@@ -9,114 +9,115 @@ class ControladorVistas extends Controller
     /* ================== Inicio ================== */
     public function home()
     {
+        // Si también moviste welcome a Usuarios, cambia a: return view('Usuarios.welcome');
         return view('welcome');
     }
 
     /* ================== Autenticación ================== */
     public function login()
     {
-        return view('Login');
+        return view('Usuarios.Login');
     }
 
     public function registro()
     {
-        return view('Registro');
+        return view('Usuarios.Registro');
     }
 
-    // OJO: tu archivo se llama "RecuperarContraseña.blade.php".
-    // Laravel lo carga, pero es recomendable renombrar a "RecuperarContrasena.blade.php" (sin ñ).
+    // Archivo actual: Usuarios/RecuperarContraseña.blade.php
+    // Recomendado renombrar a: Usuarios/RecuperarContrasena.blade.php (sin ñ)
     public function recuperarContrasena()
     {
-        return view('RecuperarContraseña'); // si renombras: view('RecuperarContrasena')
+        return view('Usuarios.RecuperarContraseña'); // si renombras: view('Usuarios.RecuperarContrasena')
     }
 
     public function verificacionDeCorreo()
     {
-        return view('VerificacionDeCorreo');
+        return view('Usuarios.VerificacionDeCorreo');
     }
 
     /* ================== Vehículos ================== */
     public function catalogoVehiculos()
     {
-        return view('CatalogoVehiculos');
+        return view('Usuarios.CatalogoVehiculos');
     }
 
-    // OJO: en tu carpeta aparece "DatelleVehiculo.blade.php" (parece typo).
-    // Recomendado renombrar a "DetalleVehiculo.blade.php".
+    // Archivo visto: Usuarios/DatelleVehiculo.blade.php (parece typo)
+    // Recomendado renombrar a: Usuarios/DetalleVehiculo.blade.php
     public function detalleVehiculo()
     {
-        return view('DatelleVehiculo'); // si renombras: view('DetalleVehiculo')
+        return view('Usuarios.DatelleVehiculo'); // si renombras: view('Usuarios.DetalleVehiculo')
     }
 
     /* ================== Reservaciones / Facturas ================== */
     public function reservar()
     {
-        return view('Reservar');
+        return view('Usuarios.Reservar');
     }
 
     public function misReservaciones()
     {
-        return view('MisReservaciones');
+        return view('Usuarios.MisReservaciones');
     }
 
-    // OJO: en la carpeta aparece "MisFactutas.blade.php" (typo).
-    // Recomendado renombrar a "MisFacturas.blade.php".
+    // Archivo visto: Usuarios/MisFactutas.blade.php (typo)
+    // Recomendado renombrar a: Usuarios/MisFacturas.blade.php
     public function misFacturas()
     {
-        return view('MisFactutas'); // si renombras: view('MisFacturas')
+        return view('Usuarios.MisFactutas'); // si renombras: view('Usuarios.MisFacturas')
     }
 
     /* ================== Membresías ================== */
     public function membresias()
     {
-        return view('Membresias');
+        return view('Usuarios.Membresias');
     }
 
     public function miMembresia()
     {
-        return view('MiMembresia');
+        return view('Usuarios.MiMembresia');
     }
 
     /* ================== Usuario ================== */
     public function perfil()
     {
-        return view('Perfil');
+        return view('Usuarios.Perfil');
     }
 
     public function notificaciones()
     {
-        return view('Notificaciones');
+        return view('Usuarios.Notificaciones');
     }
 
     /* ================== Políticas ================== */
     public function politicaDeRenta()
     {
-        return view('PoliticaDeRenta');
+        return view('Usuarios.PoliticaDeRenta');
     }
 
     public function politicasDeLimpieza()
     {
-        return view('PoliticasDeLimpieza');
+        return view('Usuarios.PoliticasDeLimpieza');
     }
 
     public function avisoDePrivacidad()
     {
-        return view('AvisoDePrivacidad');
+        return view('Usuarios.AvisoDePrivacidad');
     }
 
     public function terminosYCondiciones()
     {
-        return view('TerminosYCondiciones');
+        return view('Usuarios.TerminosYCondiciones');
     }
 
     /* ================== Información ================== */
     public function contactoYUbicaciones()
     {
-        return view('ContactoYUbicaciones');
+        return view('Usuarios.ContactoYUbicaciones');
     }
 
     public function ayuda()
     {
-        return view('Ayuda');
+        return view('Usuarios.Ayuda');
     }
 }
