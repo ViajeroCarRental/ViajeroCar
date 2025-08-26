@@ -1,18 +1,17 @@
-{{--Esta vista no esta conectada a ninguna plantilla--}}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Home</title>
-</head>
-<body>
-    {{--Sus estilos--}}
-    <style>
+@extends('layouts.Usuarios')
+@section('Titulo','Home')
+@section('contenidoHome')
+{{--estos br los puse porque la barra de menu tapaba el mensaje, cuando empiezen a poner el contenido
+de las vistas los borran. Los puse en todas las vistas.--}}
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<p>Este es el contenido de la sección de Home de Viajero Car.</p>
 
-    </style>
-{{--El contenido de la vista --}}
-
-</body>
-</html>
+@endsection
