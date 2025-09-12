@@ -9,7 +9,7 @@ class ControladorVistas extends Controller
     /* ================== Inicio ================== */
     public function home()
     {
-        // Si también moviste welcome a Usuarios, cambia a: return view('Usuarios.welcome');
+
         return view('welcome');
     }
 
@@ -24,8 +24,8 @@ class ControladorVistas extends Controller
         return view('Usuarios.Registro');
     }
 
-    // Archivo actual: Usuarios/RecuperarContraseña.blade.php
-    // Recomendado renombrar a: Usuarios/RecuperarContrasena.blade.php (sin ñ)
+
+
     public function recuperarContrasena()
     {
         return view('Usuarios.RecuperarContraseña'); // si renombras: view('Usuarios.RecuperarContrasena')
@@ -42,8 +42,8 @@ class ControladorVistas extends Controller
         return view('Usuarios.CatalogoVehiculos');
     }
 
-    // Archivo visto: Usuarios/DatelleVehiculo.blade.php (parece typo)
-    // Recomendado renombrar a: Usuarios/DetalleVehiculo.blade.php
+
+
     public function detalleVehiculo()
     {
         return view('Usuarios.DatelleVehiculo'); // si renombras: view('Usuarios.DetalleVehiculo')
@@ -60,8 +60,7 @@ class ControladorVistas extends Controller
         return view('Usuarios.MisReservaciones');
     }
 
-    // Archivo visto: Usuarios/MisFactutas.blade.php (typo)
-    // Recomendado renombrar a: Usuarios/MisFacturas.blade.php
+
     public function misFacturas()
     {
         return view('Usuarios.MisFactutas'); // si renombras: view('Usuarios.MisFacturas')
