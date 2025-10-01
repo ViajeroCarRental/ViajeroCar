@@ -46,12 +46,9 @@
 
         <!-- Sección: Administración -->
         <li class="menu-section">Administración</li>
-        <li><a href="#"><i class="fas fa-users"></i> Usuarios</a></li>
-        <li><a href="#"><i class="fas fa-user-shield"></i> Roles y permisos</a></li>
-        <li><a href="#"><i class="fas fa-building"></i> Sedes / Equipos</a></li>
-        <li><a href="#"><i class="fas fa-search"></i> Auditoría</a></li>
-        <li><a href="#"><i class="fas fa-cog"></i> Configuración</a></li>
-        <li><a href="#"><i class="fas fa-arrow-left"></i> Volver a módulos</a></li>
+        <li><a href="{{route('rutaUsuarios')}}"><i class="fas fa-users"></i> Usuarios</a></li>
+        <li><a href="{{route('rutaRoles')}}"><i class="fas fa-user-shield"></i> Roles y permisos</a></li>
+        <li><a href="{{route('rutaDashboard')}}"><i class="fas fa-arrow-left"></i> Volver a módulos</a></li>
 
     </ul>
 </aside>
