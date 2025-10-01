@@ -33,6 +33,7 @@
   --fs-24: clamp(18px, 2vw, 24px);
   --fs-28: clamp(20px, 2.4vw, 28px);
   --fs-32: clamp(22px, 3vw, 32px);
+  --fs-40: clamp(30px, 5vw, 44px);
 }
 
 *{box-sizing:border-box}
@@ -132,12 +133,31 @@ body{
 .wrow{display:grid; grid-template-columns:1.1fr .9fr; gap: clamp(12px,2.2vw,20px)}
 @media (max-width:980px){ .wrow{grid-template-columns:1fr} }
 
-.hi{font-size: var(--fs-32); font-weight:900; margin:4px 0 6px; letter-spacing:.2px}
-.hi span{
-  background:linear-gradient(90deg,var(--red),var(--orange));
-  -webkit-background-clip:text; background-clip:text; color:transparent
+/* ===== Títulos del hero — MÁS GRANDES y rojos originales ===== */
+.hi{
+  font-size: clamp(36px, 6vw, 56px); /* grande en desktop y tablet */
+  font-weight: 900;
+  margin: 8px 0 12px;
+  letter-spacing: .4px;
+  line-height: 1.15;
 }
-.sub{color:var(--muted); margin:0 0 12px; font-size: var(--fs-16)}
+.hi span{
+  background: linear-gradient(90deg, var(--red), var(--red2)); /* rojos de marca */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Subtítulo debajo — más legible */
+.sub{
+  font-size: clamp(18px, 2.4vw, 22px);
+  font-weight: 500;
+  color: var(--ink);
+  max-width: 680px;
+  line-height: 1.5;
+  opacity: .9;
+}
+
 .chips{display:flex; gap:10px; flex-wrap:wrap}
 .chip{
   display:inline-flex; gap:6px; align-items:center; padding:6px 10px; border-radius:999px;
@@ -150,7 +170,7 @@ body{
 .actions{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap}
 .actions .primary{position:relative; overflow:hidden}
 
-/* Ripple (mejor suavizado) */
+/* Ripple */
 .ripple{
   position:absolute; width:16px; height:16px; border-radius:999px; background:rgba(255,255,255,.55);
   transform:scale(0); animation:rip .6s ease-out forwards; pointer-events:none
@@ -216,9 +236,9 @@ body{
 .mod.locked{opacity:.55; cursor:not-allowed}
 .mod.locked::after{content:"🔒 Sin acceso"; position:absolute; right:12px; top:12px; font-weight:800; color:#fff; font-size: var(--fs-12)}
 /* Gradientes por tema */
-.mod[data-theme="autos"]  .head{ background:linear-gradient(120deg,#ff7a1a 0%, #ff4d5a 60%, #ff9aa7 100%) }
-.mod[data-theme="rentas"] .head{ background:linear-gradient(120deg,#6366f1 0%, #8b5cf6 60%, #d946ef 100%) }
-.mod[data-theme="admin"]  .head{ background:linear-gradient(120deg,#10b981 0%, #14b8a6 60%, #0ea5e9 100%) }
+.mod[data-theme="autos"]  .head{ background:linear-gradient(120deg,#ff7a1a 0%, #ff0011ff 60%, #ff0022ff 100%) }
+.mod[data-theme="rentas"] .head{ background:linear-gradient(120deg,#6366f1 0%, #ff0000ff 60%, #ff0000ff 100%) }
+.mod[data-theme="admin"]  .head{ background:linear-gradient(120deg,#10b981 0%, #ff0000ff 60%, #ff0000ff 100%) }
 
 /* Quick links */
 .qwrap{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
@@ -237,6 +257,10 @@ body{
 }
 
 /* ===== Responsividad fina ===== */
+@media (max-width: 900px){
+  .hi{ font-size: clamp(32px, 7vw, 48px) }
+  .sub{ font-size: clamp(17px, 2.8vw, 20px) }
+}
 @media (max-width: 820px){
   .top{ padding:10px clamp(10px,2vw,16px) }
   .right{ gap:8px }
@@ -244,7 +268,6 @@ body{
 }
 @media (max-width: 600px){
   .brand img{ width: 120px }
-  .hi{ letter-spacing: 0 }
   .panel{ right: 50%; transform: translateX(50%); width: min(92vw, 420px) }
 }
 @media (max-width: 400px){
@@ -289,7 +312,7 @@ body{
 <!-- TOPBAR -->
 <div class="top">
   <div class="brand">
-    <img src="{{ asset('assets/media/Logotipo Fondo.jpg') }}" alt="Viajero Car Rental">
+    <img src="{{ asset('img/Logo4.jpg') }}" alt="Viajero Car Rental">
     <div class="badge"><span class="dot" id="net"></span> <span id="netText">En línea</span></div>
   </div>
   <div class="right">
