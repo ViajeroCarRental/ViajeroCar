@@ -9,83 +9,35 @@ class controladorVistasAdmin extends Controller
     // Dashboard
     public function dashboard()
     {
-        return view('Admin.Dashboard');
+        return view('Admin.dashboard');
     }
 
-    // Bitácora
-    public function bitacora()
+    public function mantenimiento()
     {
-        return view('Admin.Bitacora');
+        return view('Admin.mantenimiento');
     }
 
-    // Calendario de Ocupación
-    public function calendarioDeOcupacion()
+    public function flotilla()
     {
-        return view('Admin.CalendarioDeOcupacion');
+        return view('Admin.flotilla');
     }
 
-    // Configuración
-    public function configuracion()
+    public function polizas()
     {
-        return view('Admin.Configuracion');
+        return view('Admin.polizas');
     }
 
-    // Contratos (tu archivo está en minúsculas: contratos.blade.php)
-    public function contratos()
+    public function carroceria()
     {
-        return view('Admin.contratos'); // si lo renombras a "Contratos.blade.php": view('Admin.Contratos')
+        return view('Admin.carroceria');
     }
 
-    // Facturas
-    public function facturas()
+    public function seguros()
     {
-        return view('Admin.Facturas');
+        return view('Admin.seguros');
     }
-
-    // Inventario
-    public function inventario()
+    public function gastos()
     {
-        return view('Admin.Inventario');
-    }
-
-    // Pagos
-    public function pagos()
-    {
-        return view('Admin.Pagos');
-    }
-
-    // Plantillas
-    public function plantillas()
-    {
-        return view('Admin.Plantillas');
-    }
-
-    // Rentas
-    public function rentas()
-    {
-        return view('Admin.Rentas');
-    }
-
-    // Reportes
-    public function reportes()
-    {
-        return view('Admin.Reportes');
-    }
-
-    // Reservaciones
-    public function reservaciones()
-    {
-        return view('Admin.Reservaciones');
-    }
-
-    // Usuarios y Roles
-    public function usuariosYRoles()
-    {
-        return view('Admin.UsuariosYRoles');
-    }
-
-    public function membresias()
-    {
-        return view('Admin.Membresias');
+        return view('Admin.gastos');
     }
 }

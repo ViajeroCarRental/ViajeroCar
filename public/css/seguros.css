@@ -1,0 +1,25 @@
+/* Reusa tu style.css; aquí solo lo específico/clave para que funcione aislado */
+
+/* Topbar / contenido básico (igual que tu estilo original) */
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid #e9eef5;background:#fff;position:sticky;top:0;z-index:10}
+.content{padding:18px}
+.title{font-weight:800;margin:8px 0 2px;background:linear-gradient(90deg,#E50914,#ff4d5a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:#6b7280;margin:0 0 12px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:6px 0 14px}
+.search{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid #e9eef5;border-radius:12px;background:#fff;min-width:260px}
+.search input{border:none;outline:none;width:220px}
+.btn{border:none;cursor:pointer;padding:11px 14px;border-radius:12px;color:#fff;background:linear-gradient(135deg,#E50914,#ff4d5a);box-shadow:0 10px 20px rgba(229,9,20,.28);font-weight:700}
+.btn.ghost{background:#fff;color:#E50914;border:1px solid #ffd6da;box-shadow:none}
+
+/* Tabla (idéntica a tu original) */
+.table{width:100%;border-collapse:separate;border-spacing:0;border:1px solid #ffe2e5;border-radius:14px;background:#fff;box-shadow:0 10px 30px rgba(229,9,20,.10);overflow:hidden}
+.table th,.table td{padding:12px 14px;border-bottom:1px solid #f4e5e6;text-align:left}
+.table thead th{background:#fff3f4;color:#b30b16;font-weight:800;position:sticky;top:56px;z-index:1}
+.table tr:last-child td{border-bottom:none}
+
+/* Chips de estatus (como en tu código) */
+.status{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-weight:700;font-size:12px}
+.ok{background:#eafaf1;color:#0e9f6e}
+.warn{background:#fff4e5;color:#d97706}
+.bad{background:#ffe8ea;color:#d21c2b}
+.off{background:#eef2f7;color:#64748b}
