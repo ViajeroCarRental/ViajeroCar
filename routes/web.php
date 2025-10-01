@@ -22,3 +22,25 @@ Route::get('/politicas',[ControladorVistas::class,'politicas'])->name('rutaPolit
 
 //ruta Vista FAQ
 Route::get('/faq',[ControladorVistas::class,'faq'])->name('rutaFAQ');
+
+// VISTAS Admin
+//inicio
+Route::get('/admin/dashboard', [App\Http\Controllers\controladorVistasAdmin::class, 'dashboard'])->name('rutaDashboard');
+
+//mantenimiento
+Route::get('/admin/mantenimiento', [App\Http\Controllers\controladorVistasAdmin::class, 'mantenimiento'])->name('rutaMantenimiento');
+
+//flotilla
+Route::get('/admin/flotilla', [App\Http\Controllers\controladorVistasAdmin::class, 'flotilla'])->name('rutaFlotilla');
+
+//polizas
+Route::get('/admin/polizas', [App\Http\Controllers\controladorVistasAdmin::class, 'polizas'])->name('rutaPolizas');
+
+//carroceria
+Route::get('/admin/carroceria', [App\Http\Controllers\controladorVistasAdmin::class, 'carroceria'])->name('rutaCarroceria');
+
+//seguros
+Route::get('/admin/seguros', [App\Http\Controllers\controladorVistasAdmin::class, 'seguros'])->name('rutaSeguros');
+
+//gastos
+Route::get('/admin/gastos', [App\Http\Controllers\controladorVistasAdmin::class, 'gastos'])->name('rutaGastos');
