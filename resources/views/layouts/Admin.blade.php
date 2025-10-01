@@ -10,6 +10,8 @@
     @yield('css-vistaCarroceria')
     @yield('css-vistaSeguros')
     @yield('css-vistaGastos')
+    @yield('css-vistaUsuariosAdmin')
+    @yield('css-vistaRoles')
     <link rel="stylesheet" href="{{asset('css/sidebar.css')}}">
     <title>@yield('Titulo')</title>
 </head>
@@ -60,8 +62,9 @@
     @yield('contenidoCarroceria')
     @yield('contenidoSeguros')
     @yield('contenidoGastos')
+    @yield('contenidoUsuariosAdmin')
+    @yield('contenidoRoles')
 </div>
-
 
 
 <div class="containerJS">
@@ -71,6 +74,8 @@
     @yield('js-vistaCarroceria')
     @yield('js-vistaSeguros')
     @yield('js-vistaGastos')
+    @yield('js-vistaUsuariosAdmin')
+    @yield('js-vistaRoles')
 </div>
 
 </body>
