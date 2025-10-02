@@ -1,105 +1,113 @@
-/* ===== Layout general ===== */
-body {
-  margin: 0;
-  font-family: 'Poppins', sans-serif;
-  display: flex;
-  min-height: 100vh;
-  background: #fff;
+/* ====== Sidebar Unificado (3 temas en un solo CSS) ======
+   Usos:
+   <aside class="sidebar sidebar--flotilla">...</aside>
+   <aside class="sidebar sidebar--reservas">...</aside>
+   <aside class="sidebar sidebar--admin">...</aside>
+   El contenedor de contenido puede usar .main-content
+========================================================= */
+
+/* Base layout opcional (no interfiere si ya tienes uno) */
+body{
+  margin:0;
+  font-family:'Poppins',sans-serif;
+  display:flex;
+  min-height:100vh;
+  background:#fff;
 }
 
-/* ===== Sidebar ===== */
-.sidebar {
-  width: 260px;
-  /* antes: min-height: 100vh; */
-  height: 100dvh;            /* usa 100vh si prefieres: height: 100vh; */
-  background: linear-gradient(180deg, #e50914, #d90429);
-  padding: 20px 14px;
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  left: 0;
-  top: 0;
-  overflow-y: auto;          /* permite scroll interno */
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch; /* scroll suave en iOS */
-  scrollbar-gutter: stable;  /* evita que brinque el layout al aparecer la barra */
-  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-  z-index: 100;
+/* Contenido principal (ajusta el margen si tu sidebar es fijo) */
+.main-content{
+  margin-left:260px;         /* mismo ancho del sidebar */
+  padding:20px;
+  flex:1;
+  background:#fff;
+  min-height:100vh;
 }
 
-/* opcional: más espacio al final para que no se tape el último ítem */
-.sidebar .menu { padding-bottom: 16px; }
-
+/* ====== BASE del sidebar (comparten los 3) ====== */
+.sidebar{
+  width:260px;
+  height:100dvh;             /* 100vh si prefieres; 100dvh mejora en móviles */
+  display:flex;
+  flex-direction:column;
+  position:fixed;
+  left:0; top:0;
+  padding:20px 14px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-gutter:stable;
+  box-shadow:2px 0 10px rgba(0,0,0,.1);
+  z-index:100;
+}
 
 /* Logo */
-.sidebar .logo {
-  text-align: center;
-  margin-bottom: 24px;
-}
-.sidebar .logo img {
-  max-width: 180px;
-  border-radius: 12px;
-}
+.sidebar .logo{ text-align:center; margin-bottom:24px; }
+.sidebar .logo img{ max-width:180px; border-radius:12px; }
 
 /* Menú */
-.sidebar .menu {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  flex: 1;
+.sidebar .menu{ list-style:none; margin:0; padding:0; flex:1; padding-bottom:16px; }
+.sidebar .menu-section{
+  font-size:13px;
+  font-weight:700;
+  text-transform:uppercase;
+  opacity:.9;
+  margin:18px 0 8px 12px;
 }
-.sidebar .menu-section {
-  font-size: 13px;
-  font-weight: 700;
-  color: #ffdcdc;
-  text-transform: uppercase;
-  margin: 18px 0 8px 12px;
+.sidebar .menu li{ margin-bottom:8px; }
+.sidebar .menu a{
+  display:flex; align-items:center; gap:12px;
+  padding:12px 14px;
+  text-decoration:none; border-radius:12px;
+  font-weight:700; color:#fff;
+  transition:background .2s,color .2s,transform .2s;
+  background:rgba(255,255,255,.08);
 }
-.sidebar .menu li {
-  margin-bottom: 8px;
-}
-.sidebar .menu a {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  text-decoration: none;
-  border-radius: 12px;
-  font-weight: 700;
-  color: #fff;
-  transition: all .2s ease-in-out;
-  background: rgba(255, 255, 255, 0.08);
-}
-.sidebar .menu a:hover {
-  background: #fff;
-  color: #e50914;
-}
-.sidebar .menu a i {
-  font-size: 16px;
-}
+.sidebar .menu a:hover{ background:#fff; transform:translateX(2px); }
+.sidebar .menu a i{ font-size:16px; }
 
-/* ===== Contenido principal ===== */
-.main-content {
-  margin-left: 260px; /* mismo ancho del sidebar */
-  padding: 20px;
-  flex: 1;
-  background: #fff;
-  min-height: 100vh;
-}
+/* ====== TEMAS (cambian fondo y color de hover) ====== */
 
-@media (max-width: 768px) {
-  .sidebar {
-    position: fixed;
-    width: 220px;
-    height: 100dvh;          /* importante para que siga scrolleando en móvil */
-    transform: translateX(-100%);
-    transition: transform 0.3s ease-in-out;
-    z-index: 200;
+/* --- Flotilla (rojos) --- */
+.sidebar--flotilla{
+  background:linear-gradient(180deg,#e50914,#d90429);
+}
+.sidebar--flotilla .menu-section{ color:#ffdcdc; }
+.sidebar--flotilla .menu a:hover{ color:#e50914; }
+
+/* --- Reservaciones (indigo → violeta) --- */
+.sidebar--reservas{
+  background:linear-gradient(180deg,#6366f1,#8b5cf6);
+}
+.sidebar--reservas .menu-section{ color:#e9e7ff; }
+.sidebar--reservas .menu a:hover{ color:#5b6bff; }
+
+/* --- Administración (green → teal → sky) --- */
+.sidebar--admin{
+  background:linear-gradient(180deg,#10b981,#14b8a6 55%,#0ea5e9);
+}
+.sidebar--admin .menu-section{ color:#d9fff3; }
+.sidebar--admin .menu a:hover{ color:#0ea5e9; }
+
+/* ====== Responsive ====== */
+@media (max-width: 1024px){
+  .main-content{ margin-left:240px; }
+}
+@media (max-width: 768px){
+  .sidebar{
+    position:fixed;
+    width:220px;
+    height:100dvh;
+    transform:translateX(-100%);
+    transition:transform .3s ease-in-out;
+    z-index:200;
   }
-  .sidebar.show { transform: translateX(0); }
-  .main-content {
-    margin-left: 0;
-    padding: 16px;
-  }
+  .sidebar.show{ transform:translateX(0); }  /* agrega/quita .show con tu botón */
+  .main-content{ margin-left:0; padding:16px; }
 }
 
+/* ====== Utilidades opcionales ====== */
+.sidebar .menu a.is-active{
+  background:#fff;
+  color:#111;
+}

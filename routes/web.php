@@ -40,3 +40,31 @@ Route::get('/admin/gastos', [App\Http\Controllers\controladorVistasAdmin::class,
 Route::get('/admin/usuarios', [App\Http\Controllers\controladorVistasAdmin::class, 'usuarios'])->name('rutaUsuarios');
 //roles
 Route::get('/admin/roles', [App\Http\Controllers\controladorVistasAdmin::class, 'roles'])->name('rutaRoles');
+
+//Vistas Ventas
+//inicio
+Route::get('/admin/ventas', [App\Http\Controllers\controladorVistasAdmin::class, 'ventas'])->name('rutaInicioVentas');
+//reservaciones
+Route::get('/admin/reservaciones', [App\Http\Controllers\controladorVistasAdmin::class, 'reservacionesAdmin'])->name('rutaReservacionesAdmin');
+//cotizaciones
+Route::get('/admin/cotizaciones', [App\Http\Controllers\controladorVistasAdmin::class, 'cotizaciones'])->name('rutaCotizaciones');
+//cotizaciones activas
+Route::get('/admin/cotizaciones-activas', [App\Http\Controllers\controladorVistasAdmin::class, 'cotizacionesRecientes'])->name('rutaCotizacionesRecientes');
+//cotizar
+Route::get('/admin/cotizar', [App\Http\Controllers\controladorVistasAdmin::class, 'cotizar'])->name('rutaCotizar');
+//reservaciones activas
+Route::get('/admin/reservaciones-activas', [App\Http\Controllers\controladorVistasAdmin::class, 'reservacionesActivas'])->name('rutaReservacionesActivas');
+//visor de reservaciones
+Route::get('/admin/visor-reservaciones', [App\Http\Controllers\controladorVistasAdmin::class, 'visorReservaciones'])->name('rutaVisorReservaciones');
+//administracion de reservaciones
+Route::get('/admin/administracion-reservaciones', [App\Http\Controllers\controladorVistasAdmin::class, 'administracionReservaciones'])->name('rutaAdministracionReservaciones');
+//historial completo
+Route::get('/admin/historial-completo', [App\Http\Controllers\controladorVistasAdmin::class, 'historialCompleto'])->name('rutaHistorialCompleto');
+//Contrato
+Route::get('/admin/contrato', [App\Http\Controllers\controladorVistasAdmin::class, 'contrato'])->name('rutaContrato');
+//Alta Cliente
+Route::get('/admin/alta-cliente', [App\Http\Controllers\controladorVistasAdmin::class, 'altaCliente'])->name('rutaAltaCliente');
+//Licencia
+Route::get('/admin/licencia', [App\Http\Controllers\controladorVistasAdmin::class, 'licencia'])->name('rutaLicencia');
+//RFC
+Route::get('/admin/rfc', [App\Http\Controllers\controladorVistasAdmin::class, 'RFC_Fiscal'])->name('rutaRFC');

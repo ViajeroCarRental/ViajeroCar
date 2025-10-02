@@ -194,23 +194,23 @@ body{margin:0; color:var(--ink); background:#fff}
   <div class="grid">
     <!-- AUTOS: ahora sí usa route() de Laravel -->
     <article class="mod" id="modAutos" data-link="{{ route('rutaFlotilla') }}" data-theme="autos">
-      <div class="head"><div class="ic">🚗</div> Autos</div>
+      <div class="head"><div class="ic">🚗</div>Flotilla</div>
       <div class="body">
         <p>Flotilla, mantenimiento, pólizas, carrocería y gastos.</p>
         <div class="go">Entrar →</div>
       </div>
     </article>
 
-    <article class="mod" id="modRentas" data-link="{{ url('Rentas/panel.html') }}" data-theme="rentas">
-      <div class="head"><div class="ic">🧾</div> Servicios</div>
+    <article class="mod" id="modRentas" data-link="{{route('rutaInicioVentas')}}" data-theme="rentas">
+      <div class="head"><div class="ic">🧾</div>Rentas</div>
       <div class="body">
         <p>Reservaciones, cotizaciones y seguimiento de contratos.</p>
         <div class="go">Entrar →</div>
       </div>
     </article>
 
-    <article class="mod" id="modAdmin" data-link="{{ url('Administracion/admin-usuarios.html') }}" data-theme="admin">
-      <div class="head"><div class="ic">⚙️</div> Administración</div>
+    <article class="mod" id="modAdmin" data-link="{{route('rutaUsuarios')}}" data-theme="admin">
+      <div class="head"><div class="ic">⚙️</div>Administración</div>
       <div class="body">
         <p>Usuarios, roles/permisos, sedes, auditoría y seguridad.</p>
         <div class="go">Entrar →</div>

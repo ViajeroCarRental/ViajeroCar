@@ -1,4 +1,4 @@
-@extends('layouts.Admin')
+@extends('layouts.Flotillas')
 @section('Titulo', 'Seguros')
     @section('css-vistaSeguros')
         <link rel="stylesheet" href="{{ asset('css/seguros.css') }}">

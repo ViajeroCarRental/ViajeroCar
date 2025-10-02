@@ -1,4 +1,4 @@
-@extends('layouts.Admin')
+@extends('layouts.Flotillas')
 @section('Titulo', 'Mantenimiento')
 
 @section('css-vistaMantenimiento')

@@ -53,4 +53,70 @@ class controladorVistasAdmin extends Controller
     {
         return view('Admin.Roles');
     }
+
+    //Apartado vistas Ventas
+    public function ventas()
+    {
+        return view('Admin.homeVentas');
+    }
+
+    public function reservacionesAdmin()
+    {
+        return view('Admin.Reservaciones');
+    }
+
+    public function cotizaciones()
+    {
+        return view('Admin.Cotizaciones');
+    }
+
+    public function cotizar()
+    {
+        return view('Admin.Cotizar');
+    }
+
+    public function cotizacionesRecientes()
+    {
+        return view('Admin.CotizacionesRecientes');
+    }
+
+    public function reservacionesActivas()
+    {
+        return view('Admin.ReservacionesActivas');
+    }
+
+    public function visorReservaciones()
+    {
+        return view('Admin.VisorReservaciones');
+    }
+
+    public function administracionReservaciones()
+    {
+        return view('Admin.AdministracionReservas');
+    }
+
+    public function historialCompleto()
+    {
+        return view('Admin.Historial');
+    }
+
+    public function contrato()
+    {
+        return view('Admin.Contrato');
+    }
+
+    public function altaCliente()
+    {
+        return view('Admin.AltaCliente');
+    }
+
+    public function licencia()
+    {
+        return view('Admin.Licencia');
+    }
+
+    public function RFC_Fiscal()
+    {
+        return view('Admin.RFC-Fiscal');
+    }
 }
