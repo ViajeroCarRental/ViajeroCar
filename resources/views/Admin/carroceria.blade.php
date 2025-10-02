@@ -1,4 +1,4 @@
-@extends('layouts.Admin')
+@extends('layouts.Flotillas')
 @section('Titulo', 'Carrocerias')
     @section('css-vistaCarroceria')
         <link rel="stylesheet" href="{{ asset('css/carroceria.css') }}">

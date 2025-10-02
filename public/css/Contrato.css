@@ -1,0 +1,56 @@
+:root{ --brand:#FF1E2D; --brand-2:#D6121F; --ink:#101828; --muted:#667085; --stroke:#EAECF0; --ok:#027A48 }
+*{box-sizing:border-box} html,body{margin:0;background:#F3F5F9;color:var(--ink);font-family:"Cabin",system-ui,-apple-system,Segoe UI,Roboto,Arial}
+.wrap{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
+@media(max-width:992px){.wrap{grid-template-columns:1fr}}
+/* ===== Sidebar ===== */
+.side{background:var(--brand);color:#fff;padding:16px;border-right:1px solid #C40C18;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;justify-content:center;margin-bottom:14px}
+.brand img{width:170px;border-radius:12px}
+.menu{display:flex;flex-direction:column;gap:10px}
+.mitem{display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;text-decoration:none;font-weight:800;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
+.mitem:hover{background:rgba(255,255,255,.18)}
+.mitem.active{background:#fff;color:var(--brand);border-color:#fff}
+
+/* ===== Main ===== */
+.main{padding:22px}
+.h1{margin:0 0 14px;font-size:24px;font-weight:900}
+.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:20px}
+@media(max-width:1100px){.grid{grid-template-columns:1fr}}
+
+/* Cards */
+.card{background:#fff;border:1.5px solid var(--stroke);border-radius:18px;overflow:hidden}
+.card .head{padding:14px 16px;border-bottom:1px solid var(--stroke);font-weight:900}
+.card .cnt{padding:16px}
+
+/* Key/Value filas */
+.kv{display:grid;grid-template-columns:180px 1fr;gap:10px;padding:8px 0;border-bottom:1px dotted #EEF2F6}
+.kv:last-child{border:none}
+
+/* ===== Date tiles estilo imagen ===== */
+.flex-tiles{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:14px}
+.tile{border-radius:14px;border:1px solid #F2F4F7;overflow:hidden;background:#fff}
+.tile .bar{background:var(--brand);color:#fff;font-weight:900;text-align:center;padding:12px 10px}
+.tile .body{padding:18px}
+.site{font-size:14px;color:#475467;text-align:center;margin-bottom:12px}
+.datebox{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+.bigday{font-size:46px;font-weight:900;text-align:center}
+.mmy{display:grid;gap:6px;justify-items:center}
+.mm{font-size:14px;font-weight:800;color:#B42318;background:#FFE4E6;border:1px solid #FEC6C8;border-radius:999px;padding:4px 10px}
+.yy{font-size:13px;color:#475467}
+.hr{margin-top:12px;text-align:center;font-size:20px;font-weight:900}
+
+/* ===== Auto panel ===== */
+.titleCar{font-weight:900;font-size:20px;margin-bottom:10px}
+.imgCar{width:100%;max-width:410px;object-fit:contain;display:block;margin:6px auto 14px}
+.bullets{display:grid;gap:10px;margin-top:6px}
+.bullets div{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #F2F4F7}
+.bullets div:last-child{border:none}
+
+/* Totales (opcional) */
+.totalBox{margin-top:16px;border-top:1px dashed #EEF2F6;padding-top:12px}
+.total{font-size:26px;font-weight:900;color:var(--brand)}
+
+/* Botones */
+.btn{border:none;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer}
+.primary{background:var(--brand);color:#fff;width:100%}
+.gray{background:#F8FAFC;border:1px solid var(--stroke)}
