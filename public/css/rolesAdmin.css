@@ -1,0 +1,78 @@
+:root{
+  --brand:#FF1E2D; --ink:#101828; --muted:#667085; --stroke:#E9EDF3; --bg:#F6F7FB;
+  --chip-bg:#fff; --chip-br:#E5E7EB; --chip-t:#344054;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Cabin",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+body{font-size:15px;line-height:1.45}
+a{text-decoration:none;color:inherit}
+
+/* ===== Layout ===== */
+.wrap{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+@media(max-width:960px){.wrap{grid-template-columns:1fr}}
+.side{background:var(--brand);color:#fff;padding:14px;border-right:1px solid #C40C18;position:sticky;top:0;height:100vh;overflow:auto}
+@media(max-width:960px){.side{position:fixed;inset:0 auto 0 0;width:248px;transform:translateX(-110%);transition:.2s;z-index:40}
+.side.show{transform:none}}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.10)}
+.menu{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.mitem{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);font-weight:800}
+.mitem:hover{background:rgba(255,255,255,.16)}
+.mitem.active{background:#fff;color:var(--brand)}
+
+.main{padding:16px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.h1{margin:0;font-size:22px;font-weight:800}
+.burger{display:none}@media(max-width:960px){.burger{display:inline-flex}}
+.btn{border:none;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:var(--brand);color:#fff}
+.btn.gray{background:#F8FAFC;border:1px solid var(--stroke)}
+.btn.warn{background:#FEF0C7;border:1px solid #FEDF89;color:#B54708}
+.btn.ghost{background:#fff;border:1px solid var(--stroke);color:var(--brand)}
+.small{color:var(--muted);font-size:12.5px}
+
+/* ===== Cards y tabla ===== */
+.grid{display:grid;grid-template-columns:1fr;gap:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:900px){.stats{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--stroke);border-radius:14px}
+.card .head{padding:10px 12px;border-bottom:1px solid var(--stroke);font-weight:900}
+.card .cnt{padding:10px 12px}
+.table{width:100%;border-collapse:separate;border-spacing:0}
+.table th,.table td{padding:10px;border-bottom:1px dashed #EEF2F7;text-align:left;vertical-align:top;font-size:14px}
+.table thead th{font-size:12px;color:#667085;border-bottom:1px solid var(--stroke)}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap}
+.kpill{display:inline-grid;place-items:center;border-radius:999px;padding:2px 8px;font-size:12px;border:1px solid #E4E7EC;background:#F8FAFC;margin:2px}
+.kpill.green{color:#027A48;border-color:#ABEFC6;background:#ECFDF3}
+.kpill.blue{color:#175CD3;border-color:#B2DDFF;background:#EFF8FF}
+
+/* ===== MODAL (compacto) ===== */
+.pop{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(16,24,40,.35);backdrop-filter:blur(2px);padding:12px;z-index:80}
+.pop.show{display:flex}
+.box{width:min(880px,96vw);background:#fff;border:1px solid #E7E7EC;border-radius:14px;overflow:hidden;box-shadow:0 20px 50px rgba(16,24,40,.20)}
+.box header{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #F0F2F6;font-weight:800}
+.box footer{display:flex;gap:8px;padding:10px 12px;border-top:1px solid #F0F2F6;position:sticky;bottom:0;background:#fff}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px 12px}
+@media(max-width:880px){.form{grid-template-columns:1fr}}
+label{font-size:12px;font-weight:800;color:#344054}
+.input,select{width:100%;padding:8px 10px;border:1.5px solid var(--stroke);border-radius:9px;background:#fff;font-size:14px}
+.input:focus,select:focus{outline:none;border-color:#FFC7CD;box-shadow:0 0 0 4px #FFECEF}
+
+/* Chips de módulos (más discretas) */
+.mods{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.mods label{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--chip-br);border-radius:999px;background:var(--chip-bg);color:var(--chip-t);cursor:pointer}
+.mods input[type=checkbox]{accent-color:var(--brand)}
+.mods label:hover{border-color:#FFD7DB;background:#FFF6F7}
+
+/* Tarjetas de permisos (densas) */
+.permsWrap{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:720px){.permsWrap{grid-template-columns:1fr}}
+.group{border:1px solid #EEF0F6;border-radius:10px;padding:10px;background:#fff}
+.group h4{margin:0 0 6px;font-size:13px}
+.ghead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.gtoggle{font-size:11px;color:#5E35B1;background:#F4EBFF;border:1px solid #E9D7FE;border-radius:999px;padding:3px 8px;cursor:pointer}
+.gbody{display:flex;gap:12px;flex-wrap:wrap}
+.gbody label{font-weight:600;font-size:13px}
+.group input[type=checkbox]{accent-color:var(--brand)}
+
+/* Reasignación */
+.hr{height:1px;background:#EEF2F7;margin:8px 0}

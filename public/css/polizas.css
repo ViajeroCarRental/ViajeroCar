@@ -1,0 +1,47 @@
+/* ====== PÓLIZAS ====== */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid #ffe2e5;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(229,9,20,.10);
+  overflow: hidden;
+}
+.table th,
+.table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f4e5e6;
+  text-align: left;
+}
+.table thead th {
+  background: #fff3f4;
+  color: #b30b16;
+  font-weight: 800;
+  position: sticky;
+  top: 56px;
+  z-index: 1;
+}
+.table tr:last-child td {
+  border-bottom: none;
+}
+.tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #ffe2e5;
+  background: #fff;
+}
+.tag.red {
+  background: #ffe8ea;
+  color: #d21c2b;
+}
+.tag.orange {
+  background: #fff4e5;
+  color: #b45309;
+}
+.tag.blue {
+  background: #eef2ff;
+  color: #4338ca;
+}

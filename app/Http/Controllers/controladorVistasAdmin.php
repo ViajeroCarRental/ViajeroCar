@@ -6,86 +6,117 @@ use Illuminate\Http\Request;
 
 class controladorVistasAdmin extends Controller
 {
+    //Apartado vistas Flotilla
     // Dashboard
     public function dashboard()
     {
-        return view('Admin.Dashboard');
+        return view('Admin.dashboard');
     }
 
-    // Bitácora
-    public function bitacora()
+    public function mantenimiento()
     {
-        return view('Admin.Bitacora');
+        return view('Admin.mantenimiento');
     }
 
-    // Calendario de Ocupación
-    public function calendarioDeOcupacion()
+    public function flotilla()
     {
-        return view('Admin.CalendarioDeOcupacion');
+        return view('Admin.flotilla');
     }
 
-    // Configuración
-    public function configuracion()
+    public function polizas()
     {
-        return view('Admin.Configuracion');
+        return view('Admin.polizas');
     }
 
-    // Contratos (tu archivo está en minúsculas: contratos.blade.php)
-    public function contratos()
+    public function carroceria()
     {
-        return view('Admin.contratos'); // si lo renombras a "Contratos.blade.php": view('Admin.Contratos')
+        return view('Admin.carroceria');
     }
 
-    // Facturas
-    public function facturas()
+    public function seguros()
     {
-        return view('Admin.Facturas');
+        return view('Admin.seguros');
     }
-
-    // Inventario
-    public function inventario()
+    public function gastos()
     {
-        return view('Admin.Inventario');
+        return view('Admin.gastos');
     }
 
-    // Pagos
-    public function pagos()
+    //Apartado vistas Usuarios Admin
+
+    public function usuarios()
     {
-        return view('Admin.Pagos');
+        return view('Admin.Usuarios');
     }
 
-    // Plantillas
-    public function plantillas()
+    public function roles()
     {
-        return view('Admin.Plantillas');
+        return view('Admin.Roles');
     }
 
-    // Rentas
-    public function rentas()
+    //Apartado vistas Ventas
+    public function ventas()
     {
-        return view('Admin.Rentas');
+        return view('Admin.homeVentas');
     }
 
-    // Reportes
-    public function reportes()
-    {
-        return view('Admin.Reportes');
-    }
-
-    // Reservaciones
-    public function reservaciones()
+    public function reservacionesAdmin()
     {
         return view('Admin.Reservaciones');
     }
 
-    // Usuarios y Roles
-    public function usuariosYRoles()
+    public function cotizaciones()
     {
-        return view('Admin.UsuariosYRoles');
+        return view('Admin.Cotizaciones');
     }
 
-    public function membresias()
+    public function cotizar()
     {
-        return view('Admin.Membresias');
+        return view('Admin.Cotizar');
+    }
+
+    public function cotizacionesRecientes()
+    {
+        return view('Admin.CotizacionesRecientes');
+    }
+
+    public function reservacionesActivas()
+    {
+        return view('Admin.ReservacionesActivas');
+    }
+
+    public function visorReservaciones()
+    {
+        return view('Admin.VisorReservaciones');
+    }
+
+    public function administracionReservaciones()
+    {
+        return view('Admin.AdministracionReservas');
+    }
+
+    public function historialCompleto()
+    {
+        return view('Admin.Historial');
+    }
+
+    public function contrato()
+    {
+        return view('Admin.Contrato');
+    }
+
+    public function altaCliente()
+    {
+        return view('Admin.AltaCliente');
+    }
+
+    public function licencia()
+    {
+        return view('Admin.Licencia');
+    }
+
+    public function RFC_Fiscal()
+    {
+        return view('Admin.RFC-Fiscal');
     }
 }

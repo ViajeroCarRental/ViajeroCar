@@ -1,6 +1,312 @@
-@extends('layouts.Admin')
-@section('Titulo', 'Dashboard')
-@section('contenidoDashboard')
-  <h1>Bienvenido al Panel de Administración</h1>
-  <p>Desde aquí podrás gestionar todas las funcionalidades de la aplicación.</p>
-@endsection
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Panel | Viajero Car Rental</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="{{ asset('assets/style.css') }}" />
+<style>
+:root{
+  --ink:#0f172a; --muted:#6b7280; --stroke:#e9eef5; --ring:#ffe2e5; --card:#fff;
+  /* Paleta viva */
+  --red:#E50914; --red2:#ff4d5a;
+  --orange:#ff7a1a; --amber:#f59e0b;
+  --violet:#8b5cf6; --indigo:#6366f1; --sky:#0ea5e9;
+  --emerald:#10b981; --teal:#14b8a6; --pink:#ec4899; --rose:#ff3b5c;
+}
+*{box-sizing:border-box}
+body{margin:0; color:var(--ink); background:#fff}
+
+/* ===== Topbar ===== */
+.top{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:14px 18px; border-bottom:1px solid var(--stroke);
+  position:sticky; top:0; background:#fff; z-index:50;
+}
+.brand{display:flex; align-items:center; gap:12px}
+.brand img{width:132px; border-radius:10px}
+.badge{display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border:1px solid var(--stroke); border-radius:999px; background:#fff; color:#374151; font-size:12px; font-weight:700}
+.dot{width:8px; height:8px; border-radius:999px; background:#10b981}
+.right{display:flex; gap:10px; align-items:center}
+.btn{border:none; padding:10px 14px; border-radius:12px; font-weight:900; cursor:pointer}
+.ghost{background:#fff; color:var(--red); border:1px solid #ffd6da}
+.primary{color:#fff; background:linear-gradient(135deg,var(--red),var(--red2)); box-shadow:0 10px 24px rgba(229,9,20,.28)}
+/* Bell */
+.bell{position:relative; border:1px solid var(--stroke); background:#fff; border-radius:12px; padding:9px 11px; cursor:pointer}
+.bell .count{position:absolute; top:-6px; right:-6px; background:var(--red); color:#fff; font-weight:800; font-size:12px; padding:2px 6px; border-radius:999px; box-shadow:0 0 0 3px #fff}
+.panel{position:absolute; right:18px; top:56px; width:min(420px,92vw); background:#fff; border:1px solid var(--ring); border-radius:14px; box-shadow:0 16px 40px rgba(229,9,20,.18); display:none; overflow:hidden; z-index:60}
+.panel.show{display:block}
+.panel header{padding:12px 14px; background:linear-gradient(90deg,#fff3f4,#fffaf2); color:#b30b16; font-weight:800}
+.panel .item{display:flex; gap:10px; padding:12px 14px; border-top:1px solid #f4e5e6}
+.tag{font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid #ffe2e5; background:#fff}
+.tag.red{background:#ffe8ea; color:#d21c2b} .tag.orange{background:#fff4e5; color:#b45309} .tag.blue{background:#eef2ff; color:#4338ca}
+
+/* ===== Hero multicolor ===== */
+.hero{
+  position:relative; overflow:hidden; border-bottom:1px solid var(--stroke);
+  background:
+    radial-gradient(1200px 320px at -15% -40%, #ffe4ea 10%, transparent 60%),
+    radial-gradient(900px 300px at 115% -30%, #ffe7d6 10%, transparent 60%),
+    radial-gradient(1000px 380px at 50% 120%, #e8f6ff 10%, transparent 60%),
+    #fff;
+}
+.hero::before{
+  content:""; position:absolute; inset:-40% -40% auto -40%; height:220px;
+  background:linear-gradient(90deg, #ff9aa7, #ff7a1a, #f59e0b, #8b5cf6, #6366f1, #0ea5e9, #ff9aa7);
+  background-size:200% 100%; opacity:.18; filter:blur(16px); transform:rotate(-6deg);
+  animation:rainbow 12s linear infinite;
+}
+@keyframes rainbow{ to{ background-position:200% 0 } }
+.wrap{max-width:1200px; margin:0 auto; padding:18px 18px 32px}
+.wrow{display:grid; grid-template-columns:1.15fr .85fr; gap:16px}
+@media (max-width:980px){ .wrow{grid-template-columns:1fr} }
+.hi{font-size:26px; font-weight:900; margin:4px 0 6px}
+.hi span{background:linear-gradient(90deg,var(--red),var(--orange)); -webkit-background-clip:text; background-clip:text; color:transparent}
+.sub{color:var(--muted); margin:0 0 12px}
+.chips{display:flex; gap:10px; flex-wrap:wrap}
+.chip{display:inline-flex; gap:6px; align-items:center; padding:6px 10px; border-radius:999px; font-weight:800; background:#fff; border:1px solid var(--ring)}
+.chip.c1{border-color:#ffd5d9; background:#fff0f2}
+.chip.c2{border-color:#ffe2c7; background:#fff7ed}
+.chip.c3{border-color:#d8e7ff; background:#eef6ff}
+.chip.c4{border-color:#c9f0e5; background:#eafaf1}
+.actions{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap}
+.actions .primary{position:relative; overflow:hidden}
+.ripple{position:absolute; width:16px; height:16px; border-radius:999px; background:rgba(255,255,255,.5); transform:scale(0); animation:rip .6s ease-out forwards}
+@keyframes rip{to{transform:scale(16); opacity:0}}
+.media{
+  width:100%; aspect-ratio:16/9; border-radius:18px; overflow:hidden; border:2px solid #ffd7dc;
+  background:#000; position:relative; box-shadow:0 20px 50px rgba(229,9,20,.12)
+}
+.media img,.media video{width:100%; height:100%; object-fit:cover; display:block}
+.media::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.25))}
+
+/* ===== KPIs multicolor (sin -webkit-mask) ===== */
+.kpis{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-top:18px}
+@media (max-width:1100px){ .kpis{grid-template-columns:1fr 1fr} }
+@media (max-width:640px){ .kpis{grid-template-columns:1fr} }
+.kpi{
+  background:#fff; border:2px solid var(--ring); border-radius:16px; padding:14px;
+  box-shadow:0 18px 44px rgba(229,9,20,.1); position:relative; overflow:hidden;
+}
+.kpi h4{margin:0 0 6px; color:#6b7280}
+.kpi b{font-size:28px; font-weight:900; color:#111827}
+.kpi::before{
+  content:""; position:absolute; left:0; right:0; top:0; height:4px;
+  background:var(--kpiGrad, linear-gradient(90deg,#ffa3ab,#ff4d5a,#ffa3ab));
+  background-size:200% 100%; animation:slide 6s linear infinite;
+}
+@keyframes slide{to{background-position:200% 0}}
+.kpi.k1{ --kpiGrad: linear-gradient(90deg,#ff9aa7,#ff4d5a,#ff9aa7) }
+.kpi.k2{ --kpiGrad: linear-gradient(90deg,#ffd08a,#ff7a1a,#ffd08a) }
+.kpi.k3{ --kpiGrad: linear-gradient(90deg,#9ec3ff,#6366f1,#9ec3ff) }
+.kpi.k4{ --kpiGrad: linear-gradient(90deg,#a7f3d0,#10b981,#a7f3d0) }
+
+/* ===== Módulos ===== */
+.section{max-width:1200px; margin:22px auto; padding:0 18px}
+.grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px}
+@media (max-width:980px){ .grid{grid-template-columns:1fr 1fr} }
+@media (max-width:640px){ .grid{grid-template-columns:1fr} }
+.mod{
+  border:0; border-radius:18px; padding:0; overflow:hidden; cursor:pointer; position:relative;
+  transform:translateZ(0);
+  box-shadow:0 18px 44px rgba(0,0,0,.10);
+  transition:.2s transform, .2s box-shadow, .2s filter;
+  background:#fff;
+}
+.mod:hover{transform:translateY(-2px); box-shadow:0 24px 64px rgba(0,0,0,.16); filter:saturate(1.06)}
+.mod .head{
+  padding:14px 16px; color:#fff; font-weight:900; letter-spacing:.2px;
+  display:flex; align-items:center; gap:10px;
+}
+.mod .ic{
+  width:38px; height:38px; border-radius:12px; display:grid; place-items:center; font-size:20px; background:rgba(255,255,255,.22);
+  border:1px solid rgba(255,255,255,.35)
+}
+.mod .body{ background:#fff; padding:16px; border-top:1px solid rgba(0,0,0,.05) }
+.mod .body p{margin:0; color:#4b5563}
+.mod .go{margin-top:12px; display:inline-flex; gap:8px; align-items:center; color:#111827; font-weight:900}
+.mod.locked{opacity:.55; cursor:not-allowed}
+.mod.locked::after{content:"🔒 Sin acceso"; position:absolute; right:12px; top:12px; font-weight:800; color:#fff}
+/* Gradientes por tema */
+.mod[data-theme="autos"]  .head{ background:linear-gradient(120deg,#ff7a1a 0%, #ff4d5a 60%, #ff9aa7 100%) }
+.mod[data-theme="rentas"] .head{ background:linear-gradient(120deg,#6366f1 0%, #8b5cf6 60%, #d946ef 100%) }
+.mod[data-theme="admin"]  .head{ background:linear-gradient(120deg,#10b981 0%, #14b8a6 60%, #0ea5e9 100%) }
+
+/* Quick links */
+.qwrap{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+.q{display:inline-flex; gap:8px; align-items:center; padding:10px 12px; border-radius:12px; background:#fff; border:1px solid var(--ring); font-weight:800}
+.q.cA{border-color:#ffd5d9; background:#fff0f2}
+.q.cB{border-color:#d8e7ff; background:#eef6ff}
+.q.cC{border-color:#c9f0e5; background:#eafaf1}
+
+/* Footer */
+.foot{max-width:1200px; margin:18px auto 28px; padding:0 18px; color:#9aa1ac; font-size:12px}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="top">
+  <div class="brand">
+    <img src="{{ asset('assets/media/Logotipo Fondo.jpg') }}" alt="Viajero Car Rental">
+    <div class="badge"><span class="dot" id="net"></span> <span id="netText">En línea</span></div>
+  </div>
+  <div class="right">
+    <div style="position:relative">
+      <button class="bell" id="bell">🔔<span class="count" id="bellCount">0</span></button>
+      <div class="panel" id="notif"><header>Notificaciones</header><div id="notifList"></div></div>
+    </div>
+    <span id="hello" class="muted"></span>
+    <button id="logout" class="ghost btn">Salir</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div class="wrow">
+      <div>
+        <div class="hi">Hola, <span id="who">colaborador</span> 👋</div>
+        <p class="sub">Bienvenido(a) a tu panel. Elige un módulo o usa los atajos.</p>
+        <div class="chips">
+          <span class="chip c1">⚡ Rápido</span>
+          <span class="chip c2">🔒 Seguro</span>
+          <span class="chip c3">🎯 Productivo</span>
+          <span class="chip c4" id="siteChip" style="display:none"></span>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="goRentas">➕ Nuevo contrato</button>
+          <button class="btn ghost" id="goAutos">🚗 Ver flotilla</button>
+        </div>
+      </div>
+      <div>
+        <div class="media">
+          <img src="{{ asset('assets/media/audi.gif') }}" alt="Auto en movimiento">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MÓDULOS -->
+<section class="section">
+  <h3 style="margin:0 0 8px">Módulos</h3>
+  <div class="grid">
+    <!-- AUTOS: ahora sí usa route() de Laravel -->
+    <article class="mod" id="modAutos" data-link="{{ route('rutaFlotilla') }}" data-theme="autos">
+      <div class="head"><div class="ic">🚗</div>Flotilla</div>
+      <div class="body">
+        <p>Flotilla, mantenimiento, pólizas, carrocería y gastos.</p>
+        <div class="go">Entrar →</div>
+      </div>
+    </article>
+
+    <article class="mod" id="modRentas" data-link="{{route('rutaInicioVentas')}}" data-theme="rentas">
+      <div class="head"><div class="ic">🧾</div>Rentas</div>
+      <div class="body">
+        <p>Reservaciones, cotizaciones y seguimiento de contratos.</p>
+        <div class="go">Entrar →</div>
+      </div>
+    </article>
+
+    <article class="mod" id="modAdmin" data-link="{{route('rutaUsuarios')}}" data-theme="admin">
+      <div class="head"><div class="ic">⚙️</div>Administración</div>
+      <div class="body">
+        <p>Usuarios, roles/permisos, sedes, auditoría y seguridad.</p>
+        <div class="go">Entrar →</div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<p class="foot">© Viajero Car Rental · Panel interno</p>
+
+<script src="{{ asset('assets/session.js') }}"></script>
+<script>
+/* ===== Sesión ===== */
+const u = (typeof getUser === 'function') ? getUser() : { name:'', role:'', email:'' };
+if(!u){ window.location.href='{{ url('index.html') }}'; }
+document.getElementById('hello').textContent = u.role || '';
+document.getElementById('who').textContent = u.name || 'colaborador';
+const site = localStorage.getItem('vc_site');
+if(site){
+  const el=document.getElementById('siteChip');
+  el.style.display='inline-flex';
+  el.textContent='📍 '+site;
+}
+document.getElementById('logout').onclick = ()=>{
+  localStorage.removeItem('vc_user');
+  window.location.href='{{ url('index.html') }}';
+};
+
+/* ===== Estado de red ===== */
+const net = document.getElementById('net'), netText=document.getElementById('netText');
+function setNet(on){
+  net.style.background=on?'#10b981':'#ef4444';
+  netText.textContent=on?'En línea':'Sin conexión';
+}
+setNet(navigator.onLine);
+window.addEventListener('online',()=>setNet(true));
+window.addEventListener('offline',()=>setNet(false));
+
+/* ===== Navegación ===== */
+document.querySelectorAll('.mod').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    const href=el.getAttribute('data-link');
+    if(href && href.trim() !== '') window.location.href = href;
+  });
+});
+
+/* ===== Atajos + ripple ===== */
+function ripple(e){
+  const t=e.currentTarget, r=document.createElement('span');
+  r.className='ripple';
+  const rect=t.getBoundingClientRect();
+  r.style.left=(e.clientX-rect.left)+'px';
+  r.style.top=(e.clientY-rect.top)+'px';
+  t.appendChild(r);
+  setTimeout(()=>r.remove(),600);
+}
+document.getElementById('goRentas').onclick = (e)=>{
+  ripple(e);
+  window.location.href='{{ url('Rentas/activas.html') }}';
+};
+document.getElementById('goAutos').onclick  = (e)=>{
+  ripple(e);
+  window.location.href='{{ route('rutaDashboard') }}';
+};
+
+/* ===== KPIs (demo) ===== */
+const k = { autos: 18, hoy: 3, alerts: 5, todos: 9 };
+function countTo(el, val, ms=900){
+  const start=+el.textContent||0, diff=val-start, t0=performance.now();
+  (function anim(t){
+    const p=Math.min(1,(t-t0)/ms);
+    el.textContent = Math.round(start + diff*p);
+    if(p<1) requestAnimationFrame(anim);
+  })(t0);
+}
+document.querySelectorAll('[data-kpi]').forEach(el=>countTo(el, k[el.dataset.kpi]||0));
+
+/* ===== Notificaciones (demo) ===== */
+const alerts = [
+  { tag:'orange', msg:'2 reservaciones por entregar hoy.' },
+  { tag:'red',    msg:'Póliza de un vehículo está por vencer.' },
+  { tag:'blue',   msg:'Nueva versión del módulo de Administración.' },
+];
+const list = document.getElementById('notifList');
+list.innerHTML = alerts.map(a=>
+  `<div class="item"><span class="tag ${a.tag}">
+  ${a.tag==='red'?'Urgente':a.tag==='orange'?'Próximo':'Info'}</span>
+  <div>${a.msg}</div></div>`
+).join('');
+document.getElementById('bellCount').textContent = alerts.length;
+const bell=document.getElementById('bell'), panel=document.getElementById('notif');
+bell.onclick=()=>panel.classList.toggle('show');
+document.addEventListener('click',e=>{
+  if(!bell.contains(e.target) && !panel.contains(e.target)) panel.classList.remove('show');
+});
+
+</script>
+</body>
+</html>
