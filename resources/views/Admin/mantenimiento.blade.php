@@ -15,7 +15,7 @@
       <p class="sub">Control por kilometraje (aceite y rotación). Edita al cierre de cada renta.</p>
 
       <div class="toolbar">
-        <div class="search">🔧
+        <div class="search">
           <input id="qMaint" type="text" placeholder="Buscar por coche, placa o rin">
         </div>
         <button class="btn" id="newService">🗓️ Acciones rápidas (demo)</button>

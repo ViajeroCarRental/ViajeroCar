@@ -152,7 +152,7 @@ body{
 .sub{
   font-size: clamp(18px, 2.4vw, 22px);
   font-weight: 500;
-  color: var(--ink);
+  color: black;
   max-width: 680px;
   line-height: 1.5;
   opacity: .9;
@@ -330,7 +330,7 @@ body{
   <div class="wrap">
     <div class="wrow">
       <div>
-        <div class="hi">Hola, <span id="who">colaborador</span> 👋</div>
+        <div class="hi">Hola, <span id="who">colaborador</span> 🫡</div>
         <p class="sub">Bienvenido(a) a tu panel. Elige un módulo o usa los atajos.</p>
         <div class="chips">
           <span class="chip c1">⚡ Rápido</span>
@@ -345,7 +345,7 @@ body{
       </div>
       <div>
         <div class="media">
-          <img src="{{ asset('assets/media/audi.gif') }}" alt="Auto en movimiento">
+          <img src="{{ asset('img/audi.gif') }}" alt="Auto en movimiento">
         </div>
       </div>
     </div>

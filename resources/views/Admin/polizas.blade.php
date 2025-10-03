@@ -16,7 +16,7 @@
       <p class="sub">Control de vigencias de pólizas de seguro por vehículo.</p>
 
       <div class="toolbar">
-        <div class="search">📄
+        <div class="search">
           <input id="qPolizas" type="text" placeholder="Buscar por coche, placa o póliza">
         </div>
         <button class="btn ghost" id="exportPolizas">⬇️ Exportar CSV</button>

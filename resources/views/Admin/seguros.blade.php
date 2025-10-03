@@ -14,7 +14,7 @@
       <p class="sub">Registro y seguimiento de siniestros.</p>
 
       <div class="toolbar">
-        <div class="search">🛡️
+        <div class="search">
           <input id="qClaims" type="text" placeholder="Buscar por coche o folio">
         </div>
         <button class="btn ghost" id="exportClaims">⬇️ Exportar CSV</button>

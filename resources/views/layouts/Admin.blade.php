@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     @yield('css-vistaUsuariosAdmin')
     @yield('css-vistaRoles')
     <link rel="stylesheet" href="{{asset('css/sidebar.css')}}">
@@ -13,7 +14,7 @@
     <!-- SIDEBAR: Administración -->
 <aside class="sidebar sidebar--admin">
   <div class="logo">
-    <img src="ruta_a_tu_logo.png" alt="Viajero Logo">
+    <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
   </div>
 
   <ul class="menu">
