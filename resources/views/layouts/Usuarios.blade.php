@@ -44,6 +44,7 @@
                 <li><a href="{{ route('rutaCatalogo') }}">Catálogo de autos</a></li>
                 <li><a href="{{ route('rutaReservaciones') }}">Reservaciones</a></li>
                 <li><a href="{{ route('rutaContacto') }}">Contacto</a></li>
+                <li><a href="{{ route('rutaPoliticas') }}">Políticas</a></li>
                 <li><a href="{{ route('rutaFAQ') }}">F.A.Q</a></li>
                 <li><a href="{{ route('rutaLogin') }}">Login</a></li>
                 <li><a href="{{ route('rutaPerfil') }}">Perfil</a></li>
@@ -99,18 +100,18 @@
         </div>
         <div class="footer-row links-row">
           <ul>
-            <li><a href="reserva.html">Mi reserva</a></li>
-            <li><a href="catalogo.html">Autos</a></li>
+            <li><a href="{{ route('rutaReservaciones') }}">Mi reserva</a></li>
+            <li><a href="{{ route('rutaCatalogo') }}">Autos</a></li>
             <li><a href="#">Empresas</a></li>
-            <li><a href="politicas.html">Términos y condiciones</a></li>
-            <li><a href="contacto.html">Contacto</a></li>
+            <li><a href="{{ route('rutaPoliticas') }}">Términos y condiciones</a></li>
+            <li><a href="{{ route('rutaContacto') }}">Contacto</a></li>
           </ul>
           <ul>
             <li><a href="#">Blog</a></li>
-            <li><a href="faq.html">F.A.Q.</a></li>
-            <li><a href="politicas.html">Aviso de privacidad</a></li>
-            <li><a href="politicas.html">Política de limpieza</a></li>
-            <li><a href="politicas.html">Política de renta</a></li>
+            <li><a href="{{ route('rutaFAQ') }}">F.A.Q.</a></li>
+            <li><a href="{{ route('rutaPoliticas') }}">Aviso de privacidad</a></li>
+            <li><a href="{{ route('rutaPoliticas') }}">Política de limpieza</a></li>
+            <li><a href="{{ route('rutaPoliticas') }}">Política de renta</a></li>
           </ul>
         </div>
         <div class="footer-copy">© <span id="year"></span> Viajero. Todos los derechos reservados.</div>
