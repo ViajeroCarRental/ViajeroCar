@@ -37,4 +37,14 @@ class ControladorVistas extends Controller
     {
         return view('Usuarios.FAQ');
     }
+
+    public function login()
+    {
+        return view('Usuarios.login');
+    }
+
+    public function perfil()
+    {
+        return view('Usuarios.perfil');
+    }
 }

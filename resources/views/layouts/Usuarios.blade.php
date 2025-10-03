@@ -30,6 +30,8 @@
     @yield('css-vistaContacto')
     @yield('css-vistaPoliticas')
     @yield('css-vistaFAQ')
+    @yield('css-vistaLogin')
+    @yield('css-vistaPerfil')
     <title>@yield('Titulo')</title>
 </head>
 <body>
@@ -43,14 +45,9 @@
                 <li><a href="{{ route('rutaReservaciones') }}">Reservaciones</a></li>
                 <li><a href="{{ route('rutaContacto') }}">Contacto</a></li>
                 <li><a href="{{ route('rutaFAQ') }}">F.A.Q</a></li>
+                <li><a href="{{ route('rutaLogin') }}">Login</a></li>
+                <li><a href="{{ route('rutaPerfil') }}">Perfil</a></li>
             </ul>
-        <div class="nav-actions">
-            <!-- icono dinámico segun sesión -->
-            <a id="accountLink" class="login" href="login.html" aria-label="Cuenta">
-                <i class="fa-regular fa-user"></i>
-            </a>
-            <button class="hamburger" aria-label="Menú"><i class="fa-solid fa-bars"></i></button>
-        </div>
     </nav>
 </header>
 
@@ -62,6 +59,8 @@
         @yield('contenidoContacto')
         @yield('contenidoPoliticas')
         @yield('contenidoFAQ')
+        @yield('contenidoLogin')
+        @yield('contenidoPerfil')
     </div>
 
     <div class="containerJS">
@@ -71,6 +70,8 @@
         @yield('js-vistaContacto')
         @yield('js-vistaPoliticas')
         @yield('js-vistaFAQ')
+        @yield('js-vistaLogin')
+        @yield('js-vistaPerfil')
     </div>
 
 {{-- Bootstrap JS (necesario para el toggle móvil) --}}

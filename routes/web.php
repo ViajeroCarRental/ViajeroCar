@@ -17,6 +17,10 @@ Route::get('/contacto',[ControladorVistas::class,'contacto'])->name('rutaContact
 Route::get('/politicas',[ControladorVistas::class,'politicas'])->name('rutaPoliticas');
 //ruta Vista FAQ
 Route::get('/faq',[ControladorVistas::class,'faq'])->name('rutaFAQ');
+//ruta Vista Login
+Route::get('/login',[ControladorVistas::class,'login'])->name('rutaLogin');
+//ruta Vista Perfil
+Route::get('/perfil',[ControladorVistas::class,'perfil'])->name('rutaPerfil');
 
 // VISTAS Admin
 //Vistas Flotilla
