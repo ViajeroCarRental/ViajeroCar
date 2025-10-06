@@ -134,9 +134,10 @@
           <div style="margin-top:10px">
             <div class="small" style="margin-bottom:6px">Compartir / Enviar al cliente</div>
             <div class="iconbar">
-              <a class="icon-btn" id="btnMail" target="_blank" title="Correo"><img src="../assets/media/gmail.png" alt="mail"></a>
-              <a class="icon-btn" id="btnWa"   target="_blank" title="WhatsApp"><img src="../assets/media/whatsapp.jpg" alt="wa"></a>
-              <a class="icon-btn" id="btnSms"  target="_blank" title="SMS"><img src="../assets/media/sms.png" alt="sms"></a>
+                <button class="icon-btn" id="btnPrint" title="Imprimir / PDF"><img src="../img/pdf.jpeg" alt="print"></button>
+                <a class="icon-btn" id="btnMail" target="_blank" title="Correo"><img src="../img/gmail.png" alt="mail"></a>
+                <a class="icon-btn" id="btnWa"   target="_blank" title="WhatsApp"><img src="../img/whatsapp.jpg" alt="wa"></a>
+                <a class="icon-btn" id="btnSms"  target="_blank" title="SMS"><img src="../img/sms.png" alt="sms"></a>
             </div>
             <div class="small" style="margin-top:6px">
               Tip: si el navegador soporta Web Share API, se intentará adjuntar el PDF automáticamente.
