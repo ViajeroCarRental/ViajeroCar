@@ -4,26 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <!-- Bootstrap / Fuentes / Iconos -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" rel="stylesheet">
-    <!-- Flatpickr (CSS) - lo dejo por si lo usas en otras vistas -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_red.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/navbar-top.css') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" rel="stylesheet">
+
+    <!-- Estilos propios -->
     <link rel="stylesheet" href="{{ asset('css/navbarUsuarios.css') }}">
-    <!--css vistas-->
+    <link rel="stylesheet" href="{{ asset('css/navbar-top.css') }}">
+
+    <!-- CSS por vista -->
     @yield('css-vistaHome')
     @yield('css-VistaCatalogo')
     @yield('css-vistaReservaciones')
@@ -32,90 +26,172 @@
     @yield('css-vistaFAQ')
     @yield('css-vistaLogin')
     @yield('css-vistaPerfil')
+
     <title>@yield('Titulo')</title>
+
+    <style>
+      .brand-logo-img{height:40px; display:block}
+      .footer-logo{height:42px; display:block; margin:0 auto}
+      .brand a.brand-link{display:inline-flex; align-items:center; text-decoration:none}
+
+      /* ==== ICONOS DE PERSONA ==== */
+      .menu .icon-item a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.15);
+        transition: all .3s ease;
+      }
+      .menu .icon-item a:hover {
+        background: rgba(255,255,255,.35);
+        transform: scale(1.05);
+      }
+      .menu .icon-item i {
+        font-size: 18px;
+        color: #fff;
+      }
+      .menu .icon-item i.guest {
+        opacity: 0.8;
+      }
+      .menu .icon-item i.user {
+        color: #ffffff;
+      }
+    </style>
 </head>
 <body>
 
 <header class="topbar glass">
-    <nav class="nav">
-        <div class="brand"><span class="brand-logo">VIAJERO</span></div>
-            <ul class="menu">
-                <li><a href="{{ route('rutaHome') }}" class="active">Inicio</a></li>
-                <li><a href="{{ route('rutaCatalogo') }}">Catálogo de autos</a></li>
-                <li><a href="{{ route('rutaReservaciones') }}">Reservaciones</a></li>
-                <li><a href="{{ route('rutaContacto') }}">Contacto</a></li>
-                <li><a href="{{ route('rutaPoliticas') }}">Políticas</a></li>
-                <li><a href="{{ route('rutaFAQ') }}">F.A.Q</a></li>
-                <li><a href="{{ route('rutaLogin') }}">Login</a></li>
-                <li><a href="{{ route('rutaPerfil') }}">Perfil</a></li>
-            </ul>
-    </nav>
+  <nav class="nav">
+    <div class="brand">
+      <a href="{{ route('rutaHome') }}" class="brand-link" aria-label="Viajero">
+        <img src="{{ asset('img/LogoB.png') }}" alt="Viajero" class="brand-logo-img">
+      </a>
+    </div>
+
+    <ul class="menu">
+      <li><a href="{{ route('rutaHome') }}" class="{{ request()->routeIs('rutaHome') ? 'active' : '' }}">Inicio</a></li>
+      <li><a href="{{ route('rutaCatalogo') }}" class="{{ request()->routeIs('rutaCatalogo') ? 'active' : '' }}">Catálogo de autos</a></li>
+      <li><a href="{{ route('rutaReservaciones') }}" class="{{ request()->routeIs('rutaReservaciones') ? 'active' : '' }}">Reservaciones</a></li>
+      <li><a href="{{ route('rutaContacto') }}" class="{{ request()->routeIs('rutaContacto') ? 'active' : '' }}">Contacto</a></li>
+      <li><a href="{{ route('rutaPoliticas') }}" class="{{ request()->routeIs('rutaPoliticas') ? 'active' : '' }}">Políticas</a></li>
+      <li><a href="{{ route('rutaFAQ') }}" class="{{ request()->routeIs('rutaFAQ') ? 'active' : '' }}">F.A.Q</a></li>
+
+      {{-- Iconos dinámicos de persona --}}
+      @guest
+        <!-- Ícono de persona genérico cuando NO hay sesión -->
+        <li class="icon-item">
+          <a href="{{ route('rutaLogin') }}" title="Iniciar sesión">
+            <i class="fa-regular fa-user guest"></i>
+          </a>
+        </li>
+      @endguest
+
+      @auth
+        <!-- Ícono de persona activo cuando SÍ hay sesión -->
+        <li class="icon-item">
+          <a href="{{ route('rutaPerfil') }}" title="Mi perfil">
+            <i class="fa-solid fa-user user"></i>
+          </a>
+        </li>
+      @endauth
+    </ul>
+  </nav>
 </header>
 
-    <!--Contenedor vistas -->
-    <div class="containerVS">
-        @yield('contenidoHome')
-        @yield('contenidoCatalogo')
-        @yield('contenidoReservaciones')
-        @yield('contenidoContacto')
-        @yield('contenidoPoliticas')
-        @yield('contenidoFAQ')
-        @yield('contenidoLogin')
-        @yield('contenidoPerfil')
-    </div>
+<!-- Contenedor de vistas -->
+<div class="containerVS">
+  @yield('contenidoHome')
+  @yield('contenidoCatalogo')
+  @yield('contenidoReservaciones')
+  @yield('contenidoContacto')
+  @yield('contenidoPoliticas')
+  @yield('contenidoFAQ')
+  @yield('contenidoLogin')
+  @yield('contenidoPerfil')
+</div>
 
-    <div class="containerJS">
-        @yield('js-vistaHome')
-        @yield('js-vistaCatalogo')
-        @yield('js-vistaReservaciones')
-        @yield('js-vistaContacto')
-        @yield('js-vistaPoliticas')
-        @yield('js-vistaFAQ')
-        @yield('js-vistaLogin')
-        @yield('js-vistaPerfil')
-    </div>
+<!-- JS por vista -->
+<div class="containerJS">
+  @yield('js-vistaHome')
+  @yield('js-vistaCatalogo')
+  @yield('js-vistaReservaciones')
+  @yield('js-vistaContacto')
+  @yield('js-vistaPoliticas')
+  @yield('js-vistaFAQ')
+  @yield('js-vistaLogin')
+  @yield('js-vistaPerfil')
+</div>
 
-{{-- Bootstrap JS (necesario para el toggle móvil) --}}
+{{-- Bootstrap JS --}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 <!-- FOOTER -->
-    <footer class="site-footer">
-      <div class="footer-bg" style="background-image:url('https://images.unsplash.com/photo-1465447142348-e9952c393450?q=80&w=1600&auto=format&fit=crop');"></div>
-      <div class="footer-overlay"></div>
-      <div class="footer-content">
-        <div class="footer-brandmark">VIAJERO</div>
-        <div class="footer-row loc-row">
-          <div class="loc-card"><div class="pin"><i class="fa-solid fa-location-dot"></i></div><div class="loc-body"><h4>Central Park, Querétaro</h4><p>Oficina principal</p></div></div>
-          <div class="loc-card"><div class="pin"><i class="fa-solid fa-location-dot"></i></div><div class="loc-body"><h4>Aeropuerto de Querétaro</h4><p>Pick-up / Drop-off</p></div></div>
-          <div class="loc-card"><div class="pin"><i class="fa-solid fa-location-dot"></i></div><div class="loc-body"><h4>Aeropuerto de León</h4><p>Pick-up / Drop-off</p></div></div>
-        </div>
-        <div class="footer-row pay-row">
-          <div class="payments-logos">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa" />
-            <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" />
-            <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo_%282018%29.svg" alt="American Express" />
-            <img class="oxxo" src="https://upload.wikimedia.org/wikipedia/commons/0/06/Oxxo_Logo.svg" alt="OXXO" />
-            <img class="mp" src="https://upload.wikimedia.org/wikipedia/commons/1/16/MercadoPago.svg" alt="Mercado Pago" />
-            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" />
-          </div>
-        </div>
-        <div class="footer-row links-row">
-          <ul>
-            <li><a href="{{ route('rutaReservaciones') }}">Mi reserva</a></li>
-            <li><a href="{{ route('rutaCatalogo') }}">Autos</a></li>
-            <li><a href="#">Empresas</a></li>
-            <li><a href="{{ route('rutaPoliticas') }}">Términos y condiciones</a></li>
-            <li><a href="{{ route('rutaContacto') }}">Contacto</a></li>
-          </ul>
-          <ul>
-            <li><a href="#">Blog</a></li>
-            <li><a href="{{ route('rutaFAQ') }}">F.A.Q.</a></li>
-            <li><a href="{{ route('rutaPoliticas') }}">Aviso de privacidad</a></li>
-            <li><a href="{{ route('rutaPoliticas') }}">Política de limpieza</a></li>
-            <li><a href="{{ route('rutaPoliticas') }}">Política de renta</a></li>
-          </ul>
-        </div>
-        <div class="footer-copy">© <span id="year"></span> Viajero. Todos los derechos reservados.</div>
+<footer class="site-footer">
+  <div class="footer-bg" style="background-image:url('https://images.unsplash.com/photo-1465447142348-e9952c393450?q=80&w=1600&auto=format&fit=crop');"></div>
+  <div class="footer-overlay"></div>
+  <div class="footer-content">
+    <div class="footer-brandmark">
+      <img src="{{ asset('img/LogoB.png') }}" alt="Viajero" class="footer-logo">
+    </div>
+
+    <div class="footer-row loc-row">
+      <div class="loc-card">
+        <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
+        <div class="loc-body"><h4>Central Park, Querétaro</h4><p>Oficina principal</p></div>
       </div>
-    </footer>
+      <div class="loc-card">
+        <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
+        <div class="loc-body"><h4>Aeropuerto de Querétaro</h4><p>Pick-up / Drop-off</p></div>
+      </div>
+      <div class="loc-card">
+        <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
+        <div class="loc-body"><h4>Aeropuerto de León</h4><p>Pick-up / Drop-off</p></div>
+      </div>
+    </div>
+
+    <div class="footer-row pay-row">
+      <div class="payments-logos">
+        <img src="{{ asset('img/visa.jpg') }}" alt="Visa" />
+        <img src="{{ asset('img/mastercard.png') }}" alt="Mastercard" />
+        <img src="{{ asset('img/america.png') }}" alt="American Express" />
+        <img class="oxxo" src="{{ asset('img/oxxo.png') }}" alt="OXXO" />
+        <img class="mp" src="{{ asset('img/pago.png') }}" alt="Mercado Pago" />
+        <img src="{{ asset('img/paypal.png') }}" alt="PayPal" />
+      </div>
+    </div>
+
+    <div class="footer-row links-row">
+      <ul>
+        <li><a href="{{ route('rutaReservaciones') }}">Reserva ahora</a></li>
+        <li><a href="{{ route('rutaCatalogo') }}">Autos Disponibles</a></li>
+        <li><a href="{{ route('rutaPoliticas') }}">Términos y condiciones</a></li>
+        <li><a href="{{ route('rutaContacto') }}">Contacto</a></li>
+      </ul>
+      <ul>
+        <li><a href="{{ route('rutaFAQ') }}">F.A.Q.</a></li>
+        <li><a href="{{ route('rutaPoliticas') }}">Aviso de privacidad</a></li>
+        <li><a href="{{ route('rutaPoliticas') }}">Política de limpieza</a></li>
+        <li><a href="{{ route('rutaPoliticas') }}">Política de renta</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-copy">© <span id="year"></span> Viajero. Todos los derechos reservados.</div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+
+<!-- Bloquear clic derecho -->
+<script>
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  });
+</script>
+
 </body>
 </html>

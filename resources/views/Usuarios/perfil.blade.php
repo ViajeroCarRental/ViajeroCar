@@ -7,7 +7,7 @@
     <main class="page">
     <section class="hero">
       <div class="hero-bg">
-        <img src="https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?q=80&w=1600&auto=format&fit=crop" alt="">
+        <img src="{{ asset('img/perfil.png') }}" alt="hero">
       </div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
@@ -114,7 +114,7 @@
         </section>
       </div>
     </section>
-  </main>
+  </main> 
     @section('js-vistaPerfil')
         <script src="{{ asset('js/Perfil.js') }}"></script>
     @endsection
