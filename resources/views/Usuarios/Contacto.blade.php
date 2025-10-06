@@ -9,15 +9,15 @@
 @section('contenidoContacto')
      <main class="page">
     <section class="hero" aria-label="cabecera">
-      <div class="hero-bg" role="img" aria-label="Entrega de llaves">
-        <img src="https://images.unsplash.com/photo-1483721310020-03333e577078?q=80&w=1600&auto=format&fit=crop" alt="">
+      <div class="hero-bg">
+        <img src="{{ asset('img/contacto.png') }}" alt="Contacto">
       </div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <h1>¡Hablemos! <span>Contáctanos</span></h1>
         <p>Estamos listos para ayudarte con tu próxima renta</p>
       </div>
-
+ 
       <div class="hero-chips" aria-label="sucursales">
         <span class="chip"><i class="fa-solid fa-location-dot"></i> Oficina Central Park, Querétaro</span>
         <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto de Querétaro</span>
@@ -124,7 +124,7 @@
           </div>
           <div class="cta-hours"><i class="fa-regular fa-clock"></i> Lun–Dom · 8:00 a 22:00 h</div>
         </div>
-        <img class="illus" alt="Soporte Viajero" src="https://images.unsplash.com/photo-1525182008055-f88b95ff7980?q=80&w=1200&auto=format&fit=crop">
+        <img class="illus" alt="Soporte Viajero" src="{{ asset('img/contacto2.png') }}">
       </div>
     </section>
   </main>

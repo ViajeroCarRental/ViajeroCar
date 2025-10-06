@@ -4,13 +4,11 @@
   --radius:14px;
 }
 
-/* Reset básico */
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;font-family:'Poppins',system-ui,Arial,sans-serif;color:var(--ink);background:var(--soft)}
 img{max-width:100%;height:auto;display:block}
 
-/* ===== NAVBAR ===== */
 .topbar{
   position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:60;
   width:min(1200px,94%); border-radius:var(--radius); padding:8px 12px;
@@ -33,14 +31,12 @@ img{max-width:100%;height:auto;display:block}
   .hamburger{display:block}
 }
 
-/* ===== CONTENEDOR DE PÁGINA ===== */
 .page{
   max-width:1280px;
   margin: clamp(80px,10vw,110px) auto 60px;
   padding:0 clamp(12px,3vw,20px);
 }
 
-/* ===== HERO RESPONSIVO ===== */
 .hero.hero-mini{
   position:relative; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow);
   height: clamp(220px, 28vw, 360px);
@@ -64,7 +60,32 @@ img{max-width:100%;height:auto;display:block}
 .hero .hero-content h1 span{ font-family:'Playfair Display',serif }
 .hero .hero-content p{ margin:6px 0 0; font-weight:600; font-size: clamp(12px,1.6vw,16px) }
 
-/* ===== LAYOUT FAQ ===== */
+.page > .hero.hero-mini{
+  width:100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-top: calc(-1 * clamp(80px,10vw,110px));
+  border-radius:0;
+  box-shadow:none;
+  overflow:hidden;
+}
+
+.hero.hero-mini .hero-content{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;   
+  align-items:flex-start;   
+  padding-left: clamp(16px,6vw,64px);
+  text-align:left;
+}
+.hero.hero-mini .hero-content h1{
+  margin:0 0 6px;
+}
+.hero.hero-mini .hero-content p{
+  max-width:560px;
+  opacity:.95;
+}
+
 .faq-wrap{
   display:grid; grid-template-columns: 320px 1fr; gap: clamp(14px,2vw,22px);
   margin-top: clamp(12px,2vw,18px);
@@ -76,7 +97,6 @@ img{max-width:100%;height:auto;display:block}
   .faq-wrap{ grid-template-columns: 1fr; }
 }
 
-/* Sidebar */
 .faq-side{
   background:var(--paper); border:1px solid #e5e7eb; border-radius:var(--radius);
   box-shadow:var(--shadow); padding: clamp(12px,2vw,14px); height:fit-content;
@@ -96,26 +116,75 @@ img{max-width:100%;height:auto;display:block}
 .btn-ghost{ background:#e5e7eb; color:#111 }
 .btn-wide{ width:100%; justify-content:center }
 
-/* Car widget */
-.car-widget{ margin-top:14px; border:1px solid #e5e7eb; border-radius:var(--radius); overflow:hidden;
-  background:linear-gradient(180deg,#fff,#fafafa); box-shadow:var(--shadow) }
-.cw-head{ display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #e5e7eb }
-.cw-title{ font-weight:900 }
-.cw-sub{ font-size:12px; color:#6b7280; margin-top:2px }
+/* === Car widget === */
+.car-widget{
+  margin-top:14px; border:1px solid #e5e7eb; border-radius:var(--radius); overflow:hidden;
+  background:linear-gradient(180deg,#fff,#fafafa); box-shadow:var(--shadow)
+}
+.cw-head{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:14px 16px; border-bottom:1px solid #e5e7eb;
+  background:linear-gradient(90deg, rgba(178,34,34,.08), rgba(178,34,34,.02));
+}
+.cw-title{
+  font-weight:900;
+  font-size:clamp(15px,1.6vw,18px);
+  color:var(--brand-dark);
+  letter-spacing:.5px;
+}
+.cw-sub{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:4px;
+  font-weight:600;
+  line-height:1.4;
+  max-width:220px;
+}
+.cw-head::before{
+  content:"";
+  display:block;
+  width:4px; height:auto;
+  align-self:stretch;
+  background:linear-gradient(180deg,var(--brand),var(--brand-dark));
+  border-radius:4px;
+  margin-right:10px;
+}
 .cw-bolt{ color:#f59e0b; font-size:22px }
-.cw-scene{ position:relative; height: clamp(120px,16vw,160px); background:linear-gradient(180deg,#f6f8ff,#eef2ff) }
-.cw-road{ position:absolute; left:8px; right:8px; bottom:20px; height:34px; background:#1f2937; border-radius:999px; overflow:hidden }
-.cw-road span{ position:absolute; top:50%; left:-40px; width:40px; height:4px; background:#e5e7eb; border-radius:2px; transform:translateY(-50%); animation:stripe 1.4s linear infinite }
-.cw-road span:nth-child(2){ animation-delay:.35s }
-.cw-road span:nth-child(3){ animation-delay:.7s }
-.cw-road span:nth-child(4){ animation-delay:1.05s }
-@keyframes stripe{ from{left:-40px} to{left:100%} }
-.cw-car{ position:absolute; left:28px; bottom:28px; width: clamp(150px,18vw,200px); filter:drop-shadow(0 10px 14px rgba(0,0,0,.18)) }
-.cw-car circle{ transform-origin:center }
-.cw-car circle:nth-of-type(1), .cw-car circle:nth-of-type(3){ animation:wheel 1s linear infinite }
-@keyframes wheel{ to{ transform:rotate(360deg) } }
 
-/* ===== Chat ===== */
+.cw-scene{
+  position:relative; height: clamp(120px,16vw,160px);
+  background:linear-gradient(180deg,#f6f8ff,#eef2ff);
+  overflow:hidden;
+}
+.cw-road{
+  position:absolute; left:8px; right:8px; bottom:20px; height:34px;
+  background:#1f2937; border-radius:999px; overflow:hidden;
+}
+.cw-road span{
+  position:absolute; top:50%; left:-40px; width:40px; height:4px; background:#e5e7eb; border-radius:2px;
+  transform:translateY(-50%);
+  animation:stripe 1.2s linear infinite;
+}
+.cw-road span:nth-child(2){ animation-delay:.25s }
+.cw-road span:nth-child(3){ animation-delay:.5s }
+.cw-road span:nth-child(4){ animation-delay:.75s }
+@keyframes stripe{ to{ left:100% } }
+
+.cw-car{
+  position:absolute; left:28px; bottom:28px; width: clamp(150px,18vw,200px);
+  filter:drop-shadow(0 10px 14px rgba(0,0,0,.18));
+  animation:carFloat 2s ease-in-out infinite;
+}
+@keyframes carFloat{
+  0%,100%{ transform:translateY(0) }
+  50%{ transform:translateY(-5px) }
+}
+.cw-car circle{ animation:none !important } /* llantas fijas */
+
+/* hover */
+.car-widget:hover .cw-road span{ animation-duration:.9s }
+.car-widget:hover .cw-car{ animation-duration:1.5s }
+
 .chat-card{
   background:var(--paper); border:1px solid #e5e7eb; border-radius:var(--radius); box-shadow:var(--shadow);
   display:grid; grid-template-rows: auto 1fr auto auto; min-height: clamp(420px, 52vh, 640px);
@@ -129,7 +198,6 @@ img{max-width:100%;height:auto;display:block}
 
 .chat-body{
   padding:14px; overflow:auto;
-  /* Altura “lista para todo” que funciona en móviles con barra dinámica */
   height: 52vh; min-height: 320px;
   background:linear-gradient(180deg,#fdfdfd,#f7f8fb);
 }
@@ -149,7 +217,7 @@ img{max-width:100%;height:auto;display:block}
 .chat-input{ display:flex; gap:10px; border-top:1px solid #e5e7eb; padding:10px }
 .chat-input input{
   flex:1; border:1px solid #d1d5db; border-radius:12px; padding:12px 14px; font-size:15px;
-  min-width:0; /* evita overflow en iOS */
+  min-width:0;
 }
 .typing{ display:none; padding:8px 12px; color:#6b7280 }
 .typing span{ display:inline-block; width:6px; height:6px; background:#bbb; border-radius:999px; margin:0 2px; animation:blink 1.2s infinite }
@@ -157,7 +225,6 @@ img{max-width:100%;height:auto;display:block}
 .typing span:nth-child(3){ animation-delay:.4s }
 @keyframes blink{ 0%,80%,100%{opacity:.2} 40%{opacity:1} }
 
-/* ===== Footer (opcional si lo usas en esta página) ===== */
 .footer-elegant{ background:linear-gradient(180deg,#111,#1a1a1a); color:#e5e7eb; margin-top:32px }
 .footer-social{ display:flex; justify-content:center; gap:20px; padding:18px 0 8px }
 .footer-social a{ width:44px; height:44px; border-radius:50%; background:#222; display:grid; place-items:center; color:#fff }
@@ -176,7 +243,6 @@ img{max-width:100%;height:auto;display:block}
 .footer-payments img{ height:28px; background:#fff; padding:6px 10px; border-radius:6px; box-shadow:0 4px 10px rgba(0,0,0,.25) }
 .footer-copy{ text-align:center; color:#9ca3af; font-size:13px; padding:10px 0 18px; border-top:1px solid #2b2b2b }
 
-/* ===== Breakpoints finos ===== */
 @media (max-width:720px){
   .brand-logo{font-size:20px}
   .chat-body{ height: 48vh; min-height: 300px; }
@@ -193,7 +259,7 @@ img{max-width:100%;height:auto;display:block}
   .hero .hero-content{ padding:16px }
 }
 
-/* Accesibilidad: reducir animaciones si el usuario lo pide */
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important }
+  .cw-road span,.cw-car{ animation:none !important }
 }

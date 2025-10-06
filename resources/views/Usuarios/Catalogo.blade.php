@@ -9,16 +9,18 @@
 
 @section('contenidoCatalogo')
 
-     <section class="hero">
-    <div class="hero-bg" style="background-image:url('https://images.unsplash.com/photo-1485968579580-b6d095142e6e?q=80&w=1600&auto=format&fit=crop');"></div>
-    <div class="overlay"></div>
+    <section class="hero">
+      <div class="hero-bg">
+        <img src="{{ asset('img/catalogo.png') }}" alt="FAQ ViajeroCar">
+      </div>    
+      <div class="overlay"></div>
 
     <div class="hero-inner">
       <h1 class="hero-title">¡RENTA HOY, EXPLORA MAÑANA, VIAJA SIEMPRE!</h1>
       <div class="chips">
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Oficina Central Park, Querétaro</span>
+        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Oficina Central Park, Querétaro</span>
         <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto de Querétaro</span>
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto de León</span>
+        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto Intl de Bajio, León</span>
       </div>
     </div>
   </section>
@@ -32,7 +34,7 @@
           <option value="all">Todas</option>
           <option value="central">Querétaro (Central Park)</option>
           <option value="aiq">Aeropuerto de Querétaro</option>
-          <option value="bjx">Aeropuerto de León</option>
+          <option value="bjx">Aeropuerto dIntl de Bajio, León</option>
         </select>
       </div>
 
