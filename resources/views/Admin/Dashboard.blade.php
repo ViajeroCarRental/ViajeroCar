@@ -465,6 +465,11 @@ body::before{
 
 <script src="{{ asset('assets/session.js') }}"></script>
 <script>
+
+  // Bloquea el menú contextual (clic derecho)
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+  });
 /* ===== Sesión ===== */
 const u = (typeof getUser === 'function') ? getUser() : { name:'', role:'', email:'' };
 if(!u){ window.location.href='{{ url('index.html') }}'; }
