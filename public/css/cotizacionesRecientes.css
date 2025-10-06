@@ -1,29 +1,148 @@
-:root{ --brand:#FF1E2D; --brand-2:#D6121F; --ink:#101828; --muted:#667085; --stroke:#EAECF0; }
-*{box-sizing:border-box} html,body{margin:0;background:#F3F5F9;color:var(--ink);font-family:"Cabin",system-ui,-apple-system,Segoe UI,Roboto,Arial}
+/* ==============================
+   🎨 Tokens / Design System
+============================== */
+:root{
+  --brand:#FF1E2D; --brand-2:#D6121F; --brand-3:#ff4956;
+
+  --ink:#101828; --muted:#667085; --muted-2:#475467;
+  --bg:#F3F5F9; --paper:#FFFFFF;
+
+  --stroke:#EAECF0; --stroke-2:#E5E7EB;
+
+  --radius-lg:18px; --radius-md:14px; --radius-sm:10px;
+
+  --shadow-xs:0 1px 3px rgba(16,24,40,.06);
+  --shadow-sm:0 6px 18px rgba(16,24,40,.08);
+  --shadow-md:0 12px 28px rgba(16,24,40,.10);
+
+  --ring:0 0 0 6px #FFECEF;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Cabin",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+body{font-size:15px;line-height:1.5}
+a{text-decoration:none;color:inherit}
+
+/* Scrollbar sutil */
+*::-webkit-scrollbar{height:10px;width:10px}
+*::-webkit-scrollbar-thumb{background:#dfe3ea;border-radius:999px}
+*::-webkit-scrollbar-track{background:transparent}
+
+/* ==============================
+   🧭 Shell / Sidebar / Main
+============================== */
 .wrap{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
 @media(max-width:992px){.wrap{grid-template-columns:1fr}}
-.side{background:var(--brand);color:#fff;padding:16px;border-right:1px solid #C40C18;position:sticky;top:0;height:100vh;overflow:auto}
+
+.side{
+  background:linear-gradient(180deg,var(--brand),var(--brand-2));
+  color:#fff;padding:16px;border-right:1px solid rgba(0,0,0,.06);
+  position:sticky;top:0;height:100vh;overflow:auto;
+  box-shadow:inset 0 -1px 0 rgba(255,255,255,.08);
+}
 .brand{display:flex;justify-content:center;margin-bottom:14px}
-.brand img{width:170px;border-radius:12px}
+.brand img{width:170px;border-radius:12px;filter:drop-shadow(0 8px 22px rgba(0,0,0,.18))}
 .menu{display:flex;flex-direction:column;gap:10px}
-.mitem{display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;text-decoration:none;font-weight:800;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
-.mitem:hover{background:rgba(255,255,255,.18)}
-.mitem.active{background:#fff;color:var(--brand);border-color:#fff}
+
+.mitem{
+  display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;font-weight:800;color:#fff;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(2px);
+  transition:transform .15s,background .15s,box-shadow .15s;
+}
+.mitem:hover{background:rgba(255,255,255,.18);transform:translateY(-1px);box-shadow:var(--shadow-xs)}
+.mitem.active{background:#fff;color:var(--brand);border-color:#fff;box-shadow:0 6px 16px rgba(255,255,255,.25)}
+
 .main{padding:22px}
-.h1{margin:0 0 10px;font-size:24px;font-weight:800}
-.tools{display:flex;gap:10px;align-items:center;margin-bottom:12px}
-.btn{border:none;border-radius:12px;padding:10px 12px;font-weight:800;cursor:pointer}
-.primary{background:var(--brand);color:#fff}
-.gray{background:#F8FAFC;border:1px solid var(--stroke)}
+.container{max-width:1120px;margin:0 auto}
+.h1{
+  margin:0 0 10px;font-size:24px;font-weight:900;letter-spacing:.2px;
+  background:linear-gradient(90deg,var(--brand),var(--brand-3));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
 .small{color:var(--muted);font-size:13px}
-.card{background:#fff;border:1px solid var(--stroke);border-radius:18px}
-.card .head{padding:14px 16px;border-bottom:1px solid var(--stroke);font-weight:900}
+
+/* ==============================
+   🧰 Herramientas / Botones
+============================== */
+.tools{display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.btn{
+  border:none;border-radius:12px;padding:10px 12px;font-weight:900;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;transition:transform .05s,box-shadow .15s,filter .15s;
+}
+.btn:active{transform:translateY(1px)}
+.primary{background:linear-gradient(180deg,var(--brand-2),var(--brand));color:#fff;box-shadow:var(--shadow-sm)}
+.primary:hover{filter:brightness(1.03)}
+.gray{background:#F8FAFC;border:1px solid var(--stroke);color:var(--ink)}
+
+/* ==============================
+   📦 Cards
+============================== */
+.card{
+  background:#fff;border:1.5px solid var(--stroke);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);overflow:hidden;
+}
+.card .head{
+  padding:14px 16px;border-bottom:1px solid var(--stroke);font-weight:900;color:var(--muted-2);
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+}
 .card .cnt{padding:14px 16px}
-.table{width:100%;border-collapse:separate;border-spacing:0 8px}
-.table thead th{font-size:12px;color:#667085;text-align:left;padding:6px 10px}
-.table tbody tr{background:#fff;border:1px solid var(--stroke);border-radius:12px}
-.table tbody td{padding:10px 12px;vertical-align:middle}
-.tag{display:inline-flex;align-items:center;gap:6px;border:1px solid #E5E7EB;background:#F8FAFC;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800}
+
+/* ==============================
+   📋 Tabla “cards” con header sticky
+============================== */
+/* Envoltura opcional para scroll X en móvil */
+.table-wrap{overflow:auto;border-radius:16px}
+.table-wrap::-webkit-scrollbar{height:10px}
+.table-wrap::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:999px}
+
+.table{
+  width:100%;border-collapse:separate;border-spacing:0 8px;
+}
+.table thead th{
+  position:sticky;top:0;z-index:1;
+  background:linear-gradient(90deg,var(--brand),var(--brand-3));
+  color:#fff;font-size:12px;letter-spacing:.3px;text-transform:uppercase;
+  text-align:left;padding:10px 12px;border-bottom:1px solid var(--stroke);font-weight:900;
+}
+.table tbody tr{
+  background:#fff;border:1px solid var(--stroke);border-radius:12px;box-shadow:var(--shadow-xs);
+  transition:box-shadow .15s, background .15s;
+}
+.table tbody tr:hover{background:#FFF6F7;box-shadow:var(--shadow-sm)}
+.table tbody td{padding:10px 12px;vertical-align:middle;font-size:14px}
+.table tbody tr td:first-child{border-top-left-radius:12px;border-bottom-left-radius:12px}
+.table tbody tr td:last-child{border-top-right-radius:12px;border-bottom-right-radius:12px}
+
+/* Tags / estados */
+.tag{
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid #E5E7EB;background:#F8FAFC;padding:6px 10px;border-radius:999px;
+  font-size:12px;font-weight:800;white-space:nowrap;
+}
 .tag.red{border-color:#ffd0d4;background:#fff1f2;color:#b42318}
 .tag.green{border-color:#b7f1c8;background:#ecfdf3;color:#067647}
+
+/* Acciones en fila */
 .actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ==============================
+   🧪 Inputs (si los usas aquí)
+============================== */
+input[type="text"], select{
+  height:44px;padding:10px 12px;border:1.25px solid var(--stroke);border-radius:12px;background:#fff;font-size:14px;
+  transition:border .15s, box-shadow .15s;
+}
+input[type="text"]:focus, select:focus{outline:none;border-color:#FFB4BD;box-shadow:var(--ring)}
+
+/* ==============================
+   📱 Responsive fino
+============================== */
+@media (max-width:992px){
+  .main{padding:20px 16px}
+  .container{max-width:980px}
+}
+@media (max-width:680px){
+  .h1{font-size:22px}
+  .btn{padding:9px 11px}
+  .table{min-width:720px} /* evita que se aplasten columnas: usa .table-wrap */
+}

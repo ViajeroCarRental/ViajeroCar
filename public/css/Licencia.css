@@ -1,63 +1,166 @@
+/* ==============================
+   🎨 Tokens / Design System
+============================== */
 :root{
   --brand:#E50914; --brand-2:#ff4d5a; --brand-3:#ff87a1;
-  --ink:#0f172a; --muted:#6b7280; --panel:#fff; --stroke:#e9eef5; --bg:#f7f8fb;
-  --shadow:0 22px 60px rgba(16,24,40,.10);
-}
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
 
-/* Layout */
+  --ink:#0f172a; --muted:#6b7280; --muted-2:#475467;
+  --bg:#f7f8fb; --panel:#ffffff;
+  --stroke:#e9eef5; --stroke-2:#E5E7EB;
+
+  --radius-lg:18px; --radius-md:14px; --radius-sm:10px;
+
+  --shadow-xs:0 1px 3px rgba(16,24,40,.06);
+  --shadow-sm:0 8px 22px rgba(16,24,40,.10);
+  --shadow-md:0 22px 60px rgba(16,24,40,.12);
+
+  --ring:0 0 0 6px #FFE8EA;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+body{font-size:15px;line-height:1.5}
+a{text-decoration:none;color:inherit}
+
+/* Scrollbar sutil */
+*::-webkit-scrollbar{height:10px;width:10px}
+*::-webkit-scrollbar-thumb{background:#dfe3ea;border-radius:999px}
+*::-webkit-scrollbar-track{background:transparent}
+
+/* ==============================
+   🧭 Layout
+============================== */
 .wrap{display:grid;grid-template-columns:280px 1fr;min-height:100vh;gap:18px;padding:18px}
 @media(max-width:960px){.wrap{grid-template-columns:1fr}}
 
+/* Sidebar */
 .side{
   background:linear-gradient(180deg,var(--brand-3),var(--brand-2) 40%,var(--brand) 100%);
-  color:#fff;border-radius:20px;padding:18px;border:1px solid #ffd0d6;box-shadow:var(--shadow);
+  color:#fff;border-radius:20px;padding:18px;border:1px solid #ffd0d6;box-shadow:var(--shadow-md);
   position:sticky;top:18px;height:calc(100vh - 36px);overflow:auto
 }
-.brand{display:flex;align-items:center;gap:12px;margin-bottom:10px;background:#ffffff20;border:1px solid #ffffff55;padding:10px;border-radius:14px}
+.brand{
+  display:flex;align-items:center;gap:12px;margin-bottom:12px;
+  background:#ffffff20;border:1px solid #ffffff55;padding:10px;border-radius:14px
+}
 .brand img{width:42px;height:42px;border-radius:10px;object-fit:cover;box-shadow:0 10px 20px rgba(0,0,0,.25)}
 .brand .t{font-weight:900;letter-spacing:.2px}
 .menu{display:flex;flex-direction:column;gap:10px;margin-top:10px}
-.mitem{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;text-decoration:none;font-weight:800;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
-.mitem:hover{background:rgba(255,255,255,.18)}
+.mitem{
+  display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;font-weight:800;color:#fff;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
+  transition:transform .15s,background .15s,box-shadow .15s;
+}
+.mitem:hover{background:rgba(255,255,255,.18);transform:translateY(-1px);box-shadow:var(--shadow-xs)}
 .mitem.active{background:#fff;color:var(--brand)}
 
+/* Main header */
 .main{min-width:0}
-.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:12px;flex-wrap:wrap}
-.h1{margin:0;font-size:clamp(22px,2.2vw,28px);font-weight:900}
+.header{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px;flex-wrap:wrap
+}
+.h1{
+  margin:0;font-size:clamp(22px,2.2vw,28px);font-weight:900;letter-spacing:.2px;
+  background:linear-gradient(90deg,var(--brand),var(--brand-2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
 .subtitle{margin:0;color:var(--muted);font-size:14px}
 
-/* Card / form */
-.card{background:var(--panel);border:1px solid var(--stroke);border-radius:18px;box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
-.section-title{margin:0 0 10px;font-size:15px;font-weight:900;position:relative}
-.section-title::after{content:"";display:block;height:3px;width:48px;background:linear-gradient(90deg,var(--brand),var(--brand-2));border-radius:999px;margin-top:6px}
+/* ==============================
+   📦 Cards / Secciones / Formularios
+============================== */
+.card{
+  background:var(--panel);border:1px solid var(--stroke);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);padding:20px;margin-bottom:16px;position:relative;overflow:hidden
+}
+.card::before{
+  content:"";position:absolute;inset:0 0 0 auto;width:6px;
+  background:linear-gradient(180deg,var(--brand),var(--brand-2));
+  border-radius:0 var(--radius-lg) var(--radius-lg) 0;
+}
+.section-title{
+  margin:0 0 12px;font-size:15px;font-weight:900;color:var(--muted-2);position:relative
+}
+.section-title::after{
+  content:"";display:block;height:4px;width:64px;background:linear-gradient(90deg,var(--brand),var(--brand-2));
+  border-radius:999px;margin-top:8px
+}
 
+/* Grids */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
 @media(max-width:1100px){.grid-2,.grid-3{grid-template-columns:1fr}}
 
+/* Campos */
 .field{display:flex;flex-direction:column;gap:8px}
-.field label{font-weight:800}
+.field label{font-weight:800;font-size:13px;color:var(--muted-2)}
 .input,.select{
-  padding:12px 14px;border:1px solid var(--stroke);border-radius:12px;background:#fff;
-  font-weight:700;outline:none
+  height:44px;padding:12px 14px;border:1.25px solid var(--stroke);border-radius:12px;background:#fff;font-weight:700;outline:none;
+  transition:border .15s,box-shadow .15s
 }
-.input:focus,.select:focus{box-shadow:0 0 0 6px #ffe8ea;border-color:#ffc7cd}
+.input:focus,.select:focus{box-shadow:var(--ring);border-color:#ffc7cd}
 
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.btn{border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer}
+.btn{
+  border:none;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;transition:transform .05s,box-shadow .15s,filter .15s
+}
+.btn:active{transform:translateY(1px)}
 .ghost{background:#fff;border:1px solid var(--stroke);color:#6b7280}
-.primary{background:linear-gradient(180deg,var(--brand-2),var(--brand));color:#fff;box-shadow:0 14px 28px rgba(229,9,20,.25)}
+.primary{background:linear-gradient(180deg,var(--brand-2),var(--brand));color:#fff;box-shadow:0 14px 28px rgba(229,9,20,.22)}
 .danger{background:#fee2e2;border:1px solid #fecaca;color:#991b1b}
 
-/* License number display */
+/* ==============================
+   🔢 License number / Placa
+============================== */
 .big{
   display:flex;gap:14px;align-items:center;justify-content:center;
-  padding:14px;border:1px dashed var(--stroke);border-radius:14px;background:#fff;
+  padding:16px;border:1.5px dashed var(--stroke);border-radius:16px;background:#fff;box-shadow:var(--shadow-xs)
 }
-.big .tag{font-weight:900;font-size:22px;letter-spacing:3px;color:#991b1b}
-.big .num{font-weight:900;font-size:36px;letter-spacing:2px;border:2px solid #ffccd2;border-radius:10px;padding:4px 12px}
+.big .tag{
+  font-weight:900;font-size:22px;letter-spacing:2.5px;color:#b1121b;
+  background:#fff1f2;border:1px solid #ffd7db;border-radius:10px;padding:6px 10px
+}
+.big .num{
+  font-weight:900;font-size:36px;letter-spacing:2px;color:#0f172a;
+  border:2px solid #ffccd2;border-radius:12px;padding:6px 14px;background:#fff6f7;
+  box-shadow:inset 0 1px 0 #ffe3e7, 0 6px 18px rgba(229,9,20,.08)
+}
 
-/* toast */
-#toast{position:fixed;right:22px;bottom:22px;background:#0f172a;color:#e5e7eb;border:1px solid #111827;padding:12px 16px;border-radius:12px;box-shadow:0 16px 40px rgba(2,6,23,.35);transform:translateY(10px);opacity:0;pointer-events:none;transition:.25s}
+/* ==============================
+   🧭 Navegación secundaria (opcional)
+============================== */
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin:-2px 0 10px}
+.tab{
+  padding:8px 12px;border-radius:999px;border:1px solid var(--stroke);
+  background:#fff;color:#475467;font-weight:800;cursor:pointer
+}
+.tab.active{
+  border-color:#ffd7db;background:#fff6f7;color:#b1121b;
+  box-shadow:0 6px 16px rgba(229,9,20,.08)
+}
+
+/* ==============================
+   🔔 Toast
+============================== */
+#toast{
+  position:fixed;right:22px;bottom:22px;background:#0f172a;color:#e5e7eb;
+  border:1px solid #111827;padding:12px 16px;border-radius:12px;
+  box-shadow:0 16px 40px rgba(2,6,23,.35);transform:translateY(10px);opacity:0;
+  pointer-events:none;transition:.25s;z-index:60
+}
+#toast.show{opacity:1;transform:none}
+
+/* ==============================
+   📱 Responsive fino
+============================== */
+@media (max-width:840px){
+  .card{padding:18px}
+  .input,.select{padding:11px 12px;height:42px}
+}
+@media (max-width:640px){
+  .h1{font-size:22px}
+  .btn{padding:11px 14px}
+  .big{flex-direction:column;gap:10px}
+  .big .num{font-size:32px}
+}
