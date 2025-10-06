@@ -14,7 +14,7 @@
       <p class="sub">Historial de daños, reparaciones y reportes visuales de cada vehículo.</p>
 
       <div class="toolbar">
-        <div class="search">🚗
+        <div class="search">
           <input id="qCarroceria" type="text" placeholder="Buscar por coche, placa o estatus">
         </div>
         <button class="btn" id="newReporte">➕ Nuevo reporte</button>

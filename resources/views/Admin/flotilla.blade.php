@@ -15,7 +15,7 @@
       <p class="sub">Inventario y disponibilidad. Clic en una fila para ver la ficha.</p>
 
       <div class="toolbar">
-        <div class="search">🔎
+        <div class="search">
           <input id="qFleet" type="text" placeholder="Buscar por coche, placa, rin o estatus">
         </div>
         <button class="btn ghost" id="exportFleet">⬇️ Exportar CSV</button>

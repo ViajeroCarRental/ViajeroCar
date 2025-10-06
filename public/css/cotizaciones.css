@@ -1,20 +1,178 @@
-:root{ --brand:#FF1E2D; --brand-2:#D6121F; --ink:#101828; --muted:#667085; --stroke:#EAECF0; }
-*{box-sizing:border-box} html,body{margin:0;background:#F3F5F9;color:var(--ink);font-family:"Cabin",system-ui,-apple-system,Segoe UI,Roboto,Arial}
-.wrap{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
-@media(max-width:992px){.wrap{grid-template-columns:1fr}}
-.side{background:var(--brand);color:#fff;padding:16px;border-right:1px solid #C40C18;position:sticky;top:0;height:100vh;overflow:auto}
-.brand{display:flex;justify-content:center;margin-bottom:14px}
-.brand img{width:170px;border-radius:12px}
+/* ==============================
+   🎨 Tokens / Design System
+============================== */
+:root{
+  --brand:#FF1E2D; --brand-2:#D6121F; --brand-3:#ff4956;
 
-.mitem{display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;text-decoration:none;font-weight:800;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
-.mitem:hover{background:rgba(255,255,255,.18)}
-.mitem.active{background:#fff;color:var(--brand);border-color:#fff}
-.main{padding:22px}
-.h1{margin:0 0 14px;font-size:24px;font-weight:800}
-.grid2{display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:16px}
-.card{background:#fff;border:1px solid var(--stroke);border-radius:18px;padding:18px;display:grid;gap:10px;align-content:start}
-.card h3{margin:0;font-size:18px}
-.card p{margin:0;color:var(--muted)}
-.btn{border:none;border-radius:12px;padding:12px 14px;font-weight:800;cursor:pointer}
-.primary{background:var(--brand);color:#fff}
-.ghost{background:#fff;border:1px solid var(--stroke);color:var(--brand)}
+  --ink:#101828; --muted:#667085; --muted-2:#475467;
+  --bg:#F3F5F9; --paper:#FFFFFF;
+
+  --stroke:#EAECF0; --stroke-2:#E5E7EB;
+
+  --radius-lg:18px; --radius-md:14px; --radius-sm:10px;
+
+  --shadow-xs:0 1px 3px rgba(16,24,40,.06);
+  --shadow-sm:0 6px 18px rgba(16,24,40,.08);
+  --shadow-md:0 12px 28px rgba(16,24,40,.10);
+
+  --ring:0 0 0 6px #FFECEF;
+}
+
+*{ box-sizing:border-box }
+html,body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Cabin",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+body{ font-size:15px; line-height:1.5 }
+a{ color:inherit; text-decoration:none }
+
+/* Scrollbar sutil */
+*::-webkit-scrollbar{height:10px;width:10px}
+*::-webkit-scrollbar-thumb{background:#dfe3ea;border-radius:999px}
+*::-webkit-scrollbar-track{background:transparent}
+
+/* ==============================
+   🧭 Shell / Sidebar / Main
+============================== */
+.wrap{
+  display:grid; grid-template-columns:280px 1fr; min-height:100vh;
+}
+@media (max-width:992px){ .wrap{ grid-template-columns:1fr } }
+
+.side{
+  background:linear-gradient(180deg,var(--brand),var(--brand-2));
+  color:#fff; padding:16px;
+  border-right:1px solid rgba(0,0,0,.06);
+  position:sticky; top:0; height:100vh; overflow:auto;
+  box-shadow:inset 0 -1px 0 rgba(255,255,255,.08);
+}
+.brand{
+  display:flex; justify-content:center; align-items:center;
+  gap:10px; margin-bottom:14px;
+  padding:10px 12px; border-radius:12px;
+  background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.22);
+}
+.brand img{ width:170px; border-radius:12px; filter:drop-shadow(0 8px 22px rgba(0,0,0,.18)) }
+
+/* Menú (si no tienes contenedor .menu no pasa nada) */
+.menu{ display:flex; flex-direction:column; gap:10px }
+.mitem{
+  display:flex; align-items:center; gap:10px;
+  padding:12px; border-radius:14px; font-weight:800; color:#fff;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.18); backdrop-filter:blur(2px);
+  transition:transform .15s, background .15s, box-shadow .15s;
+}
+.mitem:hover{ background:rgba(255,255,255,.18); transform:translateY(-1px); box-shadow:var(--shadow-xs) }
+.mitem.active{ background:#fff; color:var(--brand); border-color:#fff; box-shadow:0 6px 16px rgba(255,255,255,.25) }
+
+.main{ padding:22px }
+.container{ max-width:1120px; margin:0 auto }
+.h1{
+  margin:0 0 14px; font-size:24px; font-weight:900; letter-spacing:.2px;
+  background:linear-gradient(90deg,var(--brand),var(--brand-3));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+
+/* ==============================
+   🧱 Grid / Cards
+============================== */
+.grid2{
+  display:grid; grid-template-columns:repeat(2, minmax(220px,1fr)); gap:16px;
+}
+@media (max-width:820px){ .grid2{ grid-template-columns:1fr } }
+
+.card{
+  position:relative;
+  background:var(--paper);
+  border:1.5px solid var(--stroke);
+  border-radius:var(--radius-lg);
+  padding:18px;
+  display:grid; gap:10px; align-content:start;
+  box-shadow:var(--shadow-sm);
+}
+.card::before{
+  /* banda de acento */
+  content:""; position:absolute; inset:0 0 0 auto; width:6px;
+  background:linear-gradient(180deg,var(--brand),var(--brand-2));
+  border-radius:0 var(--radius-lg) var(--radius-lg) 0;
+}
+.card h3{
+  margin:0; font-size:18px; font-weight:900; color:#0f172a;
+}
+.card p{ margin:0; color:var(--muted) }
+
+/* Título de sección opcional con subrayado */
+.card .stitle{
+  margin:0; font-size:14px; font-weight:900; color:var(--muted-2);
+}
+.card .stitle + .hr{
+  height:4px; width:64px; border-radius:999px; margin:6px 0 2px;
+  background:linear-gradient(90deg,var(--brand),var(--brand-2));
+}
+
+/* ==============================
+   🔘 Botones
+============================== */
+.btn{
+  border:none; border-radius:12px; padding:12px 14px; font-weight:900; cursor:pointer;
+  transition:transform .05s, box-shadow .15s, filter .15s;
+  display:inline-flex; align-items:center; gap:8px;
+}
+.btn:active{ transform:translateY(1px) }
+
+.primary{
+  background:linear-gradient(180deg,var(--brand-2),var(--brand));
+  color:#fff; box-shadow:0 10px 22px rgba(229,9,20,.22);
+}
+.primary:hover{ filter:brightness(1.03) }
+
+.ghost{
+  background:#fff; border:1px solid var(--stroke); color:var(--brand);
+}
+.ghost:hover{ background:#F8FAFC }
+
+/* Variante sutil “soft” (por si la necesitas) */
+.btn.soft{
+  background:#FFF6F7; color:#B1121B; border:1px solid #FFD4D9;
+}
+
+/* ==============================
+   🧪 Formularios (si los usas aquí)
+============================== */
+.input, .select, input[type="text"], select{
+  height:44px; padding:10px 12px;
+  border:1.25px solid var(--stroke);
+  border-radius:12px; background:#fff; font-size:14px;
+  transition:border .15s, box-shadow .15s;
+}
+.input:focus, .select:focus, input[type="text"]:focus, select:focus{
+  outline:none; border-color:#FFB4BD; box-shadow:var(--ring);
+}
+
+/* ==============================
+   🪄 Detalles estéticos
+============================== */
+.card .hint{
+  font-size:12.5px; color:var(--muted); background:#F8FAFC;
+  border:1px dashed var(--stroke); border-radius:10px; padding:8px 10px;
+}
+
+/* Íconos redondos (kicker visual) */
+.i-round{
+  display:inline-grid; place-items:center; width:28px; height:28px;
+  border-radius:999px; background:#FFF1F2; border:1px solid #FFD7DB; color:#B1121B; font-weight:900;
+}
+
+/* ==============================
+   📱 Responsive fino
+============================== */
+@media (max-width:992px){
+  .main{ padding:20px 16px }
+  .container{ max-width:980px }
+}
+@media (max-width:640px){
+  .h1{ font-size:22px }
+  .btn{ padding:11px 13px }
+  .card{ padding:16px }
+}

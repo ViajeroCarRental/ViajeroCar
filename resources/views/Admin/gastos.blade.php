@@ -15,7 +15,7 @@
       <p class="sub">Todos los gastos por categoría y vehículo (rango por día/semana/mes).</p>
 
       <div class="toolbar">
-        <div class="search">💬
+        <div class="search">
           <input id="qCost" type="text" placeholder="Buscar por coche, categoría o descripción">
         </div>
         <button class="btn ghost" id="exportCost">⬇️ Exportar CSV</button>
