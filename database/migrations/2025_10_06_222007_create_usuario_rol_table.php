@@ -12,19 +12,19 @@ return new class extends Migration {
 
             $table->unsignedBigInteger('id_usuario');
             $table->unsignedBigInteger('id_rol');
+            $table->timestamps();
 
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
-
+            // 🔹 Evita duplicados del mismo rol por usuario
             $table->unique(['id_usuario', 'id_rol'], 'usuario_rol_unique');
 
+            // 🔹 Relaciones
             $table->foreign('id_usuario')
                 ->references('id_usuario')->on('usuarios')
-                ->onDelete('cascade');
+                ->cascadeOnDelete();
 
             $table->foreign('id_rol')
                 ->references('id_rol')->on('roles')
-                ->onDelete('cascade');
+                ->cascadeOnDelete();
         });
     }
 

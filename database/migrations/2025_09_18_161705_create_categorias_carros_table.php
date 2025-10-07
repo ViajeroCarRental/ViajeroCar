@@ -11,8 +11,12 @@ return new class extends Migration {
             $table->bigIncrements('id_categoria');
             $table->string('nombre', 100)->unique();
             $table->string('descripcion', 255)->nullable();
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
+            $table->decimal('descuento_miembro', 5, 2)->default(0.00)->comment('Descuento % para miembros preferentes');
+            $table->boolean('activo')->default(true);
+            $table->timestamps();
+
+            // Índices útiles
+            $table->index('activo', 'cat_activo_idx');
         });
     }
 

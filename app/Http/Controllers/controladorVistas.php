@@ -6,21 +6,18 @@ use Illuminate\Http\Request;
 
 class ControladorVistas extends Controller
 {
-    /* ================== Inicio ================== */
-    public function home()
-    {
 
-        return view('welcome');
-    }
 
     public function catalogo()
-    {
-        return view('Usuarios.Catalogo');
-    }
+{
 
-    public function reservaciones()
+    return view('Usuarios.catalogo');
+}
+
+    public function reservaciones(Request $request)
     {
-        return view('Usuarios.Reservaciones');
+        $filters = $request->all();
+        return view('Usuarios.Reservaciones', compact('filters'));
     }
 
     public function contacto()

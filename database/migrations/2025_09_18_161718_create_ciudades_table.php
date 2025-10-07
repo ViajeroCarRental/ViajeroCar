@@ -12,13 +12,13 @@ return new class extends Migration {
             $table->string('nombre', 120);
             $table->string('estado', 120)->nullable();
             $table->string('pais', 120)->default('México');
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
+            $table->timestamps();
 
-            // UNIQUE (nombre, estado, pais)
+            // 🔹 Evita duplicados de ciudades con mismo nombre y estado/pais
             $table->unique(['nombre', 'estado', 'pais'], 'ciudades_nombre_estado_pais_unique');
-            // INDEX (pais, estado)
-            $table->index(['pais', 'estado'], 'ciudades_pais_estado_index');
+
+            // 🔹 Índices para búsquedas frecuentes (por país o estado)
+            $table->index(['pais', 'estado'], 'ciudades_pais_estado_idx');
         });
     }
 

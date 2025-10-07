@@ -3,7 +3,12 @@
 @section('Titulo','Home')
 
 @section('css-vistaHome')
+  {{-- Flatpickr CSS (necesario para que se vea el calendario) --}}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+  {{-- Tu CSS --}}
   <link rel="stylesheet" href="{{ asset('css/navbarUsuarios.css') }}">
+
   <style>
     /* Imagen bajo el texto de 3 MSI */
     .hero-badge-3msi{
@@ -48,52 +53,95 @@
 
     <!-- Form flotante -->
     <div class="search-card">
-      <!-- form controlado por JS (validación de fechas) -->
-      <form id="rentalForm" class="search-form">
+      <form id="rentalForm" class="search-form" method="POST" action="{{ route('rutaBuscar') }}">
+        @csrf
+
+        {{-- LUGAR DE RENTA --}}
         <div class="field col-12">
           <label for="pickupPlace">Lugar de renta</label>
-          <select id="pickupPlace" aria-describedby="pickupHelp">
-            <!-- opciones pobladas por JS -->
+          <select id="pickupPlace" name="pickup_sucursal_id" aria-describedby="pickupHelp" required>
+            <option value="" disabled selected>-- Selecciona sucursal --</option>
+            @foreach($ciudades as $ciudad)
+              <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+                @foreach($ciudad->sucursalesActivas as $suc)
+                  <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
+                    {{ $suc->nombre }}
+                  </option>
+                @endforeach
+              </optgroup>
+            @endforeach
           </select>
-          <div id="pickupHelp" class="small">Elige la ciudad donde inicias tu renta.</div>
+          <div id="pickupHelp" class="small">Elige la sucursal donde inicias tu renta.</div>
         </div>
 
+        {{-- LUGAR DE DEVOLUCIÓN --}}
         <div class="field col-12">
           <label for="dropoffPlace">Lugar de devolución</label>
-          <select id="dropoffPlace" aria-describedby="dropoffHelp">
-            <!-- opciones pobladas por JS -->
+          <select id="dropoffPlace" name="dropoff_sucursal_id" aria-describedby="dropoffHelp" required>
+            <option value="" disabled selected>-- Selecciona sucursal --</option>
+            @foreach($ciudades as $ciudad)
+              <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+                @foreach($ciudad->sucursalesActivas as $suc)
+                  <option value="{{ $suc->id_sucursal }}" @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
+                    {{ $suc->nombre }}
+                  </option>
+                @endforeach
+              </optgroup>
+            @endforeach
           </select>
-          <div id="dropoffHelp" class="small">Elige la ciudad donde terminará tu renta.</div>
+          <div id="dropoffHelp" class="small">Elige la sucursal donde terminará tu renta.</div>
         </div>
 
-        <!-- Entrega: fecha + hora -->
+        {{-- ENTREGA: FECHA + HORA --}}
         <div class="field">
           <label>Entrega</label>
           <div class="datetime-row">
-            <input id="pickupDate" type="text" aria-label="Fecha de entrega" placeholder="Selecciona fecha">
-            <input id="pickupTime" type="text" aria-label="Hora de entrega" placeholder="Hora">
+            <input id="pickupDate"
+                   name="pickup_date"
+                   type="text"
+                   placeholder="Selecciona fecha"
+                   value="{{ request('pickup_date') }}"
+                   data-min="{{ now()->toDateString() }}"
+                   required>
+            <input id="pickupTime"
+                   name="pickup_time"
+                   type="text"
+                   placeholder="Hora"
+                   value="{{ request('pickup_time') }}"
+                   required>
           </div>
         </div>
 
-        <!-- Devolución: fecha + hora -->
+        {{-- DEVOLUCIÓN: FECHA + HORA --}}
         <div class="field">
           <label>Devolución</label>
           <div class="datetime-row">
-            <input id="dropoffDate" type="text" aria-label="Fecha de devolución" placeholder="Selecciona fecha">
-            <input id="dropoffTime" type="text" aria-label="Hora de devolución" placeholder="Hora">
+            <input id="dropoffDate"
+                   name="dropoff_date"
+                   type="text"
+                   placeholder="Selecciona fecha"
+                   value="{{ request('dropoff_date') }}"
+                   data-min="{{ now()->toDateString() }}"
+                   required>
+            <input id="dropoffTime"
+                   name="dropoff_time"
+                   type="text"
+                   placeholder="Hora"
+                   value="{{ request('dropoff_time') }}"
+                   required>
           </div>
         </div>
 
+        {{-- CATEGORÍA (opcional) --}}
         <div class="field">
-          <label>Tipo de auto</label>
-          <select id="carType">
-            <option>Económico</option>
-            <option>Sedán</option>
-            <option>SUV</option>
-            <option>Pickup</option>
-            <option>Mini-Van</option>
-            <option>Lujo</option>
-            <option>Deportivo</option>
+          <label for="carType">Tipo de auto</label>
+          <select id="carType" name="categoria_id">
+            <option value="">-- Cualquiera --</option>
+            @foreach($categorias as $cat)
+              <option value="{{ $cat->id_categoria }}" @selected(request('categoria_id') == $cat->id_categoria)>
+                {{ $cat->nombre }}
+              </option>
+            @endforeach
           </select>
         </div>
 
@@ -101,8 +149,10 @@
           <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> BUSCAR</button>
         </div>
       </form>
+
       <div id="rangeSummary" class="range-summary" aria-live="polite"></div>
     </div>
+
   </section>
 
   <!-- SECCIONES -->
@@ -209,7 +259,12 @@
 
 {{-- ===== JS: Flatpickr y lógica ===== --}}
 @section('js-vistaHome')
+  {{-- Flatpickr core + locale ES + rangePlugin (¡en este orden!) --}}
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
+
+  {{-- Tu JS --}}
   <script src="{{ asset('js/home.js') }}"></script>
 @endsection
 

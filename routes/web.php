@@ -2,11 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ControladorVistas;
+use App\Http\Controllers\BusquedaController;
+
 
 //rutas vistas Usuario
 
 /*  Inicio  */
-Route::get('/', [ControladorVistas::class, 'home'])->name('rutaHome');
+Route::get('/', [BusquedaController::class, 'home'])->name('rutaHome');
 //ruta Vista Catalogo
 Route::get('/catalogo',[ControladorVistas::class,'catalogo'])->name('rutaCatalogo');
 //ruta Vista Reservaciones
@@ -21,6 +23,8 @@ Route::get('/faq',[ControladorVistas::class,'faq'])->name('rutaFAQ');
 Route::get('/login',[ControladorVistas::class,'login'])->name('rutaLogin');
 //ruta Vista Perfil
 Route::get('/perfil',[ControladorVistas::class,'perfil'])->name('rutaPerfil');
+    //busqueda
+    Route::post('/buscar', [BusquedaController::class, 'buscar'])->name('rutaBuscar');
 
 // VISTAS Admin
 //Vistas Flotilla

@@ -9,21 +9,21 @@ return new class extends Migration {
     {
         Schema::create('sucursales', function (Blueprint $table) {
             $table->bigIncrements('id_sucursal');
-            $table->unsignedBigInteger('id_ciudad');
+            $table->foreignId('id_ciudad')->constrained('ciudades', 'id_ciudad')->cascadeOnDelete();
             $table->string('nombre', 120);
             $table->string('direccion', 255)->nullable();
             $table->decimal('lat', 9, 6)->nullable();
             $table->decimal('lng', 9, 6)->nullable();
             $table->json('horario_json')->nullable();
             $table->boolean('activo')->default(true);
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
+            $table->timestamps();
 
-            $table->unique('nombre', 'sucursal_nombre_unique');
+            // Unicidad por ciudad + nombre
+            $table->unique(['id_ciudad','nombre'], 'sucursales_ciudad_nombre_unique');
+
+            // Índices
             $table->index('id_ciudad', 'suc_ciudad_idx');
-
-            $table->foreign('id_ciudad')
-                ->references('id_ciudad')->on('ciudades');
+            $table->index('activo', 'suc_activo_idx');
         });
     }
 
