@@ -7,17 +7,21 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('estatus_carro', function (Blueprint $table) {
-            $table->bigIncrements('id_estatus');
-            $table->string('nombre', 80)->unique();
+        Schema::create('seguro_paquete', function (Blueprint $table) {
+            $table->bigIncrements('id_paquete');
+            $table->string('nombre', 150);
             $table->string('descripcion', 255)->nullable();
+            $table->decimal('precio_por_dia', 10, 2)->default(0.00);
+            $table->boolean('activo')->default(true);
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
+
+            $table->unique('nombre', 'seguro_paquete_nombre_unique');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('estatus_carro');
+        Schema::dropIfExists('seguro_paquete');
     }
 };

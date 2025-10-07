@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('roles', function (Blueprint $table) {
-            $table->bigIncrements('id_rol');
-            $table->string('nombre', 50)->unique();
+        Schema::create('marcas', function (Blueprint $table) {
+            $table->bigIncrements('id_marca');
+            $table->string('nombre', 100)->unique();
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
         });
@@ -17,6 +17,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('roles');
+        Schema::dropIfExists('marcas');
     }
 };
