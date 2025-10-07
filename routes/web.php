@@ -3,14 +3,16 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ControladorVistas;
 use App\Http\Controllers\BusquedaController;
-
+use App\Http\Controllers\BusquedaCatalogoController;
+use App\Http\Controllers\ContactoController;
+use Illuminate\Support\Facades\Bus;
 
 //rutas vistas Usuario
 
 /*  Inicio  */
 Route::get('/', [BusquedaController::class, 'home'])->name('rutaHome');
 //ruta Vista Catalogo
-Route::get('/catalogo',[ControladorVistas::class,'catalogo'])->name('rutaCatalogo');
+Route::get('/catalogo', [BusquedaCatalogoController::class, 'catalogo'])->name('rutaCatalogo');
 //ruta Vista Reservaciones
 Route::get('/reservaciones',[ControladorVistas::class,'reservaciones'])->name('rutaReservaciones');
 //ruta Vista Contacto
@@ -25,6 +27,10 @@ Route::get('/login',[ControladorVistas::class,'login'])->name('rutaLogin');
 Route::get('/perfil',[ControladorVistas::class,'perfil'])->name('rutaPerfil');
     //busqueda
     Route::post('/buscar', [BusquedaController::class, 'buscar'])->name('rutaBuscar');
+//busqueda catalogo
+Route::get('/catalogo/filtrar', [BusquedaCatalogoController::class, 'index'])->name('rutaCatalogoFiltrado');
+//contacto form
+Route::post('/contacto', [ContactoController::class, 'store'])->name('contacto.store');
 
 // VISTAS Admin
 //Vistas Flotilla
