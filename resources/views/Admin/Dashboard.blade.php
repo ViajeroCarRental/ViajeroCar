@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
+<link rel="icon" type="image/png" href="{{ asset('img/loquito.png') }}">
 <title>Panel | Viajero Car Rental</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="{{ asset('assets/style.css') }}" />

@@ -8,15 +8,16 @@
 @section('contenidoHomeVentas')
 <main class="main">
   <div class="topbar">
-    <button class="burger" id="burger">☰</button>
-    <div class="hi">Rentas · Resumen</div>
+    <div class="hi">
+     <img src="{{ asset('img/logom.png') }}" alt="Icono Rentas" class="hi-icon">
+      Rentas · Resumen
+     </div>
     <div class="top-actions">
       <button class="btn ghost" id="refreshDash">↻ Actualizar</button>
     </div>
   </div>
 
   <div class="content container">
-    <p class="muted" id="hello">Hola, este es tu resumen de desempeño.</p>
 
     <!-- ===== KPIs ===== -->
     @php
