@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<link rel="icon" type="image/png" href="{{ asset('img/loquito.png') }}">
+<link rel="icon" type="image/png" href="{{ asset('img/image.png') }}">
 <title>Panel | Viajero Car Rental</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="{{ asset('assets/style.css') }}" />
@@ -391,8 +391,7 @@ body::before{
 <!-- TOPBAR -->
 <div class="top">
   <div class="brand">
-    <img src="{{ asset('img/Logo4.jpg') }}" alt="Viajero Car Rental">
-    <div class="badge"><span class="dot" id="net"></span> <span id="netText">En línea</span></div>
+    <img src="{{ asset('img/image.png') }}" alt="Viajero Car Rental">
   </div>
   <div class="right">
     <div style="position:relative">
