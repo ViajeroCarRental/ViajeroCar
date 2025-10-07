@@ -9,7 +9,7 @@
 <main class="main">
   <div class="topbar">
     <div class="hi">
-     <img src="{{ asset('img/logom.png') }}" alt="Icono Rentas" class="hi-icon">
+     <img src="{{ asset('img/image.png') }}" alt="Icono Rentas" class="hi-icon">
       Rentas · Resumen
      </div>
     <div class="top-actions">
