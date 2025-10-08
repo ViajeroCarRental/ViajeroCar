@@ -19,6 +19,12 @@ class DatabaseSeeder extends Seeder
         CiudadesSeeder::class,
         SucursalesSeeder::class,
         CategoriasCarrosSeeder::class,
+        EstatusCarroSeeder::class,
+        MarcasSeeder::class,
+        ModelosSeeder::class,
+        VersionesSeeder::class,
+        VehiculosSeeder::class,
+        VehiculoImagenesSeeder::class,
     ]);
     }
 }

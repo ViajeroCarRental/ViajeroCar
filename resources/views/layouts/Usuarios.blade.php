@@ -1,66 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    <!-- Bootstrap / Fuentes / Iconos -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_red.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <!-- Bootstrap / Fuentes / Iconos -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" rel="stylesheet">
 
-    <!-- Estilos propios -->
-    <link rel="stylesheet" href="{{ asset('css/navbarUsuarios.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/navbar-top.css') }}">
+  <!-- Flatpickr CSS (una sola vez) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_red.css">
 
-    <!-- CSS por vista -->
-    @yield('css-vistaHome')
-    @yield('css-VistaCatalogo')
-    @yield('css-vistaReservaciones')
-    @yield('css-vistaContacto')
-    @yield('css-vistaPoliticas')
-    @yield('css-vistaFAQ')
-    @yield('css-vistaLogin')
-    @yield('css-vistaPerfil')
+  <!-- Estilos propios -->
+  <link rel="stylesheet" href="{{ asset('css/navbarUsuarios.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/navbar-top.css') }}">
 
-    <title>@yield('Titulo')</title>
+  <!-- CSS por vista -->
+  @yield('css-vistaHome')
+  @yield('css-VistaCatalogo')
+  @yield('css-vistaReservaciones')
+  @yield('css-vistaContacto')
+  @yield('css-vistaPoliticas')
+  @yield('css-vistaFAQ')
+  @yield('css-vistaLogin')
+  @yield('css-vistaPerfil')
 
-    <style>
-      .brand-logo-img{height:40px; display:block}
-      .footer-logo{height:42px; display:block; margin:0 auto}
-      .brand a.brand-link{display:inline-flex; align-items:center; text-decoration:none}
+  <title>@yield('Titulo')</title>
 
-      /* ==== ICONOS DE PERSONA ==== */
-      .menu .icon-item a {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        background: rgba(255,255,255,.15);
-        transition: all .3s ease;
-      }
-      .menu .icon-item a:hover {
-        background: rgba(255,255,255,.35);
-        transform: scale(1.05);
-      }
-      .menu .icon-item i {
-        font-size: 18px;
-        color: #fff;
-      }
-      .menu .icon-item i.guest {
-        opacity: 0.8;
-      }
-      .menu .icon-item i.user {
-        color: #ffffff;
-      }
-    </style>
+  <style>
+    .brand-logo-img{height:40px; display:block}
+    .footer-logo{height:42px; display:block; margin:0 auto}
+    .brand a.brand-link{display:inline-flex; align-items:center; text-decoration:none}
+
+    /* ==== ICONOS DE PERSONA ==== */
+    .menu .icon-item a {
+      display: flex; align-items: center; justify-content: center;
+      width: 42px; height: 42px; border-radius: 50%;
+      background: rgba(255,255,255,.15); transition: all .3s ease;
+    }
+    .menu .icon-item a:hover { background: rgba(255,255,255,.35); transform: scale(1.05); }
+    .menu .icon-item i { font-size: 18px; color: #fff; }
+    .menu .icon-item i.guest { opacity: .8; }
+    .menu .icon-item i.user { color: #fff; }
+  </style>
 </head>
 <body>
 
@@ -82,7 +68,6 @@
 
       {{-- Iconos dinámicos de persona --}}
       @guest
-        <!-- Ícono de persona genérico cuando NO hay sesión -->
         <li class="icon-item">
           <a href="{{ route('rutaLogin') }}" title="Iniciar sesión">
             <i class="fa-regular fa-user guest"></i>
@@ -91,7 +76,6 @@
       @endguest
 
       @auth
-        <!-- Ícono de persona activo cuando SÍ hay sesión -->
         <li class="icon-item">
           <a href="{{ route('rutaPerfil') }}" title="Mi perfil">
             <i class="fa-solid fa-user user"></i>
@@ -114,10 +98,15 @@
   @yield('contenidoPerfil')
 </div>
 
+<!-- ===== Librerías necesarias para Flatpickr (ANTES de los JS por vista) ===== -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
+
 <!-- JS por vista -->
 <div class="containerJS">
   @yield('js-vistaHome')
-  @yield('js-vistaCatalogo')
+  @yield('js-vistaCatalogo')   {{-- <- Asegúrate de usar esta sección en la vista del catálogo --}}
   @yield('js-vistaReservaciones')
   @yield('js-vistaContacto')
   @yield('js-vistaPoliticas')
@@ -185,13 +174,8 @@
 
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
-</script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
 
-<!-- Bloquear clic derecho -->
-<script>
+  // Bloquear clic derecho (opcional)
   document.addEventListener('contextmenu', function(e) {
     e.preventDefault();
   });

@@ -6,14 +6,6 @@ use Illuminate\Http\Request;
 
 class ControladorVistas extends Controller
 {
-
-
-    public function catalogo()
-{
-
-    return view('Usuarios.catalogo');
-}
-
     public function reservaciones(Request $request)
     {
         $filters = $request->all();

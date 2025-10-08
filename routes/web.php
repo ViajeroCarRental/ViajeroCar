@@ -5,6 +5,8 @@ use App\Http\Controllers\ControladorVistas;
 use App\Http\Controllers\BusquedaController;
 use App\Http\Controllers\BusquedaCatalogoController;
 use App\Http\Controllers\ContactoController;
+use App\Http\Controllers\controladorVistasAdmin;
+use App\Http\Controllers\CatalogoController;
 use Illuminate\Support\Facades\Bus;
 
 //rutas vistas Usuario
@@ -12,7 +14,7 @@ use Illuminate\Support\Facades\Bus;
 /*  Inicio  */
 Route::get('/', [BusquedaController::class, 'home'])->name('rutaHome');
 //ruta Vista Catalogo
-Route::get('/catalogo', [BusquedaCatalogoController::class, 'catalogo'])->name('rutaCatalogo');
+Route::get('/catalogo', [CatalogoController::class, 'index'])->name('rutaCatalogo');
 //ruta Vista Reservaciones
 Route::get('/reservaciones',[ControladorVistas::class,'reservaciones'])->name('rutaReservaciones');
 //ruta Vista Contacto
@@ -25,12 +27,14 @@ Route::get('/faq',[ControladorVistas::class,'faq'])->name('rutaFAQ');
 Route::get('/login',[ControladorVistas::class,'login'])->name('rutaLogin');
 //ruta Vista Perfil
 Route::get('/perfil',[ControladorVistas::class,'perfil'])->name('rutaPerfil');
-    //busqueda
-    Route::post('/buscar', [BusquedaController::class, 'buscar'])->name('rutaBuscar');
-//busqueda catalogo
-Route::get('/catalogo/filtrar', [BusquedaCatalogoController::class, 'index'])->name('rutaCatalogoFiltrado');
+//busqueda
+Route::post('/buscar', [BusquedaController::class, 'buscar'])->name('rutaBuscar');
+Route::get('/catalogo/filtrar', [CatalogoController::class, 'filtrar'])->name('rutaCatalogoFiltrar');
 //contacto form
 Route::post('/contacto', [ContactoController::class, 'store'])->name('contacto.store');
+//busqueda catalogo
+Route::get('/catalogo/resultados', [CatalogoController::class, 'resultados'])->name('rutaCatalogoResultados');
+
 
 // VISTAS Admin
 //Vistas Flotilla
