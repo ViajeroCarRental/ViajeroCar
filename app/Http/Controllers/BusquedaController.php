@@ -38,7 +38,7 @@ class BusquedaController extends Controller
         return view('welcome', compact('ciudades','categorias'));
     }
 
-    /* ====== BUSCAR (valida y redirige a Catálogo) ====== */
+    /* ====== BUSCAR (valida y redirige a Reservaciones) ====== */
     public function buscar(Request $request)
     {
         // 1) Normaliza FECHAS desde Flatpickr (rango en pickup_date)
@@ -81,7 +81,7 @@ class BusquedaController extends Controller
                 ->withInput();
         }
 
-        // 4) Redirección al catálogo con filtros
+        // 4) Redirección al flujo de reservaciones
         $params = [
             'pickup_sucursal_id'  => $validated['pickup_sucursal_id'],
             'dropoff_sucursal_id' => $validated['dropoff_sucursal_id'],
@@ -90,11 +90,13 @@ class BusquedaController extends Controller
             'dropoff_date'        => $validated['dropoff_date'],
             'dropoff_time'        => $validated['dropoff_time'],
         ];
+
         if (!empty($validated['categoria_id'])) {
             $params['categoria_id'] = $validated['categoria_id'];
         }
 
-        return redirect()->route('rutaReservaciones', $params);
+        // 🔹 Cambio aquí: redirige al nuevo controlador de Reservaciones
+        return redirect()->route('rutaReservasIniciar', $params);
     }
 
     /** Split "YYYY-MM-DD a YYYY-MM-DD" / "YYYY-MM-DD to YYYY-MM-DD" */
@@ -113,33 +115,58 @@ class BusquedaController extends Controller
     }
 
     /** Acepta "YYYY-MM-DD" o "dd/mm/YYYY" y devuelve "YYYY-MM-DD" */
-    private function normalizeDateYmd(?string $date): ?string
-    {
-        if (!$date) return null;
-        $date = trim($date);
-        // dd/mm/YYYY -> Y-m-d
-        if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $date)) {
-            [$d,$m,$y] = array_map('intval', explode('/',$date));
-            return sprintf('%04d-%02d-%02d', $y, $m, $d);
-        }
-        // Y-m-d (ya bien)
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            return $date;
-        }
-        // fallback: intenta parsear
-        $ts = strtotime($date);
-        return $ts ? date('Y-m-d', $ts) : null;
+    /** Acepta "YYYY-MM-DD" o "dd/mm/YYYY" y devuelve "YYYY-MM-DD" */
+private function normalizeDateYmd(?string $date): ?string
+{
+    if (!$date) return null;
+    $date = trim($date);
+
+    // Si vino "YYYY-MM-DDTHH:MM" o "YYYY-MM-DD HH:MM", quédate solo con la fecha
+    if (preg_match('/^(\d{4}-\d{2}-\d{2})[ T]/', $date, $m)) {
+        $date = $m[1];
     }
 
-    /** Combina fecha + hora en formato Carbon */
-    private function mergeDateTime(string $date, string $time): Carbon
-    {
-        $time = trim($time);
-        // Convierte 12h a 24h si lleva am/pm
-        if (preg_match('/(am|pm)$/i', $time)) {
-            $time = date('H:i', strtotime($time));
-        }
-
-        return Carbon::createFromFormat('Y-m-d H:i', "{$date} {$time}", 'America/Mexico_City');
+    // dd/mm/YYYY -> Y-m-d
+    if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $date)) {
+        [$d,$m,$y] = array_map('intval', explode('/',$date));
+        return sprintf('%04d-%02d-%02d', $y, $m, $d);
     }
+
+    // Y-m-d ya válido
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+        return $date;
+    }
+
+    $ts = strtotime($date);
+    return $ts ? date('Y-m-d', $ts) : null;
+}
+
+/** Combina fecha + hora en formato Carbon, tolerando "12:00 PM", "12:00:00", etc. */
+private function mergeDateTime(string $date, string $time): \Illuminate\Support\Carbon
+{
+    $date = trim($date);
+    $time = trim($time);
+
+    // Si por accidente vino la fecha dentro del campo de hora, quítala
+    // ej. "2025-02-12 12:00" o "2025-02-12T12:00:00"
+    $time = preg_replace('/^\d{4}-\d{2}-\d{2}[ T]/', '', $time);
+
+    // Normaliza cualquier variante a 24h HH:MM (recorta segundos y maneja AM/PM)
+    $ts = strtotime($time);
+    if ($ts === false) {
+        // fallback: intenta extraer HH:MM manualmente
+        if (preg_match('/(\d{1,2}):(\d{2})/', $time, $m)) {
+            $h = (int)$m[1]; $i = (int)$m[2];
+            $time = sprintf('%02d:%02d', $h, $i);
+        } else {
+            // Como última instancia, fija 12:00 para no romper el flujo
+            $time = '12:00';
+        }
+    } else {
+        $time = date('H:i', $ts);
+    }
+
+    return \Illuminate\Support\Carbon::createFromFormat('Y-m-d H:i', "{$date} {$time}", 'America/Mexico_City');
+}
+
 }

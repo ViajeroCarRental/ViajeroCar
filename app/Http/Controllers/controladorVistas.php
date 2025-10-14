@@ -6,11 +6,6 @@ use Illuminate\Http\Request;
 
 class ControladorVistas extends Controller
 {
-    public function reservaciones(Request $request)
-    {
-        $filters = $request->all();
-        return view('Usuarios.Reservaciones', compact('filters'));
-    }
 
     public function contacto()
     {

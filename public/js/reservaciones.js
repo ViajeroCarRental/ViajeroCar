@@ -1,591 +1,677 @@
-(function(){
-    const AUTH_KEY = 'vj_auth';
-    const URLS = { LOGIN:'login.html', PROFILE:'perfil.html' };
+(function () {
+  "use strict";
 
-    if(!window.VJ_AUTH){
-      function getAuth(){ try{ return JSON.parse(localStorage.getItem(AUTH_KEY)||'null'); }catch(e){ return null; } }
-      function isLogged(){ return !!localStorage.getItem(AUTH_KEY); }
-      window.VJ_AUTH = { getAuth, isLogged, URLS };
+  // ===== Helpers =====
+  const qs  = (s) => document.querySelector(s);
+  const qsa = (s) => Array.from(document.querySelectorAll(s));
+
+  // ==============================
+  // 🧽 Normalizador de layout PDF
+  // ==============================
+  function normalizePdfLayout(root){
+    if (!root) return;
+
+    // Ocultar elementos interactivos/ navegación dentro del CLON
+    root.querySelectorAll('.topbar,.steps-header,.hamburger,.quote-actions,.link,.footer-elegant')
+        .forEach(n => n.remove());
+
+    // Forzar contenedores a 100% y sin grid
+    const widen = [
+      '.wrap','.page','.main','#cotizacionDoc','.quote-doc',
+      '.summary-grid','.confirm-grid','.r-card','.r-price'
+    ];
+    root.querySelectorAll(widen.join(',')).forEach(el=>{
+      el.style.display = 'block';
+      el.style.width = '100%';
+      el.style.maxWidth = '100%';
+      el.style.margin = '0';
+      el.style.borderRadius = '0';
+      el.style.gridTemplateColumns = 'none';
+      el.style.gridTemplateAreas = 'none';
+    });
+
+    // Look de documento
+    root.querySelectorAll('.card,.quote-doc,.resume-card,.receipt-card,.resume-final')
+        .forEach(el=>{
+          el.style.boxShadow = 'none';
+          el.style.border = '1px solid #e5e7eb';
+        });
+
+    // Imágenes seguras
+    root.querySelectorAll('img').forEach(img=>{
+      img.style.maxWidth = '100%';
+      img.style.height = 'auto';
+      img.style.display = 'block';
+    });
+  }
+
+  // ---------- Topbar y menú ----------
+  document.addEventListener("DOMContentLoaded", () => {
+    const topbar = qs(".topbar");
+    function toggleTopbar() {
+      if (!topbar) return;
+      if (window.scrollY > 40) topbar.classList.add("solid");
+      else topbar.classList.remove("solid");
     }
+    toggleTopbar();
+    window.addEventListener("scroll", toggleTopbar, { passive: true });
 
-    function syncAccountIcon(){
-      const link = document.getElementById('accountLink');
-      if(!link) return;
-      if(window.VJ_AUTH.isLogged()){
-        const u = window.VJ_AUTH.getAuth() || {};
-        link.href = URLS.PROFILE;
-        link.title = 'Mi perfil';
-        link.innerHTML = `<span class="avatar-mini">${(u.name?.[0] || u.email?.[0] || 'U').toUpperCase()}</span>`;
-      }else{
-        link.href = URLS.LOGIN;
-        link.title = 'Iniciar sesión';
-        link.innerHTML = '<i class="fa-regular fa-user"></i>';
+    const hamburger = qs(".hamburger");
+    const menu = qs(".menu");
+    if (hamburger && menu) {
+      hamburger.addEventListener("click", () => {
+        const visible = getComputedStyle(menu).display !== "none";
+        menu.style.display = visible ? "none" : "flex";
+        if (!visible) {
+          menu.style.flexDirection = "column";
+          menu.style.gap = "12px";
+        }
+      });
+    }
+  });
+
+  // ---------- Progreso de pasos ----------
+  function setStep(n) {
+    const root = qs("main.page") || document.body;
+    root.dataset.currentStep = String(n);
+    paintProgress();
+  }
+  function paintProgress() {
+    const root = qs("main.page") || document.body;
+    const stepNow = Number(root?.dataset?.currentStep || 1);
+    const items = qsa(".steps-header .step-item");
+    items.forEach((it) => {
+      const n = Number(it.dataset.step || 0);
+      it.classList.toggle("active", n === stepNow);
+      it.classList.toggle("done", n < stepNow);
+    });
+    const total = items.length || 1;
+    const fill = qs("#progressFill");
+    if (fill) {
+      const pct = ((Math.max(1, stepNow) - 1) / Math.max(1, total - 1)) * 100;
+      fill.style.width = `${pct}%`;
+    }
+  }
+  document.addEventListener("DOMContentLoaded", paintProgress);
+
+  // ---------- Flatpickr ----------
+  function initFlatpickrLite() {
+    if (!window.flatpickr) return;
+    try { if (flatpickr.l10ns?.es) flatpickr.localize(flatpickr.l10ns.es); } catch (_) {}
+
+    const start = qs("#start");
+    const end = qs("#end");
+    if (start && end) {
+      if (typeof rangePlugin !== "undefined") {
+        flatpickr(start, {
+          enableTime: true, time_24hr: false, minuteIncrement: 5,
+          altInput: true, altFormat: "d/m/Y h:i K", dateFormat: "Y-m-d H:i",
+          minDate: "today", plugins: [new rangePlugin({ input: "#end" })],
+        });
+      } else {
+        flatpickr(start, {
+          enableTime: true, time_24hr: false, minuteIncrement: 5,
+          altInput: true, altFormat: "d/m/Y h:i K", dateFormat: "Y-m-d H:i", minDate: "today",
+        });
+        flatpickr(end, {
+          enableTime: true, time_24hr: false, minuteIncrement: 5,
+          altInput: true, altFormat: "d/m/Y h:i K", dateFormat: "Y-m-d H:i", minDate: "today",
+        });
       }
     }
-    document.addEventListener('DOMContentLoaded', syncAccountIcon);
-    window.addEventListener('storage', e=>{ if(e.key===AUTH_KEY) syncAccountIcon(); });
-  })();
-
-  const qs = s=>document.querySelector(s);
-  const qsa = s=>[...document.querySelectorAll(s)];
-  const money = n=>`$${Number(n).toLocaleString('es-MX')} MXN`;
-  const numFromMoney = (txt) => Number(String(txt).replace(/[^\d.]/g,'') || 0);
-  const fmtMoney = (n) => `$${n.toLocaleString('es-MX')} MXN`;
-  const fmtDT = (d) => d ? d.toLocaleString('es-MX',{weekday:'short',day:'2-digit',month:'short',hour:'numeric',minute:'2-digit',hour12:true}).replace(/\.$/,'') : '—';
-
-  const PREF_DISCOUNT = 0.10;
-  const getPrefPrice = (base) => Math.max(0, Math.round(base*(1 - PREF_DISCOUNT)));
-
-  const topbar = qs('.topbar');
-  function toggleTopbar(){ window.scrollY>40 ? topbar.classList.add('solid') : topbar.classList.remove('solid'); }
-  toggleTopbar(); window.addEventListener('scroll', toggleTopbar, {passive:true});
-  qs('.hamburger')?.addEventListener('click', ()=>{
-    const m=qs('.menu'); const show=getComputedStyle(m).display==='none';
-    m.style.display=show?'flex':'none'; if(show){m.style.flexDirection='column';m.style.gap='12px';}
-  });
-
-  function setActiveStep(n){
-    qsa('.step-item').forEach(el=>{
-      el.classList.toggle('active', Number(el.dataset.step)===n);
-      el.classList.toggle('done', Number(el.dataset.step)<n);
-    });
-    const total=qsa('.step-item').length;
-    const pct=(n-1)/(total-1)*100;
-    qs('#progressFill').style.width=`${pct}%`;
+    const ufStartDate = qs("#ufStartDate");
+    const ufEndDate   = qs("#ufEndDate");
+    const ufStartTime = qs("#ufStartTime");
+    const ufEndTime   = qs("#ufEndTime");
+    const dob         = qs("#dob");
+    if (ufStartDate) flatpickr(ufStartDate, { altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d" });
+    if (ufEndDate)   flatpickr(ufEndDate,   { altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d" });
+    if (ufStartTime) flatpickr(ufStartTime, { enableTime: true, noCalendar: true, minuteIncrement: 5, time_24hr: false, altInput: true, altFormat: "h:i K", dateFormat: "H:i" });
+    if (ufEndTime)   flatpickr(ufEndTime,   { enableTime: true, noCalendar: true, minuteIncrement: 5, time_24hr: false, altInput: true, altFormat: "h:i K", dateFormat: "H:i" });
+    if (dob)         flatpickr(dob,         { altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d", maxDate: new Date() });
   }
-  setActiveStep(2);
+  document.addEventListener("DOMContentLoaded", initFlatpickrLite);
 
-  const state = { car:null, addons:{}, days:12, taxRate:.16, payment:null, loc:'Querétaro Aeropuerto', isPreferred:false,
-  memberId: null };
+  // ---------- Mostrar/Ocultar panel ----------
+  document.addEventListener("DOMContentLoaded", () => {
+    const panel     = qs("#editPanel");
+    const toggleBtn = qs("#toggleEdit");
+    const cancelBtn = qs("#cancelEdit");
 
-  let startPicker; let userPicker; let dobPicker;
-
-  function localizeES(){ if(window.flatpickr?.l10ns?.es) flatpickr.localize(flatpickr.l10ns.es); }
-
-  function initEditPickers(defS, defE){
-    localizeES();
-    startPicker = flatpickr('#start', {
-      enableTime:true, time_24hr:false, minuteIncrement:5,
-      altInput:true, altFormat:'d/m/Y h:i K', dateFormat:'Z',
-      defaultDate:[defS, defE],
-      plugins:[ new rangePlugin({ input:'#end' }) ],
-      onChange:(dates)=>{ if(dates.length===2) applyDates(dates[0], dates[1]); }
-    });
-  }
-
-  let ufDateStartPicker, ufTimeStartPicker, ufDateEndPicker, ufTimeEndPicker;
-
-  function initUserPickers(defaultStart, defaultEnd){
-    localizeES();
-
-    ufDateStartPicker = flatpickr('#ufStartDate', {
-      altInput:true, altFormat:'d/m/Y', dateFormat:'Y-m-d',
-      defaultDate: defaultStart
-    });
-    ufDateEndPicker = flatpickr('#ufEndDate', {
-      altInput:true, altFormat:'d/m/Y', dateFormat:'Y-m-d',
-      defaultDate: defaultEnd
-    });
-
-    ufTimeStartPicker = flatpickr('#ufStartTime', {
-      enableTime:true, noCalendar:true, minuteIncrement:5,
-      time_24hr:false, altInput:true, altFormat:'h:i K', dateFormat:'H:i',
-      defaultDate: defaultStart
-    });
-    ufTimeEndPicker = flatpickr('#ufEndTime', {
-      enableTime:true, noCalendar:true, minuteIncrement:5,
-      time_24hr:false, altInput:true, altFormat:'h:i K', dateFormat:'H:i',
-      defaultDate: defaultEnd
-    });
-
-    dobPicker = flatpickr('#dob', {
-      altInput:true, altFormat:'d/m/Y', dateFormat:'Y-m-d',
-      maxDate: new Date(),
-    });
-
-    const recompute = ()=>{
-      const sDate = ufDateStartPicker?.selectedDates?.[0] || defaultStart;
-      const eDate = ufDateEndPicker?.selectedDates?.[0]   || defaultEnd;
-      const sTime = ufTimeStartPicker?.selectedDates?.[0] || defaultStart;
-      const eTime = ufTimeEndPicker?.selectedDates?.[0]   || defaultEnd;
-
-      const s = new Date(
-        sDate.getFullYear(), sDate.getMonth(), sDate.getDate(),
-        sTime.getHours(), sTime.getMinutes(), 0, 0
-      );
-      const e = new Date(
-        eDate.getFullYear(), eDate.getMonth(), eDate.getDate(),
-        eTime.getHours(), eTime.getMinutes(), 0, 0
-      );
-
-      applyDates(s, e);
-    };
-
-    [ufDateStartPicker, ufDateEndPicker, ufTimeStartPicker, ufTimeEndPicker].forEach(fp=>{
-      fp?.config && (fp.config.onChange = [...(fp.config.onChange||[]), recompute]);
-    });
-
-    recompute();
-  }
-
-  function setUserPickersFromDates(s, e){
-    ufDateStartPicker?.setDate(s, true);
-    ufTimeStartPicker?.setDate(s, true);
-    ufDateEndPicker?.setDate(e, true);
-    ufTimeEndPicker?.setDate(e, true);
-  }
-
-  function applyDates(s,e){
-    if(!(s && e)) return;
-    qs('#briefStart').textContent = fmtDT(s);
-    qs('#briefEnd').textContent   = fmtDT(e);
-    qs('#sumStart').textContent   = `${fmtDT(s)} · ${state.loc}`;
-    qs('#sumEnd').textContent     = `${fmtDT(e)} · ${state.loc}`;
-    state.days = Math.max(1, Math.ceil((e - s)/86400000));
-
-    if(startPicker){
-      const a=startPicker.selectedDates||[];
-      if(!(a[0] && a[1] && +a[0]===+s && +a[1]===+e)) startPicker.setDate([s,e], true);
+    if (toggleBtn && panel) {
+      toggleBtn.addEventListener("click", () => {
+        panel.style.display = panel.style.display === "block" ? "" : "block";
+        setStep(1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
     }
-    if(ufDateStartPicker && ufTimeStartPicker && ufDateEndPicker && ufTimeEndPicker){
-      const s0 = ufDateStartPicker.selectedDates?.[0], t0 = ufTimeStartPicker.selectedDates?.[0];
-      const e0 = ufDateEndPicker.selectedDates?.[0],   t1 = ufTimeEndPicker.selectedDates?.[0];
-      const needSync =
-        !s0 || !t0 || !e0 || !t1 ||
-        s0.toDateString() !== s.toDateString() ||
-        t0.getHours() !== s.getHours() || t0.getMinutes() !== s.getMinutes() ||
-        e0.toDateString() !== e.toDateString() ||
-        t1.getHours() !== e.getHours() || t1.getMinutes() !== e.getMinutes();
-      if(needSync) setUserPickersFromDates(s, e);
+    if (cancelBtn && panel) {
+      cancelBtn.addEventListener("click", () => {
+        panel.style.display = "none";
+        const step2 = qs("#step2");
+        if (step2) setStep(2);
+      });
     }
-  }
-
-  function toggleFlightField(){
-    const input = qs('#flight');
-    if(!input) return;
-    const isAirport = /aeropuerto/i.test(state.loc || '');
-    input.disabled = !isAirport;
-    input.placeholder = isAirport ? 'Ej. AM1234' : 'Disponible solo si recoges en Aeropuerto';
-    const wrap = input.closest('.field');
-    if(wrap) wrap.style.opacity = isAirport ? '1' : '.6';
-  }
-
-  const initialStart = new Date(); initialStart.setHours(12,0,0,0);
-  const initialEnd   = new Date(initialStart.getTime()+11*86400000);
-  qs('#briefLoc').textContent = state.loc;
-  applyDates(initialStart, initialEnd);
-  toggleFlightField();
-
-  const panel=qs('#editPanel');
-  qs('#toggleEdit').addEventListener('click',()=>{
-    panel.style.display = panel.style.display ? '' : 'block';
-    if(!startPicker) initEditPickers(initialStart, initialEnd);
-  });
-  qs('#cancelEdit').addEventListener('click',()=>panel.style.display='none');
-
-  qs('#editPanel').addEventListener('submit',e=>{
-    e.preventDefault();
-    state.loc = qs('#loc').value;
-    const [s,e2] = startPicker?.selectedDates || [];
-    applyDates(s,e2);
-    toggleFlightField();
-    panel.style.display='none';
   });
 
-  qs('#backTo1')?.addEventListener('click', ()=>{
-    panel.style.display='block';
-    if(!startPicker) initEditPickers(initialStart, initialEnd);
-    setActiveStep(1); window.scrollTo({top:0, behavior:'smooth'});
-  });
-  qs('#backTo2')?.addEventListener('click', ()=>{
-    qs('#step3').classList.add('hidden');
-    qs('#step2').classList.remove('hidden');
-    setActiveStep(2); window.scrollTo({top:0, behavior:'smooth'});
-  });
-  qs('#backTo3')?.addEventListener('click', ()=>{
-    qs('#step4').classList.add('hidden');
-    qs('#step3').classList.remove('hidden');
-    setActiveStep(3); window.scrollTo({top:0, behavior:'smooth'});
+  // ---------- Navegación pasos ----------
+  document.addEventListener("DOMContentLoaded", () => {
+    const panel = qs("#editPanel");
+    const step2 = qs("#step2");
+    const step3 = qs("#step3");
+    const step4 = qs("#step4");
+
+    const backTo1 = qs("#backTo1");
+    const backTo2 = qs("#backTo2");
+    const backTo3 = qs("#backTo3");
+    const editDates = qs("#editDates");
+    const editCar   = qs("#editCar");
+
+    function goStep1() {
+      if (panel) panel.style.display = "block";
+      if (step2) step2.style.display = "none";
+      if (step3) step3.style.display = "none";
+      if (step4) step4.style.display = "none";
+      setStep(1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    function goStep2() {
+      if (panel) panel.style.display = "";
+      if (step2) step2.style.display = "";
+      if (step3) step3.style.display = "none";
+      if (step4) step4.style.display = "none";
+      setStep(2);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    function goStep3() {
+      if (panel) panel.style.display = "";
+      if (step2) step2.style.display = "none";
+      if (step3) step3.style.display = "";
+      if (step4) step4.style.display = "none";
+      setStep(3);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    if (backTo1) backTo1.addEventListener("click", (e) => { e.preventDefault(); goStep1(); });
+    if (backTo2) backTo2.addEventListener("click", (e) => { e.preventDefault(); goStep2(); });
+    if (backTo3) backTo3.addEventListener("click", (e) => { e.preventDefault(); goStep3(); });
+
+    if (editDates) editDates.addEventListener("click", (e) => { e.preventDefault(); goStep1(); });
+    if (editCar)   editCar.addEventListener("click",   (e) => { e.preventDefault(); goStep2(); });
   });
 
-  qs('#editDates')?.addEventListener('click', ()=>{
-    panel.style.display='block';
-    if(!startPicker) initEditPickers(initialStart, initialEnd);
-    window.scrollTo({top:0, behavior:'smooth'});
-  });
-  qs('#editCar')?.addEventListener('click', ()=>{
-    qs('#step4').classList.add('hidden');
-    qs('#step2').classList.remove('hidden');
-    setActiveStep(2); window.scrollTo({top:0, behavior:'smooth'});
-  });
+  // ---------- Complementos (Paso 3) ----------
+  document.addEventListener("DOMContentLoaded", () => {
+    const grid = qs(".addons-grid");
+    const btnContinue = qs("#toStep4");
+    const btnSkip = qs("#skipAddons");
 
-  function fillMemberOffers(){
-    qsa('.r-card').forEach(card=>{
-      const payCounter = Number(card.dataset.payCounter);
-      const payPre     = Number(card.dataset.payPre);
+    if (!grid || !btnContinue) return;
 
-      const mCounter = getPrefPrice(payCounter);
-      const mPre     = getPrefPrice(payPre);
+    const state = new Map();
 
-      const p1 = card.querySelector('.member-offer [data-member="mostrador"]');
-      const s1 = card.querySelector('.member-offer [data-save="mostrador"]');
-      if(p1){ p1.textContent = fmtMoney(mCounter); }
-      if(s1){ s1.textContent = `Ahorra ${fmtMoney(payCounter - mCounter)}`; }
+    function getCardData(card) {
+      const id     = String(card.dataset.id || "");
+      const name   = String(card.dataset.name || "");
+      const price  = Number(card.dataset.price || 0);
+      const charge = String(card.dataset.charge || "por_dia");
+      const stock  = card.dataset.stock ? Number(card.dataset.stock) : Infinity;
+      return { id, name, price, charge, stock };
+    }
 
-      const p2 = card.querySelector('.member-offer [data-member="prepago"]');
-      const s2 = card.querySelector('.member-offer [data-save="prepago"]');
-      if(p2){ p2.textContent = fmtMoney(mPre); }
-      if(s2){ s2.textContent = `Ahorra ${fmtMoney(payPre - mPre)}`; }
+    function getQtyEl(card) { return card.querySelector(".qty"); }
+    function totalSelected() { let t = 0; state.forEach(v => { t += v.qty; }); return t; }
+
+    function updateCardUI(card, qty) {
+      const qtyEl = getQtyEl(card);
+      if (qtyEl) qtyEl.textContent = String(qty);
+      card.classList.toggle("selected", qty > 0);
+    }
+
+    function updateContinueButton() {
+      const hasAny = totalSelected() > 0;
+      if (hasAny) {
+        btnContinue.classList.remove("is-disabled");
+        btnContinue.removeAttribute("aria-disabled");
+        btnContinue.removeAttribute("disabled");
+      } else {
+        btnContinue.classList.add("is-disabled");
+        btnContinue.setAttribute("aria-disabled", "true");
+        btnContinue.setAttribute("disabled", "disabled");
+      }
+      try {
+        const url = new URL(btnContinue.href, window.location.origin);
+        [...url.searchParams.keys()].filter(k => k.startsWith("addons["))
+          .forEach(k => url.searchParams.delete(k));
+        state.forEach((v, id) => { if (v.qty > 0) url.searchParams.set(`addons[${id}]`, String(v.qty)); });
+        btnContinue.href = url.toString();
+      } catch (_) {}
+    }
+
+    function serializeState() {
+      const obj = {};
+      state.forEach((v, id) => {
+        if (v.qty > 0) obj[id] = { id, name: v.name, price: v.price, charge: v.charge, qty: v.qty };
+      });
+      return obj;
+    }
+    function persistSelection() { try { sessionStorage.setItem('addons_selection', JSON.stringify(serializeState())); } catch(_) {} }
+    function loadSelection() {
+      try {
+        const saved = JSON.parse(sessionStorage.getItem('addons_selection') || '{}');
+        Object.values(saved).forEach(it => {
+          state.set(String(it.id), {
+            id: String(it.id), name: it.name, price: Number(it.price),
+            charge: String(it.charge), stock: Infinity, qty: Number(it.qty)
+          });
+          const card = grid.querySelector(`.addon-card[data-id="${it.id}"]`);
+          if (card) updateCardUI(card, it.qty);
+        });
+      } catch(_) {}
+    }
+    loadSelection();
+    updateContinueButton();
+
+    grid.addEventListener("click", (e) => {
+      const t = e.target;
+      if (!(t instanceof HTMLElement)) return;
+      const isPlus  = t.classList.contains("plus");
+      const isMinus = t.classList.contains("minus");
+      if (!isPlus && !isMinus) return;
+
+      const card = t.closest(".addon-card");
+      if (!card) return;
+
+      const data = getCardData(card);
+      if (!data.id) return;
+
+      const current = state.get(data.id) || { ...data, qty: 0 };
+      let nextQty = current.qty + (isPlus ? 1 : -1);
+      if (nextQty < 0) nextQty = 0;
+      if (Number.isFinite(data.stock)) nextQty = Math.min(nextQty, data.stock);
+
+      current.qty = nextQty;
+      state.set(data.id, current);
+
+      updateCardUI(card, nextQty);
+      updateContinueButton();
+      persistSelection();
     });
+
+    btnContinue.addEventListener("click", (e) => {
+      if (btnContinue.hasAttribute("disabled") || btnContinue.classList.contains("is-disabled")) {
+        e.preventDefault();
+        return false;
+      }
+      persistSelection();
+    });
+
+    if (btnSkip) {
+      btnSkip.addEventListener("click", () => {
+        try { sessionStorage.removeItem('addons_selection'); } catch(_) {}
+      });
+    }
+  });
+
+  // ---------- Paso 4: hidratar resumen ----------
+  document.addEventListener("DOMContentLoaded", () => {
+    const elList   = qs('#extrasList');
+    const elEmpty  = qs('#extrasEmpty');
+    const elBase   = qs('#qBase');
+    const elExtras = qs('#qExtras');
+    const elIva    = qs('#qIva');
+    const elTotal  = qs('#qTotal');
+
+    if (!qs('#step4')) return;
+
+    function parseMoney(text) { return Number(String(text).replace(/[^\d.]/g, '')) || 0; }
+    const baseMx = elBase ? parseMoney(elBase.textContent) : 0;
+    const days   = Number(qs('#qDays')?.textContent || '1') || 1;
+
+    let selection = {};
+    try { selection = JSON.parse(sessionStorage.getItem('addons_selection') || '{}'); }
+    catch (_) { selection = {}; }
+
+    let extrasSub = 0;
+    if (elList) elList.innerHTML = '';
+    const items = Object.values(selection);
+    if (items.length === 0) {
+      if (elEmpty) elEmpty.style.display = '';
+    } else {
+      if (elEmpty) elEmpty.style.display = 'none';
+      items.forEach(it => {
+        const qty = Number(it.qty || 0);
+        if (qty <= 0) return;
+        const price = Number(it.price || 0);
+        const isPerDay = (String(it.charge || '') === 'por_dia');
+        const sub = price * (isPerDay ? days : 1) * qty;
+        extrasSub += sub;
+        const li = document.createElement('li');
+        li.innerHTML = `<span>${it.name} ${isPerDay ? '(por día)' : '(evento)'} × ${qty}</span><strong>$${sub.toLocaleString()} MXN</strong>`;
+        elList?.appendChild(li);
+      });
+    }
+    if (elExtras) elExtras.textContent = `$${extrasSub.toLocaleString()} MXN`;
+    const iva = Math.round((baseMx + extrasSub) * 0.16);
+    if (elIva) elIva.textContent = `$${iva.toLocaleString()} MXN`;
+    if (elTotal) elTotal.textContent = `$${(baseMx + extrasSub + iva).toLocaleString()} MXN`;
+  });
+
+  // ======================================================
+  // === FASE 1: Guardar cotización vía AJAX + generar PDF
+  // ======================================================
+  document.addEventListener("DOMContentLoaded", () => {
+    const H2C_URL   = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+    const JSPDF_URL = "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
+
+    // Tamaño carta en px a ~96dpi
+    const PAGE_W = 816;
+    const PAGE_H = 1056;
+
+    // <<< AJUSTA AQUÍ TUS MÁRGENES >>>
+    const MARGIN = { top: 64, right: 64, bottom: 64, left: 64 }; // 64px ≈ 0.67"
+    const CONTENT_W = PAGE_W - MARGIN.left - MARGIN.right; // ancho útil
+
+    const btnPdf = qs('#btnCotizar');
+    if (!btnPdf) return;
+    if (btnPdf.__pdfBound) return;
+    btnPdf.__pdfBound = true;
+
+    function loadScript(src){
+      return new Promise((res, rej)=>{
+        const s = document.createElement('script');
+        s.src = src; s.async = true; s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    }
+
+    function libs(){
+      const h2c = window.html2canvas?.default || window.html2canvas || null;
+      const jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF || null;
+      return { h2c, jsPDFCtor };
+    }
+
+    async function ensureLibs(){
+      let { h2c, jsPDFCtor } = libs();
+      if (!h2c)      { await loadScript(H2C_URL).catch(()=>{});      ({ h2c } = libs()); }
+      if (!jsPDFCtor){ await loadScript(JSPDF_URL).catch(()=>{}); ({ jsPDFCtor } = libs()); }
+      return { h2c, jsPDFCtor };
+    }
+
+    function absolutize(url) { try { return new URL(url, window.location.origin).href; } catch { return url; } }
+    async function ensureCarImageCORS(container){
+      const img = container.querySelector('.car-sum img, .car-mini__img img, .r-media img');
+      if (!img) return;
+      const abs = absolutize(img.getAttribute('src') || '');
+      img.setAttribute('crossorigin','anonymous');
+      img.src = abs;
+      if (!img.complete) await new Promise(r=>{ img.addEventListener('load', r, {once:true}); img.addEventListener('error', r, {once:true}); });
+    }
+    function ensureQuoteHeader(container){
+      let head = container.querySelector('.qd-head');
+      if (!head) {
+        head = document.createElement('div');
+        head.className = 'qd-head';
+        head.setAttribute('data-temp','1');
+        head.innerHTML = `
+          <div class="qd-brand">
+            <div class="qd-logo">VIAJERO</div>
+            <div class="qd-sub">Renta de Autos</div>
+          </div>
+          <div class="qd-meta">
+            <div><div class="l">Folio</div><div class="v" id="qdCode"></div></div>
+            <div><div class="l">Fecha</div><div class="v" id="qdDate"></div></div>
+          </div>`;
+        container.insertBefore(head, container.firstChild);
+      }
+      const code = container.querySelector('#qdCode');
+      const date = container.querySelector('#qdDate');
+      const rnd = Math.random().toString(36).slice(2,7).toUpperCase();
+      const ymd = new Date().toISOString().slice(0,10).replaceAll('-','');
+      if (code) code.textContent = `COT-${ymd}-${rnd}`;
+      if (date) date.textContent = new Date().toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+    }
+
+    // ---- Helper: leer CSRF del form o del meta
+    function getCsrfToken() {
+      const form = qs('#formCotizacion');
+      const fromInput = form?.querySelector('input[name="_token"]')?.value;
+      if (fromInput) return fromInput;
+      const fromMeta = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      return fromMeta || '';
+    }
+
+    // ---- Helper: obtener vehiculo_id y filtros desde URL
+    function getUrlParams() {
+      const url = new URL(window.location.href);
+      const sp  = url.searchParams;
+      const pickup_sucursal_id  = sp.get('pickup_sucursal_id') || '';
+      const dropoff_sucursal_id = sp.get('dropoff_sucursal_id') || '';
+      const categoria_id        = sp.get('categoria_id') || '';
+      const vehiculo_id         = sp.get('vehiculo_id') || '';
+      return { pickup_sucursal_id, dropoff_sucursal_id, categoria_id, vehiculo_id };
+    }
+
+    // ---- Helper: addons -> formato addons[id] = qty
+    function getAddonsForPost() {
+      try {
+        const raw = JSON.parse(sessionStorage.getItem('addons_selection') || '{}');
+        const out = {};
+        Object.values(raw).forEach(it => {
+          const qty = Number(it.qty || 0);
+          if (qty > 0) out[String(it.id)] = qty;
+        });
+        return out;
+      } catch {
+        return {};
+      }
+    }
+
+    // ---- Guardar cotización antes de PDF
+    // ---- Guardar cotización antes de PDF
+async function saveCotizacionBeforePdf() {
+  const form = qs('#formCotizacion');
+  if (!form) return { ok: false, message: 'No se encontró el formulario.' };
+
+  // Campos visibles
+  const nombre   = qs('#nombreCliente')?.value?.trim()  || '';
+  const email    = qs('#correoCliente')?.value?.trim()   || '';
+  const telefono = qs('#telefonoCliente')?.value?.trim() || '';
+
+  // Fechas/horas desde inputs ocultos (si existen) o desde el brief
+  let pickup_date  = qs('#pickup_date')?.value || '';
+  let pickup_time  = qs('#pickup_time')?.value || '';
+  let dropoff_date = qs('#dropoff_date')?.value || '';
+  let dropoff_time = qs('#dropoff_time')?.value || '';
+
+  if (!pickup_date || !pickup_time) {
+    const briefStart = qs('#briefStart')?.textContent?.trim() || '';
+    const parts = briefStart.split(/\s+/);
+    if (parts.length >= 2) { pickup_date = parts[0]; pickup_time = parts[1]; }
   }
-  fillMemberOffers();
-
-  function ensurePrefModal(){
-    if(document.querySelector('#prefModal')) return;
-    const wrap = document.createElement('div');
-    wrap.className = 'modal-overlay';
-    wrap.id = 'prefModal';
-    wrap.style.display = 'none';
-    wrap.innerHTML = `
-      <div class="modal" role="dialog" aria-labelledby="prefTitle" aria-modal="true">
-        <h3 id="prefTitle" style="margin:0 0 8px;font-weight:900">Ingresa tu ID de miembro preferente</h3>
-        <p style="margin:0 0 8px;color:#6b7280;font-size:13px">Validamos tu membresía para aplicar el precio de socio.</p>
-        <input id="prefInput" class="pref-input" placeholder="Ej. VJ-123456" />
-        <div id="prefError" style="display:none;color:#b22222;font-size:12px;text-align:left;margin-top:-6px;">
-          Ingresa un ID válido (5–20 caracteres alfanuméricos).
-        </div>
-        <div class="modal-actions">
-          <button type="button" id="prefCancel" class="btn btn-gray">Cancelar</button>
-          <button type="button" id="prefOk" class="btn btn-primary">Continuar</button>
-        </div>
-      </div>`;
-    document.body.appendChild(wrap);
-
-    wrap.addEventListener('click', (e)=>{ if(e.target===wrap) closePrefModal(); });
-    wrap.querySelector('#prefCancel').addEventListener('click', closePrefModal);
+  if (!dropoff_date || !dropoff_time) {
+    const briefEnd = qs('#briefEnd')?.textContent?.trim() || '';
+    const parts = briefEnd.split(/\s+/);
+    if (parts.length >= 2) { dropoff_date = parts[0]; dropoff_time = parts[1]; }
   }
-  function openPrefModal(onConfirm){
-    ensurePrefModal();
-    const overlay = document.querySelector('#prefModal');
-    const input   = overlay.querySelector('#prefInput');
-    const error   = overlay.querySelector('#prefError');
-    error.style.display = 'none';
-    input.value = state.memberId || '';
-    overlay.style.display = 'flex';
-    input.focus();
 
-    const confirm = () => {
-      const val = (input.value||'').trim();
-      if(!/^[A-Z0-9-]{5,20}$/i.test(val)){
-        error.style.display = 'block';
-        input.focus();
+  // URL params (vehiculo y sucursales)
+  const { pickup_sucursal_id, dropoff_sucursal_id, vehiculo_id } = getUrlParams();
+
+  // Addons
+  const addons = getAddonsForPost();
+
+  // Construir payload
+  const payload = {
+    vehiculo_id: Number(vehiculo_id) || undefined,
+    pickup_date, pickup_time, dropoff_date, dropoff_time,
+    pickup_sucursal_id: pickup_sucursal_id ? Number(pickup_sucursal_id) : undefined,
+    dropoff_sucursal_id: dropoff_sucursal_id ? Number(dropoff_sucursal_id) : undefined,
+    addons,
+    nombre, email, telefono,
+  };
+
+  // Endpoint desde el action del form (o default)
+  const url = form.getAttribute('action') || '/cotizaciones';
+  const token = getCsrfToken();
+
+  // UI lock
+  const original = btnPdf.innerHTML;
+  btnPdf.disabled = true;
+  btnPdf.innerHTML = '<span class="spinner" style="display:inline-block;transform:translateY(2px)">⏳</span> Generando...';
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': token,
+        'X-Requested-With': 'XMLHttpRequest',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok || data?.ok === false) {
+      const msg = data?.message || 'No se pudo guardar la cotización.';
+      throw new Error(msg);
+    }
+
+   // ✅ Enviar mensaje de nueva reservación por WhatsApp (solo versión web con mensaje prellenado)
+try {
+  const telefonoAgente = "5214427169793"; // 🇲🇽 Formato internacional
+  const folioTxt = data?.folio ? data.folio : 'pendiente';
+
+  // 📋 Mensaje predefinido
+  const mensaje =
+    `*NUEVA RESERVACIÓN*\n\n` +
+    `👤 *Cliente:* ${nombre || 'No especificado'}\n` +
+    `🧾 *Folio de cotización:* ${folioTxt}\n` +
+    `📅 *Fecha de entrega:* ${pickup_date} ${pickup_time}\n` +
+    `📆 *Fecha de devolución:* ${dropoff_date} ${dropoff_time}\n\n` +
+    `Mensaje predeterminado del sistema Viajero Car Rental.`;
+
+  // Codificar texto y construir URL directa a WhatsApp Web
+  const mensajeEncoded = encodeURIComponent(mensaje);
+  const waWebUrl = `https://web.whatsapp.com/send?phone=${telefonoAgente}&text=${mensajeEncoded}`;
+
+  // 🔗 Abrir directamente en WhatsApp Web (nueva pestaña)
+  window.open(waWebUrl, '_blank');
+
+} catch (err) {
+  console.error('Error al abrir WhatsApp Web:', err);
+}
+
+
+    // Si viene folio del server, úsalo en el header del PDF
+    if (data?.folio) {
+      const codeEl = qs('#cotizacionDoc #qdCode');
+      if (codeEl) codeEl.textContent = data.folio;
+    }
+
+    return { ok: true, folio: data?.folio || null };
+  } catch (err) {
+    console.error('Error guardando cotización:', err);
+    alert('No se pudo guardar/enviar la cotización. Revisa tu conexión o inténtalo más tarde.');
+    return { ok: false, message: String(err?.message || err) };
+  } finally {
+    btnPdf.disabled = false;
+    btnPdf.innerHTML = original;
+  }
+}
+
+
+    async function generatePdfFlow() {
+      const node = qs('#cotizacionDoc');
+      if (!node) return;
+
+      const { h2c, jsPDFCtor } = await ensureLibs();
+      if (!h2c || !jsPDFCtor) {
+        alert('No pude cargar el generador de PDF. Revisa tu conexión e inténtalo de nuevo.');
         return;
       }
-      state.memberId = val;
-      closePrefModal();
-      onConfirm && onConfirm();
-    };
-    overlay.querySelector('#prefOk').onclick = confirm;
-    input.onkeydown = (ev)=>{ if(ev.key==='Enter') confirm(); };
-  }
-  function closePrefModal(){
-    const overlay = document.querySelector('#prefModal');
-    if(overlay) overlay.style.display = 'none';
-  }
 
-  qsa('.pick').forEach(btn=>{
-    btn.addEventListener('click',()=> selectCarFromCard(btn,false));
-  });
+      // preparar encabezado / ocultar interacciones
+      ensureQuoteHeader(node);
+      const interactive = qsa('a,button', node);
+      const prev = new Map();
+      interactive.forEach(el=>{ prev.set(el, el.style.display); el.style.display='none'; });
+      document.body.classList.add('for-pdf');
 
-  qsa('.pick-member').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      if(state.memberId){
-        selectCarFromCard(btn,true);
-      }else{
-        openPrefModal(()=> selectCarFromCard(btn,true));
+      try{
+        await ensureCarImageCORS(node);
+
+        // Clon y sandbox al ANCHO ÚTIL (contenido) para mayor nitidez
+        const clone = node.cloneNode(true);
+        clone.classList.add('pdf-fit');
+        clone.style.width = `${CONTENT_W}px`;
+        clone.style.maxWidth = `${CONTENT_W}px`;
+        normalizePdfLayout(clone);
+
+        let sandbox = document.getElementById('pdf-sandbox');
+        if (!sandbox) { sandbox = document.createElement('div'); sandbox.id = 'pdf-sandbox'; document.body.appendChild(sandbox); }
+        else sandbox.innerHTML = '';
+        sandbox.style.width = `${CONTENT_W}px`;
+        sandbox.appendChild(clone);
+        window.scrollTo({top:0, behavior:'auto'});
+
+        // Render en canvas (nitidez x2)
+        const canvas = await h2c(clone, {
+          useCORS: true, allowTaint: false, backgroundColor: '#ffffff',
+          scale: 2, width: CONTENT_W, windowWidth: CONTENT_W, scrollY: 0
+        });
+
+        // === UNA SOLA HOJA con MÁRGENES definidos ===
+        const pdf = new jsPDFCtor({ unit:'px', format:[PAGE_W, PAGE_H], orientation:'portrait' });
+
+        const boxW = PAGE_W - MARGIN.left - MARGIN.right;
+        const boxH = PAGE_H - MARGIN.top  - MARGIN.bottom;
+
+        const imgW = canvas.width;
+        const imgH = canvas.height;
+        const fit  = Math.min(boxW / imgW, boxH / imgH);
+
+        const outW = Math.round(imgW * fit);
+        const outH = Math.round(imgH * fit);
+
+        const offsetX = Math.round(MARGIN.left + (boxW - outW) / 2); // centrado horizontal
+        const offsetY = Math.round(MARGIN.top  + (boxH - outH) / 2); // centrado vertical
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.98);
+        const fileName = (clone.querySelector('#qdCode')?.textContent || 'cotizacion') + '.pdf';
+
+        pdf.addImage(imgData, 'JPEG', offsetX, offsetY, outW, outH);
+        pdf.save(fileName);
+
+        const sb = document.getElementById('pdf-sandbox');
+        if (sb && sb.parentNode) sb.parentNode.removeChild(sb);
+      } catch(err){
+        console.error('PDF error:', err);
+        alert('Hubo un error generando el PDF. Revisa la consola para detalles.');
+      } finally {
+        interactive.forEach(el=>{ el.style.display = prev.get(el) || ''; });
+        document.body.classList.remove('for-pdf');
+        node.querySelectorAll('[data-temp="1"]').forEach(n=>n.remove());
       }
-    });
-  });
-
-  function selectCarFromCard(btn, member=false){
-    const card = btn.closest('.r-card');
-    const plan = btn.dataset.plan;
-    const baseRaw = Number(plan==='prepago' ? card.dataset.payPre : card.dataset.payCounter);
-    const base = member ? getPrefPrice(baseRaw) : baseRaw;
-
-    state.isPreferred = member;
-    state.car = {
-      name: card.dataset.name,
-      img: card.querySelector('img').src,
-      cat: card.dataset.cat,
-      plan,
-      baseRaw,
-      base
-    };
-    qs('#sumName').textContent = state.car.name;
-    qs('#sumCat').textContent  = `Categoría ${state.car.cat}`;
-    qs('#sumImg').src = state.car.img;
-
-    qs('#step2').classList.add('hidden');
-    qs('#step3').classList.remove('hidden');
-    setActiveStep(3);
-    window.scrollTo({top:0, behavior:'smooth'});
-  }
-
-  qsa('.pick').forEach(btn=>{
-    btn.addEventListener('click',()=> selectCarFromCard(btn,false));
-  });
-  qsa('.pick-member').forEach(btn=>{
-    btn.addEventListener('click',()=> selectCarFromCard(btn,true));
-  });
-
-  qsa('.addon-card').forEach(card=>{
-    const qtySpan=card.querySelector('.qty');
-    const id=card.dataset.id;
-    card.querySelector('.plus')?.addEventListener('click',()=>{
-      const val=(state.addons[id]||0)+1; state.addons[id]=val; qtySpan.textContent=val;
-    });
-    card.querySelector('.minus')?.addEventListener('click',()=>{
-      const val=Math.max(0,(state.addons[id]||0)-1);
-      if(val===0) delete state.addons[id]; else state.addons[id]=val;
-      qtySpan.textContent=val;
-    });
-  });
-
-  function goStep4(){
-    if(!state.car){ alert('Primero elige un auto.'); return; }
-
-    const list = Object.entries(state.addons);
-    if(list.length===0){ qs('#sumExtras').textContent='Sin complementos'; }
-    else{
-      qs('#sumExtras').innerHTML = list.map(([id,qty])=>{
-        const card = qs(`.addon-card[data-id="${id}"]`);
-        const name = card.dataset.name; const price = Number(card.dataset.price);
-        return `<div>• ${name} × ${qty} — ${money(price*qty*state.days)}</div>`;
-      }).join('');
-    }
-    const base = state.car?.base || 0;
-    const addonsTotal = list.reduce((acc,[id,qty])=>{
-      const price = Number(qs(`.addon-card[data-id="${id}"]`).dataset.price);
-      return acc + price*qty*state.days;
-    },0);
-    const tax = Math.round((base+addonsTotal)*state.taxRate);
-    const total = base + addonsTotal + tax;
-    qs('#pBase').textContent = money(base);
-    qs('#pAddons').textContent = money(addonsTotal);
-    qs('#pTax').textContent = money(tax);
-    qs('#pTotal').textContent = money(total);
-
-    if(!ufDateStartPicker) initUserPickers(initialStart, initialEnd);
-    setUserPickersFromDates(initialStart, initialEnd);
-    toggleFlightField();
-
-    qs('#step3').classList.add('hidden');
-    qs('#step4').classList.remove('hidden');
-    setActiveStep(4);
-    window.scrollTo({top:0, behavior:'smooth'});
-  }
-  qs('#toStep4').addEventListener('click', goStep4);
-  qs('#skipAddons').addEventListener('click', goStep4);
-
-  qs('#reserveBtn').addEventListener('click', (e)=>{
-    e.preventDefault();
-
-    const total = numFromMoney(qs('#pTotal').textContent || 0);
-    const col = qs('#userCol');
-    col.innerHTML = `
-      <div class="form-card">
-        <h3>Pago</h3>
-
-        <div class="pay-section">
-          <div class="group-title">Método de pago</div>
-          <div class="method-list" id="payMethods">
-            <label class="method-pill is-active"><input type="radio" name="payMethod" value="tarjeta" checked><i class="fa-regular fa-credit-card"></i> Tarjeta</label>
-            <label class="method-pill"><input type="radio" name="payMethod" value="paypal"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal"> PayPal</label>
-            <label class="method-pill"><input type="radio" name="payMethod" value="oxxo"><img src="https://upload.wikimedia.org/wikipedia/commons/0/06/Oxxo_Logo.svg" alt="OXXO"> OXXO</label>
-            <label class="method-pill"><input type="radio" name="payMethod" value="mp"><img src="https://upload.wikimedia.org/wikipedia/commons/1/16/MercadoPago.svg" alt="Mercado Pago"> Mercado Pago</label>
-            <label class="method-pill"><input type="radio" name="payMethod" value="efectivo"><i class="fa-solid fa-money-bill-wave"></i> Efectivo (en mostrador)</label>
-          </div>
-        </div>
-
-        <div class="pay-section">
-          <div class="group-title">¿Cuánto deseas liquidar ahora?</div>
-          <div class="plan-options" id="payPlan">
-            <label class="plan-pill is-active"><input type="radio" name="plan" value="100" checked> 💯 100%</label>
-            <label class="plan-pill"><input type="radio" name="plan" value="45"> 🔖 45% (anticipo)</label>
-          </div>
-          <div class="charge-box"><div class="charge-badge" id="chargeBadge">100% hoy</div><div class="charge-amount" id="chargeNow">${fmtMoney(total)}</div></div>
-        </div>
-
-        <form class="user-form" id="payForm">
-          <div class="form-row card-field"><div class="field"><label>Nombre en la tarjeta</label><input placeholder="Como aparece en la tarjeta" required></div></div>
-          <div class="form-row grid-2 card-field"><div class="field"><label>Número de tarjeta</label><input inputmode="numeric" placeholder="4111 1111 1111 1111" required></div><div class="field"><label>CVV</label><input inputmode="numeric" placeholder="123" required></div></div>
-          <div class="form-row grid-2 card-field"><div class="field"><label>Mes/Año</label><input placeholder="MM/AA" required></div><div class="field"><label>Código postal</label><input required></div></div>
-          <button class="btn btn-primary btn-block" id="payNow">Pagar ahora</button>
-          <div class="pay-logos" style="margin-top:12px"><img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa"><img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard"><img src="https://upload.wikimedia.org/wikipedia/commons/3/30/American_Express_logo_%282018%29.svg" alt="American Express"></div>
-        </form>
-      </div>`;
-
-    const payState = { method:'tarjeta', planPct:100, total, get charge(){ return Math.round(this.total*(this.planPct/100)); } };
-    const setActive = (listSel, el) => { qsa(`${listSel} label`).forEach(l=>l.classList.remove('is-active')); el.classList.add('is-active'); };
-    const setPlanDisabled = (disabled) => {
-      qsa('#payPlan .plan-pill').forEach(l=>l.classList.toggle('is-disabled', disabled));
-      if(disabled){ payState.planPct = 0; }
-      else if(payState.planPct===0){ payState.planPct = 100; setActive('#payPlan', qsa('#payPlan .plan-pill')[0]); }
-    };
-    const renderCharge = () => {
-      if(payState.method==='efectivo'){ qs('#chargeBadge').textContent='En mostrador'; qs('#chargeNow').textContent=fmtMoney(0); }
-      else{ qs('#chargeBadge').textContent=(payState.planPct===100)?'100% hoy':'45% hoy'; qs('#chargeNow').textContent=fmtMoney(payState.charge); }
-    };
-    const toggleCardFields = (show)=>{ qsa('#payForm .card-field').forEach(el=>el.style.display = show?'':'none'); qs('#payNow').textContent = show?'Pagar ahora':'Obtener número de reserva'; };
-
-    qsa('#payMethods .method-pill').forEach(lbl=>{
-      lbl.addEventListener('click', ()=>{
-        const val = lbl.querySelector('input').value; payState.method=val; setActive('#payMethods', lbl);
-        toggleCardFields(val==='tarjeta'); setPlanDisabled(val==='efectivo'); renderCharge();
-      });
-    });
-    qsa('#payPlan .plan-pill').forEach(lbl=>{
-      lbl.addEventListener('click', ()=>{ if(lbl.classList.contains('is-disabled')) return;
-        payState.planPct = Number(lbl.querySelector('input').value); setActive('#payPlan', lbl); renderCharge();
-      });
-    });
-    renderCharge(); toggleCardFields(true);
-
-    qs('#payNow')?.addEventListener('click', ev=>{
-      ev.preventDefault();
-      const paidNow = (payState.method==='tarjeta') ? payState.charge : 0;
-      state.payment = { method: payState.method, planPct: payState.planPct, paid: paidNow, total: payState.total };
-      renderConfirmation();
-    });
-  });
-
-  function refreshSelectedBaseAndTotalsIfVisible(){
-    if(!state.car) return;
-    const baseFrom = state.isPreferred ? getPrefPrice(state.car.baseRaw || state.car.base) : (state.car.baseRaw || state.car.base);
-    state.car.base = baseFrom;
-
-    const step4Visible = !qs('#step4').classList.contains('hidden');
-    if(step4Visible){
-      const list = Object.entries(state.addons);
-      const addonsTotal = list.reduce((acc,[id,qty])=>{
-        const price = Number(qs(`.addon-card[data-id="${id}"]`).dataset.price);
-        return acc + price*qty*state.days;
-      },0);
-      const tax = Math.round((baseFrom+addonsTotal)*state.taxRate);
-      const total = baseFrom + addonsTotal + tax;
-      qs('#pBase').textContent = money(baseFrom);
-      qs('#pAddons').textContent = money(addonsTotal);
-      qs('#pTax').textContent = money(tax);
-      qs('#pTotal').textContent = money(total);
-    }
-  }
-
-  function renderConfirmation(){
-    const code = 'MX-' + Math.random().toString(36).substring(2,8).toUpperCase();
-
-    qs('#cfCode').textContent = code;
-    qs('#cfStart').textContent = qs('#sumStart').textContent;
-    qs('#cfEnd').textContent   = qs('#sumEnd').textContent;
-
-    qs('#cfImg').src   = qs('#sumImg').src;
-    qs('#cfName').textContent = qs('#sumName').textContent;
-    qs('#cfCat').textContent  = qs('#sumCat').textContent;
-
-    const extrasHTML = (qs('#sumExtras').innerHTML || '').trim();
-    qs('#cfExtras').innerHTML = extrasHTML || 'Sin complementos';
-
-    qs('#cfBase').textContent  = qs('#pBase').textContent;
-    qs('#cfAddons').textContent= qs('#pAddons').textContent;
-    qs('#cfTax').textContent   = qs('#pTax').textContent;
-    qs('#cfTotal').textContent = qs('#pTotal').textContent;
-
-    const priceBox = qs('.rf-price');
-    const paidNow = state?.payment?.paid || 0;
-    if (priceBox && !qs('#cfPaid')) {
-      const row = document.createElement('div');
-      row.className = 'price-row';
-      row.innerHTML = `<span>Pagado hoy</span><strong id="cfPaid">${fmtMoney(paidNow)}</strong>`;
-      priceBox.insertBefore(row, priceBox.querySelector('.price-row.total'));
-    } else if (qs('#cfPaid')) {
-      qs('#cfPaid').textContent = fmtMoney(paidNow);
     }
 
-    const methodMap = { tarjeta:'Tarjeta', paypal:'PayPal', oxxo:'OXXO', mp:'Mercado Pago', efectivo:'Efectivo (en mostrador)' };
-    const method = state?.payment?.method || 'tarjeta';
+    // ==== Click principal: Guardar → PDF ====
+    btnPdf.addEventListener('click', async ()=>{
+      // 1) Guardar cotización (envío a backend + WhatsApp)
+      const saved = await saveCotizacionBeforePdf();
+      if (!saved.ok) return; // si falla, no generamos PDF
 
-    const totalNum = Number(String(qs('#pTotal').textContent).replace(/[^\d.]/g,'')) || 0;
-    const pending  = Math.max(0, totalNum - paidNow);
-
-    qs('#rcCode').textContent    = code;
-    qs('#rcMethod').textContent  = methodMap[method] || method;
-    qs('#rcPaid').textContent    = fmtMoney(paidNow);
-    qs('#rcPending').textContent = fmtMoney(pending);
-    qs('#rcPeriod').textContent  = `${qs('#cfStart').textContent} — ${qs('#cfEnd').textContent}`;
-
-    const rcStatus = qs('#rcStatus');
-    if(method === 'efectivo'){
-      rcStatus.textContent = 'Pago pendiente: se liquida en mostrador';
-      rcStatus.classList.remove('ok'); rcStatus.classList.add('pending');
-    }else if(pending > 0){
-      rcStatus.textContent = `Anticipo aplicado (${state?.payment?.planPct || 0}%); saldo pendiente a la entrega`;
-      rcStatus.classList.remove('ok'); rcStatus.classList.add('pending');
-    }else{
-      rcStatus.textContent = 'Pago completado';
-      rcStatus.classList.remove('pending'); rcStatus.classList.add('ok');
-    }
-
-    qs('#printReceipt')?.addEventListener('click', ()=> window.print());
-
-    qs('#step4').classList.add('hidden');
-    qs('#confirmation').classList.remove('hidden');
-    setActiveStep(4);
-    window.scrollTo({top:0, behavior:'smooth'});
-  }
-
-  qs('#quoteBtn')?.addEventListener('click', (e)=>{
-    e.preventDefault();
-    const totalTxt = qs('#pTotal')?.textContent || '$0 MXN';
-    const carName  = state.car?.name || '—';
-    const period   = `${qs('#sumStart')?.textContent || '—'} → ${qs('#sumEnd')?.textContent || '—'}`;
-    alert(`Cotización\n\nAuto: ${carName}\nPeriodo: ${period}\nTotal: ${totalTxt}`);
+      // 2) Generar el PDF exactamente igual que antes
+      await generatePdfFlow();
+    });
   });
 
-  qs('#year').textContent = new Date().getFullYear();
-
-  qs('#quoteBtn')?.addEventListener('click', (e)=>{
-    e.preventDefault();
-    qs('#qtLoc').textContent   = state.loc || '—';
-    qs('#qtPeriod').textContent= `${qs('#sumStart').textContent} → ${qs('#sumEnd').textContent}`;
-    qs('#qtDays').textContent  = `${state.days} días`;
-    qs('#qtPlan').textContent  = state.isPreferred ? 'Miembro preferente' : 'Normal';
-    qs('#qtStart').textContent = qs('#sumStart').textContent;
-    qs('#qtEnd').textContent   = qs('#sumEnd').textContent;
-    qs('#qtName').textContent  = state.car?.name || '—';
-    qs('#qtCat').textContent   = `Categoría ${state.car?.cat || '—'}`;
-    qs('#qtImg').src           = state.car?.img || '';
-    qs('#qtExtras').innerHTML  = qs('#sumExtras').innerHTML;
-    qs('#qtBase').textContent  = qs('#pBase').textContent;
-    qs('#qtAddons').textContent= qs('#pAddons').textContent;
-    qs('#qtTax').textContent   = qs('#pTax').textContent;
-    qs('#qtTotal').textContent = qs('#pTotal').textContent;
-
-    const code = 'QT-' + Math.random().toString(36).substring(2,8).toUpperCase();
-    qs('#qtCode').textContent  = code;
-    qs('#qtCode2').textContent = code;
-
-    const qtSection = qs('#quoteTemplate');
-    qtSection.style.display = 'block';
-
-    const opt = {
-      margin:       10,
-      filename:     `Cotizacion_${code}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2 },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    html2pdf().set(opt).from(qtSection).save().then(()=>{
-    qtSection.style.display = 'none';
+  // ---------- Año footer ----------
+  document.addEventListener("DOMContentLoaded", () => {
+    const y = qs("#year");
+    if (y) y.textContent = new Date().getFullYear();
   });
-});
+
+})();

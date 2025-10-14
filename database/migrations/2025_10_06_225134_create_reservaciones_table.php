@@ -10,8 +10,12 @@ return new class extends Migration {
         Schema::create('reservaciones', function (Blueprint $table) {
             $table->bigIncrements('id_reservacion');
 
-            $table->unsignedBigInteger('id_usuario');
-            $table->unsignedBigInteger('id_asesor')->nullable();
+            // 🔹 Puede haber usuario registrado o no
+            $table->unsignedBigInteger('id_usuario')->nullable();
+
+            // 🔹 Eliminamos id_asesor (ya no se usa)
+            // $table->unsignedBigInteger('id_asesor')->nullable();
+
             $table->unsignedBigInteger('id_vehiculo');
 
             $table->unsignedBigInteger('ciudad_retiro');
@@ -35,19 +39,19 @@ return new class extends Migration {
             $table->string('no_vuelo', 40)->nullable();
             $table->string('codigo', 50);
 
+            // 🔹 Campos opcionales del cliente anónimo
+            $table->string('nombre_cliente', 120)->nullable();
+            $table->string('email_cliente', 120)->nullable();
+            $table->string('telefono_cliente', 40)->nullable();
+
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
 
             $table->unique('codigo', 'reservaciones_codigo_unique');
             $table->index(['estado', 'fecha_inicio', 'fecha_fin'], 'reservas_estado_fecha_idx');
-            $table->index('id_asesor', 'res_asesor_idx');
 
-            // FK Usuarios (cliente y asesor)
+            // FK Usuario (cliente registrado, opcional)
             $table->foreign('id_usuario')
-                ->references('id_usuario')->on('usuarios')
-                ->onDelete('cascade');
-
-            $table->foreign('id_asesor')
                 ->references('id_usuario')->on('usuarios')
                 ->onDelete('set null');
 

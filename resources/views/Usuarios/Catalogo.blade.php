@@ -94,13 +94,17 @@
       @forelse ($autos as $auto)
         @php
           $trans = strtoupper(substr((string)$auto->transmision, 0, 1)) ?: 'A';
-          $img   = $auto->img_url ? (Str::startsWith($auto->img_url, ['http://','https://']) ? $auto->img_url : asset($auto->img_url)) : asset('img/placeholder-car.jpg');
+          $img   = $auto->img_url
+                    ? (\Illuminate\Support\Str::startsWith($auto->img_url, ['http://','https://'])
+                        ? $auto->img_url
+                        : asset($auto->img_url))
+                    : asset('img/placeholder-car.jpg');
         @endphp
 
         <article class="car"
-                 data-type="{{ Str::slug($auto->categoria) }}"
+                 data-type="{{ \Illuminate\Support\Str::slug($auto->categoria) }}"
                  data-trans="{{ $trans === 'M' ? 'manual' : 'automatico' }}"
-                 data-location="{{ Str::slug($auto->sucursal ?? 'general') }}">
+                 data-location="{{ \Illuminate\Support\Str::slug($auto->sucursal ?? 'general') }}">
           <div class="car-media">
             <img src="{{ $img }}" alt="{{ $auto->nombre_publico }}">
           </div>
@@ -139,8 +143,20 @@
               <span class="per">por día</span>
             </div>
 
-            <a href="{{ route('rutaReservaciones') }}"
-               class="btn btn-primary">
+            {{-- >>> Enlace que pasa filtros y fechas al flujo de reservaciones <<< --}}
+            <a
+              href="{{ route('reservaciones.desdeCatalogo', [
+                  'pickup_sucursal_id'  => request('location'),           // mismo lugar para dropoff por defecto
+                  'dropoff_sucursal_id' => request('location'),
+                  'pickup_date'         => request('start'),              // dd/mm/aaaa o yyyy-mm-dd (se normaliza)
+                  'pickup_time'         => '12:00 pm',                    // default
+                  'dropoff_date'        => request('end'),
+                  'dropoff_time'        => '11:00 am',                    // default
+                  'categoria_id'        => request('type'),               // categoría filtrada
+                  'vehiculo_id'         => $auto->id_vehiculo ?? null,    // por si quieres saltar directo
+              ]) }}"
+              class="btn btn-primary"
+            >
               <i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!
             </a>
           </div>

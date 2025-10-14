@@ -7,6 +7,7 @@ use App\Http\Controllers\BusquedaCatalogoController;
 use App\Http\Controllers\ContactoController;
 use App\Http\Controllers\controladorVistasAdmin;
 use App\Http\Controllers\CatalogoController;
+use App\Http\Controllers\ReservacionesController;
 use Illuminate\Support\Facades\Bus;
 
 //rutas vistas Usuario
@@ -16,7 +17,7 @@ Route::get('/', [BusquedaController::class, 'home'])->name('rutaHome');
 //ruta Vista Catalogo
 Route::get('/catalogo', [CatalogoController::class, 'index'])->name('rutaCatalogo');
 //ruta Vista Reservaciones
-Route::get('/reservaciones',[ControladorVistas::class,'reservaciones'])->name('rutaReservaciones');
+Route::get('/reservaciones',[ReservacionesController::class,'reservaciones'])->name('rutaReservaciones');
 //ruta Vista Contacto
 Route::get('/contacto',[ControladorVistas::class,'contacto'])->name('rutaContacto');
 //ruta Vista Politicas
@@ -34,6 +35,19 @@ Route::get('/catalogo/filtrar', [CatalogoController::class, 'filtrar'])->name('r
 Route::post('/contacto', [ContactoController::class, 'store'])->name('contacto.store');
 //busqueda catalogo
 Route::get('/catalogo/resultados', [CatalogoController::class, 'resultados'])->name('rutaCatalogoResultados');
+// Flujo principal de reservaciones (desde HOME)
+
+// (opcional) Si vienes desde el catálogo con un vehículo elegido
+Route::get('/reservaciones/desde-catalogo', [ReservacionesController::class, 'iniciar'])->name('reservaciones.desdeCatalogo');
+Route::get('/reservaciones', [ReservacionesController::class, 'desdeNavbar'])->name('rutaReservaciones');
+
+// WELCOME o CATÁLOGO → entrada estándar a Reservaciones
+// (recibe los parámetros, decide paso 2 o 3 y pinta la vista)
+Route::get('/reservaciones/iniciar', [ReservacionesController::class, 'iniciar'])->name('rutaReservasIniciar');
+Route::post('/cotizaciones', [ReservacionesController::class, 'cotizar'])->name('cotizaciones.store');
+// routes/web.php
+Route::post('/reservas', [ReservacionesController::class, 'reservar'])->name('reservas.store');
+
 
 
 // VISTAS Admin

@@ -67,13 +67,11 @@ class CatalogoController extends Controller
     }
 
     /* ======================================================
-     * ✅ NUEVO: Resultados reales del catálogo (cards desde BD)
-     *     - Usa los mismos parámetros: location (id_sucursal), type (id_categoria)
-     *     - Solo trae vehículos con estatus "Disponible" (id_estatus = 1)
+     * ✅ Catálogo real con filtros (vehículos disponibles)
      * ====================================================== */
     public function resultados(Request $request)
     {
-        // Filtros básicos (IDs o vacío)
+        // Filtros básicos
         $request->validate([
             'location' => 'nullable',
             'type'     => 'nullable',
@@ -96,7 +94,7 @@ class CatalogoController extends Controller
             ->orderBy('nombre')
             ->get();
 
-        // 🚗 Trae vehículos reales
+        // 🚗 Trae vehículos reales (solo disponibles)
         $autos = $this->queryVehiculos($filters);
 
         // Mensaje opcional
@@ -104,13 +102,29 @@ class CatalogoController extends Controller
             . ($filters['location'] ? ' · Sucursal: ' . optional($ciudades->firstWhere('id_sucursal', (int)$filters['location']))->nombre : '')
             . ($filters['type']     ? ' · Categoría: ' . optional($categorias->firstWhere('id_categoria', (int)$filters['type']))->nombre : '');
 
+        // 🧭 Si el usuario selecciona un vehículo desde el catálogo
+        if ($request->filled('vehiculo_id')) {
+            $vehiculo = DB::table('vehiculos')->where('id_vehiculo', $request->vehiculo_id)->first();
+
+            if (!$vehiculo) {
+                return back()->withErrors(['vehiculo_id' => 'El vehículo seleccionado no existe o no está disponible.']);
+            }
+
+            // 🔹 Redirige al flujo de reservaciones con la información del vehículo
+            return redirect()->route('reservaciones.iniciar', [
+                'vehiculo_id'        => $vehiculo->id_vehiculo,
+                'pickup_sucursal_id' => $vehiculo->id_sucursal,
+                'dropoff_sucursal_id'=> $vehiculo->id_sucursal,
+                'categoria_id'       => $vehiculo->id_categoria,
+            ]);
+        }
+
+        // Si no seleccionó auto, simplemente renderiza el catálogo
         return view('Usuarios.Catalogo', compact('ciudades', 'categorias', 'autos', 'mensaje'));
     }
 
     /* ======================================================
-     * 🔧 NUEVO: Helper para armar el query de vehículos
-     *     - Une vehiculos + categorias + sucursales + primera imagen
-     *     - Filtra por id_sucursal y/o id_categoria si vienen
+     * 🔧 Helper: armar el query de vehículos (con joins)
      * ====================================================== */
     private function queryVehiculos(array $filters)
     {
@@ -136,7 +150,7 @@ class CatalogoController extends Controller
                 s.nombre  as sucursal,
                 COALESCE(vi.url, '') as img_url
             ")
-            ->where('v.id_estatus', 1); // 1 = Disponible (según tu EstatusCarroSeeder)
+            ->where('v.id_estatus', 1); // 1 = Disponible
 
         if (!empty($filters['location'])) {
             $q->where('v.id_sucursal', (int)$filters['location']);
