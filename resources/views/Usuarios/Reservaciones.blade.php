@@ -318,7 +318,14 @@
       <div class="form-card">
         <h3>Tu información</h3>
 
-        <form class="user-form" id="formCotizacion" method="POST" action="{{ route('cotizaciones.store') }}">
+        - <form class="user-form" id="formCotizacion" method="POST" action="{{ route('cotizaciones.store') }}">
+        + <form class="user-form" id="formCotizacion" onsubmit="return false;">
+            <script>
+  // 📦 Rutas dinámicas para JS (Laravel → JavaScript)
+  window.APP_URL_RESERVA_MOSTRADOR = "{{ route('reservas.store') }}";
+  window.APP_URL_RESERVA_LINEA = "{{ route('reservas.linea') }}";
+</script>
+
   @csrf
 
   <div class="form-row grid-2">
@@ -397,7 +404,67 @@
   </label>
 
   <div class="form-row">
-    <button id="btnReservar" class="btn btn-primary">Reservar</button>
+    <button id="btnReservar" type="button" class="btn btn-primary">Reservar</button>
+    <!-- ===== MODAL PRINCIPAL: Selección de método de pago ===== -->
+<div id="modalMetodoPago" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <h3>Selecciona tu método de pago</h3>
+    <div class="options">
+      <button id="btnPagoLinea" class="btn btn-primary">Pago en línea</button>
+      <button id="btnPagoMostrador" class="btn btn-gray">Pago en mostrador</button>
+    </div>
+    <button id="cerrarModalMetodo" class="btn btn-secondary" style="margin-top:10px;">Cancelar</button>
+  </div>
+</div>
+
+<!-- ===== MODAL SECUNDARIO: Pasarela de pago ===== -->
+<div id="modalPasarelaPago" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <h3>Pasarela de Pago</h3>
+    <p>Introduce los datos de tu tarjeta o selecciona un método de pago seguro.</p>
+
+    <!-- 🧾 FORMULARIO DE PASARELA DE PAGO -->
+    <form id="formPasarela" class="payment-form">
+      <div class="form-row">
+        <label>Nombre del titular</label>
+        <input type="text" name="titular" placeholder="Ej. Mario Bernal" required>
+      </div>
+
+      <div class="form-row">
+        <label>Número de tarjeta</label>
+        <input type="text" name="numero" placeholder="XXXX XXXX XXXX XXXX" maxlength="19" required>
+      </div>
+
+      <div class="form-row grid-2">
+        <div class="field">
+          <label>Fecha de expiración</label>
+          <input type="text" name="expiracion" placeholder="MM/AA" maxlength="5" required>
+        </div>
+        <div class="field">
+          <label>CVV</label>
+          <input type="text" name="cvv" placeholder="XXX" maxlength="4" required>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>Método de pago</label>
+        <select name="metodo" required>
+          <option value="">Selecciona una opción</option>
+          <option value="visa">Visa</option>
+          <option value="mastercard">MasterCard</option>
+          <option value="amex">American Express</option>
+          <option value="paypal">PayPal</option>
+        </select>
+      </div>
+
+      <div class="form-row grid-2" style="margin-top:1rem;">
+        <button id="btnRealizarPago" type="submit" class="btn btn-primary">Realizar pago</button>
+        <button id="btnCancelarPago" type="button" class="btn btn-secondary">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 
     <button class="btn btn-quote" id="btnCotizar" type="button">
       <i class="fa-regular fa-file-pdf"></i> Cotizar (PDF)
@@ -517,6 +584,7 @@
 
 @section('js-vistaReservaciones')
   <script src="{{ asset('js/reservaciones.js') }}"></script>
+    <script src="{{ asset('js/BtnReserva.js') }}"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/rangePlugin.js"></script>

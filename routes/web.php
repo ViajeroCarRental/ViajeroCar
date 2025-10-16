@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BtnReservacionesController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ControladorVistas;
 use App\Http\Controllers\BusquedaController;
@@ -45,8 +46,11 @@ Route::get('/reservaciones', [ReservacionesController::class, 'desdeNavbar'])->n
 // (recibe los parámetros, decide paso 2 o 3 y pinta la vista)
 Route::get('/reservaciones/iniciar', [ReservacionesController::class, 'iniciar'])->name('rutaReservasIniciar');
 Route::post('/cotizaciones', [ReservacionesController::class, 'cotizar'])->name('cotizaciones.store');
-// routes/web.php
-Route::post('/reservas', [ReservacionesController::class, 'reservar'])->name('reservas.store');
+// reservas pago en mostrador
+Route::post('/reservas', [BtnReservacionesController::class, 'reservar'])->name('reservas.store');
+// Reserva Pago en línea
+Route::post('/reservas/linea', [BtnReservacionesController::class, 'reservarLinea'])->name('reservas.linea');
+
 
 
 
