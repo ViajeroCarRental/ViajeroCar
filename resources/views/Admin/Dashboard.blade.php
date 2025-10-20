@@ -434,8 +434,11 @@ body::before{
 <section class="section">
   <h3 style="margin:0 0 8px">Módulos</h3>
   <div class="grid">
-    <!-- AUTOS: ahora sí usa route() de Laravel -->
-    <article class="mod" id="modAutos" data-link="{{ route('rutaFlotilla') }}" data-theme="autos">
+
+    <!-- 🚗 Flotilla -->
+    <article class="mod" id="modAutos" 
+             data-link="{{ route('rutaFlotilla') }}" 
+             data-theme="autos">
       <div class="head"><div class="ic">🚗</div>Flotilla</div>
       <div class="body">
         <p>Flotilla, mantenimiento, pólizas, carrocería y gastos.</p>
@@ -443,7 +446,10 @@ body::before{
       </div>
     </article>
 
-    <article class="mod" id="modRentas" data-link="{{route('rutaInicioVentas')}}" data-theme="rentas">
+    <!-- 🧾 Rentas -->
+    <article class="mod" id="modRentas" 
+             data-link="{{ route('rutaInicioVentas') }}" 
+             data-theme="rentas">
       <div class="head"><div class="ic">🧾</div>Rentas</div>
       <div class="body">
         <p>Reservaciones, cotizaciones y seguimiento de contratos.</p>
@@ -451,15 +457,20 @@ body::before{
       </div>
     </article>
 
-    <article class="mod" id="modAdmin" data-link="{{route('rutaUsuarios')}}" data-theme="admin">
+    <!-- ⚙️ Administración -->
+    <article class="mod" id="modAdmin" 
+             data-link="{{ route('rutaUsuarios') }}" 
+             data-theme="admin">
       <div class="head"><div class="ic">⚙️</div>Administración</div>
       <div class="body">
         <p>Usuarios, roles/permisos, sedes, auditoría y seguridad.</p>
         <div class="go">Entrar →</div>
       </div>
     </article>
+
   </div>
 </section>
+
 
 <p class="foot">© Viajero Car Rental · Panel interno</p>
 
@@ -516,13 +527,12 @@ function ripple(e){
 }
 document.getElementById('goRentas').onclick = (e)=>{
   ripple(e);
-  window.location.href='{{ url('Rentas/activas.html') }}';
+  window.location.href='{{ route('rutaInicioVentas') }}';
 };
 document.getElementById('goAutos').onclick  = (e)=>{
   ripple(e);
-  window.location.href='{{ route('rutaDashboard') }}';
+  window.location.href='{{ route('rutaFlotilla') }}';
 };
-
 /* ===== KPIs (demo) ===== */
 const k = { autos: 18, hoy: 3, alerts: 5, todos: 9 };
 function countTo(el, val, ms=900){
