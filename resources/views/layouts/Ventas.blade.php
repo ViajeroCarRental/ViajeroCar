@@ -38,7 +38,7 @@
     <li><a href="{{ route('rutaAdministracionReservaciones') }}"><i class="fas fa-cogs"></i> Administración de reservaciones</a></li>
     <li><a href="{{ route('rutaHistorialCompleto') }}"><i class="fas fa-folder-open"></i> Historial completo</a></li>
     <li><a href="{{ route('rutaAltaCliente') }}"><i class="fas fa-user-plus"></i> Alta Cliente</a></li>
-    <li><a href="{{ route('rutaFacturar') }}"><i class="fas fa-user-plus"></i> Facturar</a></li>
+    <li><a href="{{ route('rutaFacturar') }}"><i class="fas fa-file-invoice-dollar"></i> Facturar</a></li>
 
     <li class="menu-section">Navegación</li>
     <li><a href="{{route('rutaInicioVentas')}}"><i class="fas fa-arrow-left"></i> Volver al Panel</a></li>
@@ -59,6 +59,7 @@
     @yield('contenidoAltaCliente')
     @yield('contenidoLicencia')
     @yield('contenidoRFC-Fiscal')
+    @yield('contenidoFacturar')
 </div>
 
 <div class="containerJS">
@@ -75,6 +76,7 @@
     @yield('js-vistaAltaCliente')
     @yield('js-vistaLicencia')
     @yield('js-vistaRFC-Fiscal')
+    @yield('js-vistaFacturar')
 </div>
 </body>
 </html>
