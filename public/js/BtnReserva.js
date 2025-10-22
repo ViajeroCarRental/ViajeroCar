@@ -221,20 +221,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ============================================================
-  // === OPCIÓN: PAGO EN LÍNEA (solo mostrar pasarela) ==========
+  // === OPCIÓN: PAGO EN LÍNEA (solo visible por ahora) =========
   // ============================================================
   if (btnPagoLinea) {
     btnPagoLinea.addEventListener("click", () => {
       modalMetodoPago.style.display = "none";
-      document.getElementById("modalPasarelaPago").style.display = "flex";
-    });
-  }
-
-  // Cerrar pasarela
-  const btnCancelarPago = document.getElementById("btnCancelarPago");
-  if (btnCancelarPago) {
-    btnCancelarPago.addEventListener("click", () => {
-      document.getElementById("modalPasarelaPago").style.display = "none";
+      // 🚧 Aquí conectaremos PayPal real o simulación más adelante
+      alert("💳 Próximamente podrás realizar tu pago en línea con PayPal.");
     });
   }
 });

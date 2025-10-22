@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('seguro_paquete', function (Blueprint $table) {
             $table->bigIncrements('id_paquete');
             $table->string('nombre', 150);
-            $table->string('descripcion', 255)->nullable();
+            $table->text('descripcion')->nullable();
             $table->decimal('precio_por_dia', 10, 2)->default(0.00);
             $table->boolean('activo')->default(true);
             $table->timestamp('created_at')->nullable();

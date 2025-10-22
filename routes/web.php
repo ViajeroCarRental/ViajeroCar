@@ -9,6 +9,8 @@ use App\Http\Controllers\ContactoController;
 use App\Http\Controllers\controladorVistasAdmin;
 use App\Http\Controllers\CatalogoController;
 use App\Http\Controllers\ReservacionesController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\ReservacionesAdminController;
 use Illuminate\Support\Facades\Bus;
 
 //rutas vistas Usuario
@@ -25,10 +27,6 @@ Route::get('/contacto',[ControladorVistas::class,'contacto'])->name('rutaContact
 Route::get('/politicas',[ControladorVistas::class,'politicas'])->name('rutaPoliticas');
 //ruta Vista FAQ
 Route::get('/faq',[ControladorVistas::class,'faq'])->name('rutaFAQ');
-//ruta Vista Login
-Route::get('/login',[ControladorVistas::class,'login'])->name('rutaLogin');
-//ruta Vista Perfil
-Route::get('/perfil',[ControladorVistas::class,'perfil'])->name('rutaPerfil');
 //busqueda
 Route::post('/buscar', [BusquedaController::class, 'buscar'])->name('rutaBuscar');
 Route::get('/catalogo/filtrar', [CatalogoController::class, 'filtrar'])->name('rutaCatalogoFiltrar');
@@ -50,6 +48,22 @@ Route::post('/cotizaciones', [ReservacionesController::class, 'cotizar'])->name(
 Route::post('/reservas', [BtnReservacionesController::class, 'reservar'])->name('reservas.store');
 // Reserva Pago en línea
 Route::post('/reservas/linea', [BtnReservacionesController::class, 'reservarLinea'])->name('reservas.linea');
+Route::get('/login', [LoginController::class, 'showLogin'])->name('auth.show');
+
+// Acciones de autenticación
+Route::post('/login',        [LoginController::class, 'login'])->name('auth.login');
+Route::post('/register',     [LoginController::class, 'register'])->name('auth.register');
+Route::post('/logout',       [LoginController::class, 'logout'])->name('logout');
+
+// Verificación de correo por código
+Route::post('/verify-code',         [LoginController::class, 'verifyCode'])->name('auth.verify');
+Route::post('/verify-code/resend',  [LoginController::class, 'resendCode'])->name('auth.verify.resend');
+
+// Rutas destino después de login (puedes ajustarlas)
+Route::get('/perfil', [LoginController::class, 'perfil'])->name('rutaPerfil');
+Route::get('/admin',  [LoginController::class, 'adminHome'])->name('admin.home');
+
+
 
 
 
@@ -80,8 +94,20 @@ Route::get('/admin/roles', [App\Http\Controllers\controladorVistasAdmin::class, 
 //Vistas Ventas
 //inicio
 Route::get('/admin/ventas', [App\Http\Controllers\controladorVistasAdmin::class, 'ventas'])->name('rutaInicioVentas');
-//reservaciones
-Route::get('/admin/reservaciones', [App\Http\Controllers\controladorVistasAdmin::class, 'reservacionesAdmin'])->name('rutaReservacionesAdmin');
+// Módulo de reservaciones (nuevo controlador dedicado)
+Route::get('/admin/reservaciones', [ReservacionesAdminController::class, 'index'])->name('rutaReservacionesAdmin');
+// Endpoint para obtener vehículos por categoría (AJAX)
+Route::get('/admin/reservaciones/vehiculos/{idCategoria}', [ReservacionesAdminController::class, 'obtenerVehiculosPorCategoria'])
+     ->name('rutaVehiculosPorCategoria');
+// Endpoint para obtener paquetes de seguros (protecciones)
+Route::get('/admin/reservaciones/seguros', [ReservacionesAdminController::class, 'getSeguros'])->name('rutaSegurosReservaciones');
+
+// Endpoint para obtener servicios adicionales (complementos)
+Route::get('/admin/reservaciones/servicios', [ReservacionesAdminController::class, 'getServicios'])->name('rutaServiciosReservaciones');
+// Guardar reservación (desde el formulario de pasos)
+Route::post('/admin/reservaciones/guardar', [App\Http\Controllers\ReservacionesAdminController::class, 'guardarReservacion'])->name('rutaGuardarReservacion');
+
+
 //cotizaciones
 Route::get('/admin/cotizaciones', [App\Http\Controllers\controladorVistasAdmin::class, 'cotizaciones'])->name('rutaCotizaciones');
 //cotizaciones activas

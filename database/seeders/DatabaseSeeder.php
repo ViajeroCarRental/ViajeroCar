@@ -25,7 +25,11 @@ class DatabaseSeeder extends Seeder
         VersionesSeeder::class,
         VehiculosSeeder::class,
         VehiculoImagenesSeeder::class,
-        ServiciosSeeder::class, // <-- aquí]);
+        ServiciosSeeder::class,
+        RolesSeeder::class,
+        UsuariosSeeder::class,
+        UsuarioRolSeeder::class,
+        SeguroPaqueteSeeder::class,
     ]);
 
     }

@@ -44,6 +44,11 @@ return new class extends Migration {
             $table->string('email_cliente', 120)->nullable();
             $table->string('telefono_cliente', 40)->nullable();
 
+            // 🔹 Campos agregados para manejo de pagos 💳
+            $table->string('paypal_order_id', 100)->nullable()->comment('ID de la orden PayPal');
+            $table->string('status_pago', 50)->default('Pendiente')->comment('Estado del pago: Pendiente, Pagado, Fallido');
+            $table->string('metodo_pago', 30)->default('mostrador')->comment('Tipo de pago: mostrador o en línea');
+
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
 

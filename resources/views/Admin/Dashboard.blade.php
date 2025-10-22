@@ -305,6 +305,87 @@ body{
 @media (prefers-reduced-motion: reduce){
   *{ animation: none !important; transition: none !important; }
 }
+/* =======================================
+   🔒 Bloqueo visual de módulos
+======================================= */
+.mod.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: grayscale(1);
+  transition: all 0.25s ease-in-out;
+}
+
+.mod.locked::after {
+  content: "🔒 Sin acceso";
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  font-weight: 800;
+  color: #fff;
+  font-size: var(--fs-12);
+  text-shadow: 0 1px 3px rgba(0,0,0,.4);
+  background: rgba(0,0,0,.25);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* =======================================
+   💫 Efecto ripple (botones principales)
+======================================= */
+.ripple {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  transform: scale(0);
+  animation: rippleExpand 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes rippleExpand {
+  to {
+    transform: scale(16);
+    opacity: 0;
+  }
+}
+
+/* =======================================
+   🌈 Tooltip para acceso restringido (opcional)
+======================================= */
+.mod.locked:hover::before {
+  content: "Acceso restringido";
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111827;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  opacity: 0.95;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  animation: fadeTooltip 0.25s ease-in-out;
+}
+
+@keyframes fadeTooltip {
+  from { opacity: 0; transform: translateX(-50%) translateY(5px); }
+  to { opacity: 0.95; transform: translateX(-50%) translateY(0); }
+}
+
+/* =======================================
+   ⚡ Suavizado de hover en módulos activos
+======================================= */
+.mod:not(.locked):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(17, 24, 39, 0.12);
+  filter: saturate(1.06);
+}
+
 </style>
 </head>
 <body>
@@ -338,10 +419,10 @@ body{
           <span class="chip c3">🎯 Productivo</span>
           <span class="chip c4" id="siteChip" style="display:none"></span>
         </div>
-        <div class="actions">
+        <!--<div class="actions">
           <button class="btn primary" id="goRentas">➕ Nuevo contrato</button>
           <button class="btn ghost" id="goAutos">🚗 Ver flotilla</button>
-        </div>
+        </div>-->
       </div>
       <div>
         <div class="media">
@@ -385,92 +466,89 @@ body{
 
 <p class="foot">© Viajero Car Rental · Panel interno</p>
 
+
 <script src="{{ asset('assets/session.js') }}"></script>
 <script>
-/* ===== Sesión ===== */
-const u = (typeof getUser === 'function') ? getUser() : { name:'', role:'', email:'' };
-if(!u){ window.location.href='{{ url('index.html') }}'; }
-document.getElementById('hello').textContent = u.role || '';
-document.getElementById('who').textContent = u.name || 'colaborador';
-const site = localStorage.getItem('vc_site');
-if(site){
-  const el=document.getElementById('siteChip');
-  el.style.display='inline-flex';
-  el.textContent='📍 '+site;
+/* ==============================
+   🔐 Sesión y bienvenida
+============================== */
+document.getElementById('hello').textContent = "{{ session('rol') }}";
+document.getElementById('who').textContent = "{{ session('nombre') ?? 'colaborador' }}";
+
+/* ==============================
+   🌐 Estado de red
+============================== */
+const net = document.getElementById('net');
+const netText = document.getElementById('netText');
+
+function setNet(on) {
+  net.style.background = on ? '#10b981' : '#ef4444';
+  netText.textContent = on ? 'En línea' : 'Sin conexión';
 }
-document.getElementById('logout').onclick = ()=>{
-  localStorage.removeItem('vc_user');
-  window.location.href='{{ url('index.html') }}';
+
+setNet(navigator.onLine);
+window.addEventListener('online', () => setNet(true));
+window.addEventListener('offline', () => setNet(false));
+
+/* ==============================
+   🚪 Logout (Laravel seguro vía POST)
+============================== */
+document.getElementById('logout').onclick = () => {
+  const logoutForm = document.getElementById('logoutForm');
+  if (logoutForm) logoutForm.submit();
 };
 
-/* ===== Estado de red ===== */
-const net = document.getElementById('net'), netText=document.getElementById('netText');
-function setNet(on){
-  net.style.background=on?'#10b981':'#ef4444';
-  netText.textContent=on?'En línea':'Sin conexión';
-}
-setNet(navigator.onLine);
-window.addEventListener('online',()=>setNet(true));
-window.addEventListener('offline',()=>setNet(false));
-
-/* ===== Navegación ===== */
-document.querySelectorAll('.mod').forEach(el=>{
-  el.addEventListener('click', ()=>{
-    const href=el.getAttribute('data-link');
-    if(href && href.trim() !== '') window.location.href = href;
+/* ==============================
+   🧭 Navegación entre módulos
+============================== */
+document.querySelectorAll('.mod').forEach(el => {
+  el.addEventListener('click', () => {
+    const href = el.getAttribute('data-link');
+    if (href && !el.classList.contains('locked')) {
+      window.location.href = href;
+    }
   });
 });
 
-/* ===== Atajos + ripple ===== */
-function ripple(e){
-  const t=e.currentTarget, r=document.createElement('span');
-  r.className='ripple';
-  const rect=t.getBoundingClientRect();
-  r.style.left=(e.clientX-rect.left)+'px';
-  r.style.top=(e.clientY-rect.top)+'px';
-  t.appendChild(r);
-  setTimeout(()=>r.remove(),600);
-}
-document.getElementById('goRentas').onclick = (e)=>{
-  ripple(e);
-  window.location.href='{{ url('Rentas/activas.html') }}';
-};
-document.getElementById('goAutos').onclick  = (e)=>{
-  ripple(e);
-  window.location.href='{{ route('rutaDashboard') }}';
-};
+/* ==============================
+   🧩 Bloqueo de módulos por rol
+============================== */
+document.addEventListener("DOMContentLoaded", () => {
+  const rol = "{{ session('rol') }}";
+  const modAutos  = document.getElementById("modAutos");
+  const modRentas = document.getElementById("modRentas");
+  const modAdmin  = document.getElementById("modAdmin");
 
-/* ===== KPIs (demo) ===== */
-const k = { autos: 18, hoy: 3, alerts: 5, todos: 9 };
-function countTo(el, val, ms=900){
-  const start=+el.textContent||0, diff=val-start, t0=performance.now();
-  (function anim(t){
-    const p=Math.min(1,(t-t0)/ms);
-    el.textContent = Math.round(start + diff*p);
-    if(p<1) requestAnimationFrame(anim);
-  })(t0);
-}
-document.querySelectorAll('[data-kpi]').forEach(el=>countTo(el, k[el.dataset.kpi]||0));
+  console.log("Rol actual:", rol);
 
-/* ===== Notificaciones (demo) ===== */
-const alerts = [
-  { tag:'orange', msg:'2 reservaciones por entregar hoy.' },
-  { tag:'red',    msg:'Póliza de un vehículo está por vencer.' },
-  { tag:'blue',   msg:'Nueva versión del módulo de Administración.' },
-];
-const list = document.getElementById('notifList');
-list.innerHTML = alerts.map(a=>
-  `<div class="item"><span class="tag ${a.tag}">
-  ${a.tag==='red'?'Urgente':a.tag==='orange'?'Próximo':'Info'}</span>
-  <div>${a.msg}</div></div>`
-).join('');
-document.getElementById('bellCount').textContent = alerts.length;
-const bell=document.getElementById('bell'), panel=document.getElementById('notif');
-bell.onclick=()=>panel.classList.toggle('show');
-document.addEventListener('click',e=>{
-  if(!bell.contains(e.target) && !panel.contains(e.target)) panel.classList.remove('show');
+  switch (rol) {
+    case "SuperAdmin":
+      // Todo habilitado
+      break;
+
+    case "Flotilla":
+      modRentas.classList.add("locked");
+      modAdmin.classList.add("locked");
+      break;
+
+    case "Ventas":
+      modAutos.classList.add("locked");
+      modAdmin.classList.add("locked");
+      break;
+
+    case "Usuario":
+    default:
+      // Usuario común → redirigir al home
+      window.location.href = "{{ route('rutaHome') }}";
+      break;
+  }
 });
-
 </script>
+
+<form id="logoutForm" action="{{ route('logout') }}" method="POST" style="display:none;">
+  @csrf
+</form>
+
+
 </body>
 </html>

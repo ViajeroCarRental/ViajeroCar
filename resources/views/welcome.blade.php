@@ -169,7 +169,7 @@
         <p>Acumula puntos por cada reserva y canjea por más descuentos, upgrades o experiencias especiales.</p>
         <p>Activa hoy tu membresía y disfruta recompensas exclusivas.</p>
         <div class="cta-group">
-          <a href="{{ route('rutaLogin') }}" class="btn btn-primary"><i class="fa-solid fa-id-card"></i> Obtén tu membresía</a>
+          <a href="{{ route('auth.login') }}" class="btn btn-primary"><i class="fa-solid fa-id-card"></i> Obtén tu membresía</a>
         </div>
       </div>
     </div>
@@ -181,7 +181,7 @@
         <p>Optimiza costos, confort y seguridad con nuestros planes para empresas.</p>
         <div class="cta-group">
           <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> Reserva ahora</a>
-          <a href="#" class="btn btn-whatsapp"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+          <!--<a href="#" class="btn btn-whatsapp"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>-->
         </div>
       </div>
       <div class="info-media media-carousel" data-interval="5200">

@@ -67,22 +67,40 @@
       <li><a href="{{ route('rutaPoliticas') }}" class="{{ request()->routeIs('rutaPoliticas') ? 'active' : '' }}">Políticas</a></li>
       <li><a href="{{ route('rutaFAQ') }}" class="{{ request()->routeIs('rutaFAQ') ? 'active' : '' }}">F.A.Q</a></li>
 
-      {{-- Iconos dinámicos de persona --}}
-      @guest
-        <li class="icon-item">
-          <a href="{{ route('rutaLogin') }}" title="Iniciar sesión">
-            <i class="fa-regular fa-user guest"></i>
-          </a>
-        </li>
-      @endguest
+      {{-- Iconos dinámicos de persona (controlados por sesión manual) --}}
+@if (session()->has('id_usuario'))
+  {{-- ✅ Usuario logueado --}}
+  <li class="icon-item dropdown">
+    <a href="#" class="dropdown-toggle" title="Mi perfil" data-bs-toggle="dropdown" aria-expanded="false">
+      <i class="fa-solid fa-user user"></i>
+    </a>
 
-      @auth
-        <li class="icon-item">
-          <a href="{{ route('rutaPerfil') }}" title="Mi perfil">
-            <i class="fa-solid fa-user user"></i>
-          </a>
-        </li>
-      @endauth
+    <ul class="dropdown-menu dropdown-menu-end shadow">
+      <li>
+        <a class="dropdown-item" href="{{ route('rutaPerfil') }}">
+          <i class="fa-regular fa-id-card me-2"></i> Perfil
+        </a>
+      </li>
+      <li><hr class="dropdown-divider"></li>
+      <li>
+        <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+          @csrf
+          <button type="submit" class="dropdown-item">
+            <i class="fa-solid fa-right-from-bracket me-2"></i> Cerrar sesión
+          </button>
+        </form>
+      </li>
+    </ul>
+  </li>
+@else
+  {{-- ❌ Usuario sin sesión --}}
+  <li class="icon-item">
+    <a href="{{ route('auth.show') }}" title="Iniciar sesión">
+      <i class="fa-regular fa-user guest"></i>
+    </a>
+  </li>
+@endif
+
     </ul>
   </nav>
 </header>
@@ -173,14 +191,7 @@
   </div>
 </footer>
 
-<script>
-  document.getElementById('year').textContent = new Date().getFullYear();
 
-  // Bloquear clic derecho (opcional)
-  document.addEventListener('contextmenu', function(e) {
-    e.preventDefault();
-  });
-</script>
 
 </body>
 </html>

@@ -368,9 +368,8 @@
     const PAGE_W = 816;
     const PAGE_H = 1056;
 
-    // <<< AJUSTA AQUÍ TUS MÁRGENES >>>
-    const MARGIN = { top: 64, right: 64, bottom: 64, left: 64 }; // 64px ≈ 0.67"
-    const CONTENT_W = PAGE_W - MARGIN.left - MARGIN.right; // ancho útil
+    const MARGIN = { top: 64, right: 64, bottom: 64, left: 64 };
+    const CONTENT_W = PAGE_W - MARGIN.left - MARGIN.right;
 
     const btnPdf = qs('#btnCotizar');
     if (!btnPdf) return;
@@ -432,7 +431,6 @@
       if (date) date.textContent = new Date().toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
     }
 
-    // ---- Helper: leer CSRF del form o del meta
     function getCsrfToken() {
       const form = qs('#formCotizacion');
       const fromInput = form?.querySelector('input[name="_token"]')?.value;
@@ -441,7 +439,6 @@
       return fromMeta || '';
     }
 
-    // ---- Helper: obtener vehiculo_id y filtros desde URL
     function getUrlParams() {
       const url = new URL(window.location.href);
       const sp  = url.searchParams;
@@ -452,7 +449,6 @@
       return { pickup_sucursal_id, dropoff_sucursal_id, categoria_id, vehiculo_id };
     }
 
-    // ---- Helper: addons -> formato addons[id] = qty
     function getAddonsForPost() {
       try {
         const raw = JSON.parse(sessionStorage.getItem('addons_selection') || '{}');
@@ -468,120 +464,102 @@
     }
 
     // ---- Guardar cotización antes de PDF
-    // ---- Guardar cotización antes de PDF
-async function saveCotizacionBeforePdf() {
-  const form = qs('#formCotizacion');
-  if (!form) return { ok: false, message: 'No se encontró el formulario.' };
+    async function saveCotizacionBeforePdf() {
+      const form = qs('#formCotizacion');
+      if (!form) return { ok: false, message: 'No se encontró el formulario.' };
 
-  // Campos visibles
-  const nombre   = qs('#nombreCliente')?.value?.trim()  || '';
-  const email    = qs('#correoCliente')?.value?.trim()   || '';
-  const telefono = qs('#telefonoCliente')?.value?.trim() || '';
+      const nombre   = qs('#nombreCliente')?.value?.trim()  || '';
+      const email    = qs('#correoCliente')?.value?.trim()   || '';
+      const telefono = qs('#telefonoCliente')?.value?.trim() || '';
 
-  // Fechas/horas desde inputs ocultos (si existen) o desde el brief
-  let pickup_date  = qs('#pickup_date')?.value || '';
-  let pickup_time  = qs('#pickup_time')?.value || '';
-  let dropoff_date = qs('#dropoff_date')?.value || '';
-  let dropoff_time = qs('#dropoff_time')?.value || '';
+      let pickup_date  = qs('#pickup_date')?.value || '';
+      let pickup_time  = qs('#pickup_time')?.value || '';
+      let dropoff_date = qs('#dropoff_date')?.value || '';
+      let dropoff_time = qs('#dropoff_time')?.value || '';
 
-  if (!pickup_date || !pickup_time) {
-    const briefStart = qs('#briefStart')?.textContent?.trim() || '';
-    const parts = briefStart.split(/\s+/);
-    if (parts.length >= 2) { pickup_date = parts[0]; pickup_time = parts[1]; }
-  }
-  if (!dropoff_date || !dropoff_time) {
-    const briefEnd = qs('#briefEnd')?.textContent?.trim() || '';
-    const parts = briefEnd.split(/\s+/);
-    if (parts.length >= 2) { dropoff_date = parts[0]; dropoff_time = parts[1]; }
-  }
+      if (!pickup_date || !pickup_time) {
+        const briefStart = qs('#briefStart')?.textContent?.trim() || '';
+        const parts = briefStart.split(/\s+/);
+        if (parts.length >= 2) { pickup_date = parts[0]; pickup_time = parts[1]; }
+      }
+      if (!dropoff_date || !dropoff_time) {
+        const briefEnd = qs('#briefEnd')?.textContent?.trim() || '';
+        const parts = briefEnd.split(/\s+/);
+        if (parts.length >= 2) { dropoff_date = parts[0]; dropoff_time = parts[1]; }
+      }
 
-  // URL params (vehiculo y sucursales)
-  const { pickup_sucursal_id, dropoff_sucursal_id, vehiculo_id } = getUrlParams();
+      const { pickup_sucursal_id, dropoff_sucursal_id, vehiculo_id } = getUrlParams();
+      const addons = getAddonsForPost();
 
-  // Addons
-  const addons = getAddonsForPost();
+      // ✅ Aquí añadimos metodo_pago para que siempre se envíe correo
+      const payload = {
+        vehiculo_id: Number(vehiculo_id) || undefined,
+        pickup_date, pickup_time, dropoff_date, dropoff_time,
+        pickup_sucursal_id: pickup_sucursal_id ? Number(pickup_sucursal_id) : undefined,
+        dropoff_sucursal_id: dropoff_sucursal_id ? Number(dropoff_sucursal_id) : undefined,
+        addons,
+        nombre, email, telefono,
+        metodo_pago: "mostrador"
+      };
 
-  // Construir payload
-  const payload = {
-    vehiculo_id: Number(vehiculo_id) || undefined,
-    pickup_date, pickup_time, dropoff_date, dropoff_time,
-    pickup_sucursal_id: pickup_sucursal_id ? Number(pickup_sucursal_id) : undefined,
-    dropoff_sucursal_id: dropoff_sucursal_id ? Number(dropoff_sucursal_id) : undefined,
-    addons,
-    nombre, email, telefono,
-  };
+      const url = form.getAttribute('action') || '/cotizaciones';
+      const token = getCsrfToken();
 
-  // Endpoint desde el action del form (o default)
-  const url = form.getAttribute('action') || '/cotizaciones';
-  const token = getCsrfToken();
+      const original = btnPdf.innerHTML;
+      btnPdf.disabled = true;
+      btnPdf.innerHTML = '<span class="spinner" style="display:inline-block;transform:translateY(2px)">⏳</span> Generando...';
 
-  // UI lock
-  const original = btnPdf.innerHTML;
-  btnPdf.disabled = true;
-  btnPdf.innerHTML = '<span class="spinner" style="display:inline-block;transform:translateY(2px)">⏳</span> Generando...';
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': token,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
 
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': token,
-        'X-Requested-With': 'XMLHttpRequest',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+        const data = await res.json().catch(() => ({}));
 
-    const data = await res.json().catch(() => ({}));
+        if (!res.ok || data?.ok === false) {
+          const msg = data?.message || 'No se pudo guardar la cotización.';
+          throw new Error(msg);
+        }
 
-    if (!res.ok || data?.ok === false) {
-      const msg = data?.message || 'No se pudo guardar la cotización.';
-      throw new Error(msg);
+        try {
+          const telefonoAgente = "5214427169793";
+          const folioTxt = data?.folio ? data.folio : 'pendiente';
+          const mensaje =
+            `*NUEVA COTIZACIÓN*\n\n` +
+            `👤 *Cliente:* ${nombre || 'No especificado'}\n` +
+            `🧾 *Folio de cotización:* ${folioTxt}\n` +
+            `📅 *Fecha de entrega:* ${pickup_date} ${pickup_time}\n` +
+            `📆 *Fecha de devolución:* ${dropoff_date} ${dropoff_time}\n\n` +
+            `Mensaje predeterminado del sistema Viajero Car Rental.`;
+          const mensajeEncoded = encodeURIComponent(mensaje);
+          const waWebUrl = `https://web.whatsapp.com/send?phone=${telefonoAgente}&text=${mensajeEncoded}`;
+          window.open(waWebUrl, '_blank');
+        } catch (err) {
+          console.error('Error al abrir WhatsApp Web:', err);
+        }
+
+        if (data?.folio) {
+          const codeEl = qs('#cotizacionDoc #qdCode');
+          if (codeEl) codeEl.textContent = data.folio;
+        }
+
+        return { ok: true, folio: data?.folio || null };
+      } catch (err) {
+        console.error('Error guardando cotización:', err);
+        alert('No se pudo guardar/enviar la cotización. Revisa tu conexión o inténtalo más tarde.');
+        return { ok: false, message: String(err?.message || err) };
+      } finally {
+        btnPdf.disabled = false;
+        btnPdf.innerHTML = original;
+      }
     }
-
-   // ✅ Enviar mensaje de nueva reservación por WhatsApp (solo versión web con mensaje prellenado)
-try {
-  const telefonoAgente = "5214427169793"; // 🇲🇽 Formato internacional
-  const folioTxt = data?.folio ? data.folio : 'pendiente';
-
-  // 📋 Mensaje predefinido
-  const mensaje =
-    `*NUEVA RESERVACIÓN*\n\n` +
-    `👤 *Cliente:* ${nombre || 'No especificado'}\n` +
-    `🧾 *Folio de cotización:* ${folioTxt}\n` +
-    `📅 *Fecha de entrega:* ${pickup_date} ${pickup_time}\n` +
-    `📆 *Fecha de devolución:* ${dropoff_date} ${dropoff_time}\n\n` +
-    `Mensaje predeterminado del sistema Viajero Car Rental.`;
-
-  // Codificar texto y construir URL directa a WhatsApp Web
-  const mensajeEncoded = encodeURIComponent(mensaje);
-  const waWebUrl = `https://web.whatsapp.com/send?phone=${telefonoAgente}&text=${mensajeEncoded}`;
-
-  // 🔗 Abrir directamente en WhatsApp Web (nueva pestaña)
-  window.open(waWebUrl, '_blank');
-
-} catch (err) {
-  console.error('Error al abrir WhatsApp Web:', err);
-}
-
-
-    // Si viene folio del server, úsalo en el header del PDF
-    if (data?.folio) {
-      const codeEl = qs('#cotizacionDoc #qdCode');
-      if (codeEl) codeEl.textContent = data.folio;
-    }
-
-    return { ok: true, folio: data?.folio || null };
-  } catch (err) {
-    console.error('Error guardando cotización:', err);
-    alert('No se pudo guardar/enviar la cotización. Revisa tu conexión o inténtalo más tarde.');
-    return { ok: false, message: String(err?.message || err) };
-  } finally {
-    btnPdf.disabled = false;
-    btnPdf.innerHTML = original;
-  }
-}
-
 
     async function generatePdfFlow() {
       const node = qs('#cotizacionDoc');
@@ -593,7 +571,6 @@ try {
         return;
       }
 
-      // preparar encabezado / ocultar interacciones
       ensureQuoteHeader(node);
       const interactive = qsa('a,button', node);
       const prev = new Map();
@@ -603,7 +580,6 @@ try {
       try{
         await ensureCarImageCORS(node);
 
-        // Clon y sandbox al ANCHO ÚTIL (contenido) para mayor nitidez
         const clone = node.cloneNode(true);
         clone.classList.add('pdf-fit');
         clone.style.width = `${CONTENT_W}px`;
@@ -617,13 +593,11 @@ try {
         sandbox.appendChild(clone);
         window.scrollTo({top:0, behavior:'auto'});
 
-        // Render en canvas (nitidez x2)
         const canvas = await h2c(clone, {
           useCORS: true, allowTaint: false, backgroundColor: '#ffffff',
           scale: 2, width: CONTENT_W, windowWidth: CONTENT_W, scrollY: 0
         });
 
-        // === UNA SOLA HOJA con MÁRGENES definidos ===
         const pdf = new jsPDFCtor({ unit:'px', format:[PAGE_W, PAGE_H], orientation:'portrait' });
 
         const boxW = PAGE_W - MARGIN.left - MARGIN.right;
@@ -636,8 +610,8 @@ try {
         const outW = Math.round(imgW * fit);
         const outH = Math.round(imgH * fit);
 
-        const offsetX = Math.round(MARGIN.left + (boxW - outW) / 2); // centrado horizontal
-        const offsetY = Math.round(MARGIN.top  + (boxH - outH) / 2); // centrado vertical
+        const offsetX = Math.round(MARGIN.left + (boxW - outW) / 2);
+        const offsetY = Math.round(MARGIN.top  + (boxH - outH) / 2);
 
         const imgData = canvas.toDataURL('image/jpeg', 0.98);
         const fileName = (clone.querySelector('#qdCode')?.textContent || 'cotizacion') + '.pdf';
@@ -657,18 +631,13 @@ try {
       }
     }
 
-    // ==== Click principal: Guardar → PDF ====
     btnPdf.addEventListener('click', async ()=>{
-      // 1) Guardar cotización (envío a backend + WhatsApp)
       const saved = await saveCotizacionBeforePdf();
-      if (!saved.ok) return; // si falla, no generamos PDF
-
-      // 2) Generar el PDF exactamente igual que antes
+      if (!saved.ok) return;
       await generatePdfFlow();
     });
   });
 
-  // ---------- Año footer ----------
   document.addEventListener("DOMContentLoaded", () => {
     const y = qs("#year");
     if (y) y.textContent = new Date().getFullYear();
