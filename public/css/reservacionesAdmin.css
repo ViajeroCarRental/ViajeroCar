@@ -1,301 +1,334 @@
-/* =====================
-   🎨 Tokens de diseño
-===================== */
-:root{
-  --brand:#FF1E2D;
-  --brand-2:#D6121F;
-  --brand-3:#ff4956;            /* hover/acento */
-  --ink:#101828;
-  --muted:#667085;
-  --muted-2:#475467;
-  --stroke:#EAECF0;
-  --stroke-2:#E5E7EB;
-  --bg:#F3F5F9;
-  --panel:#F7F9FC;
-  --paper:#fff;
-  --ok:#027A48;
-  --warn:#B45309;
-  --danger:#B42318;
+/* ===========================
+   🎨 Tokens de diseño base
+=========================== */
+:root {
+  --brand: #FF1E2D;
+  --brand-2: #D6121F;
+  --brand-3: #ff4956;
+  --ink: #101828;
+  --muted: #667085;
+  --muted-2: #475467;
+  --stroke: #EAECF0;
+  --bg: #F3F5F9;
+  --paper: #fff;
+  --ok: #027A48;
 
-  --radius-lg:18px;
-  --radius-md:14px;
-  --radius-sm:10px;
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
 
-  --shadow-xs:0 1px 3px rgba(16,24,40,.06);
-  --shadow-sm:0 4px 10px rgba(16,24,40,.08);
-  --shadow-md:0 10px 28px rgba(16,24,40,.10);
+  --shadow-xs: 0 1px 3px rgba(16,24,40,.06);
+  --shadow-sm: 0 4px 10px rgba(16,24,40,.08);
+  --shadow-md: 0 10px 28px rgba(16,24,40,.10);
 
   --ring: 0 0 0 6px #FFECEF;
 }
 
-*{box-sizing:border-box}
-html,body{
-  margin:0;
-  background:var(--bg);
-  color:var(--ink);
-  font-family:"Cabin",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Cabin", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
-body{font-size:15px; line-height:1.5}
+body { font-size: 15px; line-height: 1.5; }
 
-/* Scrollbar sutil */
-*::-webkit-scrollbar{height:10px;width:10px}
-*::-webkit-scrollbar-thumb{background:#dfe3ea;border-radius:999px}
-*::-webkit-scrollbar-track{background:transparent}
+/* Scrollbar */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: #dfe3ea; border-radius: 999px; }
 
-/* =====================
-   🧭 Layout principal
-===================== */
-.wrap{
-  display:grid;
+/* ===========================
+   🧭 Estructura principal
+=========================== */
+.wrap {
+  display: grid;
   grid-template-columns: 270px 1fr;
-  min-height:100vh;
+  min-height: 100vh;
 }
-@media(max-width:992px){
-  .wrap{grid-template-columns:1fr}
-}
-
-/* Sidebar */
-.side{
-  background: linear-gradient(180deg,var(--brand),var(--brand-2));
-  color:#fff;
-  padding:16px 14px;
-  border-right:1px solid rgba(0,0,0,.05);
-  position:sticky; top:0; height:100vh; overflow:auto;
-  box-shadow: inset 0 -1px 0 rgba(255,255,255,.08);
-}
-.brand{display:flex;justify-content:center;margin-bottom:14px}
-.brand img{width:168px;border-radius:12px;filter: drop-shadow(0 6px 20px rgba(0,0,0,.15))}
-.menu{display:flex;flex-direction:column;gap:10px}
-.mitem{
-  display:flex;align-items:center;gap:10px;
-  padding:12px 12px;
-  border-radius:14px;
-  text-decoration:none;
-  font-weight:800;
-  color:#fff;
-  background:rgba(255,255,255,.10);
-  border:1px solid rgba(255,255,255,.20);
-  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
-}
-.mitem:hover{background:rgba(255,255,255,.16); box-shadow:var(--shadow-xs); transform:translateY(-1px)}
-.mitem.active{background:#fff;color:var(--brand);border-color:#fff;box-shadow:0 6px 16px rgba(255,255,255,.25)}
-
-@media(max-width:992px){
-  .side{ position:fixed; inset:0 auto 0 0; width:272px; transform:translateX(-112%); transition:transform .25s; z-index:40 }
-  .side.show{ transform:none }
-  .side::after{ content:""; position:fixed; inset:0; background:rgba(0,0,0,.35); opacity:0; pointer-events:none; transition:.25s }
-  .side.show::after{ opacity:1; pointer-events:auto }
+@media (max-width: 992px) {
+  .wrap { grid-template-columns: 1fr; }
 }
 
-/* =====================
-   🧩 Contenido principal
-===================== */
-.main{
-  max-width: 1280px;            /* más ancho para paso 2 */
+.main {
+  max-width: 1280px;
   margin: 0 auto;
   padding: 22px 24px 40px;
 }
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.h1{ margin:0; font-size:24px; font-weight:900; letter-spacing:.2px }
-.burger{ display:none }
-@media(max-width:992px){ .burger{ display:inline-flex } }
-
-/* Botones */
-.btn{
-  border:none; border-radius:12px; padding:10px 14px; font-weight:800; cursor:pointer;
-  transition:transform .15s ease, box-shadow .15s ease, background .15s ease, color .15s ease;
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
 }
-.primary{ background:var(--brand); color:#fff; box-shadow:var(--shadow-sm) }
-.primary:hover{ background:var(--brand-3); transform:translateY(-1px) }
-.ghost{ background:#fff; border:1px solid var(--stroke); color:var(--brand) }
-.ghost:hover{ background:#F8FAFC }
-.gray{ background:#F8FAFC; border:1px solid var(--stroke) }
-.small{ color:var(--muted); font-size:13px }
+.h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: .2px;
+}
 
-/* =====================
-   🧩 Paso / formulario y resumen
-===================== */
-.grid{
-  display:grid;
-  grid-template-columns: minmax(640px, 1fr) 420px;   /* izquierda grande + resumen fijo */
-  gap: 24px;
+/* ===========================
+   🧩 Layout de pasos + resumen
+=========================== */
+.grid {
+  display: grid;
+  grid-template-columns: minmax(640px, 1fr) 380px;
+  gap: 32px;
   align-items: start;
   justify-content: center;
 }
-.grid > :first-child{ width: 100%; }
-.grid > :last-child{ min-width: 420px; }
-
-.step{
-  background:var(--paper);
-  border:1px solid var(--stroke);
-  border-radius:var(--radius-lg);
-  overflow:hidden;
-  box-shadow:var(--shadow-sm);
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
-.step header{
-  display:flex; align-items:center; gap:12px;
-  background:linear-gradient(90deg,var(--brand),var(--brand-2));
-  color:#fff; padding:14px 16px;
-}
-.badge{
-  width:34px; height:34px; border-radius:999px; background:#fff; color:#ff2332;
-  display:grid; place-items:center; font-weight:900; box-shadow:inset 0 0 0 2px #ffd3d8;
-}
-.step h3{ margin:0; font-size:18px; font-weight:900 }
-.body{ padding:16px 18px; display:grid; gap:10px }
-
-/* Campos */
-.form-2{ display:grid; grid-template-columns:1fr 1fr; gap:10px }
-@media(max-width:720px){ .form-2{ grid-template-columns:1fr } }
-label{ font-size:12.5px; font-weight:800; color:#344054; letter-spacing:.1px }
-.input, select, .fake{
-  height: 44px;
-  width:100%;
-  padding:10px 12px;
-  border:1.25px solid var(--stroke);
-  border-radius:12px;
-  background:#fff;
-  font-size:14px;
-}
-.input:focus, select:focus, .fake:focus{ outline:none; border-color:#FFB4BD; box-shadow: var(--ring) }
-.fake{ display:flex; justify-content:space-between; align-items:center; cursor:pointer }
-.fake .icon{ opacity:.6 }
-
-/* Botón dentro del paso */
-.step .body .primary,
-.step .body .btn{
-  width: 100%;
-  height: 46px;
-  border-radius: 12px;
-  font-weight: 800;
+.grid > aside {
+  min-width: 380px;
+  position: sticky;
+  top: 12px;
+  align-self: start;
 }
 
-/* ====== Controles de "Costo por día" alineados ====== */
-.form-2 div:has(#precioDia){
-  display: grid;
-  grid-template-columns: 160px auto; /* input + botón Calcular */
-  gap: 10px;
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  .grid > aside {
+    position: static;
+    min-width: 100%;
+    margin-top: 18px;
+  }
+}
+
+/* ===========================
+   🪜 Pasos (formulario)
+=========================== */
+.step {
+  background: var(--paper);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.step header {
+  display: flex;
   align-items: center;
+  gap: 12px;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  color: #fff;
+  padding: 14px 16px;
 }
-#precioDia{ max-width: 160px; }
-
-/* =====================
-   ➕ Adicionales
-===================== */
-.add-grid{
-  display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); /* fluido */
+.badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--brand);
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  box-shadow: inset 0 0 0 2px #ffd3d8;
+}
+.step h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+}
+.body {
+  padding: 18px 20px;
+  display: grid;
   gap: 14px;
 }
-@media(min-width:1101px){ .add-grid{ gap:14px } }
 
-.add{
-  border:1px solid #FFD3D8; border-radius:14px; background:#fff; overflow:hidden;
-  transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-  box-shadow:var(--shadow-xs);
-  height: 100%;
+/* Campos */
+.form-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
-.add:hover{ transform:translateY(-2px); border-color:#FFB4BD; box-shadow:var(--shadow-sm) }
-.add .head{ background:#FFE8EA; color:#7A0F1D; font-weight:900; text-align:center; padding:8px 10px }
-.add .body{ padding:10px; text-align:center; display:flex; flex-direction:column; align-items:center }
-.add .iconbig{ font-size:26px; margin-bottom:4px }
-.add .price{ color:#B2121C; font-weight:800; margin-top:6px }
-.qty{ display:flex; justify-content:center; align-items:center; gap:8px; margin-top:8px }
-.qty button{
-  width:30px; height:30px; border-radius:8px; border:1px solid #F1A2AA;
-  background:#fff; color:#B2121C; font-weight:900; cursor:pointer
+@media (max-width: 720px) {
+  .form-2 { grid-template-columns: 1fr; }
 }
-.qty button:hover{ background:#FFF2F4 }
-.qty input{ width:42px; text-align:center; border:1px solid #F1A2AA; border-radius:8px; padding:6px 2px; font-weight:700 }
+label {
+  font-size: 12.5px;
+  font-weight: 800;
+  color: #344054;
+}
+.input, select, .fake {
+  height: 44px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.25px solid var(--stroke);
+  border-radius: 12px;
+  background: #fff;
+  font-size: 14px;
+}
+.input:focus, select:focus, .fake:focus {
+  outline: none;
+  border-color: #FFB4BD;
+  box-shadow: var(--ring);
+}
+.fake {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+.fake .icon { opacity: .6; }
 
-/* =====================
-   🧾 Resumen (cotización)
-===================== */
-.sticky{ position:sticky; top:16px }
-.card{
+/* ===========================
+   🚗 Sección vehículo paso 1
+=========================== */
+.vehiculo-seleccion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.vehiculo-seleccion .input {
+  flex: 1 1 240px;
+}
+
+/* ===========================
+   🧭 Navegación entre pasos
+=========================== */
+.acciones {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* ===========================
+   ✉️ Sección compartir paso 3
+=========================== */
+.compartir {
+  margin-top: 14px;
+}
+.iconbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.icon-btn {
+  border: none;
+  background: #fff;
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+.icon-btn:hover { transform: scale(1.05); }
+.icon-btn img {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+/* ===========================
+   🧾 Resumen de cotización
+=========================== */
+.card {
   width: 100%;
   border-radius: 16px;
   border: 1px solid var(--stroke);
-  box-shadow:0 6px 16px rgba(16,24,40,.06);
-  background:#fff;
+  box-shadow: 0 6px 16px rgba(16,24,40,.06);
+  background: #fff;
+  overflow: hidden;
 }
-.card .head{ padding:12px 14px; border-bottom:1px solid var(--stroke); font-weight:900; color:var(--muted-2) }
-.card .cnt{ padding:12px 14px }
-.row{ display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px dashed #EDF0F5; gap:10px }
-.row:last-child{ border-bottom:none }
-.row .lbl{ color:#475467; font-weight:700; font-size:14px }
-.row .val{ color:#111827; font-weight:700; font-variant-numeric:tabular-nums }
-.total{ font-size:26px; font-weight:900; color:var(--brand); line-height:1.15; text-shadow:0 1px 0 #fff }
-
-/* =====================
-   📅 Date-picker
-===================== */
-.grid7{ display:grid; grid-template-columns:repeat(7,1fr); gap:8px; padding:12px }
-.dow{ font-weight:700; color:#98A2B3; text-align:center }
-.dp-head{ display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border-bottom:1px solid var(--stroke) }
-.dp-title{ font-weight:900 }
-.cell{
-  padding:10px; border-radius:10px; border:1px solid #EEF2F7; text-align:center; cursor:pointer;
-  transition:transform .12s ease, background .12s ease, border-color .12s ease; font-size:16px; user-select:none
+.card .head {
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  color: #fff;
+  padding: 14px 16px;
+  font-weight: 900;
+  border-radius: 16px 16px 0 0;
 }
-.cell:hover{ background:#FFF5F6; border-color:#FFD5D9 }
-.cell.today{ box-shadow:inset 0 0 0 2px #FF9EAB }
-.cell.disabled{ opacity:.38; pointer-events:none }
-.cell.range-start,.cell.range-end{ background:#FFECEE; border-color:#FF9EAB; font-weight:900; transform:scale(1.06) }
-.cell.in-range{ background:#FFF2F4; border-color:#FFD5D9 }
-
-/* =====================
-   🕗 Time-picker
-===================== */
-.tpbox{ width:min(520px,96vw) }
-.tp-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; border-bottom:1px solid var(--stroke) }
-.tp-title{ font-weight:800 }
-.tp-wrap{ display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:12px }
-.tp-col{ background:#fff; border:1px solid #EEF2F7; border-radius:12px; overflow:hidden; display:flex; flex-direction:column }
-.tp-col h5{ margin:0; padding:10px 12px; font-size:13px; font-weight:800; color:#344054; border-bottom:1px solid #EEF2F7 }
-.tp-hours{ max-height:280px; overflow:auto; padding:8px }
-.tp-hour{ padding:10px 12px; border:1px solid #F1F5F9; border-radius:10px; margin:6px 4px; cursor:pointer; text-align:center }
-.tp-hour:hover{ background:#FFF5F6; border-color:#FFD5D9 }
-.tp-hour.sel{ background:#FFECEE; border-color:#FFB4BD; font-weight:800 }
-.tp-mins{ display:grid; grid-template-columns: repeat(4,1fr); gap:8px; padding:10px }
-.tp-chip{ padding:10px; border:1px solid #EEF2F7; border-radius:10px; text-align:center; cursor:pointer }
-.tp-chip:hover{ background:#FFF5F6; border-color:#FFD5D9 }
-.tp-chip.sel{ background:#FFECEE; border-color:#FFB4BD; font-weight:800 }
-.tp-quick{ display:flex; flex-wrap:wrap; gap:8px; padding:10px 12px; border-top:1px dashed #EFF2F7 }
-.tp-q{ padding:8px 10px; border:1px solid #F1F5F9; border-radius:999px; font-size:13px; cursor:pointer; background:#F8FAFC }
-.tp-q:hover{ background:#EEF2F7 }
-.tp-input{ display:flex; gap:8px; padding:10px 12px; border-top:1px dashed #EFF2F7; align-items:center }
-.tp-input input{ flex:1; padding:10px 12px; border:1.5px solid var(--stroke); border-radius:10px; font-size:15px }
-.tp-input input:focus{ outline:none; border-color:#FFC7CD; box-shadow:var(--ring) }
-
-/* =====================
-   🧾 Ticket impresión
-===================== */
-#ticket{ display:none }
-@media print{
-  body *{ visibility:hidden }
-  #ticket, #ticket *{ visibility:visible }
-  #ticket{ position:absolute; inset:0; padding:18px }
+.card .cnt {
+  padding: 12px 14px;
 }
-.ticket{ max-width:900px; margin:0 auto; background:#fff; border:1px solid var(--stroke); border-radius:16px; overflow:hidden }
-.ticket header{ background:var(--brand); color:#fff; padding:16px }
-.ticket .tbody{ padding:16px }
-.trow{ display:flex; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px dashed #EFF2F7 }
-.trow:last-child{ border-bottom:none }
-.tlabel{ color:#475467; min-width:180px; font-weight:700 }
-.tval{ flex:1; text-align:right; font-variant-numeric: tabular-nums }
-.tsub{ color:#667085; font-size:13px }
-.totline{ font-size:22px; font-weight:900; color:var(--brand) }
-.tnote{ font-size:12px; color:#667085; margin-top:12px }
-.iconbar{ display:flex; gap:12px; flex-wrap:wrap }
-.icon-btn{ display:inline-flex; align-items:center; justify-content:center; width:52px; height:52px; border-radius:14px; background:#F3F4F6; border:1px solid var(--stroke); cursor:pointer; transition:transform .12s, background .12s }
-.icon-btn:hover{ background:#EEF2F7; transform:translateY(-1px) }
-.icon-btn img{ width:26px; height:26px }
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px dashed #EDF0F5;
+  gap: 10px;
+}
+.row:last-child { border-bottom: none; }
+.row div:first-child { color: #475467; font-weight: 700; }
+.row div:last-child { font-weight: 800; }
 
-/* =====================
-   💬 POPUPS Overlay (DatePicker, TimePicker, Vehículos)
-===================== */
-.pop{
+/* Total destacado */
+.total {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--brand);
+  line-height: 1.15;
+  text-shadow: 0 1px 0 #fff;
+}
+
+/* Imagen del vehículo */
+#vehImageWrap {
+  text-align: center;
+  margin-bottom: 14px;
+  background: #F9FAFB;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+  box-shadow: inset 0 0 4px rgba(0,0,0,.03);
+}
+#vehImage {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 3px 8px rgba(0,0,0,.08);
+}
+#vehName {
+  font-weight: 800;
+  font-size: 15px;
+  margin-top: 6px;
+  color: var(--muted-2);
+}
+
+/* ===========================
+   🔘 Botones generales
+=========================== */
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.primary {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+.primary:hover {
+  background: var(--brand-3);
+  transform: translateY(-1px);
+}
+.gray {
+  background: #F8FAFC;
+  border: 1px solid var(--stroke);
+  color: var(--muted-2);
+}
+.ghost {
+  background: #fff;
+  border: 1px solid var(--stroke);
+  color: var(--brand);
+}
+
+/* ===========================
+   💬 Modales / Popups
+=========================== */
+.pop {
   position: fixed;
   inset: 0;
   display: none;
@@ -305,10 +338,8 @@ label{ font-size:12.5px; font-weight:800; color:#344054; letter-spacing:.1px }
   z-index: 1000;
   padding: 16px;
 }
-.pop.show{ display: grid; }
-.pop[style*="display: block"]{ display: grid; }
-
-.pop .box{
+.pop.show { display: grid; }
+.pop .box {
   background: #fff;
   border: 1px solid var(--stroke);
   border-radius: 16px;
@@ -316,32 +347,441 @@ label{ font-size:12.5px; font-weight:800; color:#344054; letter-spacing:.1px }
   max-height: 90vh;
   overflow: hidden;
 }
-.pop .box .grid7,
-.pop .box .tp-wrap,
-.pop .box .vbox,
-.pop .box .cnt{
-  overflow: auto;
+.vbox {
+  width: min(780px, 94vw);
+  display: flex;
+  flex-direction: column;
 }
-body.no-scroll{ overflow: hidden; }
+.vbox header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--brand);
+  color: #fff;
+  padding: 10px 16px;
+  font-weight: 800;
+}
+.vbox #vehList {
+  overflow-y: auto;
+  max-height: 70vh;
+  padding: 14px;
+}
 
-/* =====================
-   🔁 Responsive
-===================== */
-@media (max-width: 1200px){
-  .grid{ grid-template-columns: minmax(560px, 1fr) 380px; gap:20px; }
-  .grid > :last-child{ min-width: 380px; }
+/* ===========================
+   📱 Responsive ex
+/* =====================================================
+   📅 CALENDARIO (DatePicker Moderno)
+===================================================== */
+#dpGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  padding: 12px;
+  background: #fff;
 }
-@media (max-width: 1100px){
-  .main{ max-width: 920px; }
-  .grid{ grid-template-columns: 1fr; gap: 16px; }
-  .grid > :last-child{ min-width: 0; }
-  .sticky{ position: static; }   /* el resumen baja en móviles */
+
+#dpGrid .dow {
+  font-weight: 800;
+  font-size: 13px;
+  color: #98A2B3;
+  text-align: center;
 }
-@media (max-width: 680px){
-  .main{ padding: 14px 16px; }
-  .h1{ font-size:22px }
-  .form-2{ grid-template-columns: 1fr }
-  .input, select, .fake{ height: 42px; }
-  .total{ font-size: 24px; }
-  .add-grid{ grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); }
+
+#dpGrid .cell {
+  padding: 9px 0;
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all .15s ease;
+  border: 1px solid transparent;
+  color: #344054;
+}
+
+#dpGrid .cell:hover {
+  background: #FFF5F6;
+  border-color: #FFD5D9;
+}
+
+.cell.range-start,
+.cell.range-end {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 900;
+}
+
+.cell.in-range {
+  background: #FFECEE;
+  color: var(--brand-2);
+}
+
+/* =====================================================
+   🕒 SELECTOR DE HORA (TimePicker)
+===================================================== */
+#tpSelect {
+  width: 100%;
+  height: 44px;
+  border-radius: 10px;
+  border: 1.5px solid var(--stroke);
+  font-size: 15px;
+  padding: 6px 10px;
+  transition: 0.2s ease;
+}
+
+#tpSelect:focus {
+  outline: none;
+  border-color: #FFB4BD;
+  box-shadow: var(--ring);
+}
+
+.tp-q {
+  background: #F8FAFC;
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all .15s ease;
+  display: inline-block;
+}
+
+.tp-q:hover {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+
+.tp-head button.active {
+  background: var(--brand);
+  color: #fff !important;
+  border-color: var(--brand);
+}
+
+/* =====================================================
+   🌟 MODALES (Apariencia y Animación)
+===================================================== */
+.pop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  backdrop-filter: blur(2px);
+}
+
+.pop.show {
+  display: flex;
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+.pop .box {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  transform: scale(0.95);
+  opacity: 0;
+  animation: popIn 0.25s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* =====================================================
+   🧾 ENCABEZADOS DE MODALES
+===================================================== */
+.dp-head,
+.tp-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--brand);
+  color: #fff;
+  border-radius: 14px 14px 0 0;
+}
+
+.dp-title,
+.tp-title {
+  font-weight: 900;
+  font-size: 16px;
+  text-transform: capitalize;
+}
+
+.dp-head .btn,
+.tp-head .btn {
+  background: #fff;
+  color: var(--brand);
+  border: none;
+  padding: 6px 10px;
+  font-weight: 700;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.dp-head .btn:hover,
+.tp-head .btn:hover {
+  background: var(--brand-2);
+  color: #fff;
+}
+
+/* =====================================================
+   ⚡ PIE DE MODALES
+===================================================== */
+.pop footer {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+  border-top: 1px solid #eee;
+}
+
+.pop footer .btn {
+  min-width: 90px;
+  border-radius: 8px;
+}
+
+/* =====================================================
+   🧊 DETALLES ADICIONALES
+===================================================== */
+.tp-wrap {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tp-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tp-input label {
+  font-weight: 700;
+  color: #344054;
+  min-width: 90px;
+}
+
+.tp-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.tpbox {
+  width: min(420px, 96vw);
+}
+
+/* =====================================================
+   💫 ANIMACIÓN DE CIERRE SUAVE (opcional)
+===================================================== */
+.pop.hide {
+  animation: fadeOut 0.25s ease-out forwards;
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.cell.disabled {
+  background: #f2f2f2;
+  color: #999;
+  cursor: not-allowed;
+}
+/* ================================
+   💎 MODALES DE SEGURO
+================================ */
+.seg-card {
+  background: #fff;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  padding: 18px;
+  margin: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease-in-out;
+}
+.seg-card:hover {
+  transform: translateY(-3px);
+  border-color: #c82333;
+  box-shadow: 0 4px 16px rgba(200, 35, 51, 0.2);
+}
+.seg-card .btn.primary {
+  background: #d00;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  padding: 8px 20px;
+  transition: background 0.2s;
+}
+.seg-card .btn.primary:hover {
+  background: #b10000;
+}
+
+/* ================================
+   ⚙️ COMPLEMENTOS / ADICIONALES
+================================ */
+.add-card {
+  background: #fff;
+  border: 1px solid #d0d5dd;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+.add-card:hover {
+  border-color: #2563eb;
+  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.15);
+}
+.add-card .info {
+  flex: 1;
+}
+.add-card .info div:first-child {
+  font-weight: 700;
+  color: #1e293b;
+}
+.add-card .info .desc {
+  font-size: 13px;
+  color: #475467;
+  margin: 3px 0;
+}
+.add-card .info .price {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+/* ================================
+   🔘 SWITCH MODERNO PARA ADICIONALES
+================================ */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #ccc;
+  transition: .3s;
+  border-radius: 34px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+.switch input:checked + .slider {
+  background-color: #2563eb;
+}
+.switch input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* ================================
+   🔄 BOTONES GENERALES
+================================ */
+.btn.gray {
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn.gray:hover {
+  background: #e5e7eb;
+}
+/* ================================
+   ✅ BOTÓN-SWITCH TIPO CONFIRMAR (con animación gris→verde)
+================================ */
+.confirm-btn-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.confirm-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  background-color: #d1d5db; /* gris por defecto */
+  border-radius: 30px;
+  padding: 6px 18px;
+  color: #333;
+  font-weight: 600;
+  font-size: 15px;
+  transition: background-color 0.4s ease, color 0.4s ease;
+  min-width: 150px;
+}
+
+.confirm-switch input {
+  display: none;
+}
+
+.confirm-switch .slider-round {
+  position: relative;
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  transform: translateX(-18px);
+}
+
+/* ✅ Cuando está activo */
+.confirm-switch input:checked + .slider-round {
+  transform: translateX(18px);
+}
+.confirm-switch input:checked ~ .switch-label {
+  color: #fff;
+}
+.confirm-switch input:checked:before {
+  background-color: #00c853;
+}
+
+/* ✅ Color de fondo cuando está activo */
+.confirm-switch:has(input:checked) {
+  background-color: #00c853;
+  color: #fff;
+}
+
+/* 🔄 Transición al desactivar */
+.confirm-switch:not(:has(input:checked)) {
+  background-color: #d1d5db;
+  color: #333;
+}
+
+/* Texto dentro del botón */
+.switch-label {
+  position: relative;
+  z-index: 2;
+  transition: color 0.3s ease;
 }

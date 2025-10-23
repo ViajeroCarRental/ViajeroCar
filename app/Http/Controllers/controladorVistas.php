@@ -6,22 +6,6 @@ use Illuminate\Http\Request;
 
 class ControladorVistas extends Controller
 {
-    /* ================== Inicio ================== */
-    public function home()
-    {
-
-        return view('welcome');
-    }
-
-    public function catalogo()
-    {
-        return view('Usuarios.Catalogo');
-    }
-
-    public function reservaciones()
-    {
-        return view('Usuarios.Reservaciones');
-    }
 
     public function contacto()
     {
@@ -37,4 +21,6 @@ class ControladorVistas extends Controller
     {
         return view('Usuarios.FAQ');
     }
+
+
 }

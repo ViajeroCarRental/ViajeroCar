@@ -3,47 +3,54 @@
 @section('Titulo','Catálogo de Vehículos')
 
 @section('css-VistaCatalogo')
-
-    <link rel="stylesheet" href="{{ asset('css/catalogo.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/catalogo.css') }}">
 @endsection
 
 @section('contenidoCatalogo')
 
-     <section class="hero">
-    <div class="hero-bg" style="background-image:url('https://images.unsplash.com/photo-1485968579580-b6d095142e6e?q=80&w=1600&auto=format&fit=crop');"></div>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg">
+      <img src="{{ asset('img/catalogo.png') }}" alt="FAQ ViajeroCar">
+    </div>
     <div class="overlay"></div>
 
     <div class="hero-inner">
       <h1 class="hero-title">¡RENTA HOY, EXPLORA MAÑANA, VIAJA SIEMPRE!</h1>
       <div class="chips">
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Oficina Central Park, Querétaro</span>
+        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Oficina Central Park, Querétaro</span>
         <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto de Querétaro</span>
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto de León</span>
+        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto Intl del Bajío, León</span>
       </div>
     </div>
   </section>
 
+  <!-- FILTROS -->
   <section class="filters" aria-labelledby="filtros-title">
     <h2 id="filtros-title" class="sr-only" style="position:absolute;left:-9999px">Filtros del catálogo</h2>
-    <form class="filter-row" onsubmit="event.preventDefault();">
+
+    <form class="filter-row" action="{{ route('rutaCatalogoResultados') }}" method="GET">
       <div class="field">
         <label for="f-location">Ubicación</label>
-        <select id="f-location">
-          <option value="all">Todas</option>
-          <option value="central">Querétaro (Central Park)</option>
-          <option value="aiq">Aeropuerto de Querétaro</option>
-          <option value="bjx">Aeropuerto de León</option>
+        <select id="f-location" name="location">
+          <option value="">Todas</option>
+          @foreach ($ciudades as $c)
+            <option value="{{ $c->id_sucursal }}" {{ (string)request('location')===(string)$c->id_sucursal ? 'selected' : '' }}>
+              {{ $c->nombre }}
+            </option>
+          @endforeach
         </select>
       </div>
 
       <div class="field">
         <label for="f-type">Tipo</label>
-        <select id="f-type">
-          <option value="all">Todos</option>
-          <option value="compacto">Compacto</option>
-          <option value="intermedio">Intermedio</option>
-          <option value="suv">SUV</option>
-          <option value="lujo">Lujo</option>
+        <select id="f-type" name="type">
+          <option value="">Todos</option>
+          @foreach ($categorias as $cat)
+            <option value="{{ $cat->id_categoria }}" {{ (string)request('type')===(string)$cat->id_categoria ? 'selected' : '' }}>
+              {{ $cat->nombre }}
+            </option>
+          @endforeach
         </select>
       </div>
 
@@ -51,7 +58,8 @@
         <label>Entrega</label>
         <div class="nice-date" data-bind="start">
           <i class="fa-regular fa-calendar"></i>
-          <input id="date-start" type="text" placeholder="dd/mm/aaaa" readonly>
+          <input id="date-start" name="start" type="text" placeholder="dd/mm/aaaa"
+                 value="{{ request('start') }}" readonly>
           <div class="cal-pop" aria-hidden="true"></div>
         </div>
       </div>
@@ -60,127 +68,111 @@
         <label>Devolución</label>
         <div class="nice-date" data-bind="end">
           <i class="fa-regular fa-calendar"></i>
-          <input id="date-end" type="text" placeholder="dd/mm/aaaa" readonly>
+          <input id="date-end" name="end" type="text" placeholder="dd/mm/aaaa"
+                 value="{{ request('end') }}" readonly>
           <div class="cal-pop" aria-hidden="true"></div>
         </div>
       </div>
 
       <div class="field actions">
-        <button class="btn btn-primary" id="btn-filter" type="button"><i class="fa-solid fa-filter"></i> Filtrar</button>
+        <button class="btn btn-primary" type="submit">
+          <i class="fa-solid fa-filter"></i> Filtrar
+        </button>
       </div>
     </form>
+
+    @isset($mensaje)
+      <div class="filter-hint" style="margin-top:.75rem">
+        <small>{{ $mensaje }}</small>
+      </div>
+    @endisset
   </section>
 
+  <!-- CATÁLOGO (DINÁMICO) -->
   <section class="catalog">
     <div class="cars">
-      <article class="car" data-type="compacto" data-trans="manual" data-location="central">
-        <div class="car-media">
-          <img src="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?q=80&w=1200&auto=format&fit=crop" alt="Chevrolet Aveo">
-        </div>
-        <div class="car-body">
-          <h3>Chevrolet <strong>Aveo</strong> o similar</h3>
-          <div class="subtitle">COMPACTO | <span class="cat">Categoría C</span></div>
-          <ul class="features">
-            <li><i class="fa-solid fa-user-group"></i> 5</li>
-            <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
-            <li><i class="fa-solid fa-door-open"></i> 4</li>
-            <li><i class="fa-solid fa-gear"></i> M</li>
-            <li><i class="fa-regular fa-snowflake"></i> A/C</li>
-          </ul>
-          <p class="incluye">KM ilimitados · Relevo de Responsabilidad (LI)</p>
-        </div>
-        <div class="car-cta">
-          <div class="price">
-            <span class="from">DESDE</span>
-            <div class="amount">$499 <small>MXN</small></div>
-            <span class="per">por día</span>
-          </div>
-          <a href="reserva.html" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!</a>
-        </div>
-      </article>
+      @forelse ($autos as $auto)
+        @php
+          $trans = strtoupper(substr((string)$auto->transmision, 0, 1)) ?: 'A';
+          $img   = $auto->img_url
+                    ? (\Illuminate\Support\Str::startsWith($auto->img_url, ['http://','https://'])
+                        ? $auto->img_url
+                        : asset($auto->img_url))
+                    : asset('img/placeholder-car.jpg');
+        @endphp
 
-      <article class="car" data-type="intermedio" data-trans="automatico" data-location="aiq">
-        <div class="car-media">
-          <img src="https://images.unsplash.com/photo-1606661421950-0f23d4f9f4ce?q=80&w=1200&auto=format&fit=crop" alt="Volkswagen Virtus">
-        </div>
-        <div class="car-body">
-          <h3>Volkswagen <strong>Virtus</strong> o similar</h3>
-          <div class="subtitle">INTERMEDIO | <span class="cat">Categoría D</span></div>
-          <ul class="features">
-            <li><i class="fa-solid fa-user-group"></i> 5</li>
-            <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-            <li><i class="fa-solid fa-door-open"></i> 4</li>
-            <li><i class="fa-solid fa-gear"></i> A</li>
-            <li><i class="fa-regular fa-snowflake"></i> A/C</li>
-          </ul>
-          <p class="incluye">Cobertura básica incluida · Asistencia 24/7</p>
-        </div>
-        <div class="car-cta">
-          <div class="price">
-            <span class="from">DESDE</span>
-            <div class="amount">$699 <small>MXN</small></div>
-            <span class="per">por día</span>
+        <article class="car"
+                 data-type="{{ \Illuminate\Support\Str::slug($auto->categoria) }}"
+                 data-trans="{{ $trans === 'M' ? 'manual' : 'automatico' }}"
+                 data-location="{{ \Illuminate\Support\Str::slug($auto->sucursal ?? 'general') }}">
+          <div class="car-media">
+            <img src="{{ $img }}" alt="{{ $auto->nombre_publico }}">
           </div>
-          <a href="reserva.html" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!</a>
-        </div>
-      </article>
 
-      <article class="car" data-type="suv" data-trans="automatico" data-location="bjx">
-        <div class="car-media">
-          <img src="https://images.unsplash.com/photo-1603380355075-45a9cd9bba56?q=80&w=1200&auto=format&fit=crop" alt="Kia Sportage">
-        </div>
-        <div class="car-body">
-          <h3>Kia <strong>Sportage</strong> o similar</h3>
-          <div class="subtitle">SUV | <span class="cat">Categoría F</span></div>
-          <ul class="features">
-            <li><i class="fa-solid fa-user-group"></i> 5</li>
-            <li><i class="fa-solid fa-suitcase-rolling"></i> 4</li>
-            <li><i class="fa-solid fa-door-open"></i> 5</li>
-            <li><i class="fa-solid fa-gear"></i> A</li>
-            <li><i class="fa-regular fa-snowflake"></i> A/C</li>
-          </ul>
-          <p class="incluye">Espacio y confort para viajes largos</p>
-        </div>
-        <div class="car-cta">
-          <div class="price">
-            <span class="from">DESDE</span>
-            <div class="amount">$999 <small>MXN</small></div>
-            <span class="per">por día</span>
-          </div>
-          <a href="reserva.html" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!</a>
-        </div>
-      </article>
+          <div class="car-body">
+            <h3>
+              {{ $auto->marca }}
+              <strong>{{ $auto->modelo }}</strong>
+              <small style="font-weight:normal">({{ $auto->anio }})</small>
+            </h3>
 
-      <article class="car" data-type="lujo" data-trans="automatico" data-location="central">
-        <div class="car-media">
-          <img src="https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?q=80&w=1200&auto=format&fit=crop" alt="BMW Serie 3">
-        </div>
-        <div class="car-body">
-          <h3>BMW <strong>Serie 3</strong> o similar</h3>
-          <div class="subtitle">LUJO | <span class="cat">Categoría L</span></div>
-          <ul class="features">
-            <li><i class="fa-solid fa-user-group"></i> 5</li>
-            <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-            <li><i class="fa-solid fa-door-open"></i> 4</li>
-            <li><i class="fa-solid fa-gear"></i> A</li>
-            <li><i class="fa-regular fa-snowflake"></i> A/C</li>
-          </ul>
-          <p class="incluye">Lujo y desempeño con máxima seguridad</p>
-        </div>
-        <div class="car-cta">
-          <div class="price">
-            <span class="from">DESDE</span>
-            <div class="amount">$1,899 <small>MXN</small></div>
-            <span class="per">por día</span>
+            <div class="subtitle">
+              {{ strtoupper($auto->categoria) }}
+              @if(!empty($auto->sucursal))
+                | <span class="cat">{{ $auto->sucursal }}</span>
+              @endif
+            </div>
+
+            <ul class="features">
+              <li title="Pasajeros"><i class="fa-solid fa-user-group"></i> {{ (int)$auto->asientos }}</li>
+              <li title="Puertas"><i class="fa-solid fa-door-open"></i> {{ (int)$auto->puertas }}</li>
+              <li title="Transmisión"><i class="fa-solid fa-gear"></i> {{ $trans }}</li>
+            </ul>
+
+            @if(!empty($auto->descripcion))
+              <p class="incluye">{{ $auto->descripcion }}</p>
+            @endif
           </div>
-          <a href="reserva.html" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!</a>
+
+          <div class="car-cta">
+            <div class="price">
+              <span class="from">DESDE</span>
+              <div class="amount">
+                ${{ number_format((float)$auto->precio_dia, 0) }} <small>MXN</small>
+              </div>
+              <span class="per">por día</span>
+            </div>
+
+            {{-- >>> Enlace que pasa filtros y fechas al flujo de reservaciones <<< --}}
+            <a
+              href="{{ route('reservaciones.desdeCatalogo', [
+                  'pickup_sucursal_id'  => request('location'),           // mismo lugar para dropoff por defecto
+                  'dropoff_sucursal_id' => request('location'),
+                  'pickup_date'         => request('start'),              // dd/mm/aaaa o yyyy-mm-dd (se normaliza)
+                  'pickup_time'         => '12:00 pm',                    // default
+                  'dropoff_date'        => request('end'),
+                  'dropoff_time'        => '11:00 am',                    // default
+                  'categoria_id'        => request('type'),               // categoría filtrada
+                  'vehiculo_id'         => $auto->id_vehiculo ?? null,    // por si quieres saltar directo
+              ]) }}"
+              class="btn btn-primary"
+            >
+              <i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!
+            </a>
+          </div>
+        </article>
+      @empty
+        <div class="no-results" style="grid-column:1/-1; text-align:center; padding:2rem 1rem;">
+          <h3>Sin resultados 🕵️‍♂️</h3>
+          <p>Intenta cambiar la ubicación, el tipo o el rango de fechas.</p>
         </div>
-      </article>
+      @endforelse
     </div>
   </section>
 
-@section('js-vistaHome')
-    <script src="{{ asset('js/catalogo.js') }}"></script>
 @endsection
 
+{{-- === JS de esta vista === --}}
+@section('js-vistaCatalogo')
+  <script src="{{ asset('js/catalogo.js') }}"></script>
 @endsection

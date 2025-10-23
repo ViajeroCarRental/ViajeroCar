@@ -10,7 +10,7 @@
 <main class="page">
     <section class="hero hero-mini">
       <div class="hero-bg">
-        <img src="https://images.unsplash.com/photo-1517142089942-ba376ce32a0a?q=80&w=1600&auto=format&fit=crop" alt="">
+        <img src="{{ asset('img/politicas.png') }}" alt="Politicas">
       </div>
       <div class="hero-overlay"></div>
       <div class="hero-content">
@@ -31,7 +31,7 @@
           </button>
           <div class="policy-body" aria-hidden="true">
             <div class="policy-content">
-              <p><strong>ELABORADO POR VIAJERO CAR RENTAL (JUAN DE DIOS HERNANDEZ RESENDIZ), PARA LA PROTECCIÓN DE DATOS DE SUS CLIENTES</strong></p>
+              <p><strong>ELABORADO POR VIAJERO CAR RENTAL, PARA LA PROTECCIÓN DE DATOS DE SUS CLIENTES</strong></p>
               <p>Persona física con Actividad Empresarial, con domicilio fiscal en Blvd. Bernardo Quintana 8300, Centro Sur, 76090 Santiago de Querétaro, Qro., tratará sus datos personales recabados para fines de identificación, operación, administración y comercialización relacionada con el alquiler de vehículos automotores. Si Usted no manifiesta su oposición para que sus datos personales sean tratados, se entenderá que ha otorgado su consentimiento para ello.</p>
               <p>Los datos personales pueden ser recabados de manera directa —como cuando se proporcionan de manera personal—, o por medio indirecto —ya sean directorios telefónicos, de servicios o laborales—, y son entre otros: Nombres y apellidos, género, fecha de nacimiento, domicilio, teléfono fijo y/o móvil, correo electrónico, etc. En cuanto a los datos financieros, de conformidad con las excepciones que señalan los artículos 8, 10 y 37 de la Ley, no son considerados como que requieran de consentimiento expreso para ser utilizados.</p>
               <p>Los datos serán utilizados estrictamente para las actividades que se desprendan de brindarle algún bien o servicio, que en forma enunciativa pero no limitativa se describen a continuación: La renta de automóviles, así como la prestación de servicios inherentes a sus viajes de placer o negocios, de actualización y confirmación, con fines promocionales, publicitarios y de contratación y crediticios, realizar estudios sobre hábitos de consumo y preferencias, la preparación de opciones financieras, la cobranza y procuración de pago y contactarlo para cualquier tema relacionado a los servicios que prestamos o a la presente política de privacidad. De conformidad con lo estipulado en el artículo 37 fracción III de la Ley, los datos personales no serán transferidos a terceros sin consentimiento, con excepción de aquellas sociedades que forman parte de nuestro grupo o socios comerciales.</p>
@@ -53,7 +53,7 @@
           <div class="policy-body" aria-hidden="true">
             <div class="policy-content">
               <p>Nos caracterizamos por ser una compañía comprometida con sus clientes, nuestra forma de operar se basa en un conjunto de Políticas y Procedimientos claros y transparentes de cara hacia ti.</p>
-              <p>Si tuvieras alguna pregunta o comentario, comunícate al <strong>01 (442) 303 2668</strong> o por correo electrónico a <a href="mailto:reservaciones@viajerocar-rental.mx">reservaciones@viajerocar-rental.mx</a> donde un especialista de Servicio a Clientes te atenderá.</p>
+              <p>Si tuvieras alguna pregunta o comentario, comunícate al <strong></strong> o por correo electrónico a <a href="mailto:reservaciones@viajerocar-rental.mx">reservaciones@viajerocar-rental.mx</a> donde un especialista de Servicio a Clientes te atenderá.</p>
               <h4>¿POR QUÉ HEMOS CREADO ESTAS POLÍTICAS?</h4>
               <p>Esta política se diseñó para asegurar la comodidad de nuestros clientes, una prioridad para VIAJERO. Te escuchamos; la solicitud de nuestros clientes era: “Quiero un auto de No Fumar” y cumplimos con esta solicitud.</p>
               <p>El humo del tabaco deja residuos en los asientos y vestiduras, los cuales emiten olores que la mayoría de los clientes consideran desagradables.</p>
