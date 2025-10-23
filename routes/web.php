@@ -105,7 +105,7 @@ Route::get('/admin/reservaciones/seguros', [ReservacionesAdminController::class,
 // Endpoint para obtener servicios adicionales (complementos)
 Route::get('/admin/reservaciones/servicios', [ReservacionesAdminController::class, 'getServicios'])->name('rutaServiciosReservaciones');
 // Guardar reservación (desde el formulario de pasos)
-Route::post('/admin/reservaciones/guardar', [App\Http\Controllers\ReservacionesAdminController::class, 'guardarReservacion'])->name('rutaGuardarReservacion');
+Route::post('/reservaciones/guardar', [ReservacionesAdminController::class, 'guardarReservacion'])->name('reservaciones.guardar');
 
 
 //cotizaciones

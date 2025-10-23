@@ -38,8 +38,8 @@
         <!-- Grupo: Entrega y Devolución -->
         <div class="form-2">
           <div>
-            <label>Entrega</label>
-            <select id="entregaSelect" class="input">
+            <label>Sucursal de retiro</label>
+            <select id="sucursal_retiro" name="sucursal_retiro" class="input">
               <option value="">Selecciona punto de entrega</option>
               @foreach($sucursales as $s)
                 <option value="{{ $s->id_sucursal }}">{{ $s->nombre_mostrado }}</option>
@@ -47,8 +47,8 @@
             </select>
           </div>
           <div>
-            <label>Devolución</label>
-            <select id="devolucionSelect" class="input">
+            <label>Sucursal de entrega</label>
+            <select id="sucursal_entrega" name="sucursal_entrega" class="input">
               <option value="">Selecciona punto de devolución</option>
               @foreach($sucursales as $s)
                 <option value="{{ $s->id_sucursal }}">{{ $s->nombre_mostrado }}</option>
@@ -61,27 +61,19 @@
         <div class="form-2">
           <div>
             <label>Fecha de salida</label>
-            <div class="fake" id="fIniBox" data-dp>
-              YYYY-MM-DD <span class="icon">📅</span>
-            </div>
+            <input id="fecha_inicio" name="fecha_inicio" class="input" type="date" required>
           </div>
           <div>
             <label>Hora de salida</label>
-            <div class="fake" id="hIniBox" data-tp>
-              --:-- AM/PM <span class="icon">🕑</span>
-            </div>
+            <input id="hora_retiro" name="hora_retiro" class="input" type="time" required>
           </div>
           <div>
             <label>Fecha de llegada</label>
-            <div class="fake" id="fFinBox" data-dp>
-              YYYY-MM-DD <span class="icon">📅</span>
-            </div>
+            <input id="fecha_fin" name="fecha_fin" class="input" type="date" required>
           </div>
           <div>
             <label>Hora de llegada</label>
-            <div class="fake" id="hFinBox" data-tp>
-              --:-- AM/PM <span class="icon">🕑</span>
-            </div>
+            <input id="hora_entrega" name="hora_entrega" class="input" type="time" required>
           </div>
         </div>
 
@@ -99,7 +91,7 @@
         <!-- Grupo: Selección de vehículo -->
         <div class="vehiculo-seleccion">
           <button class="btn primary" type="button" id="btnVeh">🚗 Seleccionar vehículo</button>
-          <input id="vehiculoSel" class="input" type="text" placeholder="Vehículo seleccionado" readonly>
+          <input id="id_vehiculo" name="id_vehiculo" class="input" type="text" placeholder="Vehículo seleccionado" readonly required>
           <span id="diasBadge" class="badge" style="background:#ECFDF3;border:1px solid #ABEFC6;color:var(--ok)">
             0 día(s)
           </span>
@@ -128,7 +120,7 @@
             <label>Protecciones (Seguros)</label>
             <div class="flex" style="gap:8px;align-items:center;">
               <button class="btn primary" type="button" id="btnProtecciones">🔒 Seleccionar protección</button>
-              <input id="proteccionSel" class="input" type="text" placeholder="Ninguna protección seleccionada" readonly>
+              <input id="proteccionSel" name="proteccionSel" class="input" type="text" placeholder="Ninguna protección seleccionada" readonly>
               <button id="proteRemove" class="btn gray" type="button" style="display:none;">✖</button>
             </div>
           </div>
@@ -145,9 +137,9 @@
           <div>
             <label>Moneda</label>
             <div class="flex">
-              <select id="moneda" class="input" style="max-width:160px;">
-                <option>MXN</option>
-                <option>USD</option>
+              <select id="moneda" name="moneda" class="input" style="max-width:160px;">
+                <option value="MXN">MXN</option>
+                <option value="USD">USD</option>
               </select>
               <span class="badge">
                 <b>TC USD</b>
@@ -176,43 +168,43 @@
 
       <div class="body">
         <!-- ✅ Formulario de datos del cliente -->
-        <form id="formReserva" action="{{ route('rutaGuardarReservacion') }}" method="POST" class="form-2" novalidate>
+        <form id="formReserva" action="{{ route('reservaciones.guardar') }}" method="POST" class="form-2" novalidate>
   @csrf
 
   <!-- Campos visibles -->
   <div>
     <label>Nombre</label>
-    <input id="cNombre" name="nombre_cliente" class="input" type="text" required>
+    <input id="nombre_cliente" name="nombre_cliente" class="input" type="text" required>
   </div>
 
   <div>
     <label>Apellido(s)</label>
-    <input id="cApellidos" name="apellidos" class="input" type="text" required>
+    <input id="apellidos" name="apellidos" class="input" type="text" required>
   </div>
 
   <div>
     <label>Email</label>
-    <input id="cEmail" name="email_cliente" class="input" type="email" required>
+    <input id="email_cliente" name="email_cliente" class="input" type="email" required>
   </div>
 
   <div>
     <label>Teléfono</label>
-    <input id="cTel" name="telefono_cliente" class="input" type="text" placeholder="+52..." required>
+    <input id="telefono_cliente" name="telefono_cliente" class="input" type="text" placeholder="+52..." required>
   </div>
 
   <div>
     <label>País</label>
-    <input id="cPais" name="pais" class="input" type="text" value="MÉXICO" required>
+    <input id="pais" name="pais" class="input" type="text" value="MÉXICO" required>
   </div>
 
   <div>
     <label>Vuelo</label>
-    <input id="cVuelo" name="no_vuelo" class="input" type="text" placeholder="UA2068" required>
+    <input id="no_vuelo" name="no_vuelo" class="input" type="text" placeholder="UA2068" required>
   </div>
   <!-- Botones -->
   <div class="acciones" style="grid-column:1/-1; margin-top:20px;">
     <button class="btn gray" id="back2" type="button">← Atrás</button>
-    <button class="btn primary" id="btnRegistrarReserva" type="submit">✅ Registrar reservación</button>
+    <button class="btn primary" id="btnReservar" type="submit">✅ Registrar reservación</button>
   </div>
 </form>
 

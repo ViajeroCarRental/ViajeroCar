@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 
 class ReservacionesAdminController extends Controller
 {
@@ -102,93 +104,130 @@ class ReservacionesAdminController extends Controller
     }
 
     /**
-     * 💾 Guardar nueva reservación enviada desde el flujo JS.
+     * 💾 Guardar nueva reservación (AJAX con Alertify)
      */
     public function guardarReservacion(Request $request)
-    {
+{
+    try {
+        // 1️⃣ Validación básica
+        $validated = $request->validate([
+            'id_vehiculo'       => 'required|integer|exists:vehiculos,id_vehiculo',
+            'sucursal_retiro'   => 'nullable|integer|exists:sucursales,id_sucursal',
+            'sucursal_entrega'  => 'nullable|integer|exists:sucursales,id_sucursal',
+            'fecha_inicio'      => 'required|date',
+            'fecha_fin'         => 'required|date|after_or_equal:fecha_inicio',
+            'hora_retiro'       => 'nullable|string|max:10',
+            'hora_entrega'      => 'nullable|string|max:10',
+            'nombre_cliente'    => 'nullable|string|max:120',
+            'email_cliente'     => 'nullable|email|max:120',
+            'telefono_cliente'  => 'nullable|string|max:40',
+            'no_vuelo'          => 'nullable|string|max:40',
+        ]);
+
+        // 2️⃣ Generar código único
+        $fecha = now()->format('Ymd');
+        $random = strtoupper(Str::random(5));
+        $codigo = "RES-{$fecha}-{$random}";
+
+        // 3️⃣ Calcular totales según el vehículo
+        $vehiculo = DB::table('vehiculos')
+            ->select('precio_dia', 'id_ciudad as ciudad_retiro')
+            ->where('id_vehiculo', $validated['id_vehiculo'])
+            ->first();
+
+        $fechaInicio = Carbon::parse($validated['fecha_inicio']);
+        $fechaFin    = Carbon::parse($validated['fecha_fin']);
+        $dias        = max(1, $fechaInicio->diffInDays($fechaFin));
+
+        $subtotal   = $vehiculo ? ($vehiculo->precio_dia * $dias) : 0;
+        $impuestos  = round($subtotal * 0.16, 2);
+        $total      = $subtotal + $impuestos;
+        $estado     = 'pendiente_pago';
+
+        // 4️⃣ Insertar reservación
+        $id = DB::table('reservaciones')->insertGetId([
+            'id_usuario'       => null,
+            'id_vehiculo'      => $validated['id_vehiculo'],
+            'sucursal_retiro'  => $validated['sucursal_retiro'] ?? null,
+            'sucursal_entrega' => $validated['sucursal_entrega'] ?? null,
+            'ciudad_retiro'    => $vehiculo ? $vehiculo->ciudad_retiro : 1,
+            'ciudad_entrega'   => $vehiculo ? $vehiculo->ciudad_retiro : 1,
+            'fecha_inicio'     => $validated['fecha_inicio'],
+            'hora_retiro'      => $validated['hora_retiro'],
+            'fecha_fin'        => $validated['fecha_fin'],
+            'hora_entrega'     => $validated['hora_entrega'],
+            'estado'           => $estado,
+            'subtotal'         => $subtotal,
+            'impuestos'        => $impuestos,
+            'total'            => $total,
+            'moneda'           => 'MXN',
+            'no_vuelo'         => $validated['no_vuelo'] ?? null,
+            'codigo'           => $codigo,
+            'nombre_cliente'   => $validated['nombre_cliente'] ?? null,
+            'email_cliente'    => $validated['email_cliente'] ?? null,
+            'telefono_cliente' => $validated['telefono_cliente'] ?? null,
+            'paypal_order_id'  => null,
+            'status_pago'      => 'Pendiente',
+            'metodo_pago'      => 'mostrador',
+            'created_at'       => now(),
+            'updated_at'       => now(),
+        ]);
+
+        // 5️⃣ Enviar correo (cliente + empresa)
+        $correoCliente = $validated['email_cliente'] ?? null;
+        $correoEmpresa = env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocarental.com');
+
+        $mensaje = "📩 CONFIRMACIÓN DE RESERVA\n\n";
+        $mensaje .= "Código de reserva: {$codigo}\n\n";
+        $mensaje .= "👤 Cliente:\n";
+        $mensaje .= "Nombre: " . ($validated['nombre_cliente'] ?? '-') . "\n";
+        $mensaje .= "Correo: " . ($validated['email_cliente'] ?? '-') . "\n";
+        $mensaje .= "Teléfono: " . ($validated['telefono_cliente'] ?? '-') . "\n";
+        $mensaje .= "Vuelo: " . ($validated['no_vuelo'] ?? '-') . "\n\n";
+        $mensaje .= "📅 Fechas:\n";
+        $mensaje .= "Entrega: {$validated['fecha_inicio']} {$validated['hora_retiro']}\n";
+        $mensaje .= "Devolución: {$validated['fecha_fin']} {$validated['hora_entrega']}\n\n";
+        $mensaje .= "💰 Montos:\n";
+        $mensaje .= "Subtotal: $" . number_format($subtotal, 2) . " MXN\n";
+        $mensaje .= "Impuestos: $" . number_format($impuestos, 2) . " MXN\n";
+        $mensaje .= "Total a pagar en mostrador: $" . number_format($total, 2) . " MXN\n\n";
+        $mensaje .= "📆 Fecha de registro: " . now()->format('d/m/Y H:i:s') . "\n";
+
         try {
-            // 🧩 Validación de campos
-            $request->validate([
-                'id_vehiculo'       => 'required|integer',
-                'sucursal_retiro'   => 'required|integer',
-                'sucursal_entrega'  => 'required|integer',
-                'fecha_inicio'      => 'required|date',
-                'fecha_fin'         => 'required|date|after_or_equal:fecha_inicio',
-                'hora_retiro'       => 'nullable|string|max:10',
-                'hora_entrega'      => 'nullable|string|max:10',
-                'subtotal'          => 'required|numeric',
-                'impuestos'         => 'required|numeric',
-                'total'             => 'required|numeric',
-                'moneda'            => 'required|string|max:5',
-                'nombre_cliente'    => 'required|string|max:100',
-                'email_cliente'     => 'required|email|max:100',
-                'telefono_cliente'  => 'required|string|max:30',
-                'no_vuelo'          => 'nullable|string|max:40',
-            ]);
-
-            // 🏙️ Obtener ciudades desde las sucursales
-            $ciudadRetiro = DB::table('sucursales')->where('id_sucursal', $request->sucursal_retiro)->value('id_ciudad');
-            $ciudadEntrega = DB::table('sucursales')->where('id_sucursal', $request->sucursal_entrega)->value('id_ciudad');
-
-            if (!$ciudadRetiro || !$ciudadEntrega) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No se pudo determinar la ciudad de retiro o entrega.'
-                ], 400);
-            }
-
-            // 🚘 Validar que el vehículo exista
-            $vehiculoExiste = DB::table('vehiculos')->where('id_vehiculo', $request->id_vehiculo)->exists();
-            if (!$vehiculoExiste) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'El vehículo seleccionado no existe o no está disponible.'
-                ], 400);
-            }
-
-            // 🔹 Generar código único
-            $codigo = 'R-' . now()->format('Ymd') . '-' . strtoupper(Str::random(6));
-
-            // 💾 Insertar reservación
-            DB::table('reservaciones')->insert([
-                'id_usuario'       => null,
-                'id_vehiculo'      => $request->id_vehiculo,
-                'sucursal_retiro'  => $request->sucursal_retiro,
-                'sucursal_entrega' => $request->sucursal_entrega,
-                'ciudad_retiro'    => $ciudadRetiro,
-                'ciudad_entrega'   => $ciudadEntrega,
-                'fecha_inicio'     => $request->fecha_inicio,
-                'hora_retiro'      => $request->hora_retiro,
-                'fecha_fin'        => $request->fecha_fin,
-                'hora_entrega'     => $request->hora_entrega,
-                'estado'           => 'pendiente_pago',
-                'hold_expires_at'  => now()->addHours(24),
-                'subtotal'         => $request->subtotal,
-                'impuestos'        => $request->impuestos,
-                'total'            => $request->total,
-                'moneda'           => $request->moneda,
-                'no_vuelo'         => $request->no_vuelo,
-                'codigo'           => $codigo,
-                'nombre_cliente'   => $request->nombre_cliente,
-                'email_cliente'    => $request->email_cliente,
-                'telefono_cliente' => $request->telefono_cliente,
-                'paypal_order_id'  => null,
-                'status_pago'      => 'Pendiente',
-                'metodo_pago'      => 'mostrador',
-                'created_at'       => now(),
-                'updated_at'       => now(),
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'codigo'  => $codigo,
-                'message' => 'Reservación registrada correctamente con estado pendiente de pago.'
-            ]);
+            Mail::raw($mensaje, function ($msg) use ($correoCliente, $correoEmpresa, $codigo) {
+                if ($correoCliente) {
+                    $msg->to($correoCliente)
+                        ->cc($correoEmpresa)
+                        ->subject("Confirmación de reserva {$codigo} - Viajero Car Rental");
+                } else {
+                    $msg->to($correoEmpresa)
+                        ->subject("Nueva reserva {$codigo} - Viajero Car Rental");
+                }
+            });
         } catch (\Throwable $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al registrar la reservación: ' . $e->getMessage(),
-            ], 500);
+            Log::error("❌ Error al enviar correo de reserva: " . $e->getMessage());
         }
+
+        // 6️⃣ Respuesta JSON (para alertify)
+        return response()->json([
+            'success'   => true,
+            'codigo'    => $codigo,
+            'id'        => $id,
+            'subtotal'  => $subtotal,
+            'impuestos' => $impuestos,
+            'total'     => $total,
+            'estado'    => $estado,
+            'message'   => 'Reservación creada correctamente y correo enviado.',
+        ]);
+
+    } catch (\Throwable $e) {
+        Log::error('❌ Error al guardar reservación: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Error interno al crear la reservación.',
+            'error'   => $e->getMessage(),
+        ], 500);
     }
+}
+
 }
