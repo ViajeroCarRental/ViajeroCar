@@ -35,7 +35,7 @@
   <ul class="menu">
     <li class="menu-section">Reservaciones</li>
     <li><a href="{{ route('rutaReservacionesAdmin') }}"><i class="fas fa-file-invoice"></i> Reservaciones</a></li>
-    <li><a href="{{ route('rutaCotizaciones') }}"><i class="fas fa-briefcase"></i> Cotizaciones</a></li>
+    <li><a href="{{ route('rutaCotizar') }}"><i class="fas fa-briefcase"></i> Cotizaciones</a></li>
     <li><a href="{{ route('rutaReservacionesActivas') }}"><i class="fas fa-check-square"></i> Reservaciones activas</a></li>
     <li><a href="{{ route('rutaVisorReservaciones') }}"><i class="fas fa-eye"></i> Visor de reservaciones</a></li>
     <li><a href="{{ route('rutaAdministracionReservaciones') }}"><i class="fas fa-cogs"></i> Administración de reservaciones</a></li>

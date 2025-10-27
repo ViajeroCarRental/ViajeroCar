@@ -70,20 +70,11 @@ class controladorVistasAdmin extends Controller
         return view('Admin.Cotizaciones');
     }
 
-    public function cotizar()
-    {
-        return view('Admin.Cotizar');
-    }
-
     public function cotizacionesRecientes()
     {
         return view('Admin.CotizacionesRecientes');
     }
 
-    public function reservacionesActivas()
-    {
-        return view('Admin.ReservacionesActivas');
-    }
 
     public function visorReservaciones()
     {
