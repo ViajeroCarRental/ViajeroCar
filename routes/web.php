@@ -155,9 +155,9 @@ Route::get('/admin/facturar', [App\Http\Controllers\controladorVistasAdmin::clas
 
 
 
-// Vista principal (usada por el Dashboard)
+// Vista principal
 Route::get('/admin/flotilla', [FlotillaController::class, 'indexView'])->name('rutaFlotilla');
 
-// 🔹 CRUD de autos en flotilla
-Route::post('/admin/flotilla/{id}/editar', [FlotillaController::class, 'edit'])->name('flotilla.editar');
+Route::post('/admin/flotilla/agregar', [FlotillaController::class, 'store'])->name('flotilla.agregar');
+Route::post('/admin/flotilla/{id}/actualizar', [FlotillaController::class, 'update'])->name('flotilla.actualizar');
 Route::delete('/admin/flotilla/{id}', [FlotillaController::class, 'destroy'])->name('flotilla.eliminar');
