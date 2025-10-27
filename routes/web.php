@@ -12,6 +12,7 @@ use App\Http\Controllers\ReservacionesController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ReservacionesAdminController;
 use App\Http\Controllers\ReservacionesActivasController;
+use App\Http\Controllers\ContratoController;
 use Illuminate\Support\Facades\Bus;
 
 //rutas vistas Usuario
@@ -107,7 +108,7 @@ Route::get('/admin/reservaciones/servicios', [ReservacionesAdminController::clas
 // Guardar reservación (desde el formulario de pasos)
 Route::post('/reservaciones/guardar', [ReservacionesAdminController::class, 'guardarReservacion'])->name('reservaciones.guardar');
 // Cotizaciones
-Route::get('/admin/cotizaciones', [App\Http\Controllers\controladorVistasAdmin::class, 'cotizaciones'])->name('rutaCotizaciones');
+Route::get('/admin/cotizaciones', [controladorVistasAdmin::class, 'cotizaciones'])->name('rutaCotizaciones');
 // Cotizaciones activas
 Route::get('/admin/cotizaciones-activas', [App\Http\Controllers\controladorVistasAdmin::class, 'cotizacionesRecientes'])->name('rutaCotizacionesRecientes');
 // Cotizar (usa el nuevo controlador con datos reales)
@@ -127,6 +128,15 @@ Route::get('/admin/reservaciones-activas', [ReservacionesActivasController::clas
 // Endpoint AJAX: obtener detalles por código (para el modal)
 Route::get('/admin/reservaciones-activas/{codigo}', [ReservacionesActivasController::class, 'show'])->name('rutaDetalleReservacionActiva');
 
+//RUTAS CONTRATOS
+//ruta vista contrato
+Route::get('/admin/contrato', [ContratoController::class, 'index'])->name('rutaContrato');
+//obtener servicios adicionales
+Route::get('/contrato/servicios', [ContratoController::class, 'getServicios'])->name('contrato.servicios');
+//obtener seguros / protecciones
+Route::get('/contrato/seguros', [ContratoController::class, 'getSeguros'])->name('contrato.seguros');
+
+
 
 //visor de reservaciones
 Route::get('/admin/visor-reservaciones', [App\Http\Controllers\controladorVistasAdmin::class, 'visorReservaciones'])->name('rutaVisorReservaciones');
@@ -134,8 +144,6 @@ Route::get('/admin/visor-reservaciones', [App\Http\Controllers\controladorVistas
 Route::get('/admin/administracion-reservaciones', [App\Http\Controllers\controladorVistasAdmin::class, 'administracionReservaciones'])->name('rutaAdministracionReservaciones');
 //historial completo
 Route::get('/admin/historial-completo', [App\Http\Controllers\controladorVistasAdmin::class, 'historialCompleto'])->name('rutaHistorialCompleto');
-//Contrato
-Route::get('/admin/contrato', [App\Http\Controllers\controladorVistasAdmin::class, 'contrato'])->name('rutaContrato');
 //Alta Cliente
 Route::get('/admin/alta-cliente', [App\Http\Controllers\controladorVistasAdmin::class, 'altaCliente'])->name('rutaAltaCliente');
 //Licencia

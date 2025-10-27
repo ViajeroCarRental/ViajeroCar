@@ -118,11 +118,15 @@ window.addEventListener("DOMContentLoaded", () => {
      🚪 CAPTURAR CONTRATO (redirige visualmente)
   =========================================================== */
   $("#mGo")?.addEventListener("click", () => {
-    if (!current) return;
-    const url = `/admin/contrato?codigo=${encodeURIComponent(current.codigo)}`;
-    console.log("➡️ Redirigiendo a:", url);
-    window.location.href = url;
-  });
+  if (!current) return;
+
+  // 🆕 Usamos el ID de reservación para generar la URL correcta
+  const url = `/admin/contrato?id_reservacion=${encodeURIComponent(current.id_reservacion)}`;
+
+  console.log("➡️ Redirigiendo a vista Contrato:", url);
+  window.location.href = url;
+});
+
 
   /* ==========================================================
      🗑️ ELIMINAR (solo mensaje visual por ahora)
