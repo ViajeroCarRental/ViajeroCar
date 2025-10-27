@@ -26,43 +26,50 @@
     </div>
 
     <div class="tbody">
-      @forelse ($reservaciones as $r)
-        <div class="row">
-          <div>{{ $r->codigo }}</div>
-          <div>{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}</div>
-          <div>{{ $r->nombre_cliente ?? '—' }}</div>
-          <div>{{ $r->email_cliente ?? '—' }}</div>
-          <div>
-            @php
-              $estado = $r->estado;
-              $color = match($estado) {
-                'confirmada' => 'ok',
-                'pendiente_pago' => 'warn',
-                'hold' => 'gray',
-                'cancelada' => 'danger',
-                default => 'gray'
-              };
-            @endphp
-            <span class="state {{ $color }}">{{ ucfirst($estado) }}</span>
-          </div>
-          <div>${{ number_format($r->total, 2) }} MXN</div>
+  @forelse ($reservaciones as $r)
+    <div class="row"
+         data-codigo="{{ $r->codigo }}"
+         data-cliente="{{ $r->nombre_cliente }}"
+         data-email="{{ $r->email_cliente }}"
+         data-estado="{{ $r->estado }}"
+         data-total="{{ $r->total }}"
+         data-fecha="{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}">
+      <div>{{ $r->codigo }}</div>
+      <div>{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}</div>
+      <div>{{ $r->nombre_cliente ?? '—' }}</div>
+      <div>{{ $r->email_cliente ?? '—' }}</div>
+      <div>
+        @php
+          $estado = $r->estado;
+          $color = match($estado) {
+            'confirmada' => 'ok',
+            'pendiente_pago' => 'warn',
+            'hold' => 'gray',
+            'cancelada' => 'danger',
+            default => 'gray'
+          };
+        @endphp
+        <span class="state {{ $color }}">{{ ucfirst($estado) }}</span>
+      </div>
+      <div>${{ number_format($r->total, 2) }} MXN</div>
 
-          <div class="actions-wrap">
-            <a href="" class="chip">✏️ Editar</a>
-            <a href="" class="chip ghost">🚗 Cambio</a>
-            <form action="" method="POST" style="display:inline;">
-              @csrf
-              @method('DELETE')
-              <button class="iconbtn danger" type="submit">🗑️</button>
-            </form>
-          </div>
-        </div>
-      @empty
-        <div class="row">
-          <div colspan="7" style="text-align:center;">No hay reservaciones activas.</div>
-        </div>
-      @endforelse
+      <div class="actions-wrap">
+        <a href="#" class="chip">✏️ Editar</a>
+        <a href="#" class="chip ghost">🚗 Cambio</a>
+        <form action="" method="POST" style="display:inline;">
+          @csrf
+          @method('DELETE')
+          <button class="iconbtn danger" type="submit">🗑️</button>
+        </form>
+      </div>
     </div>
+  @empty
+    <div class="row">
+      <div colspan="7" style="text-align:center;">No hay reservaciones activas.</div>
+    </div>
+  @endforelse
+</div>
+
   </section>
 </main>
 
@@ -75,12 +82,15 @@
     </header>
 
     <div class="cnt" id="mBody">
-      <!-- Contenido dinámico generado por JS -->
-      <div class="kv"><div>Código</div><div>—</div></div>
-      <div class="kv"><div>Fechas</div><div>—</div></div>
-      <div class="kv"><div>Vehículo</div><div>—</div></div>
-      <div class="kv"><div>Forma Pago</div><div>—</div></div>
-      <div class="kv"><div>Total</div><div>—</div></div>
+      <!-- 🧾 Campos dinámicos (rellenados por JS con fetch) -->
+      <div class="kv"><div>Código</div><div id="mCodigo">—</div></div>
+      <div class="kv"><div>Cliente</div><div id="mCliente">—</div></div>
+      <div class="kv"><div>Email</div><div id="mEmail">—</div></div>
+      <div class="kv"><div>Estado</div><div id="mEstado">—</div></div>
+      <div class="kv"><div>Fechas</div><div id="mFechas">—</div></div>
+      <div class="kv"><div>Vehículo</div><div id="mVehiculo">—</div></div>
+      <div class="kv"><div>Forma de pago</div><div id="mFormaPago">—</div></div>
+      <div class="kv"><div>Total</div><div id="mTotal">—</div></div>
     </div>
 
     <div class="actions">
@@ -91,6 +101,7 @@
     </div>
   </div>
 </div>
+
 
 @endsection
 

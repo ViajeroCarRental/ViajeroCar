@@ -46,39 +46,55 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   /* ==========================================================
-     🧾 MODAL DE DETALLE (versión extendida)
+     🧾 MODAL DE DETALLE (ahora con datos reales desde backend)
   =========================================================== */
   let current = null;
 
-  function openModal(row) {
-    const codigo = row.children[0]?.textContent || "—";
-    const fecha = row.children[1]?.textContent || "—";
-    const cliente = row.children[2]?.textContent || "—";
-    const email = row.children[3]?.textContent || "—";
-    const estado = row.children[4]?.textContent || "—";
-    const total = row.children[5]?.textContent || "—";
+  async function openModal(row) {
+    const codigo = row.dataset.codigo?.trim();
+    if (!codigo) {
+      console.warn("⚠️ No se encontró código en la fila seleccionada");
+      return;
+    }
 
-    // 🔹 Datos adicionales (simulados por ahora)
-    const fechas = `${fecha} 08:00 HRS al ${fecha} 11:00 HRS`;
-    const vehiculo = "C | COMPACTO AUTOMÁTICO - CHEVROLET Aveo";
-    const formaPago = "OFICINA";
+    console.log(`📦 Consultando reservación ${codigo}...`);
 
-    current = { codigo, cliente, email, estado, total, fecha, fechas, vehiculo, formaPago };
+    try {
+      const resp = await fetch(`/admin/reservaciones-activas/${encodeURIComponent(codigo)}`);
+      if (!resp.ok) throw new Error(`Error ${resp.status}`);
 
-    $("#mTitle").textContent = `Contrato Reservación ${codigo}`;
-    $("#mBody").innerHTML = `
-      <div class="kv"><div>Fechas</div><div>${esc(fechas)}</div></div>
-      <div class="kv"><div>Vehículo</div><div>${esc(vehiculo)}</div></div>
-      <div class="kv"><div>Forma Pago</div><div>${esc(formaPago)}</div></div>
-      <div class="kv"><div>Total</div><div>${esc(total)}</div></div>
-    `;
+      const data = await resp.json();
+      console.log("🧾 Datos recibidos:", data);
 
-    $("#modal").classList.add("show");
-    console.log("🪟 Modal abierto:", current);
+      // Guardar la reservación actual
+      current = data;
+
+      // 🧩 Construcción de campos dinámicos
+      $("#mTitle").textContent = `Contrato Reservación ${data.codigo || "—"}`;
+      $("#mCodigo").textContent = data.codigo || "—";
+      $("#mCliente").textContent = data.nombre_cliente || "—";
+      $("#mEmail").textContent = data.email_cliente || "—";
+      $("#mEstado").textContent = data.estado || "—";
+
+      const fechaInicio = data.fecha_inicio ? `${data.fecha_inicio} ${data.hora_retiro || ""}` : "";
+      const fechaFin = data.fecha_fin ? `${data.fecha_fin} ${data.hora_entrega || ""}` : "";
+      $("#mFechas").textContent = fechaInicio && fechaFin ? `${fechaInicio} a ${fechaFin}` : "—";
+
+      $("#mVehiculo").textContent = data.vehiculo || "—";
+      $("#mFormaPago").textContent = data.metodo_pago || "—";
+      $("#mTotal").textContent = Fmx(data.total);
+
+      $("#modal").classList.add("show");
+      console.log("🪟 Modal abierto con reservación:", current);
+
+    } catch (err) {
+      console.error("❌ Error al obtener detalles de la reservación:", err);
+      alert("Error al obtener la información de la reservación. Intente nuevamente.");
+    }
   }
 
   /* ==========================================================
-     ❌ Cerrar modal
+     ❌ CERRAR MODAL
   =========================================================== */
   function closeModal() {
     $("#modal").classList.remove("show");
@@ -89,7 +105,7 @@ window.addEventListener("DOMContentLoaded", () => {
   $("#mCancel")?.addEventListener("click", closeModal);
 
   /* ==========================================================
-     🪟 Abrir modal al hacer clic en una fila
+     🪟 ABRIR MODAL AL HACER CLIC EN UNA FILA
   =========================================================== */
   $$(".tbody .row").forEach((row) => {
     row.addEventListener("click", (ev) => {
@@ -109,7 +125,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   /* ==========================================================
-     🗑️ ELIMINAR (solo mensaje visual)
+     🗑️ ELIMINAR (solo mensaje visual por ahora)
   =========================================================== */
   $("#mDel")?.addEventListener("click", () => {
     if (!current) return;

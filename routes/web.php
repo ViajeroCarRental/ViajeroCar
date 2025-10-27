@@ -124,6 +124,8 @@ Route::get('/admin/cotizaciones/servicios', [App\Http\Controllers\CotizacionesAd
 
 //reservaciones activas
 Route::get('/admin/reservaciones-activas', [ReservacionesActivasController::class, 'index'])->name('rutaReservacionesActivas');
+// Endpoint AJAX: obtener detalles por código (para el modal)
+Route::get('/admin/reservaciones-activas/{codigo}', [ReservacionesActivasController::class, 'show'])->name('rutaDetalleReservacionActiva');
 
 
 //visor de reservaciones
