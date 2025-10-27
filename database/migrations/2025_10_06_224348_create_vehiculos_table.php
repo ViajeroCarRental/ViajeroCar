@@ -22,6 +22,8 @@ return new class extends Migration {
             // Datos
             $table->string('marca', 100);
             $table->string('modelo', 100);
+            $table->string('numero_serie', 100)->nullable();
+            $table->string('categoria', 100)->nullable();
             $table->year('anio');
             $table->string('nombre_publico', 150);
             $table->string('transmision', 50)->nullable();

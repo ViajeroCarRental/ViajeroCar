@@ -30,6 +30,8 @@ class DatabaseSeeder extends Seeder
         UsuariosSeeder::class,
         UsuarioRolSeeder::class,
         SeguroPaqueteSeeder::class,
+        FlotillaSeeder::class,
+        VehiculosFlotillaSeeder::class,
     ]);
 
     }

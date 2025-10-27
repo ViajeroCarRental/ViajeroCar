@@ -2,18 +2,16 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<link rel="icon" type="image/png" href="{{ asset('img/image.png') }}">
 <title>Panel | Viajero Car Rental</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="{{ asset('assets/style.css') }}" />
 <style>
-/* ====== Fuente + Render ====== */
+/* ====== Tipografía bonita + render ====== */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
 :root{
   /* Colores base */
-  --ink:#0f172a; --muted:#6b7280; --stroke:rgba(255,255,255,.22); --ring:rgba(255,255,255,.35); --card:rgba(255,255,255,.08);
-
+  --ink:#0f172a; --muted:#6b7280; --stroke:#e9eef5; --ring:#ffe2e5; --card:#fff;
   /* Marca */
   --red:#E50914; --red2:#ff4d5a;
   --orange:#ff7a1a; --amber:#f59e0b;
@@ -21,10 +19,10 @@
   --emerald:#10b981; --teal:#14b8a6; --pink:#ec4899; --rose:#ff3b5c;
 
   /* UI */
-  --radius: 16px;
-  --shadow-sm: 0 10px 30px rgba(2,6,23,.18);
-  --shadow-md: 0 18px 48px rgba(2,6,23,.22);
-  --shadow-lg: 0 28px 80px rgba(2,6,23,.28);
+  --radius: 14px;
+  --shadow-sm: 0 6px 18px rgba(17,24,39,.08);
+  --shadow-md: 0 12px 28px rgba(17,24,39,.10);
+  --shadow-lg: 0 20px 46px rgba(17,24,39,.14);
 
   /* Tipografía fluida */
   --fs-12: clamp(11px, .75vw, 12px);
@@ -41,205 +39,134 @@
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
-  margin:0; color:var(--ink);
-  font-family:'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  margin:0; color:var(--ink); background:#fff;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
   font-size: var(--fs-16);
   line-height: 1.55;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
-
-  /* FONDO LIQUID-GLASS */
-  min-height:100svh;
-  background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(255, 112, 128, .32), transparent 60%),
-    radial-gradient(1000px 520px at 110% 0%, rgba(99, 102, 241, .28), transparent 60%),
-    radial-gradient(900px 560px at 50% 120%, rgba(14,165,233,.26), transparent 60%),
-    linear-gradient(180deg, #0b1224 0%, #0a0f1f 35%, #0d1327 100%);
-  position:relative;
-  overflow-x:hidden;
-}
-
-/* Grano sutil + rejilla */
-body::before{
-  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
-  background:
-    radial-gradient(circle at 25% 15%, rgba(255,255,255,.06), transparent 30%),
-    radial-gradient(circle at 75% 85%, rgba(255,255,255,.04), transparent 30%),
-    repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, transparent 1px 32px),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 1px, transparent 1px 32px);
-  mix-blend-mode: overlay;
-}
-
-/* ====== Utilidades de VIDRIO (liquid glass) ====== */
-.glass{
-  background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,.06)) border-box;
-  backdrop-filter: blur(14px) saturate(120%);
-  -webkit-backdrop-filter: blur(14px) saturate(120%);
-  border:1px solid var(--ring);
-  border-radius:var(--radius);
-  position:relative;
-  overflow:hidden;
-  box-shadow: var(--shadow-sm);
-}
-.glass::before{ /* borde interior suave */
-  content:""; position:absolute; inset:0; pointer-events:none;
-  background:linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,0) 28%) border-box;
-  mask:linear-gradient(#000,#000) exclude, linear-gradient(#000,#000);
-  mask-composite: exclude; /* soporte moderno */
-  border-radius:inherit;
-  opacity:.55;
-}
-.gloss{ /* brillo diagonal */
-  position:absolute; inset:-40% -40% auto -40%; height:160%;
-  background:linear-gradient(120deg, rgba(255,255,255,.22), rgba(255,255,255,0) 45%);
-  transform:rotate(-8deg);
-  pointer-events:none;
 }
 
 /* ===== Topbar ===== */
 .top{
   display:flex; justify-content:space-between; align-items:center;
   padding:12px clamp(12px,2.5vw,22px);
-  position:sticky; top:14px; z-index:20; border:0;
-  margin-inline:auto; width:min(1200px,94%);
+  border-bottom:1px solid var(--stroke);
+  position:sticky; top:0; background:#fff; z-index:50;
+  backdrop-filter: saturate(120%) blur(6px);
 }
-.top::before{ /* sombra suave bajo topbar */
-  content:""; position:absolute; inset:0; border-radius:20px; z-index:-2;
-  box-shadow: 0 24px 80px rgba(2,6,23,.45);
-  opacity:.55;
-}
-.top .brand img{width: clamp(110px,16vw,140px); border-radius:12px; display:block}
+.brand{display:flex; align-items:center; gap:12px}
+.brand img{width: clamp(110px,16vw,140px); border-radius:10px; display:block}
 .badge{
   display:inline-flex; gap:8px; align-items:center;
-  padding:6px 10px; border:1px solid rgba(255,255,255,.28);
-  border-radius:999px; color:#e5e7eb; font-weight:700; font-size: var(--fs-12);
-  background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
-  backdrop-filter: blur(10px);
+  padding:6px 10px; border:1px solid var(--stroke);
+  border-radius:999px; background:#fff; color:#374151;
+  font-size: var(--fs-12); font-weight:700
 }
-.dot{width:8px; height:8px; border-radius:999px; background:#10b981; box-shadow:0 0 0 3px rgba(255,255,255,.18)}
+.dot{width:8px; height:8px; border-radius:999px; background:#10b981}
 .right{display:flex; gap:10px; align-items:center}
-
 .btn{
-  border:1px solid rgba(255,255,255,.25);
-  padding:10px 14px; border-radius:12px; font-weight:800; cursor:pointer;
+  border:none; padding:10px 14px; border-radius:12px; font-weight:800; cursor:pointer;
   font-size: var(--fs-14);
-  transition: transform .12s ease, box-shadow .25s ease, filter .2s ease, background .2s ease, color .2s ease;
+  transition: transform .12s ease, box-shadow .2s ease, background .2s ease, color .2s ease;
   will-change: transform;
-  background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
-  color:#f8fafc; backdrop-filter: blur(10px);
 }
 .btn:active{ transform: translateY(1px) }
-.btn:focus-visible{ outline: 3px solid rgba(99,102,241,.45); outline-offset:2px }
+.btn:focus-visible{ outline: 3px solid rgba(99,102,241,.4); outline-offset:2px; }
 
-.ghost{
-  background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
-  color:#ffd2d7; border-color:rgba(255, 71, 87, .35);
-}
-.ghost:hover{ box-shadow: var(--shadow-sm); filter:saturate(1.05) }
+.ghost{background:#fff; color:var(--red); border:1px solid #ffd6da}
+.ghost:hover{ box-shadow: var(--shadow-sm); background:#fff6f7 }
 
 .primary{
-  border-color:rgba(255,255,255,.35);
-  color:#0b1224; font-weight:900;
-  background:
-    radial-gradient(120% 220% at 0% 0%, rgba(255,255,255,.9) 0%, rgba(255,255,255,.75) 40%, rgba(255,255,255,.55) 60%, transparent 75%),
-    linear-gradient(135deg, rgba(255,82,93,.95), rgba(229,9,20,.95));
-  box-shadow:0 16px 42px rgba(229,9,20,.35);
+  color:#fff; background:linear-gradient(135deg,var(--red),var(--red2));
+  box-shadow:0 10px 24px rgba(229,9,20,.28)
 }
-.primary:hover{ box-shadow:0 22px 58px rgba(229,9,20,.45); filter:saturate(1.05) }
+.primary:hover{ box-shadow:0 14px 32px rgba(229,9,20,.34); filter:saturate(1.02) }
 
-/* Bell + panel (glass) */
+/* Bell + panel */
 .bell{
-  position:relative; border:1px solid rgba(255,255,255,.28);
-  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.06));
-  border-radius:12px; padding:9px 11px; cursor:pointer; font-size: var(--fs-16);
-  transition: box-shadow .25s ease, transform .12s ease, filter .2s ease; color:#e5e7eb;
-  backdrop-filter: blur(10px);
+  position:relative; border:1px solid var(--stroke); background:#fff; border-radius:12px;
+  padding:9px 11px; cursor:pointer; font-size: var(--fs-16);
+  transition: box-shadow .2s ease, transform .12s ease;
 }
-.bell:hover{ box-shadow: var(--shadow-sm); filter:brightness(1.08) }
+.bell:hover{ box-shadow: var(--shadow-sm) }
 .bell .count{
-  position:absolute; top:-6px; right:-6px; background:linear-gradient(135deg,#ff4d5a,#E50914); color:#fff;
-  font-weight:800; font-size:12px; padding:2px 6px; border-radius:999px; box-shadow:0 0 0 3px rgba(11,18,36,.9)
+  position:absolute; top:-6px; right:-6px; background:var(--red); color:#fff;
+  font-weight:800; font-size:12px; padding:2px 6px; border-radius:999px; box-shadow:0 0 0 3px #fff
 }
 .panel{
   position:absolute; right:0; top:46px; width:min(420px,92vw);
-  border-radius:16px; display:none; overflow:hidden; z-index:60;
-  border:1px solid rgba(255,255,255,.28);
-  background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
-  backdrop-filter: blur(16px) saturate(120%); color:#e5e7eb; box-shadow: var(--shadow-lg);
+  background:#fff; border:1px solid var(--ring); border-radius:14px;
+  box-shadow: var(--shadow-lg); display:none; overflow:hidden; z-index:60
 }
 .panel.show{ display:block }
 .panel header{
-  padding:12px 14px; background:linear-gradient(90deg, rgba(255,225,228,.18), rgba(255,245,220,.14));
-  color:#ffd2d7; font-weight:800; font-size: var(--fs-14)
+  padding:12px 14px; background:linear-gradient(90deg,#fff3f4,#fffaf2);
+  color:#b30b16; font-weight:800; font-size: var(--fs-14)
 }
 .panel .item{
-  display:flex; gap:10px; padding:12px 14px; border-top:1px solid rgba(255,255,255,.12); font-size: var(--fs-14);
-  color:#e2e8f0;
+  display:flex; gap:10px; padding:12px 14px; border-top:1px solid #f4e5e6; font-size: var(--fs-14)
 }
-.tag{font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.08)}
-.tag.red{background:rgba(255,77,90,.18); color:#ffd2d7}
-.tag.orange{background:rgba(255,190,120,.16); color:#ffedd5}
-.tag.blue{background:rgba(99,102,241,.18); color:#e0e7ff}
+.tag{font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid #ffe2e5; background:#fff}
+.tag.red{background:#ffe8ea; color:#d21c2b}
+.tag.orange{background:#fff4e5; color:#b45309}
+.tag.blue{background:#eef2ff; color:#4338ca}
 
-/* ===== Hero liquid ===== */
+/* ===== Hero multicolor ===== */
 .hero{
-  position:relative; overflow:hidden; border:0; padding-block: 10px;
-  background: transparent;
+  position:relative; overflow:hidden; border-bottom:1px solid var(--stroke);
+  background:
+    radial-gradient(1200px 320px at -15% -40%, #ffe4ea 10%, transparent 60%),
+    radial-gradient(900px 300px at 115% -30%, #ffe7d6 10%, transparent 60%),
+    radial-gradient(1000px 380px at 50% 120%, #e8f6ff 10%, transparent 60%),
+    #fff;
 }
 .hero::before{
-  content:""; position:absolute; inset:auto -20% -32% -20%; height:420px; z-index:0;
-  background:
-    radial-gradient(60% 120% at 20% 50%, rgba(255,157,169,.35), transparent 60%),
-    radial-gradient(60% 120% at 80% 45%, rgba(14,165,233,.28), transparent 60%),
-    linear-gradient(90deg, rgba(255,255,255,.06), rgba(255,255,255,0));
-  filter: blur(40px);
+  content:""; position:absolute; inset:-40% -40% auto -40%; height:220px;
+  background:linear-gradient(90deg, #ff9aa7, #ff7a1a, #f59e0b, #8b5cf6, #6366f1, #0ea5e9, #ff9aa7);
+  background-size:200% 100%; opacity:.18; filter:blur(16px); transform:rotate(-6deg);
+  animation:rainbow 12s linear infinite;
 }
+@keyframes rainbow{ to{ background-position:200% 0 } }
 
-/* BURBUJAS LIQUIDAS animadas */
-.hero::after{
-  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
-  background:
-    radial-gradient(120px 160px at 12% 30%, rgba(255, 112, 128,.28), transparent 60%),
-    radial-gradient(150px 170px at 86% 20%, rgba(99,102,241,.22), transparent 60%),
-    radial-gradient(140px 180px at 75% 86%, rgba(16,185,129,.20), transparent 60%);
-  animation: floaty 14s ease-in-out infinite alternate;
-}
-@keyframes floaty{
-  0%{ transform: translateY(0) translateX(0) }
-  100%{ transform: translateY(-22px) translateX(8px) }
-}
-
-.wrap{max-width:1200px; margin:0 auto; padding:18px clamp(14px,2.4vw,32px) 32px; position:relative; z-index:1}
+.wrap{max-width:1200px; margin:0 auto; padding:18px clamp(14px,2.4vw,32px) 32px}
 .wrow{display:grid; grid-template-columns:1.1fr .9fr; gap: clamp(12px,2.2vw,20px)}
 @media (max-width:980px){ .wrow{grid-template-columns:1fr} }
 
-/* Títulos */
+/* ===== Títulos del hero — MÁS GRANDES y rojos originales ===== */
 .hi{
-  font-size: clamp(36px, 6vw, 56px);
-  font-weight: 900; margin: 8px 0 12px; letter-spacing:.4px; line-height:1.15;
-  color:#f8fafc;
-  text-shadow: 0 6px 28px rgba(0,0,0,.35);
+  font-size: clamp(36px, 6vw, 56px); /* grande en desktop y tablet */
+  font-weight: 900;
+  margin: 8px 0 12px;
+  letter-spacing: .4px;
+  line-height: 1.15;
 }
 .hi span{
-  background: linear-gradient(90deg, var(--red), var(--red2));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(0 8px 28px rgba(255,77,90,.35));
+  background: linear-gradient(90deg, var(--red), var(--red2)); /* rojos de marca */
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
+
+/* Subtítulo debajo — más legible */
 .sub{
   font-size: clamp(18px, 2.4vw, 22px);
-  font-weight: 500; color:#e2e8f0; max-width: 680px; line-height:1.5; opacity:.95;
+  font-weight: 500;
+  color: black;
+  max-width: 680px;
+  line-height: 1.5;
+  opacity: .9;
 }
+
 .chips{display:flex; gap:10px; flex-wrap:wrap}
 .chip{
   display:inline-flex; gap:6px; align-items:center; padding:6px 10px; border-radius:999px;
-  font-weight:800; border:1px solid rgba(255,255,255,.28); font-size: var(--fs-12);
-  color:#e5e7eb; background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06)); backdrop-filter: blur(10px);
+  font-weight:800; background:#fff; border:1px solid var(--ring); font-size: var(--fs-12)
 }
-.chip.c1{box-shadow: inset 0 0 0 9999px rgba(255,77,90,.06)}
-.chip.c2{box-shadow: inset 0 0 0 9999px rgba(255,180,120,.06)}
-.chip.c3{box-shadow: inset 0 0 0 9999px rgba(120,140,255,.06)}
-.chip.c4{box-shadow: inset 0 0 0 9999px rgba(120,255,220,.06)}
-
+.chip.c1{border-color:#ffd5d9; background:#fff0f2}
+.chip.c2{border-color:#ffe2c7; background:#fff7ed}
+.chip.c3{border-color:#d8e7ff; background:#eef6ff}
+.chip.c4{border-color:#c9f0e5; background:#eafaf1}
 .actions{display:flex; gap:10px; margin-top:12px; flex-wrap:wrap}
 .actions .primary{position:relative; overflow:hidden}
 
@@ -251,31 +178,26 @@ body::before{
 @keyframes rip{to{transform:scale(16); opacity:0}}
 
 .media{
-  width:100%; aspect-ratio:16/9; border-radius:18px; overflow:hidden; border:1px solid rgba(255,255,255,.28);
-  background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
-  position:relative; box-shadow: var(--shadow-md);
-  backdrop-filter: blur(10px);
+  width:100%; aspect-ratio:16/9; border-radius:18px; overflow:hidden; border:2px solid #ffd7dc;
+  background:#000; position:relative; box-shadow: var(--shadow-md)
 }
-.media img,.media video{width:100%; height:100%; object-fit:cover; display:block; filter:saturate(1.02) contrast(1.02)}
-.media::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.18))}
+.media img,.media video{width:100%; height:100%; object-fit:cover; display:block}
+.media::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.22))}
 
-/* ===== KPIs (ahora de vidrio) ===== */
+/* ===== KPIs multicolor ===== */
 .kpis{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap: clamp(10px,1.4vw,14px); margin-top:18px}
 @media (max-width:1100px){ .kpis{grid-template-columns:1fr 1fr} }
 @media (max-width:640px){ .kpis{grid-template-columns:1fr} }
 .kpi{
-  border-radius:16px; padding:14px; position:relative; overflow:hidden;
-  border:1px solid rgba(255,255,255,.28);
-  background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
-  backdrop-filter: blur(12px); box-shadow: var(--shadow-sm); color:#e5e7eb;
+  background:#fff; border:2px solid var(--ring); border-radius:16px; padding:14px;
+  box-shadow: var(--shadow-sm); position:relative; overflow:hidden;
 }
-.kpi h4{margin:0 0 6px; color:#cbd5e1; font-size: var(--fs-12); letter-spacing:.2px}
-.kpi b{font-size: var(--fs-28); font-weight:900; color:#fff}
+.kpi h4{margin:0 0 6px; color:#6b7280; font-size: var(--fs-12); letter-spacing:.2px}
+.kpi b{font-size: var(--fs-28); font-weight:900; color:#111827}
 .kpi::before{
-  content:""; position:absolute; left:0; right:0; top:0; height:3px;
+  content:""; position:absolute; left:0; right:0; top:0; height:4px;
   background:var(--kpiGrad, linear-gradient(90deg,#ffa3ab,#ff4d5a,#ffa3ab));
   background-size:200% 100%; animation:slide 6s linear infinite;
-  opacity:.9;
 }
 @keyframes slide{to{background-position:200% 0}}
 .kpi.k1{ --kpiGrad: linear-gradient(90deg,#ff9aa7,#ff4d5a,#ff9aa7) }
@@ -283,58 +205,55 @@ body::before{
 .kpi.k3{ --kpiGrad: linear-gradient(90deg,#9ec3ff,#6366f1,#9ec3ff) }
 .kpi.k4{ --kpiGrad: linear-gradient(90deg,#a7f3d0,#10b981,#a7f3d0) }
 
-/* ===== Módulos (cards de vidrio con encabezado degradado) ===== */
+/* ===== Módulos ===== */
 .section{max-width:1200px; margin:22px auto; padding:0 clamp(14px,2.4vw,18px)}
 .grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap: clamp(12px,1.6vw,16px)}
 @media (max-width:980px){ .grid{grid-template-columns:1fr 1fr} }
 @media (max-width:640px){ .grid{grid-template-columns:1fr} }
 
 .mod{
-  border-radius:18px; overflow:hidden; cursor:pointer; position:relative; transform:translateZ(0);
+  border:0; border-radius:18px; padding:0; overflow:hidden; cursor:pointer; position:relative;
+  transform:translateZ(0);
+  box-shadow: var(--shadow-sm);
   transition: transform .18s ease, box-shadow .25s ease, filter .25s ease, outline .2s ease;
-  border:1px solid rgba(255,255,255,.28);
-  background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
-  backdrop-filter: blur(12px); box-shadow: var(--shadow-sm); color:#e5e7eb;
+  background:#fff;
 }
 @media (hover:hover){
   .mod:hover{transform:translateY(-2px); box-shadow: var(--shadow-md); filter:saturate(1.06)}
 }
 .mod:focus-within, .mod:focus-visible{ outline: 3px solid rgba(99,102,241,.35); outline-offset:2px }
 .mod .head{
-  padding:14px 16px; color:#fff; font-weight:900; letter-spacing:.2px; display:flex; align-items:center; gap:10px; font-size: var(--fs-18);
-  border-bottom:1px solid rgba(255,255,255,.16);
+  padding:14px 16px; color:#fff; font-weight:900; letter-spacing:.2px;
+  display:flex; align-items:center; gap:10px; font-size: var(--fs-18)
 }
 .mod .ic{
-  width:38px; height:38px; border-radius:12px; display:grid; place-items:center; font-size:20px;
-  background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.35)
+  width:38px; height:38px; border-radius:12px; display:grid; place-items:center;
+  font-size:20px; background:rgba(255,255,255,.22); border:1px solid rgba(255,255,255,.35)
 }
-.mod .body{ padding:16px }
-.mod .body p{margin:0; color:#e2e8f0; font-size: var(--fs-14)}
-.mod .go{margin-top:12px; display:inline-flex; gap:8px; align-items:center; color:#fff; font-weight:900; font-size: var(--fs-14)}
-.mod.locked{opacity:.6; cursor:not-allowed}
+.mod .body{ background:#fff; padding:16px; border-top:1px solid rgba(0,0,0,.05) }
+.mod .body p{margin:0; color:#4b5563; font-size: var(--fs-14)}
+.mod .go{margin-top:12px; display:inline-flex; gap:8px; align-items:center; color:#111827; font-weight:900; font-size: var(--fs-14)}
+.mod.locked{opacity:.55; cursor:not-allowed}
 .mod.locked::after{content:"🔒 Sin acceso"; position:absolute; right:12px; top:12px; font-weight:800; color:#fff; font-size: var(--fs-12)}
+/* Gradientes por tema */
+.mod[data-theme="autos"]  .head{ background:linear-gradient(120deg,#ff7a1a 0%, #ff0011ff 60%, #ff0022ff 100%) }
+.mod[data-theme="rentas"] .head{ background:linear-gradient(120deg,#6366f1 0%, #ff0000ff 60%, #ff0000ff 100%) }
+.mod[data-theme="admin"]  .head{ background:linear-gradient(120deg,#10b981 0%, #ff0000ff 60%, #ff0000ff 100%) }
 
-/* Gradientes por tema (líquidos) */
-.mod[data-theme="autos"]  .head{ background:linear-gradient(120deg,#ff7a1a 0%, #ff0022 60%, #ff3355 100%) }
-.mod[data-theme="rentas"] .head{ background:linear-gradient(120deg,#6366f1 0%, #ff0033 60%, #ff2244 100%) }
-.mod[data-theme="admin"]  .head{ background:linear-gradient(120deg,#10b981 0%, #ff0022 60%, #ff2244 100%) }
-
-/* Quick links (chips de vidrio) */
+/* Quick links */
 .qwrap{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
 .q{
   display:inline-flex; gap:8px; align-items:center; padding:10px 12px; border-radius:12px;
-  background:linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
-  border:1px solid rgba(255,255,255,.28); font-weight:800; font-size: var(--fs-12); color:#e5e7eb;
-  backdrop-filter: blur(10px);
+  background:#fff; border:1px solid var(--ring); font-weight:800; font-size: var(--fs-12)
 }
-.q.cA{box-shadow: inset 0 0 0 9999px rgba(255,77,90,.06)}
-.q.cB{box-shadow: inset 0 0 0 9999px rgba(120,140,255,.06)}
-.q.cC{box-shadow: inset 0 0 0 9999px rgba(120,255,220,.06)}
+.q.cA{border-color:#ffd5d9; background:#fff0f2}
+.q.cB{border-color:#d8e7ff; background:#eef6ff}
+.q.cC{border-color:#c9f0e5; background:#eafaf1}
 
 /* Footer */
 .foot{
   max-width:1200px; margin:18px auto 28px; padding:0 clamp(14px,2.4vw,18px);
-  color:#cbd5e1; font-size: var(--fs-12)
+  color:#9aa1ac; font-size: var(--fs-12)
 }
 
 /* ===== Responsividad fina ===== */
@@ -356,27 +275,30 @@ body::before{
   .actions{ gap:8px }
 }
 
-/* ===== Modo claro automático (si alguien lo fuerza) ===== */
-@media (prefers-color-scheme: light){
-  body{
-    background:
-      radial-gradient(1200px 600px at 10% -10%, rgba(255, 112, 128, .18), transparent 60%),
-      radial-gradient(1000px 520px at 110% 0%, rgba(99, 102, 241, .16), transparent 60%),
-      radial-gradient(900px 560px at 50% 120%, rgba(14,165,233,.14), transparent 60%),
-      linear-gradient(180deg, #f6f8ff 0%, #f5f7ff 35%, #f0f4ff 100%);
-    color:#0f172a;
+/* ===== Dark mode (auto) ===== */
+@media (prefers-color-scheme: dark){
+  :root{
+    --ink:#e5e7eb; --muted:#a3aab6; --stroke:#2b3340; --ring:#402328; --card:#0b1220;
   }
-  .hi{ color:#0b1224; text-shadow:none }
-  .sub,.q,.chip,.kpi,.mod,.panel,.btn,.bell,.media{
-    color:#0f172a;
-    border-color: rgba(0,0,0,.08);
-    background:linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.75));
-    backdrop-filter: blur(12px) saturate(120%);
-    -webkit-backdrop-filter: blur(12px) saturate(120%);
-    box-shadow: 0 14px 38px rgba(16,24,40,.12);
-  }
-  .badge{ color:#1f2937; border-color: rgba(0,0,0,.08); background:linear-gradient(180deg,#fff,#fafafa) }
-  .primary{ color:#0b1224 }
+  body{ background:#0b1120; color:var(--ink) }
+  .top{ background: rgba(10,16,28,.68); border-bottom:1px solid var(--stroke) }
+  .badge{ background:#0e1628; border-color:#243145; color:#cbd5e1 }
+  .ghost{ background:#0e1628; border-color:#402328; color:#ff9aa7 }
+  .ghost:hover{ background:#131c30 }
+  .bell{ background:#0e1628; border-color:#243145; color:#e5e7eb }
+  .panel{ background:#0e1628; border-color:#402328 }
+  .panel header{ background: linear-gradient(90deg,#261318,#1c2432); color:#ffd2d7 }
+  .panel .item{ border-top-color:#2c1a1e }
+  .hero{ border-bottom-color:#243145 }
+  .media{ border-color:#3d1f26; box-shadow: 0 18px 44px rgba(0,0,0,.45) }
+  .kpi{ background:#0f172a; border-color:#402328; box-shadow: 0 18px 44px rgba(0,0,0,.35) }
+  .mod{ background:#0f172a; box-shadow: 0 18px 44px rgba(0,0,0,.35) }
+  .mod .body{ background:#0f172a; border-top-color:#0b1120 }
+  .q{ background:#0f172a; border-color:#243145; color:#e5e7eb }
+  .q.cA{ background:#20141a; border-color:#402328 }
+  .q.cB{ background:#141a26; border-color:#243145 }
+  .q.cC{ background:#0f1a18; border-color:#183138 }
+  .foot{ color:#7b8392 }
 }
 
 /* ===== Accesibilidad y movimiento reducido ===== */
@@ -471,7 +393,8 @@ body::before{
 <!-- TOPBAR -->
 <div class="top">
   <div class="brand">
-    <img src="{{ asset('img/image.png') }}" alt="Viajero Car Rental">
+    <img src="{{ asset('img/Logo4.jpg') }}" alt="Viajero Car Rental">
+    <div class="badge"><span class="dot" id="net"></span> <span id="netText">En línea</span></div>
   </div>
   <div class="right">
     <div style="position:relative">
@@ -514,11 +437,8 @@ body::before{
 <section class="section">
   <h3 style="margin:0 0 8px">Módulos</h3>
   <div class="grid">
-
-    <!-- 🚗 Flotilla -->
-    <article class="mod" id="modAutos"
-             data-link="{{ route('rutaFlotilla') }}"
-             data-theme="autos">
+    <!-- AUTOS: ahora sí usa route() de Laravel -->
+    <article class="mod" id="modAutos" data-link="{{ route('rutaFlotilla') }}" data-theme="autos">
       <div class="head"><div class="ic">🚗</div>Flotilla</div>
       <div class="body">
         <p>Flotilla, mantenimiento, pólizas, carrocería y gastos.</p>
@@ -526,10 +446,7 @@ body::before{
       </div>
     </article>
 
-    <!-- 🧾 Rentas -->
-    <article class="mod" id="modRentas"
-             data-link="{{ route('rutaInicioVentas') }}"
-             data-theme="rentas">
+    <article class="mod" id="modRentas" data-link="{{route('rutaInicioVentas')}}" data-theme="rentas">
       <div class="head"><div class="ic">🧾</div>Rentas</div>
       <div class="body">
         <p>Reservaciones, cotizaciones y seguimiento de contratos.</p>
@@ -537,20 +454,15 @@ body::before{
       </div>
     </article>
 
-    <!-- ⚙️ Administración -->
-    <article class="mod" id="modAdmin"
-             data-link="{{ route('rutaUsuarios') }}"
-             data-theme="admin">
-      <div class="head"><div class="ic">⚙️</div>Administración</div>
+    <article class="mod" id="modAdmin" data-link="{{route('rutaUsuarios')}}" data-theme="admin">
+      <div class="head"><div class="ic">⚙</div>Administración</div>
       <div class="body">
         <p>Usuarios, roles/permisos, sedes, auditoría y seguridad.</p>
         <div class="go">Entrar →</div>
       </div>
     </article>
-
   </div>
 </section>
-
 
 <p class="foot">© Viajero Car Rental · Panel interno</p>
 

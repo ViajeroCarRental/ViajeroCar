@@ -14,7 +14,7 @@ use App\Http\Controllers\ReservacionesAdminController;
 use App\Http\Controllers\ReservacionesActivasController;
 use App\Http\Controllers\ContratoController;
 use Illuminate\Support\Facades\Bus;
-
+use App\Http\Controllers\FlotillaController;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -152,3 +152,12 @@ Route::get('/admin/licencia', [App\Http\Controllers\controladorVistasAdmin::clas
 Route::get('/admin/rfc', [App\Http\Controllers\controladorVistasAdmin::class, 'RFC_Fiscal'])->name('rutaRFC');
 //facturar
 Route::get('/admin/facturar', [App\Http\Controllers\controladorVistasAdmin::class, 'facturar'])->name('rutaFacturar');
+
+
+
+// Vista principal (usada por el Dashboard)
+Route::get('/admin/flotilla', [FlotillaController::class, 'indexView'])->name('rutaFlotilla');
+
+// 🔹 CRUD de autos en flotilla
+Route::post('/admin/flotilla/{id}/editar', [FlotillaController::class, 'edit'])->name('flotilla.editar');
+Route::delete('/admin/flotilla/{id}', [FlotillaController::class, 'destroy'])->name('flotilla.eliminar');
