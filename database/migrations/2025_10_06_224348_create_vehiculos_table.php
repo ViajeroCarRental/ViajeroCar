@@ -61,12 +61,14 @@ return new class extends Migration {
             $table->date('fin_vigencia_poliza')->nullable();
             $table->string('tipo_cobertura', 100)->nullable();
             $table->string('plan_seguro', 100)->nullable();
+            $table->string('archivo_poliza', 255)->nullable(); // 📎 PDF o imagen del seguro
 
             // 🔹 Tarjeta de circulación
             $table->string('folio_tarjeta', 100)->nullable();
             $table->string('movimiento_tarjeta', 100)->nullable();
             $table->date('fecha_expedicion_tarjeta')->nullable();
             $table->string('oficina_expedidora', 100)->nullable();
+            $table->string('archivo_verificacion', 255)->nullable(); // 📎 PDF o imagen de verificación
 
 
             // Uniques

@@ -15,6 +15,7 @@ use App\Http\Controllers\ReservacionesActivasController;
 use App\Http\Controllers\ContratoController;
 use Illuminate\Support\Facades\Bus;
 use App\Http\Controllers\FlotillaController;
+use App\Http\Controllers\MantenimientoController;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -155,9 +156,21 @@ Route::get('/admin/facturar', [App\Http\Controllers\controladorVistasAdmin::clas
 
 
 
-// Vista principal
+// 🚗 Rutas de Flotilla (Administrador)
+// 🔹 Vista principal de la flotilla
 Route::get('/admin/flotilla', [FlotillaController::class, 'indexView'])->name('rutaFlotilla');
-
+// 🔹 Agregar nuevo vehículo
 Route::post('/admin/flotilla/agregar', [FlotillaController::class, 'store'])->name('flotilla.agregar');
+// 🔹 Actualizar vehículo existente
 Route::post('/admin/flotilla/{id}/actualizar', [FlotillaController::class, 'update'])->name('flotilla.actualizar');
-Route::delete('/admin/flotilla/{id}', [FlotillaController::class, 'destroy'])->name('flotilla.eliminar');
+// 🔹 Eliminar vehículo
+Route::delete('/admin/flotilla/{id}/eliminar', [FlotillaController::class, 'destroy'])->name('flotilla.eliminar');
+
+
+
+// Rutas de Mantenimiento
+Route::get('/admin/mantenimiento', [MantenimientoController::class, 'indexView'])->name('rutaMantenimiento');
+
+Route::get('/admin/mantenimiento', [MantenimientoController::class, 'indexView'])->name('rutaMantenimiento');
+Route::put('/admin/mantenimiento/{id}/update', [MantenimientoController::class, 'updateKm'])->name('mantenimiento.actualizarKm');
+Route::post('/admin/mantenimiento/{id}/registrar', [MantenimientoController::class, 'registrarMantenimiento'])->name('mantenimiento.registrar');

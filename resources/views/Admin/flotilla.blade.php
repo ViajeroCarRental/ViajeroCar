@@ -98,7 +98,7 @@
         <span>Agregar Nuevo Vehículo 🚗</span>
         <button id="closeAdd">&times;</button>
       </div>
-     <form action="{{ route('flotilla.agregar') }}" method="POST" class="form-grid">
+     <form action="{{ route('flotilla.agregar') }}" method="POST" enctype="multipart/form-data" class="form-grid">
       @csrf
       <h3>Datos Generales</h3>
       <label>Marca<input type="text" name="marca" required></label>
@@ -123,14 +123,19 @@
         </select>
       </label>
       <label>Categoría
-        <select name="categoria">
-          <option>Compacto</option>
-          <option>Mediano</option>
-          <option>Grande</option>
-          <option>SUV</option>
-          <option>Pickup</option>
-          <option>Van</option>
-        </select>
+      <select name="categoria">
+        <option>C Compacto</option>
+        <option>D Medianos</option>
+        <option>E Grandes</option>
+        <option>F Full size</option>
+        <option>IC Suv compacta</option>
+        <option>I Suv mediana</option>
+        <option>IB Suv familiar compacta</option>
+        <option>M Minivan</option>
+        <option>L Pasajeros de 12 a 15 usuarios</option>
+        <option>H Pick up doble cabina</option>
+        <option>HI Pick up 4x4 doble cabina</option>
+      </select>
       </label>
       <label>Número de Serie<input type="text" name="numero_serie" placeholder="Ej. 3VWEP6BU0SM005037"></label>
       <label>VIN<input type="text" name="vin" placeholder="Ej. 3VWEP6BU0SM005037"></label>
@@ -168,12 +173,18 @@
       <label>Fin de Vigencia<input type="date" name="fin_vigencia_poliza"></label>
       <label>Tipo de Cobertura<input type="text" name="tipo_cobertura" placeholder="Ej. Responsabilidad Civil"></label>
       <label>Plan de Seguro<input type="text" name="plan_seguro" placeholder="Ej. Anual"></label>
+      <label>Archivo de Póliza (PDF o Imagen)
+      <input type="file" name="archivo_poliza" accept=".pdf,.jpg,.jpeg,.png">
+      </label>
 
       <h3>Tarjeta de Circulación</h3>
       <label>Folio Tarjeta<input type="text" name="folio_tarjeta" placeholder="Ej. 12345678"></label>
       <label>Movimiento<input type="text" name="movimiento_tarjeta" placeholder="Ej. Alta"></label>
       <label>Fecha de Expedición<input type="date" name="fecha_expedicion_tarjeta"></label>
       <label>Oficina Expedidora<input type="text" name="oficina_expedidora" placeholder="Ej. Querétaro Centro"></label>
+      <label>Archivo de Verificación (PDF o Imagen)
+      <input type="file" name="archivo_verificacion" accept=".pdf,.jpg,.jpeg,.png">
+      </label>
 
       <div class="actions" style="margin-top:15px;">
         <button type="submit" class="btn">💾 Guardar Vehículo</button>
