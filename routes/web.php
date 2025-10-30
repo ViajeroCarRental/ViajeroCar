@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Bus;
 use App\Http\Controllers\FlotillaController;
 use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\PolizasController;
+use App\Http\Controllers\CarroceriaController;
+use App\Http\Controllers\GastosController;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -180,10 +182,27 @@ Route::post('/admin/mantenimiento/{id}/registrar', [MantenimientoController::cla
 Route::get('/admin/polizas', [PolizasController::class, 'index'])->name('rutaPolizas');
 Route::get('/admin/polizas/descargar/{archivo}', [PolizasController::class, 'descargar'])->name('descargarPoliza');
 
-
-Route::get('/admin/polizas/editar/{id}', [PolizasController::class, 'editar'])->name('editarPoliza');
 Route::post('/admin/polizas/actualizar/{id}', [PolizasController::class, 'actualizar'])->name('actualizarPoliza');
-
-Route::get('/admin/polizas/subir/{id}', [PolizasController::class, 'subirArchivo'])->name('subirArchivoPoliza');
 Route::post('/admin/polizas/subir/{id}', [PolizasController::class, 'guardarArchivo'])->name('guardarArchivoPoliza');
 
+// ✅ Ver/descargar vía controlador (sin symlink)
+Route::get('/admin/polizas/ver/{id}', [PolizasController::class, 'ver'])->name('verPoliza');
+Route::get('/admin/polizas/descargar/{id}', [PolizasController::class, 'descargar'])->name('descargarPoliza');
+
+
+
+// 🚗 Carrocería — rutas limpias y sin duplicados
+Route::get('/admin/carroceria', [CarroceriaController::class, 'indexView'])
+    ->name('rutaCarroceria'); // 👈 nombre exacto que usa tu menú
+
+Route::post('/admin/carroceria/store', [CarroceriaController::class, 'store'])
+    ->name('carroceria.store');
+
+Route::put('/admin/carroceria/update/{id}', [CarroceriaController::class, 'update'])
+    ->name('carroceria.update');
+
+
+
+
+Route::get('/admin/gastos', [GastosController::class, 'index'])->name('rutaGastos');
+Route::get('/admin/gastos/filtrar', [GastosController::class, 'filtrar']);

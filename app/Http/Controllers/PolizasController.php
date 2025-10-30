@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class PolizasController extends Controller
 {
-    /**
-     * 📄 Mostrar la vista de pólizas con datos desde la base de datos
-     */
+    /** 📋 Listar todas las pólizas */
     public function index()
     {
         $polizas = DB::table('vehiculos as v')
@@ -27,69 +26,120 @@ class PolizasController extends Controller
                 'v.archivo_poliza',
                 'e.nombre as estatus'
             )
-            ->whereNotNull('v.no_poliza')
             ->orderBy('v.fin_vigencia_poliza', 'asc')
             ->get();
 
         return view('Admin.polizas', compact('polizas'));
     }
 
-    /**
-     * 📥 Descargar archivo de póliza
-     */
-    public function descargar($archivo)
+    /** ✏️ Actualizar datos de póliza */
+    public function actualizar(Request $request, $id)
     {
-        // ✅ Ruta relativa dentro de storage/app/public/
-        $path = 'polizas/' . $archivo;
+        DB::table('vehiculos')
+            ->where('id_vehiculo', $id)
+            ->update([
+                'no_poliza'              => $request->no_poliza,
+                'aseguradora'            => $request->aseguradora,
+                'plan_seguro'            => $request->plan_seguro,
+                'inicio_vigencia_poliza' => $request->inicio_vigencia_poliza,
+                'fin_vigencia_poliza'    => $request->fin_vigencia_poliza,
+            ]);
 
-        // ✅ Verificar si el archivo existe en el disco 'public'
-        if (Storage::disk('public')->exists($path)) {
-            // 🔽 Descargar el archivo (sin errores ni advertencias)
-            return Storage::disk('public')->download($path, $archivo);
+        return redirect()->route('rutaPolizas')->with('success', 'Póliza actualizada correctamente.');
+    }
+
+    /** 📤 Subir o reemplazar archivo */
+    public function guardarArchivo(Request $request, $id)
+    {
+        $request->validate([
+            'archivo_poliza' => 'required|file|mimes:pdf,jpg,jpeg,png|max:4096'
+        ]);
+
+        $vehiculo = DB::table('vehiculos')->where('id_vehiculo', $id)->first();
+        if (!$vehiculo) {
+            return back()->with('error', 'Vehículo no encontrado.');
         }
 
-        // ⚠️ Si no existe, mostrar error amigable
-        return redirect()->back()->with('error', 'El archivo no existe en el servidor.');
+        $file   = $request->file('archivo_poliza');
+        $nombre = 'poliza_' . Str::random(12) . '.' . $file->getClientOriginalExtension();
+
+        // 📁 Guardar archivo en storage/app/public/polizas
+        Storage::disk('public')->putFileAs('polizas', $file, $nombre);
+
+        // 🗑️ Eliminar archivo anterior si existe
+        if (!empty($vehiculo->archivo_poliza)) {
+            $rutasPosibles = [
+                'polizas/' . $vehiculo->archivo_poliza,
+                'uploads/' . $vehiculo->archivo_poliza,
+                $vehiculo->archivo_poliza
+            ];
+            foreach ($rutasPosibles as $ruta) {
+                if (Storage::disk('public')->exists($ruta)) {
+                    Storage::disk('public')->delete($ruta);
+                    break;
+                }
+            }
+        }
+
+        // 💾 Actualizar BD
+        DB::table('vehiculos')
+            ->where('id_vehiculo', $id)
+            ->update(['archivo_poliza' => $nombre]);
+
+        return redirect()->route('rutaPolizas')->with('success', 'Archivo subido o reemplazado correctamente.');
     }
-    public function editar($id)
+
+    /** 👁️ Ver archivo sin depender del symlink */
+    public function ver($id)
+    {
+        $vehiculo = DB::table('vehiculos')->where('id_vehiculo', $id)->first();
+
+        if (!$vehiculo || !$vehiculo->archivo_poliza) {
+            abort(404, 'Archivo no registrado.');
+        }
+
+        $nombre = $vehiculo->archivo_poliza;
+
+        // 🔍 Buscar en múltiples posibles rutas
+        $rutas = [
+            'polizas/' . $nombre,
+            'uploads/' . $nombre,
+            $nombre,
+        ];
+
+        foreach ($rutas as $ruta) {
+            if (Storage::disk('public')->exists($ruta)) {
+                return Storage::disk('public')->response($ruta);
+            }
+        }
+
+        abort(404, 'Archivo no encontrado en el servidor.');
+    }
+
+    /** ⬇️ Descargar archivo */
+    public function descargar($id)
 {
     $vehiculo = DB::table('vehiculos')->where('id_vehiculo', $id)->first();
-    return view('Admin.editarPoliza', compact('vehiculo'));
+    if (!$vehiculo || !$vehiculo->archivo_poliza) {
+        return back()->with('error', 'Archivo no disponible.');
+    }
+
+    // 🧹 Limpiar el nombre para evitar caracteres inválidos
+    $nombreLimpio = basename($vehiculo->archivo_poliza);
+
+    $rutas = [
+        'polizas/' . $nombreLimpio,
+        'uploads/' . $nombreLimpio,
+        $nombreLimpio,
+    ];
+
+    foreach ($rutas as $ruta) {
+        if (Storage::disk('public')->exists($ruta)) {
+            return Storage::disk('public')->download($ruta, $nombreLimpio);
+        }
+    }
+
+    return back()->with('error', 'El archivo no existe en el servidor.');
 }
 
-public function actualizar(Request $request, $id)
-{
-    DB::table('vehiculos')->where('id_vehiculo', $id)->update([
-        'no_poliza' => $request->no_poliza,
-        'aseguradora' => $request->aseguradora,
-        'inicio_vigencia_poliza' => $request->inicio_vigencia_poliza,
-        'fin_vigencia_poliza' => $request->fin_vigencia_poliza,
-        'plan_seguro' => $request->plan_seguro,
-    ]);
-
-    return redirect()->route('rutaPolizas')->with('success', 'Póliza actualizada correctamente.');
-}
-
-public function subirArchivo($id)
-{
-    $vehiculo = DB::table('vehiculos')->where('id_vehiculo', $id)->first();
-    return view('Admin.subirArchivoPoliza', compact('vehiculo'));
-}
-
-public function guardarArchivo(Request $request, $id)
-{
-    $request->validate([
-        'archivo_poliza' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048'
-    ]);
-
-    $file = $request->file('archivo_poliza');
-    $nombreArchivo = uniqid() . '.' . $file->getClientOriginalExtension();
-    $file->storeAs('public/polizas', $nombreArchivo);
-
-    DB::table('vehiculos')->where('id_vehiculo', $id)->update([
-        'archivo_poliza' => $nombreArchivo
-    ]);
-
-    return redirect()->route('rutaPolizas')->with('success', 'Archivo actualizado correctamente.');
-}
 }
