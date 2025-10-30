@@ -49,7 +49,7 @@
         <table class="table" id="tblCost">
           <thead>
             <tr>
-              <th>Fecha</th><th>Carro</th><th>Rin</th><th>Categoría</th><th>Descripción</th><th>Importe</th>
+              <th>Fecha</th><th>Carro</th><th>Placa</th><th>Categoría</th><th>Descripción</th><th>Importe</th>
             </tr>
           </thead>
           <tbody><!-- filas dinámicas --></tbody>
