@@ -3,7 +3,6 @@
 
 @section('css-vistaMantenimiento')
 <link rel="stylesheet" href="{{ asset('css/mantenimiento.css') }}">
-
 @endsection
 
 @section('contenidoMantenimiento')
@@ -20,7 +19,9 @@
           <div class="mhead">
             <img src="{{ asset('img/auto_default.jpg') }}" alt="auto">
             <div>
-              <h3>{{ $v->marca }} {{ $v->modelo }} <small style="color:#6b7280;font-weight:600;">({{ $v->anio }})</small></h3>
+              <h3>{{ $v->marca }} {{ $v->modelo }} 
+                <small style="color:#6b7280;font-weight:600;">({{ $v->anio }})</small>
+              </h3>
               <div class="small-muted">Placa: <b>{{ $v->placa ?? '—' }}</b></div>
             </div>
           </div>
@@ -28,9 +29,9 @@
           <div class="row"><div>Kilometraje:</div><div id="km-{{ $v->id_vehiculo }}">{{ number_format($v->kilometraje) }} km</div></div>
           <div class="row"><div>Último servicio:</div><div id="last-{{ $v->id_vehiculo }}">{{ $v->ultimo_km_servicio ? number_format($v->ultimo_km_servicio).' km' : '—' }}</div></div>
           <div class="row"><div>Próximo servicio:</div><div id="next-{{ $v->id_vehiculo }}">{{ number_format($v->proximo_servicio) }} km</div></div>
-          <div class="row"><div>Falta:</div><div id="left-{{ $v->id_vehiculo }}">{{ $v->km_para_proximo }} km</div></div>
+          <div class="row"><div>Faltan:</div><div id="left-{{ $v->id_vehiculo }}">{{ number_format($v->km_para_proximo) }} km</div></div>
 
-          <div style="text-align:right;margin-top:10px;" class="rightBtn">
+          <div style="text-align:right;margin-top:10px;">
             <button class="btn" onclick="openModal({{ $v->id_vehiculo }})">🧾 Ver detalles</button>
           </div>
         </div>
@@ -41,11 +42,15 @@
             <div class="modal-header">
               <div>
                 <h3>Ficha de mantenimiento</h3>
-                <div class="small-muted">{{ $v->marca }} {{ $v->modelo }} • Placa: <b>{{ $v->placa ?? '—' }}</b></div>
+                <div class="small-muted">
+                  {{ $v->marca }} {{ $v->modelo }} • Placa: <b>{{ $v->placa ?? '—' }}</b>
+                </div>
               </div>
               <div style="margin-left:auto; text-align:right;">
                 <div class="small-muted">Estado</div>
-                <div id="status-dot-{{ $v->id_vehiculo }}" class="status" style="background:{{ $v->estado_mantenimiento == 'rojo' ? '#ef4444' : ($v->estado_mantenimiento=='amarillo' ? '#f59e0b' : '#16a34a') }};"></div>
+                <div id="status-dot-{{ $v->id_vehiculo }}" class="status"
+                     style="background:{{ $v->estado_mantenimiento == 'rojo' ? '#ef4444' : ($v->estado_mantenimiento=='amarillo' ? '#f59e0b' : '#16a34a') }};">
+                </div>
               </div>
             </div>
 
@@ -55,17 +60,14 @@
 
               <div style="display:flex;gap:12px;margin-top:6px;">
                 <div><b>Último servicio km</b><div id="m-lastkm-{{ $v->id_vehiculo }}">{{ $v->ultimo_km_servicio ? number_format($v->ultimo_km_servicio).' km' : '—' }}</div></div>
-                <div style="margin-left:auto;text-align:right;"><b>Falta</b><div id="m-left-{{ $v->id_vehiculo }}">{{ $v->km_para_proximo }} km</div></div>
+                <div style="margin-left:auto;text-align:right;"><b>Faltan</b><div id="m-left-{{ $v->id_vehiculo }}">{{ number_format($v->km_para_proximo) }} km</div></div>
               </div>
 
               <hr>
 
-              <div style="display:flex;gap:10px;align-items:center;">
-                <div><b>Estado técnico</b></div>
-              </div>
-
+              <div><b>Estado técnico</b></div>
               <div style="margin-top:6px;">
-                <div><span class="icon-{{ $v->cambio_aceite ? 'yes' : 'no' }}">{{ $v->cambio_aceite ? '✔' : '✖' }}</span> Cambio de aceite @if($v->tipo_aceite) <small class="small-muted">({{ $v->tipo_aceite }})</small> @endif</div>
+                <div><span class="icon-{{ $v->cambio_aceite ? 'yes' : 'no' }}">{{ $v->cambio_aceite ? '✔' : '✖' }}</span> Cambio de aceite @if($v->tipo_aceite)<small class="small-muted">({{ $v->tipo_aceite }})</small>@endif</div>
                 <div><span class="icon-{{ $v->rotacion_llantas ? 'yes' : 'no' }}">{{ $v->rotacion_llantas ? '✔' : '✖' }}</span> Rotación de llantas</div>
                 <div><span class="icon-{{ $v->cambio_filtro ? 'yes' : 'no' }}">{{ $v->cambio_filtro ? '✔' : '✖' }}</span> Cambio de filtro</div>
                 <div><span class="icon-{{ $v->cambio_pastillas ? 'yes' : 'no' }}">{{ $v->cambio_pastillas ? '✔' : '✖' }}</span> Cambio de pastillas</div>
@@ -77,8 +79,15 @@
               <!-- Formulario AJAX -->
               <form id="form-{{ $v->id_vehiculo }}" onsubmit="submitMaintenance(event, {{ $v->id_vehiculo }})">
                 @csrf
-                <label>Kilometraje servicio</label>
+                <label>Kilometraje actual</label>
                 <input class="input" type="number" name="kilometraje_servicio" value="{{ $v->kilometraje }}" required>
+
+                <label>Intervalo de mantenimiento (km)</label>
+                <select name="intervalo_km" class="input">
+                  <option value="10000" {{ ($v->intervalo_km ?? 10000) == 10000 ? 'selected' : '' }}>Cada 10,000 km</option>
+                  <option value="15000" {{ ($v->intervalo_km ?? 10000) == 15000 ? 'selected' : '' }}>Cada 15,000 km</option>
+                  <option value="20000" {{ ($v->intervalo_km ?? 10000) == 20000 ? 'selected' : '' }}>Cada 20,000 km</option>
+                </select>
 
                 <label>Costo</label>
                 <input class="input" type="number" step="0.01" name="costo_servicio" value="{{ $v->costo_servicio ?? 0 }}">
@@ -101,7 +110,6 @@
                   <button type="button" class="btn gray" onclick="closeModal({{ $v->id_vehiculo }})">Cerrar</button>
                 </div>
               </form>
-
             </div>
           </div>
         </div>
@@ -122,15 +130,14 @@ function closeModal(id){
   document.getElementById('modal-'+id).setAttribute('aria-hidden','true');
 }
 
-// Enviar por AJAX, actualizar tarjeta en DOM
+// Enviar por AJAX y actualizar todo dinámicamente
 async function submitMaintenance(e, id){
   e.preventDefault();
   const form = document.getElementById('form-'+id);
-  const url = "{{ url('/admin/mantenimiento') }}/" + id + "/registrar"; // coincide con ruta
-  const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
-
+  const url = "{{ url('/admin/mantenimiento') }}/" + id + "/registrar";
+  const token = '{{ csrf_token() }}';
   const formData = new FormData(form);
-  // For checkboxes, FormData will include only checked ones. We want explicit booleans:
+
   ['cambio_aceite','rotacion_llantas','cambio_filtro','cambio_pastillas'].forEach(k=>{
     if(!formData.has(k)) formData.append(k, '0');
   });
@@ -145,16 +152,14 @@ async function submitMaintenance(e, id){
     if (!res.ok) {
       const err = await res.json().catch(()=>null);
       let msg = 'Error al guardar';
-      if (err && err.errors) {
-        msg = Object.values(err.errors).flat().join(' - ');
-      }
+      if (err && err.errors) msg = Object.values(err.errors).flat().join(' - ');
       alert(msg);
       return;
     }
 
     const data = await res.json();
 
-    // Actualizar DOM (tarjeta y modal)
+    // Actualizar datos visuales
     const card = document.getElementById('card-'+id);
     if (card) {
       card.classList.remove('verde','amarillo','rojo');
@@ -162,23 +167,17 @@ async function submitMaintenance(e, id){
       document.getElementById('km-'+id).textContent = Number(data.kilometraje).toLocaleString() + ' km';
       document.getElementById('last-'+id).textContent = Number(data.ultimo_km_servicio).toLocaleString() + ' km';
       document.getElementById('next-'+id).textContent = Number(data.proximo_servicio).toLocaleString() + ' km';
-      document.getElementById('left-'+id).textContent = Number(data.km_para_proximo).toLocaleString() + ' km';
-
-      // Modal fields
-      document.getElementById('m-km-'+id).textContent = Number(data.kilometraje).toLocaleString() + ' km';
-      document.getElementById('m-lastkm-'+id).textContent = Number(data.ultimo_km_servicio).toLocaleString() + ' km';
-      document.getElementById('m-left-'+id).textContent = Number(data.km_para_proximo).toLocaleString() + ' km';
+      document.getElementById('left-'+id).textContent = Number(data.falta).toLocaleString() + ' km';
       document.getElementById('status-dot-'+id).style.background = data.estado === 'rojo' ? '#ef4444' : (data.estado === 'amarillo' ? '#f59e0b' : '#16a34a');
     }
 
-    // Notificación pequeña
+    // Toast notification
     const t = document.getElementById('toast');
     t.textContent = data.mensaje || 'Guardado correctamente';
     t.classList.add('show');
     setTimeout(()=> t.classList.remove('show'), 2500);
 
     closeModal(id);
-
   } catch (error) {
     console.error(error);
     alert('Error de conexión. Intente nuevamente.');

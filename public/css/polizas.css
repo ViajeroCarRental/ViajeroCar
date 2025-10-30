@@ -179,3 +179,76 @@ body { font-family: var(--font); background: var(--bg); color: var(--ink); }
     min-width: 600px; /* asegura que no se aplaste demasiado */
   }
 }
+
+.btn.small {
+  padding: 4px 8px;
+  font-size: 13px;
+  border-radius: 6px;
+  text-decoration: none;
+}
+.btn.small.blue {
+  background-color: #3498db;
+  color: white;
+}
+.btn.small.green {
+  background-color: #27ae60;
+  color: white;
+}
+.btn.small.blue:hover,
+.btn.small.green:hover {
+  opacity: 0.8;
+}
+
+
+
+
+ .badge.green { background: #27ae60; color: white; padding: 4px 8px; border-radius: 6px; }
+  .badge.red { background: #e74c3c; color: white; padding: 4px 8px; border-radius: 6px; }
+  .badge.gray { background: #95a5a6; color: white; padding: 4px 8px; border-radius: 6px; }
+
+  .btn.small {
+    padding: 4px 8px;
+    font-size: 13px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: white;
+  }
+  .btn.small.blue { background: #3498db; }
+  .btn.small.green { background: #27ae60; }
+  .btn.small.orange { background: #e67e22; }
+  .btn.small.purple { background: #8e44ad; }
+  .btn.small.gray { background: #7f8c8d; }
+  .btn.small:hover { opacity: 0.85; }
+
+  /* Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+  .modal-content {
+    background: #fff;
+    padding: 20px 25px;
+    border-radius: 10px;
+    width: 500px;
+    max-width: 90%;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+  .modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .modal-header h2 { font-size: 1.3rem; }
+  .close {
+    cursor: pointer;
+    font-size: 22px;
+    color: #555;
+  }
+  .form-group { margin-bottom: 12px; }
+  .form-group label { font-weight: 600; display: block; margin-bottom: 4px; }
+  .form-group input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }

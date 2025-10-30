@@ -16,6 +16,7 @@ use App\Http\Controllers\ContratoController;
 use Illuminate\Support\Facades\Bus;
 use App\Http\Controllers\FlotillaController;
 use App\Http\Controllers\MantenimientoController;
+use App\Http\Controllers\PolizasController;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -174,3 +175,15 @@ Route::get('/admin/mantenimiento', [MantenimientoController::class, 'indexView']
 Route::get('/admin/mantenimiento', [MantenimientoController::class, 'indexView'])->name('rutaMantenimiento');
 Route::put('/admin/mantenimiento/{id}/update', [MantenimientoController::class, 'updateKm'])->name('mantenimiento.actualizarKm');
 Route::post('/admin/mantenimiento/{id}/registrar', [MantenimientoController::class, 'registrarMantenimiento'])->name('mantenimiento.registrar');
+
+// Rutas de poliza
+Route::get('/admin/polizas', [PolizasController::class, 'index'])->name('rutaPolizas');
+Route::get('/admin/polizas/descargar/{archivo}', [PolizasController::class, 'descargar'])->name('descargarPoliza');
+
+
+Route::get('/admin/polizas/editar/{id}', [PolizasController::class, 'editar'])->name('editarPoliza');
+Route::post('/admin/polizas/actualizar/{id}', [PolizasController::class, 'actualizar'])->name('actualizarPoliza');
+
+Route::get('/admin/polizas/subir/{id}', [PolizasController::class, 'subirArchivo'])->name('subirArchivoPoliza');
+Route::post('/admin/polizas/subir/{id}', [PolizasController::class, 'guardarArchivo'])->name('guardarArchivoPoliza');
+

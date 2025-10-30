@@ -2,10 +2,10 @@
 /* 🎨 VARIABLES BASE     */
 /* ===================== */
 :root {
-  --brand: #E50914;
-  --brand-light: #ff4d5a;
-  --ink: #1e293b;
-  --muted: #64748b;
+  --brand: #ff3838;
+  --brand-light: #470005;
+  --ink: #000000;
+  --muted: #000000;
   --bg: #f4f6fb;
   --paper: #ffffff;
   --stroke: #e2e8f0;
@@ -137,7 +137,7 @@ body {
   display: flex;
   justify-content: space-between;
   font-size: .95rem;
-  color: #374151;
+  color: #000000;
   margin: 6px 0;
 }
 
