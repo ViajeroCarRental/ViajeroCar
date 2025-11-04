@@ -39,7 +39,7 @@
       <table class="table table-hover align-middle">
         <thead class="table-danger">
           <tr>
-            <th>Folio</th>
+            <th>Placa</th>
             <th>Vehículo</th>
             <th>Zona</th>
             <th>Daño</th>
@@ -56,8 +56,8 @@
               $estatusClass = strtolower($c->estatus ?? '');
             @endphp
             <tr>
-              <td>{{ $c->folio }}</td>
-              <td>{{ $c->marca }} {{ $c->modelo }} ({{ $c->placa }})</td>
+              <td>{{ $c->placa }}</td>
+              <td>{{ $c->marca }} {{ $c->modelo }}</td>
               <td>{{ $c->zona_afectada }}</td>
               <td>{{ $c->tipo_danio }}</td>
               <td>{{ $c->severidad }}</td>
