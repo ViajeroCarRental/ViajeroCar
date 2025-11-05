@@ -207,7 +207,6 @@
                 <option value="Pendiente">Pendiente</option>
                 <option value="Cotizado">Cotizado</option>
                 <option value="En proceso">En proceso</option>
-                <option value="Refacción">Refacción</option>
                 <option value="Terminado">Terminado</option>
               </select>
             </div>

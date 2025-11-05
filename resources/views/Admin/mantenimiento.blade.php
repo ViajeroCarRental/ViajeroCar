@@ -17,7 +17,6 @@
           <span class="badge">{{ ucfirst($v->estatus ?? 'Desconocido') }}</span>
 
           <div class="mhead">
-            <img src="{{ asset('img/auto_default.jpg') }}" alt="auto">
             <div>
               <h3>{{ $v->marca }} {{ $v->modelo }} 
                 <small style="color:#6b7280;font-weight:600;">({{ $v->anio }})</small>
@@ -70,7 +69,7 @@
                 <div><span class="icon-{{ $v->cambio_aceite ? 'yes' : 'no' }}">{{ $v->cambio_aceite ? '✔' : '✖' }}</span> Cambio de aceite @if($v->tipo_aceite)<small class="small-muted">({{ $v->tipo_aceite }})</small>@endif</div>
                 <div><span class="icon-{{ $v->rotacion_llantas ? 'yes' : 'no' }}">{{ $v->rotacion_llantas ? '✔' : '✖' }}</span> Rotación de llantas</div>
                 <div><span class="icon-{{ $v->cambio_filtro ? 'yes' : 'no' }}">{{ $v->cambio_filtro ? '✔' : '✖' }}</span> Cambio de filtro</div>
-                <div><span class="icon-{{ $v->cambio_pastillas ? 'yes' : 'no' }}">{{ $v->cambio_pastillas ? '✔' : '✖' }}</span> Cambio de pastillas</div>
+                <div><span class="icon-{{ $v->cambio_pastillas ? 'yes' : 'no' }}">{{ $v->cambio_pastillas ? '✔' : '✖' }}</span> Cambio de frenos</div>
                 <div style="margin-top:6px;"><b>Notas:</b><div id="m-notes-{{ $v->id_vehiculo }}">{{ $v->observaciones ?? '—' }}</div></div>
               </div>
 
@@ -96,7 +95,7 @@
                   <label><input type="checkbox" name="cambio_aceite" {{ $v->cambio_aceite ? 'checked' : '' }}> Cambio de aceite</label>
                   <label><input type="checkbox" name="rotacion_llantas" {{ $v->rotacion_llantas ? 'checked' : '' }}> Rotación de llantas</label>
                   <label><input type="checkbox" name="cambio_filtro" {{ $v->cambio_filtro ? 'checked' : '' }}> Cambio de filtro</label>
-                  <label><input type="checkbox" name="cambio_pastillas" {{ $v->cambio_pastillas ? 'checked' : '' }}> Cambio de pastillas</label>
+                  <label><input type="checkbox" name="cambio_pastillas" {{ $v->cambio_pastillas ? 'checked' : '' }}> Cambio de frenos</label>
                 </div>
 
                 <label>Tipo aceite (opcional)</label>

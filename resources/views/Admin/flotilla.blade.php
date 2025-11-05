@@ -3,6 +3,105 @@
 
 @section('css-vistaFlotilla')
 <link rel="stylesheet" href="{{ asset('css/flotilla.css') }}">
+<style>
+/* ===== Swipe Reveal Delete (debajo de fila, bonito y fluido) ===== */
+.table tbody tr {
+  position: relative;
+  background: #fff;
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  user-select: none;
+  overflow: hidden;
+}
+.table tbody tr.swiped {
+  transform: translateX(-88px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+.table tbody tr td {
+  position: relative;
+  z-index: 2;
+}
+
+/* Fondo rojo debajo (no bloquea clicks cuando está oculto) */
+.table tbody tr .delete-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 22px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  border-top-right-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+  z-index: 1;
+  pointer-events: none; /* 🟢 clave: no bloquea el botón Editar */
+  box-shadow: inset -10px 0 20px rgba(0,0,0,0.08);
+}
+.table tbody tr.swiped .delete-bg {
+  opacity: 1;
+  pointer-events: auto; /* activo solo cuando está visible */
+}
+
+.table tbody tr .delete-bg form { margin: 0; }
+.table tbody tr .delete-bg button {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform .2s, background .2s, box-shadow .2s;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+}
+.table tbody tr .delete-bg button:hover {
+  transform: scale(1.07);
+  background: rgba(255,255,255,0.25);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.22);
+}
+
+/* Botón Editar — más bonito */
+.btn-sm.editBtn {
+  background: #fff;
+  border: 1px solid var(--stroke);
+  color: #ef4444;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 14px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.btn-sm.editBtn::before {
+  content: "✏️";
+  font-size: 16px;
+}
+.btn-sm.editBtn:hover {
+  transform: translateY(-1px);
+  border-color: #fecaca;
+  box-shadow: 0 6px 16px rgba(239,68,68,.18);
+}
+
+/* Ancho del área de acción al deslizar */
+:root { --swipe-width: 88px; }
+
+/* Rebote sutil al llegar */
+@keyframes rebound {
+  0%   { transform: translateX(calc(-1 * (var(--swipe-width) - 12px))); }
+  70%  { transform: translateX(calc(-1 * (var(--swipe-width) + 4px))); }
+  100% { transform: translateX(calc(-1 * var(--swipe-width))); }
+}
+.table tbody tr.rebound {
+  animation: rebound 0.25s ease;
+}
+</style>
 @endsection
 
 @section('contenidoMantenimiento')
@@ -36,30 +135,36 @@
         </thead>
         <tbody>
           @foreach($vehiculos as $v)
-            <tr data-id="{{ $v->id_vehiculo }}"
-                data-modelo="{{ $v->modelo }}"
-                data-marca="{{ $v->marca }}"
-                data-anio="{{ $v->anio }}"
-                data-color="{{ $v->color }}"
-                data-categoria="{{ $v->categoria }}"
-                data-kilometraje="{{ $v->kilometraje }}">
-              <td>{{ $v->modelo }}</td>
-              <td>{{ $v->marca }}</td>
-              <td>{{ $v->anio }}</td>
-              <td>{{ $v->color }}</td>
-              <td>{{ $v->placa }}</td>
-              <td>{{ $v->numero_serie }}</td>
-              <td>{{ $v->categoria }}</td>
-              <td>{{ number_format($v->kilometraje) }} km</td>
-              <td>{{ $v->estatus ?? 'Disponible' }}</td>
-              <td>
-                <button class="btn-sm editBtn" title="Editar">✏️</button>
-                <form action="{{ route('flotilla.eliminar', $v->id_vehiculo) }}" method="POST" style="display:inline">
+          <tr data-id="{{ $v->id_vehiculo }}"
+              data-modelo="{{ $v->modelo }}"
+              data-marca="{{ $v->marca }}"
+              data-anio="{{ $v->anio }}"
+              data-color="{{ $v->color }}"
+              data-categoria="{{ $v->categoria }}"
+              data-kilometraje="{{ $v->kilometraje }}">
+            
+            <td>{{ $v->modelo }}</td>
+            <td>{{ $v->marca }}</td>
+            <td>{{ $v->anio }}</td>
+            <td>{{ $v->color }}</td>
+            <td>{{ $v->placa }}</td>
+            <td>{{ $v->numero_serie }}</td>
+            <td>{{ $v->categoria }}</td>
+            <td>{{ number_format($v->kilometraje) }} km</td>
+            <td>{{ $v->estatus ?? 'Disponible' }}</td>
+            <td>
+              <!-- Fondo rojo debajo, oculto hasta swipe -->
+              <div class="delete-bg">
+                <form action="{{ route('flotilla.eliminar', $v->id_vehiculo) }}" method="POST">
                   @csrf @method('DELETE')
-                  <button type="submit" class="btn-sm" onclick="return confirm('¿Seguro que deseas eliminar este vehículo?')" title="Eliminar">🗑️</button>
+                  <button type="submit" title="Eliminar">🗑️</button>
                 </form>
-              </td>
-            </tr>
+              </div>
+
+              <!-- Botón Editar siempre visible -->
+              <button class="btn-sm editBtn" title="Editar"></button>
+            </td>
+          </tr>
           @endforeach
         </tbody>
       </table>
@@ -158,14 +263,6 @@
       <label>Asientos<input type="number" name="asientos" min="2" max="10" value="5"></label>
       <label>Puertas<input type="number" name="puertas" min="2" max="6" value="4"></label>
 
-      <h3>Datos del Propietario</h3>
-      <label>Propietario<input type="text" name="propietario" placeholder="Ej. José Juan de Dios Hernández Reséndiz"></label>
-      <label>RFC del Propietario<input type="text" name="rfc_propietario" placeholder="Ej. HERJ900308QM1"></label>
-      <label>Domicilio<input type="text" name="domicilio" placeholder="Ej. Bugambilias 7, Col. Los Benitos"></label>
-      <label>Municipio<input type="text" name="municipio" placeholder="Ej. Colón"></label>
-      <label>Estado<input type="text" name="estado" placeholder="Ej. Querétaro"></label>
-      <label>País<input type="text" name="pais" value="México"></label>
-
       <h3>Póliza de Seguro</h3>
       <label>Número de Póliza<input type="text" name="no_poliza"></label>
       <label>Aseguradora<input type="text" name="aseguradora" placeholder="Ej. BBVA"></label>
@@ -225,9 +322,60 @@ const addModal = document.getElementById('addModal');
 const btnAddAuto = document.getElementById('btnAddAuto');
 const closeAdd = document.getElementById('closeAdd');
 const cancelAdd = document.getElementById('cancelAdd');
-
 btnAddAuto.onclick = () => addModal.classList.add('active');
 closeAdd.onclick = cancelAdd.onclick = () => addModal.classList.remove('active');
+
+// === SWIPE PARA ELIMINAR ===
+let startX = 0;
+
+document.querySelectorAll('#tblFleet tbody tr').forEach(tr => {
+  const resetAll = () => {
+    document.querySelectorAll('#tblFleet tbody tr').forEach(r => {
+      r.classList.remove('swiped');
+      r.classList.remove('rebound');
+    });
+  };
+
+  const handleSwipe = diff => {
+    if (diff < -40 && !tr.classList.contains('swiped')) {
+      resetAll();
+      tr.classList.add('swiped');
+      tr.classList.add('rebound');
+    }
+    if (diff > 40 && tr.classList.contains('swiped')) {
+      tr.classList.remove('swiped');
+    }
+  };
+
+  // Desktop
+  tr.addEventListener('mousedown', e => startX = e.clientX);
+  tr.addEventListener('mousemove', e => {
+    if (e.buttons === 1) {
+      const diff = e.clientX - startX;
+      handleSwipe(diff);
+    }
+  });
+
+  // Mobile
+  tr.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+  tr.addEventListener('touchmove', e => {
+    const diff = e.touches[0].clientX - startX;
+    handleSwipe(diff);
+  });
+});
+
+// Cerrar swipe con ESC o clic fuera de la tabla
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('#tblFleet tbody tr').forEach(r => r.classList.remove('swiped'));
+  }
+});
+document.addEventListener('click', e => {
+  const tbl = document.getElementById('tblFleet');
+  if (!tbl.contains(e.target)) {
+    document.querySelectorAll('#tblFleet tbody tr').forEach(r => r.classList.remove('swiped'));
+  }
+});
 </script>
 @endsection
 @endsection
