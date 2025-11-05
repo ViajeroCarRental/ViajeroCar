@@ -14,7 +14,11 @@ use App\Http\Controllers\ReservacionesAdminController;
 use App\Http\Controllers\ReservacionesActivasController;
 use App\Http\Controllers\ContratoController;
 use Illuminate\Support\Facades\Bus;
-
+use App\Http\Controllers\FlotillaController;
+use App\Http\Controllers\MantenimientoController;
+use App\Http\Controllers\PolizasController;
+use App\Http\Controllers\CarroceriaController;
+use App\Http\Controllers\GastosController;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -164,3 +168,55 @@ Route::get('/admin/alta-cliente', [App\Http\Controllers\controladorVistasAdmin::
 Route::get('/admin/licencia', [App\Http\Controllers\controladorVistasAdmin::class, 'licencia'])->name('rutaLicencia');
 //RFC
 Route::get('/admin/rfc', [App\Http\Controllers\controladorVistasAdmin::class, 'RFC_Fiscal'])->name('rutaRFC');
+//facturar
+Route::get('/admin/facturar', [App\Http\Controllers\controladorVistasAdmin::class, 'facturar'])->name('rutaFacturar');
+
+
+
+// 🚗 Rutas de Flotilla (Administrador)
+// 🔹 Vista principal de la flotilla
+Route::get('/admin/flotilla', [FlotillaController::class, 'indexView'])->name('rutaFlotilla');
+// 🔹 Agregar nuevo vehículo
+Route::post('/admin/flotilla/agregar', [FlotillaController::class, 'store'])->name('flotilla.agregar');
+// 🔹 Actualizar vehículo existente
+Route::post('/admin/flotilla/{id}/actualizar', [FlotillaController::class, 'update'])->name('flotilla.actualizar');
+// 🔹 Eliminar vehículo
+Route::delete('/admin/flotilla/{id}/eliminar', [FlotillaController::class, 'destroy'])->name('flotilla.eliminar');
+
+
+
+// Rutas de Mantenimiento
+Route::get('/admin/mantenimiento', [MantenimientoController::class, 'indexView'])->name('rutaMantenimiento');
+
+Route::get('/admin/mantenimiento', [MantenimientoController::class, 'indexView'])->name('rutaMantenimiento');
+Route::put('/admin/mantenimiento/{id}/update', [MantenimientoController::class, 'updateKm'])->name('mantenimiento.actualizarKm');
+Route::post('/admin/mantenimiento/{id}/registrar', [MantenimientoController::class, 'registrarMantenimiento'])->name('mantenimiento.registrar');
+
+// Rutas de poliza
+Route::get('/admin/polizas', [PolizasController::class, 'index'])->name('rutaPolizas');
+Route::get('/admin/polizas/descargar/{archivo}', [PolizasController::class, 'descargar'])->name('descargarPoliza');
+
+Route::post('/admin/polizas/actualizar/{id}', [PolizasController::class, 'actualizar'])->name('actualizarPoliza');
+Route::post('/admin/polizas/subir/{id}', [PolizasController::class, 'guardarArchivo'])->name('guardarArchivoPoliza');
+
+// ✅ Ver/descargar vía controlador (sin symlink)
+Route::get('/admin/polizas/ver/{id}', [PolizasController::class, 'ver'])->name('verPoliza');
+Route::get('/admin/polizas/descargar/{id}', [PolizasController::class, 'descargar'])->name('descargarPoliza');
+
+
+
+// 🚗 Carrocería — rutas limpias y sin duplicados
+Route::get('/admin/carroceria', [CarroceriaController::class, 'indexView'])
+    ->name('rutaCarroceria'); // 👈 nombre exacto que usa tu menú
+
+Route::post('/admin/carroceria/store', [CarroceriaController::class, 'store'])
+    ->name('carroceria.store');
+
+Route::put('/admin/carroceria/update/{id}', [CarroceriaController::class, 'update'])
+    ->name('carroceria.update');
+
+
+
+
+Route::get('/admin/gastos', [GastosController::class, 'index'])->name('rutaGastos');
+Route::get('/admin/gastos/filtrar', [GastosController::class, 'filtrar']);

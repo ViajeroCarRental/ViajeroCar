@@ -110,4 +110,9 @@ class controladorVistasAdmin extends Controller
     {
         return view('Admin.RFC-Fiscal');
     }
+
+    public function Facturar()
+    {
+        return view('Admin.Facturar');
+    }
 }

@@ -51,3 +51,4 @@ function guardModule(modName) {
     location.href = '../dashboard.html';
   }
 }
+

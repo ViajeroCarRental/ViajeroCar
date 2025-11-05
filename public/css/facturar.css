@@ -1,0 +1,167 @@
+:root {
+  --brand:#FF1E2D;
+  --brand-2:#D6121F;
+  --ink:#101828;
+  --muted:#667085;
+  --stroke:#EAECF0;
+  --bg:#fff;
+  --panel:#F7F9FC;
+  --ok:#027A48;
+}
+
+body {
+  background:#F3F5F9;
+  color:var(--ink);
+  font-family:"Cabin",system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  font-size:15.5px;
+  line-height:1.45;
+}
+
+/* ====== CONTENEDOR GENERAL ====== */
+.wrap-facturar {
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  padding:48px 16px;
+}
+
+.factura-card {
+  background:var(--bg);
+  border:1px solid var(--stroke);
+  border-radius:18px;
+  box-shadow:0 25px 60px rgba(0,0,0,.08);
+  width:min(860px,96%);
+  padding:36px 42px;
+}
+
+/* ====== ENCABEZADO ====== */
+.factura-header {
+  text-align:center;
+  margin-bottom:26px;
+}
+.factura-header i {
+  font-size:50px;
+  color:var(--brand);
+  margin-bottom:8px;
+}
+.factura-header h2 {
+  margin:0;
+  font-size:25px;
+  font-weight:800;
+  color:var(--brand-2);
+}
+.factura-header p {
+  color:var(--muted);
+  font-size:15px;
+  margin-top:6px;
+}
+
+/* ====== FORMULARIO ====== */
+.factura-form {
+  display:grid;
+  gap:28px;
+}
+.form-section {
+  background:var(--panel);
+  border:1px solid var(--stroke);
+  border-radius:14px;
+  padding:18px 20px 22px;
+}
+.form-section h3 {
+  font-size:17px;
+  color:var(--brand-2);
+  font-weight:800;
+  border-bottom:2px solid var(--brand);
+  display:inline-block;
+  padding-bottom:4px;
+  margin-bottom:16px;
+}
+.input-group {
+  margin-bottom:12px;
+  display:flex;
+  flex-direction:column;
+}
+.input-group label {
+  font-weight:800;
+  color:#344054;
+  font-size:13px;
+  margin-bottom:6px;
+}
+.input-group input,
+.input-group select,
+.input-group textarea {
+  width:100%;
+  border:1.5px solid var(--stroke);
+  border-radius:12px;
+  padding:12px;
+  font-size:15px;
+  background:#fff;
+  transition:border .2s, box-shadow .2s;
+}
+.input-group textarea {resize:vertical;}
+.input-group input:focus,
+.input-group select:focus,
+.input-group textarea:focus {
+  outline:none;
+  border-color:#FFC7CD;
+  box-shadow:0 0 0 6px #FFECEF;
+}
+.input-group small {
+  font-size:12px;
+  color:var(--muted);
+  margin-top:4px;
+}
+
+/* ====== BOTÓN ====== */
+.factura-footer {
+  text-align:center;
+  margin-top:16px;
+}
+.btn-facturar {
+  background:linear-gradient(90deg,var(--brand),var(--brand-2));
+  color:#fff;
+  border:none;
+  padding:13px 36px;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+  transition:all .25s ease;
+}
+.btn-facturar:hover {
+  transform:translateY(-2px);
+  box-shadow:0 8px 20px rgba(255,30,45,.3);
+}
+.btn-facturar i {
+  margin-right:8px;
+}
+.nota {
+  font-size:14px;
+  color:var(--muted);
+  margin-top:10px;
+}
+
+/* ====== ALERTAS ====== */
+.alert {
+  padding:12px 14px;
+  border-radius:12px;
+  margin-bottom:16px;
+  font-weight:700;
+}
+.alert.success {
+  background:#ECFDF3;
+  color:#027A48;
+  border:1px solid #ABEFC6;
+}
+.alert.error {
+  background:#FEF3F2;
+  color:#B42318;
+  border:1px solid #FEE4E2;
+}
+
+/* ====== RESPONSIVE ====== */
+@media (max-width:720px){
+  .factura-card {padding:28px 22px;}
+  .factura-header h2 {font-size:22px;}
+  .btn-facturar {width:100%;}
+}

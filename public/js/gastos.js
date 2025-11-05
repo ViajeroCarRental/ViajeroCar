@@ -1,133 +1,130 @@
-// ========= Utilidades =========
-const money = n => Number(n||0).toLocaleString('es-MX',{style:'currency',currency:'MXN'});
-const DMY = s => { const [d,m,y]=s.split('/').map(Number); return new Date(y,m-1,d); };
-const endOfDay = d => { const x = new Date(d); x.setHours(23,59,59,999); return x; };
-const startOfWeek = d => { const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; };
-const startOfMonth = d => { const x=new Date(d); x.setDate(1); x.setHours(0,0,0,0); return x; };
+document.addEventListener("DOMContentLoaded", () => {
+  const tbl = document.querySelector("#tblCost tbody");
+  const from = document.querySelector("#from");
+  const to = document.querySelector("#to");
+  const gTot = document.querySelector("#gTot");
+  const gMaint = document.querySelector("#gMaint");
+  const gPol = document.querySelector("#gPol");
+  const gBody = document.querySelector("#gBody");
+  const gOther = document.querySelector("#gOther");
+  const topCar = document.querySelector("#topCar");
+  const topCarName = document.querySelector("#topCarName");
+  const avgPerDay = document.querySelector("#avgPerDay");
+  const rangeLabel = document.querySelector("#rangeLabel");
 
-// FLEET: usa global o fallback
-const FLEET = window.FLEET || [
-  { id:1, name:'Nissan Versa', year:2022, plate:'XYZ-123', rim:15 },
-  { id:3, name:'Chevrolet Aveo', year:2023, plate:'JKL-789', rim:15 },
-  { id:4, name:'Kia Rio', year:2020, plate:'MNO-321', rim:15 },
-  { id:5, name:'Mazda 3', year:2022, plate:'QWE-555', rim:18 },
-  { id:6, name:'VW Jetta', year:2019, plate:'JET-201', rim:16 },
-  { id:7, name:'Hyundai Accent', year:2021, plate:'ACC-777', rim:15 },
-  { id:8, name:'Chevrolet Onix', year:2022, plate:'ONX-222', rim:15 },
-  { id:11, name:'Honda City', year:2022, plate:'CTY-432', rim:15 },
-  { id:12, name:'Renault Kwid', year:2022, plate:'KWD-120', rim:14 },
-  { id:14, name:'Seat Ibiza', year:2022, plate:'IBZ-888', rim:17 },
-  { id:15, name:'Chevrolet Spark', year:2018, plate:'SPK-101', rim:14 },
-];
-
-// Dataset de gastos (idéntico patrón al original)
-const COSTS = [
-  {date:'02/08/2025',car:3,type:'policy',desc:'Prima anual Quálitas',amt:9200},
-  {date:'05/08/2025',car:1,type:'maint', desc:'Cambio de aceite/filtro',amt:1800},
-  {date:'06/08/2025',car:2,type:'maint', desc:'Balatas + rectificado',amt:4200},
-  {date:'10/08/2025',car:1,type:'body',  desc:'Rayón defensa',amt:1800},
-  {date:'12/08/2025',car:4,type:'maint', desc:'Bomba de combustible',amt:9500},
-  {date:'12/08/2025',car:4,type:'claim', desc:'Deducible siniestro',amt:6000},
-  {date:'14/08/2025',car:5,type:'policy',desc:'Prima anual AXA',amt:10500},
-  {date:'15/08/2025',car:7,type:'maint', desc:'Servicio A',amt:1900},
-  {date:'20/08/2025',car:12,type:'body', desc:'Pintura fascia',amt:1500},
-  {date:'22/08/2025',car:6,type:'other', desc:'Limpieza profunda',amt:600},
-  {date:'01/09/2025',car:1,type:'maint', desc:'Afinación menor',amt:2300},
-  {date:'03/09/2025',car:11,type:'policy',desc:'Prima anual AXA',amt:9800},
-  {date:'05/09/2025',car:15,type:'maint',desc:'General B',amt:5200},
-  {date:'06/09/2025',car:8, type:'other', desc:'Tenencia',amt:1800},
-  {date:'06/09/2025',car:14,type:'body',  desc:'Parabrisas',amt:3500},
-];
-
-const labels = {maint:'Mantenimiento',policy:'Póliza',body:'Carrocería',claim:'Siniestro',other:'Otros'};
-
-// Elementos
-const costBody = document.querySelector('#tblCost tbody');
-const fromEl = document.getElementById('from');
-const toEl = document.getElementById('to');
-const quickToday = document.getElementById('quickToday');
-const quickWeek = document.getElementById('quickWeek');
-const quickMonth = document.getElementById('quickMonth');
-
-// Rango inicial: Mes actual
-function setRange(type){
-  const now = new Date();
-  if(type==='day'){
-    fromEl.valueAsDate = new Date(now.getFullYear(),now.getMonth(),now.getDate());
-    toEl.valueAsDate   = endOfDay(now);
-  } else if(type==='week'){
-    const s = startOfWeek(now), e = new Date(s); e.setDate(s.getDate()+6);
-    fromEl.valueAsDate = s; toEl.valueAsDate = endOfDay(e);
-  } else { // month
-    const s = startOfMonth(now), e = new Date(s.getFullYear(),s.getMonth()+1,0);
-    fromEl.valueAsDate = s; toEl.valueAsDate = endOfDay(e);
+  async function cargarGastos(params = {}) {
+    const query = new URLSearchParams(params).toString();
+    const res = await fetch(`/admin/gastos/filtrar?${query}`);
+    const data = await res.json();
+    renderTabla(data);
+    calcularTotales(data);
+    renderGrafica(data);
   }
-  paintCosts();
-}
-setRange('month');
-quickToday.onclick = ()=>setRange('day');
-quickWeek.onclick  = ()=>setRange('week');
-quickMonth.onclick = ()=>setRange('month');
-document.getElementById('applyRange').addEventListener('click', paintCosts);
 
-// Pintar tabla + KPIs
-function paintCosts(){
-  if(!fromEl.value || !toEl.value) return;
-  const from = new Date(fromEl.value), to = endOfDay(new Date(toEl.value));
+  function renderTabla(data) {
+    tbl.innerHTML = "";
+    data.forEach(g => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${g.fecha}</td>
+        <td>${g.marca} ${g.modelo}</td>
+        <td>${g.placa || "-"}</td>
+        <td>${g.tipo}</td>
+        <td>${g.descripcion || "-"}</td>
+        <td>$${Number(g.monto).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</td>
+      `;
+      tbl.appendChild(tr);
+    });
+  }
 
-  const rows = COSTS.filter(x => {
-    const d = DMY(x.date); return d >= from && d <= to;
+  function calcularTotales(data) {
+    const total = data.reduce((acc, g) => acc + Number(g.monto), 0);
+    gTot.textContent = `$${total.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+
+    const porTipo = (tipo) =>
+      data.filter(g => g.tipo.toLowerCase().includes(tipo))
+          .reduce((a, g) => a + Number(g.monto), 0);
+
+    gMaint.textContent = `$${porTipo("mantenimiento").toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+    gPol.textContent   = `$${porTipo("seguro").toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+    gBody.textContent  = `$${porTipo("carrocer").toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+    gOther.textContent = `$${(total - (porTipo("mantenimiento") + porTipo("seguro") + porTipo("carrocer"))).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+
+    // Top vehículo
+    const porCarro = {};
+    data.forEach(g => {
+      const key = `${g.marca} ${g.modelo}`;
+      porCarro[key] = (porCarro[key] || 0) + Number(g.monto);
+    });
+    const top = Object.entries(porCarro).sort((a, b) => b[1] - a[1])[0];
+    if (top) {
+      topCar.textContent = `$${top[1].toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      topCarName.textContent = top[0];
+    }
+
+    // Promedio diario
+    if (from.value && to.value) {
+      const diff = (new Date(to.value) - new Date(from.value)) / (1000 * 3600 * 24) + 1;
+      avgPerDay.textContent = `$${(total / diff).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+      rangeLabel.textContent = `${diff} días`;
+    }
+  }
+
+  // 📊 Chart.js
+  let chart;
+  function renderGrafica(data) {
+    const ctxId = "chartGastos";
+    if (!document.getElementById(ctxId)) {
+      const canvas = document.createElement("canvas");
+      canvas.id = ctxId;
+      document.querySelector(".content").appendChild(canvas);
+    }
+    const ctx = document.getElementById(ctxId).getContext("2d");
+
+    const porTipo = {};
+    data.forEach(g => porTipo[g.tipo] = (porTipo[g.tipo] || 0) + Number(g.monto));
+
+    const labels = Object.keys(porTipo);
+    const values = Object.values(porTipo);
+
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: "pie",
+      data: { labels, datasets: [{ data: values }] },
+      options: {
+        plugins: {
+          legend: { position: "bottom" },
+          title: { display: true, text: "Distribución de gastos por tipo" }
+        }
+      }
+    });
+  }
+
+  // Filtros rápidos
+  document.getElementById("applyRange").addEventListener("click", () =>
+    cargarGastos({ from: from.value, to: to.value })
+  );
+  document.getElementById("quickToday").addEventListener("click", () => {
+    const d = new Date().toISOString().split("T")[0];
+    from.value = to.value = d;
+    cargarGastos({ from: d, to: d });
+  });
+  document.getElementById("quickWeek").addEventListener("click", () => {
+    const now = new Date();
+    const start = new Date(now.setDate(now.getDate() - 7)).toISOString().split("T")[0];
+    const end = new Date().toISOString().split("T")[0];
+    from.value = start;
+    to.value = end;
+    cargarGastos({ from: start, to: end });
+  });
+  document.getElementById("quickMonth").addEventListener("click", () => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0];
+    from.value = start;
+    to.value = end;
+    cargarGastos({ from: start, to: end });
   });
 
-  costBody.innerHTML = rows.map(x => {
-    const car = FLEET.find(c => c.id === x.car) || {name:'—',year:'',plate:'—',rim:'—'};
-    return `<tr>
-      <td>${x.date}</td>
-      <td>${car.name} ${car.year} (${car.plate})</td>
-      <td>R${car.rim}</td>
-      <td>${labels[x.type]||x.type}</td>
-      <td>${x.desc}</td>
-      <td>${money(x.amt)}</td>
-    </tr>`;
-  }).join('');
-
-  const sum = t => rows.filter(r=>r.type===t).reduce((a,b)=>a+b.amt,0);
-  const tot = rows.reduce((a,b)=>a+b.amt,0);
-
-  // Totales
-  document.getElementById('gTot').textContent   = money(tot);
-  document.getElementById('gMaint').textContent = money(sum('maint'));
-  document.getElementById('gPol').textContent   = money(sum('policy'));
-  document.getElementById('gBody').textContent  = money(sum('body'));
-  document.getElementById('gOther').textContent = money(sum('claim')+sum('other'));
-
-  // Extras: conteo, top vehículo, promedio por día, label de rango
-  document.getElementById('gCount').textContent = `${rows.length} movimiento${rows.length!==1?'s':''}`;
-
-  const byCar = {}; rows.forEach(r=>{ byCar[r.car]=(byCar[r.car]||0)+r.amt; });
-  let topId=null, topVal=0;
-  Object.entries(byCar).forEach(([id,val])=>{ if(val>topVal){topVal=val; topId=+id;} });
-  const topCar = topId ? FLEET.find(c=>c.id===topId) : null;
-  document.getElementById('topCar').textContent = money(topVal||0);
-  document.getElementById('topCarName').textContent = topCar ? `${topCar.name} ${topCar.year} (${topCar.plate}) · R${topCar.rim}` : '—';
-
-  const days = Math.max(1, Math.ceil((to - from)/(24*60*60*1000))+1);
-  document.getElementById('avgPerDay').textContent = money(days ? (tot/days) : 0);
-  document.getElementById('rangeLabel').textContent = `${from.toLocaleDateString('es-MX')} → ${to.toLocaleDateString('es-MX')} · ${days} día${days!==1?'s':''}`;
-}
-paintCosts();
-
-// Buscador
-document.getElementById('qCost').addEventListener('input', e => {
-  const t=e.target.value.toLowerCase();
-  [...costBody.rows].forEach(r => r.style.display = r.innerText.toLowerCase().includes(t) ? '' : 'none');
+  cargarGastos();
 });
-
-// Export CSV (helper local)
-function exportCSV(tableId, filename){
-  const rows=[...document.querySelectorAll(`#${tableId} tr`)]
-    .map(tr=>[...tr.children].map(td=>`"${td.innerText.replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob=new Blob([rows],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href);
-}
-document.getElementById('exportCost').addEventListener('click', ()=>exportCSV('tblCost','gastos.csv'));

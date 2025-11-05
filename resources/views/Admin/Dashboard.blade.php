@@ -455,7 +455,7 @@ body{
     </article>
 
     <article class="mod" id="modAdmin" data-link="{{route('rutaUsuarios')}}" data-theme="admin">
-      <div class="head"><div class="ic">⚙️</div>Administración</div>
+      <div class="head"><div class="ic">⚙</div>Administración</div>
       <div class="body">
         <p>Usuarios, roles/permisos, sedes, auditoría y seguridad.</p>
         <div class="go">Entrar →</div>

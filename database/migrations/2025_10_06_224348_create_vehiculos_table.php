@@ -22,6 +22,8 @@ return new class extends Migration {
             // Datos
             $table->string('marca', 100);
             $table->string('modelo', 100);
+            $table->string('numero_serie', 100)->nullable();
+            $table->string('categoria', 100)->nullable();
             $table->year('anio');
             $table->string('nombre_publico', 150);
             $table->string('transmision', 50)->nullable();
@@ -35,8 +37,39 @@ return new class extends Migration {
             $table->string('placa', 50)->nullable();
             $table->string('vin', 100)->nullable();
             $table->string('descripcion', 255)->nullable();
-            $table->timestamp('created_at')->nullable();
-            $table->timestamp('updated_at')->nullable();
+            // 🔹 Datos administrativos y legales
+            $table->string('tipo_servicio', 100)->nullable();
+            $table->string('propietario', 150)->nullable();
+            $table->string('rfc_propietario', 20)->nullable();
+            $table->string('domicilio', 255)->nullable();
+            $table->string('municipio', 100)->nullable();
+            $table->string('estado', 100)->nullable();
+            $table->string('pais', 100)->default('México');
+
+            // 🔹 Datos técnicos y verificación
+            $table->integer('cilindros')->nullable();
+            $table->string('numero_motor', 100)->nullable();
+            $table->string('holograma', 50)->nullable();
+            $table->string('vigencia_verificacion', 100)->nullable();
+            $table->string('no_centro_verificacion', 100)->nullable();
+            $table->string('tipo_verificacion', 100)->nullable();
+
+            // 🔹 Póliza de seguro
+            $table->string('no_poliza', 100)->nullable();
+            $table->string('aseguradora', 150)->nullable();
+            $table->date('inicio_vigencia_poliza')->nullable();
+            $table->date('fin_vigencia_poliza')->nullable();
+            $table->string('tipo_cobertura', 100)->nullable();
+            $table->string('plan_seguro', 100)->nullable();
+            $table->string('archivo_poliza', 255)->nullable(); // 📎 PDF o imagen del seguro
+
+            // 🔹 Tarjeta de circulación
+            $table->string('folio_tarjeta', 100)->nullable();
+            $table->string('movimiento_tarjeta', 100)->nullable();
+            $table->date('fecha_expedicion_tarjeta')->nullable();
+            $table->string('oficina_expedidora', 100)->nullable();
+            $table->string('archivo_verificacion', 255)->nullable(); // 📎 PDF o imagen de verificación
+
 
             // Uniques
             $table->unique('placa', 'vehiculos_placa_unique');
@@ -75,6 +108,9 @@ return new class extends Migration {
             $table->foreign('id_version')
                 ->references('id_version')->on('versiones')
                 ->onDelete('set null');
+
+            
+            $table->timestamps();
         });
     }
 
