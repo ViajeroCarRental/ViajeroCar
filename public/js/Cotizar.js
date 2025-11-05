@@ -4,7 +4,15 @@
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
 const esc = (s) =>
-  (s ?? "").toString().replace(/[&<>"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m]));
+  (s ?? "").toString().replace(/[&<>"]/g, (m) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;"
+  }[m]));
+
+/* Mostrar / ocultar menú lateral */
+$('#burger')?.addEventListener('click', () => $('#side').classList.toggle('show'));
 
 /* ==========================================================
    🧭 NAVEGACIÓN ENTRE PASOS
@@ -36,77 +44,43 @@ function calcularDias() {
 }
 
 /* ==========================================================
-   🚘 SELECCIÓN DE VEHÍCULO
+   🚗 CATEGORÍA → IMAGEN Y TARIFA BASE
 ========================================================== */
-const vehList = $("#vehList");
-const vehModal = $("#vehPop");
-const vehInput = $("#id_vehiculo");
 const categoriaSelect = $("#categoriaSelect");
+const vehImageWrap = $('#vehImageWrap');
+const vehImage = $('#vehImage');
+const vehName = $('#vehName');
 
-$("#btnVeh")?.addEventListener("click", async () => {
-  const idCat = categoriaSelect?.value || 0;
-  if (!idCat) return alertify.warning("Selecciona una categoría primero.");
-  vehModal.classList.add("show");
-  vehList.innerHTML = "<div style='padding:12px;'>Cargando vehículos...</div>";
+categoriaSelect?.addEventListener('change', async () => {
+  const idCat = categoriaSelect.value;
+
+  if (!idCat || idCat === '0') {
+    vehImageWrap.style.display = 'none';
+    $('#baseLine').textContent = '—';
+    updateResumen(0);
+    return;
+  }
 
   try {
-    const res = await fetch(`/admin/cotizaciones/vehiculos/${idCat}`);
-    const data = await res.json();
-    if (!data.length)
-      return (vehList.innerHTML = "<div style='padding:12px;'>No hay vehículos disponibles.</div>");
+    const res = await fetch(`/admin/cotizaciones/categoria/${idCat}`);
+    const cat = await res.json();
+    if (cat?.error) throw new Error(cat.message || 'Categoría no encontrada.');
 
-    vehList.innerHTML = data
-      .map(
-        (v) => `
-      <div class="veh-card" style="display:flex;gap:16px;align-items:center;justify-content:space-between;border:1px solid #ddd;border-radius:12px;padding:10px;margin-bottom:10px;">
-        <div style="display:flex;gap:12px;align-items:center;">
-          <img src="${v.imagen ?? "/assets/media/no-image.png"}" alt="auto" style="width:140px;height:90px;object-fit:cover;border-radius:8px;">
-          <div>
-            <div style="font-weight:700;">${esc(v.nombre_publico)}</div>
-            <div style="font-size:13px;color:#666;">${esc(v.marca)} ${esc(v.modelo)} ${v.anio}</div>
-            <div style="font-size:12px;color:#777;">${v.transmision || "—"} · ${v.asientos} asientos · ${v.puertas} puertas</div>
-          </div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-weight:700;font-size:15px;color:#d00;">$${Number(v.precio_dia).toLocaleString()} MXN</div>
-          <button class="btn primary btnSelectVeh"
-                  data-id="${v.id_vehiculo}"
-                  data-nombre="${esc(v.nombre_publico)}"
-                  data-precio="${v.precio_dia}"
-                  data-img="${v.imagen ?? "/assets/media/no-image.png"}">Seleccionar</button>
-        </div>
-      </div>`
-      )
-      .join("");
+    vehImage.src = cat.imagen || '/assets/placeholder-car.jpg';
+    vehName.textContent = cat.nombre || 'Ejemplo de la categoría seleccionada';
+    vehImageWrap.style.display = 'block';
+
+    const tarifa = parseFloat(cat.tarifa_base ?? cat.precio_dia ?? 0);
+    $('#baseLine').textContent = `$${tarifa.toFixed(2)} MXN/día`;
+
+    updateResumen(tarifa, calcularDias());
   } catch (err) {
-    console.error(err);
-    vehList.innerHTML = "<div style='padding:12px;color:#d00;'>Error al cargar los vehículos.</div>";
+    console.error('Error cargando categoría:', err);
+    alertify.error('No se pudo cargar la categoría.');
+    vehImageWrap.style.display = 'none';
+    $('#baseLine').textContent = '—';
+    updateResumen(0);
   }
-});
-
-$("#vehClose")?.addEventListener("click", () => vehModal.classList.remove("show"));
-vehModal?.addEventListener("click", (e) => {
-  if (e.target.id === "vehPop") vehModal.classList.remove("show");
-});
-
-vehList?.addEventListener("click", (e) => {
-  const btn = e.target.closest(".btnSelectVeh");
-  if (!btn) return;
-
-  const idVehiculo = btn.dataset.id;
-  const nombre = btn.dataset.nombre;
-  const precio = parseFloat(btn.dataset.precio || 0);
-  const imgSrc = btn.dataset.img;
-
-  vehInput.value = nombre;
-  vehInput.dataset.idVehiculo = idVehiculo;
-  vehInput.dataset.precio = precio;
-
-  vehModal.classList.remove("show");
-  updateResumen(precio);
-  $("#vehImage").src = imgSrc;
-  $("#vehName").textContent = nombre;
-  $("#vehImageWrap").style.display = "block";
 });
 
 /* ==========================================================
@@ -127,7 +101,8 @@ btnProtecciones?.addEventListener("click", async () => {
     const res = await fetch("/admin/cotizaciones/seguros");
     const data = await res.json();
     if (!data.length)
-      return (proteList.innerHTML = "<div style='text-align:center;padding:12px;'>No hay seguros disponibles.</div>");
+      return (proteList.innerHTML =
+        "<div style='text-align:center;padding:12px;'>No hay seguros disponibles.</div>");
 
     proteList.innerHTML = data
       .map(
@@ -218,7 +193,7 @@ async function cargarAdicionales() {
 }
 $("#go2")?.addEventListener("click", cargarAdicionales);
 
-// 🔹 Controlar incremento/decremento
+// 🔹 Incremento/decremento
 document.addEventListener("click", (e) => {
   const card = e.target.closest(".add-card");
   if (!card) return;
@@ -250,21 +225,21 @@ document.addEventListener("click", (e) => {
 });
 
 /* ==========================================================
-   💰 RESUMEN Y TOTALES (Versión mejorada y robusta)
+   💰 RESUMEN Y TOTALES
 ========================================================== */
 let precioSeleccionado = 0;
 let diasSeleccionados = 1;
 
 function updateResumen(precioDia = null, dias = null) {
-  // Actualiza precio y días si vienen nuevos
   if (precioDia !== null) precioSeleccionado = parseFloat(precioDia) || 0;
   if (dias !== null) diasSeleccionados = parseInt(dias) || 1;
 
-  // Cálculos base
   const base = precioSeleccionado * diasSeleccionados;
-  const proteccion = seguroSeleccionado ? parseFloat(seguroSeleccionado.precio) * diasSeleccionados : 0;
+  const proteccion = seguroSeleccionado
+    ? parseFloat(seguroSeleccionado.precio || 0) * diasSeleccionados
+    : 0;
   const extras = adicionalesSeleccionados.reduce(
-    (sum, a) => sum + (parseFloat(a.precio) || 0) * (a.cantidad || 0) * (a.tipo_cobro === "por_dia" ? diasSeleccionados : 1),
+    (sum, a) => sum + (parseFloat(a.precio) || 0) * (a.cantidad || 0) * diasSeleccionados,
     0
   );
 
@@ -272,24 +247,12 @@ function updateResumen(precioDia = null, dias = null) {
   const iva = subtotal * 0.16;
   const total = subtotal + iva;
 
-  // Moneda y tipo de cambio
   const moneda = $("#moneda")?.value || "MXN";
   let tc = parseFloat($("#tc")?.value);
-
-  // ✅ Validación robusta de tipo de cambio
   if (isNaN(tc) || tc <= 0) tc = 17;
 
-  // 🧮 Conversión correcta (divide entre tipo de cambio si está en USD)
-  const conv = moneda === "USD" ? 1 / tc : 1;
+  const conv = moneda === "USD" ? (1 / tc) : 1;
 
-  // Evita propagación de errores (NaN)
-  if ([base, subtotal, iva, total, conv].some(isNaN)) {
-    console.warn("⚠️ Cálculo interrumpido: valores inválidos detectados.");
-    return;
-  }
-
-  // Actualización de resumen en pantalla
-  $("#baseLine").textContent = `$${(base * conv).toFixed(2)} ${moneda}`;
   $("#proteName").textContent = seguroSeleccionado ? seguroSeleccionado.nombre : "—";
   $("#extrasName").textContent = adicionalesSeleccionados.length
     ? adicionalesSeleccionados.map((a) => `${a.cantidad}× ${a.nombre}`).join(", ")
@@ -298,56 +261,111 @@ function updateResumen(precioDia = null, dias = null) {
   $("#iva").textContent = `$${(iva * conv).toFixed(2)} ${moneda}`;
   $("#total").textContent = `$${(total * conv).toFixed(2)} ${moneda}`;
 }
-
-// 🔁 Recalcular en tiempo real
 $("#moneda")?.addEventListener("change", () => updateResumen());
 $("#tc")?.addEventListener("input", () => updateResumen());
-
 
 /* ==========================================================
    💾 BOTONES DEL PASO 3
 ========================================================== */
-$("#btnGuardarCotizacion")?.addEventListener("click", async (e) => {
+$("#btnGuardarYEnviar")?.addEventListener("click", async (e) => {
   e.preventDefault();
-  const payload = obtenerDatosCotizacion();
-  await enviarCotizacion(payload, "guardada");
-});
 
-$("#btnEnviarCotizacion")?.addEventListener("click", async (e) => {
-  e.preventDefault();
+  const v = (s) => $(s)?.value?.trim();
+  if (!v("#categoriaSelect") || $("#categoriaSelect").value === "0")
+    return alertify.warning("⚠️ Selecciona una categoría de vehículo.");
+
+  // 🔹 Ya no bloqueamos si faltan sucursales o fechas
+  // (Se pueden dejar vacías para una simple cotización)
+
+  if (!v("#nombre_cliente") || !v("#email_cliente") || !v("#telefono_cliente"))
+    return alertify.warning("⚠️ Completa los datos del cliente.");
+
+  const btn = $("#btnGuardarYEnviar");
+  btn.disabled = true;
+  btn.textContent = "Procesando...";
+
   const payload = obtenerDatosCotizacion();
   payload.enviarCorreo = true;
-  await enviarCotizacion(payload, "enviada");
+
+  await enviarCotizacion(payload, "guardada y enviada");
+
+  btn.disabled = false;
+  btn.textContent = "💾 Guardar y enviar cotización";
 });
+
 
 $("#btnConfirmarCotizacion")?.addEventListener("click", async (e) => {
   e.preventDefault();
+
+  const v = (s) => $(s)?.value?.trim();
+  if (!v("#categoriaSelect") || $("#categoriaSelect").value === "0")
+    return alertify.warning("⚠️ Selecciona una categoría de vehículo.");
+  if (!v("#sucursal_retiro") || !v("#sucursal_entrega"))
+    return alertify.warning("⚠️ Selecciona sucursal de retiro y entrega.");
+  if (!v("#fecha_inicio") || !v("#fecha_fin"))
+    return alertify.warning("⚠️ Completa las fechas.");
+  if (!v("#nombre_cliente") || !v("#email_cliente") || !v("#telefono_cliente"))
+    return alertify.warning("⚠️ Completa los datos del cliente.");
+
+  const btn = $("#btnConfirmarCotizacion");
+  btn.disabled = true;
+  btn.textContent = "Confirmando...";
+
   const payload = obtenerDatosCotizacion();
   payload.confirmar = true;
+
   await enviarCotizacion(payload, "confirmada");
+
+  btn.disabled = false;
+  btn.textContent = "✅ Confirmar y reservar";
 });
 
 /* ==========================================================
    📤 ENVÍO AL CONTROLADOR
 ========================================================== */
 async function enviarCotizacion(data, accion = "guardada") {
+  // 🧭 Validar fechas antes de enviar
+  const fInicio = $("#fecha_inicio")?.value;
+  const fFin = $("#fecha_fin")?.value;
+
+  if (!fInicio || !fFin) {
+    alertify.error("⚠️ Completa las fechas de salida y llegada antes de continuar.");
+    return;
+  }
+
+  if (new Date(fFin) < new Date(fInicio)) {
+    alertify.error("⚠️ La fecha de devolución no puede ser menor que la de salida.");
+    return;
+  }
+
+  // 🟢 Validación superada
+  console.log("✅ Fechas válidas:", fInicio, "→", fFin);
+
   try {
     const res = await fetch("/admin/cotizaciones/guardar", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+        "X-CSRF-TOKEN": document.querySelector('meta[name=\"csrf-token\"]').content,
       },
       body: JSON.stringify(data),
     });
 
     const result = await res.json();
+
     if (res.ok && result.success) {
       alertify.success(`✅ Cotización ${accion} correctamente`);
       console.log("📦 Respuesta del servidor:", result);
-      if (accion === "confirmada") {
+
+      if (accion.includes("confirmada")) {
         alertify.notify("Se redirigirá al módulo de reservaciones...", "custom", 6);
         setTimeout(() => (window.location.href = "/admin/reservaciones"), 1500);
+      } else {
+        // Limpieza visual tipo Reservaciones
+        $('#formCotizacion')?.reset?.();
+        vehImageWrap.style.display = 'none';
+        $('#baseLine').textContent = '—';
+        updateResumen(0);
       }
     } else {
       alertify.error(`⚠️ Error al ${accion} cotización`);
@@ -358,6 +376,7 @@ async function enviarCotizacion(data, accion = "guardada") {
     alertify.error("Error de conexión con el servidor");
   }
 }
+
 
 /* ==========================================================
    🧾 CAPTURA DE DATOS COMPLETA
@@ -370,33 +389,31 @@ function obtenerDatosCotizacion() {
   const total = $("#total")?.textContent.replace(/[^\d.]/g, "") || "0";
 
   return {
-  vehiculo_id: vehInput.dataset.idVehiculo || "",
-  categoria_id: $("#categoriaSelect")?.value,
-  pickup_sucursal_id: $("#sucursal_retiro")?.value,
-  dropoff_sucursal_id: $("#sucursal_entrega")?.value,
-  pickup_date: $("#fecha_inicio")?.value,
-  pickup_time: $("#hora_retiro")?.value,
-  dropoff_date: $("#fecha_fin")?.value,
-  dropoff_time: $("#hora_entrega")?.value,
-  days: diasSeleccionados,
-  seguro: seguroSeleccionado,
-  extras: adicionalesSeleccionados,
-  moneda,
-  tipo_cambio: tc,
-  subtotal,
-  iva,
-  total,
-  cliente: {
-    nombre: $("#nombre_cliente")?.value,
-    apellidos: $("#apellidos")?.value,
-    email: $("#email_cliente")?.value,
-    telefono: $("#telefono_cliente")?.value,
-    pais: $("#pais")?.value,
-    vuelo: $("#no_vuelo")?.value,
-  },
-};
-
-
+    categoria_id: $("#categoriaSelect")?.value,
+    precio_base_dia: precioSeleccionado,
+    pickup_sucursal_id: $("#sucursal_retiro")?.value,
+    dropoff_sucursal_id: $("#sucursal_entrega")?.value,
+    pickup_date: $("#fecha_inicio")?.value,
+    pickup_time: $("#hora_retiro")?.value,
+    dropoff_date: $("#fecha_fin")?.value,
+    dropoff_time: $("#hora_entrega")?.value,
+    days: diasSeleccionados,
+    seguro: seguroSeleccionado,
+    extras: adicionalesSeleccionados,
+    moneda,
+    tipo_cambio: tc,
+    subtotal,
+    iva,
+    total,
+    cliente: {
+      nombre: $("#nombre_cliente")?.value,
+      apellidos: $("#apellidos")?.value,
+      email: $("#email_cliente")?.value,
+      telefono: $("#telefono_cliente")?.value,
+      pais: $("#pais")?.value,
+      vuelo: $("#no_vuelo")?.value,
+    },
+  };
 }
 
 /* ==========================================================
@@ -404,5 +421,5 @@ function obtenerDatosCotizacion() {
 ========================================================== */
 window.addEventListener("DOMContentLoaded", () => {
   calcularDias();
-  updateResumen();
+  updateResumen(0, 1);
 });

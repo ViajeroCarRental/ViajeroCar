@@ -13,10 +13,11 @@ return new class extends Migration {
             // 🔹 Puede haber usuario registrado o no
             $table->unsignedBigInteger('id_usuario')->nullable();
 
-            // 🔹 Eliminamos id_asesor (ya no se usa)
-            // $table->unsignedBigInteger('id_asesor')->nullable();
+            // 🔹 Ya no se requiere vehículo obligatorio
+            $table->unsignedBigInteger('id_vehiculo')->nullable();
 
-            $table->unsignedBigInteger('id_vehiculo');
+            // 🔹 Nueva referencia: categoría reservada
+            $table->unsignedBigInteger('id_categoria')->nullable();
 
             $table->unsignedBigInteger('ciudad_retiro');
             $table->unsignedBigInteger('ciudad_entrega');
@@ -55,17 +56,19 @@ return new class extends Migration {
             $table->unique('codigo', 'reservaciones_codigo_unique');
             $table->index(['estado', 'fecha_inicio', 'fecha_fin'], 'reservas_estado_fecha_idx');
 
-            // FK Usuario (cliente registrado, opcional)
+            // FKs
             $table->foreign('id_usuario')
                 ->references('id_usuario')->on('usuarios')
                 ->onDelete('set null');
 
-            // FK Vehículo
             $table->foreign('id_vehiculo')
                 ->references('id_vehiculo')->on('vehiculos')
-                ->onDelete('cascade');
+                ->onDelete('set null');
 
-            // FKs Ciudades / Sucursales
+            $table->foreign('id_categoria')
+                ->references('id_categoria')->on('categorias_carros')
+                ->onDelete('set null');
+
             $table->foreign('ciudad_retiro')
                 ->references('id_ciudad')->on('ciudades');
 

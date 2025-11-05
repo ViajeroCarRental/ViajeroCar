@@ -37,7 +37,7 @@ class CotizacionesAdminController extends Controller
             ->get();
 
         $categorias = DB::table('categorias_carros')
-            ->select('id_categoria', 'nombre', 'descripcion')
+            ->select('id_categoria', 'nombre', 'descripcion', 'precio_dia')
             ->where('activo', 1)
             ->orderBy('nombre')
             ->get();
@@ -46,41 +46,7 @@ class CotizacionesAdminController extends Controller
     }
 
     /**
-     * 🚗 Obtener vehículos por categoría (AJAX)
-     */
-    public function vehiculosPorCategoria($idCategoria = 0)
-    {
-        try {
-            $query = DB::table('vehiculos as v')
-                ->leftJoin('marcas as m', 'v.id_marca', '=', 'm.id_marca')
-                ->leftJoin('modelos as mo', 'v.id_modelo', '=', 'mo.id_modelo')
-                ->select(
-                    'v.id_vehiculo',
-                    'v.nombre_publico',
-                    'v.precio_dia',
-                    'v.transmision',
-                    'v.combustible',
-                    'v.asientos',
-                    'm.nombre as marca',
-                    'mo.nombre as modelo'
-                )
-                ->where('v.id_estatus', 1);
-
-            if ($idCategoria > 0) {
-                $query->where('v.id_categoria', $idCategoria);
-            }
-
-            $vehiculos = $query->orderBy('m.nombre')->get();
-
-            return response()->json($vehiculos, 200);
-        } catch (\Throwable $e) {
-            Log::error("❌ Error al obtener vehículos: " . $e->getMessage());
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * 🛡️ Obtener paquetes de seguros activos (Cotizar)
+     * 🛡️ Obtener paquetes de seguros activos
      */
     public function getSeguros()
     {
@@ -99,7 +65,7 @@ class CotizacionesAdminController extends Controller
     }
 
     /**
-     * 🧩 Obtener servicios adicionales activos (Cotizar)
+     * 🧩 Obtener servicios adicionales activos
      */
     public function getServicios()
     {
@@ -118,87 +84,114 @@ class CotizacionesAdminController extends Controller
     }
 
     /**
+     * 🚗 Obtener información de una categoría (para mostrar imagen y descripción)
+     */
+    public function getCategoria($idCategoria)
+    {
+        try {
+            $categoria = DB::table('categorias_carros as c')
+                ->leftJoin('vehiculos as v', 'v.id_categoria', '=', 'c.id_categoria')
+                ->leftJoin('vehiculo_imagenes as img', 'v.id_vehiculo', '=', 'img.id_vehiculo')
+                ->where('c.id_categoria', $idCategoria)
+                ->select(
+                    'c.id_categoria',
+                    'c.nombre',
+                    'c.descripcion',
+                    'c.precio_dia as tarifa_base',
+                    DB::raw('COALESCE(img.url, "/assets/placeholder-car.jpg") as imagen')
+                )
+                ->first();
+
+            if (!$categoria) {
+                return response()->json(['error' => true, 'message' => 'Categoría no encontrada'], 404);
+            }
+
+            return response()->json($categoria);
+        } catch (\Throwable $e) {
+            Log::error("❌ Error al obtener categoría: " . $e->getMessage());
+            return response()->json(['error' => true, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * 💾 Guardar cotización / enviar / confirmar
      */
     public function guardarCotizacion(Request $request)
     {
         try {
-            // ✅ Validación
-            $validated = $request->validate([
-                'pickup_sucursal_id' => 'required|integer|exists:sucursales,id_sucursal',
-                'dropoff_sucursal_id' => 'required|integer|exists:sucursales,id_sucursal',
-                'pickup_date'   => 'required|date',
-                'pickup_time'   => 'required|string|max:10',
-                'dropoff_date'  => 'required|date|after_or_equal:pickup_date',
-                'dropoff_time'  => 'required|string|max:10',
-                'vehiculo_id'   => 'required|integer|exists:vehiculos,id_vehiculo',
-                'total'         => 'nullable|numeric',
-            ]);
+            // ✅ CORRECCIÓN #1: proteger el merge para evitar error con null
+            $data = json_decode($request->getContent(), true);
+            if (is_array($data)) {
+                $request->merge($data);
+            }
+
+            /* ==========================================================
+               ✅ Validación condicional
+            ========================================================== */
+            if ($request->has('confirmar')) {
+                // 🟢 Caso: Guardar y Reservar → campos obligatorios
+                $validated = $request->validate([
+                    'pickup_sucursal_id' => 'required|integer|exists:sucursales,id_sucursal',
+                    'dropoff_sucursal_id' => 'required|integer|exists:sucursales,id_sucursal',
+                    'pickup_date'   => 'required|date',
+                    'pickup_time'   => 'required|string|max:10',
+                    'dropoff_date'  => 'required|date|after_or_equal:pickup_date',
+                    'dropoff_time'  => 'required|string|max:10',
+                    'categoria_id'  => 'required|integer|exists:categorias_carros,id_categoria',
+                ]);
+            } else {
+                // 🟡 Caso: Guardar o Enviar Cotización → se permiten vacíos
+                $validated = $request->validate([
+                    'pickup_sucursal_id' => 'nullable|integer|exists:sucursales,id_sucursal',
+                    'dropoff_sucursal_id' => 'nullable|integer|exists:sucursales,id_sucursal',
+                    'pickup_date'   => 'required|date',
+                    'pickup_time'   => 'nullable|string|max:10',
+                    'dropoff_date'  => 'required|date|after_or_equal:pickup_date',
+                    'dropoff_time'  => 'nullable|string|max:10',
+                    'categoria_id'  => 'required|integer|exists:categorias_carros,id_categoria',
+                ]);
+            }
 
             // 🎫 Folio único
             $folio = 'COT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
 
-            // 🧮 Cálculo
+            // 🧮 Cálculos
             $dias = max(1, Carbon::parse($request->pickup_date)->diffInDays(Carbon::parse($request->dropoff_date)));
-            $iva = round(($request->input('subtotal', 0) ?? 0) * 0.16, 2);
-            $total = $request->input('total', 0);
+            $categoria = DB::table('categorias_carros')
+                ->select('id_categoria', 'nombre', 'descripcion', 'precio_dia')
+                ->where('id_categoria', $request->categoria_id)
+                ->first();
 
-            // 🔍 Datos de sucursales y ciudades
+            $subtotal = ($categoria->precio_dia ?? 0) * $dias;
+            $iva = round($subtotal * 0.16, 2);
+            $total = $subtotal + $iva;
+
+            // 🔍 Datos sucursales
             $sucursalRetiro = DB::table('sucursales')->where('id_sucursal', $request->pickup_sucursal_id)->first();
             $sucursalEntrega = DB::table('sucursales')->where('id_sucursal', $request->dropoff_sucursal_id)->first();
 
-            $pickup_name = $sucursalRetiro ? $sucursalRetiro->nombre : '';
-            $dropoff_name = $sucursalEntrega ? $sucursalEntrega->nombre : '';
+            $pickup_name = $sucursalRetiro?->nombre ?? '';
+            $dropoff_name = $sucursalEntrega?->nombre ?? '';
 
-            // 🔍 Obtener datos del vehículo
-            $vehiculo = DB::table('vehiculos as v')
-                ->leftJoin('vehiculo_imagenes as img', 'v.id_vehiculo', '=', 'img.id_vehiculo')
-                ->leftJoin('marcas as m', 'v.id_marca', '=', 'm.id_marca')
-                ->leftJoin('modelos as mo', 'v.id_modelo', '=', 'mo.id_modelo')
-                ->leftJoin('categorias_carros as c', 'v.id_categoria', '=', 'c.id_categoria')
-                ->select(
-                    'v.nombre_publico',
-                    'v.precio_dia',
-                    'v.anio',
-                    'v.transmision',
-                    'v.asientos',
-                    'v.puertas',
-                    'm.nombre as marca',
-                    'mo.nombre as modelo',
-                    'c.nombre as categoria',
-                    'img.url as imagen'
-                )
-                ->where('v.id_vehiculo', $request->vehiculo_id)
-                ->first();
-
-            $imgVehiculo = $vehiculo && $vehiculo->imagen
-                ? asset($vehiculo->imagen)
-                : asset('img/no-image.png');
-
-            // 🗂️ Asegurar carpeta de cotizaciones
-            Storage::makeDirectory('public/cotizaciones');
-
-            // 💾 Insertar cotización
+            // 💾 Guardar cotización
             $idCotizacion = DB::table('cotizaciones')->insertGetId([
-                'folio'              => $folio,
-                'vehiculo_id'        => $request->vehiculo_id,
-                'vehiculo_marca'     => $vehiculo->marca ?? '',
-                'vehiculo_modelo'    => $vehiculo->modelo ?? '',
-                'vehiculo_categoria' => $vehiculo->categoria ?? '',
-                'pickup_date'        => $request->pickup_date,
-                'pickup_time'        => $request->pickup_time,
-                'pickup_name'        => $pickup_name,
-                'dropoff_date'       => $request->dropoff_date,
-                'dropoff_time'       => $request->dropoff_time,
-                'dropoff_name'       => $dropoff_name,
-                'days'               => $dias,
-                'tarifa_base'        => $vehiculo->precio_dia ?? 0,
-                'iva'                => $iva,
-                'total'              => $total,
-                'addons'             => json_encode($request->input('extras', [])),
-                'cliente'            => json_encode($request->input('cliente', [])),
-                'created_at'         => now(),
-                'updated_at'         => now(),
+                'folio'               => $folio,
+                'vehiculo_id'         => $categoria->id_categoria ?? null,
+                'vehiculo_categoria'  => $categoria->nombre ?? '',
+                'pickup_date'         => $request->pickup_date,
+                'pickup_time'         => $request->pickup_time,
+                'pickup_name'         => $pickup_name,
+                'dropoff_date'        => $request->dropoff_date,
+                'dropoff_time'        => $request->dropoff_time,
+                'dropoff_name'        => $dropoff_name,
+                'days'                => $dias,
+                'tarifa_base'         => $categoria->precio_dia ?? 0,
+                'iva'                 => $iva,
+                'total'               => $total,
+                'addons'              => json_encode($request->input('extras', [])),
+                'cliente'             => json_encode($request->input('cliente', [])),
+                'created_at'          => now(),
+                'updated_at'          => now(),
             ]);
 
             $cliente = $request->input('cliente', []);
@@ -206,73 +199,71 @@ class CotizacionesAdminController extends Controller
             $seguro = $request->input('seguro', null);
             $accion = 'guardada';
 
-            // 🧾 Listar servicios seleccionados
-            $extrasList = '';
-            if ($seguro) {
-                $extrasList .= "<li>Protección: {$seguro['nombre']} - $" . number_format($seguro['precio'], 2) . " MXN/día</li>";
-            }
-            if (!empty($extras)) {
-                foreach ($extras as $e) {
-                    $extrasList .= "<li>{$e['cantidad']}× {$e['nombre']} - $" . number_format($e['precio'], 2) . " MXN</li>";
-                }
-            }
-            if ($extrasList === '') $extrasList = '<li>Sin adicionales</li>';
-
             /* ==========================================================
-               📄 Generar PDF PROFESIONAL
-            ========================================================== */
-            $logoPath = public_path('img/Logo3.jpg');
-            $fechaHoy = now()->format('d M Y');
-
-            $pdfHtml = "
-            <div style='font-family:sans-serif; color:#111; font-size:14px;'>
-                <table width='100%' style='border-collapse:collapse;'>
-                    <tr>
-                        <td><img src='{$logoPath}' style='height:60px;'></td>
-                        <td style='text-align:right;'>
-                            <strong style='font-size:12px;'>NO. DE COTIZACIÓN</strong><br>
-                            <span style='font-size:15px; color:#D6121F; font-weight:bold;'>{$folio}</span><br>
-                            <small>Fecha: {$fechaHoy}</small>
-                        </td>
-                    </tr>
-                </table>
-                <hr style='margin:16px 0;'>
-                <h2 style='color:#111; font-size:18px;'>Resumen de tu cotización</h2>
-                <p><strong>Entrega:</strong> {$pickup_name} ({$request->pickup_date} {$request->pickup_time})</p>
-                <p><strong>Devolución:</strong> {$dropoff_name} ({$request->dropoff_date} {$request->dropoff_time})</p>
-                <p><strong>Días:</strong> {$dias}</p>
-                <h3 style='margin-top:20px;'>Tu Auto</h3>
-                <table width='100%' cellpadding='6'>
-                    <tr>
-                        <td width='30%'><img src='{$imgVehiculo}' style='width:100%; border-radius:8px;'></td>
-                        <td width='70%' style='vertical-align:top;'>
-                            <strong style='font-size:16px;'>{$vehiculo->nombre_publico}</strong><br>
-                            <small>{$vehiculo->marca} {$vehiculo->modelo} - {$vehiculo->categoria}</small><br>
-                            <small>{$vehiculo->anio} • {$vehiculo->transmision} • {$vehiculo->asientos} asientos</small>
-                        </td>
-                    </tr>
-                </table>
-                <h3 style='margin-top:24px;'>Opciones de renta seleccionadas</h3>
-                <ul>{$extrasList}</ul>
-                <h3 style='margin-top:24px;'>Detalles del precio</h3>
-                <table width='100%' style='border-collapse:collapse;'>
-                    <tr><td>Tarifa base</td><td style='text-align:right;'>$".number_format($vehiculo->precio_dia * $dias, 2)." MXN</td></tr>
-                    <tr><td>Opciones de renta</td><td style='text-align:right;'>$".number_format(($total - $iva - ($vehiculo->precio_dia * $dias)), 2)." MXN</td></tr>
-                    <tr><td>Cargos e IVA</td><td style='text-align:right;'>$".number_format($iva, 2)." MXN</td></tr>
-                    <tr style='border-top:1px solid #ccc; font-weight:bold;'>
-                        <td>TOTAL</td><td style='text-align:right; color:#D6121F;'>$".number_format($total, 2)." MXN</td>
-                    </tr>
-                </table>
-                <p style='margin-top:40px; color:#555;'>Gracias por elegir <strong>Viajero Car Rental</strong>. 🚗</p>
-            </div>";
-
-            $pdfPath = storage_path("app/public/cotizaciones/{$folio}.pdf");
-            Pdf::html($pdfHtml)->format('a4')->save($pdfPath);
-
-            /* ==========================================================
-               📧 Enviar correo con PDF adjunto
+               📄 Generar PDF SOLO si se va a enviar por correo
             ========================================================== */
             if ($request->has('enviarCorreo') && !empty($cliente['email'])) {
+                $extrasList = '';
+                if ($seguro) {
+                    $extrasList .= "<li>Protección: {$seguro['nombre']} - $" . number_format($seguro['precio'], 2) . " MXN/día</li>";
+                }
+                if (!empty($extras)) {
+                    foreach ($extras as $e) {
+                        $extrasList .= "<li>{$e['cantidad']}× {$e['nombre']} - $" . number_format($e['precio'], 2) . " MXN</li>";
+                    }
+                }
+                if ($extrasList === '') $extrasList = '<li>Sin adicionales</li>';
+
+                $logoPath = public_path('img/Logo3.jpg');
+                $fechaHoy = now()->format('d M Y');
+                $imgCategoria = asset('img/categorias/' . Str::slug($categoria->nombre) . '.jpg');
+
+                $pdfHtml = "
+                <div style='font-family:sans-serif; color:#111; font-size:14px;'>
+                    <table width='100%' style='border-collapse:collapse;'>
+                        <tr>
+                            <td><img src='{$logoPath}' style='height:60px;'></td>
+                            <td style='text-align:right;'>
+                                <strong style='font-size:12px;'>NO. DE COTIZACIÓN</strong><br>
+                                <span style='font-size:15px; color:#D6121F; font-weight:bold;'>{$folio}</span><br>
+                                <small>Fecha: {$fechaHoy}</small>
+                            </td>
+                        </tr>
+                    </table>
+                    <hr style='margin:16px 0;'>
+                    <h2>Resumen de tu cotización</h2>
+                    <p><strong>Entrega:</strong> {$pickup_name} ({$request->pickup_date} {$request->pickup_time})</p>
+                    <p><strong>Devolución:</strong> {$dropoff_name} ({$request->dropoff_date} {$request->dropoff_time})</p>
+                    <p><strong>Días:</strong> {$dias}</p>
+                    <h3>Categoría seleccionada</h3>
+                    <table width='100%' cellpadding='6'>
+                        <tr>
+                            <td width='30%'><img src='{$imgCategoria}' style='width:100%; border-radius:8px;'></td>
+                            <td width='70%' style='vertical-align:top;'>
+                                <strong style='font-size:16px;'>{$categoria->nombre}</strong><br>
+                                <small>{$categoria->descripcion}</small><br>
+                                <small>Tarifa base diaria: $" . number_format($categoria->precio_dia, 2) . " MXN</small>
+                            </td>
+                        </tr>
+                    </table>
+                    <h3 style='margin-top:24px;'>Opciones seleccionadas</h3>
+                    <ul>{$extrasList}</ul>
+                    <h3 style='margin-top:24px;'>Detalles del precio</h3>
+                    <table width='100%' style='border-collapse:collapse;'>
+                        <tr><td>Tarifa base</td><td style='text-align:right;'>$" . number_format($categoria->precio_dia * $dias, 2) . " MXN</td></tr>
+                        <tr><td>IVA (16%)</td><td style='text-align:right;'>$" . number_format($iva, 2) . " MXN</td></tr>
+                        <tr style='border-top:1px solid #ccc; font-weight:bold;'>
+                            <td>TOTAL</td><td style='text-align:right; color:#D6121F;'>$" . number_format($total, 2) . " MXN</td>
+                        </tr>
+                    </table>
+                    <p style='margin-top:40px; color:#555;'>Gracias por elegir <strong>Viajero Car Rental</strong>.</p>
+                </div>";
+
+                Storage::makeDirectory('public/cotizaciones');
+                $pdfPath = storage_path("app/public/cotizaciones/{$folio}.pdf");
+                Pdf::html($pdfHtml)->format('a4')->save($pdfPath);
+
+                // Enviar correo
                 Mail::html("
                     <div style='font-family:sans-serif;'>
                         <h2 style='color:#D6121F;'>Viajero Car Rental</h2>
@@ -284,6 +275,7 @@ class CotizacionesAdminController extends Controller
                             ->subject("Tu cotización #{$folio} - Viajero Car Rental")
                             ->attach($pdfPath);
                 });
+
                 $accion = 'enviada por correo';
             }
 
@@ -291,19 +283,28 @@ class CotizacionesAdminController extends Controller
                ✅ Confirmar → crear reservación real
             ========================================================== */
             if ($request->has('confirmar')) {
+                // ✅ CORRECCIÓN #3: nombres de campos coherentes con el JS
+                $ciudadRetiro = DB::table('sucursales')
+                    ->where('id_sucursal', $request->pickup_sucursal_id)
+                    ->value('id_ciudad');
+
+                $ciudadEntrega = DB::table('sucursales')
+                    ->where('id_sucursal', $request->dropoff_sucursal_id)
+                    ->value('id_ciudad');
+
                 DB::table('reservaciones')->insert([
                     'codigo'           => 'RES-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5)),
-                    'id_vehiculo'      => $request->vehiculo_id,
+                    'id_categoria'     => $request->categoria_id,
                     'fecha_inicio'     => $request->pickup_date,
                     'fecha_fin'        => $request->dropoff_date,
                     'hora_retiro'      => $request->pickup_time,
                     'hora_entrega'     => $request->dropoff_time,
                     'sucursal_retiro'  => $request->pickup_sucursal_id,
                     'sucursal_entrega' => $request->dropoff_sucursal_id,
-                    'ciudad_retiro'    => $sucursalRetiro->id_ciudad ?? null,
-                    'ciudad_entrega'   => $sucursalEntrega->id_ciudad ?? null,
-                    'subtotal'         => $total / 1.16,
-                    'impuestos'        => $total - ($total / 1.16),
+                    'ciudad_retiro'    => $ciudadRetiro ?? 1,
+                    'ciudad_entrega'   => $ciudadEntrega ?? 1,
+                    'subtotal'         => $subtotal,
+                    'impuestos'        => $iva,
                     'total'            => $total,
                     'moneda'           => 'MXN',
                     'estado'           => 'pendiente_pago',
@@ -313,6 +314,7 @@ class CotizacionesAdminController extends Controller
                     'created_at'       => now(),
                     'updated_at'       => now(),
                 ]);
+
                 $accion = 'confirmada y registrada como reservación';
             }
 
@@ -323,7 +325,6 @@ class CotizacionesAdminController extends Controller
                 'id'      => $idCotizacion,
                 'message' => "Cotización {$accion} correctamente.",
             ]);
-
         } catch (\Throwable $e) {
             Log::error("❌ Error en guardarCotizacion: " . $e->getMessage());
             return response()->json([

@@ -11,11 +11,22 @@ return new class extends Migration {
             $table->bigIncrements('id_categoria');
             $table->string('nombre', 100)->unique();
             $table->string('descripcion', 255)->nullable();
-            $table->decimal('descuento_miembro', 5, 2)->default(0.00)->comment('Descuento % para miembros preferentes');
+
+            // 💰 Precio base por día de la categoría
+            $table->decimal('precio_dia', 10, 2)->default(0.00);
+
+            // 🧾 Descuento para miembros
+            $table->decimal('descuento_miembro', 5, 2)
+                  ->default(0.00)
+                  ->comment('Descuento % para miembros preferentes');
+
+            // ⚙️ Estado activo/inactivo
             $table->boolean('activo')->default(true);
+
+            // ⏰ Control de tiempo
             $table->timestamps();
 
-            // Índices útiles
+            // 📈 Índice para optimizar consultas por estado
             $table->index('activo', 'cat_activo_idx');
         });
     }

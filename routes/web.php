@@ -98,29 +98,33 @@ Route::get('/admin/roles', [App\Http\Controllers\controladorVistasAdmin::class, 
 Route::get('/admin/ventas', [App\Http\Controllers\controladorVistasAdmin::class, 'ventas'])->name('rutaInicioVentas');
 // Módulo de reservaciones (nuevo controlador dedicado)
 Route::get('/admin/reservaciones', [ReservacionesAdminController::class, 'index'])->name('rutaReservacionesAdmin');
-// Endpoint para obtener vehículos por categoría (AJAX)
-Route::get('/admin/reservaciones/vehiculos/{idCategoria}', [ReservacionesAdminController::class, 'obtenerVehiculosPorCategoria'])
-     ->name('rutaVehiculosPorCategoria');
-// Endpoint para obtener paquetes de seguros (protecciones)
+// ✅ Nuevo endpoint para obtener info de una categoría
+Route::get('/admin/reservaciones/categorias/{idCategoria}', [ReservacionesAdminController::class, 'obtenerCategoriaPorId'])->name('rutaCategoriaPorId');
+// Endpoint para obtener paquetes de seguros
 Route::get('/admin/reservaciones/seguros', [ReservacionesAdminController::class, 'getSeguros'])->name('rutaSegurosReservaciones');
-// Endpoint para obtener servicios adicionales (complementos)
+// Endpoint para obtener servicios adicionales
 Route::get('/admin/reservaciones/servicios', [ReservacionesAdminController::class, 'getServicios'])->name('rutaServiciosReservaciones');
-// Guardar reservación (desde el formulario de pasos)
+// Guardar reservación
 Route::post('/reservaciones/guardar', [ReservacionesAdminController::class, 'guardarReservacion'])->name('reservaciones.guardar');
+
+// =========================
+// 🌍 RUTAS COTIZACIONES ADMIN
+// =========================
+
 // Cotizaciones
 Route::get('/admin/cotizaciones', [controladorVistasAdmin::class, 'cotizaciones'])->name('rutaCotizaciones');
-// Cotizaciones activas
 Route::get('/admin/cotizaciones-activas', [App\Http\Controllers\controladorVistasAdmin::class, 'cotizacionesRecientes'])->name('rutaCotizacionesRecientes');
-// Cotizar (usa el nuevo controlador con datos reales)
 Route::get('/admin/cotizar', [App\Http\Controllers\CotizacionesAdminController::class, 'index'])->name('rutaCotizar');
+
 // Guardar la cotización
 Route::post('/admin/cotizaciones/guardar', [App\Http\Controllers\CotizacionesAdminController::class, 'guardarCotizacion'])->name('rutaGuardarCotizacion');
-// Endpoint AJAX para obtener vehículos por categoría (Cotizar)
-Route::get('/admin/cotizaciones/vehiculos/{idCategoria?}', [App\Http\Controllers\CotizacionesAdminController::class, 'vehiculosPorCategoria'])->name('rutaVehiculosPorCategoriaCotizar');
-// Endpoint AJAX para obtener paquetes de seguros (Cotizar)
+
+// Endpoints AJAX
 Route::get('/admin/cotizaciones/seguros', [App\Http\Controllers\CotizacionesAdminController::class, 'getSeguros'])->name('rutaSegurosCotizar');
-// Endpoint AJAX para obtener servicios adicionales (Cotizar)
 Route::get('/admin/cotizaciones/servicios', [App\Http\Controllers\CotizacionesAdminController::class, 'getServicios'])->name('rutaServiciosCotizar');
+Route::get('/admin/cotizaciones/categoria/{idCategoria}', [App\Http\Controllers\CotizacionesAdminController::class, 'getCategoria'])->name('rutaCategoriaCotizar');
+
+
 
 
 //reservaciones activas
@@ -128,13 +132,23 @@ Route::get('/admin/reservaciones-activas', [ReservacionesActivasController::clas
 // Endpoint AJAX: obtener detalles por código (para el modal)
 Route::get('/admin/reservaciones-activas/{codigo}', [ReservacionesActivasController::class, 'show'])->name('rutaDetalleReservacionActiva');
 
-//RUTAS CONTRATOS
-//ruta vista contrato
-Route::get('/admin/contrato', [ContratoController::class, 'index'])->name('rutaContrato');
-//obtener servicios adicionales
-Route::get('/contrato/servicios', [ContratoController::class, 'getServicios'])->name('contrato.servicios');
-//obtener seguros / protecciones
-Route::get('/contrato/seguros', [ContratoController::class, 'getSeguros'])->name('contrato.seguros');
+//contrato id
+Route::get('/admin/contrato/{id}', [ContratoController::class, 'mostrarContrato'])->name('contrato.mostrar');
+// 🧩 Actualizar servicios adicionales (AJAX desde Contrato)
+Route::post('/admin/contrato/servicios', [ContratoController::class, 'actualizarServicios'])->name('contrato.actualizarServicios');
+// =============================================================
+// 🛡️ Actualización de seguros (Paso 3 del contrato)
+// =============================================================
+Route::post('/admin/contrato/seguros', [App\Http\Controllers\ContratoController::class, 'actualizarSeguro'])->name('contrato.actualizarSeguro');
+// 💰 Actualizar cargos adicionales (Paso 4)
+Route::post('/admin/contrato/cargos', [App\Http\Controllers\ContratoController::class, 'actualizarCargos'])->name('contrato.actualizarCargos');
+// 📄 Guardar documentación subida (Paso 5)
+Route::post('/contrato/guardar-documentacion', [ContratoController::class, 'guardarDocumentacion'])->name('contrato.guardarDocumentacion');
+// Obtener conductores asociados al contrato (AJAX)
+Route::get('/admin/contrato/{id}/conductores', [ContratoController::class, 'obtenerConductores']);
+
+
+
 
 
 

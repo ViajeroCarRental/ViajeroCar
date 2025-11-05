@@ -81,21 +81,18 @@
         <div>
           <label>Categoría del vehículo</label>
           <select id="categoriaSelect" class="input">
-            <option value="0">Todas las categorías</option>
+            <option value="0">Selecciona una categoría</option>
             @foreach($categorias as $cat)
               <option value="{{ $cat->id_categoria }}">{{ $cat->nombre }}</option>
             @endforeach
           </select>
         </div>
-
-        <!-- Grupo: Selección de vehículo -->
-        <div class="vehiculo-seleccion">
-          <button class="btn primary" type="button" id="btnVeh">🚗 Seleccionar vehículo</button>
-          <input id="id_vehiculo" name="id_vehiculo" class="input" type="text" placeholder="Vehículo seleccionado" readonly required>
-          <span id="diasBadge" class="badge" style="background:#ECFDF3;border:1px solid #ABEFC6;color:var(--ok)">
-            0 día(s)
-          </span>
-        </div>
+        <!-- Grupo: Duración del viaje -->
+<div style="margin-top:10px;">
+  <span id="diasBadge" class="badge" style="background:#ECFDF3;border:1px solid #ABEFC6;color:var(--ok)">
+    0 día(s)
+  </span>
+</div>
 
         <!-- Botón continuar -->
         <div class="acciones">
@@ -224,27 +221,39 @@
   </section>
 
   <!-- ======================
-       SECCIÓN DERECHA: RESUMEN
-  ======================= -->
-  <aside class="sticky">
-    <div class="card">
-      <div class="head">Resumen de cotización</div>
-      <div class="cnt">
-        <div id="vehImageWrap" style="text-align:center;margin-bottom:10px;display:none;">
-          <img id="vehImage" src="" alt="Vehículo seleccionado"
-               style="width:100%;max-width:250px;border-radius:12px;object-fit:cover;">
-          <div id="vehName" style="font-weight:700;margin-top:6px;"></div>
-        </div>
+     SECCIÓN DERECHA: RESUMEN
+======================= -->
+<aside class="sticky">
+  <div class="card">
+    <div class="head">Resumen de Reservación</div>
+    <div class="cnt">
 
-        <div class="row"><div>Tarifa Base</div><div id="baseLine">—</div></div>
-        <div class="row"><div>Protección</div><div id="proteName">—</div></div>
-        <div class="row"><div>Adicionales</div><div id="extrasName">—</div></div>
-        <div class="row"><div>Subtotal</div><div id="subTot">$0.00 MXN</div></div>
-        <div class="row"><div>IVA (16%)</div><div id="iva">$0.00 MXN</div></div>
-        <div class="row"><div style="font-weight:900">Total</div><div class="total" id="total">$0.00 MXN</div></div>
+      <!-- 🚗 Imagen de referencia por categoría -->
+      <div id="vehImageWrap" style="text-align:center;margin-bottom:10px;display:none;">
+        <img id="vehImage"
+             src="{{ asset('assets/placeholder-car.jpg') }}"
+             alt="Ejemplo de vehículo de la categoría seleccionada"
+             style="width:100%;max-width:250px;border-radius:12px;object-fit:cover;">
+        <div id="vehName" style="font-weight:700;margin-top:6px;">
+          Ejemplo de la categoría seleccionada
+        </div>
       </div>
+
+      <!-- 💰 Detalle de precios -->
+      <div class="row"><div>Tarifa Base</div><div id="baseLine">—</div></div>
+      <div class="row"><div>Protección</div><div id="proteName">—</div></div>
+      <div class="row"><div>Adicionales</div><div id="extrasName">—</div></div>
+      <div class="row"><div>Subtotal</div><div id="subTot">$0.00 MXN</div></div>
+      <div class="row"><div>IVA (16%)</div><div id="iva">$0.00 MXN</div></div>
+      <div class="row">
+        <div style="font-weight:900">Total</div>
+        <div class="total" id="total">$0.00 MXN</div>
+      </div>
+
     </div>
-  </aside>
+  </div>
+</aside>
+
 
 </div>
  <!-- /grid -->
@@ -309,18 +318,6 @@
     </footer>
   </div>
 </div>
-
-
-    <!-- 🚗 Modal de vehículos -->
-    <div class="pop" id="vehPop">
-      <div class="box vbox">
-        <header>
-          <span>Vehículos disponibles</span>
-          <button class="btn gray" id="vehClose">✖</button>
-        </header>
-        <div id="vehList" style="padding:12px"></div>
-      </div>
-    </div>
 
     <!-- 🔒 Modal de Protecciones -->
 <div class="pop" id="proteccionPop">

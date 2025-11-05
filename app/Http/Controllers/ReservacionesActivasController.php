@@ -54,6 +54,7 @@ public function show($codigo)
         $reservacion = DB::table('reservaciones')
             ->join('vehiculos', 'reservaciones.id_vehiculo', '=', 'vehiculos.id_vehiculo')
             ->select(
+                'reservaciones.id_reservacion', // 👈 IMPORTANTE: este campo no estaba
                 'reservaciones.codigo',
                 'reservaciones.nombre_cliente',
                 'reservaciones.email_cliente',
@@ -83,5 +84,6 @@ public function show($codigo)
         ], 500);
     }
 }
+
 
 }

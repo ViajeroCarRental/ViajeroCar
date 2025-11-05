@@ -9,30 +9,38 @@ return new class extends Migration {
     {
         Schema::create('cotizaciones', function (Blueprint $table) {
             $table->bigIncrements('id_cotizacion');
+
+            // 🎫 Identificador único
             $table->string('folio', 40)->unique();
 
-            $table->unsignedBigInteger('vehiculo_id');
+            // 🚗 Datos del vehículo o categoría (no siempre se asigna un vehículo real)
+            $table->unsignedBigInteger('vehiculo_id')->nullable();
             $table->string('vehiculo_marca')->nullable();
             $table->string('vehiculo_modelo')->nullable();
             $table->string('vehiculo_categoria')->nullable();
 
+            // 📅 Fechas y horas de entrega/devolución
             $table->date('pickup_date');
-            $table->string('pickup_time', 5);
+            $table->string('pickup_time', 10)->nullable();
             $table->string('pickup_name')->nullable();
 
             $table->date('dropoff_date');
-            $table->string('dropoff_time', 5);
+            $table->string('dropoff_time', 10)->nullable();
             $table->string('dropoff_name')->nullable();
 
-            $table->unsignedInteger('days');
+            // 📏 Duración de la renta
+            $table->unsignedInteger('days')->default(1);
 
+            // 💰 Totales
             $table->decimal('tarifa_base', 12, 2)->default(0);
             $table->decimal('extras_sub', 12, 2)->default(0);
             $table->decimal('iva', 12, 2)->default(0);
             $table->decimal('total', 12, 2)->default(0);
 
-            $table->json('addons')->nullable();   // complementos seleccionados
-            $table->json('cliente')->nullable();  // nombre/email/telefono
+            // 🧩 JSON: complementos y cliente
+            $table->json('addons')->nullable();   // servicios adicionales
+            $table->json('cliente')->nullable();  // nombre/email/telefono, etc.
+
             $table->timestamps();
         });
     }

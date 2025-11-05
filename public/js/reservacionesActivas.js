@@ -121,7 +121,8 @@ window.addEventListener("DOMContentLoaded", () => {
   if (!current) return;
 
   // 🆕 Usamos el ID de reservación para generar la URL correcta
-  const url = `/admin/contrato?id_reservacion=${encodeURIComponent(current.id_reservacion)}`;
+  const url = `/admin/contrato/${encodeURIComponent(current.id_reservacion)}`;
+
 
   console.log("➡️ Redirigiendo a vista Contrato:", url);
   window.location.href = url;
@@ -131,9 +132,17 @@ window.addEventListener("DOMContentLoaded", () => {
   /* ==========================================================
      🗑️ ELIMINAR (solo mensaje visual por ahora)
   =========================================================== */
-  $("#mDel")?.addEventListener("click", () => {
-    if (!current) return;
-    alert(`🗑️ Reservación ${current.codigo} eliminada (solo vista, sin acción real).`);
-    closeModal();
-  });
+  /* ==========================================================
+   🚪 CAPTURAR CONTRATO (redirige visualmente)
+========================================================== */
+$("#mGo")?.addEventListener("click", () => {
+  if (!current) return;
+
+  // ✅ Redirigir correctamente a la ruta con el ID
+  const url = `/admin/contrato/${encodeURIComponent(current.id_reservacion)}`;
+
+  console.log("➡️ Redirigiendo a vista Contrato:", url);
+  window.location.href = url;
+});
+
 });

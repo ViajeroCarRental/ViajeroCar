@@ -1,6 +1,7 @@
 /* ==========================================================
-   🎨 CONTRATO.CSS — Unificado pasos 1, 2 y 3
+   🎨 CONTRATO.CSS — Versión optimizada
    Autor: Ingeniero Bernal
+   💡 Corrección completa del flujo showStep()
 ========================================================== */
 
 :root {
@@ -17,232 +18,1078 @@
 /* ========================== */
 /* 🔹 RESET GLOBAL            */
 /* ========================== */
-*{box-sizing:border-box}
-html,body{
-  margin:0;
-  background:#F3F5F9;
-  color:var(--ink);
-  font-family:"Cabin",system-ui,-apple-system,Segoe UI,Roboto,Arial;
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  background: #F3F5F9;
+  color: var(--ink);
+  font-family: "Cabin", system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
 /* ========================== */
 /* 📄 LAYOUT GENERAL          */
 /* ========================== */
-.main{padding:22px}
-.h1{margin:0 0 14px;font-size:24px;font-weight:900;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:20px}
-@media(max-width:1100px){.grid{grid-template-columns:1fr}}
+.main {
+  padding: 22px;
+}
+.h1 {
+  margin: 0 0 14px;
+  font-size: 24px;
+  font-weight: 900;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap: 20px;
+  align-items: start;
+}
+@media(max-width:1100px){
+  .grid { grid-template-columns: 1fr; }
+}
 
 /* ========================== */
 /* 📦 SECCIONES Y TARJETAS    */
 /* ========================== */
-.section,.card{
-  background:#fff;
-  border:1.5px solid var(--stroke);
-  border-radius:18px;
-  overflow:hidden;
+.section, .card {
+  background: #fff;
+  border: 1.5px solid var(--stroke);
+  border-radius: 18px;
+  overflow: hidden;
 }
-.section .head,.card .head{
-  padding:14px 16px;
-  border-bottom:1px solid var(--stroke);
-  font-weight:900;
+.section .head, .card .head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--stroke);
+  font-weight: 900;
 }
-.section .cnt,.card .cnt{padding:16px}
+.section .cnt, .card .cnt {
+  padding: 16px;
+}
 
 /* ========================== */
 /* 💰 RESUMEN Y TOTALES       */
 /* ========================== */
-.kv{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:10px;
-  padding:10px 0;
-  border-bottom:1px dashed #EEF2F6;
+.kv {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px dashed #EEF2F6;
 }
-.kv:last-child{border:none}
-.totalBox{margin-top:16px;border-top:1px dashed #EEF2F6;padding-top:12px}
-.total{font-size:26px;font-weight:900;color:var(--brand)}
-.badge{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:6px 10px;border-radius:999px;
-  font-size:12px;border:1px solid #E9EAEE;background:#F9FAFB;
+.kv:last-child { border: none; }
+.totalBox {
+  margin-top: 16px;
+  border-top: 1px dashed #EEF2F6;
+  padding-top: 12px;
+}
+.total {
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--brand);
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid #E9EAEE;
+  background: #F9FAFB;
 }
 
 /* ========================== */
 /* 🔘 BOTONES                 */
 /* ========================== */
-.btn{
-  border:none;
-  border-radius:12px;
-  padding:14px 16px;
-  font-weight:800;
-  cursor:pointer;
-  transition:0.2s ease;
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.2s ease;
 }
-.primary{background:var(--brand);color:#fff}
-.primary:hover{background:var(--brand-2)}
-.gray{background:#F8FAFC;border:1px solid var(--stroke)}
-.gray:hover{background:#EEF2F6}
-.ghost{background:#fff;border:1px solid var(--stroke);color:var(--ink)}
-.full{width:100%}
-.acciones{display:flex;gap:12px;justify-content:flex-end;align-items:center;flex-wrap:wrap}
+.primary { background: var(--brand); color: #fff; }
+.primary:hover { background: var(--brand-2); }
+.gray { background: #F8FAFC; border: 1px solid var(--stroke); }
+.gray:hover { background: #EEF2F6; }
+.ghost { background: #fff; border: 1px solid var(--stroke); color: var(--ink); }
+.full { width: 100%; }
+.acciones {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+}
 
 /* ========================== */
 /* 🧭 PASOS DE CONTRATO       */
 /* ========================== */
-.steps{display:flex;flex-direction:column;gap:24px}
-.step{
-  background:#fff;
-  border:1.5px solid var(--stroke);
-  border-radius:18px;
-  padding:18px;
-  box-shadow:0 4px 14px rgba(16,24,40,.04);
+.steps {
+  display: block;
+  position: relative;
+  min-height: 500px;
 }
-.step header{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-bottom:10px;
+
+/* Ocultamos todos los pasos por defecto */
+.step {
+  background: #fff;
+  border: 1.5px solid var(--stroke);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 4px 14px rgba(16,24,40,.04);
+  opacity: 0;
+  visibility: hidden;
+  display: none;
+  position: relative;
+  transition: opacity .35s ease-in-out, visibility .35s ease-in-out;
 }
-.step header .badge{
-  background:var(--brand);
-  color:#fff;
-  font-weight:900;
-  font-size:14px;
-  padding:6px 10px;
+
+/* Paso activo */
+.step.active {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 5;
 }
-.step h3{margin:0;font-size:18px;font-weight:900}
-.step .body{display:flex;flex-direction:column;gap:14px}
+
+/* Header de paso */
+.step header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.step header .badge {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 900;
+  font-size: 14px;
+  padding: 6px 10px;
+}
+.step h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+}
+.step .body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
 /* ========================== */
 /* 🧩 PASO 2 — ADICIONALES    */
 /* ========================== */
-.add-grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:16px;margin-top:10px;
+.add-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 10px;
 }
 @media(max-width:1200px){.add-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:900px){.add-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.add-grid{grid-template-columns:1fr}}
-.add{
-  background:#fff;
-  border:1px solid #EAECEF;
-  border-radius:14px;
-  box-shadow:0 2px 12px rgba(16,24,40,.04);
-  overflow:hidden;
+.add {
+  background: #fff;
+  border: 1px solid #EAECEF;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(16,24,40,.04);
+  overflow: hidden;
 }
-.add .tag{background:var(--brand);color:#fff;display:inline-block;padding:8px 12px;border-radius:10px;margin:12px 12px 0;font-weight:900}
-.add .body{padding:12px 16px 16px;text-align:center}
-.add .icon{font-size:36px;margin:6px 0 8px}
-.add .desc{color:#667085;font-size:13px;min-height:40px}
-.add .price{font-weight:900;margin:8px 0 12px}
-.qty{display:flex;justify-content:center;align-items:center;gap:10px}
-.qty button{width:30px;height:30px;border-radius:10px;border:1px solid #E5E7EB;background:#fff;font-weight:900;cursor:pointer}
-.qty button:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
-.qty input{width:52px;text-align:center;border:1px solid #E5E7EB;border-radius:10px;padding:6px 2px}
+.add .tag {
+  background: var(--brand);
+  color: #fff;
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin: 12px 12px 0;
+  font-weight: 900;
+}
+.add .body { padding: 12px 16px 16px; text-align: center; }
+.add .icon { font-size: 36px; margin: 6px 0 8px; }
+.add .desc { color: #667085; font-size: 13px; min-height: 40px; }
+.add .price { font-weight: 900; margin: 8px 0 12px; }
 
 /* ========================== */
 /* 🛡️ PASO 3 — PROTECCIONES   */
 /* ========================== */
-.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-@media(max-width:1100px){.cards{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:680px){.cards{grid-template-columns:1fr}}
-.card .body h4{margin:0;font-weight:900}
-.card .body p{color:#475467;font-size:13px;margin:8px 0}
-.card .precio{font-weight:900;margin-top:8px;text-align:center}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 10px;
+}
 
-/* ========================== */
-/* 📦 PACKS / THEMES          */
-/* ========================== */
-.pack{border-radius:16px;overflow:hidden;border:1px solid #e5e7eb}
-.pack .ph{padding:10px 14px;color:#fff;font-weight:900}
-.hBlue{background:linear-gradient(90deg,var(--blue),var(--blue-2))}
-.hYellow{background:linear-gradient(90deg,var(--yellow),var(--yellow-2))}
-.hOrange{background:linear-gradient(90deg,var(--orange),var(--orange-2))}
-.hGreen{background:linear-gradient(90deg,var(--green2),var(--green2-2))}
-.hRed{background:linear-gradient(90deg,var(--red),var(--red-2));color:#7a0a0a}
+.card.seguro-item {
+  border: 2px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 18px 16px 22px;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(16,24,40,.04);
+  transition: all .25s ease;
+  position: relative;
+  text-align: center;
+  cursor: pointer;
+}
+
+.card.seguro-item:hover {
+  transform: translateY(-4px);
+  border-color: #16A34A;
+  background: #F0FDF4;
+  box-shadow: 0 8px 20px rgba(16,24,40,.08);
+}
+
+.card.seguro-item h4 {
+  font-size: 16px;
+  font-weight: 900;
+  color: #064E3B;
+  margin: 0 0 6px;
+}
+
+.card.seguro-item p {
+  color: #475467;
+  font-size: 13px;
+  margin: 8px 0 12px;
+  min-height: 36px;
+}
+
+.card.seguro-item .precio {
+  font-weight: 900;
+  font-size: 15px;
+  margin: 10px 0;
+  color: #111827;
+}
+
+.card.seguro-item .switch {
+  margin: 10px auto 6px;
+  display: block;
+}
+
+.card.seguro-item .switch.on {
+  box-shadow: 0 0 0 3px rgba(22,163,74,.25);
+}
+
+.card.seguro-item .small {
+  color: #64748b;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+/* Estado activo (cuando el switch está encendido) */
+.card.seguro-item.active {
+  border-color: #16A34A;
+  background: #ECFDF5;
+  box-shadow: 0 0 0 2px #16A34A20;
+}
+
 
 /* ========================== */
 /* 📜 TEXTO Y NOTAS           */
 /* ========================== */
-.note{
-  background:#FAFFFB;
-  border:1px solid #CFF7E3;
-  color:#035E38;
-  padding:10px 12px;
-  border-radius:12px;
-  font-size:13px;
-  margin:10px 0;
+.note {
+  background: #FAFFFB;
+  border: 1px solid #CFF7E3;
+  color: #035E38;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  margin: 10px 0;
 }
-.small{color:#667085;font-size:13px}
-.disabled{opacity:.5;pointer-events:none}
+.small { color: #667085; font-size: 13px; }
+.disabled { opacity: .5; pointer-events: none; }
 
 /* ========================== */
 /* 🟢 INTERACTIVOS / SEGUROS  */
 /* ========================== */
-.seguro-item{
-  border:2px solid #E5E7EB;
-  border-radius:16px;
-  padding:12px;
-  display:flex;
-  align-items:center;
-  cursor:pointer;
-  transition:0.2s ease;
-  background:#fff;
+.seguro-item {
+  border: 2px solid #E5E7EB;
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: 0.2s ease;
+  background: #fff;
 }
-.seguro-item:hover{
-  border-color:#16A34A;
-  background:#F0FDF4;
+.seguro-item:hover {
+  border-color: #16A34A;
+  background: #F0FDF4;
 }
 .seguro-item input[type="radio"]:checked + .body,
-.seguro-item.selected{
-  border-color:#16A34A;
-  background:#ECFDF5;
-  box-shadow:0 0 0 2px #16A34A20;
+.seguro-item.selected {
+  border-color: #16A34A;
+  background: #ECFDF5;
+  box-shadow: 0 0 0 2px #16A34A20;
 }
-.seguro-item input[type="radio"]{
-  accent-color:#16A34A;
-  transform:scale(1.2);
-  margin-right:10px;
-}
-
-/* ========================== */
-/* 🔘 SWITCH                  */
-/* ========================== */
-.switch{
-  position:relative;
-  width:48px;
-  height:26px;
-  border-radius:999px;
-  background:#E5E7EB;
-  cursor:pointer;
-  transition:0.25s ease;
-  flex-shrink:0;
-}
-.switch::after{
-  content:"";
-  position:absolute;
-  top:3px;
-  left:3px;
-  width:20px;
-  height:20px;
-  border-radius:50%;
-  background:#fff;
-  transition:0.25s ease;
-}
-.switch.on{background:#16A34A;}
-.switch.on::after{left:25px;}
-.switch-label{
-  font-size:13px;
-  color:var(--muted);
-  margin-left:8px;
-  user-select:none;
+.seguro-item input[type="radio"] {
+  accent-color: #16A34A;
+  transform: scale(1.2);
+  margin-right: 10px;
 }
 
 /* ========================== */
 /* 📌 LAYOUT DERECHA (ASIDE)  */
 /* ========================== */
-.sticky{position:sticky;top:20px;align-self:start}
-.card img{max-width:100%;border-radius:12px;display:block;margin:auto}
-.card p{margin:6px 0;color:#475467;font-size:14px;text-align:center}
+.sticky {
+  position: sticky;
+  top: 20px;
+  align-self: start;
+}
+.card img {
+  max-width: 100%;
+  border-radius: 12px;
+  display: block;
+  margin: auto;
+}
+.card p {
+  margin: 6px 0;
+  color: #475467;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ==========================================================
+   💫 Animación suave entre pasos
+========================================================== */
+.step.active {
+  animation: fadeIn .4s ease-in-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* ==========================================================
+   🎨 Estilo visual del Paso 1 (resumen tipo tarjeta)
+========================================================== */
+.contrato-resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.resumen-header .row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: 10px 0;
+}
+.resumen-header h4 {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+.resumen-header p {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--ink);
+  margin: 4px 0 0;
+}
+
+.resumen-entrega {
+  display: flex;
+  gap: 18px;
+  justify-content: space-around;
+  flex-wrap: wrap;
+}
+
+.resumen-entrega .bloque {
+  flex: 1 1 45%;
+  background: #fff;
+  border: 2px solid var(--stroke);
+  border-radius: 16px;
+  text-align: center;
+  padding: 14px;
+  box-shadow: 0 4px 10px rgba(16,24,40,.05);
+}
+
+.bloque .titulo {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 900;
+  padding: 8px 0;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.bloque .lugar {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 4px 0 10px;
+}
+.bloque .fecha {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 6px;
+  font-weight: 900;
+}
+.bloque .fecha .dia {
+  font-size: 38px;
+  color: var(--brand);
+}
+.bloque .fecha .mes {
+  font-size: 16px;
+  background: #FFE2E5;
+  color: var(--brand);
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-weight: 800;
+}
+.bloque .fecha .anio {
+  font-size: 12px;
+  color: var(--muted);
+}
+.bloque .hora {
+  margin-top: 8px;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.resumen-totales .kv {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px dashed #eee;
+}
+.resumen-totales .kv.total {
+  border-top: 2px solid #EAEAEA;
+  margin-top: 10px;
+  padding-top: 12px;
+}
+.resumen-totales .total {
+  color: var(--brand);
+  font-size: 22px;
+  font-weight: 900;
+}
+/* =======================
+   🧩 PASO 2 — SERVICIOS ADICIONALES (versión UI completa)
+======================= */
+#serviciosGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  margin-top: 18px;
+}
+
+.card-servicio {
+  background: #fff;
+  border-radius: 18px;
+  border: 1.5px solid #EAECF0;
+  box-shadow: 0 4px 12px rgba(16,24,40,.04);
+  padding: 18px 16px 22px;
+  text-align: center;
+  transition: all .2s ease;
+}
+
+.card-servicio:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(16,24,40,.08);
+}
+
+.card-servicio h4 {
+  background: var(--brand);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 10px;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 900;
+  margin-bottom: 10px;
+}
+
+.card-servicio p {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 6px 0 12px;
+  min-height: 40px;
+}
+
+.card-servicio .precio {
+  font-size: 16px;
+  font-weight: 900;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+
+.card-servicio .contador {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+
+.card-servicio .contador button {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.card-servicio .contador button:hover {
+  background: var(--brand-2);
+}
+
+.card-servicio .contador .cantidad {
+  font-weight: 900;
+  font-size: 18px;
+  min-width: 20px;
+}
+/* ==========================================================
+   💰 PASO 4 — CARGOS ADICIONALES (Diseño tipo "Configuración Final")
+========================================================== */
+#cargosGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  margin-top: 14px;
+}
+
+.card.cargo-item {
+  background: #fff;
+  border: 1.5px solid #EAECF0;
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(16,24,40,.05);
+  padding: 18px 16px 20px;
+  transition: all .25s ease;
+  position: relative;
+}
+
+.card.cargo-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 18px rgba(16,24,40,.08);
+}
+
+.card.cargo-item .head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.card.cargo-item .hTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 900;
+  color: var(--ink);
+}
+
+.card.cargo-item .hIcon {
+  font-size: 20px;
+}
+
+.card.cargo-item .body {
+  font-size: 13px;
+  color: #475467;
+  text-align: center;
+}
+
+.card.cargo-item .precio {
+  font-weight: 900;
+  font-size: 16px;
+  color: #111827;
+  margin-top: 10px;
+}
+
+.card.cargo-item .switch {
+  margin-left: auto;
+}
+
+.card.cargo-item.active {
+  border-color: var(--green2);
+  background: #ECFDF5;
+  box-shadow: 0 0 0 3px rgba(22,163,74,.15);
+}
+
+
+/* ==========================================================
+   🧩 INTEGRACIÓN ESTILOS PASO 4, 5 y 6 – CONTRATO UNIFICADO
+   ========================================================== */
+
+/* ======= Extras del Paso 4 (configuración, switches, badges) ======= */
+.switch {
+  --on:#22c55e;
+  position:relative;
+  width:54px;
+  height:30px;
+  border-radius:999px;
+  background:#E5E7EB;
+  cursor:pointer;
+  transition:.18s;
+  box-shadow:inset 0 0 0 1px #e5e7eb, 0 3px 8px rgba(2,8,23,.08);
+}
+.switch::after {
+  content:"";
+  position:absolute;
+  left:4px;
+  top:4px;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:#fff;
+  transition:.2s;
+  box-shadow:0 2px 6px rgba(2,8,23,.18);
+}
+.switch.on {
+  background:linear-gradient(90deg,var(--on),#16a34a);
+}
+.switch.on::after {
+  left:28px;
+}
+
+.note {
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  background:#FAFFFB;
+  border:1px solid #CFF7E3;
+  color:#035E38;
+  padding:12px 14px;
+  border-radius:14px;
+  font-size:13px;
+}
+.note .ic { font-size:18px; }
+
+.pillOK {
+  background:#ecfdf5;
+  border:1px solid #bbf7d0;
+  color:#065f46;
+  border-radius:999px;
+  padding:4px 10px;
+  font-weight:800;
+}
+
+/* ======= Formulario y uploader (Paso 5) ======= */
+.form-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+@media(max-width:720px){
+  .form-grid { grid-template-columns:1fr; }
+}
+
+.uploader {
+  position:relative;
+  border:2px dashed #E5E7EB;
+  border-radius:16px;
+  min-height:180px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(180deg,#FAFBFC, #F9FAFB);
+  text-align:center;
+  padding:16px;
+  transition:background .15s, border-color .15s;
+}
+.uploader:hover {
+  background:#FFF6F7;
+  border-color:#FFD3D6;
+}
+.uploader input[type=file] {
+  position:absolute;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
+}
+.uploader .msg {
+  color:#667085;
+}
+.preview {
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.thumb {
+  border:1px solid #E5E7EB;
+  border-radius:14px;
+  overflow:hidden;
+  width:200px;
+  height:130px;
+  position:relative;
+  background:#fff;
+  box-shadow:0 6px 18px rgba(16,24,40,.06);
+}
+.thumb img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+.thumb .rm {
+  position:absolute;
+  top:6px;
+  right:6px;
+  background:rgba(0,0,0,.7);
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  padding:4px 6px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+/* ======= Modal de Pago (Paso 6) ======= */
+.modal-back {
+  position:fixed;
+  inset:0;
+  background:rgba(16,24,40,.40);
+  display:none; /* 🔒 Oculto por defecto */
+  align-items:center;
+  justify-content:center;
+  z-index:50;
+  padding:10px;
+}
+.modal-back.show {
+  display:flex; /* ✅ Solo visible cuando JS agrega .show */
+}
+.modal {
+  width:min(640px,100%);
+  max-height:90vh;
+  display:flex;
+  flex-direction:column;
+  background:#fff;
+  border-radius:14px;
+  border:1px solid #EAECF0;
+  box-shadow:0 32px 100px rgba(16,24,40,.28);
+  overflow:hidden;
+}
+.modal .head {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 12px;
+  border-bottom:1px solid #EAECF0;
+  font-weight:900;
+  font-size:14px;
+}
+.modal .body {
+  padding:12px;
+  overflow:auto;
+}
+.modal .foot {
+  padding:10px 12px;
+  border-top:1px solid #EAECF0;
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+  background:#fff;
+}
+
+/* Tabs y métodos de pago */
+.pay-groups {
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin:4px 0 10px;
+}
+.tab {
+  padding:7px 10px;
+  border:1px solid #EAECF0;
+  border-radius:999px;
+  background:#F9FAFB;
+  font-weight:800;
+  cursor:pointer;
+  font-size:12px;
+}
+.tab.active {
+  background:#fff;
+  border-color:#FF1E2D;
+  box-shadow:0 0 0 4px rgba(255,30,45,.12);
+  color:#FF1E2D;
+}
+
+.method-grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-bottom:8px;
+}
+@media(max-width:460px){
+  .method-grid { grid-template-columns:1fr; }
+}
+.mcard {
+  position:relative;
+  border:1px solid #EAECF0;
+  border-radius:12px;
+  padding:8px 10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+  background:#fff;
+}
+.mcard input {
+  position:absolute;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
+}
+.mcard img {
+  width:28px;
+  height:28px;
+  object-fit:contain;
+}
+.mcard .ttl {
+  font-weight:800;
+  font-size:13px;
+}
+.mcard .sub {
+  font-size:11px;
+  color:#667085;
+}
+.mcard.active {
+  border-color:#FF1E2D;
+  box-shadow:0 0 0 4px rgba(255,30,45,.12);
+}
+
+/* Campos dentro del modal */
+fieldset {
+  border:1px solid #EAECF0;
+  border-radius:12px;
+  padding:10px;
+  margin:8px 0;
+  background:#fff;
+}
+legend {
+  font-weight:900;
+  color:#0f172a;
+  padding:0 6px;
+  font-size:12px;
+}
+
+/* Utilidades del modal */
+.qr {
+  width:110px;
+  height:110px;
+  border:1px dashed #e5e7eb;
+  border-radius:10px;
+  background:
+    linear-gradient(90deg,#f5f6f7 1px,transparent 1px) 0 0/10px 10px,
+    linear-gradient(#f5f6f7 1px,transparent 1px) 0 0/10px 10px;
+}
+.copy {
+  border:1px solid #EAECF0;
+  background:#F8FAFC;
+  border-radius:8px;
+  padding:7px 10px;
+  font-size:12px;
+  cursor:pointer;
+}
+
+/* ======= Tablas del Paso 6 (estado de cuenta) ======= */
+.table {
+  width:100%;
+  border-collapse:collapse;
+  border:1px solid #EAECF0;
+  border-radius:12px;
+  overflow:hidden;
+}
+.table th, .table td {
+  border-bottom:1px solid #EAECF0;
+  padding:9px 10px;
+  font-size:13px;
+}
+.table th {
+  background:#F9FAFB;
+  text-align:left;
+}
+.table tr:last-child td {
+  border-bottom:none;
+}
+.row {
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  border-bottom:1px dashed #EEF2F6;
+}
+.row > div {
+  padding:8px;
+}
+.row:last-child {
+  border-bottom:none;
+}
+.total {
+  color:#FF1E2D;
+  font-size:22px;
+  font-weight:900;
+}
+.small {
+  color:#667085;
+  font-size:12px;
+}
+.step {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .25s, transform .25s;
+}
+.step[style*="display: block"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==========================================================
+   🧾 PASO 5 · DOCUMENTACIÓN (modo simple)
+   Ajuste de estructura visual tipo grid (alineación con resumen)
+   Autor: Ingeniero Bernal
+========================================================== */
+
+.step[data-step="5"] .body {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* 🧩 Izquierda formulario / derecha resumen */
+  gap: 22px;
+  align-items: start;
+}
+
+/* 🔹 Bloques de formulario */
+.step[data-step="5"] .section {
+  background: #fff;
+  border: 1.5px solid var(--stroke);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(16,24,40,.04);
+  margin-bottom: 18px;
+}
+
+.step[data-step="5"] .section .head {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--stroke);
+  font-weight: 900;
+  background: #FAFAFA;
+}
+
+.step[data-step="5"] .section .cnt {
+  padding: 16px;
+}
+
+/* 🔸 Rejilla de campos */
+.step[data-step="5"] .form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 20px;
+}
+
+@media (max-width: 720px) {
+  .step[data-step="5"] .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 🖼️ Uploader */
+.step[data-step="5"] .uploader {
+  position: relative;
+  border: 2px dashed #E5E7EB;
+  border-radius: 16px;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #FAFBFC, #F9FAFB);
+  text-align: center;
+  padding: 16px;
+  transition: background .15s, border-color .15s;
+}
+.step[data-step="5"] .uploader:hover {
+  background: #FFF6F7;
+  border-color: #FFD3D6;
+}
+.step[data-step="5"] .uploader input[type=file] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.step[data-step="5"] .uploader .msg {
+  color: #667085;
+  font-size: 13px;
+}
+.step[data-step="5"] .preview {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+/* 🧱 Alineación de botones */
+.step[data-step="5"] .acciones {
+  margin-top: 24px;
+  grid-column: 1 / -1; /* Hace que ocupen todo el ancho */
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ✅ Estado visual de licencia */
+.pill-warn {
+  background: #FEF3C7;
+  border: 1px solid #FACC15;
+  color: #92400E;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.pill-ok {
+  background: #ECFDF5;
+  border: 1px solid #86EFAC;
+  color: #065F46;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-block;
+}
+
+/* 📱 Responsivo */
+@media (max-width: 1100px) {
+  .step[data-step="5"] .body {
+    grid-template-columns: 1fr; /* 🔻 Apilado en pantallas pequeñas */
+  }
+}
+.thumb {
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  overflow: hidden;
+  width: 200px;
+  height: 130px;
+  position: relative;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(16,24,40,.06);
+  transition: transform .2s ease;
+}
+.thumb:hover {
+  transform: scale(1.02);
+}
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.thumb .rm {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(0,0,0,.7);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 4px 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.thumb .rm:hover {
+  background: rgba(220,38,38,.85);
+}

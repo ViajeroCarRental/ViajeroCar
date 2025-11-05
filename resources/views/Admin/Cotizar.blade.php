@@ -81,21 +81,21 @@
 <div>
   <label>Categoría del vehículo</label>
   <select id="categoriaSelect" class="input">
-    <option value="0">Todas las categorías</option>
+    <option value="0">Selecciona una Categoria</option>
     @foreach($categorias as $cat)
       <option value="{{ $cat->id_categoria }}">{{ $cat->nombre }}</option>
     @endforeach
   </select>
 </div>
 
-<!-- Grupo: Selección de vehículo -->
-<div class="vehiculo-seleccion">
-  <button class="btn primary" type="button" id="btnVeh">🚗 Seleccionar vehículo</button>
-  <input id="id_vehiculo" name="vehiculo_id" class="input" type="text" placeholder="Vehículo seleccionado" readonly required>
+<!-- Grupo: Duración del viaje -->
+<div style="margin-top:10px;">
   <span id="diasBadge" class="badge" style="background:#ECFDF3;border:1px solid #ABEFC6;color:var(--ok)">
     0 día(s)
   </span>
 </div>
+
+
 
 <!-- Botón continuar -->
 <div class="acciones">
@@ -160,76 +160,96 @@
     </article>
 
     <!-- 👤 PASO 3: CLIENTE Y ENVÍO -->
-    <article class="step" data-step="3" style="display:none;">
-      <header>
-        <div class="badge">3</div>
-        <h3>PASO 3 · Datos del cliente</h3>
-      </header>
+<article class="step" data-step="3" style="display:none;">
+  <header>
+    <div class="badge">3</div>
+    <h3>PASO 3 · Datos del cliente</h3>
+  </header>
 
-      <div class="body">
-        <!-- ✅ Formulario de datos del cliente -->
-        <form id="formCotizacion" action="{{ route('rutaGuardarCotizacion') }}" method="POST" class="form-2" novalidate>
-          @csrf
-          <div>
-            <label>Nombre</label>
-            <input id="nombre_cliente" name="nombre_cliente" class="input" type="text" required>
-          </div>
-          <div>
-            <label>Apellido(s)</label>
-            <input id="apellidos" name="apellidos" class="input" type="text" required>
-          </div>
-          <div>
-            <label>Email</label>
-            <input id="email_cliente" name="email_cliente" class="input" type="email" required>
-          </div>
-          <div>
-            <label>Teléfono</label>
-            <input id="telefono_cliente" name="telefono_cliente" class="input" type="text" placeholder="+52..." required>
-          </div>
-          <div>
-            <label>País</label>
-            <input id="pais" name="pais" class="input" type="text" value="MÉXICO" required>
-          </div>
-          <div>
-            <label>Vuelo</label>
-            <input id="no_vuelo" name="no_vuelo" class="input" type="text" placeholder="UA2068" required>
-          </div>
+  <div class="body">
+    <!-- ✅ Formulario de datos del cliente -->
+    <form id="formCotizacion" action="{{ route('rutaGuardarCotizacion') }}" method="POST" class="form-2" novalidate>
+      @csrf
 
-          <!-- 🔹 Botones específicos de cotización -->
-          <div class="acciones" style="grid-column:1/-1; margin-top:20px; display:flex; flex-wrap:wrap; gap:10px;">
-            <button class="btn gray" id="back2" type="button">← Atrás</button>
-            <button class="btn primary" id="btnGuardarCotizacion" type="submit">💾 Guardar cotización</button>
-            <button class="btn success" id="btnEnviarCotizacion" type="button">📤 Enviar por correo</button>
-            <button class="btn ghost" id="btnConfirmarCotizacion" type="button">✅ Confirmar y reservar</button>
-          </div>
-        </form>
+      <div>
+        <label>Nombre</label>
+        <input id="nombre_cliente" name="nombre_cliente" class="input" type="text" required>
       </div>
-    </article>
+
+      <div>
+        <label>Apellido(s)</label>
+        <input id="apellidos" name="apellidos" class="input" type="text" required>
+      </div>
+
+      <div>
+        <label>Email</label>
+        <input id="email_cliente" name="email_cliente" class="input" type="email" required>
+      </div>
+
+      <div>
+        <label>Teléfono</label>
+        <input id="telefono_cliente" name="telefono_cliente" class="input" type="text" placeholder="+52..." required>
+      </div>
+
+      <div>
+        <label>País</label>
+        <input id="pais" name="pais" class="input" type="text" value="MÉXICO" required>
+      </div>
+
+      <div>
+        <label>Vuelo</label>
+        <input id="no_vuelo" name="no_vuelo" class="input" type="text" placeholder="UA2068">
+      </div>
+
+      <!-- 🔹 Botones -->
+      <div class="acciones" style="grid-column:1/-1; margin-top:20px; display:flex; flex-wrap:wrap; gap:10px;">
+        <button class="btn gray" id="back2" type="button">← Atrás</button>
+        <button class="btn primary" id="btnGuardarYEnviar" type="button">
+  💾 Guardar y enviar cotización
+</button>
+        <button class="btn success" id="btnConfirmarCotizacion" type="button">
+          ✅ Confirmar y reservar
+        </button>
+      </div>
+    </form>
+  </div>
+</article>
+
 
   </section>
 
   <!-- ======================
-       SECCIÓN DERECHA: RESUMEN
-  ======================= -->
-  <aside class="sticky">
-    <div class="card">
-      <div class="head">Resumen de cotización</div>
-      <div class="cnt">
-        <div id="vehImageWrap" style="text-align:center;margin-bottom:10px;display:none;">
-          <img id="vehImage" src="" alt="Vehículo seleccionado"
-               style="width:100%;max-width:250px;border-radius:12px;object-fit:cover;">
-          <div id="vehName" style="font-weight:700;margin-top:6px;"></div>
-        </div>
+     SECCIÓN DERECHA: RESUMEN
+======================= -->
+<aside class="sticky">
+  <div class="card">
+    <div class="head">Resumen de cotización</div>
+    <div class="cnt">
 
-        <div class="row"><div>Tarifa Base</div><div id="baseLine">—</div></div>
-        <div class="row"><div>Protección</div><div id="proteName">—</div></div>
-        <div class="row"><div>Adicionales</div><div id="extrasName">—</div></div>
-        <div class="row"><div>Subtotal</div><div id="subTot">$0.00 MXN</div></div>
-        <div class="row"><div>IVA (16%)</div><div id="iva">$0.00 MXN</div></div>
-        <div class="row"><div style="font-weight:900">Total</div><div class="total" id="total">$0.00 MXN</div></div>
-      </div>
+      <!-- 🚗 Imagen de referencia por categoría -->
+<div id="vehImageWrap" style="text-align:center;margin-bottom:10px;display:none;">
+  <img id="vehImage"
+       src="{{ asset('assets/placeholder-car.jpg') }}"
+       alt="Ejemplo de vehículo de la categoría seleccionada"
+       style="width:100%;max-width:250px;border-radius:12px;object-fit:cover;">
+  <div id="vehName" style="font-weight:700;margin-top:6px;">
+    Ejemplo de la categoría seleccionada
+  </div>
+</div>
+
+
+      <!-- Totales de cotización -->
+      <div class="row"><div>Tarifa Base</div><div id="baseLine">—</div></div>
+      <div class="row"><div>Protección</div><div id="proteName">—</div></div>
+      <div class="row"><div>Adicionales</div><div id="extrasName">—</div></div>
+      <div class="row"><div>Subtotal</div><div id="subTot">$0.00 MXN</div></div>
+      <div class="row"><div>IVA (16%)</div><div id="iva">$0.00 MXN</div></div>
+      <div class="row"><div style="font-weight:900">Total</div><div class="total" id="total">$0.00 MXN</div></div>
+
     </div>
-  </aside>
+  </div>
+</aside>
+
 
 </div>
  <!-- /grid -->
@@ -292,17 +312,6 @@
       <button class="btn gray" id="tpClear">Limpiar</button>
       <button class="btn primary" id="tpApply">Aplicar</button>
     </footer>
-  </div>
-</div>
-
-<!-- 🚗 Modal de vehículos -->
-<div class="pop" id="vehPop">
-  <div class="box vbox">
-    <header>
-      <span>Vehículos disponibles</span>
-      <button class="btn gray" id="vehClose">✖</button>
-    </header>
-    <div id="vehList" style="padding:12px"></div>
   </div>
 </div>
 

@@ -24,70 +24,44 @@ $('#back2')?.addEventListener('click', () => showStep(2));
 showStep(1);
 
 /* ================================
-   🚘 Selección de vehículo
+   🚗 Imagen y tarifa por categoría
 ================================ */
-const vehList = $('#vehList');
-const vehModal = $('#vehPop');
-const vehInput = $('#id_vehiculo');
 const categoriaSelect = $('#categoriaSelect');
+const vehImageWrap = $('#vehImageWrap');
+const vehImage = $('#vehImage');
+const vehName = $('#vehName');
 
-$('#btnVeh')?.addEventListener('click', async () => {
-  const idCat = categoriaSelect?.value;
-  if (!idCat) return alertify.warning('Selecciona una categoría primero.');
-  vehModal.classList.add('show');
-  vehList.innerHTML = '<div style="padding:12px;">Cargando vehículos...</div>';
-  try {
-    const res = await fetch(`/admin/reservaciones/vehiculos/${idCat}`);
-    const data = await res.json();
-    if (!data.length)
-      return vehList.innerHTML = '<div style="padding:12px;">No hay vehículos disponibles.</div>';
+categoriaSelect?.addEventListener('change', async () => {
+  const cat = categoriaSelect.value;
 
-    vehList.innerHTML = data.map(v => `
-      <div class="veh-card" style="display:flex;gap:16px;align-items:center;justify-content:space-between;border:1px solid #ddd;border-radius:12px;padding:10px;margin-bottom:10px;">
-        <div style="display:flex;gap:12px;align-items:center;">
-          <img src="${v.imagen ?? '/assets/media/no-image.png'}" alt="auto" style="width:140px;height:90px;object-fit:cover;border-radius:8px;">
-          <div>
-            <div style="font-weight:700;">${esc(v.nombre_publico)}</div>
-            <div style="font-size:13px;color:#666;">${esc(v.marca)} ${esc(v.modelo)} ${v.anio}</div>
-            <div style="font-size:12px;color:#777;">${v.transmision || '—'} · ${v.asientos} asientos · ${v.puertas} puertas</div>
-          </div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-weight:700;font-size:15px;color:#d00;">$${Number(v.precio_dia).toLocaleString()} MXN</div>
-          <button class="btn primary btnSelectVeh"
-                  data-id="${v.id_vehiculo}"
-                  data-nombre="${esc(v.nombre_publico)}"
-                  data-precio="${v.precio_dia}">Seleccionar</button>
-        </div>
-      </div>
-    `).join('');
-  } catch (err) {
-    console.error(err);
-    vehList.innerHTML = '<div style="padding:12px;color:#d00;">Error al cargar los vehículos.</div>';
+  if (cat == 0) {
+    vehImageWrap.style.display = 'none';
+    $('#baseLine').textContent = '—';
+    updateResumen(0);
+    return;
   }
-});
 
-$('#vehClose')?.addEventListener('click', () => vehModal.classList.remove('show'));
-vehModal?.addEventListener('click', e => { if (e.target.id === 'vehPop') vehModal.classList.remove('show'); });
+  try {
+    // 🔹 Obtiene datos de la categoría desde el backend
+    const res = await fetch(`/admin/reservaciones/categorias/${cat}`);
+    const data = await res.json();
 
-vehList?.addEventListener('click', e => {
-  const btn = e.target.closest('.btnSelectVeh');
-  if (!btn) return;
+    // Mostrar imagen y nombre
+    vehImage.src = data.imagen || '/assets/placeholder-car.jpg';
+    vehName.textContent = data.nombre || 'Ejemplo de la categoría seleccionada';
+    vehImageWrap.style.display = 'block';
 
-  const idVehiculo = btn.dataset.id;
-  const nombre = btn.dataset.nombre;
-  const precio = parseFloat(btn.dataset.precio || 0);
-  const imgSrc = btn.closest('.veh-card')?.querySelector('img')?.src || '/assets/media/no-image.png';
+    // Tarifa base
+    const tarifa = parseFloat(data.tarifa_base || data.precio_dia || 0);
+    $('#baseLine').textContent = `$${tarifa.toFixed(2)} MXN/día`;
+    updateResumen(tarifa);
 
-  vehInput.value = nombre;
-  vehInput.dataset.idVehiculo = idVehiculo;
-  vehInput.dataset.precio = precio;
-
-  vehModal.classList.remove('show');
-  updateResumen(precio);
-  $('#vehImage').src = imgSrc;
-  $('#vehName').textContent = nombre;
-  $('#vehImageWrap').style.display = 'block';
+  } catch (err) {
+    console.error('Error al cargar categoría:', err);
+    vehImageWrap.style.display = 'none';
+    $('#baseLine').textContent = '—';
+    updateResumen(0);
+  }
 });
 
 /* ================================
@@ -286,17 +260,21 @@ $('#formReserva')?.addEventListener('submit', async e => {
   e.preventDefault();
 
   const v = id => $(id)?.value?.trim();
-  if (!v('#id_vehiculo')) return alertify.warning('⚠️ Selecciona un vehículo.');
-  if (!v('#sucursal_retiro') || !v('#sucursal_entrega')) return alertify.warning('⚠️ Selecciona sucursal de retiro y entrega.');
-  if (!v('#fecha_inicio') || !v('#fecha_fin')) return alertify.warning('⚠️ Completa las fechas de la reserva.');
-  if (!v('#nombre_cliente') || !v('#email_cliente') || !v('#telefono_cliente')) return alertify.warning('⚠️ Completa los datos del cliente.');
+  if (!v('#categoriaSelect') || $('#categoriaSelect').value == 0)
+    return alertify.warning('⚠️ Selecciona una categoría de vehículo.');
+  if (!v('#sucursal_retiro') || !v('#sucursal_entrega'))
+    return alertify.warning('⚠️ Selecciona sucursal de retiro y entrega.');
+  if (!v('#fecha_inicio') || !v('#fecha_fin'))
+    return alertify.warning('⚠️ Completa las fechas de la reserva.');
+  if (!v('#nombre_cliente') || !v('#email_cliente') || !v('#telefono_cliente'))
+    return alertify.warning('⚠️ Completa los datos del cliente.');
 
   const btn = $('#btnReservar');
   btn.disabled = true;
   btn.textContent = 'Procesando...';
 
   const payload = {
-    id_vehiculo: vehInput.dataset.idVehiculo || '',
+    id_categoria: $('#categoriaSelect').value,
     sucursal_retiro: $('#sucursal_retiro').value,
     sucursal_entrega: $('#sucursal_entrega').value,
     fecha_inicio: $('#fecha_inicio').value,
@@ -312,6 +290,9 @@ $('#formReserva')?.addEventListener('submit', async e => {
     telefono_cliente: $('#telefono_cliente').value,
     no_vuelo: $('#no_vuelo')?.value || ''
   };
+
+  payload.seguroSeleccionado = seguroSeleccionado;
+  payload.adicionalesSeleccionados = adicionalesSeleccionados;
 
   try {
     const res = await fetch('/reservaciones/guardar', {
@@ -329,6 +310,8 @@ $('#formReserva')?.addEventListener('submit', async e => {
       alertify.notify(`Código: <b>${data.codigo}</b>`, 'custom', 8);
       e.target.reset();
       $('#vehImageWrap').style.display = 'none';
+      $('#baseLine').textContent = '—';
+      updateResumen(0);
     } else {
       throw new Error(data.message || 'Error desconocido al guardar.');
     }

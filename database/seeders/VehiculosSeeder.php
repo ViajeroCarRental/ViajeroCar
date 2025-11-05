@@ -159,7 +159,7 @@ class VehiculosSeeder extends Seeder
                 'asientos'       => 5,
                 'puertas'        => 4,
                 'kilometraje'    => 8000,
-                'precio_dia'     => 1.00,
+                'precio_dia'     => 1599.00, // ✅ corregido
                 'deposito_garantia' => 5000.00,
                 'descripcion'    => 'Lujo y desempeño con tecnología avanzada y máxima seguridad.',
                 'created_at'     => now(),
