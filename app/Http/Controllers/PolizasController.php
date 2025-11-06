@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class PolizasController extends Controller
 {
@@ -32,7 +33,7 @@ class PolizasController extends Controller
         return view('Admin.polizas', compact('polizas'));
     }
 
-    /** ✏️ Actualizar datos de póliza */
+    /** ✏️ Actualizar póliza y registrar gasto acumulado */
     public function actualizar(Request $request, $id)
     {
         DB::table('vehiculos')
@@ -45,7 +46,41 @@ class PolizasController extends Controller
                 'fin_vigencia_poliza'    => $request->fin_vigencia_poliza,
             ]);
 
-        return redirect()->route('rutaPolizas')->with('success', 'Póliza actualizada correctamente.');
+        // 🧾 Registrar costo en tabla gastos
+        if ($request->filled('costo_poliza') && $request->costo_poliza > 0) {
+            $costo = (float) $request->costo_poliza;
+            $fecha = Carbon::now();
+
+            // Buscar gasto previo (póliza o poliza)
+            $gastoExistente = DB::table('gastos')
+                ->where('id_vehiculo', $id)
+                ->whereIn('tipo', ['póliza', 'poliza'])
+                ->first();
+
+            if ($gastoExistente) {
+                // 🔁 Acumular monto
+                DB::table('gastos')
+                    ->where('id_gasto', $gastoExistente->id_gasto)
+                    ->update([
+                        'monto' => $gastoExistente->monto + $costo,
+                        'updated_at' => $fecha,
+                    ]);
+            } else {
+                // 🆕 Crear nuevo gasto
+                DB::table('gastos')->insert([
+                    'id_vehiculo' => $id,
+                    'tipo'        => 'póliza',
+                    'descripcion' => 'Costo de póliza de seguro',
+                    'monto'       => $costo,
+                    'fecha'       => $fecha,
+                    'created_at'  => $fecha,
+                    'updated_at'  => $fecha,
+                ]);
+            }
+        }
+
+        return redirect()->route('rutaPolizas')
+            ->with('success', 'Póliza y gasto actualizados correctamente.');
     }
 
     /** 📤 Subir o reemplazar archivo */
@@ -63,17 +98,13 @@ class PolizasController extends Controller
         $file   = $request->file('archivo_poliza');
         $nombre = 'poliza_' . Str::random(12) . '.' . $file->getClientOriginalExtension();
 
-        // 📁 Guardar archivo en storage/app/public/polizas
+        // 📁 Guardar en storage
         Storage::disk('public')->putFileAs('polizas', $file, $nombre);
 
-        // 🗑️ Eliminar archivo anterior si existe
+        // 🗑️ Eliminar archivo anterior si existía
         if (!empty($vehiculo->archivo_poliza)) {
-            $rutasPosibles = [
-                'polizas/' . $vehiculo->archivo_poliza,
-                'uploads/' . $vehiculo->archivo_poliza,
-                $vehiculo->archivo_poliza
-            ];
-            foreach ($rutasPosibles as $ruta) {
+            $rutas = ['polizas/' . $vehiculo->archivo_poliza, 'uploads/' . $vehiculo->archivo_poliza];
+            foreach ($rutas as $ruta) {
                 if (Storage::disk('public')->exists($ruta)) {
                     Storage::disk('public')->delete($ruta);
                     break;
@@ -86,10 +117,11 @@ class PolizasController extends Controller
             ->where('id_vehiculo', $id)
             ->update(['archivo_poliza' => $nombre]);
 
-        return redirect()->route('rutaPolizas')->with('success', 'Archivo subido o reemplazado correctamente.');
+        return redirect()->route('rutaPolizas')
+            ->with('success', 'Archivo subido o reemplazado correctamente.');
     }
 
-    /** 👁️ Ver archivo sin depender del symlink */
+    /** 👁️ Ver archivo */
     public function ver($id)
     {
         $vehiculo = DB::table('vehiculos')->where('id_vehiculo', $id)->first();
@@ -98,14 +130,8 @@ class PolizasController extends Controller
             abort(404, 'Archivo no registrado.');
         }
 
-        $nombre = $vehiculo->archivo_poliza;
-
-        // 🔍 Buscar en múltiples posibles rutas
-        $rutas = [
-            'polizas/' . $nombre,
-            'uploads/' . $nombre,
-            $nombre,
-        ];
+        $nombre = basename($vehiculo->archivo_poliza);
+        $rutas = ['polizas/' . $nombre, 'uploads/' . $nombre, $nombre];
 
         foreach ($rutas as $ruta) {
             if (Storage::disk('public')->exists($ruta)) {
@@ -118,28 +144,22 @@ class PolizasController extends Controller
 
     /** ⬇️ Descargar archivo */
     public function descargar($id)
-{
-    $vehiculo = DB::table('vehiculos')->where('id_vehiculo', $id)->first();
-    if (!$vehiculo || !$vehiculo->archivo_poliza) {
-        return back()->with('error', 'Archivo no disponible.');
-    }
-
-    // 🧹 Limpiar el nombre para evitar caracteres inválidos
-    $nombreLimpio = basename($vehiculo->archivo_poliza);
-
-    $rutas = [
-        'polizas/' . $nombreLimpio,
-        'uploads/' . $nombreLimpio,
-        $nombreLimpio,
-    ];
-
-    foreach ($rutas as $ruta) {
-        if (Storage::disk('public')->exists($ruta)) {
-            return Storage::disk('public')->download($ruta, $nombreLimpio);
+    {
+        $vehiculo = DB::table('vehiculos')->where('id_vehiculo', $id)->first();
+        if (!$vehiculo || !$vehiculo->archivo_poliza) {
+            return back()->with('error', 'Archivo no disponible.');
         }
+
+        $nombre = basename($vehiculo->archivo_poliza);
+        $rutas = ['polizas/' . $nombre, 'uploads/' . $nombre, $nombre];
+
+        foreach ($rutas as $ruta) {
+            if (Storage::disk('public')->exists($ruta)) {
+                // ⚙️ BOM UTF-8 para nombres con acentos
+                return Storage::disk('public')->download($ruta, $nombre);
+            }
+        }
+
+        return back()->with('error', 'El archivo no existe en el servidor.');
     }
-
-    return back()->with('error', 'El archivo no existe en el servidor.');
-}
-
 }

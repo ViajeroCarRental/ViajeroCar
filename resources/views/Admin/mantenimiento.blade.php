@@ -3,6 +3,7 @@
 
 @section('css-vistaMantenimiento')
 <link rel="stylesheet" href="{{ asset('css/mantenimiento.css') }}">
+
 @endsection
 
 @section('contenidoMantenimiento')
@@ -10,6 +11,15 @@
   <div class="content">
     <h1 class="title">Mantenimiento de Flotilla</h1>
     <p class="small-muted">Actualiza el kilometraje o registra mantenimientos. Los colores indican el estado actual.</p>
+
+    <!-- 🔍 Buscador -->
+    <div class="buscador-flotilla">
+      <i class="fas fa-search icono-buscar"></i>
+      <input 
+        type="text" 
+        id="filtroMantenimiento" 
+        placeholder="Buscar por modelo, marca o placa...">
+    </div>
 
     <div class="mgrid">
       @foreach($vehiculos as $v)
@@ -182,5 +192,16 @@ async function submitMaintenance(e, id){
     alert('Error de conexión. Intente nuevamente.');
   }
 }
+
+// === 🔎 FILTRO DE MANTENIMIENTO ===
+document.getElementById('filtroMantenimiento').addEventListener('keyup', function() {
+  const filtro = this.value.toLowerCase();
+  const tarjetas = document.querySelectorAll('.mgrid .mcard');
+
+  tarjetas.forEach(card => {
+    const texto = card.textContent.toLowerCase();
+    card.style.display = texto.includes(filtro) ? '' : 'none';
+  });
+});
 </script>
 @endsection

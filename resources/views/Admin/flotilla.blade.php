@@ -3,105 +3,7 @@
 
 @section('css-vistaFlotilla')
 <link rel="stylesheet" href="{{ asset('css/flotilla.css') }}">
-<style>
-/* ===== Swipe Reveal Delete (debajo de fila, bonito y fluido) ===== */
-.table tbody tr {
-  position: relative;
-  background: #fff;
-  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
-  user-select: none;
-  overflow: hidden;
-}
-.table tbody tr.swiped {
-  transform: translateX(-88px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-}
-.table tbody tr td {
-  position: relative;
-  z-index: 2;
-}
 
-/* Fondo rojo debajo (no bloquea clicks cuando está oculto) */
-.table tbody tr .delete-bg {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #dc2626, #ef4444);
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding-right: 22px;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-  border-top-right-radius: var(--radius);
-  border-bottom-right-radius: var(--radius);
-  z-index: 1;
-  pointer-events: none; /* 🟢 clave: no bloquea el botón Editar */
-  box-shadow: inset -10px 0 20px rgba(0,0,0,0.08);
-}
-.table tbody tr.swiped .delete-bg {
-  opacity: 1;
-  pointer-events: auto; /* activo solo cuando está visible */
-}
-
-.table tbody tr .delete-bg form { margin: 0; }
-.table tbody tr .delete-bg button {
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.25);
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  color: #fff;
-  font-size: 22px;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  transition: transform .2s, background .2s, box-shadow .2s;
-  box-shadow: 0 8px 18px rgba(0,0,0,0.18);
-}
-.table tbody tr .delete-bg button:hover {
-  transform: scale(1.07);
-  background: rgba(255,255,255,0.25);
-  box-shadow: 0 10px 22px rgba(0,0,0,0.22);
-}
-
-/* Botón Editar — más bonito */
-.btn-sm.editBtn {
-  background: #fff;
-  border: 1px solid var(--stroke);
-  color: #ef4444;
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 14px;
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  cursor: pointer;
-  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
-  box-shadow: 0 2px 8px rgba(0,0,0,.06);
-}
-.btn-sm.editBtn::before {
-  content: "✏️";
-  font-size: 16px;
-}
-.btn-sm.editBtn:hover {
-  transform: translateY(-1px);
-  border-color: #fecaca;
-  box-shadow: 0 6px 16px rgba(239,68,68,.18);
-}
-
-/* Ancho del área de acción al deslizar */
-:root { --swipe-width: 88px; }
-
-/* Rebote sutil al llegar */
-@keyframes rebound {
-  0%   { transform: translateX(calc(-1 * (var(--swipe-width) - 12px))); }
-  70%  { transform: translateX(calc(-1 * (var(--swipe-width) + 4px))); }
-  100% { transform: translateX(calc(-1 * var(--swipe-width))); }
-}
-.table tbody tr.rebound {
-  animation: rebound 0.25s ease;
-}
-</style>
 @endsection
 
 @section('contenidoMantenimiento')
@@ -113,9 +15,19 @@
   <div class="content">
     <h1 class="title">Flotilla</h1>
 
-    <div class="toolbar" style="margin-bottom:20px; text-align:right;">
-      <button id="btnAddAuto" class="btn-red">➕ Agregar Auto</button>
-    </div>
+<!-- 🔍 Buscador + Botón juntos -->
+<div class="buscador-contenedor">
+  <div class="buscador-flotilla">
+    <i class="fas fa-search icono-buscar"></i>
+    <input 
+      type="text" 
+      id="filtroVehiculo" 
+      placeholder="Buscar por modelo, placa, color o año...">
+  </div>
+
+  <button id="btnAddAuto" class="btn-red">➕ Agregar Auto</button>
+</div>
+
 
     <div style="overflow:auto">
       <table class="table" id="tblFleet">
@@ -155,9 +67,9 @@
             <td>
               <!-- Fondo rojo debajo, oculto hasta swipe -->
               <div class="delete-bg">
-                <form action="{{ route('flotilla.eliminar', $v->id_vehiculo) }}" method="POST">
+                <form action="{{ route('flotilla.eliminar', $v->id_vehiculo) }}" method="POST" class="delete-form">
                   @csrf @method('DELETE')
-                  <button type="submit" title="Eliminar">🗑️</button>
+                  <button type="button" class="btnDelete" title="Eliminar">🗑️</button>
                 </form>
               </div>
 
@@ -290,6 +202,18 @@
       </form>
     </div>
   </div>
+  <!-- Modal: Confirmar eliminación -->
+<div id="confirmDeleteModal" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-modal="true">
+    <h3>¿Eliminar vehículo?</h3>
+    <p>Esta acción no se puede deshacer.</p>
+    <div class="actions">
+      <button type="button" class="btn-cancel" id="cancelDelete">Cancelar</button>
+      <button type="button" class="btn-delete" id="confirmDelete">Eliminar</button>
+    </div>
+  </div>
+</div>
+
 </main>
 
 @section('js-vistaFlotilla')
@@ -324,6 +248,54 @@ const closeAdd = document.getElementById('closeAdd');
 const cancelAdd = document.getElementById('cancelAdd');
 btnAddAuto.onclick = () => addModal.classList.add('active');
 closeAdd.onclick = cancelAdd.onclick = () => addModal.classList.remove('active');
+
+// === Confirmación de eliminación ===
+// Recomendado: cambia el botón del basurero a type="button"
+// <button type="button" class="btnDelete">🗑️</button>
+// y mantén el <form method="POST" class="delete-form"> con @csrf @method('DELETE')
+
+(function () {
+  const confirmModal = document.getElementById('confirmDeleteModal');
+  const btnCancel = document.getElementById('cancelDelete');
+  const btnConfirm = document.getElementById('confirmDelete');
+  let formToDelete = null;
+
+  // 1) Abrir modal al click del basurero
+  document.querySelectorAll('.delete-bg .delete-form .btnDelete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      formToDelete = e.target.closest('form');
+      confirmModal.classList.add('active');
+    });
+  });
+
+  // 2) Cerrar sin eliminar
+  btnCancel.addEventListener('click', () => {
+    confirmModal.classList.remove('active');
+    formToDelete = null;
+  });
+
+  // 3) Confirmar eliminación
+  btnConfirm.addEventListener('click', () => {
+    if (formToDelete) formToDelete.submit();
+  });
+
+  // 4) Cerrar clic fuera
+  confirmModal.addEventListener('click', (e) => {
+    if (e.target === confirmModal) {
+      confirmModal.classList.remove('active');
+      formToDelete = null;
+    }
+  });
+
+  // 5) Cerrar con ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      confirmModal.classList.remove('active');
+      formToDelete = null;
+    }
+  });
+})();
+
 
 // === SWIPE PARA ELIMINAR ===
 let startX = 0;
@@ -376,6 +348,25 @@ document.addEventListener('click', e => {
     document.querySelectorAll('#tblFleet tbody tr').forEach(r => r.classList.remove('swiped'));
   }
 });
+// === 🔎 FILTRO DE BÚSQUEDA ===
+document.getElementById('filtroVehiculo').addEventListener('keyup', function () {
+  const filtro = this.value.toLowerCase();
+  const filas = document.querySelectorAll('#tblFleet tbody tr');
+
+  filas.forEach(fila => {
+    const modelo = fila.dataset.modelo.toLowerCase();
+    const placa = fila.querySelector('td:nth-child(5)').textContent.toLowerCase();
+    const color = fila.dataset.color.toLowerCase();
+    const anio = fila.dataset.anio.toLowerCase();
+
+    if (modelo.includes(filtro) || placa.includes(filtro) || color.includes(filtro) || anio.includes(filtro)) {
+      fila.style.display = '';
+    } else {
+      fila.style.display = 'none';
+    }
+  });
+});
+
 </script>
 @endsection
 @endsection

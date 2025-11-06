@@ -496,3 +496,46 @@ body {
     padding: 1.2rem;
   }
 }
+
+
+/* 🔍 Buscador mantenimiento (idéntico al de flotilla pero adaptado a tarjetas) */
+.buscador-flotilla {
+  position: relative;
+  display: block;
+  margin: 15px 0 25px 0;
+}
+
+.buscador-flotilla input {
+  width: 420px;
+  padding: 12px 16px 12px 44px;
+  font-size: 15px;
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  background: #f9fafb;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.buscador-flotilla input:focus {
+  border-color: #d6121f;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(214, 18, 31, 0.15);
+}
+
+.buscador-flotilla input::placeholder {
+  color: #aaa;
+  font-style: italic;
+}
+
+.icono-buscar {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #b0b0b0;
+  font-size: 16px;
+  pointer-events: none;
+}

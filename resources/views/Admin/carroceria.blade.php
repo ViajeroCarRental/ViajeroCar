@@ -5,16 +5,7 @@
 <link rel="stylesheet" href="{{ asset('css/carroceria.css') }}">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-  /* 🎨 Estilos de estatus */
-  .status.pendiente { background: #fff3cd; color: #856404; padding: .25rem .5rem; border-radius: .5rem; }
-  .status.cotizado { background: #d1ecf1; color: #0c5460; padding: .25rem .5rem; border-radius: .5rem; }
-  .status.en\ proceso { background: #cfe2ff; color: #084298; padding: .25rem .5rem; border-radius: .5rem; }
-  .status.refacción { background: #f8d7da; color: #721c24; padding: .25rem .5rem; border-radius: .5rem; }
-  .status.terminado { background: #d4edda; color: #155724; padding: .25rem .5rem; border-radius: .5rem; }
-  .cursor-pointer { cursor: pointer; }
-  .form-text-vehiculo { font-size: .9rem; color: #6c757d; }
-</style>
+
 @endsection
 
 @section('contenidoCarroceria')
@@ -27,16 +18,24 @@
     <h1 class="title">Carrocería</h1>
     <p class="sub">Historial de daños, reparaciones y reportes visuales de cada vehículo.</p>
 
-    <!-- 🔴 Nuevo reporte -->
-    <div class="d-flex justify-content-end mb-3">
-      <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalNuevoReporte">
-        <i class="bi bi-plus-lg"></i> Nuevo reporte
-      </button>
-    </div>
+<!-- 🔍 Buscador + Botón alineados -->
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div class="buscador-flotilla mb-0">
+    <i class="fas fa-search icono-buscar"></i>
+    <input 
+      type="text" 
+      id="filtroCarroceria" 
+      placeholder="Buscar por placa, modelo, marca, zona o taller...">
+  </div>
+
+  <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalNuevoReporte">
+    <i class="bi bi-plus-lg"></i> Nuevo reporte
+  </button>
+</div>
 
     <!-- 📋 Tabla -->
     <div class="table-wrapper">
-      <table class="table table-hover align-middle">
+      <table class="table table-hover align-middle" id="tblCarroceria">
         <thead class="table-danger">
           <tr>
             <th>Placa</th>
@@ -148,7 +147,6 @@
                 <option value="Pendiente">Pendiente</option>
                 <option value="Cotizado">Cotizado</option>
                 <option value="En proceso">En proceso</option>
-                <option value="Refacción">Refacción</option>
                 <option value="Terminado">Terminado</option>
               </select>
             </div>
@@ -270,6 +268,15 @@
 @section('js-vistaCarroceria')
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+  // ==== FILTRO DE TABLA DE CARROCERÍA ====
+  document.getElementById('filtroCarroceria').addEventListener('keyup', function() {
+    const filtro = this.value.toLowerCase();
+    document.querySelectorAll('#tblCarroceria tbody tr').forEach(tr => {
+      const texto = tr.textContent.toLowerCase();
+      tr.style.display = texto.includes(filtro) ? '' : 'none';
+    });
+  });
+
   // ==== FILTRO DE VEHÍCULOS ====
   const filtro = document.getElementById('filtroVehiculos');
   if (filtro) {

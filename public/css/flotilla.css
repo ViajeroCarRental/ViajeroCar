@@ -372,3 +372,202 @@ body { font-family: var(--font); background: var(--bg); color: var(--ink); }
 @keyframes fadeIn {
   from { opacity: 0; } to { opacity: 1; }
 }
+
+
+
+/* Modal confirmación eliminar */
+#confirmDeleteModal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+#confirmDeleteModal.active { display: flex; }
+#confirmDeleteModal .modal-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 22px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+#confirmDeleteModal h3 { margin: 0 0 8px; }
+#confirmDeleteModal p { margin: 0 0 16px; color: #555; }
+#confirmDeleteModal .actions {
+  display: flex; gap: 12px; justify-content: center; margin-top: 6px;
+}
+#confirmDeleteModal .btn-cancel {
+  background: #e5e7eb; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer;
+}
+#confirmDeleteModal .btn-delete {
+  background: #dc2626; color: #fff; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer;
+}
+
+
+/* ===== Swipe Reveal Delete (debajo de fila, bonito y fluido) ===== */
+.table tbody tr {
+  position: relative;
+  background: #fff;
+  transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+  user-select: none;
+  overflow: hidden;
+}
+.table tbody tr.swiped {
+  transform: translateX(-88px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+.table tbody tr td {
+  position: relative;
+  z-index: 2;
+}
+
+/* Fondo rojo debajo (no bloquea clicks cuando está oculto) */
+.table tbody tr .delete-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 22px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  border-top-right-radius: var(--radius);
+  border-bottom-right-radius: var(--radius);
+  z-index: 1;
+  pointer-events: none; /* 🟢 clave: no bloquea el botón Editar */
+  box-shadow: inset -10px 0 20px rgba(0,0,0,0.08);
+}
+.table tbody tr.swiped .delete-bg {
+  opacity: 1;
+  pointer-events: auto; /* activo solo cuando está visible */
+}
+
+.table tbody tr .delete-bg form { margin: 0; }
+.table tbody tr .delete-bg button {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform .2s, background .2s, box-shadow .2s;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+}
+.table tbody tr .delete-bg button:hover {
+  transform: scale(1.07);
+  background: rgba(255,255,255,0.25);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.22);
+}
+
+/* Botón Editar — más bonito */
+.btn-sm.editBtn {
+  background: #fff;
+  border: 1px solid var(--stroke);
+  color: #ef4444;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 14px;
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.btn-sm.editBtn::before {
+  content: "✏️";
+  font-size: 16px;
+}
+.btn-sm.editBtn:hover {
+  transform: translateY(-1px);
+  border-color: #fecaca;
+  box-shadow: 0 6px 16px rgba(239,68,68,.18);
+}
+
+/* Ancho del área de acción al deslizar */
+:root { --swipe-width: 88px; }
+
+/* Rebote sutil al llegar */
+@keyframes rebound {
+  0%   { transform: translateX(calc(-1 * (var(--swipe-width) - 12px))); }
+  70%  { transform: translateX(calc(-1 * (var(--swipe-width) + 4px))); }
+  100% { transform: translateX(calc(-1 * var(--swipe-width))); }
+}
+.table tbody tr.rebound {
+  animation: rebound 0.25s ease;
+}
+
+/* 🧭 Contenedor del buscador y botón */
+.buscador-contenedor {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap; /* responsive */
+}
+
+/* 🔍 Buscador */
+.buscador-flotilla {
+  position: relative;
+  flex: 1;
+  max-width: 450px;
+}
+
+.buscador-flotilla input {
+  width: 100%;
+  padding: 12px 16px 12px 42px;
+  font-size: 15px;
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  background: #f9fafb;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.buscador-flotilla input:focus {
+  border-color: #d6121f;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(214, 18, 31, 0.15);
+}
+
+.icono-buscar {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #b0b0b0;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+/* 🔘 Botón Agregar */
+.btn-red {
+  background: linear-gradient(135deg, #d6121f, #b70f1b);
+  color: #fff;
+  font-weight: 600;
+  padding: 10px 22px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  box-shadow: 0 3px 8px rgba(214, 18, 31, 0.25);
+  transition: all 0.25s ease;
+}
+
+.btn-red:hover {
+  background: linear-gradient(135deg, #b70f1b, #910c16);
+  transform: translateY(-1px);
+}

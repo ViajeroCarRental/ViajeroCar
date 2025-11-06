@@ -19,6 +19,7 @@ use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\PolizasController;
 use App\Http\Controllers\CarroceriaController;
 use App\Http\Controllers\GastosController;
+use App\Http\Controllers\SiniestrosController;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -218,5 +219,25 @@ Route::put('/admin/carroceria/update/{id}', [CarroceriaController::class, 'updat
 
 
 
+// === GASTOS ===
 Route::get('/admin/gastos', [GastosController::class, 'index'])->name('rutaGastos');
 Route::get('/admin/gastos/filtrar', [GastosController::class, 'filtrar']);
+// 🔹 Obtener totales por categoría (para las tarjetas)
+Route::get('/admin/gastos/totales', [GastosController::class, 'totales'])->name('gastos.totales');
+
+// 🔹 Exportar todos los gastos a Excel (CSV)
+Route::get('/admin/gastos/exportar', [GastosController::class, 'exportar'])->name('gastos.exportar');
+
+// 🔹 Rango rápido: hoy, semana o mes
+Route::get('/admin/gastos/rango/{tipo}', [GastosController::class, 'rangoRapido'])->name('gastos.rango');
+
+
+
+
+// === Siniestros ===
+Route::get('/admin/seguros', [App\Http\Controllers\SiniestrosController::class, 'index'])->name('rutaSeguros');
+Route::post('/admin/siniestros/guardar', [App\Http\Controllers\SiniestrosController::class, 'guardar'])->name('guardarSiniestro');
+Route::post('/admin/siniestros/actualizar/{id}', [App\Http\Controllers\SiniestrosController::class, 'actualizar'])->name('actualizarSiniestro');
+Route::post('/admin/siniestros/subir/{id}', [App\Http\Controllers\SiniestrosController::class, 'subirArchivo'])->name('subirArchivoSiniestro');
+Route::get('/admin/siniestros/ver/{id}', [App\Http\Controllers\SiniestrosController::class, 'ver'])->name('verSiniestro');
+Route::get('/admin/siniestros/descargar/{id}', [App\Http\Controllers\SiniestrosController::class, 'descargar'])->name('descargarSiniestro');
