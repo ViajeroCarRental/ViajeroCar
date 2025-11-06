@@ -1,4 +1,4 @@
-@extends('layouts.Flotillas')
+@extends('layouts.Flotillas') 
 @section('Titulo', 'Pólizas')
 
 @section('css-vistaPolizas')
@@ -6,6 +6,7 @@
 <style>
   .badge.green { background: #27ae60; color: white; padding: 4px 8px; border-radius: 6px; }
   .badge.red { background: #e74c3c; color: white; padding: 4px 8px; border-radius: 6px; }
+  .badge.yellow { background: #f1c40f; color: #222; padding: 4px 8px; border-radius: 6px; }
   .badge.gray { background: #95a5a6; color: white; padding: 4px 8px; border-radius: 6px; }
 
   .btn.small {
@@ -70,35 +71,62 @@
       <table class="table" id="tblPolizas">
         <thead>
           <tr>
-            <th>Carro</th><th>Póliza</th><th>Aseguradora</th><th>Vigencia</th><th>Estatus</th><th>Archivo</th><th>Acciones</th>
+            <th>Carro</th>
+            <th>Póliza</th>
+            <th>Aseguradora</th>
+            <th>Vigencia</th>
+            <th>Días restantes</th>
+            <th>Estatus</th>
+            <th>Archivo</th>
+            <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           @forelse($polizas as $p)
             @php
               $fin = $p->fin_vigencia_poliza ? \Carbon\Carbon::parse($p->fin_vigencia_poliza) : null;
-              $vigente = $fin && $fin->isFuture();
+              $inicio = $p->inicio_vigencia_poliza ? \Carbon\Carbon::parse($p->inicio_vigencia_poliza) : null;
+              $hoy = \Carbon\Carbon::now();
+
+              // 🔢 Calcular diferencia sin decimales
+              $diasRestantes = $fin ? $hoy->floatDiffInDays($fin, false) : null;
+              $diasRestantes = $diasRestantes !== null ? (int) round($diasRestantes) : null;
+
+              // 🎨 Lógica de colores y estados
+              if ($diasRestantes === null) {
+                  $estatus = ['label' => 'Sin fecha', 'color' => 'gray'];
+              } elseif ($diasRestantes < 0) {
+                  $estatus = ['label' => 'Vencida', 'color' => 'red'];
+              } elseif ($diasRestantes <= 9) {
+                  $estatus = ['label' => 'Por vencer', 'color' => 'red'];
+              } elseif ($diasRestantes >= 10 && $diasRestantes <= 20) {
+                  $estatus = ['label' => 'Por vencer', 'color' => 'yellow'];
+              } else {
+                  $estatus = ['label' => 'Vigente', 'color' => 'green'];
+              }
+
               $archivo = $p->archivo_poliza ? basename($p->archivo_poliza) : null;
               $url = $archivo ? asset('storage/polizas/'.$archivo) : null;
             @endphp
+
             <tr>
               <td><strong>{{ $p->nombre_publico }}</strong><br><small>{{ $p->placa }}</small></td>
               <td>{{ $p->no_poliza ?? 'Sin póliza' }}</td>
               <td>{{ $p->aseguradora ?? '—' }}</td>
               <td>
-                {{ $p->inicio_vigencia_poliza ? \Carbon\Carbon::parse($p->inicio_vigencia_poliza)->format('d/m/Y') : '—' }}
+                {{ $inicio ? $inicio->format('d/m/Y') : '—' }}
                 –
-                {{ $p->fin_vigencia_poliza ? \Carbon\Carbon::parse($p->fin_vigencia_poliza)->format('d/m/Y') : '—' }}
+                {{ $fin ? $fin->format('d/m/Y') : '—' }}
               </td>
               <td>
-                @if(!$fin)
-                  <span class="badge gray">Sin fecha</span>
-                @elseif($vigente)
-                  <span class="badge green">Vigente</span>
+                @if($diasRestantes !== null)
+                  <span>{{ $diasRestantes }} {{ abs($diasRestantes) == 1 ? 'día' : 'días' }}</span>
                 @else
-                  <span class="badge red">Vencida</span>
+                  <span>—</span>
                 @endif
               </td>
+              <td><span class="badge {{ $estatus['color'] }}">{{ $estatus['label'] }}</span></td>
+
               <td>
                 @if($p->archivo_poliza)
                   <div style="display:flex; gap:8px;">
@@ -109,6 +137,7 @@
                   <span class="text-gray">—</span>
                 @endif
               </td>
+
               <td>
                 <div style="display:flex; gap:8px;">
                   <button class="btn small orange" onclick="abrirModalEditar({{ $p->id_vehiculo }}, '{{ $p->no_poliza }}', '{{ $p->aseguradora }}', '{{ $p->plan_seguro }}', '{{ $p->inicio_vigencia_poliza }}', '{{ $p->fin_vigencia_poliza }}')">Editar</button>
@@ -117,7 +146,7 @@
               </td>
             </tr>
           @empty
-            <tr><td colspan="7" class="text-center">No hay pólizas registradas</td></tr>
+            <tr><td colspan="8" class="text-center">No hay pólizas registradas</td></tr>
           @endforelse
         </tbody>
       </table>
