@@ -35,6 +35,11 @@
     <li><a href="{{ route('rutaDashboard') }}"><i class="fas fa-arrow-left"></i> Volver al panel</a></li>
   </ul>
 </aside>
+<!-- Botón para mostrar/ocultar sidebar -->
+<button id="toggleSidebar" class="btn-toggle">
+  <i class="fas fa-bars"></i>
+</button>
+
 <div class="main-content">
     @yield('contenidoMantenimiento')
     @yield('contenidoFlotilla')
@@ -54,4 +59,15 @@
     @yield('js-vistaGastos')
 </div>
 </body>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const sidebar = document.querySelector(".sidebar");
+  const btnToggle = document.getElementById("toggleSidebar");
+
+  btnToggle.addEventListener("click", () => {
+    sidebar.classList.toggle("sidebar-hidden");
+  });
+});
+</script>
+
 </html>

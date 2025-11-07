@@ -106,10 +106,23 @@ async function cargarTotales() {
 function aplicarFiltroCategoria(tipo) {
   const rows = document.querySelectorAll("#tblCost tbody tr");
   rows.forEach(r => {
-    if (tipo === "total") r.style.display = "";
-    else r.style.display = (r.dataset.type === tipo) ? "" : "none";
+    const tipoRow = r.dataset.type.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // sin acentos
+    const tipoCard = tipo.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    if (tipoCard === "total") {
+      r.style.display = "";
+    } else if (tipoCard === "otros") {
+      if (["siniestro", "otros"].includes(tipoRow)) {
+        r.style.display = "";
+      } else {
+        r.style.display = "none";
+      }
+    } else {
+      r.style.display = (tipoRow === tipoCard) ? "" : "none";
+    }
   });
 }
+
 
 // ========= Filtro rápido (Hoy / Semana / Mes) =========
 async function filtrarRango(tipo) {
@@ -141,17 +154,20 @@ async function filtrarRango(tipo) {
   }
 }
 
-// ========= Exportar a Excel/CSV (backend) =========
-document.getElementById("exportCost").addEventListener("click", () => {
-  window.location.href = '{{ route("gastos.exportar") }}';
-});
-
 // ========= Inicialización =========
 document.addEventListener("DOMContentLoaded", () => {
+  // Mostrar todos los registros al cargar la página (sin filtros)
+  const rows = document.querySelectorAll("#tblCost tbody tr");
+  rows.forEach(r => r.style.display = ""); // muestra todo
+
+  // Cargar totales desde backend
   cargarTotales();
+
+  // Activar filtros al hacer clic en las tarjetas
   document.querySelectorAll(".card[data-type]").forEach(card => {
     card.addEventListener("click", () => aplicarFiltroCategoria(card.dataset.type));
   });
 });
+
 </script>
 @endsection

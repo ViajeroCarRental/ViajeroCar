@@ -241,3 +241,6 @@ Route::post('/admin/siniestros/actualizar/{id}', [App\Http\Controllers\Siniestro
 Route::post('/admin/siniestros/subir/{id}', [App\Http\Controllers\SiniestrosController::class, 'subirArchivo'])->name('subirArchivoSiniestro');
 Route::get('/admin/siniestros/ver/{id}', [App\Http\Controllers\SiniestrosController::class, 'ver'])->name('verSiniestro');
 Route::get('/admin/siniestros/descargar/{id}', [App\Http\Controllers\SiniestrosController::class, 'descargar'])->name('descargarSiniestro');
+// 🔎 Buscador AJAX de vehículos
+Route::get('/admin/vehiculos/buscar', [SiniestrosController::class, 'buscarVehiculos'])
+    ->name('vehiculos.buscar');

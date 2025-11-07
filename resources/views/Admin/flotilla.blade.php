@@ -41,10 +41,12 @@
             <th>Número de Serie</th>
             <th>Categoría</th>
             <th>Kilometraje</th>
+            <th>Tanque (L)</th>
             <th>Estatus</th>
             <th>Acciones</th>
           </tr>
         </thead>
+
         <tbody>
           @foreach($vehiculos as $v)
           <tr data-id="{{ $v->id_vehiculo }}"
@@ -63,6 +65,7 @@
             <td>{{ $v->numero_serie }}</td>
             <td>{{ $v->categoria }}</td>
             <td>{{ number_format($v->kilometraje) }} km</td>
+            <td>{{ $v->capacidad_tanque ? $v->capacidad_tanque . ' L' : '—' }}</td>
             <td>{{ $v->estatus ?? 'Disponible' }}</td>
             <td>
               <!-- Fondo rojo debajo, oculto hasta swipe -->
@@ -140,22 +143,17 @@
         </select>
       </label>
       <label>Categoría
-      <select name="categoria">
-        <option>C Compacto</option>
-        <option>D Medianos</option>
-        <option>E Grandes</option>
-        <option>F Full size</option>
-        <option>IC Suv compacta</option>
-        <option>I Suv mediana</option>
-        <option>IB Suv familiar compacta</option>
-        <option>M Minivan</option>
-        <option>L Pasajeros de 12 a 15 usuarios</option>
-        <option>H Pick up doble cabina</option>
-        <option>HI Pick up 4x4 doble cabina</option>
-      </select>
+        <select name="id_categoria" required>
+          <option value="" disabled selected>Seleccione una categoría...</option>
+          @foreach($categorias as $cat)
+            <option value="{{ $cat->id_categoria }}">{{ $cat->nombre }}</option>
+          @endforeach
+        </select>
+      </label>
+
       </label>
       <label>Número de Serie<input type="text" name="numero_serie" placeholder="Ej. 3VWEP6BU0SM005037"></label>
-      <label>VIN<input type="text" name="vin" placeholder="Ej. 3VWEP6BU0SM005037"></label>
+      <label>Número de Rin<input type="text" name="numero_rin" placeholder="Ej. 17x7J o similar"></label>
       <label>Placa<input type="text" name="placa" placeholder="Ej. UNS639J"></label>
 
       <h3>Datos Técnicos</h3>
@@ -174,6 +172,8 @@
       <label>Kilometraje<input type="number" name="kilometraje" min="0" value="0"></label>
       <label>Asientos<input type="number" name="asientos" min="2" max="10" value="5"></label>
       <label>Puertas<input type="number" name="puertas" min="2" max="6" value="4"></label>
+      <label>Capacidad de Tanque (L)<input type="number" step="0.1" name="capacidad_tanque" placeholder="Ej. 55.0"></label>
+
 
       <h3>Póliza de Seguro</h3>
       <label>Número de Póliza<input type="text" name="no_poliza"></label>

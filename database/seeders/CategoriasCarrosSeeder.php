@@ -11,63 +11,69 @@ class CategoriasCarrosSeeder extends Seeder
     {
         DB::table('categorias_carros')->insert([
             [
-                'nombre' => 'Económico',
-                'descripcion' => 'Autos pequeños, eficientes y cómodos para ciudad.',
-                'precio_dia' => 499.00,
-                'created_at' => now(), 'updated_at' => now()
-            ],
-            [
                 'nombre' => 'Compacto',
-                'descripcion' => 'Modelos prácticos, cómodos y con buen rendimiento.',
-                'precio_dia' => 579.00,
+                'descripcion' => 'Chevrolet Aveo o similar. Autos similares: VW Virtus, Kia Rio, Hyundai HB20, Toyota Yaris.',
+                'precio_dia' => 467.00,
                 'created_at' => now(), 'updated_at' => now()
             ],
             [
-                'nombre' => 'Sedán',
-                'descripcion' => 'Espacio para familia o trabajo con cajuela amplia.',
-                'precio_dia' => 699.00,
+                'nombre' => 'Medianos',
+                'descripcion' => 'Nissan Versa o similar. Autos similares: VW Virtus, Kia Rio, Hyundai HB20, Toyota Yaris.',
+                'precio_dia' => 600.00,
                 'created_at' => now(), 'updated_at' => now()
             ],
             [
-                'nombre' => 'SUV',
-                'descripcion' => 'Camionetas con espacio extra y tracción elevada.',
-                'precio_dia' => 999.00,
+                'nombre' => 'Grandes',
+                'descripcion' => 'Jetta o similar. Autos similares: Nissan Sentra, Toyota Corolla, Kia K4.',
+                'precio_dia' => 800.00,
                 'created_at' => now(), 'updated_at' => now()
             ],
             [
-                'nombre' => 'Pickup',
-                'descripcion' => 'Camionetas resistentes para carga y uso rudo.',
-                'precio_dia' => 1299.00,
+                'nombre' => 'Full Size',
+                'descripcion' => 'Toyota Camry o similar.',
+                'precio_dia' => 1550.00,
                 'created_at' => now(), 'updated_at' => now()
             ],
             [
-                'nombre' => 'De lujo',
-                'descripcion' => 'Vehículos de alta gama con interiores premium.',
-                'precio_dia' => 1599.00,
+                'nombre' => 'SUV Compacta',
+                'descripcion' => 'Jeep Renegade o similar. Autos similares: Kia Seltos, Nissan Xtrail.',
+                'precio_dia' => 1600.00,
                 'created_at' => now(), 'updated_at' => now()
             ],
             [
-                'nombre' => 'Deportivos',
-                'descripcion' => 'Autos potentes, veloces y de alto rendimiento.',
-                'precio_dia' => 1699.00,
+                'nombre' => 'SUV Mediana',
+                'descripcion' => 'Chevrolet Captiva o similar. Autos similares: Kia Seltos, Nissan Xtrail.',
+                'precio_dia' => 1800.00,
                 'created_at' => now(), 'updated_at' => now()
             ],
             [
-                'nombre' => 'Híbridos',
-                'descripcion' => 'Vehículos con motor eléctrico y bajo consumo.',
-                'precio_dia' => 1099.00,
+                'nombre' => 'SUV Familiar Compacta',
+                'descripcion' => 'Toyota Avanza o similar. Autos similares: Suzuki Ertiga, Mitsubishi Xpander.',
+                'precio_dia' => 1700.00,
                 'created_at' => now(), 'updated_at' => now()
             ],
             [
-                'nombre' => 'Eléctricos',
-                'descripcion' => '100% eléctricos, sin emisiones y silenciosos.',
-                'precio_dia' => 1799.00,
+                'nombre' => 'Minivan',
+                'descripcion' => 'Honda Odyssey o similar. Autos similares: Toyota Sienna.',
+                'precio_dia' => 2600.00,
                 'created_at' => now(), 'updated_at' => now()
             ],
             [
-                'nombre' => 'Vans',
-                'descripcion' => 'Vehículos amplios para grupos o transporte turístico.',
-                'precio_dia' => 1599.00,
+                'nombre' => 'Pasajeros 12-15',
+                'descripcion' => 'Toyota Hiace o similar. Autos similares: Nissan Urvan.',
+                'precio_dia' => 2900.00,
+                'created_at' => now(), 'updated_at' => now()
+            ],
+            [
+                'nombre' => 'Pick Up Doble Cabina',
+                'descripcion' => 'Nissan Frontier o similar. Autos similares: Toyota Hilux, Mitsubishi L200.',
+                'precio_dia' => 1950.00,
+                'created_at' => now(), 'updated_at' => now()
+            ],
+            [
+                'nombre' => 'Pick Up 4x4 Doble Cabina',
+                'descripcion' => 'Toyota Tacoma o similar. Autos similares: No aplica.',
+                'precio_dia' => 2600.00,
                 'created_at' => now(), 'updated_at' => now()
             ],
         ]);

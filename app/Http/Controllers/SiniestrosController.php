@@ -12,54 +12,77 @@ class SiniestrosController extends Controller
 {
     /** 📋 Listar todos los siniestros */
     public function index()
-    {
-        $siniestros = DB::table('siniestros as s')
-            ->join('vehiculos as v', 's.id_vehiculo', '=', 'v.id_vehiculo')
-            ->select(
-                's.id_siniestro',
-                's.folio',
-                'v.nombre_publico',
-                'v.placa',
-                's.fecha',
-                's.tipo',
-                's.estatus',
-                's.deducible',
-                's.rin',
-                's.archivo'
-            )
-            ->orderBy('s.fecha', 'desc')
-            ->get();
+{
+    $siniestros = DB::table('siniestros as s')
+        ->join('vehiculos as v', 's.id_vehiculo', '=', 'v.id_vehiculo')
+        ->select(
+            's.id_siniestro',
+            'v.nombre_publico',
+            'v.placa',
+            's.fecha',
+            's.tipo',
+            's.deducible',
+            's.descripcion',  // 🟢 agregar este campo
+            's.archivo'
+        )
+        ->orderBy('s.fecha', 'desc')
+        ->get();
 
-        return view('Admin.seguros', compact('siniestros'));
-    }
+    return view('Admin.seguros', compact('siniestros'));
+}
+
 
     /** 🆕 Registrar nuevo siniestro */
-    public function guardar(Request $request)
-    {
-        $request->validate([
-            'id_vehiculo' => 'required|exists:vehiculos,id_vehiculo',
-            'folio' => 'required|string|max:50|unique:siniestros',
-            'fecha' => 'required|date',
-            'tipo' => 'required|string',
-            'estatus' => 'nullable|string|max:50',
-            'deducible' => 'nullable|numeric|min:0',
-            'rin' => 'nullable|string|max:100',
-        ]);
+  public function guardar(Request $request)
+{
+    $request->validate([
+        'id_vehiculo' => 'required|exists:vehiculos,id_vehiculo',
+        'folio'       => 'nullable|string|max:50|unique:siniestros,folio',
+        'fecha'       => 'required|date',
+        'tipo'        => 'required|string',
+        'estatus'     => 'nullable|string|max:50',
+        'deducible'   => 'nullable|numeric|min:0',
+        'descripcion' => 'nullable|string|max:1000',
+    ]);
 
-        DB::table('siniestros')->insert([
-            'id_vehiculo' => $request->id_vehiculo,
-            'folio' => $request->folio,
-            'fecha' => $request->fecha,
-            'tipo' => $request->tipo,
-            'estatus' => $request->estatus ?? 'Abierto',
-            'deducible' => $request->deducible,
-            'rin' => $request->rin,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        return redirect()->route('rutaSiniestros')->with('success', 'Siniestro registrado correctamente.');
+    // 🔐 Generar folio si no viene
+    $folio = $request->folio;
+    if (!$folio) {
+        $folio = 'SIN-' . now()->format('Ymd-His') . '-' . Str::upper(Str::random(4));
+        while (DB::table('siniestros')->where('folio', $folio)->exists()) {
+            $folio = 'SIN-' . now()->format('Ymd-His') . '-' . Str::upper(Str::random(4));
+        }
     }
+
+// 🆕 Insertar siniestro
+DB::table('siniestros')->insert([
+    'id_vehiculo' => $request->id_vehiculo,
+    'folio'       => $folio,
+    'fecha'       => $request->fecha,
+    'tipo'        => $request->tipo,
+    'estatus'     => $request->estatus ?? 'Abierto',
+    'deducible'   => $request->deducible,
+    'rin'         => null,
+    'descripcion' => $request->descripcion,
+    'created_at'  => now(),
+    'updated_at'  => now(),
+]);
+
+// 💰 Registrar gasto asociado al siniestro (sin cambiar de vista)
+DB::table('gastos')->insert([
+    'id_vehiculo' => $request->id_vehiculo,
+    'tipo'        => 'Siniestro',
+    'descripcion' => $request->descripcion ?? 'Gasto por siniestro del vehículo',
+    'monto'       => $request->deducible ?? 0,
+    'fecha'       => $request->fecha,
+    'created_at'  => now(),
+    'updated_at'  => now(),
+]);
+
+return redirect()->route('rutaSeguros')->with('success', 'Siniestro y gasto registrado correctamente.');
+
+}
+
 
     /** ✏️ Editar siniestro */
     public function actualizar(Request $request, $id)
@@ -83,7 +106,7 @@ class SiniestrosController extends Controller
             'updated_at' => now(),
         ]);
 
-        return redirect()->route('rutaSiniestros')->with('success', 'Siniestro actualizado correctamente.');
+        return redirect()->route('rutaSeguros')->with('success', 'Siniestro actualizado correctamente.');
     }
 
     /** 📤 Subir archivo (PDF o imagen) */
@@ -109,7 +132,8 @@ class SiniestrosController extends Controller
 
         DB::table('siniestros')->where('id_siniestro', $id)->update(['archivo' => $nombre]);
 
-        return redirect()->route('rutaSiniestros')->with('success', 'Archivo subido correctamente.');
+        return redirect()->route('rutaSeguros')->with('success', 'Archivo subido correctamente.');
+
     }
 
     /** 👁️ Ver archivo */
@@ -143,4 +167,50 @@ class SiniestrosController extends Controller
 
         return back()->with('error', 'Archivo no encontrado en el servidor.');
     }
+    public function buscarVehiculos(Request $request)
+{
+    $q = trim($request->get('q', ''));
+
+    if ($q === '') {
+        return response()->json([]);
+    }
+
+    $vehiculos = DB::table('vehiculos')
+        ->select(
+            'id_vehiculo',
+            'nombre_publico',
+            'placa',
+            'color',
+            'numero_serie',
+            'anio'
+        )
+        ->where(function ($w) use ($q) {
+            $w->where('placa', 'like', "%{$q}%")
+              ->orWhere('color', 'like', "%{$q}%")
+              ->orWhere('numero_serie', 'like', "%{$q}%")
+              ->orWhere('anio', 'like', "%{$q}%")
+              ->orWhere('nombre_publico', 'like', "%{$q}%");
+        })
+        ->orderBy('anio', 'desc')
+        ->limit(12)
+        ->get();
+
+    // Formato amigable para el frontend
+    $data = $vehiculos->map(function ($v) {
+        $label = "{$v->nombre_publico} {$v->anio}";
+        $det   = [];
+        if ($v->placa) $det[] = "Placa: {$v->placa}";
+        if ($v->color) $det[] = "Color: {$v->color}";
+        if ($v->numero_serie) $det[] = "Serie: {$v->numero_serie}";
+        $sub   = implode(' · ', $det);
+
+        return [
+            'id'    => $v->id_vehiculo,
+            'label' => $label,
+            'sub'   => $sub,
+        ];
+    });
+
+    return response()->json($data);
+}
 }
