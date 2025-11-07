@@ -157,6 +157,7 @@ class ReservacionesAdminController extends Controller
                 'impuestos'        => $impuestos,
                 'total'            => $total,
                 'moneda'           => 'MXN',
+                'tarifa_ajustada'   => $request->input('tarifa_ajustada', false),
                 'no_vuelo'         => $validated['no_vuelo'] ?? null,
                 'codigo'           => $codigo,
                 'nombre_cliente'   => $validated['nombre_cliente'] ?? null,

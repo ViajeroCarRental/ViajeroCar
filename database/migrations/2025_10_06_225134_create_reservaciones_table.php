@@ -37,6 +37,9 @@ return new class extends Migration {
             $table->decimal('total', 10, 2)->default(0.00);
             $table->string('moneda', 10)->default('MXN');
 
+            // 🟡 Nuevo campo para saber si la tarifa fue modificada manualmente
+            $table->boolean('tarifa_ajustada')->default(false)->comment('Indica si la tarifa fue modificada manualmente por el asesor');
+
             $table->string('no_vuelo', 40)->nullable();
             $table->string('codigo', 50);
 
