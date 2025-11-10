@@ -130,7 +130,7 @@ class CotizacionesAdminController extends Controller
         // 🎫 Folio único
         $folio = 'COT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
 
-        // 🧮 Cálculo
+        // 🧮 Cálculo de días y totales
         $dias = max(1, Carbon::parse($request->pickup_date)->diffInDays(Carbon::parse($request->dropoff_date)));
         $iva = round(($request->input('subtotal', 0) ?? 0) * 0.16, 2);
         $total = $request->input('total', 0);
@@ -142,13 +142,13 @@ class CotizacionesAdminController extends Controller
         $pickup_name = $sucursalRetiro?->nombre ?? '';
         $dropoff_name = $sucursalEntrega?->nombre ?? '';
 
-        // 🔍 Obtener datos de la categoría
+        // 🔍 Datos de categoría
         $categoria = DB::table('categorias_carros')
             ->select('nombre', 'descripcion', 'precio_dia')
             ->where('id_categoria', $request->categoria_id)
             ->first();
 
-        // 🖼️ Imagen representativa por categoría
+        // 🖼️ Imagen por categoría
         $imgCategoria = asset('img/categorias/' . Str::slug($categoria->nombre) . '.jpg');
 
         // 💾 Insertar cotización
@@ -163,12 +163,20 @@ class CotizacionesAdminController extends Controller
             'dropoff_time'       => $request->dropoff_time,
             'dropoff_name'       => $dropoff_name,
             'days'               => $dias,
+
+            // 💰 Totales y tarifas coherentes con reservaciones
             'tarifa_base'        => $categoria->precio_dia ?? 0,
+            'tarifa_modificada'  => $request->input('tarifa_modificada', $categoria->precio_dia ?? 0),
+            'tarifa_ajustada'    => $request->input('tarifa_ajustada', false),
+            'extras_sub'         => $request->input('extras_sub', 0),
             'iva'                => $iva,
             'total'              => $total,
+
+            // 🧩 JSON
             'addons'             => json_encode($request->input('extras', [])),
             'seguro'             => json_encode($request->input('seguro', [])),
             'cliente'            => json_encode($request->input('cliente', [])),
+
             'created_at'         => now(),
             'updated_at'         => now(),
         ]);
@@ -179,7 +187,7 @@ class CotizacionesAdminController extends Controller
         $seguro = $request->input('seguro', null);
         $accion = 'guardada';
 
-        // 🧾 Listar servicios seleccionados
+        // 🧾 Lista de servicios seleccionados
         $extrasList = '';
         if ($seguro) {
             $extrasList .= "<li>Protección: {$seguro['nombre']} - $" . number_format($seguro['precio'], 2) . " MXN/día</li>";
@@ -221,7 +229,7 @@ class CotizacionesAdminController extends Controller
                     <td width='70%' style='vertical-align:top;'>
                         <strong style='font-size:16px;'>{$categoria->nombre}</strong><br>
                         <small>{$categoria->descripcion}</small><br>
-                        <small>Tarifa base diaria: $" . number_format($categoria->precio_dia, 2) . " MXN</small>
+                        <small>Tarifa base diaria: $" . number_format($request->input('tarifa_modificada', $categoria->precio_dia), 2) . " MXN</small>
                     </td>
                 </tr>
             </table>
@@ -229,7 +237,7 @@ class CotizacionesAdminController extends Controller
             <ul>{$extrasList}</ul>
             <h3 style='margin-top:24px;'>Detalles del precio</h3>
             <table width='100%' style='border-collapse:collapse;'>
-                <tr><td>Tarifa base</td><td style='text-align:right;'>$" . number_format($categoria->precio_dia * $dias, 2) . " MXN</td></tr>
+                <tr><td>Tarifa base</td><td style='text-align:right;'>$" . number_format(($request->input('tarifa_modificada', $categoria->precio_dia) * $dias), 2) . " MXN</td></tr>
                 <tr><td>Opciones</td><td style='text-align:right;'>$" . number_format(($total - $iva - ($categoria->precio_dia * $dias)), 2) . " MXN</td></tr>
                 <tr><td>Cargos e IVA</td><td style='text-align:right;'>$" . number_format($iva, 2) . " MXN</td></tr>
                 <tr style='border-top:1px solid #ccc; font-weight:bold;'>
@@ -247,7 +255,7 @@ class CotizacionesAdminController extends Controller
         file_put_contents($filePath, $pdf->output());
 
         /* ==========================================================
-           📧 Enviar correo con PDF adjunto (como versión original)
+           📧 Enviar correo con PDF adjunto
         ========================================================== */
         if ($request->has('enviarCorreo') && !empty($cliente->email)) {
             Log::info("📧 Intentando enviar correo a: " . $cliente->email);
@@ -284,6 +292,8 @@ class CotizacionesAdminController extends Controller
                 'sucursal_entrega' => $request->dropoff_sucursal_id,
                 'ciudad_retiro'    => $sucursalRetiro->id_ciudad ?? null,
                 'ciudad_entrega'   => $sucursalEntrega->id_ciudad ?? null,
+                'tarifa_modificada'=> $request->input('tarifa_modificada', $categoria->precio_dia ?? 0),
+                'tarifa_ajustada'  => $request->input('tarifa_ajustada', false),
                 'subtotal'         => $total / 1.16,
                 'impuestos'        => $total - ($total / 1.16),
                 'total'            => $total,

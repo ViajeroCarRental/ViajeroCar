@@ -14,8 +14,8 @@ return new class extends Migration {
             $table->string('folio', 40)->unique();
 
             // 🚗 Datos del vehículo o categoría
-            $table->unsignedBigInteger('id_categoria')->nullable(); // ✅ Agregado
-            $table->string('categoria_nombre')->nullable();          // ✅ Agregado
+            $table->unsignedBigInteger('id_categoria')->nullable();
+            $table->string('categoria_nombre')->nullable();
             $table->unsignedBigInteger('vehiculo_id')->nullable();
             $table->string('vehiculo_marca')->nullable();
             $table->string('vehiculo_modelo')->nullable();
@@ -35,11 +35,21 @@ return new class extends Migration {
 
             // 💰 Totales
             $table->decimal('tarifa_base', 12, 2)->default(0);
+
+            // 🟡 Nuevos campos coherentes con reservaciones
+            $table->decimal('tarifa_modificada', 12, 2)
+                  ->nullable()
+                  ->comment('Tarifa final aplicada si fue editada manualmente');
+
+            $table->boolean('tarifa_ajustada')
+                  ->default(false)
+                  ->comment('Indica si la tarifa fue modificada manualmente por el asesor');
+
             $table->decimal('extras_sub', 12, 2)->default(0);
             $table->decimal('iva', 12, 2)->default(0);
             $table->decimal('total', 12, 2)->default(0);
 
-            // 🧩 JSON
+            // 🧩 JSON: servicios, seguros, cliente
             $table->json('addons')->nullable();   // servicios adicionales
             $table->json('seguro')->nullable();   // paquete de seguro
             $table->json('cliente')->nullable();  // nombre/email/telefono, etc.

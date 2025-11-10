@@ -66,14 +66,24 @@ categoriaSelect?.addEventListener('change', async () => {
     const cat = await res.json();
     if (cat?.error) throw new Error(cat.message || 'Categoría no encontrada.');
 
+    // 🔹 Mostrar imagen y nombre de la categoría
     vehImage.src = cat.imagen || '/assets/placeholder-car.jpg';
     vehName.textContent = cat.nombre || 'Ejemplo de la categoría seleccionada';
     vehImageWrap.style.display = 'block';
 
+    // 🔹 Calcular y mostrar tarifa base
     const tarifa = parseFloat(cat.tarifa_base ?? cat.precio_dia ?? 0);
     $('#baseLine').textContent = `$${tarifa.toFixed(2)} MXN/día`;
 
+    // 🔹 Restaurar estilo y control de tarifa base
+    tarifaOriginal = tarifa;
+    tarifaEditadaManualmente = false;
+    $('#baseLine').style.color = '#000';
+    $('#baseLine').style.fontWeight = '400';
+
+    // 🔹 Actualizar resumen con la nueva tarifa
     updateResumen(tarifa, calcularDias());
+
   } catch (err) {
     console.error('Error cargando categoría:', err);
     alertify.error('No se pudo cargar la categoría.');
@@ -225,15 +235,28 @@ document.addEventListener("click", (e) => {
 });
 
 /* ==========================================================
-   💰 RESUMEN Y TOTALES
+   💰 RESUMEN Y TOTALES (con edición de tarifa y control completo)
 ========================================================== */
 let precioSeleccionado = 0;
 let diasSeleccionados = 1;
+let tarifaOriginal = 0;
+let tarifaEditadaManualmente = false;
 
+/**
+ * 🔹 Actualiza valores del resumen y totales
+ * @param {number|null} precioDia - Tarifa base del día
+ * @param {number|null} dias - Número de días calculados
+ */
 function updateResumen(precioDia = null, dias = null) {
   if (precioDia !== null) precioSeleccionado = parseFloat(precioDia) || 0;
   if (dias !== null) diasSeleccionados = parseInt(dias) || 1;
+  actualizarTotal();
+}
 
+/**
+ * 🔹 Recalcula totales (base, protecciones, extras, IVA, total)
+ */
+function actualizarTotal() {
   const base = precioSeleccionado * diasSeleccionados;
   const proteccion = seguroSeleccionado
     ? parseFloat(seguroSeleccionado.precio || 0) * diasSeleccionados
@@ -261,8 +284,93 @@ function updateResumen(precioDia = null, dias = null) {
   $("#iva").textContent = `$${(iva * conv).toFixed(2)} ${moneda}`;
   $("#total").textContent = `$${(total * conv).toFixed(2)} ${moneda}`;
 }
-$("#moneda")?.addEventListener("change", () => updateResumen());
-$("#tc")?.addEventListener("input", () => updateResumen());
+
+$("#moneda")?.addEventListener("change", actualizarTotal);
+$("#tc")?.addEventListener("input", actualizarTotal);
+
+/* ==========================================================
+   ✏️ EDICIÓN INLINE DE TARIFA BASE
+========================================================== */
+const editTarifaBtn = $('#editTarifa');
+const baseLine = $('#baseLine');
+
+editTarifaBtn?.addEventListener('click', () => {
+  if (!baseLine) return;
+
+  // Evitar múltiples inputs
+  if (baseLine.querySelector('input')) return;
+
+  const valorActual = parseFloat(baseLine.textContent.replace(/[^\d.]/g, '')) || precioSeleccionado || 0;
+
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.value = valorActual.toFixed(2);
+  input.min = 0;
+  input.step = 0.01;
+  input.style.width = '90px';
+  input.style.padding = '4px';
+  input.style.border = '1px solid #ccc';
+  input.style.borderRadius = '6px';
+  input.style.fontWeight = '600';
+
+  baseLine.textContent = '';
+  baseLine.appendChild(input);
+  input.focus();
+
+  input.addEventListener('blur', guardarTarifaEditada);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') input.blur();
+  });
+
+  function guardarTarifaEditada() {
+    const nuevoValor = parseFloat(input.value);
+    if (isNaN(nuevoValor) || nuevoValor <= 0) {
+      alertify.warning('⚠️ Ingresa una tarifa válida.');
+      input.focus();
+      return;
+    }
+
+    tarifaEditadaManualmente = true;
+    precioSeleccionado = nuevoValor;
+    tarifaOriginal = tarifaOriginal || valorActual;
+
+    baseLine.innerHTML = `<span style="color:#ca8a04;font-weight:600;">$${nuevoValor.toFixed(2)} MXN/día*</span>`;
+    actualizarTotal();
+  }
+});
+/* ================================
+   🕒 Formato de hora a 12h con AM/PM
+================================ */
+function formatoHora12h(hora) {
+  if (!hora) return '—';
+  let [h, m] = hora.split(':');
+  h = parseInt(h);
+  const sufijo = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${m} ${sufijo}`;
+}
+
+/* ================================
+   🧭 Mostrar resumen de viaje
+================================ */
+function actualizarResumenViaje() {
+  $('#resSucursalRetiro').textContent = $('#sucursal_retiro').selectedOptions[0]?.text || '—';
+  $('#resSucursalEntrega').textContent = $('#sucursal_entrega').selectedOptions[0]?.text || '—';
+  $('#resFechaInicio').textContent = $('#fecha_inicio').value || '—';
+  $('#resHoraInicio').textContent = formatoHora12h($('#hora_retiro').value);
+  $('#resFechaFin').textContent = $('#fecha_fin').value || '—';
+  $('#resHoraFin').textContent = formatoHora12h($('#hora_entrega').value);
+  $('#resDias').textContent = `${diasSeleccionados} día(s)` || '—';
+}
+
+// 🔹 Detectar cambios en selects e inputs
+$('#sucursal_retiro')?.addEventListener('change', actualizarResumenViaje);
+$('#sucursal_entrega')?.addEventListener('change', actualizarResumenViaje);
+$('#fecha_inicio')?.addEventListener('change', actualizarResumenViaje);
+$('#fecha_fin')?.addEventListener('change', actualizarResumenViaje);
+$('#hora_retiro')?.addEventListener('change', actualizarResumenViaje);
+$('#hora_entrega')?.addEventListener('change', actualizarResumenViaje);
+
 
 /* ==========================================================
    💾 BOTONES DEL PASO 3
@@ -359,13 +467,18 @@ async function enviarCotizacion(data, accion = "guardada") {
 
       if (accion.includes("confirmada")) {
         alertify.notify("Se redirigirá al módulo de reservaciones...", "custom", 6);
-        setTimeout(() => (window.location.href = "/admin/reservaciones"), 1500);
+        setTimeout(() => (window.location.href = "/admin/reservaciones-activas"), 1500);
       } else {
         // Limpieza visual tipo Reservaciones
         $('#formCotizacion')?.reset?.();
         vehImageWrap.style.display = 'none';
         $('#baseLine').textContent = '—';
         updateResumen(0);
+
+        // 🔹 Restablecer color y variables de tarifa (evita que quede en amarillo)
+        $('#baseLine').style.color = '#000';
+        $('#baseLine').style.fontWeight = '400';
+        tarifaEditadaManualmente = false;
       }
     } else {
       alertify.error(`⚠️ Error al ${accion} cotización`);
@@ -378,19 +491,35 @@ async function enviarCotizacion(data, accion = "guardada") {
 }
 
 
+
 /* ==========================================================
-   🧾 CAPTURA DE DATOS COMPLETA
+   🧾 CAPTURA DE DATOS COMPLETA (ACTUALIZADA)
 ========================================================== */
 function obtenerDatosCotizacion() {
   const moneda = $("#moneda")?.value || "MXN";
   const tc = parseFloat($("#tc")?.value || 17);
-  const subtotal = $("#subTot")?.textContent.replace(/[^\d.]/g, "") || "0";
-  const iva = $("#iva")?.textContent.replace(/[^\d.]/g, "") || "0";
-  const total = $("#total")?.textContent.replace(/[^\d.]/g, "") || "0";
+  const subtotal = parseFloat($("#subTot")?.textContent.replace(/[^\d.]/g, "") || "0");
+  const iva = parseFloat($("#iva")?.textContent.replace(/[^\d.]/g, "") || "0");
+  const total = parseFloat($("#total")?.textContent.replace(/[^\d.]/g, "") || "0");
+
+  // 🔹 Detectar si el usuario editó la tarifa manualmente
+  const tarifaAjustada = tarifaEditadaManualmente ? 1 : 0;
+
+  // 🔹 Calcular subtotal de extras (sin IVA)
+  const extras_sub = adicionalesSeleccionados.reduce(
+    (sum, a) => sum + (parseFloat(a.precio) || 0) * (a.cantidad || 0) * diasSeleccionados,
+    0
+  );
+
+  // 🔹 Tarifa modificada (si fue ajustada manualmente)
+  const tarifaModificada = tarifaEditadaManualmente ? precioSeleccionado : tarifaOriginal || precioSeleccionado;
 
   return {
     categoria_id: $("#categoriaSelect")?.value,
-    precio_base_dia: precioSeleccionado,
+    precio_base_dia: tarifaOriginal || precioSeleccionado,
+    tarifa_modificada: tarifaModificada,
+    tarifa_ajustada: tarifaAjustada,
+    extras_sub, // 🟡 Nuevo campo: subtotal de adicionales
     pickup_sucursal_id: $("#sucursal_retiro")?.value,
     dropoff_sucursal_id: $("#sucursal_entrega")?.value,
     pickup_date: $("#fecha_inicio")?.value,
