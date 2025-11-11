@@ -30,6 +30,12 @@ return new class extends Migration {
             $table->time('hora_entrega')->nullable();
 
             $table->enum('estado', ['hold','pendiente_pago','confirmada','cancelada','expirada'])->default('hold');
+
+            // 🧩 Nuevo campo: control de cambios de fecha por el superadmin
+            $table->boolean('aprobado_por_superadmin')
+                  ->default(false)
+                  ->comment('Indica si el superadmin aprobó cambios de fecha de salida');
+
             $table->dateTime('hold_expires_at')->nullable();
 
             $table->decimal('subtotal', 10, 2)->default(0.00);

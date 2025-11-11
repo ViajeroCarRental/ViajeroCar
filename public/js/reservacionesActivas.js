@@ -33,10 +33,11 @@ window.addEventListener("DOMContentLoaded", () => {
     let visible = 0;
 
     rows.forEach((row) => {
-      const nombre = row.children[2]?.textContent?.toLowerCase() || "";
-      const email = row.children[3]?.textContent?.toLowerCase() || "";
-      const estado = row.children[4]?.textContent?.toLowerCase() || "";
-      const show = !q || nombre.includes(q) || email.includes(q) || estado.includes(q);
+      const nombre = row.children[1]?.textContent?.toLowerCase() || "";
+      const email = row.children[2]?.textContent?.toLowerCase() || "";
+      const estado = row.children[7]?.textContent?.toLowerCase() || "";
+      const show =
+        !q || nombre.includes(q) || email.includes(q) || estado.includes(q);
       row.style.display = show ? "grid" : "none";
       if (show) visible++;
     });
@@ -46,7 +47,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   /* ==========================================================
-     🧾 MODAL DE DETALLE (ahora con datos reales desde backend)
+     🧾 MODAL DE DETALLE
   =========================================================== */
   let current = null;
 
@@ -60,7 +61,9 @@ window.addEventListener("DOMContentLoaded", () => {
     console.log(`📦 Consultando reservación ${codigo}...`);
 
     try {
-      const resp = await fetch(`/admin/reservaciones-activas/${encodeURIComponent(codigo)}`);
+      const resp = await fetch(
+        `/admin/reservaciones-activas/${encodeURIComponent(codigo)}`
+      );
       if (!resp.ok) throw new Error(`Error ${resp.status}`);
 
       const data = await resp.json();
@@ -69,24 +72,33 @@ window.addEventListener("DOMContentLoaded", () => {
       // Guardar la reservación actual
       current = data;
 
-      // 🧩 Construcción de campos dinámicos
-      $("#mTitle").textContent = `Contrato Reservación ${data.codigo || "—"}`;
+      /* ==========================================================
+         🧩 RELLENAR CAMPOS DEL MODAL
+      =========================================================== */
+      $("#mTitle").textContent = `Detalle Reservación ${data.codigo || "—"}`;
       $("#mCodigo").textContent = data.codigo || "—";
       $("#mCliente").textContent = data.nombre_cliente || "—";
       $("#mEmail").textContent = data.email_cliente || "—";
+      $("#mNumero").textContent = data.telefono_cliente || "—";
+      $("#mCategoria").textContent = data.categoria || "—";
       $("#mEstado").textContent = data.estado || "—";
 
-      const fechaInicio = data.fecha_inicio ? `${data.fecha_inicio} ${data.hora_retiro || ""}` : "";
-      const fechaFin = data.fecha_fin ? `${data.fecha_fin} ${data.hora_entrega || ""}` : "";
-      $("#mFechas").textContent = fechaInicio && fechaFin ? `${fechaInicio} a ${fechaFin}` : "—";
+      const salida = data.fecha_inicio
+        ? `${data.fecha_inicio} ${data.hora_retiro || ""}`
+        : "—";
+      const entrega = data.fecha_fin
+        ? `${data.fecha_fin} ${data.hora_entrega || ""}`
+        : "—";
 
-      $("#mVehiculo").textContent = data.vehiculo || "—";
+      $("#mSalida").textContent = salida;
+      $("#mEntrega").textContent = entrega;
+
       $("#mFormaPago").textContent = data.metodo_pago || "—";
       $("#mTotal").textContent = Fmx(data.total);
 
+      // Mostrar modal
       $("#modal").classList.add("show");
       console.log("🪟 Modal abierto con reservación:", current);
-
     } catch (err) {
       console.error("❌ Error al obtener detalles de la reservación:", err);
       alert("Error al obtener la información de la reservación. Intente nuevamente.");
@@ -118,31 +130,12 @@ window.addEventListener("DOMContentLoaded", () => {
      🚪 CAPTURAR CONTRATO (redirige visualmente)
   =========================================================== */
   $("#mGo")?.addEventListener("click", () => {
-  if (!current) return;
+    if (!current) return;
 
-  // 🆕 Usamos el ID de reservación para generar la URL correcta
-  const url = `/admin/contrato/${encodeURIComponent(current.id_reservacion)}`;
-
-
-  console.log("➡️ Redirigiendo a vista Contrato:", url);
-  window.location.href = url;
-});
-
-
-  /* ==========================================================
-     🗑️ ELIMINAR (solo mensaje visual por ahora)
-  =========================================================== */
-  /* ==========================================================
-   🚪 CAPTURAR CONTRATO (redirige visualmente)
-========================================================== */
-$("#mGo")?.addEventListener("click", () => {
-  if (!current) return;
-
-  // ✅ Redirigir correctamente a la ruta con el ID
-  const url = `/admin/contrato/${encodeURIComponent(current.id_reservacion)}`;
-
-  console.log("➡️ Redirigiendo a vista Contrato:", url);
-  window.location.href = url;
-});
-
+    const url = `/admin/contrato/${encodeURIComponent(
+      current.id_reservacion
+    )}`;
+    console.log("➡️ Redirigiendo a vista Contrato:", url);
+    window.location.href = url;
+  });
 });
