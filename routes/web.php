@@ -244,3 +244,16 @@ Route::get('/admin/siniestros/descargar/{id}', [App\Http\Controllers\SiniestrosC
 // 🔎 Buscador AJAX de vehículos
 Route::get('/admin/vehiculos/buscar', [SiniestrosController::class, 'buscarVehiculos'])
     ->name('vehiculos.buscar');
+
+
+// routes/web.php
+Route::get('/preview-poliza', function () {
+    $vehiculo = (object)[
+        'nombre_publico' => 'Nissan Versa 2023 Automático',
+        'placa' => 'VIA-1234',
+        'aseguradora' => 'AXA Seguros',
+        'fin_vigencia_poliza' => now()->addDays(5)
+    ];
+    $diasRestantes = 5;
+    return view('emails.poliza_vencimiento', compact('vehiculo', 'diasRestantes'));
+});

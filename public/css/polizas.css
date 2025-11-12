@@ -256,7 +256,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--ink); }
 
 
 
-    .badge.green { background: #27ae60; color: white; padding: 4px 8px; border-radius: 6px; }
+  .badge.green { background: #27ae60; color: white; padding: 4px 8px; border-radius: 6px; }
   .badge.red { background: #e74c3c; color: white; padding: 4px 8px; border-radius: 6px; }
   .badge.yellow { background: #f1c40f; color: #222; padding: 4px 8px; border-radius: 6px; }
   .badge.gray { background: #95a5a6; color: white; padding: 4px 8px; border-radius: 6px; }
