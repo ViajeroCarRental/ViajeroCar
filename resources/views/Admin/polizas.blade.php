@@ -148,6 +148,36 @@
     </form>
   </div>
 </div>
+<!-- Modal Subir Archivo -->
+<div class="modal" id="modalArchivo">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Subir Archivo de Póliza</h2>
+      <span class="close" onclick="cerrarModal('modalArchivo')">&times;</span>
+    </div>
+
+    <form id="formArchivo" method="POST" enctype="multipart/form-data">
+      @csrf
+      <div class="form-group">
+        <label>Seleccionar archivo (PDF o imagen)</label>
+        <input 
+          type="file" 
+          name="archivo_poliza" 
+          accept=".pdf,.jpg,.jpeg,.png" 
+          required>
+        <small class="text-muted">
+          Tamaño máximo: 4 MB
+        </small>
+      </div>
+
+      <div style="text-align:right;">
+        <button type="submit" class="btn small green">Subir</button>
+        <button type="button" class="btn small gray" onclick="cerrarModal('modalArchivo')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 
 @endsection
 

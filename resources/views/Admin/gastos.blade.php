@@ -71,7 +71,6 @@
   </div>
 </main>
 @endsection
-
 @section('js-vistaGastos')
 <script>
 // ========= Cargar totales desde backend =========
@@ -123,7 +122,6 @@ function aplicarFiltroCategoria(tipo) {
   });
 }
 
-
 // ========= Filtro rápido (Hoy / Semana / Mes) =========
 async function filtrarRango(tipo) {
   try {
@@ -154,6 +152,22 @@ async function filtrarRango(tipo) {
   }
 }
 
+// ========= 🔍 Buscador dinámico =========
+document.getElementById("qCost").addEventListener("keyup", function() {
+  const filtro = this.value.toLowerCase();
+  const filas = document.querySelectorAll("#tblCost tbody tr");
+
+  filas.forEach(fila => {
+    const texto = fila.textContent.toLowerCase();
+    fila.style.display = texto.includes(filtro) ? "" : "none";
+  });
+});
+
+// ========= 🧾 Exportar Excel (CSV) =========
+document.getElementById("exportCost").addEventListener("click", () => {
+  window.location.href = "{{ route('gastos.exportar') }}";
+});
+
 // ========= Inicialización =========
 document.addEventListener("DOMContentLoaded", () => {
   // Mostrar todos los registros al cargar la página (sin filtros)
@@ -168,6 +182,5 @@ document.addEventListener("DOMContentLoaded", () => {
     card.addEventListener("click", () => aplicarFiltroCategoria(card.dataset.type));
   });
 });
-
 </script>
 @endsection
