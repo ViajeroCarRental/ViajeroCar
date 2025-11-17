@@ -165,9 +165,9 @@ class CotizacionesAdminController extends Controller
             'days'               => $dias,
 
             // 💰 Totales y tarifas coherentes con reservaciones
-            'tarifa_base'        => $categoria->precio_dia ?? 0,
-            'tarifa_modificada'  => $request->input('tarifa_modificada', $categoria->precio_dia ?? 0),
-            'tarifa_ajustada'    => $request->input('tarifa_ajustada', false),
+            'tarifa_base'        => $request->input('tarifa_base', $categoria->precio_dia ?? 0),
+            'tarifa_modificada'  => $request->filled('tarifa_modificada') ? $request->tarifa_modificada : null,
+            'tarifa_ajustada'    => $request->boolean('tarifa_ajustada', false),
             'extras_sub'         => $request->input('extras_sub', 0),
             'iva'                => $iva,
             'total'              => $total,
@@ -283,17 +283,21 @@ class CotizacionesAdminController extends Controller
         if ($request->has('confirmar')) {
             $idReserva = DB::table('reservaciones')->insertGetId([
                 'codigo'           => 'RES-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5)),
-                'id_categoria'     => $request->categoria_id,
-                'fecha_inicio'     => $request->pickup_date,
-                'fecha_fin'        => $request->dropoff_date,
-                'hora_retiro'      => $request->pickup_time,
-                'hora_entrega'     => $request->dropoff_time,
-                'sucursal_retiro'  => $request->pickup_sucursal_id,
-                'sucursal_entrega' => $request->dropoff_sucursal_id,
-                'ciudad_retiro'    => $sucursalRetiro->id_ciudad ?? null,
-                'ciudad_entrega'   => $sucursalEntrega->id_ciudad ?? null,
-                'tarifa_modificada'=> $request->input('tarifa_modificada', $categoria->precio_dia ?? 0),
-                'tarifa_ajustada'  => $request->input('tarifa_ajustada', false),
+                'id_categoria'      => $request->categoria_id,
+                'fecha_inicio'      => $request->pickup_date,
+                'fecha_fin'         => $request->dropoff_date,
+                'hora_retiro'       => $request->pickup_time,
+                'hora_entrega'      => $request->dropoff_time,
+                'sucursal_retiro'   => $request->pickup_sucursal_id,
+                'sucursal_entrega'  => $request->dropoff_sucursal_id,
+                'ciudad_retiro'     => $sucursalRetiro->id_ciudad ?? null,
+                'ciudad_entrega'    => $sucursalEntrega->id_ciudad ?? null,
+
+                // 💰 Coherente con cotizaciones
+                'tarifa_base'        => $request->input('tarifa_base', $categoria->precio_dia ?? 0),
+                'tarifa_modificada'  => $request->input('tarifa_modificada', $request->input('tarifa_base', $categoria->precio_dia ?? 0)),
+                'tarifa_ajustada'    => $request->boolean('tarifa_ajustada', false),
+
                 'subtotal'         => $total / 1.16,
                 'impuestos'        => $total - ($total / 1.16),
                 'total'            => $total,
@@ -322,6 +326,324 @@ class CotizacionesAdminController extends Controller
             'success' => false,
             'message' => 'Error al procesar la cotización.',
             'error'   => $e->getMessage(),
+        ], 500);
+    }
+}
+
+/**
+ * 📋 Vista de listado de cotizaciones (temporal)
+ */
+public function listado()
+{
+    // 🔹 Obtener todas las cotizaciones (últimas primero)
+    $cotizaciones = DB::table('cotizaciones')
+        ->orderByDesc('id_cotizacion')
+        ->get();
+
+    // 🔹 Enviar los datos a la vista
+    return view('Admin.CotizacionesListado', compact('cotizaciones'));
+}
+
+public function convertirAReservacion($id)
+{
+    try {
+        Log::info("🔄 [Convertir] Iniciando conversión de cotización ID {$id}");
+
+        // 1️⃣ Buscar la cotización
+        $cot = DB::table('cotizaciones')->where('id_cotizacion', $id)->first();
+
+        if (!$cot) {
+            Log::warning("⚠️ [Convertir] Cotización no encontrada ID {$id}");
+            return response()->json([
+                'success' => false,
+                'message' => 'Cotización no encontrada.'
+            ], 404);
+        }
+
+        Log::info("📦 [Convertir] Cotización encontrada: {$cot->folio}");
+
+        // 2️⃣ Decodificar JSON
+        $cliente = json_decode($cot->cliente ?? '{}', true);
+        $addons = json_decode($cot->addons ?? '[]', true);
+        $seguro = json_decode($cot->seguro ?? '{}', true);
+
+        // 3️⃣ Buscar sucursales por nombre
+        $sucursalRetiro = DB::table('sucursales')
+            ->where('nombre', 'LIKE', "%{$cot->pickup_name}%")
+            ->value('id_sucursal');
+
+        $sucursalEntrega = DB::table('sucursales')
+            ->where('nombre', 'LIKE', "%{$cot->dropoff_name}%")
+            ->value('id_sucursal');
+
+        Log::info("🏬 Sucursal retiro ID: {$sucursalRetiro}, entrega ID: {$sucursalEntrega}");
+
+        // 4️⃣ Preparar tarifas correctamente
+        $tarifaBase = $cot->tarifa_base; // viene directo del cotizador
+        $tarifaMod = $cot->tarifa_modificada === $cot->tarifa_base ? null : $cot->tarifa_modificada;
+
+        // 5️⃣ Subtotales SIN recalcular (vienen desde cotizaciones)
+        $subtotal = $cot->total / 1.16;
+        $iva = $cot->total - $subtotal;
+
+        // 6️⃣ Generar código
+        $codigo = "RES-" . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
+
+        Log::info("🆕 [Convertir] Código generado: {$codigo}");
+
+        // 7️⃣ Crear reservación principal
+        $idReserva = DB::table('reservaciones')->insertGetId([
+            'id_usuario'        => null,
+            'id_vehiculo'       => null,
+            'id_categoria'      => $cot->id_categoria,
+
+            'ciudad_retiro'     => 1,
+            'ciudad_entrega'    => 1,
+            'sucursal_retiro'   => $sucursalRetiro,
+            'sucursal_entrega'  => $sucursalEntrega,
+
+            'fecha_inicio'      => $cot->pickup_date,
+            'hora_retiro'       => $cot->pickup_time,
+            'fecha_fin'         => $cot->dropoff_date,
+            'hora_entrega'      => $cot->dropoff_time,
+
+            'estado'            => 'pendiente_pago',
+
+            'subtotal'          => round($subtotal, 2),
+            'impuestos'         => round($iva, 2),
+            'total'             => round($cot->total, 2),
+            'moneda'            => 'MXN',
+
+            'tarifa_base'       => $tarifaBase,
+            'tarifa_modificada' => $tarifaMod,
+            'tarifa_ajustada'   => $cot->tarifa_ajustada,
+
+            'codigo'            => $codigo,
+
+            'nombre_cliente'    => $cliente['nombre'] ?? null,
+            'email_cliente'     => $cliente['email'] ?? null,
+            'telefono_cliente'  => $cliente['telefono'] ?? null,
+
+            'status_pago'       => 'Pendiente',
+            'metodo_pago'       => 'mostrador',
+
+            'created_at'        => now(),
+            'updated_at'        => now(),
+        ]);
+
+        Log::info("📝 [Convertir] Reservación creada ID {$idReserva} para cotización {$cot->folio}");
+
+        // 8️⃣ Guardar servicios adicionales (tablas pivot)
+        if (!empty($addons)) {
+            foreach ($addons as $srv) {
+                DB::table('reservacion_servicio')->insert([
+                    'id_reservacion' => $idReserva,
+                    'id_servicio'    => $srv['id'],
+                    'cantidad'       => $srv['cantidad'],
+                    'precio_unitario'=> $srv['precio'],
+                    'created_at'     => now(),
+                    'updated_at'     => now(),
+                ]);
+                Log::info("➕ [Convertir] Servicio añadido ID {$srv['id']} (cant={$srv['cantidad']})");
+            }
+        } else {
+            Log::info("ℹ️ [Convertir] La cotización no tenía servicios adicionales.");
+        }
+
+        // 9️⃣ Guardar seguro (si existe)
+        if (!empty($seguro) && isset($seguro['id_paquete'])) {
+            DB::table('reservacion_paquete_seguro')->insert([
+                'id_reservacion' => $idReserva,
+                'id_paquete'     => $seguro['id_paquete'],
+                'precio_por_dia' => $seguro['precio'],
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
+
+            Log::info("🛡️ [Convertir] Paquete de seguro asignado ID {$seguro['id_paquete']}");
+        } else {
+            Log::info("ℹ️ [Convertir] La cotización no tenía paquete de seguro.");
+        }
+
+        // 🔟 Eliminar PDF
+        $pdfPath = public_path("storage/cotizaciones/{$cot->folio}.pdf");
+        if (file_exists($pdfPath)) {
+            unlink($pdfPath);
+            Log::info("🗑️ PDF eliminado: {$cot->folio}.pdf");
+        }
+
+        // 1️⃣1️⃣ Eliminar cotización
+        DB::table('cotizaciones')->where('id_cotizacion', $id)->delete();
+        Log::info("🧹 Cotización eliminada ID {$id}");
+
+        return response()->json([
+            'success' => true,
+            'codigo'  => $codigo,
+            'message' => 'Cotización convertida en reservación correctamente.'
+        ]);
+
+    } catch (\Throwable $e) {
+        Log::error("❌ Error al convertir cotización ID {$id}: " . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Error interno al convertir cotización.',
+            'error'   => $e->getMessage(),
+        ], 500);
+    }
+}
+
+
+public function reenviarCotizacion($id)
+{
+    try {
+        // 1️⃣ Buscar cotización
+        $cotizacion = DB::table('cotizaciones')->where('id_cotizacion', $id)->first();
+
+        if (!$cotizacion) {
+            return response()->json([
+                'success' => false,
+                'message' => '❌ Cotización no encontrada.'
+            ], 404);
+        }
+
+        // 2️⃣ Decodificar cliente
+        $cliente = json_decode($cotizacion->cliente ?? '{}', true);
+        $emailCliente = $cliente['email'] ?? null;
+        $nombreCliente = $cliente['nombre'] ?? 'Cliente';
+
+        if (!$emailCliente) {
+            return response()->json([
+                'success' => false,
+                'message' => '⚠️ La cotización no tiene correo de cliente.'
+            ], 400);
+        }
+
+        // 3️⃣ Verificar existencia del PDF
+        $pdfPath = public_path("storage/cotizaciones/{$cotizacion->folio}.pdf");
+        if (!file_exists($pdfPath)) {
+            return response()->json([
+                'success' => false,
+                'message' => '📄 No se encontró el archivo PDF asociado a esta cotización.'
+            ], 404);
+        }
+
+        // 4️⃣ Enviar correo
+        $from = env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocarental.com');
+        $correoEmpresa = $from;
+
+        Mail::send([], [], function ($message) use ($emailCliente, $nombreCliente, $pdfPath, $cotizacion, $correoEmpresa) {
+            $asunto = "📨 Reenvío de cotización {$cotizacion->folio} - Viajero Car Rental";
+
+            $body = "
+            <h2 style='color:#C10A14;'>Reenvío de Cotización</h2>
+            <p>Estimado/a <strong>{$nombreCliente}</strong>,</p>
+            <p>Le reenviamos su cotización correspondiente al folio <strong>{$cotizacion->folio}</strong>.</p>
+            <p>Adjunto encontrará el documento PDF con los detalles de su cotización.</p>
+            <p>Gracias por su preferencia.<br>Equipo de <strong>Viajero Car Rental</strong></p>
+            ";
+
+            $message->to($emailCliente)
+                    ->cc($correoEmpresa)
+                    ->subject($asunto)
+                    ->html($body) // ✅ Método correcto en Laravel 12
+                    ->attach($pdfPath);
+        });
+        Log::info("📨 Cotización reenviada: {$cotizacion->folio} a {$emailCliente}");
+
+
+        return response()->json([
+            'success' => true,
+            'message' => "📨 Cotización reenviada correctamente a {$emailCliente}."
+        ]);
+    } catch (\Throwable $e) {
+        Log::error("❌ Error al reenviar cotización: " . $e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => '⚠️ Error interno al reenviar la cotización.',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
+public function eliminarCotizacion($id)
+{
+    try {
+        // 1️⃣ Buscar cotización
+        $cotizacion = DB::table('cotizaciones')->where('id_cotizacion', $id)->first();
+
+        if (!$cotizacion) {
+            Log::warning("⚠️ Intento de eliminar cotización inexistente: ID {$id}");
+            return response()->json([
+                'success' => false,
+                'message' => '❌ Cotización no encontrada.'
+            ], 404);
+        }
+
+        // 2️⃣ Eliminar PDF si existe
+        $pdfPath = public_path("storage/cotizaciones/{$cotizacion->folio}.pdf");
+        if (file_exists($pdfPath)) {
+            unlink($pdfPath);
+            Log::info("🗑️ PDF eliminado: {$cotizacion->folio}.pdf");
+        } else {
+            Log::warning("📄 No se encontró el PDF para eliminar: {$cotizacion->folio}.pdf");
+        }
+
+        // 3️⃣ Eliminar registro de la base de datos
+        DB::table('cotizaciones')->where('id_cotizacion', $id)->delete();
+        Log::info("✅ Cotización eliminada manualmente: {$cotizacion->folio} (ID {$id})");
+
+        return response()->json([
+            'success' => true,
+            'message' => "✅ Cotización {$cotizacion->folio} eliminada correctamente."
+        ]);
+
+    } catch (\Throwable $e) {
+        Log::error("❌ Error al eliminar cotización ID {$id}: " . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => '⚠️ Error interno al eliminar cotización.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+}
+
+public function limpiarCotizacionesVencidas()
+{
+    try {
+        // 🔹 Buscar cotizaciones con más de 90 días desde dropoff_date
+        $limite = now()->subDays(90)->toDateString();
+
+        $cotizaciones = DB::table('cotizaciones')
+            ->whereDate('dropoff_date', '<', $limite)
+            ->get();
+
+        $totalEliminadas = 0;
+
+        foreach ($cotizaciones as $cotizacion) {
+            $pdfPath = public_path("storage/cotizaciones/{$cotizacion->folio}.pdf");
+            if (file_exists($pdfPath)) {
+                unlink($pdfPath);
+                Log::info("🧹 [AutoClean] PDF eliminado: {$cotizacion->folio}.pdf");
+            }
+
+            DB::table('cotizaciones')->where('id_cotizacion', $cotizacion->id_cotizacion)->delete();
+            $totalEliminadas++;
+        }
+
+        Log::info("🧼 Limpieza automática completada. Cotizaciones eliminadas: {$totalEliminadas}");
+
+        return response()->json([
+            'success' => true,
+            'message' => "🧼 Limpieza completada. Cotizaciones eliminadas: {$totalEliminadas}"
+        ]);
+
+    } catch (\Throwable $e) {
+        Log::error("❌ Error en limpieza automática: " . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => '⚠️ Error interno durante limpieza automática.',
+            'error' => $e->getMessage(),
         ], 500);
     }
 }

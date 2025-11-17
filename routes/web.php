@@ -12,13 +12,13 @@ use App\Http\Controllers\ReservacionesController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ReservacionesAdminController;
 use App\Http\Controllers\ReservacionesActivasController;
-use App\Http\Controllers\ContratoController;
 use Illuminate\Support\Facades\Bus;
 use App\Http\Controllers\FlotillaController;
 use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\PolizasController;
 use App\Http\Controllers\CarroceriaController;
 use App\Http\Controllers\GastosController;
+use App\Http\Controllers\ContratoController;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -127,7 +127,16 @@ Route::post('/admin/cotizaciones/guardar', [App\Http\Controllers\CotizacionesAdm
 Route::get('/admin/cotizaciones/seguros', [App\Http\Controllers\CotizacionesAdminController::class, 'getSeguros'])->name('rutaSegurosCotizar');
 Route::get('/admin/cotizaciones/servicios', [App\Http\Controllers\CotizacionesAdminController::class, 'getServicios'])->name('rutaServiciosCotizar');
 Route::get('/admin/cotizaciones/categoria/{idCategoria}', [App\Http\Controllers\CotizacionesAdminController::class, 'getCategoria'])->name('rutaCategoriaCotizar');
-
+// 🟢 Vista de todas las cotizaciones (para botón "Ver cotizaciones")
+Route::get('/admin/cotizaciones/listado', [App\Http\Controllers\CotizacionesAdminController::class, 'listado'])->name('rutaVerCotizaciones');
+// Convertir Cotizacion en Reservación
+Route::post('/admin/cotizaciones/{id}/convertir', [App\Http\Controllers\CotizacionesAdminController::class, 'convertirAReservacion'])->name('cotizaciones.convertir');
+// 🔄 Reenviar cotización por correo
+Route::post('/admin/cotizaciones/{id}/reenviar', [App\Http\Controllers\CotizacionesAdminController::class, 'reenviarCotizacion'])->name('cotizaciones.reenviar');
+// 🔹 Eliminar cotización manualmente
+Route::delete('/admin/cotizaciones/{id}/eliminar', [App\Http\Controllers\CotizacionesAdminController::class, 'eliminarCotizacion'])->name('cotizaciones.eliminar');
+// 🔹 Limpieza automática (opcional: protegida o por CRON)
+Route::get('/admin/cotizaciones/limpiar-vencidas', [App\Http\Controllers\CotizacionesAdminController::class, 'limpiarCotizacionesVencidas'])->name('cotizaciones.limpiarVencidas');
 
 
 
@@ -137,9 +146,9 @@ Route::get('/admin/reservaciones-activas', [ReservacionesActivasController::clas
 Route::get('/admin/reservaciones-activas/{codigo}', [ReservacionesActivasController::class, 'show'])->name('rutaDetalleReservacionActiva');
 
 //contrato id
-Route::get('/admin/contrato/{id}', [ContratoController::class, 'mostrarContrato'])->name('contrato.mostrar');
+Route::get('/admin/contrato/{id}', [App\Http\Controllers\ContratoController::class, 'mostrarContrato'])->name('contrato.mostrar');
 // 🧩 Actualizar servicios adicionales (AJAX desde Contrato)
-Route::post('/admin/contrato/servicios', [ContratoController::class, 'actualizarServicios'])->name('contrato.actualizarServicios');
+Route::post('/admin/contrato/servicios', [App\Http\Controllers\ContratoController::class, 'actualizarServicios'])->name('contrato.actualizarServicios');
 // =============================================================
 // 🛡️ Actualización de seguros (Paso 3 del contrato)
 // =============================================================
@@ -147,9 +156,9 @@ Route::post('/admin/contrato/seguros', [App\Http\Controllers\ContratoController:
 // 💰 Actualizar cargos adicionales (Paso 4)
 Route::post('/admin/contrato/cargos', [App\Http\Controllers\ContratoController::class, 'actualizarCargos'])->name('contrato.actualizarCargos');
 // 📄 Guardar documentación subida (Paso 5)
-Route::post('/contrato/guardar-documentacion', [ContratoController::class, 'guardarDocumentacion'])->name('contrato.guardarDocumentacion');
+Route::post('/admin/contrato/guardar-documentacion', [App\Http\Controllers\ContratoController::class, 'guardarDocumentacion'])->name('contrato.guardarDocumentacion');
 // Obtener conductores asociados al contrato (AJAX)
-Route::get('/admin/contrato/{id}/conductores', [ContratoController::class, 'obtenerConductores']);
+Route::get('/admin/contrato/{id}/conductores', [App\Http\Controllers\ContratoController::class, 'obtenerConductores']);
 
 
 

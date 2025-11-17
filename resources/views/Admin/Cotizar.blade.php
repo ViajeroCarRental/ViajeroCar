@@ -214,7 +214,13 @@
     </form>
   </div>
 </article>
-
+  <!-- 🔘 Botón Ver Cotizaciones -->
+<div class="ver-cotizaciones-wrap">
+  <button class="btn-ver-cotizaciones"
+          onclick="location.href='{{ route('rutaVerCotizaciones') }}'">
+     Ver cotizaciones 📄
+  </button>
+</div>
 
   </section>
 
@@ -272,7 +278,6 @@
     </div>
   </div>
 </aside>
-
 
 
 </div>

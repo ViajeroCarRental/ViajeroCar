@@ -174,19 +174,27 @@ class ReservacionesAdminController extends Controller
             'moneda'           => 'MXN',
 
             // 🟡 Tarifa ajustada y valor real usado
-            'tarifa_ajustada'   => $request->input('tarifa_ajustada', false),
-            'tarifa_modificada' => $tarifaBase,
+             'tarifa_ajustada'   => $request->input('tarifa_ajustada', false),
 
-            'no_vuelo'         => $validated['no_vuelo'] ?? null,
-            'codigo'           => $codigo,
-            'nombre_cliente'   => $validated['nombre_cliente'] ?? null,
-            'email_cliente'    => $validated['email_cliente'] ?? null,
-            'telefono_cliente' => $validated['telefono_cliente'] ?? null,
-            'paypal_order_id'  => null,
-            'status_pago'      => 'Pendiente',
-            'metodo_pago'      => 'mostrador',
-            'created_at'       => now(),
-            'updated_at'       => now(),
+            // ✅ Guardar tarifa_modificada solo si el usuario realmente la editó
+             'tarifa_modificada' => $request->filled('tarifa_modificada')
+             ? $request->tarifa_modificada
+             : null,
+
+            // ✅ Guardar siempre la tarifa base real del catálogo
+             'tarifa_base'       => $tarifaBase,
+
+             'no_vuelo'         => $validated['no_vuelo'] ?? null,
+             'codigo'           => $codigo,
+             'nombre_cliente'   => $validated['nombre_cliente'] ?? null,
+             'email_cliente'    => $validated['email_cliente'] ?? null,
+             'telefono_cliente' => $validated['telefono_cliente'] ?? null,
+             'paypal_order_id'  => null,
+             'status_pago'      => 'Pendiente',
+             'metodo_pago'      => 'mostrador',
+             'created_at'       => now(),
+             'updated_at'       => now(),
+
         ]);
 
         // 4.1️⃣ Guardar seguro seleccionado (reservacion_paquete_seguro)

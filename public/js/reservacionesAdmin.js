@@ -51,10 +51,15 @@ categoriaSelect?.addEventListener('change', async () => {
     vehName.textContent = data.nombre || 'Ejemplo de la categoría seleccionada';
     vehImageWrap.style.display = 'block';
 
-    // Tarifa base
+    // ✅ Tarifa base real de la categoría
     const tarifa = parseFloat(data.tarifa_base || data.precio_dia || 0);
-    tarifaOriginal = tarifa;
-    tarifaEditadaManualmente = false;
+
+    // Guardar referencia base y resetear bandera de edición
+    tarifaOriginal = tarifa;              // base real del catálogo
+    precioSeleccionado = tarifa;          // inicia igual
+    tarifaEditadaManualmente = false;     // aún no fue editada
+
+    // Mostrar valor inicial
     $('#baseLine').innerHTML = `$${tarifa.toFixed(2)} MXN/día`;
     updateResumen(tarifa);
 
@@ -363,28 +368,43 @@ $('#formReserva')?.addEventListener('submit', async e => {
   btn.disabled = true;
   btn.textContent = 'Procesando...';
 
-  const payload = {
-    id_categoria: $('#categoriaSelect').value,
-    sucursal_retiro: $('#sucursal_retiro').value,
-    sucursal_entrega: $('#sucursal_entrega').value,
-    fecha_inicio: $('#fecha_inicio').value,
-    fecha_fin: $('#fecha_fin').value,
-    hora_retiro: $('#hora_retiro')?.value || '',
-    hora_entrega: $('#hora_entrega')?.value || '',
-    subtotal: $('#subTot').textContent.replace(/[^\d.]/g, '') || '0',
-    impuestos: $('#iva').textContent.replace(/[^\d.]/g, '') || '0',
-    total: $('#total').textContent.replace(/[^\d.]/g, '') || '0',
-    moneda: $('#moneda').value,
-    nombre_cliente: $('#nombre_cliente').value,
-    email_cliente: $('#email_cliente').value,
-    telefono_cliente: $('#telefono_cliente').value,
-    no_vuelo: $('#no_vuelo')?.value || '',
-    tarifa_ajustada: tarifaEditadaManualmente ? 1 : 0 // 🟡 NUEVO
-  };
+ // 📌 Antes de armar el payload
+const tarifaModificada = tarifaEditadaManualmente ? precioSeleccionado : null;
 
-  payload.seguroSeleccionado = seguroSeleccionado;
-  payload.adicionalesSeleccionados = adicionalesSeleccionados;
-  payload.tarifa_ajustada = tarifaEditadaManualmente ? 1 : 0;
+const payload = {
+  id_categoria: $('#categoriaSelect').value,
+  sucursal_retiro: $('#sucursal_retiro').value,
+  sucursal_entrega: $('#sucursal_entrega').value,
+  fecha_inicio: $('#fecha_inicio').value,
+  fecha_fin: $('#fecha_fin').value,
+  hora_retiro: $('#hora_retiro')?.value || '',
+  hora_entrega: $('#hora_entrega')?.value || '',
+  subtotal: $('#subTot').textContent.replace(/[^\d.]/g, '') || '0',
+  impuestos: $('#iva').textContent.replace(/[^\d.]/g, '') || '0',
+  total: $('#total').textContent.replace(/[^\d.]/g, '') || '0',
+  moneda: $('#moneda').value,
+  nombre_cliente: $('#nombre_cliente').value,
+  email_cliente: $('#email_cliente').value,
+  telefono_cliente: $('#telefono_cliente').value,
+  no_vuelo: $('#no_vuelo')?.value || '',
+
+  // ✅ bandera de edición
+  tarifa_ajustada: tarifaEditadaManualmente ? 1 : 0,
+
+  // ✅ siempre base real (de la categoría)
+  precio_base_dia: tarifaOriginal || precioSeleccionado
+};
+
+// ✅ solo incluir tarifa_modificada si realmente fue editada
+if (tarifaEditadaManualmente) {
+  payload.tarifa_modificada = tarifaModificada;
+}
+
+// 👇 el resto queda igual
+payload.seguroSeleccionado = seguroSeleccionado;
+payload.adicionalesSeleccionados = adicionalesSeleccionados;
+payload.tarifa_ajustada = tarifaEditadaManualmente ? 1 : 0;
+
 
   try {
     const res = await fetch('/reservaciones/guardar', {

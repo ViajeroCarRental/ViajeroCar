@@ -104,6 +104,7 @@
       <div class="kv"><div>Estado</div><div id="mEstado">—</div></div>
       <div class="kv"><div>Forma de pago</div><div id="mFormaPago">—</div></div>
       <div class="kv"><div>Total</div><div id="mTotal">—</div></div>
+      <div class="kv"><div>Tarifa modificada</div><div id="mTarifaModificada">—</div></div>
     </div>
 
     <div class="actions">

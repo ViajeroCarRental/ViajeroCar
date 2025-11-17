@@ -462,24 +462,28 @@ async function enviarCotizacion(data, accion = "guardada") {
     const result = await res.json();
 
     if (res.ok && result.success) {
-      alertify.success(`✅ Cotización ${accion} correctamente`);
-      console.log("📦 Respuesta del servidor:", result);
+  alertify.success(`✅ Cotización ${accion} correctamente`);
+  console.log("📦 Respuesta del servidor:", result);
 
-      if (accion.includes("confirmada")) {
-        alertify.notify("Se redirigirá al módulo de reservaciones...", "custom", 6);
-        setTimeout(() => (window.location.href = "/admin/reservaciones-activas"), 1500);
-      } else {
-        // Limpieza visual tipo Reservaciones
-        $('#formCotizacion')?.reset?.();
-        vehImageWrap.style.display = 'none';
-        $('#baseLine').textContent = '—';
-        updateResumen(0);
+  if (accion.includes("confirmada")) {
+    alertify.notify("Se redirigirá al módulo de reservaciones...", "custom", 6);
+    setTimeout(() => (window.location.href = "/admin/reservaciones-activas"), 1500);
+  } else {
+    // 🧼 Limpieza visual completa
+    $('#formCotizacion')?.reset?.();
+    vehImageWrap.style.display = 'none';
+    $('#baseLine').textContent = '—';
+    updateResumen(0);
+    $('#baseLine').style.color = '#000';
+    $('#baseLine').style.fontWeight = '400';
+    tarifaEditadaManualmente = false;
 
-        // 🔹 Restablecer color y variables de tarifa (evita que quede en amarillo)
-        $('#baseLine').style.color = '#000';
-        $('#baseLine').style.fontWeight = '400';
-        tarifaEditadaManualmente = false;
-      }
+    // 🧭 Regresar al paso 1
+    showStep(1);
+
+    // 🕓 (Opcional) recargar tras 1 s para limpiar variables globales
+    setTimeout(() => window.location.reload(), 1000);
+  }
     } else {
       alertify.error(`⚠️ Error al ${accion} cotización`);
       console.error(result);
@@ -511,15 +515,19 @@ function obtenerDatosCotizacion() {
     0
   );
 
-  // 🔹 Tarifa modificada (si fue ajustada manualmente)
-  const tarifaModificada = tarifaEditadaManualmente ? precioSeleccionado : tarifaOriginal || precioSeleccionado;
+  // 🔹 Tarifa base (valor original del catálogo)
+  const tarifaBase = tarifaOriginal || precioSeleccionado;
 
+  // 🔹 Tarifa modificada (si fue ajustada manualmente)
+  const tarifaModificada = tarifaEditadaManualmente ? precioSeleccionado : tarifaBase;
+
+  // 📦 Datos completos para enviar al backend
   return {
     categoria_id: $("#categoriaSelect")?.value,
-    precio_base_dia: tarifaOriginal || precioSeleccionado,
-    tarifa_modificada: tarifaModificada,
-    tarifa_ajustada: tarifaAjustada,
-    extras_sub, // 🟡 Nuevo campo: subtotal de adicionales
+    tarifa_base: tarifaBase,           // 💰 valor original del catálogo
+    tarifa_modificada: tarifaModificada, // 🟡 si fue modificada por el usuario
+    tarifa_ajustada: tarifaAjustada,     // 1 o 0 (bandera)
+    extras_sub, // 🟣 Subtotal de adicionales (sin IVA)
     pickup_sucursal_id: $("#sucursal_retiro")?.value,
     dropoff_sucursal_id: $("#sucursal_entrega")?.value,
     pickup_date: $("#fecha_inicio")?.value,

@@ -32,7 +32,8 @@ class DatabaseSeeder extends Seeder
         SeguroPaqueteSeeder::class,
         FlotillaSeeder::class,
         VehiculosFlotillaSeeder::class,
-    ]);
-
+        CargoConceptoSeeder::class,
+        ]);
     }
+
 }

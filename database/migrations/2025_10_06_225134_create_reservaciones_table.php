@@ -46,6 +46,7 @@ return new class extends Migration {
             // 🟡 Nuevo campo para saber si la tarifa fue modificada manualmente
             $table->boolean('tarifa_ajustada')->default(false)->comment('Indica si la tarifa fue modificada manualmente por el asesor');
             $table->decimal('tarifa_modificada', 10, 2)->nullable()->comment('Tarifa base diaria real (modificada o no)');
+            $table->decimal('tarifa_base', 10, 2)->nullable()->comment('Tarifa base diaria del catálogo');
 
             $table->string('no_vuelo', 40)->nullable();
             $table->string('codigo', 50);

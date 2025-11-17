@@ -96,6 +96,11 @@ window.addEventListener("DOMContentLoaded", () => {
       $("#mFormaPago").textContent = data.metodo_pago || "—";
       $("#mTotal").textContent = Fmx(data.total);
 
+      $("#mTarifaModificada").textContent = data.tarifa_modificada
+  ? Fmx(data.tarifa_modificada)
+  : "—";
+
+
       // Mostrar modal
       $("#modal").classList.add("show");
       console.log("🪟 Modal abierto con reservación:", current);
