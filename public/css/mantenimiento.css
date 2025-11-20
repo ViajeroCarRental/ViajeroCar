@@ -551,3 +551,239 @@ body {
     color: #374151;
     margin-bottom: 6px;
   }
+  /* ========================================================================= */
+/* 🛠 MODAL PROFESIONAL – VERSIÓN DEFINITIVA (Scroll + colores suaves)       */
+/* ========================================================================= */
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal.show {
+    display: flex;
+}
+
+/* CONTENEDOR */
+.modal-content {
+    width: 95%;
+    max-width: 780px;
+    background: #ffffff;
+    border-radius: 20px;
+    overflow-y: auto;              /* ←← YA PERMITE BAJAR */
+    max-height: 92vh;              /* ←← Altura controlada */
+    box-shadow: 0 12px 28px rgba(0,0,0,.25);
+    animation: slideUp .28s ease-out;
+    border: 1px solid #e5e7eb;
+}
+
+/* HEADER */
+.modal-header {
+    background: #E50914; /* rojo más elegante */
+    color: #fff;
+    padding: 22px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.45rem;
+    font-weight: 800;
+}
+
+.modal-header small {
+    opacity: .9;
+    font-size: .88rem;
+}
+
+.status {
+    width: 14px !important;
+    height: 14px !important;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(255,255,255,.6);
+}
+
+/* BODY */
+.modal-body {
+    padding: 28px 34px;
+}
+
+/* FILA SUPERIOR */
+.modal-top-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+/* Textos */
+.modal-body p {
+    margin: 6px 0;
+    font-size: .95rem;
+    color: #1f2937;
+}
+
+.section-title {
+    margin-top: 22px;
+    margin-bottom: 6px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111827;
+    padding-left: 12px;
+    position: relative;
+}
+.section-title::before {
+    content: "";
+    width: 4px;
+    height: 18px;
+    background: #E50914;
+    border-radius: 3px;
+    position: absolute;
+    left: 0;
+    top: 4px;
+}
+
+/* Separador */
+.modal-separator {
+    width: 100%;
+    height: 1px;
+    background: #e5e7eb;
+    margin: 14px 0 20px;
+    opacity: .75;
+}
+
+/* INPUTS */
+.modal-body input,
+.modal-body select,
+.modal-body textarea {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: .95rem;
+    margin-bottom: 14px;
+    outline: none;
+    background: #fafafa;
+    transition: all .2s ease;
+}
+
+.modal-body input:focus,
+.modal-body select:focus,
+.modal-body textarea:focus {
+    background: #fff;
+    border-color: #E50914;
+    box-shadow: 0 0 0 3px rgba(229,9,20,.18);
+}
+
+/* Elimina ese borde rojo feo */
+.modal-body input:invalid {
+    border-color: #d1d5db !important;
+    box-shadow: none !important;
+}
+
+/* checkboxes */
+.opciones-mantenimiento {
+    background: #f8fafc;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+.opciones-mantenimiento label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: .92rem;
+}
+.icon-yes { color: #16a34a; font-weight: 700; }
+.icon-no  { color: #ef4444; font-weight: 700; }
+
+/* FOOTER */
+.modal-footer {
+    padding: 16px 32px 22px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.modal-footer .btn {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .25s ease;
+}
+
+.modal-footer .btn.primary {
+    background: #E50914;
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(229,9,20,.2);
+}
+.modal-footer .btn.primary:hover {
+    background: #B20810;
+    transform: translateY(-1px);
+}
+
+.modal-footer .btn.gray {
+    background: #f3f4f6;
+    color: #111;
+}
+.modal-footer .btn.gray:hover {
+    background: #e5e7eb;
+}
+
+/* Animación */
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+/* ====================================================== */
+/* ✔ Corrección de alineación de checkboxes               */
+/* ====================================================== */
+
+.opciones-mantenimiento {
+    background: #f8fafc;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+}
+
+.opciones-mantenimiento p {
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: #111827;
+}
+
+/* Cada opción queda en fila con checkbox + texto */
+.opciones-mantenimiento label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin: 8px 0 !important;
+    font-size: .95rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+}
+
+/* Ajuste checkbox */
+.opciones-mantenimiento input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #E50914; /* color del sistema */
+    cursor: pointer;
+}
+
+/* Evita que el checkbox salga a la derecha */
+#opcionesMenor- * ,
+#opcionesMayor- * {
+    text-align: left !important;
+}
