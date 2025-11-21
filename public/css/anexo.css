@@ -1,0 +1,212 @@
+/* ===============================
+   ESTILO GENERAL DEL DOCUMENTO
+================================= */
+
+.document-wrapper {
+    background: #ffffff;
+    padding: 35px;
+    margin: 20px auto;
+    width: 95%;
+    max-width: 1000px;
+    border-radius: 14px;
+    box-shadow: 0 6px 28px rgba(0,0,0,0.10);
+    font-family: 'Poppins', sans-serif;
+    color: #222;
+}
+
+/* ===============================
+        ENCABEZADO
+================================= */
+
+.doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #e50914;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
+
+.logo {
+    height: 65px;
+}
+
+.doc-header h1 {
+    font-size: 36px;
+    margin: 0;
+    font-weight: 700;
+}
+
+.agreement-box {
+    margin-top: 5px;
+    text-align: right;
+}
+
+.ag-label {
+    display: block;
+    font-size: 13px;
+    color: #555;
+}
+
+.ag-value {
+    font-size: 20px;
+    font-weight: bold;
+    color: #e50914;
+}
+
+/* ===============================
+            TÍTULOS
+================================= */
+
+.section-title {
+    font-size: 22px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 5px;
+    color: #000;
+}
+
+.section-sub {
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 25px;
+}
+
+/* ===============================
+            TABLA
+================================= */
+
+.styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 35px;
+}
+
+.styled-table thead th {
+    background: #e50914;
+    color: white;
+    padding: 12px;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+}
+
+.styled-table td {
+    border-bottom: 1px solid #ddd;
+    padding: 10px 12px;
+}
+
+.styled-table tr:hover {
+    background: #fafafa;
+}
+
+.img-cell {
+    text-align: center;
+}
+
+.doc-thumb {
+    width: 60px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.no-img {
+    color: #888;
+    font-size: 13px;
+}
+
+.actions {
+    text-align: center;
+}
+
+.btn-delete {
+    background: transparent;
+    border: none;
+    color: #d62828;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.empty-row {
+    text-align: center;
+    padding: 15px;
+    font-size: 15px;
+    color: #888;
+}
+
+/* ===============================
+            FORMULARIO
+================================= */
+
+.form-card {
+    background: #fafafa;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 35px;
+    border: 1px solid #eee;
+}
+
+.form-card h3 {
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.form-row {
+    margin-bottom: 14px;
+}
+
+.form-row label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.form-row input {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.btn-primary {
+    background: #e50914;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.btn-primary:hover {
+    background: #bb0811;
+}
+
+/* ===============================
+        TEXTO LEGAL
+================================= */
+
+.legal-section p {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    text-align: justify;
+}
+
+/* ===============================
+            FIRMA
+================================= */
+
+.signature-section {
+    margin-top: 50px;
+    text-align: center;
+}
+
+.sig-line {
+    width: 300px;
+    height: 2px;
+    background: #000;
+    margin: 0 auto 8px auto;
+}

@@ -20,6 +20,7 @@ use App\Http\Controllers\PolizasController;
 use App\Http\Controllers\CarroceriaController;
 use App\Http\Controllers\GastosController;
 use App\Http\Controllers\SiniestrosController;
+use App\Http\Controllers\ConductorAdicionalController;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -257,3 +258,17 @@ Route::get('/preview-poliza', function () {
     $diasRestantes = 5;
     return view('emails.poliza_vencimiento', compact('vehiculo', 'diasRestantes'));
 });
+
+
+// conductor adicional
+// Ver anexo
+Route::get('/admin/reservacion/{id}/anexo', 
+    [ConductorAdicionalController::class, 'verAnexo'])->name('anexo.ver');
+
+// Guardar nuevo conductor
+Route::post('/admin/anexo/guardar', 
+    [ConductorAdicionalController::class, 'guardar'])->name('anexo.guardar');
+
+// Eliminar conductor
+Route::delete('/admin/anexo/{id}/eliminar', 
+    [ConductorAdicionalController::class, 'eliminar'])->name('anexo.eliminar');
