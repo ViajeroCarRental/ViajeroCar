@@ -18,9 +18,13 @@ return new class extends Migration {
             $table->string('licencia', 100);
             $table->string('vence', 50)->nullable();
 
-            // 🆕 Imagen (licencia o INE)
+            // Imagen (INE o Licencia)
             $table->string('imagen_licencia')->nullable();
 
+            // Firma del conductor adicional (firma hecha en canvas)
+            $table->string('firma_conductor')->nullable();
+
+            // Si el conductor ya firmó
             $table->boolean('firmado')->default(false);
 
             $table->timestamps();

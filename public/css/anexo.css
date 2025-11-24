@@ -210,3 +210,31 @@
     background: #000;
     margin: 0 auto 8px auto;
 }
+.modal-firma {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.firma-content {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    width: 600px;
+    text-align: center;
+    box-shadow: 0 6px 25px rgba(0,0,0,0.2);
+}
+
+.firma-buttons button {
+    margin: 10px;
+}
+
+canvas {
+    border: 2px solid #999;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}

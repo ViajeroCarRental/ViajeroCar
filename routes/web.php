@@ -272,3 +272,7 @@ Route::post('/admin/anexo/guardar',
 // Eliminar conductor
 Route::delete('/admin/anexo/{id}/eliminar', 
     [ConductorAdicionalController::class, 'eliminar'])->name('anexo.eliminar');
+    // Guardar firma del arrendador
+Route::post('/admin/anexo/guardar-firma',
+    [ConductorAdicionalController::class, 'guardarFirma'])
+    ->name('anexo.guardarFirma');
