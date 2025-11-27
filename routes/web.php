@@ -276,3 +276,14 @@ Route::delete('/admin/anexo/{id}/eliminar',
 Route::post('/admin/anexo/guardar-firma',
     [ConductorAdicionalController::class, 'guardarFirma'])
     ->name('anexo.guardarFirma');
+
+
+
+
+Route::get('/admin/reservacion/{id}/checklist', function($id) {
+    return view('Admin.checklist', ['id' => $id]);
+})->name('checklist.ver');
+
+Route::get('/admin/checklist2', function () {
+    return view('Admin.checklist2');
+});

@@ -1,0 +1,337 @@
+:root{
+  --brand:#D6001C;
+  --ink:#111827;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --paper:#ffffff;
+  --bg:#f3f5f9;
+  --radius:14px;
+  --shadow:0 10px 30px rgba(16,24,40,.08);
+  --shadow-soft:0 4px 12px rgba(16,24,40,.06);
+  --font:'Inter','Poppins',system-ui,Arial,sans-serif;
+}
+
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--ink);
+}
+
+.checklist-container{
+  max-width:1100px;
+  margin:18px auto;
+  padding:28px;
+  background:var(--paper);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  border:1px solid #eef0f4;
+}
+
+/* ===== HEADER ===== */
+.cl-header{
+  display:grid;
+  grid-template-columns:180px 1fr 210px;
+  gap:14px;
+  align-items:center;
+  padding:10px 6px 18px;
+  border-bottom:3px solid var(--brand);
+}
+
+.cl-logo img{ width:160px; }
+
+.cl-title-box{
+  text-align:center;
+}
+.cl-title-box h1{
+  font-size:26px;
+  font-weight:800;
+  margin:0;
+  letter-spacing:.8px;
+}
+.cl-title-box h2{
+  margin:4px 0 8px;
+  font-size:14px;
+  font-weight:600;
+  color:#374151;
+}
+.office-info{
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.35;
+}
+
+.cl-ra-box{
+  background:#f7f7f8;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px;
+  text-align:center;
+}
+.cl-ra-box span{
+  font-size:12px;
+  color:#4b5563;
+}
+.cl-ra-box strong{
+  display:block;
+  margin-top:6px;
+  font-size:20px;
+  font-weight:800;
+}
+
+/* ===== PAPER SECTIONS ===== */
+.paper-section{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px;
+  margin-top:14px;
+  box-shadow:var(--shadow-soft);
+}
+
+.sec-title{
+  font-size:15px;
+  font-weight:800;
+  margin:0 0 10px;
+  letter-spacing:.3px;
+  text-transform:uppercase;
+}
+.sec-title.center{ text-align:center; }
+
+/* ===== TABLES ===== */
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+th,td{
+  border:1px solid var(--line);
+  padding:8px 10px;
+  font-size:13px;
+}
+th{
+  background:#f8fafc;
+  font-weight:700;
+  text-align:center;
+}
+td{ text-align:center; }
+
+.vehicle-table th{
+  width:120px;
+  background:#f3f4f6;
+}
+
+/* ===== GASOLINA ===== */
+.gas-wrap{ padding:18px; }
+
+.gas-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+.gas-pill{
+  background:#0f172a;
+  color:#fff;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+.gas-pill strong{ font-size:13px; }
+
+.gas-bar{
+  position:relative;
+  height:52px;
+  background:#f1f5f9;
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden;
+}
+.gas-fill{
+  position:absolute;
+  inset:0 auto 0 0;
+  width:0%;
+  background:linear-gradient(90deg, #16a34a, #22c55e);
+  transition:width .45s ease;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);
+}
+
+.gas-marks{
+  position:relative;
+  z-index:2;
+  height:100%;
+  display:grid;
+  grid-template-columns:repeat(17,1fr);
+}
+.gas-mark{
+  border:none;
+  background:transparent;
+  font-size:11px;
+  font-weight:700;
+  color:#111;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+.gas-mark:hover{
+  background:rgba(0,0,0,.04);
+}
+.gas-mark.active{
+  background:rgba(255,255,255,.8);
+  color:#0f172a;
+  box-shadow:inset 0 0 0 2px #0f172a;
+}
+
+.sign-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:10px;
+}
+.sign-row label{
+  font-weight:700;
+  font-size:13px;
+}
+.sig-line{
+  flex:1;
+  height:1px;
+  background:#111;
+}
+
+/* ===== DIAGRAMA AUTO ===== */
+.diagram-card{
+  position:relative;
+  background:#f8fafc;
+  border:1px dashed #cbd5e1;
+  border-radius:16px;
+  padding:22px 14px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:280px;
+}
+
+.car-diagram{
+  width:360px;
+  max-width:100%;
+  height:auto;
+  display:block;
+}
+
+.diagram-label{
+  position:absolute;
+  font-size:12px;
+  font-weight:800;
+  color:#111;
+  letter-spacing:.6px;
+  background:#fff;
+  padding:4px 8px;
+  border:1px solid #e2e8f0;
+  border-radius:999px;
+}
+.diagram-label--top{ top:8px; left:50%; transform:translateX(-50%); }
+.diagram-label--bottom{ bottom:8px; left:50%; transform:translateX(-50%); }
+.diagram-label--left{ left:8px; top:50%; transform:translateY(-50%) rotate(-90deg); }
+.diagram-label--right{ right:8px; top:50%; transform:translateY(-50%) rotate(90deg); }
+
+/* ===== EQUIPO ===== */
+.equip-table td{
+  text-align:left;
+  font-weight:600;
+}
+.equip-table td:nth-child(2),
+.equip-table td:nth-child(4){
+  text-align:center;
+  width:60px;
+  font-weight:800;
+}
+
+/* ===== RULES ===== */
+.rules-list{
+  margin:0;
+  padding-left:18px;
+  font-size:13px;
+}
+.rules-list li{ margin-bottom:6px; color:#111; }
+
+.accept-line{
+  margin-top:12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:13px;
+  font-weight:700;
+}
+.accept-line .line{
+  flex:1; height:1px; background:#111;
+}
+.accept-line .xbox{
+  font-weight:800;
+}
+
+/* ===== SIGN TABLES ===== */
+.sign-table th{ background:#f3f4f6; }
+.sign-table td{ height:44px; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px){
+  .cl-header{
+    grid-template-columns:1fr;
+    text-align:center;
+  }
+  .cl-logo{ display:flex; justify-content:center; }
+  .cl-ra-box{ width:fit-content; margin:0 auto; }
+}
+
+/* ===== PRINT ===== */
+@media print{
+  body{ background:#fff; }
+  .checklist-container{ box-shadow:none; border:none; margin:0; }
+  .paper-section{ box-shadow:none; }
+}
+/* ====================================================== */
+/*                 DIAGRAMA 1–18 (NUEVO)                  */
+/* ====================================================== */
+
+.car-map {
+    width: 300px;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Todas las formas clickeables */
+.car-map .zone rect,
+.car-map .zone circle,
+.car-map .zone polygon,
+.car-map .zone path {
+    cursor: pointer;
+    fill: transparent;
+    stroke: none;
+    transition: fill 0.15s ease-out, stroke 0.15s ease-out;
+}
+
+/* Texto de números (si quieres quitarlos por completo, descomenta) */
+/*
+.car-map .zone text {
+    display: none;
+}
+*/
+
+/* Hover: solo se ve un ligero rojo sobre la pieza, no el cuadro completo */
+.car-map .zone:hover rect,
+.car-map .zone:hover circle,
+.car-map .zone:hover polygon,
+.car-map .zone:hover path {
+    fill: rgba(214, 0, 28, 0.10);
+}
+
+/* Marcado: rojo más fuerte siguiendo la forma de la pieza */
+.car-map .zone.is-marked rect,
+.car-map .zone.is-marked circle,
+.car-map .zone.is-marked polygon,
+.car-map .zone.is-marked path {
+    fill: rgba(214, 0, 28, 0.35);
+    stroke: #D6001C;
+    stroke-width: 2;
+}
