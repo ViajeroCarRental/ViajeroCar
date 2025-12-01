@@ -27,7 +27,10 @@ body{
   border:1px solid #eef0f4;
 }
 
-/* ===== HEADER ===== */
+/* ===================================================== */
+/*                        HEADER                         */
+/* ===================================================== */
+
 .cl-header{
   display:grid;
   grid-template-columns:180px 1fr 210px;
@@ -78,7 +81,10 @@ body{
   font-weight:800;
 }
 
-/* ===== PAPER SECTIONS ===== */
+/* ===================================================== */
+/*                    PAPER SECTIONS                     */
+/* ===================================================== */
+
 .paper-section{
   background:#fff;
   border:1px solid var(--line);
@@ -97,7 +103,10 @@ body{
 }
 .sec-title.center{ text-align:center; }
 
-/* ===== TABLES ===== */
+/* ===================================================== */
+/*                        TABLES                         */
+/* ===================================================== */
+
 table{
   width:100%;
   border-collapse:collapse;
@@ -106,20 +115,22 @@ th,td{
   border:1px solid var(--line);
   padding:8px 10px;
   font-size:13px;
+  text-align:center;
 }
 th{
   background:#f8fafc;
   font-weight:700;
-  text-align:center;
 }
-td{ text-align:center; }
 
 .vehicle-table th{
   width:120px;
   background:#f3f4f6;
 }
 
-/* ===== GASOLINA ===== */
+/* ===================================================== */
+/*           GASOLINA — NUEVO GAUGE (AUTO)               */
+/* ===================================================== */
+
 .gas-wrap{ padding:18px; }
 
 .gas-head{
@@ -127,7 +138,7 @@ td{ text-align:center; }
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  margin-bottom:8px;
+  margin-bottom:14px;
 }
 .gas-pill{
   background:#0f172a;
@@ -141,47 +152,69 @@ td{ text-align:center; }
 }
 .gas-pill strong{ font-size:13px; }
 
-.gas-bar{
-  position:relative;
-  height:52px;
-  background:#f1f5f9;
-  border:1px solid var(--line);
-  border-radius:12px;
-  overflow:hidden;
-}
-.gas-fill{
-  position:absolute;
-  inset:0 auto 0 0;
-  width:0%;
-  background:linear-gradient(90deg, #16a34a, #22c55e);
-  transition:width .45s ease;
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);
+/* --- Gauge contenedor --- */
+/* --------------------------------------------------------------- */
+/*                   ⛽ GAUGE SUPER PREMIUM                        */
+/* --------------------------------------------------------------- */
+
+.gas-gauge-pro{
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  border-radius:20px;
+  padding:20px;
+  margin-bottom:14px;
+  box-shadow:0 8px 22px rgba(0,0,0,.06);
 }
 
-.gas-marks{
-  position:relative;
-  z-index:2;
-  height:100%;
+.gas-gauge-inner{
+  width:240px;
+  margin:0 auto;
+}
+
+.gauge-pro-svg{
+  width:100%;
+  display:block;
+}
+
+.gauge-pro-label{
+  font-size:14px;
+  font-weight:800;
+  fill:#111;
+  text-anchor:middle;
+}
+
+/* Botones */
+.gauge-pro-options{
   display:grid;
   grid-template-columns:repeat(17,1fr);
+  gap:4px;
+  margin-top:14px;
 }
-.gas-mark{
-  border:none;
-  background:transparent;
+
+.gauge-pro-btn{
+  background:#ffffff;
+  border:1px solid #e5e7eb;
+  padding:3px;
+  border-radius:6px;
   font-size:11px;
-  font-weight:700;
-  color:#111;
   cursor:pointer;
-  transition:all .15s ease;
+  transition:all .2s ease;
 }
-.gas-mark:hover{
-  background:rgba(0,0,0,.04);
+.gauge-pro-btn:hover{
+  background:#f3f4f6;
 }
-.gas-mark.active{
-  background:rgba(255,255,255,.8);
-  color:#0f172a;
-  box-shadow:inset 0 0 0 2px #0f172a;
+.gauge-pro-btn.active{
+  background:#d6001c;
+  color:#fff;
+  border-color:#9b0015;
+  font-weight:700;
+  box-shadow:0 0 0 2px rgba(214,0,28,.25);
 }
+
+
+/* ===================================================== */
+/*                     SIGNATURE LINES                   */
+/* ===================================================== */
 
 .sign-row{
   display:flex;
@@ -199,7 +232,10 @@ td{ text-align:center; }
   background:#111;
 }
 
-/* ===== DIAGRAMA AUTO ===== */
+/* ===================================================== */
+/*                   DIAGRAM CAR STYLES                  */
+/* ===================================================== */
+
 .diagram-card{
   position:relative;
   background:#f8fafc;
@@ -212,13 +248,42 @@ td{ text-align:center; }
   min-height:280px;
 }
 
-.car-diagram{
-  width:360px;
-  max-width:100%;
-  height:auto;
-  display:block;
+.car-map {
+    width: 300px;
+    display: block;
+    margin: 0 auto;
 }
 
+/* zonas clickeables */
+.car-map .zone rect,
+.car-map .zone circle,
+.car-map .zone polygon,
+.car-map .zone path {
+    cursor: pointer;
+    fill: transparent;
+    stroke: none;
+    transition: fill 0.15s ease-out, stroke 0.15s ease-out;
+}
+
+/* hover */
+.car-map .zone:hover rect,
+.car-map .zone:hover circle,
+.car-map .zone:hover polygon,
+.car-map .zone:hover path {
+    fill: rgba(214, 0, 28, 0.10);
+}
+
+/* marcado */
+.car-map .zone.is-marked rect,
+.car-map .zone.is-marked circle,
+.car-map .zone.is-marked polygon,
+.car-map .zone.is-marked path {
+    fill: rgba(214, 0, 28, 0.35);
+    stroke: #D6001C;
+    stroke-width: 2;
+}
+
+/* Etiquetas */
 .diagram-label{
   position:absolute;
   font-size:12px;
@@ -235,7 +300,10 @@ td{ text-align:center; }
 .diagram-label--left{ left:8px; top:50%; transform:translateY(-50%) rotate(-90deg); }
 .diagram-label--right{ right:8px; top:50%; transform:translateY(-50%) rotate(90deg); }
 
-/* ===== EQUIPO ===== */
+/* ===================================================== */
+/*                        EQUIPO                         */
+/* ===================================================== */
+
 .equip-table td{
   text-align:left;
   font-weight:600;
@@ -247,7 +315,10 @@ td{ text-align:center; }
   font-weight:800;
 }
 
-/* ===== RULES ===== */
+/* ===================================================== */
+/*                      RULES & TEXT                      */
+/* ===================================================== */
+
 .rules-list{
   margin:0;
   padding-left:18px;
@@ -270,11 +341,25 @@ td{ text-align:center; }
   font-weight:800;
 }
 
-/* ===== SIGN TABLES ===== */
+.comment-box{
+  border:1px solid var(--line);
+  height:80px;
+  border-radius:8px;
+  background:#fff;
+  box-shadow:inset 0 1px 4px rgba(0,0,0,.05);
+}
+
+/* ===================================================== */
+/*                     SIGNATURE TABLES                  */
+/* ===================================================== */
+
 .sign-table th{ background:#f3f4f6; }
 .sign-table td{ height:44px; }
 
-/* ===== RESPONSIVE ===== */
+/* ===================================================== */
+/*                     RESPONSIVE DESIGN                 */
+/* ===================================================== */
+
 @media (max-width: 900px){
   .cl-header{
     grid-template-columns:1fr;
@@ -284,54 +369,87 @@ td{ text-align:center; }
   .cl-ra-box{ width:fit-content; margin:0 auto; }
 }
 
-/* ===== PRINT ===== */
+/* ===================================================== */
+/*                        PRINT                           */
+/* ===================================================== */
+
 @media print{
   body{ background:#fff; }
   .checklist-container{ box-shadow:none; border:none; margin:0; }
   .paper-section{ box-shadow:none; }
 }
-/* ====================================================== */
-/*                 DIAGRAMA 1–18 (NUEVO)                  */
-/* ====================================================== */
+/* ===== WIDGET GASOLINA PREMIUM ===== */
 
-.car-map {
-    width: 300px;
-    display: block;
-    margin: 0 auto;
+.fuel-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:18px;
 }
 
-/* Todas las formas clickeables */
-.car-map .zone rect,
-.car-map .zone circle,
-.car-map .zone polygon,
-.car-map .zone path {
-    cursor: pointer;
-    fill: transparent;
-    stroke: none;
-    transition: fill 0.15s ease-out, stroke 0.15s ease-out;
+.fuel-card{
+  background:#f8fafc;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px 14px 18px;
+  box-shadow:var(--shadow-soft);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
 }
 
-/* Texto de números (si quieres quitarlos por completo, descomenta) */
-/*
-.car-map .zone text {
-    display: none;
-}
-*/
-
-/* Hover: solo se ve un ligero rojo sobre la pieza, no el cuadro completo */
-.car-map .zone:hover rect,
-.car-map .zone:hover circle,
-.car-map .zone:hover polygon,
-.car-map .zone:hover path {
-    fill: rgba(214, 0, 28, 0.10);
+.fuel-title{
+  font-size:14px;
+  font-weight:700;
+  margin:0 0 4px;
 }
 
-/* Marcado: rojo más fuerte siguiendo la forma de la pieza */
-.car-map .zone.is-marked rect,
-.car-map .zone.is-marked circle,
-.car-map .zone.is-marked polygon,
-.car-map .zone.is-marked path {
-    fill: rgba(214, 0, 28, 0.35);
-    stroke: #D6001C;
-    stroke-width: 2;
+.fuel-gauge{
+  width:100%;
+  max-width:260px;
+  margin:4px auto 6px;
+}
+
+.fuel-svg{
+  width:100%;
+  display:block;
+}
+
+.gauge-label{
+  font-size:12px;
+  font-weight:800;
+  fill:#111;
+  text-anchor:middle;
+}
+
+.fuel-btns{
+  display:grid;
+  grid-template-columns:repeat(17,1fr);
+  gap:3px;
+  margin-top:6px;
+}
+
+.fuel-btn{
+  border:1px solid #e5e7eb;
+  background:#ffffff;
+  border-radius:6px;
+  padding:2px 3px;
+  font-size:10px;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+.fuel-btn:hover{
+  background:#f3f4f6;
+}
+.fuel-btn.active{
+  background:var(--brand);
+  color:#fff;
+  border-color:#9b0015;
+  font-weight:700;
+  box-shadow:0 0 0 2px rgba(214,0,28,.25);
+}
+
+@media (max-width: 900px){
+  .fuel-grid{
+    grid-template-columns:1fr;
+  }
 }

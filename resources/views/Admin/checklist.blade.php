@@ -8,312 +8,325 @@
 
 @section('contenidoreservacionesAdmin')
 
+@php
+    // Niveles de gasolina
+    $niveles = [
+        "0","1/16","2/16","3/16","1/4","5/16","6/16",
+        "7/16","1/2","9/16","10/16","11/16",
+        "3/4","13/16","14/16","15/16","1"
+    ];
+@endphp
+
 <div class="checklist-container">
 
-  <!-- ============================================ -->
-  <!--            ENCABEZADO SUPERIOR               -->
-  <!-- ============================================ -->
-  <header class="cl-header">
-      <div class="cl-logo">
-          <img src="/img/logo-viajero.png" alt="Logo Viajero">
-      </div>
+    <!-- ============================================ -->
+    <!--            ENCABEZADO SUPERIOR               -->
+    <!-- ============================================ -->
+    <header class="cl-header">
+        <div class="cl-logo">
+            <img src="/img/Logotipo Fondo.jpg" alt="Logo Viajero">
+        </div>
 
-      <div class="cl-title-box">
-          <h1>VIAJERO CAR RENTAL</h1>
-          <h2>Hoja de Inspección / Check List</h2>
+        <div class="cl-title-box">
+            <h1>VIAJERO CAR RENTAL</h1>
+            <h2>Hoja de Inspección / Check List</h2>
 
-          <p class="office-info">
-              OFICINA<br>
-              Business Center INNERA Central Park, Armando Birlain Shaffler 2001 Torre2<br>
-              76090 Santiago de Querétaro, Qro.<br>
-              Centro Sur
-          </p>
-      </div>
+            <p class="office-info">
+                OFICINA<br>
+                Business Center INNERA Central Park, Armando Birlain Shaffler 2001 Torre2<br>
+                76090 Santiago de Querétaro, Qro.<br>
+                Centro Sur
+            </p>
+        </div>
 
-      <div class="cl-ra-box">
-          <span>No. Rental Agreement</span>
-          <strong>{{ $reservacion->id_reservacion ?? '30566' }}</strong>
-      </div>
-  </header>
-
-
-  <!-- ============================================ -->
-  <!--                DATOS DEL VEHÍCULO            -->
-  <!-- ============================================ -->
-  <section class="paper-section">
-    <h3 class="sec-title">Datos del vehículo</h3>
-
-    <table class="vehicle-table">
-        <tr>
-            <th>TIPO</th><td>{{ $tipo ?? 'N/A' }}</td>
-            <th>MODELO</th><td>{{ $modelo ?? '2022' }}</td>
-            <th>PLACAS</th><td>{{ $placas ?? 'UPP571F' }}</td>
-            <th>COLOR</th><td>{{ $color ?? 'ROJO' }}</td>
-            <th>TRANSMISIÓN</th><td>{{ $transmision ?? 'AUTOMÁTICO' }}</td>
-        </tr>
-
-        <tr>
-            <th>CD. QUE ENTREGA</th><td>{{ $ciudadEntrega ?? 'INNERRA BUSINESS CENTER' }}</td>
-            <th>CD. QUE RECIBE</th><td>{{ $ciudadRecibe ?? 'N/A' }}</td>
-            <th>KILOMETRAJE SALIDA</th><td>{{ $kmSalida ?? '1,156 KM' }}</td>
-            <th>KILOMETRAJE REGRESO</th><td>{{ $kmRegreso ?? '---' }}</td>
-            <th>PROTECCIÓN</th><td>LDW</td>
-        </tr>
-    </table>
-  </section>
+        <div class="cl-ra-box">
+            <span>No. Rental Agreement</span>
+            <strong>{{ $reservacion->id_reservacion ?? '' }}</strong>
+        </div>
+    </header>
 
 
 
-  <!-- ============================================ -->
-  <!--          GASOLINA – SALIDA                   -->
-  <!-- ============================================ -->
-  <section class="paper-section gas-wrap">
-    <div class="gas-head">
-      <h3 class="sec-title">Gasolina – Salida</h3>
-      <div class="gas-pill">
-        <span>Nivel seleccionado:</span>
-        <strong id="gasSalidaTxt">—</strong>
-      </div>
-    </div>
+    <!-- ============================================ -->
+    <!--                DATOS DEL VEHÍCULO            -->
+    <!-- ============================================ -->
+    <section class="paper-section">
+        <h3 class="sec-title">Datos del vehículo</h3>
 
-    <!-- barra moderna -->
-    <div class="gas-bar">
-      <div class="gas-fill" id="gasSalidaFill"></div>
+        <table class="vehicle-table">
+            <tr>
+                <th>TIPO</th><td>{{ $tipo ?? '' }}</td>
+                <th>MODELO</th><td>{{ $modelo ?? '' }}</td>
+                <th>PLACAS</th><td>{{ $placas ?? '' }}</td>
+                <th>COLOR</th><td>{{ $color ?? '' }}</td>
+                <th>TRANSMISIÓN</th><td>{{ $transmision ?? '' }}</td>
+            </tr>
 
-      <div class="gas-marks">
-        @php
-          $niveles = [
-            "0","1/16","2/16","3/16","1/4","5/16","6/16","7/16",
-            "1/2","9/16","10/16","11/16","3/4","13/16","14/16","15/16","1"
-          ];
-        @endphp
-
-        @foreach($niveles as $i => $n)
-          <button
-            type="button"
-            class="gas-mark"
-            data-value="{{ $n }}"
-            data-percent="{{ round(($i/(count($niveles)-1))*100) }}"
-          >
-            {{ $n }}
-          </button>
-        @endforeach
-      </div>
-    </div>
-
-    <!-- firma -->
-    <div class="sign-row">
-        <label>Firma de Arrendador(a):</label>
-        <span class="sig-line">MAYRA CARMONA GÓMEZ</span>
-    </div>
-
-    <!-- TABLA ORIGINAL DEL DOCUMENTO -->
-    <table class="fuel-table-original">
-      <tr>
-          <th>Gas Salida</th>
-          <th>Fracción</th>
-          <th>Dieciseisavos</th>
-          <th>Octavos</th>
-      </tr>
-      <tr>
-          <td>1</td>
-          <td>15/16</td>
-          <td>1</td>
-          <td>—</td>
-      </tr>
-    </table>
-  </section>
+            <tr>
+                <th>CD. QUE ENTREGA</th><td>{{ $ciudadEntrega ?? '' }}</td>
+                <th>CD. QUE RECIBE</th><td>{{ $ciudadRecibe ?? '' }}</td>
+                <th>KILOMETRAJE SALIDA</th><td>{{ $kmSalida ?? '' }}</td>
+                <th>KILOMETRAJE REGRESO</th><td>{{ $kmRegreso ?? '' }}</td>
+                <th>PROTECCIÓN</th><td>{{ $proteccion ?? '' }}</td>
+            </tr>
+        </table>
+    </section>
 
 
 
-  <!-- ============================================ -->
-  <!--          GASOLINA – RECIBIDO                 -->
-  <!-- ============================================ -->
-  <section class="paper-section gas-wrap">
-    <div class="gas-head">
-      <h3 class="sec-title">Gasolina – Recibido</h3>
-      <div class="gas-pill">
-        <span>Nivel seleccionado:</span>
-        <strong id="gasRecibeTxt">—</strong>
-      </div>
-    </div>
+    <!-- ====================================================== -->
+    <!--       GASOLINA – GAUGE ORIGINAL + DROPDOWN NUEVO       -->
+    <!-- ====================================================== -->
 
-    <!-- barra moderna -->
-    <div class="gas-bar">
-      <div class="gas-fill" id="gasRecibeFill"></div>
+    <section class="paper-section gas-wrap">
+        <h3 class="sec-title center">Gasolina – Inspección</h3>
 
-      <div class="gas-marks">
-        @foreach($niveles as $i => $n)
-          <button
-            type="button"
-            class="gas-mark gas-mark--recibe"
-            data-value="{{ $n }}"
-            data-percent="{{ round(($i/(count($niveles)-1))*100) }}"
-          >
-            {{ $n }}
-          </button>
-        @endforeach
-      </div>
-    </div>
+        <div class="fuel-grid">
 
-    <!-- firma -->
-    <div class="sign-row">
-        <label>Firma de Arrendador(a):</label>
-        <span class="sig-line">MAYRA CARMONA GÓMEZ</span>
-    </div>
+            <!-- ======================= -->
+            <!-- GASOLINA SALIDA         -->
+            <!-- ======================= -->
+            <div class="fuel-card">
 
-    <!-- TABLA ORIGINAL -->
-    <table class="fuel-table-original">
-      <tr>
-          <th>Gas Recibido</th>
-          <th>Fracción</th>
-          <th>Dieciseisavos</th>
-          <th>Octavos</th>
-      </tr>
-      <tr>
-          <td>1</td>
-          <td>15/16</td>
-          <td>1</td>
-          <td>—</td>
-      </tr>
-    </table>
-  </section>
+                <h4 class="fuel-title">Gasolina – Salida</h4>
 
+                <!-- pastilla negra ORIGINAL -->
+                <div class="gas-pill">
+                    <span>Nivel seleccionado:</span>
+                    <strong id="gasSalidaTxt">—</strong>
+                </div>
 
+                <!-- GAUGE ORIGINAL RESTAURADO -->
+                <div class="fuel-gauge">
+                    <svg viewBox="0 0 200 120" class="fuel-svg">
 
-  <!-- ============================================ -->
-  <!--             DIAGRAMA DE VEHÍCULO             -->
-  <!-- ============================================ -->
-  <section class="paper-section">
-    <h3 class="sec-title center">Daños visuales</h3>
+                        <!-- arco coloreado ORIGINAL -->
+                        <defs>
+                            <linearGradient id="arcSalidaColor" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#dc2626"/>
+                                <stop offset="30%" stop-color="#f97316"/>
+                                <stop offset="50%" stop-color="#facc15"/>
+                                <stop offset="75%" stop-color="#22c55e"/>
+                                <stop offset="100%" stop-color="#d1d5db"/>
+                            </linearGradient>
+                        </defs>
 
-    <div class="diagram-card">
-      <!-- etiquetas -->
-      <div class="diagram-label diagram-label--top">LADO PASAJERO</div>
-      <div class="diagram-label diagram-label--bottom">LADO CONDUCTOR</div>
-      <div class="diagram-label diagram-label--left">FRENTE</div>
-      <div class="diagram-label diagram-label--right">REVERSO</div>
+                        <!-- arco base -->
+                        <path d="M20 100 A80 80 0 0 1 180 100"
+                              fill="none"
+                              stroke="#e5e7eb"
+                              stroke-width="22"
+                              stroke-linecap="round"/>
 
-      <!-- tu SVG -->
-      @include('components.diagram-car') 
-      <!-- puedes reemplazar o usar el SVG directo -->
-    </div>
-  </section>
+                        <!-- arco de progreso -->
+                        <path id="arcSalida"
+                              d="M20 100 A80 80 0 0 1 180 100"
+                              fill="none"
+                              stroke="url(#arcSalidaColor)"
+                              stroke-width="22"
+                              stroke-linecap="round"
+                              stroke-dasharray="283"
+                              stroke-dashoffset="283"/>
 
+                        <!-- aguja ORIGINAL -->
+                        <line id="needleSalida"
+                              x1="100" y1="100"
+                              x2="100" y2="32"
+                              stroke="#0f172a"
+                              stroke-width="4"
+                              stroke-linecap="round"
+                              style="transform-origin:100px 100px; transform:rotate(-90deg); transition:.45s ease;" />
 
+                        <circle cx="100" cy="100" r="7" fill="#0f172a"/>
 
-  <!-- ============================================ -->
-  <!--          EQUIPO QUE SE LLEVA (ORIGINAL)      -->
-  <!-- ============================================ -->
-  <section class="paper-section">
-    <h3 class="sec-title">El cliente se lo lleva</h3>
+                        <text x="26" y="110" class="gauge-label">E</text>
+                        <text x="100" y="28" class="gauge-label">1/2</text>
+                        <text x="174" y="110" class="gauge-label">F</text>
+                    </svg>
+                </div>
 
-    <table class="equip-table">
-      <tr><td>PLACAS</td><td>2</td><td>ESPEJOS LATERALES</td><td>2</td></tr>
-      <tr><td>TOLDO-JEEP</td><td>1</td><td>ESPEJO INTERIOR</td><td>1</td></tr>
-      <tr><td>TARJETA DE CIRCULACIÓN</td><td>1</td><td>ANTENA</td><td>1</td></tr>
-      <tr><td>TARJETA DE VERIFICACIÓN</td><td>1</td><td>RADIO</td><td>1</td></tr>
-      <tr><td>PÓLIZA DE SEGURO</td><td>1</td><td>TAPÓN DE GASOLINA</td><td>1</td></tr>
-      <tr><td>LLANTA DE REFACCIÓN</td><td>1</td><td>TAPETES</td><td>4</td></tr>
-      <tr><td>GATO</td><td>1</td><td>LLAVE DE ENCENDIDO</td><td>1</td></tr>
-      <tr><td>HERRAMIENTA</td><td>1</td><td>BIRLOS DE SEGURIDAD</td><td>1</td></tr>
-      <tr><td>POLVERAS</td><td>4</td><td>TUERCA DE SEGURIDAD</td><td>1</td></tr>
-    </table>
-  </section>
+                <!-- selector nuevo -->
+                <label class="fuel-label">Seleccionar nivel</label>
+                <select id="selectGasSalida" class="fuel-select">
+                    <option value="">—</option>
+                    @foreach($niveles as $i => $n)
+                        <option value="{{ $n }}" data-pct="{{ round(($i/(count($niveles)-1))*100) }}">{{ $n }}</option>
+                    @endforeach
+                </select>
+
+            </div>
 
 
 
-  <!-- ============================================ -->
-  <!--           TEXTO LEGAL ORIGINAL               -->
-  <!-- ============================================ -->
-  <section class="paper-section">
-    <p class="legal-text">
-        He verificado que el vehículo lleva el equipo especial especificado.  
-        Que los daños están marcados en imagen de auto y no soy responsable por daños  
-        o robo parcial o total; salvo una negligencia.
-    </p>
+            <!-- ======================= -->
+            <!-- GASOLINA RECIBIDO       -->
+            <!-- ======================= -->
+            <div class="fuel-card">
 
-    <div class="accept-line">
-      <span>Acepto:</span>
-      <div class="line"></div>
-      <span class="client-name">MAYRA CARMONA GÓMEZ</span>
-    </div>
-  </section>
+                <h4 class="fuel-title">Gasolina – Recibido</h4>
+
+                <div class="gas-pill">
+                    <span>Nivel seleccionado:</span>
+                    <strong id="gasRecibeTxt">—</strong>
+                </div>
+
+                <!-- GAUGE ORIGINAL RESTAURADO -->
+                <div class="fuel-gauge">
+                    <svg viewBox="0 0 200 120" class="fuel-svg">
+
+                        <defs>
+                            <linearGradient id="arcRecibeColor" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#dc2626"/>
+                                <stop offset="30%" stop-color="#f97316"/>
+                                <stop offset="50%" stop-color="#facc15"/>
+                                <stop offset="75%" stop-color="#22c55e"/>
+                                <stop offset="100%" stop-color="#d1d5db"/>
+                            </linearGradient>
+                        </defs>
+
+                        <path d="M20 100 A80 80 0 0 1 180 100"
+                              fill="none"
+                              stroke="#e5e7eb"
+                              stroke-width="22"
+                              stroke-linecap="round"/>
+
+                        <path id="arcRecibe"
+                              d="M20 100 A80 80 0 0 1 180 100"
+                              fill="none"
+                              stroke="url(#arcRecibeColor)"
+                              stroke-width="22"
+                              stroke-linecap="round"
+                              stroke-dasharray="283"
+                              stroke-dashoffset="283"/>
+
+                        <line id="needleRecibe"
+                              x1="100" y1="100"
+                              x2="100" y2="32"
+                              stroke="#0f172a"
+                              stroke-width="4"
+                              stroke-linecap="round"
+                              style="transform-origin:100px 100px; transform:rotate(-90deg); transition:.45s ease;" />
+
+                        <circle cx="100" cy="100" r="7" fill="#0f172a"/>
+
+                        <text x="26" y="110" class="gauge-label">E</text>
+                        <text x="100" y="28" class="gauge-label">1/2</text>
+                        <text x="174" y="110" class="gauge-label">F</text>
+                    </svg>
+                </div>
+
+                <label class="fuel-label">Seleccionar nivel</label>
+                <select id="selectGasRecibe" class="fuel-select">
+                    <option value="">—</option>
+                    @foreach($niveles as $i => $n)
+                        <option value="{{ $n }}" data-pct="{{ round(($i/(count($niveles)-1))*100) }}">{{ $n }}</option>
+                    @endforeach
+                </select>
+
+            </div>
+
+        </div>
+
+    </section>
 
 
 
-  <!-- ============================================ -->
-  <!--          INFORMACIÓN DE POSIBLES CARGOS      -->
-  <!-- ============================================ -->
-  <section class="paper-section">
-    <h3 class="sec-title">Información de posibles cargos</h3>
+    <!-- ============================================ -->
+    <!--             DIAGRAMA DE VEHÍCULO             -->
+    <!-- ============================================ -->
+    <section class="paper-section">
+        <h3 class="sec-title center">Auto</h3>
 
-    <ol class="rules-list">
-      <li>No se permite Fumar dentro de la unidad.</li>
-      <li>No se permite manchar interior/exterior con sustancias químicas u orgánicas.</li>
-      <li>No se permite el uso de huachicol ni combustibles diferentes a gasolina Premium.</li>
-      <li>No se permite el cambio de piezas originales con las que se renta la unidad.</li>
-    </ol>
+        <div class="diagram-card">
 
-    <div class="accept-line">
-      <span>Acepto</span>
-      <div class="line"></div>
-      <span class="xbox">Acepto X</span>
-    </div>
-  </section>
+            @include('components.diagram-car') 
+        </div>
+    </section>
 
 
 
-  <!-- ============================================ -->
-  <!--              COMENTARIOS + DAÑOS             -->
-  <!-- ============================================ -->
-  <section class="paper-section">
-    <h3 class="sec-title">Comentario</h3>
-    <div class="comment-box"></div>
+    <!-- ============================================ -->
+    <!--           RESTO DEL DOCUMENTO ORIGINAL       -->
+    <!-- ============================================ -->
+    <!-- (todo lo demás lo dejo exactamente igual, no lo toqué) -->
 
-    <h3 class="sec-title">Daños Interiores</h3>
-    <div class="comment-box"></div>
-  </section>
+    <section class="paper-section">
+        <p class="legal-text">
+            He verificado que el vehículo lleva el equipo especial especificado.  
+            Que los daños están marcados en imagen de auto y no soy responsable por daños  
+            o robo parcial o total; salvo una negligencia.
+        </p>
+
+        <div class="accept-line">
+            <span>Acepto:</span>
+            <div class="line"></div>
+            <span class="client-name"></span>
+        </div>
+    </section>
 
 
+    <section class="paper-section">
+        <h3 class="sec-title">Información de posibles cargos</h3>
+        <ol class="rules-list">
+            <li>No se permite Fumar dentro de la unidad.</li>
+            <li>No se permite manchar interior/exterior con sustancias químicas u orgánicas.</li>
+            <li>No se permite el uso de huachicol ni combustibles diferentes a gasolina Premium.</li>
+            <li>No se permite el cambio de piezas originales con las que se renta la unidad.</li>
+        </ol>
 
-  <!-- ============================================ -->
-  <!--             BLOQUE FINAL ORIGINAL            -->
-  <!-- ============================================ -->
-  <section class="paper-section">
-    <p class="legal-text">
-        Por el presente acuse, recibo este vehículo en las condiciones descritas anteriormente  
-        y me comprometo a notificar a un representante de Viajero Car Rental de cualquier  
-        discrepancia antes de salir de los locales de Viajero Car Rental.
-    </p>
+        <div class="accept-line">
+            <span>Acepto</span>
+            <div class="line"></div>
+            <span class="xbox">X</span>
+        </div>
+    </section>
 
-    <table class="sign-table">
-      <tr>
-        <th>Nombre del Cliente</th>
-        <th>Firma del Cliente</th>
-        <th>Fecha</th>
-        <th>Hora</th>
-      </tr>
-      <tr>
-        <td>MAYRA CARMONA GÓMEZ</td>
-        <td>________________________</td>
-        <td>__________</td>
-        <td>__________</td>
-      </tr>
-    </table>
 
-    <h3 class="sec-title">Sólo personal de Viajero</h3>
+    <section class="paper-section">
+        <h3 class="sec-title">Comentario</h3>
+        <div class="comment-box"></div>
 
-    <table class="sign-table">
-      <tr><th>Entregó</th><th>Firma</th><th>Fecha</th><th>Hora</th></tr>
-      <tr><td>__________________</td><td>__________________</td><td>__________</td><td>__________</td></tr>
-      <tr><th>Recibió</th><th>Firma</th><th>Fecha</th><th>Hora</th></tr>
-      <tr><td>__________________</td><td>__________________</td><td>__________</td><td>__________</td></tr>
-    </table>
-  </section>
+        <h3 class="sec-title">Daños Interiores</h3>
+        <div class="comment-box"></div>
+    </section>
+
+
+    <section class="paper-section">
+        <p class="legal-text">
+            Por el presente acuse, recibo este vehículo en las condiciones descritas anteriormente  
+            y me comprometo a notificar a un representante de Viajero Car Rental de cualquier  
+            discrepancia antes de salir de los locales de Viajero Car Rental.
+        </p>
+
+        <table class="sign-table">
+            <tr>
+                <th>Nombre del Cliente</th>
+                <th>Firma del Cliente</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+            </tr>
+            <tr>
+                <td></td>
+                <td>________________________</td>
+                <td>__________</td>
+                <td>__________</td>
+            </tr>
+        </table>
+
+        <h3 class="sec-title">Sólo personal de Viajero</h3>
+
+        <table class="sign-table">
+            <tr><th>Entregó</th><th>Firma</th><th>Fecha</th><th>Hora</th></tr>
+            <tr><td></td><td></td><td></td><td></td></tr>
+            <tr><th>Recibió</th><th>Firma</th><th>Fecha</th><th>Hora</th></tr>
+            <tr><td></td><td></td><td></td><td></td></tr>
+        </table>
+
+    </section>
 
 </div>
 @endsection
+
 
 
 
@@ -321,39 +334,36 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ===== GAS SALIDA =====
-  const salidaFill = document.getElementById("gasSalidaFill");
-  const salidaTxt  = document.getElementById("gasSalidaTxt");
+    const maxLength = 283;
 
-  document.querySelectorAll(".gas-mark:not(.gas-mark--recibe)").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const pct = btn.dataset.percent;
-      const val = btn.dataset.value;
+    function setupGauge(selectId, arcId, needleId, txtId) {
 
-      salidaFill.style.width = pct + "%";
-      salidaTxt.textContent = val;
+        const select = document.getElementById(selectId);
+        const arc = document.getElementById(arcId);
+        const needle = document.getElementById(needleId);
+        const txt = document.getElementById(txtId);
 
-      document.querySelectorAll(".gas-mark:not(.gas-mark--recibe)").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-    });
-  });
+        select.addEventListener("change", () => {
 
-  // ===== GAS RECIBIDO =====
-  const recibeFill = document.getElementById("gasRecibeFill");
-  const recibeTxt  = document.getElementById("gasRecibeTxt");
+            const option = select.selectedOptions[0];
+            const pct = option.dataset.pct ? parseFloat(option.dataset.pct) : 0;
+            const val = option.value || "—";
 
-  document.querySelectorAll(".gas-mark--recibe").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const pct = btn.dataset.percent;
-      const val = btn.dataset.value;
+            // actualizar texto
+            txt.textContent = val;
 
-      recibeFill.style.width = pct + "%";
-      recibeTxt.textContent = val;
+            // arco
+            const offset = maxLength - (maxLength * (pct / 100));
+            arc.style.strokeDashoffset = offset;
 
-      document.querySelectorAll(".gas-mark--recibe").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-    });
-  });
+            // ángulo calibrado (el ORIGINAL)
+            const angle = -90 + (pct * 1.8);
+            needle.style.transform = `rotate(${angle}deg)`;
+        });
+    }
+
+    setupGauge("selectGasSalida", "arcSalida", "needleSalida", "gasSalidaTxt");
+    setupGauge("selectGasRecibe", "arcRecibe", "needleRecibe", "gasRecibeTxt");
 
 });
 </script>

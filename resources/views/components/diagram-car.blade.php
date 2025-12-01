@@ -1,121 +1,247 @@
-<svg
-    viewBox="0 0 300 780"
-    xmlns="http://www.w3.org/2000/svg"
-    class="car-map">
+<style>
+    /* ===== TARJETA COMPLETA ===== */
+    .checklist-card {
+        width: 100%;
+        background: white;
+        border-radius: 18px;
+        border: 1px solid #ddd;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,.07);
+        display: flex;
+        gap: 35px;
+        align-items: flex-start;
+    }
 
-    <!-- ==== IMAGEN DEL AUTO (TAMAÑO MEDIO) ==== -->
-    <image
-        href="{{ asset('img/diagrama-carro-danos3.png') }}"
-        x="0"
-        y="0"
-        width="300"
-        height="780"
-        preserveAspectRatio="xMidYMid meet"
-    />
+    /* ===== AUTO IZQUIERDA ===== */
+    .car-box {
+        width: 260px;
+        padding: 18px;
+        border-radius: 12px;
+        border: 1px solid #e7e7e7;
+        background: #fafafa;
+    }
 
-    <!-- ========================================= -->
-    <!--          ZONAS CLICKEABLES 1–18           -->
-    <!-- ========================================= -->
+    #carSVG {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
 
-    <!-- Cada zona es INVISIBLE pero marca daño al hacer clic -->
+    .zone:hover { cursor: pointer; opacity: 0.6; }
+    .zone.selected rect,
+    .zone.selected circle {
+        fill: rgba(255, 0, 0, 0.35);
+    }
+    .zone text {
+        pointer-events: none;
+        fill: #000;
+        font-weight: bold;
+    }
 
-    <!-- 1 Defensa delantera -->
-    <g class="zone" data-zone="1">
-        <rect x="80" y="10" width="140" height="55" fill="transparent"/>
-        <text x="150" y="40" text-anchor="middle" font-size="18" font-weight="700">1</text>
-    </g>
+    /* ===== TABLA DERECHA ===== */
+    .tabla-entrega {
+        flex: 1;
+    }
 
-    <!-- 2 Cofre -->
-    <g class="zone" data-zone="2">
-        <rect x="95" y="95" width="110" height="90" fill="transparent"/>
-        <text x="150" y="145" text-anchor="middle" font-size="18" font-weight="700">2</text>
-    </g>
+    .tabla-entrega h3 {
+        font-weight: 900;
+        margin-bottom: 15px;
+        font-size: 20px;
+    }
 
-    <!-- 14 Parte superior central -->
-    <g class="zone" data-zone="14">
-        <rect x="95" y="200" width="110" height="65" fill="transparent"/>
-        <text x="150" y="235" text-anchor="middle" font-size="18" font-weight="700">14</text>
-    </g>
+    table.entrega {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 15px;
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+    }
 
-    <!-- 5 Techo -->
-    <g class="zone" data-zone="5">
-        <rect x="80" y="280" width="140" height="135" fill="transparent"/>
-        <text x="150" y="350" text-anchor="middle" font-size="18" font-weight="700">5</text>
-    </g>
+    table.entrega tr:nth-child(even) {
+        background: #fafafa;
+    }
 
-    <!-- 10 Parte trasera central -->
-    <g class="zone" data-zone="10">
-        <rect x="80" y="435" width="140" height="110" fill="transparent"/>
-        <text x="150" y="490" text-anchor="middle" font-size="18" font-weight="700">10</text>
-    </g>
+    table.entrega td {
+        padding: 10px 15px;
+        border-bottom: 1px solid #eee;
+    }
+    table.entrega tr:last-child td {
+        border-bottom: none;
+    }
 
-    <!-- 13 Defensa trasera -->
-    <g class="zone" data-zone="13">
-        <rect x="80" y="595" width="140" height="65" fill="transparent"/>
-        <text x="150" y="635" text-anchor="middle" font-size="18" font-weight="700">13</text>
-    </g>
+    table.entrega td:nth-child(2),
+    table.entrega td:nth-child(4) {
+        text-align: right;
+        font-weight: bold;
+    }
 
-    <!-- LATERAL IZQUIERDO (3,6,8,11) -->
-    <g class="zone" data-zone="3">
-        <rect x="25" y="150" width="45" height="55" fill="transparent"/>
-        <text x="47" y="185" text-anchor="middle" font-size="18" font-weight="700">3</text>
-    </g>
+    /* ===== MODAL BONITO ===== */
+    #modalDaño {
+        display:none;
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.55);
+        justify-content:center;
+        align-items:center;
+        z-index:9999;
+    }
 
-    <g class="zone" data-zone="6">
-        <rect x="25" y="220" width="45" height="65" fill="transparent"/>
-        <text x="47" y="260" text-anchor="middle" font-size="18" font-weight="700">6</text>
-    </g>
+    #modalDaño .box {
+        background:white;
+        width:320px;
+        padding:22px;
+        border-radius:14px;
+        box-shadow:0 0 15px rgba(0,0,0,.15);
+    }
 
-    <g class="zone" data-zone="8">
-        <rect x="25" y="300" width="45" height="65" fill="transparent"/>
-        <text x="47" y="340" text-anchor="middle" font-size="18" font-weight="700">8</text>
-    </g>
+    #modalDaño h4 {
+        font-size:18px;
+        font-weight:800;
+        margin-bottom:10px;
+    }
 
-    <g class="zone" data-zone="11">
-        <rect x="25" y="380" width="45" height="75" fill="transparent"/>
-        <text x="47" y="420" text-anchor="middle" font-size="18" font-weight="700">11</text>
-    </g>
+    #modalDaño textarea {
+        width:100%;
+        padding:10px;
+        resize:none;
+        background:#f7f7f7;
+        border-radius:10px;
+        border:1px solid #ddd;
+    }
 
-    <!-- LATERAL DERECHO (4,7,9,12) -->
-    <g class="zone" data-zone="4">
-        <rect x="230" y="150" width="45" height="55" fill="transparent"/>
-        <text x="253" y="185" text-anchor="middle" font-size="18" font-weight="700">4</text>
-    </g>
+    .btn {
+        width:100%;
+        padding:10px;
+        border-radius:10px;
+        border:none;
+        margin-top:10px;
+        font-weight:600;
+        font-size:15px;
+    }
 
-    <g class="zone" data-zone="7">
-        <rect x="230" y="220" width="45" height="65" fill="transparent"/>
-        <text x="253" y="260" text-anchor="middle" font-size="18" font-weight="700">7</text>
-    </g>
+    .btn-save { background:#1976D2; color:white; }
+    .btn-cancel { background:#aaa; color:white; }
 
-    <g class="zone" data-zone="9">
-        <rect x="230" y="300" width="45" height="65" fill="transparent"/>
-        <text x="253" y="340" text-anchor="middle" font-size="18" font-weight="700">9</text>
-    </g>
+</style>
 
-    <g class="zone" data-zone="12">
-        <rect x="230" y="380" width="45" height="75" fill="transparent"/>
-        <text x="253" y="420" text-anchor="middle" font-size="18" font-weight="700">12</text>
-    </g>
+<div class="checklist-card">
 
-    <!-- RUEDAS (15,16,17,18) -->
-    <g class="zone" data-zone="15">
-        <circle cx="60" cy="110" r="40" fill="transparent"/>
-        <text x="60" y="115" text-anchor="middle" font-size="18" font-weight="700">15</text>
-    </g>
+    <!-- ======================================================= -->
+    <!--                      AUTO IZQUIERDA                      -->
+    <!-- ======================================================= -->
+    <div class="car-box">
+        <svg id="carSVG" viewBox="0 0 300 780" xmlns="http://www.w3.org/2000/svg">
 
-    <g class="zone" data-zone="16">
-        <circle cx="240" cy="110" r="40" fill="transparent"/>
-        <text x="240" y="115" text-anchor="middle" font-size="18" font-weight="700">16</text>
-    </g>
+            <image
+                href="{{ asset('img/diagrama-carro-danos3.png') }}"
+                width="300"
+                height="780"
+                preserveAspectRatio="xMidYMid meet"
+            />
 
-    <g class="zone" data-zone="17">
-        <circle cx="60" cy="540" r="40" fill="transparent"/>
-        <text x="60" y="545" text-anchor="middle" font-size="18" font-weight="700">17</text>
-    </g>
+            <!-- 🔥 ZONAS (igual que antes) -->
+            <g class="zone" data-zone="1">
+                <rect x="80" y="15" width="140" height="50" fill="transparent"/>
+                <text x="150" y="45">1</text>
+            </g>
 
-    <g class="zone" data-zone="18">
-        <circle cx="240" cy="540" r="40" fill="transparent"/>
-        <text x="240" y="545" text-anchor="middle" font-size="18" font-weight="700">18</text>
-    </g>
+            <g class="zone" data-zone="10">
+                <rect x="70" y="330" width="160" height="120" fill="transparent"/>
+                <text x="150" y="390">10</text>
+            </g>
 
-</svg>
+            <!-- agrega las demás zonas aquí -->
+
+        </svg>
+    </div>
+
+    <!-- ======================================================= -->
+    <!--             DERECHA: TABLA "EL CLIENTE SE LO LLEVA"     -->
+    <!-- ======================================================= -->
+    <div class="tabla-entrega">
+        <h3>EL CLIENTE SE LO LLEVA</h3>
+
+        <table class="entrega">
+            <tr><td>PLACAS</td><td>2</td><td>ESPEJOS LATERALES</td><td>2</td></tr>
+            <tr><td>TOLDO-JEEP</td><td>1</td><td>ESPEJO INTERIOR</td><td>1</td></tr>
+            <tr><td>TARJETA DE CIRCULACIÓN</td><td>1</td><td>ANTENA</td><td>1</td></tr>
+            <tr><td>TARJETA DE VERIFICACIÓN</td><td>1</td><td>RADIO</td><td>1</td></tr>
+            <tr><td>PÓLIZA DE SEGURO</td><td>1</td><td>TAPÓN DE GASOLINA</td><td>1</td></tr>
+            <tr><td>LLANTA DE REFACCIÓN</td><td>1</td><td>TAPETES</td><td>4</td></tr>
+            <tr><td>GATO</td><td>1</td><td>LLAVE DE ENCENDIDO</td><td>1</td></tr>
+            <tr><td>HERRAMIENTA</td><td>1</td><td>AVISO DE SEGURIDAD</td><td>1</td></tr>
+            <tr><td>POLVERAS</td><td>4</td><td>TUERCA DE SEGURIDAD</td><td>1</td></tr>
+        </table>
+    </div>
+
+</div>
+
+<!-- ======================================================= -->
+<!--                       MODAL                              -->
+<!-- ======================================================= -->
+<div id="modalDaño">
+    <div class="box">
+        <h4 id="tituloModal">Parte del vehículo</h4>
+
+        <textarea id="comentarioDaño" rows="3"
+                  placeholder="Describe el daño..."></textarea>
+
+        <button class="btn btn-save" id="guardarDaño">Guardar</button>
+        <button class="btn btn-cancel" id="cancelarDaño">Cancelar</button>
+    </div>
+</div>
+
+<script>
+    /* NOMBRES REALES POR CADA ZONA */
+    const nombresZonas = {
+        1: "Defensa delantera",
+        2: "Defensa delantera superior",
+        3: "Costado izquierdo frontal",
+        4: "Costado derecho frontal",
+        5: "Cofre / parabrisas",
+        6: "Puerta delantera izquierda",
+        7: "Puerta delantera derecha",
+        8: "Puerta trasera izquierda",
+        9: "Puerta trasera derecha",
+        10: "Techo trasero",
+        11: "Costado izquierdo trasero",
+        12: "Costado derecho trasero",
+        13: "Defensa trasera",
+        14: "Parte frontal superior",
+        15: "Llanta delantera izquierda",
+        16: "Llanta delantera derecha",
+        17: "Llanta trasera izquierda",
+        18: "Llanta trasera derecha",
+    };
+
+    const modal = document.getElementById("modalDaño");
+
+    document.querySelectorAll('.zone').forEach(z => {
+        z.addEventListener('click', () => {
+
+            let zona = z.dataset.zone;
+
+            if (z.classList.contains('selected')) {
+                z.classList.remove('selected');
+                return;
+            }
+
+            z.classList.add('selected');
+
+            document.getElementById("tituloModal").textContent =
+                nombresZonas[zona] || ("Zona " + zona);
+
+            document.getElementById("comentarioDaño").value = "";
+
+            modal.style.display = "flex";
+        });
+    });
+
+    document.getElementById("guardarDaño").onclick = () => {
+        modal.style.display = "none";
+    };
+    document.getElementById("cancelarDaño").onclick = () => {
+        modal.style.display = "none";
+    };
+</script>
