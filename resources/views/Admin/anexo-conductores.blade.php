@@ -15,7 +15,8 @@
     <!-- =============================== -->
     <header class="doc-header">
         <div class="header-left">
-            <img src="/img/logo-viajero.png" class="logo" alt="Viajero Car Rental">
+            <img src="{{ asset('/img/Logotipo Fondo.jpg') }}" class="big-header-logo">
+
 
             <div class="company-info">
                 <p>Viajero Car Rental</p>

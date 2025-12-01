@@ -2,70 +2,75 @@
     /* ===== TARJETA COMPLETA ===== */
     .checklist-card {
         width: 100%;
-        background: white;
-        border-radius: 18px;
-        border: 1px solid #ddd;
+        background: #ffffff;
+        border-radius: 20px;
         padding: 30px;
-        box-shadow: 0 4px 15px rgba(0,0,0,.07);
+        box-shadow: 0 4px 14px rgba(0,0,0,.06);
         display: flex;
-        gap: 35px;
+        gap: 40px;
         align-items: flex-start;
     }
 
-    /* ===== AUTO IZQUIERDA ===== */
+    /* ===== AUTO ===== */
     .car-box {
-        width: 260px;
-        padding: 18px;
-        border-radius: 12px;
-        border: 1px solid #e7e7e7;
-        background: #fafafa;
+        width: 280px;
+        position: relative;
+        padding: 0;
     }
 
-    #carSVG {
+    .car-svg {
         width: 100%;
         height: auto;
         display: block;
     }
 
-    .zone:hover { cursor: pointer; opacity: 0.6; }
-    .zone.selected rect,
-    .zone.selected circle {
-        fill: rgba(255, 0, 0, 0.35);
+    /* ===== PUNTOS SVG ===== */
+    .point-dot {
+        fill: rgba(255,255,255,0.95);
+        stroke: #ff4d6a;
+        stroke-width: 4;
+        cursor: pointer;
+        transition: stroke-width .15s ease, filter .15s ease;
     }
-    .zone text {
-        pointer-events: none;
-        fill: #000;
-        font-weight: bold;
+
+    /* YA NO USA SCALE -> YA NO SE MUEVE EL PUNTO */
+    .point-dot:hover {
+        stroke-width: 6;
+    }
+
+    .point-dot.selected {
+        stroke-width: 8;
+        filter: drop-shadow(0 0 6px rgba(255,0,0,.7));
     }
 
     /* ===== TABLA DERECHA ===== */
     .tabla-entrega {
         flex: 1;
+        margin-top: 10px;
     }
 
     .tabla-entrega h3 {
         font-weight: 900;
         margin-bottom: 15px;
-        font-size: 20px;
+        font-size: 22px;
+        text-align: center;
     }
 
     table.entrega {
         width: 100%;
         border-collapse: collapse;
         font-size: 15px;
-        background: white;
-        border-radius: 15px;
-        overflow: hidden;
     }
 
     table.entrega tr:nth-child(even) {
-        background: #fafafa;
+        background: #f7f7f7;
     }
 
     table.entrega td {
         padding: 10px 15px;
         border-bottom: 1px solid #eee;
     }
+
     table.entrega tr:last-child td {
         border-bottom: none;
     }
@@ -76,89 +81,108 @@
         font-weight: bold;
     }
 
-    /* ===== MODAL BONITO ===== */
+    /* ===== MODAL ===== */
     #modalDaño {
-        display:none;
-        position:fixed;
-        inset:0;
-        background:rgba(0,0,0,.55);
-        justify-content:center;
-        align-items:center;
-        z-index:9999;
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
     }
 
     #modalDaño .box {
-        background:white;
-        width:320px;
-        padding:22px;
-        border-radius:14px;
-        box-shadow:0 0 15px rgba(0,0,0,.15);
+        background: white;
+        width: 320px;
+        padding: 22px;
+        border-radius: 14px;
+        box-shadow: 0 0 15px rgba(0,0,0,.15);
     }
 
     #modalDaño h4 {
-        font-size:18px;
-        font-weight:800;
-        margin-bottom:10px;
+        font-size: 18px;
+        font-weight: 800;
+        margin-bottom: 10px;
     }
 
     #modalDaño textarea {
-        width:100%;
-        padding:10px;
-        resize:none;
-        background:#f7f7f7;
-        border-radius:10px;
-        border:1px solid #ddd;
+        width: 100%;
+        padding: 10px;
+        resize: none;
+        min-height: 90px;
+        background: #f7f7f7;
+        border-radius: 10px;
+        border: 1px solid #ddd;
     }
 
     .btn {
-        width:100%;
-        padding:10px;
-        border-radius:10px;
-        border:none;
-        margin-top:10px;
-        font-weight:600;
-        font-size:15px;
+        width: 100%;
+        padding: 10px;
+        border-radius: 10px;
+        border: none;
+        margin-top: 10px;
+        font-weight: 600;
+        font-size: 15px;
+        cursor: pointer;
     }
 
     .btn-save { background:#1976D2; color:white; }
     .btn-cancel { background:#aaa; color:white; }
-
 </style>
+
 
 <div class="checklist-card">
 
-    <!-- ======================================================= -->
-    <!--                      AUTO IZQUIERDA                      -->
-    <!-- ======================================================= -->
+    {{-- ================== AUTO ================== --}}
     <div class="car-box">
-        <svg id="carSVG" viewBox="0 0 300 780" xmlns="http://www.w3.org/2000/svg">
+        <svg id="carSVG" class="car-svg" viewBox="0 0 800 1280">
 
-            <image
-                href="{{ asset('img/diagrama-carro-danos3.png') }}"
-                width="300"
-                height="780"
-                preserveAspectRatio="xMidYMid meet"
-            />
+            {{-- imagen base --}}
+            <image href="{{ asset('img/diagrama-carro-danos3.png') }}"
+                   x="0" y="0" width="800" height="1280" />
 
-            <!-- 🔥 ZONAS (igual que antes) -->
-            <g class="zone" data-zone="1">
-                <rect x="80" y="15" width="140" height="50" fill="transparent"/>
-                <text x="150" y="45">1</text>
-            </g>
+            {{-- ================== PUNTOS ================== --}}
 
-            <g class="zone" data-zone="10">
-                <rect x="70" y="330" width="160" height="120" fill="transparent"/>
-                <text x="150" y="390">10</text>
-            </g>
+            {{-- DEFENSA DELANTERA --}}
+            <circle class="point-dot" data-zone="1" cx="400" cy="120" r="26" />
+            <circle class="point-dot" data-zone="2" cx="400" cy="210" r="26" />
 
-            <!-- agrega las demás zonas aquí -->
+            {{-- COFRE / PARABRISAS --}}
+            <circle class="point-dot" data-zone="5" cx="400" cy="365" r="26" />
+
+            {{-- COSTADOS FRONTALES --}}
+            <circle class="point-dot" data-zone="3" cx="155" cy="385" r="26" />
+            <circle class="point-dot" data-zone="4" cx="645" cy="385" r="26" />
+
+            {{-- PUERTAS DELANTERAS --}}
+            <circle class="point-dot" data-zone="6" cx="155" cy="525" r="26" />
+            <circle class="point-dot" data-zone="7" cx="645" cy="525" r="26" />
+
+            {{-- PUERTAS TRASERAS --}}
+            <circle class="point-dot" data-zone="8" cx="155" cy="685" r="26" />
+            <circle class="point-dot" data-zone="9" cx="645" cy="685" r="26" />
+
+            {{-- TECHO --}}
+            <circle class="point-dot" data-zone="10" cx="400" cy="640" r="26" />
+
+            {{-- COSTADOS TRASEROS --}}
+            <circle class="point-dot" data-zone="11" cx="155" cy="845" r="26" />
+            <circle class="point-dot" data-zone="12" cx="645" cy="845" r="26" />
+
+            {{-- DEFENSA TRASERA --}}
+            <circle class="point-dot" data-zone="13" cx="400" cy="1010" r="26" />
+
+            {{-- LLANTAS EXACTAS --}}
+            <circle class="point-dot" data-zone="15" cx="117"  cy="458" r="26" />
+            <circle class="point-dot" data-zone="16" cx="682"  cy="458" r="26" />
+            <circle class="point-dot" data-zone="17" cx="117"  cy="908" r="26" />
+            <circle class="point-dot" data-zone="18" cx="682"  cy="908" r="26" />
 
         </svg>
     </div>
 
-    <!-- ======================================================= -->
-    <!--             DERECHA: TABLA "EL CLIENTE SE LO LLEVA"     -->
-    <!-- ======================================================= -->
+    {{-- ================== TABLA DERECHA ================== --}}
     <div class="tabla-entrega">
         <h3>EL CLIENTE SE LO LLEVA</h3>
 
@@ -177,23 +201,18 @@
 
 </div>
 
-<!-- ======================================================= -->
-<!--                       MODAL                              -->
-<!-- ======================================================= -->
+{{-- ================== MODAL ================== --}}
 <div id="modalDaño">
     <div class="box">
-        <h4 id="tituloModal">Parte del vehículo</h4>
-
-        <textarea id="comentarioDaño" rows="3"
-                  placeholder="Describe el daño..."></textarea>
-
-        <button class="btn btn-save" id="guardarDaño">Guardar</button>
-        <button class="btn btn-cancel" id="cancelarDaño">Cancelar</button>
+        <h4 id="tituloModal">Zona</h4>
+        <textarea id="comentarioDaño"
+                  placeholder="Describe el daño o comentario..."></textarea>
+        <button type="button" id="guardarDaño" class="btn btn-save">Guardar</button>
+        <button type="button" id="cancelarDaño" class="btn btn-cancel">Cancelar</button>
     </div>
 </div>
 
 <script>
-    /* NOMBRES REALES POR CADA ZONA */
     const nombresZonas = {
         1: "Defensa delantera",
         2: "Defensa delantera superior",
@@ -204,11 +223,10 @@
         7: "Puerta delantera derecha",
         8: "Puerta trasera izquierda",
         9: "Puerta trasera derecha",
-        10: "Techo trasero",
-        11: "Costado izquierdo trasero",
-        12: "Costado derecho trasero",
+        10: "Techo",
+        11: "Costado trasero izquierdo",
+        12: "Costado trasero derecho",
         13: "Defensa trasera",
-        14: "Parte frontal superior",
         15: "Llanta delantera izquierda",
         16: "Llanta delantera derecha",
         17: "Llanta trasera izquierda",
@@ -217,30 +235,20 @@
 
     const modal = document.getElementById("modalDaño");
 
-    document.querySelectorAll('.zone').forEach(z => {
-        z.addEventListener('click', () => {
-
-            let zona = z.dataset.zone;
-
-            if (z.classList.contains('selected')) {
-                z.classList.remove('selected');
-                return;
-            }
-
-            z.classList.add('selected');
+    document.querySelectorAll(".point-dot").forEach(p => {
+        p.addEventListener("click", () => {
+            const z = p.dataset.zone;
+            p.classList.toggle("selected");
 
             document.getElementById("tituloModal").textContent =
-                nombresZonas[zona] || ("Zona " + zona);
+                nombresZonas[z] || ("Zona " + z);
 
             document.getElementById("comentarioDaño").value = "";
-
             modal.style.display = "flex";
         });
     });
 
-    document.getElementById("guardarDaño").onclick = () => {
-        modal.style.display = "none";
-    };
+    document.getElementById("guardarDaño").onclick =
     document.getElementById("cancelarDaño").onclick = () => {
         modal.style.display = "none";
     };
