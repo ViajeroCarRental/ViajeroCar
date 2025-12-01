@@ -32,6 +32,7 @@ return new class extends Migration {
             $table->integer('asientos')->default(4);
             $table->integer('puertas')->default(4);
             $table->integer('kilometraje')->default(0);
+            $table->integer('gasolina_actual')->nullable();
             $table->decimal('precio_dia', 10, 2)->default(0.00);
             $table->decimal('deposito_garantia', 10, 2)->default(0.00);
             $table->string('placa', 50)->nullable();
@@ -109,7 +110,7 @@ return new class extends Migration {
                 ->references('id_version')->on('versiones')
                 ->onDelete('set null');
 
-            
+
             $table->timestamps();
         });
     }

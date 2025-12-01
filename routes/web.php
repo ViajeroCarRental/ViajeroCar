@@ -155,12 +155,64 @@ Route::post('/admin/contrato/servicios', [App\Http\Controllers\ContratoControlle
 Route::post('/admin/contrato/seguros', [App\Http\Controllers\ContratoController::class, 'actualizarSeguro'])->name('contrato.actualizarSeguro');
 // 💰 Actualizar cargos adicionales (Paso 4)
 Route::post('/admin/contrato/cargos', [App\Http\Controllers\ContratoController::class, 'actualizarCargos'])->name('contrato.actualizarCargos');
+// Obtener cargos guardados en el contrato (Paso 4: gasolina + dropoff)
+Route::get('/admin/contrato/cargos/{idContrato}', [App\Http\Controllers\ContratoController::class, 'obtenerCargosContrato'])->name('contrato.obtenerCargos');
+
 // 📄 Guardar documentación subida (Paso 5)
 Route::post('/admin/contrato/guardar-documentacion', [App\Http\Controllers\ContratoController::class, 'guardarDocumentacion'])->name('contrato.guardarDocumentacion');
 // Obtener conductores asociados al contrato (AJAX)
 Route::get('/admin/contrato/{id}/conductores', [App\Http\Controllers\ContratoController::class, 'obtenerConductores']);
+/* =============================================================
+   📌 Solicitud de cambio de fecha (Paso 1 – editar fecha inicio)
+   ============================================================= */
+// Crear solicitud de cambio de fecha
+Route::post('/admin/contrato/solicitar-cambio-fecha',[App\Http\Controllers\ContratoController::class, 'solicitarCambioFecha'])->name('contrato.solicitarCambioFecha');
+// Endpoint que recibe el clic del superadmin (aprobar)
+Route::get('/admin/contrato/cambio-fecha/aprobar/{token}',[App\Http\Controllers\ContratoController::class, 'aprobarCambioFecha'])->name('contrato.aprobarCambioFecha');
+// Endpoint que recibe el clic del superadmin (rechazar)
+Route::get('/admin/contrato/cambio-fecha/rechazar/{token}',[App\Http\Controllers\ContratoController::class, 'rechazarCambioFecha'])->name('contrato.rechazarCambioFecha');
+Route::get('/admin/contrato/cambio-fecha/estado/{id}', [ContratoController::class, 'estadoCambioFecha']);
+Route::post('/admin/contrato/{idReservacion}/recalcular-total', [ContratoController::class, 'recalcularYActualizarTotales']);
+// 📌 Obtener vehículos por categoría (para el modal del contrato)
+Route::get('/admin/contrato/vehiculos-por-categoria/{idCategoria}', [App\Http\Controllers\ContratoController::class, 'vehiculosPorCategoria'])->name('contrato.vehiculosPorCategoria');
+Route::post('/admin/contrato/{idReservacion}/actualizar-categoria',[App\Http\Controllers\ContratoController::class, 'actualizarCategoria'])->name('contrato.actualizarCategoria');
+// 🚗 Asignar vehículo a la reservación
+Route::post('/admin/contrato/asignar-vehiculo', [App\Http\Controllers\ContratoController::class, 'asignarVehiculo'])->name('contrato.asignarVehiculo');
+// 🔥 Upgrade — obtener oferta
+Route::get('/admin/contrato/{id}/oferta-upgrade', [ContratoController::class, 'obtenerOfertaUpgrade'])->name('contrato.oferta-upgrade');
+
+// 🔥 Upgrade — aceptar
+Route::post('/admin/contrato/{id}/aceptar-upgrade', [ContratoController::class, 'aceptarUpgrade'])->name('contrato.aceptar-upgrade');
+
+// 🔥 Upgrade — rechazar
+Route::post('/admin/contrato/{id}/rechazar-upgrade', [ContratoController::class, 'rechazarUpgrade'])->name('contrato.rechazar-upgrade');
+
+Route::get('/admin/contrato/categoria-info/{codigo}',[ContratoController::class, 'categoriaInfo'])->name('contrato.categoria-info');
 
 
+Route::get('/admin/contrato/vehiculo-random/{idCategoria}',[ContratoController::class, 'vehiculoRandom'])->name('contrato.vehiculo-random');
+Route::post('/admin/reservacion/delivery/guardar', [ContratoController::class, 'guardarDeliveryReservacion'])->name('reservacion.delivery.guardar');
+Route::post('/admin/contrato/seguros-individuales',[ContratoController::class, 'actualizarSegurosIndividuales'])->name('contrato.actualizarSegurosIndividuales');
+Route::delete('/admin/contrato/seguros-individuales',[ContratoController::class, 'eliminarSeguroIndividual'])->name('contrato.eliminarSeguroIndividual');
+Route::delete('/admin/contrato/seguros-individuales/todos',[ContratoController::class, 'eliminarTodosLosIndividuales'])->name('contrato.eliminarIndividualesTodos');
+Route::post('/admin/contrato/cargo-variable', [ContratoController::class, 'guardarCargoVariable']);
+// PASO 6 — resumen
+Route::get('/admin/contrato/{id}/resumen-paso6',[ContratoController::class, 'resumenPaso6']);
+
+// PASO 6 — agregar pago
+Route::post('/admin/contrato/pagos/agregar',[ContratoController::class, 'agregarPagoPaso6']);
+
+// PASO 6 — eliminar pago
+Route::delete('/admin/contrato/pagos/{idPago}/eliminar',[ContratoController::class, 'eliminarPago']);
+// 🔹 Registrar pago manual (efectivo / terminal / transferencia)
+Route::post('/admin/contrato/pagos/agregar', [ContratoController::class, 'pagoManual'])->name('contrato.pago.agregar');
+
+// 🔹 Registrar pago con PayPal (pasarela en línea)
+Route::post('/admin/contrato/pagos/paypal',[ContratoController::class, 'pagoPayPal'])->name('contrato.pago.paypal');
+
+// 🔹 Eliminar un pago registrado
+Route::delete('/admin/contrato/pagos/{id_pago}/eliminar',[ContratoController::class, 'eliminarPago'])->name('contrato.pago.eliminar');
+Route::get('/admin/contrato/{id_reservacion}/resumen',[ContratoController::class, 'resumenContrato'])->name('contrato.resumen');
 
 
 

@@ -679,65 +679,7 @@ html, body {
   .form-grid { grid-template-columns:1fr; }
 }
 
-.uploader {
-  position:relative;
-  border:2px dashed #E5E7EB;
-  border-radius:16px;
-  min-height:180px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:linear-gradient(180deg,#FAFBFC, #F9FAFB);
-  text-align:center;
-  padding:16px;
-  transition:background .15s, border-color .15s;
-}
-.uploader:hover {
-  background:#FFF6F7;
-  border-color:#FFD3D6;
-}
-.uploader input[type=file] {
-  position:absolute;
-  inset:0;
-  opacity:0;
-  cursor:pointer;
-}
-.uploader .msg {
-  color:#667085;
-}
-.preview {
-  display:flex;
-  gap:12px;
-  flex-wrap:wrap;
-  margin-top:10px;
-}
-.thumb {
-  border:1px solid #E5E7EB;
-  border-radius:14px;
-  overflow:hidden;
-  width:200px;
-  height:130px;
-  position:relative;
-  background:#fff;
-  box-shadow:0 6px 18px rgba(16,24,40,.06);
-}
-.thumb img {
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-.thumb .rm {
-  position:absolute;
-  top:6px;
-  right:6px;
-  background:rgba(0,0,0,.7);
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  padding:4px 6px;
-  font-size:12px;
-  cursor:pointer;
-}
+
 
 /* ======= Modal de Pago (Paso 6) ======= */
 .modal-back {
@@ -1093,3 +1035,1022 @@ legend {
 .thumb .rm:hover {
   background: rgba(220,38,38,.85);
 }
+
+/* ============================================
+   BACKDROP
+============================================ */
+#modalVehiculos {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+}
+
+#modalVehiculos.show-modal {
+  display: flex;
+}
+
+/* ============================================
+   CONTENIDO
+============================================ */
+#modalVehiculos.modal-vehiculos .modal-content {
+
+  width: 920px;
+  max-height: 92vh;
+  overflow: hidden;
+  border-radius: 18px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+}
+
+/* ============================================
+   HEADER
+============================================ */
+.modal-header {
+  background: #E50914;
+  padding: 18px 22px;
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+/* ============================================
+   FILTROS
+============================================ */
+.modal-filtros {
+  background: #fafafa;
+  padding: 16px 22px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.filtros-grid {
+  display: flex;
+  gap: 12px;
+}
+
+.filtro-input {
+  flex: 1;
+  padding: 10px 13px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  background: white;
+}
+
+/* ============================================
+   LISTA
+============================================ */
+.modal-lista {
+  padding: 22px;
+  overflow-y: auto;
+  max-height: 65vh;
+}
+
+/* Tarjetas */
+.vehiculo-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 18px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #eee;
+  margin-bottom: 15px;
+  transition: transform .2s, background .2s;
+}
+
+.vehiculo-card:hover {
+  background: #f8f8f8;
+  transform: translateY(-2px);
+}
+
+.vehiculo-img {
+  width: 110px;
+  height: 70px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+/* Info */
+.vehiculo-info h4 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #222;
+}
+
+.vehiculo-info p {
+  margin: 3px 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Botón */
+.btn-vehiculo {
+  background: #E50914;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Footer */
+.modal-footer {
+  padding: 15px;
+  background: #fafafa;
+  border-top: 1px solid #eee;
+  text-align: right;
+}
+
+.btn-cerrar {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  background: #ddd;
+  cursor: pointer;
+}
+
+/* ============================================================
+   🚀 MODAL — FONDO OSCURO
+============================================================ */
+.upgrade-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 5000;
+}
+
+.upgrade-modal.show {
+    display: flex;
+}
+
+/* ============================================================
+   🚗 TARJETA PREMIUM DEL MODAL
+============================================================ */
+.upgrade-card {
+    width: 420px;
+    background: #ffffff;
+    border-radius: 22px;
+    padding: 24px;
+    position: relative;
+    box-shadow: 0 8px 35px rgba(0,0,0,0.25);
+    animation: fadeUp 0.25s ease-out;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Animación suave */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(25px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   ❌ BOTÓN CERRAR
+============================================================ */
+.upgrade-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #fff;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #444;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.2s;
+}
+
+.upgrade-close:hover {
+    background: #f3f3f3;
+}
+
+/* ============================================================
+   🔥 BURBUJA DE DESCUENTO
+============================================================ */
+.upgrade-discount-badge {
+    position: absolute;
+    top: -16px;
+    left: -16px;
+    background: #d6001c;
+    color: white;
+    padding: 10px 16px;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(214, 0, 28, 0.4);
+}
+
+/* ============================================================
+   🚗 IMAGEN DEL VEHÍCULO
+============================================================ */
+.upgrade-image-wrapper {
+    width: 100%;
+    height: 180px;
+    overflow: hidden;
+    border-radius: 18px;
+    margin-top: 15px;
+    margin-bottom: 18px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.upgrade-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ============================================================
+   🟥 TÍTULO DE CATEGORÍA
+============================================================ */
+.upgrade-categoria {
+    font-size: 22px;
+    color: #1a1a1a;
+    text-align: center;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+/* ============================================================
+   🚘 NOMBRE COMPLETO DEL VEHÍCULO
+============================================================ */
+.upgrade-nombre-vehiculo {
+    text-align: center;
+    font-size: 17px;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 14px;
+}
+
+/* ============================================================
+   📝 DESCRIPCIÓN
+============================================================ */
+.upgrade-descripcion {
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 16px;
+}
+
+/* ============================================================
+   📦 ESPECIFICACIONES
+============================================================ */
+.upgrade-especificaciones {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+    margin-bottom: 20px;
+}
+
+.spec-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+.spec-label {
+    font-weight: 600;
+    color: #333;
+}
+
+.spec-value {
+    color: #555;
+}
+
+/* ============================================================
+   ⭐ BENEFICIOS
+============================================================ */
+.upgrade-beneficios {
+    background: #f4f7fb;
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* ============================================================
+   💵 PRECIOS
+============================================================ */
+.upgrade-precios {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.upgrade-precio-inflado {
+    font-size: 16px;
+    color: #999;
+    text-decoration: line-through;
+}
+
+.upgrade-precio-real {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0c8a0c;
+}
+
+/* ============================================================
+   🔘 BOTONES
+============================================================ */
+.upgrade-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.btn-upgrade-cancel {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 15px;
+    border-radius: 12px;
+    border: 2px solid #999;
+    background: white;
+    color: #444;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+.btn-upgrade-cancel:hover {
+    background: #efefef;
+}
+
+.btn-upgrade-accept {
+    flex: 1;
+    padding: 12px 16px;
+    font-size: 15px;
+    border-radius: 12px;
+    border: none;
+    background: #0077ff;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+.btn-upgrade-accept:hover {
+    background: #005fcc;
+}
+/* ============================
+   🌙 SWITCH MODERNO CORRECTO
+============================= */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+
+/* Ocultar checkbox por defecto */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* Fondo del switch */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  border-radius: 30px;
+  transition: background-color 0.25s ease;
+}
+
+/* ⭕ Bolita REAL del switch */
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 22px;
+  width: 22px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.25s ease;
+}
+
+/* Estado encendido */
+.switch input:checked + .slider {
+  background-color: #28a745;
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(24px);
+}
+
+/* ============================================================
+   📌 DELIVERY – Inputs y Selects
+============================================================ */
+.delivery-wrapper label {
+  color: #444;
+  font-weight: bold;
+}
+
+.delivery-wrapper select,
+.delivery-wrapper input[type="text"],
+.delivery-wrapper input[type="number"] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fafafa;
+  font-size: 15px;
+  margin-top: 6px;
+  transition: all .25s ease;
+}
+
+.delivery-wrapper select:hover,
+.delivery-wrapper input:hover {
+  border-color: #888;
+}
+
+.delivery-wrapper select:focus,
+.delivery-wrapper input:focus {
+  border-color: #1e82ff;
+  box-shadow: 0 0 6px rgba(30, 130, 255, .4);
+  outline: none;
+}
+
+/* Placeholder elegante */
+.delivery-wrapper input::placeholder {
+  color: #888;
+}
+
+/* Total en rojo igual al total de adicionales */
+#deliveryTotal {
+  font-size: 20px;
+  font-weight: bold;
+  color: #C62828;
+}
+
+
+/* ============================
+      MODAL BASE (centrado)
+============================ */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none; /* se activa con JS */
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 999999;
+    padding: 20px;
+    backdrop-filter: blur(3px);
+}
+
+/* ============================
+      CONTENIDO DEL MODAL
+============================ */
+.modal .modal-content {
+    background: #ffffff;
+    width: 85%;                /* tamaño ideal */
+    max-width: 1400px;         /* evita pantallas gigantes */
+    border-radius: 14px;
+    padding: 25px;
+    box-shadow: 0px 10px 35px rgba(0,0,0,0.35);
+    animation: fadeInUp 0.25s ease-out;
+    max-height: 90vh;
+    overflow: hidden; /* importante para el scroll horizontal solamente en cards */
+    display: flex;
+    flex-direction: column;
+}
+
+/* modal grande para paquetes */
+.modal-large {
+    width: 90%;
+    max-width: 1500px;
+}
+
+/* ============================
+      HEADER DEL MODAL
+============================ */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.modal-header h2,
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+/* botón cerrar (X) */
+.close-modal,
+.closeModal {
+    background: none;
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #555;
+    transition: 0.2s;
+}
+
+.close-modal:hover,
+.closeModal:hover {
+    color: #d33;
+    transform: scale(1.15);
+}
+
+/* ============================
+        CONTENIDO SCROLL
+============================ */
+.modal-body {
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+/* ============================
+ 🔥 SCROLL HORIZONTAL CARDS
+============================ */
+.cards {
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #c7c7c7 transparent;
+}
+
+/* Estilo scrollbar Chrome */
+.cards::-webkit-scrollbar {
+    height: 8px;
+}
+.cards::-webkit-scrollbar-track {
+    background: transparent;
+}
+.cards::-webkit-scrollbar-thumb {
+    background: #c7c7c7;
+    border-radius: 6px;
+}
+
+/* ============================
+        TARJETAS DE SEGURO
+============================ */
+.cards .card {
+    min-width: 290px;
+    max-width: 320px;
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.12);
+    border: 1px solid #ececec;
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.cards .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 6px 16px rgba(0,0,0,0.18);
+}
+
+/* Títulos de cada card */
+.card h4 {
+    font-size: 1.05rem;
+    margin: 0 0 6px;
+}
+
+.card .precio {
+    font-weight: 700;
+    margin: 10px 0;
+    font-size: .95rem;
+    color: #BE2E2E;
+}
+
+/* ============================
+      ANIMACIÓN MODAL
+============================ */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Títulos de categorías */
+.categoria-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 24px 0 12px;
+    color: #2c3e50;
+    border-left: 4px solid #3498db;
+    padding-left: 10px;
+}
+
+/* Carrusel horizontal */
+.scroll-h {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    scroll-snap-type: x mandatory;
+}
+
+.scroll-h::-webkit-scrollbar {
+    height: 6px;
+}
+
+.scroll-h::-webkit-scrollbar-thumb {
+    background: #b4b4b4;
+    border-radius: 4px;
+}
+
+.scroll-h .card {
+    min-width: 260px;
+    scroll-snap-align: start;
+}
+
+/* 🔧 Ajuste visual del bloque grande del Paso 5 */
+.step[data-step="5"] .section {
+  border-radius: 18px;
+  border: 1.5px solid var(--stroke);
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(16,24,40,.04);
+}
+
+/* Encabezado */
+.step[data-step="5"] .section .head {
+  background: #FAFAFA;
+  border-bottom: 1px solid var(--stroke);
+  padding: 14px 16px;
+  font-weight: 900;
+  font-size: 16px;
+}
+#tituloPersona {
+  font-size: 17px;
+  font-weight: 900;
+  color: #1f2937;
+}
+.step[data-step="5"] label {
+  font-size: 14px;
+  color: #374151;
+  font-weight: 600;
+}
+
+.step[data-step="5"] input,
+.step[data-step="5"] select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #D1D5DB;
+  background: #fff;
+  font-size: 14px;
+  transition: .2s ease;
+}
+
+.step[data-step="5"] input:focus,
+.step[data-step="5"] select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(255,30,45,.18);
+  outline: none;
+}
+.step[data-step="5"] .form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 22px;
+}
+
+@media (max-width: 900px) {
+  .step[data-step="5"] .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.step[data-step="5"] .uploader .msg {
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+}
+#alertaLicencia,
+#confirmacionLicencia {
+  margin-top: 12px;
+}
+/* ==========================================================
+   💳 MODAL NUEVO — PASO 6 (MEJORADO)
+========================================================== */
+
+.modal-back {
+  position: fixed;
+  inset: 0;
+  background: rgba(16,24,40,.40);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 99998;
+  padding: 18px;
+  backdrop-filter: blur(3px); /* 🔥 efecto moderno */
+}
+
+.modal-back.show {
+  display: flex;
+  animation: fadeIn .25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #EAECF0;
+  width: min(640px, 100%);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0px 20px 55px rgba(0,0,0,.22);
+  position: relative;
+  transform: translateY(15px);
+  animation: modalSlide .25s ease-out forwards;
+}
+
+@keyframes modalSlide {
+  to { transform: translateY(0); }
+}
+
+/* HEADER */
+.modal .head {
+  padding: 14px 18px;
+  border-bottom: 1px solid #EAECF0;
+  font-weight: 800;
+  font-size: 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal .head button {
+  background: #F2F4F7;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.modal .head button:hover {
+  background: #E4E7EC;
+}
+
+/* BODY */
+.modal .body {
+  padding: 18px;
+  overflow-y: auto;
+}
+
+/* FOOTER */
+.modal .foot {
+  padding: 14px 18px;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #EAECF0;
+}
+
+/* ==========================================================
+   📌 TABS MEJORADOS
+========================================================== */
+
+.pay-groups {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.pay-groups .tab {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  cursor: pointer;
+  font-size: .9rem;
+  transition: .2s;
+}
+
+.pay-groups .tab:hover:not(.active) {
+  background: #F3F4F6;
+}
+
+.pay-groups .tab.active {
+  background: #0052CC;
+  color: #fff;
+  border-color: #0052CC;
+}
+
+/* Deshabilitado */
+.pay-groups .tab.disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+/* ==========================================================
+   🟦 CONTENEDORES DE MÉTODOS
+========================================================== */
+[data-pane] {
+  background: #F9FAFB;
+  border: 1px solid #EAECF0;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+}
+
+/* ==========================================================
+   💳 TARJETAS (VISA / MC / DEBITO)
+========================================================== */
+
+.method-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.mcard {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  gap: 10px;
+  cursor: pointer;
+  transition: .2s;
+  align-items: center;
+}
+
+.mcard input {
+  display: none;
+}
+
+.mcard:hover {
+  border-color: #CBD5E1;
+}
+
+.mcard:has(input:checked) {
+  border-color: #0052CC;
+  background: #EFF6FF;
+}
+
+.mcard img {
+  width: 36px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.mcard .ttl {
+  font-weight: 700;
+  font-size: .9rem;
+}
+
+.mcard .sub {
+  font-size: .75rem;
+  color: #6B7280;
+}
+
+/* ==========================================================
+   📝 CAMPOS DE FORMULARIO
+========================================================== */
+
+.form-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #D0D5DD;
+  font-size: .9rem;
+  transition: .2s;
+}
+
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus {
+  border-color: #0052CC;
+  box-shadow: 0 0 0 3px rgba(0,82,204,.2);
+  outline: none;
+}
+
+fieldset {
+  border: 1px solid #EAECF0;
+  padding: 14px;
+  border-radius: 10px;
+}
+
+legend {
+  padding: 0 6px;
+  font-size: .85rem;
+  font-weight: 600;
+  color: #344054;
+}
+
+.err {
+  color: #D92D20;
+  font-size: .8rem;
+  margin-top: 4px;
+}
+
+/* ==========================================================
+   🟡 BOTÓN GUARDAR
+========================================================== */
+
+.btn.primary {
+  background: #0052CC !important;
+  color: white !important;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  transition: .2s;
+}
+
+.btn.primary:hover {
+  background: #003F99 !important;
+}
+
+.btn.gray {
+  background: #F2F4F7 !important;
+  color: #101828 !important;
+}
+
+.btn.gray:hover {
+  background: #E4E7EC !important;
+}
+/* Imagen */
+.vehiculo-img {
+  width:100%;
+  max-width:220px;
+  border-radius:12px;
+  margin-bottom:8px;
+}
+
+/* Texto portadita */
+.vehiculo-nombre {
+  font-size: 1.05rem;
+  margin: 4px 0 0 0;
+}
+
+.vehiculo-mini {
+  color:#6B7280;
+  font-size: .85rem;
+  margin:0;
+}
+
+/* Botón ver detalle */
+.btn-resumen {
+  margin-top: 14px;
+  padding: 8px 14px;
+  background: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: .9rem;
+  cursor: pointer;
+  width: 100%;
+  transition: .2s;
+}
+
+.btn-resumen:hover {
+  background: #E5E7EC;
+}
+

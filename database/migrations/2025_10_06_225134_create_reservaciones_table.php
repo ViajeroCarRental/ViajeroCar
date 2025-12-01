@@ -43,7 +43,7 @@ return new class extends Migration {
             $table->decimal('total', 10, 2)->default(0.00);
             $table->string('moneda', 10)->default('MXN');
 
-            // 🟡 Nuevo campo para saber si la tarifa fue modificada manualmente
+            // 🟡 Nuevo campo: tarifa ajustada
             $table->boolean('tarifa_ajustada')->default(false)->comment('Indica si la tarifa fue modificada manualmente por el asesor');
             $table->decimal('tarifa_modificada', 10, 2)->nullable()->comment('Tarifa base diaria real (modificada o no)');
             $table->decimal('tarifa_base', 10, 2)->nullable()->comment('Tarifa base diaria del catálogo');
@@ -56,10 +56,25 @@ return new class extends Migration {
             $table->string('email_cliente', 120)->nullable();
             $table->string('telefono_cliente', 40)->nullable();
 
-            // 🔹 Campos agregados para manejo de pagos 💳
+            // 🔹 Campos agregados para pagos
             $table->string('paypal_order_id', 100)->nullable()->comment('ID de la orden PayPal');
             $table->string('status_pago', 50)->default('Pendiente')->comment('Estado del pago: Pendiente, Pagado, Fallido');
             $table->string('metodo_pago', 30)->default('mostrador')->comment('Tipo de pago: mostrador o en línea');
+
+            /* ============================================================
+                 🟩 CAMPOS AGREGADOS PARA DELIVERY
+            ============================================================ */
+
+            $table->boolean('delivery_activo')->default(false);
+            $table->unsignedBigInteger('delivery_ubicacion')->nullable();
+            $table->string('delivery_direccion')->nullable();
+            $table->integer('delivery_km')->default(0);
+            $table->decimal('delivery_precio_km', 10, 2)->default(0);
+            $table->decimal('delivery_total', 10, 2)->default(0);
+
+            /* ============================================================
+                 FIN DE CAMPOS DE DELIVERY
+            ============================================================ */
 
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();

@@ -9,6 +9,7 @@ return new class extends Migration {
     {
         Schema::create('categorias_carros', function (Blueprint $table) {
             $table->bigIncrements('id_categoria');
+            $table->string('codigo', 10)->unique();
             $table->string('nombre', 100)->unique();
             $table->string('descripcion', 255)->nullable();
 

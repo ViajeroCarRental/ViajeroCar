@@ -31,8 +31,12 @@ class DatabaseSeeder extends Seeder
         UsuarioRolSeeder::class,
         SeguroPaqueteSeeder::class,
         FlotillaSeeder::class,
-        VehiculosFlotillaSeeder::class,
         CargoConceptoSeeder::class,
+        MantenimientoTipoSeeder::class,
+        MantenimientosSeeder::class,
+        CategoriaCostoKmSeeder::class,
+        UbicacionesServicioSeeder::class,
+        SeguroIndividualesSeeder::class,
         ]);
     }
 
