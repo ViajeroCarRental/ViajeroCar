@@ -239,8 +239,29 @@
         </div>
       </div>
 
+      <!-- 📅 Detalles del viaje -->
+      <div class="trip-details" style="margin-bottom:12px;">
+        <div class="row"><div>📍 Retiro</div><div id="resSucursalRetiro">—</div></div>
+        <div class="row"><div>🏁 Entrega</div><div id="resSucursalEntrega">—</div></div>
+        <div class="row"><div>🗓️ Fecha salida</div><div id="resFechaInicio">—</div></div>
+        <div class="row"><div>🕑 Hora salida</div><div id="resHoraInicio">—</div></div>
+        <div class="row"><div>📅 Fecha llegada</div><div id="resFechaFin">—</div></div>
+        <div class="row"><div>🕓 Hora llegada</div><div id="resHoraFin">—</div></div>
+        <div class="row"><div>⏱️ Duración</div><div id="resDias">—</div></div>
+      </div>
+
       <!-- 💰 Detalle de precios -->
-      <div class="row"><div>Tarifa Base</div><div id="baseLine">—</div></div>
+      <div class="row">
+        <div>
+          Tarifa Base
+          <button id="editTarifa" title="Editar tarifa"
+                  style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:16px;margin-left:6px;">
+            ✏️
+          </button>
+        </div>
+        <div id="baseLine">—</div>
+      </div>
+
       <div class="row"><div>Protección</div><div id="proteName">—</div></div>
       <div class="row"><div>Adicionales</div><div id="extrasName">—</div></div>
       <div class="row"><div>Subtotal</div><div id="subTot">$0.00 MXN</div></div>

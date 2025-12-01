@@ -12,9 +12,44 @@ class ServiciosSeeder extends Seeder
         $now = now();
 
         $rows = [
+
+            // =======================
+            // GASOLINA Y LITROS
+            // =======================
             [
-                'nombre'      => 'Silla de seguridad para niños',
-                'descripcion' => 'Para niños de 18 a 36 kg aprox.',
+                'nombre'      => 'Gasolina Prepago',
+                'descripcion' => 'Costo por litro x cantidad de litros que tenga el auto.',
+                'tipo_cobro'  => 'por_evento',
+                'precio'      => 20.00,
+                'activo'      => true,
+                'created_at'  => $now,
+                'updated_at'  => $now,
+            ],
+            [
+                'nombre'      => 'Gasolina (faltante)',
+                'descripcion' => 'Se cobra cuando el cliente regresa el auto con faltante de gasolina.',
+                'tipo_cobro'  => 'por_evento',
+                'precio'      => 25.50,
+                'activo'      => true,
+                'created_at'  => $now,
+                'updated_at'  => $now,
+            ],
+            [
+                'nombre'      => 'Servicio de Litro Faltante',
+                'descripcion' => 'Costo aplicado a cada litro faltante al regresar el auto.',
+                'tipo_cobro'  => 'por_evento',
+                'precio'      => 13.16,
+                'activo'      => true,
+                'created_at'  => $now,
+                'updated_at'  => $now,
+            ],
+
+            // =======================
+            // SERVICIOS ADICIONALES
+            // =======================
+            [
+                'nombre'      => 'Conductor adicional',
+                'descripcion' => 'Agregar un conductor extra.',
                 'tipo_cobro'  => 'por_dia',
                 'precio'      => 150.00,
                 'activo'      => true,
@@ -22,8 +57,44 @@ class ServiciosSeeder extends Seeder
                 'updated_at'  => $now,
             ],
             [
+                'nombre'      => 'Conductor menor',
+                'descripcion' => 'Cobro adicional por conductor menor de edad.',
+                'tipo_cobro'  => 'por_dia',
+                'precio'      => 200.00,
+                'activo'      => true,
+                'created_at'  => $now,
+                'updated_at'  => $now,
+            ],
+            [
+                'nombre'      => 'Licencia vencida',
+                'descripcion' => 'Aplicable cuando el cliente presenta licencia vencida.',
+                'tipo_cobro'  => 'por_dia',
+                'precio'      => 200.00,
+                'activo'      => true,
+                'created_at'  => $now,
+                'updated_at'  => $now,
+            ],
+            [
+                'nombre'      => 'Silla de bebé',
+                'descripcion' => 'Silla de seguridad para bebé.',
+                'tipo_cobro'  => 'por_dia',
+                'precio'      => 150.00,
+                'activo'      => true,
+                'created_at'  => $now,
+                'updated_at'  => $now,
+            ],
+            [
+                'nombre'      => 'GPS',
+                'descripcion' => 'Dispositivo GPS.',
+                'tipo_cobro'  => 'por_dia',
+                'precio'      => 200.00,
+                'activo'      => true,
+                'created_at'  => $now,
+                'updated_at'  => $now,
+            ],
+            [
                 'nombre'      => 'Upgrade de categoría',
-                'descripcion' => 'Cambia a una categoría superior.',
+                'descripcion' => 'Cambio a categoría superior.',
                 'tipo_cobro'  => 'por_dia',
                 'precio'      => 200.00,
                 'activo'      => true,
@@ -31,17 +102,8 @@ class ServiciosSeeder extends Seeder
                 'updated_at'  => $now,
             ],
             [
-                'nombre'      => 'Dispositivo GPS',
-                'descripcion' => 'Cobertura funcional en Querétaro.',
-                'tipo_cobro'  => 'por_dia',
-                'precio'      => 200.00,
-                'activo'      => true,
-                'created_at'  => $now,
-                'updated_at'  => $now,
-            ],
-            [
-                'nombre'      => 'Conductor adicional',
-                'descripcion' => 'Agrega un conductor extra.',
+                'nombre'      => 'Accesorios de celular',
+                'descripcion' => 'Accesorios para celular (cobro por día).',
                 'tipo_cobro'  => 'por_dia',
                 'precio'      => 150.00,
                 'activo'      => true,
@@ -50,7 +112,7 @@ class ServiciosSeeder extends Seeder
             ],
         ];
 
-        // Inserta o ignora si ya existen (por el unique de nombre)
+        // Inserta o actualiza por unique(nombre)
         foreach ($rows as $row) {
             DB::table('servicios')->updateOrInsert(
                 ['nombre' => $row['nombre']],

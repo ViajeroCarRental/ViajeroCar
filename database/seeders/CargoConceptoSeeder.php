@@ -50,6 +50,27 @@ class CargoConceptoSeeder extends Seeder
         'created_at'  => now(),
         'updated_at'  => now(),
     ],
+    [
+    'clave' => 'C005',
+    'nombre' => 'Gasolina faltante',
+    'descripcion' => 'Cargo por litros faltantes de combustible.',
+    'monto_base' => 0,
+    'moneda' => 'MXN',
+    'activo' => true,
+    'created_at' => now(),
+    'updated_at' => now(),
+],
+[
+    'clave' => 'C006',
+    'nombre' => 'Dropoff',
+    'descripcion' => 'Entrega en ubicación personalizada.',
+    'monto_base' => 0,
+    'moneda' => 'MXN',
+    'activo' => true,
+    'created_at' => now(),
+    'updated_at' => now(),
+],
+
 ]);
 
     }

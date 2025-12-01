@@ -8,32 +8,30 @@ use Illuminate\Support\Facades\DB;
 class ReservacionesActivasController extends Controller
 {
     /**
-     * Muestra todas las reservaciones activas (no canceladas ni expiradas).
+     * 📋 Muestra todas las reservaciones activas (no canceladas ni expiradas)
      */
     public function index()
     {
         try {
-            // 🔹 Consulta principal: reservaciones activas
-            $reservaciones = DB::table('reservaciones')
+            // 🔹 Consulta principal: reservaciones activas con su categoría
+            $reservaciones = DB::table('reservaciones as r')
+                ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
                 ->select(
-                    'id_reservacion',
-                    'codigo',
-                    'fecha_inicio',
-                    'estado',
-                    'total',
-                    'nombre_cliente',
-                    'email_cliente'
+                    'r.id_reservacion',
+                    'r.codigo',
+                    'r.nombre_cliente',
+                    'r.email_cliente',
+                    'r.telefono_cliente',
+                    'r.estado',
+                    'r.metodo_pago',
+                    'r.fecha_inicio',
+                    'r.fecha_fin',
+                    'r.total',
+                    DB::raw('COALESCE(c.nombre, "Sin categoría") as categoria')
                 )
-                ->whereNotIn('estado', ['cancelada', 'expirada'])
-                ->orderByDesc('id_reservacion')
+                ->whereNotIn('r.estado', ['cancelada', 'expirada'])
+                ->orderByDesc('r.id_reservacion')
                 ->get();
-
-            // 🔹 Formato uniforme para la vista
-            $reservaciones->transform(function ($r) {
-                $r->nombre_mostrar = $r->nombre_cliente ?? '—';
-                $r->email_mostrar  = $r->email_cliente ?? '—';
-                return $r;
-            });
 
             // 🔹 Renderiza la vista con los datos
             return view('Admin.ReservacionesActivas', compact('reservaciones'));
@@ -45,45 +43,45 @@ class ReservacionesActivasController extends Controller
     }
 
     /**
- * Retorna los detalles completos de una reservación activa (por código).
- */
-public function show($codigo)
-{
-    try {
-        // 🔹 Busca la reservación por código y une datos del vehículo
-        $reservacion = DB::table('reservaciones')
-            ->join('vehiculos', 'reservaciones.id_vehiculo', '=', 'vehiculos.id_vehiculo')
-            ->select(
-                'reservaciones.id_reservacion', // 👈 IMPORTANTE: este campo no estaba
-                'reservaciones.codigo',
-                'reservaciones.nombre_cliente',
-                'reservaciones.email_cliente',
-                'reservaciones.estado',
-                'reservaciones.fecha_inicio',
-                'reservaciones.hora_retiro',
-                'reservaciones.fecha_fin',
-                'reservaciones.hora_entrega',
-                'reservaciones.metodo_pago',
-                'reservaciones.total',
-                DB::raw("CONCAT(vehiculos.marca, ' ', vehiculos.modelo) AS vehiculo")
-            )
-            ->where('reservaciones.codigo', $codigo)
-            ->first();
+     * 🔍 Retorna los detalles completos de una reservación activa (por código)
+     */
+    public function show($codigo)
+    {
+        try {
+            // 🔹 Buscar reservación por código con su categoría
+            $reservacion = DB::table('reservaciones as r')
+                ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
+                ->select(
+                    'r.id_reservacion',
+                    'r.codigo',
+                    'r.nombre_cliente',
+                    'r.email_cliente',
+                    'r.telefono_cliente',
+                    'r.estado',
+                    'r.fecha_inicio',
+                    'r.hora_retiro',
+                    'r.fecha_fin',
+                    'r.hora_entrega',
+                    'r.metodo_pago',
+                    'r.total',
+                    'r.tarifa_modificada',
+                    DB::raw('COALESCE(c.nombre, "Sin categoría") as categoria')
+                )
+                ->where('r.codigo', $codigo)
+                ->first();
 
-        // 🔹 Validación: si no se encuentra
-        if (!$reservacion) {
-            return response()->json(['error' => 'Reservación no encontrada'], 404);
+            // 🔹 Validación: si no se encuentra
+            if (!$reservacion) {
+                return response()->json(['error' => 'Reservación no encontrada'], 404);
+            }
+
+            // 🔹 Respuesta exitosa en formato JSON
+            return response()->json($reservacion, 200);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'error' => 'Error al obtener los detalles: ' . $e->getMessage()
+            ], 500);
         }
-
-        // 🔹 Respuesta exitosa en formato JSON
-        return response()->json($reservacion, 200);
-
-    } catch (\Throwable $e) {
-        return response()->json([
-            'error' => 'Error al obtener los detalles: ' . $e->getMessage()
-        ], 500);
     }
-}
-
-
 }

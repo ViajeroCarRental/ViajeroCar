@@ -10,72 +10,117 @@ class CategoriasCarrosSeeder extends Seeder
     public function run(): void
     {
         DB::table('categorias_carros')->insert([
+
+            // C — Compacto
             [
-                'nombre' => 'Compacto',
-                'descripcion' => 'Chevrolet Aveo o similar. Autos similares: VW Virtus, Kia Rio, Hyundai HB20, Toyota Yaris.',
-                'precio_dia' => 467.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'C',
+                'nombre'        => 'Compacto',
+                'descripcion'   => 'Chevrolet Aveo o similar',
+                'precio_dia'    => 467.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // D — Medianos
             [
-                'nombre' => 'Medianos',
-                'descripcion' => 'Nissan Versa o similar. Autos similares: VW Virtus, Kia Rio, Hyundai HB20, Toyota Yaris.',
-                'precio_dia' => 600.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'D',
+                'nombre'        => 'Medianos',
+                'descripcion'   => 'Nissan Versa o similar',
+                'precio_dia'    => 600.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // E — Grandes
             [
-                'nombre' => 'Grandes',
-                'descripcion' => 'Jetta o similar. Autos similares: Nissan Sentra, Toyota Corolla, Kia K4.',
-                'precio_dia' => 800.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'E',
+                'nombre'        => 'Grandes',
+                'descripcion'   => 'Volkswagen Jetta o similar',
+                'precio_dia'    => 800.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // F — Full Size
             [
-                'nombre' => 'Full Size',
-                'descripcion' => 'Toyota Camry o similar.',
-                'precio_dia' => 1550.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'F',
+                'nombre'        => 'Full Size',
+                'descripcion'   => 'Toyota Camry o similar',
+                'precio_dia'    => 1550.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // IC — SUV Compacta
             [
-                'nombre' => 'SUV Compacta',
-                'descripcion' => 'Jeep Renegade o similar. Autos similares: Kia Seltos, Nissan Xtrail.',
-                'precio_dia' => 1600.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'IC',
+                'nombre'        => 'SUV Compacta',
+                'descripcion'   => 'Jeep Renegade o similar',
+                'precio_dia'    => 1600.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // I — SUV Mediana
             [
-                'nombre' => 'SUV Mediana',
-                'descripcion' => 'Chevrolet Captiva o similar. Autos similares: Kia Seltos, Nissan Xtrail.',
-                'precio_dia' => 1800.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'I',
+                'nombre'        => 'SUV Mediana',
+                'descripcion'   => 'Volkswagen Taos o similar',
+                'precio_dia'    => 1800.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // IB — SUV Familiar Compacta
             [
-                'nombre' => 'SUV Familiar Compacta',
-                'descripcion' => 'Toyota Avanza o similar. Autos similares: Suzuki Ertiga, Mitsubishi Xpander.',
-                'precio_dia' => 1700.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'IB',
+                'nombre'        => 'SUV Familiar Compacta',
+                'descripcion'   => 'Toyota Avanza o similar',
+                'precio_dia'    => 1700.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // M — Minivan
             [
-                'nombre' => 'Minivan',
-                'descripcion' => 'Honda Odyssey o similar. Autos similares: Toyota Sienna.',
-                'precio_dia' => 2600.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'M',
+                'nombre'        => 'Minivan',
+                'descripcion'   => 'Honda Odyssey o similar',
+                'precio_dia'    => 2600.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // L — Pasajeros 12–15
             [
-                'nombre' => 'Pasajeros 12-15',
-                'descripcion' => 'Toyota Hiace o similar. Autos similares: Nissan Urvan.',
-                'precio_dia' => 2900.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'L',
+                'nombre'        => 'Van Pasajeros 13',
+                'descripcion'   => 'Toyota Hiace o similar',
+                'precio_dia'    => 2900.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // H — Pickup Doble Cabina
             [
-                'nombre' => 'Pick Up Doble Cabina',
-                'descripcion' => 'Nissan Frontier o similar. Autos similares: Toyota Hilux, Mitsubishi L200.',
-                'precio_dia' => 1950.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'H',
+                'nombre'        => 'Pickup Doble Cabina',
+                'descripcion'   => 'Nissan Frontier o similar',
+                'precio_dia'    => 1950.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // HI — Pickup 4x4
             [
-                'nombre' => 'Pick Up 4x4 Doble Cabina',
-                'descripcion' => 'Toyota Tacoma o similar. Autos similares: No aplica.',
-                'precio_dia' => 2600.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'HI',
+                'nombre'        => 'Pickup 4x4 Doble Cabina',
+                'descripcion'   => 'Toyota Tacoma o similar',
+                'precio_dia'    => 2600.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
         ]);
     }
 }

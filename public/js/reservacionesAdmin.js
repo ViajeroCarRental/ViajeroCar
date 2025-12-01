@@ -51,9 +51,16 @@ categoriaSelect?.addEventListener('change', async () => {
     vehName.textContent = data.nombre || 'Ejemplo de la categoría seleccionada';
     vehImageWrap.style.display = 'block';
 
-    // Tarifa base
+    // ✅ Tarifa base real de la categoría
     const tarifa = parseFloat(data.tarifa_base || data.precio_dia || 0);
-    $('#baseLine').textContent = `$${tarifa.toFixed(2)} MXN/día`;
+
+    // Guardar referencia base y resetear bandera de edición
+    tarifaOriginal = tarifa;              // base real del catálogo
+    precioSeleccionado = tarifa;          // inicia igual
+    tarifaEditadaManualmente = false;     // aún no fue editada
+
+    // Mostrar valor inicial
+    $('#baseLine').innerHTML = `$${tarifa.toFixed(2)} MXN/día`;
     updateResumen(tarifa);
 
   } catch (err) {
@@ -71,6 +78,8 @@ let precioSeleccionado = 0;
 let diasSeleccionados = 1;
 let seguroSeleccionado = null;
 let adicionalesSeleccionados = [];
+let tarifaOriginal = 0;
+let tarifaEditadaManualmente = false;
 
 function updateResumen(precioDia = null, dias = null) {
   if (precioDia !== null) precioSeleccionado = precioDia;
@@ -105,6 +114,62 @@ function actualizarTotal() {
 }
 selectMoneda?.addEventListener('change', actualizarTotal);
 tcInput?.addEventListener('input', actualizarTotal);
+
+/* ================================
+   ✏️ Edición inline de tarifa base
+================================ */
+const editTarifaBtn = $('#editTarifa');
+const baseLine = $('#baseLine');
+
+editTarifaBtn?.addEventListener('click', () => {
+  if (!baseLine) return;
+
+  // Si ya hay un input activo, no volver a crearlo
+  if (baseLine.querySelector('input')) return;
+
+  // Obtener valor actual numérico
+  const valorActual = parseFloat(baseLine.textContent.replace(/[^\d.]/g, '')) || precioSeleccionado || 0;
+
+  // Crear input temporal
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.value = valorActual.toFixed(2);
+  input.min = 0;
+  input.step = 0.01;
+  input.style.width = '90px';
+  input.style.padding = '4px';
+  input.style.border = '1px solid #ccc';
+  input.style.borderRadius = '6px';
+  input.style.fontWeight = '600';
+
+  // Reemplazar texto por input
+  baseLine.textContent = '';
+  baseLine.appendChild(input);
+  input.focus();
+
+  // Guardar cuando presione Enter o salga del campo
+  input.addEventListener('blur', guardarTarifaEditada);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') input.blur();
+  });
+
+  function guardarTarifaEditada() {
+    const nuevoValor = parseFloat(input.value);
+    if (isNaN(nuevoValor) || nuevoValor <= 0) {
+      alertify.warning('⚠️ Ingresa una tarifa válida.');
+      input.focus();
+      return;
+    }
+
+    tarifaEditadaManualmente = true;
+    precioSeleccionado = nuevoValor;
+    tarifaOriginal = tarifaOriginal || valorActual;
+
+    // Mostrar valor actualizado
+    baseLine.innerHTML = `<span style="color:#ca8a04;font-weight:600;">$${nuevoValor.toFixed(2)} MXN/día*</span>`;
+    actualizarTotal();
+  }
+});
 
 /* ================================
    🔒 Protecciones (Seguros)
@@ -251,7 +316,37 @@ function calcularDias() {
   if (diffDays <= 0) diffDays = 1;
   $('#diasBadge').textContent = `${diffDays} día(s)`;
   updateResumen(null, diffDays);
+  actualizarResumenViaje();
 }
+/* ================================
+   🕒 Formato de hora a 12h con AM/PM
+================================ */
+function formatoHora12h(hora) {
+  if (!hora) return '—';
+  let [h, m] = hora.split(':');
+  h = parseInt(h);
+  const sufijo = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${m} ${sufijo}`;
+}
+
+/* ================================
+   🧭 Mostrar resumen de viaje
+================================ */
+function actualizarResumenViaje() {
+  $('#resSucursalRetiro').textContent = $('#sucursal_retiro').selectedOptions[0]?.text || '—';
+  $('#resSucursalEntrega').textContent = $('#sucursal_entrega').selectedOptions[0]?.text || '—';
+  $('#resFechaInicio').textContent = $('#fecha_inicio').value || '—';
+  $('#resHoraInicio').textContent = formatoHora12h($('#hora_retiro').value);
+  $('#resFechaFin').textContent = $('#fecha_fin').value || '—';
+ $('#resHoraFin').textContent = formatoHora12h($('#hora_entrega').value);
+  $('#resDias').textContent = `${diasSeleccionados} día(s)` || '—';
+}
+
+$('#sucursal_retiro')?.addEventListener('change', actualizarResumenViaje);
+$('#sucursal_entrega')?.addEventListener('change', actualizarResumenViaje);
+$('#hora_retiro')?.addEventListener('change', actualizarResumenViaje);
+$('#hora_entrega')?.addEventListener('change', actualizarResumenViaje);
 
 /* ================================
    📤 Envío con fetch + Alertify
@@ -273,26 +368,43 @@ $('#formReserva')?.addEventListener('submit', async e => {
   btn.disabled = true;
   btn.textContent = 'Procesando...';
 
-  const payload = {
-    id_categoria: $('#categoriaSelect').value,
-    sucursal_retiro: $('#sucursal_retiro').value,
-    sucursal_entrega: $('#sucursal_entrega').value,
-    fecha_inicio: $('#fecha_inicio').value,
-    fecha_fin: $('#fecha_fin').value,
-    hora_retiro: $('#hora_retiro')?.value || '',
-    hora_entrega: $('#hora_entrega')?.value || '',
-    subtotal: $('#subTot').textContent.replace(/[^\d.]/g, '') || '0',
-    impuestos: $('#iva').textContent.replace(/[^\d.]/g, '') || '0',
-    total: $('#total').textContent.replace(/[^\d.]/g, '') || '0',
-    moneda: $('#moneda').value,
-    nombre_cliente: $('#nombre_cliente').value,
-    email_cliente: $('#email_cliente').value,
-    telefono_cliente: $('#telefono_cliente').value,
-    no_vuelo: $('#no_vuelo')?.value || ''
-  };
+ // 📌 Antes de armar el payload
+const tarifaModificada = tarifaEditadaManualmente ? precioSeleccionado : null;
 
-  payload.seguroSeleccionado = seguroSeleccionado;
-  payload.adicionalesSeleccionados = adicionalesSeleccionados;
+const payload = {
+  id_categoria: $('#categoriaSelect').value,
+  sucursal_retiro: $('#sucursal_retiro').value,
+  sucursal_entrega: $('#sucursal_entrega').value,
+  fecha_inicio: $('#fecha_inicio').value,
+  fecha_fin: $('#fecha_fin').value,
+  hora_retiro: $('#hora_retiro')?.value || '',
+  hora_entrega: $('#hora_entrega')?.value || '',
+  subtotal: $('#subTot').textContent.replace(/[^\d.]/g, '') || '0',
+  impuestos: $('#iva').textContent.replace(/[^\d.]/g, '') || '0',
+  total: $('#total').textContent.replace(/[^\d.]/g, '') || '0',
+  moneda: $('#moneda').value,
+  nombre_cliente: $('#nombre_cliente').value,
+  email_cliente: $('#email_cliente').value,
+  telefono_cliente: $('#telefono_cliente').value,
+  no_vuelo: $('#no_vuelo')?.value || '',
+
+  // ✅ bandera de edición
+  tarifa_ajustada: tarifaEditadaManualmente ? 1 : 0,
+
+  // ✅ siempre base real (de la categoría)
+  precio_base_dia: tarifaOriginal || precioSeleccionado
+};
+
+// ✅ solo incluir tarifa_modificada si realmente fue editada
+if (tarifaEditadaManualmente) {
+  payload.tarifa_modificada = tarifaModificada;
+}
+
+// 👇 el resto queda igual
+payload.seguroSeleccionado = seguroSeleccionado;
+payload.adicionalesSeleccionados = adicionalesSeleccionados;
+payload.tarifa_ajustada = tarifaEditadaManualmente ? 1 : 0;
+
 
   try {
     const res = await fetch('/reservaciones/guardar', {
@@ -306,15 +418,23 @@ $('#formReserva')?.addEventListener('submit', async e => {
 
     const data = await res.json();
     if (res.ok && data.success) {
-      alertify.success('✅ Reservación registrada correctamente.');
-      alertify.notify(`Código: <b>${data.codigo}</b>`, 'custom', 8);
-      e.target.reset();
-      $('#vehImageWrap').style.display = 'none';
-      $('#baseLine').textContent = '—';
-      updateResumen(0);
-    } else {
-      throw new Error(data.message || 'Error desconocido al guardar.');
-    }
+  alertify.success('✅ Reservación registrada correctamente.');
+  alertify.notify(`Código: <b>${data.codigo}</b>`, 'custom', 8);
+
+  // 🧼 Limpiar formulario y resumen visualmente
+  e.target.reset();
+  $('#vehImageWrap').style.display = 'none';
+  $('#baseLine').textContent = '—';
+  updateResumen(0);
+
+  // 🕓 Esperar un segundo y recargar la vista
+  setTimeout(() => {
+    window.location.href = '/admin/reservaciones';
+    // 👆 Cambia 'rutaReservacionesAdmin' por el nombre real de tu ruta
+  }, 1000);
+} else {
+  throw new Error(data.message || 'Error desconocido al guardar.');
+}
   } catch (err) {
     console.error(err);
     alertify.error(`❌ No se pudo guardar la reservación: ${err.message}`);
