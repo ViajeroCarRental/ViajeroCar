@@ -21,6 +21,7 @@ use App\Http\Controllers\GastosController;
 use App\Http\Controllers\SiniestrosController;
 use App\Http\Controllers\ConductorAdicionalController;
 use App\Http\Controllers\ContratoController;
+use App\Http\Controllers\RolesController;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -348,3 +349,32 @@ Route::get('/admin/reservacion/{id}/checklist', function($id) {
 Route::get('/admin/checklist2', function () {
     return view('Admin.checklist2');
 });
+
+
+/* ===============================================
+   ADMIN · ROLES Y PERMISOS
+================================================ */
+
+Route::prefix('admin/roles')->group(function () {
+
+    Route::get('/', [RolesController::class, 'index'])->name('roles.index');
+
+    Route::get('/listar', [RolesController::class, 'list'])->name('roles.list');
+
+    Route::post('/crear', [RolesController::class, 'store'])->name('roles.store');
+
+    Route::get('/{id_rol}/obtener', [RolesController::class, 'show'])->name('roles.show');
+
+    Route::put('/{id_rol}/actualizar', [RolesController::class, 'update'])->name('roles.update');
+
+    Route::delete('/{id_rol}/eliminar', [RolesController::class, 'destroy'])->name('roles.destroy');
+
+    Route::post('/{id_rol}/reasignar', [RolesController::class, 'reassign'])->name('roles.reassign');
+
+    Route::get('/exportar', [RolesController::class, 'export'])->name('roles.export');
+
+    Route::post('/importar', [RolesController::class, 'import'])->name('roles.import');
+
+    Route::post('/seed', [RolesController::class, 'seed'])->name('roles.seed');
+});
+
