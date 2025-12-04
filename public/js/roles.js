@@ -1,3 +1,7 @@
+/* ============================================================
+   ELEMENTOS
+============================================================ */
+
 const pop = document.getElementById("rolesPop");
 const btnNuevo = document.getElementById("btnNuevo");
 const closePop = document.getElementById("closePop");
@@ -5,7 +9,6 @@ const btnCancelar = document.getElementById("btnCancelar");
 const btnGuardar = document.getElementById("btnGuardar");
 
 const nombre = document.getElementById("rolNombre");
-const desc = document.getElementById("rolDesc");
 const permBox = document.getElementById("permBox");
 
 let editId = null;
@@ -15,37 +18,47 @@ const csrf = document
     .getAttribute("content");
 
 
-/* ================================
+/* ============================================================
    MOSTRAR POP
-================================ */
+============================================================ */
+
 btnNuevo.onclick = () => {
     editId = null;
     nombre.value = "";
-    desc.value = "";
     permBox.innerHTML = "";
+
     cargarPermisos([]);
+
     document.getElementById("usuariosAsignados").style.display = "none";
+
     pop.style.display = "flex";
 };
 
-/* ================================
-   CERRAR POP
-================================ */
-closePop.onclick = btnCancelar.onclick = () => pop.style.display = "none";
 
-/* ================================
+/* ============================================================
+   CERRAR POP
+============================================================ */
+
+closePop.onclick = btnCancelar.onclick = () => {
+    pop.style.display = "none";
+};
+
+
+/* ============================================================
    LISTAR ROLES
-================================ */
+============================================================ */
+
 function cargarRoles() {
     fetch("/admin/roles/listar")
         .then(res => res.json())
         .then(data => {
+
             let body = "";
+
             data.forEach(r => {
                 body += `
                 <tr>
                     <td>${r.nombre}</td>
-                    <td>${r.descripcion ?? "—"}</td>
                     <td>${r.total_usuarios}</td>
                     <td>
                         <button class="btn btn-primary btn-sm" onclick="editar(${r.id_rol})">Editar</button>
@@ -53,40 +66,41 @@ function cargarRoles() {
                     </td>
                 </tr>`;
             });
+
             document.getElementById("rolesBody").innerHTML = body;
-        });
+        })
+        .catch(err => console.error(err));
 }
 
 cargarRoles();
 
 
-/* ================================
-   EDITAR ROL
-================================ */
+/* ============================================================
+   EDITAR
+============================================================ */
+
 window.editar = (id) => {
     fetch(`/admin/roles/obtener/${id}`)
         .then(res => res.json())
         .then(data => {
 
             editId = id;
+
             nombre.value = data.rol.nombre;
-            desc.value = data.rol.descripcion ?? "";
 
             cargarPermisos(data.permisosAsignados);
 
-            // mostrar usuarios
             const lista = document.getElementById("listaUsuarios");
             lista.innerHTML = "";
             const box = document.getElementById("usuariosAsignados");
 
-            box.style.display = "block";
-
             if (data.usuarios.length > 0) {
+                box.style.display = "block";
                 data.usuarios.forEach(u => {
-                    lista.innerHTML += `
-                        <li>${u.nombres} ${u.apellidos} — ${u.correo}</li>`;
+                    lista.innerHTML += `<li>${u.nombres} ${u.apellidos} — ${u.correo}</li>`;
                 });
             } else {
+                box.style.display = "block";
                 lista.innerHTML = "<li>No hay usuarios asignados.</li>";
             }
 
@@ -94,16 +108,22 @@ window.editar = (id) => {
         });
 };
 
-/* ================================
+
+/* ============================================================
    CARGAR PERMISOS
-================================ */
+============================================================ */
+
 function cargarPermisos(asignados = []) {
-    fetch("/admin/roles/obtener/1") // solo para obtener catálogo de permisos
+
+    fetch("/admin/roles/obtener/1")
         .then(r => r.json())
         .then(data => {
+
             permBox.innerHTML = "";
+
             data.permisos.forEach(p => {
                 const checked = asignados.includes(p.id_permiso) ? "checked" : "";
+
                 permBox.innerHTML += `
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" value="${p.id_permiso}" ${checked}>
@@ -113,9 +133,11 @@ function cargarPermisos(asignados = []) {
         });
 }
 
-/* ================================
-   GUARDAR ROL
-================================ */
+
+/* ============================================================
+   GUARDAR
+============================================================ */
+
 btnGuardar.onclick = () => {
 
     const permisos = [];
@@ -123,7 +145,6 @@ btnGuardar.onclick = () => {
 
     const payload = {
         nombre: nombre.value,
-        descripcion: desc.value,
         permisos
     };
 
@@ -147,10 +168,13 @@ btnGuardar.onclick = () => {
         });
 };
 
-/* ================================
+
+/* ============================================================
    ELIMINAR
-================================ */
+============================================================ */
+
 window.eliminar = (id) => {
+
     if (!confirm("¿Eliminar este rol?")) return;
 
     fetch(`/admin/roles/eliminar/${id}`, {

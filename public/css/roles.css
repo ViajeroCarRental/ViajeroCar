@@ -1,0 +1,235 @@
+/* ===========================================================
+   🎨 TOKENS / DESIGN SYSTEM GLOBAL
+   (SE INCLUYE COMPLETO PARA QUE ROLES TENGA MISMA ESTÉTICA)
+=========================================================== */
+
+:root{
+  --brand:#FF1E2D;
+  --brand-2:#D6121F;
+  --brand-3:#ff4956;
+
+  --ink:#101828;
+  --muted:#667085;
+  --muted-2:#475467;
+
+  --bg:#F3F5F9;
+  --paper:#FFFFFF;
+  --panel:#F7F9FC;
+  --stroke:#EAECF0;
+  --stroke-2:#E5E7EB;
+
+  --ok:#027A48;
+  --warn:#B54708;
+  --danger:#B42318;
+  --info:#175CD3;
+
+  --radius-lg:18px;
+  --radius-md:14px;
+  --radius-sm:10px;
+
+  --shadow-xs:0 1px 3px rgba(16,24,40,.06);
+  --shadow-sm:0 4px 10px rgba(16,24,40,.08);
+  --shadow-md:0 10px 28px rgba(16,24,40,.10);
+
+  --ring:0 0 0 6px #FFECEF;
+}
+
+*{ box-sizing:border-box }
+html,body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Cabin",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+}
+
+body{ font-size:15px; line-height:1.5 }
+
+/* Buttons */
+.btn{
+  border:none;
+  border-radius:12px;
+  padding:10px 14px;
+  cursor:pointer;
+  font-weight:800;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.btn.primary{
+  background:var(--brand);
+  color:#fff;
+  box-shadow:var(--shadow-sm);
+}
+.btn.primary:hover{ background:var(--brand-3) }
+.btn.gray{
+  background:#F8FAFC;
+  border:1px solid var(--stroke);
+}
+
+/* Table Global */
+.table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  font-size:14px;
+  border-radius:12px;
+  overflow:hidden;
+}
+.table thead th{
+  background:linear-gradient(90deg,var(--brand),var(--brand-3));
+  color:#fff;
+  padding:12px 10px;
+  font-size:12px;
+  letter-spacing:.3px;
+  text-transform:uppercase;
+}
+.table tbody td{
+  padding:12px 10px;
+  border-bottom:1px dashed #EFF2F7;
+}
+.table tbody tr:nth-child(odd){ background:#fff }
+.table tbody tr:nth-child(even){ background:#FAFBFC }
+.table tbody tr:hover{ background:#FFF5F6 }
+
+/* Pills */
+.kpill{
+  padding:4px 10px;
+  border-radius:999px;
+  display:inline-flex;
+  font-size:12px;
+  font-weight:700;
+  border:1px solid var(--stroke);
+}
+.kpill.blue{
+  background:#EFF8FF;
+  border-color:#B2DDFF;
+  color:#175CD3;
+}
+.kpill.red{
+  background:#FEF3F2;
+  border-color:#FECDCA;
+  color:#B42318;
+}
+
+/* Modal */
+.pop{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.35);
+  backdrop-filter:blur(2px);
+  padding:16px;
+  z-index:100;
+}
+.pop.show{ display:flex }
+
+.box{
+  width:min(520px,95vw);
+  background:var(--paper);
+  border-radius:18px;
+  border:1px solid var(--stroke);
+  box-shadow:var(--shadow-md);
+  overflow:hidden;
+}
+.box header{
+  padding:14px 16px;
+  font-weight:800;
+  border-bottom:1px solid var(--stroke);
+}
+.box footer{
+  padding:14px 16px;
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+}
+
+.input{
+  width:100%;
+  height:44px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--stroke);
+  font-size:14px;
+}
+.input:focus{
+  outline:none;
+  border-color:#FFB4BD;
+  box-shadow:var(--ring);
+}
+
+/* ===========================================================
+   🎯 ESTILOS ESPECÍFICOS DE LA VISTA ROLES
+=========================================================== */
+
+.roles-container{
+  max-width:1120px;
+  margin:0 auto;
+  padding:24px 18px;
+}
+
+.header-flex{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:18px;
+}
+
+.header-flex h3{
+  font-size:24px;
+  font-weight:900;
+  margin:0;
+  color:var(--ink);
+}
+
+/* Table wrapper */
+.table-wrap{
+  border:1px solid var(--stroke);
+  border-radius:12px;
+  overflow:auto;
+  background:var(--paper);
+  box-shadow:var(--shadow-xs);
+}
+
+/* Botones de acciones */
+.btn-editar{
+  @apply kpill blue;
+}
+.btn-eliminar{
+  @apply kpill red;
+}
+
+/* Permiso box */
+.perm-box{
+  border:1px solid var(--stroke);
+  border-radius:14px;
+  padding:12px;
+  background:var(--panel);
+  max-height:260px;
+  overflow:auto;
+}
+
+.form-check{
+  display:flex;
+  gap:8px;
+  padding:6px 0;
+}
+
+/* Botón guardar/cancelar */
+#btnCancelar{
+  background:#F8FAFC;
+  border:1px solid var(--stroke);
+  border-radius:12px;
+  padding:10px 16px;
+  font-weight:800;
+}
+#btnGuardar{
+  background:var(--brand);
+  color:#fff;
+  padding:10px 16px;
+  border-radius:12px;
+  font-weight:800;
+  box-shadow:var(--shadow-sm);
+}
+#btnGuardar:hover{ background:var(--brand-3) }

@@ -8,7 +8,15 @@ use Illuminate\Support\Facades\DB;
 class RolesController extends Controller
 {
     /**
-     * LISTAR ROLES (para la tabla)
+     * Vista principal
+     */
+    public function index()
+    {
+        return view('admin.Roles');
+    }
+
+    /**
+     * Listar roles
      */
     public function list()
     {
@@ -17,17 +25,16 @@ class RolesController extends Controller
             ->select(
                 'r.id_rol',
                 'r.nombre',
-                'r.descripcion',
                 DB::raw('COUNT(ur.id_usuario) as total_usuarios')
             )
-            ->groupBy('r.id_rol', 'r.nombre', 'r.descripcion')
+            ->groupBy('r.id_rol', 'r.nombre')
             ->get();
 
         return response()->json($roles);
     }
 
     /**
-     * OBTENER UN ROL (info + usuarios + permisos)
+     * Obtener rol + permisos + usuarios
      */
     public function show($id)
     {
@@ -39,8 +46,10 @@ class RolesController extends Controller
             ->select('u.id_usuario', 'u.nombres', 'u.apellidos', 'u.correo')
             ->get();
 
+        // obtener todos los permisos
         $permisos = DB::table('permisos')->get();
 
+        // permisos asignados
         $permisosAsignados = DB::table('rol_permiso')
             ->where('id_rol', $id)
             ->pluck('id_permiso')
@@ -55,13 +64,12 @@ class RolesController extends Controller
     }
 
     /**
-     * CREAR ROL
+     * Crear rol
      */
     public function store(Request $r)
     {
         $id = DB::table('roles')->insertGetId([
             'nombre' => $r->nombre,
-            'descripcion' => $r->descripcion,
             'created_at' => now(),
             'updated_at' => now()
         ]);
@@ -79,17 +87,15 @@ class RolesController extends Controller
     }
 
     /**
-     * ACTUALIZAR ROL + PERMISOS
+     * Actualizar rol
      */
     public function update(Request $r, $id)
     {
         DB::table('roles')->where('id_rol', $id)->update([
             'nombre' => $r->nombre,
-            'descripcion' => $r->descripcion,
             'updated_at' => now()
         ]);
 
-        // permisos
         DB::table('rol_permiso')->where('id_rol', $id)->delete();
 
         if ($r->permisos) {
@@ -105,7 +111,7 @@ class RolesController extends Controller
     }
 
     /**
-     * ELIMINAR ROL
+     * Eliminar rol
      */
     public function destroy($id)
     {

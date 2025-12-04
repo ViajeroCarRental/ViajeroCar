@@ -22,6 +22,7 @@ use App\Http\Controllers\SiniestrosController;
 use App\Http\Controllers\ConductorAdicionalController;
 use App\Http\Controllers\ContratoController;
 use App\Http\Controllers\RolesController;
+use App\Http\Controllers\UsuarioAdminController;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -350,31 +351,32 @@ Route::get('/admin/checklist2', function () {
     return view('Admin.checklist2');
 });
 
-
 /* ===============================================
    ADMIN · ROLES Y PERMISOS
 ================================================ */
+Route::get('/admin/roles', [RolesController::class, 'index'])->name('roles.index');
+Route::get('/admin/roles/listar', [RolesController::class, 'list']);
+Route::get('/admin/roles/obtener/{id}', [RolesController::class, 'show']);
+Route::post('/admin/roles/crear', [RolesController::class, 'store']);
+Route::put('/admin/roles/actualizar/{id}', [RolesController::class, 'update']);
+Route::delete('/admin/roles/eliminar/{id}', [RolesController::class, 'destroy']);
 
-Route::prefix('admin/roles')->group(function () {
 
-    Route::get('/', [RolesController::class, 'index'])->name('roles.index');
 
-    Route::get('/listar', [RolesController::class, 'list'])->name('roles.list');
 
-    Route::post('/crear', [RolesController::class, 'store'])->name('roles.store');
+// LISTAR – UNA SOLA RUTA
+// LISTAR
+Route::get('/admin/usuarios', [UsuarioAdminController::class, 'index'])
+    ->name('admin.usuarios.index');
 
-    Route::get('/{id_rol}/obtener', [RolesController::class, 'show'])->name('roles.show');
+// CREAR
+Route::post('/admin/usuarios', [UsuarioAdminController::class, 'store'])
+    ->name('admin.usuarios.store');
 
-    Route::put('/{id_rol}/actualizar', [RolesController::class, 'update'])->name('roles.update');
+// ACTUALIZAR
+Route::put('/admin/usuarios/{id}', [UsuarioAdminController::class, 'update'])
+    ->name('admin.usuarios.update');
 
-    Route::delete('/{id_rol}/eliminar', [RolesController::class, 'destroy'])->name('roles.destroy');
-
-    Route::post('/{id_rol}/reasignar', [RolesController::class, 'reassign'])->name('roles.reassign');
-
-    Route::get('/exportar', [RolesController::class, 'export'])->name('roles.export');
-
-    Route::post('/importar', [RolesController::class, 'import'])->name('roles.import');
-
-    Route::post('/seed', [RolesController::class, 'seed'])->name('roles.seed');
-});
-
+// ELIMINAR
+Route::delete('/admin/usuarios/{id}', [UsuarioAdminController::class, 'destroy'])
+    ->name('admin.usuarios.destroy');
