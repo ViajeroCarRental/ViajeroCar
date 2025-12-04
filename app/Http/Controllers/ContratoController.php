@@ -741,6 +741,184 @@ public function guardarDocumentacion(Request $request)
     }
 }
 
+public function obtenerDocumentacion($idContrato)
+{
+    try {
+
+        // ====================================================
+        // 🔧 Función interna para crear URL de archivo
+        // ====================================================
+        $makeUrl = function ($idArchivo) {
+            return $idArchivo ? route('archivo.mostrar', ['id' => $idArchivo]) : null;
+        };
+
+        // ====================================================
+        // 🔹 OBTENER DOCUMENTOS DEL TITULAR
+        // ====================================================
+        $docsTitular = DB::table('contrato_documento')
+            ->where('id_contrato', $idContrato)
+            ->whereNull('id_conductor')
+            ->get();
+
+        $ident = $docsTitular->firstWhere('tipo', 'identificacion');
+        $lic   = $docsTitular->firstWhere('tipo', 'licencia');
+
+        // ====================================================
+        // 🔹 Determinar si la licencia está vencida
+        // ====================================================
+        $licenciaVencida = false;
+        if ($lic && $lic->fecha_vencimiento) {
+            $licenciaVencida = \Carbon\Carbon::parse($lic->fecha_vencimiento)->isPast();
+        }
+
+        // ====================================================
+        // 🔹 UNIFICAR CAMPOS DEL TITULAR
+        // ====================================================
+        $titularCampos = [
+            // Identificación
+            'tipo_identificacion'   => $ident->tipo_identificacion ?? null,
+            'numero_identificacion' => $ident->numero_identificacion ?? null,
+            'nombre'                => $ident->nombre ?? null,
+            'apellido_paterno'      => $ident->apellido_paterno ?? null,
+            'apellido_materno'      => $ident->apellido_materno ?? null,
+            'fecha_nacimiento'      => $ident->fecha_nacimiento ?? null,
+            'fecha_vencimiento_id'  => $ident->fecha_vencimiento ?? null,
+
+            // Licencia
+            'numero_licencia'         => $lic->numero_identificacion ?? null,
+            'pais_emision'            => $lic->pais_emision ?? null,
+            'fecha_emision_licencia'  => $lic->fecha_emision ?? null,
+            'fecha_vencimiento_licencia' => $lic->fecha_vencimiento ?? null,
+
+            // Contacto
+            'contacto_emergencia' => null // No estaba en esta tabla
+        ];
+
+        // ====================================================
+        // 🔹 UNIFICAR ARCHIVOS DE TITULAR
+        // ====================================================
+        $titularArchivos = [
+            'idFrente_url'  => $ident ? $makeUrl($ident->id_archivo_frente) : null,
+            'idReverso_url' => $ident ? $makeUrl($ident->id_archivo_reverso) : null,
+            'licFrente_url' => $lic   ? $makeUrl($lic->id_archivo_frente)  : null,
+            'licReverso_url'=> $lic   ? $makeUrl($lic->id_archivo_reverso) : null,
+        ];
+
+        // ====================================================
+        // 🔹 TITULAR FINAL, FORMATO EXACTO PARA JS
+        // ====================================================
+        $titular = [
+            'campos'           => $titularCampos,
+            'archivos'         => $titularArchivos,
+            'licencia_vencida' => $licenciaVencida,
+        ];
+
+        // ====================================================
+        // 🔹 OBTENER CONDUCTORES ADICIONALES
+        // ====================================================
+        $conductores = DB::table('contrato_conductor_adicional')
+            ->where('id_contrato', $idContrato)
+            ->get();
+
+        $docsAdicionales = DB::table('contrato_documento')
+            ->where('id_contrato', $idContrato)
+            ->whereNotNull('id_conductor')
+            ->get()
+            ->groupBy('id_conductor');
+
+        $adicionalesData = [];
+
+        foreach ($conductores as $c) {
+
+            $grupo = $docsAdicionales->get($c->id_conductor, collect());
+            $ident = $grupo->firstWhere('tipo', 'identificacion');
+            $lic   = $grupo->firstWhere('tipo', 'licencia');
+
+            $vencida = false;
+            if ($lic && $lic->fecha_vencimiento) {
+                $vencida = \Carbon\Carbon::parse($lic->fecha_vencimiento)->isPast();
+            }
+
+            // 📌 Unificar campos del adicional
+            $campos = [
+                'tipo_identificacion'   => $ident->tipo_identificacion ?? null,
+                'numero_identificacion' => $ident->numero_identificacion ?? null,
+                'nombre'                => $ident->nombre ?? $c->nombres,
+                'apellido_paterno'      => $ident->apellido_paterno ?? null,
+                'apellido_materno'      => $ident->apellido_materno ?? null,
+                'fecha_nacimiento'      => $ident->fecha_nacimiento ?? $c->fecha_nacimiento,
+                'fecha_vencimiento_id'  => $ident->fecha_vencimiento ?? null,
+
+                'numero_licencia'         => $lic->numero_identificacion ?? $c->numero_licencia,
+                'pais_emision'            => $lic->pais_emision ?? $c->pais_licencia,
+                'fecha_emision_licencia'  => $lic->fecha_emision ?? null,
+                'fecha_vencimiento_licencia' => $lic->fecha_vencimiento ?? null,
+
+                'contacto_emergencia'     => $c->contacto,
+            ];
+
+            // 📌 Unificar archivos del adicional
+            $archivos = [
+                'idFrente_url'  => $ident ? $makeUrl($ident->id_archivo_frente) : null,
+                'idReverso_url' => $ident ? $makeUrl($ident->id_archivo_reverso) : null,
+                'licFrente_url' => $lic   ? $makeUrl($lic->id_archivo_frente)  : null,
+                'licReverso_url'=> $lic   ? $makeUrl($lic->id_archivo_reverso) : null,
+            ];
+
+            // 📌 Estructura EXACTA para JS
+            $adicionalesData[$c->id_conductor] = [
+                'campos'           => $campos,
+                'archivos'         => $archivos,
+                'licencia_vencida' => $vencida,
+            ];
+        }
+
+        // ====================================================
+        // 🎯 RESPUESTA EXACTA PARA EL JS
+        // ====================================================
+        return response()->json([
+            'success'    => true,
+            'documentos' => [
+                'titular'     => $titular,
+                'adicionales' => $adicionalesData,
+            ],
+        ]);
+
+    } catch (\Throwable $e) {
+
+        Log::error("ERROR obtenerDocumentacion: ".$e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'msg'     => 'Error interno al obtener documentación'
+        ], 500);
+    }
+}
+public function verificarDocumentosExistentes($idContrato)
+{
+    try {
+
+        $existen = DB::table('contrato_documento')
+            ->where('id_contrato', $idContrato)
+            ->exists();
+
+        return response()->json([
+            'success' => true,
+            'existen' => $existen
+        ]);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'existen' => false,
+            'msg' => 'Error verificando documentos'
+        ], 500);
+    }
+}
+
+
+
+
 
 
 public function guardarCargoVariable(Request $request)
@@ -2114,113 +2292,203 @@ public function resumenContrato($idReservacion)
 {
     try {
 
-        // ===============================
-        // 1) Reservación
-        // ===============================
-        $res = DB::table('reservaciones as r')
-            ->leftJoin('categorias_carros as c', 'c.id_categoria', '=', 'r.id_categoria')
-            ->leftJoin('vehiculos as v', 'v.id_vehiculo', '=', 'r.id_vehiculo')
-            ->where('r.id_reservacion', $idReservacion)
+        // 🔹 UNIR CON VEHÍCULOS
+        $res = DB::table('reservaciones')
+            ->leftJoin('vehiculos as v', 'reservaciones.id_vehiculo', '=', 'v.id_vehiculo')
+            ->where('reservaciones.id_reservacion', $idReservacion)
             ->select(
-                'r.*',
-                'c.nombre as categoria_nombre',
-                'c.codigo as categoria_codigo',
-                'v.marca',
-                'v.modelo',
-                'v.transmision',
-                'v.asientos as pasajeros',
-                'v.puertas',
-                'v.kilometraje'
+                'reservaciones.codigo',
+                'reservaciones.nombre_cliente',
+                'reservaciones.telefono_cliente',
+                'reservaciones.email_cliente',
+
+                // VEHÍCULO
+                'v.marca as veh_marca',
+                'v.modelo as veh_modelo',
+                'v.transmision as veh_transmision',
+                'v.asientos as veh_asientos',
+                'v.puertas as veh_puertas',
+                'v.kilometraje as veh_km',
+                'v.categoria as veh_categoria',
+
+                // FECHAS Y HORARIOS
+                'reservaciones.fecha_inicio',
+                'reservaciones.hora_retiro',
+                'reservaciones.fecha_fin',
+                'reservaciones.hora_entrega',
+                // TOTALES
+                // TOTALES
+'reservaciones.subtotal',
+'reservaciones.impuestos',
+'reservaciones.total',
+'reservaciones.tarifa_base',
+'reservaciones.tarifa_modificada'
+
             )
             ->first();
 
         if (!$res) {
-            return response()->json(['success' => false, 'msg' => 'Reservación no encontrada']);
+            return response()->json([
+                'success' => false,
+                'msg' => 'Reservación no encontrada'
+            ]);
         }
 
-        // ===============================
-        // 2) Calcular días
-        // ===============================
-        $dias = Carbon::parse($res->fecha_inicio)
-            ->diffInDays(Carbon::parse($res->fecha_fin)) + 1;
+        /* ============================================================
+            🛡️ SEGUROS (PAQUETE O INDIVIDUALES)
+        ============================================================ */
 
-        // ===============================
-        // 3) Tarifa real
-        // ===============================
-        $tarifa = ($res->tarifa_ajustada == 1 && $res->tarifa_modificada > 0)
-            ? $res->tarifa_modificada
-            : $res->tarifa_base;
+        // 1) Buscar paquete
+        $paquete = DB::table('reservacion_paquete_seguro as rps')
+            ->join('seguro_paquete as sp', 'rps.id_paquete', '=', 'sp.id_paquete')
+            ->where('rps.id_reservacion', $idReservacion)
+            ->select('sp.nombre', 'sp.descripcion', 'rps.precio_por_dia')
+            ->first();
 
-        $tarifaTotal = $tarifa * $dias;
+        // 2) Buscar individuales
+        $individuales = DB::table('reservacion_seguro_individual as ri')
+            ->join('seguro_individuales as si', 'ri.id_individual', '=', 'si.id_individual')
+            ->where('ri.id_reservacion', $idReservacion)
+            ->select('si.nombre', 'si.descripcion', 'ri.precio_por_dia')
+            ->get();
 
-        // ===============================
-        // 4) Seguros
-        // ===============================
-        $totalSeguros = $this->calcularTotalProtecciones($idReservacion);
+        // Resultado armado
+        $seguros = [
+            'tipo' => null,
+            'lista' => [],
+            'total' => 0
+        ];
 
-        // ===============================
-        // 5) Servicios adicionales
-        // ===============================
+        if ($paquete) {
+            $seguros['tipo'] = 'paquete';
+            $seguros['lista'][] = [
+                'nombre' => $paquete->nombre,
+                'descripcion' => $paquete->descripcion,
+                'precio' => $paquete->precio_por_dia
+            ];
+            $seguros['total'] = $paquete->precio_por_dia;
+
+        } elseif ($individuales->count() > 0) {
+
+            $seguros['tipo'] = 'individuales';
+
+            foreach ($individuales as $ind) {
+                $seguros['lista'][] = [
+                    'nombre' => $ind->nombre,
+                    'descripcion' => $ind->descripcion,
+                    'precio' => $ind->precio_por_dia
+                ];
+                $seguros['total'] += $ind->precio_por_dia;
+            }
+        }
+
+        /* ============================================================
+            🎒 SERVICIOS ADICIONALES (Reservación → Servicios)
+        ============================================================ */
+
         $servicios = DB::table('reservacion_servicio as rs')
-            ->join('servicios as s', 's.id_servicio', '=', 'rs.id_servicio')
+            ->join('servicios as s', 'rs.id_servicio', '=', 's.id_servicio')
             ->where('rs.id_reservacion', $idReservacion)
             ->select('s.nombre', 'rs.cantidad', 'rs.precio_unitario')
             ->get();
 
-        $totalServicios = $servicios->sum(fn($s) => $s->cantidad * $s->precio_unitario);
+        $listaServicios = [];
+        foreach ($servicios as $srv) {
+            $listaServicios[] = [
+                'nombre'  => $srv->nombre,
+                'cantidad'=> $srv->cantidad,
+                'precio'  => $srv->precio_unitario,
+                'total'   => $srv->cantidad * $srv->precio_unitario
+            ];
+        }
 
-        // ===============================
-        // 6) Delivery
-        // ===============================
-        $delivery = $res->delivery_total ?? 0;
+        /* ============================================================
+            🚗 CARGOS (Delivery / Dropoff / etc.)
+        ============================================================ */
 
-        // ===============================
-        // 7) Cargos adicionales
-        // ===============================
-        $contrato = DB::table('contratos')
+        $reg = DB::table('reservaciones')
             ->where('id_reservacion', $idReservacion)
             ->first();
 
         $cargos = [];
 
-        if ($contrato) {
-            $cargos = DB::table('cargo_adicional')
-                ->where('id_contrato', $contrato->id_contrato)
-                ->select('concepto', 'monto', 'detalle')
-                ->get();
+        // DELIVERY
+        if ($reg && $reg->delivery_activo) {
+            $cargos[] = [
+                'nombre' => 'Entrega a domicilio',
+                'km'     => $reg->delivery_km,
+                'total'  => $reg->delivery_total
+            ];
         }
 
-        $totalCargos = $cargos->sum('monto');
+        /* ============================================================
+   🛠️ CARGOS ADICIONALES (GASOLINA, DROPOFF, PENALIZACIONES)
+============================================================ */
 
-        // ===============================
-        // 8) Subtotales
-        // ===============================
-        $subtotal = $tarifaTotal + $totalSeguros + $totalServicios + $delivery + $totalCargos;
-        $iva = $subtotal * 0.16;
-        $totalContrato = $subtotal + $iva;
+$cargosAdic = DB::table('cargo_adicional')
+    ->where('id_contrato', $idReservacion) // si manejas id_contrato separado, te lo ajusto
+    ->select(
+        'concepto',
+        'monto',
+        'detalle'
+    )
+    ->get();
 
-        // ===============================
-        // 9) Pagos
-        // ===============================
-        $pagos = DB::table('pagos')
-            ->where('id_reservacion', $idReservacion)
-            ->orderBy('created_at')
-            ->get()
-            ->map(function ($p) {
-                return [
-                    'fecha' => Carbon::parse($p->created_at)->format('Y-m-d H:i'),
-                    'tipo'  => $p->tipo_pago,
-                    'monto' => $p->monto
-                ];
-            });
+$cargos = [];
 
-        $totalPagado = $pagos->sum('monto');
-        $saldoPendiente = $totalContrato - $totalPagado;
+foreach ($cargosAdic as $c) {
+
+    $detalle = $c->detalle ? json_decode($c->detalle, true) : null;
+
+    $cargos[] = [
+        'nombre' => $c->concepto,
+        'total'  => $c->monto,
+        'km'     => $detalle['km'] ?? null,
+        'litros' => $detalle['litros'] ?? null,
+        'nota'   => $detalle['nota'] ?? null
+    ];
+}
+/* ============================================================
+   💵 TOTALES DESGLOSADOS (de la reservación)
+============================================================ */
+$totales = [
+    'tarifa_base' => $res->tarifa_base ?? 0,
+    'subtotal'    => $res->subtotal ?? 0,
+    'iva'         => $res->impuestos ?? 0,
+    'total'       => $res->total ?? 0
+];
+
+/* ============================================================
+   💳 PAGOS REALIZADOS
+============================================================ */
+$pagos = DB::table('pagos')
+    ->where('id_reservacion', $idReservacion)
+    ->where('estatus', 'paid')
+    ->sum('monto');
+
+$saldoPendiente = max(0, ($res->total ?? 0) - $pagos);
+
+
+
+        // (Opcional) GASOLINA – solo si más adelante agregas ese campo
+        /*
+        if ($reg->gasolina_faltante) {
+            $cargos[] = [
+                'nombre' => 'Gasolina faltante',
+                'total'  => $reg->gasolina_total
+            ];
+        }
+        */
+
+        /* ============================================================
+            📤 RETURN JSON FINAL
+        ============================================================ */
 
         return response()->json([
             'success' => true,
             'data' => [
 
+                // DATOS BÁSICOS
                 'codigo' => $res->codigo,
 
                 'cliente' => [
@@ -2229,77 +2497,53 @@ public function resumenContrato($idReservacion)
                     'email'    => $res->email_cliente,
                 ],
 
+                // VEHÍCULO
                 'vehiculo' => [
-                    'marca'       => $res->marca,
-                    'modelo'      => $res->modelo,
-                    'transmision' => $res->transmision,
-                    'pasajeros'   => $res->pasajeros,
-                    'puertas'     => $res->puertas,
-                    'km_actual'   => $res->kilometraje,
-                    'imagen'      => asset('img/default-car.png'),
+                    'marca'       => $res->veh_marca,
+                    'modelo'      => $res->veh_modelo,
+                    'categoria'   => $res->veh_categoria,
+                    'transmision' => $res->veh_transmision,
+                    'pasajeros'   => $res->veh_asientos,
+                    'puertas'     => $res->veh_puertas,
+                    'km'          => $res->veh_km,
                 ],
 
-                'categoria' => [
-                    'nombre' => $res->categoria_nombre,
-                    'codigo' => $res->categoria_codigo
-                ],
-
+                // FECHAS + HORARIOS
                 'fechas' => [
-                    'salida_fecha'  => $res->fecha_inicio,
-                    'salida_hora'   => $res->hora_retiro,
-                    'entrega_fecha' => $res->fecha_fin,
-                    'entrega_hora'  => $res->hora_entrega,
-                    'dias'          => $dias
+                    'inicio'      => $res->fecha_inicio,
+                    'hora_inicio' => $res->hora_retiro,
+                    'fin'         => $res->fecha_fin,
+                    'hora_fin'    => $res->hora_entrega,
+                    'dias'        => \Carbon\Carbon::parse($res->fecha_inicio)
+                                        ->diffInDays(\Carbon\Carbon::parse($res->fecha_fin)) ?: 1,
                 ],
 
-                'seguros' => [
-                    'total'    => $totalSeguros,
-                    'detalles' => []
-                ],
+                // SEGUROS
+                'seguros'   => $seguros,
 
-                'servicios' => [
-                    'lista' => $servicios->map(fn($s) => [
-                        'nombre'   => $s->nombre,
-                        'cantidad' => $s->cantidad,
-                        'total'    => $s->cantidad * $s->precio_unitario
-                    ]),
-                    'total' => $totalServicios
-                ],
+                // SERVICIOS ADICIONALES
+                'servicios' => $listaServicios,
 
-                'delivery' => [
-                    'activo' => $delivery > 0,
-                    'total'  => $delivery
-                ],
-
-                'cargos' => [
-                    'lista' => $cargos->map(fn($c) => [
-                        'nombre' => $c->concepto,
-                        'monto'  => $c->monto
-                    ]),
-                    'total' => $totalCargos
-                ],
-
-                'totales' => [
-                    'tarifa_base'     => $tarifaTotal,
-                    'adicionales'     => $totalServicios + $totalSeguros + $delivery + $totalCargos,
-                    'subtotal'        => $subtotal,
-                    'iva'             => $iva,
-                    'total_contrato'  => $totalContrato
-                ],
-
-                'pagos' => [
-                    'realizados' => $totalPagado,
+                // CARGOS
+                'cargos'    => $cargos,
+                'totales' => $totales,
+                'pagos'   => [
+                    'realizados' => $pagos,
                     'saldo'      => $saldoPendiente
-                ]
+]
+
             ]
         ]);
 
     } catch (\Throwable $e) {
-        Log::error("ERROR resumenContrato: ".$e->getMessage());
-        return response()->json(['success' => false, 'msg' => 'Error interno'], 500);
+
+        Log::error("ERROR resumenContrato: " . $e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'msg' => 'Error interno'
+        ], 500);
     }
 }
-
-
 
 }

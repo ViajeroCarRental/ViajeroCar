@@ -26,6 +26,7 @@
     @yield('css-vistaRFC-Fiscal')
     @yield('css-vistaFacturar')
     @yield('css-VistaCotizacionesRecientes')
+    @yield('css-vistaContratoFinal')
     <title>@yield('Titulo')</title>
 </head>
 <body>
@@ -67,6 +68,7 @@
     @yield('contenidoRFC-Fiscal')
     @yield('contenidoFacturar')
     @yield('contenido-VistaCotizacionesRecientes')
+    @yield('contenidoContratoFinal')
 </div>
 
 <div class="containerJS">
@@ -86,6 +88,7 @@
     @yield('js-vistaRFC-Fiscal')
     @yield('js-vistaFacturar')
     @yield('js-VistaCotizacionesRecientes')
+    @yield('js-vistaContratoFinal')
 </div>
 </body>
 </html>

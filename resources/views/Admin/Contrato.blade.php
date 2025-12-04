@@ -788,42 +788,14 @@
             </div>
 
             <div class="input-row">
-              <label>Entidad/País de Emisión</label>
+              <label>PAIS</label>
               <select id="licEmite" name="emite_licencia" required>
                 <option value="">Selecciona…</option>
-                <option>Ciudad de México</option>
-                <option>Aguascalientes</option>
-                <option>Baja California</option>
-                <option>Baja California Sur</option>
-                <option>Campeche</option>
-                <option>Coahuila</option>
-                <option>Colima</option>
-                <option>Chiapas</option>
-                <option>Chihuahua</option>
-                <option>Durango</option>
-                <option>Guanajuato</option>
-                <option>Guerrero</option>
-                <option>Hidalgo</option>
-                <option>Jalisco</option>
                 <option>México</option>
-                <option>Michoacán</option>
-                <option>Morelos</option>
-                <option>Nayarit</option>
-                <option>Nuevo León</option>
-                <option>Oaxaca</option>
-                <option>Puebla</option>
-                <option>Querétaro</option>
-                <option>Quintana Roo</option>
-                <option>San Luis Potosí</option>
-                <option>Sinaloa</option>
-                <option>Sonora</option>
-                <option>Tabasco</option>
-                <option>Tamaulipas</option>
-                <option>Tlaxcala</option>
-                <option>Veracruz</option>
-                <option>Yucatán</option>
-                <option>Zacatecas</option>
-                <option>Otro país</option>
+                <option>U.S.A</option>
+                <option>BRASIL</option>
+                <option>COLOMBIA</option>
+                <option>CANADA</option>
               </select>
             </div>
 
@@ -877,6 +849,10 @@
       <div class="acciones" style="margin-top:20px;">
         <button class="btn gray" id="back4" type="button">← Atrás</button>
         <button class="btn primary" id="btnContinuarDoc" type="submit">Guardar y Continuar →</button>
+        <button class="btn success" id="btnSaltarDoc" type="button" style="margin-left:8px;">
+  Continuar sin volver a subir →
+</button>
+
         <div class="small" style="margin-top:8px;">
           Se guarda automáticamente. Requisitos: fotos de frente y reverso de INE y Licencia.
         </div>
@@ -995,7 +971,7 @@
              alt="Vehículo"
              class="vehiculo-img">
 
-        <p class="vehiculo-nombre" id="resumenVehCompacto"><b>—</b></p>
+        <p class="vehiculo-nombre" id="resumenVehCompacto">—</p>
 
         <p class="vehiculo-mini" id="resumenCategoriaCompacto">Categoría: —</p>
 
@@ -1125,6 +1101,7 @@
 
   </div>
 </aside>
+
 
 
 

@@ -21,6 +21,7 @@ use App\Http\Controllers\GastosController;
 use App\Http\Controllers\SiniestrosController;
 use App\Http\Controllers\ConductorAdicionalController;
 use App\Http\Controllers\ContratoController;
+use Illuminate\Support\Facades\DB;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -162,6 +163,18 @@ Route::get('/admin/contrato/cargos/{idContrato}', [App\Http\Controllers\Contrato
 
 // 📄 Guardar documentación subida (Paso 5)
 Route::post('/admin/contrato/guardar-documentacion', [App\Http\Controllers\ContratoController::class, 'guardarDocumentacion'])->name('contrato.guardarDocumentacion');
+Route::get('/admin/contrato/documentacion/{idContrato}',[App\Http\Controllers\ContratoController::class, 'obtenerDocumentacion'])->name('contrato.obtenerDocumentacion');
+Route::get('/archivo/{id}', function($id){
+    $archivo = DB::table('archivos')->where('id_archivo',$id)->first();
+    if (!$archivo) abort(404);
+
+    return response($archivo->contenido)
+        ->header('Content-Type', $archivo->mime_type);
+})->name('archivo.mostrar');
+Route::get('/admin/contrato/{id}/documentos-existen',
+    [ContratoController::class, 'verificarDocumentosExistentes']
+)->name('contrato.documentos.existen');
+
 // Obtener conductores asociados al contrato (AJAX)
 Route::get('/admin/contrato/{id}/conductores', [App\Http\Controllers\ContratoController::class, 'obtenerConductores']);
 /* =============================================================

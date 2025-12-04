@@ -219,6 +219,9 @@ async function aceptarUpgrade() {
 
     // 🔄 Recalcular totales
     await actualizarFechasYRecalcular();
+    await cargarResumenBasico();
+    await cargarResumenBasico();
+
 
     // ➡️ Continuar al Paso 2
     showStep(2);
@@ -417,6 +420,8 @@ function obtenerHoraActual() {
 
   $("#btnGuardarFechaDevolucion")?.addEventListener("click", async () => {
     await actualizarFechasYRecalcular();
+    await cargarResumenBasico();
+
     $(".fecha-edicion-devolucion").style.display = "none";
   });
 
@@ -560,7 +565,6 @@ async function guardarNuevaCategoriaEnDB(idCategoria) {
 
     // ⚠️ Forzar recálculo después del cambio
     await actualizarFechasYRecalcular();
-    await actualizarResumenContrato();
 
 
   } catch (err) {
@@ -900,6 +904,7 @@ async function seleccionarVehiculo(idVehiculo) {
     });
 
     alertify.success("Vehículo asignado correctamente.");
+    await cargarResumenBasico();
 
     cerrarModalVehiculos();
 
@@ -1016,7 +1021,7 @@ if (deliveryToggle) {
 
       actualizarTotal();
       guardarDelivery();   // ← AGREGA ESTA LÍNEA
-      actualizarResumenContrato();
+
 
 
     }
@@ -1169,6 +1174,8 @@ async function guardarDelivery() {
   } catch (err) {
       console.error("❌ Error al guardar Delivery:", err);
   }
+  await cargarResumenBasico();
+
 }
 
 
@@ -1295,7 +1302,7 @@ if (packGrid) {
   const switches = $$(".switch");
 
   // Actualiza visualmente los switches (SOLO paquetes) y recalcula total
-  const actualizarEstadoVisualPaquetes = (activoId) => {
+  const actualizarEstadoVisualPaquetes =  async (activoId) => {
     switches.forEach((sw) => {
       const isActive = Number(sw.dataset.id) === Number(activoId);
       sw.classList.toggle("on", isActive);
@@ -1303,6 +1310,8 @@ if (packGrid) {
 
     // Recalcular total global (paquete + individuales)
     recalcularTotalProtecciones();
+    await cargarResumenBasico();
+
   };
 
   // Detecta click sobre un switch de paquete
@@ -1423,6 +1432,8 @@ if (individualesGrid && individualesGrid.length > 0) {
 
           sw.classList.remove("on");
           recalcularTotalProtecciones();
+          await cargarResumenBasico();
+
           return;
         }
 
@@ -1444,6 +1455,8 @@ if (individualesGrid && individualesGrid.length > 0) {
 
         sw.classList.add("on");
         recalcularTotalProtecciones();
+        await cargarResumenBasico();
+
 
       } catch (err) {
         console.error("❌ Error individual:", err);
@@ -1459,7 +1472,9 @@ if (individualesGrid && individualesGrid.length > 0) {
    (por si vienen datos ya marcados desde Blade)
 ========================================================== */
 recalcularTotalProtecciones();
-actualizarResumenContrato();
+cargarResumenBasico();
+
+
 
 
 
@@ -1544,7 +1559,7 @@ total += parseFloat(gasCant.value || 0) * parseFloat(gasPrecio.value || 0);
    🧾 ACTIVAR / DESACTIVAR CARGOS
 ========================================================== */
 if (cargosGrid) {
-  cargosGrid.addEventListener("click", (e) => {
+  cargosGrid.addEventListener("click", async (e) => {
     const sw = e.target.closest(".switch");
     if (!sw) return;
 
@@ -1555,6 +1570,8 @@ if (cargosGrid) {
 
     guardarCargoPaso4(conceptoID);
     recalcularTotalPaso4();
+    await cargarResumenBasico();
+
   });
 }
 
@@ -1562,7 +1579,7 @@ if (cargosGrid) {
 /* ==========================================================
    🔥 ACTIVAR AUTOMÁTICAMENTE CAMBIO DE VEHÍCULO (id=3)
 ========================================================== */
-function activarCargoCambioVehiculo() {
+ async function activarCargoCambioVehiculo() {
 
   const cardCambio = document.querySelector('.cargo-item[data-id="3"]');
   if (!cardCambio) return;
@@ -1574,6 +1591,8 @@ function activarCargoCambioVehiculo() {
     sw.classList.add("on");
     guardarCargoPaso4(conceptoID);
     recalcularTotalPaso4();
+    await cargarResumenBasico();
+
   }
 }
 
@@ -1581,7 +1600,7 @@ function activarCargoCambioVehiculo() {
 /* ==========================================================
    🔥 ACTIVAR AUTOMÁTICAMENTE TANQUE INCOMPLETO (id=2)
 ========================================================== */
-function activarCargoTanqueIncompleto() {
+ async function activarCargoTanqueIncompleto() {
 
   const card = document.querySelector('.cargo-item[data-id="2"]');
   if (!card) return;
@@ -1593,6 +1612,7 @@ function activarCargoTanqueIncompleto() {
     sw.classList.add("on");
     guardarCargoPaso4(conceptoID);
     recalcularTotalPaso4();
+    await cargarResumenBasico();
   }
 }
 
@@ -1602,7 +1622,7 @@ function activarCargoTanqueIncompleto() {
 ========================================================== */
 if (switchGasLit) {
 
-  switchGasLit.addEventListener("click", () => {
+  switchGasLit.addEventListener("click",  async () => {
 
     switchGasLit.classList.toggle("on");
 
@@ -1630,6 +1650,7 @@ if (switchGasLit) {
     }
 
     recalcularTotalPaso4();
+    await cargarResumenBasico();
   });
 }
 
@@ -1669,6 +1690,8 @@ if (cardGas) {
 }
 
     recalcularTotalPaso4();
+    await cargarResumenBasico();
+
   });
 }
 
@@ -1742,6 +1765,8 @@ async function seleccionarVehiculo(idVehiculo) {
     }
 
     alertify.success("Vehículo asignado correctamente");
+    await cargarResumenBasico();
+
 
     cerrarModalVehiculos();
     actualizarVehiculoUI(data.vehiculo);
@@ -1839,7 +1864,7 @@ function actualizarCamposDropoff() {
 /* ==========================================================
    🧮 Calcular total del Dropoff
 ========================================================== */
-function recalcularDropoff() {
+ async function recalcularDropoff() {
 
     if (!dropUbicacion) return;
 
@@ -1867,6 +1892,8 @@ function recalcularDropoff() {
     }
 
     recalcularTotalPaso4();
+    await cargarResumenBasico();
+
 }
 
 
@@ -1908,7 +1935,7 @@ async function guardarDropoff() {
    🎛 Activar / Desactivar Switch Dropoff
 ========================================================== */
 if (switchDropoff) {
-    switchDropoff.addEventListener("click", () => {
+    switchDropoff.addEventListener("click",  async () => {
 
         switchDropoff.classList.toggle("on");
 
@@ -1932,6 +1959,8 @@ if (switchDropoff) {
         }
 
         recalcularTotalPaso4();
+        await cargarResumenBasico();
+
     });
 }
 
@@ -2017,7 +2046,7 @@ async function restaurarEstadoGasolina() {
 ========================================================== */
 
 if (dropUbicacion) {
-    dropUbicacion.addEventListener("change", () => {
+    dropUbicacion.addEventListener("change",  async () => {
         actualizarCamposDropoff();
         recalcularDropoff();
         guardarDropoff();
@@ -2025,7 +2054,7 @@ if (dropUbicacion) {
 }
 
 if (dropKm) {
-    dropKm.addEventListener("input", () => {
+    dropKm.addEventListener("input",  async () => {
         recalcularDropoff();
         guardarDropoff();
     });
@@ -2050,149 +2079,345 @@ restaurarEstadoDropoff();
 
 
 recalcularTotalPaso4();
-actualizarResumenContrato();
+
+
+
 
 
 
 console.log("✔ Paso 4 listo (cambio vehículo + gasolina faltante)");
 
-  /* ==========================================================
-   🧾 PASO 5: Subida de documentación (CORREGIDO + ALERTIFY PRO)
+ /* ==========================================================
+   🧾 PASO 5: Subida de documentación (CORREGIDO + CARGA INICIAL)
 ========================================================== */
 const formDoc = document.querySelector("#formDocumentacion");
 
-if (formDoc && ID_CONTRATO) {
+if (formDoc && typeof ID_CONTRATO !== "undefined" && ID_CONTRATO) {
   console.log("🧾 Iniciando manejo de documentación (Paso 5)...");
 
-  // Configurar Alertify
+  // ==========================================================
+  // 🔧 ADICIÓN NECESARIA → Asegurar la ruta correcta
+  // ==========================================================
+  if (!formDoc.action || formDoc.action.trim() === "") {
+    formDoc.action = "/admin/contrato/guardar-documentacion";
+  }
+
+  // ==========================================================
+  // 🔧 Alertify config
+  // ==========================================================
   alertify.set("notifier", "position", "top-right");
   alertify.set("notifier", "delay", 3);
 
+  // ==========================================================
+  // 🧠 ESTADO INTERNO DEL PASO 5
+  // ==========================================================
+  let documentosGuardados = {
+    titular: null,
+    adicionales: {}
+  };
+
+  let docsCargadosActual = false;
+
+  let adicionalesTotal = parseInt(formDoc.dataset.adicionales || "0", 10) || 0;
+  let indiceActual = parseInt(formDoc.dataset.actual || "0", 10) || 0;
+  let conductoresAdicionales = [];
+
+  try {
+    conductoresAdicionales = JSON.parse(formDoc.dataset.conductores || "[]");
+  } catch (e) {
+    console.warn("⚠️ dataset.conductores no es JSON válido:", e);
+    conductoresAdicionales = [];
+  }
+
+  const alertaLicencia = document.getElementById("alertaLicencia");
+  const confirmacionLicencia = document.getElementById("confirmacionLicencia");
+  const inputIdConductor = document.querySelector("#id_conductor");
+  const tituloPersona = document.querySelector("#tituloPersona");
+
+  // ==========================================================
+  // 🔹 Helpers visuales
+  // ==========================================================
+  function actualizarEstadoLicenciaVisual(licenciaVencida) {
+    if (!alertaLicencia || !confirmacionLicencia) return;
+
+    if (licenciaVencida === true) {
+      alertaLicencia.style.display = "block";
+      confirmacionLicencia.style.display = "none";
+    } else if (licenciaVencida === false) {
+      alertaLicencia.style.display = "none";
+      confirmacionLicencia.style.display = "block";
+    } else {
+      alertaLicencia.style.display = "none";
+      confirmacionLicencia.style.display = "none";
+    }
+  }
+
+  function setValorInput(id, valor) {
+    const el = document.getElementById(id);
+    if (el && valor !== null && valor !== undefined && valor !== "") {
+      el.value = valor;
+    }
+  }
+
+  function limpiarFormularioYPreviews() {
+    formDoc
+      .querySelectorAll("input[type='text'], input[type='date'], input[type='file']")
+      .forEach((i) => (i.value = ""));
+
+    document
+      .querySelectorAll(".preview")
+      .forEach((div) => {
+        div.innerHTML = "";
+        div.removeAttribute("data-has-server-file");
+      });
+
+    docsCargadosActual = false;
+    actualizarEstadoLicenciaVisual(null);
+  }
+
+  function crearPreviewDesdeURL(nombreCampo, url) {
+    if (!url) return;
+
+    const previewDiv = document.getElementById(`prev-${nombreCampo}`);
+    if (!previewDiv) return;
+
+    previewDiv.innerHTML = "";
+
+    const thumb = document.createElement("div");
+    thumb.classList.add("thumb");
+    thumb.innerHTML = `
+      <img src="${url}" alt="Vista previa">
+      <button type="button" class="rm" title="Quitar">×</button>
+    `;
+    previewDiv.appendChild(thumb);
+previewDiv.dataset.hasServerFile = "1";
+docsCargadosActual = true; // ← ESTA ES LA LÍNEA CLAVE
+
+
+    const btnRm = thumb.querySelector(".rm");
+    if (btnRm) {
+      btnRm.addEventListener("click", () => {
+        previewDiv.innerHTML = "";
+        previewDiv.removeAttribute("data-has-server-file");
+        docsCargadosActual = false;
+      });
+    }
+  }
+
+  // ==========================================================
+  // 📥 Aplicar datos al formulario
+  // ==========================================================
+  function aplicarDocumentacionEnFormulario(esTitular, idConductor) {
+    docsCargadosActual = false;
+
+    let dataDoc =
+      esTitular
+        ? documentosGuardados.titular
+        : documentosGuardados.adicionales?.[String(idConductor)] || null;
+
+    if (!dataDoc) {
+      actualizarEstadoLicenciaVisual(null);
+      return;
+    }
+
+    const campos = dataDoc.campos || {};
+    const archivos = dataDoc.archivos || {};
+
+    setValorInput("tipo_identificacion", campos.tipo_identificacion);
+    setValorInput("numero_identificacion", campos.numero_identificacion);
+    setValorInput("nombre", campos.nombre);
+    setValorInput("apellido_paterno", campos.apellido_paterno);
+    setValorInput("apellido_materno", campos.apellido_materno);
+    setValorInput("fecha_nacimiento", campos.fecha_nacimiento);
+    setValorInput("fecha_vencimiento_id", campos.fecha_vencimiento_id);
+
+    setValorInput("contacto_emergencia", campos.contacto_emergencia);
+
+    setValorInput("numero_licencia", campos.numero_licencia);
+    setValorInput("emite_licencia", campos.emite_licencia);
+    setValorInput("fecha_emision_licencia", campos.fecha_emision_licencia);
+    setValorInput("fecha_vencimiento_licencia", campos.fecha_vencimiento_licencia);
+
+    crearPreviewDesdeURL("idFrente", archivos.idFrente_url);
+    crearPreviewDesdeURL("idReverso", archivos.idReverso_url);
+    crearPreviewDesdeURL("licFrente", archivos.licFrente_url);
+    crearPreviewDesdeURL("licReverso", archivos.licReverso_url);
+
+    const licVencida = dataDoc.licencia_vencida === true;
+    actualizarEstadoLicenciaVisual(licVencida);
+
+    // ==========================================================
+    // 🔧 CORRECCIÓN IMPORTANTE:
+    // SI HAY ARCHIVOS EN EL BACKEND, docsCargadosActual = true
+    // (aunque la licencia esté vencida)
+    // ==========================================================
+    if (
+        archivos.idFrente_url ||
+        archivos.idReverso_url ||
+        archivos.licFrente_url ||
+        archivos.licReverso_url
+    ) {
+        docsCargadosActual = true;
+    }
+}
+
+
+  // ==========================================================
+  // 🚀 Carga inicial desde backend
+  // ==========================================================
+  async function cargarDocumentacionInicial() {
+    try {
+      const resp = await fetch(
+        `/admin/contrato/documentacion/${encodeURIComponent(ID_CONTRATO)}`
+      );
+
+      if (!resp.ok) return;
+
+      const data = await resp.json();
+      if (!data?.success || !data?.documentos) return;
+
+      documentosGuardados.titular = data.documentos.titular || null;
+      documentosGuardados.adicionales = data.documentos.adicionales || {};
+
+      let esTitular = indiceActual === 0;
+      let idConductorActual = null;
+
+      if (!esTitular) {
+        const idx = indiceActual - 1;
+        const conductor = conductoresAdicionales[idx];
+
+        if (conductor) {
+          idConductorActual = conductor.id_conductor || conductor.id || null;
+        } else {
+          esTitular = true;
+          indiceActual = 0;
+          formDoc.dataset.actual = "0";
+        }
+      }
+
+      if (esTitular) {
+        tituloPersona.textContent = "Documentación del titular";
+        inputIdConductor.value = "";
+      } else {
+        const idx = indiceActual - 1;
+        const c = conductoresAdicionales[idx];
+        const nombre = c?.nombres || `Conductor adicional #${indiceActual}`;
+        const apellidos = c?.apellidos || "";
+
+        tituloPersona.textContent = `Documentación de ${nombre} ${apellidos}`.trim();
+        inputIdConductor.value = idConductorActual || "";
+      }
+
+      limpiarFormularioYPreviews();
+      aplicarDocumentacionEnFormulario(esTitular, idConductorActual);
+
+    } catch (e) {
+      console.error("❌ Error cargarDocumentacionInicial:", e);
+    }
+  }
+
+  cargarDocumentacionInicial();
+
+  // ==========================================================
+  // 📨 SUBMIT DEL FORMULARIO
+  // ==========================================================
   formDoc.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // 🎯 Validación antes de enviar
     const archivos = formDoc.querySelectorAll("input[type='file']");
     let tieneArchivo = false;
 
     archivos.forEach((a) => {
-      if (a.files.length > 0) tieneArchivo = true;
+      if (a.files && a.files.length > 0) tieneArchivo = true;
     });
 
-    if (!tieneArchivo) {
+    if (!tieneArchivo && !docsCargadosActual) {
       alertify.warning("📁 Debes seleccionar al menos un archivo.");
       return;
     }
 
-    // Deshabilitar botón para evitar doble envío
     const btnSubmit = formDoc.querySelector("button[type='submit']");
     if (btnSubmit) {
       btnSubmit.disabled = true;
-      btnSubmit.innerHTML = "Subiendo... ⏳";
+      btnSubmit.textContent = "Subiendo... ⏳";
     }
 
     const formData = new FormData(formDoc);
 
-    try {
-      console.log("📤 Enviando documentación al servidor…");
+    // ==========================================================
+    // 🔧 ADICIÓN NECESARIA → Asegurar que SIEMPRE se envía id_contrato
+    // ==========================================================
+    formData.set("id_contrato", ID_CONTRATO);
 
+    try {
       const resp = await fetch(formDoc.action, {
         method: "POST",
         headers: {
-          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
         },
-        body: formData,
+        body: formData
       });
 
       const data = await resp.json();
       console.log("📡 Respuesta servidor:", data);
 
-      // 🧩 Cambiar estado visual
-      const alerta = document.getElementById("alertaLicencia");
-      const confirmacion = document.getElementById("confirmacionLicencia");
-
       if (data.warning) {
-        alerta.style.display = "block";
-        confirmacion.style.display = "none";
+        alertaLicencia.style.display = "block";
+        confirmacionLicencia.style.display = "none";
         alertify.warning("⚠️ La licencia está vencida.");
-      } else {
-        alerta.style.display = "none";
-        confirmacion.style.display = "block";
-        alertify.success("📄 Documentación verificada correctamente.");
-      }
 
-      // ⚠️ Si licencia vencida → cancelar avance
-      if (data.warning) {
-        if (btnSubmit) {
-          btnSubmit.disabled = false;
-          btnSubmit.textContent = "Guardar documentación";
-        }
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "Guardar documentación";
+        docsCargadosActual = false;
         return;
       }
 
-      // ====================================================
-      // 🚀 SEGUIMIENTO DE CONDUCTORES ADICIONALES
-      // ====================================================
-      if (data.success) {
-        const adicionales = parseInt(formDoc.dataset.adicionales || "0");
-        let actual = parseInt(formDoc.dataset.actual || "0");
-        const conductores = JSON.parse(formDoc.dataset.conductores || "[]");
+      alertaLicencia.style.display = "none";
+      confirmacionLicencia.style.display = "block";
+      alertify.success("📄 Documentación guardada correctamente.");
 
-        console.log("📊 Conductores extra:", adicionales, conductores);
+      docsCargadosActual = true;
 
-        // ¿Siguen faltando?
-        if (actual < adicionales && conductores.length > 0) {
-          actual++;
-          formDoc.dataset.actual = actual;
+      const adicionales = adicionalesTotal;
+      let actual = indiceActual;
+      const conductores = conductoresAdicionales;
 
-          const siguiente = conductores[actual - 1];
-          const idReal = siguiente?.id_conductor || "";
-          const nombre = siguiente?.nombres || `Conductor adicional #${actual}`;
-          const apellidos = siguiente?.apellidos || "";
+      if (actual < adicionales && conductores.length > 0) {
+        actual++;
+        indiceActual = actual;
+        formDoc.dataset.actual = String(actual);
 
-          // Actualizar título
-          document.querySelector("#tituloPersona").textContent =
-            `Documentación de ${nombre} ${apellidos}`.trim();
+        const siguiente = conductores[actual - 1];
+        const idReal = siguiente?.id_conductor || "";
+        const nombre = siguiente?.nombres || `Conductor adicional #${actual}`;
+        const apellidos = siguiente?.apellidos || "";
 
-          document.querySelector("#id_conductor").value = idReal;
+        tituloPersona.textContent = `Documentación de ${nombre} ${apellidos}`.trim();
+        inputIdConductor.value = idReal;
 
-          // Limpiar inputs visibles
-          formDoc.querySelectorAll(
-            "input[type='text'], input[type='date'], input[type='file']"
-          ).forEach((i) => (i.value = ""));
+        limpiarFormularioYPreviews();
+        aplicarDocumentacionEnFormulario(false, idReal);
 
-          // Limpiar previews
-          document
-            .querySelectorAll(".preview")
-            .forEach((div) => (div.innerHTML = ""));
+        alertify.message(`🧍‍♂️ Continúa con la documentación de ${nombre}`);
 
-          alertify.message(`🧍‍♂️ Continúa con la documentación de ${nombre}`);
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = "Guardar documentación";
+        return;
+      }
 
-          // Reactivar botón
-          if (btnSubmit) {
-            btnSubmit.disabled = false;
-            btnSubmit.textContent = "Guardar documentación";
-          }
+      // ==================================================
+      // ✅ Fin de conductores → Paso 6
+      // ==================================================
+      alertify.success("🎉 Documentación completada. Avanzando al paso final…");
 
-          return;
-        }
-
-        // ====================================================
-        // 🎉 YA NO HAY MÁS CONDUCTORES → PASO 6
-        // ====================================================
-        alertify.success("🎉 Documentación completada. Avanzando al paso final…");
-
+      if (typeof showStep === "function") {
         showStep(6);
       }
-      await actualizarResumenContrato();
-
 
     } catch (err) {
-      console.error("❌ Error al subir documentación:", err);
-      alertify.error("Error al enviar documentos. Intenta nuevamente.");
+      console.error("❌ Error subir documentación:", err);
+      alertify.error("Error al enviar documentos.");
     } finally {
-      // Reactivar botón (si hubo error)
-      const btnSubmit = formDoc.querySelector("button[type='submit']");
       if (btnSubmit) {
         btnSubmit.disabled = false;
         btnSubmit.textContent = "Guardar documentación";
@@ -2200,7 +2425,6 @@ if (formDoc && ID_CONTRATO) {
     }
   });
 }
-
 
 /* ==========================================================
    📸 Vista previa de archivos (INE / Licencia)
@@ -2220,15 +2444,14 @@ document.querySelectorAll('.uploader input[type="file"]').forEach((input) => {
     reader.onload = (ev) => {
       const thumb = document.createElement("div");
       thumb.classList.add("thumb");
-
       thumb.innerHTML = `
         <img src="${ev.target.result}" alt="Vista previa">
         <button type="button" class="rm" title="Quitar">×</button>
       `;
 
       previewDiv.appendChild(thumb);
+      previewDiv.removeAttribute("data-has-server-file");
 
-      // Botón para borrar archivo seleccionado
       thumb.querySelector(".rm").addEventListener("click", () => {
         e.target.value = "";
         thumb.remove();
@@ -2238,6 +2461,8 @@ document.querySelectorAll('.uploader input[type="file"]').forEach((input) => {
     reader.readAsDataURL(file);
   });
 });
+
+
 
 /* ==========================================================
       🧾 PASO 6 — TOTAL DE LA RESERVACIÓN + PAGOS + PAYPAL
@@ -2294,7 +2519,8 @@ async function cargarPaso6() {
         baseDescr.textContent = r.base.descripcion ?? "—";
         baseAmt.textContent   = money(r.base.total);
         addsAmt.textContent   = money(r.adicionales.total);
-        ivaAmt.textContent    = money(r.totales.subtotal + r.totales.iva);
+        ivaAmt.textContent = money(r.totales.subtotal);
+
         ivaOnly.textContent   = money(r.totales.iva);
 
         totalContrato.textContent = money(r.totales.total_contrato);
@@ -2448,6 +2674,8 @@ async function prepararPayPal() {
 
                 cerrarModalPago();
                 cargarPaso6();
+                await cargarResumenBasico();
+
             },
 
             onError: (err) => {
@@ -2573,6 +2801,8 @@ pSave?.addEventListener("click", async () => {
 
         cerrarModalPago();
         cargarPaso6();
+        await cargarResumenBasico();
+
 
     } catch (e) {
         console.error("❌ Error guardando pago manual:", e);
@@ -2592,7 +2822,9 @@ payBody?.addEventListener("click", async (e) => {
 
     await fetch(`/admin/contrato/pagos/${id_pago}/eliminar`, { method: "DELETE" });
     cargarPaso6();
-    actualizarResumenContrato();
+    await cargarResumenBasico();
+
+
 
 });
 
@@ -2612,178 +2844,296 @@ function money(num) {
    🚀 Inicializar
 ========================================================== */
 cargarPaso6();
-actualizarResumenContrato();
 
 
 
-// ==============================
-// Expandir / colapsar resumen
-// ==============================
-const btnVerDetalle     = document.getElementById("btnVerDetalle");
-const btnOcultarDetalle = document.getElementById("btnOcultarDetalle");
-const resumenCompacto   = document.getElementById("resumenCompacto");
-const resumenDetalle    = document.getElementById("resumenDetalle");
 
-btnVerDetalle?.addEventListener("click", () => {
-    resumenDetalle.style.display = "block";
-    resumenCompacto.style.display = "none";
+//resumen detalle toggle
+
+/* ==========================================================
+   📌 LEER ID_RESERVACION DESDE EL HTML
+========================================================== */
+const contratoInicial = document.getElementById('contratoInicial');
+
+if (contratoInicial) {
+    window.ID_RESERVACION = contratoInicial.dataset.idReservacion;
+    console.log("📌 ID_RESERVACION cargado:", window.ID_RESERVACION);
+} else {
+    console.error("❌ ERROR: No existe #contratoInicial en el HTML");
+}
+
+
+/* ==========================================================
+   📌 1) TOGGLE RESUMEN
+========================================================== */
+
+const btnVerDetalle     = document.querySelector("#btnVerDetalle");
+const btnOcultarDetalle = document.querySelector("#btnOcultarDetalle");
+const resumenCompacto   = document.querySelector("#resumenCompacto");
+const resumenDetalle    = document.querySelector("#resumenDetalle");
+
+console.log("🔎 Verificando elementos resumen:", {
+    btnVerDetalle,
+    btnOcultarDetalle,
+    resumenCompacto,
+    resumenDetalle
 });
 
-btnOcultarDetalle?.addEventListener("click", () => {
-    resumenCompacto.style.display = "block";
-    resumenDetalle.style.display = "none";
-});
+if (!btnVerDetalle || !btnOcultarDetalle || !resumenCompacto || !resumenDetalle) {
+    console.error("❌ No se encontraron elementos del resumen.");
+} else {
 
-// ==============================
-// FUNCIÓN GLOBAL
-// ==============================
-async function actualizarResumenContrato() {
+    btnVerDetalle.addEventListener("click", (e) => {
+        e.preventDefault();
+        resumenCompacto.style.display = "none";
+        resumenDetalle.style.display = "block";
+        console.log("📂 Resumen expandido.");
+    });
 
-    console.log("🔄 Actualizando resumen del contrato…");
+    btnOcultarDetalle.addEventListener("click", (e) => {
+        e.preventDefault();
+        resumenDetalle.style.display = "none";
+        resumenCompacto.style.display = "block";
+        console.log("📁 Resumen colapsado.");
+    });
+}
+
+
+/* ==========================================================
+   📌 2) CARGAR RESUMEN BÁSICO + VEHÍCULO
+========================================================== */
+
+async function cargarResumenBasico() {
+
+    if (!window.ID_RESERVACION) {
+        console.warn("❌ No existe ID_RESERVACION en el HTML");
+        return;
+    }
 
     try {
         const resp = await fetch(`/admin/contrato/${ID_RESERVACION}/resumen`);
-        const data = await resp.json();
+        const json = await resp.json();
 
-        if (!data.success) {
-            console.warn("⚠ Resumen no cargado:", data);
+        if (!json.success) {
+            console.warn("⚠ No se pudo obtener el resumen:", json.msg);
             return;
         }
 
-        const r = data.data;
+        const r = json.data;
 
-        // ==========================
-        // 1. MODO COMPACTO
-        // ==========================
-        setText("resumenTotalCompacto", `$${r.totales.total_contrato.toFixed(2)} MXN`);
-
-        if (r.vehiculo && (r.vehiculo.marca || r.vehiculo.modelo)) {
-            setText("resumenVehCompacto", `${r.vehiculo.marca} ${r.vehiculo.modelo}`);
-        } else {
-            setText("resumenVehCompacto", "Sin vehículo asignado");
-        }
-
-        setText(
-            "resumenCategoriaCompacto",
-            `Categoría: ${r.categoria.nombre} (${r.categoria.codigo})`
-        );
-
-        setText("resumenDiasCompacto", `Días de renta: ${r.fechas.dias}`);
-        setText("resumenFechasCompacto", `${r.fechas.salida_fecha} / ${r.fechas.entrega_fecha}`);
-
-        // ==========================
-        // 2. DETALLE
-        // ==========================
-        setText("detCodigo", r.codigo);
+        // -------------------------------------
+        // 🔹 CLIENTE (TU CÓDIGO ORIGINAL)
+        // -------------------------------------
+        document.querySelector("#detCodigo").textContent = r.codigo ?? "—";
 
         if (r.cliente) {
-            setText("detCliente", r.cliente.nombre);
-            setText("detTelefono", r.cliente.telefono);
-            setText("detEmail", r.cliente.email);
+            document.querySelector("#detCliente").textContent  = r.cliente.nombre   ?? "—";
+            document.querySelector("#detTelefono").textContent = r.cliente.telefono ?? "—";
+            document.querySelector("#detEmail").textContent    = r.cliente.email    ?? "—";
         }
 
+        // -------------------------------------------------
+        // ⭐ AGREGADO: CARGAR DATOS DEL VEHÍCULO EN EL HTML
+        // -------------------------------------------------
         if (r.vehiculo) {
-            setText("detModelo", r.vehiculo.modelo);
-            setText("detMarca", r.vehiculo.marca);
-            setText("detCategoria", `${r.categoria.nombre} (${r.categoria.codigo})`);
-            setText("detTransmision", r.vehiculo.transmision);
-            setText("detPasajeros", r.vehiculo.pasajeros);
-            setText("detPuertas", r.vehiculo.puertas);
-            setText("detKm", r.vehiculo.km_actual);
+            document.querySelector("#detModelo").textContent      = r.vehiculo.modelo ?? "—";
+            document.querySelector("#detMarca").textContent       = r.vehiculo.marca ?? "—";
+            document.querySelector("#detCategoria").textContent   = r.vehiculo.categoria ?? "—";
+            document.querySelector("#detTransmision").textContent = r.vehiculo.transmision ?? "—";
+            document.querySelector("#detPasajeros").textContent   = r.vehiculo.pasajeros ?? "—";
+            document.querySelector("#detPuertas").textContent     = r.vehiculo.puertas ?? "—";
+            document.querySelector("#detKm").textContent          = r.vehiculo.km ?? "—";
         }
 
-        // ==========================
-        // Fechas
-        // ==========================
-        setText("detFechaSalida", r.fechas.salida_fecha);
-        setText("detHoraSalida", r.fechas.salida_hora);
-        setText("detFechaEntrega", r.fechas.entrega_fecha);
-        setText("detHoraEntrega", r.fechas.entrega_hora);
-        setText("detDiasRenta", r.fechas.dias);
+        // ⭐ AGREGADO: FECHAS + HORARIOS
+        if (r.fechas) {
+            document.querySelector("#detFechaSalida").textContent  = r.fechas.inicio ?? "—";
+            document.querySelector("#detHoraSalida").textContent   = r.fechas.hora_inicio ?? "—";
 
-        // ==========================
-        // Paquetes
-        // ==========================
-        setText("r_seguros_total", `$${r.seguros.total.toFixed(2)} MXN`);
+            document.querySelector("#detFechaEntrega").textContent = r.fechas.fin ?? "—";
+            document.querySelector("#detHoraEntrega").textContent  = r.fechas.hora_fin ?? "—";
 
-        const contSeg = document.getElementById("r_seguros_lista");
-        contSeg.innerHTML = "";
-
-        if (!r.seguros.detalles.length) {
-            contSeg.innerHTML = `<li class="empty">Sin protecciones seleccionadas</li>`;
+            document.querySelector("#detDiasRenta").textContent    = r.fechas.dias ?? "—";
         }
 
-        // ==========================
-        // Servicios
-        // ==========================
-        const contServ = document.getElementById("r_servicios_lista");
-        contServ.innerHTML = "";
+        /* ==========================================================
+   📌 RESUMEN COMPACTO (Mini resumen)
+========================================================== */
 
-        const listaServicios = r.servicios.lista ?? [];
-        const deliveryActivo = r.delivery.activo;
+if (r.vehiculo) {
+    // Vehículo compacto
+    document.querySelector("#resumenVehCompacto").textContent =
+        `${r.vehiculo.marca ?? ''} ${r.vehiculo.modelo ?? ''}`.trim() || "—";
 
-        if (!listaServicios.length && !deliveryActivo) {
-            contServ.innerHTML = `<li class="empty">Sin servicios adicionales</li>`;
-        } else {
-            listaServicios.forEach(s => {
-                contServ.innerHTML += `
-                    <li>${s.nombre} x${s.cantidad} – <b>$${s.total.toFixed(2)}</b></li>
-                `;
-            });
+    document.querySelector("#resumenCategoriaCompacto").textContent =
+        `Categoría: ${r.vehiculo.categoria ?? "—"}`;
+}
 
-            if (deliveryActivo) {
-                contServ.innerHTML += `
-                    <li>🚚 Delivery – <b>$${r.delivery.total.toFixed(2)}</b></li>
-                `;
-            }
-        }
+if (r.fechas) {
+    document.querySelector("#resumenDiasCompacto").textContent =
+        `Días de renta: ${r.fechas.dias ?? "—"}`;
 
-        // ==========================
-        // Cargos
-        // ==========================
-        const contCargos = document.getElementById("r_cargos_lista");
-        contCargos.innerHTML = "";
+    document.querySelector("#resumenFechasCompacto").textContent =
+        `${r.fechas.inicio ?? "—"} / ${r.fechas.fin ?? "—"}`;
+}
 
-        const listaCargos = r.cargos.lista ?? [];
+// TOTAL COMPACTO
+if (r.totales) {
+    document.querySelector("#resumenTotalCompacto").textContent =
+        `$${r.totales.total ?? 0} MXN`;
+}
 
-        if (!listaCargos.length) {
-            contCargos.innerHTML = `<li class="empty">Sin cargos adicionales</li>`;
-        } else {
-            listaCargos.forEach(c => {
-                contCargos.innerHTML += `
-                    <li>${c.nombre} – <b>$${c.monto.toFixed(2)}</b></li>
-                `;
-            });
-        }
+// Mini–imagen del vehículo (si luego subes imagen)
+const img = document.querySelector("#resumenImgVeh");
+if (img && r.vehiculo && r.vehiculo.imagen) {
+    img.src = r.vehiculo.imagen;
+}
 
-        // ==========================
-        // Totales
-        // ==========================
-        setText("r_base_precio", `$${r.totales.tarifa_base.toFixed(2)} MXN`);
-        setText("r_subtotal", `$${r.totales.subtotal.toFixed(2)} MXN`);
-        setText("r_iva", `$${r.totales.iva.toFixed(2)} MXN`);
-        setText("r_total_final", `$${r.totales.total_contrato.toFixed(2)} MXN`);
+        /* ==========================================================
+   🛡️  SEGUROS (PAQUETE O INDIVIDUALES)
+========================================================== */
 
-        // ==========================
-        // Pagos
-        // ==========================
-        setText("detPagos", `$${r.pagos.realizados.toFixed(2)} MXN`);
-        setText("detSaldo", `$${r.pagos.saldo.toFixed(2)} MXN`);
+const listaSeguros = document.querySelector("#r_seguros_lista");
+const totalSeguros = document.querySelector("#r_seguros_total");
 
-        console.log("✔ Resumen actualizado");
+// limpiar lista
+listaSeguros.innerHTML = "";
 
-    } catch (err) {
-        console.error("❌ Error actualizando resumen:", err);
+if (r.seguros && r.seguros.tipo) {
+
+    if (r.seguros.tipo === "paquete") {
+
+        const item = document.createElement("li");
+        const s = r.seguros.lista[0];
+        item.textContent = `${s.nombre} — $${s.precio}`;
+        listaSeguros.appendChild(item);
+
+    } else if (r.seguros.tipo === "individuales") {
+
+        r.seguros.lista.forEach(s => {
+            const item = document.createElement("li");
+            item.textContent = `${s.nombre} — $${s.precio}`;
+            listaSeguros.appendChild(item);
+        });
+    }
+
+    totalSeguros.textContent = `$${r.seguros.total} MXN`;
+
+} else {
+    // ninguno
+    const vacio = document.createElement("li");
+    vacio.classList.add("empty");
+    vacio.textContent = "—";
+    listaSeguros.appendChild(vacio);
+    totalSeguros.textContent = "—";
+}
+if (r.servicios && r.servicios.length > 0) {
+    const ul = document.querySelector("#r_servicios_lista");
+    ul.innerHTML = "";
+
+    r.servicios.forEach(s => {
+        const li = document.createElement("li");
+        li.textContent = `${s.nombre} (x${s.cantidad}) — $${s.total}`;
+        ul.appendChild(li);
+    });
+}
+if (r.cargos && r.cargos.length > 0) {
+    const ul = document.querySelector("#r_cargos_lista");
+    ul.innerHTML = "";
+
+    r.cargos.forEach(c => {
+        let txt = `${c.nombre} — $${c.total}`;
+        if (c.km) txt += ` (${c.km} km)`;
+        ul.innerHTML += `<li>${txt}</li>`;
+    });
+    if (c.litros) txt += ` (${c.litros} L)`;
+
+}
+
+/* ==========================================================
+   💵 TOTAL DESGLOSADO
+========================================================== */
+if (r.totales) {
+    document.querySelector("#r_base_precio").textContent = `$${r.totales.tarifa_base}`;
+    document.querySelector("#r_subtotal").textContent    = `$${r.totales.subtotal}`;
+    document.querySelector("#r_iva").textContent         = `$${r.totales.iva}`;
+    document.querySelector("#r_total_final").textContent = `$${r.totales.total}`;
+}
+
+/* ==========================================================
+   💳 PAGOS Y SALDO
+========================================================== */
+if (r.pagos) {
+    document.querySelector("#detPagos").textContent = `$${r.pagos.realizados}`;
+    document.querySelector("#detSaldo").textContent = `$${r.pagos.saldo}`;
+}
+
+
+
+
+        console.log("✔ Resumen básico cargado.");
+
+    } catch (error) {
+        console.error("❌ Error cargando resumen básico:", error);
     }
 }
 
-// Helper
-function setText(id, text) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = text ?? "—";
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", cargarResumenBasico);
+} else {
+    cargarResumenBasico();
 }
 
-document.addEventListener("DOMContentLoaded", actualizarResumenContrato);
+const btnSaltarDoc = document.getElementById("btnSaltarDoc");
+
+if (btnSaltarDoc) {
+
+  btnSaltarDoc.addEventListener("click", async () => {
+
+    if (!ID_CONTRATO) {
+      alertify.error("ID del contrato no encontrado.");
+      return;
+    }
+
+    alertify.message("Verificando documentación existente...");
+
+    try {
+      const resp = await fetch(`/admin/contrato/${ID_CONTRATO}/documentos-existen`);
+      const data = await resp.json();
+
+      if (!data.success) {
+        alertify.error("Error verificando documentos.");
+        return;
+      }
+
+      if (!data.existen) {
+        alertify.warning("⚠️ No hay documentación guardada. Debes subir los documentos.");
+        return;
+      }
+
+      // ===================================
+      // 🎯 SI EXISTEN, AVANZAMOS AL PASO 6
+      // ===================================
+      alertify.success("✔ Documentación encontrada. Avanzando…");
+
+      if (typeof showStep === "function") {
+        showStep(6);
+      }
+
+    } catch (e) {
+      console.error("Error:", e);
+      alertify.error("No se pudo verificar.");
+    }
+  });
+
+}
+
+
+
+
+
+
+
 
 
   /* ==========================================================
