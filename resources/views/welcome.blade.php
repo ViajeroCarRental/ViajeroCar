@@ -9,7 +9,12 @@
   {{-- Tu CSS --}}
   <link rel="stylesheet" href="{{ asset('css/navbarUsuarios.css') }}">
 
+  {{-- Swiper CSS para el carrusel de tarjetas --}}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+
   <style>
+    :root{ --brand:#b22222; --ink:#0f172a }
+
     .hero-badge-3msi{
       width: clamp(180px, 38vw, 520px);
       max-width: 100%;
@@ -59,13 +64,212 @@
         gap:28px;
       }
     }
+
+    /* ===== Banner Reservas (limpio, sin rayas) ===== */
+    .rv-banner-wrap{
+      position:fixed; top:10px; left:50%; transform:translateX(-50%);
+      z-index: 9999; width:min(1100px,95%);
+      pointer-events:none; /* no bloquea clics del hero */
+    }
+    .rv-banner{
+      display:none; pointer-events:auto;
+      background:#fff; color:var(--ink);
+      border-radius:16px; box-shadow:0 14px 40px rgba(0,0,0,.18);
+      border:1px solid rgba(0,0,0,.08); overflow:hidden;
+    }
+    .rv-row{ display:flex; align-items:center; gap:12px; padding:10px 14px; }
+    .rv-car{
+      width:34px; height:34px; border-radius:10px;
+      background:rgba(178,34,34,.10); display:grid; place-items:center;
+      animation:rv-car-move 3s.ease-in-out infinite;
+    }
+    .rv-car svg{ color:var(--brand) }
+    @keyframes rv-car-move{ 0%,100%{ transform:translateX(0) } 50%{ transform:translateX(6px) } }
+
+    .rv-live{ font-weight:600; color:var(--ink); font-size:13px; }
+    .rv-live::before{
+      content:""; display:inline-block; width:8px; height:8px; border-radius:999px; margin-right:6px;
+      background:#10b981; box-shadow:0 0 0 0 rgba(16,185,129,.5); animation:rv-live 1.5s ease-out infinite;
+    }
+    @keyframes rv-live{
+      0%{ box-shadow:0 0 0 0 rgba(16,185,129,.5) }
+      70%{ box-shadow:0 0 0 10px rgba(16,185,129,0) }
+      100%{ box-shadow:0 0 0 0 rgba(16,185,129,0) }
+    }
+
+    .rv-text{ font-size:13px; color:#3f3f46 }
+    .rv-count{ font-weight:700; color:var(--ink) }
+
+    .rv-cta{
+      background:var(--brand); color:#fff; border:0; border-radius:10px;
+      padding:8px 12px; font-size:13px; font-weight:600; cursor:pointer;
+      box-shadow:0 8px 20px rgba(178,34,34,.25);
+      transition:opacity .2s.ease;
+    }
+    .rv-cta:hover{ opacity:.95 }
+
+    .rv-close{
+      border:0; background:transparent; color:#9ca3af; font-size:18px; cursor:pointer;
+    }
+    .rv-close:hover{ color:#374151 }
+
+    /* Barra de progreso */
+    .rv-bar{ height:4px; width:100%; background:#f1f5f9 }
+    .rv-bar i{
+      display:block; height:100%; width:0%;
+      background:linear-gradient(90deg,#b22222,#ef4444,#fb923c,#b22222);
+      background-size:300% 100%; animation:rv-bar-move 1.6s linear infinite;
+    }
+    @keyframes rv-bar-move{ from{background-position:0% 50%} to{background-position:200% 50%} }
+
+    /* Entradas / salidas */
+    .rv-in{ animation:rv-drop .35s cubic-bezier(.2,.7,.2,1) forwards }
+    .rv-out{ animation:rv-lift .28s ease forwards }
+    @keyframes rv-drop{ from{ opacity:0; transform:translateY(-10px) scale(.98) } to{ opacity:1; transform:translateY(0) scale(1) } }
+    @keyframes rv-lift{ from{ opacity:1; transform:translateY(0) scale(1) } to{ opacity:0; transform:translateY(-10px) scale(.98) } }
+
+    @media (max-width:560px){
+      .rv-text{ font-size:12px }
+      .rv-cta{ display:none } /* CTA se oculta en móvil para no saturar */
+    }
+
+    /* ====== Swiper de TARJETAS (tiles) ====== */
+    .vj-tiles-swiper{ padding: 6px 10px 42px; width:min(1200px,94%); margin:28px auto; }
+    .vj-tiles-swiper .swiper-slide{ height:auto }
+
+    .tile-card{
+      background:#fff; border-radius:18px; overflow:hidden;
+      box-shadow:0 18px 40px rgba(0,0,0,.18);
+      display:flex; flex-direction:column; height:100%;
+    }
+    .tile-card .tile-media{
+      width:100%; height:230px; background-size:cover; background-position:center; background-repeat:no-repeat;
+    }
+    .tile-card .tile-body{ padding:18px 20px 22px; display:flex; flex-direction:column; gap:10px; flex:1 }
+    .tile-card h3{ margin:0; font-size:1.1rem; color:var(--brand); letter-spacing:.2px }
+    .tile-card p{ margin:0; color:var(--ink); opacity:.85; line-height:1.45 }
+    .tile-card .tile-link{ margin-top:auto; font-weight:600; color:var(--brand); text-decoration:none }
+    .tile-card .tile-link:hover{ text-decoration:underline }
+
+    .vj-tiles-swiper .swiper-button-prev,
+    .vj-tiles-swiper .swiper-button-next{
+      width:42px; height:42px; border-radius:50%;
+      background:#fff; box-shadow:0 10px 26px rgba(0,0,0,.18);
+    }
+    .vj-tiles-swiper .swiper-button-prev:after,
+    .vj-tiles-swiper .swiper-button-next:after{
+      font-size:18px; color:var(--brand);
+    }
+    .vj-tiles-swiper .swiper-pagination-bullet{
+      opacity:.35; background:var(--brand)
+    }
+    .vj-tiles-swiper .swiper-pagination-bullet-active{
+      opacity:1; transform:scale(1.15)
+    }
+
+    /* ==== CARD DE RESEÑAS GOOGLE ==== */
+    .tile-card.tile-reviews .tile-body{
+      gap: 12px;
+    }
+
+    .reviews-summary{
+      display:flex;
+      align-items:baseline;
+      gap:6px;
+      font-size:0.95rem;
+      font-weight:600;
+      color:var(--ink);
+    }
+
+    .reviews-score{
+      font-size:1.1rem;
+      font-weight:800;
+      color:#f59e0b;
+    }
+
+    .reviews-count{
+      font-size:0.85rem;
+      color:var(--muted);
+    }
+
+    .reviews-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height:180px;
+      overflow-y:auto;
+      padding-right:4px;
+    }
+
+    .review-item{
+      background:#f9fafb;
+      border-radius:10px;
+      padding:8px 10px;
+      box-shadow:0 4px 10px rgba(0,0,0,.04);
+    }
+
+    .review-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:0.85rem;
+      margin-bottom:4px;
+    }
+
+    .review-head strong{
+      font-weight:700;
+      color:#111827;
+    }
+
+    .review-stars{
+      font-size:0.8rem;
+      color:#f59e0b;
+    }
+
+    .review-text{
+      margin:0;
+      font-size:0.85rem;
+      color:#374151;
+      line-height:1.4;
+    }
   </style>
 @endsection
 
 @section('contenidoHome')
 
+@php
+    use Illuminate\Support\Str;
+@endphp
+
 <!-- ===== VISTA INICIO ===== -->
 <section class="v-inicio" data-title="Inicio">
+
+  <!-- ===== Banner Reservas (arriba, centrado) ===== -->
+  <div class="rv-banner-wrap" id="rvWrap" aria-live="polite">
+    <div class="rv-banner" id="rvBanner" role="status" aria-label="Reservas en vivo">
+      <div class="rv-bar"><i id="rvBar"></i></div>
+
+      <div class="rv-row">
+        <div class="rv-car" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M5 11l1-3.2A2 2 0 0 1 7.9 6h8.2a2 2 0 0 1 1.9 1.8L20 11v5a1 1 0 0 1-1 1h-1a1.5 1.5 0 0 1 0-3h1v-1H5v1h1a1.5 1.5 0 1 1 0 3H5a1 1 0 0 1-1-1v-5Zm3.2-3a.8.8 0 0 0-.77.6L6.9 10h10.2l-.53-1.4a.8.8 0 0 0-.77-.6H8.2Z"/>
+          </svg>
+        </div>
+
+        <div class="rv-copy" style="flex:1 1 auto">
+          <div class="rv-live">Reservas en vivo</div>
+          <div class="rv-text">
+            Ahora mismo <span class="rv-count" id="rvCount">5</span> personas están reservando autos.
+          </div>
+        </div>
+
+        <button class="rv-cta" onclick="location.href='{{ route('rutaReservaciones') }}'">Ver disponibilidad</button>
+        <button class="rv-close" id="rvClose" aria-label="Cerrar">✕</button>
+      </div>
+    </div>
+  </div>
+  <!-- ===== /Banner Reservas ===== -->
+
   <!-- HERO -->
   <section class="hero">
     <div class="carousel">
@@ -108,107 +312,132 @@
       </div>
     
 
-    <!-- Form flotante -->
+    <!-- ===== NUEVO LAYOUT DEL CUESTIONARIO ===== -->
     <div class="search-card">
       <form id="rentalForm" class="search-form" method="POST" action="{{ route('rutaBuscar') }}">
         @csrf
 
-        {{-- LUGAR DE RENTA --}}
-        <div class="field col-12">
-          <label for="pickupPlace">Lugar de renta</label>
-          <select id="pickupPlace" name="pickup_sucursal_id" aria-describedby="pickupHelp" required>
-            <option value="" disabled selected>-- Selecciona sucursal --</option>
-            @foreach($ciudades as $ciudad)
-              <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
-                @foreach($ciudad->sucursalesActivas as $suc)
-                  <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
-                    {{ $suc->nombre }}
-                  </option>
+        <div class="search-grid">
+
+          {{-- COLUMNA: LUGAR DE RENTA (PICK-UP / DROP-OFF) --}}
+          <div class="sg-col sg-col-location">
+
+            {{-- Título + checkbox en la MISMA fila --}}
+            <div class="location-head">
+              <span class="field-title">Lugar de renta</span>
+
+              <label class="inline-check" for="differentDropoff">
+                <input type="checkbox" id="differentDropoff" checked>
+                <span>Devolver en otro destino</span>
+              </label>
+            </div>
+
+            {{-- Pick-up --}}
+            <div class="field icon-field">
+              <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
+              <select id="pickupPlace" name="pickup_sucursal_id" aria-describedby="pickupHelp" required>
+                <option value="" disabled selected>¿Dónde inicia tu viaje? (Pick-up)</option>
+                @foreach($ciudades as $ciudad)
+                  <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+                    @foreach($ciudad->sucursalesActivas as $suc)
+                      <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
+                        {{ $suc->nombre }}
+                      </option>
+                    @endforeach
+                  </optgroup>
                 @endforeach
-              </optgroup>
-            @endforeach
-          </select>
-          <div id="pickupHelp" class="small">Elige la sucursal donde inicias tu renta.</div>
-        </div>
+              </select>
+            </div>
 
-        {{-- LUGAR DE DEVOLUCIÓN --}}
-        <div class="field col-12">
-          <label for="dropoffPlace">Lugar de devolución</label>
-          <select id="dropoffPlace" name="dropoff_sucursal_id" aria-describedby="dropoffHelp" required>
-            <option value="" disabled selected>-- Selecciona sucursal --</option>
-            @foreach($ciudades as $ciudad)
-              <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
-                @foreach($ciudad->sucursalesActivas as $suc)
-                  <option value="{{ $suc->id_sucursal }}" @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
-                    {{ $suc->nombre }}
-                  </option>
+            {{-- Drop-off --}}
+            <div class="field icon-field" id="dropoffWrapper">
+              <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
+              <select id="dropoffPlace" name="dropoff_sucursal_id" aria-describedby="dropoffHelp" required>
+                <option value="" disabled selected>¿Dónde termina tu viaje? (Drop-off)</option>
+                @foreach($ciudades as $ciudad)
+                  <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+                    @foreach($ciudad->sucursalesActivas as $suc)
+                      <option value="{{ $suc->id_sucursal }}" @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
+                        {{ $suc->nombre }}
+                      </option>
+                    @endforeach
+                  </optgroup>
                 @endforeach
-              </optgroup>
-            @endforeach
-          </select>
-          <div id="dropoffHelp" class="small">Elige la sucursal donde terminará tu renta.</div>
-        </div>
-
-        {{-- ENTREGA: FECHA + HORA --}}
-        <div class="field">
-          <label>Entrega</label>
-          <div class="datetime-row">
-            <input id="pickupDate"
-                   name="pickup_date"
-                   type="text"
-                   placeholder="Selecciona fecha"
-                   value="{{ request('pickup_date') }}"
-                   data-min="{{ now()->toDateString() }}"
-                   required>
-            <input id="pickupTime"
-                   name="pickup_time"
-                   type="text"
-                   placeholder="Hora"
-                   value="{{ request('pickup_time') }}"
-                   required>
+              </select>
+            </div>
           </div>
-        </div>
 
-        {{-- DEVOLUCIÓN: FECHA + HORA --}}
-        <div class="field">
-          <label>Devolución</label>
-          <div class="datetime-row">
-            <input id="dropoffDate"
-                   name="dropoff_date"
-                   type="text"
-                   placeholder="Selecciona fecha"
-                   value="{{ request('dropoff_date') }}"
-                   data-min="{{ now()->toDateString() }}"
-                   required>
-            <input id="dropoffTime"
-                   name="dropoff_time"
-                   type="text"
-                   placeholder="Hora"
-                   value="{{ request('dropoff_time') }}"
-                   required>
+          {{-- COLUMNA: ENTREGA --}}
+          <div class="sg-col sg-col-datetime">
+            <div class="field">
+              <label>Entrega</label>
+              <div class="datetime-row">
+                <div class="dt-field icon-field">
+                  <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                  <input id="pickupDate"
+                         name="pickup_date"
+                         type="text"
+                         placeholder="12/Sep/2024"
+                         value="{{ request('pickup_date') }}"
+                         data-min="{{ now()->toDateString() }}"
+                         required>
+                </div>
+                <div class="dt-field icon-field">
+                  <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+                  <input id="pickupTime"
+                         name="pickup_time"
+                         type="text"
+                         placeholder="06:00 PM"
+                         value="{{ request('pickup_time') }}"
+                         required>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {{-- CATEGORÍA (opcional) --}}
-        <div class="field">
-          <label for="carType">Tipo de auto</label>
-          <select id="carType" name="categoria_id">
-            <option value="">-- Cualquiera --</option>
-            @foreach($categorias as $cat)
-              <option value="{{ $cat->id_categoria }}" @selected(request('categoria_id') == $cat->id_categoria)>
-                {{ $cat->nombre }}
-              </option>
-            @endforeach
-          </select>
-        </div>
+          {{-- COLUMNA: DEVOLUCIÓN --}}
+          <div class="sg-col sg-col-datetime">
+            <div class="field">
+              <label>Devolución</label>
+              <div class="datetime-row">
+                <div class="dt-field icon-field">
+                  <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                  <input id="dropoffDate"
+                         name="dropoff_date"
+                         type="text"
+                         placeholder="12/Sep/2024"
+                         value="{{ request('dropoff_date') }}"
+                         data-min="{{ now()->toDateString() }}"
+                         required>
+                </div>
+                <div class="dt-field icon-field">
+                  <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+                  <input id="dropoffTime"
+                         name="dropoff_time"
+                         type="text"
+                         placeholder="06:00 PM"
+                         value="{{ request('dropoff_time') }}"
+                         required>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <div class="actions">
-          <button type="submit"><i class="fa-solid fa-magnifying-glass"></i> BUSCAR</button>
-        </div>
+          {{-- COLUMNA: BOTÓN BUSCAR --}}
+          <div class="sg-col sg-col-submit">
+            <div class="actions">
+              <button type="submit">
+                <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
+              </button>
+            </div>
+          </div>
+
+        </div> {{-- /search-grid --}}
+
+        <div id="rangeSummary" class="range-summary" aria-live="polite"></div>
       </form>
-
-      <div id="rangeSummary" class="range-summary" aria-live="polite"></div>
     </div>
+    <!-- ===== /NUEVO LAYOUT DEL CUESTIONARIO ===== -->
 
   </section>
 
@@ -274,7 +503,7 @@
           </div>
 
           <ul class="car-specs">
-            <li><i class="fa-solid fa-user-large"></i> 5</li>
+            <li><i class="fa-solid.fa-user-large"></i> 5</li>
             <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
             <li><i class="fa-solid fa-briefcase"></i> 2</li>
           </ul>
@@ -407,10 +636,10 @@
         <article class="car-card">
           <header class="car-title">
             <h3>SUV MEDIANA</h3>
-            <p>Chevrolet captiva o similar | I</p>
+            <p>Kia Seltos o similar | I</p>
           </header>
           <div class="car-media">
-            <img src="{{ asset('img/captiva.png') }}" alt="Chevrolet captiva o similar">
+            <img src="{{ asset('img/seltos.png') }}" alt="Kia Seltos o similar">
           </div>
 
           <div class="offer">
@@ -734,35 +963,167 @@
     </div>
   </section>
 
-  <!-- TARJETAS -->
-  <section class="tiles">
-    <div class="tiles-wrap">
-      <article class="tile">
-        <div class="tile-media" style="background-image:url('{{ asset('img/arcos.jpg') }}');"></div>
-        <div class="tile-body">
-          <h3>DESCUBRE QUERÉTARO:</h3>
-          <p>Rutas escénicas y pueblos mágicos para disfrutar a tu ritmo. ¡Explóralo en auto!</p>
-          <a href="#" class="tile-link">Leer más…</a>
+  <!-- TARJETAS (Swiper) -->
+  <section aria-label="Explora destinos y servicios">
+    <div class="swiper vj-tiles-swiper">
+      <div class="swiper-wrapper">
+
+        {{-- ==== 3 TARJETAS ORIGINALES ==== --}}
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/24.jpg') }}')"></div>
+            <div class="tile-body">
+              <h3>Activos 24/7:</h3>
+              <p>Atención y soporte en todo momento. Nuestro equipo está disponible las 24 horas, los 7 días de la semana, para que viajes con total tranquilidad.</p>
+              <a href="#" class="tile-link">Leer más…</a>
+            </div>
+          </article>
         </div>
-      </article>
-      <article class="tile">
-        <div class="tile-media" style="background-image:url('{{ asset('img/24.jpg') }}');"></div>
-        <div class="tile-body">
-          <h3>SERVICIO 24/7:</h3>
-          <p>Asistencia en carretera y soporte siempre disponibles. Tu viaje nunca se detiene.</p>
-          <a href="#" class="tile-link">Leer más…</a>
+
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/4x4.png') }}')"></div>
+            <div class="tile-body">
+              <h3>AUTOS Y CAMIONETAS 4x4:</h3>
+              <p>Viaja sin límites. Contamos con SUVs, autos todoterreno y camionetas 4x4 ideales para carretera, ciudad o aventura.</p>
+              <a href="#" class="tile-link">Explora nuestra flota...</a>
+            </div>
+          </article>
         </div>
-      </article>
-      <article class="tile">
-        <div class="tile-media" style="background-image:url('{{ asset('img/leon.jpeg') }}');"></div>
-        <div class="tile-body">
-          <h3>DESCUBRE LEÓN:</h3>
-          <p>Moda, negocios y gastronomía con la libertad de moverte en tu auto.</p>
-          <a href="#" class="tile-link">Leer más…</a>
+
+        <!-- ✅ Corregido: esta card ahora usa background-image -->
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/Urvancard.png') }}')"></div>
+            <div class="tile-body">
+              <h3>CAMIONETAS PARA 13 PASAJEROS:</h3>
+              <p>Perfectas para viajes familiares o empresariales. Comodidad, espacio y seguridad para todos tus acompañantes.</p>
+              <a href="#" class="tile-link">Reserva la tuya...</a>
+            </div>
+          </article>
         </div>
-      </article>
+
+        {{-- ==== 6 NUEVAS TARJETAS ==== --}}
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/tarjeta.png') }}')"></div>
+            <div class="tile-body">
+              <h3>ACEPTAMOS TARJETAS:</h3>
+              <p>Pagos con tarjeta de crédito o débito. Fácil, rápido y seguro. También puedes hacer tu pago final al devolver tu vehículo.</p>
+              <a href="#" class="tile-link">Conoce nuestras opciones...</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/aeropuerto.png') }}')"></div>
+            <div class="tile-body">
+              <h3>ENTREGA EN AEROPUERTO 24/7:</h3>
+              <p>Recibe o entrega tu auto directamente en el aeropuerto, sin filas ni esperas. Disponible las 24 horas del día.</p>
+              <a href="#" class="tile-link">Agendar entrega...</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/Verificacion.png') }}')"></div>
+            <div class="tile-body">
+              <h3>VEHÍCULOS CON VERIFICACIÓN 00:</h3>
+              <p>Todos nuestros autos cumplen con las normas ambientales y están verificados tipo 00 para garantizar su óptimo rendimiento.</p>
+              <a href="#" class="tile-link">Descubre más...</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/Drop.png') }}')"></div>
+            <div class="tile-body">
+              <h3>DROP OFF NACIONAL:</h3>
+              <p>Disfruta de tu viaje sin preocupaciones. Devuelve tu auto en otra ciudad con nuestro servicio Drop Off Nacional (con costo adicional).</p>
+              <a href="#" class="tile-link">Consultar destinos...</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/nuevos.png') }}')"></div>
+            <div class="tile-body">
+              <h3>AUTOS NUEVOS Y MODERNOS:</h3>
+              <p>Conduce con estilo y seguridad. Nuestra flota está compuesta por vehículos recientes, siempre en óptimas condiciones.</p>
+              <a href="#" class="tile-link">Explora la flota...</a>
+            </div>
+          </article>
+        </div>
+
+        {{-- 🔹 TARJETA DE RESEÑAS GOOGLE (última slide, SIEMPRE esta card) --}}
+        <div class="swiper-slide">
+          <article class="tile-card tile-reviews">
+            <div class="tile-media" style="background-image:url('{{ asset('img/Prioridad.png') }}')"></div>
+
+            <div class="tile-body">
+              <h3>RESEÑAS DE GOOGLE MAPS:</h3>
+
+              @if(!empty($googleRating))
+                <div class="reviews-summary">
+                  <span class="reviews-score">⭐ {{ number_format($googleRating, 1) }}</span>
+                  @if(!empty($googleTotal))
+                    <span class="reviews-count">({{ $googleTotal }} opiniones)</span>
+                  @endif
+                </div>
+              @endif
+
+              <div class="reviews-list">
+                @if(isset($googleReviews) && $googleReviews->isNotEmpty())
+                  @foreach($googleReviews as $review)
+                    <div class="review-item">
+                      <div class="review-head">
+                        <strong>{{ $review['author_name'] ?? 'Usuario de Google' }}</strong>
+                        @if(!empty($review['rating']))
+                          <span class="review-stars">
+                            @for($i = 0; $i < (int)$review['rating']; $i++)
+                              ★
+                            @endfor
+                          </span>
+                        @endif
+                      </div>
+                      <p class="review-text">
+                        {{ Str::limit($review['text'] ?? '', 120) }}
+                      </p>
+                    </div>
+                  @endforeach
+                @else
+                  {{-- Mensaje cuando aún no hay reseñas o falló la API --}}
+                  <div class="review-item">
+                    <p class="review-text">
+                      Pronto verás aquí las opiniones de nuestros clientes en Google Maps.
+                    </p>
+                  </div>
+                @endif
+              </div>
+
+              <a href="https://www.google.com/maps/place/VIAJERO+CAR+RENTAL+Centro+Sur"
+                 target="_blank"
+                 rel="noopener"
+                 class="tile-link">
+                Ver más reseñas en Google…
+              </a>
+            </div>
+          </article>
+        </div>
+
+      </div>
+
+      {{-- Controles --}}
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-button-next"></div>
+      <div class="swiper-pagination"></div>
     </div>
   </section>
+  <!-- /TARJETAS (Swiper) -->
 
   <!-- CTA FINAL -->
   <section class="cta-hero">
@@ -799,6 +1160,8 @@
   </div>
 </div>
 
+@endsection
+
 @section('js-vistaHome')
   {{-- Flatpickr core + locale ES + rangePlugin (¡en este orden!) --}}
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -807,6 +1170,9 @@
 
   {{-- Tu JS --}}
   <script src="{{ asset('js/home.js') }}"></script>
+
+  {{-- Swiper JS para el carrusel de tarjetas --}}
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
   {{-- Carruseles de flota (loop infinito, flechas bidireccionales, autoslide 10s) --}}
   <script>
@@ -866,62 +1232,108 @@
   })();
   </script>
 
-  <!-- ===== Aviso animado "carrito" (entra 5s cada 2min) ===== -->
+  <!-- ===== Inicialización Swiper de TARJETAS ===== -->
+  <script>
+    const tilesSwiper = new Swiper('.vj-tiles-swiper', {
+      loop: true,
+      speed: 650,
+      autoplay: {
+        delay: 3200,
+        disableOnInteraction: false
+      },
+      spaceBetween: 18,
+      slidesPerView: 1.06,
+      centeredSlides: false,
+      grabCursor: true,
+      navigation: {
+        nextEl: '.vj-tiles-swiper .swiper-button-next',
+        prevEl: '.vj-tiles-swiper .swiper-button-prev',
+      },
+      pagination: {
+        el: '.vj-tiles-swiper .swiper-pagination',
+        clickable: true
+      },
+      breakpoints: {
+        560:  { slidesPerView: 1.4, spaceBetween: 18 },
+        768:  { slidesPerView: 2,   spaceBetween: 20 },
+        1024: { slidesPerView: 3,   spaceBetween: 22 },
+        1280: { slidesPerView: 3.3, spaceBetween: 24 }
+      }
+    });
+  </script>
+
+  <!-- ===== Toast de reservas (simple y limpio) ===== -->
   <script>
   (function(){
-    const MENSAJE_FIJO = "HAY 5 PERSONAS MÁS RESERVANDO";
-    const MOSTRAR_MS   = 5000;    // visible 5s
-    const INTERVALO_MS = 120000;  // cada 2 minutos
-    let mostrando = false;
+    // Números por aparición (puedes ajustar)
+    const SEQ = [5,7,10,5,12];
 
-    function crearNodo(msg){
-      const el = document.createElement('div');
-      el.className = 'alert-reservas';
-      el.setAttribute('role','status');
-      el.setAttribute('aria-live','polite');
-      el.innerHTML = `
-        <div class="row">
-          <!-- Ícono de auto (inline SVG, libre) -->
-          <svg class="icon-car" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M14 16H9m10 0h3v-3.15a1 1 0 00-.84-.99L16 11l-2.7-3.6a1 1 0 00-.8-.4H5.24a2 2 0 00-1.8 1.1l-.8 1.63A6 6 0 002 12.42V16h2"/>
-            <circle cx="6.5" cy="16.5" r="2.5"/>
-            <circle cx="16.5" cy="16.5" r="2.5"/>
-          </svg>
-          <span class="badge">En vivo</span>
-          <span class="msg">` + msg + `</span>
-        </div>
-      `;
-      document.body.appendChild(el);
-      return el;
+    const SHOW_MS = 7000;  // tiempo visible
+    const HIDE_MS = 25000;  // tiempo oculto entre apariciones
+
+    const banner = document.getElementById('rvBanner');
+    const bar    = document.getElementById('rvBar');
+    const count  = document.getElementById('rvCount');
+    const close  = document.getElementById('rvClose');
+
+    let idx = 0, loop = true, hideT = null, nextT = null;
+    let paused = false, startTs = 0, remaining = SHOW_MS;
+
+    function setBar(ms){
+      bar.style.transition = 'none'; bar.style.width = '0%';
+      requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
+        bar.style.transition = `width ${ms}ms linear`;
+        bar.style.width = '100%';
+      });});
     }
 
-    function mostrarAlerta(msg = MENSAJE_FIJO){
-      if (mostrando) return;
-      mostrando = true;
+    function showOnce(){
+      count.textContent = SEQ[idx]; idx = (idx + 1) % SEQ.length;
+      banner.style.display = 'block';
+      banner.classList.remove('rv-out'); banner.classList.add('rv-in');
 
-      const el = crearNodo(msg);
-      // forzar siguiente frame para transiciones CSS
-      requestAnimationFrame(()=> el.classList.add('in'));
+      remaining = SHOW_MS; startTs = performance.now();
+      setBar(SHOW_MS);
 
+      hideT = setTimeout(hide, SHOW_MS);
+    }
+
+    function hide(){
+      banner.classList.remove('rv-in'); banner.classList.add('rv-out');
       setTimeout(()=>{
-        el.classList.remove('in');
-        setTimeout(()=>{
-          el.remove();
-          mostrando = false;
-        }, 500); // coincide con transición CSS
-      }, MOSTRAR_MS);
+        banner.style.display = 'none';
+        if(loop){ nextT = setTimeout(showOnce, HIDE_MS); }
+      }, 260);
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      mostrarAlerta();                       // una de inmediato
-      setInterval(mostrarAlerta, INTERVALO_MS); // cada 2 min
+    // Pausar al pasar el mouse (congela la barra)
+    banner.addEventListener('mouseenter', ()=>{
+      paused = true;
+      const elapsed = performance.now() - startTs;
+      remaining = Math.max(0, SHOW_MS - elapsed);
+      if(hideT){ clearTimeout(hideT); hideT = null; }
+      bar.style.transition = 'none';
     });
 
-    // Exponer si quieres dispararla manualmente
-    window.mostrarAlertaReservas = mostrarAlerta;
+    banner.addEventListener('mouseleave', ()=>{
+      if(!paused) return; paused = false;
+      // reanudar
+      setTimeout(()=>{
+        setBar(remaining);
+        hideT = setTimeout(hide, remaining);
+        startTs = performance.now() - (SHOW_MS - remaining);
+      }, 30);
+    });
+
+    close.addEventListener('click', ()=>{
+      loop = false;
+      if(hideT) clearTimeout(hideT);
+      if(nextT) clearTimeout(nextT);
+      banner.style.display = 'none';
+    });
+
+    document.addEventListener('DOMContentLoaded', showOnce);
   })();
   </script>
-  <!-- ===== /Aviso animado ===== -->
-@endsection
-
+  <!-- ===== /Toast de reservas ===== -->
 @endsection

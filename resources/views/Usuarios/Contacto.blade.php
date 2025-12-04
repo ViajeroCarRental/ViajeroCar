@@ -29,27 +29,54 @@
 
   {{-- ===== MAPAS ===== --}}
   <section class="maps" aria-label="mapas de ubicación">
+    {{-- Central Park --}}
     <div class="map-card">
-      <div class="map-head"><i class="fa-solid fa-map-location-dot"></i> Central Park, Querétaro</div>
+      <div class="map-head">
+        <i class="fa-solid fa-map-location-dot"></i>
+        Central Park, Querétaro
+      </div>
       <div class="map-body">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3732.320875076114!2d-100.40373!3d20.58863"
-          loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <iframe
+          src="https://www.google.com/maps?q=20.5714388,-100.365049&z=15&output=embed"
+          style="border:0;"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
       </div>
     </div>
 
+    {{-- Aeropuerto Internacional de Querétaro --}}
     <div class="map-card">
-      <div class="map-head"><i class="fa-solid fa-plane-departure"></i> Aeropuerto Intercontinental de Qro.</div>
+      <div class="map-head">
+        <i class="fa-solid fa-plane-departure"></i>
+        Aeropuerto Internacional de Querétaro
+      </div>
       <div class="map-body">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3719.870311799566!2d-100.15367!3d20.60267"
-          loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <iframe
+          src="https://www.google.com/maps?q=20.6226379,-100.1900731&z=15&output=embed"
+          style="border:0;"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
       </div>
     </div>
 
+    {{-- Central de Autobuses de Querétaro --}}
     <div class="map-card">
-      <div class="map-head"><i class="fa-solid fa-plane-arrival"></i> Aeropuerto del Bajío (León)</div>
+      <div class="map-head">
+        <i class="fa-solid fa-bus"></i>
+        Central de Autobuses de Querétaro
+      </div>
       <div class="map-body">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3604.232674145455!2d-101.47641!3d21.24142"
-          loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        <iframe
+          src="https://www.google.com/maps?q=20.576941,-100.3643343&z=15&output=embed"
+          style="border:0;"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
       </div>
     </div>
   </section>

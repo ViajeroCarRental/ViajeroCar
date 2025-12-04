@@ -1,4 +1,4 @@
-:root{ 
+:root{  
   --brand:#b22222; --brand-dark:#8b1d1a; --brand-2:#8b1d1a;
   --ink:#0f172a; --muted:#6b7280; --soft:#f6f7fb; --paper:#fff;
   --shadow:0 25px 60px rgba(0,0,0,.35);
@@ -67,16 +67,34 @@ body{
 @media (max-width:940px){ .menu{ display:none } .hamburger{ display:block } }
 
 /* ===== HERO ===== */
-.hero{ position:relative; min-height:88vh }
+.hero{ position:relative; min-height:88vh; padding-top: calc(var(--topbar-h) + 8px); }
 .carousel{ position:absolute; inset:0; overflow:hidden; z-index:0 }
 .slide{ position:absolute; inset:0; background-size:cover; background-position:center; opacity:0; transform:scale(1.04); transition:opacity .9s, transform 1.5s }
 .slide.active{ opacity:1; transform:scale(1) }
 .overlay{ position:absolute; inset:0; background:linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,.35)); z-index:0 }
-.hero-copy{ position:relative; z-index:2; color:#fff; max-width:900px; padding:160px 24px 120px }
-.kicker{ letter-spacing:2px; font-weight:600; text-transform:uppercase }
-.headline{ font-family:'Playfair Display',serif; font-size:64px; line-height:.92; margin:6px 0; text-transform:uppercase; font-weight:800 }
 
-/* ===== HERO ICONOS ===== */
+/* copia centrada */
+.hero-copy{
+  position:relative;
+  z-index:2;
+  color:#fff;
+  max-width:1100px;
+  padding:160px 24px 120px;
+  margin:0 auto;
+  text-align:center;
+}
+.kicker{ letter-spacing:2px; font-weight:600; text-transform:uppercase }
+.headline{
+  font-family:'Playfair Display',serif;
+  font-size:64px;
+  line-height:.92;
+  margin:10px auto 0;
+  text-transform:uppercase;
+  font-weight:800;
+  max-width:900px;
+}
+
+/* ===== HERO ICONOS (primera definición, luego se sobreescribe abajo para el layout final) ===== */
 .hero-icons{
   margin-top:14px;
   display:flex;
@@ -92,31 +110,50 @@ body{
   font-weight:600;
   line-height:1.3;
 }
-.hero-icons .icon-item i{ font-size:20px; flex:0 0 22px; display:inline-block }
+.hero-icons .icon-item i{ font-size:2px; flex:0 0 22px; display:inline-block }
 .hero-icons .icon-item span{ display:inline }
 
 /* ===== FORM ===== */
 .search-card{
-  position: absolute;
-  right: 20px;
-  bottom: 24px;
-  width: min(520px,92%);
-  background: var(--paper);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
-  z-index: 3;
-  padding: 16px;
-  box-sizing: border-box;
-  max-height: calc(100vh - 140px);
-  overflow: auto;
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:32px;
+  width:min(2200px,96%);
+  background:var(--paper);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  z-index:3;
+  padding: 10px 15px 15px;
+  box-sizing:border-box;
+  max-height:calc(80vh - 100px);
+  overflow:auto;
 }
+
+/* el form solo envuelve la grid */
 .search-form{
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(2, 1fr);
-  align-items: start;
-  box-sizing: border-box;
+  display:block;
 }
+
+/* grid principal del formulario: 
+   [Lugar + checkbox + destino] | [Entrega] | [Devolución] | [Botón] */
+.search-grid{
+  display:grid;
+  grid-template-columns: 2.7fr 1.6fr 1.6fr auto;
+  column-gap:16px;
+  row-gap:10px;
+  align-items:flex-end;
+}
+
+.sg-col{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.sg-col-location{ min-width:0; }
+.sg-col-datetime{ min-width:0; }
+.sg-col-submit{ align-self:stretch; }
+
 .field{ display:flex; flex-direction:column; gap:6px; position:relative }
 .field.col-12{ grid-column:1 / -1 }
 label{ font-size:12px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.5px }
@@ -131,17 +168,29 @@ input,select,textarea{
   box-sizing:border-box;
 }
 input:focus,select:focus{ border-color:var(--brand); box-shadow:0 0 0 3px rgba(178,34,34,.15) }
-.actions{ grid-column:1 / -1 }
+
+.actions{
+  display:flex;
+  align-items:stretch;
+  justify-content:flex-end;
+  height:100%;
+}
 .actions button{
-  width:100%;
+  width:60%;
+  margin: 0 auto;
   background:var(--brand);
   color:#fff;
   border:0;
-  padding:12px 16px;
+  padding:20px 10px;
   font-weight:700;
-  border-radius:10px;
+  border-radius:12px;
   cursor:pointer;
-  letter-spacing:.5px
+  letter-spacing:.5px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  text-transform:uppercase;
 }
 .range-summary{ margin-top:8px; font-size:12px; color:#6b7280 }
 
@@ -155,7 +204,15 @@ input:focus,select:focus{ border-color:var(--brand); box-shadow:0 0 0 3px rgba(1
 }
 .datetime-row input{ flex: 1 1 120px; min-width: 0 }
 
-.cal-ico{ position:absolute; right:12px; bottom:12px; font-size:16px; color:#000000; pointer-events:none }
+.cal-ico{
+  position:absolute;
+  right:12px;
+  top:50%;                 /* centrado vertical */
+  transform:translateY(-50%);
+  font-size:18px;
+  color:#9ca3af;
+  pointer-events:none;
+}
 input.flatpickr-input{ padding-right:36px }
 .flatpickr-calendar{ border-radius:14px; box-shadow:0 18px 45px rgba(0,0,0,.18); overflow:hidden }
 .flatpickr-months{ background:var(--brand); color:#fff }
@@ -269,38 +326,64 @@ input.flatpickr-input{ padding-right:36px }
 .dropdown-menu .dropdown-item:hover { background: rgba(178,34,34,.12); color: var(--brand); }
 .dropdown-divider { margin: 6px 0; border-top: 1px solid #eee; }
 
-/* ===== Ajustes específicos del hero respecto a la topbar ===== */
-.hero{ padding-top: calc(var(--topbar-h) + 8px); }
+/* ===== Ajustes específicos hero/nav ===== */
 .hero .search-card{
-  position: absolute;
-  right: 70px !important;
-  left: 900px !important;
-  top: calc(var(--topbar-h) + 20px) !important;
-  bottom: auto;
-  transform: none !important;
-  margin: 0 !important;
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:32px;
+  right:auto;
+  top:auto;
+  margin:0;
 }
 
 /* ===== Responsivo ===== */
 @media (max-width:1100px){ .headline{ font-size:54px } }
+
 @media (max-width:900px){
   .headline{ font-size:46px }
-  .search-card{ position:static; margin:-40px auto 20px; width:min(700px,92%); max-height:none; overflow:visible; }
+
+  .hero .search-card{
+    position:static;
+    transform:none;
+    margin:-40px auto 20px;
+    width:min(720px,94%);
+    max-height:none;
+    overflow:visible;
+  }
+
+  .search-grid{
+    grid-template-columns: 1fr 1fr;  /* dos columnas */
+  }
+
+  .sg-col-submit{
+    grid-column:1 / -1;              /* botón abajo a lo ancho */
+  }
+
   .hero{ padding-top:78px }
   .topbar{ left:50%; transform:translateX(-50%); width:96% }
   .info-row,.info-row.reverse{ grid-template-columns:1fr; gap:18px }
   .tiles-wrap{ grid-template-columns:1fr 1fr }
   .hero-icons .icon-item span{ font-size:15px; }
 }
+
 @media (max-width:560px){
   .headline{ font-size:34px }
-  .search-form{ grid-template-columns:1fr }
-  .info-content h2{ font-size:36px }
-  .tiles-wrap{ grid-template-columns:1fr }
-  .search-card{ padding:12px; bottom:12px; }
+
+  .search-card{
+    padding:12px;
+    bottom:12px;
+  }
+
+  .search-grid{
+    grid-template-columns:1fr;       /* una columna */
+  }
+
   .datetime-row{ gap:6px; }
   .hero-icons .icon-item i{ font-size:18px; }
   .hero-icons .icon-item span{ font-size:14px; }
+  .info-content h2{ font-size:36px }
+  .tiles-wrap{ grid-template-columns:1fr }
 }
 
 /* ===== Variación grid de iconos hero ===== */
@@ -645,7 +728,6 @@ input::-moz-focus-inner{ border:0; }
 .fleet-btn,
 a.btn{ -webkit-tap-highlight-color:transparent; }
 
-
 #fleet-carousel.fleet,
 #fleet-carousel-2.fleet{
   margin-bottom: 6px !important;
@@ -660,49 +742,9 @@ a.btn{ -webkit-tap-highlight-color:transparent; }
   box-shadow: none !important;
   padding: 0 !important;
 
-  margin-top: 0 !important;       /* pegado */
-  margin-bottom: 18px !important; /* respiro inferior */
-
-  text-align: center;
-  font-family: 'Playfair Display', serif;
-  font-size: clamp(15px, 1.6vw, 19px); 
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: .7px;
-  text-transform: uppercase;
-  color: #111827;
-}
-
-#fleet-carousel + .fleet-meta .sep,
-#fleet-carousel-2 + .fleet-meta .sep{
-  margin: 0 12px;
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--brand);
-}
-
-/* móvil */
-@media (max-width:720px){
-  #fleet-carousel.fleet,
-  #fleet-carousel-2.fleet{ margin-bottom: 4px !important; }
-  #fleet-carousel + .fleet-meta,
-  #fleet-carousel-2 + .fleet-meta{ margin-bottom: 14px !important; font-size: 15px; }
-}
-#fleet-carousel.fleet,
-#fleet-carousel-2.fleet{
-  margin-bottom: 8px !important;
-}
-
-#fleet-carousel .fleet-track,
-#fleet-carousel-2 .fleet-track{
-  padding-bottom: 0 !important;
-  margin-bottom: 0 !important;
-}
-
-#fleet-carousel + .fleet-meta,
-#fleet-carousel-2 + .fleet-meta{
   margin-top: 40px !important;
   margin-bottom: 40px !important;
+
   text-align: center;
   font-family: 'Playfair Display', serif;
   font-size: clamp(16px, 1.8vw, 20px);
@@ -780,74 +822,615 @@ section:has(> #fleet-carousel-2){
   grid-row: 2 !important;    
 }
 
-.alert-reservas {
+/* ===== Aviso animado "En vivo" (versión anterior, mantiene compatibilidad) ===== */
+.alert-reservas{
   position: fixed;
-  left: 16px;               /* entra desde la izquierda */
-  bottom: 28px;             /* muévelo arriba si quieres */
+  left: 16px;
+  bottom: 28px;
   z-index: 1200;
   transform: translateX(-120%);
   opacity: 0;
   transition: transform .45s ease, opacity .35s ease;
   pointer-events: none;
 
-  /* estilo visual */
   background: var(--paper);
   color: var(--ink);
-  border-left: 6px solid var(--brand);
-  border-radius: 14px;
+  border-radius: 16px;
   box-shadow: var(--shadow);
-  padding: 12px 16px;
+  padding: 10px 12px;
   max-width: min(94vw, 420px);
   font-family: 'Poppins', system-ui, sans-serif;
-  font-weight: 600;
-  letter-spacing: .3px;
 }
-.alert-reservas.in {
-  transform: translateX(0);
-  opacity: 1;
+.alert-reservas.in{ transform: translateX(0); opacity: 1; }
+.alert-reservas .ar-wrap{ display:flex; align-items:center; gap:12px; }
+.alert-reservas .ar-icon{
+  width:36px; height:36px; flex:0 0 36px;
+  display:grid; place-items:center;
+  border-radius:50%;
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  box-shadow: 0 8px 18px rgba(178,34,34,.35);
 }
-.alert-reservas .row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.alert-reservas .badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--brand);
-  color: var(--paper);
-  font-weight: 700;
-  font-size: 12px;
-  letter-spacing: .3px;
-  text-transform: uppercase;
-  box-shadow: 0 4px 10px rgba(178,34,34,.35);
-}
-.alert-reservas .msg {
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--ink);
-}
-/* ícono del carrito/auto */
-.alert-reservas .icon-car {
-  width: 22px;
-  height: 22px;
-  flex: 0 0 auto;
-  stroke: var(--brand);
-  fill: none;
+.alert-reservas .ar-icon svg{
+  width:18px; height:18px;
+  stroke:#fff; fill:none; stroke-width:2;
   animation: car-vibe 1.3s ease-in-out infinite;
 }
-@keyframes car-vibe {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(2px); }
+.alert-reservas .ar-body{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.alert-reservas .ar-badge{
+  display:inline-block; padding:3px 10px; border-radius:999px;
+  background:rgba(178,34,34,.12); color:var(--brand);
+  font-weight:800; font-size:11px; text-transform:uppercase; letter-spacing:.5px;
+  border:1px solid rgba(178,34,34,.35);
 }
-/* versión móvil: sube el aviso para no tapar botones flotantes */
+.alert-reservas .ar-msg{ font-size:14px; font-weight:800; letter-spacing:.2px; line-height:1.25; color:var(--ink); }
+@keyframes car-vibe{ 0%,100%{transform:translateX(0)} 50%{transform:translateX(2px)} }
+@media (max-width:560px){
+  .alert-reservas{ bottom:90px; left:12px; max-width:86vw; }
+  .alert-reservas .ar-badge{ font-size:10px; padding:2px 8px; }
+  .alert-reservas .ar-msg{ font-size:13px; }
+}
+
+
+/* ===== Banner reservas en vivo (versión nueva, abajo centrado) ===== */
+.rv-banner-wrap{
+  position:fixed;
+  top:auto !important;
+  bottom:16px !important;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:9999;
+  width:min(1100px,95%);
+  pointer-events:none; /* no bloquea clics del hero */
+}
+.rv-banner{ pointer-events:auto; } /* sí permite clics en el banner */
+
+/* separarnos un poco de la barra social en móviles */
+@media (max-width:560px){
+  .rv-banner-wrap{ bottom:86px !important; }
+}
+.rv-row{ display:flex; align-items:center; gap:12px; padding:10px 14px; }
+
+/* Icono auto */
+.rv-car{
+  width:34px; height:34px; border-radius:10px;
+  background:rgba(178,34,34,.10);
+  display:grid; place-items:center;
+  animation:rv-car-move 3s ease-in-out infinite;
+}
+.rv-car svg{ color:var(--brand) }
+@keyframes rv-car-move{ 0%,100%{ transform:translateX(0) } 50%{ transform:translateX(6px) } }
+
+/* Live + texto */
+.rv-live{ font-weight:600; color:var(--ink); font-size:13px; }
+.rv-live::before{
+  content:""; display:inline-block; width:8px; height:8px; border-radius:999px; margin-right:6px;
+  background:#10b981; box-shadow:0 0 0 0 rgba(16,185,129,.5); animation:rv-live 1.5s ease-out infinite;
+}
+@keyframes rv-live{
+  0%{ box-shadow:0 0 0 0 rgba(16,185,129,.5) }
+  70%{ box-shadow:0 0 0 10px rgba(16,185,129,0) }
+  100%{ box-shadow:0 0 0 0 rgba(16,185,129,0) }
+}
+.rv-text{ font-size:13px; color:#3f3f46 }
+.rv-count{ font-weight:800; color:var(--ink) }
+
+/* CTA y cierre */
+.rv-cta{
+  background:var(--brand); color:#fff; border:0; border-radius:10px;
+  padding:8px 12px; font-size:13px; font-weight:700; cursor:pointer;
+  box-shadow:0 8px 20px rgba(178,34,34,.25);
+  transition:opacity .2s ease;
+}
+.rv-cta:hover{ opacity:.95 }
+.rv-close{
+  border:0; background:transparent; color:#9ca3af; font-size:18px; cursor:pointer;
+}
+.rv-close:hover{ color:#374151 }
+
+.rv-bar{ height:4px; width:100%; background:#f1f5f9 }
+.rv-bar i{
+  display:block; height:100%; width:0%;
+  background:linear-gradient(90deg,var(--brand),#ef4444,#fb923c,var(--brand));
+  background-size:300% 100%;
+  animation:rv-bar-move 1.6s linear infinite;
+}
+@keyframes rv-bar-move{ from{background-position:0% 50%} to{background-position:200% 50%} }
+
+.rv-in{ animation:rv-drop .35s cubic-bezier(.2,.7,.2,1) forwards }
+.rv-out{ animation:rv-lift .28s ease forwards }
+@keyframes rv-drop{ from{ opacity:0; transform:translateY(-10px) scale(.98) } to{ opacity:1; transform:translateY(0) scale(1) } }
+@keyframes rv-lift{ from{ opacity:1; transform:translateY(0) scale(1) } to{ opacity:0; transform:translateY(-10px) scale(.98) } }
+
+@media (max-width:560px){
+  .rv-text{ font-size:12px }
+  .rv-cta{ display:none } 
+}
+
+/* ======= SWIPER TARJETAS (Nueva sección de cards giratorias) ======= */
+.vj-tiles-swiper {
+  padding: 6px 10px 42px;
+  width: min(1200px, 94%);
+  margin: 40px auto 80px;
+}
+.vj-tiles-swiper .swiper-slide {
+  height: auto; /* permite alturas variables */
+}
+
+.tile-card {
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(255, 255, 255, 0.18);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.tile-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+}
+.tile-card .tile-media {
+  width: 100%;
+  height: 230px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.tile-card .tile-body {
+  padding: 18px 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.tile-card h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--brand);
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}
+.tile-card p {
+  margin: 0;
+  color: var(--ink);
+  opacity: 0.85;
+  line-height: 1.45;
+}
+.tile-card .tile-link {
+  margin-top: auto;
+  font-weight: 600;
+  color: var(--brand);
+  text-decoration: none;
+}
+.tile-card .tile-link:hover {
+  text-decoration: underline;
+}
+
+/* === Flechas del Swiper === */
+.vj-tiles-swiper .swiper-button-prev,
+.vj-tiles-swiper .swiper-button-next {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+}
+.vj-tiles-swiper .swiper-button-prev:after,
+.vj-tiles-swiper .swiper-button-next:after {
+  font-size: 18px;
+  color: var(--brand);
+}
+
+/* === Paginación === */
+.vj-tiles-swiper .swiper-pagination-bullet {
+  opacity: 0.35;
+  background: var(--brand);
+}
+.vj-tiles-swiper .swiper-pagination-bullet-active {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+/* === Adaptabilidad === */
+@media (max-width: 768px) {
+  .tile-card .tile-media {
+    height: 200px;
+  }
+}
+@media (max-width: 560px) {
+  .vj-tiles-swiper {
+    padding-bottom: 36px;
+  }
+  .tile-card .tile-media {
+    height: 180px;
+  }
+}
+
+.vj-tiles-swiper,
+.vj-tiles-swiper .swiper,
+.vj-tiles-swiper .swiper-wrapper,
+.vj-tiles-swiper .swiper-slide,
+.vj-tiles-swiper .swiper-pagination {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+/* Evitar pseudo-elementos con fondos */
+.vj-tiles-swiper::before,
+.vj-tiles-swiper::after,
+.vj-tiles-swiper .swiper::before,
+.vj-tiles-swiper .swiper::after,
+.vj-tiles-swiper .swiper-pagination::before,
+.vj-tiles-swiper .swiper-pagination::after{
+  content: none !important;
+}
+
+/* Colocar la paginación sin “placa” de fondo */
+.vj-tiles-swiper .swiper-pagination{
+  position: relative;
+  margin-top: 12px;
+  padding: 0;
+}
+
+/* Por si el padre intenta pintar fondo */
+section:has(> .vj-tiles-swiper),
+div:has(> .vj-tiles-swiper){
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+/* === Forzar 3 tarjetas exactas por vista en el swiper de tiles === */
+.vj-tiles-swiper{
+  --tiles-gap: 24px;                 /* separacion entre tarjetas */
+  overflow: hidden;                  /* oculta cualquier cachito sobrante */
+}
+
+.vj-tiles-swiper .swiper-slide{
+  width: calc((100% - (var(--tiles-gap) * 2)) / 3) !important; /* 3 por fila */
+  margin-right: var(--tiles-gap) !important;
+  height: auto;
+}
+
+/* quitar margen en el último slide visible de cada pase (opcional visual) */
+.vj-tiles-swiper .swiper-slide:last-child{
+  margin-right: 0 !important;
+}
+
+/* breakpoints: 2 en tablet, 1 en móvil */
+@media (max-width: 992px){
+  .vj-tiles-swiper .swiper-slide{
+    width: calc((100% - var(--tiles-gap)) / 2) !important;      /* 2 por fila */
+  }
+}
 @media (max-width: 560px){
-  .alert-reservas {
-    bottom: 90px;
-    left: 12px;
-    max-width: 86vw;
-    font-size: 13px;
+  .vj-tiles-swiper .swiper-slide{
+    width: 100% !important;                                     /* 1 por fila */
+    margin-right: 0 !important;
+  }
+}
+
+/* === AJUSTE LIMPIO ESCRITORIO: HERO + FORM + BOTÓN === */
+@media (min-width: 901px){
+
+  /* Más espacio en el héroe para que el recuadro “cuelgue” abajo
+     sin tapar los íconos de arriba */
+  .hero{
+    min-height: 88vh;
+    padding-top: calc(var(--topbar-h) + 8px);
+    padding-bottom: 180px;   /* antes 120px */
+  }
+
+  /* Recuadro centrado y más abajo, casi sobre la parte blanca */
+  .hero .search-card{
+    position: absolute !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    bottom: -90px !important;             /* MÁS ABAJO: si lo quieres aún más, prueba -100px */
+    margin: 0 auto !important;
+    width: min(1120px, 94%) !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Las secciones de abajo arrancan después del recuadro,
+     así ya no se ven “pegadas” */
+  .info-sections{
+    margin-top: 230px !important;         /* antes 170px */
+  }
+
+  .fleet{
+    margin: 230px auto 80px !important;   /* mismo colchón para el carrusel */
+  }
+
+  /* Grid del formulario: 3 columnas y botón abajo a lo largo */
+  .search-grid{
+    grid-template-columns: 2.7fr 1.6fr 1.6fr !important;
+  }
+
+  .sg-col-submit{
+    grid-column: 1 / -1;
+  }
+
+  .actions{
+    justify-content: flex-end;
+  }
+
+  .actions button{
+    width: 100%;
+    padding: 14px 22px;
+    border-radius: 12px;
+  }
+}
+/* === AJUSTE LIMPIO ESCRITORIO: HERO + FORM + BOTÓN (versión final) === */
+@media (min-width: 901px){
+
+  /* Hero un poco más corto (sube visualmente todo) */
+  .hero{
+    min-height: 40vh;                          /* antes 88vh */
+    padding-top: calc(var(--topbar-h) + 2px);  /* menos espacio arriba */
+    padding-bottom: 25px;                      /* antes 60px */
+  }
+
+  /* Recuadro: un poco más pegado al hero */
+  .hero .search-card{
+    position: relative !important;
+    left: auto !important;
+    transform: none !important;
+    bottom: auto !important;
+
+    margin: 24px auto 0 !important;            /* antes 40px */
+    width: min(1120px, 94%) !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .info-sections{
+    margin-top: 80px !important;
+  }
+
+  .fleet{
+    margin: 80px auto 80px !important;
+  }
+
+  /* Grid del formulario: 3 columnas y botón abajo a lo largo */
+  .search-grid{
+    grid-template-columns: 2.7fr 1.6fr 1.6fr !important;
+  }
+
+  .sg-col-submit{
+    grid-column: 1 / -1;
+  }
+
+  .actions{
+    justify-content: flex-end;
+  }
+
+  .actions button{
+    width: 100%;
+    padding: 14px 22px;
+    border-radius: 12px;
+  }
+}
+/* ==== AJUSTE DEL FORMULARIO DEL HERO: FILAS/ COLUMNAS Y CHECK ARRIBA ==== */
+/* Mejor alineado en general */
+.search-grid{
+  column-gap: 16px;
+  row-gap: 14px;
+  align-items: flex-start;          /* que todo quede pegado arriba, no chueco */
+}
+
+/* Columna de ubicaciones (pick-up / drop-off) */
+.sg-col-location{
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+/* Subimos la casilla "DEVOLVER EN OTRO DESTINO" arriba del pick-up */
+.sg-col-location .small{
+  order: -1;                        /* la sube por encima del primer campo */
+  margin-top: 0;
+  margin-bottom: 2px;
+}
+
+/* Aseguramos el orden de los selects: primero pick-up, luego drop-off */
+.sg-col-location .field:first-of-type{
+  order: 0;
+}
+.sg-col-location .field:last-of-type{
+  order: 1;
+}
+
+/* Escritorio: 3 columnas bien derechas y botón abajo a lo ancho */
+@media (min-width: 901px){
+  .search-grid{
+    grid-template-columns: 2.7fr 1.6fr 1.6fr !important;
+  }
+
+  .sg-col-submit{
+    grid-column: 1 / -1;
+    margin-top: 6px;
+  }
+
+  .actions{
+    justify-content: flex-end;
+  }
+
+  .actions button{
+    width: 100%;
+    padding: 14px 22px;
+    border-radius: 12px;
+  }
+}
+/* === AJUSTE DE ALINEACIÓN INTERNA DEL FORMULARIO (ESCRITORIO) === */
+@media (min-width: 901px){
+
+  /* Grid general: columnas más proporcionadas y todo pegado arriba */
+  .search-grid{
+    grid-template-columns: 2.2fr 1.4fr 1.4fr 1.1fr !important;
+    align-items: flex-start;
+  }
+
+  .sg-col{
+    height: 100%;
+  }
+
+  /* Columna de ubicación: ordenamos bien checkbox + pick-up + drop-off */
+  .sg-col-location{
+    display: grid;
+    grid-template-rows: auto auto auto;
+    row-gap: 8px;
+  }
+
+  /* Checkbox arriba pero sin empujar tanto hacia abajo el resto */
+  .sg-col-location .small{
+    grid-row: 1;
+    align-self: end;
+    margin-top: 0;
+    margin-bottom: 2px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    font-weight: 600;
+  }
+
+  /* 1er select (pick-up) */
+  .sg-col-location .field:nth-of-type(1){
+    grid-row: 2;
+  }
+
+  /* 2do select (drop-off) */
+  .sg-col-location .field:nth-of-type(2){
+    grid-row: 3;
+  }
+
+  /* Columnas de fecha/hora: que se estiren igual y no queden flotando */
+  .sg-col-datetime{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 8px;
+    height: 100%;
+  }
+
+  .sg-col-datetime .field{
+    height: 100%;
+  }
+
+  /* Columna del botón: alineado al fondo y ocupando todo el alto */
+  .sg-col-submit{
+    grid-column: 4 / 5;
+    align-self: stretch;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .actions{
+    width: 100%;
+    height: 100%;
+    align-items: flex-end;
+  }
+
+  .actions button{
+    width: 100%;
+    padding: 16px 18px;
+    border-radius: 12px;
+  }
+}
+/* ================== AJUSTE FINAL FORM HERO ================== */
+@media (min-width: 901px){
+
+  /* Grid: 3 columnas (Lugar / Entrega / Devolución)
+     y una fila extra para el botón a lo ancho */
+  .search-grid{
+    display: grid;
+    grid-template-columns: 2.7fr 1.6fr 1.6fr;  /* 3 columnas */
+    column-gap: 16px;
+    row-gap: 14px;
+    align-items: flex-end;
+  }
+
+  /* Columna de ubicaciones: checkbox arriba + 2 selects en orden normal */
+  .sg-col-location{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* "Devolver en otro destino" arriba de todo */
+  .sg-col-location .small{
+    order: -1;                /* sube el texto */
+    margin-top: 0;
+    margin-bottom: 4px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    font-weight: 600;
+  }
+
+  /* Dejamos los selects en el orden del HTML:
+     1) ¿Dónde inicia tu viaje?
+     2) ¿Dónde termina tu viaje? */
+  .sg-col-location .field{
+    order: 0;
+  }
+
+  /* Columnas de fecha/hora más ordenadas */
+  .sg-col-datetime{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sg-col-datetime .field{
+    width: 100%;
+  }
+
+  /* Columna del botón: nueva fila, a lo ancho */
+  .sg-col-submit{
+    grid-column: 1 / -1;      /* ocupa las 3 columnas */
+    align-self: auto;
+    margin-top: 6px;
+  }
+
+  .actions{
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .actions button{
+    width: 100%;              /* botón largo */
+    padding: 16px 22px;
+    border-radius: 12px;
+  }
+}
+/* === AJUSTE DE ESPACIOS ENTRE FECHA / HORA EN ESCRITORIO === */
+@media (min-width: 901px){
+
+  /* Menos espacio vertical en la columna de ubicaciones */
+  .sg-col-location{
+    gap: 6px;
+  }
+
+  /* Columna de ENTREGa / DEVOLUCIÓN más compacta */
+  .sg-col-datetime{
+    display: grid;
+    grid-auto-rows: auto;
+    row-gap: 4px;        /* antes 8px/10px, ahora más pegado */
+  }
+
+  .sg-col-datetime .field{
+    margin: 0;
+  }
+
+  /* Ocultamos el label “vacío” de la segunda fila (hora)
+     y subimos un poco el input para que quede pegado a la fecha */
+  .sg-col-datetime .field:nth-child(2) label{
+    display: none;
+  }
+  .sg-col-datetime .field:nth-child(2){
+    margin-top: -10px;   /* si lo quieres aún más pegado, baja a -12px */
   }
 }

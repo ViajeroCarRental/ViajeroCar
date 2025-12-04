@@ -8,10 +8,10 @@
 
 @section('contenidoCatalogo')
 
-  <!-- HERO -->
+  {{-- ========== HERO ========== --}}
   <section class="hero">
     <div class="hero-bg">
-      <img src="{{ asset('img/catalogo.png') }}" alt="FAQ ViajeroCar">
+      <img src="{{ asset('img/catalogo.png') }}" alt="Catálogo ViajeroCar">
     </div>
     <div class="overlay"></div>
 
@@ -25,53 +25,146 @@
     </div>
   </section>
 
-  <!-- FILTROS -->
+  @php
+    use Illuminate\Support\Str;
+
+    // === Normalizador de texto (para hacer coincidir nombres aunque cambie mayúsculas/plural/etc.) ===
+    $normalize = function ($s) {
+        return Str::of($s ?? '')
+            ->lower()
+            ->replace(['–','-'], ' ')
+            ->squish()
+            ->__toString();
+    };
+
+    // 🔹 Config oficial de categorías (cómo quieres mostrarlas)
+    // "db" = cómo las tienes más o menos en la BD (texto aproximado)
+    $configCategorias = [
+      [
+        'db'      => 'Compacto',
+        'codigo'  => 'C',
+        'titulo'  => 'Compacto',
+        'ejemplo' => 'Chevrolet Aveo o similar',
+      ],
+      [
+        'db'      => 'Medianos',
+        'codigo'  => 'D',
+        'titulo'  => 'Mediano',
+        'ejemplo' => 'Nissan Versa o similar',
+      ],
+      [
+        'db'      => 'Grandes',
+        'codigo'  => 'E',
+        'titulo'  => 'Grande',
+        'ejemplo' => 'Volkswagen Jetta o similar',
+      ],
+      [
+        'db'      => 'Full size',
+        'codigo'  => 'F',
+        'titulo'  => 'Full Size',
+        'ejemplo' => 'Toyota Camry o similar',
+      ],
+      [
+        'db'      => 'Suv compacta',
+        'codigo'  => 'IC',
+        'titulo'  => 'SUV Compacta',
+        'ejemplo' => 'Jeep Renegade o similar',
+      ],
+      [
+        'db'      => 'Suv Mediana',
+        'codigo'  => 'I',
+        'titulo'  => 'SUV Mediana',
+        'ejemplo' => 'Kia Seltos o similar',
+      ],
+      [
+        'db'      => 'Suv Familiar compacta',
+        'codigo'  => 'IB',
+        'titulo'  => 'SUV Familiar compacta',
+        'ejemplo' => 'Toyota Avanza o similar',
+      ],
+      [
+        'db'      => 'Minivan',
+        'codigo'  => 'M',
+        'titulo'  => 'Minivan',
+        'ejemplo' => 'Honda Odyssey o similar',
+      ],
+      [
+        'db'      => 'Hasta 13- usuarios',
+        'codigo'  => 'L',
+        'titulo'  => 'Hasta 13 pasajeros',
+        'ejemplo' => 'Toyota Hiace o similar',
+      ],
+      [
+        'db'      => 'Pick up Doble Cabina',
+        'codigo'  => 'H',
+        'titulo'  => 'Pick Up doble cabina',
+        'ejemplo' => 'Nissan Frontier o similar',
+      ],
+      [
+        'db'      => 'Pick up 4x4 Doble Cabina',
+        'codigo'  => 'HI',
+        'titulo'  => 'Pick Up 4x4 doble cabina',
+        'ejemplo' => 'Toyota Tacoma o similar',
+      ],
+    ];
+
+    // 🔹 Capacidad predeterminada por código
+    $predeterminados = [
+      'C'  => ['pax'=>5,  'small'=>2, 'big'=>1],
+      'D'  => ['pax'=>5,  'small'=>2, 'big'=>1],
+      'E'  => ['pax'=>5,  'small'=>2, 'big'=>2],
+      'F'  => ['pax'=>5,  'small'=>2, 'big'=>2],
+      'IC' => ['pax'=>5,  'small'=>2, 'big'=>2],
+      'I'  => ['pax'=>5,  'small'=>3, 'big'=>2],
+      'IB' => ['pax'=>7,  'small'=>3, 'big'=>2],
+      'M'  => ['pax'=>7,  'small'=>4, 'big'=>2],
+      'L'  => ['pax'=>13, 'small'=>4, 'big'=>3],
+      'H'  => ['pax'=>5,  'small'=>3, 'big'=>2],
+      'HI' => ['pax'=>5,  'small'=>3, 'big'=>2],
+    ];
+
+    // 🔹 Indexar las categorías de BD por nombre normalizado
+    $categoriasIndex = [];
+    foreach ($categorias as $cat) {
+        $categoriasIndex[$normalize($cat->nombre)] = $cat;
+    }
+
+    // 🔹 Agrupar autos por nombre de categoría normalizado
+    $autosPorCatNorm = [];
+    foreach ($autos as $auto) {
+        $norm = $normalize($auto->categoria ?? null);
+        if (!$norm) continue;
+        $autosPorCatNorm[$norm][] = $auto;
+    }
+  @endphp
+
+  {{-- ========== FILTRO (CATEGORÍA) ========== --}}
   <section class="filters" aria-labelledby="filtros-title">
-    <h2 id="filtros-title" class="sr-only" style="position:absolute;left:-9999px">Filtros del catálogo</h2>
+    <h2 id="filtros-title" class="sr-only">Filtros del catálogo</h2>
 
     <form class="filter-row" action="{{ route('rutaCatalogoResultados') }}" method="GET">
       <div class="field">
-        <label for="f-location">Ubicación</label>
-        <select id="f-location" name="location">
-          <option value="">Todas</option>
-          @foreach ($ciudades as $c)
-            <option value="{{ $c->id_sucursal }}" {{ (string)request('location')===(string)$c->id_sucursal ? 'selected' : '' }}>
-              {{ $c->nombre }}
-            </option>
-          @endforeach
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="f-type">Tipo</label>
+        <label for="f-type">Categoría</label>
         <select id="f-type" name="type">
-          <option value="">Todos</option>
-          @foreach ($categorias as $cat)
-            <option value="{{ $cat->id_categoria }}" {{ (string)request('type')===(string)$cat->id_categoria ? 'selected' : '' }}>
-              {{ $cat->nombre }}
-            </option>
+          <option value="">Todas</option>
+
+          @foreach ($configCategorias as $cfg)
+            @php
+              $normCfg = $normalize($cfg['db']);
+              $catBd   = $categoriasIndex[$normCfg] ?? null;
+            @endphp
+
+            @if($catBd)
+              @php
+                $value    = $catBd->id_categoria;
+                $selected = (string)request('type') === (string)$value ? 'selected' : '';
+              @endphp
+              <option value="{{ $value }}" {{ $selected }}>
+                {{ $cfg['codigo'] }} · {{ $cfg['titulo'] }} — {{ $cfg['ejemplo'] }}
+              </option>
+            @endif
           @endforeach
         </select>
-      </div>
-
-      <div class="field">
-        <label>Entrega</label>
-        <div class="nice-date" data-bind="start">
-          <i class="fa-regular fa-calendar"></i>
-          <input id="date-start" name="start" type="text" placeholder="dd/mm/aaaa"
-                 value="{{ request('start') }}" readonly>
-          <div class="cal-pop" aria-hidden="true"></div>
-        </div>
-      </div>
-
-      <div class="field">
-        <label>Devolución</label>
-        <div class="nice-date" data-bind="end">
-          <i class="fa-regular fa-calendar"></i>
-          <input id="date-end" name="end" type="text" placeholder="dd/mm/aaaa"
-                 value="{{ request('end') }}" readonly>
-          <div class="cal-pop" aria-hidden="true"></div>
-        </div>
       </div>
 
       <div class="field actions">
@@ -80,99 +173,144 @@
         </button>
       </div>
     </form>
-
-    @isset($mensaje)
-      <div class="filter-hint" style="margin-top:.75rem">
-        <small>{{ $mensaje }}</small>
-      </div>
-    @endisset
   </section>
 
-  <!-- CATÁLOGO (DINÁMICO) -->
+  {{-- ========== CATÁLOGO AGRUPADO POR CATEGORÍA ========== --}}
   <section class="catalog">
     <div class="cars">
-      @forelse ($autos as $auto)
+      @php $hayAutos = false; @endphp
+
+      @foreach ($configCategorias as $cfg)
         @php
-          $trans = strtoupper(substr((string)$auto->transmision, 0, 1)) ?: 'A';
-          $img   = $auto->img_url
-                    ? (\Illuminate\Support\Str::startsWith($auto->img_url, ['http://','https://'])
-                        ? $auto->img_url
-                        : asset($auto->img_url))
-                    : asset('img/placeholder-car.jpg');
+          $normCfg = $normalize($cfg['db']);
+          $lista   = $autosPorCatNorm[$normCfg] ?? [];
+          $lista   = array_slice($lista, 0, 3); // máximo 3 autos por categoría
         @endphp
 
-        <article class="car"
-                 data-type="{{ \Illuminate\Support\Str::slug($auto->categoria) }}"
-                 data-trans="{{ $trans === 'M' ? 'manual' : 'automatico' }}"
-                 data-location="{{ \Illuminate\Support\Str::slug($auto->sucursal ?? 'general') }}">
-          <div class="car-media">
-            <img src="{{ $img }}" alt="{{ $auto->nombre_publico }}">
-          </div>
+        @if (!empty($lista))
+          @php $hayAutos = true; @endphp
 
-          <div class="car-body">
-            <h3>
-              {{ $auto->marca }}
-              <strong>{{ $auto->modelo }}</strong>
-              <small style="font-weight:normal">({{ $auto->anio }})</small>
-            </h3>
-
-            <div class="subtitle">
-              {{ strtoupper($auto->categoria) }}
-              @if(!empty($auto->sucursal))
-                | <span class="cat">{{ $auto->sucursal }}</span>
-              @endif
+          <div class="catalog-group">
+            <div class="catalog-group-head">
+              <h2 class="catalog-group-title">
+                {{ $cfg['codigo'] }} · {{ $cfg['titulo'] }}
+              </h2>
+              <p class="catalog-group-subtitle">
+                {{ $cfg['ejemplo'] }}
+              </p>
             </div>
 
-            <ul class="features">
-              <li title="Pasajeros"><i class="fa-solid fa-user-group"></i> {{ (int)$auto->asientos }}</li>
-              <li title="Puertas"><i class="fa-solid fa-door-open"></i> {{ (int)$auto->puertas }}</li>
-              <li title="Transmisión"><i class="fa-solid fa-gear"></i> {{ $trans }}</li>
-            </ul>
+            <div class="car-list">
+              @foreach ($lista as $auto)
+                @php
+                  // Imagen
+                  $img = $auto->img_url
+                        ? (Str::startsWith($auto->img_url, ['http://','https://'])
+                            ? $auto->img_url
+                            : asset($auto->img_url))
+                        : asset('img/placeholder-car.jpg');
 
-            @if(!empty($auto->descripcion))
-              <p class="incluye">{{ $auto->descripcion }}</p>
-            @endif
-          </div>
+                  // Capacidad según código
+                  $cap = $predeterminados[$cfg['codigo']] ?? [
+                    'pax'   => (int)($auto->asientos ?? 5),
+                    'small' => 2,
+                    'big'   => 1,
+                  ];
 
-          <div class="car-cta">
-            <div class="price">
-              <span class="from">DESDE</span>
-              <div class="amount">
-                ${{ number_format((float)$auto->precio_dia, 0) }} <small>MXN</small>
-              </div>
-              <span class="per">por día</span>
+                  // Transmisión texto
+                  $trans = strtoupper(substr((string)$auto->transmision, 0, 1)) === 'M'
+                           ? 'Manual'
+                           : 'Automática';
+                @endphp
+
+                <article class="car car-long">
+                  {{-- IMAGEN --}}
+                  <div class="car-media">
+                    <img src="{{ $img }}" alt="{{ $auto->nombre_publico ?? ($auto->marca.' '.$auto->modelo) }}">
+                  </div>
+
+                  {{-- INFO CENTRAL --}}
+                  <div class="car-main">
+                    {{-- Pill de categoría --}}
+                    <span class="car-pill">
+                      <i class="fa-solid fa-car-side"></i>
+                      {{ $cfg['codigo'] }} · {{ $cfg['titulo'] }}
+                    </span>
+
+                    <h3 class="car-name">
+                      <span class="car-brand">{{ $auto->marca }}</span>
+                      <span class="car-model">{{ $auto->modelo }}</span>
+                    </h3>
+
+                    <p class="subtitle">
+                      Transmisión {{ $trans }}
+                    </p>
+
+                    <ul class="car-specs">
+                      <li title="Personas">
+                        <i class="fa-solid fa-user-group"></i> {{ $cap['pax'] }} pasajeros
+                      </li>
+                      <li title="Maletas chicas">
+                        <i class="fa-solid fa-suitcase-rolling"></i> {{ $cap['small'] }} maletas chicas
+                      </li>
+                      <li title="Maletas grandes">
+                        <i class="fa-solid fa-suitcase"></i> {{ $cap['big'] }} maletas grandes
+                      </li>
+                    </ul>
+
+                    <div class="car-tech">
+                      <span class="car-tech-badge yes">
+                        <i class="fa-brands fa-apple"></i> Apple CarPlay
+                      </span>
+                      <span class="car-tech-badge yes">
+                        <i class="fa-brands fa-android"></i> Android Auto
+                      </span>
+                    </div>
+
+                    @if(!empty($auto->descripcion))
+                      <p class="incluye">{{ $auto->descripcion }}</p>
+                    @endif
+                  </div>
+
+                  {{-- PRECIO + CTA --}}
+                  <div class="car-cta">
+                    <div class="price">
+                      <span class="from">DESDE</span>
+                      <div class="amount">
+                        ${{ number_format((float)$auto->precio_dia, 0) }} <small>MXN</small>
+                      </div>
+                      <span class="per">por día</span>
+                    </div>
+
+                    {{-- Botón: tu controller redirige a reservaciones.iniciar cuando recibe vehiculo_id --}}
+                    <a
+                      href="{{ route('rutaCatalogoResultados', [
+                          'vehiculo_id' => $auto->id_vehiculo,
+                      ]) }}"
+                      class="btn btn-primary"
+                    >
+                      <i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!
+                    </a>
+                  </div>
+                </article>
+              @endforeach
             </div>
-
-            {{-- >>> Enlace que pasa filtros y fechas al flujo de reservaciones <<< --}}
-            <a
-              href="{{ route('reservaciones.desdeCatalogo', [
-                  'pickup_sucursal_id'  => request('location'),           // mismo lugar para dropoff por defecto
-                  'dropoff_sucursal_id' => request('location'),
-                  'pickup_date'         => request('start'),              // dd/mm/aaaa o yyyy-mm-dd (se normaliza)
-                  'pickup_time'         => '12:00 pm',                    // default
-                  'dropoff_date'        => request('end'),
-                  'dropoff_time'        => '11:00 am',                    // default
-                  'categoria_id'        => request('type'),               // categoría filtrada
-                  'vehiculo_id'         => $auto->id_vehiculo ?? null,    // por si quieres saltar directo
-              ]) }}"
-              class="btn btn-primary"
-            >
-              <i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!
-            </a>
           </div>
-        </article>
-      @empty
+        @endif
+      @endforeach
+
+      @if(!$hayAutos)
         <div class="no-results" style="grid-column:1/-1; text-align:center; padding:2rem 1rem;">
-          <h3>Sin resultados 🕵️‍♂️</h3>
-          <p>Intenta cambiar la ubicación, el tipo o el rango de fechas.</p>
+          <h3>Sin vehículos disponibles</h3>
+          <p>Intenta cambiar la categoría o vuelve más tarde.</p>
         </div>
-      @endforelse
+      @endif
+
     </div>
   </section>
 
 @endsection
 
-{{-- === JS de esta vista === --}}
 @section('js-vistaCatalogo')
   <script src="{{ asset('js/catalogo.js') }}"></script>
 @endsection

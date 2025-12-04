@@ -8,7 +8,6 @@
 html{scroll-behavior:smooth}
 body{margin:0;font-family:'Poppins',system-ui,Arial,sans-serif;color:var(--ink);background:var(--soft)}
 
-/* ===== Topbar (si la usas en esta vista) ===== */
 .topbar{
   position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:60;width:min(1200px,94%);
   border-radius:14px;padding:8px 12px;border:1px solid var(--brand);background:rgba(178,34,34,.35);
