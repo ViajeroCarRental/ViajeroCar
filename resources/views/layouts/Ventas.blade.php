@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css"/>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     @yield('css-vistaHomeVentas')
     @yield('css-vistareservacionesAdmin')
     @yield('css-vistaHomeCotizaciones')
@@ -23,6 +25,8 @@
     @yield('css-vistaLicencia')
     @yield('css-vistaRFC-Fiscal')
     @yield('css-vistaFacturar')
+    @yield('css-VistaCotizacionesRecientes')
+    @yield('css-vistaContratoFinal')
     <title>@yield('Titulo')</title>
 </head>
 <body>
@@ -63,6 +67,8 @@
     @yield('contenidoLicencia')
     @yield('contenidoRFC-Fiscal')
     @yield('contenidoFacturar')
+    @yield('contenido-VistaCotizacionesRecientes')
+    @yield('contenidoContratoFinal')
 </div>
 
 <div class="containerJS">
@@ -81,6 +87,8 @@
     @yield('js-vistaLicencia')
     @yield('js-vistaRFC-Fiscal')
     @yield('js-vistaFacturar')
+    @yield('js-VistaCotizacionesRecientes')
+    @yield('js-vistaContratoFinal')
 </div>
 </body>
 </html>

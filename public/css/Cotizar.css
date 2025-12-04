@@ -841,3 +841,53 @@ label {
 .prote-card .btn.primary:hover {
   background: var(--brand-2);
 }
+/* =====================================================
+   🔘 BOTÓN "VER COTIZACIONES" (reposicionado)
+===================================================== */
+.ver-cotizaciones-wrap {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 20px;
+  margin-left: 40px;
+  position: relative;
+  z-index: 5;
+}
+
+.btn-ver-cotizaciones {
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 28px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-ver-cotizaciones:hover {
+  background: linear-gradient(90deg, var(--brand-2), var(--brand));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(214, 18, 31, 0.25);
+}
+
+/* 📱 Responsivo */
+@media (max-width: 992px) {
+  .ver-cotizaciones-wrap {
+    justify-content: center;
+    margin-left: 0;
+    position: static;
+  }
+
+  .btn-ver-cotizaciones {
+    width: 90%;
+    justify-content: center;
+    font-size: 16px;
+  }
+}

@@ -9,27 +9,37 @@ use Illuminate\Support\Facades\Storage;
 class FlotillaController extends Controller
 {
     // 🔹 Mostrar todos los autos
-    public function indexView()
-    {
-        $vehiculos = DB::table('vehiculos as v')
-            ->leftJoin('estatus_carro as e', 'v.id_estatus', '=', 'e.id_estatus')
-            ->select(
-                'v.id_vehiculo',
-                'v.modelo',
-                'v.marca',
-                'v.anio',
-                'v.color',
-                'v.placa',
-                'v.numero_serie',
-                'v.kilometraje',
-                'v.categoria',
-                'e.nombre as estatus'
-            )
-            ->orderBy('v.modelo', 'asc')
-            ->get();
+public function indexView()
+{
+    $vehiculos = DB::table('vehiculos as v')
+        ->leftJoin('estatus_carro as e', 'v.id_estatus', '=', 'e.id_estatus')
+        ->leftJoin('categorias_carros as c', 'v.id_categoria', '=', 'c.id_categoria')
+        ->select(
+            'v.id_vehiculo',
+            'v.modelo',
+            'v.marca',
+            'v.anio',
+            'v.color',
+            'v.placa',
+            'v.numero_serie',
+            'v.kilometraje',
+            'v.capacidad_tanque',
+            'e.nombre as estatus',
+            'c.nombre as categoria' // ✅ nombre de la categoría desde la tabla
+        )
+        ->orderBy('v.modelo', 'asc')
+        ->get();
 
-        return view('Admin.flotilla', compact('vehiculos'));
-    }
+    // 🔹 Ahora sí definimos $categorias para el modal
+    $categorias = DB::table('categorias_carros')
+        ->where('activo', true)
+        ->orderBy('nombre')
+        ->get();
+
+    return view('Admin.flotilla', compact('vehiculos', 'categorias'));
+}
+
+
 
     // 🔹 Agregar nuevo auto
 public function store(Request $request)
@@ -45,6 +55,9 @@ public function store(Request $request)
         'kilometraje' => 'nullable|integer|min:0|max:1000000',
         'archivo_poliza' => 'nullable|mimes:pdf,jpg,jpeg,png|max:4096',
         'archivo_verificacion' => 'nullable|mimes:pdf,jpg,jpeg,png|max:4096',
+        'numero_rin' => 'nullable|string|max:100',
+        'capacidad_tanque' => 'nullable|numeric|min:0',
+
     ]);
 
     // === Subida de archivos ===
@@ -61,7 +74,7 @@ public function store(Request $request)
         // 🔹 Identificadores
         'id_ciudad' => 1,
         'id_sucursal' => 1,
-        'id_categoria' => 1,
+        'id_categoria' => $request->id_categoria, // ✅ categoría vinculada
         'id_estatus' => 1,
 
         // 🔹 Datos generales
@@ -72,9 +85,9 @@ public function store(Request $request)
         'color' => $request->color ?? 'Blanco',
         'transmision' => $request->transmision ?? 'Automática',
         'combustible' => $request->combustible ?? 'Gasolina',
-        'categoria' => $request->categoria ?? 'Compacto',
         'numero_serie' => $request->numero_serie,
-        'vin' => $request->vin,
+        'numero_rin' => $request->numero_rin,
+        'capacidad_tanque' => $request->capacidad_tanque,
         'placa' => $request->placa,
 
         // 🔹 Datos técnicos

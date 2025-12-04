@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
           .reduce((a, g) => a + Number(g.monto), 0);
 
     gMaint.textContent = `$${porTipo("mantenimiento").toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
-    gPol.textContent   = `$${porTipo("seguro").toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
+    gPol.textContent   = `$${porTipo("poliza").toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
     gBody.textContent  = `$${porTipo("carrocer").toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
     gOther.textContent = `$${(total - (porTipo("mantenimiento") + porTipo("seguro") + porTipo("carrocer"))).toLocaleString("es-MX", { minimumFractionDigits: 2 })}`;
 

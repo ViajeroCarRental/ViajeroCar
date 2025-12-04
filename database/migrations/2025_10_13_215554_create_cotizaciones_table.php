@@ -13,13 +13,15 @@ return new class extends Migration {
             // 🎫 Identificador único
             $table->string('folio', 40)->unique();
 
-            // 🚗 Datos del vehículo o categoría (no siempre se asigna un vehículo real)
+            // 🚗 Datos del vehículo o categoría
+            $table->unsignedBigInteger('id_categoria')->nullable();
+            $table->string('categoria_nombre')->nullable();
             $table->unsignedBigInteger('vehiculo_id')->nullable();
             $table->string('vehiculo_marca')->nullable();
             $table->string('vehiculo_modelo')->nullable();
             $table->string('vehiculo_categoria')->nullable();
 
-            // 📅 Fechas y horas de entrega/devolución
+            // 📅 Fechas y horas
             $table->date('pickup_date');
             $table->string('pickup_time', 10)->nullable();
             $table->string('pickup_name')->nullable();
@@ -28,17 +30,28 @@ return new class extends Migration {
             $table->string('dropoff_time', 10)->nullable();
             $table->string('dropoff_name')->nullable();
 
-            // 📏 Duración de la renta
+            // 📏 Duración
             $table->unsignedInteger('days')->default(1);
 
             // 💰 Totales
             $table->decimal('tarifa_base', 12, 2)->default(0);
+
+            // 🟡 Nuevos campos coherentes con reservaciones
+            $table->decimal('tarifa_modificada', 12, 2)
+                  ->nullable()
+                  ->comment('Tarifa final aplicada si fue editada manualmente');
+
+            $table->boolean('tarifa_ajustada')
+                  ->default(false)
+                  ->comment('Indica si la tarifa fue modificada manualmente por el asesor');
+
             $table->decimal('extras_sub', 12, 2)->default(0);
             $table->decimal('iva', 12, 2)->default(0);
             $table->decimal('total', 12, 2)->default(0);
 
-            // 🧩 JSON: complementos y cliente
+            // 🧩 JSON: servicios, seguros, cliente
             $table->json('addons')->nullable();   // servicios adicionales
+            $table->json('seguro')->nullable();   // paquete de seguro
             $table->json('cliente')->nullable();  // nombre/email/telefono, etc.
 
             $table->timestamps();

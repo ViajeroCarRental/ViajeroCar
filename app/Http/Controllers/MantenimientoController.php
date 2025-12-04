@@ -34,7 +34,13 @@ class MantenimientoController extends Controller
                 'm.rotacion_llantas',
                 'm.cambio_filtro',
                 'm.cambio_pastillas',
-                'm.observaciones'
+                'm.observaciones',
+                'm.tipo_mantenimiento',   // 👈 AÑADE ESTA LÍNEA
+                'm.otro',
+                'm.rellenar_aceite',
+                'm.nivel_agua',
+                'm.presion_llantas',
+                'm.limpieza_general'
             )
             ->orderBy('v.marca')
             ->get();
@@ -138,8 +144,15 @@ class MantenimientoController extends Controller
             'rotacion_llantas'     => 'nullable|in:0,1,on,off,true,false',
             'cambio_filtro'        => 'nullable|in:0,1,on,off,true,false',
             'cambio_pastillas'     => 'nullable|in:0,1,on,off,true,false',
+            'rellenar_aceite'      => 'nullable|in:0,1,on,off,true,false',
+            'nivel_agua'           => 'nullable|in:0,1,on,off,true,false',
+            'presion_llantas'      => 'nullable|in:0,1,on,off,true,false',
+            'limpieza_general'     => 'nullable|in:0,1,on,off,true,false',
+            'tipo_mantenimiento'   => 'nullable|in:menor,mayor',
+            'otro'                 => 'nullable|string|max:255',
             'observaciones'        => 'nullable|string|max:2000',
         ];
+
 
         $validator = Validator::make($request->all(), $rules);
         if ($validator->fails()) {
@@ -175,6 +188,13 @@ class MantenimientoController extends Controller
             'observaciones'      => $request->input('observaciones'),
             'estatus'            => $estado,
             'updated_at'         => now(),
+            'tipo_mantenimiento' => $request->input('tipo_mantenimiento'),
+            'otro'               => $request->input('otro'),
+            'rellenar_aceite' => $request->boolean('rellenar_aceite'),
+            'nivel_agua' => $request->boolean('nivel_agua'),
+            'presion_llantas' => $request->boolean('presion_llantas'),
+            'limpieza_general' => $request->boolean('limpieza_general'),
+
         ];
 
         DB::table('mantenimientos')->updateOrInsert(['id_vehiculo' => $id], $data);

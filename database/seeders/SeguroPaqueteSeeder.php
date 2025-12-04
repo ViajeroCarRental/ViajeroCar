@@ -10,77 +10,82 @@ class SeguroPaqueteSeeder extends Seeder
     public function run(): void
     {
         DB::table('seguro_paquete')->insert([
+
             [
-                'nombre' => 'LDW PACK (Full Cover)',
-                'descripcion' => 'Cobertura total sin deducible. Incluye:
-                    - LDW (Loss Damage Waiver): El cliente no paga deducible (0%).
-                    - PAI (Gastos médicos hasta 250,000 MXN por evento).
-                    - PRA (Asistencia vial Premium: grúa, envío de gasolina, cambio de neumático, paso de corriente).
-                    - LOU (Tiempo perdido en taller: cubierto).
-                    - LA (Asistencia legal: incluida).
-                    - EXT.LI (Responsabilidad civil hasta 3,000,000 MXN).
-                    Depósito en garantía depende de la categoría del vehículo.',
-                'precio_por_dia' => 675.00,
-                'activo' => true,
+                'nombre' => 'LDW PACK',
+                'descripcion' =>
+"-El cliente es Responsable por el 0% deducible, de lado a lado pase lo que pase con el auto esta cubierto de bumper a bumper.
+-Gastos médicos cubiertos 250,000 MXN por evento
+-Asistencia en carretera Premium. Incluye: envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente. no incluye costo de llave ni gasolina
+-Tiempo perdido en taller, cubierto
+-Asistencia Legal, Cubierta
+-Responsabilidad civil hasta 3,000,000 MXN",
+                'precio_por_dia' => 1120.00,
+                'activo' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+
             [
-                'nombre' => 'PDW PACK (Amplia)',
-                'descripcion' => 'Cobertura amplia con deducible del 5%. Incluye:
-                    - PDW (Provisional Damage Waiver): Cubre carrocería al 5%, no cubre llantas, rines ni cristales.
-                    - PAI (Gastos médicos hasta 250,000 MXN por evento).
-                    - LOU (Tiempo perdido en taller: incluido).
-                    - LA (Asistencia legal: incluida).
-                    - ALI (Responsabilidad civil hasta 1,000,000 MXN).
-                    - PRA (Asistencia Premium: no incluida).
-                    Depósito en garantía depende de la categoría del vehículo.',
-                'precio_por_dia' => 575.00,
-                'activo' => true,
+                'nombre' => 'PDW PACK',
+                'descripcion' =>
+"-Cubierta toda la carrosería AL 5%, 10% Perdida total o Robo, NO CUBRE llantas, accesorios, rines ni cristales
+-Gastos médicos cubiertos 250,000 MXN por evento
+-Asistencia Premium: El cliente es responsable por costos de: Grúa en caso de requerirla, corralón, envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente
+-Tiempo perdido en taller, cubierto
+-Asistencia Legal, Cubierta
+-Responsabilidad civil hasta 1,000,000 MXN",
+                'precio_por_dia' => 855.00,
+                'activo' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+
             [
-                'nombre' => 'CDW PACK 1 (10% Deducible)',
-                'descripcion' => 'Cobertura con deducible del 10%. Incluye:
-                    - CDW (Collision Damage Waiver 10%): Deducible en daños o robo total 10% del valor factura.
-                    - PAI (Gastos médicos hasta 250,000 MXN por evento).
-                    - LOU (Tiempo perdido en taller: incluido).
-                    - LA (Asistencia legal: incluida).
-                    - ALI (Responsabilidad civil hasta 1,000,000 MXN).
-                    - PRA (Asistencia vial Premium: no incluida).
-                    Depósito en garantía depende de la categoría del vehículo.',
-                'precio_por_dia' => 450.00,
-                'activo' => true,
+                'nombre' => 'CDW PACK 1',
+                'descripcion' =>
+"-El cliente es Responsable por el 10% Deducible en Daños, 20% Perdida total o Robo sobre valor factura
+-Gastos médicos cubiertos 250,000 MXN por evento
+-Asistencia Premium: El cliente es responsable por costos de: Grúa en caso de requerirla, corralón, envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente
+-Tiempo perdido en taller, cubierto
+-Asistencia Legal, Cubierta
+-Responsabilidad civil hasta 1,000,000 MXN",
+                'precio_por_dia' => 730.00,
+                'activo' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+
             [
-                'nombre' => 'CDW PACK 2 (20% Deducible)',
-                'descripcion' => 'Cobertura con deducible del 20%. Incluye:
-                    - CDW (Collision Damage Waiver 20%): Deducible en daños o robo total 20% del valor factura.
-                    - PAI (Gastos médicos hasta 250,000 MXN por evento).
-                    - LOU (Tiempo perdido en taller: incluido).
-                    - LA (Asistencia legal: incluida).
-                    - LI (Responsabilidad civil hasta 350,000 MXN).
-                    - PRA (Asistencia vial Premium: no incluida).
-                    Depósito en garantía depende de la categoría del vehículo.',
-                'precio_por_dia' => 375.00,
-                'activo' => true,
+                'nombre' => 'CDW PACK 2',
+                'descripcion' =>
+"-El cliente es Responsable por el 20% Deducible en Daños, 30% Perdida total o Robo sobre valor factura
+-Gastos médicos cubiertos 250,000 MXN por evento
+-Asistencia Premium: El cliente es responsable por costos de: Grúa en caso de requerirla, corralón, envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente
+-Tiempo perdido en taller, cubierto
+-Asistencia Legal, Cubierta
+-Responsabilidad civil hasta 350,000 MXN",
+                'precio_por_dia' => 555.00,
+                'activo' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+
             [
-                'nombre' => 'DECLINE PACK (Sin Cobertura)',
-                'descripcion' => 'El cliente asume el 100% de los daños. Incluye solo:
-                    - LI (Responsabilidad civil hasta 350,000 MXN).
-                    No incluye cobertura médica, asistencia vial, ni protección de deducible.
-                    El cliente paga el total de los daños o robo sobre el valor factura.',
+                'nombre' => 'DECLINE PROTECTIONS',
+                'descripcion' =>
+"-El cliente es Responsable por el 100% Deducible sobre valor factura de auto
+-No cubre gastos médicos en caso de accidente
+-Asistencia Premium: El cliente es responsable por costos de: Grúa en caso de requerirla, corralón, envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente
+-No cubre Tiempo perdido en taller
+-No cubre Asistencia Legal
+-Responsabilidad civil hasta 350,000 MXN",
                 'precio_por_dia' => 0.00,
-                'activo' => true,
+                'activo' => 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+
         ]);
     }
 }

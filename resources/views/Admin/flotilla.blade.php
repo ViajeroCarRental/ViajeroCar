@@ -3,6 +3,7 @@
 
 @section('css-vistaFlotilla')
 <link rel="stylesheet" href="{{ asset('css/flotilla.css') }}">
+
 @endsection
 
 @section('contenidoMantenimiento')
@@ -14,9 +15,19 @@
   <div class="content">
     <h1 class="title">Flotilla</h1>
 
-    <div class="toolbar" style="margin-bottom:20px; text-align:right;">
-      <button id="btnAddAuto" class="btn-red">➕ Agregar Auto</button>
-    </div>
+<!-- 🔍 Buscador + Botón juntos -->
+<div class="buscador-contenedor">
+  <div class="buscador-flotilla">
+    <i class="fas fa-search icono-buscar"></i>
+    <input 
+      type="text" 
+      id="filtroVehiculo" 
+      placeholder="Buscar por modelo, placa, color o año...">
+  </div>
+
+  <button id="btnAddAuto" class="btn-red">➕ Agregar Auto</button>
+</div>
+
 
     <div style="overflow:auto">
       <table class="table" id="tblFleet">
@@ -30,36 +41,45 @@
             <th>Número de Serie</th>
             <th>Categoría</th>
             <th>Kilometraje</th>
+            <th>Tanque (L)</th>
             <th>Estatus</th>
             <th>Acciones</th>
           </tr>
         </thead>
+
         <tbody>
           @foreach($vehiculos as $v)
-            <tr data-id="{{ $v->id_vehiculo }}"
-                data-modelo="{{ $v->modelo }}"
-                data-marca="{{ $v->marca }}"
-                data-anio="{{ $v->anio }}"
-                data-color="{{ $v->color }}"
-                data-categoria="{{ $v->categoria }}"
-                data-kilometraje="{{ $v->kilometraje }}">
-              <td>{{ $v->modelo }}</td>
-              <td>{{ $v->marca }}</td>
-              <td>{{ $v->anio }}</td>
-              <td>{{ $v->color }}</td>
-              <td>{{ $v->placa }}</td>
-              <td>{{ $v->numero_serie }}</td>
-              <td>{{ $v->categoria }}</td>
-              <td>{{ number_format($v->kilometraje) }} km</td>
-              <td>{{ $v->estatus ?? 'Disponible' }}</td>
-              <td>
-                <button class="btn-sm editBtn" title="Editar">✏️</button>
-                <form action="{{ route('flotilla.eliminar', $v->id_vehiculo) }}" method="POST" style="display:inline">
+          <tr data-id="{{ $v->id_vehiculo }}"
+              data-modelo="{{ $v->modelo }}"
+              data-marca="{{ $v->marca }}"
+              data-anio="{{ $v->anio }}"
+              data-color="{{ $v->color }}"
+              data-categoria="{{ $v->categoria }}"
+              data-kilometraje="{{ $v->kilometraje }}">
+            
+            <td>{{ $v->modelo }}</td>
+            <td>{{ $v->marca }}</td>
+            <td>{{ $v->anio }}</td>
+            <td>{{ $v->color }}</td>
+            <td>{{ $v->placa }}</td>
+            <td>{{ $v->numero_serie }}</td>
+            <td>{{ $v->categoria }}</td>
+            <td>{{ number_format($v->kilometraje) }} km</td>
+            <td>{{ $v->capacidad_tanque ? $v->capacidad_tanque . ' L' : '—' }}</td>
+            <td>{{ $v->estatus ?? 'Disponible' }}</td>
+            <td>
+              <!-- Fondo rojo debajo, oculto hasta swipe -->
+              <div class="delete-bg">
+                <form action="{{ route('flotilla.eliminar', $v->id_vehiculo) }}" method="POST" class="delete-form">
                   @csrf @method('DELETE')
-                  <button type="submit" class="btn-sm" onclick="return confirm('¿Seguro que deseas eliminar este vehículo?')" title="Eliminar">🗑️</button>
+                  <button type="button" class="btnDelete" title="Eliminar">🗑️</button>
                 </form>
-              </td>
-            </tr>
+              </div>
+
+              <!-- Botón Editar siempre visible -->
+              <button class="btn-sm editBtn" title="Editar"></button>
+            </td>
+          </tr>
           @endforeach
         </tbody>
       </table>
@@ -123,22 +143,17 @@
         </select>
       </label>
       <label>Categoría
-      <select name="categoria">
-        <option>C Compacto</option>
-        <option>D Medianos</option>
-        <option>E Grandes</option>
-        <option>F Full size</option>
-        <option>IC Suv compacta</option>
-        <option>I Suv mediana</option>
-        <option>IB Suv familiar compacta</option>
-        <option>M Minivan</option>
-        <option>L Pasajeros de 12 a 15 usuarios</option>
-        <option>H Pick up doble cabina</option>
-        <option>HI Pick up 4x4 doble cabina</option>
-      </select>
+        <select name="id_categoria" required>
+          <option value="" disabled selected>Seleccione una categoría...</option>
+          @foreach($categorias as $cat)
+            <option value="{{ $cat->id_categoria }}">{{ $cat->nombre }}</option>
+          @endforeach
+        </select>
+      </label>
+
       </label>
       <label>Número de Serie<input type="text" name="numero_serie" placeholder="Ej. 3VWEP6BU0SM005037"></label>
-      <label>VIN<input type="text" name="vin" placeholder="Ej. 3VWEP6BU0SM005037"></label>
+      <label>Número de Rin<input type="text" name="numero_rin" placeholder="Ej. 17x7J o similar"></label>
       <label>Placa<input type="text" name="placa" placeholder="Ej. UNS639J"></label>
 
       <h3>Datos Técnicos</h3>
@@ -157,14 +172,8 @@
       <label>Kilometraje<input type="number" name="kilometraje" min="0" value="0"></label>
       <label>Asientos<input type="number" name="asientos" min="2" max="10" value="5"></label>
       <label>Puertas<input type="number" name="puertas" min="2" max="6" value="4"></label>
+      <label>Capacidad de Tanque (L)<input type="number" step="0.1" name="capacidad_tanque" placeholder="Ej. 55.0"></label>
 
-      <h3>Datos del Propietario</h3>
-      <label>Propietario<input type="text" name="propietario" placeholder="Ej. José Juan de Dios Hernández Reséndiz"></label>
-      <label>RFC del Propietario<input type="text" name="rfc_propietario" placeholder="Ej. HERJ900308QM1"></label>
-      <label>Domicilio<input type="text" name="domicilio" placeholder="Ej. Bugambilias 7, Col. Los Benitos"></label>
-      <label>Municipio<input type="text" name="municipio" placeholder="Ej. Colón"></label>
-      <label>Estado<input type="text" name="estado" placeholder="Ej. Querétaro"></label>
-      <label>País<input type="text" name="pais" value="México"></label>
 
       <h3>Póliza de Seguro</h3>
       <label>Número de Póliza<input type="text" name="no_poliza"></label>
@@ -193,6 +202,18 @@
       </form>
     </div>
   </div>
+  <!-- Modal: Confirmar eliminación -->
+<div id="confirmDeleteModal" aria-hidden="true">
+  <div class="modal-content" role="dialog" aria-modal="true">
+    <h3>¿Eliminar vehículo?</h3>
+    <p>Esta acción no se puede deshacer.</p>
+    <div class="actions">
+      <button type="button" class="btn-cancel" id="cancelDelete">Cancelar</button>
+      <button type="button" class="btn-delete" id="confirmDelete">Eliminar</button>
+    </div>
+  </div>
+</div>
+
 </main>
 
 @section('js-vistaFlotilla')
@@ -225,9 +246,127 @@ const addModal = document.getElementById('addModal');
 const btnAddAuto = document.getElementById('btnAddAuto');
 const closeAdd = document.getElementById('closeAdd');
 const cancelAdd = document.getElementById('cancelAdd');
-
 btnAddAuto.onclick = () => addModal.classList.add('active');
 closeAdd.onclick = cancelAdd.onclick = () => addModal.classList.remove('active');
+
+// === Confirmación de eliminación ===
+// Recomendado: cambia el botón del basurero a type="button"
+// <button type="button" class="btnDelete">🗑️</button>
+// y mantén el <form method="POST" class="delete-form"> con @csrf @method('DELETE')
+
+(function () {
+  const confirmModal = document.getElementById('confirmDeleteModal');
+  const btnCancel = document.getElementById('cancelDelete');
+  const btnConfirm = document.getElementById('confirmDelete');
+  let formToDelete = null;
+
+  // 1) Abrir modal al click del basurero
+  document.querySelectorAll('.delete-bg .delete-form .btnDelete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      formToDelete = e.target.closest('form');
+      confirmModal.classList.add('active');
+    });
+  });
+
+  // 2) Cerrar sin eliminar
+  btnCancel.addEventListener('click', () => {
+    confirmModal.classList.remove('active');
+    formToDelete = null;
+  });
+
+  // 3) Confirmar eliminación
+  btnConfirm.addEventListener('click', () => {
+    if (formToDelete) formToDelete.submit();
+  });
+
+  // 4) Cerrar clic fuera
+  confirmModal.addEventListener('click', (e) => {
+    if (e.target === confirmModal) {
+      confirmModal.classList.remove('active');
+      formToDelete = null;
+    }
+  });
+
+  // 5) Cerrar con ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      confirmModal.classList.remove('active');
+      formToDelete = null;
+    }
+  });
+})();
+
+
+// === SWIPE PARA ELIMINAR ===
+let startX = 0;
+
+document.querySelectorAll('#tblFleet tbody tr').forEach(tr => {
+  const resetAll = () => {
+    document.querySelectorAll('#tblFleet tbody tr').forEach(r => {
+      r.classList.remove('swiped');
+      r.classList.remove('rebound');
+    });
+  };
+
+  const handleSwipe = diff => {
+    if (diff < -40 && !tr.classList.contains('swiped')) {
+      resetAll();
+      tr.classList.add('swiped');
+      tr.classList.add('rebound');
+    }
+    if (diff > 40 && tr.classList.contains('swiped')) {
+      tr.classList.remove('swiped');
+    }
+  };
+
+  // Desktop
+  tr.addEventListener('mousedown', e => startX = e.clientX);
+  tr.addEventListener('mousemove', e => {
+    if (e.buttons === 1) {
+      const diff = e.clientX - startX;
+      handleSwipe(diff);
+    }
+  });
+
+  // Mobile
+  tr.addEventListener('touchstart', e => startX = e.touches[0].clientX);
+  tr.addEventListener('touchmove', e => {
+    const diff = e.touches[0].clientX - startX;
+    handleSwipe(diff);
+  });
+});
+
+// Cerrar swipe con ESC o clic fuera de la tabla
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('#tblFleet tbody tr').forEach(r => r.classList.remove('swiped'));
+  }
+});
+document.addEventListener('click', e => {
+  const tbl = document.getElementById('tblFleet');
+  if (!tbl.contains(e.target)) {
+    document.querySelectorAll('#tblFleet tbody tr').forEach(r => r.classList.remove('swiped'));
+  }
+});
+// === 🔎 FILTRO DE BÚSQUEDA ===
+document.getElementById('filtroVehiculo').addEventListener('keyup', function () {
+  const filtro = this.value.toLowerCase();
+  const filas = document.querySelectorAll('#tblFleet tbody tr');
+
+  filas.forEach(fila => {
+    const modelo = fila.dataset.modelo.toLowerCase();
+    const placa = fila.querySelector('td:nth-child(5)').textContent.toLowerCase();
+    const color = fila.dataset.color.toLowerCase();
+    const anio = fila.dataset.anio.toLowerCase();
+
+    if (modelo.includes(filtro) || placa.includes(filtro) || color.includes(filtro) || anio.includes(filtro)) {
+      fila.style.display = '';
+    } else {
+      fila.style.display = 'none';
+    }
+  });
+});
+
 </script>
 @endsection
 @endsection

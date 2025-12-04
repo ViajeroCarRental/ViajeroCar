@@ -1,0 +1,192 @@
+/* ============================================================
+   🧾 COTIZACIONES LISTADO — ESTILO VIAJERO
+   Autor: Ingeniero Bernal
+   ============================================================ */
+
+/* ===== Contenedor general ===== */
+.main-content {
+  margin-left: 150px; /* 🔹 antes 260px */
+  padding: 16px 24px 24px 24px;
+  background:
+    radial-gradient(1200px 600px at 100% -10%, rgba(255,30,45,.06), transparent 60%),
+    linear-gradient(180deg, #f6f8ff 0%, #f5f7ff 36%, #f0f4ff 100%);
+  min-height: 100vh;
+  overflow-x: auto;
+  transition: margin-left 0.3s ease;
+}
+
+
+.titulo-seccion {
+  font-size: 24px;
+  font-weight: 900;
+  color: #C10A14;
+  margin-bottom: 18px;
+  text-shadow: 0 1px 0 #fff;
+}
+
+/* ===== Contenedor de la tabla ===== */
+.tabla-contenedor {
+  width: 100%;
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  padding: 16px;
+}
+
+/* ===== Tabla ===== */
+.tabla-cotizaciones {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1200px; /* evita que se encoja demasiado */
+}
+
+.tabla-cotizaciones thead {
+  background: linear-gradient(90deg, #FF1E2D, #D6121F);
+  color: #fff;
+  text-align: left;
+}
+
+.tabla-cotizaciones thead th {
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tabla-cotizaciones tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #eaecef;
+  font-size: 14px;
+  color: #374151;
+  vertical-align: middle;
+}
+
+.tabla-cotizaciones tbody tr:hover {
+  background: #fff5f5;
+  transition: background 0.2s ease;
+}
+
+/* ===== Celdas especiales ===== */
+.tarifa-editada {
+  color: #E50914;
+  font-weight: 700;
+}
+
+.total {
+  color: #16a34a;
+  font-weight: 800;
+}
+
+.no-datos {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 20px;
+}
+
+/* ===== Acciones ===== */
+.acciones {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.btn-accion {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.btn-accion i {
+  font-size: 16px;
+}
+
+/* 🎯 Colores de acción */
+.btn-convertir {
+  background: #2563eb;
+  color: #fff;
+}
+.btn-convertir:hover {
+  background: #1e40af;
+  transform: translateY(-2px);
+}
+
+.btn-reenviar {
+  background: #10b981;
+  color: #fff;
+}
+.btn-reenviar:hover {
+  background: #059669;
+  transform: translateY(-2px);
+}
+
+.btn-eliminar {
+  background: #dc2626;
+  color: #fff;
+}
+.btn-eliminar:hover {
+  background: #b91c1c;
+  transform: translateY(-2px);
+}
+
+/* ===== Scroll horizontal ===== */
+.tabla-contenedor::-webkit-scrollbar {
+  height: 10px;
+}
+.tabla-contenedor::-webkit-scrollbar-thumb {
+  background: #c4c4c4;
+  border-radius: 999px;
+}
+.tabla-contenedor::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 992px) {
+  .main-content {
+    margin-left: 76px;
+    padding: 16px;
+  }
+
+  .titulo-seccion {
+    font-size: 20px;
+    text-align: center;
+  }
+
+  .tabla-contenedor {
+    padding: 8px;
+  }
+
+  .tabla-cotizaciones thead {
+    font-size: 13px;
+  }
+
+  .tabla-cotizaciones tbody td {
+    font-size: 13px;
+  }
+
+  .acciones {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-accion {
+    justify-content: center;
+  }
+}
+
+.btn-accion i {
+  margin-right: 6px;
+  font-size: 16px;
+  vertical-align: middle;
+}

@@ -14,83 +14,97 @@
     <span class="badge gray">Total <b id="count">{{ count($reservaciones) }}</b></span>
   </div>
 
+  <!-- ======================= 📋 TABLA ======================= -->
   <section class="table">
     <div class="thead">
       <div>Código</div>
-      <div>Fecha</div>
-      <div>Nombre Cliente</div>
+      <div>Cliente</div>
       <div>Email</div>
+      <div>Número</div>
+      <div>Categoría</div>
+      <div>Fecha salida</div>
+      <div>Fecha entrega</div>
       <div>Estado</div>
+      <div>Forma de pago</div>
       <div>Total</div>
       <div>Acciones</div>
     </div>
 
     <div class="tbody">
-  @forelse ($reservaciones as $r)
-    <div class="row"
-         data-codigo="{{ $r->codigo }}"
-         data-cliente="{{ $r->nombre_cliente }}"
-         data-email="{{ $r->email_cliente }}"
-         data-estado="{{ $r->estado }}"
-         data-total="{{ $r->total }}"
-         data-fecha="{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}">
-      <div>{{ $r->codigo }}</div>
-      <div>{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}</div>
-      <div>{{ $r->nombre_cliente ?? '—' }}</div>
-      <div>{{ $r->email_cliente ?? '—' }}</div>
-      <div>
-        @php
-          $estado = $r->estado;
-          $color = match($estado) {
-            'confirmada' => 'ok',
-            'pendiente_pago' => 'warn',
-            'hold' => 'gray',
-            'cancelada' => 'danger',
-            default => 'gray'
-          };
-        @endphp
-        <span class="state {{ $color }}">{{ ucfirst($estado) }}</span>
-      </div>
-      <div>${{ number_format($r->total, 2) }} MXN</div>
+      @forelse ($reservaciones as $r)
+        <div class="row"
+             data-codigo="{{ $r->codigo }}"
+             data-cliente="{{ $r->nombre_cliente }}"
+             data-email="{{ $r->email_cliente }}"
+             data-numero="{{ $r->telefono_cliente }}"
+             data-categoria="{{ $r->categoria }}"
+             data-fecha-salida="{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}"
+             data-fecha-entrega="{{ \Carbon\Carbon::parse($r->fecha_fin)->format('Y-m-d') }}"
+             data-estado="{{ $r->estado }}"
+             data-metodo="{{ $r->metodo_pago }}"
+             data-total="{{ $r->total }}">
+          <div>{{ $r->codigo }}</div>
+          <div>{{ $r->nombre_cliente ?? '—' }}</div>
+          <div>{{ $r->email_cliente ?? '—' }}</div>
+          <div>{{ $r->telefono_cliente ?? '—' }}</div>
+          <div>{{ $r->categoria ?? '—' }}</div>
+          <div>{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}</div>
+          <div>{{ \Carbon\Carbon::parse($r->fecha_fin)->format('Y-m-d') }}</div>
+          <div>
+            @php
+              $estado = $r->estado;
+              $color = match($estado) {
+                'confirmada' => 'ok',
+                'pendiente_pago' => 'warn',
+                'hold' => 'gray',
+                'cancelada' => 'danger',
+                default => 'gray'
+              };
+            @endphp
+            <span class="state {{ $color }}">{{ ucfirst($estado) }}</span>
+          </div>
+          <div>{{ ucfirst($r->metodo_pago) }}</div>
+          <div>${{ number_format($r->total, 2) }} MXN</div>
 
-      <div class="actions-wrap">
-        <a href="#" class="chip">✏️ Editar</a>
-        <a href="#" class="chip ghost">🚗 Cambio</a>
-        <form action="" method="POST" style="display:inline;">
-          @csrf
-          @method('DELETE')
-          <button class="iconbtn danger" type="submit">🗑️</button>
-        </form>
-      </div>
+          <div class="actions-wrap">
+            <a href="#" class="chip">✏️ Editar</a>
+            <a href="#" class="chip ghost">📄 Contrato</a>
+            <form action="" method="POST" style="display:inline;">
+              @csrf
+              @method('DELETE')
+              <button class="iconbtn danger" type="submit">🗑️</button>
+            </form>
+          </div>
+        </div>
+      @empty
+        <div class="row">
+          <div colspan="10" style="text-align:center;">No hay reservaciones activas.</div>
+        </div>
+      @endforelse
     </div>
-  @empty
-    <div class="row">
-      <div colspan="7" style="text-align:center;">No hay reservaciones activas.</div>
-    </div>
-  @endforelse
-</div>
-
   </section>
 </main>
 
-<!-- Modal de detalle -->
+<!-- ======================= 🧾 MODAL DETALLE ======================= -->
 <div class="pop" id="modal">
   <div class="box">
     <header>
-      <div id="mTitle">Contrato Reservación</div>
+      <div id="mTitle">Detalle de Reservación</div>
       <button class="btn gray" id="mClose">✖</button>
     </header>
 
     <div class="cnt" id="mBody">
-      <!-- 🧾 Campos dinámicos (rellenados por JS con fetch) -->
       <div class="kv"><div>Código</div><div id="mCodigo">—</div></div>
       <div class="kv"><div>Cliente</div><div id="mCliente">—</div></div>
       <div class="kv"><div>Email</div><div id="mEmail">—</div></div>
+      <div class="kv"><div>Número</div><div id="mNumero">—</div></div>
+      <div class="kv"><div>Categoría</div><div id="mCategoria">—</div></div>
+      <div class="kv"><div>Fecha salida</div><div id="mSalida">—</div></div>
+      <div class="kv"><div>Fecha entrega</div><div id="mEntrega">—</div></div>
       <div class="kv"><div>Estado</div><div id="mEstado">—</div></div>
-      <div class="kv"><div>Fechas</div><div id="mFechas">—</div></div>
-      <div class="kv"><div>Vehículo</div><div id="mVehiculo">—</div></div>
       <div class="kv"><div>Forma de pago</div><div id="mFormaPago">—</div></div>
       <div class="kv"><div>Total</div><div id="mTotal">—</div></div>
+      <div class="kv"><div>Tarifa modificada</div><div id="mTarifaModificada">—</div></div>
     </div>
 
     <div class="actions">
@@ -101,7 +115,6 @@
     </div>
   </div>
 </div>
-
 
 @endsection
 

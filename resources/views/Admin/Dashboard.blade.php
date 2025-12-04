@@ -113,14 +113,14 @@ body{
 .tag.blue{background:#eef2ff; color:#4338ca}
 
 /* ===== Hero multicolor ===== */
-.hero{
-  position:relative; overflow:hidden; border-bottom:1px solid var(--stroke);
+.hero {
   background:
-    radial-gradient(1200px 320px at -15% -40%, #ffe4ea 10%, transparent 60%),
-    radial-gradient(900px 300px at 115% -30%, #ffe7d6 10%, transparent 60%),
-    radial-gradient(1000px 380px at 50% 120%, #e8f6ff 10%, transparent 60%),
-    #fff;
+    radial-gradient(1200px 320px at -15% -40%, #1b1f2f 10%, transparent 60%),
+    radial-gradient(900px 300px at 115% -30%, #252a3b 10%, transparent 60%),
+    radial-gradient(1000px 380px at 50% 120%, #2e3344 10%, transparent 60%),
+    #0b1120; /* 🔸 Fondo base oscuro */
 }
+
 .hero::before{
   content:""; position:absolute; inset:-40% -40% auto -40%; height:220px;
   background:linear-gradient(90deg, #ff9aa7, #ff7a1a, #f59e0b, #8b5cf6, #6366f1, #0ea5e9, #ff9aa7);

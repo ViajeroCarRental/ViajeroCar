@@ -10,66 +10,117 @@ class CategoriasCarrosSeeder extends Seeder
     public function run(): void
     {
         DB::table('categorias_carros')->insert([
+
+            // C — Compacto
             [
-                'nombre' => 'Económico',
-                'descripcion' => 'Autos pequeños, eficientes y cómodos para ciudad.',
-                'precio_dia' => 499.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'C',
+                'nombre'        => 'Compacto',
+                'descripcion'   => 'Chevrolet Aveo o similar',
+                'precio_dia'    => 467.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // D — Medianos
             [
-                'nombre' => 'Compacto',
-                'descripcion' => 'Modelos prácticos, cómodos y con buen rendimiento.',
-                'precio_dia' => 579.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'D',
+                'nombre'        => 'Medianos',
+                'descripcion'   => 'Nissan Versa o similar',
+                'precio_dia'    => 600.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // E — Grandes
             [
-                'nombre' => 'Sedán',
-                'descripcion' => 'Espacio para familia o trabajo con cajuela amplia.',
-                'precio_dia' => 699.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'E',
+                'nombre'        => 'Grandes',
+                'descripcion'   => 'Volkswagen Jetta o similar',
+                'precio_dia'    => 800.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // F — Full Size
             [
-                'nombre' => 'SUV',
-                'descripcion' => 'Camionetas con espacio extra y tracción elevada.',
-                'precio_dia' => 999.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'F',
+                'nombre'        => 'Full Size',
+                'descripcion'   => 'Toyota Camry o similar',
+                'precio_dia'    => 1550.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // IC — SUV Compacta
             [
-                'nombre' => 'Pickup',
-                'descripcion' => 'Camionetas resistentes para carga y uso rudo.',
-                'precio_dia' => 1299.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'IC',
+                'nombre'        => 'SUV Compacta',
+                'descripcion'   => 'Jeep Renegade o similar',
+                'precio_dia'    => 1600.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // I — SUV Mediana
             [
-                'nombre' => 'De lujo',
-                'descripcion' => 'Vehículos de alta gama con interiores premium.',
-                'precio_dia' => 1599.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'I',
+                'nombre'        => 'SUV Mediana',
+                'descripcion'   => 'Volkswagen Taos o similar',
+                'precio_dia'    => 1800.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // IB — SUV Familiar Compacta
             [
-                'nombre' => 'Deportivos',
-                'descripcion' => 'Autos potentes, veloces y de alto rendimiento.',
-                'precio_dia' => 1699.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'IB',
+                'nombre'        => 'SUV Familiar Compacta',
+                'descripcion'   => 'Toyota Avanza o similar',
+                'precio_dia'    => 1700.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // M — Minivan
             [
-                'nombre' => 'Híbridos',
-                'descripcion' => 'Vehículos con motor eléctrico y bajo consumo.',
-                'precio_dia' => 1099.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'M',
+                'nombre'        => 'Minivan',
+                'descripcion'   => 'Honda Odyssey o similar',
+                'precio_dia'    => 2600.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // L — Pasajeros 12–15
             [
-                'nombre' => 'Eléctricos',
-                'descripcion' => '100% eléctricos, sin emisiones y silenciosos.',
-                'precio_dia' => 1799.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'L',
+                'nombre'        => 'Van Pasajeros 13',
+                'descripcion'   => 'Toyota Hiace o similar',
+                'precio_dia'    => 2900.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // H — Pickup Doble Cabina
             [
-                'nombre' => 'Vans',
-                'descripcion' => 'Vehículos amplios para grupos o transporte turístico.',
-                'precio_dia' => 1599.00,
-                'created_at' => now(), 'updated_at' => now()
+                'codigo'        => 'H',
+                'nombre'        => 'Pickup Doble Cabina',
+                'descripcion'   => 'Nissan Frontier o similar',
+                'precio_dia'    => 1950.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
             ],
+
+            // HI — Pickup 4x4
+            [
+                'codigo'        => 'HI',
+                'nombre'        => 'Pickup 4x4 Doble Cabina',
+                'descripcion'   => 'Toyota Tacoma o similar',
+                'precio_dia'    => 2600.00,
+                'created_at'    => now(),
+                'updated_at'    => now()
+            ],
+
         ]);
     }
 }

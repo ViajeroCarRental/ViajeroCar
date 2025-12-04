@@ -12,13 +12,16 @@ use App\Http\Controllers\ReservacionesController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ReservacionesAdminController;
 use App\Http\Controllers\ReservacionesActivasController;
-use App\Http\Controllers\ContratoController;
 use Illuminate\Support\Facades\Bus;
 use App\Http\Controllers\FlotillaController;
 use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\PolizasController;
 use App\Http\Controllers\CarroceriaController;
 use App\Http\Controllers\GastosController;
+use App\Http\Controllers\SiniestrosController;
+use App\Http\Controllers\ConductorAdicionalController;
+use App\Http\Controllers\ContratoController;
+use Illuminate\Support\Facades\DB;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -127,7 +130,16 @@ Route::post('/admin/cotizaciones/guardar', [App\Http\Controllers\CotizacionesAdm
 Route::get('/admin/cotizaciones/seguros', [App\Http\Controllers\CotizacionesAdminController::class, 'getSeguros'])->name('rutaSegurosCotizar');
 Route::get('/admin/cotizaciones/servicios', [App\Http\Controllers\CotizacionesAdminController::class, 'getServicios'])->name('rutaServiciosCotizar');
 Route::get('/admin/cotizaciones/categoria/{idCategoria}', [App\Http\Controllers\CotizacionesAdminController::class, 'getCategoria'])->name('rutaCategoriaCotizar');
-
+// 🟢 Vista de todas las cotizaciones (para botón "Ver cotizaciones")
+Route::get('/admin/cotizaciones/listado', [App\Http\Controllers\CotizacionesAdminController::class, 'listado'])->name('rutaVerCotizaciones');
+// Convertir Cotizacion en Reservación
+Route::post('/admin/cotizaciones/{id}/convertir', [App\Http\Controllers\CotizacionesAdminController::class, 'convertirAReservacion'])->name('cotizaciones.convertir');
+// 🔄 Reenviar cotización por correo
+Route::post('/admin/cotizaciones/{id}/reenviar', [App\Http\Controllers\CotizacionesAdminController::class, 'reenviarCotizacion'])->name('cotizaciones.reenviar');
+// 🔹 Eliminar cotización manualmente
+Route::delete('/admin/cotizaciones/{id}/eliminar', [App\Http\Controllers\CotizacionesAdminController::class, 'eliminarCotizacion'])->name('cotizaciones.eliminar');
+// 🔹 Limpieza automática (opcional: protegida o por CRON)
+Route::get('/admin/cotizaciones/limpiar-vencidas', [App\Http\Controllers\CotizacionesAdminController::class, 'limpiarCotizacionesVencidas'])->name('cotizaciones.limpiarVencidas');
 
 
 
@@ -137,21 +149,85 @@ Route::get('/admin/reservaciones-activas', [ReservacionesActivasController::clas
 Route::get('/admin/reservaciones-activas/{codigo}', [ReservacionesActivasController::class, 'show'])->name('rutaDetalleReservacionActiva');
 
 //contrato id
-Route::get('/admin/contrato/{id}', [ContratoController::class, 'mostrarContrato'])->name('contrato.mostrar');
+Route::get('/admin/contrato/{id}', [App\Http\Controllers\ContratoController::class, 'mostrarContrato'])->name('contrato.mostrar');
 // 🧩 Actualizar servicios adicionales (AJAX desde Contrato)
-Route::post('/admin/contrato/servicios', [ContratoController::class, 'actualizarServicios'])->name('contrato.actualizarServicios');
+Route::post('/admin/contrato/servicios', [App\Http\Controllers\ContratoController::class, 'actualizarServicios'])->name('contrato.actualizarServicios');
 // =============================================================
 // 🛡️ Actualización de seguros (Paso 3 del contrato)
 // =============================================================
 Route::post('/admin/contrato/seguros', [App\Http\Controllers\ContratoController::class, 'actualizarSeguro'])->name('contrato.actualizarSeguro');
 // 💰 Actualizar cargos adicionales (Paso 4)
 Route::post('/admin/contrato/cargos', [App\Http\Controllers\ContratoController::class, 'actualizarCargos'])->name('contrato.actualizarCargos');
+// Obtener cargos guardados en el contrato (Paso 4: gasolina + dropoff)
+Route::get('/admin/contrato/cargos/{idContrato}', [App\Http\Controllers\ContratoController::class, 'obtenerCargosContrato'])->name('contrato.obtenerCargos');
+
 // 📄 Guardar documentación subida (Paso 5)
-Route::post('/contrato/guardar-documentacion', [ContratoController::class, 'guardarDocumentacion'])->name('contrato.guardarDocumentacion');
+Route::post('/admin/contrato/guardar-documentacion', [App\Http\Controllers\ContratoController::class, 'guardarDocumentacion'])->name('contrato.guardarDocumentacion');
+Route::get('/admin/contrato/documentacion/{idContrato}',[App\Http\Controllers\ContratoController::class, 'obtenerDocumentacion'])->name('contrato.obtenerDocumentacion');
+Route::get('/archivo/{id}', function($id){
+    $archivo = DB::table('archivos')->where('id_archivo',$id)->first();
+    if (!$archivo) abort(404);
+
+    return response($archivo->contenido)
+        ->header('Content-Type', $archivo->mime_type);
+})->name('archivo.mostrar');
+Route::get('/admin/contrato/{id}/documentos-existen',
+    [ContratoController::class, 'verificarDocumentosExistentes']
+)->name('contrato.documentos.existen');
+
 // Obtener conductores asociados al contrato (AJAX)
-Route::get('/admin/contrato/{id}/conductores', [ContratoController::class, 'obtenerConductores']);
+Route::get('/admin/contrato/{id}/conductores', [App\Http\Controllers\ContratoController::class, 'obtenerConductores']);
+/* =============================================================
+   📌 Solicitud de cambio de fecha (Paso 1 – editar fecha inicio)
+   ============================================================= */
+// Crear solicitud de cambio de fecha
+Route::post('/admin/contrato/solicitar-cambio-fecha',[App\Http\Controllers\ContratoController::class, 'solicitarCambioFecha'])->name('contrato.solicitarCambioFecha');
+// Endpoint que recibe el clic del superadmin (aprobar)
+Route::get('/admin/contrato/cambio-fecha/aprobar/{token}',[App\Http\Controllers\ContratoController::class, 'aprobarCambioFecha'])->name('contrato.aprobarCambioFecha');
+// Endpoint que recibe el clic del superadmin (rechazar)
+Route::get('/admin/contrato/cambio-fecha/rechazar/{token}',[App\Http\Controllers\ContratoController::class, 'rechazarCambioFecha'])->name('contrato.rechazarCambioFecha');
+Route::get('/admin/contrato/cambio-fecha/estado/{id}', [ContratoController::class, 'estadoCambioFecha']);
+Route::post('/admin/contrato/{idReservacion}/recalcular-total', [ContratoController::class, 'recalcularYActualizarTotales']);
+// 📌 Obtener vehículos por categoría (para el modal del contrato)
+Route::get('/admin/contrato/vehiculos-por-categoria/{idCategoria}', [App\Http\Controllers\ContratoController::class, 'vehiculosPorCategoria'])->name('contrato.vehiculosPorCategoria');
+Route::post('/admin/contrato/{idReservacion}/actualizar-categoria',[App\Http\Controllers\ContratoController::class, 'actualizarCategoria'])->name('contrato.actualizarCategoria');
+// 🚗 Asignar vehículo a la reservación
+Route::post('/admin/contrato/asignar-vehiculo', [App\Http\Controllers\ContratoController::class, 'asignarVehiculo'])->name('contrato.asignarVehiculo');
+// 🔥 Upgrade — obtener oferta
+Route::get('/admin/contrato/{id}/oferta-upgrade', [ContratoController::class, 'obtenerOfertaUpgrade'])->name('contrato.oferta-upgrade');
+
+// 🔥 Upgrade — aceptar
+Route::post('/admin/contrato/{id}/aceptar-upgrade', [ContratoController::class, 'aceptarUpgrade'])->name('contrato.aceptar-upgrade');
+
+// 🔥 Upgrade — rechazar
+Route::post('/admin/contrato/{id}/rechazar-upgrade', [ContratoController::class, 'rechazarUpgrade'])->name('contrato.rechazar-upgrade');
+
+Route::get('/admin/contrato/categoria-info/{codigo}',[ContratoController::class, 'categoriaInfo'])->name('contrato.categoria-info');
 
 
+Route::get('/admin/contrato/vehiculo-random/{idCategoria}',[ContratoController::class, 'vehiculoRandom'])->name('contrato.vehiculo-random');
+Route::post('/admin/reservacion/delivery/guardar', [ContratoController::class, 'guardarDeliveryReservacion'])->name('reservacion.delivery.guardar');
+Route::post('/admin/contrato/seguros-individuales',[ContratoController::class, 'actualizarSegurosIndividuales'])->name('contrato.actualizarSegurosIndividuales');
+Route::delete('/admin/contrato/seguros-individuales',[ContratoController::class, 'eliminarSeguroIndividual'])->name('contrato.eliminarSeguroIndividual');
+Route::delete('/admin/contrato/seguros-individuales/todos',[ContratoController::class, 'eliminarTodosLosIndividuales'])->name('contrato.eliminarIndividualesTodos');
+Route::post('/admin/contrato/cargo-variable', [ContratoController::class, 'guardarCargoVariable']);
+// PASO 6 — resumen
+Route::get('/admin/contrato/{id}/resumen-paso6',[ContratoController::class, 'resumenPaso6']);
+
+// PASO 6 — agregar pago
+Route::post('/admin/contrato/pagos/agregar',[ContratoController::class, 'agregarPagoPaso6']);
+
+// PASO 6 — eliminar pago
+Route::delete('/admin/contrato/pagos/{idPago}/eliminar',[ContratoController::class, 'eliminarPago']);
+// 🔹 Registrar pago manual (efectivo / terminal / transferencia)
+Route::post('/admin/contrato/pagos/agregar', [ContratoController::class, 'pagoManual'])->name('contrato.pago.agregar');
+
+// 🔹 Registrar pago con PayPal (pasarela en línea)
+Route::post('/admin/contrato/pagos/paypal',[ContratoController::class, 'pagoPayPal'])->name('contrato.pago.paypal');
+
+// 🔹 Eliminar un pago registrado
+Route::delete('/admin/contrato/pagos/{id_pago}/eliminar',[ContratoController::class, 'eliminarPago'])->name('contrato.pago.eliminar');
+Route::get('/admin/contrato/{id_reservacion}/resumen',[ContratoController::class, 'resumenContrato'])->name('contrato.resumen');
 
 
 
@@ -218,5 +294,70 @@ Route::put('/admin/carroceria/update/{id}', [CarroceriaController::class, 'updat
 
 
 
+// === GASTOS ===
 Route::get('/admin/gastos', [GastosController::class, 'index'])->name('rutaGastos');
 Route::get('/admin/gastos/filtrar', [GastosController::class, 'filtrar']);
+// 🔹 Obtener totales por categoría (para las tarjetas)
+Route::get('/admin/gastos/totales', [GastosController::class, 'totales'])->name('gastos.totales');
+
+// 🔹 Exportar todos los gastos a Excel (CSV)
+Route::get('/admin/gastos/exportar', [GastosController::class, 'exportar'])->name('gastos.exportar');
+
+// 🔹 Rango rápido: hoy, semana o mes
+Route::get('/admin/gastos/rango/{tipo}', [GastosController::class, 'rangoRapido'])->name('gastos.rango');
+
+
+
+
+// === Siniestros ===
+Route::get('/admin/seguros', [App\Http\Controllers\SiniestrosController::class, 'index'])->name('rutaSeguros');
+Route::post('/admin/siniestros/guardar', [App\Http\Controllers\SiniestrosController::class, 'guardar'])->name('guardarSiniestro');
+Route::post('/admin/siniestros/actualizar/{id}', [App\Http\Controllers\SiniestrosController::class, 'actualizar'])->name('actualizarSiniestro');
+Route::post('/admin/siniestros/subir/{id}', [App\Http\Controllers\SiniestrosController::class, 'subirArchivo'])->name('subirArchivoSiniestro');
+Route::get('/admin/siniestros/ver/{id}', [App\Http\Controllers\SiniestrosController::class, 'ver'])->name('verSiniestro');
+Route::get('/admin/siniestros/descargar/{id}', [App\Http\Controllers\SiniestrosController::class, 'descargar'])->name('descargarSiniestro');
+// 🔎 Buscador AJAX de vehículos
+Route::get('/admin/vehiculos/buscar', [SiniestrosController::class, 'buscarVehiculos'])
+    ->name('vehiculos.buscar');
+
+
+// routes/web.php
+Route::get('/preview-poliza', function () {
+    $vehiculo = (object)[
+        'nombre_publico' => 'Nissan Versa 2023 Automático',
+        'placa' => 'VIA-1234',
+        'aseguradora' => 'AXA Seguros',
+        'fin_vigencia_poliza' => now()->addDays(5)
+    ];
+    $diasRestantes = 5;
+    return view('emails.poliza_vencimiento', compact('vehiculo', 'diasRestantes'));
+});
+
+
+// conductor adicional
+// Ver anexo
+Route::get('/admin/reservacion/{id}/anexo',
+    [ConductorAdicionalController::class, 'verAnexo'])->name('anexo.ver');
+
+// Guardar nuevo conductor
+Route::post('/admin/anexo/guardar',
+    [ConductorAdicionalController::class, 'guardar'])->name('anexo.guardar');
+
+// Eliminar conductor
+Route::delete('/admin/anexo/{id}/eliminar',
+    [ConductorAdicionalController::class, 'eliminar'])->name('anexo.eliminar');
+    // Guardar firma del arrendador
+Route::post('/admin/anexo/guardar-firma',
+    [ConductorAdicionalController::class, 'guardarFirma'])
+    ->name('anexo.guardarFirma');
+
+
+
+
+Route::get('/admin/reservacion/{id}/checklist', function($id) {
+    return view('Admin.checklist', ['id' => $id]);
+})->name('checklist.ver');
+
+Route::get('/admin/checklist2', function () {
+    return view('Admin.checklist2');
+});

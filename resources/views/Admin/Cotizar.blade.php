@@ -214,7 +214,13 @@
     </form>
   </div>
 </article>
-
+  <!-- 🔘 Botón Ver Cotizaciones -->
+<div class="ver-cotizaciones-wrap">
+  <button class="btn-ver-cotizaciones"
+          onclick="location.href='{{ route('rutaVerCotizaciones') }}'">
+     Ver cotizaciones 📄
+  </button>
+</div>
 
   </section>
 
@@ -223,28 +229,51 @@
 ======================= -->
 <aside class="sticky">
   <div class="card">
-    <div class="head">Resumen de cotización</div>
+    <div class="head">Resumen de Cotización</div>
     <div class="cnt">
 
       <!-- 🚗 Imagen de referencia por categoría -->
-<div id="vehImageWrap" style="text-align:center;margin-bottom:10px;display:none;">
-  <img id="vehImage"
-       src="{{ asset('assets/placeholder-car.jpg') }}"
-       alt="Ejemplo de vehículo de la categoría seleccionada"
-       style="width:100%;max-width:250px;border-radius:12px;object-fit:cover;">
-  <div id="vehName" style="font-weight:700;margin-top:6px;">
-    Ejemplo de la categoría seleccionada
-  </div>
-</div>
+      <div id="vehImageWrap" style="text-align:center;margin-bottom:10px;display:none;">
+        <img id="vehImage"
+             src="{{ asset('assets/placeholder-car.jpg') }}"
+             alt="Ejemplo de vehículo de la categoría seleccionada"
+             style="width:100%;max-width:250px;border-radius:12px;object-fit:cover;">
+        <div id="vehName" style="font-weight:700;margin-top:6px;">
+          Ejemplo de la categoría seleccionada
+        </div>
+      </div>
 
+      <!-- 📅 Detalles del viaje -->
+      <div class="trip-details" style="margin-bottom:12px;">
+        <div class="row"><div>📍 Retiro</div><div id="resSucursalRetiro">—</div></div>
+        <div class="row"><div>🏁 Entrega</div><div id="resSucursalEntrega">—</div></div>
+        <div class="row"><div>🗓️ Fecha salida</div><div id="resFechaInicio">—</div></div>
+        <div class="row"><div>🕑 Hora salida</div><div id="resHoraInicio">—</div></div>
+        <div class="row"><div>📅 Fecha llegada</div><div id="resFechaFin">—</div></div>
+        <div class="row"><div>🕓 Hora llegada</div><div id="resHoraFin">—</div></div>
+        <div class="row"><div>⏱️ Duración</div><div id="resDias">—</div></div>
+      </div>
 
-      <!-- Totales de cotización -->
-      <div class="row"><div>Tarifa Base</div><div id="baseLine">—</div></div>
+      <!-- 💰 Detalle de precios -->
+      <div class="row">
+        <div>
+          Tarifa Base
+          <button id="editTarifa" title="Editar tarifa"
+                  style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:16px;margin-left:6px;">
+            ✏️
+          </button>
+        </div>
+        <div id="baseLine">—</div>
+      </div>
+
       <div class="row"><div>Protección</div><div id="proteName">—</div></div>
       <div class="row"><div>Adicionales</div><div id="extrasName">—</div></div>
       <div class="row"><div>Subtotal</div><div id="subTot">$0.00 MXN</div></div>
       <div class="row"><div>IVA (16%)</div><div id="iva">$0.00 MXN</div></div>
-      <div class="row"><div style="font-weight:900">Total</div><div class="total" id="total">$0.00 MXN</div></div>
+      <div class="row">
+        <div style="font-weight:900">Total</div>
+        <div class="total" id="total">$0.00 MXN</div>
+      </div>
 
     </div>
   </div>

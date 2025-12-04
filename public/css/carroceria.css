@@ -137,7 +137,7 @@ body {
 }
 
 /* ===========================================================
-   🚗 TABLA DE CARROCERÍA
+   🚗 TABLA DE CARROCERÍA — Estilo unificado con "Gastos"
 =========================================================== */
 .table-wrapper {
   width: 100%;
@@ -153,9 +153,13 @@ body {
   width: 100%;
   border-collapse: collapse;
   min-width: 950px;
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 
-.table th, .table td {
+/* 🔹 Celdas base */
+.table th,
+.table td {
   padding: 12px 16px;
   border-bottom: 1px solid var(--stroke);
   text-align: left;
@@ -163,18 +167,40 @@ body {
   vertical-align: middle;
 }
 
-.table th {
-  background: var(--brand);
+/* 🔴 Encabezado con degradado rojo */
+.table thead th {
+  background: linear-gradient(90deg, var(--brand), var(--brand-light));
   color: #fff;
   text-transform: uppercase;
   font-size: 13px;
-  font-weight: 600;
-  letter-spacing: .5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  border: none;
+  border-right: 1px solid rgba(255,255,255,0.15);
 }
 
-.table tr:hover {
-  background: #fff7f7;
+/* 🔘 Bordes redondeados */
+.table thead th:first-child {
+  border-top-left-radius: var(--radius);
 }
+.table thead th:last-child {
+  border-top-right-radius: var(--radius);
+  border-right: none;
+}
+
+/* 🔲 Filas alternadas y hover */
+.table tbody tr:nth-child(odd) { background: #fff; }
+.table tbody tr:nth-child(even) { background: #fafbfc; }
+.table tbody tr:hover {
+  background: #fff1f1;
+  cursor: pointer;
+}
+
+/* ✨ Sombra sutil bajo el encabezado */
+.table thead {
+  box-shadow: 0 2px 4px rgba(0,0,0,.05);
+}
+
 
 /* ===========================================================
    🟢 ESTATUS DE REPARACIÓN
@@ -232,73 +258,140 @@ body {
 }
 
 /* ===========================================================
-   🪟 MODALES (Editar / Estatus / Nuevo)
+   🚗 MODAL "Elegir vehículo" — Ajuste compacto y responsivo
 =========================================================== */
+.modal-dialog {
+  max-width: 650px; /* Evita que se alargue demasiado */
+  margin: 1.75rem auto;
+}
+
 .modal-content {
   border-radius: var(--radius);
-  border: 1px solid var(--stroke);
-  box-shadow: var(--shadow-md);
+  overflow: hidden;
 }
 
+/* 🔹 Encabezado */
 .modal-header {
-  background: var(--brand);
+  background: linear-gradient(90deg, var(--brand), var(--brand-light));
   color: #fff;
-  border-top-left-radius: var(--radius);
-  border-top-right-radius: var(--radius);
+  padding: 12px 20px;
+  font-weight: 700;
+  align-items: center;
 }
 
+/* 🔹 Cuerpo del modal */
 .modal-body {
-  background: #f9fafb;
-  padding: 20px;
-  border-bottom-left-radius: var(--radius);
-  border-bottom-right-radius: var(--radius);
-}
-
-.modal-body label {
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--ink);
-  display: block;
-  margin-top: 8px;
-}
-
-.modal-body input,
-.modal-body select {
-  width: 100%;
-  margin-top: 4px;
-  margin-bottom: 10px;
-  padding: 8px 10px;
-  border-radius: var(--radius);
-  border: 1px solid var(--stroke);
-  font-family: var(--font);
-  background: var(--paper);
-}
-
-.modal-footer {
-  padding: 14px 20px;
   background: #fff;
-  border-top: 1px solid var(--stroke);
-  border-bottom-left-radius: var(--radius);
-  border-bottom-right-radius: var(--radius);
-  display: flex;
+  padding: 18px 22px;
+  max-height: 60vh; /* Máxima altura relativa a la pantalla */
+  overflow-y: auto; /* Scroll solo si hay muchas filas */
+}
+
+/* 🔹 Tabla dentro del modal */
+.modal .table {
+  min-width: unset !important;
+  width: 100% !important;
+  table-layout: auto;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.modal .table th,
+.modal .table td {
+  padding: 10px 12px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.modal .table thead th {
+  background: linear-gradient(90deg, var(--brand), var(--brand-light));
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+
+/* 🔹 Pie del modal */
+.modal-footer {
+  padding: 12px 18px;
   justify-content: flex-end;
-  gap: 10px;
 }
 
 .modal-footer .btn {
-  background: var(--brand);
-}
-.modal-footer .btn:hover {
-  background: var(--brand-light);
+  padding: 8px 18px;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 10px;
 }
 
-/* ===========================================================
-   📱 RESPONSIVE
-=========================================================== */
+
+ /* 🎨 Estilos de estatus */
+  .status.pendiente { background: #fff3cd; color: #856404; padding: .25rem .5rem; border-radius: .5rem; }
+  .status.cotizado { background: #d1ecf1; color: #0c5460; padding: .25rem .5rem; border-radius: .5rem; }
+  .status.en\ proceso { background: #cfe2ff; color: #084298; padding: .25rem .5rem; border-radius: .5rem; }
+  .status.refacción { background: #f8d7da; color: #721c24; padding: .25rem .5rem; border-radius: .5rem; }
+  .status.terminado { background: #d4edda; color: #155724; padding: .25rem .5rem; border-radius: .5rem; }
+  .cursor-pointer { cursor: pointer; }
+  .form-text-vehiculo { font-size: .9rem; color: #6c757d; }
+
+  /* 🔍 Buscador de Carrocería */
+.buscador-flotilla {
+  position: relative;
+  display: block;
+  margin: 15px 0 25px 0;
+}
+
+.buscador-flotilla input {
+  width: 420px;
+  padding: 12px 16px 12px 44px;
+  font-size: 15px;
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  background: #f9fafb;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.buscador-flotilla input:focus {
+  border-color: #d6121f;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(214, 18, 31, 0.15);
+}
+
+.buscador-flotilla input::placeholder {
+  color: #aaa;
+  font-style: italic;
+}
+
+.icono-buscar {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #b0b0b0;
+  font-size: 16px;
+  pointer-events: none;
+}
+/* 🧭 Alinear buscador y botón al mismo nivel */
+.d-flex.flex-wrap.gap-2 .buscador-flotilla input {
+  width: 350px; /* Puedes ajustar el ancho */
+}
+
 @media (max-width: 768px) {
-  .toolbar { flex-direction: column; }
-  .toolbar .btn { width: 100%; }
-  .table th, .table td { padding: 10px; font-size: 14px; }
-  .actions { flex-direction: column; }
-  .btn-action { width: 100%; }
+  .d-flex.flex-wrap.gap-2 {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .d-flex.flex-wrap.gap-2 .buscador-flotilla input {
+    width: 100%;
+  }
+
+  .d-flex.flex-wrap.gap-2 button {
+    width: 100%;
+  }
 }
