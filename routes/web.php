@@ -354,14 +354,17 @@ Route::get('/admin/checklist2', function () {
 /* ===============================================
    ADMIN · ROLES Y PERMISOS
 ================================================ */
+
 Route::get('/admin/roles', [RolesController::class, 'index'])->name('roles.index');
-Route::get('/admin/roles/listar', [RolesController::class, 'list']);
-Route::get('/admin/roles/obtener/{id}', [RolesController::class, 'show']);
-Route::post('/admin/roles/crear', [RolesController::class, 'store']);
-Route::put('/admin/roles/actualizar/{id}', [RolesController::class, 'update']);
-Route::delete('/admin/roles/eliminar/{id}', [RolesController::class, 'destroy']);
 
+Route::get('/admin/roles/listar', [RolesController::class, 'listar']);   // ← CORREGIDO
 
+Route::get('/admin/roles/obtener/{id}', [RolesController::class, 'obtener']); // ← CORREGIDO
+
+Route::post('/admin/roles/crear', [RolesController::class, 'crear']); // ← CORREGIDO
+
+Route::post('/admin/roles/actualizar/{id}', [RolesController::class, 'actualizar']);
+Route::post('/admin/roles/eliminar/{id}', [RolesController::class, 'eliminar']);
 
 
 // LISTAR – UNA SOLA RUTA
@@ -380,3 +383,5 @@ Route::put('/admin/usuarios/{id}', [UsuarioAdminController::class, 'update'])
 // ELIMINAR
 Route::delete('/admin/usuarios/{id}', [UsuarioAdminController::class, 'destroy'])
     ->name('admin.usuarios.destroy');
+Route::delete('/admin/clientes/{id}', [UsuarioAdminController::class, 'destroyCliente'])
+    ->name('admin.clientes.destroy');

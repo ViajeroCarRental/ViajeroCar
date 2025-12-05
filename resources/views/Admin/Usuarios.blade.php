@@ -5,15 +5,15 @@
 @section('css-vistaUsuariosAdmin')
     <link rel="stylesheet" href="{{ asset('css/usuariosAdmin.css') }}">
 @endsection
+
 @section('contenidoUsuariosAdmin')
     <!-- MAIN -->
     <main class="main">
+
         <div class="top">
             <div class="h1">Administración</div>
-            <button class="btn gray burger" id="burger">☰</button>
         </div>
-
-        <div class="grid">
+                <div class="grid">
             <div>
                 <h2 style="margin:0 0 6px;font-size:28px">Usuarios del sistema</h2>
                 <div class="small">
@@ -22,25 +22,36 @@
                 </div>
             </div>
 
+
+
             <!-- STATS -->
             <div class="stats">
-                <div class="stat">
+                <div class="stat stat-filter" data-filter="activos">
                     <div class="title">Activos</div>
                     <div class="num" id="sActivos">{{ $totales['activos'] ?? 0 }}</div>
                 </div>
-                <div class="stat">
+                <div class="stat stat-filter" data-filter="invitaciones">
                     <div class="title">Invitaciones</div>
                     <div class="num" id="sInvites">{{ $totales['invitaciones'] ?? 0 }}</div>
                 </div>
-                <div class="stat">
+                <div class="stat stat-filter" data-filter="admins">
                     <div class="title">Admins</div>
                     <div class="num" id="sAdmins">{{ $totales['admins'] ?? 0 }}</div>
                 </div>
-                <div class="stat">
-                    <div class="title">Desactivados</div>
+                <div class="stat stat-filter" data-filter="inactivos">
+                    <div class="title">Inactivos</div>
                     <div class="num" id="sOff">{{ $totales['desactivados'] ?? 0 }}</div>
                 </div>
             </div>
+        <!-- ==========================
+             PANEL ESTADÍSTICAS + GRÁFICA
+        =========================== -->
+        <div class="card" style="margin-bottom:22px">
+            <div class="cnt">
+                <h3 style="margin-bottom:8px">Estadísticas generales del sistema</h3>
+                <canvas id="usuariosChart" height="100"></canvas>
+            </div>
+        </div>
 
             <!-- ==========================
                  BLOQUE 1: USUARIOS ADMIN
@@ -56,7 +67,6 @@
                         </div>
                         <div style="display:flex;gap:8px;flex-wrap:wrap">
                             <button class="btn primary" id="btnAdd">➕ Agregar usuario</button>
-                            <button class="btn ghost" id="btnExport">⬇️ Exportar CSV</button>
                         </div>
                     </div>
 
@@ -67,15 +77,10 @@
                         </div>
 
                         <select id="fRol" class="input">
-                            <option value="">Todos los roles</option>
+                            
                             @foreach(($roles ?? []) as $rol)
                                 <option value="{{ $rol->id_rol }}">{{ $rol->nombre }}</option>
                             @endforeach
-                        </select>
-
-                        <select id="fSede" class="input">
-                            <option value="">Todas las sedes</option>
-                            {{-- Placeholder, no hay campo sede en BD --}}
                         </select>
                     </div>
 
@@ -159,6 +164,7 @@
                                     <th>Tipo</th>
                                     <th>Estatus</th>
                                     <th>Verificación</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -189,10 +195,17 @@
                                                 <span class="status status-warn">Sin verificar</span>
                                             @endif
                                         </td>
+                                        <td>
+                                            <button class="btn tiny danger btn-delete-client"
+                                                    data-id="{{ $cli->id_usuario }}">
+                                                🗑 Eliminar
+                                            </button>
+                                        </td>
+
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7">
+                                        <td colspan="8">
                                             <div class="empty">
                                                 Aún no hay clientes registrados en el sistema.
                                             </div>
@@ -240,14 +253,20 @@
                 </div>
  
                 <div>
-                 <label>Contraseña</label>
-                 <input class="input" id="uPassword" type="password" placeholder="Mínimo 6 caracteres">
+                    <label>Contraseña</label>
+                    <div style="position:relative">
+                        <input class="input" id="uPassword" type="password" placeholder="Mínimo 6 caracteres">
+                        <button type="button" id="togglePass"
+                            style="position:absolute;right:10px;top:50%;transform:translateY(-50%);border:none;background:transparent;cursor:pointer;">
+                            👁
+                        </button>
+                    </div>
                 </div>
 
                 <div> 
                     <label>Rol</label>
-                    <select id="uRol" class="input">
-                        <option value="">Selecciona un rol</option>
+                    <select id="uRol" name="id_rol" class="input" required>
+                        <option value="" disabled selected>Selecciona un rol</option>
                         @foreach(($roles ?? []) as $rol)
                             <option value="{{ $rol->id_rol }}">{{ $rol->nombre }}</option>
                         @endforeach
@@ -276,5 +295,136 @@
 @endsection
 
 @section('js-vistaUsuariosAdmin')
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // ==========================
+        // GRÁFICA PRO
+        // ==========================
+        const ctx = document.getElementById('usuariosChart').getContext('2d');
+
+        const gradActivos = ctx.createLinearGradient(0, 0, 0, 200);
+        gradActivos.addColorStop(0, "#4CAF50");
+        gradActivos.addColorStop(1, "#2E7D32");
+
+        const gradInactivos = ctx.createLinearGradient(0, 0, 0, 200);
+        gradInactivos.addColorStop(0, "#EF5350");
+        gradInactivos.addColorStop(1, "#B71C1C");
+
+        const gradAdmins = ctx.createLinearGradient(0, 0, 0, 200);
+        gradAdmins.addColorStop(0, "#42A5F5");
+        gradAdmins.addColorStop(1, "#0D47A1");
+
+        const gradClientes = ctx.createLinearGradient(0, 0, 0, 200);
+        gradClientes.addColorStop(0, "#AB47BC");
+        gradClientes.addColorStop(1, "#4A148C");
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Activos', 'Inactivos', 'Admins', 'Clientes'],
+                datasets: [{
+                    label: 'Usuarios',
+                    data: [
+                        {{ $conteos['activos'] }},
+                        {{ $conteos['inactivos'] }},
+                        {{ $conteos['admins'] }},
+                        {{ $conteos['clientes'] }}
+                    ],
+                    backgroundColor: [
+                        gradActivos,
+                        gradInactivos,
+                        gradAdmins,
+                        gradClientes
+                    ],
+                    borderRadius: 14,
+                    barThickness: 55,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                animation: {
+                    duration: 900,
+                    easing: "easeOutQuart"
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: "#1f1f1f",
+                        titleColor: "#fff",
+                        bodyColor: "#ddd",
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // ==========================
+        // BUSCADOR EN TIEMPO REAL
+        // ==========================
+        const inputSearch = document.getElementById("q");
+        const tbodyAdmins = document.getElementById("tbodyAdmins");
+
+        inputSearch?.addEventListener("input", (e) => {
+            const text = e.target.value.toLowerCase();
+
+            tbodyAdmins.querySelectorAll("tr").forEach(r => {
+                const nombre = (r.dataset.nombres || "").toLowerCase();
+                const apellidos = (r.dataset.apellidos || "").toLowerCase();
+                const correo = (r.dataset.correo || "").toLowerCase();
+
+                const visible =
+                    nombre.includes(text) ||
+                    apellidos.includes(text) ||
+                    correo.includes(text);
+
+                r.style.display = visible ? "" : "none";
+            });
+        });
+
+        // ==========================
+        // FILTRO POR CARDS GRANDES
+        // ==========================
+        document.querySelectorAll(".stat-filter").forEach(stat => {
+            stat.addEventListener("click", () => {
+                const tipo = stat.dataset.filter;
+                const rows = tbodyAdmins.querySelectorAll("tr");
+
+                rows.forEach(r => {
+                    const activo = r.dataset.activo === "1";
+                    r.style.display = "";
+
+                    if (tipo === "activos" && !activo) r.style.display = "none";
+                    if (tipo === "inactivos" && activo) r.style.display = "none";
+                    // "admins" ya viene filtrado desde backend, no ocultamos nada
+                    // "invitaciones" no aplica a admins, se podría usar para clientes si quisieras
+                });
+            });
+        });
+
+        // ==========================
+        // VER / OCULTAR CONTRASEÑA
+        // ==========================
+        const uPassword = document.getElementById("uPassword");
+        const togglePass = document.getElementById("togglePass");
+        togglePass?.addEventListener("click", () => {
+            if (uPassword.type === "password") {
+                uPassword.type = "text";
+                togglePass.textContent = "🙈";
+            } else {
+                uPassword.type = "password";
+                togglePass.textContent = "👁";
+            }
+        });
+    });
+    </script>
+
     <script src="{{ asset('js/usuariosAdmin.js') }}"></script>
 @endsection

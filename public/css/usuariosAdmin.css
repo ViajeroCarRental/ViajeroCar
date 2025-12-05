@@ -289,3 +289,78 @@ a{text-decoration:none;color:inherit}
   .stats{ grid-template-columns:1fr }
   .filters{ grid-template-columns:1fr }
 }
+/* ============================================================
+   🎨 EFECTO 3D PARA GRÁFICAS CHART.JS
+   ============================================================ */
+
+/* ============================================================
+   🎨 GRÁFICA 3D MINIMALISTA PREMIUM (APPLE / STRIPE STYLE)
+   ============================================================ */
+
+/* Contenedor limpio, elegante */
+.chart-container {
+    padding: 26px;
+    border-radius: 18px;
+
+    background: #ffffff;
+
+    /* Sombra flotante suave */
+    box-shadow:
+        0 8px 22px rgba(0,0,0,0.08),
+        0 2px 6px rgba(0,0,0,0.06);
+
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efecto de brillo sutil */
+.chart-container::before {
+    content: "";
+    position: absolute;
+    top: -40%;
+    left: 0;
+    width: 100%;
+    height: 200%;
+
+    background: radial-gradient(
+        circle at top,
+        rgba(255,255,255,0.65),
+        rgba(255,255,255,0) 70%
+    );
+
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Animación ligera cuando se pasa el mouse */
+.chart-container:hover {
+    transform: translateY(-2px);
+    transition: 0.25s ease;
+}
+
+/* Canvas: sombra sutil y tamaño optimizado */
+#usuariosChart {
+    max-height: 260px;
+    filter:
+        drop-shadow(0px 4px 6px rgba(0,0,0,0.15))
+        drop-shadow(0px 1px 2px rgba(0,0,0,0.10));
+}
+
+/* Hover del canvas */
+#usuariosChart:hover {
+    transform: scale(1.01);
+    transition: 0.3s ease-out;
+}
+
+/* MINI efecto 3D en las barras sin saturar */
+.chart-bar-3d {
+    filter:
+        drop-shadow(0px 3px 5px rgba(0,0,0,0.18))
+        drop-shadow(0px 1px 2px rgba(0,0,0,0.12));
+}
+
+/* Tipografía más profesional en tooltips */
+.chartjs-tooltip {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}

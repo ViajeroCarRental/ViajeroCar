@@ -154,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Respuesta HTML (error)
                 const html = await r.text();
                 console.error("ERROR HTML CREATE/UPDATE:", html);
-                alert("❌ Error interno del servidor. Revisa la consola.");
+                alert("❌ Error este correo ya está en uso o hubo un error interno del servidor. Revisa la consola.");
                 throw new Error("Respuesta no JSON");
             })
             .then((data) => {
@@ -167,6 +167,47 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .catch(err => console.error("ERROR JS:", err));
     });
+    // ==============================
+// 🗑 ELIMINAR CLIENTE
+// ==============================
+document.addEventListener("click", e => {
+    const btn = e.target.closest(".btn-delete-client");
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+
+    if (!confirm("¿Eliminar este cliente?")) return;
+
+    const fd = new FormData();
+    fd.append("_method", "DELETE");
+
+    fetch(`/admin/clientes/${id}`, {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": csrfToken,
+            "Accept": "application/json"
+        },
+        body: fd
+    })
+        .then(async r => {
+            if (r.headers.get("content-type")?.includes("application/json")) {
+                return r.json();
+            }
+            const html = await r.text();
+            console.error("ERROR HTML DELETE CLIENTE:", html);
+            alert("❌ Error interno del servidor.");
+            throw new Error("Respuesta no JSON");
+        })
+        .then(data => {
+            if (data.ok) {
+                location.reload();
+            } else {
+                alert(data.message ?? "Error al eliminar");
+            }
+        })
+        .catch(err => console.error("ERROR DELETE CLIENTE:", err));
+});
+
 
     btnClose?.addEventListener("click", cerrarModal);
     btnCancel?.addEventListener("click", cerrarModal);

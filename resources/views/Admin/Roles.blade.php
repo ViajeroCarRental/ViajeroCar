@@ -1,11 +1,9 @@
 @extends('layouts.admin')
 
-{{-- SECCIÓN CSS --}}
 @section('css-vistaRoles')
 <link rel="stylesheet" href="{{ asset('css/roles.css') }}">
 @endsection
 
-{{-- CONTENIDO PRINCIPAL --}}
 @section('contenidoRoles')
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -31,7 +29,9 @@
     </div>
 </div>
 
-{{-- MODAL --}}
+<!-- ===============================
+     MODAL POPUP
+=============================== -->
 <div class="pop" id="rolesPop" style="display:none">
     <div class="pop-box">
 
@@ -49,7 +49,10 @@
 
             <div class="form-group mt-3">
                 <h5>Permisos</h5>
-                <div id="permBox" class="perm-box"></div>
+                <div id="permBox" class="perm-box">
+                    <!-- No hay permisos aún, así que se mostrará vacío sin romper -->
+                    <p style="color:#777; font-size: 14px;">(Permisos no disponibles)</p>
+                </div>
             </div>
 
             <div class="form-group mt-3" id="usuariosAsignados" style="display:none">
@@ -67,12 +70,14 @@
     </div>
 </div>
 
-{{-- ===================================================== --}}
-{{-- ========================= JS ========================= --}}
-{{-- ===================================================== --}}
+<!-- ===============================
+     JAVASCRIPT
+=============================== -->
 <script>
 
 const csrf = document.querySelector('meta[name="csrf-token"]').content;
+
+let editId = null;
 
 const pop = document.getElementById("rolesPop");
 const btnNuevo = document.getElementById("btnNuevo");
@@ -83,29 +88,35 @@ const btnGuardar = document.getElementById("btnGuardar");
 const nombre = document.getElementById("rolNombre");
 const permBox = document.getElementById("permBox");
 
-let editId = null;
-
-/* MOSTRAR POP */
+/* =====================================================
+   NUEVO ROL
+===================================================== */
 btnNuevo.onclick = () => {
     editId = null;
     nombre.value = "";
-    permBox.innerHTML = "";
-    cargarPermisos([]);
+
+    // limpiamos permisos (aunque no existan)
+    permBox.innerHTML = `<p style="color:#777; font-size: 14px;">(Permisos no disponibles)</p>`;
+
     document.getElementById("usuariosAsignados").style.display = "none";
+
     pop.style.display = "flex";
 };
 
-/* CERRAR POP */
+/* CERRAR POPUP */
 closePop.onclick = btnCancelar.onclick = () => {
     pop.style.display = "none";
 };
 
-/* LISTAR ROLES */
+/* =====================================================
+   LISTAR ROLES
+===================================================== */
 function cargarRoles() {
     fetch("/admin/roles/listar")
         .then(res => res.json())
         .then(data => {
             let html = "";
+
             data.forEach(r => {
                 html += `
                 <tr>
@@ -117,80 +128,82 @@ function cargarRoles() {
                     </td>
                 </tr>`;
             });
+
             document.getElementById("rolesBody").innerHTML = html;
         });
 }
 cargarRoles();
 
-/* EDITAR */
+/* =====================================================
+   EDITAR ROL
+===================================================== */
 window.editar = (id) => {
+
     fetch(`/admin/roles/obtener/${id}`)
         .then(res => res.json())
         .then(data => {
+
             editId = id;
+
             nombre.value = data.rol.nombre;
-            cargarPermisos(data.permisosAsignados);
+
+            // No hay permisos, así que simplemente mostramos vacío
+            permBox.innerHTML = `<p style="color:#777; font-size: 14px;">(Permisos no disponibles)</p>`;
+
+            // usuarios también estarán vacíos
             const box = document.getElementById("usuariosAsignados");
             const lista = document.getElementById("listaUsuarios");
-            lista.innerHTML = "";
-            if (data.usuarios.length > 0) {
-                box.style.display = "block";
-                data.usuarios.forEach(u => {
-                    lista.innerHTML += `<li>${u.nombres} ${u.apellidos} — ${u.correo}</li>`;
-                });
-            } else {
-                box.style.display = "block";
-                lista.innerHTML = "<li>No hay usuarios asignados.</li>";
-            }
+
+            lista.innerHTML = "<li>No hay usuarios asignados.</li>";
+            box.style.display = "block";
+
             pop.style.display = "flex";
-        });
+        })
+        .catch(err => console.error(err));
 };
 
-/* CARGAR PERMISOS */
-function cargarPermisos(asignados = []) {
-    fetch("/admin/permisos/listar")
-        .then(res => res.json())
-        .then(permisos => {
-            permBox.innerHTML = "";
-            permisos.forEach(p => {
-                const checked = asignados.includes(p.id_permiso) ? "checked" : "";
-                permBox.innerHTML += `
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="${p.id_permiso}" ${checked}>
-                        <label>${p.nombre}</label>
-                    </div>`;
-            });
-        });
-}
-
-/* GUARDAR */
+/* =====================================================
+   GUARDAR ROL (CREAR / EDITAR)
+===================================================== */
 btnGuardar.onclick = () => {
-    const seleccion = [];
-    permBox.querySelectorAll("input:checked").forEach(c => seleccion.push(c.value));
-    const payload = { nombre: nombre.value, permisos: seleccion };
-    const method = editId ? "PUT" : "POST";
-    const url = editId ? `/admin/roles/actualizar/${editId}` : `/admin/roles/crear`;
+
+    const form = new FormData();
+    form.append("nombre", nombre.value);
+
+    let url = "/admin/roles/crear";
+    let metodo = "POST";
+
+    if (editId) {
+        url = `/admin/roles/actualizar/${editId}`;
+        metodo = "PUT";
+    }
+
     fetch(url, {
-        method: method,
-        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrf },
-        body: JSON.stringify(payload)
+        method: metodo,
+        headers: { "X-CSRF-TOKEN": csrf },
+        body: form
     })
     .then(res => res.json())
     .then(() => {
         pop.style.display = "none";
         cargarRoles();
-    });
+    })
+    .catch(err => console.error(err));
 };
 
-/* ELIMINAR */
+/* =====================================================
+   ELIMINAR ROL
+===================================================== */
 window.eliminarRol = (id) => {
     if (!confirm("¿Eliminar este rol?")) return;
+
     fetch(`/admin/roles/eliminar/${id}`, {
         method: "DELETE",
         headers: { "X-CSRF-TOKEN": csrf }
     })
     .then(res => res.json())
-    .then(() => cargarRoles());
+    .then(() => cargarRoles())
+    .catch(err => console.error(err));
 };
 
 </script>

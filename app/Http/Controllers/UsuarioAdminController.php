@@ -11,6 +11,7 @@ class UsuarioAdminController extends Controller
 {
     public function index(Request $request)
     {
+        // Totales generales
         $totales = [
             'activos'      => DB::table('usuarios')->where('activo', 1)->count(),
             'desactivados' => DB::table('usuarios')->where('activo', 0)->count(),
@@ -18,6 +19,21 @@ class UsuarioAdminController extends Controller
             'invitaciones' => DB::table('usuarios')->where('email_verificado', 0)->count(),
         ];
 
+        // Para gráficas
+        $clientesTemp = DB::table('usuarios as u')
+            ->leftJoin('usuario_rol as ur', 'u.id_usuario', '=', 'ur.id_usuario')
+            ->whereNull('ur.id_usuario')
+            ->whereNotNull('u.pais')
+            ->get();
+
+        $conteos = [
+            'activos'   => $totales['activos'],
+            'inactivos' => $totales['desactivados'],
+            'admins'    => $totales['admins'],
+            'clientes'  => count($clientesTemp),
+        ];
+
+        // Usuarios administrativos
         $admins = DB::table('usuarios as u')
             ->join('usuario_rol as ur', 'u.id_usuario', '=', 'ur.id_usuario')
             ->join('roles as r', 'ur.id_rol', '=', 'r.id_rol')
@@ -31,13 +47,15 @@ class UsuarioAdminController extends Controller
                 DB::raw('GROUP_CONCAT(r.nombre ORDER BY r.nombre SEPARATOR ", ") as roles'),
                 DB::raw('MIN(ur.id_rol) as rol_id_principal')
             )
-            ->groupBy('u.id_usuario','u.nombres','u.apellidos','u.correo','u.numero','u.activo')
+            ->groupBy('u.id_usuario', 'u.nombres', 'u.apellidos', 'u.correo', 'u.numero', 'u.activo')
             ->orderBy('u.nombres')
             ->get();
 
+        // Clientes reales
         $clientes = DB::table('usuarios as u')
             ->leftJoin('usuario_rol as ur', 'u.id_usuario', '=', 'ur.id_usuario')
             ->whereNull('ur.id_usuario')
+            ->whereNotNull('u.pais')
             ->select(
                 'u.id_usuario',
                 'u.nombres',
@@ -59,12 +77,11 @@ class UsuarioAdminController extends Controller
             'admins'   => $admins,
             'clientes' => $clientes,
             'roles'    => $roles,
+            'conteos'  => $conteos
         ]);
     }
 
-    // ====================================================
-    // 🟢 CREAR USUARIO ADMINISTRATIVO
-    // ====================================================
+    // CREAR ADMIN
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -73,11 +90,10 @@ class UsuarioAdminController extends Controller
             'correo'    => 'required|email|max:150|unique:usuarios,correo',
             'numero'    => 'nullable|string|max:20',
             'id_rol'    => 'required|exists:roles,id_rol',
-            'activo'    => 'required|in:0,1',   // 🔥 Corregido
-            'password'  => 'nullable|string'
+            'activo'    => 'required|in:0,1',
+            'password'  => 'nullable|string|min:6'
         ]);
 
-        // Si viene contraseña, usarla. Si no, default.
         $password = $data['password'] ?? '123456';
 
         $idUsuario = DB::table('usuarios')->insertGetId([
@@ -107,9 +123,7 @@ class UsuarioAdminController extends Controller
         ]);
     }
 
-    // ====================================================
-    // 🟡 ACTUALIZAR USUARIO ADMINISTRATIVO
-    // ====================================================
+    // EDITAR ADMIN
     public function update(Request $request, int $id): JsonResponse
     {
         $data = $request->validate([
@@ -118,11 +132,10 @@ class UsuarioAdminController extends Controller
             'correo'    => 'required|email|max:150|unique:usuarios,correo,' . $id . ',id_usuario',
             'numero'    => 'nullable|string|max:20',
             'id_rol'    => 'required|exists:roles,id_rol',
-            'activo'    => 'required|in:0,1',   // 🔥 Corregido
+            'activo'    => 'required|in:0,1',
             'password'  => 'nullable|string|min:6'
         ]);
 
-        // Actualizar datos del usuario
         DB::table('usuarios')
             ->where('id_usuario', $id)
             ->update([
@@ -134,7 +147,6 @@ class UsuarioAdminController extends Controller
                 'updated_at' => now(),
             ]);
 
-        // Si incluyeron nueva contraseña
         if (!empty($data['password'])) {
             DB::table('usuarios')
                 ->where('id_usuario', $id)
@@ -143,7 +155,6 @@ class UsuarioAdminController extends Controller
                 ]);
         }
 
-        // Reemplazar rol principal
         DB::table('usuario_rol')->where('id_usuario', $id)->delete();
 
         DB::table('usuario_rol')->insert([
@@ -159,25 +170,30 @@ class UsuarioAdminController extends Controller
         ]);
     }
 
-    // ====================================================
-    // 🔴 ELIMINAR USUARIO ADMINISTRATIVO
-    // ====================================================
+    // ELIMINAR ADMIN
     public function destroy(int $id): JsonResponse
     {
-        DB::table('usuario_rol')
-            ->where('id_usuario', $id)
-            ->delete();
+        DB::table('usuario_rol')->where('id_usuario', $id)->delete();
 
-        DB::table('usuarios')
-            ->where('id_usuario', $id)
-            ->update([
-                'activo'     => 0,
-                'updated_at' => now(),
-            ]);
+        DB::table('usuarios')->where('id_usuario', $id)->update([
+            'activo'     => 0,
+            'updated_at' => now(),
+        ]);
 
         return response()->json([
             'ok' => true,
-            'message' => 'Usuario administrativo eliminado (roles removidos).',
+            'message' => 'Usuario administrativo desactivado correctamente.',
+        ]);
+    }
+
+    // ELIMINAR CLIENTE
+    public function destroyCliente(int $id): JsonResponse
+    {
+        DB::table('usuarios')->where('id_usuario', $id)->delete();
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Cliente eliminado correctamente.'
         ]);
     }
 }
