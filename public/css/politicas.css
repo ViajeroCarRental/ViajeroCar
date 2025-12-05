@@ -41,7 +41,7 @@ body{
 /* ===== HERO ===== */
 .hero.hero-mini{
   position:relative;
-  overflow:hidden;                   /* ✅ se corrigió el typo */
+  overflow:hidden;
   min-height:clamp(340px, 62vh, 620px);
 }
 
@@ -56,10 +56,10 @@ body{
 }
 
 /* Capas del hero */
-.hero-bg{ position:absolute; inset:0; }        /* 🔴 la capa de fondo ocupa todo */
+.hero-bg{ position:absolute; inset:0; }
 .hero-bg img{
   width:100%;
-  height:100%;                                  /* 🔴 cubre la altura del hero */
+  height:100%;
   object-fit:cover;
   display:block;
 }
@@ -139,6 +139,73 @@ body{
 .sub-item.open .sub-body{opacity:1}
 .sub-content{padding:14px 16px;background:#fff;border-top:1px solid #e5e7eb;border-radius:0 0 10px 10px}
 
+/* ===== Tabla Garantías ===== */
+.tabla-garantias{
+  width:100%;
+  overflow-x:auto;
+  margin-top:20px;
+}
+
+.tabla-viajero{
+  width:100%;
+  border-collapse:collapse;
+  font-family:'Poppins',system-ui,-apple-system,Arial,sans-serif;
+  font-size:14px;
+  border:1px solid #c5c5c5;
+}
+
+.tabla-viajero thead{
+  background:#f3f4f6;
+}
+
+.tabla-viajero th,
+.tabla-viajero td{
+  padding:12px 10px;
+  border:1px solid #c5c5c5;
+  text-align:left;
+  vertical-align:top;
+}
+
+.tabla-viajero tbody tr:nth-child(even){
+  background:#fafafa;
+}
+
+.tabla-viajero tbody tr:hover{
+  background:#ffecec;
+}
+
+/* Columna del grupo */
+.tabla-viajero .grupo{
+  font-weight:700;
+  color:#b22222;
+  white-space:nowrap;
+}
+
+/* Columna recomendada */
+.tabla-viajero th.recomendado,
+.tabla-viajero td.recomendado{
+  background:#ffe1e1;
+  border-color:#b22222;
+  font-weight:600;
+}
+
+.tabla-viajero th.recomendado span{
+  font-size:12px;
+  font-weight:400;
+}
+
+/* Texto dentro de la categoría */
+.cat-main{
+  font-weight:600;
+  display:inline-block;
+  margin-bottom:3px;
+}
+
+.cat-sub{
+  font-size:12px;
+  color:#6b7280;
+}
+
 /* ===== Footer ===== */
 .footer-elegant{background:linear-gradient(180deg,#111,#1a1a1a);color:#e5e7eb;margin-top:32px}
 .footer-social{display:flex;justify-content:center;gap:20px;padding:18px 0 8px}
@@ -157,8 +224,19 @@ body{
 
 /* ===== Responsive ===== */
 @media (max-width:980px){
-  .hero-bg img{ height:100%; }            /* mantiene el cover en móvil */
+  .hero-bg img{ height:100%; }
 }
+
+@media (max-width:768px){
+  .tabla-viajero{
+    font-size:12px;
+  }
+  .tabla-viajero th,
+  .tabla-viajero td{
+    padding:8px 6px;
+  }
+}
+
 @media (max-width:720px){
   .hero-content{ padding-left:22px; padding-right:22px; }
   .hero-content h1{ font-size:clamp(28px,8vw,40px) }

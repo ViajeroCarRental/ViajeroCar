@@ -8,14 +8,13 @@ use Illuminate\Support\Facades\DB;
 
 class SucursalesSeeder extends Seeder {
     public function run(): void {
-        $map = DB::table('ciudades')->pluck('id_ciudad','nombre'); // ['Querétaro'=>1, 'León'=>2, ...]
+        $map = DB::table('ciudades')->pluck('id_ciudad','nombre'); 
 
         $rows = [
             ['ciudad'=>'Querétaro','nombre'=>'Querétaro Aeropuerto'],
             ['ciudad'=>'Querétaro','nombre'=>'Querétaro Central de Autobuses'],
-            ['ciudad'=>'León','nombre'=>'León Aeropuerto'],
-            ['ciudad'=>'León','nombre'=>'León Central de Autobuses'],
-            ['ciudad'=>'Guanajuato','nombre'=>'Guanajuato Centro'],
+            ['ciudad'=>'Querétaro','nombre'=>'Querétaro Oficina Plaza Central Park'],
+
         ];
 
         foreach($rows as $r){

@@ -1,10 +1,11 @@
-<?php
+<?php 
 
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http; // 👈 NUEVO
 
 class BusquedaController extends Controller
 {
@@ -34,8 +35,45 @@ class BusquedaController extends Controller
             ->orderBy('nombre')
             ->get();
 
+        /* ==========================
+         *  GOOGLE MAPS – RESEÑAS
+         * ========================== */
+        $googleReviews = collect();
+        $googleRating  = null;
+        $googleTotal   = null;
+
+        try {
+            // 🔑 Llave y place_id desde .env (los configuramos en el siguiente paso)
+            $apiKey  = env('GOOGLE_PLACES_KEY');
+            $placeId = env('GOOGLE_VIAJERO_PLACE_ID');
+
+            if ($apiKey && $placeId) {
+                $response = Http::get('https://maps.googleapis.com/maps/api/place/details/json', [
+                    'place_id' => $placeId,
+                    'fields'   => 'rating,reviews,user_ratings_total',
+                    'language' => 'es',
+                    'key'      => $apiKey,
+                ]);
+
+                if ($response->ok() && $response->json('status') === 'OK') {
+                    $googleReviews = collect($response->json('result.reviews', []))->take(4);
+                    $googleRating  = $response->json('result.rating');
+                    $googleTotal   = $response->json('result.user_ratings_total');
+                }
+            }
+        } catch (\Throwable $e) {
+            // Opcional: puedes loguear el error si quieres
+            // \Log::error('Error al obtener reseñas de Google: '.$e->getMessage());
+        }
+
         // Renderiza tu vista (welcome/home)
-        return view('welcome', compact('ciudades','categorias'));
+        return view('welcome', [
+            'ciudades'      => $ciudades,
+            'categorias'    => $categorias,
+            'googleReviews' => $googleReviews,
+            'googleRating'  => $googleRating,
+            'googleTotal'   => $googleTotal,
+        ]);
     }
 
     /* ====== BUSCAR (valida y redirige a Reservaciones) ====== */
@@ -115,58 +153,57 @@ class BusquedaController extends Controller
     }
 
     /** Acepta "YYYY-MM-DD" o "dd/mm/YYYY" y devuelve "YYYY-MM-DD" */
-    /** Acepta "YYYY-MM-DD" o "dd/mm/YYYY" y devuelve "YYYY-MM-DD" */
-private function normalizeDateYmd(?string $date): ?string
-{
-    if (!$date) return null;
-    $date = trim($date);
+    private function normalizeDateYmd(?string $date): ?string
+    {
+        if (!$date) return null;
+        $date = trim($date);
 
-    // Si vino "YYYY-MM-DDTHH:MM" o "YYYY-MM-DD HH:MM", quédate solo con la fecha
-    if (preg_match('/^(\d{4}-\d{2}-\d{2})[ T]/', $date, $m)) {
-        $date = $m[1];
-    }
-
-    // dd/mm/YYYY -> Y-m-d
-    if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $date)) {
-        [$d,$m,$y] = array_map('intval', explode('/',$date));
-        return sprintf('%04d-%02d-%02d', $y, $m, $d);
-    }
-
-    // Y-m-d ya válido
-    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-        return $date;
-    }
-
-    $ts = strtotime($date);
-    return $ts ? date('Y-m-d', $ts) : null;
-}
-
-/** Combina fecha + hora en formato Carbon, tolerando "12:00 PM", "12:00:00", etc. */
-private function mergeDateTime(string $date, string $time): \Illuminate\Support\Carbon
-{
-    $date = trim($date);
-    $time = trim($time);
-
-    // Si por accidente vino la fecha dentro del campo de hora, quítala
-    // ej. "2025-02-12 12:00" o "2025-02-12T12:00:00"
-    $time = preg_replace('/^\d{4}-\d{2}-\d{2}[ T]/', '', $time);
-
-    // Normaliza cualquier variante a 24h HH:MM (recorta segundos y maneja AM/PM)
-    $ts = strtotime($time);
-    if ($ts === false) {
-        // fallback: intenta extraer HH:MM manualmente
-        if (preg_match('/(\d{1,2}):(\d{2})/', $time, $m)) {
-            $h = (int)$m[1]; $i = (int)$m[2];
-            $time = sprintf('%02d:%02d', $h, $i);
-        } else {
-            // Como última instancia, fija 12:00 para no romper el flujo
-            $time = '12:00';
+        // Si vino "YYYY-MM-DDTHH:MM" o "YYYY-MM-DD HH:MM", quédate solo con la fecha
+        if (preg_match('/^(\d{4}-\d{2}-\d{2})[ T]/', $date, $m)) {
+            $date = $m[1];
         }
-    } else {
-        $time = date('H:i', $ts);
+
+        // dd/mm/YYYY -> Y-m-d
+        if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $date)) {
+            [$d,$m,$y] = array_map('intval', explode('/',$date));
+            return sprintf('%04d-%02d-%02d', $y, $m, $d);
+        }
+
+        // Y-m-d ya válido
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return $date;
+        }
+
+        $ts = strtotime($date);
+        return $ts ? date('Y-m-d', $ts) : null;
     }
 
-    return \Illuminate\Support\Carbon::createFromFormat('Y-m-d H:i', "{$date} {$time}", 'America/Mexico_City');
-}
+    /** Combina fecha + hora en formato Carbon, tolerando "12:00 PM", "12:00:00", etc. */
+    private function mergeDateTime(string $date, string $time): \Illuminate\Support\Carbon
+    {
+        $date = trim($date);
+        $time = trim($time);
+
+        // Si por accidente vino la fecha dentro del campo de hora, quítala
+        // ej. "2025-02-12 12:00" o "2025-02-12T12:00:00"
+        $time = preg_replace('/^\d{4}-\d{2}-\d{2}[ T]/', '', $time);
+
+        // Normaliza cualquier variante a 24h HH:MM (recorta segundos y maneja AM/PM)
+        $ts = strtotime($time);
+        if ($ts === false) {
+            // fallback: intenta extraer HH:MM manualmente
+            if (preg_match('/(\d{1,2}):(\d{2})/', $time, $m)) {
+                $h = (int)$m[1]; $i = (int)$m[2];
+                $time = sprintf('%02d:%02d', $h, $i);
+            } else {
+                // Como última instancia, fija 12:00 para no romper el flujo
+                $time = '12:00';
+            }
+        } else {
+            $time = date('H:i', $ts);
+        }
+
+        return \Illuminate\Support\Carbon::createFromFormat('Y-m-d H:i', "{$date} {$time}", 'America/Mexico_City');
+    }
 
 }

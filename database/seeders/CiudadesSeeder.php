@@ -10,8 +10,6 @@ class CiudadesSeeder extends Seeder {
     public function run(): void {
         $qs = [
             ['nombre'=>'Querétaro','estado'=>'Querétaro','pais'=>'México'],
-            ['nombre'=>'León','estado'=>'Guanajuato','pais'=>'México'],
-            ['nombre'=>'Guanajuato','estado'=>'Guanajuato','pais'=>'México'],
         ];
         foreach($qs as $c){
             DB::table('ciudades')->updateOrInsert(
