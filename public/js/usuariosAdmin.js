@@ -25,8 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let modo = "create";
 
-    const abrirModal = () => pop.style.display = "flex";
-    const cerrarModal = () => pop.style.display = "none";
+    const abrirModal = () => (pop.style.display = "flex");
+    const cerrarModal = () => (pop.style.display = "none");
 
     const limpiarForm = () => {
         uId.value = "";
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // ========================
-    // 🆕 BOTÓN NUEVO
+    // 🆕 NUEVO USUARIO
     // ========================
     btnAdd?.addEventListener("click", () => {
         modo = "create";
@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ========================
-    // 🗑 ELIMINAR
+    // 🗑 ELIMINAR ADMIN
     // ========================
     tbodyAdmins?.addEventListener("click", (e) => {
         const btn = e.target.closest(".btn-delete-user");
@@ -89,34 +89,25 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!confirm(`¿Eliminar al usuario "${nombre}"?`)) return;
 
         const fd = new FormData();
-        fd.append("_method", "DELETE");
 
-        fetch(`/admin/usuarios/${id}`, {
+        fetch(`/admin/usuarios/${id}/delete`, {
             method: "POST",
             headers: {
                 "X-CSRF-TOKEN": csrfToken,
                 "Accept": "application/json"
             },
-
-            body: fd,
+            body: fd
         })
-            .then(async (r) => {
-                if (r.headers.get("content-type")?.includes("application/json")) {
-                    return r.json();
-                }
-                const html = await r.text();
-                console.error("ERROR HTML DELETE:", html);
-                alert("❌ Error interno del servidor (DELETE). Revisa la consola.");
-                throw new Error("Respuesta no JSON");
-            })
-            .then((data) => {
+            .then(r => r.json())
+            .then(data => {
                 if (data.ok) location.reload();
+                else alert(data.message ?? "Error al eliminar.");
             })
-            .catch(err => console.error("Error DELETE:", err));
+            .catch(err => console.error("ERROR DELETE ADMIN:", err));
     });
 
     // ========================
-    // 💾 GUARDAR (CREATE / EDIT)
+    // 💾 GUARDAR
     // ========================
     btnSave?.addEventListener("click", () => {
         const fd = new FormData();
@@ -128,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
         fd.append("id_rol", uRol.value);
         fd.append("activo", uActivo.value);
 
-        // Si el usuario escribió contraseña → enviarla
+        // contraseña opcional
         if (uPassword && uPassword.value.trim() !== "") {
             fd.append("password", uPassword.value.trim());
         }
@@ -136,28 +127,17 @@ document.addEventListener("DOMContentLoaded", () => {
         let url = "/admin/usuarios";
 
         if (modo === "edit") {
-            url = `/admin/usuarios/${uId.value}`;
-            fd.append("_method", "PUT");
+            const id = uId.value;
+            url = `/admin/usuarios/${id}/update`;
         }
 
         fetch(url, {
             method: "POST",
-            headers: { "X-CSRF-TOKEN": csrfToken },
+            headers: { "X-CSRF-TOKEN": csrfToken, "Accept": "application/json" },
             body: fd
         })
-            .then(async (r) => {
-                // Detectar si Laravel respondió JSON
-                if (r.headers.get("content-type")?.includes("application/json")) {
-                    return r.json();
-                }
-
-                // Respuesta HTML (error)
-                const html = await r.text();
-                console.error("ERROR HTML CREATE/UPDATE:", html);
-                alert("❌ Error este correo ya está en uso o hubo un error interno del servidor. Revisa la consola.");
-                throw new Error("Respuesta no JSON");
-            })
-            .then((data) => {
+            .then(r => r.json())
+            .then(data => {
                 if (data.ok) {
                     cerrarModal();
                     location.reload();
@@ -165,49 +145,37 @@ document.addEventListener("DOMContentLoaded", () => {
                     alert(data.message ?? "Error al guardar.");
                 }
             })
-            .catch(err => console.error("ERROR JS:", err));
+            .catch(err => console.error("ERROR CREATE/UPDATE:", err));
     });
+
     // ==============================
-// 🗑 ELIMINAR CLIENTE
-// ==============================
-document.addEventListener("click", e => {
-    const btn = e.target.closest(".btn-delete-client");
-    if (!btn) return;
+    // 🗑 ELIMINAR CLIENTE
+    // ==============================
+    document.addEventListener("click", e => {
+        const btn = e.target.closest(".btn-delete-client");
+        if (!btn) return;
 
-    const id = btn.dataset.id;
+        const id = btn.dataset.id;
 
-    if (!confirm("¿Eliminar este cliente?")) return;
+        if (!confirm("¿Eliminar este cliente?")) return;
 
-    const fd = new FormData();
-    fd.append("_method", "DELETE");
+        const fd = new FormData();
 
-    fetch(`/admin/clientes/${id}`, {
-        method: "POST",
-        headers: {
-            "X-CSRF-TOKEN": csrfToken,
-            "Accept": "application/json"
-        },
-        body: fd
-    })
-        .then(async r => {
-            if (r.headers.get("content-type")?.includes("application/json")) {
-                return r.json();
-            }
-            const html = await r.text();
-            console.error("ERROR HTML DELETE CLIENTE:", html);
-            alert("❌ Error interno del servidor.");
-            throw new Error("Respuesta no JSON");
+        fetch(`/admin/clientes/${id}/delete`, {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+                "Accept": "application/json"
+            },
+            body: fd
         })
-        .then(data => {
-            if (data.ok) {
-                location.reload();
-            } else {
-                alert(data.message ?? "Error al eliminar");
-            }
-        })
-        .catch(err => console.error("ERROR DELETE CLIENTE:", err));
-});
-
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) location.reload();
+                else alert(data.message ?? "Error al eliminar cliente.");
+            })
+            .catch(err => console.error("ERROR DELETE CLIENTE:", err));
+    });
 
     btnClose?.addEventListener("click", cerrarModal);
     btnCancel?.addEventListener("click", cerrarModal);

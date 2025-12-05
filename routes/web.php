@@ -371,19 +371,25 @@ Route::post('/admin/roles/eliminar/{id}', [RolesController::class, 'eliminar']);
 
 // LISTAR – UNA SOLA RUTA
 // LISTAR
+// LISTAR
 Route::get('/admin/usuarios', [UsuarioAdminController::class, 'index'])
     ->name('admin.usuarios.index');
 
-// ROLES
-Route::get('/admin/roles', [RolesController::class, 'index'])
-    ->name('roles.index');
+// CREAR
+Route::post('/admin/usuarios', [UsuarioAdminController::class, 'store'])
+    ->name('admin.usuarios.store');
 
-Route::get('/admin/roles/listar', [RolesController::class, 'listar']);
-Route::get('/admin/roles/obtener/{id}', [RolesController::class, 'obtener']);
+// ACTUALIZAR (URL DISTINTA PARA NO CHOCAR)
+Route::post('/admin/usuarios/{id}/update', [UsuarioAdminController::class, 'update'])
+    ->name('admin.usuarios.update');
 
-Route::post('/admin/roles/crear', [RolesController::class, 'crear']);
-Route::post('/admin/roles/actualizar/{id}', [RolesController::class, 'actualizar']);
-Route::post('/admin/roles/eliminar/{id}', [RolesController::class, 'eliminar']);
+// ELIMINAR ADMIN
+Route::post('/admin/usuarios/{id}/delete', [UsuarioAdminController::class, 'destroy'])
+    ->name('admin.usuarios.destroy');
+
+// ELIMINAR CLIENTE
+Route::post('/admin/clientes/{id}/delete', [UsuarioAdminController::class, 'destroyCliente'])
+    ->name('admin.clientes.destroy');
 
 
 Route::prefix('admin')->group(function () {
