@@ -67,13 +67,19 @@
           <div>${{ number_format($r->total, 2) }} MXN</div>
 
           <div class="actions-wrap">
-            <a href="#" class="chip">✏️ Editar</a>
-            <a href="#" class="chip ghost">📄 Contrato</a>
-            <form action="" method="POST" style="display:inline;">
-              @csrf
-              @method('DELETE')
-              <button class="iconbtn danger" type="submit">🗑️</button>
-            </form>
+            <form action="{{ route('rutaEliminarReservacionActiva', $r->id_reservacion) }}"
+      method="POST" style="display:inline;">
+    @csrf
+    @method('DELETE')
+
+    <button class="iconbtn danger" type="submit"
+            onclick="return confirm('¿Seguro que deseas eliminar esta reservación?');">
+        🗑️
+    </button>
+</form>
+
+</form>
+
           </div>
         </div>
       @empty
