@@ -210,10 +210,10 @@ class VehiculosSeeder extends Seeder
 ],
 
 /* ============================================================
-   4) SUV — Kia Sportage
+   4) SUV — Kia Sportage (ANTES Guanajuato → AHORA Querétaro)
 ============================================================ */
 [
-    'id_ciudad' => 2,
+    'id_ciudad' => 1,              // antes 2
     'id_sucursal' => 3,
     'id_categoria' => 4,
     'id_estatus' => 1,
@@ -245,9 +245,9 @@ class VehiculosSeeder extends Seeder
     'tipo_servicio' => 'Arrendamiento',
     'propietario' => 'Viajero Car Rental',
     'rfc_propietario' => 'VCR2024A12',
-    'domicilio' => 'San Miguel de Allende',
-    'municipio' => 'Allende',
-    'estado' => 'Guanajuato',
+    'domicilio' => 'Querétaro, Qro.',   // antes San Miguel de Allende
+    'municipio' => 'Querétaro',         // antes Allende
+    'estado' => 'Querétaro',            // antes Guanajuato
     'pais' => 'México',
 
     'cilindros' => 4,
@@ -268,7 +268,7 @@ class VehiculosSeeder extends Seeder
     'folio_tarjeta' => 'TC-SPT-004',
     'movimiento_tarjeta' => 'Alta 2022',
     'fecha_expedicion_tarjeta' => '2022-05-10',
-    'oficina_expedidora' => 'León SAT',
+    'oficina_expedidora' => 'Querétaro SAT',   // antes León SAT
     'archivo_verificacion' => null,
 
     'created_at' => now(),
@@ -276,10 +276,10 @@ class VehiculosSeeder extends Seeder
 ],
 
 /* ============================================================
-   5) Pickup — Ford Ranger
+   5) Pickup — Ford Ranger (ANTES Guanajuato → AHORA Querétaro)
 ============================================================ */
 [
-    'id_ciudad' => 2,
+    'id_ciudad' => 1,              // antes 2
     'id_sucursal' => 3,
     'id_categoria' => 5,
     'id_estatus' => 1,
@@ -311,9 +311,9 @@ class VehiculosSeeder extends Seeder
     'tipo_servicio' => 'Arrendamiento',
     'propietario' => 'Viajero Car Rental',
     'rfc_propietario' => 'VCR2024A12',
-    'domicilio' => 'San Miguel de Allende',
-    'municipio' => 'Allende',
-    'estado' => 'Guanajuato',
+    'domicilio' => 'Querétaro, Qro.',   // antes San Miguel de Allende
+    'municipio' => 'Querétaro',         // antes Allende
+    'estado' => 'Querétaro',            // antes Guanajuato
     'pais' => 'México',
 
     'cilindros' => 6,
@@ -334,7 +334,7 @@ class VehiculosSeeder extends Seeder
     'folio_tarjeta' => 'TC-RAN-005',
     'movimiento_tarjeta' => 'Alta 2022',
     'fecha_expedicion_tarjeta' => '2022-07-01',
-    'oficina_expedidora' => 'León SAT',
+    'oficina_expedidora' => 'Querétaro SAT',   // antes León SAT
     'archivo_verificacion' => null,
 
     'created_at' => now(),
@@ -607,9 +607,10 @@ class VehiculosSeeder extends Seeder
 
 /* ============================================================
    10) Van — Mercedes-Benz Clase V
+   (ANTES Guanajuato → AHORA Querétaro)
 ============================================================ */
 [
-    'id_ciudad' => 2,
+    'id_ciudad' => 1,              // antes 2
     'id_sucursal' => 3,
     'id_categoria' => 10,
     'id_estatus' => 1,
@@ -641,9 +642,9 @@ class VehiculosSeeder extends Seeder
     'tipo_servicio' => 'Arrendamiento',
     'propietario' => 'Viajero Car Rental',
     'rfc_propietario' => 'VCR2024A12',
-    'domicilio' => 'San Miguel de Allende',
-    'municipio' => 'Allende',
-    'estado' => 'Guanajuato',
+    'domicilio' => 'Querétaro, Qro.',   // antes San Miguel de Allende
+    'municipio' => 'Querétaro',         // antes Allende
+    'estado' => 'Querétaro',            // antes Guanajuato
     'pais' => 'México',
 
     'cilindros' => 4,
@@ -664,7 +665,7 @@ class VehiculosSeeder extends Seeder
     'folio_tarjeta' => 'TC-MBZ-010',
     'movimiento_tarjeta' => 'Alta 2022',
     'fecha_expedicion_tarjeta' => '2022-09-10',
-    'oficina_expedidora' => 'León SAT',
+    'oficina_expedidora' => 'Querétaro SAT',   // antes León SAT
     'archivo_verificacion' => null,
 
     'created_at' => now(),

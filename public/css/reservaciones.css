@@ -467,7 +467,19 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
 }
 .qd-meta .v{ font-weight:900; }
 
-/* Notas (letra chica y gris) */
+.resume-card .qd-head{
+  padding-top:18px;      
+  padding-left:10px;      
+
+}
+
+.resume-card .qd-logo img{
+  margin-top:3px;        
+  max-height:48px;
+  width:auto;
+  display:block;
+}
+
 .qd-notes{
   background:#fafafa; border:1px solid #eee; border-radius:10px;
   padding:10px; margin-top:8px;
