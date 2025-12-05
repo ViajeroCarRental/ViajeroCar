@@ -29,37 +29,27 @@
     </div>
 </div>
 
-<!-- ===============================
-     MODAL POPUP
-=============================== -->
+<!-- ============================================
+     MODAL CREAR / EDITAR ROL
+============================================ -->
 <div class="pop" id="rolesPop" style="display:none">
     <div class="pop-box">
 
         <header class="pop-header">
             <h4 id="tituloModal">Nuevo rol</h4>
-            <button id="closePop" class="btn-close"></button>
+            <button id="closePop" class="btn-close">×</button>
         </header>
 
         <div class="pop-body">
-
             <div class="form-group">
                 <label>Nombre del rol</label>
-                <input class="input" id="rolNombre" placeholder="Ej. Operador">
-            </div>
-
-            <div class="form-group mt-3">
-                <h5>Permisos</h5>
-                <div id="permBox" class="perm-box">
-                    <!-- No hay permisos aún, así que se mostrará vacío sin romper -->
-                    <p style="color:#777; font-size: 14px;">(Permisos no disponibles)</p>
-                </div>
+                <input class="input" id="rolNombre" placeholder="Ej. Superadministrador">
             </div>
 
             <div class="form-group mt-3" id="usuariosAsignados" style="display:none">
                 <h5>Usuarios con este rol</h5>
                 <ul id="listaUsuarios" class="lista-usuarios"></ul>
             </div>
-
         </div>
 
         <footer class="pop-footer">
@@ -70,142 +60,176 @@
     </div>
 </div>
 
-<!-- ===============================
-     JAVASCRIPT
-=============================== -->
+<!-- ============================================
+     MODAL LISTA DE USUARIOS ASIGNADOS
+============================================ -->
+<div class="pop" id="usuariosPop" style="display:none">
+    <div class="pop-box" style="width:480px;">
+
+        <header class="pop-header">
+            <h4>Usuarios asignados</h4>
+            <button class="btn-close" onclick="cerrarUsuariosPop()">×</button>
+        </header>
+
+        <div class="pop-body" id="usuariosLista"></div>
+
+        <footer class="pop-footer">
+            <button class="btn btn-secondary" onclick="cerrarUsuariosPop()">Cerrar</button>
+        </footer>
+
+    </div>
+</div>
+
 <script>
-
 const csrf = document.querySelector('meta[name="csrf-token"]').content;
-
 let editId = null;
 
+/* ================
+   MODALES
+================ */
 const pop = document.getElementById("rolesPop");
+const usuariosPop = document.getElementById("usuariosPop");
+
+/* ================
+   ELEMENTOS
+================ */
 const btnNuevo = document.getElementById("btnNuevo");
 const closePop = document.getElementById("closePop");
 const btnCancelar = document.getElementById("btnCancelar");
 const btnGuardar = document.getElementById("btnGuardar");
-
 const nombre = document.getElementById("rolNombre");
-const permBox = document.getElementById("permBox");
 
-/* =====================================================
+/* =========================================================
    NUEVO ROL
-===================================================== */
+========================================================= */
 btnNuevo.onclick = () => {
     editId = null;
     nombre.value = "";
-
-    // limpiamos permisos (aunque no existan)
-    permBox.innerHTML = `<p style="color:#777; font-size: 14px;">(Permisos no disponibles)</p>`;
-
     document.getElementById("usuariosAsignados").style.display = "none";
-
     pop.style.display = "flex";
 };
 
-/* CERRAR POPUP */
-closePop.onclick = btnCancelar.onclick = () => {
-    pop.style.display = "none";
-};
+closePop.onclick = btnCancelar.onclick = () => pop.style.display = "none";
 
-/* =====================================================
+/* =========================================================
    LISTAR ROLES
-===================================================== */
+========================================================= */
 function cargarRoles() {
     fetch("/admin/roles/listar")
         .then(res => res.json())
         .then(data => {
             let html = "";
-
             data.forEach(r => {
+
                 html += `
                 <tr>
                     <td>${r.nombre}</td>
-                    <td>${r.total_usuarios}</td>
+
                     <td>
-                        <button class="btn-editar" onclick="editar(${r.id_rol})">Editar</button>
-                        <button class="btn-eliminar" onclick="eliminarRol(${r.id_rol})">Eliminar</button>
+                        <button class="btn-user-count" onclick="verUsuarios(${r.id_rol})">
+                            ${r.usuarios.length}
+                        </button>
+                    </td>
+
+                    <td>
+                        <button class="btn-action btn-editar" onclick="editar(${r.id_rol})">Editar</button>
+                        <button class="btn-action btn-eliminar" onclick="eliminarRol(${r.id_rol})">Eliminar</button>
                     </td>
                 </tr>`;
             });
-
             document.getElementById("rolesBody").innerHTML = html;
         });
 }
 cargarRoles();
 
-/* =====================================================
-   EDITAR ROL
-===================================================== */
-window.editar = (id) => {
+/* =========================================================
+   VER USUARIOS ASIGNADOS (MODAL)
+========================================================= */
+window.verUsuarios = (id) => {
+    fetch(`/admin/roles/obtener/${id}`)
+        .then(res => res.json())
+        .then(data => {
 
+            const lista = data.usuarios;
+            const cont = document.getElementById("usuariosLista");
+
+            if (lista.length === 0) {
+                cont.innerHTML = "<p style='color:#888'>Sin usuarios asignados.</p>";
+            } else {
+                cont.innerHTML = lista.map(u => `
+                    <div class="usuario-item">
+                        <b>${u.nombres} ${u.apellidos}</b><br>
+                        <small>${u.correo}</small>
+                    </div>
+                `).join("");
+            }
+
+            usuariosPop.style.display = "flex";
+        });
+};
+
+function cerrarUsuariosPop() {
+    usuariosPop.style.display = "none";
+}
+
+/* =========================================================
+   EDITAR
+========================================================= */
+window.editar = (id) => {
     fetch(`/admin/roles/obtener/${id}`)
         .then(res => res.json())
         .then(data => {
 
             editId = id;
-
             nombre.value = data.rol.nombre;
 
-            // No hay permisos, así que simplemente mostramos vacío
-            permBox.innerHTML = `<p style="color:#777; font-size: 14px;">(Permisos no disponibles)</p>`;
-
-            // usuarios también estarán vacíos
-            const box = document.getElementById("usuariosAsignados");
             const lista = document.getElementById("listaUsuarios");
+            lista.innerHTML = data.usuarios.length
+                ? data.usuarios.map(u => `
+                    <li><b>${u.nombres} ${u.apellidos}</b><br><small>${u.correo}</small></li>
+                  `).join("")
+                : "<li>No hay usuarios.</li>";
 
-            lista.innerHTML = "<li>No hay usuarios asignados.</li>";
-            box.style.display = "block";
-
+            document.getElementById("usuariosAsignados").style.display = "block";
             pop.style.display = "flex";
-        })
-        .catch(err => console.error(err));
+        });
 };
 
-/* =====================================================
-   GUARDAR ROL (CREAR / EDITAR)
-===================================================== */
+/* =========================================================
+   GUARDAR (CREAR / EDITAR)
+========================================================= */
 btnGuardar.onclick = () => {
-
     const form = new FormData();
+    form.append("_token", csrf);
     form.append("nombre", nombre.value);
 
     let url = "/admin/roles/crear";
-    let metodo = "POST";
+    if (editId) url = `/admin/roles/actualizar/${editId}`;
 
-    if (editId) {
-        url = `/admin/roles/actualizar/${editId}`;
-        metodo = "PUT";
-    }
-
-    fetch(url, {
-        method: metodo,
-        headers: { "X-CSRF-TOKEN": csrf },
-        body: form
-    })
-    .then(res => res.json())
+    fetch(url, { method: "POST", body: form })
+    .then(r => r.json())
     .then(() => {
         pop.style.display = "none";
         cargarRoles();
-    })
-    .catch(err => console.error(err));
+    });
 };
 
-/* =====================================================
-   ELIMINAR ROL
-===================================================== */
+/* =========================================================
+   ELIMINAR
+========================================================= */
 window.eliminarRol = (id) => {
     if (!confirm("¿Eliminar este rol?")) return;
 
-    fetch(`/admin/roles/eliminar/${id}`, {
-        method: "DELETE",
-        headers: { "X-CSRF-TOKEN": csrf }
-    })
-    .then(res => res.json())
-    .then(() => cargarRoles())
-    .catch(err => console.error(err));
-};
+    const form = new FormData();
+    form.append("_token", csrf);
 
+    fetch(`/admin/roles/eliminar/${id}`, {
+        method: "POST",
+        body: form
+    })
+    .then(r => r.json())
+    .then(() => cargarRoles());
+};
 </script>
 
 @endsection

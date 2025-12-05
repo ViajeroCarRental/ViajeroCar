@@ -34,6 +34,20 @@
         </a>
     </li>
 
+      <li>
+    <a href="{{ route('paqueteseguros.index') }}">
+        <i class="fas fa-shield-alt"></i> Seguros
+    </a>
+</li>
+<li>
+    <a href="{{ route('paquetesindividuales.index') }}">
+        <i class="fas fa-layer-group"></i> Seguros Individuales
+    </a>
+</li>
+
+
+
+
     <li class="menu-section">Navegación</li>
 
     <li>

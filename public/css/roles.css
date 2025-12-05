@@ -233,3 +233,180 @@ body{ font-size:15px; line-height:1.5 }
   box-shadow:var(--shadow-sm);
 }
 #btnGuardar:hover{ background:var(--brand-3) }
+/* ===============================
+   POPUP – MODERNO Y ELEGANTE
+=============================== */
+.pop {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.45); /* vidrio oscuro */
+    backdrop-filter: blur(6px);
+    z-index: 9999;
+}
+
+/* Caja principal */
+.pop-box {
+    width: 420px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.18);
+    animation: popupShow 0.25s ease-out;
+}
+
+/* Animación suave */
+@keyframes popupShow {
+    from { opacity: 0; transform: scale(.92); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+/* Header */
+.pop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.pop-header h4 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.btn-close {
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #64748b;
+    transition: .2s;
+}
+
+.btn-close:hover {
+    color: #0f172a;
+}
+
+/* Inputs */
+.input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    font-size: 14px;
+    transition: 0.25s;
+}
+
+.input:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18);
+    outline: none;
+}
+
+/* Footer */
+.pop-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+/* Botones */
+.pop-footer .btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: 0.2s;
+}
+
+/* Cancelar */
+.btn-secondary {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+.btn-secondary:hover {
+    background: #cbd5e1;
+}
+
+/* Guardar */
+.btn-danger {
+    background: #ef4444;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+/* Textos */
+.form-group label {
+    font-weight: 600;
+    color: #334155;
+}
+/* ============================
+   BOTONES DE ACCIÓN (EDITAR / ELIMINAR)
+============================ */
+.btn-action {
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: .2s ease;
+}
+
+/* Editar */
+.btn-editar {
+    background: #3b82f6; /* azul suave */
+    color: white;
+    box-shadow: 0 2px 6px rgba(59,130,246,0.25);
+}
+
+.btn-editar:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(59,130,246,0.35);
+}
+
+/* Eliminar */
+.btn-eliminar {
+    background: #ef4444; /* rojo moderno */
+    color: white;
+    box-shadow: 0 2px 6px rgba(239,68,68,0.25);
+}
+
+.btn-eliminar:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(239,68,68,0.35);
+}
+
+/* alineación de columnas */
+.roles-table td button {
+    margin-right: 6px;
+}
+.btn-user-count {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    font-size: 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-user-count:hover {
+    background: #1e40af;
+    transform: translateY(-2px);
+}

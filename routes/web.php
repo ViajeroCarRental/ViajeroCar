@@ -23,6 +23,8 @@ use App\Http\Controllers\ConductorAdicionalController;
 use App\Http\Controllers\ContratoController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\UsuarioAdminController;
+use App\Http\Controllers\SeguroPaqueteController;
+use App\Http\Controllers\SeguroIndividualController;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -372,16 +374,40 @@ Route::post('/admin/roles/eliminar/{id}', [RolesController::class, 'eliminar']);
 Route::get('/admin/usuarios', [UsuarioAdminController::class, 'index'])
     ->name('admin.usuarios.index');
 
-// CREAR
-Route::post('/admin/usuarios', [UsuarioAdminController::class, 'store'])
-    ->name('admin.usuarios.store');
+// ROLES
+Route::get('/admin/roles', [RolesController::class, 'index'])
+    ->name('roles.index');
 
-// ACTUALIZAR
-Route::put('/admin/usuarios/{id}', [UsuarioAdminController::class, 'update'])
-    ->name('admin.usuarios.update');
+Route::get('/admin/roles/listar', [RolesController::class, 'listar']);
+Route::get('/admin/roles/obtener/{id}', [RolesController::class, 'obtener']);
 
-// ELIMINAR
-Route::delete('/admin/usuarios/{id}', [UsuarioAdminController::class, 'destroy'])
-    ->name('admin.usuarios.destroy');
-Route::delete('/admin/clientes/{id}', [UsuarioAdminController::class, 'destroyCliente'])
-    ->name('admin.clientes.destroy');
+Route::post('/admin/roles/crear', [RolesController::class, 'crear']);
+Route::post('/admin/roles/actualizar/{id}', [RolesController::class, 'actualizar']);
+Route::post('/admin/roles/eliminar/{id}', [RolesController::class, 'eliminar']);
+
+
+Route::prefix('admin')->group(function () {
+
+    Route::get('/seguros', [SeguroPaqueteController::class, 'index'])->name('paqueteseguros.index');
+
+    Route::get('/seguros/list', [SeguroPaqueteController::class, 'list']);
+    Route::get('/seguros/{id}', [SeguroPaqueteController::class, 'show']);
+
+    Route::post('/seguros', [SeguroPaqueteController::class, 'store']);
+    Route::put('/seguros/{id}', [SeguroPaqueteController::class, 'update']);
+    Route::delete('/seguros/{id}', [SeguroPaqueteController::class, 'destroy']);
+});
+
+
+Route::prefix('admin')->group(function () {
+
+    Route::get('/seguros-individuales', [SeguroIndividualController::class, 'index'])
+        ->name('paquetesindividuales.index');
+
+    Route::get('/seguros-individuales/list', [SeguroIndividualController::class, 'list']);
+    Route::get('/seguros-individuales/{id}', [SeguroIndividualController::class, 'show']);
+
+    Route::post('/seguros-individuales', [SeguroIndividualController::class, 'store']);
+    Route::put('/seguros-individuales/{id}', [SeguroIndividualController::class, 'update']);
+    Route::delete('/seguros-individuales/{id}', [SeguroIndividualController::class, 'destroy']);
+});
