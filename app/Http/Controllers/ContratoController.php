@@ -216,6 +216,8 @@ $costoKmCategoria = DB::table('categoria_costo_km')
             'delivery'           => $delivery,
             'segurosIndividualesSeleccionados' => $segurosIndividualesSeleccionados,
             'individuales' => $individuales,
+            'idReservacion' => $id  // 👈 ESTO ESTÁ BIEN
+
 
         ]);
 
@@ -582,10 +584,10 @@ public function guardarDocumentacion(Request $request)
             'id_conductor' => 'nullable|integer|exists:contrato_conductor_adicional,id_conductor',
 
             // Archivos
-            'idFrente' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
-            'idReverso' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
-            'licFrente' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
-            'licReverso' => 'nullable|file|mimes:jpg,jpeg,png|max:5120',
+            'idFrente' => 'nullable|file|mimes:jpg,jpeg,png|max:20480',
+            'idReverso' => 'nullable|file|mimes:jpg,jpeg,png|max:20480',
+            'licFrente' => 'nullable|file|mimes:jpg,jpeg,png|max:20480',
+            'licReverso' => 'nullable|file|mimes:jpg,jpeg,png|max:20480',
         ]);
 
         $idContrato   = $data['id_contrato'];
@@ -1149,9 +1151,10 @@ private function obtenerIndividualesSeleccionados($idReservacion)
 private function calcularTotalProtecciones($idReservacion)
 {
     $dias = DB::table('reservaciones')
-        ->selectRaw("DATEDIFF(fecha_fin, fecha_inicio) as dias")
-        ->where('id_reservacion', $idReservacion)
-        ->value('dias') ?? 1;
+    ->selectRaw("DATEDIFF(fecha_fin, fecha_inicio) + 1 as dias")
+    ->where('id_reservacion', $idReservacion)
+    ->value('dias') ?? 1;
+
 
     // 🔥 Paquete
     $paquete = DB::table('reservacion_paquete_seguro')
@@ -1997,15 +2000,16 @@ public function resumenPaso6($idReservacion)
         }
 
         // ===============================
-        // 2) Calcular días
+        // 2) Calcular días (correcto con +1)
         // ===============================
         $dias = Carbon::parse($res->fecha_inicio)
             ->diffInDays(Carbon::parse($res->fecha_fin)) + 1;
 
         // ===============================
-        // 3) Base (tarifa * días)
+        // 3) Tarifa correcta
+        //    PRIORIDAD: tarifa_modificada → tarifa_base
         // ===============================
-        $tarifa = $res->tarifa_ajustada && $res->tarifa_modificada
+        $tarifa = $res->tarifa_modificada !== null
             ? $res->tarifa_modificada
             : $res->tarifa_base;
 
@@ -2016,7 +2020,7 @@ public function resumenPaso6($idReservacion)
         // ===============================
         $adds = DB::table('reservacion_servicio')
             ->where('id_reservacion', $idReservacion)
-            ->selectRaw("SUM(cantidad * precio_unitario) as total")
+            ->selectRaw("SUM(cantidad * precio_unitario * $dias) as total")
             ->first()->total ?? 0;
 
         // ===============================
@@ -2025,7 +2029,7 @@ public function resumenPaso6($idReservacion)
         $delivery = $res->delivery_total ?? 0;
 
         // ===============================
-        // 6) Seguros (tu función ya existe)
+        // 6) Seguros
         // ===============================
         $precioSeguros = $this->calcularTotalProtecciones($idReservacion);
 
@@ -2045,11 +2049,23 @@ public function resumenPaso6($idReservacion)
         }
 
         // ===============================
-        // 8) Subtotal y IVA
+        // 8) Subtotal, IVA, total
         // ===============================
         $subtotal = $baseTotal + $adds + $delivery + $precioSeguros + $cargos;
         $iva = $subtotal * 0.16;
         $totalContrato = $subtotal + $iva;
+
+        // ===============================
+        // 9.1 Guardar totales reales en DB
+        // ===============================
+        DB::table('reservaciones')
+            ->where('id_reservacion', $idReservacion)
+            ->update([
+                'subtotal' => $subtotal,
+                'impuestos' => $iva,
+                'total' => $totalContrato,
+                'updated_at' => now(),
+            ]);
 
         // ===============================
         // 9) Pagos
@@ -2072,17 +2088,26 @@ public function resumenPaso6($idReservacion)
         $saldoPendiente = $totalContrato - $totalPagado;
 
         // ===============================
-        // 10) Respuesta final
+        // 🔥 10) Respuesta final (JSON)
+        // Incluye tarifas para que JS pueda actualizar correctamente
         // ===============================
         return response()->json([
             'ok' => true,
             'data' => [
                 'base' => [
+                    'dias' => $dias,
+                    'tarifa' => $tarifa,
+                    'tarifa_base' => $res->tarifa_base,
+                    'tarifa_modificada' => $res->tarifa_modificada,
                     'descripcion' => "{$dias} días · {$tarifa} por día",
-                    'total'       => $baseTotal
+                    'total' => $baseTotal
                 ],
                 'adicionales' => [
-                    'total' => $adds + $delivery + $precioSeguros
+                    'servicios' => $adds,
+                    'delivery' => $delivery,
+                    'seguros' => $precioSeguros,
+                    'cargos' => $cargos,
+                    'total' => $adds + $delivery + $precioSeguros + $cargos
                 ],
                 'totales' => [
                     'subtotal'        => $subtotal,
@@ -2099,6 +2124,7 @@ public function resumenPaso6($idReservacion)
         return response()->json(['ok' => false, 'msg' => 'Error interno'], 500);
     }
 }
+
 
 public function agregarPagoPaso6(Request $request)
 {
@@ -2333,6 +2359,10 @@ public function resumenContrato($idReservacion)
                 'msg' => 'Reservación no encontrada'
             ]);
         }
+$dias = \Carbon\Carbon::parse($res->fecha_inicio)
+        ->diffInDays(\Carbon\Carbon::parse($res->fecha_fin)) + 1;
+
+
 
         /* ============================================================
             🛡️ SEGUROS (PAQUETE O INDIVIDUALES)
@@ -2366,7 +2396,8 @@ public function resumenContrato($idReservacion)
                 'descripcion' => $paquete->descripcion,
                 'precio' => $paquete->precio_por_dia
             ];
-            $seguros['total'] = $paquete->precio_por_dia;
+            $seguros['total'] = $paquete->precio_por_dia * $dias;
+
 
         } elseif ($individuales->count() > 0) {
 
@@ -2378,7 +2409,8 @@ public function resumenContrato($idReservacion)
                     'descripcion' => $ind->descripcion,
                     'precio' => $ind->precio_por_dia
                 ];
-                $seguros['total'] += $ind->precio_por_dia;
+                $seguros['total'] += $ind->precio_por_dia * $dias;
+
             }
         }
 
@@ -2398,7 +2430,7 @@ public function resumenContrato($idReservacion)
                 'nombre'  => $srv->nombre,
                 'cantidad'=> $srv->cantidad,
                 'precio'  => $srv->precio_unitario,
-                'total'   => $srv->cantidad * $srv->precio_unitario
+                'total'   => ($srv->cantidad * $srv->precio_unitario) * $dias
             ];
         }
 
@@ -2514,8 +2546,7 @@ $saldoPendiente = max(0, ($res->total ?? 0) - $pagos);
                     'hora_inicio' => $res->hora_retiro,
                     'fin'         => $res->fecha_fin,
                     'hora_fin'    => $res->hora_entrega,
-                    'dias'        => \Carbon\Carbon::parse($res->fecha_inicio)
-                                        ->diffInDays(\Carbon\Carbon::parse($res->fecha_fin)) ?: 1,
+                    'dias'        => $dias,
                 ],
 
                 // SEGUROS
@@ -2546,4 +2577,116 @@ $saldoPendiente = max(0, ($res->total ?? 0) - $pagos);
     }
 }
 
+public function editarTarifa(Request $request, $idReservacion)
+{
+    try {
+        $nuevoValor = $request->tarifa_modificada;
+
+        if (!$nuevoValor || $nuevoValor <= 0) {
+            return response()->json([
+                'ok' => false,
+                'msg' => 'Tarifa inválida'
+            ]);
+        }
+
+        DB::table('reservaciones')
+            ->where('id_reservacion', $idReservacion)
+            ->update([
+                'tarifa_modificada' => $nuevoValor
+            ]);
+
+        return response()->json(['ok' => true]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'ok' => false,
+            'msg' => 'Error al actualizar tarifa',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 }
+
+public function editarCortesia(Request $request, $idReservacion)
+{
+    try {
+        $horas = (int) $request->cortesias;
+
+        if (!in_array($horas, [1, 2, 3])) {
+            return response()->json([
+                'ok' => false,
+                'msg' => 'Las horas de cortesía deben ser 1, 2 o 3'
+            ]);
+        }
+
+        DB::table('reservaciones')
+            ->where('id_reservacion', $idReservacion)
+            ->update([
+                'horas_cortesia' => $horas
+            ]);
+
+        return response()->json(['ok' => true]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'ok' => false,
+            'msg' => 'Error al guardar horas de cortesía',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+public function finalizar($idReservacion)
+{
+    try {
+        // 1) Validar reservación
+        $reservacion = DB::table('reservaciones')
+            ->where('id_reservacion', $idReservacion)
+            ->first();
+
+        if (!$reservacion) {
+            return redirect()->back()->with('error', 'Reservación no encontrada.');
+        }
+
+        // 2) Verificar si ya existe contrato
+        $contratoExistente = DB::table('contratos')
+            ->where('id_reservacion', $idReservacion)
+            ->first();
+
+        if ($contratoExistente) {
+            return redirect()->route('contrato.final', $contratoExistente->id_contrato);
+        }
+
+        // 3) Generar número único de contrato
+        $numeroContrato = 'CTR-' . strtoupper(bin2hex(random_bytes(4)));
+
+        // 4) Crear contrato
+        $idContrato = DB::table('contratos')->insertGetId([
+            'id_reservacion'  => $idReservacion,
+            'id_asesor'       => session('id_usuario') ?? null,
+            'numero_contrato' => $numeroContrato,
+            'estado'          => 'abierto',
+            'abierto_en'      => now(),
+            'created_at'      => now(),
+            'updated_at'      => now(),
+        ]);
+
+        // 5) Redirigir al contrato final
+        return redirect()->route('contrato.final', $idContrato);
+
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'Error al finalizar contrato: ' . $e->getMessage());
+    }
+}
+public function status($idReservacion)
+{
+    $existe = DB::table('contratos')
+        ->where('id_reservacion', $idReservacion)
+        ->exists();
+
+    return response()->json(['existe' => $existe]);
+}
+
+
+
+}
+
+

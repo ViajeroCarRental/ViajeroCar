@@ -941,7 +941,11 @@
     <!-- 🔹 Navegación -->
     <div class="acciones" style="margin-top:20px;">
       <button class="btn gray" id="back5" type="button">← Atrás</button>
-      <button id="btnFinalizar" class="btn primary">FINALIZAR CONTRATO</button>
+      <form id="formFinalizar" action="{{ route('contrato.finalizar', $idReservacion) }}" method="POST">
+    @csrf
+    <button class="btn primary" id="btnFinalizar">FINALIZAR CONTRATO</button>
+</form>
+
     </div>
   </div>
 </article>
@@ -972,11 +976,8 @@
              class="vehiculo-img">
 
         <p class="vehiculo-nombre" id="resumenVehCompacto">—</p>
-
         <p class="vehiculo-mini" id="resumenCategoriaCompacto">Categoría: —</p>
-
         <p class="vehiculo-mini" id="resumenDiasCompacto">Días de renta: —</p>
-
         <p class="vehiculo-mini" id="resumenFechasCompacto">— / —</p>
       </div>
 
@@ -1059,6 +1060,7 @@
           <ul id="r_servicios_lista" class="det-lista">
             <li class="empty">—</li>
           </ul>
+          <p>Total: <b id="r_servicios_total">—</b></p>
         </section>
 
         <!-- ======================
@@ -1076,7 +1078,46 @@
         ======================= -->
         <section class="res-block">
           <h4>Total desglosado</h4>
-          <p>Tarifa base: <b id="r_base_precio">—</b></p>
+
+          <!-- Tarifa base editable -->
+          <p>
+            Tarifa base:
+            <b id="r_base_precio">—</b>
+            <button id="btnEditarTarifa"
+                    style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:15px;margin-left:6px;">
+              ✏️
+            </button>
+          </p>
+
+          <!-- Horas de cortesía editable -->
+          <p>
+            Horas de cortesía:
+            <span id="r_cortesia">1</span>
+            <button id="btnEditarCortesia"
+                    style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:15px;margin-left:6px;">
+              ✏️
+            </button>
+          </p>
+
+          <!-- Editor oculto -->
+          <div id="editorCortesia" style="display:none; margin-top:6px;">
+            <select id="inputCortesia" style="padding:4px;border-radius:6px;border:1px solid #ccc;">
+              <option value="1">1 hora</option>
+              <option value="2">2 horas</option>
+              <option value="3">3 horas</option>
+            </select>
+
+            <button id="btnGuardarCortesia"
+                    style="margin-left:8px;background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;cursor:pointer;">
+              Guardar
+            </button>
+
+            <button id="btnCancelarCortesia"
+                    style="margin-left:4px;background:#ccc;border:none;padding:4px 8px;border-radius:6px;cursor:pointer;">
+              Cancelar
+            </button>
+          </div>
+
           <p>Subtotal: <b id="r_subtotal">—</b></p>
           <p>IVA: <b id="r_iva">—</b></p>
           <p>Total contrato: <b id="r_total_final">—</b></p>
@@ -1101,6 +1142,7 @@
 
   </div>
 </aside>
+
 
 
 

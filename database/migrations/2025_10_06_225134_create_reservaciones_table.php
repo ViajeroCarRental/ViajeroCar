@@ -48,6 +48,10 @@ return new class extends Migration {
             $table->decimal('tarifa_modificada', 10, 2)->nullable()->comment('Tarifa base diaria real (modificada o no)');
             $table->decimal('tarifa_base', 10, 2)->nullable()->comment('Tarifa base diaria del catálogo');
 
+            // 🕒 Horas de cortesía permitidas (1–3 horas)
+            $table->unsignedTinyInteger('horas_cortesia')->default(1)->comment('Horas de cortesía antes de cobrar día adicional');
+
+
             $table->string('no_vuelo', 40)->nullable();
             $table->string('codigo', 50);
 
