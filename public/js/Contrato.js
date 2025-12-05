@@ -2520,11 +2520,9 @@ async function cargarPaso6() {
         baseAmt.textContent   = money(r.base.total);
         addsAmt.textContent   = money(r.adicionales.total);
         ivaAmt.textContent = money(r.totales.subtotal);
-
-        ivaOnly.textContent   = money(r.totales.iva);
-
-        totalContrato.textContent = money(r.totales.total_contrato);
-        saldoPend.textContent     = money(r.totales.saldo_pendiente);
+ivaOnly.textContent = money(r.totales.iva);
+totalContrato.textContent = money(r.totales.total_contrato);
+saldoPend.textContent = money(r.totales.saldo_pendiente);
 
         renderPagos(r.pagos);
 
@@ -2839,6 +2837,151 @@ function money(num) {
         minimumFractionDigits: 2
     });
 }
+/* ==========================================================
+   ✏️ EDICIÓN DE TARIFA BASE
+========================================================== */
+
+const btnEditarTarifa = document.getElementById("btnEditarTarifa");
+const rBasePrecio     = document.getElementById("r_base_precio");
+
+btnEditarTarifa?.addEventListener("click", () => {
+    if (!rBasePrecio) return;
+
+    // Si ya existe input, evitar duplicarlo
+    if (rBasePrecio.querySelector("input")) return;
+
+    const valorActual = parseFloat(rBasePrecio.textContent.replace(/[^\d.]/g, "")) || 0;
+
+    const input = document.createElement("input");
+    input.type = "number";
+    input.value = valorActual.toFixed(2);
+    input.min = 0;
+    input.step = 0.01;
+    input.style.width = "90px";
+    input.style.padding = "4px";
+    input.style.border = "1px solid #ccc";
+    input.style.borderRadius = "6px";
+
+    rBasePrecio.textContent = "";
+    rBasePrecio.appendChild(input);
+    input.focus();
+
+    input.addEventListener("blur", () => guardarTarifaModificada(input.value));
+    input.addEventListener("keydown", e => {
+        if (e.key === "Enter") input.blur();
+    });
+});
+
+
+async function guardarTarifaModificada(nuevoValor) {
+    try {
+        const resp = await fetch(`/admin/contrato/${ID_RESERVACION}/editar-tarifa`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ tarifa_modificada: nuevoValor })
+        });
+
+        if (!resp.ok) throw new Error("Error al guardar tarifa modificada");
+
+        console.log("Tarifa modificada guardada correctamente.");
+        cargarResumenBasico();
+        cargarPaso6();
+
+    } catch (e) {
+        console.error("❌ Error al actualizar tarifa:", e);
+    }
+}
+
+
+
+
+/* ==========================================================
+   ✏️ EDICIÓN DE HORAS DE CORTESÍA
+========================================================== */
+
+const btnEditarCortesia   = document.getElementById("btnEditarCortesia");
+const editorCortesia      = document.getElementById("editorCortesia");
+const inputCortesia       = document.getElementById("inputCortesia");
+const btnGuardarCortesia  = document.getElementById("btnGuardarCortesia");
+const btnCancelarCortesia = document.getElementById("btnCancelarCortesia");
+const rCortesia           = document.getElementById("r_cortesia");
+
+
+btnEditarCortesia?.addEventListener("click", () => {
+    editorCortesia.style.display = "block";
+    inputCortesia.value = rCortesia.textContent || "1";
+});
+
+btnCancelarCortesia?.addEventListener("click", () => {
+    editorCortesia.style.display = "none";
+});
+
+
+btnGuardarCortesia?.addEventListener("click", async () => {
+    const horas = parseInt(inputCortesia.value);
+
+    if (![1, 2, 3].includes(horas)) {
+        alert("Horas permitidas: 1, 2 o 3");
+        return;
+    }
+
+    try {
+        const resp = await fetch(`/admin/contrato/${ID_RESERVACION}/editar-cortesia`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ horas_cortesia: horas })
+        });
+
+        if (!resp.ok) throw new Error("Error al guardar horas de cortesía");
+
+        rCortesia.textContent = horas;
+        editorCortesia.style.display = "none";
+
+        cargarPaso6();
+        cargarResumenBasico();
+
+        console.log("Horas de cortesía actualizadas correctamente.");
+
+    } catch (e) {
+        console.error("❌ Error al actualizar cortesía:", e);
+        alert("Error al actualizar cortesía");
+    }
+});
+/* ==========================================================
+   🚨 ALERTA FINALIZAR CONTRATO
+========================================================== */
+
+const formFinalizar = document.getElementById("formFinalizar");
+
+formFinalizar?.addEventListener("submit", (e) => {
+    e.preventDefault(); // detenemos envío para mostrar alerta
+
+    // Mensaje según estado
+    fetch(`/admin/contrato/${ID_RESERVACION}/status`)
+        .then(res => res.json())
+        .then(data => {
+
+            if (data.existe) {
+                alertify.message("Continuando contrato existente");
+            } else {
+                alertify.success("Contrato abierto correctamente");
+            }
+
+            // Enviar formulario después de la alerta (0.8 segundos)
+            setTimeout(() => formFinalizar.submit(), 800);
+        })
+        .catch(() => {
+            // Si falla la consulta, solo enviamos el form
+            formFinalizar.submit();
+        });
+});
+
 
 /* ==========================================================
    🚀 Inicializar
@@ -3033,10 +3176,13 @@ if (r.servicios && r.servicios.length > 0) {
 
     r.servicios.forEach(s => {
         const li = document.createElement("li");
-        li.textContent = `${s.nombre} (x${s.cantidad}) — $${s.total}`;
+        li.textContent = `${s.nombre} (x${s.cantidad}) — $${s.precio} por día`;
         ul.appendChild(li);
     });
 }
+document.querySelector("#r_servicios_total").textContent =
+    `$${r.servicios.reduce((sum, s) => sum + s.total, 0)} MXN`;
+
 if (r.cargos && r.cargos.length > 0) {
     const ul = document.querySelector("#r_cargos_lista");
     ul.innerHTML = "";
@@ -3054,7 +3200,8 @@ if (r.cargos && r.cargos.length > 0) {
    💵 TOTAL DESGLOSADO
 ========================================================== */
 if (r.totales) {
-    document.querySelector("#r_base_precio").textContent = `$${r.totales.tarifa_base}`;
+    document.querySelector("#r_base_precio").textContent =
+    `$${r.totales.tarifa_modificada ?? r.totales.tarifa_base}`;
     document.querySelector("#r_subtotal").textContent    = `$${r.totales.subtotal}`;
     document.querySelector("#r_iva").textContent         = `$${r.totales.iva}`;
     document.querySelector("#r_total_final").textContent = `$${r.totales.total}`;

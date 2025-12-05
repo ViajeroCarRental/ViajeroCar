@@ -8,11 +8,7 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('vehiculos', function (Blueprint $table) {
-            // 🧹 Quitar el campo VIN y su índice único
-            if (Schema::hasColumn('vehiculos', 'vin')) {
-                $table->dropUnique('vehiculos_vin_unique');
-                $table->dropColumn('vin');
-            }
+
 
             // 🆕 Agregar campo número de rin
             $table->string('numero_rin', 100)

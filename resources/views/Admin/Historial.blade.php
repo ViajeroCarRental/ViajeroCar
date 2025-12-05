@@ -15,6 +15,7 @@
       <div class="head">Filtros</div>
       <div class="cnt">
         <div class="flex">
+
           <input type="text" id="q" placeholder="Buscar por cliente, folio, vehículo…" style="min-width:260px">
 
           <label>Desde
@@ -59,32 +60,18 @@
 
           <button id="btnFiltrar" class="btn primary">Aplicar</button>
           <button id="btnClear" class="btn gray">Limpiar</button>
-          <button id="btnExport" class="btn gray">Exportar CSV</button>
-          <button id="btnPrint" class="btn gray">Imprimir</button>
         </div>
       </div>
     </section>
 
-    <!-- Resumen superior -->
+    <!-- Resumen -->
     <section class="section">
       <div class="head">Resumen</div>
       <div class="cnt summary" id="sumCards">
-        <div class="card">
-          <div class="t">Rentas</div>
-          <div class="v" id="sumCount">0</div>
-        </div>
-        <div class="card">
-          <div class="t">Ingresos (MXN)</div>
-          <div class="v" id="sumTotal">$0</div>
-        </div>
-        <div class="card">
-          <div class="t">Pagado (MXN)</div>
-          <div class="v" id="sumPagado">$0</div>
-        </div>
-        <div class="card">
-          <div class="t">Saldo Pendiente (MXN)</div>
-          <div class="v" id="sumSaldo">$0</div>
-        </div>
+        <div class="card"><div class="t">Rentas</div><div class="v" id="sumCount">0</div></div>
+        <div class="card"><div class="t">Ingresos</div><div class="v" id="sumTotal">$0</div></div>
+        <div class="card"><div class="t">Pagado</div><div class="v" id="sumPagado">$0</div></div>
+        <div class="card"><div class="t">Saldo Pendiente</div><div class="v" id="sumSaldo">$0</div></div>
       </div>
     </section>
 
@@ -92,30 +79,33 @@
     <section class="section">
       <div class="head">Resultados</div>
       <div class="cnt">
-        <table class="table" id="tbl">
-          <thead>
-            <tr>
-              <th data-k="folio">Folio</th>
-              <th data-k="fecha">Fecha</th>
-              <th data-k="cliente">Cliente</th>
-              <th data-k="vehiculo">Vehículo</th>
-              <th data-k="dias">Días</th>
-              <th data-k="sucursal">Sucursal</th>
-              <th data-k="status">Estatus</th>
-              <th data-k="total">Total</th>
-              <th data-k="pagado">Pagado</th>
-              <th data-k="saldo">Saldo</th>
-              <th></th>
-            </tr>
-          </thead>
 
-          {{-- IMPORTANTE: el route base se inyecta aquí para que el JS construya los href como route('?folio=...') --}}
-          <tbody id="tbody" data-contrato-base="{{ route('rutaContrato') }}">
-            <tr>
-              <td colspan="11" style="text-align:center;color:#667085">Cargando…</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-wrap">
+          <table class="table" id="tbl">
+            <thead>
+              <tr>
+                <th>Folio</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Vehículo / Categoría</th>
+                <th>Días</th>
+                <th>Sucursal</th>
+                <th>Estatus</th>
+                <th>Total</th>
+                <th>Pagado</th>
+                <th>Saldo</th>
+                <th></th>
+              </tr>
+            </thead>
+
+            <!-- 🔥 Tbody que el JS necesita -->
+            <tbody id="tbody">
+              <tr>
+                <td colspan="11" style="text-align:center;color:#667085">Cargando…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <div class="pager">
           <div class="badge" id="range">0–0 de 0</div>
@@ -128,8 +118,10 @@
             <option>100</option>
           </select>
         </div>
+
       </div>
     </section>
+
   </main>
 @endsection
 
