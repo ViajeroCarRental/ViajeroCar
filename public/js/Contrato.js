@@ -2713,11 +2713,21 @@ function cargarPayPalSDK() {
 /* ==========================================================
    🔹 Registrar pago PayPal en backend
 ========================================================== */
+/* ==========================================================
+   🔹 Registrar pago PayPal en backend (CORREGIDO)
+========================================================== */
 async function registrarPagoPayPal(order_id, monto) {
     try {
-        const resp = await fetch(`/admin/contrato/pagos/pago-paypal`, {
+
+        // Tomar CSRF desde tu <meta> del layout
+        const csrf = document.querySelector('meta[name="csrf-token"]').content;
+
+        const resp = await fetch(`/admin/contrato/pagos/paypal`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": csrf
+            },
             body: JSON.stringify({
                 id_reservacion: ID_RESERVACION,
                 order_id,
@@ -2725,15 +2735,33 @@ async function registrarPagoPayPal(order_id, monto) {
             })
         });
 
-        const data = await resp.json();
+        // Revisar si la respuesta realmente es JSON
+        const text = await resp.text();
+        console.log("RESPUESTA PAYPAL RAW:", text);
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error("⚠️ El backend regresó HTML en lugar de JSON:", text);
+            alert("Error inesperado procesando el pago. Revisa consola.");
+            return;
+        }
+
         if (!data.ok) {
             alert("Error registrando pago PayPal");
             console.error(data);
+            return;
         }
+
+        console.log("PAYPAL registrado correctamente:", data);
+
     } catch (e) {
         console.error("❌ Error registrando pago PayPal:", e);
+        alert("Error al registrar pago PayPal");
     }
 }
+
 
 /* ==========================================================
    🔹 Obtener monto a pagar
@@ -2770,30 +2798,52 @@ pSave?.addEventListener("click", async () => {
     try {
         const metodo = document.querySelector("[name='m']:checked")?.value || null;
 
-        const payload = {
-            id_reservacion: ID_RESERVACION,
-            tipo_pago: pTipo?.value || "PAGO RESERVACIÓN",
-            monto: parseFloat(pMonto?.value || 0),
-            ultimos4: null,          // campos reservados por si el backend los ocupa
-            auth: null,
-            notas: pNotes?.value || null,
-            metodo
-        };
+        // VALIDAR MÉTODO PARA LOS TABS QUE LO REQUIEREN
+        const tabActiva = document.querySelector("#payTabs .tab.active")?.dataset.tab;
 
-        if (!payload.monto || payload.monto <= 0) {
-            $("#pErr").textContent = "Monto inválido";
+        // Campos de archivo según pestaña
+        let fileInput = null;
+        if (tabActiva === "tarjeta") fileInput = document.getElementById("fileTerminal");
+        if (tabActiva === "transferencia") fileInput = document.getElementById("fileTransfer");
+
+        // VALIDAR COMPROBANTE SI ES NECESARIO
+        if ((tabActiva === "tarjeta" || tabActiva === "transferencia") && !fileInput?.files[0]) {
+            $("#pErr").text("Debes subir el comprobante.");
             return;
         }
 
+        // Construir FormData (admite archivos)
+        const fd = new FormData();
+        fd.append("id_reservacion", ID_RESERVACION);
+        fd.append("tipo_pago", pTipo?.value || "PAGO RESERVACIÓN");
+        fd.append("monto", pMonto?.value || 0);
+        fd.append("notas", pNotes?.value || "");
+        fd.append("metodo", metodo);
+
+        if (fileInput?.files[0]) {
+            fd.append("comprobante", fileInput.files[0]);
+        }
+
+        // AGREGAR CSRF TOKEN
+        fd.append("_token", document.querySelector('meta[name="csrf-token"]').content);
+
         const resp = await fetch(`/admin/contrato/pagos/agregar`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
+            body: fd
         });
 
-        const data = await resp.json();
+        // Intentar leer JSON, pero sin explotar si devuelve HTML
+        let data = {};
+        try {
+            data = await resp.json();
+        } catch (err) {
+            console.error("⚠️ La respuesta NO es JSON. Probablemente error 419/500 HTML.");
+            $("#pErr").text("Error inesperado al guardar el pago.");
+            return;
+        }
+
         if (!data.ok) {
-            $("#pErr").textContent = data.msg || "Error al guardar el pago";
+            $("#pErr").text(data.msg || "Error al guardar el pago.");
             return;
         }
 
@@ -2801,12 +2851,12 @@ pSave?.addEventListener("click", async () => {
         cargarPaso6();
         await cargarResumenBasico();
 
-
     } catch (e) {
         console.error("❌ Error guardando pago manual:", e);
-        $("#pErr").textContent = "Error al guardar el pago.";
+        $("#pErr").text("Error al guardar el pago.");
     }
 });
+
 
 /* ==========================================================
    🔹 8. Eliminar pago
