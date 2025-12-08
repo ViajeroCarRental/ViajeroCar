@@ -158,6 +158,10 @@ Route::get('/admin/reservaciones-activas', [ReservacionesActivasController::clas
 // Endpoint AJAX: obtener detalles por código (para el modal)
 Route::get('/admin/reservaciones-activas/{codigo}', [ReservacionesActivasController::class, 'show'])->name('rutaDetalleReservacionActiva');
 
+// Eliminar reservación activa
+Route::delete('/admin/reservaciones-activas/{id}', [ReservacionesActivasController::class, 'destroy'])
+    ->name('rutaEliminarReservacionActiva');
+
 //contrato id
 Route::get('/admin/contrato/{id}', [App\Http\Controllers\ContratoController::class, 'mostrarContrato'])->name('contrato.mostrar');
 // 🧩 Actualizar servicios adicionales (AJAX desde Contrato)

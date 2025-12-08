@@ -159,9 +159,8 @@ console.log("Respuesta fetch:", res);
                         </div>
 
                         <div style="display:flex; gap:10px;">
-                            <button class="btn b-primary">Confirmar</button>
-                            <button class="btn b-red">Cancelar</button>
-                            <button class="btn b-gray">Reenviar correo</button>
+                            <button class="btn b-primary">EDITAR</button>
+                            <button class="btn b-red">FINALIZAR</button>
                         </div>
                     </div>
 

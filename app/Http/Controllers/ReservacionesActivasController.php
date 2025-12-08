@@ -84,4 +84,28 @@ class ReservacionesActivasController extends Controller
             ], 500);
         }
     }
+
+    /**
+ * 🗑️ Elimina una reservación activa
+ */
+public function destroy($id)
+{
+    try {
+        // Verificar si existe
+        $reserv = DB::table('reservaciones')->where('id_reservacion', $id)->first();
+
+        if (!$reserv) {
+            return back()->with('error', 'La reservación no existe.');
+        }
+
+        // Eliminar
+        DB::table('reservaciones')->where('id_reservacion', $id)->delete();
+
+        return back()->with('success', 'Reservación eliminada correctamente.');
+
+    } catch (\Throwable $e) {
+        return back()->with('error', 'Error al eliminar la reservación: ' . $e->getMessage());
+    }
+}
+
 }
