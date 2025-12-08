@@ -1,4 +1,4 @@
-@extends('layouts.Usuarios')
+@extends('layouts.Usuarios')  
 
 @section('Titulo','Reservaciones')
 
@@ -19,11 +19,13 @@
   $dropoffTime       = $f['dropoff_time']        ?? request('dropoff_time') ?? '12:00';
   $categoriaId       = $f['categoria_id']        ?? request('categoria_id');
   $vehiculoId        = isset($vehiculo)? ($vehiculo->id_vehiculo ?? null) : (request('vehiculo_id') ?: null);
+  $plan              = $f['plan']               ?? request('plan'); // 🔹 plan: mostrador / linea
 
   $stepCurrent = isset($step) ? (int)$step : (int)request('step', 2);
 
   // Nombres de sucursales para el encabezado (con fallback a $ciudades)
-  $pickupName = null; $dropoffName = null;
+  $pickupName = null; 
+  $dropoffName = null;
   if (!empty($sucursales)) {
     $sucById = collect($sucursales)->keyBy('id_sucursal');
     $pickupName  = $pickupSucursalId  ? optional($sucById->get((int)$pickupSucursalId))->nombre  : null;
@@ -47,6 +49,7 @@
     'dropoff_time' => $dropoffTime,
     'categoria_id' => $categoriaId,
     'vehiculo_id'  => $vehiculoId,
+    'plan'         => $plan, // 🔹 mantener plan en todos los pasos
   ], fn($v)=>$v!==null && $v!=='');
 
   // Helper para construir URLs de pasos
@@ -64,15 +67,18 @@
   $folioCotizacion = $folio ?? ('COT-'.now()->format('Ymd').'-'.strtoupper(\Illuminate\Support\Str::random(5)));
   $fechaCotizacion = now()->isoFormat('DD MMM YYYY'); // ej. "09 oct 2025"
 
-  // Imagen absoluta para html2canvas/html2pdf
+  // Imagen absoluta para html2canvas/html2pdf (vehículo)
   $vehiculoImg = isset($vehiculo)
       ? (($vehiculo->img_url ?? '') ?: asset('img/placeholder-car.jpg'))
       : asset('img/placeholder-car.jpg');
   // forzar absoluta:
   $vehiculoImgAbs = url($vehiculoImg);
+
+  // 🔹 Logo de la cotización (usa tu archivo de public/img)
+  $logoCotizacion = url(asset('img/Logotipo.png'));
 @endphp
 
-<main class="page" data-current-step="{{ $stepCurrent }}">
+<main class="page" data-current-step="{{ $stepCurrent }}" data-plan="{{ $plan ?? '' }}">
   <!-- PASOS -->
   <section class="steps-wrap">
     <div class="steps-card">
@@ -227,9 +233,9 @@
               <div class="p-old">${{ number_format($car->precio_dia*1.3, 0) }} <small>MXN</small></div>
               <div class="p-new" data-plan-label="En mostrador">${{ number_format($car->precio_dia, 0) }} <small>MXN</small></div>
               <div class="p-save">Ahorra ${{ number_format($car->precio_dia*0.3, 0) }} MXN</div>
-              <!-- Elegir auto → PASO 3 con vehiculo_id -->
+              <!-- Elegir auto → PASO 3 con vehiculo_id y plan=mostrador -->
               <a class="btn btn-gray"
-                 href="{{ $toStep(3, ['vehiculo_id' => $car->id_vehiculo]) }}">
+                 href="{{ $toStep(3, ['vehiculo_id' => $car->id_vehiculo, 'plan' => 'mostrador']) }}">
                 En mostrador
               </a>
             </div>
@@ -237,8 +243,9 @@
               <div class="p-old">${{ number_format($car->precio_dia*1.3, 0) }} <small>MXN</small></div>
               <div class="p-new p-accent" data-plan-label="Prepago">${{ number_format($car->precio_dia*0.55, 0) }} <small>MXN</small></div>
               <div class="p-save">Ahorra ${{ number_format($car->precio_dia*0.75, 0) }} MXN</div>
+              <!-- Elegir auto → PASO 3 con vehiculo_id y plan=linea -->
               <a class="btn btn-primary"
-                 href="{{ $toStep(3, ['vehiculo_id' => $car->id_vehiculo]) }}">
+                 href="{{ $toStep(3, ['vehiculo_id' => $car->id_vehiculo, 'plan' => 'linea']) }}">
                 Prepago
               </a>
             </div>
@@ -306,239 +313,242 @@
   </section>
 
   {{-- ===== PASO 4: Dos columnas (Formulario + Resumen) ===== --}}
-<section id="step4" class="summary {{ $stepCurrent===4 ? '' : 'hidden' }}">
-  <div class="step-back">
-    <!-- Volver a PASO 3 conservando vehiculo_id si existe -->
-    <a class="btn btn-ghost"
-       href="{{ $vehiculoId ? $toStep(3, ['vehiculo_id'=>$vehiculoId]) : $toStep(3) }}">← Regresar</a>
-  </div>
-
-  <div class="summary-grid">
-    {{-- IZQUIERDA: FORMULARIO --}}
-    <div class="form-card">
-      <h3>Tu información</h3>
-
-      <form class="user-form" id="formCotizacion" onsubmit="return false;">
-        <script>
-          // 📦 Rutas dinámicas para JS (Laravel → JavaScript)
-          window.APP_URL_RESERVA_MOSTRADOR = "{{ route('reservas.store') }}";
-          window.APP_URL_RESERVA_LINEA = "{{ route('reservas.linea') }}";
-        </script>
-
-        @csrf
-
-        <div class="form-row grid-2">
-          <div class="field">
-            <label>Entrega — Día</label>
-            <input type="text" name="pickup_date" id="pickup_date" value="{{ $pickupDate }}" readonly>
-          </div>
-          <div class="field">
-            <label>Entrega — Hora</label>
-            <input type="text" name="pickup_time" id="pickup_time" value="{{ $pickupTime }}" readonly>
-          </div>
-        </div>
-
-        <div class="form-row grid-2">
-          <div class="field">
-            <label>Devolución — Día</label>
-            <input type="text" name="dropoff_date" id="dropoff_date" value="{{ $dropoffDate }}" readonly>
-          </div>
-          <div class="field">
-            <label>Devolución — Hora</label>
-            <input type="text" name="dropoff_time" id="dropoff_time" value="{{ $dropoffTime }}" readonly>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="field">
-            <label>No. de vuelo (opcional)</label>
-            <input type="text" name="vuelo" id="vuelo" placeholder="Ej. AM1234">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="field">
-            <label>Nombre completo</label>
-            <input type="text" name="nombre" id="nombreCliente" placeholder="Tu nombre y apellidos">
-          </div>
-        </div>
-
-        <div class="form-row grid-2">
-          <div class="field">
-            <label>Móvil</label>
-            <input type="text" name="telefono" id="telefonoCliente" placeholder="55 1234 5678">
-          </div>
-          <div class="field">
-            <label>Correo electrónico</label>
-            <input type="email" name="email" id="correoCliente" placeholder="tucorreo@dominio.com">
-          </div>
-        </div>
-
-        <div class="form-row grid-2">
-          <div class="field">
-            <label>País</label>
-            <select name="pais" id="pais">
-              <option value="">Selecciona un país</option>
-              <option value="México">México</option>
-              <option value="Estados Unidos">Estados Unidos</option>
-              <option value="Canadá">Canadá</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Fecha de nacimiento</label>
-            <input type="text" name="nacimiento" id="dob" placeholder="dd/mm/aaaa">
-          </div>
-        </div>
-
-        <label class="cbox">
-          <input type="checkbox" name="acepto" id="acepto">
-          <span class="checkmark"></span>
-          <span>ESTOY DE ACUERDO Y ACEPTO LAS POLÍTICAS Y PROCEDIMIENTOS PARA LA RENTA.</span>
-        </label>
-
-        <label class="cbox">
-          <input type="checkbox" name="promos" id="promos">
-          <span class="checkmark"></span>
-          <span>DESEO RECIBIR ALERTAS, CONFIRMACIONES Y PROMOCIONES.</span>
-        </label>
-
-        <div class="form-row">
-          <button id="btnReservar" type="button" class="btn btn-primary">Reservar</button>
-
-          <!-- ===== MODAL PRINCIPAL: Selección de método de pago ===== -->
-          <div id="modalMetodoPago" class="modal-overlay" style="display:none;">
-            <div class="modal-card">
-              <h3>Selecciona tu método de pago</h3>
-              <div class="options">
-                <button id="btnPagoLinea" class="btn btn-primary">Pago en línea</button>
-                <button id="btnPagoMostrador" class="btn btn-gray">Pago en mostrador</button>
-              </div>
-              <button id="cerrarModalMetodo" class="btn btn-secondary" style="margin-top:10px;">Cancelar</button>
-            </div>
-          </div>
-
-          <!-- === NUEVO: Contenedor donde PayPal inyectará su botón === -->
-          <div id="paypal-button-container" style="display:none; text-align:center; margin-top:20px;"></div>
-        </div>
-
-        <!-- === BOTÓN COTIZAR PDF === -->
-        <button class="btn btn-quote" id="btnCotizar" type="button">
-          <i class="fa-regular fa-file-pdf"></i> Cotizar (PDF)
-        </button>
-
-        <div class="pay-logos">
-          <img src="{{ asset('img/pay/amex.png') }}" alt="Amex" onerror="this.style.display='none'">
-          <img src="{{ asset('img/pay/paypal.png') }}" alt="PayPal" onerror="this.style.display='none'">
-          <img src="{{ asset('img/pay/oxxo.png') }}" alt="Oxxo" onerror="this.style.display='none'">
-        </div>
-      </form>
+  <section id="step4" class="summary {{ $stepCurrent===4 ? '' : 'hidden' }}">
+    <div class="step-back">
+      <!-- Volver a PASO 3 conservando vehiculo_id si existe -->
+      <a class="btn btn-ghost"
+         href="{{ $vehiculoId ? $toStep(3, ['vehiculo_id'=>$vehiculoId]) : $toStep(3) }}">← Regresar</a>
     </div>
 
-    {{-- DERECHA: RESUMEN (exportable) --}}
-    <aside class="resume-card" id="cotizacionDoc">
-      <div class="qd-head">
-        <div class="qd-brand">
-          <div class="qd-logo">VIAJERO</div>
-          <div class="qd-sub">Renta de Autos</div>
-        </div>
-        <div class="qd-meta">
-          <div>
-            <div class="l">No. de cotización</div>
-            <div class="v">{{ $folioCotizacion }}</div>
-          </div>
-          <div>
-            <div class="l">Fecha</div>
-            <div class="v">{{ $fechaCotizacion }}</div>
-          </div>
-        </div>
-      </div>
+    <div class="summary-grid">
+      {{-- IZQUIERDA: FORMULARIO --}}
+      <div class="form-card">
+        <h3>Tu información</h3>
 
-      <div class="resume-block">
-        <div class="block-head">
-          <div>Resumen de tu reserva</div>
-          <a href="{{ $toStep(1) }}" class="link small">Modificar</a>
-        </div>
-        <div class="block-body">
-          <div class="item"><strong>Lugar y fecha</strong></div>
-          <ul class="kv">
-            <li>
-              <span>Entrega:</span>
-              <strong>{{ \Carbon\Carbon::parse($pickupDate.' '.$pickupTime)->isoFormat('ddd DD [de] MMM, h:mm a') }}</strong>
-              — {{ $pickupName }}
-            </li>
-            <li>
-              <span>Devolución:</span>
-              <strong>{{ \Carbon\Carbon::parse($dropoffDate.' '.$dropoffTime)->isoFormat('ddd DD [de] MMM, h:mm a') }}</strong>
-              — {{ $dropoffName }}
-            </li>
-            <li><span>Días</span> <strong id="qDays">{{ $days }}</strong></li>
-          </ul>
-        </div>
-      </div>
+        <form class="user-form" id="formCotizacion" onsubmit="return false;">
+          <script>
+            // 📦 Rutas dinámicas para JS (Laravel → JavaScript)
+            window.APP_URL_RESERVA_MOSTRADOR = "{{ route('reservas.store') }}";
+            window.APP_URL_RESERVA_LINEA = "{{ route('reservas.linea') }}";
+          </script>
 
-      <div class="resume-block">
-        <div class="block-head">
-          <div>Tu Auto</div>
-          @if($vehiculoId)<a href="{{ $toStep(2) }}" class="link small">Modificar</a>@endif
-        </div>
-        <div class="block-body">
-          @if(isset($vehiculo))
-            <div class="car-sum">
-              {{-- Imagen absoluta para PDF --}}
-              <img src="{{ $vehiculoImgAbs }}" alt="Auto" crossorigin="anonymous">
-              <div>
-                <div class="car-name">{{ $vehiculo->marca }} <strong>{{ $vehiculo->modelo }}</strong> o similar</div>
-                <div class="car-sub">Categoría {{ $vehiculo->categoria_nombre ?? '—' }}</div>
+          @csrf
+
+          <div class="form-row grid-2">
+            <div class="field">
+              <label>Entrega — Día</label>
+              <input type="text" name="pickup_date" id="pickup_date" value="{{ $pickupDate }}" readonly>
+            </div>
+            <div class="field">
+              <label>Entrega — Hora</label>
+              <input type="text" name="pickup_time" id="pickup_time" value="{{ $pickupTime }}" readonly>
+            </div>
+          </div>
+
+          <div class="form-row grid-2">
+            <div class="field">
+              <label>Devolución — Día</label>
+              <input type="text" name="dropoff_date" id="dropoff_date" value="{{ $dropoffDate }}" readonly>
+            </div>
+            <div class="field">
+              <label>Devolución — Hora</label>
+              <input type="text" name="dropoff_time" id="dropoff_time" value="{{ $dropoffTime }}" readonly>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>No. de vuelo (opcional)</label>
+              <input type="text" name="vuelo" id="vuelo" placeholder="Ej. AM1234">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label>Nombre completo</label>
+              <input type="text" name="nombre" id="nombreCliente" placeholder="Tu nombre y apellidos">
+            </div>
+          </div>
+
+          <div class="form-row grid-2">
+            <div class="field">
+              <label>Móvil</label>
+              <input type="text" name="telefono" id="telefonoCliente" placeholder="55 1234 5678">
+            </div>
+            <div class="field">
+              <label>Correo electrónico</label>
+              <input type="email" name="email" id="correoCliente" placeholder="tucorreo@dominio.com">
+            </div>
+          </div>
+
+          <div class="form-row grid-2">
+            <div class="field">
+              <label>País</label>
+              <select name="pais" id="pais">
+                <option value="">Selecciona un país</option>
+                <option value="México">México</option>
+                <option value="Estados Unidos">Estados Unidos</option>
+                <option value="Canadá">Canadá</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Fecha de nacimiento</label>
+              <input type="text" name="nacimiento" id="dob" placeholder="dd/mm/aaaa">
+            </div>
+          </div>
+
+          <label class="cbox">
+            <input type="checkbox" name="acepto" id="acepto">
+            <span class="checkmark"></span>
+            <span>ESTOY DE ACUERDO Y ACEPTO LAS POLÍTICAS Y PROCEDIMIENTOS PARA LA RENTA.</span>
+          </label>
+
+          <label class="cbox">
+            <input type="checkbox" name="promos" id="promos">
+            <span class="checkmark"></span>
+            <span>DESEO RECIBIR ALERTAS, CONFIRMACIONES Y PROMOCIONES.</span>
+          </label>
+
+          <div class="form-row">
+            <button id="btnReservar" type="button" class="btn btn-primary">Reservar</button>
+
+            <!-- ===== MODAL PRINCIPAL: Selección de método de pago (solo para plan mostrador) ===== -->
+            <div id="modalMetodoPago" class="modal-overlay" style="display:none;">
+              <div class="modal-card">
+                <h3>Selecciona tu método de pago</h3>
+                <div class="options">
+                  <button id="btnPagoLinea" class="btn btn-primary">Pago en línea</button>
+                  <button id="btnPagoMostrador" class="btn btn-gray">Pago en mostrador</button>
+                </div>
+                <button id="cerrarModalMetodo" class="btn btn-secondary" style="margin-top:10px;">Cancelar</button>
               </div>
             </div>
-          @else
-            <p class="muted">No hay vehículo seleccionado.</p>
-          @endif
-        </div>
+
+            <!-- === Contenedor donde PayPal inyectará su botón === -->
+            <div id="paypal-button-container" style="display:none; text-align:center; margin-top:20px;"></div>
+          </div>
+
+          <!-- === BOTÓN COTIZAR PDF === -->
+          <button class="btn btn-quote" id="btnCotizar" type="button">
+            <i class="fa-regular fa-file-pdf"></i> Cotizar (PDF)
+          </button>
+
+          <div class="pay-logos">
+            <img src="{{ asset('img/pay/amex.png') }}" alt="Amex" onerror="this.style.display='none'">
+            <img src="{{ asset('img/pay/paypal.png') }}" alt="PayPal" onerror="this.style.display='none'">
+            <img src="{{ asset('img/pay/oxxo.png') }}" alt="Oxxo" onerror="this.style.display='none'">
+          </div>
+        </form>
       </div>
 
-      <div class="resume-block">
-        <div class="block-head"><div>Extras</div></div>
-        <div class="block-body">
-          <ul id="extrasList" class="kv"></ul>
-          <div id="extrasEmpty" class="muted">Sin complementos.</div>
+      {{-- DERECHA: RESUMEN (exportable) --}}
+      <aside class="resume-card" id="cotizacionDoc">
+        <div class="qd-head">
+          <div class="qd-brand">
+            <div class="qd-logo">
+              {{-- 🔹 Logo dinámico para la cotización --}}
+              <img src="{{ $logoCotizacion }}"
+                   alt="Logo cotización"
+                   crossorigin="anonymous"
+                   style="max-height: 48px; width: auto; display:block;">
+            </div>
+            <div class="qd-sub">Renta de Autos</div>
+          </div>
+          <div class="qd-meta">
+            <div>
+              <div class="l">No. de cotización</div>
+              <div class="v">{{ $folioCotizacion }}</div>
+            </div>
+            <div>
+              <div class="l">Fecha</div>
+              <div class="v">{{ $fechaCotizacion }}</div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="resume-block">
-        <div class="block-head"><div>Detalles del precio</div></div>
-        <div class="block-body">
-          <div class="price-row"><span>Tarifa base</span><strong id="qBase">${{ number_format($tarifaBase, 0) }} MXN</strong></div>
-          <div class="price-row"><span>Opciones de renta</span><strong id="qExtras">$0 MXN</strong></div>
-          <div class="price-row"><span>Cargos e IVA</span><strong id="qIva">$0 MXN</strong></div>
-          <div class="price-row total"><span>TOTAL</span><strong id="qTotal">${{ number_format($tarifaBase, 0) }} MXN</strong></div>
-        </div>
-      </div>
-
-      <div class="resume-block">
-        <div class="block-body">
-          <div class="qd-notes qd-muted">
-            <div class="n-title">Notas importantes</div>
-            <ul class="qd-list">
-              <li>Los <strong>seguros obligatorios</strong> no están incluidos en este monto. Se cotizan y confirman con un <strong>agente de Viajero Car Rental</strong>.</li>
-              <li>Tarifas, disponibilidad y tipo de vehículo sujetos a cambio sin previo aviso.</li>
-              <li>Se requiere tarjeta de crédito física del titular al recoger el vehículo.</li>
+        <div class="resume-block">
+          <div class="block-head">
+            <div>Resumen de tu reserva</div>
+            <a href="{{ $toStep(1) }}" class="link small">Modificar</a>
+          </div>
+          <div class="block-body">
+            <div class="item"><strong>Lugar y fecha</strong></div>
+            <ul class="kv">
+              <li>
+                <span>Entrega:</span>
+                <strong>{{ \Carbon\Carbon::parse($pickupDate.' '.$pickupTime)->isoFormat('ddd DD [de] MMM, h:mm a') }}</strong>
+                — {{ $pickupName }}
+              </li>
+              <li>
+                <span>Devolución:</span>
+                <strong>{{ \Carbon\Carbon::parse($dropoffDate.' '.$dropoffTime)->isoFormat('ddd DD [de] MMM, h:mm a') }}</strong>
+                — {{ $dropoffName }}
+              </li>
+              <li><span>Días</span> <strong id="qDays">{{ $days }}</strong></li>
             </ul>
           </div>
         </div>
-      </div>
-    </aside>
-  </div>
-</section>
 
+        <div class="resume-block">
+          <div class="block-head">
+            <div>Tu Auto</div>
+            @if($vehiculoId)<a href="{{ $toStep(2) }}" class="link small">Modificar</a>@endif
+          </div>
+          <div class="block-body">
+            @if(isset($vehiculo))
+              <div class="car-sum">
+                {{-- Imagen absoluta para PDF --}}
+                <img src="{{ $vehiculoImgAbs }}" alt="Auto" crossorigin="anonymous">
+                <div>
+                  <div class="car-name">{{ $vehiculo->marca }} <strong>{{ $vehiculo->modelo }}</strong> o similar</div>
+                  <div class="car-sub">Categoría {{ $vehiculo->categoria_nombre ?? '—' }}</div>
+                </div>
+              </div>
+            @else
+              <p class="muted">No hay vehículo seleccionado.</p>
+            @endif
+          </div>
+        </div>
 
+        <div class="resume-block">
+          <div class="block-head"><div>Extras</div></div>
+          <div class="block-body">
+            <ul id="extrasList" class="kv"></ul>
+            <div id="extrasEmpty" class="muted">Sin complementos.</div>
+          </div>
+        </div>
 
+        <div class="resume-block">
+          <div class="block-head"><div>Detalles del precio</div></div>
+          <div class="block-body">
+            <div class="price-row"><span>Tarifa base</span><strong id="qBase">${{ number_format($tarifaBase, 0) }} MXN</strong></div>
+            <div class="price-row"><span>Opciones de renta</span><strong id="qExtras">$0 MXN</strong></div>
+            <div class="price-row"><span>Cargos e IVA</span><strong id="qIva">$0 MXN</strong></div>
+            <div class="price-row total"><span>TOTAL</span><strong id="qTotal">${{ number_format($tarifaBase, 0) }} MXN</strong></div>
+          </div>
+        </div>
+
+        <div class="resume-block">
+          <div class="block-body">
+            <div class="qd-notes qd-muted">
+              <div class="n-title">Notas importantes</div>
+              <ul class="qd-list">
+                <li>Los <strong>seguros obligatorios</strong> no están incluidos en este monto. Se cotizan y confirman con un <strong>agente de Viajero Car Rental</strong>.</li>
+                <li>Tarifas, disponibilidad y tipo de vehículo sujetos a cambio sin previo aviso.</li>
+                <li>Se requiere tarjeta de crédito física del titular al recoger el vehículo.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
 </main>
 @endsection
 
 @section('js-vistaReservaciones')
-   <!-- PayPal SDK primero -->
-  <script src = "https://www.paypal.com/sdk/js?client-id=ATzNpaAJlH7dFrWKu91xLmCzYVDQQF5DJ51b0OFICqchae6n8Pq7XkfsOOQNnElIJMt_Aj0GEZeIkFsp&currency=MXN";></script>
+  <!-- PayPal SDK primero -->
+  <script src="https://www.paypal.com/sdk/js?client-id=ATzNpaAJlH7dFrWKu91xLmCzYVDQQF5DJ51b0OFICqchae6n8Pq7XkfsOOQNnElIJMt_Aj0GEZeIkFsp&currency=MXN"></script>
   <!-- Luego tus JS locales -->
   <script src="{{ asset('js/reservaciones.js') }}"></script>
   <script src="{{ asset('js/BtnReserva.js') }}"></script>
@@ -549,5 +559,54 @@
   <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/rangePlugin.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
-@endsection
 
+  <!-- 🔹 LÓGICA PARA QUE EL MODAL SOLO SALGA EN PAGO EN MOSTRADOR -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const main        = document.querySelector('main.page');
+      const currentPlan = (main && main.dataset.plan) ? main.dataset.plan : '';
+
+      const btnReservar       = document.getElementById('btnReservar');
+      const modalMetodoPago   = document.getElementById('modalMetodoPago');
+      const cerrarModalMetodo = document.getElementById('cerrarModalMetodo');
+      const btnPagoLinea      = document.getElementById('btnPagoLinea');
+      const btnPagoMostrador  = document.getElementById('btnPagoMostrador');
+
+      if (!btnReservar) return;
+
+      btnReservar.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        // 🔸 Si el plan es "linea" → ir DIRECTO al flujo en línea (sin mostrar modal)
+        if (currentPlan === 'linea') {
+          if (btnPagoLinea) {
+            // reutiliza la lógica que ya tengas asociada a este botón
+            btnPagoLinea.click();
+          } else if (typeof window.handleReservaPagoEnLinea === 'function') {
+            window.handleReservaPagoEnLinea();
+          } else {
+            console.warn('No se encontró handler para pago en línea');
+          }
+          return;
+        }
+
+        // 🔸 Si el plan es "mostrador" → mostrar modal
+        if (currentPlan === 'mostrador') {
+          if (modalMetodoPago) {
+            modalMetodoPago.style.display = 'flex';
+          }
+          return;
+        }
+
+        // Si por alguna razón no hay plan
+        alert('Selecciona un tipo de pago desde el paso del vehículo (Mostrador o Prepago).');
+      });
+
+      if (cerrarModalMetodo && modalMetodoPago) {
+        cerrarModalMetodo.addEventListener('click', function () {
+          modalMetodoPago.style.display = 'none';
+        });
+      }
+    });
+  </script>
+@endsection

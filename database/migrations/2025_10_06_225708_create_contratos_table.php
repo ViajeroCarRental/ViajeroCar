@@ -19,6 +19,9 @@ return new class extends Migration {
             $table->dateTime('cerrado_en')->nullable();
             $table->string('motivo_apertura_anticipada', 255)->nullable();
             $table->string('motivo_cierre_anticipado', 255)->nullable();
+            $table->longText('firma_cliente')->nullable();     // Base64 PNG
+            $table->longText('firma_arrendador')->nullable();  // Base64 PNG
+
 
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();

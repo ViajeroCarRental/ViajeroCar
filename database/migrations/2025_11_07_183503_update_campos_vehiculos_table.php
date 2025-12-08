@@ -8,7 +8,8 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('vehiculos', function (Blueprint $table) {
-            
+
+
             // 🆕 Agregar campo número de rin
             $table->string('numero_rin', 100)
                 ->nullable()

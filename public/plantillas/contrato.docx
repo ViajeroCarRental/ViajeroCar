@@ -1,0 +1,4 @@
+$template->setValue('nombre_cliente', $contrato->nombre_cliente);
+$template->setValue('fecha_inicio', $contrato->fecha_inicio);
+$template->setValue('fecha_fin', $contrato->fecha_fin);
+$template->setValue('total', number_format($contrato->total, 2));

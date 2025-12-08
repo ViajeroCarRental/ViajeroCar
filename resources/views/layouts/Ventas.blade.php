@@ -26,6 +26,7 @@
     @yield('css-vistaRFC-Fiscal')
     @yield('css-vistaFacturar')
     @yield('css-VistaCotizacionesRecientes')
+    @yield('css-vistaContratoFinal')
     <title>@yield('Titulo')</title>
 </head>
 <body>
@@ -41,8 +42,8 @@
     <li><a href="{{ route('rutaCotizar') }}"><i class="fas fa-briefcase"></i> Cotizaciones</a></li>
     <li><a href="{{ route('rutaReservacionesActivas') }}"><i class="fas fa-check-square"></i> Reservaciones activas</a></li>
     <li><a href="{{ route('rutaVisorReservaciones') }}"><i class="fas fa-eye"></i> Visor de reservaciones</a></li>
-    <li><a href="{{ route('rutaAdministracionReservaciones') }}"><i class="fas fa-cogs"></i> Administración de reservaciones</a></li>
-    <li><a href="{{ route('rutaHistorialCompleto') }}"><i class="fas fa-folder-open"></i> Historial completo</a></li>
+    <li><a href="{{ route('rutaAdministracionReservaciones') }}"><i class="fas fa-cogs"></i> Contratos</a></li>
+    <li><a href="{{ route('ventas.historial') }}"><i class="fas fa-folder-open"></i> Historial completo</a></li>
     <li><a href="{{ route('rutaAltaCliente') }}"><i class="fas fa-user-plus"></i> Alta Cliente</a></li>
     <li><a href="{{ route('rutaFacturar') }}"><i class="fas fa-file-invoice-dollar"></i> Facturar</a></li>
 
@@ -67,6 +68,7 @@
     @yield('contenidoRFC-Fiscal')
     @yield('contenidoFacturar')
     @yield('contenido-VistaCotizacionesRecientes')
+    @yield('contenidoContratoFinal')
 </div>
 
 <div class="containerJS">
@@ -86,6 +88,7 @@
     @yield('js-vistaRFC-Fiscal')
     @yield('js-vistaFacturar')
     @yield('js-VistaCotizacionesRecientes')
+    @yield('js-vistaContratoFinal')
 </div>
 </body>
 </html>

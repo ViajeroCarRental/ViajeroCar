@@ -25,6 +25,13 @@ use App\Http\Controllers\RolesController;
 use App\Http\Controllers\UsuarioAdminController;
 use App\Http\Controllers\SeguroPaqueteController;
 use App\Http\Controllers\SeguroIndividualController;
+use App\Http\Controllers\ContratoFinalController;
+use App\Http\Controllers\ChecklistController;
+use App\Http\Controllers\ContratosAbiertosController;
+use App\Http\Controllers\VisorReservacionesController;
+use App\Http\Controllers\HistorialController;
+use App\Http\Controllers\ContratosAbiertosControllerController;
+use Illuminate\Support\Facades\DB;
 //rutas vistas Usuario
 
 /*  Inicio  */
@@ -166,6 +173,18 @@ Route::get('/admin/contrato/cargos/{idContrato}', [App\Http\Controllers\Contrato
 
 // 📄 Guardar documentación subida (Paso 5)
 Route::post('/admin/contrato/guardar-documentacion', [App\Http\Controllers\ContratoController::class, 'guardarDocumentacion'])->name('contrato.guardarDocumentacion');
+Route::get('/admin/contrato/documentacion/{idContrato}',[App\Http\Controllers\ContratoController::class, 'obtenerDocumentacion'])->name('contrato.obtenerDocumentacion');
+Route::get('/archivo/{id}', function($id){
+    $archivo = DB::table('archivos')->where('id_archivo',$id)->first();
+    if (!$archivo) abort(404);
+
+    return response($archivo->contenido)
+        ->header('Content-Type', $archivo->mime_type);
+})->name('archivo.mostrar');
+Route::get('/admin/contrato/{id}/documentos-existen',
+    [ContratoController::class, 'verificarDocumentosExistentes']
+)->name('contrato.documentos.existen');
+
 // Obtener conductores asociados al contrato (AJAX)
 Route::get('/admin/contrato/{id}/conductores', [App\Http\Controllers\ContratoController::class, 'obtenerConductores']);
 /* =============================================================
@@ -220,13 +239,32 @@ Route::post('/admin/contrato/pagos/paypal',[ContratoController::class, 'pagoPayP
 Route::delete('/admin/contrato/pagos/{id_pago}/eliminar',[ContratoController::class, 'eliminarPago'])->name('contrato.pago.eliminar');
 Route::get('/admin/contrato/{id_reservacion}/resumen',[ContratoController::class, 'resumenContrato'])->name('contrato.resumen');
 
+Route::get('/admin/contrato-final', [App\Http\Controllers\ContratoFinalController::class, 'mostrarContratoFinal'])->name('admin.contratoFinal');
+Route::post('/admin/contrato/{id}/editar-tarifa', [ContratoController::class, 'editarTarifa']);
+Route::post('/admin/contrato/{id}/editar-cortesia', [ContratoController::class, 'editarCortesia']);
+Route::post('/admin/contrato/{id}/finalizar',
+    [ContratoController::class, 'finalizar']
+)->name('contrato.finalizar');
+
+Route::get('/admin/contrato-final/{id}',
+    [App\Http\Controllers\ContratoFinalController::class, 'mostrarContratoFinal']
+)->name('contrato.final');
+
+Route::get('/admin/contrato/{id}/status',
+    [ContratoController::class, 'status']
+);
+
+Route::post('/contrato/firma-cliente', [ContratoFinalController::class, 'guardarFirmaCliente'])->name('contrato.firmaCliente');
+Route::post('/contrato/firma-arrendador', [ContratoFinalController::class, 'guardarFirmaArr'])->name('contrato.firmaArr');
+Route::get('/contrato/{id}/exportar-word', [ContratoController::class, 'exportarWord'])
+    ->name('contrato.exportarWord');
+Route::post('/contrato/{id}/enviar-correo', [ContratoFinalController::class, 'enviarContratoCorreo']);
 
 
 
 //visor de reservaciones
 Route::get('/admin/visor-reservaciones', [App\Http\Controllers\controladorVistasAdmin::class, 'visorReservaciones'])->name('rutaVisorReservaciones');
-//administracion de reservaciones
-Route::get('/admin/administracion-reservaciones', [App\Http\Controllers\controladorVistasAdmin::class, 'administracionReservaciones'])->name('rutaAdministracionReservaciones');
+
 //historial completo
 Route::get('/admin/historial-completo', [App\Http\Controllers\controladorVistasAdmin::class, 'historialCompleto'])->name('rutaHistorialCompleto');
 //Alta Cliente
@@ -417,3 +455,49 @@ Route::prefix('admin')->group(function () {
     Route::put('/seguros-individuales/{id}', [SeguroIndividualController::class, 'update']);
     Route::delete('/seguros-individuales/{id}', [SeguroIndividualController::class, 'destroy']);
 });
+
+// VER CHECKLIST
+Route::get('/admin/reservacion/{id}/checklist',
+    [ChecklistController::class, 'showChecklist']
+)->name('checklist.ver');
+
+// GUARDAR GASOLINA
+Route::post('/checklist/{id}/guardar-gasolina',
+    [ChecklistController::class, 'guardarGasolina']
+)->name('checklist.guardarGasolina');
+
+// ACTUALIZAR KILOMETRAJE
+Route::post('/admin/checklist/{id}/actualizar-km',
+    [ChecklistController::class, 'actualizarKilometraje']
+)->name('checklist.actualizar.km');
+
+Route::post('/contrato/{id}/guardar-dano',
+    [ChecklistController::class, 'guardarDano']
+)->name('contrato.guardarDano');
+
+Route::get('/admin/checklist/{id}/danos',
+    [ChecklistController::class, 'listarDanos']);
+Route::post('/contrato/guardar-inventario',
+    [ChecklistController::class, 'guardarInventario'])
+->name('contrato.guardarInventario');
+
+// 👁️ Visor de reservaciones (solo lectura)
+Route::get('/ventas/reservaciones', [VisorReservacionesController::class, 'index'])->name('visor.reservaciones');
+
+// 🔌 API del visor
+Route::get('/api/visor-reservaciones', [VisorReservacionesController::class, 'api']);
+
+
+// Vista principal del historial
+Route::get('/ventas/historial', [HistorialController::class, 'index'])
+    ->name('ventas.historial');
+
+// API que envía cotizaciones + reservaciones + contratos
+Route::get('/api/historial', [HistorialController::class, 'api'])
+    ->name('api.historial');
+
+    //administracion de reservaciones
+Route::get('/admin/administracion-reservaciones', [ContratosAbiertosController::class, 'index'])->name('rutaAdministracionReservaciones');
+Route::get('/api/contratos-abiertos/{id}', [ContratosAbiertosController::class, 'detalle'])
+    ->name('contratos.detalle');
+Route::get('/api/contratos-abiertos', [ContratosAbiertosController::class, 'api']);
