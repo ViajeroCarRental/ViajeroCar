@@ -60,7 +60,7 @@ class ContratosAbiertosController extends Controller
     public function detalle($id)
 {
     $ctr = DB::table('contratos AS c')
-        ->join('reservaciones AS r','c.id_reservacion','=','r.id_reservacion')
+        ->leftJoin('reservaciones AS r','c.id_reservacion','=','r.id_reservacion')
         ->leftJoin('vehiculos AS v','r.id_vehiculo','=','v.id_vehiculo')
         ->leftJoin('categorias_carros AS cat','r.id_categoria','=','cat.id_categoria')
         ->select(
@@ -68,41 +68,30 @@ class ContratosAbiertosController extends Controller
             'c.numero_contrato',
             'c.estado',
 
-            // 👉 lo que tu JS llama "clave"
-            'r.codigo AS clave',
+            DB::raw('r.codigo AS clave'),
+            DB::raw('r.nombre_cliente AS nombre_cliente'),
+            DB::raw('r.email_cliente AS email_cliente'),
+            DB::raw('r.telefono_cliente AS telefono'),
 
-            'r.nombre_cliente',
-            'r.email_cliente',
-
-            // 👉 lo que tu JS espera como "telefono"
-            'r.telefono_cliente AS telefono',
-
-            // si tienes campo país en reservaciones, mapea:
-            // 'r.pais_cliente AS pais',
             DB::raw('NULL AS pais'),
 
-            // vehículo
             'v.marca',
             'v.modelo',
             'cat.nombre AS categoria',
 
-            // 👉 mapeo para la timeline
-            'r.fecha_inicio   AS entrega_fecha',
-            'r.hora_retiro    AS entrega_hora',
-            'r.fecha_fin      AS dev_fecha',
-            'r.hora_entrega   AS dev_hora',
+            DB::raw('r.fecha_inicio AS entrega_fecha'),
+            DB::raw('r.hora_retiro AS entrega_hora'),
+            DB::raw('r.fecha_fin AS dev_fecha'),
+            DB::raw('r.hora_entrega AS dev_hora'),
 
-            // si usas delivery como lugar
-            'r.delivery_direccion AS entrega_lugar',
-            'r.delivery_direccion AS dev_lugar',
+            DB::raw('r.delivery_direccion AS entrega_lugar'),
+            DB::raw('r.delivery_direccion AS dev_lugar'),
 
-            // totales
             'r.total',
             'r.metodo_pago',
             'r.delivery_activo',
             'r.delivery_total',
 
-            // si no tienes aún adicionales en DB:
             DB::raw('NULL AS adicionales')
         )
         ->where('c.id_contrato', $id)
@@ -113,10 +102,11 @@ class ContratosAbiertosController extends Controller
     }
 
     return response()->json([
-        'ok'   => true,
+        'ok' => true,
         'data' => $ctr,
     ]);
 }
+
 
 
 }

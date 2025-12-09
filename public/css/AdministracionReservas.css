@@ -117,7 +117,13 @@ a{text-decoration:none;color:inherit}
 .st-cancel{color:#991B1B;background:#FEF2F2;border-color:#FEE2E2}
 
 /* ===== Tarjeta de detalle dentro de la tabla ===== */
-.detail{display:none;background:#F8FAFC}
+.detail{
+    display:table-row !important;
+}
+.detail > td{
+    padding:0 !important;
+}
+
 .detail > td{padding:0;border-bottom:1px solid #EEF2F6}
 .card{
   margin:14px;border:1px solid var(--stroke);border-radius:16px;background:rgba(255,255,255,.96);
@@ -208,4 +214,87 @@ a{text-decoration:none;color:inherit}
   .card-bd{gap:14px}
   .kv{grid-template-columns:140px 1fr}
   .card-title{font-size:15px}
+}
+
+/* ============================================
+   🎨 NUEVO DISEÑO PARA DETALLES EXPANDIDOS
+   (compatible con tu HTML generado por JS)
+============================================ */
+
+/* Contenedor general del detalle */
+.panel{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap:22px;
+    background:#fff;
+    padding:26px;
+    border:1px solid var(--stroke);
+    border-radius:18px;
+    box-shadow:var(--shadow-sm);
+    margin-top:-2px;
+}
+
+/* Cada bloque (Contacto, Vehículo, etc.) */
+.box{
+    background:#fff;
+    border-radius:16px;
+    padding:14px 10px;
+    border-left:4px solid var(--brand);
+    box-shadow:var(--shadow-xs);
+}
+
+/* Títulos dentro de cada bloque */
+.box h3{
+    margin:0 0 6px 0;
+    font-size:15px;
+    font-weight:900;
+    color:var(--ink);
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+
+/* Texto normal */
+.box p{
+    margin:4px 0;
+    color:var(--muted-2);
+    font-size:14px;
+}
+
+/* Conteo grande del total */
+.box.total{
+    border-left:4px solid var(--ok);
+}
+
+.box.total .big{
+    font-size:22px;
+    font-weight:900;
+    color:var(--ink);
+}
+
+/* Íconos */
+.box h3::before{
+    font-size:18px;
+}
+
+/* Estados */
+.status-tag{
+    padding:6px 12px;
+    font-size:12px;
+    border-radius:12px;
+    font-weight:800;
+    text-transform:uppercase;
+    display:inline-block;
+}
+
+.status-pendiente{ background:#FFF7E6; color:#B45309; border:1px solid #FCD34D; }
+.status-abierto{ background:#E0F2FE; color:#0369A1; border:1px solid #7DD3FC; }
+.status-cerrado{ background:#DCFCE7; color:#15803D; border:1px solid #86EFAC; }
+.status-cancelado{ background:#FEE2E2; color:#B91C1C; border:1px solid #FCA5A5; }
+
+/* Responsive */
+@media(max-width:760px){
+    .panel{
+        grid-template-columns:1fr;
+    }
 }

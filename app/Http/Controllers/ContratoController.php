@@ -2240,67 +2240,225 @@ public function pagoPayPal(Request $req)
 public function pagoManual(Request $req)
 {
     $req->validate([
-        'id_reservacion' => 'required|integer',
-        'tipo_pago'      => 'required|string',
-        'metodo'         => 'required|string',
+        'id_reservacion' => 'required|integer|exists:reservaciones,id_reservacion',
+        'tipo_pago'      => 'required|string|max:50',
+        'metodo'         => 'required|string|max:50',
         'monto'          => 'required|numeric|min:1',
+        'notas'          => 'nullable|string|max:500',
+        'comprobante'    => 'nullable|file|mimes:jpg,jpeg,png,pdf',
     ]);
 
     DB::beginTransaction();
 
     try {
-        // Subir comprobante si existe
+        // ---------------------------------------------------
+        // 1) Determinar ORIGEN DEL PAGO según el método
+        // ---------------------------------------------------
+        $origen = match (strtoupper($req->metodo)) {
+            'EFECTIVO'         => 'mostrador',
+            'TRANSFERENCIA',
+            'SPEI',
+            'DEPOSITO'         => 'mostrador',
+            'VISA',
+            'MASTERCARD',
+            'AMEX',
+            'DEBITO'           => 'terminal',
+            default            => 'mostrador',
+        };
+
+        // ---------------------------------------------------
+        // 2) Subir comprobante SI existe
+        // ---------------------------------------------------
         $filePath = null;
 
         if ($req->hasFile('comprobante')) {
-            $file = $req->file('comprobante');
-            $filePath = $file->store('pagos', 'public');
+            $filePath = $req->file('comprobante')->store('pagos', 'public');
         }
 
+        // ---------------------------------------------------
+        // 3) Insertar el pago manual
+        // ---------------------------------------------------
         $idPago = DB::table('pagos')->insertGetId([
-            'id_reservacion'       => $req->id_reservacion,
-            'id_contrato'          => null,
+            'id_reservacion' => $req->id_reservacion,
+            'id_contrato'    => null,
 
-            'origen_pago'          => ($req->metodo === 'EFECTIVO' ? 'mostrador' : 'terminal'),
-            'metodo'               => $req->metodo,
-            'tipo_pago'            => $req->tipo_pago,
+            'origen_pago' => $origen,
+            'metodo'      => strtoupper($req->metodo),
+            'tipo_pago'   => strtoupper($req->tipo_pago),
 
-            'monto'                => $req->monto,
-            'moneda'               => 'MXN',
+            'monto'       => $req->monto,
+            'moneda'      => 'MXN',
+            'estatus'     => 'paid',
 
-            'estatus'              => 'paid',
-            'comprobante'          => $filePath,
+            'comprobante' => $filePath,
+            'pasarela'    => null,
+            'referencia_pasarela' => null,
 
-            'referencia_pasarela'  => null,
-            'payload_webhook'      => null,
-            'captured_at'          => now(),
+            'payload_webhook' => json_encode([
+                'notas' => $req->notas,
+            ]),
 
-            'created_at'           => now(),
-            'updated_at'           => now(),
+            'captured_at' => now(),
+            'created_at'  => now(),
+            'updated_at'  => now(),
         ]);
 
-        // Opcional: actualizar estado si ya está pagado
-        $saldo = $this->calcularSaldoPendiente($req->id_reservacion);
+        // ---------------------------------------------------
+        // 4) Verificar si queda saldo pendiente y actualizar reservación
+        // ---------------------------------------------------
+        $res = DB::table('reservaciones')->where('id_reservacion', $req->id_reservacion)->first();
+
+        $pagado = DB::table('pagos')
+            ->where('id_reservacion', $req->id_reservacion)
+            ->where('estatus', 'paid')
+            ->sum('monto');
+
+        $saldo = $res->total - $pagado;
 
         if ($saldo <= 0) {
             DB::table('reservaciones')
                 ->where('id_reservacion', $req->id_reservacion)
                 ->update([
                     'status_pago' => 'Pagado',
-                    'metodo_pago' => 'mostrador',
-                    'estado'      => 'confirmada'
+                    'metodo_pago' => $origen,
+                    'estado'      => 'confirmada',
+                    'updated_at'  => now(),
                 ]);
         }
 
         DB::commit();
 
-        return response()->json(['ok' => true, 'id_pago' => $idPago]);
+        return response()->json([
+            'ok' => true,
+            'id_pago' => $idPago,
+        ]);
 
     } catch (\Throwable $th) {
         DB::rollBack();
-        return response()->json(['ok' => false, 'msg' => $th->getMessage()]);
+        Log::error("Error pagoManual: ".$th->getMessage());
+
+        return response()->json([
+            'ok' => false,
+            'msg' => 'Error interno al registrar el pago',
+        ], 500);
     }
 }
+
+
+public function pagoEfectivo(Request $req)
+{
+    $req->validate([
+        'id_reservacion' => 'required|integer',
+        'tipo_pago'      => 'required|string',
+        'monto'          => 'required|numeric|min:1',
+        'notas'          => 'nullable|string|max:500',
+    ]);
+
+    $idPago = DB::table('pagos')->insertGetId([
+        'id_reservacion' => $req->id_reservacion,
+
+        'origen_pago' => 'mostrador',
+        'metodo'      => 'EFECTIVO',
+        'tipo_pago'   => $req->tipo_pago,
+        'monto'       => $req->monto,
+        'moneda'      => 'MXN',
+
+        'estatus'     => 'paid',
+        'pasarela'    => null,
+        'referencia_pasarela' => null,
+
+        'payload_webhook' => json_encode([
+            'notas' => $req->notas,
+        ]),
+
+        'captured_at' => now(),
+        'created_at'  => now(),
+        'updated_at'  => now(),
+    ]);
+
+    return response()->json(['ok' => true, 'id_pago' => $idPago]);
+}
+
+public function pagoTerminal(Request $req)
+{
+    $req->validate([
+        'id_reservacion' => 'required|integer',
+        'tipo_pago'      => 'required|string',
+        'metodo'         => 'required|string', // VISA, MASTERCARD, AMEX, DEBITO
+        'monto'          => 'required|numeric|min:1',
+        'comprobante'    => 'required|file|mimes:jpg,jpeg,png,pdf',
+    ]);
+
+    // Guardar ticket
+    $filePath = $req->file('comprobante')->store('pagos', 'public');
+
+    $idPago = DB::table('pagos')->insertGetId([
+        'id_reservacion' => $req->id_reservacion,
+
+        'origen_pago' => 'terminal',
+        'metodo'      => $req->metodo,
+        'tipo_pago'   => $req->tipo_pago,
+
+        'monto'       => $req->monto,
+        'moneda'      => 'MXN',
+
+        'estatus'     => 'paid',
+        'comprobante' => $filePath,
+
+        'pasarela'    => null,
+        'referencia_pasarela' => null,
+
+        'payload_webhook' => null,
+        'captured_at'     => now(),
+
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return response()->json(['ok' => true, 'id_pago' => $idPago]);
+}
+public function pagoTransferencia(Request $req)
+{
+    $req->validate([
+        'id_reservacion' => 'required|integer',
+        'tipo_pago'      => 'required|string',
+        'metodo'         => 'required|string', // TRANSFERENCIA / SPEI / DEPOSITO
+        'monto'          => 'required|numeric|min:1',
+        'comprobante'    => 'required|file|mimes:jpg,jpeg,png,pdf',
+        'notas'          => 'nullable|string|max:500',
+    ]);
+
+    $filePath = $req->file('comprobante')->store('pagos', 'public');
+
+    $idPago = DB::table('pagos')->insertGetId([
+        'id_reservacion' => $req->id_reservacion,
+
+        'origen_pago' => 'mostrador',
+        'metodo'      => $req->metodo,
+        'tipo_pago'   => $req->tipo_pago,
+
+        'monto'       => $req->monto,
+        'moneda'      => 'MXN',
+
+        'estatus'     => 'paid',
+        'comprobante' => $filePath,
+
+        'pasarela'    => null,
+        'referencia_pasarela' => null,
+
+        'payload_webhook' => json_encode([
+            'notas' => $req->notas,
+        ]),
+
+        'captured_at' => now(),
+
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return response()->json(['ok' => true, 'id_pago' => $idPago]);
+}
+
 private function calcularSaldoPendiente($id)
 {
     $res = DB::table('reservaciones')->where('id_reservacion', $id)->first();
