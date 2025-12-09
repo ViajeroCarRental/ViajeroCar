@@ -7,7 +7,7 @@
 
 @section('contenidoReservacionesActivas')
 <main class="main">
-  <h1 class="h1">Reservaciones activas</h1>
+  <h1 class="h1">Booking</h1>
 
   <div class="toolbar">
     <input id="q" class="input" type="search" placeholder="Buscar por nombre o correo…">
