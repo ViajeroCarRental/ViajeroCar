@@ -99,8 +99,6 @@ Route::get('/admin/flotilla', [App\Http\Controllers\controladorVistasAdmin::clas
 Route::get('/admin/polizas', [App\Http\Controllers\controladorVistasAdmin::class, 'polizas'])->name('rutaPolizas');
 //carroceria
 Route::get('/admin/carroceria', [App\Http\Controllers\controladorVistasAdmin::class, 'carroceria'])->name('rutaCarroceria');
-//seguros
-Route::get('/admin/seguros', [App\Http\Controllers\controladorVistasAdmin::class, 'seguros'])->name('rutaSeguros');
 //gastos
 Route::get('/admin/gastos', [App\Http\Controllers\controladorVistasAdmin::class, 'gastos'])->name('rutaGastos');
 
@@ -265,7 +263,6 @@ Route::get('/contrato/{id}/exportar-word', [ContratoController::class, 'exportar
 Route::post('/contrato/{id}/enviar-correo', [ContratoFinalController::class, 'enviarContratoCorreo']);
 
 
-
 //visor de reservaciones
 Route::get('/admin/visor-reservaciones', [App\Http\Controllers\controladorVistasAdmin::class, 'visorReservaciones'])->name('rutaVisorReservaciones');
 
@@ -343,7 +340,7 @@ Route::get('/admin/gastos/rango/{tipo}', [GastosController::class, 'rangoRapido'
 
 
 // === Siniestros ===
-Route::get('/admin/seguros', [App\Http\Controllers\SiniestrosController::class, 'index'])->name('rutaSeguros');
+Route::get('/admin/siniestros', [App\Http\Controllers\SiniestrosController::class, 'index'])->name('rutaSeguros');
 Route::post('/admin/siniestros/guardar', [App\Http\Controllers\SiniestrosController::class, 'guardar'])->name('guardarSiniestro');
 Route::post('/admin/siniestros/actualizar/{id}', [App\Http\Controllers\SiniestrosController::class, 'actualizar'])->name('actualizarSiniestro');
 Route::post('/admin/siniestros/subir/{id}', [App\Http\Controllers\SiniestrosController::class, 'subirArchivo'])->name('subirArchivoSiniestro');

@@ -1,82 +1,296 @@
-/* ============================================
-   🎨 NUEVO DISEÑO PARA DETALLES EXPANDIDOS
-   (compatible con tu HTML generado por JS)
-============================================ */
+/* ===========================================================
+   🎨 HISTORIAL DE RENTAS — ESTILO MODERNO (Viajero Car Rental)
+   100% compatible con tu vista e idéntico al diseño de la imagen
+=========================================================== */
 
-/* Contenedor general del detalle */
-.panel{
-    display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap:22px;
-    background:#fff;
-    padding:26px;
-    border:1px solid var(--stroke);
-    border-radius:18px;
-    box-shadow:var(--shadow-sm);
-    margin-top:-2px;
+/* ----------- Variables globales ----------- */
+:root {
+  --bg: #f4f6fb;
+  --paper: #ffffff;
+  --stroke: #e5e7eb;
+  --stroke-2: #d1d5db;
+
+  --brand: #ff1e2d;
+  --brand-soft: #ffe3e6;
+
+  --ink: #1f2937;
+  --muted: #6b7280;
+
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+
+  --shadow-sm: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-md: 0 6px 20px rgba(0,0,0,0.08);
 }
 
-/* Cada bloque (Contacto, Vehículo, etc.) */
-.box{
-    background:#fff;
-    border-radius:16px;
-    padding:14px 10px;
-    border-left:4px solid var(--brand);
-    box-shadow:var(--shadow-xs);
+/* ----------- Layout general ----------- */
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Inter", system-ui, sans-serif;
 }
 
-/* Títulos dentro de cada bloque */
-.box h3{
-    margin:0 0 6px 0;
-    font-size:15px;
-    font-weight:900;
-    color:var(--ink);
-    display:flex;
-    align-items:center;
-    gap:6px;
+.main {
+  padding: 20px;
 }
 
-/* Texto normal */
-.box p{
-    margin:4px 0;
-    color:var(--muted-2);
-    font-size:14px;
+/* ----------- Título principal ----------- */
+.h1 {
+  margin: 0 0 14px;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: .3px;
 }
 
-/* Conteo grande del total */
-.box.total{
-    border-left:4px solid var(--ok);
+/* =====================================================
+   🔷 Secciones
+===================================================== */
+.section {
+  background: var(--paper);
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--stroke);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
-.box.total .big{
-    font-size:22px;
-    font-weight:900;
-    color:var(--ink);
+.section .head {
+  padding: 14px 18px;
+  font-weight: 800;
+  color: var(--muted);
+  border-bottom: 1px solid var(--stroke);
+  background: #fafafa;
 }
 
-/* Íconos */
-.box h3::before{
-    font-size:18px;
+.section .cnt {
+  padding: 18px;
 }
 
-/* Estados */
-.status-tag{
-    padding:6px 12px;
-    font-size:12px;
-    border-radius:12px;
-    font-weight:800;
-    text-transform:uppercase;
-    display:inline-block;
+/* =====================================================
+   🔍 Filtros
+===================================================== */
+.flex {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
-.status-pendiente{ background:#FFF7E6; color:#B45309; border:1px solid #FCD34D; }
-.status-abierto{ background:#E0F2FE; color:#0369A1; border:1px solid #7DD3FC; }
-.status-cerrado{ background:#DCFCE7; color:#15803D; border:1px solid #86EFAC; }
-.status-cancelado{ background:#FEE2E2; color:#B91C1C; border:1px solid #FCA5A5; }
+input[type=text],
+input[type=date],
+select {
+  height: 44px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1.4px solid var(--stroke);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  outline: none;
+  transition: 0.2s;
+}
 
-/* Responsive */
-@media(max-width:760px){
-    .panel{
-        grid-template-columns:1fr;
-    }
+input:focus,
+select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px rgba(255, 30, 45, .15);
+}
+
+/* Botones */
+.btn {
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 14px;
+  transition: 0.15s;
+}
+
+.primary {
+  background: var(--brand);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.primary:hover {
+  background: #e11220;
+}
+
+.gray {
+  background: #f1f3f5;
+  border: 1px solid var(--stroke);
+  color: var(--ink);
+}
+
+.gray:hover {
+  background: #e5e7eb;
+}
+
+/* =====================================================
+   📊 Resumen
+===================================================== */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--stroke);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  /* gradiente suave como en tu imagen */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255, 30, 45, .06), transparent);
+}
+
+.card .t {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.card .v {
+  font-size: 22px;
+  font-weight: 900;
+  margin-top: 6px;
+  color: var(--ink);
+}
+
+/* =====================================================
+   📋 Tabla de resultados
+===================================================== */
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.table thead th {
+  padding: 14px;
+  background: #fafafa;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--stroke);
+}
+
+.table td {
+  padding: 14px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--stroke);
+}
+
+.table tbody tr:hover {
+  background: #fff6f7;
+}
+
+/* =====================================================
+   🟡 Estatus (badges redondos)
+===================================================== */
+.status {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  display: inline-block;
+  border: 1px solid;
+}
+
+.status-reservada {
+  background: #fff7e6;
+  border-color: #fcd34d;
+  color: #b45309;
+}
+
+.status-pendiente {
+  background: #fef9c3;
+  border-color: #facc15;
+  color: #92400e;
+}
+
+.status-contrato {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0369a1;
+}
+
+.status-finalizada {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+.status-cancelada {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+/* =====================================================
+   ⏭️ Paginación
+===================================================== */
+.pager {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.pager button {
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-md);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pager button:hover {
+  background: #f1f3f5;
+}
+
+.badge {
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stroke);
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* =====================================================
+   📱 Responsive
+===================================================== */
+@media (max-width: 960px) {
+  .summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
 }

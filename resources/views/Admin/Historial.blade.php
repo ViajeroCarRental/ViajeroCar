@@ -68,7 +68,7 @@
     <section class="section">
       <div class="head">Resumen</div>
       <div class="cnt summary" id="sumCards">
-        <div class="card"><div class="t">Rentas</div><div class="v" id="sumCount">0</div></div>
+        <div class="card"><div class="t">Accciones</div><div class="v" id="sumCount">0</div></div>
         <div class="card"><div class="t">Ingresos</div><div class="v" id="sumTotal">$0</div></div>
         <div class="card"><div class="t">Pagado</div><div class="v" id="sumPagado">$0</div></div>
         <div class="card"><div class="t">Saldo Pendiente</div><div class="v" id="sumSaldo">$0</div></div>

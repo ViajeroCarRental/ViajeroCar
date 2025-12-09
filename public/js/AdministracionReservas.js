@@ -159,7 +159,15 @@ console.log("Respuesta fetch:", res);
                         </div>
 
                         <div style="display:flex; gap:10px;">
-                            <button class="btn b-primary">EDITAR</button>
+
+    <a href="/admin/contrato/${d.id_reservacion}"
+   class="btn b-blue btnEdit">
+   ✎ Editar
+</a>
+
+
+
+
                             <button class="btn b-red">FINALIZAR</button>
                         </div>
                     </div>

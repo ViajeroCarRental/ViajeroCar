@@ -67,6 +67,7 @@ class ContratosAbiertosController extends Controller
             'c.id_contrato',
             'c.numero_contrato',
             'c.estado',
+            'r.id_reservacion',
 
             DB::raw('r.codigo AS clave'),
             DB::raw('r.nombre_cliente AS nombre_cliente'),
