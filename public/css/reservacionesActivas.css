@@ -115,7 +115,6 @@ small, .small { font-size: 12px; color: var(--muted); }
 .badge.warn { border-color: #FEDF89; background: #FFFAEB; color: #B54708; }
 .badge.gray { border-color: #E5E7EB; background: #F9FAFB; color: #475467; }
 
-
 /* ==============================
    ⚙️ Acciones / botones
 ============================== */
@@ -140,7 +139,7 @@ small, .small { font-size: 12px; color: var(--muted); }
 .chip.ghost { background: #fff; color: #334155; border-color: #E5E7EB; }
 
 /* ==============================
-   🪟 Modal con estilo moderno Viajero 🚗💨
+   🪟 Modal con estilo moderno Viajero
 ============================== */
 .pop {
   position: fixed;
@@ -272,7 +271,6 @@ small, .small { font-size: 12px; color: var(--muted); }
   to { transform: translateY(0); opacity: 1; }
 }
 
-
 /* ==============================
    📱 Responsive fino
 ============================== */
@@ -289,7 +287,7 @@ small, .small { font-size: 12px; color: var(--muted); }
 }
 
 /* ==============================
-   🧭 Tabla con columnas iguales (versión final)
+   🧭 Tabla con columnas iguales
 ============================== */
 .table {
   background: #fff;
@@ -304,18 +302,16 @@ small, .small { font-size: 12px; color: var(--muted); }
   position: relative;
 }
 
-/* ==============================
-   🟥 Encabezado unificado (todas las columnas = 220px)
-============================== */
+/* Encabezado compacto (12 columnas = 140px) */
 .table .thead {
   position: sticky;
   top: 0;
   z-index: 2;
   display: grid;
-  grid-template-columns: repeat(11, 220px); /* 👈 11 columnas iguales */
+  grid-template-columns: repeat(12, 140px);
   align-items: center;
-  min-width: calc(220px * 11);
-  padding: 11px 14px;
+  min-width: calc(140px * 12);
+  padding: 6px 8px;
   background: linear-gradient(90deg, var(--brand), var(--brand-3));
   color: #fff;
   font-weight: 900;
@@ -328,22 +324,20 @@ small, .small { font-size: 12px; color: var(--muted); }
 
 .table .thead > div {
   border-right: 1px solid rgba(255,255,255,0.25);
-  padding-right: 8px;
+  padding-right: 4px;
   text-align: left;
 }
 .table .thead > div:last-child {
   border-right: none;
 }
 
-/* ==============================
-   🧾 Filas alineadas (mismas 11 columnas)
-============================== */
+/* Filas alineadas (mismas 12 columnas) */
 .table .row {
   display: grid;
-  grid-template-columns: repeat(11, 220px); /* 👈 idéntico al encabezado */
+  grid-template-columns: repeat(12, 140px);
   align-items: center;
-  min-width: calc(220px * 11);
-  padding: 11px 14px;
+  min-width: calc(140px * 12);
+  padding: 6px 8px;
   gap: 0;
   border-bottom: 1px solid #F2F4F7;
   background: #fff;
@@ -354,9 +348,7 @@ small, .small { font-size: 12px; color: var(--muted); }
 .table .row:hover { background: #FFF5F6; }
 .table .row:last-child { border-bottom: none; }
 
-/* ==============================
-   🩸 Indicador visual de scroll
-============================== */
+/* Indicador visual de scroll */
 .table::after {
   content: "";
   position: absolute;
@@ -368,9 +360,7 @@ small, .small { font-size: 12px; color: var(--muted); }
   background: linear-gradient(to left, rgba(255,255,255,0.95), rgba(255,255,255,0));
 }
 
-/* ==============================
-   🏷️ Estado (badge)
-============================== */
+/* Estado (badge) */
 .state {
   display: inline-flex;
   align-items: center;
@@ -387,9 +377,7 @@ small, .small { font-size: 12px; color: var(--muted); }
 .state.warn { background: #FFFAEB; border-color: #FEDF89; color: #B54708; }
 .state.gray { background: #F2F4F7; color: #475467; }
 
-/* ==============================
-   🎚️ Scrollbar estilizado
-============================== */
+/* Scrollbar tabla */
 .table::-webkit-scrollbar {
   height: 10px;
 }
@@ -401,13 +389,90 @@ small, .small { font-size: 12px; color: var(--muted); }
   background: #f1f3f6;
 }
 
-/* ==============================
-   🔤 Unificación tipográfica
-============================== */
+/* Tipografía tabla */
 .table .thead > div,
 .table .row > div {
   font-family: "Cabin", system-ui, sans-serif;
   line-height: 1.4;
 }
 
+/* ============================
+   🎯 Select estilo calendario
+============================ */
+.select-ubicacion {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
 
+    background-color: #fff;
+    border: 2px solid #e11b22;
+    padding: 8px 32px 8px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    cursor: pointer;
+    transition: all .2s ease;
+    position: relative;
+
+    /* Flecha personalizada */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='10'><path fill='%23E02631' d='M2 2l5 5 5-5'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 14px;
+    padding-right: 36px !important;
+}
+
+/* Hover */
+.select-ubicacion:hover {
+    background: #fff5f5;
+    border-color: #ff515d !important;
+}
+
+/* Focus */
+.select-ubicacion:focus {
+    outline: none;
+    border-color: #b91c1c;
+    box-shadow: 0 0 4px rgba(220, 38, 38, 0.4);
+}
+
+/* Opciones del menú desplegable */
+.select-ubicacion option {
+    font-weight: 600;
+    padding: 10px;
+    background: white;
+    color: #1f2937;
+}
+
+/* ============================
+   Input de búsqueda
+============================ */
+.toolbar .input {
+    height: 44px;
+    border: 2px solid #E02631 !important;
+    border-radius: 14px;
+    padding: 0 14px;
+    font-weight: 600;
+    background: #fff;
+    color: var(--ink);
+    transition: .2s ease;
+    box-shadow: 0 3px 6px rgba(224, 38, 49, 0.10);
+}
+
+.toolbar .input:focus {
+    border-color: #ff3b47 !important;
+    box-shadow: 0 0 0 4px rgba(255, 79, 90, 0.25);
+}
+
+/* ============================
+   BADGE DEL TOTAL
+============================ */
+.badge.gray {
+    background: #fff;
+    border: 2px solid #E02631 !important;
+    color: #1e293b;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-weight: 700;
+    box-shadow: 0 3px 6px rgba(224, 38, 49, 0.10);
+}
