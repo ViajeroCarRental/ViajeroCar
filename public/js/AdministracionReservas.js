@@ -159,7 +159,11 @@ console.log("Respuesta fetch:", res);
                         </div>
 
                         <div style="display:flex; gap:10px;">
-                            <button class="btn b-primary">EDITAR</button>
+                            <button class="btn b-primary btnEditarContrato"
+        data-id="${d.id_contrato}">
+    EDITAR
+</button>
+
                             <button class="btn b-red">FINALIZAR</button>
                         </div>
                     </div>
@@ -209,5 +213,13 @@ console.log("Respuesta fetch:", res);
 
     // Inicial
     loadData();
+
+    document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("btnEditarContrato")) {
+        const idContrato = e.target.dataset.id;
+        window.location.href = `/admin/contrato/${idContrato}`;
+    }
+});
+
 
 });

@@ -318,6 +318,7 @@ function actualizarTotal() {
     if (ID_RESERVACION) {
       localStorage.setItem(`contratoPasoActual_${ID_RESERVACION}`, n);
     }
+    if (n === 6) cargarPaso6();
   };
 
   /* ==========================================================
@@ -2508,6 +2509,17 @@ const paypalContainer = document.querySelector("#paypal-button-container-modal")
    🔹 1. Cargar datos del Paso 6
 ========================================================== */
 async function cargarPaso6() {
+
+    // 🔄 Recapturar elementos AHORA que el Paso 6 ya está en el DOM
+    const baseAmt       = document.querySelector("#baseAmt");
+    const baseDescr     = document.querySelector("#baseDescr");
+    const addsAmt       = document.querySelector("#addsAmt");
+    const ivaAmt        = document.querySelector("#ivaAmt");
+    const ivaOnly       = document.querySelector("#ivaOnly");
+    const totalContrato = document.querySelector("#totalContrato");
+    const saldoPend     = document.querySelector("#saldoPendiente");
+    const payBody       = document.querySelector("#payBody");
+
     try {
         const resp = await fetch(`/admin/contrato/${ID_RESERVACION}/resumen-paso6`);
         const data = await resp.json();
@@ -2515,21 +2527,23 @@ async function cargarPaso6() {
 
         const r = data.data;
 
-        // Desglose
-        baseDescr.textContent = r.base.descripcion ?? "—";
-        baseAmt.textContent   = money(r.base.total);
-        addsAmt.textContent   = money(r.adicionales.total);
-        ivaAmt.textContent = money(r.totales.subtotal);
-ivaOnly.textContent = money(r.totales.iva);
-totalContrato.textContent = money(r.totales.total_contrato);
-saldoPend.textContent = money(r.totales.saldo_pendiente);
+        // Desglose TOT REAL
+        baseDescr.textContent     = r.base.descripcion ?? "—";
+        baseAmt.textContent       = money(r.base.total);
+        addsAmt.textContent       = money(r.adicionales.total);
+        ivaAmt.textContent        = money(r.totales.subtotal);
+        ivaOnly.textContent       = money(r.totales.iva);
+        totalContrato.textContent = money(r.totales.total_contrato);
+        saldoPend.textContent     = money(r.totales.saldo_pendiente);
 
+        // Renderizar pagos
         renderPagos(r.pagos);
 
     } catch (e) {
         console.error("❌ Error Paso 6:", e);
     }
 }
+
 
 /* ==========================================================
    🔹 2. Renderizar tabla pagos
@@ -3424,6 +3438,12 @@ $("#go2")?.addEventListener("click", async () => {
   $("#go6")?.addEventListener("click", () => {
     console.log("➡️ Paso 6");
     showStep(6);
+    cargarPaso6();
+    cargarResumenBasico();
+     setTimeout(() => {
+        cargarPaso6();
+        cargarResumenBasico();
+    }, 150); // 150ms es perfecto
   });
   $("#back1")?.addEventListener("click", () => {
     console.log("⬅️ Paso 1");
