@@ -18,8 +18,8 @@
 
   {{-- ===================== 🔍 FILTROS ===================== --}}
   <form method="GET" class="toolbar">
-    
-    {{-- Buscador --}}
+
+    {{-- 🔵 Buscador por nombre o correo --}}
     <input
       id="q"
       name="q"
@@ -81,7 +81,7 @@
              data-fecha-salida="{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}"
              data-estado="{{ $r->estado }}"
              data-sucursal="{{ $r->sucursal_retiro }}">
-          
+
           {{-- 1. No. de reservación --}}
           <div>{{ $r->codigo }}</div>
 
@@ -172,70 +172,23 @@
 
       {{-- CONTENIDO --}}
       <div class="cnt">
-        <div class="kv">
-          <strong>Código</strong>
-          <span id="mCodigo">—</span>
-        </div>
-
-        <div class="kv">
-          <strong>Cliente</strong>
-          <span id="mCliente">—</span>
-        </div>
-
-        <div class="kv">
-          <strong>Correo</strong>
-          <span id="mEmail">—</span>
-        </div>
-
-        <div class="kv">
-          <strong>Teléfono</strong>
-          <span id="mNumero">—</span>
-        </div>
-
-        <div class="kv">
-          <strong>Categoría</strong>
-          <span id="mCategoria">—</span>
-        </div>
-
-        <div class="kv">
-          <strong>Estado</strong>
-          <span id="mEstado">—</span>
-        </div>
-
-        <div class="kv">
-          <strong>Salida</strong>
-          <span id="mSalida">—</span>
-        </div>
-
-        <div class="kv">
-          <strong>Entrega</strong>
-          <span id="mEntrega">—</span>
-        </div>
-
-        <div class="kv">
-          <strong>Forma de pago</strong>
-          <span id="mFormaPago">—</span>
-        </div>
-
-        <div class="kv">
-          <strong>Total</strong>
-          <span id="mTotal">—</span>
-        </div>
-
-        <div class="kv">
-          <strong>Tarifa modificada</strong>
-          <span id="mTarifaModificada">—</span>
-        </div>
+        <div class="kv"><strong>Código</strong><span id="mCodigo">—</span></div>
+        <div class="kv"><strong>Cliente</strong><span id="mCliente">—</span></div>
+        <div class="kv"><strong>Correo</strong><span id="mEmail">—</span></div>
+        <div class="kv"><strong>Teléfono</strong><span id="mNumero">—</span></div>
+        <div class="kv"><strong>Categoría</strong><span id="mCategoria">—</span></div>
+        <div class="kv"><strong>Estado</strong><span id="mEstado">—</span></div>
+        <div class="kv"><strong>Salida</strong><span id="mSalida">—</span></div>
+        <div class="kv"><strong>Entrega</strong><span id="mEntrega">—</span></div>
+        <div class="kv"><strong>Forma de pago</strong><span id="mFormaPago">—</span></div>
+        <div class="kv"><strong>Total</strong><span id="mTotal">—</span></div>
+        <div class="kv"><strong>Tarifa modificada</strong><span id="mTarifaModificada">—</span></div>
       </div>
 
-      {{-- FOOTER / BOTONES --}}
+      {{-- FOOTER --}}
       <div class="actions">
-        <button type="button" class="btn gray" id="mCancel">
-          Cerrar
-        </button>
-        <button type="button" class="btn primary" id="mGo">
-          Ir a contrato
-        </button>
+        <button type="button" class="btn gray" id="mCancel">Cerrar</button>
+        <button type="button" class="btn primary" id="mGo">Ir a contrato</button>
       </div>
     </div>
   </div>
