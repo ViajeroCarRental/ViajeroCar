@@ -437,3 +437,8 @@ Route::get('/admin/administracion-reservaciones', [ContratosAbiertosController::
 Route::get('/api/contratos-abiertos/{id}', [ContratosAbiertosController::class, 'detalle'])
     ->name('contratos.detalle');
 Route::get('/api/contratos-abiertos', [ContratosAbiertosController::class, 'api']);
+//suta consultar saldo pendiente
+Route::get('/admin/contrato/{id}/saldo', [ContratosAbiertosController::class, 'saldo']);
+
+Route::post('/admin/contrato/{id}/finalizar', [ContratosAbiertosController::class, 'finalizarContrato']);
+

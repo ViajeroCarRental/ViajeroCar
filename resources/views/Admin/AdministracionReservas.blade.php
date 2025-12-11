@@ -66,6 +66,44 @@
 
     </div>
 </main>
+<!-- MODAL — CONFIRMAR FINALIZAR -->
+<div id="modalFinalizar" class="modal-fin" style="display:none;">
+    <div class="modal-fin-box">
+        <h2 id="mf_titulo">Finalizar contrato</h2>
+        <p id="mf_msg">Mensaje aquí…</p>
+
+        <div class="mf-btns">
+            <button id="mf_cancel" class="btn gray">Cancelar</button>
+            <button id="mf_ok" class="btn b-primary">Aceptar</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal-fin {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+.modal-fin-box {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 370px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,.2);
+}
+.mf-btns {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-evenly;
+}
+</style>
+
 @endsection
 
 @section('js-vistaAdministracionReservaciones')
