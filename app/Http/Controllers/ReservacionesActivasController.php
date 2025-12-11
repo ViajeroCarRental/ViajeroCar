@@ -10,10 +10,9 @@ class ReservacionesActivasController extends Controller
     /**
      * 📋 Muestra todas las reservaciones activas (no canceladas ni expiradas)
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            // 🔹 Consulta principal: reservaciones activas con su categoría
             $reservaciones = DB::table('reservaciones as r')
                 ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
                 ->select(
@@ -25,19 +24,39 @@ class ReservacionesActivasController extends Controller
                     'r.estado',
                     'r.metodo_pago',
                     'r.fecha_inicio',
+                    'r.hora_retiro',
                     'r.fecha_fin',
                     'r.total',
-                    DB::raw('COALESCE(c.nombre, "Sin categoría") as categoria')
+                    'r.sucursal_retiro',
+                    'r.no_vuelo',              // 👈 NUEVO: número de vuelo
+                    'c.codigo as categoria'    // C, D, E, H, etc.
                 )
+                // solo activas
                 ->whereNotIn('r.estado', ['cancelada', 'expirada'])
+
+                // 🔽 Filtro opcional por sucursal_retiro (Aeropuerto / Central / Central Park)
+                ->when($request->filled('sucursal'), function ($q) use ($request) {
+                    $q->where('r.sucursal_retiro', $request->sucursal);
+                })
+
+                // 🔎 (Opcional) Filtro por texto q en nombre o correo
+                ->when($request->filled('q'), function ($qBuilder) use ($request) {
+                    $term = '%' . $request->q . '%';
+                    $qBuilder->where(function ($sub) use ($term) {
+                        $sub->where('r.nombre_cliente', 'LIKE', $term)
+                            ->orWhere('r.email_cliente', 'LIKE', $term);
+                    });
+                })
+
                 ->orderByDesc('r.id_reservacion')
                 ->get();
 
-            // 🔹 Renderiza la vista con los datos
-            return view('Admin.ReservacionesActivas', compact('reservaciones'));
+            return view('Admin.ReservacionesActivas', [
+                'reservaciones'        => $reservaciones,
+                'sucursalSeleccionada' => $request->sucursal,
+            ]);
 
         } catch (\Throwable $e) {
-            // 🔹 Mensaje amigable en caso de error
             return back()->with('error', 'Error al cargar las reservaciones activas: ' . $e->getMessage());
         }
     }
@@ -48,7 +67,6 @@ class ReservacionesActivasController extends Controller
     public function show($codigo)
     {
         try {
-            // 🔹 Buscar reservación por código con su categoría
             $reservacion = DB::table('reservaciones as r')
                 ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
                 ->select(
@@ -65,17 +83,17 @@ class ReservacionesActivasController extends Controller
                     'r.metodo_pago',
                     'r.total',
                     'r.tarifa_modificada',
-                    DB::raw('COALESCE(c.nombre, "Sin categoría") as categoria')
+                    'r.no_vuelo',                              
+                    DB::raw('DATEDIFF(r.fecha_fin, r.fecha_inicio) as dias'),
+                    'c.codigo as categoria'  
                 )
                 ->where('r.codigo', $codigo)
                 ->first();
 
-            // 🔹 Validación: si no se encuentra
             if (!$reservacion) {
                 return response()->json(['error' => 'Reservación no encontrada'], 404);
             }
 
-            // 🔹 Respuesta exitosa en formato JSON
             return response()->json($reservacion, 200);
 
         } catch (\Throwable $e) {
@@ -86,26 +104,27 @@ class ReservacionesActivasController extends Controller
     }
 
     /**
- * 🗑️ Elimina una reservación activa
- */
-public function destroy($id)
-{
-    try {
-        // Verificar si existe
-        $reserv = DB::table('reservaciones')->where('id_reservacion', $id)->first();
+     * 🗑️ Elimina una reservación activa
+     */
+    public function destroy($id)
+    {
+        try {
+            $reserv = DB::table('reservaciones')
+                ->where('id_reservacion', $id)
+                ->first();
 
-        if (!$reserv) {
-            return back()->with('error', 'La reservación no existe.');
+            if (!$reserv) {
+                return back()->with('error', 'La reservación no existe.');
+            }
+
+            DB::table('reservaciones')
+                ->where('id_reservacion', $id)
+                ->delete();
+
+            return back()->with('success', 'Reservación eliminada correctamente.');
+
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Error al eliminar la reservación: ' . $e->getMessage());
         }
-
-        // Eliminar
-        DB::table('reservaciones')->where('id_reservacion', $id)->delete();
-
-        return back()->with('success', 'Reservación eliminada correctamente.');
-
-    } catch (\Throwable $e) {
-        return back()->with('error', 'Error al eliminar la reservación: ' . $e->getMessage());
     }
-}
-
 }

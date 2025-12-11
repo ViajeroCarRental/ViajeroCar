@@ -1,296 +1,433 @@
-/* ===========================================================
-   🎨 HISTORIAL DE RENTAS — ESTILO MODERNO (Viajero Car Rental)
-   100% compatible con tu vista e idéntico al diseño de la imagen
-=========================================================== */
-
-/* ----------- Variables globales ----------- */
+/* ==============================
+   TOKENS / VARIABLES (mismo sistema)
+============================== */
 :root {
-  --bg: #f4f6fb;
-  --paper: #ffffff;
-  --stroke: #e5e7eb;
-  --stroke-2: #d1d5db;
+  --brand: #FF1E2D;
+  --brand-2: #D6121F;
 
-  --brand: #ff1e2d;
-  --brand-soft: #ffe3e6;
+  --ink: #0F172A;
+  --muted: #667085;
+  --muted-2: #475467;
 
-  --ink: #1f2937;
-  --muted: #6b7280;
+  --stroke: #E5E7EB;
+  --stroke-2: #E9EDF3;
+  --bg: #F6F7FB;
+  --paper: #FFFFFF;
+
+  --ok: #027A48;
 
   --radius-lg: 18px;
   --radius-md: 14px;
-  --radius-sm: 10px;
+  --radius-pill: 999px;
 
-  --shadow-sm: 0 4px 12px rgba(0,0,0,0.06);
-  --shadow-md: 0 6px 20px rgba(0,0,0,0.08);
+  --shadow-xs: 0 1px 3px rgba(16,24,40,.06);
+  --shadow-sm: 0 4px 12px rgba(16,24,40,.08);
+  --shadow-soft: 0 22px 45px rgba(15,23,42,.16);
 }
 
-/* ----------- Layout general ----------- */
-body {
-  background: var(--bg);
+/* ==============================
+   LAYOUT GENERAL
+============================== */
+
+.main{
+  padding: 26px 28px 40px;
+  background: radial-gradient(circle at top, #ffffff 0, #F3F4FF 38%, #EEF2FF 100%);
+}
+
+.h1{
+  margin: 0 0 18px;
+  font-size: 26px;
+  font-weight: 800;
   color: var(--ink);
-  font-family: "Inter", system-ui, sans-serif;
 }
 
-.main {
-  padding: 20px;
-}
+/* ==============================
+   SECCIONES (match Contrato)
+============================== */
 
-/* ----------- Título principal ----------- */
-.h1 {
-  margin: 0 0 14px;
-  font-size: 28px;
-  font-weight: 900;
-  letter-spacing: .3px;
-}
-
-/* =====================================================
-   🔷 Secciones
-===================================================== */
-.section {
+.section{
+  margin-top: 18px;
   background: var(--paper);
-  border-radius: var(--radius-lg);
-  border: 1.5px solid var(--stroke);
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  border-radius: 22px;
+  border: 1px solid rgba(255,30,45,.05);
+  box-shadow: var(--shadow-soft);
 }
 
-.section .head {
-  padding: 14px 18px;
-  font-weight: 800;
-  color: var(--muted);
-  border-bottom: 1px solid var(--stroke);
-  background: #fafafa;
-}
-
-.section .cnt {
-  padding: 18px;
-}
-
-/* =====================================================
-   🔍 Filtros
-===================================================== */
-.flex {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-input[type=text],
-input[type=date],
-select {
-  height: 44px;
-  padding: 10px 12px;
-  background: #fff;
-  border: 1.4px solid var(--stroke);
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  outline: none;
-  transition: 0.2s;
-}
-
-input:focus,
-select:focus {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 4px rgba(255, 30, 45, .15);
-}
-
-/* Botones */
-.btn {
-  padding: 10px 16px;
-  border-radius: var(--radius-md);
-  border: none;
-  cursor: pointer;
-  font-weight: 800;
-  font-size: 14px;
-  transition: 0.15s;
-}
-
-.primary {
-  background: var(--brand);
-  color: #fff;
-  box-shadow: var(--shadow-sm);
-}
-
-.primary:hover {
-  background: #e11220;
-}
-
-.gray {
-  background: #f1f3f5;
-  border: 1px solid var(--stroke);
-  color: var(--ink);
-}
-
-.gray:hover {
-  background: #e5e7eb;
-}
-
-/* =====================================================
-   📊 Resumen
-===================================================== */
-.summary {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-}
-
-.card {
-  background: #fff;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--stroke);
-  padding: 16px;
-  box-shadow: var(--shadow-sm);
-  position: relative;
-  overflow: hidden;
-}
-
-.card::before {
-  /* gradiente suave como en tu imagen */
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(255, 30, 45, .06), transparent);
-}
-
-.card .t {
+.section .head{
+  padding: 10px 22px 6px;
   font-size: 13px;
-  color: var(--muted);
-  font-weight: 700;
-}
-
-.card .v {
-  font-size: 22px;
-  font-weight: 900;
-  margin-top: 6px;
-  color: var(--ink);
-}
-
-/* =====================================================
-   📋 Tabla de resultados
-===================================================== */
-.table-wrap {
-  overflow-x: auto;
-}
-
-.table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: #fff;
-  border: 1px solid var(--stroke);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.table thead th {
-  padding: 14px;
-  background: #fafafa;
-  color: var(--ink);
-  font-size: 13px;
-  font-weight: 900;
+  font-weight: 600;
+  color: var(--muted-2);
   text-transform: uppercase;
-  border-bottom: 1px solid var(--stroke);
+  letter-spacing: .08em;
 }
 
-.table td {
-  padding: 14px;
+.section .cnt{
+  padding: 8px 18px 18px;
+}
+
+/* ==============================
+   FILTROS (GRID ORDENADO)
+============================== */
+
+/* Grid similar a un mini wizard */
+.flex{
+  display: grid;
+  grid-template-columns: 2.3fr 1.1fr 1.1fr 1fr 1fr 1fr;
+  gap: 10px 12px;
+  align-items: end;
+}
+
+/* Buscador ancho */
+.flex > input[type="text"]{
+  grid-column: 1 / span 3;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--brand);
   font-size: 14px;
-  border-bottom: 1px solid var(--stroke);
+  color: var(--ink);
+  background:#fff;
+  box-shadow: 0 7px 16px rgba(0,0,0,.04);
 }
 
-.table tbody tr:hover {
-  background: #fff6f7;
-}
-
-/* =====================================================
-   🟡 Estatus (badges redondos)
-===================================================== */
-.status {
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-weight: 800;
-  font-size: 12px;
-  display: inline-block;
-  border: 1px solid;
-}
-
-.status-reservada {
-  background: #fff7e6;
-  border-color: #fcd34d;
-  color: #b45309;
-}
-
-.status-pendiente {
-  background: #fef9c3;
-  border-color: #facc15;
-  color: #92400e;
-}
-
-.status-contrato {
-  background: #e0f2fe;
-  border-color: #7dd3fc;
-  color: #0369a1;
-}
-
-.status-finalizada {
-  background: #dcfce7;
-  border-color: #86efac;
-  color: #15803d;
-}
-
-.status-cancelada {
-  background: #fee2e2;
-  border-color: #fca5a5;
-  color: #b91c1c;
-}
-
-/* =====================================================
-   ⏭️ Paginación
-===================================================== */
-.pager {
+/* Labels (Desde / Hasta) */
+.flex label{
   display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: flex-end;
-  margin-top: 16px;
+  flex-direction: column;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted-2);
 }
 
-.pager button {
-  padding: 8px 12px;
-  background: #fff;
-  border: 1px solid var(--stroke);
-  border-radius: var(--radius-md);
-  font-weight: 800;
+/* Desde / Hasta en misma fila que buscador */
+.flex > label:nth-child(2){ /* Desde */
+  grid-column: 4 / span 1;
+}
+.flex > label:nth-child(3){ /* Hasta */
+  grid-column: 5 / span 1;
+}
+
+/* Campos tipo calendario (match home/Contrato) */
+.flex input[type="date"]{
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  border: 1.8px solid var(--stroke);
+  font-size: 13px;
+  color: var(--ink);
+  background:#fff;
+  box-shadow: 0 6px 14px rgba(15,23,42,.06);
+  outline:none;
+  appearance:none;
+}
+
+/* Selects en segunda fila */
+#fstatus{   grid-column: 1 / span 1; }
+#fpago{     grid-column: 2 / span 1; }
+#fsucursal{ grid-column: 3 / span 1; }
+#fvehiculo{ grid-column: 4 / span 1; }
+
+.flex select{
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  border: 1.8px solid var(--stroke);
+  font-size: 13px;
+  color: var(--ink);
+  background:#fff;
+  box-shadow: 0 6px 14px rgba(15,23,42,.06);
+  outline:none;
+  appearance:none;
+}
+
+/* Focus tipo flatpickr/home */
+.flex input[type="date"]:focus,
+.flex select:focus{
+  border-color: var(--brand);
+  box-shadow:
+    0 0 0 1px rgba(255,30,45,.18),
+    0 10px 20px rgba(15,23,42,.10);
+}
+
+/* Botones a la derecha */
+#btnFiltrar{
+  grid-column: 5 / span 1;
+  justify-self: end;
+}
+#btnClear{
+  grid-column: 6 / span 1;
+  justify-self: start;
+}
+
+/* ==============================
+   BOTONES (mismo estilo Contrato)
+============================== */
+
+.btn{
+  border-radius: var(--radius-pill);
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
+  border: 2px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .15s, color .15s, border-color .15s,
+              box-shadow .15s, transform .05s;
 }
 
-.pager button:hover {
-  background: #f1f3f5;
+.btn.primary{
+  background:#fff;
+  color: var(--ink);
+  border-color: var(--brand);
+  box-shadow: 0 10px 22px rgba(255,30,45,.15);
 }
 
-.badge {
-  padding: 8px 12px;
-  background: #f9fafb;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--stroke);
-  font-weight: 800;
-  font-size: 12px;
+.btn.primary:hover{
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  color:#fff;
+  transform: translateY(-1px);
+}
+
+.btn.gray{
+  background:#F9FAFB;
+  color: var(--muted-2);
+  border-color: #E5E7EB;
+}
+
+.btn.gray:hover{
+  background:#E5E7EB;
+}
+
+/* ==============================
+   RESUMEN (CARDS)
+============================== */
+
+.summary{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.summary .card{
+  padding: 12px 14px;
+  border-radius: 18px;
+  border:1px solid var(--stroke-2);
+  background: linear-gradient(135deg,#ffffff,#F9FAFB);
+  box-shadow: var(--shadow-xs);
+}
+
+.summary .card .t{
+  font-size: 11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
   color: var(--muted);
 }
 
-/* =====================================================
-   📱 Responsive
-===================================================== */
-@media (max-width: 960px) {
-  .summary {
-    grid-template-columns: repeat(2, 1fr);
+.summary .card .v{
+  margin-top: 4px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ==============================
+   TABLA (banda roja tipo bookings)
+============================== */
+
+.table-wrap{
+  width:100%;
+  overflow:auto;
+  margin-top: 4px;
+  border-radius: 0 0 18px 18px;
+}
+
+.table{
+  width:100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 900px;
+}
+
+/* encabezado rojo */
+.table thead{
+  background: var(--brand);
+  color:#fff;
+}
+
+.table thead th{
+  padding: 9px 10px;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  text-align:left;
+  white-space: nowrap;
+}
+
+/* cuerpo */
+.table tbody td{
+  padding: 9px 10px;
+  border-top:1px solid #F3F4F6;
+  color: #111827;
+}
+
+.table tbody tr:nth-child(even){
+  background:#F9FAFB;
+}
+
+.table tbody tr:hover{
+  background:#F3F4FF;
+}
+
+/* columna acciones */
+.table tbody td:last-child{
+  text-align: right;
+}
+
+/* ==============================
+   PAGINADOR
+============================== */
+
+.pager{
+  margin-top: 10px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--muted-2);
+}
+
+.pager .badge{
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background:#FFF1F2;
+  border:1px solid rgba(248,113,113,.35);
+  font-weight:600;
+}
+
+.pager button{
+  min-width: 30px;
+  min-height: 30px;
+  border-radius:50%;
+  border:1px solid var(--stroke);
+  background:#fff;
+  cursor:pointer;
+  font-size:16px;
+  box-shadow:0 4px 10px rgba(15,23,42,.08);
+}
+
+.pager button:hover{
+  background:#F3F4F6;
+}
+
+.pager select{
+  min-height: 30px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  border:1px solid var(--stroke);
+  font-size: 13px;
+}
+
+/* ==============================
+   RESPONSIVE
+============================== */
+
+@media (max-width: 960px){
+  .main{
+    padding:18px 14px 32px;
+  }
+
+  /* filtros en columna en móvil */
+  .flex{
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .flex > *{
+    width:100%;
+  }
+
+  #btnFiltrar,
+  #btnClear{
+    justify-self:stretch;
+  }
+
+  .table{
+    min-width: 760px;
   }
 }
 
-@media (max-width: 600px) {
-  .summary {
-    grid-template-columns: 1fr;
+/* ============================================
+   DETALLES EXPANDIDOS (panel que ya tenías)
+============================================ */
+
+.panel{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap:22px;
+  background:#fff;
+  padding:26px;
+  border:1px solid var(--stroke);
+  border-radius:18px;
+  box-shadow:var(--shadow-sm);
+  margin-top:-2px;
+}
+
+.box{
+  background:#fff;
+  border-radius:16px;
+  padding:14px 10px;
+  border-left:4px solid var(--brand);
+  box-shadow:var(--shadow-xs);
+}
+
+.box h3{
+  margin:0 0 6px 0;
+  font-size:15px;
+  font-weight:900;
+  color:var(--ink);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.box p{
+  margin:4px 0;
+  color:var(--muted-2);
+  font-size:14px;
+}
+
+.box.total{
+  border-left:4px solid var(--ok);
+}
+
+.box.total .big{
+  font-size:22px;
+  font-weight:900;
+  color:var(--ink);
+}
+
+.status-tag{
+  padding:6px 12px;
+  font-size:12px;
+  border-radius:12px;
+  font-weight:800;
+  text-transform:uppercase;
+  display:inline-block;
+}
+
+.status-pendiente{ background:#FFF7E6; color:#B45309; border:1px solid #FCD34D; }
+.status-abierto{ background:#E0F2FE; color:#0369A1; border:1px solid #7DD3FC; }
+.status-cerrado{ background:#DCFCE7; color:#15803D; border:1px solid #86EFAC; }
+.status-cancelado{ background:#FEE2E2; color:#B91C1C; border:1px solid #FCA5A5; }
+
+@media(max-width:760px){
+  .panel{
+    grid-template-columns:1fr;
   }
 }
