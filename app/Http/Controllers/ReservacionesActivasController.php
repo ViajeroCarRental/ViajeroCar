@@ -13,6 +13,11 @@ class ReservacionesActivasController extends Controller
     public function index(Request $request)
     {
         try {
+            // 🔹 Tomamos los filtros del request
+            $sucursal = $request->input('sucursal');
+            $codigo   = trim($request->input('codigo')); // 🔴 filtro exclusivo para código
+            $search   = trim($request->input('q'));      // 🔵 filtro para nombre o correo
+
             $reservaciones = DB::table('reservaciones as r')
                 ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
                 ->select(
@@ -28,21 +33,27 @@ class ReservacionesActivasController extends Controller
                     'r.fecha_fin',
                     'r.total',
                     'r.sucursal_retiro',
-                    'r.no_vuelo',              // 👈 NUEVO: número de vuelo
+                    'r.no_vuelo',              // número de vuelo
                     'c.codigo as categoria'    // C, D, E, H, etc.
                 )
                 // solo activas
                 ->whereNotIn('r.estado', ['cancelada', 'expirada'])
 
                 // 🔽 Filtro opcional por sucursal_retiro (Aeropuerto / Central / Central Park)
-                ->when($request->filled('sucursal'), function ($q) use ($request) {
-                    $q->where('r.sucursal_retiro', $request->sucursal);
+                ->when($sucursal, function ($q, $sucursal) {
+                    $q->where('r.sucursal_retiro', $sucursal);
                 })
 
-                // 🔎 (Opcional) Filtro por texto q en nombre o correo
-                ->when($request->filled('q'), function ($qBuilder) use ($request) {
-                    $term = '%' . $request->q . '%';
-                    $qBuilder->where(function ($sub) use ($term) {
+                // 🟥 1) FILTRO INDEPENDIENTE POR CÓDIGO (coincidencia desde el inicio)
+                ->when($codigo, function ($q, $codigo) {
+                    $q->where('r.codigo', 'LIKE', $codigo . '%');
+                })
+
+                // 🟦 2) FILTRO INDEPENDIENTE POR NOMBRE O CORREO (desde el inicio)
+                ->when($search, function ($q, $search) {
+                    $term = $search . '%';
+
+                    $q->where(function ($sub) use ($term) {
                         $sub->where('r.nombre_cliente', 'LIKE', $term)
                             ->orWhere('r.email_cliente', 'LIKE', $term);
                     });
@@ -53,7 +64,7 @@ class ReservacionesActivasController extends Controller
 
             return view('Admin.ReservacionesActivas', [
                 'reservaciones'        => $reservaciones,
-                'sucursalSeleccionada' => $request->sucursal,
+                'sucursalSeleccionada' => $sucursal,
             ]);
 
         } catch (\Throwable $e) {
@@ -83,9 +94,9 @@ class ReservacionesActivasController extends Controller
                     'r.metodo_pago',
                     'r.total',
                     'r.tarifa_modificada',
-                    'r.no_vuelo',                              
+                    'r.no_vuelo',
                     DB::raw('DATEDIFF(r.fecha_fin, r.fecha_inicio) as dias'),
-                    'c.codigo as categoria'  
+                    'c.codigo as categoria'
                 )
                 ->where('r.codigo', $codigo)
                 ->first();
