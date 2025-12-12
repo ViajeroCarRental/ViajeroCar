@@ -300,7 +300,7 @@ Route::post('/admin/mantenimiento/{id}/registrar', [MantenimientoController::cla
 
 // Rutas de poliza
 Route::get('/admin/polizas', [PolizasController::class, 'index'])->name('rutaPolizas');
-Route::get('/admin/polizas/descargar/{archivo}', [PolizasController::class, 'descargar'])->name('descargarPoliza');
+
 
 Route::post('/admin/polizas/actualizar/{id}', [PolizasController::class, 'actualizar'])->name('actualizarPoliza');
 Route::post('/admin/polizas/subir/{id}', [PolizasController::class, 'guardarArchivo'])->name('guardarArchivoPoliza');
