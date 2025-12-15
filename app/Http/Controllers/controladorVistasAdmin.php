@@ -113,6 +113,6 @@ class controladorVistasAdmin extends Controller
 
     public function Facturar()
     {
-        return view('Admin.Facturar');
+        return view('Admin.facturar');
     }
 }

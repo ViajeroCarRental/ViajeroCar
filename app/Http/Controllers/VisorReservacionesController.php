@@ -10,7 +10,7 @@ class VisorReservacionesController extends Controller
 {
     public function index()
     {
-        return view('Ventas.VisorReservaciones');
+        return view('Ventas.visorReservaciones');
     }
 
     // 📌 API para obtener reservaciones filtradas + paginación
