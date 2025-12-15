@@ -10,7 +10,7 @@ class controladorVistasAdmin extends Controller
     // Dashboard
     public function dashboard()
     {
-        return view('Admin.dashboard');
+        return view('Admin.Dashboard');
     }
 
     public function mantenimiento()
