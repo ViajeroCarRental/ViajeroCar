@@ -290,6 +290,6 @@ class LoginController extends Controller
             return redirect()->route('rutaHome')->withErrors(['error' => 'No tienes permiso para acceder al panel.']);
         }
 
-        return view('Admin.dashboard');
+        return view('Admin.Dashboard');
     }
 }
