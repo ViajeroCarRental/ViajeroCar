@@ -42,7 +42,7 @@ Route::get('/catalogo', [CatalogoController::class, 'index'])->name('rutaCatalog
 Route::get('/reservaciones',[ReservacionesController::class,'reservaciones'])->name('rutaReservaciones');
 //ruta Vista Contacto
 Route::get('/contacto',[ControladorVistas::class,'contacto'])->name('rutaContacto');
-//ruta Vista Politicas
+//ruta Vista Politicasf
 Route::get('/politicas',[ControladorVistas::class,'politicas'])->name('rutaPoliticas');
 //ruta Vista FAQ
 Route::get('/faq',[ControladorVistas::class,'faq'])->name('rutaFAQ');
@@ -275,7 +275,7 @@ Route::get('/admin/licencia', [App\Http\Controllers\controladorVistasAdmin::clas
 //RFC
 Route::get('/admin/rfc', [App\Http\Controllers\controladorVistasAdmin::class, 'RFC_Fiscal'])->name('rutaRFC');
 //facturar
-Route::get('/admin/facturar', [App\Http\Controllers\controladorVistasAdmin::class, 'facturar'])->name('rutaFacturar');
+Route::get('/admin/facturar', [App\Http\Controllers\controladorVistasAdmin::class, 'Facturar'])->name('rutaFacturar');
 
 
 

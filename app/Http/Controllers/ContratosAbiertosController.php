@@ -11,7 +11,7 @@ class ContratosAbiertosController extends Controller
 {
     public function index()
     {
-        return view('admin.AdministracionReservas');
+        return view('Admin.AdministracionReservas');
     }
 
     public function api(Request $req)
