@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.Admin')
 
 @section('css-vistaRoles')
 <link rel="stylesheet" href="{{ asset('css/roles.css') }}">
