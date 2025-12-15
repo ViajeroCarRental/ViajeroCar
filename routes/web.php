@@ -244,9 +244,7 @@ Route::get('/admin/contrato/{id_reservacion}/resumen',[ContratoController::class
 Route::get('/admin/contrato-final', [App\Http\Controllers\ContratoFinalController::class, 'mostrarContratoFinal'])->name('admin.contratoFinal');
 Route::post('/admin/contrato/{id}/editar-tarifa', [ContratoController::class, 'editarTarifa']);
 Route::post('/admin/contrato/{id}/editar-cortesia', [ContratoController::class, 'editarCortesia']);
-Route::post('/admin/contrato/{id}/finalizar',
-    [ContratoController::class, 'finalizar']
-)->name('contrato.finalizar');
+Route::post('/admin/contrato/{id}/finalizar',[ContratoController::class, 'finalizar'])->name('contrato.finalizar');
 
 Route::get('/admin/contrato-final/{id}',
     [App\Http\Controllers\ContratoFinalController::class, 'mostrarContratoFinal']
@@ -505,5 +503,5 @@ Route::get('/api/contratos-abiertos', [ContratosAbiertosController::class, 'api'
 //suta consultar saldo pendiente
 Route::get('/admin/contrato/{id}/saldo', [ContratosAbiertosController::class, 'saldo']);
 
-Route::post('/admin/contrato/{id}/finalizar', [ContratosAbiertosController::class, 'finalizarContrato']);
+Route::post('/admin/contrato/{id}/cerrar', [ContratosAbiertosController::class, 'finalizarContrato']);
 
