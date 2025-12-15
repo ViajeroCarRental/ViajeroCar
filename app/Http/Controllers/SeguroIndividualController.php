@@ -9,7 +9,7 @@ class SeguroIndividualController extends Controller
 {
     public function index()
     {
-        return view('admin.paquetesindividuales');
+        return view('Admin.paquetesindividuales');
     }
 
     public function list()
