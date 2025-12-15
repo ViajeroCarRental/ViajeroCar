@@ -132,7 +132,7 @@ $dias = $dias + 1;
     // ============================
     // 8️⃣ Enviar datos a la vista
     // ============================
-    return view('admin.ContratoFinal', [
+    return view('Admin.ContratoFinal', [
         'contrato'     => $contrato,
         'reservacion'  => $reservacion,
         'licencia'     => $licencia,
