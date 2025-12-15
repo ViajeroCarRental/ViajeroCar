@@ -285,7 +285,7 @@ document.addEventListener("DOMContentLoaded", () => {
             textoOK: "Finalizar",
             onOK: async () => {
     try {
-        const resp = await fetch(`/admin/contrato/${idContrato}/finalizar`, {
+        const resp = await fetch(`/admin/contrato/${idContrato}/cerrar`, {
             method: "POST",
             headers: {
                 "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
