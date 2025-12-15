@@ -78,7 +78,7 @@ class controladorVistasAdmin extends Controller
 
     public function visorReservaciones()
     {
-        return view('Admin.VisorReservaciones');
+        return view('Admin.visorReservaciones');
     }
 
     public function administracionReservaciones()
