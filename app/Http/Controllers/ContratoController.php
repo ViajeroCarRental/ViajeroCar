@@ -585,15 +585,38 @@ public function guardarDocumentacion(Request $request)
             // Conductor adicional (si aplica)
             'id_conductor' => 'nullable|integer|exists:contrato_conductor_adicional,id_conductor',
 
-            // Archivos
-            'idFrente' => 'nullable|file|mimes:jpg,jpeg,png|max:20480',
-            'idReverso' => 'nullable|file|mimes:jpg,jpeg,png|max:20480',
-            'licFrente' => 'nullable|file|mimes:jpg,jpeg,png|max:20480',
-            'licReverso' => 'nullable|file|mimes:jpg,jpeg,png|max:20480',
+            // Archivos (MULTIPLATAFORMA)
+            'idFrente'  => 'nullable|file|max:20480',
+            'idReverso' => 'nullable|file|max:20480',
+            'licFrente' => 'nullable|file|max:20480',
+            'licReverso'=> 'nullable|file|max:20480',
+
         ]);
 
         $idContrato   = $data['id_contrato'];
         $idConductor  = $data['id_conductor'] ?? null;
+        // ============================
+// 1.1 VALIDACIÓN REAL DE ARCHIVOS (MULTIPLATAFORMA)
+// ============================
+$archivos = [
+    'idFrente'  => $request->file('idFrente'),
+    'idReverso' => $request->file('idReverso'),
+    'licFrente' => $request->file('licFrente'),
+    'licReverso'=> $request->file('licReverso'),
+];
+
+foreach ($archivos as $campo => $file) {
+    if ($file) {
+        $mime = $file->getMimeType();
+
+        if (!str_starts_with($mime, 'image/')) {
+            throw ValidationException::withMessages([
+                $campo => "Tipo de archivo no permitido: $mime"
+            ]);
+        }
+    }
+}
+
 
 
         // ============================
