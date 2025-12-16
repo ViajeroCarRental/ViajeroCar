@@ -1275,7 +1275,10 @@ function recalcularTotalProtecciones() {
 }
 
   totalSeguros.textContent = `$${total.toFixed(2)} MXN`;
-  btnContinuarPaso3.disabled = total <= 0;
+// ✅ Permitir avanzar aunque el total sea $0, mientras haya al menos 1 seguro seleccionado
+const haySeguroSeleccionado = !!document.querySelector(".switch.on, .switch-individual.on");
+btnContinuarPaso3.disabled = !haySeguroSeleccionado;
+
 }
 
 /* Helpers para limpiar UI */
