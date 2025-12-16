@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
+
 
 class ContratoController extends Controller
 {
@@ -733,14 +735,28 @@ public function guardarDocumentacion(Request $request)
         ]);
 
 
+    }     catch (ValidationException $e) {
+
+        return response()->json([
+            'error' => 'Error de validación',
+            'detalles' => $e->errors(),
+            'files' => collect($request->files)->map(fn($f) => [
+                'nombre' => $f->getClientOriginalName(),
+                'mime'   => $f->getMimeType(),
+                'tamano' => $f->getSize(),
+            ]),
+        ], 422);
+
     } catch (\Throwable $e) {
 
         Log::error("ERROR guardarDocumentacion: ".$e->getMessage());
 
         return response()->json([
-            'error' => 'Error interno al guardar documentación.'
+            'error'   => 'Error interno al guardar documentación.',
+            'detalle' => $e->getMessage(),
         ], 500);
     }
+
 }
 
 public function obtenerDocumentacion($idContrato)

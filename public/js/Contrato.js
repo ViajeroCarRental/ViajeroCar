@@ -2359,7 +2359,27 @@ docsCargadosActual = true; // ← ESTA ES LA LÍNEA CLAVE
         body: formData
       });
 
-      const data = await resp.json();
+      const rawText = await resp.text();
+console.log("📥 Respuesta cruda servidor:", rawText);
+
+let data;
+try {
+  data = JSON.parse(rawText);
+} catch (e) {
+  alertify.error(
+    "❌ Error del servidor (respuesta no JSON):\n" + rawText
+  );
+  throw new Error("Respuesta no JSON");
+}
+
+if (!resp.ok || data.error) {
+  alertify.error(
+    "❌ Error al subir documentación:\n" +
+    (data.error || data.message || "Error desconocido")
+  );
+  throw new Error(data.error || "Error backend");
+}
+
       console.log("📡 Respuesta servidor:", data);
 
       if (data.warning) {
