@@ -1282,7 +1282,7 @@ public function solicitarCambioFecha(Request $request)
            📧 Enviar correo al superadministrador
         ========================================================== */
 
-        $superadminEmail = "mariobernal10ba@gmail.com"; // <-- cámbialo
+        $superadminEmail = "administrador@viajerocarental.com"; // <-- cámbialo
 
         $linkAprobar  = url("/admin/contrato/cambio-fecha/aprobar/{$token}");
         $linkRechazar = url("/admin/contrato/cambio-fecha/rechazar/{$token}");
