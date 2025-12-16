@@ -891,3 +891,38 @@ label {
     font-size: 16px;
   }
 }
+/* ================================
+   ✅ SCROLL en modal de Protecciones
+================================ */
+
+/* Tu modal ya tiene max-height, pero la caja estaba cortando todo */
+#proteccionPop .box{
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;      /* ya lo tenías, lo reafirmamos */
+  overflow: hidden;      /* ok: que el scroll sea SOLO del contenido interno */
+}
+/* Header y footer fijos */
+#proteccionPop .box > header,
+#proteccionPop .box > footer{
+  flex: 0 0 auto;
+}
+
+/* Aquí va el scroll real */
+#proteccionPop #proteList{
+  flex: 1 1 auto;
+  overflow-y: auto;
+  max-height: calc(90vh - 120px); /* ajusta si tu header/footer cambian */
+  padding: 16px;
+
+  /* mejora touch/scroll */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Opcional: scrollbar más bonita SOLO dentro del listado */
+#proteccionPop #proteList::-webkit-scrollbar{ width: 10px; }
+#proteccionPop #proteList::-webkit-scrollbar-thumb{
+  background: #dfe3ea;
+  border-radius: 999px;
+}
