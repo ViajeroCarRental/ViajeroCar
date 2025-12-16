@@ -2319,6 +2319,47 @@ docsCargadosActual = true; // ← ESTA ES LA LÍNEA CLAVE
 
   cargarDocumentacionInicial();
 
+
+  // ==========================================================
+// 🗜️ COMPRESIÓN DE IMÁGENES (iOS / Android / Desktop)
+// ==========================================================
+async function comprimirImagen(file, maxWidth = 1400, quality = 0.7) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.src = e.target.result;
+    };
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const scale = Math.min(maxWidth / img.width, 1);
+
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(
+        (blob) => {
+          resolve(
+            new File([blob], file.name.replace(/\.\w+$/, ".jpg"), {
+              type: "image/jpeg"
+            })
+          );
+        },
+        "image/jpeg",
+        quality
+      );
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+
   // ==========================================================
   // 📨 SUBMIT DEL FORMULARIO
   // ==========================================================
@@ -2349,6 +2390,25 @@ docsCargadosActual = true; // ← ESTA ES LA LÍNEA CLAVE
     // 🔧 ADICIÓN NECESARIA → Asegurar que SIEMPRE se envía id_contrato
     // ==========================================================
     formData.set("id_contrato", ID_CONTRATO);
+
+    // ==========================================================
+// 🗜️ COMPRESIÓN REAL ANTES DE ENVIAR (EVITA 413 EN RAILWAY)
+// ==========================================================
+const camposImagen = ["idFrente", "idReverso", "licFrente", "licReverso"];
+
+for (const campo of camposImagen) {
+  const input = formDoc.querySelector(`[name="${campo}"]`);
+
+  if (input && input.files && input.files[0]) {
+    const original = input.files[0];
+
+    // Solo comprimir si pesa más de 1MB
+    const comprimida = await comprimirImagen(original);
+formData.set(campo, comprimida);
+
+  }
+}
+
 
     try {
       const resp = await fetch(formDoc.action, {
