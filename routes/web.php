@@ -51,7 +51,7 @@ Route::post('/buscar', [BusquedaController::class, 'buscar'])->name('rutaBuscar'
 Route::get('/catalogo/filtrar', [CatalogoController::class, 'filtrar'])->name('rutaCatalogoFiltrar');
 //contacto form
 Route::post('/contacto', [ContactoController::class, 'store'])->name('contacto.store');
-//busqueda catalogo
+//busqueda catalogoV
 Route::get('/catalogo/resultados', [CatalogoController::class, 'resultados'])->name('rutaCatalogoResultados');
 // Flujo principal de reservaciones (desde HOME)
 
@@ -151,14 +151,26 @@ Route::get('/admin/cotizaciones/limpiar-vencidas', [App\Http\Controllers\Cotizac
 
 
 
-//reservaciones activas
-Route::get('/admin/reservaciones-activas', [ReservacionesActivasController::class, 'index'])->name('rutaReservacionesActivas');
-// Endpoint AJAX: obtener detalles por código (para el modal)
-Route::get('/admin/reservaciones-activas/{codigo}', [ReservacionesActivasController::class, 'show'])->name('rutaDetalleReservacionActiva');
+// ===============================
+// RESERVACIONES ACTIVAS
+// ===============================
 
-// Eliminar reservación activa
-Route::delete('/admin/reservaciones-activas/{id}', [ReservacionesActivasController::class, 'destroy'])
-    ->name('rutaEliminarReservacionActiva');
+// Vista principal
+Route::get('/admin/reservaciones-activas',
+[ReservacionesActivasController::class, 'index'])->name('rutaReservacionesActivas');
+
+// 🔧 ACTUALIZAR + ENVIAR CORREO
+Route::put('/admin/reservaciones-activas/{id}',
+[ReservacionesActivasController::class, 'updateDatos'])->name('rutaUpdateReservacionActiva');
+
+// 🔍 DETALLE (SIEMPRE AL FINAL)
+Route::get('/admin/reservaciones-activas/{codigo}',
+[ReservacionesActivasController::class, 'show'])->name('rutaDetalleReservacionActiva');
+
+// 🗑️ ELIMINAR
+Route::delete('/admin/reservaciones-activas/{id}',
+[ReservacionesActivasController::class, 'destroy'])->name('rutaEliminarReservacionActiva');
+
 
 //contrato id
 Route::get('/admin/contrato/{id}', [App\Http\Controllers\ContratoController::class, 'mostrarContrato'])->name('contrato.mostrar');
