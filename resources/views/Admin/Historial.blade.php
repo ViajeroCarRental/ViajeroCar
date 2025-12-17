@@ -45,9 +45,9 @@
 
           <select id="fsucursal">
             <option value="">Sucursal</option>
-            <option>Centro</option>
-            <option>Aeropuerto</option>
-            <option>Bernardo Quintana</option>
+            <option>Central de autobuses</option>
+            <option>Aeropuerto de Querétaro</option>
+            <option>Central Park</option>
           </select>
 
           <select id="fvehiculo">

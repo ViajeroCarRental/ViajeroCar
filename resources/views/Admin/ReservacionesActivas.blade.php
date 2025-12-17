@@ -134,17 +134,19 @@
           {{-- 11. Total --}}
           <div>${{ number_format($r->total, 2) }} MXN</div>
 
-          {{-- 12. Acciones --}}
+          {{-- 12. Acciones (⋯ abre modal) --}}
           <div class="actions-wrap">
-            <form action="{{ route('rutaEliminarReservacionActiva', $r->id_reservacion) }}"
-                  method="POST" style="display:inline;">
-              @csrf
-              @method('DELETE')
-              <button class="iconbtn danger" type="submit"
-                      onclick="return confirm('¿Seguro que deseas eliminar esta reservación?');">
-                🗑️
-              </button>
-            </form>
+            <button
+              type="button"
+              class="iconbtn more"
+              title="Más acciones"
+              data-open-actions
+              data-id="{{ $r->id_reservacion }}"
+              data-codigo="{{ $r->codigo }}"
+              data-delete-url="{{ route('rutaEliminarReservacionActiva', $r->id_reservacion) }}"
+            >
+              ⋯
+            </button>
           </div>
 
         </div>
@@ -240,6 +242,53 @@
     <div class="actions">
       <button type="button" class="btn gray" id="eCancel">Cancelar</button>
       <button type="button" class="btn primary" id="eSave">Guardar cambios</button>
+    </div>
+  </div>
+</div>
+
+{{-- ============================
+   🪟 MODAL ACCIONES (No Show / Cancelar / Eliminar)
+============================= --}}
+<div class="pop" id="modalActions" aria-hidden="true">
+  <div class="box box-sm">
+    <header>
+      <div>
+        <div id="aTitle">Acciones</div>
+        <span>Booking: <b id="aCodigo">—</b></span>
+      </div>
+      <button type="button" id="aClose">&times;</button>
+    </header>
+
+    <div class="cnt">
+      <p class="muted" style="margin:0 0 10px;">
+        Elige qué deseas hacer con esta reservación.
+      </p>
+
+      <div class="actions-grid">
+        <button type="button" class="btn warn" id="aNoShow">
+          No Show
+        </button>
+
+        <button type="button" class="btn gray" id="aCancelar">
+          Cancelar
+        </button>
+
+        {{-- ✅ Eliminar (ya existe en tu sistema) --}}
+        <form id="aDeleteForm" method="POST">
+          @csrf
+          @method('DELETE')
+          <button type="submit" class="btn danger" id="aEliminar">
+            Eliminar
+          </button>
+        </form>
+      </div>
+
+      {{-- hidden: id actual (para historial en el siguiente paso) --}}
+      <input type="hidden" id="aIdReservacion" value="">
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn gray" id="aCancel">Cerrar</button>
     </div>
   </div>
 </div>

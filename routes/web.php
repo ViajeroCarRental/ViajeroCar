@@ -526,3 +526,9 @@ Route::get('/admin/contrato/{id}/saldo', [ContratosAbiertosController::class, 's
 
 Route::post('/admin/contrato/{id}/cerrar', [ContratosAbiertosController::class, 'finalizarContrato']);
 
+// Acciones desde el modal (No Show / Cancelar)
+Route::post('/admin/reservaciones-activas/{id}/no-show', [ReservacionesActivasController::class, 'noShow'])
+  ->name('reservaciones_activas.no_show');
+
+Route::post('/admin/reservaciones-activas/{id}/cancelar', [ReservacionesActivasController::class, 'cancelar'])
+  ->name('reservaciones_activas.cancelar');
