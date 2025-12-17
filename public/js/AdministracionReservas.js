@@ -69,116 +69,124 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-document.addEventListener("click", async (e) => {
-    if (!e.target.classList.contains("btnToggle")) return;
 
-    const btn = e.target;
-    const id = btn.dataset.id;
-    const tr = btn.closest("tr");
+    // ============================================================
+    // Expandir detalles del contrato
+    // ============================================================
+    document.addEventListener("click", async (e) => {
+        if (!e.target.classList.contains("btnToggle")) return;
 
-    const nextRow = tr.nextElementSibling;
-    if (nextRow && nextRow.classList.contains("detail")) {
-        nextRow.remove();
-        btn.textContent = "+";
-        return;
-    }
+        const btn = e.target;
+        const id = btn.dataset.id;
+        const tr = btn.closest("tr");
 
-    try {
+        const nextRow = tr.nextElementSibling;
+        if (nextRow && nextRow.classList.contains("detail")) {
+            nextRow.remove();
+            btn.textContent = "+";
+            return;
+        }
 
-        const res = await fetch(`/api/contratos-abiertos/${id}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-console.log("Respuesta fetch:", res);
-        const json = await res.json();
-        if (!json.ok) throw new Error("Respuesta ok = false");
+        try {
 
-        const d = json.data;
+            const res = await fetch(`/api/contratos-abiertos/${id}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const json = await res.json();
+            if (!json.ok) throw new Error("Respuesta ok = false");
 
-        const row = document.createElement("tr");
-        row.classList.add("detail");
+            const d = json.data;
 
-        row.innerHTML = `
-            <td colspan="9">
-                <div class="card">
+            const row = document.createElement("tr");
+            row.classList.add("detail");
 
-                    <div class="card-hd">
-                        <div class="card-title">Reserva · ${d.clave}</div>
-                        <div class="card-meta">
-                            <span class="badge st-pend">${d.estado}</span>
-                            <span class="badge">Web</span>
-                        </div>
-                    </div>
+            row.innerHTML = `
+                <td colspan="9">
+                    <div class="card">
 
-                    <div class="card-bd">
-                        <div class="block">
-                            <div class="kv">
-                                <div class="k">Contacto</div>
-                                <div class="v">${d.pais ?? ""} · ${d.telefono ?? ""}</div>
-                            </div>
-
-                            <div class="kv">
-                                <div class="k">Vehículo</div>
-                                <div class="v">${d.categoria ?? ""} · ${d.marca ?? ""} ${d.modelo ?? ""}</div>
-                            </div>
-
-                            <div class="kv">
-                                <div class="k">Adicionales</div>
-                                <div class="v">${d.adicionales ?? "—"}</div>
+                        <div class="card-hd">
+                            <div class="card-title">Reserva · ${d.clave}</div>
+                            <div class="card-meta">
+                                <span class="badge st-pend">${d.estado}</span>
+                                <span class="badge">Web</span>
                             </div>
                         </div>
 
-                        <div class="timeline">
-                            <div class="tl-item">
-                                <div class="tl-dot"></div>
-                                <div class="tl-body">
-                                    <div class="tl-title">Entrega</div>
-                                    <div class="tl-sub">
-                                        ${d.entrega_lugar}<br>
-                                        ${d.entrega_fecha} · ${d.entrega_hora} HRS
-                                    </div>
+                        <div class="card-bd">
+                            <div class="block">
+                                <div class="kv">
+                                    <div class="k">Contacto</div>
+                                    <div class="v">${d.pais ?? ""} · ${d.telefono ?? ""}</div>
+                                </div>
+
+                                <div class="kv">
+                                    <div class="k">Vehículo</div>
+                                    <div class="v">${d.categoria ?? ""} · ${d.marca ?? ""} ${d.modelo ?? ""}</div>
+                                </div>
+
+                                <div class="kv">
+                                    <div class="k">Adicionales</div>
+                                    <div class="v">${d.adicionales ?? "—"}</div>
                                 </div>
                             </div>
 
-                            <div class="tl-item">
-                                <div class="tl-dot" style="background:#0EA5E9"></div>
-                                <div class="tl-body">
-                                    <div class="tl-title">Devolución</div>
-                                    <div class="tl-sub">
-                                        ${d.dev_lugar}<br>
-                                        ${d.dev_fecha} · ${d.dev_hora} HRS
+                            <div class="timeline">
+                                <div class="tl-item">
+                                    <div class="tl-dot"></div>
+                                    <div class="tl-body">
+                                        <div class="tl-title">Entrega</div>
+                                        <div class="tl-sub">
+                                            ${d.entrega_lugar}<br>
+                                            ${d.entrega_fecha} · ${d.entrega_hora} HRS
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tl-item">
+                                    <div class="tl-dot" style="background:#0EA5E9"></div>
+                                    <div class="tl-body">
+                                        <div class="tl-title">Devolución</div>
+                                        <div class="tl-sub">
+                                            ${d.dev_lugar}<br>
+                                            ${d.dev_fecha} · ${d.dev_hora} HRS
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="card-ft">
-                        <div class="total">
-                            <img src="/img/wallet.svg" style="width:18px">
-                            $${Number(d.total ?? 0).toFixed(2)}
-                            <small>· ${d.metodo_pago ?? "N/A"}</small>
+                        <div class="card-ft">
+                            <div class="total">
+                                <img src="/img/wallet.svg" style="width:18px">
+                                $${Number(d.total ?? 0).toFixed(2)}
+                                <small>· ${d.metodo_pago ?? "N/A"}</small>
+                            </div>
+
+                            <div style="display:flex; gap:10px;">
+                                <button class="btn b-primary btnEditarContrato"
+                                    data-id="${d.id_contrato}">
+                                    EDITAR
+                                </button>
+
+                                <button class="btn b-red btnFinalizarContrato"
+                                    data-id="${d.id_contrato}">
+                                    FINALIZAR
+                                </button>
+                            </div>
                         </div>
 
-                        <div style="display:flex; gap:10px;">
-                            <button class="btn b-primary btnEditarContrato"
-        data-id="${d.id_contrato}">
-    EDITAR
-</button>
-
-                            <button class="btn b-red">FINALIZAR</button>
-                        </div>
                     </div>
+                </td>
+            `;
 
-                </div>
-            </td>
-        `;
+            tr.insertAdjacentElement("afterend", row);
+            btn.textContent = "−";
 
-        tr.insertAdjacentElement("afterend", row);
-        btn.textContent = "−";
-    } catch (err) {
-        console.error("❌ Error al cargar detalle:", err);
-        alert("Error al cargar los detalles del contrato");
-    }
-});
+        } catch (err) {
+            console.error("❌ Error al cargar detalle:", err);
+            alert("Error al cargar los detalles del contrato");
+        }
+    });
+
 
 
 
@@ -214,12 +222,143 @@ console.log("Respuesta fetch:", res);
     // Inicial
     loadData();
 
-    document.addEventListener("click", (e) => {
-    if (e.target.classList.contains("btnEditarContrato")) {
-        const idContrato = e.target.dataset.id;
-        window.location.href = `/admin/contrato/${idContrato}`;
-    }
-});
 
+
+
+
+    // ============================================================
+    // Botón EDITAR
+    // ============================================================
+    document.addEventListener("click", (e) => {
+        if (e.target.classList.contains("btnEditarContrato")) {
+            const idContrato = e.target.dataset.id;
+            window.location.href = `/admin/contrato/${idContrato}`;
+        }
+    });
+
+
+
+
+
+
+    // ============================================================
+    // Botón FINALIZAR
+    // ============================================================
+    document.addEventListener("click", async (e) => {
+        if (!e.target.classList.contains("btnFinalizarContrato")) return;
+
+        const idContrato = e.target.dataset.id;
+
+        // 1) Consultar saldo pendiente
+        const resp = await fetch(`/admin/contrato/${idContrato}/saldo`);
+        const json = await resp.json();
+
+        if (!json.ok) {
+            alertify.error("Error consultando saldo.");
+            return;
+        }
+
+        const saldo = json.saldo;
+
+        // Si hay saldo pendiente → mostrar alerta
+        if (saldo > 0) {
+            mostrarModalFinalizar({
+                titulo: "Pago pendiente",
+                mensaje: `Este contrato tiene un saldo pendiente de <b>$${saldo.toFixed(2)}</b>.<br><br>
+                          Debes liquidarlo antes de finalizar.`,
+                textoOK: "Ir a pagar",
+                onOK: () => window.location.href = `/admin/contrato/${idContrato}`,
+            });
+            return;
+        }
+
+        // Si NO hay saldo pendiente → confirmar cierre
+        mostrarModalFinalizar({
+            titulo: "Finalizar contrato",
+            mensaje: `
+                ¿Deseas finalizar el contrato?<br><br>
+                Esto generará:<br>
+                • Ticket PDF<br>
+                • PDF de pagos<br>
+                • Enviado por correo al cliente.
+            `,
+            textoOK: "Finalizar",
+            onOK: async () => {
+    try {
+        const resp = await fetch(`/admin/contrato/${idContrato}/cerrar`, {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                "Content-Type": "application/json"
+            }
+        });
+
+        const json = await resp.json();
+
+        if (!json.ok) {
+            alertify.error(json.msg || "Error al finalizar.");
+            return;
+        }
+
+        alertify.success("Contrato finalizado y correo enviado.");
+    } catch (e) {
+        console.error(e);
+        alertify.error("Error al procesar finalización.");
+    }
+}
+
+        });
+    });
+
+
+
+
+
+    // ============================================================
+    // Modal genérico para finalización
+    // ============================================================
+    function mostrarModalFinalizar({ titulo, mensaje, textoOK, onOK }) {
+
+        let modal = document.getElementById("modalFinalizar");
+        if (!modal) {
+            // Crear modal si no existe
+            modal = document.createElement("div");
+            modal.id = "modalFinalizar";
+            modal.className = "modal-fin";
+            modal.style.display = "none";
+            modal.innerHTML = `
+                <div class="modal-fin-box">
+                    <h2 id="mf_titulo"></h2>
+                    <p id="mf_msg"></p>
+
+                    <div class="mf-btns">
+                        <button id="mf_cancel" class="btn gray">Cancelar</button>
+                        <button id="mf_ok" class="btn b-primary">Aceptar</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        const mt = document.getElementById("mf_titulo");
+        const mm = document.getElementById("mf_msg");
+        const ok = document.getElementById("mf_ok");
+        const cancel = document.getElementById("mf_cancel");
+
+        mt.innerHTML = titulo;
+        mm.innerHTML = mensaje;
+        ok.textContent = textoOK;
+
+        modal.style.display = "flex";
+
+        const cerrar = () => modal.style.display = "none";
+
+        cancel.onclick = () => cerrar();
+
+        ok.onclick = () => {
+            cerrar();
+            if (typeof onOK === "function") onOK();
+        };
+    }
 
 });

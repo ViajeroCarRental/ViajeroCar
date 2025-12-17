@@ -12,7 +12,7 @@ class SeguroPaqueteController extends Controller
     // ===========================================
     public function index()
     {
-        return view('admin.paqueteseguros');
+        return view('Admin.paqueteseguros');
 
     }
 

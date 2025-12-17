@@ -9,7 +9,7 @@ class RolesController extends Controller
 {
     public function index()
     {
-        return view('admin.Roles');
+        return view('Admin.Roles');
     }
 
     public function listar()

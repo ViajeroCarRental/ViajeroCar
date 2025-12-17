@@ -10,7 +10,7 @@ class controladorVistasAdmin extends Controller
     // Dashboard
     public function dashboard()
     {
-        return view('Admin.dashboard');
+        return view('Admin.Dashboard');
     }
 
     public function mantenimiento()
@@ -78,7 +78,7 @@ class controladorVistasAdmin extends Controller
 
     public function visorReservaciones()
     {
-        return view('Admin.VisorReservaciones');
+        return view('Admin.visorReservaciones');
     }
 
     public function administracionReservaciones()
@@ -113,6 +113,6 @@ class controladorVistasAdmin extends Controller
 
     public function Facturar()
     {
-        return view('Admin.Facturar');
+        return view('Admin.facturar');
     }
 }

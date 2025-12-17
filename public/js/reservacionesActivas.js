@@ -143,4 +143,106 @@ window.addEventListener("DOMContentLoaded", () => {
     console.log("➡️ Redirigiendo a vista Contrato:", url);
     window.location.href = url;
   });
+  /* ==========================================================
+   ✏️ MODAL EDICIÓN (solo datos permitidos)
+========================================================== */
+function openEditModal() {
+  if (!current) return;
+
+  // Precargar inputs
+  $("#eTitle").textContent = `Editar ${current.codigo || ""}`;
+  $("#eNombre").value = current.nombre_cliente || "";
+  $("#eCorreo").value = current.email_cliente || "";
+  $("#eTelefono").value = current.telefono_cliente || "";
+
+  $("#eFechaInicio").value = current.fecha_inicio || "";
+  $("#eHoraRetiro").value = (current.hora_retiro || "").slice(0, 5);
+
+  $("#eFechaFin").value = current.fecha_fin || "";
+  $("#eHoraEntrega").value = (current.hora_entrega || "").slice(0, 5);
+
+  $("#modalEdit").classList.add("show");
+}
+
+function closeEditModal() {
+  $("#modalEdit").classList.remove("show");
+}
+
+$("#mEdit")?.addEventListener("click", openEditModal);
+$("#eClose")?.addEventListener("click", closeEditModal);
+$("#eCancel")?.addEventListener("click", closeEditModal);
+
+/* ==========================================================
+   💾 GUARDAR CAMBIOS (PUT)
+========================================================== */
+$("#eSave")?.addEventListener("click", async () => {
+  if (!current) return;
+
+  const payload = {
+    nombre_cliente: $("#eNombre").value.trim(),
+    email_cliente: $("#eCorreo").value.trim(),
+    telefono_cliente: $("#eTelefono").value.trim(),
+    fecha_inicio: $("#eFechaInicio").value,
+    hora_retiro: $("#eHoraRetiro").value,
+    fecha_fin: $("#eFechaFin").value,
+    hora_entrega: $("#eHoraEntrega").value
+  };
+
+  if (!payload.nombre_cliente || !payload.email_cliente || !payload.telefono_cliente) {
+    alertify.error("Completa nombre, correo y teléfono");
+return;
+
+  }
+
+  if (!payload.fecha_inicio || !payload.fecha_fin) {
+   alertify.error("Completa fecha de salida y entrega");
+return;
+
+  }
+
+  if (payload.fecha_fin < payload.fecha_inicio) {
+    alertify.warning("La fecha de entrega no puede ser menor que la de salida");
+return;
+
+  }
+
+  try {
+    const res = await fetch(`/admin/reservaciones-activas/${current.id_reservacion}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.message);
+
+    // Actualizar estado local
+    Object.assign(current, payload);
+
+    $("#mCliente").textContent = current.nombre_cliente;
+    $("#mEmail").textContent = current.email_cliente;
+    $("#mNumero").textContent = current.telefono_cliente;
+
+    const salida = `${current.fecha_inicio} ${current.hora_retiro || ""}`;
+    const entrega = `${current.fecha_fin} ${current.hora_entrega || ""}`;
+
+    $("#mSalida").textContent = salida;
+    $("#mEntrega").textContent = entrega;
+
+    alertify.success("Reservación actualizada correctamente");
+    closeEditModal();
+
+  } catch (err) {
+    console.error(err);
+    alertify.error(err.message || "Error al guardar la reservación");
+
+  }
+});
+
+
+
+
 });

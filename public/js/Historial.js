@@ -104,13 +104,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         <td>${pagado !== null ? "$" + pagado.toFixed(2) : "—"}</td>
                         <td>${saldo !== null ? "$" + saldo.toFixed(2) : "—"}</td>
 
-                        <td>
-                            ${
-                                r.tipo === "contrato"
-                                ? `<a href="${tbody.dataset.contratoBase}?folio=${r.folio}" class="btn small">Ver</a>`
-                                : ""
-                            }
-                        </td>
                     `;
 
                     tbody.appendChild(tr);

@@ -188,10 +188,61 @@
       {{-- FOOTER --}}
       <div class="actions">
         <button type="button" class="btn gray" id="mCancel">Cerrar</button>
+        <button type="button" class="btn gray" id="mEdit">Editar</button>
         <button type="button" class="btn primary" id="mGo">Ir a contrato</button>
       </div>
     </div>
   </div>
+
+  {{-- ============================
+     🪟 MODAL EDICIÓN RESERVACIÓN
+============================ --}}
+<div class="pop" id="modalEdit">
+  <div class="box">
+    <header>
+      <div>
+        <div id="eTitle">Editar datos</div>
+        <span>Solo se actualizan datos del cliente y fechas</span>
+      </div>
+      <button type="button" id="eClose">&times;</button>
+    </header>
+
+    <div class="cnt">
+      <div class="kv"><strong>Nombre</strong>
+        <input class="input" id="eNombre" type="text" />
+      </div>
+
+      <div class="kv"><strong>Correo</strong>
+        <input class="input" id="eCorreo" type="email" />
+      </div>
+
+      <div class="kv"><strong>Teléfono</strong>
+        <input class="input" id="eTelefono" type="text" />
+      </div>
+
+      <div class="kv"><strong>Salida (fecha)</strong>
+        <input class="input" id="eFechaInicio" type="date" />
+      </div>
+
+      <div class="kv"><strong>Salida (hora)</strong>
+        <input class="input" id="eHoraRetiro" type="time" />
+      </div>
+
+      <div class="kv"><strong>Entrega (fecha)</strong>
+        <input class="input" id="eFechaFin" type="date" />
+      </div>
+
+      <div class="kv"><strong>Entrega (hora)</strong>
+        <input class="input" id="eHoraEntrega" type="time" />
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn gray" id="eCancel">Cancelar</button>
+      <button type="button" class="btn primary" id="eSave">Guardar cambios</button>
+    </div>
+  </div>
+</div>
 
 </main>
 @endsection

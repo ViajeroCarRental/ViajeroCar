@@ -11,7 +11,7 @@ class HistorialController extends Controller
 {
     public function index()
 {
-    return view('admin.Historial');
+    return view('Admin.Historial');
 }
 
 public function api(Request $req)

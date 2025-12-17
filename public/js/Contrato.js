@@ -1275,7 +1275,10 @@ function recalcularTotalProtecciones() {
 }
 
   totalSeguros.textContent = `$${total.toFixed(2)} MXN`;
-  btnContinuarPaso3.disabled = total <= 0;
+// ✅ Permitir avanzar aunque el total sea $0, mientras haya al menos 1 seguro seleccionado
+const haySeguroSeleccionado = !!document.querySelector(".switch.on, .switch-individual.on");
+btnContinuarPaso3.disabled = !haySeguroSeleccionado;
+
 }
 
 /* Helpers para limpiar UI */
@@ -2319,6 +2322,47 @@ docsCargadosActual = true; // ← ESTA ES LA LÍNEA CLAVE
 
   cargarDocumentacionInicial();
 
+
+  // ==========================================================
+// 🗜️ COMPRESIÓN DE IMÁGENES (iOS / Android / Desktop)
+// ==========================================================
+async function comprimirImagen(file, maxWidth = 1400, quality = 0.7) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.src = e.target.result;
+    };
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const scale = Math.min(maxWidth / img.width, 1);
+
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(
+        (blob) => {
+          resolve(
+            new File([blob], file.name.replace(/\.\w+$/, ".jpg"), {
+              type: "image/jpeg"
+            })
+          );
+        },
+        "image/jpeg",
+        quality
+      );
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+
   // ==========================================================
   // 📨 SUBMIT DEL FORMULARIO
   // ==========================================================
@@ -2350,6 +2394,25 @@ docsCargadosActual = true; // ← ESTA ES LA LÍNEA CLAVE
     // ==========================================================
     formData.set("id_contrato", ID_CONTRATO);
 
+    // ==========================================================
+// 🗜️ COMPRESIÓN REAL ANTES DE ENVIAR (EVITA 413 EN RAILWAY)
+// ==========================================================
+const camposImagen = ["idFrente", "idReverso", "licFrente", "licReverso"];
+
+for (const campo of camposImagen) {
+  const input = formDoc.querySelector(`[name="${campo}"]`);
+
+  if (input && input.files && input.files[0]) {
+    const original = input.files[0];
+
+    // Solo comprimir si pesa más de 1MB
+    const comprimida = await comprimirImagen(original);
+formData.set(campo, comprimida);
+
+  }
+}
+
+
     try {
       const resp = await fetch(formDoc.action, {
         method: "POST",
@@ -2359,7 +2422,27 @@ docsCargadosActual = true; // ← ESTA ES LA LÍNEA CLAVE
         body: formData
       });
 
-      const data = await resp.json();
+      const rawText = await resp.text();
+console.log("📥 Respuesta cruda servidor:", rawText);
+
+let data;
+try {
+  data = JSON.parse(rawText);
+} catch (e) {
+  alertify.error(
+    "❌ Error del servidor (respuesta no JSON):\n" + rawText
+  );
+  throw new Error("Respuesta no JSON");
+}
+
+if (!resp.ok || data.error) {
+  alertify.error(
+    "❌ Error al subir documentación:\n" +
+    (data.error || data.message || "Error desconocido")
+  );
+  throw new Error(data.error || "Error backend");
+}
+
       console.log("📡 Respuesta servidor:", data);
 
       if (data.warning) {

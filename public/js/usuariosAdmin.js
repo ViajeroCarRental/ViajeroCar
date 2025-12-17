@@ -1,195 +1,182 @@
-/* ===== UTIL ===== */
-const $=s=>document.querySelector(s);
-const $$=s=>Array.from(document.querySelectorAll(s));
-const uid = ()=> 'U-' + Math.random().toString(36).slice(2,8);
-const esc = s => (s??'').toString().replace(/[&<>"]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-const store = {
-  get(){ return JSON.parse(localStorage.getItem('admin_users')||'[]'); },
-  set(arr){ localStorage.setItem('admin_users', JSON.stringify(arr)); }
-};
-const ROLES = ['Admin','Supervisor','Operador','Invitado'];
-const SEDES = ['Aeropuerto del Bajío (BJX)','Aeropuerto de Querétaro (AIQ)','Aeropuerto GDL','Aeropuerto MTY','Querétaro Centro'];
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("🔥 usuariosAdmin.js cargado");
 
-/* ===== UI INIT ===== */
-$('#burger')?.addEventListener('click',()=>$('#side').classList.toggle('show'));
+    const btnAdd = document.getElementById("btnAdd");
+    const tbodyAdmins = document.getElementById("tbodyAdmins");
 
-(function fillFilters(){
-  $('#fRol').innerHTML = '<option value="">Todos los roles</option>' + ROLES.map(r=>`<option>${esc(r)}</option>`).join('');
-  $('#fSede').innerHTML = '<option value="">Todas las sedes</option>' + SEDES.map(s=>`<option>${esc(s)}</option>`).join('');
-  $('#uRol').innerHTML = ROLES.map(r=>`<option>${esc(r)}</option>`).join('');
-  $('#uSede').innerHTML = SEDES.map(s=>`<option>${esc(s)}</option>`).join('');
-})();
+    const pop = document.getElementById("userPop");
+    const popTitle = document.getElementById("userPopTitle");
+    const btnClose = document.getElementById("userClose");
+    const btnCancel = document.getElementById("userCancel");
+    const btnSave = document.getElementById("userSave");
 
-/* ===== STATE ===== */
-let editingId = null;
+    const uId = document.getElementById("uId");
+    const uNombre = document.getElementById("uNombre");
+    const uApellidos = document.getElementById("uApellidos");
+    const uEmail = document.getElementById("uEmail");
+    const uNumero = document.getElementById("uNumero");
+    const uRol = document.getElementById("uRol");
+    const uActivo = document.getElementById("uActivo");
+    const uPassword = document.getElementById("uPassword");
 
-/* ===== RENDER ===== */
-function kpill(txt, cls=''){return `<span class="kpill ${cls}">${esc(txt)}</span>`}
-function render(){
-  const q=($('#q').value||'').toLowerCase().trim();
-  const fRol=$('#fRol').value||'';
-  const fSede=$('#fSede').value||'';
+    const csrfToken = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute("content");
 
-  const data = store.get().filter(u=>{
-    const matchesQ = !q || (u.nombre+' '+u.apellidos+' '+u.email).toLowerCase().includes(q);
-    const matchesR = !fRol || u.rol===fRol;
-    const matchesS = !fSede || u.sede===fSede;
-    return matchesQ && matchesR && matchesS;
-  });
+    let modo = "create";
 
-  const tbody = $('#tbody');
-  if(!data.length){
-    tbody.innerHTML = `<tr><td colspan="7"><div class="empty">Sin resultados. Ajusta filtros o agrega un usuario.</div></td></tr>`;
-  }else{
-    tbody.innerHTML = data.map(u=>{
-      const mods = (u.modulos||[]).map(m=>kpill(m,'blue')).join(' ');
-      const est  = u.status==='activo' ? kpill('Activo','green')
-                 : u.status==='desactivado' ? kpill('Desactivado','red')
-                 : kpill('Invitación','');
-      return `<tr>
-        <td>${esc(u.nombre)} ${esc(u.apellidos||'')}</td>
-        <td>${esc(u.email)}</td>
-        <td>${kpill(u.rol)}</td>
-        <td>${esc(u.sede)}</td>
-        <td>${mods||'—'}</td>
-        <td>${est}</td>
-        <td>
-          <div class="row-actions">
-            <button class="btn gray" data-ed="${u.id}">✏️ Editar</button>
-            ${u.status!=='desactivado'
-              ? `<button class="btn warn" data-deact="${u.id}">⏸ Desactivar</button>`
-              : `<button class="btn primary" data-act="${u.id}">▶️ Activar</button>`}
-            <button class="btn gray" data-del="${u.id}">🗑️ Eliminar</button>
-          </div>
-        </td>
-      </tr>`;
-    }).join('');
-  }
+    const abrirModal = () => (pop.style.display = "flex");
+    const cerrarModal = () => (pop.style.display = "none");
 
-  // Stats
-  const all = store.get();
-  $('#sActivos').textContent = all.filter(u=>u.status==='activo').length;
-  $('#sInvites').textContent = all.filter(u=>u.status==='invitacion').length;
-  $('#sAdmins').textContent  = all.filter(u=>u.rol==='Admin' && u.status!=='desactivado').length;
-  $('#sOff').textContent     = all.filter(u=>u.status==='desactivado').length;
-}
+    const limpiarForm = () => {
+        uId.value = "";
+        uNombre.value = "";
+        uApellidos.value = "";
+        uEmail.value = "";
+        uNumero.value = "";
+        uRol.value = "";
+        uActivo.value = "1";
+        if (uPassword) uPassword.value = "";
+    };
 
-/* ===== EVENTS: Filters ===== */
-$('#q').addEventListener('input',render);
-$('#fRol').addEventListener('change',render);
-$('#fSede').addEventListener('change',render);
+    const cargarDesdeFila = (tr) => {
+        uId.value = tr.dataset.id;
+        uNombre.value = tr.dataset.nombres;
+        uApellidos.value = tr.dataset.apellidos;
+        uEmail.value = tr.dataset.correo;
+        uNumero.value = tr.dataset.numero;
+        uRol.value = tr.dataset.rolId;
+        uActivo.value = tr.dataset.activo === "0" ? "0" : "1";
+        if (uPassword) uPassword.value = "";
+    };
 
-/* ===== MODAL ADD/EDIT ===== */
-function openUserModal(editId=null){
-  editingId = editId;
-  $('#userPopTitle').textContent = editId ? 'Editar usuario' : 'Nuevo usuario';
-  if(editId){
-    const u = store.get().find(x=>x.id===editId);
-    if(!u) return;
-    $('#uNombre').value = u.nombre||'';
-    $('#uApellidos').value = u.apellidos||'';
-    $('#uEmail').value = u.email||'';
-    $('#uSede').value = u.sede||SEDES[0];
-    $('#uRol').value = u.rol||ROLES[2];
-    $('#uStatus').value = u.status||'activo';
-    // módulos
-    $$('#uMods option').forEach(o=>o.selected=(u.modulos||[]).includes(o.value));
-  }else{
-    $('#uNombre').value = '';
-    $('#uApellidos').value = '';
-    $('#uEmail').value = '';
-    $('#uSede').value = SEDES[0];
-    $('#uRol').value = ROLES[2];
-    $('#uStatus').value = 'activo';
-    $$('#uMods option').forEach(o=>o.selected=false);
-  }
-  $('#userPop').classList.add('show');
-}
-function closeUserModal(){ $('#userPop').classList.remove('show'); }
-$('#btnAdd').addEventListener('click',()=>openUserModal());
-$('#userClose').addEventListener('click',closeUserModal);
-$('#userCancel').addEventListener('click',closeUserModal);
+    // ========================
+    // 🆕 NUEVO USUARIO
+    // ========================
+    btnAdd?.addEventListener("click", () => {
+        modo = "create";
+        popTitle.textContent = "Nuevo usuario administrativo";
+        limpiarForm();
+        abrirModal();
+    });
 
-/* ===== SAVE ===== */
-$('#userSave').addEventListener('click',()=>{
-  const nombre=($('#uNombre').value||'').trim();
-  const apellidos=($('#uApellidos').value||'').trim();
-  const email=($('#uEmail').value||'').trim();
-  const sede=$('#uSede').value;
-  const rol=$('#uRol').value;
-  const status=$('#uStatus').value;
-  const modulos=$$('#uMods option:checked').map(o=>o.value);
+    // ========================
+    // ✏ EDITAR
+    // ========================
+    tbodyAdmins?.addEventListener("click", (e) => {
+        const btn = e.target.closest(".btn-edit-user");
+        if (!btn) return;
 
-  if(!nombre||!email){ alert('Nombre y Email son obligatorios'); return; }
+        const tr = btn.closest("tr");
+        modo = "edit";
+        popTitle.textContent = "Editar usuario administrativo";
 
-  const arr = store.get();
-  if(editingId){
-    const i = arr.findIndex(u=>u.id===editingId);
-    if(i>=0){ arr[i]={...arr[i], nombre, apellidos, email, sede, rol, status, modulos}; }
-  }else{
-    arr.push({ id:uid(), nombre, apellidos, email, sede, rol, status, modulos, createdAt:Date.now() });
-  }
-  store.set(arr);
-  closeUserModal();
-  render();
+        cargarDesdeFila(tr);
+        abrirModal();
+    });
+
+    // ========================
+    // 🗑 ELIMINAR ADMIN
+    // ========================
+    tbodyAdmins?.addEventListener("click", (e) => {
+        const btn = e.target.closest(".btn-delete-user");
+        if (!btn) return;
+
+        const tr = btn.closest("tr");
+        const id = tr.dataset.id;
+        const nombre = `${tr.dataset.nombres} ${tr.dataset.apellidos}`;
+
+        if (!confirm(`¿Eliminar al usuario "${nombre}"?`)) return;
+
+        const fd = new FormData();
+
+        fetch(`/admin/usuarios/${id}/delete`, {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+                "Accept": "application/json"
+            },
+            body: fd
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) location.reload();
+                else alert(data.message ?? "Error al eliminar.");
+            })
+            .catch(err => console.error("ERROR DELETE ADMIN:", err));
+    });
+
+    // ========================
+    // 💾 GUARDAR
+    // ========================
+    btnSave?.addEventListener("click", () => {
+        const fd = new FormData();
+
+        fd.append("nombres", uNombre.value.trim());
+        fd.append("apellidos", uApellidos.value.trim());
+        fd.append("correo", uEmail.value.trim());
+        fd.append("numero", uNumero.value.trim());
+        fd.append("id_rol", uRol.value);
+        fd.append("activo", uActivo.value);
+
+        // contraseña opcional
+        if (uPassword && uPassword.value.trim() !== "") {
+            fd.append("password", uPassword.value.trim());
+        }
+
+        let url = "/admin/usuarios";
+
+        if (modo === "edit") {
+            const id = uId.value;
+            url = `/admin/usuarios/${id}/update`;
+        }
+
+        fetch(url, {
+            method: "POST",
+            headers: { "X-CSRF-TOKEN": csrfToken, "Accept": "application/json" },
+            body: fd
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) {
+                    cerrarModal();
+                    location.reload();
+                } else {
+                    alert(data.message ?? "Error al guardar.");
+                }
+            })
+            .catch(err => console.error("ERROR CREATE/UPDATE:", err));
+    });
+
+    // ==============================
+    // 🗑 ELIMINAR CLIENTE
+    // ==============================
+    document.addEventListener("click", e => {
+        const btn = e.target.closest(".btn-delete-client");
+        if (!btn) return;
+
+        const id = btn.dataset.id;
+
+        if (!confirm("¿Eliminar este cliente?")) return;
+
+        const fd = new FormData();
+
+        fetch(`/admin/clientes/${id}/delete`, {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+                "Accept": "application/json"
+            },
+            body: fd
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) location.reload();
+                else alert(data.message ?? "Error al eliminar cliente.");
+            })
+            .catch(err => console.error("ERROR DELETE CLIENTE:", err));
+    });
+
+    btnClose?.addEventListener("click", cerrarModal);
+    btnCancel?.addEventListener("click", cerrarModal);
 });
-
-/* ===== ROW ACTIONS (edit/activate/deactivate/delete) ===== */
-$('#tbody').addEventListener('click',e=>{
-  const ed = e.target.getAttribute('data-ed');
-  const deact = e.target.getAttribute('data-deact');
-  const act = e.target.getAttribute('data-act');
-  const del = e.target.getAttribute('data-del');
-  let arr = store.get();
-  if(ed){ openUserModal(ed); return; }
-  if(deact){
-    arr = arr.map(u=>u.id===deact?{...u,status:'desactivado'}:u);
-    store.set(arr); render(); return;
-  }
-  if(act){
-    arr = arr.map(u=>u.id===act?{...u,status:'activo'}:u);
-    store.set(arr); render(); return;
-  }
-  if(del){
-    if(confirm('¿Eliminar usuario? Esta acción no se puede deshacer.')){
-      arr = arr.filter(u=>u.id!==del);
-      store.set(arr); render();
-    }
-  }
-});
-
-/* ===== INVITAR / CSV / RESET ===== */
-$('#btnInvite').addEventListener('click',()=>{
-  const mailto = 'mailto:?subject=' + encodeURIComponent('Invitación a VIAJERO')
-    + '&body=' + encodeURIComponent('Hola,\n\nHas sido invitado a VIAJERO. Crea tu contraseña y accede a los módulos asignados.\n\nSaludos.');
-  window.location.href = mailto;
-});
-$('#btnExport').addEventListener('click',()=>{
-  const arr=store.get();
-  if(!arr.length){ alert('No hay datos para exportar.'); return; }
-  const header=['id','nombre','apellidos','email','sede','rol','status','modulos','createdAt'];
-  const rows = [header.join(',')].concat(arr.map(u=>{
-    const line = [
-      u.id, u.nombre, u.apellidos||'', u.email, u.sede, u.rol, u.status,
-      (u.modulos||[]).join('|'), new Date(u.createdAt||Date.now()).toISOString()
-    ].map(v=> `"${String(v).replace(/"/g,'""')}"`).join(',');
-    return line;
-  })).join('\n');
-  const blob = new Blob([rows],{type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download='usuarios.csv'; a.click(); URL.revokeObjectURL(url);
-});
-$('#btnReset').addEventListener('click',()=>{
-  if(!confirm('Restablecer datos de demostración?')) return;
-  const demo=[
-    {id:uid(), nombre:'Gael', apellidos:'Arriaga', email:'gael@viajero.mx', sede:SEDES[4], rol:'Admin', status:'activo', modulos:['Administración','Reservaciones','Reportes'], createdAt:Date.now()-86400000*4},
-    {id:uid(), nombre:'María', apellidos:'Lara', email:'maria@viajero.mx', sede:SEDES[0], rol:'Supervisor', status:'activo', modulos:['Reservaciones','Activas','Historial'], createdAt:Date.now()-86400000*2},
-    {id:uid(), nombre:'Jorge', apellidos:'Soto', email:'jorge@viajero.mx', sede:SEDES[1], rol:'Operador', status:'invitacion', modulos:['Reservaciones'], createdAt:Date.now()-86400000},
-    {id:uid(), nombre:'Ana', apellidos:'Paz', email:'ana@viajero.mx', sede:SEDES[2], rol:'Operador', status:'desactivado', modulos:['Reservaciones','Visor'], createdAt:Date.now()}
-  ];
-  store.set(demo);
-  render();
-});
-
-/* ===== START ===== */
-render();

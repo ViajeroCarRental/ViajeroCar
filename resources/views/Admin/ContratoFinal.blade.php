@@ -279,9 +279,18 @@
 
 <div class="acciones-extra">
     <a href="{{ route('checklist.ver', $reservacion->id_reservacion) }}" class="btn-checklist">
-        Ir al Checklist
+        Checklist
+    </a>
+
+    <a href="#" class="btn-checklist">
+        Cambio de Vehículo
+    </a>
+
+    <a href="#" class="btn-checklist">
+        Conductor adicional
     </a>
 </div>
+
 
 
 <div id="modalCliente" class="modal-firma">

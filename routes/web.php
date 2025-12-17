@@ -21,6 +21,10 @@ use App\Http\Controllers\GastosController;
 use App\Http\Controllers\SiniestrosController;
 use App\Http\Controllers\ConductorAdicionalController;
 use App\Http\Controllers\ContratoController;
+use App\Http\Controllers\RolesController;
+use App\Http\Controllers\UsuarioAdminController;
+use App\Http\Controllers\SeguroPaqueteController;
+use App\Http\Controllers\SeguroIndividualController;
 use App\Http\Controllers\ContratoFinalController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ContratosAbiertosController;
@@ -38,7 +42,7 @@ Route::get('/catalogo', [CatalogoController::class, 'index'])->name('rutaCatalog
 Route::get('/reservaciones',[ReservacionesController::class,'reservaciones'])->name('rutaReservaciones');
 //ruta Vista Contacto
 Route::get('/contacto',[ControladorVistas::class,'contacto'])->name('rutaContacto');
-//ruta Vista Politicas
+//ruta Vista Politicasf
 Route::get('/politicas',[ControladorVistas::class,'politicas'])->name('rutaPoliticas');
 //ruta Vista FAQ
 Route::get('/faq',[ControladorVistas::class,'faq'])->name('rutaFAQ');
@@ -47,7 +51,7 @@ Route::post('/buscar', [BusquedaController::class, 'buscar'])->name('rutaBuscar'
 Route::get('/catalogo/filtrar', [CatalogoController::class, 'filtrar'])->name('rutaCatalogoFiltrar');
 //contacto form
 Route::post('/contacto', [ContactoController::class, 'store'])->name('contacto.store');
-//busqueda catalogo
+//busqueda catalogoV
 Route::get('/catalogo/resultados', [CatalogoController::class, 'resultados'])->name('rutaCatalogoResultados');
 // Flujo principal de reservaciones (desde HOME)
 
@@ -95,8 +99,6 @@ Route::get('/admin/flotilla', [App\Http\Controllers\controladorVistasAdmin::clas
 Route::get('/admin/polizas', [App\Http\Controllers\controladorVistasAdmin::class, 'polizas'])->name('rutaPolizas');
 //carroceria
 Route::get('/admin/carroceria', [App\Http\Controllers\controladorVistasAdmin::class, 'carroceria'])->name('rutaCarroceria');
-//seguros
-Route::get('/admin/seguros', [App\Http\Controllers\controladorVistasAdmin::class, 'seguros'])->name('rutaSeguros');
 //gastos
 Route::get('/admin/gastos', [App\Http\Controllers\controladorVistasAdmin::class, 'gastos'])->name('rutaGastos');
 
@@ -149,14 +151,26 @@ Route::get('/admin/cotizaciones/limpiar-vencidas', [App\Http\Controllers\Cotizac
 
 
 
-//reservaciones activas
-Route::get('/admin/reservaciones-activas', [ReservacionesActivasController::class, 'index'])->name('rutaReservacionesActivas');
-// Endpoint AJAX: obtener detalles por código (para el modal)
-Route::get('/admin/reservaciones-activas/{codigo}', [ReservacionesActivasController::class, 'show'])->name('rutaDetalleReservacionActiva');
+// ===============================
+// RESERVACIONES ACTIVAS
+// ===============================
 
-// Eliminar reservación activa
-Route::delete('/admin/reservaciones-activas/{id}', [ReservacionesActivasController::class, 'destroy'])
-    ->name('rutaEliminarReservacionActiva');
+// Vista principal
+Route::get('/admin/reservaciones-activas',
+[ReservacionesActivasController::class, 'index'])->name('rutaReservacionesActivas');
+
+// 🔧 ACTUALIZAR + ENVIAR CORREO
+Route::put('/admin/reservaciones-activas/{id}',
+[ReservacionesActivasController::class, 'updateDatos'])->name('rutaUpdateReservacionActiva');
+
+// 🔍 DETALLE (SIEMPRE AL FINAL)
+Route::get('/admin/reservaciones-activas/{codigo}',
+[ReservacionesActivasController::class, 'show'])->name('rutaDetalleReservacionActiva');
+
+// 🗑️ ELIMINAR
+Route::delete('/admin/reservaciones-activas/{id}',
+[ReservacionesActivasController::class, 'destroy'])->name('rutaEliminarReservacionActiva');
+
 
 //contrato id
 Route::get('/admin/contrato/{id}', [App\Http\Controllers\ContratoController::class, 'mostrarContrato'])->name('contrato.mostrar');
@@ -242,9 +256,7 @@ Route::get('/admin/contrato/{id_reservacion}/resumen',[ContratoController::class
 Route::get('/admin/contrato-final', [App\Http\Controllers\ContratoFinalController::class, 'mostrarContratoFinal'])->name('admin.contratoFinal');
 Route::post('/admin/contrato/{id}/editar-tarifa', [ContratoController::class, 'editarTarifa']);
 Route::post('/admin/contrato/{id}/editar-cortesia', [ContratoController::class, 'editarCortesia']);
-Route::post('/admin/contrato/{id}/finalizar',
-    [ContratoController::class, 'finalizar']
-)->name('contrato.finalizar');
+Route::post('/admin/contrato/{id}/finalizar',[ContratoController::class, 'finalizar'])->name('contrato.finalizar');
 
 Route::get('/admin/contrato-final/{id}',
     [App\Http\Controllers\ContratoFinalController::class, 'mostrarContratoFinal']
@@ -261,7 +273,6 @@ Route::get('/contrato/{id}/exportar-word', [ContratoController::class, 'exportar
 Route::post('/contrato/{id}/enviar-correo', [ContratoFinalController::class, 'enviarContratoCorreo']);
 
 
-
 //visor de reservaciones
 Route::get('/admin/visor-reservaciones', [App\Http\Controllers\controladorVistasAdmin::class, 'visorReservaciones'])->name('rutaVisorReservaciones');
 
@@ -274,7 +285,7 @@ Route::get('/admin/licencia', [App\Http\Controllers\controladorVistasAdmin::clas
 //RFC
 Route::get('/admin/rfc', [App\Http\Controllers\controladorVistasAdmin::class, 'RFC_Fiscal'])->name('rutaRFC');
 //facturar
-Route::get('/admin/facturar', [App\Http\Controllers\controladorVistasAdmin::class, 'facturar'])->name('rutaFacturar');
+Route::get('/admin/facturar', [App\Http\Controllers\controladorVistasAdmin::class, 'Facturar'])->name('rutaFacturar');
 
 
 
@@ -299,7 +310,7 @@ Route::post('/admin/mantenimiento/{id}/registrar', [MantenimientoController::cla
 
 // Rutas de poliza
 Route::get('/admin/polizas', [PolizasController::class, 'index'])->name('rutaPolizas');
-Route::get('/admin/polizas/descargar/{archivo}', [PolizasController::class, 'descargar'])->name('descargarPoliza');
+
 
 Route::post('/admin/polizas/actualizar/{id}', [PolizasController::class, 'actualizar'])->name('actualizarPoliza');
 Route::post('/admin/polizas/subir/{id}', [PolizasController::class, 'guardarArchivo'])->name('guardarArchivoPoliza');
@@ -339,7 +350,7 @@ Route::get('/admin/gastos/rango/{tipo}', [GastosController::class, 'rangoRapido'
 
 
 // === Siniestros ===
-Route::get('/admin/seguros', [App\Http\Controllers\SiniestrosController::class, 'index'])->name('rutaSeguros');
+Route::get('/admin/siniestros', [App\Http\Controllers\SiniestrosController::class, 'index'])->name('rutaSeguros');
 Route::post('/admin/siniestros/guardar', [App\Http\Controllers\SiniestrosController::class, 'guardar'])->name('guardarSiniestro');
 Route::post('/admin/siniestros/actualizar/{id}', [App\Http\Controllers\SiniestrosController::class, 'actualizar'])->name('actualizarSiniestro');
 Route::post('/admin/siniestros/subir/{id}', [App\Http\Controllers\SiniestrosController::class, 'subirArchivo'])->name('subirArchivoSiniestro');
@@ -391,6 +402,70 @@ Route::get('/admin/checklist2', function () {
     return view('Admin.checklist2');
 });
 
+/* ===============================================
+   ADMIN · ROLES Y PERMISOS
+================================================ */
+
+Route::get('/admin/roles', [RolesController::class, 'index'])->name('roles.index');
+
+Route::get('/admin/roles/listar', [RolesController::class, 'listar']);   // ← CORREGIDO
+
+Route::get('/admin/roles/obtener/{id}', [RolesController::class, 'obtener']); // ← CORREGIDO
+
+Route::post('/admin/roles/crear', [RolesController::class, 'crear']); // ← CORREGIDO
+
+Route::post('/admin/roles/actualizar/{id}', [RolesController::class, 'actualizar']);
+Route::post('/admin/roles/eliminar/{id}', [RolesController::class, 'eliminar']);
+
+
+// LISTAR – UNA SOLA RUTA
+// LISTAR
+// LISTAR
+Route::get('/admin/usuarios', [UsuarioAdminController::class, 'index'])
+    ->name('admin.usuarios.index');
+
+// CREAR
+Route::post('/admin/usuarios', [UsuarioAdminController::class, 'store'])
+    ->name('admin.usuarios.store');
+
+// ACTUALIZAR (URL DISTINTA PARA NO CHOCAR)
+Route::post('/admin/usuarios/{id}/update', [UsuarioAdminController::class, 'update'])
+    ->name('admin.usuarios.update');
+
+// ELIMINAR ADMIN
+Route::post('/admin/usuarios/{id}/delete', [UsuarioAdminController::class, 'destroy'])
+    ->name('admin.usuarios.destroy');
+
+// ELIMINAR CLIENTE
+Route::post('/admin/clientes/{id}/delete', [UsuarioAdminController::class, 'destroyCliente'])
+    ->name('admin.clientes.destroy');
+
+
+Route::prefix('admin')->group(function () {
+
+    Route::get('/seguros', [SeguroPaqueteController::class, 'index'])->name('paqueteseguros.index');
+
+    Route::get('/seguros/list', [SeguroPaqueteController::class, 'list']);
+    Route::get('/seguros/{id}', [SeguroPaqueteController::class, 'show']);
+
+    Route::post('/seguros', [SeguroPaqueteController::class, 'store']);
+    Route::put('/seguros/{id}', [SeguroPaqueteController::class, 'update']);
+    Route::delete('/seguros/{id}', [SeguroPaqueteController::class, 'destroy']);
+});
+
+
+Route::prefix('admin')->group(function () {
+
+    Route::get('/seguros-individuales', [SeguroIndividualController::class, 'index'])
+        ->name('paquetesindividuales.index');
+
+    Route::get('/seguros-individuales/list', [SeguroIndividualController::class, 'list']);
+    Route::get('/seguros-individuales/{id}', [SeguroIndividualController::class, 'show']);
+
+    Route::post('/seguros-individuales', [SeguroIndividualController::class, 'store']);
+    Route::put('/seguros-individuales/{id}', [SeguroIndividualController::class, 'update']);
+    Route::delete('/seguros-individuales/{id}', [SeguroIndividualController::class, 'destroy']);
+});
 
 // VER CHECKLIST
 Route::get('/admin/reservacion/{id}/checklist',
@@ -446,3 +521,8 @@ Route::get('/categorias', [CategoriasController::class, 'index'])->name('categor
 Route::post('/categorias', [CategoriasController::class, 'store'])->name('categorias.store');
 Route::put('/categorias/{id}', [CategoriasController::class, 'update'])->name('categorias.update');
 Route::delete('/categorias/{id}', [CategoriasController::class, 'destroy'])->name('categorias.destroy');
+//suta consultar saldo pendiente
+Route::get('/admin/contrato/{id}/saldo', [ContratosAbiertosController::class, 'saldo']);
+
+Route::post('/admin/contrato/{id}/cerrar', [ContratosAbiertosController::class, 'finalizarContrato']);
+

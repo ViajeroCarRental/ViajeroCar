@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
+
 
 class ContratoController extends Controller
 {
@@ -583,15 +585,38 @@ public function guardarDocumentacion(Request $request)
             // Conductor adicional (si aplica)
             'id_conductor' => 'nullable|integer|exists:contrato_conductor_adicional,id_conductor',
 
-            // Archivos
-            'idFrente' => 'nullable|file|mimes:jpg,jpeg,png|max:20480',
-            'idReverso' => 'nullable|file|mimes:jpg,jpeg,png|max:20480',
-            'licFrente' => 'nullable|file|mimes:jpg,jpeg,png|max:20480',
-            'licReverso' => 'nullable|file|mimes:jpg,jpeg,png|max:20480',
+            // Archivos (MULTIPLATAFORMA)
+            'idFrente'  => 'nullable|file|max:20480',
+            'idReverso' => 'nullable|file|max:20480',
+            'licFrente' => 'nullable|file|max:20480',
+            'licReverso'=> 'nullable|file|max:20480',
+
         ]);
 
         $idContrato   = $data['id_contrato'];
         $idConductor  = $data['id_conductor'] ?? null;
+        // ============================
+// 1.1 VALIDACIÓN REAL DE ARCHIVOS (MULTIPLATAFORMA)
+// ============================
+$archivos = [
+    'idFrente'  => $request->file('idFrente'),
+    'idReverso' => $request->file('idReverso'),
+    'licFrente' => $request->file('licFrente'),
+    'licReverso'=> $request->file('licReverso'),
+];
+
+foreach ($archivos as $campo => $file) {
+    if ($file) {
+        $mime = $file->getMimeType();
+
+        if (!str_starts_with($mime, 'image/')) {
+            throw ValidationException::withMessages([
+                $campo => "Tipo de archivo no permitido: $mime"
+            ]);
+        }
+    }
+}
+
 
 
         // ============================
@@ -733,14 +758,28 @@ public function guardarDocumentacion(Request $request)
         ]);
 
 
+    }     catch (ValidationException $e) {
+
+        return response()->json([
+            'error' => 'Error de validación',
+            'detalles' => $e->errors(),
+            'files' => collect($request->files)->map(fn($f) => [
+                'nombre' => $f->getClientOriginalName(),
+                'mime'   => $f->getMimeType(),
+                'tamano' => $f->getSize(),
+            ]),
+        ], 422);
+
     } catch (\Throwable $e) {
 
         Log::error("ERROR guardarDocumentacion: ".$e->getMessage());
 
         return response()->json([
-            'error' => 'Error interno al guardar documentación.'
+            'error'   => 'Error interno al guardar documentación.',
+            'detalle' => $e->getMessage(),
         ], 500);
     }
+
 }
 
 public function obtenerDocumentacion($idContrato)
@@ -1282,7 +1321,7 @@ public function solicitarCambioFecha(Request $request)
            📧 Enviar correo al superadministrador
         ========================================================== */
 
-        $superadminEmail = "mariobernal10ba@gmail.com"; // <-- cámbialo
+        $superadminEmail = "administrador@viajerocarental.com"; // <-- cámbialo
 
         $linkAprobar  = url("/admin/contrato/cambio-fecha/aprobar/{$token}");
         $linkRechazar = url("/admin/contrato/cambio-fecha/rechazar/{$token}");

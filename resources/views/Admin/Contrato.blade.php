@@ -943,7 +943,7 @@
       <button class="btn gray" id="back5" type="button">← Atrás</button>
       <form id="formFinalizar" action="{{ route('contrato.finalizar', $idReservacion) }}" method="POST">
     @csrf
-    <button class="btn primary" id="btnFinalizar">FINALIZAR CONTRATO</button>
+    <button class="btn primary" id="btnFinalizar">Crear Contrato</button>
 </form>
 
     </div>
