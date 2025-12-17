@@ -894,7 +894,6 @@ label {
 /* ================================
    ✅ SCROLL en modal de Protecciones
 ================================ */
-
 /* Tu modal ya tiene max-height, pero la caja estaba cortando todo */
 #proteccionPop .box{
   display: flex;
@@ -902,6 +901,7 @@ label {
   max-height: 90vh;      /* ya lo tenías, lo reafirmamos */
   overflow: hidden;      /* ok: que el scroll sea SOLO del contenido interno */
 }
+
 /* Header y footer fijos */
 #proteccionPop .box > header,
 #proteccionPop .box > footer{

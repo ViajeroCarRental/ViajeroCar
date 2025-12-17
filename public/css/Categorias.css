@@ -1,0 +1,292 @@
+/* ============================================
+   TOKENS / BASE
+================================================ */
+:root{
+  --brand:#ff1e2d;
+  --brand-dark:#d41420;
+  --warn:#ffb300;
+  --warn-dark:#d19000;
+
+  --ink:#1f1f1f;
+  --muted:#6b7280;
+  --paper:#ffffff;
+  --stroke:#e5e7eb;
+
+  --radius-lg:18px;
+  --radius-md:14px;
+
+  --shadow-sm:0 6px 20px rgba(0,0,0,0.08);
+  --shadow-md:0 18px 60px rgba(0,0,0,0.25);
+}
+
+*{ box-sizing:border-box; }
+
+.main{
+  padding: 25px;
+  font-family:'Inter', sans-serif;
+}
+
+/* ============================================
+   HEADER (título + botón)
+================================================ */
+.head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.h1{
+  margin:0;
+  font-size:26px;
+  font-weight:700;
+  color:var(--ink);
+}
+
+.btn-add{
+  padding:10px 20px;
+  border-radius:20px;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+  transition:.2s;
+  background: var(--brand);
+  color:#fff;
+}
+.btn-add:hover{ background: var(--brand-dark); }
+
+/* ============================================
+   ALERTA SUCCESS
+================================================ */
+.toast{
+  background:#EAF6EE;
+  border:1px solid #B7E4C7;
+  color:#027A48;
+  padding:10px 14px;
+  border-radius:12px;
+  margin: 0 0 14px 0;
+  font-weight:600;
+}
+
+/* ============================================
+   TABLA (card + header rojo)
+================================================ */
+.card{
+  background:var(--paper);
+  padding:0;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow:hidden;
+}
+
+.table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.table th{
+  background:#e21d1d;
+  color:#fff;
+  font-weight:700;
+  padding:14px;
+  text-align:left;
+  font-size:14px;
+}
+
+.table td{
+  padding:16px;
+  font-size:15px;
+  border-bottom:1px solid #eee;
+}
+
+.table tbody tr:hover{
+  background:#f9f9f9;
+}
+
+/* numeritos alineados */
+.mono{
+  font-variant-numeric: tabular-nums;
+}
+
+/* acciones */
+.actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.btn-edit,
+.btn-del{
+  padding:10px 20px;
+  border-radius:20px;
+  border:none;
+  cursor:pointer;
+  font-weight:600;
+  transition:.2s;
+}
+
+.btn-edit{
+  background: var(--warn);
+  color:#fff;
+}
+.btn-edit:hover{ background: var(--warn-dark); }
+
+.btn-del{
+  background: var(--brand);
+  color:#fff;
+}
+.btn-del:hover{ background: var(--brand-dark); }
+
+/* empty row */
+.empty{
+  padding: 22px 16px;
+  text-align:center;
+  color: var(--muted);
+}
+
+/* ============================================
+   MODAL PREMIUM para <dialog>
+   (SIN cambiar tu blade)
+================================================ */
+
+/* el <dialog> */
+.modal{
+  border:none;
+  padding:0;
+  background: transparent;
+}
+
+/* backdrop del dialog */
+.modal::backdrop{
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(3px);
+}
+
+/* caja interna */
+.modal-box{
+  width: 600px;
+  max-width: 95%;
+  background: #ffffff;
+  padding: 28px 34px;
+  border-radius: 20px;
+  box-shadow: var(--shadow-md);
+  animation: modalFadeIn .25s ease-out;
+  font-family: "Inter", sans-serif;
+}
+
+/* header modal */
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom: 16px;
+}
+
+.modal-head h2{
+  margin:0;
+  font-size:24px;
+  font-weight:700;
+  color:#222;
+}
+
+/* botón cerrar (x) */
+.x{
+  border:none;
+  background:#f3f4f6;
+  color:#111;
+  cursor:pointer;
+  font-size:16px;
+  padding:8px 12px;
+  border-radius:12px;
+  transition:.2s;
+}
+.x:hover{ background:#e5e7eb; }
+
+/* labels */
+.label{
+  font-weight:600;
+  font-size:14px;
+  color:#333;
+  margin-bottom:5px;
+  display:block;
+}
+
+/* inputs / select premium */
+.input{
+  width:100%;
+  padding:12px 14px;
+  border-radius:12px;
+  border:1px solid #d4d4d4;
+  background:#f9fafb;
+  font-size:15px;
+  outline:none;
+  transition: 0.2s ease;
+  margin-bottom:18px;
+  color:#333;
+}
+
+.input:focus{
+  border-color:#2563eb;
+  background:#ffffff;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+
+/* checkbox */
+.check{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top: 6px;
+  margin-bottom: 8px;
+  font-weight:600;
+  color:#333;
+}
+
+.check input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  accent-color:#2563eb;
+  cursor:pointer;
+}
+
+/* footer modal */
+.modal-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:14px;
+  margin-top: 10px;
+}
+
+/* botón gris del modal */
+.btn-ghost{
+  padding:10px 22px;
+  border-radius:12px;
+  font-weight:600;
+  cursor:pointer;
+  border:none;
+  transition:0.2s ease;
+  background:#e5e7eb;
+  color:#333;
+}
+.btn-ghost:hover{ background:#d1d5db; }
+
+/* el botón principal del modal reutiliza .btn-add (rojo) */
+
+/* animación */
+@keyframes modalFadeIn{
+  from{ opacity:0; transform: translateY(-12px); }
+  to  { opacity:1; transform: translateY(0); }
+}
+
+/* ============================================
+   RESPONSIVE
+================================================ */
+@media (max-width: 680px){
+  .table th, .table td{ padding:12px; }
+  .actions{ flex-wrap:wrap; }
+  .btn-edit, .btn-del{ padding:9px 14px; }
+  .modal-box{ padding:22px 18px; }
+  .modal-head h2{ font-size:20px; }
+}

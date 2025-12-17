@@ -785,3 +785,26 @@ label {
   z-index: 2;
   transition: color 0.3s ease;
 }
+/* ================================
+   ✅ SCROLL en modal de Protecciones
+================================ */
+#proteccionPop .box{
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden; /* el scroll se lo damos al contenido */
+}
+
+#proteccionPop .box > header,
+#proteccionPop .box > footer{
+  flex: 0 0 auto;
+}
+
+#proteccionPop #proteList{
+  flex: 1 1 auto;
+  overflow-y: auto;
+  max-height: calc(90vh - 120px);
+  padding: 16px;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}

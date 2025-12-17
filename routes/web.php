@@ -437,3 +437,12 @@ Route::get('/admin/administracion-reservaciones', [ContratosAbiertosController::
 Route::get('/api/contratos-abiertos/{id}', [ContratosAbiertosController::class, 'detalle'])
     ->name('contratos.detalle');
 Route::get('/api/contratos-abiertos', [ContratosAbiertosController::class, 'api']);
+
+
+// Categorías de carros admin
+use App\Http\Controllers\CategoriasController;
+
+Route::get('/categorias', [CategoriasController::class, 'index'])->name('categorias.index');
+Route::post('/categorias', [CategoriasController::class, 'store'])->name('categorias.store');
+Route::put('/categorias/{id}', [CategoriasController::class, 'update'])->name('categorias.update');
+Route::delete('/categorias/{id}', [CategoriasController::class, 'destroy'])->name('categorias.destroy');

@@ -21,6 +21,7 @@
     <li class="menu-section">Administración</li>
     <li><a href="{{ route('rutaUsuarios') }}"><i class="fas fa-users"></i> Usuarios</a></li>
     <li><a href="{{ route('rutaRoles') }}"><i class="fas fa-user-shield"></i> Roles y permisos</a></li>
+    <li><a href="{{ route('rutaCategorias') }}"><i class="fas fa-car"></i> Categorías</a></li>
 
     <li class="menu-section">Navegación</li>
     <li><a href="{{ route('rutaDashboard') }}"><i class="fas fa-arrow-left"></i> Volver a módulos</a></li>
