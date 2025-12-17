@@ -59,7 +59,11 @@ class ReservacionesActivasController extends Controller
                     });
                 })
 
-                ->orderByDesc('r.id_reservacion')
+                // ✅ ORDEN: más próxima -> más lejana
+                ->orderBy('r.fecha_inicio', 'asc')
+                // ✅ si empatan en fecha, ordena por hora
+                ->orderBy('r.hora_retiro', 'asc')
+
                 ->get();
 
             return view('Admin.ReservacionesActivas', [
