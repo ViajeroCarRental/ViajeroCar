@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\ReservacionAdminMail;
 
 class ReservacionesAdminController extends Controller
 {
@@ -174,27 +175,26 @@ class ReservacionesAdminController extends Controller
             'moneda'           => 'MXN',
 
             // 🟡 Tarifa ajustada y valor real usado
-             'tarifa_ajustada'   => $request->input('tarifa_ajustada', false),
+            'tarifa_ajustada'   => $request->input('tarifa_ajustada', false),
 
             // ✅ Guardar tarifa_modificada solo si el usuario realmente la editó
-             'tarifa_modificada' => $request->filled('tarifa_modificada')
-             ? $request->tarifa_modificada
-             : null,
+            'tarifa_modificada' => $request->filled('tarifa_modificada')
+                ? $request->tarifa_modificada
+                : null,
 
             // ✅ Guardar siempre la tarifa base real del catálogo
-             'tarifa_base'       => $tarifaBase,
+            'tarifa_base'       => $tarifaBase,
 
-             'no_vuelo'         => $validated['no_vuelo'] ?? null,
-             'codigo'           => $codigo,
-             'nombre_cliente'   => $validated['nombre_cliente'] ?? null,
-             'email_cliente'    => $validated['email_cliente'] ?? null,
-             'telefono_cliente' => $validated['telefono_cliente'] ?? null,
-             'paypal_order_id'  => null,
-             'status_pago'      => 'Pendiente',
-             'metodo_pago'      => 'mostrador',
-             'created_at'       => now(),
-             'updated_at'       => now(),
-
+            'no_vuelo'         => $validated['no_vuelo'] ?? null,
+            'codigo'           => $codigo,
+            'nombre_cliente'   => $validated['nombre_cliente'] ?? null,
+            'email_cliente'    => $validated['email_cliente'] ?? null,
+            'telefono_cliente' => $validated['telefono_cliente'] ?? null,
+            'paypal_order_id'  => null,
+            'status_pago'      => 'Pendiente',
+            'metodo_pago'      => 'mostrador',
+            'created_at'       => now(),
+            'updated_at'       => now(),
         ]);
 
         // 4.1️⃣ Guardar seguro seleccionado (reservacion_paquete_seguro)
@@ -223,38 +223,27 @@ class ReservacionesAdminController extends Controller
             }
         }
 
-        // 5️⃣ Enviar correo de confirmación
+        // 5️⃣ Enviar correo (YA NO TEXTO PLANO, AHORA HTML CON MAILABLE)
         $correoCliente = $validated['email_cliente'] ?? null;
         $correoEmpresa = env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocarental.com');
 
-        $mensaje = "📩 CONFIRMACIÓN DE RESERVA\n\n";
-        $mensaje .= "Código de reserva: {$codigo}\n";
-        $mensaje .= "Categoría: " . ($categoria->nombre ?? '-') . "\n\n";
-        $mensaje .= "👤 Cliente:\n";
-        $mensaje .= "Nombre: " . ($validated['nombre_cliente'] ?? '-') . "\n";
-        $mensaje .= "Correo: " . ($validated['email_cliente'] ?? '-') . "\n";
-        $mensaje .= "Teléfono: " . ($validated['telefono_cliente'] ?? '-') . "\n";
-        $mensaje .= "Vuelo: " . ($validated['no_vuelo'] ?? '-') . "\n\n";
-        $mensaje .= "📅 Fechas:\n";
-        $mensaje .= "Entrega: {$validated['fecha_inicio']} {$validated['hora_retiro']}\n";
-        $mensaje .= "Devolución: {$validated['fecha_fin']} {$validated['hora_entrega']}\n\n";
-        $mensaje .= "💰 Montos:\n";
-        $mensaje .= "Subtotal: $" . number_format($subtotalFront, 2) . " MXN\n";
-        $mensaje .= "Impuestos: $" . number_format($impuestosFront, 2) . " MXN\n";
-        $mensaje .= "Total a pagar: $" . number_format($totalFront, 2) . " MXN\n\n";
-        $mensaje .= "📆 Fecha de registro: " . now()->format('d/m/Y H:i:s') . "\n";
+        // Traer la reservación ya guardada para mandarla a la vista
+        $reservacion = DB::table('reservaciones')
+            ->where('id_reservacion', $id)
+            ->first();
 
         try {
-            Mail::raw($mensaje, function ($msg) use ($correoCliente, $correoEmpresa, $codigo) {
-                if ($correoCliente) {
-                    $msg->to($correoCliente)
-                        ->cc($correoEmpresa)
-                        ->subject("Confirmación de reserva {$codigo} - Viajero Car Rental");
-                } else {
-                    $msg->to($correoEmpresa)
-                        ->subject("Nueva reserva {$codigo} - Viajero Car Rental");
-                }
-            });
+            // Misma lógica que tenías con Mail::raw():
+            // - Si hay correo del cliente -> se manda al cliente y CC a la empresa
+            // - Si no hay correo del cliente -> se manda solo a la empresa
+            if ($correoCliente) {
+                Mail::to($correoCliente)
+                    ->cc($correoEmpresa)
+                    ->send(new \App\Mail\ReservacionAdminMail($reservacion, $categoria));
+            } else {
+                Mail::to($correoEmpresa)
+                    ->send(new \App\Mail\ReservacionAdminMail($reservacion, $categoria));
+            }
         } catch (\Throwable $e) {
             Log::error("❌ Error al enviar correo de reserva: " . $e->getMessage());
         }
@@ -279,5 +268,6 @@ class ReservacionesAdminController extends Controller
         ], 500);
     }
 }
+
 
 }
