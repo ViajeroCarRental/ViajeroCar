@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf; // ✅ DomPDF puro
+use App\Mail\CotizacionAdminMail;
 
 class CotizacionesAdminController extends Controller
 {
@@ -148,8 +149,8 @@ class CotizacionesAdminController extends Controller
             ->where('id_categoria', $request->categoria_id)
             ->first();
 
-        // 🖼️ Imagen por categoría
-        $imgCategoria = asset('img/categorias/' . Str::slug($categoria->nombre) . '.jpg');
+        // 🖼️ Imagen por categoría (para PDF: mejor ruta física)
+        $imgCategoria = public_path('img/categorias/' . Str::slug($categoria->nombre) . '.jpg');
 
         // 💾 Insertar cotización
         $idCotizacion = DB::table('cotizaciones')->insertGetId([
@@ -200,87 +201,60 @@ class CotizacionesAdminController extends Controller
         if ($extrasList === '') $extrasList = '<li>Sin adicionales</li>';
 
         /* ==========================================================
-           📄 Generar PDF
+           📄 Generar PDF (USANDO VISTA Admin.cotizacion-pdf)
         ========================================================== */
-        $logoPath = public_path('img/Logo3.jpg');
-        $fechaHoy = now()->format('d M Y');
-
-        $pdfHtml = "
-        <div style='font-family:sans-serif; color:#111; font-size:14px;'>
-            <table width='100%' style='border-collapse:collapse;'>
-                <tr>
-                    <td><img src='{$logoPath}' style='height:60px;'></td>
-                    <td style='text-align:right;'>
-                        <strong style='font-size:12px;'>NO. DE COTIZACIÓN</strong><br>
-                        <span style='font-size:15px; color:#D6121F; font-weight:bold;'>{$folio}</span><br>
-                        <small>Fecha: {$fechaHoy}</small>
-                    </td>
-                </tr>
-            </table>
-            <hr style='margin:16px 0;'>
-            <h2 style='color:#111; font-size:18px;'>Resumen de tu cotización</h2>
-            <p><strong>Entrega:</strong> {$pickup_name} ({$request->pickup_date} {$request->pickup_time})</p>
-            <p><strong>Devolución:</strong> {$dropoff_name} ({$request->dropoff_date} {$request->dropoff_time})</p>
-            <p><strong>Días:</strong> {$dias}</p>
-            <h3 style='margin-top:20px;'>Categoría seleccionada</h3>
-            <table width='100%' cellpadding='6'>
-                <tr>
-                    <td width='30%'><img src='{$imgCategoria}' style='width:100%; border-radius:8px;'></td>
-                    <td width='70%' style='vertical-align:top;'>
-                        <strong style='font-size:16px;'>{$categoria->nombre}</strong><br>
-                        <small>{$categoria->descripcion}</small><br>
-                        <small>Tarifa base diaria: $" . number_format($request->input('tarifa_modificada', $categoria->precio_dia), 2) . " MXN</small>
-                    </td>
-                </tr>
-            </table>
-            <h3 style='margin-top:24px;'>Opciones seleccionadas</h3>
-            <ul>{$extrasList}</ul>
-            <h3 style='margin-top:24px;'>Detalles del precio</h3>
-            <table width='100%' style='border-collapse:collapse;'>
-                <tr><td>Tarifa base</td><td style='text-align:right;'>$" . number_format(($request->input('tarifa_modificada', $categoria->precio_dia) * $dias), 2) . " MXN</td></tr>
-                <tr><td>Opciones</td><td style='text-align:right;'>$" . number_format(($total - $iva - ($categoria->precio_dia * $dias)), 2) . " MXN</td></tr>
-                <tr><td>Cargos e IVA</td><td style='text-align:right;'>$" . number_format($iva, 2) . " MXN</td></tr>
-                <tr style='border-top:1px solid #ccc; font-weight:bold;'>
-                    <td>TOTAL</td><td style='text-align:right; color:#D6121F;'>$" . number_format($total, 2) . " MXN</td>
-                </tr>
-            </table>
-            <p style='margin-top:40px; color:#555;'>Gracias por elegir <strong>Viajero Car Rental</strong>.</p>
-        </div>";
-
-        // ✅ Guardar PDF
         $publicPath = public_path('storage/cotizaciones');
         if (!file_exists($publicPath)) mkdir($publicPath, 0777, true);
-        $pdf = Pdf::loadHTML($pdfHtml)->setPaper('a4', 'portrait');
+
         $filePath = $publicPath . '/' . $folio . '.pdf';
+
+        $tarifaDiaria = $request->filled('tarifa_modificada')
+            ? $request->tarifa_modificada
+            : ($categoria->precio_dia ?? 0);
+
+        $pdf = Pdf::loadView('Admin.cotizacion-pdf', [
+            'logoPath'     => public_path('img/Logo3.jpg'),
+            'folio'        => $folio,
+            'fechaHoy'     => now()->format('d M Y'),
+
+            'pickup_name'  => $pickup_name,
+            'pickup_date'  => $request->pickup_date,
+            'pickup_time'  => $request->pickup_time,
+
+            'dropoff_name' => $dropoff_name,
+            'dropoff_date' => $request->dropoff_date,
+            'dropoff_time' => $request->dropoff_time,
+
+            'dias'         => $dias,
+            'categoria'    => $categoria,
+            'imgCategoria' => $imgCategoria,
+            'tarifaDiaria' => $tarifaDiaria,
+            'extrasList'   => $extrasList,
+            'iva'          => $iva,
+            'total'        => $total,
+        ])->setPaper('a4', 'portrait');
+
         file_put_contents($filePath, $pdf->output());
 
         /* ==========================================================
-           📧 Enviar correo con PDF adjunto
+           📧 Enviar correo con PDF adjunto (USANDO MAILABLE)
         ========================================================== */
         if ($request->has('enviarCorreo') && !empty($cliente->email)) {
-            Log::info("📧 Intentando enviar correo a: " . $cliente->email);
 
-            Mail::html("
-                <div style='font-family:sans-serif;'>
-                    <h2 style='color:#D6121F;'>Viajero Car Rental</h2>
-                    <p>Estimado(a) <b>{$cliente->nombre} {$cliente->apellidos}</b>,</p>
-                    <p>Adjuntamos tu cotización <b>{$folio}</b> en formato PDF con todos los detalles de tu solicitud.</p>
-                    <p>Si deseas confirmar esta cotización, puedes hacerlo desde el panel o contactarnos directamente.</p>
-                </div>
-            ", function ($message) use ($cliente, $filePath, $folio) {
-                $message->to($cliente->email)
-                        ->subject("Tu cotización #{$folio} - Viajero Car Rental")
-                        ->attach($filePath);
-            });
+            $clienteNombre = trim(($cliente->nombre ?? '') . ' ' . ($cliente->apellidos ?? ''));
 
-            Log::info("📧 Correo de cotización enviado correctamente a: " . $cliente->email);
+            Mail::to($cliente->email)->send(
+                new \App\Mail\CotizacionAdminMail($clienteNombre, $folio, $filePath)
+            );
+
             $accion = 'enviada por correo';
         }
 
         /* ==========================================================
-           ✅ Confirmar → crear reservación
+           ✅ Confirmar → crear reservación (RESTAURADO COMPLETO)
         ========================================================== */
         if ($request->has('confirmar')) {
+
             $idReserva = DB::table('reservaciones')->insertGetId([
                 'codigo'           => 'RES-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5)),
                 'id_categoria'      => $request->categoria_id,
@@ -290,10 +264,12 @@ class CotizacionesAdminController extends Controller
                 'hora_entrega'      => $request->dropoff_time,
                 'sucursal_retiro'   => $request->pickup_sucursal_id,
                 'sucursal_entrega'  => $request->dropoff_sucursal_id,
+
+                // ✅ ESTOS CAMPOS ERAN LA CLAVE (para evitar tu error)
                 'ciudad_retiro'     => $sucursalRetiro->id_ciudad ?? null,
                 'ciudad_entrega'    => $sucursalEntrega->id_ciudad ?? null,
 
-                // 💰 Coherente con cotizaciones
+                // ✅ coherente con cotizaciones
                 'tarifa_base'        => $request->input('tarifa_base', $categoria->precio_dia ?? 0),
                 'tarifa_modificada'  => $request->input('tarifa_modificada', $request->input('tarifa_base', $categoria->precio_dia ?? 0)),
                 'tarifa_ajustada'    => $request->boolean('tarifa_ajustada', false),
@@ -309,6 +285,7 @@ class CotizacionesAdminController extends Controller
                 'created_at'       => now(),
                 'updated_at'       => now(),
             ]);
+
             $accion = 'confirmada y registrada como reservación';
         }
 
@@ -329,6 +306,8 @@ class CotizacionesAdminController extends Controller
         ], 500);
     }
 }
+
+
 
 /**
  * 📋 Vista de listado de cotizaciones (temporal)
@@ -496,8 +475,13 @@ public function convertirAReservacion($id)
 public function reenviarCotizacion($id)
 {
     try {
-        // 1️⃣ Buscar cotización
-        $cotizacion = DB::table('cotizaciones')->where('id_cotizacion', $id)->first();
+
+        // ==========================================================
+        // 1️⃣ Buscar cotización (SIN CAMBIOS)
+        // ==========================================================
+        $cotizacion = DB::table('cotizaciones')
+            ->where('id_cotizacion', $id)
+            ->first();
 
         if (!$cotizacion) {
             return response()->json([
@@ -506,10 +490,13 @@ public function reenviarCotizacion($id)
             ], 404);
         }
 
-        // 2️⃣ Decodificar cliente
+        // ==========================================================
+        // 2️⃣ Decodificar cliente (SIN CAMBIOS)
+        // ==========================================================
         $cliente = json_decode($cotizacion->cliente ?? '{}', true);
-        $emailCliente = $cliente['email'] ?? null;
-        $nombreCliente = $cliente['nombre'] ?? 'Cliente';
+
+        $emailCliente  = $cliente['email'] ?? null;
+        $nombreCliente = trim(($cliente['nombre'] ?? 'Cliente') . ' ' . ($cliente['apellidos'] ?? ''));
 
         if (!$emailCliente) {
             return response()->json([
@@ -518,8 +505,11 @@ public function reenviarCotizacion($id)
             ], 400);
         }
 
-        // 3️⃣ Verificar existencia del PDF
+        // ==========================================================
+        // 3️⃣ Verificar existencia del PDF (SIN CAMBIOS)
+        // ==========================================================
         $pdfPath = public_path("storage/cotizaciones/{$cotizacion->folio}.pdf");
+
         if (!file_exists($pdfPath)) {
             return response()->json([
                 'success' => false,
@@ -527,44 +517,43 @@ public function reenviarCotizacion($id)
             ], 404);
         }
 
-        // 4️⃣ Enviar correo
-        $from = env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocarental.com');
-        $correoEmpresa = $from;
+        // ==========================================================
+        // 4️⃣ Enviar correo (CORREGIDO)
+        // ==========================================================
+        $correoEmpresa = env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocarental.com');
 
-        Mail::send([], [], function ($message) use ($emailCliente, $nombreCliente, $pdfPath, $cotizacion, $correoEmpresa) {
-            $asunto = "📨 Reenvío de cotización {$cotizacion->folio} - Viajero Car Rental";
+        Mail::to($emailCliente)
+            ->cc($correoEmpresa)
+            ->send(
+                new CotizacionAdminMail(
+                    $nombreCliente,
+                    $cotizacion->folio,
+                    $pdfPath
+                )
+            );
 
-            $body = "
-            <h2 style='color:#C10A14;'>Reenvío de Cotización</h2>
-            <p>Estimado/a <strong>{$nombreCliente}</strong>,</p>
-            <p>Le reenviamos su cotización correspondiente al folio <strong>{$cotizacion->folio}</strong>.</p>
-            <p>Adjunto encontrará el documento PDF con los detalles de su cotización.</p>
-            <p>Gracias por su preferencia.<br>Equipo de <strong>Viajero Car Rental</strong></p>
-            ";
-
-            $message->to($emailCliente)
-                    ->cc($correoEmpresa)
-                    ->subject($asunto)
-                    ->html($body) // ✅ Método correcto en Laravel 12
-                    ->attach($pdfPath);
-        });
         Log::info("📨 Cotización reenviada: {$cotizacion->folio} a {$emailCliente}");
 
-
+        // ==========================================================
+        // ✅ RESPUESTA
+        // ==========================================================
         return response()->json([
             'success' => true,
             'message' => "📨 Cotización reenviada correctamente a {$emailCliente}."
         ]);
+
     } catch (\Throwable $e) {
+
         Log::error("❌ Error al reenviar cotización: " . $e->getMessage());
 
         return response()->json([
             'success' => false,
             'message' => '⚠️ Error interno al reenviar la cotización.',
-            'error' => $e->getMessage()
+            'error'   => $e->getMessage()
         ], 500);
     }
 }
+
 
 public function eliminarCotizacion($id)
 {
