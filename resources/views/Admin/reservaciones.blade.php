@@ -13,7 +13,6 @@
 
     <!-- 🔹 Encabezado superior -->
     <div class="top">
-      <button class="btn ghost burger" id="burger">☰</button>
       <h1 class="h1">Nueva reservación</h1>
       <button class="btn ghost" onclick="location.href='../dashboard.html'">Salir</button>
     </div>

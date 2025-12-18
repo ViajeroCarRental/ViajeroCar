@@ -275,21 +275,25 @@ small, .small { font-size: 12px; color: var(--muted); }
    📱 Responsive fino
 ============================== */
 @media (max-width: 760px) {
-  .thead, .row {
-    grid-template-columns: 140px 1fr 1fr 120px 120px;
+  .table .thead, .table .row {
+    grid-template-columns: 180px 110px 90px 95px 70px 140px;
   }
-  .thead > :nth-child(2), .thead > :nth-child(6), .thead > :nth-child(7),
-  .row > :nth-child(2), .row > :nth-child(6), .row > :nth-child(7) {
+
+  /* Oculta desde CELULAR en adelante (7,8,9,10,11) */
+  .table .thead > :nth-child(n+7),
+  .table .row  > :nth-child(n+7) {
     display: none;
   }
+
   .input { min-width: 0; width: 100%; }
   .kv { grid-template-columns: 120px 1fr; }
 }
 
+
 /* ==============================
-   🧭 Tabla con columnas iguales
+   🧭 Tabla
 ============================== */
-.table {
+.table{
   background: #fff;
   border: 1px solid var(--stroke);
   border-radius: 14px;
@@ -300,56 +304,81 @@ small, .small { font-size: 12px; color: var(--muted); }
   max-width: 100%;
   display: block;
   position: relative;
+
+  --cols:
+    190px  /* NO. DE RESERVACIÓN */
+    110px  /* CHECK IN */
+    80px   /* HORA (IN) */
+    60px   /* CATEGORÍA */
+    60px   /* DÍAS */
+    170px  /* NOMBRE COMPLETO */
+    140px  /* CELULAR */
+    230px  /* CORREO */
+    150px  /* ESTATUS DE PAGO */
+    95px   /* TOTAL */
+    140px; /* ACCIONES */
+
 }
 
-/* Encabezado compacto (12 columnas = 140px) */
-.table .thead {
+.table .thead{
   position: sticky;
   top: 0;
   z-index: 2;
   display: grid;
-  grid-template-columns: repeat(12, 140px);
+  grid-template-columns: var(--cols);
+  min-width: max-content;
   align-items: center;
-  min-width: calc(140px * 12);
   padding: 6px 8px;
   background: linear-gradient(90deg, var(--brand), var(--brand-3));
   color: #fff;
   font-weight: 900;
-  letter-spacing: .3px;
+  letter-spacing: .0px;
   text-transform: uppercase;
-  font-size: 12px;
+  font-size: 10px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
   border-bottom: 1px solid rgba(255,255,255,0.3);
 }
 
-.table .thead > div {
-  border-right: 1px solid rgba(255,255,255,0.25);
-  padding-right: 4px;
+.table .thead > div{
+  padding: 2px 6px;
   text-align: left;
+  white-space: nowrap;
+  min-width: 0;
+  border-right: 1px solid rgba(255,255,255,0.15);
 }
-.table .thead > div:last-child {
+.table .thead > div:last-child{
   border-right: none;
 }
 
-/* Filas alineadas (mismas 12 columnas) */
-.table .row {
+.table .row{
   display: grid;
-  grid-template-columns: repeat(12, 140px);
+  grid-template-columns: var(--cols);
+  min-width: max-content;
   align-items: center;
-  min-width: calc(140px * 12);
-  padding: 6px 8px;
+  padding: 4px 6px;
   gap: 0;
   border-bottom: 1px solid #F2F4F7;
   background: #fff;
   transition: background .15s;
   font-size: 14px;
 }
-.table .row:nth-child(even) { background: #FAFBFC; }
-.table .row:hover { background: #FFF5F6; }
-.table .row:last-child { border-bottom: none; }
+.table .row:nth-child(even){ background: #FAFBFC; }
+.table .row:hover{ background: #FFF5F6; }
+.table .row:last-child{ border-bottom: none; }
 
-/* Indicador visual de scroll */
-.table::after {
+.table .row > div{
+  padding: 2px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  border-right: 1px solid #EEF0F3;
+}
+.table .row > div:last-child{
+  border-right: none;
+}
+
+.table::after{
   content: "";
   position: absolute;
   top: 0;
@@ -415,7 +444,6 @@ small, .small { font-size: 12px; color: var(--muted); }
     transition: all .2s ease;
     position: relative;
 
-    /* Flecha personalizada */
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='10'><path fill='%23E02631' d='M2 2l5 5 5-5'/></svg>");
     background-repeat: no-repeat;
     background-position: right 14px center;
@@ -477,7 +505,6 @@ small, .small { font-size: 12px; color: var(--muted); }
     box-shadow: 0 3px 6px rgba(224, 38, 49, 0.10);
 }
 
-
 /* ===========================
    BOTÓN ⋯ (más acciones)
 =========================== */
@@ -528,7 +555,7 @@ small, .small { font-size: 12px; color: var(--muted); }
 
 /* NO SHOW (Azul) */
 #modalActions #aNoShow{
-  background: #2563EB; /* azul */
+  background: #2563EB;
   color: #fff;
   border-color: rgba(37,99,235,.35);
 }
@@ -538,7 +565,7 @@ small, .small { font-size: 12px; color: var(--muted); }
 
 /* CANCELAR (Amarillo) */
 #modalActions #aCancelar{
-  background: #F59E0B; /* amarillo */
+  background: #F59E0B;
   color: #111827;
   border-color: rgba(245,158,11,.45);
 }

@@ -48,8 +48,7 @@
 
   <!-- ======================= 📋 TABLA ======================= -->
   <section class="table">
-    <div class="thead"
-         style="grid-template-columns: repeat({{ $cols }}, 180px);">
+    <div class="thead">
       <div>No. de Reservacion</div>
       <div>Check in</div>
       <div>Hora (IN)</div>
@@ -72,7 +71,7 @@
     <div class="tbody">
       @forelse ($reservaciones as $r)
         <div class="row"
-             style="grid-template-columns: repeat({{ $cols }}, 180px);"
+            
              data-codigo="{{ $r->codigo }}"
              data-cliente="{{ $r->nombre_cliente }}"
              data-email="{{ $r->email_cliente }}"
@@ -105,7 +104,7 @@
             $fin    = \Carbon\Carbon::parse($r->fecha_fin);
             $dias   = $inicio->diffInDays($fin);
           @endphp
-          <div>{{ $dias }} días</div>
+          <div>{{ $dias }}</div>
 
           {{-- 7. Nombre --}}
           <div>{{ $r->nombre_cliente ?? '—' }}</div>
@@ -151,7 +150,7 @@
 
         </div>
       @empty
-        <div class="row" style="grid-template-columns: repeat({{ $cols }}, 180px);">
+        <div class="row" >
           <div style="grid-column: 1 / -1; text-align:center;">No hay reservaciones activas.</div>
         </div>
       @endforelse

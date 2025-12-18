@@ -9,7 +9,6 @@ const esc = s => (s ?? '').toString()
   .replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
 
 /* Mostrar / ocultar menú lateral */
-$('#burger')?.addEventListener('click', () => $('#side').classList.toggle('show'));
 
 /* ================================
    📑 Navegación de pasos

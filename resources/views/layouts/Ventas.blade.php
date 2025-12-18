@@ -31,6 +31,12 @@
     <title>@yield('Titulo')</title>
 </head>
 <body>
+
+<button class="btn-toggle" id="btnToggleSidebar" type="button" aria-label="Mostrar/Ocultar menú">
+  <i class="bi bi-list"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- SIDEBAR: Reservaciones -->
 <aside class="sidebar sidebar--reservas">
   <div class="logo">
@@ -92,6 +98,8 @@
     @yield('js-VistaCotizacionesRecientes')
     @yield('js-vistaContratoFinal')
     @yield('js-vistaEditarContrato')
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+
 </div>
 </body>
 </html>
