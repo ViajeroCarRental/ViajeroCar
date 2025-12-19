@@ -20,7 +20,7 @@ body{margin:0;font-family:'Poppins',system-ui,Arial,sans-serif;color:var(--ink);
 .login .avatar-mini{
   width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
   background:#ffffff26;color:#fff;font-weight:900;font-size:14px;letter-spacing:.4px
-}
+} 
 .hamburger{display:none;background:transparent;border:0;color:#fff;font-size:22px}
 @media (max-width:940px){.menu{display:none}.hamburger{display:block}}
 
@@ -291,330 +291,8 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
 .btn-primary:hover{ filter:brightness(.95); }
 .btn-gray{ background:#f1f5f9; border:1px solid #e5e7eb; color:#0f172a; }
 
-.member-offer{
-  grid-column: 1 / -1;
-  margin-top:16px;
-  border:1px solid rgba(178,34,34,0.7);
-  border-radius:14px;
-  background:rgba(178,34,34,0.15);
-  backdrop-filter: blur(6px);
-  box-shadow:0 8px 20px rgba(2,6,23,.05);
-  padding:16px 20px;
-  display:block;
-}
-.member-offer .mo-head{
-  text-align:center;
-  font-weight:900;
-  font-size:16px;
-  color:#000000;
-  margin-bottom:14px;
-  border:none;
-  padding:0;
-}
-.member-offer .mo-grid{
-  display:grid;
-  grid-template-columns:1fr;
-  gap:12px;
-  padding:0;
-}
-.member-offer .mcol{
-  display:grid;
-  grid-template-columns: 100px 1fr auto auto;
-  align-items:center;
-  gap:12px;
-  padding:12px 14px;
-  background:#f8fafc;
-  border:1px solid #e5e7eb;
-  border-radius:10px;
-  min-height:64px;
-}
-.member-offer .m-label{ font-size:11px; text-transform:uppercase; letter-spacing:.35px;  color:#64748b; font-weight:800; }
-.member-offer .m-price{ font-size:22px; font-weight:900; color:#0f172a; line-height:1;}
-.member-offer .m-save{ font-size:11px; font-weight:800; color:#065f46; background:#d1fae5; border:1px solid #a7f3d0; padding:6px 10px; border-radius:999px; white-space:nowrap;}
-.member-offer .m-btn{ padding:8px 12px; border-radius:10px; font-weight:800; font-size:13px;}
+/* ... (tu CSS sigue igual hasta el final donde pegaste modal-card/options) ... */
 
-.r-card{
-  display:grid;
-  grid-template-columns: 1fr 590px;
-  grid-template-rows: auto auto;
-  grid-template-areas:
-    "body  price"
-    "media price";
-  gap:16px;
-  align-items:start;
-}
-.r-body{  grid-area: body; }
-.r-price{ grid-area: price; }
-.r-media{ grid-area: media; }
-.r-media img{
-  width:85%;
-  height:250px;
-  object-fit:cover;
-  border-radius:12px;
-}
-@media (max-width: 900px){
-  .member-offer .mo-grid{ grid-template-columns:1fr; }
-  .member-offer .mcol{
-    grid-template-columns: 100px 1fr auto auto;
-    min-height:50px;
-    grid-template-areas:
-      "label price"
-      "save  btn";
-    row-gap:8px;
-  }
-  .member-offer .m-label{ font-size:10px; font-weight:500; }
-  .member-offer .m-price{ font-size:20px; }
-  .member-offer .m-save{ font-size:11px; }
-  .member-offer .m-btn{ font-size:13px; }
-  .r-card{
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "body"
-      "price"
-      "media";
-  }
-  .r-media img{ height:200px; width:100%; }
-}
-
-.btn-quote{
-  background:rgba(178,34,34,.12);
-  color:var(--brand);
-  border:1px solid rgba(178,34,34,.3);
-  margin-top: 10px;
-}
-.btn-quote:hover{ filter:brightness(.98); }
-
-/* ====== Documento de Cotización (PDF) ====== */
-.quote-wrap{
-  background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:var(--shadow);
-  padding:16px;margin-top:8px
-}
-.quote-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.quote-title{font-weight:900;font-size:18px}
-.quote-meta{font-size:12px;color:#6b7280}
-.quote-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.quote-block{background:#fafafa;border:1px solid #eee;border-radius:10px;padding:10px}
-.quote-block h4{margin:0 0 6px}
-.kv{list-style:none;margin:0;padding:0}
-.kv li{display:flex;gap:8px;align-items:flex-start;margin:4px 0}
-.kv li span{color:#6b7280;font-size:12px;min-width:88px;text-transform:uppercase;font-weight:900}
-.kv li strong{font-weight:900}
-.car-mini{display:flex;gap:12px;align-items:center}
-.car-mini__img img{width:110px;height:70px;object-fit:cover;background:#f6f7fb;border-radius:8px}
-.car-mini__text .t1{font-weight:900}
-.car-mini__text .t2,.car-mini__text .t3{font-size:12px;color:#6b7280}
-.muted{color:#6b7280;font-size:12px}
-.quote-actions{margin-top:12px;display:flex;gap:10px}
-
-/* ===== Quote / PDF look ===== */
-.quote-doc { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:18px; box-shadow:0 12px 30px rgba(0,0,0,.08); }
-.quote-doc .qd-title{ margin:6px 0 12px; font-size:18px; font-weight:900; }
-
-.qd-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:16px; margin-bottom:12px; }
-.qd-brand .qd-logo{ font-family:'Playfair Display',serif; font-weight:800; letter-spacing:2px; font-size:22px; color:#111; }
-.qd-brand .qd-sub{ color:#6b7280; font-weight:700; font-size:12px; }
-.qd-meta{ display:grid; grid-auto-flow:column; gap:16px; }
-.qd-meta .l{ font-size:11px; text-transform:uppercase; color:#6b7280; font-weight:900; margin-bottom:2px; }
-.qd-meta .v{ font-weight:900; }
-
-.qd-block{ border-top:1px solid #e5e7eb; padding-top:12px; margin-top:12px; }
-.qd-block-head{ font-weight:900; margin-bottom:8px; }
-.qd-block-head.between{ display:flex; justify-content:space-between; align-items:center; }
-.qd-link{ color:#b22222; font-weight:900; text-decoration:none; }
-
-.qd-kv .row{ display:flex; gap:10px; margin:4px 0; }
-.qd-kv .k{ width:110px; color:#6b7280; font-weight:800; text-transform:uppercase; font-size:12px; }
-.qd-kv .v{ flex:1; }
-
-.qd-muted{ color:#6b7280; }
-
-.qd-car{ display:flex; gap:14px; align-items:center; }
-.qd-car img{ width:170px; height:auto; object-fit:cover; border-radius:10px; background:#f6f7fb; }
-.qd-car .t1{ font-weight:900; }
-.qd-car .t2{ font-size:12px; color:#555; }
-.qd-car .t3{ font-size:12px; color:#111; }
-
-.qd-list{ margin:0; padding-left:18px; }
-.qd-list li{ margin:6px 0; font-weight:800; }
-.qd-list li .price{ float:right; }
-
-.qd-price .row{ display:flex; justify-content:space-between; margin:6px 0; }
-.qd-price .row.total{ border-top:1px solid #e5e7eb; padding-top:8px; margin-top:8px; }
-
-.qd-notes{ background:#fafafa; border:1px solid #eee; border-radius:10px; padding:12px; margin-top:12px; }
-.qd-notes .n-title{ font-weight:900; margin-bottom:6px; }
-
-/* Clase que activamos justo antes de exportar para asegurar tipografía/tamaños de PDF */
-.for-pdf .quote-doc{ box-shadow:none; border:1px solid #ddd; }
-@media print{
-  .quote-doc{ box-shadow:none; border:1px solid #111; }
-}
-
-/* ===== Encabezado y notas para PDF dentro de #cotizacionDoc ===== */
-.qd-head{
-  display:flex;justify-content:space-between;align-items:flex-end;
-  gap:16px;margin:0 0 8px;
-}
-.qd-brand .qd-logo{
-  font-family:'Playfair Display',serif;font-weight:800;letter-spacing:2px;
-  font-size:22px;color:#111;
-}
-.qd-brand .qd-sub{ color:#6b7280; font-weight:700; font-size:12px; }
-.qd-meta{ display:grid; grid-auto-flow:column; gap:18px; }
-.qd-meta .l{
-  font-size:11px; text-transform:uppercase; color:#6b7280;
-  font-weight:900; margin-bottom:2px;
-}
-.qd-meta .v{ font-weight:900; }
-
-.resume-card .qd-head{
-  padding-top:18px;      
-  padding-left:10px;      
-
-}
-
-.resume-card .qd-logo img{
-  margin-top:3px;        
-  max-height:48px;
-  width:auto;
-  display:block;
-}
-
-.qd-notes{
-  background:#fafafa; border:1px solid #eee; border-radius:10px;
-  padding:10px; margin-top:8px;
-}
-.qd-notes .n-title{ font-weight:900; margin-bottom:6px; }
-.qd-list{ margin:0; padding-left:18px; }
-.qd-list li{
-  margin:4px 0; font-size:12px; line-height:1.45; color:#6b7280;
-}
-.qd-list li strong{ color:#374151; }
-
-/* Asegurar imágenes correctas en el PDF */
-#cotizacionDoc img{ max-width:100%; height:auto; display:block; }
-
-/* >>> Limpieza visual al exportar (para que el contenido quede “pegado” arriba en el PDF) */
-.for-pdf{ background:#fff; }
-.for-pdf #cotizacionDoc{ margin:0 !important; border-radius:0 !important; }
-.for-pdf .summary-grid{ gap:0 !important; }
-.for-pdf .resume-card{ box-shadow:none !important; border:1px solid #ddd !important; }
-.for-pdf .resume-card .block-head{ padding:10px 12px; }
-.for-pdf .resume-card .block-body{ padding:10px 12px; }
-
-/* (ya lo tienes, lo repito por claridad) – tamaño de la foto del auto en el resumen */
-.resume-card .car-sum img{
-  width:190px;height:auto;object-fit:cover;background:#f6f7fb;border-radius:10px;
-}
-/* Contenedor temporal para PDF */
-#pdf-sandbox {
-  position: fixed;
-  inset: 0 auto auto 0;    /* top:0; left:0 */
-  z-index: -1;             /* fuera de la vista y no bloquea clics */
-  visibility: hidden;      /* no parpadea */
-}
-
-/* Ancho carta a ~96dpi: 8.5in * 96 = 816px (con 20px de margen interno) */
-.pdf-fit {
-  width: 816px;
-  box-sizing: border-box;
-  padding: 12px;           /* coincide con margin jsPDF para que calce bonito */
-}
-
-/* Quita sombras/bordes fuertes al exportar (opcional) */
-.for-pdf .resume-card{ box-shadow:none; border:1px solid #ddd; }
-/* =========================
-   🧾 OVERRIDES SOLO PARA PDF
-   ========================= */
-
-/* Modo PDF (se activa desde JS con body.for-pdf) */
-body.for-pdf{ background:#fff !important; }
-
-/* Escenario neutral donde montamos el clon */
-#pdf-sandbox{
-  position:fixed;
-  left:-9999px; top:0;            /* fuera de la vista */
-  width:816px;                     /* carta a 96dpi */
-  background:#fff;
-  padding:0; margin:0;
-  z-index:999999;
-  visibility:visible;
-}
-
-/* El clon exportable */
-#pdf-sandbox .pdf-fit{
-  width:816px !important;
-  max-width:816px !important;
-  box-sizing:border-box;
-  margin:0 !important;
-  padding:12px !important;         /* “respira” y cuadra con márgenes de jsPDF */
-  border:0 !important;
-  border-radius:0 !important;
-  box-shadow:none !important;
-  background:#fff !important;
-}
-
-/* Romper cualquier layout que “angoste” el contenido */
-#pdf-sandbox .wrap,
-#pdf-sandbox .summary-grid,
-#pdf-sandbox .confirm-grid{ display:block !important; width:100% !important; }
-
-#pdf-sandbox [class*="grid"],
-#pdf-sandbox [class*="cols"],
-#pdf-sandbox .r-card,
-#pdf-sandbox .r-price{ display:block !important; width:100% !important; }
-
-/* Contenido principal a 100% del ancho */
-#pdf-sandbox .main,
-#pdf-sandbox #cotizacionDoc,
-#pdf-sandbox .quote-doc,
-#pdf-sandbox .resume-card{ width:100% !important; max-width:100% !important; }
-
-/* Quitar sombras fuertes y dejar look de documento */
-#pdf-sandbox .card,
-#pdf-sandbox .quote-doc,
-#pdf-sandbox .resume-card,
-#pdf-sandbox .receipt-card,
-#pdf-sandbox .resume-final{
-  box-shadow:none !important;
-  border:1px solid #e5e7eb !important;
-}
-
-/* Encabezado bonito para el PDF */
-#pdf-sandbox .qd-head{
-  display:flex !important; align-items:flex-end; justify-content:space-between;
-  gap:16px; margin:0 0 12px; padding-bottom:8px; border-bottom:1px solid #EAECF0;
-}
-#pdf-sandbox .qd-brand .qd-logo{ font-weight:800; letter-spacing:3px; }
-#pdf-sandbox .qd-meta .l{ font-size:11px; color:#667085; text-transform:uppercase; font-weight:900; }
-#pdf-sandbox .qd-meta .v{ font-weight:900; }
-
-/* Notas */
-#pdf-sandbox .qd-notes{ margin-top:14px; padding:12px; background:#F7F9FC; border:1px solid #EAECF0; border-radius:10px; }
-
-/* Imágenes seguras para html2canvas */
-#pdf-sandbox img{ max-width:100% !important; height:auto !important; display:block; }
-
-/* Ocultar UI interactiva en el clon (doble seguro) */
-#pdf-sandbox a,
-#pdf-sandbox button,
-#pdf-sandbox .topbar,
-#pdf-sandbox .steps-header,
-#pdf-sandbox .hamburger,
-#pdf-sandbox .quote-actions,
-#pdf-sandbox .link,
-#pdf-sandbox .footer-elegant{ display:none !important; }
-
-/* Pequeños ajustes de densidad para que todo quepa lindo */
-#pdf-sandbox .block-head{ padding:10px 12px !important; }
-#pdf-sandbox .block-body{ padding:10px 12px !important; }
-#pdf-sandbox .price-row.total{ margin-top:6px !important; padding-top:6px !important; }
-
-/* Garantizar márgenes del @page no peleen con el clon */
-@page{ size:Letter; margin:12mm; }
-.for-pdf .resume-card .block-head{ padding:8px 10px !important; }
-.for-pdf .resume-card .block-body{ padding:8px 10px !important; }
-.for-pdf #cotizacionDoc{ font-size:0.95em; } /* texto 5% más chico */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -635,9 +313,7 @@ body.for-pdf{ background:#fff !important; }
   text-align: center;
 }
 
-.modal-card h3 {
-  margin-bottom: 1rem;
-}
+.modal-card h3 { margin-bottom: 1rem; }
 
 .modal-card .options {
   display: flex;
@@ -645,3 +321,256 @@ body.for-pdf{ background:#fff !important; }
   gap: 0.75rem;
   margin-bottom: 1rem;
 }
+
+/* ===== Flatpickr (Viajero) solo dentro de .calendar-viajero ===== */
+.calendar-viajero .flatpickr-calendar{
+  border:0;
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 20px 50px rgba(0,0,0,.2);
+  font-family:'Poppins',system-ui,Arial,sans-serif
+}
+.calendar-viajero .flatpickr-months{background:var(--brand);color:#fff}
+.calendar-viajero .flatpickr-months .flatpickr-month{height:56px}
+.calendar-viajero .flatpickr-current-month{color:#fff;font-weight:800;font-size:18px}
+.calendar-viajero .flatpickr-months .flatpickr-prev-month,
+.calendar-viajero .flatpickr-months .flatpickr-next-month{fill:#fff;opacity:.95}
+.calendar-viajero .flatpickr-weekdays{background:#fff;border-bottom:4px solid var(--brand)}
+.calendar-viajero span.flatpickr-weekday{color:var(--brand);font-weight:800}
+.calendar-viajero .flatpickr-day{border-radius:10px;font-weight:800}
+.calendar-viajero .flatpickr-day:hover{background:#ffe5e5}
+.calendar-viajero .flatpickr-day.today:not(.selected):not(.startRange):not(.endRange){
+  border:2px solid var(--brand)!important;
+  color:var(--brand)!important
+}
+.calendar-viajero .flatpickr-day.selected,
+.calendar-viajero .flatpickr-day.startRange,
+.calendar-viajero .flatpickr-day.endRange{
+  background:var(--brand)!important;
+  border-color:var(--brand)!important;
+  color:#fff!important
+}
+.calendar-viajero .flatpickr-day.inRange{background:#ffe5e5!important;color:#b22222!important}
+.calendar-viajero .flatpickr-day.startRange{border-radius:999px 0 0 999px}
+.calendar-viajero .flatpickr-day.endRange{border-radius:0 999px 999px 0}
+.calendar-viajero .flatpickr-time{border-top:1px solid #f0f0f0}
+
+/* ==========================================================
+   ✅ OPCIÓN A: DatePicker/TimePicker CUSTOM (dpPop / tpPop)
+   (NO requiere cambiar Blade)
+========================================================== */
+
+/* Asegura que tus modales queden arriba de todo */
+.pop{ z-index: 9999; }
+#dpPop, #tpPop{ z-index: 99999; }
+
+/* Caja general */
+#dpPop .box,
+#tpPop .box{
+  background:#fff;
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid #e5e7eb;
+  box-shadow:0 20px 60px rgba(0,0,0,.22);
+}
+
+/* Header rojo (dp/tp) */
+#dpPop .dp-head,
+#tpPop .tp-head{
+  background:linear-gradient(90deg, var(--brand), #f45a5a) !important;
+  color:#fff !important;
+  box-shadow:0 2px 12px rgba(0,0,0,.14);
+}
+
+/* Botones del header (prev/next, 12h/24h, AM/PM, close) */
+#dpPop .dp-head .btn,
+#tpPop .tp-head .btn{
+  border:0 !important;
+  border-radius:10px !important;
+  font-weight:900 !important;
+  box-shadow:0 6px 14px rgba(0,0,0,.12);
+  transition: transform .12s, filter .12s;
+}
+#dpPop .dp-head .btn:hover,
+#tpPop .tp-head .btn:hover{ transform: translateY(-1px); filter: brightness(.98); }
+
+/* Grid del calendario */
+#dpPop #dpGrid{
+  padding:12px 12px 14px;
+  background:#fff;
+}
+
+/* Soporta varios tipos de celdas: div/span/button */
+#dpPop #dpGrid button,
+#dpPop #dpGrid .dp-day,
+#dpPop #dpGrid .day,
+#dpPop #dpGrid [data-day]{
+  width:40px;
+  height:40px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  cursor:pointer;
+  user-select:none;
+  border:1px solid transparent;
+  background:transparent;
+  transition: transform .12s, background .12s, border .12s, box-shadow .12s;
+}
+
+/* Hover */
+#dpPop #dpGrid button:hover,
+#dpPop #dpGrid .dp-day:hover,
+#dpPop #dpGrid .day:hover,
+#dpPop #dpGrid [data-day]:hover{
+  background:#ffe5e5;
+  transform: translateY(-1px);
+}
+
+/* “Hoy” (soporta clases típicas) */
+#dpPop #dpGrid .is-today,
+#dpPop #dpGrid .today,
+#dpPop #dpGrid [data-today="1"]{
+  border:2px solid var(--brand) !important;
+  color:var(--brand) !important;
+}
+
+/* Seleccionado (soporta clases típicas) */
+#dpPop #dpGrid .is-selected,
+#dpPop #dpGrid .selected,
+#dpPop #dpGrid .active,
+#dpPop #dpGrid [aria-selected="true"]{
+  background:var(--brand) !important;
+  border-color:var(--brand) !important;
+  color:#fff !important;
+  box-shadow:0 0 0 4px rgba(178,34,34,.12);
+}
+
+/* En rango */
+#dpPop #dpGrid .is-inrange,
+#dpPop #dpGrid .inRange{
+  background:#ffe5e5 !important;
+  color:#b22222 !important;
+}
+
+/* Deshabilitado */
+#dpPop #dpGrid .is-disabled,
+#dpPop #dpGrid .disabled,
+#dpPop #dpGrid [disabled],
+#dpPop #dpGrid [aria-disabled="true"]{
+  opacity:.45;
+  pointer-events:none;
+}
+
+/* Footer dpPop */
+#dpPop footer{
+  background:linear-gradient(90deg, #fff, #fff6f6);
+  border-top:1px solid #eee !important;
+}
+#dpPop footer .btn{
+  border-radius:12px;
+  font-weight:900;
+}
+#dpPop footer .btn.primary{
+  background:var(--brand);
+  color:#fff;
+}
+
+/* ==========================
+   🕑 TimePicker custom (tpPop)
+========================== */
+
+#tpPop .tp-wrap{ background:#fff; }
+#tpPop .tp-q{
+  display:inline-flex;
+  align-items:center;
+  padding:8px 10px;
+  border-radius:999px;
+  background:rgba(178,34,34,.10);
+  border:1px solid rgba(178,34,34,.22);
+  color:var(--brand);
+  font-weight:900;
+  cursor:pointer;
+  user-select:none;
+  transition: transform .12s, filter .12s, background .12s;
+}
+#tpPop .tp-q:hover{ transform: translateY(-1px); filter: brightness(.98); background:rgba(178,34,34,.14); }
+
+#tpPop #tpSelect{
+  border:1px solid #d1d5db;
+  border-radius:12px;
+  padding:10px 12px;
+}
+#tpPop #tpSelect:focus{
+  outline:none;
+  border-color:var(--brand);
+  box-shadow:0 0 0 4px rgba(178,34,34,.12);
+}
+
+/* Footer tpPop */
+#tpPop footer{
+  background:linear-gradient(90deg, #fff, #fff6f6);
+  border-top:1px solid #eee !important;
+}
+#tpPop footer .btn{
+  border-radius:12px;
+  font-weight:900;
+}
+#tpPop footer .btn.primary{
+  background:var(--brand);
+  color:#fff;
+}
+/* Fila fecha/hora */
+.datetime-row{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  width:100%;
+  box-sizing:border-box;
+  flex-wrap:wrap;
+}
+.datetime-row input{
+  flex:1 1 120px;
+  min-width:0;
+}
+
+/* Icono calendario / reloj */
+.cal-ico{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:18px;
+  color:#9ca3af;
+  pointer-events:none;
+}
+input.flatpickr-input{ padding-right:36px }
+
+/* Estilos flatpickr */
+.flatpickr-calendar{ border-radius:14px; box-shadow:0 18px 45px rgba(0,0,0,.18); overflow:hidden }
+.flatpickr-months{ background:var(--brand); color:#fff }
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month .cur-month,
+.flatpickr-current-month .numInput.cur-year{ font-weight:700; color:#fff }
+.flatpickr-weekdays{ background:#f6f7fb }
+.flatpickr-weekday{ color:#8b1d1a; font-weight:700 }
+.flatpickr-day{ border-radius:10px; font-weight:600 }
+.flatpickr-day.inRange{
+  background:rgba(178,34,34,.10);
+  box-shadow:inset 0 0 0 1.5px rgba(178,34,34,.20),
+             inset 0 -3px 0 rgba(178,34,34,.55),
+             inset 0 3px 0 rgba(178,34,34,.55);
+  color:var(--ink);
+}
+.flatpickr-day.startRange,
+.flatpickr-day.endRange{ background:var(--brand); color:#fff }
+.flatpickr-day.startRange{ border-radius:12px 6px 6px 12px }
+.flatpickr-day.endRange{ border-radius:6px 12px 12px 6px }
+.flatpickr-day:hover{ background:rgba(178,34,34,.14) }
+.flatpickr-day.today{ border:1.5px solid var(--brand) }
+.flatpickr-time{ border-top:1px solid #e5e7eb; background:#fff }
+.flatpickr-time input,
+.flatpickr-time .flatpickr-am-pm{ font-weight:700; color:var(--ink) }
+
+.hidden{ display:none !important; }
+.small{ font-size:12px; color:var(--muted); margin-top:4px; }

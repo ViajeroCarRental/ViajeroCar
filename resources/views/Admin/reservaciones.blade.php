@@ -3,6 +3,7 @@
 
 @section('css-vistaHomeVentas')
 <link rel="stylesheet" href="{{ asset('css/reservacionesAdmin.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@400;600;700&display=swap" rel="stylesheet">
 @endsection
 
@@ -60,20 +61,35 @@
         <div class="form-2">
           <div>
             <label>Fecha de salida</label>
-            <input id="fecha_inicio" name="fecha_inicio" class="input" type="date" required>
+            <input id="fecha_inicio" 
+            name="fecha_inicio" 
+            class="input" 
+            type="date" required>
           </div>
+
           <div>
             <label>Hora de salida</label>
-            <input id="hora_retiro" name="hora_retiro" class="input" type="time" required>
+            <input id="hora_retiro" 
+            name="hora_retiro" 
+            class="input" 
+            type="time" required>
           </div>
+
           <div>
             <label>Fecha de llegada</label>
-            <input id="fecha_fin" name="fecha_fin" class="input" type="date" required>
+            <input id="fecha_fin" 
+            name="fecha_fin" 
+            class="input" 
+            type="date" required>
           </div>
           <div>
             <label>Hora de llegada</label>
-            <input id="hora_entrega" name="hora_entrega" class="input" type="time" required>
+            <input id="hora_entrega" 
+            name="hora_entrega" 
+            class="input" 
+            type="time" required>
           </div>
+          
         </div>
 
         <!-- Grupo: Categoría -->
