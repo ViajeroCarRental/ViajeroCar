@@ -130,7 +130,7 @@
       <div class="kv"><div>Correo electrónico</div><div id="clienteEmail">{{ $reservacion->email_cliente }}</div></div>
       <div class="kv"><div>Duración</div>
         <div id="diasBadge">
-          {{ \Carbon\Carbon::parse($reservacion->fecha_inicio)->diffInDays($reservacion->fecha_fin) + 1 }} días
+          {{ \Carbon\Carbon::parse($reservacion->fecha_inicio)->diffInDays($reservacion->fecha_fin)}} días
         </div>
       </div>
       <div class="kv total">

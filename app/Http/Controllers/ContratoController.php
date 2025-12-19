@@ -1521,7 +1521,7 @@ if ($res->tarifa_ajustada == 1 && $res->tarifa_modificada > 0) {
 
         // 4️⃣ Calcular días (incluye día inicial)
         $dias = Carbon::parse($data['fecha_inicio'])
-    ->diffInDays(Carbon::parse($data['fecha_fin'])) + 1;
+    ->diffInDays(Carbon::parse($data['fecha_fin']));
 
 
         // 5️⃣ Calcular subtotal, impuestos y total
@@ -2042,7 +2042,7 @@ public function resumenPaso6($idReservacion)
         // 2) Calcular días (correcto con +1)
         // ===============================
         $dias = Carbon::parse($res->fecha_inicio)
-            ->diffInDays(Carbon::parse($res->fecha_fin)) + 1;
+            ->diffInDays(Carbon::parse($res->fecha_fin));
 
         // ===============================
         // 3) Tarifa correcta
@@ -2557,7 +2557,7 @@ public function resumenContrato($idReservacion)
             ]);
         }
 $dias = \Carbon\Carbon::parse($res->fecha_inicio)
-        ->diffInDays(\Carbon\Carbon::parse($res->fecha_fin)) + 1;
+        ->diffInDays(\Carbon\Carbon::parse($res->fecha_fin));
 
 
 

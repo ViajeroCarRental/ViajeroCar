@@ -278,9 +278,13 @@
 </div>
 
 <div class="acciones-extra">
-    <a href="{{ route('checklist.ver', $reservacion->id_reservacion) }}" class="btn-checklist">
-        Checklist
-    </a>
+    <a href="{{ route('checklist.ver', [
+    'id' => $contrato->id_contrato,
+    'modo' => 'salida'
+]) }}" class="btn-checklist">
+    Checklist
+</a>
+>
 
     <a href="#" class="btn-checklist">
         Cambio de Vehículo
