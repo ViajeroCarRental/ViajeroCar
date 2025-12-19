@@ -31,6 +31,7 @@ use App\Http\Controllers\ContratosAbiertosController;
 use App\Http\Controllers\VisorReservacionesController;
 use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\ContratosAbiertosControllerController;
+use App\Http\Controllers\ChecklistCambioAutoController;
 use Illuminate\Support\Facades\DB;
 //rutas vistas Usuario
 
@@ -398,9 +399,9 @@ Route::get('/admin/reservacion/{id}/checklist', function($id) {
     return view('Admin.checklist', ['id' => $id]);
 })->name('checklist.ver');
 
-Route::get('/admin/checklist2', function () {
-    return view('Admin.checklist2');
-});
+// Vista checklist cambio de auto
+Route::get('/admin/checklist2', [ChecklistCambioAutoController::class, 'index'])
+    ->name('checklist.cambio-auto');
 
 /* ===============================================
    ADMIN · ROLES Y PERMISOS

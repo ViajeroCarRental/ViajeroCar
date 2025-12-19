@@ -16,7 +16,7 @@
         "3/4","13/16","14/16","15/16","1"
     ];
 @endphp
-<input type="hidden" id="idContrato" value="{{ $reservacion->id_reservacion }}">
+<input type="hidden" id="idContrato" value="{{ $contrato->id_contrato }}">
 
 <div class="checklist-container">
 
@@ -42,7 +42,7 @@
 
         <div class="cl-ra-box">
             <span>No. Rental Agreement</span>
-            <strong>{{ $reservacion->id_reservacion ?? '' }}</strong>
+            <strong>{{ $contrato->numero_contrato ?? $contrato->id_contrato ?? '' }}</strong>
         </div>
     </header>
 
@@ -82,8 +82,25 @@
             <th>KILOMETRAJE SALIDA</th>
             <td>{{ $kmSalida ?? '—' }}</td>
 
-            <th>KILOMETRAJE REGRESO</th>
-            <td>{{ $kmRegreso ?? '—' }}</td>
+            <td>
+    <span id="kmRegresoText"
+          style="cursor:pointer; text-decoration:underline;">
+        {{ $kmRegreso ?? '—' }}
+    </span>
+
+    <input type="number"
+           id="kmRegresoInput"
+           value="{{ $kmRegreso ?? '' }}"
+           style="display:none; width:100px;"
+           min="0">
+
+    <button id="btnGuardarKm"
+            style="display:none;"
+            class="btn btn-sm btn-primary">
+        Guardar
+    </button>
+</td>
+
 
             <th>PROTECCIÓN</th>
             <td>{{ $proteccion ?? '—' }}</td>
@@ -281,11 +298,20 @@
 
     <div class="accept-line">
         <span>Acepto:</span>
-        <input type="text" class="input-line"
-               placeholder="Nombre del cliente"
-               data-field="acepto_cliente_nombre">
+
+        @if($contrato->firma_cliente)
+            <img src="{{ $contrato->firma_cliente }}"
+                 class="firma-img"
+                 alt="Firma del cliente">
+        @else
+            <button class="btn-open-sign"
+                    data-type="cliente">
+                Firmar Cliente
+            </button>
+        @endif
     </div>
 </section>
+
 
 <!-- ============================================ -->
 <!--           POSIBLES CARGOS                    -->
@@ -333,6 +359,7 @@
         discrepancia antes de salir de los locales de Viajero Car Rental.
     </p>
 
+    <!-- ================= CLIENTE ================= -->
     <table class="sign-table">
         <tr>
             <th>Nombre del Cliente</th>
@@ -342,7 +369,8 @@
         </tr>
         <tr>
             <td>
-                <input type="text" class="input-line"
+                <input type="text"
+                       class="input-line"
                        data-field="firma_cliente_nombre"
                        placeholder="Nombre del cliente">
             </td>
@@ -351,17 +379,21 @@
                 @if($contrato->firma_cliente)
                     <img src="{{ $contrato->firma_cliente }}" class="firma-img">
                 @else
-                    <button class="btn-open-sign" data-type="cliente">Firmar Cliente</button>
+                    <button class="btn-open-sign" data-type="cliente">
+                        Firmar Cliente
+                    </button>
                 @endif
             </td>
 
             <td>
-                <input type="date" class="input-line"
+                <input type="date"
+                       class="input-line"
                        data-field="firma_cliente_fecha">
             </td>
 
             <td>
-                <input type="time" class="input-line"
+                <input type="time"
+                       class="input-line"
                        data-field="firma_cliente_hora">
             </td>
         </tr>
@@ -369,6 +401,7 @@
 
     <h3 class="sec-title">Sólo personal de Viajero</h3>
 
+    <!-- ================= ENTREGA ================= -->
     <table class="sign-table">
         <tr>
             <th>Entregó</th>
@@ -378,7 +411,8 @@
         </tr>
         <tr>
             <td>
-                <input type="text" class="input-line"
+                <input type="text"
+                       class="input-line"
                        data-field="entrego_nombre"
                        placeholder="Nombre del agente que entrega">
             </td>
@@ -387,14 +421,27 @@
                 @if($contrato->firma_arrendador)
                     <img src="{{ $contrato->firma_arrendador }}" class="firma-img">
                 @else
-                    <button class="btn-open-sign" data-type="arrendador">Firmar Agente</button>
+                    <button class="btn-open-sign" data-type="arrendador">
+                        Firmar Agente
+                    </button>
                 @endif
             </td>
 
-            <td><input type="date" class="input-line" data-field="entrego_fecha"></td>
-            <td><input type="time" class="input-line" data-field="entrego_hora"></td>
+            <td>
+                <input type="date"
+                       class="input-line"
+                       data-field="entrego_fecha">
+            </td>
+
+            <td>
+                <input type="time"
+                       class="input-line"
+                       data-field="entrego_hora">
+            </td>
         </tr>
 
+        <!-- ================= RECIBE ================= -->
+        <!-- USA LA MISMA FIRMA DEL QUE ENTREGÓ -->
         <tr>
             <th>Recibió</th>
             <th>Firma</th>
@@ -403,19 +450,38 @@
         </tr>
         <tr>
             <td>
-                <input type="text" class="input-line"
+                <input type="text"
+                       class="input-line"
                        data-field="recibio_nombre"
                        placeholder="Nombre del agente que recibe">
             </td>
 
-            <td><button class="btn-open-sign" data-type="arrendador">Firmar</button></td>
+            <td>
+                @if($contrato->firma_arrendador)
+                    <img src="{{ $contrato->firma_arrendador }}" class="firma-img">
+                @else
+                    <span style="opacity:.6;font-size:.85rem">
+                        Firma pendiente
+                    </span>
+                @endif
+            </td>
 
-            <td><input type="date" class="input-line" data-field="recibio_fecha"></td>
-            <td><input type="time" class="input-line" data-field="recibio_hora"></td>
+            <td>
+                <input type="date"
+                       class="input-line"
+                       data-field="recibio_fecha">
+            </td>
+
+            <td>
+                <input type="time"
+                       class="input-line"
+                       data-field="recibio_hora">
+            </td>
         </tr>
     </table>
 
 </section>
+
 
 <!-- =======================================================
      MODAL ÚNICO DE FIRMAS (CLIENTE / AGENTE)
@@ -648,6 +714,59 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Guardado:", input.dataset.field, input.value);
         });
     });
+    /* ==========================================================
+   EDITAR + GUARDAR KILOMETRAJE DE REGRESO
+========================================================== */
+const kmText = document.getElementById("kmRegresoText");
+const kmInput = document.getElementById("kmRegresoInput");
+const btnGuardarKm = document.getElementById("btnGuardarKm");
+
+if (kmText && kmInput && btnGuardarKm) {
+
+    // Al dar clic en el texto
+    kmText.addEventListener("click", () => {
+        kmText.style.display = "none";
+        kmInput.style.display = "inline-block";
+        btnGuardarKm.style.display = "inline-block";
+        kmInput.focus();
+    });
+
+    // Guardar kilometraje
+    btnGuardarKm.addEventListener("click", async () => {
+
+        const km = kmInput.value;
+
+        if (!km || km < 0) {
+            alert("Kilometraje inválido");
+            return;
+        }
+
+        const resp = await fetch(`/admin/checklist/${CHECKLIST_ID}/actualizar-km`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                km_regreso: km
+            })
+        });
+
+        if (!resp.ok) {
+            alert("Error al guardar kilometraje");
+            return;
+        }
+
+        // Actualizar texto
+        kmText.textContent = km;
+
+        // Volver a modo lectura
+        kmInput.style.display = "none";
+        btnGuardarKm.style.display = "none";
+        kmText.style.display = "inline";
+    });
+}
+
 
 });
 </script>
