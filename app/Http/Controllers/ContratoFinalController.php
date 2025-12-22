@@ -50,7 +50,7 @@ class ContratoFinalController extends Controller
         // 4️⃣ Días
         $dias = max(
             \Carbon\Carbon::parse($reservacion->fecha_inicio)
-                ->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_fin)) + 1,
+                ->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_fin)),
             1
         );
 
