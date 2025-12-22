@@ -15,11 +15,25 @@ document.addEventListener("DOMContentLoaded", () => {
       // Si ya está cargado, no volver a cargar
       if (window.paypal) return resolve();
 
+      // Validar que tengamos el CLIENT_ID disponible
+      if (!window.PAYPAL_CLIENT_ID) {
+        console.error("PAYPAL_CLIENT_ID no está definido en window.");
+        alert("Error al configurar la pasarela de pago. Intenta más tarde.");
+        return reject(new Error("Falta PAYPAL_CLIENT_ID"));
+      }
+
       const script = document.createElement("script");
       script.src =
-        "https://www.paypal.com/sdk/js?client-id=ATzNpaAJlH7dFrWKu91xLmCzYVDQQF5DJ51b0OFICqchae6n8Pq7XkfsOOQNnElIJMt_Aj0GEZeIkFsp&currency=MXN";
-      script.onload = resolve;
-      script.onerror = reject;
+        "https://www.paypal.com/sdk/js?client-id=" +
+        encodeURIComponent(window.PAYPAL_CLIENT_ID) +
+        "&currency=MXN";
+
+      script.onload = () => resolve();
+      script.onerror = (err) => {
+        console.error("Error al cargar el SDK de PayPal:", err);
+        reject(err);
+      };
+
       document.head.appendChild(script);
     });
   }
@@ -73,6 +87,38 @@ document.addEventListener("DOMContentLoaded", () => {
   async function iniciarPagoEnLinea() {
     if (modalMetodoPago) modalMetodoPago.style.display = "none";
 
+    // 🔍 Validar datos obligatorios antes de llamar a PayPal
+    const payload = getFormData();
+    const aceptaTerminos = document.querySelector("#acepto")?.checked || false;
+
+    const camposFaltantes = [];
+
+    if (!payload.nombre) camposFaltantes.push("Nombre completo");
+    if (!payload.telefono) camposFaltantes.push("Móvil");
+    if (!payload.email) camposFaltantes.push("Correo electrónico");
+    if (!payload.pickup_date || !payload.pickup_time) {
+      camposFaltantes.push("Fecha y hora de entrega");
+    }
+    if (!payload.dropoff_date || !payload.dropoff_time) {
+      camposFaltantes.push("Fecha y hora de devolución");
+    }
+    if (!payload.vehiculo_id) camposFaltantes.push("Vehículo seleccionado");
+    if (!payload.pickup_sucursal_id) camposFaltantes.push("Sucursal de entrega");
+    if (!payload.dropoff_sucursal_id) camposFaltantes.push("Sucursal de devolución");
+
+    if (camposFaltantes.length > 0) {
+      alert(
+        "Por favor completa los siguientes campos antes de continuar con el pago:\n\n- " +
+        camposFaltantes.join("\n- ")
+      );
+      return;
+    }
+
+    if (!aceptaTerminos) {
+      alert("Debes aceptar las políticas y procedimientos para continuar con el pago.");
+      return;
+    }
+
     try {
       await loadPayPalSDK();
 
@@ -93,8 +139,20 @@ document.addEventListener("DOMContentLoaded", () => {
         },
 
         createOrder: (data, actions) => {
-          const total =
-            document.querySelector("#qTotal")?.textContent?.replace(/[^\d.]/g, "") || "5000";
+          const totalText =
+            document.querySelector("#qTotal")?.textContent || "";
+
+          const totalNumber = parseFloat(
+            totalText.replace(/[^\d.]/g, "")
+          );
+
+          if (!totalText || isNaN(totalNumber) || totalNumber <= 0) {
+            alert("El total de la reservación no es válido. Actualiza la página e inténtalo de nuevo.");
+            // Lanzamos error para que PayPal no continúe
+            throw new Error("Total inválido para crear la orden de PayPal.");
+          }
+
+          const total = totalNumber.toFixed(2);
 
           return actions.order.create({
             purchase_units: [
@@ -111,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         onApprove: async (data, actions) => {
           const order = await actions.order.capture();
-          alert("✅ Pago completado. Registrando reservación...");
+          alert("✅ Pago completado en PayPal. Registrando reservación...");
 
           const payload = getFormData();
 
@@ -120,6 +178,12 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||
             form?.querySelector('input[name="_token"]')?.value ||
             "";
+
+          if (!token) {
+            alert("No se encontró el token de seguridad. Actualiza la página e inténtalo de nuevo.");
+            console.error("CSRF token no encontrado en la página.");
+            return;
+          }
 
           const urlLinea = window.APP_URL_RESERVA_LINEA || "/reservas/linea";
 
@@ -134,19 +198,21 @@ document.addEventListener("DOMContentLoaded", () => {
             body: JSON.stringify({
               ...payload,
               paypal_order_id: order.id,
-              status_pago: "Pagado",
+              // 👇 El backend decidirá el status del pago; aquí ya no lo fingimos
             }),
           });
 
           const dataRes = await res.json().catch(() => ({}));
 
           if (!res.ok || dataRes.ok === false) {
-            alert("⚠️ Error al registrar la reservación.");
+            console.error("Error al registrar la reservación en backend:", dataRes);
+            alert("⚠️ Error al registrar la reservación. Por favor contacta a soporte con tu comprobante de pago.");
             return;
           }
 
           alert("🎉 Reservación registrada con éxito. Ticket enviado por correo.");
-          sessionStorage.clear();
+          // Limpiamos solo lo relacionado a esta reserva
+          sessionStorage.removeItem("addons_selection");
         },
 
         onCancel: () => {
@@ -155,12 +221,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         onError: (err) => {
           console.error("Error PayPal:", err);
-          alert("Error al procesar el pago.");
+          alert("Error al procesar el pago. Intenta más tarde o usa otro método.");
         },
       }).render("#paypal-button-container");
     } catch (error) {
       console.error("Error al cargar PayPal:", error);
-      alert("No se pudo cargar la pasarela.");
+      alert("No se pudo cargar la pasarela de pago. Intenta más tarde.");
     }
   }
 

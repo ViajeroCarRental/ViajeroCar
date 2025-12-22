@@ -1,4 +1,4 @@
-@extends('layouts.Usuarios')  
+@extends('layouts.Usuarios')
 
 @section('Titulo','Reservaciones')
 
@@ -24,7 +24,7 @@
   $stepCurrent = isset($step) ? (int)$step : (int)request('step', 2);
 
   // Nombres de sucursales para el encabezado (con fallback a $ciudades)
-  $pickupName = null; 
+  $pickupName = null;
   $dropoffName = null;
   if (!empty($sucursales)) {
     $sucById = collect($sucursales)->keyBy('id_sucursal');
@@ -547,8 +547,19 @@
 @endsection
 
 @section('js-vistaReservaciones')
-  <!-- PayPal SDK primero -->
-  <script src="https://www.paypal.com/sdk/js?client-id=ATzNpaAJlH7dFrWKu91xLmCzYVDQQF5DJ51b0OFICqchae6n8Pq7XkfsOOQNnElIJMt_Aj0GEZeIkFsp&currency=MXN"></script>
+  @php
+      $paypalMode = env('PAYPAL_MODE', 'live');
+      $paypalClientId = $paypalMode === 'live'
+          ? env('PAYPAL_CLIENT_ID_LIVE')
+          : env('PAYPAL_CLIENT_ID_SANDBOX', env('PAYPAL_CLIENT_ID_LIVE'));
+  @endphp
+
+  <script>
+      window.PAYPAL_MODE = "{{ $paypalMode }}";
+      window.PAYPAL_CLIENT_ID = "{{ $paypalClientId }}";
+  </script>
+
+
   <!-- Luego tus JS locales -->
   <script src="{{ asset('js/reservaciones.js') }}"></script>
   <script src="{{ asset('js/BtnReserva.js') }}"></script>

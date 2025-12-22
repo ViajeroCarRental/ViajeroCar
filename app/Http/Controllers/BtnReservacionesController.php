@@ -9,6 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservacionUsuarioMail;
+use Illuminate\Support\Facades\Http;
 
 class BtnReservacionesController extends Controller
 {
@@ -123,7 +124,7 @@ public function reservar(Request $request)
     public function reservarLinea(Request $request)
 {
     try {
-        // 1️⃣ Validación
+        // 1️⃣ Validación de datos de la reserva + paypal_order_id obligatorio
         $validated = $request->validate([
             'vehiculo_id'         => 'required|integer',
             'pickup_date'         => 'required|date',
@@ -137,8 +138,8 @@ public function reservar(Request $request)
             'telefono'            => 'nullable|string|max:40',
             'vuelo'               => 'nullable|string|max:40',
             'addons'              => 'nullable|array',
-            'paypal_order_id'     => 'nullable|string',
-            'status_pago'         => 'nullable|string',
+            'paypal_order_id'     => 'required|string',
+            // ❌ OJO: ya NO aceptamos status_pago desde el front
         ]);
 
         // 2️⃣ Código RES
@@ -146,7 +147,7 @@ public function reservar(Request $request)
         $random = strtoupper(Str::random(5));
         $codigo = "RES-{$fecha}-{$random}";
 
-        // 3️⃣ Totales
+        // 3️⃣ Totales (mismo cálculo que en reservar)
         $vehiculo = DB::table('vehiculos')
             ->select('precio_dia', 'id_ciudad as ciudad_retiro')
             ->where('id_vehiculo', $validated['vehiculo_id'])
@@ -160,7 +161,110 @@ public function reservar(Request $request)
         $impuestos = round($subtotal * 0.16, 2);
         $total     = $subtotal + $impuestos;
 
-        // 4️⃣ Insertar reservación confirmada
+        // ============================================
+        // 4️⃣ Validar la orden de PayPal en servidor
+        // ============================================
+        $paypalOrderId = $validated['paypal_order_id'];
+
+        $mode = env('PAYPAL_MODE', 'live');
+        if ($mode === 'live') {
+            $clientId = env('PAYPAL_CLIENT_ID_LIVE');
+            $secret   = env('PAYPAL_SECRET_LIVE');
+            $baseUrl  = 'https://api-m.paypal.com';
+        } else {
+            $clientId = env('PAYPAL_CLIENT_ID_SANDBOX', env('PAYPAL_CLIENT_ID_LIVE'));
+            $secret   = env('PAYPAL_SECRET_SANDBOX', env('PAYPAL_SECRET_LIVE'));
+            $baseUrl  = 'https://api-m.sandbox.paypal.com';
+        }
+
+        if (!$clientId || !$secret) {
+            Log::error('❌ Credenciales de PayPal incompletas en .env');
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Configuración de PayPal incompleta. Intenta más tarde.',
+            ], 500);
+        }
+
+        // 4.1 Obtener access token
+        $tokenResponse = Http::withBasicAuth($clientId, $secret)
+            ->asForm()
+            ->post($baseUrl . '/v1/oauth2/token', [
+                'grant_type' => 'client_credentials',
+            ]);
+
+        if (!$tokenResponse->ok()) {
+            Log::error('❌ Error OAuth PayPal', ['body' => $tokenResponse->body()]);
+            return response()->json([
+                'ok'      => false,
+                'message' => 'No se pudo validar el pago con PayPal (OAuth).',
+            ], 422);
+        }
+
+        $accessToken = $tokenResponse['access_token'] ?? null;
+        if (!$accessToken) {
+            Log::error('❌ PayPal sin access_token en respuesta OAuth', ['json' => $tokenResponse->json()]);
+            return response()->json([
+                'ok'      => false,
+                'message' => 'No se pudo obtener autorización de PayPal.',
+            ], 422);
+        }
+
+        // 4.2 Consultar la orden en PayPal
+        $orderResponse = Http::withToken($accessToken)
+            ->get($baseUrl . '/v2/checkout/orders/' . $paypalOrderId);
+
+        if (!$orderResponse->ok()) {
+            Log::error('❌ No se pudo obtener la orden de PayPal', [
+                'order_id' => $paypalOrderId,
+                'body'     => $orderResponse->body(),
+            ]);
+
+            return response()->json([
+                'ok'      => false,
+                'message' => 'No se pudo validar la orden de pago con PayPal.',
+            ], 422);
+        }
+
+        $orderData = $orderResponse->json();
+        $status    = $orderData['status'] ?? null;
+
+        if ($status !== 'COMPLETED') {
+            Log::warning('⚠️ Orden PayPal no completada', [
+                'order_id' => $paypalOrderId,
+                'status'   => $status,
+            ]);
+
+            return response()->json([
+                'ok'      => false,
+                'message' => 'El pago aún no está completado en PayPal.',
+            ], 422);
+        }
+
+        // 4.3 Validar monto y moneda
+        $purchaseUnits = $orderData['purchase_units'][0] ?? null;
+        $amountData    = $purchaseUnits['amount'] ?? null;
+        $amountValue   = $amountData['value'] ?? null;
+        $currencyCode  = $amountData['currency_code'] ?? null;
+
+        $expectedTotal = number_format($total, 2, '.', '');
+
+        if ($currencyCode !== 'MXN' || $amountValue != $expectedTotal) {
+            Log::warning('⚠️ Desajuste entre total local y PayPal', [
+                'order_id'      => $paypalOrderId,
+                'paypal_value'  => $amountValue,
+                'paypal_curr'   => $currencyCode,
+                'expectedTotal' => $expectedTotal,
+            ]);
+
+            return response()->json([
+                'ok'      => false,
+                'message' => 'El monto del pago no coincide con la reservación.',
+            ], 422);
+        }
+
+        // ============================================
+        // 5️⃣ Insertar reservación confirmada
+        // ============================================
         $id = DB::table('reservaciones')->insertGetId([
             'id_usuario'       => null,
             'id_vehiculo'      => $validated['vehiculo_id'],
@@ -182,14 +286,14 @@ public function reservar(Request $request)
             'nombre_cliente'   => $validated['nombre'] ?? null,
             'email_cliente'    => $validated['email'] ?? null,
             'telefono_cliente' => $validated['telefono'] ?? null,
-            'paypal_order_id'  => $validated['paypal_order_id'] ?? null,
+            'paypal_order_id'  => $paypalOrderId,
             'status_pago'      => 'Pagado',
             'metodo_pago'      => 'en_linea',
             'created_at'       => now(),
             'updated_at'       => now(),
         ]);
 
-        // 5️⃣ Enviar correo con plantilla (PAGO EN LÍNEA)
+        // 6️⃣ Enviar correo con plantilla (PAGO EN LÍNEA)
         $reservacion = DB::table('reservaciones')
             ->where('id_reservacion', $id)
             ->first();
@@ -200,7 +304,7 @@ public function reservar(Request $request)
                 ->send(new ReservacionUsuarioMail($reservacion, 'en_linea'));
         }
 
-        // 6️⃣ Respuesta JSON
+        // 7️⃣ Respuesta JSON
         return response()->json([
             'ok'        => true,
             'folio'     => $codigo,
@@ -209,11 +313,13 @@ public function reservar(Request $request)
             'impuestos' => $impuestos,
             'total'     => $total,
             'estado'    => 'confirmada',
-            'message'   => 'Pago completado y reserva confirmada correctamente.',
+            'message'   => 'Pago validado con PayPal y reserva confirmada correctamente.',
         ]);
 
     } catch (\Throwable $e) {
-        Log::error('❌ Error en reservarLinea: ' . $e->getMessage());
+        Log::error('❌ Error en reservarLinea: ' . $e->getMessage(), [
+            'trace' => $e->getTraceAsString(),
+        ]);
 
         return response()->json([
             'ok'      => false,
@@ -222,5 +328,6 @@ public function reservar(Request $request)
         ], 500);
     }
 }
+
 
 }
