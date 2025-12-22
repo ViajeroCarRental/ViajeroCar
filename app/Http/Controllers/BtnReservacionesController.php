@@ -200,6 +200,7 @@ public function reservar(Request $request)
                 ->send(new ReservacionUsuarioMail($reservacion, 'en_linea'));
         }
 
+        
         // 6️⃣ Respuesta JSON
         return response()->json([
             'ok'        => true,

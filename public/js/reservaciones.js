@@ -11,11 +11,9 @@
   function normalizePdfLayout(root){
     if (!root) return;
 
-    // Ocultar elementos interactivos/ navegación dentro del CLON
     root.querySelectorAll('.topbar,.steps-header,.hamburger,.quote-actions,.link,.footer-elegant')
         .forEach(n => n.remove());
 
-    // Forzar contenedores a 100% y sin grid
     const widen = [
       '.wrap','.page','.main','#cotizacionDoc','.quote-doc',
       '.summary-grid','.confirm-grid','.r-card','.r-price'
@@ -30,14 +28,12 @@
       el.style.gridTemplateAreas = 'none';
     });
 
-    // Look de documento
     root.querySelectorAll('.card,.quote-doc,.resume-card,.receipt-card,.resume-final')
         .forEach(el=>{
           el.style.boxShadow = 'none';
           el.style.border = '1px solid #e5e7eb';
         });
 
-    // Imágenes seguras
     root.querySelectorAll('img').forEach(img=>{
       img.style.maxWidth = '100%';
       img.style.height = 'auto';
@@ -45,34 +41,32 @@
     });
   }
 
-  // ---------- Topbar y menú ----------
-  document.addEventListener("DOMContentLoaded", () => {
+  // ---------- Topbar ----------
+  function initTopbar() {
     const topbar = qs(".topbar");
+    if (!topbar) return;
+
     function toggleTopbar() {
-      if (!topbar) return;
       if (window.scrollY > 40) topbar.classList.add("solid");
       else topbar.classList.remove("solid");
     }
+
     toggleTopbar();
     window.addEventListener("scroll", toggleTopbar, { passive: true });
-
-
-
-  // ---------- Progreso de pasos ----------
-  function setStep(n) {
-    const root = qs("main.page") || document.body;
-    root.dataset.currentStep = String(n);
-    paintProgress();
   }
+
+  // ---------- Progreso ----------
   function paintProgress() {
     const root = qs("main.page") || document.body;
     const stepNow = Number(root?.dataset?.currentStep || 1);
+
     const items = qsa(".steps-header .step-item");
     items.forEach((it) => {
       const n = Number(it.dataset.step || 0);
       it.classList.toggle("active", n === stepNow);
       it.classList.toggle("done", n < stepNow);
     });
+
     const total = items.length || 1;
     const fill = qs("#progressFill");
     if (fill) {
@@ -80,11 +74,11 @@
       fill.style.width = `${pct}%`;
     }
   }
-  document.addEventListener("DOMContentLoaded", paintProgress);
 
   // ---------- Flatpickr ----------
   function initFlatpickrLite() {
     if (!window.flatpickr) return;
+
     try { if (flatpickr.l10ns?.es) flatpickr.localize(flatpickr.l10ns.es); } catch (_) {}
 
     const start = qs("#start");
@@ -107,89 +101,36 @@
         });
       }
     }
+
     const ufStartDate = qs("#ufStartDate");
     const ufEndDate   = qs("#ufEndDate");
     const ufStartTime = qs("#ufStartTime");
     const ufEndTime   = qs("#ufEndTime");
     const dob         = qs("#dob");
+
     if (ufStartDate) flatpickr(ufStartDate, { altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d" });
     if (ufEndDate)   flatpickr(ufEndDate,   { altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d" });
-    if (ufStartTime) flatpickr(ufStartTime, { enableTime: true, noCalendar: true, minuteIncrement: 5, time_24hr: false, altInput: true, altFormat: "h:i K", dateFormat: "H:i" });
-    if (ufEndTime)   flatpickr(ufEndTime,   { enableTime: true, noCalendar: true, minuteIncrement: 5, time_24hr: false, altInput: true, altFormat: "h:i K", dateFormat: "H:i" });
-    if (dob)         flatpickr(dob,         { altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d", maxDate: new Date() });
+
+    if (ufStartTime) flatpickr(ufStartTime, {
+      enableTime: true, noCalendar: true, minuteIncrement: 5, time_24hr: false,
+      altInput: true, altFormat: "h:i K", dateFormat: "H:i"
+    });
+
+    if (ufEndTime) flatpickr(ufEndTime, {
+      enableTime: true, noCalendar: true, minuteIncrement: 5, time_24hr: false,
+      altInput: true, altFormat: "h:i K", dateFormat: "H:i"
+    });
+
+    if (dob) flatpickr(dob, { altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d", maxDate: new Date() });
   }
-  document.addEventListener("DOMContentLoaded", initFlatpickrLite);
 
-  // ---------- Mostrar/Ocultar panel ----------
-  document.addEventListener("DOMContentLoaded", () => {
-    const panel     = qs("#editPanel");
-    const toggleBtn = qs("#toggleEdit");
-    const cancelBtn = qs("#cancelEdit");
-
-    if (toggleBtn && panel) {
-      toggleBtn.addEventListener("click", () => {
-        panel.style.display = panel.style.display === "block" ? "" : "block";
-        setStep(1);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-    }
-    if (cancelBtn && panel) {
-      cancelBtn.addEventListener("click", () => {
-        panel.style.display = "none";
-        const step2 = qs("#step2");
-        if (step2) setStep(2);
-      });
-    }
-  });
-
-  // ---------- Navegación pasos ----------
-  document.addEventListener("DOMContentLoaded", () => {
-    const panel = qs("#editPanel");
-    const step2 = qs("#step2");
+  // ==============================
+  // ✅ Step 3: Complementos
+  // ==============================
+  function initAddonsStep3() {
     const step3 = qs("#step3");
-    const step4 = qs("#step4");
+    if (!step3) return;
 
-    const backTo1 = qs("#backTo1");
-    const backTo2 = qs("#backTo2");
-    const backTo3 = qs("#backTo3");
-    const editDates = qs("#editDates");
-    const editCar   = qs("#editCar");
-
-    function goStep1() {
-      if (panel) panel.style.display = "block";
-      if (step2) step2.style.display = "none";
-      if (step3) step3.style.display = "none";
-      if (step4) step4.style.display = "none";
-      setStep(1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-    function goStep2() {
-      if (panel) panel.style.display = "";
-      if (step2) step2.style.display = "";
-      if (step3) step3.style.display = "none";
-      if (step4) step4.style.display = "none";
-      setStep(2);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-    function goStep3() {
-      if (panel) panel.style.display = "";
-      if (step2) step2.style.display = "none";
-      if (step3) step3.style.display = "";
-      if (step4) step4.style.display = "none";
-      setStep(3);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    if (backTo1) backTo1.addEventListener("click", (e) => { e.preventDefault(); goStep1(); });
-    if (backTo2) backTo2.addEventListener("click", (e) => { e.preventDefault(); goStep2(); });
-    if (backTo3) backTo3.addEventListener("click", (e) => { e.preventDefault(); goStep3(); });
-
-    if (editDates) editDates.addEventListener("click", (e) => { e.preventDefault(); goStep1(); });
-    if (editCar)   editCar.addEventListener("click",   (e) => { e.preventDefault(); goStep2(); });
-  });
-
-  // ---------- Complementos (Paso 3) ----------
-  document.addEventListener("DOMContentLoaded", () => {
     const grid = qs(".addons-grid");
     const btnContinue = qs("#toStep4");
     const btnSkip = qs("#skipAddons");
@@ -208,32 +149,11 @@
     }
 
     function getQtyEl(card) { return card.querySelector(".qty"); }
-    function totalSelected() { let t = 0; state.forEach(v => { t += v.qty; }); return t; }
 
     function updateCardUI(card, qty) {
       const qtyEl = getQtyEl(card);
       if (qtyEl) qtyEl.textContent = String(qty);
       card.classList.toggle("selected", qty > 0);
-    }
-
-    function updateContinueButton() {
-      const hasAny = totalSelected() > 0;
-      if (hasAny) {
-        btnContinue.classList.remove("is-disabled");
-        btnContinue.removeAttribute("aria-disabled");
-        btnContinue.removeAttribute("disabled");
-      } else {
-        btnContinue.classList.add("is-disabled");
-        btnContinue.setAttribute("aria-disabled", "true");
-        btnContinue.setAttribute("disabled", "disabled");
-      }
-      try {
-        const url = new URL(btnContinue.href, window.location.origin);
-        [...url.searchParams.keys()].filter(k => k.startsWith("addons["))
-          .forEach(k => url.searchParams.delete(k));
-        state.forEach((v, id) => { if (v.qty > 0) url.searchParams.set(`addons[${id}]`, String(v.qty)); });
-        btnContinue.href = url.toString();
-      } catch (_) {}
     }
 
     function serializeState() {
@@ -243,26 +163,85 @@
       });
       return obj;
     }
-    function persistSelection() { try { sessionStorage.setItem('addons_selection', JSON.stringify(serializeState())); } catch(_) {} }
+
+    function persistSelection() {
+      try { sessionStorage.setItem('addons_selection', JSON.stringify(serializeState())); } catch(_) {}
+    }
+
     function loadSelection() {
       try {
         const saved = JSON.parse(sessionStorage.getItem('addons_selection') || '{}');
         Object.values(saved).forEach(it => {
           state.set(String(it.id), {
-            id: String(it.id), name: it.name, price: Number(it.price),
-            charge: String(it.charge), stock: Infinity, qty: Number(it.qty)
+            id: String(it.id),
+            name: it.name,
+            price: Number(it.price),
+            charge: String(it.charge),
+            stock: Infinity,
+            qty: Number(it.qty)
           });
           const card = grid.querySelector(`.addon-card[data-id="${it.id}"]`);
           if (card) updateCardUI(card, it.qty);
         });
       } catch(_) {}
     }
+
+    function updateContinueHref() {
+      try {
+        const url = new URL(btnContinue.href, window.location.origin);
+
+        [...url.searchParams.keys()]
+          .filter(k => k.startsWith("addons["))
+          .forEach(k => url.searchParams.delete(k));
+
+        state.forEach((v, id) => {
+          if (v.qty > 0) url.searchParams.set(`addons[${id}]`, String(v.qty));
+        });
+
+        btnContinue.href = url.toString();
+      } catch (_) {}
+    }
+
+    function updateContinueButtonVisual() {
+      btnContinue.classList.remove("is-disabled");
+      btnContinue.removeAttribute("aria-disabled");
+      btnContinue.removeAttribute("disabled");
+    }
+
+    // ✅ FIX REAL: navegar a Step 4 usando la URL actual + step=4 + addons[...] (no confiar solo en href)
+    function goToStep4Hard() {
+      const main = qs('main.page');
+      const plan = main?.dataset?.plan || qs('#plan')?.value || '';
+      const categoriaId = qs('#categoria_id')?.value || '';
+
+      const url = new URL(window.location.href);
+      url.searchParams.set('step', '4');
+
+      // si por alguna razón faltan:
+      if (plan && !url.searchParams.get('plan')) url.searchParams.set('plan', plan);
+      if (categoriaId && !url.searchParams.get('categoria_id')) url.searchParams.set('categoria_id', categoriaId);
+
+      // limpia addons previos
+      [...url.searchParams.keys()]
+        .filter(k => k.startsWith("addons["))
+        .forEach(k => url.searchParams.delete(k));
+
+      // agrega addons
+      state.forEach((v, id) => {
+        if (v.qty > 0) url.searchParams.set(`addons[${id}]`, String(v.qty));
+      });
+
+      window.location.href = url.toString();
+    }
+
     loadSelection();
-    updateContinueButton();
+    updateContinueHref();
+    updateContinueButtonVisual();
 
     grid.addEventListener("click", (e) => {
       const t = e.target;
       if (!(t instanceof HTMLElement)) return;
+
       const isPlus  = t.classList.contains("plus");
       const isMinus = t.classList.contains("minus");
       if (!isPlus && !isMinus) return;
@@ -275,6 +254,7 @@
 
       const current = state.get(data.id) || { ...data, qty: 0 };
       let nextQty = current.qty + (isPlus ? 1 : -1);
+
       if (nextQty < 0) nextQty = 0;
       if (Number.isFinite(data.stock)) nextQty = Math.min(nextQty, data.stock);
 
@@ -282,16 +262,16 @@
       state.set(data.id, current);
 
       updateCardUI(card, nextQty);
-      updateContinueButton();
+      updateContinueHref();
+      updateContinueButtonVisual();
       persistSelection();
     });
 
+    // ✅ IMPORTANTE: interceptamos click para forzar step=4
     btnContinue.addEventListener("click", (e) => {
-      if (btnContinue.hasAttribute("disabled") || btnContinue.classList.contains("is-disabled")) {
-        e.preventDefault();
-        return false;
-      }
+      e.preventDefault();
       persistSelection();
+      goToStep4Hard();
     });
 
     if (btnSkip) {
@@ -299,10 +279,15 @@
         try { sessionStorage.removeItem('addons_selection'); } catch(_) {}
       });
     }
-  });
+  }
 
-  // ---------- Paso 4: hidratar resumen ----------
-  document.addEventListener("DOMContentLoaded", () => {
+  // ==============================
+  // ✅ Step 4: hidratar resumen
+  // ==============================
+  function hydrateSummaryStep4() {
+    const step4 = qs('#step4');
+    if (!step4) return;
+
     const elList   = qs('#extrasList');
     const elEmpty  = qs('#extrasEmpty');
     const elBase   = qs('#qBase');
@@ -310,9 +295,8 @@
     const elIva    = qs('#qIva');
     const elTotal  = qs('#qTotal');
 
-    if (!qs('#step4')) return;
-
     function parseMoney(text) { return Number(String(text).replace(/[^\d.]/g, '')) || 0; }
+
     const baseMx = elBase ? parseMoney(elBase.textContent) : 0;
     const days   = Number(qs('#qDays')?.textContent || '1') || 1;
 
@@ -322,6 +306,7 @@
 
     let extrasSub = 0;
     if (elList) elList.innerHTML = '';
+
     const items = Object.values(selection);
     if (items.length === 0) {
       if (elEmpty) elEmpty.style.display = '';
@@ -330,29 +315,34 @@
       items.forEach(it => {
         const qty = Number(it.qty || 0);
         if (qty <= 0) return;
+
         const price = Number(it.price || 0);
         const isPerDay = (String(it.charge || '') === 'por_dia');
         const sub = price * (isPerDay ? days : 1) * qty;
+
         extrasSub += sub;
+
         const li = document.createElement('li');
         li.innerHTML = `<span>${it.name} ${isPerDay ? '(por día)' : '(evento)'} × ${qty}</span><strong>$${sub.toLocaleString()} MXN</strong>`;
         elList?.appendChild(li);
       });
     }
+
     if (elExtras) elExtras.textContent = `$${extrasSub.toLocaleString()} MXN`;
+
     const iva = Math.round((baseMx + extrasSub) * 0.16);
     if (elIva) elIva.textContent = `$${iva.toLocaleString()} MXN`;
+
     if (elTotal) elTotal.textContent = `$${(baseMx + extrasSub + iva).toLocaleString()} MXN`;
-  });
+  }
 
   // ======================================================
-  // === FASE 1: Guardar cotización vía AJAX + generar PDF
+  // === Guardar cotización vía AJAX + generar PDF
   // ======================================================
-  document.addEventListener("DOMContentLoaded", () => {
+  function initPdfFlow() {
     const H2C_URL   = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
     const JSPDF_URL = "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
 
-    // Tamaño carta en px a ~96dpi
     const PAGE_W = 816;
     const PAGE_H = 1056;
 
@@ -386,37 +376,25 @@
     }
 
     function absolutize(url) { try { return new URL(url, window.location.origin).href; } catch { return url; } }
+
     async function ensureCarImageCORS(container){
       const img = container.querySelector('.car-sum img, .car-mini__img img, .r-media img');
       if (!img) return;
       const abs = absolutize(img.getAttribute('src') || '');
       img.setAttribute('crossorigin','anonymous');
       img.src = abs;
-      if (!img.complete) await new Promise(r=>{ img.addEventListener('load', r, {once:true}); img.addEventListener('error', r, {once:true}); });
-    }
-    function ensureQuoteHeader(container){
-      let head = container.querySelector('.qd-head');
-      if (!head) {
-        head = document.createElement('div');
-        head.className = 'qd-head';
-        head.setAttribute('data-temp','1');
-        head.innerHTML = `
-          <div class="qd-brand">
-            <div class="qd-logo">VIAJERO</div>
-            <div class="qd-sub">Renta de Autos</div>
-          </div>
-          <div class="qd-meta">
-            <div><div class="l">Folio</div><div class="v" id="qdCode"></div></div>
-            <div><div class="l">Fecha</div><div class="v" id="qdDate"></div></div>
-          </div>`;
-        container.insertBefore(head, container.firstChild);
+      if (!img.complete) {
+        await new Promise(r=>{
+          img.addEventListener('load', r, {once:true});
+          img.addEventListener('error', r, {once:true});
+        });
       }
-      const code = container.querySelector('#qdCode');
-      const date = container.querySelector('#qdDate');
-      const rnd = Math.random().toString(36).slice(2,7).toUpperCase();
-      const ymd = new Date().toISOString().slice(0,10).replaceAll('-','');
-      if (code) code.textContent = `COT-${ymd}-${rnd}`;
-      if (date) date.textContent = new Date().toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+    }
+
+    function ensureQuoteHeader(container){
+      const head = container.querySelector('.qd-head');
+      if (!head) return;
+      // Tu Blade ya trae folio/fecha, no inventamos nada aquí.
     }
 
     function getCsrfToken() {
@@ -451,7 +429,6 @@
       }
     }
 
-    // ---- Guardar cotización antes de PDF
     async function saveCotizacionBeforePdf() {
       const form = qs('#formCotizacion');
       if (!form) return { ok: false, message: 'No se encontró el formulario.' };
@@ -479,7 +456,6 @@
       const { pickup_sucursal_id, dropoff_sucursal_id, vehiculo_id } = getUrlParams();
       const addons = getAddonsForPost();
 
-      // ✅ Aquí añadimos metodo_pago para que siempre se envíe correo
       const payload = {
         vehiculo_id: Number(vehiculo_id) || undefined,
         pickup_date, pickup_time, dropoff_date, dropoff_time,
@@ -533,11 +509,6 @@
           console.error('Error al abrir WhatsApp Web:', err);
         }
 
-        if (data?.folio) {
-          const codeEl = qs('#cotizacionDoc #qdCode');
-          if (codeEl) codeEl.textContent = data.folio;
-        }
-
         return { ok: true, folio: data?.folio || null };
       } catch (err) {
         console.error('Error guardando cotización:', err);
@@ -560,9 +531,11 @@
       }
 
       ensureQuoteHeader(node);
+
       const interactive = qsa('a,button', node);
       const prev = new Map();
       interactive.forEach(el=>{ prev.set(el, el.style.display); el.style.display='none'; });
+
       document.body.classList.add('for-pdf');
 
       try{
@@ -575,15 +548,27 @@
         normalizePdfLayout(clone);
 
         let sandbox = document.getElementById('pdf-sandbox');
-        if (!sandbox) { sandbox = document.createElement('div'); sandbox.id = 'pdf-sandbox'; document.body.appendChild(sandbox); }
-        else sandbox.innerHTML = '';
+        if (!sandbox) {
+          sandbox = document.createElement('div');
+          sandbox.id = 'pdf-sandbox';
+          document.body.appendChild(sandbox);
+        } else {
+          sandbox.innerHTML = '';
+        }
+
         sandbox.style.width = `${CONTENT_W}px`;
         sandbox.appendChild(clone);
+
         window.scrollTo({top:0, behavior:'auto'});
 
         const canvas = await h2c(clone, {
-          useCORS: true, allowTaint: false, backgroundColor: '#ffffff',
-          scale: 2, width: CONTENT_W, windowWidth: CONTENT_W, scrollY: 0
+          useCORS: true,
+          allowTaint: false,
+          backgroundColor: '#ffffff',
+          scale: 2,
+          width: CONTENT_W,
+          windowWidth: CONTENT_W,
+          scrollY: 0
         });
 
         const pdf = new jsPDFCtor({ unit:'px', format:[PAGE_W, PAGE_H], orientation:'portrait' });
@@ -602,7 +587,7 @@
         const offsetY = Math.round(MARGIN.top  + (boxH - outH) / 2);
 
         const imgData = canvas.toDataURL('image/jpeg', 0.98);
-        const fileName = (clone.querySelector('#qdCode')?.textContent || 'cotizacion') + '.pdf';
+        const fileName = (qs('#cotizacionDoc .qd-meta .v')?.textContent || 'cotizacion') + '.pdf';
 
         pdf.addImage(imgData, 'JPEG', offsetX, offsetY, outW, outH);
         pdf.save(fileName);
@@ -615,7 +600,6 @@
       } finally {
         interactive.forEach(el=>{ el.style.display = prev.get(el) || ''; });
         document.body.classList.remove('for-pdf');
-        node.querySelectorAll('[data-temp="1"]').forEach(n=>n.remove());
       }
     }
 
@@ -624,11 +608,25 @@
       if (!saved.ok) return;
       await generatePdfFlow();
     });
-  });
+  }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  // ---------- Footer year ----------
+  function setYear() {
     const y = qs("#year");
     if (y) y.textContent = new Date().getFullYear();
+  }
+
+  // ==============================
+  // ✅ BOOT
+  // ==============================
+  document.addEventListener("DOMContentLoaded", () => {
+    initTopbar();
+    paintProgress();
+    initFlatpickrLite();
+    initAddonsStep3();
+    hydrateSummaryStep4();
+    initPdfFlow();
+    setYear();
   });
 
 })();
