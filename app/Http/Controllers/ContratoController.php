@@ -1190,7 +1190,7 @@ private function obtenerIndividualesSeleccionados($idReservacion)
 private function calcularTotalProtecciones($idReservacion)
 {
     $dias = DB::table('reservaciones')
-    ->selectRaw("DATEDIFF(fecha_fin, fecha_inicio) + 1 as dias")
+    ->selectRaw("DATEDIFF(fecha_fin, fecha_inicio)  as dias")
     ->where('id_reservacion', $idReservacion)
     ->value('dias') ?? 1;
 
