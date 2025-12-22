@@ -892,7 +892,7 @@
           <div id="addsAmt">$0</div>
         </div>
         <div class="row">
-          <div>Cargos e IVA</div>
+          <div>Subtotal</div>
           <div id="ivaAmt">$0</div>
         </div>
         <div class="row">
