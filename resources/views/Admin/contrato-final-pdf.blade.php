@@ -336,6 +336,20 @@
 </head>
 
 <body>
+    @php
+    use Carbon\Carbon;
+
+    // Fecha de retiro
+    $fechaRetiro = Carbon::parse($reservacion->fecha_inicio);
+
+    $dia  = $fechaRetiro->day;
+    $mes  = $fechaRetiro->translatedFormat('F'); // mes en texto
+    $anio = $fechaRetiro->year;
+
+    // Lugar: sucursal de retiro
+    $lugar = $reservacion->sucursal_retiro_nombre ?? '________________';
+@endphp
+
   <div class="contrato-final-container">
 
     {{-- ✅ HOJA 1 --}}
@@ -548,21 +562,39 @@
 
             <div class="hoja2-pie">
               <div>
-                En <span class="pie-linea w1"></span> a los <span class="pie-linea w2"></span>
-                día del mes de <span class="pie-linea w3"></span> de <span class="pie-linea w4"></span>
+                En <span class="pie-linea w1">{{ $lugar }}</span>
+                a los <span class="pie-linea w2">{{ $dia }}</span>
+                día del mes de <span class="pie-linea w3">{{ ucfirst($mes) }}</span>
+                de <span class="pie-linea w4">{{ $anio }}</span>
               </div>
 
-              <div class="firmas">
-                <div class="firma-box">
-                  <div class="firma-linea"></div>
-                  LA ARRENDADORA
-                </div>
-                <div class="firma-box">
-                  <div class="firma-linea"></div>
-                  LA ARRENDATARIA (NOMBRE Y FIRMA)
-                </div>
-              </div>
-            </div>
+
+              @if(!empty($contrato->firma_arrendador) || !empty($contrato->firma_cliente))
+                  <div class="firmas">
+
+                    {{-- FIRMA DEL ARRENDADOR --}}
+                    @if(!empty($contrato->firma_arrendador))
+                      <div class="firma-box">
+                        <p>Firma del Arrendador</p>
+                        <img class="firma-img" src="{{ $contrato->firma_arrendador }}" alt="Firma arrendador">
+                      </div>
+                    @endif
+
+                    {{-- FIRMA DEL CLIENTE --}}
+                    @if(!empty($contrato->firma_cliente))
+                      <div class="firma-box">
+                        <p>Firma del Cliente</p>
+                        <img class="firma-img" src="{{ $contrato->firma_cliente }}" alt="Firma cliente">
+                        <p style="margin-top:6px;font-size:10px;font-weight:700;">
+                          {{ $reservacion->nombre_cliente ?? '—' }}
+                        </p>
+                      </div>
+                    @endif
+
+                  </div>
+                @endif
+
+
 
           </div>
         </div>
