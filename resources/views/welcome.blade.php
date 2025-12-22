@@ -353,7 +353,7 @@
             <div class="field icon-field" id="dropoffWrapper">
               <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
               <select id="dropoffPlace" name="dropoff_sucursal_id" aria-describedby="dropoffHelp" required>
-                <option value="" disabled selected>¿Dónde termina tu viaje? (Drop-off)</option>
+                <option value="" disabled selected>¿Dónde termina tu viaje? </option>
                 @foreach($ciudades as $ciudad)
                   <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
                     @foreach($ciudad->sucursalesActivas as $suc)

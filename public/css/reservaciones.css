@@ -20,7 +20,7 @@ body{margin:0;font-family:'Poppins',system-ui,Arial,sans-serif;color:var(--ink);
 .login .avatar-mini{
   width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
   background:#ffffff26;color:#fff;font-weight:900;font-size:14px;letter-spacing:.4px
-} 
+}
 .hamburger{display:none;background:transparent;border:0;color:#fff;font-size:22px}
 @media (max-width:940px){.menu{display:none}.hamburger{display:block}}
 
@@ -52,24 +52,111 @@ body{margin:0;font-family:'Poppins',system-ui,Arial,sans-serif;color:var(--ink);
 
 /* ===== PASO 2 ===== */
 .results{display:grid;gap:36px}
-.r-card{background:#fff;border-radius:16px;box-shadow:var(--shadow);padding:18px;display:grid;grid-template-columns:320px 1fr 360px;gap:20px;position:relative}
+.r-card{
+  background:#fff;border-radius:16px;box-shadow:var(--shadow);
+  padding:18px;display:grid;grid-template-columns:320px 1fr 360px;gap:20px;position:relative
+}
 .stock-pill{position:absolute;left:22px;top:-14px;background:#22c55e;color:#0a1a0a;font-weight:900;padding:6px 12px;border-radius:999px;box-shadow:0 8px 16px rgba(0,0,0,.15)}
+
+/* MEDIA */
+.r-media{
+  background:linear-gradient(180deg,#fff, #fbfbff);
+  border:1px solid #eef2f7;
+  border-radius:14px;
+  padding:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:220px;
+}
 .r-media img{width:100%;height:100%;object-fit:contain}
-.r-body h3{margin:0 0 6px;font-size:26px}
+
+/* NUEVO: texto superior y contenido de tarjeta */
+.r-topline{
+  font-size:12px;
+  font-weight:900;
+  color:#475569;
+  letter-spacing:.35px;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+.r-title{ margin:0 0 6px; font-size:26px; }
 .subtitle{color:#374151;font-weight:800;text-transform:uppercase}
+
+/* NUEVO: chips de specs */
+.r-specs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  list-style:none;
+  margin:10px 0 8px;
+  padding:0;
+}
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:#f3f4f6;
+  border:1px solid #e5e7eb;
+  border-radius:999px;
+  padding:7px 10px;
+  font-weight:900;
+  font-size:12px;
+  color:#111827;
+  line-height:1;
+}
+.chip i{ color:#111827; opacity:.9 }
+.chip-ok{
+  background:rgba(34,197,94,.12);
+  border-color:rgba(34,197,94,.28);
+  color:#065f46;
+}
+.chip-ok i{ color:#16a34a; }
+
+/* NUEVO: nota abajo */
+.r-note{
+  color:#374151;
+  font-size:13px;
+  line-height:1.45;
+  background:#f9fafb;
+  border:1px dashed #e5e7eb;
+  border-radius:12px;
+  padding:10px 12px;
+}
+
+/* por si todavía usas lista anterior */
 .icons{display:flex;flex-wrap:wrap;gap:12px;list-style:none;margin:10px 0 6px;padding:0}
 .icons li{background:#f3f4f6;border-radius:10px;padding:6px 10px;font-weight:800;font-size:13px}
 .incl{color:#374151;font-size:13px}
+
+/* ===== precios ===== */
 .r-price{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center;justify-items:end}
+
+/* base */
 .p-col{width:100%;background:#f9fafb;border:1px dashed #e5e7eb;border-radius:12px;padding:12px;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .p-old{color:#6b7280;text-decoration:line-through;font-weight:700}
 .p-new{font-size:24px;font-weight:900}.p-new small{font-size:12px;font-weight:900}
 .p-accent{color:var(--brand)}.p-save{color:#16a34a;font-weight:800;font-size:12px}
+
 .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;border:0;cursor:pointer;font-weight:900}
-.btn-primary{background:var(--brand);color:#fff}.btn-gray{background:#e5e7eb}.btn-secondary{background:#111827;color:#fff}.btn-ghost{background:#e5e7eb;color:#111}
+.btn-primary{background:var(--brand);color:#fff}
+.btn-gray{background:#e5e7eb}
+.btn-secondary{background:#111827;color:#fff}
+.btn-ghost{background:#e5e7eb;color:#111}
 .btn-block{width:100%}
 .hidden{display:none}
-@media (max-width:1024px){.r-card{grid-template-columns:1fr}.r-price{grid-template-columns:1fr 1fr;justify-items:stretch}.p-col{align-items:flex-start}}
+
+/* responsive paso 2 */
+@media (max-width:1024px){
+  .r-card{grid-template-columns:1fr}
+  .r-price{grid-template-columns:1fr 1fr;justify-items:stretch}
+  .p-col{align-items:flex-start}
+}
+@media (max-width:560px){
+  .r-price{grid-template-columns:1fr}
+  .r-title{font-size:22px}
+  .r-media{min-height:190px}
+}
 
 /* ===== PASO 3 ===== */
 .addons-title{font-size:20px;font-weight:900;margin:10px 0 12px}
@@ -227,7 +314,6 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
 .flatpickr-time{border-top:1px solid #f0f0f0}
 
 /* ===== Impresión ===== */
-/* >>> Cambiamos a tamaño carta (Letter) */
 @page{ size:Letter; margin:12mm }
 @media print{
   body{background:#fff}
@@ -242,14 +328,30 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
 .btn-accent{ background:#fff;color:var(--brand);border:2px solid var(--brand); }
 .btn-accent:hover{filter:brightness(.98)}
 
+/* ===== MODAL (unificado) ===== */
 .modal-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.6);
-  display:flex;align-items:center;justify-content:center;z-index:999;
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.55);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
 }
-.modal{
-  background:#fff;padding:20px;border-radius:12px;
-  max-width:400px;width:90%;box-shadow:0 12px 30px rgba(0,0,0,.25);
-  text-align:center
+.modal-card{
+  background:#fff;
+  border-radius:12px;
+  padding:2rem;
+  max-width:400px;
+  width:90%;
+  box-shadow:0 12px 30px rgba(0,0,0,.25);
+  text-align:center;
+}
+.modal-card h3{ margin-bottom:1rem; }
+.modal-card .options{
+  display:flex;
+  flex-direction:column;
+  gap:.75rem;
+  margin-bottom:1rem;
 }
 .pref-input{ width:100%;padding:10px;margin:12px 0;border:1px solid #ccc;border-radius:8px }
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
@@ -291,37 +393,6 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
 .btn-primary:hover{ filter:brightness(.95); }
 .btn-gray{ background:#f1f5f9; border:1px solid #e5e7eb; color:#0f172a; }
 
-/* ... (tu CSS sigue igual hasta el final donde pegaste modal-card/options) ... */
-
-.modal-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,0.5);
-  z-index: 999;
-}
-
-.modal-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 2rem;
-  max-width: 400px;
-  width: 90%;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-  text-align: center;
-}
-
-.modal-card h3 { margin-bottom: 1rem; }
-
-.modal-card .options {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
 /* ===== Flatpickr (Viajero) solo dentro de .calendar-viajero ===== */
 .calendar-viajero .flatpickr-calendar{
   border:0;
@@ -357,14 +428,10 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
 
 /* ==========================================================
    ✅ OPCIÓN A: DatePicker/TimePicker CUSTOM (dpPop / tpPop)
-   (NO requiere cambiar Blade)
 ========================================================== */
-
-/* Asegura que tus modales queden arriba de todo */
 .pop{ z-index: 9999; }
 #dpPop, #tpPop{ z-index: 99999; }
 
-/* Caja general */
 #dpPop .box,
 #tpPop .box{
   background:#fff;
@@ -373,16 +440,12 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
   border:1px solid #e5e7eb;
   box-shadow:0 20px 60px rgba(0,0,0,.22);
 }
-
-/* Header rojo (dp/tp) */
 #dpPop .dp-head,
 #tpPop .tp-head{
   background:linear-gradient(90deg, var(--brand), #f45a5a) !important;
   color:#fff !important;
   box-shadow:0 2px 12px rgba(0,0,0,.14);
 }
-
-/* Botones del header (prev/next, 12h/24h, AM/PM, close) */
 #dpPop .dp-head .btn,
 #tpPop .tp-head .btn{
   border:0 !important;
@@ -394,13 +457,11 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
 #dpPop .dp-head .btn:hover,
 #tpPop .tp-head .btn:hover{ transform: translateY(-1px); filter: brightness(.98); }
 
-/* Grid del calendario */
 #dpPop #dpGrid{
   padding:12px 12px 14px;
   background:#fff;
 }
 
-/* Soporta varios tipos de celdas: div/span/button */
 #dpPop #dpGrid button,
 #dpPop #dpGrid .dp-day,
 #dpPop #dpGrid .day,
@@ -417,8 +478,6 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
   background:transparent;
   transition: transform .12s, background .12s, border .12s, box-shadow .12s;
 }
-
-/* Hover */
 #dpPop #dpGrid button:hover,
 #dpPop #dpGrid .dp-day:hover,
 #dpPop #dpGrid .day:hover,
@@ -426,16 +485,12 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
   background:#ffe5e5;
   transform: translateY(-1px);
 }
-
-/* “Hoy” (soporta clases típicas) */
 #dpPop #dpGrid .is-today,
 #dpPop #dpGrid .today,
 #dpPop #dpGrid [data-today="1"]{
   border:2px solid var(--brand) !important;
   color:var(--brand) !important;
 }
-
-/* Seleccionado (soporta clases típicas) */
 #dpPop #dpGrid .is-selected,
 #dpPop #dpGrid .selected,
 #dpPop #dpGrid .active,
@@ -445,15 +500,11 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
   color:#fff !important;
   box-shadow:0 0 0 4px rgba(178,34,34,.12);
 }
-
-/* En rango */
 #dpPop #dpGrid .is-inrange,
 #dpPop #dpGrid .inRange{
   background:#ffe5e5 !important;
   color:#b22222 !important;
 }
-
-/* Deshabilitado */
 #dpPop #dpGrid .is-disabled,
 #dpPop #dpGrid .disabled,
 #dpPop #dpGrid [disabled],
@@ -461,8 +512,6 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
   opacity:.45;
   pointer-events:none;
 }
-
-/* Footer dpPop */
 #dpPop footer{
   background:linear-gradient(90deg, #fff, #fff6f6);
   border-top:1px solid #eee !important;
@@ -476,10 +525,7 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
   color:#fff;
 }
 
-/* ==========================
-   🕑 TimePicker custom (tpPop)
-========================== */
-
+/* TimePicker custom */
 #tpPop .tp-wrap{ background:#fff; }
 #tpPop .tp-q{
   display:inline-flex;
@@ -506,8 +552,6 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
   border-color:var(--brand);
   box-shadow:0 0 0 4px rgba(178,34,34,.12);
 }
-
-/* Footer tpPop */
 #tpPop footer{
   background:linear-gradient(90deg, #fff, #fff6f6);
   border-top:1px solid #eee !important;
@@ -520,6 +564,7 @@ span.flatpickr-weekday{color:var(--brand);font-weight:800}
   background:var(--brand);
   color:#fff;
 }
+
 /* Fila fecha/hora */
 .datetime-row{
   display:flex;
