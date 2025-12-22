@@ -15,6 +15,9 @@
   overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
   scrollbar-gutter:stable;
+  border-radius:14px;
+  isolation:isolate;
+
 
   /* Rojo intenso tipo Viajero */
   background:
@@ -138,35 +141,6 @@
   transition:margin-left .3s ease;
 }
 
-/* ===== Responsive ===== */
-@media(max-width:768px){
-  .sidebar{
-    width:76px;
-    padding:16px 10px;
-    backdrop-filter: blur(10px) saturate(140%);
-  }
-  .sidebar .logo{ margin-bottom:12px }
-  .sidebar .logo img{ max-width:48px; border-radius:10px }
-
-  .sidebar .menu-section{ display:none !important; }
-  .sidebar .menu a{
-    justify-content:center;
-    padding:10px;
-    font-size:0 !important;
-    gap:0;
-  }
-  .sidebar .menu a i{
-    font-size:18px !important;
-    width:34px;
-    height:34px;
-    border-radius:10px;
-  }
-
-  .main-content{
-    margin-left:76px !important;
-    padding:16px;
-  }
-}
 
 /* ===== Dark Mode ===== */
 @media(prefers-color-scheme:dark){
@@ -216,4 +190,44 @@
 
 .sidebar.sidebar-hidden ~ .main-content {
   margin-left: 0 !important;
+}
+/* Overlay para móvil */
+.sidebar-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  z-index:90; /* debajo del sidebar (100) y debajo del botón (150) */
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .25s ease;
+}
+
+/* cuando el sidebar está abierto en móvil, mostramos overlay */
+body.sidebar-open .sidebar-overlay{
+  opacity:1;
+  pointer-events:auto;
+}
+
+/* Botón toggle: cuando sidebar está visible, lo empujamos a la derecha */
+body.sidebar-open .btn-toggle{
+  left: 276px; /* 260 + margen */
+}
+
+/* En pantallas pequeñas, el sidebar se oculta completamente (no modo mini) */
+@media(max-width:768px){
+  .sidebar{
+    transform: translateX(-100%);
+    width:260px; /* full */
+  }
+  body.sidebar-open .sidebar{
+    transform: translateX(0);
+  }
+
+  .main-content{
+    margin-left:0 !important;
+  }
+
+  body.sidebar-open .btn-toggle{
+    left:16px; /* que no se vaya a la derecha en móvil */
+  }
 }

@@ -97,9 +97,8 @@ window.addEventListener("DOMContentLoaded", () => {
       $("#mTotal").textContent = Fmx(data.total);
 
       $("#mTarifaModificada").textContent = data.tarifa_modificada
-  ? Fmx(data.tarifa_modificada)
-  : "—";
-
+        ? Fmx(data.tarifa_modificada)
+        : "—";
 
       // Mostrar modal
       $("#modal").classList.add("show");
@@ -143,106 +142,217 @@ window.addEventListener("DOMContentLoaded", () => {
     console.log("➡️ Redirigiendo a vista Contrato:", url);
     window.location.href = url;
   });
+
   /* ==========================================================
-   ✏️ MODAL EDICIÓN (solo datos permitidos)
-========================================================== */
-function openEditModal() {
-  if (!current) return;
+     ✏️ MODAL EDICIÓN (solo datos permitidos)
+  =========================================================== */
+  function openEditModal() {
+    if (!current) return;
 
-  // Precargar inputs
-  $("#eTitle").textContent = `Editar ${current.codigo || ""}`;
-  $("#eNombre").value = current.nombre_cliente || "";
-  $("#eCorreo").value = current.email_cliente || "";
-  $("#eTelefono").value = current.telefono_cliente || "";
+    // Precargar inputs
+    $("#eTitle").textContent = `Editar ${current.codigo || ""}`;
+    $("#eNombre").value = current.nombre_cliente || "";
+    $("#eCorreo").value = current.email_cliente || "";
+    $("#eTelefono").value = current.telefono_cliente || "";
 
-  $("#eFechaInicio").value = current.fecha_inicio || "";
-  $("#eHoraRetiro").value = (current.hora_retiro || "").slice(0, 5);
+    $("#eFechaInicio").value = current.fecha_inicio || "";
+    $("#eHoraRetiro").value = (current.hora_retiro || "").slice(0, 5);
 
-  $("#eFechaFin").value = current.fecha_fin || "";
-  $("#eHoraEntrega").value = (current.hora_entrega || "").slice(0, 5);
+    $("#eFechaFin").value = current.fecha_fin || "";
+    $("#eHoraEntrega").value = (current.hora_entrega || "").slice(0, 5);
 
-  $("#modalEdit").classList.add("show");
-}
-
-function closeEditModal() {
-  $("#modalEdit").classList.remove("show");
-}
-
-$("#mEdit")?.addEventListener("click", openEditModal);
-$("#eClose")?.addEventListener("click", closeEditModal);
-$("#eCancel")?.addEventListener("click", closeEditModal);
-
-/* ==========================================================
-   💾 GUARDAR CAMBIOS (PUT)
-========================================================== */
-$("#eSave")?.addEventListener("click", async () => {
-  if (!current) return;
-
-  const payload = {
-    nombre_cliente: $("#eNombre").value.trim(),
-    email_cliente: $("#eCorreo").value.trim(),
-    telefono_cliente: $("#eTelefono").value.trim(),
-    fecha_inicio: $("#eFechaInicio").value,
-    hora_retiro: $("#eHoraRetiro").value,
-    fecha_fin: $("#eFechaFin").value,
-    hora_entrega: $("#eHoraEntrega").value
-  };
-
-  if (!payload.nombre_cliente || !payload.email_cliente || !payload.telefono_cliente) {
-    alertify.error("Completa nombre, correo y teléfono");
-return;
-
+    $("#modalEdit").classList.add("show");
   }
 
-  if (!payload.fecha_inicio || !payload.fecha_fin) {
-   alertify.error("Completa fecha de salida y entrega");
-return;
-
+  function closeEditModal() {
+    $("#modalEdit").classList.remove("show");
   }
 
-  if (payload.fecha_fin < payload.fecha_inicio) {
-    alertify.warning("La fecha de entrega no puede ser menor que la de salida");
-return;
+  $("#mEdit")?.addEventListener("click", openEditModal);
+  $("#eClose")?.addEventListener("click", closeEditModal);
+  $("#eCancel")?.addEventListener("click", closeEditModal);
 
+  /* ==========================================================
+     💾 GUARDAR CAMBIOS (PUT)
+  =========================================================== */
+  $("#eSave")?.addEventListener("click", async () => {
+    if (!current) return;
+
+    const payload = {
+      nombre_cliente: $("#eNombre").value.trim(),
+      email_cliente: $("#eCorreo").value.trim(),
+      telefono_cliente: $("#eTelefono").value.trim(),
+      fecha_inicio: $("#eFechaInicio").value,
+      hora_retiro: $("#eHoraRetiro").value,
+      fecha_fin: $("#eFechaFin").value,
+      hora_entrega: $("#eHoraEntrega").value
+    };
+
+    if (!payload.nombre_cliente || !payload.email_cliente || !payload.telefono_cliente) {
+      alertify.error("Completa nombre, correo y teléfono");
+      return;
+    }
+
+    if (!payload.fecha_inicio || !payload.fecha_fin) {
+      alertify.error("Completa fecha de salida y entrega");
+      return;
+    }
+
+    if (payload.fecha_fin < payload.fecha_inicio) {
+      alertify.warning("La fecha de entrega no puede ser menor que la de salida");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/admin/reservaciones-activas/${current.id_reservacion}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.message);
+
+      // Actualizar estado local
+      Object.assign(current, payload);
+
+      $("#mCliente").textContent = current.nombre_cliente;
+      $("#mEmail").textContent = current.email_cliente;
+      $("#mNumero").textContent = current.telefono_cliente;
+
+      const salida = `${current.fecha_inicio} ${current.hora_retiro || ""}`;
+      const entrega = `${current.fecha_fin} ${current.hora_entrega || ""}`;
+
+      $("#mSalida").textContent = salida;
+      $("#mEntrega").textContent = entrega;
+
+      alertify.success("Reservación actualizada correctamente");
+      closeEditModal();
+
+    } catch (err) {
+      console.error(err);
+      alertify.error(err.message || "Error al guardar la reservación");
+    }
+  });
+
+  /* ==========================================================
+     🧩 MODAL ACCIONES (⋯) + CONFIRMACIONES + POST
+  =========================================================== */
+  const modalActions = $("#modalActions");
+  const aClose = $("#aClose");
+  const aCancel = $("#aCancel");
+  const aCodigo = $("#aCodigo");
+  const aIdReservacion = $("#aIdReservacion");
+  const aDeleteForm = $("#aDeleteForm");
+
+  function openActionsModal({ id, codigo, deleteUrl }) {
+    if (!modalActions) return;
+
+    if (aCodigo) aCodigo.textContent = codigo || "—";
+    if (aIdReservacion) aIdReservacion.value = id || "";
+
+    // ✅ Conecta tu DELETE existente a la reservación seleccionada
+    if (aDeleteForm && deleteUrl) aDeleteForm.setAttribute("action", deleteUrl);
+
+    modalActions.classList.add("show");
+    modalActions.setAttribute("aria-hidden", "false");
   }
 
-  try {
-    const res = await fetch(`/admin/reservaciones-activas/${current.id_reservacion}`, {
-      method: "PUT",
+  function closeActionsModal() {
+    if (!modalActions) return;
+    modalActions.classList.remove("show");
+    modalActions.setAttribute("aria-hidden", "true");
+  }
+
+  // Abrir modal desde cada ⋯
+  $$("[data-open-actions]").forEach((btn) => {
+    btn.addEventListener("click", (ev) => {
+      ev.stopPropagation();
+      openActionsModal({
+        id: btn.dataset.id,
+        codigo: btn.dataset.codigo,
+        deleteUrl: btn.dataset.deleteUrl,
+      });
+    });
+  });
+
+  // Cerrar modal
+  aClose?.addEventListener("click", closeActionsModal);
+  aCancel?.addEventListener("click", closeActionsModal);
+
+  // Cerrar al dar click fuera
+  modalActions?.addEventListener("click", (e) => {
+    if (e.target === modalActions) closeActionsModal();
+  });
+
+  // ✅ Confirmación (NO se quita) al eliminar
+  aDeleteForm?.addEventListener("submit", (e) => {
+    const codigo = aCodigo?.textContent || "esta reservación";
+    if (!confirm(`¿Seguro que deseas ELIMINAR ${codigo}?`)) {
+      e.preventDefault();
+    }
+  });
+
+  // ✅ CSRF para POST
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+
+  async function postAccion(url) {
+    const res = await fetch(url, {
+      method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+        "X-CSRF-TOKEN": csrf,
+        "Accept": "application/json",
       },
-      body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
-    if (!res.ok || !data.success) throw new Error(data.message);
+    const data = await res.json().catch(() => ({}));
 
-    // Actualizar estado local
-    Object.assign(current, payload);
+    if (!res.ok || !data.success) {
+      throw new Error(data.message || "Error al ejecutar la acción");
+    }
 
-    $("#mCliente").textContent = current.nombre_cliente;
-    $("#mEmail").textContent = current.email_cliente;
-    $("#mNumero").textContent = current.telefono_cliente;
-
-    const salida = `${current.fecha_inicio} ${current.hora_retiro || ""}`;
-    const entrega = `${current.fecha_fin} ${current.hora_entrega || ""}`;
-
-    $("#mSalida").textContent = salida;
-    $("#mEntrega").textContent = entrega;
-
-    alertify.success("Reservación actualizada correctamente");
-    closeEditModal();
-
-  } catch (err) {
-    console.error(err);
-    alertify.error(err.message || "Error al guardar la reservación");
-
+    return data;
   }
-});
 
+  // 🚫 No Show (POST)
+  $("#aNoShow")?.addEventListener("click", async (ev) => {
+    ev.stopPropagation();
+    const id = aIdReservacion?.value;
+    const codigo = aCodigo?.textContent || "—";
+    if (!id) return;
 
+    if (!confirm(`¿Marcar ${codigo} como NO SHOW?`)) return;
 
+    try {
+      await postAccion(`/admin/reservaciones-activas/${id}/no-show`);
+      alertify.success("Marcada como No Show");
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+      alertify.error(e.message);
+    }
+  });
+
+  // ⚠️ Cancelar (POST)
+  $("#aCancelar")?.addEventListener("click", async (ev) => {
+    ev.stopPropagation();
+    const id = aIdReservacion?.value;
+    const codigo = aCodigo?.textContent || "—";
+    if (!id) return;
+
+    if (!confirm(`¿Cancelar ${codigo}?`)) return;
+
+    try {
+      await postAccion(`/admin/reservaciones-activas/${id}/cancelar`);
+      alertify.success("Reservación cancelada");
+      window.location.reload();
+    } catch (e) {
+      console.error(e);
+      alertify.error(e.message);
+    }
+  });
 
 });

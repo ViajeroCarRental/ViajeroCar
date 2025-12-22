@@ -1,8 +1,8 @@
 @extends('layouts.Admin')
-@section('titulo', 'Categorías')
+@section('Titulo', 'Categorías')
 
 @section('css')
-<link rel="stylesheet" href="{{ asset('css/categorias.css') }}">
+<link rel="stylesheet" href="{{ asset('css/Categorias.css') }}">
 @endsection
 
 @section('contenido')
@@ -43,11 +43,11 @@
             <td class="actions">
               <button class="btn-edit"
                 onclick="openEdit(
-                  '{{ $c->id_categoria }}',
+                  {{ $c->id_categoria }},
                   @js($c->codigo),
                   @js($c->nombre),
-                  '{{ $c->precio_dia }}',
-                  '{{ $c->activo }}'
+                  {{ $c->precio_dia }},
+                  {{ $c->activo }}
                 )">
                 Editar
               </button>
@@ -63,7 +63,9 @@
           </tr>
         @empty
           <tr>
-            <td colspan="5" class="empty">No hay categorías registradas.</td>
+            <td colspan="5" class="empty">
+              No hay categorías registradas.
+            </td>
           </tr>
         @endforelse
       </tbody>
@@ -91,7 +93,12 @@
     <input class="input" name="nombre" maxlength="100" required>
 
     <label class="label">Precio por día</label>
-    <input class="input" name="precio_dia" type="number" step="0.01" min="0" required>
+    <input class="input"
+           name="precio_dia"
+           type="number"
+           step="0.01"
+           min="0"
+           required>
 
     <label class="check">
       <input type="checkbox" name="activo" value="1" checked>
@@ -109,7 +116,10 @@
     MODAL EDITAR
 ========================= --}}
 <dialog id="modalEditar" class="modal">
-  <form method="POST" id="formEditar" class="modal-box">
+  <form method="POST"
+        id="formEditar"
+        class="modal-box"
+        data-action="{{ route('categorias.update', '__ID__') }}">
     @csrf
     @method('PUT')
 
@@ -125,7 +135,13 @@
     <input class="input" id="e_nombre" name="nombre" maxlength="100" required>
 
     <label class="label">Precio por día</label>
-    <input class="input" id="e_precio" name="precio_dia" type="number" step="0.01" min="0" required>
+    <input class="input"
+           id="e_precio"
+           name="precio_dia"
+           type="number"
+           step="0.01"
+           min="0"
+           required>
 
     <label class="label">Activo</label>
     <select class="input" id="e_activo" name="activo" required>
@@ -140,10 +156,15 @@
   </form>
 </dialog>
 
+{{-- =========================
+    JS INLINE (mínimo)
+========================= --}}
 <script>
-function openEdit(id, codigo, nombre, precio, activo){
+function openEdit(id, codigo, nombre, precio, activo) {
   const form = document.getElementById('formEditar');
-  form.action = `/categorias/${id}`;
+
+  // ✅ construye /admin/categorias/{id} desde Laravel route()
+  form.action = form.dataset.action.replace('__ID__', id);
 
   document.getElementById('e_codigo').value = codigo;
   document.getElementById('e_nombre').value = nombre;

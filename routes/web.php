@@ -518,12 +518,26 @@ Route::get('/api/contratos-abiertos', [ContratosAbiertosController::class, 'api'
 // Categorías de carros admin
 use App\Http\Controllers\CategoriasController;
 
-Route::get('/categorias', [CategoriasController::class, 'index'])->name('categorias.index');
-Route::post('/categorias', [CategoriasController::class, 'store'])->name('categorias.store');
-Route::put('/categorias/{id}', [CategoriasController::class, 'update'])->name('categorias.update');
-Route::delete('/categorias/{id}', [CategoriasController::class, 'destroy'])->name('categorias.destroy');
+Route::get('/admin/categorias', [CategoriasController::class, 'index'])
+    ->name('categorias.index');
+
+Route::post('/admin/categorias', [CategoriasController::class, 'store'])
+    ->name('categorias.store');
+
+Route::put('/admin/categorias/{id}', [CategoriasController::class, 'update'])
+    ->name('categorias.update');
+
+Route::delete('/admin/categorias/{id}', [CategoriasController::class, 'destroy'])
+    ->name('categorias.destroy');
+
 //suta consultar saldo pendiente
 Route::get('/admin/contrato/{id}/saldo', [ContratosAbiertosController::class, 'saldo']);
 
 Route::post('/admin/contrato/{id}/cerrar', [ContratosAbiertosController::class, 'finalizarContrato']);
 
+// Acciones desde el modal (No Show / Cancelar)
+Route::post('/admin/reservaciones-activas/{id}/no-show', [ReservacionesActivasController::class, 'noShow'])
+  ->name('reservaciones_activas.no_show');
+
+Route::post('/admin/reservaciones-activas/{id}/cancelar', [ReservacionesActivasController::class, 'cancelar'])
+  ->name('reservaciones_activas.cancelar');

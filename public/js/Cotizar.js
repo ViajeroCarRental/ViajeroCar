@@ -11,9 +11,6 @@ const esc = (s) =>
     '"': "&quot;"
   }[m]));
 
-/* Mostrar / ocultar menú lateral */
-$('#burger')?.addEventListener('click', () => $('#side').classList.toggle('show'));
-
 /* ==========================================================
    🧭 NAVEGACIÓN ENTRE PASOS
 ========================================================== */

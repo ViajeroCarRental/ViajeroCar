@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
     @yield('css-vistaMantenimiento')
     @yield('css-vistaFlotilla')
     @yield('css-vistaPolizas')
@@ -15,6 +17,12 @@
     <title>@yield('Titulo')</title>
 </head>
 <body>
+
+<button class="btn-toggle" id="btnToggleSidebar" type="button" aria-label="Mostrar/Ocultar menú">
+  <i class="bi bi-list"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
     <!-- SIDEBAR: Flotilla -->
 <aside class="sidebar sidebar--flotilla">
   <div class="logo">
@@ -35,10 +43,6 @@
     <li><a href="{{ route('rutaDashboard') }}"><i class="fas fa-arrow-left"></i> Volver al panel</a></li>
   </ul>
 </aside>
-<!-- Botón para mostrar/ocultar sidebar -->
-<button id="toggleSidebar" class="btn-toggle">
-  <i class="fas fa-bars"></i>
-</button>
 
 <div class="main-content">
     @yield('contenidoMantenimiento')
@@ -57,17 +61,10 @@
     @yield('js-vistaCarroceria')
     @yield('js-vistaSeguros')
     @yield('js-vistaGastos')
+    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+
 </div>
 </body>
-<script>
-document.addEventListener("DOMContentLoaded", function(){
-  const sidebar = document.querySelector(".sidebar");
-  const btnToggle = document.getElementById("toggleSidebar");
 
-  btnToggle.addEventListener("click", () => {
-    sidebar.classList.toggle("sidebar-hidden");
-  });
-});
-</script>
 
 </html>

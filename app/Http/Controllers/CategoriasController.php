@@ -13,16 +13,17 @@ class CategoriasController extends Controller
             ->orderBy('id_categoria', 'asc')
             ->get();
 
-        return view('categorias', compact('categorias'));
+        // ✅ tu vista real está en: resources/views/Admin/Categorias.blade.php
+        return view('Admin.Categorias', compact('categorias'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'codigo'    => 'required|max:10|unique:categorias_carros,codigo',
-            'nombre'    => 'required|max:100',
-            'precio_dia'=> 'required|numeric|min:0',
-            'activo'    => 'nullable|boolean',
+            'codigo'     => 'required|max:10|unique:categorias_carros,codigo',
+            'nombre'     => 'required|max:100',
+            'precio_dia' => 'required|numeric|min:0',
+            'activo'     => 'nullable|boolean',
         ]);
 
         DB::table('categorias_carros')->insert([
@@ -34,16 +35,17 @@ class CategoriasController extends Controller
             'updated_at' => now(),
         ]);
 
-        return back()->with('success', 'Categoría creada.');
+        // ✅ regresa a /admin/categorias (según tus rutas)
+        return redirect()->route('categorias.index')->with('success', 'Categoría creada.');
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
-            'codigo'    => 'required|max:10|unique:categorias_carros,codigo,' . $id . ',id_categoria',
-            'nombre'    => 'required|max:100',
-            'precio_dia'=> 'required|numeric|min:0',
-            'activo'    => 'required|boolean',
+            'codigo'     => 'required|max:10|unique:categorias_carros,codigo,' . $id . ',id_categoria',
+            'nombre'     => 'required|max:100',
+            'precio_dia' => 'required|numeric|min:0',
+            'activo'     => 'required|boolean',
         ]);
 
         DB::table('categorias_carros')
@@ -52,11 +54,11 @@ class CategoriasController extends Controller
                 'codigo'     => $request->codigo,
                 'nombre'     => $request->nombre,
                 'precio_dia' => $request->precio_dia,
-                'activo'     => $request->activo,
+                'activo'     => (int) $request->activo,
                 'updated_at' => now(),
             ]);
 
-        return back()->with('success', 'Categoría actualizada.');
+        return redirect()->route('categorias.index')->with('success', 'Categoría actualizada.');
     }
 
     public function destroy($id)
@@ -65,6 +67,6 @@ class CategoriasController extends Controller
             ->where('id_categoria', $id)
             ->delete();
 
-        return back()->with('success', 'Categoría eliminada.');
+        return redirect()->route('categorias.index')->with('success', 'Categoría eliminada.');
     }
 }

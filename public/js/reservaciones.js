@@ -56,19 +56,7 @@
     toggleTopbar();
     window.addEventListener("scroll", toggleTopbar, { passive: true });
 
-    const hamburger = qs(".hamburger");
-    const menu = qs(".menu");
-    if (hamburger && menu) {
-      hamburger.addEventListener("click", () => {
-        const visible = getComputedStyle(menu).display !== "none";
-        menu.style.display = visible ? "none" : "flex";
-        if (!visible) {
-          menu.style.flexDirection = "column";
-          menu.style.gap = "12px";
-        }
-      });
-    }
-  });
+
 
   // ---------- Progreso de pasos ----------
   function setStep(n) {
