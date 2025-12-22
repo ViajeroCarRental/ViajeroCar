@@ -34,6 +34,7 @@ class ReservacionesController extends Controller
 
         // ✅ categoria_id será la selección del Paso 2
         $categoriaId = $request->input('categoria_id') ?? $request->input('type');
+        $plan        = $request->input('plan');
 
         // Normalizar fechas/horas
         $pickupDate  = $this->normalizeDateYmd($pickupDateRaw);
@@ -160,66 +161,48 @@ class ReservacionesController extends Controller
             'dropoff_date'        => $dropoffDate,
             'dropoff_time'        => $dropoffTime,
             'categoria_id'        => $categoriaId,
+            'plan' => $plan,
         ];
 
-        // --- 5) Decidir PASO respetando ?step= (incluye paso 4) ---
-        $requestedStep = (int)$request->query('step', 0);
-        if ($requestedStep < 1 || $requestedStep > 4) {
-            $requestedStep = 0;
-        }
+        // ======================================================
+// ✅ NUEVO CONTROL DE FLUJO (POR CATEGORÍA)
+// ======================================================
 
-        /**
-         * ✅ FLUJO:
-         * 1 = filtros
-         * 2 = categorías (NO autos)
-         * 3 = autos (requiere categoria_id) o auto preseleccionado desde catálogo
-         * 4 = resumen (requiere vehiculo_id)
-         */
-        if ($requestedStep === 1) {
-            $step = 1;
-            $vehiculos = collect();
-        } elseif ($requestedStep === 2) {
-            // ✅ Paso 2: SOLO categorías
-            $step = 2;
-            $vehiculos = collect();
-        } elseif ($requestedStep === 3) {
-            if ($vehiculoId) {
-                // Desde catálogo con vehiculo elegido
-                $step = 3;
-                $vehiculos = collect();
-            } else {
-                // Sin vehículo: Step 3 solo si hay categoria elegida
-                if (empty($categoriaId)) {
-                    $step = 2;
-                    $vehiculos = collect();
-                } else {
-                    $step = 3;
-                    $vehiculos = $this->listarVehiculosDisponibles($filters);
-                }
-            }
-        } elseif ($requestedStep === 4) {
-            // ✅ Resumen: solo procede si hay vehículo seleccionado
-            if ($vehiculoId) {
-                $step = 4;
-                $vehiculos = collect();
-            } else {
-                // Sin vehículo → regresar a categorías
-                $step = 2;
-                $vehiculos = collect();
-            }
-        } else {
-            // Sin preferencia:
-            if ($vehiculoId) {
-                $step = 3;
-                $vehiculos = collect();
-            } elseif (!empty($categoriaId)) {
-                $step = 3;
-                $vehiculos = $this->listarVehiculosDisponibles($filters);
-            } else {
-                $step = 2;
-                $vehiculos = collect();
-            }
-        }
+// Step solicitado por URL
+$requestedStep = (int) $request->query('step', 0);
+
+// Validar rango
+if ($requestedStep < 1 || $requestedStep > 4) {
+    $requestedStep = 0;
+}
+
+// Flags del flujo actual
+$hasCategoria = !empty($categoriaId);
+$hasPlan      = !empty($plan);
+
+// Decidir paso correcto
+if ($requestedStep === 1) {
+    $step = 1;
+} elseif ($requestedStep === 2) {
+    $step = 2;
+} elseif ($requestedStep === 3) {
+    // Complementos requieren categoría + plan
+    $step = ($hasCategoria && $hasPlan) ? 3 : 2;
+} elseif ($requestedStep === 4) {
+    // 🔥 RESUMEN YA NO REQUIERE vehiculo_id
+    $step = ($hasCategoria && $hasPlan) ? 4 : 2;
+} else {
+    // Sin step explícito
+    if ($hasCategoria && $hasPlan) {
+        $step = 3;
+    } else {
+        $step = 2;
+    }
+}
+
+// Ya no listamos vehículos (flujo por categoría)
+$vehiculos = collect();
+
 
         // --- 6) Complementos (SERVICIOS) — SIEMPRE cargar ---
         $servicios = $this->obtenerServiciosActivos();

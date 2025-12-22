@@ -193,22 +193,30 @@
 
     // ✅ Mantener href con addons[...] (SIN tocar step/plan/categoria)
     function updateContinueHref() {
-      try {
-        const url = new URL(btnContinue.href, window.location.origin);
+  try {
+    const url = new URL(window.location.href);
 
-        // limpia addons previos
-        [...url.searchParams.keys()]
-          .filter(k => k.startsWith("addons["))
-          .forEach(k => url.searchParams.delete(k));
+    // 🔥 FORZAR paso 4 (clave del fix)
+    url.searchParams.set('step', '4');
 
-        // agrega addons actuales
-        state.forEach((v, id) => {
-          if (v.qty > 0) url.searchParams.set(`addons[${id}]`, String(v.qty));
-        });
+    // limpiar addons anteriores
+    [...url.searchParams.keys()]
+      .filter(k => k.startsWith("addons["))
+      .forEach(k => url.searchParams.delete(k));
 
-        btnContinue.href = url.toString();
-      } catch (_) {}
-    }
+    // agregar addons actuales
+    state.forEach((v, id) => {
+      if (v.qty > 0) {
+        url.searchParams.set(`addons[${id}]`, String(v.qty));
+      }
+    });
+
+    btnContinue.href = url.toString();
+  } catch (e) {
+    console.error('Error actualizando href Paso 4:', e);
+  }
+}
+
 
     // ❗ OJO: NO deshabilitamos el botón continuar.
     // Ya tienes "Omitir", pero si quieres permitir continuar sin addons,
