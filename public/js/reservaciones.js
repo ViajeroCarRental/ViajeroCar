@@ -11,9 +11,11 @@
   function normalizePdfLayout(root){
     if (!root) return;
 
+    // Ocultar elementos interactivos/ navegación dentro del CLON
     root.querySelectorAll('.topbar,.steps-header,.hamburger,.quote-actions,.link,.footer-elegant')
         .forEach(n => n.remove());
 
+    // Forzar contenedores a 100% y sin grid
     const widen = [
       '.wrap','.page','.main','#cotizacionDoc','.quote-doc',
       '.summary-grid','.confirm-grid','.r-card','.r-price'
@@ -28,12 +30,14 @@
       el.style.gridTemplateAreas = 'none';
     });
 
+    // Look de documento
     root.querySelectorAll('.card,.quote-doc,.resume-card,.receipt-card,.resume-final')
         .forEach(el=>{
           el.style.boxShadow = 'none';
           el.style.border = '1px solid #e5e7eb';
         });
 
+    // Imágenes seguras
     root.querySelectorAll('img').forEach(img=>{
       img.style.maxWidth = '100%';
       img.style.height = 'auto';
@@ -41,7 +45,7 @@
     });
   }
 
-  // ---------- Topbar ----------
+  // ---------- Topbar y menú ----------
   function initTopbar() {
     const topbar = qs(".topbar");
     if (!topbar) return;
@@ -55,7 +59,7 @@
     window.addEventListener("scroll", toggleTopbar, { passive: true });
   }
 
-  // ---------- Progreso ----------
+  // ---------- Progreso de pasos ----------
   function paintProgress() {
     const root = qs("main.page") || document.body;
     const stepNow = Number(root?.dataset?.currentStep || 1);
@@ -83,6 +87,8 @@
 
     const start = qs("#start");
     const end = qs("#end");
+
+    // Ojo: tus inputs son fecha y hora separados, pero si algún día vuelves a usar rango aquí, queda soportado
     if (start && end) {
       if (typeof rangePlugin !== "undefined") {
         flatpickr(start, {
@@ -124,12 +130,10 @@
     if (dob) flatpickr(dob, { altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d", maxDate: new Date() });
   }
 
-  // ==============================
-  // ✅ Step 3: Complementos
-  // ==============================
+  // ---------- Complementos (Paso 3) ----------
   function initAddonsStep3() {
     const step3 = qs("#step3");
-    if (!step3) return;
+    if (!step3) return; // no estamos en paso 3
 
     const grid = qs(".addons-grid");
     const btnContinue = qs("#toStep4");
@@ -149,6 +153,7 @@
     }
 
     function getQtyEl(card) { return card.querySelector(".qty"); }
+    function totalSelected() { let t = 0; state.forEach(v => { t += v.qty; }); return t; }
 
     function updateCardUI(card, qty) {
       const qtyEl = getQtyEl(card);
@@ -186,14 +191,17 @@
       } catch(_) {}
     }
 
+    // ✅ Mantener href con addons[...] (SIN tocar step/plan/categoria)
     function updateContinueHref() {
       try {
         const url = new URL(btnContinue.href, window.location.origin);
 
+        // limpia addons previos
         [...url.searchParams.keys()]
           .filter(k => k.startsWith("addons["))
           .forEach(k => url.searchParams.delete(k));
 
+        // agrega addons actuales
         state.forEach((v, id) => {
           if (v.qty > 0) url.searchParams.set(`addons[${id}]`, String(v.qty));
         });
@@ -202,36 +210,13 @@
       } catch (_) {}
     }
 
+    // ❗ OJO: NO deshabilitamos el botón continuar.
+    // Ya tienes "Omitir", pero si quieres permitir continuar sin addons,
+    // esto evita bloqueos raros.
     function updateContinueButtonVisual() {
       btnContinue.classList.remove("is-disabled");
       btnContinue.removeAttribute("aria-disabled");
       btnContinue.removeAttribute("disabled");
-    }
-
-    // ✅ FIX REAL: navegar a Step 4 usando la URL actual + step=4 + addons[...] (no confiar solo en href)
-    function goToStep4Hard() {
-      const main = qs('main.page');
-      const plan = main?.dataset?.plan || qs('#plan')?.value || '';
-      const categoriaId = qs('#categoria_id')?.value || '';
-
-      const url = new URL(window.location.href);
-      url.searchParams.set('step', '4');
-
-      // si por alguna razón faltan:
-      if (plan && !url.searchParams.get('plan')) url.searchParams.set('plan', plan);
-      if (categoriaId && !url.searchParams.get('categoria_id')) url.searchParams.set('categoria_id', categoriaId);
-
-      // limpia addons previos
-      [...url.searchParams.keys()]
-        .filter(k => k.startsWith("addons["))
-        .forEach(k => url.searchParams.delete(k));
-
-      // agrega addons
-      state.forEach((v, id) => {
-        if (v.qty > 0) url.searchParams.set(`addons[${id}]`, String(v.qty));
-      });
-
-      window.location.href = url.toString();
     }
 
     loadSelection();
@@ -267,11 +252,9 @@
       persistSelection();
     });
 
-    // ✅ IMPORTANTE: interceptamos click para forzar step=4
-    btnContinue.addEventListener("click", (e) => {
-      e.preventDefault();
+    btnContinue.addEventListener("click", () => {
+      // Solo persistimos antes de navegar
       persistSelection();
-      goToStep4Hard();
     });
 
     if (btnSkip) {
@@ -281,9 +264,7 @@
     }
   }
 
-  // ==============================
-  // ✅ Step 4: hidratar resumen
-  // ==============================
+  // ---------- Paso 4: hidratar resumen ----------
   function hydrateSummaryStep4() {
     const step4 = qs('#step4');
     if (!step4) return;
@@ -343,6 +324,7 @@
     const H2C_URL   = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
     const JSPDF_URL = "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
 
+    // Tamaño carta en px a ~96dpi
     const PAGE_W = 816;
     const PAGE_H = 1056;
 
@@ -392,9 +374,17 @@
     }
 
     function ensureQuoteHeader(container){
-      const head = container.querySelector('.qd-head');
-      if (!head) return;
-      // Tu Blade ya trae folio/fecha, no inventamos nada aquí.
+      let head = container.querySelector('.qd-head');
+      if (!head) return; // en tu Blade ya existe, no inventamos otro
+
+      const code = container.querySelector('#qdCode');
+      const date = container.querySelector('#qdDate');
+      const rnd = Math.random().toString(36).slice(2,7).toUpperCase();
+      const ymd = new Date().toISOString().slice(0,10).replaceAll('-','');
+      if (code && !code.textContent.trim()) code.textContent = `COT-${ymd}-${rnd}`;
+      if (date && !date.textContent.trim()) {
+        date.textContent = new Date().toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+      }
     }
 
     function getCsrfToken() {
@@ -532,6 +522,7 @@
 
       ensureQuoteHeader(node);
 
+      // Ocultar interactivos dentro del render
       const interactive = qsa('a,button', node);
       const prev = new Map();
       interactive.forEach(el=>{ prev.set(el, el.style.display); el.style.display='none'; });
