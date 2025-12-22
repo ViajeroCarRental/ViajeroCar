@@ -90,7 +90,7 @@
 
   <!-- HEADER -->
   <div class="header">
-    <img src="https://i.ibb.co/rR3WvFNf/image.png" alt="Viajero Car Rental">
+    <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
     <h1>
       {{ $tipo === 'linea' ? 'Reserva Confirmada' : 'Confirmación de Reservación' }}
     </h1>
