@@ -393,9 +393,7 @@ class ReservacionesController extends Controller
             ")
             ->where('v.id_estatus', 1); // Disponible
 
-        if (!empty($filters['pickup_sucursal_id'])) {
-            $q->where('v.id_sucursal', (int)$filters['pickup_sucursal_id']);
-        }
+
         if (!empty($filters['categoria_id'])) {
             $q->where('v.id_categoria', (int)$filters['categoria_id']);
         }
