@@ -24,7 +24,7 @@ public function reservar(Request $request)
     try {
         // 1️⃣ Validación básica
         $validated = $request->validate([
-            'vehiculo_id'         => 'required|integer',
+            'categoria_id'        => 'required|integer',
             'pickup_date'         => 'required|date',
             'pickup_time'         => 'required',
             'dropoff_date'        => 'required|date',
@@ -35,7 +35,7 @@ public function reservar(Request $request)
             'email'               => 'nullable|string|max:120',
             'telefono'            => 'nullable|string|max:40',
             'vuelo'               => 'nullable|string|max:40',
-            'addons'              => 'nullable|array'
+            'addons'              => 'nullable|array',
         ]);
 
         // 2️⃣ Generar código RES
@@ -43,29 +43,46 @@ public function reservar(Request $request)
         $random = strtoupper(Str::random(5));
         $codigo = "RES-{$fecha}-{$random}";
 
-        // 3️⃣ Calcular totales
-        $vehiculo = DB::table('vehiculos')
-            ->select('precio_dia', 'id_ciudad as ciudad_retiro')
-            ->where('id_vehiculo', $validated['vehiculo_id'])
+        // 3️⃣ Calcular totales usando la CATEGORÍA (no el vehículo)
+        $categoria = DB::table('categorias_carros')
+            ->select('precio_dia')
+            ->where('id_categoria', $validated['categoria_id'])
             ->first();
 
         $fechaInicio = Carbon::parse($validated['pickup_date']);
         $fechaFin    = Carbon::parse($validated['dropoff_date']);
         $dias        = max(1, $fechaInicio->diffInDays($fechaFin));
 
-        $subtotal  = $vehiculo ? ($vehiculo->precio_dia * $dias) : 0;
+        $precioDia = $categoria ? $categoria->precio_dia : 0;
+        $subtotal  = $precioDia * $dias;
         $impuestos = round($subtotal * 0.16, 2);
         $total     = $subtotal + $impuestos;
 
         // 4️⃣ Estado fijo: pago pendiente en mostrador
         $estado = 'pendiente_pago';
 
+        // 4.1️⃣ Determinar ciudad a partir de la sucursal de retiro
+        $ciudadRetiro = null;
+
+        if (!empty($validated['pickup_sucursal_id'])) {
+            $ciudadRetiro = DB::table('sucursales')
+                ->where('id_sucursal', $validated['pickup_sucursal_id'])
+                ->value('id_ciudad');
+        }
+
+        if (!$ciudadRetiro) {
+            // Fallback por si no viene sucursal o no se encuentra ciudad
+            $ciudadRetiro = 1;
+        }
+
+        $ciudadEntrega = $ciudadRetiro;
+
         // 5️⃣ Insertar reservación
         $id = DB::table('reservaciones')->insertGetId([
             'id_usuario'       => null,
-            'id_vehiculo'      => $validated['vehiculo_id'],
-            'ciudad_retiro'    => $vehiculo ? $vehiculo->ciudad_retiro : 1,
-            'ciudad_entrega'   => $vehiculo ? $vehiculo->ciudad_retiro : 1,
+            'id_vehiculo'      => null, // 👉 se asigna después en el contrato
+            'ciudad_retiro'    => $ciudadRetiro,
+            'ciudad_entrega'   => $ciudadEntrega,
             'sucursal_retiro'  => $validated['pickup_sucursal_id'] ?? null,
             'sucursal_entrega' => $validated['dropoff_sucursal_id'] ?? null,
             'fecha_inicio'     => $validated['pickup_date'],
@@ -110,7 +127,7 @@ public function reservar(Request $request)
         ]);
 
     } catch (\Throwable $e) {
-        Log::error('❌ Error creando reservación: ' . $e->getMessage());
+        Log::error('❌ Error creando reservación (mostrador): ' . $e->getMessage());
 
         return response()->json([
             'ok'      => false,
@@ -121,12 +138,13 @@ public function reservar(Request $request)
 }
 
 
+
     public function reservarLinea(Request $request)
 {
     try {
         // 1️⃣ Validación de datos de la reserva + paypal_order_id obligatorio
         $validated = $request->validate([
-            'vehiculo_id'         => 'required|integer',
+            'categoria_id'        => 'required|integer',
             'pickup_date'         => 'required|date',
             'pickup_time'         => 'required',
             'dropoff_date'        => 'required|date',
@@ -147,17 +165,18 @@ public function reservar(Request $request)
         $random = strtoupper(Str::random(5));
         $codigo = "RES-{$fecha}-{$random}";
 
-        // 3️⃣ Totales (mismo cálculo que en reservar)
-        $vehiculo = DB::table('vehiculos')
-            ->select('precio_dia', 'id_ciudad as ciudad_retiro')
-            ->where('id_vehiculo', $validated['vehiculo_id'])
+        // 3️⃣ Totales (mismo cálculo que en reservar, pero usando CATEGORÍA)
+        $categoria = DB::table('categorias_carros')
+            ->select('precio_dia')
+            ->where('id_categoria', $validated['categoria_id'])
             ->first();
 
         $fechaInicio = Carbon::parse($validated['pickup_date']);
         $fechaFin    = Carbon::parse($validated['dropoff_date']);
         $dias        = max(1, $fechaInicio->diffInDays($fechaFin));
 
-        $subtotal  = $vehiculo ? ($vehiculo->precio_dia * $dias) : 0;
+        $precioDia = $categoria ? $categoria->precio_dia : 0;
+        $subtotal  = $precioDia * $dias;
         $impuestos = round($subtotal * 0.16, 2);
         $total     = $subtotal + $impuestos;
 
@@ -263,13 +282,31 @@ public function reservar(Request $request)
         }
 
         // ============================================
-        // 5️⃣ Insertar reservación confirmada
+        // 5️⃣ Determinar ciudad a partir de sucursal
+        // ============================================
+        $ciudadRetiro = null;
+
+        if (!empty($validated['pickup_sucursal_id'])) {
+            $ciudadRetiro = DB::table('sucursales')
+                ->where('id_sucursal', $validated['pickup_sucursal_id'])
+                ->value('id_ciudad');
+        }
+
+        if (!$ciudadRetiro) {
+            // Fallback si no hay sucursal o ciudad
+            $ciudadRetiro = 1;
+        }
+
+        $ciudadEntrega = $ciudadRetiro;
+
+        // ============================================
+        // 6️⃣ Insertar reservación confirmada
         // ============================================
         $id = DB::table('reservaciones')->insertGetId([
             'id_usuario'       => null,
-            'id_vehiculo'      => $validated['vehiculo_id'],
-            'ciudad_retiro'    => $vehiculo ? $vehiculo->ciudad_retiro : 1,
-            'ciudad_entrega'   => $vehiculo ? $vehiculo->ciudad_retiro : 1,
+            'id_vehiculo'      => null, // 👉 se asigna después en el contrato
+            'ciudad_retiro'    => $ciudadRetiro,
+            'ciudad_entrega'   => $ciudadEntrega,
             'sucursal_retiro'  => $validated['pickup_sucursal_id'] ?? null,
             'sucursal_entrega' => $validated['dropoff_sucursal_id'] ?? null,
             'fecha_inicio'     => $validated['pickup_date'],
@@ -293,7 +330,7 @@ public function reservar(Request $request)
             'updated_at'       => now(),
         ]);
 
-        // 6️⃣ Enviar correo con plantilla (PAGO EN LÍNEA)
+        // 7️⃣ Enviar correo con plantilla (PAGO EN LÍNEA)
         $reservacion = DB::table('reservaciones')
             ->where('id_reservacion', $id)
             ->first();
@@ -304,7 +341,7 @@ public function reservar(Request $request)
                 ->send(new ReservacionUsuarioMail($reservacion, 'en_linea'));
         }
 
-        // 7️⃣ Respuesta JSON
+        // 8️⃣ Respuesta JSON
         return response()->json([
             'ok'        => true,
             'folio'     => $codigo,

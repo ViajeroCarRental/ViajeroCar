@@ -34,10 +34,11 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         // 🧾 Recolectar datos del formulario
         const form = document.querySelector("#formCotizacion");
-        if (!form) {
-          alert("No se encontró el formulario de reservación.");
-          return;
-        }
+if (!form) {
+  alertify.error("No se encontró el formulario de reservación.");
+  return;
+}
+
 
         const nombre = document.querySelector("#nombreCliente")?.value?.trim() || "";
         const email = document.querySelector("#correoCliente")?.value?.trim() || "";
@@ -50,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const dropoff_time = document.querySelector("#dropoff_time")?.value || "";
 
         const urlParams = new URLSearchParams(window.location.search);
-        const vehiculo_id = urlParams.get("vehiculo_id") || "";
+        const categoria_id = urlParams.get("categoria_id") || "";
         const pickup_sucursal_id = urlParams.get("pickup_sucursal_id") || "";
         const dropoff_sucursal_id = urlParams.get("dropoff_sucursal_id") || "";
 
@@ -65,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Payload
         const payload = {
-          vehiculo_id,
+          categoria_id,
           pickup_date,
           pickup_time,
           dropoff_date,
@@ -101,10 +102,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         const data = await res.json();
-        if (!res.ok || data.ok === false) {
-          alert("No se pudo registrar la reservación.");
-          return;
-        }
+if (!res.ok || data.ok === false) {
+  alertify.error("No se pudo registrar la reservación.");
+  return;
+}
+
 
         const folio = data.folio?.replace(/^COT/, "RES") || "RES-PENDIENTE";
         const pickup = `${pickup_date} ${pickup_time}`;
@@ -207,27 +209,33 @@ document.addEventListener("DOMContentLoaded", () => {
         const fileName = `ticket-${folio}.pdf`;
 
         // ✅ Confirmación visual antes de descargar el PDF
-        alert("✅ Su reservación fue registrada correctamente y se ha enviado a Viajero Car Rental.\n\n📩 Recibirá confirmación por correo electrónico.");
-        sessionStorage.clear(); // limpia datos temporales
+alertify.alert(
+  "Reservación registrada",
+  "✅ Su reservación fue registrada correctamente y se ha env...ar Rental.\n\n📩 Recibirá confirmación por correo electrónico."
+);
+sessionStorage.clear(); // limpia datos temporales
 
-        // pequeña pausa antes de descargar
-        setTimeout(() => pdf.save(fileName), 600);
+// pequeña pausa antes de descargar
+setTimeout(() => pdf.save(fileName), 600);
+
 
       } catch (error) {
-        console.error("Error en pago mostrador:", error);
-        alert("Ocurrió un error al generar el ticket con logo.");
-      }
+  console.error("Error en pago mostrador:", error);
+  alertify.error("Ocurrió un error al generar el ticket con logo.");
+}
+
     });
   }
 
   // ============================================================
   // === OPCIÓN: PAGO EN LÍNEA (solo visible por ahora) =========
   // ============================================================
-  if (btnPagoLinea) {
-    btnPagoLinea.addEventListener("click", () => {
-      modalMetodoPago.style.display = "none";
-      // 🚧 Aquí conectaremos PayPal real o simulación más adelante
-      alert("💳 Próximamente podrás realizar tu pago en línea con PayPal.");
-    });
-  }
+ if (btnPagoLinea) {
+  btnPagoLinea.addEventListener("click", () => {
+    modalMetodoPago.style.display = "none";
+    // 🚧 Aquí conectaremos PayPal real o simulación más adelante
+    alertify.message("💳 Próximamente podrás realizar tu pago en línea con PayPal.");
+  });
+}
+
 });

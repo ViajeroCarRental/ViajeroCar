@@ -409,8 +409,7 @@
       const pickup_sucursal_id  = sp.get('pickup_sucursal_id') || '';
       const dropoff_sucursal_id = sp.get('dropoff_sucursal_id') || '';
       const categoria_id        = sp.get('categoria_id') || '';
-      const vehiculo_id         = sp.get('vehiculo_id') || '';
-      return { pickup_sucursal_id, dropoff_sucursal_id, categoria_id, vehiculo_id };
+      return { pickup_sucursal_id, dropoff_sucursal_id, categoria_id};
     }
 
     function getAddonsForPost() {
@@ -451,11 +450,11 @@
         if (parts.length >= 2) { dropoff_date = parts[0]; dropoff_time = parts[1]; }
       }
 
-      const { pickup_sucursal_id, dropoff_sucursal_id, vehiculo_id } = getUrlParams();
+      const { pickup_sucursal_id, dropoff_sucursal_id, categoria_id } = getUrlParams();
       const addons = getAddonsForPost();
 
       const payload = {
-        vehiculo_id: Number(vehiculo_id) || undefined,
+                categoria_id: categoria_id ? Number(categoria_id) : undefined,
         pickup_date, pickup_time, dropoff_date, dropoff_time,
         pickup_sucursal_id: pickup_sucursal_id ? Number(pickup_sucursal_id) : undefined,
         dropoff_sucursal_id: dropoff_sucursal_id ? Number(dropoff_sucursal_id) : undefined,
@@ -509,24 +508,31 @@
 
         return { ok: true, folio: data?.folio || null };
       } catch (err) {
-        console.error('Error guardando cotización:', err);
-        alert('No se pudo guardar/enviar la cotización. Revisa tu conexión o inténtalo más tarde.');
-        return { ok: false, message: String(err?.message || err) };
-      } finally {
+  console.error('Error guardando cotización:', err);
+  if (window.alertify) {
+    alertify.error('No se pudo guardar/enviar la cotización. Revisa tu conexión o inténtalo más tarde.');
+  } else {
+    alert('No se pudo guardar/enviar la cotización. Revisa tu conexión o inténtalo más tarde.');
+  }
+  return { ok: false, message: String(err?.message || err) };
+} finally {
+
         btnPdf.disabled = false;
         btnPdf.innerHTML = original;
       }
     }
 
     async function generatePdfFlow() {
-      const node = qs('#cotizacionDoc');
-      if (!node) return;
-
       const { h2c, jsPDFCtor } = await ensureLibs();
-      if (!h2c || !jsPDFCtor) {
-        alert('No pude cargar el generador de PDF. Revisa tu conexión e inténtalo de nuevo.');
-        return;
-      }
+if (!h2c || !jsPDFCtor) {
+  if (window.alertify) {
+    alertify.error('No pude cargar el generador de PDF. Revisa tu conexión e inténtalo de nuevo.');
+  } else {
+    alert('No pude cargar el generador de PDF. Revisa tu conexión e inténtalo de nuevo.');
+  }
+  return;
+}
+
 
       ensureQuoteHeader(node);
 
@@ -594,9 +600,14 @@
         const sb = document.getElementById('pdf-sandbox');
         if (sb && sb.parentNode) sb.parentNode.removeChild(sb);
       } catch(err){
-        console.error('PDF error:', err);
-        alert('Hubo un error generando el PDF. Revisa la consola para detalles.');
-      } finally {
+  console.error('PDF error:', err);
+  if (window.alertify) {
+    alertify.error('Hubo un error generando el PDF. Revisa la consola para detalles.');
+  } else {
+    alert('Hubo un error generando el PDF. Revisa la consola para detalles.');
+  }
+} finally {
+
         interactive.forEach(el=>{ el.style.display = prev.get(el) || ''; });
         document.body.classList.remove('for-pdf');
       }
