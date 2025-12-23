@@ -1190,7 +1190,7 @@ private function obtenerIndividualesSeleccionados($idReservacion)
 private function calcularTotalProtecciones($idReservacion)
 {
     $dias = DB::table('reservaciones')
-    ->selectRaw("DATEDIFF(fecha_fin, fecha_inicio)  as dias")
+    ->selectRaw("DATEDIFF(fecha_fin, fecha_inicio)   as dias")
     ->where('id_reservacion', $idReservacion)
     ->value('dias') ?? 1;
 
@@ -2118,7 +2118,7 @@ public function resumenPaso6($idReservacion)
                     'id_pago' => $p->id_pago,
                     'fecha'   => Carbon::parse($p->created_at)->format('Y-m-d H:i'),
                     'tipo'    => $p->tipo_pago,
-                    'origen'  => $p->metodo,
+                    'origen'  => $p->origen_pago ?? $p->metodo,
                     'monto'   => $p->monto,
                 ];
             });
@@ -2178,17 +2178,36 @@ public function agregarPagoPaso6(Request $request)
             'metodo'         => 'nullable|string|max:50',
         ]);
 
+        // 🔹 Normalizar método
+        $metodo = strtoupper($data['metodo'] ?? 'EFECTIVO');
+
+        // 🔹 Definir ORIGEN según método (igual que en pagoManual)
+        $origen = match ($metodo) {
+            'VISA', 'MASTERCARD', 'AMEX', 'DEBITO' => 'terminal',
+            'TRANSFERENCIA', 'SPEI', 'DEPOSITO'    => 'mostrador',
+            'EFECTIVO'                             => 'mostrador',
+            default                                => 'mostrador',
+        };
+
         DB::table('pagos')->insert([
             'id_reservacion' => $data['id_reservacion'],
-            'metodo'         => $data['metodo'] ?? 'mostrador',
+            'id_contrato'    => null,
+
+            'origen_pago'    => $origen,      // ✅ ahora sí se llena
+            'metodo'         => $metodo,
             'tipo_pago'      => $data['tipo_pago'],
+
             'monto'          => $data['monto'],
+            'moneda'         => 'MXN',
             'estatus'        => 'paid',
+
             'payload_webhook'=> json_encode([
                 'ultimos4' => $data['ultimos4'] ?? null,
                 'auth'     => $data['auth'] ?? null,
                 'notas'    => $data['notas'] ?? null,
             ]),
+
+            'captured_at'    => now(),
             'created_at'     => now(),
             'updated_at'     => now(),
         ]);
@@ -2200,6 +2219,7 @@ public function agregarPagoPaso6(Request $request)
         return response()->json(['ok' => false, 'msg' => 'Error interno'], 500);
     }
 }
+
 public function eliminarPago($idPago)
 {
     try {

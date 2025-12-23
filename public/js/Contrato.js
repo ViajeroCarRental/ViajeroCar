@@ -2553,6 +2553,8 @@ document.querySelectorAll('.uploader input[type="file"]').forEach((input) => {
    ========================================================== */
 
 console.log("🚀 Paso 6 inicializado…");
+// 🔐 CSRF token desde el <meta> del layout
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
 
 // UI totales
 const baseAmt       = $("#baseAmt");
@@ -2956,7 +2958,7 @@ pSave?.addEventListener("click", async () => {
 
 
 /* ==========================================================
-   🔹 8. Eliminar pago
+   🔹 8. Eliminar pago (con CSRF)
 ========================================================== */
 payBody?.addEventListener("click", async (e) => {
     const btn = e.target.closest("[data-del]");
@@ -2965,13 +2967,31 @@ payBody?.addEventListener("click", async (e) => {
     const id_pago = btn.dataset.del;
     if (!confirm("¿Eliminar este pago?")) return;
 
-    await fetch(`/admin/contrato/pagos/${id_pago}/eliminar`, { method: "DELETE" });
-    cargarPaso6();
-    await cargarResumenBasico();
+    try {
+        const resp = await fetch(`/admin/contrato/pagos/${id_pago}/eliminar`, {
+            method: "DELETE",
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+                "Accept": "application/json"
+            }
+        });
 
+        console.log("RESP ELIMINAR:", resp.status);
 
+        if (!resp.ok) {
+            alert("No se pudo eliminar el pago (error " + resp.status + ").");
+            return;
+        }
 
+        await cargarPaso6();
+        await cargarResumenBasico();
+
+    } catch (err) {
+        console.error("❌ Error al eliminar pago:", err);
+        alert("Error de conexión al intentar eliminar el pago.");
+    }
 });
+
 
 /* ==========================================================
    🔹 Helper de formato
@@ -3421,14 +3441,6 @@ if (btnSaltarDoc) {
   });
 
 }
-
-
-
-
-
-
-
-
 
   /* ==========================================================
      🚀 Navegación entre pasos

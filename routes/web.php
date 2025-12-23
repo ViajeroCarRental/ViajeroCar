@@ -31,7 +31,6 @@ use App\Http\Controllers\ContratosAbiertosController;
 use App\Http\Controllers\VisorReservacionesController;
 use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\ContratosAbiertosControllerController;
-use App\Http\Controllers\ChecklistCambioAutoController;
 use Illuminate\Support\Facades\DB;
 //rutas vistas Usuario
 
@@ -242,8 +241,6 @@ Route::get('/admin/contrato/{id}/resumen-paso6',[ContratoController::class, 'res
 // PASO 6 — agregar pago
 Route::post('/admin/contrato/pagos/agregar',[ContratoController::class, 'agregarPagoPaso6']);
 
-// PASO 6 — eliminar pago
-Route::delete('/admin/contrato/pagos/{idPago}/eliminar',[ContratoController::class, 'eliminarPago']);
 // 🔹 Registrar pago manual (efectivo / terminal / transferencia)
 Route::post('/admin/contrato/pagos/agregar', [ContratoController::class, 'pagoManual'])->name('contrato.pago.agregar');
 
@@ -399,9 +396,9 @@ Route::get('/admin/reservacion/{id}/checklist', function($id) {
     return view('Admin.checklist', ['id' => $id]);
 })->name('checklist.ver');
 
-// Vista checklist cambio de auto
-Route::get('/admin/checklist2', [ChecklistCambioAutoController::class, 'index'])
-    ->name('checklist.cambio-auto');
+Route::get('/admin/checklist2', function () {
+    return view('Admin.checklist2');
+});
 
 /* ===============================================
    ADMIN · ROLES Y PERMISOS
@@ -518,26 +515,12 @@ Route::get('/api/contratos-abiertos', [ContratosAbiertosController::class, 'api'
 // Categorías de carros admin
 use App\Http\Controllers\CategoriasController;
 
-Route::get('/admin/categorias', [CategoriasController::class, 'index'])
-    ->name('categorias.index');
-
-Route::post('/admin/categorias', [CategoriasController::class, 'store'])
-    ->name('categorias.store');
-
-Route::put('/admin/categorias/{id}', [CategoriasController::class, 'update'])
-    ->name('categorias.update');
-
-Route::delete('/admin/categorias/{id}', [CategoriasController::class, 'destroy'])
-    ->name('categorias.destroy');
-
+Route::get('/categorias', [CategoriasController::class, 'index'])->name('categorias.index');
+Route::post('/categorias', [CategoriasController::class, 'store'])->name('categorias.store');
+Route::put('/categorias/{id}', [CategoriasController::class, 'update'])->name('categorias.update');
+Route::delete('/categorias/{id}', [CategoriasController::class, 'destroy'])->name('categorias.destroy');
 //suta consultar saldo pendiente
 Route::get('/admin/contrato/{id}/saldo', [ContratosAbiertosController::class, 'saldo']);
 
 Route::post('/admin/contrato/{id}/cerrar', [ContratosAbiertosController::class, 'finalizarContrato']);
 
-// Acciones desde el modal (No Show / Cancelar)
-Route::post('/admin/reservaciones-activas/{id}/no-show', [ReservacionesActivasController::class, 'noShow'])
-  ->name('reservaciones_activas.no_show');
-
-Route::post('/admin/reservaciones-activas/{id}/cancelar', [ReservacionesActivasController::class, 'cancelar'])
-  ->name('reservaciones_activas.cancelar');
