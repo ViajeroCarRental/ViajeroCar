@@ -22,6 +22,7 @@ public function indexView()
             'v.color',
             'v.placa',
             'v.numero_serie',
+            'v.numero_rin',
             'v.kilometraje',
             'v.capacidad_tanque',
             'e.nombre as estatus',

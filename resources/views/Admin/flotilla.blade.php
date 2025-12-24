@@ -19,9 +19,9 @@
 <div class="buscador-contenedor">
   <div class="buscador-flotilla">
     <i class="fas fa-search icono-buscar"></i>
-    <input 
-      type="text" 
-      id="filtroVehiculo" 
+    <input
+      type="text"
+      id="filtroVehiculo"
       placeholder="Buscar por modelo, placa, color o año...">
   </div>
 
@@ -39,6 +39,7 @@
             <th>Color</th>
             <th>Placa</th>
             <th>Número de Serie</th>
+            <th>Número de Rin</th>
             <th>Categoría</th>
             <th>Kilometraje</th>
             <th>Tanque (L)</th>
@@ -56,13 +57,14 @@
               data-color="{{ $v->color }}"
               data-categoria="{{ $v->categoria }}"
               data-kilometraje="{{ $v->kilometraje }}">
-            
+
             <td>{{ $v->modelo }}</td>
             <td>{{ $v->marca }}</td>
             <td>{{ $v->anio }}</td>
             <td>{{ $v->color }}</td>
             <td>{{ $v->placa }}</td>
             <td>{{ $v->numero_serie }}</td>
+             <td>{{ $v->numero_rin ?? '—' }}</td>
             <td>{{ $v->categoria }}</td>
             <td>{{ number_format($v->kilometraje) }} km</td>
             <td>{{ $v->capacidad_tanque ? $v->capacidad_tanque . ' L' : '—' }}</td>
