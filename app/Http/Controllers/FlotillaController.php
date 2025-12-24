@@ -22,6 +22,7 @@ public function indexView()
             'v.color',
             'v.placa',
             'v.numero_serie',
+            'v.numero_rin',
             'v.kilometraje',
             'v.capacidad_tanque',
             'e.nombre as estatus',
@@ -57,6 +58,7 @@ public function store(Request $request)
         'archivo_verificacion' => 'nullable|mimes:pdf,jpg,jpeg,png|max:4096',
         'numero_rin' => 'nullable|string|max:100',
         'capacidad_tanque' => 'nullable|numeric|min:0',
+        'aceite' => 'nullable|string|max:100',
 
     ]);
 
@@ -88,6 +90,7 @@ public function store(Request $request)
         'numero_serie' => $request->numero_serie,
         'numero_rin' => $request->numero_rin,
         'capacidad_tanque' => $request->capacidad_tanque,
+        'aceite' => $request->aceite,
         'placa' => $request->placa,
 
         // 🔹 Datos técnicos

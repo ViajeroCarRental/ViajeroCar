@@ -664,7 +664,7 @@
           return;
         }
 
-        alert('Selecciona un tipo de pago desde el paso de categoría (Mostrador o Prepago).');
+        alertify.warning('Selecciona un tipo de pago desde el paso de categoría (Mostrador o Prepago).');
       });
 
       if (cerrarModalMetodo && modalMetodoPago) {

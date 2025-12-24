@@ -19,9 +19,9 @@
 <div class="buscador-contenedor">
   <div class="buscador-flotilla">
     <i class="fas fa-search icono-buscar"></i>
-    <input 
-      type="text" 
-      id="filtroVehiculo" 
+    <input
+      type="text"
+      id="filtroVehiculo"
       placeholder="Buscar por modelo, placa, color o año...">
   </div>
 
@@ -39,6 +39,7 @@
             <th>Color</th>
             <th>Placa</th>
             <th>Número de Serie</th>
+            <th>Número de Rin</th>
             <th>Categoría</th>
             <th>Kilometraje</th>
             <th>Tanque (L)</th>
@@ -56,13 +57,14 @@
               data-color="{{ $v->color }}"
               data-categoria="{{ $v->categoria }}"
               data-kilometraje="{{ $v->kilometraje }}">
-            
+
             <td>{{ $v->modelo }}</td>
             <td>{{ $v->marca }}</td>
             <td>{{ $v->anio }}</td>
             <td>{{ $v->color }}</td>
             <td>{{ $v->placa }}</td>
             <td>{{ $v->numero_serie }}</td>
+             <td>{{ $v->numero_rin ?? '—' }}</td>
             <td>{{ $v->categoria }}</td>
             <td>{{ number_format($v->kilometraje) }} km</td>
             <td>{{ $v->capacidad_tanque ? $v->capacidad_tanque . ' L' : '—' }}</td>
@@ -173,6 +175,25 @@
       <label>Asientos<input type="number" name="asientos" min="2" max="10" value="5"></label>
       <label>Puertas<input type="number" name="puertas" min="2" max="6" value="4"></label>
       <label>Capacidad de Tanque (L)<input type="number" step="0.1" name="capacidad_tanque" placeholder="Ej. 55.0"></label>
+      <!-- 👇 NUEVO CAMPO -->
+      <label>Tipo de Aceite
+        <select id="aceiteSelect">
+        <option value="" selected disabled>Seleccione tipo de aceite...</option>
+        <option value="Cvtec">CVT</option>
+        <option value="Atf">ATF</option>
+        <option value="otro">Otro...</option>
+        </select>
+
+        <!-- Este es el que realmente se envía al backend -->
+        <input
+        type="text"
+        name="aceite"
+        id="aceiteInput"
+        placeholder="Ej. 5W30 sintético"
+        style="margin-top:6px; display:none;"
+        >
+    </label>
+
 
 
       <h3>Póliza de Seguro</h3>
@@ -249,11 +270,35 @@ const cancelAdd = document.getElementById('cancelAdd');
 btnAddAuto.onclick = () => addModal.classList.add('active');
 closeAdd.onclick = cancelAdd.onclick = () => addModal.classList.remove('active');
 
-// === Confirmación de eliminación ===
-// Recomendado: cambia el botón del basurero a type="button"
-// <button type="button" class="btnDelete">🗑️</button>
-// y mantén el <form method="POST" class="delete-form"> con @csrf @method('DELETE')
 
+// 🔴🔴🔴 AQUÍ EMPIEZA LO NUEVO DEL ACEITE 🔴🔴🔴
+// === SELECT + INPUT PARA TIPO DE ACEITE ===
+const aceiteSelect = document.getElementById('aceiteSelect');
+const aceiteInput  = document.getElementById('aceiteInput');
+
+if (aceiteSelect && aceiteInput) {
+  aceiteSelect.addEventListener('change', () => {
+    const val = aceiteSelect.value;
+
+    if (val === 'otro') {
+      // Mostrar input para escribir aceite libre
+      aceiteInput.style.display = 'block';
+      aceiteInput.value = '';
+      aceiteInput.focus();
+    } else if (val) {
+      // Ocultar input y poner el valor seleccionado
+      aceiteInput.style.display = 'none';
+      aceiteInput.value = val;
+    } else {
+      aceiteInput.style.display = 'none';
+      aceiteInput.value = '';
+    }
+  });
+}
+// 🔴🔴🔴 AQUÍ TERMINA LO NUEVO DEL ACEITE 🔴🔴🔴
+
+
+// === Confirmación de eliminación ===
 (function () {
   const confirmModal = document.getElementById('confirmDeleteModal');
   const btnCancel = document.getElementById('cancelDelete');
@@ -348,6 +393,7 @@ document.addEventListener('click', e => {
     document.querySelectorAll('#tblFleet tbody tr').forEach(r => r.classList.remove('swiped'));
   }
 });
+
 // === 🔎 FILTRO DE BÚSQUEDA ===
 document.getElementById('filtroVehiculo').addEventListener('keyup', function () {
   const filtro = this.value.toLowerCase();
@@ -366,6 +412,7 @@ document.getElementById('filtroVehiculo').addEventListener('keyup', function () 
     }
   });
 });
+
 
 </script>
 @endsection
