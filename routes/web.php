@@ -523,4 +523,3 @@ Route::delete('/categorias/{id}', [CategoriasController::class, 'destroy'])->nam
 Route::get('/admin/contrato/{id}/saldo', [ContratosAbiertosController::class, 'saldo']);
 
 Route::post('/admin/contrato/{id}/cerrar', [ContratosAbiertosController::class, 'finalizarContrato']);
-

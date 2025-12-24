@@ -44,6 +44,17 @@
     </select>
 
     <span class="badge gray">Total <b id="count">{{ count($reservaciones) }}</b></span>
+
+    {{-- ✅ Botón exportar (ARREGLADO: sin ">" extra) --}}
+    <button
+      type="button"
+      class="btn primary"
+      id="btnExportExcel"
+      style="margin-left:auto; display:flex; align-items:center; gap:8px;"
+    >
+      ⬇️ Exportar Excel
+    </button>
+
   </form>
 
   <!-- ======================= 📋 TABLA ======================= -->
@@ -71,7 +82,7 @@
     <div class="tbody">
       @forelse ($reservaciones as $r)
         <div class="row"
-            
+
              data-codigo="{{ $r->codigo }}"
              data-cliente="{{ $r->nombre_cliente }}"
              data-email="{{ $r->email_cliente }}"
@@ -295,6 +306,74 @@
 </main>
 @endsection
 
+{{-- ✅ IMPORTANTE: SOLO UNA SECCIÓN JS (ARREGLADO: quitamos duplicado) --}}
 @section('js-vistaReservacionesActivas')
   <script src="{{ asset('js/reservacionesActivas.js') }}"></script>
+
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      const btn = document.getElementById('btnExportExcel');
+      if (!btn) return;
+
+      // Convierte texto a CSV seguro
+      const csvCell = (v) => {
+        const s = (v ?? '').toString().replace(/\s+/g, ' ').trim();
+        const escaped = s.replace(/"/g, '""');
+        return /[",\n]/.test(escaped) ? `"${escaped}"` : escaped;
+      };
+
+      const downloadCSV = (filename, csvContent) => {
+        const bom = "\uFEFF"; // BOM para acentos/ñ en Excel
+        const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        URL.revokeObjectURL(url);
+      };
+
+      btn.addEventListener('click', () => {
+        const thead = document.querySelector('.table .thead');
+        const rows  = Array.from(document.querySelectorAll('.table .tbody .row'));
+
+        if (!thead) {
+          alert('No encontré el encabezado de la tabla.');
+          return;
+        }
+
+        // Filas reales (evita el row del empty)
+        const dataRows = rows.filter(r => r.children.length > 2);
+
+        if (dataRows.length === 0) {
+          alert('No hay bookings para exportar.');
+          return;
+        }
+
+        // Headers (quitamos "Acciones")
+        const headers = Array.from(thead.children).map(h => h.innerText.trim());
+        const headersNoActions = headers.slice(0, -1);
+
+        const SEP = ';';
+        let csv = headersNoActions.map(csvCell).join(SEP) + '\n';
+
+        dataRows.forEach(row => {
+          const cells = Array.from(row.children);
+          const dataCells = cells.slice(0, -1).map(cell => cell.innerText); // quita Acciones
+          csv += dataCells.map(csvCell).join(SEP) + '\n';
+        });
+
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth()+1).padStart(2,'0');
+        const d = String(now.getDate()).padStart(2,'0');
+
+        downloadCSV(`bookings_${y}-${m}-${d}.csv`, csv);
+      });
+    });
+  </script>
 @endsection
