@@ -26,7 +26,7 @@
 
           <div class="mhead">
             <div>
-              <h3>{{ $v->marca }} {{ $v->modelo }} 
+              <h3>{{ $v->marca }} {{ $v->modelo }}
                 <small style="color:#6b7280;font-weight:600;">({{ $v->anio }})</small>
               </h3>
               <div class="small-muted">Placa: <b>{{ !empty($v->placa) ? $v->placa : '—' }}</b></div>
@@ -34,6 +34,13 @@
           </div>
 
           <div class="row"><div>Kilometraje:</div><div id="km-{{ $v->id_vehiculo }}">{{ number_format($v->kilometraje) }} km</div></div>
+          <div class="row">
+  <div>Aceite:</div>
+  <div id="oil-{{ $v->id_vehiculo }}">
+    {{ !empty($v->aceite) ? $v->aceite : '—' }}
+  </div>
+</div>
+
           <div class="row"><div>Último servicio:</div><div id="last-{{ $v->id_vehiculo }}">{{ $v->ultimo_km_servicio ? number_format($v->ultimo_km_servicio).' km' : '—' }}</div></div>
           <div class="row"><div>Próximo servicio:</div><div id="next-{{ $v->id_vehiculo }}">{{ number_format($v->proximo_servicio) }} km</div></div>
           <div class="row"><div>Faltan:</div><div id="left-{{ $v->id_vehiculo }}">{{ number_format($v->km_para_proximo) }} km</div></div>
@@ -64,6 +71,7 @@
             <div class="modal-body">
               <p><b>Último servicio:</b> <span id="m-last-{{ $v->id_vehiculo }}">{{ $v->fecha_servicio ?? '—' }}</span></p>
               <p><b>Kilometraje (vehículo):</b> <span id="m-km-{{ $v->id_vehiculo }}">{{ number_format($v->kilometraje) }} km</span></p>
+              <p><b>Aceite:</b> <span id="m-oil-{{ $v->id_vehiculo }}">{{ !empty($v->aceite) ? $v->aceite : '—' }}</span></p>
 
               <div style="display:flex;gap:12px;margin-top:6px;">
                 <div><b>Último servicio km</b><div id="m-lastkm-{{ $v->id_vehiculo }}">{{ $v->ultimo_km_servicio ? number_format($v->ultimo_km_servicio).' km' : '—' }}</div></div>
@@ -72,7 +80,7 @@
 
               <hr>
 
-              <div><b>Estado técnico</b> 
+              <div><b>Estado técnico</b>
                 <small style="color:#6b7280;">(Último servicio: <span id="m-servicioKm-{{ $v->id_vehiculo }}">{{ $v->ultimo_km_servicio ?? '—' }}</span> km)</small>
               </div>
 
