@@ -305,11 +305,17 @@ if (aceiteSelect && aceiteInput) {
 
 
 /* ==========================================================
-   📦 FUNCIÓN PARA COMPRIMIR IMÁGENES (NUEVO)
-   - SOLO SE USARÁ PARA IMÁGENES, NO PDF
+   📦 FUNCIÓN PARA COMPRIMIR IMÁGENES (Flotilla)
+   - Compatible iOS / Safari
+   - SOLO IMÁGENES, NO PDF
 ========================================================== */
-async function comprimirImagen(file, maxWidth = 1400, quality = 0.7) { // 💡 NUEVO
-  return new Promise((resolve, reject) => {
+async function comprimirImagen(file, maxWidth = 1200, quality = 0.7) {
+  // Si no es imagen, no hacemos nada
+  if (!file || !file.type || !file.type.startsWith("image/")) {
+    return file;
+  }
+
+  return new Promise((resolve) => {
     try {
       const img = new Image();
       const reader = new FileReader();
@@ -318,35 +324,67 @@ async function comprimirImagen(file, maxWidth = 1400, quality = 0.7) { // 💡 N
         img.src = e.target.result;
       };
 
+      img.onerror = () => {
+        console.error("No se pudo cargar la imagen para comprimir");
+        if (window.alertify) {
+          alertify.error("❌ No se pudo leer la imagen para comprimir.");
+        }
+        resolve(file);
+      };
+
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        const scale = Math.min(maxWidth / img.width, 1);
+        const scale = Math.min(maxWidth / img.width, 1); // no hacer upscaling
 
-        canvas.width = img.width * scale;
+        canvas.width  = img.width * scale;
         canvas.height = img.height * scale;
 
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        canvas.toBlob(
-          (blob) => {
-            if (!blob) {
-              resolve(file); // fallback: devolver original si algo falla
-              return;
-            }
-            const nuevoFile = new File([blob], file.name.replace(/\.\w+$/, ".jpg"), {
-              type: "image/jpeg"
-            });
-            resolve(nuevoFile);
-          },
-          "image/jpeg",
-          quality
-        );
+        const terminar = (blob) => {
+          if (!blob) {
+            resolve(file);
+            return;
+          }
+
+          const newName = (file.name || "imagen").replace(/\.\w+$/, ".jpg");
+
+          let nuevoArchivo;
+          try {
+            // Algunos Safari viejos no soportan bien new File
+            nuevoArchivo = new File([blob], newName, { type: "image/jpeg" });
+          } catch (e) {
+            nuevoArchivo = blob;
+            nuevoArchivo.name = newName;
+          }
+
+          resolve(nuevoArchivo);
+        };
+
+        if (canvas.toBlob) {
+          canvas.toBlob(
+            (blob) => terminar(blob),
+            "image/jpeg",
+            quality
+          );
+        } else {
+          // Fallback sin toBlob
+          const dataUrl = canvas.toDataURL("image/jpeg", quality);
+          const bin  = atob(dataUrl.split(",")[1]);
+          const len  = bin.length;
+          const buf  = new Uint8Array(len);
+          for (let i = 0; i < len; i++) buf[i] = bin.charCodeAt(i);
+          terminar(new Blob([buf], { type: "image/jpeg" }));
+        }
       };
 
       reader.readAsDataURL(file);
     } catch (err) {
       console.error("Error al comprimir imagen:", err);
+      if (window.alertify) {
+        alertify.error("❌ Error interno al comprimir la imagen.");
+      }
       resolve(file); // si algo truena, se manda el original
     }
   });
@@ -375,21 +413,58 @@ if (formAddAuto) { // 💡 NUEVO
     const inputPoliza = formAddAuto.querySelector('input[name="archivo_poliza"]');
     const inputVerif  = formAddAuto.querySelector('input[name="archivo_verificacion"]');
 
-    // Comprimir solo si son imágenes
+    // 📄 Póliza
     if (inputPoliza && inputPoliza.files && inputPoliza.files[0]) {
-      const file = inputPoliza.files[0];
-      if (file.type.startsWith('image/')) {
-        const comprimida = await comprimirImagen(file);
-        formData.set('archivo_poliza', comprimida);
+      const original = inputPoliza.files[0];
+      let archivoFinal = original;
+
+      if (original.type.startsWith("image/") && original.size > 1024 * 1024) {
+        const kbOri = (original.size / 1024).toFixed(1);
+        console.log("🔍 póliza original:", kbOri, "KB");
+        if (window.alertify) {
+          alertify.message("📸 Póliza original: " + kbOri + " KB");
+        }
+        archivoFinal = await comprimirImagen(original);
+        const kbComp = (archivoFinal.size / 1024).toFixed(1);
+        console.log("✅ póliza comprimida:", kbComp, "KB");
+        if (window.alertify) {
+          alertify.message("✅ Póliza comprimida: " + kbComp + " KB");
+        }
       }
+
+      formData.delete("archivo_poliza");
+      formData.append(
+        "archivo_poliza",
+        archivoFinal,
+        archivoFinal.name || original.name || "poliza.jpg"
+      );
     }
 
+    // 📄 Verificación
     if (inputVerif && inputVerif.files && inputVerif.files[0]) {
-      const file = inputVerif.files[0];
-      if (file.type.startsWith('image/')) {
-        const comprimida = await comprimirImagen(file);
-        formData.set('archivo_verificacion', comprimida);
+      const original = inputVerif.files[0];
+      let archivoFinal = original;
+
+      if (original.type.startsWith("image/") && original.size > 1024 * 1024) {
+        const kbOri = (original.size / 1024).toFixed(1);
+        console.log("🔍 verificación original:", kbOri, "KB");
+        if (window.alertify) {
+          alertify.message("📸 Verificación original: " + kbOri + " KB");
+        }
+        archivoFinal = await comprimirImagen(original);
+        const kbComp = (archivoFinal.size / 1024).toFixed(1);
+        console.log("✅ verificación comprimida:", kbComp, "KB");
+        if (window.alertify) {
+          alertify.message("✅ Verificación comprimida: " + kbComp + " KB");
+        }
       }
+
+      formData.delete("archivo_verificacion");
+      formData.append(
+        "archivo_verificacion",
+        archivoFinal,
+        archivoFinal.name || original.name || "verificacion.jpg"
+      );
     }
 
     try {
@@ -412,8 +487,17 @@ if (formAddAuto) { // 💡 NUEVO
         data = JSON.parse(rawText);
       } catch (err) {
         console.error('Respuesta no JSON del servidor:', rawText);
+
+        // Detectar si es un POST demasiado grande (413 / PostTooLargeException)
+        let msg = "❌ Error del servidor.";
+        if (resp.status === 413 || rawText.includes("PostTooLargeException") || rawText.includes("POST data is too large")) {
+          msg += " El formulario o los archivos son demasiado grandes para el servidor (límite de subida).";
+        } else {
+          msg += " Respuesta no válida.";
+        }
+
         if (window.alertify) {
-          alertify.error('❌ Error del servidor (respuesta no válida). Revisa consola.');
+          alertify.error(msg);
         }
         throw err;
       }
@@ -579,6 +663,7 @@ document.getElementById('filtroVehiculo').addEventListener('keyup', function () 
     }
   });
 });
+
 </script>
 @endsection
 @endsection
