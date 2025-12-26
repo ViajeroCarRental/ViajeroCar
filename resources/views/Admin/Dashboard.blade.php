@@ -5,6 +5,9 @@
 <title>Panel | Viajero Car Rental</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="stylesheet" href="{{ asset('assets/style.css') }}" />
+<link rel="icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
+<link rel="shortcut icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
+
 <style>
 /* ====== Tipografía bonita + render ====== */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
