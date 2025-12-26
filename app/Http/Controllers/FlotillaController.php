@@ -59,7 +59,7 @@ public function store(Request $request)
         'numero_rin' => 'nullable|string|max:100',
         'capacidad_tanque' => 'nullable|numeric|min:0',
         'aceite' => 'nullable|string|max:100',
-
+        // (si quieres, aquí podrías agregar más validaciones de otros campos)
     ]);
 
     // === Subida de archivos ===
@@ -74,66 +74,77 @@ public function store(Request $request)
     // === Inserción completa ===
     DB::table('vehiculos')->insert([
         // 🔹 Identificadores
-        'id_ciudad' => 1,
+        'id_ciudad'   => 1,
         'id_sucursal' => 1,
-        'id_categoria' => $request->id_categoria, // ✅ categoría vinculada
-        'id_estatus' => 1,
+        'id_categoria'=> $request->id_categoria, // ✅ categoría vinculada
+        'id_estatus'  => 1,
 
         // 🔹 Datos generales
-        'marca' => $request->marca,
-        'modelo' => $request->modelo,
-        'anio' => $request->anio,
+        'marca'          => $request->marca,
+        'modelo'         => $request->modelo,
+        'anio'           => $request->anio,
         'nombre_publico' => $request->nombre_publico ?? "{$request->marca} {$request->modelo} {$request->anio}",
-        'color' => $request->color ?? 'Blanco',
-        'transmision' => $request->transmision ?? 'Automática',
-        'combustible' => $request->combustible ?? 'Gasolina',
-        'numero_serie' => $request->numero_serie,
-        'numero_rin' => $request->numero_rin,
-        'capacidad_tanque' => $request->capacidad_tanque,
-        'aceite' => $request->aceite,
-        'placa' => $request->placa,
+        'color'          => $request->color ?? 'Blanco',
+        'transmision'    => $request->transmision ?? 'Automática',
+        'combustible'    => $request->combustible ?? 'Gasolina',
+        'numero_serie'   => $request->numero_serie,
+        'numero_rin'     => $request->numero_rin,
+        'capacidad_tanque'=> $request->capacidad_tanque,
+        'aceite'         => $request->aceite,
+        'placa'          => $request->placa,
 
         // 🔹 Datos técnicos
-        'cilindros' => $request->cilindros ?? 4,
-        'numero_motor' => $request->numero_motor,
-        'holograma' => $request->holograma,
+        'cilindros'             => $request->cilindros ?? 4,
+        'numero_motor'          => $request->numero_motor,
+        'holograma'             => $request->holograma,
         'vigencia_verificacion' => $request->vigencia_verificacion,
-        'no_centro_verificacion' => $request->no_centro_verificacion,
-        'tipo_verificacion' => $request->tipo_verificacion,
-        'kilometraje' => $request->kilometraje ?? 0,
-        'asientos' => $request->asientos ?? 5,
-        'puertas' => $request->puertas ?? 4,
+        'no_centro_verificacion'=> $request->no_centro_verificacion,
+        'tipo_verificacion'     => $request->tipo_verificacion,
+        'kilometraje'           => $request->kilometraje ?? 0,
+        'asientos'              => $request->asientos ?? 5,
+        'puertas'               => $request->puertas ?? 4,
 
         // 🔹 Propietario
-        'propietario' => $request->propietario ?? 'Viajero Car Rental',
+        'propietario'     => $request->propietario ?? 'Viajero Car Rental',
         'rfc_propietario' => $request->rfc_propietario ?? 'VCR010101MX0',
-        'domicilio' => $request->domicilio,
-        'municipio' => $request->municipio,
-        'estado' => $request->estado,
-        'pais' => $request->pais ?? 'México',
+        'domicilio'       => $request->domicilio,
+        'municipio'       => $request->municipio,
+        'estado'          => $request->estado,
+        'pais'            => $request->pais ?? 'México',
 
         // 🔹 Póliza de seguro
-        'no_poliza' => $request->no_poliza,
-        'aseguradora' => $request->aseguradora,
-        'inicio_vigencia_poliza' => $request->inicio_vigencia_poliza,
-        'fin_vigencia_poliza' => $request->fin_vigencia_poliza,
-        'tipo_cobertura' => $request->tipo_cobertura,
-        'plan_seguro' => $request->plan_seguro,
-        'archivo_poliza' => $archivoPoliza,
+        'no_poliza'             => $request->no_poliza,
+        'aseguradora'           => $request->aseguradora,
+        'inicio_vigencia_poliza'=> $request->inicio_vigencia_poliza,
+        'fin_vigencia_poliza'   => $request->fin_vigencia_poliza,
+        'tipo_cobertura'        => $request->tipo_cobertura,
+        'plan_seguro'           => $request->plan_seguro,
+        'archivo_poliza'        => $archivoPoliza,
 
         // 🔹 Tarjeta de circulación / verificación
-        'folio_tarjeta' => $request->folio_tarjeta,
-        'movimiento_tarjeta' => $request->movimiento_tarjeta,
-        'fecha_expedicion_tarjeta' => $request->fecha_expedicion_tarjeta,
-        'oficina_expedidora' => $request->oficina_expedidora,
-        'archivo_verificacion' => $archivoVerificacion,
+        'folio_tarjeta'           => $request->folio_tarjeta,
+        'movimiento_tarjeta'      => $request->movimiento_tarjeta,
+        'fecha_expedicion_tarjeta'=> $request->fecha_expedicion_tarjeta,
+        'oficina_expedidora'      => $request->oficina_expedidora,
+        'archivo_verificacion'    => $archivoVerificacion,
 
         // 🔹 Fechas de auditoría
         'created_at' => now(),
         'updated_at' => now(),
     ]);
 
-    return redirect()->route('rutaFlotilla')->with('success', '🚗 Vehículo agregado correctamente con todos los datos.');
+    // ⬇⬇⬇ AQUÍ VIENE LO IMPORTANTE PARA EL iPAD / FETCH ⬇⬇⬇
+    if ($request->expectsJson()) {
+        return response()->json([
+            'success' => true,
+            'message' => '🚗 Vehículo agregado correctamente con todos los datos.',
+        ]);
+    }
+
+    // Petición normal de navegador (sin fetch)
+    return redirect()
+        ->route('rutaFlotilla')
+        ->with('success', '🚗 Vehículo agregado correctamente con todos los datos.');
 }
 
 
