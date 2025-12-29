@@ -571,3 +571,14 @@ body { font-family: var(--font); background: var(--bg); color: var(--ink); }
   background: linear-gradient(135deg, #b70f1b, #910c16);
   transform: translateY(-1px);
 }
+/* ===========================
+   ✅ Extras para nuevos campos
+   =========================== */
+.form-grid label.inline-2{
+  grid-column: span 1;
+}
+
+.form-grid input[type="file"]{
+  padding: 9px 10px;
+  background: #fff;
+}

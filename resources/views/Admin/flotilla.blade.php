@@ -118,15 +118,18 @@
         <span>Agregar Nuevo Vehículo 🚗</span>
         <button id="closeAdd">&times;</button>
       </div>
+
       {{-- 💡 AQUÍ SOLO SE LE AGREGA EL ID AL FORM --}}
       <form id="formAddAuto" action="{{ route('flotilla.agregar') }}" method="POST" enctype="multipart/form-data" class="form-grid">
         @csrf
+
         <h3>Datos Generales</h3>
         <label>Marca<input type="text" name="marca" required></label>
         <label>Modelo<input type="text" name="modelo" required></label>
         <label>Año<input type="number" name="anio" required min="2000" max="{{ date('Y')+1 }}"></label>
         <label>Nombre Público<input type="text" name="nombre_publico" required placeholder="Ej. VW Jetta 1.4 TSI 2025"></label>
         <label>Color<input type="text" name="color" placeholder="Ej. Blanco Perla"></label>
+
         <label>Transmisión
           <select name="transmision">
             <option>Automática</option>
@@ -135,6 +138,7 @@
             <option>Tiptronic</option>
           </select>
         </label>
+
         <label>Combustible
           <select name="combustible">
             <option>Gasolina</option>
@@ -143,6 +147,7 @@
             <option>Eléctrico</option>
           </select>
         </label>
+
         <label>Categoría
           <select name="id_categoria" required>
             <option value="" disabled selected>Seleccione una categoría...</option>
@@ -162,34 +167,71 @@
         <label>Número de Motor<input type="text" name="numero_motor" placeholder="Ej. DSJ137414"></label>
         <label>Holograma<input type="text" name="holograma" placeholder="Ej. 00"></label>
         <label>Vigencia de Verificación<input type="date" name="vigencia_verificacion"></label>
-        <label>No. Centro de Verificación<input type="text" name="no_centro_verificacion" placeholder="Ej. QRO-123"></label>
-        <label>Tipo de Verificación
-          <select name="tipo_verificacion">
-            <option>Ordinaria</option>
-            <option>Extraordinaria</option>
-            <option>Complementaria</option>
-          </select>
+
+        <!-- ✅ NUEVO: Archivo de verificación en Datos Técnicos -->
+        <label>Archivo de Verificación (PDF o Imagen)
+          <input
+            type="file"
+            name="archivo_verificacion_tecnica"
+            accept=".pdf,.jpg,.jpeg,.png"
+            capture="environment"
+          >
         </label>
+
+        <!-- ❌ QUITADOS: No. Centro de Verificación, Tipo de Verificación -->
         <label>Kilometraje<input type="number" name="kilometraje" min="0" value="0"></label>
         <label>Asientos<input type="number" name="asientos" min="2" max="10" value="5"></label>
         <label>Puertas<input type="number" name="puertas" min="2" max="6" value="4"></label>
         <label>Capacidad de Tanque (L)<input type="number" step="0.1" name="capacidad_tanque" placeholder="Ej. 55.0"></label>
+
         <!-- 👇 NUEVO CAMPO -->
         <label>Tipo de Aceite
           <select id="aceiteSelect">
-          <option value="" selected disabled>Seleccione tipo de aceite...</option>
-          <option value="Cvtec">CVT</option>
-          <option value="Atf">ATF</option>
-          <option value="otro">Otro...</option>
+            <option value="" selected disabled>Seleccione tipo de aceite...</option>
+            <option value="Cvtec">CVT</option>
+            <option value="Atf">ATF</option>
+            <option value="otro">Otro...</option>
           </select>
 
           <!-- Este es el que realmente se envía al backend -->
           <input
-          type="text"
-          name="aceite"
-          id="aceiteInput"
-          placeholder="Ej. 5W30 sintético"
-          style="margin-top:6px; display:none;"
+            type="text"
+            name="aceite"
+            id="aceiteInput"
+            placeholder="Ej. 5W30 sintético"
+            style="margin-top:6px; display:none;"
+          >
+        </label>
+
+        <!-- ✅ NUEVO: DATOS DEL PROPIETARIO -->
+        <h3>Datos del Propietario</h3>
+
+        <label class="inline-2">
+          <span>Propietario</span>
+          <select id="propietarioSelect">
+            <option value="" disabled selected>Seleccione...</option>
+            <option value="Juan de Dios">Juan de Dios</option>
+            <option value="José Antonio">José Antonio</option>
+            <option value="otro">Otro...</option>
+          </select>
+
+          <!-- Este es el que se envía al backend -->
+          <input
+            type="text"
+            name="propietario"
+            id="propietarioInput"
+            placeholder="Escribe el propietario..."
+            style="margin-top:6px; display:none;"
+          >
+        </label>
+
+        <label class="inline-2">
+          <span>Carta factura (PDF/Imagen o cámara)</span>
+          <input
+            type="file"
+            name="carta_factura"
+            accept=".pdf,.jpg,.jpeg,.png"
+            capture="environment"
           >
         </label>
 
@@ -198,19 +240,46 @@
         <label>Aseguradora<input type="text" name="aseguradora" placeholder="Ej. BBVA"></label>
         <label>Inicio de Vigencia<input type="date" name="inicio_vigencia_poliza"></label>
         <label>Fin de Vigencia<input type="date" name="fin_vigencia_poliza"></label>
-        <label>Tipo de Cobertura<input type="text" name="tipo_cobertura" placeholder="Ej. Responsabilidad Civil"></label>
-        <label>Plan de Seguro<input type="text" name="plan_seguro" placeholder="Ej. Anual"></label>
+
+        <!-- ❌ QUITADOS: Tipo de Cobertura, Plan de Seguro -->
         <label>Archivo de Póliza (PDF o Imagen)
           <input type="file" name="archivo_poliza" accept=".pdf,.jpg,.jpeg,.png">
         </label>
 
         <h3>Tarjeta de Circulación</h3>
         <label>Folio Tarjeta<input type="text" name="folio_tarjeta" placeholder="Ej. 12345678"></label>
-        <label>Movimiento<input type="text" name="movimiento_tarjeta" placeholder="Ej. Alta"></label>
+
+        <!-- ✅ Movimiento ahora es select (Alta/Baja/Otro) -->
+        <label>Movimiento
+          <select id="movimientoSelect">
+            <option value="" disabled selected>Seleccione...</option>
+            <option value="Alta">Alta</option>
+            <option value="Baja">Baja</option>
+            <option value="otro">Otro...</option>
+          </select>
+
+          <!-- Este es el que se envía al backend -->
+          <input
+            type="text"
+            name="movimiento_tarjeta"
+            id="movimientoInput"
+            placeholder="Escribe el movimiento..."
+            style="margin-top:6px; display:none;"
+          >
+        </label>
+
         <label>Fecha de Expedición<input type="date" name="fecha_expedicion_tarjeta"></label>
-        <label>Oficina Expedidora<input type="text" name="oficina_expedidora" placeholder="Ej. Querétaro Centro"></label>
-        <label>Archivo de Verificación (PDF o Imagen)
-          <input type="file" name="archivo_verificacion" accept=".pdf,.jpg,.jpeg,.png">
+
+        <!-- ❌ QUITADO: Oficina Expedidora -->
+
+        <!-- ✅ RENOMBRADO: ya no dice Archivo de Verificación -->
+        <label>Tarjeta de Circulación (PDF o Imagen)
+          <input
+            type="file"
+            name="archivo_verificacion"
+            accept=".pdf,.jpg,.jpeg,.png"
+            capture="environment"
+          >
         </label>
 
         <div class="actions" style="margin-top:15px;">
@@ -240,7 +309,7 @@
 /* ==========================================================
    🔔 CONFIGURACIÓN ALERTIFY (NUEVO)
 ========================================================== */
-if (window.alertify) { // 💡 NUEVO
+if (window.alertify) {
   alertify.set('notifier', 'position', 'top-right');
   alertify.set('notifier', 'delay', 4);
 }
@@ -277,8 +346,9 @@ btnAddAuto.onclick = () => addModal.classList.add('active');
 closeAdd.onclick = cancelAdd.onclick = () => addModal.classList.remove('active');
 
 
-// 🔴🔴🔴 AQUÍ EMPIEZA LO NUEVO DEL ACEITE 🔴🔴🔴
-// === SELECT + INPUT PARA TIPO DE ACEITE ===
+// =====================================
+// ✅ SELECT + INPUT PARA TIPO DE ACEITE
+// =====================================
 const aceiteSelect = document.getElementById('aceiteSelect');
 const aceiteInput  = document.getElementById('aceiteInput');
 
@@ -287,12 +357,10 @@ if (aceiteSelect && aceiteInput) {
     const val = aceiteSelect.value;
 
     if (val === 'otro') {
-      // Mostrar input para escribir aceite libre
       aceiteInput.style.display = 'block';
       aceiteInput.value = '';
       aceiteInput.focus();
     } else if (val) {
-      // Ocultar input y poner el valor seleccionado
       aceiteInput.style.display = 'none';
       aceiteInput.value = val;
     } else {
@@ -301,7 +369,54 @@ if (aceiteSelect && aceiteInput) {
     }
   });
 }
-// 🔴🔴🔴 AQUÍ TERMINA LO NUEVO DEL ACEITE 🔴🔴🔴
+
+// =====================================
+// ✅ PROPIETARIO (select + input)
+// =====================================
+const propietarioSelect = document.getElementById('propietarioSelect');
+const propietarioInput  = document.getElementById('propietarioInput');
+
+if (propietarioSelect && propietarioInput) {
+  propietarioSelect.addEventListener('change', () => {
+    const val = propietarioSelect.value;
+
+    if (val === 'otro') {
+      propietarioInput.style.display = 'block';
+      propietarioInput.value = '';
+      propietarioInput.focus();
+    } else if (val) {
+      propietarioInput.style.display = 'none';
+      propietarioInput.value = val; // se envía en name="propietario"
+    } else {
+      propietarioInput.style.display = 'none';
+      propietarioInput.value = '';
+    }
+  });
+}
+
+// =====================================
+// ✅ Movimiento tarjeta (Alta/Baja/Otro)
+// =====================================
+const movimientoSelect = document.getElementById('movimientoSelect');
+const movimientoInput  = document.getElementById('movimientoInput');
+
+if (movimientoSelect && movimientoInput) {
+  movimientoSelect.addEventListener('change', () => {
+    const val = movimientoSelect.value;
+
+    if (val === 'otro') {
+      movimientoInput.style.display = 'block';
+      movimientoInput.value = '';
+      movimientoInput.focus();
+    } else if (val) {
+      movimientoInput.style.display = 'none';
+      movimientoInput.value = val; // se envía en name="movimiento_tarjeta"
+    } else {
+      movimientoInput.style.display = 'none';
+      movimientoInput.value = '';
+    }
+  });
+}
 
 
 /* ==========================================================
@@ -310,31 +425,24 @@ if (aceiteSelect && aceiteInput) {
    - SOLO IMÁGENES, NO PDF
 ========================================================== */
 async function comprimirImagen(file, maxWidth = 1200, quality = 0.7) {
-  // Si no es imagen, no hacemos nada
-  if (!file || !file.type || !file.type.startsWith("image/")) {
-    return file;
-  }
+  if (!file || !file.type || !file.type.startsWith("image/")) return file;
 
   return new Promise((resolve) => {
     try {
       const img = new Image();
       const reader = new FileReader();
 
-      reader.onload = (e) => {
-        img.src = e.target.result;
-      };
+      reader.onload = (e) => { img.src = e.target.result; };
 
       img.onerror = () => {
         console.error("No se pudo cargar la imagen para comprimir");
-        if (window.alertify) {
-          alertify.error("❌ No se pudo leer la imagen para comprimir.");
-        }
+        if (window.alertify) alertify.error("❌ No se pudo leer la imagen para comprimir.");
         resolve(file);
       };
 
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        const scale = Math.min(maxWidth / img.width, 1); // no hacer upscaling
+        const scale = Math.min(maxWidth / img.width, 1);
 
         canvas.width  = img.width * scale;
         canvas.height = img.height * scale;
@@ -343,33 +451,23 @@ async function comprimirImagen(file, maxWidth = 1200, quality = 0.7) {
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
         const terminar = (blob) => {
-          if (!blob) {
-            resolve(file);
-            return;
-          }
+          if (!blob) return resolve(file);
 
           const newName = (file.name || "imagen").replace(/\.\w+$/, ".jpg");
-
           let nuevoArchivo;
+
           try {
-            // Algunos Safari viejos no soportan bien new File
             nuevoArchivo = new File([blob], newName, { type: "image/jpeg" });
           } catch (e) {
             nuevoArchivo = blob;
             nuevoArchivo.name = newName;
           }
-
           resolve(nuevoArchivo);
         };
 
         if (canvas.toBlob) {
-          canvas.toBlob(
-            (blob) => terminar(blob),
-            "image/jpeg",
-            quality
-          );
+          canvas.toBlob((blob) => terminar(blob), "image/jpeg", quality);
         } else {
-          // Fallback sin toBlob
           const dataUrl = canvas.toDataURL("image/jpeg", quality);
           const bin  = atob(dataUrl.split(",")[1]);
           const len  = bin.length;
@@ -382,10 +480,8 @@ async function comprimirImagen(file, maxWidth = 1200, quality = 0.7) {
       reader.readAsDataURL(file);
     } catch (err) {
       console.error("Error al comprimir imagen:", err);
-      if (window.alertify) {
-        alertify.error("❌ Error interno al comprimir la imagen.");
-      }
-      resolve(file); // si algo truena, se manda el original
+      if (window.alertify) alertify.error("❌ Error interno al comprimir la imagen.");
+      resolve(file);
     }
   });
 }
@@ -393,9 +489,9 @@ async function comprimirImagen(file, maxWidth = 1200, quality = 0.7) {
 /* ==========================================================
    🧾 SUBMIT DEL FORMULARIO "AGREGAR AUTO" CON COMPRESIÓN
 ========================================================== */
-const formAddAuto = document.getElementById('formAddAuto'); // 💡 NUEVO
+const formAddAuto = document.getElementById('formAddAuto');
 
-if (formAddAuto) { // 💡 NUEVO
+if (formAddAuto) {
   formAddAuto.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -410,8 +506,9 @@ if (formAddAuto) { // 💡 NUEVO
     const formData = new FormData(formAddAuto);
 
     // Campos de archivo
-    const inputPoliza = formAddAuto.querySelector('input[name="archivo_poliza"]');
-    const inputVerif  = formAddAuto.querySelector('input[name="archivo_verificacion"]');
+    const inputPoliza  = formAddAuto.querySelector('input[name="archivo_poliza"]');
+    const inputVerifTC = formAddAuto.querySelector('input[name="archivo_verificacion_tecnica"]');
+    const inputTarjeta = formAddAuto.querySelector('input[name="archivo_verificacion"]');
 
     // 📄 Póliza
     if (inputPoliza && inputPoliza.files && inputPoliza.files[0]) {
@@ -419,52 +516,43 @@ if (formAddAuto) { // 💡 NUEVO
       let archivoFinal = original;
 
       if (original.type.startsWith("image/") && original.size > 1024 * 1024) {
-        const kbOri = (original.size / 1024).toFixed(1);
-        console.log("🔍 póliza original:", kbOri, "KB");
-        if (window.alertify) {
-          alertify.message("📸 Póliza original: " + kbOri + " KB");
-        }
+        if (window.alertify) alertify.message("📸 Póliza original: " + (original.size / 1024).toFixed(1) + " KB");
         archivoFinal = await comprimirImagen(original);
-        const kbComp = (archivoFinal.size / 1024).toFixed(1);
-        console.log("✅ póliza comprimida:", kbComp, "KB");
-        if (window.alertify) {
-          alertify.message("✅ Póliza comprimida: " + kbComp + " KB");
-        }
+        if (window.alertify) alertify.message("✅ Póliza comprimida: " + (archivoFinal.size / 1024).toFixed(1) + " KB");
       }
 
       formData.delete("archivo_poliza");
-      formData.append(
-        "archivo_poliza",
-        archivoFinal,
-        archivoFinal.name || original.name || "poliza.jpg"
-      );
+      formData.append("archivo_poliza", archivoFinal, archivoFinal.name || original.name || "poliza.jpg");
     }
 
-    // 📄 Verificación
-    if (inputVerif && inputVerif.files && inputVerif.files[0]) {
-      const original = inputVerif.files[0];
+    // 📄 Verificación técnica
+    if (inputVerifTC && inputVerifTC.files && inputVerifTC.files[0]) {
+      const original = inputVerifTC.files[0];
       let archivoFinal = original;
 
       if (original.type.startsWith("image/") && original.size > 1024 * 1024) {
-        const kbOri = (original.size / 1024).toFixed(1);
-        console.log("🔍 verificación original:", kbOri, "KB");
-        if (window.alertify) {
-          alertify.message("📸 Verificación original: " + kbOri + " KB");
-        }
+        if (window.alertify) alertify.message("📸 Verificación (técnica) original: " + (original.size / 1024).toFixed(1) + " KB");
         archivoFinal = await comprimirImagen(original);
-        const kbComp = (archivoFinal.size / 1024).toFixed(1);
-        console.log("✅ verificación comprimida:", kbComp, "KB");
-        if (window.alertify) {
-          alertify.message("✅ Verificación comprimida: " + kbComp + " KB");
-        }
+        if (window.alertify) alertify.message("✅ Verificación (técnica) comprimida: " + (archivoFinal.size / 1024).toFixed(1) + " KB");
+      }
+
+      formData.delete("archivo_verificacion_tecnica");
+      formData.append("archivo_verificacion_tecnica", archivoFinal, archivoFinal.name || original.name || "verificacion_tecnica.jpg");
+    }
+
+    // 🪪 Tarjeta de circulación (archivo_verificacion)
+    if (inputTarjeta && inputTarjeta.files && inputTarjeta.files[0]) {
+      const original = inputTarjeta.files[0];
+      let archivoFinal = original;
+
+      if (original.type.startsWith("image/") && original.size > 1024 * 1024) {
+        if (window.alertify) alertify.message("📸 Tarjeta de circulación original: " + (original.size / 1024).toFixed(1) + " KB");
+        archivoFinal = await comprimirImagen(original);
+        if (window.alertify) alertify.message("✅ Tarjeta de circulación comprimida: " + (archivoFinal.size / 1024).toFixed(1) + " KB");
       }
 
       formData.delete("archivo_verificacion");
-      formData.append(
-        "archivo_verificacion",
-        archivoFinal,
-        archivoFinal.name || original.name || "verificacion.jpg"
-      );
+      formData.append("archivo_verificacion", archivoFinal, archivoFinal.name || original.name || "tarjeta_circulacion.jpg");
     }
 
     try {
@@ -488,7 +576,6 @@ if (formAddAuto) { // 💡 NUEVO
       } catch (err) {
         console.error('Respuesta no JSON del servidor:', rawText);
 
-        // Detectar si es un POST demasiado grande (413 / PostTooLargeException)
         let msg = "❌ Error del servidor.";
         if (resp.status === 413 || rawText.includes("PostTooLargeException") || rawText.includes("POST data is too large")) {
           msg += " El formulario o los archivos son demasiado grandes para el servidor (límite de subida).";
@@ -496,13 +583,10 @@ if (formAddAuto) { // 💡 NUEVO
           msg += " Respuesta no válida.";
         }
 
-        if (window.alertify) {
-          alertify.error(msg);
-        }
+        if (window.alertify) alertify.error(msg);
         throw err;
       }
 
-      // Manejo de errores de validación (422) u otros
       if (!resp.ok || data.success === false) {
         let msg = data.message || 'Error al guardar el vehículo.';
 
@@ -511,34 +595,21 @@ if (formAddAuto) { // 💡 NUEVO
           Object.keys(data.errors).forEach(campo => {
             data.errors[campo].forEach(m => erroresPlanos.push(m));
           });
-          if (erroresPlanos.length) {
-            msg = erroresPlanos.join('\n');
-          }
+          if (erroresPlanos.length) msg = erroresPlanos.join('\n');
         }
 
-        if (window.alertify) {
-          alertify.error('❌ ' + msg);
-        } else {
-          console.error(msg);
-        }
-
+        if (window.alertify) alertify.error('❌ ' + msg);
         return;
       }
 
-      // Éxito
-      if (window.alertify) {
-        alertify.success(data.message || 'Vehículo agregado correctamente.');
-      }
+      if (window.alertify) alertify.success(data.message || 'Vehículo agregado correctamente.');
 
-      // Cerrar modal y refrescar tabla (por simplicidad, recarga)
       addModal.classList.remove('active');
       window.location.reload();
 
     } catch (err) {
       console.error('Error en envío de formulario flotilla:', err);
-      if (window.alertify) {
-        alertify.error('❌ Error al enviar el formulario. Intenta nuevamente.');
-      }
+      if (window.alertify) alertify.error('❌ Error al enviar el formulario. Intenta nuevamente.');
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -556,7 +627,6 @@ if (formAddAuto) { // 💡 NUEVO
   const btnConfirm = document.getElementById('confirmDelete');
   let formToDelete = null;
 
-  // 1) Abrir modal al click del basurero
   document.querySelectorAll('.delete-bg .delete-form .btnDelete').forEach(btn => {
     btn.addEventListener('click', (e) => {
       formToDelete = e.target.closest('form');
@@ -564,18 +634,15 @@ if (formAddAuto) { // 💡 NUEVO
     });
   });
 
-  // 2) Cerrar sin eliminar
   btnCancel.addEventListener('click', () => {
     confirmModal.classList.remove('active');
     formToDelete = null;
   });
 
-  // 3) Confirmar eliminación
   btnConfirm.addEventListener('click', () => {
     if (formToDelete) formToDelete.submit();
   });
 
-  // 4) Cerrar clic fuera
   confirmModal.addEventListener('click', (e) => {
     if (e.target === confirmModal) {
       confirmModal.classList.remove('active');
@@ -583,7 +650,6 @@ if (formAddAuto) { // 💡 NUEVO
     }
   });
 
-  // 5) Cerrar con ESC
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       confirmModal.classList.remove('active');
@@ -632,7 +698,6 @@ document.querySelectorAll('#tblFleet tbody tr').forEach(tr => {
   });
 });
 
-// Cerrar swipe con ESC o clic fuera de la tabla
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     document.querySelectorAll('#tblFleet tbody tr').forEach(r => r.classList.remove('swiped'));
@@ -663,7 +728,6 @@ document.getElementById('filtroVehiculo').addEventListener('keyup', function () 
     }
   });
 });
-
 </script>
 @endsection
 @endsection
