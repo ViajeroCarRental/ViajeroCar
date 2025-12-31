@@ -106,6 +106,35 @@ class ReservacionesAdminController extends Controller
     public function guardarReservacion(Request $request)
 {
     try {
+
+        // 🟢 0) Obtener usuario de sesión
+        $idUsuario = session('id_usuario');
+
+        if (!$idUsuario) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay usuario autenticado en el panel de administración.'
+            ], 401);
+        }
+
+        // 🟢 0.1) Verificar que tenga rol permitido (ajusta los nombres a los de tu tabla "roles")
+        $rolesUsuario = DB::table('usuario_rol as ur')
+            ->join('roles as r', 'ur.id_rol', '=', 'r.id_rol')
+            ->where('ur.id_usuario', $idUsuario)
+            ->pluck('r.nombre')
+            ->toArray();
+
+        $rolesPermitidos = ['Ventas', 'SuperAdmin']; // <-- ajusta a tus nombres reales
+
+        $autorizado = count(array_intersect($rolesUsuario, $rolesPermitidos)) > 0;
+
+        if (!$autorizado) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tienes permisos para crear reservaciones.'
+            ], 403);
+        }
+
         // 1️⃣ Validación básica
         $validated = $request->validate([
             'id_categoria'      => 'required|integer|exists:categorias_carros,id_categoria',
@@ -157,6 +186,7 @@ class ReservacionesAdminController extends Controller
         // 4️⃣ Insertar reservación
         $id = DB::table('reservaciones')->insertGetId([
             'id_usuario'       => null,
+            'id_asesor'        => $idUsuario, // 👈 ASESOR QUE CREA LA RESERVA
             'id_categoria'     => $validated['id_categoria'],
             'sucursal_retiro'  => $validated['sucursal_retiro'] ?? null,
             'sucursal_entrega' => $validated['sucursal_entrega'] ?? null,
@@ -233,7 +263,6 @@ class ReservacionesAdminController extends Controller
             ->first();
 
         try {
-            // Misma lógica que tenías con Mail::raw():
             // - Si hay correo del cliente -> se manda al cliente y CC a la empresa
             // - Si no hay correo del cliente -> se manda solo a la empresa
             if ($correoCliente) {

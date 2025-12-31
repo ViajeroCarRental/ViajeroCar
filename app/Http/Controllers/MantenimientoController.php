@@ -24,6 +24,7 @@ class MantenimientoController extends Controller
                 'v.placa',
                 'v.color',
                 'v.kilometraje',
+                'v.aceite',
                 'e.nombre as estatus',
                 'm.ultimo_km_servicio',
                 'm.intervalo_km',

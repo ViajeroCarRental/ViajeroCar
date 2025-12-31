@@ -283,6 +283,37 @@
         </div>
     </section>
 
+    <!-- ============================================ -->
+<!--           FOTOS DEL VEHÍCULO                 -->
+<!-- ============================================ -->
+<section class="paper-section">
+  <h3 class="sec-title center">Fotos del vehículo</h3>
+
+  <div class="form-grid" style="margin-top:12px">
+
+    <div>
+      <label>Fotografías del Auto — SALIDA</label>
+      <div class="uploader" data-name="autoSalida">
+        <div class="msg">Toca para cámara o galería (JPG/PNG)</div>
+        <input name="autoSalida[]" type="file" accept="image/jpeg,image/png" multiple>
+      </div>
+      <div class="preview" id="prev-autoSalida"></div>
+    </div>
+
+    <div>
+      <label>Fotografías del Auto — REGRESO</label>
+      <div class="uploader" data-name="autoRegreso">
+        <div class="msg">Toca para cámara o galería (JPG/PNG)</div>
+        <input name="autoRegreso[]" type="file" accept="image/jpeg,image/png" multiple>
+      </div>
+      <div class="preview" id="prev-autoRegreso"></div>
+    </div>
+
+  </div>
+</section>
+
+
+
 
 
     <!-- ============================================ -->
@@ -372,7 +403,8 @@
                 <input type="text"
                        class="input-line"
                        data-field="firma_cliente_nombre"
-                       placeholder="Nombre del cliente">
+                       placeholder="Nombre del cliente"
+                       value="{{ $clienteNombre ?? '' }}">
             </td>
 
             <td>
@@ -414,7 +446,8 @@
                 <input type="text"
                        class="input-line"
                        data-field="entrego_nombre"
-                       placeholder="Nombre del agente que entrega">
+                       placeholder="Nombre del agente que entrega"
+                       value="{{ $asesorNombre ?? '' }}">
             </td>
 
             <td>
@@ -441,7 +474,7 @@
         </tr>
 
         <!-- ================= RECIBE ================= -->
-        <!-- USA LA MISMA FIRMA DEL QUE ENTREGÓ -->
+        <!-- USA LA MISMA FIRMA DEL QUE ENTREGÓ (PUEDE EDITARSE) -->
         <tr>
             <th>Recibió</th>
             <th>Firma</th>
@@ -453,7 +486,8 @@
                 <input type="text"
                        class="input-line"
                        data-field="recibio_nombre"
-                       placeholder="Nombre del agente que recibe">
+                       placeholder="Nombre del agente que recibe"
+                       value="{{ $asesorNombre ?? '' }}">
             </td>
 
             <td>
@@ -480,6 +514,25 @@
         </tr>
     </table>
 
+</section>
+
+<!-- ============================================ -->
+<!--           ACCIONES CHECKLIST                 -->
+<!-- ============================================ -->
+<section class="paper-section">
+    <div class="checklist-actions">
+        <button type="button"
+                id="btnChecklistSalida"
+                class="btn btn-primary">
+            Enviar checklist de salida
+        </button>
+
+        <button type="button"
+                id="btnChecklistEntrada"
+                class="btn btn-outline-primary">
+            Enviar checklist de regreso
+        </button>
+    </div>
 </section>
 
 
@@ -766,6 +819,111 @@ if (kmText && kmInput && btnGuardarKm) {
         kmText.style.display = "inline";
     });
 }
+/* ==========================================================
+   📸 Vista previa de fotos (Checklist: Auto salida / regreso)
+========================================================== */
+document.querySelectorAll('.uploader input[type="file"]').forEach((input) => {
+  input.addEventListener("change", (e) => {
+    const contenedor = e.target.closest(".uploader");
+    const previewId = contenedor.getAttribute("data-name");
+    const previewDiv = document.getElementById(`prev-${previewId}`);
+
+    if (!previewDiv) return;
+
+    previewDiv.innerHTML = "";
+
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    files.forEach((file) => {
+      if (!file.type.startsWith("image/")) return;
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const thumb = document.createElement("div");
+        thumb.classList.add("thumb");
+        thumb.innerHTML = `
+          <img src="${ev.target.result}" alt="Vista previa">
+          <button type="button" class="rm" title="Quitar">×</button>
+        `;
+
+        previewDiv.appendChild(thumb);
+        previewDiv.removeAttribute("data-has-server-file");
+
+        // ⚠️ Simple (igual que lo tuyo): si quitas, se limpia TODO el input
+        thumb.querySelector(".rm").addEventListener("click", () => {
+          input.value = "";
+          previewDiv.innerHTML = "";
+        });
+      };
+
+      reader.readAsDataURL(file);
+    });
+  });
+});
+
+    /* ==========================================================
+       📤 Enviar checklist de SALIDA
+    ========================================================== */
+    const btnChecklistSalida = document.getElementById("btnChecklistSalida");
+
+    if (btnChecklistSalida) {
+        btnChecklistSalida.addEventListener("click", async () => {
+            try {
+                const token = document.querySelector('meta[name="csrf-token"]').content;
+
+                const formData = new FormData();
+                formData.append("_token", token);
+                formData.append("tipo", "salida");
+
+                // 📝 Campos de comentarios
+                const comentario = document.querySelector('[data-field="comentario_cliente"]');
+                const danos = document.querySelector('[data-field="danos_interiores"]');
+
+                const fcFecha = document.querySelector('[data-field="firma_cliente_fecha"]');
+                const fcHora  = document.querySelector('[data-field="firma_cliente_hora"]');
+                const eFecha  = document.querySelector('[data-field="entrego_fecha"]');
+                const eHora   = document.querySelector('[data-field="entrego_hora"]');
+                const rFecha  = document.querySelector('[data-field="recibio_fecha"]');
+                const rHora   = document.querySelector('[data-field="recibio_hora"]');
+
+                formData.append("comentario_cliente", comentario ? comentario.value : "");
+                formData.append("danos_interiores", danos ? danos.value : "");
+
+                formData.append("firma_cliente_fecha", fcFecha ? fcFecha.value : "");
+                formData.append("firma_cliente_hora",  fcHora  ? fcHora.value  : "");
+                formData.append("entrego_fecha",       eFecha  ? eFecha.value  : "");
+                formData.append("entrego_hora",        eHora   ? eHora.value   : "");
+                formData.append("recibio_fecha",       rFecha  ? rFecha.value  : "");
+                formData.append("recibio_hora",        rHora   ? rHora.value   : "");
+
+                // 📸 Fotos de salida
+                const inputSalida = document.querySelector('.uploader[data-name="autoSalida"] input[type="file"]');
+                if (inputSalida && inputSalida.files && inputSalida.files.length > 0) {
+                    Array.from(inputSalida.files).forEach((file) => {
+                        formData.append("autoSalida[]", file);
+                    });
+                }
+
+                const resp = await fetch(`/admin/checklist/${CHECKLIST_ID}/enviar-salida`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok || !data.ok) {
+                    alert(data.msg || "Error al enviar el checklist de salida");
+                    return;
+                }
+
+                alert(data.msg || "Checklist de salida guardado correctamente.");
+            } catch (err) {
+                console.error(err);
+                alert("Error de conexión al enviar el checklist de salida.");
+            }
+        });
+    }
 
 
 });

@@ -1,444 +1,964 @@
-/* ================================
-   🎨 Helpers visuales y básicos
-================================ */
-const $ = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
+(function () {
+  "use strict";
 
-/* Escapar HTML para evitar inyecciones */
-const esc = s => (s ?? '').toString()
-  .replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+  /* =========================
+     Helpers
+  ========================= */
+  const qs = (s) => document.querySelector(s);
 
-/* Mostrar / ocultar menú lateral */
+  const money = (n) => {
+    const num = Number(n || 0);
+    return `$${num.toLocaleString("es-MX", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })} MXN`;
+  };
 
-/* ================================
-   📑 Navegación de pasos
-================================ */
-const showStep = n => {
-  $$('[data-step]').forEach(el => el.style.display = (Number(el.dataset.step) === n ? 'block' : 'none'));
-};
-$('#go2')?.addEventListener('click', () => showStep(2));
-$('#back1')?.addEventListener('click', () => showStep(1));
-$('#go3')?.addEventListener('click', () => showStep(3));
-$('#back2')?.addEventListener('click', () => showStep(2));
-showStep(1);
+  const openPop = (el) => { if (el) el.style.display = "flex"; };
+  const closePop = (el) => { if (el) el.style.display = "none"; };
 
-/* ================================
-   🚗 Imagen y tarifa por categoría
-================================ */
-const categoriaSelect = $('#categoriaSelect');
-const vehImageWrap = $('#vehImageWrap');
-const vehImage = $('#vehImage');
-const vehName = $('#vehName');
+  const escapeHtml = (str) => {
+    return String(str || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  };
 
-categoriaSelect?.addEventListener('change', async () => {
-  const cat = categoriaSelect.value;
+  const toISODate = (d) => {
+    if (!(d instanceof Date) || isNaN(d)) return "";
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const da = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${da}`;
+  };
 
-  if (cat == 0) {
-    vehImageWrap.style.display = 'none';
-    $('#baseLine').textContent = '—';
-    updateResumen(0);
-    return;
+  /* =========================
+     Estado global
+  ========================= */
+  const state = {
+    days: 0,
+    categoria: null,   // {id,nombre,desc,precio_dia,img}
+    proteccion: null,  // {id,nombre,precio,charge,desc}
+    addons: new Map(), // id -> {id,nombre,precio,charge,desc,qty}
+  };
+
+  /* =========================
+     Hidden inputs (backend)
+  ========================= */
+  function ensureHidden(name, id) {
+    let input = qs(`#${id}`);
+    if (!input) {
+      input = document.createElement("input");
+      input.type = "hidden";
+      input.id = id;
+      input.name = name;
+      qs("#formReserva")?.appendChild(input);
+    } else {
+      input.name = name;
+    }
+    return input;
   }
 
-  try {
-    // 🔹 Obtiene datos de la categoría desde el backend
-    const res = await fetch(`/admin/reservaciones/categorias/${cat}`);
-    const data = await res.json();
-
-    // Mostrar imagen y nombre
-    vehImage.src = data.imagen || '/assets/placeholder-car.jpg';
-    vehName.textContent = data.nombre || 'Ejemplo de la categoría seleccionada';
-    vehImageWrap.style.display = 'block';
-
-    // ✅ Tarifa base real de la categoría
-    const tarifa = parseFloat(data.tarifa_base || data.precio_dia || 0);
-
-    // Guardar referencia base y resetear bandera de edición
-    tarifaOriginal = tarifa;              // base real del catálogo
-    precioSeleccionado = tarifa;          // inicia igual
-    tarifaEditadaManualmente = false;     // aún no fue editada
-
-    // Mostrar valor inicial
-    $('#baseLine').innerHTML = `$${tarifa.toFixed(2)} MXN/día`;
-    updateResumen(tarifa);
-
-  } catch (err) {
-    console.error('Error al cargar categoría:', err);
-    vehImageWrap.style.display = 'none';
-    $('#baseLine').textContent = '—';
-    updateResumen(0);
+  function ensureTotalsHidden() {
+    ensureHidden("precio_base_dia", "precio_base_dia");
+    ensureHidden("subtotal", "subtotal");
+    ensureHidden("impuestos", "impuestos");
+    ensureHidden("total", "total");
   }
-});
 
-/* ================================
-   💰 Resumen y totales
-================================ */
-let precioSeleccionado = 0;
-let diasSeleccionados = 1;
-let seguroSeleccionado = null;
-let adicionalesSeleccionados = [];
-let tarifaOriginal = 0;
-let tarifaEditadaManualmente = false;
+  function ensureCategoriaHiddenFix() {
+    const catHid = qs("#categoria_id");
+    if (catHid) catHid.name = "id_categoria";
+    else ensureHidden("id_categoria", "categoria_id");
+  }
 
-function updateResumen(precioDia = null, dias = null) {
-  if (precioDia !== null) precioSeleccionado = precioDia;
-  if (dias !== null) diasSeleccionados = dias;
-  actualizarTotal();
-}
+  function ensureProteccionHidden() {
+    ensureHidden("seguroSeleccionado[id]", "seguroSeleccionado_id");
+    ensureHidden("seguroSeleccionado[precio]", "seguroSeleccionado_precio");
+    ensureHidden("seguroSeleccionado[nombre]", "seguroSeleccionado_nombre");
+    ensureHidden("seguroSeleccionado[charge]", "seguroSeleccionado_charge");
+  }
 
-const selectMoneda = $('#moneda');
-const tcInput = $('#tc');
+  function syncProteccionHidden() {
+    ensureProteccionHidden();
+    const p = state.proteccion;
 
-function actualizarTotal() {
-  const base = precioSeleccionado * diasSeleccionados;
-  const proteccion = seguroSeleccionado ? seguroSeleccionado.precio * diasSeleccionados : 0;
-  const extras = adicionalesSeleccionados.reduce(
-    (sum, a) => sum + (a.precio * a.cantidad * diasSeleccionados), 0
-  );
-  const subtotal = base + proteccion + extras;
-  const iva = subtotal * 0.16;
-  const total = subtotal + iva;
+    qs("#seguroSeleccionado_id").value = p ? String(p.id ?? "") : "";
+    qs("#seguroSeleccionado_precio").value = p ? String(Number(p.precio || 0)) : "";
+    qs("#seguroSeleccionado_nombre").value = p ? String(p.nombre || "") : "";
+    qs("#seguroSeleccionado_charge").value = p ? String(p.charge || "por_evento") : "";
+  }
 
-  const moneda = selectMoneda.value;
-  const tc = parseFloat(tcInput.value || 17);
-  const conv = moneda === 'USD' ? (1 / tc) : 1;
+  function syncAddonsHidden() {
+    const wrap = qs("#addonsHidden");
+    if (!wrap) return;
 
-  $('#subTot').textContent = `$${(subtotal * conv).toFixed(2)} ${moneda}`;
-  $('#iva').textContent = `$${(iva * conv).toFixed(2)} ${moneda}`;
-  $('#total').textContent = `$${(total * conv).toFixed(2)} ${moneda}`;
-  $('#proteName').textContent = seguroSeleccionado ? seguroSeleccionado.nombre : '—';
-  $('#extrasName').textContent = adicionalesSeleccionados.length
-    ? adicionalesSeleccionados.map(a => `${a.cantidad}× ${a.nombre}`).join(', ')
-    : '—';
-}
-selectMoneda?.addEventListener('change', actualizarTotal);
-tcInput?.addEventListener('input', actualizarTotal);
+    wrap.innerHTML = "";
 
-/* ================================
-   ✏️ Edición inline de tarifa base
-================================ */
-const editTarifaBtn = $('#editTarifa');
-const baseLine = $('#baseLine');
+    let i = 0;
+    state.addons.forEach((it) => {
+      const qty = Number(it.qty || 0);
+      if (qty <= 0) return;
 
-editTarifaBtn?.addEventListener('click', () => {
-  if (!baseLine) return;
+      const fields = [
+        ["id", it.id],
+        ["cantidad", qty],
+        ["precio", Number(it.precio || 0)],
+        ["nombre", it.nombre || ""],
+        ["charge", it.charge || "por_evento"],
+      ];
 
-  // Si ya hay un input activo, no volver a crearlo
-  if (baseLine.querySelector('input')) return;
+      fields.forEach(([k, v]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = `adicionalesSeleccionados[${i}][${k}]`;
+        input.value = String(v ?? "");
+        wrap.appendChild(input);
+      });
 
-  // Obtener valor actual numérico
-  const valorActual = parseFloat(baseLine.textContent.replace(/[^\d.]/g, '')) || precioSeleccionado || 0;
+      i++;
+    });
+  }
 
-  // Crear input temporal
-  const input = document.createElement('input');
-  input.type = 'number';
-  input.value = valorActual.toFixed(2);
-  input.min = 0;
-  input.step = 0.01;
-  input.style.width = '90px';
-  input.style.padding = '4px';
-  input.style.border = '1px solid #ccc';
-  input.style.borderRadius = '6px';
-  input.style.fontWeight = '600';
+  /* =========================
+     Fechas/Horas: UI + Hidden
+     - UI:  #fecha_inicio_ui, #fecha_fin_ui, #hora_retiro_ui, #hora_entrega_ui
+     - Hidden reales (backend): #fecha_inicio, #fecha_fin, #hora_retiro, #hora_entrega
+  ========================= */
+  function syncDateHiddenFromUI(uiId, hiddenId) {
+    const ui = qs(uiId);
+    const hid = qs(hiddenId);
+    if (!ui || !hid) return;
 
-  // Reemplazar texto por input
-  baseLine.textContent = '';
-  baseLine.appendChild(input);
-  input.focus();
+    // Si UI trae dd/mm/YYYY -> lo convertimos a ISO
+    const val = String(ui.value || "").trim();
+    if (!val) { hid.value = ""; return; }
 
-  // Guardar cuando presione Enter o salga del campo
-  input.addEventListener('blur', guardarTarifaEditada);
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') input.blur();
-  });
-
-  function guardarTarifaEditada() {
-    const nuevoValor = parseFloat(input.value);
-    if (isNaN(nuevoValor) || nuevoValor <= 0) {
-      alertify.warning('⚠️ Ingresa una tarifa válida.');
-      input.focus();
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
+      const [d, m, y] = val.split("/").map(Number);
+      const date = new Date(y, m - 1, d, 0, 0, 0);
+      hid.value = toISODate(date);
       return;
     }
 
-    tarifaEditadaManualmente = true;
-    precioSeleccionado = nuevoValor;
-    tarifaOriginal = tarifaOriginal || valorActual;
+    // si ya viniera ISO por algo
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+      hid.value = val;
+      return;
+    }
 
-    // Mostrar valor actualizado
-    baseLine.innerHTML = `<span style="color:#ca8a04;font-weight:600;">$${nuevoValor.toFixed(2)} MXN/día*</span>`;
-    actualizarTotal();
-  }
-});
-
-/* ================================
-   🔒 Protecciones (Seguros)
-================================ */
-const btnProtecciones = $('#btnProtecciones');
-const proteModal = $('#proteccionPop');
-const proteList = $('#proteList');
-const proteInput = $('#proteccionSel');
-const proteRemove = $('#proteRemove');
-
-proteRemove?.addEventListener('click', () => {
-  seguroSeleccionado = null;
-  proteInput.value = 'Ninguna protección seleccionada';
-  proteRemove.style.display = 'none';
-  actualizarTotal();
-});
-
-$('#proteClose')?.addEventListener('click', () => proteModal.classList.remove('show'));
-$('#proteCancel')?.addEventListener('click', () => proteModal.classList.remove('show'));
-proteModal?.addEventListener('click', e => { if (e.target.id === 'proteccionPop') proteModal.classList.remove('show'); });
-
-btnProtecciones?.addEventListener('click', async () => {
-  proteModal.classList.add('show');
-  proteList.innerHTML = '<div style="text-align:center;padding:12px;">Cargando protecciones...</div>';
-  try {
-    const res = await fetch('/admin/reservaciones/seguros');
-    const data = await res.json();
-    if (!data.length)
-      return proteList.innerHTML = '<div style="text-align:center;padding:12px;">No hay seguros disponibles.</div>';
-
-    proteList.innerHTML = data.map(s => `
-      <div class="seg-card" style="border:1px solid #ddd;border-radius:12px;padding:16px;margin-bottom:10px;text-align:center;background:#f8fafc;">
-        <div style="font-weight:700;">${s.nombre}</div>
-        <div style="font-size:13px;color:#475467;min-height:40px;">${s.descripcion ?? ''}</div>
-        <div style="font-weight:600;color:#d00;margin-top:6px;">$${Number(s.precio_por_dia).toFixed(2)} MXN/día</div>
-        <button class="btn primary selectProteccion"
-                data-id="${s.id_paquete}"
-                data-nombre="${esc(s.nombre)}"
-                data-precio="${s.precio_por_dia}">Seleccionar</button>
-      </div>
-    `).join('');
-  } catch (err) {
-    console.error('Error al cargar seguros:', err);
-    proteList.innerHTML = '<div style="color:#d00;padding:10px;">Error al cargar los paquetes.</div>';
-  }
-});
-
-proteList?.addEventListener('click', e => {
-  const btn = e.target.closest('.selectProteccion');
-  if (!btn) return;
-  seguroSeleccionado = {
-    id: btn.dataset.id,
-    nombre: btn.dataset.nombre,
-    precio: parseFloat(btn.dataset.precio)
-  };
-  proteInput.value = `${seguroSeleccionado.nombre} - $${seguroSeleccionado.precio}/día`;
-  proteRemove.style.display = 'inline-block';
-  proteModal.classList.remove('show');
-  actualizarTotal();
-});
-
-/* ================================
-   🧩 Cargar servicios adicionales
-================================ */
-async function cargarAdicionales() {
-  const grid = $('#addGrid');
-  grid.innerHTML = '<div class="loading">Cargando adicionales...</div>';
-  try {
-    const resp = await fetch('/admin/reservaciones/servicios');
-    const data = await resp.json();
-    if (!data.length)
-      return grid.innerHTML = '<div class="empty">No hay servicios adicionales disponibles.</div>';
-
-    grid.innerHTML = data.map(serv => `
-      <div class="add-card" data-id="${serv.id_servicio}" data-nombre="${esc(serv.nombre)}" data-precio="${serv.precio}"
-           style="border:1px solid #D0D5DD;border-radius:10px;padding:12px;margin-bottom:10px;background:#fff;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-weight:700;">${serv.nombre}</div>
-            <div style="font-size:13px;color:#475467;">${serv.descripcion || ''}</div>
-            <div style="font-weight:600;color:#2563eb;margin-top:4px;">$${parseFloat(serv.precio).toFixed(2)} MXN/día</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <button class="btn gray menos" style="padding:4px 10px;">−</button>
-            <span class="cantidad" style="min-width:20px;text-align:center;">0</span>
-            <button class="btn gray mas" style="padding:4px 10px;">+</button>
-          </div>
-        </div>
-      </div>
-    `).join('');
-  } catch (err) {
-    console.error('Error cargando servicios:', err);
-    grid.innerHTML = '<div class="error">No se pudieron cargar los servicios adicionales.</div>';
-  }
-}
-
-$('#go2')?.addEventListener('click', cargarAdicionales);
-
-// 🔹 Controlar incremento/decremento
-document.addEventListener('click', e => {
-  const card = e.target.closest('.add-card');
-  if (!card) return;
-  const id = card.dataset.id;
-  const nombre = card.dataset.nombre;
-  const precio = parseFloat(card.dataset.precio);
-  const span = card.querySelector('.cantidad');
-
-  if (e.target.classList.contains('mas')) {
-    let actual = parseInt(span.textContent) || 0;
-    actual++;
-    span.textContent = actual;
-    let existe = adicionalesSeleccionados.find(a => a.id === id);
-    if (existe) existe.cantidad = actual;
-    else adicionalesSeleccionados.push({ id, nombre, precio, cantidad: actual });
+    hid.value = "";
   }
 
-  if (e.target.classList.contains('menos')) {
-    let actual = parseInt(span.textContent) || 0;
-    if (actual > 0) actual--;
-    span.textContent = actual;
-    let existe = adicionalesSeleccionados.find(a => a.id === id);
-    if (existe) {
-      existe.cantidad = actual;
-      if (actual === 0)
-        adicionalesSeleccionados = adicionalesSeleccionados.filter(a => a.id !== id);
+  function syncTimeHiddenFromUI(uiId, hiddenId) {
+    const ui = qs(uiId);
+    const hid = qs(hiddenId);
+    if (!ui || !hid) return;
+
+    const val = String(ui.value || "").trim();
+    hid.value = val || "";
+  }
+
+  /* =========================
+     Días
+  ========================= */
+  function computeDays() {
+    const fi = qs("#fecha_inicio")?.value || "";
+    const ff = qs("#fecha_fin")?.value || "";
+    if (!fi || !ff) return 0;
+
+    const parseDate = (val) => {
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
+        const [d, m, y] = val.split("/").map(Number);
+        return new Date(y, m - 1, d, 0, 0, 0);
+      }
+      // ISO
+      if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return new Date(val + "T00:00:00");
+      // fallback
+      return new Date(val);
+    };
+
+    const d1 = parseDate(fi);
+    const d2 = parseDate(ff);
+    const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+    return Math.max(1, Number.isFinite(diff) ? diff : 0);
+  }
+
+  function syncDays() {
+    state.days = computeDays();
+    const diasTxt = qs("#diasTxt");
+    if (diasTxt) diasTxt.textContent = String(state.days || 0);
+
+    refreshCategoriaPreview();
+    refreshAddonsBadge();
+    refreshSummary();
+    syncTotalsHidden();
+  }
+
+  /* =========================
+     Aeropuerto (No. vuelo)
+  ========================= */
+  function isAirportSelected() {
+    const r = qs("#sucursal_retiro")?.value || "";
+    const e = qs("#sucursal_entrega")?.value || "";
+    return (String(r) === "1" || String(e) === "1");
+  }
+
+  function syncVueloField() {
+    const wrap = qs("#vueloWrap");
+    const vuelo = qs("#no_vuelo");
+    const show = isAirportSelected();
+
+    if (wrap) wrap.style.display = show ? "" : "none";
+    if (vuelo) {
+      if (show) vuelo.setAttribute("required", "required");
+      else {
+        vuelo.removeAttribute("required");
+        vuelo.value = "";
+      }
     }
   }
 
-  actualizarTotal();
-});
+  /* =========================
+     Categoría
+  ========================= */
+  function setCategoria(cat) {
+    state.categoria = cat;
 
-/* ================================
-   📅 Cálculo de días
-================================ */
-$('#fecha_inicio')?.addEventListener('change', calcularDias);
-$('#fecha_fin')?.addEventListener('change', calcularDias);
+    const hid = qs("#categoria_id");
+    if (hid) hid.value = cat ? String(cat.id) : "";
 
-function calcularDias() {
-  const f1 = new Date($('#fecha_inicio').value);
-  const f2 = new Date($('#fecha_fin').value);
-  if (!f1 || !f2 || isNaN(f1) || isNaN(f2)) return;
-  const diffTime = f2 - f1;
-  let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  if (diffDays <= 0) diffDays = 1;
-  $('#diasBadge').textContent = `${diffDays} día(s)`;
-  updateResumen(null, diffDays);
-  actualizarResumenViaje();
-}
-/* ================================
-   🕒 Formato de hora a 12h con AM/PM
-================================ */
-function formatoHora12h(hora) {
-  if (!hora) return '—';
-  let [h, m] = hora.split(':');
-  h = parseInt(h);
-  const sufijo = h >= 12 ? 'PM' : 'AM';
-  h = h % 12 || 12;
-  return `${h}:${m} ${sufijo}`;
-}
+    const txt = qs("#catSelTxt");
+    const sub = qs("#catSelSub");
+    const rem = qs("#catRemove");
 
-/* ================================
-   🧭 Mostrar resumen de viaje
-================================ */
-function actualizarResumenViaje() {
-  $('#resSucursalRetiro').textContent = $('#sucursal_retiro').selectedOptions[0]?.text || '—';
-  $('#resSucursalEntrega').textContent = $('#sucursal_entrega').selectedOptions[0]?.text || '—';
-  $('#resFechaInicio').textContent = $('#fecha_inicio').value || '—';
-  $('#resHoraInicio').textContent = formatoHora12h($('#hora_retiro').value);
-  $('#resFechaFin').textContent = $('#fecha_fin').value || '—';
- $('#resHoraFin').textContent = formatoHora12h($('#hora_entrega').value);
-  $('#resDias').textContent = `${diasSeleccionados} día(s)` || '—';
-}
+    if (!cat) {
+      if (txt) txt.textContent = "— Ninguna categoría —";
+      if (sub) sub.textContent = "Tarifa base por día y cálculo previo aparecerán aquí.";
+      if (rem) rem.style.display = "none";
+      const mini = qs("#catMiniPreview");
+      if (mini) mini.style.display = "none";
+      syncTotalsHidden();
+      refreshSummary();
+      return;
+    }
 
-$('#sucursal_retiro')?.addEventListener('change', actualizarResumenViaje);
-$('#sucursal_entrega')?.addEventListener('change', actualizarResumenViaje);
-$('#hora_retiro')?.addEventListener('change', actualizarResumenViaje);
-$('#hora_entrega')?.addEventListener('change', actualizarResumenViaje);
+    if (txt) txt.textContent = cat.nombre;
+    if (sub) sub.textContent = `${money(cat.precio_dia)} / día · ${state.days || 0} día(s)`;
+    if (rem) rem.style.display = "";
 
-/* ================================
-   📤 Envío con fetch + Alertify
-================================ */
-$('#formReserva')?.addEventListener('submit', async e => {
-  e.preventDefault();
+    refreshCategoriaPreview();
+    syncTotalsHidden();
+    refreshSummary();
+  }
 
-  const v = id => $(id)?.value?.trim();
-  if (!v('#categoriaSelect') || $('#categoriaSelect').value == 0)
-    return alertify.warning('⚠️ Selecciona una categoría de vehículo.');
-  if (!v('#sucursal_retiro') || !v('#sucursal_entrega'))
-    return alertify.warning('⚠️ Selecciona sucursal de retiro y entrega.');
-  if (!v('#fecha_inicio') || !v('#fecha_fin'))
-    return alertify.warning('⚠️ Completa las fechas de la reserva.');
-  if (!v('#nombre_cliente') || !v('#email_cliente') || !v('#telefono_cliente'))
-    return alertify.warning('⚠️ Completa los datos del cliente.');
+  function refreshCategoriaPreview() {
+    const cat = state.categoria;
+    const mini = qs("#catMiniPreview");
+    if (!mini) return;
 
-  const btn = $('#btnReservar');
-  btn.disabled = true;
-  btn.textContent = 'Procesando...';
+    if (!cat) {
+      mini.style.display = "none";
+      return;
+    }
 
- // 📌 Antes de armar el payload
-const tarifaModificada = tarifaEditadaManualmente ? precioSeleccionado : null;
+    mini.style.display = "";
 
-const payload = {
-  id_categoria: $('#categoriaSelect').value,
-  sucursal_retiro: $('#sucursal_retiro').value,
-  sucursal_entrega: $('#sucursal_entrega').value,
-  fecha_inicio: $('#fecha_inicio').value,
-  fecha_fin: $('#fecha_fin').value,
-  hora_retiro: $('#hora_retiro')?.value || '',
-  hora_entrega: $('#hora_entrega')?.value || '',
-  subtotal: $('#subTot').textContent.replace(/[^\d.]/g, '') || '0',
-  impuestos: $('#iva').textContent.replace(/[^\d.]/g, '') || '0',
-  total: $('#total').textContent.replace(/[^\d.]/g, '') || '0',
-  moneda: $('#moneda').value,
-  nombre_cliente: $('#nombre_cliente').value,
-  email_cliente: $('#email_cliente').value,
-  telefono_cliente: $('#telefono_cliente').value,
-  no_vuelo: $('#no_vuelo')?.value || '',
+    const n = qs("#catMiniName");
+    const d = qs("#catMiniDesc");
+    const rate = qs("#catMiniRate");
+    const calc = qs("#catMiniCalc");
 
-  // ✅ bandera de edición
-  tarifa_ajustada: tarifaEditadaManualmente ? 1 : 0,
+    if (n) n.textContent = cat.nombre || "—";
+    if (d) d.textContent = cat.desc || "—";
+    if (rate) rate.textContent = `${money(cat.precio_dia).replace(" MXN", "")} MXN / día`;
 
-  // ✅ siempre base real (de la categoría)
-  precio_base_dia: tarifaOriginal || precioSeleccionado
-};
+    const pre = Number(cat.precio_dia || 0) * Number(state.days || 0);
+    if (calc) calc.textContent = money(pre);
+  }
 
-// ✅ solo incluir tarifa_modificada si realmente fue editada
-if (tarifaEditadaManualmente) {
-  payload.tarifa_modificada = tarifaModificada;
-}
+  /* =========================
+     Protecciones
+  ========================= */
+  function setProteccion(p) {
+    state.proteccion = p;
 
-// 👇 el resto queda igual
-payload.seguroSeleccionado = seguroSeleccionado;
-payload.adicionalesSeleccionados = adicionalesSeleccionados;
-payload.tarifa_ajustada = tarifaEditadaManualmente ? 1 : 0;
+    const hid = qs("#proteccion_id");
+    if (hid) hid.value = p ? String(p.id) : "";
 
+    const txt = qs("#proteSelTxt");
+    const sub = qs("#proteSelSub");
+    const rem = qs("#proteRemove");
 
-  try {
-    const res = await fetch('/reservaciones/guardar', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+    if (!p) {
+      if (txt) txt.textContent = "— Ninguna protección —";
+      if (sub) sub.textContent = "Costo se refleja en el resumen.";
+      if (rem) rem.style.display = "none";
+      syncProteccionHidden();
+      syncTotalsHidden();
+      refreshSummary();
+      return;
+    }
+
+    if (txt) txt.textContent = p.nombre || "Protección";
+    const pPrice = Number(p.precio || 0);
+    if (sub) sub.textContent = `${money(pPrice)} ${p.charge === "por_dia" ? "/ día" : ""}`;
+    if (rem) rem.style.display = "";
+
+    syncProteccionHidden();
+    syncTotalsHidden();
+    refreshSummary();
+  }
+
+  /* =========================
+     Addons
+  ========================= */
+  function setAddonQty(item, qty) {
+    const q = Math.max(0, Number(qty || 0));
+    if (q <= 0) state.addons.delete(String(item.id));
+    else state.addons.set(String(item.id), { ...item, qty: q });
+
+    syncAddonsHidden();
+    refreshAddonsBadge();
+    syncTotalsHidden();
+    refreshSummary();
+  }
+
+  function refreshAddonsBadge() {
+    const txt = qs("#addonsSelTxt");
+    const sub = qs("#addonsSelSub");
+    const clear = qs("#addonsClear");
+
+    const items = Array.from(state.addons.values()).filter(x => Number(x.qty || 0) > 0);
+
+    if (!items.length) {
+      if (txt) txt.textContent = "— Ninguno —";
+      if (sub) sub.textContent = "Subtotal estimado aparecerá aquí.";
+      if (clear) clear.style.display = "none";
+      return;
+    }
+
+    const names = items.slice(0, 2).map(x => `${x.nombre} ×${x.qty}`);
+    const rest = items.length > 2 ? ` +${items.length - 2} más` : "";
+    if (txt) txt.textContent = names.join(", ") + rest;
+
+    const extrasSub = calcExtrasSubtotal();
+    if (sub) sub.textContent = `Subtotal extras: ${money(extrasSub)}`;
+    if (clear) clear.style.display = "";
+  }
+
+  function calcExtrasSubtotal() {
+    const days = Number(state.days || 0);
+    let sum = 0;
+    state.addons.forEach((it) => {
+      const price = Number(it.precio || 0);
+      const qty = Number(it.qty || 0);
+      const perDay = String(it.charge || "por_evento") === "por_dia";
+      sum += price * qty * (perDay ? days : 1);
+    });
+    return sum;
+  }
+
+  /* =========================
+     Totales + hidden
+  ========================= */
+  function calcTotals() {
+    const days = Number(state.days || 0);
+
+    const baseDia = state.categoria ? Number(state.categoria.precio_dia || 0) : 0;
+    const baseTotal = baseDia * days;
+
+    const prot = state.proteccion;
+    const protPrice = prot ? Number(prot.precio || 0) : 0;
+    const protTotal = prot
+      ? (String(prot.charge || "por_evento") === "por_dia" ? protPrice * days : protPrice)
+      : 0;
+
+    const extrasSub = calcExtrasSubtotal();
+
+    const subtotal = baseTotal + protTotal + extrasSub;
+    const iva = Math.round(subtotal * 0.16 * 100) / 100;
+    const total = subtotal + iva;
+
+    return { baseDia, baseTotal, protTotal, extrasSub, subtotal, iva, total };
+  }
+
+  function syncTotalsHidden() {
+    ensureTotalsHidden();
+
+    const totals = calcTotals();
+    const baseDia = totals.baseDia;
+
+    qs("#precio_base_dia").value = String(baseDia || 0);
+    qs("#subtotal").value = String(totals.subtotal || 0);
+    qs("#impuestos").value = String(totals.iva || 0);
+    qs("#total").value = String(totals.total || 0);
+  }
+
+  /* =========================
+     Resumen
+  ========================= */
+  function refreshSummary() {
+    const days = Number(state.days || 0);
+
+    const selR = qs("#sucursal_retiro");
+    const selE = qs("#sucursal_entrega");
+
+    const getText = (sel) =>
+      sel?.options?.[sel.selectedIndex]?.textContent?.trim() || "—";
+
+    // ✅ mostrar en resumen lo que ve el usuario (UI), pero si no existe, fallback al hidden
+    const fi = qs("#fecha_inicio_ui")?.value || qs("#fecha_inicio")?.value || "—";
+    const hi = qs("#hora_retiro_ui")?.value || qs("#hora_retiro")?.value || "—";
+    const ff = qs("#fecha_fin_ui")?.value || qs("#fecha_fin")?.value || "—";
+    const hf = qs("#hora_entrega_ui")?.value || qs("#hora_entrega")?.value || "—";
+
+    const setText = (id, val) => { const el = qs(id); if (el) el.textContent = val; };
+
+    setText("#resSucursalRetiro", getText(selR));
+    setText("#resSucursalEntrega", getText(selE));
+    setText("#resFechaInicio", fi);
+    setText("#resHoraInicio", hi);
+    setText("#resFechaFin", ff);
+    setText("#resHoraFin", hf);
+    setText("#resDias", days ? `${days} día(s)` : "—");
+
+    const cat = state.categoria;
+    const totals = calcTotals();
+
+    setText("#resCat", cat ? cat.nombre : "—");
+    setText("#resBaseDia", cat ? `${money(totals.baseDia)} / día` : "—");
+    setText("#resBaseTotal", cat ? money(totals.baseTotal) : "—");
+
+    const prot = state.proteccion;
+    const protPrice = prot ? Number(prot.precio || 0) : 0;
+    setText(
+      "#resProte",
+      prot ? `${prot.nombre} (${money(protPrice)}${prot.charge === "por_dia" ? " / día" : ""})` : "—"
+    );
+
+    const items = Array.from(state.addons.values()).filter(x => Number(x.qty || 0) > 0);
+    setText("#resAdds", items.length ? items.map(x => `${x.nombre} ×${x.qty}`).join(", ") : "—");
+
+    setText("#resSub", money(totals.subtotal));
+    setText("#resIva", money(totals.iva));
+    setText("#resTotal", money(totals.total));
+  }
+
+  /* =========================
+     Load Protecciones (DESC)
+  ========================= */
+  async function loadProtecciones() {
+    const list = qs("#proteList");
+    if (!list) return;
+
+    list.innerHTML = `<div class="loading">Cargando paquetes...</div>`;
+
+    try {
+      const res = await fetch("/admin/reservaciones/seguros", {
+        headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
+      });
+
+      const data = await res.json().catch(() => []);
+      const arrRaw = Array.isArray(data) ? data : (data?.data || []);
+
+      const arr = arrRaw.map((raw) => {
+        const id = raw.id_paquete ?? raw.id ?? raw.idPaquete;
+        const nombre = raw.nombre ?? "Protección";
+        const desc = raw.descripcion ?? "";
+        const precio = Number(raw.precio_por_dia ?? raw.precio_dia ?? raw.precio ?? 0);
+        const charge = raw.tipo_cobro ?? raw.charge ?? "por_evento";
+        return { id, nombre, desc, precio, charge };
+      });
+
+      // ✅ ordenar caro -> barato (como lo traías)
+      arr.sort((a, b) => Number(b.precio || 0) - Number(a.precio || 0));
+
+      if (!arr.length) {
+        list.innerHTML = `<div class="loading">No hay protecciones disponibles.</div>`;
+        return;
+      }
+
+      list.innerHTML = "";
+
+      arr.forEach((p) => {
+        const isFree = Number(p.precio || 0) <= 0;
+
+        const card = document.createElement("article");
+        card.className = "card-pick" + (isFree ? " card-pick--free" : "");
+
+        if (isFree) {
+          card.style.gridTemplateColumns = "1fr";
+          card.style.opacity = "0.9";
+          card.style.borderStyle = "dashed";
+        }
+
+        card.innerHTML = `
+          <div class="cp-left">
+            <div class="cp-title">${escapeHtml(p.nombre)}</div>
+            <div class="cp-sub">${escapeHtml(p.desc || (isFree ? "Sin protección adicional." : "Protección para tu viaje."))}</div>
+            <div class="cp-meta">
+              <span class="pill">Tipo: ${p.charge === "por_dia" ? "Por día" : "Por evento"}</span>
+              ${isFree ? `<span class="pill">Opción básica</span>` : ``}
+            </div>
+          </div>
+
+          ${isFree ? `
+            <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+              <button class="btn gray" style="padding:8px 12px; border-radius:12px;" type="button">Elegir</button>
+            </div>
+          ` : `
+            <div class="cp-right">
+              <div class="cp-price">
+                <div class="muted small">Costo</div>
+                <div class="price-big">${money(p.precio).replace(" MXN","")} <span>MXN${p.charge==="por_dia" ? " / día" : ""}</span></div>
+              </div>
+              <button class="btn primary btn-block" type="button">Elegir</button>
+            </div>
+          `}
+        `;
+
+        card.addEventListener("click", (e) => {
+          const btn = e.target.closest("button");
+          if (!btn) return;
+
+          setProteccion({
+            id: p.id,
+            nombre: p.nombre,
+            precio: p.precio,
+            charge: p.charge,
+            desc: p.desc
+          });
+
+          closePop(qs("#proteccionPop"));
+        });
+
+        list.appendChild(card);
+      });
+
+    } catch (e) {
+      console.error("Protecciones error:", e);
+      list.innerHTML = `<div class="loading">Error cargando protecciones.</div>`;
+    }
+  }
+
+  /* =========================
+     Load Addons
+  ========================= */
+  async function loadAddons() {
+    const list = qs("#addonsList");
+    if (!list) return;
+
+    list.innerHTML = `<div class="loading">Cargando adicionales...</div>`;
+
+    try {
+      const res = await fetch("/admin/reservaciones/servicios", {
+        headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
+      });
+
+      const data = await res.json().catch(() => []);
+      const arrRaw = Array.isArray(data) ? data : (data?.data || []);
+
+      if (!arrRaw.length) {
+        list.innerHTML = `<div class="loading">No hay adicionales disponibles.</div>`;
+        return;
+      }
+
+      list.innerHTML = "";
+
+      arrRaw.forEach((raw) => {
+        const id = raw.id_servicio ?? raw.id ?? raw.idServicio;
+        const nombre = raw.nombre ?? "Adicional";
+        const desc = raw.descripcion ?? "";
+        const precio = Number(raw.precio ?? raw.costo ?? raw.monto ?? 0);
+        const charge = raw.tipo_cobro ?? raw.charge ?? "por_evento";
+
+        const current = state.addons.get(String(id));
+        const qty = current ? Number(current.qty || 0) : 0;
+
+        const card = document.createElement("article");
+        card.className = "card-addon";
+        card.dataset.id = String(id);
+
+        card.innerHTML = `
+          <div class="ad-left">
+            <div class="cp-title">${escapeHtml(nombre)}</div>
+            <div class="cp-sub">${escapeHtml(desc || "Servicio adicional.")}</div>
+            <div class="cp-meta">
+              <span class="pill">Cobro: ${charge === "por_dia" ? "Por día" : "Por evento"}</span>
+            </div>
+          </div>
+
+          <div class="ad-right">
+            <div class="cp-price">
+              <div class="muted small">Costo</div>
+              <div class="price-big">${money(precio).replace(" MXN","")} <span>MXN${charge==="por_dia" ? " / día" : ""}</span></div>
+            </div>
+
+            <div class="qty-row">
+              <button class="qty-btn minus" type="button" aria-label="menos">−</button>
+              <div class="qty" data-qty>${qty}</div>
+              <button class="qty-btn plus" type="button" aria-label="más">+</button>
+            </div>
+          </div>
+        `;
+
+        card.addEventListener("click", (e) => {
+          const plus = e.target.closest(".plus");
+          const minus = e.target.closest(".minus");
+          if (!plus && !minus) return;
+
+          const item = { id, nombre, precio, charge, desc };
+          const cur = state.addons.get(String(id))?.qty || 0;
+          const next = Math.max(0, Number(cur) + (plus ? 1 : -1));
+
+          setAddonQty(item, next);
+
+          const qtyEl = card.querySelector("[data-qty]");
+          if (qtyEl) qtyEl.textContent = String(next);
+        });
+
+        list.appendChild(card);
+      });
+
+    } catch (e) {
+      console.error("Addons error:", e);
+      list.innerHTML = `<div class="loading">Error cargando adicionales.</div>`;
+    }
+  }
+
+  /* =========================
+     Validación
+  ========================= */
+  function validateBeforeSubmit() {
+    const missing = [];
+
+    const req = (id, label) => {
+      const el = qs(id);
+      const val = el ? String(el.value || "").trim() : "";
+      if (!val) missing.push(label);
+    };
+
+    req("#sucursal_retiro", "Sucursal de retiro");
+    req("#sucursal_entrega", "Sucursal de entrega");
+
+    // ✅ validamos los hidden reales (backend)
+    req("#fecha_inicio", "Fecha de salida");
+    req("#hora_retiro", "Hora de salida");
+    req("#fecha_fin", "Fecha de llegada");
+    req("#hora_entrega", "Hora de llegada");
+
+    if (!qs("#categoria_id")?.value) missing.push("Categoría");
+
+    req("#nombre_cliente", "Nombre");
+    req("#apellido_paterno", "Apellido paterno");
+    req("#apellido_materno", "Apellido materno");
+    req("#email_cliente", "Email");
+    req("#telefono_cliente", "Teléfono");
+    req("#pais", "País");
+
+    if (isAirportSelected()) {
+      const vuelo = qs("#no_vuelo")?.value?.trim() || "";
+      if (!vuelo) missing.push("No. vuelo (Aeropuerto)");
+    }
+
+    if (missing.length) {
+      alert("Falta completar:\n• " + missing.join("\n• "));
+      return false;
+    }
+    return true;
+  }
+
+  /* =========================
+     Flatpickr: calendario modal + time 10min
+     (usa inputs _ui y sincroniza a hidden reales)
+  ========================= */
+  function initFlatpickrModalCalendar() {
+    if (!window.flatpickr) return;
+
+    // backdrop
+    let backdrop = document.querySelector(".fp-backdrop");
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.className = "fp-backdrop";
+      document.body.appendChild(backdrop);
+    }
+
+    function makeActions(instance, labelText) {
+      const actions = document.createElement("div");
+      actions.className = "fp-actions";
+      actions.innerHTML = `
+        <button type="button" class="fp-today">Hoy</button>
+        <button type="button" class="fp-clear">Limpiar</button>
+        <button type="button" class="fp-label">✖ ${labelText}</button>
+      `;
+
+      actions.querySelector(".fp-today").addEventListener("click", () => instance.setDate(new Date(), true));
+      actions.querySelector(".fp-clear").addEventListener("click", () => {
+        instance.clear();
+        // al limpiar, reflejamos hidden
+        if (instance.input?.id === "fecha_inicio_ui") qs("#fecha_inicio").value = "";
+        if (instance.input?.id === "fecha_fin_ui") qs("#fecha_fin").value = "";
+        syncDays();
+      });
+      return actions;
+    }
+
+    function openModal(instance) {
+      backdrop.classList.add("is-open");
+      document.body.classList.add("no-scroll");
+      backdrop.onclick = () => instance.close();
+    }
+
+    function closeModal() {
+      backdrop.classList.remove("is-open");
+      document.body.classList.remove("no-scroll");
+      backdrop.onclick = null;
+    }
+
+    // ✅ Fecha inicio UI -> hidden ISO
+    window.flatpickr("#fecha_inicio_ui", {
+      locale: "es",
+      dateFormat: "d/m/Y",
+      allowInput: false,
+      clickOpens: true,
+      minDate: "today",
+
+      onOpen: (sel, str, instance) => {
+        openModal(instance);
+        if (!instance._actionsAdded) {
+          instance.calendarContainer.appendChild(makeActions(instance, "Fecha PickUp"));
+          instance._actionsAdded = true;
+        }
       },
-      body: JSON.stringify(payload)
+      onClose: () => closeModal(),
+      onChange: (selectedDates) => {
+        const d = selectedDates?.[0];
+        qs("#fecha_inicio").value = d ? toISODate(d) : "";
+
+        const fin = qs("#fecha_fin")?.value;
+        if (fin && qs("#fecha_inicio")?.value && fin < qs("#fecha_inicio").value) {
+          qs("#fecha_fin").value = "";
+          qs("#fecha_fin_ui").value = "";
+        }
+        syncDays();
+      }
     });
 
-    const data = await res.json();
-    if (res.ok && data.success) {
-  alertify.success('✅ Reservación registrada correctamente.');
-  alertify.notify(`Código: <b>${data.codigo}</b>`, 'custom', 8);
+    // ✅ Fecha fin UI -> hidden ISO
+    window.flatpickr("#fecha_fin_ui", {
+      locale: "es",
+      dateFormat: "d/m/Y",
+      allowInput: false,
+      clickOpens: true,
+      minDate: "today",
+      onOpen: (sel, str, instance) => {
+        openModal(instance);
+        if (!instance._actionsAdded) {
+          instance.calendarContainer.appendChild(makeActions(instance, "Fecha Devolución"));
+          instance._actionsAdded = true;
+        }
+      },
+      onClose: () => closeModal(),
+      onChange: (selectedDates) => {
+        const d = selectedDates?.[0];
+        qs("#fecha_fin").value = d ? toISODate(d) : "";
 
-  // 🧼 Limpiar formulario y resumen visualmente
-  e.target.reset();
-  $('#vehImageWrap').style.display = 'none';
-  $('#baseLine').textContent = '—';
-  updateResumen(0);
-
-  // 🕓 Esperar un segundo y recargar la vista
-  setTimeout(() => {
-    window.location.href = '/admin/reservaciones';
-    // 👆 Cambia 'rutaReservacionesAdmin' por el nombre real de tu ruta
-  }, 1000);
-} else {
-  throw new Error(data.message || 'Error desconocido al guardar.');
-}
-  } catch (err) {
-    console.error(err);
-    alertify.error(`❌ No se pudo guardar la reservación: ${err.message}`);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Registrar Reservación';
+        const ini = qs("#fecha_inicio")?.value;
+        const fin = qs("#fecha_fin")?.value;
+        if (ini && fin && fin < ini) {
+          qs("#fecha_fin").value = "";
+          qs("#fecha_fin_ui").value = "";
+          alert("La fecha de devolución no puede ser antes de la fecha de salida.");
+        }
+        syncDays();
+      }
+    });
   }
-});
+
+  function initFlatpickrTime10() {
+    if (!window.flatpickr) return;
+
+    const baseCfg = {
+      enableTime: true,
+      noCalendar: true,
+      dateFormat: "H:i",
+      time_24hr: true,
+      minuteIncrement: 10,
+      allowInput: false,
+    };
+
+    window.flatpickr("#hora_retiro_ui", {
+      ...baseCfg,
+      onChange: (sel, timeStr) => {
+        qs("#hora_retiro").value = timeStr || "";
+        refreshSummary();
+      },
+      onClose: () => refreshSummary(),
+    });
+
+    window.flatpickr("#hora_entrega_ui", {
+      ...baseCfg,
+      onChange: (sel, timeStr) => {
+        qs("#hora_entrega").value = timeStr || "";
+        refreshSummary();
+      },
+      onClose: () => refreshSummary(),
+    });
+  }
+
+  /* =========================
+     Eventos UI
+  ========================= */
+  function bindUI() {
+    // ✅ si no carga flatpickr, sincroniza por cambios en UI
+    ["#fecha_inicio_ui", "#fecha_fin_ui"].forEach((id) => {
+      qs(id)?.addEventListener("change", () => {
+        syncDateHiddenFromUI(id, id.replace("_ui", ""));
+        syncDays();
+      });
+    });
+
+    ["#hora_retiro_ui", "#hora_entrega_ui"].forEach((id) => {
+      qs(id)?.addEventListener("change", () => {
+        syncTimeHiddenFromUI(id, id.replace("_ui", ""));
+        refreshSummary();
+      });
+    });
+
+    qs("#sucursal_retiro")?.addEventListener("change", () => {
+      syncVueloField();
+      refreshSummary();
+    });
+    qs("#sucursal_entrega")?.addEventListener("change", () => {
+      syncVueloField();
+      refreshSummary();
+    });
+
+    // Categorías modal
+    const catPop = qs("#catPop");
+    qs("#btnCategorias")?.addEventListener("click", () => openPop(catPop));
+    qs("#catClose")?.addEventListener("click", () => closePop(catPop));
+    qs("#catCancel")?.addEventListener("click", () => closePop(catPop));
+
+    catPop?.addEventListener("click", (e) => {
+      const card = e.target.closest(".card-pick");
+      const btn = e.target.closest("button");
+      if (!card || !btn) return;
+
+      const id = card.dataset.id;
+      const nombre = card.dataset.nombre || "";
+      const desc = card.dataset.desc || "";
+      const precio = Number(card.dataset.precio || 0);
+      const img = card.dataset.img || "";
+
+      setCategoria({ id, nombre, desc, precio_dia: precio, img });
+      closePop(catPop);
+    });
+
+    qs("#catRemove")?.addEventListener("click", () => setCategoria(null));
+
+    // Protecciones modal
+    const protPop = qs("#proteccionPop");
+    qs("#btnProtecciones")?.addEventListener("click", async () => {
+      openPop(protPop);
+      await loadProtecciones();
+    });
+    qs("#proteClose")?.addEventListener("click", () => closePop(protPop));
+    qs("#proteCancel")?.addEventListener("click", () => closePop(protPop));
+    qs("#proteRemove")?.addEventListener("click", () => setProteccion(null));
+
+    // Addons modal
+    const addPop = qs("#addonsPop");
+    qs("#btnAddons")?.addEventListener("click", async () => {
+      openPop(addPop);
+      await loadAddons();
+    });
+    qs("#addonsClose")?.addEventListener("click", () => closePop(addPop));
+    qs("#addonsCancel")?.addEventListener("click", () => closePop(addPop));
+    qs("#addonsApply")?.addEventListener("click", () => {
+      closePop(addPop);
+      refreshAddonsBadge();
+      refreshSummary();
+      syncTotalsHidden();
+    });
+    qs("#addonsClear")?.addEventListener("click", () => {
+      state.addons.clear();
+      syncAddonsHidden();
+      refreshAddonsBadge();
+      syncTotalsHidden();
+      refreshSummary();
+    });
+
+    // Resumen modal
+    const resPop = qs("#resumenPop");
+    qs("#btnResumen")?.addEventListener("click", () => {
+      syncDays();
+      refreshSummary();
+      openPop(resPop);
+    });
+    qs("#resumenClose")?.addEventListener("click", () => closePop(resPop));
+    qs("#resumenOk")?.addEventListener("click", () => closePop(resPop));
+
+    // cerrar modal al tocar afuera
+    document.querySelectorAll(".pop.modal").forEach((pop) => {
+      pop.addEventListener("click", (e) => {
+        if (e.target === pop) closePop(pop);
+      });
+    });
+
+    // submit
+    qs("#formReserva")?.addEventListener("submit", (e) => {
+      ensureCategoriaHiddenFix();
+      ensureTotalsHidden();
+      ensureProteccionHidden();
+
+      // ✅ asegúrate que hidden reales estén sincronizados antes de validar
+      syncDateHiddenFromUI("#fecha_inicio_ui", "#fecha_inicio");
+      syncDateHiddenFromUI("#fecha_fin_ui", "#fecha_fin");
+      syncTimeHiddenFromUI("#hora_retiro_ui", "#hora_retiro");
+      syncTimeHiddenFromUI("#hora_entrega_ui", "#hora_entrega");
+
+      syncVueloField();
+      syncDays();
+      refreshSummary();
+      syncProteccionHidden();
+      syncAddonsHidden();
+      syncTotalsHidden();
+
+      if (!validateBeforeSubmit()) {
+        e.preventDefault();
+        return;
+      }
+    });
+  }
+
+  /* =========================
+     Boot
+  ========================= */
+  document.addEventListener("DOMContentLoaded", () => {
+    ensureCategoriaHiddenFix();
+    ensureTotalsHidden();
+    ensureProteccionHidden();
+
+    syncVueloField();
+
+    // ✅ si ya traen valores (editar), refresca UI (si existe)
+    // (cuando me pases el blade, ajustamos estos IDs si hace falta)
+
+    syncDays();
+    refreshAddonsBadge();
+    syncProteccionHidden();
+    syncAddonsHidden();
+    syncTotalsHidden();
+    refreshSummary();
+
+    initFlatpickrModalCalendar();
+    initFlatpickrTime10();
+
+    bindUI();
+  });
+
+})();

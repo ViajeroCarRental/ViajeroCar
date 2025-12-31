@@ -18,6 +18,9 @@ class ContratoController extends Controller
     public function mostrarContrato($id)
 {
     try {
+        // 👤 Asesor logueado (desde sesión)
+        $asesorId = session('id_usuario'); // puede ser null si no hay sesión
+
         // 🔹 1. Obtener la reservación base
         $reservacion = DB::table('reservaciones as r')
             ->leftJoin('sucursales as sr', 'r.sucursal_retiro', '=', 'sr.id_sucursal')
@@ -53,8 +56,10 @@ class ContratoController extends Controller
         if (!$contrato) {
             $numeroContrato = 'CTR-' . strtoupper(substr($reservacion->codigo, 0, 4)) . '-' . now()->format('ymdHis');
 
+            // 🆕 Crear contrato ligando asesor si existe sesión
             $idContrato = DB::table('contratos')->insertGetId([
                 'id_reservacion'  => $reservacion->id_reservacion,
+                'id_asesor'       => $asesorId,         // 👈 aquí guardamos el asesor
                 'numero_contrato' => $numeroContrato,
                 'estado'          => 'abierto',
                 'abierto_en'      => now(),
@@ -72,9 +77,32 @@ class ContratoController extends Controller
             ]);
 
             $contrato = DB::table('contratos')->where('id_contrato', $idContrato)->first();
+        } else {
+            // 🛠 Si ya existe contrato y no tiene asesor, ponle el actual
+            if ($asesorId && is_null($contrato->id_asesor)) {
+                DB::table('contratos')
+                    ->where('id_contrato', $contrato->id_contrato)
+                    ->update([
+                        'id_asesor'  => $asesorId,
+                        'updated_at' => now(),
+                    ]);
+
+                $contrato->id_asesor = $asesorId;
+            }
         }
 
-        // 🔹 3. Cargar categorías (FALTABA ESTA PARTE)
+        // 🧷 Sin importar si es nuevo o existente:
+        //    asegura que la reservación tenga también el id_asesor
+        if ($asesorId) {
+            DB::table('reservaciones')
+                ->where('id_reservacion', $reservacion->id_reservacion)
+                ->update([
+                    'id_asesor'  => $asesorId,
+                    'updated_at' => now(),
+                ]);
+        }
+
+        // 🔹 3. Cargar categorías
         $categorias = DB::table('categorias_carros')
             ->select('id_categoria', 'nombre')
             ->orderBy('nombre')
@@ -103,50 +131,48 @@ class ContratoController extends Controller
             ->where('rps.id_reservacion', $reservacion->id_reservacion)
             ->first();
 
-            // 🔹 7.1. Seguros individuales seleccionados (si existen)
+        // 🔹 7.1. Seguros individuales seleccionados (si existen)
         $segurosIndividualesSeleccionados = $this->obtenerIndividualesSeleccionados($reservacion->id_reservacion);
 
         // 🔹 7.2. Protecciones individuales disponibles
-$individuales = DB::table('seguro_individuales')
-    ->where('activo', true)
-    ->select('id_individual', 'nombre', 'descripcion', 'precio_por_dia')
-    ->get();
+        $individuales = DB::table('seguro_individuales')
+            ->where('activo', true)
+            ->select('id_individual', 'nombre', 'descripcion', 'precio_por_dia')
+            ->get();
 
-    // Clasificación por nombre
-$grupo_colision = $individuales->filter(fn($i) =>
-    str_contains($i->nombre, 'LDW') ||
-    str_contains($i->nombre, 'PDW') ||
-    str_contains($i->nombre, 'CDW') ||
-    str_contains($i->nombre, 'DECLINE')
-);
+        // Clasificación por nombre
+        $grupo_colision = $individuales->filter(fn($i) =>
+            str_contains($i->nombre, 'LDW') ||
+            str_contains($i->nombre, 'PDW') ||
+            str_contains($i->nombre, 'CDW') ||
+            str_contains($i->nombre, 'DECLINE')
+        );
 
-$grupo_medicos = $individuales->filter(fn($i) =>
-    str_contains($i->nombre, 'PAI')
-);
+        $grupo_medicos = $individuales->filter(fn($i) =>
+            str_contains($i->nombre, 'PAI')
+        );
 
-$grupo_asistencia = $individuales->filter(fn($i) =>
-    str_contains($i->nombre, 'PRA')
-);
+        $grupo_asistencia = $individuales->filter(fn($i) =>
+            str_contains($i->nombre, 'PRA')
+        );
 
-$grupo_terceros = $individuales->filter(fn($i) =>
-    str_contains($i->nombre, 'LI') // LI – ALI – EXT.LI
-);
+        $grupo_terceros = $individuales->filter(fn($i) =>
+            str_contains($i->nombre, 'LI') // LI – ALI – EXT.LI
+        );
 
-$grupo_protecciones = $individuales->filter(fn($i) =>
-    str_contains($i->nombre, 'LOU') ||
-    str_contains($i->nombre, 'LA')
-);
+        $grupo_protecciones = $individuales->filter(fn($i) =>
+            str_contains($i->nombre, 'LOU') ||
+            str_contains($i->nombre, 'LA')
+        );
 
-// Pasar a la vista
-view()->share([
-    'grupo_colision'     => $grupo_colision,
-    'grupo_medicos'      => $grupo_medicos,
-    'grupo_asistencia'   => $grupo_asistencia,
-    'grupo_terceros'     => $grupo_terceros,
-    'grupo_protecciones' => $grupo_protecciones,
-]);
-
-
+        // Pasar a la vista
+        view()->share([
+            'grupo_colision'     => $grupo_colision,
+            'grupo_medicos'      => $grupo_medicos,
+            'grupo_asistencia'   => $grupo_asistencia,
+            'grupo_terceros'     => $grupo_terceros,
+            'grupo_protecciones' => $grupo_protecciones,
+        ]);
 
         // 🔹 8. Servicios adicionales
         $servicios = DB::table('servicios')->get();
@@ -169,38 +195,36 @@ view()->share([
                 for ($i = 1; $i <= $adicional->cantidad; $i++) {
                     $conductoresExtras->push([
                         'id_conductor' => null,
-                        'nombres' => "Conductor adicional $i",
+                        'nombres'      => "Conductor adicional $i",
                     ]);
                 }
             }
         }
 
-        // 🔹 11. Ubicaciones (🔥 LO QUE FALTABA)
-$ubicaciones = DB::table('ubicaciones_servicio')
-    ->where('activo', 1)
-    ->orderBy('estado')
-    ->orderBy('destino')
-    ->get();
+        // 🔹 11. Ubicaciones
+        $ubicaciones = DB::table('ubicaciones_servicio')
+            ->where('activo', 1)
+            ->orderBy('estado')
+            ->orderBy('destino')
+            ->get();
 
-    // 🔹 12. Cargar datos de Delivery desde la reservación
-$delivery = DB::table('reservaciones')
-    ->select(
-        'delivery_activo as activo',
-        'delivery_ubicacion as id_ubicacion',
-        'delivery_direccion as direccion',
-        'delivery_km as kms',
-        'delivery_precio_km as precio_km',
-        'delivery_total as total'
-    )
-    ->where('id_reservacion', $reservacion->id_reservacion)
-    ->first();
+        // 🔹 12. Cargar datos de Delivery desde la reservación
+        $delivery = DB::table('reservaciones')
+            ->select(
+                'delivery_activo as activo',
+                'delivery_ubicacion as id_ubicacion',
+                'delivery_direccion as direccion',
+                'delivery_km as kms',
+                'delivery_precio_km as precio_km',
+                'delivery_total as total'
+            )
+            ->where('id_reservacion', $reservacion->id_reservacion)
+            ->first();
 
-
-    // Obtener costo por km de la categoría seleccionada
-$costoKmCategoria = DB::table('categoria_costo_km')
-    ->where('id_categoria', $reservacion->id_categoria)
-    ->value('costo_km') ?? 0;
-
+        // Obtener costo por km de la categoría seleccionada
+        $costoKmCategoria = DB::table('categoria_costo_km')
+            ->where('id_categoria', $reservacion->id_categoria)
+            ->value('costo_km') ?? 0;
 
         // 🔹 10. Retornar vista
         return view('Admin.Contrato', [
@@ -212,18 +236,14 @@ $costoKmCategoria = DB::table('categoria_costo_km')
             'contrato'           => $contrato,
             'cargos_conceptos'   => $cargos_conceptos,
             'conductoresExtras'  => $conductoresExtras,
-            'categorias'         => $categorias,  // ←🔥 AHORA SÍ LO MANDAS A LA VISTA
+            'categorias'         => $categorias,
             'ubicaciones'        => $ubicaciones,
             'costoKmCategoria'   => $costoKmCategoria,
             'delivery'           => $delivery,
             'segurosIndividualesSeleccionados' => $segurosIndividualesSeleccionados,
-            'individuales' => $individuales,
-            'idReservacion' => $id  // 👈 ESTO ESTÁ BIEN
-
-
+            'individuales'       => $individuales,
+            'idReservacion'      => $id,  // 👈 sigue igual
         ]);
-
-
 
     } catch (\Throwable $e) {
         Log::error('Error en ContratoController@mostrarContrato: ' . $e->getMessage());

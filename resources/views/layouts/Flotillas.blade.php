@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
 
     @yield('css-vistaMantenimiento')
