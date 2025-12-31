@@ -394,4 +394,3 @@
     cargarDanos();
 </script>
 
-</script>
