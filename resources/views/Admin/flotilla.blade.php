@@ -119,7 +119,6 @@
         <button id="closeAdd">&times;</button>
       </div>
 
-      {{-- 💡 AQUÍ SOLO SE LE AGREGA EL ID AL FORM --}}
       <form id="formAddAuto" action="{{ route('flotilla.agregar') }}" method="POST" enctype="multipart/form-data" class="form-grid">
         @csrf
 
@@ -157,7 +156,6 @@
           </select>
         </label>
 
-        </label>
         <label>Número de Serie<input type="text" name="numero_serie" placeholder="Ej. 3VWEP6BU0SM005037"></label>
         <label>Número de Rin<input type="text" name="numero_rin" placeholder="Ej. 17x7J o similar"></label>
         <label>Placa<input type="text" name="placa" placeholder="Ej. UNS639J"></label>
@@ -178,13 +176,12 @@
           >
         </label>
 
-        <!-- ❌ QUITADOS: No. Centro de Verificación, Tipo de Verificación -->
         <label>Kilometraje<input type="number" name="kilometraje" min="0" value="0"></label>
         <label>Asientos<input type="number" name="asientos" min="2" max="10" value="5"></label>
         <label>Puertas<input type="number" name="puertas" min="2" max="6" value="4"></label>
         <label>Capacidad de Tanque (L)<input type="number" step="0.1" name="capacidad_tanque" placeholder="Ej. 55.0"></label>
 
-        <!-- 👇 NUEVO CAMPO -->
+        <!-- Tipo de Aceite -->
         <label>Tipo de Aceite
           <select id="aceiteSelect">
             <option value="" selected disabled>Seleccione tipo de aceite...</option>
@@ -193,7 +190,6 @@
             <option value="otro">Otro...</option>
           </select>
 
-          <!-- Este es el que realmente se envía al backend -->
           <input
             type="text"
             name="aceite"
@@ -215,7 +211,6 @@
             <option value="otro">Otro...</option>
           </select>
 
-          <!-- Este es el que se envía al backend -->
           <input
             type="text"
             name="propietario"
@@ -241,7 +236,6 @@
         <label>Inicio de Vigencia<input type="date" name="inicio_vigencia_poliza"></label>
         <label>Fin de Vigencia<input type="date" name="fin_vigencia_poliza"></label>
 
-        <!-- ❌ QUITADOS: Tipo de Cobertura, Plan de Seguro -->
         <label>Archivo de Póliza (PDF o Imagen)
           <input type="file" name="archivo_poliza" accept=".pdf,.jpg,.jpeg,.png">
         </label>
@@ -249,7 +243,6 @@
         <h3>Tarjeta de Circulación</h3>
         <label>Folio Tarjeta<input type="text" name="folio_tarjeta" placeholder="Ej. 12345678"></label>
 
-        <!-- ✅ Movimiento ahora es select (Alta/Baja/Otro) -->
         <label>Movimiento
           <select id="movimientoSelect">
             <option value="" disabled selected>Seleccione...</option>
@@ -258,7 +251,6 @@
             <option value="otro">Otro...</option>
           </select>
 
-          <!-- Este es el que se envía al backend -->
           <input
             type="text"
             name="movimiento_tarjeta"
@@ -270,9 +262,6 @@
 
         <label>Fecha de Expedición<input type="date" name="fecha_expedicion_tarjeta"></label>
 
-        <!-- ❌ QUITADO: Oficina Expedidora -->
-
-        <!-- ✅ RENOMBRADO: ya no dice Archivo de Verificación -->
         <label>Tarjeta de Circulación (PDF o Imagen)
           <input
             type="file"
@@ -307,14 +296,91 @@
 @section('js-vistaFlotilla')
 <script>
 /* ==========================================================
-   🔔 CONFIGURACIÓN ALERTIFY (NUEVO)
+   🔔 CONFIGURACIÓN ALERTIFY
 ========================================================== */
 if (window.alertify) {
   alertify.set('notifier', 'position', 'top-right');
   alertify.set('notifier', 'delay', 4);
 }
 
-// === MODAL EDITAR ===
+/* ==========================================================
+   ✅ VALIDACIÓN DEL FORM (ANTES DE ENVIAR)
+========================================================== */
+function valorVacio(v){
+  return v === null || v === undefined || String(v).trim() === '';
+}
+
+function getFieldValue(form, selector){
+  const el = form.querySelector(selector);
+  if(!el) return '';
+  if(el.type === 'file') return (el.files && el.files[0]) ? el.files[0] : null;
+  return el.value;
+}
+
+function validarFormVehiculo(form){
+  const faltantes = [];
+
+  // 🔴 Campos que SÍ quieres obligatorios
+  const rules = [
+    { label: 'Marca', selector: 'input[name="marca"]' },
+    { label: 'Modelo', selector: 'input[name="modelo"]' },
+    { label: 'Año', selector: 'input[name="anio"]' },
+    { label: 'Nombre público', selector: 'input[name="nombre_publico"]' },
+    { label: 'Categoría', selector: 'select[name="id_categoria"]' },
+    { label: 'Número de serie', selector: 'input[name="numero_serie"]' },
+
+    { label: 'Kilometraje', selector: 'input[name="kilometraje"]' },
+
+    // Propietario
+    { label: 'Propietario', selector: '#propietarioInput' },
+    { label: 'Carta factura', selector: 'input[name="carta_factura"]', type:'file' },
+
+    // Seguro
+    { label: 'Aseguradora', selector: 'input[name="aseguradora"]' },
+    { label: 'Número de póliza', selector: 'input[name="no_poliza"]' },
+    { label: 'Inicio de vigencia (póliza)', selector: 'input[name="inicio_vigencia_poliza"]' },
+    { label: 'Fin de vigencia (póliza)', selector: 'input[name="fin_vigencia_poliza"]' },
+
+    // Tarjeta
+    { label: 'Folio tarjeta', selector: 'input[name="folio_tarjeta"]' },
+    { label: 'Movimiento', selector: '#movimientoInput' },
+    { label: 'Fecha de expedición', selector: 'input[name="fecha_expedicion_tarjeta"]' },
+    { label: 'Tarjeta de circulación (archivo)', selector: 'input[name="archivo_verificacion"]', type:'file' },
+  ];
+
+  for (const r of rules) {
+    if (r.type === 'file') {
+      const file = getFieldValue(form, r.selector);
+      if (!file) faltantes.push(r.label);
+    } else {
+      const val = getFieldValue(form, r.selector);
+      if (valorVacio(val)) faltantes.push(r.label);
+    }
+  }
+
+  return faltantes;
+}
+
+function mostrarFaltantes(faltantes){
+  const lista = faltantes.map(x => `• ${x}`).join('<br>');
+
+  const html = `
+    <div style="text-align:left">
+      <b>Falta completar:</b><br><br>
+      ${lista}
+    </div>
+  `;
+
+  if (window.alertify) {
+    alertify.alert('Campos obligatorios', html);
+  } else {
+    alert('Falta completar:\n\n' + faltantes.map(x => '- ' + x).join('\n'));
+  }
+}
+
+/* ==========================================================
+   🧾 MODAL EDITAR
+========================================================== */
 const modal = document.getElementById('editModal');
 const closeModal = document.getElementById('closeModal');
 const cancelModal = document.getElementById('cancelModal');
@@ -337,7 +403,9 @@ document.querySelectorAll('.editBtn').forEach(btn => {
 });
 closeModal.onclick = cancelModal.onclick = () => modal.classList.remove('active');
 
-// === MODAL AGREGAR AUTO ===
+/* ==========================================================
+   🧾 MODAL AGREGAR
+========================================================== */
 const addModal = document.getElementById('addModal');
 const btnAddAuto = document.getElementById('btnAddAuto');
 const closeAdd = document.getElementById('closeAdd');
@@ -345,17 +413,14 @@ const cancelAdd = document.getElementById('cancelAdd');
 btnAddAuto.onclick = () => addModal.classList.add('active');
 closeAdd.onclick = cancelAdd.onclick = () => addModal.classList.remove('active');
 
-
-// =====================================
-// ✅ SELECT + INPUT PARA TIPO DE ACEITE
-// =====================================
+/* ==========================================================
+   SELECTS: ACEITE / PROPIETARIO / MOVIMIENTO (OTRO...)
+========================================================== */
 const aceiteSelect = document.getElementById('aceiteSelect');
 const aceiteInput  = document.getElementById('aceiteInput');
-
 if (aceiteSelect && aceiteInput) {
   aceiteSelect.addEventListener('change', () => {
     const val = aceiteSelect.value;
-
     if (val === 'otro') {
       aceiteInput.style.display = 'block';
       aceiteInput.value = '';
@@ -370,23 +435,18 @@ if (aceiteSelect && aceiteInput) {
   });
 }
 
-// =====================================
-// ✅ PROPIETARIO (select + input)
-// =====================================
 const propietarioSelect = document.getElementById('propietarioSelect');
 const propietarioInput  = document.getElementById('propietarioInput');
-
 if (propietarioSelect && propietarioInput) {
   propietarioSelect.addEventListener('change', () => {
     const val = propietarioSelect.value;
-
     if (val === 'otro') {
       propietarioInput.style.display = 'block';
       propietarioInput.value = '';
       propietarioInput.focus();
     } else if (val) {
       propietarioInput.style.display = 'none';
-      propietarioInput.value = val; // se envía en name="propietario"
+      propietarioInput.value = val; // se envía
     } else {
       propietarioInput.style.display = 'none';
       propietarioInput.value = '';
@@ -394,23 +454,18 @@ if (propietarioSelect && propietarioInput) {
   });
 }
 
-// =====================================
-// ✅ Movimiento tarjeta (Alta/Baja/Otro)
-// =====================================
 const movimientoSelect = document.getElementById('movimientoSelect');
 const movimientoInput  = document.getElementById('movimientoInput');
-
 if (movimientoSelect && movimientoInput) {
   movimientoSelect.addEventListener('change', () => {
     const val = movimientoSelect.value;
-
     if (val === 'otro') {
       movimientoInput.style.display = 'block';
       movimientoInput.value = '';
       movimientoInput.focus();
     } else if (val) {
       movimientoInput.style.display = 'none';
-      movimientoInput.value = val; // se envía en name="movimiento_tarjeta"
+      movimientoInput.value = val; // se envía
     } else {
       movimientoInput.style.display = 'none';
       movimientoInput.value = '';
@@ -418,11 +473,8 @@ if (movimientoSelect && movimientoInput) {
   });
 }
 
-
 /* ==========================================================
-   📦 FUNCIÓN PARA COMPRIMIR IMÁGENES (Flotilla)
-   - Compatible iOS / Safari
-   - SOLO IMÁGENES, NO PDF
+   📦 FUNCIÓN PARA COMPRIMIR IMÁGENES (SOLO IMÁGENES)
 ========================================================== */
 async function comprimirImagen(file, maxWidth = 1200, quality = 0.7) {
   if (!file || !file.type || !file.type.startsWith("image/")) return file;
@@ -487,13 +539,20 @@ async function comprimirImagen(file, maxWidth = 1200, quality = 0.7) {
 }
 
 /* ==========================================================
-   🧾 SUBMIT DEL FORMULARIO "AGREGAR AUTO" CON COMPRESIÓN
+   🧾 SUBMIT FORM AGREGAR AUTO (VALIDA + COMPRIME + FETCH)
 ========================================================== */
 const formAddAuto = document.getElementById('formAddAuto');
 
 if (formAddAuto) {
   formAddAuto.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    // ✅ VALIDAR ANTES DE ENVIAR
+    const faltantes = validarFormVehiculo(formAddAuto);
+    if (faltantes.length) {
+      mostrarFaltantes(faltantes);
+      return; // ⛔ no manda el fetch
+    }
 
     const submitBtn = formAddAuto.querySelector('button[type="submit"]');
     const originalText = submitBtn ? submitBtn.textContent : '';
@@ -509,51 +568,28 @@ if (formAddAuto) {
     const inputPoliza  = formAddAuto.querySelector('input[name="archivo_poliza"]');
     const inputVerifTC = formAddAuto.querySelector('input[name="archivo_verificacion_tecnica"]');
     const inputTarjeta = formAddAuto.querySelector('input[name="archivo_verificacion"]');
+    const inputCarta   = formAddAuto.querySelector('input[name="carta_factura"]');
 
-    // 📄 Póliza
-    if (inputPoliza && inputPoliza.files && inputPoliza.files[0]) {
-      const original = inputPoliza.files[0];
+    // Helper: comprimir y reinsertar
+    async function comprimirYReinsertar(input, fieldName, defaultName){
+      if (!input || !input.files || !input.files[0]) return;
+
+      const original = input.files[0];
       let archivoFinal = original;
 
       if (original.type.startsWith("image/") && original.size > 1024 * 1024) {
-        if (window.alertify) alertify.message("📸 Póliza original: " + (original.size / 1024).toFixed(1) + " KB");
         archivoFinal = await comprimirImagen(original);
-        if (window.alertify) alertify.message("✅ Póliza comprimida: " + (archivoFinal.size / 1024).toFixed(1) + " KB");
       }
 
-      formData.delete("archivo_poliza");
-      formData.append("archivo_poliza", archivoFinal, archivoFinal.name || original.name || "poliza.jpg");
+      formData.delete(fieldName);
+      formData.append(fieldName, archivoFinal, archivoFinal.name || original.name || defaultName);
     }
 
-    // 📄 Verificación técnica
-    if (inputVerifTC && inputVerifTC.files && inputVerifTC.files[0]) {
-      const original = inputVerifTC.files[0];
-      let archivoFinal = original;
-
-      if (original.type.startsWith("image/") && original.size > 1024 * 1024) {
-        if (window.alertify) alertify.message("📸 Verificación (técnica) original: " + (original.size / 1024).toFixed(1) + " KB");
-        archivoFinal = await comprimirImagen(original);
-        if (window.alertify) alertify.message("✅ Verificación (técnica) comprimida: " + (archivoFinal.size / 1024).toFixed(1) + " KB");
-      }
-
-      formData.delete("archivo_verificacion_tecnica");
-      formData.append("archivo_verificacion_tecnica", archivoFinal, archivoFinal.name || original.name || "verificacion_tecnica.jpg");
-    }
-
-    // 🪪 Tarjeta de circulación (archivo_verificacion)
-    if (inputTarjeta && inputTarjeta.files && inputTarjeta.files[0]) {
-      const original = inputTarjeta.files[0];
-      let archivoFinal = original;
-
-      if (original.type.startsWith("image/") && original.size > 1024 * 1024) {
-        if (window.alertify) alertify.message("📸 Tarjeta de circulación original: " + (original.size / 1024).toFixed(1) + " KB");
-        archivoFinal = await comprimirImagen(original);
-        if (window.alertify) alertify.message("✅ Tarjeta de circulación comprimida: " + (archivoFinal.size / 1024).toFixed(1) + " KB");
-      }
-
-      formData.delete("archivo_verificacion");
-      formData.append("archivo_verificacion", archivoFinal, archivoFinal.name || original.name || "tarjeta_circulacion.jpg");
-    }
+    // Comprimir imágenes si aplica
+    await comprimirYReinsertar(inputPoliza,  "archivo_poliza",               "poliza.jpg");
+    await comprimirYReinsertar(inputVerifTC, "archivo_verificacion_tecnica", "verificacion_tecnica.jpg");
+    await comprimirYReinsertar(inputTarjeta, "archivo_verificacion",         "tarjeta_circulacion.jpg");
+    await comprimirYReinsertar(inputCarta,   "carta_factura",                "carta_factura.jpg");
 
     try {
       const tokenMeta = document.querySelector('meta[name="csrf-token"]');
@@ -619,8 +655,9 @@ if (formAddAuto) {
   });
 }
 
-
-// === Confirmación de eliminación ===
+/* ==========================================================
+   ✅ Confirmación de eliminación
+========================================================== */
 (function () {
   const confirmModal = document.getElementById('confirmDeleteModal');
   const btnCancel = document.getElementById('cancelDelete');
@@ -658,8 +695,9 @@ if (formAddAuto) {
   });
 })();
 
-
-// === SWIPE PARA ELIMINAR ===
+/* ==========================================================
+   👆 SWIPE PARA ELIMINAR
+========================================================== */
 let startX = 0;
 
 document.querySelectorAll('#tblFleet tbody tr').forEach(tr => {
@@ -681,7 +719,6 @@ document.querySelectorAll('#tblFleet tbody tr').forEach(tr => {
     }
   };
 
-  // Desktop
   tr.addEventListener('mousedown', e => startX = e.clientX);
   tr.addEventListener('mousemove', e => {
     if (e.buttons === 1) {
@@ -690,7 +727,6 @@ document.querySelectorAll('#tblFleet tbody tr').forEach(tr => {
     }
   });
 
-  // Mobile
   tr.addEventListener('touchstart', e => startX = e.touches[0].clientX);
   tr.addEventListener('touchmove', e => {
     const diff = e.touches[0].clientX - startX;
@@ -710,7 +746,9 @@ document.addEventListener('click', e => {
   }
 });
 
-// === 🔎 FILTRO DE BÚSQUEDA ===
+/* ==========================================================
+   🔎 FILTRO DE BÚSQUEDA
+========================================================== */
 document.getElementById('filtroVehiculo').addEventListener('keyup', function () {
   const filtro = this.value.toLowerCase();
   const filas = document.querySelectorAll('#tblFleet tbody tr');

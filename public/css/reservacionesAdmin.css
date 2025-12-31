@@ -1,810 +1,693 @@
-/* ===========================
-   🎨 Tokens de diseño base
-=========================== */
-:root {
-  --brand: #FF1E2D;
-  --brand-2: #D6121F;
-  --brand-3: #ff4956;
-  --ink: #101828;
-  --muted: #667085;
-  --muted-2: #475467;
-  --stroke: #EAECF0;
-  --bg: #F3F5F9;
-  --paper: #fff;
-  --ok: #027A48;
+:root{
+  --brand:#b22222;
+  --brand-dark:#8b1d1a;
+  --ink:#0f172a;
+  --muted:#6b7280;
+  --soft:#f6f7fb;
+  --paper:#fff;
+  --shadow:0 25px 60px rgba(0,0,0,.14);
+  --stroke:#e5e7eb;
+  --ok:#16a34a;
 
-  --radius-lg: 18px;
-  --radius-md: 14px;
-  --radius-sm: 10px;
-
-  --shadow-xs: 0 1px 3px rgba(16,24,40,.06);
-  --shadow-sm: 0 4px 10px rgba(16,24,40,.08);
-  --shadow-md: 0 10px 28px rgba(16,24,40,.10);
-
-  --ring: 0 0 0 6px #FFECEF;
+  /* extra */
+  --card-gap:22px;
+  --card-radius:18px;
+  --card-shadow:0 22px 55px rgba(15,23,42,.12);
+  --card-border:rgba(15,23,42,.08);
 }
 
-* { box-sizing: border-box; }
-html, body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: "Cabin", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-}
-body { font-size: 15px; line-height: 1.5; }
-
-/* Scrollbar */
-*::-webkit-scrollbar { width: 10px; height: 10px; }
-*::-webkit-scrollbar-thumb { background: #dfe3ea; border-radius: 999px; }
-
-/* ===========================
-   🧭 Estructura principal
-=========================== */
-.wrap {
-  display: grid;
-  grid-template-columns: 270px 1fr;
-  min-height: 100vh;
-}
-@media (max-width: 992px) {
-  .wrap { grid-template-columns: 1fr; }
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:'Poppins',system-ui,Arial,sans-serif;
+  color:var(--ink);
+  background:var(--soft);
 }
 
-.main {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 22px 24px 40px;
-}
-.top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-.h1 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 900;
-  letter-spacing: .2px;
+/* ✅ más “aire” general + full width agradable */
+.wrap{
+  width:100%;
+  max-width:1100px;
+  margin:42px auto;
+  padding:0 18px 70px;
 }
 
-/* ===========================
-   🧩 Layout de pasos + resumen
-=========================== */
-.grid {
-  display: grid;
-  grid-template-columns: minmax(640px, 1fr) 380px;
-  gap: 32px;
-  align-items: start;
-  justify-content: center;
+.main{ display:block; }
+
+.top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
 }
-.steps {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+.h1{ margin:0; font-size:28px; font-weight:900; letter-spacing:.2px; }
+.top-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+/* ===== UI atoms ===== */
+label{
+  display:block;
+  font-size:12px;
+  font-weight:900;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.35px;
+  margin-bottom:6px;
 }
-.grid > aside {
-  min-width: 380px;
-  position: sticky;
-  top: 12px;
-  align-self: start;
+.input{
+  width:100%;
+  padding:12px 14px;
+  border:1px solid #d1d5db;
+  border-radius:12px;
+  background:#fff;
+  outline:none;
+  transition:border .15s, box-shadow .15s, transform .08s;
+}
+.input:focus{
+  border-color:var(--brand);
+  box-shadow:0 0 0 4px rgba(178,34,34,.12);
+}
+.input-lg{
+  padding:14px 16px;           /* ✅ inputs + calendarios más grandes */
+  font-size:15px;
+  border-radius:14px;
 }
 
-@media (max-width: 1200px) {
-  .grid {
-    grid-template-columns: 1fr;
+.small{ font-size:12px; }
+.muted{ color:var(--muted); }
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:10px 14px;
+  border-radius:12px;
+  border:1px solid transparent;
+  cursor:pointer;
+  font-weight:900;
+  background:#e5e7eb;
+  color:#111827;
+  transition:transform .12s, filter .12s, box-shadow .12s;
+}
+.btn:hover{ transform:translateY(-1px); filter:brightness(.98); box-shadow:0 10px 18px rgba(0,0,0,.08); }
+
+.btn.primary{
+  background:var(--brand);
+  border-color:#a31818;
+  color:#fff;
+}
+.btn.gray{
+  background:#f1f5f9;
+  border-color:#e5e7eb;
+  color:#0f172a;
+}
+.btn.ghost{
+  background:#ffffff80;
+  border:1px solid var(--stroke);
+  backdrop-filter: blur(8px);
+}
+.btn-block{ width:100%; }
+
+/* ✅ botón resumen “pro” */
+.btn-resumen{
+  position:relative;
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
+  color:#fff;
+  border:1px solid rgba(255,255,255,.18);
+  box-shadow:0 18px 40px rgba(178,34,34,.26);
+  padding:11px 16px;
+}
+.btn-resumen:hover{
+  transform:translateY(-2px);
+  box-shadow:0 22px 55px rgba(178,34,34,.32);
+}
+.pulse-dot{
+  width:10px;height:10px;
+  border-radius:999px;
+  background:#fff;
+  box-shadow:0 0 0 0 rgba(255,255,255,.55);
+  animation:pulse 1.4s infinite;
+}
+@keyframes pulse{
+  0%{ box-shadow:0 0 0 0 rgba(255,255,255,.55); opacity:1; }
+  100%{ box-shadow:0 0 0 14px rgba(255,255,255,0); opacity:.9; }
+}
+
+/* ===== Cards stack ===== */
+.stack-card{
+  background:rgba(255,255,255,.86);
+  border:1px solid var(--card-border);
+  border-radius:var(--card-radius);
+  box-shadow:var(--card-shadow);
+  overflow:hidden;
+  margin-bottom:var(--card-gap);        /* ✅ separación entre cards */
+}
+
+/* ✅ Header de card: rojo sólido (como botones) */
+.stack-head{
+  padding:14px 16px;
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark)); /* ✅ rojo elegante */
+  border-bottom:1px solid rgb(227, 0, 0);
+}
+.stack-title{
+  font-weight:900;
+  font-size:16px;
+  color:#fff;                           /* ✅ texto blanco */
+  letter-spacing:.2px;
+}
+.stack-sub{
+  margin-top:3px;
+  color:rgba(255,255,255,.88);          /* ✅ sub blanco suave */
+  font-size:13px;
+  font-weight:600;
+}
+
+.stack-body{ padding:16px; }
+
+.form-2{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:12px;
+}
+@media (max-width:820px){
+  .form-2{ grid-template-columns:1fr; }
+}
+
+/* days pill */
+.days-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:12px;
+}
+.days-pill{
+  display:inline-flex;
+  gap:8px;
+  align-items:center;
+  padding:10px 12px;
+  border-radius:999px;
+  border:1px solid rgba(34,197,94,.25);
+  background:rgba(34,197,94,.10);
+  color:#065f46;
+  font-weight:900;
+}
+.hint{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px dashed var(--stroke);
+  background:#fff;
+  color:#374151;
+  font-size:13px;
+}
+
+/* ===== Picker row ===== */
+.picker-row{
+  display:flex;
+  gap:10px;
+  align-items:stretch;
+}
+.picker-selected{
+  flex:1;
+  background:#fff;
+  border:1px solid var(--stroke);
+  border-radius:14px;
+  padding:10px 12px;
+  min-height:46px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.picker-label{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.35px;
+  color:var(--muted);
+  font-weight:900;
+}
+.picker-value{
+  font-weight:900;
+  margin-top:2px;
+}
+.picker-sub{
+  font-size:12px;
+  color:#475569;
+  margin-top:2px;
+}
+@media (max-width:720px){
+  .picker-row{ flex-direction:column; }
+}
+
+/* Mini preview category */
+.mini-preview{
+  margin-top:12px;
+  border:1px solid var(--stroke);
+  border-radius:16px;
+  background:#fff;
+  overflow:hidden;
+}
+.mini-right{ padding:14px; }
+.mini-title{ font-weight:900; font-size:16px; }
+.mini-sub{ margin-top:4px; color:#475569; font-size:13px; }
+.mini-price{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:12px;
+}
+.price-big{
+  font-size:18px;
+  font-weight:900;
+}
+.price-big span{ font-size:12px; font-weight:900; color:#475569; }
+@media (max-width:560px){
+  .mini-price{ grid-template-columns:1fr; }
+}
+
+/* Actions */
+.acciones.single{
+  margin-top:12px;
+  display:flex;
+  justify-content:flex-end;
+}
+
+/* ===== MODALS ===== */
+.pop{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.55);
+  z-index:9999;
+  padding:18px;
+}
+.box{
+  background:#fff;
+  border-radius:18px;
+  border:1px solid var(--stroke);
+  box-shadow:0 30px 80px rgba(0,0,0,.22);
+  width:min(980px, 96vw);
+  max-height:86vh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.modal-box{ width:min(980px,96vw); }
+.resumen-box{ width:min(720px,96vw); }
+
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px 14px;
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark)); /* ✅ rojo sólido */
+  color:#fff;
+}
+.modal-title{ font-weight:900; letter-spacing:.2px; }
+
+.modal-body{
+  padding:14px;
+  overflow:auto;
+  background:#fff;
+}
+.modal-foot{
+  padding:12px 14px;
+  border-top:1px solid var(--stroke);
+  background:#fff;
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+}
+.foot-split{ justify-content:space-between; }
+
+/* Cards grid inside modals */
+.grid-cards{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:12px;
+}
+@media (max-width:840px){
+  .grid-cards{ grid-template-columns:1fr; }
+}
+
+.loading{
+  width:100%;
+  text-align:center;
+  padding:16px;
+  color:#475569;
+  font-weight:900;
+  border:1px dashed var(--stroke);
+  border-radius:14px;
+  background:#f9fafb;
+}
+
+/* Pick card */
+.card-pick{
+  display:grid;
+  grid-template-columns:1.3fr .7fr;
+  gap:12px;
+  background:#fff;
+  border:1px solid var(--stroke);
+  border-radius:16px;
+  padding:14px;
+  align-items:center;
+}
+.cp-title{ font-weight:900; font-size:16px; }
+.cp-sub{ color:#475569; font-size:13px; margin-top:4px; }
+.cp-meta{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+
+.pill{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  background:#f1f5f9;
+  border:1px solid #e5e7eb;
+  color:#0f172a;
+}
+.pill-ok{
+  background:rgba(34,197,94,.12);
+  border-color:rgba(34,197,94,.25);
+  color:#065f46;
+}
+.cp-right{ display:flex; flex-direction:column; gap:10px; align-items:stretch; }
+.cp-price{ text-align:right; }
+.cp-price .price-big{ font-size:18px; }
+
+/* ✅ Categorías con imagen horizontal */
+.cat-wide{
+  grid-template-columns:220px 1.2fr .7fr;
+}
+.cp-img{
+  height:120px;
+  border-radius:14px;
+  overflow:hidden;
+  border:1px solid var(--stroke);
+  background:#f1f5f9;
+}
+.cp-img img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+@media (max-width:840px){
+  .cat-wide{
+    grid-template-columns:1fr;
   }
-  .grid > aside {
-    position: static;
-    min-width: 100%;
-    margin-top: 18px;
-  }
+  .cp-img{ height:160px; }
+  .cp-price{ text-align:left; }
 }
 
-/* ===========================
-   🪜 Pasos (formulario)
-=========================== */
-.step {
-  background: var(--paper);
-  border: 1px solid var(--stroke);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
+/* Addon card (qty) */
+.card-addon{
+  display:grid;
+  grid-template-columns:1.3fr .7fr;
+  gap:12px;
+  background:#fff;
+  border:1px solid var(--stroke);
+  border-radius:16px;
+  padding:14px;
+  align-items:center;
 }
-.step header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: linear-gradient(90deg, var(--brand), var(--brand-2));
-  color: #fff;
-  padding: 14px 16px;
+.ad-right{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:stretch;
 }
-.badge {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #fff;
-  color: var(--brand);
-  display: grid;
-  place-items: center;
-  font-weight: 900;
-  box-shadow: inset 0 0 0 2px #ffd3d8;
+.qty-row{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
 }
-.step h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 900;
+.qty-btn{
+  width:38px;
+  height:38px;
+  border-radius:999px;
+  border:1px solid var(--stroke);
+  background:#f8fafc;
+  font-weight:900;
+  font-size:18px;
+  cursor:pointer;
 }
-.body {
-  padding: 18px 20px;
-  display: grid;
-  gap: 14px;
+.qty{ min-width:22px; text-align:center; font-weight:900; }
+
+/* Resumen */
+.resumen-card{
+  background:#fff;
+  border:1px solid var(--stroke);
+  border-radius:16px;
+  padding:14px;
+}
+.res-row{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  padding:8px 0;
+  border-bottom:1px dashed #eef2f7;
+  font-weight:800;
+}
+.res-row:last-child{ border-bottom:none; }
+.res-row.total{
+  border-top:2px solid #111827;
+  margin-top:8px;
+  padding-top:12px;
+  font-size:18px;
+  font-weight:900;
+}
+.divider{
+  height:1px;
+  background:var(--stroke);
+  margin:10px 0;
 }
 
-/* Campos */
-.form-2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+/* ✅ Protección $0 como botón chiquito */
+.prot-free-row{
+  grid-column:1/-1;
+  display:flex;
+  justify-content:center;
 }
-@media (max-width: 720px) {
-  .form-2 { grid-template-columns: 1fr; }
+.prot-free-btn{
+  background:#fff;
+  border:1px dashed #cbd5e1;
+  color:#334155;
+  padding:10px 14px;
+  border-radius:12px;
+  font-weight:900;
+  cursor:pointer;
 }
-label {
-  font-size: 12.5px;
-  font-weight: 800;
-  color: #344054;
-}
-.input, select, .fake {
-  height: 44px;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1.25px solid var(--stroke);
-  border-radius: 12px;
-  background: #fff;
-  font-size: 14px;
-}
-.input:focus, select:focus, .fake:focus {
-  outline: none;
-  border-color: #FFB4BD;
-  box-shadow: var(--ring);
-}
-.fake {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-}
-.fake .icon { opacity: .6; }
-
-/* ===========================
-   🚗 Sección vehículo paso 1
-=========================== */
-.vehiculo-seleccion {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-.vehiculo-seleccion .input {
-  flex: 1 1 240px;
+.prot-free-btn:hover{
+  border-color:#94a3b8;
+  box-shadow:0 10px 22px rgba(15,23,42,.10);
 }
 
-/* ===========================
-   🧭 Navegación entre pasos
-=========================== */
-.acciones {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  flex-wrap: wrap;
+body.no-scroll{ overflow:hidden; }
+/* ✅ Date/Time más pro */
+input[type="date"].input-lg,
+input[type="time"].input-lg{
+  height:54px;
+  font-size:16px;
+  letter-spacing:.2px;
 }
 
-/* ===========================
-   ✉️ Sección compartir paso 3
-=========================== */
-.compartir {
-  margin-top: 14px;
-}
-.iconbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.icon-btn {
-  border: none;
-  background: #fff;
-  border-radius: 12px;
-  padding: 6px;
-  box-shadow: var(--shadow-xs);
-  cursor: pointer;
-  transition: transform .15s ease;
-}
-.icon-btn:hover { transform: scale(1.05); }
-.icon-btn img {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
+input[type="date"].input-lg::-webkit-calendar-picker-indicator,
+input[type="time"].input-lg::-webkit-calendar-picker-indicator{
+  cursor:pointer;
+  opacity:.85;
+  transform:scale(1.15);
 }
 
-/* ===========================
-   🧾 Resumen de cotización
-=========================== */
-.card {
-  width: 100%;
-  border-radius: 16px;
-  border: 1px solid var(--stroke);
-  box-shadow: 0 6px 16px rgba(16,24,40,.06);
-  background: #fff;
-  overflow: hidden;
+input[type="date"].input-lg{
+  padding-right:44px;
+  background-image: linear-gradient(transparent,transparent);
 }
-.card .head {
-  background: linear-gradient(90deg, var(--brand), var(--brand-2));
-  color: #fff;
-  padding: 14px 16px;
-  font-weight: 900;
-  border-radius: 16px 16px 0 0;
-}
-.card .cnt {
-  padding: 12px 14px;
-}
-.row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 9px 0;
-  border-bottom: 1px dashed #EDF0F5;
-  gap: 10px;
-}
-.row:last-child { border-bottom: none; }
-.row div:first-child { color: #475467; font-weight: 700; }
-.row div:last-child { font-weight: 800; }
-
-/* Total destacado */
-.total {
-  font-size: 26px;
-  font-weight: 900;
-  color: var(--brand);
-  line-height: 1.15;
-  text-shadow: 0 1px 0 #fff;
+input[type="time"].input-lg{
+  padding-right:44px;
+  background-image: linear-gradient(transparent,transparent);
 }
 
-/* Imagen del vehículo */
-#vehImageWrap {
-  text-align: center;
-  margin-bottom: 14px;
-  background: #F9FAFB;
-  padding: 10px;
-  border-radius: 14px;
-  border: 1px solid var(--stroke);
-  box-shadow: inset 0 0 4px rgba(0,0,0,.03);
+/* =========================================
+   ✅ FLATPICKR (CALENDARIO + HORA) — MODAL PRO
+========================================= */
+
+/* Backdrop (tu JS crea .fp-backdrop) */
+.fp-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .15s ease;
+  z-index:9998;
 }
-#vehImage {
-  width: 100%;
-  max-width: 260px;
-  height: auto;
-  border-radius: 12px;
-  object-fit: cover;
-  box-shadow: 0 3px 8px rgba(0,0,0,.08);
-}
-#vehName {
-  font-weight: 800;
-  font-size: 15px;
-  margin-top: 6px;
-  color: var(--muted-2);
+.fp-backdrop.is-open{
+  opacity:1;
+  pointer-events:auto;
 }
 
-/* ===========================
-   🔘 Botones generales
-=========================== */
-.btn {
-  border: none;
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
-}
-.primary {
-  background: var(--brand);
-  color: #fff;
-  box-shadow: var(--shadow-sm);
-}
-.primary:hover {
-  background: var(--brand-3);
-  transform: translateY(-1px);
-}
-.gray {
-  background: #F8FAFC;
-  border: 1px solid var(--stroke);
-  color: var(--muted-2);
-}
-.ghost {
-  background: #fff;
-  border: 1px solid var(--stroke);
-  color: var(--brand);
+/* Calendar container como modal centrado */
+.flatpickr-calendar{
+  border:1px solid var(--stroke) !important;
+  border-radius:18px !important;
+  box-shadow:0 30px 80px rgba(0,0,0,.22) !important;
+  overflow:hidden !important;
+  z-index:9999 !important;
 }
 
-/* ===========================
-   💬 Modales / Popups
-=========================== */
-.pop {
-  position: fixed;
-  inset: 0;
-  display: none;
-  place-items: center;
-  background: rgba(16,24,40,.32);
-  backdrop-filter: blur(2px);
-  z-index: 1000;
-  padding: 16px;
-}
-.pop.show { display: grid; }
-.pop .box {
-  background: #fff;
-  border: 1px solid var(--stroke);
-  border-radius: 16px;
-  box-shadow: var(--shadow-md);
-  max-height: 90vh;
-  overflow: hidden;
-}
-.vbox {
-  width: min(780px, 94vw);
-  display: flex;
-  flex-direction: column;
-}
-.vbox header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: var(--brand);
-  color: #fff;
-  padding: 10px 16px;
-  font-weight: 800;
-}
-.vbox #vehList {
-  overflow-y: auto;
-  max-height: 70vh;
-  padding: 14px;
+/* ✅ lo centramos como modal cuando está abierto */
+.flatpickr-calendar.open,
+.flatpickr-calendar.inline{
+  position:fixed !important;
+  top:50% !important;
+  left:50% !important;
+  transform:translate(-50%, -50%) !important;
 }
 
-/* ===========================
-   📱 Responsive ex
-/* =====================================================
-   📅 CALENDARIO (DatePicker Moderno)
-===================================================== */
-#dpGrid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-  padding: 12px;
-  background: #fff;
+/* Header rojo (mes/año) */
+.flatpickr-months{
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark)) !important;
+  padding:10px 10px !important;
+}
+.flatpickr-months .flatpickr-month{
+  color:#fff !important;
+}
+.flatpickr-current-month{
+  font-size:18px !important;
+  font-weight:900 !important;
+}
+.flatpickr-current-month .cur-month,
+.flatpickr-current-month .numInputWrapper,
+.flatpickr-current-month .numInput.cur-year{
+  color:#fff !important;
+  font-weight:900 !important;
 }
 
-#dpGrid .dow {
-  font-weight: 800;
-  font-size: 13px;
-  color: #98A2B3;
-  text-align: center;
+/* Flechas grandes negras como tu screenshot */
+.flatpickr-prev-month, .flatpickr-next-month{
+  padding:10px !important;
+}
+.flatpickr-prev-month svg, .flatpickr-next-month svg{
+  width:22px !important;
+  height:22px !important;
+  fill:#111827 !important;
+}
+.flatpickr-prev-month:hover svg,
+.flatpickr-next-month:hover svg{
+  fill:#000 !important;
 }
 
-#dpGrid .cell {
-  padding: 9px 0;
-  border-radius: 10px;
-  text-align: center;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all .15s ease;
-  border: 1px solid transparent;
-  color: #344054;
+/* Días de la semana */
+.flatpickr-weekdays{
+  background:#fff !important;
+  border-bottom:1px solid var(--stroke) !important;
+}
+.flatpickr-weekday{
+  color:#6b7280 !important;
+  font-weight:900 !important;
+  font-size:12px !important;
 }
 
-#dpGrid .cell:hover {
-  background: #FFF5F6;
-  border-color: #FFD5D9;
+/* Celdas día */
+.flatpickr-day{
+  border-radius:12px !important;
+  font-weight:800 !important;
+  color:#111827 !important;
+}
+.flatpickr-day:hover{
+  background:rgba(178,34,34,.10) !important;
+  border-color:rgba(178,34,34,.10) !important;
 }
 
-.cell.range-start,
-.cell.range-end {
-  background: var(--brand);
-  color: #fff;
-  font-weight: 900;
+/* Selección */
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange{
+  background:var(--brand) !important;
+  border-color:var(--brand) !important;
+  color:#fff !important;
+  box-shadow:0 10px 22px rgba(178,34,34,.25) !important;
 }
 
-.cell.in-range {
-  background: #FFECEE;
-  color: var(--brand-2);
+/* Rango */
+.flatpickr-day.inRange{
+  background:rgba(178,34,34,.12) !important;
+  border-color:rgba(178,34,34,.12) !important;
 }
 
-/* =====================================================
-   🕒 SELECTOR DE HORA (TimePicker)
-===================================================== */
-#tpSelect {
-  width: 100%;
-  height: 44px;
-  border-radius: 10px;
-  border: 1.5px solid var(--stroke);
-  font-size: 15px;
-  padding: 6px 10px;
-  transition: 0.2s ease;
+/* Días deshabilitados / otros meses */
+.flatpickr-day.disabled,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay{
+  color:#cbd5e1 !important;
 }
 
-#tpSelect:focus {
-  outline: none;
-  border-color: #FFB4BD;
-  box-shadow: var(--ring);
+/* ✅ Footer acciones (tu JS agrega .fp-actions) */
+.fp-actions{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  border-top:1px solid var(--stroke);
+  background:#fff;
+}
+.fp-actions button{
+  border:1px solid var(--stroke);
+  background:#fff;
+  padding:10px 14px;
+  border-radius:12px;
+  font-weight:900;
+  cursor:pointer;
+}
+.fp-actions .fp-today{
+  color:#111827;
+}
+.fp-actions .fp-clear{
+  color:#dc2626;
+  border-color:rgba(220,38,38,.25);
+}
+.fp-actions .fp-label{
+  color:#334155;
+  background:#f8fafc;
+}
+.fp-actions button:hover{
+  box-shadow:0 10px 22px rgba(15,23,42,.10);
+  transform:translateY(-1px);
 }
 
-.tp-q {
-  background: #F8FAFC;
-  border: 1px solid var(--stroke);
-  border-radius: 8px;
-  padding: 6px 10px;
-  cursor: pointer;
-  transition: all .15s ease;
-  display: inline-block;
+/* =========================================
+   ✅ TIME PICKER (HORA) — PRO
+========================================= */
+.flatpickr-time{
+  border-top:1px solid var(--stroke) !important;
+}
+.flatpickr-time .numInputWrapper{
+  border-radius:14px !important;
+}
+.flatpickr-time input{
+  font-weight:900 !important;
+  font-size:16px !important;
+}
+.flatpickr-time .flatpickr-am-pm{
+  font-weight:900 !important;
 }
 
-.tp-q:hover {
-  background: var(--brand);
-  color: #fff;
-  border-color: var(--brand);
+/* Inputs (se ven grandes y pro) */
+input.flatpickr-input.input-lg{
+  height:54px;
+  font-size:16px;
+  letter-spacing:.2px;
 }
 
-.tp-head button.active {
-  background: var(--brand);
-  color: #fff !important;
-  border-color: var(--brand);
-}
-
-/* =====================================================
-   🌟 MODALES (Apariencia y Animación)
-===================================================== */
-.pop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-  backdrop-filter: blur(2px);
-}
-
-.pop.show {
-  display: flex;
-  animation: fadeIn 0.25s ease-out forwards;
-}
-
-.pop .box {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-  transform: scale(0.95);
-  opacity: 0;
-  animation: popIn 0.25s ease-out forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes popIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-/* =====================================================
-   🧾 ENCABEZADOS DE MODALES
-===================================================== */
-.dp-head,
-.tp-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  background: var(--brand);
-  color: #fff;
-  border-radius: 14px 14px 0 0;
-}
-
-.dp-title,
-.tp-title {
-  font-weight: 900;
-  font-size: 16px;
-  text-transform: capitalize;
-}
-
-.dp-head .btn,
-.tp-head .btn {
-  background: #fff;
-  color: var(--brand);
-  border: none;
-  padding: 6px 10px;
-  font-weight: 700;
-  border-radius: 8px;
-  transition: 0.2s;
-}
-
-.dp-head .btn:hover,
-.tp-head .btn:hover {
-  background: var(--brand-2);
-  color: #fff;
-}
-
-/* =====================================================
-   ⚡ PIE DE MODALES
-===================================================== */
-.pop footer {
-  display: flex;
-  justify-content: space-around;
-  padding: 10px;
-  border-top: 1px solid #eee;
-}
-
-.pop footer .btn {
-  min-width: 90px;
-  border-radius: 8px;
-}
-
-/* =====================================================
-   🧊 DETALLES ADICIONALES
-===================================================== */
-.tp-wrap {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.tp-input {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.tp-input label {
-  font-weight: 700;
-  color: #344054;
-  min-width: 90px;
-}
-
-.tp-quick {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  font-size: 14px;
-}
-
-.tpbox {
-  width: min(420px, 96vw);
-}
-
-/* =====================================================
-   💫 ANIMACIÓN DE CIERRE SUAVE (opcional)
-===================================================== */
-.pop.hide {
-  animation: fadeOut 0.25s ease-out forwards;
-}
-@keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-.cell.disabled {
-  background: #f2f2f2;
-  color: #999;
-  cursor: not-allowed;
-}
-/* ================================
-   💎 MODALES DE SEGURO
-================================ */
-.seg-card {
-  background: #fff;
-  border: 1px solid #d0d5dd;
-  border-radius: 12px;
-  padding: 18px;
-  margin: 10px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-  transition: all 0.2s ease-in-out;
-}
-.seg-card:hover {
-  transform: translateY(-3px);
-  border-color: #c82333;
-  box-shadow: 0 4px 16px rgba(200, 35, 51, 0.2);
-}
-.seg-card .btn.primary {
-  background: #d00;
-  border: none;
-  border-radius: 8px;
-  color: white;
-  font-weight: 600;
-  padding: 8px 20px;
-  transition: background 0.2s;
-}
-.seg-card .btn.primary:hover {
-  background: #b10000;
-}
-
-/* ================================
-   ⚙️ COMPLEMENTOS / ADICIONALES
-================================ */
-.add-card {
-  background: #fff;
-  border: 1px solid #d0d5dd;
-  border-radius: 12px;
-  padding: 14px 18px;
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: all 0.2s ease;
-}
-.add-card:hover {
-  border-color: #2563eb;
-  box-shadow: 0 3px 10px rgba(37, 99, 235, 0.15);
-}
-.add-card .info {
-  flex: 1;
-}
-.add-card .info div:first-child {
-  font-weight: 700;
-  color: #1e293b;
-}
-.add-card .info .desc {
-  font-size: 13px;
-  color: #475467;
-  margin: 3px 0;
-}
-.add-card .info .price {
-  font-weight: 600;
-  color: #2563eb;
-}
-
-/* ================================
-   🔘 SWITCH MODERNO PARA ADICIONALES
-================================ */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 46px;
-  height: 24px;
-}
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #ccc;
-  transition: .3s;
-  border-radius: 34px;
-}
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .3s;
-  border-radius: 50%;
-}
-.switch input:checked + .slider {
-  background-color: #2563eb;
-}
-.switch input:checked + .slider:before {
-  transform: translateX(22px);
-}
-
-/* ================================
-   🔄 BOTONES GENERALES
-================================ */
-.btn.gray {
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
-  color: #374151;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn.gray:hover {
-  background: #e5e7eb;
-}
-/* ================================
-   ✅ BOTÓN-SWITCH TIPO CONFIRMAR (con animación gris→verde)
-================================ */
-.confirm-btn-wrap {
-  display: flex;
-  justify-content: center;
-  margin-top: 14px;
-}
-
-.confirm-switch {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  cursor: pointer;
-  user-select: none;
-  background-color: #d1d5db; /* gris por defecto */
-  border-radius: 30px;
-  padding: 6px 18px;
-  color: #333;
-  font-weight: 600;
-  font-size: 15px;
-  transition: background-color 0.4s ease, color 0.4s ease;
-  min-width: 150px;
-}
-
-.confirm-switch input {
-  display: none;
-}
-
-.confirm-switch .slider-round {
-  position: relative;
-  display: inline-block;
-  width: 22px;
-  height: 22px;
-  background-color: #fff;
-  border-radius: 50%;
-  transition: transform 0.3s ease;
-  transform: translateX(-18px);
-}
-
-/* ✅ Cuando está activo */
-.confirm-switch input:checked + .slider-round {
-  transform: translateX(18px);
-}
-.confirm-switch input:checked ~ .switch-label {
-  color: #fff;
-}
-.confirm-switch input:checked:before {
-  background-color: #00c853;
-}
-
-/* ✅ Color de fondo cuando está activo */
-.confirm-switch:has(input:checked) {
-  background-color: #00c853;
-  color: #fff;
-}
-
-/* 🔄 Transición al desactivar */
-.confirm-switch:not(:has(input:checked)) {
-  background-color: #d1d5db;
-  color: #333;
-}
-
-/* Texto dentro del botón */
-.switch-label {
-  position: relative;
-  z-index: 2;
-  transition: color 0.3s ease;
-}
-/* ================================
-   ✅ SCROLL en modal de Protecciones
-================================ */
-#proteccionPop .box{
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-  overflow: hidden; /* el scroll se lo damos al contenido */
-}
-
-#proteccionPop .box > header,
-#proteccionPop .box > footer{
-  flex: 0 0 auto;
-}
-
-#proteccionPop #proteList{
-  flex: 1 1 auto;
-  overflow-y: auto;
-  max-height: calc(90vh - 120px);
-  padding: 16px;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+/* Quita el iconito nativo (por si algún browser insiste) */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator{
+  display:none;
 }

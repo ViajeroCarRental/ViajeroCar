@@ -240,7 +240,7 @@
       if (!isPlus && !isMinus) return;
 
       const card = t.closest(".addon-card");
-      if (!card) return;
+      if (!card) return; 
 
       const data = getCardData(card);
       if (!data.id) return;
