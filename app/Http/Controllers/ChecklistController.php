@@ -411,19 +411,23 @@ public function enviarChecklistSalida(Request $request, $id)
     try {
         // 1) Validar mínimamente
         $request->validate([
-            'comentario_cliente'   => 'nullable|string',
-            'danos_interiores'     => 'nullable|string',
-            'firma_cliente_fecha'  => 'nullable|date',
-            'firma_cliente_hora'   => 'nullable|date_format:H:i',
-            'entrego_fecha'        => 'nullable|date',
-            'entrego_hora'         => 'nullable|date_format:H:i',
-            'recibio_fecha'        => 'nullable|date',
-            'recibio_hora'         => 'nullable|date_format:H:i',
-            'autoSalida.*'         => 'required|file|mimetypes:image/jpeg,image/png'
-        ], [
-            'autoSalida.*.required' => 'Debes cargar al menos una foto de salida',
-            'autoSalida.*.mimetypes' => 'Las fotos deben ser JPG o PNG'
-        ]);
+    'comentario_cliente'   => 'nullable|string',
+    'danos_interiores'     => 'nullable|string',
+    'firma_cliente_fecha'  => 'nullable|date',
+    'firma_cliente_hora'   => 'nullable|date_format:H:i',
+    'entrego_fecha'        => 'nullable|date',
+    'entrego_hora'         => 'nullable|date_format:H:i',
+    'recibio_fecha'        => 'nullable|date',
+    'recibio_hora'         => 'nullable|date_format:H:i',
+    // 👇 AQUI AGREGAMOS max:2097152
+    'autoSalida.*'         => 'required|file|mimetypes:image/jpeg,image/png|max:2097152',
+], [
+    'autoSalida.*.required'  => 'Debes cargar al menos una foto de salida',
+    'autoSalida.*.mimetypes' => 'Las fotos deben ser JPG o PNG',
+    // 👇 Mensaje bonito para el tamaño
+    'autoSalida.*.max'       => 'Cada foto puede pesar como máximo 2 GB.',
+]);
+
 
         // 2) Buscar contrato
         $contrato = DB::table('contratos')
