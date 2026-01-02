@@ -98,8 +98,10 @@ class ReservacionesActivasController extends Controller
             ]);
 
         } catch (\Throwable $e) {
-            return back()->with('error', 'Error al cargar las reservaciones activas: ' . $e->getMessage());
-        }
+    Log::error('❌ Bookings index error: ' . $e->getMessage());
+    abort(500, $e->getMessage()); // <-- aquí te va a mostrar el mensaje exacto
+}
+
     }
 
     /**
