@@ -279,7 +279,7 @@ small, .small { font-size: 12px; color: var(--muted); }
     grid-template-columns: 180px 110px 90px 95px 70px 140px;
   }
 
-  /* Oculta desde CELULAR en adelante (7,8,9,10,11) */
+  /* Oculta desde CELULAR en adelante (7,8,9,10,11...) */
   .table .thead > :nth-child(n+7),
   .table .row  > :nth-child(n+7) {
     display: none;
@@ -288,7 +288,6 @@ small, .small { font-size: 12px; color: var(--muted); }
   .input { min-width: 0; width: 100%; }
   .kv { grid-template-columns: 120px 1fr; }
 }
-
 
 /* ==============================
    🧭 Tabla
@@ -305,19 +304,36 @@ small, .small { font-size: 12px; color: var(--muted); }
   display: block;
   position: relative;
 
+  /* ✅ DEFAULT: 11 columnas (SIN No. Vuelo) */
   --cols:
     190px  /* NO. DE RESERVACIÓN */
     110px  /* CHECK IN */
     80px   /* HORA (IN) */
-    60px   /* CATEGORÍA */
+    90px   /* CATEGORÍA */
     60px   /* DÍAS */
-    170px  /* NOMBRE COMPLETO */
+    190px  /* NOMBRE COMPLETO */
     140px  /* CELULAR */
     230px  /* CORREO */
     150px  /* ESTATUS DE PAGO */
-    95px   /* TOTAL */
+    110px  /* TOTAL */
     140px; /* ACCIONES */
+}
 
+/* ✅ Aeropuerto: 12 columnas (AGREGA No. Vuelo) */
+.table.is-airport{
+  --cols:
+    190px  /* NO. DE RESERVACIÓN */
+    110px  /* CHECK IN */
+    80px   /* HORA (IN) */
+    110px  /* NO. VUELO */
+    90px   /* CATEGORÍA */
+    60px   /* DÍAS */
+    190px  /* NOMBRE COMPLETO */
+    140px  /* CELULAR */
+    230px  /* CORREO */
+    150px  /* ESTATUS DE PAGO */
+    110px  /* TOTAL */
+    140px; /* ACCIONES */
 }
 
 .table .thead{
@@ -332,7 +348,6 @@ small, .small { font-size: 12px; color: var(--muted); }
   background: linear-gradient(90deg, var(--brand), var(--brand-3));
   color: #fff;
   font-weight: 900;
-  letter-spacing: .0px;
   text-transform: uppercase;
   font-size: 10px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
@@ -407,16 +422,9 @@ small, .small { font-size: 12px; color: var(--muted); }
 .state.gray { background: #F2F4F7; color: #475467; }
 
 /* Scrollbar tabla */
-.table::-webkit-scrollbar {
-  height: 10px;
-}
-.table::-webkit-scrollbar-thumb {
-  background: #cfd4da;
-  border-radius: 999px;
-}
-.table::-webkit-scrollbar-track {
-  background: #f1f3f6;
-}
+.table::-webkit-scrollbar { height: 10px; }
+.table::-webkit-scrollbar-thumb { background: #cfd4da; border-radius: 999px; }
+.table::-webkit-scrollbar-track { background: #f1f3f6; }
 
 /* Tipografía tabla */
 .table .thead > div,
@@ -429,80 +437,80 @@ small, .small { font-size: 12px; color: var(--muted); }
    🎯 Select estilo calendario
 ============================ */
 .select-ubicacion {
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 
-    background-color: #fff;
-    border: 2px solid #e11b22;
-    padding: 8px 32px 8px 12px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #1f2937;
-    cursor: pointer;
-    transition: all .2s ease;
-    position: relative;
+  background-color: #fff;
+  border: 2px solid #e11b22;
+  padding: 8px 32px 8px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+  cursor: pointer;
+  transition: all .2s ease;
+  position: relative;
 
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='10'><path fill='%23E02631' d='M2 2l5 5 5-5'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    background-size: 14px;
-    padding-right: 36px !important;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='10'><path fill='%23E02631' d='M2 2l5 5 5-5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 14px;
+  padding-right: 36px !important;
 }
 
 /* Hover */
 .select-ubicacion:hover {
-    background: #fff5f5;
-    border-color: #ff515d !important;
+  background: #fff5f5;
+  border-color: #ff515d !important;
 }
 
 /* Focus */
 .select-ubicacion:focus {
-    outline: none;
-    border-color: #b91c1c;
-    box-shadow: 0 0 4px rgba(220, 38, 38, 0.4);
+  outline: none;
+  border-color: #b91c1c;
+  box-shadow: 0 0 4px rgba(220, 38, 38, 0.4);
 }
 
 /* Opciones del menú desplegable */
 .select-ubicacion option {
-    font-weight: 600;
-    padding: 10px;
-    background: white;
-    color: #1f2937;
+  font-weight: 600;
+  padding: 10px;
+  background: white;
+  color: #1f2937;
 }
 
 /* ============================
    Input de búsqueda
 ============================ */
 .toolbar .input {
-    height: 44px;
-    border: 2px solid #E02631 !important;
-    border-radius: 14px;
-    padding: 0 14px;
-    font-weight: 600;
-    background: #fff;
-    color: var(--ink);
-    transition: .2s ease;
-    box-shadow: 0 3px 6px rgba(224, 38, 49, 0.10);
+  height: 44px;
+  border: 2px solid #E02631 !important;
+  border-radius: 14px;
+  padding: 0 14px;
+  font-weight: 600;
+  background: #fff;
+  color: var(--ink);
+  transition: .2s ease;
+  box-shadow: 0 3px 6px rgba(224, 38, 49, 0.10);
 }
 
 .toolbar .input:focus {
-    border-color: #ff3b47 !important;
-    box-shadow: 0 0 0 4px rgba(255, 79, 90, 0.25);
+  border-color: #ff3b47 !important;
+  box-shadow: 0 0 0 4px rgba(255, 79, 90, 0.25);
 }
 
 /* ============================
    BADGE DEL TOTAL
 ============================ */
 .badge.gray {
-    background: #fff;
-    border: 2px solid #E02631 !important;
-    color: #1e293b;
-    padding: 6px 14px;
-    border-radius: 16px;
-    font-weight: 700;
-    box-shadow: 0 3px 6px rgba(224, 38, 49, 0.10);
+  background: #fff;
+  border: 2px solid #E02631 !important;
+  color: #1e293b;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-weight: 700;
+  box-shadow: 0 3px 6px rgba(224, 38, 49, 0.10);
 }
 
 /* ===========================
@@ -515,9 +523,7 @@ small, .small { font-size: 12px; color: var(--muted); }
 }
 
 /* Modal más pequeño */
-.box.box-sm{
-  max-width: 520px;
-}
+.box.box-sm{ max-width: 520px; }
 
 /* Grid de botones dentro del modal */
 .actions-grid{
@@ -533,14 +539,11 @@ small, .small { font-size: 12px; color: var(--muted); }
 /* ===========================
    🎛️ MODAL ACCIONES - Botones mismo tamaño + colores
 =========================== */
-
-/* Asegura que el form del botón eliminar ocupe el mismo ancho */
 #modalActions .actions-grid > form{
   width: 100%;
   margin: 0;
 }
 
-/* Todos los botones del grid: mismo tamaño */
 #modalActions .actions-grid .btn,
 #modalActions .actions-grid form .btn{
   width: 100%;
@@ -559,9 +562,7 @@ small, .small { font-size: 12px; color: var(--muted); }
   color: #fff;
   border-color: rgba(37,99,235,.35);
 }
-#modalActions #aNoShow:hover{
-  filter: brightness(.95);
-}
+#modalActions #aNoShow:hover{ filter: brightness(.95); }
 
 /* CANCELAR (Amarillo) */
 #modalActions #aCancelar{
@@ -569,16 +570,12 @@ small, .small { font-size: 12px; color: var(--muted); }
   color: #111827;
   border-color: rgba(245,158,11,.45);
 }
-#modalActions #aCancelar:hover{
-  filter: brightness(.95);
-}
+#modalActions #aCancelar:hover{ filter: brightness(.95); }
 
-/* ELIMINAR (Rojo, mismo tamaño) */
+/* ELIMINAR (Rojo) */
 #modalActions #aEliminar{
   background: #B42318;
   color: #fff;
   border-color: rgba(180,35,24,.45);
 }
-#modalActions #aEliminar:hover{
-  filter: brightness(.95);
-}
+#modalActions #aEliminar:hover{ filter: brightness(.95); }

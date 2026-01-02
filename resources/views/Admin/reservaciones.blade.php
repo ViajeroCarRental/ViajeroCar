@@ -21,7 +21,13 @@
       </div>
     </div>
 
-    <form id="formReserva" action="{{ route('reservaciones.guardar') }}" method="POST" novalidate>
+    <form
+      id="formReserva"
+      action="{{ route('reservaciones.guardar') }}"
+      method="POST"
+      novalidate
+      data-redirect="{{ route('rutaReservacionesActivas') }}"
+    >
       @csrf
 
       {{-- Hidden “state” --}}
@@ -230,7 +236,6 @@
 
           <div class="days-row">
             <span class="days-pill">⏱️ <b id="diasTxt">0</b> día(s)</span>
-            {{-- ❌ Eliminado: "*El cálculo previo es estimado." --}}
           </div>
         </div>
       </section>
@@ -274,8 +279,6 @@
               </div>
             </div>
           </div>
-
-          {{-- ❌ Eliminado: "*La tarifa base viene de categorias_carros.precio_dia." --}}
         </div>
       </section>
 
@@ -344,13 +347,8 @@
             </div>
 
             <div>
-              <label>Apellido paterno</label>
-              <input id="apellido_paterno" name="apellido_paterno" class="input" type="text" required>
-            </div>
-
-            <div>
-              <label>Apellido materno</label>
-              <input id="apellido_materno" name="apellido_materno" class="input" type="text" required>
+              <label>Apellidos</label>
+              <input id="apellidos_cliente" name="apellidos_cliente" class="input" type="text" required>
             </div>
 
             <div>
@@ -610,8 +608,32 @@
   </div>
 </div>
 
+{{-- =========================
+   ✅ MODAL: CONFIRMACIÓN (SOLO UNO)
+========================= --}}
+<div class="pop modal" id="confirmPop" style="display:none;">
+  <div class="box modal-box">
+    <header class="modal-head">
+      <div class="modal-title">✅ Reservación registrada</div>
+      <button class="btn gray" id="confirmClose" type="button">✖</button>
+    </header>
+
+    <div class="modal-body">
+      <p style="margin:0; font-weight:800; color:#111827;">
+        ¡Listo! La reservación se registró correctamente.
+      </p>
+      <p class="muted" style="margin:8px 0 0;">
+        Te enviaremos a <b>Reservaciones Activas</b>.
+      </p>
+    </div>
+
+    <footer class="modal-foot">
+      <button class="btn primary" id="confirmOk" type="button">Ir a Reservaciones Activas</button>
+    </footer>
+  </div>
+</div>
+
 @section('js-vistareservacionesAdmin')
-{{-- ✅ IMPORTANTE: Flatpickr + locale ES antes de tu JS --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>

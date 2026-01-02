@@ -45,7 +45,7 @@
 
     <span class="badge gray">Total <b id="count">{{ count($reservaciones) }}</b></span>
 
-    {{-- ✅ Botón exportar (ARREGLADO: sin ">" extra) --}}
+    {{-- ✅ Botón exportar --}}
     <button
       type="button"
       class="btn primary"
@@ -58,7 +58,8 @@
   </form>
 
   <!-- ======================= 📋 TABLA ======================= -->
-  <section class="table">
+  {{-- ✅ Clase para activar 12 columnas cuando es aeropuerto --}}
+  <section class="table {{ $esAeropuerto ? 'is-airport' : '' }}" data-cols="{{ $cols }}">
     <div class="thead">
       <div>No. de Reservacion</div>
       <div>Check in</div>
@@ -81,10 +82,37 @@
 
     <div class="tbody">
       @forelse ($reservaciones as $r)
-        <div class="row"
+        @php
+          // ✅ PRIORIDAD:
+          // 1) nombre_completo (del controller)
+          // 2) nombre_cliente + apellidos_cliente
+          // 3) solo nombre_cliente
+          $nombreCompleto = trim((string)($r->nombre_completo ?? ''));
 
+          if ($nombreCompleto === '') {
+            $nombreCompleto = trim((string)($r->nombre_cliente ?? '') . ' ' . (string)($r->apellidos_cliente ?? ''));
+          }
+
+          if ($nombreCompleto === '') {
+            $nombreCompleto = trim((string)($r->nombre_cliente ?? ''));
+          }
+
+          if ($nombreCompleto === '') $nombreCompleto = '—';
+
+          // ✅ Días
+          $inicio = \Carbon\Carbon::parse($r->fecha_inicio);
+          $fin    = \Carbon\Carbon::parse($r->fecha_fin);
+          $dias   = $inicio->diffInDays($fin);
+
+          // ✅ Hora segura
+          $horaIn = $r->hora_retiro
+            ? \Carbon\Carbon::parse($r->hora_retiro)->format('H:i')
+            : '—';
+        @endphp
+
+        <div class="row"
              data-codigo="{{ $r->codigo }}"
-             data-cliente="{{ $r->nombre_cliente }}"
+             data-cliente="{{ $nombreCompleto }}"
              data-email="{{ $r->email_cliente }}"
              data-numero="{{ $r->telefono_cliente }}"
              data-categoria="{{ $r->categoria }}"
@@ -95,11 +123,11 @@
           {{-- 1. No. de reservación --}}
           <div>{{ $r->codigo }}</div>
 
-          {{-- 2. Check in --}}
-          <div>{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}</div>
+          {{-- 2. Check in (✅ dd/mm/aaaa) --}}
+          <div>{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('d/m/Y') }}</div>
 
           {{-- 3. Hora --}}
-          <div>{{ \Carbon\Carbon::parse($r->hora_retiro)->format('H:i') }}</div>
+          <div>{{ $horaIn }}</div>
 
           {{-- 4. No. Vuelo (solo si estamos filtrando Aeropuerto) --}}
           @if($esAeropuerto)
@@ -110,15 +138,10 @@
           <div>{{ $r->categoria }}</div>
 
           {{-- 6. Días --}}
-          @php
-            $inicio = \Carbon\Carbon::parse($r->fecha_inicio);
-            $fin    = \Carbon\Carbon::parse($r->fecha_fin);
-            $dias   = $inicio->diffInDays($fin);
-          @endphp
           <div>{{ $dias }}</div>
 
-          {{-- 7. Nombre --}}
-          <div>{{ $r->nombre_cliente ?? '—' }}</div>
+          {{-- 7. Nombre completo --}}
+          <div>{{ $nombreCompleto }}</div>
 
           {{-- 8. Celular --}}
           <div>{{ $r->telefono_cliente ?? '—' }}</div>
@@ -161,7 +184,7 @@
 
         </div>
       @empty
-        <div class="row" >
+        <div class="row">
           <div style="grid-column: 1 / -1; text-align:center;">No hay reservaciones activas.</div>
         </div>
       @endforelse
@@ -173,7 +196,6 @@
   ============================ --}}
   <div class="pop" id="modal">
     <div class="box">
-      {{-- HEADER --}}
       <header>
         <div>
           <div id="mTitle">Detalle reservación</div>
@@ -182,7 +204,6 @@
         <button type="button" id="mClose">&times;</button>
       </header>
 
-      {{-- CONTENIDO --}}
       <div class="cnt">
         <div class="kv"><strong>Código</strong><span id="mCodigo">—</span></div>
         <div class="kv"><strong>Cliente</strong><span id="mCliente">—</span></div>
@@ -197,7 +218,6 @@
         <div class="kv"><strong>Tarifa modificada</strong><span id="mTarifaModificada">—</span></div>
       </div>
 
-      {{-- FOOTER --}}
       <div class="actions">
         <button type="button" class="btn gray" id="mCancel">Cerrar</button>
         <button type="button" class="btn gray" id="mEdit">Editar</button>
@@ -208,105 +228,95 @@
 
   {{-- ============================
      🪟 MODAL EDICIÓN RESERVACIÓN
-============================ --}}
-<div class="pop" id="modalEdit">
-  <div class="box">
-    <header>
-      <div>
-        <div id="eTitle">Editar datos</div>
-        <span>Solo se actualizan datos del cliente y fechas</span>
-      </div>
-      <button type="button" id="eClose">&times;</button>
-    </header>
+  ============================ --}}
+  <div class="pop" id="modalEdit">
+    <div class="box">
+      <header>
+        <div>
+          <div id="eTitle">Editar datos</div>
+          <span>Solo se actualizan datos del cliente y fechas</span>
+        </div>
+        <button type="button" id="eClose">&times;</button>
+      </header>
 
-    <div class="cnt">
-      <div class="kv"><strong>Nombre</strong>
-        <input class="input" id="eNombre" type="text" />
-      </div>
+      <div class="cnt">
+        <div class="kv"><strong>Nombre</strong>
+          <input class="input" id="eNombre" type="text" />
+        </div>
 
-      <div class="kv"><strong>Correo</strong>
-        <input class="input" id="eCorreo" type="email" />
-      </div>
+        <div class="kv"><strong>Correo</strong>
+          <input class="input" id="eCorreo" type="email" />
+        </div>
 
-      <div class="kv"><strong>Teléfono</strong>
-        <input class="input" id="eTelefono" type="text" />
-      </div>
+        <div class="kv"><strong>Teléfono</strong>
+          <input class="input" id="eTelefono" type="text" />
+        </div>
 
-      <div class="kv"><strong>Salida (fecha)</strong>
-        <input class="input" id="eFechaInicio" type="date" />
-      </div>
+        <div class="kv"><strong>Salida (fecha)</strong>
+          <input class="input" id="eFechaInicio" type="date" />
+        </div>
 
-      <div class="kv"><strong>Salida (hora)</strong>
-        <input class="input" id="eHoraRetiro" type="time" />
-      </div>
+        <div class="kv"><strong>Salida (hora)</strong>
+          <input class="input" id="eHoraRetiro" type="time" />
+        </div>
 
-      <div class="kv"><strong>Entrega (fecha)</strong>
-        <input class="input" id="eFechaFin" type="date" />
-      </div>
+        <div class="kv"><strong>Entrega (fecha)</strong>
+          <input class="input" id="eFechaFin" type="date" />
+        </div>
 
-      <div class="kv"><strong>Entrega (hora)</strong>
-        <input class="input" id="eHoraEntrega" type="time" />
-      </div>
-    </div>
-
-    <div class="actions">
-      <button type="button" class="btn gray" id="eCancel">Cancelar</button>
-      <button type="button" class="btn primary" id="eSave">Guardar cambios</button>
-    </div>
-  </div>
-</div>
-
-{{-- ============================
-   🪟 MODAL ACCIONES (No Show / Cancelar / Eliminar)
-============================= --}}
-<div class="pop" id="modalActions" aria-hidden="true">
-  <div class="box box-sm">
-    <header>
-      <div>
-        <div id="aTitle">Acciones</div>
-        <span>Booking: <b id="aCodigo">—</b></span>
-      </div>
-      <button type="button" id="aClose">&times;</button>
-    </header>
-
-    <div class="cnt">
-      <p class="muted" style="margin:0 0 10px;">
-        Elige qué deseas hacer con esta reservación.
-      </p>
-
-      <div class="actions-grid">
-        <button type="button" class="btn warn" id="aNoShow">
-          No Show
-        </button>
-
-        <button type="button" class="btn gray" id="aCancelar">
-          Cancelar
-        </button>
-
-        {{-- ✅ Eliminar (ya existe en tu sistema) --}}
-        <form id="aDeleteForm" method="POST">
-          @csrf
-          @method('DELETE')
-          <button type="submit" class="btn danger" id="aEliminar">
-            Eliminar
-          </button>
-        </form>
+        <div class="kv"><strong>Entrega (hora)</strong>
+          <input class="input" id="eHoraEntrega" type="time" />
+        </div>
       </div>
 
-      {{-- hidden: id actual (para historial en el siguiente paso) --}}
-      <input type="hidden" id="aIdReservacion" value="">
-    </div>
-
-    <div class="actions">
-      <button type="button" class="btn gray" id="aCancel">Cerrar</button>
+      <div class="actions">
+        <button type="button" class="btn gray" id="eCancel">Cancelar</button>
+        <button type="button" class="btn primary" id="eSave">Guardar cambios</button>
+      </div>
     </div>
   </div>
-</div>
+
+  {{-- ============================
+     🪟 MODAL ACCIONES (No Show / Cancelar / Eliminar)
+  ============================= --}}
+  <div class="pop" id="modalActions" aria-hidden="true">
+    <div class="box box-sm">
+      <header>
+        <div>
+          <div id="aTitle">Acciones</div>
+          <span>Booking: <b id="aCodigo">—</b></span>
+        </div>
+        <button type="button" id="aClose">&times;</button>
+      </header>
+
+      <div class="cnt">
+        <p class="muted" style="margin:0 0 10px;">
+          Elige qué deseas hacer con esta reservación.
+        </p>
+
+        <div class="actions-grid">
+          <button type="button" class="btn warn" id="aNoShow">No Show</button>
+          <button type="button" class="btn gray" id="aCancelar">Cancelar</button>
+
+          <form id="aDeleteForm" method="POST">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn danger" id="aEliminar">Eliminar</button>
+          </form>
+        </div>
+
+        <input type="hidden" id="aIdReservacion" value="">
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn gray" id="aCancel">Cerrar</button>
+      </div>
+    </div>
+  </div>
 
 </main>
 @endsection
 
-{{-- ✅ IMPORTANTE: SOLO UNA SECCIÓN JS (ARREGLADO: quitamos duplicado) --}}
 @section('js-vistaReservacionesActivas')
   <script src="{{ asset('js/reservacionesActivas.js') }}"></script>
 
@@ -315,7 +325,6 @@
       const btn = document.getElementById('btnExportExcel');
       if (!btn) return;
 
-      // Convierte texto a CSV seguro
       const csvCell = (v) => {
         const s = (v ?? '').toString().replace(/\s+/g, ' ').trim();
         const escaped = s.replace(/"/g, '""');
@@ -323,7 +332,7 @@
       };
 
       const downloadCSV = (filename, csvContent) => {
-        const bom = "\uFEFF"; // BOM para acentos/ñ en Excel
+        const bom = "\uFEFF";
         const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
 
@@ -346,7 +355,6 @@
           return;
         }
 
-        // Filas reales (evita el row del empty)
         const dataRows = rows.filter(r => r.children.length > 2);
 
         if (dataRows.length === 0) {
@@ -354,7 +362,6 @@
           return;
         }
 
-        // Headers (quitamos "Acciones")
         const headers = Array.from(thead.children).map(h => h.innerText.trim());
         const headersNoActions = headers.slice(0, -1);
 
@@ -363,7 +370,7 @@
 
         dataRows.forEach(row => {
           const cells = Array.from(row.children);
-          const dataCells = cells.slice(0, -1).map(cell => cell.innerText); // quita Acciones
+          const dataCells = cells.slice(0, -1).map(cell => cell.innerText);
           csv += dataCells.map(csvCell).join(SEP) + '\n';
         });
 

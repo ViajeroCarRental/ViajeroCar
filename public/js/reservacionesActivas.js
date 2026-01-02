@@ -10,13 +10,18 @@ const Fmx = (v) =>
     maximumFractionDigits: 2,
   }) +
   " MXN";
-const esc = (s) =>
-  (s ?? "").toString().replace(/[&<>"]/g, (m) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-  }[m]));
+
+/* ✅ Formatea YYYY-MM-DD (o YYYY-MM-DDTHH:mm) a dd/mm/aaaa */
+const toDMY = (dateStr) => {
+  if (!dateStr) return "";
+  const s = String(dateStr).trim();
+  const iso = s.includes("T") ? s.split("T")[0] : s; // por si llega timestamp
+  const parts = iso.split("-");
+  if (parts.length !== 3) return s; // si no es ISO, lo regresa igual
+  const [y, m, d] = parts;
+  if (!y || !m || !d) return s;
+  return `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`;
+};
 
 /* ==========================================================
    🚀 ESPERAR A QUE EL DOM ESTÉ LISTO
@@ -26,6 +31,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
   /* ==========================================================
      🔍 FILTRO DE BÚSQUEDA (nombre, correo o estado)
+     ✅ YA NO USAMOS row.children[] (cambiaba con Aeropuerto)
+     ✅ Usamos data-* que no se mueven
   =========================================================== */
   $("#q")?.addEventListener("input", () => {
     const q = $("#q").value.trim().toLowerCase();
@@ -33,11 +40,18 @@ window.addEventListener("DOMContentLoaded", () => {
     let visible = 0;
 
     rows.forEach((row) => {
-      const nombre = row.children[1]?.textContent?.toLowerCase() || "";
-      const email = row.children[2]?.textContent?.toLowerCase() || "";
-      const estado = row.children[7]?.textContent?.toLowerCase() || "";
+      const nombre = (row.dataset.cliente || "").toLowerCase();
+      const email = (row.dataset.email || "").toLowerCase();
+      const estado = (row.dataset.estado || "").toLowerCase();
+      const codigo = (row.dataset.codigo || "").toLowerCase();
+
       const show =
-        !q || nombre.includes(q) || email.includes(q) || estado.includes(q);
+        !q ||
+        nombre.includes(q) ||
+        email.includes(q) ||
+        estado.includes(q) ||
+        codigo.includes(q);
+
       row.style.display = show ? "grid" : "none";
       if (show) visible++;
     });
@@ -69,7 +83,6 @@ window.addEventListener("DOMContentLoaded", () => {
       const data = await resp.json();
       console.log("🧾 Datos recibidos:", data);
 
-      // Guardar la reservación actual
       current = data;
 
       /* ==========================================================
@@ -77,17 +90,25 @@ window.addEventListener("DOMContentLoaded", () => {
       =========================================================== */
       $("#mTitle").textContent = `Detalle Reservación ${data.codigo || "—"}`;
       $("#mCodigo").textContent = data.codigo || "—";
-      $("#mCliente").textContent = data.nombre_cliente || "—";
+
+      // ✅ Si backend manda nombre + apellidos separado, los unimos.
+      const fullName = [data.nombre_cliente, data.apellidos_cliente]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+
+      $("#mCliente").textContent = fullName || data.nombre_cliente || "—";
       $("#mEmail").textContent = data.email_cliente || "—";
       $("#mNumero").textContent = data.telefono_cliente || "—";
       $("#mCategoria").textContent = data.categoria || "—";
       $("#mEstado").textContent = data.estado || "—";
 
+      // ✅ Modal: fechas dd/mm/aaaa
       const salida = data.fecha_inicio
-        ? `${data.fecha_inicio} ${data.hora_retiro || ""}`
+        ? `${toDMY(data.fecha_inicio)} ${String(data.hora_retiro || "").slice(0,5)}`
         : "—";
       const entrega = data.fecha_fin
-        ? `${data.fecha_fin} ${data.hora_entrega || ""}`
+        ? `${toDMY(data.fecha_fin)} ${String(data.hora_entrega || "").slice(0,5)}`
         : "—";
 
       $("#mSalida").textContent = salida;
@@ -100,7 +121,6 @@ window.addEventListener("DOMContentLoaded", () => {
         ? Fmx(data.tarifa_modificada)
         : "—";
 
-      // Mostrar modal
       $("#modal").classList.add("show");
       console.log("🪟 Modal abierto con reservación:", current);
     } catch (err) {
@@ -149,8 +169,10 @@ window.addEventListener("DOMContentLoaded", () => {
   function openEditModal() {
     if (!current) return;
 
-    // Precargar inputs
     $("#eTitle").textContent = `Editar ${current.codigo || ""}`;
+
+    // ✅ Si backend maneja apellidos aparte, puedes decidir aquí si quieres editar ambos.
+    // Por ahora, dejamos el nombre como viene.
     $("#eNombre").value = current.nombre_cliente || "";
     $("#eCorreo").value = current.email_cliente || "";
     $("#eTelefono").value = current.telefono_cliente || "";
@@ -216,15 +238,15 @@ window.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message);
 
-      // Actualizar estado local
       Object.assign(current, payload);
 
+      // ✅ Actualiza modal (en dd/mm/aaaa)
       $("#mCliente").textContent = current.nombre_cliente;
       $("#mEmail").textContent = current.email_cliente;
       $("#mNumero").textContent = current.telefono_cliente;
 
-      const salida = `${current.fecha_inicio} ${current.hora_retiro || ""}`;
-      const entrega = `${current.fecha_fin} ${current.hora_entrega || ""}`;
+      const salida = `${toDMY(current.fecha_inicio)} ${String(current.hora_retiro || "").slice(0,5)}`;
+      const entrega = `${toDMY(current.fecha_fin)} ${String(current.hora_entrega || "").slice(0,5)}`;
 
       $("#mSalida").textContent = salida;
       $("#mEntrega").textContent = entrega;
@@ -232,6 +254,7 @@ window.addEventListener("DOMContentLoaded", () => {
       alertify.success("Reservación actualizada correctamente");
       closeEditModal();
 
+      // (Opcional) Si quieres reflejarlo en la tabla sin recargar, lo hacemos después.
     } catch (err) {
       console.error(err);
       alertify.error(err.message || "Error al guardar la reservación");
@@ -254,7 +277,6 @@ window.addEventListener("DOMContentLoaded", () => {
     if (aCodigo) aCodigo.textContent = codigo || "—";
     if (aIdReservacion) aIdReservacion.value = id || "";
 
-    // ✅ Conecta tu DELETE existente a la reservación seleccionada
     if (aDeleteForm && deleteUrl) aDeleteForm.setAttribute("action", deleteUrl);
 
     modalActions.classList.add("show");
@@ -267,7 +289,6 @@ window.addEventListener("DOMContentLoaded", () => {
     modalActions.setAttribute("aria-hidden", "true");
   }
 
-  // Abrir modal desde cada ⋯
   $$("[data-open-actions]").forEach((btn) => {
     btn.addEventListener("click", (ev) => {
       ev.stopPropagation();
@@ -279,16 +300,13 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Cerrar modal
   aClose?.addEventListener("click", closeActionsModal);
   aCancel?.addEventListener("click", closeActionsModal);
 
-  // Cerrar al dar click fuera
   modalActions?.addEventListener("click", (e) => {
     if (e.target === modalActions) closeActionsModal();
   });
 
-  // ✅ Confirmación (NO se quita) al eliminar
   aDeleteForm?.addEventListener("submit", (e) => {
     const codigo = aCodigo?.textContent || "esta reservación";
     if (!confirm(`¿Seguro que deseas ELIMINAR ${codigo}?`)) {
@@ -296,7 +314,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ✅ CSRF para POST
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
 
   async function postAccion(url) {
@@ -317,7 +334,6 @@ window.addEventListener("DOMContentLoaded", () => {
     return data;
   }
 
-  // 🚫 No Show (POST)
   $("#aNoShow")?.addEventListener("click", async (ev) => {
     ev.stopPropagation();
     const id = aIdReservacion?.value;
@@ -336,7 +352,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ⚠️ Cancelar (POST)
   $("#aCancelar")?.addEventListener("click", async (ev) => {
     ev.stopPropagation();
     const id = aIdReservacion?.value;

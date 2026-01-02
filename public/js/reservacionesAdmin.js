@@ -34,6 +34,21 @@
     return `${y}-${m}-${da}`;
   };
 
+  // ✅ CSRF
+  const getCsrf = () => {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta) return meta.getAttribute("content") || "";
+    const tok = qs('#formReserva input[name="_token"]');
+    return tok ? tok.value : "";
+  };
+
+  // ✅ Cierra todos los modales (para que sea SOLO confirmPop)
+  const closeAllPops = () => {
+    document.querySelectorAll(".pop.modal").forEach((m) => {
+      m.style.display = "none";
+    });
+  };
+
   /* =========================
      Estado global
   ========================= */
@@ -124,15 +139,12 @@
 
   /* =========================
      Fechas/Horas: UI + Hidden
-     - UI:  #fecha_inicio_ui, #fecha_fin_ui, #hora_retiro_ui, #hora_entrega_ui
-     - Hidden reales (backend): #fecha_inicio, #fecha_fin, #hora_retiro, #hora_entrega
   ========================= */
   function syncDateHiddenFromUI(uiId, hiddenId) {
     const ui = qs(uiId);
     const hid = qs(hiddenId);
     if (!ui || !hid) return;
 
-    // Si UI trae dd/mm/YYYY -> lo convertimos a ISO
     const val = String(ui.value || "").trim();
     if (!val) { hid.value = ""; return; }
 
@@ -143,7 +155,6 @@
       return;
     }
 
-    // si ya viniera ISO por algo
     if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
       hid.value = val;
       return;
@@ -174,9 +185,7 @@
         const [d, m, y] = val.split("/").map(Number);
         return new Date(y, m - 1, d, 0, 0, 0);
       }
-      // ISO
       if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return new Date(val + "T00:00:00");
-      // fallback
       return new Date(val);
     };
 
@@ -409,7 +418,6 @@
     const getText = (sel) =>
       sel?.options?.[sel.selectedIndex]?.textContent?.trim() || "—";
 
-    // ✅ mostrar en resumen lo que ve el usuario (UI), pero si no existe, fallback al hidden
     const fi = qs("#fecha_inicio_ui")?.value || qs("#fecha_inicio")?.value || "—";
     const hi = qs("#hora_retiro_ui")?.value || qs("#hora_retiro")?.value || "—";
     const ff = qs("#fecha_fin_ui")?.value || qs("#fecha_fin")?.value || "—";
@@ -448,7 +456,7 @@
   }
 
   /* =========================
-     Load Protecciones (DESC)
+     Load Protecciones
   ========================= */
   async function loadProtecciones() {
     const list = qs("#proteList");
@@ -473,7 +481,7 @@
         return { id, nombre, desc, precio, charge };
       });
 
-      // ✅ ordenar caro -> barato (como lo traías)
+      // ✅ ordenar caro -> barato
       arr.sort((a, b) => Number(b.precio || 0) - Number(a.precio || 0));
 
       if (!arr.length) {
@@ -630,6 +638,26 @@
   }
 
   /* =========================
+     ✅ NUEVO: Apellidos en 1 input
+     - En tu blade ahora existe: #apellidos_cliente
+     - En BD tienes: apellidos_cliente
+     - En backend controller valida/guarda apellido_paterno/apellido_materno?
+       -> Aquí mandamos apellidos_cliente y (si quieres) lo convertimos a paterno/materno.
+  ========================= */
+  function splitApellidos(apellidosRaw) {
+    const s = String(apellidosRaw || "").trim().replace(/\s+/g, " ");
+    if (!s) return { paterno: "", materno: "" };
+
+    const parts = s.split(" ");
+    if (parts.length === 1) return { paterno: parts[0], materno: "" };
+
+    // Heurística MX: primer apellido = paterno, resto = materno (puede ser compuesto)
+    const paterno = parts[0];
+    const materno = parts.slice(1).join(" ");
+    return { paterno, materno };
+  }
+
+  /* =========================
      Validación
   ========================= */
   function validateBeforeSubmit() {
@@ -644,7 +672,6 @@
     req("#sucursal_retiro", "Sucursal de retiro");
     req("#sucursal_entrega", "Sucursal de entrega");
 
-    // ✅ validamos los hidden reales (backend)
     req("#fecha_inicio", "Fecha de salida");
     req("#hora_retiro", "Hora de salida");
     req("#fecha_fin", "Fecha de llegada");
@@ -653,8 +680,7 @@
     if (!qs("#categoria_id")?.value) missing.push("Categoría");
 
     req("#nombre_cliente", "Nombre");
-    req("#apellido_paterno", "Apellido paterno");
-    req("#apellido_materno", "Apellido materno");
+    req("#apellidos_cliente", "Apellidos");   // ✅ CAMBIO AQUÍ
     req("#email_cliente", "Email");
     req("#telefono_cliente", "Teléfono");
     req("#pais", "País");
@@ -673,7 +699,6 @@
 
   /* =========================
      Flatpickr: calendario modal + time 10min
-     (usa inputs _ui y sincroniza a hidden reales)
   ========================= */
   function initFlatpickrModalCalendar() {
     if (!window.flatpickr) return;
@@ -698,7 +723,6 @@
       actions.querySelector(".fp-today").addEventListener("click", () => instance.setDate(new Date(), true));
       actions.querySelector(".fp-clear").addEventListener("click", () => {
         instance.clear();
-        // al limpiar, reflejamos hidden
         if (instance.input?.id === "fecha_inicio_ui") qs("#fecha_inicio").value = "";
         if (instance.input?.id === "fecha_fin_ui") qs("#fecha_fin").value = "";
         syncDays();
@@ -718,7 +742,6 @@
       backdrop.onclick = null;
     }
 
-    // ✅ Fecha inicio UI -> hidden ISO
     window.flatpickr("#fecha_inicio_ui", {
       locale: "es",
       dateFormat: "d/m/Y",
@@ -747,7 +770,6 @@
       }
     });
 
-    // ✅ Fecha fin UI -> hidden ISO
     window.flatpickr("#fecha_fin_ui", {
       locale: "es",
       dateFormat: "d/m/Y",
@@ -810,10 +832,133 @@
   }
 
   /* =========================
+     ✅ SUBMIT POR AJAX
+     - Aquí convertimos apellidos a lo que tu backend espere.
+     - Como tu controller hoy valida nombre_cliente/email/telefono/no_vuelo...
+       y NO valida apellidos_cliente, esto no rompe nada.
+     - Si tu tabla ya tiene apellidos_cliente, lo mandamos.
+     - Y si tu backend aún espera apellido_paterno/materno, también lo mandamos (compat).
+  ========================= */
+  async function submitReservaAjax(e) {
+    e.preventDefault();
+
+    const form = qs("#formReserva");
+    if (!form) return;
+
+    // ✅ sincroniza todo ANTES de validar
+    ensureCategoriaHiddenFix();
+    ensureTotalsHidden();
+    ensureProteccionHidden();
+
+    syncDateHiddenFromUI("#fecha_inicio_ui", "#fecha_inicio");
+    syncDateHiddenFromUI("#fecha_fin_ui", "#fecha_fin");
+    syncTimeHiddenFromUI("#hora_retiro_ui", "#hora_retiro");
+    syncTimeHiddenFromUI("#hora_entrega_ui", "#hora_entrega");
+
+    syncVueloField();
+    syncDays();
+    refreshSummary();
+    syncProteccionHidden();
+    syncAddonsHidden();
+    syncTotalsHidden();
+
+    if (!validateBeforeSubmit()) return;
+
+    const btn = qs("#btnReservar");
+    const setLoading = (on) => {
+      if (!btn) return;
+      btn.disabled = on;
+      btn.style.opacity = on ? "0.85" : "1";
+      btn.style.cursor = on ? "not-allowed" : "pointer";
+      btn.textContent = on ? "⏳ Registrando..." : "✅ Registrar reservación";
+    };
+
+    try {
+      setLoading(true);
+
+      const action = form.getAttribute("action");
+      const fd = new FormData(form);
+
+      // ✅ Asegurar que exista apellidos_cliente en el payload
+      const apellidos = String(qs("#apellidos_cliente")?.value || "").trim().replace(/\s+/g, " ");
+      fd.set("apellidos_cliente", apellidos);
+
+      // ✅ Compat: por si tu backend aún usa paterno/materno
+      const parts = splitApellidos(apellidos);
+      fd.set("apellido_paterno", parts.paterno);
+      fd.set("apellido_materno", parts.materno);
+
+      const res = await fetch(action, {
+        method: "POST",
+        headers: {
+          "X-CSRF-TOKEN": getCsrf(),
+          "Accept": "application/json"
+        },
+        body: fd
+      });
+
+      // Laravel validation
+      if (res.status === 422) {
+        const data = await res.json().catch(() => null);
+        const first = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
+        alert(first || "Revisa los campos: falta información o hay datos inválidos.");
+        setLoading(false);
+        return;
+      }
+
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        console.error("Error al registrar:", res.status, txt);
+        alert("Ocurrió un error al registrar la reservación. Revisa logs.");
+        setLoading(false);
+        return;
+      }
+
+      // ✅ éxito
+      const data = await res.json().catch(() => ({}));
+
+      // si el backend manda redirect_url lo usamos
+      if (data?.redirect_url) form.dataset.redirect = data.redirect_url;
+
+      const confirmPop = qs("#confirmPop");
+      const redirectToActivas = () => {
+        const url = form.dataset.redirect || "/";
+        window.location.href = url;
+      };
+
+      // Bind 1 sola vez (para no duplicar listeners)
+      if (confirmPop && !confirmPop.dataset.bound) {
+        confirmPop.dataset.bound = "1";
+
+        qs("#confirmOk")?.addEventListener("click", redirectToActivas);
+        qs("#confirmClose")?.addEventListener("click", redirectToActivas);
+
+        confirmPop.addEventListener("click", (ev) => {
+          if (ev.target === confirmPop) redirectToActivas();
+        });
+      }
+
+      // ✅ SOLO confirm modal
+      closeAllPops();
+      openPop(confirmPop);
+
+      // Si lo quieres automático sin click, descomenta:
+      // setTimeout(redirectToActivas, 900);
+
+    } catch (err) {
+      console.error(err);
+      alert("Error de red/servidor. Intenta de nuevo.");
+    } finally {
+      // si no redirige automático, dejamos el botón normal por si cierran
+      setLoading(false);
+    }
+  }
+
+  /* =========================
      Eventos UI
   ========================= */
   function bindUI() {
-    // ✅ si no carga flatpickr, sincroniza por cambios en UI
+    // ✅ fallback sync sin flatpickr
     ["#fecha_inicio_ui", "#fecha_fin_ui"].forEach((id) => {
       qs(id)?.addEventListener("change", () => {
         syncDateHiddenFromUI(id, id.replace("_ui", ""));
@@ -902,37 +1047,17 @@
     qs("#resumenClose")?.addEventListener("click", () => closePop(resPop));
     qs("#resumenOk")?.addEventListener("click", () => closePop(resPop));
 
-    // cerrar modal al tocar afuera
+    // cerrar modal al tocar afuera (menos confirm, confirm se va a activas)
     document.querySelectorAll(".pop.modal").forEach((pop) => {
       pop.addEventListener("click", (e) => {
-        if (e.target === pop) closePop(pop);
+        if (e.target !== pop) return;
+        if (pop.id === "confirmPop") return; // confirm maneja su propio comportamiento
+        closePop(pop);
       });
     });
 
-    // submit
-    qs("#formReserva")?.addEventListener("submit", (e) => {
-      ensureCategoriaHiddenFix();
-      ensureTotalsHidden();
-      ensureProteccionHidden();
-
-      // ✅ asegúrate que hidden reales estén sincronizados antes de validar
-      syncDateHiddenFromUI("#fecha_inicio_ui", "#fecha_inicio");
-      syncDateHiddenFromUI("#fecha_fin_ui", "#fecha_fin");
-      syncTimeHiddenFromUI("#hora_retiro_ui", "#hora_retiro");
-      syncTimeHiddenFromUI("#hora_entrega_ui", "#hora_entrega");
-
-      syncVueloField();
-      syncDays();
-      refreshSummary();
-      syncProteccionHidden();
-      syncAddonsHidden();
-      syncTotalsHidden();
-
-      if (!validateBeforeSubmit()) {
-        e.preventDefault();
-        return;
-      }
-    });
+    // ✅ submit -> AJAX
+    qs("#formReserva")?.addEventListener("submit", submitReservaAjax);
   }
 
   /* =========================
@@ -944,9 +1069,6 @@
     ensureProteccionHidden();
 
     syncVueloField();
-
-    // ✅ si ya traen valores (editar), refresca UI (si existe)
-    // (cuando me pases el blade, ajustamos estos IDs si hace falta)
 
     syncDays();
     refreshAddonsBadge();

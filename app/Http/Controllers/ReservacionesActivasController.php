@@ -6,11 +6,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Carbon\Carbon;
 
 class ReservacionesActivasController extends Controller
 {
     /**
-     * 📋 Muestra todas las reservaciones activas (no canceladas ni expiradas)
+     * 📋 Muestra todas las reservaciones activas (solo HOY y FUTURAS)
+     * ✅ Excluye: cancelada, expirada, no_show
      */
     public function index(Request $request)
     {
@@ -20,12 +22,20 @@ class ReservacionesActivasController extends Controller
             $codigo   = trim($request->input('codigo')); // 🔴 filtro exclusivo para código
             $search   = trim($request->input('q'));      // 🔵 filtro para nombre o correo
 
+            // ✅ SOLO HOY Y FUTURAS (por fecha_inicio)
+            $hoy = Carbon::today()->format('Y-m-d');
+
             $reservaciones = DB::table('reservaciones as r')
                 ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
                 ->select(
                     'r.id_reservacion',
                     'r.codigo',
+
+                    // ✅ nombre + apellidos
                     'r.nombre_cliente',
+                    'r.apellidos_cliente',
+                    DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,''))) as nombre_completo"),
+
                     'r.email_cliente',
                     'r.telefono_cliente',
                     'r.estado',
@@ -38,6 +48,10 @@ class ReservacionesActivasController extends Controller
                     'r.no_vuelo',              // número de vuelo
                     'c.codigo as categoria'    // C, D, E, H, etc.
                 )
+
+                // ✅ SOLO mostrar hoy y futuras (NO mostrar pasadas)
+                ->whereDate('r.fecha_inicio', '>=', $hoy)
+
                 // ✅ solo activas (ya excluye no_show también)
                 ->whereNotIn('r.estado', ['cancelada', 'expirada', 'no_show'])
 
@@ -56,7 +70,10 @@ class ReservacionesActivasController extends Controller
                     $term = $search . '%';
 
                     $q->where(function ($sub) use ($term) {
+                        // ✅ busca por nombre o apellidos o concatenado
                         $sub->where('r.nombre_cliente', 'LIKE', $term)
+                            ->orWhere('r.apellidos_cliente', 'LIKE', $term)
+                            ->orWhere(DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,'')))"), 'LIKE', $term)
                             ->orWhere('r.email_cliente', 'LIKE', $term);
                     });
                 })
@@ -89,7 +106,12 @@ class ReservacionesActivasController extends Controller
                 ->select(
                     'r.id_reservacion',
                     'r.codigo',
+
+                    // ✅ nombre + apellidos
                     'r.nombre_cliente',
+                    'r.apellidos_cliente',
+                    DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,''))) as nombre_completo"),
+
                     'r.email_cliente',
                     'r.telefono_cliente',
                     'r.estado',
@@ -221,6 +243,7 @@ class ReservacionesActivasController extends Controller
 
     /**
      * ✏️ Actualiza SOLO: nombre, correo, teléfono, salida/entrega (fecha+hora)
+     * (Si después quieres también editar apellidos en este modal, lo agregamos aquí)
      */
     public function updateDatos(Request $request, $id)
     {
@@ -269,6 +292,9 @@ class ReservacionesActivasController extends Controller
                 ->select(
                     'r.codigo',
                     'r.nombre_cliente',
+                    'r.apellidos_cliente',
+                    DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,''))) as nombre_completo"),
+
                     'r.email_cliente',
                     'r.telefono_cliente',
                     'r.fecha_inicio',
@@ -301,7 +327,7 @@ class ReservacionesActivasController extends Controller
             $mensaje .= "Categoría: " . ($r->categoria ?? '-') . "\n\n";
 
             $mensaje .= "👤 Cliente:\n";
-            $mensaje .= "Nombre: {$r->nombre_cliente}\n";
+            $mensaje .= "Nombre: " . ($r->nombre_completo ?: $r->nombre_cliente) . "\n";
             $mensaje .= "Correo: {$r->email_cliente}\n";
             $mensaje .= "Teléfono: {$r->telefono_cliente}\n";
             $mensaje .= "Vuelo: " . ($r->no_vuelo ?? '-') . "\n\n";
