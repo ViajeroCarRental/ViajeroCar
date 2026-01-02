@@ -64,7 +64,7 @@ categoriaSelect?.addEventListener('change', async () => {
     if (cat?.error) throw new Error(cat.message || 'Categoría no encontrada.');
 
     // 🔹 Mostrar imagen y nombre de la categoría
-    vehImage.src = cat.imagen || '/assets/placeholder-car.jpg';
+    vehImage.src = cat.imagen || '/assets/Logotipo.png';
     vehName.textContent = cat.nombre || 'Ejemplo de la categoría seleccionada';
     vehImageWrap.style.display = 'block';
 

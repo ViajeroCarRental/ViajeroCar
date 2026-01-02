@@ -453,7 +453,7 @@
 
         @foreach($categoriasOrdenadas as $cat)
           @php
-            $img = $imgCategorias[$cat->id_categoria] ?? asset('img/placeholder-car.jpg');
+            $img = $imgCategorias[$cat->id_categoria] ?? asset('img/Logotipo.png');
             $cap = $pasajeros[$cat->id_categoria] ?? 5;
             $tran = $transmision[$cat->id_categoria] ?? 'Automático';
 

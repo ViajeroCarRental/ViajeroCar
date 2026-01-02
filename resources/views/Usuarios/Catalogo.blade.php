@@ -57,7 +57,7 @@
             case 'L':  return asset('img/Hiace.png');
             case 'H':  return asset('img/Frontier.png');
             case 'HI': return asset('img/Tacoma.png');
-            default:   return asset('img/placeholder-car.jpg');
+            default:   return asset('img/Logotipo.png');
         }
     }
   @endphp

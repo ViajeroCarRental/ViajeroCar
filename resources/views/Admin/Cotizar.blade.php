@@ -234,7 +234,7 @@
       <!-- 🚗 Imagen de referencia por categoría -->
       <div id="vehImageWrap" style="text-align:center;margin-bottom:10px;display:none;">
         <img id="vehImage"
-             src="{{ asset('assets/placeholder-car.jpg') }}"
+             src="{{ asset('assets/Logotipo.png') }}"
              alt="Ejemplo de vehículo de la categoría seleccionada"
              style="width:100%;max-width:250px;border-radius:12px;object-fit:cover;">
         <div id="vehName" style="font-weight:700;margin-top:6px;">

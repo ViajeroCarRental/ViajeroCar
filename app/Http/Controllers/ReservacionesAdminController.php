@@ -53,7 +53,7 @@ class ReservacionesAdminController extends Controller
                     'c.nombre',
                     'c.descripcion',
                     'c.precio_dia as tarifa_base',
-                    DB::raw('COALESCE(img.url, "/assets/placeholder-car.jpg") as imagen')
+                    DB::raw('COALESCE(img.url, "/assets/Logotipo.png") as imagen')
                 )
                 ->first();
 
