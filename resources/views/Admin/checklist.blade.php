@@ -283,6 +283,37 @@
         </div>
     </section>
 
+    <!-- ============================================ -->
+<!--           FOTOS DEL VEHÍCULO                 -->
+<!-- ============================================ -->
+<section class="paper-section">
+  <h3 class="sec-title center">Fotos del vehículo</h3>
+
+  <div class="form-grid" style="margin-top:12px">
+
+    <div>
+      <label>Fotografías del Auto — SALIDA</label>
+      <div class="uploader" data-name="autoSalida">
+        <div class="msg">Toca para cámara o galería (JPG/PNG)</div>
+        <input name="autoSalida[]" type="file" accept="image/jpeg,image/png" multiple>
+      </div>
+      <div class="preview" id="prev-autoSalida"></div>
+    </div>
+
+    <div>
+      <label>Fotografías del Auto — REGRESO</label>
+      <div class="uploader" data-name="autoRegreso">
+        <div class="msg">Toca para cámara o galería (JPG/PNG)</div>
+        <input name="autoRegreso[]" type="file" accept="image/jpeg,image/png" multiple>
+      </div>
+      <div class="preview" id="prev-autoRegreso"></div>
+    </div>
+
+  </div>
+</section>
+
+
+
 
 
     <!-- ============================================ -->
@@ -372,7 +403,8 @@
                 <input type="text"
                        class="input-line"
                        data-field="firma_cliente_nombre"
-                       placeholder="Nombre del cliente">
+                       placeholder="Nombre del cliente"
+                       value="{{ $clienteNombre ?? '' }}">
             </td>
 
             <td>
@@ -414,7 +446,8 @@
                 <input type="text"
                        class="input-line"
                        data-field="entrego_nombre"
-                       placeholder="Nombre del agente que entrega">
+                       placeholder="Nombre del agente que entrega"
+                       value="{{ $asesorNombre ?? '' }}">
             </td>
 
             <td>
@@ -441,7 +474,7 @@
         </tr>
 
         <!-- ================= RECIBE ================= -->
-        <!-- USA LA MISMA FIRMA DEL QUE ENTREGÓ -->
+        <!-- USA LA MISMA FIRMA DEL QUE ENTREGÓ (PUEDE EDITARSE) -->
         <tr>
             <th>Recibió</th>
             <th>Firma</th>
@@ -453,7 +486,8 @@
                 <input type="text"
                        class="input-line"
                        data-field="recibio_nombre"
-                       placeholder="Nombre del agente que recibe">
+                       placeholder="Nombre del agente que recibe"
+                       value="{{ $asesorNombre ?? '' }}">
             </td>
 
             <td>
@@ -480,6 +514,25 @@
         </tr>
     </table>
 
+</section>
+
+<!-- ============================================ -->
+<!--           ACCIONES CHECKLIST                 -->
+<!-- ============================================ -->
+<section class="paper-section">
+    <div class="checklist-actions">
+        <button type="button"
+                id="btnChecklistSalida"
+                class="btn btn-primary">
+            Enviar checklist de salida
+        </button>
+
+        <button type="button"
+                id="btnChecklistEntrada"
+                class="btn btn-outline-primary">
+            Enviar checklist de regreso
+        </button>
+    </div>
 </section>
 
 
@@ -766,6 +819,165 @@ if (kmText && kmInput && btnGuardarKm) {
         kmText.style.display = "inline";
     });
 }
+/* ==========================================================
+   📸 Vista previa de fotos (Checklist: Auto salida / regreso)
+========================================================== */
+document.querySelectorAll('.uploader input[type="file"]').forEach((input) => {
+  input.addEventListener("change", (e) => {
+    const contenedor = e.target.closest(".uploader");
+    const previewId = contenedor.getAttribute("data-name");
+    const previewDiv = document.getElementById(`prev-${previewId}`);
+
+    if (!previewDiv) return;
+
+    previewDiv.innerHTML = "";
+
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    files.forEach((file) => {
+      if (!file.type.startsWith("image/")) return;
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const thumb = document.createElement("div");
+        thumb.classList.add("thumb");
+        thumb.innerHTML = `
+          <img src="${ev.target.result}" alt="Vista previa">
+          <button type="button" class="rm" title="Quitar">×</button>
+        `;
+
+        previewDiv.appendChild(thumb);
+        previewDiv.removeAttribute("data-has-server-file");
+
+        // ⚠️ Simple (igual que lo tuyo): si quitas, se limpia TODO el input
+        thumb.querySelector(".rm").addEventListener("click", () => {
+          input.value = "";
+          previewDiv.innerHTML = "";
+        });
+      };
+
+      reader.readAsDataURL(file);
+    });
+  });
+});
+
+    /* ==========================================================
+   📤 Enviar checklist de SALIDA
+========================================================== */
+const btnChecklistSalida = document.getElementById("btnChecklistSalida");
+
+if (btnChecklistSalida) {
+    btnChecklistSalida.addEventListener("click", async () => {
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+
+            const formData = new FormData();
+            formData.append("_token", token);
+            formData.append("tipo", "salida");
+
+            // 📝 Campos de comentarios
+            const comentario = document.querySelector('[data-field="comentario_cliente"]');
+            const danos      = document.querySelector('[data-field="danos_interiores"]');
+
+            const fcFecha = document.querySelector('[data-field="firma_cliente_fecha"]');
+            const fcHora  = document.querySelector('[data-field="firma_cliente_hora"]');
+            const eFecha  = document.querySelector('[data-field="entrego_fecha"]');
+            const eHora   = document.querySelector('[data-field="entrego_hora"]');
+            const rFecha  = document.querySelector('[data-field="recibio_fecha"]');
+            const rHora   = document.querySelector('[data-field="recibio_hora"]');
+
+            formData.append("comentario_cliente", comentario ? comentario.value : "");
+            formData.append("danos_interiores",   danos      ? danos.value      : "");
+
+            formData.append("firma_cliente_fecha", fcFecha ? fcFecha.value : "");
+            formData.append("firma_cliente_hora",  fcHora  ? fcHora.value  : "");
+            formData.append("entrego_fecha",       eFecha  ? eFecha.value  : "");
+            formData.append("entrego_hora",        eHora   ? eHora.value   : "");
+            formData.append("recibio_fecha",       rFecha  ? rFecha.value  : "");
+            formData.append("recibio_hora",        rHora   ? rHora.value   : "");
+
+            // 📸 Fotos de salida (con validación de peso)
+            const inputSalida = document.querySelector('.uploader[data-name="autoSalida"] input[type="file"]');
+            if (inputSalida && inputSalida.files && inputSalida.files.length > 0) {
+                const MAX_MB    = 4; // AJUSTA ESTE VALOR AL MISMO "max" QUE TENGAS EN LARAVEL
+                const MAX_BYTES = MAX_MB * 1024 * 1024;
+
+                for (const file of Array.from(inputSalida.files)) {
+                    if (file.size > MAX_BYTES) {
+                        alert(
+                            `La foto "${file.name}" pesa ${(file.size / 1024 / 1024).toFixed(1)} MB.\n` +
+                            `El máximo permitido es ${MAX_MB} MB.\n\n` +
+                            `Toma menos fotos o en menor resolución.`
+                        );
+                        return; // ⛔ No mandamos nada
+                    }
+                    formData.append("autoSalida[]", file);
+                }
+            }
+
+            const resp = await fetch(`/admin/checklist/${CHECKLIST_ID}/enviar-salida`, {
+                method: "POST",
+                headers: {
+                    // NO ponemos Content-Type, FormData lo agrega solo
+                    "X-CSRF-TOKEN": token
+                },
+                body: formData
+            });
+
+            const rawText = await resp.text();
+            let data = null;
+
+            // Intentar parsear JSON
+            try {
+                data = JSON.parse(rawText);
+            } catch (e) {
+                // no era JSON, se queda en null
+            }
+
+            // Manejo de error de respuesta
+            if (!resp.ok || !data || data.ok === false) {
+                let msg = "Error al enviar el checklist de salida.";
+
+                // Errores de validación de Laravel (422)
+                if (data && data.errors) {
+                    msg = Object.values(data.errors).flat().join("\n");
+                } else if (data && data.msg) {
+                    msg = data.msg;
+                } else if (
+                    resp.status === 413 ||
+                    rawText.toLowerCase().includes("post_max_size") ||
+                    rawText.toLowerCase().includes("upload_max_filesize")
+                ) {
+                    msg = "Las fotos son demasiado pesadas para el servidor. " +
+                          "Intenta con menos fotos o en menor resolución.";
+                } else {
+                    msg = `Error ${resp.status}: ${rawText.slice(0, 200)}`;
+                }
+
+                alert(msg);
+                return;
+            }
+
+            alert(data.msg || "Checklist de salida guardado correctamente.");
+        } catch (err) {
+            console.error(err);
+
+            let msg = "Error de red al enviar el checklist de salida.";
+
+            // Mensaje típico de Safari/iPad cuando falla el upload
+            if (err && typeof err.message === "string" && err.message.includes("failed to upload")) {
+                msg = "Una de las fotos no se pudo subir (suele ser por tamaño o conexión).\n" +
+                      "Intenta con menos fotos o en menor resolución.";
+            } else if (err && err.message) {
+                msg += "\nDetalle: " + err.message;
+            }
+
+            alert(msg);
+        }
+    });
+}
+
 
 
 });

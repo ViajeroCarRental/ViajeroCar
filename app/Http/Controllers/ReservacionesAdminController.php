@@ -108,6 +108,35 @@ class ReservacionesAdminController extends Controller
     public function guardarReservacion(Request $request)
     {
         try {
+            // 🟢 0) Obtener usuario de sesión
+$idUsuario = session('id_usuario');
+
+if (!$idUsuario) {
+    return response()->json([
+        'success' => false,
+        'message' => 'No hay usuario autenticado en el panel de administración.'
+    ], 401);
+}
+
+// 🟢 0.1) Verificar que tenga rol permitido
+$rolesUsuario = DB::table('usuario_rol as ur')
+    ->join('roles as r', 'ur.id_rol', '=', 'r.id_rol')
+    ->where('ur.id_usuario', $idUsuario)
+    ->pluck('r.nombre')
+    ->toArray();
+
+// 🔁 Ajusta estos nombres según tu tabla "roles"
+$rolesPermitidos = ['Rentas', 'SuperAdmin'];
+
+$autorizado = count(array_intersect($rolesUsuario, $rolesPermitidos)) > 0;
+
+if (!$autorizado) {
+    return response()->json([
+        'success' => false,
+        'message' => 'No tienes permisos para crear reservaciones.'
+    ], 403);
+}
+
             // 1️⃣ Validación básica
             $validated = $request->validate([
                 'id_categoria'      => 'required|integer|exists:categorias_carros,id_categoria',

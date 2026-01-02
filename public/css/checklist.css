@@ -488,3 +488,113 @@ th{
 .btn-open-sign:hover {
     background: #e74c3c;
 }
+.form-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap:14px;
+}
+
+.uploader{
+  position:relative;
+  border:2px dashed #cbd5e1;
+  border-radius:12px;
+  padding:14px;
+  background:#f8fafc;
+  cursor:pointer;
+}
+
+.uploader .msg{ opacity:.75; }
+
+.uploader input[type="file"]{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  opacity:0;
+  cursor:pointer;
+}
+
+.preview{
+  margin-top:10px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.thumb{
+  width:110px;
+  height:110px;
+  border-radius:12px;
+  overflow:hidden;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  position:relative;
+}
+
+.thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.thumb .rm{
+  position:absolute;
+  top:6px;
+  right:6px;
+  width:28px;
+  height:28px;
+  border:none;
+  border-radius:999px;
+  background:rgba(0,0,0,.6);
+  color:#fff;
+  cursor:pointer;
+}
+.modal-firma{
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,.6);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.modal-content{
+    background:#fff;
+    padding:25px;
+    border-radius:12px;
+    width:460px;
+    text-align:center;
+}
+
+canvas{
+    border:1px solid #222;
+    border-radius:6px;
+    background:#fafafa;
+    margin-bottom:15px;
+}
+
+.modal-buttons button{
+    padding:10px 18px;
+    margin:5px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.btn-clear{ background:#ccc; }
+.btn-save{ background:#28a745; color:white; }
+.btn-close{ background:#c82333; color:white; }
+
+.checklist-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:12px;
+    margin-top:10px;
+}
+
+.checklist-actions .btn{
+    min-width:220px;
+}
+
