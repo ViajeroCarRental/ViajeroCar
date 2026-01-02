@@ -87,7 +87,6 @@
     11 => asset('img/Tacoma.png'),
   ];
 
-  $placeholder = asset('img/placeholder-car.jpg');
 
   $categoriaImg = $categoriaSel
     ? ($catImages[$categoriaSel->id_categoria] ?? $placeholder)
