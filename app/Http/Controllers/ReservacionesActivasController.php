@@ -13,16 +13,18 @@ class ReservacionesActivasController extends Controller
     /**
      * 📋 Muestra todas las reservaciones activas (solo HOY y FUTURAS)
      * ✅ Excluye: cancelada, expirada, no_show
+     * ✅ Soporta fecha_inicio como:
+     *    - DATE/DATETIME real
+     *    - string 'YYYY-MM-DD'
+     *    - string 'DD/MM/YYYY'
      */
     public function index(Request $request)
     {
         try {
-            // 🔹 Tomamos los filtros del request
             $sucursal = $request->input('sucursal');
-            $codigo   = trim($request->input('codigo')); // 🔴 filtro exclusivo para código
-            $search   = trim($request->input('q'));      // 🔵 filtro para nombre o correo
+            $codigo   = trim($request->input('codigo'));
+            $search   = trim($request->input('q'));
 
-            // ✅ SOLO HOY Y FUTURAS (por fecha_inicio)
             $hoy = Carbon::today()->format('Y-m-d');
 
             $reservaciones = DB::table('reservaciones as r')
@@ -31,7 +33,6 @@ class ReservacionesActivasController extends Controller
                     'r.id_reservacion',
                     'r.codigo',
 
-                    // ✅ nombre + apellidos
                     'r.nombre_cliente',
                     'r.apellidos_cliente',
                     DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,''))) as nombre_completo"),
@@ -45,32 +46,39 @@ class ReservacionesActivasController extends Controller
                     'r.fecha_fin',
                     'r.total',
                     'r.sucursal_retiro',
-                    'r.no_vuelo',              // número de vuelo
-                    'c.codigo as categoria'    // C, D, E, H, etc.
+                    'r.no_vuelo',
+                    'c.codigo as categoria'
                 )
 
-                // ✅ SOLO mostrar hoy y futuras (NO mostrar pasadas)
-                ->whereDate('r.fecha_inicio', '>=', $hoy)
-
-                // ✅ solo activas (ya excluye no_show también)
+                // ✅ solo activas
                 ->whereNotIn('r.estado', ['cancelada', 'expirada', 'no_show'])
 
-                // 🔽 Filtro opcional por sucursal_retiro (Aeropuerto / Central / Central Park)
+                // ✅ SOLO HOY Y FUTURAS (robusto)
+                ->where(function ($q) use ($hoy) {
+                    // 1) Si fecha_inicio es DATE/DATETIME real
+                    $q->whereDate('r.fecha_inicio', '>=', $hoy)
+
+                    // 2) Si está como string 'YYYY-MM-DD'
+                    ->orWhere('r.fecha_inicio', '>=', $hoy)
+
+                    // 3) Si está como string 'DD/MM/YYYY'
+                    ->orWhereRaw("STR_TO_DATE(r.fecha_inicio, '%d/%m/%Y') >= STR_TO_DATE(?, '%Y-%m-%d')", [$hoy]);
+                })
+
+                // filtro por sucursal
                 ->when($sucursal, function ($q, $sucursal) {
                     $q->where('r.sucursal_retiro', $sucursal);
                 })
 
-                // 🟥 1) FILTRO INDEPENDIENTE POR CÓDIGO (coincidencia desde el inicio)
+                // filtro por código
                 ->when($codigo, function ($q, $codigo) {
                     $q->where('r.codigo', 'LIKE', $codigo . '%');
                 })
 
-                // 🟦 2) FILTRO INDEPENDIENTE POR NOMBRE O CORREO (desde el inicio)
+                // filtro por nombre/apellidos/correo
                 ->when($search, function ($q, $search) {
                     $term = $search . '%';
-
                     $q->where(function ($sub) use ($term) {
-                        // ✅ busca por nombre o apellidos o concatenado
                         $sub->where('r.nombre_cliente', 'LIKE', $term)
                             ->orWhere('r.apellidos_cliente', 'LIKE', $term)
                             ->orWhere(DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,'')))"), 'LIKE', $term)
@@ -78,9 +86,8 @@ class ReservacionesActivasController extends Controller
                     });
                 })
 
-                // ✅ ORDEN: más próxima -> más lejana
+                // orden
                 ->orderBy('r.fecha_inicio', 'asc')
-                // ✅ si empatan en fecha, ordena por hora
                 ->orderBy('r.hora_retiro', 'asc')
 
                 ->get();
@@ -96,7 +103,7 @@ class ReservacionesActivasController extends Controller
     }
 
     /**
-     * 🔍 Retorna los detalles completos de una reservación activa (por código)
+     * 🔍 Detalles por código
      */
     public function show($codigo)
     {
@@ -107,7 +114,6 @@ class ReservacionesActivasController extends Controller
                     'r.id_reservacion',
                     'r.codigo',
 
-                    // ✅ nombre + apellidos
                     'r.nombre_cliente',
                     'r.apellidos_cliente',
                     DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,''))) as nombre_completo"),
@@ -143,7 +149,7 @@ class ReservacionesActivasController extends Controller
     }
 
     /**
-     * 🗑️ Elimina una reservación activa
+     * 🗑️ Eliminar
      */
     public function destroy($id)
     {
@@ -168,7 +174,7 @@ class ReservacionesActivasController extends Controller
     }
 
     /**
-     * 🚫 Marcar como NO SHOW
+     * 🚫 No Show
      */
     public function noShow($id)
     {
@@ -205,7 +211,7 @@ class ReservacionesActivasController extends Controller
     }
 
     /**
-     * ❌ Cancelar reservación
+     * ❌ Cancelar
      */
     public function cancelar($id)
     {
@@ -242,8 +248,7 @@ class ReservacionesActivasController extends Controller
     }
 
     /**
-     * ✏️ Actualiza SOLO: nombre, correo, teléfono, salida/entrega (fecha+hora)
-     * (Si después quieres también editar apellidos en este modal, lo agregamos aquí)
+     * ✏️ Update datos + correo
      */
     public function updateDatos(Request $request, $id)
     {
@@ -260,7 +265,6 @@ class ReservacionesActivasController extends Controller
                 'hora_entrega'     => 'nullable|string|max:10',
             ]);
 
-            // 🔹 Verificar reservación
             $reserv = DB::table('reservaciones')
                 ->where('id_reservacion', $id)
                 ->first();
@@ -272,7 +276,6 @@ class ReservacionesActivasController extends Controller
                 ], 404);
             }
 
-            // 🔹 Actualizar datos
             DB::table('reservaciones')
                 ->where('id_reservacion', $id)
                 ->update([
@@ -286,7 +289,6 @@ class ReservacionesActivasController extends Controller
                     'updated_at'       => now(),
                 ]);
 
-            // 🔹 Reconsultar (FUENTE ÚNICA DE VERDAD)
             $r = DB::table('reservaciones as r')
                 ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
                 ->select(
@@ -294,7 +296,6 @@ class ReservacionesActivasController extends Controller
                     'r.nombre_cliente',
                     'r.apellidos_cliente',
                     DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,''))) as nombre_completo"),
-
                     'r.email_cliente',
                     'r.telefono_cliente',
                     'r.fecha_inicio',
@@ -311,7 +312,6 @@ class ReservacionesActivasController extends Controller
                 ->where('r.id_reservacion', $id)
                 ->first();
 
-            // 🔹 Correos
             $correoCliente = trim((string) $r->email_cliente);
             $correoEmpresa = env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocarental.com');
             $moneda = $r->moneda ?? 'MXN';
@@ -321,7 +321,6 @@ class ReservacionesActivasController extends Controller
                 $correoCliente = null;
             }
 
-            // 🔹 Construir mensaje
             $mensaje  = "📩 CONFIRMACIÓN DE RESERVA (ACTUALIZACIÓN)\n\n";
             $mensaje .= "Código de reserva: {$r->codigo}\n";
             $mensaje .= "Categoría: " . ($r->categoria ?? '-') . "\n\n";
@@ -343,7 +342,6 @@ class ReservacionesActivasController extends Controller
 
             $mensaje .= "📆 Enviado: " . now()->format('d/m/Y H:i:s');
 
-            // 🔹 Enviar correo
             Mail::raw($mensaje, function ($msg) use ($correoCliente, $correoEmpresa, $r) {
                 if ($correoCliente) {
                     $msg->to($correoCliente)
