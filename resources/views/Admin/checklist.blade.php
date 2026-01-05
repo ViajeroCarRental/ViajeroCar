@@ -998,6 +998,126 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    /* ==========================================================
+   📤 Enviar checklist de REGRESO
+========================================================== */
+const btnChecklistEntrada = document.getElementById("btnChecklistEntrada");
+
+if (btnChecklistEntrada) {
+    btnChecklistEntrada.addEventListener("click", async () => {
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]').content;
+
+            const formData = new FormData();
+            formData.append("_token", token);
+            formData.append("tipo", "devolucion"); // 👈 importante
+
+            // 📝 Campos de comentarios (los mismos campos que salida)
+            const comentario = document.querySelector('[data-field="comentario_cliente"]');
+            const danos      = document.querySelector('[data-field="danos_interiores"]');
+
+            const fcFecha = document.querySelector('[data-field="firma_cliente_fecha"]');
+            const fcHora  = document.querySelector('[data-field="firma_cliente_hora"]');
+            const eFecha  = document.querySelector('[data-field="entrego_fecha"]');
+            const eHora   = document.querySelector('[data-field="entrego_hora"]');
+            const rFecha  = document.querySelector('[data-field="recibio_fecha"]');
+            const rHora   = document.querySelector('[data-field="recibio_hora"]');
+
+            formData.append("comentario_cliente", comentario ? comentario.value : "");
+            formData.append("danos_interiores",   danos      ? danos.value      : "");
+
+            formData.append("firma_cliente_fecha", fcFecha ? fcFecha.value : "");
+            formData.append("firma_cliente_hora",  fcHora  ? fcHora.value  : "");
+            formData.append("entrego_fecha",       eFecha  ? eFecha.value  : "");
+            formData.append("entrego_hora",        eHora   ? eHora.value   : "");
+            formData.append("recibio_fecha",       rFecha  ? rFecha.value  : "");
+            formData.append("recibio_hora",        rHora   ? rHora.value   : "");
+
+            // 📸 Fotos de REGRESO (usando los archivos almacenados en uploaderFiles)
+            const filesRegreso = uploaderFiles["autoRegreso"] || [];
+
+            if (filesRegreso.length === 0) {
+                alert("Debes cargar al menos una foto del vehículo (regreso).");
+                return;
+            }
+
+            // Límite FRONT: 2 GB por foto (igual que backend)
+            const MAX_MB    = 2048;
+            const MAX_BYTES = MAX_MB * 1024 * 1024;
+
+            for (const file of filesRegreso) {
+                if (file.size > MAX_BYTES) {
+                    alert(
+                        `La foto "${file.name}" pesa ${(file.size / 1024 / 1024).toFixed(1)} MB.\n` +
+                        `El máximo permitido es ${MAX_MB} MB.`
+                    );
+                    return; // ⛔ No mandamos nada
+                }
+                formData.append("autoRegreso[]", file);
+            }
+
+            const resp = await fetch(`/admin/checklist/${CHECKLIST_ID}/enviar-entrada`, {
+                method: "POST",
+                headers: {
+                    // NO ponemos Content-Type, FormData lo agrega solo
+                    "X-CSRF-TOKEN": token
+                },
+                body: formData
+            });
+
+            const rawText = await resp.text();
+            let data = null;
+
+            // Intentar parsear JSON
+            try {
+                data = JSON.parse(rawText);
+            } catch (e) {
+                // no era JSON, se queda en null
+            }
+
+            // Manejo de error de respuesta
+            if (!resp.ok || !data || data.ok === false) {
+                let msg = "Error al enviar el checklist de regreso.";
+
+                // Errores de validación de Laravel (422)
+                if (data && data.errors) {
+                    msg = Object.values(data.errors).flat().join("\n");
+                } else if (data && data.msg) {
+                    msg = data.msg;
+                } else if (
+                    resp.status === 413 ||
+                    rawText.toLowerCase().includes("post_max_size") ||
+                    rawText.toLowerCase().includes("upload_max_filesize")
+                ) {
+                    msg = "Las fotos son demasiado pesadas para el servidor. " +
+                          "Intenta con menos fotos o en menor resolución.";
+                } else {
+                    msg = `Error ${resp.status}: ${rawText.slice(0, 200)}`;
+                }
+
+                alert(msg);
+                return;
+            }
+
+            alert(data.msg || "Checklist de regreso guardado correctamente.");
+        } catch (err) {
+            console.error(err);
+
+            let msg = "Error de red al enviar el checklist de regreso.";
+
+            if (err && typeof err.message === "string" && err.message.includes("failed to upload")) {
+                msg = "Una de las fotos no se pudo subir (suele ser por tamaño o conexión).\n" +
+                      "Intenta con menos fotos o en menor resolución.";
+            } else if (err && err.message) {
+                msg += "\nDetalle: " + err.message;
+            }
+
+            alert(msg);
+        }
+    });
+}
+
+
 });
 
 </script>

@@ -393,14 +393,13 @@ Route::post('/admin/anexo/guardar-firma',
 
 
 // 📄 Mostrar checklist (usando el controlador)
-Route::get('/admin/reservacion/{id}/checklist',
-    [ChecklistController::class, 'showChecklist'])
-    ->name('checklist.ver');
+Route::get('/admin/reservacion/{id}/checklist',[ChecklistController::class, 'showChecklist'])->name('checklist.ver');
 
 // 📤 Enviar checklist de SALIDA (fotos + comentarios + fechas/horas)
-Route::post('/admin/checklist/{id}/enviar-salida',
-    [ChecklistController::class, 'enviarChecklistSalida'])
-    ->name('checklist.enviarSalida');
+Route::post('/admin/checklist/{id}/enviar-salida',[ChecklistController::class, 'enviarChecklistSalida'])->name('checklist.enviarSalida');
+
+Route::post('/admin/checklist/{id}/enviar-entrada', [ChecklistController::class, 'enviarChecklistEntrada'])->name('admin.checklist.enviar-entrada');
+
 
 Route::get('/admin/checklist2', function () {
     return view('Admin.checklist2');

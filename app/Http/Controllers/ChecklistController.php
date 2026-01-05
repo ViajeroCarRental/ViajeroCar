@@ -544,5 +544,151 @@ public function enviarChecklistSalida(Request $request, $id)
     }
 }
 
+public function enviarChecklistEntrada(Request $request, $id)
+{
+    try {
+        // 1) Validar mínimamente
+        $request->validate([
+            'comentario_cliente'   => 'nullable|string',
+            'danos_interiores'     => 'nullable|string',
+            'firma_cliente_fecha'  => 'nullable|date',
+            'firma_cliente_hora'   => 'nullable|date_format:H:i',
+            'entrego_fecha'        => 'nullable|date',
+            'entrego_hora'         => 'nullable|date_format:H:i',
+            'recibio_fecha'        => 'nullable|date',
+            'recibio_hora'         => 'nullable|date_format:H:i',
+            // 👇 igual que salida pero con autoRegreso
+            'autoRegreso.*'        => 'required|file|mimetypes:image/jpeg,image/png|max:2097152',
+        ], [
+            'autoRegreso.*.required'  => 'Debes cargar al menos una foto de regreso',
+            'autoRegreso.*.mimetypes' => 'Las fotos deben ser JPG o PNG',
+            'autoRegreso.*.max'       => 'Cada foto puede pesar como máximo 2 GB.',
+        ]);
+
+        // 2) Buscar contrato
+        $contrato = DB::table('contratos')
+            ->where('id_contrato', $id)
+            ->first();
+
+        if (!$contrato) {
+            return response()->json([
+                'ok'  => false,
+                'msg' => 'Contrato no encontrado'
+            ], 404);
+        }
+
+        // 3) Reservación ligada al contrato
+        $reservacion = DB::table('reservaciones')
+            ->where('id_reservacion', $contrato->id_reservacion)
+            ->first();
+
+        if (!$reservacion) {
+            return response()->json([
+                'ok'  => false,
+                'msg' => 'Reservación no encontrada'
+            ], 404);
+        }
+
+        // 4) Inspección de ENTRADA (si no existe, la creamos)
+        $inspEntrada = DB::table('inspeccion')
+            ->where('id_contrato', $contrato->id_contrato)
+            ->where('tipo', 'entrada')
+            ->orderByDesc('id_inspeccion')
+            ->first();
+
+        if ($inspEntrada) {
+            $idInspeccionEntrada = $inspEntrada->id_inspeccion;
+
+            // opcional: actualizar observaciones
+            DB::table('inspeccion')
+                ->where('id_inspeccion', $idInspeccionEntrada)
+                ->update([
+                    'observaciones' => $request->input('comentario_cliente'),
+                    'updated_at'    => now(),
+                ]);
+        } else {
+            // Si no existe registro de entrada, usamos datos actuales del vehículo
+            $vehiculo = null;
+            if ($reservacion->id_vehiculo) {
+                $vehiculo = DB::table('vehiculos')
+                    ->where('id_vehiculo', $reservacion->id_vehiculo)
+                    ->first();
+            }
+
+            $kmEntrada = $vehiculo->kilometraje ?? 0;
+            $nivelDecimal = null;
+
+            if ($vehiculo && $vehiculo->gasolina_actual !== null) {
+                // gasolina_actual es entero 0–16, lo convertimos a decimal 0.00–1.00
+                $nivelDecimal = round(((int)$vehiculo->gasolina_actual) / 16, 2);
+            }
+
+            $idInspeccionEntrada = DB::table('inspeccion')->insertGetId([
+                'id_contrato'       => $contrato->id_contrato,
+                'tipo'              => 'entrada',
+                'fecha'             => now(),
+                'odometro_km'       => $kmEntrada,
+                'nivel_combustible' => $nivelDecimal,
+                'firma_cliente_url' => null,
+                'observaciones'     => $request->input('comentario_cliente'),
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ]);
+        }
+
+        // 5) Base común para cada foto de REGRESO
+        $base = [
+            'id_reservacion'      => $reservacion->id_reservacion,
+            'id_contrato'         => $contrato->id_contrato,
+            'id_inspeccion'       => $idInspeccionEntrada,
+            'tipo'                => 'devolucion', // 👈 aquí cambia
+            'comentario_cliente'  => $request->input('comentario_cliente'),
+            'danos_interiores'    => $request->input('danos_interiores'),
+            'firma_cliente_fecha' => $request->input('firma_cliente_fecha') ?: null,
+            'firma_cliente_hora'  => $request->input('firma_cliente_hora') ?: null,
+            'entrego_fecha'       => $request->input('entrego_fecha') ?: null,
+            'entrego_hora'        => $request->input('entrego_hora') ?: null,
+            'recibio_fecha'       => $request->input('recibio_fecha') ?: null,
+            'recibio_hora'        => $request->input('recibio_hora') ?: null,
+            'created_at'          => now(),
+            'updated_at'          => now(),
+        ];
+
+        // 6) Procesar fotos de REGRESO (autoRegreso[])
+        $files = $request->file('autoRegreso', []);
+
+        if (!$files || !count($files)) {
+            return response()->json([
+                'ok'  => false,
+                'msg' => 'Debes cargar al menos una foto del vehículo (regreso).'
+            ], 422);
+        }
+
+        foreach ($files as $file) {
+            if (!$file) {
+                continue;
+            }
+
+            DB::table('inspeccion_fotos_comentarios')->insert(array_merge($base, [
+                'archivo'        => file_get_contents($file->getRealPath()),
+                'mime_type'      => $file->getClientMimeType(),
+                'nombre_archivo' => $file->getClientOriginalName(),
+            ]));
+        }
+
+        return response()->json([
+            'ok'  => true,
+            'msg' => 'Checklist de regreso guardado correctamente.'
+        ]);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'ok'  => false,
+            'msg' => 'Error al guardar el checklist de regreso: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+
 
 }
