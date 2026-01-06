@@ -417,14 +417,11 @@ public function enviarChecklistSalida(Request $request, $id)
     'firma_cliente_hora'   => 'nullable|date_format:H:i',
     'entrego_fecha'        => 'nullable|date',
     'entrego_hora'         => 'nullable|date_format:H:i',
-    'recibio_fecha'        => 'nullable|date',
-    'recibio_hora'         => 'nullable|date_format:H:i',
-    // 👇 AQUI AGREGAMOS max:2097152
+    // 👇 En salida ya NO validamos recibio_*
     'autoSalida.*'         => 'required|file|mimetypes:image/jpeg,image/png|max:2097152',
 ], [
     'autoSalida.*.required'  => 'Debes cargar al menos una foto de salida',
     'autoSalida.*.mimetypes' => 'Las fotos deben ser JPG o PNG',
-    // 👇 Mensaje bonito para el tamaño
     'autoSalida.*.max'       => 'Cada foto puede pesar como máximo 2 GB.',
 ]);
 
@@ -493,21 +490,23 @@ public function enviarChecklistSalida(Request $request, $id)
 
         // 5) Base común para cada foto
         $base = [
-            'id_reservacion'      => $reservacion->id_reservacion,
-            'id_contrato'         => $contrato->id_contrato,
-            'id_inspeccion'       => $idInspeccionSalida,
-            'tipo'                => 'salida',
-            'comentario_cliente'  => $request->input('comentario_cliente'),
-            'danos_interiores'    => $request->input('danos_interiores'),
-            'firma_cliente_fecha' => $request->input('firma_cliente_fecha') ?: null,
-            'firma_cliente_hora'  => $request->input('firma_cliente_hora') ?: null,
-            'entrego_fecha'       => $request->input('entrego_fecha') ?: null,
-            'entrego_hora'        => $request->input('entrego_hora') ?: null,
-            'recibio_fecha'       => $request->input('recibio_fecha') ?: null,
-            'recibio_hora'        => $request->input('recibio_hora') ?: null,
-            'created_at'          => now(),
-            'updated_at'          => now(),
-        ];
+                'id_reservacion'      => $reservacion->id_reservacion,
+                'id_contrato'         => $contrato->id_contrato,
+                'id_inspeccion'       => $idInspeccionSalida,
+                'tipo'                => 'salida',
+                'comentario_cliente'  => $request->input('comentario_cliente'),
+                'danos_interiores'    => $request->input('danos_interiores'),
+                'firma_cliente_fecha' => $request->input('firma_cliente_fecha') ?: null,
+                'firma_cliente_hora'  => $request->input('firma_cliente_hora') ?: null,
+                'entrego_fecha'       => $request->input('entrego_fecha') ?: null,
+                'entrego_hora'        => $request->input('entrego_hora') ?: null,
+                // 👇 En salida estos se quedan siempre NULL
+                'recibio_fecha'       => null,
+                'recibio_hora'        => null,
+                'created_at'          => now(),
+                'updated_at'          => now(),
+            ];
+
 
         // 6) Procesar fotos de SALIDA (autoSalida[])
         $files = $request->file('autoSalida', []);
@@ -548,22 +547,19 @@ public function enviarChecklistEntrada(Request $request, $id)
 {
     try {
         // 1) Validar mínimamente
-        $request->validate([
-            'comentario_cliente'   => 'nullable|string',
-            'danos_interiores'     => 'nullable|string',
-            'firma_cliente_fecha'  => 'nullable|date',
-            'firma_cliente_hora'   => 'nullable|date_format:H:i',
-            'entrego_fecha'        => 'nullable|date',
-            'entrego_hora'         => 'nullable|date_format:H:i',
-            'recibio_fecha'        => 'nullable|date',
-            'recibio_hora'         => 'nullable|date_format:H:i',
-            // 👇 igual que salida pero con autoRegreso
-            'autoRegreso.*'        => 'required|file|mimetypes:image/jpeg,image/png|max:2097152',
-        ], [
-            'autoRegreso.*.required'  => 'Debes cargar al menos una foto de regreso',
-            'autoRegreso.*.mimetypes' => 'Las fotos deben ser JPG o PNG',
-            'autoRegreso.*.max'       => 'Cada foto puede pesar como máximo 2 GB.',
-        ]);
+       $request->validate([
+    'comentario_cliente'   => 'nullable|string',
+    'danos_interiores'     => 'nullable|string',
+    // 👇 En ENTRADA solo nos importan estos tiempos
+    'recibio_fecha'        => 'nullable|date',
+    'recibio_hora'         => 'nullable|date_format:H:i',
+    'autoRegreso.*'        => 'required|file|mimetypes:image/jpeg,image/png|max:2097152',
+], [
+    'autoRegreso.*.required'  => 'Debes cargar al menos una foto de regreso',
+    'autoRegreso.*.mimetypes' => 'Las fotos deben ser JPG o PNG',
+    'autoRegreso.*.max'       => 'Cada foto puede pesar como máximo 2 GB.',
+]);
+
 
         // 2) Buscar contrato
         $contrato = DB::table('contratos')
@@ -638,21 +634,24 @@ public function enviarChecklistEntrada(Request $request, $id)
 
         // 5) Base común para cada foto de REGRESO
         $base = [
-            'id_reservacion'      => $reservacion->id_reservacion,
-            'id_contrato'         => $contrato->id_contrato,
-            'id_inspeccion'       => $idInspeccionEntrada,
-            'tipo'                => 'devolucion', // 👈 aquí cambia
-            'comentario_cliente'  => $request->input('comentario_cliente'),
-            'danos_interiores'    => $request->input('danos_interiores'),
-            'firma_cliente_fecha' => $request->input('firma_cliente_fecha') ?: null,
-            'firma_cliente_hora'  => $request->input('firma_cliente_hora') ?: null,
-            'entrego_fecha'       => $request->input('entrego_fecha') ?: null,
-            'entrego_hora'        => $request->input('entrego_hora') ?: null,
-            'recibio_fecha'       => $request->input('recibio_fecha') ?: null,
-            'recibio_hora'        => $request->input('recibio_hora') ?: null,
-            'created_at'          => now(),
-            'updated_at'          => now(),
-        ];
+    'id_reservacion'      => $reservacion->id_reservacion,
+    'id_contrato'         => $contrato->id_contrato,
+    'id_inspeccion'       => $idInspeccionEntrada,
+    // 👇 DEBE SER 'entrada' porque el ENUM solo permite 'salida' o 'entrada'
+    'tipo'                => 'entrada',
+    'comentario_cliente'  => $request->input('comentario_cliente'),
+    'danos_interiores'    => $request->input('danos_interiores'),
+    // 👇 En entrada NO repetimos datos de salida
+    'firma_cliente_fecha' => null,
+    'firma_cliente_hora'  => null,
+    'entrego_fecha'       => null,
+    'entrego_hora'        => null,
+    'recibio_fecha'       => $request->input('recibio_fecha') ?: null,
+    'recibio_hora'        => $request->input('recibio_hora') ?: null,
+    'created_at'          => now(),
+    'updated_at'          => now(),
+];
+
 
         // 6) Procesar fotos de REGRESO (autoRegreso[])
         $files = $request->file('autoRegreso', []);

@@ -903,8 +903,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const fcHora  = document.querySelector('[data-field="firma_cliente_hora"]');
                 const eFecha  = document.querySelector('[data-field="entrego_fecha"]');
                 const eHora   = document.querySelector('[data-field="entrego_hora"]');
-                const rFecha  = document.querySelector('[data-field="recibio_fecha"]');
-                const rHora   = document.querySelector('[data-field="recibio_hora"]');
 
                 formData.append("comentario_cliente", comentario ? comentario.value : "");
                 formData.append("danos_interiores",   danos      ? danos.value      : "");
@@ -913,8 +911,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 formData.append("firma_cliente_hora",  fcHora  ? fcHora.value  : "");
                 formData.append("entrego_fecha",       eFecha  ? eFecha.value  : "");
                 formData.append("entrego_hora",        eHora   ? eHora.value   : "");
-                formData.append("recibio_fecha",       rFecha  ? rFecha.value  : "");
-                formData.append("recibio_hora",        rHora   ? rHora.value   : "");
 
                 // 📸 Fotos de salida (usando los archivos almacenados en uploaderFiles)
                 const filesSalida = uploaderFiles["autoSalida"] || [];
@@ -1010,28 +1006,22 @@ if (btnChecklistEntrada) {
 
             const formData = new FormData();
             formData.append("_token", token);
-            formData.append("tipo", "devolucion"); // 👈 importante
+            formData.append("tipo", "entrada"); // 👈 importante
 
-            // 📝 Campos de comentarios (los mismos campos que salida)
-            const comentario = document.querySelector('[data-field="comentario_cliente"]');
-            const danos      = document.querySelector('[data-field="danos_interiores"]');
+            // 📝 Campos de comentarios (SOLO regreso)
+const comentario = document.querySelector('[data-field="comentario_cliente"]');
+const danos      = document.querySelector('[data-field="danos_interiores"]');
 
-            const fcFecha = document.querySelector('[data-field="firma_cliente_fecha"]');
-            const fcHora  = document.querySelector('[data-field="firma_cliente_hora"]');
-            const eFecha  = document.querySelector('[data-field="entrego_fecha"]');
-            const eHora   = document.querySelector('[data-field="entrego_hora"]');
-            const rFecha  = document.querySelector('[data-field="recibio_fecha"]');
-            const rHora   = document.querySelector('[data-field="recibio_hora"]');
+const rFecha  = document.querySelector('[data-field="recibio_fecha"]');
+const rHora   = document.querySelector('[data-field="recibio_hora"]');
 
-            formData.append("comentario_cliente", comentario ? comentario.value : "");
-            formData.append("danos_interiores",   danos      ? danos.value      : "");
+formData.append("comentario_cliente", comentario ? comentario.value : "");
+formData.append("danos_interiores",   danos      ? danos.value      : "");
 
-            formData.append("firma_cliente_fecha", fcFecha ? fcFecha.value : "");
-            formData.append("firma_cliente_hora",  fcHora  ? fcHora.value  : "");
-            formData.append("entrego_fecha",       eFecha  ? eFecha.value  : "");
-            formData.append("entrego_hora",        eHora   ? eHora.value   : "");
-            formData.append("recibio_fecha",       rFecha  ? rFecha.value  : "");
-            formData.append("recibio_hora",        rHora   ? rHora.value   : "");
+// 👇 En regreso SOLO se guardan estos tiempos
+formData.append("recibio_fecha",       rFecha  ? rFecha.value  : "");
+formData.append("recibio_hora",        rHora   ? rHora.value   : "");
+
 
             // 📸 Fotos de REGRESO (usando los archivos almacenados en uploaderFiles)
             const filesRegreso = uploaderFiles["autoRegreso"] || [];
