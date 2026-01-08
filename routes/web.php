@@ -528,3 +528,9 @@ Route::delete('/categorias/{id}', [CategoriasController::class, 'destroy'])->nam
 Route::get('/admin/contrato/{id}/saldo', [ContratosAbiertosController::class, 'saldo']);
 
 Route::post('/admin/contrato/{id}/cerrar', [ContratosAbiertosController::class, 'finalizarContrato']);
+
+Route::post('/admin/reservaciones-activas/{id}/no-show',
+[ReservacionesActivasController::class, 'noShow'])->name('rutaNoShowReservacionActiva');
+
+Route::post('/admin/reservaciones-activas/{id}/cancelar',
+[ReservacionesActivasController::class, 'cancelar'])->name('rutaCancelarReservacionActiva');

@@ -14,6 +14,9 @@
     $esAeropuerto = request('sucursal') === '1';
     // Número de columnas según si mostramos No. Vuelo o no
     $cols = $esAeropuerto ? 12 : 11;
+
+    // Por si no viene del controller (evita error)
+    $reservaciones_anteriores = $reservaciones_anteriores ?? [];
   @endphp
 
   {{-- ===================== 🔍 FILTROS ===================== --}}
@@ -55,11 +58,22 @@
       ⬇️ Exportar Excel
     </button>
 
+    {{-- ✅ NUEVO: Reservaciones anteriores --}}
+    <button
+      type="button"
+      class="btn gray"
+      id="btnPrevBookings"
+      style="display:flex; align-items:center; gap:8px;"
+      title="Ver reservaciones del día anterior"
+    >
+      🗓️ Reservaciones anteriores
+    </button>
+
   </form>
 
-  <!-- ======================= 📋 TABLA ======================= -->
-  {{-- ✅ Clase para activar 12 columnas cuando es aeropuerto --}}
-  <section class="table {{ $esAeropuerto ? 'is-airport' : '' }}" data-cols="{{ $cols }}">
+  <!-- ======================= 📋 TABLA ACTUAL ======================= -->
+  {{-- ✅ ID para que exporte solo esta tabla --}}
+  <section id="tablaActivas" class="table {{ $esAeropuerto ? 'is-airport' : '' }}" data-cols="{{ $cols }}">
     <div class="thead">
       <div>No. de Reservacion</div>
       <div>Check in</div>
@@ -83,10 +97,6 @@
     <div class="tbody">
       @forelse ($reservaciones as $r)
         @php
-          // ✅ PRIORIDAD:
-          // 1) nombre_completo (del controller)
-          // 2) nombre_cliente + apellidos_cliente
-          // 3) solo nombre_cliente
           $nombreCompleto = trim((string)($r->nombre_completo ?? ''));
 
           if ($nombreCompleto === '') {
@@ -99,12 +109,10 @@
 
           if ($nombreCompleto === '') $nombreCompleto = '—';
 
-          // ✅ Días
           $inicio = \Carbon\Carbon::parse($r->fecha_inicio);
           $fin    = \Carbon\Carbon::parse($r->fecha_fin);
           $dias   = $inicio->diffInDays($fin);
 
-          // ✅ Hora segura
           $horaIn = $r->hora_retiro
             ? \Carbon\Carbon::parse($r->hora_retiro)->format('H:i')
             : '—';
@@ -120,36 +128,20 @@
              data-estado="{{ $r->estado }}"
              data-sucursal="{{ $r->sucursal_retiro }}">
 
-          {{-- 1. No. de reservación --}}
           <div>{{ $r->codigo }}</div>
-
-          {{-- 2. Check in (✅ dd/mm/aaaa) --}}
           <div>{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('d/m/Y') }}</div>
-
-          {{-- 3. Hora --}}
           <div>{{ $horaIn }}</div>
 
-          {{-- 4. No. Vuelo (solo si estamos filtrando Aeropuerto) --}}
           @if($esAeropuerto)
             <div>{{ $r->no_vuelo ?? '—' }}</div>
           @endif
 
-          {{-- 5. Categoría (CÓDIGO) --}}
           <div>{{ $r->categoria }}</div>
-
-          {{-- 6. Días --}}
           <div>{{ $dias }}</div>
-
-          {{-- 7. Nombre completo --}}
           <div>{{ $nombreCompleto }}</div>
-
-          {{-- 8. Celular --}}
           <div>{{ $r->telefono_cliente ?? '—' }}</div>
-
-          {{-- 9. Correo --}}
           <div>{{ $r->email_cliente ?? '—' }}</div>
 
-          {{-- 10. Estado --}}
           <div>
             @php
               $estado = $r->estado;
@@ -164,10 +156,8 @@
             <span class="state {{ $color }}">{{ ucfirst($estado) }}</span>
           </div>
 
-          {{-- 11. Total --}}
           <div>${{ number_format($r->total, 2) }} MXN</div>
 
-          {{-- 12. Acciones (⋯ abre modal) --}}
           <div class="actions-wrap">
             <button
               type="button"
@@ -190,6 +180,135 @@
       @endforelse
     </div>
   </section>
+
+  {{-- ==========================================================
+     🗓️ MODAL: RESERVACIONES ANTERIORES (AYER)
+     ✅ TABLA IDÉNTICA + MISMAS ACCIONES
+  =========================================================== --}}
+  <div class="pop" id="modalPrev" aria-hidden="true">
+    <div class="box box-xl">
+      <header>
+        <div>
+          <div id="pTitle">Reservaciones anteriores</div>
+          <span>Bookings del día anterior · Total: <b id="countPrev">{{ count($reservaciones_anteriores) }}</b></span>
+        </div>
+        <button type="button" id="pClose">&times;</button>
+      </header>
+
+      <div class="cnt table-cnt">
+        <section id="tablaPrevias" class="table {{ $esAeropuerto ? 'is-airport' : '' }}" data-cols="{{ $cols }}">
+          <div class="thead">
+            <div>No. de Reservacion</div>
+            <div>Check in</div>
+            <div>Hora (IN)</div>
+
+            @if($esAeropuerto)
+              <div>No. Vuelo</div>
+            @endif
+
+            <div>Categoría</div>
+            <div>Días</div>
+            <div>Nombre Completo</div>
+            <div>Celular</div>
+            <div>Correo</div>
+            <div>Estatus de pago</div>
+            <div>Total</div>
+            <div>Acciones</div>
+          </div>
+
+          <div class="tbody">
+            @forelse ($reservaciones_anteriores as $r)
+              @php
+                $nombreCompleto = trim((string)($r->nombre_completo ?? ''));
+
+                if ($nombreCompleto === '') {
+                  $nombreCompleto = trim((string)($r->nombre_cliente ?? '') . ' ' . (string)($r->apellidos_cliente ?? ''));
+                }
+
+                if ($nombreCompleto === '') {
+                  $nombreCompleto = trim((string)($r->nombre_cliente ?? ''));
+                }
+
+                if ($nombreCompleto === '') $nombreCompleto = '—';
+
+                $inicio = \Carbon\Carbon::parse($r->fecha_inicio);
+                $fin    = \Carbon\Carbon::parse($r->fecha_fin);
+                $dias   = $inicio->diffInDays($fin);
+
+                $horaIn = $r->hora_retiro
+                  ? \Carbon\Carbon::parse($r->hora_retiro)->format('H:i')
+                  : '—';
+              @endphp
+
+              <div class="row"
+                   data-codigo="{{ $r->codigo }}"
+                   data-cliente="{{ $nombreCompleto }}"
+                   data-email="{{ $r->email_cliente }}"
+                   data-numero="{{ $r->telefono_cliente }}"
+                   data-categoria="{{ $r->categoria }}"
+                   data-fecha-salida="{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}"
+                   data-estado="{{ $r->estado }}"
+                   data-sucursal="{{ $r->sucursal_retiro }}">
+
+                <div>{{ $r->codigo }}</div>
+                <div>{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('d/m/Y') }}</div>
+                <div>{{ $horaIn }}</div>
+
+                @if($esAeropuerto)
+                  <div>{{ $r->no_vuelo ?? '—' }}</div>
+                @endif
+
+                <div>{{ $r->categoria }}</div>
+                <div>{{ $dias }}</div>
+                <div>{{ $nombreCompleto }}</div>
+                <div>{{ $r->telefono_cliente ?? '—' }}</div>
+                <div>{{ $r->email_cliente ?? '—' }}</div>
+
+                <div>
+                  @php
+                    $estado = $r->estado;
+                    $color = match($estado) {
+                      'confirmada' => 'ok',
+                      'pendiente_pago' => 'warn',
+                      'hold' => 'gray',
+                      'cancelada' => 'danger',
+                      default => 'gray'
+                    };
+                  @endphp
+                  <span class="state {{ $color }}">{{ ucfirst($estado) }}</span>
+                </div>
+
+                <div>${{ number_format($r->total, 2) }} MXN</div>
+
+                <div class="actions-wrap">
+                  <button
+                    type="button"
+                    class="iconbtn more"
+                    title="Más acciones"
+                    data-open-actions
+                    data-id="{{ $r->id_reservacion }}"
+                    data-codigo="{{ $r->codigo }}"
+                    data-delete-url="{{ route('rutaEliminarReservacionActiva', $r->id_reservacion) }}"
+                  >
+                    ⋯
+                  </button>
+                </div>
+
+              </div>
+            @empty
+              <div class="row">
+                <div style="grid-column: 1 / -1; text-align:center;">No hay reservaciones anteriores.</div>
+              </div>
+            @endforelse
+          </div>
+        </section>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn gray" id="pCancel">Cerrar</button>
+      </div>
+    </div>
+  </div>
 
   {{-- ============================
        🪟 MODAL DETALLE RESERVACIÓN
@@ -305,6 +424,26 @@
           </form>
         </div>
 
+        {{-- ✅ SOLO PARA NO SHOW / CANCELAR --}}
+        <div id="aExtraFields" class="a-extra" style="display:none;">
+          <div class="a-field">
+            <label for="aComentarios">Comentarios</label>
+            <textarea id="aComentarios" class="a-textarea" rows="3" placeholder="Escribe el motivo..."></textarea>
+          </div>
+
+          <div class="a-field">
+            <label for="aEliminadoPor">¿Quién lo eliminó?</label>
+            <select id="aEliminadoPor" class="a-select">
+              <option value="">Selecciona…</option>
+              <option value="Javier">Javier</option>
+              <option value="Ventas">Ventas</option>
+              <option value="Recepción">Recepción</option>
+              <option value="Sistema">Sistema</option>
+            </select>
+          </div>
+        </div>
+
+        <input type="hidden" id="aAccion" value="">
         <input type="hidden" id="aIdReservacion" value="">
       </div>
 
@@ -320,6 +459,7 @@
 @section('js-vistaReservacionesActivas')
   <script src="{{ asset('js/reservacionesActivas.js') }}"></script>
 
+  {{-- ✅ Exportar Excel SOLO para tabla principal --}}
   <script>
     window.addEventListener("DOMContentLoaded", () => {
       const btn = document.getElementById('btnExportExcel');
@@ -347,8 +487,8 @@
       };
 
       btn.addEventListener('click', () => {
-        const thead = document.querySelector('.table .thead');
-        const rows  = Array.from(document.querySelectorAll('.table .tbody .row'));
+        const thead = document.querySelector('#tablaActivas .thead');
+        const rows  = Array.from(document.querySelectorAll('#tablaActivas .tbody .row'));
 
         if (!thead) {
           alert('No encontré el encabezado de la tabla.');

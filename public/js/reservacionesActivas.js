@@ -15,28 +15,53 @@ const Fmx = (v) =>
 const toDMY = (dateStr) => {
   if (!dateStr) return "";
   const s = String(dateStr).trim();
-  const iso = s.includes("T") ? s.split("T")[0] : s; // por si llega timestamp
+  const iso = s.includes("T") ? s.split("T")[0] : s;
   const parts = iso.split("-");
-  if (parts.length !== 3) return s; // si no es ISO, lo regresa igual
+  if (parts.length !== 3) return s;
   const [y, m, d] = parts;
   if (!y || !m || !d) return s;
   return `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`;
 };
 
 /* ==========================================================
-   🚀 ESPERAR A QUE EL DOM ESTÉ LISTO
+   🚀 DOM READY
 ========================================================== */
 window.addEventListener("DOMContentLoaded", () => {
   console.log("✅ JS cargado correctamente - Reservaciones Activas");
 
   /* ==========================================================
-     🔍 FILTRO DE BÚSQUEDA (nombre, correo o estado)
-     ✅ YA NO USAMOS row.children[] (cambiaba con Aeropuerto)
-     ✅ Usamos data-* que no se mueven
+     🗓️ MODAL: RESERVACIONES ANTERIORES
+  =========================================================== */
+  const modalPrev = $("#modalPrev");
+  const btnPrev   = $("#btnPrevBookings");
+  const pClose    = $("#pClose");
+  const pCancel   = $("#pCancel");
+
+  function openPrevModal(){
+    if (!modalPrev) return;
+    modalPrev.classList.add("show");
+    modalPrev.setAttribute("aria-hidden", "false");
+  }
+  function closePrevModal(){
+    if (!modalPrev) return;
+    modalPrev.classList.remove("show");
+    modalPrev.setAttribute("aria-hidden", "true");
+  }
+
+  btnPrev?.addEventListener("click", openPrevModal);
+  pClose?.addEventListener("click", closePrevModal);
+  pCancel?.addEventListener("click", closePrevModal);
+
+  modalPrev?.addEventListener("click", (e) => {
+    if (e.target === modalPrev) closePrevModal();
+  });
+
+  /* ==========================================================
+     🔍 FILTRO DE BÚSQUEDA (SOLO TABLA PRINCIPAL)
   =========================================================== */
   $("#q")?.addEventListener("input", () => {
     const q = $("#q").value.trim().toLowerCase();
-    const rows = $$(".tbody .row");
+    const rows = $$("#tablaActivas .tbody .row");
     let visible = 0;
 
     rows.forEach((row) => {
@@ -75,9 +100,7 @@ window.addEventListener("DOMContentLoaded", () => {
     console.log(`📦 Consultando reservación ${codigo}...`);
 
     try {
-      const resp = await fetch(
-        `/admin/reservaciones-activas/${encodeURIComponent(codigo)}`
-      );
+      const resp = await fetch(`/admin/reservaciones-activas/${encodeURIComponent(codigo)}`);
       if (!resp.ok) throw new Error(`Error ${resp.status}`);
 
       const data = await resp.json();
@@ -85,13 +108,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
       current = data;
 
-      /* ==========================================================
-         🧩 RELLENAR CAMPOS DEL MODAL
-      =========================================================== */
       $("#mTitle").textContent = `Detalle Reservación ${data.codigo || "—"}`;
       $("#mCodigo").textContent = data.codigo || "—";
 
-      // ✅ Si backend manda nombre + apellidos separado, los unimos.
       const fullName = [data.nombre_cliente, data.apellidos_cliente]
         .filter(Boolean)
         .join(" ")
@@ -103,12 +122,11 @@ window.addEventListener("DOMContentLoaded", () => {
       $("#mCategoria").textContent = data.categoria || "—";
       $("#mEstado").textContent = data.estado || "—";
 
-      // ✅ Modal: fechas dd/mm/aaaa
       const salida = data.fecha_inicio
-        ? `${toDMY(data.fecha_inicio)} ${String(data.hora_retiro || "").slice(0,5)}`
+        ? `${toDMY(data.fecha_inicio)} ${String(data.hora_retiro || "").slice(0, 5)}`
         : "—";
       const entrega = data.fecha_fin
-        ? `${toDMY(data.fecha_fin)} ${String(data.hora_entrega || "").slice(0,5)}`
+        ? `${toDMY(data.fecha_fin)} ${String(data.hora_entrega || "").slice(0, 5)}`
         : "—";
 
       $("#mSalida").textContent = salida;
@@ -129,9 +147,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  /* ==========================================================
-     ❌ CERRAR MODAL
-  =========================================================== */
   function closeModal() {
     $("#modal").classList.remove("show");
     console.log("❎ Modal cerrado");
@@ -141,38 +156,37 @@ window.addEventListener("DOMContentLoaded", () => {
   $("#mCancel")?.addEventListener("click", closeModal);
 
   /* ==========================================================
-     🪟 ABRIR MODAL AL HACER CLIC EN UNA FILA
+     ✅ CLIC EN FILA (FUNCIONA PARA AMBAS TABLAS)
+     - Tabla principal y tabla del modal
   =========================================================== */
-  $$(".tbody .row").forEach((row) => {
-    row.addEventListener("click", (ev) => {
-      if (["A", "BUTTON", "FORM"].includes(ev.target.tagName)) return;
-      openModal(row);
-    });
+  document.addEventListener("click", (ev) => {
+    const row = ev.target.closest(".table .tbody .row");
+    if (!row) return;
+
+    // No abrir si se clickeó algo interactivo dentro de la fila
+    if (ev.target.closest("button, a, form, input, select, textarea")) return;
+
+    openModal(row);
   });
 
   /* ==========================================================
-     🚪 CAPTURAR CONTRATO (redirige visualmente)
+     🚪 CAPTURAR CONTRATO
   =========================================================== */
   $("#mGo")?.addEventListener("click", () => {
     if (!current) return;
-
-    const url = `/admin/contrato/${encodeURIComponent(
-      current.id_reservacion
-    )}`;
+    const url = `/admin/contrato/${encodeURIComponent(current.id_reservacion)}`;
     console.log("➡️ Redirigiendo a vista Contrato:", url);
     window.location.href = url;
   });
 
   /* ==========================================================
-     ✏️ MODAL EDICIÓN (solo datos permitidos)
+     ✏️ MODAL EDICIÓN
   =========================================================== */
   function openEditModal() {
     if (!current) return;
 
     $("#eTitle").textContent = `Editar ${current.codigo || ""}`;
 
-    // ✅ Si backend maneja apellidos aparte, puedes decidir aquí si quieres editar ambos.
-    // Por ahora, dejamos el nombre como viene.
     $("#eNombre").value = current.nombre_cliente || "";
     $("#eCorreo").value = current.email_cliente || "";
     $("#eTelefono").value = current.telefono_cliente || "";
@@ -240,21 +254,18 @@ window.addEventListener("DOMContentLoaded", () => {
 
       Object.assign(current, payload);
 
-      // ✅ Actualiza modal (en dd/mm/aaaa)
       $("#mCliente").textContent = current.nombre_cliente;
       $("#mEmail").textContent = current.email_cliente;
       $("#mNumero").textContent = current.telefono_cliente;
 
-      const salida = `${toDMY(current.fecha_inicio)} ${String(current.hora_retiro || "").slice(0,5)}`;
-      const entrega = `${toDMY(current.fecha_fin)} ${String(current.hora_entrega || "").slice(0,5)}`;
+      const salida = `${toDMY(current.fecha_inicio)} ${String(current.hora_retiro || "").slice(0, 5)}`;
+      const entrega = `${toDMY(current.fecha_fin)} ${String(current.hora_entrega || "").slice(0, 5)}`;
 
       $("#mSalida").textContent = salida;
       $("#mEntrega").textContent = entrega;
 
       alertify.success("Reservación actualizada correctamente");
       closeEditModal();
-
-      // (Opcional) Si quieres reflejarlo en la tabla sin recargar, lo hacemos después.
     } catch (err) {
       console.error(err);
       alertify.error(err.message || "Error al guardar la reservación");
@@ -262,7 +273,7 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   /* ==========================================================
-     🧩 MODAL ACCIONES (⋯) + CONFIRMACIONES + POST
+     🧩 MODAL ACCIONES (⋯) - MISMO PARA AMBAS TABLAS
   =========================================================== */
   const modalActions = $("#modalActions");
   const aClose = $("#aClose");
@@ -271,6 +282,11 @@ window.addEventListener("DOMContentLoaded", () => {
   const aIdReservacion = $("#aIdReservacion");
   const aDeleteForm = $("#aDeleteForm");
 
+  const aExtraFields = $("#aExtraFields");
+  const aComentarios = $("#aComentarios");
+  const aEliminadoPor = $("#aEliminadoPor");
+  const aAccion = $("#aAccion");
+
   function openActionsModal({ id, codigo, deleteUrl }) {
     if (!modalActions) return;
 
@@ -278,6 +294,11 @@ window.addEventListener("DOMContentLoaded", () => {
     if (aIdReservacion) aIdReservacion.value = id || "";
 
     if (aDeleteForm && deleteUrl) aDeleteForm.setAttribute("action", deleteUrl);
+
+    if (aExtraFields) aExtraFields.style.display = "none";
+    if (aComentarios) aComentarios.value = "";
+    if (aEliminadoPor) aEliminadoPor.value = "";
+    if (aAccion) aAccion.value = "";
 
     modalActions.classList.add("show");
     modalActions.setAttribute("aria-hidden", "false");
@@ -289,14 +310,16 @@ window.addEventListener("DOMContentLoaded", () => {
     modalActions.setAttribute("aria-hidden", "true");
   }
 
-  $$("[data-open-actions]").forEach((btn) => {
-    btn.addEventListener("click", (ev) => {
-      ev.stopPropagation();
-      openActionsModal({
-        id: btn.dataset.id,
-        codigo: btn.dataset.codigo,
-        deleteUrl: btn.dataset.deleteUrl,
-      });
+  // ✅ Delegación: funciona para los ⋯ de ambas tablas
+  document.addEventListener("click", (ev) => {
+    const btn = ev.target.closest("[data-open-actions]");
+    if (!btn) return;
+
+    ev.stopPropagation();
+    openActionsModal({
+      id: btn.dataset.id,
+      codigo: btn.dataset.codigo,
+      deleteUrl: btn.dataset.deleteUrl,
     });
   });
 
@@ -316,13 +339,15 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
 
-  async function postAccion(url) {
+  async function postAccion(url, payload = null) {
     const res = await fetch(url, {
       method: "POST",
       headers: {
         "X-CSRF-TOKEN": csrf,
         "Accept": "application/json",
+        ...(payload ? { "Content-Type": "application/json" } : {}),
       },
+      ...(payload ? { body: JSON.stringify(payload) } : {}),
     });
 
     const data = await res.json().catch(() => ({}));
@@ -334,16 +359,39 @@ window.addEventListener("DOMContentLoaded", () => {
     return data;
   }
 
+  function showExtras(tipo) {
+    if (aExtraFields) aExtraFields.style.display = "grid";
+    if (aAccion) aAccion.value = tipo; // "no-show" | "cancelar"
+  }
+
+  function getExtrasOrStop() {
+    const comentarios = (aComentarios?.value || "").trim();
+    const eliminado_por = (aEliminadoPor?.value || "").trim();
+
+    if (!comentarios) { alertify.error("Agrega comentarios"); return null; }
+    if (!eliminado_por) { alertify.error("Selecciona quién lo eliminó"); return null; }
+
+    return { comentarios, eliminado_por };
+  }
+
   $("#aNoShow")?.addEventListener("click", async (ev) => {
     ev.stopPropagation();
     const id = aIdReservacion?.value;
     const codigo = aCodigo?.textContent || "—";
     if (!id) return;
 
+    if (aAccion?.value !== "no-show") {
+      showExtras("no-show");
+      return;
+    }
+
+    const payload = getExtrasOrStop();
+    if (!payload) return;
+
     if (!confirm(`¿Marcar ${codigo} como NO SHOW?`)) return;
 
     try {
-      await postAccion(`/admin/reservaciones-activas/${id}/no-show`);
+      await postAccion(`/admin/reservaciones-activas/${id}/no-show`, payload);
       alertify.success("Marcada como No Show");
       window.location.reload();
     } catch (e) {
@@ -358,10 +406,18 @@ window.addEventListener("DOMContentLoaded", () => {
     const codigo = aCodigo?.textContent || "—";
     if (!id) return;
 
+    if (aAccion?.value !== "cancelar") {
+      showExtras("cancelar");
+      return;
+    }
+
+    const payload = getExtrasOrStop();
+    if (!payload) return;
+
     if (!confirm(`¿Cancelar ${codigo}?`)) return;
 
     try {
-      await postAccion(`/admin/reservaciones-activas/${id}/cancelar`);
+      await postAccion(`/admin/reservaciones-activas/${id}/cancelar`, payload);
       alertify.success("Reservación cancelada");
       window.location.reload();
     } catch (e) {

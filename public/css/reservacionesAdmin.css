@@ -14,6 +14,12 @@
   --card-radius:18px;
   --card-shadow:0 22px 55px rgba(15,23,42,.12);
   --card-border:rgba(15,23,42,.08);
+
+  /* extras UI */
+  --chip:#f1f5f9;
+  --chip-stroke:#e5e7eb;
+  --glow:0 0 0 4px rgba(178,34,34,.12);
+  --glass:rgba(255,255,255,.86);
 }
 
 *{box-sizing:border-box}
@@ -68,7 +74,7 @@ label{
   box-shadow:0 0 0 4px rgba(178,34,34,.12);
 }
 .input-lg{
-  padding:14px 16px;           /* ✅ inputs + calendarios más grandes */
+  padding:14px 16px;
   font-size:15px;
   border-radius:14px;
 }
@@ -136,29 +142,29 @@ label{
 
 /* ===== Cards stack ===== */
 .stack-card{
-  background:rgba(255,255,255,.86);
+  background:var(--glass);
   border:1px solid var(--card-border);
   border-radius:var(--card-radius);
   box-shadow:var(--card-shadow);
   overflow:hidden;
-  margin-bottom:var(--card-gap);        /* ✅ separación entre cards */
+  margin-bottom:var(--card-gap);
 }
 
-/* ✅ Header de card: rojo sólido (como botones) */
+/* ✅ Header de card: rojo sólido */
 .stack-head{
   padding:14px 16px;
-  background:linear-gradient(180deg, var(--brand), var(--brand-dark)); /* ✅ rojo elegante */
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
   border-bottom:1px solid rgb(227, 0, 0);
 }
 .stack-title{
   font-weight:900;
   font-size:16px;
-  color:#fff;                           /* ✅ texto blanco */
+  color:#fff;
   letter-spacing:.2px;
 }
 .stack-sub{
   margin-top:3px;
-  color:rgba(255,255,255,.88);          /* ✅ sub blanco suave */
+  color:rgba(255,255,255,.88);
   font-size:13px;
   font-weight:600;
 }
@@ -304,7 +310,7 @@ label{
   justify-content:space-between;
   gap:10px;
   padding:12px 14px;
-  background:linear-gradient(180deg, var(--brand), var(--brand-dark)); /* ✅ rojo sólido */
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
   color:#fff;
 }
 .modal-title{ font-weight:900; letter-spacing:.2px; }
@@ -367,8 +373,8 @@ label{
   border-radius:999px;
   font-size:12px;
   font-weight:900;
-  background:#f1f5f9;
-  border:1px solid #e5e7eb;
+  background:var(--chip);
+  border:1px solid var(--chip-stroke);
   color:#0f172a;
 }
 .pill-ok{
@@ -397,9 +403,7 @@ label{
   object-fit:cover;
 }
 @media (max-width:840px){
-  .cat-wide{
-    grid-template-columns:1fr;
-  }
+  .cat-wide{ grid-template-columns:1fr; }
   .cp-img{ height:160px; }
   .cp-price{ text-align:left; }
 }
@@ -489,6 +493,7 @@ label{
 }
 
 body.no-scroll{ overflow:hidden; }
+
 /* ✅ Date/Time más pro */
 input[type="date"].input-lg,
 input[type="time"].input-lg{
@@ -504,14 +509,8 @@ input[type="time"].input-lg::-webkit-calendar-picker-indicator{
   transform:scale(1.15);
 }
 
-input[type="date"].input-lg{
-  padding-right:44px;
-  background-image: linear-gradient(transparent,transparent);
-}
-input[type="time"].input-lg{
-  padding-right:44px;
-  background-image: linear-gradient(transparent,transparent);
-}
+input[type="date"].input-lg{ padding-right:44px; background-image: linear-gradient(transparent,transparent); }
+input[type="time"].input-lg{ padding-right:44px; background-image: linear-gradient(transparent,transparent); }
 
 /* =========================================
    ✅ FLATPICKR (CALENDARIO + HORA) — MODAL PRO
@@ -555,9 +554,7 @@ input[type="time"].input-lg{
   background:linear-gradient(180deg, var(--brand), var(--brand-dark)) !important;
   padding:10px 10px !important;
 }
-.flatpickr-months .flatpickr-month{
-  color:#fff !important;
-}
+.flatpickr-months .flatpickr-month{ color:#fff !important; }
 .flatpickr-current-month{
   font-size:18px !important;
   font-weight:900 !important;
@@ -569,19 +566,15 @@ input[type="time"].input-lg{
   font-weight:900 !important;
 }
 
-/* Flechas grandes negras como tu screenshot */
-.flatpickr-prev-month, .flatpickr-next-month{
-  padding:10px !important;
-}
+/* Flechas grandes */
+.flatpickr-prev-month, .flatpickr-next-month{ padding:10px !important; }
 .flatpickr-prev-month svg, .flatpickr-next-month svg{
   width:22px !important;
   height:22px !important;
   fill:#111827 !important;
 }
 .flatpickr-prev-month:hover svg,
-.flatpickr-next-month:hover svg{
-  fill:#000 !important;
-}
+.flatpickr-next-month:hover svg{ fill:#000 !important; }
 
 /* Días de la semana */
 .flatpickr-weekdays{
@@ -646,9 +639,7 @@ input[type="time"].input-lg{
   font-weight:900;
   cursor:pointer;
 }
-.fp-actions .fp-today{
-  color:#111827;
-}
+.fp-actions .fp-today{ color:#111827; }
 .fp-actions .fp-clear{
   color:#dc2626;
   border-color:rgba(220,38,38,.25);
@@ -665,19 +656,13 @@ input[type="time"].input-lg{
 /* =========================================
    ✅ TIME PICKER (HORA) — PRO
 ========================================= */
-.flatpickr-time{
-  border-top:1px solid var(--stroke) !important;
-}
-.flatpickr-time .numInputWrapper{
-  border-radius:14px !important;
-}
+.flatpickr-time{ border-top:1px solid var(--stroke) !important; }
+.flatpickr-time .numInputWrapper{ border-radius:14px !important; }
 .flatpickr-time input{
   font-weight:900 !important;
   font-size:16px !important;
 }
-.flatpickr-time .flatpickr-am-pm{
-  font-weight:900 !important;
-}
+.flatpickr-time .flatpickr-am-pm{ font-weight:900 !important; }
 
 /* Inputs (se ven grandes y pro) */
 input.flatpickr-input.input-lg{
@@ -690,4 +675,715 @@ input.flatpickr-input.input-lg{
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator{
   display:none;
+}
+
+/* =========================
+   ✅ COMBOS (PAÍS + LADA)
+========================= */
+.combo{ position:relative; width:100%; }
+.combo-field{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  width:100%;
+  position:relative;
+}
+.combo-flag{
+  width:34px; height:34px;
+  border-radius:12px;
+  display:inline-flex;
+  align-items:center; justify-content:center;
+  border:1px solid var(--stroke);
+  background:#fff;
+  font-size:18px;
+}
+.combo-input{ padding-right:48px; }
+.combo-toggle{
+  position:absolute;
+  right:10px; top:50%;
+  transform:translateY(-50%);
+  width:34px; height:34px;
+  border-radius:12px;
+  border:1px solid var(--stroke);
+  background:#fff;
+  cursor:pointer;
+  font-weight:1000;
+}
+
+.combo-dd{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0; right:0;
+  background:#fff;
+  border:1px solid var(--stroke);
+  border-radius:16px;
+  box-shadow:0 22px 55px rgba(15,23,42,.14);
+  overflow:hidden;
+  display:none;
+  z-index:999;
+}
+.combo-dd.is-open{ display:block; }
+
+.combo-dd .opt{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px 12px;
+  cursor:pointer;
+  font-weight:900;
+  border-bottom:1px solid #f1f5f9;
+}
+.combo-dd .opt:hover{ background:#f8fafc; }
+.combo-dd .opt:last-child{ border-bottom:0; }
+
+.combo-dd .left{ display:flex; gap:10px; align-items:center; }
+.combo-dd .tag{
+  font-size:11px;
+  font-weight:1000;
+  padding:5px 10px;
+  border-radius:999px;
+  border:1px solid rgba(178,34,34,.18);
+  background:rgba(178,34,34,.08);
+  color:#7a1414;
+}
+
+.combo-dd .empty{
+  padding:14px;
+  text-align:center;
+  color:#64748b;
+  font-weight:900;
+}
+
+/* ===== Teléfono (prefijo + input) ===== */
+.phone-grid{
+  position:relative;
+  display:grid;
+  grid-template-columns: 120px 1fr;
+  gap:10px;
+  align-items:stretch;
+}
+.phone-prefix{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--stroke);
+  background:#fff;
+  cursor:pointer;
+  font-weight:1000;
+}
+.phone-prefix .flag{ font-size:18px; }
+.phone-prefix .code{ font-weight:1000; color:#111827; }
+.phone-prefix .chev{ opacity:.7; }
+
+.combo-dd.phone-dd{
+  grid-column:1 / -1;
+  max-height:320px;
+}
+.phone-dd .dd-head{
+  padding:10px;
+  border-bottom:1px solid #f1f5f9;
+  background:#fff;
+}
+.phone-dd .dd-search{
+  width:100%;
+  padding:12px 12px;
+  border:1px solid var(--stroke);
+  border-radius:12px;
+  outline:none;
+  font-weight:900;
+}
+.phone-dd .dd-list{
+  max-height:260px;
+  overflow:auto;
+}
+.phone-dd .row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px;
+  border-bottom:1px solid #f1f5f9;
+  cursor:pointer;
+  font-weight:900;
+}
+.phone-dd .row:hover{ background:#f8fafc; }
+.phone-dd .row .l{ display:flex; align-items:center; gap:10px; }
+.phone-dd .row .flag{ width:26px; display:inline-flex; justify-content:center; }
+.phone-dd .row .name{ font-weight:1000; }
+.phone-dd .row .dial{ color:#0f172a; opacity:.9; }
+
+@media (max-width: 520px){
+  .phone-grid{ grid-template-columns: 1fr; }
+  .phone-prefix{ justify-content:space-between; }
+}
+
+/* =========================
+   ✅ PAÍS readonly UI
+========================= */
+.readonly-country{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:900;
+  color:#111827;
+}
+.readonly-country #pais_flag_ui{ font-size:18px; }
+
+/* ==========================================================
+   ✅ PROTECCIONES (MODAL) — PAQUETES + INDIVIDUALES ESTÉTICO
+========================================================== */
+
+/* Tabs */
+.modal-prote-tabs .tabs-bar{
+  display:flex;
+  gap:10px;
+  padding:12px 16px;
+  background:#fff;
+  border-bottom:1px solid #e5e7eb;
+}
+.modal-prote-tabs .tab-btn{
+  border:1px solid #e5e7eb;
+  background:#f8fafc;
+  padding:10px 12px;
+  border-radius:999px;
+  font-weight:900;
+  cursor:pointer;
+  color:#111827;
+  transition:.15s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.modal-prote-tabs .tab-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 10px 24px rgba(0,0,0,.10);
+}
+.modal-prote-tabs .tab-btn.is-active{
+  border-color:rgba(178,34,34,.28);
+  background:rgba(178,34,34,.08);
+  box-shadow:0 0 0 4px rgba(178,34,34,.10);
+  color:var(--brand);
+}
+.modal-prote-tabs .tab-panel{ display:none; }
+.modal-prote-tabs .tab-panel.is-active{ display:block; }
+
+/* ===== Carrusel horizontal ===== */
+.scroll-h{
+  display:flex;
+  gap:16px;
+  overflow-x:auto;
+  padding:10px 6px 16px;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+}
+.scroll-h::-webkit-scrollbar{ height:10px; }
+.scroll-h::-webkit-scrollbar-thumb{ background:#e5e7eb; border-radius:999px; }
+.scroll-h::-webkit-scrollbar-track{ background:transparent; }
+
+/* ==========================================================
+   ✅ PAQUETES DE PROTECCIÓN (cards del carrusel)
+   Más espacio + más estético
+========================================================== */
+.prote-pack,
+.pack-card,
+.prote-card,
+.card-pack{
+  flex:0 0 360px;                  /* ✅ más ancho */
+  scroll-snap-align:start;
+  background:
+    radial-gradient(900px 220px at 20% 0%, rgba(178,34,34,.10), transparent 55%),
+    #fff;
+  border:1px solid rgba(15,23,42,.10);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 14px 38px rgba(0,0,0,.12);
+  transition:.18s ease;
+  position:relative;
+  min-height:315px;               /* ✅ más alto */
+}
+
+/* franja */
+.prote-pack::before,
+.pack-card::before,
+.prote-card::before,
+.card-pack::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:12px;
+  background:linear-gradient(90deg,var(--brand), #ff6b6b);
+}
+
+/* hover */
+.prote-pack:hover,
+.pack-card:hover,
+.prote-card:hover,
+.card-pack:hover{
+  transform:translateY(-4px);
+  box-shadow:0 22px 58px rgba(0,0,0,.16);
+}
+
+/* seleccionado */
+.prote-pack.is-selected,
+.pack-card.is-selected,
+.prote-card.is-selected,
+.card-pack.is-selected{
+  border-color:rgba(178,34,34,.45);
+  box-shadow:var(--glow), 0 22px 58px rgba(0,0,0,.16);
+}
+
+/* badge recomendado */
+.prote-pack .badge,
+.pack-card .badge,
+.prote-card .badge,
+.card-pack .badge,
+.prote-pack .tag,
+.pack-card .tag,
+.prote-card .tag,
+.card-pack .tag{
+  position:absolute;
+  top:16px;
+  right:16px;
+  background:#111827;
+  color:#fff;
+  padding:7px 11px;
+  border-radius:999px;
+  font-weight:1000;
+  font-size:11px;
+  letter-spacing:.25px;
+  box-shadow:0 12px 24px rgba(0,0,0,.18);
+}
+
+/* header interior */
+.prote-pack .head,
+.pack-card .head,
+.prote-card .head,
+.card-pack .head{
+  padding:22px 18px 12px;         /* ✅ más padding */
+}
+.prote-pack h3,
+.pack-card h3,
+.prote-card h3,
+.card-pack h3{
+  margin:10px 0 6px;
+  font-size:19px;
+  font-weight:1000;
+  letter-spacing:.2px;
+}
+.prote-pack p,
+.pack-card p,
+.prote-card p,
+.card-pack p{
+  margin:0;
+  color:#475569;
+  font-weight:700;
+  font-size:13px;
+  line-height:1.4;
+}
+
+/* precio */
+.prote-pack .price,
+.pack-card .price,
+.prote-card .price,
+.card-pack .price{
+  margin-top:12px;
+  background:linear-gradient(180deg, #fafafa, #ffffff);
+  border:1px dashed rgba(15,23,42,.14);
+  border-radius:16px;
+  padding:14px 14px;              /* ✅ más padding */
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+}
+.prote-pack .price strong,
+.pack-card .price strong,
+.prote-card .price strong,
+.card-pack .price strong{
+  font-size:24px;                 /* ✅ más grande */
+  font-weight:1000;
+  color:#111827;
+}
+.prote-pack .price span,
+.pack-card .price span,
+.prote-card .price span,
+.card-pack .price span{
+  font-size:12px;
+  font-weight:1000;
+  color:#64748b;
+}
+
+/* lista de beneficios */
+.prote-pack ul,
+.pack-card ul,
+.prote-card ul,
+.card-pack ul{
+  list-style:none;
+  padding:0 18px 16px;
+  margin:12px 0 0;
+  display:grid;
+  gap:10px;                       /* ✅ más aire */
+}
+.prote-pack ul li,
+.pack-card ul li,
+.prote-card ul li,
+.card-pack ul li{
+  background:#f3f4f6;
+  border:1px solid rgba(15,23,42,.10);
+  border-radius:999px;
+  padding:9px 12px;               /* ✅ más padding */
+  font-weight:900;
+  font-size:12px;
+  color:#111827;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.prote-pack ul li::before,
+.pack-card ul li::before,
+.prote-card ul li::before,
+.card-pack ul li::before{
+  content:"✓";
+  width:18px;height:18px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:rgba(34,197,94,.14);
+  border:1px solid rgba(34,197,94,.28);
+  color:#166534;
+  font-weight:1000;
+}
+
+/* acciones */
+.prote-pack .actions,
+.pack-card .actions,
+.prote-card .actions,
+.card-pack .actions{
+  padding:14px 18px 18px;         /* ✅ más espacio */
+  display:flex;
+  gap:10px;
+}
+.prote-pack .actions .btn,
+.pack-card .actions .btn,
+.prote-card .actions .btn,
+.card-pack .actions .btn{
+  width:100%;
+  justify-content:center;
+  border-radius:14px;
+  padding:11px 14px;              /* ✅ más cómodo */
+}
+
+/* ===== Individuales (tus .ins-card) — más pro ===== */
+.cat-title{
+  margin:18px 0 10px;
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:.3px;
+  color:#111827;
+  text-transform:uppercase;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.cat-title::after{
+  content:"";
+  flex:1;
+  height:2px;
+  background:linear-gradient(90deg, rgba(178,34,34,.35), transparent);
+  border-radius:999px;
+}
+
+/* Card premium */
+.ins-card{
+  flex:0 0 320px;
+  scroll-snap-align:start;
+  background:
+    linear-gradient(180deg, rgba(178,34,34,.06), transparent 40%),
+    #fff;
+  border-radius:18px;
+  border:1px solid #e5e7eb;
+  box-shadow:0 14px 34px rgba(0,0,0,.12);
+  overflow:hidden;
+  transition:.18s ease;
+  position:relative;
+}
+.ins-card::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:10px;
+  background:linear-gradient(90deg,var(--brand), #ff6b6b);
+}
+.ins-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 20px 50px rgba(0,0,0,.16);
+}
+.ins-card .body{ padding:16px 14px 14px; }
+
+.ins-card h4{
+  margin:8px 0 6px;
+  font-size:16px;
+  font-weight:1000;
+  color:#111827;
+  letter-spacing:.1px;
+}
+.ins-card p{
+  margin:0 0 12px;
+  font-size:13px;
+  color:#475569;
+  font-weight:700;
+  line-height:1.35;
+  min-height:36px;
+}
+.ins-card .precio{
+  margin-top:10px;
+  background:#f9fafb;
+  border:1px dashed #e5e7eb;
+  border-radius:14px;
+  padding:10px 12px;
+  font-weight:1000;
+  color:#111827;
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+}
+.ins-card .precio span{
+  color:#64748b;
+  font-size:12px;
+  font-weight:900;
+}
+
+/* fila inferior */
+.ins-card .small{
+  margin-top:10px;
+  font-weight:1000;
+  color:#64748b;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+/* Switch */
+.switch{
+  width:56px;
+  height:32px;
+  border-radius:999px;
+  background:#e5e7eb;
+  border:1px solid #d1d5db;
+  position:relative;
+  margin-top:0;
+  box-shadow:inset 0 4px 10px rgba(0,0,0,.06);
+  flex:0 0 auto;
+}
+.switch::after{
+  content:"";
+  position:absolute;
+  top:3px; left:3px;
+  width:26px; height:26px;
+  border-radius:50%;
+  background:#fff;
+  box-shadow:0 10px 20px rgba(0,0,0,.18);
+  transition:.18s ease;
+}
+
+/* ON */
+.switch.is-on,
+.ins-card.is-selected .switch,
+.individual-item.is-selected .switch,
+.individual-item.active .switch{
+  background:rgba(178,34,34,.15);
+  border-color:rgba(178,34,34,.35);
+}
+.switch.is-on::after,
+.ins-card.is-selected .switch::after,
+.individual-item.is-selected .switch::after,
+.individual-item.active .switch::after{
+  left:27px;
+  background:var(--brand);
+}
+
+/* seleccionado */
+.ins-card.is-selected,
+.individual-item.is-selected,
+.individual-item.active{
+  border-color:rgba(178,34,34,.45);
+  box-shadow:var(--glow), 0 22px 60px rgba(0,0,0,.16);
+}
+.ins-card.is-selected::after,
+.individual-item.is-selected::after,
+.individual-item.active::after{
+  content:"SELECCIONADO";
+  position:absolute;
+  top:16px;
+  right:14px;
+  background:#111827;
+  color:#fff;
+  padding:6px 10px;
+  border-radius:999px;
+  font-weight:1000;
+  font-size:11px;
+  letter-spacing:.25px;
+  box-shadow:0 10px 20px rgba(0,0,0,.16);
+}
+
+.individual-item.is-selected .small,
+.individual-item.active .small{ color:var(--brand); }
+
+/* Responsive */
+@media (max-width: 860px){
+  .prote-pack, .pack-card, .prote-card, .card-pack{ flex-basis: 320px; }
+  .ins-card{ flex-basis: 290px; }
+}
+@media (max-width: 560px){
+  .pop.modal{ padding:10px; }
+  .modal-prote-tabs .tabs-bar{ flex-wrap:wrap; }
+  .modal-prote-tabs .tab-btn{ width:100%; justify-content:center; }
+}
+/* ✅ Descripción de paquetes alineada a la derecha */
+.prote-pack .head p,
+.pack-card .head p,
+.prote-card .head p,
+.card-pack .head p{
+  text-align:right;
+}
+
+/* (Opcional) si también quieres el título a la derecha */
+.prote-pack .head h3,
+.pack-card .head h3,
+.prote-card .head h3,
+.card-pack .head h3{
+  text-align:right;
+}
+/* ===============================
+   MÁS ESPACIO EN CARDS DE PAQUETES
+=============================== */
+
+/* Espacio general interno */
+.prote-pack,
+.pack-card,
+.prote-card,
+.card-pack{
+  padding: 10px;              /* margen interno extra */
+}
+
+/* Header (título + descripción) */
+.prote-pack .head,
+.pack-card .head,
+.prote-card .head,
+.card-pack .head{
+  padding: 28px 22px 16px;    /* más aire arriba y lados */
+}
+
+/* Precio */
+.prote-pack .price,
+.pack-card .price,
+.prote-card .price,
+.card-pack .price{
+  margin: 18px 22px 0;        /* separación lateral */
+}
+
+/* Lista de beneficios */
+.prote-pack ul,
+.pack-card ul,
+.prote-card ul,
+.card-pack ul{
+  padding: 0 22px 18px;       /* más margen lateral */
+}
+
+/* Botones */
+.prote-pack .actions,
+.pack-card .actions,
+.prote-card .actions,
+.card-pack .actions{
+  padding: 18px 22px 22px;    /* cierre más respirado */
+}
+/* =========================================
+   💰 PRECIO DE PAQUETES — ESTILO PREMIUM
+========================================= */
+
+/* Contenedor del precio */
+.prote-pack .price,
+.pack-card .price,
+.prote-card .price,
+.card-pack .price{
+  background:
+    linear-gradient(180deg, rgba(178,34,34,.08), rgba(178,34,34,.02)),
+    #fff;
+  border:1px dashed rgba(178,34,34,.35);
+  border-radius:18px;
+  padding:18px 18px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:14px;
+  position:relative;
+}
+
+/* Etiqueta pequeña arriba del monto */
+.prote-pack .price::before,
+.pack-card .price::before,
+.prote-card .price::before,
+.card-pack .price::before{
+  content:"Precio por día";
+  position:absolute;
+  top:-10px;
+  left:16px;
+  background:#fff;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:1000;
+  color:#7a1414;
+  border:1px solid rgba(178,34,34,.35);
+  letter-spacing:.25px;
+}
+
+/* Monto principal */
+.prote-pack .price strong,
+.pack-card .price strong,
+.prote-card .price strong,
+.card-pack .price strong{
+  font-size:28px;                 /* 🔥 más protagonista */
+  font-weight:1000;
+  color:#7a1414;
+  letter-spacing:.3px;
+  line-height:1;
+}
+
+/* MXN / día */
+.prote-pack .price span,
+.pack-card .price span,
+.prote-card .price span,
+.card-pack .price span{
+  font-size:12px;
+  font-weight:900;
+  color:#475569;
+  margin-left:6px;
+}
+
+/* Hover elegante */
+.prote-pack:hover .price,
+.pack-card:hover .price,
+.prote-card:hover .price,
+.card-pack:hover .price{
+  box-shadow:0 14px 32px rgba(178,34,34,.22);
+  transform:translateY(-1px);
+  transition:.18s ease;
+}
+
+/* Seleccionado */
+.prote-pack.is-selected .price,
+.pack-card.is-selected .price,
+.prote-card.is-selected .price,
+.card-pack.is-selected .price{
+  background:
+    linear-gradient(180deg, rgba(178,34,34,.18), rgba(178,34,34,.06)),
+    #fff;
+  border-color:rgba(178,34,34,.55);
+  box-shadow:0 0 0 4px rgba(178,34,34,.12),
+             0 18px 44px rgba(178,34,34,.28);
 }

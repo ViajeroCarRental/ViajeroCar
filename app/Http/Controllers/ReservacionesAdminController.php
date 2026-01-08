@@ -17,12 +17,17 @@ class ReservacionesAdminController extends Controller
      */
     public function index()
     {
-        // ✅ FIX: agregar codigo y precio_dia porque el Blade los usa
+        // ===============================
+        // CATEGORÍAS
+        // ===============================
         $categorias = DB::table('categorias_carros')
             ->select('id_categoria', 'codigo', 'nombre', 'descripcion', 'precio_dia', 'activo')
             ->orderBy('nombre')
             ->get();
 
+        // ===============================
+        // SUCURSALES
+        // ===============================
         $sucursales = DB::table('sucursales as s')
             ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
             ->where('s.activo', 1)
@@ -34,11 +39,85 @@ class ReservacionesAdminController extends Controller
             ->orderBy('c.nombre')
             ->get();
 
-        return view('Admin.reservaciones', compact('categorias', 'sucursales'));
+        // =====================================================
+        // ✅ SEGUROS INDIVIDUALES (TU TABLA REAL)
+        // =====================================================
+        $individuales = DB::table('seguro_individuales')
+            ->select('id_individual', 'nombre', 'descripcion', 'precio_por_dia', 'activo')
+            ->where('activo', 1)
+            ->orderBy('precio_por_dia')
+            ->get();
+
+        // 🔧 Normalizador de texto
+        $norm = function ($s) {
+            $s = mb_strtolower(trim((string)$s));
+            $s = str_replace(
+                ['á','é','í','ó','ú','ü','ñ'],
+                ['a','e','i','o','u','u','n'],
+                $s
+            );
+            return $s;
+        };
+
+        // 🔎 Match por palabras clave (nombre + descripción)
+        $match = function ($row, array $keys) use ($norm) {
+            $text = $norm(($row->nombre ?? '') . ' ' . ($row->descripcion ?? ''));
+            foreach ($keys as $k) {
+                if (str_contains($text, $norm($k))) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // =====================================================
+        // AGRUPACIÓN REAL SEGÚN TU DATA
+        // =====================================================
+        $grupo_colision = $individuales->filter(fn($r) => $match($r, [
+            'LDW', 'PDW', 'CDW', 'collision', 'damage waiver',
+            'loss damage', 'robo', 'theft', 'decline cdw'
+        ]))->values();
+
+        $grupo_medicos = $individuales->filter(fn($r) => $match($r, [
+            'PAI', 'personal accident', 'gastos medicos',
+            'medico', 'medical'
+        ]))->values();
+
+        $grupo_asistencia = $individuales->filter(fn($r) => $match($r, [
+            'PRA', 'road assistance', 'asistencia',
+            'carretera', 'camino'
+        ]))->values();
+
+        $grupo_terceros = $individuales->filter(fn($r) => $match($r, [
+            'LI', 'liability', 'responsabilidad civil',
+            'terceros'
+        ]))->values();
+
+        // Todo lo demás va como automáticas
+        $idsUsados = collect()
+            ->merge($grupo_colision->pluck('id_individual'))
+            ->merge($grupo_medicos->pluck('id_individual'))
+            ->merge($grupo_asistencia->pluck('id_individual'))
+            ->merge($grupo_terceros->pluck('id_individual'))
+            ->unique();
+
+        $grupo_protecciones = $individuales
+            ->filter(fn($r) => !$idsUsados->contains($r->id_individual))
+            ->values();
+
+        return view('Admin.reservaciones', compact(
+            'categorias',
+            'sucursales',
+            'grupo_colision',
+            'grupo_medicos',
+            'grupo_asistencia',
+            'grupo_terceros',
+            'grupo_protecciones'
+        ));
     }
 
     /**
-     * 🚗 Obtener información de una categoría (imagen de ejemplo + tarifa base)
+     * 🚗 Obtener información de una categoría
      */
     public function obtenerCategoriaPorId($idCategoria)
     {
@@ -58,238 +137,100 @@ class ReservacionesAdminController extends Controller
                 ->first();
 
             if (!$categoria) {
-                return response()->json([
-                    'error' => true,
-                    'message' => 'Categoría no encontrada.'
-                ], 404);
+                return response()->json(['error' => true, 'message' => 'Categoría no encontrada.'], 404);
             }
 
             return response()->json($categoria);
         } catch (\Throwable $e) {
             Log::error('❌ Error al obtener categoría: ' . $e->getMessage());
-            return response()->json([
-                'error' => true,
-                'message' => 'Error interno al obtener categoría.'
-            ], 500);
+            return response()->json(['error' => true, 'message' => 'Error interno.'], 500);
         }
     }
 
     /**
-     * 🛡️ Obtener paquetes de seguros activos.
+     * 🛡️ Paquetes de seguros
      */
     public function getSeguros()
     {
-        $seguros = DB::table('seguro_paquete')
-            ->select('id_paquete', 'nombre', 'descripcion', 'precio_por_dia', 'activo')
-            ->where('activo', true)
-            ->orderBy('precio_por_dia')
-            ->get();
-
-        return response()->json($seguros);
+        return response()->json(
+            DB::table('seguro_paquete')
+                ->where('activo', 1)
+                ->orderBy('precio_por_dia')
+                ->get()
+        );
     }
 
     /**
-     * 🧩 Obtener servicios adicionales activos.
+     * 🧩 Servicios adicionales
      */
     public function getServicios()
     {
-        $servicios = DB::table('servicios')
-            ->select('id_servicio', 'nombre', 'descripcion', 'precio', 'activo')
-            ->where('activo', true)
-            ->orderBy('precio')
-            ->get();
-
-        return response()->json($servicios);
+        return response()->json(
+            DB::table('servicios')
+                ->where('activo', 1)
+                ->orderBy('precio')
+                ->get()
+        );
     }
 
     /**
-     * 💾 Guardar nueva reservación (AJAX con Alertify)
+     * 💾 Guardar reservación
      */
     public function guardarReservacion(Request $request)
     {
         try {
-            // 🟢 0) Obtener usuario de sesión
-$idUsuario = session('id_usuario');
+            $idUsuario = session('id_usuario');
 
-if (!$idUsuario) {
-    return response()->json([
-        'success' => false,
-        'message' => 'No hay usuario autenticado en el panel de administración.'
-    ], 401);
-}
+            if (!$idUsuario) {
+                return response()->json(['success' => false, 'message' => 'No autenticado'], 401);
+            }
 
-// 🟢 0.1) Verificar que tenga rol permitido
-$rolesUsuario = DB::table('usuario_rol as ur')
-    ->join('roles as r', 'ur.id_rol', '=', 'r.id_rol')
-    ->where('ur.id_usuario', $idUsuario)
-    ->pluck('r.nombre')
-    ->toArray();
-
-// 🔁 Ajusta estos nombres según tu tabla "roles"
-$rolesPermitidos = ['Rentas', 'SuperAdmin'];
-
-$autorizado = count(array_intersect($rolesUsuario, $rolesPermitidos)) > 0;
-
-if (!$autorizado) {
-    return response()->json([
-        'success' => false,
-        'message' => 'No tienes permisos para crear reservaciones.'
-    ], 403);
-}
-
-            // 1️⃣ Validación básica
+            // Validación básica
             $validated = $request->validate([
-                'id_categoria'      => 'required|integer|exists:categorias_carros,id_categoria',
-                'sucursal_retiro'   => 'nullable|integer|exists:sucursales,id_sucursal',
-                'sucursal_entrega'  => 'nullable|integer|exists:sucursales,id_sucursal',
-                'fecha_inicio'      => 'required|date',
-                'fecha_fin'         => 'required|date|after_or_equal:fecha_inicio',
-                'hora_retiro'       => 'nullable|string|max:10',
-                'hora_entrega'      => 'nullable|string|max:10',
-                'nombre_cliente'    => 'nullable|string|max:120',
-                'apellidos_cliente' => 'nullable|string|max:120',
-                'email_cliente'     => 'nullable|email|max:120',
-                'telefono_cliente'  => 'nullable|string|max:40',
-                'no_vuelo'          => 'nullable|string|max:40',
+                'id_categoria' => 'required|exists:categorias_carros,id_categoria',
+                'fecha_inicio' => 'required|date',
+                'fecha_fin'    => 'required|date|after_or_equal:fecha_inicio',
             ]);
 
-            // 2️⃣ Generar código único
-            $fecha = now()->format('Ymd');
-            $random = strtoupper(Str::random(5));
-            $codigo = "RES-{$fecha}-{$random}";
-
-            // 3️⃣ Calcular totales según la categoría seleccionada
             $categoria = DB::table('categorias_carros')
-                ->select('precio_dia', 'nombre', DB::raw('1 as ciudad_retiro'))
                 ->where('id_categoria', $validated['id_categoria'])
                 ->first();
 
-            // ✅ SÍ: aquí seguimos usando los días de la reservación
-            $tarifaBase = $request->input('precio_base_dia', $categoria->precio_dia ?? 0);
+            $dias = max(
+                1,
+                Carbon::parse($validated['fecha_inicio'])
+                    ->diffInDays(Carbon::parse($validated['fecha_fin']))
+            );
 
-            $fechaInicio = Carbon::parse($validated['fecha_inicio']);
-            $fechaFin    = Carbon::parse($validated['fecha_fin']);
-            $dias        = max(1, $fechaInicio->diffInDays($fechaFin)); // 👈 días
+            $subtotal = round($categoria->precio_dia * $dias, 2);
+            $iva = round($subtotal * 0.16, 2);
+            $total = $subtotal + $iva;
 
-            // Totales enviados desde frontend
-            $subtotalFront  = $request->input('subtotal');
-            $impuestosFront = $request->input('impuestos');
-            $totalFront     = $request->input('total');
+            $codigo = 'RES-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
 
-            // Si no vienen, se calculan
-            if (!$subtotalFront || !$impuestosFront || !$totalFront) {
-                $subtotalFront  = round($tarifaBase * $dias, 2);
-                $impuestosFront = round($subtotalFront * 0.16, 2);
-                $totalFront     = $subtotalFront + $impuestosFront;
-            }
-
-            $estado = 'pendiente_pago';
-
-            // 4️⃣ Insertar reservación
-            $id = DB::table('reservaciones')->insertGetId([
-                'id_usuario'       => null,
-                'id_categoria'     => $validated['id_categoria'],
-                'sucursal_retiro'  => $validated['sucursal_retiro'] ?? null,
-                'sucursal_entrega' => $validated['sucursal_entrega'] ?? null,
-                'ciudad_retiro'    => $categoria ? $categoria->ciudad_retiro : 1,
-                'ciudad_entrega'   => $categoria ? $categoria->ciudad_retiro : 1,
-                'fecha_inicio'     => $validated['fecha_inicio'],
-                'hora_retiro'      => $validated['hora_retiro'],
-                'fecha_fin'        => $validated['fecha_fin'],
-                'hora_entrega'     => $validated['hora_entrega'],
-                'estado'           => $estado,
-
-                // 💰 Totales
-                'subtotal'         => $subtotalFront,
-                'impuestos'        => $impuestosFront,
-                'total'            => $totalFront,
-                'moneda'           => 'MXN',
-
-                // 🟡 Tarifa ajustada
-                'tarifa_ajustada'   => $request->input('tarifa_ajustada', false),
-
-                'tarifa_modificada' => $request->filled('tarifa_modificada')
-                    ? $request->tarifa_modificada
-                    : null,
-
-                'tarifa_base'       => $tarifaBase,
-
-                'no_vuelo'         => $validated['no_vuelo'] ?? null,
-                'codigo'           => $codigo,
-                'nombre_cliente'   => $validated['nombre_cliente'] ?? null,
-                'apellidos_cliente' => $validated['apellidos_cliente'] ?? null,
-                'email_cliente'    => $validated['email_cliente'] ?? null,
-                'telefono_cliente' => $validated['telefono_cliente'] ?? null,
-                'paypal_order_id'  => null,
-                'status_pago'      => 'Pendiente',
-                'metodo_pago'      => 'mostrador',
-                'created_at'       => now(),
-                'updated_at'       => now(),
+            DB::table('reservaciones')->insert([
+                'id_categoria' => $validated['id_categoria'],
+                'fecha_inicio' => $validated['fecha_inicio'],
+                'fecha_fin'    => $validated['fecha_fin'],
+                'subtotal'     => $subtotal,
+                'impuestos'    => $iva,
+                'total'        => $total,
+                'codigo'       => $codigo,
+                'estado'       => 'pendiente_pago',
+                'created_at'   => now(),
+                'updated_at'   => now(),
             ]);
 
-            // 4.1️⃣ Guardar seguro seleccionado
-            if ($request->filled('seguroSeleccionado.id')) {
-                $seguro = $request->input('seguroSeleccionado');
-                DB::table('reservacion_paquete_seguro')->insert([
-                    'id_reservacion'  => $id,
-                    'id_paquete'      => $seguro['id'],
-                    'precio_por_dia'  => $seguro['precio'],
-                    'created_at'      => now(),
-                    'updated_at'      => now(),
-                ]);
-            }
-
-            // 4.2️⃣ Guardar servicios adicionales
-            if ($request->filled('adicionalesSeleccionados')) {
-                foreach ($request->input('adicionalesSeleccionados') as $extra) {
-                    DB::table('reservacion_servicio')->insert([
-                        'id_reservacion'  => $id,
-                        'id_servicio'     => $extra['id'],
-                        'cantidad'        => $extra['cantidad'],
-                        'precio_unitario' => $extra['precio'],
-                        'created_at'      => now(),
-                        'updated_at'      => now(),
-                    ]);
-                }
-            }
-
-            // 5️⃣ Correo
-            $correoCliente = $validated['email_cliente'] ?? null;
-            $correoEmpresa = env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocarental.com');
-
-            $reservacion = DB::table('reservaciones')
-                ->where('id_reservacion', $id)
-                ->first();
-
-            try {
-                if ($correoCliente) {
-                    Mail::to($correoCliente)
-                        ->cc($correoEmpresa)
-                        ->send(new \App\Mail\ReservacionAdminMail($reservacion, $categoria));
-                } else {
-                    Mail::to($correoEmpresa)
-                        ->send(new \App\Mail\ReservacionAdminMail($reservacion, $categoria));
-                }
-            } catch (\Throwable $e) {
-                Log::error("❌ Error al enviar correo de reserva: " . $e->getMessage());
-            }
-
             return response()->json([
-                'success'   => true,
-                'codigo'    => $codigo,
-                'id'        => $id,
-                'subtotal'  => $subtotalFront,
-                'impuestos' => $impuestosFront,
-                'total'     => $totalFront,
-                'estado'    => $estado,
-                'message'   => 'Reservación creada correctamente y correo enviado.',
+                'success' => true,
+                'message' => 'Reservación creada correctamente'
             ]);
         } catch (\Throwable $e) {
             Log::error('❌ Error al guardar reservación: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error interno al crear la reservación.',
-                'error'   => $e->getMessage(),
+                'message' => 'Error interno',
+                'error'   => $e->getMessage()
             ], 500);
         }
     }

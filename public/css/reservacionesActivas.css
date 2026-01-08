@@ -279,7 +279,6 @@ small, .small { font-size: 12px; color: var(--muted); }
     grid-template-columns: 180px 110px 90px 95px 70px 140px;
   }
 
-  /* Oculta desde CELULAR en adelante (7,8,9,10,11...) */
   .table .thead > :nth-child(n+7),
   .table .row  > :nth-child(n+7) {
     display: none;
@@ -304,36 +303,34 @@ small, .small { font-size: 12px; color: var(--muted); }
   display: block;
   position: relative;
 
-  /* ✅ DEFAULT: 11 columnas (SIN No. Vuelo) */
   --cols:
-    190px  /* NO. DE RESERVACIÓN */
-    110px  /* CHECK IN */
-    80px   /* HORA (IN) */
-    90px   /* CATEGORÍA */
-    60px   /* DÍAS */
-    190px  /* NOMBRE COMPLETO */
-    140px  /* CELULAR */
-    230px  /* CORREO */
-    150px  /* ESTATUS DE PAGO */
-    110px  /* TOTAL */
-    140px; /* ACCIONES */
+    190px
+    110px
+    80px
+    90px
+    60px
+    190px
+    140px
+    230px
+    150px
+    110px
+    140px;
 }
 
-/* ✅ Aeropuerto: 12 columnas (AGREGA No. Vuelo) */
 .table.is-airport{
   --cols:
-    190px  /* NO. DE RESERVACIÓN */
-    110px  /* CHECK IN */
-    80px   /* HORA (IN) */
-    110px  /* NO. VUELO */
-    90px   /* CATEGORÍA */
-    60px   /* DÍAS */
-    190px  /* NOMBRE COMPLETO */
-    140px  /* CELULAR */
-    230px  /* CORREO */
-    150px  /* ESTATUS DE PAGO */
-    110px  /* TOTAL */
-    140px; /* ACCIONES */
+    190px
+    110px
+    80px
+    110px
+    90px
+    60px
+    190px
+    140px
+    230px
+    150px
+    110px
+    140px;
 }
 
 .table .thead{
@@ -459,20 +456,17 @@ small, .small { font-size: 12px; color: var(--muted); }
   padding-right: 36px !important;
 }
 
-/* Hover */
 .select-ubicacion:hover {
   background: #fff5f5;
   border-color: #ff515d !important;
 }
 
-/* Focus */
 .select-ubicacion:focus {
   outline: none;
   border-color: #b91c1c;
   box-shadow: 0 0 4px rgba(220, 38, 38, 0.4);
 }
 
-/* Opciones del menú desplegable */
 .select-ubicacion option {
   font-weight: 600;
   padding: 10px;
@@ -579,3 +573,63 @@ small, .small { font-size: 12px; color: var(--muted); }
   border-color: rgba(180,35,24,.45);
 }
 #modalActions #aEliminar:hover{ filter: brightness(.95); }
+
+/* =========================================
+   ✅ Campos extra (comentarios + eliminado_por)
+   Modal Actions
+========================================= */
+#aExtraFields.a-extra{
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #F1D0D4;
+  background: #FFF7F8;
+  border-radius: 12px;
+}
+
+#aExtraFields .a-field{
+  display: grid;
+  gap: 6px;
+}
+
+#aExtraFields label{
+  font-weight: 800;
+  font-size: 12px;
+  color: #7A1A1F;
+}
+
+#aExtraFields .a-textarea,
+#aExtraFields .a-select{
+  width: 100%;
+  border: 1.5px solid #F1B8BE;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  background: #fff;
+  outline: none;
+}
+
+#aExtraFields .a-textarea:focus,
+#aExtraFields .a-select:focus{
+  border-color: #FF6B76;
+  box-shadow: 0 0 0 4px rgba(255, 79, 90, 0.18);
+}
+
+/* ==========================================================
+   ✅ EXTRA: MODAL “RESERVACIONES ANTERIORES” MÁS ANCHO + SCROLL
+========================================================== */
+.box.box-xl{
+  width: min(1120px, 96vw);
+}
+
+.box .cnt.table-cnt{
+  padding: 14px 14px 18px;
+  background: #fff;
+  max-height: min(72vh, 720px);
+  overflow: auto;
+}
+
+#modalPrev .table{
+  box-shadow: var(--shadow-sm);
+}

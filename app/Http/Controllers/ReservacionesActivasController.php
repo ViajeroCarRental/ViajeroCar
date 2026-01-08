@@ -17,16 +17,23 @@ class ReservacionesActivasController extends Controller
      *    - DATE/DATETIME real
      *    - string 'YYYY-MM-DD'
      *    - string 'DD/MM/YYYY'
+     *
+     * ✅ AGREGA:
+     *    - reservaciones_anteriores (AYER) para el modal
      */
     public function index(Request $request)
     {
         try {
             $sucursal = $request->input('sucursal');
-            $codigo   = trim($request->input('codigo'));
-            $search   = trim($request->input('q'));
+            $codigo   = trim((string)$request->input('codigo'));
+            $search   = trim((string)$request->input('q'));
 
-            $hoy = Carbon::today()->format('Y-m-d');
+            $hoy  = Carbon::today()->format('Y-m-d');
+            $ayer = Carbon::yesterday()->format('Y-m-d');
 
+            /* ==========================================================
+               ✅ RESERVACIONES ACTIVAS (HOY Y FUTURAS)
+            ========================================================== */
             $reservaciones = DB::table('reservaciones as r')
                 ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
                 ->select(
@@ -62,7 +69,10 @@ class ReservacionesActivasController extends Controller
                     ->orWhere('r.fecha_inicio', '>=', $hoy)
 
                     // 3) Si está como string 'DD/MM/YYYY'
-                    ->orWhereRaw("STR_TO_DATE(r.fecha_inicio, '%d/%m/%Y') >= STR_TO_DATE(?, '%Y-%m-%d')", [$hoy]);
+                    ->orWhereRaw(
+                        "STR_TO_DATE(r.fecha_inicio, '%d/%m/%Y') >= STR_TO_DATE(?, '%Y-%m-%d')",
+                        [$hoy]
+                    );
                 })
 
                 // filtro por sucursal
@@ -89,19 +99,92 @@ class ReservacionesActivasController extends Controller
                 // orden
                 ->orderBy('r.fecha_inicio', 'asc')
                 ->orderBy('r.hora_retiro', 'asc')
-
                 ->get();
 
+
+            /* ==========================================================
+               ✅ RESERVACIONES ANTERIORES (AYER)
+               - MISMA LÓGICA (activa / filtros / orden)
+               - SOLO CAMBIA EL RANGO DE FECHA A AYER
+            ========================================================== */
+            $reservaciones_anteriores = DB::table('reservaciones as r')
+                ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
+                ->select(
+                    'r.id_reservacion',
+                    'r.codigo',
+
+                    'r.nombre_cliente',
+                    'r.apellidos_cliente',
+                    DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,''))) as nombre_completo"),
+
+                    'r.email_cliente',
+                    'r.telefono_cliente',
+                    'r.estado',
+                    'r.metodo_pago',
+                    'r.fecha_inicio',
+                    'r.hora_retiro',
+                    'r.fecha_fin',
+                    'r.total',
+                    'r.sucursal_retiro',
+                    'r.no_vuelo',
+                    'c.codigo as categoria'
+                )
+
+                // ✅ solo activas (igual que la actual)
+                ->whereNotIn('r.estado', ['cancelada', 'expirada', 'no_show'])
+
+                // ✅ SOLO AYER (robusto)
+                ->where(function ($q) use ($ayer) {
+                    // 1) Si fecha_inicio es DATE/DATETIME real
+                    $q->whereDate('r.fecha_inicio', '=', $ayer)
+
+                    // 2) Si está como string 'YYYY-MM-DD'
+                    ->orWhere('r.fecha_inicio', '=', $ayer)
+
+                    // 3) Si está como string 'DD/MM/YYYY'
+                    ->orWhereRaw(
+                        "STR_TO_DATE(r.fecha_inicio, '%d/%m/%Y') = STR_TO_DATE(?, '%Y-%m-%d')",
+                        [$ayer]
+                    );
+                })
+
+                // filtro por sucursal
+                ->when($sucursal, function ($q, $sucursal) {
+                    $q->where('r.sucursal_retiro', $sucursal);
+                })
+
+                // filtro por código
+                ->when($codigo, function ($q, $codigo) {
+                    $q->where('r.codigo', 'LIKE', $codigo . '%');
+                })
+
+                // filtro por nombre/apellidos/correo
+                ->when($search, function ($q, $search) {
+                    $term = $search . '%';
+                    $q->where(function ($sub) use ($term) {
+                        $sub->where('r.nombre_cliente', 'LIKE', $term)
+                            ->orWhere('r.apellidos_cliente', 'LIKE', $term)
+                            ->orWhere(DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,'')))"), 'LIKE', $term)
+                            ->orWhere('r.email_cliente', 'LIKE', $term);
+                    });
+                })
+
+                // orden
+                ->orderBy('r.fecha_inicio', 'asc')
+                ->orderBy('r.hora_retiro', 'asc')
+                ->get();
+
+
             return view('Admin.ReservacionesActivas', [
-                'reservaciones'        => $reservaciones,
-                'sucursalSeleccionada' => $sucursal,
+                'reservaciones'            => $reservaciones,
+                'reservaciones_anteriores' => $reservaciones_anteriores, // ✅ YA VA AL BLADE
+                'sucursalSeleccionada'      => $sucursal,
             ]);
 
         } catch (\Throwable $e) {
-    Log::error('❌ Bookings index error: ' . $e->getMessage());
-    abort(500, $e->getMessage()); // <-- aquí te va a mostrar el mensaje exacto
-}
-
+            Log::error('❌ Bookings index error: ' . $e->getMessage());
+            abort(500, $e->getMessage());
+        }
     }
 
     /**

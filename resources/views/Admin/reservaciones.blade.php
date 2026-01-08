@@ -35,6 +35,18 @@
       <input type="hidden" id="proteccion_id" name="proteccion_id" value="">
       <div id="addonsHidden"></div>
 
+      {{-- ✅ Servicios (switch) --}}
+      <input type="hidden" id="svc_dropoff"  name="svc_dropoff"  value="0">
+      <input type="hidden" id="svc_delivery" name="svc_delivery" value="0">
+      <input type="hidden" id="svc_gasolina" name="svc_gasolina" value="0">
+
+      {{-- Hidden wrap para individuales --}}
+      <div id="insHidden"></div>
+
+      {{-- ✅ Teléfono final (backend) --}}
+      <input type="hidden" id="telefono_cliente" name="telefono_cliente" value="">
+      <input type="hidden" id="telefono_lada" name="telefono_lada" value="+52">
+
       {{-- ======================
            1) UBICACIÓN
       ======================= --}}
@@ -66,13 +78,11 @@
               </select>
             </div>
           </div>
-          {{-- ❌ Eliminado: texto de Aeropuerto --}}
         </div>
       </section>
 
       {{-- ======================
            2) FECHAS Y HORAS
-           ✅ UI (flatpickr modal) + ✅ Hidden ISO para backend
       ======================= --}}
       <section class="stack-card">
         <div class="stack-head">
@@ -83,19 +93,14 @@
         <div class="stack-body">
           <datalist id="time10"></datalist>
 
-          {{-- ✅ estilos para que se vea como tu imagen (modal + barras) --}}
           <style>
-            /* Backdrop para modal tipo imagen */
             .fp-backdrop{
-              position:fixed;
-              inset:0;
+              position:fixed; inset:0;
               background:rgba(0,0,0,.55);
-              display:none;
-              z-index:9998;
+              display:none; z-index:9998;
             }
             .fp-backdrop.is-open{ display:block; }
 
-            /* Calendar container en modal (centrado) */
             .flatpickr-calendar.open{
               z-index:9999 !important;
               position:fixed !important;
@@ -108,7 +113,6 @@
               overflow:hidden !important;
             }
 
-            /* Header rojo como tus tokens */
             .flatpickr-months{
               background:var(--brand) !important;
               color:#fff !important;
@@ -151,38 +155,26 @@
               color:#fff !important;
             }
 
-            /* Barra de acciones inferior (Hoy / Limpiar / etiqueta) */
             .fp-actions{
-              display:flex;
-              justify-content:space-between;
-              align-items:center;
+              display:flex; justify-content:space-between; align-items:center;
               gap:10px;
               padding:10px 12px;
               border-top:1px solid #eef2f7;
               background:#fff;
             }
             .fp-actions button{
-              border:0;
-              background:transparent;
-              font-weight:900;
-              cursor:pointer;
+              border:0; background:transparent;
+              font-weight:900; cursor:pointer;
             }
             .fp-actions .fp-today{ color:#2563eb; }
             .fp-actions .fp-clear{ color:#ef4444; }
-            .fp-actions .fp-label{
-              color:#111827;
-              opacity:.85;
-            }
+            .fp-actions .fp-label{ color:#111827; opacity:.85; }
 
-            /* Inputs UI con icono y look pro */
             .dt-field{ position:relative; }
             .dt-ico{
-              position:absolute;
-              right:12px;
-              top:50%;
+              position:absolute; right:12px; top:50%;
               transform:translateY(-50%);
-              color:#9ca3af;
-              pointer-events:none;
+              color:#9ca3af; pointer-events:none;
               font-size:16px;
             }
             input.fp-ui{
@@ -195,41 +187,29 @@
           <div class="form-2">
             <div class="dt-field">
               <label>Fecha de salida</label>
-
-              {{-- ✅ UI para flatpickr (dd/mm/YYYY) --}}
               <input id="fecha_inicio_ui" class="input input-lg fp-ui" type="text" placeholder="dd/mm/aaaa" autocomplete="off" required>
               <span class="dt-ico">📅</span>
-
-              {{-- ✅ Hidden real para backend (YYYY-mm-dd) --}}
               <input id="fecha_inicio" name="fecha_inicio" type="hidden">
             </div>
 
             <div class="dt-field">
               <label>Hora de salida</label>
-
-              {{-- ✅ UI para flatpickr time --}}
               <input id="hora_retiro_ui" class="input input-lg fp-ui" type="text" placeholder="hh:mm" autocomplete="off" required>
               <span class="dt-ico">🕒</span>
-
-              {{-- ✅ Hidden real para backend --}}
               <input id="hora_retiro" name="hora_retiro" type="hidden">
             </div>
 
             <div class="dt-field">
               <label>Fecha de llegada</label>
-
               <input id="fecha_fin_ui" class="input input-lg fp-ui" type="text" placeholder="dd/mm/aaaa" autocomplete="off" required>
               <span class="dt-ico">📅</span>
-
               <input id="fecha_fin" name="fecha_fin" type="hidden">
             </div>
 
             <div class="dt-field">
               <label>Hora de llegada</label>
-
               <input id="hora_entrega_ui" class="input input-lg fp-ui" type="text" placeholder="hh:mm" autocomplete="off" required>
               <span class="dt-ico">🕒</span>
-
               <input id="hora_entrega" name="hora_entrega" type="hidden">
             </div>
           </div>
@@ -241,7 +221,7 @@
       </section>
 
       {{-- ======================
-           3) CATEGORÍA (MENÚ MODAL)
+           3) CATEGORÍA
       ======================= --}}
       <section class="stack-card">
         <div class="stack-head">
@@ -283,12 +263,71 @@
       </section>
 
       {{-- ======================
-           4) PROTECCIONES (MENÚ MODAL)
+           4) SERVICIOS (SWITCHES)
+      ======================= --}}
+      <section class="stack-card">
+        <div class="stack-head">
+          <div class="stack-title">🧰 Servicios</div>
+          <div class="stack-sub">Activa lo que aplique.</div>
+        </div>
+
+        <div class="stack-body">
+          <div class="svc-row">
+            <div class="svc-seg" role="group" aria-label="Servicios">
+              <button type="button" class="svc-btn" data-svc="dropoff">🚩 Drop Off</button>
+              <button type="button" class="svc-btn" data-svc="delivery">🚚 Delivery</button>
+              <button type="button" class="svc-btn" data-svc="gasolina">⛽ Gasolina prepago</button>
+            </div>
+
+            <div class="picker-selected" style="flex:1;">
+              <div class="picker-label">Seleccionado</div>
+              <div class="picker-value" id="svcSelTxt">— Ninguno —</div>
+              <div class="picker-sub" id="svcSelSub">Después te muestro los detalles aquí.</div>
+            </div>
+
+            <button class="btn gray" type="button" id="svcClear" style="display:none;">✖</button>
+          </div>
+
+          <style>
+            .svc-row{ display:flex; gap:12px; align-items:stretch; flex-wrap:wrap; }
+            .svc-seg{
+              display:flex; gap:8px; padding:8px;
+              border:1px solid rgba(255,255,255,.20);
+              background:rgba(255,255,255,.06);
+              border-radius:14px;
+            }
+            .svc-btn{
+              border:0;
+              padding:10px 12px;
+              border-radius:12px;
+              font-weight:900;
+              cursor:pointer;
+              background:rgba(255,255,255,.10);
+              color:#fff;
+              transition:.15s ease;
+              white-space:nowrap;
+            }
+            .svc-btn:hover{ transform:translateY(-1px); }
+            .svc-btn.is-on{
+              background:#fff;
+              color:#7a1414;
+              box-shadow:0 12px 28px rgba(0,0,0,.18);
+            }
+            @media (max-width: 720px){
+              .svc-seg{ width:100%; justify-content:space-between; }
+              .svc-btn{ flex:1; text-align:center; }
+            }
+          </style>
+        </div>
+      </section>
+
+      {{-- ======================
+           5) PROTECCIONES
       ======================= --}}
       <section class="stack-card">
         <div class="stack-head">
           <div class="stack-title">🔒 Protecciones</div>
-          <div class="stack-sub">Paquetes de seguro.</div>
+          <div class="stack-sub">Elige paquete o arma tu combinación con protecciones individuales.</div>
         </div>
 
         <div class="stack-body">
@@ -307,7 +346,7 @@
       </section>
 
       {{-- ======================
-           5) ADICIONALES (MENÚ MODAL)
+           6) ADICIONALES
       ======================= --}}
       <section class="stack-card">
         <div class="stack-head">
@@ -331,7 +370,7 @@
       </section>
 
       {{-- ======================
-           6) CLIENTE
+           7) CLIENTE
       ======================= --}}
       <section class="stack-card">
         <div class="stack-head">
@@ -356,14 +395,35 @@
               <input id="email_cliente" name="email_cliente" class="input" type="email" required>
             </div>
 
+            {{-- ✅ TELÉFONO con LADA + BANDERA --}}
             <div>
               <label>Teléfono</label>
-              <input id="telefono_cliente" name="telefono_cliente" class="input" type="text" placeholder="+52..." required>
+              <div class="phone-grid" id="phoneCombo">
+                <button class="phone-prefix" type="button" id="phone_toggle" aria-label="Elegir país">
+                  <span class="flag" id="phone_flag">🇲🇽</span>
+                  <span class="code" id="phone_code">+52</span>
+                  <span class="chev">▾</span>
+                </button>
+
+                <input id="telefono_ui" class="input" type="tel" inputmode="tel" placeholder="4421234567" required>
+
+                <div class="combo-dd phone-dd" id="phone_dd" role="listbox" aria-label="Lista de ladas">
+                  <div class="dd-head">
+                    <input id="phone_search" class="dd-search" type="text" placeholder="Buscar país o lada…">
+                  </div>
+                  <div class="dd-list" id="phone_list"></div>
+                </div>
+              </div>
             </div>
 
+            {{-- ✅ PAÍS fijo (readonly) --}}
             <div>
               <label>País</label>
-              <input id="pais" name="pais" class="input" type="text" value="MÉXICO" required>
+              <input type="hidden" id="pais" name="pais" value="MÉXICO">
+              <div class="input readonly-country">
+                <span id="pais_flag_ui">🇲🇽</span>
+                <span id="pais_text_ui">México</span>
+              </div>
             </div>
 
             <div id="vueloWrap" style="display:none;">
@@ -378,6 +438,7 @@
           </div>
         </div>
       </section>
+
     </form>
 
   </main>
@@ -420,7 +481,11 @@
           font-size:12px;
           line-height:1;
           white-space:nowrap;
+          color:#111827;
         }
+        #catPop .cp-right .cp-price{ padding:10px 0; border-bottom:1px dashed rgba(0,0,0,.10); }
+        #catPop .cp-right .cp-price:last-of-type{ border-bottom:0; }
+        #catPop .cat-estimado{ font-weight:900; }
       </style>
 
       <div class="grid-cards">
@@ -436,7 +501,7 @@
             8 => asset('img/Odyssey.png'),
             9 => asset('img/Urvan.png'),
             10 => asset('img/Frontier.png'),
-            11 => asset('img/tacoma.png'),
+            11 => asset('img/Tacoma.png'),
           ];
 
           $pasajeros = [
@@ -505,6 +570,14 @@
                   ${{ number_format((float)$cat->precio_dia, 2) }} <span>MXN / día</span>
                 </div>
               </div>
+
+              <div class="cp-price" style="margin-top:10px;">
+                <div class="muted small">Estimado (base × días)</div>
+                <div class="price-big">
+                  <span class="cat-estimado">$0.00</span> <span>MXN</span>
+                </div>
+              </div>
+
               <button class="btn primary btn-block" type="button">Elegir</button>
             </div>
           </article>
@@ -518,31 +591,255 @@
   </div>
 </div>
 
-{{-- =========================
-   MODAL: PROTECCIONES
-========================= --}}
+{{-- ✅ MODAL: PROTECCIONES (CON PESTAÑAS + CSS NECESARIO PARA QUE SE VEAN INDIVIDUALES) --}}
 <div class="pop modal" id="proteccionPop">
-  <div class="box modal-box">
+  <div class="box modal-box modal-prote-tabs">
     <header class="modal-head">
-      <div class="modal-title">🔒 Seleccionar protección</div>
+      <div class="modal-title">🔒 Protecciones</div>
       <button class="btn gray" id="proteClose" type="button">✖</button>
     </header>
 
-    <div class="modal-body">
-      <div id="proteList" class="grid-cards">
-        <div class="loading">Cargando paquetes...</div>
-      </div>
+    {{-- ✅ CSS extra SOLO para este modal: tabs + carruseles + cards individuales (para que NO “desaparezcan”) --}}
+    <style>
+      /* Tabs */
+      #proteccionPop .tabs-bar{
+        display:flex; gap:10px; align-items:center;
+        padding:12px 14px;
+        border-bottom:1px solid rgba(17,24,39,.08);
+        background:#fff;
+      }
+      #proteccionPop .tab-btn{
+        border:1px solid rgba(17,24,39,.12);
+        background:#f8fafc;
+        color:#111827;
+        padding:10px 14px;
+        border-radius:999px;
+        font-weight:900;
+        cursor:pointer;
+        display:inline-flex;
+        gap:8px;
+        align-items:center;
+      }
+      #proteccionPop .tab-btn.is-active{
+        background:rgba(178,34,34,.10);
+        border-color:rgba(178,34,34,.30);
+        color:#7a1414;
+      }
+
+      /* Panels */
+      #proteccionPop .tab-panel{ display:none; }
+      #proteccionPop .tab-panel.is-active{ display:block; }
+
+      /* Carrusel horizontal */
+      #proteccionPop .scroll-h{
+        display:flex;
+        gap:12px;
+        overflow-x:auto;
+        padding:10px 2px 14px;
+        scroll-snap-type:x mandatory;
+        -webkit-overflow-scrolling:touch;
+      }
+      #proteccionPop .scroll-h::-webkit-scrollbar{ height:10px; }
+      #proteccionPop .scroll-h::-webkit-scrollbar-thumb{
+        background:rgba(17,24,39,.18);
+        border-radius:999px;
+      }
+
+      /* Títulos por categoría */
+      #proteccionPop .cat-title{
+        margin:14px 0 8px;
+        font-weight:1000;
+        color:#111827;
+        text-transform:uppercase;
+        letter-spacing:.02em;
+        font-size:14px;
+      }
+
+      /* Card individual (IMPORTANTE: fondo blanco + borde, para que SIEMPRE se vea) */
+      #proteccionPop .ins-card{
+        min-width:280px;
+        max-width:320px;
+        background:#fff;
+        border:1px solid rgba(17,24,39,.10);
+        border-radius:16px;
+        box-shadow:0 10px 26px rgba(0,0,0,.08);
+        scroll-snap-align:start;
+        padding:14px;
+        user-select:none;
+      }
+      #proteccionPop .ins-card h4{ margin:0 0 6px; color:#111827; font-weight:1000; }
+      #proteccionPop .ins-card p{ margin:0 0 10px; color:#6b7280; font-weight:700; }
+      #proteccionPop .ins-card .precio{ font-weight:1000; color:#111827; }
+      #proteccionPop .ins-card .precio span{ font-weight:900; color:#6b7280; margin-left:6px; }
+      #proteccionPop .ins-card .small{ margin-top:8px; font-weight:900; color:#6b7280; }
+
+      /* Estado seleccionado (tu JS pone .is-selected) */
+      #proteccionPop .ins-card.is-selected{
+        border-color:rgba(178,34,34,.55);
+        box-shadow:0 16px 40px rgba(178,34,34,.18);
+      }
+
+      /* Switch visual */
+      #proteccionPop .switch-individual{
+        width:44px; height:26px;
+        border-radius:999px;
+        background:rgba(17,24,39,.12);
+        position:relative;
+        margin-top:10px;
+      }
+      #proteccionPop .switch-individual::after{
+        content:"";
+        position:absolute;
+        width:20px; height:20px;
+        border-radius:999px;
+        background:#fff;
+        top:3px; left:3px;
+        box-shadow:0 8px 20px rgba(0,0,0,.18);
+        transition:.15s ease;
+      }
+      #proteccionPop .switch-individual.is-on{
+        background:rgba(178,34,34,.85);
+      }
+      #proteccionPop .switch-individual.is-on::after{
+        left:21px;
+      }
+
+      /* Footer botones */
+      #proteccionPop .foot-split{
+        display:flex;
+        justify-content:space-between;
+        gap:12px;
+      }
+    </style>
+
+    <div class="tabs-bar">
+      <button type="button" class="tab-btn is-active" data-tab="tab-paquetes">🛡️ Protecciones</button>
+      <button type="button" class="tab-btn" data-tab="tab-individuales">🧩 Protecciones individuales</button>
     </div>
 
-    <footer class="modal-foot">
+    <div class="modal-body">
+      <section class="tab-panel is-active" id="tab-paquetes">
+        <div class="note" style="margin-bottom:14px;">Elige un paquete de protección.</div>
+        <div class="scroll-h" id="protePacksTrack" aria-label="Carrusel de protecciones">
+          <div class="loading" style="padding:12px; font-weight:900; color:#111827;">Cargando paquetes...</div>
+        </div>
+      </section>
+
+      <section class="tab-panel" id="tab-individuales">
+        <div class="note" style="margin-bottom:14px;">
+          Selecciona una o varias protecciones individuales. 
+        </div>
+
+        <h4 class="cat-title">Colisión y robo</h4>
+        <div class="scroll-h" id="insColisionTrack">
+          @forelse(($grupo_colision ?? []) as $ind)
+            <label class="ins-card individual-item"
+                   data-id="{{ $ind->id_individual }}"
+                   data-precio="{{ $ind->precio_por_dia }}"
+                   style="cursor:pointer;">
+              <div class="body">
+                <h4>{{ $ind->nombre }}</h4>
+                <p>{{ $ind->descripcion }}</p>
+                <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+                <div class="small">Incluir</div>
+              </div>
+            </label>
+          @empty
+            <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+          @endforelse
+        </div>
+
+        <h4 class="cat-title">Gastos médicos</h4>
+        <div class="scroll-h" id="insMedicosTrack">
+          @forelse(($grupo_medicos ?? []) as $ind)
+            <label class="ins-card individual-item"
+                   data-id="{{ $ind->id_individual }}"
+                   data-precio="{{ $ind->precio_por_dia }}"
+                   style="cursor:pointer;">
+              <div class="body">
+                <h4>{{ $ind->nombre }}</h4>
+                <p>{{ $ind->descripcion }}</p>
+                <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+                <div class="small">Incluir</div>
+              </div>
+            </label>
+          @empty
+            <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+          @endforelse
+        </div>
+
+        <h4 class="cat-title">Asistencia para el camino</h4>
+        <div class="scroll-h" id="insCaminoTrack">
+          @forelse(($grupo_asistencia ?? []) as $ind)
+            <label class="ins-card individual-item"
+                   data-id="{{ $ind->id_individual }}"
+                   data-precio="{{ $ind->precio_por_dia }}"
+                   style="cursor:pointer;">
+              <div class="body">
+                <h4>{{ $ind->nombre }}</h4>
+                <p>{{ $ind->descripcion }}</p>
+                <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+                <div class="small">Incluir</div>
+              </div>
+            </label>
+          @empty
+            <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+          @endforelse
+        </div>
+
+        <h4 class="cat-title">Daños a terceros</h4>
+        <div class="scroll-h" id="insTercerosTrack">
+          @forelse(($grupo_terceros ?? []) as $ind)
+            <label class="ins-card individual-item"
+                   data-id="{{ $ind->id_individual }}"
+                   data-precio="{{ $ind->precio_por_dia }}"
+                   style="cursor:pointer;">
+              <div class="body">
+                <h4>{{ $ind->nombre }}</h4>
+                <p>{{ $ind->descripcion }}</p>
+                <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+                <div class="small">Incluir</div>
+              </div>
+            </label>
+          @empty
+            <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+          @endforelse
+        </div>
+
+        <h4 class="cat-title">Protecciones automáticas</h4>
+        <div class="scroll-h" id="insAutoTrack">
+          @forelse(($grupo_protecciones ?? []) as $ind)
+            <label class="ins-card individual-item"
+                   data-id="{{ $ind->id_individual }}"
+                   data-precio="{{ $ind->precio_por_dia }}"
+                   style="cursor:pointer;">
+              <div class="body">
+                <h4>{{ $ind->nombre }}</h4>
+                <p>{{ $ind->descripcion }}</p>
+                <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+                <div class="small">Incluir</div>
+              </div>
+            </label>
+          @empty
+            <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+          @endforelse
+        </div>
+      </section>
+    </div>
+
+    <footer class="modal-foot foot-split">
       <button class="btn gray" id="proteCancel" type="button">Cerrar</button>
+      <button class="btn primary" id="proteApply" type="button">Aplicar</button>
     </footer>
   </div>
 </div>
 
-{{-- =========================
-   MODAL: ADICIONALES
-========================= --}}
+{{-- MODAL: ADICIONALES --}}
 <div class="pop modal" id="addonsPop">
   <div class="box modal-box">
     <header class="modal-head">
@@ -563,9 +860,7 @@
   </div>
 </div>
 
-{{-- =========================
-   MODAL: RESUMEN (OVERLAY)
-========================= --}}
+{{-- MODAL: RESUMEN --}}
 <div class="pop modal" id="resumenPop">
   <div class="box modal-box resumen-box">
     <header class="modal-head">
@@ -591,6 +886,8 @@
         <div class="res-row"><div>Tarifa base</div><div id="resBaseDia">—</div></div>
         <div class="res-row"><div>Base × días</div><div id="resBaseTotal">—</div></div>
 
+        <div class="res-row"><div>🧰 Servicios</div><div id="resServicios">—</div></div>
+
         <div class="res-row"><div>🔒 Protección</div><div id="resProte">—</div></div>
         <div class="res-row"><div>➕ Adicionales</div><div id="resAdds">—</div></div>
 
@@ -608,9 +905,7 @@
   </div>
 </div>
 
-{{-- =========================
-   ✅ MODAL: CONFIRMACIÓN (SOLO UNO)
-========================= --}}
+{{-- MODAL: CONFIRMACIÓN --}}
 <div class="pop modal" id="confirmPop" style="display:none;">
   <div class="box modal-box">
     <header class="modal-head">
@@ -623,12 +918,12 @@
         ¡Listo! La reservación se registró correctamente.
       </p>
       <p class="muted" style="margin:8px 0 0;">
-        Te enviaremos a <b>Reservaciones Activas</b>.
+        Te enviaremos a <b>Bookings</b>.
       </p>
     </div>
 
     <footer class="modal-foot">
-      <button class="btn primary" id="confirmOk" type="button">Ir a Reservaciones Activas</button>
+      <button class="btn primary" id="confirmOk" type="button">Ir a Bookings</button>
     </footer>
   </div>
 </div>

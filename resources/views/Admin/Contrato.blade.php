@@ -1623,10 +1623,6 @@
   </div>
 </div>
 
-
-
-
-
 </main>
 @endsection
 @section('js-vistaContrato')
