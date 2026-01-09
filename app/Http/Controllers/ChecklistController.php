@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ChecklistInspeccionMail;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
+use Illuminate\Support\Facades\Log;
+
 
 class ChecklistController extends Controller
 {
@@ -411,20 +416,22 @@ public function enviarChecklistSalida(Request $request, $id)
     try {
         // 1) Validar mínimamente
         $request->validate([
-    'comentario_cliente'   => 'nullable|string',
-    'danos_interiores'     => 'nullable|string',
-    'firma_cliente_fecha'  => 'nullable|date',
-    'firma_cliente_hora'   => 'nullable|date_format:H:i',
-    'entrego_fecha'        => 'nullable|date',
-    'entrego_hora'         => 'nullable|date_format:H:i',
-    // 👇 En salida ya NO validamos recibio_*
-    'autoSalida.*'         => 'required|file|mimetypes:image/jpeg,image/png|max:2097152',
-], [
-    'autoSalida.*.required'  => 'Debes cargar al menos una foto de salida',
-    'autoSalida.*.mimetypes' => 'Las fotos deben ser JPG o PNG',
-    'autoSalida.*.max'       => 'Cada foto puede pesar como máximo 2 GB.',
-]);
+            'comentario_cliente'   => 'nullable|string',
+            'danos_interiores'     => 'nullable|string',
+            'firma_cliente_fecha'  => 'nullable|date',
+            'firma_cliente_hora'   => 'nullable|date_format:H:i',
+            'entrego_fecha'        => 'nullable|date',
+            'entrego_hora'         => 'nullable|date_format:H:i',
+            'autoSalida.*'         => 'required|file|mimetypes:image/jpeg,image/png|max:2097152',
+        ], [
+            'autoSalida.*.required'  => 'Debes cargar al menos una foto de salida',
+            'autoSalida.*.mimetypes' => 'Las fotos deben ser JPG o PNG',
+            'autoSalida.*.max'       => 'Cada foto puede pesar como máximo 2 GB.',
+        ]);
 
+        Log::info('📋 [ChecklistSalida] Validación OK', [
+            'contrato_id' => $id,
+        ]);
 
         // 2) Buscar contrato
         $contrato = DB::table('contratos')
@@ -432,6 +439,8 @@ public function enviarChecklistSalida(Request $request, $id)
             ->first();
 
         if (!$contrato) {
+            Log::warning('⚠ [ChecklistSalida] Contrato no encontrado', ['id' => $id]);
+
             return response()->json([
                 'ok'  => false,
                 'msg' => 'Contrato no encontrado'
@@ -444,13 +453,23 @@ public function enviarChecklistSalida(Request $request, $id)
             ->first();
 
         if (!$reservacion) {
+            Log::warning('⚠ [ChecklistSalida] Reservación no encontrada', [
+                'id_reservacion' => $contrato->id_reservacion
+            ]);
+
             return response()->json([
                 'ok'  => false,
                 'msg' => 'Reservación no encontrada'
             ], 404);
         }
 
-        // 4) Inspección de SALIDA (si no existe, la creamos)
+        Log::info('✅ [ChecklistSalida] Contrato y reservación encontrados', [
+            'contrato_id'     => $contrato->id_contrato,
+            'reservacion_id'  => $reservacion->id_reservacion,
+            'email_cliente'   => $reservacion->email_cliente ?? null,
+        ]);
+
+        // 4) Inspección de SALIDA
         $inspSalida = DB::table('inspeccion')
             ->where('id_contrato', $contrato->id_contrato)
             ->where('tipo', 'salida')
@@ -458,8 +477,10 @@ public function enviarChecklistSalida(Request $request, $id)
 
         if ($inspSalida) {
             $idInspeccionSalida = $inspSalida->id_inspeccion;
+            Log::info('ℹ [ChecklistSalida] Inspección de salida existente', [
+                'id_inspeccion' => $idInspeccionSalida
+            ]);
         } else {
-            // Usamos los datos actuales como referencia (km / gasolina)
             $vehiculo = null;
             if ($reservacion->id_vehiculo) {
                 $vehiculo = DB::table('vehiculos')
@@ -471,7 +492,6 @@ public function enviarChecklistSalida(Request $request, $id)
             $nivelDecimal = null;
 
             if ($vehiculo && $vehiculo->gasolina_actual !== null) {
-                // gasolina_actual es entero 0–16, lo convertimos a decimal 0.00–1.00
                 $nivelDecimal = round(((int)$vehiculo->gasolina_actual) / 16, 2);
             }
 
@@ -486,32 +506,36 @@ public function enviarChecklistSalida(Request $request, $id)
                 'created_at'        => now(),
                 'updated_at'        => now(),
             ]);
+
+            Log::info('🆕 [ChecklistSalida] Inspección de salida creada', [
+                'id_inspeccion' => $idInspeccionSalida
+            ]);
         }
 
         // 5) Base común para cada foto
         $base = [
-                'id_reservacion'      => $reservacion->id_reservacion,
-                'id_contrato'         => $contrato->id_contrato,
-                'id_inspeccion'       => $idInspeccionSalida,
-                'tipo'                => 'salida',
-                'comentario_cliente'  => $request->input('comentario_cliente'),
-                'danos_interiores'    => $request->input('danos_interiores'),
-                'firma_cliente_fecha' => $request->input('firma_cliente_fecha') ?: null,
-                'firma_cliente_hora'  => $request->input('firma_cliente_hora') ?: null,
-                'entrego_fecha'       => $request->input('entrego_fecha') ?: null,
-                'entrego_hora'        => $request->input('entrego_hora') ?: null,
-                // 👇 En salida estos se quedan siempre NULL
-                'recibio_fecha'       => null,
-                'recibio_hora'        => null,
-                'created_at'          => now(),
-                'updated_at'          => now(),
-            ];
+            'id_reservacion'      => $reservacion->id_reservacion,
+            'id_contrato'         => $contrato->id_contrato,
+            'id_inspeccion'       => $idInspeccionSalida,
+            'tipo'                => 'salida',
+            'comentario_cliente'  => $request->input('comentario_cliente'),
+            'danos_interiores'    => $request->input('danos_interiores'),
+            'firma_cliente_fecha' => $request->input('firma_cliente_fecha') ?: null,
+            'firma_cliente_hora'  => $request->input('firma_cliente_hora') ?: null,
+            'entrego_fecha'       => $request->input('entrego_fecha') ?: null,
+            'entrego_hora'        => $request->input('entrego_hora') ?: null,
+            'recibio_fecha'       => null,
+            'recibio_hora'        => null,
+            'created_at'          => now(),
+            'updated_at'          => now(),
+        ];
 
-
-        // 6) Procesar fotos de SALIDA (autoSalida[])
+        // 6) Procesar fotos de SALIDA
         $files = $request->file('autoSalida', []);
 
         if (!$files || !count($files)) {
+            Log::warning('⚠ [ChecklistSalida] Sin fotos de salida');
+
             return response()->json([
                 'ok'  => false,
                 'msg' => 'Debes cargar al menos una foto del vehículo (salida).'
@@ -530,12 +554,300 @@ public function enviarChecklistSalida(Request $request, $id)
             ]));
         }
 
+        Log::info('📸 [ChecklistSalida] Fotos de salida guardadas', [
+            'total_fotos' => count($files),
+        ]);
+                // 6.1) 🔄 Traer las fotos de ESTE checklist de salida para adjuntarlas al correo
+        $fotosSalida = DB::table('inspeccion_fotos_comentarios')
+            ->where('id_contrato', $contrato->id_contrato)
+            ->where('id_inspeccion', $idInspeccionSalida)
+            ->where('tipo', 'salida')
+            ->orderBy('id_inspeccion_fc')
+            ->get();
+
+        // Preparamos arreglo con binario, mime y nombre para usarlo como adjunto
+        $fotosAdjuntos = $fotosSalida->map(function ($f) {
+            return [
+                'contenido' => $f->archivo,
+                'mime'      => $f->mime_type ?: 'image/jpeg',
+                'nombre'    => $f->nombre_archivo ?: ('foto-inspeccion-' . $f->id_inspeccion_fc . '.jpg'),
+            ];
+        })->toArray();
+
+
+        // 7) Generar PDFs y enviar correos
+        try {
+            Log::info('🧾 [ChecklistSalida] Generando PDFs para checklist salida...');
+
+            // 🔎 Vehículo (para datos del PDF)
+            $vehiculoPdf = null;
+            if (!empty($reservacion->id_vehiculo)) {
+                $vehiculoPdf = DB::table('vehiculos')
+                    ->where('id_vehiculo', $reservacion->id_vehiculo)
+                    ->first();
+            }
+            // ======================================================
+// ✅ 7.A) Traer datos reales capturados en el checklist (salida)
+//     (comentarios, daños, fechas y horas)
+// ======================================================
+$fcSalida = DB::table('inspeccion_fotos_comentarios')
+    ->where('id_contrato', $contrato->id_contrato)
+    ->where('tipo', 'salida')
+    ->orderByDesc('id_inspeccion_fc') // el más reciente
+    ->select([
+        'comentario_cliente',
+        'danos_interiores',
+        'firma_cliente_fecha',
+        'firma_cliente_hora',
+        'entrego_fecha',
+        'entrego_hora',
+        'recibio_fecha',
+        'recibio_hora',
+    ])
+    ->first();
+
+$comentario_cliente  = $fcSalida->comentario_cliente  ?? null;
+$danos_interiores    = $fcSalida->danos_interiores    ?? null;
+
+$firmaClienteFecha   = $fcSalida->firma_cliente_fecha ?? null;
+$firmaClienteHora    = $fcSalida->firma_cliente_hora  ?? null;
+
+$entrego_fecha       = $fcSalida->entrego_fecha ?? null;
+$entrego_hora        = $fcSalida->entrego_hora  ?? null;
+
+$recibio_fecha       = $fcSalida->recibio_fecha ?? null;
+$recibio_hora        = $fcSalida->recibio_hora  ?? null;
+
+// ======================================================
+// ✅ 7.B) Nombre del asesor
+//    Prioridad:
+//      1) contratos.id_asesor
+//      2) reservaciones.id_asesor
+//      3) session('id_usuario') del panel admin
+// ======================================================
+$asesor   = '—';
+$asesorId = $contrato->id_asesor ?? null;
+
+// 2) Si el contrato no tiene id_asesor, usamos el de la reservación
+if (empty($asesorId) && !empty($reservacion->id_asesor)) {
+    $asesorId = $reservacion->id_asesor;
+}
+
+// 3) Si sigue vacío, usamos al usuario logueado en el panel (tu esquema actual)
+if (empty($asesorId) && session()->has('id_usuario')) {
+    $asesorId = session('id_usuario');
+}
+
+// 4) Con ese id buscamos en "usuarios" nombres y apellidos
+if (!empty($asesorId)) {
+    $uAsesor = DB::table('usuarios')
+        ->where('id_usuario', $asesorId)
+        ->select('nombres', 'apellidos')
+        ->first();
+
+    if ($uAsesor) {
+        $asesor = trim(
+            ($uAsesor->nombres   ?? '') . ' ' .
+            ($uAsesor->apellidos ?? '')
+        );
+
+        if ($asesor === '') {
+            $asesor = '—';
+        }
+    }
+}
+
+// 👀 Log para confirmar qué se usó
+Log::info('🧑‍💼 [ChecklistSalida] Asesor resuelto', [
+    'contrato_id'             => $contrato->id_contrato,
+    'id_asesor_contrato'      => $contrato->id_asesor ?? null,
+    'id_asesor_reservacion'   => $reservacion->id_asesor ?? null,
+    'id_asesor_usado'         => $asesorId,
+    'asesor_nombre'           => $asesor,
+]);
+
+
+
+// ======================================================
+// ✅ 7.C) Nombre completo del cliente (por si lo ocupas en PDF)
+// ======================================================
+$nombreCliente = trim(
+    ($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')
+);
+
+
+                        // ✅ GASOLINA (para mostrar en PDF)
+            // Fuente 1: vehiculos.gasolina_actual (0-16)
+            $gasolinaSalida = null;
+
+            if ($vehiculoPdf && $vehiculoPdf->gasolina_actual !== null) {
+                $val = (int) $vehiculoPdf->gasolina_actual;
+
+                // seguridad por si viene fuera de rango
+                if ($val < 0) $val = 0;
+                if ($val > 16) $val = 16;
+
+                $gasolinaSalida = $val . '/16';
+            }
+
+            // Fuente 2 (fallback): inspeccion.nivel_combustible (0.00 - 1.00 aprox)
+            // Solo si no vino de vehiculos
+            if ($gasolinaSalida === null) {
+                $inspTmp = DB::table('inspeccion')
+                    ->where('id_contrato', $contrato->id_contrato)
+                    ->where('tipo', 'salida')
+                    ->first();
+
+                if ($inspTmp && $inspTmp->nivel_combustible !== null) {
+                    $val = (int) round(((float)$inspTmp->nivel_combustible) * 16);
+                    if ($val < 0) $val = 0;
+                    if ($val > 16) $val = 16;
+
+                    $gasolinaSalida = $val . '/16';
+                }
+            }
+
+            // ✅ En SALIDA normalmente "Recibido" aún no aplica:
+            $gasolinaRegreso = null;
+
+
+            // ✅ Tipo vehículo = nombre de categoría (vehiculo.id_categoria o reservacion.id_categoria)
+            $tipoVehiculo = null;
+            $categoriaId = $vehiculoPdf->id_categoria ?? $reservacion->id_categoria ?? null;
+
+            if (!empty($categoriaId)) {
+                $tipoVehiculo = DB::table('categorias_carros')
+                    ->where('id_categoria', $categoriaId)
+                    ->value('nombre');
+            }
+
+            // ✅ Datos del vehículo
+            $color       = $vehiculoPdf->color ?? null;
+            $transmision = $vehiculoPdf->transmision ?? null;
+            $modelo      = $vehiculoPdf->modelo ?? null;
+            $placas      = $vehiculoPdf->placa ?? null;
+
+            // ✅ Ciudades (AJUSTA tabla/campos si no se llaman así)
+            $ciudadEntrega = DB::table('ciudades')
+                ->where('id_ciudad', $reservacion->ciudad_entrega)
+                ->value('nombre');
+
+            $ciudadRecibe = DB::table('ciudades')
+                ->where('id_ciudad', $reservacion->ciudad_retiro)
+                ->value('nombre');
+
+            // ✅ Protección: NO existe en tus tablas mostradas
+            // Déjalo null o quítalo del PDF hasta que nos digas de dónde sale.
+            $proteccion = null;
+
+            // ✅ Data para PDFs (EVITA choque con "tipo")
+            $dataPdf = [
+                'reservacion'    => $reservacion,
+                'contrato'       => $contrato,
+
+                // 👇 tipo del checklist (no lo uses como "tipoVehiculo")
+                'tipoChecklist'  => 'salida',
+
+                // 👇 datos reales para tabla
+                'tipoVehiculo'   => $tipoVehiculo,
+                'color'          => $color,
+                'transmision'    => $transmision,
+                'modelo'         => $modelo,
+                'placas'         => $placas,
+                'ciudadEntrega'  => $ciudadEntrega,
+                'ciudadRecibe'   => $ciudadRecibe,
+                'proteccion'     => $proteccion,
+
+                'gasolinaSalida'  => $gasolinaSalida,
+                'gasolinaRegreso' => $gasolinaRegreso,
+                // 👇 comentarios y daños reales
+                'comentario_cliente' => $comentario_cliente,
+                'danos_interiores'   => $danos_interiores,
+
+                // 👇 fechas/horas reales (cliente + entregó/recibió)
+                'firmaClienteFecha'  => $firmaClienteFecha,
+                'firmaClienteHora'   => $firmaClienteHora,
+                'entrego_fecha'      => $entrego_fecha,
+                'entrego_hora'       => $entrego_hora,
+                'recibio_fecha'      => $recibio_fecha,
+                'recibio_hora'       => $recibio_hora,
+                // 👇 asesor
+                'asesor'             => $asesor,
+                // 👇 por si tu blade usa $nombreCliente
+                'nombreCliente'      => $nombreCliente,
+
+
+            ];
+
+            $pdfCliente = PDF::loadView('Admin.checklist_pdf_cliente', $dataPdf);
+            $pdfInterno = PDF::loadView('Admin.checklist_pdf_interno', $dataPdf);
+
+            Log::info('✅ [ChecklistSalida] PDFs generados correctamente');
+
+            // Correo al cliente
+            if (!empty($reservacion->email_cliente)) {
+                Log::info('📧 [ChecklistSalida] Enviando checklist al CLIENTE', [
+                    'email' => $reservacion->email_cliente,
+                ]);
+
+                    Mail::to($reservacion->email_cliente)
+                    ->send(new ChecklistInspeccionMail(
+                        $reservacion,
+                        $contrato,
+                        'salida',
+                        $pdfCliente->output(),
+                        null,
+                        $fotosAdjuntos   // 👈 ahora adjuntos
+                    ));
+
+
+
+                Log::info('✅ [ChecklistSalida] Correo enviado al CLIENTE');
+            } else {
+                Log::warning('⚠ [ChecklistSalida] Reservación sin email_cliente, no se envía correo al cliente');
+            }
+
+            // Correo interno
+            $correoInterno = config('mail.from.address', 'reservaciones@viajerocarental.com');
+
+            Log::info('📧 [ChecklistSalida] Enviando checklist al INTERNO', [
+                'email' => $correoInterno,
+            ]);
+
+                            Mail::to($correoInterno)
+                ->send(new ChecklistInspeccionMail(
+                    $reservacion,
+                    $contrato,
+                    'salida',
+                    $pdfInterno->output(),
+                    null,
+                    $fotosAdjuntos   // 👈 mismas fotos
+                ));
+
+
+
+            Log::info('✅ [ChecklistSalida] Correo enviado al INTERNO');
+
+        } catch (\Throwable $mailEx) {
+            Log::error('❌ [ChecklistSalida] Error al enviar correo checklist salida', [
+                'mensaje' => $mailEx->getMessage(),
+                'file'    => $mailEx->getFile(),
+                'line'    => $mailEx->getLine(),
+            ]);
+        }
+
         return response()->json([
             'ok'  => true,
             'msg' => 'Checklist de salida guardado correctamente.'
         ]);
 
     } catch (\Throwable $e) {
+        Log::error('❌ [ChecklistSalida] Error general en enviarChecklistSalida', [
+            'mensaje' => $e->getMessage(),
+            'file'    => $e->getFile(),
+            'line'    => $e->getLine(),
+        ]);
+
         return response()->json([
             'ok'  => false,
             'msg' => 'Error al guardar el checklist de salida: ' . $e->getMessage()
@@ -547,19 +859,17 @@ public function enviarChecklistEntrada(Request $request, $id)
 {
     try {
         // 1) Validar mínimamente
-       $request->validate([
-    'comentario_cliente'   => 'nullable|string',
-    'danos_interiores'     => 'nullable|string',
-    // 👇 En ENTRADA solo nos importan estos tiempos
-    'recibio_fecha'        => 'nullable|date',
-    'recibio_hora'         => 'nullable|date_format:H:i',
-    'autoRegreso.*'        => 'required|file|mimetypes:image/jpeg,image/png|max:2097152',
-], [
-    'autoRegreso.*.required'  => 'Debes cargar al menos una foto de regreso',
-    'autoRegreso.*.mimetypes' => 'Las fotos deben ser JPG o PNG',
-    'autoRegreso.*.max'       => 'Cada foto puede pesar como máximo 2 GB.',
-]);
-
+        $request->validate([
+            'comentario_cliente'   => 'nullable|string',
+            'danos_interiores'     => 'nullable|string',
+            'recibio_fecha'        => 'nullable|date',
+            'recibio_hora'         => 'nullable|date_format:H:i',
+            'autoRegreso.*'        => 'required|file|mimetypes:image/jpeg,image/png|max:2097152',
+        ], [
+            'autoRegreso.*.required'  => 'Debes cargar al menos una foto de regreso',
+            'autoRegreso.*.mimetypes' => 'Las fotos deben ser JPG o PNG',
+            'autoRegreso.*.max'       => 'Cada foto puede pesar como máximo 2 GB.',
+        ]);
 
         // 2) Buscar contrato
         $contrato = DB::table('contratos')
@@ -595,7 +905,6 @@ public function enviarChecklistEntrada(Request $request, $id)
         if ($inspEntrada) {
             $idInspeccionEntrada = $inspEntrada->id_inspeccion;
 
-            // opcional: actualizar observaciones
             DB::table('inspeccion')
                 ->where('id_inspeccion', $idInspeccionEntrada)
                 ->update([
@@ -604,19 +913,18 @@ public function enviarChecklistEntrada(Request $request, $id)
                 ]);
         } else {
             // Si no existe registro de entrada, usamos datos actuales del vehículo
-            $vehiculo = null;
+            $vehiculoTmp = null;
             if ($reservacion->id_vehiculo) {
-                $vehiculo = DB::table('vehiculos')
+                $vehiculoTmp = DB::table('vehiculos')
                     ->where('id_vehiculo', $reservacion->id_vehiculo)
                     ->first();
             }
 
-            $kmEntrada = $vehiculo->kilometraje ?? 0;
+            $kmEntrada = $vehiculoTmp->kilometraje ?? 0;
             $nivelDecimal = null;
 
-            if ($vehiculo && $vehiculo->gasolina_actual !== null) {
-                // gasolina_actual es entero 0–16, lo convertimos a decimal 0.00–1.00
-                $nivelDecimal = round(((int)$vehiculo->gasolina_actual) / 16, 2);
+            if ($vehiculoTmp && $vehiculoTmp->gasolina_actual !== null) {
+                $nivelDecimal = round(((int)$vehiculoTmp->gasolina_actual) / 16, 2);
             }
 
             $idInspeccionEntrada = DB::table('inspeccion')->insertGetId([
@@ -632,26 +940,28 @@ public function enviarChecklistEntrada(Request $request, $id)
             ]);
         }
 
+        // Nos aseguramos de tener la inspección de entrada fresca
+        $inspEntrada = DB::table('inspeccion')
+            ->where('id_inspeccion', $idInspeccionEntrada)
+            ->first();
+
         // 5) Base común para cada foto de REGRESO
         $base = [
-    'id_reservacion'      => $reservacion->id_reservacion,
-    'id_contrato'         => $contrato->id_contrato,
-    'id_inspeccion'       => $idInspeccionEntrada,
-    // 👇 DEBE SER 'entrada' porque el ENUM solo permite 'salida' o 'entrada'
-    'tipo'                => 'entrada',
-    'comentario_cliente'  => $request->input('comentario_cliente'),
-    'danos_interiores'    => $request->input('danos_interiores'),
-    // 👇 En entrada NO repetimos datos de salida
-    'firma_cliente_fecha' => null,
-    'firma_cliente_hora'  => null,
-    'entrego_fecha'       => null,
-    'entrego_hora'        => null,
-    'recibio_fecha'       => $request->input('recibio_fecha') ?: null,
-    'recibio_hora'        => $request->input('recibio_hora') ?: null,
-    'created_at'          => now(),
-    'updated_at'          => now(),
-];
-
+            'id_reservacion'      => $reservacion->id_reservacion,
+            'id_contrato'         => $contrato->id_contrato,
+            'id_inspeccion'       => $idInspeccionEntrada,
+            'tipo'                => 'entrada',
+            'comentario_cliente'  => $request->input('comentario_cliente'),
+            'danos_interiores'    => $request->input('danos_interiores'),
+            'firma_cliente_fecha' => null,
+            'firma_cliente_hora'  => null,
+            'entrego_fecha'       => null,
+            'entrego_hora'        => null,
+            'recibio_fecha'       => $request->input('recibio_fecha') ?: null,
+            'recibio_hora'        => $request->input('recibio_hora') ?: null,
+            'created_at'          => now(),
+            'updated_at'          => now(),
+        ];
 
         // 6) Procesar fotos de REGRESO (autoRegreso[])
         $files = $request->file('autoRegreso', []);
@@ -675,12 +985,255 @@ public function enviarChecklistEntrada(Request $request, $id)
             ]));
         }
 
+        // 6.1) Traer fotos de ENTRADA para adjuntarlas
+        $fotosEntrada = DB::table('inspeccion_fotos_comentarios')
+            ->where('id_contrato', $contrato->id_contrato)
+            ->where('id_inspeccion', $idInspeccionEntrada)
+            ->where('tipo', 'entrada')
+            ->orderBy('id_inspeccion_fc')
+            ->get();
+
+        $fotosAdjuntos = $fotosEntrada->map(function ($f) {
+            return [
+                'contenido' => $f->archivo,
+                'mime'      => $f->mime_type ?: 'image/jpeg',
+                'nombre'    => $f->nombre_archivo ?: ('foto-entrada-' . $f->id_inspeccion_fc . '.jpg'),
+            ];
+        })->toArray();
+
+        // 6.2) Datos del checklist de SALIDA ya guardados
+        $fcSalida = DB::table('inspeccion_fotos_comentarios')
+            ->where('id_contrato', $contrato->id_contrato)
+            ->where('tipo', 'salida')
+            ->orderByDesc('id_inspeccion_fc')
+            ->select([
+                'comentario_cliente',
+                'danos_interiores',
+                'firma_cliente_fecha',
+                'firma_cliente_hora',
+                'entrego_fecha',
+                'entrego_hora',
+            ])
+            ->first();
+
+        $comentarioSalida   = $fcSalida->comentario_cliente   ?? null;
+        $danosSalida        = $fcSalida->danos_interiores     ?? null;
+        $firmaClienteFecha  = $fcSalida->firma_cliente_fecha  ?? null;
+        $firmaClienteHora   = $fcSalida->firma_cliente_hora   ?? null;
+        $entrego_fecha      = $fcSalida->entrego_fecha        ?? null;
+        $entrego_hora       = $fcSalida->entrego_hora         ?? null;
+
+        // 6.3) Datos del checklist de ENTRADA (regreso)
+        $fcEntrada = $fotosEntrada->last(); // colección, tomamos el último
+
+        $comentarioEntrada  = $fcEntrada->comentario_cliente  ?? null;
+        $danosEntrada       = $fcEntrada->danos_interiores    ?? null;
+        $recibio_fecha      = $fcEntrada->recibio_fecha       ?? null;
+        $recibio_hora       = $fcEntrada->recibio_hora        ?? null;
+
+        // 6.4) Resolver asesor (mismo flujo que en salida)
+        $asesor   = '—';
+        $asesorId = $contrato->id_asesor ?? null;
+
+        if (empty($asesorId) && !empty($reservacion->id_asesor)) {
+            $asesorId = $reservacion->id_asesor;
+        }
+        if (empty($asesorId) && session()->has('id_usuario')) {
+            $asesorId = session('id_usuario');
+        }
+
+        if (!empty($asesorId)) {
+            $uAsesor = DB::table('usuarios')
+                ->where('id_usuario', $asesorId)
+                ->select('nombres', 'apellidos')
+                ->first();
+
+            if ($uAsesor) {
+                $asesor = trim(($uAsesor->nombres ?? '') . ' ' . ($uAsesor->apellidos ?? ''));
+                if ($asesor === '') {
+                    $asesor = '—';
+                }
+            }
+        }
+
+        $nombreCliente = trim(
+            ($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')
+        );
+
+        // 6.5) Datos del vehículo y gasolina
+        $vehiculoPdf = null;
+        if (!empty($reservacion->id_vehiculo)) {
+            $vehiculoPdf = DB::table('vehiculos')
+                ->where('id_vehiculo', $reservacion->id_vehiculo)
+                ->first();
+        }
+
+        // Gasolina - Salida (desde inspección de salida si existe)
+        $gasolinaSalida = null;
+        $inspSalida = DB::table('inspeccion')
+            ->where('id_contrato', $contrato->id_contrato)
+            ->where('tipo', 'salida')
+            ->first();
+
+        if ($inspSalida && $inspSalida->nivel_combustible !== null) {
+            $val = (int) round(((float)$inspSalida->nivel_combustible) * 16);
+            if ($val < 0) $val = 0;
+            if ($val > 16) $val = 16;
+            $gasolinaSalida = $val . '/16';
+        }
+
+        // ⚠️ KM SALIDA desde inspección de salida
+        $kmSalida = $inspSalida->odometro_km ?? null;
+
+        // Si no encontramos en inspección, usamos vehiculos.gasolina_actual (mejor que nada)
+        if ($gasolinaSalida === null && $vehiculoPdf && $vehiculoPdf->gasolina_actual !== null) {
+            $val = (int) $vehiculoPdf->gasolina_actual;
+            if ($val < 0) $val = 0;
+            if ($val > 16) $val = 16;
+            $gasolinaSalida = $val . '/16';
+        }
+
+        // Gasolina - Regreso (entrada)
+        $gasolinaRegreso = null;
+        if ($inspEntrada && $inspEntrada->nivel_combustible !== null) {
+            $val = (int) round(((float)$inspEntrada->nivel_combustible) * 16);
+            if ($val < 0) $val = 0;
+            if ($val > 16) $val = 16;
+            $gasolinaRegreso = $val . '/16';
+        }
+
+        // ⚠️ KM REGRESO desde inspección de entrada
+        $kmRegreso = $inspEntrada->odometro_km ?? null;
+
+        // Tipo de vehículo (categoría)
+        $tipoVehiculo = null;
+        $categoriaId = $vehiculoPdf->id_categoria ?? $reservacion->id_categoria ?? null;
+
+        if (!empty($categoriaId)) {
+            $tipoVehiculo = DB::table('categorias_carros')
+                ->where('id_categoria', $categoriaId)
+                ->value('nombre');
+        }
+
+        $color       = $vehiculoPdf->color ?? null;
+        $transmision = $vehiculoPdf->transmision ?? null;
+        $modelo      = $vehiculoPdf->modelo ?? null;
+        $placas      = $vehiculoPdf->placa ?? null;
+
+        $ciudadEntrega = DB::table('ciudades')
+            ->where('id_ciudad', $reservacion->ciudad_entrega)
+            ->value('nombre');
+
+        $ciudadRecibe = DB::table('ciudades')
+            ->where('id_ciudad', $reservacion->ciudad_retiro)
+            ->value('nombre');
+
+        $proteccion = null;
+
+        // 7) Generar PDFs y enviar correos
+        try {
+            $dataPdf = [
+                'reservacion'    => $reservacion,
+                'contrato'       => $contrato,
+                'tipoChecklist'  => 'entrada',
+
+                // Datos de vehículo (cliente + interno)
+                'tipoVehiculo'   => $tipoVehiculo,
+                'tipo'           => $tipoVehiculo,   // alias para pdf interno
+                'color'          => $color,
+                'transmision'    => $transmision,
+                'modelo'         => $modelo,
+                'placas'         => $placas,
+                'ciudadEntrega'  => $ciudadEntrega,
+                'ciudadRecibe'   => $ciudadRecibe,
+                'proteccion'     => $proteccion,
+
+                'gasolinaSalida'  => $gasolinaSalida,
+                'gasolinaRegreso' => $gasolinaRegreso,
+
+                // KM para pdf interno
+                'kmSalida'        => $kmSalida,
+                'kmRegreso'       => $kmRegreso,
+
+                // Comentarios: priorizamos los de entrada; si no hay, usamos salida
+                'comentario_cliente' => $comentarioEntrada ?? $comentarioSalida,
+                'danos_interiores'   => $danosEntrada ?? $danosSalida,
+
+                // Aliases para pdf interno
+                'comentarioCliente'  => $comentarioEntrada ?? $comentarioSalida,
+                'danosInteriores'    => $danosEntrada ?? $danosSalida,
+
+                // Fechas/horas
+                'firmaClienteFecha'  => $firmaClienteFecha,
+                'firmaClienteHora'   => $firmaClienteHora,
+                'entrego_fecha'      => $entrego_fecha,
+                'entrego_hora'       => $entrego_hora,
+                'recibio_fecha'      => $recibio_fecha,
+                'recibio_hora'       => $recibio_hora,
+
+                // Aliases camelCase para el interno
+                'entregoFecha'       => $entrego_fecha,
+                'entregoHora'        => $entrego_hora,
+                'recibioFecha'       => $recibio_fecha,
+                'recibioHora'        => $recibio_hora,
+
+                // Asesor y cliente
+                'asesor'             => $asesor,
+                'nombreCliente'      => $nombreCliente,
+
+                // Aliases específicos del interno
+                'clienteNombre'      => $nombreCliente,
+                'asesorNombre'       => $asesor,
+                'entregoNombre'      => $asesor,
+                'recibioNombre'      => $asesor,
+            ];
+
+            $pdfCliente = PDF::loadView('Admin.checklist_pdf_cliente', $dataPdf);
+            $pdfInterno = PDF::loadView('Admin.checklist_pdf_interno', $dataPdf);
+
+            // Enviar al cliente (si tiene correo)
+            if (!empty($reservacion->email_cliente)) {
+                Mail::to($reservacion->email_cliente)
+                    ->send(new ChecklistInspeccionMail(
+                        $reservacion,
+                        $contrato,
+                        'entrada',
+                        $pdfCliente->output(),
+                        null,
+                        $fotosAdjuntos
+                    ));
+            }
+
+            // Copia al correo interno
+            $correoInterno = config('mail.from.address', 'reservaciones@viajerocarental.com');
+
+            Mail::to($correoInterno)
+                ->send(new ChecklistInspeccionMail(
+                    $reservacion,
+                    $contrato,
+                    'entrada',
+                    $pdfCliente->output(),
+                    $pdfInterno->output(),
+                    $fotosAdjuntos
+                ));
+        } catch (\Throwable $mailEx) {
+            Log::error('Error al enviar correo checklist entrada: '.$mailEx->getMessage(), [
+                'file' => $mailEx->getFile(),
+                'line' => $mailEx->getLine(),
+            ]);
+        }
+
         return response()->json([
-            'ok'  => true,
-            'msg' => 'Checklist de regreso guardado correctamente.'
+           'ok'  => true,
+           'msg' => 'Checklist de regreso guardado correctamente.'
         ]);
 
     } catch (\Throwable $e) {
+        Log::error('Error general en enviarChecklistEntrada: '.$e->getMessage(), [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+        ]);
+
         return response()->json([
             'ok'  => false,
             'msg' => 'Error al guardar el checklist de regreso: ' . $e->getMessage()
