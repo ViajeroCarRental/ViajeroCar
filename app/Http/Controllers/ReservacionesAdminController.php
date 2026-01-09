@@ -179,25 +179,30 @@ class ReservacionesAdminController extends Controller
     public function guardarReservacion(Request $request)
 {
     try {
-        $idUsuario = session('id_usuario');
+        // 👤 Asesor logueado (usuario admin del sistema)
+        $idAsesor = session('id_usuario');
 
-        if (!$idUsuario) {
+        if (!$idAsesor) {
             return response()->json(['success' => false, 'message' => 'No autenticado'], 401);
         }
 
-        // ✅ Validación básica + sucursales
+        // ✅ Validación: categoría, fechas, sucursales y datos del cliente
         $validated = $request->validate([
             'id_categoria'     => 'required|exists:categorias_carros,id_categoria',
             'fecha_inicio'     => 'required|date',
             'fecha_fin'        => 'required|date|after_or_equal:fecha_inicio',
+
             'sucursal_retiro'  => 'required|integer|exists:sucursales,id_sucursal',
             'sucursal_entrega' => 'required|integer|exists:sucursales,id_sucursal',
-            // si ya mandas hora_retiro/hora_entrega, puedes validarlas también:
-            // 'hora_retiro'      => 'nullable|date_format:H:i',
-            // 'hora_entrega'     => 'nullable|date_format:H:i',
+
+            'nombre_cliente'    => 'required|string|max:150',
+            'apellidos_cliente' => 'required|string|max:150',
+            'email_cliente'     => 'required|email|max:150',
+            'telefono_cliente'  => 'required|string|max:30',
+            'telefono_lada'     => 'nullable|string|max:10',
         ]);
 
-        // 🔎 Obtener sucursales para sacar las ciudades
+        // 🔎 Sucursales → ciudades
         $sucursalRetiro = DB::table('sucursales')
             ->where('id_sucursal', $validated['sucursal_retiro'])
             ->first();
@@ -213,11 +218,10 @@ class ReservacionesAdminController extends Controller
             ], 422);
         }
 
-        // 🏙 IDs de ciudad desde sucursales
         $ciudadRetiroId  = $sucursalRetiro->id_ciudad;
         $ciudadEntregaId = $sucursalEntrega->id_ciudad;
 
-        // 💰 Cálculo de días y totales
+        // 💰 Cálculo de totales
         $categoria = DB::table('categorias_carros')
             ->where('id_categoria', $validated['id_categoria'])
             ->first();
@@ -241,30 +245,46 @@ class ReservacionesAdminController extends Controller
 
         $codigo = 'RES-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
 
-        // 💾 Insert completo (incluyendo campos NOT NULL de la tabla)
+        // 💾 Insert COMPLETO
         DB::table('reservaciones')->insert([
-            'id_usuario'       => $idUsuario,
-            'id_vehiculo'      => null, // por ahora sin vehículo asignado
-            'id_categoria'     => $validated['id_categoria'],
+            // 🔹 Cliente web (si no está logueado) → null
+            'id_usuario'        => null,
 
-            'ciudad_retiro'    => $ciudadRetiroId,
-            'ciudad_entrega'   => $ciudadEntregaId,
-            'sucursal_retiro'  => $validated['sucursal_retiro'],
-            'sucursal_entrega' => $validated['sucursal_entrega'],
+            // 🔹 Asesor que crea la reserva
+            'id_asesor'         => $idAsesor,
 
-            'fecha_inicio'     => $validated['fecha_inicio'],
-            'hora_retiro'      => $request->input('hora_retiro'),   // si el form lo manda
-            'fecha_fin'        => $validated['fecha_fin'],
-            'hora_entrega'     => $request->input('hora_entrega'),  // si el form lo manda
+            // 🔹 Vehículo aún no asignado
+            'id_vehiculo'       => null,
 
-            'subtotal'         => $subtotal,
-            'impuestos'        => $iva,
-            'total'            => $total,
-            'codigo'           => $codigo,
-            'estado'           => 'pendiente_pago',
+            'id_categoria'      => $validated['id_categoria'],
 
-            'created_at'       => now(),
-            'updated_at'       => now(),
+            // 🧑‍💼 Datos del cliente
+            'nombre_cliente'    => $validated['nombre_cliente'],
+            'apellidos_cliente' => $validated['apellidos_cliente'],
+            'email_cliente'     => $validated['email_cliente'],
+            'telefono_cliente'  => $validated['telefono_cliente'],
+
+            // 📍 Ubicación
+            'ciudad_retiro'     => $ciudadRetiroId,
+            'ciudad_entrega'    => $ciudadEntregaId,
+            'sucursal_retiro'   => $validated['sucursal_retiro'],
+            'sucursal_entrega'  => $validated['sucursal_entrega'],
+
+            // 📅 Fechas y horas
+            'fecha_inicio'      => $validated['fecha_inicio'],
+            'hora_retiro'       => $request->input('hora_retiro'),
+            'fecha_fin'         => $validated['fecha_fin'],
+            'hora_entrega'      => $request->input('hora_entrega'),
+
+            // 💸 Totales
+            'subtotal'          => $subtotal,
+            'impuestos'         => $iva,
+            'total'             => $total,
+            'codigo'            => $codigo,
+            'estado'            => 'pendiente_pago',
+
+            'created_at'        => now(),
+            'updated_at'        => now(),
         ]);
 
         return response()->json([
@@ -281,5 +301,6 @@ class ReservacionesAdminController extends Controller
         ], 500);
     }
 }
+
 
 }
