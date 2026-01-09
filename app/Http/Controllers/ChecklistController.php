@@ -413,6 +413,8 @@ public function guardarFirmaArrendador(Request $req)
 
 public function enviarChecklistSalida(Request $request, $id)
 {
+    // 👇 Aumentar memoria solo para esta petición
+    ini_set('memory_limit', '512M'); // o '256M' si quieres probar más conservador
     try {
         // 1) Validar mínimamente
         $request->validate([
