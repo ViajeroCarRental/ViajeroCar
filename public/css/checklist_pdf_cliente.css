@@ -1,0 +1,416 @@
+/* ==========================================================
+   ✅ CHECKLIST CLIENTE - PDF (DomPDF Friendly)
+========================================================== */
+
+@page{
+  size: letter portrait;
+  margin: 8mm;
+}
+
+/* ===== Variables tomadas del checklist (ajustadas para PDF) ===== */
+:root{
+  --brand:#D6001C;
+  --ink:#111827;
+  --muted:#6b7280;
+  --line:#e5e7eb;
+  --paper:#ffffff;
+  --bg:#f3f5f9;
+  --radius:14px;
+  --shadow:0 10px 30px rgba(16,24,40,.08);
+  --shadow-soft:0 4px 12px rgba(16,24,40,.06);
+  --font:'Inter','Poppins',system-ui,Arial,sans-serif;
+
+  /* compatibilidad con código del PDF anterior */
+  --stroke: var(--line);
+  --bg-soft:#f8fafc;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html, body{
+  margin:0;
+  padding:0;
+  background:#fff;
+  color:var(--ink);
+  /* DejaVu para PDF + fallback al font del checklist */
+  font-family: DejaVu Sans, var(--font);
+  font-size: 11px;
+}
+
+.checklist-pdf-container{
+  width:100%;
+  margin:0;
+  padding:0 10px 8px;
+  background:#fff;
+}
+
+/* ===================================================== */
+/*                        HEADER                         */
+/*        (copiado de la vista checklist)                */
+/* ===================================================== */
+
+.cl-header{
+  display:grid;
+  grid-template-columns:180px 1fr 210px;
+  gap:14px;
+  align-items:center;
+  padding:10px 6px 18px;
+  border-bottom:3px solid var(--brand);
+}
+
+.cl-logo img{
+  width:160px;
+}
+
+.cl-title-box{
+  text-align:center;
+}
+.cl-title-box h1{
+  font-size:26px;
+  font-weight:800;
+  margin:0;
+  letter-spacing:.8px;
+}
+.cl-title-box h2{
+  margin:4px 0 8px;
+  font-size:14px;
+  font-weight:600;
+  color:#374151;
+}
+.office-info{
+  font-size:12px;
+  color:var(--muted);
+  line-height:1.35;
+}
+
+.cl-ra-box{
+  background:#f7f7f8;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px;
+  text-align:center;
+}
+.cl-ra-box span{
+  font-size:12px;
+  color:#4b5563;
+}
+.cl-ra-box strong{
+  display:block;
+  margin-top:6px;
+  font-size:20px;
+  font-weight:800;
+}
+
+/* ===================================================== */
+/*                    PAPER SECTIONS                     */
+/* ===================================================== */
+
+.sec-block{
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  padding:10px 12px 9px;
+  margin-top:10px;
+  margin-bottom:7px;
+}
+
+.paper-section{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px;
+  margin-top:14px;
+  box-shadow:var(--shadow-soft);
+}
+
+.sec-title{
+  font-size:13px;
+  font-weight:800;
+  margin:0 0 8px;
+  letter-spacing:.3px;
+  text-transform:uppercase;
+}
+.sec-title.center{
+  text-align:center;
+}
+
+/* ===================================================== */
+/*                        TABLES                         */
+/*        (estilo checklist aplicado al PDF)             */
+/* ===================================================== */
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th,td{
+  border:1px solid var(--line);
+  padding:6px 8px;
+  font-size:11px;
+  text-align:left;
+}
+
+th{
+  background:#f8fafc;
+  font-weight:700;
+}
+
+.vehicle-table th{
+  width:120px;
+  background:#f3f4f6;
+}
+
+.small-muted{
+  font-size:9px;
+  color:var(--muted);
+}
+
+/* ===================================================== */
+/*                     COMMENT BOXES                     */
+/* ===================================================== */
+
+.comment-box{
+  border:1px solid var(--line);
+  min-height:60px;
+  border-radius:8px;
+  background:#fff;
+  box-shadow:inset 0 1px 4px rgba(0,0,0,.05);
+  padding:6px 7px;
+  font-size:10.5px;
+  line-height:1.4;
+}
+
+/* ===================================================== */
+/*           GASOLINA — GAUGE ESTILO CHECKLIST           */
+/* ===================================================== */
+
+.gas-wrap{
+  padding:12px 14px 14px;
+}
+
+.gas-pill{
+  background:#0f172a;
+  color:#fff;
+  padding:6px 10px;
+  border-radius:999px;
+  font-size:12px;
+  display:flex;
+  gap:6px;
+  align-items:center;
+}
+.gas-pill strong{
+  font-size:13px;
+}
+
+/* grid de tarjetas gasolina */
+.fuel-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+
+.fuel-card{
+  background:#f8fafc;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:12px 10px 14px;
+  box-shadow:var(--shadow-soft);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.fuel-title{
+  font-size:13px;
+  font-weight:700;
+  margin:0 0 4px;
+}
+
+.fuel-gauge{
+  width:100%;
+  max-width:260px;
+  margin:4px auto 6px;
+}
+
+.fuel-svg{
+  width:100%;
+  display:block;
+}
+
+.gauge-label{
+  font-size:11px;
+  font-weight:800;
+  fill:#111;
+  text-anchor:middle;
+}
+
+/* ===================================================== */
+/*                      RULES & TEXT                     */
+/* ===================================================== */
+
+.legal-text{
+  font-size:9.5px;
+  line-height:1.35;
+  text-align:justify;
+  margin-bottom:6px;
+}
+
+.rules-list{
+  margin:0;
+  padding-left:18px;
+  font-size:11px;
+}
+.rules-list li{
+  margin-bottom:4px;
+  color:#111;
+}
+
+/* ===================================================== */
+/*                     ACEPTACIÓN / FIRMA                */
+/* ===================================================== */
+
+.accept-line{
+  margin-top:8px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:11px;
+  font-weight:700;
+}
+.accept-label{
+  width:40%;
+}
+.accept-sign{
+  flex:1;
+}
+
+.xbox{
+  display:inline-block;
+  width:18px;
+  height:18px;
+  border:1px solid var(--ink);
+  text-align:center;
+  font-size:11px;
+  line-height:16px;
+  margin-left:8px;
+}
+
+.firma-img{
+  max-width:150px;
+  height:auto;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#fff;
+  display:inline-block;
+}
+
+/* ===================================================== */
+/*                     SIGNATURE TABLES                  */
+/* ===================================================== */
+
+.sign-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:6px;
+  font-size:10.5px;
+}
+.sign-table th{
+  background:#f3f4f6;
+  border:1px solid var(--line);
+  padding:4px 5px;
+  text-align:left;
+  font-weight:900;
+  white-space:nowrap;
+}
+.sign-table td{
+  border:1px solid var(--line);
+  padding:4px 5px;
+  vertical-align:middle;
+  height:44px;
+}
+
+/* ===================================================== */
+/*                   LAYOUT AUXILIAR                     */
+/* ===================================================== */
+
+.two-cols{
+  width:100%;
+  display:table;
+  table-layout:fixed;
+}
+.two-cols > div{
+  display:table-cell;
+  vertical-align:top;
+  padding-right:4px;
+}
+.two-cols > div:last-child{
+  padding-right:0;
+  padding-left:4px;
+}
+
+/* ===================================================== */
+/*                        FOOTER                         */
+/* ===================================================== */
+
+.footer-note{
+  margin-top:6px;
+  font-size:9px;
+  text-align:center;
+  color:var(--muted);
+}
+
+/* ===================================================== */
+/*            CAMPOS TIPO CHECKLIST (REUTILIZADOS)       */
+/* ===================================================== */
+
+/* Campos de línea (inputs de nombre / fechas / horas) */
+.input-line{
+  width:100%;
+  border:none;
+  border-bottom:1px solid #555;
+  padding:4px 2px;
+  font-size:11px;
+  background:transparent;
+  outline:none;
+}
+
+/* Textareas de comentarios / daños interiores */
+.comment-input{
+  width:100%;
+  height:90px;
+  border:1px solid #ddd;
+  border-radius:8px;
+  padding:6px;
+  font-size:11px;
+  background:#fafafa;
+  resize:none;
+}
+
+/* Botón de firmar (se dibuja en el PDF, no es interactivo) */
+.btn-open-sign{
+  padding:6px 10px;
+  background:#c0392b;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  font-size:11px;
+}
+
+/* DomPDF ignora :hover, pero no afecta */
+.btn-open-sign:hover{
+  background:#e74c3c;
+}
+
+/* ===================================================== */
+/*                 CONTROL DE CORTES EN PDF              */
+/* ===================================================== */
+
+.sec-block,
+.vehicle-table,
+.sign-table,
+.paper-section{
+  page-break-inside:avoid;
+}
