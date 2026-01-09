@@ -284,7 +284,7 @@
 ]) }}" class="btn-checklist">
     Checklist
 </a>
-    <a href="" class="btn-checklist">
+    <a href="{{route('checklist2')}}" class="btn-checklist">
         Cambio de Vehículo
     </a>
 

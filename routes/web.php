@@ -31,6 +31,7 @@ use App\Http\Controllers\ContratosAbiertosController;
 use App\Http\Controllers\VisorReservacionesController;
 use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\ContratosAbiertosControllerController;
+use App\Http\Controllers\ChecklistCambioAutoController;
 use Illuminate\Support\Facades\DB;
 //rutas vistas Usuario
 
@@ -401,9 +402,7 @@ Route::post('/admin/checklist/{id}/enviar-salida',[ChecklistController::class, '
 Route::post('/admin/checklist/{id}/enviar-entrada', [ChecklistController::class, 'enviarChecklistEntrada'])->name('admin.checklist.enviar-entrada');
 
 
-Route::get('/admin/checklist2', function () {
-    return view('Admin.checklist2');
-});
+Route::get('/admin/checklist2',[ChecklistCambioAutoController::class, 'index'])->name('checklist2');
 
 /* ===============================================
    ADMIN · ROLES Y PERMISOS

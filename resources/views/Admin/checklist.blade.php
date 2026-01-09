@@ -968,8 +968,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         msg = "Las fotos son demasiado pesadas para el servidor. " +
                               "Intenta con menos fotos o en menor resolución.";
                     } else {
-                        msg = `Error ${resp.status}: ${rawText.slice(0, 200)}`;
-                    }
+    // 👇 Muestra TODO lo que mandó el servidor
+    msg = `Error ${resp.status}:\n` + (rawText || '(sin cuerpo de respuesta)');
+}
+
 
                     alert(msg);
                     return;
@@ -1082,8 +1084,10 @@ formData.append("recibio_hora",        rHora   ? rHora.value   : "");
                     msg = "Las fotos son demasiado pesadas para el servidor. " +
                           "Intenta con menos fotos o en menor resolución.";
                 } else {
-                    msg = `Error ${resp.status}: ${rawText.slice(0, 200)}`;
-                }
+    // 👇 Muestra TODO lo que mandó el servidor
+    msg = `Error ${resp.status}:\n` + (rawText || '(sin cuerpo de respuesta)');
+}
+
 
                 alert(msg);
                 return;

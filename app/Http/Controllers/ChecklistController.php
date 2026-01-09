@@ -842,17 +842,20 @@ $nombreCliente = trim(
         ]);
 
     } catch (\Throwable $e) {
-        Log::error('❌ [ChecklistSalida] Error general en enviarChecklistSalida', [
-            'mensaje' => $e->getMessage(),
-            'file'    => $e->getFile(),
-            'line'    => $e->getLine(),
-        ]);
+    Log::error('❌ [ChecklistSalida] Error general en enviarChecklistSalida', [
+        'mensaje' => $e->getMessage(),
+        'file'    => $e->getFile(),
+        'line'    => $e->getLine(),
+        'trace'   => $e->getTraceAsString(),   // 👈 agrega esto
+        'input'   => $request->all(),          // opcional: ver qué llegó
+    ]);
 
-        return response()->json([
-            'ok'  => false,
-            'msg' => 'Error al guardar el checklist de salida: ' . $e->getMessage()
-        ], 500);
-    }
+    return response()->json([
+        'ok'  => false,
+        'msg' => 'Error al guardar el checklist de salida: ' . $e->getMessage()
+    ], 500);
+}
+
 }
 
 public function enviarChecklistEntrada(Request $request, $id)
