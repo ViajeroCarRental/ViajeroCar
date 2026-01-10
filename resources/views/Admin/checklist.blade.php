@@ -620,6 +620,62 @@ document.addEventListener("DOMContentLoaded", () => {
     // 🗂 Archivos seleccionados por cada uploader (clave = data-name)
     const uploaderFiles = {};
 
+        /**
+     * Comprime una imagen usando canvas.
+     * - maxWidth: ancho máximo (el alto se ajusta solo)
+     * - quality: calidad JPEG (0–1)
+     */
+    function compressImage(file, maxWidth = 1600, quality = 0.7) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+
+            img.onload = () => {
+                let width  = img.width;
+                let height = img.height;
+
+                // Redimensionar si es más grande que maxWidth
+                if (width > maxWidth) {
+                    const ratio = maxWidth / width;
+                    width  = maxWidth;
+                    height = height * ratio;
+                }
+
+                const canvas = document.createElement("canvas");
+                canvas.width  = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob(
+                    (blob) => {
+                        if (!blob) {
+                            return reject(new Error("No se pudo comprimir la imagen"));
+                        }
+
+                        // Crear un File nuevo (JPEG) a partir del blob
+                        const ext    = file.name.split(".").pop();
+                        const base   = file.name.replace(/\.[^.]+$/, "");
+                        const newName = `${base}-cmp.jpg`;
+
+                        const compressedFile = new File([blob], newName, {
+                            type: "image/jpeg",
+                            lastModified: Date.now(),
+                        });
+
+                        resolve(compressedFile);
+                    },
+                    "image/jpeg",
+                    quality
+                );
+            };
+
+            img.onerror = () => reject(new Error("No se pudo leer la imagen"));
+            img.src = URL.createObjectURL(file);
+        });
+    }
+
+
     /* ==========================================================
        FUNCIÓN PARA CONFIGURAR GAUGE
     ============================================================= */
@@ -828,10 +884,10 @@ document.addEventListener("DOMContentLoaded", () => {
        📸 Vista previa de fotos (Checklist: Auto salida / regreso)
        ➜ Permitir agregar varias tandas sin borrar las anteriores
     ========================================================== */
-    document.querySelectorAll('.uploader input[type="file"]').forEach((input) => {
-        input.addEventListener("change", (e) => {
+        document.querySelectorAll('.uploader input[type="file"]').forEach((input) => {
+        input.addEventListener("change", async (e) => {
             const contenedor = e.target.closest(".uploader");
-            const previewId = contenedor.getAttribute("data-name");
+            const previewId  = contenedor.getAttribute("data-name");
             const previewDiv = document.getElementById(`prev-${previewId}`);
 
             if (!previewDiv) return;
@@ -844,11 +900,23 @@ document.addEventListener("DOMContentLoaded", () => {
             const newFiles = Array.from(e.target.files || []);
             if (!newFiles.length) return;
 
-            // Agregar los nuevos archivos al arreglo existente
-            newFiles.forEach((file) => {
-                if (!file.type.startsWith("image/")) return;
-                uploaderFiles[previewId].push(file);
-            });
+            // 🔽 Comprimir cada archivo nuevo
+            const compressedList = [];
+            for (const file of newFiles) {
+                if (!file.type.startsWith("image/")) continue;
+
+                try {
+                    const compressed = await compressImage(file, 1600, 0.7);
+                    compressedList.push(compressed);
+                } catch (err) {
+                    console.error("Error al comprimir imagen:", err);
+                    // Si falla la compresión, usamos el original (peor caso)
+                    compressedList.push(file);
+                }
+            }
+
+            // Agregar los archivos comprimidos al arreglo existente
+            uploaderFiles[previewId] = uploaderFiles[previewId].concat(compressedList);
 
             // Limpiar el input para permitir volver a abrir cámara/galería
             input.value = "";
