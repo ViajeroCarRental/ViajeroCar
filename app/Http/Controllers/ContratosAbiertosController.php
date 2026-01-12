@@ -23,14 +23,17 @@ class ContratosAbiertosController extends Controller
     $query = DB::table('contratos AS c')
         ->join('reservaciones AS r', 'c.id_reservacion', '=', 'r.id_reservacion')
         ->select(
-            'c.id_contrato',
-            'c.numero_contrato',
-            'c.estado',
-            'r.fecha_fin',
-            'r.hora_entrega',
-            'r.nombre_cliente AS nombre',
-            'r.email_cliente  AS email'
-        )
+    'c.id_contrato',
+    'c.numero_contrato',
+    'c.estado',
+    'r.fecha_fin',
+    'r.hora_entrega',
+    'r.nombre_cliente   AS nombre',
+    'r.apellidos_cliente AS apellidos',
+    'r.email_cliente    AS email'
+)
+
+
         ->where('c.estado', 'abierto');
 
     if ($q !== '') {
