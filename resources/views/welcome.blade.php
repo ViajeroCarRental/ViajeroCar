@@ -333,130 +333,132 @@
         </div>
       </div>
 
-    <!-- ===== NUEVO LAYOUT DEL CUESTIONARIO ===== -->
-    <div class="search-card">
-      <form id="rentalForm" class="search-form" method="POST" action="{{ route('rutaBuscar') }}">
-        @csrf
+      <!-- ===== NUEVO LAYOUT DEL CUESTIONARIO ===== -->
+      <div class="search-card">
+        <form id="rentalForm" class="search-form" method="POST" action="{{ route('rutaBuscar') }}">
+          @csrf
 
-        <div class="search-grid">
+          <div class="search-grid">
 
-          {{-- COLUMNA: LUGAR DE RENTA (PICK-UP / DROP-OFF) --}}
-          <div class="sg-col sg-col-location">
+            {{-- COLUMNA: LUGAR DE RENTA (PICK-UP / DROP-OFF) --}}
+            <div class="sg-col sg-col-location">
 
-            <div class="location-head">
-              <span class="field-title">Lugar de renta</span>
+              <div class="location-head">
+                <span class="field-title">Lugar de renta</span>
 
-              <label class="inline-check" for="differentDropoff">
-                <input type="checkbox" id="differentDropoff" checked>
-                <span>Devolver en otro destino</span>
-              </label>
+                <label class="inline-check" for="differentDropoff">
+                  {{-- ✅ Fix recomendado: agrega name para enviar el valor en POST --}}
+                  <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1" checked>
+                  <span>Devolver en otro destino</span>
+                </label>
+              </div>
+
+              <div class="field icon-field">
+                <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
+                <select id="pickupPlace" name="pickup_sucursal_id" aria-describedby="pickupHelp" required>
+                  <option value="" disabled selected>¿Dónde inicia tu viaje? (Pick-up)</option>
+                  @foreach($ciudades as $ciudad)
+                    <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+                      @foreach($ciudad->sucursalesActivas as $suc)
+                        <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
+                          {{ $suc->nombre }}
+                        </option>
+                      @endforeach
+                    </optgroup>
+                  @endforeach
+                </select>
+              </div>
+
+              <div class="field icon-field" id="dropoffWrapper">
+                <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
+                <select id="dropoffPlace" name="dropoff_sucursal_id" aria-describedby="dropoffHelp" required>
+                  <option value="" disabled selected>¿Dónde termina tu viaje? </option>
+                  @foreach($ciudades as $ciudad)
+                    <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+                      @foreach($ciudad->sucursalesActivas as $suc)
+                        <option value="{{ $suc->id_sucursal }}" @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
+                          {{ $suc->nombre }}
+                        </option>
+                      @endforeach
+                    </optgroup>
+                  @endforeach
+                </select>
+              </div>
             </div>
 
-            <div class="field icon-field">
-              <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
-              <select id="pickupPlace" name="pickup_sucursal_id" aria-describedby="pickupHelp" required>
-                <option value="" disabled selected>¿Dónde inicia tu viaje? (Pick-up)</option>
-                @foreach($ciudades as $ciudad)
-                  <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
-                    @foreach($ciudad->sucursalesActivas as $suc)
-                      <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
-                        {{ $suc->nombre }}
-                      </option>
-                    @endforeach
-                  </optgroup>
-                @endforeach
-              </select>
-            </div>
-
-            <div class="field icon-field" id="dropoffWrapper">
-              <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
-              <select id="dropoffPlace" name="dropoff_sucursal_id" aria-describedby="dropoffHelp" required>
-                <option value="" disabled selected>¿Dónde termina tu viaje? </option>
-                @foreach($ciudades as $ciudad)
-                  <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
-                    @foreach($ciudad->sucursalesActivas as $suc)
-                      <option value="{{ $suc->id_sucursal }}" @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
-                        {{ $suc->nombre }}
-                      </option>
-                    @endforeach
-                  </optgroup>
-                @endforeach
-              </select>
-            </div>
-          </div>
-
-          {{-- COLUMNA: ENTREGA --}}
-          <div class="sg-col sg-col-datetime">
-            <div class="field">
-              <label>Entrega</label>
-              <div class="datetime-row">
-                <div class="dt-field icon-field">
-                  <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                  <input id="pickupDate"
-                         name="pickup_date"
-                         type="text"
-                         placeholder="12/Sep/2024"
-                         value="{{ request('pickup_date') }}"
-                         data-min="{{ now()->toDateString() }}"
-                         required>
-                </div>
-                <div class="dt-field icon-field">
-                  <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-                  <input id="pickupTime"
-                         name="pickup_time"
-                         type="text"
-                         placeholder="06:00 PM"
-                         value="{{ request('pickup_time') }}"
-                         required>
+            {{-- COLUMNA: ENTREGA --}}
+            <div class="sg-col sg-col-datetime">
+              <div class="field">
+                <label>Entrega</label>
+                <div class="datetime-row">
+                  <div class="dt-field icon-field">
+                    <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                    <input id="pickupDate"
+                           name="pickup_date"
+                           type="text"
+                           placeholder="12/Sep/2024"
+                           value="{{ request('pickup_date') }}"
+                           data-min="{{ now()->toDateString() }}"
+                           required>
+                  </div>
+                  <div class="dt-field icon-field">
+                    <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+                    <input id="pickupTime"
+                           name="pickup_time"
+                           type="text"
+                           placeholder="06:00 PM"
+                           value="{{ request('pickup_time') }}"
+                           required>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {{-- COLUMNA: DEVOLUCIÓN --}}
-          <div class="sg-col sg-col-datetime">
-            <div class="field">
-              <label>Devolución</label>
-              <div class="datetime-row">
-                <div class="dt-field icon-field">
-                  <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                  <input id="dropoffDate"
-                         name="dropoff_date"
-                         type="text"
-                         placeholder="12/Sep/2024"
-                         value="{{ request('dropoff_date') }}"
-                         data-min="{{ now()->toDateString() }}"
-                         required>
-                </div>
-                <div class="dt-field icon-field">
-                  <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-                  <input id="dropoffTime"
-                         name="dropoff_time"
-                         type="text"
-                         placeholder="06:00 PM"
-                         value="{{ request('dropoff_time') }}"
-                         required>
+            {{-- COLUMNA: DEVOLUCIÓN --}}
+            <div class="sg-col sg-col-datetime">
+              <div class="field">
+                <label>Devolución</label>
+                <div class="datetime-row">
+                  <div class="dt-field icon-field">
+                    <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                    <input id="dropoffDate"
+                           name="dropoff_date"
+                           type="text"
+                           placeholder="12/Sep/2024"
+                           value="{{ request('dropoff_date') }}"
+                           data-min="{{ now()->toDateString() }}"
+                           required>
+                  </div>
+                  <div class="dt-field icon-field">
+                    <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+                    <input id="dropoffTime"
+                           name="dropoff_time"
+                           type="text"
+                           placeholder="06:00 PM"
+                           value="{{ request('dropoff_time') }}"
+                           required>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {{-- COLUMNA: BOTÓN BUSCAR --}}
-          <div class="sg-col sg-col-submit">
-            <div class="actions">
-              <button type="submit">
-                <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
-              </button>
+            {{-- COLUMNA: BOTÓN BUSCAR --}}
+            <div class="sg-col sg-col-submit">
+              <div class="actions">
+                <button type="submit">
+                  <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
+                </button>
+              </div>
             </div>
+
           </div>
 
-        </div>
+          <div id="rangeSummary" class="range-summary" aria-live="polite"></div>
+        </form>
+      </div>
+      <!-- ===== /NUEVO LAYOUT DEL CUESTIONARIO ===== -->
 
-        <div id="rangeSummary" class="range-summary" aria-live="polite"></div>
-      </form>
-    </div>
-    <!-- ===== /NUEVO LAYOUT DEL CUESTIONARIO ===== -->
-
+    </div> {{-- ✅ Fix importante: cierre correcto de .hero-copy --}}
   </section>
 
   {{-- Sentinel para detectar "salí del hero" --}}

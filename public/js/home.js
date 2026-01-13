@@ -125,7 +125,6 @@
     // Para evitar que duplicar duplique botones o cosas raras:
     // asumimos que dentro del viewport SOLO van slides.
     // Si tu wrap contiene botones, está bien (porque duplicamos viewport, no wrap).
-
     viewport.innerHTML = originalHTML + originalHTML;
 
     // Re-leer slides ya duplicadas
@@ -138,7 +137,6 @@
     viewport.style.webkitOverflowScrolling = 'touch';
 
     // Posicionar al inicio de la “segunda mitad” para poder ir atrás/adelante infinito
-    // (o sea, empezar en el set original “real”)
     const step0 = getStepPx(allSlides[0], viewport);
     viewport.scrollLeft = step0 * half;
 
@@ -146,8 +144,6 @@
     let timer = null;
 
     function normalizeIfNeeded(){
-      // Si estamos muy a la derecha (cerca del final), regresamos una mitad
-      // Si estamos muy a la izquierda, avanzamos una mitad
       const step = getStepPx(allSlides[0], viewport);
       if(!step) return;
 
@@ -178,7 +174,6 @@
       viewport.scrollBehavior = 'smooth';
       viewport.scrollLeft += (delta * step);
 
-      // liberar lock después de animación
       window.setTimeout(()=>{
         viewport.scrollBehavior = 'auto';
         normalizeIfNeeded();
@@ -196,7 +191,7 @@
       timer = setInterval(()=> moveBy(1), interval);
     }
 
-    // Scroll manual (rueda/touch): también normaliza para que no “se acabe”
+    // Scroll manual (rueda/touch)
     viewport.addEventListener('scroll', ()=>{
       if(lock) return;
       normalizeIfNeeded();
@@ -220,11 +215,11 @@
       });
     }
 
-    // Hover pause (opcional)
+    // Hover pause
     wrap.addEventListener('mouseenter', stop);
     wrap.addEventListener('mouseleave', start);
 
-    // Resize: re-centra en la mitad (manteniendo sensación estable)
+    // Resize: re-centra
     window.addEventListener('resize', ()=>{
       const step = getStepPx(allSlides[0], viewport);
       if(!step) return;
