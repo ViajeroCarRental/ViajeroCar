@@ -225,3 +225,49 @@
     el?.addEventListener('input',  updateSummary);
   });
 })();
+// ====================
+// Social bar hide after HERO / show on FOOTER
+// ====================
+(function () {
+  "use strict";
+
+  const social = document.getElementById("socialBar");
+  const hero = document.querySelector(".hero");
+  const footer = document.querySelector(".site-footer"); // <-- ajusta si tu footer usa otro selector
+  if (!social || !hero) return;
+
+  // estados iniciales
+  social.classList.add("is-show");
+
+  // helper: saber si un elemento está "entrando" en viewport
+  function isInViewport(el, offset = 0) {
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    return (r.top <= (window.innerHeight - offset)) && (r.bottom >= 0);
+  }
+
+  function updateSocial() {
+    // Si el footer existe y ya está visible -> mostrar
+    if (footer && isInViewport(footer, 120)) {
+      social.classList.remove("is-hidden");
+      social.classList.add("is-show");
+      return;
+    }
+
+    // Si ya pasaste el final del hero -> esconder (meter al margen)
+    const heroBottom = hero.getBoundingClientRect().bottom;
+    const passedHero = heroBottom <= 80; // umbral
+    if (passedHero) {
+      social.classList.remove("is-show");
+      social.classList.add("is-hidden");
+    } else {
+      // dentro del hero -> visible
+      social.classList.remove("is-hidden");
+      social.classList.add("is-show");
+    }
+  }
+
+  updateSocial();
+  window.addEventListener("scroll", updateSocial, { passive: true });
+  window.addEventListener("resize", updateSocial);
+})();

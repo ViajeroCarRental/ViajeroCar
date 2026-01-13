@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
 
   <style>
-    :root{ --brand:#b22222; --ink:#0f172a }
+    :root{ --brand:#b22222; --ink:#0f172a; --muted:#6b7280 }
 
     .hero-badge-3msi{
       width: clamp(180px, 38vw, 520px);
@@ -55,7 +55,7 @@
       display:flex;
       align-items:center;
       gap:12px;
-      min-width:240px; /* ayuda a que el wrap sea parejo */
+      min-width:240px;
     }
     @media (min-width:900px){
       .hero-icons{
@@ -69,7 +69,7 @@
     .rv-banner-wrap{
       position:fixed; top:10px; left:50%; transform:translateX(-50%);
       z-index: 9999; width:min(1100px,95%);
-      pointer-events:none; /* no bloquea clics del hero */
+      pointer-events:none;
     }
     .rv-banner{
       display:none; pointer-events:auto;
@@ -81,7 +81,7 @@
     .rv-car{
       width:34px; height:34px; border-radius:10px;
       background:rgba(178,34,34,.10); display:grid; place-items:center;
-      animation:rv-car-move 3s.ease-in-out infinite;
+      animation:rv-car-move 3s ease-in-out infinite;
     }
     .rv-car svg{ color:var(--brand) }
     @keyframes rv-car-move{ 0%,100%{ transform:translateX(0) } 50%{ transform:translateX(6px) } }
@@ -104,7 +104,7 @@
       background:var(--brand); color:#fff; border:0; border-radius:10px;
       padding:8px 12px; font-size:13px; font-weight:600; cursor:pointer;
       box-shadow:0 8px 20px rgba(178,34,34,.25);
-      transition:opacity .2s.ease;
+      transition:opacity .2s ease;
     }
     .rv-cta:hover{ opacity:.95 }
 
@@ -113,7 +113,6 @@
     }
     .rv-close:hover{ color:#374151 }
 
-    /* Barra de progreso */
     .rv-bar{ height:4px; width:100%; background:#f1f5f9 }
     .rv-bar i{
       display:block; height:100%; width:0%;
@@ -122,7 +121,6 @@
     }
     @keyframes rv-bar-move{ from{background-position:0% 50%} to{background-position:200% 50%} }
 
-    /* Entradas / salidas */
     .rv-in{ animation:rv-drop .35s cubic-bezier(.2,.7,.2,1) forwards }
     .rv-out{ animation:rv-lift .28s ease forwards }
     @keyframes rv-drop{ from{ opacity:0; transform:translateY(-10px) scale(.98) } to{ opacity:1; transform:translateY(0) scale(1) } }
@@ -130,7 +128,7 @@
 
     @media (max-width:560px){
       .rv-text{ font-size:12px }
-      .rv-cta{ display:none } /* CTA se oculta en móvil para no saturar */
+      .rv-cta{ display:none }
     }
 
     /* ====== Swiper de TARJETAS (tiles) ====== */
@@ -168,77 +166,47 @@
     }
 
     /* ==== CARD DE RESEÑAS GOOGLE ==== */
-    .tile-card.tile-reviews .tile-body{
-      gap: 12px;
-    }
+    .tile-card.tile-reviews .tile-body{ gap: 12px; }
 
     .reviews-summary{
-      display:flex;
-      align-items:baseline;
-      gap:6px;
-      font-size:0.95rem;
-      font-weight:600;
-      color:var(--ink);
+      display:flex; align-items:baseline; gap:6px;
+      font-size:0.95rem; font-weight:600; color:var(--ink);
     }
-
-    .reviews-score{
-      font-size:1.1rem;
-      font-weight:800;
-      color:#f59e0b;
-    }
-
-    .reviews-count{
-      font-size:0.85rem;
-      color:var(--muted);
-    }
+    .reviews-score{ font-size:1.1rem; font-weight:800; color:#f59e0b; }
+    .reviews-count{ font-size:0.85rem; color:var(--muted); }
 
     .reviews-list{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      max-height:180px;
-      overflow-y:auto;
-      padding-right:4px;
+      display:flex; flex-direction:column; gap:8px;
+      max-height:180px; overflow-y:auto; padding-right:4px;
     }
-
     .review-item{
-      background:#f9fafb;
-      border-radius:10px;
-      padding:8px 10px;
+      background:#f9fafb; border-radius:10px; padding:8px 10px;
       box-shadow:0 4px 10px rgba(0,0,0,.04);
     }
-
     .review-head{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      font-size:0.85rem;
-      margin-bottom:4px;
+      display:flex; justify-content:space-between; align-items:center;
+      font-size:0.85rem; margin-bottom:4px;
     }
-
-    .review-head strong{
-      font-weight:700;
-      color:#111827;
-    }
-
-    .review-stars{
-      font-size:0.8rem;
-      color:#f59e0b;
-    }
-
+    .review-head strong{ font-weight:700; color:#111827; }
+    .review-stars{ font-size:0.8rem; color:#f59e0b; }
     .review-text{
-      margin:0;
-      font-size:0.85rem;
-      color:#374151;
-      line-height:1.4;
+      margin:0; font-size:0.85rem; color:#374151; line-height:1.4;
     }
+
+    /* =========================
+       SOCIAL (animación show/hide)
+       - NO cambia tu CSS principal; solo clases
+    ========================= */
+    .social{ opacity:1; transform:translateX(0); transition:opacity .25s ease, transform .25s ease; }
+    .social.is-hidden{ opacity:0; transform:translateX(10px); pointer-events:none; }
+    .social.is-show{ opacity:1; transform:translateX(0); pointer-events:auto; }
   </style>
 @endsection
 
 @section('contenidoHome')
 
 @php
-    use Illuminate\Support\Str;
+  use Illuminate\Support\Str;
 @endphp
 
 <!-- ===== VISTA INICIO ===== -->
@@ -271,7 +239,7 @@
   <!-- ===== /Banner Reservas ===== -->
 
   <!-- HERO -->
-  <section class="hero">
+  <section class="hero" id="heroTop">
     <div class="carousel">
       <div class="slide active" style="background-image:url('{{ asset('img/inicio1.png') }}');"></div>
       <div class="slide" style="background-image:url('{{ asset('img/inicio2.png') }}');"></div>
@@ -298,19 +266,16 @@
           <span>Contamos con verificación 00</span>
         </div>
 
-        <!-- NUEVO: Atención en aeropuerto 24/7 -->
         <div class="icon-item">
           <i class="fa-solid fa-plane-departure"></i>
           <span>Atención en aeropuerto 24/7</span>
         </div>
 
-        <!-- NUEVO: Autos con modelos recientes -->
         <div class="icon-item">
           <i class="fa-solid fa-car-side"></i>
           <span>Autos con modelos recientes</span>
         </div>
       </div>
-    
 
     <!-- ===== NUEVO LAYOUT DEL CUESTIONARIO ===== -->
     <div class="search-card">
@@ -322,7 +287,6 @@
           {{-- COLUMNA: LUGAR DE RENTA (PICK-UP / DROP-OFF) --}}
           <div class="sg-col sg-col-location">
 
-            {{-- Título + checkbox en la MISMA fila --}}
             <div class="location-head">
               <span class="field-title">Lugar de renta</span>
 
@@ -332,7 +296,6 @@
               </label>
             </div>
 
-            {{-- Pick-up --}}
             <div class="field icon-field">
               <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
               <select id="pickupPlace" name="pickup_sucursal_id" aria-describedby="pickupHelp" required>
@@ -349,7 +312,6 @@
               </select>
             </div>
 
-            {{-- Drop-off --}}
             <div class="field icon-field" id="dropoffWrapper">
               <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
               <select id="dropoffPlace" name="dropoff_sucursal_id" aria-describedby="dropoffHelp" required>
@@ -432,7 +394,7 @@
             </div>
           </div>
 
-        </div> {{-- /search-grid --}}
+        </div>
 
         <div id="rangeSummary" class="range-summary" aria-live="polite"></div>
       </form>
@@ -440,6 +402,9 @@
     <!-- ===== /NUEVO LAYOUT DEL CUESTIONARIO ===== -->
 
   </section>
+
+  {{-- Sentinel para detectar "salí del hero" --}}
+  <span id="heroEndSentinel" style="position:relative; display:block; width:1px; height:1px;"></span>
 
   <section id="fleet-carousel" class="fleet">
     <div class="fleet-viewport" id="fleetViewport">
@@ -470,7 +435,6 @@
             <li><i class="fa-solid fa-briefcase"></i> 1</li>
           </ul>
 
-          {{-- Conectividad: CarPlay + Android Auto --}}
           <div class="car-connect">
             <span class="badge-chip badge-apple" title="Apple CarPlay">
               <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
@@ -503,7 +467,7 @@
           </div>
 
           <ul class="car-specs">
-            <li><i class="fa-solid.fa-user-large"></i> 5</li>
+            <li><i class="fa-solid fa-user-large"></i> 5</li>
             <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
             <li><i class="fa-solid fa-briefcase"></i> 2</li>
           </ul>
@@ -676,14 +640,11 @@
     </div>
   </section>
 
-  <!-- Texto debajo del CARRUSEL 1 -->
   <div class="fleet-meta" aria-label="Beneficios">
     <span>KM ilimitados</span>
     <i class="sep" aria-hidden="true">|</i>
     <span>Transmisión Automática</span>
   </div>
-
-  <!-- ===== /CARRUSEL DE AUTOS ===== -->
 
   <!-- SECCIONES -->
   <section class="info-sections">
@@ -937,14 +898,11 @@
       </div>
     </section>
 
-    <!-- Texto debajo del CARRUSEL 2 -->
     <div class="fleet-meta" aria-label="Beneficios">
       <span>KM ilimitados</span>
       <i class="sep" aria-hidden="true">|</i>
       <span>Transmisión Automática</span>
     </div>
-
-    {{-- ===== /NUEVO CARRUSEL ===== --}}
 
     <div class="info-row reverse">
       <div class="info-content">
@@ -968,7 +926,6 @@
     <div class="swiper vj-tiles-swiper">
       <div class="swiper-wrapper">
 
-        {{-- ==== 3 TARJETAS ORIGINALES ==== --}}
         <div class="swiper-slide">
           <article class="tile-card">
             <div class="tile-media" style="background-image:url('{{ asset('img/24.jpg') }}')"></div>
@@ -991,7 +948,6 @@
           </article>
         </div>
 
-        <!-- ✅ Corregido: esta card ahora usa background-image -->
         <div class="swiper-slide">
           <article class="tile-card">
             <div class="tile-media" style="background-image:url('{{ asset('img/Urvancard.png') }}')"></div>
@@ -1003,7 +959,6 @@
           </article>
         </div>
 
-        {{-- ==== 6 NUEVAS TARJETAS ==== --}}
         <div class="swiper-slide">
           <article class="tile-card">
             <div class="tile-media" style="background-image:url('{{ asset('img/tarjeta.png') }}')"></div>
@@ -1059,7 +1014,6 @@
           </article>
         </div>
 
-        {{-- 🔹 TARJETA DE RESEÑAS GOOGLE (última slide, SIEMPRE esta card) --}}
         <div class="swiper-slide">
           <article class="tile-card tile-reviews">
             <div class="tile-media" style="background-image:url('{{ asset('img/Prioridad.png') }}')"></div>
@@ -1096,7 +1050,6 @@
                     </div>
                   @endforeach
                 @else
-                  {{-- Mensaje cuando aún no hay reseñas o falló la API --}}
                   <div class="review-item">
                     <p class="review-text">
                       Pronto verás aquí las opiniones de nuestros clientes en Google Maps.
@@ -1117,7 +1070,6 @@
 
       </div>
 
-      {{-- Controles --}}
       <div class="swiper-button-prev"></div>
       <div class="swiper-button-next"></div>
       <div class="swiper-pagination"></div>
@@ -1138,12 +1090,20 @@
   </section>
 </section>
 
-<!-- Barra social lateral -->
-<div class="social">
-  <a href="#" class="whatsapp" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
-  <a href="#" class="facebook" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-  <a href="#" class="instagram" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-  <a href="#" class="tiktok" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+<!-- Barra social lateral (YA CON LINKS REALES + ANIMACIÓN) -->
+<div class="social is-show" id="socialBar">
+  {{-- WhatsApp: reemplaza el número --}}
+  <a href="https://wa.me/5214427169793_blank" rel="noopener" class="whatsapp" aria-label="WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+
+  <a href="https://www.facebook.com/ViajeroCarRentalQueretaro?locale=es_LA" target="_blank" rel="noopener" class="facebook" aria-label="Facebook">
+    <i class="fa-brands fa-facebook-f"></i>
+  </a>
+
+  <a href="https://www.instagram.com/viajerocarental/" target="_blank" rel="noopener" class="instagram" aria-label="Instagram">
+    <i class="fa-brands fa-instagram"></i>
+  </a>
 </div>
 
 <!-- Modal de Bienvenida -->
@@ -1174,7 +1134,7 @@
   {{-- Swiper JS para el carrusel de tarjetas --}}
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  {{-- Carruseles de flota (loop infinito, flechas bidireccionales, autoslide 10s) --}}
+  {{-- Carruseles de flota --}}
   <script>
   (function(){
     const fleets = document.querySelectorAll('.fleet');
@@ -1237,10 +1197,7 @@
     const tilesSwiper = new Swiper('.vj-tiles-swiper', {
       loop: true,
       speed: 650,
-      autoplay: {
-        delay: 3200,
-        disableOnInteraction: false
-      },
+      autoplay: { delay: 3200, disableOnInteraction: false },
       spaceBetween: 18,
       slidesPerView: 1.06,
       centeredSlides: false,
@@ -1262,14 +1219,12 @@
     });
   </script>
 
-  <!-- ===== Toast de reservas (simple y limpio) ===== -->
+  <!-- ===== Toast de reservas ===== -->
   <script>
   (function(){
-    // Números por aparición (puedes ajustar)
     const SEQ = [5,7,10,5,12];
-
-    const SHOW_MS = 7000;  // tiempo visible
-    const HIDE_MS = 25000;  // tiempo oculto entre apariciones
+    const SHOW_MS = 7000;
+    const HIDE_MS = 25000;
 
     const banner = document.getElementById('rvBanner');
     const bar    = document.getElementById('rvBar');
@@ -1288,6 +1243,7 @@
     }
 
     function showOnce(){
+      if(!banner) return;
       count.textContent = SEQ[idx]; idx = (idx + 1) % SEQ.length;
       banner.style.display = 'block';
       banner.classList.remove('rv-out'); banner.classList.add('rv-in');
@@ -1306,8 +1262,7 @@
       }, 260);
     }
 
-    // Pausar al pasar el mouse (congela la barra)
-    banner.addEventListener('mouseenter', ()=>{
+    banner && banner.addEventListener('mouseenter', ()=>{
       paused = true;
       const elapsed = performance.now() - startTs;
       remaining = Math.max(0, SHOW_MS - elapsed);
@@ -1315,9 +1270,8 @@
       bar.style.transition = 'none';
     });
 
-    banner.addEventListener('mouseleave', ()=>{
+    banner && banner.addEventListener('mouseleave', ()=>{
       if(!paused) return; paused = false;
-      // reanudar
       setTimeout(()=>{
         setBar(remaining);
         hideT = setTimeout(hide, remaining);
@@ -1325,7 +1279,7 @@
       }, 30);
     });
 
-    close.addEventListener('click', ()=>{
+    close && close.addEventListener('click', ()=>{
       loop = false;
       if(hideT) clearTimeout(hideT);
       if(nextT) clearTimeout(nextT);
@@ -1335,5 +1289,45 @@
     document.addEventListener('DOMContentLoaded', showOnce);
   })();
   </script>
-  <!-- ===== /Toast de reservas ===== -->
+
+  <!-- ===== Animación Social: hero -> hide, fuera hero -> show, footer -> show ===== -->
+  <script>
+  (function(){
+    const social = document.getElementById('socialBar');
+    const heroEnd = document.getElementById('heroEndSentinel');
+    const footer  = document.querySelector('.site-footer');
+
+    if(!social || !heroEnd) return;
+
+    const show = () => {
+      social.classList.remove('is-hidden');
+      social.classList.add('is-show');
+    };
+
+    const hide = () => {
+      social.classList.remove('is-show');
+      social.classList.add('is-hidden');
+    };
+
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.target === heroEnd){
+          // si el sentinel está visible => ya saliste del hero => MOSTRAR
+          // pero tú pediste: dentro del hero visible, al salir del hero ocultar
+          // entonces invertimos: si intersecta (ya estás abajo) -> HIDE; si no -> SHOW
+          entry.isIntersecting ? hide() : show();
+        }
+        if(footer && entry.target === footer && entry.isIntersecting){
+          show();
+        }
+      });
+    }, { threshold: 0.05 });
+
+    io.observe(heroEnd);
+    if(footer) io.observe(footer);
+
+    // estado inicial: estás en hero => visible
+    show();
+  })();
+  </script>
 @endsection

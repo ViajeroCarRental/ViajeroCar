@@ -1104,7 +1104,7 @@ input.flatpickr-input{ padding-right:44px; }
   .tiles-wrap{ grid-template-columns:1fr 1fr }
   .info-content h2{ font-size:40px }
 }
-
+ 
 @media (max-width:560px){
   .headline{ font-size:34px }
   .search-card{ padding:12px; }
@@ -1158,4 +1158,49 @@ input::-moz-focus-inner{ border:0; }
 
 .search-card .cal-ico{
   top: calc(var(--lab-h) + var(--lab-gap) + (var(--ctl-h) / 2) + var(--ico-nudge)) !important;
+}
+/* =========================
+   SOCIAL: Animación hide/show por scroll
+========================= */
+.social{
+  position:fixed;
+  right:12px;
+  top:40%;
+  z-index:40;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+
+  /* transiciones */
+  transition:
+    transform .35s cubic-bezier(.2,.8,.2,1),
+    opacity .25s ease;
+  will-change: transform;
+}
+
+/* iOS safe-area (para que no se pegue al borde) */
+@supports (padding: env(safe-area-inset-right)){
+  .social{ right: calc(12px + env(safe-area-inset-right)); }
+}
+
+/* Estado: escondida (se mete al margen) */
+.social.is-hidden{
+  transform: translateX(34px); /* “se esconde” hacia la derecha */
+  opacity: .95;
+}
+
+/* Estado: visible completa */
+.social.is-show{
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Micro detalle: en móvil un poco más grande para tap */
+@media (max-width:560px){
+  .social a{
+    width:48px;
+    height:48px;
+    border-radius:12px;
+    font-size:22px;
+  }
 }
