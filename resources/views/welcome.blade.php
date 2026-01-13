@@ -1218,7 +1218,7 @@
       if(!track || !prev || !next) return;
 
       let autoSlide;
-      const stepCount = 3; 
+      const stepCount = 1 
 
       const step = () => {
         const card = track.querySelector('.car-card');
