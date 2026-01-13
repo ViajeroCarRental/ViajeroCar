@@ -1196,84 +1196,131 @@ input::-moz-focus-inner{ border:0; }
   transform: translateX(0);
 }
 /* =========================
-   FAB Redes Sociales (Radial)
+   FIX MOBILE: "Lugar de renta" + switch (no se encime)
+   + Grid a 1 columna
 ========================= */
-.social-fab{
-  position:fixed;
-  right:18px;
-  bottom:18px;
-  z-index:9999;
-  width:56px;
-  height:56px;
+
+/* Encabezado de la columna (titulo + switch) */
+.location-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;           /* clave: permite brincar a otra línea */
 }
 
-/* Botón principal */
-.social-fab .fab-main{
-  width:56px;
-  height:56px;
-  border-radius:999px;
-  border:0;
-  cursor:pointer;
-  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
-  color:#fff;
-  box-shadow:0 18px 45px rgba(0,0,0,.28);
-  display:grid;
-  place-items:center;
-  font-size:20px;
-  transition: transform .2s ease, filter .2s ease;
-}
-.social-fab .fab-main:hover{ transform: translateY(-2px); filter:brightness(1.05); }
-
-/* Items (burbujas) */
-.social-fab .fab-item{
-  position:absolute;
-  right:0;
-  bottom:0;
-  width:48px;
-  height:48px;
-  border-radius:999px;
-  display:grid;
-  place-items:center;
-  text-decoration:none;
-  color:#fff;
-  box-shadow:0 16px 40px rgba(0,0,0,.22);
-
-  /* estado cerrado */
-  transform: translate(0,0) scale(.6);
-  opacity:0;
-  pointer-events:none;
-
-  transition:
-    transform .28s cubic-bezier(.2,.8,.2,1),
-    opacity .2s ease;
+.location-head .field-title{
+  font-weight:700;
+  line-height:1.1;
 }
 
-/* Colores */
-.social-fab .fab-wa{ background:#25d366; }
-.social-fab .fab-ig{ background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
-.social-fab .fab-fb{ background:#1877f2; }
-
-.social-fab .fab-item i{ font-size:20px; }
-
-/* ✅ Abierto: despliegue radial (como tu imagen) */
-.social-fab.open .fab-item{
-  opacity:1;
-  pointer-events:auto;
-  transform: translate(0,0) scale(1);
+.inline-check{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  white-space:nowrap;       /* que no se rompa raro */
+  font-size:13px;
 }
 
-/* Posiciones (ajusta si quieres más separado) */
-.social-fab.open .fab-wa{ transform: translate(-62px, 0px) scale(1); }     /* izquierda */
-.social-fab.open .fab-ig{ transform: translate(-44px, -54px) scale(1); }  /* diagonal arriba-izq */
-.social-fab.open .fab-fb{ transform: translate(0px, -70px) scale(1); }    /* arriba */
-
-/* Rotación del ícono principal cuando abre */
-.social-fab.open .fab-main i{
-  transform: rotate(45deg);
-  transition: transform .25s ease;
+.inline-check input{
+  width:18px;
+  height:18px;
+  accent-color: var(--brand, #b22222);
 }
 
-/* (opcional) para móvil, un poco más grande el toque */
-@media (max-width:560px){
-  .social-fab{ right:14px; bottom:14px; }
+/* Mobile: apilar header y mejorar espacios */
+@media (max-width: 560px){
+
+  .location-head{
+    flex-direction:column;  /* título arriba, switch abajo */
+    align-items:flex-start;
+    gap:8px;
+  }
+
+  .inline-check{
+    width:100%;
+    justify-content:flex-start;
+    white-space:normal;     /* en móvil sí permitimos salto */
+    line-height:1.2;
+  }
+
+  /* Grid del buscador a 1 columna */
+  .search-grid{
+    display:grid !important;
+    grid-template-columns: 1fr !important;
+    gap:12px !important;
+  }
+
+  /* Las columnas no deben forzar ancho */
+  .sg-col{
+    width:100%;
+    min-width:0;
+  }
+
+  /* Date/Time: apilar para que no se aplaste */
+  .datetime-row{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:10px;
+  }
+
+  /* Inputs/selects que ocupen todo */
+  .search-form select,
+  .search-form input{
+    width:100%;
+  }
+
+  /* Un poquito más de padding en la card para que respire */
+  .search-card{
+    padding:14px 12px;
+    border-radius:16px;
+  }
+}
+/* =========================
+   FIX: Desktop OK + Mobile apilado
+========================= */
+
+/* ✅ Desktop/Laptop: mantener en una sola línea */
+.location-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:nowrap;            /* <- IMPORTANTE: no wrap en laptop */
+}
+
+.inline-check{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  white-space:nowrap;          /* en desktop ok */
+  flex:0 0 auto;
+}
+
+/* ✅ Mobile: ahora sí apilamos y permitimos wrap */
+@media (max-width: 560px){
+  .location-head{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:8px;
+    flex-wrap:wrap;            /* <- solo aquí */
+  }
+
+  .inline-check{
+    width:100%;
+    justify-content:flex-start;
+    white-space:normal;        /* <- solo aquí permitimos salto */
+    line-height:1.2;
+  }
+
+  .search-grid{
+    grid-template-columns: 1fr !important;
+    gap:12px !important;
+  }
+
+  .datetime-row{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:10px;
+  }
 }
