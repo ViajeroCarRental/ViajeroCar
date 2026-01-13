@@ -30,7 +30,6 @@ use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ContratosAbiertosController;
 use App\Http\Controllers\VisorReservacionesController;
 use App\Http\Controllers\HistorialController;
-use App\Http\Controllers\ContratosAbiertosControllerController;
 use App\Http\Controllers\ChecklistCambioAutoController;
 use Illuminate\Support\Facades\DB;
 //rutas vistas Usuario

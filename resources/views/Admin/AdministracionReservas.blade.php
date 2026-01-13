@@ -39,18 +39,20 @@
         ====================== -->
         <table class="table" id="tbl">
             <thead>
-                <tr>
-                    <th style="width:40px"></th>
-                    <th>Clave</th>
-                    <th>Fecha Checkout</th>
-                    <th>Hora Checkout</th>
-                    <th>Nombre</th>
-                    <th>Apellidos</th>
-                    <th>Email</th>
-                    <th>Estatus</th>
-                    <th class="col-actions"></th>
-                </tr>
-            </thead>
+    <tr>
+        <th style="width:40px"></th>
+        <th>No. Contrato</th>
+        <th>Fecha Checkout</th>
+        <th>Hora Checkout</th>
+        <th>Nombre</th>
+        <th>Apellidos</th>
+        <th>Email</th>
+        <th>Estatus</th>
+        <th class="col-actions"></th>
+    </tr>
+</thead>
+
+
 
             <tbody id="tbody"></tbody>
         </table>

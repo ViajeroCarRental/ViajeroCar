@@ -21,7 +21,25 @@ class ContratoController extends Controller
         // 👤 Asesor logueado (desde sesión)
         $asesorId = session('id_usuario'); // puede ser null si no hay sesión
 
-        // 🔹 1. Obtener la reservación base
+        // =========================================================
+        // 0) Detectar si $id es id_contrato o id_reservacion
+        // =========================================================
+        // Primero intentamos encontrar un contrato con ese ID
+        $contrato = DB::table('contratos')
+            ->where('id_contrato', $id)
+            ->first();
+
+        if ($contrato) {
+            // 👉 Venimos desde "Contratos Abiertos" (ID = id_contrato)
+            $idReservacion = $contrato->id_reservacion;
+        } else {
+            // 👉 Venimos desde algún flujo que sigue usando id_reservacion
+            $idReservacion = $id;
+        }
+
+        // =========================================================
+        // 1) Obtener la reservación base (usando SIEMPRE id_reservacion real)
+        // =========================================================
         $reservacion = DB::table('reservaciones as r')
             ->leftJoin('sucursales as sr', 'r.sucursal_retiro', '=', 'sr.id_sucursal')
             ->leftJoin('sucursales as se', 'r.sucursal_entrega', '=', 'se.id_sucursal')
@@ -41,25 +59,30 @@ class ContratoController extends Controller
                 'r.id_vehiculo',
                 'r.id_categoria'
             )
-            ->where('r.id_reservacion', $id)
+            ->where('r.id_reservacion', $idReservacion)
             ->first();
 
         if (!$reservacion) {
             return redirect()->back()->with('error', 'Reservación no encontrada.');
         }
 
-        // 🔹 2. Buscar o crear contrato
-        $contrato = DB::table('contratos')
-            ->where('id_reservacion', $reservacion->id_reservacion)
-            ->first();
+        // =========================================================
+        // 2) Buscar o crear contrato para esta reservación
+        //    (si no lo encontramos por id_contrato, lo buscamos por id_reservacion)
+        // =========================================================
+        if (!$contrato) {
+            $contrato = DB::table('contratos')
+                ->where('id_reservacion', $reservacion->id_reservacion)
+                ->first();
+        }
 
         if (!$contrato) {
+            // 🆕 Crear contrato
             $numeroContrato = 'CTR-' . strtoupper(substr($reservacion->codigo, 0, 4)) . '-' . now()->format('ymdHis');
 
-            // 🆕 Crear contrato ligando asesor si existe sesión
             $idContrato = DB::table('contratos')->insertGetId([
                 'id_reservacion'  => $reservacion->id_reservacion,
-                'id_asesor'       => $asesorId,         // 👈 aquí guardamos el asesor
+                'id_asesor'       => $asesorId,
                 'numero_contrato' => $numeroContrato,
                 'estado'          => 'abierto',
                 'abierto_en'      => now(),
@@ -91,8 +114,9 @@ class ContratoController extends Controller
             }
         }
 
-        // 🧷 Sin importar si es nuevo o existente:
-        //    asegura que la reservación tenga también el id_asesor
+        // =========================================================
+        // 3) Asegurar que la reservación tenga id_asesor
+        // =========================================================
         if ($asesorId) {
             DB::table('reservaciones')
                 ->where('id_reservacion', $reservacion->id_reservacion)
@@ -102,39 +126,43 @@ class ContratoController extends Controller
                 ]);
         }
 
-        // 🔹 3. Cargar categorías
+        // =========================================================
+        // 4) Catálogos y datos auxiliares (igual que ya tenías)
+        // =========================================================
+
+        // Categorías
         $categorias = DB::table('categorias_carros')
             ->select('id_categoria', 'nombre')
             ->orderBy('nombre')
             ->get();
 
-        // 🔹 4. Cargos adicionales disponibles
+        // Cargos adicionales disponibles
         $cargos_conceptos = DB::table('cargo_concepto')
             ->where('activo', true)
             ->get();
 
-        // 🔹 5. Vehículo
+        // Vehículo
         $vehiculo = DB::table('vehiculos')
             ->where('id_vehiculo', $reservacion->id_vehiculo)
             ->first();
 
-        // 🔹 6. Seguros
+        // Seguros paquetes
         $seguros = DB::table('seguro_paquete')
             ->where('activo', true)
             ->select('id_paquete as id_seguro', 'nombre', 'descripcion as cobertura', 'precio_por_dia')
             ->get();
 
-        // 🔹 7. Seguro seleccionado
+        // Seguro seleccionado (paquete)
         $seguroSeleccionado = DB::table('reservacion_paquete_seguro as rps')
             ->join('seguro_paquete as sp', 'rps.id_paquete', '=', 'sp.id_paquete')
             ->select('sp.id_paquete as id_seguro', 'sp.nombre', 'sp.precio_por_dia')
             ->where('rps.id_reservacion', $reservacion->id_reservacion)
             ->first();
 
-        // 🔹 7.1. Seguros individuales seleccionados (si existen)
+        // Seguros individuales seleccionados
         $segurosIndividualesSeleccionados = $this->obtenerIndividualesSeleccionados($reservacion->id_reservacion);
 
-        // 🔹 7.2. Protecciones individuales disponibles
+        // Protecciones individuales disponibles
         $individuales = DB::table('seguro_individuales')
             ->where('activo', true)
             ->select('id_individual', 'nombre', 'descripcion', 'precio_por_dia')
@@ -157,7 +185,7 @@ class ContratoController extends Controller
         );
 
         $grupo_terceros = $individuales->filter(fn($i) =>
-            str_contains($i->nombre, 'LI') // LI – ALI – EXT.LI
+            str_contains($i->nombre, 'LI')
         );
 
         $grupo_protecciones = $individuales->filter(fn($i) =>
@@ -165,7 +193,6 @@ class ContratoController extends Controller
             str_contains($i->nombre, 'LA')
         );
 
-        // Pasar a la vista
         view()->share([
             'grupo_colision'     => $grupo_colision,
             'grupo_medicos'      => $grupo_medicos,
@@ -174,10 +201,10 @@ class ContratoController extends Controller
             'grupo_protecciones' => $grupo_protecciones,
         ]);
 
-        // 🔹 8. Servicios adicionales
+        // Servicios adicionales
         $servicios = DB::table('servicios')->get();
 
-        // 🔹 9. Detectar conductores adicionales
+        // Detectar conductores adicionales
         $servicioConductor = DB::table('servicios')
             ->where('nombre', 'LIKE', '%conductor adicional%')
             ->where('activo', true)
@@ -201,14 +228,14 @@ class ContratoController extends Controller
             }
         }
 
-        // 🔹 11. Ubicaciones
+        // Ubicaciones
         $ubicaciones = DB::table('ubicaciones_servicio')
             ->where('activo', 1)
             ->orderBy('estado')
             ->orderBy('destino')
             ->get();
 
-        // 🔹 12. Cargar datos de Delivery desde la reservación
+        // Datos de Delivery
         $delivery = DB::table('reservaciones')
             ->select(
                 'delivery_activo as activo',
@@ -221,12 +248,14 @@ class ContratoController extends Controller
             ->where('id_reservacion', $reservacion->id_reservacion)
             ->first();
 
-        // Obtener costo por km de la categoría seleccionada
+        // Costo por km de la categoría
         $costoKmCategoria = DB::table('categoria_costo_km')
             ->where('id_categoria', $reservacion->id_categoria)
             ->value('costo_km') ?? 0;
 
-        // 🔹 10. Retornar vista
+        // =========================================================
+        // 5) Retornar vista
+        // =========================================================
         return view('Admin.Contrato', [
             'reservacion'        => $reservacion,
             'vehiculo'           => $vehiculo,
@@ -242,7 +271,7 @@ class ContratoController extends Controller
             'delivery'           => $delivery,
             'segurosIndividualesSeleccionados' => $segurosIndividualesSeleccionados,
             'individuales'       => $individuales,
-            'idReservacion'      => $id,  // 👈 sigue igual
+            'idReservacion'      => $reservacion->id_reservacion, // 👈 ahora sí el id de la reserva real
         ]);
 
     } catch (\Throwable $e) {
@@ -250,6 +279,7 @@ class ContratoController extends Controller
         return redirect()->back()->with('error', 'Ocurrió un error al cargar la reservación.');
     }
 }
+
 
 
 public function obtenerConductores($idContrato)
