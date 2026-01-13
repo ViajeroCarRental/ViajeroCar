@@ -1162,6 +1162,7 @@ input::-moz-focus-inner{ border:0; }
 /* =========================
    SOCIAL: Animación hide/show por scroll
 ========================= */
+/* Social lateral (base) */
 .social{
   position:fixed;
   right:12px;
@@ -1171,36 +1172,108 @@ input::-moz-focus-inner{ border:0; }
   flex-direction:column;
   gap:10px;
 
-  /* transiciones */
-  transition:
-    transform .35s cubic-bezier(.2,.8,.2,1),
-    opacity .25s ease;
+  /* 👇 animación */
+  transition: transform .28s ease;
   will-change: transform;
 }
 
-/* iOS safe-area (para que no se pegue al borde) */
-@supports (padding: env(safe-area-inset-right)){
-  .social{ right: calc(12px + env(safe-area-inset-right)); }
+/* 👇 modo “asomado” (solo quedan visibles ~18px) */
+.social.peek{
+  transform: translateX(calc(100% - 18px));
+  opacity: 1 !important;      /* por si algo la baja */
+  display: flex !important;   /* por si algo la apaga */
 }
 
-/* Estado: escondida (se mete al margen) */
-.social.is-hidden{
-  transform: translateX(34px); /* “se esconde” hacia la derecha */
-  opacity: .95;
-}
-
-/* Estado: visible completa */
-.social.is-show{
+/* 👇 modo visible normal */
+.social.show{
   transform: translateX(0);
-  opacity: 1;
+  opacity: 1 !important;
+  display: flex !important;
 }
 
-/* Micro detalle: en móvil un poco más grande para tap */
+/* (opcional) si quieres que al pasar el mouse se abra */
+.social.peek:hover{
+  transform: translateX(0);
+}
+/* =========================
+   FAB Redes Sociales (Radial)
+========================= */
+.social-fab{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  z-index:9999;
+  width:56px;
+  height:56px;
+}
+
+/* Botón principal */
+.social-fab .fab-main{
+  width:56px;
+  height:56px;
+  border-radius:999px;
+  border:0;
+  cursor:pointer;
+  background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+  color:#fff;
+  box-shadow:0 18px 45px rgba(0,0,0,.28);
+  display:grid;
+  place-items:center;
+  font-size:20px;
+  transition: transform .2s ease, filter .2s ease;
+}
+.social-fab .fab-main:hover{ transform: translateY(-2px); filter:brightness(1.05); }
+
+/* Items (burbujas) */
+.social-fab .fab-item{
+  position:absolute;
+  right:0;
+  bottom:0;
+  width:48px;
+  height:48px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  text-decoration:none;
+  color:#fff;
+  box-shadow:0 16px 40px rgba(0,0,0,.22);
+
+  /* estado cerrado */
+  transform: translate(0,0) scale(.6);
+  opacity:0;
+  pointer-events:none;
+
+  transition:
+    transform .28s cubic-bezier(.2,.8,.2,1),
+    opacity .2s ease;
+}
+
+/* Colores */
+.social-fab .fab-wa{ background:#25d366; }
+.social-fab .fab-ig{ background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
+.social-fab .fab-fb{ background:#1877f2; }
+
+.social-fab .fab-item i{ font-size:20px; }
+
+/* ✅ Abierto: despliegue radial (como tu imagen) */
+.social-fab.open .fab-item{
+  opacity:1;
+  pointer-events:auto;
+  transform: translate(0,0) scale(1);
+}
+
+/* Posiciones (ajusta si quieres más separado) */
+.social-fab.open .fab-wa{ transform: translate(-62px, 0px) scale(1); }     /* izquierda */
+.social-fab.open .fab-ig{ transform: translate(-44px, -54px) scale(1); }  /* diagonal arriba-izq */
+.social-fab.open .fab-fb{ transform: translate(0px, -70px) scale(1); }    /* arriba */
+
+/* Rotación del ícono principal cuando abre */
+.social-fab.open .fab-main i{
+  transform: rotate(45deg);
+  transition: transform .25s ease;
+}
+
+/* (opcional) para móvil, un poco más grande el toque */
 @media (max-width:560px){
-  .social a{
-    width:48px;
-    height:48px;
-    border-radius:12px;
-    font-size:22px;
-  }
+  .social-fab{ right:14px; bottom:14px; }
 }

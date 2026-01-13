@@ -194,12 +194,68 @@
     }
 
     /* =========================
-       SOCIAL (animación show/hide)
-       - NO cambia tu CSS principal; solo clases
+      ✅ BURBUJA RADIAL (NUEVO)
     ========================= */
-    .social{ opacity:1; transform:translateX(0); transition:opacity .25s ease, transform .25s ease; }
-    .social.is-hidden{ opacity:0; transform:translateX(10px); pointer-events:none; }
-    .social.is-show{ opacity:1; transform:translateX(0); pointer-events:auto; }
+    .social-fab{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      z-index:9999;
+      width:64px;
+      height:64px;
+    }
+
+    .social-fab .fab-main{
+      width:64px; height:64px;
+      border-radius:999px;
+      border:0;
+      cursor:pointer;
+      display:grid;
+      place-items:center;
+      color:#fff;
+      background: radial-gradient(circle at 30% 30%, #ef4444, var(--brand));
+      box-shadow:0 18px 40px rgba(0,0,0,.22);
+      transition: transform .18s ease, filter .18s ease;
+    }
+    .social-fab .fab-main:hover{ transform: translateY(-2px); filter:brightness(1.02); }
+
+    .social-fab .fab-item{
+      position:absolute;
+      right:6px;
+      bottom:6px;
+      width:52px; height:52px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      color:#fff;
+      text-decoration:none;
+      box-shadow:0 16px 30px rgba(0,0,0,.18);
+      transform: translate(0,0) scale(.7);
+      opacity:0;
+      pointer-events:none;
+      transition: transform .22s cubic-bezier(.2,.9,.2,1), opacity .18s ease;
+    }
+
+    /* Colores por red */
+    .fab-wp{ background:#22c55e; }
+    .fab-fb{ background:#1877f2; }
+    .fab-ig{ background: radial-gradient(circle at 30% 30%, #f97316, #d946ef, #0ea5e9); }
+
+    /* posiciones al abrir */
+    .social-fab.open .fab-wp{
+      transform: translate(-82px, -8px) scale(1);
+      opacity:1; pointer-events:auto;
+    }
+    .social-fab.open .fab-fb{
+      transform: translate(-58px, -72px) scale(1);
+      opacity:1; pointer-events:auto;
+    }
+    .social-fab.open .fab-ig{
+      transform: translate(6px, -92px) scale(1);
+      opacity:1; pointer-events:auto;
+    }
+
+    .social-fab i{ font-size:20px; }
   </style>
 @endsection
 
@@ -1090,18 +1146,33 @@
   </section>
 </section>
 
-<!-- Barra social lateral (YA CON LINKS REALES + ANIMACIÓN) -->
-<div class="social is-show" id="socialBar">
-  {{-- WhatsApp: reemplaza el número --}}
-  <a href="https://wa.me/5214427169793_blank" rel="noopener" class="whatsapp" aria-label="WhatsApp">
+<!-- ✅ BURBUJA RADIAL DE REDES (NUEVA) -->
+<div class="social-fab" id="socialFab">
+  <button class="fab-main" id="fabMain" type="button" aria-label="Redes sociales" aria-expanded="false">
+    <i class="fa-solid fa-share-nodes"></i>
+  </button>
+
+  <a class="fab-item fab-wp"
+     href="https://wa.me/5214427169793"
+     target="_blank"
+     rel="noopener"
+     aria-label="WhatsApp">
     <i class="fa-brands fa-whatsapp"></i>
   </a>
 
-  <a href="https://www.facebook.com/ViajeroCarRentalQueretaro?locale=es_LA" target="_blank" rel="noopener" class="facebook" aria-label="Facebook">
+  <a class="fab-item fab-fb"
+     href="https://www.facebook.com/ViajeroCarRentalQueretaro?locale=es_LA"
+     target="_blank"
+     rel="noopener"
+     aria-label="Facebook">
     <i class="fa-brands fa-facebook-f"></i>
   </a>
 
-  <a href="https://www.instagram.com/viajerocarental/" target="_blank" rel="noopener" class="instagram" aria-label="Instagram">
+  <a class="fab-item fab-ig"
+     href="https://www.instagram.com/viajerocarental/"
+     target="_blank"
+     rel="noopener"
+     aria-label="Instagram">
     <i class="fa-brands fa-instagram"></i>
   </a>
 </div>
@@ -1115,7 +1186,7 @@
     <p>Tu cuenta está lista. ¿Quieres ir directo a tu reserva?</p>
     <div class="modal-actions">
       <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> Ir a mi reserva</a>
-      <button class="btn btn-ghost" id="wmOk">Seguir en inicio</button>
+      <button class="btn btn-ghost" id="wmOk" type="button">Seguir en inicio</button>
     </div>
   </div>
 </div>
@@ -1287,47 +1358,6 @@
     });
 
     document.addEventListener('DOMContentLoaded', showOnce);
-  })();
-  </script>
-
-  <!-- ===== Animación Social: hero -> hide, fuera hero -> show, footer -> show ===== -->
-  <script>
-  (function(){
-    const social = document.getElementById('socialBar');
-    const heroEnd = document.getElementById('heroEndSentinel');
-    const footer  = document.querySelector('.site-footer');
-
-    if(!social || !heroEnd) return;
-
-    const show = () => {
-      social.classList.remove('is-hidden');
-      social.classList.add('is-show');
-    };
-
-    const hide = () => {
-      social.classList.remove('is-show');
-      social.classList.add('is-hidden');
-    };
-
-    const io = new IntersectionObserver((entries)=>{
-      entries.forEach(entry=>{
-        if(entry.target === heroEnd){
-          // si el sentinel está visible => ya saliste del hero => MOSTRAR
-          // pero tú pediste: dentro del hero visible, al salir del hero ocultar
-          // entonces invertimos: si intersecta (ya estás abajo) -> HIDE; si no -> SHOW
-          entry.isIntersecting ? hide() : show();
-        }
-        if(footer && entry.target === footer && entry.isIntersecting){
-          show();
-        }
-      });
-    }, { threshold: 0.05 });
-
-    io.observe(heroEnd);
-    if(footer) io.observe(footer);
-
-    // estado inicial: estás en hero => visible
-    show();
   })();
   </script>
 @endsection
