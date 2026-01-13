@@ -54,7 +54,7 @@
 })();
 
 
-// ===== Carrusel principal HERO =====
+// ===== Carrusel principal HERO (tu versión, infinito) =====
 (function(){
   "use strict";
   const slides = [...document.querySelectorAll('.slide')];
@@ -71,23 +71,172 @@
 })();
 
 
-// ===== Carruseles de secciones =====
+// =====================================================================
+// ✅ Carruseles de secciones: INFINITO + AVANZA 1 CARD (NO por página)
+// - Funciona con overflow-x (scroll) duplicando contenido
+// - Botones soportados:
+//   Dentro de .media-carousel: [data-mc="next"] / [data-mc="prev"]
+//   o clases: .mc-next .mc-prev .next .prev .btn-next .btn-prev
+// =====================================================================
 (function(){
   "use strict";
-  document.querySelectorAll('.media-carousel').forEach((wrap, idx)=>{
-    const items = [...wrap.querySelectorAll('.media-slide')];
-    if(items.length <= 1) return;
 
+  const qsa = (s, root=document) => Array.from(root.querySelectorAll(s));
+
+  function getStepPx(firstSlide, container){
+    if(!firstSlide) return 0;
+    const r = firstSlide.getBoundingClientRect();
+    const s = getComputedStyle(firstSlide);
+
+    const ml = parseFloat(s.marginLeft)  || 0;
+    const mr = parseFloat(s.marginRight) || 0;
+
+    // gap real si es flex
+    const cs = getComputedStyle(container);
+    const gap = parseFloat(cs.columnGap || cs.gap) || 0;
+
+    return r.width + ml + mr + gap;
+  }
+
+  function initInfiniteOneByOne(wrap, idx){
+    // El "viewport" donde se scrollea: si tu wrap ya es el scroll container, usamos wrap
+    // Si tienes un inner tipo .media-viewport, también lo soporta:
+    const viewport = wrap.querySelector('.media-viewport') || wrap;
+
+    const slides = qsa('.media-slide', viewport);
+    if(slides.length <= 1) return;
+
+    // Evitar doble init
+    if(wrap.dataset.infiniteReady === "1") return;
+    wrap.dataset.infiniteReady = "1";
+
+    // Botones (si existen)
+    const btnNext = wrap.querySelector('[data-mc="next"], .mc-next, .next, .btn-next');
+    const btnPrev = wrap.querySelector('[data-mc="prev"], .mc-prev, .prev, .btn-prev');
+
+    // Intervalo
     const base = Number(wrap.dataset.interval || 5000);
-    let i = 0;
+    const interval = base + (idx * 300);
 
-    const show = x => items.forEach((el,k)=> el.classList.toggle('active', k===x));
-    show(i);
+    // ✅ Duplicar contenido para loop infinito “seamless”
+    // Guardamos HTML original (solo 1 vez)
+    const originalHTML = viewport.innerHTML;
 
-    setInterval(()=>{
-      i = (i+1) % items.length;
-      show(i);
-    }, base + (idx * 300));
+    // Para evitar que duplicar duplique botones o cosas raras:
+    // asumimos que dentro del viewport SOLO van slides.
+    // Si tu wrap contiene botones, está bien (porque duplicamos viewport, no wrap).
+
+    viewport.innerHTML = originalHTML + originalHTML;
+
+    // Re-leer slides ya duplicadas
+    const allSlides = qsa('.media-slide', viewport);
+    const half = allSlides.length / 2;
+
+    // Asegurar que el viewport sea scroll horizontal (si tu CSS ya lo hace, no afecta)
+    viewport.style.overflowX = viewport.style.overflowX || 'auto';
+    viewport.style.scrollBehavior = 'auto'; // lo controlamos nosotros
+    viewport.style.webkitOverflowScrolling = 'touch';
+
+    // Posicionar al inicio de la “segunda mitad” para poder ir atrás/adelante infinito
+    // (o sea, empezar en el set original “real”)
+    const step0 = getStepPx(allSlides[0], viewport);
+    viewport.scrollLeft = step0 * half;
+
+    let lock = false;
+    let timer = null;
+
+    function normalizeIfNeeded(){
+      // Si estamos muy a la derecha (cerca del final), regresamos una mitad
+      // Si estamos muy a la izquierda, avanzamos una mitad
+      const step = getStepPx(allSlides[0], viewport);
+      if(!step) return;
+
+      const pos = viewport.scrollLeft;
+      const leftLimit  = step * (half * 0.4);
+      const rightLimit = step * (half * 1.6);
+
+      if(pos < leftLimit){
+        viewport.scrollBehavior = 'auto';
+        viewport.scrollLeft = pos + (step * half);
+      }
+      if(pos > rightLimit){
+        viewport.scrollBehavior = 'auto';
+        viewport.scrollLeft = pos - (step * half);
+      }
+    }
+
+    function moveBy(delta){
+      if(lock) return;
+      lock = true;
+
+      const step = getStepPx(allSlides[0], viewport);
+      if(!step){
+        lock = false;
+        return;
+      }
+
+      viewport.scrollBehavior = 'smooth';
+      viewport.scrollLeft += (delta * step);
+
+      // liberar lock después de animación
+      window.setTimeout(()=>{
+        viewport.scrollBehavior = 'auto';
+        normalizeIfNeeded();
+        lock = false;
+      }, 420);
+    }
+
+    function stop(){
+      if(timer) clearInterval(timer);
+      timer = null;
+    }
+
+    function start(){
+      stop();
+      timer = setInterval(()=> moveBy(1), interval);
+    }
+
+    // Scroll manual (rueda/touch): también normaliza para que no “se acabe”
+    viewport.addEventListener('scroll', ()=>{
+      if(lock) return;
+      normalizeIfNeeded();
+    }, { passive:true });
+
+    // Clicks
+    if(btnNext){
+      btnNext.addEventListener('click', (e)=>{
+        e.preventDefault();
+        stop();
+        moveBy(1);
+        start();
+      });
+    }
+    if(btnPrev){
+      btnPrev.addEventListener('click', (e)=>{
+        e.preventDefault();
+        stop();
+        moveBy(-1);
+        start();
+      });
+    }
+
+    // Hover pause (opcional)
+    wrap.addEventListener('mouseenter', stop);
+    wrap.addEventListener('mouseleave', start);
+
+    // Resize: re-centra en la mitad (manteniendo sensación estable)
+    window.addEventListener('resize', ()=>{
+      const step = getStepPx(allSlides[0], viewport);
+      if(!step) return;
+      viewport.scrollBehavior = 'auto';
+      viewport.scrollLeft = step * half;
+    }, { passive:true });
+
+    start();
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    qsa('.media-carousel').forEach((wrap, idx)=> initInfiniteOneByOne(wrap, idx));
   });
 })();
 
@@ -133,7 +282,7 @@
   const rangeSummary = document.getElementById('rangeSummary');
 
   if(window.flatpickr){
-    const rangePicker = flatpickr('#pickupDate', {
+    flatpickr('#pickupDate', {
       locale: 'es',
       altInput: true,
       altFormat: 'd/m/Y',
@@ -165,6 +314,7 @@
 
     const [y,m,day] = d.split('-').map(Number);
     let [hh,mm] = t.replace(/( am| pm)/i,'').split(':').map(Number);
+
     if(/pm/i.test(t) && hh !== 12) hh += 12;
     if(/am/i.test(t) && hh === 12) hh = 0;
 

@@ -1205,58 +1205,121 @@
   {{-- Swiper JS para el carrusel de tarjetas --}}
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-  {{-- Carruseles de flota --}}
+  {{-- ✅ Carruseles de flota (REEMPLAZO: loop infinito real 1x1, sin atorarse) --}}
   <script>
   (function(){
+    "use strict";
+
     const fleets = document.querySelectorAll('.fleet');
     if(!fleets.length) return;
 
-    fleets.forEach(fleet => {
+    fleets.forEach((fleet)=>{
       const track = fleet.querySelector('.fleet-track');
       const prev  = fleet.querySelector('.fleet-btn.prev');
       const next  = fleet.querySelector('.fleet-btn.next');
       if(!track || !prev || !next) return;
 
-      let autoSlide;
-      const stepCount = 1 
+      // Evitar doble init
+      if(track.dataset.infiniteReady === "1") return;
+      track.dataset.infiniteReady = "1";
 
-      const step = () => {
+      const GAP_FALLBACK = 18;
+      let autoSlide = null;
+      let lock = false;
+
+      function getGapPx(){
+        const st = getComputedStyle(track);
+        const gap = parseFloat(st.columnGap || st.gap) || 0;
+        return gap || GAP_FALLBACK;
+      }
+
+      function getStepPx(){
         const card = track.querySelector('.car-card');
-        return card ? (card.offsetWidth + 18) : 340; 
-      };
+        if(!card) return 340;
+        const rect = card.getBoundingClientRect();
+        const cs = getComputedStyle(card);
+        const ml = parseFloat(cs.marginLeft) || 0;
+        const mr = parseFloat(cs.marginRight) || 0;
+        return rect.width + ml + mr + getGapPx();
+      }
 
-      const toStart = () => track.scrollTo({ left: 0, behavior: 'smooth' });
-      const toEnd   = () => track.scrollTo({ left: track.scrollWidth, behavior: 'smooth' });
+      // Guardar original y duplicar (loop)
+      const originalHTML = track.innerHTML;
+      track.innerHTML = originalHTML + originalHTML;
 
-      const nextSlide = () => {
-        if (track.scrollLeft + track.offsetWidth >= track.scrollWidth - step()) {
-          toStart();
-        } else {
-          track.scrollBy({ left: step() * stepCount, behavior: 'smooth' });
+      const cards = Array.from(track.querySelectorAll('.car-card'));
+      const half  = Math.floor(cards.length / 2); // cantidad del set original
+
+      function jumpToMiddle(){
+        const step = getStepPx();
+        track.scrollLeft = step * half;
+      }
+
+      // Importante: centrar después de que el layout ya calculó tamaños
+      requestAnimationFrame(()=> requestAnimationFrame(jumpToMiddle));
+
+      function normalizeHard(){
+        const step = getStepPx();
+        const maxScroll = track.scrollWidth - track.clientWidth;
+
+        if(track.scrollLeft <= step){
+          track.scrollLeft += step * half;
+          return;
         }
-      };
-
-      const prevSlide = () => {
-        if (track.scrollLeft <= 0) {
-          toEnd();
-        } else {
-          track.scrollBy({ left: -step() * stepCount, behavior: 'smooth' });
+        if(track.scrollLeft >= (maxScroll - step)){
+          track.scrollLeft -= step * half;
+          return;
         }
-      };
+      }
 
-      next.addEventListener('click', nextSlide);
-      prev.addEventListener('click', prevSlide);
+      function moveBy(dir){
+        if(lock) return;
+        lock = true;
+
+        normalizeHard();
+
+        const step = getStepPx();
+        const before = track.scrollLeft;
+
+        track.scrollBy({ left: dir * step, behavior: 'smooth' });
+
+        window.setTimeout(()=>{
+          normalizeHard();
+
+          // Si se clavó por límite real, forzar wrap
+          if(track.scrollLeft === before){
+            normalizeHard();
+            track.scrollBy({ left: dir * step, behavior: 'auto' });
+            normalizeHard();
+          }
+
+          lock = false;
+        }, 420);
+      }
+
+      next.addEventListener('click', (e)=>{ e.preventDefault(); stopAuto(); moveBy(1); startAuto(); });
+      prev.addEventListener('click', (e)=>{ e.preventDefault(); stopAuto(); moveBy(-1); startAuto(); });
+
+      track.addEventListener('scroll', ()=>{
+        if(lock) return;
+        normalizeHard();
+      }, { passive:true });
 
       function startAuto(){
         stopAuto();
-        autoSlide = setInterval(nextSlide, 10000); 
+        autoSlide = setInterval(()=> moveBy(1), 10000);
       }
       function stopAuto(){
         if(autoSlide) clearInterval(autoSlide);
+        autoSlide = null;
       }
 
       track.addEventListener('mouseenter', stopAuto);
       track.addEventListener('mouseleave', startAuto);
+
+      window.addEventListener('resize', ()=>{
+        requestAnimationFrame(()=> requestAnimationFrame(jumpToMiddle));
+      }, { passive:true });
 
       startAuto();
     });
