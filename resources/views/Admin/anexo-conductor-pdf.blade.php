@@ -5,283 +5,354 @@
   <title>Anexo Conductor Adicional - PDF</title>
     <style>
     /* ==========================================
-       CONFIGURACIÓN DE PÁGINA (DomPDF)
-    ========================================== */
-    @page{
-      size: 230mm 470mm; /* ancho, alto */
-      margin: 20mm;
-    }
+   VARIABLES Y BASE
+========================================== */
+:root {
+  --brand: #E50914;
+  --brand-dark: #bb0811;
+  --ink: #111827;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --paper: #ffffff;
+  --bg: #f3f4f6;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.08);
+  --font: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
 
-    *{
-      box-sizing:border-box;
-    }
+/* ==========================================
+   CONFIGURACIÓN DE PÁGINA (DomPDF)
+========================================== */
+@page {
+  size: 230mm 470mm; /* ancho, alto */
+  margin: 20mm;
+}
 
-    html, body{
-      margin:0;
-      padding:0;
-      background:#f3f4f6 !important;
-      color:#111827;
-      font-family: DejaVu Sans, Arial, sans-serif !important;
-      font-size: 11px;
-    }
+* {
+  box-sizing: border-box;
+}
 
-    h1,h2,h3,h4,p{
-      margin:0;
-      padding:0;
-    }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #f3f4f6 !important;
+  color: #111827;
+  font-family: DejaVu Sans, Arial, sans-serif !important;
+  font-size: 11px;
+}
 
-    /* ==========================================
-       ENCABEZADO DOCUMENTO (mismas clases)
-    ========================================== */
-    .doc-header{
-      width:100%;
-      display:table;
-      table-layout:fixed;
-      background:#ffffff;
-      border-radius:16px;
-      padding:12px 16px;
-      margin-bottom:14px;
-      border:1px solid #e5e7eb;
-      box-shadow:0 4px 12px rgba(15,23,42,.06);
-    }
+h1, h2, h3, h4, p {
+  margin: 0;
+  padding: 0;
+}
 
-    .header-left,
-    .header-right{
-      display:table-cell;
-      vertical-align:middle;
-    }
+/* Contenedor principal (formato carta centrado) */
+.document-wrapper {
+  background: var(--paper);
+  padding: 28px 34px 38px;
+  margin: 22px auto;
+  width: 95%;
+  max-width: 1000px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+}
 
-    .header-left{
-      width:60%;
-    }
+/* ===============================
+        ENCABEZADO (PDF)
+================================= */
 
-    .big-header-logo{
-      width:160px;
-      height:auto;
-      margin-bottom:8px;
-    }
+.doc-header {
+  width: 100%;
+  display: table;            /* Más compatible con DomPDF que flex */
+  table-layout: fixed;
+  border-bottom: 2px solid var(--brand);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
 
-    .company-info p{
-      font-size:11px;
-      line-height:1.35;
-    }
+.header-left,
+.header-right {
+  display: table-cell;
+  vertical-align: middle;
+}
 
-    .header-right{
-      width:40%;
-      text-align:right;
-    }
+.header-left {
+  width: 60%;
+}
 
-    .doc-meta{
-      display:inline-block;
-      text-align:right;
-      font-size:10px;
-    }
+.header-right {
+  width: 40%;
+  text-align: right;
+}
 
-    .doc-label{
-      display:block;
-      font-size:10px;
-      text-transform:uppercase;
-      color:#6b7280;
-      letter-spacing:.08em;
-      margin-bottom:3px;
-    }
+/* Logo del encabezado */
+.big-header-logo {
+  width: 260px;             /* Tamaño similar al de la vista */
+  height: auto;
+  object-fit: contain;      /* Ya no "cover" para que no se recorte */
+  object-position: left center;
+  display: block;
+  margin: 0 0 8px 0;
+}
 
-    .doc-title{
-      font-size:14px;
-      font-weight:700;
-      margin:0 0 6px;
-    }
+/* Estos pueden quedarse igual que en la vista */
+.company-info p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
 
-    .meta-grid{
-      border-radius:12px;
-      border:1px solid #e5e7eb;
-      background:#f9fafb;
-      padding:6px 10px;
-      margin-top:4px;
-    }
+.company-info p:first-child {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 14px;
+}
 
-    .meta-item{
-      font-size:9.5px;
-      margin-bottom:2px;
-    }
+.doc-meta {
+  text-align: right;
+}
 
-    .meta-item:last-child{
-      margin-bottom:0;
-    }
+.doc-label {
+  display: inline-block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+  color: var(--muted);
+}
 
-    .meta-label{
-      display:block;
-      color:#6b7280;
-    }
+.doc-title {
+  margin: 2px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
 
-    .meta-value{
-      display:block;
-      font-weight:700;
-    }
+.meta-grid {
+  display: inline-block;    /* Mejor para PDF que flex */
+  margin-top: 6px;
+  font-size: 13px;
+}
 
-    /* ==========================================
-       INTRO / NOTA
-    ========================================== */
-    .intro-section{
-      border-radius:16px;
-      border:1px solid #e5e7eb;
-      background:#ffffff;
-      padding:14px 16px;
-      margin-top:10px;
-    }
+.meta-item {
+  text-align: right;
+}
 
-    .section-title{
-      font-size:12px;
-      font-weight:700;
-      text-align:center;
-      text-transform:uppercase;
-      margin-bottom:4px;
-    }
+.meta-label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
 
-    .section-sub{
-      font-size:10.5px;
-      text-align:center;
-      color:#6b7280;
-    }
+.meta-value {
+  font-weight: 600;
+  color: var(--ink);
+}
 
-    /* ==========================================
-       BLOQUES / TARJETAS
-    ========================================== */
-    .card-block{
-      border-radius:16px;
-      border:1px solid #e5e7eb;
-      background:#ffffff;
-      padding:14px 16px;
-      margin-top:14px;
-    }
 
-    .block-header{
-      margin-bottom:8px;
-    }
+/* Responsive del encabezado (en PDF casi no aplica, pero no estorba) */
+@media (max-width: 768px) {
+  .doc-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
 
-    .block-title{
-      font-size:11.5px;
-      font-weight:700;
-      margin-bottom:2px;
-    }
+  .header-right {
+    align-items: flex-start;
+    text-align: left;
+  }
 
-    .block-subtitle{
-      font-size:10px;
-      color:#6b7280;
-    }
+  .meta-grid {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
 
-    /* ==========================================
-       TABLA CONDUCTOR ADICIONAL
-    ========================================== */
-    .styled-table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:10.5px;
-      margin-top:6px;
-    }
+/* ===============================
+            INTRO
+================================= */
 
-    .styled-table th,
-    .styled-table td{
-      border:1px solid #e5e7eb;
-      padding:8px 10px;
-      text-align:center;
-      vertical-align:middle;
-    }
+.intro-section {
+  text-align: center;
+  margin-bottom: 16px;
+}
 
-    .styled-table th{
-      background:#f3f4f6;
-      font-weight:600;
-      white-space:nowrap;
-    }
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+}
 
-    .img-cell{
-      text-align:center;
-    }
+.section-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
 
-    .firma-col{
-      width:40%;
-    }
+/* ===============================
+    BLOQUES / TARJETAS
+================================= */
 
-    .doc-thumb{
-      max-width:180px;
-      max-height:90px;
-      height:auto;
-      border-radius:10px;
-      border:1px solid #e5e7eb;
-      background:#ffffff;
-    }
+.card-block {
+  background: #fafafa;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  padding: 18px 18px 20px;
+  margin-bottom: 14px;
+}
 
-    .no-img{
-      font-size:10px;
-      color:#9ca3af;
-    }
+.block-header {
+  margin-bottom: 10px;
+}
 
-    .empty-row{
-      text-align:center;
-      font-size:10px;
-      color:#9ca3af;
-    }
+.block-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
 
-    /* ==========================================
-       TEXTO LEGAL
-    ========================================== */
-    .legal-block .legal-section p{
-      font-size:10.2px;
-      line-height:1.5;
-      margin-bottom:6px;
-      text-align:justify;
-    }
+.block-subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
 
-    .legal-block .legal-section p:last-child{
-      margin-bottom:0;
-    }
+/* ===============================
+            TABLA
+================================= */
 
-    /* ==========================================
-       FIRMAS
-    ========================================== */
-    .signatures-wrapper{
-      margin-top:10px;
-      text-align:center;
-    }
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 8px;
+}
 
-    .signature-card{
-      display:inline-block;
-      padding:12px 18px 10px;
-      border-radius:14px;
-      border:1px solid #e5e7eb;
-      background:#f9fafb;
-    }
+/* Encabezado tipo contrato */
+.styled-table thead th {
+  background: #f9fafb;
+  color: var(--ink);
+  padding: 8px 10px;
+  text-align: center;
+  font-weight: 600;
+  border-bottom: 2px solid var(--brand);
+  border-top: 1px solid #111;
+  border-left: 1px solid #111;
+  border-right: 1px solid #111;
+}
 
-    .signature-image{
-      max-width:220px;
-      max-height:90px;
-      height:auto;
-      border-radius:10px;
-      border:1px solid #e5e7eb;
-      background:#ffffff;
-    }
+/* Celdas cuerpo */
+.styled-table td {
+  border-left: 1px solid #111;
+  border-right: 1px solid #111;
+  border-bottom: 1px solid #111;
+  padding: 7px 10px;
+  text-align: center;
+}
 
-    .sig-line{
-      margin-top:6px;
-      border-top:1px solid #111827;
-      width:100%;
-    }
+.styled-table tbody tr:nth-child(even) {
+  background: #fdfdfd;
+}
 
-    .sig-label{
-      margin-top:4px;
-      font-size:10px;
-    }
+.styled-table tbody tr:hover {
+  background: #f3f4f6;
+}
 
-    /* ==========================================
-       EVITAR CORTES FEOS EN PDF
-    ========================================== */
-    .doc-header,
-    .intro-section,
-    .card-block,
-    .styled-table,
-    .signature-card{
-      page-break-inside:avoid;
-    }
+.img-cell {
+  text-align: center;
+}
+
+/* Columna de firma (sigue siendo útil en el PDF) */
+.firma-col {
+  width: 40%;
+}
+
+.doc-thumb {
+  width: 65px;
+  height: auto;
+  border-radius: 4px;
+  border: 1px solid #000;
+}
+
+.no-img {
+  font-style: italic;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.empty-row {
+  text-align: center;
+  padding: 14px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ===============================
+        TEXTO LEGAL
+================================= */
+
+.legal-block {
+  background: #ffffff;
+}
+
+.legal-section p {
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+  text-align: justify;
+}
+
+/* ===============================
+            FIRMAS
+================================= */
+
+.signatures-wrapper {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-top: 8px;
+}
+
+.signature-card {
+  text-align: center;
+}
+
+.signature-image {
+  max-width: 260px;
+  height: auto;
+  display: block;
+  margin: 0 auto 10px;
+}
+
+.sig-line {
+  width: 260px;
+  height: 1px;
+  background: #000;
+  margin: 0 auto 6px;
+}
+
+.sig-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ==========================================
+   EVITAR CORTES FEOS EN PDF
+========================================== */
+.doc-header,
+.intro-section,
+.card-block,
+.styled-table,
+.signature-card {
+  page-break-inside: avoid;
+}
+
   </style>
 </head>
 
