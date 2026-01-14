@@ -445,15 +445,17 @@ h1, h2, h3, h4, p {
                         </td>
 
                         {{-- Firma del conductor --}}
-                        <td class="img-cell firma-col">
-                            @if(!empty($conductorActual->firma_conductor))
-                                <img src="{{ asset($conductorActual->firma_conductor) }}"
-                                     class="doc-thumb"
-                                     alt="Firma conductor">
-                            @else
-                                <span class="no-img">Firma pendiente</span>
-                            @endif
-                        </td>
+                        {{-- Firma del conductor --}}
+<td class="img-cell firma-col">
+    @if(!empty($conductorActual->firma_conductor))
+        <img src="{{ public_path($conductorActual->firma_conductor) }}"
+             class="doc-thumb"
+             alt="Firma conductor">
+    @else
+        <span class="no-img">Firma pendiente</span>
+    @endif
+</td>
+
                     </tr>
                 @else
                     <tr>
