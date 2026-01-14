@@ -288,9 +288,11 @@
         Cambio de Vehículo
     </a>
 
-    <a href="#" class="btn-checklist">
-        Conductor adicional
-    </a>
+    <a href="{{ route('anexo.ver', ['id' => $contrato->id_contrato]) }}" class="btn-checklist">
+    Conductor adicional
+</a>
+
+
 </div>
 
 

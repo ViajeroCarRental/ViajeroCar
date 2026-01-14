@@ -17,7 +17,6 @@
         <div class="header-left">
             <img src="{{ asset('/img/Logotipo Fondo.jpg') }}" class="big-header-logo">
 
-
             <div class="company-info">
                 <p>Viajero Car Rental</p>
                 <p>Anexo de contrato – Conductor adicional</p>
@@ -48,8 +47,8 @@
     <!-- =============================== -->
     <section class="intro-section">
         <h2 class="section-title">Autorización para Conductor Adicional Aceptado</h2>
-        <p class="section-sub">
-            Nota: Se aplicarán cargos al presente contrato de renta por concepto de conductor(es) adicional(es).
+        <p class="section-sub" id="subConductores">
+            Revise la información de los conductores adicionales autorizados para conducir el vehículo.
         </p>
     </section>
 
@@ -60,7 +59,7 @@
         <div class="block-header">
             <h3 class="block-title">Conductores adicionales registrados</h3>
             <p class="block-subtitle">
-                Revise la información de los conductores adicionales autorizados para conducir el vehículo.
+                La tabla muestra todos los conductores adicionales registrados para este contrato.
             </p>
         </div>
 
@@ -68,35 +67,59 @@
             <thead>
                 <tr>
                     <th>Nombre (Name)</th>
-                    <th>Años (Age)</th>
                     <th>No. Licencia</th>
-                    <th>Vence (Expira)</th>
                     <th>Firma del Conductor</th>
                     <th class="col-acciones">Acciones</th>
                 </tr>
             </thead>
 
-            <tbody>
+            <tbody id="tbodyConductores">
                 @forelse($conductores as $c)
-                    <tr>
-                        <td>{{ $c->nombre }}</td>
-                        <td>{{ $c->edad }}</td>
-                        <td>{{ $c->licencia }}</td>
-                        <td>{{ $c->vence }}</td>
+                    @php
+                        $nombreCompleto = trim(($c->nombres ?? '') . ' ' . ($c->apellidos ?? ''));
+                    @endphp
+                    <tr data-id-conductor="{{ $c->id_conductor }}">
+                        {{-- Nombre --}}
+                        <td>
+                            {{ $nombreCompleto ?: '---' }}
+                        </td>
 
-                        <td class="img-cell">
-                            @if($c->firma_conductor)
-                                <img src="{{ asset($c->firma_conductor) }}" class="doc-thumb" alt="Firma conductor">
+                        {{-- Licencia --}}
+                        <td>
+                            {{ $c->numero_licencia ?? '---' }}
+                        </td>
+
+                        {{-- Firma del conductor --}}
+                        <td class="img-cell firma-col">
+                            @if(!empty($c->firma_conductor))
+                                <img src="{{ asset($c->firma_conductor) }}"
+                                     class="doc-thumb"
+                                     alt="Firma conductor">
                             @else
-                                <span class="no-img">Sin firma</span>
+                                <span class="no-img">Firma pendiente</span>
                             @endif
                         </td>
 
+                        {{-- Acciones --}}
                         <td class="actions">
-                            <form action="{{ route('anexo.eliminar', $c->id_conductor) }}" method="POST">
+                            {{-- Botón para firmar (lápiz) --}}
+                            <button type="button"
+                                    class="btn-icon btn-firmar-conductor"
+                                    data-id="{{ $c->id_conductor }}"
+                                    data-nombre="{{ $nombreCompleto }}">
+                                <i class="fas fa-pen"></i>
+                            </button>
+
+                            {{-- Botón para eliminar --}}
+                            <form method="POST"
+                                  action="{{ route('anexo.eliminar', $c->id_conductor) }}"
+                                  style="display:inline">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn-icon" title="Eliminar conductor">
+                                <button class="btn-icon btn-delete-conductor"
+                                        type="submit"
+                                        title="Eliminar conductor"
+                                        onclick="return confirm('¿Eliminar al conductor adicional {{ $nombreCompleto ?: 'sin nombre' }} del contrato?');">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             </form>
@@ -104,7 +127,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="empty-row">
+                        <td colspan="4" class="empty-row">
                             No hay conductores adicionales registrados.
                         </td>
                     </tr>
@@ -114,66 +137,24 @@
     </section>
 
     <!-- =============================== -->
-    <!-- BLOQUE: FORMULARIO NUEVO       -->
+    <!-- BLOQUE: FIRMAS DE CONDUCTORES  -->
     <!-- =============================== -->
     <section class="card-block">
-        <div class="block-header">
-            <h3 class="block-title">Agregar conductor adicional</h3>
-            <p class="block-subtitle">
-                Capture los datos del nuevo conductor adicional que será autorizado para conducir el vehículo.
-            </p>
+      <div class="block-header">
+        <h3 class="block-title">Firmas</h3>
+        <p class="block-subtitle">
+          Haz clic en el ícono de lápiz de la fila del conductor para capturar su firma digital.
+        </p>
+      </div>
+
+      <div class="firmas">
+        <div class="firma-item">
+          <p><b id="labelFirmaConductor">FIRMA DE CONDUCTOR ADICIONAL:</b></p>
+          <p class="small-muted">
+              La etiqueta se actualizará con el nombre del conductor seleccionado.
+          </p>
         </div>
-
-        <form method="POST" action="{{ route('anexo.guardar') }}" enctype="multipart/form-data">
-            @csrf
-            <input type="hidden" name="id_reservacion" value="{{ $reservacion->id_reservacion ?? 0 }}">
-
-            <div class="form-grid">
-                <div class="form-row form-row-lg">
-                    <label>Nombre completo del conductor</label>
-                    <input type="text" name="nombre" required>
-                </div>
-
-                <div class="form-row form-row-sm">
-                    <label>Edad</label>
-                    <input type="number" name="edad" min="18" required>
-                </div>
-
-                <div class="form-row form-row-md">
-                    <label>No. de licencia</label>
-                    <input type="text" name="licencia" required>
-                </div>
-
-                <div class="form-row form-row-md">
-                    <label>Vence (Expira)</label>
-                    <input type="text" name="vence" placeholder="Permanente o fecha" required>
-                </div>
-
-                <div class="form-row form-row-lg">
-                    <label>Documento (INE / Licencia / Pasaporte)</label>
-                    <input type="file" name="documento" accept="image/*,application/pdf" required>
-                </div>
-
-                <div class="form-row form-row-lg">
-                    <label>Firma del conductor adicional</label>
-                    <div class="firma-inline">
-                        <button type="button" id="btnFirmaConductor" class="btn-secondary">
-                            Capturar firma
-                        </button>
-                        <span class="firma-hint">
-                            La firma quedará ligada al registro del conductor en la tabla superior.
-                        </span>
-                    </div>
-                    <input type="hidden" name="firma_conductor" id="firma_conductor">
-                </div>
-
-                <div class="form-actions">
-                    <button class="btn-primary" type="submit">
-                        Agregar conductor
-                    </button>
-                </div>
-            </div>
-        </form>
+      </div>
     </section>
 
     <!-- =============================== -->
@@ -221,22 +202,46 @@
 
         <div class="signatures-wrapper">
 
-            <!-- Firma arrendador -->
-            <div class="signature-card">
-                @if($reservacion->firma_arrendador)
-                    <img src="{{ asset($reservacion->firma_arrendador) }}" class="signature-image" alt="Firma arrendador">
-                @endif
+            {{-- Firma arrendador --}}
+<div class="signature-card">
+    @if($contrato->firma_arrendador)
+        <img src="{{ $contrato->firma_arrendador }}" class="signature-image" alt="Firma arrendador">
+    @else
+        <span style="opacity:.6;font-size:.85rem">
+            Firma pendiente
+        </span>
+    @endif
 
-                <div class="sig-line"></div>
-                <p class="sig-label">Firma del Arrendador(a)</p>
+    <div class="sig-line"></div>
+    <p class="sig-label">Firma del Arrendador(a)</p>
 
-                <button id="btnFirmar" class="btn-primary" type="button" style="margin-top: 10px;">
-                    Firmar documento
-                </button>
-            </div>
+</div>
+
 
         </div>
     </section>
+
+   {{-- =============================== --}}
+{{-- BOTÓN ENVIAR ANEXOS            --}}
+{{-- =============================== --}}
+<div class="anexo-actions" style="text-align:center; margin-top: 1.5rem; margin-bottom: 1rem;">
+
+    <form id="formEnviarAnexos"
+          method="POST"
+          action="{{ route('anexo.enviarAnexos', $contrato->id_contrato) }}"
+          style="display:inline-block;">
+        @csrf
+
+        <button type="submit"
+                class="btn btn-red"
+                id="btnEnviarAnexos">
+            Enviar anexos por correo
+        </button>
+    </form>
+
+</div>
+
+
 
 </div>
 
@@ -260,7 +265,7 @@
 <!-- Modal firma conductor -->
 <div id="modalFirmaConductor" class="modal-firma">
     <div class="firma-content">
-        <h3>Firma del Conductor Adicional</h3>
+        <h3 id="tituloModalConductor">Firma del Conductor Adicional</h3>
         <canvas id="signature-pad-conductor" width="500" height="200"></canvas>
 
         <div class="firma-buttons">
@@ -278,81 +283,197 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
+    const baseAsset = "{{ asset('') }}"; // ej. https://tudominio.com/
+
     /* ==========================
        FIRMA ARRENDADOR
     =========================== */
     const modalA   = document.getElementById('modalFirma');
     const btnOpenA = document.getElementById('btnFirmar');
 
-    if (btnOpenA && modalA) {
+    let signaturePadA = null;
+    const canvasA = document.getElementById('signature-pad');
+    if (canvasA && window.SignaturePad) {
+        signaturePadA = new SignaturePad(canvasA);
+    }
+
+    if (btnOpenA && modalA && signaturePadA) {
         btnOpenA.addEventListener('click', () => {
             modalA.style.display = 'flex';
+            signaturePadA.clear();
         });
-    }
 
-    const canvasA = document.getElementById('signature-pad');
-    const signaturePadA = new SignaturePad(canvasA);
+        const btnClearA = document.getElementById('clear-signature');
+        const btnSaveA  = document.getElementById('save-signature');
 
-    document.getElementById('clear-signature').onclick = () => signaturePadA.clear();
-
-    document.getElementById('save-signature').onclick = () => {
-        if (signaturePadA.isEmpty()) {
-            alert("Por favor realiza tu firma.");
-            return;
+        if (btnClearA) {
+            btnClearA.addEventListener('click', () => signaturePadA.clear());
         }
 
-        const dataURL = signaturePadA.toDataURL("image/png");
+        if (btnSaveA) {
+            btnSaveA.addEventListener('click', () => {
+                if (signaturePadA.isEmpty()) {
+                    alert("Por favor realiza tu firma.");
+                    return;
+                }
 
-        fetch("{{ route('anexo.guardarFirma') }}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            },
-            body: JSON.stringify({
-                id_reservacion: "{{ $reservacion->id_reservacion }}",
-                firma: dataURL
-            })
-        })
-        .then(res => res.json())
-        .then(() => {
-            alert('Firma guardada correctamente');
-            modalA.style.display = 'none';
-            window.location.reload();
-        });
-    };
+                const dataURL    = signaturePadA.toDataURL("image/png");
+                const idContrato = btnOpenA.dataset.contrato;
+
+                fetch("{{ route('anexo.guardarFirma') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({
+                        id_contrato: idContrato,
+                        firma: dataURL
+                    })
+                })
+                .then(res => res.json())
+                .then(resp => {
+                    if (!resp.ok) {
+                        alert(resp.error || 'No se pudo guardar la firma.');
+                        return;
+                    }
+                    alert('Firma guardada correctamente');
+                    modalA.style.display = 'none';
+                    window.location.reload();
+                })
+                .catch(() => {
+                    alert('Error de comunicación con el servidor al guardar la firma de arrendador.');
+                });
+            });
+        }
+    }
 
     /* ==========================
-       FIRMA CONDUCTOR
+       FIRMA DE CONDUCTORES
+       (tabla con lápiz por fila)
     =========================== */
-    const modalC     = document.getElementById('modalFirmaConductor');
-    const btnOpenC   = document.getElementById('btnFirmaConductor');
-    const inputFirma = document.getElementById('firma_conductor');
 
-    const canvasC = document.getElementById('signature-pad-conductor');
-    const signaturePadC = new SignaturePad(canvasC);
+    const modalC        = document.getElementById('modalFirmaConductor');
+    const canvasC       = document.getElementById('signature-pad-conductor');
+    const labelFirma    = document.getElementById('labelFirmaConductor');
+    const subConductores = document.getElementById('subConductores');
+    const tituloModalC  = document.getElementById('tituloModalConductor');
 
-    if (btnOpenC && modalC) {
-        btnOpenC.addEventListener('click', () => {
-            modalC.style.display = 'flex';
-            signaturePadC.clear();
+    let signaturePadC = null;
+    if (canvasC && window.SignaturePad) {
+        signaturePadC = new SignaturePad(canvasC);
+    }
+
+    let currentConductorId      = null;
+    let currentConductorNombre  = '';
+    let currentConductorRow     = null;
+
+    // Botones lápiz por fila
+    const btnsFirmar = document.querySelectorAll('.btn-firmar-conductor');
+
+    if (btnsFirmar && modalC && signaturePadC) {
+        btnsFirmar.forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentConductorId     = btn.dataset.id;
+                currentConductorNombre = btn.dataset.nombre || 'Conductor adicional';
+                currentConductorRow    = btn.closest('tr');
+
+                if (labelFirma) {
+                    labelFirma.textContent = 'FIRMA DE ' + currentConductorNombre.toUpperCase() + ':';
+                }
+                if (subConductores) {
+                    subConductores.textContent = 'Revisando conductor adicional: ' + currentConductorNombre;
+                }
+                if (tituloModalC) {
+                    tituloModalC.textContent = 'Firma de ' + currentConductorNombre;
+                }
+
+                signaturePadC.clear();
+                modalC.style.display = 'flex';
+            });
         });
     }
 
-    document.getElementById('clear-conductor').onclick = () => signaturePadC.clear();
+    // Botones de limpiar / guardar del modal del conductor
+    const btnClearC = document.getElementById('clear-conductor');
+    const btnSaveC  = document.getElementById('save-conductor');
 
-    document.getElementById('save-conductor').onclick = () => {
-        if (signaturePadC.isEmpty()) {
-            alert("El conductor debe firmar.");
-            return;
+    if (btnClearC && signaturePadC) {
+        btnClearC.addEventListener('click', () => signaturePadC.clear());
+    }
+
+    if (btnSaveC && signaturePadC) {
+        btnSaveC.addEventListener('click', () => {
+            if (signaturePadC.isEmpty()) {
+                alert("El conductor debe firmar.");
+                return;
+            }
+
+            if (!currentConductorId) {
+                alert("No hay conductor seleccionado.");
+                return;
+            }
+
+            const dataURL = signaturePadC.toDataURL("image/png");
+
+            fetch("{{ route('anexo.guardarFirmaConductor') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({
+                    id_conductor: currentConductorId,
+                    firma: dataURL
+                })
+            })
+            .then(res => res.json())
+            .then(resp => {
+                if (resp.ok) {
+                    alert('✔ Firma guardada correctamente para ' + (currentConductorNombre || 'conductor'));
+
+                    // Actualizar la celda de firma SOLO de esta fila
+                    if (resp.ruta_firma && currentConductorRow) {
+                        const celdaFirma = currentConductorRow.querySelector('.firma-col');
+                        if (celdaFirma) {
+                            celdaFirma.innerHTML = '';
+
+                            const img = document.createElement('img');
+                            img.src = baseAsset + resp.ruta_firma;
+                            img.className = 'doc-thumb';
+                            img.alt = 'Firma del conductor';
+
+                            celdaFirma.appendChild(img);
+                        }
+                    }
+
+                    modalC.style.display = 'none';
+                    currentConductorId     = null;
+                    currentConductorNombre = '';
+                    currentConductorRow    = null;
+
+                } else {
+                    alert(resp.error || 'Ocurrió un problema al guardar la firma.');
+                }
+            })
+            .catch(() => {
+                alert('Error de comunicación con el servidor al guardar la firma.');
+            });
+        });
+    }
+
+    // (Opcional) Cerrar modal de conductor clickeando fuera
+    window.addEventListener('click', (e) => {
+        if (e.target === modalC) {
+            modalC.style.display = 'none';
+            currentConductorId     = null;
+            currentConductorNombre = '';
+            currentConductorRow    = null;
         }
-
-        const dataURL = signaturePadC.toDataURL("image/png");
-        inputFirma.value = dataURL;
-
-        alert("✔ Firma del conductor guardada en el formulario");
-        modalC.style.display = 'none';
-    };
+        if (e.target === modalA) {
+            modalA.style.display = 'none';
+        }
+    });
 
 });
 </script>

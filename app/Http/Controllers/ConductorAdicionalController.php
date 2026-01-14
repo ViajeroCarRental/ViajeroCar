@@ -4,135 +4,367 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Mail\AnexoConductorAdicionalMail;
 
 class ConductorAdicionalController extends Controller
 {
     /* ============================================================
-       📌 MOSTRAR ANEXO (vista del documento)
+       📄 MOSTRAR ANEXO (por CONTRATO)
+       $id = id_contrato
     ============================================================ */
-    public function verAnexo($id)
+    public function verAnexo($id) // $id = id_contrato
     {
-        // Buscar reservación real
-        $reservacion = DB::table('reservaciones')
-            ->where('id_reservacion', $id)
+        // 1) Contrato (aquí vive la firma del arrendador)
+        $contrato = DB::table('contratos')
+            ->where('id_contrato', $id)
+            ->select('id_contrato', 'id_reservacion', 'numero_contrato', 'firma_arrendador')
             ->first();
 
-        // Si no existe → modo DEMO
-        if (!$reservacion) {
-            $reservacion = (object)[
-                'id_reservacion'    => $id,
-                'nombre_cliente'    => 'Cliente Demo',
-                'email_cliente'     => 'demo@email.com',
-                'telefono_cliente'  => '0000000000',
-                'firma_arrendador'  => null,   // ← necesario para evitar error
-            ];
-        } else {
-            // Si existe pero falta la propiedad (por selects manuales)
-            if (!property_exists($reservacion, 'firma_arrendador')) {
-                $reservacion->firma_arrendador = null;
-            }
+        if (!$contrato) {
+            abort(404, 'Contrato no encontrado para el anexo.');
         }
 
-        // Conductores extra
-        $conductores = DB::table('conductores_adicionales')
-            ->where('id_reservacion', $id)
+        // 2) Reservación (titular)
+        $reservacion = DB::table('reservaciones')
+            ->where('id_reservacion', $contrato->id_reservacion)
+            ->select(
+                'id_reservacion',
+                'nombre_cliente',
+                'apellidos_cliente',
+                'email_cliente',
+                'telefono_cliente'
+            )
+            ->first();
+
+        // 3) Todos los conductores ligados al contrato
+        $conductores = DB::table('contrato_conductor_adicional as cca')
+            ->leftJoin('contrato_documento as cd', function ($join) {
+                $join->on('cd.id_conductor', '=', 'cca.id_conductor')
+                     ->where('cd.tipo', '=', 'licencia');
+            })
+            ->where('cca.id_contrato', $id)
+            ->select(
+                'cca.id_conductor',
+                'cca.nombres',
+                'cca.apellidos',
+                'cca.numero_licencia',
+                'cca.fecha_nacimiento',
+                'cd.fecha_vencimiento as vence',
+                'cca.firma_conductor',
+                'cca.firmado',
+                'cca.firmado_en'
+            )
             ->get();
 
-        return view('Admin.anexo-conductores', compact('reservacion', 'conductores'));
-    }
+        // 4) Filtrar al titular (mismo nombre + apellidos que la reservación)
+        if ($reservacion) {
+            // Nombre completo del titular normalizado
+            $nombreTitular = trim(mb_strtoupper(
+                ($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? ''),
+                'UTF-8'
+            ));
 
+            $conductores = $conductores->filter(function ($c) use ($nombreTitular) {
+                $nombreConductor = trim(mb_strtoupper(
+                    ($c->nombres ?? '') . ' ' . ($c->apellidos ?? ''),
+                    'UTF-8'
+                ));
 
-
-    /* ============================================================
-       📌 GUARDAR CONDUCTOR ADICIONAL
-    ============================================================ */
-    public function guardar(Request $request)
-    {
-        $request->validate([
-            'id_reservacion'   => 'required|integer|exists:reservaciones,id_reservacion',
-            'nombre'           => 'required|string|max:150',
-            'edad'             => 'nullable|integer',
-            'licencia'         => 'required|string',
-            'vence'            => 'nullable|string',
-            'imagen_licencia'  => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
-        ]);
-
-        // Procesar imagen si viene
-        $rutaImagen = null;
-
-        if ($request->hasFile('imagen_licencia')) {
-            $archivo = $request->file('imagen_licencia');
-
-            $nombreArchivo = time() . '_' . preg_replace('/\s+/', '_', $archivo->getClientOriginalName());
-            $archivo->move(public_path('conductores'), $nombreArchivo);
-
-            $rutaImagen = 'conductores/' . $nombreArchivo;
+                // Solo dejamos pasar a los que NO son el titular
+                return $nombreConductor !== $nombreTitular;
+            })->values(); // reindexar la colección
         }
 
-        // Guardar en DB
-        DB::table('conductores_adicionales')->insert([
-            'id_reservacion'  => $request->id_reservacion,
-            'nombre'          => $request->nombre,
-            'edad'            => $request->edad,
-            'licencia'        => $request->licencia,
-            'vence'           => $request->vence,
-            'imagen_licencia' => $rutaImagen,
-            'firmado'         => false,
-            'created_at'      => now(),
-            'updated_at'      => now(),
-        ]);
-
-        return back()->with('ok', 'Conductor agregado correctamente.');
+        return view('Admin.anexo-conductores', compact('contrato', 'reservacion', 'conductores'));
     }
 
-
-
     /* ============================================================
-       📌 ELIMINAR CONDUCTOR
+       🗑 ELIMINAR CONDUCTOR ADICIONAL DEL CONTRATO
+       (borra también sus documentos de contrato_documento)
     ============================================================ */
     public function eliminar($id)
     {
-        DB::table('conductores_adicionales')
-            ->where('id_conductor', $id)
-            ->delete();
+        DB::beginTransaction();
 
-        return back()->with('ok', 'Conductor eliminado.');
+        try {
+            // Borrar documentos ligados a ese conductor
+            DB::table('contrato_documento')
+                ->where('id_conductor', $id)
+                ->delete();
+
+            // Borrar conductor adicional
+            DB::table('contrato_conductor_adicional')
+                ->where('id_conductor', $id)
+                ->delete();
+
+            DB::commit();
+
+            return back()->with('ok', 'Conductor adicional eliminado correctamente.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Error al eliminar conductor adicional: ' . $e->getMessage());
+
+            return back()->with('error', 'No se pudo eliminar el conductor adicional.');
+        }
     }
-
-
 
     /* ============================================================
-       📌 GUARDAR FIRMA DEL ARRENDADOR (canvas)
-       Lo puedes usar en tu JS para guardar la firma digital
+       ✍️ GUARDAR FIRMA DEL ARRENDADOR (desde ANEXO)
+       Recibe id_contrato + firma (base64)
     ============================================================ */
-    public function guardarFirma(Request $request)
+    public function guardarFirmaArrendador(Request $request)
     {
         $request->validate([
-            'id_reservacion' => 'required|integer|exists:reservaciones,id_reservacion',
-            'firma'          => 'required|string', // base64
+            'id_contrato' => 'required|integer|exists:contratos,id_contrato',
+            'firma'       => 'required|string',
         ]);
 
-        // Guardar firma como imagen PNG
-        $imagen = $request->firma;
-        $imagen = str_replace('data:image/png;base64,', '', $imagen);
-        $imagen = str_replace(' ', '+', $imagen);
+        try {
+            $carpeta = public_path('firmas');
+            if (!is_dir($carpeta)) {
+                mkdir($carpeta, 0777, true);
+            }
 
-        $nombre = 'firma_' . $request->id_reservacion . '_' . time() . '.png';
-        $ruta = public_path('firmas/' . $nombre);
+            $imagenBase64 = $request->firma;
+            $imagenBase64 = str_replace('data:image/png;base64,', '', $imagenBase64);
+            $imagenBase64 = str_replace(' ', '+', $imagenBase64);
 
-        if (!file_exists(public_path('firmas'))) {
-            mkdir(public_path('firmas'), 0777, true);
-        }
+            $nombreArchivo = 'firma_arrendador_contrato_' . $request->id_contrato . '_' . time() . '.png';
+            $rutaFisica    = $carpeta . DIRECTORY_SEPARATOR . $nombreArchivo;
 
-        file_put_contents($ruta, base64_decode($imagen));
+            file_put_contents($rutaFisica, base64_decode($imagenBase64));
 
-        // Actualizar reservación
-        DB::table('reservaciones')
-            ->where('id_reservacion', $request->id_reservacion)
-            ->update([
-                'firma_arrendador' => 'firmas/' . $nombre
+            $rutaPublica = 'firmas/' . $nombreArchivo;
+
+            DB::table('contratos')
+                ->where('id_contrato', $request->id_contrato)
+                ->update([
+                    'firma_arrendador' => $rutaPublica,
+                    'updated_at'       => now(),
+                ]);
+
+            return response()->json([
+                'ok'         => true,
+                'ruta_firma' => $rutaPublica,
             ]);
+        } catch (\Throwable $e) {
+            Log::error('Error al guardar firma arrendador (anexo): ' . $e->getMessage());
 
-        return response()->json(['ok' => true, 'ruta' => 'firmas/' . $nombre]);
+            return response()->json([
+                'ok'    => false,
+                'error' => 'No se pudo guardar la firma del arrendador.',
+            ], 500);
+        }
     }
+
+    /* ============================================================
+       ✍️ GUARDAR FIRMA DE CONDUCTOR ADICIONAL
+       Espera: id_conductor + firma (base64)
+    ============================================================ */
+    public function guardarFirmaConductor(Request $request)
+    {
+        $request->validate([
+            'id_conductor' => 'required|integer|exists:contrato_conductor_adicional,id_conductor',
+            'firma'        => 'required|string', // base64
+        ]);
+
+        try {
+            // Carpeta para firmas de conductores
+            $carpeta = public_path('firmas_conductores');
+
+            if (!is_dir($carpeta)) {
+                mkdir($carpeta, 0777, true);
+            }
+
+            // Decodificar base64
+            $imagenBase64 = $request->firma;
+            $imagenBase64 = str_replace('data:image/png;base64,', '', $imagenBase64);
+            $imagenBase64 = str_replace(' ', '+', $imagenBase64);
+
+            $nombreArchivo = 'firma_conductor_' . $request->id_conductor . '_' . time() . '.png';
+            $rutaFisica    = $carpeta . DIRECTORY_SEPARATOR . $nombreArchivo;
+
+            file_put_contents($rutaFisica, base64_decode($imagenBase64));
+
+            // Ruta relativa para asset()
+            $rutaPublica = 'firmas_conductores/' . $nombreArchivo;
+
+            // Actualizar conductor adicional
+            DB::table('contrato_conductor_adicional')
+                ->where('id_conductor', $request->id_conductor)
+                ->update([
+                    'firma_conductor' => $rutaPublica,
+                    'firmado'         => 1,
+                    'firmado_en'      => now(),
+                    'updated_at'      => now(),
+                ]);
+
+            return response()->json([
+                'ok'           => true,
+                'ruta_firma'   => $rutaPublica,
+                'id_conductor' => $request->id_conductor,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Error al guardar firma de conductor adicional: ' . $e->getMessage());
+
+            return response()->json([
+                'ok'    => false,
+                'error' => 'No se pudo guardar la firma del conductor.',
+            ], 500);
+        }
+    }
+
+        /* ============================================================
+       📧 ENVIAR ANEXOS DE CONDUCTORES ADICIONALES (por CONTRATO)
+       Genera un PDF por conductor adicional válido y lo adjunta al correo
+    ============================================================ */
+    public function enviarAnexos($id)
+    {
+        try {
+            // 1) Buscar contrato
+            $contrato = DB::table('contratos')
+                ->where('id_contrato', $id)
+                ->select('id_contrato', 'id_reservacion', 'numero_contrato', 'firma_arrendador')
+                ->first();
+
+            if (!$contrato) {
+                return back()->with('error', 'Contrato no encontrado para enviar anexos.');
+            }
+
+            // 2) Reservación (titular)
+            $reservacion = DB::table('reservaciones')
+                ->where('id_reservacion', $contrato->id_reservacion)
+                ->select(
+                    'id_reservacion',
+                    'nombre_cliente',
+                    'apellidos_cliente',
+                    'email_cliente',
+                    'fecha_inicio',
+                    'hora_retiro'
+                )
+                ->first();
+
+            if (!$reservacion || empty($reservacion->email_cliente)) {
+                return back()->with('error', 'La reservación no tiene correo válido para enviar los anexos.');
+            }
+
+            // 3) Todos los conductores ligados al contrato (incluye titular y placeholders)
+            $conductores = DB::table('contrato_conductor_adicional as cca')
+                ->leftJoin('contrato_documento as cd', function ($join) {
+                    $join->on('cd.id_conductor', '=', 'cca.id_conductor')
+                         ->where('cd.tipo', '=', 'licencia');
+                })
+                ->where('cca.id_contrato', $id)
+                ->select(
+                    'cca.id_conductor',
+                    'cca.nombres',
+                    'cca.apellidos',
+                    'cca.numero_licencia',
+                    'cca.fecha_nacimiento',
+                    'cd.fecha_vencimiento as vence',
+                    'cca.firma_conductor',
+                    'cca.firmado',
+                    'cca.firmado_en'
+                )
+                ->get();
+
+            if ($conductores->isEmpty()) {
+                return back()->with('error', 'No hay conductores adicionales registrados para este contrato.');
+            }
+
+            // 4) Nombre completo del titular (normalizado)
+            $nombreTitular = trim(mb_strtoupper(
+                ($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? ''),
+                'UTF-8'
+            ));
+
+            // 5) Filtrar conductores válidos para generar PDF
+            $conductoresValidos = $conductores->filter(function ($c) use ($nombreTitular) {
+                // Nombre completo del conductor
+                $nombreConductor = trim(mb_strtoupper(
+                    ($c->nombres ?? '') . ' ' . ($c->apellidos ?? ''),
+                    'UTF-8'
+                ));
+
+                // a) Excluir titular (mismo nombre que la reservación)
+                if ($nombreConductor !== '' && $nombreConductor === $nombreTitular) {
+                    return false;
+                }
+
+                // b) Excluir placeholders "Conductor adicional X"
+                $nombresBruto = trim(mb_strtoupper($c->nombres ?? '', 'UTF-8'));
+
+                if (
+                    strpos($nombresBruto, 'CONDUCTOR ADICIONAL') !== false ||
+                    strpos($nombreConductor, 'CONDUCTOR ADICIONAL') !== false
+                ) {
+                    return false;
+                }
+
+                // c) Excluir si NO tiene firma
+                if (empty($c->firma_conductor)) {
+                    return false;
+                }
+
+                return true;
+            })->values();
+
+            if ($conductoresValidos->isEmpty()) {
+                return back()->with('error', 'No hay conductores adicionales válidos (con nombre real y firma) para generar anexos.');
+            }
+
+            // 6) Generar un PDF por cada conductor válido
+            $rutasPdfs = [];
+
+            $carpeta = storage_path('app/anexos_conductores');
+            if (!is_dir($carpeta)) {
+                mkdir($carpeta, 0777, true);
+            }
+
+            foreach ($conductoresValidos as $conductor) {
+                // Renderizar vista del PDF
+                $pdf = Pdf::loadView('Admin.anexo-conductor-pdf', [
+                    'contrato'    => $contrato,
+                    'reservacion' => $reservacion,
+                    'conductor'   => $conductor,
+                ]);
+
+                $nombreArchivo = 'anexo_conductor_'
+                    . $contrato->id_contrato . '_'
+                    . $conductor->id_conductor . '.pdf';
+
+                $rutaCompleta = $carpeta . DIRECTORY_SEPARATOR . $nombreArchivo;
+
+                // Guardar el PDF en disco
+                $pdf->save($rutaCompleta);
+
+                $rutasPdfs[] = $rutaCompleta;
+            }
+
+            if (empty($rutasPdfs)) {
+                return back()->with('error', 'No se pudieron generar los PDFs de los anexos.');
+            }
+
+            // 7) Enviar correo con TODOS los PDFs adjuntos
+            Mail::to($reservacion->email_cliente)
+                ->send(new AnexoConductorAdicionalMail($reservacion, $contrato, $rutasPdfs));
+
+            // 8) (Opcional) Borrar PDFs temporales
+            foreach ($rutasPdfs as $ruta) {
+                if (file_exists($ruta)) {
+                    @unlink($ruta);
+                }
+            }
+
+            return back()->with('ok', 'Anexos de conductores adicionales enviados correctamente.');
+        } catch (\Throwable $e) {
+            Log::error('Error al enviar anexos de conductores adicionales: ' . $e->getMessage());
+
+            return back()->with('error', 'Ocurrió un error al generar o enviar los anexos de conductores.');
+        }
+    }
+
 }
