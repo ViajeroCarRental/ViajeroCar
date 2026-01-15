@@ -516,3 +516,57 @@ canvas {
     display: block;
     margin: 0 auto 1px; /* Centrado */
 }
+/* ===============================
+   FIRMAS DE CONDUCTORES (BLOQUE NUEVO)
+================================= */
+
+.firmas {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.firma-item {
+    padding-top: 4px;
+}
+
+.firma-img,
+.firma-item .doc-thumb {
+    max-width: 260px;
+    height: auto;
+    display: block;
+    margin: 6px auto 0;
+}
+
+/* Botón rojo de firma de conductor */
+.btn-red {
+    background: #b91c1c;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-red:hover {
+    background: #7f1d1d;
+}
+
+/* ===============================
+   TRANSICIÓN "CARRUSEL" DE CARTAS
+================================= */
+
+.document-wrapper.fade-out {
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.document-wrapper.fade-in {
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}

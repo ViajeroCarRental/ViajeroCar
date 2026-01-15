@@ -373,23 +373,21 @@ Route::get('/preview-poliza', function () {
 
 
 // conductor adicional
-// Ver anexo
-Route::get('/admin/reservacion/{id}/anexo',
-    [ConductorAdicionalController::class, 'verAnexo'])->name('anexo.ver');
+// 📄 Ver anexo de conductores adicionales (por contrato)
+Route::get('/admin/anexo/conductores/{id}', [ConductorAdicionalController::class, 'verAnexo'])->name('anexo.ver');
 
-// Guardar nuevo conductor
-Route::post('/admin/anexo/guardar',
-    [ConductorAdicionalController::class, 'guardar'])->name('anexo.guardar');
+// 🗑 Eliminar un conductor adicional del contrato
+Route::delete('/admin/anexo/conductor/{id}', [ConductorAdicionalController::class, 'eliminar'])->name('anexo.eliminar');
 
-// Eliminar conductor
-Route::delete('/admin/anexo/{id}/eliminar',
-    [ConductorAdicionalController::class, 'eliminar'])->name('anexo.eliminar');
-    // Guardar firma del arrendador
-Route::post('/admin/anexo/guardar-firma',
-    [ConductorAdicionalController::class, 'guardarFirma'])
-    ->name('anexo.guardarFirma');
+// ✍️ Guardar firma del arrendador (desde el anexo)
+// ⚠️ El name COINCIDE con lo que ya usas en el fetch: route('anexo.guardarFirma')
+Route::post('/admin/anexo/firma-arrendador', [ConductorAdicionalController::class, 'guardarFirmaArrendador'])->name('anexo.guardarFirma');
 
+// ✍️ Guardar firma de un conductor adicional
+Route::post('/admin/anexo/firma-conductor', [ConductorAdicionalController::class, 'guardarFirmaConductor'])->name('anexo.guardarFirmaConductor');
 
+// ⚠️ enviar anexos por correo (desde el contrato)
+Route::post('/admin/anexo/{id}/enviar-anexos',[ConductorAdicionalController::class, 'enviarAnexos'])->name('anexo.enviarAnexos');
 
 
 // 📄 Mostrar checklist (usando el controlador)

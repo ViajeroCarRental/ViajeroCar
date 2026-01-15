@@ -183,23 +183,26 @@ class ReservacionesAdminController extends Controller
         $idAsesor = session('id_usuario');
 
         if (!$idAsesor) {
-            return response()->json(['success' => false, 'message' => 'No autenticado'], 401);
+            return response()->json([
+                'success' => false,
+                'message' => 'No autenticado'
+            ], 401);
         }
 
         // ✅ Validación: categoría, fechas, sucursales y datos del cliente
         $validated = $request->validate([
-            'id_categoria'     => 'required|exists:categorias_carros,id_categoria',
-            'fecha_inicio'     => 'required|date',
-            'fecha_fin'        => 'required|date|after_or_equal:fecha_inicio',
+            'id_categoria'      => 'required|exists:categorias_carros,id_categoria',
+            'fecha_inicio'      => 'required|date',
+            'fecha_fin'         => 'required|date|after_or_equal:fecha_inicio',
 
-            'sucursal_retiro'  => 'required|integer|exists:sucursales,id_sucursal',
-            'sucursal_entrega' => 'required|integer|exists:sucursales,id_sucursal',
+            'sucursal_retiro'   => 'required|integer|exists:sucursales,id_sucursal',
+            'sucursal_entrega'  => 'required|integer|exists:sucursales,id_sucursal',
 
             'nombre_cliente'    => 'required|string|max:150',
             'apellidos_cliente' => 'required|string|max:150',
             'email_cliente'     => 'required|email|max:150',
             'telefono_cliente'  => 'required|string|max:30',
-            'telefono_lada'     => 'nullable|string|max:10',
+            'telefono_lada'     => 'nullable|string|max:10', // solo se valida, no se guarda si no existe la columna
         ]);
 
         // 🔎 Sucursales → ciudades
@@ -221,7 +224,7 @@ class ReservacionesAdminController extends Controller
         $ciudadRetiroId  = $sucursalRetiro->id_ciudad;
         $ciudadEntregaId = $sucursalEntrega->id_ciudad;
 
-        // 💰 Cálculo de totales
+        // 💰 Cálculo de totales (con tarifa base)
         $categoria = DB::table('categorias_carros')
             ->where('id_categoria', $validated['id_categoria'])
             ->first();
@@ -233,20 +236,24 @@ class ReservacionesAdminController extends Controller
             ], 404);
         }
 
+        // 👉 Tarifa base que viene de categorias_carros
+        $tarifaBase = (float) $categoria->precio_dia;
+
         $dias = max(
             1,
             Carbon::parse($validated['fecha_inicio'])
                 ->diffInDays(Carbon::parse($validated['fecha_fin']))
         );
 
-        $subtotal = round($categoria->precio_dia * $dias, 2);
-        $iva      = round($subtotal * 0.16, 2);
-        $total    = $subtotal + $iva;
+        // Totales base (puedes sobreescribir desde el frontend si algún día lo necesitas)
+        $subtotal = $request->input('subtotal', round($tarifaBase * $dias, 2));
+        $iva      = $request->input('impuestos', round($subtotal * 0.16, 2));
+        $total    = $request->input('total', $subtotal + $iva);
 
         $codigo = 'RES-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
 
-        // 💾 Insert COMPLETO
-        DB::table('reservaciones')->insert([
+        // 💾 Insert COMPLETO y obtener ID de la reservación
+        $id = DB::table('reservaciones')->insertGetId([
             // 🔹 Cliente web (si no está logueado) → null
             'id_usuario'        => null,
 
@@ -276,6 +283,9 @@ class ReservacionesAdminController extends Controller
             'fecha_fin'         => $validated['fecha_fin'],
             'hora_entrega'      => $request->input('hora_entrega'),
 
+            // 💰 Tarifa base guardada en la reservación
+            'tarifa_base'       => $tarifaBase,
+
             // 💸 Totales
             'subtotal'          => $subtotal,
             'impuestos'         => $iva,
@@ -287,20 +297,93 @@ class ReservacionesAdminController extends Controller
             'updated_at'        => now(),
         ]);
 
+        /* ==========================================================
+           4.1️⃣ Guardar seguro seleccionado (reservacion_paquete_seguro)
+        ========================================================== */
+        if ($request->filled('seguroSeleccionado.id')) {
+            $seguro = $request->input('seguroSeleccionado');
+
+            if (is_array($seguro) && isset($seguro['id'])) {
+                DB::table('reservacion_paquete_seguro')->insert([
+                    'id_reservacion' => $id,
+                    'id_paquete'     => $seguro['id'],
+                    'precio_por_dia' => $seguro['precio'] ?? 0,
+                    'created_at'     => now(),
+                    'updated_at'     => now(),
+                ]);
+            }
+        }
+
+        /* ==========================================================
+           4.2️⃣ Guardar servicios adicionales (reservacion_servicio)
+        ========================================================== */
+        if ($request->filled('adicionalesSeleccionados')) {
+            $extras = $request->input('adicionalesSeleccionados');
+
+            if (is_array($extras)) {
+                foreach ($extras as $extra) {
+                    if (!is_array($extra) || !isset($extra['id'])) {
+                        continue;
+                    }
+
+                    DB::table('reservacion_servicio')->insert([
+                        'id_reservacion'  => $id,
+                        'id_servicio'     => $extra['id'],
+                        'cantidad'        => $extra['cantidad'] ?? 1,
+                        'precio_unitario' => $extra['precio'] ?? 0,
+                        'created_at'      => now(),
+                        'updated_at'      => now(),
+                    ]);
+                }
+            }
+        }
+
+        /* ==========================================================
+           5️⃣ Enviar correo con Mailable (ReservacionAdminMail)
+        ========================================================== */
+        $correoCliente = $validated['email_cliente'] ?? null;
+        $correoEmpresa = env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocarental.com');
+
+        // Traer la reservación ya guardada para mandarla al Mailable
+        $reservacion = DB::table('reservaciones')
+            ->where('id_reservacion', $id)
+            ->first();
+
+        try {
+            if ($correoCliente) {
+                Mail::to($correoCliente)
+                    ->cc($correoEmpresa)
+                    ->send(new ReservacionAdminMail($reservacion, $categoria));
+            } else {
+                Mail::to($correoEmpresa)
+                    ->send(new ReservacionAdminMail($reservacion, $categoria));
+            }
+        } catch (\Throwable $e) {
+            Log::error('❌ Error al enviar correo de reserva: ' . $e->getMessage());
+        }
+
+        // 6️⃣ Respuesta JSON
         return response()->json([
-            'success' => true,
-            'message' => 'Reservación creada correctamente'
+            'success'   => true,
+            'message'   => 'Reservación creada correctamente y correo enviado.',
+            'id'        => $id,
+            'codigo'    => $codigo,
+            'subtotal'  => $subtotal,
+            'impuestos' => $iva,
+            'total'     => $total,
+            'estado'    => 'pendiente_pago',
         ]);
     } catch (\Throwable $e) {
         Log::error('❌ Error al guardar reservación: ' . $e->getMessage());
 
         return response()->json([
             'success' => false,
-            'message' => 'Error interno',
-            'error'   => $e->getMessage()
+            'message' => 'Error interno al crear la reservación.',
+            'error'   => $e->getMessage(),
         ], 500);
     }
 }
+
 
 
 }
