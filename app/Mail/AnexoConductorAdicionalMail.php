@@ -31,17 +31,32 @@ class AnexoConductorAdicionalMail extends Mailable
     public $rutasPdfs;
 
     /**
+     * Imágenes para adjuntar (solo se usarán en la copia a reservaciones).
+     *
+     * Estructura:
+     * [
+     *   ['nombre' => 'archivo.jpg', 'mime' => 'image/jpeg', 'data' => <binario>],
+     *   ...
+     * ]
+     *
+     * @var array<int, array<string,mixed>>
+     */
+    public $imagenes;
+
+    /**
      * Create a new message instance.
      *
      * @param  mixed  $reservacion   // objeto de la consulta (DB::table...)
      * @param  mixed  $contrato      // objeto de la consulta (DB::table...)
      * @param  array  $rutasPdfs     // rutas completas a los PDF a adjuntar
+     * @param  array  $imagenes      // imágenes en memoria (solo para copia admin)
      */
-    public function __construct($reservacion, $contrato, array $rutasPdfs = [])
+    public function __construct($reservacion, $contrato, array $rutasPdfs = [], array $imagenes = [])
     {
         $this->reservacion = $reservacion;
         $this->contrato    = $contrato;
         $this->rutasPdfs   = $rutasPdfs;
+        $this->imagenes    = $imagenes;
     }
 
     /**
@@ -81,12 +96,14 @@ class AnexoConductorAdicionalMail extends Mailable
     /**
      * Get the attachments for the message.
      *
-     * Espera rutas completas a los PDFs en $this->rutasPdfs.
+     * Espera rutas completas a los PDFs en $this->rutasPdfs
+     * y, opcionalmente, imágenes en $this->imagenes.
      */
     public function attachments(): array
     {
         $attachments = [];
 
+        // 🔹 1) Adjuntar PDFs
         foreach ($this->rutasPdfs as $ruta) {
             if (empty($ruta)) {
                 continue;
@@ -97,6 +114,22 @@ class AnexoConductorAdicionalMail extends Mailable
             $attachments[] = Attachment::fromPath($ruta)
                 ->as($nombre)
                 ->withMime('application/pdf');
+        }
+
+        // 🔹 2) Adjuntar imágenes (solo cuando se envía con $imagenes)
+        foreach ($this->imagenes ?? [] as $img) {
+            if (empty($img['data'])) {
+                continue;
+            }
+
+            $nombre = $img['nombre'] ?? 'imagen_anexo.jpg';
+            $mime   = $img['mime']   ?? 'image/jpeg';
+            $data   = $img['data'];
+
+            $attachments[] = Attachment::fromData(
+                fn () => $data,
+                $nombre
+            )->withMime($mime);
         }
 
         return $attachments;
