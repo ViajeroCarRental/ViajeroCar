@@ -277,23 +277,68 @@
     </div>
 </div>
 
-<div class="acciones-extra">
+<div class="acciones-extra"
+     style="
+        max-width: 1060px;
+        margin: 0 auto 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+     ">
     <a href="{{ route('checklist.ver', [
-    'id' => $contrato->id_contrato,
-    'modo' => 'salida'
-]) }}" class="btn-checklist">
-    Checklist
-</a>
-    <a href="{{route('checklist2')}}" class="btn-checklist">
-        Cambio de Vehículo
+        'id' => $contrato->id_contrato,
+        'modo' => 'salida'
+    ]) }}"
+       class="btn-checklist"
+       style="
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        border: 1px solid transparent;
+        background: #FF1E2D;
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(16,24,40,.06);
+       ">
+        Checklist
     </a>
 
-    <a href="{{ route('anexo.ver', ['id' => $contrato->id_contrato]) }}" class="btn-checklist">
-    Conductor adicional
+    <a href="{{ route('checklist2', ['id' => $contrato->id_contrato]) }}"
+   class="btn-checklist"
+   style="
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid transparent;
+    background: #FF1E2D;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(16,24,40,.06);
+   ">
+    Cambio de Vehículo
 </a>
 
 
+    <a href="{{ route('anexo.ver', ['id' => $contrato->id_contrato]) }}"
+       class="btn-checklist"
+       style="
+        padding: 10px 16px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none;
+        border: 1px solid transparent;
+        background: #FF1E2D;
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(16,24,40,.06);
+       ">
+        Conductor adicional
+    </a>
 </div>
+
 
 
 

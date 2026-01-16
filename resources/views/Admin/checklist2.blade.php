@@ -12,6 +12,7 @@
 
 <div class="checklist2-container">
 
+
     <!-- ENCABEZADO -->
     <header class="cl2-header">
 
@@ -50,16 +51,40 @@
             <h3 class="cl2-section-title">AUTO RECIBIDO POR EMPRESA</h3>
 
             <table class="cl2-table">
-                <tr><th>CATEGORIA</th><td>N/A</td></tr>
-                <tr><th>TIPO</th><td>N/A</td></tr>
-                <tr><th>MODELO</th><td>N/A</td></tr>
-                <tr><th>PLACAS</th><td>N/A</td></tr>
-                <tr><th>TRANSMISIÓN</th><td>N/A</td></tr>
-                <tr><th>Capacidad de Gasolina</th><td>N/A</td></tr>
-                <tr><th>FUEL OUT</th><td>N/A</td></tr>
-                <tr><th>KILOMETRAJE OUT</th><td>N/A</td></tr>
-                <tr><th>FUEL IN</th><td>N/A</td></tr>
-                <tr><th>KILOMETRAJE IN</th><td>N/A</td></tr>
+                <tr>
+                    <th>CATEGORIA</th>
+                    <td>{{ $categoria->codigo ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <th>TIPO</th>
+                    <td>{{ $vehiculo->tipo_servicio ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <th>MODELO</th>
+                    <td>{{ $vehiculo->modelo ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <th>PLACAS</th>
+                    <td>{{ $vehiculo->placa ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <th>TRANSMISIÓN</th>
+                    <td>{{ $vehiculo->transmision ?? 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <th>FUEL OUT</th>
+                    <td>
+                     @if(!is_null($vehiculo->gasolina_actual ?? null))
+                            {{ $vehiculo->gasolina_actual }}
+                        @else
+                            N/A
+                        @endif
+                    </td>
+                </tr>
+                <tr>
+                    <th>KILOMETRAJE OUT</th>
+                    <td>{{ $vehiculo->kilometraje ?? 'N/A' }}</td>
+                </tr>
             </table>
 
             {{-- DIAGRAMA INTERACTIVO – EMPRESA --}}
@@ -109,6 +134,7 @@
                 <p class="cl2-car-hint">
                     Haz clic en los puntos para registrar daños al recibir el vehículo.
                 </p>
+
 
                 <table class="cl2-danos-table" data-context="empresa">
                     <thead>
