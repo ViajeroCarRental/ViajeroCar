@@ -25,32 +25,71 @@
 })();
 
 
-// ===== Navbar: glass -> sólida + hamburguesa =====
+// ===== Navbar: glass -> sólida + hamburguesa (MOBILE LIMPIO) =====
+// ✅ NO usa menu.style.display (eso rompe tu CSS responsive)
+// ✅ Usa .topbar.nav-open + .nav-backdrop
 (function(){
   "use strict";
-  const topbar = document.querySelector('.topbar');
 
+  const topbar = document.querySelector(".topbar");
+  if(!topbar) return;
+
+  // ----- solid on scroll -----
   function onScroll(){
-    if(!topbar) return;
-    if(window.scrollY > 40) topbar.classList.add('solid');
-    else topbar.classList.remove('solid');
+    if(window.scrollY > 40) topbar.classList.add("solid");
+    else topbar.classList.remove("solid");
+  }
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive:true });
+
+  // ----- mobile menu toggle -----
+  const btn       = document.querySelector(".hamburger");
+  const backdrop  = document.querySelector(".nav-backdrop"); // <div class="nav-backdrop"></div> después de .topbar
+  const menuLinks = Array.from(topbar.querySelectorAll(".menu a"));
+
+  function openNav(){
+    topbar.classList.add("nav-open");
+    if(btn) btn.setAttribute("aria-expanded", "true");
   }
 
-  onScroll();
-  window.addEventListener('scroll', onScroll, { passive: true });
+  function closeNav(){
+    topbar.classList.remove("nav-open");
+    if(btn) btn.setAttribute("aria-expanded", "false");
+  }
 
-  const btn  = document.querySelector('.hamburger');
-  const menu = document.querySelector('.menu');
-  if(btn && menu){
-    btn.addEventListener('click', ()=>{
-      const visible = getComputedStyle(menu).display !== 'none';
-      menu.style.display = visible ? 'none' : 'flex';
-      if(!visible){
-        menu.style.flexDirection = 'column';
-        menu.style.gap = '14px';
-      }
+  function toggleNav(){
+    topbar.classList.contains("nav-open") ? closeNav() : openNav();
+  }
+
+  if(btn){
+    // accesibilidad
+    btn.setAttribute("type", "button");
+    if(!btn.getAttribute("aria-label")) btn.setAttribute("aria-label", "Abrir menú");
+    btn.setAttribute("aria-expanded", btn.getAttribute("aria-expanded") || "false");
+
+    btn.addEventListener("click", (e)=>{
+      e.preventDefault();
+      toggleNav();
     });
   }
+
+  // Cerrar tocando fuera
+  if(backdrop){
+    backdrop.addEventListener("click", closeNav);
+  }
+
+  // Cerrar al elegir link
+  menuLinks.forEach(a => a.addEventListener("click", closeNav));
+
+  // Cerrar con ESC (Windows / teclado)
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape") closeNav();
+  });
+
+  // Si cambia a desktop, quitamos estado mobile abierto
+  window.addEventListener("resize", ()=>{
+    if(window.innerWidth > 940) closeNav();
+  }, { passive:true });
 })();
 
 
@@ -122,9 +161,7 @@
     // Guardamos HTML original (solo 1 vez)
     const originalHTML = viewport.innerHTML;
 
-    // Para evitar que duplicar duplique botones o cosas raras:
     // asumimos que dentro del viewport SOLO van slides.
-    // Si tu wrap contiene botones, está bien (porque duplicamos viewport, no wrap).
     viewport.innerHTML = originalHTML + originalHTML;
 
     // Re-leer slides ya duplicadas

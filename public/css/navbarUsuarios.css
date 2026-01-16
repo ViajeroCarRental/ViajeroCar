@@ -8,6 +8,9 @@
   --ctl-h:48px;      /* alto uniforme de input/select */
   --lab-h:14px;      /* altura del label */
   --lab-gap:6px;     /* gap entre label y control */
+
+  /* ✅ SUBIR ICONOS DEL FORM (nudge) */
+  --ico-nudge:-20px; /* prueba -3px a -6px si quieres más/menos */
 }
 
 *{ box-sizing:border-box }
@@ -20,7 +23,10 @@ body{
 }
 
 /* =========================
-   NAVBAR
+   NAVBAR (LIMPIO + RESPONSIVE)
+   - Desktop: menú normal
+   - Mobile: logo + perfil + hamburger
+   - Panel: reutiliza .menu con .topbar.nav-open
 ========================= */
 .topbar{
   position:fixed;
@@ -30,7 +36,7 @@ body{
   width:min(1200px,94%);
   border-radius:14px;
   padding:8px 12px;
-  transition:backdrop-filter .3s,background .3s,box-shadow .3s;
+  transition:backdrop-filter .3s,background .3s,box-shadow .3s, transform .2s;
 }
 .glass{
   background:rgba(178,34,34,.35);
@@ -43,11 +49,21 @@ body{
   border:1px solid var(--brand);
   box-shadow:0 18px 40px rgba(0,0,0,.25);
 }
-.nav{ display:flex; align-items:center; justify-content:space-between; gap:16px }
+.nav{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  position:relative;
+}
 .brand-logo{
   font-family:'Playfair Display',serif;
   font-weight:800; letter-spacing:2px; color:#fff; font-size:22px;
   text-shadow:0 1px 2px rgba(0,0,0,.25);
+  text-decoration:none;
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 .menu{ display:flex; gap:20px; list-style:none; margin:0; padding:0 }
 .menu a{
@@ -79,90 +95,69 @@ body{
   width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
   background:#ffffff26;color:#fff;font-weight:900;font-size:14px;letter-spacing:.5px;
 }
-.hamburger{ display:none; background:transparent; border:0; color:#fff; font-size:22px; cursor:pointer }
-@media (max-width:940px){ .menu{ display:none } .hamburger{ display:block } }
 
-/* =========================================================
-   ✅ NAVBAR MOBILE (iOS/Android)
-   - NO toca desktop
-   - Menú desplegable dentro de la topbar
-   - Solo queda icono de perfil + hamburger
-   - Abre al poner .topbar.nav-open
-========================================================= */
+/* Hamburger (solo mobile) */
+.hamburger{
+  display:none;
+  width:44px; height:44px;
+  border-radius:12px;
+  border:0;
+  cursor:pointer;
+  color:#fff;
+  background:rgba(255,255,255,.10);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);
+  -webkit-tap-highlight-color:transparent;
+}
+.hamburger:active{ transform:scale(.98); }
+
+/* ✅ MOBILE NAV */
 @media (max-width:940px){
 
-  /* En móvil, ocultamos el logo para dejar solo perfil + hamburger */
-  .brand-logo{ display:none !important; }
+  /* Solo logo + acciones visibles */
+  .menu{ display:none !important; }
+  .hamburger{ display:grid; place-items:center; }
 
-  /* Alineación: hamburger a la izquierda, acciones a la derecha */
   .nav{ gap:10px; }
-  .hamburger{
-    display:block;
-    width:44px;
-    height:44px;
-    border-radius:12px;
-    background:rgba(255,255,255,.10);
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);
+  .nav-actions{ margin-left:auto; gap:10px; }
+
+  /* Backdrop (pon un <div class="nav-backdrop"></div> después de .topbar) */
+  .nav-backdrop{
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:999;
+    background:rgba(0,0,0,.28);
+    backdrop-filter:blur(1px);
+    -webkit-tap-highlight-color:transparent;
   }
-  .hamburger:active{ transform:scale(.98); }
+  .topbar.nav-open ~ .nav-backdrop{ display:block; }
 
-  .nav-actions{
-    margin-left:auto;
-    gap:10px;
-  }
-
-  /* El menú se convierte en "panel" desplegable */
-  .menu{
-    /* por default oculto */
-    display:none !important;
-
+  /* Panel desplegable usando UL.menu */
+  .topbar .menu{
     position:absolute;
     left:10px;
     right:10px;
     top: calc(100% + 10px);
-    z-index:1200;
+    z-index:1100;
 
+    display:flex !important;
     flex-direction:column;
     gap:6px;
     padding:10px;
 
     border-radius:16px;
     background:rgba(255,255,255,.96);
-    backdrop-filter: blur(10px);
-    box-shadow:0 22px 60px rgba(0,0,0,.28);
     border:1px solid rgba(15,23,42,.10);
+    box-shadow:0 22px 60px rgba(0,0,0,.28);
+    backdrop-filter:blur(10px);
 
-    transform-origin: top;
-    transform: translateY(-6px) scale(.98);
     opacity:0;
+    transform: translateY(-6px) scale(.98);
     pointer-events:none;
+    transform-origin: top;
   }
 
-  /* Links del panel */
-  .menu a{
-    color:var(--ink) !important;
-    opacity:1 !important;
-    background:transparent !important;
-    padding:12px 12px !important;
-    border-radius:12px !important;
-    font-weight:900 !important;
-    letter-spacing:.4px !important;
-    text-transform:uppercase;
-    box-shadow:none !important;
-  }
-  .menu a:hover{
-    background:rgba(178,34,34,.10) !important;
-    color:var(--brand) !important;
-  }
-  .menu a.active{
-    background:rgba(178,34,34,.12) !important;
-    color:var(--brand) !important;
-    box-shadow:inset 0 0 0 1px rgba(178,34,34,.25) !important;
-  }
-
-  /* Estado abierto: topbar.nav-open */
   .topbar.nav-open .menu{
-    display:flex !important;
     opacity:1;
     transform: translateY(0) scale(1);
     pointer-events:auto;
@@ -174,22 +169,33 @@ body{
     to{ opacity:1; transform: translateY(0) scale(1); }
   }
 
-  /* Área clickeable para cerrar (opcional, si agregas un div .nav-backdrop en el Blade) */
-  .nav-backdrop{
-    display:none;
-    position:fixed;
-    inset:0;
-    z-index:1100;
-    background:rgba(0,0,0,.25);
-    backdrop-filter: blur(1px);
+  .topbar .menu a{
+    color:var(--ink) !important;
+    opacity:1 !important;
+    background:transparent !important;
+    padding:12px 12px !important;
+    border-radius:12px !important;
+    font-weight:900 !important;
+    letter-spacing:.4px !important;
+    text-transform:uppercase;
+    box-shadow:none !important;
   }
-  .topbar.nav-open + .nav-backdrop{
-    display:block;
+  .topbar .menu a:hover{
+    background:rgba(178,34,34,.10) !important;
+    color:var(--brand) !important;
   }
+  .topbar .menu a.active{
+    background:rgba(178,34,34,.12) !important;
+    color:var(--brand) !important;
+    box-shadow:inset 0 0 0 1px rgba(178,34,34,.25) !important;
+  }
+}
 
-  /* iOS tap highlight */
-  .hamburger, .menu a, .login{
-    -webkit-tap-highlight-color: transparent;
+/* iOS safe-area (notch) */
+@supports (padding: max(0px)){
+  .topbar{
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right:max(12px, env(safe-area-inset-right));
   }
 }
 
@@ -436,10 +442,7 @@ input:focus, select:focus{
 .field-icon{
   position:absolute;
   left:12px;
-
-  /* ✅ centro exacto = label(14) + gap(6) + mitad del control(24) */
-  top: calc(var(--lab-h) + var(--lab-gap) + (var(--ctl-h) / 2));
-
+  top: calc(var(--lab-h) + var(--lab-gap) + (var(--ctl-h) / 2) + var(--ico-nudge));
   transform: translateY(-50%);
   color:#9ca3af;
   font-size:16px;
@@ -454,11 +457,11 @@ input:focus, select:focus{
   padding-left:42px; /* espacio para el icono */
 }
 
-/* ✅ Si usas icono derecho (.cal-ico) también va centrado real */
+/* ✅ icono derecho (cal) centrado real */
 .cal-ico{
   position:absolute;
   right:12px;
-  top: calc(var(--lab-h) + var(--lab-gap) + (var(--ctl-h) / 2));
+  top: calc(var(--lab-h) + var(--lab-gap) + (var(--ctl-h) / 2) + var(--ico-nudge));
   transform: translateY(-50%);
   font-size:18px;
   color:#9ca3af;
@@ -466,10 +469,10 @@ input:focus, select:focus{
 }
 input.flatpickr-input{ padding-right:44px; }
 
-/* ✅ IMPORTANTE: tu datetime-row debe ser 1 columna (2 filas), no 2 columnas */
+/* ✅ datetime-row 1 columna (2 filas) */
 .datetime-row{
   display:grid;
-  grid-template-columns: 1fr; /* ✅ apilado */
+  grid-template-columns: 1fr;
   gap:12px;
   width:100%;
 }
@@ -639,6 +642,10 @@ input.flatpickr-input{ padding-right:44px; }
   display:flex;
   flex-direction:column;
   gap:10px;
+
+  /* animación hide/show */
+  transition: transform .28s ease;
+  will-change: transform;
 }
 .social a{
   width:44px;
@@ -655,6 +662,19 @@ input.flatpickr-input{ padding-right:44px; }
 .facebook{ background:#1877f2 }
 .instagram{ background:#e1306c }
 .tiktok{ background:#000 }
+
+/* modo “asomado” */
+.social.peek{
+  transform: translateX(calc(100% - 18px));
+  opacity: 1 !important;
+  display: flex !important;
+}
+.social.show{
+  transform: translateX(0);
+  opacity: 1 !important;
+  display: flex !important;
+}
+.social.peek:hover{ transform: translateX(0); }
 
 /* =========================
    Modal de Bienvenida
@@ -841,7 +861,7 @@ input.flatpickr-input{ padding-right:44px; }
   font-size: 18px;
 }
 
-/* Ofertas / badge (una sola versión) */
+/* Ofertas / badge */
 .offer{ margin-top:4px; display:flex; flex-direction:column; gap:4px; }
 .offer-badge{
   position:absolute;
@@ -1205,7 +1225,7 @@ input.flatpickr-input{ padding-right:44px; }
     overflow:visible;
   }
 
-  /* ✅ tablet: 2 columnas */
+  /* tablet: 2 columnas */
   .search-grid{ grid-template-columns:1fr 1fr; }
   .sg-col-submit{ grid-column:1 / -1; }
 
@@ -1219,10 +1239,9 @@ input.flatpickr-input{ padding-right:44px; }
 @media (max-width:560px){
   .headline{ font-size:34px }
   .search-card{ padding:12px; }
-  /* ✅ móvil: 1 columna */
+  /* móvil: 1 columna */
   .search-grid{ grid-template-columns:1fr; }
   .info-content h2{ font-size:36px }
-  .tiles-wrap{ grid-template-columns:1fr }
 }
 
 /* =========================
@@ -1257,362 +1276,233 @@ button:focus-visible{
 button::-moz-focus-inner,
 input::-moz-focus-inner{ border:0; }
 .btn, .car-cta, .fleet-btn, a.btn{ -webkit-tap-highlight-color:transparent; }
+/* =========================
+   NAV RESPONSIVE (HAMBURGER)
+   Requisitos:
+   - <button id="navHamburger" class="hamburger">
+   - <ul id="mainMenu" class="menu">
+   - <div id="navBackdrop" class="nav-backdrop">
+   - JS agrega/remueve: body.nav-open
+========================= */
 
-/* ✅ SUBIR ICONOS DEL FORM (solo esto) */
 :root{
-  /* antes estaba exacto al centro; le restamos px para subirlo */
-  --ico-nudge:-20px; /* prueba -3px a -6px si quieres más/menos */
+  --nav-break: 940px; /* ajusta si quieres (860/940/1024) */
 }
 
-.search-card .field-icon{
-  top: calc(var(--lab-h) + var(--lab-gap) + (var(--ctl-h) / 2) + var(--ico-nudge)) !important;
-}
-
-.search-card .cal-ico{
-  top: calc(var(--lab-h) + var(--lab-gap) + (var(--ctl-h) / 2) + var(--ico-nudge)) !important;
-}
-
-/* =========================
-   SOCIAL: Animación hide/show por scroll
-========================= */
-/* Social lateral (base) */
-.social{
-  position:fixed;
-  right:12px;
-  top:40%;
-  z-index:40;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-
-  /* 👇 animación */
-  transition: transform .28s ease;
-  will-change: transform;
-}
-
-/* 👇 modo “asomado” (solo quedan visibles ~18px) */
-.social.peek{
-  transform: translateX(calc(100% - 18px));
-  opacity: 1 !important;      /* por si algo la baja */
-  display: flex !important;   /* por si algo la apaga */
-}
-
-/* 👇 modo visible normal */
-.social.show{
-  transform: translateX(0);
-  opacity: 1 !important;
-  display: flex !important;
-}
-
-/* (opcional) si quieres que al pasar el mouse se abra */
-.social.peek:hover{
-  transform: translateX(0);
-}
-
-/* =========================
-   FIX MOBILE: "Lugar de renta" + switch (no se encime)
-   + Grid a 1 columna
-========================= */
-
-/* Encabezado de la columna (titulo + switch) */
-.location-head{
+/* Desktop default: menú visible */
+.topbar .menu{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  flex-wrap:wrap;           /* clave: permite brincar a otra línea */
-}
-
-.location-head .field-title{
-  font-weight:700;
-  line-height:1.1;
-}
-
-.inline-check{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  white-space:nowrap;       /* que no se rompa raro */
-  font-size:13px;
-}
-
-.inline-check input{
-  width:18px;
-  height:18px;
-  accent-color: var(--brand, #b22222);
-}
-
-/* Mobile: apilar header y mejorar espacios */
-@media (max-width: 560px){
-
-  .location-head{
-    flex-direction:column;  /* título arriba, switch abajo */
-    align-items:flex-start;
-    gap:8px;
-  }
-
-  .inline-check{
-    width:100%;
-    justify-content:flex-start;
-    white-space:normal;     /* en móvil sí permitimos salto */
-    line-height:1.2;
-  }
-
-  /* Grid del buscador a 1 columna */
-  .search-grid{
-    display:grid !important;
-    grid-template-columns: 1fr !important;
-    gap:12px !important;
-  }
-
-  /* Las columnas no deben forzar ancho */
-  .sg-col{
-    width:100%;
-    min-width:0;
-  }
-
-  /* Date/Time: apilar para que no se aplaste */
-  .datetime-row{
-    display:grid;
-    grid-template-columns: 1fr;
-    gap:10px;
-  }
-
-  /* Inputs/selects que ocupen todo */
-  .search-form select,
-  .search-form input{
-    width:100%;
-  }
-
-  /* Un poquito más de padding en la card para que respire */
-  .search-card{
-    padding:14px 12px;
-    border-radius:16px;
-  }
-}
-
-/* =========================
-   FIX: Desktop OK + Mobile apilado
-========================= */
-
-/* ✅ Desktop/Laptop: mantener en una sola línea */
-.location-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  flex-wrap:nowrap;            /* <- IMPORTANTE: no wrap en laptop */
-}
-
-.inline-check{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  white-space:nowrap;          /* en desktop ok */
-  flex:0 0 auto;
-}
-
-/* ✅ Mobile: ahora sí apilamos y permitimos wrap */
-@media (max-width: 560px){
-  .location-head{
-    flex-direction:column;
-    align-items:flex-start;
-    gap:8px;
-    flex-wrap:wrap;            /* <- solo aquí */
-  }
-
-  .inline-check{
-    width:100%;
-    justify-content:flex-start;
-    white-space:normal;        /* <- solo aquí permitimos salto */
-    line-height:1.2;
-  }
-
-  .search-grid{
-    grid-template-columns: 1fr !important;
-    gap:12px !important;
-  }
-
-  .datetime-row{
-    display:grid;
-    grid-template-columns: 1fr;
-    gap:10px;
-  }
-}
-
-/* ================================
-   FORM HOME - LOOK LAP (como screenshot)
-================================== */
-
-/* Card */
-.search-card{
-  width:min(1200px, 94%);
-  margin: 22px auto 0;
-  background:#fff;
-  border-radius:18px;
-  box-shadow:0 18px 50px rgba(0,0,0,.18);
-  padding:18px 18px 16px;
-  overflow:hidden;
-}
-
-/* Grid principal */
-.search-grid{
-  display:grid;
   gap:18px;
-  align-items:start;
-  width:100%;
-  min-width:0;
 }
 
-/* ===== LAP / DESKTOP ===== */
-@media (min-width: 900px){
-  .search-grid{
-    grid-template-columns: 1.2fr 1fr 1fr auto; /* Lugar | Entrega | Devolución | Submit */
-  }
-
-  .sg-col-location{ grid-column:1; }
-  .sg-col-datetime:nth-of-type(2){ grid-column:2; } /* Entrega */
-  .sg-col-datetime:nth-of-type(3){ grid-column:3; } /* Devolución */
-  .sg-col-submit{
-    grid-column: 1 / -1; /* botón abajo a lo ancho */
-  }
-
-  .sg-col-submit .actions button{
-    width:100%;
-    height:62px;
-    border-radius:14px;
-    font-size:18px;
-    font-weight:800;
-    letter-spacing:.4px;
-  }
+/* Desktop: hamburguesa oculta */
+.topbar .hamburger{
+  display:none;
 }
 
-/* ===== TABLET ===== */
-@media (min-width: 561px) and (max-width: 899px){
-  .search-grid{
-    grid-template-columns: 1fr 1fr;
-  }
-  .sg-col-location{ grid-column:1 / -1; }
-  .sg-col-submit{ grid-column:1 / -1; }
-  .sg-col-submit .actions button{ width:100%; height:56px; }
-}
-
-/* ===== MOBILE ===== */
-@media (max-width: 560px){
-  .search-grid{
-    grid-template-columns: 1fr;
-    gap:14px;
-  }
-  .sg-col-submit .actions button{ width:100%; height:54px; }
-}
-
-/* ================================
-   FIX: iconos + texto + overflow
-================================== */
-.sg-col{ min-width:0; }
-.field{ width:100%; min-width:0; }
-
-.icon-field{
-  position:relative;
-  width:100%;
-  min-width:0;
-}
-
-.field-icon{
-  position:absolute;
-  left:14px;
-  top:50%;
-  transform:translateY(-50%);
-  width:18px;
-  height:18px;
-  display:grid;
-  place-items:center;
+/* Backdrop default oculto */
+.nav-backdrop{
+  opacity:0;
   pointer-events:none;
-  opacity:.8;
-  z-index:2;
 }
 
-/* inputs / selects */
-.icon-field input,
-.icon-field select,
-.icon-field .flatpickr-input{
-  width:100%;
-  max-width:100%;
-  min-width:0;
-  height:48px;
-  padding:0 14px 0 46px; /* espacio real para el icono */
-  border:1px solid #d1d5db;
-  border-radius:12px;
-  outline:none;
-  background:#fff;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
+/* =========================
+   MOBILE
+========================= */
+@media (max-width: 940px){
 
-.icon-field select{
-  padding-right:40px; /* espacio flecha */
-}
-
-/* labels tipo ENTREGa/DEVOLUCIÓN */
-.field > label{
-  display:block;
-  text-align:center;
-  font-weight:800;
-  font-size:12px;
-  letter-spacing:.9px;
-  color:#6b7280;
-  margin-bottom:10px;
-}
-
-/* fecha + hora: en tu blade ya están en columna (dt-field), aquí solo aseguramos spacing */
-.datetime-row{
-  display:flex;
-  flex-direction:column;
-  gap:14px;
-  width:100%;
-  min-width:0;
-}
-
-.dt-field{ min-width:0; }
-
-/* ===== Header Lugar de renta + switch (lap se ve en fila) ===== */
-.location-head{
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  gap:18px;
-  margin-bottom:10px;
-}
-
-.field-title{
-  font-weight:800;
-  font-size:12px;
-  letter-spacing:.9px;
-  color:#6b7280;
-}
-
-.inline-check{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-weight:800;
-  color:#0f172a;
-  font-size:14px;
-  white-space:nowrap;
-}
-
-.inline-check input{
-  width:18px;
-  height:18px;
-  accent-color: #b22222;
-}
-
-/* Mobile: el switch se baja para no encimarse */
-@media (max-width:560px){
-  .location-head{
-    flex-direction:column;
-    align-items:flex-start;
-    gap:8px;
+  /* ✅ En móvil: mostrar hamburguesa */
+  .topbar .hamburger{
+    display:flex;
   }
+
+  /* ✅ En móvil: ocultar menú por defecto */
+  .topbar .menu{
+    display:none;
+  }
+
+  /* ✅ Backdrop cuando está abierto */
+  body.nav-open .nav-backdrop{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  /* ✅ Menú abierto (panel) */
+  body.nav-open .topbar .menu{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+
+    position:fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+    right: 12px;
+    width: min(86vw, 360px);
+    max-height: calc(100vh - env(safe-area-inset-top, 0px) - 24px);
+    overflow:auto;
+
+    padding: 14px;
+    background: rgba(255,255,255,.96);
+    border: 1px solid rgba(15,23,42,.10);
+    border-radius: 18px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.18);
+    z-index: 9999;
+
+    -webkit-overflow-scrolling: touch;
+  }
+
+  body.nav-open .topbar .menu a{
+    display:block;
+    width:100%;
+    padding:12px 12px;
+    border-radius:14px;
+    background: rgba(15,23,42,.03);
+  }
+
+  body.nav-open .topbar .menu a:hover{
+    background: rgba(178,34,34,.10);
+  }
+
+  /* ✅ El dropdown de bootstrap dentro del panel se ve bien */
+  body.nav-open .topbar .menu .dropdown-menu{
+    position: static !important;
+    float: none !important;
+    margin-top: 8px;
+  }
+
+  /* ✅ En móvil: que el icono de usuario NO esté dentro del menú.
+     OJO: en tu layout ya lo movimos a .nav-actions, así que esto solo es extra. */
+}
+
+/* =========================
+   Backdrop look
+========================= */
+.nav-backdrop{
+  position:fixed;
+  inset:0;
+  background: rgba(2,6,23,.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  transition: opacity .2s ease;
+  z-index: 9998;
+}
+/* =========================
+   NAV RESPONSIVE (HAMBURGER) — FIX BORROSO
+   Requisitos:
+   - <button id="navHamburger" class="hamburger">
+   - <ul id="mainMenu" class="menu">
+   - <div id="navBackdrop" class="nav-backdrop">
+   - JS agrega/remueve: body.nav-open
+========================= */
+
+:root{
+  --nav-break: 940px;
+}
+
+/* Desktop default */
+.topbar .menu{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+
+.topbar .hamburger{ display:none; }
+
+/* Backdrop default */
+.nav-backdrop{
+  opacity:0;
+  pointer-events:none;
+
+  position:fixed;
+  inset:0;
+  background: rgba(2,6,23,.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: opacity .2s ease;
+  z-index: 9998;
+}
+
+/* =========================
+   MOBILE
+========================= */
+@media (max-width: 940px){
+
+  /* ✅ mostrar hamburguesa */
+  .topbar .hamburger{ display:flex; }
+
+  /* ✅ ocultar menú por defecto */
+  .topbar .menu{ display:none; }
+
+  /* ✅ abrir backdrop */
+  body.nav-open .nav-backdrop{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  /* ✅ abrir menú como panel */
+  body.nav-open .topbar .menu{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+
+    position:fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+    right: 12px;
+    width: min(86vw, 360px);
+    max-height: calc(100vh - env(safe-area-inset-top, 0px) - 24px);
+    overflow:auto;
+
+    padding: 14px;
+
+    /* ✅ CLAVE: menú nítido */
+    background: #ffffff !important;
+    opacity: 1 !important;
+
+    /* ✅ CLAVE: quitar cualquier blur heredado */
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    filter: none !important;
+
+    border: 1px solid rgba(15,23,42,.12);
+    border-radius: 18px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    z-index: 9999;
+
+    -webkit-overflow-scrolling: touch;
+    transform: translateZ(0); /* iOS: mejora nitidez */
+  }
+
+  body.nav-open .topbar .menu a{
+    display:block;
+    width:100%;
+    padding:12px 12px;
+    border-radius:14px;
+    background: rgba(15,23,42,.03);
+  }
+
+  body.nav-open .topbar .menu a:hover{
+    background: rgba(178,34,34,.10);
+  }
+
+  /* ✅ dropdown bootstrap dentro del panel */
+  body.nav-open .topbar .menu .dropdown-menu{
+    position: static !important;
+    float: none !important;
+    margin-top: 8px;
+  }
+
+  /* ✅ (opcional) evitar scroll del body cuando el menú está abierto */
+  body.nav-open{
+    overflow:hidden;
+    touch-action: none;
+  }
+}
+
+/* =========================
+   EXTRA: Por si .topbar.glass aplica blur global (navbar-top.css)
+   Esto asegura que solo el backdrop difumine, no el contenido.
+========================= */
+body.nav-open .topbar{
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
