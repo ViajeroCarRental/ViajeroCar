@@ -40,7 +40,7 @@
   <title>@yield('Titulo')</title>
 
   <style>
-    .brand-logo-img{height:35px; display:block}
+    .brand-logo-img{height:30px; display:block}
     .footer-logo{height:42px; display:block; margin:0 auto}
     .brand a.brand-link{display:inline-flex; align-items:center; text-decoration:none}
 
