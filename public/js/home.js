@@ -27,7 +27,7 @@
 
 // ===== Navbar: glass -> sólida + hamburguesa (MOBILE LIMPIO) =====
 // ✅ NO usa menu.style.display (eso rompe tu CSS responsive)
-// ✅ Usa .topbar.nav-open + .nav-backdrop
+// ✅ Usa .topbar.nav-open + body.nav-open + #navBackdrop
 (function(){
   "use strict";
 
@@ -43,43 +43,53 @@
   window.addEventListener("scroll", onScroll, { passive:true });
 
   // ----- mobile menu toggle -----
-  const btn       = document.querySelector(".hamburger");
-  const backdrop  = document.querySelector(".nav-backdrop"); // <div class="nav-backdrop"></div> después de .topbar
-  const menuLinks = Array.from(topbar.querySelectorAll(".menu a"));
+  const btn      = document.getElementById("navHamburger") || document.querySelector(".hamburger");
+  const backdrop = document.getElementById("navBackdrop")  || document.querySelector(".nav-backdrop");
+  const menu     = document.getElementById("mainMenu")     || topbar.querySelector(".menu");
+  if(!btn || !menu) return;
+
+  const MQ = window.matchMedia("(max-width: 940px)");
+
+  function isMobile(){
+    return MQ.matches;
+  }
 
   function openNav(){
+    if(!isMobile()) return;
+    document.body.classList.add("nav-open");
     topbar.classList.add("nav-open");
-    if(btn) btn.setAttribute("aria-expanded", "true");
+    btn.setAttribute("aria-expanded", "true");
   }
 
   function closeNav(){
+    document.body.classList.remove("nav-open");
     topbar.classList.remove("nav-open");
-    if(btn) btn.setAttribute("aria-expanded", "false");
+    btn.setAttribute("aria-expanded", "false");
   }
 
-  function toggleNav(){
-    topbar.classList.contains("nav-open") ? closeNav() : openNav();
+  function toggleNav(e){
+    if(e) e.preventDefault();
+    document.body.classList.contains("nav-open") ? closeNav() : openNav();
   }
 
-  if(btn){
-    // accesibilidad
-    btn.setAttribute("type", "button");
-    if(!btn.getAttribute("aria-label")) btn.setAttribute("aria-label", "Abrir menú");
-    btn.setAttribute("aria-expanded", btn.getAttribute("aria-expanded") || "false");
+  // accesibilidad
+  btn.setAttribute("type", "button");
+  if(!btn.getAttribute("aria-label")) btn.setAttribute("aria-label", "Abrir menú");
+  btn.setAttribute("aria-expanded", btn.getAttribute("aria-expanded") || "false");
 
-    btn.addEventListener("click", (e)=>{
-      e.preventDefault();
-      toggleNav();
-    });
-  }
+  btn.addEventListener("click", toggleNav);
 
   // Cerrar tocando fuera
   if(backdrop){
     backdrop.addEventListener("click", closeNav);
   }
 
-  // Cerrar al elegir link
-  menuLinks.forEach(a => a.addEventListener("click", closeNav));
+  // Cerrar al elegir link (delegado)
+  menu.addEventListener("click", (e)=>{
+    const a = e.target.closest("a");
+    if(!a) return;
+    closeNav();
+  });
 
   // Cerrar con ESC (Windows / teclado)
   document.addEventListener("keydown", (e)=>{
@@ -87,9 +97,11 @@
   });
 
   // Si cambia a desktop, quitamos estado mobile abierto
-  window.addEventListener("resize", ()=>{
-    if(window.innerWidth > 940) closeNav();
-  }, { passive:true });
+  if(MQ.addEventListener){
+    MQ.addEventListener("change", ()=>{ if(!isMobile()) closeNav(); });
+  } else {
+    window.addEventListener("resize", ()=>{ if(!isMobile()) closeNav(); }, { passive:true });
+  }
 })();
 
 

@@ -1506,3 +1506,35 @@ body.nav-open .topbar{
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
+/* =========================
+   PATCH ANTI-BORROSO (NO TOCA EL RESTO)
+   Pégalo AL FINAL del CSS
+========================= */
+
+/* ✅ Navbar: quitar blur del glass */
+.glass{
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ✅ Panel menú mobile: quitar blur (tu .topbar .menu en @media) */
+@media (max-width:940px){
+  .topbar .menu{
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    filter: none !important;
+    transform: translateZ(0); /* iOS: mejora nitidez */
+  }
+
+  /* ✅ Backdrop: si también lo quieres sin blur */
+  .nav-backdrop{
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* ✅ Extra: por si algún blur se hereda cuando abres el menú */
+body.nav-open .topbar{
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
