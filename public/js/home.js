@@ -332,37 +332,64 @@
       altFormat: 'd/m/Y',
       dateFormat: 'Y-m-d',
       minDate: 'today',
+      disableMobile: true,
       plugins: typeof rangePlugin !== 'undefined'
         ? [ new rangePlugin({ input: '#dropoffDate' }) ]
         : [],
       onChange: updateSummary
     });
 
-    flatpickr('#pickupTime', {
-      enableTime:true, noCalendar:true,
-      dateFormat:'h:i K', minuteIncrement:5,
-      onChange:updateSummary
-    });
+    const timeCfg = {
+      enableTime: true,
+      noCalendar: true,
+      dateFormat: 'H:i',     // ✅ 24h en el valor del input
+      time_24hr: true,       // ✅ 24h en UI
+      minuteIncrement: 15,   // ✅ 15 en 15
+      allowInput: true,
+      disableMobile: true,
+      onChange: updateSummary,
+      onClose: (selectedDates, dateStr, instance) => {
+        // Normaliza si escriben manualmente (ej: 18:07 -> 18:15)
+        const m = String(dateStr || "").match(/^(\d{1,2}):(\d{2})$/);
+        if(!m) return;
 
-    flatpickr('#dropoffTime', {
-      enableTime:true, noCalendar:true,
-      dateFormat:'h:i K', minuteIncrement:5,
-      onChange:updateSummary
-    });
+        let hh = Number(m[1]);
+        let mm = Number(m[2]);
+        if(!Number.isFinite(hh) || !Number.isFinite(mm)) return;
+
+        hh = Math.max(0, Math.min(23, hh));
+        mm = Math.max(0, Math.min(59, mm));
+
+        const rounded = Math.round(mm / 15) * 15;
+        if(rounded === 60){
+          mm = 0;
+          hh = (hh + 1) % 24;
+        } else {
+          mm = rounded;
+        }
+
+        const out = String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
+        if(out !== dateStr) instance.setDate(out, true, 'H:i');
+      }
+    };
+
+    flatpickr('#pickupTime', timeCfg);
+    flatpickr('#dropoffTime', timeCfg);
   }
 
   function buildDT(dateId, timeId){
-    const d = document.getElementById(dateId)?.value;
-    const t = document.getElementById(timeId)?.value || '00:00';
+    const d = document.getElementById(dateId)?.value;          // Y-m-d
+    const t = document.getElementById(timeId)?.value || '00:00'; // H:i
     if(!d) return null;
 
     const [y,m,day] = d.split('-').map(Number);
-    let [hh,mm] = t.replace(/( am| pm)/i,'').split(':').map(Number);
+    const [hh,mm] = t.split(':').map(Number);
 
-    if(/pm/i.test(t) && hh !== 12) hh += 12;
-    if(/am/i.test(t) && hh === 12) hh = 0;
+    if(!y || !m || !day) return null;
+    const H = Number.isFinite(hh) ? hh : 0;
+    const M = Number.isFinite(mm) ? mm : 0;
 
-    return new Date(y, m-1, day, hh, mm);
+    return new Date(y, m-1, day, H, M);
   }
 
   function updateSummary(){
