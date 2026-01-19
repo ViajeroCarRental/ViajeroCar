@@ -11,6 +11,14 @@
 
   /* ✅ SUBIR ICONOS DEL FORM (nudge) */
   --ico-nudge:-20px; /* prueba -3px a -6px si quieres más/menos */
+
+  /* ✅ HERO FIX: espacio y tamaños fluidos */
+  --hero-form-gap: clamp(190px, 22vh, 320px);
+  --hero-icon-size: clamp(46px, 5vw, 70px);
+  --hero-icon-gap: clamp(12px, 2vw, 18px);
+
+  /* NAV */
+  --nav-break: 940px;
 }
 
 *{ box-sizing:border-box }
@@ -24,9 +32,6 @@ body{
 
 /* =========================
    NAVBAR (LIMPIO + RESPONSIVE)
-   - Desktop: menú normal
-   - Mobile: logo + perfil + hamburger
-   - Panel: reutiliza .menu con .topbar.nav-open
 ========================= */
 .topbar{
   position:fixed;
@@ -40,7 +45,10 @@ body{
 }
 .glass{
   background:rgba(178,34,34,.35);
-  backdrop-filter:blur(10px);
+  /* ✅ PATCH ANTI-BORROSO */
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+
   border:1px solid var(--brand);
   box-shadow:0 10px 30px rgba(0,0,0,.15);
 }
@@ -110,93 +118,130 @@ body{
 }
 .hamburger:active{ transform:scale(.98); }
 
-/* ✅ MOBILE NAV */
-@media (max-width:940px){
-
-  /* Solo logo + acciones visibles */
-  .menu{ display:none !important; }
-  .hamburger{ display:grid; place-items:center; }
-
-  .nav{ gap:10px; }
-  .nav-actions{ margin-left:auto; gap:10px; }
-
-  /* Backdrop (pon un <div class="nav-backdrop"></div> después de .topbar) */
-  .nav-backdrop{
-    display:none;
-    position:fixed;
-    inset:0;
-    z-index:999;
-    background:rgba(0,0,0,.28);
-    backdrop-filter:blur(1px);
-    -webkit-tap-highlight-color:transparent;
-  }
-  .topbar.nav-open ~ .nav-backdrop{ display:block; }
-
-  /* Panel desplegable usando UL.menu */
-  .topbar .menu{
-    position:absolute;
-    left:10px;
-    right:10px;
-    top: calc(100% + 10px);
-    z-index:1100;
-
-    display:flex !important;
-    flex-direction:column;
-    gap:6px;
-    padding:10px;
-
-    border-radius:16px;
-    background:rgba(255,255,255,.96);
-    border:1px solid rgba(15,23,42,.10);
-    box-shadow:0 22px 60px rgba(0,0,0,.28);
-    backdrop-filter:blur(10px);
-
-    opacity:0;
-    transform: translateY(-6px) scale(.98);
-    pointer-events:none;
-    transform-origin: top;
-  }
-
-  .topbar.nav-open .menu{
-    opacity:1;
-    transform: translateY(0) scale(1);
-    pointer-events:auto;
-    animation: navDrop .18s ease-out;
-  }
-
-  @keyframes navDrop{
-    from{ opacity:0; transform: translateY(-6px) scale(.98); }
-    to{ opacity:1; transform: translateY(0) scale(1); }
-  }
-
-  .topbar .menu a{
-    color:var(--ink) !important;
-    opacity:1 !important;
-    background:transparent !important;
-    padding:12px 12px !important;
-    border-radius:12px !important;
-    font-weight:900 !important;
-    letter-spacing:.4px !important;
-    text-transform:uppercase;
-    box-shadow:none !important;
-  }
-  .topbar .menu a:hover{
-    background:rgba(178,34,34,.10) !important;
-    color:var(--brand) !important;
-  }
-  .topbar .menu a.active{
-    background:rgba(178,34,34,.12) !important;
-    color:var(--brand) !important;
-    box-shadow:inset 0 0 0 1px rgba(178,34,34,.25) !important;
-  }
-}
-
 /* iOS safe-area (notch) */
 @supports (padding: max(0px)){
   .topbar{
     padding-left: max(12px, env(safe-area-inset-left));
     padding-right:max(12px, env(safe-area-inset-right));
   }
+}
+
+/* =========================
+   NAV RESPONSIVE (HAMBURGER) — UNICO
+   Requisitos:
+   - <button id="navHamburger" class="hamburger">
+   - <ul id="mainMenu" class="menu">
+   - <div id="navBackdrop" class="nav-backdrop">
+   - JS agrega/remueve: body.nav-open
+========================= */
+
+/* Backdrop default */
+.nav-backdrop{
+  opacity:0;
+  pointer-events:none;
+
+  position:fixed;
+  inset:0;
+  background: rgba(2,6,23,.45);
+
+  /* ✅ si lo quieres SIN blur */
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+
+  transition: opacity .2s ease;
+  z-index: 9998;
+}
+
+/* Desktop default: menú visible / hamburguesa oculta */
+.topbar .menu{ display:flex; align-items:center; gap:18px; }
+.topbar .hamburger{ display:none; }
+
+/* =========================
+   MOBILE NAV
+========================= */
+@media (max-width: 940px){
+
+  .topbar .hamburger{ display:flex; }
+
+  /* ocultar menú por defecto */
+  .topbar .menu{ display:none; }
+
+  /* abrir backdrop */
+  body.nav-open .nav-backdrop{
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  /* abrir menú como panel */
+  body.nav-open .topbar .menu{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+
+    position:fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+    right: 12px;
+    width: min(86vw, 360px);
+    max-height: calc(100vh - env(safe-area-inset-top, 0px) - 24px);
+    overflow:auto;
+
+    padding: 14px;
+
+    background: #ffffff !important;
+    opacity: 1 !important;
+
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    filter: none !important;
+
+    border: 1px solid rgba(15,23,42,.12);
+    border-radius: 18px;
+    box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    z-index: 9999;
+
+    -webkit-overflow-scrolling: touch;
+    transform: translateZ(0);
+  }
+
+  body.nav-open .topbar .menu a{
+    display:block;
+    width:100%;
+    padding:12px 12px;
+    border-radius:14px;
+    background: rgba(15,23,42,.03);
+    color: var(--ink) !important;
+    opacity: 1 !important;
+  }
+
+  body.nav-open .topbar .menu a:hover{
+    background: rgba(178,34,34,.10);
+    color: var(--brand) !important;
+  }
+
+  body.nav-open .topbar .menu a.active{
+    background: rgba(178,34,34,.12) !important;
+    color: var(--brand) !important;
+    box-shadow: inset 0 0 0 1px rgba(178,34,34,.25) !important;
+  }
+
+  /* dropdown bootstrap dentro del panel */
+  body.nav-open .topbar .menu .dropdown-menu{
+    position: static !important;
+    float: none !important;
+    margin-top: 8px;
+  }
+
+  /* evitar scroll del body cuando el menú está abierto */
+  body.nav-open{
+    overflow:hidden;
+    touch-action: none;
+  }
+}
+
+/* extra: por si se hereda blur */
+body.nav-open .topbar{
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* =========================
@@ -222,7 +267,7 @@ body{
   z-index:2;
   color:#fff;
   max-width:1100px;
-  padding:70px 24px 120px;
+  padding:70px 24px var(--hero-form-gap); /* ✅ importante */
   margin:0 auto;
   text-align:center;
 }
@@ -259,13 +304,17 @@ body{
 @keyframes kickerIn{ to{ opacity:1; transform: translateY(0); } }
 
 /* =========================
-   HERO ICONOS (TU VERSION FINAL)
+   HERO ICONOS (FIX RESPONSIVO + NO TAPA FORM)
 ========================= */
 .hero-icons{
   display:grid;
   grid-template-columns: repeat(3, minmax(0,1fr));
-  gap:18px;
-  margin-top:65px;
+  gap: var(--hero-icon-gap);
+  margin-top: clamp(28px, 6vh, 65px);
+  width: min(980px, 100%);
+  margin-left:auto;
+  margin-right:auto;
+  align-items:start;
 }
 .hero-icons .icon-item{
   display:flex;
@@ -277,7 +326,7 @@ body{
   transition: transform .4s ease;
 }
 .hero-icons .icon-item i{
-  font-size:70px;
+  font-size: var(--hero-icon-size);
   line-height:1;
   filter: drop-shadow(0 4px 14px rgba(0,0,0,.25));
 }
@@ -287,30 +336,44 @@ body{
   line-height:1.35;
   opacity:.95;
 }
-.hero-icons .icon-item:nth-child(1){ transform: translateY(-20px); }
-.hero-icons .icon-item:nth-child(2){ transform: translateY(60px); }
-.hero-icons .icon-item:nth-child(3){ transform: translateY(-20px); }
+
+/* ✅ stagger SOLO en desktop grande (antes el 2 bajaba 60px y chocaba) */
+@media (min-width:1101px){
+  .hero-icons .icon-item:nth-child(1){ transform: translateY(-14px); }
+  .hero-icons .icon-item:nth-child(2){ transform: translateY(18px); }
+  .hero-icons .icon-item:nth-child(3){ transform: translateY(-14px); }
+}
+
+/* hover */
 .hero-icons .icon-item:hover{ transform: translateY(-6px) scale(1.05); }
 
-/* tu caso especial del item 5 */
-.hero-icons .icon-item:nth-child(5){
-  grid-column: 3 !important;
-  grid-row: 2 !important;
+/* tu caso especial del item 5 SOLO en desktop */
+@media (min-width:901px){
+  .hero-icons .icon-item:nth-child(5){
+    grid-column: 3 !important;
+    grid-row: 2 !important;
+  }
+}
+@media (max-width:900px){
+  .hero-icons .icon-item:nth-child(5){
+    grid-column:auto !important;
+    grid-row:auto !important;
+  }
 }
 
 @media (max-width:900px){
   .hero-icons{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  /* ✅ en tablet para abajo: sin offsets para que jamás tape el form */
+  .hero-icons .icon-item{ transform:none !important; }
 }
 @media (max-width:560px){
   .hero-icons{ grid-template-columns: 1fr; }
-  .hero-icons .icon-item i{ font-size:46px; }
+  .hero-icons .icon-item i{ font-size: clamp(40px, 12vw, 46px); }
   .hero-icons .icon-item span{ font-size:13.5px; }
 }
 
 /* =========================================================
    ✅ FORMULARIO HERO (3 columnas / 2 filas por columna)
-   - iconos centrados real
-   - fecha/hora en 2 filas (no lado a lado)
 ========================================================= */
 .search-card{
   position:relative;
@@ -335,11 +398,11 @@ body{
   align-items:start;
 }
 
-/* ✅ Col 1: header + 2 campos (el header NO debe desalinear) */
+/* ✅ Col 1 */
 .sg-col-location{
   min-width:0;
   display:grid;
-  grid-template-rows: var(--lab-h) auto auto; /* “altura tipo label” + 2 campos */
+  grid-template-rows: var(--lab-h) auto auto;
   row-gap:12px;
   align-content:start;
 }
@@ -378,11 +441,11 @@ body{
   margin:0;
 }
 
-/* ✅ Col 2 y 3: 2 filas reales (fecha arriba, hora abajo) */
+/* ✅ Col 2 y 3 */
 .sg-col-datetime{
   min-width:0;
   display:grid;
-  grid-template-rows: auto auto; /* 2 fields */
+  grid-template-rows: auto auto;
   row-gap:12px;
   align-content:start;
 }
@@ -415,12 +478,12 @@ label{
   margin:0;
 }
 
-/* ✅ inputs (mismo alto, misma alineación) */
+/* ✅ inputs */
 input, select, textarea{
   border:1px solid #d1d5db;
   border-radius:10px;
-  padding:0 12px;                 /* ✅ padding vertical removido para centrado real */
-  height: var(--ctl-h);            /* ✅ mismo alto siempre */
+  padding:0 12px;
+  height: var(--ctl-h);
   font-size:14px;
   outline:none;
   background:#fff;
@@ -437,7 +500,7 @@ input:focus, select:focus{
   box-shadow:0 0 0 3px rgba(178,34,34,.15);
 }
 
-/* ✅ icon-field: el icono se centra respecto al CONTROL (no al label) */
+/* ✅ icon-field */
 .icon-field{ position:relative; }
 .field-icon{
   position:absolute;
@@ -454,10 +517,10 @@ input:focus, select:focus{
 }
 .icon-field input,
 .icon-field select{
-  padding-left:42px; /* espacio para el icono */
+  padding-left:42px;
 }
 
-/* ✅ icono derecho (cal) centrado real */
+/* ✅ icono derecho (cal) */
 .cal-ico{
   position:absolute;
   right:12px;
@@ -469,7 +532,7 @@ input:focus, select:focus{
 }
 input.flatpickr-input{ padding-right:44px; }
 
-/* ✅ datetime-row 1 columna (2 filas) */
+/* ✅ datetime-row 1 columna */
 .datetime-row{
   display:grid;
   grid-template-columns: 1fr;
@@ -642,8 +705,6 @@ input.flatpickr-input{ padding-right:44px; }
   display:flex;
   flex-direction:column;
   gap:10px;
-
-  /* animación hide/show */
   transition: transform .28s ease;
   will-change: transform;
 }
@@ -663,7 +724,6 @@ input.flatpickr-input{ padding-right:44px; }
 .instagram{ background:#e1306c }
 .tiktok{ background:#000 }
 
-/* modo “asomado” */
 .social.peek{
   transform: translateX(calc(100% - 18px));
   opacity: 1 !important;
@@ -1234,8 +1294,11 @@ input.flatpickr-input{ padding-right:44px; }
   .info-row,.info-row.reverse{ grid-template-columns:1fr; gap:18px }
   .tiles-wrap{ grid-template-columns:1fr 1fr }
   .info-content h2{ font-size:40px }
+
+  /* ✅ en <=900 el hero no necesita tanto padding bottom porque el form ya es estático */
+  .hero-copy{ padding-bottom: 40px !important; }
 }
- 
+
 @media (max-width:560px){
   .headline{ font-size:34px }
   .search-card{ padding:12px; }
@@ -1276,265 +1339,3 @@ button:focus-visible{
 button::-moz-focus-inner,
 input::-moz-focus-inner{ border:0; }
 .btn, .car-cta, .fleet-btn, a.btn{ -webkit-tap-highlight-color:transparent; }
-/* =========================
-   NAV RESPONSIVE (HAMBURGER)
-   Requisitos:
-   - <button id="navHamburger" class="hamburger">
-   - <ul id="mainMenu" class="menu">
-   - <div id="navBackdrop" class="nav-backdrop">
-   - JS agrega/remueve: body.nav-open
-========================= */
-
-:root{
-  --nav-break: 940px; /* ajusta si quieres (860/940/1024) */
-}
-
-/* Desktop default: menú visible */
-.topbar .menu{
-  display:flex;
-  align-items:center;
-  gap:18px;
-}
-
-/* Desktop: hamburguesa oculta */
-.topbar .hamburger{
-  display:none;
-}
-
-/* Backdrop default oculto */
-.nav-backdrop{
-  opacity:0;
-  pointer-events:none;
-}
-
-/* =========================
-   MOBILE
-========================= */
-@media (max-width: 940px){
-
-  /* ✅ En móvil: mostrar hamburguesa */
-  .topbar .hamburger{
-    display:flex;
-  }
-
-  /* ✅ En móvil: ocultar menú por defecto */
-  .topbar .menu{
-    display:none;
-  }
-
-  /* ✅ Backdrop cuando está abierto */
-  body.nav-open .nav-backdrop{
-    opacity:1;
-    pointer-events:auto;
-  }
-
-  /* ✅ Menú abierto (panel) */
-  body.nav-open .topbar .menu{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-
-    position:fixed;
-    top: calc(env(safe-area-inset-top, 0px) + 12px);
-    right: 12px;
-    width: min(86vw, 360px);
-    max-height: calc(100vh - env(safe-area-inset-top, 0px) - 24px);
-    overflow:auto;
-
-    padding: 14px;
-    background: rgba(255,255,255,.96);
-    border: 1px solid rgba(15,23,42,.10);
-    border-radius: 18px;
-    box-shadow: 0 18px 50px rgba(0,0,0,.18);
-    z-index: 9999;
-
-    -webkit-overflow-scrolling: touch;
-  }
-
-  body.nav-open .topbar .menu a{
-    display:block;
-    width:100%;
-    padding:12px 12px;
-    border-radius:14px;
-    background: rgba(15,23,42,.03);
-  }
-
-  body.nav-open .topbar .menu a:hover{
-    background: rgba(178,34,34,.10);
-  }
-
-  /* ✅ El dropdown de bootstrap dentro del panel se ve bien */
-  body.nav-open .topbar .menu .dropdown-menu{
-    position: static !important;
-    float: none !important;
-    margin-top: 8px;
-  }
-
-  /* ✅ En móvil: que el icono de usuario NO esté dentro del menú.
-     OJO: en tu layout ya lo movimos a .nav-actions, así que esto solo es extra. */
-}
-
-/* =========================
-   Backdrop look
-========================= */
-.nav-backdrop{
-  position:fixed;
-  inset:0;
-  background: rgba(2,6,23,.45);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  transition: opacity .2s ease;
-  z-index: 9998;
-}
-/* =========================
-   NAV RESPONSIVE (HAMBURGER) — FIX BORROSO
-   Requisitos:
-   - <button id="navHamburger" class="hamburger">
-   - <ul id="mainMenu" class="menu">
-   - <div id="navBackdrop" class="nav-backdrop">
-   - JS agrega/remueve: body.nav-open
-========================= */
-
-:root{
-  --nav-break: 940px;
-}
-
-/* Desktop default */
-.topbar .menu{
-  display:flex;
-  align-items:center;
-  gap:18px;
-}
-
-.topbar .hamburger{ display:none; }
-
-/* Backdrop default */
-.nav-backdrop{
-  opacity:0;
-  pointer-events:none;
-
-  position:fixed;
-  inset:0;
-  background: rgba(2,6,23,.45);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  transition: opacity .2s ease;
-  z-index: 9998;
-}
-
-/* =========================
-   MOBILE
-========================= */
-@media (max-width: 940px){
-
-  /* ✅ mostrar hamburguesa */
-  .topbar .hamburger{ display:flex; }
-
-  /* ✅ ocultar menú por defecto */
-  .topbar .menu{ display:none; }
-
-  /* ✅ abrir backdrop */
-  body.nav-open .nav-backdrop{
-    opacity:1;
-    pointer-events:auto;
-  }
-
-  /* ✅ abrir menú como panel */
-  body.nav-open .topbar .menu{
-    display:flex;
-    flex-direction:column;
-    gap:12px;
-
-    position:fixed;
-    top: calc(env(safe-area-inset-top, 0px) + 12px);
-    right: 12px;
-    width: min(86vw, 360px);
-    max-height: calc(100vh - env(safe-area-inset-top, 0px) - 24px);
-    overflow:auto;
-
-    padding: 14px;
-
-    /* ✅ CLAVE: menú nítido */
-    background: #ffffff !important;
-    opacity: 1 !important;
-
-    /* ✅ CLAVE: quitar cualquier blur heredado */
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    filter: none !important;
-
-    border: 1px solid rgba(15,23,42,.12);
-    border-radius: 18px;
-    box-shadow: 0 18px 50px rgba(0,0,0,.22);
-    z-index: 9999;
-
-    -webkit-overflow-scrolling: touch;
-    transform: translateZ(0); /* iOS: mejora nitidez */
-  }
-
-  body.nav-open .topbar .menu a{
-    display:block;
-    width:100%;
-    padding:12px 12px;
-    border-radius:14px;
-    background: rgba(15,23,42,.03);
-  }
-
-  body.nav-open .topbar .menu a:hover{
-    background: rgba(178,34,34,.10);
-  }
-
-  /* ✅ dropdown bootstrap dentro del panel */
-  body.nav-open .topbar .menu .dropdown-menu{
-    position: static !important;
-    float: none !important;
-    margin-top: 8px;
-  }
-
-  /* ✅ (opcional) evitar scroll del body cuando el menú está abierto */
-  body.nav-open{
-    overflow:hidden;
-    touch-action: none;
-  }
-}
-
-/* =========================
-   EXTRA: Por si .topbar.glass aplica blur global (navbar-top.css)
-   Esto asegura que solo el backdrop difumine, no el contenido.
-========================= */
-body.nav-open .topbar{
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-/* =========================
-   PATCH ANTI-BORROSO (NO TOCA EL RESTO)
-   Pégalo AL FINAL del CSS
-========================= */
-
-/* ✅ Navbar: quitar blur del glass */
-.glass{
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}
-
-/* ✅ Panel menú mobile: quitar blur (tu .topbar .menu en @media) */
-@media (max-width:940px){
-  .topbar .menu{
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    filter: none !important;
-    transform: translateZ(0); /* iOS: mejora nitidez */
-  }
-
-  /* ✅ Backdrop: si también lo quieres sin blur */
-  .nav-backdrop{
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-}
-
-/* ✅ Extra: por si algún blur se hereda cuando abres el menú */
-body.nav-open .topbar{
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-}

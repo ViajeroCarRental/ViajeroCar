@@ -62,7 +62,7 @@
 
     /* ===== HAMBURGER (solo se verá en móvil por tu CSS) ===== */
     .hamburger{
-      width:44px; height:44px;
+      width:40px; height:40px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,.25);
       background: rgba(255,255,255,.12);
