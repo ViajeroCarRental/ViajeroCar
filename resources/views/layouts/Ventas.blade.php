@@ -80,6 +80,7 @@
     @yield('contenido-VistaCotizacionesRecientes')
     @yield('contenidoContratoFinal')
     @yield('contenidoEditarContrato')
+    @yield('contenidoChecklist2')
 </div>
 
 <div class="containerJS">
@@ -101,6 +102,7 @@
     @yield('js-VistaCotizacionesRecientes')
     @yield('js-vistaContratoFinal')
     @yield('js-vistaEditarContrato')
+    @yield('js-vistaChecklist2')
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 
 </div>
