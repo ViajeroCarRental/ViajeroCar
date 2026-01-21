@@ -527,6 +527,35 @@
 
     @section('js-vistaChecklist2')
         <script src="{{ asset('js/checklist2.js') }}"></script>
+
+        {{-- 🔔 ALERTAS CON ALERTIFY --}}
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Posición de las notificaciones (ajústala si quieres otra)
+                if (typeof alertify !== 'undefined') {
+                    alertify.set('notifier', 'position', 'top-right');
+
+                    @if (session('success'))
+                        alertify.success(@json(session('success')));
+                    @endif
+
+                    @if (session('error'))
+                        alertify.error(@json(session('error')));
+                    @endif
+
+                    // Si hay errores de validación (por ejemplo en fotos_cambio)
+                    @if ($errors->any())
+                        alertify.error('Hay errores en el formulario. Revisa los campos.');
+                        @foreach ($errors->all() as $error)
+                            alertify.error(@json($error));
+                        @endforeach
+                    @endif
+                } else {
+                    // Por si un día algo pasa con el CDN de alertify
+                    console.warn('AlertifyJS no está cargado en esta vista.');
+                }
+            });
+        </script>
     @endsection
 
 @endsection

@@ -1,5 +1,16 @@
+// ==========================
+// DEBUG HELPER
+// ==========================
+const DEBUG_CAMBIO_AUTO = true;
+function debugCambioAuto(...args) {
+    if (DEBUG_CAMBIO_AUTO) {
+        console.log('[CambioAuto]', ...args);
+    }
+}
+
 (function () {
     const root = document.getElementById('checklist2-root');
+    debugCambioAuto('JS checklist2 inicializado', { root });
     if (!root) return;
 
     const nombresZonas = {
@@ -23,15 +34,79 @@
     };
 
     // URLs que vienen del data-* del contenedor
-    const urlGuardarDano      = root.dataset.urlGuardarDano;
-    const urlEliminarDanoBase = root.dataset.urlEliminarDanoBase;
-        const urlVehiculosCategoriaBase = root.dataset.urlVehiculosCategoriaBase;
+    const urlGuardarDano            = root.dataset.urlGuardarDano;
+    const urlEliminarDanoBase       = root.dataset.urlEliminarDanoBase;
+    const urlVehiculosCategoriaBase = root.dataset.urlVehiculosCategoriaBase;
     const urlSetVehiculoNuevo       = root.dataset.urlSetVehiculoNuevo;
-
 
     // Token CSRF
     const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
     const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : '';
+
+    // ==========================
+    // COMPRESIÓN DE IMÁGENES
+    // ==========================
+    function compressImage(file, maxWidth = 1600, quality = 0.7) {
+        return new Promise((resolve, reject) => {
+            try {
+                const img = new Image();
+
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxWidth) {
+                        const ratio = maxWidth / width;
+                        width = maxWidth;
+                        height = height * ratio;
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob(
+                        (blob) => {
+                            if (!blob) {
+                                return reject(new Error('No se pudo comprimir la imagen'));
+                            }
+
+                            const baseName = file.name.replace(/\.[^.]+$/, '');
+                            const newName = `${baseName}-cmp.jpg`;
+
+                            const compressedFile = new File([blob], newName, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now(),
+                            });
+
+                            debugCambioAuto('Imagen comprimida', {
+                                originalSizeMB: (file.size / (1024 * 1024)).toFixed(2),
+                                compressedSizeMB: (compressedFile.size / (1024 * 1024)).toFixed(2),
+                                name: newName,
+                            });
+
+                            resolve(compressedFile);
+                        },
+                        'image/jpeg',
+                        quality
+                    );
+                };
+
+                img.onerror = () => reject(new Error('No se pudo leer la imagen'));
+                const url = URL.createObjectURL(file);
+                img.onloadend = () => {
+                    // liberamos el objectURL cuando ya no se necesita
+                    URL.revokeObjectURL(url);
+                };
+                img.src = url;
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
 
     let contextoActual = null;  // empresa | cliente
     let zonaActual = null;      // número de zona
@@ -201,24 +276,58 @@
         });
     });
 
-    // Vista previa de foto
-    fotoInput.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            if (fotoTemporalUrl) {
-                URL.revokeObjectURL(fotoTemporalUrl);
+    // Vista previa de foto + COMPRESIÓN para cada daño
+    if (fotoInput) {
+        fotoInput.addEventListener("change", async (e) => {
+            const file = e.target.files[0];
+
+            if (!file) {
+                previewFoto.style.display = "none";
+                if (fotoTemporalUrl) {
+                    URL.revokeObjectURL(fotoTemporalUrl);
+                    fotoTemporalUrl = null;
+                }
+                return;
             }
-            fotoTemporalUrl = URL.createObjectURL(file);
-            previewFoto.src = fotoTemporalUrl;
-            previewFoto.style.display = "block";
-        } else {
-            previewFoto.style.display = "none";
-            if (fotoTemporalUrl) {
-                URL.revokeObjectURL(fotoTemporalUrl);
-                fotoTemporalUrl = null;
+
+            try {
+                // Solo comprimimos si es imagen
+                let finalFile = file;
+                if (file.type && file.type.startsWith('image/')) {
+                    finalFile = await compressImage(file, 1600, 0.7);
+                }
+
+                // Reemplazar el archivo original del input por el comprimido
+                const dt = new DataTransfer();
+                dt.items.add(finalFile);
+                fotoInput.files = dt.files;
+
+                // Actualizar preview con el archivo comprimido
+                if (fotoTemporalUrl) {
+                    URL.revokeObjectURL(fotoTemporalUrl);
+                }
+                fotoTemporalUrl = URL.createObjectURL(finalFile);
+                previewFoto.src = fotoTemporalUrl;
+                previewFoto.style.display = "block";
+
+                debugCambioAuto('Foto de daño preparada (comprimida)', {
+                    originalSizeMB: (file.size / (1024 * 1024)).toFixed(2),
+                    finalSizeMB: (finalFile.size / (1024 * 1024)).toFixed(2),
+                });
+
+            } catch (err) {
+                console.error(err);
+                if (window.alertify) {
+                    alertify.error('No se pudo procesar la fotografía del daño. Intenta con otra imagen.');
+                } else {
+                    alert('No se pudo procesar la fotografía del daño. Intenta con otra imagen.');
+                }
+                // Limpiamos por seguridad
+                fotoInput.value = '';
+                previewFoto.style.display = "none";
             }
-        }
-    });
+        });
+    }
 
     function cerrarModal() {
         modal.style.display = "none";
@@ -238,92 +347,110 @@
         previewFoto.style.display = "none";
     }
 
-    btnCancelar.addEventListener("click", cerrarModal);
+    if (btnCancelar) {
+        btnCancelar.addEventListener("click", cerrarModal);
+    }
 
     // Cerrar modal al hacer clic fuera
-    modal.addEventListener("click", (e) => {
-        if (e.target === modal) {
-            cerrarModal();
-        }
-    });
+    if (modal) {
+        modal.addEventListener("click", (e) => {
+            if (e.target === modal) {
+                cerrarModal();
+            }
+        });
+    }
 
     // Guardar daño → llamar al backend por AJAX
-    btnGuardar.addEventListener("click", async () => {
-        if (!contextoActual || !zonaActual) {
-    if (window.alertify) {
-        alertify.warning('Selecciona primero un punto del diagrama.');
-    } else {
-        alert('Selecciona primero un punto del diagrama.');
-    }
-    return;
-}
+    if (btnGuardar) {
+        btnGuardar.addEventListener("click", async () => {
+            if (!contextoActual || !zonaActual) {
+                if (window.alertify) {
+                    alertify.warning('Selecciona primero un punto del diagrama.');
+                } else {
+                    alert('Selecciona primero un punto del diagrama.');
+                }
+                return;
+            }
 
+            if (!fotoInput.files[0]) {
+                if (window.alertify) {
+                    alertify.warning('La fotografía del daño es obligatoria.');
+                } else {
+                    alert('La fotografía del daño es obligatoria.');
+                }
+                return;
+            }
 
-        if (!fotoInput.files[0]) {
-    if (window.alertify) {
-        alertify.warning('La fotografía del daño es obligatoria.');
-    } else {
-        alert('La fotografía del daño es obligatoria.');
-    }
-    return;
-}
+            const tipoVal = (tipoInput.value || '').trim();
+            const comentarioVal = (comentarioInput.value || '').trim();
+            const costoVal = costoInput.value || '';
 
+            const formData = new FormData();
+            formData.append('contexto', contextoActual); // empresa / cliente
+            formData.append('zona', zonaActual);
+            formData.append('tipo_dano', tipoVal);
+            formData.append('comentario', comentarioVal);
+            formData.append('costo_estimado', costoVal);
+            formData.append('foto', fotoInput.files[0]);
 
-        const tipoVal = (tipoInput.value || '').trim();
-        const comentarioVal = (comentarioInput.value || '').trim();
-        const costoVal = costoInput.value || '';
-
-        const formData = new FormData();
-        formData.append('contexto', contextoActual); // empresa / cliente
-        formData.append('zona', zonaActual);
-        formData.append('tipo_dano', tipoVal);
-        formData.append('comentario', comentarioVal);
-        formData.append('costo_estimado', costoVal);
-        formData.append('foto', fotoInput.files[0]);
-
-        try {
-            const resp = await fetch(urlGuardarDano, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken,
-                },
-                body: formData
+            debugCambioAuto('Guardar daño: preparando envío', {
+                contextoActual,
+                zonaActual,
+                tipo: tipoVal,
+                comentario: comentarioVal,
+                costo: costoVal,
+                tieneFoto: !!fotoInput.files[0],
             });
 
-            const data = await resp.json();
+            try {
+                const resp = await fetch(urlGuardarDano, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: formData
+                });
 
-if (!resp.ok || !data.ok) {
-    throw new Error(data.message || 'Error al guardar el daño.');
-}
+                debugCambioAuto('POST urlGuardarDano → response', {
+                    url: urlGuardarDano,
+                    status: resp.status,
+                    ok: resp.ok,
+                });
 
-// Tomamos el objeto "dano" que mandó el backend
-const danoResp = data.dano || {};
+                const data = await resp.json();
 
-// Agregar fila a la tabla correspondiente (empresa / cliente)
-agregarFilaDano(contextoActual, {
-    id: danoResp.id, // id_foto_cambio
-    zona: zonaActual,
-    descripcion: tipoVal || comentarioVal,
-    costo_estimado: costoVal
-});
+                debugCambioAuto('Respuesta JSON guardarDano', data);
 
+                if (!resp.ok || !data.ok) {
+                    throw new Error(data.message || 'Error al guardar el daño.');
+                }
 
-            if (window.alertify) {
-    alertify.success('Daño guardado correctamente.');
-} else {
-    alert('Daño guardado correctamente.');
-}
-cerrarModal();
+                const danoResp = data.dano || {};
 
-        } catch (error) {
-    console.error(error);
-    if (window.alertify) {
-        alertify.error('Ocurrió un error al guardar el daño.');
-    } else {
-        alert('Ocurrió un error al guardar el daño.');
+                agregarFilaDano(contextoActual, {
+                    id: danoResp.id,
+                    zona: zonaActual,
+                    descripcion: tipoVal || comentarioVal,
+                    costo_estimado: costoVal
+                });
+
+                if (window.alertify) {
+                    alertify.success('Daño guardado correctamente.');
+                } else {
+                    alert('Daño guardado correctamente.');
+                }
+                cerrarModal();
+
+            } catch (error) {
+                console.error(error);
+                if (window.alertify) {
+                    alertify.error('Ocurrió un error al guardar el daño.');
+                } else {
+                    alert('Ocurrió un error al guardar el daño.');
+                }
+            }
+        });
     }
-}
-    });
 
     // =======================================
     // ELIMINAR DAÑO (click en la X)
@@ -336,9 +463,13 @@ cerrarModal();
         const contexto = btn.dataset.contexto;
         const fila = btn.closest('tr');
 
+        debugCambioAuto('Click eliminar daño', { idFoto, contexto });
+
         const ejecutarEliminacion = async () => {
             try {
                 const url = urlEliminarDanoBase.replace('__ID__', idFoto);
+
+                debugCambioAuto('DELETE eliminarDano → disparando fetch', { url });
 
                 const resp = await fetch(url, {
                     method: 'DELETE',
@@ -349,15 +480,18 @@ cerrarModal();
                 });
 
                 const data = await resp.json();
+                debugCambioAuto('Respuesta JSON eliminarDano', {
+                    status: resp.status,
+                    ok: resp.ok,
+                    data,
+                });
 
                 if (!resp.ok || !data.ok) {
                     throw new Error(data.message || 'Error al eliminar el daño.');
                 }
 
-                // Quitar fila del DOM
                 if (fila) fila.remove();
 
-                // Si ya no quedan filas, mostrar "Sin daños registrados"
                 const tbody = document.querySelector(
                     '.cl2-danos-table[data-context="' + contexto + '"] tbody'
                 );
@@ -368,7 +502,6 @@ cerrarModal();
                     tbody.appendChild(trEmpty);
                 }
 
-                // Recalcular total
                 recalcularTotal(contexto);
 
                 if (window.alertify) {
@@ -386,7 +519,6 @@ cerrarModal();
             }
         };
 
-        // Confirmación con Alertify (si existe) o confirm nativo
         if (window.alertify) {
             alertify.confirm(
                 'Eliminar daño',
@@ -401,7 +533,7 @@ cerrarModal();
         }
     });
 
-        // ==========================================================
+    // ==========================================================
     //   CAMBIO DE AUTO – LADO CLIENTE (MODAL VEHÍCULOS)
     // ==========================================================
     const selectCategoriaCliente = document.getElementById('categoriaCliente');
@@ -438,7 +570,6 @@ cerrarModal();
     if (btnCerrarModal1) btnCerrarModal1.addEventListener('click', cerrarModalVehiculos);
     if (btnCerrarModal2) btnCerrarModal2.addEventListener('click', cerrarModalVehiculos);
 
-    // Cerrar modal haciendo clic en el fondo oscuro
     if (modalVehiculos) {
         modalVehiculos.addEventListener('click', (e) => {
             if (e.target === modalVehiculos) {
@@ -508,17 +639,14 @@ cerrarModal();
         });
     }
 
-    // Filtros en vivo
     if (filtroColor)  filtroColor.addEventListener('input', renderVehiculosLista);
     if (filtroModelo) filtroModelo.addEventListener('input', renderVehiculosLista);
     if (filtroSerie)  filtroSerie.addEventListener('input', renderVehiculosLista);
 
-    // Cuando se selecciona una categoría → cargar vehículos y abrir modal
     if (selectCategoriaCliente && urlVehiculosCategoriaBase) {
         selectCategoriaCliente.addEventListener('change', async (e) => {
             const idCat = e.target.value;
 
-            // Si limpian el select, limpiamos la lista
             if (!idCat) {
                 vehiculosCategoria = [];
                 if (listaVehiculos) listaVehiculos.innerHTML = '';
@@ -555,7 +683,6 @@ cerrarModal();
         });
     }
 
-    // Click en "Seleccionar" dentro de la lista de vehículos
     if (listaVehiculos && urlSetVehiculoNuevo) {
         listaVehiculos.addEventListener('click', async (e) => {
             const btn = e.target.closest('.btn-vehiculo');
@@ -564,7 +691,16 @@ cerrarModal();
             const idVehiculo = btn.dataset.id;
             if (!idVehiculo) return;
 
-            // 1) Actualizar la tabla del lado CLIENTE con los datos del carro nuevo
+            debugCambioAuto('Seleccionar vehículo en modal', {
+                idVehiculo,
+                tipo: btn.dataset.tipo,
+                modelo: btn.dataset.modelo,
+                placas: btn.dataset.placas,
+                transmision: btn.dataset.transmision,
+                fuel: btn.dataset.fuel,
+                km: btn.dataset.km,
+            });
+
             if (spanTipo)   spanTipo.textContent   = btn.dataset.tipo || 'N/A';
             if (spanModelo) spanModelo.textContent = btn.dataset.modelo || 'N/A';
             if (spanPlacas) spanPlacas.textContent = btn.dataset.placas || 'N/A';
@@ -576,8 +712,12 @@ cerrarModal();
                 inputIdVehiculoNuevo.value = idVehiculo;
             }
 
-            // 2) Llamar al backend para registrar el vehículo nuevo en cambios_vehiculo (estado en_proceso)
             try {
+                debugCambioAuto('POST setVehiculoNuevo → disparando fetch', {
+                    url: urlSetVehiculoNuevo,
+                    payload: { id_vehiculo_nuevo: idVehiculo },
+                });
+
                 const resp = await fetch(urlSetVehiculoNuevo, {
                     method: 'POST',
                     headers: {
@@ -591,6 +731,12 @@ cerrarModal();
                 });
 
                 const data = await resp.json();
+
+                debugCambioAuto('Respuesta JSON setVehiculoNuevo', {
+                    status: resp.status,
+                    ok: resp.ok,
+                    data,
+                });
 
                 if (!resp.ok || !data.ok) {
                     throw new Error(data.message || 'Error al asignar el vehículo nuevo.');
@@ -615,15 +761,13 @@ cerrarModal();
         });
     }
 
-        // ===================================
+    // ===================================
     //  Sincronizar altura de extra-block
-    //  (empresa vs cliente)
     // ===================================
     function syncExtraBlocksHeight() {
         const blocks = document.querySelectorAll('.cl2-extra-block');
         if (blocks.length < 2) return;
 
-        // Resetear minHeight antes de medir
         blocks.forEach(b => {
             b.style.minHeight = '0px';
         });
@@ -637,99 +781,114 @@ cerrarModal();
         });
     }
 
-
     // ================================
-//  FOTOS DEL CAMBIO DE AUTO
-// ================================
-const inputCambio = document.getElementById('inputFotosCambio');
-const previewCambio = document.getElementById('preview-fotosCambio');
-const msgCambio = document.querySelector('#uploaderCambioAuto .cl2-photo-msg');
+    //  FOTOS DEL CAMBIO DE AUTO
+    // ================================
+    const inputCambio = document.getElementById('inputFotosCambio');
+    const previewCambio = document.getElementById('preview-fotosCambio');
+    const msgCambio = document.querySelector('#uploaderCambioAuto .cl2-photo-msg');
 
-let filesCambio = []; // aquí guardamos TODAS las fotos seleccionadas
+    let filesCambio = []; // aquí guardamos TODAS las fotos seleccionadas (ya comprimidas)
 
-function actualizarInputCambio() {
-    const dt = new DataTransfer();
-    filesCambio.forEach(f => dt.items.add(f));
-    inputCambio.files = dt.files;
+    function actualizarInputCambio() {
+        if (!inputCambio) return;
 
-    if (msgCambio) {
-        msgCambio.textContent = filesCambio.length
-            ? `${filesCambio.length} foto(s) seleccionada(s)`
-            : 'Toca para cámara o galería (JPG/PNG)';
+        const dt = new DataTransfer();
+        filesCambio.forEach(f => dt.items.add(f));
+        inputCambio.files = dt.files;
+
+        if (msgCambio) {
+            msgCambio.textContent = filesCambio.length
+                ? `${filesCambio.length} foto(s) seleccionada(s)`
+                : 'Toca para cámara o galería (JPG/PNG)';
+        }
     }
-}
 
-function renderPreviewCambio() {
-    if (!previewCambio) return;
+    function renderPreviewCambio() {
+        if (!previewCambio) return;
 
-    previewCambio.innerHTML = '';
+        previewCambio.innerHTML = '';
 
-    filesCambio.forEach((file, index) => {
-        const thumb = document.createElement('div');
-        thumb.className = 'cl2-photo-thumb';
+        filesCambio.forEach((file, index) => {
+            const thumb = document.createElement('div');
+            thumb.className = 'cl2-photo-thumb';
 
-        const img = document.createElement('img');
-        const url = URL.createObjectURL(file);
-        img.src = url;
-        img.onload = () => URL.revokeObjectURL(url);
+            const img = document.createElement('img');
+            const url = URL.createObjectURL(file);
+            img.src = url;
+            img.onload = () => URL.revokeObjectURL(url);
 
-        const btnX = document.createElement('button');
-        btnX.type = 'button';
-        btnX.className = 'cl2-photo-remove';
-        btnX.textContent = '×';
-        btnX.dataset.index = index.toString();
+            const btnX = document.createElement('button');
+            btnX.type = 'button';
+            btnX.className = 'cl2-photo-remove';
+            btnX.textContent = '×';
+            btnX.dataset.index = index.toString();
 
-        thumb.appendChild(img);
-        thumb.appendChild(btnX);
-        previewCambio.appendChild(thumb);
-    });
+            thumb.appendChild(img);
+            thumb.appendChild(btnX);
+            previewCambio.appendChild(thumb);
+        });
 
-    // 🔹 cada vez que cambian las fotos, reajustamos la altura de los bloques
-    syncExtraBlocksHeight();
-}
+        // cada vez que cambian las fotos, reajustamos la altura de los bloques
+        syncExtraBlocksHeight();
+    }
 
+    // Selección de nuevas fotos de CAMBIO + COMPRESIÓN
+    if (inputCambio) {
+        inputCambio.addEventListener('change', async (e) => {
+            const nuevas = Array.from(e.target.files || []);
+            if (!nuevas.length) return;
 
-// Cuando seleccionas nuevas fotos
-if (inputCambio) {
-    inputCambio.addEventListener('change', (e) => {
-        const nuevas = Array.from(e.target.files || []);
+            const comprimidas = [];
 
-        // las agregamos a las que ya había
-        filesCambio = filesCambio.concat(nuevas);
+            for (const file of nuevas) {
+                if (!file.type || !file.type.startsWith('image/')) {
+                    comprimidas.push(file);
+                    continue;
+                }
 
-        renderPreviewCambio();
-        actualizarInputCambio();
-    });
-}
+                try {
+                    const compressed = await compressImage(file, 1600, 0.7);
+                    comprimidas.push(compressed);
+                } catch (err) {
+                    console.error('Error al comprimir imagen de cambio:', err);
+                    comprimidas.push(file); // peor caso, usamos la original
+                }
+            }
 
-// Eliminar una sola foto con la X (delegación de eventos)
-if (previewCambio) {
-    previewCambio.addEventListener('click', (e) => {
-        const btn = e.target.closest('.cl2-photo-remove');
-        if (!btn) return;
+            filesCambio = filesCambio.concat(comprimidas);
 
-        const index = parseInt(btn.dataset.index, 10);
-        if (isNaN(index)) return;
+            // limpiamos el input nativo para poder volver a abrir cámara/galería
+            inputCambio.value = '';
 
-        filesCambio.splice(index, 1);  // quitamos esa sola foto
-        renderPreviewCambio();
-        actualizarInputCambio();
-    });
-}
+            renderPreviewCambio();
+            actualizarInputCambio();
+        });
+    }
 
+    // Eliminar una sola foto de CAMBIO con la X
+    if (previewCambio) {
+        previewCambio.addEventListener('click', (e) => {
+            const btn = e.target.closest('.cl2-photo-remove');
+            if (!btn) return;
 
-        // Recalcular totales al cargar (por si ya venían daños desde BD)
+            const index = parseInt(btn.dataset.index, 10);
+            if (isNaN(index)) return;
+
+            filesCambio.splice(index, 1);
+            renderPreviewCambio();
+            actualizarInputCambio();
+        });
+    }
+
+    // Recalcular totales al cargar (por si ya venían daños desde BD)
     recalcularTotal('empresa');
     recalcularTotal('cliente');
 
     // Ajustar alturas iniciales de los bloques
     syncExtraBlocksHeight();
 
-    // Volver a ajustar en cambios de tamaño de ventana
     window.addEventListener('load', syncExtraBlocksHeight);
     window.addEventListener('resize', syncExtraBlocksHeight);
 
 })();
-
-
-
