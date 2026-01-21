@@ -78,7 +78,7 @@ class CambioAutoMail extends Mailable
             ?? $this->reservacion->id_reservacion;
 
         return new Content(
-            view: 'emails.cambio_auto', // ← nombre de tu vista HTML de correo
+            view: 'emails.Cambio_auto', // ← nombre de tu vista HTML de correo
             with: [
                 'clienteNombre'    => $clienteNombre,
                 'codigoReservacion'=> $codigoReservacion,
