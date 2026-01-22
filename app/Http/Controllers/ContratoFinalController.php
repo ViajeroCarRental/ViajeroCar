@@ -138,64 +138,131 @@ class ContratoFinalController extends Controller
        ENVIAR CONTRATO POR CORREO (PDF)
     ========================================================= */
     public function enviarContratoCorreo(Request $request, $id)
-    {
-        $contrato = DB::table('contratos')->where('id_contrato', $id)->first();
-        if (!$contrato) {
-            return response()->json(['ok' => false, 'msg' => 'Contrato no encontrado']);
-        }
+{
+    // 1️⃣ CONTRATO
+    $contrato = DB::table('contratos')->where('id_contrato', $id)->first();
+    if (!$contrato) {
+        return response()->json(['ok' => false, 'msg' => 'Contrato no encontrado']);
+    }
 
-        $reservacion = DB::table('reservaciones')->where('id_reservacion', $contrato->id_reservacion)->first();
-        if (!$reservacion || !$reservacion->email_cliente) {
-            return response()->json(['ok' => false, 'msg' => 'Correo no disponible']);
-        }
+    // 2️⃣ RESERVACIÓN (MISMO JOIN QUE mostrarContratoFinal)
+    $reservacion = DB::table('reservaciones as r')
+        ->leftJoin('sucursales as sr', 'r.sucursal_retiro', '=', 'sr.id_sucursal')
+        ->leftJoin('sucursales as se', 'r.sucursal_entrega', '=', 'se.id_sucursal')
+        ->select(
+            'r.*',
+            'sr.nombre as sucursal_retiro_nombre',
+            'se.nombre as sucursal_entrega_nombre'
+        )
+        ->where('r.id_reservacion', $contrato->id_reservacion)
+        ->first();
 
-        $aviso = $request->input('aviso', '');
+    if (!$reservacion || empty($reservacion->email_cliente)) {
+        return response()->json(['ok' => false, 'msg' => 'Correo del cliente no disponible']);
+    }
 
-        // Reusar datos
-        $dias = max(
-            \Carbon\Carbon::parse($reservacion->fecha_inicio)
-                ->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_fin)) + 1,
-            1
-        );
+    // 3️⃣ LICENCIA (por si la quieres usar en el correo)
+    $licencia = DB::table('contrato_documento')
+        ->where('id_contrato', $id)
+        ->where('tipo', 'licencia')
+        ->first();
 
-        $tarifaBase = $reservacion->tarifa_modificada ?? $reservacion->tarifa_base ?? 0;
-        $subtotal = $tarifaBase * $dias;
-        $totalFinal = $subtotal * 1.16;
+    // 4️⃣ DÍAS  (MISMA FÓRMULA QUE mostrarContratoFinal)
+    $dias = max(
+        \Carbon\Carbon::parse($reservacion->fecha_inicio)
+            ->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_fin)),
+        1
+    );
 
-        // PDF
-        $pdf = Pdf::loadView('Admin.contrato-final-pdf', compact(
-            'contrato',
-            'reservacion',
-            'dias',
-            'tarifaBase',
-            'subtotal',
-            'totalFinal'
-        ))
+    // 5️⃣ TARIFA BASE
+    $tarifaBase = $reservacion->tarifa_modificada ?? $reservacion->tarifa_base ?? 0;
+
+    // 6️⃣ PAQUETES, INDIVIDUALES, EXTRAS (MISMO CÓDIGO)
+    $paquetes = DB::table('reservacion_paquete_seguro as rps')
+        ->leftJoin('seguro_paquete as sp', 'rps.id_paquete', '=', 'sp.id_paquete')
+        ->select('sp.nombre', 'rps.precio_por_dia')
+        ->where('rps.id_reservacion', $reservacion->id_reservacion)
+        ->get();
+
+    $individuales = DB::table('reservacion_seguro_individual as rsi')
+        ->leftJoin('seguro_individuales as si', 'rsi.id_individual', '=', 'si.id_individual')
+        ->select('si.nombre', 'rsi.precio_por_dia')
+        ->where('rsi.id_reservacion', $reservacion->id_reservacion)
+        ->get();
+
+    $extras = DB::table('reservacion_servicio as rs')
+        ->leftJoin('servicios as s', 'rs.id_servicio', '=', 's.id_servicio')
+        ->select('s.nombre', 'rs.precio_unitario')
+        ->where('rs.id_reservacion', $reservacion->id_reservacion)
+        ->get();
+
+    // 7️⃣ SUBTOTAL Y TOTAL (IGUAL QUE EN LA VISTA)
+    $subtotal =
+        ($tarifaBase * $dias) +
+        $paquetes->sum(fn($p) => $p->precio_por_dia * $dias) +
+        $individuales->sum(fn($i) => $i->precio_por_dia * $dias) +
+        $extras->sum(fn($e) => $e->precio_unitario * $dias);
+
+    $totalFinal = $subtotal * 1.16;
+
+    // 8️⃣ VEHÍCULO (MISMO JOIN)
+    $vehiculo = DB::table('vehiculos as v')
+        ->leftJoin('categorias_carros as c', 'v.id_categoria', '=', 'c.id_categoria')
+        ->select(
+            'v.modelo',
+            'v.color',
+            'v.transmision',
+            'v.kilometraje',
+            'v.gasolina_actual',
+            DB::raw('COALESCE(c.nombre, v.categoria) as categoria')
+        )
+        ->where('v.id_vehiculo', $reservacion->id_vehiculo)
+        ->first();
+
+    // 9️⃣ TEXTO DEL AVISO
+    $aviso = $request->input('aviso', '');
+
+    // 🔟 GENERAR PDF CON TODOS LOS DATOS (LOS MISMOS QUE LA VISTA)
+    $pdf = Pdf::loadView('Admin.contrato-final-pdf', [
+            'contrato'     => $contrato,
+            'reservacion'  => $reservacion,
+            'licencia'     => $licencia,
+            'vehiculo'     => $vehiculo,
+            'dias'         => $dias,
+            'tarifaBase'   => $tarifaBase,
+            'paquetes'     => $paquetes,
+            'individuales' => $individuales,
+            'extras'       => $extras,
+            'subtotal'     => $subtotal,
+            'totalFinal'   => $totalFinal,
+        ])
         ->setPaper('legal', 'portrait')
         ->setOptions([
-            'isRemoteEnabled' => true,
+            'isRemoteEnabled'      => true,
             'isHtml5ParserEnabled' => true,
         ]);
 
-        $filePath = storage_path("app/public/Contrato_{$id}.pdf");
-        $pdf->save($filePath);
+    $filePath = storage_path("app/public/Contrato_{$id}.pdf");
+    $pdf->save($filePath);
 
-        Mail::to($reservacion->email_cliente)->send(
-            new ContratoFinalMail(
-                $contrato,
-                $reservacion,
-                null,
-                null,
-                $dias,
-                $totalFinal,
-                $filePath,
-                $aviso
-            )
-        );
+    // 1️⃣1️⃣ ENVIAR CORREO
+    Mail::to($reservacion->email_cliente)->send(
+        new ContratoFinalMail(
+            $contrato,
+            $reservacion,
+            $licencia,
+            $vehiculo,
+            $dias,
+            $totalFinal,
+            $filePath,
+            $aviso
+        )
+    );
 
-        return response()->json([
-            'ok' => true,
-            'msg' => 'Contrato enviado correctamente'
-        ]);
-    }
+    return response()->json([
+        'ok'  => true,
+        'msg' => 'Contrato enviado correctamente'
+    ]);
+}
+
 }

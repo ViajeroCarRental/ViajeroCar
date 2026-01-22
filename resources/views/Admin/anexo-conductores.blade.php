@@ -285,6 +285,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const baseAsset = "{{ asset('') }}"; // ej. https://tudominio.com/
 
+    /* ==============================================
+       🔔 MENSAJES DE LARAVEL → ALERTIFY
+       (cuando regresas con ->with('ok') / ->with('error'))
+    ============================================== */
+    @if(session('ok'))
+        alertify.success("{{ session('ok') }}");
+    @endif
+
+    @if(session('error'))
+        alertify.error("{{ session('error') }}");
+    @endif
+
+    @if($errors->any())
+        alertify.error("Hay errores en la información enviada, revisa los datos.");
+    @endif
+
     /* ==========================
        FIRMA ARRENDADOR
     =========================== */
@@ -313,12 +329,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnSaveA) {
             btnSaveA.addEventListener('click', () => {
                 if (signaturePadA.isEmpty()) {
-                    alert("Por favor realiza tu firma.");
+                    alertify.warning('Por favor realiza tu firma.');
                     return;
                 }
 
                 const dataURL    = signaturePadA.toDataURL("image/png");
                 const idContrato = btnOpenA.dataset.contrato;
+
+                alertify.message('Guardando firma de arrendador...');
 
                 fetch("{{ route('anexo.guardarFirma') }}", {
                     method: "POST",
@@ -334,15 +352,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(res => res.json())
                 .then(resp => {
                     if (!resp.ok) {
-                        alert(resp.error || 'No se pudo guardar la firma.');
+                        alertify.error(resp.error || 'No se pudo guardar la firma del arrendador.');
                         return;
                     }
-                    alert('Firma guardada correctamente');
+                    alertify.success('Firma de arrendador guardada correctamente.');
                     modalA.style.display = 'none';
                     window.location.reload();
                 })
                 .catch(() => {
-                    alert('Error de comunicación con el servidor al guardar la firma de arrendador.');
+                    alertify.error('Error de comunicación con el servidor al guardar la firma de arrendador.');
                 });
             });
         }
@@ -353,11 +371,11 @@ document.addEventListener('DOMContentLoaded', () => {
        (tabla con lápiz por fila)
     =========================== */
 
-    const modalC        = document.getElementById('modalFirmaConductor');
-    const canvasC       = document.getElementById('signature-pad-conductor');
-    const labelFirma    = document.getElementById('labelFirmaConductor');
+    const modalC         = document.getElementById('modalFirmaConductor');
+    const canvasC        = document.getElementById('signature-pad-conductor');
+    const labelFirma     = document.getElementById('labelFirmaConductor');
     const subConductores = document.getElementById('subConductores');
-    const tituloModalC  = document.getElementById('tituloModalConductor');
+    const tituloModalC   = document.getElementById('tituloModalConductor');
 
     let signaturePadC = null;
     if (canvasC && window.SignaturePad) {
@@ -405,16 +423,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnSaveC && signaturePadC) {
         btnSaveC.addEventListener('click', () => {
             if (signaturePadC.isEmpty()) {
-                alert("El conductor debe firmar.");
+                alertify.warning('El conductor debe firmar.');
                 return;
             }
 
             if (!currentConductorId) {
-                alert("No hay conductor seleccionado.");
+                alertify.error('No hay conductor seleccionado.');
                 return;
             }
 
             const dataURL = signaturePadC.toDataURL("image/png");
+
+            alertify.message('Guardando firma de ' + (currentConductorNombre || 'conductor') + '...');
 
             fetch("{{ route('anexo.guardarFirmaConductor') }}", {
                 method: "POST",
@@ -430,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(res => res.json())
             .then(resp => {
                 if (resp.ok) {
-                    alert('✔ Firma guardada correctamente para ' + (currentConductorNombre || 'conductor'));
+                    alertify.success('Firma guardada correctamente para ' + (currentConductorNombre || 'conductor') + '.');
 
                     // Actualizar la celda de firma SOLO de esta fila
                     if (resp.ruta_firma && currentConductorRow) {
@@ -453,16 +473,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentConductorRow    = null;
 
                 } else {
-                    alert(resp.error || 'Ocurrió un problema al guardar la firma.');
+                    alertify.error(resp.error || 'Ocurrió un problema al guardar la firma del conductor.');
                 }
             })
             .catch(() => {
-                alert('Error de comunicación con el servidor al guardar la firma.');
+                alertify.error('Error de comunicación con el servidor al guardar la firma del conductor.');
             });
         });
     }
 
-    // (Opcional) Cerrar modal de conductor clickeando fuera
+    // Cerrar modales al hacer clic fuera
     window.addEventListener('click', (e) => {
         if (e.target === modalC) {
             modalC.style.display = 'none';
@@ -475,6 +495,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    /* =============================================
+       📧 ENVÍO DE ANEXOS POR CORREO
+       - Mensaje "enviando..."
+       - Luego Laravel regresa con ->with('ok') y
+         lo mostramos arriba con alertify.success
+    ============================================== */
+
+    const formEnviarAnexos = document.getElementById('formEnviarAnexos');
+    const btnEnviarAnexos  = document.getElementById('btnEnviarAnexos');
+
+    if (formEnviarAnexos && btnEnviarAnexos) {
+        formEnviarAnexos.addEventListener('submit', function (e) {
+            // Opcional: validar que haya al menos un conductor en la tabla
+            const filas = document.querySelectorAll('#tbodyConductores tr');
+            const hayConductores = filas.length > 0 && !filas[0].classList.contains('empty-row');
+
+            if (!hayConductores) {
+                e.preventDefault();
+                alertify.warning('No hay conductores adicionales registrados para enviar anexos.');
+                return;
+            }
+
+            // Mensaje mientras se procesa el cambio / envío de correo
+            alertify.message('Se está procesando el anexo y enviando los correos, por favor espera...');
+            btnEnviarAnexos.disabled = true;
+        });
+    }
+
 });
 </script>
 @endsection
+
+

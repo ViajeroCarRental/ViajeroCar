@@ -373,24 +373,27 @@
       <div class="secciones">
 
         <article class="bloque ul-2cols">
-          <h3>Datos del Arrendatario</h3>
-          <ul>
-            <li><b>Nombre:</b> {{ $reservacion->nombre_cliente ?? '—' }}</li>
-            <li><b>Correo:</b> {{ $reservacion->email_cliente ?? '—' }}</li>
-            <li><b>Teléfono:</b> {{ $reservacion->telefono_cliente ?? '—' }}</li>
-            <li><b>País:</b> {{ $reservacion->pais ?? '—' }}</li>
-            <li><b>Vuelo:</b> {{ $reservacion->no_vuelo ?? '—' }}</li>
-          </ul>
-        </article>
+  <h3>Datos del Arrendatario</h3>
+  <ul>
+    <li><b>Nombre:</b> {{ $reservacion->nombre_cliente ?? '—' }}</li>
+    <li><b>Correo:</b> {{ $reservacion->email_cliente ?? '—' }}</li>
+    <li><b>Teléfono:</b> {{ $reservacion->telefono_cliente ?? '—' }}</li>
+    {{-- País viene de la licencia, igual que en la vista --}}
+    <li><b>País:</b> {{ $licencia->pais_emision ?? '—' }}</li>
+    <li><b>Vuelo:</b> {{ $reservacion->no_vuelo ?? '—' }}</li>
+  </ul>
+</article>
+
 
         <article class="bloque ul-2cols">
-          <h3>Licencia del Cliente</h3>
-          <ul>
-            <li><b>No. Licencia:</b> {{ $contrato->licencia_numero ?? '—' }}</li>
-            <li><b>Vence:</b> {{ $contrato->licencia_vencimiento ?? '—' }}</li>
-            <li><b>Emitida en:</b> {{ $contrato->licencia_pais ?? '—' }}</li>
-          </ul>
-        </article>
+  <h3>Licencia del Cliente</h3>
+  <ul>
+    <li><b>No. Licencia:</b> {{ $licencia->numero_identificacion ?? '—' }}</li>
+    <li><b>Vence:</b> {{ $licencia->fecha_vencimiento ?? '—' }}</li>
+    <li><b>Emitida en:</b> {{ $licencia->pais_emision ?? '—' }}</li>
+  </ul>
+</article>
+
 
         <article class="bloque ul-2cols">
           <h3>Itinerario</h3>

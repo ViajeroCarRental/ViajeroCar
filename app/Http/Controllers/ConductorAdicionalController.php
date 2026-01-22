@@ -456,7 +456,7 @@ public function enviarAnexos($id)
             }
         }
 
-        return back()->with('ok', 'Anexos de conductores adicionales enviados correctamente.');
+        return back()->with('ok', 'Se generaron los anexos correctamente y se enviaron los correos al cliente y a reservaciones.');
     } catch (\Throwable $e) {
         Log::error('Error al enviar anexos de conductores adicionales: ' . $e->getMessage());
 
