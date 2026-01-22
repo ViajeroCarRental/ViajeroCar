@@ -5,12 +5,12 @@
   --topbar-h:78px;
 
   /* ✅ tokens del form para alinear iconos perfecto */
-  --ctl-h:48px;      /* alto uniforme de input/select */
-  --lab-h:14px;      /* altura del label */
-  --lab-gap:6px;     /* gap entre label y control */
+  --ctl-h:48px;
+  --lab-h:14px;
+  --lab-gap:6px;
 
   /* ✅ SUBIR ICONOS DEL FORM (nudge) */
-  --ico-nudge:-20px; /* prueba -3px a -6px si quieres más/menos */
+  --ico-nudge:-20px;
 
   /* ✅ HERO FIX: espacio y tamaños fluidos */
   --hero-form-gap: clamp(190px, 22vh, 320px);
@@ -45,10 +45,8 @@ body{
 }
 .glass{
   background:rgba(178,34,34,.35);
-  /* ✅ PATCH ANTI-BORROSO */
   backdrop-filter:none !important;
   -webkit-backdrop-filter:none !important;
-
   border:1px solid var(--brand);
   box-shadow:0 10px 30px rgba(0,0,0,.15);
 }
@@ -128,51 +126,30 @@ body{
 
 /* =========================
    NAV RESPONSIVE (HAMBURGER) — UNICO
-   Requisitos:
-   - <button id="navHamburger" class="hamburger">
-   - <ul id="mainMenu" class="menu">
-   - <div id="navBackdrop" class="nav-backdrop">
-   - JS agrega/remueve: body.nav-open
 ========================= */
-
-/* Backdrop default */
 .nav-backdrop{
   opacity:0;
   pointer-events:none;
-
   position:fixed;
   inset:0;
   background: rgba(2,6,23,.45);
-
-  /* ✅ si lo quieres SIN blur */
   backdrop-filter:none !important;
   -webkit-backdrop-filter:none !important;
-
   transition: opacity .2s ease;
   z-index: 9998;
 }
-
-/* Desktop default: menú visible / hamburguesa oculta */
 .topbar .menu{ display:flex; align-items:center; gap:18px; }
 .topbar .hamburger{ display:none; }
 
-/* =========================
-   MOBILE NAV
-========================= */
 @media (max-width: 940px){
-
   .topbar .hamburger{ display:flex; }
-
-  /* ocultar menú por defecto */
   .topbar .menu{ display:none; }
 
-  /* abrir backdrop */
   body.nav-open .nav-backdrop{
     opacity:1;
     pointer-events:auto;
   }
 
-  /* abrir menú como panel */
   body.nav-open .topbar .menu{
     display:flex;
     flex-direction:column;
@@ -224,21 +201,17 @@ body{
     box-shadow: inset 0 0 0 1px rgba(178,34,34,.25) !important;
   }
 
-  /* dropdown bootstrap dentro del panel */
   body.nav-open .topbar .menu .dropdown-menu{
     position: static !important;
     float: none !important;
     margin-top: 8px;
   }
 
-  /* evitar scroll del body cuando el menú está abierto */
   body.nav-open{
     overflow:hidden;
     touch-action: none;
   }
 }
-
-/* extra: por si se hereda blur */
 body.nav-open .topbar{
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -267,12 +240,11 @@ body.nav-open .topbar{
   z-index:2;
   color:#fff;
   max-width:1100px;
-  padding:70px 24px var(--hero-form-gap); /* ✅ importante */
+  padding:70px 24px var(--hero-form-gap);
   margin:0 auto;
   text-align:center;
 }
 
-/* tu kicker (manteniendo diseño) */
 .hero-copy .kicker{
   font-family:'Playfair Display', serif;
   font-size: clamp(38px, 5vw, 56px);
@@ -283,7 +255,7 @@ body.nav-open .topbar{
   line-height: 1.1;
   text-align: center;
   margin: -6px 0 22px;
-  text-shadow: 0 3px 10px rgba(0,0,0,.35);
+  text-shadow:0 3px 10px rgba(0,0,0,.35);
   position: relative;
   opacity:0;
   transform: translateY(8px);
@@ -304,13 +276,14 @@ body.nav-open .topbar{
 @keyframes kickerIn{ to{ opacity:1; transform: translateY(0); } }
 
 /* =========================
-   HERO ICONOS (FIX RESPONSIVO + NO TAPA FORM)
+   HERO ICONOS (NO SE ENSIMAN)
 ========================= */
 .hero-icons{
   display:grid;
   grid-template-columns: repeat(3, minmax(0,1fr));
   gap: var(--hero-icon-gap);
   margin-top: clamp(28px, 6vh, 65px);
+  margin-bottom: 18px; /* ✅ FIX: separa SIEMPRE de lo que venga abajo */
   width: min(980px, 100%);
   margin-left:auto;
   margin-right:auto;
@@ -337,17 +310,13 @@ body.nav-open .topbar{
   opacity:.95;
 }
 
-/* ✅ stagger SOLO en desktop grande (antes el 2 bajaba 60px y chocaba) */
 @media (min-width:1101px){
   .hero-icons .icon-item:nth-child(1){ transform: translateY(-14px); }
   .hero-icons .icon-item:nth-child(2){ transform: translateY(18px); }
   .hero-icons .icon-item:nth-child(3){ transform: translateY(-14px); }
 }
-
-/* hover */
 .hero-icons .icon-item:hover{ transform: translateY(-6px) scale(1.05); }
 
-/* tu caso especial del item 5 SOLO en desktop */
 @media (min-width:901px){
   .hero-icons .icon-item:nth-child(5){
     grid-column: 3 !important;
@@ -361,19 +330,37 @@ body.nav-open .topbar{
   }
 }
 
+/* ✅ Tablet/Mobile: 2 columnas + sin transforms (para que no choque) */
 @media (max-width:900px){
-  .hero-icons{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-  /* ✅ en tablet para abajo: sin offsets para que jamás tape el form */
+  .hero-icons{
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 12px;
+    margin-top: 22px;
+    margin-bottom: 22px; /* ✅ más aire antes del form */
+  }
   .hero-icons .icon-item{ transform:none !important; }
+  .hero-icons .icon-item:hover{ transform:none !important; }
 }
+
+/* ✅ Móvil: NO 1 columna (eso los hace gigantes) */
 @media (max-width:560px){
-  .hero-icons{ grid-template-columns: 1fr; }
-  .hero-icons .icon-item i{ font-size: clamp(40px, 12vw, 46px); }
-  .hero-icons .icon-item span{ font-size:13.5px; }
+  .hero-icons{
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap:10px;
+    margin-top: 18px;
+    margin-bottom: 26px; /* ✅ FIX fuerte: evita que alcance al form */
+  }
+  .hero-icons .icon-item i{ font-size: clamp(34px, 10vw, 44px); }
+  .hero-icons .icon-item span{ font-size:12.5px; line-height:1.25; }
+}
+
+/* ✅ SOLO si la pantalla es ultra angosta */
+@media (max-width:360px){
+  .hero-icons{ grid-template-columns:1fr; }
 }
 
 /* =========================================================
-   ✅ FORMULARIO HERO (3 columnas / 2 filas por columna)
+   FORMULARIO HERO
 ========================================================= */
 .search-card{
   position:relative;
@@ -389,7 +376,6 @@ body.nav-open .topbar{
 }
 .search-form{ display:block; }
 
-/* ✅ 3 columnas */
 .search-grid{
   display:grid;
   grid-template-columns:repeat(3, minmax(0, 1fr));
@@ -398,7 +384,6 @@ body.nav-open .topbar{
   align-items:start;
 }
 
-/* ✅ Col 1 */
 .sg-col-location{
   min-width:0;
   display:grid;
@@ -423,7 +408,6 @@ body.nav-open .topbar{
   line-height: var(--lab-h);
 }
 
-/* ✅ checkbox */
 .inline-check{
   display:inline-flex;
   align-items:center;
@@ -441,7 +425,6 @@ body.nav-open .topbar{
   margin:0;
 }
 
-/* ✅ Col 2 y 3 */
 .sg-col-datetime{
   min-width:0;
   display:grid;
@@ -450,7 +433,6 @@ body.nav-open .topbar{
   align-content:start;
 }
 
-/* ✅ Submit a lo ancho abajo */
 .sg-col-submit{
   grid-column:1 / -1;
   display:flex;
@@ -458,7 +440,6 @@ body.nav-open .topbar{
   margin-top:4px;
 }
 
-/* field */
 .field{
   display:flex;
   flex-direction:column;
@@ -467,7 +448,6 @@ body.nav-open .topbar{
   min-width:0;
 }
 
-/* labels */
 label{
   font-size:12px;
   color:var(--muted);
@@ -478,7 +458,6 @@ label{
   margin:0;
 }
 
-/* ✅ inputs */
 input, select, textarea{
   border:1px solid #d1d5db;
   border-radius:10px;
@@ -500,7 +479,6 @@ input:focus, select:focus{
   box-shadow:0 0 0 3px rgba(178,34,34,.15);
 }
 
-/* ✅ icon-field */
 .icon-field{ position:relative; }
 .field-icon{
   position:absolute;
@@ -520,7 +498,6 @@ input:focus, select:focus{
   padding-left:42px;
 }
 
-/* ✅ icono derecho (cal) */
 .cal-ico{
   position:absolute;
   right:12px;
@@ -532,7 +509,6 @@ input:focus, select:focus{
 }
 input.flatpickr-input{ padding-right:44px; }
 
-/* ✅ datetime-row 1 columna */
 .datetime-row{
   display:grid;
   grid-template-columns: 1fr;
@@ -542,7 +518,6 @@ input.flatpickr-input{ padding-right:44px; }
 .datetime-row input,
 .datetime-row select{ width:100%; }
 
-/* botón buscar */
 .actions{
   display:flex;
   width:100%;
@@ -565,7 +540,7 @@ input.flatpickr-input{ padding-right:44px; }
   text-transform:uppercase;
 }
 
-/* flatpickr (tus estilos) */
+/* flatpickr */
 .flatpickr-calendar{ border-radius:14px; box-shadow:0 18px 45px rgba(0,0,0,.18); overflow:hidden }
 .flatpickr-months{ background:var(--brand); color:#fff }
 .flatpickr-months .flatpickr-month,
@@ -594,7 +569,7 @@ input.flatpickr-input{ padding-right:44px; }
 .hidden{ display:none !important; }
 .small{ font-size:12px; color:var(--muted); margin-top:4px; }
 
-/* posición del search-card dentro del hero */
+/* posición del search-card dentro del hero (DESKTOP) */
 .hero .search-card{
   position:absolute;
   left:50%;
@@ -754,7 +729,7 @@ input.flatpickr-input{ padding-right:44px; }
 .modal-actions{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
 
 /* =========================
-   Dropdown (si lo usas en navbar)
+   Dropdown
 ========================= */
 .icon-item.dropdown{ position:relative; }
 .dropdown-menu{
@@ -777,7 +752,7 @@ input.flatpickr-input{ padding-right:44px; }
 .dropdown-divider{ margin:6px 0; border-top:1px solid #eee; }
 
 /* =========================
-   FLEET / CARRUSELES (LIMPIO)
+   FLEET / CARRUSELES
 ========================= */
 .fleet{
   position:relative;
@@ -795,20 +770,13 @@ input.flatpickr-input{ padding-right:44px; }
   display:flex;
   gap:18px;
   scroll-snap-type:x mandatory;
-
-  /* ✅ necesario para scrollBy() */
   overflow-x:auto;
   overflow-y:hidden;
-
   padding:0 8px;
-
-  /* ya no dependas de transform */
   transition:none;
-
   background:transparent !important;
   border:0 !important;
   box-shadow:none !important;
-
   -webkit-overflow-scrolling: touch;
   scroll-behavior:smooth;
 }
@@ -1022,7 +990,15 @@ input.flatpickr-input{ padding-right:44px; }
   width:min(1100px,95%);
   pointer-events:none;
 }
-.rv-banner{ pointer-events:auto; display:none; overflow:hidden; border-radius:16px; border:1px solid rgba(0,0,0,.08); background:#fff; box-shadow:0 14px 40px rgba(0,0,0,.18); }
+.rv-banner{
+  pointer-events:auto;
+  display:none;
+  overflow:hidden;
+  border-radius:16px;
+  border:1px solid rgba(0,0,0,.08);
+  background:#fff;
+  box-shadow:0 14px 40px rgba(0,0,0,.18);
+}
 @media (max-width:560px){ .rv-banner-wrap{ bottom:86px !important; } }
 
 .rv-row{ display:flex; align-items:center; gap:12px; padding:10px 14px; }
@@ -1082,7 +1058,10 @@ input.flatpickr-input{ padding-right:44px; }
 .rv-in{ animation:rv-drop .35s cubic-bezier(.2,.7,.2,1) forwards }
 .rv-out{ animation:rv-lift .28s ease forwards }
 @keyframes rv-drop{ from{ opacity:0; transform:translateY(-10px) scale(.98) } to{ opacity:1; transform:translateY(0) scale(1) } }
-@keyframes rv-lift{ from{ opacity:1; transform:translateY(0) scale(1) } to{ opacity:0; transform:translateY(-10px) scale(.98) } }
+@keyframes rv-lift{
+  from{ opacity:1; transform:translateY(0) scale(1) }
+  to{ opacity:0; transform:translateY(-10px) scale(.98) }
+}
 
 @media (max-width:560px){
   .rv-text{ font-size:12px }
@@ -1149,7 +1128,6 @@ input.flatpickr-input{ padding-right:44px; }
 }
 .tile-card .tile-link:hover{ text-decoration:underline }
 
-/* Flechas */
 .vj-tiles-swiper .swiper-button-prev,
 .vj-tiles-swiper .swiper-button-next{
   width:42px; height:42px;
@@ -1163,7 +1141,6 @@ input.flatpickr-input{ padding-right:44px; }
   color:var(--brand);
 }
 
-/* Paginación */
 .vj-tiles-swiper .swiper-pagination-bullet{
   opacity:.35;
   background:var(--brand);
@@ -1173,7 +1150,6 @@ input.flatpickr-input{ padding-right:44px; }
   transform:scale(1.15);
 }
 
-/* Adaptabilidad tiles */
 @media (max-width:768px){ .tile-card .tile-media{ height:200px } }
 @media (max-width:560px){
   .vj-tiles-swiper{ padding-bottom:36px; }
@@ -1181,7 +1157,7 @@ input.flatpickr-input{ padding-right:44px; }
 }
 
 /* =========================
-   FOOTER / FOOTBAR (NO TE LO QUITO)
+   FOOTER / FOOTBAR
 ========================= */
 .site-footer{
   position:relative;
@@ -1288,19 +1264,22 @@ input.flatpickr-input{ padding-right:44px; }
   .headline{ font-size:54px }
 }
 
+/* ✅ FIX ENSIMADO REAL:
+   En mobile tu form estaba subiendo con margin negativo (-40px).
+   Lo dejamos POSITIVO para que NO se meta en los iconos.
+*/
 @media (max-width:900px){
   .headline{ font-size:46px }
 
   .hero .search-card{
     position:static;
     transform:none;
-    margin:-40px auto 20px;
+    margin: 12px auto 20px; /* ✅ antes: -40px (eso lo ensimaba) */
     width:min(720px,94%);
     max-height:none;
     overflow:visible;
   }
 
-  /* tablet: 2 columnas */
   .search-grid{ grid-template-columns:1fr 1fr; }
   .sg-col-submit{ grid-column:1 / -1; }
 
@@ -1310,14 +1289,12 @@ input.flatpickr-input{ padding-right:44px; }
   .tiles-wrap{ grid-template-columns:1fr 1fr }
   .info-content h2{ font-size:40px }
 
-  /* ✅ en <=900 el hero no necesita tanto padding bottom porque el form ya es estático */
-  .hero-copy{ padding-bottom: 40px !important; }
+  .hero-copy{ padding-bottom: 22px !important; }
 }
 
 @media (max-width:560px){
   .headline{ font-size:34px }
   .search-card{ padding:12px; }
-  /* móvil: 1 columna */
   .search-grid{ grid-template-columns:1fr; }
   .info-content h2{ font-size:36px }
 }
@@ -1354,28 +1331,24 @@ button:focus-visible{
 button::-moz-focus-inner,
 input::-moz-focus-inner{ border:0; }
 .btn, .car-cta, .fleet-btn, a.btn{ -webkit-tap-highlight-color:transparent; }
+
 /* =========================
-   TIMEPICKER UI (reloj tipo Material) — VIAJERO THEME
+   TIMEPICKER UI — VIAJERO THEME
 ========================= */
 .timepicker-ui-modal,
 .timepicker-ui-clock,
 .timepicker-ui-wrapper{
   font-family: 'Poppins', system-ui, -apple-system, Arial, sans-serif;
 }
-
 .timepicker-ui-modal{
   border-radius: 18px !important;
   overflow: hidden;
   box-shadow: 0 18px 45px rgba(0,0,0,.25) !important;
 }
-
-/* Header (donde sale la hora grande) */
 .timepicker-ui-modal .timepicker-ui-header{
   background: var(--brand) !important;
   color: #fff !important;
 }
-
-/* Texto hora/min */
 .timepicker-ui-modal .timepicker-ui-hour,
 .timepicker-ui-modal .timepicker-ui-minute,
 .timepicker-ui-modal .timepicker-ui-am,
@@ -1383,26 +1356,18 @@ input::-moz-focus-inner{ border:0; }
   color: #fff !important;
   font-weight: 800 !important;
 }
-
-/* Círculo del reloj */
 .timepicker-ui-modal .timepicker-ui-clock{
   background: #f3f4f6 !important;
 }
-
-/* Manecilla + punto central */
 .timepicker-ui-modal .timepicker-ui-clock-hand,
 .timepicker-ui-modal .timepicker-ui-clock-hand::before,
 .timepicker-ui-modal .timepicker-ui-clock-hand::after{
   background: var(--brand) !important;
 }
-
-/* Número seleccionado */
 .timepicker-ui-modal .timepicker-ui-value-active{
   background: var(--brand) !important;
   color: #fff !important;
 }
-
-/* Botones Cancel/OK */
 .timepicker-ui-modal .timepicker-ui-cancel,
 .timepicker-ui-modal .timepicker-ui-ok{
   font-weight: 900 !important;
@@ -1410,16 +1375,10 @@ input::-moz-focus-inner{ border:0; }
 .timepicker-ui-modal .timepicker-ui-ok{
   color: var(--brand) !important;
 }
-/* =========================
-   FIX VISIBILIDAD TIMEPICKER UI
-   (modal/overlay arriba de TODO)
-========================= */
-.timepicker-ui-overlay{
-  z-index: 999998 !important;
-}
-.timepicker-ui-modal{
-  z-index: 999999 !important;
-}
+
+/* overlay arriba de TODO */
+.timepicker-ui-overlay{ z-index: 999998 !important; }
+.timepicker-ui-modal{ z-index: 999999 !important; }
 
 /* Evita que el modal quede “cortado” por contenedores */
 .hero,
@@ -1429,11 +1388,9 @@ input::-moz-focus-inner{ border:0; }
   overflow: visible !important;
 }
 
-/* Si tu topbar/backdrop tiene z-index alto, esto lo supera */
-.topbar{ z-index: 1000; } /* ok */
-.nav-backdrop{ z-index: 9998; } /* ok */
+.topbar{ z-index: 1000; }
+.nav-backdrop{ z-index: 9998; }
 
-/* Mejor tap highlight en inputs del reloj */
 input#pickupTime,
 input#dropoffTime{
   -webkit-tap-highlight-color: transparent;
