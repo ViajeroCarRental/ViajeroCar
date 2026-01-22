@@ -3,14 +3,20 @@
 @section('Titulo','Home')
 
 @section('css-vistaHome')
-  {{-- Flatpickr CSS (necesario para que se vea el calendario) --}}
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  {{-- ✅ Timepicker UI CSS (NECESARIO para que el reloj se vea bien en lap y teléfono) --}}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/timepicker-ui@2.6.2/dist/timepicker-ui.min.css">
 
-  {{-- Tu CSS --}}
-  <link rel="stylesheet" href="{{ asset('css/navbarUsuarios.css') }}">
-
-  {{-- Swiper CSS para el carrusel de tarjetas --}}
+  {{-- ✅ Swiper CSS --}}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+
+  {{-- ⚠️ IMPORTANTE:
+      Los <script> NO deben ir en la sección de CSS.
+      Te los dejo aquí “sin quitarlos”, pero comentados para no romper el orden/carga.
+  --}}
+  {{--
+  <script src="https://cdn.jsdelivr.net/npm/timepicker-ui@2.6.2/dist/timepicker-ui.umd.min.js"></script>
+  <script src="{{ asset('js/home.js') }}"></script>
+  --}}
 
   <style>
     :root{ --brand:#b22222; --ink:#0f172a; --muted:#6b7280 }
@@ -1196,18 +1202,27 @@
 @endsection
 
 @section('js-vistaHome')
-  {{-- Flatpickr core + locale ES + rangePlugin (¡en este orden!) --}}
+
+  {{-- ✅ Swiper JS --}}
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+  {{-- ✅ Flatpickr core + locale ES + rangePlugin --}}
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
 
-  {{-- Tu JS --}}
+  {{-- ✅ Timepicker UI (JS) — DEBE CARGAR ANTES DE home.js --}}
+  {{-- (Dejo SOLO 1 CDN activo para evitar duplicados) --}}
+  <script src="https://cdn.jsdelivr.net/npm/timepicker-ui@2.6.2/dist/timepicker-ui.umd.min.js"></script>
+
+  {{--
+  <script src="https://unpkg.com/timepicker-ui@2.6.2/dist/timepicker-ui.umd.min.js"></script>
+  --}}
+
+  {{-- ✅ Tu JS --}}
   <script src="{{ asset('js/home.js') }}"></script>
 
-  {{-- Swiper JS para el carrusel de tarjetas --}}
-  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-
-  {{-- ✅ Carruseles de flota (REEMPLAZO: loop infinito real 1x1, sin atorarse) --}}
+  {{-- ✅ (Tu inline script de fleet infinito - lo dejo tal cual) --}}
   <script>
   (function(){
     "use strict";

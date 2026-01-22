@@ -599,7 +599,7 @@ input.flatpickr-input{ padding-right:44px; }
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  bottom:-150px;
+  bottom:-170px;
   right:auto;
   top:auto;
   margin:0;
@@ -790,17 +790,32 @@ input.flatpickr-input{ padding-right:44px; }
   padding:0 !important;
 }
 .fleet-viewport{ position:relative !important; overflow:visible !important; }
+
 .fleet-track{
   display:flex;
   gap:18px;
   scroll-snap-type:x mandatory;
-  overflow:hidden;
+
+  /* ✅ necesario para scrollBy() */
+  overflow-x:auto;
+  overflow-y:hidden;
+
   padding:0 8px;
-  transition:transform .6s ease;
+
+  /* ya no dependas de transform */
+  transition:none;
+
   background:transparent !important;
   border:0 !important;
   box-shadow:none !important;
+
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior:smooth;
 }
+.fleet-track::-webkit-scrollbar{ height:10px; }
+.fleet-track::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.18); border-radius:999px; }
+.fleet-track::-webkit-scrollbar-track{ background:transparent; }
+
 .car-card{
   flex:0 0 calc((100% - 36px) / 3);
   background:#fff !important;
@@ -1339,3 +1354,89 @@ button:focus-visible{
 button::-moz-focus-inner,
 input::-moz-focus-inner{ border:0; }
 .btn, .car-cta, .fleet-btn, a.btn{ -webkit-tap-highlight-color:transparent; }
+/* =========================
+   TIMEPICKER UI (reloj tipo Material) — VIAJERO THEME
+========================= */
+.timepicker-ui-modal,
+.timepicker-ui-clock,
+.timepicker-ui-wrapper{
+  font-family: 'Poppins', system-ui, -apple-system, Arial, sans-serif;
+}
+
+.timepicker-ui-modal{
+  border-radius: 18px !important;
+  overflow: hidden;
+  box-shadow: 0 18px 45px rgba(0,0,0,.25) !important;
+}
+
+/* Header (donde sale la hora grande) */
+.timepicker-ui-modal .timepicker-ui-header{
+  background: var(--brand) !important;
+  color: #fff !important;
+}
+
+/* Texto hora/min */
+.timepicker-ui-modal .timepicker-ui-hour,
+.timepicker-ui-modal .timepicker-ui-minute,
+.timepicker-ui-modal .timepicker-ui-am,
+.timepicker-ui-modal .timepicker-ui-pm{
+  color: #fff !important;
+  font-weight: 800 !important;
+}
+
+/* Círculo del reloj */
+.timepicker-ui-modal .timepicker-ui-clock{
+  background: #f3f4f6 !important;
+}
+
+/* Manecilla + punto central */
+.timepicker-ui-modal .timepicker-ui-clock-hand,
+.timepicker-ui-modal .timepicker-ui-clock-hand::before,
+.timepicker-ui-modal .timepicker-ui-clock-hand::after{
+  background: var(--brand) !important;
+}
+
+/* Número seleccionado */
+.timepicker-ui-modal .timepicker-ui-value-active{
+  background: var(--brand) !important;
+  color: #fff !important;
+}
+
+/* Botones Cancel/OK */
+.timepicker-ui-modal .timepicker-ui-cancel,
+.timepicker-ui-modal .timepicker-ui-ok{
+  font-weight: 900 !important;
+}
+.timepicker-ui-modal .timepicker-ui-ok{
+  color: var(--brand) !important;
+}
+/* =========================
+   FIX VISIBILIDAD TIMEPICKER UI
+   (modal/overlay arriba de TODO)
+========================= */
+.timepicker-ui-overlay{
+  z-index: 999998 !important;
+}
+.timepicker-ui-modal{
+  z-index: 999999 !important;
+}
+
+/* Evita que el modal quede “cortado” por contenedores */
+.hero,
+.search-card,
+.search-form,
+.search-grid{
+  overflow: visible !important;
+}
+
+/* Si tu topbar/backdrop tiene z-index alto, esto lo supera */
+.topbar{ z-index: 1000; } /* ok */
+.nav-backdrop{ z-index: 9998; } /* ok */
+
+/* Mejor tap highlight en inputs del reloj */
+input#pickupTime,
+input#dropoffTime{
+  -webkit-tap-highlight-color: transparent;
+  caret-color: transparent;
+  cursor: pointer;
+}

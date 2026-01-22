@@ -26,15 +26,12 @@
 
 
 // ===== Navbar: glass -> sólida + hamburguesa (MOBILE LIMPIO) =====
-// ✅ NO usa menu.style.display (eso rompe tu CSS responsive)
-// ✅ Usa .topbar.nav-open + body.nav-open + #navBackdrop
 (function(){
   "use strict";
 
   const topbar = document.querySelector(".topbar");
   if(!topbar) return;
 
-  // ----- solid on scroll -----
   function onScroll(){
     if(window.scrollY > 40) topbar.classList.add("solid");
     else topbar.classList.remove("solid");
@@ -42,17 +39,13 @@
   onScroll();
   window.addEventListener("scroll", onScroll, { passive:true });
 
-  // ----- mobile menu toggle -----
   const btn      = document.getElementById("navHamburger") || document.querySelector(".hamburger");
   const backdrop = document.getElementById("navBackdrop")  || document.querySelector(".nav-backdrop");
   const menu     = document.getElementById("mainMenu")     || topbar.querySelector(".menu");
   if(!btn || !menu) return;
 
   const MQ = window.matchMedia("(max-width: 940px)");
-
-  function isMobile(){
-    return MQ.matches;
-  }
+  const isMobile = ()=> MQ.matches;
 
   function openNav(){
     if(!isMobile()) return;
@@ -72,31 +65,24 @@
     document.body.classList.contains("nav-open") ? closeNav() : openNav();
   }
 
-  // accesibilidad
   btn.setAttribute("type", "button");
   if(!btn.getAttribute("aria-label")) btn.setAttribute("aria-label", "Abrir menú");
   btn.setAttribute("aria-expanded", btn.getAttribute("aria-expanded") || "false");
 
   btn.addEventListener("click", toggleNav);
 
-  // Cerrar tocando fuera
-  if(backdrop){
-    backdrop.addEventListener("click", closeNav);
-  }
+  if(backdrop) backdrop.addEventListener("click", closeNav);
 
-  // Cerrar al elegir link (delegado)
   menu.addEventListener("click", (e)=>{
     const a = e.target.closest("a");
     if(!a) return;
     closeNav();
   });
 
-  // Cerrar con ESC (Windows / teclado)
   document.addEventListener("keydown", (e)=>{
     if(e.key === "Escape") closeNav();
   });
 
-  // Si cambia a desktop, quitamos estado mobile abierto
   if(MQ.addEventListener){
     MQ.addEventListener("change", ()=>{ if(!isMobile()) closeNav(); });
   } else {
@@ -105,7 +91,7 @@
 })();
 
 
-// ===== Carrusel principal HERO (tu versión, infinito) =====
+// ===== Carrusel principal HERO (infinito) =====
 (function(){
   "use strict";
   const slides = [...document.querySelectorAll('.slide')];
@@ -123,11 +109,126 @@
 
 
 // =====================================================================
-// ✅ Carruseles de secciones: INFINITO + AVANZA 1 CARD (NO por página)
-// - Funciona con overflow-x (scroll) duplicando contenido
-// - Botones soportados:
-//   Dentro de .media-carousel: [data-mc="next"] / [data-mc="prev"]
-//   o clases: .mc-next .mc-prev .next .prev .btn-next .btn-prev
+// ✅ Carruseles FLEET: INFINITO + AVANZA 1 CARD (scroll horizontal)
+// =====================================================================
+(function(){
+  "use strict";
+
+  function initFleetInfinite(fleet){
+    const track = fleet.querySelector('.fleet-track');
+    const prev  = fleet.querySelector('.fleet-btn.prev');
+    const next  = fleet.querySelector('.fleet-btn.next');
+    if(!track || !prev || !next) return;
+
+    if(track.dataset.infiniteReady === "1") return;
+    track.dataset.infiniteReady = "1";
+
+    const GAP_FALLBACK = 18;
+    let autoSlide = null;
+    let lock = false;
+
+    function getGapPx(){
+      const st = getComputedStyle(track);
+      const gap = parseFloat(st.columnGap || st.gap) || 0;
+      return gap || GAP_FALLBACK;
+    }
+
+    function getStepPx(){
+      const card = track.querySelector('.car-card');
+      if(!card) return 340;
+      const rect = card.getBoundingClientRect();
+      const cs = getComputedStyle(card);
+      const ml = parseFloat(cs.marginLeft) || 0;
+      const mr = parseFloat(cs.marginRight) || 0;
+      return rect.width + ml + mr + getGapPx();
+    }
+
+    const originalHTML = track.innerHTML;
+    track.innerHTML = originalHTML + originalHTML;
+
+    const cards = Array.from(track.querySelectorAll('.car-card'));
+    const half  = Math.floor(cards.length / 2);
+
+    function jumpToMiddle(){
+      const step = getStepPx();
+      track.scrollLeft = step * half;
+    }
+    requestAnimationFrame(()=> requestAnimationFrame(jumpToMiddle));
+
+    function normalizeHard(){
+      const step = getStepPx();
+      const maxScroll = track.scrollWidth - track.clientWidth;
+
+      if(track.scrollLeft <= step){
+        track.scrollLeft += step * half;
+        return;
+      }
+      if(track.scrollLeft >= (maxScroll - step)){
+        track.scrollLeft -= step * half;
+        return;
+      }
+    }
+
+    function moveBy(dir){
+      if(lock) return;
+      lock = true;
+
+      normalizeHard();
+
+      const step = getStepPx();
+      const before = track.scrollLeft;
+
+      track.scrollBy({ left: dir * step, behavior: 'smooth' });
+
+      window.setTimeout(()=>{
+        normalizeHard();
+
+        if(track.scrollLeft === before){
+          normalizeHard();
+          track.scrollBy({ left: dir * step, behavior: 'auto' });
+          normalizeHard();
+        }
+
+        lock = false;
+      }, 420);
+    }
+
+    function startAuto(){
+      stopAuto();
+      autoSlide = setInterval(()=> moveBy(1), 10000);
+    }
+    function stopAuto(){
+      if(autoSlide) clearInterval(autoSlide);
+      autoSlide = null;
+    }
+
+    next.addEventListener('click', (e)=>{ e.preventDefault(); stopAuto(); moveBy(1); startAuto(); });
+    prev.addEventListener('click', (e)=>{ e.preventDefault(); stopAuto(); moveBy(-1); startAuto(); });
+
+    track.addEventListener('scroll', ()=>{
+      if(lock) return;
+      normalizeHard();
+    }, { passive:true });
+
+    track.addEventListener('mouseenter', stopAuto);
+    track.addEventListener('mouseleave', startAuto);
+
+    window.addEventListener('resize', ()=>{
+      requestAnimationFrame(()=> requestAnimationFrame(jumpToMiddle));
+    }, { passive:true });
+
+    startAuto();
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    document.querySelectorAll('.fleet').forEach(initFleetInfinite);
+  });
+})();
+
+
+// =====================================================================
+// ✅ Carruseles de secciones: INFINITO + AVANZA 1 CARD
+// (solo si NO son slides absolute/fade)
 // =====================================================================
 (function(){
   "use strict";
@@ -142,7 +243,6 @@
     const ml = parseFloat(s.marginLeft)  || 0;
     const mr = parseFloat(s.marginRight) || 0;
 
-    // gap real si es flex
     const cs = getComputedStyle(container);
     const gap = parseFloat(cs.columnGap || cs.gap) || 0;
 
@@ -150,42 +250,34 @@
   }
 
   function initInfiniteOneByOne(wrap, idx){
-    // El "viewport" donde se scrollea: si tu wrap ya es el scroll container, usamos wrap
-    // Si tienes un inner tipo .media-viewport, también lo soporta:
     const viewport = wrap.querySelector('.media-viewport') || wrap;
 
     const slides = qsa('.media-slide', viewport);
     if(slides.length <= 1) return;
 
-    // Evitar doble init
+    const first = slides[0];
+    const isAbsoluteFade = first && getComputedStyle(first).position === "absolute";
+    if(isAbsoluteFade) return;
+
     if(wrap.dataset.infiniteReady === "1") return;
     wrap.dataset.infiniteReady = "1";
 
-    // Botones (si existen)
     const btnNext = wrap.querySelector('[data-mc="next"], .mc-next, .next, .btn-next');
     const btnPrev = wrap.querySelector('[data-mc="prev"], .mc-prev, .prev, .btn-prev');
 
-    // Intervalo
     const base = Number(wrap.dataset.interval || 5000);
     const interval = base + (idx * 300);
 
-    // ✅ Duplicar contenido para loop infinito “seamless”
-    // Guardamos HTML original (solo 1 vez)
     const originalHTML = viewport.innerHTML;
-
-    // asumimos que dentro del viewport SOLO van slides.
     viewport.innerHTML = originalHTML + originalHTML;
 
-    // Re-leer slides ya duplicadas
     const allSlides = qsa('.media-slide', viewport);
     const half = allSlides.length / 2;
 
-    // Asegurar que el viewport sea scroll horizontal (si tu CSS ya lo hace, no afecta)
-    viewport.style.overflowX = viewport.style.overflowX || 'auto';
-    viewport.style.scrollBehavior = 'auto'; // lo controlamos nosotros
+    viewport.style.overflowX = 'auto';
+    viewport.style.scrollBehavior = 'auto';
     viewport.style.webkitOverflowScrolling = 'touch';
 
-    // Posicionar al inicio de la “segunda mitad” para poder ir atrás/adelante infinito
     const step0 = getStepPx(allSlides[0], viewport);
     viewport.scrollLeft = step0 * half;
 
@@ -240,13 +332,11 @@
       timer = setInterval(()=> moveBy(1), interval);
     }
 
-    // Scroll manual (rueda/touch)
     viewport.addEventListener('scroll', ()=>{
       if(lock) return;
       normalizeIfNeeded();
     }, { passive:true });
 
-    // Clicks
     if(btnNext){
       btnNext.addEventListener('click', (e)=>{
         e.preventDefault();
@@ -264,11 +354,9 @@
       });
     }
 
-    // Hover pause
     wrap.addEventListener('mouseenter', stop);
     wrap.addEventListener('mouseleave', start);
 
-    // Resize: re-centra
     window.addEventListener('resize', ()=>{
       const step = getStepPx(allSlides[0], viewport);
       if(!step) return;
@@ -320,86 +408,179 @@
 })();
 
 
-// ===== Flatpickr fechas / horas + resumen =====
+// ===== Flatpickr FECHAS + TimepickerUI (RELOJ BONITO) + resumen =====
 (function(){
   "use strict";
+
   const rangeSummary = document.getElementById('rangeSummary');
 
+  // 1) FECHAS (Flatpickr + rangePlugin)
   if(window.flatpickr){
-    flatpickr('#pickupDate', {
+    const pickup = document.getElementById('pickupDate');
+    const min = pickup?.dataset?.min || 'today';
+
+    window.flatpickr('#pickupDate', {
       locale: 'es',
       altInput: true,
       altFormat: 'd/m/Y',
       dateFormat: 'Y-m-d',
-      minDate: 'today',
+      minDate: min,
       disableMobile: true,
-      plugins: typeof rangePlugin !== 'undefined'
-        ? [ new rangePlugin({ input: '#dropoffDate' }) ]
+      plugins: (typeof window.rangePlugin !== "undefined")
+        ? [ new window.rangePlugin({ input: '#dropoffDate' }) ]
         : [],
       onChange: updateSummary
     });
+  }
 
-    const timeCfg = {
-      enableTime: true,
-      noCalendar: true,
-      dateFormat: 'H:i',     // ✅ 24h en el valor del input
-      time_24hr: true,       // ✅ 24h en UI
-      minuteIncrement: 15,   // ✅ 15 en 15
-      allowInput: true,
-      disableMobile: true,
-      onChange: updateSummary,
-      onClose: (selectedDates, dateStr, instance) => {
-        // Normaliza si escriben manualmente (ej: 18:07 -> 18:15)
-        const m = String(dateStr || "").match(/^(\d{1,2}):(\d{2})$/);
-        if(!m) return;
+  // 2) HORAS (TimepickerUI)
+  // ✅ Arreglos aquí:
+  // - Espera REAL a que cargue el CDN
+  // - Inicializa con wrapper correcto (según docs)
+  // - Fuerza 24h y evita "keyboard" raro en móvil
+  function resolveCtor(){
+    if (typeof window.TimepickerUI === "function") return window.TimepickerUI;
+    if (window.TimepickerUI && typeof window.TimepickerUI.TimepickerUI === "function") return window.TimepickerUI.TimepickerUI;
+    if (window.Timepicker && typeof window.Timepicker === "function") return window.Timepicker;
+    if (window.timepickerUI && typeof window.timepickerUI === "function") return window.timepickerUI;
+    return null;
+  }
 
-        let hh = Number(m[1]);
-        let mm = Number(m[2]);
-        if(!Number.isFinite(hh) || !Number.isFinite(mm)) return;
+  function waitForCtor(maxMs = 9000){
+    return new Promise((resolve)=>{
+      const start = performance.now();
+      (function tick(){
+        const Ctor = resolveCtor();
+        if(Ctor) return resolve(Ctor);
+        if(performance.now() - start >= maxMs) return resolve(null);
+        setTimeout(tick, 120);
+      })();
+    });
+  }
 
-        hh = Math.max(0, Math.min(23, hh));
-        mm = Math.max(0, Math.min(59, mm));
+  function wrapTimepickerInput(input){
+    // TimepickerUI suele esperar wrapper con class="timepicker-ui"
+    // Si ya está envuelto, no lo dupliques.
+    const parent = input.parentElement;
+    if(parent && parent.classList && parent.classList.contains('timepicker-ui')) return parent;
 
-        const rounded = Math.round(mm / 15) * 15;
-        if(rounded === 60){
-          mm = 0;
-          hh = (hh + 1) % 24;
-        } else {
-          mm = rounded;
-        }
+    const wrap = document.createElement('div');
+    wrap.className = 'timepicker-ui';            // ✅ clave
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    return wrap;
+  }
 
-        const out = String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
-        if(out !== dateStr) instance.setDate(out, true, 'H:i');
-      }
-    };
+  async function initAnalogTime(id){
+    const input = document.getElementById(id);
+    if(!input) return;
 
-    flatpickr('#pickupTime', timeCfg);
-    flatpickr('#dropoffTime', timeCfg);
+    if(input.dataset.tpReady === "1") return;
+    input.dataset.tpReady = "1";
+
+    // Evita teclado nativo feo
+    input.setAttribute("readonly", "readonly");
+    input.setAttribute("inputmode", "none");
+
+    // Asegura wrapper esperado por la lib
+    const wrapper = wrapTimepickerInput(input);
+
+    const Ctor = await waitForCtor(9000);
+
+    if(!Ctor){
+      console.warn("[TimepickerUI] No se encontró el constructor. Esto NO es del JS: el CDN no cargó o el layout no imprime @yield('js-vistaHome').");
+      console.warn("[TimepickerUI] Debug:", {
+        TimepickerUI: window.TimepickerUI,
+        hasTimepickerUI: !!window.TimepickerUI,
+        hasTimepicker: !!window.Timepicker,
+        hasLower: !!window.timepickerUI
+      });
+      // Fallback limpio: placeholder 24h
+      if(!input.value) input.placeholder = "18:00";
+      return;
+    }
+
+    try{
+      // Configuración estable (bonita en móvil)
+      const tp = new Ctor(wrapper, {
+        clockType: "24h",
+        incrementMinuteBy: 15,
+
+        // ✅ Esto evita que salga la opción "keyboard" (la pantalla rara)
+        // En algunas versiones se llama enableSwitchIcon; en otras showKeyboardIcon.
+        enableSwitchIcon: false,
+        showKeyboardIcon: false
+      });
+
+      // Distintas builds exponen create() o init()
+      if(typeof tp.create === "function") tp.create();
+      else if(typeof tp.init === "function") tp.init();
+
+      // Forzar formato 24h simple si viene vacío
+      if(!input.value) input.value = "12:00";
+
+      input.addEventListener("change", updateSummary);
+      input.addEventListener("input", updateSummary);
+
+      // iOS: asegurar foco sin teclado
+      input.addEventListener("click", ()=>{
+        input.blur();
+        // muchas builds abren al click, pero si no:
+        if(typeof tp.open === "function") tp.open();
+      });
+    } catch(err){
+      console.error("[TimepickerUI] Falló la inicialización:", err);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", ()=>{
+    initAnalogTime("pickupTime");
+    initAnalogTime("dropoffTime");
+    updateSummary();
+  });
+
+  // 3) Resumen (soporta 24h y AM/PM por si alguna vez llega)
+  function parseTimeTo24h(str){
+    const raw = String(str || '').trim();
+    if(!raw) return { hh:0, mm:0 };
+
+    const m = raw.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+    if(!m) return { hh:0, mm:0 };
+
+    let hh = Number(m[1] || 0);
+    let mm = Number(m[2] || 0);
+    const ap = (m[3] || '').toUpperCase();
+
+    if(ap === 'PM' && hh < 12) hh += 12;
+    if(ap === 'AM' && hh === 12) hh = 0;
+
+    hh = Number.isFinite(hh) ? Math.max(0, Math.min(23, hh)) : 0;
+    mm = Number.isFinite(mm) ? Math.max(0, Math.min(59, mm)) : 0;
+
+    return { hh, mm };
   }
 
   function buildDT(dateId, timeId){
-    const d = document.getElementById(dateId)?.value;          // Y-m-d
-    const t = document.getElementById(timeId)?.value || '00:00'; // H:i
+    const d = document.getElementById(dateId)?.value;
+    const t = document.getElementById(timeId)?.value || '00:00';
     if(!d) return null;
 
-    const [y,m,day] = d.split('-').map(Number);
-    const [hh,mm] = t.split(':').map(Number);
-
+    const [y, m, day] = d.split('-').map(Number);
     if(!y || !m || !day) return null;
-    const H = Number.isFinite(hh) ? hh : 0;
-    const M = Number.isFinite(mm) ? mm : 0;
 
-    return new Date(y, m-1, day, H, M);
+    const { hh, mm } = parseTimeTo24h(t);
+    return new Date(y, m - 1, day, hh, mm);
   }
 
   function updateSummary(){
     if(!rangeSummary) return;
+
     const s = buildDT('pickupDate','pickupTime');
     const e = buildDT('dropoffDate','dropoffTime');
     if(!s || !e){ rangeSummary.textContent=''; return; }
 
-    const h = Math.round((e-s)/36e5);
-    const d = Math.ceil(h/24);
+    const h = Math.round((e - s) / 36e5);
+    const d = Math.ceil(h / 24);
     rangeSummary.textContent = `Renta por ${d} día(s) · ~${h} hora(s)`;
   }
 })();
