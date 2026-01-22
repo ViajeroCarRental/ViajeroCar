@@ -403,6 +403,27 @@ CHECKLIST CAMBIO DE AUTO
 =================================*/
 Route::get('/admin/checklist2/{id}', [ChecklistCambioAutoController::class, 'index'])->name('checklist2');
 
+// enviar checklist cambio de auto
+Route::post('/admin/checklist2/{id}/guardar', [ChecklistCambioAutoController::class, 'guardarCambio'])->name('checklist2.guardar');
+
+// Guardar UN daño desde el modal (AJAX)
+Route::post('/admin/checklist2/{id}/danio', [ChecklistCambioAutoController::class, 'guardarDano'])
+    ->name('checklist2.guardarDano');
+
+    Route::delete('/admin/checklist2/danio/{id}', [ChecklistCambioAutoController::class, 'eliminarDano'])
+    ->name('checklist2.eliminarDano');
+// 1) Vehículos por categoría (para llenar el modal)
+Route::get('/admin/checklist2/{id}/vehiculos/categoria/{idCategoria}', [ChecklistCambioAutoController::class, 'vehiculosPorCategoria'])
+    ->name('checklist2.vehiculosPorCategoria');
+
+// 2) Seleccionar / guardar vehículo nuevo (estado en_proceso)
+Route::post('/admin/checklist2/{id}/set-vehiculo-nuevo', [ChecklistCambioAutoController::class, 'setVehiculoNuevo'])
+    ->name('checklist2.setVehiculoNuevo');
+
+// 3) Confirmar cambio de vehículo (actualiza reservación + confirma cambio)
+Route::post('/admin/checklist2/{id}/confirmar-cambio', [ChecklistCambioAutoController::class, 'confirmarCambio'])
+    ->name('checklist2.confirmarCambio');
+
 
 /* ===============================================
    ADMIN · ROLES Y PERMISOS

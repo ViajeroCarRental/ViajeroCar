@@ -166,31 +166,62 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   confirmarAviso?.addEventListener("click", async () => {
-    try {
-      if (!id) return alert("No se detectó el ID del contrato.");
-      if (!textoCliente) return;
-
-      const cliente = textoCliente.value.trim();
-      if (cliente.length < 10) {
-        alert("Escribe un mensaje un poquito más completo.");
-        return;
+  try {
+    if (!id) {
+      if (window.alertify) {
+        alertify.error("No se detectó el ID del contrato.");
+      } else {
+        alert("No se detectó el ID del contrato.");
       }
-
-      confirmarAviso.disabled = true;
-      confirmarAviso.textContent = "Enviando...";
-
-      const data = await postJSON(`/contrato/${id}/enviar-correo`, { aviso: cliente });
-
-      alert(data.msg || "✅ Enviado");
-      modalAviso.style.display = "none";
-    } catch (e) {
-      console.error(e);
-      alert("❌ Error al enviar correo: " + e.message + "\nRevisa storage/logs/laravel.log");
-    } finally {
-      confirmarAviso.disabled = false;
-      confirmarAviso.textContent = "Confirmar";
+      return;
     }
-  });
+
+    if (!textoCliente) return;
+
+    const cliente = textoCliente.value.trim();
+    if (cliente.length < 10) {
+      if (window.alertify) {
+        alertify.warning("Escribe el texto de aviso un poco más completo.");
+      } else {
+        alert("Escribe el texto de aviso un poquito más completo.");
+      }
+      return;
+    }
+
+    confirmarAviso.disabled = true;
+    confirmarAviso.textContent = "Enviando...";
+
+    // Mensaje mientras se genera y envía el contrato
+    if (window.alertify) {
+      alertify.message("Generando contrato y enviando correo...");
+    }
+
+    const data = await postJSON(`/contrato/${id}/enviar-correo`, { aviso: cliente });
+
+    if (window.alertify) {
+      if (data.ok) {
+        alertify.success(data.msg || "Contrato enviado correctamente.");
+      } else {
+        alertify.error(data.msg || "No se pudo enviar el contrato.");
+      }
+    } else {
+      alert(data.msg || "Contrato enviado correctamente.");
+    }
+
+    modalAviso.style.display = "none";
+  } catch (e) {
+    console.error(e);
+    if (window.alertify) {
+      alertify.error("Error al enviar correo: " + (e.message || "Error desconocido"));
+    } else {
+      alert("❌ Error al enviar correo: " + e.message + "\nRevisa storage/logs/laravel.log");
+    }
+  } finally {
+    confirmarAviso.disabled = false;
+    confirmarAviso.textContent = "Confirmar y Enviar";
+  }
+});
+
 
   /* =======================================
      5) IMPRIMIR (solo navegador)

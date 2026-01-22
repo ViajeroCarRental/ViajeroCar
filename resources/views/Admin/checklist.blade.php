@@ -327,20 +327,7 @@
         o robo parcial o total; salvo una negligencia.
     </p>
 
-    <div class="accept-line">
-        <span>Acepto:</span>
 
-        @if($contrato->firma_cliente)
-            <img src="{{ $contrato->firma_cliente }}"
-                 class="firma-img"
-                 alt="Firma del cliente">
-        @else
-            <button class="btn-open-sign"
-                    data-type="cliente">
-                Firmar Cliente
-            </button>
-        @endif
-    </div>
 </section>
 
 
@@ -358,9 +345,19 @@
         <li>No se permite el cambio de piezas originales con las que se renta la unidad.</li>
     </ol>
 
-    <div class="accept-line">
-        <span>Acepto</span>
-        <span class="xbox">X</span>
+     <div class="accept-line">
+        <span>Acepto:</span>
+
+        @if($contrato->firma_cliente)
+            <img src="{{ $contrato->firma_cliente }}"
+                 class="firma-img"
+                 alt="Firma del cliente">
+        @else
+            <button class="btn-open-sign"
+                    data-type="cliente">
+                Firmar Cliente
+            </button>
+        @endif
     </div>
 </section>
 
