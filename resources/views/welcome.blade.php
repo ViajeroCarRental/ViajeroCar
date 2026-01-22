@@ -303,9 +303,9 @@
   <!-- HERO -->
   <section class="hero" id="heroTop">
     <div class="carousel">
-      <div class="slide active" style="background-image:url('{{ asset('img/inicio1.png') }}');"></div>
-      <div class="slide" style="background-image:url('{{ asset('img/inicio2.png') }}');"></div>
-      <div class="slide" style="background-image:url('{{ asset('img/inicio3.png') }}');"></div>
+      <div class="slide active" style="background-image:url('{{ asset('img/inicio1.webp') }}');"></div>
+      <div class="slide" style="background-image:url('{{ asset('img/inicio2.webp') }}');"></div>
+      <div class="slide" style="background-image:url('{{ asset('img/inicio3.webp') }}');"></div>
       <div class="overlay"></div>
     </div>
 
