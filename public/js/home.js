@@ -1,8 +1,34 @@
-// ====================
-// UI / PRESENTACIÓN SOLAMENTE
-// ====================
+/* ==========================================================
+   Viajero - home.js (COMPLETO)
+   - Navbar + hero + carousels + modal + resumen fechas/horas
+   - ✅ HORAS: reemplaza reloj por SELECTS debajo del input
+     * 25 hrs: 00..24
+     * minutos: 00/15/30/45
+     * 24:00 = siguiente día 00:00 (para cálculos)
+========================================================== */
 
-// ===== Icono de cuenta (solo presentación) =====
+/* ====================
+   Polyfills
+==================== */
+(function(){
+  "use strict";
+
+  // Polyfill seguro para closest en algunos webviews viejos
+  if (!Element.prototype.closest) {
+    Element.prototype.closest = function(s) {
+      let el = this;
+      do {
+        if (el.matches(s)) return el;
+        el = el.parentElement || el.parentNode;
+      } while (el !== null && el.nodeType === 1);
+      return null;
+    };
+  }
+})();
+
+/* ====================
+   Icono de cuenta
+==================== */
 (function(){
   "use strict";
   function syncAccountIcon(){
@@ -24,8 +50,9 @@
   document.addEventListener('DOMContentLoaded', syncAccountIcon);
 })();
 
-
-// ===== Navbar: glass -> sólida + hamburguesa (MOBILE LIMPIO) =====
+/* ====================
+   Navbar: glass -> sólida + hamburguesa
+==================== */
 (function(){
   "use strict";
 
@@ -90,15 +117,16 @@
   }
 })();
 
-
-// ===== Carrusel principal HERO (infinito) =====
+/* ====================
+   HERO: carrusel fondo
+==================== */
 (function(){
   "use strict";
-  const slides = [...document.querySelectorAll('.slide')];
+  const slides = Array.from(document.querySelectorAll('.slide'));
   if(!slides.length) return;
 
   let i = 0;
-  const show = x => slides.forEach((s,k)=> s.classList.toggle('active', k===x));
+  const show = (x)=> slides.forEach((s,k)=> s.classList.toggle('active', k===x));
   show(i);
 
   setInterval(()=>{
@@ -107,10 +135,9 @@
   }, 5000);
 })();
 
-
-// =====================================================================
-// ✅ Carruseles FLEET: INFINITO + AVANZA 1 CARD (scroll horizontal)
-// =====================================================================
+/* =====================================================================
+   FLEET: INFINITO + AVANZA 1 CARD (scroll horizontal)
+===================================================================== */
 (function(){
   "use strict";
 
@@ -120,6 +147,7 @@
     const next  = fleet.querySelector('.fleet-btn.next');
     if(!track || !prev || !next) return;
 
+    // Evitar doble init
     if(track.dataset.infiniteReady === "1") return;
     track.dataset.infiniteReady = "1";
 
@@ -143,6 +171,7 @@
       return rect.width + ml + mr + getGapPx();
     }
 
+    // Duplicar para loop
     const originalHTML = track.innerHTML;
     track.innerHTML = originalHTML + originalHTML;
 
@@ -183,6 +212,7 @@
       window.setTimeout(()=>{
         normalizeHard();
 
+        // Si se clavó por límite real, forzar wrap
         if(track.scrollLeft === before){
           normalizeHard();
           track.scrollBy({ left: dir * step, behavior: 'auto' });
@@ -225,11 +255,9 @@
   });
 })();
 
-
-// =====================================================================
-// ✅ Carruseles de secciones: INFINITO + AVANZA 1 CARD
-// (solo si NO son slides absolute/fade)
-// =====================================================================
+/* =====================================================================
+   Media carousels: SOLO si son horizontales (no absolute/fade)
+===================================================================== */
 (function(){
   "use strict";
 
@@ -257,7 +285,7 @@
 
     const first = slides[0];
     const isAbsoluteFade = first && getComputedStyle(first).position === "absolute";
-    if(isAbsoluteFade) return;
+    if(isAbsoluteFade) return; // si tu CSS es fade/absolute, NO tocar
 
     if(wrap.dataset.infiniteReady === "1") return;
     wrap.dataset.infiniteReady = "1";
@@ -340,17 +368,13 @@
     if(btnNext){
       btnNext.addEventListener('click', (e)=>{
         e.preventDefault();
-        stop();
-        moveBy(1);
-        start();
+        stop(); moveBy(1); start();
       });
     }
     if(btnPrev){
       btnPrev.addEventListener('click', (e)=>{
         e.preventDefault();
-        stop();
-        moveBy(-1);
-        start();
+        stop(); moveBy(-1); start();
       });
     }
 
@@ -372,16 +396,18 @@
   });
 })();
 
-
-// ===== Año en footer =====
+/* ====================
+   Año en footer
+==================== */
 (function(){
   "use strict";
   const y = document.getElementById('year');
   if(y) y.textContent = new Date().getFullYear();
 })();
 
-
-// ===== Modal de bienvenida =====
+/* ====================
+   Modal de bienvenida
+==================== */
 (function(){
   "use strict";
   const modal  = document.getElementById('welcomeModal');
@@ -407,8 +433,12 @@
   }
 })();
 
-
-// ===== Flatpickr FECHAS + TimepickerUI (RELOJ BONITO) + resumen =====
+/* =====================================================================
+   Flatpickr FECHAS + (antes TimepickerUI) -> ahora SELECTS + Resumen
+   ✅ 25 hrs: 00..24
+   ✅ minutos: 00/15/30/45
+   ✅ 24:00 = siguiente día 00:00 (para cálculo)
+===================================================================== */
 (function(){
   "use strict";
 
@@ -433,104 +463,115 @@
     });
   }
 
-  // 2) HORAS (TimepickerUI)
-  // ✅ Arreglos aquí:
-  // - Espera REAL a que cargue el CDN
-  // - Inicializa con wrapper correcto (según docs)
-  // - Fuerza 24h y evita "keyboard" raro en móvil
-  function resolveCtor(){
-    if (typeof window.TimepickerUI === "function") return window.TimepickerUI;
-    if (window.TimepickerUI && typeof window.TimepickerUI.TimepickerUI === "function") return window.TimepickerUI.TimepickerUI;
-    if (window.Timepicker && typeof window.Timepicker === "function") return window.Timepicker;
-    if (window.timepickerUI && typeof window.timepickerUI === "function") return window.timepickerUI;
-    return null;
+  /* ==========================
+     SELECTS de hora/minuto
+  ========================== */
+  function pad2(n){ return String(n).padStart(2,"0"); }
+
+  function createTimeSelectsBelow(input, opts){
+    const { hourMax=24, minuteStep=15, defaultValue="12:00" } = (opts || {});
+
+    // contenedor: intenta uno cercano, si no el parent
+    const wrap = input.closest(".time-field") || input.parentElement;
+
+    // evita duplicar
+    if(wrap && wrap.querySelector(".tp-selects")) return;
+
+    const box = document.createElement("div");
+    box.className = "tp-selects";
+
+    const selH = document.createElement("select");
+    selH.className = "tp-hour";
+    selH.setAttribute("aria-label", "Hora");
+
+    const selM = document.createElement("select");
+    selM.className = "tp-min";
+    selM.setAttribute("aria-label", "Minutos");
+
+    // Horas 00..24 (25 opciones)
+    for(let h=0; h<=hourMax; h++){
+      const op = document.createElement("option");
+      op.value = String(h);
+      op.textContent = pad2(h);
+      selH.appendChild(op);
+    }
+
+    // Minutos 00..45 step 15
+    for(let m=0; m<60; m+=minuteStep){
+      const op = document.createElement("option");
+      op.value = String(m);
+      op.textContent = pad2(m);
+      selM.appendChild(op);
+    }
+
+    // Set inicial desde defaultValue
+    const m = String(defaultValue).trim().match(/^(\d{1,2})(?::(\d{2}))?/);
+    let hh = m ? Number(m[1]) : 12;
+    let mm = m ? Number(m[2] || 0) : 0;
+
+    if(hh > hourMax) hh = hourMax;
+    if(hh === 24 && mm !== 0) mm = 0;
+
+    // redondeo al step más cercano
+    mm = Math.round(mm / minuteStep) * minuteStep;
+    if(mm >= 60) mm = 0;
+
+    selH.value = String(hh);
+    selM.value = String(mm);
+
+    function sync(){
+      const h = Number(selH.value || 0);
+      const mi = Number(selM.value || 0);
+
+      // si eligen 24, fuerza minutos 00
+      if(h === 24 && mi !== 0){
+        selM.value = "0";
+      }
+
+      const finalH = pad2(Number(selH.value || 0));
+      const finalM = pad2(Number(selM.value || 0));
+      input.value = `${finalH}:${finalM}`;
+
+      input.dispatchEvent(new Event("input", { bubbles:true }));
+    }
+
+    selH.addEventListener("change", sync);
+    selM.addEventListener("change", sync);
+
+    box.appendChild(selH);
+    box.appendChild(selM);
+
+    // insertar debajo del input
+    if(wrap){
+      wrap.appendChild(box);
+    }else{
+      input.insertAdjacentElement("afterend", box);
+    }
+
+    sync();
   }
 
-  function waitForCtor(maxMs = 9000){
-    return new Promise((resolve)=>{
-      const start = performance.now();
-      (function tick(){
-        const Ctor = resolveCtor();
-        if(Ctor) return resolve(Ctor);
-        if(performance.now() - start >= maxMs) return resolve(null);
-        setTimeout(tick, 120);
-      })();
-    });
-  }
-
-  function wrapTimepickerInput(input){
-    // TimepickerUI suele esperar wrapper con class="timepicker-ui"
-    // Si ya está envuelto, no lo dupliques.
-    const parent = input.parentElement;
-    if(parent && parent.classList && parent.classList.contains('timepicker-ui')) return parent;
-
-    const wrap = document.createElement('div');
-    wrap.className = 'timepicker-ui';            // ✅ clave
-    input.parentNode.insertBefore(wrap, input);
-    wrap.appendChild(input);
-    return wrap;
-  }
-
-  async function initAnalogTime(id){
+  function initAnalogTime(id){
     const input = document.getElementById(id);
     if(!input) return;
 
     if(input.dataset.tpReady === "1") return;
     input.dataset.tpReady = "1";
 
-    // Evita teclado nativo feo
+    // Evita teclado nativo raro
     input.setAttribute("readonly", "readonly");
     input.setAttribute("inputmode", "none");
 
-    // Asegura wrapper esperado por la lib
-    const wrapper = wrapTimepickerInput(input);
+    createTimeSelectsBelow(input, {
+      hourMax: 24,
+      minuteStep: 15,
+      defaultValue: input.value || "12:00"
+    });
 
-    const Ctor = await waitForCtor(9000);
+    if(!input.value) input.value = "12:00";
 
-    if(!Ctor){
-      console.warn("[TimepickerUI] No se encontró el constructor. Esto NO es del JS: el CDN no cargó o el layout no imprime @yield('js-vistaHome').");
-      console.warn("[TimepickerUI] Debug:", {
-        TimepickerUI: window.TimepickerUI,
-        hasTimepickerUI: !!window.TimepickerUI,
-        hasTimepicker: !!window.Timepicker,
-        hasLower: !!window.timepickerUI
-      });
-      // Fallback limpio: placeholder 24h
-      if(!input.value) input.placeholder = "18:00";
-      return;
-    }
-
-    try{
-      // Configuración estable (bonita en móvil)
-      const tp = new Ctor(wrapper, {
-        clockType: "24h",
-        incrementMinuteBy: 15,
-
-        // ✅ Esto evita que salga la opción "keyboard" (la pantalla rara)
-        // En algunas versiones se llama enableSwitchIcon; en otras showKeyboardIcon.
-        enableSwitchIcon: false,
-        showKeyboardIcon: false
-      });
-
-      // Distintas builds exponen create() o init()
-      if(typeof tp.create === "function") tp.create();
-      else if(typeof tp.init === "function") tp.init();
-
-      // Forzar formato 24h simple si viene vacío
-      if(!input.value) input.value = "12:00";
-
-      input.addEventListener("change", updateSummary);
-      input.addEventListener("input", updateSummary);
-
-      // iOS: asegurar foco sin teclado
-      input.addEventListener("click", ()=>{
-        input.blur();
-        // muchas builds abren al click, pero si no:
-        if(typeof tp.open === "function") tp.open();
-      });
-    } catch(err){
-      console.error("[TimepickerUI] Falló la inicialización:", err);
-    }
+    input.addEventListener("change", updateSummary);
+    input.addEventListener("input", updateSummary);
   }
 
   document.addEventListener("DOMContentLoaded", ()=>{
@@ -539,7 +580,7 @@
     updateSummary();
   });
 
-  // 3) Resumen (soporta 24h y AM/PM por si alguna vez llega)
+  // 3) Resumen
   function parseTimeTo24h(str){
     const raw = String(str || '').trim();
     if(!raw) return { hh:0, mm:0 };
@@ -554,8 +595,17 @@
     if(ap === 'PM' && hh < 12) hh += 12;
     if(ap === 'AM' && hh === 12) hh = 0;
 
-    hh = Number.isFinite(hh) ? Math.max(0, Math.min(23, hh)) : 0;
+    // ✅ permitir 24:00 (solo si minutos = 0)
+    if(Number.isFinite(hh)){
+      hh = Math.max(0, Math.min(24, hh));
+    } else {
+      hh = 0;
+    }
     mm = Number.isFinite(mm) ? Math.max(0, Math.min(59, mm)) : 0;
+
+    if(hh === 24 && mm !== 0){
+      mm = 0;
+    }
 
     return { hh, mm };
   }
@@ -565,10 +615,20 @@
     const t = document.getElementById(timeId)?.value || '00:00';
     if(!d) return null;
 
-    const [y, m, day] = d.split('-').map(Number);
+    const parts = d.split('-').map(Number);
+    if(parts.length !== 3) return null;
+    const [y, m, day] = parts;
     if(!y || !m || !day) return null;
 
     const { hh, mm } = parseTimeTo24h(t);
+
+    // ✅ 24:00 = siguiente día 00:00
+    if(hh === 24){
+      const dt = new Date(y, m - 1, day, 0, 0);
+      dt.setDate(dt.getDate() + 1);
+      return dt;
+    }
+
     return new Date(y, m - 1, day, hh, mm);
   }
 
@@ -581,27 +641,26 @@
 
     const h = Math.round((e - s) / 36e5);
     const d = Math.ceil(h / 24);
+    if(!Number.isFinite(h) || h <= 0){ rangeSummary.textContent=''; return; }
+
     rangeSummary.textContent = `Renta por ${d} día(s) · ~${h} hora(s)`;
   }
 })();
 
-
-// ====================
-// ✅ BURBUJA DE REDES SOCIALES (RADIAL)
-// ====================
+/* ====================
+   Burbuja radial redes
+==================== */
 (function () {
   "use strict";
 
   const fab = document.getElementById("socialFab");
   const btn = document.getElementById("fabMain");
-
   if (!fab || !btn) return;
 
   function openFab(){
     fab.classList.add("open");
     btn.setAttribute("aria-expanded", "true");
   }
-
   function closeFab(){
     fab.classList.remove("open");
     btn.setAttribute("aria-expanded", "false");
@@ -620,4 +679,129 @@
   document.addEventListener("keydown", (e)=>{
     if(e.key === "Escape") closeFab();
   });
+})();
+
+/* =====================================================================
+   Swiper tiles (tarjetas)
+===================================================================== */
+(function(){
+  "use strict";
+
+  function initTilesSwiper(){
+    if(typeof window.Swiper !== "function") return;
+    const el = document.querySelector('.vj-tiles-swiper');
+    if(!el) return;
+    if(el.dataset.swReady === "1") return;
+    el.dataset.swReady = "1";
+
+    // eslint-disable-next-line no-new
+    new Swiper('.vj-tiles-swiper', {
+      loop: true,
+      speed: 650,
+      autoplay: { delay: 3200, disableOnInteraction: false },
+      spaceBetween: 18,
+      slidesPerView: 1.06,
+      centeredSlides: false,
+      grabCursor: true,
+      navigation: {
+        nextEl: '.vj-tiles-swiper .swiper-button-next',
+        prevEl: '.vj-tiles-swiper .swiper-button-prev',
+      },
+      pagination: {
+        el: '.vj-tiles-swiper .swiper-pagination',
+        clickable: true
+      },
+      breakpoints: {
+        560:  { slidesPerView: 1.4, spaceBetween: 18 },
+        768:  { slidesPerView: 2,   spaceBetween: 20 },
+        1024: { slidesPerView: 3,   spaceBetween: 22 },
+        1280: { slidesPerView: 3.3, spaceBetween: 24 }
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', initTilesSwiper);
+})();
+
+/* =====================================================================
+   Toast reservas (rvBanner)
+===================================================================== */
+(function(){
+  "use strict";
+
+  const SEQ = [5,7,10,5,12];
+  const SHOW_MS = 7000;
+  const HIDE_MS = 25000;
+
+  const banner = document.getElementById('rvBanner');
+  const bar    = document.getElementById('rvBar');
+  const count  = document.getElementById('rvCount');
+  const close  = document.getElementById('rvClose');
+
+  if(!banner || !bar || !count) return;
+  if(banner.dataset.rvReady === "1") return;
+  banner.dataset.rvReady = "1";
+
+  let idx = 0, loop = true, hideT = null, nextT = null;
+  let paused = false, startTs = 0, remaining = SHOW_MS;
+
+  function setBar(ms){
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
+    requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
+      bar.style.transition = `width ${ms}ms linear`;
+      bar.style.width = '100%';
+    });});
+  }
+
+  function showOnce(){
+    count.textContent = SEQ[idx];
+    idx = (idx + 1) % SEQ.length;
+
+    banner.style.display = 'block';
+    banner.classList.remove('rv-out');
+    banner.classList.add('rv-in');
+
+    remaining = SHOW_MS;
+    startTs = performance.now();
+    setBar(SHOW_MS);
+
+    hideT = setTimeout(hide, SHOW_MS);
+  }
+
+  function hide(){
+    banner.classList.remove('rv-in');
+    banner.classList.add('rv-out');
+    setTimeout(()=>{
+      banner.style.display = 'none';
+      if(loop){ nextT = setTimeout(showOnce, HIDE_MS); }
+    }, 260);
+  }
+
+  banner.addEventListener('mouseenter', ()=>{
+    paused = true;
+    const elapsed = performance.now() - startTs;
+    remaining = Math.max(0, SHOW_MS - elapsed);
+    if(hideT){ clearTimeout(hideT); hideT = null; }
+    bar.style.transition = 'none';
+  });
+
+  banner.addEventListener('mouseleave', ()=>{
+    if(!paused) return;
+    paused = false;
+    setTimeout(()=>{
+      setBar(remaining);
+      hideT = setTimeout(hide, remaining);
+      startTs = performance.now() - (SHOW_MS - remaining);
+    }, 30);
+  });
+
+  close && close.addEventListener('click', ()=>{
+    loop = false;
+    if(hideT) clearTimeout(hideT);
+    if(nextT) clearTimeout(nextT);
+    banner.style.display = 'none';
+  });
+
+  document.addEventListener('DOMContentLoaded', showOnce);
 })();

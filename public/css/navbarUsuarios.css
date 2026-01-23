@@ -1,3 +1,9 @@
+/* ==========================================================================
+   navbarUsuarios.css — COMPLETO (LIMPIO / RESPONSIVE / iOS-OK)
+   ✅ Mantiene iconos (incluido reloj) y FIX: la lista del timepicker / dropdown
+      se vea SIEMPRE (z-index + overflow + pointer events + wrapper correcto)
+========================================================================== */
+
 :root{
   --brand:#b22222; --brand-dark:#8b1d1a; --brand-2:#8b1d1a;
   --ink:#0f172a; --muted:#6b7280; --soft:#f6f7fb; --paper:#fff;
@@ -21,7 +27,7 @@
   --nav-break: 940px;
 }
 
-*{ box-sizing:border-box }
+*{ box-sizing:border-box; }
 
 body{
   margin:0;
@@ -71,7 +77,7 @@ body{
   align-items:center;
   gap:10px;
 }
-.menu{ display:flex; gap:20px; list-style:none; margin:0; padding:0 }
+.menu{ display:flex; gap:20px; list-style:none; margin:0; padding:0; }
 .menu a{
   color:#fff;
   text-decoration:none;
@@ -83,12 +89,12 @@ body{
   padding:8px 10px;
   border-radius:10px;
 }
-.menu a:hover{ opacity:1; background:rgba(255,255,255,.12) }
+.menu a:hover{ opacity:1; background:rgba(255,255,255,.12); }
 .menu a.active{
   background:rgba(255,255,255,.2);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);
 }
-.nav-actions{ display:flex; align-items:center; gap:10px }
+.nav-actions{ display:flex; align-items:center; gap:10px; }
 .login{
   color:#fff; font-size:18px; width:38px; height:38px;
   display:grid; place-items:center;
@@ -96,7 +102,7 @@ body{
   background:rgba(255,255,255,.16);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);
 }
-.login:hover{ background:rgba(255,255,255,.26) }
+.login:hover{ background:rgba(255,255,255,.26); }
 .login .avatar-mini{
   width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
   background:#ffffff26;color:#fff;font-weight:900;font-size:14px;letter-spacing:.5px;
@@ -125,7 +131,7 @@ body{
 }
 
 /* =========================
-   NAV RESPONSIVE (HAMBURGER) — UNICO
+   NAV RESPONSIVE (HAMBURGER) — ÚNICO
 ========================= */
 .nav-backdrop{
   opacity:0;
@@ -221,14 +227,14 @@ body.nav-open .topbar{
    HERO
 ========================= */
 .hero{ position:relative; min-height:125vh; padding-top: calc(var(--topbar-h) + 8px); }
-.carousel{ position:absolute; inset:0; overflow:hidden; z-index:0 }
+.carousel{ position:absolute; inset:0; overflow:hidden; z-index:0; }
 .slide{
   position:absolute; inset:0;
   background-size:cover; background-position:center;
   opacity:0; transform:scale(1.04);
   transition:opacity .9s, transform 1.5s;
 }
-.slide.active{ opacity:1; transform:scale(1) }
+.slide.active{ opacity:1; transform:scale(1); }
 .overlay{
   position:absolute; inset:0;
   background:linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,.35));
@@ -283,7 +289,7 @@ body.nav-open .topbar{
   grid-template-columns: repeat(3, minmax(0,1fr));
   gap: var(--hero-icon-gap);
   margin-top: clamp(28px, 6vh, 65px);
-  margin-bottom: 18px; /* ✅ FIX: separa SIEMPRE de lo que venga abajo */
+  margin-bottom: 18px; /* ✅ separa del form */
   width: min(980px, 100%);
   margin-left:auto;
   margin-right:auto;
@@ -309,7 +315,6 @@ body.nav-open .topbar{
   line-height:1.35;
   opacity:.95;
 }
-
 @media (min-width:1101px){
   .hero-icons .icon-item:nth-child(1){ transform: translateY(-14px); }
   .hero-icons .icon-item:nth-child(2){ transform: translateY(18px); }
@@ -330,31 +335,29 @@ body.nav-open .topbar{
   }
 }
 
-/* ✅ Tablet/Mobile: 2 columnas + sin transforms (para que no choque) */
+/* ✅ Tablet/Mobile: 2 columnas + sin transforms */
 @media (max-width:900px){
   .hero-icons{
     grid-template-columns: repeat(2, minmax(0,1fr));
     gap: 12px;
     margin-top: 22px;
-    margin-bottom: 22px; /* ✅ más aire antes del form */
+    margin-bottom: 22px;
   }
   .hero-icons .icon-item{ transform:none !important; }
   .hero-icons .icon-item:hover{ transform:none !important; }
 }
 
-/* ✅ Móvil: NO 1 columna (eso los hace gigantes) */
+/* ✅ Móvil */
 @media (max-width:560px){
   .hero-icons{
     grid-template-columns: repeat(2, minmax(0,1fr));
     gap:10px;
     margin-top: 18px;
-    margin-bottom: 26px; /* ✅ FIX fuerte: evita que alcance al form */
+    margin-bottom: 26px;
   }
   .hero-icons .icon-item i{ font-size: clamp(34px, 10vw, 44px); }
   .hero-icons .icon-item span{ font-size:12.5px; line-height:1.25; }
 }
-
-/* ✅ SOLO si la pantalla es ultra angosta */
 @media (max-width:360px){
   .hero-icons{ grid-template-columns:1fr; }
 }
@@ -479,6 +482,9 @@ input:focus, select:focus{
   box-shadow:0 0 0 3px rgba(178,34,34,.15);
 }
 
+/* =========================
+   ICONOS EN INPUTS (NO QUITAR)
+========================= */
 .icon-field{ position:relative; }
 .field-icon{
   position:absolute;
@@ -494,10 +500,9 @@ input:focus, select:focus{
   place-items:center;
 }
 .icon-field input,
-.icon-field select{
-  padding-left:42px;
-}
+.icon-field select{ padding-left:42px; }
 
+/* ✅ Icono de reloj (derecha) — se mantiene SIEMPRE */
 .cal-ico{
   position:absolute;
   right:12px;
@@ -506,6 +511,9 @@ input:focus, select:focus{
   font-size:18px;
   color:#9ca3af;
   pointer-events:none;
+  opacity: 1 !important;
+  display: grid !important;
+  place-items: center !important;
 }
 input.flatpickr-input{ padding-right:44px; }
 
@@ -518,10 +526,7 @@ input.flatpickr-input{ padding-right:44px; }
 .datetime-row input,
 .datetime-row select{ width:100%; }
 
-.actions{
-  display:flex;
-  width:100%;
-}
+.actions{ display:flex; width:100%; }
 .actions button{
   width:100%;
   margin:0;
@@ -540,15 +545,72 @@ input.flatpickr-input{ padding-right:44px; }
   text-transform:uppercase;
 }
 
+/* =========================
+   ✅ LO ÚLTIMO: HACER QUE SE DESPLIEGUE LA LISTA (TIMEPICKER / DROPDOWNS)
+   - 1) No recortar overlays por overflow
+   - 2) Z-index arriba de todo
+   - 3) El wrapper .timepicker-ui sea "clickable" y no tape el icono
+========================= */
+
+/* A) Evita recortes */
+.hero,
+.search-card,
+.search-form,
+.search-grid,
+.field{
+  overflow: visible !important;
+}
+
+/* B) Wrapper oficial del timepicker (por si lo agrega el JS) */
+.timepicker-ui{
+  position: relative;
+  display:block;
+  width:100%;
+  z-index: 2; /* por encima de layout del form */
+}
+.timepicker-ui .timepicker-ui-input{
+  cursor: pointer;
+}
+
+/* C) Si el plugin crea dropdown/lista interna, que se vea */
+.timepicker-ui-wrapper,
+.timepicker-ui-modal,
+.timepicker-ui-overlay,
+.timepicker-ui-clock{
+  z-index: 999999 !important;
+}
+
+/* overlay arriba de TODO (por si iOS se pone raro) */
+.timepicker-ui-overlay{ z-index: 999998 !important; }
+.timepicker-ui-modal{ z-index: 999999 !important; }
+
+/* D) Si tu select/dropdown de ubicaciones trae menú (Bootstrap/etc), también */
+.dropdown-menu{
+  z-index: 999999 !important;
+}
+
+/* E) Asegura que nada “invisible” bloquee taps */
+.cal-ico{ pointer-events:none !important; } /* icono no bloquea click */
+.icon-field{ pointer-events:auto; }
+.icon-field input,
+.icon-field select{
+  pointer-events:auto;
+}
+
 /* flatpickr */
-.flatpickr-calendar{ border-radius:14px; box-shadow:0 18px 45px rgba(0,0,0,.18); overflow:hidden }
-.flatpickr-months{ background:var(--brand); color:#fff }
+.flatpickr-calendar{
+  z-index: 999990 !important;
+  border-radius:14px;
+  box-shadow:0 18px 45px rgba(0,0,0,.18);
+  overflow:hidden;
+}
+.flatpickr-months{ background:var(--brand); color:#fff; }
 .flatpickr-months .flatpickr-month,
 .flatpickr-current-month .cur-month,
-.flatpickr-current-month .numInput.cur-year{ font-weight:700; color:#fff }
-.flatpickr-weekdays{ background:#f6f7fb }
-.flatpickr-weekday{ color:#8b1d1a; font-weight:700 }
-.flatpickr-day{ border-radius:10px; font-weight:600 }
+.flatpickr-current-month .numInput.cur-year{ font-weight:700; color:#fff; }
+.flatpickr-weekdays{ background:#f6f7fb; }
+.flatpickr-weekday{ color:#8b1d1a; font-weight:700; }
+.flatpickr-day{ border-radius:10px; font-weight:600; }
 .flatpickr-day.inRange{
   background:rgba(178,34,34,.10);
   box-shadow:inset 0 0 0 1.5px rgba(178,34,34,.20),
@@ -557,14 +619,14 @@ input.flatpickr-input{ padding-right:44px; }
   color:var(--ink);
 }
 .flatpickr-day.startRange,
-.flatpickr-day.endRange{ background:var(--brand); color:#fff }
-.flatpickr-day.startRange{ border-radius:12px 6px 6px 12px }
-.flatpickr-day.endRange{ border-radius:6px 12px 12px 6px }
-.flatpickr-day:hover{ background:rgba(178,34,34,.14) }
-.flatpickr-day.today{ border:1.5px solid var(--brand) }
-.flatpickr-time{ border-top:1px solid #e5e7eb; background:#fff }
+.flatpickr-day.endRange{ background:var(--brand); color:#fff; }
+.flatpickr-day.startRange{ border-radius:12px 6px 6px 12px; }
+.flatpickr-day.endRange{ border-radius:6px 12px 12px 6px; }
+.flatpickr-day:hover{ background:rgba(178,34,34,.14); }
+.flatpickr-day.today{ border:1.5px solid var(--brand); }
+.flatpickr-time{ border-top:1px solid #e5e7eb; background:#fff; }
 .flatpickr-time input,
-.flatpickr-time .flatpickr-am-pm{ font-weight:800; color:var(--ink) }
+.flatpickr-time .flatpickr-am-pm{ font-weight:800; color:var(--ink); }
 
 .hidden{ display:none !important; }
 .small{ font-size:12px; color:var(--muted); margin-top:4px; }
@@ -583,7 +645,7 @@ input.flatpickr-input{ padding-right:44px; }
 /* =========================
    SECCIONES / CARDS
 ========================= */
-.info-sections{ margin-top:110px }
+.info-sections{ margin-top:110px; }
 .info-row{
   max-width:1200px;
   margin:0 auto 60px;
@@ -593,7 +655,7 @@ input.flatpickr-input{ padding-right:44px; }
   align-items:stretch;
   padding:0 16px;
 }
-.info-row.reverse{ grid-template-columns:1fr 1.2fr }
+.info-row.reverse{ grid-template-columns:1fr 1.2fr; }
 .info-media{
   border-radius:18px;
   min-height:360px;
@@ -602,13 +664,17 @@ input.flatpickr-input{ padding-right:44px; }
   position:relative;
   overflow:hidden;
 }
+
+/* IMPORTANTE:
+   Si tu media-carousel es FADE con absolute, lo dejamos así */
 .media-carousel .media-slide{
   position:absolute; inset:0;
   background-size:cover; background-position:center;
   opacity:0; transform:scale(1.04);
   transition:opacity .8s, transform 1.4s;
 }
-.media-carousel .media-slide.active{ opacity:1; transform:scale(1) }
+.media-carousel .media-slide.active{ opacity:1; transform:scale(1); }
+
 .info-content{
   background:#fff;
   border-radius:18px;
@@ -627,8 +693,8 @@ input.flatpickr-input{ padding-right:44px; }
   margin:0 0 8px;
   text-transform:uppercase;
 }
-.info-content p{ color:#222; font-size:16px; line-height:1.6; margin:0 }
-.cta-group{ display:flex; gap:12px; margin-top:10px; flex-wrap:wrap }
+.info-content p{ color:#222; font-size:16px; line-height:1.6; margin:0; }
+.cta-group{ display:flex; gap:12px; margin-top:10px; flex-wrap:wrap; }
 
 .btn{
   display:inline-flex;
@@ -641,18 +707,18 @@ input.flatpickr-input{ padding-right:44px; }
   font-size:14px;
   box-shadow:0 10px 20px rgba(0,0,0,.12);
 }
-.btn-lg{ padding:14px 20px; font-size:15px }
-.btn-primary{ background:var(--brand); color:#fff }
-.btn-primary:hover{ filter:brightness(1.05) }
-.btn-whatsapp{ background:#25d366; color:#fff }
-.btn-ghost{ background:#fff; color:#111; border:1px solid #e5e7eb }
+.btn-lg{ padding:14px 20px; font-size:15px; }
+.btn-primary{ background:var(--brand); color:#fff; }
+.btn-primary:hover{ filter:brightness(1.05); }
+.btn-whatsapp{ background:#25d366; color:#fff; }
+.btn-ghost{ background:#fff; color:#111; border:1px solid #e5e7eb; }
 
 /* =========================
    CTA FINAL
 ========================= */
-.cta-hero{ position:relative; margin:40px 0 0 }
-.cta-bg{ position:absolute; inset:0; background-size:cover; background-position:center }
-.cta-overlay{ position:absolute; inset:0; background:linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,.2)) }
+.cta-hero{ position:relative; margin:40px 0 0; }
+.cta-bg{ position:absolute; inset:0; background-size:cover; background-position:center; }
+.cta-overlay{ position:absolute; inset:0; background:linear-gradient(0deg, rgba(0,0,0,.55), rgba(0,0,0,.2)); }
 .cta-inner{
   position:relative; z-index:2;
   color:#fff; text-align:center;
@@ -670,7 +736,7 @@ input.flatpickr-input{ padding-right:44px; }
 }
 
 /* =========================
-   Social lateral
+   Social lateral (si lo usas)
 ========================= */
 .social{
   position:fixed;
@@ -694,10 +760,10 @@ input.flatpickr-input{ padding-right:44px; }
   font-size:20px;
   box-shadow:0 10px 20px rgba(0,0,0,.25);
 }
-.whatsapp{ background:#25d366 }
-.facebook{ background:#1877f2 }
-.instagram{ background:#e1306c }
-.tiktok{ background:#000 }
+.whatsapp{ background:#25d366; }
+.facebook{ background:#1877f2; }
+.instagram{ background:#e1306c; }
+.tiktok{ background:#000; }
 
 .social.peek{
   transform: translateX(calc(100% - 18px));
@@ -714,22 +780,22 @@ input.flatpickr-input{ padding-right:44px; }
 /* =========================
    Modal de Bienvenida
 ========================= */
-.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1200}
-.modal.show{display:flex}
-.modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px)}
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1200;}
+.modal.show{display:flex;}
+.modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(2px);}
 .modal-card{
   position:relative;z-index:1;background:#fff;border-radius:16px;
   box-shadow:0 30px 80px rgba(0,0,0,.45);
   width:min(520px,92%);
-  padding:20px;border:1px solid #e5e7eb;text-align:center
+  padding:20px;border:1px solid #e5e7eb;text-align:center;
 }
-.modal-close{position:absolute;right:10px;top:10px;border:0;background:transparent;font-size:22px;color:#6b7280;cursor:pointer}
-.modal-card h3{margin:8px 0 6px;font-size:24px}
+.modal-close{position:absolute;right:10px;top:10px;border:0;background:transparent;font-size:22px;color:#6b7280;cursor:pointer;}
+.modal-card h3{margin:8px 0 6px;font-size:24px;}
 .modal-card p{margin:0 0 12px;color:#374151 !important;}
-.modal-actions{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.modal-actions{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
 
 /* =========================
-   Dropdown
+   Dropdown (general)
 ========================= */
 .icon-item.dropdown{ position:relative; }
 .dropdown-menu{
@@ -799,8 +865,8 @@ input.flatpickr-input{ padding-right:44px; }
   position:relative;
 }
 .car-card:hover{ transform:translateY(-4px); box-shadow:0 24px 60px rgba(0,0,0,.18); }
-.car-title h3{ margin:0; font-size:15px; letter-spacing:1.2px; color:var(--brand) }
-.car-title p{ margin:2px 0 0; font-size:13px; color:var(--muted) }
+.car-title h3{ margin:0; font-size:15px; letter-spacing:1.2px; color:var(--brand); }
+.car-title p{ margin:2px 0 0; font-size:13px; color:var(--muted); }
 .car-media{ width:100%; aspect-ratio:16/9; display:grid; place-items:center; }
 .car-media img{
   width:90%;
@@ -1008,7 +1074,7 @@ input.flatpickr-input{ padding-right:44px; }
   display:grid; place-items:center;
   animation:rv-car-move 3s ease-in-out infinite;
 }
-.rv-car svg{ color:var(--brand) }
+.rv-car svg{ color:var(--brand); }
 @keyframes rv-car-move{ 0%,100%{ transform:translateX(0) } 50%{ transform:translateX(6px) } }
 
 .rv-live{ font-weight:700; color:var(--ink); font-size:13px; }
@@ -1021,8 +1087,8 @@ input.flatpickr-input{ padding-right:44px; }
   70%{ box-shadow:0 0 0 10px rgba(16,185,129,0) }
   100%{ box-shadow:0 0 0 0 rgba(16,185,129,0) }
 }
-.rv-text{ font-size:13px; color:#3f3f46 }
-.rv-count{ font-weight:900; color:var(--ink) }
+.rv-text{ font-size:13px; color:#3f3f46; }
+.rv-count{ font-weight:900; color:var(--ink); }
 
 .rv-cta{
   background:var(--brand);
@@ -1036,7 +1102,7 @@ input.flatpickr-input{ padding-right:44px; }
   box-shadow:0 8px 20px rgba(178,34,34,.25);
   transition:opacity .2s ease;
 }
-.rv-cta:hover{ opacity:.95 }
+.rv-cta:hover{ opacity:.95; }
 .rv-close{
   border:0;
   background:transparent;
@@ -1044,9 +1110,9 @@ input.flatpickr-input{ padding-right:44px; }
   font-size:18px;
   cursor:pointer;
 }
-.rv-close:hover{ color:#374151 }
+.rv-close:hover{ color:#374151; }
 
-.rv-bar{ height:4px; width:100%; background:#f1f5f9 }
+.rv-bar{ height:4px; width:100%; background:#f1f5f9; }
 .rv-bar i{
   display:block; height:100%; width:0%;
   background:linear-gradient(90deg,var(--brand),#ef4444,#fb923c,var(--brand));
@@ -1055,17 +1121,14 @@ input.flatpickr-input{ padding-right:44px; }
 }
 @keyframes rv-bar-move{ from{background-position:0% 50%} to{background-position:200% 50%} }
 
-.rv-in{ animation:rv-drop .35s cubic-bezier(.2,.7,.2,1) forwards }
-.rv-out{ animation:rv-lift .28s ease forwards }
+.rv-in{ animation:rv-drop .35s cubic-bezier(.2,.7,.2,1) forwards; }
+.rv-out{ animation:rv-lift .28s ease forwards; }
 @keyframes rv-drop{ from{ opacity:0; transform:translateY(-10px) scale(.98) } to{ opacity:1; transform:translateY(0) scale(1) } }
-@keyframes rv-lift{
-  from{ opacity:1; transform:translateY(0) scale(1) }
-  to{ opacity:0; transform:translateY(-10px) scale(.98) }
-}
+@keyframes rv-lift{ from{ opacity:1; transform:translateY(0) scale(1) } to{ opacity:0; transform:translateY(-10px) scale(.98) } }
 
 @media (max-width:560px){
-  .rv-text{ font-size:12px }
-  .rv-cta{ display:none }
+  .rv-text{ font-size:12px; }
+  .rv-cta{ display:none; }
 }
 
 /* =========================
@@ -1126,7 +1189,7 @@ input.flatpickr-input{ padding-right:44px; }
   color:var(--brand);
   text-decoration:none;
 }
-.tile-card .tile-link:hover{ text-decoration:underline }
+.tile-card .tile-link:hover{ text-decoration:underline; }
 
 .vj-tiles-swiper .swiper-button-prev,
 .vj-tiles-swiper .swiper-button-next{
@@ -1150,7 +1213,7 @@ input.flatpickr-input{ padding-right:44px; }
   transform:scale(1.15);
 }
 
-@media (max-width:768px){ .tile-card .tile-media{ height:200px } }
+@media (max-width:768px){ .tile-card .tile-media{ height:200px; } }
 @media (max-width:560px){
   .vj-tiles-swiper{ padding-bottom:36px; }
   .tile-card .tile-media{ height:180px; }
@@ -1164,7 +1227,7 @@ input.flatpickr-input{ padding-right:44px; }
   margin-top:0;
   color:#e8edf5;
 }
-.footer-bg{ position:absolute; inset:0; background-size:cover; background-position:center }
+.footer-bg{ position:absolute; inset:0; background-size:cover; background-position:center; }
 .footer-overlay{
   position:absolute;
   inset:0;
@@ -1191,7 +1254,7 @@ input.flatpickr-input{ padding-right:44px; }
   letter-spacing:2px;
   margin-bottom:14px;
 }
-.loc-row{ margin-top:10px; margin-bottom:20px; justify-content:center }
+.loc-row{ margin-top:10px; margin-bottom:20px; justify-content:center; }
 .loc-card{
   display:flex;
   align-items:center;
@@ -1211,10 +1274,10 @@ input.flatpickr-input{ padding-right:44px; }
   background:linear-gradient(135deg, var(--brand), #8b1d1a);
   box-shadow:0 8px 16px rgba(0,0,0,.35);
 }
-.loc-body h4{ margin:0; font-size:15px; color:#fff }
-.loc-body p{ margin:2px 0 0; font-size:12px; color:#b7c0d3 }
+.loc-body h4{ margin:0; font-size:15px; color:#fff; }
+.loc-body p{ margin:2px 0 0; font-size:12px; color:#b7c0d3; }
 
-.pay-row{ margin:12px 0 }
+.pay-row{ margin:12px 0; }
 .payments-logos{
   display:flex;
   align-items:center;
@@ -1248,7 +1311,7 @@ input.flatpickr-input{ padding-right:44px; }
   font-weight:700;
   font-size:14px;
 }
-.links-row a:hover{ color:#fff }
+.links-row a:hover{ color:#fff; }
 
 .footer-copy{
   margin-top:18px;
@@ -1258,23 +1321,20 @@ input.flatpickr-input{ padding-right:44px; }
 }
 
 /* =========================
-   RESPONSIVO GENERAL
+   RESPONSIVO GENERAL + FIX ENSIMADO REAL
 ========================= */
 @media (max-width:1100px){
-  .headline{ font-size:54px }
+  .headline{ font-size:54px; }
 }
 
-/* ✅ FIX ENSIMADO REAL:
-   En mobile tu form estaba subiendo con margin negativo (-40px).
-   Lo dejamos POSITIVO para que NO se meta en los iconos.
-*/
+/* ✅ FIX ENSIMADO REAL: en mobile el form NO sube */
 @media (max-width:900px){
-  .headline{ font-size:46px }
+  .headline{ font-size:46px; }
 
   .hero .search-card{
     position:static;
     transform:none;
-    margin: 12px auto 20px; /* ✅ antes: -40px (eso lo ensimaba) */
+    margin: 12px auto 20px;
     width:min(720px,94%);
     max-height:none;
     overflow:visible;
@@ -1283,20 +1343,20 @@ input.flatpickr-input{ padding-right:44px; }
   .search-grid{ grid-template-columns:1fr 1fr; }
   .sg-col-submit{ grid-column:1 / -1; }
 
-  .hero{ padding-top:78px }
-  .topbar{ left:50%; transform:translateX(-50%); width:96% }
-  .info-row,.info-row.reverse{ grid-template-columns:1fr; gap:18px }
-  .tiles-wrap{ grid-template-columns:1fr 1fr }
-  .info-content h2{ font-size:40px }
+  .hero{ padding-top:78px; }
+  .topbar{ left:50%; transform:translateX(-50%); width:96%; }
+  .info-row,.info-row.reverse{ grid-template-columns:1fr; gap:18px; }
+  .tiles-wrap{ grid-template-columns:1fr 1fr; }
+  .info-content h2{ font-size:40px; }
 
   .hero-copy{ padding-bottom: 22px !important; }
 }
 
 @media (max-width:560px){
-  .headline{ font-size:34px }
+  .headline{ font-size:34px; }
   .search-card{ padding:12px; }
   .search-grid{ grid-template-columns:1fr; }
-  .info-content h2{ font-size:36px }
+  .info-content h2{ font-size:36px; }
 }
 
 /* =========================
@@ -1333,7 +1393,7 @@ input::-moz-focus-inner{ border:0; }
 .btn, .car-cta, .fleet-btn, a.btn{ -webkit-tap-highlight-color:transparent; }
 
 /* =========================
-   TIMEPICKER UI — VIAJERO THEME
+   TIMEPICKER UI — VIAJERO THEME + (LISTA/VISTA SIEMPRE)
 ========================= */
 .timepicker-ui-modal,
 .timepicker-ui-clock,
@@ -1376,24 +1436,59 @@ input::-moz-focus-inner{ border:0; }
   color: var(--brand) !important;
 }
 
-/* overlay arriba de TODO */
+/* ✅ overlay arriba de TODO */
 .timepicker-ui-overlay{ z-index: 999998 !important; }
 .timepicker-ui-modal{ z-index: 999999 !important; }
 
-/* Evita que el modal quede “cortado” por contenedores */
-.hero,
-.search-card,
-.search-form,
-.search-grid{
-  overflow: visible !important;
-}
-
-.topbar{ z-index: 1000; }
-.nav-backdrop{ z-index: 9998; }
-
+/* ✅ IMPORTANTE: el input del timepicker debe permitir tap/click */
 input#pickupTime,
 input#dropoffTime{
   -webkit-tap-highlight-color: transparent;
   caret-color: transparent;
   cursor: pointer;
+}
+/* =====================================================================
+   TIME SELECTS (00..24 + 00/15/30/45) — debajo del input
+   ✅ Compatible con tu .field / .icon-field / tokens
+===================================================================== */
+
+/* 1) Contenedor de los selects debajo del input */
+.tp-selects{
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+}
+
+/* 2) Estilo pro y consistente con tu sistema */
+.tp-selects select{
+  height: var(--ctl-h);
+  border-radius: 10px;               /* igual que tus inputs */
+  border: 1px solid #d1d5db;         /* igual que inputs */
+  background: #fff;
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 3) Focus igual que el form */
+.tp-selects select:focus{
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(178,34,34,.15);
+}
+
+/* 4) Si estás usando icon-field, que no se ensime nada */
+.icon-field .tp-selects{
+  padding-left: 0;
+}
+
+/* 5) En móvil: una columna para que no se aplaste */
+@media (max-width: 520px){
+  .tp-selects{
+    grid-template-columns: 1fr;
+  }
 }

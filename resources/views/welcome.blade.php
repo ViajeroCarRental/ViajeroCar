@@ -3,20 +3,8 @@
 @section('Titulo','Home')
 
 @section('css-vistaHome')
-  {{-- ✅ Timepicker UI CSS (NECESARIO para que el reloj se vea bien en lap y teléfono) --}}
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/timepicker-ui@2.6.2/dist/timepicker-ui.min.css">
-
   {{-- ✅ Swiper CSS --}}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
-
-  {{-- ⚠️ IMPORTANTE:
-      Los <script> NO deben ir en la sección de CSS.
-      Te los dejo aquí “sin quitarlos”, pero comentados para no romper el orden/carga.
-  --}}
-  {{--
-  <script src="https://cdn.jsdelivr.net/npm/timepicker-ui@2.6.2/dist/timepicker-ui.umd.min.js"></script>
-  <script src="{{ asset('js/home.js') }}"></script>
-  --}}
 
   <style>
     :root{ --brand:#b22222; --ink:#0f172a; --muted:#6b7280 }
@@ -353,7 +341,6 @@
                 <span class="field-title">Lugar de renta</span>
 
                 <label class="inline-check" for="differentDropoff">
-                  {{-- ✅ Fix recomendado: agrega name para enviar el valor en POST --}}
                   <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1" checked>
                   <span>Devolver en otro destino</span>
                 </label>
@@ -399,15 +386,12 @@
                 <div class="datetime-row">
                   <div class="dt-field icon-field">
                     <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                    <input id="pickupDate"
-                           name="pickup_date"
-                           type="text"
-                           placeholder="12/Sep/2024"
-                           value="{{ request('pickup_date') }}"
-                           data-min="{{ now()->toDateString() }}"
-                           required>
+
                   </div>
-                  <div class="dt-field icon-field">
+
+                  {{-- ✅ FIX: reloj repetido -> dejamos SOLO el izquierdo (field-icon)
+                       ✅ el “dividido” lo maneja tu JS insertando selects debajo --}}
+                  <div class="dt-field icon-field time-field">
                     <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
                     <input id="pickupTime"
                            name="pickup_time"
@@ -427,15 +411,12 @@
                 <div class="datetime-row">
                   <div class="dt-field icon-field">
                     <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                    <input id="dropoffDate"
-                           name="dropoff_date"
-                           type="text"
-                           placeholder="12/Sep/2024"
-                           value="{{ request('dropoff_date') }}"
-                           data-min="{{ now()->toDateString() }}"
-                           required>
+              
                   </div>
-                  <div class="dt-field icon-field">
+
+                  {{-- ✅ FIX: reloj repetido -> dejamos SOLO el izquierdo (field-icon)
+                       ✅ el “dividido” lo maneja tu JS insertando selects debajo --}}
+                  <div class="dt-field icon-field time-field">
                     <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
                     <input id="dropoffTime"
                            name="dropoff_time"
