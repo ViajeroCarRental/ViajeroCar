@@ -644,7 +644,7 @@
             <p>Toyota Tacoma o similar | F</p>
           </header>
           <div class="car-media">
-            <img src="{{ asset('img/tacoma.png') }}" alt="Toyota Tacoma o similar">
+            <img src="{{ asset('img/Tacoma.png') }}" alt="Toyota Tacoma o similar">
           </div>
 
           <div class="offer">
