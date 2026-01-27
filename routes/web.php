@@ -88,7 +88,9 @@ Route::get('/admin',  [LoginController::class, 'adminHome'])
     ->name('admin.home')
     ->middleware('sesion.activa');
 
-
+Route::get('/reservaciones-usuario', function () {
+    return view('Usuarios.Reservaciones');
+})->name('rutaReservacionesUsuario');
 
 
 
@@ -570,7 +572,5 @@ Route::post('/admin/reservaciones-activas/{id}/no-show',
 Route::post('/admin/reservaciones-activas/{id}/cancelar',
 [ReservacionesActivasController::class, 'cancelar'])->name('rutaCancelarReservacionActiva');
 
-Route::get('/reservaciones-usuario', function () {
-    return view('Usuarios.Reservaciones');
-})->name('rutaReservacionesUsuario');
+
 }); // <- FIN grupo sesion.activa

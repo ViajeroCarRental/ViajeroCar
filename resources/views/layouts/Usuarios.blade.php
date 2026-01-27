@@ -306,14 +306,5 @@
 </footer>
 @yield('js-vistaHome')
 
-{{-- ⚠️ Mensaje de sesión expirada (layout Usuarios) --}}
-@if (session('session_expired'))
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      alertify.error(@json(session('session_expired')));
-    });
-  </script>
-@endif
-
 </body>
 </html>
