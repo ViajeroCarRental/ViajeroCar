@@ -310,7 +310,7 @@
           <i class="fa-regular fa-credit-card"></i>
           <span>Aceptamos tarjetas de débito y crédito</span>
         </div>
-      
+
         <div class="icon-item">
           <i class="fa-solid fa-shield-halved"></i>
           <span>Contamos con verificación 00</span>
@@ -329,12 +329,15 @@
 
       <!-- ===== NUEVO LAYOUT DEL CUESTIONARIO ===== -->
       <div class="search-card">
-        <form id="rentalForm" class="search-form" method="POST" action="{{ route('rutaBuscar') }}">
+        <form id="rentalForm" class="search-form" method="GET" action="{{ route('rutaReservacionesUsuario') }}">
+
           @csrf
 
           <div class="search-grid">
 
-            {{-- COLUMNA: LUGAR DE RENTA (PICK-UP / DROP-OFF) --}}
+            {{-- =========================
+                COLUMNA 1: LUGAR DE RENTA
+            ========================= --}}
             <div class="sg-col sg-col-location">
 
               <div class="location-head">
@@ -365,7 +368,7 @@
               <div class="field icon-field" id="dropoffWrapper">
                 <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
                 <select id="dropoffPlace" name="dropoff_sucursal_id" aria-describedby="dropoffHelp" required>
-                  <option value="" disabled selected>¿Dónde termina tu viaje? </option>
+                  <option value="" disabled selected>¿Dónde termina tu viaje?</option>
                   @foreach($ciudades as $ciudad)
                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
                       @foreach($ciudad->sucursalesActivas as $suc)
@@ -377,59 +380,88 @@
                   @endforeach
                 </select>
               </div>
+
             </div>
 
-            {{-- COLUMNA: ENTREGA --}}
+            {{-- =========================
+                COLUMNA 2: ENTREGA
+                (fecha arriba, hora/min abajo)
+            ========================= --}}
             <div class="sg-col sg-col-datetime">
               <div class="field">
                 <label>Entrega</label>
+
                 <div class="datetime-row">
+
+                  {{-- FECHA --}}
                   <div class="dt-field icon-field">
                     <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-
-                  </div>
-
-                  {{-- ✅ FIX: reloj repetido -> dejamos SOLO el izquierdo (field-icon)
-                       ✅ el “dividido” lo maneja tu JS insertando selects debajo --}}
-                  <div class="dt-field icon-field time-field">
-                    <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-                    <input id="pickupTime"
-                           name="pickup_time"
+                    <input id="pickupDate"
+                           name="pickup_date"
                            type="text"
-                           placeholder="06:00 PM"
-                           value="{{ request('pickup_time') }}"
+                           placeholder="12/Sep/2024"
+                           value="{{ request('pickup_date') }}"
+                           data-min="{{ now()->toDateString() }}"
                            required>
                   </div>
-                </div>
+
+                  {{-- HORA (tu JS mete selects debajo del hidden) --}}
+                  <div class="dt-field icon-field time-field">
+                    <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+
+                    {{-- este es el que se envía al backend (NO se ve) --}}
+                    <input type="hidden"
+                           id="pickupTime"
+                           name="pickup_time"
+                           value="{{ request('pickup_time','12:00') }}">
+                    {{-- tu home.js insertará aquí los selects --}}
+                  </div>
+
+                </div> {{-- /datetime-row --}}
               </div>
             </div>
 
-            {{-- COLUMNA: DEVOLUCIÓN --}}
+            {{-- =========================
+                COLUMNA 3: DEVOLUCIÓN
+                (fecha arriba, hora/min abajo)
+            ========================= --}}
             <div class="sg-col sg-col-datetime">
               <div class="field">
                 <label>Devolución</label>
+
                 <div class="datetime-row">
+
+                  {{-- FECHA --}}
                   <div class="dt-field icon-field">
                     <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-              
-                  </div>
-
-                  {{-- ✅ FIX: reloj repetido -> dejamos SOLO el izquierdo (field-icon)
-                       ✅ el “dividido” lo maneja tu JS insertando selects debajo --}}
-                  <div class="dt-field icon-field time-field">
-                    <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-                    <input id="dropoffTime"
-                           name="dropoff_time"
+                    <input id="dropoffDate"
+                           name="dropoff_date"
                            type="text"
-                           placeholder="06:00 PM"
-                           value="{{ request('dropoff_time') }}"
+                           placeholder="12/Sep/2024"
+                           value="{{ request('dropoff_date') }}"
+                           data-min="{{ now()->toDateString() }}"
                            required>
                   </div>
-                </div>
+
+                  {{-- HORA (tu JS mete selects debajo del hidden) --}}
+                  <div class="dt-field icon-field time-field">
+                    <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+
+                    {{-- este es el que se envía al backend (NO se ve) --}}
+                    <input type="hidden"
+                           id="dropoffTime"
+                           name="dropoff_time"
+                           value="{{ request('dropoff_time','12:00') }}">
+                    {{-- tu home.js insertará aquí los selects --}}
+                  </div>
+
+                </div> {{-- /datetime-row --}}
               </div>
             </div>
 
-            {{-- COLUMNA: BOTÓN BUSCAR --}}
+            {{-- =========================
+                COLUMNA 4: BOTÓN BUSCAR
+            ========================= --}}
             <div class="sg-col sg-col-submit">
               <div class="actions">
                 <button type="submit">
@@ -438,14 +470,14 @@
               </div>
             </div>
 
-          </div>
+          </div> {{-- /search-grid --}}
 
           <div id="rangeSummary" class="range-summary" aria-live="polite"></div>
         </form>
       </div>
       <!-- ===== /NUEVO LAYOUT DEL CUESTIONARIO ===== -->
 
-    </div> {{-- ✅ Fix importante: cierre correcto de .hero-copy --}}
+    </div> {{-- cierre .hero-copy --}}
   </section>
 
   {{-- Sentinel para detectar "salí del hero" --}}
@@ -852,334 +884,348 @@
 
             <div class="car-connect">
               <span class="badge-chip badge-apple" title="Apple CarPlay">
-                <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="2" y="2" width="20" height="20" rx="5"></rect>
+                  <polygon points="10,8 16,12 10,16"></polygon>
+                </svg>
                 CarPlay
               </span>
               <span class="badge-chip badge-android" title="Android Auto">
-                <svg viewBox="0 0 24 24"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path></svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
+                </svg>
                 Android Auto
               </span>
             </div>
 
             <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
-          </article>
+            </article>
 
-          <article class="car-card">
-            <header class="car-title">
-              <h3>PICK UP DOBLE CABINA</h3>
-              <p> Nissan Frontier o similar | H</p>
-            </header>
-            <div class="car-media">
-              <img src="{{ asset('img/Frontier.png') }}" alt="Nissan Frontier similar">
-            </div>
-
-            <div class="offer">
-              <span class="offer-badge">-24%</span>
-              <div class="price-line">
-                <span class="price-now">$1,950</span><span class="per">/día</span>
-                <span class="price-old">$2,550</span>
+            <article class="car-card">
+              <header class="car-title">
+                <h3>SUV COMPACTA</h3>
+                <p> Jeep Renegade o similar | IC</p>
+              </header>
+              <div class="car-media">
+                <img src="{{ asset('img/renegade.png') }}" alt=" Jeep Renegade o similar">
               </div>
-            </div>
 
-            <ul class="car-specs">
-              <li><i class="fa-solid fa-user-large"></i> 5</li>
-              <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-              <li><i class="fa-solid fa-briefcase"></i> 3</li>
-            </ul>
-
-            <div class="car-connect">
-              <span class="badge-chip badge-apple" title="Apple CarPlay">
-                <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
-                CarPlay
-              </span>
-              <span class="badge-chip badge-android" title="Android Auto">
-                <svg viewBox="0 0 24 24"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path></svg>
-                Android Auto
-              </span>
-            </div>
-
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
-          </article>
-
-          <article class="car-card">
-            <header class="car-title">
-              <h3>PICK UP 4X4 DOBLE CABINA</h3>
-              <p>Toyota Tacoma o similar | HI</p>
-            </header>
-            <div class="car-media">
-              <img src="{{ asset('img/Tacoma.png') }}" alt="Toyota Tacoma o similar">
-            </div>
-
-            <div class="offer">
-              <span class="offer-badge">-10%</span>
-              <div class="price-line">
-                <span class="price-now">$2,600</span><span class="per">/día</span>
-                <span class="price-old">$2,900</span>
-              </div>
-            </div>
-
-            <ul class="car-specs">
-              <li><i class="fa-solid fa-user-large"></i> 5</li>
-              <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-              <li><i class="fa-solid fa-briefcase"></i> 3</li>
-            </ul>
-
-            <div class="car-connect">
-              <span class="badge-chip badge-apple" title="Apple CarPlay">
-                <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
-                CarPlay
-              </span>
-              <span class="badge-chip badge-android" title="Android Auto">
-                <svg viewBox="0 0 24 24"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path></svg>
-                Android Auto
-              </span>
-            </div>
-
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
-          </article>
-        </div>
-
-        <button class="fleet-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
-      </div>
-    </section>
-
-    <div class="fleet-meta" aria-label="Beneficios">
-      <span>KM ilimitados</span>
-      <i class="sep" aria-hidden="true">|</i>
-      <span>Transmisión Automática</span>
-    </div>
-
-    <div class="info-row reverse">
-      <div class="info-content">
-        <h2>Soluciones empresariales</h2>
-        <p>Gestionamos tus viajes corporativos de punta a punta para que tu equipo se concentre en lo importante.</p>
-        <p>Optimiza costos, confort y seguridad con nuestros planes para empresas.</p>
-        <div class="cta-group">
-          <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> Reserva ahora</a>
-        </div>
-      </div>
-      <div class="info-media media-carousel" data-interval="5200">
-        <div class="media-slide active" style="background-image:url('{{ asset('img/inicio7.png') }}');"></div>
-        <div class="media-slide" style="background-image:url('{{ asset('img/inicio8.png') }}');"></div>
-        <div class="media-slide" style="background-image:url('{{ asset('img/inicio9.png') }}');"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- TARJETAS (Swiper) -->
-  <section aria-label="Explora destinos y servicios">
-    <div class="swiper vj-tiles-swiper">
-      <div class="swiper-wrapper">
-
-        <div class="swiper-slide">
-          <article class="tile-card">
-            <div class="tile-media" style="background-image:url('{{ asset('img/24.jpg') }}')"></div>
-            <div class="tile-body">
-              <h3>Activos 24/7:</h3>
-              <p>Atención y soporte en todo momento. Nuestro equipo está disponible las 24 horas, los 7 días de la semana, para que viajes con total tranquilidad.</p>
-              <a href="#" class="tile-link">Leer más…</a>
-            </div>
-          </article>
-        </div>
-
-        <div class="swiper-slide">
-          <article class="tile-card">
-            <div class="tile-media" style="background-image:url('{{ asset('img/4x4.png') }}')"></div>
-            <div class="tile-body">
-              <h3>AUTOS Y CAMIONETAS 4x4:</h3>
-              <p>Viaja sin límites. Contamos con SUVs, autos todoterreno y camionetas 4x4 ideales para carretera, ciudad o aventura.</p>
-              <a href="#" class="tile-link">Explora nuestra flota...</a>
-            </div>
-          </article>
-        </div>
-
-        <div class="swiper-slide">
-          <article class="tile-card">
-            <div class="tile-media" style="background-image:url('{{ asset('img/Urvancard.png') }}')"></div>
-            <div class="tile-body">
-              <h3>CAMIONETAS PARA 13 PASAJEROS:</h3>
-              <p>Perfectas para viajes familiares o empresariales. Comodidad, espacio y seguridad para todos tus acompañantes.</p>
-              <a href="#" class="tile-link">Reserva la tuya...</a>
-            </div>
-          </article>
-        </div>
-
-        <div class="swiper-slide">
-          <article class="tile-card">
-            <div class="tile-media" style="background-image:url('{{ asset('img/tarjeta.png') }}')"></div>
-            <div class="tile-body">
-              <h3>ACEPTAMOS TARJETAS:</h3>
-              <p>Pagos con tarjeta de crédito o débito. Fácil, rápido y seguro. También puedes hacer tu pago final al devolver tu vehículo.</p>
-              <a href="#" class="tile-link">Conoce nuestras opciones...</a>
-            </div>
-          </article>
-        </div>
-
-        <div class="swiper-slide">
-          <article class="tile-card">
-            <div class="tile-media" style="background-image:url('{{ asset('img/aeropuerto.png') }}')"></div>
-            <div class="tile-body">
-              <h3>ENTREGA EN AEROPUERTO 24/7:</h3>
-              <p>Recibe o entrega tu auto directamente en el aeropuerto, sin filas ni esperas. Disponible las 24 horas del día.</p>
-              <a href="#" class="tile-link">Agendar entrega...</a>
-            </div>
-          </article>
-        </div>
-
-        <div class="swiper-slide">
-          <article class="tile-card">
-            <div class="tile-media" style="background-image:url('{{ asset('img/Verificacion.png') }}')"></div>
-            <div class="tile-body">
-              <h3>VEHÍCULOS CON VERIFICACIÓN 00:</h3>
-              <p>Todos nuestros autos cumplen con las normas ambientales y están verificados tipo 00 para garantizar su óptimo rendimiento.</p>
-              <a href="#" class="tile-link">Descubre más...</a>
-            </div>
-          </article>
-        </div>
-
-        <div class="swiper-slide">
-          <article class="tile-card">
-            <div class="tile-media" style="background-image:url('{{ asset('img/Drop.png') }}')"></div>
-            <div class="tile-body">
-              <h3>DROP OFF NACIONAL:</h3>
-              <p>Disfruta de tu viaje sin preocupaciones. Devuelve tu auto en otra ciudad con nuestro servicio Drop Off Nacional (con costo adicional).</p>
-              <a href="#" class="tile-link">Consultar destinos...</a>
-            </div>
-          </article>
-        </div>
-
-        <div class="swiper-slide">
-          <article class="tile-card">
-            <div class="tile-media" style="background-image:url('{{ asset('img/nuevos.png') }}')"></div>
-            <div class="tile-body">
-              <h3>AUTOS NUEVOS Y MODERNOS:</h3>
-              <p>Conduce con estilo y seguridad. Nuestra flota está compuesta por vehículos recientes, siempre en óptimas condiciones.</p>
-              <a href="#" class="tile-link">Explora la flota...</a>
-            </div>
-          </article>
-        </div>
-
-        <div class="swiper-slide">
-          <article class="tile-card tile-reviews">
-            <div class="tile-media" style="background-image:url('{{ asset('img/Prioridad.png') }}')"></div>
-
-            <div class="tile-body">
-              <h3>RESEÑAS DE GOOGLE MAPS:</h3>
-
-              @if(!empty($googleRating))
-                <div class="reviews-summary">
-                  <span class="reviews-score">⭐ {{ number_format($googleRating, 1) }}</span>
-                  @if(!empty($googleTotal))
-                    <span class="reviews-count">({{ $googleTotal }} opiniones)</span>
-                  @endif
+              <div class="offer">
+                <span class="offer-badge">-24%</span>
+                <div class="price-line">
+                  <span class="price-now">$1,600</span><span class="per">/día</span>
+                  <span class="price-old">$2,100</span>
                 </div>
-              @endif
-
-              <div class="reviews-list">
-                @if(isset($googleReviews) && $googleReviews->isNotEmpty())
-                  @foreach($googleReviews as $review)
-                    <div class="review-item">
-                      <div class="review-head">
-                        <strong>{{ $review['author_name'] ?? 'Usuario de Google' }}</strong>
-                        @if(!empty($review['rating']))
-                          <span class="review-stars">
-                            @for($i = 0; $i < (int)$review['rating']; $i++)
-                              ★
-                            @endfor
-                          </span>
-                        @endif
-                      </div>
-                      <p class="review-text">
-                        {{ Str::limit($review['text'] ?? '', 120) }}
-                      </p>
-                    </div>
-                  @endforeach
-                @else
-                  <div class="review-item">
-                    <p class="review-text">
-                      Pronto verás aquí las opiniones de nuestros clientes en Google Maps.
-                    </p>
-                  </div>
-                @endif
               </div>
 
-              <a href="https://www.google.com/maps/place/VIAJERO+CAR+RENTAL+Centro+Sur"
-                 target="_blank"
-                 rel="noopener"
-                 class="tile-link">
-                Ver más reseñas en Google…
+              <ul class="car-specs">
+                <li><i class="fa-solid fa-user-large"></i> 5</li>
+                <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
+                <li><i class="fa-solid fa-briefcase"></i> 3</li>
+              </ul>
+
+              <div class="car-connect">
+                <span class="badge-chip badge-apple" title="Apple CarPlay">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
+                    <polygon points="10,8 16,12 10,16"></polygon>
+                  </svg>
+                  CarPlay
+                </span>
+                <span class="badge-chip badge-android" title="Android Auto">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
+                  </svg>
+                  Android Auto
+                </span>
+              </div>
+
+              <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            </article>
+
+            <article class="car-card">
+              <header class="car-title">
+                <h3>SUV MEDIANA</h3>
+                <p>Kia Seltos o similar | I</p>
+              </header>
+              <div class="car-media">
+                <img src="{{ asset('img/seltos.png') }}" alt="Kia Seltos o similar">
+              </div>
+
+              <div class="offer">
+                <span class="offer-badge">-25%</span>
+                <div class="price-line">
+                  <span class="price-now">$1,800</span><span class="per">/día</span>
+                  <span class="price-old">$2,400</span>
+                </div>
+              </div>
+
+              <ul class="car-specs">
+                <li><i class="fa-solid fa-user-large"></i> 5</li>
+                <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
+                <li><i class="fa-solid fa-briefcase"></i> 3</li>
+              </ul>
+
+              <div class="car-connect">
+                <span class="badge-chip badge-apple" title="Apple CarPlay">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
+                    <polygon points="10,8 16,12 10,16"></polygon>
+                  </svg>
+                  CarPlay
+                </span>
+                <span class="badge-chip badge-android" title="Android Auto">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
+                  </svg>
+                  Android Auto
+                </span>
+              </div>
+
+              <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            </article>
+
+            </div>
+
+            <button class="fleet-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+            </section>
+
+            <div class="fleet-meta" aria-label="Beneficios">
+              <span>KM ilimitados</span>
+              <i class="sep" aria-hidden="true">|</i>
+              <span>Transmisión Automática</span>
+            </div>
+              <div class="info-row reverse">
+                <div class="info-content">
+                  <h2>Soluciones empresariales</h2>
+                  <p>Gestionamos tus viajes corporativos de punta a punta para que tu equipo se concentre en lo importante.</p>
+                  <p>Optimiza costos, confort y seguridad con nuestros planes para empresas.</p>
+                  <div class="cta-group">
+                    <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> Reserva ahora</a>
+                  </div>
+                </div>
+                <div class="info-media media-carousel" data-interval="5200">
+                  <div class="media-slide active" style="background-image:url('{{ asset('img/inicio7.png') }}');"></div>
+                  <div class="media-slide" style="background-image:url('{{ asset('img/inicio8.png') }}');"></div>
+                  <div class="media-slide" style="background-image:url('{{ asset('img/inicio9.png') }}');"></div>
+                </div>
+              </div>
+            </section>
+
+            <!-- TARJETAS (Swiper) -->
+            <section aria-label="Explora destinos y servicios">
+              <div class="swiper vj-tiles-swiper">
+                <div class="swiper-wrapper">
+
+                  <div class="swiper-slide">
+                    <article class="tile-card">
+                      <div class="tile-media" style="background-image:url('{{ asset('img/24.jpg') }}')"></div>
+                      <div class="tile-body">
+                        <h3>Activos 24/7:</h3>
+                        <p>Atención y soporte en todo momento. Nuestro equipo está disponible las 24 horas, los 7 días de la semana, para que viajes con total tranquilidad.</p>
+                        <a href="#" class="tile-link">Leer más…</a>
+                      </div>
+                    </article>
+                  </div>
+
+                  <div class="swiper-slide">
+                    <article class="tile-card">
+                      <div class="tile-media" style="background-image:url('{{ asset('img/4x4.png') }}')"></div>
+                      <div class="tile-body">
+                        <h3>AUTOS Y CAMIONETAS 4x4:</h3>
+                        <p>Viaja sin límites. Contamos con SUVs, autos todoterreno y camionetas 4x4 ideales para carretera, ciudad o aventura.</p>
+                        <a href="#" class="tile-link">Explora nuestra flota...</a>
+                      </div>
+                    </article>
+                  </div>
+
+                  <div class="swiper-slide">
+                    <article class="tile-card">
+                      <div class="tile-media" style="background-image:url('{{ asset('img/Urvancard.png') }}')"></div>
+                      <div class="tile-body">
+                        <h3>CAMIONETAS PARA 13 PASAJEROS:</h3>
+                        <p>Perfectas para viajes familiares o empresariales. Comodidad, espacio y seguridad para todos tus acompañantes.</p>
+                        <a href="#" class="tile-link">Reserva la tuya...</a>
+                      </div>
+                    </article>
+                  </div>
+
+                  <div class="swiper-slide">
+                    <article class="tile-card">
+                      <div class="tile-media" style="background-image:url('{{ asset('img/tarjeta.png') }}')"></div>
+                      <div class="tile-body">
+                        <h3>ACEPTAMOS TARJETAS:</h3>
+                        <p>Pagos con tarjeta de crédito o débito. Fácil, rápido y seguro. También puedes hacer tu pago final al devolver tu vehículo.</p>
+                        <a href="#" class="tile-link">Conoce nuestras opciones...</a>
+                      </div>
+                    </article>
+                  </div>
+
+                  <div class="swiper-slide">
+                    <article class="tile-card">
+                      <div class="tile-media" style="background-image:url('{{ asset('img/aeropuerto.png') }}')"></div>
+                      <div class="tile-body">
+                        <h3>ENTREGA EN AEROPUERTO 24/7:</h3>
+                        <p>Recibe o entrega tu auto directamente en el aeropuerto, sin filas ni esperas. Disponible las 24 horas del día.</p>
+                        <a href="#" class="tile-link">Agendar entrega...</a>
+                      </div>
+                    </article>
+                  </div>
+
+                  <div class="swiper-slide">
+                    <article class="tile-card">
+                      <div class="tile-media" style="background-image:url('{{ asset('img/Verificacion.png') }}')"></div>
+                      <div class="tile-body">
+                        <h3>VEHÍCULOS CON VERIFICACIÓN 00:</h3>
+                        <p>Todos nuestros autos cumplen con las normas ambientales y están verificados tipo 00 para garantizar su óptimo rendimiento.</p>
+                        <a href="#" class="tile-link">Descubre más...</a>
+                      </div>
+                    </article>
+                  </div>
+
+                  <div class="swiper-slide">
+                    <article class="tile-card">
+                      <div class="tile-media" style="background-image:url('{{ asset('img/Drop.png') }}')"></div>
+                      <div class="tile-body">
+                        <h3>DROP OFF NACIONAL:</h3>
+                        <p>Disfruta de tu viaje sin preocupaciones. Devuelve tu auto en otra ciudad con nuestro servicio Drop Off Nacional (con costo adicional).</p>
+                        <a href="#" class="tile-link">Consultar destinos...</a>
+                      </div>
+                    </article>
+                  </div>
+
+                  <div class="swiper-slide">
+                    <article class="tile-card">
+                      <div class="tile-media" style="background-image:url('{{ asset('img/nuevos.png') }}')"></div>
+                      <div class="tile-body">
+                        <h3>AUTOS NUEVOS Y MODERNOS:</h3>
+                        <p>Conduce con estilo y seguridad. Nuestra flota está compuesta por vehículos recientes, siempre en óptimas condiciones.</p>
+                        <a href="#" class="tile-link">Explora la flota...</a>
+                      </div>
+                    </article>
+                  </div>
+
+                  <div class="swiper-slide">
+                    <article class="tile-card tile-reviews">
+                      <div class="tile-media" style="background-image:url('{{ asset('img/Prioridad.png') }}')"></div>
+
+                      <div class="tile-body">
+                        <h3>RESEÑAS DE GOOGLE MAPS:</h3>
+
+                        @if(!empty($googleRating))
+                          <div class="reviews-summary">
+                            <span class="reviews-score">⭐ {{ number_format($googleRating, 1) }}</span>
+                            @if(!empty($googleTotal))
+                              <span class="reviews-count">({{ $googleTotal }} opiniones)</span>
+                            @endif
+                          </div>
+                        @endif
+
+                        <div class="reviews-list">
+                          @if(isset($googleReviews) && $googleReviews->isNotEmpty())
+                            @foreach($googleReviews as $review)
+                              <div class="review-item">
+                                <div class="review-head">
+                                  <strong>{{ $review['author_name'] ?? 'Usuario de Google' }}</strong>
+                                  @if(!empty($review['rating']))
+                                    <span class="review-stars">
+                                      @for($i = 0; $i < (int)$review['rating']; $i++)
+                                        ★
+                                      @endfor
+                                    </span>
+                                  @endif
+                                </div>
+                                <p class="review-text">
+                                  {{ Str::limit($review['text'] ?? '', 120) }}
+                                </p>
+                              </div>
+                            @endforeach
+                          @else
+                            <div class="review-item">
+                              <p class="review-text">
+                                Pronto verás aquí las opiniones de nuestros clientes en Google Maps.
+                              </p>
+                            </div>
+                          @endif
+                        </div>
+
+                        <a href="https://www.google.com/maps/place/VIAJERO+CAR+RENTAL+Centro+Sur"
+                          target="_blank"
+                          rel="noopener"
+                          class="tile-link">
+                          Ver más reseñas en Google…
+                        </a>
+                      </div>
+                    </article>
+                  </div>
+
+                </div>
+
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-pagination"></div>
+              </div>
+            </section>
+            <!-- /TARJETAS (Swiper) -->
+
+            <!-- CTA FINAL -->
+            <section class="cta-hero">
+              <div class="cta-bg" style="background-image:url('{{ asset('img/inicio10.png') }}');"></div>
+              <div class="cta-overlay"></div>
+              <div class="cta-inner">
+                <h2>¡RENTA HOY, EXPLORA MAÑANA, VIAJA SIEMPRE!</h2>
+                <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary btn-lg">
+                  <i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!
+                </a>
+              </div>
+            </section>
+            </section>
+
+            <!-- ✅ BURBUJA RADIAL DE REDES (NUEVA) -->
+            <div class="social-fab" id="socialFab">
+              <button class="fab-main" id="fabMain" type="button" aria-label="Redes sociales" aria-expanded="false">
+                <i class="fa-solid fa-share-nodes"></i>
+              </button>
+
+              <a class="fab-item fab-wp"
+                href="https://wa.me/5214427169793"
+                target="_blank"
+                rel="noopener"
+                aria-label="WhatsApp">
+                <i class="fa-brands fa-whatsapp"></i>
+              </a>
+
+              <a class="fab-item fab-fb"
+                href="https://www.facebook.com/ViajeroCarRentalQueretaro?locale=es_LA"
+                target="_blank"
+                rel="noopener"
+                aria-label="Facebook">
+                <i class="fa-brands fa-facebook-f"></i>
+              </a>
+
+              <a class="fab-item fab-ig"
+                href="https://www.instagram.com/viajerocarental/"
+                target="_blank"
+                rel="noopener"
+                aria-label="Instagram">
+                <i class="fa-brands fa-instagram"></i>
               </a>
             </div>
-          </article>
-        </div>
 
-      </div>
-
-      <div class="swiper-button-prev"></div>
-      <div class="swiper-button-next"></div>
-      <div class="swiper-pagination"></div>
-    </div>
-  </section>
-  <!-- /TARJETAS (Swiper) -->
-
-  <!-- CTA FINAL -->
-  <section class="cta-hero">
-    <div class="cta-bg" style="background-image:url('{{ asset('img/inicio10.png') }}');"></div>
-    <div class="cta-overlay"></div>
-    <div class="cta-inner">
-      <h2>¡RENTA HOY, EXPLORA MAÑANA, VIAJA SIEMPRE!</h2>
-      <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary btn-lg">
-        <i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!
-      </a>
-    </div>
-  </section>
-</section>
-
-<!-- ✅ BURBUJA RADIAL DE REDES (NUEVA) -->
-<div class="social-fab" id="socialFab">
-  <button class="fab-main" id="fabMain" type="button" aria-label="Redes sociales" aria-expanded="false">
-    <i class="fa-solid fa-share-nodes"></i>
-  </button>
-
-  <a class="fab-item fab-wp"
-     href="https://wa.me/5214427169793"
-     target="_blank"
-     rel="noopener"
-     aria-label="WhatsApp">
-    <i class="fa-brands fa-whatsapp"></i>
-  </a>
-
-  <a class="fab-item fab-fb"
-     href="https://www.facebook.com/ViajeroCarRentalQueretaro?locale=es_LA"
-     target="_blank"
-     rel="noopener"
-     aria-label="Facebook">
-    <i class="fa-brands fa-facebook-f"></i>
-  </a>
-
-  <a class="fab-item fab-ig"
-     href="https://www.instagram.com/viajerocarental/"
-     target="_blank"
-     rel="noopener"
-     aria-label="Instagram">
-    <i class="fa-brands fa-instagram"></i>
-  </a>
-</div>
-
-<!-- Modal de Bienvenida -->
-<div class="modal" id="welcomeModal" aria-hidden="true">
-  <div class="modal-backdrop"></div>
-  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="wmTitle">
-    <button class="modal-close" id="wmClose" aria-label="Cerrar"><i class="fa-regular fa-circle-xmark"></i></button>
-    <h3 id="wmTitle"><i class="fa-regular fa-hand-peace"></i> ¡Bienvenido, <span id="wmName">Viajero</span>!</h3>
-    <p>Tu cuenta está lista. ¿Quieres ir directo a tu reserva?</p>
-    <div class="modal-actions">
-      <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> Ir a mi reserva</a>
-      <button class="btn btn-ghost" id="wmOk" type="button">Seguir en inicio</button>
-    </div>
-  </div>
-</div>
-
+            <!-- Modal de Bienvenida -->
+            <div class="modal" id="welcomeModal" aria-hidden="true">
+              <div class="modal-backdrop"></div>
+              <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="wmTitle">
+                <button class="modal-close" id="wmClose" aria-label="Cerrar"><i class="fa-regular fa-circle-xmark"></i></button>
+                <h3 id="wmTitle"><i class="fa-regular fa-hand-peace"></i> ¡Bienvenido, <span id="wmName">Viajero</span>!</h3>
+                <p>Tu cuenta está lista. ¿Quieres ir directo a tu reserva?</p>
+                <div class="modal-actions">
+                  <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> Ir a mi reserva</a>
+                  <button class="btn btn-ghost" id="wmOk" type="button">Seguir en inicio</button>
+                </div>
+              </div>
+            </div>
 @endsection
 
 @section('js-vistaHome')
@@ -1188,17 +1234,10 @@
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
   {{-- ✅ Flatpickr core + locale ES + rangePlugin --}}
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
+  
 
-  {{-- ✅ Timepicker UI (JS) — DEBE CARGAR ANTES DE home.js --}}
-  {{-- (Dejo SOLO 1 CDN activo para evitar duplicados) --}}
-  <script src="https://cdn.jsdelivr.net/npm/timepicker-ui@2.6.2/dist/timepicker-ui.umd.min.js"></script>
-
-  {{--
-  <script src="https://unpkg.com/timepicker-ui@2.6.2/dist/timepicker-ui.umd.min.js"></script>
-  --}}
 
   {{-- ✅ Tu JS --}}
   <script src="{{ asset('js/home.js') }}"></script>
@@ -1328,27 +1367,32 @@
   <script>
     const tilesSwiper = new Swiper('.vj-tiles-swiper', {
       loop: true,
-      speed: 650,
-      autoplay: { delay: 3200, disableOnInteraction: false },
-      spaceBetween: 18,
-      slidesPerView: 1.06,
+      speed: 600,
+      spaceBetween: 24,
+      slidesPerView: 1,
       centeredSlides: false,
       grabCursor: true,
+
       navigation: {
         nextEl: '.vj-tiles-swiper .swiper-button-next',
         prevEl: '.vj-tiles-swiper .swiper-button-prev',
       },
+
       pagination: {
         el: '.vj-tiles-swiper .swiper-pagination',
         clickable: true
       },
+
       breakpoints: {
-        560:  { slidesPerView: 1.4, spaceBetween: 18 },
-        768:  { slidesPerView: 2,   spaceBetween: 20 },
-        1024: { slidesPerView: 3,   spaceBetween: 22 },
-        1280: { slidesPerView: 3.3, spaceBetween: 24 }
+        640: {
+          slidesPerView: 2
+        },
+        1024: {
+          slidesPerView: 3
+        }
       }
     });
+
   </script>
 
   <!-- ===== Toast de reservas ===== -->

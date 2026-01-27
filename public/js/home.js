@@ -1,12 +1,3 @@
-/* ==========================================================
-   Viajero - home.js (COMPLETO)
-   - Navbar + hero + carousels + modal + resumen fechas/horas
-   - ✅ HORAS: reemplaza reloj por SELECTS debajo del input
-     * 25 hrs: 00..24
-     * minutos: 00/15/30/45
-     * 24:00 = siguiente día 00:00 (para cálculos)
-========================================================== */
-
 /* ====================
    Polyfills
 ==================== */
@@ -53,12 +44,19 @@
 /* ====================
    Navbar: glass -> sólida + hamburguesa
 ==================== */
-(function(){
+/* ====================
+   Navbar: glass -> sólida + hamburguesa (FIX)
+   - usa .topbar.nav-open y body.nav-open
+   - cierra al cambiar a desktop
+   - cierra al click fuera (opcional) y al click en link
+==================== */
+/*(function(){
   "use strict";
 
   const topbar = document.querySelector(".topbar");
   if(!topbar) return;
 
+  // solid on scroll
   function onScroll(){
     if(window.scrollY > 40) topbar.classList.add("solid");
     else topbar.classList.remove("solid");
@@ -66,9 +64,12 @@
   onScroll();
   window.addEventListener("scroll", onScroll, { passive:true });
 
+  // elements
   const btn      = document.getElementById("navHamburger") || document.querySelector(".hamburger");
   const backdrop = document.getElementById("navBackdrop")  || document.querySelector(".nav-backdrop");
-  const menu     = document.getElementById("mainMenu")     || topbar.querySelector(".menu");
+
+  // ✅ IMPORTANTE: el menú real es UL.menu dentro de la topbar
+  const menu = topbar.querySelector(".menu");
   if(!btn || !menu) return;
 
   const MQ = window.matchMedia("(max-width: 940px)");
@@ -88,52 +89,50 @@
   }
 
   function toggleNav(e){
-    if(e) e.preventDefault();
+    e && e.preventDefault();
     document.body.classList.contains("nav-open") ? closeNav() : openNav();
   }
 
+  // accesibilidad + type
   btn.setAttribute("type", "button");
   if(!btn.getAttribute("aria-label")) btn.setAttribute("aria-label", "Abrir menú");
-  btn.setAttribute("aria-expanded", btn.getAttribute("aria-expanded") || "false");
+  if(!btn.getAttribute("aria-expanded")) btn.setAttribute("aria-expanded", "false");
 
   btn.addEventListener("click", toggleNav);
 
+  // click backdrop cierra
   if(backdrop) backdrop.addEventListener("click", closeNav);
 
+  // click en link dentro del menú cierra
   menu.addEventListener("click", (e)=>{
     const a = e.target.closest("a");
-    if(!a) return;
-    closeNav();
+    if(a) closeNav();
   });
 
+  // esc cierra
   document.addEventListener("keydown", (e)=>{
     if(e.key === "Escape") closeNav();
   });
 
+  // ✅ si cambia a desktop, forzar cierre
   if(MQ.addEventListener){
     MQ.addEventListener("change", ()=>{ if(!isMobile()) closeNav(); });
-  } else {
+  }else{
     window.addEventListener("resize", ()=>{ if(!isMobile()) closeNav(); }, { passive:true });
   }
+
+  // ✅ opcional: click fuera del menú y fuera del botón cierra (en mobile)
+  document.addEventListener("click", (e)=>{
+    if(!isMobile()) return;
+    if(!document.body.classList.contains("nav-open")) return;
+    const insideMenu = menu.contains(e.target);
+    const insideBtn  = btn.contains(e.target);
+    const insideTop  = topbar.contains(e.target);
+    if(!insideMenu && !insideBtn && !insideTop) closeNav();
+  });
 })();
+ */
 
-/* ====================
-   HERO: carrusel fondo
-==================== */
-(function(){
-  "use strict";
-  const slides = Array.from(document.querySelectorAll('.slide'));
-  if(!slides.length) return;
-
-  let i = 0;
-  const show = (x)=> slides.forEach((s,k)=> s.classList.toggle('active', k===x));
-  show(i);
-
-  setInterval(()=>{
-    i = (i+1) % slides.length;
-    show(i);
-  }, 5000);
-})();
 
 /* =====================================================================
    FLEET: INFINITO + AVANZA 1 CARD (scroll horizontal)
@@ -285,7 +284,7 @@
 
     const first = slides[0];
     const isAbsoluteFade = first && getComputedStyle(first).position === "absolute";
-    if(isAbsoluteFade) return; // si tu CSS es fade/absolute, NO tocar
+    if(isAbsoluteFade) return;
 
     if(wrap.dataset.infiniteReady === "1") return;
     wrap.dataset.infiniteReady = "1";
@@ -434,15 +433,36 @@
 })();
 
 /* =====================================================================
-   Flatpickr FECHAS + (antes TimepickerUI) -> ahora SELECTS + Resumen
-   ✅ 25 hrs: 00..24
-   ✅ minutos: 00/15/30/45
-   ✅ 24:00 = siguiente día 00:00 (para cálculo)
+   Flatpickr FECHAS + SELECTS + Resumen
 ===================================================================== */
 (function(){
   "use strict";
 
   const rangeSummary = document.getElementById('rangeSummary');
+
+  /* ==========================================================
+     ✅ Inyectar CSS para ocultar el input visible de hora
+     (sin tocar tu CSS externo)
+  ========================================================== */
+  (function injectTimeCss(){
+    const id = "tpHideInputStyle";
+    if(document.getElementById(id)) return;
+    const st = document.createElement("style");
+    st.id = id;
+    st.textContent = `
+      .tp-hidden-input{ display:none !important; }
+      .tp-selects{ display:flex; gap:10px; margin-top:10px; }
+      .tp-selects select{
+        width:100%;
+        height:48px;
+        border-radius:12px;
+        border:1px solid rgba(0,0,0,.12);
+        padding:10px 12px;
+        outline:none;
+      }
+    `;
+    document.head.appendChild(st);
+  })();
 
   // 1) FECHAS (Flatpickr + rangePlugin)
   if(window.flatpickr){
@@ -562,6 +582,10 @@
     input.setAttribute("readonly", "readonly");
     input.setAttribute("inputmode", "none");
 
+    // ✅ FIX: ocultar el input visible (12:00 p. m.) y dejar SOLO selects
+    input.classList.add("tp-hidden-input");
+    input.setAttribute("aria-hidden", "true");
+
     createTimeSelectsBelow(input, {
       hourMax: 24,
       minuteStep: 15,
@@ -645,6 +669,109 @@
 
     rangeSummary.textContent = `Renta por ${d} día(s) · ~${h} hora(s)`;
   }
+
+  /* ==========================================================
+     ✅ FIX SUBMIT: asegurar que los hidden tengan hora final
+     ✅ FIX DROPOFF: required dinámico según checkbox
+     ✅ FIX FECHA: si el usuario escribe, normalizamos a Y-m-d
+  ========================================================== */
+  (function bindFormFixes(){
+    const form = document.getElementById("rentalForm");
+    if(!form) return;
+    if(form.dataset.bindFixes === "1") return;
+    form.dataset.bindFixes = "1";
+
+    const chk = document.getElementById("differentDropoff");
+    const dropWrap  = document.getElementById("dropoffWrapper");
+    const dropSel   = document.getElementById("dropoffPlace");
+    const pickSel   = document.getElementById("pickupPlace");
+
+    const pickTime  = document.getElementById("pickupTime");
+    const dropTime  = document.getElementById("dropoffTime");
+
+    const pickDate  = document.getElementById("pickupDate");
+    const dropDate  = document.getElementById("dropoffDate");
+
+    function setDropoffState(){
+      const on = !!(chk && chk.checked);
+
+      if(dropWrap) dropWrap.style.display = on ? "" : "none";
+
+      if(dropSel){
+        if(on){
+          dropSel.setAttribute("required", "required");
+        }else{
+          dropSel.removeAttribute("required");
+          // igualar dropoff al pickup cuando NO hay diferente destino
+          if(pickSel && pickSel.value) dropSel.value = pickSel.value;
+        }
+      }
+    }
+
+    // Si cambias pick-up y NO hay dropoff diferente, iguala dropoff
+    pickSel && pickSel.addEventListener("change", ()=>{
+      if(chk && !chk.checked && dropSel){
+        dropSel.value = pickSel.value;
+      }
+    });
+
+    chk && chk.addEventListener("change", setDropoffState);
+    setDropoffState();
+
+    // Lee selects hora/min si existen y sincroniza el hidden
+    function syncHiddenFromSelects(hiddenId){
+      const hidden = document.getElementById(hiddenId);
+      if(!hidden) return;
+
+      const wrap = hidden.closest(".time-field") || hidden.parentElement;
+      const selH = wrap ? wrap.querySelector(".tp-selects .tp-hour") : null;
+      const selM = wrap ? wrap.querySelector(".tp-selects .tp-min")  : null;
+
+      if(selH && selM){
+        const hh = String(selH.value || "0").padStart(2,"0");
+        const mm = String(selM.value || "0").padStart(2,"0");
+        hidden.value = `${hh}:${mm}`;
+      } else {
+        if(!hidden.value) hidden.value = "12:00";
+      }
+    }
+
+    // Normaliza fecha si la escriben como d/m/Y o d-m-Y
+    function normalizeDateInput(input){
+      if(!input) return;
+      const v = String(input.value || "").trim();
+      if(/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+
+      const m = v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if(m){
+        const dd = String(m[1]).padStart(2,"0");
+        const mm = String(m[2]).padStart(2,"0");
+        const yy = m[3];
+        input.value = `${yy}-${mm}-${dd}`;
+      }
+    }
+
+    // Antes de enviar: sincroniza TODO
+    form.addEventListener("submit", ()=>{
+      syncHiddenFromSelects("pickupTime");
+      syncHiddenFromSelects("dropoffTime");
+
+      normalizeDateInput(pickDate);
+      normalizeDateInput(dropDate);
+
+      // si NO hay dropoff diferente, iguala ids para que backend no falle
+      if(chk && !chk.checked && dropSel && pickSel && pickSel.value){
+        dropSel.value = pickSel.value;
+      }
+
+      // refrescar resumen por si acaso
+      updateSummary();
+
+      // (extra) asegurar que hidden existan con valor
+      if(pickTime && !pickTime.value) pickTime.value = "12:00";
+      if(dropTime && !dropTime.value) dropTime.value = "12:00";
+    }, { capture:true });
+  })();
 })();
 
 /* ====================
