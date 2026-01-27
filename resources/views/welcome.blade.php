@@ -275,11 +275,12 @@
         </div>
 
         <div class="rv-copy" style="flex:1 1 auto">
-          <div class="rv-live">Reservas en vivo</div>
-          <div class="rv-text">
-            Ahora mismo <span class="rv-count" id="rvCount">5</span> personas están reservando autos.
+          <div class="rv-live" id="rvTitle">Buscando reserva</div>
+          <div class="rv-text" id="rvMsg">
+            Alguien más está buscando reserva en este momento
           </div>
         </div>
+
 
         <button class="rv-cta" onclick="location.href='{{ route('rutaReservaciones') }}'">Ver disponibilidad</button>
         <button class="rv-close" id="rvClose" aria-label="Cerrar">✕</button>
@@ -1397,42 +1398,86 @@
   </script>
 
   <!-- ===== Toast de reservas ===== -->
+  <!-- ===== Toast de reservas ===== -->
+<!-- ===== Toast de reservas ===== -->
   <script>
   (function(){
-    const SEQ = [5,7,10,5,12];
+    // ✅ Orden exacto:
+    // 1 → 2 → 1 → 3 → 1 → 4
+    const SEQ = [
+      {
+        title: "Buscando reserva",
+        text: "Alguien más está buscando reserva en este momento"
+      },
+      {
+        title: "Otra reserva",
+        text: "Un cliente acaba de reservar en el Aeropuerto de Querétaro (AIQ)"
+      },
+      {
+        title: "Buscando reserva",
+        text: "Alguien más está buscando reserva en este momento"
+      },
+      {
+        title: "Otra reserva",
+        text: "Un cliente acaba de reservar en la Central de Autobuses de Querétaro (TAQ)"
+      },
+      {
+        title: "Buscando reserva",
+        text: "Alguien más está buscando reserva en este momento"
+      },
+      {
+        title: "Otra reserva",
+        text: "Un cliente acaba de reservar en la Plaza de Central Park Querétaro"
+      }
+    ];
+
     const SHOW_MS = 7000;
     const HIDE_MS = 25000;
 
     const banner = document.getElementById('rvBanner');
     const bar    = document.getElementById('rvBar');
-    const count  = document.getElementById('rvCount');
+    const title  = document.getElementById('rvTitle');
+    const msg    = document.getElementById('rvMsg');
     const close  = document.getElementById('rvClose');
 
     let idx = 0, loop = true, hideT = null, nextT = null;
     let paused = false, startTs = 0, remaining = SHOW_MS;
 
     function setBar(ms){
-      bar.style.transition = 'none'; bar.style.width = '0%';
-      requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
-        bar.style.transition = `width ${ms}ms linear`;
-        bar.style.width = '100%';
-      });});
+      bar.style.transition = 'none';
+      bar.style.width = '0%';
+      requestAnimationFrame(()=>{ 
+        requestAnimationFrame(()=>{
+          bar.style.transition = `width ${ms}ms linear`;
+          bar.style.width = '100%';
+        });
+      });
     }
 
     function showOnce(){
       if(!banner) return;
-      count.textContent = SEQ[idx]; idx = (idx + 1) % SEQ.length;
-      banner.style.display = 'block';
-      banner.classList.remove('rv-out'); banner.classList.add('rv-in');
 
-      remaining = SHOW_MS; startTs = performance.now();
+      const item = SEQ[idx];
+      idx = (idx + 1) % SEQ.length;
+
+      title.textContent = item.title;
+      msg.textContent   = item.text;
+
+      banner.style.display = 'block';
+      banner.classList.remove('rv-out');
+      banner.classList.add('rv-in');
+
+      remaining = SHOW_MS;
+      startTs = performance.now();
       setBar(SHOW_MS);
 
       hideT = setTimeout(hide, SHOW_MS);
     }
 
     function hide(){
-      banner.classList.remove('rv-in'); banner.classList.add('rv-out');
+      banner.classList.remove('rv-in');
+      banner.classList.add('rv-out');
+
       setTimeout(()=>{
         banner.style.display = 'none';
         if(loop){ nextT = setTimeout(showOnce, HIDE_MS); }
@@ -1448,7 +1493,8 @@
     });
 
     banner && banner.addEventListener('mouseleave', ()=>{
-      if(!paused) return; paused = false;
+      if(!paused) return;
+      paused = false;
       setTimeout(()=>{
         setBar(remaining);
         hideT = setTimeout(hide, remaining);
@@ -1466,4 +1512,5 @@
     document.addEventListener('DOMContentLoaded', showOnce);
   })();
   </script>
+
 @endsection
