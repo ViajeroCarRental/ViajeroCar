@@ -322,13 +322,10 @@
 
 <section class="paper-section">
     <p class="legal-text">
-        He verificado que el vehículo lleva el equipo especial especificado.
-        Que los daños están marcados en imagen de auto y no soy responsable por daños
-        o robo parcial o total; salvo una negligencia.
+        {{ $leyendaSeguro ?? 'He verificado que el vehículo lleva el equipo especial especificado. Que los daños están marcados en imagen de auto y no soy responsable por daños o robo parcial o total; salvo una negligencia.' }}
     </p>
-
-
 </section>
+
 
 
 <!-- ============================================ -->
@@ -430,6 +427,11 @@
 
     <h3 class="sec-title">Sólo personal de Viajero</h3>
 
+        {{-- Firmas para JS (reutilizar firma si entregó = recibió) --}}
+    <input type="hidden" id="firmaArrendadorSrc" value="{{ $contrato->firma_arrendador ?? '' }}">
+    <input type="hidden" id="firmaRecibioSrc"   value="{{ $contrato->firma_recibio ?? '' }}">
+
+
     <!-- ================= ENTREGA ================= -->
     <table class="sign-table">
         <tr>
@@ -470,8 +472,7 @@
             </td>
         </tr>
 
-        <!-- ================= RECIBE ================= -->
-        <!-- USA LA MISMA FIRMA DEL QUE ENTREGÓ (PUEDE EDITARSE) -->
+         <!-- ================= RECIBE ================= -->
         <tr>
             <th>Recibió</th>
             <th>Firma</th>
@@ -479,21 +480,48 @@
             <th>Hora</th>
         </tr>
         <tr>
+            {{-- SELECT con agentes (SuperAdmin + Ventas) --}}
             <td>
-                <input type="text"
-                       class="input-line"
-                       data-field="recibio_nombre"
-                       placeholder="Nombre del agente que recibe"
-                       value="{{ $asesorNombre ?? '' }}">
+                @php
+    // Nombre real guardado en el contrato (si ya lo seleccionaron antes)
+    $recibioNombre = trim($contrato->recibio_nombre ?? '');
+@endphp
+
+                <select
+    id="selectRecibioNombre"
+    class="input-line"
+    data-field="recibio_nombre">
+    <option value="">Selecciona agente...</option>
+    @foreach($agentes as $ag)
+        @php
+            $nombreAgente = trim($ag->nombre);
+
+            // 1) Si ya hay recibido guardado en BD, usamos ese
+            if ($recibioNombre !== '') {
+                $seleccionado = ($nombreAgente === $recibioNombre) ? 'selected' : '';
+            } else {
+                // 2) Si no hay recibido, por default usamos al asesor que entrega
+                $seleccionado = ($nombreAgente === ($asesorNombre ?? '')) ? 'selected' : '';
+            }
+        @endphp
+        <option value="{{ $nombreAgente }}" {{ $seleccionado }}>
+            {{ $nombreAgente }}
+        </option>
+    @endforeach
+</select>
+
             </td>
 
+            {{-- Firma de quien recibe (propia columna firma_recibio) --}}
             <td>
-                @if($contrato->firma_arrendador)
-                    <img src="{{ $contrato->firma_arrendador }}" class="firma-img">
+                @php $firmaRecibio = $contrato->firma_recibio ?? null; @endphp
+
+                @if($firmaRecibio)
+                    <img src="{{ $firmaRecibio }}" class="firma-img">
                 @else
-                    <span style="opacity:.6;font-size:.85rem">
-                        Firma pendiente
-                    </span>
+                    <button class="btn-open-sign" data-type="recibio">
+                        Firmar quien recibe
+                    </button>
                 @endif
             </td>
 
@@ -614,10 +642,61 @@ document.addEventListener("DOMContentLoaded", () => {
     const CHECKLIST_ID = {{ $id }};
     const maxLength = 283;
 
+    /* ==========================================================
+       RELOJ PARA FECHAS Y HORAS DE FIRMA / ENTREGA / RECIBO
+    ============================================================= */
+    const camposFecha = [
+        "firma_cliente_fecha",
+        "entrego_fecha",
+        "recibio_fecha",
+    ];
+
+    const camposHora = [
+        "firma_cliente_hora",
+        "entrego_hora",
+        "recibio_hora",
+    ];
+
+    function actualizarFechasHorasAhora() {
+        const ahora = new Date();
+
+        const yyyy = ahora.getFullYear();
+        const mm   = String(ahora.getMonth() + 1).padStart(2, "0");
+        const dd   = String(ahora.getDate()).padStart(2, "0");
+        const hh   = String(ahora.getHours()).padStart(2, "0");
+        const min  = String(ahora.getMinutes()).padStart(2, "0");
+
+        const fechaStr = `${yyyy}-${mm}-${dd}`;   // formato yyyy-mm-dd
+        const horaStr  = `${hh}:${min}`;          // formato HH:MM
+
+        // Rellenar TODAS las fechas
+        camposFecha.forEach((field) => {
+            const input = document.querySelector(`[data-field="${field}"]`);
+            if (input) {
+                input.value = fechaStr;
+            }
+        });
+
+        // Rellenar TODAS las horas
+        camposHora.forEach((field) => {
+            const input = document.querySelector(`[data-field="${field}"]`);
+            if (input) {
+                input.value = horaStr;
+            }
+        });
+    }
+
+    // Primera carga al abrir la vista
+    actualizarFechasHorasAhora();
+
+    // Se siguen actualizando mientras la vista esté abierta
+    // (puedes subir o bajar el intervalo, aquí cada 30 segundos)
+    setInterval(actualizarFechasHorasAhora, 30 * 1000);
+
     // 🗂 Archivos seleccionados por cada uploader (clave = data-name)
     const uploaderFiles = {};
 
-        /**
+    /**
      * Comprime una imagen usando canvas.
      * - maxWidth: ancho máximo (el alto se ajusta solo)
      * - quality: calidad JPEG (0–1)
@@ -651,8 +730,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         }
 
                         // Crear un File nuevo (JPEG) a partir del blob
-                        const ext    = file.name.split(".").pop();
-                        const base   = file.name.replace(/\.[^.]+$/, "");
+                        const ext     = file.name.split(".").pop();
+                        const base    = file.name.replace(/\.[^.]+$/, "");
                         const newName = `${base}-cmp.jpg`;
 
                         const compressedFile = new File([blob], newName, {
@@ -671,7 +750,6 @@ document.addEventListener("DOMContentLoaded", () => {
             img.src = URL.createObjectURL(file);
         });
     }
-
 
     /* ==========================================================
        FUNCIÓN PARA CONFIGURAR GAUGE
@@ -715,24 +793,27 @@ document.addEventListener("DOMContentLoaded", () => {
     /* ==========================================================
        GUARDAR GASOLINA DE REGRESO
     ============================================================= */
-    document.getElementById("selectGasRecibe").addEventListener("change", async (e) => {
+    const selectGasRecibeEl = document.getElementById("selectGasRecibe");
+    if (selectGasRecibeEl) {
+        selectGasRecibeEl.addEventListener("change", async (e) => {
 
-        const nivel = e.target.value;
+            const nivel = e.target.value;
 
-        const resp = await fetch(`/checklist/${CHECKLIST_ID}/guardar-gasolina`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({
-                gasolina_regreso: nivel
-            })
+            const resp = await fetch(`/checklist/${CHECKLIST_ID}/guardar-gasolina`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    gasolina_regreso: nivel
+                })
+            });
+
+            const data = await resp.json();
+            alert(data.msg);
         });
-
-        const data = await resp.json();
-        alert(data.msg);
-    });
+    }
 
     /* ==========================================================
        MODAL ÚNICO DE FIRMAS
@@ -741,7 +822,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById("padFirma");
     const btnClear = document.getElementById("btnClearFirma");
     const btnGuardar = document.getElementById("btnGuardarFirma");
-    const btnCerrar = document.getElementById("btnCerrarModal");
+       const btnCerrar = document.getElementById("btnCerrarModal");
     const tituloModal = document.getElementById("tituloModalFirma");
 
     let tipoFirma = null;
@@ -751,12 +832,17 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".btn-open-sign").forEach(btn => {
         btn.addEventListener("click", () => {
 
-            tipoFirma = btn.dataset.type;
+            tipoFirma = btn.dataset.type; // "cliente", "arrendador" o "recibio"
 
-            tituloModal.textContent =
-                tipoFirma === "cliente"
-                    ? "Firma del Cliente"
-                    : "Firma del Arrendador";
+            if (tipoFirma === "cliente") {
+                tituloModal.textContent = "Firma del Cliente";
+            } else if (tipoFirma === "arrendador") {
+                tituloModal.textContent = "Firma del Agente que entrega";
+            } else if (tipoFirma === "recibio") {
+                tituloModal.textContent = "Firma del Agente que recibe";
+            } else {
+                tituloModal.textContent = "Firma";
+            }
 
             signaturePad.clear();
             modal.style.display = "flex";
@@ -780,9 +866,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const dataURL = signaturePad.toDataURL("image/png");
 
-        const url = tipoFirma === "cliente"
-            ? "/contrato/firma-cliente"
-            : "/contrato/firma-arrendador";
+        let url = null;
+
+        if (tipoFirma === "cliente") {
+            url = "/contrato/firma-cliente";
+        } else if (tipoFirma === "arrendador") {
+            url = "/contrato/firma-arrendador";
+        } else if (tipoFirma === "recibio") {
+            url = "/contrato/firma-recibio";
+        }
+
+        if (!url) {
+            alert("Tipo de firma desconocido");
+            return;
+        }
 
         await fetch(url, {
             method: "POST",
@@ -811,7 +908,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name=\"csrf-token\"]').content
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({
                     id_contrato: CONTRATO_ID,
@@ -826,7 +923,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /* ==========================================================
        EDITAR + GUARDAR KILOMETRAJE DE REGRESO
-    ========================================================== */
+    ============================================================= */
     const kmText = document.getElementById("kmRegresoText");
     const kmInput = document.getElementById("kmRegresoInput");
     const btnGuardarKm = document.getElementById("btnGuardarKm");
@@ -880,8 +977,8 @@ document.addEventListener("DOMContentLoaded", () => {
     /* ==========================================================
        📸 Vista previa de fotos (Checklist: Auto salida / regreso)
        ➜ Permitir agregar varias tandas sin borrar las anteriores
-    ========================================================== */
-        document.querySelectorAll('.uploader input[type="file"]').forEach((input) => {
+    ============================================================= */
+    document.querySelectorAll('.uploader input[type="file"]').forEach((input) => {
         input.addEventListener("change", async (e) => {
             const contenedor = e.target.closest(".uploader");
             const previewId  = contenedor.getAttribute("data-name");
@@ -1033,10 +1130,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         msg = "Las fotos son demasiado pesadas para el servidor. " +
                               "Intenta con menos fotos o en menor resolución.";
                     } else {
-    // 👇 Muestra TODO lo que mandó el servidor
-    msg = `Error ${resp.status}:\n` + (rawText || '(sin cuerpo de respuesta)');
-}
-
+                        // 👇 Muestra TODO lo que mandó el servidor
+                        msg = `Error ${resp.status}:\n` + (rawText || '(sin cuerpo de respuesta)');
+                    }
 
                     alert(msg);
                     return;
@@ -1062,124 +1158,201 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* ==========================================================
-   📤 Enviar checklist de REGRESO
-========================================================== */
-const btnChecklistEntrada = document.getElementById("btnChecklistEntrada");
+       📤 Enviar checklist de REGRESO
+    ========================================================== */
+    const btnChecklistEntrada = document.getElementById("btnChecklistEntrada");
 
-if (btnChecklistEntrada) {
-    btnChecklistEntrada.addEventListener("click", async () => {
-        try {
-            const token = document.querySelector('meta[name="csrf-token"]').content;
-
-            const formData = new FormData();
-            formData.append("_token", token);
-            formData.append("tipo", "entrada"); // 👈 importante
-
-            // 📝 Campos de comentarios (SOLO regreso)
-const comentario = document.querySelector('[data-field="comentario_cliente"]');
-const danos      = document.querySelector('[data-field="danos_interiores"]');
-
-const rFecha  = document.querySelector('[data-field="recibio_fecha"]');
-const rHora   = document.querySelector('[data-field="recibio_hora"]');
-
-formData.append("comentario_cliente", comentario ? comentario.value : "");
-formData.append("danos_interiores",   danos      ? danos.value      : "");
-
-// 👇 En regreso SOLO se guardan estos tiempos
-formData.append("recibio_fecha",       rFecha  ? rFecha.value  : "");
-formData.append("recibio_hora",        rHora   ? rHora.value   : "");
-
-
-            // 📸 Fotos de REGRESO (usando los archivos almacenados en uploaderFiles)
-            const filesRegreso = uploaderFiles["autoRegreso"] || [];
-
-            if (filesRegreso.length === 0) {
-                alert("Debes cargar al menos una foto del vehículo (regreso).");
-                return;
-            }
-
-            // Límite FRONT: 2 GB por foto (igual que backend)
-            const MAX_MB    = 2048;
-            const MAX_BYTES = MAX_MB * 1024 * 1024;
-
-            for (const file of filesRegreso) {
-                if (file.size > MAX_BYTES) {
-                    alert(
-                        `La foto "${file.name}" pesa ${(file.size / 1024 / 1024).toFixed(1)} MB.\n` +
-                        `El máximo permitido es ${MAX_MB} MB.`
-                    );
-                    return; // ⛔ No mandamos nada
-                }
-                formData.append("autoRegreso[]", file);
-            }
-
-            const resp = await fetch(`/admin/checklist/${CHECKLIST_ID}/enviar-entrada`, {
-                method: "POST",
-                headers: {
-                    // NO ponemos Content-Type, FormData lo agrega solo
-                    "X-CSRF-TOKEN": token
-                },
-                body: formData
-            });
-
-            const rawText = await resp.text();
-            let data = null;
-
-            // Intentar parsear JSON
+    if (btnChecklistEntrada) {
+        btnChecklistEntrada.addEventListener("click", async () => {
             try {
-                data = JSON.parse(rawText);
-            } catch (e) {
-                // no era JSON, se queda en null
-            }
+                const token = document.querySelector('meta[name="csrf-token"]').content;
 
-            // Manejo de error de respuesta
-            if (!resp.ok || !data || data.ok === false) {
-                let msg = "Error al enviar el checklist de regreso.";
+                const formData = new FormData();
+                formData.append("_token", token);
+                formData.append("tipo", "entrada"); // 👈 importante
 
-                // Errores de validación de Laravel (422)
-                if (data && data.errors) {
-                    msg = Object.values(data.errors).flat().join("\n");
-                } else if (data && data.msg) {
-                    msg = data.msg;
-                } else if (
-                    resp.status === 413 ||
-                    rawText.toLowerCase().includes("post_max_size") ||
-                    rawText.toLowerCase().includes("upload_max_filesize")
-                ) {
-                    msg = "Las fotos son demasiado pesadas para el servidor. " +
+                // 📝 Campos de comentarios (SOLO regreso)
+                const comentario = document.querySelector('[data-field="comentario_cliente"]');
+                const danos      = document.querySelector('[data-field="danos_interiores"]');
+
+                const rFecha  = document.querySelector('[data-field="recibio_fecha"]');
+                const rHora   = document.querySelector('[data-field="recibio_hora"]');
+
+                formData.append("comentario_cliente", comentario ? comentario.value : "");
+                formData.append("danos_interiores",   danos      ? danos.value      : "");
+
+                // 👇 En regreso SOLO se guardan estos tiempos
+                formData.append("recibio_fecha",       rFecha  ? rFecha.value  : "");
+                formData.append("recibio_hora",        rHora   ? rHora.value   : "");
+
+                // 📸 Fotos de REGRESO (usando los archivos almacenados en uploaderFiles)
+                const filesRegreso = uploaderFiles["autoRegreso"] || [];
+
+                if (filesRegreso.length === 0) {
+                    alert("Debes cargar al menos una foto del vehículo (regreso).");
+                    return;
+                }
+
+                // Límite FRONT: 2 GB por foto (igual que backend)
+                const MAX_MB    = 2048;
+                const MAX_BYTES = MAX_MB * 1024 * 1024;
+
+                for (const file of filesRegreso) {
+                    if (file.size > MAX_BYTES) {
+                        alert(
+                            `La foto "${file.name}" pesa ${(file.size / 1024 / 1024).toFixed(1)} MB.\n` +
+                            `El máximo permitido es ${MAX_MB} MB.`
+                        );
+                        return; // ⛔ No mandamos nada
+                    }
+                    formData.append("autoRegreso[]", file);
+                }
+
+                const resp = await fetch(`/admin/checklist/${CHECKLIST_ID}/enviar-entrada`, {
+                    method: "POST",
+                    headers: {
+                        // NO ponemos Content-Type, FormData lo agrega solo
+                        "X-CSRF-TOKEN": token
+                    },
+                    body: formData
+                });
+
+                const rawText = await resp.text();
+                let data = null;
+
+                // Intentar parsear JSON
+                try {
+                    data = JSON.parse(rawText);
+                } catch (e) {
+                    // no era JSON, se queda en null
+                }
+
+                // Manejo de error de respuesta
+                if (!resp.ok || !data || data.ok === false) {
+                    let msg = "Error al enviar el checklist de regreso.";
+
+                    // Errores de validación de Laravel (422)
+                    if (data && data.errors) {
+                        msg = Object.values(data.errors).flat().join("\n");
+                    } else if (data && data.msg) {
+                        msg = data.msg;
+                    } else if (
+                        resp.status === 413 ||
+                        rawText.toLowerCase().includes("post_max_size") ||
+                        rawText.toLowerCase().includes("upload_max_filesize")
+                    ) {
+                        msg = "Las fotos son demasiado pesadas para el servidor. " +
+                              "Intenta con menos fotos o en menor resolución.";
+                    } else {
+                        // 👇 Muestra TODO lo que mandó el servidor
+                        msg = `Error ${resp.status}:\n` + (rawText || '(sin cuerpo de respuesta)');
+                    }
+
+                    alert(msg);
+                    return;
+                }
+
+                alert(data.msg || "Checklist de regreso guardado correctamente.");
+            } catch (err) {
+                console.error(err);
+
+                let msg = "Error de red al enviar el checklist de regreso.";
+
+                if (err && typeof err.message === "string" && err.message.includes("failed to upload")) {
+                    msg = "Una de las fotos no se pudo subir (suele ser por tamaño o conexión).\n" +
                           "Intenta con menos fotos o en menor resolución.";
-                } else {
-    // 👇 Muestra TODO lo que mandó el servidor
-    msg = `Error ${resp.status}:\n` + (rawText || '(sin cuerpo de respuesta)');
-}
-
+                } else if (err && err.message) {
+                    msg += "\nDetalle: " + err.message;
+                }
 
                 alert(msg);
+            }
+        });
+    }
+
+        /* ==========================================================
+       Reutilizar firma si el mismo asesor entrega y recibe
+       - Si Entregó == Recibió y hay firma_arrendador → copiar a firma_recibio
+       - Si cambian a otro asesor → se limpia firma_recibio para pedir nueva firma
+       - Si vuelves a poner al que entrega, vuelve a jalar su firma
+    ============================================================= */
+    const selectRecibio = document.getElementById("selectRecibioNombre");
+    const inputEntrego  = document.querySelector('[data-field="entrego_nombre"]');
+    const firmaArrInput = document.getElementById("firmaArrendadorSrc");
+    const firmaRecInput = document.getElementById("firmaRecibioSrc");
+
+    if (selectRecibio && inputEntrego && firmaArrInput) {
+
+        const firmaArrSrc = firmaArrInput.value || "";
+        const firmaRecSrcInicial = firmaRecInput ? (firmaRecInput.value || "") : "";
+
+        async function guardarFirmaRecibio(firma) {
+            const resp = await fetch("/contrato/firma-recibio", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    id_contrato: CONTRATO_ID,
+                    firma: firma
+                })
+            });
+            return resp.ok;
+        }
+
+        async function manejarCambioRecibio() {
+            const nombreEntrego = (inputEntrego.value || "").trim();
+            const nombreRecibio = (selectRecibio.value || "").trim();
+
+            // Nada seleccionado → limpiamos firma de "Recibió"
+            if (!nombreRecibio) {
+                await guardarFirmaRecibio("");
                 return;
             }
 
-            alert(data.msg || "Checklist de regreso guardado correctamente.");
-        } catch (err) {
-            console.error(err);
-
-            let msg = "Error de red al enviar el checklist de regreso.";
-
-            if (err && typeof err.message === "string" && err.message.includes("failed to upload")) {
-                msg = "Una de las fotos no se pudo subir (suele ser por tamaño o conexión).\n" +
-                      "Intenta con menos fotos o en menor resolución.";
-            } else if (err && err.message) {
-                msg += "\nDetalle: " + err.message;
+            // MISMO asesor → copiar siempre la firma del arrendador si existe
+            if (nombreEntrego && nombreRecibio === nombreEntrego && firmaArrSrc) {
+                const ok = await guardarFirmaRecibio(firmaArrSrc);
+                if (ok) {
+                    alert("Se reutilizó la firma del agente que entrega para 'Recibió'.");
+                    location.reload();
+                }
+                return;
             }
 
-            alert(msg);
+            // Distinto asesor → limpiar firma y exigir que firme ese nuevo agente
+await guardarFirmaRecibio("");
+alert("Seleccionaste otro agente. Debe capturar una nueva firma para 'Recibió'.");
+location.reload();   // 👈 recargamos la página automáticamente
+
         }
-    });
-}
+
+        // 👉 Al cambiar manualmente el select
+        selectRecibio.addEventListener("change", manejarCambioRecibio);
+
+        // 👉 Al cargar la página:
+        // Si no hay firma_recibio guardada y el que recibe = el que entrega,
+        // copiamos automáticamente la firma del arrendador.
+        (function autoSyncAlCargar() {
+            const nombreEntrego = (inputEntrego.value || "").trim();
+            const nombreRecibio = (selectRecibio.value || "").trim();
+            const firmaRecActual = firmaRecSrcInicial;
+
+            if (!firmaRecActual &&
+                firmaArrSrc &&
+                nombreEntrego &&
+                nombreEntrego === nombreRecibio) {
+                manejarCambioRecibio();
+            }
+        })();
+    }
 
 
 });
-
 </script>
+
+
 <!-- Librería oficial SignaturePad -->
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
 
