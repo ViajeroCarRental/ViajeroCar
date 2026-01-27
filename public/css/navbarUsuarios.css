@@ -356,7 +356,7 @@ body.nav-open .topbar{
     margin-bottom: 26px;
   }
   .hero-icons .icon-item i{ font-size: clamp(34px, 10vw, 44px); }
-  .hero-icons .icon-item span{ font-size:12.5px; line-height:1.25; }
+  .hero-icons .icon-item span{ font-size:18px; line-height:1.25; }
 }
 @media (max-width:360px){
   .hero-icons{ grid-template-columns:1fr; }

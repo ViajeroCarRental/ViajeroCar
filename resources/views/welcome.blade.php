@@ -639,24 +639,24 @@
 
         <article class="car-card">
           <header class="car-title">
-            <h3>SUV COMPACTA</h3>
-            <p> Jeep Renegade o similar | IC</p>
+            <h3>PICKUP 4X4 DOBLE CABINA</h3>
+            <p>Toyota Tacoma o similar | F</p>
           </header>
           <div class="car-media">
-            <img src="{{ asset('img/renegade.png') }}" alt=" Jeep Renegade o similar">
+            <img src="{{ asset('img/tacoma.png') }}" alt="Toyota Tacoma o similar">
           </div>
 
           <div class="offer">
-            <span class="offer-badge">-24%</span>
+            <span class="offer-badge">-13%</span>
             <div class="price-line">
-              <span class="price-now">$1,600</span><span class="per">/día</span>
-              <span class="price-old">$2,100</span>
+              <span class="price-now">$2,600</span><span class="per">/día</span>
+              <span class="price-old">$3,000</span>
             </div>
           </div>
 
           <ul class="car-specs">
             <li><i class="fa-solid fa-user-large"></i> 5</li>
-            <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
+            <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
             <li><i class="fa-solid fa-briefcase"></i> 3</li>
           </ul>
 
@@ -673,6 +673,7 @@
 
           <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
         </article>
+
 
         <article class="car-card">
           <header class="car-title">
