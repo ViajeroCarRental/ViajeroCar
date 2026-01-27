@@ -9,6 +9,10 @@
     <link rel="icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+        {{-- AlertifyJS CSS --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css"/>
+
 
 
     @yield('css-vistaMantenimiento')
@@ -59,16 +63,27 @@
 
 
 <div class="containerJS">
+<div class="containerJS">
+    {{-- AlertifyJS JS --}}
+    <script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+
     @yield('js-vistaMantenimiento')
     @yield('js-vistaFlotilla')
     @yield('js-vistaPolizas')
     @yield('js-vistaCarroceria')
     @yield('js-vistaSeguros')
     @yield('js-vistaGastos')
+
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 
+    {{-- ⚠️ Mensaje de sesión expirada --}}
+    @if (session('session_expired'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                alertify.error(@json(session('session_expired')));
+            });
+        </script>
+    @endif
 </div>
 </body>
-
-
 </html>

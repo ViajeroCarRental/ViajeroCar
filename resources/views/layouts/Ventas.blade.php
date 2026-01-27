@@ -105,6 +105,15 @@
     @yield('js-vistaChecklist2')
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 
+    {{-- ⚠️ Mensaje de sesión expirada --}}
+    @if (session('session_expired'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                alertify.error(@json(session('session_expired')));
+            });
+        </script>
+    @endif
 </div>
 </body>
 </html>
+

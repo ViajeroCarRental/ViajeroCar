@@ -31,6 +31,7 @@ use App\Http\Controllers\ContratosAbiertosController;
 use App\Http\Controllers\VisorReservacionesController;
 use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\ChecklistCambioAutoController;
+use App\Http\Controllers\CategoriasController;
 use Illuminate\Support\Facades\DB;
 //rutas vistas Usuario
 
@@ -79,12 +80,22 @@ Route::post('/verify-code',         [LoginController::class, 'verifyCode'])->nam
 Route::post('/verify-code/resend',  [LoginController::class, 'resendCode'])->name('auth.verify.resend');
 
 // Rutas destino después de login (puedes ajustarlas)
-Route::get('/perfil', [LoginController::class, 'perfil'])->name('rutaPerfil');
-Route::get('/admin',  [LoginController::class, 'adminHome'])->name('admin.home');
+Route::get('/perfil', [LoginController::class, 'perfil'])
+    ->name('rutaPerfil')
+    ->middleware('sesion.activa');
+
+Route::get('/admin',  [LoginController::class, 'adminHome'])
+    ->name('admin.home')
+    ->middleware('sesion.activa');
 
 
 
 
+
+// ======================
+// RUTAS PROTEGIDAS (requieren sesión)
+// ======================
+Route::middleware('sesion.activa')->group(function () {
 
 
 // VISTAS Admin
@@ -542,7 +553,7 @@ Route::get('/api/contratos-abiertos', [ContratosAbiertosController::class, 'api'
 
 
 // Categorías de carros admin
-use App\Http\Controllers\CategoriasController;
+
 
 Route::get('/categorias', [CategoriasController::class, 'index'])->name('categorias.index');
 Route::post('/categorias', [CategoriasController::class, 'store'])->name('categorias.store');
@@ -562,3 +573,4 @@ Route::post('/admin/reservaciones-activas/{id}/cancelar',
 Route::get('/reservaciones-usuario', function () {
     return view('Usuarios.Reservaciones');
 })->name('rutaReservacionesUsuario');
+}); // <- FIN grupo sesion.activa
