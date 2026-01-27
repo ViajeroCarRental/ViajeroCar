@@ -10,6 +10,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
+        {{-- AlertifyJS CSS --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css"/>
+
 
 
 
@@ -88,13 +92,25 @@
 </div>
 
 <div class="containerJS">
+    {{-- AlertifyJS JS --}}
+    <script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+
     @yield('js-vistaUsuariosAdmin')
     @yield('js-vistaRoles')
 
     @yield('js')
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 
+    {{-- ⚠️ Mensaje de sesión expirada, si viene del middleware --}}
+    @if (session('session_expired'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                alertify.error(@json(session('session_expired')));
+            });
+        </script>
+    @endif
 </div>
+
 
 </body>
 </html>
