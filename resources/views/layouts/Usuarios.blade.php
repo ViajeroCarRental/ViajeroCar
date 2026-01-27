@@ -172,7 +172,6 @@
   </nav>
 </header>
 
-<div class="nav-backdrop" id="navBackdrop"></div>
 
 <div class="containerVS">
   @yield('contenidoHome')
@@ -196,7 +195,7 @@
   const topbar   = document.querySelector(".topbar");
   const btn      = document.getElementById("navHamburger");
   const menu     = document.getElementById("mainMenu");
-  const backdrop = document.getElementById("navBackdrop");
+
 
   if(!topbar || !btn || !menu) return;
 
@@ -218,7 +217,6 @@
     document.body.classList.contains("nav-open") ? closeNav() : openNav();
   });
 
-  if(backdrop) backdrop.addEventListener("click", closeNav);
 
   menu.addEventListener("click", (e)=>{
     if(e.target.closest("a")) closeNav();
