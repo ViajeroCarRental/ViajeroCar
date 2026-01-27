@@ -384,24 +384,33 @@ body.nav-open .topbar{
   grid-template-columns:repeat(3, minmax(0, 1fr));
   column-gap:16px;
   row-gap:14px;
-  align-items:start;
+  align-items:stretch;  /* ✅ clave para que queden parejos */
 }
-
-.sg-col-location{
+/* ✅ Igualar altura visual de cada columna */
+.sg-col-location,
+.sg-col-datetime{
   min-width:0;
   display:grid;
-  grid-template-rows: var(--lab-h) auto auto;
-  row-gap:18px;
+  grid-template-rows: 28px auto auto;  /* header fijo + 2 filas */
+  row-gap:10px;
   align-content:start;
 }
+
+/* La fila donde van los inputs (caja principal) que crezca parejo */
+.sg-col-location > .field,
+.sg-col-datetime > .field{
+  height: 100%;
+}
+
 .location-head{
   display:flex;
   align-items:center;
   justify-content:flex-start;
   gap:14px;
   margin:0;
-  min-height: var(--lab-h);
+  min-height: 28px;   /* ✅ misma altura para “header” de columna */
 }
+
 .field-title{
   font-size:12px;
   color:var(--muted);
@@ -431,8 +440,8 @@ body.nav-open .topbar{
 .sg-col-datetime{
   min-width:0;
   display:grid;
-  grid-template-rows: auto auto;
-  row-gap:12px;
+  grid-template-rows: var(--lab-h) auto auto;
+  row-gap:18px;
   align-content:start;
 }
 
@@ -516,7 +525,7 @@ input:focus, select:focus{
   place-items: center !important;
 }
 .tp-selects{
-  margin-top: 4px; /* antes 10px */
+  margin-top: 6px;/* antes 10px */
 }
 input.flatpickr-input{ padding-right:44px; }
 
@@ -639,8 +648,8 @@ input.flatpickr-input{ padding-right:44px; }
   position:static;
   transform:none;
   margin: 28px auto 20px;
-  width:min(720px,94%);
-  max-height:none;
+  width:min(1180px,96%);
+  max-height:1180px;
   overflow:visible;
 }
 
@@ -1593,4 +1602,70 @@ input#dropoffTime{
 /* 5) Si tu HTML todavía trae un icono izquierdo viejo (.field-icon), lo escondemos SOLO aquí */
 .search-card .time-field.icon-field .field-icon{
   display:none !important;
+}
+/* =========================================================
+   PARCHE: headers IGUALES en las 3 columnas (quita lo chueco)
+   Pégalo DESPUÉS de tu bloque actual de .search-grid / .sg-col-*
+========================================================= */
+
+:root{
+  --sg-head-h: 34px; /* ajusta a 32/36 si quieres */
+}
+
+/* 1) MISMA estructura de filas en todas las columnas */
+.search-card .sg-col-location,
+.search-card .sg-col-datetime{
+  min-width:0;
+  display:grid;
+  grid-template-rows: var(--sg-head-h) auto auto; /* ✅ header fijo */
+  row-gap: 10x;                                  /* ✅ consistente */
+  align-content:start;
+}
+
+/* 2) Header izquierdo (Lugar de renta + checkbox) */
+.search-card .sg-col-location .location-head{
+  min-height: var(--sg-head-h);
+  height: var(--sg-head-h);
+  display:flex;
+  align-items:center;
+  gap: 12px;
+  margin:0;
+}
+
+/* evita que el checkbox “estire” la fila */
+.search-card .sg-col-location .inline-check{
+  line-height: 1;
+}
+
+/* 3) Headers de Entrega/Devolución (el texto de arriba) */
+.search-card .sg-col-datetime > .field-title,
+.search-card .sg-col-datetime .field-title:first-child{
+  min-height: var(--sg-head-h);
+  height: var(--sg-head-h);
+  display:flex;
+  align-items:center;
+  justify-content:center; /* ✅ se ve pro centrado */
+  margin:0;
+}
+
+/* 4) Asegura que las cajas crezcan parejo */
+.search-card .sg-col-location > .field,
+.search-card .sg-col-datetime > .field{
+  height: 100%;
+}
+/* =========================================================
+   AJUSTE FINO: subir location / bajar datetime
+   (Pegar AL FINAL)
+========================================================= */
+:root{
+  --loc-shift: -12px;   /* (-) sube location | (+) baja location */
+  --dt-shift:  10px;    /* (+) baja datetime | (-) sube datetime */
+}
+
+/* mueve SOLO las columnas */
+.search-card .sg-col-location{
+  transform: translateY(var(--loc-shift)) !important;
+}
+.search-card .sg-col-datetime{
+  transform: translateY(var(--dt-shift)) !important;
 }
