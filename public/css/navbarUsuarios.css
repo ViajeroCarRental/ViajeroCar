@@ -391,7 +391,7 @@ body.nav-open .topbar{
   min-width:0;
   display:grid;
   grid-template-rows: var(--lab-h) auto auto;
-  row-gap:12px;
+  row-gap:18px;
   align-content:start;
 }
 .location-head{
@@ -636,13 +636,12 @@ input.flatpickr-input{ padding-right:44px; }
 
 /* posición del search-card dentro del hero (DESKTOP) */
 .hero .search-card{
-  position:absolute;
-  left:50%;
-  transform:translateX(-50%);
-  bottom:-170px;
-  right:auto;
-  top:auto;
-  margin:0;
+  position:static;
+  transform:none;
+  margin: 28px auto 20px;
+  width:min(720px,94%);
+  max-height:none;
+  overflow:visible;
 }
 
 /* =========================
@@ -1337,7 +1336,7 @@ input.flatpickr-input{ padding-right:44px; }
   .hero .search-card{
     position:static;
     transform:none;
-    margin: 12px auto 20px;
+    margin: 40px auto 20px;
     width:min(720px,94%);
     max-height:none;
     overflow:visible;
@@ -1352,14 +1351,15 @@ input.flatpickr-input{ padding-right:44px; }
   .tiles-wrap{ grid-template-columns:1fr 1fr; }
   .info-content h2{ font-size:40px; }
 
-  .hero-copy{ padding-bottom: 22px !important; }
+  .hero-copy{ padding-bottom: 52px ; }
 }
 
 @media (max-width:560px){
   .headline{ font-size:34px; }
-  .search-card{ padding:12px; }
+  .search-card{ padding:25px 12px 14px; } 
   .search-grid{ grid-template-columns:1fr; }
   .info-content h2{ font-size:36px; }
+  .hero .search-card{ margin-top: 54px; }
 }
 
 /* =========================
