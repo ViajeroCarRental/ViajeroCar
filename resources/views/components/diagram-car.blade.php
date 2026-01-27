@@ -26,12 +26,15 @@
 
     /* ===== PUNTOS SVG ===== */
     .point-dot {
-        fill: rgba(255,255,255,0.95);
-        stroke: #ff4d6a;
-        stroke-width: 4;
-        cursor: pointer;
-        transition: stroke-width .15s ease, filter .15s ease;
-    }
+    fill: rgba(255,255,255,0.95);        /* círculo casi blanco cuando NO hay daño */
+    stroke: #ff4d6a;
+    stroke-width: 4;
+    cursor: pointer;
+    transition: stroke-width .15s ease,
+                filter .15s ease,
+                fill .15s ease;          /* 👈 añadimos transición del fill */
+}
+
 
     /* YA NO USA SCALE -> YA NO SE MUEVE EL PUNTO */
     .point-dot:hover {
@@ -39,9 +42,11 @@
     }
 
     .point-dot.selected {
-        stroke-width: 8;
-        filter: drop-shadow(0 0 6px rgba(255,0,0,.7));
-    }
+    stroke-width: 8;
+    filter: drop-shadow(0 0 6px rgba(255,0,0,.7));
+    fill: rgba(255,77,106,0.9);   /* 👈 AQUÍ se rellena el círculo */
+}
+
 
     /* ===== TABLA DERECHA ===== */
     .tabla-entrega {
@@ -280,6 +285,12 @@
 
     let zonaSeleccionada = null;
 
+        // 🔹 Al cargar el componente, marcamos TODOS los ítems de inventario
+    document.querySelectorAll(".itemCheck").forEach(chk => {
+        chk.checked = true;
+    });
+
+
     // ======================================
     // 1) CUANDO SE PRESIONA UN PUNTO
     // ======================================
@@ -342,31 +353,45 @@
             console.error(e);
         }
     };
-    document.getElementById("guardarInventario").addEventListener("click", async () => {
+        document.getElementById("guardarInventario").addEventListener("click", async () => {
+        const idContrato = document.getElementById("idContrato").value;
 
-    const idContrato = document.getElementById("idContrato").value;
+        const items = {};
 
-    let items = {};
+        // 🔹 Solo agregamos al payload los que SIGUEN marcados
+        document.querySelectorAll(".itemCheck").forEach(chk => {
+            if (chk.checked) {
+                items[chk.dataset.item] = 1;
+            }
+        });
 
-    document.querySelectorAll(".itemCheck").forEach(chk => {
-        items[chk.dataset.item] = chk.checked ? 1 : 0;
+        try {
+            const resp = await fetch("{{ route('contrato.guardarInventario') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({
+                    id_contrato: idContrato,
+                    inventario: items
+                })
+            });
+
+            const data = await resp.json();
+
+            if (!resp.ok || !data.ok) {
+                alert(data.msg || "Error al guardar inventario.");
+                return;
+            }
+
+            alert(data.msg || "Inventario guardado.");
+        } catch (e) {
+            console.error(e);
+            alert("Error de conexión al guardar el inventario.");
+        }
     });
 
-    const resp = await fetch("{{ route('contrato.guardarInventario') }}", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRF-TOKEN": "{{ csrf_token() }}"
-        },
-        body: JSON.stringify({
-            id_contrato: idContrato,
-            inventario: items
-        })
-    });
-
-    const data = await resp.json();
-    alert(data.msg);
-});
 
 
     // ======================================

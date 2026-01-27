@@ -266,6 +266,8 @@ Route::get('/admin/contrato/{id}/status',
 
 Route::post('/contrato/firma-cliente', [ContratoFinalController::class, 'guardarFirmaCliente'])->name('contrato.firmaCliente');
 Route::post('/contrato/firma-arrendador', [ContratoFinalController::class, 'guardarFirmaArr'])->name('contrato.firmaArr');
+Route::post('/contrato/firma-recibio', [ChecklistController::class, 'guardarFirmaRecibio']);
+
 Route::get('/contrato/{id}/exportar-word', [ContratoController::class, 'exportarWord'])
     ->name('contrato.exportarWord');
 Route::post('/contrato/{id}/enviar-correo', [ContratoFinalController::class, 'enviarContratoCorreo']);
@@ -490,6 +492,8 @@ Route::prefix('admin')->group(function () {
     Route::delete('/seguros-individuales/{id}', [SeguroIndividualController::class, 'destroy']);
 });
 
+Route::post('/contrato/guardar-dato', [ChecklistController::class, 'guardarDato'])
+     ->name('contrato.guardarDato');
 // VER CHECKLIST
 Route::get('/admin/reservacion/{id}/checklist',
     [ChecklistController::class, 'showChecklist']

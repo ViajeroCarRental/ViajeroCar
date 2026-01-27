@@ -22,19 +22,25 @@ class ChecklistController extends Controller
     if (!$contrato) abort(404, "Contrato no encontrado");
 
     // ✅ 2) Reservación ligada al contrato
-    $reservacion = DB::table('reservaciones as r')
-        ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
-        ->leftJoin('ciudades as cr', 'r.ciudad_retiro', '=', 'cr.id_ciudad')
-        ->leftJoin('ciudades as ce', 'r.ciudad_entrega', '=', 'ce.id_ciudad')
-        ->select(
-            'r.*',
-            'c.codigo as categoria_codigo',
-            'c.nombre as categoria_nombre',
-            'cr.nombre as ciudad_retiro_nombre',
-            'ce.nombre as ciudad_entrega_nombre'
-        )
-        ->where('r.id_reservacion', $contrato->id_reservacion)
-        ->first();
+$reservacion = DB::table('reservaciones as r')
+    ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
+    ->leftJoin('ciudades as cr', 'r.ciudad_retiro', '=', 'cr.id_ciudad')
+    ->leftJoin('ciudades as ce', 'r.ciudad_entrega', '=', 'ce.id_ciudad')
+    // 👇 NUEVO: relación con el paquete de seguro
+    ->leftJoin('reservacion_paquete_seguro as rps', 'r.id_reservacion', '=', 'rps.id_reservacion')
+    ->leftJoin('seguro_paquete as sp', 'rps.id_paquete', '=', 'sp.id_paquete')
+    ->select(
+        'r.*',
+        'c.codigo as categoria_codigo',
+        'c.nombre as categoria_nombre',
+        'cr.nombre as ciudad_retiro_nombre',
+        'ce.nombre as ciudad_entrega_nombre',
+        // 👇 NUEVO: nombre del paquete de seguro
+        'sp.nombre as nombre_seguro_paquete'
+    )
+    ->where('r.id_reservacion', $contrato->id_reservacion)
+    ->first();
+
 
     if (!$reservacion) abort(404, "Reservación no encontrada");
 
@@ -60,23 +66,31 @@ class ChecklistController extends Controller
         ->orderByDesc('id_inspeccion')
         ->first();
 
-        // ✅ 4.1 Nombre del cliente
-    $clienteNombre = null;
+        // ✅ 4.1 Nombre del cliente (nombre + apellidos de la reservación)
+$clienteNombre = null;
 
-    if (!empty($reservacion->nombre_cliente)) {
-        // Si la reservación ya tiene el nombre capturado, usamos ese
-        $clienteNombre = $reservacion->nombre_cliente;
-    } elseif (!empty($reservacion->id_usuario)) {
-        // Si no, intentamos obtenerlo de la tabla usuarios
-        $usuarioCliente = DB::table('usuarios')
-            ->select('nombres', 'apellidos')
-            ->where('id_usuario', $reservacion->id_usuario)
-            ->first();
+// 1) Primero usamos lo que viene directo de la tabla RESERVACIONES
+if (!empty($reservacion->nombre_cliente) || !empty($reservacion->apellidos_cliente)) {
+    $clienteNombre = trim(
+        ($reservacion->nombre_cliente ?? '') . ' ' .
+        ($reservacion->apellidos_cliente ?? '')
+    );
 
-        if ($usuarioCliente) {
-            $clienteNombre = trim($usuarioCliente->nombres . ' ' . $usuarioCliente->apellidos);
-        }
+// 2) Si por alguna razón no viene ahí, caemos al usuario ligado
+} elseif (!empty($reservacion->id_usuario)) {
+    $usuarioCliente = DB::table('usuarios')
+        ->select('nombres', 'apellidos')
+        ->where('id_usuario', $reservacion->id_usuario)
+        ->first();
+
+    if ($usuarioCliente) {
+        $clienteNombre = trim(
+            ($usuarioCliente->nombres ?? '') . ' ' .
+            ($usuarioCliente->apellidos ?? '')
+        );
     }
+}
+
 
     // ✅ 4.2 Nombre del asesor / arrendador (quien hace la reservación)
     $asesorNombre = null;
@@ -93,8 +107,25 @@ class ChecklistController extends Controller
         }
     }
 
+        // ✅ 4.3 Protección y leyenda según el seguro
+    $proteccionData = $this->obtenerProteccionYLeyenda($reservacion->id_reservacion);
 
-    // ✅ 5) Retornar vista
+        // ✅ 4.4 Lista de agentes que pueden RECIBIR (SuperAdmin + Ventas)
+    $agentes = DB::table('usuarios as u')
+        ->join('usuario_rol as ur', 'u.id_usuario', '=', 'ur.id_usuario')
+        ->join('roles as r', 'ur.id_rol', '=', 'r.id_rol')
+        ->where('u.activo', 1)
+        ->whereIn('r.nombre', ['SuperAdmin', 'Ventas'])
+        ->select(
+            'u.id_usuario',
+            DB::raw("CONCAT(u.nombres, ' ', u.apellidos) as nombre")
+        )
+        ->orderBy('nombre')
+        ->get();
+
+
+
+        // ✅ 5) Retornar vista
     return view('Admin.checklist', [
         'id'          => $contrato->id_contrato,
         'contrato'    => $contrato,
@@ -103,6 +134,7 @@ class ChecklistController extends Controller
         // 🔹 Nombres para la sección de firmas
         'clienteNombre' => $clienteNombre,
         'asesorNombre'  => $asesorNombre,
+        'agentes'       => $agentes,
 
         'tipo'        => $reservacion->categoria_codigo ?? '—',
         'modelo'      => $vehiculo->modelo ?? $vehiculo->modelo_nombre ?? '—',
@@ -116,22 +148,20 @@ class ChecklistController extends Controller
         'kmSalida'    => $vehiculo->kilometraje ?? '—',
         'kmRegreso'   => $inspEntrada->odometro_km ?? '—',
 
-        'proteccion'  => $reservacion->categoria_nombre ?? '—',
+        // 👇 Protección y leyenda dinámicas
+        'proteccion'    => $proteccionData['proteccion']    // puede ser null si no hay paquete
+                            ?? ($reservacion->nombre_seguro_paquete ?? '—'),
+        'leyendaSeguro' => $proteccionData['leyendaSeguro'], // SIEMPRE trae algo (tiene default)
 
         // Gasolina (vehiculo.gasolina_actual es entero 0-16)
         'gasolinaSalida'  => $this->convertirEnteroAFraccion16($vehiculo->gasolina_actual ?? null),
 
-        // OJO: inspeccion.nivel_combustible es decimal, ahorita tú guardas fracción string (eso hay que afinar)
-        // Por ahora lo dejo tal cual para no romperte la UI:
         'gasolinaRegreso' => ($inspEntrada && $inspEntrada->nivel_combustible !== null)
-    ? $this->convertirEnteroAFraccion16((int) round($inspEntrada->nivel_combustible * 16))
-    : '',
-
+            ? $this->convertirEnteroAFraccion16((int) round($inspEntrada->nivel_combustible * 16))
+            : '',
     ]);
+
 }
-
-
-
 
     // ============================================================
     //   🟨 ACTUALIZAR KILOMETRAJE DE REGRESO
@@ -320,6 +350,66 @@ private function convertirFraccion16AEntero($valor)
     return $map[$valor] ?? null;
 }
 
+/**
+ * Obtiene la "protección" (texto corto) y la leyenda de inspección
+ * según el paquete de seguro asociado a la reservación.
+ */
+private function obtenerProteccionYLeyenda(int $idReservacion): array
+{
+    // 1) Buscar el paquete de seguro ligado a la reservación
+    $paquete = DB::table('reservacion_paquete_seguro')
+        ->join('seguro_paquete', 'reservacion_paquete_seguro.id_paquete', '=', 'seguro_paquete.id_paquete')
+        ->where('reservacion_paquete_seguro.id_reservacion', $idReservacion)
+        ->select('seguro_paquete.nombre')
+        ->first();
+
+    $proteccion    = null;
+    $leyendaSeguro = null;
+
+    if ($paquete) {
+        $nombrePaquete = trim($paquete->nombre);
+
+        // 2) Mapeo: nombre en BD -> etiqueta de protección + leyenda
+        $mapa = [
+            'LDW PACK' => [
+                'proteccion' => 'LDW 0% Deductible',
+                'leyenda'    => 'He verificado que el vehículo lleva el equipo especial especificado. Que los daños están marcados en imagen de auto y soy responsable por el 0% deducible, de lado a lado pase lo que pase con el auto, está cubierto de bumper a bumper; salvo una negligencia.',
+            ],
+            'PDW PACK' => [
+                'proteccion' => 'PDW 5% Deductible',
+                'leyenda'    => 'Cubre toda la carrocería al 5%, 10% Pérdida total o Robo, NO CUBRE llantas, accesorios, rines ni cristales.',
+            ],
+            'CDW PACK 1' => [
+                'proteccion' => 'CDW 10% Deductible',
+                'leyenda'    => 'He verificado que el vehículo lleva el equipo especial especificado. Que los daños están marcados en imagen de auto y soy responsable por el 10% Deducible en Daños, 20% Pérdida total o Robo sobre valor factura.',
+            ],
+            'CDW PACK 2' => [
+                'proteccion' => 'CDW 20% Deductible',
+                'leyenda'    => 'He verificado que el vehículo lleva el equipo especial especificado. Que los daños están marcados en imagen de auto y soy responsable por el 20% Deducible en Daños, 30% Pérdida total o Robo sobre valor factura.',
+            ],
+            'DECLINE PROTECTIONS' => [
+                'proteccion' => 'DECLINE CDW',
+                'leyenda'    => 'He verificado que el vehículo lleva el equipo especial especificado. Que los daños están marcados en imagen de auto y soy responsable por el 100% Deducible sobre valor factura de auto.',
+            ],
+        ];
+
+        if (isset($mapa[$nombrePaquete])) {
+            $proteccion    = $mapa[$nombrePaquete]['proteccion'];
+            $leyendaSeguro = $mapa[$nombrePaquete]['leyenda'];
+        }
+    }
+
+    // 3) Texto por defecto si no hay paquete o no coincide
+    if ($leyendaSeguro === null) {
+        $leyendaSeguro = 'He verificado que el vehículo lleva el equipo especial especificado. Que los daños están marcados en imagen de auto y no soy responsable por daños o robo parcial o total; salvo una negligencia.';
+    }
+
+    return [
+        'proteccion'    => $proteccion,
+        'leyendaSeguro' => $leyendaSeguro,
+    ];
+}
+
 
 public function guardarDano(Request $request, $idContrato)
 {
@@ -393,6 +483,52 @@ public function guardarInventario(Request $req)
     }
 }
 
+public function guardarDato(Request $request)
+{
+    // 1) Validar datos de entrada
+    $request->validate([
+        'id_contrato' => 'required|integer|exists:contratos,id_contrato',
+        'campo'       => 'required|string',
+        'valor'       => 'nullable|string',
+    ]);
+
+    // 2) Lista blanca de campos permitidos
+    $permitidos = [
+        'firma_cliente_nombre',
+        'firma_cliente_fecha',
+        'firma_cliente_hora',
+
+        'entrego_nombre',
+        'entrego_fecha',
+        'entrego_hora',
+
+        'recibio_nombre',   // 👈 AQUÍ entra el nuevo campo
+        'recibio_fecha',
+        'recibio_hora',
+
+        'comentario_cliente',
+        'danos_interiores',
+    ];
+
+    if (!in_array($request->campo, $permitidos, true)) {
+        return response()->json([
+            'ok'  => false,
+            'msg' => 'Campo no permitido',
+        ], 422);
+    }
+
+    // 3) Actualizar el contrato
+    DB::table('contratos')
+        ->where('id_contrato', $request->id_contrato)
+        ->update([
+            $request->campo => $request->valor,
+            'updated_at'    => now(),
+        ]);
+
+    return response()->json(['ok' => true]);
+}
+
+
 public function guardarFirmaCliente(Request $req)
 {
     DB::table('contratos')
@@ -410,6 +546,16 @@ public function guardarFirmaArrendador(Request $req)
 
     return response()->json(['ok' => true]);
 }
+
+public function guardarFirmaRecibio(Request $req)
+{
+    DB::table('contratos')
+        ->where('id_contrato', $req->id_contrato)
+        ->update(['firma_recibio' => $req->firma]);
+
+    return response()->json(['ok' => true]);
+}
+
 
 public function enviarChecklistSalida(Request $request, $id)
 {
@@ -1191,8 +1337,8 @@ public function enviarChecklistEntrada(Request $request, $id)
                 // Aliases específicos del interno
                 'clienteNombre'      => $nombreCliente,
                 'asesorNombre'       => $asesor,
-                'entregoNombre'      => $asesor,
-                'recibioNombre'      => $asesor,
+                'entregoNombre'      => $asesor,  // el que entrega sigue siendo el asesor
+                'recibioNombre'      => $contrato->recibio_nombre ?: $asesor,
             ];
 
             $pdfCliente = PDF::loadView('Admin.checklist_pdf_cliente', $dataPdf);
