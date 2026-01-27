@@ -19,6 +19,22 @@
   $dropoffDate       = $f['dropoff_date']        ?? request('dropoff_date') ?? now()->addDays(3)->toDateString();
   $dropoffTime       = $f['dropoff_time']        ?? request('dropoff_time') ?? '12:00';
 
+  // ============================
+  // ✅ FIX: Si pickup_date viene como rango "YYYY-MM-DD a YYYY-MM-DD"
+  // (por flatpickr rangePlugin), separarlo para que Carbon NO truene.
+  // ============================
+  if (is_string($pickupDate) && str_contains($pickupDate, ' a ')) {
+    [$start, $end] = array_map('trim', explode(' a ', $pickupDate, 2));
+
+    // pickup_date = inicio
+    $pickupDate = $start ?: now()->toDateString();
+
+    // si dropoff_date venía vacío o igual al default, lo reemplazamos por el fin del rango
+    if (empty($dropoffDate) || $dropoffDate === now()->addDays(3)->toDateString()) {
+      $dropoffDate = $end ?: now()->addDays(3)->toDateString();
+    }
+  }
+
   // ✅ flujo por categoría
   $categoriaId       = $f['categoria_id']        ?? request('categoria_id');
   $plan              = $f['plan']                ?? request('plan'); // mostrador / linea
@@ -60,8 +76,8 @@
   };
 
   // días
-  $d1 = \Illuminate\Support\Carbon::parse($pickupDate);
-  $d2 = \Illuminate\Support\Carbon::parse($dropoffDate);
+  $d1 = \Illuminate\Support\Carbon::parse(trim((string)$pickupDate));
+  $d2 = \Illuminate\Support\Carbon::parse(trim((string)$dropoffDate));
   $days = max(1, $d1->diffInDays($d2));
 
   // ✅ categoría seleccionada
@@ -624,7 +640,6 @@
       window.PAYPAL_MODE = "{{ $paypalMode }}";
       window.PAYPAL_CLIENT_ID = "{{ $paypalClientId }}";
   </script>
-
 
   <!-- Luego tus JS locales -->
   <script src="{{ asset('js/reservaciones.js') }}"></script>

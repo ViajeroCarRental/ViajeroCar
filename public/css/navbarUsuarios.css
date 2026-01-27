@@ -499,8 +499,8 @@ input:focus, select:focus{
   display:grid;
   place-items:center;
 }
-.icon-field input,
-.icon-field select{ padding-left:42px; }
+.icon-field > input,
+.icon-field > select{ padding-left:42px; }
 
 /* ✅ Icono de reloj (derecha) — se mantiene SIEMPRE */
 .cal-ico{
@@ -514,6 +514,9 @@ input:focus, select:focus{
   opacity: 1 !important;
   display: grid !important;
   place-items: center !important;
+}
+.tp-selects{
+  margin-top: 4px; /* antes 10px */
 }
 input.flatpickr-input{ padding-right:44px; }
 
@@ -1491,4 +1494,103 @@ input#dropoffTime{
   .tp-selects{
     grid-template-columns: 1fr;
   }
+}
+/* =========================================================
+   FIX: ícono reloj NO choca con el select de HORA
+   (solo afecta los selects que tu JS crea dentro de .tp-selects)
+========================================================= */
+
+/* El wrapper del time-field debe ser referencia del icono */
+.time-field{ position: relative; }
+
+/* En .tp-selects: el primer select (HH) necesita espacio extra por el icono */
+.time-field .tp-selects select:first-child{
+  padding-left: 44px !important; /* prueba 42-50 */
+}
+
+/* Opcional: el segundo select (MM) no necesita icono, lo dejamos normal */
+.time-field .tp-selects select:nth-child(2){
+  padding-left: 12px !important;
+}
+/* =====================================================================
+   PARCHE — Ajuste fino de icono reloj y selects de hora/minuto
+   - No rompe otros iconos
+   - No toca JS ni Blade
+   - Solo afecta el form del hero
+===================================================================== */
+
+/* 1) Variable exclusiva para el reloj */
+:root{
+  --clock-nudge: 0px; /* ajusta 6px – 14px si lo quieres más abajo/arriba */
+}
+
+/* 2) Baja SOLO el icono del reloj */
+.cal-ico{
+  top: calc(
+    var(--lab-h)
+    + var(--lab-gap)
+    + (var(--ctl-h) / 2)
+    + var(--ico-nudge)
+    + var(--clock-nudge)
+  ) !important;
+}
+
+/* 3) Sube ligeramente los selects de hora/minuto */
+.tp-selects{
+  margin-top: 6px !important; /* antes 10px */
+  gap: 8px !important;        /* más compacto */
+}
+/* =========================================================
+   PARCHE FINAL — reloj a la IZQUIERDA dentro del input (como tu imagen)
+   Pegar AL FINAL del CSS
+========================================================= */
+
+:root{
+  --timeclock-nudge: 0px;  /* + baja el reloj | - sube el reloj */
+}
+
+/* 1) Solo para los campos de hora */
+.search-card .time-field.icon-field{
+  position: relative !important;
+}
+
+/* 2) Quita el reloj de la derecha si existe (.cal-ico) */
+.search-card .time-field.icon-field .cal-ico{
+  display: none !important;
+}
+
+/* 3) Crea el reloj a la izquierda (aunque NO exista <i>) */
+.search-card .time-field.icon-field::before{
+  content:"\f017"; /* FontAwesome clock */
+  font-family:"Font Awesome 6 Free";
+  font-weight:900;
+
+  position:absolute;
+  left:12px;
+  top: calc(var(--lab-h) + var(--lab-gap) + (var(--ctl-h) / 2) + var(--ico-nudge) + var(--timeclock-nudge));
+  transform: translateY(-50%);
+
+  width:18px;
+  height:18px;
+  display:grid;
+  place-items:center;
+
+  color:#9ca3af;
+  opacity:1;
+  visibility:visible;
+
+  z-index: 99999;
+  pointer-events:none;
+}
+
+/* 4) El input deja espacio para el reloj (como tu imagen) */
+.search-card .time-field.icon-field input#pickupTime,
+.search-card .time-field.icon-field input#dropoffTime{
+  padding-left: 44px !important; /* espacio del icono */
+  padding-right: 12px !important;
+}
+
+/* 5) Si tu HTML todavía trae un icono izquierdo viejo (.field-icon), lo escondemos SOLO aquí */
+.search-card .time-field.icon-field .field-icon{
+  display:none !important;
 }

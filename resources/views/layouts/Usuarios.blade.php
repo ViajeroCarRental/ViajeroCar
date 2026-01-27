@@ -19,7 +19,7 @@
   <link rel="icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
   <link rel="shortcut icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
 
-  <!-- Flatpickr CSS (una sola vez) -->
+  <!-- Flatpickr CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_red.css">
 
@@ -40,11 +40,21 @@
   <title>@yield('Titulo')</title>
 
   <style>
+    /* ==========================
+       FIX FRANJA SUPERIOR (TUYO)
+    ========================== */
+    html, body{
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    body{ overflow-x: hidden; }
+    header.topbar{ margin-top: 0 !important; }
+
     .brand-logo-img{height:30px; display:block}
     .footer-logo{height:42px; display:block; margin:0 auto}
     .brand a.brand-link{display:inline-flex; align-items:center; text-decoration:none}
 
-    /* ===== ICONO PERSONA (NAV-ACTIONS) ===== */
+    /* ===== ICONO PERSONA ===== */
     .nav-actions{display:flex; align-items:center; gap:12px;}
     .nav-actions .icon-pill{
       display:flex; align-items:center; justify-content:center;
@@ -60,13 +70,13 @@
     .nav-actions .icon-pill i{ font-size:18px; color:#fff; }
     .nav-actions .icon-pill i.guest{ opacity:.85; }
 
-    /* ===== HAMBURGER (solo se verá en móvil por tu CSS) ===== */
+    /* ===== HAMBURGER ===== */
     .hamburger{
       width:40px; height:40px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,.25);
       background: rgba(255,255,255,.12);
-      display:none; /* tu CSS lo enciende en mobile */
+      display:none;
       align-items:center;
       justify-content:center;
       cursor:pointer;
@@ -84,7 +94,7 @@
     .hamburger .hb::before{ top:-6px; }
     .hamburger .hb::after{ top: 6px; }
 
-    /* Backdrop (lo activas con JS agregando/removiendo body.nav-open) */
+    /* Backdrop */
     .nav-backdrop{
       position:fixed; inset:0;
       background: rgba(0,0,0,.45);
@@ -94,6 +104,18 @@
     }
     body.nav-open .nav-backdrop{
       opacity:1; pointer-events:auto;
+    }
+
+    /* =================================================
+       ✅ ÚNICO AGREGADO: TRANSICIÓN GLASS → SOLID
+       (NO cambia estilos, solo anima el cambio)
+    ================================================= */
+    header.topbar{
+      transition:
+        background .35s ease,
+        box-shadow .35s ease,
+        backdrop-filter .35s ease,
+        -webkit-backdrop-filter .35s ease;
     }
   </style>
 </head>
@@ -108,7 +130,6 @@
       </a>
     </div>
 
-    {{-- ✅ MENÚ SOLO LINKS (en móvil se oculta y se abre como panel con JS/CSS) --}}
     <ul class="menu" id="mainMenu">
       <li><a href="{{ route('rutaHome') }}" class="{{ request()->routeIs('rutaHome') ? 'active' : '' }}">Inicio</a></li>
       <li><a href="{{ route('rutaCatalogo') }}" class="{{ request()->routeIs('rutaCatalogo') ? 'active' : '' }}">Catálogo de autos</a></li>
@@ -118,56 +139,41 @@
       <li><a href="{{ route('rutaFAQ') }}" class="{{ request()->routeIs('rutaFAQ') ? 'active' : '' }}">F.A.Q</a></li>
     </ul>
 
-    {{-- ✅ ACCIONES (SIEMPRE VISIBLES): icono + hamburguesa --}}
     <div class="nav-actions">
 
       @if (session()->has('id_usuario'))
-        {{-- ✅ Usuario logueado --}}
         <div class="dropdown">
-          <a href="#"
-             class="icon-pill dropdown-toggle"
-             title="Mi perfil"
-             data-bs-toggle="dropdown"
-             aria-expanded="false">
+          <a href="#" class="icon-pill dropdown-toggle" data-bs-toggle="dropdown">
             <i class="fa-solid fa-user"></i>
           </a>
-
           <ul class="dropdown-menu dropdown-menu-end shadow">
             <li>
-              <a class="dropdown-item" href="{{ route('rutaPerfil') }}">
-                <i class="fa-regular fa-id-card me-2"></i> Perfil
-              </a>
+              <a class="dropdown-item" href="{{ route('rutaPerfil') }}">Perfil</a>
             </li>
             <li><hr class="dropdown-divider"></li>
             <li>
-              <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+              <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="dropdown-item">
-                  <i class="fa-solid fa-right-from-bracket me-2"></i> Cerrar sesión
-                </button>
+                <button type="submit" class="dropdown-item">Cerrar sesión</button>
               </form>
             </li>
           </ul>
         </div>
       @else
-        {{-- ❌ Usuario sin sesión --}}
-        <a href="{{ route('auth.show') }}" class="icon-pill" title="Iniciar sesión" id="accountLink">
+        <a href="{{ route('auth.show') }}" class="icon-pill" title="Iniciar sesión">
           <i class="fa-regular fa-user guest"></i>
         </a>
       @endif
 
-      {{-- ✅ Hamburguesa (solo móvil por CSS) --}}
-      <button class="hamburger" type="button" aria-label="Abrir menú" aria-expanded="false" id="navHamburger">
-        <span class="hb" aria-hidden="true"></span>
+      <button class="hamburger" type="button" id="navHamburger" aria-label="Abrir menú">
+        <span class="hb"></span>
       </button>
     </div>
   </nav>
 </header>
 
-{{-- ✅ Backdrop (para cerrar al tocar fuera) --}}
-<div class="nav-backdrop" id="navBackdrop" aria-hidden="true"></div>
+<div class="nav-backdrop" id="navBackdrop"></div>
 
-<!-- Contenedor de vistas -->
 <div class="containerVS">
   @yield('contenidoHome')
   @yield('contenidoCatalogo')
@@ -179,72 +185,71 @@
   @yield('contenidoPerfil')
 </div>
 
-<!-- ===== Librerías necesarias para Flatpickr (ANTES de los JS por vista) ===== -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
-
-{{-- AlertifyJS --}}
 <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
-
-<!-- JS por vista -->
-<div class="containerJS">
-  @yield('js-vistaHome')
-  @yield('js-vistaCatalogo')
-  @yield('js-vistaReservaciones')
-  @yield('js-vistaContacto')
-  @yield('js-vistaPoliticas')
-  @yield('js-vistaFAQ')
-  @yield('js-vistaLogin')
-  @yield('js-vistaPerfil')
-</div>
-
-{{-- Bootstrap JS --}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-{{-- ✅ JS mínimo para hamburguesa (si ya lo tienes en home.js, puedes quitarlo de aquí) --}}
 <script>
 (function(){
   "use strict";
-  const btn = document.getElementById('navHamburger');
-  const menu = document.getElementById('mainMenu');
-  const backdrop = document.getElementById('navBackdrop');
 
-  if(!btn || !menu) return;
+  const topbar   = document.querySelector(".topbar");
+  const btn      = document.getElementById("navHamburger");
+  const menu     = document.getElementById("mainMenu");
+  const backdrop = document.getElementById("navBackdrop");
+
+  if(!topbar || !btn || !menu) return;
+
+  const MQ = window.matchMedia("(max-width: 940px)");
+  const isMobile = ()=> MQ.matches;
 
   function openNav(){
-    document.body.classList.add('nav-open');
-    btn.setAttribute('aria-expanded','true');
-    // mostramos menú solo en móvil (tu CSS lo estiliza como panel)
-    menu.style.display = 'flex';
-    menu.style.flexDirection = 'column';
-    menu.style.gap = '12px';
+    if(!isMobile()) return;
+    document.body.classList.add("nav-open");
+    btn.setAttribute("aria-expanded","true");
   }
+
   function closeNav(){
-    document.body.classList.remove('nav-open');
-    btn.setAttribute('aria-expanded','false');
-    // ocultar en móvil
-    menu.style.display = '';
-  }
-  function toggleNav(){
-    document.body.classList.contains('nav-open') ? closeNav() : openNav();
+    document.body.classList.remove("nav-open");
+    btn.setAttribute("aria-expanded","false");
   }
 
-  btn.addEventListener('click', (e)=>{ e.preventDefault(); toggleNav(); });
-  backdrop && backdrop.addEventListener('click', closeNav);
-
-  // cerrar al dar click a un link
-  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeNav));
-
-  // cerrar con ESC
-  document.addEventListener('keydown', (e)=>{
-    if(e.key === 'Escape') closeNav();
+  btn.addEventListener("click", ()=>{
+    document.body.classList.contains("nav-open") ? closeNav() : openNav();
   });
 
-  // si vuelves a desktop, resetea
-  window.addEventListener('resize', ()=>{
-    if(window.innerWidth > 860) closeNav();
-  }, { passive:true });
+  if(backdrop) backdrop.addEventListener("click", closeNav);
+
+  menu.addEventListener("click", (e)=>{
+    if(e.target.closest("a")) closeNav();
+  });
+
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape") closeNav();
+  });
+
+  if(MQ.addEventListener){
+    MQ.addEventListener("change", ()=>{ if(!isMobile()) closeNav(); });
+  }
+
+  /* =================================================
+     ✅ ÚNICO AGREGADO: GLASS ↔ SOLID POR SCROLL
+  ================================================= */
+  const SOLID_AT = 20;
+
+  function syncTopbar(){
+    if(window.scrollY > SOLID_AT){
+      topbar.classList.add("solid");
+      topbar.classList.remove("glass");
+    }else{
+      topbar.classList.add("glass");
+      topbar.classList.remove("solid");
+    }
+  }
+
+  syncTopbar();
+  window.addEventListener("scroll", syncTopbar, { passive:true });
+
 })();
 </script>
 
@@ -301,6 +306,7 @@
     <div class="footer-copy">© <span id="year"></span> Viajero. Todos los derechos reservados.</div>
   </div>
 </footer>
+@yield('js-vistaHome')
 
 </body>
 </html>
