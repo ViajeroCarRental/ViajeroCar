@@ -263,15 +263,15 @@
     <div class="footer-row loc-row">
       <div class="loc-card">
         <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
-        <div class="loc-body"><h4>Central Park, Querétaro</h4><p>Oficina principal</p></div>
+        <div class="loc-body"><h4>Plaza Central Park, Querétaro Centro</h4><p>Oficina principal</p></div>
       </div>
       <div class="loc-card">
         <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
-        <div class="loc-body"><h4>Aeropuerto de Querétaro</h4><p>Pick-up / Drop-off</p></div>
+        <div class="loc-body"><h4>Aeropuerto Internacional de Querétaro (AIQ)</h4><p>Pick-up / Drop-off</p></div>
       </div>
       <div class="loc-card">
         <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
-        <div class="loc-body"><h4>Aeropuerto de León</h4><p>Pick-up / Drop-off</p></div>
+        <div class="loc-body"><h4>Central de Autobuses de Querétaro (TAQ)</h4><p>Pick-up / Drop-off</p></div>
       </div>
     </div>
 
