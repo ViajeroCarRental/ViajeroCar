@@ -1967,3 +1967,78 @@ input.flatpickr-input{
     display: none !important;
   }
 }
+/* =========================================================
+   FLATPICKR — SOLO RESPONSIVO (NO CAMBIA ESTILO)
+   Evita que se salga en teléfono / pantallas chicas
+   Pegar AL FINAL
+========================================================= */
+
+/* 1) Nunca más ancho que la pantalla */
+.flatpickr-calendar{
+  max-width: calc(100vw - 24px) !important;  /* respeta 12px de margen a cada lado */
+  box-sizing: border-box !important;
+}
+
+/* 2) En móvil: lo centramos y lo limitamos en alto para que no se corte */
+@media (max-width:560px){
+  .flatpickr-calendar.open{
+    position: fixed !important;
+
+    /* “encuadro” seguro dentro de la pantalla */
+    left: 12px !important;
+    right: 12px !important;
+
+    top: 50% !important;
+    bottom: auto !important;
+
+    /* OJO: NO scale, NO font-size, NO padding => no cambia estilo */
+    transform: translateY(-50%) !important;
+
+    max-height: 86vh !important;    /* evita que se salga por abajo/arriba */
+    overflow: auto !important;      /* si no cabe, hace scroll dentro */
+    -webkit-overflow-scrolling: touch;
+
+    z-index: 999999 !important;
+  }
+
+  /* La flechita (arrow) a veces empuja el layout fuera; esto solo la oculta */
+  .flatpickr-calendar.arrowTop:before,
+  .flatpickr-calendar.arrowTop:after,
+  .flatpickr-calendar.arrowBottom:before,
+  .flatpickr-calendar.arrowBottom:after{
+    display:none !important;
+  }
+}
+/* =========================================================
+   FLATPICKR — “Extender” la rejilla para quitar espacio blanco
+   (no cambia colores, solo widths/layout)
+   Pegar AL FINAL
+========================================================= */
+
+/* Asegura que el contenedor del calendario use todo el ancho disponible */
+.flatpickr-calendar.open{
+  width: min(calc(100vw - 24px), 420px) !important;  /* ajusta 420 si quieres más */
+}
+
+/* Estira TODO el interior */
+.flatpickr-calendar .flatpickr-innerContainer,
+.flatpickr-calendar .flatpickr-rContainer,
+.flatpickr-calendar .flatpickr-days,
+.flatpickr-calendar .dayContainer,
+.flatpickr-calendar .flatpickr-weekdaycontainer{
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 100% !important;
+}
+
+/* Hace que cada día ocupe 1/7 del ancho (para que “llene” el calendario) */
+.flatpickr-calendar .dayContainer{
+  display: flex !important;
+  flex-wrap: wrap !important;
+}
+
+.flatpickr-calendar .flatpickr-day{
+  width: calc(100% / 7) !important;
+  max-width: calc(100% / 7) !important;
+  flex: 0 0 calc(100% / 7) !important;
+}
