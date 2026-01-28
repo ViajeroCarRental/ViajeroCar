@@ -214,6 +214,12 @@
       @if (session('success'))
         alertify.success("{{ session('success') }}");
       @endif
+
+      // 🔔 Mensaje cuando la sesión expiró (middleware SesionActiva)
+      @if (session('session_expired'))
+        alertify.warning("{{ session('session_expired') }}");
+      @endif
     });
   </script>
 @endsection
+
