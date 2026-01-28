@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -117,6 +117,13 @@
         backdrop-filter .35s ease,
         -webkit-backdrop-filter .35s ease;
     }
+    /* anti auto-zoom iOS al enfocar (flatpickr incluido) */
+    .search-card input,
+    .search-card select,
+    .search-card textarea{
+      font-size:16px !important;
+    }
+
   </style>
 </head>
 
@@ -305,6 +312,22 @@
   </div>
 </footer>
 @yield('js-vistaHome')
+<script>
+  // iOS: bloquear zoom por doble tap / gesto
+  (function(){
+    document.addEventListener('gesturestart', e => e.preventDefault(), {passive:false});
+    document.addEventListener('touchmove', e => {
+      if (e.touches && e.touches.length > 1) e.preventDefault();
+    }, {passive:false});
+
+    let last = 0;
+    document.addEventListener('touchend', e => {
+      const now = Date.now();
+      if (now - last <= 300) e.preventDefault();
+      last = now;
+    }, {passive:false});
+  })();
+</script>
 
 </body>
 </html>
