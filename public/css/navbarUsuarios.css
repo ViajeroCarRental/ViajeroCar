@@ -1828,3 +1828,28 @@ input.flatpickr-input{
     z-index: 999999 !important;
   }
 }
+/* =========================================================
+   FLATPICKR — Calendario más grande (ESCALA)
+   Pegar AL FINAL
+========================================================= */
+
+/* Tamaño general (ajusta 1.15 / 1.20 / 1.30) */
+:root{
+  --fp-scale: 1.25;
+}
+
+/* Escala el widget completo */
+.flatpickr-calendar{
+  transform: scale(var(--fp-scale)) !important;
+  transform-origin: top left !important;
+}
+
+/* Evita que se corte por el escalado */
+.flatpickr-calendar.open{
+  margin-bottom: 12px !important;
+}
+
+/* En móvil: aún más grande si quieres */
+@media (max-width:560px){
+  :root{ --fp-scale: 1.35; }
+}
