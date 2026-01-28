@@ -1781,3 +1781,14 @@ input#dropoffTime{
     margin-top: 6px !important;     /* espacio extra por seguridad */
   }
 }
+/* =========================================================
+   FIX ZOOM EN MÓVIL (iOS/Android) — inputs >= 16px
+   (Pegar AL FINAL)
+========================================================= */
+@media (max-width:560px){
+  .search-card input,
+  .search-card select,
+  .search-card textarea{
+    font-size:16px !important;
+  }
+}
