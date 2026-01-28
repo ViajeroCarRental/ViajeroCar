@@ -1782,39 +1782,25 @@ input#dropoffTime{
   }
 }
 /* =========================================================
-   FIX ZOOM EN MÓVIL (iOS/Android) — inputs >= 16px
-   (Pegar AL FINAL)
-========================================================= */
-@media (max-width:560px){
-  .search-card input,
-  .search-card select,
-  .search-card textarea{
-    font-size:16px !important;
-  }
-}
-/* =========================================================
-   FIX DEFINITIVO: evitar zoom al enfocar inputs en móvil
-   (Pegar AL FINAL del CSS)
+   FIX: quitar línea / highlight al abrir calendario (iOS)
+   NO quita focus, NO quita funcionalidad
 ========================================================= */
 
-/* iOS (Safari) detect: cualquier dispositivo con WebKit táctil */
+/* inputs de fecha / flatpickr */
+input.flatpickr-input:focus{
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* iOS: quita la línea azul de tap */
+input.flatpickr-input{
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* si Safari insiste con focus visual */
 @supports (-webkit-touch-callout: none){
-  .search-card input,
-  .search-card select,
-  .search-card textarea{
-    font-size:16px !important; /* <-- clave anti-zoom */
-  }
-  /* en particular el de flatpickr */
-  .search-card input.flatpickr-input{
-    font-size:16px !important;
-  }
-}
-
-/* Android/otros táctiles (por si no entra el @supports) */
-@media (pointer: coarse){
-  .search-card input,
-  .search-card select,
-  .search-card textarea{
-    font-size:16px !important;
+  input.flatpickr-input:focus{
+    outline: 0 !important;
+    box-shadow: none !important;
   }
 }
