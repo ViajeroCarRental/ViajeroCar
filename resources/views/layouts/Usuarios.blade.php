@@ -2,8 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
   <!-- Bootstrap / Fuentes / Iconos -->
@@ -327,6 +326,19 @@
       last = now;
     }, {passive:false});
   })();
+</script>
+<script>
+(function(){
+  // Bloquea pinch/gesture zoom (iOS)
+  document.addEventListener('gesturestart', e => e.preventDefault(), {passive:false});
+  document.addEventListener('gesturechange', e => e.preventDefault(), {passive:false});
+  document.addEventListener('gestureend',   e => e.preventDefault(), {passive:false});
+
+  // Bloquea zoom con 2 dedos
+  document.addEventListener('touchmove', e => {
+    if (e.touches && e.touches.length > 1) e.preventDefault();
+  }, {passive:false});
+})();
 </script>
 
 </body>

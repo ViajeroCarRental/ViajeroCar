@@ -1804,3 +1804,27 @@ input.flatpickr-input{
     box-shadow: none !important;
   }
 }
+/* =========================================================
+   iOS FIX DEFINITIVO: NO zoom + NO re-escala al abrir Flatpickr
+   (Pegar AL FINAL)
+========================================================= */
+@supports (-webkit-touch-callout: none){
+
+  /* 1) iOS auto-zoom killer */
+  .search-card input,
+  .search-card select,
+  .search-card textarea{
+    font-size:16px !important;
+  }
+
+  /* 2) iOS: evita “zoom/reflow” por scroll interno al enfocar */
+  .search-card{
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* 3) Flatpickr arriba siempre */
+  .flatpickr-calendar{
+    z-index: 999999 !important;
+  }
+}
