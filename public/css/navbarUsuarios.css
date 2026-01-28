@@ -1555,7 +1555,7 @@ input#dropoffTime{
 ========================================================= */
 
 :root{
-  --timeclock-nudge: 0px;  /* + baja el reloj | - sube el reloj */
+  --timeclock-nudge: 4px;  /* + baja el reloj | - sube el reloj */
 }
 
 /* 1) Solo para los campos de hora */
@@ -1618,7 +1618,7 @@ input#dropoffTime{
   min-width:0;
   display:grid;
   grid-template-rows: var(--sg-head-h) auto auto; /* ✅ header fijo */
-  row-gap: 10x;                                  /* ✅ consistente */
+  row-gap: 10px;                                  /* ✅ consistente */
   align-content:start;
 }
 
@@ -1662,10 +1662,122 @@ input#dropoffTime{
   --dt-shift:  10px;    /* (+) baja datetime | (-) sube datetime */
 }
 
-/* mueve SOLO las columnas */
 .search-card .sg-col-location{
-  transform: translateY(var(--loc-shift)) !important;
+  margin-top: var(--loc-shift) !important;  /* (-) sube, (+) baja */
 }
 .search-card .sg-col-datetime{
-  transform: translateY(var(--dt-shift)) !important;
+  margin-top: var(--dt-shift) !important;   /* (+) baja, (-) sube */
+}
+.search-card .sg-col-location .field.hidden{
+  display: flex !important;         /* mantiene la fila */
+  visibility: hidden !important;    /* se oculta */
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.search-card .sg-col-submit{
+  margin-top: 16px !important;
+}
+@media (max-width:560px){
+  .search-card .sg-col-submit{
+    margin-top: 18px !important;
+  }
+}
+/* 1) Dentro del HERO: cualquier .hidden en la columna location
+      NO debe usar display:none (porque colapsa y mueve todo) */
+.search-card .sg-col-location .hidden{
+  display: block !important;          /* evita colapso */
+  visibility: hidden !important;      /* se oculta */
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* 2) Si lo que se oculta es un flex (field), mantenlo como flex */
+.search-card .sg-col-location .field.hidden{
+  display: flex !important;
+}
+
+/* 3) Si el JS le pone inline style="display:none", lo matamos igual */
+.search-card .sg-col-location [style*="display: none"]{
+  display: block !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.search-card .sg-col-location .field[style*="display: none"]{
+  display: flex !important;
+}
+/* =========================================
+   FIX SOLO MÓVIL: el botón BUSCAR NO se encima con los selects
+   Pegar AL FINAL
+========================================= */
+@media (max-width:560px){
+
+  /* separa la fila del botón de lo de arriba */
+  .search-card .sg-col-submit{
+    margin-top: 18px !important;
+    align-items: flex-start !important;
+  }
+
+  /* evita que el contenedor “estire” raro */
+  .search-card .actions{
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* botón con altura normal (sin empujar hacia arriba) *//* =========================================
+   FIX SOLO MÓVIL: cada recuadro fijo (sin encimarse)
+   El form crece en altura lo necesario
+   Pegar AL FINAL
+========================================= */
+@media (max-width:560px){
+
+  /* 1) El card NO debe recortar ni forzar scroll interno */
+  .search-card{
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* 2) El grid en móvil: stack real y sin "stretch" */
+  .search-grid{
+    grid-template-columns: 1fr !important;
+    align-items: start !important;
+    row-gap: 16px !important; /* separación entre secciones */
+  }
+
+  /* 3) Las columnas NO deben tener grid-template-rows fijo en móvil */
+  .search-card .sg-col-location,
+  .search-card .sg-col-datetime{
+    display: block !important;
+    margin-top: 0 !important;
+  }
+
+  /* 4) Cada field se comporta como bloque independiente con espacio */
+  .search-card .field{
+    margin: 0 0 12px !important;   /* espacio por cada recuadro */
+  }
+  .search-card .field:last-child{
+    margin-bottom: 0 !important;
+  }
+
+  /* 5) Los selects de hora/minuto: que no se aprieten */
+  .tp-selects{
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin-top: 10px !important;
+  }
+
+  /* 6) El botón "Buscar" abajo con espacio real */
+  .search-card .sg-col-submit{
+    margin-top: 8px !important;
+  }
+  .search-card .actions button{
+    margin-top: 10px !important;
+  }
+}
+
+  .search-card .actions button{
+    width: 100% !important;
+    padding: 14px 18px !important;  /* un poquito menos que 16px */
+    margin-top: 6px !important;     /* espacio extra por seguridad */
+  }
 }
