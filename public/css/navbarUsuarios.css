@@ -1853,3 +1853,117 @@ input.flatpickr-input{
 @media (max-width:560px){
   :root{ --fp-scale: 1.35; }
 }
+/* =========================================================
+   FLATPICKR — Calendario grande + RESPONSIVO (desktop/phone)
+   Pegar AL FINAL
+========================================================= */
+
+/* Desktop */
+:root{
+  --fp-scale-desktop: 1.20;
+  --fp-scale-mobile:  1.35; /* ajusta 1.25–1.50 */
+}
+
+/* 1) Escala el calendario */
+.flatpickr-calendar{
+  transform: scale(var(--fp-scale-desktop)) !important;
+  transform-origin: top left !important;
+}
+
+/* 2) En MÓVIL: que sea grande, centrado y que NO se salga */
+@media (max-width:560px){
+
+  /* Flatpickr a “modal” centrado */
+  .flatpickr-calendar.open{
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) scale(var(--fp-scale-mobile)) !important;
+    transform-origin: center !important;
+
+    z-index: 999999 !important;
+
+    /* límite para que no se corte por altura/pantalla */
+    max-height: 90vh !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Asegura que el “triángulo” (si aparece) no estorbe */
+  .flatpickr-calendar.arrowTop:before,
+  .flatpickr-calendar.arrowTop:after,
+  .flatpickr-calendar.arrowBottom:before,
+  .flatpickr-calendar.arrowBottom:after{
+    display:none !important;
+  }
+}
+/* =========================================================
+   FLATPICKR — Grande + RESPONSIVO (sin salirse en móvil)
+   Pegar AL FINAL
+========================================================= */
+
+/* ===== Desktop: grande con scale ===== */
+:root{
+  --fp-scale-desktop: 1.18;
+}
+
+.flatpickr-calendar{
+  max-width: calc(100vw - 24px) !important; /* nunca se sale del viewport */
+  box-sizing: border-box !important;
+}
+
+@media (min-width:561px){
+  .flatpickr-calendar{
+    transform: scale(var(--fp-scale-desktop)) !important;
+    transform-origin: top left !important;
+  }
+}
+
+/* ===== Móvil: NO scale (para que no se salga). Mejor tamaño real ===== */
+@media (max-width:560px){
+
+  /* popup centrado y con ancho que cabe SIEMPRE */
+  .flatpickr-calendar.open{
+    position: fixed !important;
+    left: 12px !important;
+    right: 12px !important;
+    top: 50% !important;
+    bottom: auto !important;
+
+    transform: translateY(-50%) !important; /* sin scale */
+    transform-origin: center !important;
+
+    width: auto !important;
+    max-width: none !important;
+    max-height: 86vh !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch;
+
+    z-index: 999999 !important;
+  }
+
+  /* Crece “de verdad” para que se vea grande sin salirse */
+  .flatpickr-calendar{
+    font-size: 16px !important;
+  }
+
+  .flatpickr-day{
+    height: 44px !important;
+    line-height: 44px !important;
+    max-width: 44px !important;
+  }
+
+  .flatpickr-weekday{
+    font-size: 13px !important;
+  }
+
+  /* Quita la flechita del calendario (la que a veces lo descuadra) */
+  .flatpickr-calendar.arrowTop:before,
+  .flatpickr-calendar.arrowTop:after,
+  .flatpickr-calendar.arrowBottom:before,
+  .flatpickr-calendar.arrowBottom:after{
+    display: none !important;
+  }
+}
