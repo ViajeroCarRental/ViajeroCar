@@ -41,117 +41,27 @@
   document.addEventListener('DOMContentLoaded', syncAccountIcon);
 })();
 
-/* ====================
-   Navbar: glass -> sólida + hamburguesa
-==================== */
-/* ====================
-   Navbar: glass -> sólida + hamburguesa (FIX)
-   - usa .topbar.nav-open y body.nav-open
-   - cierra al cambiar a desktop
-   - cierra al click fuera (opcional) y al click en link
-==================== */
-/*(function(){
-  "use strict";
-
-  const topbar = document.querySelector(".topbar");
-  if(!topbar) return;
-
-  // solid on scroll
-  function onScroll(){
-    if(window.scrollY > 40) topbar.classList.add("solid");
-    else topbar.classList.remove("solid");
-  }
-  onScroll();
-  window.addEventListener("scroll", onScroll, { passive:true });
-
-  // elements
-  const btn      = document.getElementById("navHamburger") || document.querySelector(".hamburger");
-  const backdrop = document.getElementById("navBackdrop")  || document.querySelector(".nav-backdrop");
-
-  // ✅ IMPORTANTE: el menú real es UL.menu dentro de la topbar
-  const menu = topbar.querySelector(".menu");
-  if(!btn || !menu) return;
-
-  const MQ = window.matchMedia("(max-width: 940px)");
-  const isMobile = ()=> MQ.matches;
-
-  function openNav(){
-    if(!isMobile()) return;
-    document.body.classList.add("nav-open");
-    topbar.classList.add("nav-open");
-    btn.setAttribute("aria-expanded", "true");
-  }
-
-  function closeNav(){
-    document.body.classList.remove("nav-open");
-    topbar.classList.remove("nav-open");
-    btn.setAttribute("aria-expanded", "false");
-  }
-
-  function toggleNav(e){
-    e && e.preventDefault();
-    document.body.classList.contains("nav-open") ? closeNav() : openNav();
-  }
-
-  // accesibilidad + type
-  btn.setAttribute("type", "button");
-  if(!btn.getAttribute("aria-label")) btn.setAttribute("aria-label", "Abrir menú");
-  if(!btn.getAttribute("aria-expanded")) btn.setAttribute("aria-expanded", "false");
-
-  btn.addEventListener("click", toggleNav);
-
-  // click backdrop cierra
-  if(backdrop) backdrop.addEventListener("click", closeNav);
-
-  // click en link dentro del menú cierra
-  menu.addEventListener("click", (e)=>{
-    const a = e.target.closest("a");
-    if(a) closeNav();
-  });
-
-  // esc cierra
-  document.addEventListener("keydown", (e)=>{
-    if(e.key === "Escape") closeNav();
-  });
-
-  // ✅ si cambia a desktop, forzar cierre
-  if(MQ.addEventListener){
-    MQ.addEventListener("change", ()=>{ if(!isMobile()) closeNav(); });
-  }else{
-    window.addEventListener("resize", ()=>{ if(!isMobile()) closeNav(); }, { passive:true });
-  }
-
-  // ✅ opcional: click fuera del menú y fuera del botón cierra (en mobile)
-  document.addEventListener("click", (e)=>{
-    if(!isMobile()) return;
-    if(!document.body.classList.contains("nav-open")) return;
-    const insideMenu = menu.contains(e.target);
-    const insideBtn  = btn.contains(e.target);
-    const insideTop  = topbar.contains(e.target);
-    if(!insideMenu && !insideBtn && !insideTop) closeNav();
-  });
-})();
- */
-
-
 /* =====================================================================
-   FLEET: INFINITO + AVANZA 1 CARD (scroll horizontal)
+   FLEET: SOLO FLECHAS (SIN LOOP / SIN AUTOPLAY) + TOPES + BOTONES GRIS
+   - avanza 1 card por click
+   - NO duplica HTML
+   - cuando llega al inicio o al final, se queda ahí (NO se mueve)
+   - fuerza inicio real (scrollLeft=0) para que PREV se vea gris desde el arranque
 ===================================================================== */
 (function(){
   "use strict";
 
-  function initFleetInfinite(fleet){
+  function initFleetControlled(fleet){
     const track = fleet.querySelector('.fleet-track');
     const prev  = fleet.querySelector('.fleet-btn.prev');
     const next  = fleet.querySelector('.fleet-btn.next');
     if(!track || !prev || !next) return;
 
     // Evitar doble init
-    if(track.dataset.infiniteReady === "1") return;
-    track.dataset.infiniteReady = "1";
+    if(track.dataset.fleetReady === "1") return;
+    track.dataset.fleetReady = "1";
 
     const GAP_FALLBACK = 18;
-    let autoSlide = null;
     let lock = false;
 
     function getGapPx(){
@@ -170,229 +80,116 @@
       return rect.width + ml + mr + getGapPx();
     }
 
-    // Duplicar para loop
-    const originalHTML = track.innerHTML;
-    track.innerHTML = originalHTML + originalHTML;
-
-    const cards = Array.from(track.querySelectorAll('.car-card'));
-    const half  = Math.floor(cards.length / 2);
-
-    function jumpToMiddle(){
-      const step = getStepPx();
-      track.scrollLeft = step * half;
+    function getMaxScroll(){
+      return Math.max(0, track.scrollWidth - track.clientWidth);
     }
-    requestAnimationFrame(()=> requestAnimationFrame(jumpToMiddle));
 
-    function normalizeHard(){
-      const step = getStepPx();
-      const maxScroll = track.scrollWidth - track.clientWidth;
+    function clampScroll(){
+      const max = getMaxScroll();
+      if(track.scrollLeft < 0) track.scrollLeft = 0;
+      if(track.scrollLeft > max) track.scrollLeft = max;
+    }
 
-      if(track.scrollLeft <= step){
-        track.scrollLeft += step * half;
-        return;
-      }
-      if(track.scrollLeft >= (maxScroll - step)){
-        track.scrollLeft -= step * half;
-        return;
-      }
+    // ✅ aplica gris al inicio y al final (ambos)
+    function updateBtns(){
+      const max = getMaxScroll();
+      const atStart = track.scrollLeft <= 1;
+      const atEnd   = track.scrollLeft >= (max - 1);
+
+      prev.disabled = atStart;
+      next.disabled = atEnd;
+
+      prev.classList.toggle('is-disabled', atStart);
+      next.classList.toggle('is-disabled', atEnd);
+
+      prev.setAttribute('aria-disabled', atStart ? 'true' : 'false');
+      next.setAttribute('aria-disabled', atEnd ? 'true' : 'false');
+    }
+
+    // ✅ dispara animación cuando topas límite (inicio o fin)
+    function pulseLimit(btn){
+      // si ya está disabled, re-lanza la animación removiendo y poniendo clase
+      btn.classList.remove('is-disabled');
+      void btn.offsetWidth; // reflow
+      btn.classList.add('is-disabled');
+    }
+
+    function clamp(n, min, max){
+      return Math.max(min, Math.min(max, n));
     }
 
     function moveBy(dir){
       if(lock) return;
-      lock = true;
 
-      normalizeHard();
-
+      const maxScroll = getMaxScroll();
       const step = getStepPx();
-      const before = track.scrollLeft;
 
-      track.scrollBy({ left: dir * step, behavior: 'smooth' });
+      const from = track.scrollLeft;
+      const to   = clamp(from + (dir * step), 0, maxScroll);
+
+      // ✅ si ya estás en el borde, no te muevas y anima el botón
+      if(to === from){
+        updateBtns();
+        pulseLimit(dir < 0 ? prev : next);
+        return;
+      }
+
+      lock = true;
+      track.scrollTo({ left: to, behavior: 'smooth' });
 
       window.setTimeout(()=>{
-        normalizeHard();
-
-        // Si se clavó por límite real, forzar wrap
-        if(track.scrollLeft === before){
-          normalizeHard();
-          track.scrollBy({ left: dir * step, behavior: 'auto' });
-          normalizeHard();
-        }
-
         lock = false;
+        clampScroll();
+        updateBtns();
       }, 420);
     }
 
-    function startAuto(){
-      stopAuto();
-      autoSlide = setInterval(()=> moveBy(1), 10000);
-    }
-    function stopAuto(){
-      if(autoSlide) clearInterval(autoSlide);
-      autoSlide = null;
-    }
+    // ✅ Flechas
+    next.addEventListener('click', (e)=>{ e.preventDefault(); moveBy( 1); });
+    prev.addEventListener('click', (e)=>{ e.preventDefault(); moveBy(-1); });
 
-    next.addEventListener('click', (e)=>{ e.preventDefault(); stopAuto(); moveBy(1); startAuto(); });
-    prev.addEventListener('click', (e)=>{ e.preventDefault(); stopAuto(); moveBy(-1); startAuto(); });
-
+    // ✅ si scrollean con touch/wheel, actualiza estado
     track.addEventListener('scroll', ()=>{
       if(lock) return;
-      normalizeHard();
+      clampScroll();
+      updateBtns();
     }, { passive:true });
 
-    track.addEventListener('mouseenter', stopAuto);
-    track.addEventListener('mouseleave', startAuto);
+    // ✅ FORZAR inicio real: arregla que en el inicio se vea roja por scrollLeft != 0
+    function forceStart(){
+      clampScroll();
+      track.scrollLeft = 0; // <- clave
+      clampScroll();
+      updateBtns();
+    }
+
+    // rAF doble para esperar layout
+    requestAnimationFrame(()=> requestAnimationFrame(forceStart));
+    // cuando cargan imágenes (muy importante)
+    window.addEventListener('load', forceStart, { once:true });
+    // fallback extra
+    setTimeout(forceStart, 80);
 
     window.addEventListener('resize', ()=>{
-      requestAnimationFrame(()=> requestAnimationFrame(jumpToMiddle));
+      requestAnimationFrame(()=>{
+        clampScroll();
+        updateBtns();
+      });
     }, { passive:true });
-
-    startAuto();
   }
 
   document.addEventListener('DOMContentLoaded', ()=>{
-    document.querySelectorAll('.fleet').forEach(initFleetInfinite);
+    document.querySelectorAll('.fleet').forEach(initFleetControlled);
   });
 })();
 
 /* =====================================================================
-   Media carousels: SOLO si son horizontales (no absolute/fade)
+   Media carousels: SOLO manual (SIN LOOP / SIN AUTOPLAY)
+   Nota: tus .media-carousel son "fade" (position:absolute), aquí no tocamos nada.
 ===================================================================== */
 (function(){
   "use strict";
-
-  const qsa = (s, root=document) => Array.from(root.querySelectorAll(s));
-
-  function getStepPx(firstSlide, container){
-    if(!firstSlide) return 0;
-    const r = firstSlide.getBoundingClientRect();
-    const s = getComputedStyle(firstSlide);
-
-    const ml = parseFloat(s.marginLeft)  || 0;
-    const mr = parseFloat(s.marginRight) || 0;
-
-    const cs = getComputedStyle(container);
-    const gap = parseFloat(cs.columnGap || cs.gap) || 0;
-
-    return r.width + ml + mr + gap;
-  }
-
-  function initInfiniteOneByOne(wrap, idx){
-    const viewport = wrap.querySelector('.media-viewport') || wrap;
-
-    const slides = qsa('.media-slide', viewport);
-    if(slides.length <= 1) return;
-
-    const first = slides[0];
-    const isAbsoluteFade = first && getComputedStyle(first).position === "absolute";
-    if(isAbsoluteFade) return;
-
-    if(wrap.dataset.infiniteReady === "1") return;
-    wrap.dataset.infiniteReady = "1";
-
-    const btnNext = wrap.querySelector('[data-mc="next"], .mc-next, .next, .btn-next');
-    const btnPrev = wrap.querySelector('[data-mc="prev"], .mc-prev, .prev, .btn-prev');
-
-    const base = Number(wrap.dataset.interval || 5000);
-    const interval = base + (idx * 300);
-
-    const originalHTML = viewport.innerHTML;
-    viewport.innerHTML = originalHTML + originalHTML;
-
-    const allSlides = qsa('.media-slide', viewport);
-    const half = allSlides.length / 2;
-
-    viewport.style.overflowX = 'auto';
-    viewport.style.scrollBehavior = 'auto';
-    viewport.style.webkitOverflowScrolling = 'touch';
-
-    const step0 = getStepPx(allSlides[0], viewport);
-    viewport.scrollLeft = step0 * half;
-
-    let lock = false;
-    let timer = null;
-
-    function normalizeIfNeeded(){
-      const step = getStepPx(allSlides[0], viewport);
-      if(!step) return;
-
-      const pos = viewport.scrollLeft;
-      const leftLimit  = step * (half * 0.4);
-      const rightLimit = step * (half * 1.6);
-
-      if(pos < leftLimit){
-        viewport.scrollBehavior = 'auto';
-        viewport.scrollLeft = pos + (step * half);
-      }
-      if(pos > rightLimit){
-        viewport.scrollBehavior = 'auto';
-        viewport.scrollLeft = pos - (step * half);
-      }
-    }
-
-    function moveBy(delta){
-      if(lock) return;
-      lock = true;
-
-      const step = getStepPx(allSlides[0], viewport);
-      if(!step){
-        lock = false;
-        return;
-      }
-
-      viewport.scrollBehavior = 'smooth';
-      viewport.scrollLeft += (delta * step);
-
-      window.setTimeout(()=>{
-        viewport.scrollBehavior = 'auto';
-        normalizeIfNeeded();
-        lock = false;
-      }, 420);
-    }
-
-    function stop(){
-      if(timer) clearInterval(timer);
-      timer = null;
-    }
-
-    function start(){
-      stop();
-      timer = setInterval(()=> moveBy(1), interval);
-    }
-
-    viewport.addEventListener('scroll', ()=>{
-      if(lock) return;
-      normalizeIfNeeded();
-    }, { passive:true });
-
-    if(btnNext){
-      btnNext.addEventListener('click', (e)=>{
-        e.preventDefault();
-        stop(); moveBy(1); start();
-      });
-    }
-    if(btnPrev){
-      btnPrev.addEventListener('click', (e)=>{
-        e.preventDefault();
-        stop(); moveBy(-1); start();
-      });
-    }
-
-    wrap.addEventListener('mouseenter', stop);
-    wrap.addEventListener('mouseleave', start);
-
-    window.addEventListener('resize', ()=>{
-      const step = getStepPx(allSlides[0], viewport);
-      if(!step) return;
-      viewport.scrollBehavior = 'auto';
-      viewport.scrollLeft = step * half;
-    }, { passive:true });
-
-    start();
-  }
-
-  document.addEventListener('DOMContentLoaded', ()=>{
-    qsa('.media-carousel').forEach((wrap, idx)=> initInfiniteOneByOne(wrap, idx));
-  });
+  // Sin autoplay, sin loop, sin timers aquí.
 })();
 
 /* ====================
@@ -491,10 +288,7 @@
   function createTimeSelectsBelow(input, opts){
     const { hourMax=24, minuteStep=15, defaultValue="12:00" } = (opts || {});
 
-    // contenedor: intenta uno cercano, si no el parent
     const wrap = input.closest(".time-field") || input.parentElement;
-
-    // evita duplicar
     if(wrap && wrap.querySelector(".tp-selects")) return;
 
     const box = document.createElement("div");
@@ -508,7 +302,6 @@
     selM.className = "tp-min";
     selM.setAttribute("aria-label", "Minutos");
 
-    // Horas 00..24 (25 opciones)
     for(let h=0; h<=hourMax; h++){
       const op = document.createElement("option");
       op.value = String(h);
@@ -516,7 +309,6 @@
       selH.appendChild(op);
     }
 
-    // Minutos 00..45 step 15
     for(let m=0; m<60; m+=minuteStep){
       const op = document.createElement("option");
       op.value = String(m);
@@ -524,7 +316,6 @@
       selM.appendChild(op);
     }
 
-    // Set inicial desde defaultValue
     const m = String(defaultValue).trim().match(/^(\d{1,2})(?::(\d{2}))?/);
     let hh = m ? Number(m[1]) : 12;
     let mm = m ? Number(m[2] || 0) : 0;
@@ -532,7 +323,6 @@
     if(hh > hourMax) hh = hourMax;
     if(hh === 24 && mm !== 0) mm = 0;
 
-    // redondeo al step más cercano
     mm = Math.round(mm / minuteStep) * minuteStep;
     if(mm >= 60) mm = 0;
 
@@ -543,7 +333,6 @@
       const h = Number(selH.value || 0);
       const mi = Number(selM.value || 0);
 
-      // si eligen 24, fuerza minutos 00
       if(h === 24 && mi !== 0){
         selM.value = "0";
       }
@@ -561,7 +350,6 @@
     box.appendChild(selH);
     box.appendChild(selM);
 
-    // insertar debajo del input
     if(wrap){
       wrap.appendChild(box);
     }else{
@@ -578,11 +366,9 @@
     if(input.dataset.tpReady === "1") return;
     input.dataset.tpReady = "1";
 
-    // Evita teclado nativo raro
     input.setAttribute("readonly", "readonly");
     input.setAttribute("inputmode", "none");
 
-    // ✅ FIX: ocultar el input visible (12:00 p. m.) y dejar SOLO selects
     input.classList.add("tp-hidden-input");
     input.setAttribute("aria-hidden", "true");
 
@@ -604,7 +390,6 @@
     updateSummary();
   });
 
-  // 3) Resumen
   function parseTimeTo24h(str){
     const raw = String(str || '').trim();
     if(!raw) return { hh:0, mm:0 };
@@ -619,7 +404,6 @@
     if(ap === 'PM' && hh < 12) hh += 12;
     if(ap === 'AM' && hh === 12) hh = 0;
 
-    // ✅ permitir 24:00 (solo si minutos = 0)
     if(Number.isFinite(hh)){
       hh = Math.max(0, Math.min(24, hh));
     } else {
@@ -646,7 +430,6 @@
 
     const { hh, mm } = parseTimeTo24h(t);
 
-    // ✅ 24:00 = siguiente día 00:00
     if(hh === 24){
       const dt = new Date(y, m - 1, day, 0, 0);
       dt.setDate(dt.getDate() + 1);
@@ -670,11 +453,6 @@
     rangeSummary.textContent = `Renta por ${d} día(s) · ~${h} hora(s)`;
   }
 
-  /* ==========================================================
-     ✅ FIX SUBMIT: asegurar que los hidden tengan hora final
-     ✅ FIX DROPOFF: required dinámico según checkbox
-     ✅ FIX FECHA: si el usuario escribe, normalizamos a Y-m-d
-  ========================================================== */
   (function bindFormFixes(){
     const form = document.getElementById("rentalForm");
     if(!form) return;
@@ -702,13 +480,11 @@
           dropSel.setAttribute("required", "required");
         }else{
           dropSel.removeAttribute("required");
-          // igualar dropoff al pickup cuando NO hay diferente destino
           if(pickSel && pickSel.value) dropSel.value = pickSel.value;
         }
       }
     }
 
-    // Si cambias pick-up y NO hay dropoff diferente, iguala dropoff
     pickSel && pickSel.addEventListener("change", ()=>{
       if(chk && !chk.checked && dropSel){
         dropSel.value = pickSel.value;
@@ -718,7 +494,6 @@
     chk && chk.addEventListener("change", setDropoffState);
     setDropoffState();
 
-    // Lee selects hora/min si existen y sincroniza el hidden
     function syncHiddenFromSelects(hiddenId){
       const hidden = document.getElementById(hiddenId);
       if(!hidden) return;
@@ -736,7 +511,6 @@
       }
     }
 
-    // Normaliza fecha si la escriben como d/m/Y o d-m-Y
     function normalizeDateInput(input){
       if(!input) return;
       const v = String(input.value || "").trim();
@@ -751,7 +525,6 @@
       }
     }
 
-    // Antes de enviar: sincroniza TODO
     form.addEventListener("submit", ()=>{
       syncHiddenFromSelects("pickupTime");
       syncHiddenFromSelects("dropoffTime");
@@ -759,15 +532,12 @@
       normalizeDateInput(pickDate);
       normalizeDateInput(dropDate);
 
-      // si NO hay dropoff diferente, iguala ids para que backend no falle
       if(chk && !chk.checked && dropSel && pickSel && pickSel.value){
         dropSel.value = pickSel.value;
       }
 
-      // refrescar resumen por si acaso
       updateSummary();
 
-      // (extra) asegurar que hidden existan con valor
       if(pickTime && !pickTime.value) pickTime.value = "12:00";
       if(dropTime && !dropTime.value) dropTime.value = "12:00";
     }, { capture:true });
@@ -809,27 +579,41 @@
 })();
 
 /* =====================================================================
-   Swiper tiles (tarjetas)
+   Swiper tiles (tarjetas) - CERO AUTOPLAY + SOLO FLECHAS + SIN LOOP
+   ✅ si ya existía un swiper con autoplay de otro script, lo detiene y lo destruye
 ===================================================================== */
 (function(){
   "use strict";
 
   function initTilesSwiper(){
     if(typeof window.Swiper !== "function") return;
+
     const el = document.querySelector('.vj-tiles-swiper');
     if(!el) return;
+
+    // ✅ si alguien lo inicializó antes (y trae autoplay), lo apagamos
+    if(el.swiper){
+      try{
+        if(el.swiper.autoplay) el.swiper.autoplay.stop();
+      }catch(_){}
+      try{
+        el.swiper.destroy(true, true);
+      }catch(_){}
+    }
+
     if(el.dataset.swReady === "1") return;
     el.dataset.swReady = "1";
 
     // eslint-disable-next-line no-new
     new Swiper('.vj-tiles-swiper', {
-      loop: true,
+      loop: false,
+      autoplay: false,
+      allowTouchMove: false, // ✅ solo flechas
       speed: 650,
-      autoplay: { delay: 3200, disableOnInteraction: false },
       spaceBetween: 18,
       slidesPerView: 1.06,
       centeredSlides: false,
-      grabCursor: true,
+      grabCursor: false,
       navigation: {
         nextEl: '.vj-tiles-swiper .swiper-button-next',
         prevEl: '.vj-tiles-swiper .swiper-button-prev',

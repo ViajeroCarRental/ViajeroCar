@@ -1259,11 +1259,10 @@
       if(!track || !prev || !next) return;
 
       // Evitar doble init
-      if(track.dataset.infiniteReady === "1") return;
-      track.dataset.infiniteReady = "1";
+      if(track.dataset.fleetReady === "1") return;
+      track.dataset.fleetReady = "1";
 
       const GAP_FALLBACK = 18;
-      let autoSlide = null;
       let lock = false;
 
       function getGapPx(){
@@ -1282,120 +1281,73 @@
         return rect.width + ml + mr + getGapPx();
       }
 
-      // Guardar original y duplicar (loop)
-      const originalHTML = track.innerHTML;
-      track.innerHTML = originalHTML + originalHTML;
-
-      const cards = Array.from(track.querySelectorAll('.car-card'));
-      const half  = Math.floor(cards.length / 2); // cantidad del set original
-
-      function jumpToMiddle(){
-        const step = getStepPx();
-        track.scrollLeft = step * half;
+      function getMaxScroll(){
+        return Math.max(0, track.scrollWidth - track.clientWidth);
       }
 
-      // Importante: centrar después de que el layout ya calculó tamaños
-      requestAnimationFrame(()=> requestAnimationFrame(jumpToMiddle));
+      function clampScroll(){
+        const max = getMaxScroll();
+        if(track.scrollLeft < 0) track.scrollLeft = 0;
+        if(track.scrollLeft > max) track.scrollLeft = max;
+      }
 
-      function normalizeHard(){
-        const step = getStepPx();
-        const maxScroll = track.scrollWidth - track.clientWidth;
+      function updateBtns(){
+        const max = getMaxScroll();
+        const atStart = track.scrollLeft <= 1;
+        const atEnd   = track.scrollLeft >= (max - 1);
 
-        if(track.scrollLeft <= step){
-          track.scrollLeft += step * half;
-          return;
-        }
-        if(track.scrollLeft >= (maxScroll - step)){
-          track.scrollLeft -= step * half;
-          return;
-        }
+        prev.disabled = atStart;
+        next.disabled = atEnd;
+
+        prev.setAttribute('aria-disabled', atStart ? 'true' : 'false');
+        next.setAttribute('aria-disabled', atEnd ? 'true' : 'false');
+
+        prev.classList.toggle('is-disabled', atStart);
+        next.classList.toggle('is-disabled', atEnd);
       }
 
       function moveBy(dir){
         if(lock) return;
         lock = true;
 
-        normalizeHard();
-
         const step = getStepPx();
-        const before = track.scrollLeft;
+        const max  = getMaxScroll();
+        const target = Math.min(max, Math.max(0, track.scrollLeft + dir * step));
 
-        track.scrollBy({ left: dir * step, behavior: 'smooth' });
+        track.scrollTo({ left: target, behavior: 'smooth' });
 
         window.setTimeout(()=>{
-          normalizeHard();
-
-          // Si se clavó por límite real, forzar wrap
-          if(track.scrollLeft === before){
-            normalizeHard();
-            track.scrollBy({ left: dir * step, behavior: 'auto' });
-            normalizeHard();
-          }
-
+          clampScroll();
+          updateBtns();
           lock = false;
         }, 420);
       }
 
-      next.addEventListener('click', (e)=>{ e.preventDefault(); stopAuto(); moveBy(1); startAuto(); });
-      prev.addEventListener('click', (e)=>{ e.preventDefault(); stopAuto(); moveBy(-1); startAuto(); });
+      next.addEventListener('click', (e)=>{ e.preventDefault(); moveBy(1); });
+      prev.addEventListener('click', (e)=>{ e.preventDefault(); moveBy(-1); });
 
       track.addEventListener('scroll', ()=>{
         if(lock) return;
-        normalizeHard();
+        clampScroll();
+        updateBtns();
       }, { passive:true });
-
-      function startAuto(){
-        stopAuto();
-        autoSlide = setInterval(()=> moveBy(1), 10000);
-      }
-      function stopAuto(){
-        if(autoSlide) clearInterval(autoSlide);
-        autoSlide = null;
-      }
-
-      track.addEventListener('mouseenter', stopAuto);
-      track.addEventListener('mouseleave', startAuto);
 
       window.addEventListener('resize', ()=>{
-        requestAnimationFrame(()=> requestAnimationFrame(jumpToMiddle));
+        requestAnimationFrame(()=>{
+          clampScroll();
+          updateBtns();
+        });
       }, { passive:true });
 
-      startAuto();
+      // Init
+      requestAnimationFrame(()=>{
+        clampScroll();
+        updateBtns();
+      });
     });
   })();
   </script>
 
-  <!-- ===== Inicialización Swiper de TARJETAS ===== -->
-  <script>
-    const tilesSwiper = new Swiper('.vj-tiles-swiper', {
-      loop: true,
-      speed: 600,
-      spaceBetween: 24,
-      slidesPerView: 1,
-      centeredSlides: false,
-      grabCursor: true,
-
-      navigation: {
-        nextEl: '.vj-tiles-swiper .swiper-button-next',
-        prevEl: '.vj-tiles-swiper .swiper-button-prev',
-      },
-
-      pagination: {
-        el: '.vj-tiles-swiper .swiper-pagination',
-        clickable: true
-      },
-
-      breakpoints: {
-        640: {
-          slidesPerView: 2
-        },
-        1024: {
-          slidesPerView: 3
-        }
-      }
-    });
-
-  </script>
 
   <!-- ===== Toast de reservas ===== -->
   <!-- ===== Toast de reservas ===== -->

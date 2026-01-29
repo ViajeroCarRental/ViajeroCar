@@ -914,6 +914,12 @@ input.flatpickr-input{ padding-right:44px; }
 }
 .car-cta:hover{ transform:translateY(-1px); }
 
+/* =========================
+   FLECHAS CARRUSEL (FINAL)
+   🔴 Activo: rojo sólido + blanco
+   ⚪ Disabled: gris + animación
+========================= */
+
 .fleet-btn{
   position:absolute !important;
   top:50% !important;
@@ -921,33 +927,81 @@ input.flatpickr-input{ padding-right:44px; }
   width:52px !important;
   height:52px !important;
   border-radius:50% !important;
+
+  /* ACTIVO */
+  background:var(--brand) !important;
   border:2px solid var(--brand) !important;
-  background:rgba(178,34,34,.08) !important;
-  color:var(--brand) !important;
+  color:#fff !important;
+
   display:grid !important;
   place-items:center !important;
   cursor:pointer !important;
-  box-shadow:0 10px 24px rgba(0,0,0,.20) !important;
-  transition:all .2s ease !important;
+
+  box-shadow:0 10px 24px rgba(178,34,34,.45) !important;
+  transition:
+    background .2s ease,
+    color .2s ease,
+    transform .2s ease,
+    box-shadow .2s ease !important;
+
   z-index:200 !important;
   pointer-events:auto !important;
 }
-.fleet-btn:hover{
-  background:var(--brand) !important;
-  color:#fff !important;
-  transform:translateY(-50%) scale(1.06) !important;
+
+/* Hover solo si está activa */
+.fleet-btn:not(.is-disabled):hover{
+  background:#8b1d1a !important;
+  border-color:#8b1d1a !important;
+  transform:translateY(-50%) scale(1.08) !important;
+  box-shadow:0 14px 30px rgba(178,34,34,.55) !important;
 }
+
+/* ⛔ DESHABILITADO (INICIO Y FIN) */
+.fleet-btn.is-disabled,
+.fleet-btn:disabled{
+  background:#e5e7eb !important;
+  border-color:#d1d5db !important;
+  color:#9ca3af !important;
+
+  box-shadow:none !important;
+  pointer-events:none !important;
+  cursor:default !important;
+
+  /* 👇 animación compartida */
+  animation:fleet-limit-pop .28s ease-out both;
+}
+
+/* 🎯 Animación sutil al llegar al límite */
+@keyframes fleet-limit-pop{
+  0%{
+    transform:translateY(-50%) scale(1);
+  }
+  60%{
+    transform:translateY(-50%) scale(0.92);
+  }
+  100%{
+    transform:translateY(-50%) scale(1);
+  }
+}
+
+/* Posiciones desktop */
 .fleet-btn.prev{ left:-62px !important; }
 .fleet-btn.next{ right:-62px !important; }
 
+/* Tablet */
 @media (max-width:1100px){
   .car-card{ flex:0 0 calc((100% - 18px) / 2); }
   .fleet-btn.prev{ left:-48px !important; }
   .fleet-btn.next{ right:-48px !important; }
 }
+
+/* Móvil */
 @media (max-width:720px){
   .car-card{ flex:0 0 100%; }
-  .fleet-btn{ width:44px !important; height:44px !important; }
+  .fleet-btn{
+    width:44px !important;
+    height:44px !important;
+  }
   .fleet-btn.prev{ left:8px !important; }
   .fleet-btn.next{ right:8px !important; }
   .fleet{ margin:90px auto 50px !important; }
