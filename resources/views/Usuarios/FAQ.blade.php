@@ -3,11 +3,10 @@
 @section('Titulo','F.A.Q | ViajeroCar')
 
 @section('css-vistaFAQ')
-    <link rel="stylesheet" href="{{ asset('css/faq.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/faq.css') }}">
 @endsection
 
 @section('contenidoFAQ')
-
 <main class="page">
   <!-- HERO -->
   <section class="hero hero-mini">
@@ -69,7 +68,8 @@
           </svg>
         </div>
 
-        <a href="catalogo.html" class="btn btn-secondary btn-wide">
+        {{-- si tienes ruta del catálogo, usa route('catalogo') --}}
+        <a href="{{ url('/catalogo') }}" class="btn btn-secondary btn-wide">
           <i class="fa-solid fa-car"></i> Ver catálogo de autos
         </a>
       </div>
@@ -86,7 +86,9 @@
             <div class="agent-sub">Respuestas inmediatas · 24/7</div>
           </div>
         </div>
-        <button class="btn btn-secondary btn-agent" id="btnAgent"><i class="fa-solid fa-headset"></i> Hablar con un agente</button>
+        <button class="btn btn-secondary btn-agent" id="btnAgent">
+          <i class="fa-solid fa-headset"></i> Hablar con un agente
+        </button>
       </div>
 
       <div class="chat-body" id="chatBody"></div>
@@ -100,12 +102,16 @@
 
       <form class="chat-input" id="chatForm">
         <input id="msg" placeholder="Escribe tu pregunta… (ej. ¿cómo modifico mi reserva?)" autocomplete="off">
-        <button class="btn btn-primary" aria-label="enviar"><i class="fa-solid fa-paper-plane"></i></button>
+        <button class="btn btn-primary" aria-label="enviar">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
       </form>
+
       <div class="typing" id="typing"><span></span><span></span><span></span></div>
     </div>
   </section>
 </main>
+@endsection
 
 @section('js-vistaFAQ')
   <script src="{{ asset('js/faq.js') }}"></script>
