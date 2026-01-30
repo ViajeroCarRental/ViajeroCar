@@ -53,14 +53,14 @@
     // Imagen por categoría
     function img_por_categoria($codigo) {
       switch ($codigo) {
-        case 'C':  return asset('img/Aveo.png');
+        case 'C':  return asset('img/aveo.png');
         case 'D':  return asset('img/virtus.png');
         case 'E':  return asset('img/jetta.png');
         case 'F':  return asset('img/camry.png');
         case 'IC': return asset('img/renegade.png');
         case 'I':  return asset('img/seltos.png');
         case 'IB': return asset('img/avanza.png');
-        case 'M':  return asset('img/odyssey.png');
+        case 'M':  return asset('img/Odyssey.png');
         case 'L':  return asset('img/Hiace.png');
         case 'H':  return asset('img/Frontier.png');
         case 'HI': return asset('img/Tacoma.png');
