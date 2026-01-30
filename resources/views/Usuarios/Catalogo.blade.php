@@ -18,16 +18,23 @@
     <div class="hero-inner">
       <h1 class="hero-title">¡RENTA HOY, EXPLORA MAÑANA, VIAJA SIEMPRE!</h1>
       <div class="chips">
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Oficina Central Plaza Park, Querétaro</span>
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto de Querétaro</span>
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Central de Autobuses de Querétaro</span>
+        <span class="chip">
+          <i class="fa-solid fa-location-dot"></i>
+          Pick-up Oficina Central Plaza Park, Querétaro
+        </span>
+        <span class="chip">
+          <i class="fa-solid fa-location-dot"></i>
+          Pick-up Aeropuerto de Querétaro
+        </span>
+        <span class="chip">
+          <i class="fa-solid fa-location-dot"></i>
+          Pick-up Central de Autobuses de Querétaro
+        </span>
       </div>
     </div>
   </section>
 
   @php
-    use Illuminate\Support\Str;
-
     // Capacidad predeterminada por código de categoría
     $predeterminados = [
       'C'  => ['pax'=>5,  'small'=>2, 'big'=>1],
@@ -43,72 +50,42 @@
       'HI' => ['pax'=>5,  'small'=>3, 'big'=>2],
     ];
 
-    // Imagen genérica por categoría (opcional, puedes apuntar a imágenes reales si las tienes)
+    // Imagen por categoría
     function img_por_categoria($codigo) {
-        switch ($codigo) {
-            case 'C':  return asset('img/Aveo.png');
-            case 'D':  return asset('img/virtus.png');
-            case 'E':  return asset('img/jetta.png');
-            case 'F':  return asset('img/camry.png');
-            case 'IC': return asset('img/renegade.png');
-            case 'I':  return asset('img/seltos.png');
-            case 'IB': return asset('img/avanza.png');
-            case 'M':  return asset('img/odyssey.png');
-            case 'L':  return asset('img/Hiace.png');
-            case 'H':  return asset('img/Frontier.png');
-            case 'HI': return asset('img/Tacoma.png');
-            default:   return asset('img/Logotipo.png');
-        }
+      switch ($codigo) {
+        case 'C':  return asset('img/Aveo.png');
+        case 'D':  return asset('img/virtus.png');
+        case 'E':  return asset('img/jetta.png');
+        case 'F':  return asset('img/camry.png');
+        case 'IC': return asset('img/renegade.png');
+        case 'I':  return asset('img/seltos.png');
+        case 'IB': return asset('img/avanza.png');
+        case 'M':  return asset('img/odyssey.png');
+        case 'L':  return asset('img/Hiace.png');
+        case 'H':  return asset('img/Frontier.png');
+        case 'HI': return asset('img/Tacoma.png');
+        default:   return asset('img/Logotipo.png');
+      }
     }
   @endphp
 
-  {{-- ========== FILTRO (CATEGORÍA) ========== --}}
-  <section class="filters" aria-labelledby="filtros-title">
-    <h2 id="filtros-title" class="sr-only">Filtros del catálogo</h2>
-
-    <form class="filter-row" action="{{ route('rutaCatalogoResultados') }}" method="GET">
-      <div class="field">
-        <label for="f-type">Categoría</label>
-        <select id="f-type" name="type">
-          <option value="">Todas</option>
-
-          @foreach ($categorias as $cat)
-            @php
-              $value    = $cat->id_categoria;
-              $selected = (string)request('type') === (string)$value ? 'selected' : '';
-            @endphp
-            <option value="{{ $value }}" {{ $selected }}>
-              {{ $cat->codigo }} · {{ $cat->nombre }} — {{ $cat->descripcion }}
-            </option>
-          @endforeach
-        </select>
-      </div>
-
-      <div class="field actions">
-        <button class="btn btn-primary" type="submit">
-          <i class="fa-solid fa-filter"></i> Filtrar
-        </button>
-      </div>
-    </form>
-  </section>
-
-  
-  {{-- ========== CATÁLOGO POR CATEGORÍA (USANDO SOLO categorias_carros) ========== --}}
+  {{-- ========== CATÁLOGO ========== --}}
   <section class="catalog">
     <div class="cars">
+
       @php $hayAutos = count($categoriasCards) > 0; @endphp
 
       @foreach ($categoriasCards as $cat)
         @php
           $codigo  = $cat->codigo;
           $titulo  = $cat->nombre;
-          $ejemplo = $cat->descripcion;
+          $desc    = $cat->descripcion;
           $precio  = $cat->precio_dia;
 
           $cap = $predeterminados[$codigo] ?? [
-              'pax'   => 5,
-              'small' => 2,
-              'big'   => 1,
+            'pax'   => 5,
+            'small' => 2,
+            'big'   => 1,
           ];
 
           $img = img_por_categoria($codigo);
@@ -120,18 +97,19 @@
               {{ $codigo }} · {{ $titulo }}
             </h2>
             <p class="catalog-group-subtitle">
-              {{ $ejemplo }}
+              {{ $desc }}
             </p>
           </div>
 
           <div class="car-list">
             <article class="car car-long">
-              {{-- IMAGEN --}}
+
+              {{-- Imagen --}}
               <div class="car-media">
                 <img src="{{ $img }}" alt="{{ $titulo }}">
               </div>
 
-              {{-- INFO CENTRAL --}}
+              {{-- Info --}}
               <div class="car-main">
                 <span class="car-pill">
                   <i class="fa-solid fa-car-side"></i>
@@ -148,14 +126,17 @@
                 </p>
 
                 <ul class="car-specs">
-                  <li title="Personas">
-                    <i class="fa-solid fa-user-group"></i> {{ $cap['pax'] }} pasajeros
+                  <li>
+                    <i class="fa-solid fa-user-group"></i>
+                    {{ $cap['pax'] }} pasajeros
                   </li>
-                  <li title="Maletas chicas">
-                    <i class="fa-solid fa-suitcase-rolling"></i> {{ $cap['small'] }} maletas chicas
+                  <li>
+                    <i class="fa-solid fa-suitcase-rolling"></i>
+                    {{ $cap['small'] }} maletas chicas
                   </li>
-                  <li title="Maletas grandes">
-                    <i class="fa-solid fa-suitcase"></i> {{ $cap['big'] }} maletas grandes
+                  <li>
+                    <i class="fa-solid fa-suitcase"></i>
+                    {{ $cap['big'] }} maletas grandes
                   </li>
                 </ul>
 
@@ -169,11 +150,11 @@
                 </div>
 
                 <p class="incluye">
-                  {{ $ejemplo }}. Tarifas sujetas a disponibilidad y temporada.
+                  {{ $desc }}. Tarifas sujetas a disponibilidad y temporada.
                 </p>
               </div>
 
-              {{-- PRECIO + CTA --}}
+              {{-- Precio / CTA --}}
               <div class="car-cta">
                 <div class="price">
                   <span class="from">DESDE</span>
@@ -183,14 +164,15 @@
                   <span class="per">por día</span>
                 </div>
 
-                {{-- Aquí puedes luego mandar categoria_id a reservaciones si quieres --}}
                 <a
                   href="{{ route('rutaReservasIniciar', ['categoria_id' => $cat->id_categoria]) }}"
                   class="btn btn-primary"
                 >
-                  <i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!
+                  <i class="fa-regular fa-calendar-check"></i>
+                  ¡Reserva ahora!
                 </a>
               </div>
+
             </article>
           </div>
         </div>
@@ -199,7 +181,7 @@
       @if(!$hayAutos)
         <div class="no-results" style="grid-column:1/-1; text-align:center; padding:2rem 1rem;">
           <h3>Sin vehículos disponibles</h3>
-          <p>Intenta cambiar la categoría o vuelve más tarde.</p>
+          <p>Vuelve más tarde para conocer nuestras opciones.</p>
         </div>
       @endif
 
@@ -210,17 +192,4 @@
 
 @section('js-vistaCatalogo')
   <script src="{{ asset('js/catalogo.js') }}"></script>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const selectCategoria = document.getElementById('f-type');
-
-      if (selectCategoria && selectCategoria.form) {
-        // Cuando cambias la categoría, se envía el formulario automáticamente
-        selectCategoria.addEventListener('change', function () {
-          this.form.submit();
-        });
-      }
-    });
-  </script>
 @endsection

@@ -129,10 +129,10 @@ body{
   flex:0 0 auto;
 }
 
-/* ===== HERO ===== */
+/* ===== HERO (RESPONSIVO POR DISPOSITIVO) ===== */
 .hero{
   position:relative;
-  min-height:clamp(420px,66vh,680px);
+  height: clamp(520px, 78vh, 860px); /* laptop/desktop default */
   margin-bottom:30px;
   overflow:hidden;
 }
@@ -141,6 +141,7 @@ body{
   width:100%;
   height:100%;
   object-fit:cover;
+  object-position:center 35%; /* encuadre default */
   display:block;
 }
 .hero .overlay{
@@ -182,65 +183,44 @@ body{
   gap:8px;
 }
 
-/* ===== FILTROS (solo tipo, fijo) ===== */
-.filters{
-  position:relative;
-  z-index:900;
-  width:100%;
-  display:flex;
-  justify-content:center;
-  margin:-90px 0 24px;
+/* ✅ iPhone / móviles */
+@media (max-width:600px){
+  .hero{
+    height:72vh;
+    min-height:520px;
+    max-height:780px;
+  }
+  .hero-bg img{
+    object-position:center 25%;
+  }
+  .hero-inner{ padding:110px 14px 18px; }
+  .hero-title{ font-size:34px; }
 }
-.filter-row{
-  width:min(750px, 94vw);
-  background:#fff;
-  display:grid;
-  grid-template-columns:1fr 170px;
-  gap:12px;
-  padding:14px 16px;
-  border-radius:18px;
-  box-shadow:var(--shadow);
+
+/* ✅ tablets (iPad) */
+@media (min-width:601px) and (max-width:1024px){
+  .hero{
+    height:68vh;
+    min-height:560px;
+    max-height:820px;
+  }
+  .hero-bg img{
+    object-position:center 32%;
+  }
+  .hero-inner{ padding:120px 16px 22px; }
+  .hero-title{ font-size:44px; }
 }
-.field{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-.field label{
-  font-size:12px;
-  color:var(--muted);
-  font-weight:800;
-  text-transform:uppercase;
-  letter-spacing:.4px;
-}
-.field select{
-  height:46px;
-  border-radius:12px;
-  padding:0 12px;
-  border:1px solid #d1d5db;
-  font-weight:600;
-}
-.field select:focus{
-  border-color:var(--brand);
-  box-shadow:0 0 0 3px rgba(178,34,34,.14);
-}
-.field.actions{
-  display:flex;
-  align-items:flex-end;
-}
-.field.actions .btn{
-  width:100%;
-  height:46px;
-  border-radius:12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border:0;
-  background:var(--brand);
-  color:#fff;
-  font-weight:900;
-  letter-spacing:.4px;
-  cursor:pointer;
+
+/* ✅ laptops grandes / desktop */
+@media (min-width:1025px){
+  .hero{
+    height:74vh;
+    min-height:620px;
+    max-height:920px;
+  }
+  .hero-bg img{
+    object-position:center 38%;
+  }
 }
 
 /* ========================================= */
@@ -311,23 +291,40 @@ body{
   align-items:stretch;
 }
 
-/* ===== IMAGEN IZQUIERDA ===== */
+/* ===== IMAGEN IZQUIERDA (SIN FONDO, LIMPIA) ===== */
 .car-media{
-  background:#000;
+  background: transparent;          /* ❌ sin fondo */
   display:grid;
   place-items:center;
   overflow:hidden;
+
+  aspect-ratio: 21 / 9;              /* mantiene proporción */
+  padding: 0;                        /* ❌ sin marco */
 }
+
 .car-media img{
   width:100%;
   height:100%;
-  object-fit:cover;
-  transform:scale(1.04);
-  transition:transform .25s ease;
+  object-fit: contain;              /* auto completo */
+  object-position: center;
+  background: transparent;          /* por si la imagen trae alpha */
+  transform: none;
+  transition: transform .25s ease;
 }
+
+/* hover sutil sin recortar */
 .car:hover .car-media img{
-  transform:scale(1.09);
+  transform: scale(1.03);
 }
+
+@media (max-width:1024px){
+  .car-media{ aspect-ratio: 16 / 10; }
+}
+
+@media (max-width:680px){
+  .car-media{ aspect-ratio: 16 / 9; }
+}
+
 
 /* ===== COLUMNA CENTRAL ===== */
 .car-main{
@@ -600,9 +597,6 @@ body{
 @media (max-width:1024px){
   .topbar{ top:12px; width:min(980px,94%); }
 
-  .hero-inner{ padding:110px 16px 22px; }
-  .hero-title{ font-size:44px; }
-
   /* cards: 2 columnas (img + contenido), CTA abajo */
   .car-long{
     grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
@@ -618,10 +612,6 @@ body{
 
 /* tablets / iPad normal */
 @media (max-width:900px){
-  .filters{ padding:0 16px; margin:-70px 0 24px; }
-  .filter-row{ width:100%; grid-template-columns:1fr; }
-  .field.actions{ align-items:stretch; }
-
   /* footer a 2 columnas */
   .footer-main{
     grid-template-columns: 1fr 1fr;
@@ -660,9 +650,6 @@ body{
     font-size:13px;
   }
 
-  .hero-inner{ padding:105px 16px 18px; }
-  .hero-title{ font-size:36px; }
-
   .cars{ padding:0 14px 34px; }
   .car-main{ padding:16px 16px; }
   .car-cta{ padding:12px 16px 16px; }
@@ -670,8 +657,6 @@ body{
 
 /* teléfonos */
 @media (max-width:680px){
-  .hero-title{ font-size:34px; }
-
   /* card en una sola columna */
   .car-long{ grid-template-columns:1fr; }
   .car-media{ min-height:180px; }
@@ -688,7 +673,6 @@ body{
 /* teléfonos chicos */
 @media (max-width:420px){
   .topbar{ top:10px; }
-  .hero-inner{ padding:98px 14px 16px; }
   .chip{ padding:9px 10px; font-size:11px; }
   .car-specs li{ font-size:11px; padding:5px 10px; }
 }
