@@ -291,40 +291,55 @@ body{
   align-items:stretch;
 }
 
-/* ===== IMAGEN IZQUIERDA (SIN FONDO, LIMPIA) ===== */
+/* =========================================================
+   ✅ IMAGEN IZQUIERDA (SIN FONDO, RECTÁNGULO, iOS OK)
+   FIX: en móvil/iPad NO desaparece (tiene altura real)
+========================================================= */
 .car-media{
-  background: transparent;          /* ❌ sin fondo */
-  display:grid;
-  place-items:center;
+  background:transparent;
   overflow:hidden;
 
-  aspect-ratio: 21 / 9;              /* mantiene proporción */
-  padding: 0;                        /* ❌ sin marco */
+  /* iOS-friendly */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  width:100%;
+  aspect-ratio: 21 / 9;     /* desktop: más panorámica */
+  min-height: 180px;        /* fallback por si algún navegador ignora ratio */
 }
 
 .car-media img{
   width:100%;
-  height:100%;
-  object-fit: contain;              /* auto completo */
-  object-position: center;
-  background: transparent;          /* por si la imagen trae alpha */
-  transform: none;
-  transition: transform .25s ease;
+  height:auto;              /* ✅ clave: no height:100% */
+  max-height:100%;
+  object-fit:contain;
+  object-position:center;
+  display:block;
+  background:transparent;
+  transform:none;
+  transition:transform .25s ease;
 }
 
-/* hover sutil sin recortar */
 .car:hover .car-media img{
   transform: scale(1.03);
 }
 
+/* tablet */
 @media (max-width:1024px){
-  .car-media{ aspect-ratio: 16 / 10; }
+  .car-media{
+    aspect-ratio: 16 / 10;
+    min-height: 190px;
+  }
 }
 
+/* móvil */
 @media (max-width:680px){
-  .car-media{ aspect-ratio: 16 / 9; }
+  .car-media{
+    aspect-ratio: 4 / 3;    /* en móvil conviene menos panorámica */
+    min-height: 220px;
+  }
 }
-
 
 /* ===== COLUMNA CENTRAL ===== */
 .car-main{
@@ -659,7 +674,6 @@ body{
 @media (max-width:680px){
   /* card en una sola columna */
   .car-long{ grid-template-columns:1fr; }
-  .car-media{ min-height:180px; }
   .catalog-group-title{ font-size:18px; }
 
   .price .amount{ font-size:24px; }
