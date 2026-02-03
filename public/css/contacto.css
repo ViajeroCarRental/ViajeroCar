@@ -6,8 +6,16 @@
 /* ===== Reset base ===== */
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;font-family:'Poppins',system-ui,Arial,sans-serif;color:var(--ink);background:var(--soft)}
 
+/* ✅ IMPORTANTE: quitamos el gris del body para que NO haya franja arriba del hero */
+body{
+  margin:0;
+  font-family:'Poppins',system-ui,Arial,sans-serif;
+  color:var(--ink);
+  background:#fff; /* antes: var(--soft) */
+}
+
+/* ===== NAVBAR ===== */
 .topbar{
   position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:60;width:min(1200px,94%);
   border-radius:14px;padding:8px 12px;border:1px solid var(--brand);background:rgba(178,34,34,.35);
@@ -26,7 +34,13 @@ body{margin:0;font-family:'Poppins',system-ui,Arial,sans-serif;color:var(--ink);
 @media (max-width:940px){.menu{display:none}.hamburger{display:block}}
 
 /* ===== Page container ===== */
-.page{max-width:1200px;margin:110px auto 60px;padding:0 16px}
+/* ✅ Ahora el fondo gris vive aquí (en el contenido), no arriba del hero */
+.page{
+  max-width:1200px;
+  margin:110px auto 60px;
+  padding:0 16px;
+  background:var(--soft);
+}
 
 /* ===== HERO mejorado ===== */
 .hero{
@@ -60,16 +74,21 @@ body{margin:0;font-family:'Poppins',system-ui,Arial,sans-serif;color:var(--ink);
 }
 
 /* ===== Hero FULL-WIDTH (solo la imagen a todo el ancho) ===== */
+/* ✅ Aquí está el FIX real: ya NO usamos margin-top negativo, usamos top para pegarlo arriba */
 .page > .hero{
+  position:relative;
   width:100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  margin-top: calc(-1 * 110px); /* compensa el margin-top del .page para que la imagen suba */
+
+  top: -110px;          /* ⬅️ elimina la franja gris superior */
+  margin-bottom: -110px;/* ⬅️ compensa para que no “jale” el contenido de abajo */
+
   border-radius:0;
   box-shadow:none;
 }
 .page > .hero .hero-bg img{
-  height: clamp(360px, 55vh, 640px); /* más alto para verse como en tu captura */
+  height: clamp(360px, 55vh, 640px);
 }
 
 /* Chips de sucursales */
@@ -218,6 +237,10 @@ body{margin:0;font-family:'Poppins',system-ui,Arial,sans-serif;color:var(--ink);
 }
 @media (max-width:520px){
   .page{ margin-top:96px }
+  .page > .hero{
+    top:-96px;
+    margin-bottom:-96px;
+  }
   .hero .hero-content{ padding:16px }
   .chip{ font-size:11px; padding:7px 10px }
 }
@@ -227,6 +250,7 @@ body{margin:0;font-family:'Poppins',system-ui,Arial,sans-serif;color:var(--ink);
   *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important }
 }
 
+/* ===== Alerts / Validación ===== */
 .alert {
   padding: 12px 16px;
   border-radius: 10px;
@@ -248,4 +272,38 @@ body{margin:0;font-family:'Poppins',system-ui,Arial,sans-serif;color:var(--ink);
   font-size: 13px;
   margin-top: 4px;
   display: block;
+}
+/* ===========================
+   FIX: quitar franja gris arriba del HERO
+   (NO mueve la navbar)
+=========================== */
+
+/* 1) La page ya NO empuja hacia abajo con margin-top.
+      En su lugar, baja el contenido con padding-top (espacio para navbar) */
+.page{
+  max-width:1200px;
+  margin:0 auto 60px !important;
+  padding:110px 16px 0 !important;
+  background:transparent; /* no es necesario pintar nada aquí */
+}
+
+/* 2) El hero full width se “mete” en el padding-top y queda pegado arriba */
+.page > .hero{
+  width:100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+
+  margin-top:-110px !important; /* quita el espacio gris superior */
+  border-radius:0 !important;
+  box-shadow:none !important;
+}
+
+/* 3) Ajuste móvil para que no vuelva a aparecer */
+@media (max-width:520px){
+  .page{
+    padding-top:96px !important;
+  }
+  .page > .hero{
+    margin-top:-96px !important;
+  }
 }
