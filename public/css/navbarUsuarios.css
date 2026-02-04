@@ -2098,8 +2098,11 @@ input.flatpickr-input{
   max-width: calc(100% / 7) !important;
   flex: 0 0 calc(100% / 7) !important;
 }
+/* ✅ SOLO MÓVIL: subir SOLO el texto "LUGAR DE RENTA" */
 @media (max-width:560px){
-  .search-card .sg-col-location .location-head{
-    margin-top:-2px;   /* 👈 sube el texto */
+  .search-card .sg-col-location .location-head .field-title{
+    position: relative;
+    top: -6px; /* prueba -4, -6, -8 */
   }
 }
+
