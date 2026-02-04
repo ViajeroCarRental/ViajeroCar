@@ -418,6 +418,8 @@ body.nav-open .topbar{
   text-transform:uppercase;
   letter-spacing:.5px;
   line-height: var(--lab-h);
+  position: relative;
+  top: 1px; 
 }
 
 .inline-check{
