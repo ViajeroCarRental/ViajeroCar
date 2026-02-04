@@ -2100,6 +2100,6 @@ input.flatpickr-input{
 }
 @media (max-width:560px){
   .search-card .sg-col-location .location-head{
-    margin-top: 0px;   /* 👈 sube el texto */
+    margin-top:-2px;   /* 👈 sube el texto */
   }
 }
