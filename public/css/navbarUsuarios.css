@@ -419,7 +419,7 @@ body.nav-open .topbar{
   letter-spacing:.5px;
   line-height: var(--lab-h);
   position: relative;
-  top: -6px; 
+  top: 2px; 
 }
 
 .inline-check{
@@ -2097,4 +2097,9 @@ input.flatpickr-input{
   width: calc(100% / 7) !important;
   max-width: calc(100% / 7) !important;
   flex: 0 0 calc(100% / 7) !important;
+}
+@media (max-width:560px){
+  .search-card .sg-col-location .location-head{
+    margin-top: -6px;   /* 👈 sube el texto */
+  }
 }
