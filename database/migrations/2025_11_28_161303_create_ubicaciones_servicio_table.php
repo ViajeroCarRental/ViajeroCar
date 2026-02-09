@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
         Schema::create('ubicaciones_servicio', function (Blueprint $table) {
             $table->bigIncrements('id_ubicacion');
@@ -15,10 +15,11 @@ return new class extends Migration
             $table->string('destino', 200);
             $table->integer('km');
 
-            // Usaremos esta bandera para activar/desactivar destinos
             $table->boolean('activo')->default(true);
 
-            $table->timestamps();
+            // ✅ nullable como tu DESCRIBE
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
         });
     }
 

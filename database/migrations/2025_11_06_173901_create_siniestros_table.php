@@ -6,22 +6,16 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Crear tabla 'siniestros'
-     */
     public function up(): void
     {
         Schema::create('siniestros', function (Blueprint $table) {
             $table->bigIncrements('id_siniestro');
 
-            // 🔗 Relación con vehículo
             $table->unsignedBigInteger('id_vehiculo');
 
-            // 📋 Datos generales del siniestro
             $table->string('folio', 50)->unique();
-            $table->date('fecha')->default(now());
+            $table->date('fecha'); // ✅ sin default fijo
 
-            // ⚙️ Tipo de siniestro
             $table->enum('tipo', [
                 'Recuperado',
                 'Robo',
@@ -30,32 +24,28 @@ return new class extends Migration
                 'Temas legales'
             ]);
 
-            // 📌 Estatus general (abierto, cerrado, en trámite, etc.)
+            // ✅ faltaba
+            $table->text('descripcion')->nullable();
+
             $table->string('estatus', 50)->default('Abierto');
 
-            // 💰 Deducible
             $table->decimal('deducible', 10, 2)->nullable();
-
-            // ⚙️ Rin o referencia adicional
             $table->string('rin', 100)->nullable();
 
-            // 📎 Archivo (PDF o imagen)
-            $table->string('archivo')->nullable();
+            $table->string('archivo', 255)->nullable();
 
-            // 🔄 Control de tiempo
-            $table->timestamps();
+            // ✅ timestamps nullable (para espejo exacto del DESCRIBE)
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
 
-            // 🔗 Relación con 'vehiculos'
+            $table->index('id_vehiculo', 'sin_veh_idx');
+
             $table->foreign('id_vehiculo')
-                ->references('id_vehiculo')
-                ->on('vehiculos')
+                ->references('id_vehiculo')->on('vehiculos')
                 ->onDelete('cascade');
         });
     }
 
-    /**
-     * Eliminar tabla
-     */
     public function down(): void
     {
         Schema::dropIfExists('siniestros');

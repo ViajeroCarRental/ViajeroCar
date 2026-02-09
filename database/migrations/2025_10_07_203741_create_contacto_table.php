@@ -18,7 +18,9 @@ return new class extends Migration
             $table->boolean('promociones')->default(false);
             $table->string('origen', 50)->nullable()->comment('Ej: contacto_web, campaña, etc.');
             $table->timestamp('fecha_envio')->useCurrent();
-            $table->timestamps();
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+
         });
     }
 

@@ -34,7 +34,9 @@ return new class extends Migration {
             $table->unsignedBigInteger('verificado_por')->nullable();
             $table->dateTime('verificado_en')->nullable();
 
-            $table->timestamps();
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+
 
             // 🔗 Índices y llaves foráneas
             $table->index('id_contrato', 'ctr_doc_ctr_idx');

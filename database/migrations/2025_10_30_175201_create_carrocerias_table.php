@@ -24,8 +24,10 @@ return new class extends Migration
             $table->decimal('costo_estimado', 10, 2)->default(0);
             $table->enum('estatus', ['Pendiente', 'Cotizado', 'En proceso', 'Refacciones', 'Terminado'])->default('Pendiente');
 
-            // ⏰ Tiempos de control
-            $table->timestamps();
+            // ⏰ Tiempos de control (nullable como en tu tabla real)
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+
 
             // 🔗 FK con 'vehiculos'
             $table->foreign('id_vehiculo')

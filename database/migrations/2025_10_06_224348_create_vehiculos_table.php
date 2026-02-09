@@ -36,8 +36,15 @@ return new class extends Migration {
             $table->decimal('precio_dia', 10, 2)->default(0.00);
             $table->decimal('deposito_garantia', 10, 2)->default(0.00);
             $table->string('placa', 50)->nullable();
+
+            // ✅ FALTABAN EN TU MIGRACIÓN (según DESCRIBE)
+            $table->string('numero_rin', 100)->nullable();
+            $table->decimal('capacidad_tanque', 6, 2)->nullable();
+            $table->string('aceite', 100)->nullable();
+
             $table->string('vin', 100)->nullable();
             $table->string('descripcion', 255)->nullable();
+
             // 🔹 Datos administrativos y legales
             $table->string('tipo_servicio', 100)->nullable();
             $table->string('propietario', 150)->nullable();
@@ -62,15 +69,14 @@ return new class extends Migration {
             $table->date('fin_vigencia_poliza')->nullable();
             $table->string('tipo_cobertura', 100)->nullable();
             $table->string('plan_seguro', 100)->nullable();
-            $table->string('archivo_poliza', 255)->nullable(); // 📎 PDF o imagen del seguro
+            $table->string('archivo_poliza', 255)->nullable();
 
             // 🔹 Tarjeta de circulación
             $table->string('folio_tarjeta', 100)->nullable();
             $table->string('movimiento_tarjeta', 100)->nullable();
             $table->date('fecha_expedicion_tarjeta')->nullable();
             $table->string('oficina_expedidora', 100)->nullable();
-            $table->string('archivo_verificacion', 255)->nullable(); // 📎 PDF o imagen de verificación
-
+            $table->string('archivo_verificacion', 255)->nullable();
 
             // Uniques
             $table->unique('placa', 'vehiculos_placa_unique');
@@ -109,7 +115,6 @@ return new class extends Migration {
             $table->foreign('id_version')
                 ->references('id_version')->on('versiones')
                 ->onDelete('set null');
-
 
             $table->timestamps();
         });
