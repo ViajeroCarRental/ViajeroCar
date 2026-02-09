@@ -24,8 +24,6 @@
 
   <!-- Estilos propios -->
   <link rel="stylesheet" href="{{ asset('css/navbarUsuarios.css') }}">
-  <link rel="stylesheet" href="{{ asset('css/navbar-top.css') }}">
-
   <!-- CSS por vista -->
   @yield('css-vistaHome')
   @yield('css-VistaCatalogo')
