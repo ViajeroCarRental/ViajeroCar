@@ -37,22 +37,17 @@ class ChecklistInspeccionMail extends Mailable
      * PDF interno (checklist completo).
      */
     public $pdfInterno;
-        /**
-     * Fotos de la inspección (para el cuerpo del correo).
+
+    /**
+     * Fotos de la inspección (solo para mostrarlas en la vista,
+     * ya NO se adjuntan como archivos).
      */
     public $fotos;
 
-
     /**
      * Crear una nueva instancia del mensaje.
-     *
-     * @param  mixed       $reservacion
-     * @param  mixed       $contrato
-     * @param  string      $tipo         'salida' | 'entrada'
-     * @param  string|null $pdfCliente   binario del PDF para cliente (output() de DomPDF)
-     * @param  string|null $pdfInterno   binario del PDF interno (opcional)
      */
-        public function __construct(
+    public function __construct(
         $reservacion,
         $contrato,
         string $tipo = 'salida',
@@ -65,9 +60,8 @@ class ChecklistInspeccionMail extends Mailable
         $this->tipo        = $tipo;
         $this->pdfCliente  = $pdfCliente;
         $this->pdfInterno  = $pdfInterno;
-        $this->fotos       = $fotos;   // 👈 guardamos las fotos para la vista del correo
+        $this->fotos       = $fotos;   // solo para la vista del correo
     }
-
 
     /**
      * Asunto del correo.
@@ -84,7 +78,7 @@ class ChecklistInspeccionMail extends Mailable
     /**
      * Contenido (vista) del correo.
      */
-        public function content(): Content
+    public function content(): Content
     {
         return new Content(
             view: 'emails.checklist_correo',
@@ -92,15 +86,13 @@ class ChecklistInspeccionMail extends Mailable
                 'reservacion' => $this->reservacion,
                 'contrato'    => $this->contrato,
                 'tipo'        => $this->tipo,
+                'fotos'       => $this->fotos,  // si quieres usarlas en el cuerpo
             ],
         );
     }
 
-
     /**
-     * Adjuntos del correo (PDF cliente y opcional interno).
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * Adjuntos del correo: solo PDFs.
      */
     public function attachments(): array
     {
@@ -126,27 +118,7 @@ class ChecklistInspeccionMail extends Mailable
             )->withMime('application/pdf');
         }
 
-                // 📷 Fotos de inspección como adjuntos normales
-        if (!empty($this->fotos)) {
-            foreach ($this->fotos as $foto) {
-                $contenido = $foto['contenido'] ?? null;
-
-                if ($contenido === null) {
-                    continue;
-                }
-
-                $nombre = $foto['nombre'] ?? 'foto-inspeccion.jpg';
-                $mime   = $foto['mime']   ?? 'image/jpeg';
-
-                $attachments[] = Attachment::fromData(
-                    fn () => $contenido,
-                    $nombre
-                )->withMime($mime);
-            }
-        }
-
-        return $attachments;
-
+        // 🔥 YA NO SE ADJUNTAN FOTOS 🔥
 
         return $attachments;
     }
