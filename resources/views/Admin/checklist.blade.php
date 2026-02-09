@@ -284,33 +284,196 @@
     </section>
 
     <!-- ============================================ -->
-<!--           FOTOS DEL VEHÍCULO                 -->
+<!--           IMÁGENES GENERALES                 -->
 <!-- ============================================ -->
 <section class="paper-section">
-  <h3 class="sec-title center">Fotos del vehículo</h3>
+  <h3 class="sec-title center">Imágenes generales del vehículo</h3>
 
-  <div class="form-grid" style="margin-top:12px">
+  <div class="photo-grid">
 
-    <div>
-      <label>Fotografías del Auto — SALIDA</label>
-      <div class="uploader" data-name="autoSalida">
-        <div class="msg">Toca para cámara o galería (JPG/PNG)</div>
-        <input name="autoSalida[]" type="file" accept="image/jpeg,image/png" multiple>
+    <!-- ================== SALIDA ================== -->
+    <div class="photo-column">
+      <h4 class="photo-column-title">SALIDA</h4>
+
+      <!-- 1. FRENTE (1 sola foto) -->
+      <div class="photo-slot">
+        <div class="photo-slot-label">1. FRENTE</div>
+        <div class="photo-uploader" data-name="frenteSalida" data-max-files="1">
+          <span class="photo-uploader-msg">Toca para tomar foto o elegir de la galería</span>
+          <input
+              type="file"
+              name="frente_salida"
+              accept="image/*"
+              capture="environment">
+        </div>
+        <div class="photo-preview" id="prev-frenteSalida"></div>
       </div>
-      <div class="preview" id="prev-autoSalida"></div>
+
+      <!-- 2. PARABRISAS (1 sola foto) -->
+      <div class="photo-slot">
+        <div class="photo-slot-label">2. PARABRISAS</div>
+        <div class="photo-uploader" data-name="parabrisasSalida" data-max-files="1">
+          <span class="photo-uploader-msg">Toca para tomar foto o elegir de la galería</span>
+          <input
+              type="file"
+              name="parabrisas_salida"
+              accept="image/*"
+              capture="environment">
+        </div>
+        <div class="photo-preview" id="prev-parabrisasSalida"></div>
+      </div>
+
+      <!-- 3. LADO CONDUCTOR (1 sola foto) -->
+      <div class="photo-slot">
+        <div class="photo-slot-label">3. LADO CONDUCTOR</div>
+        <div class="photo-uploader" data-name="ladoConductorSalida" data-max-files="1">
+          <span class="photo-uploader-msg">Toca para tomar foto o elegir de la galería</span>
+          <input
+              type="file"
+              name="lado_conductor_salida"
+              accept="image/*"
+              capture="environment">
+        </div>
+        <div class="photo-preview" id="prev-ladoConductorSalida"></div>
+      </div>
+
+      <!-- 4. LADO PASAJERO (1 sola foto) -->
+      <div class="photo-slot">
+        <div class="photo-slot-label">4. LADO PASAJERO</div>
+        <div class="photo-uploader" data-name="ladoPasajeroSalida" data-max-files="1">
+          <span class="photo-uploader-msg">Toca para tomar foto o elegir de la galería</span>
+          <input
+              type="file"
+              name="lado_pasajero_salida"
+              accept="image/*"
+              capture="environment">
+        </div>
+        <div class="photo-preview" id="prev-ladoPasajeroSalida"></div>
+      </div>
+
+      <!-- 5. ATRÁS (1 sola foto) -->
+      <div class="photo-slot">
+        <div class="photo-slot-label">5. ATRÁS</div>
+        <div class="photo-uploader" data-name="atrasSalida" data-max-files="1">
+          <span class="photo-uploader-msg">Toca para tomar foto o elegir de la galería</span>
+          <input
+              type="file"
+              name="atras_salida"
+              accept="image/*"
+              capture="environment">
+        </div>
+        <div class="photo-preview" id="prev-atrasSalida"></div>
+      </div>
+
+      <!-- 6. INTERIORES (MÁX 8 fotos) -->
+      <div class="photo-slot">
+        <div class="photo-slot-label">6. INTERIORES <span class="photo-hint">(máx. 8 fotos)</span></div>
+        <div class="photo-uploader" data-name="interioresSalida" data-max-files="8">
+          <span class="photo-uploader-msg">Toca para tomar fotos o elegir de la galería</span>
+          <input
+              type="file"
+              name="interiores_salida[]"
+              accept="image/*"
+              capture="environment"
+              multiple>
+        </div>
+        <div class="photo-preview" id="prev-interioresSalida"></div>
+      </div>
     </div>
 
-    <div>
-      <label>Fotografías del Auto — REGRESO</label>
-      <div class="uploader" data-name="autoRegreso">
-        <div class="msg">Toca para cámara o galería (JPG/PNG)</div>
-        <input name="autoRegreso[]" type="file" accept="image/jpeg,image/png" multiple>
+    <!-- ================== REGRESO ================== -->
+    <div class="photo-column">
+      <h4 class="photo-column-title">REGRESO</h4>
+
+      <!-- 1. FRENTE (1 sola foto) -->
+      <div class="photo-slot">
+        <div class="photo-slot-label">1. FRENTE</div>
+        <div class="photo-uploader" data-name="frenteRegreso" data-max-files="1">
+          <span class="photo-uploader-msg">Toca para tomar foto o elegir de la galería</span>
+          <input
+              type="file"
+              name="frente_regreso"
+              accept="image/*"
+              capture="environment">
+        </div>
+        <div class="photo-preview" id="prev-frenteRegreso"></div>
       </div>
-      <div class="preview" id="prev-autoRegreso"></div>
+
+      <!-- 2. PARABRISAS (1 sola foto) -->
+      <div class="photo-slot">
+        <div class="photo-slot-label">2. PARABRISAS</div>
+        <div class="photo-uploader" data-name="parabrisasRegreso" data-max-files="1">
+          <span class="photo-uploader-msg">Toca para tomar foto o elegir de la galería</span>
+          <input
+              type="file"
+              name="parabrisas_regreso"
+              accept="image/*"
+              capture="environment">
+        </div>
+        <div class="photo-preview" id="prev-parabrisasRegreso"></div>
+      </div>
+
+      <!-- 3. LADO CONDUCTOR (1 sola foto) -->
+      <div class="photo-slot">
+        <div class="photo-slot-label">3. LADO CONDUCTOR</div>
+        <div class="photo-uploader" data-name="ladoConductorRegreso" data-max-files="1">
+          <span class="photo-uploader-msg">Toca para tomar foto o elegir de la galería</span>
+          <input
+              type="file"
+              name="lado_conductor_regreso"
+              accept="image/*"
+              capture="environment">
+        </div>
+        <div class="photo-preview" id="prev-ladoConductorRegreso"></div>
+      </div>
+
+      <!-- 4. LADO PASAJERO (1 sola foto) -->
+      <div class="photo-slot">
+        <div class="photo-slot-label">4. LADO PASAJERO</div>
+        <div class="photo-uploader" data-name="ladoPasajeroRegreso" data-max-files="1">
+          <span class="photo-uploader-msg">Toca para tomar foto o elegir de la galería</span>
+          <input
+              type="file"
+              name="lado_pasajero_regreso"
+              accept="image/*"
+              capture="environment">
+        </div>
+        <div class="photo-preview" id="prev-ladoPasajeroRegreso"></div>
+      </div>
+
+      <!-- 5. ATRÁS (1 sola foto) -->
+      <div class="photo-slot">
+        <div class="photo-slot-label">5. ATRÁS</div>
+        <div class="photo-uploader" data-name="atrasRegreso" data-max-files="1">
+          <span class="photo-uploader-msg">Toca para tomar foto o elegir de la galería</span>
+          <input
+              type="file"
+              name="atras_regreso"
+              accept="image/*"
+              capture="environment">
+        </div>
+        <div class="photo-preview" id="prev-atrasRegreso"></div>
+      </div>
+
+      <!-- 6. INTERIORES (MÁX 8 fotos) -->
+      <div class="photo-slot">
+        <div class="photo-slot-label">6. INTERIORES <span class="photo-hint">(máx. 8 fotos)</span></div>
+        <div class="photo-uploader" data-name="interioresRegreso" data-max-files="8">
+          <span class="photo-uploader-msg">Toca para tomar fotos o elegir de la galería</span>
+          <input
+              type="file"
+              name="interiores_regreso[]"
+              accept="image/*"
+              capture="environment"
+              multiple>
+        </div>
+        <div class="photo-preview" id="prev-interioresRegreso"></div>
+      </div>
     </div>
 
   </div>
 </section>
+
 
 
 
@@ -690,7 +853,6 @@ document.addEventListener("DOMContentLoaded", () => {
     actualizarFechasHorasAhora();
 
     // Se siguen actualizando mientras la vista esté abierta
-    // (puedes subir o bajar el intervalo, aquí cada 30 segundos)
     setInterval(actualizarFechasHorasAhora, 30 * 1000);
 
     // 🗂 Archivos seleccionados por cada uploader (clave = data-name)
@@ -729,8 +891,6 @@ document.addEventListener("DOMContentLoaded", () => {
                             return reject(new Error("No se pudo comprimir la imagen"));
                         }
 
-                        // Crear un File nuevo (JPEG) a partir del blob
-                        const ext     = file.name.split(".").pop();
                         const base    = file.name.replace(/\.[^.]+$/, "");
                         const newName = `${base}-cmp.jpg`;
 
@@ -757,22 +917,30 @@ document.addEventListener("DOMContentLoaded", () => {
     function setupGauge(selectId, arcId, needleId, txtId) {
 
         const select = document.getElementById(selectId);
+        if (!select) return;
+
         const arc = document.getElementById(arcId);
         const needle = document.getElementById(needleId);
         const txt = document.getElementById(txtId);
 
         function updateGauge() {
             const option = select.selectedOptions[0];
-            const pct = option.dataset.pct ? parseFloat(option.dataset.pct) : 0;
-            const val = option.value || "—";
+            const pct = option && option.dataset.pct ? parseFloat(option.dataset.pct) : 0;
+            const val = option ? (option.value || "—") : "—";
 
-            txt.textContent = val;
+            if (txt) {
+                txt.textContent = val;
+            }
 
-            const offset = maxLength - (maxLength * (pct / 100));
-            arc.style.strokeDashoffset = offset;
+            if (arc) {
+                const offset = maxLength - (maxLength * (pct / 100));
+                arc.style.strokeDashoffset = offset;
+            }
 
-            const angle = -90 + (pct * 1.8);
-            needle.style.transform = `rotate(${angle}deg)`;
+            if (needle) {
+                const angle = -90 + (pct * 1.8);
+                needle.style.transform = `rotate(${angle}deg)`;
+            }
         }
 
         select.addEventListener("change", updateGauge);
@@ -782,8 +950,8 @@ document.addEventListener("DOMContentLoaded", () => {
             [...select.options].forEach(op => {
                 if (op.value === inicial) op.selected = true;
             });
-            updateGauge();
         }
+        updateGauge();
     }
 
     /* Inicializar gauges */
@@ -811,7 +979,11 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             const data = await resp.json();
-            alert(data.msg);
+            if (data.ok) {
+                alertify.success(data.msg || "Gasolina de regreso guardada.");
+            } else {
+                alertify.error(data.msg || "Error al guardar gasolina de regreso.");
+            }
         });
     }
 
@@ -822,7 +994,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const canvas = document.getElementById("padFirma");
     const btnClear = document.getElementById("btnClearFirma");
     const btnGuardar = document.getElementById("btnGuardarFirma");
-       const btnCerrar = document.getElementById("btnCerrarModal");
+    const btnCerrar = document.getElementById("btnCerrarModal");
     const tituloModal = document.getElementById("tituloModalFirma");
 
     let tipoFirma = null;
@@ -860,7 +1032,7 @@ document.addEventListener("DOMContentLoaded", () => {
     /* GUARDAR FIRMA */
     btnGuardar.onclick = async () => {
         if (signaturePad.isEmpty()) {
-            alert("La firma está vacía");
+            alertify.warning("La firma está vacía.");
             return;
         }
 
@@ -877,11 +1049,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (!url) {
-            alert("Tipo de firma desconocido");
+            alertify.error("Tipo de firma desconocido.");
             return;
         }
 
-        await fetch(url, {
+        const resp = await fetch(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -893,7 +1065,12 @@ document.addEventListener("DOMContentLoaded", () => {
             })
         });
 
-        alert("Firma guardada correctamente");
+        if (!resp.ok) {
+            alertify.error("Error al guardar la firma.");
+            return;
+        }
+
+        alertify.success("Firma guardada correctamente.");
         modal.style.display = "none";
         location.reload();
     };
@@ -944,7 +1121,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const km = kmInput.value;
 
             if (!km || km < 0) {
-                alert("Kilometraje inválido");
+                alertify.warning("Kilometraje inválido.");
                 return;
             }
 
@@ -960,7 +1137,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (!resp.ok) {
-                alert("Error al guardar kilometraje");
+                alertify.error("Error al guardar kilometraje.");
                 return;
             }
 
@@ -971,28 +1148,74 @@ document.addEventListener("DOMContentLoaded", () => {
             kmInput.style.display = "none";
             btnGuardarKm.style.display = "none";
             kmText.style.display = "inline";
+
+            alertify.success("Kilometraje de regreso guardado.");
         });
     }
 
     /* ==========================================================
-       📸 Vista previa de fotos (Checklist: Auto salida / regreso)
-       ➜ Permitir agregar varias tandas sin borrar las anteriores
+       📸 NUEVO FLUJO: Vista previa + compresión por apartado
+       - Usa .photo-uploader (HTML nuevo)
+       - data-name => clave en uploaderFiles (frenteSalida, etc.)
+       - data-max-files:
+            - 1 → siempre se reemplaza la foto anterior
+            - >1 → acumula hasta el máximo (interiores: 8)
     ============================================================= */
-    document.querySelectorAll('.uploader input[type="file"]').forEach((input) => {
+    document.querySelectorAll('.photo-uploader input[type="file"]').forEach((input) => {
         input.addEventListener("change", async (e) => {
-            const contenedor = e.target.closest(".uploader");
-            const previewId  = contenedor.getAttribute("data-name");
-            const previewDiv = document.getElementById(`prev-${previewId}`);
+            const contenedor = e.target.closest(".photo-uploader");
+            if (!contenedor) return;
 
+            const slotName = contenedor.getAttribute("data-name");
+            if (!slotName) return;
+
+            const maxFilesAttr = contenedor.getAttribute("data-max-files");
+            const maxFiles = maxFilesAttr ? parseInt(maxFilesAttr, 10) : 99;
+
+            const previewDiv = document.getElementById(`prev-${slotName}`);
             if (!previewDiv) return;
 
-            // Inicializar arreglo para este uploader
-            if (!uploaderFiles[previewId]) {
-                uploaderFiles[previewId] = [];
+            // Inicializar arreglo para este apartado
+            if (!uploaderFiles[slotName]) {
+                uploaderFiles[slotName] = [];
             }
 
-            const newFiles = Array.from(e.target.files || []);
+            let newFiles = Array.from(e.target.files || []);
             if (!newFiles.length) return;
+
+            // Si solo se permite 1 foto, se reemplaza siempre por la última selección
+            if (maxFiles === 1) {
+                uploaderFiles[slotName] = [];
+            } else {
+                const actuales = uploaderFiles[slotName].length;
+                const disponibles = maxFiles - actuales;
+
+                if (disponibles <= 0) {
+                    // 🔔 Alerta especial para daños interiores (máx 8)
+                    if (slotName === "interioresSalida" || slotName === "interioresRegreso") {
+                        alertify.warning("Ya alcanzaste el límite de 8 fotos en Daños interiores.");
+                    } else {
+                        alertify.warning(`Solo se permiten ${maxFiles} foto(s) en este apartado.`);
+                    }
+                    input.value = "";
+                    return;
+                }
+
+                if (newFiles.length > disponibles) {
+                    if (slotName === "interioresSalida" || slotName === "interioresRegreso") {
+                        alertify.warning(
+                            `Solo se permiten ${maxFiles} fotos en Daños interiores.\n` +
+                            `Se tomarán solo las primeras ${disponibles} fotos seleccionadas.`
+                        );
+                    } else {
+                        alertify.warning(
+                            `Solo se permiten ${maxFiles} foto(s) en este apartado.\n` +
+                            `Se tomarán solo las primeras ${disponibles} foto(s).`
+                        );
+                    }
+                    newFiles = newFiles.slice(0, disponibles);
+                }
+            }
 
             // 🔽 Comprimir cada archivo nuevo
             const compressedList = [];
@@ -1004,20 +1227,19 @@ document.addEventListener("DOMContentLoaded", () => {
                     compressedList.push(compressed);
                 } catch (err) {
                     console.error("Error al comprimir imagen:", err);
-                    // Si falla la compresión, usamos el original (peor caso)
                     compressedList.push(file);
                 }
             }
 
             // Agregar los archivos comprimidos al arreglo existente
-            uploaderFiles[previewId] = uploaderFiles[previewId].concat(compressedList);
+            uploaderFiles[slotName] = uploaderFiles[slotName].concat(compressedList);
 
             // Limpiar el input para permitir volver a abrir cámara/galería
             input.value = "";
 
-            // Reconstruir la vista previa con TODOS los archivos almacenados
+            // Reconstruir la vista previa con TODOS los archivos almacenados en este slot
             previewDiv.innerHTML = "";
-            uploaderFiles[previewId].forEach((file) => {
+            uploaderFiles[slotName].forEach((file) => {
                 const reader = new FileReader();
                 reader.onload = (ev) => {
                     const thumb = document.createElement("div");
@@ -1032,7 +1254,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     // Quitar solo ESTA foto (del arreglo y de la vista)
                     thumb.querySelector(".rm").addEventListener("click", () => {
-                        uploaderFiles[previewId] = uploaderFiles[previewId].filter(
+                        uploaderFiles[slotName] = uploaderFiles[slotName].filter(
                             (f) => f !== file
                         );
                         thumb.remove();
@@ -1045,7 +1267,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /* ==========================================================
        📤 Enviar checklist de SALIDA
-    ========================================================== */
+    ============================================================= */
     const btnChecklistSalida = document.getElementById("btnChecklistSalida");
 
     if (btnChecklistSalida) {
@@ -1074,30 +1296,60 @@ document.addEventListener("DOMContentLoaded", () => {
                 formData.append("entrego_fecha",       eFecha  ? eFecha.value  : "");
                 formData.append("entrego_hora",        eHora   ? eHora.value   : "");
 
-                // 📸 Fotos de salida (usando los archivos almacenados en uploaderFiles)
-                const filesSalida = uploaderFiles["autoSalida"] || [];
+                // 📸 Fotos de salida por apartado → se mandan como
+                // frente_salida, parabrisas_salida, etc.
+                const mapSlotsToFields = {
+                    frenteSalida:        "frente_salida",
+                    parabrisasSalida:    "parabrisas_salida",
+                    ladoConductorSalida: "lado_conductor_salida",
+                    ladoPasajeroSalida:  "lado_pasajero_salida",
+                    atrasSalida:         "atras_salida",
+                    interioresSalida:    "interiores_salida[]",
+                };
 
-                if (filesSalida.length > 0) {
-                    // Límite FRONT: 2 GB por foto (igual que en backend)
-                    const MAX_MB    = 2048;
-                    const MAX_BYTES = MAX_MB * 1024 * 1024;
+                const MAX_MB    = 2048;
+                const MAX_BYTES = MAX_MB * 1024 * 1024;
 
-                    for (const file of filesSalida) {
+                let hayFotos = false;
+
+                for (const [slotName, fieldName] of Object.entries(mapSlotsToFields)) {
+                    const files = uploaderFiles[slotName] || [];
+                    if (!files.length) continue;
+
+                    hayFotos = true;
+
+                    if (slotName === "interioresSalida") {
+                        // Puede haber varias
+                        for (const file of files) {
+                            if (file.size > MAX_BYTES) {
+                                alertify.error(
+                                    `La foto "${file.name}" pesa ${(file.size / 1024 / 1024).toFixed(1)} MB.\n` +
+                                    `El máximo permitido es ${MAX_MB} MB.`
+                                );
+                                return;
+                            }
+                            formData.append(fieldName, file);
+                        }
+                    } else {
+                        // Solo se usa 1 foto por apartado (la última seleccionada)
+                        const file = files[files.length - 1];
                         if (file.size > MAX_BYTES) {
-                            alert(
+                            alertify.error(
                                 `La foto "${file.name}" pesa ${(file.size / 1024 / 1024).toFixed(1)} MB.\n` +
                                 `El máximo permitido es ${MAX_MB} MB.`
                             );
-                            return; // ⛔ No mandamos nada
+                            return;
                         }
-                        formData.append("autoSalida[]", file);
+                        formData.append(fieldName, file);
                     }
                 }
+
+                // No hacemos validación de "mínimo 1 foto" aquí,
+                // lo valida el backend y regresa 422 si no hay ninguna.
 
                 const resp = await fetch(`/admin/checklist/${CHECKLIST_ID}/enviar-salida`, {
                     method: "POST",
                     headers: {
-                        // NO ponemos Content-Type, FormData lo agrega solo
                         "X-CSRF-TOKEN": token
                     },
                     body: formData
@@ -1106,18 +1358,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 const rawText = await resp.text();
                 let data = null;
 
-                // Intentar parsear JSON
                 try {
                     data = JSON.parse(rawText);
-                } catch (e) {
-                    // no era JSON, se queda en null
-                }
+                } catch (e) {}
 
-                // Manejo de error de respuesta
                 if (!resp.ok || !data || data.ok === false) {
                     let msg = "Error al enviar el checklist de salida.";
 
-                    // Errores de validación de Laravel (422)
                     if (data && data.errors) {
                         msg = Object.values(data.errors).flat().join("\n");
                     } else if (data && data.msg) {
@@ -1130,21 +1377,19 @@ document.addEventListener("DOMContentLoaded", () => {
                         msg = "Las fotos son demasiado pesadas para el servidor. " +
                               "Intenta con menos fotos o en menor resolución.";
                     } else {
-                        // 👇 Muestra TODO lo que mandó el servidor
-                        msg = `Error ${resp.status}:\n` + (rawText || '(sin cuerpo de respuesta)');
+                        msg = `Error ${resp.status}:\n` + (rawText || "(sin cuerpo de respuesta)");
                     }
 
-                    alert(msg);
+                    alertify.error(msg);
                     return;
                 }
 
-                alert(data.msg || "Checklist de salida guardado correctamente.");
+                alertify.success(data.msg || "Checklist de salida guardado correctamente.");
             } catch (err) {
                 console.error(err);
 
                 let msg = "Error de red al enviar el checklist de salida.";
 
-                // Mensaje típico de Safari/iPad cuando falla el upload
                 if (err && typeof err.message === "string" && err.message.includes("failed to upload")) {
                     msg = "Una de las fotos no se pudo subir (suele ser por tamaño o conexión).\n" +
                           "Intenta con menos fotos o en menor resolución.";
@@ -1152,14 +1397,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     msg += "\nDetalle: " + err.message;
                 }
 
-                alert(msg);
+                alertify.error(msg);
             }
         });
     }
 
     /* ==========================================================
        📤 Enviar checklist de REGRESO
-    ========================================================== */
+    ============================================================= */
     const btnChecklistEntrada = document.getElementById("btnChecklistEntrada");
 
     if (btnChecklistEntrada) {
@@ -1169,7 +1414,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const formData = new FormData();
                 formData.append("_token", token);
-                formData.append("tipo", "entrada"); // 👈 importante
+                formData.append("tipo", "entrada");
 
                 // 📝 Campos de comentarios (SOLO regreso)
                 const comentario = document.querySelector('[data-field="comentario_cliente"]');
@@ -1181,37 +1426,65 @@ document.addEventListener("DOMContentLoaded", () => {
                 formData.append("comentario_cliente", comentario ? comentario.value : "");
                 formData.append("danos_interiores",   danos      ? danos.value      : "");
 
-                // 👇 En regreso SOLO se guardan estos tiempos
                 formData.append("recibio_fecha",       rFecha  ? rFecha.value  : "");
                 formData.append("recibio_hora",        rHora   ? rHora.value   : "");
 
-                // 📸 Fotos de REGRESO (usando los archivos almacenados en uploaderFiles)
-                const filesRegreso = uploaderFiles["autoRegreso"] || [];
+                                // 📸 Fotos de REGRESO: mandar por categoría igual que en SALIDA
+                const mapSlotsToFieldsEntrada = {
+                    frenteRegreso:        "frente_regreso",
+                    parabrisasRegreso:    "parabrisas_regreso",
+                    ladoConductorRegreso: "lado_conductor_regreso",
+                    ladoPasajeroRegreso:  "lado_pasajero_regreso",
+                    atrasRegreso:         "atras_regreso",
+                    interioresRegreso:    "interiores_regreso[]", // puede llevar varias
+                };
 
-                if (filesRegreso.length === 0) {
-                    alert("Debes cargar al menos una foto del vehículo (regreso).");
-                    return;
-                }
-
-                // Límite FRONT: 2 GB por foto (igual que backend)
                 const MAX_MB    = 2048;
                 const MAX_BYTES = MAX_MB * 1024 * 1024;
 
-                for (const file of filesRegreso) {
-                    if (file.size > MAX_BYTES) {
-                        alert(
-                            `La foto "${file.name}" pesa ${(file.size / 1024 / 1024).toFixed(1)} MB.\n` +
-                            `El máximo permitido es ${MAX_MB} MB.`
-                        );
-                        return; // ⛔ No mandamos nada
+                let totalFotosRegreso = 0;
+
+                for (const [slotName, fieldName] of Object.entries(mapSlotsToFieldsEntrada)) {
+                    const files = uploaderFiles[slotName] || [];
+                    if (!files.length) continue;
+
+                    if (slotName === "interioresRegreso") {
+                        // 👉 interiores: se mandan TODAS (hasta el tope que tú ya limitas en el uploader)
+                        for (const file of files) {
+                            if (file.size > MAX_BYTES) {
+                                alertify.error(
+                                    `La foto "${file.name}" pesa ${(file.size / 1024 / 1024).toFixed(1)} MB.\n` +
+                                    `El máximo permitido es ${MAX_MB} MB.`
+                                );
+                                return;
+                            }
+                            formData.append(fieldName, file);
+                            totalFotosRegreso++;
+                        }
+                    } else {
+                        // 👉 frente / parabrisas / lados / atrás: solo la ÚLTIMA seleccionada
+                        const file = files[files.length - 1];
+                        if (file.size > MAX_BYTES) {
+                            alertify.error(
+                                `La foto "${file.name}" pesa ${(file.size / 1024 / 1024).toFixed(1)} MB.\n` +
+                                `El máximo permitido es ${MAX_MB} MB.`
+                            );
+                            return;
+                        }
+                        formData.append(fieldName, file);
+                        totalFotosRegreso++;
                     }
-                    formData.append("autoRegreso[]", file);
                 }
+
+                if (!totalFotosRegreso) {
+                    alertify.warning("Debes cargar al menos una foto del vehículo (regreso).");
+                    return;
+                }
+
 
                 const resp = await fetch(`/admin/checklist/${CHECKLIST_ID}/enviar-entrada`, {
                     method: "POST",
                     headers: {
-                        // NO ponemos Content-Type, FormData lo agrega solo
                         "X-CSRF-TOKEN": token
                     },
                     body: formData
@@ -1220,18 +1493,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 const rawText = await resp.text();
                 let data = null;
 
-                // Intentar parsear JSON
                 try {
                     data = JSON.parse(rawText);
-                } catch (e) {
-                    // no era JSON, se queda en null
-                }
+                } catch (e) {}
 
-                // Manejo de error de respuesta
                 if (!resp.ok || !data || data.ok === false) {
                     let msg = "Error al enviar el checklist de regreso.";
 
-                    // Errores de validación de Laravel (422)
                     if (data && data.errors) {
                         msg = Object.values(data.errors).flat().join("\n");
                     } else if (data && data.msg) {
@@ -1244,15 +1512,14 @@ document.addEventListener("DOMContentLoaded", () => {
                         msg = "Las fotos son demasiado pesadas para el servidor. " +
                               "Intenta con menos fotos o en menor resolución.";
                     } else {
-                        // 👇 Muestra TODO lo que mandó el servidor
-                        msg = `Error ${resp.status}:\n` + (rawText || '(sin cuerpo de respuesta)');
+                        msg = `Error ${resp.status}:\n` + (rawText || "(sin cuerpo de respuesta)");
                     }
 
-                    alert(msg);
+                    alertify.error(msg);
                     return;
                 }
 
-                alert(data.msg || "Checklist de regreso guardado correctamente.");
+                alertify.success(data.msg || "Checklist de regreso guardado correctamente.");
             } catch (err) {
                 console.error(err);
 
@@ -1265,16 +1532,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     msg += "\nDetalle: " + err.message;
                 }
 
-                alert(msg);
+                alertify.error(msg);
             }
         });
     }
 
-        /* ==========================================================
+    /* ==========================================================
        Reutilizar firma si el mismo asesor entrega y recibe
-       - Si Entregó == Recibió y hay firma_arrendador → copiar a firma_recibio
-       - Si cambian a otro asesor → se limpia firma_recibio para pedir nueva firma
-       - Si vuelves a poner al que entrega, vuelve a jalar su firma
     ============================================================= */
     const selectRecibio = document.getElementById("selectRecibioNombre");
     const inputEntrego  = document.querySelector('[data-field="entrego_nombre"]');
@@ -1315,25 +1579,22 @@ document.addEventListener("DOMContentLoaded", () => {
             if (nombreEntrego && nombreRecibio === nombreEntrego && firmaArrSrc) {
                 const ok = await guardarFirmaRecibio(firmaArrSrc);
                 if (ok) {
-                    alert("Se reutilizó la firma del agente que entrega para 'Recibió'.");
+                    alertify.success("Se reutilizó la firma del agente que entrega para 'Recibió'.");
                     location.reload();
                 }
                 return;
             }
 
             // Distinto asesor → limpiar firma y exigir que firme ese nuevo agente
-await guardarFirmaRecibio("");
-alert("Seleccionaste otro agente. Debe capturar una nueva firma para 'Recibió'.");
-location.reload();   // 👈 recargamos la página automáticamente
-
+            await guardarFirmaRecibio("");
+            alertify.warning("Seleccionaste otro agente. Debe capturar una nueva firma para 'Recibió'.");
+            location.reload();
         }
 
         // 👉 Al cambiar manualmente el select
         selectRecibio.addEventListener("change", manejarCambioRecibio);
 
         // 👉 Al cargar la página:
-        // Si no hay firma_recibio guardada y el que recibe = el que entrega,
-        // copiamos automáticamente la firma del arrendador.
         (function autoSyncAlCargar() {
             const nombreEntrego = (inputEntrego.value || "").trim();
             const nombreRecibio = (selectRecibio.value || "").trim();
@@ -1348,9 +1609,10 @@ location.reload();   // 👈 recargamos la página automáticamente
         })();
     }
 
-
 });
 </script>
+
+
 
 
 <!-- Librería oficial SignaturePad -->
