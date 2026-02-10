@@ -2,8 +2,323 @@
   "use strict";
 
   // ===== Helpers =====
-  const qs  = (s) => document.querySelector(s);
-  const qsa = (s) => Array.from(document.querySelectorAll(s));
+  const qs  = (s, r = document) => r.querySelector(s);
+  const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+  // ======================================================
+  // ✅ FORZAR SIEMPRE STEP 1 CUANDO SOLO VIENE ?step=2
+  // (si la URL trae más params, NO toca nada)
+  // ======================================================
+  function forceStep1WhenOnlyStepParam(){
+    try{
+      const url = new URL(window.location.href);
+      const p = url.searchParams;
+
+      if (!p.has('step')) return;
+
+      const keys = [];
+      p.forEach((v,k)=>{ if (v !== null && String(v).trim() !== '') keys.push(k); });
+
+      const onlyStep = (keys.length === 1 && keys[0] === 'step');
+      if (!onlyStep) return;
+
+      p.set('step','1');
+      window.history.replaceState({}, document.title, url.pathname + '?' + p.toString() + url.hash);
+
+      try{
+        document.dispatchEvent(new CustomEvent('wizard:stepChanged', { detail:{ step: 1 } }));
+      }catch(_){}
+    }catch(_){}
+  }
+
+  // ======================================================
+  // ✅ PERSISTENCIA (SIN SESIÓN)
+  // - guarda en localStorage y en querystring
+  // - rehidrata al cargar / al cambiar de step
+  // - ✅ FIX: NO spamea replaceState en cada tecla (throttle)
+  // - ✅ FIX: setVal NO dispara change si no cambió el valor
+  // ======================================================
+  function initWizardStatePersistence(){
+    const LS_KEY = "viajero_resv_filters_v1";
+
+    const map = {
+      pickup_sucursal_id:  qs('#pickup_sucursal_id')  || qs('[name="pickup_sucursal_id"]'),
+      dropoff_sucursal_id: qs('#dropoff_sucursal_id') || qs('[name="dropoff_sucursal_id"]'),
+
+      pickup_date:  qs('#start') || qs('[name="pickup_date"]'),
+      dropoff_date: qs('#end')   || qs('[name="dropoff_date"]'),
+
+      pickup_h:  qs('#pickup_h')  || qs('[name="pickup_hour"]')  || qs('[name="pickup_hora"]')  || qs('[name="pickup_h"]'),
+      pickup_m:  qs('#pickup_m')  || qs('[name="pickup_min"]')   || qs('[name="pickup_minuto"]')|| qs('[name="pickup_m"]'),
+      dropoff_h: qs('#dropoff_h') || qs('[name="dropoff_hour"]') || qs('[name="dropoff_hora"]') || qs('[name="dropoff_h"]'),
+      dropoff_m: qs('#dropoff_m') || qs('[name="dropoff_min"]')  || qs('[name="dropoff_minuto"]')|| qs('[name="dropoff_m"]'),
+
+      pickup_time_hidden:  qs('#pickup_time_hidden')  || qs('[name="pickup_time"]'),
+      dropoff_time_hidden: qs('#dropoff_time_hidden') || qs('[name="dropoff_time"]'),
+    };
+
+    const addonsHidden =
+      qs('#addonsHidden') ||
+      qs('input[name="addons"]') ||
+      qs('input[name="addons_ids"]') ||
+      qs('input[name="addonsHidden"]');
+
+    function safeVal(el){
+      if (!el) return "";
+      return (el.value ?? "").toString().trim();
+    }
+
+    function setVal(el, v){
+      if (!el) return;
+      const next = (v ?? "").toString();
+      if ((el.value ?? "") === next) return; // ✅ no loops
+      el.value = next;
+      try{ el.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
+    }
+
+    function computeTimesIntoHidden(){
+      const ph = safeVal(map.pickup_h);
+      const pm = safeVal(map.pickup_m);
+      const dh = safeVal(map.dropoff_h);
+      const dm = safeVal(map.dropoff_m);
+
+      if (map.pickup_time_hidden && (ph || pm)){
+        const hh = (ph || "00").padStart(2,'0');
+        const mm = (pm || "00").padStart(2,'0');
+        map.pickup_time_hidden.value = `${hh}:${mm}`;
+      }
+      if (map.dropoff_time_hidden && (dh || dm)){
+        const hh = (dh || "00").padStart(2,'0');
+        const mm = (dm || "00").padStart(2,'0');
+        map.dropoff_time_hidden.value = `${hh}:${mm}`;
+      }
+    }
+
+    function readFromQS(){
+      const p = new URLSearchParams(window.location.search);
+      const obj = {};
+      [
+        'pickup_sucursal_id','dropoff_sucursal_id',
+        'pickup_date','dropoff_date',
+        'pickup_time','dropoff_time',
+        'pickup_h','pickup_m','dropoff_h','dropoff_m',
+        'addons','step','categoria_id','plan'
+      ].forEach(k=>{
+        const v = p.get(k);
+        if (v !== null && String(v).trim() !== "") obj[k] = v;
+      });
+      return obj;
+    }
+
+    function readFromLS(){
+      try{
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return {};
+        const obj = JSON.parse(raw);
+        return (obj && typeof obj === 'object') ? obj : {};
+      }catch(_){ return {}; }
+    }
+
+    function writeToLS(state){
+      try{ localStorage.setItem(LS_KEY, JSON.stringify(state || {})); }catch(_){}
+    }
+
+    function currentState(){
+      computeTimesIntoHidden();
+
+      const st = {
+        pickup_sucursal_id: safeVal(map.pickup_sucursal_id),
+        dropoff_sucursal_id: safeVal(map.dropoff_sucursal_id),
+
+        pickup_date: safeVal(map.pickup_date),
+        dropoff_date: safeVal(map.dropoff_date),
+
+        pickup_time: safeVal(map.pickup_time_hidden) || "",
+        dropoff_time: safeVal(map.dropoff_time_hidden) || "",
+
+        pickup_h: safeVal(map.pickup_h),
+        pickup_m: safeVal(map.pickup_m),
+        dropoff_h: safeVal(map.dropoff_h),
+        dropoff_m: safeVal(map.dropoff_m),
+      };
+
+      if (addonsHidden) st.addons = safeVal(addonsHidden);
+
+      try{
+        const p = new URLSearchParams(window.location.search);
+        const step = p.get('step'); if (step) st.step = step;
+        const categoria_id = p.get('categoria_id'); if (categoria_id) st.categoria_id = categoria_id;
+        const plan = p.get('plan'); if (plan) st.plan = plan;
+      }catch(_){}
+
+      return st;
+    }
+
+    function mergePreferNew(base, incoming){
+      const out = { ...(base||{}) };
+      Object.keys(incoming||{}).forEach(k=>{
+        const v = incoming[k];
+        if (v !== null && String(v).trim() !== "") out[k] = v;
+      });
+      return out;
+    }
+
+    function applyStateToInputs(state){
+      if (!state) return;
+
+      // ✅ NO pisar si Blade ya puso value
+      if (map.pickup_sucursal_id && !safeVal(map.pickup_sucursal_id) && state.pickup_sucursal_id) setVal(map.pickup_sucursal_id, state.pickup_sucursal_id);
+      if (map.dropoff_sucursal_id && !safeVal(map.dropoff_sucursal_id) && state.dropoff_sucursal_id) setVal(map.dropoff_sucursal_id, state.dropoff_sucursal_id);
+
+      if (map.pickup_date && !safeVal(map.pickup_date) && state.pickup_date) setVal(map.pickup_date, state.pickup_date);
+      if (map.dropoff_date && !safeVal(map.dropoff_date) && state.dropoff_date) setVal(map.dropoff_date, state.dropoff_date);
+
+      if (map.pickup_h && !safeVal(map.pickup_h) && state.pickup_h) setVal(map.pickup_h, state.pickup_h);
+      if (map.pickup_m && !safeVal(map.pickup_m) && state.pickup_m) setVal(map.pickup_m, state.pickup_m);
+      if (map.dropoff_h && !safeVal(map.dropoff_h) && state.dropoff_h) setVal(map.dropoff_h, state.dropoff_h);
+      if (map.dropoff_m && !safeVal(map.dropoff_m) && state.dropoff_m) setVal(map.dropoff_m, state.dropoff_m);
+
+      // hidden time si solo viene HH:MM
+      if (state.pickup_time && !safeVal(map.pickup_time_hidden) && map.pickup_time_hidden) setVal(map.pickup_time_hidden, state.pickup_time);
+      if (state.dropoff_time && !safeVal(map.dropoff_time_hidden) && map.dropoff_time_hidden) setVal(map.dropoff_time_hidden, state.dropoff_time);
+
+      function splitToHM(t){
+        const m = String(t||"").match(/^(\d{1,2}):(\d{2})$/);
+        if (!m) return null;
+        return { h: m[1].padStart(2,'0'), m: m[2].padStart(2,'0') };
+      }
+      const pHM = splitToHM(state.pickup_time);
+      if (pHM){
+        if (map.pickup_h && !safeVal(map.pickup_h)) setVal(map.pickup_h, pHM.h);
+        if (map.pickup_m && !safeVal(map.pickup_m)) setVal(map.pickup_m, pHM.m);
+      }
+      const dHM = splitToHM(state.dropoff_time);
+      if (dHM){
+        if (map.dropoff_h && !safeVal(map.dropoff_h)) setVal(map.dropoff_h, dHM.h);
+        if (map.dropoff_m && !safeVal(map.dropoff_m)) setVal(map.dropoff_m, dHM.m);
+      }
+
+      if (addonsHidden && !safeVal(addonsHidden) && state.addons){
+        addonsHidden.value = state.addons;
+        try{ addonsHidden.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
+      }
+
+      computeTimesIntoHidden();
+    }
+
+    function pushStateToQS(state){
+      try{
+        const url = new URL(window.location.href);
+        const p = url.searchParams;
+
+        const keepStep = p.get('step');
+
+        const setIf = (k,v)=>{
+          if (v !== null && String(v).trim() !== "") p.set(k, String(v).trim());
+        };
+
+        setIf('pickup_sucursal_id', state.pickup_sucursal_id);
+        setIf('dropoff_sucursal_id', state.dropoff_sucursal_id);
+
+        setIf('pickup_date', state.pickup_date);
+        setIf('dropoff_date', state.dropoff_date);
+
+        setIf('pickup_time', state.pickup_time);
+        setIf('dropoff_time', state.dropoff_time);
+
+        // opcional split
+        setIf('pickup_h', state.pickup_h);
+        setIf('pickup_m', state.pickup_m);
+        setIf('dropoff_h', state.dropoff_h);
+        setIf('dropoff_m', state.dropoff_m);
+
+        if (state.addons) setIf('addons', state.addons);
+
+        if (keepStep) p.set('step', keepStep);
+
+        window.history.replaceState({}, document.title, url.pathname + '?' + p.toString() + url.hash);
+      }catch(_){}
+    }
+
+    // ✅ throttle para no “sentir” que se congela al escribir / abrir selects
+    function throttle(fn, wait){
+      let t = null;
+      let lastArgs = null;
+      return function(...args){
+        lastArgs = args;
+        if (t) return;
+        t = setTimeout(()=>{
+          t = null;
+          fn.apply(null, lastArgs);
+        }, wait);
+      };
+    }
+
+    const persistNow = throttle(()=>{
+      const st = currentState();
+      writeToLS(st);
+      pushStateToQS(st);
+    }, 180);
+
+    function hydrate(){
+      const fromQS = readFromQS();
+      const fromLS = readFromLS();
+      const merged = mergePreferNew(fromLS, fromQS);
+
+      applyStateToInputs(merged);
+
+      // si QS venía vacío pero LS tenía algo, empuja a QS
+      try{
+        const p = new URLSearchParams(window.location.search);
+        const hasMeaningful =
+          p.get('pickup_date') || p.get('dropoff_date') ||
+          p.get('pickup_time') || p.get('dropoff_time') ||
+          p.get('pickup_sucursal_id') || p.get('dropoff_sucursal_id') ||
+          p.get('addons');
+
+        if (!hasMeaningful) pushStateToQS(currentState());
+      }catch(_){}
+
+      writeToLS(currentState());
+    }
+
+    // listeners
+    const watch = [
+      map.pickup_sucursal_id, map.dropoff_sucursal_id,
+      map.pickup_date, map.dropoff_date,
+      map.pickup_h, map.pickup_m, map.dropoff_h, map.dropoff_m,
+      map.pickup_time_hidden, map.dropoff_time_hidden,
+      addonsHidden
+    ].filter(Boolean);
+
+    watch.forEach(el=>{
+      el.addEventListener('change', persistNow);
+      el.addEventListener('blur', persistNow);
+      if (el.tagName === 'INPUT') el.addEventListener('input', persistNow);
+    });
+
+    // ✅ asegurar hidden times justo antes de enviar Step1
+    const step1Form = qs('#step1Form');
+    if (step1Form){
+      step1Form.addEventListener('submit', ()=>{
+        computeTimesIntoHidden();
+        // guardamos último estado antes de navegar
+        try{
+          const st = currentState();
+          writeToLS(st);
+          pushStateToQS(st);
+        }catch(_){}
+      });
+    }
+
+    document.addEventListener('wizard:stepChanged', ()=>{
+      hydrate();
+      persistNow();
+    });
+
+    hydrate();
+    persistNow();
+  }
 
   // ==============================
   // 🧽 Normalizador de layout PDF
@@ -11,14 +326,13 @@
   function normalizePdfLayout(root){
     if (!root) return;
 
-    // Ocultar elementos interactivos/ navegación dentro del CLON
-    root.querySelectorAll('.topbar,.steps-header,.hamburger,.quote-actions,.link,.footer-elegant')
-        .forEach(n => n.remove());
+    root.querySelectorAll(
+      '.topbar,.wizard-steps,.hamburger,.link,.footer-elegant,.wizard-nav,button,a'
+    ).forEach(n => n.remove());
 
-    // Forzar contenedores a 100% y sin grid
     const widen = [
-      '.wrap','.page','.main','#cotizacionDoc','.quote-doc',
-      '.summary-grid','.confirm-grid','.r-card','.r-price'
+      '.wizard-page','.wizard-card','.sum-table','.sum-car','.sum-form',
+      '.cats','.addons'
     ];
     root.querySelectorAll(widen.join(',')).forEach(el=>{
       el.style.display = 'block';
@@ -26,18 +340,13 @@
       el.style.maxWidth = '100%';
       el.style.margin = '0';
       el.style.borderRadius = '0';
-      el.style.gridTemplateColumns = 'none';
-      el.style.gridTemplateAreas = 'none';
     });
 
-    // Look de documento
-    root.querySelectorAll('.card,.quote-doc,.resume-card,.receipt-card,.resume-final')
-        .forEach(el=>{
-          el.style.boxShadow = 'none';
-          el.style.border = '1px solid #e5e7eb';
-        });
+    root.querySelectorAll('.wizard-card,.sum-block,.cat-card,.addon-card').forEach(el=>{
+      el.style.boxShadow = 'none';
+      el.style.border = '1px solid #e5e7eb';
+    });
 
-    // Imágenes seguras
     root.querySelectorAll('img').forEach(img=>{
       img.style.maxWidth = '100%';
       img.style.height = 'auto';
@@ -45,598 +354,424 @@
     });
   }
 
-  // ---------- Topbar y menú ----------
-  function initTopbar() {
-    const topbar = qs(".topbar");
-    if (!topbar) return;
-
-    function toggleTopbar() {
-      if (window.scrollY > 40) topbar.classList.add("solid");
-      else topbar.classList.remove("solid");
+  // ==========================================================
+  // ✅ Step 4 UI: ISO YYYY-MM-DD → dd-mm-aaaa (solo visual)
+  // ==========================================================
+  function initStep4DatePretty(){
+    function isoToDMY(iso){
+      if(!iso || typeof iso !== 'string') return iso;
+      const s = iso.trim();
+      const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if(!m) return iso;
+      return `${m[3]}-${m[2]}-${m[1]}`;
     }
 
-    toggleTopbar();
-    window.addEventListener("scroll", toggleTopbar, { passive: true });
-  }
-
-  // ---------- Progreso de pasos ----------
-  function paintProgress() {
-    const root = qs("main.page") || document.body;
-    const stepNow = Number(root?.dataset?.currentStep || 1);
-
-    const items = qsa(".steps-header .step-item");
-    items.forEach((it) => {
-      const n = Number(it.dataset.step || 0);
-      it.classList.toggle("active", n === stepNow);
-      it.classList.toggle("done", n < stepNow);
+    qsa('.js-date').forEach(el=>{
+      const iso = el.getAttribute('data-iso') || el.textContent.trim();
+      el.textContent = isoToDMY(iso);
     });
 
-    const total = items.length || 1;
-    const fill = qs("#progressFill");
-    if (fill) {
-      const pct = ((Math.max(1, stepNow) - 1) / Math.max(1, total - 1)) * 100;
-      fill.style.width = `${pct}%`;
+    const sumCarInfoP = qs('.sum-car-info p');
+    if (sumCarInfoP && sumCarInfoP.innerHTML){
+      sumCarInfoP.innerHTML = sumCarInfoP.innerHTML.replace(
+        /(\b\d{4}-\d{2}-\d{2}\b)/g,
+        (m)=> isoToDMY(m)
+      );
     }
   }
 
-  // ---------- Flatpickr ----------
-  function initFlatpickrLite() {
-    if (!window.flatpickr) return;
+  // ==========================================================
+  // ✅ DÍAS + ACTUALIZACIÓN DE PRECIOS EN PASO 2
+  // ==========================================================
+  function initDaysAndPricesSync(){
+    const pickupDate  = qs("#start") || qs('input[name="pickup_date"]');
+    const dropoffDate = qs("#end")   || qs('input[name="dropoff_date"]');
+    const pickupHour  = qs('#pickup_h');
+    const pickupMin   = qs('#pickup_m');
+    const dropoffHour = qs('#dropoff_h');
+    const dropoffMin  = qs('#dropoff_m');
 
-    try { if (flatpickr.l10ns?.es) flatpickr.localize(flatpickr.l10ns.es); } catch (_) {}
+    if (!pickupDate || !dropoffDate) return;
 
-    const start = qs("#start");
-    const end = qs("#end");
+    function parseDateAny(val){
+      if (!val) return null;
+      const s = String(val).trim();
 
-    // Ojo: tus inputs son fecha y hora separados, pero si algún día vuelves a usar rango aquí, queda soportado
-    if (start && end) {
-      if (typeof rangePlugin !== "undefined") {
-        flatpickr(start, {
-          enableTime: true, time_24hr: false, minuteIncrement: 5,
-          altInput: true, altFormat: "d/m/Y h:i K", dateFormat: "Y-m-d H:i",
-          minDate: "today", plugins: [new rangePlugin({ input: "#end" })],
-        });
-      } else {
-        flatpickr(start, {
-          enableTime: true, time_24hr: false, minuteIncrement: 5,
-          altInput: true, altFormat: "d/m/Y h:i K", dateFormat: "Y-m-d H:i", minDate: "today",
-        });
-        flatpickr(end, {
-          enableTime: true, time_24hr: false, minuteIncrement: 5,
-          altInput: true, altFormat: "d/m/Y h:i K", dateFormat: "Y-m-d H:i", minDate: "today",
-        });
-      }
+      let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+      if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+
+      m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
     }
 
-    const ufStartDate = qs("#ufStartDate");
-    const ufEndDate   = qs("#ufEndDate");
-    const ufStartTime = qs("#ufStartTime");
-    const ufEndTime   = qs("#ufEndTime");
-    const dob         = qs("#dob");
+    function getDateTime(which){
+      const d = parseDateAny(which==="pickup" ? pickupDate.value : dropoffDate.value);
+      if (!d) return null;
+      const h = which==="pickup" ? pickupHour?.value : dropoffHour?.value;
+      const mi = which==="pickup" ? pickupMin?.value  : dropoffMin?.value;
+      d.setHours(+h||0, +mi||0, 0, 0);
+      return d;
+    }
 
-    if (ufStartDate) flatpickr(ufStartDate, { altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d" });
-    if (ufEndDate)   flatpickr(ufEndDate,   { altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d" });
+    function calcDays(){
+      const a = getDateTime("pickup");
+      const b = getDateTime("dropoff");
+      if (!a || !b) return 1;
+      const diff = b - a;
+      if (diff <= 0) return 1;
+      return Math.ceil(diff / (24*60*60*1000));
+    }
 
-    if (ufStartTime) flatpickr(ufStartTime, {
-      enableTime: true, noCalendar: true, minuteIncrement: 5, time_24hr: false,
-      altInput: true, altFormat: "h:i K", dateFormat: "H:i"
-    });
+    function runUpdate(){
+      const days = calcDays();
 
-    if (ufEndTime) flatpickr(ufEndTime, {
-      enableTime: true, noCalendar: true, minuteIncrement: 5, time_24hr: false,
-      altInput: true, altFormat: "h:i K", dateFormat: "H:i"
-    });
+      const daysLabel = qs('#daysLabel');
+      if (daysLabel) daysLabel.textContent = days;
 
-    if (dob) flatpickr(dob, { altInput: true, altFormat: "d/m/Y", dateFormat: "Y-m-d", maxDate: new Date() });
+      qsa(".js-days").forEach(el=>el.textContent = days);
+
+      qsa('.car-card').forEach(card=>{
+        const prepagoDia   = parseFloat(card.getAttribute('data-prepago-dia') || '0') || 0;
+        const mostradorDia = parseFloat(card.getAttribute('data-mostrador-dia') || '0') || 0;
+
+        const prepagoTotal   = prepagoDia * days;
+        const mostradorTotal = mostradorDia * days;
+
+        const fmt = (n)=> Math.round(n).toLocaleString('es-MX');
+
+        const elPrepTotal = qs('.js-prepago-total', card);
+        const elMostTotal = qs('.js-mostrador-total', card);
+        const elPrepDia   = qs('.js-prepago-dia', card);
+        const elMostDia   = qs('.js-mostrador-dia', card);
+
+        if (elPrepDia)   elPrepDia.textContent   = fmt(prepagoDia);
+        if (elMostDia)   elMostDia.textContent   = fmt(mostradorDia);
+        if (elPrepTotal) elPrepTotal.textContent = fmt(prepagoTotal);
+        if (elMostTotal) elMostTotal.textContent = fmt(mostradorTotal);
+      });
+
+      const qDays = qs('#qDays');
+      if (qDays) qDays.textContent = days;
+    }
+
+    [pickupDate, dropoffDate, pickupHour, pickupMin, dropoffHour, dropoffMin]
+      .filter(Boolean)
+      .forEach(el=>el.addEventListener("change", runUpdate));
+
+    runUpdate();
   }
 
-  // ---------- Complementos (Paso 3) ----------
-  function initAddonsStep3() {
-    const step3 = qs("#step3");
-    if (!step3) return; // no estamos en paso 3
+  // ==========================================================
+  // ✅ ADICIONALES: guardar + rehidratar + enviar a backend
+  // ==========================================================
+  function initAddonsSync(){
+    const hidden =
+      qs('#addonsHidden') ||
+      qs('input[name="addons"]') ||
+      qs('input[name="addons_ids"]') ||
+      qs('input[name="addonsHidden"]');
 
-    const grid = qs(".addons-grid");
-    const btnContinue = qs("#toStep4");
-    const btnSkip = qs("#skipAddons");
+    const cards = qsa('.addon-card');
+    if (!cards.length || !hidden) return;
 
-    if (!grid || !btnContinue) return;
-
-    const state = new Map();
-
-    function getCardData(card) {
-      const id     = String(card.dataset.id || "");
-      const name   = String(card.dataset.name || "");
-      const price  = Number(card.dataset.price || 0);
-      const charge = String(card.dataset.charge || "por_dia");
-      const stock  = card.dataset.stock ? Number(card.dataset.stock) : Infinity;
-      return { id, name, price, charge, stock };
+    function parseMap(str){
+      const map = new Map();
+      (String(str||'').split(',').map(s=>s.trim()).filter(Boolean)).forEach(pair=>{
+        const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
+        if (m) map.set(m[1], Math.max(0, parseInt(m[2],10) || 0));
+        else {
+          const id = pair.replace(/\D/g,'');
+          if (id) map.set(id, 1);
+        }
+      });
+      return map;
     }
 
-    function getQtyEl(card) { return card.querySelector(".qty"); }
-    function totalSelected() { let t = 0; state.forEach(v => { t += v.qty; }); return t; }
+    function serializeMap(map){
+      return Array.from(map.entries())
+        .filter(([,q])=> (q||0) > 0)
+        .map(([id,q])=> `${id}:${q}`)
+        .join(',');
+    }
 
-    function updateCardUI(card, qty) {
-      const qtyEl = getQtyEl(card);
+    function setQty(card, qty){
+      qty = Math.max(0, qty|0);
+      const qtyEl = qs('.qty', card);
       if (qtyEl) qtyEl.textContent = String(qty);
-      card.classList.toggle("selected", qty > 0);
+      card.classList.toggle('selected', qty > 0);
     }
 
-    function serializeState() {
-      const obj = {};
-      state.forEach((v, id) => {
-        if (v.qty > 0) obj[id] = { id, name: v.name, price: v.price, charge: v.charge, qty: v.qty };
+    function readQty(card){
+      const qtyEl = qs('.qty', card);
+      const q = qtyEl ? parseInt(qtyEl.textContent, 10) : 0;
+      return isNaN(q) ? 0 : q;
+    }
+
+    function buildFromUI(){
+      const map = new Map();
+      cards.forEach(card=>{
+        const id = String(card.getAttribute('data-id') || '').trim();
+        if (!id) return;
+        const qty = readQty(card);
+        if (qty > 0) map.set(id, qty);
       });
-      return obj;
+      return map;
     }
 
-    function persistSelection() {
-      try { sessionStorage.setItem('addons_selection', JSON.stringify(serializeState())); } catch(_) {}
-    }
-
-    function loadSelection() {
-      try {
-        const saved = JSON.parse(sessionStorage.getItem('addons_selection') || '{}');
-        Object.values(saved).forEach(it => {
-          state.set(String(it.id), {
-            id: String(it.id),
-            name: it.name,
-            price: Number(it.price),
-            charge: String(it.charge),
-            stock: Infinity,
-            qty: Number(it.qty)
-          });
-          const card = grid.querySelector(`.addon-card[data-id="${it.id}"]`);
-          if (card) updateCardUI(card, it.qty);
-        });
-      } catch(_) {}
-    }
-
-    // ✅ Mantener href con addons[...] (SIN tocar step/plan/categoria)
-    function updateContinueHref() {
-  try {
-    const url = new URL(window.location.href);
-
-    // 🔥 FORZAR paso 4 (clave del fix)
-    url.searchParams.set('step', '4');
-
-    // limpiar addons anteriores
-    [...url.searchParams.keys()]
-      .filter(k => k.startsWith("addons["))
-      .forEach(k => url.searchParams.delete(k));
-
-    // agregar addons actuales
-    state.forEach((v, id) => {
-      if (v.qty > 0) {
-        url.searchParams.set(`addons[${id}]`, String(v.qty));
-      }
-    });
-
-    btnContinue.href = url.toString();
-  } catch (e) {
-    console.error('Error actualizando href Paso 4:', e);
-  }
-}
-
-
-    // ❗ OJO: NO deshabilitamos el botón continuar.
-    // Ya tienes "Omitir", pero si quieres permitir continuar sin addons,
-    // esto evita bloqueos raros.
-    function updateContinueButtonVisual() {
-      btnContinue.classList.remove("is-disabled");
-      btnContinue.removeAttribute("aria-disabled");
-      btnContinue.removeAttribute("disabled");
-    }
-
-    loadSelection();
-    updateContinueHref();
-    updateContinueButtonVisual();
-
-    grid.addEventListener("click", (e) => {
-      const t = e.target;
-      if (!(t instanceof HTMLElement)) return;
-
-      const isPlus  = t.classList.contains("plus");
-      const isMinus = t.classList.contains("minus");
-      if (!isPlus && !isMinus) return;
-
-      const card = t.closest(".addon-card");
-      if (!card) return; 
-
-      const data = getCardData(card);
-      if (!data.id) return;
-
-      const current = state.get(data.id) || { ...data, qty: 0 };
-      let nextQty = current.qty + (isPlus ? 1 : -1);
-
-      if (nextQty < 0) nextQty = 0;
-      if (Number.isFinite(data.stock)) nextQty = Math.min(nextQty, data.stock);
-
-      current.qty = nextQty;
-      state.set(data.id, current);
-
-      updateCardUI(card, nextQty);
-      updateContinueHref();
-      updateContinueButtonVisual();
-      persistSelection();
-    });
-
-    btnContinue.addEventListener("click", () => {
-      // Solo persistimos antes de navegar
-      persistSelection();
-    });
-
-    if (btnSkip) {
-      btnSkip.addEventListener("click", () => {
-        try { sessionStorage.removeItem('addons_selection'); } catch(_) {}
-      });
-    }
-  }
-
-  // ---------- Paso 4: hidratar resumen ----------
-  function hydrateSummaryStep4() {
-    const step4 = qs('#step4');
-    if (!step4) return;
-
-    const elList   = qs('#extrasList');
-    const elEmpty  = qs('#extrasEmpty');
-    const elBase   = qs('#qBase');
-    const elExtras = qs('#qExtras');
-    const elIva    = qs('#qIva');
-    const elTotal  = qs('#qTotal');
-
-    function parseMoney(text) { return Number(String(text).replace(/[^\d.]/g, '')) || 0; }
-
-    const baseMx = elBase ? parseMoney(elBase.textContent) : 0;
-    const days   = Number(qs('#qDays')?.textContent || '1') || 1;
-
-    let selection = {};
-    try { selection = JSON.parse(sessionStorage.getItem('addons_selection') || '{}'); }
-    catch (_) { selection = {}; }
-
-    let extrasSub = 0;
-    if (elList) elList.innerHTML = '';
-
-    const items = Object.values(selection);
-    if (items.length === 0) {
-      if (elEmpty) elEmpty.style.display = '';
-    } else {
-      if (elEmpty) elEmpty.style.display = 'none';
-      items.forEach(it => {
-        const qty = Number(it.qty || 0);
-        if (qty <= 0) return;
-
-        const price = Number(it.price || 0);
-        const isPerDay = (String(it.charge || '') === 'por_dia');
-        const sub = price * (isPerDay ? days : 1) * qty;
-
-        extrasSub += sub;
-
-        const li = document.createElement('li');
-        li.innerHTML = `<span>${it.name} ${isPerDay ? '(por día)' : '(evento)'} × ${qty}</span><strong>$${sub.toLocaleString()} MXN</strong>`;
-        elList?.appendChild(li);
-      });
-    }
-
-    if (elExtras) elExtras.textContent = `$${extrasSub.toLocaleString()} MXN`;
-
-    const iva = Math.round((baseMx + extrasSub) * 0.16);
-    if (elIva) elIva.textContent = `$${iva.toLocaleString()} MXN`;
-
-    if (elTotal) elTotal.textContent = `$${(baseMx + extrasSub + iva).toLocaleString()} MXN`;
-  }
-
-  // ======================================================
-  // === Guardar cotización vía AJAX + generar PDF
-  // ======================================================
-  function initPdfFlow() {
-    const H2C_URL   = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
-    const JSPDF_URL = "https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js";
-
-    // Tamaño carta en px a ~96dpi
-    const PAGE_W = 816;
-    const PAGE_H = 1056;
-
-    const MARGIN = { top: 64, right: 64, bottom: 64, left: 64 };
-    const CONTENT_W = PAGE_W - MARGIN.left - MARGIN.right;
-
-    const btnPdf = qs('#btnCotizar');
-    if (!btnPdf) return;
-    if (btnPdf.__pdfBound) return;
-    btnPdf.__pdfBound = true;
-
-    function loadScript(src){
-      return new Promise((res, rej)=>{
-        const s = document.createElement('script');
-        s.src = src; s.async = true; s.onload = res; s.onerror = rej;
-        document.head.appendChild(s);
-      });
-    }
-
-    function libs(){
-      const h2c = window.html2canvas?.default || window.html2canvas || null;
-      const jsPDFCtor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF || null;
-      return { h2c, jsPDFCtor };
-    }
-
-    async function ensureLibs(){
-      let { h2c, jsPDFCtor } = libs();
-      if (!h2c)      { await loadScript(H2C_URL).catch(()=>{});      ({ h2c } = libs()); }
-      if (!jsPDFCtor){ await loadScript(JSPDF_URL).catch(()=>{}); ({ jsPDFCtor } = libs()); }
-      return { h2c, jsPDFCtor };
-    }
-
-    function absolutize(url) { try { return new URL(url, window.location.origin).href; } catch { return url; } }
-
-    async function ensureCarImageCORS(container){
-      const img = container.querySelector('.car-sum img, .car-mini__img img, .r-media img');
-      if (!img) return;
-      const abs = absolutize(img.getAttribute('src') || '');
-      img.setAttribute('crossorigin','anonymous');
-      img.src = abs;
-      if (!img.complete) {
-        await new Promise(r=>{
-          img.addEventListener('load', r, {once:true});
-          img.addEventListener('error', r, {once:true});
-        });
-      }
-    }
-
-    function ensureQuoteHeader(container){
-      let head = container.querySelector('.qd-head');
-      if (!head) return; // en tu Blade ya existe, no inventamos otro
-
-      const code = container.querySelector('#qdCode');
-      const date = container.querySelector('#qdDate');
-      const rnd = Math.random().toString(36).slice(2,7).toUpperCase();
-      const ymd = new Date().toISOString().slice(0,10).replaceAll('-','');
-      if (code && !code.textContent.trim()) code.textContent = `COT-${ymd}-${rnd}`;
-      if (date && !date.textContent.trim()) {
-        date.textContent = new Date().toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
-      }
-    }
-
-    function getCsrfToken() {
-      const form = qs('#formCotizacion');
-      const fromInput = form?.querySelector('input[name="_token"]')?.value;
-      if (fromInput) return fromInput;
-      const fromMeta = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-      return fromMeta || '';
-    }
-
-    function getUrlParams() {
-      const url = new URL(window.location.href);
-      const sp  = url.searchParams;
-      const pickup_sucursal_id  = sp.get('pickup_sucursal_id') || '';
-      const dropoff_sucursal_id = sp.get('dropoff_sucursal_id') || '';
-      const categoria_id        = sp.get('categoria_id') || '';
-      return { pickup_sucursal_id, dropoff_sucursal_id, categoria_id};
-    }
-
-    function getAddonsForPost() {
-      try {
-        const raw = JSON.parse(sessionStorage.getItem('addons_selection') || '{}');
-        const out = {};
-        Object.values(raw).forEach(it => {
-          const qty = Number(it.qty || 0);
-          if (qty > 0) out[String(it.id)] = qty;
-        });
-        return out;
-      } catch {
-        return {};
-      }
-    }
-
-    async function saveCotizacionBeforePdf() {
-      const form = qs('#formCotizacion');
-      if (!form) return { ok: false, message: 'No se encontró el formulario.' };
-
-      const nombre   = qs('#nombreCliente')?.value?.trim()  || '';
-      const email    = qs('#correoCliente')?.value?.trim()   || '';
-      const telefono = qs('#telefonoCliente')?.value?.trim() || '';
-
-      let pickup_date  = qs('#pickup_date')?.value || '';
-      let pickup_time  = qs('#pickup_time')?.value || '';
-      let dropoff_date = qs('#dropoff_date')?.value || '';
-      let dropoff_time = qs('#dropoff_time')?.value || '';
-
-      if (!pickup_date || !pickup_time) {
-        const briefStart = qs('#briefStart')?.textContent?.trim() || '';
-        const parts = briefStart.split(/\s+/);
-        if (parts.length >= 2) { pickup_date = parts[0]; pickup_time = parts[1]; }
-      }
-      if (!dropoff_date || !dropoff_time) {
-        const briefEnd = qs('#briefEnd')?.textContent?.trim() || '';
-        const parts = briefEnd.split(/\s+/);
-        if (parts.length >= 2) { dropoff_date = parts[0]; dropoff_time = parts[1]; }
-      }
-
-      const { pickup_sucursal_id, dropoff_sucursal_id, categoria_id } = getUrlParams();
-      const addons = getAddonsForPost();
-
-      const payload = {
-                categoria_id: categoria_id ? Number(categoria_id) : undefined,
-        pickup_date, pickup_time, dropoff_date, dropoff_time,
-        pickup_sucursal_id: pickup_sucursal_id ? Number(pickup_sucursal_id) : undefined,
-        dropoff_sucursal_id: dropoff_sucursal_id ? Number(dropoff_sucursal_id) : undefined,
-        addons,
-        nombre, email, telefono,
-        metodo_pago: "mostrador"
-      };
-
-      const url = form.getAttribute('action') || '/cotizaciones';
-      const token = getCsrfToken();
-
-      const original = btnPdf.innerHTML;
-      btnPdf.disabled = true;
-      btnPdf.innerHTML = '<span class="spinner" style="display:inline-block;transform:translateY(2px)">⏳</span> Generando...';
-
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': token,
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-
-        const data = await res.json().catch(() => ({}));
-
-        if (!res.ok || data?.ok === false) {
-          const msg = data?.message || 'No se pudo guardar la cotización.';
-          throw new Error(msg);
-        }
-
-        try {
-          const telefonoAgente = "5214427169793";
-          const folioTxt = data?.folio ? data.folio : 'pendiente';
-          const mensaje =
-            `*NUEVA COTIZACIÓN*\n\n` +
-            `👤 *Cliente:* ${nombre || 'No especificado'}\n` +
-            `🧾 *Folio de cotización:* ${folioTxt}\n` +
-            `📅 *Fecha de entrega:* ${pickup_date} ${pickup_time}\n` +
-            `📆 *Fecha de devolución:* ${dropoff_date} ${dropoff_time}\n\n` +
-            `Mensaje predeterminado del sistema Viajero Car Rental.`;
-          const mensajeEncoded = encodeURIComponent(mensaje);
-          const waWebUrl = `https://web.whatsapp.com/send?phone=${telefonoAgente}&text=${mensajeEncoded}`;
-          window.open(waWebUrl, '_blank');
-        } catch (err) {
-          console.error('Error al abrir WhatsApp Web:', err);
-        }
-
-        return { ok: true, folio: data?.folio || null };
-      } catch (err) {
-  console.error('Error guardando cotización:', err);
-  if (window.alertify) {
-    alertify.error('No se pudo guardar/enviar la cotización. Revisa tu conexión o inténtalo más tarde.');
-  } else {
-    alert('No se pudo guardar/enviar la cotización. Revisa tu conexión o inténtalo más tarde.');
-  }
-  return { ok: false, message: String(err?.message || err) };
-} finally {
-
-        btnPdf.disabled = false;
-        btnPdf.innerHTML = original;
-      }
-    }
-
-    async function generatePdfFlow() {
-      const { h2c, jsPDFCtor } = await ensureLibs();
-if (!h2c || !jsPDFCtor) {
-  if (window.alertify) {
-    alertify.error('No pude cargar el generador de PDF. Revisa tu conexión e inténtalo de nuevo.');
-  } else {
-    alert('No pude cargar el generador de PDF. Revisa tu conexión e inténtalo de nuevo.');
-  }
-  return;
-}
-
-
-      ensureQuoteHeader(node);
-
-      // Ocultar interactivos dentro del render
-      const interactive = qsa('a,button', node);
-      const prev = new Map();
-      interactive.forEach(el=>{ prev.set(el, el.style.display); el.style.display='none'; });
-
-      document.body.classList.add('for-pdf');
+    function writeHiddenAndURL(){
+      const map = buildFromUI();
+      const value = serializeMap(map);
+      hidden.value = value;
+      try{ hidden.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
 
       try{
-        await ensureCarImageCORS(node);
-
-        const clone = node.cloneNode(true);
-        clone.classList.add('pdf-fit');
-        clone.style.width = `${CONTENT_W}px`;
-        clone.style.maxWidth = `${CONTENT_W}px`;
-        normalizePdfLayout(clone);
-
-        let sandbox = document.getElementById('pdf-sandbox');
-        if (!sandbox) {
-          sandbox = document.createElement('div');
-          sandbox.id = 'pdf-sandbox';
-          document.body.appendChild(sandbox);
-        } else {
-          sandbox.innerHTML = '';
-        }
-
-        sandbox.style.width = `${CONTENT_W}px`;
-        sandbox.appendChild(clone);
-
-        window.scrollTo({top:0, behavior:'auto'});
-
-        const canvas = await h2c(clone, {
-          useCORS: true,
-          allowTaint: false,
-          backgroundColor: '#ffffff',
-          scale: 2,
-          width: CONTENT_W,
-          windowWidth: CONTENT_W,
-          scrollY: 0
-        });
-
-        const pdf = new jsPDFCtor({ unit:'px', format:[PAGE_W, PAGE_H], orientation:'portrait' });
-
-        const boxW = PAGE_W - MARGIN.left - MARGIN.right;
-        const boxH = PAGE_H - MARGIN.top  - MARGIN.bottom;
-
-        const imgW = canvas.width;
-        const imgH = canvas.height;
-        const fit  = Math.min(boxW / imgW, boxH / imgH);
-
-        const outW = Math.round(imgW * fit);
-        const outH = Math.round(imgH * fit);
-
-        const offsetX = Math.round(MARGIN.left + (boxW - outW) / 2);
-        const offsetY = Math.round(MARGIN.top  + (boxH - outH) / 2);
-
-        const imgData = canvas.toDataURL('image/jpeg', 0.98);
-        const fileName = (qs('#cotizacionDoc .qd-meta .v')?.textContent || 'cotizacion') + '.pdf';
-
-        pdf.addImage(imgData, 'JPEG', offsetX, offsetY, outW, outH);
-        pdf.save(fileName);
-
-        const sb = document.getElementById('pdf-sandbox');
-        if (sb && sb.parentNode) sb.parentNode.removeChild(sb);
-      } catch(err){
-  console.error('PDF error:', err);
-  if (window.alertify) {
-    alertify.error('Hubo un error generando el PDF. Revisa la consola para detalles.');
-  } else {
-    alert('Hubo un error generando el PDF. Revisa la consola para detalles.');
-  }
-} finally {
-
-        interactive.forEach(el=>{ el.style.display = prev.get(el) || ''; });
-        document.body.classList.remove('for-pdf');
-      }
+        const url = new URL(window.location.href);
+        url.searchParams.set('addons', value);
+        window.history.replaceState({}, document.title, url.toString());
+      }catch(_){}
     }
 
-    btnPdf.addEventListener('click', async ()=>{
-      const saved = await saveCotizacionBeforePdf();
-      if (!saved.ok) return;
-      await generatePdfFlow();
+    function hydrate(){
+      const fromQS = (()=>{ try{ return new URLSearchParams(location.search).get('addons') || ''; }catch(_){ return ''; } })();
+      const base = fromQS || hidden.value || '';
+      const map = parseMap(base);
+
+      cards.forEach(card=>{
+        const id = String(card.getAttribute('data-id') || '').trim();
+        if (!id) return;
+        setQty(card, map.get(id) || 0);
+      });
+
+      writeHiddenAndURL();
+    }
+
+    cards.forEach(card=>{
+      const plus  = qs('.qty-btn.plus', card);
+      const minus = qs('.qty-btn.minus', card);
+
+      if (plus){
+        plus.addEventListener('click', ()=>{
+          setQty(card, readQty(card) + 1);
+          writeHiddenAndURL();
+        });
+      }
+      if (minus){
+        minus.addEventListener('click', ()=>{
+          setQty(card, readQty(card) - 1);
+          writeHiddenAndURL();
+        });
+      }
+    });
+
+    const toStep4 = qs('#toStep4');
+    if (toStep4){
+      toStep4.addEventListener('click', (e)=>{
+        e.preventDefault();
+        writeHiddenAndURL();
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('step','4');
+        window.location.href = url.toString();
+      });
+    }
+
+    document.addEventListener('wizard:stepChanged', hydrate);
+    hydrate();
+  }
+
+  // ======================================================
+  // 🔥 Floating labels
+  // ======================================================
+  function initFloatingLabels(){
+    const floats = qsa('[data-float]');
+    if (!floats.length) return;
+
+    const hasValue = (el) => {
+      if (!el) return false;
+      const v = (el.value ?? "").toString().trim();
+      return v !== "" && v !== "H" && v !== "Min";
+    };
+
+    function setState(ctl, filled){
+      ctl.classList.toggle('filled', !!filled);
+      ctl.classList.toggle('pristine', !filled);
+    }
+
+    floats.forEach(ctl=>{
+      const input  = qs('[data-float-input]', ctl);
+      const select = qs('[data-float-select]', ctl);
+
+      if (input)  setState(ctl, hasValue(input));
+      if (select) setState(ctl, hasValue(select));
+
+      if (input){
+        input.addEventListener('focus', ()=> ctl.classList.remove('pristine'));
+        input.addEventListener('input', ()=> setState(ctl, hasValue(input)));
+        input.addEventListener('change',()=> setState(ctl, hasValue(input)));
+        input.addEventListener('blur', ()=> setState(ctl, hasValue(input)));
+      }
+
+      if (select){
+        select.addEventListener('focus', ()=> ctl.classList.remove('pristine'));
+        select.addEventListener('change',()=> setState(ctl, hasValue(select)));
+        select.addEventListener('blur', ()=> setState(ctl, hasValue(select)));
+      }
     });
   }
 
-  // ---------- Footer year ----------
-  function setYear() {
-    const y = qs("#year");
-    if (y) y.textContent = new Date().getFullYear();
+  // ==========================================================
+  // ✅ FLATPICKR: REGLAS 100% (anti doble-init)
+  // ==========================================================
+  function initFlatpickrRules(){
+    if (!window.flatpickr) return;
+
+    try{
+      if (window.flatpickr?.l10ns?.es) window.flatpickr.localize(window.flatpickr.l10ns.es);
+    }catch(_){}
+
+    const start = qs("#start");
+    const end   = qs("#end");
+    if (!start || !end) return;
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    function toDateAtMidnight(d){
+      const x = new Date(d.getTime());
+      x.setHours(0,0,0,0);
+      return x;
+    }
+
+    function parseAnyToDate(val){
+      if (!val) return null;
+      const s = String(val).trim();
+
+      let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+      if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+
+      m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    try{ if (start._flatpickr) start._flatpickr.destroy(); }catch(_){}
+    try{ if (end._flatpickr)   end._flatpickr.destroy();   }catch(_){}
+
+    const baseCfg = { dateFormat:"d-m-Y", allowInput:true, disableMobile:true };
+
+    const startFp = window.flatpickr(start, { ...baseCfg });
+    const endFp   = window.flatpickr(end,   { ...baseCfg });
+
+    const startInit = parseAnyToDate(start.value);
+    const endInit   = parseAnyToDate(end.value);
+
+    if (startInit) startFp.setDate(startInit, false);
+    if (endInit)   endFp.setDate(endInit, false);
+
+    startFp.set("minDate", today);
+    endFp.set("minDate", today);
+
+    const jumpToCurrentMonth = (fp) => {
+      const d = fp.selectedDates?.[0] || today;
+      fp.jumpToDate(d, true);
+    };
+    startFp.set("onOpen", [() => jumpToCurrentMonth(startFp)]);
+    endFp.set("onOpen",   [() => jumpToCurrentMonth(endFp)]);
+
+    let lock = false;
+
+    function applyConstraintsAndFix(){
+      if (lock) return;
+      lock = true;
+
+      const sRaw = startFp.selectedDates?.[0] || null;
+      const eRaw = endFp.selectedDates?.[0]   || null;
+
+      const s = sRaw ? toDateAtMidnight(sRaw) : null;
+      const e = eRaw ? toDateAtMidnight(eRaw) : null;
+
+      if (s && s < today) startFp.setDate(today, false);
+      if (e && e < today) endFp.setDate(today, false);
+
+      const s2 = startFp.selectedDates?.[0] ? toDateAtMidnight(startFp.selectedDates[0]) : null;
+      const e2 = endFp.selectedDates?.[0]   ? toDateAtMidnight(endFp.selectedDates[0])   : null;
+
+      endFp.set("minDate", s2 || today);
+      startFp.set("maxDate", e2 || null);
+
+      if (s2 && e2 && s2.getTime() > e2.getTime()){
+        endFp.setDate(s2, false);
+        endFp.set("minDate", s2);
+        startFp.set("maxDate", s2);
+      }
+
+      jumpToCurrentMonth(startFp);
+      jumpToCurrentMonth(endFp);
+
+      lock = false;
+    }
+
+    startFp.set("onChange", [applyConstraintsAndFix]);
+    endFp.set("onChange",   [applyConstraintsAndFix]);
+
+    applyConstraintsAndFix();
+    start.addEventListener("blur", applyConstraintsAndFix);
+    end.addEventListener("blur", applyConstraintsAndFix);
   }
 
-  // ==============================
-  // ✅ BOOT
-  // ==============================
+  // ======================================================
+  // ✅ BOOT (flatpickr se carga con defer → esperar)
+  // ======================================================
+  function bootWhenFlatpickrReady(){
+    let tries = 0;
+    const maxTries = 240; // ~4s
+    function tick(){
+      tries++;
+      if (window.flatpickr){
+        initFlatpickrRules();
+        return;
+      }
+      if (tries < maxTries) requestAnimationFrame(tick);
+    }
+    tick();
+  }
+
+  function refreshFloatStates(){
+    qsa('[data-float]').forEach(ctl=>{
+      const input  = qs('[data-float-input]', ctl);
+      const select = qs('[data-float-select]', ctl);
+
+      const val = (el)=> (el && el.value != null) ? String(el.value).trim() : "";
+      const filled =
+        (input  && val(input)  !== "") ||
+        (select && val(select) !== "" && val(select) !== "H" && val(select) !== "Min");
+
+      ctl.classList.toggle('filled', filled);
+      ctl.classList.toggle('pristine', !filled);
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
-    initTopbar();
-    paintProgress();
-    initFlatpickrLite();
-    initAddonsStep3();
-    hydrateSummaryStep4();
-    initPdfFlow();
-    setYear();
+    forceStep1WhenOnlyStepParam();
+
+    // ✅ Persistencia
+    initWizardStatePersistence();
+
+    // UI
+    initFloatingLabels();
+    bootWhenFlatpickrReady();
+    initDaysAndPricesSync();
+    initAddonsSync();
+    initStep4DatePretty();
+
+    refreshFloatStates();
+    setTimeout(refreshFloatStates, 80);
+    setTimeout(refreshFloatStates, 250);
   });
 
 })();
