@@ -27,7 +27,9 @@ return new class extends Migration {
             // Si el conductor ya firmó
             $table->boolean('firmado')->default(false);
 
-            $table->timestamps();
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+
 
             $table->foreign('id_reservacion')
                 ->references('id_reservacion')->on('reservaciones')

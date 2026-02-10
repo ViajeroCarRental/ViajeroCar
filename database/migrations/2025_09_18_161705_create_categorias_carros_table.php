@@ -25,7 +25,10 @@ return new class extends Migration {
             $table->boolean('activo')->default(true);
 
             // ⏰ Control de tiempo
-            $table->timestamps();
+            // ⏰ Control de tiempo (nullable como en tu tabla real)
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+
 
             // 📈 Índice para optimizar consultas por estado
             $table->index('activo', 'cat_activo_idx');

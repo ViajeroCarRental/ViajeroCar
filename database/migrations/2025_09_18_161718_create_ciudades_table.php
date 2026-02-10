@@ -12,7 +12,9 @@ return new class extends Migration {
             $table->string('nombre', 120);
             $table->string('estado', 120)->nullable();
             $table->string('pais', 120)->default('México');
-            $table->timestamps();
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+
 
             // 🔹 Evita duplicados de ciudades con mismo nombre y estado/pais
             $table->unique(['nombre', 'estado', 'pais'], 'ciudades_nombre_estado_pais_unique');

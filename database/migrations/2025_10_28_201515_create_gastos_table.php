@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Crear tabla 'gastos'
-     */
     public function up(): void
     {
         Schema::create('gastos', function (Blueprint $table) {
@@ -18,26 +15,29 @@ return new class extends Migration
             $table->unsignedBigInteger('id_vehiculo');
 
             // 💡 Tipo y descripción del gasto
-            $table->string('tipo', 50); // mantenimiento, seguro, siniestro, combustible, etc.
+            $table->string('tipo', 50);
             $table->string('descripcion', 255)->nullable();
 
             // 💰 Monto y fecha
-            $table->decimal('monto', 10, 2)->default(0);
-            $table->date('fecha')->default(now());
+            $table->decimal('monto', 10, 2)->default(0.00);
 
-            // 🔄 Control de tiempo
-            $table->timestamps();
+            // ✅ Default fijo como en tu tabla real
+            $table->date('fecha')->default('2025-12-12');
 
-            // 🔗 Relación con 'vehiculos'
+            // ✅ Timestamps nullable (como tu tabla real)
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+
+            // Índices (por el MUL)
+            $table->index('id_vehiculo', 'gastos_veh_idx');
+
+            // 🔗 FK vehículo
             $table->foreign('id_vehiculo')
                 ->references('id_vehiculo')->on('vehiculos')
                 ->onDelete('cascade');
         });
     }
 
-    /**
-     * Revertir tabla 'gastos'
-     */
     public function down(): void
     {
         Schema::dropIfExists('gastos');

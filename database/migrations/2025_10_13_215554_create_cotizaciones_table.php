@@ -15,46 +15,43 @@ return new class extends Migration {
 
             // 🚗 Datos del vehículo o categoría
             $table->unsignedBigInteger('id_categoria')->nullable();
-            $table->string('categoria_nombre')->nullable();
+            $table->string('categoria_nombre', 255)->nullable();
+
             $table->unsignedBigInteger('vehiculo_id')->nullable();
-            $table->string('vehiculo_marca')->nullable();
-            $table->string('vehiculo_modelo')->nullable();
-            $table->string('vehiculo_categoria')->nullable();
+            $table->string('vehiculo_marca', 255)->nullable();
+            $table->string('vehiculo_modelo', 255)->nullable();
+            $table->string('vehiculo_categoria', 255)->nullable();
 
             // 📅 Fechas y horas
             $table->date('pickup_date');
             $table->string('pickup_time', 10)->nullable();
-            $table->string('pickup_name')->nullable();
+            $table->string('pickup_name', 255)->nullable();
 
             $table->date('dropoff_date');
             $table->string('dropoff_time', 10)->nullable();
-            $table->string('dropoff_name')->nullable();
+            $table->string('dropoff_name', 255)->nullable();
 
             // 📏 Duración
             $table->unsignedInteger('days')->default(1);
 
             // 💰 Totales
-            $table->decimal('tarifa_base', 12, 2)->default(0);
+            $table->decimal('tarifa_base', 12, 2)->default(0.00);
+            $table->decimal('tarifa_modificada', 12, 2)->nullable();
 
-            // 🟡 Nuevos campos coherentes con reservaciones
-            $table->decimal('tarifa_modificada', 12, 2)
-                  ->nullable()
-                  ->comment('Tarifa final aplicada si fue editada manualmente');
+            $table->boolean('tarifa_ajustada')->default(false);
 
-            $table->boolean('tarifa_ajustada')
-                  ->default(false)
-                  ->comment('Indica si la tarifa fue modificada manualmente por el asesor');
-
-            $table->decimal('extras_sub', 12, 2)->default(0);
-            $table->decimal('iva', 12, 2)->default(0);
-            $table->decimal('total', 12, 2)->default(0);
+            $table->decimal('extras_sub', 12, 2)->default(0.00);
+            $table->decimal('iva', 12, 2)->default(0.00);
+            $table->decimal('total', 12, 2)->default(0.00);
 
             // 🧩 JSON: servicios, seguros, cliente
-            $table->json('addons')->nullable();   // servicios adicionales
-            $table->json('seguro')->nullable();   // paquete de seguro
-            $table->json('cliente')->nullable();  // nombre/email/telefono, etc.
+            $table->json('addons')->nullable();
+            $table->json('seguro')->nullable();
+            $table->json('cliente')->nullable();
 
-            $table->timestamps();
+            // ✅ Timestamps nullable (como tu tabla real)
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
         });
     }
 

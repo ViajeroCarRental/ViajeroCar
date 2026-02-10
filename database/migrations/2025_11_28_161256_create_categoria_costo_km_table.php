@@ -18,7 +18,9 @@ return new class extends Migration
             $table->decimal('costo_km', 10, 2);
 
             $table->boolean('activo')->default(true);
-            $table->timestamps();
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+
 
             $table->foreign('id_categoria')
                 ->references('id_categoria')

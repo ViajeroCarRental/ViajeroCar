@@ -9,13 +9,20 @@ return new class extends Migration {
     {
         Schema::create('reservacion_seguro', function (Blueprint $table) {
             $table->bigIncrements('id');
+
             $table->unsignedBigInteger('id_reservacion');
             $table->unsignedBigInteger('id_seguro');
+
             $table->decimal('precio_por_dia', 10, 2)->default(0.00);
+
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
 
             $table->unique(['id_reservacion', 'id_seguro'], 'reservacion_seguro_uniq');
+
+            // ✅ Índices explícitos (para reflejar los MUL)
+            $table->index('id_reservacion', 'rs_res_idx');
+            $table->index('id_seguro', 'rs_seg_idx');
 
             $table->foreign('id_reservacion')
                 ->references('id_reservacion')->on('reservaciones')

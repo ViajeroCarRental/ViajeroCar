@@ -19,7 +19,8 @@ return new class extends Migration {
 
             $table->date('fecha_desde')->nullable();
             $table->date('fecha_hasta')->nullable();
-            // dias_semana se agrega con SET vía DB::statement más abajo
+
+            // dias_semana via ALTER más abajo
 
             $table->integer('min_dias')->nullable();
             $table->integer('max_dias')->nullable();
@@ -37,6 +38,11 @@ return new class extends Migration {
             $table->timestamp('updated_at')->nullable();
 
             $table->index(['id_categoria','id_version','id_vehiculo'], 'tr_ambito_idx');
+
+            // ✅ Para reflejar MUL en fecha_desde
+            $table->index('fecha_desde', 'tr_fecha_desde_idx');
+
+            // Mantengo tu índice de rango de fechas
             $table->index(['fecha_desde','fecha_hasta'], 'tr_fechas_idx');
 
             $table->foreign('id_categoria')
@@ -52,13 +58,11 @@ return new class extends Migration {
                 ->onDelete('cascade');
         });
 
-        // Agregar columna SET para dias_semana (MySQL)
         DB::statement("
             ALTER TABLE tarifa_regla
             ADD COLUMN dias_semana SET('Mon','Tue','Wed','Thu','Fri','Sat','Sun') NULL AFTER fecha_hasta
         ");
 
-        // Check: al menos uno de precio_fijo o multiplicador debe existir
         DB::statement("
             ALTER TABLE tarifa_regla
             ADD CONSTRAINT chk_tr_precio_o_mult

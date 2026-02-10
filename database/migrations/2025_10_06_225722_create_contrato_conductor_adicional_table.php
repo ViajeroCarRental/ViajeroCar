@@ -17,6 +17,10 @@ return new class extends Migration {
             $table->string('pais_licencia', 60)->nullable();
             $table->date('fecha_nacimiento')->nullable();
             $table->string('contacto', 40)->nullable();
+            $table->longText('firma_conductor')->nullable();
+            $table->boolean('firmado')->default(false);
+            $table->dateTime('firmado_en')->nullable();
+
 
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();

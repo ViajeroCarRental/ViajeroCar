@@ -9,10 +9,8 @@ return new class extends Migration {
     {
         Schema::create('contratos', function (Blueprint $table) {
             $table->bigIncrements('id_contrato');
-
             $table->unsignedBigInteger('id_reservacion');
             $table->unsignedBigInteger('id_asesor')->nullable();
-
             $table->string('numero_contrato', 60)->unique();
             $table->enum('estado', ['abierto','cerrado','cancelado'])->default('abierto');
             $table->dateTime('abierto_en')->nullable();
@@ -21,8 +19,8 @@ return new class extends Migration {
             $table->string('motivo_cierre_anticipado', 255)->nullable();
             $table->longText('firma_cliente')->nullable();     // Base64 PNG
             $table->longText('firma_arrendador')->nullable();  // Base64 PNG
-
-
+            $table->longText('firma_recibio')->nullable();     // Base64 PNG
+            $table->string('recibio_nombre', 255)->nullable();
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
 

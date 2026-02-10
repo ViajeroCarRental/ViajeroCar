@@ -1,4 +1,4 @@
-{{-- resources/views/Admin/checklist-interno-pdf.blade.php --}}
+{{-- resources/views/Admin/checklist_pdf_interno.blade.php --}}
 <!DOCTYPE html>
 <html lang="es">
 <head>
