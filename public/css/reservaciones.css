@@ -1,13 +1,3 @@
-/* ==========================================================================
-   reservaciones.css — FINAL LIMPIO
-   - Fondo SOLO en .page (full-bleed)
-   - Wizard centrado (steps + card)
-   - Step 1 / 2 / 3 / 4
-   - Flatpickr visible y anclado al input (sin recorte)
-   - Step 1 más grande SOLO con data-current-step="1"
-   - Pasos siempre a la misma altura (layout estable)
-========================================================================== */
-
 :root{
   --brand:#b22222;
   --brand-dark:#8b1d1a;
@@ -42,7 +32,7 @@ body{
 .hidden{ display:none!important; }
 
 /* ==========================================================
-   PAGE (full-bleed)
+   PAGE
 ========================================================== */
 .page{
   position:relative;
@@ -82,7 +72,6 @@ body{
   pointer-events:none;
 }
 
-/* contenedor wizard (por si usas wrapper) */
 .wizard-page{ overflow:visible !important; }
 
 /* ==========================================================
@@ -150,7 +139,7 @@ body{
 }
 
 /* ==========================================================
-   PASOS (estable en todos los steps)
+   PASOS
 ========================================================== */
 .wizard-steps{
   width:min(var(--wizard-w), 96vw);
@@ -374,7 +363,9 @@ body{
   pointer-events:none;
   font-size:15px;
   z-index:2;
+  line-height:1;
 }
+
 
 .ctl .flabel{
   position:absolute;
@@ -558,7 +549,11 @@ body{
 }
 .chip i{ opacity:.9; }
 
-.car-price{ display:grid; gap:10px; }
+.car-price{ 
+  display:grid; 
+  gap:10px;
+  padding-top:52px; 
+}
 
 .price-pill{
   text-align:right;
@@ -569,6 +564,71 @@ body{
   font-size:12px;
   color:#6b7280;
   font-weight:800;
+}
+/* ===== Precio prepago estilo oferta ===== */
+
+.price-pill--prepago{
+  text-align:right;
+}
+
+.price-old{
+  font-size:14px;
+  font-weight:900;
+  color:#9ca3af;
+  text-decoration:line-through;
+  margin-bottom:4px;
+}
+
+.price-new{
+  font-size:28px;
+  font-weight:900;
+  color:#000;
+  line-height:1.1;
+}
+
+.price-save{
+  margin-top:4px;
+  font-size:14px;
+  font-weight:800;
+  color:#6b7280;
+}
+
+/* Texto pequeño subrayado arriba del precio */
+.price-hint{
+  display:block;
+  font-size:11px;
+  font-weight:900;
+  color:#6b7280;
+  margin-bottom:6px;
+  text-align:right;
+}
+.price-hint--u{
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* Badge de ahorro debajo del prepago */
+.save-pill{
+  margin-top:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:7px 10px;
+  border-radius:999px;
+
+  font-size:12px;
+  font-weight:900;
+
+  color:#8b1d1a;
+  background:rgba(178,34,34,.07);
+  border:1px solid rgba(178,34,34,.20);
+
+  float:right; /* para que quede alineado a la derecha como tu pill */
+}
+.save-pill strong{
+  color:#b22222;
 }
 
 .btn-pay{
@@ -594,6 +654,48 @@ body{
   .car-avatar{ max-width:100%; height:190px; }
   .price-pill{ text-align:left; }
 }
+/* ===============================
+   📅 Badge de días - Step 2
+================================= */
+
+.car-card{
+  position:relative;
+  overflow:visible;
+}
+
+.car-days-badge{
+  position:absolute;
+  top:14px;
+  right:14px;
+  z-index:6;
+
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+
+  height:34px;
+  padding:0 14px;
+  border-radius:999px;
+
+  background: rgba(178,34,34,.06);       /* ✅ rosita suave */
+  border: 2px solid rgba(178,34,34,.22); /* ✅ borde como pill */
+  color: #b22222;
+
+  font-weight:900;
+  font-size:13px;
+  letter-spacing:.2px;
+
+  backdrop-filter:none; /* ✅ pill limpia como la de la imagen */
+  box-shadow:none;      /* ✅ pill limpia */
+}
+.car-days-badge i{
+  font-size:14px;
+}
+
+
+.car-days-badge i{
+  font-size:14px;
+}
 
 /* ==========================================================
    STEP 3: COMPLEMENTOS
@@ -602,6 +704,7 @@ body{
   display:grid;
   grid-template-columns:repeat(3, minmax(0,1fr));
   gap:14px;
+  margin-top:6px;
 }
 @media (max-width:980px){ .addons-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
 @media (max-width:560px){ .addons-grid{ grid-template-columns:1fr; } }
@@ -609,39 +712,155 @@ body{
 .addon-card{
   background:#fff;
   border-radius:14px;
-  border:1px solid #eee;
-  box-shadow:0 10px 30px rgba(0,0,0,.08);
   padding:16px;
   display:flex;
   flex-direction:column;
   gap:8px;
-  transition:transform .2s, box-shadow .2s, border-color .2s;
+
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(15,23,42,.10);
+  box-shadow:0 14px 35px rgba(0,0,0,.10);
+  transform:translateZ(0);
+
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
-.addon-card:hover{ transform:translateY(-2px); box-shadow:0 18px 40px rgba(0,0,0,.12); }
+
+/* Barra superior sutil */
+.addon-card::before{
+  content:"";
+  position:absolute;
+  left:0; right:0; top:0;
+  height:4px;
+  background:linear-gradient(90deg, var(--brand), rgba(178,34,34,.20), var(--brand-dark));
+  opacity:.75;
+}
+
+/* Check visual seleccionado */
+.addon-card::after{
+  content:"✓";
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  font-size:14px;
+  color:#fff;
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
+  box-shadow:0 12px 26px rgba(178,34,34,.22);
+  transform:scale(.92);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .18s ease, transform .18s ease;
+}
+
+.addon-card:hover{ transform:translateY(-3px); box-shadow:0 18px 40px rgba(0,0,0,.12); }
+
 .addon-card.selected{
   border-color:rgba(178,34,34,.35);
-  box-shadow:0 18px 45px rgba(178,34,34,.12);
+  box-shadow:0 18px 48px rgba(178,34,34,.14);
 }
-.addon-card h4{ margin:0; font-weight:900; }
-.addon-card p{ margin:0; color:#374151; font-weight:700; line-height:1.45; }
+.addon-card.selected::after{
+  opacity:1;
+  transform:scale(1);
+}
 
+.addon-card h4{ margin:0; font-weight:900; }
+.addon-card p{
+  margin:0;
+  font-size:13px;
+  color:#374151;
+  font-weight:700;
+  line-height:1.45;
+}
+
+/* Título + jerarquía */
+.addon-name{
+  margin:0;
+  font-size:15px;
+  letter-spacing:.2px;
+  color:#0f172a;
+  padding-right:38px;
+}
+
+/* Badge precio  */
+.addon-card .small{
+  margin-top:2px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  width:fit-content;
+  padding:7px 10px;
+  border-radius:999px;
+  background:rgba(178,34,34,.07);
+  border:1px solid rgba(178,34,34,.18);
+  color:#8b1d1a;
+  font-weight:900;
+}
+.addon-card .small strong{ color:#111827; }
+
+/* Qty */
 .addon-qty{
   display:flex;
   align-items:center;
   gap:12px;
   margin-top:auto;
+  padding-top:10px;
+  border-top:1px dashed rgba(178,34,34,.18);
+  justify-content:space-between;
 }
+
+.addon-qty .qty{
+  min-width:34px;
+  height:34px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  font-size:13px;
+  font-weight:900;
+}
+
+/* Botones qty */
 .addon-qty button{
-  width:38px;height:38px;border-radius:999px;
-  border:1px solid #e5e7eb;background:#f5f5f5;
-  font-weight:900;font-size:18px;cursor:pointer;
-  transition:transform .15s ease, filter .15s ease;
+  width:40px;
+  height:40px;
+  border-radius:999px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  box-shadow:0 8px 18px rgba(0,0,0,.06);
+  font-weight:900;
+  font-size:18px;
+  cursor:pointer;
+  transition:transform .15s ease, filter .15s ease, border-color .18s ease, box-shadow .18s ease;
 }
 .addon-qty button:hover{ transform:translateY(-1px); filter:brightness(.98); }
-.addon-qty .qty{ min-width:22px; text-align:center; font-weight:900; }
+.addon-qty button.plus{
+  border-color:rgba(178,34,34,.22);
+  background:linear-gradient(180deg, rgba(178,34,34,.10), rgba(178,34,34,.04));
+}
+.addon-qty button:active{ transform:translateY(0) scale(.98); }
+
+.addon-card.qty-zero .qty-btn.minus{
+  opacity:.45;
+  filter:saturate(.6);
+}
+
+@media (max-width:980px){
+  .addon-card{ padding:14px; }
+}
+@media (max-width:560px){
+  .addon-card{ padding:14px; }
+  .addon-name{ font-size:14px; }
+}
 
 /* ==========================================================
-   STEP 4: RESUMEN
+   STEP 4: RESUMEN 
 ========================================================== */
 .sum-car{
   display:flex;
@@ -663,7 +882,7 @@ body{
   padding:8px;
   border:1px solid #eef2f7;
 }
-.sum-car-info h3{ margin:0 0 6px; font-weight:900; }
+.sum-car-info h3{ margin:0 0 6px; font-weight:900; font-size:20px;}
 .sum-car-info p{ margin:0; color:#374151; font-weight:700; line-height:1.45; }
 
 @media (max-width:760px){
@@ -681,30 +900,77 @@ body{
 }
 .sum-block{ border-bottom:1px solid #e5e7eb; }
 .sum-block:last-child{ border-bottom:none; }
+
 .sum-block h4{
   margin:0;
   padding:12px 14px;
   font-weight:900;
-  background:#f9fafb;
-  border-bottom:1px solid #e5e7eb;
+  font-size:18px;
+  background:linear-gradient(90deg, rgba(178,34,34,.14), rgba(178,34,34,.06));
+  border-bottom:1px solid rgba(178,34,34,.14);
+  color:#111827;
+  position:relative;
 }
-.sum-block .row{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  padding:10px 14px;
-  border-top:1px solid #eef2f7;
-  font-weight:800;
-  color:#0f172a;
+.sum-block h4::before{
+  content:"";
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
+  display:inline-block;
+  margin-right:10px;
+  vertical-align:middle;
+  box-shadow:0 10px 18px rgba(178,34,34,.18);
 }
+
+/* ===========================
+   STEP 4 - Filas de pagos
+   (mismo estilo + alineación perfecta)
+=========================== */
+.sum-block .row:not(.row-included){
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 14px;
+
+  /* 🔒 mantenemos el estilo original */
+  padding: 10px 14px;
+  border-top: 1px solid #eef2f7;
+  font-weight: 800;
+  font-size: 16px;        /* 👈 mismo tamaño que usas arriba */
+  color: #0f172a;
+}
+
+.sum-block .row:not(.row-included) > span{
+  min-width: 0;
+  font-weight: 800;       /* 🔒 mismo peso */
+}
+
+.sum-block .row:not(.row-included) > strong{
+  justify-self: end;
+  white-space: nowrap;
+  font-weight: 900;       /* 🔥 un poquito más fuerte para el precio */
+}
+
+
 .sum-block .row:first-of-type{ border-top:none; }
+
 .sum-total{
   display:flex;
   justify-content:space-between;
   padding:12px 14px;
   font-weight:900;
-  font-size:16px;
-  background:linear-gradient(90deg,#fff, #fff6f6);
+  font-size:20px;
+  background:linear-gradient(90deg, rgba(178,34,34,.10), rgba(255,255,255,1));
+  border-top:1px solid rgba(178,34,34,.16);
+}
+.sum-total span{ font-weight:900; color:#111827; }
+.sum-total strong{
+  padding:8px 12px;
+  border-radius:999px;
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
+  color:#fff;
+  box-shadow:0 14px 28px rgba(178,34,34,.22);
 }
 
 .sum-form{
@@ -713,6 +979,61 @@ body{
   border-radius:14px;
   box-shadow:0 10px 25px rgba(0,0,0,.08);
   padding:14px;
+}
+/* ==========================================================
+   STEP 4 — DATOS PERSONALES 
+========================================================== */
+.sum-form .sum-personal-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px 22px;            
+  margin-top:10px;
+  margin-bottom:14px;
+}
+/* ✅ Step 4: hacer que el campo de vuelo ocupe las 2 columnas */
+.sum-form .sum-personal-grid .field:has(#vuelo){
+  grid-column: 1 / -1;
+}
+
+/* cada field sin “saltos raros” */
+.sum-form .sum-personal-grid .field{
+  gap:8px;
+  margin:0;
+}
+
+/* labels arriba (como tu screenshot) */
+.sum-form .sum-personal-grid .field > label{
+  display:block;
+  margin:0 0 8px;
+  color:#6b7280;
+  font-weight:900;
+  font-size:13px;
+  letter-spacing:.2px;
+  text-transform:uppercase;
+}
+
+/* por si DOB usa .ctl estilo Step 1, que se alinee bien */
+.sum-form .sum-personal-grid .ctl{
+  margin:0;
+}
+
+/* checks en 2 columnas también (terminos/promo) */
+.sum-form .sum-checks{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px 22px;
+  margin:10px 0 16px;
+}
+.sum-form .sum-checks .cbox,
+.sum-form .sum-checks .return-check{
+  margin:0;               
+  max-width:none;
+}
+
+/* responsive: 1 columna */
+@media (max-width:760px){
+  .sum-form .sum-personal-grid{ grid-template-columns:1fr; }
+  .sum-form .sum-checks{ grid-template-columns:1fr; }
 }
 
 /* labels tipo "Hora/Min" */
@@ -761,20 +1082,69 @@ body{
   padding-right:34px;
 }
 
-/* checkbox */
+/* CHECKS compactos */
 .cbox, .return-check{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   gap:10px;
   font-weight:900;
   color:#111827;
   margin:10px 0;
   font-size:13px;
+
+  padding:0;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+
+  max-width:680px;
 }
 .cbox input, .return-check input{
   width:18px; height:18px;
   accent-color:var(--brand);
-  margin-top:2px;
+  margin-top:3px;
+  flex:0 0 auto;
+}
+.sum-form .cbox span{
+  text-transform:none;
+  letter-spacing:0;
+  font-size:13px;
+  font-weight:800;
+  color:#111827;
+  line-height:1.35;
+}
+@media (max-width:560px){
+  .cbox, .return-check{ max-width:100%; }
+  .sum-form .cbox span{ font-size:12.5px; }
+}
+/* ===========================
+   STEP 4 - Split Cards
+=========================== */
+.step4-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:22px;
+  align-items:start;
+}
+
+.step4-left,
+.step4-right{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.card-block{
+  background:var(--paper);
+  border-radius:var(--radius);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  padding:22px;
+}
+
+/* responsive */
+@media(max-width: 980px){
+  .step4-grid{ grid-template-columns:1fr; }
 }
 
 /* ==========================================================
@@ -801,14 +1171,292 @@ body{
 .btn-secondary{ background:#111827; color:#fff; }
 .btn-ghost{ background:#f1f5f9; color:#0f172a; border:1px solid #e5e7eb; }
 
+/* ==========================================================
+   BOTONES
+========================================================== */
+.sum-form .wizard-nav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+/* Reservar */
+#btnReservar{
+  height:44px;
+  padding:0 26px;
+  max-width:600px;
+  width:100%;
+  border-radius:16px;
+  font-size:14px;
+  font-weight:900;
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
+  color:#fff;
+  box-shadow:0 16px 34px rgba(178,34,34,.22);
+  margin-left:auto;
+}
+
+.sum-form .wizard-nav .btn-ghost{
+  height:50px;
+  border-radius:14px;
+}
+
+/* Cotizar */
 .btn-quote{
+  display:block;
+  margin-top:16px;
+  margin-left:auto;
+
+  height:44px;
+  max-width:600px;
+  border-radius:14px;
+  border:2px solid rgba(178,34,34,.55);
   background:#fff;
   color:var(--brand);
-  border:2px solid var(--brand);
-  margin-top:10px;
+  font-weight:900;
+  box-shadow:0 10px 20px rgba(178,34,34,.10);
+  font-size:14px;
   width:100%;
 }
 .btn-quote:hover{ filter:brightness(.98); }
+.btn-quote i{ font-size:16px; }
+
+@media (max-width:560px){
+  #btnReservar{ width:100%; }
+  .sum-form .wizard-nav{ flex-direction:column; gap:12px; }
+  .btn-quote{ max-width:none; margin-left:0; height:46px; font-size:13.5px; }
+}
+
+/* ==========================================================
+   DATOS PERSONALES 
+========================================================== */
+.sum-section-title{
+  background:transparent;
+  border:0;
+  padding:0;
+  margin:4px 0 12px;
+
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:.6px;
+  color:#111827;
+
+  display:flex;
+  align-items:center;
+  gap:14px;
+  text-transform:none;
+}
+.sum-section-title::after{
+  content:"";
+  flex:1;
+  height:2px;
+  background:linear-gradient(90deg, var(--brand), rgba(178,34,34,.15));
+  border-radius:999px;
+}
+
+/* ==========================================================
+   STEP 1 
+========================================================== */
+.wizard-page[data-current-step="1"] .wizard-card{
+  width: min(1180px, 96vw);
+  padding: 30px;
+  border-radius: 22px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.26);
+  margin-top:35px;
+}
+.wizard-page[data-current-step="1"] .wizard-head{ margin:0 0 16px; }
+.wizard-page[data-current-step="1"] .wizard-head h2{ font-size:28px; }
+.wizard-page[data-current-step="1"] .wizard-head p{ font-size:20px; }
+.wizard-page[data-current-step="1"] .search-grid{
+  gap:26px;
+  grid-template-columns: 1.25fr 1fr 1fr;
+}
+.wizard-page[data-current-step="1"] .ctl input,
+.wizard-page[data-current-step="1"] .ctl select{
+  height:60px;
+  border-radius:16px;
+}
+
+@media (max-width:980px){
+  .wizard-page[data-current-step="1"] .wizard-card{
+    width: min(980px, 96vw);
+    padding: 24px;
+  }
+  .wizard-page[data-current-step="1"] .wizard-head h2{ font-size:30px; }
+}
+@media (max-width:560px){
+  .wizard-page[data-current-step="1"] .wizard-card{
+    width: min(540px, 94vw);
+    padding: 18px;
+    margin-top:10px;
+  }
+  .wizard-page[data-current-step="1"] .wizard-head h2{ font-size:26px; }
+  .wizard-page[data-current-step="1"] .ctl input,
+  .wizard-page[data-current-step="1"] .ctl select{ height:56px; }
+}
+
+/* ==========================================================
+   STEP 4 — Resumen compacto 
+========================================================== */
+.sum-compact{
+  margin-top:6px;
+  padding:12px;
+  border-radius:14px;
+  background:linear-gradient(180deg,#fff,#fbfbfd);
+  border:1px solid #eef2f7;
+  box-shadow:0 10px 25px rgba(0,0,0,.06);
+}
+.sum-compact-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+  padding-bottom:10px;
+  border-bottom:1px dashed rgba(178,34,34,.18);
+}
+.sum-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+  letter-spacing:.4px;
+  color:#fff;
+  background:linear-gradient(90deg, var(--brand), var(--brand-dark));
+  box-shadow:0 10px 22px rgba(178,34,34,.18);
+}
+.sum-days{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-weight:900;
+  font-size:12px;
+  color:#111827;
+  background:#fff;
+  border:1px solid #eef2f7;
+  padding:8px 10px;
+  border-radius:999px;
+}
+.sum-compact-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.sum-item{
+  background:#fff;
+  border:1px solid #eef2f7;
+  border-radius:14px;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.sum-item-label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:900;
+  font-size:12px;
+  color:#6b7280;
+  text-transform:uppercase;
+  letter-spacing:.45px;
+}
+.sum-item-value{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.sum-place{
+  font-weight:900;
+  color:#111827;
+  line-height:1.2;
+}
+.sum-dt{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  font-weight:900;
+  color:#111827;
+}
+.sum-dt .js-date{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid #e5e7eb;
+  background:#f3f4f6;
+  font-size:12px;
+}
+.sum-time{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid rgba(178,34,34,.22);
+  background:rgba(178,34,34,.08);
+  color:#8b1d1a;
+  font-size:12px;
+}
+
+@media (max-width:760px){
+  .sum-compact-grid{ grid-template-columns:1fr; }
+  .sum-compact-head{ flex-direction:column; align-items:flex-start; }
+  .sum-dt{ justify-content:flex-start; }
+}
+/* ===========================
+   STEP 4 — 3 CARDS (1 arriba + 2 abajo)
+=========================== */
+.step4-layout{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+/* Card superior full width */
+.step4-top{
+  width:100%;
+}
+
+/* Abajo: 2 columnas */
+.step4-bottom{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:18px;
+  align-items:start;
+}
+
+/* responsive */
+@media(max-width: 980px){
+  .step4-bottom{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* tus cards (si no las tienes ya) */
+.card-block{
+  background:var(--paper);
+  border-radius:var(--radius);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  padding:22px;
+}
+
+/* evitar doble estilo si sum-car/sum-table/sum-form ya traen fondo/sombra */
+.card-block .sum-car,
+.card-block .sum-table,
+.card-block .sum-form{
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  padding:0;
+}
 
 /* ==========================================================
    MODAL
@@ -953,189 +1601,277 @@ span.flatpickr-weekday{
   .topbar,.wizard-steps{ display:none!important; }
   .wizard-card{ box-shadow:none; border:1px solid #e5e7eb; background:#fff; }
 }
-
+.sum-form .ctl.has-ico .ico{
+  top: 50%;
+  transform: translateY(-50%);
+}
 /* ==========================================================
-   STEP 1 “wide” SOLO cuando data-current-step="1"
+   ✅ STEP 4 — DOB SIN FLOATING 
 ========================================================== */
-.wizard-page[data-current-step="1"] .wizard-card{
-  width: min(1180px, 96vw);
-  padding: 30px;
-  border-radius: 22px;
-  box-shadow: 0 30px 80px rgba(0,0,0,.26);
-  margin-top:35px;
-}
-.wizard-page[data-current-step="1"] .wizard-head{ margin:0 0 16px; }
-.wizard-page[data-current-step="1"] .wizard-head h2{ font-size:34px; }
-.wizard-page[data-current-step="1"] .wizard-head p{ font-size:15px; }
-.wizard-page[data-current-step="1"] .search-grid{
-  gap:26px;
-  grid-template-columns: 1.25fr 1fr 1fr;
-}
-.wizard-page[data-current-step="1"] .ctl input,
-.wizard-page[data-current-step="1"] .ctl select{
-  height:60px;
-  border-radius:16px;
-}
-
-@media (max-width:980px){
-  .wizard-page[data-current-step="1"] .wizard-card{
-    width: min(980px, 96vw);
-    padding: 24px;
-  }
-  .wizard-page[data-current-step="1"] .wizard-head h2{ font-size:30px; }
-}
-@media (max-width:560px){
-  .wizard-page[data-current-step="1"] .wizard-card{
-    width: min(540px, 94vw);
-    padding: 18px;
-    margin-top:10px;
-  }
-  .wizard-page[data-current-step="1"] .wizard-head h2{ font-size:26px; }
-  .wizard-page[data-current-step="1"] .ctl input,
-  .wizard-page[data-current-step="1"] .ctl select{ height:56px; }
-}
-
-/* ==========================================================
-   STEP 4 — Resumen compacto + “Datos personales”
-========================================================== */
-.sum-compact{
-  margin-top:6px;
-  padding:12px;
-  border-radius:14px;
-  background:linear-gradient(180deg,#fff,#fbfbfd);
-  border:1px solid #eef2f7;
-  box-shadow:0 10px 25px rgba(0,0,0,.06);
-}
-
-.sum-compact-head{
+.sum-form .sum-personal-grid .ctl{
   display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-  padding-bottom:10px;
-  border-bottom:1px dashed rgba(178,34,34,.18);
+  flex-direction:column;
+  align-items:stretch;
 }
 
-.sum-tag{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:8px 12px;
-  border-radius:999px;
-  font-weight:900;
-  font-size:12px;
-  letter-spacing:.4px;
-  color:#fff;
-  background:linear-gradient(90deg, var(--brand), var(--brand-dark));
-  box-shadow:0 10px 22px rgba(178,34,34,.18);
+.sum-form .sum-personal-grid .ctl .flabel{
+  position:static !important;
+  transform:none !important;
+  top:auto !important;
+  left:auto !important;
+
+  display:block !important;
+  margin:0 0 8px !important;
+
+  color:#6b7280 !important;
+  font-weight:900 !important;
+  font-size:13px !important;
+  letter-spacing:.2px !important;
+  text-transform:uppercase !important;
+
+  background:transparent !important;
+  padding:0 !important;
+  border-radius:0 !important;
+  opacity:1 !important;
+
+  transition:none !important; 
 }
 
-.sum-days{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  font-weight:900;
-  font-size:12px;
-  color:#111827;
-  background:#fff;
-  border:1px solid #eef2f7;
-  padding:8px 10px;
-  border-radius:999px;
+.sum-form .sum-personal-grid .ctl input,
+.sum-form .sum-personal-grid .ctl select{
+  padding-top:0 !important;
+}
+/* 1) El precio tachado (price-old) ahora rojo */
+.price-pill--prepago .price-old{
+  color: rgba(178,34,34,.95);              /* rojo brand */
+  text-decoration: line-through;
+  text-decoration-color: rgba(178,34,34,.95);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px; /* ayuda a que la raya se vea “a la mitad” */
 }
 
-.sum-compact-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
+/* 2) Precio en oficina más grande */
+.car-price > .price-pill:not(.price-pill--prepago){
+  font-size: 25px;                          /* sube el total */
+  line-height: 1.1;
+}
+
+/* Mantén el "precio por día" pequeño aunque el total sea grande */
+.car-price > .price-pill:not(.price-pill--prepago) small{
+  font-size: 12px;
+  font-weight: 800;
+  color: #6b7280;
+}
+
+/* Opcional: que el número se vea más pesado */
+.car-price > .price-pill:not(.price-pill--prepago) .js-mostrador-total{
+  font-weight: 900;
+}
+/* ✅ Texto subrayado arriba del precio (más grande + línea a la mitad) */
+.price-hint{
+  font-size: 12.5px;          /* antes 11px */
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 8px;
+  text-align: right;
+}
+
+/* Línea “a la mitad” (tipo strike, pero sin tachar el texto) */
+.price-hint--u{
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0;          /* sin espacio extra abajo */
+  text-decoration: none;      /* apagamos underline normal */
+}
+
+.price-hint--u::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:50%;                    /* ✅ línea al centro vertical */
+  transform: translateY(-50%);
+  height: 2px;                /* grosor */
+  background: rgba(178,34,34,.9);  /* tono rojo */
+  border-radius: 999px;
+}
+/* ===============================
+   STEP 4 Layout
+=================================*/
+
+.step4-layout{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Columna izquierda */
+.card-left{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Columna derecha */
+.card-right{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+@media (max-width: 992px){
+  .step4-layout{
+    grid-template-columns: 1fr;
+  }
+}
+/* ===========================
+   STEP 4: DOS FONDOS SEPARADOS
+=========================== */
+
+/* 1) En Step 4, la card padre ya NO debe verse como fondo blando */
+.page[data-current-step="4"] > .wizard-card,
+.page[data-current-step="4"] .wizard-card{
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+/* 2) Layout 2 columnas */
+.step4-layout{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+/* 3) Estas serán tus 2 cards grandes (izq/der) */
+.step4-pane{
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+/* separación interna dentro de cada pane */
+.step4-pane .card-left,
+.step4-pane .card-right{
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* responsive */
+@media (max-width: 992px){
+  .step4-layout{ grid-template-columns: 1fr; }
+}
+.step4-layout{
+  grid-template-columns: 0.95fr 1.05fr;
+}
+/* ===========================
+   STEP 4 - HEADER VISIBLE + MÁS ANCHO
+=========================== */
+
+/* 1) Haz más ancho el contenedor SOLO en Step 4 */
+.page[data-current-step="4"]{
+  --wizard-w: 12 00px; 
+}
+
+@media (min-width: 1200px){
+  .page[data-current-step="4"]{
+    --wizard-w: 1280px;
+  }
+}
+
+/* 2) Header del Step 4 con panel para que no se pierda */
+.page[data-current-step="4"] .wizard-head{
+  background: rgba(255,255,255,.92);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 18px;
+  margin: 0 0 18px;
+  backdrop-filter: blur(6px);
+}
+
+.page[data-current-step="4"] .wizard-head h2,
+.page[data-current-step="4"] .wizard-head p{
+  color: var(--ink);
+}
+
+.page[data-current-step="4"] .step4-layout{
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 24px;
+}
+
+/* 4) Páneles más grandes */
+.page[data-current-step="4"] .step4-pane{
+  padding: 20px;
+}
+
+/* 5) Ajuste responsive */
+@media (max-width: 992px){
+  .page[data-current-step="4"] .wizard-head{
+    padding: 16px;
+  }
+  .page[data-current-step="4"] .step4-layout{
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+/* ===========================
+   STEP 4 - Incluido con palomitas
+=========================== */
+.sum-block .row.row-included{
+  align-items:flex-start;
   gap:12px;
 }
 
-.sum-item{
+.inc-label{
+  font-weight:900;
+  color:#111827;
+  white-space:nowrap;
+}
+
+.inc-items{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 14px;
+}
+
+.inc-item{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-weight:800;
+  color:#0f172a;
   background:#fff;
   border:1px solid #eef2f7;
-  border-radius:14px;
-  padding:12px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-.sum-item-label{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-weight:900;
-  font-size:12px;
-  color:#6b7280;
-  text-transform:uppercase;
-  letter-spacing:.45px;
-}
-
-.sum-item-value{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
-.sum-place{
-  font-weight:900;
-  color:#111827;
-  line-height:1.2;
-}
-
-.sum-dt{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  flex-wrap:wrap;
-  font-weight:900;
-  color:#111827;
-}
-
-.sum-dt .js-date{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:7px 10px;
+  padding:6px 10px;
   border-radius:999px;
-  border:1px solid #e5e7eb;
-  background:#f3f4f6;
-  font-size:12px;
 }
 
-.sum-time{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:7px 10px;
-  border-radius:999px;
-  border:1px solid rgba(178,34,34,.22);
-  background:rgba(178,34,34,.08);
-  color:#8b1d1a;
-  font-size:12px;
-}
-
-.sum-section-title{
-  margin: 4px 0 12px;
+.inc-check{
+  color:#22c55e;          /* ✅ verde */
   font-weight:900;
-  font-size:13px;
-  letter-spacing:.45px;
-  text-transform:uppercase;
-  color:#6b7280;
-  display:flex;
-  align-items:center;
-  gap:10px;
+  font-size:14px;
+  line-height:1;
 }
-.sum-section-title::after{
+/* ==========================================================
+   ✅ STEP 4: La línea roja (accent bar) arriba del header card
+========================================================== */
+.page[data-current-step="4"] .wizard-head{
+  position: relative;
+  overflow: hidden;                 /* para que la barra respete bordes redondos */
+}
+
+/* Barra superior igual a la que tenías en .wizard-card::before */
+.page[data-current-step="4"] .wizard-head::before{
   content:"";
-  flex:1;
-  height:1px;
-  background:linear-gradient(90deg, rgba(178,34,34,.25), rgba(178,34,34,0));
-}
-
-@media (max-width:760px){
-  .sum-compact-grid{ grid-template-columns:1fr; }
-  .sum-compact-head{ flex-direction:column; align-items:flex-start; }
-  .sum-dt{ justify-content:flex-start; }
+  position:absolute;
+  left:0; right:0; top:0;
+  height:4px;
+  background:linear-gradient(90deg, var(--brand), rgba(178,34,34,.25), var(--brand-dark));
+  opacity:.95;
 }
