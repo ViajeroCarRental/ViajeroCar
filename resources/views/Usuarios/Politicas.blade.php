@@ -793,7 +793,7 @@
 
                 </table>
               </div>
-
+ 
               <p style="margin-top: 1rem;">
                 <em>Montos sujetos a cambio sin previo aviso. Los importes definitivos se confirmarán en tu cotización y contrato de renta.</em>
               </p>
