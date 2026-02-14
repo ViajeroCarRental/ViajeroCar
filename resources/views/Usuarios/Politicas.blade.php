@@ -774,7 +774,7 @@
                     </tr>
 
                     <tr>
-                    <td>M</td><td>Minivan Honda Odyssey o similar</td><td>$10,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN800,000</td>
+                    <td>M</td><td>Minivan Honda Odyssey o similar</td><td>$MXN10,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN800,000</td>
                     </tr>
 
                     <tr>
@@ -793,7 +793,7 @@
 
                 </table>
               </div>
- 
+
               <p style="margin-top: 1rem;">
                 <em>Montos sujetos a cambio sin previo aviso. Los importes definitivos se confirmarán en tu cotización y contrato de renta.</em>
               </p>
