@@ -1,10 +1,20 @@
-@extends('layouts.Usuarios')  
+@extends('layouts.Usuarios')
 
 @section('Titulo','Home')
 
 @section('css-vistaHome')
   {{-- ✅ Swiper CSS --}}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+  {{-- Select2 CSS --}}
+
+
+
+    {{--reemplaza visualmente  <select>. --}}  
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+ {{--Font Awesome es  el paquete que dibuja íconos. --}}  
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-p+6F+H1G5p8pP/1hObu/YZ7o2aM5J5lFjAzU5e+0Jx8xR+uEzjFN8IvU3UpUy6v1k3vXv4+XzN0z3VQUpgK6Vw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 
   <style>
     :root{ --brand:#b22222; --ink:#0f172a; --muted:#6b7280 }
@@ -248,6 +258,36 @@
       transform: translate(6px, -92px) scale(1);
       opacity:1; pointer-events:auto;
     }
+     /* Select2 */
+
+.select2-container--default .select2-selection--single {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    border-radius: 10px;
+    padding: 0 10px;
+}
+.select2-container--open .select2-dropdown--above {
+    top: 100% !important;
+    bottom: auto !important;
+}
+
+.select2-selection__rendered {
+    display: flex;
+    align-items: center;
+    line-height: normal !important;
+}
+
+.select2-selection__rendered i {
+    margin-right: 8px;
+    font-size: 1.2em;
+}
+
+.select2-results__option .icon-item i {
+    margin-right: 8px;
+    font-size: 1em;
+}
+
 
     .social-fab i{ font-size:20px; }
   </style>
@@ -318,12 +358,14 @@
         </div>
 
         <div class="icon-item">
-          <i class="fa-solid fa-plane-departure"></i>
+           <i class="fa-solid fa-plane-departure"></i>
           <span>Atención en aeropuerto 24/7</span>
+
         </div>
 
         <div class="icon-item">
           <i class="fa-solid fa-car-side"></i>
+
           <span>Autos con modelos recientes</span>
         </div>
       </div>
@@ -351,8 +393,8 @@
               </div>
 
               <div class="field icon-field">
-                <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
-                <select id="pickupPlace" name="pickup_sucursal_id" aria-describedby="pickupHelp" required>
+                <span class="field-icon" id="pickupIcon"><i class="fa-solid fa-location-dot"></i></span>
+                <select id="pickupPlace" name="pickup_sucursal_id"aria-describedby="pickupHelp" required>
                   <option value="" disabled selected>¿Dónde inicia tu viaje? (Pick-up)</option>
                   @foreach($ciudades as $ciudad)
                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
@@ -367,7 +409,7 @@
               </div>
 
               <div class="field icon-field" id="dropoffWrapper">
-                <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
+               <span class="field-icon" id="dropoffIcon"> <i class="fa-solid fa-location-dot"></i></span>
                 <select id="dropoffPlace" name="dropoff_sucursal_id" aria-describedby="dropoffHelp" required>
                   <option value="" disabled selected>¿Dónde termina tu viaje?</option>
                   @foreach($ciudades as $ciudad)
@@ -635,45 +677,51 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
-        </article>
+         <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            </article>
 
-        <article class="car-card">
-          <header class="car-title">
-            <h3>PICKUP 4X4 DOBLE CABINA</h3>
-            <p>Toyota Tacoma o similar | F</p>
-          </header>
-          <div class="car-media">
-            <img src="{{ asset('img/Tacoma.png') }}" alt="Toyota Tacoma o similar">
-          </div>
+            <article class="car-card">
+              <header class="car-title">
+                <h3>SUV COMPACTA</h3>
+                <p> Jeep Renegade o similar | IC</p>
+              </header>
+              <div class="car-media">
+                <img src="{{ asset('img/renegade.png') }}" alt=" Jeep Renegade o similar">
+              </div>
 
-          <div class="offer">
-            <span class="offer-badge">-13%</span>
-            <div class="price-line">
-              <span class="price-now">$2,600</span><span class="per">/día</span>
-              <span class="price-old">$3,000</span>
-            </div>
-          </div>
+              <div class="offer">
+                <span class="offer-badge">-24%</span>
+                <div class="price-line">
+                  <span class="price-now">$1,600</span><span class="per">/día</span>
+                  <span class="price-old">$2,100</span>
+                </div>
+              </div>
 
-          <ul class="car-specs">
-            <li><i class="fa-solid fa-user-large"></i> 5</li>
-            <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-            <li><i class="fa-solid fa-briefcase"></i> 3</li>
-          </ul>
+              <ul class="car-specs">
+                <li><i class="fa-solid fa-user-large"></i> 5</li>
+                <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
+                <li><i class="fa-solid fa-briefcase"></i> 3</li>
+              </ul>
 
-          <div class="car-connect">
-            <span class="badge-chip badge-apple" title="Apple CarPlay">
-              <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
-              CarPlay
-            </span>
-            <span class="badge-chip badge-android" title="Android Auto">
-              <svg viewBox="0 0 24 24"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path></svg>
-              Android Auto
-            </span>
-          </div>
+              <div class="car-connect">
+                <span class="badge-chip badge-apple" title="Apple CarPlay">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
+                    <polygon points="10,8 16,12 10,16"></polygon>
+                  </svg>
+                  CarPlay
+                </span>
+                <span class="badge-chip badge-android" title="Android Auto">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
+                  </svg>
+                  Android Auto
+                </span>
+              </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
-        </article>
+              <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            </article>
+
 
 
         <article class="car-card">
@@ -861,9 +909,10 @@
             <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
           </article>
 
+
           <article class="car-card">
             <header class="car-title">
-              <h3>VAN</h3>
+              <h3>VAN PASAJEROS</h3>
               <p>Toyota Hiace o similar | L</p>
             </header>
             <div class="car-media">
@@ -879,7 +928,7 @@
             </div>
 
             <ul class="car-specs">
-              <li><i class="fa-solid fa-user-large"></i> 5</li>
+              <li><i class="fa-solid fa-user-large"></i> 13</li>
               <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
               <li><i class="fa-solid fa-briefcase"></i> 3</li>
             </ul>
@@ -900,92 +949,87 @@
               </span>
             </div>
 
+
             <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
             </article>
 
-            <article class="car-card">
-              <header class="car-title">
-                <h3>SUV COMPACTA</h3>
-                <p> Jeep Renegade o similar | IC</p>
-              </header>
-              <div class="car-media">
-                <img src="{{ asset('img/renegade.png') }}" alt=" Jeep Renegade o similar">
-              </div>
+{
+        <article class="car-card">
+          <header class="car-title">
+            <h3>PICK UP DOBLE CABINA</h3>
+            <p>Nissan Frontier o similar | E</p>
+          </header>
 
-              <div class="offer">
-                <span class="offer-badge">-24%</span>
-                <div class="price-line">
-                  <span class="price-now">$1,600</span><span class="per">/día</span>
-                  <span class="price-old">$2,100</span>
-                </div>
-              </div>
+          <div class="car-media">
+            <img src="{{ asset('img/frontier.png') }}" alt="Nissan Frontier o similar">
+          </div>
 
-              <ul class="car-specs">
-                <li><i class="fa-solid fa-user-large"></i> 5</li>
-                <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
-                <li><i class="fa-solid fa-briefcase"></i> 3</li>
-              </ul>
+         <div class="offer">
+           <span class="offer-badge">-13%</span>
+           <div class="price-line">
+            <span class="price-now">$1,950</span><span class="per">/día</span>
+            <span class="price-old">$2,203</span>
+           </div>
+         </div>
 
-              <div class="car-connect">
-                <span class="badge-chip badge-apple" title="Apple CarPlay">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                    <polygon points="10,8 16,12 10,16"></polygon>
-                  </svg>
-                  CarPlay
-                </span>
-                <span class="badge-chip badge-android" title="Android Auto">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                  </svg>
-                  Android Auto
-                </span>
-              </div>
+         <ul class="car-specs">
+           <li><i class="fa-solid fa-user-large"></i> 5</li>
+           <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
+           <li><i class="fa-solid fa-briefcase"></i> 3</li>
+         </ul>
 
-              <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
-            </article>
+         <div class="car-connect">
+          <span class="badge-chip badge-apple" title="Apple CarPlay">
+            <svg viewBox="0 0 24 24"> <rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
+            CarPlay
+          </span>
+          <span class="badge-chip badge-android" title="Android Auto">
+            <svg viewBox="0 0 24 24"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path></svg>
+            Android Auto
+          </span>
+        </div>
 
-            <article class="car-card">
-              <header class="car-title">
-                <h3>SUV MEDIANA</h3>
-                <p>Kia Seltos o similar | I</p>
-              </header>
-              <div class="car-media">
-                <img src="{{ asset('img/seltos.png') }}" alt="Kia Seltos o similar">
-              </div>
+           <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+          </article>
 
-              <div class="offer">
-                <span class="offer-badge">-25%</span>
-                <div class="price-line">
-                  <span class="price-now">$1,800</span><span class="per">/día</span>
-                  <span class="price-old">$2,400</span>
-                </div>
-              </div>
+        <article class="car-card">
+        <article class="car-card">
+          <header class="car-title">
+            <h3>PICK UP 4X4 DOBLE CABINA</h3>
+            <p>Toyota Tacoma o similar | F</p>
+          </header>
+          <div class="car-media">
+            <img src="{{ asset('img/Tacoma.png') }}" alt="Toyota Tacoma o similar">
+          </div>
 
-              <ul class="car-specs">
-                <li><i class="fa-solid fa-user-large"></i> 5</li>
-                <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
-                <li><i class="fa-solid fa-briefcase"></i> 3</li>
-              </ul>
+          <div class="offer">
+            <span class="offer-badge">-13%</span>
+            <div class="price-line">
+              <span class="price-now">$2,600</span><span class="per">/día</span>
+              <span class="price-old">$3,000</span>
+            </div>
+          </div>
 
-              <div class="car-connect">
-                <span class="badge-chip badge-apple" title="Apple CarPlay">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                    <polygon points="10,8 16,12 10,16"></polygon>
-                  </svg>
-                  CarPlay
-                </span>
-                <span class="badge-chip badge-android" title="Android Auto">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                  </svg>
-                  Android Auto
-                </span>
-              </div>
+          <ul class="car-specs">
+            <li><i class="fa-solid fa-user-large"></i> 5</li>
+            <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
+            <li><i class="fa-solid fa-briefcase"></i> 3</li>
+          </ul>
+
+          <div class="car-connect">
+            <span class="badge-chip badge-apple" title="Apple CarPlay">
+              <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
+              CarPlay
+            </span>
+            <span class="badge-chip badge-android" title="Android Auto">
+              <svg viewBox="0 0 24 24"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path></svg>
+              Android Auto
+            </span>
+          </div>
 
               <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
             </article>
+
 
             </div>
 
@@ -1232,13 +1276,32 @@
 
 @section('js-vistaHome')
 
+{{-- ✅ jQuery  Permite que Select2 funcione--}}
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
   {{-- ✅ Swiper JS --}}
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
   {{-- ✅ Flatpickr core + locale ES + rangePlugin --}}
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
-  
+
+ {{-- ✅ Select2 JS  Convierte el select en avanzado--}}
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  {{-- ✅ Inicializar Select2 básico --}}
+  <script>
+    $(document).ready(function() {
+        $('#pickupPlace').select2({ width: '100%' });
+        $('#dropoffPlace').select2({ width: '100%' });
+    });
+  </script>
+
+
+
+  {{-- ✅ JS de iconos --}}
+  <script src="{{ asset('js/iconos-lugar.js') }}"></script>
+
 
 
   {{-- ✅ Tu JS --}}
@@ -1398,7 +1461,7 @@
     function setBar(ms){
       bar.style.transition = 'none';
       bar.style.width = '0%';
-      requestAnimationFrame(()=>{ 
+      requestAnimationFrame(()=>{
         requestAnimationFrame(()=>{
           bar.style.transition = `width ${ms}ms linear`;
           bar.style.width = '100%';
