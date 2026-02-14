@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Http\Controllers;
 
@@ -13,10 +13,12 @@ class BusquedaController extends Controller
     public function home()
     {
         // Ciudades
-        $ciudadesBase = DB::table('ciudades')
-            ->select('id_ciudad','nombre','estado','pais')
-            ->orderBy('nombre')
-            ->get();
+    $ciudadesBase = DB::table('ciudades')
+    ->select('id_ciudad','nombre','estado','pais')
+    ->orderByRaw("CASE WHEN nombre = 'Querétaro' THEN 0 ELSE 1 END")
+    ->orderBy('nombre')
+    ->get();
+
 
         // Agregar sucursales activas a cada ciudad
         $ciudades = $ciudadesBase->map(function ($c) {

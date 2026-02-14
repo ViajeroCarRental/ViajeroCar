@@ -1,4 +1,4 @@
-@extends('layouts.Usuarios')  
+@extends('layouts.Usuarios')
 
 @section('Titulo','Home')
 
@@ -6,7 +6,11 @@
   {{-- ✅ Swiper CSS --}}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
 
-  <style>
+  {{-- Select2 CSS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-p+6F+H1G5p8pP/1hObu/YZ7o2aM5J5lFjAzU5e+0Jx8xR+uEzjFN8IvU3UpUy6v1k3vXv4+XzN0z3VQUpgK6Vw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<style>
     :root{ --brand:#b22222; --ink:#0f172a; --muted:#6b7280 }
 
     .hero-badge-3msi{
@@ -249,6 +253,34 @@
       opacity:1; pointer-events:auto;
     }
 
+
+ /* Estilo de SELECT2 */
+.select2-container--default .select2-selection--single {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    border-radius: 10px;
+    padding: 0 10px;
+}
+
+
+.select2-selection__rendered {
+    display: flex;
+    align-items: center;
+    line-height: normal !important;
+}
+
+.select2-selection__rendered i {
+    margin-right: 8px;
+    font-size: 1.2em;
+}
+
+.select2-results__option .icon-item i {
+    margin-right: 8px;
+    font-size: 1em;
+}
+
+
     .social-fab i{ font-size:20px; }
   </style>
 @endsection
@@ -353,7 +385,7 @@
               <div class="field icon-field">
                 <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
                 <select id="pickupPlace" name="pickup_sucursal_id" aria-describedby="pickupHelp" required>
-                  <option value="" disabled selected>¿Dónde inicia tu viaje? (Pick-up)</option>
+                  <option value="" disabled selected>¿Dónde inicia tu viaje?</option>
                   @foreach($ciudades as $ciudad)
                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
                       @foreach($ciudad->sucursalesActivas as $suc)
@@ -390,7 +422,7 @@
             ========================= --}}
             <div class="sg-col sg-col-datetime">
               <div class="field">
-                <label>Entrega</label>
+                <label>Pick-Up</label>
 
                 <div class="datetime-row">
 
@@ -1232,13 +1264,30 @@
 
 @section('js-vistaHome')
 
+{{-- ✅ jQuery --}}
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
   {{-- ✅ Swiper JS --}}
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
   {{-- ✅ Flatpickr core + locale ES + rangePlugin --}}
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
-  
+
+ {{-- ✅ Select2 JS --}}
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  {{-- ✅ Inicializar Select2 básico --}}
+  <script>
+    $(document).ready(function() {
+        $('#pickupPlace').select2({ width: '100%' });
+        $('#dropoffPlace').select2({ width: '100%' });
+    });
+  </script>
+
+  {{-- ✅ JS de iconos --}}
+  <script src="{{ asset('js/iconos-lugar.js') }}"></script>
+
 
 
   {{-- ✅ Tu JS --}}
@@ -1398,7 +1447,7 @@
     function setBar(ms){
       bar.style.transition = 'none';
       bar.style.width = '0%';
-      requestAnimationFrame(()=>{ 
+      requestAnimationFrame(()=>{
         requestAnimationFrame(()=>{
           bar.style.transition = `width ${ms}ms linear`;
           bar.style.width = '100%';
