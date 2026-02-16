@@ -6,6 +6,58 @@
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
 
   // ======================================================
+  // ✅ SIN ALERTAS: bloquear SOLO la alerta de "Campos incompletos"
+  // (Fecha y hora de entrega / devolución)
+  // ======================================================
+  (function disableMissingFieldsAlerts(){
+    const shouldBlock = (msg) => {
+      const s = String(msg || "");
+      return (
+        s.includes("Campos incompletos") ||
+        s.includes("Por favor completa los siguientes campos") ||
+        s.includes("Fecha y hora de entrega") ||
+        s.includes("Fecha y hora de devolución")
+      );
+    };
+
+    // 1) Native alert()
+    try{
+      const _alert = window.alert;
+      window.alert = function(msg){
+        if (shouldBlock(msg)) return;
+        return _alert.call(window, msg);
+      };
+    }catch(_){}
+
+    // 2) SweetAlert2 (Swal.fire)
+    try{
+      if (window.Swal && typeof window.Swal.fire === "function"){
+        const _fire = window.Swal.fire.bind(window.Swal);
+        window.Swal.fire = function(a, b, c){
+          const title = (a && typeof a === "object") ? (a.title || "") : (a || "");
+          const text  = (a && typeof a === "object") ? (a.text  || "") : (b || "");
+          if (shouldBlock(title) || shouldBlock(text)) return Promise.resolve();
+          return _fire(a, b, c);
+        };
+      }
+    }catch(_){}
+
+    // 3) Fallback: si algún modal/toast aparece con ese texto, lo ocultamos
+    try{
+      const mo = new MutationObserver(() => {
+        const nodes = Array.from(document.querySelectorAll("body *"));
+        nodes.forEach(el=>{
+          if (!el || !el.textContent) return;
+          if (!shouldBlock(el.textContent)) return;
+          const modal = el.closest(".modal,.swal2-container,.alert,.toast,[role='dialog']");
+          (modal || el).style.display = "none";
+        });
+      });
+      mo.observe(document.documentElement, { childList:true, subtree:true });
+    }catch(_){}
+  })();
+
+  // ======================================================
   // ✅ FORZAR SIEMPRE STEP 1 CUANDO SOLO VIENE ?step=2
   // (si la URL trae más params, NO toca nada)
   // ======================================================
@@ -166,7 +218,6 @@
     function applyStateToInputs(state){
       if (!state) return;
 
-      // ✅ NO pisar si Blade ya puso value
       if (map.pickup_sucursal_id && !safeVal(map.pickup_sucursal_id) && state.pickup_sucursal_id) setVal(map.pickup_sucursal_id, state.pickup_sucursal_id);
       if (map.dropoff_sucursal_id && !safeVal(map.dropoff_sucursal_id) && state.dropoff_sucursal_id) setVal(map.dropoff_sucursal_id, state.dropoff_sucursal_id);
 
@@ -178,7 +229,6 @@
       if (map.dropoff_h && !safeVal(map.dropoff_h) && state.dropoff_h) setVal(map.dropoff_h, state.dropoff_h);
       if (map.dropoff_m && !safeVal(map.dropoff_m) && state.dropoff_m) setVal(map.dropoff_m, state.dropoff_m);
 
-      // hidden time si solo viene HH:MM
       if (state.pickup_time && !safeVal(map.pickup_time_hidden) && map.pickup_time_hidden) setVal(map.pickup_time_hidden, state.pickup_time);
       if (state.dropoff_time && !safeVal(map.dropoff_time_hidden) && map.dropoff_time_hidden) setVal(map.dropoff_time_hidden, state.dropoff_time);
 
@@ -226,7 +276,6 @@
         setIf('pickup_time', state.pickup_time);
         setIf('dropoff_time', state.dropoff_time);
 
-        // opcional split
         setIf('pickup_h', state.pickup_h);
         setIf('pickup_m', state.pickup_m);
         setIf('dropoff_h', state.dropoff_h);
@@ -240,7 +289,6 @@
       }catch(_){}
     }
 
-    // ✅ throttle para no “sentir” que se congela al escribir / abrir selects
     function throttle(fn, wait){
       let t = null;
       let lastArgs = null;
@@ -267,7 +315,6 @@
 
       applyStateToInputs(merged);
 
-      // si QS venía vacío pero LS tenía algo, empuja a QS
       try{
         const p = new URLSearchParams(window.location.search);
         const hasMeaningful =
@@ -282,7 +329,6 @@
       writeToLS(currentState());
     }
 
-    // listeners
     const watch = [
       map.pickup_sucursal_id, map.dropoff_sucursal_id,
       map.pickup_date, map.dropoff_date,
@@ -297,12 +343,10 @@
       if (el.tagName === 'INPUT') el.addEventListener('input', persistNow);
     });
 
-    // ✅ asegurar hidden times justo antes de enviar Step1
     const step1Form = qs('#step1Form');
     if (step1Form){
       step1Form.addEventListener('submit', ()=>{
         computeTimesIntoHidden();
-        // guardamos último estado antes de navegar
         try{
           const st = currentState();
           writeToLS(st);
@@ -410,7 +454,7 @@
     function getDateTime(which){
       const d = parseDateAny(which==="pickup" ? pickupDate.value : dropoffDate.value);
       if (!d) return null;
-      const h = which==="pickup" ? pickupHour?.value : dropoffHour?.value;
+      const h  = which==="pickup" ? pickupHour?.value : dropoffHour?.value;
       const mi = which==="pickup" ? pickupMin?.value  : dropoffMin?.value;
       d.setHours(+h||0, +mi||0, 0, 0);
       return d;
@@ -634,10 +678,27 @@
 
     const start = qs("#start");
     const end   = qs("#end");
-    if (!start || !end) return;
+
+    // ✅ DOB (Step 4)
+    const dob   = qs("#dob");
 
     const today = new Date();
     today.setHours(0,0,0,0);
+
+    // ---------- DOB picker (solo fecha) ----------
+    if (dob){
+      try{ if (dob._flatpickr) dob._flatpickr.destroy(); }catch(_){}
+      window.flatpickr(dob, {
+        dateFormat: "d-m-Y",
+        allowInput: true,
+        disableMobile: true,
+        maxDate: today,
+        onOpen: [(sel, str, fp) => fp.jumpToDate(fp.selectedDates?.[0] || today, true)]
+      });
+    }
+
+    // ---------- Step 1 pickers ----------
+    if (!start || !end) return;
 
     function toDateAtMidnight(d){
       const x = new Date(d.getTime());
@@ -673,6 +734,7 @@
     if (startInit) startFp.setDate(startInit, false);
     if (endInit)   endFp.setDate(endInit, false);
 
+    // ✅ solo pasado bloqueado (sin limitar futuro)
     startFp.set("minDate", today);
     endFp.set("minDate", today);
 
@@ -701,13 +763,15 @@
       const s2 = startFp.selectedDates?.[0] ? toDateAtMidnight(startFp.selectedDates[0]) : null;
       const e2 = endFp.selectedDates?.[0]   ? toDateAtMidnight(endFp.selectedDates[0])   : null;
 
+      // ✅ devolución siempre >= pick-up (pero pick-up NO se limita hacia adelante)
       endFp.set("minDate", s2 || today);
-      startFp.set("maxDate", e2 || null);
+      // startFp.set("maxDate", e2 || null); // ❌ quitado para permitir pick-up a futuro sin límite
 
       if (s2 && e2 && s2.getTime() > e2.getTime()){
+        // si pick-up se va después de devolución, movemos devolución a pick-up
         endFp.setDate(s2, false);
         endFp.set("minDate", s2);
-        startFp.set("maxDate", s2);
+        // ✅ ya NO ponemos maxDate al pick-up
       }
 
       jumpToCurrentMonth(startFp);
