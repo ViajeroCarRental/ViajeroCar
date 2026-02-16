@@ -1,11 +1,11 @@
-<?php 
+<?php
 
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http; // 👈 NUEVO
+use Illuminate\Support\Facades\Http; //  NUEVO
 
 class BusquedaController extends Controller
 {
@@ -14,9 +14,10 @@ class BusquedaController extends Controller
     {
         // Ciudades
         $ciudadesBase = DB::table('ciudades')
-            ->select('id_ciudad','nombre','estado','pais')
-            ->orderBy('nombre')
-            ->get();
+          ->select('id_ciudad','nombre','estado','pais')
+          ->orderByRaw("CASE WHEN nombre = 'Querétaro' THEN 0 ELSE 1 END")
+          ->orderBy('nombre')
+          ->get();
 
         // Agregar sucursales activas a cada ciudad
         $ciudades = $ciudadesBase->map(function ($c) {
