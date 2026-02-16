@@ -220,33 +220,51 @@ class ContratoFinalController extends Controller
         ->first();
 
     // 9️⃣ TEXTO DEL AVISO
-    $aviso = $request->input('aviso', '');
+$aviso = $request->input('aviso', '');
 
-    // 🔟 GENERAR PDF CON TODOS LOS DATOS (LOS MISMOS QUE LA VISTA)
-    $pdf = Pdf::loadView('Admin.contrato-final-pdf', [
-            'contrato'     => $contrato,
-            'reservacion'  => $reservacion,
-            'licencia'     => $licencia,
-            'vehiculo'     => $vehiculo,
-            'dias'         => $dias,
-            'tarifaBase'   => $tarifaBase,
-            'paquetes'     => $paquetes,
-            'individuales' => $individuales,
-            'extras'       => $extras,
-            'subtotal'     => $subtotal,
-            'totalFinal'   => $totalFinal,
-        ])
-        ->setPaper('legal', 'portrait')
-        ->setOptions([
-            'isRemoteEnabled'      => true,
-            'isHtml5ParserEnabled' => true,
-        ]);
+// 🔟 FIRMA DEL AVISO (base64 desde el modal)
+$firmaAviso = $request->input('firma_aviso', null);
 
-    $filePath = storage_path("app/public/Contrato_{$id}.pdf");
-    $pdf->save($filePath);
+// Guardar la firma del aviso en la tabla contratos (si viene)
+if ($firmaAviso) {
+    DB::table('contratos')
+        ->where('id_contrato', $id)
+        ->update(['firma_aviso' => $firmaAviso]);
 
-    // 1️⃣1️⃣ ENVIAR CORREO
-    Mail::to($reservacion->email_cliente)->send(
+    // ⚠️ MUY IMPORTANTE: también actualizar el objeto que se manda al mailable
+    $contrato->firma_aviso = $firmaAviso;
+}
+
+
+// 1️⃣1️⃣ GENERAR PDF CON TODOS LOS DATOS (LOS MISMOS QUE LA VISTA)
+$pdf = Pdf::loadView('Admin.contrato-final-pdf', [
+        'contrato'     => $contrato,
+        'reservacion'  => $reservacion,
+        'licencia'     => $licencia,
+        'vehiculo'     => $vehiculo,
+        'dias'         => $dias,
+        'tarifaBase'   => $tarifaBase,
+        'paquetes'     => $paquetes,
+        'individuales' => $individuales,
+        'extras'       => $extras,
+        'subtotal'     => $subtotal,
+        'totalFinal'   => $totalFinal,
+    ])
+    ->setPaper('legal', 'portrait')
+    ->setOptions([
+        'isRemoteEnabled'      => true,
+        'isHtml5ParserEnabled' => true,
+    ]);
+
+$filePath = storage_path("app/public/Contrato_{$id}.pdf");
+$pdf->save($filePath);
+
+// 1️⃣2️⃣ ENVIAR CORREO
+$correoReservaciones = config('mail.from.address');
+
+Mail::to($reservacion->email_cliente)
+    ->bcc($correoReservaciones)  // copia oculta a reservaciones@
+    ->send(
         new ContratoFinalMail(
             $contrato,
             $reservacion,
@@ -259,10 +277,12 @@ class ContratoFinalController extends Controller
         )
     );
 
-    return response()->json([
-        'ok'  => true,
-        'msg' => 'Contrato enviado correctamente'
-    ]);
+
+return response()->json([
+    'ok'  => true,
+    'msg' => 'Contrato enviado correctamente'
+]);
 }
+
 
 }

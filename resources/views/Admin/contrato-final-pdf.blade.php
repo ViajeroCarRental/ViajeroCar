@@ -348,6 +348,11 @@
 
     // Lugar: sucursal de retiro
     $lugar = $reservacion->sucursal_retiro_nombre ?? '________________';
+
+    // ✅ Nombre completo del cliente (nombre + apellidos)
+    $nombreCompletoCliente = trim(
+        ($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')
+    );
 @endphp
 
   <div class="contrato-final-container">
@@ -375,7 +380,10 @@
         <article class="bloque ul-2cols">
   <h3>Datos del Arrendatario</h3>
   <ul>
-    <li><b>Nombre:</b> {{ $reservacion->nombre_cliente ?? '—' }}</li>
+    <li>
+      <b>Nombre:</b>
+      {{ $nombreCompletoCliente !== '' ? $nombreCompletoCliente : ($reservacion->nombre_cliente ?? '—') }}
+    </li>
     <li><b>Correo:</b> {{ $reservacion->email_cliente ?? '—' }}</li>
     <li><b>Teléfono:</b> {{ $reservacion->telefono_cliente ?? '—' }}</li>
     {{-- País viene de la licencia, igual que en la vista --}}
@@ -588,9 +596,10 @@
                       <div class="firma-box">
                         <p>Firma del Cliente</p>
                         <img class="firma-img" src="{{ $contrato->firma_cliente }}" alt="Firma cliente">
-                        <p style="margin-top:6px;font-size:10px;font-weight:700;">
-                          {{ $reservacion->nombre_cliente ?? '—' }}
-                        </p>
+                            <p style="margin-top:6px;font-size:10px;font-weight:700;">
+      {{ $nombreCompletoCliente !== '' ? $nombreCompletoCliente : ($reservacion->nombre_cliente ?? '—') }}
+    </p>
+
                       </div>
                     @endif
 

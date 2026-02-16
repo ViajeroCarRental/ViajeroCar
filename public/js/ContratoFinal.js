@@ -145,27 +145,44 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  /* =======================================
-     4) MODAL AVISO + ENVIAR CORREO (PDF)
-  ======================================= */
-  const modalAviso = document.getElementById("modalAviso");
-  const btnAbrirModalAviso = document.getElementById("btnAbrirModalAviso");
-  const cancelarAviso = document.getElementById("cancelarAviso");
-  const confirmarAviso = document.getElementById("confirmarAviso");
-  const textoCliente = document.getElementById("textoCliente");
+ /* =======================================
+   4) MODAL AVISO + ENVIAR CORREO (PDF)
+======================================= */
+const modalAviso         = document.getElementById("modalAviso");
+const btnAbrirModalAviso = document.getElementById("btnAbrirModalAviso");
+const cancelarAviso      = document.getElementById("cancelarAviso");
+const confirmarAviso     = document.getElementById("confirmarAviso");
 
-  btnAbrirModalAviso?.addEventListener("click", () => {
-    if (!modalAviso || !textoCliente) return;
-    modalAviso.style.display = "flex";
-    textoCliente.value = "";
-  });
+// Nuevo: elementos para la firma del aviso
+const canvasAviso        = document.getElementById("padAviso");
+const clearAviso         = document.getElementById("clearAviso");
+const textoOriginalAviso = document.getElementById("textoOriginal");
 
-  cancelarAviso?.addEventListener("click", () => {
-    if (!modalAviso) return;
-    modalAviso.style.display = "none";
-  });
+let padAviso = null;
+if (canvasAviso && window.SignaturePad) {
+  padAviso = new SignaturePad(canvasAviso, { minWidth: 1, maxWidth: 2 });
+}
 
-  confirmarAviso?.addEventListener("click", async () => {
+// Abrir modal de aviso y limpiar firma
+btnAbrirModalAviso?.addEventListener("click", () => {
+  if (!modalAviso || !padAviso) return;
+  modalAviso.style.display = "flex";
+  padAviso.clear();
+});
+
+// Cerrar modal de aviso
+cancelarAviso?.addEventListener("click", () => {
+  if (!modalAviso) return;
+  modalAviso.style.display = "none";
+});
+
+// Limpiar la firma del aviso
+clearAviso?.addEventListener("click", () => {
+  padAviso?.clear();
+});
+
+// Confirmar aviso: validar firma + enviar correo
+confirmarAviso?.addEventListener("click", async () => {
   try {
     if (!id) {
       if (window.alertify) {
@@ -176,27 +193,32 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (!textoCliente) return;
+    if (!padAviso) return;
 
-    const cliente = textoCliente.value.trim();
-    if (cliente.length < 10) {
+    // Validar que haya firma
+    if (padAviso.isEmpty()) {
       if (window.alertify) {
-        alertify.warning("Escribe el texto de aviso un poco más completo.");
+        alertify.warning("Por favor realiza la firma para confirmar el aviso.");
       } else {
-        alert("Escribe el texto de aviso un poquito más completo.");
+        alert("Por favor realiza la firma para confirmar el aviso.");
       }
       return;
     }
 
+    // Texto del aviso (ya viene con el nombre completo desde Blade)
+    const avisoTexto = textoOriginalAviso?.innerText?.trim() || "";
+
     confirmarAviso.disabled = true;
     confirmarAviso.textContent = "Enviando...";
 
-    // Mensaje mientras se genera y envía el contrato
     if (window.alertify) {
-      alertify.message("Generando contrato y enviando correo...");
+      alertify.message("Guardando firma del aviso y enviando contrato...");
     }
 
-    const data = await postJSON(`/contrato/${id}/enviar-correo`, { aviso: cliente });
+    const data = await postJSON(`/contrato/${id}/enviar-correo`, {
+      aviso: avisoTexto,
+      firma_aviso: padAviso.toDataURL("image/png")
+    });
 
     if (window.alertify) {
       if (data.ok) {
@@ -218,9 +240,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   } finally {
     confirmarAviso.disabled = false;
-    confirmarAviso.textContent = "Confirmar y Enviar";
+    confirmarAviso.textContent = "Firmar y Enviar";
   }
 });
+
 
 
   /* =======================================

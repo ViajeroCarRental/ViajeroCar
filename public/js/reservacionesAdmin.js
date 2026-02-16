@@ -78,6 +78,15 @@
       dropoff: false,
       delivery: false,
       gasolina: false
+    },
+
+    // ✅ DELIVERY (estado interno)
+    delivery: {
+      total: 0,
+      km: 0,
+      ubicacion: "",
+      direccion: "",
+      activo: false
     }
   };
 
@@ -116,6 +125,20 @@
     ensureHidden("seguroSeleccionado[precio]", "seguroSeleccionado_precio");
     ensureHidden("seguroSeleccionado[nombre]", "seguroSeleccionado_nombre");
     ensureHidden("seguroSeleccionado[charge]", "seguroSeleccionado_charge");
+  }
+
+  function ensureServiciosHidden() {
+    ensureHidden("svc_dropoff", "svc_dropoff");
+    ensureHidden("svc_delivery", "svc_delivery");
+    ensureHidden("svc_gasolina", "svc_gasolina");
+  }
+
+  function ensureDeliveryHidden() {
+    ensureHidden("delivery_activo", "delivery_activo");
+    ensureHidden("delivery_total", "delivery_total");
+    ensureHidden("delivery_km", "delivery_km");
+    ensureHidden("delivery_direccion", "delivery_direccion");
+    ensureHidden("delivery_ubicacion", "delivery_ubicacion");
   }
 
   function syncProteccionHidden() {
@@ -189,9 +212,11 @@
   }
 
   /* =========================
-     Servicios (switch)
+     Servicios (switches)
   ========================= */
   function syncServiciosHidden() {
+    ensureServiciosHidden();
+
     const d = qs("#svc_dropoff");
     const l = qs("#svc_delivery");
     const g = qs("#svc_gasolina");
@@ -201,51 +226,201 @@
     if (g) g.value = state.servicios.gasolina ? "1" : "0";
   }
 
+  /* =========================
+     🚚 DELIVERY (Switch + Campos + Total)
+     REGLA PEDIDA:
+     - OFF: NO se ve nada (campos y total ocultos)
+     - ON: se despliega bloque y muestra total dentro del bloque
+  ========================= */
+  function getDeliveryEls() {
+    const wrap = qs(".delivery-wrapper");
+    if (!wrap) return null;
+
+    return {
+      wrap,
+      toggle: qs("#deliveryToggle"),
+      fields: qs("#deliveryFields"),
+      ubicacion: qs("#deliveryUbicacion"),
+      groupDir: qs("#groupDireccion"),
+      groupKm: qs("#groupKm"),
+      dir: qs("#deliveryDireccion"),
+      km: qs("#deliveryKm"),
+      totalTxt: qs("#deliveryTotal"),
+      totalHid: qs("#deliveryTotalHidden"),
+      precioKmHid: qs("#deliveryPrecioKm"),
+    };
+  }
+
+  function getDeliveryPrecioKm(els) {
+    const wrap = els?.wrap;
+    const fromData = wrap ? Number(wrap.dataset.costoKm || 0) : 0;
+    const fromHid = els?.precioKmHid ? Number(els.precioKmHid.value || 0) : 0;
+    return Number.isFinite(fromData) && fromData > 0 ? fromData : fromHid;
+  }
+
+  function syncDeliveryGroups(els) {
+    if (!els) return;
+    const val = String(els.ubicacion?.value || "");
+    const isManual = (val === "0");
+    if (els.groupDir) els.groupDir.style.display = isManual ? "block" : "none";
+    if (els.groupKm) els.groupKm.style.display = isManual ? "block" : "none";
+  }
+
+  function computeDelivery(els) {
+    if (!els) return 0;
+
+    const precioKm = getDeliveryPrecioKm(els);
+    let km = 0;
+
+    const val = String(els.ubicacion?.value || "");
+
+    if (val === "0") {
+      km = Number(els.km?.value || 0);
+    } else if (val) {
+      const opt = els.ubicacion?.options?.[els.ubicacion.selectedIndex];
+      km = Number(opt?.dataset?.km || 0);
+    } else {
+      km = 0;
+    }
+
+    km = Math.max(0, km);
+    const total = Math.max(0, km * Math.max(0, precioKm));
+
+    state.delivery.km = km;
+    state.delivery.total = total;
+    state.delivery.ubicacion = val;
+    state.delivery.direccion = String(els.dir?.value || "");
+
+    if (els.totalTxt) els.totalTxt.textContent = money(total);
+    if (els.totalHid) els.totalHid.value = String(total);
+
+    if (els.wrap) {
+      els.wrap.dataset.deliveryKm = String(km);
+      els.wrap.dataset.deliveryTotal = String(total);
+      els.wrap.dataset.deliveryUbicacion = val;
+      els.wrap.dataset.deliveryDireccion = state.delivery.direccion;
+    }
+
+    // ✅ hidden backend
+    ensureDeliveryHidden();
+    qs("#delivery_activo").value = state.servicios.delivery ? "1" : "0";
+    qs("#delivery_total").value = String(total);
+    qs("#delivery_km").value = String(km);
+    qs("#delivery_direccion").value = state.delivery.direccion;
+    qs("#delivery_ubicacion").value = val;
+
+    return total;
+  }
+
+  function resetDelivery(els) {
+    state.delivery.total = 0;
+    state.delivery.km = 0;
+    state.delivery.ubicacion = "";
+    state.delivery.direccion = "";
+
+    if (els?.totalTxt) els.totalTxt.textContent = money(0);
+    if (els?.totalHid) els.totalHid.value = "0";
+
+    // limpia campos para que NO “se queden” al volver a abrir
+    if (els?.ubicacion) els.ubicacion.value = "";
+    if (els?.dir) els.dir.value = "";
+    if (els?.km) els.km.value = "";
+
+    ensureDeliveryHidden();
+    qs("#delivery_activo").value = "0";
+    qs("#delivery_total").value = "0";
+    qs("#delivery_km").value = "0";
+    qs("#delivery_direccion").value = "";
+    qs("#delivery_ubicacion").value = "";
+  }
+
+  function setDeliveryActive(on, source = "") {
+    const els = getDeliveryEls();
+    state.servicios.delivery = !!on;
+    state.delivery.activo = !!on;
+
+    syncServiciosHidden();
+    ensureDeliveryHidden();
+    qs("#delivery_activo").value = on ? "1" : "0";
+
+    // UI
+    if (els?.toggle) els.toggle.checked = !!on;
+
+    // ✅ REGLA: OFF = no se ve nada
+    if (els?.fields) els.fields.style.display = on ? "block" : "none";
+
+    if (!on) {
+      resetDelivery(els);
+    } else {
+      syncDeliveryGroups(els);
+      computeDelivery(els);
+    }
+
+    syncTotalsHidden();
+    refreshSummary();
+  }
+
+  function bindDeliveryUI() {
+    const els = getDeliveryEls();
+    if (!els) return;
+
+    // init desde dataset server
+    const activoServer = String(els.wrap.dataset.deliveryActivo || "0") === "1";
+
+    // precarga valores server
+    const ubServer = els.wrap.dataset.deliveryUbicacion;
+    if (els.ubicacion && ubServer !== undefined && ubServer !== null && String(ubServer) !== "") {
+      els.ubicacion.value = String(ubServer);
+    }
+    const kmServer = els.wrap.dataset.deliveryKm;
+    if (els.km && kmServer) els.km.value = String(kmServer);
+    const dirServer = els.wrap.dataset.deliveryDireccion;
+    if (els.dir && dirServer) els.dir.value = String(dirServer);
+
+    // aplica estado inicial (IMPORTANTE: OFF oculta TODO)
+    setDeliveryActive(activoServer, "init");
+
+    // listeners
+    els.toggle?.addEventListener("change", () => {
+      setDeliveryActive(!!els.toggle.checked, "switch");
+    });
+
+    els.ubicacion?.addEventListener("change", () => {
+      // si escoge ubicación predefinida, limpia manual
+      if (String(els.ubicacion.value) !== "0") {
+        if (els.dir) els.dir.value = "";
+        if (els.km) els.km.value = "";
+      }
+      syncDeliveryGroups(els);
+
+      if (state.servicios.delivery) {
+        computeDelivery(els);
+        syncTotalsHidden();
+        refreshSummary();
+      }
+    });
+
+    els.km?.addEventListener("input", () => {
+      if (state.servicios.delivery) {
+        computeDelivery(els);
+        syncTotalsHidden();
+        refreshSummary();
+      }
+    });
+
+    els.dir?.addEventListener("input", () => {
+      state.delivery.direccion = String(els.dir.value || "");
+      ensureDeliveryHidden();
+      qs("#delivery_direccion").value = state.delivery.direccion;
+    });
+  }
+
   function getServiciosLabelList() {
     const labels = [];
     if (state.servicios.dropoff) labels.push("🚩 Drop Off");
     if (state.servicios.delivery) labels.push("🚚 Delivery");
     if (state.servicios.gasolina) labels.push("⛽ Gasolina prepago");
     return labels;
-  }
-
-  function refreshServiciosUI() {
-    const btns = Array.from(document.querySelectorAll(".svc-btn[data-svc]"));
-    btns.forEach((b) => {
-      const key = b.dataset.svc;
-      const isOn = !!state.servicios[key];
-      b.classList.toggle("is-on", isOn);
-      b.setAttribute("aria-pressed", isOn ? "true" : "false");
-    });
-
-    const list = getServiciosLabelList();
-    const txt = qs("#svcSelTxt");
-    const sub = qs("#svcSelSub");
-    const clear = qs("#svcClear");
-
-    if (txt) txt.textContent = list.length ? list.join(" · ") : "— Ninguno —";
-    if (sub) sub.textContent = list.length ? "Servicios activados." : "Después te muestro los detalles aquí.";
-    if (clear) clear.style.display = list.length ? "" : "none";
-
-    const rs = qs("#resServicios");
-    if (rs) rs.textContent = list.length ? list.join(", ") : "—";
-  }
-
-  function toggleServicio(key) {
-    if (!["dropoff", "delivery", "gasolina"].includes(key)) return;
-    state.servicios[key] = !state.servicios[key];
-    syncServiciosHidden();
-    refreshServiciosUI();
-    refreshSummary();
-  }
-
-  function clearServicios() {
-    state.servicios.dropoff = false;
-    state.servicios.delivery = false;
-    state.servicios.gasolina = false;
-    syncServiciosHidden();
-    refreshServiciosUI();
-    refreshSummary();
   }
 
   /* =========================
@@ -326,6 +501,13 @@
     refreshCategoriaPreview();
     repaintCategoriaModalEstimados();
     refreshAddonsBadge();
+
+    // ✅ si delivery está activo, recalcula
+    if (state.servicios.delivery) {
+      const els = getDeliveryEls();
+      if (els) computeDelivery(els);
+    }
+
     refreshSummary();
     syncTotalsHidden();
   }
@@ -463,13 +645,6 @@
       insCaminoTrack: "Asistencia para el camino",
       insTercerosTrack: "Daños a terceros",
       insAutoTrack: "Protecciones automáticas",
-
-      // por si tus tracks del modalIndividuales cambian:
-      cardsColision: "Colisión y robo",
-      cardsMedicos: "Gastos médicos",
-      cardsCamino: "Asistencia para el camino",
-      cardsTerceros: "Daños a terceros",
-      cardsAuto: "Protecciones automáticas",
     };
     return map[trackId] || "";
   }
@@ -484,8 +659,7 @@
     const nombre = card.querySelector("h4")?.textContent?.trim() || "Seguro individual";
     const desc = card.querySelector("p")?.textContent?.trim() || "";
 
-    // 👇 soporta tanto .scroll-h como .cards
-    const parentTrack = card.closest(".scroll-h, .cards")?.id || "";
+    const parentTrack = card.closest(".scroll-h")?.id || "";
     const grupo = getGrupoLabelFromTrack(parentTrack);
 
     const exists = state.individuales.has(id);
@@ -607,11 +781,15 @@
     const indTotal = (!prot) ? calcIndividualesSubtotal() : 0;
     const extrasSub = calcExtrasSubtotal();
 
-    const subtotal = baseTotal + protTotal + indTotal + extrasSub;
+    const deliveryTotal = state.servicios.delivery
+      ? Number(qs("#deliveryTotalHidden")?.value || state.delivery.total || 0)
+      : 0;
+
+    const subtotal = baseTotal + protTotal + indTotal + extrasSub + deliveryTotal;
     const iva = Math.round(subtotal * 0.16 * 100) / 100;
     const total = subtotal + iva;
 
-    return { baseDia, baseTotal, protTotal, indTotal, extrasSub, subtotal, iva, total };
+    return { baseDia, baseTotal, protTotal, indTotal, extrasSub, deliveryTotal, subtotal, iva, total };
   }
 
   function syncTotalsHidden() {
@@ -722,6 +900,18 @@
     if (isAirportSelected()) {
       const vuelo = qs("#no_vuelo")?.value?.trim() || "";
       if (!vuelo) missing.push("No. vuelo (Aeropuerto)");
+    }
+
+    if (state.servicios.delivery) {
+      const els = getDeliveryEls();
+      if (els) {
+        const ub = String(els.ubicacion?.value || "");
+        if (!ub) missing.push("Delivery: seleccionar ubicación");
+        if (ub === "0") {
+          const km = Number(els.km?.value || 0);
+          if (!(km > 0)) missing.push("Delivery: kilómetros personalizados");
+        }
+      }
     }
 
     if (missing.length) {
@@ -875,6 +1065,8 @@
     ensureCategoriaHiddenFix();
     ensureTotalsHidden();
     ensureProteccionHidden();
+    ensureServiciosHidden();
+    ensureDeliveryHidden();
 
     syncDateHiddenFromUI("#fecha_inicio_ui", "#fecha_inicio");
     syncDateHiddenFromUI("#fecha_fin_ui", "#fecha_fin");
@@ -886,8 +1078,17 @@
     repaintCategoriaModalEstimados();
     refreshSummary();
 
-    syncServiciosHidden();
-    refreshServiciosUI();
+    // ✅ delivery: si está activo recalcula
+    if (state.servicios.delivery) {
+      const els = getDeliveryEls();
+      if (els) computeDelivery(els);
+    } else {
+      qs("#delivery_activo").value = "0";
+      qs("#delivery_total").value = "0";
+      qs("#delivery_km").value = "0";
+      qs("#delivery_direccion").value = "";
+      qs("#delivery_ubicacion").value = "";
+    }
 
     syncProteccionHidden();
     syncIndividualesHidden();
@@ -921,6 +1122,24 @@
       fd.set("svc_dropoff",  state.servicios.dropoff ? "1" : "0");
       fd.set("svc_delivery", state.servicios.delivery ? "1" : "0");
       fd.set("svc_gasolina", state.servicios.gasolina ? "1" : "0");
+
+      // ✅ delivery (backend)
+      if (state.servicios.delivery) {
+        const els = getDeliveryEls();
+        if (els) {
+          fd.set("delivery_activo", "1");
+          fd.set("delivery_total", String(Number(els.totalHid?.value || 0)));
+          fd.set("delivery_km", String(Number(els.km?.value || 0)));
+          fd.set("delivery_direccion", String(els.dir?.value || ""));
+          fd.set("delivery_ubicacion", String(els.ubicacion?.value || ""));
+        }
+      } else {
+        fd.set("delivery_activo", "0");
+        fd.set("delivery_total", "0");
+        fd.set("delivery_km", "0");
+        fd.set("delivery_direccion", "");
+        fd.set("delivery_ubicacion", "");
+      }
 
       const res = await fetch(action, {
         method: "POST",
@@ -1177,7 +1396,6 @@
   const COUNTRY_DATA = [
     { name:"MÉXICO", iso2:"MX", dial:"+52" },
     { name:"ESTADOS UNIDOS", iso2:"US", dial:"+1" },
-
     { name:"AFGANISTÁN", iso2:"AF", dial:"+93" },
     { name:"ALBANIA", iso2:"AL", dial:"+355" },
     { name:"ALEMANIA", iso2:"DE", dial:"+49" },
@@ -1471,11 +1689,20 @@
       refreshSummary();
     });
 
-    // Servicios
-    qsa(".svc-btn[data-svc]").forEach((b) => {
-      b.addEventListener("click", () => toggleServicio(b.dataset.svc));
+    // ✅ Switches Servicios (NO botones)
+    qs("#dropoffToggle")?.addEventListener("change", (e) => {
+      state.servicios.dropoff = !!e.target.checked;
+      syncServiciosHidden();
+      refreshSummary();
+      syncTotalsHidden();
     });
-    qs("#svcClear")?.addEventListener("click", () => clearServicios());
+
+    qs("#gasolinaToggle")?.addEventListener("change", (e) => {
+      state.servicios.gasolina = !!e.target.checked;
+      syncServiciosHidden();
+      refreshSummary();
+      syncTotalsHidden();
+    });
 
     // Categorías modal
     const catPop = qs("#catPop");
@@ -1533,12 +1760,11 @@
       closePop(protPop);
     });
 
-    // ✅ EVENT DELEGATION: individuales (sirve en proteccionPop y modalIndividuales)
+    // ✅ EVENT DELEGATION: individuales
     document.addEventListener("click", (e) => {
       const card = e.target.closest(".individual-item");
       if (!card) return;
 
-      // evita que click en botones dentro rompa (si un día pones botones)
       const isBtn = e.target.closest("button,a,input,textarea,select");
       if (isBtn) return;
 
@@ -1572,7 +1798,6 @@
     qs("#btnResumen")?.addEventListener("click", () => {
       syncDays();
       repaintCategoriaModalEstimados();
-      refreshServiciosUI();
       refreshProteccionUIHeader();
       refreshSummary();
       openPop(resPop);
@@ -1587,19 +1812,6 @@
         if (pop.id === "confirmPop") return;
         closePop(pop);
       });
-    });
-
-    // ✅ Modal individuales (si existe en blade)
-    const indPop = qs("#modalIndividuales");
-    qsa('.closeModal[data-target="individuales"]').forEach((b) => {
-      b.addEventListener("click", () => closePop(indPop));
-    });
-    qs("#individualesApply")?.addEventListener("click", () => {
-      syncIndividualesHidden();
-      refreshProteccionUIHeader();
-      syncTotalsHidden();
-      refreshSummary();
-      closePop(indPop);
     });
 
     // Teléfono: sincroniza hidden al escribir
@@ -1619,11 +1831,23 @@
     ensureCategoriaHiddenFix();
     ensureTotalsHidden();
     ensureProteccionHidden();
+    ensureServiciosHidden();
+    ensureDeliveryHidden();
+
+    // estados iniciales switches por hidden
+    state.servicios.dropoff  = String(qs("#svc_dropoff")?.value || "0") === "1";
+    state.servicios.gasolina = String(qs("#svc_gasolina")?.value || "0") === "1";
+
+    const dropT = qs("#dropoffToggle");
+    if (dropT) dropT.checked = state.servicios.dropoff;
+
+    const gasT = qs("#gasolinaToggle");
+    if (gasT) gasT.checked = state.servicios.gasolina;
 
     syncVueloField();
 
-    syncServiciosHidden();
-    refreshServiciosUI();
+    // ✅ Delivery init + listeners (OFF oculta todo)
+    bindDeliveryUI();
 
     syncDays();
     repaintCategoriaModalEstimados();

@@ -168,7 +168,17 @@
   <!-- CONTENT -->
   <div class="content">
 
-    <p>Estimado(a) <strong>{{ $reservacion->nombre_cliente }}</strong>,</p>
+    @php
+    $nombreCompleto = trim(
+        ($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')
+    );
+@endphp
+
+<p>
+    Estimado(a)
+    <strong>{{ $nombreCompleto !== '' ? $nombreCompleto : ($reservacion->nombre_cliente ?? 'Cliente') }}</strong>,
+</p>
+
     <p>Adjuntamos su <strong>Contrato Final de Renta</strong> correspondiente a su reservación.</p>
 
     <div class="info-box">
@@ -177,24 +187,76 @@
       <p><strong>Total:</strong> ${{ number_format($totalFinal, 2) }} MXN</p>
     </div>
 
-    <!-- =============================
+            {{-- =============================
          AVISO LEGAL DEL CLIENTE
-         (CORREGIDO)
-    ============================== -->
-
+    ============================== --}}
     @php
         $textoAviso = isset($aviso) ? trim($aviso) : '';
     @endphp
 
     @if($textoAviso !== '')
-    <div class="info-box" style="margin-top: 25px;">
-        <h3 style="margin: 0 0 10px; color:#b1060f;">Confirmación del Cliente</h3>
+        <div class="info-box" style="margin-top: 25px;">
+            <h3 style="margin: 0 0 10px; color:#b1060f;">Confirmación del Cliente</h3>
 
-        <p style="white-space: pre-wrap; font-size:15px; line-height:1.6;">
-            {{ $textoAviso }}
-        </p>
-    </div>
+            {{-- Texto que el cliente aceptó (ya incluye su nombre completo) --}}
+            <p style="white-space: pre-wrap; font-size:15px; line-height:1.6; text-align:justify;">
+                {{ $textoAviso }}
+            </p>
+
+            {{-- Firma capturada en el modal de aviso --}}
+            @php
+                $firmaBase64 = $contrato->firma_aviso ?? null;
+            @endphp
+
+            @if(!empty($firmaBase64))
+                <p class="firma-label" style="margin-top:18px;">
+                    Firma del arrendatario en conformidad con el aviso:
+                </p>
+
+                @php
+                    // 1) Quitar el encabezado "data:image/png;base64,"
+                    $comaPos = strpos($firmaBase64, ',');
+                    $datosBase64 = $comaPos !== false
+                        ? substr($firmaBase64, $comaPos + 1)
+                        : $firmaBase64;
+
+                    // 2) Decodificar base64 a binario
+                    $firmaBinaria = base64_decode($datosBase64);
+
+                    // 3) Incrustar la imagen en el correo como CID
+                    $cidFirmaAviso = $message->embedData(
+                        $firmaBinaria,
+                        'firma-aviso.png',
+                        'image/png'
+                    );
+                @endphp
+
+                <img src="{{ $cidFirmaAviso }}"
+                alt="Firma del arrendatario"
+                class="firma-img"
+                style="display:block; margin:8px auto 0; border:1px solid #ccc; border-radius:6px; width:180px;">
+
+
+                @php
+                    $nombreCompletoAviso = trim(
+                        ($reservacion->nombre_cliente ?? '') . ' ' .
+                        ($reservacion->apellidos_cliente ?? '')
+                    );
+                @endphp
+
+                @if($nombreCompletoAviso !== '')
+                  <p style="margin-top:6px; font-size:14px; font-weight:600; text-align:center;">
+                    {{ $nombreCompletoAviso }}
+                  </p>
+                @endif
+
+            @endif
+        </div>
     @endif
+
+
+
+
 
 
     <div class="divider"></div>

@@ -260,14 +260,14 @@ label{
 .mini-price{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:12px;
+  gap:18;
   margin-top:12px;
 }
 .price-big{
   font-size:18px;
   font-weight:900;
 }
-.price-big span{ font-size:12px; font-weight:900; color:#475569; }
+.price-big span{ font-size:18x; font-weight:900; color:#475569; }
 @media (max-width:560px){
   .mini-price{ grid-template-columns:1fr; }
 }
@@ -885,13 +885,12 @@ input[type="time"]::-webkit-calendar-picker-indicator{
 
 /* ==========================================================
    ✅ PAQUETES DE PROTECCIÓN (cards del carrusel)
-   Más espacio + más estético
 ========================================================== */
 .prote-pack,
 .pack-card,
 .prote-card,
 .card-pack{
-  flex:0 0 360px;                  /* ✅ más ancho */
+  flex:0 0 360px;
   scroll-snap-align:start;
   background:
     radial-gradient(900px 220px at 20% 0%, rgba(178,34,34,.10), transparent 55%),
@@ -902,10 +901,9 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   box-shadow:0 14px 38px rgba(0,0,0,.12);
   transition:.18s ease;
   position:relative;
-  min-height:315px;               /* ✅ más alto */
+  min-height:315px;
 }
 
-/* franja */
 .prote-pack::before,
 .pack-card::before,
 .prote-card::before,
@@ -917,7 +915,6 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   background:linear-gradient(90deg,var(--brand), #ff6b6b);
 }
 
-/* hover */
 .prote-pack:hover,
 .pack-card:hover,
 .prote-card:hover,
@@ -926,7 +923,6 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   box-shadow:0 22px 58px rgba(0,0,0,.16);
 }
 
-/* seleccionado */
 .prote-pack.is-selected,
 .pack-card.is-selected,
 .prote-card.is-selected,
@@ -935,7 +931,6 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   box-shadow:var(--glow), 0 22px 58px rgba(0,0,0,.16);
 }
 
-/* badge recomendado */
 .prote-pack .badge,
 .pack-card .badge,
 .prote-card .badge,
@@ -957,13 +952,13 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   box-shadow:0 12px 24px rgba(0,0,0,.18);
 }
 
-/* header interior */
 .prote-pack .head,
 .pack-card .head,
 .prote-card .head,
 .card-pack .head{
-  padding:22px 18px 12px;         /* ✅ más padding */
+  padding:28px 22px 16px;
 }
+
 .prote-pack h3,
 .pack-card h3,
 .prote-card h3,
@@ -973,6 +968,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   font-weight:1000;
   letter-spacing:.2px;
 }
+
 .prote-pack p,
 .pack-card p,
 .prote-card p,
@@ -982,31 +978,33 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   font-weight:700;
   font-size:13px;
   line-height:1.4;
+  text-align:right;
 }
 
-/* precio */
 .prote-pack .price,
 .pack-card .price,
 .prote-card .price,
 .card-pack .price{
-  margin-top:12px;
+  margin:18px 22px 0;
   background:linear-gradient(180deg, #fafafa, #ffffff);
   border:1px dashed rgba(15,23,42,.14);
   border-radius:16px;
-  padding:14px 14px;              /* ✅ más padding */
+  padding:14px 14px;
   display:flex;
   align-items:flex-end;
   justify-content:space-between;
   gap:12px;
 }
+
 .prote-pack .price strong,
 .pack-card .price strong,
 .prote-card .price strong,
 .card-pack .price strong{
-  font-size:24px;                 /* ✅ más grande */
+  font-size:24px;
   font-weight:1000;
   color:#111827;
 }
+
 .prote-pack .price span,
 .pack-card .price span,
 .prote-card .price span,
@@ -1016,17 +1014,17 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   color:#64748b;
 }
 
-/* lista de beneficios */
 .prote-pack ul,
 .pack-card ul,
 .prote-card ul,
 .card-pack ul{
   list-style:none;
-  padding:0 18px 16px;
+  padding:0 22px 18px;
   margin:12px 0 0;
   display:grid;
-  gap:10px;                       /* ✅ más aire */
+  gap:10px;
 }
+
 .prote-pack ul li,
 .pack-card ul li,
 .prote-card ul li,
@@ -1034,7 +1032,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   background:#f3f4f6;
   border:1px solid rgba(15,23,42,.10);
   border-radius:999px;
-  padding:9px 12px;               /* ✅ más padding */
+  padding:9px 12px;
   font-weight:900;
   font-size:12px;
   color:#111827;
@@ -1042,6 +1040,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   align-items:center;
   gap:10px;
 }
+
 .prote-pack ul li::before,
 .pack-card ul li::before,
 .prote-card ul li::before,
@@ -1057,15 +1056,15 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   font-weight:1000;
 }
 
-/* acciones */
 .prote-pack .actions,
 .pack-card .actions,
 .prote-card .actions,
 .card-pack .actions{
-  padding:14px 18px 18px;         /* ✅ más espacio */
+  padding:18px 22px 22px;
   display:flex;
   gap:10px;
 }
+
 .prote-pack .actions .btn,
 .pack-card .actions .btn,
 .prote-card .actions .btn,
@@ -1073,10 +1072,10 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   width:100%;
   justify-content:center;
   border-radius:14px;
-  padding:11px 14px;              /* ✅ más cómodo */
+  padding:11px 14px;
 }
 
-/* ===== Individuales (tus .ins-card) — más pro ===== */
+/* ===== Individuales (ins-card) ===== */
 .cat-title{
   margin:18px 0 10px;
   font-size:14px;
@@ -1096,7 +1095,6 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   border-radius:999px;
 }
 
-/* Card premium */
 .ins-card{
   flex:0 0 320px;
   scroll-snap-align:start;
@@ -1156,8 +1154,6 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   font-size:12px;
   font-weight:900;
 }
-
-/* fila inferior */
 .ins-card .small{
   margin-top:10px;
   font-weight:1000;
@@ -1167,19 +1163,18 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   gap:10px;
 }
 
-/* Switch */
-.switch{
+/* ✅ Switch INDIVIDUAL (solo modal protecciones) */
+#proteccionPop .switch.switch-individual{
   width:56px;
   height:32px;
   border-radius:999px;
   background:#e5e7eb;
   border:1px solid #d1d5db;
   position:relative;
-  margin-top:0;
   box-shadow:inset 0 4px 10px rgba(0,0,0,.06);
   flex:0 0 auto;
 }
-.switch::after{
+#proteccionPop .switch.switch-individual::after{
   content:"";
   position:absolute;
   top:3px; left:3px;
@@ -1189,19 +1184,11 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   box-shadow:0 10px 20px rgba(0,0,0,.18);
   transition:.18s ease;
 }
-
-/* ON */
-.switch.is-on,
-.ins-card.is-selected .switch,
-.individual-item.is-selected .switch,
-.individual-item.active .switch{
+#proteccionPop .switch.switch-individual.is-on{
   background:rgba(178,34,34,.15);
   border-color:rgba(178,34,34,.35);
 }
-.switch.is-on::after,
-.ins-card.is-selected .switch::after,
-.individual-item.is-selected .switch::after,
-.individual-item.active .switch::after{
+#proteccionPop .switch.switch-individual.is-on::after{
   left:27px;
   background:var(--brand);
 }
@@ -1229,11 +1216,10 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   letter-spacing:.25px;
   box-shadow:0 10px 20px rgba(0,0,0,.16);
 }
-
 .individual-item.is-selected .small,
 .individual-item.active .small{ color:var(--brand); }
 
-/* Responsive */
+/* Responsive protecciones */
 @media (max-width: 860px){
   .prote-pack, .pack-card, .prote-card, .card-pack{ flex-basis: 320px; }
   .ins-card{ flex-basis: 290px; }
@@ -1243,147 +1229,154 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   .modal-prote-tabs .tabs-bar{ flex-wrap:wrap; }
   .modal-prote-tabs .tab-btn{ width:100%; justify-content:center; }
 }
-/* ✅ Descripción de paquetes alineada a la derecha */
-.prote-pack .head p,
-.pack-card .head p,
-.prote-card .head p,
-.card-pack .head p{
-  text-align:right;
-}
 
-/* (Opcional) si también quieres el título a la derecha */
-.prote-pack .head h3,
-.pack-card .head h3,
-.prote-card .head h3,
-.card-pack .head h3{
-  text-align:right;
-}
-/* ===============================
-   MÁS ESPACIO EN CARDS DE PAQUETES
-=============================== */
-
-/* Espacio general interno */
-.prote-pack,
-.pack-card,
-.prote-card,
-.card-pack{
-  padding: 10px;              /* margen interno extra */
-}
-
-/* Header (título + descripción) */
-.prote-pack .head,
-.pack-card .head,
-.prote-card .head,
-.card-pack .head{
-  padding: 28px 22px 16px;    /* más aire arriba y lados */
-}
-
-/* Precio */
-.prote-pack .price,
-.pack-card .price,
-.prote-card .price,
-.card-pack .price{
-  margin: 18px 22px 0;        /* separación lateral */
-}
-
-/* Lista de beneficios */
-.prote-pack ul,
-.pack-card ul,
-.prote-card ul,
-.card-pack ul{
-  padding: 0 22px 18px;       /* más margen lateral */
-}
-
-/* Botones */
-.prote-pack .actions,
-.pack-card .actions,
-.prote-card .actions,
-.card-pack .actions{
-  padding: 18px 22px 22px;    /* cierre más respirado */
-}
-/* =========================================
-   💰 PRECIO DE PAQUETES — ESTILO PREMIUM
-========================================= */
-
-/* Contenedor del precio */
-.prote-pack .price,
-.pack-card .price,
-.prote-card .price,
-.card-pack .price{
-  background:
-    linear-gradient(180deg, rgba(178,34,34,.08), rgba(178,34,34,.02)),
-    #fff;
-  border:1px dashed rgba(178,34,34,.35);
-  border-radius:18px;
-  padding:18px 18px;
-  display:flex;
-  align-items:flex-end;
-  justify-content:space-between;
+/* =========================
+   SERVICIOS: 1 fila (cards lado a lado)
+========================= */
+.svc-grid{
+  display:grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap:14px;
+  align-items: start;
+}
+
+.svc-card{
+  background: #fff;
+  border: 1px solid rgba(15,23,42,.10);
+  border-radius: 16px;
+  box-shadow: 0 14px 34px rgba(15,23,42,.10);
+  overflow: hidden;
+  padding: 14px;
+  display:flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.svc-top{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+
+.svc-ico{
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border-radius: 12px;
+  background: rgba(178,34,34,.10);
+  border: 1px solid rgba(178,34,34,.18);
+  font-size: 18px;
+  flex: 0 0 42px;
+}
+
+.svc-meta{ flex: 1; min-width: 0; }
+.svc-name{
+  font-weight: 1000;
+  color: #0f172a;
+  margin: 2px 0 4px;
+}
+.svc-desc{
+  color: #6b7280;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.svc-bottom{
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(15,23,42,.12);
+}
+.svc-hint{
+  font-weight: 900;
+  color: #111827;
+  opacity: .75;
+}
+
+/* Delivery fields */
+.svc-fields{
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15,23,42,.08);
+  display: grid;
+  gap: 10px;
+}
+
+.svc-field .svc-label{
+  display:block;
+  font-weight: 900;
+  color:#111827;
+  margin-bottom: 6px;
+}
+
+.svc-total{
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(178,34,34,.08);
+  border: 1px solid rgba(178,34,34,.18);
+  font-weight: 900;
+}
+
+.svc-card--accent{
+  border-color: rgba(178,34,34,.25);
+  box-shadow: 0 18px 46px rgba(178,34,34,.14);
+}
+
+/* ✅ SWITCH SOLO PARA SERVICIOS (input + span.slider) */
+.svc-card label.switch{
   position:relative;
+  display:inline-block;
+  width:56px;
+  height:30px;
 }
-
-/* Etiqueta pequeña arriba del monto */
-.prote-pack .price::before,
-.pack-card .price::before,
-.prote-card .price::before,
-.card-pack .price::before{
-  content:"Precio por día";
+.svc-card label.switch input{
   position:absolute;
-  top:-10px;
-  left:16px;
-  background:#fff;
-  padding:4px 10px;
+  opacity:0;
+  width:0;
+  height:0;
+}
+.svc-card label.switch .slider{
+  position:absolute;
+  inset:0;
+  cursor:pointer;
+  background:#e5e7eb; /* OFF */
+  border:1px solid rgba(15,23,42,.12);
   border-radius:999px;
-  font-size:11px;
-  font-weight:1000;
-  color:#7a1414;
-  border:1px solid rgba(178,34,34,.35);
-  letter-spacing:.25px;
+  transition:background .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+.svc-card label.switch .slider::before{
+  content:"";
+  position:absolute;
+  width:22px;
+  height:22px;
+  left:4px;
+  top:50%;
+  transform:translateY(-50%);
+  background:#fff;
+  border-radius:999px;
+  box-shadow:0 8px 18px rgba(15,23,42,.18);
+  transition:transform .22s ease;
+}
+.svc-card label.switch input:checked + .slider{
+  background:rgba(178,34,34,.92);
+  border-color:rgba(178,34,34,.45);
+}
+.svc-card label.switch input:checked + .slider::before{
+  transform:translate(26px, -50%);
+}
+.svc-card label.switch input:focus + .slider{
+  box-shadow:0 0 0 4px rgba(178,34,34,.20);
 }
 
-/* Monto principal */
-.prote-pack .price strong,
-.pack-card .price strong,
-.prote-card .price strong,
-.card-pack .price strong{
-  font-size:28px;                 /* 🔥 más protagonista */
-  font-weight:1000;
-  color:#7a1414;
-  letter-spacing:.3px;
-  line-height:1;
+/* Responsive */
+@media (max-width: 1100px){
+  .svc-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-
-/* MXN / día */
-.prote-pack .price span,
-.pack-card .price span,
-.prote-card .price span,
-.card-pack .price span{
-  font-size:12px;
-  font-weight:900;
-  color:#475569;
-  margin-left:6px;
-}
-
-/* Hover elegante */
-.prote-pack:hover .price,
-.pack-card:hover .price,
-.prote-card:hover .price,
-.card-pack:hover .price{
-  box-shadow:0 14px 32px rgba(178,34,34,.22);
-  transform:translateY(-1px);
-  transition:.18s ease;
-}
-
-/* Seleccionado */
-.prote-pack.is-selected .price,
-.pack-card.is-selected .price,
-.prote-card.is-selected .price,
-.card-pack.is-selected .price{
-  background:
-    linear-gradient(180deg, rgba(178,34,34,.18), rgba(178,34,34,.06)),
-    #fff;
-  border-color:rgba(178,34,34,.55);
-  box-shadow:0 0 0 4px rgba(178,34,34,.12),
-             0 18px 44px rgba(178,34,34,.28);
+@media (max-width: 720px){
+  .svc-grid{ grid-template-columns: 1fr; }
 }
