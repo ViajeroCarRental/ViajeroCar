@@ -302,7 +302,7 @@
     selM.className = "tp-min";
     selM.setAttribute("aria-label", "Minutos");
 
-    for(let h=0; h<=hourMax; h++){
+    for(let h=1; h<=hourMax; h++){
       const op = document.createElement("option");
       op.value = String(h);
       op.textContent = pad2(h);
@@ -326,8 +326,13 @@
     mm = Math.round(mm / minuteStep) * minuteStep;
     if(mm >= 60) mm = 0;
 
-    selH.value = String(hh);
-    selM.value = String(mm);
+/* Para visualizar H y Min en los input de Pick-Up y Devolucion */
+    selH.selectedIndex = -1;
+    selM.selectedIndex = -1;
+
+    selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>H</option>`);
+    selM.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>Min</option>`);
+
 
     function sync(){
       const h = Number(selH.value || 0);

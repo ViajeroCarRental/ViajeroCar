@@ -1,4 +1,4 @@
-@extends('layouts.Usuarios') 
+@extends('layouts.Usuarios')
 
 @section('Titulo','Politicas de Privacidad y Términos de Servicio')
 
@@ -134,38 +134,38 @@
                       <h4>Edad mínima</h4>
                       <p>
                         La edad mínima para rentar un vehículo con <strong>Viajero Car Rental</strong> es de 21 años.
-                        Se aplica un cargo por conductor joven para clientes entre 21 y 24 años, con un costo de 
-                        <strong>$241 MXN por día</strong>. Este cargo puede estar sujeto a tarifa de aeropuerto 
+                        Se aplica un cargo por conductor joven para clientes entre 21 y 24 años, con un costo de
+                        <strong>$241 MXN por día</strong>. Este cargo puede estar sujeto a tarifa de aeropuerto
                         y otros cargos aplicables más IVA.
                       </p>
 
                       <h4>Licencia de conducir vigente</h4>
                       <p>
-                        El cliente principal deberá presentar una licencia de conducir vigente del país de 
-                        residencia con un mínimo de un año de antigüedad. Viajero Car Rental se reserva el 
-                        derecho de verificar la licencia y negar la renta si no cumple con los lineamientos. 
+                        El cliente principal deberá presentar una licencia de conducir vigente del país de
+                        residencia con un mínimo de un año de antigüedad. Viajero Car Rental se reserva el
+                        derecho de verificar la licencia y negar la renta si no cumple con los lineamientos.
                         Para conductores adicionales solo se requiere licencia vigente, sin antigüedad mínima.
                       </p>
 
                       <h4>Identificación oficial vigente</h4>
                       <p>
-                        Se debe presentar una identificación oficial con fotografía. Para ciudadanos mexicanos 
-                        se solicita INE/IFE con al menos un año de antigüedad. Para extranjeros se acepta 
+                        Se debe presentar una identificación oficial con fotografía. Para ciudadanos mexicanos
+                        se solicita INE/IFE con al menos un año de antigüedad. Para extranjeros se acepta
                         pasaporte, Passport Card, FM2, FM3 o Residencia Permanente.
                       </p>
 
                       <h4>Tarjeta de crédito a nombre del titular</h4>
                       <p>
-                        Es indispensable presentar una tarjeta de crédito bancaria a nombre del titular para 
-                        iniciar la renta. El pago final puede hacerse con tarjeta de débito. Se aceptan 
-                        American Express, Visa y MasterCard. La tarjeta debe tener mínimo un año de antigüedad. 
-                        Viajero Car Rental puede rechazar tarjetas en mal estado, ilegibles o de programas 
+                        Es indispensable presentar una tarjeta de crédito bancaria a nombre del titular para
+                        iniciar la renta. El pago final puede hacerse con tarjeta de débito. Se aceptan
+                        American Express, Visa y MasterCard. La tarjeta debe tener mínimo un año de antigüedad.
+                        Viajero Car Rental puede rechazar tarjetas en mal estado, ilegibles o de programas
                         especiales no compatibles.
                       </p>
 
                       <h4>Derecho a negar el servicio</h4>
                       <p>
-                        Viajero Car Rental se reserva el derecho de no completar la renta si cualquiera de los 
+                        Viajero Car Rental se reserva el derecho de no completar la renta si cualquiera de los
                         requisitos no se cumple o si se detecta alguna irregularidad en la documentación presentada.
                       </p>
 
@@ -184,43 +184,43 @@
 
                       <h4>Términos y condiciones del seguro de cancelación – Viajero Car Rental</h4>
                       <p>
-                        Para realizar la cancelación de una reserva prepagada y comenzar el proceso de reembolso 
-                        del total prepagado, el cliente deberá comunicarse con <strong>Viajero Car Rental</strong> 
-                        al teléfono <strong>01 (442) 716 9793</strong> o escribir al correo 
+                        Para realizar la cancelación de una reserva prepagada y comenzar el proceso de reembolso
+                        del total prepagado, el cliente deberá comunicarse con <strong>Viajero Car Rental</strong>
+                        al teléfono <strong>01 (442) 716 9793</strong> o escribir al correo
                         <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>.
                       </p>
                       <p>
-                        En caso de haber adquirido el <strong>seguro de cancelación</strong>, este reembolsará el 
+                        En caso de haber adquirido el <strong>seguro de cancelación</strong>, este reembolsará el
                         <strong>100% del total prepagado</strong> por la renta.
                       </p>
                       <p>
-                        El cliente podrá solicitar su reembolso hasta <strong>24 horas antes</strong> de la fecha y hora 
-                        programadas de inicio de la renta. El seguro de cancelación <strong>no tendrá validez</strong> 
+                        El cliente podrá solicitar su reembolso hasta <strong>24 horas antes</strong> de la fecha y hora
+                        programadas de inicio de la renta. El seguro de cancelación <strong>no tendrá validez</strong>
                         si el reembolso se solicita con menos de 24 horas previas al momento de la renta.
                       </p>
                       <p>
-                        El reembolso aplica únicamente al <strong>monto prepagado originalmente</strong> por la renta. 
-                        Si se realizan modificaciones a la reserva prepagada y posteriormente se cancela, el reembolso 
-                        cubrirá exclusivamente el importe original prepagado, sin incluir diferencias de precio 
-                        generadas por dichas modificaciones. Si las modificaciones se realizan con menos de 24 horas 
+                        El reembolso aplica únicamente al <strong>monto prepagado originalmente</strong> por la renta.
+                        Si se realizan modificaciones a la reserva prepagada y posteriormente se cancela, el reembolso
+                        cubrirá exclusivamente el importe original prepagado, sin incluir diferencias de precio
+                        generadas por dichas modificaciones. Si las modificaciones se realizan con menos de 24 horas
                         antes de la renta, el seguro de cancelación se <strong>invalida</strong>.
                       </p>
                       <p>
-                        El pago de <strong>$200 MXN</strong> por el seguro de cancelación <strong>no es reembolsable</strong>, 
+                        El pago de <strong>$200 MXN</strong> por el seguro de cancelación <strong>no es reembolsable</strong>,
                         independientemente de si se utiliza o no.
                       </p>
                       <p>
-                        El reembolso se procesará y se reflejará en la <strong>tarjeta con la que se realizó el prepago</strong>, 
-                        en un lapso de hasta <strong>8 días hábiles</strong> posteriores a la solicitud de reembolso, 
+                        El reembolso se procesará y se reflejará en la <strong>tarjeta con la que se realizó el prepago</strong>,
+                        en un lapso de hasta <strong>8 días hábiles</strong> posteriores a la solicitud de reembolso,
                         pudiendo variar según la entidad bancaria y los días hábiles aplicables.
                       </p>
                       <p>
-                        No aplica reembolso del prepago ni del seguro de cancelación si, para la fecha y hora de la renta, 
+                        No aplica reembolso del prepago ni del seguro de cancelación si, para la fecha y hora de la renta,
                         el arrendatario presenta <strong>algún adeudo pendiente con Viajero Car Rental</strong>.
                       </p>
                       <p>
-                        En caso de que el cliente no desee liquidar el adeudo, pero el prepago haya sido mayor a la suma de 
-                        dicho adeudo más una <strong>cuota administrativa de $1,000 MXN</strong>, Viajero Car Rental 
+                        En caso de que el cliente no desee liquidar el adeudo, pero el prepago haya sido mayor a la suma de
+                        dicho adeudo más una <strong>cuota administrativa de $1,000 MXN</strong>, Viajero Car Rental
                         reembolsará únicamente el <strong>remanente</strong>.
                       </p>
 
@@ -239,105 +239,105 @@
 
                       <h4>Impuesto (IVA)</h4>
                       <p>
-                        Todos los cargos relacionados con la renta del vehículo están sujetos al 
+                        Todos los cargos relacionados con la renta del vehículo están sujetos al
                         <strong>Impuesto al Valor Agregado (IVA)</strong> vigente en la localidad donde se realiza la renta.
                       </p>
 
                       <h4>Cargo por recuperación de aeropuerto (Airport Fee)</h4>
                       <p>
-                        Aplica únicamente en sucursales ubicadas dentro de un aeropuerto. Es una cuota de recuperación 
-                        por operar dentro de instalaciones aeroportuarias. Este cargo se detalla siempre en la 
+                        Aplica únicamente en sucursales ubicadas dentro de un aeropuerto. Es una cuota de recuperación
+                        por operar dentro de instalaciones aeroportuarias. Este cargo se detalla siempre en la
                         cotización y/o confirmación de <strong>Viajero Car Rental</strong>.
                       </p>
 
                       <h4>Cargo por telemetría (Telematic Fee)</h4>
                       <p>
-                        Es un cargo por transacción que aplica a todas las rentas para cubrir el uso de la telemetría del vehículo. 
-                        Este cargo se aplica en mostrador al abrir el contrato y corresponde al 
+                        Es un cargo por transacción que aplica a todas las rentas para cubrir el uso de la telemetría del vehículo.
+                        Este cargo se aplica en mostrador al abrir el contrato y corresponde al
                         <strong>7.5% sobre todos los conceptos de la renta</strong>.
                       </p>
 
                       <h4>Cargo por Transaction Fee</h4>
                       <p>
-                        Es un cargo por transacción que aplica a todo tipo de cliente en todas las rentas, 
+                        Es un cargo por transacción que aplica a todo tipo de cliente en todas las rentas,
                         y cubre costos administrativos y operativos internos de <strong>Viajero Car Rental</strong>.
                       </p>
 
                       <h4>Impuesto de saneamiento ambiental</h4>
                       <p>
-                        En algunos municipios o destinos turísticos de México puede aplicar un impuesto por saneamiento ambiental, 
-                        regulado por la autoridad local. En dichos destinos, podría cobrarse una cuota fija por día de renta, 
+                        En algunos municipios o destinos turísticos de México puede aplicar un impuesto por saneamiento ambiental,
+                        regulado por la autoridad local. En dichos destinos, podría cobrarse una cuota fija por día de renta,
                         misma que será informada al cliente en su cotización antes de firmar el contrato.
                       </p>
 
                       <h4>Cargo por dejar el vehículo en otra ciudad (Drop-Off / One-Way)</h4>
                       <p>
-                        Aplica cuando el cliente toma el automóvil en una ciudad y lo devuelve en otra distinta. 
-                        El monto depende de la distancia entre ambas ciudades y se desglosa en la cotización 
-                        y/o confirmación. Los vehículos solo pueden devolverse en sucursales donde 
+                        Aplica cuando el cliente toma el automóvil en una ciudad y lo devuelve en otra distinta.
+                        El monto depende de la distancia entre ambas ciudades y se desglosa en la cotización
+                        y/o confirmación. Los vehículos solo pueden devolverse en sucursales donde
                         <strong>Viajero Car Rental</strong> tenga operación autorizada.
                       </p>
 
                       <h4>Excepciones de devolución</h4>
                       <p>
-                        Por razones logísticas y de operación, algunas rutas o combinaciones de ciudades pueden 
-                        restringirse. En caso de aplicarse alguna limitación, esta será informada al cliente 
+                        Por razones logísticas y de operación, algunas rutas o combinaciones de ciudades pueden
+                        restringirse. En caso de aplicarse alguna limitación, esta será informada al cliente
                         en la cotización previa a la renta.
                       </p>
 
                       <h4>Cargo por gasolina</h4>
                       <p>
-                        La gasolina no está incluida en la tarifa, salvo que un paquete o promoción lo especifique 
-                        expresamente. El vehículo debe devolverse con el tanque lleno; de lo contrario, se aplicará 
+                        La gasolina no está incluida en la tarifa, salvo que un paquete o promoción lo especifique
+                        expresamente. El vehículo debe devolverse con el tanque lleno; de lo contrario, se aplicará
                         el cargo por el combustible faltante.
                       </p>
 
                       <h5>Precio de gasolina prepagada (por litro)</h5>
                       <p>
-                        El precio será el vigente en la gasolinera. Para referencia, <strong>$31 MXN por litro</strong>, 
+                        El precio será el vigente en la gasolinera. Para referencia, <strong>$31 MXN por litro</strong>,
                         rentando en oficina de aeropuerto o ciudad (incluye cargos e IVA).
                       </p>
 
                       <h5>Precio por servicio de combustible sin prepago (por litro)</h5>
                       <p>
-                        El precio será equivalente al doble del precio vigente en gasolinera. Para referencia, 
+                        El precio será equivalente al doble del precio vigente en gasolinera. Para referencia,
                         <strong>$62 MXN por litro</strong> (incluye cargos e IVA).
                       </p>
 
                       <h4>Cargo por conductor adicional</h4>
                       <p>
-                        El cliente puede designar un conductor adicional mayor de 21 años, quien deberá presentarse 
-                        con licencia de conducir vigente. El conductor adicional adquiere las mismas obligaciones 
+                        El cliente puede designar un conductor adicional mayor de 21 años, quien deberá presentarse
+                        con licencia de conducir vigente. El conductor adicional adquiere las mismas obligaciones
                         que el titular del contrato.
                       </p>
                       <p>
-                        <strong>$265 MXN por día</strong>, hasta un máximo de <strong>$1,325 MXN por renta</strong>. 
+                        <strong>$265 MXN por día</strong>, hasta un máximo de <strong>$1,325 MXN por renta</strong>.
                         Este precio incluye sobrecargos e IVA.
                       </p>
                       <p>
-                        Están exentos de este cargo los cónyuges, compañeros de trabajo y compañeros domésticos. 
+                        Están exentos de este cargo los cónyuges, compañeros de trabajo y compañeros domésticos.
                         Esta cuota puede ser susceptible al Airport Fee y al IVA correspondiente.
                       </p>
 
                       <h4>Cuota por conductor joven</h4>
                       <p>
-                        Aplica a clientes entre 21 y 24 años de edad. El costo es de 
-                        <strong>$241 MXN por día</strong> (incluye sobrecargos e IVA). 
+                        Aplica a clientes entre 21 y 24 años de edad. El costo es de
+                        <strong>$241 MXN por día</strong> (incluye sobrecargos e IVA).
                         Esta cuota puede estar sujeta también al Airport Fee.
                       </p>
 
                       <h4>Cuota por pérdida de uso (LOU – Loss of Use)</h4>
                       <p>
-                        En caso de que, debido a un accidente, mal uso o evento atribuible al cliente, el vehículo 
-                        quede imposibilitado para rentarse nuevamente, el cliente será responsable de los días de 
+                        En caso de que, debido a un accidente, mal uso o evento atribuible al cliente, el vehículo
+                        quede imposibilitado para rentarse nuevamente, el cliente será responsable de los días de
                         renta perdidos durante el tiempo de reparación o detención de la unidad.
                       </p>
                       <p>
-                        Esta cuota puede eximirse al adquirir el paquete de <strong>Protección Total</strong>, siempre 
+                        Esta cuota puede eximirse al adquirir el paquete de <strong>Protección Total</strong>, siempre
                         y cuando el cliente cumpla con todas las políticas y procedimientos contratados.
                       </p>
                       <p>
-                        Si el vehículo es detenido por accidente, alcoholímetro o por estar mal estacionado, además 
+                        Si el vehículo es detenido por accidente, alcoholímetro o por estar mal estacionado, además
                         de las multas y gastos de liberación, se aplicarán:
                       </p>
                       <ul>
@@ -347,22 +347,22 @@
 
                       <h4>Cargo por licencia de vehículo (VLF)</h4>
                       <p>
-                        Es una cuota de recuperación por trámites y servicios vehiculares, tales como placas, 
-                        permisos provisionales, verificación, tenencia y otros gastos administrativos relacionados 
+                        Es una cuota de recuperación por trámites y servicios vehiculares, tales como placas,
+                        permisos provisionales, verificación, tenencia y otros gastos administrativos relacionados
                         con la operación del vehículo.
                       </p>
 
                       <h4>Asistencia en el camino Premium (RSA)</h4>
                       <p>
-                        Servicio adicional que brinda apoyo en situaciones como envío de duplicado de llaves, 
-                        cambio de llanta por ponchadura, recarga de batería o suministro de gasolina por desabasto. 
+                        Servicio adicional que brinda apoyo en situaciones como envío de duplicado de llaves,
+                        cambio de llanta por ponchadura, recarga de batería o suministro de gasolina por desabasto.
                         Este servicio puede adquirirse directamente en mostrador.
                       </p>
 
                       <h4>Términos y condiciones de Viajero Car Rental</h4>
                       <p>
-                        Todas estas definiciones complementan los Términos y Condiciones vigentes de 
-                        <strong>Viajero Car Rental</strong>, los cuales forman parte del contrato de renta 
+                        Todas estas definiciones complementan los Términos y Condiciones vigentes de
+                        <strong>Viajero Car Rental</strong>, los cuales forman parte del contrato de renta
                         y se encuentran disponibles para consulta en el sitio web oficial.
                       </p>
 
@@ -381,7 +381,7 @@
 
                       <h4>Formas de pago aceptadas por Viajero Car Rental</h4>
                       <p>
-                        En <strong>Viajero Car Rental</strong> buscamos ofrecer múltiples opciones de pago para tu comodidad 
+                        En <strong>Viajero Car Rental</strong> buscamos ofrecer múltiples opciones de pago para tu comodidad
                         y seguridad. Las formas de pago disponibles son las siguientes:
                       </p>
 
@@ -403,44 +403,44 @@
 
                       <h5>PayPal</h5>
                       <p>
-                        Puedes realizar tu pago mediante <strong>PayPal</strong>, ya sea directamente desde nuestra página 
+                        Puedes realizar tu pago mediante <strong>PayPal</strong>, ya sea directamente desde nuestra página
                         (cuando esté habilitado) o a través de un enlace seguro proporcionado por un asesor de Viajero Car Rental.
                       </p>
 
                       <h5>Pago en efectivo</h5>
                       <p>
-                        <strong>Sí aceptamos efectivo</strong> como forma de pago para cubrir el total de la renta en sucursal. 
-                        Sin embargo, la <strong>garantía (depósito)</strong> deberá realizarse siempre mediante tarjeta bancaria 
+                        <strong>Sí aceptamos efectivo</strong> como forma de pago para cubrir el total de la renta en sucursal.
+                        Sin embargo, la <strong>garantía (depósito)</strong> deberá realizarse siempre mediante tarjeta bancaria
                         u otro método electrónico autorizado.
                       </p>
 
                       <h5>Depósitos en OXXO</h5>
                       <p>
-                        Aceptamos pagos mediante <strong>depósitos en tiendas OXXO</strong>. Este método requiere coordinación 
-                        previa con un asesor de Viajero Car Rental, quien proporcionará la información y referencia necesarias 
+                        Aceptamos pagos mediante <strong>depósitos en tiendas OXXO</strong>. Este método requiere coordinación
+                        previa con un asesor de Viajero Car Rental, quien proporcionará la información y referencia necesarias
                         para realizar el depósito.
                       </p>
 
                       <h5>Mercado Pago</h5>
                       <p>
-                        También aceptamos pagos a través de <strong>Mercado Pago</strong>, ya sea mediante enlace directo o 
-                        código QR. Este método igualmente requiere contacto previo con un asesor para generar el enlace de pago 
+                        También aceptamos pagos a través de <strong>Mercado Pago</strong>, ya sea mediante enlace directo o
+                        código QR. Este método igualmente requiere contacto previo con un asesor para generar el enlace de pago
                         personalizado y seguro.
                       </p>
 
                       <h5>Avisos importantes</h5>
                       <ul>
                         <li>
-                          Viajero Car Rental se reserva el derecho de <strong>no aceptar tarjetas dañadas, ilegibles 
+                          Viajero Car Rental se reserva el derecho de <strong>no aceptar tarjetas dañadas, ilegibles
                           o no compatibles</strong> con nuestras terminales bancarias.
                         </li>
                         <li>
-                          Los pagos realizados por <strong>OXXO</strong> o <strong>Mercado Pago</strong> deben ser 
-                          <strong>confirmados y verificados</strong> por un asesor antes de considerar la reservación 
+                          Los pagos realizados por <strong>OXXO</strong> o <strong>Mercado Pago</strong> deben ser
+                          <strong>confirmados y verificados</strong> por un asesor antes de considerar la reservación
                           como garantizada.
                         </li>
                         <li>
-                          En algunos casos, ciertos métodos de pago podrán estar sujetos a validación adicional o a 
+                          En algunos casos, ciertos métodos de pago podrán estar sujetos a validación adicional o a
                           condiciones específicas según promociones vigentes.
                         </li>
                       </ul>
@@ -460,31 +460,31 @@
 
                       <h4>Política de cancelaciones de reservaciones, no llegada (No show) y reembolsos – Viajero Car Rental</h4>
                       <p>
-                        Si necesitas cancelar tu reservación, en <strong>Viajero Car Rental</strong> gestionaremos tu solicitud 
+                        Si necesitas cancelar tu reservación, en <strong>Viajero Car Rental</strong> gestionaremos tu solicitud
                         de reembolso a la brevedad posible. Nuestra política de cancelación flexible se detalla a continuación.
                       </p>
 
                       <h5>Reembolso del 100%</h5>
                       <p>
-                        Aplica para reservaciones con modalidad de <strong>pago en línea (prepago)</strong> cuando la cancelación 
+                        Aplica para reservaciones con modalidad de <strong>pago en línea (prepago)</strong> cuando la cancelación
                         se realiza <strong>21 días o más</strong> antes de la fecha de renta.
                       </p>
 
                       <h5>Reembolso del 50%</h5>
                       <p>
-                        Aplica para reservaciones con modalidad de <strong>pago en línea (prepago)</strong> cuando la cancelación 
+                        Aplica para reservaciones con modalidad de <strong>pago en línea (prepago)</strong> cuando la cancelación
                         se realiza entre <strong>20 y 15 días</strong> previos a la fecha de renta.
                       </p>
 
                       <h5>Reembolso del 25%</h5>
                       <p>
-                        Aplica para reservaciones con modalidad de <strong>pago en línea (prepago)</strong> cuando la cancelación 
+                        Aplica para reservaciones con modalidad de <strong>pago en línea (prepago)</strong> cuando la cancelación
                         se realiza entre <strong>14 y 7 días</strong> previos a la fecha de renta.
                       </p>
 
                       <h5>Sin reembolso (6 días o menos y No show)</h5>
                       <p>
-                        Para reservaciones en la modalidad de <strong>pago en línea (prepago)</strong>, 
+                        Para reservaciones en la modalidad de <strong>pago en línea (prepago)</strong>,
                         <strong>no se proporcionará ningún reembolso</strong> cuando:
                       </p>
                       <ul>
@@ -492,13 +492,13 @@
                         <li>El cliente <strong>no se presente (No show)</strong> y no cancele la reservación.</li>
                       </ul>
                       <p>
-                        Si la reservación se realizó originalmente con <strong>6 días o menos</strong> de anticipación, se entiende 
+                        Si la reservación se realizó originalmente con <strong>6 días o menos</strong> de anticipación, se entiende
                         y acepta que <strong>no aplica reembolso</strong> en caso de cancelación.
                       </p>
 
                       <h5>Relación con el Seguro de Cancelación</h5>
                       <p>
-                        Los reembolsos <strong>íntegros del 100%</strong> del valor de la reserva solo aplican para aquellas 
+                        Los reembolsos <strong>íntegros del 100%</strong> del valor de la reserva solo aplican para aquellas
                         reservaciones que:
                       </p>
                       <ul>
@@ -506,21 +506,21 @@
                         <li>Hayan seleccionado la modalidad de <strong>pago en línea (prepago)</strong>.</li>
                       </ul>
                       <p>
-                        Para ser elegible, la notificación de cancelación debe realizarse <strong>hasta 24 horas antes</strong> 
-                        de la fecha de renta. Cualquier notificación de cancelación realizada con 
-                        <strong>menos de 24 horas</strong> de antelación, incluso si se adquirió el Seguro de Cancelación, 
+                        Para ser elegible, la notificación de cancelación debe realizarse <strong>hasta 24 horas antes</strong>
+                        de la fecha de renta. Cualquier notificación de cancelación realizada con
+                        <strong>menos de 24 horas</strong> de antelación, incluso si se adquirió el Seguro de Cancelación,
                         <strong>no será sujeta a reembolso</strong>.
                       </p>
 
                       <h5>Devolución anticipada del vehículo</h5>
                       <p>
-                        Si el cliente devuelve el vehículo <strong>antes de la fecha/hora pactadas</strong>, 
+                        Si el cliente devuelve el vehículo <strong>antes de la fecha/hora pactadas</strong>,
                         <strong>no se reembolsará ninguna cantidad</strong> ni diferencial por los días no utilizados.
                       </p>
 
                       <h5>Incumplimiento de requisitos al llegar al mostrador</h5>
                       <p>
-                        Si el cliente cuenta con una <strong>reserva prepagada</strong> y, al llegar al mostrador, 
+                        Si el cliente cuenta con una <strong>reserva prepagada</strong> y, al llegar al mostrador,
                         <strong>no cumple con uno o más requisitos</strong>, no se realizará ningún reembolso del total prepagado.
                       </p>
                       <p>Estos requisitos incluyen, de manera enunciativa mas no limitativa:</p>
@@ -528,20 +528,20 @@
                         <li>Presentar licencia de conducir válida y vigente.</li>
                         <li>Presentar tarjeta de crédito válida a nombre del titular de la renta.</li>
                         <li>Presentar identificación oficial vigente.</li>
-                        <li>Que los documentos cumplan con la <strong>vigencia</strong> y la 
+                        <li>Que los documentos cumplan con la <strong>vigencia</strong> y la
                             <strong>antigüedad mínima</strong> establecida en las políticas de Viajero Car Rental.
                         </li>
                       </ul>
 
                       <h5>Procedimiento para solicitar reembolsos</h5>
                       <p>
-                        En los casos en los que <strong>sí aplique un reembolso</strong>, el cliente deberá dar aviso a 
-                        <strong>Viajero Car Rental</strong> dentro de los <strong>ocho días naturales siguientes</strong> a la 
+                        En los casos en los que <strong>sí aplique un reembolso</strong>, el cliente deberá dar aviso a
+                        <strong>Viajero Car Rental</strong> dentro de los <strong>ocho días naturales siguientes</strong> a la
                         cancelación de la reserva, a través de:
                       </p>
                       <ul>
                         <li>Teléfono: <strong>01 (442) 303 2668</strong></li>
-                        <li>Correo electrónico: 
+                        <li>Correo electrónico:
                           <a href="mailto:reservaciones@viajerocar-rental.mx">reservaciones@viajerocar-rental.mx</a>
                         </li>
                       </ul>
@@ -551,12 +551,12 @@
 
                       <h5>Adeudos pendientes</h5>
                       <p>
-                        No aplica reembolso si, para la fecha y hora de la renta, el arrendatario presenta 
+                        No aplica reembolso si, para la fecha y hora de la renta, el arrendatario presenta
                         <strong>algún adeudo pendiente con Viajero Car Rental</strong>.
                       </p>
                       <p>
-                        En caso de que el cliente no desee liquidar el adeudo, pero el prepago haya sido mayor a la suma de dicho 
-                        adeudo más una <strong>cuota administrativa de $1,000 MXN</strong>, Viajero Car Rental reembolsará 
+                        En caso de que el cliente no desee liquidar el adeudo, pero el prepago haya sido mayor a la suma de dicho
+                        adeudo más una <strong>cuota administrativa de $1,000 MXN</strong>, Viajero Car Rental reembolsará
                         únicamente el <strong>remanente</strong>.
                       </p>
 
@@ -655,7 +655,7 @@
           </div>
         </li>
 
-                
+
         {{-- GARANTÍA DE RENTA O PRE-AUTORIZACIONES --}}
         <li class="policy-item">
           <button class="policy-head" type="button" aria-expanded="false">
@@ -670,27 +670,27 @@
 
               <h4>Garantía de renta o pre-autorizaciones – Viajero Car Rental</h4>
               <p>
-                La <strong>garantía de renta</strong> o <strong>pre-autorización</strong> es un monto que se retiene temporalmente en la 
-                tarjeta bancaria del cliente como respaldo por la renta del vehículo. Este monto <strong>no constituye un cargo 
+                La <strong>garantía de renta</strong> o <strong>pre-autorización</strong> es un monto que se retiene temporalmente en la
+                tarjeta bancaria del cliente como respaldo por la renta del vehículo. Este monto <strong>no constituye un cargo
                 definitivo</strong> al momento de abrir el contrato.
               </p>
               <p>
-                Al finalizar la renta, <strong>Viajero Car Rental</strong> toma de esta pre-autorización el importe correspondiente a la 
-                renta y a los cargos adicionales autorizados (si los hubiera), y posteriormente <strong>libera el resto del monto 
+                Al finalizar la renta, <strong>Viajero Car Rental</strong> toma de esta pre-autorización el importe correspondiente a la
+                renta y a los cargos adicionales autorizados (si los hubiera), y posteriormente <strong>libera el resto del monto
                 retenido</strong>.
               </p>
 
               <h5>Monto de la garantía y tipo de cobertura</h5>
               <p>
-                El <strong>tipo de protección o cobertura</strong> que el cliente elija determinará el <strong>monto de la pre-autorización</strong> 
-                que será requerido en la tarjeta bancaria. A mayor nivel de cobertura, menor será el nivel de responsabilidad 
+                El <strong>tipo de protección o cobertura</strong> que el cliente elija determinará el <strong>monto de la pre-autorización</strong>
+                que será requerido en la tarjeta bancaria. A mayor nivel de cobertura, menor será el nivel de responsabilidad
                 económica del cliente ante daños o eventos cubiertos, y en consecuencia, puede variar el monto retenido.
               </p>
 
               <h5>Liberación de la pre-autorización</h5>
               <p>
-                La liberación de la pre-autorización se realiza dentro de las <strong>48 horas hábiles</strong> siguientes a la devolución 
-                del vehículo, o en el tiempo que estipule el banco emisor de la tarjeta, siempre y cuando el automóvil sea 
+                La liberación de la pre-autorización se realiza dentro de las <strong>48 horas hábiles</strong> siguientes a la devolución
+                del vehículo, o en el tiempo que estipule el banco emisor de la tarjeta, siempre y cuando el automóvil sea
                 devuelto en las mismas condiciones mecánicas, estéticas y funcionales en las que fue entregado, y con:
               </p>
               <ul>
@@ -702,29 +702,29 @@
               </ul>
 
               <p>
-                En caso de incidencias, daños, faltantes o violaciones a políticas (por ejemplo, limpieza, uso indebido, multas), 
-                el monto correspondiente podrá ser tomado parcial o totalmente de la pre-autorización, de acuerdo con lo 
+                En caso de incidencias, daños, faltantes o violaciones a políticas (por ejemplo, limpieza, uso indebido, multas),
+                el monto correspondiente podrá ser tomado parcial o totalmente de la pre-autorización, de acuerdo con lo
                 estipulado en el contrato de renta.
               </p>
 
               <h5>Paquetes de protección y responsabilidad</h5>
               <p>
-                <strong>Viajero Car Rental</strong> ofrece distintos <strong>paquetes de protección</strong> para que el cliente elija el que mejor se adapte 
+                <strong>Viajero Car Rental</strong> ofrece distintos <strong>paquetes de protección</strong> para que el cliente elija el que mejor se adapte
                 a sus necesidades. La elección del paquete determinará:
               </p>
               <ul>
                 <li>El <strong>monto de la garantía</strong> o pre-autorización.</li>
-                <li>El <strong>nivel de responsabilidad</strong> económica del cliente ante daños al vehículo, robo parcial/total 
+                <li>El <strong>nivel de responsabilidad</strong> económica del cliente ante daños al vehículo, robo parcial/total
                     o terceros, según las coberturas contratadas.</li>
               </ul>
               <p>
-                Los montos específicos de garantía se informan al momento de cotizar y se detallan en el contrato de renta 
+                Los montos específicos de garantía se informan al momento de cotizar y se detallan en el contrato de renta
                 según el <strong>grupo de vehículo</strong> y el <strong>paquete de protección</strong> elegido.
               </p>
 
               <h5>Ejemplos referenciales de montos de pre-autorización por grupo de auto</h5>
               <p>
-                Los siguientes montos son <strong>ejemplos referenciales</strong> y pueden variar según temporada, sucursal, promociones 
+                Los siguientes montos son <strong>ejemplos referenciales</strong> y pueden variar según temporada, sucursal, promociones
                 o cambios de política interna. El valor definitivo siempre se indicará antes de firmar el contrato.
               </p>
 
@@ -733,115 +733,63 @@
                 <table class="tabla-viajero">
                   <thead>
                     <tr>
-                      <th>Grupo</th>
-                      <th>Categoría</th>
-                      <th>Cobertura al 100%</th>
-                      <th class="recomendado">Cobertura al 90%<br><span>Recomendado</span></th>
-                      <th>Cobertura al 80%</th>
-                      <th>Sin cobertura</th>
+                    <th>Categoría</th>
+                    <th>Tamaño</th>
+                    <th>LDW</th>
+                    <th>PDW</th>
+                    <th>CDW 10%</th>
+                    <th>CDW 20%</th>
+                    <th>CDW declinado</th>
                     </tr>
-                  </thead>
+                    </thead>
 
-                  <tbody>
+
+                <tbody>
                     <tr>
-                      <td class="grupo">C</td>
-                      <td>Compacto Chevrolet Aveo o similar</td>
-                      <td>$5,000 MXN</td>
-                      <td class="recomendado">$8,000 MXN</td>
-                      <td>$15,000 MXN</td>
-                      <td>$30,000 MXN</td>
+                    <td>C</td><td>Compacto Chevrolet aveo o similar</td><td>$MXN5,000</td><td>$MXN8,000</td><td>$MXN15,000</td><td>$MXN25,000</td><td>$MXN330,000</td>
                     </tr>
 
                     <tr>
-                      <td class="grupo">D</td>
-                      <td>Medianos Nissan Versa o similar</td>
-                      <td>$5,000 MXN</td>
-                      <td class="recomendado">$8,000 MXN</td>
-                      <td>$15,000 MXN</td>
-                      <td>$30,000 MXN</td>
+                    <td>D</td><td>Medianos Nissan Virtus o similar</td><td>$MXN5,000</td><td>$MXN8,000</td><td>$MXN18,000</td><td>$MXN25,000</td><td>$MXN380,000</td>
                     </tr>
 
                     <tr>
-                      <td class="grupo">E</td>
-                      <td>Grandes Jetta o similar</td>
-                      <td>$8,000 MXN</td>
-                      <td class="recomendado">$10,000 MXN</td>
-                      <td>$20,000 MXN</td>
-                      <td>$40,000 MXN</td>
+                    <td>E</td><td>Grandes Volkswagen Jetta o similar</td><td>$MXN5,000</td><td>$MXN8,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN500,000</td>
                     </tr>
 
                     <tr>
-                      <td class="grupo">F</td>
-                      <td>Full size Camry o similar</td>
-                      <td>$8,000 MXN</td>
-                      <td class="recomendado">$10,000 MXN</td>
-                      <td>$20,000 MXN</td>
-                      <td>$40,000 MXN</td>
+                    <td>F</td><td>Full size Camry o similar</td><td>$MXN5,000</td><td>$MXN15,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN650,000</td>
                     </tr>
 
                     <tr>
-                      <td class="grupo">IC</td>
-                      <td>SUV compacta Jeep Renegade o similar</td>
-                      <td>$8,000 MXN</td>
-                      <td class="recomendado">$10,000 MXN</td>
-                      <td>$20,000 MXN</td>
-                      <td>$40,000 MXN</td>
+                    <td>IC</td><td>Suv compacta Jeep Renegade o similar</td><td>$MXN5,000</td><td>$MXN8,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN500,000</td>
                     </tr>
 
                     <tr>
-                      <td class="grupo">I</td>
-                      <td>SUV mediana Kia Seltos o similar</td>
-                      <td>$8,000 MXN</td>
-                      <td class="recomendado">$10,000 MXN</td>
-                      <td>$20,000 MXN</td>
-                      <td>$40,000 MXN</td>
+                    <td>I</td><td>Suv Mediana Kia Seltos o similar</td><td>$MXN5,000</td><td>$MXN10,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN600,000</td>
                     </tr>
 
                     <tr>
-                      <td class="grupo">IB</td>
-                      <td>SUV familiar compacta Toyota Avanza o similar</td>
-                      <td>$8,000 MXN</td>
-                      <td class="recomendado">$10,000 MXN</td>
-                      <td>$20,000 MXN</td>
-                      <td>$40,000 MXN</td>
+                    <td>IB</td><td>Suv Familiar compacta Toyota avanza o similar</td><td>$MXN5,000</td><td>$MXN8,000</td><td>$MXN18,000</td><td>$MXN25,000</td><td>$MXN400,000</td>
                     </tr>
 
                     <tr>
-                      <td class="grupo">M</td>
-                      <td>Minivan Honda Odyssey o similar</td>
-                      <td>$10,000 MXN</td>
-                      <td class="recomendado">$12,500 MXN</td>
-                      <td>$25,000 MXN</td>
-                      <td>$50,000 MXN</td>
+                    <td>M</td><td>Minivan Honda Odyssey o similar</td><td>$MXN10,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN800,000</td>
                     </tr>
 
                     <tr>
-                      <td class="grupo">L</td>
-                      <td>Hasta 13 usuarios Toyota Hiace o similar</td>
-                      <td>$10,000 MXN</td>
-                      <td class="recomendado">$12,500 MXN</td>
-                      <td>$25,000 MXN</td>
-                      <td>$50,000 MXN</td>
+                    <td>L</td><td>Pasajeros de 12 usuarios Toyota Hiace o similar</td><td>$MXN10,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN800,000</td>
                     </tr>
 
                     <tr>
-                      <td class="grupo">H</td>
-                      <td>Pick up doble cabina Nissan Frontier o similar</td>
-                      <td>$10,000 MXN</td>
-                      <td class="recomendado">$12,500 MXN</td>
-                      <td>$25,000 MXN</td>
-                      <td>$50,000 MXN</td>
+                    <td>H</td><td>Pick up Doble Cabina Nissan Frontier o similar</td><td>$MXN10,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN600,000</td>
                     </tr>
 
                     <tr>
-                      <td class="grupo">HI</td>
-                      <td>Pick up 4x4 doble cabina Toyota Tacoma o similar</td>
-                      <td>$12,000 MXN</td>
-                      <td class="recomendado">$15,000 MXN</td>
-                      <td>$35,000 MXN</td>
-                      <td>$70,000 MXN</td>
+                    <td>HI</td><td>Pick up 4x4 Doble Cabina Toyota Tacoma o similar</td><td>$MXN10,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN900,000</td>
                     </tr>
-                  </tbody>
+                    </tbody>
+
 
                 </table>
               </div>
@@ -852,26 +800,26 @@
 
               <h5>Medios para realizar la garantía</h5>
               <p>
-                El <strong>depósito en garantía o pre-autorización</strong> es un requisito obligatorio para efectuar la renta. En 
+                El <strong>depósito en garantía o pre-autorización</strong> es un requisito obligatorio para efectuar la renta. En
                 <strong>Viajero Car Rental</strong>, la garantía se realiza mediante:
               </p>
               <ul>
                 <li><strong>Tarjetas de crédito bancarias</strong> (American Express, Visa, Mastercard).</li>
-                <li>En algunos casos, se puede aceptar <strong>tarjeta de débito</strong> para la garantía, siempre que la institución 
+                <li>En algunos casos, se puede aceptar <strong>tarjeta de débito</strong> para la garantía, siempre que la institución
                     bancaria y el monto requerido lo permitan. Esto se confirmará al momento de la renta.</li>
               </ul>
               <p>
-                Aunque aceptamos otros métodos de pago (efectivo, PayPal, depósitos en OXXO, Mercado Pago) para cubrir el 
-                <strong>costo de la renta</strong>, la <strong>garantía</strong> deberá hacerse siempre mediante una tarjeta bancaria válida y 
+                Aunque aceptamos otros métodos de pago (efectivo, PayPal, depósitos en OXXO, Mercado Pago) para cubrir el
+                <strong>costo de la renta</strong>, la <strong>garantía</strong> deberá hacerse siempre mediante una tarjeta bancaria válida y
                 autorizada.
               </p>
 
               <h5>Importante</h5>
               <ul>
-                <li>El cliente es responsable de contar con <strong>línea de crédito suficiente</strong> en su tarjeta para cubrir el 
+                <li>El cliente es responsable de contar con <strong>línea de crédito suficiente</strong> en su tarjeta para cubrir el
                     monto de la garantía.</li>
                 <li>La no aprobación de la pre-autorización por parte del banco puede ser motivo para <strong>no completar la renta</strong>.</li>
-                <li>Algunos grupos de vehículos de gama alta pueden requerir <strong>protecciones obligatorias</strong> con deducible y 
+                <li>Algunos grupos de vehículos de gama alta pueden requerir <strong>protecciones obligatorias</strong> con deducible y
                     montos de garantía mayores, lo cual será informado antes de la firma del contrato.</li>
               </ul>
 
