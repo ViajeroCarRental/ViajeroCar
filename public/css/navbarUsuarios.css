@@ -419,7 +419,7 @@ body.nav-open .topbar{
   letter-spacing:.5px;
   line-height: var(--lab-h);
   position: relative;
-  top: 2px; 
+  top: 2px;
 }
 
 .inline-check{
@@ -668,27 +668,41 @@ input.flatpickr-input{ padding-right:44px; }
   align-items:stretch;
   padding:0 16px;
 }
-.info-row.reverse{ grid-template-columns:1fr 1.2fr; }
+
+
+/* =========================
+   RESPONSIVOS
+========================= */
 .info-media{
+  width:100%; /* ancho del contenedor*/
+  aspect-ratio:16/9;  /* ancho del contenedor*/
   border-radius:18px;
-  min-height:360px;
-  background:#ddd;
-  box-shadow:var(--shadow);
-  position:relative;
   overflow:hidden;
+  position:relative; /* */
+  box-shadow:var(--shadow);
+  background:#000;
 }
 
 /* IMPORTANTE:
    Si tu media-carousel es FADE con absolute, lo dejamos así */
 .media-carousel .media-slide{
-  position:absolute; inset:0;
-  background-size:cover; background-position:center;
-  opacity:0; transform:scale(1.04);
-  transition:opacity .8s, transform 1.4s;
-}
-.media-carousel .media-slide.active{ opacity:1; transform:scale(1); }
+  position:absolute;
+  inset:0;
 
-.info-content{
+  background-size: cover;   /*La imagen llena el contenedor*/
+  background-position: center; /*Centra la imagen */
+  background-repeat: no-repeat;
+
+  opacity:0;
+  transition:opacity .8s;
+}
+
+.media-carousel .media-slide.active{
+  opacity:1;
+}
+
+
+o-content{
   background:#fff;
   border-radius:18px;
   box-shadow:var(--shadow);
@@ -1421,7 +1435,7 @@ input.flatpickr-input{ padding-right:44px; }
 
 @media (max-width:560px){
   .headline{ font-size:34px; }
-  .search-card{ padding:25px 12px 14px; } 
+  .search-card{ padding:25px 12px 14px; }
   .search-grid{ grid-template-columns:1fr; }
   .info-content h2{ font-size:36px; }
   .hero .search-card{ margin-top: 50px; }

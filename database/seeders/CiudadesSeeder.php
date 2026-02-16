@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 
 class CiudadesSeeder extends Seeder {
     public function run(): void {
-        $qs = [
+        $qs =
+        [
             ['nombre'=>'Querétaro','estado'=>'Querétaro','pais'=>'México'],
             ['nombre'=>'Aguascalientes','estado'=>'Aguascalientes','pais'=>'México'],
             ['nombre'=>'CDMX','estado'=>'CDMX','pais'=>'México'],
@@ -28,7 +29,6 @@ class CiudadesSeeder extends Seeder {
             ['nombre'=>'Toluca','estado'=>'Toluca','pais'=>'México'],
             ['nombre'=>'Veracruz','estado'=>'Veracruz','pais'=>'México'],
             ['nombre'=>'Zacatecas','estado'=>'Zacatecas','pais'=>'México'],
-
         ];
         foreach($qs as $c){
             DB::table('ciudades')->updateOrInsert(

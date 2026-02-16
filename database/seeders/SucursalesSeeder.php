@@ -10,9 +10,6 @@ class SucursalesSeeder extends Seeder {
     public function run(): void {
         $map = DB::table('ciudades')->pluck('id_ciudad','nombre');
 
-
-            $rows = [
-
             ['ciudad'=>'Querétaro','nombre'=>'Querétaro Aeropuerto'],
             ['ciudad'=>'Querétaro','nombre'=>'Querétaro Central de Autobuses'],
             ['ciudad'=>'Querétaro','nombre'=>'Querétaro Oficina Plaza Central Park'],
@@ -51,9 +48,7 @@ class SucursalesSeeder extends Seeder {
             ['ciudad'=>'Veracruz','nombre'=>'Aeropuerto Internacional de Veracruz'],
 
             ['ciudad'=>'Zacatecas','nombre'=>'Aeropuerto Internacional de Zacatecas'],
-
-            ];
-
+        ];
 
         foreach($rows as $r){
             $idCiudad = $map[$r['ciudad']] ?? null;
