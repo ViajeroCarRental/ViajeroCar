@@ -416,7 +416,7 @@
     <table class="header-table" role="presentation">
       <tr>
         <td style="vertical-align:middle;">
-          <img src="{{ rtrim(config('app.url'), '/') . '/img/Logo3.jpg' }}" alt="Viajero Car Rental">
+          <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
 
         </td>
 
@@ -753,7 +753,7 @@
         </div>
 
         <div class="footer-logo-word">
-          VIAJERO
+          <img src="{{ asset('img/LogoB.png') }}" alt="Viajero" class="footer-logo">
         </div>
       </div>
 
