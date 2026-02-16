@@ -19,18 +19,18 @@ class SucursalesSeeder extends Seeder {
 
             ['ciudad'=>'Aguascalientes','nombre'=>'Aeropuerto Internacional de Aguascalientes'],
 
-            ['ciudad'=>'CDMX','nombre'=>'Aeropuerto Internacional de Ciudad de México'],
-            ['ciudad'=>'CDMX','nombre'=>'Aeropuerto Internacional Felipe Ángeles'],
+            ['ciudad'=>'CDMX','nombre'=>'Aeropuerto Internacional de <strong>Ciudad de México</strong>'],
+            ['ciudad'=>'CDMX','nombre'=>'Aeropuerto Internacional <strong>Felipe Ángeles</strong>'],
 
             ['ciudad'=>'Durango','nombre'=>'Aeropuerto Internacional de Durango'],
 
-            ['ciudad'=>'Guanajuato','nombre'=>'Aeropuerto Internacional de Guanajuato, Silao'],
-            ['ciudad'=>'Guanajuato','nombre'=>'Central de Autobuses León de los Aldamas'],
+            ['ciudad'=>'Guanajuato','nombre'=>'Aeropuerto Internacional de Guanajuato, <strong>Silao</strong>'],
+            ['ciudad'=>'Guanajuato','nombre'=>'Central de Autobuses <strong>León</strong> de los Aldamas'],
 
             ['ciudad'=>'Guerrero','nombre'=>'Aeropuerto Internacional de Acapulco'],
 
-            ['ciudad'=>'Jalisco','nombre'=>'Aeropuerto Internacional Miguel Hidalgo (GDL)'],
-            ['ciudad'=>'Jalisco','nombre'=>'Aeropuerto Internacional Puerto Vallarta'],
+            ['ciudad'=>'Jalisco','nombre'=>'Aeropuerto Internacional Miguel Hidalgo <strong>(GDL)</strong>'],
+            ['ciudad'=>'Jalisco','nombre'=>'Aeropuerto Internacional <strong>Puerto Vallarta</strong>'],
 
             ['ciudad'=>'Monterrey','nombre'=>'Aeropuerto Internacional de Monterrey'],
 
@@ -42,9 +42,9 @@ class SucursalesSeeder extends Seeder {
 
             ['ciudad'=>'San Luis Potosí','nombre'=>'Aeropuerto Internacional de San Luis Potosí'],
 
-            ['ciudad'=>'Tabasco','nombre'=>'Aeropuerto Internacional Carlos Rovirosa Pérez (VSA)'],
+            ['ciudad'=>'Tabasco','nombre'=>'Aeropuerto Internacional Carlos Rovirosa Pérez <strong>(VSA)</strong>'],
 
-            ['ciudad'=>'Tamaulipas','nombre'=>'Aeropuerto Internacional de Tampico'],
+            ['ciudad'=>'Tamaulipas','nombre'=>'Aeropuerto Internacional de <strong>Tampico</strong>'],
 
             ['ciudad'=>'Toluca','nombre'=>'Aeropuerto Internacional de Toluca'],
 
