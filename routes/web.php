@@ -35,6 +35,27 @@ use App\Http\Controllers\CategoriasController;
 use Illuminate\Support\Facades\DB;
 //rutas vistas Usuario
 
+
+//--------------------------------------------------------------------------//
+
+use App\Http\Controllers\VisorReservacionController;
+
+Route::get(
+    '/ventas/reservacion/{id}',
+    [VisorReservacionController::class, 'mostrarReservacion']
+)->name('visor.show');
+
+Route::put(
+    '/ventas/reservacion/{id}',
+    [VisorReservacionController::class, 'actualizarReservacion']
+)->name('visor.update');
+
+Route::delete(
+    '/ventas/reservacion/{id}',
+    [VisorReservacionController::class, 'eliminarReservacion']
+)->name('visor.delete');
+//--------------------------------------------------------------------------//
+
 /*  Inicio  */
 Route::get('/', [BusquedaController::class, 'home'])->name('rutaHome');
 //ruta Vista Catalogo
@@ -574,3 +595,4 @@ Route::post('/admin/reservaciones-activas/{id}/cancelar',
 
 
 }); // <- FIN grupo sesion.activa
+

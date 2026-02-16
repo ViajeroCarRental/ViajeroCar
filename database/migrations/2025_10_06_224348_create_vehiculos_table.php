@@ -25,7 +25,7 @@ return new class extends Migration {
             $table->string('numero_serie', 100)->nullable();
             $table->string('categoria', 100)->nullable();
             $table->year('anio');
-            $table->string('nombre_publico', 150);
+            $table->string('nombre_publico', 150); //Que es nombre publico
             $table->string('transmision', 50)->nullable();
             $table->string('combustible', 50)->nullable();
             $table->string('color', 40)->nullable();
