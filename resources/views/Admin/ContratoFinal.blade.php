@@ -48,7 +48,10 @@
             <section class="bloque">
     <h3>Datos de Arrendatario</h3>
     <ul>
-        <li><b>Nombre:</b> {{ $reservacion->nombre_cliente ?? '—' }}</li>
+        <li><b>Nombre:</b>
+    {{ trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')) ?: '—' }}
+</li>
+
         <li><b>Correo:</b> {{ $reservacion->email_cliente ?? '—' }}</li>
         <li><b>Teléfono(s):</b> {{ $reservacion->telefono_cliente ?? '—' }}</li>
         <li><b>País:</b> {{ $licencia->pais_emision ?? '—' }}</li>
@@ -370,10 +373,11 @@
 <!-- MODAL DE AVISO LEGAL PARA ENVÍO DE CORREO -->
 <div id="modalAviso" class="modal-firma" style="display:none;">
     <div class="modal-body" style="max-width:650px;">
+
         <h3>Aviso de responsabilidad</h3>
 
         <p style="font-size:15px; margin-bottom:10px;">
-            Por favor copie y escriba exactamente el siguiente texto para confirmar que está de acuerdo:
+            Por favor lea el siguiente texto de responsabilidad y firme para confirmar que está de acuerdo:
         </p>
 
         <div style="
@@ -383,25 +387,47 @@
             border-radius:8px;
             margin-bottom:18px;
         ">
-            <p id="textoOriginal">
-                Yo, ('Nombre Completo'), manifiesto estar plenamente consciente de que cualquier daño,
-                negligencia o mal uso del vehículo que no esté cubierto por mi paquete de seguro o protecciones
-                individuales será responsabilidad mía, y acepto pagar los cargos adicionales que pudieran
-                generarse conforme a las políticas de Viajero Car Rental.
+            <p id="textoOriginal" style="margin:0;">
+                Yo,
+                {{ $reservacion->nombre_cliente
+                        ? trim($reservacion->nombre_cliente . ' ' . ($reservacion->apellidos_cliente ?? ''))
+                        : '________________' }},
+                manifiesto estar plenamente consciente de que cualquier daño, negligencia o mal uso del vehículo
+                que no esté cubierto por mi paquete de seguro o protecciones individuales será responsabilidad mía,
+                y acepto pagar los cargos adicionales que pudieran generarse conforme a las políticas de
+                Viajero Car Rental.
             </p>
         </div>
 
-        <textarea id="textoCliente"
-            placeholder="Escriba aquí exactamente el mismo texto anterior…"
-            style="width:100%; height:140px; padding:12px; border-radius:8px; border:1px solid #ccc;">
-        </textarea>
+        <div style="margin-top:10px;">
+            <p style="font-size:14px; margin-bottom:8px;">
+                Firma del arrendatario en conformidad con el aviso:
+            </p>
 
-        <div class="firma-buttons" style="margin-top:15px;">
-            <button id="cancelarAviso" class="btn btn-gray">Cancelar</button>
-            <button id="confirmarAviso" class="btn btn-red">Confirmar y Enviar</button>
+            <div style="border:1px solid #ccc; border-radius:8px; padding:10px; background:#fafafa;">
+                <canvas id="padAviso" width="500" height="200"></canvas>
+
+                <div class="firma-buttons" style="margin-top:10px; display:flex; gap:10px;">
+                    <button id="clearAviso" class="btn btn-gray" type="button">
+                        Limpiar firma
+                    </button>
+                </div>
+            </div>
         </div>
+
+        <div class="firma-buttons"
+             style="margin-top:15px; display:flex; gap:10px; justify-content:flex-end;">
+            <button id="cancelarAviso" class="btn btn-gray" type="button">
+                Cancelar
+            </button>
+            <button id="confirmarAviso" class="btn btn-red" type="button">
+                Confirmar y Enviar
+            </button>
+        </div>
+
     </div>
 </div>
+
 
 @endsection
 

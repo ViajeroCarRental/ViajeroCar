@@ -35,10 +35,17 @@
       <input type="hidden" id="proteccion_id" name="proteccion_id" value="">
       <div id="addonsHidden"></div>
 
+      {{-- ✅ FIX: ciudades (FK -> id_ciudad) --}}
+      <input type="hidden" id="ciudad_retiro"  name="ciudad_retiro"  value="">
+      <input type="hidden" id="ciudad_entrega" name="ciudad_entrega" value="">
+
       {{-- ✅ Servicios (switch) --}}
       <input type="hidden" id="svc_dropoff"  name="svc_dropoff"  value="0">
       <input type="hidden" id="svc_delivery" name="svc_delivery" value="0">
       <input type="hidden" id="svc_gasolina" name="svc_gasolina" value="0">
+
+      {{-- ✅ Precio por litro (Gasolina prepago) -> lo usa el JS --}}
+      <input type="hidden" id="gasolinaPrecioLitro" value="24">
 
       {{-- Hidden wrap para individuales --}}
       <div id="insHidden"></div>
@@ -63,7 +70,9 @@
               <select id="sucursal_retiro" name="sucursal_retiro" class="input" required>
                 <option value="">Selecciona punto de entrega</option>
                 @foreach($sucursales as $s)
-                  <option value="{{ $s->id_sucursal }}">{{ $s->nombre_mostrado }}</option>
+                  <option value="{{ $s->id_sucursal }}" data-ciudad-id="{{ $s->id_ciudad }}">
+                    {{ $s->nombre_mostrado }}
+                  </option>
                 @endforeach
               </select>
             </div>
@@ -73,7 +82,9 @@
               <select id="sucursal_entrega" name="sucursal_entrega" class="input" required>
                 <option value="">Selecciona punto de devolución</option>
                 @foreach($sucursales as $s)
-                  <option value="{{ $s->id_sucursal }}">{{ $s->nombre_mostrado }}</option>
+                  <option value="{{ $s->id_sucursal }}" data-ciudad-id="{{ $s->id_ciudad }}">
+                    {{ $s->nombre_mostrado }}
+                  </option>
                 @endforeach
               </select>
             </div>
@@ -265,59 +276,175 @@
       {{-- ======================
            4) SERVICIOS (SWITCHES)
       ======================= --}}
+      @php
+        $deliverySafe = $delivery ?? null;
+        $ubicacionesSafe = $ubicaciones ?? [];
+        $costoKmCategoriaSafe = $costoKmCategoria ?? 0;
+        $idReservacionSafe = $reservacion->id_reservacion ?? null;
+      @endphp
+
       <section class="stack-card">
         <div class="stack-head">
           <div class="stack-title">🧰 Servicios</div>
-          <div class="stack-sub">Activa lo que aplique.</div>
+          <div class="stack-sub">Servicios adicionales.</div>
         </div>
 
         <div class="stack-body">
-          <div class="svc-row">
-            <div class="svc-seg" role="group" aria-label="Servicios">
-              <button type="button" class="svc-btn" data-svc="dropoff">🚩 Drop Off</button>
-              <button type="button" class="svc-btn" data-svc="delivery">🚚 Delivery</button>
-              <button type="button" class="svc-btn" data-svc="gasolina">⛽ Gasolina prepago</button>
+
+          <div class="svc-grid">
+
+            {{-- 🚩 DROP OFF (SOLO SWITCH, NO TOTAL VISIBLE) --}}
+            <div class="svc-card">
+              <div class="svc-top">
+                <div class="svc-ico">🚩</div>
+                <div class="svc-meta">
+                  <div class="svc-name">Drop Off</div>
+                  <div class="svc-desc">Entrega en sucursal distinta o en estado distinto.</div>
+                </div>
+              </div>
+
+              <div class="svc-bottom">
+                <div class="svc-hint">Activar</div>
+
+                <label class="switch">
+                  <input type="checkbox" id="dropoffToggle" data-precio="250">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              {{-- ✅ SOLO SE MUESTRA SI EL SWITCH ESTÁ ACTIVO (lo controla el JS) --}}
+              <div class="svc-fields" id="dropoffFields" style="display:none;">
+                <div class="svc-total">
+                  <span>Total Drop Off</span>
+                  <b id="dropoffTotal">$0.00 MXN</b>
+                </div>
+              </div>
+
+              <input type="hidden" id="dropoffTotalHidden" value="0">
             </div>
 
-            <div class="picker-selected" style="flex:1;">
-              <div class="picker-label">Seleccionado</div>
-              <div class="picker-value" id="svcSelTxt">— Ninguno —</div>
-              <div class="picker-sub" id="svcSelSub">Después te muestro los detalles aquí.</div>
+            {{-- 🚚 DELIVERY --}}
+            <div class="svc-card svc-card--accent delivery-wrapper"
+                data-id-reservacion="{{ $idReservacionSafe ?? '' }}"
+                data-delivery-activo="{{ $deliverySafe->activo ?? 0 }}"
+                data-delivery-km="{{ $deliverySafe->kms ?? '' }}"
+                data-delivery-direccion="{{ $deliverySafe->direccion ?? '' }}"
+                data-delivery-total="{{ $deliverySafe->total ?? 0 }}"
+                data-delivery-ubicacion="{{ isset($deliverySafe->id_ubicacion) ? $deliverySafe->id_ubicacion : '' }}"
+                data-costo-km="{{ $costoKmCategoriaSafe }}">
+
+              <div class="svc-top">
+                <div class="svc-ico">🚚</div>
+                <div class="svc-meta">
+                  <div class="svc-name">Delivery</div>
+                  <div class="svc-desc">Entrega a domicilio o ubicación especial.</div>
+                </div>
+              </div>
+
+              <div class="svc-bottom">
+                <div class="svc-hint">Activar</div>
+
+                <label class="switch switch-soft">
+                  <input type="checkbox"
+                        id="deliveryToggle"
+                        name="delivery_activo"
+                        {{ !empty($deliverySafe->activo) ? 'checked' : '' }}>
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="svc-fields"
+                  id="deliveryFields"
+                  style="display: {{ !empty($deliverySafe->activo) ? 'block' : 'none' }};">
+
+                <div class="svc-field">
+                  <label class="svc-label">Seleccionar ubicación</label>
+                  <select id="deliveryUbicacion" name="delivery_ubicacion" class="input">
+                    <option value="">Seleccione...</option>
+
+                    @foreach($ubicacionesSafe as $u)
+                      <option value="{{ $u->id_ubicacion }}"
+                              data-km="{{ $u->km }}"
+                              {{ (!empty($deliverySafe->id_ubicacion) && $deliverySafe->id_ubicacion == $u->id_ubicacion) ? 'selected' : '' }}>
+                        {{ $u->estado }} - {{ $u->destino }} ({{ $u->km }} km)
+                      </option>
+                    @endforeach
+
+                    <option value="0"
+                              {{ (isset($deliverySafe->id_ubicacion) && (int)$deliverySafe->id_ubicacion === 0) ? 'selected' : '' }}>
+                      Dirección personalizada (manual)
+                    </option>
+                  </select>
+                </div>
+
+                <div class="svc-field"
+                    id="groupDireccion"
+                    style="display: {{ (isset($deliverySafe->id_ubicacion) && $deliverySafe->id_ubicacion == 0) ? 'block' : 'none' }};">
+                  <label class="svc-label">Dirección personalizada (opcional)</label>
+                  <input type="text"
+                        id="deliveryDireccion"
+                        name="delivery_direccion"
+                        class="input"
+                        placeholder="Ej. Calle Robles 123, Centro"
+                        value="{{ $deliverySafe->direccion ?? '' }}">
+                </div>
+
+                <div class="svc-field"
+                    id="groupKm"
+                    style="display: {{ (isset($deliverySafe->id_ubicacion) && $deliverySafe->id_ubicacion == 0) ? 'block' : 'none' }};">
+                  <label class="svc-label">Kilómetros personalizados</label>
+                  <input type="number"
+                        min="0"
+                        id="deliveryKm"
+                        name="delivery_km"
+                        class="input"
+                        placeholder="Ej. 15"
+                        value="{{ $deliverySafe->kms ?? '' }}">
+                </div>
+
+                <div class="svc-total">
+                  <span>Total Delivery</span>
+                  <b id="deliveryTotal">${{ number_format($deliverySafe->total ?? 0, 2) }} MXN</b>
+                </div>
+
+              </div>
+
+              <input type="hidden" id="deliveryPrecioKm" value="{{ $costoKmCategoriaSafe }}">
+              <input type="hidden" id="deliveryTotalHidden" value="{{ $deliverySafe->total ?? 0 }}">
             </div>
 
-            <button class="btn gray" type="button" id="svcClear" style="display:none;">✖</button>
+            {{-- ⛽ GASOLINA PREPAGO (SOLO SWITCH, NO TOTAL VISIBLE) --}}
+            <div class="svc-card">
+              <div class="svc-top">
+                <div class="svc-ico">⛽</div>
+                <div class="svc-meta">
+                  <div class="svc-name">Gasolina prepago</div>
+                  <div class="svc-desc">Se liquida gasolina por adelantado.</div>
+                </div>
+              </div>
+
+              <div class="svc-bottom">
+                <div class="svc-hint">Activar</div>
+
+                <label class="switch switch-soft">
+                  <input type="checkbox" id="gasolinaToggle" data-precio="600">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              {{-- ✅ SOLO SE MUESTRA SI EL SWITCH ESTÁ ACTIVO (lo controla el JS) --}}
+              <div class="svc-fields" id="gasolinaFields" style="display:none;">
+                <div class="svc-total">
+                  <span>Total Gasolina</span>
+                  <b id="gasolinaTotal">$0.00 MXN</b>
+                </div>
+              </div>
+
+              <input type="hidden" id="gasolinaTotalHidden" value="0">
+            </div>
+
           </div>
 
-          <style>
-            .svc-row{ display:flex; gap:12px; align-items:stretch; flex-wrap:wrap; }
-            .svc-seg{
-              display:flex; gap:8px; padding:8px;
-              border:1px solid rgba(255,255,255,.20);
-              background:rgba(255,255,255,.06);
-              border-radius:14px;
-            }
-            .svc-btn{
-              border:0;
-              padding:10px 12px;
-              border-radius:12px;
-              font-weight:900;
-              cursor:pointer;
-              background:rgba(255,255,255,.10);
-              color:#fff;
-              transition:.15s ease;
-              white-space:nowrap;
-            }
-            .svc-btn:hover{ transform:translateY(-1px); }
-            .svc-btn.is-on{
-              background:#fff;
-              color:#7a1414;
-              box-shadow:0 12px 28px rgba(0,0,0,.18);
-            }
-            @media (max-width: 720px){
-              .svc-seg{ width:100%; justify-content:space-between; }
-              .svc-btn{ flex:1; text-align:center; }
-            }
-          </style>
         </div>
       </section>
 
@@ -395,7 +522,6 @@
               <input id="email_cliente" name="email_cliente" class="input" type="email" required>
             </div>
 
-            {{-- ✅ TELÉFONO con LADA + BANDERA --}}
             <div>
               <label>Teléfono</label>
               <div class="phone-grid" id="phoneCombo">
@@ -416,7 +542,6 @@
               </div>
             </div>
 
-            {{-- ✅ PAÍS fijo (readonly) --}}
             <div>
               <label>País</label>
               <input type="hidden" id="pais" name="pais" value="MÉXICO">
@@ -538,7 +663,9 @@
               data-nombre="{{ $cat->nombre }}"
               data-desc="{{ $cat->descripcion }}"
               data-precio="{{ $cat->precio_dia }}"
-              data-img="{{ $img }}">
+              data-img="{{ $img }}"
+              data-litros="{{ $cat->litros_gasolina ?? 0 }}"
+          >
             <div class="cp-img">
               <img src="{{ $img }}" alt="{{ $cat->nombre }}">
             </div>
@@ -591,7 +718,7 @@
   </div>
 </div>
 
-{{-- ✅ MODAL: PROTECCIONES (CON PESTAÑAS + CSS NECESARIO PARA QUE SE VEAN INDIVIDUALES) --}}
+{{-- ✅ MODAL: PROTECCIONES --}}
 <div class="pop modal" id="proteccionPop">
   <div class="box modal-box modal-prote-tabs">
     <header class="modal-head">
@@ -599,9 +726,7 @@
       <button class="btn gray" id="proteClose" type="button">✖</button>
     </header>
 
-    {{-- ✅ CSS extra SOLO para este modal: tabs + carruseles + cards individuales (para que NO “desaparezcan”) --}}
     <style>
-      /* Tabs */
       #proteccionPop .tabs-bar{
         display:flex; gap:10px; align-items:center;
         padding:12px 14px;
@@ -625,12 +750,8 @@
         border-color:rgba(178,34,34,.30);
         color:#7a1414;
       }
-
-      /* Panels */
       #proteccionPop .tab-panel{ display:none; }
       #proteccionPop .tab-panel.is-active{ display:block; }
-
-      /* Carrusel horizontal */
       #proteccionPop .scroll-h{
         display:flex;
         gap:12px;
@@ -644,8 +765,6 @@
         background:rgba(17,24,39,.18);
         border-radius:999px;
       }
-
-      /* Títulos por categoría */
       #proteccionPop .cat-title{
         margin:14px 0 8px;
         font-weight:1000;
@@ -654,8 +773,6 @@
         letter-spacing:.02em;
         font-size:14px;
       }
-
-      /* Card individual (IMPORTANTE: fondo blanco + borde, para que SIEMPRE se vea) */
       #proteccionPop .ins-card{
         min-width:280px;
         max-width:320px;
@@ -672,14 +789,10 @@
       #proteccionPop .ins-card .precio{ font-weight:1000; color:#111827; }
       #proteccionPop .ins-card .precio span{ font-weight:900; color:#6b7280; margin-left:6px; }
       #proteccionPop .ins-card .small{ margin-top:8px; font-weight:900; color:#6b7280; }
-
-      /* Estado seleccionado (tu JS pone .is-selected) */
       #proteccionPop .ins-card.is-selected{
         border-color:rgba(178,34,34,.55);
         box-shadow:0 16px 40px rgba(178,34,34,.18);
       }
-
-      /* Switch visual */
       #proteccionPop .switch-individual{
         width:44px; height:26px;
         border-radius:999px;
@@ -703,8 +816,6 @@
       #proteccionPop .switch-individual.is-on::after{
         left:21px;
       }
-
-      /* Footer botones */
       #proteccionPop .foot-split{
         display:flex;
         justify-content:space-between;
@@ -727,16 +838,13 @@
 
       <section class="tab-panel" id="tab-individuales">
         <div class="note" style="margin-bottom:14px;">
-          Selecciona una o varias protecciones individuales. 
+          Selecciona una o varias protecciones individuales.
         </div>
 
         <h4 class="cat-title">Colisión y robo</h4>
         <div class="scroll-h" id="insColisionTrack">
           @forelse(($grupo_colision ?? []) as $ind)
-            <label class="ins-card individual-item"
-                   data-id="{{ $ind->id_individual }}"
-                   data-precio="{{ $ind->precio_por_dia }}"
-                   style="cursor:pointer;">
+            <label class="ins-card individual-item" data-id="{{ $ind->id_individual }}" data-precio="{{ $ind->precio_por_dia }}" style="cursor:pointer;">
               <div class="body">
                 <h4>{{ $ind->nombre }}</h4>
                 <p>{{ $ind->descripcion }}</p>
@@ -753,10 +861,7 @@
         <h4 class="cat-title">Gastos médicos</h4>
         <div class="scroll-h" id="insMedicosTrack">
           @forelse(($grupo_medicos ?? []) as $ind)
-            <label class="ins-card individual-item"
-                   data-id="{{ $ind->id_individual }}"
-                   data-precio="{{ $ind->precio_por_dia }}"
-                   style="cursor:pointer;">
+            <label class="ins-card individual-item" data-id="{{ $ind->id_individual }}" data-precio="{{ $ind->precio_por_dia }}" style="cursor:pointer;">
               <div class="body">
                 <h4>{{ $ind->nombre }}</h4>
                 <p>{{ $ind->descripcion }}</p>
@@ -773,10 +878,7 @@
         <h4 class="cat-title">Asistencia para el camino</h4>
         <div class="scroll-h" id="insCaminoTrack">
           @forelse(($grupo_asistencia ?? []) as $ind)
-            <label class="ins-card individual-item"
-                   data-id="{{ $ind->id_individual }}"
-                   data-precio="{{ $ind->precio_por_dia }}"
-                   style="cursor:pointer;">
+            <label class="ins-card individual-item" data-id="{{ $ind->id_individual }}" data-precio="{{ $ind->precio_por_dia }}" style="cursor:pointer;">
               <div class="body">
                 <h4>{{ $ind->nombre }}</h4>
                 <p>{{ $ind->descripcion }}</p>
@@ -793,10 +895,7 @@
         <h4 class="cat-title">Daños a terceros</h4>
         <div class="scroll-h" id="insTercerosTrack">
           @forelse(($grupo_terceros ?? []) as $ind)
-            <label class="ins-card individual-item"
-                   data-id="{{ $ind->id_individual }}"
-                   data-precio="{{ $ind->precio_por_dia }}"
-                   style="cursor:pointer;">
+            <label class="ins-card individual-item" data-id="{{ $ind->id_individual }}" data-precio="{{ $ind->precio_por_dia }}" style="cursor:pointer;">
               <div class="body">
                 <h4>{{ $ind->nombre }}</h4>
                 <p>{{ $ind->descripcion }}</p>
@@ -813,10 +912,7 @@
         <h4 class="cat-title">Protecciones automáticas</h4>
         <div class="scroll-h" id="insAutoTrack">
           @forelse(($grupo_protecciones ?? []) as $ind)
-            <label class="ins-card individual-item"
-                   data-id="{{ $ind->id_individual }}"
-                   data-precio="{{ $ind->precio_por_dia }}"
-                   style="cursor:pointer;">
+            <label class="ins-card individual-item" data-id="{{ $ind->id_individual }}" data-precio="{{ $ind->precio_por_dia }}" style="cursor:pointer;">
               <div class="body">
                 <h4>{{ $ind->nombre }}</h4>
                 <p>{{ $ind->descripcion }}</p>
