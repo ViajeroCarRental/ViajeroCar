@@ -228,6 +228,51 @@ class ReservacionesAdminController extends Controller
         $categoria = DB::table('categorias_carros')
             ->where('id_categoria', $validated['id_categoria'])
             ->first();
+            // ===============================
+// ✅ Ficha "Tu Auto" (como Catálogo)
+// ===============================
+$predeterminados = [
+    'C'  => ['pax'=>5,  'small'=>2, 'big'=>1],
+    'D'  => ['pax'=>5,  'small'=>2, 'big'=>1],
+    'E'  => ['pax'=>5,  'small'=>2, 'big'=>2],
+    'F'  => ['pax'=>5,  'small'=>2, 'big'=>2],
+    'IC' => ['pax'=>5,  'small'=>2, 'big'=>2],
+    'I'  => ['pax'=>5,  'small'=>3, 'big'=>2],
+    'IB' => ['pax'=>7,  'small'=>3, 'big'=>2],
+    'M'  => ['pax'=>7,  'small'=>4, 'big'=>2],
+    'L'  => ['pax'=>13, 'small'=>4, 'big'=>3],
+    'H'  => ['pax'=>5,  'small'=>3, 'big'=>2],
+    'HI' => ['pax'=>5,  'small'=>3, 'big'=>2],
+];
+
+$codigoCat = strtoupper(trim((string)($categoria->codigo ?? '')));
+$cap = $predeterminados[$codigoCat] ?? ['pax'=>5,'small'=>2,'big'=>1];
+
+// Nombre en singular para subtítulo (Grandes -> GRANDE, Medianos -> MEDIANO, etc.)
+$nombreCat = trim((string)($categoria->nombre ?? ''));
+$singular = $nombreCat;
+if (mb_substr($singular, -1) === 's') {
+    $singular = mb_substr($singular, 0, mb_strlen($singular)-1);
+}
+$singular = mb_strtoupper($singular);
+
+// El título grande debe ser la descripción (ej: "Volkswagen Jetta o similar")
+$tituloAuto = trim((string)($categoria->descripcion ?? 'Auto o similar'));
+
+// Subtítulo tipo: "GRANDE | CATEGORÍA E"
+$subtituloAuto = $singular . " | CATEGORÍA " . ($codigoCat ?: '-');
+
+$tuAuto = [
+    'titulo'     => $tituloAuto,
+    'subtitulo'  => $subtituloAuto,
+    'pax'        => (int)$cap['pax'],
+    'small'      => (int)$cap['small'],
+    'big'        => (int)$cap['big'],
+    'transmision'=> 'Transmisión manual o automática',
+    'tech'       => 'Apple CarPlay | Android Auto',
+    'incluye'    => 'KM ilimitados | Reelevo de Responsabilidad (LI)',
+];
+
 
         if (!$categoria) {
             return response()->json([
@@ -237,18 +282,60 @@ class ReservacionesAdminController extends Controller
         }
 
         // 👉 Tarifa base que viene de categorias_carros
-        $tarifaBase = (float) $categoria->precio_dia;
+$tarifaBase = (float) $categoria->precio_dia;
 
-        $dias = max(
-            1,
-            Carbon::parse($validated['fecha_inicio'])
-                ->diffInDays(Carbon::parse($validated['fecha_fin']))
-        );
+$dias = max(
+    1,
+    Carbon::parse($validated['fecha_inicio'])
+        ->diffInDays(Carbon::parse($validated['fecha_fin']))
+);
 
-        // Totales base (puedes sobreescribir desde el frontend si algún día lo necesitas)
-        $subtotal = $request->input('subtotal', round($tarifaBase * $dias, 2));
-        $iva      = $request->input('impuestos', round($subtotal * 0.16, 2));
-        $total    = $request->input('total', $subtotal + $iva);
+// ===============================
+// ✅ Calcular total de OPCIONES desde el request
+//    (seguro + servicios), ambos por día
+// ===============================
+$extrasServiciosTotal = 0.0;
+
+if ($request->filled('adicionalesSeleccionados')) {
+    $extras = $request->input('adicionalesSeleccionados');
+
+    if (is_array($extras)) {
+        foreach ($extras as $extra) {
+            if (!is_array($extra) || !isset($extra['precio'])) {
+                continue;
+            }
+
+            $precio   = (float) ($extra['precio'] ?? 0);   // precio por día
+            $cantidad = (int)   ($extra['cantidad'] ?? 1); // cantidad seleccionada
+
+            // opciones por día
+            $extrasServiciosTotal += $precio * $cantidad * $dias;
+        }
+    }
+}
+
+$seguroTotal = 0.0;
+if ($request->filled('seguroSeleccionado.id')) {
+    $seguro = $request->input('seguroSeleccionado');
+
+    if (is_array($seguro) && isset($seguro['precio'])) {
+        // precio del paquete por día
+        $seguroTotal = (float) $seguro['precio'] * $dias;
+    }
+}
+
+// ✅ Total de OPCIONES por toda la renta
+$opcionesRentaTotal = round($seguroTotal + $extrasServiciosTotal, 2);
+
+// ===============================
+// ✅ Totales que se guardan en la DB
+//    (tarifa base + opciones + IVA)
+// ===============================
+$tarifaBaseTotal = round($tarifaBase * $dias, 2);
+$subtotal        = $tarifaBaseTotal + $opcionesRentaTotal;
+$iva             = round($subtotal * 0.16, 2);
+$total           = $subtotal + $iva;
+
 
         $codigo = 'RES-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
 
@@ -349,14 +436,118 @@ class ReservacionesAdminController extends Controller
             ->where('id_reservacion', $id)
             ->first();
 
+        // ===============================
+// ✅ Traer SEGURO (paquete) ligado a la reservación
+// ===============================
+$seguroReserva = DB::table('reservacion_paquete_seguro as rps')
+    ->join('seguro_paquete as sp', 'sp.id_paquete', '=', 'rps.id_paquete')
+    ->where('rps.id_reservacion', $id)
+    ->select(
+        'sp.id_paquete',
+        'sp.nombre',
+        'sp.descripcion',
+        'rps.precio_por_dia'
+    )
+    ->first();
+
+// ===============================
+// ✅ Traer SERVICIOS (extras) ligados a la reservación
+// ===============================
+$extrasReserva = DB::table('reservacion_servicio as rs')
+    ->join('servicios as s', 's.id_servicio', '=', 'rs.id_servicio')
+    ->where('rs.id_reservacion', $id)
+    ->select(
+        's.id_servicio',
+        's.nombre',
+        's.descripcion',
+        'rs.cantidad',
+        'rs.precio_unitario',
+        DB::raw('(rs.cantidad * rs.precio_unitario) as total')
+    )
+    ->get();
+
+    // ===============================
+// ✅ Traer SUCURSAL + CIUDAD (retiro / entrega) para el correo
+// ===============================
+$retiroInfo = DB::table('sucursales as s')
+    ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
+    ->where('s.id_sucursal', $reservacion->sucursal_retiro)
+    ->select('s.nombre as sucursal', 'c.nombre as ciudad')
+    ->first();
+
+$entregaInfo = DB::table('sucursales as s')
+    ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
+    ->where('s.id_sucursal', $reservacion->sucursal_entrega)
+    ->select('s.nombre as sucursal', 'c.nombre as ciudad')
+    ->first();
+
+$lugarRetiro  = $retiroInfo ? ($retiroInfo->ciudad . ' - ' . $retiroInfo->sucursal) : '-';
+$lugarEntrega = $entregaInfo ? ($entregaInfo->ciudad . ' - ' . $entregaInfo->sucursal) : '-';
+
+// ===============================
+// ✅ Imagen por categoría (referencia) — usando tu mapeo por ID
+// ⚠️ Para correos: URL ABSOLUTA (APP_URL debe estar bien)
+// ===============================
+$catImages = [
+    1  => 'img/aveo.png',
+    2  => 'img/virtus.png',
+    3  => 'img/jetta.png',
+    4  => 'img/camry.png',
+    5  => 'img/renegade.png',
+    6  => 'img/seltos.png',
+    7  => 'img/avanza.png',
+    8  => 'img/Odyssey.png',
+    9  => 'img/Hiace.png',
+    10 => 'img/Frontier.png',
+    11 => 'img/Tacoma.png',
+];
+
+// Id de categoría de TU BD
+$catId = (int)($categoria->id_categoria ?? 0);
+
+// Base URL (para que en correo siempre sea absoluto)
+$baseUrl = rtrim(config('app.url'), '/');
+
+// Si existe imagen para esa categoría -> úsala, si no -> placeholder
+$imgPath = $catImages[$catId] ?? 'img/categorias/placeholder.png';
+
+// URL final para el correo
+$imgCategoria = $baseUrl . '/' . ltrim($imgPath, '/');
+
+// ===============================
+// ✅ Total "Opciones de renta" (seguro + servicios)
+// - Seguro: precio_por_dia * dias
+// - Servicios: suma (cantidad * precio_unitario)
+// ===============================
+$extrasServiciosTotal = 0;
+if (!empty($extrasReserva)) {
+    // $extrasReserva es Collection -> sum('total') funciona
+    $extrasServiciosTotal = (float) $extrasReserva->sum('total');
+}
+
+$seguroTotal = 0;
+if (!empty($seguroReserva) && isset($seguroReserva->precio_por_dia)) {
+    $seguroTotal = (float)$seguroReserva->precio_por_dia * (float)$dias;
+}
+
+$opcionesRentaTotal = round($seguroTotal + $extrasServiciosTotal, 2);
+
+
+
         try {
             if ($correoCliente) {
                 Mail::to($correoCliente)
-                    ->cc($correoEmpresa)
-                    ->send(new ReservacionAdminMail($reservacion, $categoria));
+    ->cc($correoEmpresa)
+    ->send(new ReservacionAdminMail($reservacion,$categoria,$seguroReserva,$extrasReserva,$lugarRetiro,$lugarEntrega,$imgCategoria,$opcionesRentaTotal, $tuAuto
+    ));
+
+
             } else {
                 Mail::to($correoEmpresa)
-                    ->send(new ReservacionAdminMail($reservacion, $categoria));
+    ->send(new ReservacionAdminMail($reservacion,$categoria,$seguroReserva,$extrasReserva,$lugarRetiro,$lugarEntrega,$imgCategoria,$opcionesRentaTotal, $tuAuto
+    ));
+
+
             }
         } catch (\Throwable $e) {
             Log::error('❌ Error al enviar correo de reserva: ' . $e->getMessage());
