@@ -440,7 +440,8 @@
 
       <p class="lead">
         Tu vehículo ya está reservado, el siguiente código es tu número de reservación,
-        da <a href="{{ $url_detalle ?? '#' }}">click aquí</a> para más información.
+        da da <a href="{{ route('visor.show', ['id' => $reservacion->id_reservacion]) }}">click aquí</a> para más información.
+
       </p>
 
       <p class="lead" style="margin-top:0;">

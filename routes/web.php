@@ -33,12 +33,12 @@ use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\ChecklistCambioAutoController;
 use App\Http\Controllers\CategoriasController;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\VisorReservacionController;
 //rutas vistas Usuario
 
 
 //--------------------------------------------------------------------------//
 
-use App\Http\Controllers\VisorReservacionController;
 
 Route::get('/ventas/reservacion/{id}', [VisorReservacionController::class, 'mostrarReservacion'])->name('visor.show');
 Route::put('/ventas/reservacion/{id}', [VisorReservacionController::class, 'actualizarReservacion'])->name('visor.update');
