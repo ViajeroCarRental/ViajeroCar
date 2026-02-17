@@ -7,194 +7,267 @@ use Illuminate\Support\Facades\DB;
 
 class VisorReservacionController extends Controller
 {
+     /* =========================================================
+       GET ÚNICO – MUESTRA LAS 3 CARDS
+    ========================================================= */
 
-
-//   MOSTRAR
-public function mostrarReservacion($id)
-{
-    $reservacion = DB::table('reservaciones')
-        ->where('id_reservacion', $id)
-        ->first();
-
-    if (!$reservacion)
+    public function mostrarReservacion($id)
     {
-        abort(404, 'Reservación no encontradaaa');
-    }
+        // ---------- CARD 1 ----------
+        $reservacion = DB::table('reservaciones')
+            ->where('id_reservacion', $id)
+            ->select('id_reservacion', 'id_categoria')
+            ->first();
 
-    $servicios = DB::table('reservacion_servicio')
-        ->join('servicios','reservacion_servicio.id_servicio','=','servicios.id_servicio')
-        ->where('reservacion_servicio.id_reservacion',$id)
-        ->select(
-            'servicios.id_servicio',
-            'servicios.nombre',
-            'reservacion_servicio.cantidad',
-            'reservacion_servicio.precio_unitario'
-        )
-        ->get();
+        if (!$reservacion) {
+            abort(404, 'Reservación no encontrada');
+        }
 
-    $subtotalServicios = 0;
+        // Servicios asociados
+        $servicios = DB::table('reservacion_servicio')
+            ->join('servicios', 'reservacion_servicio.id_servicio', '=', 'servicios.id_servicio')
+            ->where('reservacion_servicio.id_reservacion', $id)
+            ->select(
+                'servicios.id_servicio',
+                'servicios.nombre',
+                'reservacion_servicio.cantidad',
+                'reservacion_servicio.precio_unitario'
+            )
+            ->get();
 
-    foreach ($servicios as $s) {
-        $subtotalServicios += $s->cantidad * $s->precio_unitario;
-    }
-
-    $li = 350000;
-    $subtotal = $subtotalServicios + $li;
-    $iva = $subtotal * 0.16;
-    $total = $subtotal + $iva;
-
-    $reservacionVista = DB::table('reservaciones as r')
-        ->leftJoin('ciudades as cr','r.ciudad_retiro','=','cr.id_ciudad')
-        ->leftJoin('sucursales as sr','r.sucursal_retiro','=','sr.id_sucursal')
-        ->leftJoin('ciudades as ce','r.ciudad_entrega','=','ce.id_ciudad')
-        ->leftJoin('sucursales as se','r.sucursal_entrega','=','se.id_sucursal')
-        ->where('r.id_reservacion',$id)
-        ->select(
-            'r.*',
-            DB::raw("CONCAT(sr.nombre,' (',cr.nombre,')') as pickupName"),
-            DB::raw("CONCAT(se.nombre,' (',ce.nombre,')') as dropoffName")
-        )
-        ->first();
-
-    $sucursales = DB::table('sucursales as s')
-        ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
-        ->where('s.activo', 1)
-        ->select(
-            's.id_sucursal',
-            DB::raw("CONCAT(s.nombre,' (',c.nombre,')') as nombre_mostrado")
-        )
-        ->orderBy('c.nombre')
-        ->get();
-
-    return view('Usuarios.visorReservacion', [
-        'reservacion' => $reservacionVista,
-        'servicios'   => $servicios,
-        'subtotal'    => $subtotal,
-        'iva'         => $iva,
-        'total'       => $total,
-        'sucursales'  => $sucursales,
-    ]);
-}
-
-
-public function actualizarReservacion(Request $request, $id)
-{
-    DB::beginTransaction();
-
-    try {
-
-        DB::table('reservaciones')
-        ->where('id_reservacion',$id)
-        ->update([
-
-            'nombre_cliente'    => $request->nombre_cliente,
-            'apellidos_cliente' => $request->apellidos_cliente,
-            'email_cliente'     => $request->email_cliente,
-            'telefono_cliente'  => $request->telefono_cliente,
-
-            'fecha_inicio' => $request->fecha_inicio,
-            'fecha_fin'    => $request->fecha_fin,
-
-            'hora_retiro'  => $request->hora_retiro,
-            'hora_entrega' => $request->hora_entrega,
-
-            'sucursal_retiro'   => $request->sucursal_retiro,
-            'sucursal_entrega'  => $request->sucursal_entrega,
-
-             //Categoria.
-            'id_categoria'      => $request->id_categoria,
-
-            'updated_at'   => now()
-        ]);
-
-        //Elimina los servicios coexistentes.
-        DB::table('reservacion_servicio')
-            ->where('id_reservacion',$id)
-            ->delete();
-
+        // Totales
         $subtotalServicios = 0;
-
-        if($request->servicios){
-            foreach($request->servicios as $s){
-                if($s['cantidad'] > 0){
-                    DB::table('reservacion_servicio')->insert([
-                        'id_reservacion'  => $id,
-                        'id_servicio'     => $s['id'],
-                        'cantidad'        => $s['cantidad'],
-                        'precio_unitario' => $s['precio'],
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-
-                    $subtotalServicios +=
-                        $s['cantidad'] * $s['precio'];
-                }
-
-            }
-
+        foreach ($servicios as $s) {
+            $subtotalServicios += $s->cantidad * $s->precio_unitario;
         }
 
         $li = 350000;
         $subtotal = $subtotalServicios + $li;
-        $iva   = $subtotal * 0.16;
+        $iva = $subtotal * 0.16;
         $total = $subtotal + $iva;
 
-        DB::table('reservaciones')
-        ->where('id_reservacion',$id)
-        ->update([
+        // Catálogo de servicios
+        $catalogoServicios = DB::table('servicios')
+            ->where('activo', 1)
+            ->orderBy('nombre')
+            ->get();
 
-            'subtotal'  => $subtotal,
-            'impuestos' => $iva,
-            'total'     => $total
+        // ---------- CARD 2 ----------
+        $cliente = DB::table('reservaciones')
+            ->where('id_reservacion', $id)
+            ->select(
+                'nombre_cliente',
+                'apellidos_cliente',
+                'email_cliente',
+                'telefono_cliente'
+            )
+            ->first();
 
+        // ---------- CARD 3 ----------
+        $itinerario = DB::table('reservaciones')
+            ->where('id_reservacion', $id)
+            ->select(
+                'fecha_inicio',
+                'fecha_fin',
+                'hora_retiro',
+                'hora_entrega',
+                'sucursal_retiro',
+                'sucursal_entrega'
+            )
+            ->first();
+
+        $sucursales = DB::table('sucursales as s')
+            ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
+            ->where('s.activo', 1)
+            ->select(
+                's.id_sucursal',
+                DB::raw("CONCAT(s.nombre,' (',c.nombre,')') as nombre_mostrado")
+            )
+            ->orderBy('c.nombre')
+            ->get();
+
+
+            // ---------- CONTRATO ----------
+            $tieneContrato = DB::table('contratos')
+            ->where('id_reservacion', $id)
+            ->exists();
+
+
+        return view('Usuarios.visorReservacion', [
+            // Card 1
+            'reservacion'        => $reservacion,
+            'servicios'          => $servicios,
+            'subtotal'           => $subtotal,
+            'iva'                => $iva,
+            'total'              => $total,
+            'catalogoServicios' => $catalogoServicios,
+
+            // Card 2
+            'cliente'            => $cliente,
+
+            // Card 3
+            'itinerario'         => $itinerario,
+            'sucursales'         => $sucursales,
+
+            'tieneContrato'      => $tieneContrato,
+        ]);
+    }
+
+    /* =========================================================
+       PUT ÚNICO – DECIDE QUÉ CARD ACTUALIZAR
+    ========================================================= */
+
+    public function actualizarReservacion(Request $request, $id)
+    {
+
+         // 🔒 BLOQUEO POR CONTRATO
+    $existeContrato = DB::table('contratos')
+        ->where('id_reservacion', $id)
+        ->exists();
+
+    if ($existeContrato) {
+        return back()->with('error', 'No se puede editar la reservación porque ya tiene contrato');
+    }
+
+        switch ($request->card) {
+            case 'card1':
+                return $this->actualizarCard1($request, $id);
+            case 'card2':
+                return $this->actualizarCard2($request, $id);
+            case 'card3':
+                return $this->actualizarCard3($request, $id);
+            default:
+                return back()->with('error', 'Acción no válida');
+        }
+    }
+
+    private function actualizarCard1(Request $request, $id)
+    {
+        $request->validate([
+            'id_categoria'         => 'required|integer',
+            'servicios'            => 'required|array',
+            'servicios.*.id'       => 'required|integer',
+            'servicios.*.cantidad' => 'required|integer|min:1',
+            'servicios.*.precio'   => 'required|numeric|min:0'
         ]);
 
+        DB::beginTransaction();
 
-        DB::commit();
+        try {
+            // Categoría
+            DB::table('reservaciones')
+                ->where('id_reservacion', $id)
+                ->update([
+                    'id_categoria' => $request->id_categoria,
+                    'updated_at'   => now()
+                ]);
 
-        return back()->with('success','Reservación actualizada');
+            // Servicios
+            DB::table('reservacion_servicio')
+                ->where('id_reservacion', $id)
+                ->delete();
 
+            $subtotalServicios = 0;
 
-    } catch(\Exception $e){
+            foreach ($request->servicios as $s) {
+                DB::table('reservacion_servicio')->insert([
+                    'id_reservacion'  => $id,
+                    'id_servicio'     => $s['id'],
+                    'cantidad'        => $s['cantidad'],
+                    'precio_unitario' => $s['precio'],
+                    'created_at'      => now(),
+                    'updated_at'      => now()
+                ]);
 
-        DB::rollBack();
+                $subtotalServicios += $s['cantidad'] * $s['precio'];
+            }
 
-        return back()->with('error','Error al actualizar');
+            // Totales
+            $li = 350000;
+            $subtotal = $subtotalServicios + $li;
+            $iva = $subtotal * 0.16;
+            $total = $subtotal + $iva;
 
+            DB::table('reservaciones')
+                ->where('id_reservacion', $id)
+                ->update([
+                    'subtotal'  => $subtotal,
+                    'impuestos' => $iva,
+                    'total'     => $total
+                ]);
+
+            DB::commit();
+            return back()->with('success', 'Vehículo y servicios actualizados');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Error al guardar Card 1');
+        }
     }
-}
 
-public function eliminarReservacion($id)
-{
-    DB::beginTransaction();
+    /* =========================================================
+       CARD 2 – DATOS DEL CLIENTE
+    ========================================================= */
 
-    try{
-
-        DB::table('reservacion_servicio')
-            ->where('id_reservacion',$id)
-            ->delete();
-
+    private function actualizarCard2(Request $request, $id)
+    {
+        $request->validate([
+            'nombre_cliente'    => 'required|string|max:100',
+            'apellidos_cliente' => 'required|string|max:100',
+            'email_cliente'     => 'required|email',
+            'telefono_cliente'  => 'required|string|max:20'
+        ]);
 
         DB::table('reservaciones')
-            ->where('id_reservacion',$id)
-            ->delete();
+            ->where('id_reservacion', $id)
+            ->update([
+                'nombre_cliente'    => $request->nombre_cliente,
+                'apellidos_cliente' => $request->apellidos_cliente,
+                'email_cliente'     => $request->email_cliente,
+                'telefono_cliente'  => $request->telefono_cliente,
+                'updated_at'        => now()
+            ]);
 
+        return back()->with('success', 'Datos del cliente actualizados');
+    }
 
-        DB::commit();
+    /* =========================================================
+       CARD 3 – FECHAS, HORAS Y SUCURSALES
+    ========================================================= */
 
-        return redirect('/ventas')
-            ->with('success','Reservación eliminada');
+    private function actualizarCard3(Request $request, $id)
+    {
+        $request->validate([
+            'fecha_inicio'     => 'required|date',
+            'fecha_fin'        => 'required|date|after_or_equal:fecha_inicio',
+            'hora_retiro'      => 'required',
+            'hora_entrega'     => 'required',
+            'sucursal_retiro'  => 'required|integer',
+            'sucursal_entrega' => 'required|integer'
+        ]);
 
+        // Validación de horas si la fecha es la misma
+        if ($request->fecha_inicio === $request->fecha_fin) {
+            if ($request->hora_entrega <= $request->hora_retiro) {
+                return back()->withErrors([
+                    'hora_entrega' =>
+                        'La hora de entrega debe ser posterior a la de retiro'
+                ]);
+            }
+        }
 
-    }catch(\Exception $e){
+        DB::table('reservaciones')
+            ->where('id_reservacion', $id)
+            ->update([
+                'fecha_inicio'     => $request->fecha_inicio,
+                'fecha_fin'        => $request->fecha_fin,
+                'hora_retiro'      => $request->hora_retiro,
+                'hora_entrega'     => $request->hora_entrega,
+                'sucursal_retiro'  => $request->sucursal_retiro,
+                'sucursal_entrega' => $request->sucursal_entrega,
+                'updated_at'       => now()
+            ]);
 
-        DB::rollBack();
-
-        return back()
-            ->with('error','No se pudo eliminar');
+        return back()->with('success', 'Fechas y sucursales actualizadas');
     }
 }
-
-}
-
-

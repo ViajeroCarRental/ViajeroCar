@@ -1,109 +1,217 @@
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', () => {
 
-    const btnEditar     = document.getElementById('btnEditar');
-    const btnActualizar = document.getElementById('btnActualizar');
-    const btnAgregar    = document.getElementById('btnAgregarServicio');
+    /* ======================================================
+       CARD 1 – VEHÍCULO / SERVICIOS
+    ====================================================== */
+
+    const btnEditarServicios  = document.getElementById('btnEditarServicios');
+    const btnGuardarCard1     = document.getElementById('btnGuardarCard1');
     const btnCambiarCategoria = document.getElementById('btnCambiarCategoria');
 
-    const campos    = document.querySelectorAll('.editable');
-    const servicios = document.querySelectorAll('.editable-servicio');
-    const btnEliminarServicio = document.querySelectorAll('.btnEliminarServicio');
+    const contenedorAgregarServicio = document.getElementById('contenedorAgregarServicio');
+    const selectServicio      = document.getElementById('selectServicio');
+    const btnConfirmarAgregar = document.getElementById('btnConfirmarAgregar');
+    const tablaServicios      = document.getElementById('tablaServicios');
 
-    if (btnEditar) {
-        btnEditar.addEventListener('click', function () {
+    let servicioIndex = tablaServicios ? tablaServicios.rows.length : 0;
 
-            campos.forEach(el => {
-                if (el.tagName === 'SELECT') {
-                    el.disabled = false;
-                } else {
-                    el.removeAttribute('readonly');
-                }
-                el.classList.add('border-warning');
-            });
+    /* ====== EDITAR CARD 1 ====== */
+    if (btnEditarServicios) {
+        btnEditarServicios.addEventListener('click', () => {
 
-            servicios.forEach(input => {
+            document.querySelectorAll('.editable-servicio').forEach(input => {
                 input.removeAttribute('readonly');
                 input.classList.add('border-warning');
             });
 
-            btnActualizar.classList.remove('d-none');
+            btnGuardarCard1.classList.remove('d-none');
+            contenedorAgregarServicio.classList.remove('d-none');
+            btnCambiarCategoria.classList.remove('d-none');
 
-            if (btnAgregar) btnAgregar.classList.remove('d-none');
-            if (btnCambiarCategoria) btnCambiarCategoria.classList.remove('d-none');
+            document.querySelectorAll('.btnEliminarServicio')
+                .forEach(btn => btn.classList.remove('d-none'));
 
-            btnEliminarServicio.forEach(btn => btn.classList.remove('d-none'));
-            btnEditar.classList.add('d-none');
+            btnEditarServicios.classList.add('d-none');
         });
     }
 
-    /* CAMBIAR CATEGORÍA */
-    if (btnCambiarCategoria) {
+    /* ====== AGREGAR SERVICIO ====== */
+    if (btnConfirmarAgregar) {
+        btnConfirmarAgregar.addEventListener('click', () => {
+
+            if (!selectServicio.value) {
+                alert('Selecciona un servicio');
+                return;
+            }
+
+            const option = selectServicio.selectedOptions[0];
+            const id     = option.value;
+            const nombre = option.dataset.nombre;
+            const precio = option.dataset.precio;
+
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+                <td>
+                    ${nombre}
+                    <input type="hidden" name="servicios[${servicioIndex}][id]" value="${id}">
+                </td>
+                <td>
+                    <input type="number" min="1"
+                           name="servicios[${servicioIndex}][cantidad]"
+                           class="form-control editable-servicio border-warning"
+                           value="1">
+                </td>
+                <td>
+                    <input type="number" step="0.01" min="0"
+                           name="servicios[${servicioIndex}][precio]"
+                           class="form-control editable-servicio border-warning"
+                           value="${precio}">
+                </td>
+                <td>$${parseFloat(precio).toFixed(2)}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger btnEliminarServicio">✖</button>
+                </td>
+            `;
+
+            tablaServicios.appendChild(fila);
+            servicioIndex++;
+            selectServicio.value = '';
+        });
+    }
+
+    /* ====== ELIMINAR SERVICIO ====== */
+    document.addEventListener('click', e => {
+        if (e.target.classList.contains('btnEliminarServicio')) {
+            if (confirm('¿Quitar servicio?')) {
+                e.target.closest('tr').remove();
+            }
+        }
+    });
+
+    /* ======================================================
+       CATEGORÍA – IMAGEN + TEXTO
+    ====================================================== */
+
+    const modalCategoriaEl = document.getElementById('modalCategoria');
+
+    const categoriasVehiculo = {
+        1: { texto: 'C | Compacto',   img: '/img/aveo.png' },
+        2: { texto: 'D | Mediano',    img: '/img/virtus.png' },
+        3: { texto: 'E | Grande',     img: '/img/jetta.png' },
+        4: { texto: 'F | Full Size',  img: '/img/camry.png' },
+        5: { texto: 'IC | SUV Completa' , img: '/img/renegade.png' },
+        6: { texto: 'I | SUV Mediana' , img: '/img/avanza.png' },
+        7: { texto: 'H | Pick Doble Cabina' , img: '/img/Frontier.png' },
+        8: { texto: 'M | Minivan' , img: '/img/Odyssey.png' },
+        9: { texto: 'HI | Pickup 4x4 Doble Cabina' , img: '/img/Tacoma.png' },
+        10: { texto: 'L | Van Pasajeros' , img: '/img/Urvan.png' }
+    };
+
+    if (btnCambiarCategoria && modalCategoriaEl) {
         btnCambiarCategoria.addEventListener('click', () => {
-            new bootstrap.Modal(document.getElementById('modalCategoria')).show();
+            new bootstrap.Modal(modalCategoriaEl).show();
         });
     }
 
     document.querySelectorAll('.elegirCategoria').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.getElementById('inputCategoria').value = btn.dataset.id;
-            document.getElementById('imgVehiculo').src = btn.dataset.img;
-            document.getElementById('textoCategoria').innerText = btn.dataset.txt;
 
-            bootstrap.Modal.getInstance(
-                document.getElementById('modalCategoria')
-            ).hide();
+            const id = btn.dataset.id;
+            document.getElementById('inputCategoria').value = id;
+
+            document.getElementById('imgVehiculo').src = categoriasVehiculo[id].img;
+            document.getElementById('textoCategoria').innerText =
+                categoriasVehiculo[id].texto;
+
+            bootstrap.Modal.getInstance(modalCategoriaEl).hide();
         });
     });
 
+    /* ======================================================
+       CARD 2 – CLIENTE
+    ====================================================== */
 
+    const btnEditarCliente  = document.getElementById('btnEditarCliente');
+    const btnGuardarCliente = document.getElementById('btnGuardarCliente');
 
+    if (btnEditarCliente) {
+        btnEditarCliente.addEventListener('click', () => {
 
-    /* ELIMINAR SERVICIO */
-    btnEliminarServicio.forEach(btn => {
-        btn.addEventListener('click', function () {
-            if (confirm('¿Quitar servicio?')) {
-                this.closest('tr').remove();
+            document.querySelectorAll('.editable-cliente').forEach(input => {
+                input.removeAttribute('readonly');
+                input.classList.add('border-warning');
+            });
+
+            btnGuardarCliente.classList.remove('d-none');
+            btnEditarCliente.classList.add('d-none');
+        });
+    }
+
+    /* ======================================================
+       CARD 3 – ITINERARIO
+    ====================================================== */
+
+    const btnEditarItinerario  = document.getElementById('btnEditarItinerario');
+    const btnGuardarItinerario = document.getElementById('btnGuardarItinerario');
+
+    // Estado inicial: BLOQUEADO
+    document.querySelectorAll('.editable-itinerario').forEach(el => {
+        if (el.tagName !== 'SELECT') el.setAttribute('readonly', true);
+        if (el.tagName === 'SELECT') el.classList.add('bloqueado');
+    });
+
+    if (btnEditarItinerario) {
+        btnEditarItinerario.addEventListener('click', () => {
+
+            document.querySelectorAll('.editable-itinerario').forEach(el => {
+
+                if (el.tagName !== 'SELECT') {
+                    el.removeAttribute('readonly');
+                }
+
+                if (el.tagName === 'SELECT') {
+                    el.classList.remove('bloqueado');
+                }
+
+                el.classList.add('border-warning');
+            });
+
+            btnGuardarItinerario.classList.remove('d-none');
+            btnEditarItinerario.classList.add('d-none');
+        });
+    }
+
+    /* ======================================================
+       VALIDACIÓN CARD 3 – FECHAS Y HORAS
+    ====================================================== */
+
+    const formCard3 =
+        document.querySelector('input[name="card"][value="card3"]')?.closest('form');
+
+    if (formCard3) {
+        formCard3.addEventListener('submit', e => {
+
+            const alertBox = document.getElementById('alertCard3');
+            alertBox.classList.add('d-none');
+            alertBox.innerText = '';
+
+            const fi = formCard3.querySelector('[name="fecha_inicio"]').value;
+            const ff = formCard3.querySelector('[name="fecha_fin"]').value;
+            const hr = formCard3.querySelector('[name="hora_retiro"]').value;
+            const he = formCard3.querySelector('[name="hora_entrega"]').value;
+
+            if (!fi || !ff || !hr || !he) return;
+
+            const inicio = new Date(`${fi}T${hr}`);
+            const fin    = new Date(`${ff}T${he}`);
+
+            if (fin <= inicio) {
+                e.preventDefault();
+                alertBox.innerText =
+                    'La fecha y hora de entrega deben ser posteriores a la de retiro.';
+                alertBox.classList.remove('d-none');
             }
-        });
-    });
-
-    /* AGREGAR SERVICIO */
-    if (btnAgregar) {
-        btnAgregar.addEventListener('click', function () {
-
-            const tabla = document.getElementById('tablaServicios');
-            if (!tabla) return;
-
-            const index = tabla.rows.length;
-            const fila = document.createElement('tr');
-
-            fila.innerHTML = `
-                <td>
-                    <input type="text" name="servicios[${index}][nombre]"
-                           class="form-control form-control-sm"
-                           placeholder="Servicio">
-                    <input type="hidden" name="servicios[${index}][id]" value="0">
-                </td>
-                <td>
-                    <input type="number" name="servicios[${index}][cantidad]"
-                           value="1" class="form-control form-control-sm">
-                </td>
-                <td>
-                    <input type="number" name="servicios[${index}][precio]"
-                           step="0.01" value="0"
-                           class="form-control form-control-sm">
-                </td>
-                <td>$0.00</td>
-                <td>
-                    <button type="button" class="btn btn-sm btn-danger"
-                            onclick="this.closest('tr').remove()">✖</button>
-                </td>
-            `;
-
-            tabla.appendChild(fila);
         });
     }
 
 });
-
-
