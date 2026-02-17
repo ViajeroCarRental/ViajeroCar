@@ -29,22 +29,49 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================================================
   if (btnPagoMostrador) {
     btnPagoMostrador.addEventListener("click", async () => {
+
+      const nombreInput   = document.querySelector("#nombreCliente");
+      const emailInput    = document.querySelector("#correoCliente");
+      const telefonoInput = document.querySelector("#telefonoCliente");
+      const checkAcepto   = document.querySelector("#acepto");
+
+      const nombre   = nombreInput?.value?.trim() || "";
+      const email    = emailInput?.value?.trim() || "";
+      const telefono = telefonoInput?.value?.trim() || "";
+      const vuelo    = document.querySelector("#vuelo")?.value?.trim() || "";
+      const acepta   = checkAcepto?.checked;
+
+      let faltantes = [];
+
+      if (!nombre)   faltantes.push("Nombre completo");
+      if (!email)    faltantes.push("Correo electrónico");
+      if (!telefono) faltantes.push("Teléfono móvil");
+      if (!acepta)   faltantes.push("Aceptar términos y condiciones");
+
+      if (faltantes.length > 0) {
+        modalMetodoPago.style.display = "none";
+        
+        const msg = "<b>No podemos continuar.</b><br>Por favor completa:<br>• " + faltantes.join("<br>• ");
+        if(window.alertify) alertify.error(msg);
+        else alert("Faltan datos obligatorios.");
+
+        if (!nombre) nombreInput.focus();
+        else if (!email) emailInput.focus();
+        else if (!telefono) telefonoInput.focus();
+        
+        return; 
+      }
+
       modalMetodoPago.style.display = "none";
 
       try {
         // 🧾 Recolectar datos del formulario
         const form = document.querySelector("#formCotizacion");
-if (!form) {
-  alertify.error("No se encontró el formulario de reservación.");
-  return;
-}
-
-
-        const nombre = document.querySelector("#nombreCliente")?.value?.trim() || "";
-        const email = document.querySelector("#correoCliente")?.value?.trim() || "";
-        const telefono = document.querySelector("#telefonoCliente")?.value?.trim() || "";
-        const vuelo = document.querySelector("#vuelo")?.value?.trim() || "";
-
+        if (!form) {
+          alertify.error("No se encontró el formulario de reservación.");
+          return;
+        }
+        
         const pickup_date = document.querySelector("#pickup_date")?.value || "";
         const pickup_time = document.querySelector("#pickup_time")?.value || "";
         const dropoff_date = document.querySelector("#dropoff_date")?.value || "";
@@ -62,7 +89,7 @@ if (!form) {
           Object.values(raw).forEach((it) => {
             if (it.qty > 0) addons[it.id] = it.qty;
           });
-        } catch (_) {}
+        } catch (_) { }
 
         // Payload
         const payload = {
@@ -102,10 +129,10 @@ if (!form) {
         });
 
         const data = await res.json();
-if (!res.ok || data.ok === false) {
-  alertify.error("No se pudo registrar la reservación.");
-  return;
-}
+        if (!res.ok || data.ok === false) {
+          alertify.error("No se pudo registrar la reservación.");
+          return;
+        }
 
 
         const folio = data.folio?.replace(/^COT/, "RES") || "RES-PENDIENTE";
@@ -209,20 +236,20 @@ if (!res.ok || data.ok === false) {
         const fileName = `ticket-${folio}.pdf`;
 
         // ✅ Confirmación visual antes de descargar el PDF
-alertify.alert(
-  "Reservación registrada",
-  "✅ Su reservación fue registrada correctamente y se ha env...ar Rental.\n\n📩 Recibirá confirmación por correo electrónico."
-);
-sessionStorage.clear(); // limpia datos temporales
+        alertify.alert(
+          "Reservación registrada",
+          "✅ Su reservación fue registrada correctamente y se ha env...ar Rental.\n\n📩 Recibirá confirmación por correo electrónico."
+        );
+        sessionStorage.clear(); // limpia datos temporales
 
-// pequeña pausa antes de descargar
-setTimeout(() => pdf.save(fileName), 600);
+        // pequeña pausa antes de descargar
+        setTimeout(() => pdf.save(fileName), 600);
 
 
       } catch (error) {
-  console.error("Error en pago mostrador:", error);
-  alertify.error("Ocurrió un error al generar el ticket con logo.");
-}
+        console.error("Error en pago mostrador:", error);
+        alertify.error("Ocurrió un error al generar el ticket con logo.");
+      }
 
     });
   }
@@ -230,12 +257,12 @@ setTimeout(() => pdf.save(fileName), 600);
   // ============================================================
   // === OPCIÓN: PAGO EN LÍNEA (solo visible por ahora) =========
   // ============================================================
- if (btnPagoLinea) {
-  btnPagoLinea.addEventListener("click", () => {
-    modalMetodoPago.style.display = "none";
-    // 🚧 Aquí conectaremos PayPal real o simulación más adelante
-    alertify.message("💳 Próximamente podrás realizar tu pago en línea con PayPal.");
-  });
-}
+  if (btnPagoLinea) {
+    btnPagoLinea.addEventListener("click", () => {
+      modalMetodoPago.style.display = "none";
+      // 🚧 Aquí conectaremos PayPal real o simulación más adelante
+      alertify.message("💳 Próximamente podrás realizar tu pago en línea con PayPal.");
+    });
+  }
 
 });

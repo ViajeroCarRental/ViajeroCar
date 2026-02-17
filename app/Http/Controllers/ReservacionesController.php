@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Spatie\LaravelPdf\Facades\Pdf;          // << Spatie PDF
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use App\Http\Requests\StoreCotizacionRequest;
 
 class ReservacionesController extends Controller
 {
@@ -263,24 +264,12 @@ $vehiculos = collect();
 
     /* ===================== NUEVO: generar PDF + guardar en archivos + enviar WhatsApp ===================== */
 
-    public function cotizar(Request $request)
+    public function cotizar(StoreCotizacionRequest $request)
 {
     Log::info('🟢 Datos recibidos en cotizar:', $request->all());
 
     // 1️⃣ Validación: ahora trabajamos por CATEGORÍA, no por vehículo
-    $request->validate([
-        'categoria_id'        => 'required|integer',
-        'pickup_date'         => 'required|date_format:Y-m-d',
-        'pickup_time'         => 'required|date_format:H:i',
-        'dropoff_date'        => 'required|date_format:Y-m-d',
-        'dropoff_time'        => 'required|date_format:H:i',
-        'pickup_sucursal_id'  => 'nullable|integer',
-        'dropoff_sucursal_id' => 'nullable|integer',
-        'addons'              => 'nullable|array',
-        'nombre'              => 'nullable|string|max:150',
-        'email'               => 'nullable|email|max:150',
-        'telefono'            => 'nullable|string|max:30',
-    ]);
+    $validated = $request->validated();
 
     // 2️⃣ Buscar la CATEGORÍA y opcionalmente un vehículo ejemplo para la ficha
     $vehiculo = DB::table('categorias_carros as c')

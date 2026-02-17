@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReservacionUsuarioMail;
 use Illuminate\Support\Facades\Http;
+use App\Http\Requests\StoreReservacionRequest;
+use App\Http\Requests\StoreReservacionLineaRequest;
 
 class BtnReservacionesController extends Controller
 {
@@ -19,24 +21,11 @@ class BtnReservacionesController extends Controller
      */
 
 
-public function reservar(Request $request)
+public function reservar(StoreReservacionRequest $request)
 {
     try {
         // 1️⃣ Validación básica
-        $validated = $request->validate([
-            'categoria_id'        => 'required|integer',
-            'pickup_date'         => 'required|date',
-            'pickup_time'         => 'required',
-            'dropoff_date'        => 'required|date',
-            'dropoff_time'        => 'required',
-            'pickup_sucursal_id'  => 'nullable|integer',
-            'dropoff_sucursal_id' => 'nullable|integer',
-            'nombre'              => 'nullable|string|max:120',
-            'email'               => 'nullable|string|max:120',
-            'telefono'            => 'nullable|string|max:40',
-            'vuelo'               => 'nullable|string|max:40',
-            'addons'              => 'nullable|array',
-        ]);
+        $validated = $request->validated();
 
         // 2️⃣ Generar código RES
         $fecha  = now()->format('Ymd');
@@ -137,28 +126,11 @@ public function reservar(Request $request)
     }
 }
 
-
-
-    public function reservarLinea(Request $request)
+    public function reservarLinea(StoreReservacionLineaRequest $request)
 {
     try {
         // 1️⃣ Validación de datos de la reserva + paypal_order_id obligatorio
-        $validated = $request->validate([
-            'categoria_id'        => 'required|integer',
-            'pickup_date'         => 'required|date',
-            'pickup_time'         => 'required',
-            'dropoff_date'        => 'required|date',
-            'dropoff_time'        => 'required',
-            'pickup_sucursal_id'  => 'nullable|integer',
-            'dropoff_sucursal_id' => 'nullable|integer',
-            'nombre'              => 'nullable|string|max:120',
-            'email'               => 'nullable|string|max:120',
-            'telefono'            => 'nullable|string|max:40',
-            'vuelo'               => 'nullable|string|max:40',
-            'addons'              => 'nullable|array',
-            'paypal_order_id'     => 'required|string',
-            // ❌ OJO: ya NO aceptamos status_pago desde el front
-        ]);
+        $validated = $request->validated();
 
         // 2️⃣ Código RES
         $fecha  = now()->format('Ymd');

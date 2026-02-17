@@ -2,14 +2,116 @@
   "use strict";
 
   // ===== Helpers =====
-  const qs  = (s, r = document) => r.querySelector(s);
+  const qs = (s, r = document) => r.querySelector(s);
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
+
+  // Validacines
+  function initSectionValidators() {
+
+    // paso 1
+    const formStep1 = document.getElementById('step1Form');
+    if (formStep1) {
+      formStep1.addEventListener('submit', function (e) {
+        // Lista de IDs obligatorios en el Paso 1
+        const requiredIds = [
+          'pickup_sucursal_id', 'dropoff_sucursal_id',
+          'start', 'end', // Inputs de fecha
+          'pickup_h', 'pickup_m',
+          'dropoff_h', 'dropoff_m'
+        ];
+
+        let error = false;
+
+        // Revisamos uno por uno
+        for (let id of requiredIds) {
+          let el = document.getElementById(id);
+          // Si no existe o está vacío o es nulo
+          if (!el || el.value.trim() === "") {
+            error = true;
+            // Efecto visual de error
+            el.style.borderColor = 'red';
+            setTimeout(() => el.style.borderColor = '', 3000);
+          }
+        }
+
+        if (error) {
+          e.preventDefault(); // 🛑 ¡ALTO! No deja pasar al Paso 2
+          e.stopImmediatePropagation();
+          if (window.alertify) alertify.error("Completa todos los campos de lugar y fecha para continuar.");
+        }
+      });
+    }
+
+    // paso 2
+    const btnNextStep2 = document.querySelector('.wizard-nav a[href*="step=3"]');
+
+    if (btnNextStep2) {
+      btnNextStep2.addEventListener('click', function (e) {
+        // Verificamos si hay alguna tarjeta de carro activa
+        const carSelected = document.querySelector('.car-card.active');
+
+        // O verificamos si la URL ya tiene categoria_id (por si recargó)
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasCat = urlParams.has('categoria_id');
+
+        if (!carSelected && !hasCat) {
+          e.preventDefault(); // 🛑 ¡ALTO! No deja pasar al Paso 3
+          if (window.alertify) alertify.error("Debes seleccionar un vehículo y un plan de renta.");
+
+          // Scroll hacia los autos para que vea que debe elegir
+          const carsContainer = document.querySelector('.cars');
+          if (carsContainer) carsContainer.scrollIntoView({ behavior: "smooth" });
+        }
+      });
+    }
+
+    // paso 4
+    const btnReservar = document.getElementById('btnReservar');
+    if (btnReservar) {
+      btnReservar.addEventListener('click', function (e) {
+        let faltantes = [];
+
+        // Obtenemos los campos
+        const nombre = document.getElementById('nombreCliente');
+        const apellido = document.getElementById('apellidoCliente');
+        const telefono = document.getElementById('telefonoCliente');
+        const email = document.getElementById('correoCliente');
+        const terminos = document.getElementById('acepto');
+        const nacimiento = document.getElementById('dob');
+
+        // Reglas
+        if (!nombre || nombre.value.trim().length < 2) faltantes.push("Nombre");
+        if (!apellido || apellido.value.trim().length < 2) faltantes.push("Apellidos");
+        if (!telefono || telefono.value.trim().length < 10) faltantes.push("Teléfono (10 dígitos)");
+        if (!nacimiento || nacimiento.value.trim() === "") faltantes.push("Fecha de nacimiento");
+
+        // Validar Email con Regex simple
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email.value.trim())) faltantes.push("Correo electrónico válido");
+
+        // Validar Checkbox
+        if (!terminos || !terminos.checked) faltantes.push("Aceptar términos y condiciones");
+
+        if (faltantes.length > 0) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+
+          // Mensaje detallado
+          if (window.alertify) {
+            alertify.error("<b>Faltan datos obligatorios:</b><br>" + faltantes.join("<br>"));
+          } else {
+            alert("Faltan datos:\n" + faltantes.join("\n"));
+          }
+        }
+      });
+    }
+  }
 
   // ======================================================
   // ✅ SIN ALERTAS: bloquear SOLO la alerta de "Campos incompletos"
   // (Fecha y hora de entrega / devolución)
   // ======================================================
-  (function disableMissingFieldsAlerts(){
+  (function disableMissingFieldsAlerts() {
     const shouldBlock = (msg) => {
       const s = String(msg || "");
       return (
@@ -21,66 +123,66 @@
     };
 
     // 1) Native alert()
-    try{
+    try {
       const _alert = window.alert;
-      window.alert = function(msg){
+      window.alert = function (msg) {
         if (shouldBlock(msg)) return;
         return _alert.call(window, msg);
       };
-    }catch(_){}
+    } catch (_) { }
 
     // 2) SweetAlert2 (Swal.fire)
-    try{
-      if (window.Swal && typeof window.Swal.fire === "function"){
+    try {
+      if (window.Swal && typeof window.Swal.fire === "function") {
         const _fire = window.Swal.fire.bind(window.Swal);
-        window.Swal.fire = function(a, b, c){
+        window.Swal.fire = function (a, b, c) {
           const title = (a && typeof a === "object") ? (a.title || "") : (a || "");
-          const text  = (a && typeof a === "object") ? (a.text  || "") : (b || "");
+          const text = (a && typeof a === "object") ? (a.text || "") : (b || "");
           if (shouldBlock(title) || shouldBlock(text)) return Promise.resolve();
           return _fire(a, b, c);
         };
       }
-    }catch(_){}
+    } catch (_) { }
 
     // 3) Fallback: si algún modal/toast aparece con ese texto, lo ocultamos
-    try{
+    try {
       const mo = new MutationObserver(() => {
         const nodes = Array.from(document.querySelectorAll("body *"));
-        nodes.forEach(el=>{
+        nodes.forEach(el => {
           if (!el || !el.textContent) return;
           if (!shouldBlock(el.textContent)) return;
           const modal = el.closest(".modal,.swal2-container,.alert,.toast,[role='dialog']");
           (modal || el).style.display = "none";
         });
       });
-      mo.observe(document.documentElement, { childList:true, subtree:true });
-    }catch(_){}
+      mo.observe(document.documentElement, { childList: true, subtree: true });
+    } catch (_) { }
   })();
 
   // ======================================================
   // ✅ FORZAR SIEMPRE STEP 1 CUANDO SOLO VIENE ?step=2
   // (si la URL trae más params, NO toca nada)
   // ======================================================
-  function forceStep1WhenOnlyStepParam(){
-    try{
+  function forceStep1WhenOnlyStepParam() {
+    try {
       const url = new URL(window.location.href);
       const p = url.searchParams;
 
       if (!p.has('step')) return;
 
       const keys = [];
-      p.forEach((v,k)=>{ if (v !== null && String(v).trim() !== '') keys.push(k); });
+      p.forEach((v, k) => { if (v !== null && String(v).trim() !== '') keys.push(k); });
 
       const onlyStep = (keys.length === 1 && keys[0] === 'step');
       if (!onlyStep) return;
 
-      p.set('step','1');
+      p.set('step', '1');
       window.history.replaceState({}, document.title, url.pathname + '?' + p.toString() + url.hash);
 
-      try{
-        document.dispatchEvent(new CustomEvent('wizard:stepChanged', { detail:{ step: 1 } }));
-      }catch(_){}
-    }catch(_){}
+      try {
+        document.dispatchEvent(new CustomEvent('wizard:stepChanged', { detail: { step: 1 } }));
+      } catch (_) { }
+    } catch (_) { }
   }
 
   // ======================================================
@@ -90,22 +192,22 @@
   // - ✅ FIX: NO spamea replaceState en cada tecla (throttle)
   // - ✅ FIX: setVal NO dispara change si no cambió el valor
   // ======================================================
-  function initWizardStatePersistence(){
+  function initWizardStatePersistence() {
     const LS_KEY = "viajero_resv_filters_v1";
 
     const map = {
-      pickup_sucursal_id:  qs('#pickup_sucursal_id')  || qs('[name="pickup_sucursal_id"]'),
+      pickup_sucursal_id: qs('#pickup_sucursal_id') || qs('[name="pickup_sucursal_id"]'),
       dropoff_sucursal_id: qs('#dropoff_sucursal_id') || qs('[name="dropoff_sucursal_id"]'),
 
-      pickup_date:  qs('#start') || qs('[name="pickup_date"]'),
-      dropoff_date: qs('#end')   || qs('[name="dropoff_date"]'),
+      pickup_date: qs('#start') || qs('[name="pickup_date"]'),
+      dropoff_date: qs('#end') || qs('[name="dropoff_date"]'),
 
-      pickup_h:  qs('#pickup_h')  || qs('[name="pickup_hour"]')  || qs('[name="pickup_hora"]')  || qs('[name="pickup_h"]'),
-      pickup_m:  qs('#pickup_m')  || qs('[name="pickup_min"]')   || qs('[name="pickup_minuto"]')|| qs('[name="pickup_m"]'),
+      pickup_h: qs('#pickup_h') || qs('[name="pickup_hour"]') || qs('[name="pickup_hora"]') || qs('[name="pickup_h"]'),
+      pickup_m: qs('#pickup_m') || qs('[name="pickup_min"]') || qs('[name="pickup_minuto"]') || qs('[name="pickup_m"]'),
       dropoff_h: qs('#dropoff_h') || qs('[name="dropoff_hour"]') || qs('[name="dropoff_hora"]') || qs('[name="dropoff_h"]'),
-      dropoff_m: qs('#dropoff_m') || qs('[name="dropoff_min"]')  || qs('[name="dropoff_minuto"]')|| qs('[name="dropoff_m"]'),
+      dropoff_m: qs('#dropoff_m') || qs('[name="dropoff_min"]') || qs('[name="dropoff_minuto"]') || qs('[name="dropoff_m"]'),
 
-      pickup_time_hidden:  qs('#pickup_time_hidden')  || qs('[name="pickup_time"]'),
+      pickup_time_hidden: qs('#pickup_time_hidden') || qs('[name="pickup_time"]'),
       dropoff_time_hidden: qs('#dropoff_time_hidden') || qs('[name="dropoff_time"]'),
     };
 
@@ -115,67 +217,67 @@
       qs('input[name="addons_ids"]') ||
       qs('input[name="addonsHidden"]');
 
-    function safeVal(el){
+    function safeVal(el) {
       if (!el) return "";
       return (el.value ?? "").toString().trim();
     }
 
-    function setVal(el, v){
+    function setVal(el, v) {
       if (!el) return;
       const next = (v ?? "").toString();
       if ((el.value ?? "") === next) return; // ✅ no loops
       el.value = next;
-      try{ el.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
+      try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) { }
     }
 
-    function computeTimesIntoHidden(){
+    function computeTimesIntoHidden() {
       const ph = safeVal(map.pickup_h);
       const pm = safeVal(map.pickup_m);
       const dh = safeVal(map.dropoff_h);
       const dm = safeVal(map.dropoff_m);
 
-      if (map.pickup_time_hidden && (ph || pm)){
-        const hh = (ph || "00").padStart(2,'0');
-        const mm = (pm || "00").padStart(2,'0');
+      if (map.pickup_time_hidden && (ph || pm)) {
+        const hh = (ph || "00").padStart(2, '0');
+        const mm = (pm || "00").padStart(2, '0');
         map.pickup_time_hidden.value = `${hh}:${mm}`;
       }
-      if (map.dropoff_time_hidden && (dh || dm)){
-        const hh = (dh || "00").padStart(2,'0');
-        const mm = (dm || "00").padStart(2,'0');
+      if (map.dropoff_time_hidden && (dh || dm)) {
+        const hh = (dh || "00").padStart(2, '0');
+        const mm = (dm || "00").padStart(2, '0');
         map.dropoff_time_hidden.value = `${hh}:${mm}`;
       }
     }
 
-    function readFromQS(){
+    function readFromQS() {
       const p = new URLSearchParams(window.location.search);
       const obj = {};
       [
-        'pickup_sucursal_id','dropoff_sucursal_id',
-        'pickup_date','dropoff_date',
-        'pickup_time','dropoff_time',
-        'pickup_h','pickup_m','dropoff_h','dropoff_m',
-        'addons','step','categoria_id','plan'
-      ].forEach(k=>{
+        'pickup_sucursal_id', 'dropoff_sucursal_id',
+        'pickup_date', 'dropoff_date',
+        'pickup_time', 'dropoff_time',
+        'pickup_h', 'pickup_m', 'dropoff_h', 'dropoff_m',
+        'addons', 'step', 'categoria_id', 'plan'
+      ].forEach(k => {
         const v = p.get(k);
         if (v !== null && String(v).trim() !== "") obj[k] = v;
       });
       return obj;
     }
 
-    function readFromLS(){
-      try{
+    function readFromLS() {
+      try {
         const raw = localStorage.getItem(LS_KEY);
         if (!raw) return {};
         const obj = JSON.parse(raw);
         return (obj && typeof obj === 'object') ? obj : {};
-      }catch(_){ return {}; }
+      } catch (_) { return {}; }
     }
 
-    function writeToLS(state){
-      try{ localStorage.setItem(LS_KEY, JSON.stringify(state || {})); }catch(_){}
+    function writeToLS(state) {
+      try { localStorage.setItem(LS_KEY, JSON.stringify(state || {})); } catch (_) { }
     }
 
-    function currentState(){
+    function currentState() {
       computeTimesIntoHidden();
 
       const st = {
@@ -196,26 +298,26 @@
 
       if (addonsHidden) st.addons = safeVal(addonsHidden);
 
-      try{
+      try {
         const p = new URLSearchParams(window.location.search);
         const step = p.get('step'); if (step) st.step = step;
         const categoria_id = p.get('categoria_id'); if (categoria_id) st.categoria_id = categoria_id;
         const plan = p.get('plan'); if (plan) st.plan = plan;
-      }catch(_){}
+      } catch (_) { }
 
       return st;
     }
 
-    function mergePreferNew(base, incoming){
-      const out = { ...(base||{}) };
-      Object.keys(incoming||{}).forEach(k=>{
+    function mergePreferNew(base, incoming) {
+      const out = { ...(base || {}) };
+      Object.keys(incoming || {}).forEach(k => {
         const v = incoming[k];
         if (v !== null && String(v).trim() !== "") out[k] = v;
       });
       return out;
     }
 
-    function applyStateToInputs(state){
+    function applyStateToInputs(state) {
       if (!state) return;
 
       if (map.pickup_sucursal_id && !safeVal(map.pickup_sucursal_id) && state.pickup_sucursal_id) setVal(map.pickup_sucursal_id, state.pickup_sucursal_id);
@@ -232,38 +334,38 @@
       if (state.pickup_time && !safeVal(map.pickup_time_hidden) && map.pickup_time_hidden) setVal(map.pickup_time_hidden, state.pickup_time);
       if (state.dropoff_time && !safeVal(map.dropoff_time_hidden) && map.dropoff_time_hidden) setVal(map.dropoff_time_hidden, state.dropoff_time);
 
-      function splitToHM(t){
-        const m = String(t||"").match(/^(\d{1,2}):(\d{2})$/);
+      function splitToHM(t) {
+        const m = String(t || "").match(/^(\d{1,2}):(\d{2})$/);
         if (!m) return null;
-        return { h: m[1].padStart(2,'0'), m: m[2].padStart(2,'0') };
+        return { h: m[1].padStart(2, '0'), m: m[2].padStart(2, '0') };
       }
       const pHM = splitToHM(state.pickup_time);
-      if (pHM){
+      if (pHM) {
         if (map.pickup_h && !safeVal(map.pickup_h)) setVal(map.pickup_h, pHM.h);
         if (map.pickup_m && !safeVal(map.pickup_m)) setVal(map.pickup_m, pHM.m);
       }
       const dHM = splitToHM(state.dropoff_time);
-      if (dHM){
+      if (dHM) {
         if (map.dropoff_h && !safeVal(map.dropoff_h)) setVal(map.dropoff_h, dHM.h);
         if (map.dropoff_m && !safeVal(map.dropoff_m)) setVal(map.dropoff_m, dHM.m);
       }
 
-      if (addonsHidden && !safeVal(addonsHidden) && state.addons){
+      if (addonsHidden && !safeVal(addonsHidden) && state.addons) {
         addonsHidden.value = state.addons;
-        try{ addonsHidden.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
+        try { addonsHidden.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) { }
       }
 
       computeTimesIntoHidden();
     }
 
-    function pushStateToQS(state){
-      try{
+    function pushStateToQS(state) {
+      try {
         const url = new URL(window.location.href);
         const p = url.searchParams;
 
         const keepStep = p.get('step');
 
-        const setIf = (k,v)=>{
+        const setIf = (k, v) => {
           if (v !== null && String(v).trim() !== "") p.set(k, String(v).trim());
         };
 
@@ -286,36 +388,36 @@
         if (keepStep) p.set('step', keepStep);
 
         window.history.replaceState({}, document.title, url.pathname + '?' + p.toString() + url.hash);
-      }catch(_){}
+      } catch (_) { }
     }
 
-    function throttle(fn, wait){
+    function throttle(fn, wait) {
       let t = null;
       let lastArgs = null;
-      return function(...args){
+      return function (...args) {
         lastArgs = args;
         if (t) return;
-        t = setTimeout(()=>{
+        t = setTimeout(() => {
           t = null;
           fn.apply(null, lastArgs);
         }, wait);
       };
     }
 
-    const persistNow = throttle(()=>{
+    const persistNow = throttle(() => {
       const st = currentState();
       writeToLS(st);
       pushStateToQS(st);
     }, 180);
 
-    function hydrate(){
+    function hydrate() {
       const fromQS = readFromQS();
       const fromLS = readFromLS();
       const merged = mergePreferNew(fromLS, fromQS);
 
       applyStateToInputs(merged);
 
-      try{
+      try {
         const p = new URLSearchParams(window.location.search);
         const hasMeaningful =
           p.get('pickup_date') || p.get('dropoff_date') ||
@@ -324,7 +426,7 @@
           p.get('addons');
 
         if (!hasMeaningful) pushStateToQS(currentState());
-      }catch(_){}
+      } catch (_) { }
 
       writeToLS(currentState());
     }
@@ -337,25 +439,25 @@
       addonsHidden
     ].filter(Boolean);
 
-    watch.forEach(el=>{
+    watch.forEach(el => {
       el.addEventListener('change', persistNow);
       el.addEventListener('blur', persistNow);
       if (el.tagName === 'INPUT') el.addEventListener('input', persistNow);
     });
 
     const step1Form = qs('#step1Form');
-    if (step1Form){
-      step1Form.addEventListener('submit', ()=>{
+    if (step1Form) {
+      step1Form.addEventListener('submit', () => {
         computeTimesIntoHidden();
-        try{
+        try {
           const st = currentState();
           writeToLS(st);
           pushStateToQS(st);
-        }catch(_){}
+        } catch (_) { }
       });
     }
 
-    document.addEventListener('wizard:stepChanged', ()=>{
+    document.addEventListener('wizard:stepChanged', () => {
       hydrate();
       persistNow();
     });
@@ -367,7 +469,7 @@
   // ==============================
   // 🧽 Normalizador de layout PDF
   // ==============================
-  function normalizePdfLayout(root){
+  function normalizePdfLayout(root) {
     if (!root) return;
 
     root.querySelectorAll(
@@ -375,10 +477,10 @@
     ).forEach(n => n.remove());
 
     const widen = [
-      '.wizard-page','.wizard-card','.sum-table','.sum-car','.sum-form',
-      '.cats','.addons'
+      '.wizard-page', '.wizard-card', '.sum-table', '.sum-car', '.sum-form',
+      '.cats', '.addons'
     ];
-    root.querySelectorAll(widen.join(',')).forEach(el=>{
+    root.querySelectorAll(widen.join(',')).forEach(el => {
       el.style.display = 'block';
       el.style.width = '100%';
       el.style.maxWidth = '100%';
@@ -386,12 +488,12 @@
       el.style.borderRadius = '0';
     });
 
-    root.querySelectorAll('.wizard-card,.sum-block,.cat-card,.addon-card').forEach(el=>{
+    root.querySelectorAll('.wizard-card,.sum-block,.cat-card,.addon-card').forEach(el => {
       el.style.boxShadow = 'none';
       el.style.border = '1px solid #e5e7eb';
     });
 
-    root.querySelectorAll('img').forEach(img=>{
+    root.querySelectorAll('img').forEach(img => {
       img.style.maxWidth = '100%';
       img.style.height = 'auto';
       img.style.display = 'block';
@@ -401,25 +503,25 @@
   // ==========================================================
   // ✅ Step 4 UI: ISO YYYY-MM-DD → dd-mm-aaaa (solo visual)
   // ==========================================================
-  function initStep4DatePretty(){
-    function isoToDMY(iso){
-      if(!iso || typeof iso !== 'string') return iso;
+  function initStep4DatePretty() {
+    function isoToDMY(iso) {
+      if (!iso || typeof iso !== 'string') return iso;
       const s = iso.trim();
       const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if(!m) return iso;
+      if (!m) return iso;
       return `${m[3]}-${m[2]}-${m[1]}`;
     }
 
-    qsa('.js-date').forEach(el=>{
+    qsa('.js-date').forEach(el => {
       const iso = el.getAttribute('data-iso') || el.textContent.trim();
       el.textContent = isoToDMY(iso);
     });
 
     const sumCarInfoP = qs('.sum-car-info p');
-    if (sumCarInfoP && sumCarInfoP.innerHTML){
+    if (sumCarInfoP && sumCarInfoP.innerHTML) {
       sumCarInfoP.innerHTML = sumCarInfoP.innerHTML.replace(
         /(\b\d{4}-\d{2}-\d{2}\b)/g,
-        (m)=> isoToDMY(m)
+        (m) => isoToDMY(m)
       );
     }
   }
@@ -427,72 +529,72 @@
   // ==========================================================
   // ✅ DÍAS + ACTUALIZACIÓN DE PRECIOS EN PASO 2
   // ==========================================================
-  function initDaysAndPricesSync(){
-    const pickupDate  = qs("#start") || qs('input[name="pickup_date"]');
-    const dropoffDate = qs("#end")   || qs('input[name="dropoff_date"]');
-    const pickupHour  = qs('#pickup_h');
-    const pickupMin   = qs('#pickup_m');
+  function initDaysAndPricesSync() {
+    const pickupDate = qs("#start") || qs('input[name="pickup_date"]');
+    const dropoffDate = qs("#end") || qs('input[name="dropoff_date"]');
+    const pickupHour = qs('#pickup_h');
+    const pickupMin = qs('#pickup_m');
     const dropoffHour = qs('#dropoff_h');
-    const dropoffMin  = qs('#dropoff_m');
+    const dropoffMin = qs('#dropoff_m');
 
     if (!pickupDate || !dropoffDate) return;
 
-    function parseDateAny(val){
+    function parseDateAny(val) {
       if (!val) return null;
       const s = String(val).trim();
 
       let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-      if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+      if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
 
       m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+      if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
 
       const d = new Date(s);
       return isNaN(d.getTime()) ? null : d;
     }
 
-    function getDateTime(which){
-      const d = parseDateAny(which==="pickup" ? pickupDate.value : dropoffDate.value);
+    function getDateTime(which) {
+      const d = parseDateAny(which === "pickup" ? pickupDate.value : dropoffDate.value);
       if (!d) return null;
-      const h  = which==="pickup" ? pickupHour?.value : dropoffHour?.value;
-      const mi = which==="pickup" ? pickupMin?.value  : dropoffMin?.value;
-      d.setHours(+h||0, +mi||0, 0, 0);
+      const h = which === "pickup" ? pickupHour?.value : dropoffHour?.value;
+      const mi = which === "pickup" ? pickupMin?.value : dropoffMin?.value;
+      d.setHours(+h || 0, +mi || 0, 0, 0);
       return d;
     }
 
-    function calcDays(){
+    function calcDays() {
       const a = getDateTime("pickup");
       const b = getDateTime("dropoff");
       if (!a || !b) return 1;
       const diff = b - a;
       if (diff <= 0) return 1;
-      return Math.ceil(diff / (24*60*60*1000));
+      return Math.ceil(diff / (24 * 60 * 60 * 1000));
     }
 
-    function runUpdate(){
+    function runUpdate() {
       const days = calcDays();
 
       const daysLabel = qs('#daysLabel');
       if (daysLabel) daysLabel.textContent = days;
 
-      qsa(".js-days").forEach(el=>el.textContent = days);
+      qsa(".js-days").forEach(el => el.textContent = days);
 
-      qsa('.car-card').forEach(card=>{
-        const prepagoDia   = parseFloat(card.getAttribute('data-prepago-dia') || '0') || 0;
+      qsa('.car-card').forEach(card => {
+        const prepagoDia = parseFloat(card.getAttribute('data-prepago-dia') || '0') || 0;
         const mostradorDia = parseFloat(card.getAttribute('data-mostrador-dia') || '0') || 0;
 
-        const prepagoTotal   = prepagoDia * days;
+        const prepagoTotal = prepagoDia * days;
         const mostradorTotal = mostradorDia * days;
 
-        const fmt = (n)=> Math.round(n).toLocaleString('es-MX');
+        const fmt = (n) => Math.round(n).toLocaleString('es-MX');
 
         const elPrepTotal = qs('.js-prepago-total', card);
         const elMostTotal = qs('.js-mostrador-total', card);
-        const elPrepDia   = qs('.js-prepago-dia', card);
-        const elMostDia   = qs('.js-mostrador-dia', card);
+        const elPrepDia = qs('.js-prepago-dia', card);
+        const elMostDia = qs('.js-mostrador-dia', card);
 
-        if (elPrepDia)   elPrepDia.textContent   = fmt(prepagoDia);
-        if (elMostDia)   elMostDia.textContent   = fmt(mostradorDia);
+        if (elPrepDia) elPrepDia.textContent = fmt(prepagoDia);
+        if (elMostDia) elMostDia.textContent = fmt(mostradorDia);
         if (elPrepTotal) elPrepTotal.textContent = fmt(prepagoTotal);
         if (elMostTotal) elMostTotal.textContent = fmt(mostradorTotal);
       });
@@ -503,7 +605,7 @@
 
     [pickupDate, dropoffDate, pickupHour, pickupMin, dropoffHour, dropoffMin]
       .filter(Boolean)
-      .forEach(el=>el.addEventListener("change", runUpdate));
+      .forEach(el => el.addEventListener("change", runUpdate));
 
     runUpdate();
   }
@@ -511,7 +613,7 @@
   // ==========================================================
   // ✅ ADICIONALES: guardar + rehidratar + enviar a backend
   // ==========================================================
-  function initAddonsSync(){
+  function initAddonsSync() {
     const hidden =
       qs('#addonsHidden') ||
       qs('input[name="addons"]') ||
@@ -521,42 +623,42 @@
     const cards = qsa('.addon-card');
     if (!cards.length || !hidden) return;
 
-    function parseMap(str){
+    function parseMap(str) {
       const map = new Map();
-      (String(str||'').split(',').map(s=>s.trim()).filter(Boolean)).forEach(pair=>{
+      (String(str || '').split(',').map(s => s.trim()).filter(Boolean)).forEach(pair => {
         const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
-        if (m) map.set(m[1], Math.max(0, parseInt(m[2],10) || 0));
+        if (m) map.set(m[1], Math.max(0, parseInt(m[2], 10) || 0));
         else {
-          const id = pair.replace(/\D/g,'');
+          const id = pair.replace(/\D/g, '');
           if (id) map.set(id, 1);
         }
       });
       return map;
     }
 
-    function serializeMap(map){
+    function serializeMap(map) {
       return Array.from(map.entries())
-        .filter(([,q])=> (q||0) > 0)
-        .map(([id,q])=> `${id}:${q}`)
+        .filter(([, q]) => (q || 0) > 0)
+        .map(([id, q]) => `${id}:${q}`)
         .join(',');
     }
 
-    function setQty(card, qty){
-      qty = Math.max(0, qty|0);
+    function setQty(card, qty) {
+      qty = Math.max(0, qty | 0);
       const qtyEl = qs('.qty', card);
       if (qtyEl) qtyEl.textContent = String(qty);
       card.classList.toggle('selected', qty > 0);
     }
 
-    function readQty(card){
+    function readQty(card) {
       const qtyEl = qs('.qty', card);
       const q = qtyEl ? parseInt(qtyEl.textContent, 10) : 0;
       return isNaN(q) ? 0 : q;
     }
 
-    function buildFromUI(){
+    function buildFromUI() {
       const map = new Map();
-      cards.forEach(card=>{
+      cards.forEach(card => {
         const id = String(card.getAttribute('data-id') || '').trim();
         if (!id) return;
         const qty = readQty(card);
@@ -565,25 +667,25 @@
       return map;
     }
 
-    function writeHiddenAndURL(){
+    function writeHiddenAndURL() {
       const map = buildFromUI();
       const value = serializeMap(map);
       hidden.value = value;
-      try{ hidden.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
+      try { hidden.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) { }
 
-      try{
+      try {
         const url = new URL(window.location.href);
         url.searchParams.set('addons', value);
         window.history.replaceState({}, document.title, url.toString());
-      }catch(_){}
+      } catch (_) { }
     }
 
-    function hydrate(){
-      const fromQS = (()=>{ try{ return new URLSearchParams(location.search).get('addons') || ''; }catch(_){ return ''; } })();
+    function hydrate() {
+      const fromQS = (() => { try { return new URLSearchParams(location.search).get('addons') || ''; } catch (_) { return ''; } })();
       const base = fromQS || hidden.value || '';
       const map = parseMap(base);
 
-      cards.forEach(card=>{
+      cards.forEach(card => {
         const id = String(card.getAttribute('data-id') || '').trim();
         if (!id) return;
         setQty(card, map.get(id) || 0);
@@ -592,18 +694,18 @@
       writeHiddenAndURL();
     }
 
-    cards.forEach(card=>{
-      const plus  = qs('.qty-btn.plus', card);
+    cards.forEach(card => {
+      const plus = qs('.qty-btn.plus', card);
       const minus = qs('.qty-btn.minus', card);
 
-      if (plus){
-        plus.addEventListener('click', ()=>{
+      if (plus) {
+        plus.addEventListener('click', () => {
           setQty(card, readQty(card) + 1);
           writeHiddenAndURL();
         });
       }
-      if (minus){
-        minus.addEventListener('click', ()=>{
+      if (minus) {
+        minus.addEventListener('click', () => {
           setQty(card, readQty(card) - 1);
           writeHiddenAndURL();
         });
@@ -611,13 +713,13 @@
     });
 
     const toStep4 = qs('#toStep4');
-    if (toStep4){
-      toStep4.addEventListener('click', (e)=>{
+    if (toStep4) {
+      toStep4.addEventListener('click', (e) => {
         e.preventDefault();
         writeHiddenAndURL();
 
         const url = new URL(window.location.href);
-        url.searchParams.set('step','4');
+        url.searchParams.set('step', '4');
         window.location.href = url.toString();
       });
     }
@@ -629,7 +731,7 @@
   // ======================================================
   // 🔥 Floating labels
   // ======================================================
-  function initFloatingLabels(){
+  function initFloatingLabels() {
     const floats = qsa('[data-float]');
     if (!floats.length) return;
 
@@ -639,29 +741,29 @@
       return v !== "" && v !== "H" && v !== "Min";
     };
 
-    function setState(ctl, filled){
+    function setState(ctl, filled) {
       ctl.classList.toggle('filled', !!filled);
       ctl.classList.toggle('pristine', !filled);
     }
 
-    floats.forEach(ctl=>{
-      const input  = qs('[data-float-input]', ctl);
+    floats.forEach(ctl => {
+      const input = qs('[data-float-input]', ctl);
       const select = qs('[data-float-select]', ctl);
 
-      if (input)  setState(ctl, hasValue(input));
+      if (input) setState(ctl, hasValue(input));
       if (select) setState(ctl, hasValue(select));
 
-      if (input){
-        input.addEventListener('focus', ()=> ctl.classList.remove('pristine'));
-        input.addEventListener('input', ()=> setState(ctl, hasValue(input)));
-        input.addEventListener('change',()=> setState(ctl, hasValue(input)));
-        input.addEventListener('blur', ()=> setState(ctl, hasValue(input)));
+      if (input) {
+        input.addEventListener('focus', () => ctl.classList.remove('pristine'));
+        input.addEventListener('input', () => setState(ctl, hasValue(input)));
+        input.addEventListener('change', () => setState(ctl, hasValue(input)));
+        input.addEventListener('blur', () => setState(ctl, hasValue(input)));
       }
 
-      if (select){
-        select.addEventListener('focus', ()=> ctl.classList.remove('pristine'));
-        select.addEventListener('change',()=> setState(ctl, hasValue(select)));
-        select.addEventListener('blur', ()=> setState(ctl, hasValue(select)));
+      if (select) {
+        select.addEventListener('focus', () => ctl.classList.remove('pristine'));
+        select.addEventListener('change', () => setState(ctl, hasValue(select)));
+        select.addEventListener('blur', () => setState(ctl, hasValue(select)));
       }
     });
   }
@@ -669,25 +771,25 @@
   // ==========================================================
   // ✅ FLATPICKR: REGLAS 100% (anti doble-init)
   // ==========================================================
-  function initFlatpickrRules(){
+  function initFlatpickrRules() {
     if (!window.flatpickr) return;
 
-    try{
+    try {
       if (window.flatpickr?.l10ns?.es) window.flatpickr.localize(window.flatpickr.l10ns.es);
-    }catch(_){}
+    } catch (_) { }
 
     const start = qs("#start");
-    const end   = qs("#end");
+    const end = qs("#end");
 
     // ✅ DOB (Step 4)
-    const dob   = qs("#dob");
+    const dob = qs("#dob");
 
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
 
     // ---------- DOB picker (solo fecha) ----------
-    if (dob){
-      try{ if (dob._flatpickr) dob._flatpickr.destroy(); }catch(_){}
+    if (dob) {
+      try { if (dob._flatpickr) dob._flatpickr.destroy(); } catch (_) { }
       window.flatpickr(dob, {
         dateFormat: "d-m-Y",
         allowInput: true,
@@ -700,39 +802,39 @@
     // ---------- Step 1 pickers ----------
     if (!start || !end) return;
 
-    function toDateAtMidnight(d){
+    function toDateAtMidnight(d) {
       const x = new Date(d.getTime());
-      x.setHours(0,0,0,0);
+      x.setHours(0, 0, 0, 0);
       return x;
     }
 
-    function parseAnyToDate(val){
+    function parseAnyToDate(val) {
       if (!val) return null;
       const s = String(val).trim();
 
       let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-      if (m) return new Date(+m[3], +m[2]-1, +m[1]);
+      if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
 
       m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (m) return new Date(+m[1], +m[2]-1, +m[3]);
+      if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
 
       const d = new Date(s);
       return isNaN(d.getTime()) ? null : d;
     }
 
-    try{ if (start._flatpickr) start._flatpickr.destroy(); }catch(_){}
-    try{ if (end._flatpickr)   end._flatpickr.destroy();   }catch(_){}
+    try { if (start._flatpickr) start._flatpickr.destroy(); } catch (_) { }
+    try { if (end._flatpickr) end._flatpickr.destroy(); } catch (_) { }
 
-    const baseCfg = { dateFormat:"d-m-Y", allowInput:true, disableMobile:true };
+    const baseCfg = { dateFormat: "d-m-Y", allowInput: true, disableMobile: true };
 
     const startFp = window.flatpickr(start, { ...baseCfg });
-    const endFp   = window.flatpickr(end,   { ...baseCfg });
+    const endFp = window.flatpickr(end, { ...baseCfg });
 
     const startInit = parseAnyToDate(start.value);
-    const endInit   = parseAnyToDate(end.value);
+    const endInit = parseAnyToDate(end.value);
 
     if (startInit) startFp.setDate(startInit, false);
-    if (endInit)   endFp.setDate(endInit, false);
+    if (endInit) endFp.setDate(endInit, false);
 
     // ✅ solo pasado bloqueado (sin limitar futuro)
     startFp.set("minDate", today);
@@ -743,16 +845,16 @@
       fp.jumpToDate(d, true);
     };
     startFp.set("onOpen", [() => jumpToCurrentMonth(startFp)]);
-    endFp.set("onOpen",   [() => jumpToCurrentMonth(endFp)]);
+    endFp.set("onOpen", [() => jumpToCurrentMonth(endFp)]);
 
     let lock = false;
 
-    function applyConstraintsAndFix(){
+    function applyConstraintsAndFix() {
       if (lock) return;
       lock = true;
 
       const sRaw = startFp.selectedDates?.[0] || null;
-      const eRaw = endFp.selectedDates?.[0]   || null;
+      const eRaw = endFp.selectedDates?.[0] || null;
 
       const s = sRaw ? toDateAtMidnight(sRaw) : null;
       const e = eRaw ? toDateAtMidnight(eRaw) : null;
@@ -761,13 +863,13 @@
       if (e && e < today) endFp.setDate(today, false);
 
       const s2 = startFp.selectedDates?.[0] ? toDateAtMidnight(startFp.selectedDates[0]) : null;
-      const e2 = endFp.selectedDates?.[0]   ? toDateAtMidnight(endFp.selectedDates[0])   : null;
+      const e2 = endFp.selectedDates?.[0] ? toDateAtMidnight(endFp.selectedDates[0]) : null;
 
       // ✅ devolución siempre >= pick-up (pero pick-up NO se limita hacia adelante)
       endFp.set("minDate", s2 || today);
       // startFp.set("maxDate", e2 || null); // ❌ quitado para permitir pick-up a futuro sin límite
 
-      if (s2 && e2 && s2.getTime() > e2.getTime()){
+      if (s2 && e2 && s2.getTime() > e2.getTime()) {
         // si pick-up se va después de devolución, movemos devolución a pick-up
         endFp.setDate(s2, false);
         endFp.set("minDate", s2);
@@ -781,7 +883,7 @@
     }
 
     startFp.set("onChange", [applyConstraintsAndFix]);
-    endFp.set("onChange",   [applyConstraintsAndFix]);
+    endFp.set("onChange", [applyConstraintsAndFix]);
 
     applyConstraintsAndFix();
     start.addEventListener("blur", applyConstraintsAndFix);
@@ -791,12 +893,12 @@
   // ======================================================
   // ✅ BOOT (flatpickr se carga con defer → esperar)
   // ======================================================
-  function bootWhenFlatpickrReady(){
+  function bootWhenFlatpickrReady() {
     let tries = 0;
     const maxTries = 240; // ~4s
-    function tick(){
+    function tick() {
       tries++;
-      if (window.flatpickr){
+      if (window.flatpickr) {
         initFlatpickrRules();
         return;
       }
@@ -805,14 +907,14 @@
     tick();
   }
 
-  function refreshFloatStates(){
-    qsa('[data-float]').forEach(ctl=>{
-      const input  = qs('[data-float-input]', ctl);
+  function refreshFloatStates() {
+    qsa('[data-float]').forEach(ctl => {
+      const input = qs('[data-float-input]', ctl);
       const select = qs('[data-float-select]', ctl);
 
-      const val = (el)=> (el && el.value != null) ? String(el.value).trim() : "";
+      const val = (el) => (el && el.value != null) ? String(el.value).trim() : "";
       const filled =
-        (input  && val(input)  !== "") ||
+        (input && val(input) !== "") ||
         (select && val(select) !== "" && val(select) !== "H" && val(select) !== "Min");
 
       ctl.classList.toggle('filled', filled);
@@ -825,6 +927,8 @@
 
     // ✅ Persistencia
     initWizardStatePersistence();
+
+    initSectionValidators();
 
     // UI
     initFloatingLabels();
