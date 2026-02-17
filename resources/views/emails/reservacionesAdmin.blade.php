@@ -302,6 +302,107 @@
 .ex-price{ font-size:13px; opacity:.85; color:#111; }
 .ex-subtitle{ font-size:12px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; opacity:.85; margin:14px 0 8px; }
 
+/* =========================
+   FOOTER TIPO LANDING (correo)
+========================= */
+.site-footer{
+  margin-top:40px;
+  background:#e5e7eb;         /* gris similar al de la web */
+  padding:18px 30px 20px;
+  font-size:13px;
+  color:#111827;
+}
+
+.footer-inner{
+  max-width:700px;
+  margin:0 auto;
+}
+
+/* fila superior: redes + logo palabra */
+.footer-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.footer-social{
+  font-size:0;                /* para quitar espacios entre imgs */
+}
+
+.footer-social a{
+  display:inline-block;
+  margin-right:14px;
+}
+
+.footer-social img{
+  max-height:20px;
+  display:block;
+}
+
+.footer-logo-word{
+  font-size:26px;
+  font-weight:800;
+  letter-spacing:.12em;
+}
+
+/* línea divisoria */
+.footer-sep{
+  height:1px;
+  background:#111827;
+  margin:8px 0 14px;
+}
+
+/* bloque central: ubicaciones + links */
+.footer-main{
+  display:flex;
+  justify-content:space-between;
+  gap:24px;
+  margin-bottom:14px;
+}
+
+.footer-col{
+  flex:1;
+}
+
+.footer-col p{
+  font-size:12px;
+  margin:0 0 6px;
+}
+
+.footer-col ul{
+  list-style:none;
+  padding:0;
+  margin:0;
+}
+
+.footer-col li{
+  margin-bottom:4px;
+}
+
+.footer-col a{
+  color:#111827;
+  text-decoration:none;
+  font-size:12px;
+  text-transform:uppercase;
+}
+
+.footer-col a:hover{
+  text-decoration:underline;
+}
+
+/* fila pagos */
+.footer-pay{
+  border-top:1px solid #111827;
+  padding-top:10px;
+}
+
+.footer-pay img{
+  max-height:22px;
+  display:inline-block;
+  margin-right:10px;
+}
+
 
   </style>
 </head>
@@ -315,7 +416,7 @@
     <table class="header-table" role="presentation">
       <tr>
         <td style="vertical-align:middle;">
-          <img src="{{ rtrim(config('app.url'), '/') . '/img/Logo3.jpg' }}" alt="Viajero Car Rental">
+          <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
 
         </td>
 
@@ -339,7 +440,8 @@
 
       <p class="lead">
         Tu vehículo ya está reservado, el siguiente código es tu número de reservación,
-        da <a href="{{ $url_detalle ?? '#' }}">click aquí</a> para más información.
+        da da <a href="{{ route('visor.show', ['id' => $reservacion->id_reservacion]) }}">click aquí</a> para más información.
+
       </p>
 
       <p class="lead" style="margin-top:0;">
@@ -583,7 +685,6 @@
     </td>
   </tr>
   <tr>
-      <tr>
     <td class="p-label price-total">TOTAL</td>
     <td class="p-value price-total">
       ${{ number_format($reservacion->total, 2) }} MXN
@@ -591,9 +692,7 @@
   </tr>
 </table>
 
-
-
-<div class="divider"></div>
+</div> {{-- <-- aquí sí cierras .summary-card, justo después del precio --}}
 
 {{-- 🔻 Texto y línea roja debajo del detalle de precio --}}
 <p class="price-note">
@@ -630,11 +729,84 @@
   </p>
 </div>
 
-</div> {{-- <-- aquí sí cierras .summary-card --}}
-
   </div>
 
-  <!-- FOOTER -->
+   {{-- FOOTER GRANDE TIPO LANDING --}}
+  <div class="site-footer">
+    <div class="footer-inner">
+
+      {{-- Fila superior: redes + logo de palabra --}}
+      <div class="footer-top">
+        <div class="footer-social">
+          {{-- Aquí pon las rutas reales de tus redes o déjalas en "#" y luego las cambias --}}
+          <a href="https://wa.me/524423032668">
+            <img src="{{ asset('img/email/whatsapp-black.png') }}" alt="WhatsApp">
+          </a>
+          <a href="https://www.facebook.com/viajerocarental">
+            <img src="{{ asset('img/email/facebook-black.png') }}" alt="Facebook">
+          </a>
+          <a href="https://www.instagram.com/viajerocarental">
+            <img src="{{ asset('img/email/instagram-black.png') }}" alt="Instagram">
+          </a>
+          <a href="https://www.tiktok.com/@viajerocarental">
+            <img src="{{ asset('img/email/tiktok-black.png') }}" alt="TikTok">
+          </a>
+        </div>
+
+        <div class="footer-logo-word">
+          <img src="{{ asset('img/LogoB.png') }}" alt="Viajero" class="footer-logo">
+        </div>
+      </div>
+
+      <div class="footer-sep"></div>
+
+      {{-- Fila central: ubicaciones + links --}}
+      <div class="footer-main">
+        {{-- Columna 1: ubicaciones --}}
+        <div class="footer-col">
+          <p>📍 OFICINA CENTRAL PARK, QUERÉTARO</p>
+          <p>📍 PICK-UP AEROPUERTO DE QUERÉTARO</p>
+          <p>📍 PICK-UP AEROPUERTO DE LEÓN</p>
+        </div>
+
+        {{-- Columna 2: links centro --}}
+        <div class="footer-col">
+          <ul>
+            <li><a href="{{ route('rutaReservaciones') }}">MI RESERVA</a></li>
+            <li><a href="{{ route('rutaCatalogo') }}">AUTOS</a></li>
+            <li><a href="https://viajerocarental.com/empresas">EMPRESAS</a></li>
+            <li><a href="{{ route('rutaPoliticas') }}">TÉRMINOS Y CONDICIONES</a></li>
+            <li><a href="{{ route('rutaContacto') }}">CONTACTO</a></li>
+          </ul>
+        </div>
+
+        {{-- Columna 3: links derecha --}}
+        <div class="footer-col">
+          <ul>
+            <li><a href="https://viajerocarental.com/blog">BLOG</a></li>
+            <li><a href="{{ route('rutaFAQ') }}">F.A.Q</a></li>
+            <li><a href="{{ route('rutaPoliticas') }}">AVISO DE PRIVACIDAD</a></li>
+            <li><a href="{{ route('rutaPoliticas') }}">POLÍTICA DE LIMPIEZA</a></li>
+            <li><a href="{{ route('rutaPoliticas') }}">POLÍTICA DE RENTA</a></li>
+          </ul>
+        </div>
+      </div>
+
+      {{-- Fila inferior: métodos de pago --}}
+      <div class="footer-pay">
+        <img src="{{ asset('img/visa.jpg') }}" alt="Visa">
+        <img src="{{ asset('img/mastercard.png') }}" alt="Mastercard">
+        <img src="{{ asset('img/america.png') }}" alt="American Express">
+        <img src="{{ asset('img/oxxo.png') }}" alt="OXXO">
+        <img src="{{ asset('img/pago.png') }}" alt="Mercado Pago">
+        <img src="{{ asset('img/paypal.png') }}" alt="PayPal">
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- FOOTER SIMPLE EXISTENTE -->
   <div class="footer">
     © {{ date('Y') }} <strong>Viajero Car Rental</strong><br>
     <a href="https://viajerocarental.com">www.viajerocarental.com</a> |
