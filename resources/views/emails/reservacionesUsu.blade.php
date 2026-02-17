@@ -114,6 +114,7 @@
     <!-- INFO PRINCIPAL -->
     <div class="info-box">
       <p><strong>Código de reserva:</strong> {{ $reservacion->codigo }}</p>
+      <p><strong>Categoría:</strong> {{ $reservacion->vehiculo_categoria ?? 'No especificada' }}</p>
 
       <p><strong>Cliente:</strong></p>
       <p>Nombre: {{ $reservacion->nombre_cliente ?? 'No especificado' }}</p>
@@ -140,6 +141,12 @@
       @else
         <p><strong>Total a pagar en mostrador:</strong> ${{ number_format($reservacion->total, 2) }} MXN</p>
       @endif
+
+      <br>
+
+      <p><strong>Tarifa base catálogo:</strong> ${{ number_format($reservacion->tarifa_base ?? 0, 2) }} MXN</p>
+      <p><strong>Tarifa ajustada:</strong> {{ (isset($reservacion->tarifa_base) && (float)$reservacion->tarifa_base != (float)$reservacion->subtotal) ? 'Sí' : 'No' }}</p>
+      <p><strong>Estado:</strong> {{ $tipo === 'linea' ? 'Pagado' : 'Pendiente de pago en mostrador' }}</p>
 
       <br>
 
