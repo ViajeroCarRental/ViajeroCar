@@ -186,8 +186,6 @@
   @yield('contenidoFAQ')
   @yield('contenidoLogin')
   @yield('contenidoPerfil')
-  @yield('js-vistaReservaciones')
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>

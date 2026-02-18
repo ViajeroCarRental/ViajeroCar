@@ -18,11 +18,11 @@ return new class extends Migration {
             // El campo se crea vacío; el tipo lo cambiamos después
             $table->binary('contenido')->nullable();
 
-            $table->string('extension', 10)->nullable();   //A que se refiere extensión?
+            $table->string('extension', 10)->nullable();
             $table->string('mime_type', 100)->nullable();
             $table->unsignedBigInteger('tamano_bytes')->nullable();
             $table->string('url', 500)->nullable();
-            $table->string('checksum', 64)->nullable();  //Checksum que es
+            $table->string('checksum', 64)->nullable();
             $table->enum('visibilidad', ['private', 'public'])->default('private');
 
             $table->timestamp('created_at')->nullable();
@@ -30,7 +30,7 @@ return new class extends Migration {
         });
 
         // 🔥 Aquí viene la magia: convertimos el campo a LONGBLOB manualmente
-        DB::statement('ALTER TABLE archivos MODIFY contenido LONGBLOB'); //¿Que es statement
+        DB::statement('ALTER TABLE archivos MODIFY contenido LONGBLOB');
     }
 
     public function down(): void
