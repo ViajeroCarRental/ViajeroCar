@@ -1,5 +1,4 @@
-@extends('layouts.Usuarios')
-
+@extends('layouts.Usuarios') 
 @section('Titulo','Reservaciones')
 
 @section('css-vistaReservaciones')
@@ -80,15 +79,9 @@
   $isFreshEntry = empty($pickupSucursalId) || empty($dropoffSucursalId);
   $stepCurrent  = $isFreshEntry ? 1 : ($controllerStep ?? $requestedStep);
 
-  if ($stepCurrent >= 2 && $isFreshEntry) {
-    $stepCurrent = 1;
-  }
-  if ($stepCurrent >= 3 && (empty($categoriaId) || empty($plan))) {
-    $stepCurrent = 2;
-  }
-  if ($stepCurrent >= 4 && (empty($categoriaId) || empty($plan))) {
-    $stepCurrent = 2;
-  }
+  if ($stepCurrent >= 2 && $isFreshEntry) $stepCurrent = 1;
+  if ($stepCurrent >= 3 && (empty($categoriaId) || empty($plan))) $stepCurrent = 2;
+  if ($stepCurrent >= 4 && (empty($categoriaId) || empty($plan))) $stepCurrent = 2;
 
   // Nombres de sucursales para el encabezado (fallback a $ciudades)
   $pickupName  = null;
@@ -136,6 +129,24 @@
     $categoriaSel = collect($categorias)->firstWhere('id_categoria', (int)$categoriaId);
   }
 
+  // ✅ Texto para "Tu auto" (sale de categorias_carros -> descripcion)
+  $autoTitulo = ($categoriaSel && isset($categoriaSel->descripcion) && trim((string)$categoriaSel->descripcion) !== '')
+    ? (string)$categoriaSel->descripcion
+    : 'Auto o similar';
+
+  // ✅ Línea secundaria tipo "GRANDES | CATEGORÍA E" (NO truena si no viene codigo)
+  $catNombreUpper = ($categoriaSel && isset($categoriaSel->nombre))
+    ? strtoupper((string)$categoriaSel->nombre)
+    : 'CATEGORÍA';
+
+  $catCodigoUpper = ($categoriaSel && isset($categoriaSel->codigo))
+    ? strtoupper((string)$categoriaSel->codigo)
+    : '';
+
+  $autoSubtitulo = $catCodigoUpper
+    ? ($catNombreUpper.' | CATEGORÍA '.$catCodigoUpper)
+    : $catNombreUpper;
+
   // ✅ IMÁGENES
   $catImages = [
     1  => asset('img/aveo.png'),
@@ -153,8 +164,8 @@
 
   $placeholder = asset('img/Logotipo.png');
 
-  $categoriaImg = $categoriaSel
-    ? ($catImages[$categoriaSel->id_categoria] ?? $placeholder)
+  $categoriaImg = ($categoriaSel && isset($categoriaSel->id_categoria))
+    ? ($catImages[(int)$categoriaSel->id_categoria] ?? $placeholder)
     : $placeholder;
 
   $precioDiaCategoria = (float)($categoriaSel->precio_dia ?? 0);
@@ -173,10 +184,17 @@
   $featPassengers   = (int)($categoriaSel->pasajeros ?? 0);
   $featCarplay      = (int)($categoriaSel->apple_carplay ?? 0);
   $featAndroidAuto  = (int)($categoriaSel->android_auto ?? 0);
-  $featAc           = (int)($categoriaSel->aire_acondicionado ?? ($categoriaSel->aire_ac ?? 0)); // por si tu columna se llama distinto
+  $featAc           = (int)($categoriaSel->aire_acondicionado ?? ($categoriaSel->aire_ac ?? 0));
 
-  // ✅ Burbuja roja: DEBE decir "COMPACTO" (tu categoría)
-  $tagCategoria = $categoriaSel ? strtoupper($categoriaSel->nombre) : 'COMPACTO';
+  // ✅ Fecha larga en español: miércoles 18 de febrero del 2026
+  \Carbon\Carbon::setLocale('es');
+  $pickupFechaLarga = \Carbon\Carbon::parse($pickupDateISO)->translatedFormat('l d \d\e F \d\e\l Y');
+  $dropoffFechaLarga = \Carbon\Carbon::parse($dropoffDateISO)->translatedFormat('l d \d\e F \d\e\l Y');
+
+  // ✅ Burbuja roja (YA NO SE USA en UI, pero lo dejamos por si lo ocupas después)
+  $tagCategoria = ($categoriaSel && isset($categoriaSel->nombre))
+    ? strtoupper((string)$categoriaSel->nombre)
+    : 'COMPACTO';
 @endphp
 
 <main class="page wizard-page"
@@ -642,6 +660,60 @@
     {{-- ===================== STEP 4 ===================== --}}
     @if($stepCurrent===4)
       <input type="hidden" id="addonsHidden" value="{{ $addonsParam }}">
+
+      <style>
+        /* ✅ Títulos con línea roja (como tu estilo) */
+        .sum-line-title{
+          position:relative;
+          display:flex;
+          align-items:center;
+          gap:10px;
+          font-weight:900;
+          letter-spacing:.35px;
+          text-transform:uppercase;
+          font-size:13px;
+          color:#0f172a;
+          margin:0 0 10px;
+        }
+        .sum-line-title:after{
+          content:"";
+          height:3px;
+          flex:1;
+          border-radius:999px;
+          background:linear-gradient(90deg, rgba(178,34,34,1), rgba(178,34,34,.15));
+        }
+
+        /* ✅ Lugar/Fecha: etiqueta “Fecha” y “Hora” */
+        .sum-dt2{
+          display:flex;
+          flex-direction:column;
+          gap:4px;
+          margin-top:4px;
+        }
+        .sum-dt2 .dt-row{
+          display:flex;
+          gap:8px;
+          align-items:baseline;
+        }
+        .sum-dt2 .dt-lbl{
+          min-width:58px;
+          font-size:11px;
+          font-weight:900;
+          letter-spacing:.55px;
+          text-transform:uppercase;
+          color:#6b7280;
+        }
+        .sum-dt2 .dt-val{
+          font-weight:800;
+          color:#111827;
+          line-height:1.15;
+        }
+        .sum-dt2 .dt-time{
+          font-weight:900;
+          color:#111827;
+        }
+      </style>
+
       <div class="step4-layout">
 
         {{-- ===================== PANE IZQUIERDO ===================== --}}
@@ -742,7 +814,7 @@
 
               @if($isAirport)
                 <div class="field" style="grid-column: 1 / -1;">
-                  <label>No. de vuelo (opcional)</label>
+                  <label>No. de vuelo </label>
                   <input type="text" name="vuelo" id="vuelo" >
                 </div>
               @endif
@@ -800,58 +872,94 @@
               </span>
             </div>
 
-            {{-- 1) Arriba: Pick-up (izq) / Devolución (der) --}}
+            {{-- ✅ Subtítulo 1 --}}
+            <h4 class="sum-subtitle">Lugar y fecha</h4>
+
             <div class="sum-compact-grid">
+
+              {{-- PICKUP --}}
               <div class="sum-item">
                 <div class="sum-item-label">
                   <i class="fa-solid fa-location-dot"></i> Pick-Up
                 </div>
+
                 <div class="sum-item-value">
                   <strong class="sum-place">{{ $pickupName ?? '—' }}</strong>
-                  <span class="sum-dt">
-                    <span class="js-date" data-iso="{{ $pickupDateISO }}">{{ $pickupDate }}</span>
-                    <span class="sum-time">{{ $pickupTime }}</span>
-                  </span>
+
+                  {{-- ✅ Fecha y Hora (formato largo) --}}
+                  <div class="sum-dt2">
+                    <div class="dt-row">
+                      <span class="dt-lbl">Fecha</span>
+                      <span class="dt-val">{{ $pickupFechaLarga ?? $pickupDate }}</span>
+                    </div>
+                    <div class="dt-row">
+                      <span class="dt-lbl">Hora</span>
+                      <span class="dt-time">{{ $pickupTime }}</span>
+                    </div>
+                  </div>
+
+                  {{-- (si todavía usas .js-date en JS, lo dejamos oculto para no romper lógica) --}}
+                  <span class="js-date" data-iso="{{ $pickupDateISO }}" style="display:none;">{{ $pickupDate }}</span>
                 </div>
               </div>
 
+              {{-- DROPOFF --}}
               <div class="sum-item">
                 <div class="sum-item-label">
                   <i class="fa-solid fa-location-dot"></i> Devolución
                 </div>
+
                 <div class="sum-item-value">
                   <strong class="sum-place">{{ $dropoffName ?? '—' }}</strong>
-                  <span class="sum-dt">
-                    <span class="js-date" data-iso="{{ $dropoffDateISO }}">{{ $dropoffDate }}</span>
-                    <span class="sum-time">{{ $dropoffTime }}</span>
-                  </span>
+
+                  <div class="sum-dt2">
+                    <div class="dt-row">
+                      <span class="dt-lbl">Fecha</span>
+                      <span class="dt-val">{{ $dropoffFechaLarga ?? $dropoffDate }}</span>
+                    </div>
+                    <div class="dt-row">
+                      <span class="dt-lbl">Hora</span>
+                      <span class="dt-time">{{ $dropoffTime }}</span>
+                    </div>
+                  </div>
+
+                  <span class="js-date" data-iso="{{ $dropoffDateISO }}" style="display:none;">{{ $dropoffDate }}</span>
                 </div>
               </div>
+
             </div>
 
-            {{-- 2) Abajo: imagen + categoría + iconos
-                ✅ AQUÍ va la burbuja roja con la categoría (COMPACTO) --}}
-            <div class="sum-car" style="margin-top:14px;">
-              <img src="{{ $categoriaImg }}" alt="Auto" onerror="this.onerror=null;this.src='{{ $placeholder }}';">
+            {{-- ✅ Subtítulo 2 --}}
+            <h4 class="sum-subtitle" style="margin-top:14px;">Tu auto</h4>
 
-              <div class="sum-car-info">
-                <div class="sum-car-top" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                  <span class="sum-tag">{{ $tagCategoria }}</span>
+            {{-- ✅ TU AUTO (descripcion arriba + subtítulo abajo + imagen) --}}
+            <div class="sum-car" style="margin-top:10px; display:flex; gap:20px; align-items:center;">
+              <div class="sum-car-img">
+                <img src="{{ $categoriaImg }}"
+                    alt="Auto"
+                    onerror="this.onerror=null;this.src='{{ $placeholder }}';"
+                    style="width:200px; border-radius:14px;">
+              </div>
+
+              <div class="sum-car-info" style="flex:1;">
+                <div class="car-mini-name" style="font-weight:900; font-size:20px; color:#111827;">
+                  {{ $autoTitulo }}
                 </div>
 
-                <div class="r-specs" style="margin-top:10px;">
+                <div class="car-mini-sub" style="margin-top:4px; font-weight:800; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#111827;">
+                  {{ $autoSubtitulo }}
+                </div>
+
+                <div class="r-specs" style="margin-top:14px;">
                   @if($featAc)
                     <span class="chip chip-ok"><i class="fa-solid fa-snowflake"></i> A/C</span>
                   @endif
-
                   @if($featAndroidAuto)
                     <span class="chip chip-ok"><i class="fa-brands fa-android"></i> Android Auto</span>
                   @endif
-
                   @if($featCarplay)
                     <span class="chip chip-ok"><i class="fa-brands fa-apple"></i> CarPlay</span>
                   @endif
-
                   @if($featPassengers > 0)
                     <span class="chip"><i class="fa-solid fa-user"></i> {{ $featPassengers }} personas</span>
                   @endif
@@ -861,22 +969,28 @@
 
           </div>
 
+          <h4 class="sum-subtitle" style="margin-top:16px;">Detalles del precio</h4>
+
           <div class="sum-table" id="cotizacionDoc">
+
+            {{-- ✅ TARIFA BASE --}}
             <div class="sum-block">
-              <h4>Tarifa Base</h4>
+              <div class="sum-line-title">Tarifa Base</div>
+
               <div class="row row-base">
                 <span>
                   Total de {{ $days }} día(s) - precio por día ${{ number_format((float)($categoriaSel->precio_dia ?? 0), 0) }} MXN
                 </span>
-              </div>  
+              </div>
 
               <div class="row row-base-total">
                 <span class="row-total-label">Total:</span>
                 <strong id="qBase">${{ number_format($tarifaBase, 0) }} MXN</strong>
               </div>
 
+              {{-- ✅ INCLUIDO (con línea roja también) --}}
+              <div class="sum-line-title" style="margin-top:14px;">Incluido</div>
               <div class="row row-included">
-                <span class="inc-label">Incluido:</span>
                 <span class="inc-items">
                   <span class="inc-item"><span class="inc-check">✔</span> Kilometraje ilimitado</span>
                   <span class="inc-item"><span class="inc-check">✔</span> Reelevo de Responsabilidad (LI)</span>
@@ -884,13 +998,15 @@
               </div>
             </div>
 
+            {{-- ✅ OPCIONES DE RENTA --}}
             <div class="sum-block">
-              <h4>Opciones de Renta</h4>
+              <div class="sum-line-title">Opciones de Renta</div>
               <div class="row"><span>Complementos</span><strong id="qExtras">$0 MXN</strong></div>
             </div>
 
+            {{-- ✅ CARGOS E IVA --}}
             <div class="sum-block">
-              <h4>Cargos e IVA</h4>
+              <div class="sum-line-title">Cargos e IVA</div>
               <div class="row"><span>IVA (16%)</span><strong id="qIva">$0 MXN</strong></div>
             </div>
 
@@ -901,7 +1017,6 @@
           </div>
 
         </div>
-
       </div>
     @endif
 
