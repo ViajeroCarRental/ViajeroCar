@@ -979,7 +979,15 @@
         <div class="divider"></div>
 
         <div class="res-row"><div>🚗 Categoría</div><div id="resCat">—</div></div>
-        <div class="res-row"><div>Tarifa base</div><div id="resBaseDia">—</div></div>
+        <div class="res-row">
+          <div>
+            Tarifa base 
+            <button type="button" id="btnEditarTarifa" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:16px;margin-left:6px;">
+              ✏️
+            </button>
+          </div>
+            <div id="resBaseDia">—</div>
+        </div>
         <div class="res-row"><div>Base × días</div><div id="resBaseTotal">—</div></div>
 
         <div class="res-row"><div>🧰 Servicios</div><div id="resServicios">—</div></div>

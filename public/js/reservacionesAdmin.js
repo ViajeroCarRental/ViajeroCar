@@ -45,7 +45,7 @@
     if (!/^[A-Z]{2}$/.test(code)) return "🏳️";
     const A = 0x1F1E6;
     return String.fromCodePoint(A + (code.charCodeAt(0) - 65)) +
-           String.fromCodePoint(A + (code.charCodeAt(1) - 65));
+      String.fromCodePoint(A + (code.charCodeAt(1) - 65));
   };
 
   // ✅ CSRF
@@ -555,6 +555,10 @@
       if (rem) rem.style.display = "none";
       const mini = qs("#catMiniPreview");
       if (mini) mini.style.display = "none";
+
+      const baseEl = qs("#resBaseDia");
+      if (baseEl) baseEl.textContent = "—"
+
       syncTotalsHidden();
       refreshSummary();
       return;
@@ -563,6 +567,9 @@
     if (txt) txt.textContent = cat.nombre;
     if (sub) sub.textContent = `${money(cat.precio_dia)} / día · ${state.days || 0} día(s)`;
     if (rem) rem.style.display = "";
+
+    const baseEl = qs("#resBaseDia");
+    if (baseEl) baseEl.textContent = "";
 
     refreshCategoriaPreview();
     syncTotalsHidden();
@@ -802,6 +809,90 @@
     qs("#total").value = String(totals.total || 0);
   }
 
+  // Funcion de editar tarifa base
+  function initTarifaEdit() {
+    const btn = qs("#btnEditarTarifa");
+    const container = qs("#resBaseDia");
+
+    if (!btn || !container) return;
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      if (!state.categoria) return;
+      if (container.querySelector("input")) return;
+
+      const precioActual = parseFloat(state.categoria.precio_dia || 0);
+
+      const input = document.createElement("input");
+      input.type = "number";
+      input.value = precioActual.toFixed(2);
+      input.min = 0;
+      input.step = 0.01;
+
+      Object.assign(input.style, {
+        width: "90px",
+        padding: "4px",
+        border: "1px solid #2563eb",
+        borderRadius: "6px",
+        fontWeight: "600",
+        fontSize: "14px",
+        color: "#333",
+        outline: "none"
+      });
+
+      container.innerHTML = "";
+      container.appendChild(input);
+      input.focus();
+      input.select();
+
+      const guardar = () => {
+        let nuevoValor = parseFloat(input.value);
+
+        if (isNaN(nuevoValor) || nuevoValor < 0) {
+          nuevoValor = precioActual;
+        }
+
+        state.categoria.precio_dia = nuevoValor;
+
+        container.innerHTML = "";
+
+        syncTotalsHidden();
+        refreshTotalsOnly();
+
+        const sub = qs("#catSelSub");
+        if (sub) {
+          sub.textContent = `${money(nuevoValor)} / día · ${state.days || 0} día(s)`;
+        }
+
+        refreshCategoriaPreview();
+      };
+
+      input.addEventListener("blur", guardar);
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          input.blur();
+        }
+      });
+    });
+  }
+
+  function refreshTotalsOnly() {
+    const totals = calcTotals();
+    const cat = state.categoria;
+
+    const setText = (id, val) => { const el = qs(id); if (el) el.textContent = val; };
+
+    // Actualizamos "Base x Días"
+    setText("#resBaseTotal", cat ? money(totals.baseTotal) : "—");
+
+    // Actualizamos Totales Finales
+    setText("#resSub", money(totals.subtotal));
+    setText("#resIva", money(totals.iva));
+    setText("#resTotal", money(totals.total));
+  }
+
   /* =========================
      Resumen
   ========================= */
@@ -833,7 +924,13 @@
     const totals = calcTotals();
 
     setText("#resCat", cat ? cat.nombre : "—");
-    setText("#resBaseDia", cat ? `${money(totals.baseDia)} / día` : "—");
+
+    const baseEl = qs("#resBaseDia");
+    if (baseEl && !baseEl.querySelector("input")) 
+    {
+      baseEl.textContent = cat ? `${money(totals.baseDia)} / día` : "—";
+    }
+
     setText("#resBaseTotal", cat ? money(totals.baseTotal) : "—");
 
     const svcList = getServiciosLabelList();
@@ -1119,7 +1216,7 @@
       fd.set("telefono_cliente", qs("#telefono_cliente")?.value || "");
 
       // ✅ asegurar servicios
-      fd.set("svc_dropoff",  state.servicios.dropoff ? "1" : "0");
+      fd.set("svc_dropoff", state.servicios.dropoff ? "1" : "0");
       fd.set("svc_delivery", state.servicios.delivery ? "1" : "0");
       fd.set("svc_gasolina", state.servicios.gasolina ? "1" : "0");
 
@@ -1266,7 +1363,7 @@
             <p>${escapeHtml(p.desc || (isFree ? "Sin protección adicional." : "Protección para tu viaje."))}</p>
 
             <div class="precio">
-              ${money(p.precio).replace(" MXN","")} <span>MXN${p.charge==="por_dia" ? " / día" : ""}</span>
+              ${money(p.precio).replace(" MXN", "")} <span>MXN${p.charge === "por_dia" ? " / día" : ""}</span>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:12px;">
@@ -1355,7 +1452,7 @@
           <div class="ad-right">
             <div class="cp-price">
               <div class="muted small">Costo</div>
-              <div class="price-big">${money(precio).replace(" MXN","")} <span>MXN${charge==="por_dia" ? " / día" : ""}</span></div>
+              <div class="price-big">${money(precio).replace(" MXN", "")} <span>MXN${charge === "por_dia" ? " / día" : ""}</span></div>
             </div>
 
             <div class="qty-row">
@@ -1822,6 +1919,9 @@
 
     // tabs
     bindProteTabs();
+
+    // funcion de editar tarifa base
+    initTarifaEdit();
   }
 
   /* =========================
@@ -1835,7 +1935,7 @@
     ensureDeliveryHidden();
 
     // estados iniciales switches por hidden
-    state.servicios.dropoff  = String(qs("#svc_dropoff")?.value || "0") === "1";
+    state.servicios.dropoff = String(qs("#svc_dropoff")?.value || "0") === "1";
     state.servicios.gasolina = String(qs("#svc_gasolina")?.value || "0") === "1";
 
     const dropT = qs("#dropoffToggle");
