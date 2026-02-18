@@ -187,10 +187,6 @@
 
   // ======================================================
   // ✅ PERSISTENCIA (SIN SESIÓN)
-  // - guarda en localStorage y en querystring
-  // - rehidrata al cargar / al cambiar de step
-  // - ✅ FIX: NO spamea replaceState en cada tecla (throttle)
-  // - ✅ FIX: setVal NO dispara change si no cambió el valor
   // ======================================================
   function initWizardStatePersistence() {
     const LS_KEY = "viajero_resv_filters_v1";
@@ -225,7 +221,7 @@
     function setVal(el, v) {
       if (!el) return;
       const next = (v ?? "").toString();
-      if ((el.value ?? "") === next) return; // ✅ no loops
+      if ((el.value ?? "") === next) return;
       el.value = next;
       try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) { }
     }
@@ -526,6 +522,129 @@
     }
   }
 
+  // ======================================================
+  // ✅ Step 4: Nombre Completo → (nombre + apellido hidden)
+  // ======================================================
+  function initFullNameSync(){
+    const full     = qs('#nombreCompleto');
+    const nombre   = qs('#nombreCliente');
+    const apellido = qs('#apellidoCliente');
+
+    if (!full || !nombre || !apellido) return;
+
+    const norm = (s)=> String(s || '').trim().replace(/\s+/g,' ');
+
+    function splitFullName(v){
+      const s = norm(v);
+      if (!s) return { nombre:"", apellido:"" };
+
+      const parts = s.split(' ');
+      if (parts.length === 1) return { nombre: parts[0], apellido: "" };
+
+      const last = parts.pop();
+      return { nombre: parts.join(' '), apellido: last };
+    }
+
+    function syncToHidden(){
+      const { nombre: n, apellido: a } = splitFullName(full.value);
+      nombre.value   = n;
+      apellido.value = a;
+      try{ nombre.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
+      try{ apellido.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
+    }
+
+    function hydrateFullFromHidden(){
+      const n = norm(nombre.value);
+      const a = norm(apellido.value);
+
+      if (!norm(full.value) && (n || a)){
+        full.value = norm([n, a].filter(Boolean).join(' '));
+      }
+    }
+
+    hydrateFullFromHidden();
+    syncToHidden();
+
+    full.addEventListener('input', syncToHidden);
+    full.addEventListener('blur',  syncToHidden);
+
+    nombre.addEventListener('change', hydrateFullFromHidden);
+    apellido.addEventListener('change', hydrateFullFromHidden);
+  }
+
+  // ======================================================
+  // ✅ DOB SELECTS (DD/MM/YYYY) → hidden #dob (YYYY-MM-DD)
+  // - años: (hoy - 18) hacia atrás 100 años
+  // - ajusta días por mes/año (febrero 28/29)
+  // ======================================================
+  function initDobSelects(){
+    const day   = qs('#dob_day');
+    const month = qs('#dob_month');
+    const year  = qs('#dob_year');
+    const hidden = qs('#dob'); // name="nacimiento" para backend
+
+    // Si no están los selects, no hacemos nada (por si no es Step 4)
+    if (!day || !month || !year || !hidden) return;
+
+    function pad2(n){ return String(n).padStart(2,'0'); }
+
+    function daysInMonth(y, m){
+      // m: 1..12
+      if (!y || !m) return 31;
+      return new Date(Number(y), Number(m), 0).getDate();
+    }
+
+    function clampDay(){
+      const y = year.value;
+      const m = month.value;
+      const d = day.value;
+
+      if (!m) return;
+
+      const maxD = daysInMonth(y || 2000, m);
+      if (d && Number(d) > maxD){
+        day.value = pad2(maxD);
+      }
+    }
+
+    function updateHidden(){
+      clampDay();
+
+      const d = day.value;
+      const m = month.value;
+      const y = year.value;
+
+      if (d && m && y){
+        hidden.value = `${y}-${m}-${d}`; // ✅ formato backend
+      } else {
+        hidden.value = '';
+      }
+
+      try{ hidden.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
+    }
+
+    // ✅ Si ya venía un valor (YYYY-MM-DD) del backend o rehidratado, lo re-partimos
+    function hydrateFromHidden(){
+      const v = String(hidden.value || '').trim();
+      const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!m) return;
+
+      // solo setea si aún están vacíos
+      if (!year.value)  year.value  = m[1];
+      if (!month.value) month.value = m[2];
+      if (!day.value)   day.value   = m[3];
+
+      updateHidden();
+    }
+
+    day.addEventListener('change', updateHidden);
+    month.addEventListener('change', updateHidden);
+    year.addEventListener('change', updateHidden);
+
+    hydrateFromHidden();
+    updateHidden();
+  }
+
   // ==========================================================
   // ✅ DÍAS + ACTUALIZACIÓN DE PRECIOS EN PASO 2
   // ==========================================================
@@ -770,6 +889,7 @@
 
   // ==========================================================
   // ✅ FLATPICKR: REGLAS 100% (anti doble-init)
+  // - DOB removido porque ahora son selects DD/MM/YYYY
   // ==========================================================
   function initFlatpickrRules() {
     if (!window.flatpickr) return;
@@ -781,23 +901,8 @@
     const start = qs("#start");
     const end = qs("#end");
 
-    // ✅ DOB (Step 4)
-    const dob = qs("#dob");
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    // ---------- DOB picker (solo fecha) ----------
-    if (dob) {
-      try { if (dob._flatpickr) dob._flatpickr.destroy(); } catch (_) { }
-      window.flatpickr(dob, {
-        dateFormat: "d-m-Y",
-        allowInput: true,
-        disableMobile: true,
-        maxDate: today,
-        onOpen: [(sel, str, fp) => fp.jumpToDate(fp.selectedDates?.[0] || today, true)]
-      });
-    }
 
     // ---------- Step 1 pickers ----------
     if (!start || !end) return;
@@ -865,15 +970,11 @@
       const s2 = startFp.selectedDates?.[0] ? toDateAtMidnight(startFp.selectedDates[0]) : null;
       const e2 = endFp.selectedDates?.[0] ? toDateAtMidnight(endFp.selectedDates[0]) : null;
 
-      // ✅ devolución siempre >= pick-up (pero pick-up NO se limita hacia adelante)
       endFp.set("minDate", s2 || today);
-      // startFp.set("maxDate", e2 || null); // ❌ quitado para permitir pick-up a futuro sin límite
 
-      if (s2 && e2 && s2.getTime() > e2.getTime()) {
-        // si pick-up se va después de devolución, movemos devolución a pick-up
+      if (s2 && e2 && s2.getTime() > e2.getTime()){
         endFp.setDate(s2, false);
         endFp.set("minDate", s2);
-        // ✅ ya NO ponemos maxDate al pick-up
       }
 
       jumpToCurrentMonth(startFp);
@@ -936,6 +1037,12 @@
     initDaysAndPricesSync();
     initAddonsSync();
     initStep4DatePretty();
+
+    // ✅ Nombre Completo (Step 4)
+    initFullNameSync();
+
+    // ✅ DOB DD/MM/YYYY (Step 4)
+    initDobSelects();
 
     refreshFloatStates();
     setTimeout(refreshFloatStates, 80);

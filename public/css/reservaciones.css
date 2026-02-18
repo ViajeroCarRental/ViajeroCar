@@ -1335,9 +1335,10 @@ body{
   font-weight:900;
   font-size:12px;
   color:#111827;
-  background:#fff;
-  border:1px solid #eef2f7;
-  padding:8px 10px;
+  background:rgba(178,34,34,.12); 
+  border:1px solid rgba(178,34,34,.35);
+  backdrop-filter: blur(6px);     
+  padding:10px 16px;
   border-radius:999px;
 }
 .sum-compact-grid{
@@ -1409,14 +1410,6 @@ body{
   .sum-compact-grid{ grid-template-columns:1fr; }
   .sum-compact-head{ flex-direction:column; align-items:flex-start; }
   .sum-dt{ justify-content:flex-start; }
-}
-/* ===========================
-   STEP 4 — 3 CARDS (1 arriba + 2 abajo)
-=========================== */
-.step4-layout{
-  display:flex;
-  flex-direction:column;
-  gap:18px;
 }
 
 /* Card superior full width */
@@ -1874,4 +1867,559 @@ span.flatpickr-weekday{
   height:4px;
   background:linear-gradient(90deg, var(--brand), rgba(178,34,34,.25), var(--brand-dark));
   opacity:.95;
+}
+/* ===========================
+   ✅ SUM-COMPACT V2 (nuevo layout)
+=========================== */
+.sum-compact--v2{
+  padding: 16px;
+}
+
+.sum-compact--v2 .sum-compact-title{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  margin-bottom: 10px;
+}
+
+.sum-compact--v2 .sum-compact-h{
+  margin:0;
+  font-weight:900;
+  font-size: 26px;
+  letter-spacing:.4px;
+  color:#111827;
+}
+
+.sum-compact--v2 .sum-compact-chips{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed rgba(178,34,34,.18);
+}
+
+/* cuerpo: imagen + ubicaciones */
+.sum-compact--v2 .sum-compact-body{
+  display:grid;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 14px;
+  align-items: stretch;
+}
+
+/* imagen */
+.sum-compact--v2 .sum-compact-car{
+  border:1px solid #eef2f7;
+  border-radius:14px;
+  background: linear-gradient(180deg,#fff,#fbfbfd);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 12px;
+}
+.sum-compact--v2 .sum-compact-car img{
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  object-fit: contain;
+  background: transparent;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/* contenedor de recuadros internos */
+.sum-compact--v2 .sum-compact-locs{
+  display:grid;
+  grid-template-columns: 1fr 1fr; /* mantiene tus dos recuadros */
+  gap: 12px;
+}
+
+/* recuadro interno */
+.sum-compact--v2 .sum-loc-card{
+  background:#fff;
+  border:1px solid #eef2f7;
+  border-radius:14px;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+/* pills de fecha/hora */
+.sum-compact--v2 .sum-loc-pills{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top: 2px;
+}
+
+.sum-compact--v2 .pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 10px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+  border:1px solid #e5e7eb;
+  background:#f3f4f6;
+  color:#111827;
+  white-space: nowrap;
+}
+
+.sum-compact--v2 .pill-time{
+  border-color: rgba(178,34,34,.22);
+  background: rgba(178,34,34,.08);
+  color:#8b1d1a;
+}
+
+/* responsive */
+@media (max-width:760px){
+  .sum-compact--v2 .sum-compact-body{
+    grid-template-columns: 1fr;
+  }
+  .sum-compact--v2 .sum-compact-locs{
+    grid-template-columns: 1fr;
+  }
+  .sum-compact--v2 .sum-compact-h{
+    font-size: 22px;
+  }
+}
+/* ===========================
+   ✅ STEP 4 — 2 columnas lado a lado
+=========================== */
+
+/* en Step 4 quitamos la "card padre" para que se vean 2 cards separadas */
+.page.wizard-page[data-current-step="4"] .wizard-card{
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+/* layout 2 columnas */
+.page.wizard-page[data-current-step="4"] .step4-layout{
+  display: grid !important;
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* cada panel grande */
+.page.wizard-page[data-current-step="4"] .step4-pane{
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  min-width: 0;
+}
+
+/* responsive */
+@media (max-width: 992px){
+  .page.wizard-page[data-current-step="4"] .step4-layout{
+    grid-template-columns: 1fr !important;
+    gap: 18px;
+  }
+}
+/* ==========================================================
+   ✅ FIX FINAL STEP 4 (GANADOR) — PÉGALO AL FINAL
+========================================================== */
+
+/* 1) Arreglar el typo y dar ancho real en Step 4 */
+.page.wizard-page[data-current-step="4"]{
+  --wizard-w: 1280px; /* ✅ sin espacios */
+}
+
+/* 2) Quitar el "fondo padre" de wizard-card (ya lo tienes, lo refuerzo) */
+.page.wizard-page[data-current-step="4"] .wizard-card{
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+/* 3) 2 panes lado a lado */
+.page.wizard-page[data-current-step="4"] .step4-layout{
+  display: grid !important;
+  grid-template-columns: minmax(0,0.95fr) minmax(0,1.05fr);
+  gap: 24px;
+  align-items: start;
+}
+
+/* 4) cada pane */
+.page.wizard-page[data-current-step="4"] .step4-pane{
+  min-width: 0; /* 🔥 evita overflow que rompe grid */
+}
+
+/* 5) cosas típicas que rompen columnas: imágenes, textos largos */
+.page.wizard-page[data-current-step="4"] img{
+  max-width: 100%;
+  height: auto;
+}
+.page.wizard-page[data-current-step="4"] .sum-car-info,
+.page.wizard-page[data-current-step="4"] .sum-table,
+.page.wizard-page[data-current-step="4"] .sum-form{
+  min-width: 0;
+}
+
+/* responsive */
+@media (max-width: 992px){
+  .page.wizard-page[data-current-step="4"]{
+    --wizard-w: 900px;
+  }
+  .page.wizard-page[data-current-step="4"] .step4-layout{
+    grid-template-columns: 1fr !important;
+    gap: 18px;
+  }
+}
+/* ==========================================================
+   ✅ FIX STEP 4: NO quitar estilos del resumen (sum-car)
+   - Conserva tu diseño original (imagen + lugares como estaba)
+   - Evita doble card (card-block + sum-car)
+========================================================== */
+
+/* 1) Step 4: la wizard-card padre transparente (para 2 panels) */
+.page.wizard-page[data-current-step="4"] .wizard-card{
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+/* 2) Layout 2 columnas (cards a la par) */
+.page.wizard-page[data-current-step="4"] .step4-layout{
+  display:grid !important;
+  grid-template-columns: minmax(0,0.95fr) minmax(0,1.05fr);
+  gap:24px;
+  align-items:start;
+}
+
+/* 3) Los 2 paneles grandes (izq/der) */
+.page.wizard-page[data-current-step="4"] .step4-pane{
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  min-width:0;
+}
+
+/* 4) IMPORTANTÍSIMO:
+      En Step 4, .card-block NO debe meter otra "card" encima.
+      PERO NO TOCAMOS sum-car / sum-table / sum-form (se quedan igual) */
+.page.wizard-page[data-current-step="4"] .card-block{
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* 5) Asegura que tu sum-car se vea EXACTO como estaba (tu diseño) */
+.page.wizard-page[data-current-step="4"] .sum-car{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  padding:12px;
+}
+
+/* 6) Responsive */
+@media (max-width: 992px){
+  .page.wizard-page[data-current-step="4"] .step4-layout{
+    grid-template-columns: 1fr !important;
+    gap:18px;
+  }
+}
+/* ==========================================================
+   ✅ STEP 4 — 2 CARDS LADO A LADO (FORZADO)
+   IZQ: Datos personales
+   DER: Resumen (compacto + tabla)
+========================================================== */
+
+/* Asegura que Step 4 tenga ancho suficiente */
+.wizard-page[data-current-step="4"],
+.page[data-current-step="4"]{
+  --wizard-w: 1280px;
+}
+
+/* La card padre NO debe ser otra “tarjeta” en Step 4 */
+.wizard-page[data-current-step="4"] .wizard-card,
+.page[data-current-step="4"] .wizard-card{
+  width: min(var(--wizard-w), 96vw);
+  margin: 0 auto;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* ✅ Grid real: 2 columnas SIEMPRE (desktop) */
+.wizard-page[data-current-step="4"] .step4-layout,
+.page[data-current-step="4"] .step4-layout{
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 22px !important;
+  align-items: start !important;
+}
+
+/* ✅ Cada columna debe poder encoger (si no, se cae abajo) */
+.wizard-page[data-current-step="4"] .step4-layout > *,
+.page[data-current-step="4"] .step4-layout > *{
+  min-width: 0 !important;
+}
+
+/* Tus 2 cards grandes */
+.wizard-page[data-current-step="4"] .step4-pane,
+.page[data-current-step="4"] .step4-pane{
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  min-width: 0;
+}
+
+/* 👇 Importante: si usas .card-block dentro, NO metas otra tarjeta encima */
+.wizard-page[data-current-step="4"] .card-block,
+.page[data_current_step="4"] .card-block,
+.page[data-current-step="4"] .card-block{
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* Evitar que imágenes/textos largos rompan la columna */
+.wizard-page[data-current-step="4"] img,
+.page[data-current-step="4"] img{
+  max-width: 100%;
+  height: auto;
+}
+
+.wizard-page[data-current-step="4"] .sum-car,
+.wizard-page[data-current-step="4"] .sum-table,
+.wizard-page[data-current-step="4"] .sum-form,
+.page[data-current-step="4"] .sum-car,
+.page[data-current-step="4"] .sum-table,
+.page[data-current-step="4"] .sum-form{
+  min-width: 0;
+}
+
+/* ✅ Responsive (solo aquí se permite 1 columna) */
+@media (max-width: 992px){
+  .wizard-page[data-current-step="4"] .step4-layout,
+  .page[data-current-step="4"] .step4-layout{
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+}
+
+/* ===== DOB estilo compacto DD/MM/YYYY ===== */
+
+.dob-inline{
+  display:flex;
+  width:100%;
+  border:1px solid #000000;
+  border-radius:14px;
+  overflow:hidden;
+  background:#fff;
+}
+
+.dob-inline select{
+  flex:1;
+  height:54px;
+  border:0;
+  outline:none;
+  text-align:center;
+  font-weight:900;
+  font-size:14px;
+  background:#f3f4f6;
+  appearance:none;
+  -webkit-appearance:none;
+}
+
+.dob-inline select:not(:last-child){
+  border-right:1px solid #000000;
+}
+/* ===========================
+   ✅ Tarifa Base: total abajo
+=========================== */
+.sum-block .row.row-base{
+  display: flex !important;
+  justify-content: flex-start !important;
+  grid-template-columns: none !important; /* por si hereda grid */
+}
+
+.sum-block .row.row-base-total{
+  display: flex !important;
+  justify-content: flex-end !important;
+  padding-top: 0 !important;
+  margin-top: -4px;  /* ajusta si lo quieres más pegado */
+  border-top: 0 !important;
+}
+
+.sum-block .row.row-base-total strong{
+  font-size: 18px;
+  font-weight: 900;
+}
+/* ===========================
+   ✅ Tarifa Base: fila Total abajo con texto
+=========================== */
+.sum-block .row.row-base{
+  display:flex !important;
+  justify-content:flex-start !important;
+  grid-template-columns:none !important;
+}
+
+.sum-block .row.row-base-total{
+  display:flex !important;
+  justify-content:space-between !important; /* label izq, precio der */
+  align-items:center !important;
+
+  border-top:0 !important;
+  padding-top:0 !important;
+  margin-top:-4px; /* ajusta si lo quieres más pegado */
+}
+
+.sum-block .row.row-base-total .row-total-label{
+  font-weight:900;
+  color:#111827;
+}
+
+.sum-block .row.row-base-total strong{
+  font-weight:900;
+  font-size:18px;
+  white-space:nowrap;
+}
+/* ========================================
+   Tarifa Base - total alineado correcto
+======================================== */
+
+.sum-block .row.row-base-info{
+  display:block;
+  border-top:0;
+}
+
+.sum-block .row.row-base-total{
+  display:flex !important;
+  justify-content:space-between !important;
+  align-items:center !important;
+  border-top:0 !important;
+  padding-top:4px !important;
+}
+
+.sum-block .row.row-base-total span{
+  font-weight:900;
+  color:#111827;
+}
+
+.sum-block .row.row-base-total strong{
+  font-weight:900;
+  font-size:18px;
+  white-space:nowrap;
+}
+/* ==========================================================
+   ✅ Tarifa Base: "Total:" izq + monto der EN LA MISMA FILA
+========================================================== */
+.sum-table .sum-block .row.row-base-total{
+  display:grid !important;
+  grid-template-columns: 1fr auto !important;
+  align-items:center !important;
+  column-gap:14px !important;
+
+  /* evita que se baje */
+  white-space:nowrap !important;
+
+  /* que no meta borde extra */
+  border-top:0 !important;
+  padding-top:0 !important;
+  margin-top:-4px !important;
+}
+
+.sum-table .sum-block .row.row-base-total .row-total-label{
+  font-weight:900;
+  color:#111827;
+  white-space:nowrap !important;
+}
+
+.sum-table .sum-block .row.row-base-total strong{
+  justify-self:end !important;
+  white-space:nowrap !important;
+  font-weight:900;
+  font-size:18px;
+}
+/* ==========================================================
+   ✅ STEP 4 — DATOS PERSONALES: TODO NEGRO
+   - Labels (arriba) negros
+   - Bordes de inputs/selects negros
+   - Placeholder negro (si lo quieres negro también)
+   - Sin focus azul/rojo (sin box-shadow)
+   PÉGALO AL FINAL
+========================================================== */
+
+/* Labels arriba */
+.sum-form .sum-personal-grid .field > label,
+.sum-form .field > label,
+.sum-form .sum-section-title{
+  color:#000 !important;
+}
+
+/* Inputs + Selects: borde negro + texto negro */
+.sum-form input,
+.sum-form select{
+  border:2px solid #000 !important;
+  color:#000 !important;
+  background:#fff !important;
+  box-shadow:none !important;
+  outline:none !important;
+}
+
+/* Placeholder negro (si prefieres que sea más suave, dime y lo ponemos gris) */
+.sum-form input::placeholder{
+  color:#000 !important;
+  opacity:1 !important;
+}
+
+/* Flechita del select en negro (anula la gris que tienes global) */
+.sum-form select{
+  background-image:
+    linear-gradient(45deg, transparent 50%, #000 50%),
+    linear-gradient(135deg, #000 50%, transparent 50%) !important;
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 12px) 50% !important;
+  background-size:6px 6px !important;
+  background-repeat:no-repeat !important;
+}
+
+/* Quitar completamente el focus brand/azul */
+.sum-form input:focus,
+.sum-form select:focus,
+.sum-form input:focus-visible,
+.sum-form select:focus-visible{
+  border-color:#000 !important;
+  box-shadow:none !important;
+  outline:none !important;
+}
+
+/* DOB también negro (por si se te mezcla con reglas anteriores) */
+.sum-form .dob-inline{
+  border:2px solid #000 !important;
+  box-shadow:none !important;
+}
+.sum-form .dob-inline select{
+  color:#000 !important;
+  background:#fff !important;
+  box-shadow:none !important;
+  outline:none !important;
+}
+.sum-form .dob-inline select:not(:last-child){
+  border-right:2px solid #000 !important;
+}
+.sum-form .dob-inline:focus-within{
+  border-color:#000 !important;
+  box-shadow:none !important;
 }

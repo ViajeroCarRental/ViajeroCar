@@ -985,7 +985,6 @@
             <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
             </article>
 
-{
         <article class="car-card">
           <header class="car-title">
             <h3>PICK UP DOBLE CABINA</h3>
@@ -993,7 +992,7 @@
           </header>
 
           <div class="car-media">
-            <img src="{{ asset('img/frontier.png') }}" alt="Nissan Frontier o similar">
+            <img src="{{ asset('img/Frontier.png') }}" alt="Nissan Frontier o similar">
           </div>
 
          <div class="offer">

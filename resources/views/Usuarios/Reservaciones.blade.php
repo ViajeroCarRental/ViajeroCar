@@ -163,6 +163,20 @@
   // split hora/min para Step 1 (UI)
   [$ph, $pm] = array_pad(explode(':', $pickupTime ?? '12:00'), 2, '00');
   [$dh, $dm] = array_pad(explode(':', $dropoffTime ?? '12:00'), 2, '00');
+
+  // DOB range: 100 años atrás, hasta (hoy-18)
+  $currentYear = now()->year;
+  $minYear = $currentYear - 100;
+  $maxYear = $currentYear - 18;
+
+  // ✅ features para Step 4 (si existen en BD)
+  $featPassengers   = (int)($categoriaSel->pasajeros ?? 0);
+  $featCarplay      = (int)($categoriaSel->apple_carplay ?? 0);
+  $featAndroidAuto  = (int)($categoriaSel->android_auto ?? 0);
+  $featAc           = (int)($categoriaSel->aire_acondicionado ?? ($categoriaSel->aire_ac ?? 0)); // por si tu columna se llama distinto
+
+  // ✅ Burbuja roja: DEBE decir "COMPACTO" (tu categoría)
+  $tagCategoria = $categoriaSel ? strtoupper($categoriaSel->nombre) : 'COMPACTO';
 @endphp
 
 <main class="page wizard-page"
@@ -174,7 +188,6 @@
   <div class="reservas-bg" aria-hidden="true"></div>
 
   <style>
-    /* ✅ FIX: overlay NO bloquea inputs/clicks */
     .reservas-bg{
       position:absolute;
       inset:0;
@@ -199,10 +212,6 @@
       color:#9ca3af;
       pointer-events:none;
       font-size:15px;
-    }
-    .sum-form .sum-personal-grid .ctl:has(#dob) > .ico{
-      top: calc(50% + 14px);
-      transform: translateY(-50%);
     }
 
     .ctl input, .ctl select{
@@ -254,6 +263,31 @@
       font-size:13px;
       color:#6b7280;
     }
+
+    /* ✅ DOB “input dividido” (DD/MM/YYYY) */
+    .dob-inline{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1.4fr;
+      gap:0;
+      border:2px solid #3b82f6;
+      border-radius:10px;
+      overflow:hidden;
+      background:#fff;
+      height:54px;
+    }
+    .dob-inline select{
+      border:0 !important;
+      height:54px;
+      border-radius:0 !important;
+      padding:0 12px !important;
+      font-weight:900;
+      outline:none;
+      background:#fff;
+    }
+    .dob-inline select:not(:last-child){
+      border-right:2px solid #3b82f6 !important;
+    }
+    .dob-inline select:focus{ box-shadow:none !important; }
 
     @media (min-width:981px){
       .search-grid > .group-card{
@@ -607,232 +641,265 @@
 
     {{-- ===================== STEP 4 ===================== --}}
     @if($stepCurrent===4)
-      <header class="wizard-head">
-        <h2>Resumen de tu itinerario</h2>
-        <p>Verifica tus datos antes de reservar.</p>
-      </header>
-
       <input type="hidden" id="addonsHidden" value="{{ $addonsParam }}">
-
-      {{-- ✅ DOS PANELES (2 FONDOS SEPARADOS):
-          IZQUIERDA: Datos personales + pago
-          DERECHA:   Resumen completo + desglose de pagos
-      --}}
       <div class="step4-layout">
 
         {{-- ===================== PANE IZQUIERDO ===================== --}}
         <div class="step4-pane">
-          <div class="card-left">
+          <form class="sum-form" id="formCotizacion" onsubmit="return false;">
+            <script>
+              window.APP_URL_RESERVA_MOSTRADOR = "{{ route('reservas.store') }}";
+              window.APP_URL_RESERVA_LINEA     = "{{ route('reservas.linea') }}";
+            </script>
 
-            <div class="card-block card-personal">
-              <form class="sum-form" id="formCotizacion" onsubmit="return false;">
-                <script>
-                  window.APP_URL_RESERVA_MOSTRADOR = "{{ route('reservas.store') }}";
-                  window.APP_URL_RESERVA_LINEA     = "{{ route('reservas.linea') }}";
-                </script>
+            @csrf
 
-                @csrf
+            <input type="hidden" name="categoria_id" id="categoria_id" value="{{ $categoriaId }}">
+            <input type="hidden" name="plan" id="plan" value="{{ $plan }}">
+            <input type="hidden" name="addons" id="addons_payload" value="{{ $addonsParam }}">
 
-                <input type="hidden" name="categoria_id" id="categoria_id" value="{{ $categoriaId }}">
-                <input type="hidden" name="plan" id="plan" value="{{ $plan }}">
-                <input type="hidden" name="addons" id="addons_payload" value="{{ $addonsParam }}">
+            <h2 class="sum-section-title"> Datos personales</h2>
 
-                <div class="sum-section-title">Datos personales</div>
+            <div class="sum-personal-grid">
 
-                <div class="sum-personal-grid">
-                  <div class="field">
-                    <label>Nombre(s)</label>
-                    <input type="text" name="nombre" id="nombreCliente" placeholder="Nombre">
-                  </div>
+              {{-- Nombre completo (2 columnas) --}}
+              <div class="field" style="grid-column: 1 / -1;">
+                <label>Nombre Completo</label>
 
-                  <div class="field">
-                    <label>Apellidos</label>
-                    <input type="text" name="apellido" id="apellidoCliente" placeholder="Apellidos">
-                  </div>
+                <input
+                  type="text"
+                  name="nombre_completo"
+                  id="nombreCompleto"
+                  autocomplete="name"
+                >
 
-                  <div class="field">
-                    <label>Móvil</label>
-                    <input type="text" name="telefono" id="telefonoCliente" placeholder="442 123 4567">
-                  </div>
+                {{-- Hidden: compatibilidad --}}
+                <input type="hidden" name="nombre" id="nombreCliente">
+                <input type="hidden" name="apellido" id="apellidoCliente">
+              </div>
 
-                  <div class="field">
-                    <label>Correo electrónico</label>
-                    <input type="email" name="email" id="correoCliente" placeholder="ejemplo@gmail.com">
-                  </div>
+              {{-- ✅ Móvil + correo en 1 columna (apilados) --}}
+              <div class="field" style="grid-column: 1 / -1;">
+                <label>Móvil</label>
+                <input type="text" name="telefono" id="telefonoCliente" >
+              </div>
 
-                  <div class="field">
-                    <label>País</label>
-                    <select name="pais" id="pais">
-                      <option value="">Selecciona un país</option>
-                      <option value="México">México</option>
-                      <option value="Estados Unidos">Estados Unidos</option>
-                      <option value="Canadá">Canadá</option>
-                    </select>
-                  </div>
+              <div class="field" style="grid-column: 1 / -1;">
+                <label>Correo electrónico</label>
+                <input type="email" name="email" id="correoCliente" >
+              </div>
 
-                  <div class="field">
-                    <div class="ctl has-ico pristine" data-float>
-                      <span class="ico"><i class="fa-solid fa-calendar-days"></i></span>
-                      <span class="flabel">Fecha de nacimiento</span>
-                      <input
-                        type="text"
-                        name="nacimiento"
-                        id="dob"
-                        placeholder="dd-mm-aaaa"
-                        required
-                        data-float-input
-                      >
-                    </div>
-                  </div>
+              {{-- ✅ País (col 1) --}}
+              <div class="field">
+                <label>País</label>
+                <select name="pais" id="pais">
+                  <option value="">Selecciona un país</option>
+                  <option value="México">México</option>
+                  <option value="Estados Unidos">Estados Unidos</option>
+                  <option value="Canadá">Canadá</option>
+                </select>
+              </div>
 
-                  @php
-                    $isAirport =
-                      (is_string($pickupName) && str_contains(mb_strtolower($pickupName), 'aeropuerto')) ||
-                      (is_string($dropoffName) && str_contains(mb_strtolower($dropoffName), 'aeropuerto'));
-                  @endphp
+              {{-- ✅ Fecha nacimiento (col 2) DD/MM/YYYY --}}
+              <div class="field">
+                <label>Fecha de nacimiento</label>
 
-                  @if($isAirport)
-                    <div class="field field-span-2">
-                      <label>No. de vuelo (opcional)</label>
-                      <input type="text" name="vuelo" id="vuelo" placeholder="Ej. AM1234">
-                    </div>
-                  @endif
+                <div class="dob-inline">
+                  <select id="dob_day">
+                    <option value="">DD</option>
+                    @for($d=1; $d<=31; $d++)
+                      <option value="{{ str_pad($d,2,'0',STR_PAD_LEFT) }}">
+                        {{ str_pad($d,2,'0',STR_PAD_LEFT) }}
+                      </option>
+                    @endfor
+                  </select>
+
+                  <select id="dob_month">
+                    <option value="">MM</option>
+                    @for($m=1; $m<=12; $m++)
+                      <option value="{{ str_pad($m,2,'0',STR_PAD_LEFT) }}">
+                        {{ str_pad($m,2,'0',STR_PAD_LEFT) }}
+                      </option>
+                    @endfor
+                  </select>
+
+                  <select id="dob_year">
+                    <option value="">YYYY</option>
+                    @for($y=$maxYear; $y>=$minYear; $y--)
+                      <option value="{{ $y }}">{{ $y }}</option>
+                    @endfor
+                  </select>
                 </div>
 
-                <div class="sum-checks">
-                  <label class="cbox">
-                    <input type="checkbox" name="acepto" id="acepto">
-                    <span>ESTOY DE ACUERDO Y ACEPTO LOS TÉRMINOS Y CONDICIONES.</span>
-                  </label>
+                <input type="hidden" name="nacimiento" id="dob">
+              </div>
 
-                  <label class="cbox">
-                    <input type="checkbox" name="promos" id="promos">
-                    <span>DESEO RECIBIR ALERTAS, CONFIRMACIONES Y PROMOCIONES.</span>
-                  </label>
+              @php
+                $isAirport =
+                  (is_string($pickupName) && str_contains(mb_strtolower($pickupName), 'aeropuerto')) ||
+                  (is_string($dropoffName) && str_contains(mb_strtolower($dropoffName), 'aeropuerto'));
+              @endphp
+
+              @if($isAirport)
+                <div class="field" style="grid-column: 1 / -1;">
+                  <label>No. de vuelo (opcional)</label>
+                  <input type="text" name="vuelo" id="vuelo" >
                 </div>
+              @endif
 
-                <div class="wizard-nav" style="margin-top:10px;">
-                  <a class="btn btn-ghost" href="{{ $toStep(3) }}">Anterior</a>
-                  <button id="btnReservar" type="button" class="btn btn-primary">Reservar</button>
-                </div>
-
-                <button class="btn btn-quote" id="btnCotizar" type="button">
-                  <i class="fa-regular fa-file-pdf"></i> Cotizar (PDF)
-                </button>
-
-                <div class="pay-logos" style="display:flex;gap:16px;margin-top:10px;align-items:center;flex-wrap:wrap;">
-                  <img src="{{ asset('img/america.png') }}" alt="Amex" onerror="this.style.display='none'" style="height:24px;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,.15)">
-                  <img src="{{ asset('img/paypal.png') }}" alt="PayPal" onerror="this.style.display='none'" style="height:24px;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,.15)">
-                  <img src="{{ asset('img/oxxo.png') }}" alt="Oxxo" onerror="this.style.display='none'" style="height:24px;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,.15)">
-                </div>
-
-                <div id="modalMetodoPago" class="modal-overlay" style="display:none;">
-                  <div class="modal-card">
-                    <h3>Selecciona tu método de pago</h3>
-                    <div class="options">
-                      <button id="btnPagoLinea" class="btn btn-primary" type="button">Pago en línea</button>
-                      <button id="btnPagoMostrador" class="btn btn-gray" type="button">Pago en mostrador</button>
-                    </div>
-                    <button id="cerrarModalMetodo" class="btn btn-secondary" type="button" style="margin-top:10px;">Cancelar</button>
-                  </div>
-                </div>
-
-                <div id="paypal-button-container" style="display:none; text-align:center; margin-top:20px;"></div>
-              </form>
             </div>
 
-          </div>
+            <div class="sum-checks">
+              <label class="cbox">
+                <input type="checkbox" name="acepto" id="acepto">
+                <span>ESTOY DE ACUERDO Y ACEPTO LAS POLÍTICAS Y PROCEDIMIENTOS PARA LA RENTA.</span>
+              </label>
+
+              <label class="cbox">
+                <input type="checkbox" name="promos" id="promos">
+                <span>DESEO RECIBIR ALERTAS, CONFIRMACIONES, OFERTAS Y PROMOCIONES EN MI CORREO Y/O TELÉFONO CELULAR.</span>
+              </label>
+            </div>
+
+            <div class="wizard-nav" style="margin-top:10px;">
+              <a class="btn btn-ghost" href="{{ $toStep(3) }}">Anterior</a>
+              <button id="btnReservar" type="button" class="btn btn-primary">Reservar</button>
+            </div>
+
+            <div class="pay-logos" style="display:flex;gap:16px;margin-top:10px;align-items:center;flex-wrap:wrap;">
+              <img src="{{ asset('img/america.png') }}" alt="Amex" onerror="this.style.display='none'" style="height:24px;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,.15)">
+              <img src="{{ asset('img/paypal.png') }}" alt="PayPal" onerror="this.style.display='none'" style="height:24px;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,.15)">
+              <img src="{{ asset('img/oxxo.png') }}" alt="Oxxo" onerror="this.style.display='none'" style="height:24px;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,.15)">
+            </div>
+
+            <div id="modalMetodoPago" class="modal-overlay" style="display:none;">
+              <div class="modal-card">
+                <h3>Selecciona tu método de pago</h3>
+                <div class="options">
+                  <button id="btnPagoLinea" class="btn btn-primary" type="button">Pago en línea</button>
+                  <button id="btnPagoMostrador" class="btn btn-gray" type="button">Pago en mostrador</button>
+                </div>
+                <button id="cerrarModalMetodo" class="btn btn-secondary" type="button" style="margin-top:10px;">Cancelar</button>
+              </div>
+            </div>
+
+            <div id="paypal-button-container" style="display:none; text-align:center; margin-top:20px;"></div>
+          </form>
         </div>
 
         {{-- ===================== PANE DERECHO ===================== --}}
         <div class="step4-pane">
-          <div class="card-right">
 
-            <div class="card-block card-summary">
-              <div class="sum-car">
-                <img src="{{ $categoriaImg }}" alt="Auto" onerror="this.onerror=null;this.src='{{ $placeholder }}';">
-                <div class="sum-car-info">
-                  <h3>{{ $categoriaSel ? strtoupper($categoriaSel->nombre) : 'Sin categoría seleccionada' }}</h3>
+          <div class="sum-compact" aria-label="Resumen compacto">
+            <div class="sum-compact-head">
+              <h4 class="sum-title"><strong>Resumen de tu reserva</strong></h4>
 
-                  <div class="sum-compact" aria-label="Resumen compacto">
-                    <div class="sum-compact-head">
-                      <span class="sum-tag">COMPACTO</span>
-                      <span class="sum-days">
-                        <i class="fa-regular fa-calendar"></i>
-                        Días: <strong id="qDays">{{ $days }}</strong>
-                      </span>
-                    </div>
+              <span class="sum-days">
+                <i class="fa-regular fa-calendar"></i>
+                Días: <strong id="qDays">{{ $days }}</strong>
+              </span>
+            </div>
 
-                    <div class="sum-compact-grid">
-                      <div class="sum-item">
-                        <div class="sum-item-label">
-                          <i class="fa-solid fa-location-dot"></i> Pick-Up
-                        </div>
-                        <div class="sum-item-value">
-                          <strong class="sum-place">{{ $pickupName ?? '—' }}</strong>
-                          <span class="sum-dt">
-                            <span class="js-date" data-iso="{{ $pickupDateISO }}">{{ $pickupDate }}</span>
-                            <span class="sum-time">{{ $pickupTime }}</span>
-                          </span>
-                        </div>
-                      </div>
+            {{-- 1) Arriba: Pick-up (izq) / Devolución (der) --}}
+            <div class="sum-compact-grid">
+              <div class="sum-item">
+                <div class="sum-item-label">
+                  <i class="fa-solid fa-location-dot"></i> Pick-Up
+                </div>
+                <div class="sum-item-value">
+                  <strong class="sum-place">{{ $pickupName ?? '—' }}</strong>
+                  <span class="sum-dt">
+                    <span class="js-date" data-iso="{{ $pickupDateISO }}">{{ $pickupDate }}</span>
+                    <span class="sum-time">{{ $pickupTime }}</span>
+                  </span>
+                </div>
+              </div>
 
-                      <div class="sum-item">
-                        <div class="sum-item-label">
-                          <i class="fa-solid fa-location-dot"></i> Devolución
-                        </div>
-                        <div class="sum-item-value">
-                          <strong class="sum-place">{{ $dropoffName ?? '—' }}</strong>
-                          <span class="sum-dt">
-                            <span class="js-date" data-iso="{{ $dropoffDateISO }}">{{ $dropoffDate }}</span>
-                            <span class="sum-time">{{ $dropoffTime }}</span>
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
+              <div class="sum-item">
+                <div class="sum-item-label">
+                  <i class="fa-solid fa-location-dot"></i> Devolución
+                </div>
+                <div class="sum-item-value">
+                  <strong class="sum-place">{{ $dropoffName ?? '—' }}</strong>
+                  <span class="sum-dt">
+                    <span class="js-date" data-iso="{{ $dropoffDateISO }}">{{ $dropoffDate }}</span>
+                    <span class="sum-time">{{ $dropoffTime }}</span>
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div class="card-block card-totals" id="cotizacionDoc">
-              <div class="sum-table">
-                <div class="sum-block">
-                  <h4>Tarifa Base</h4>
-                  <div class="row">
-                    <span>{{ $days }} día(s) - precio por día ${{ number_format((float)($categoriaSel->precio_dia ?? 0), 0) }} MXN</span>
-                    <strong id="qBase">${{ number_format($tarifaBase, 0) }} MXN</strong>
-                  </div>
+            {{-- 2) Abajo: imagen + categoría + iconos
+                ✅ AQUÍ va la burbuja roja con la categoría (COMPACTO) --}}
+            <div class="sum-car" style="margin-top:14px;">
+              <img src="{{ $categoriaImg }}" alt="Auto" onerror="this.onerror=null;this.src='{{ $placeholder }}';">
 
-                  {{-- ✅ Incluido: ✔ Kilometraje ilimitado ✔ Reelevo de Responsabilidad (LI) --}}
-                  <div class="row row-included">
-                    <span class="inc-label">Incluido:</span>
-                    <span class="inc-items">
-                      <span class="inc-item"><span class="inc-check">✔</span> Kilometraje ilimitado</span>
-                      <span class="inc-item"><span class="inc-check">✔</span> Reelevo de Responsabilidad (LI)</span>
-                    </span>
-                  </div>
+              <div class="sum-car-info">
+                <div class="sum-car-top" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                  <span class="sum-tag">{{ $tagCategoria }}</span>
                 </div>
 
-                <div class="sum-block">
-                  <h4>Opciones de Renta</h4>
-                  <div class="row"><span>Complementos</span><strong id="qExtras">$0 MXN</strong></div>
-                </div>
+                <div class="r-specs" style="margin-top:10px;">
+                  @if($featAc)
+                    <span class="chip chip-ok"><i class="fa-solid fa-snowflake"></i> A/C</span>
+                  @endif
 
-                <div class="sum-block">
-                  <h4>Cargos e IVA</h4>
-                  <div class="row"><span>IVA (16%)</span><strong id="qIva">$0 MXN</strong></div>
-                </div>
+                  @if($featAndroidAuto)
+                    <span class="chip chip-ok"><i class="fa-brands fa-android"></i> Android Auto</span>
+                  @endif
 
-                <div class="sum-total">
-                  <span>Total</span>
-                  <strong id="qTotal">${{ number_format($tarifaBase, 0) }} MXN</strong>
+                  @if($featCarplay)
+                    <span class="chip chip-ok"><i class="fa-brands fa-apple"></i> CarPlay</span>
+                  @endif
+
+                  @if($featPassengers > 0)
+                    <span class="chip"><i class="fa-solid fa-user"></i> {{ $featPassengers }} personas</span>
+                  @endif
                 </div>
               </div>
             </div>
 
           </div>
+
+          <div class="sum-table" id="cotizacionDoc">
+            <div class="sum-block">
+              <h4>Tarifa Base</h4>
+              <div class="row row-base">
+                <span>
+                  Total de {{ $days }} día(s) - precio por día ${{ number_format((float)($categoriaSel->precio_dia ?? 0), 0) }} MXN
+                </span>
+              </div>  
+
+              <div class="row row-base-total">
+                <span class="row-total-label">Total:</span>
+                <strong id="qBase">${{ number_format($tarifaBase, 0) }} MXN</strong>
+              </div>
+
+              <div class="row row-included">
+                <span class="inc-label">Incluido:</span>
+                <span class="inc-items">
+                  <span class="inc-item"><span class="inc-check">✔</span> Kilometraje ilimitado</span>
+                  <span class="inc-item"><span class="inc-check">✔</span> Reelevo de Responsabilidad (LI)</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="sum-block">
+              <h4>Opciones de Renta</h4>
+              <div class="row"><span>Complementos</span><strong id="qExtras">$0 MXN</strong></div>
+            </div>
+
+            <div class="sum-block">
+              <h4>Cargos e IVA</h4>
+              <div class="row"><span>IVA (16%)</span><strong id="qIva">$0 MXN</strong></div>
+            </div>
+
+            <div class="sum-total">
+              <span>Total</span>
+              <strong id="qTotal">${{ number_format($tarifaBase, 0) }} MXN</strong>
+            </div>
+          </div>
+
         </div>
 
       </div>
