@@ -1,8 +1,11 @@
-@extends('layouts.Usuarios') 
+@extends('layouts.Usuarios')
 @section('Titulo','Reservaciones')
 
 @section('css-vistaReservaciones')
   <link rel="stylesheet" href="{{ asset('css/reservaciones.css') }}">
+  <!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
 @endsection
 
 @section('contenidoReservaciones')
@@ -357,50 +360,83 @@
 
         <div class="search-grid">
 
-          {{-- Lugar --}}
-          <div class="group-card">
-            <div class="group-head"><div class="group-title">Lugar</div></div>
+       {{-- Lugar --}}
+<div class="group-card">
+  <div class="group-head"><div class="group-title">Lugar</div></div>
 
-            <div class="field-row">
-              <div class="field">
-                <div class="ctl has-ico pristine" data-float>
-                  <span class="ico"><i class="fa-solid fa-location-dot"></i></span>
-                  <span class="flabel">Lugar de Pick-Up</span>
-                  <select name="pickup_sucursal_id" required data-float-select>
-                    <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}></option>
-                    @foreach(($ciudades ?? []) as $ciudad)
-                      <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
-                        @foreach($ciudad->sucursalesActivas ?? [] as $suc)
-                          <option value="{{ $suc->id_sucursal }}" {{ (string)$pickupSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
-                            {{ $suc->nombre }}
-                          </option>
-                        @endforeach
-                      </optgroup>
-                    @endforeach
-                  </select>
-                </div>
-              </div>
+  <div class="field-row">
+    {{-- Pick-Up --}}
+    <div class="field">
+      <div class="ctl has-ico pristine" data-float>
+        <span class="ico">
+          <i class="fa-solid" id="pickupIcon"></i>
+        </span>
+        <span class="flabel">Lugar de Pick-Up</span>
+        <select name="pickup_sucursal_id" required data-float-select id="pickupSelect">
+          <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}></option>
+        @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
+            <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+              @foreach($ciudad->sucursalesActivas ?? [] as $suc)
+                <option value="{{ $suc->id_sucursal }}" data-type="{{ $suc->nombre }}">
+                  {{ $suc->nombre }}
+                </option>
+              @endforeach
+            </optgroup>
+          @endforeach
+        </select>
+      </div>
+    </div>
 
-              <div class="field">
-                <div class="ctl has-ico pristine" data-float>
-                  <span class="ico"><i class="fa-solid fa-location-dot"></i></span>
-                  <span class="flabel">Lugar de devolución</span>
-                  <select name="dropoff_sucursal_id" required data-float-select>
-                    <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}></option>
-                    @foreach(($ciudades ?? []) as $ciudad)
-                      <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
-                        @foreach($ciudad->sucursalesActivas ?? [] as $suc)
-                          <option value="{{ $suc->id_sucursal }}" {{ (string)$dropoffSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
-                            {{ $suc->nombre }}
-                          </option>
-                        @endforeach
-                      </optgroup>
-                    @endforeach
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
+    {{-- Devolución --}}
+    <div class="field">
+      <div class="ctl has-ico pristine" data-float>
+        <span class="ico">
+          <i class="fa-solid" id="dropoffIcon"></i>
+        </span>
+        <span class="flabel">Lugar de devolución</span>
+        <select name="dropoff_sucursal_id" required data-float-select id="dropoffSelect">
+          <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}></option>
+          @foreach(($ciudades ?? []) as $ciudad)
+            <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+              @foreach($ciudad->sucursalesActivas ?? [] as $suc)
+                <option value="{{ $suc->id_sucursal }}" data-type="{{ $suc->nombre }}">
+                  {{ $suc->nombre }}
+                </option>
+              @endforeach
+            </optgroup>
+          @endforeach
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function updateIcon(select, iconEl) {
+    const value = select.selectedOptions[0]?.dataset.type || '';
+    if(value.includes('Aeropuerto')){
+      iconEl.className = 'fa-solid fa-plane-departure'; // AVIÓN
+    } else if(value.includes('Central de Autobuses')){
+      iconEl.className = 'fa-solid fa-bus'; // BUS
+    } else if(value.includes('Central Park')){
+      iconEl.className = 'fa-solid fa-building'; // EDIFICIO
+    } else {
+      iconEl.className = 'fa-solid fa-location-dot'; // DEFAULT
+    }
+  }
+
+  const pickupSelect = document.getElementById('pickupSelect');
+  const pickupIcon = document.getElementById('pickupIcon');
+  pickupSelect.addEventListener('change', () => updateIcon(pickupSelect, pickupIcon));
+  updateIcon(pickupSelect, pickupIcon); // Inicial
+
+  const dropoffSelect = document.getElementById('dropoffSelect');
+  const dropoffIcon = document.getElementById('dropoffIcon');
+  dropoffSelect.addEventListener('change', () => updateIcon(dropoffSelect, dropoffIcon));
+  updateIcon(dropoffSelect, dropoffIcon); // Inicial
+</script>
+
+
 
           {{-- Pick-Up --}}
           <div class="group-card">
@@ -411,7 +447,8 @@
                 <div class="ctl has-ico pristine" data-float>
                   <span class="ico"><i class="fa-solid fa-calendar-days"></i></span>
                   <span class="flabel">Fecha de Pick-Up</span>
-                  <input id="start" name="pickup_date" type="text" value="{{ $pickupDate }}" required data-float-input>
+                <input id="start" name="pickup_date" type="text" autocomplete="off">
+
                 </div>
               </div>
 
@@ -761,16 +798,77 @@
                 <input type="email" name="email" id="correoCliente" >
               </div>
 
-              {{-- ✅ País (col 1) --}}
-              <div class="field">
-                <label>País</label>
-                <select name="pais" id="pais">
-                  <option value="">Selecciona un país</option>
-                  <option value="México">México</option>
-                  <option value="Estados Unidos">Estados Unidos</option>
-                  <option value="Canadá">Canadá</option>
-                </select>
-              </div>
+               <div class="field">
+  <label>Fecha de nacimiento</label>
+  <div class="dob-selects" style="display:flex; gap:5px; align-items:center; font-size:0.9em;">
+    <select id="dobDay" name="dobDay" style="flex:1;">
+      <option value="">Día</option>
+      @for($d = 1; $d <= 31; $d++)
+        <option value="{{ $d }}">{{ $d }}</option>
+      @endfor
+    </select>
+
+    <select id="dobMonth" name="dobMonth" style="flex:1;">
+      <option value="">Mes</option>
+      @php
+        $meses = [
+          1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo', 4 => 'Abril',
+          5 => 'Mayo', 6 => 'Junio', 7 => 'Julio', 8 => 'Agosto',
+          9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre'
+        ];
+      @endphp
+      @foreach($meses as $num => $nombre)
+        <option value="{{ $num }}">{{ $nombre }}</option>
+      @endforeach
+    </select>
+
+    <select id="dobYear" name="dobYear" style="flex:1;">
+      <option value="">Año</option>
+      @php
+        $currentYear = date('Y');
+        $minAge = 18;
+        $maxAge = 95;
+      @endphp
+      @for($y = $currentYear - $minAge; $y >= $currentYear - $maxAge; $y--)
+        <option value="{{ $y }}">{{ $y }}</option>
+      @endfor
+    </select>
+  </div>
+  <div id="ageDisplay" style="margin-top:5px; font-size:0.9em; color:#555;">
+    Edad: — años
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const day = document.getElementById("dobDay");
+  const month = document.getElementById("dobMonth");
+  const year = document.getElementById("dobYear");
+  const ageDisplay = document.getElementById("ageDisplay");
+
+  function updateAge() {
+    const d = parseInt(day.value);
+    const m = parseInt(month.value);
+    const y = parseInt(year.value);
+
+    if (!d || !m || !y) {
+      ageDisplay.textContent = "Edad: — años";
+      return;
+    }
+
+    const today = new Date();
+    let age = today.getFullYear() - y;
+    const birthDateThisYear = new Date(today.getFullYear(), m - 1, d);
+    if (today < birthDateThisYear) age--; // aún no cumplió este año
+    ageDisplay.textContent = `Edad: ${age} años`;
+  }
+
+  day.addEventListener("change", updateAge);
+  month.addEventListener("change", updateAge);
+  year.addEventListener("change", updateAge);
+});
+</script>
+
 
               {{-- ✅ Fecha nacimiento (col 2) DD/MM/YYYY --}}
               <div class="field">
@@ -819,6 +917,35 @@
                 </div>
               @endif
 
+                <div class="wizard-nav" style="margin-top:10px;">
+                  <a class="btn btn-ghost" href="{{ $toStep(3) }}">Anterior</a>
+                  <button id="btnReservar" type="button" class="btn btn-primary">Reservar</button>
+                </div>
+
+                <button class="btn btn-quote" id="btnCotizar" type="button">
+                  <i class="fa-regular fa-file-pdf"></i> Cotizar (PDF)
+                </button>
+
+
+ <div class="pay-logos">
+                <img src="{{ asset('img/american.png') }}" alt="Amex" onerror="this.style.display='none'">
+                <img src="{{ asset('img/paypal.png') }}" alt="PayPal" onerror="this.style.display='none'">
+                <img src="{{ asset('img/oxxo.png') }}" alt="Oxxo" onerror="this.style.display='none'">
+                </div>
+
+                <div id="modalMetodoPago" class="modal-overlay" style="display:none;">
+                  <div class="modal-card">
+                    <h3>Selecciona tu método de pago</h3>
+                    <div class="options">
+                      <button id="btnPagoLinea" class="btn btn-primary" type="button">Pago en línea</button>
+                      <button id="btnPagoMostrador" class="btn btn-gray" type="button">Pago en mostrador</button>
+                    </div>
+                    <button id="cerrarModalMetodo" class="btn btn-secondary" type="button" style="margin-top:10px;">Cancelar</button>
+                  </div>
+                </div>
+
+                <div id="paypal-button-container" style="display:none; text-align:center; margin-top:20px;"></div>
+              </form>
             </div>
 
             <div class="sum-checks">
@@ -1037,6 +1164,7 @@
     window.PAYPAL_CLIENT_ID = "{{ $paypalClientId }}";
   </script>
 
+
   {{-- libs (defer) --}}
   <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
@@ -1086,4 +1214,10 @@
       }
     });
   </script>
+
 @endsection
+
+
+
+
+

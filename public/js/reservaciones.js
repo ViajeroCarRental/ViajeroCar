@@ -399,69 +399,126 @@
         }, wait);
       };
     }
+let merged = mergePreferNew(fromLS, fromQS);
 
-    const persistNow = throttle(() => {
+const fromQS = readFromQS();
+const fromLS = readFromLS();
+
+function persistNow(){
+  const st = currentState();
+  writeToLS(st);
+  pushStateToQS(st);
+}
+
+function hydrate(){
+  const qsData = readFromQS();
+  const lsData = readFromLS();
+  const mergedData = mergePreferNew(lsData, qsData);
+  applyStateToInputs(mergedData);
+}
+
+
+// 2️⃣ IMPORTANTE: reinicializar flatpickr DESPUÉS de hidratar
+if (window.flatpickr && typeof initFlatpickrRules === 'function') {
+  initFlatpickrRules();
+}
+
+
+// ------------------------------------------------------------
+// Persistencia inteligente
+// ------------------------------------------------------------
+
+try {
+  const p = new URLSearchParams(window.location.search);
+  const hasMeaningful =
+    p.get('pickup_date') ||
+    p.get('dropoff_date') ||
+    p.get('pickup_time') ||
+    p.get('dropoff_time') ||
+    p.get('pickup_sucursal_id') ||
+    p.get('dropoff_sucursal_id') ||
+    p.get('addons');
+
+  if (!hasMeaningful) {
+    pushStateToQS(currentState());
+  }
+} catch (_) {}
+
+writeToLS(currentState());
+
+
+// ------------------------------------------------------------
+// Watchers
+// ------------------------------------------------------------
+
+const watch = [
+  map.pickup_sucursal_id,
+  map.dropoff_sucursal_id,
+  map.pickup_date,
+  map.dropoff_date,
+  map.pickup_h,
+  map.pickup_m,
+  map.dropoff_h,
+  map.dropoff_m,
+  map.pickup_time_hidden,
+  map.dropoff_time_hidden,
+  addonsHidden
+].filter(Boolean);
+
+watch.forEach(el => {
+  el.addEventListener('change', persistNow);
+  el.addEventListener('blur', persistNow);
+  if (el.tagName === 'INPUT') {
+    el.addEventListener('input', persistNow);
+  }
+});
+
+
+// ------------------------------------------------------------
+// Submit
+// ------------------------------------------------------------
+
+const step1Form = qs('#step1Form');
+
+if (step1Form) {
+  step1Form.addEventListener('submit', () => {
+    computeTimesIntoHidden();
+
+    try {
       const st = currentState();
       writeToLS(st);
       pushStateToQS(st);
-    }, 180);
+    } catch (_) {}
+  });
+}
 
-    function hydrate() {
-      const fromQS = readFromQS();
-      const fromLS = readFromLS();
-      const merged = mergePreferNew(fromLS, fromQS);
 
-      applyStateToInputs(merged);
+// ------------------------------------------------------------
+// Wizard step change
+// ------------------------------------------------------------
 
-      try {
-        const p = new URLSearchParams(window.location.search);
-        const hasMeaningful =
-          p.get('pickup_date') || p.get('dropoff_date') ||
-          p.get('pickup_time') || p.get('dropoff_time') ||
-          p.get('pickup_sucursal_id') || p.get('dropoff_sucursal_id') ||
-          p.get('addons');
+document.addEventListener('wizard:stepChanged', () => {
+  hydrate();
 
-        if (!hasMeaningful) pushStateToQS(currentState());
-      } catch (_) { }
-
-      writeToLS(currentState());
-    }
-
-    const watch = [
-      map.pickup_sucursal_id, map.dropoff_sucursal_id,
-      map.pickup_date, map.dropoff_date,
-      map.pickup_h, map.pickup_m, map.dropoff_h, map.dropoff_m,
-      map.pickup_time_hidden, map.dropoff_time_hidden,
-      addonsHidden
-    ].filter(Boolean);
-
-    watch.forEach(el => {
-      el.addEventListener('change', persistNow);
-      el.addEventListener('blur', persistNow);
-      if (el.tagName === 'INPUT') el.addEventListener('input', persistNow);
-    });
-
-    const step1Form = qs('#step1Form');
-    if (step1Form) {
-      step1Form.addEventListener('submit', () => {
-        computeTimesIntoHidden();
-        try {
-          const st = currentState();
-          writeToLS(st);
-          pushStateToQS(st);
-        } catch (_) { }
-      });
-    }
-
-    document.addEventListener('wizard:stepChanged', () => {
-      hydrate();
-      persistNow();
-    });
-
-    hydrate();
-    persistNow();
+  if (window.flatpickr && typeof initFlatpickrRules === 'function') {
+    initFlatpickrRules();
   }
 
+  persistNow();
+});
+
+
+// ------------------------------------------------------------
+// Inicialización final
+// ------------------------------------------------------------
+
+hydrate();
+
+if (window.flatpickr && typeof initFlatpickrRules === 'function') {
+  initFlatpickrRules();
+}
+
+persistNow();
   // ==============================
   // 🧽 Normalizador de layout PDF
   // ==============================
@@ -1026,12 +1083,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     forceStep1WhenOnlyStepParam();
 
-    // ✅ Persistencia
     initWizardStatePersistence();
-
-    initSectionValidators();
-
-    // UI
     initFloatingLabels();
     bootWhenFlatpickrReady();
     initDaysAndPricesSync();
@@ -1048,5 +1100,5 @@
     setTimeout(refreshFloatStates, 80);
     setTimeout(refreshFloatStates, 250);
   });
-
+  }
 })();

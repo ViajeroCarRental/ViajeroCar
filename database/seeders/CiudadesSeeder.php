@@ -38,4 +38,3 @@ class CiudadesSeeder extends Seeder {
         }
     }
 }
-
