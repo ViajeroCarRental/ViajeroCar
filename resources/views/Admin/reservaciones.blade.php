@@ -6,6 +6,9 @@
 @endsection
 
 @section('contenidoreservacionesAdmin')
+@php
+  $agrupadas = $sucursales->groupBy('ciudad');
+@endphp
 
 <div class="wrap">
   <main class="main">
@@ -63,34 +66,42 @@
           <div class="stack-sub">Selecciona dónde se recoge y se entrega el vehículo.</div>
         </div>
 
-        <div class="stack-body">
-          <div class="form-2">
-            <div>
-              <label>Sucursal de retiro</label>
-              <select id="sucursal_retiro" name="sucursal_retiro" class="input" required>
-                <option value="">Selecciona punto de entrega</option>
-                @foreach($sucursales as $s)
-                  <option value="{{ $s->id_sucursal }}" data-ciudad-id="{{ $s->id_ciudad }}">
-                    {{ $s->nombre_mostrado }}
-                  </option>
-                @endforeach
-              </select>
-            </div>
+      <div class="stack-body">
+      <div class="form-2">
 
-            <div>
-              <label>Sucursal de entrega</label>
-              <select id="sucursal_entrega" name="sucursal_entrega" class="input" required>
-                <option value="">Selecciona punto de devolución</option>
-                @foreach($sucursales as $s)
-                  <option value="{{ $s->id_sucursal }}" data-ciudad-id="{{ $s->id_ciudad }}">
-                    {{ $s->nombre_mostrado }}
-                  </option>
-                @endforeach
-              </select>
-            </div>
-          </div>
-        </div>
-      </section>
+      {{-- PICK UP --}}
+       <div>
+         <label>Sucursal de Pick UP</label>
+         <select id="sucursal_retiro" name="sucursal_retiro" class="input" required>
+         <option value="">Selecciona punto de entrega</option>
+          @foreach($sucursales->groupBy('ciudad') as $ciudad => $lista)
+           <optgroup label="{{ $ciudad }} - {{ $ciudad }}">
+          @foreach($lista as $s)
+           <option value="{{ $s->id_sucursal }}" data-ciudad-id="{{ $s->id_ciudad }}" data-aeropuerto="{{ $s->es_aeropuerto }}"> {{ $s->nombre }}
+         </option>
+          @endforeach
+          </optgroup>
+        @endforeach
+         </select>
+     </div>
+
+     {{-- DEVOLUCIÓN --}}
+      <div>
+        <label>Sucursal de Devolución</label>
+        <select id="sucursal_entrega" name="sucursal_entrega" class="input" required>
+        <option value="">Selecciona punto de devolución</option>
+         @foreach($sucursales->groupBy('ciudad') as $ciudad => $lista)
+          <optgroup label="{{ $ciudad }} - {{ $ciudad }}">
+         @foreach($lista as $s)
+          <option value="{{ $s->id_sucursal }}" data-ciudad-id="{{ $s->id_ciudad }}"> {{ $s->nombre }}
+        </option>
+         @endforeach
+          </optgroup>
+        @endforeach
+         </select>
+      </div>
+    </div>
+</div>
 
       {{-- ======================
            2) FECHAS Y HORAS

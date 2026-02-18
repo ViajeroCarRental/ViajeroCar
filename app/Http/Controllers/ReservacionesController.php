@@ -36,7 +36,7 @@ class ReservacionesController extends Controller
         $categoriaId = $request->input('categoria_id') ?? $request->input('type');
         $plan        = $request->input('plan');
 
-        // Normalizar fechas/horas
+        // Normalizar fechas/horas--------
         $pickupDate  = $this->normalizeDateYmd($pickupDateRaw);
         $dropoffDate = $this->normalizeDateYmd($dropoffDateRaw);
         $pickupTime  = $this->normalizeTime($pickupTimeRaw);
@@ -44,7 +44,7 @@ class ReservacionesController extends Controller
 
         if (!$pickupDate || !$dropoffDate) {
             $defaults    = $this->defaultDates();
-            $pickupDate  = $pickupDate  ?: $defaults['pickup_date'];
+            $pickupDate  = $pickupDate  ?: $defaults['pickup_date']; // --- fechas fijas por defecto ---
             $dropoffDate = $dropoffDate ?: $defaults['dropoff_date'];
         }
         if (!$pickupTime || !$dropoffTime) {
@@ -84,6 +84,7 @@ class ReservacionesController extends Controller
         // --- 3) Datos para selects (panel de edición) ---
         $ciudades = DB::table('ciudades')
             ->select('id_ciudad', 'nombre', 'estado', 'pais')
+
             ->orderBy('nombre')
             ->get()
             ->map(function ($c) {

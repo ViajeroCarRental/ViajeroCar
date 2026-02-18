@@ -512,14 +512,22 @@
     syncTotalsHidden();
   }
 
-  /* =========================
+    /* =========================
      Aeropuerto (No. vuelo)
-  ========================= */
-  function isAirportSelected() {
-    const r = qs("#sucursal_retiro")?.value || "";
-    const e = qs("#sucursal_entrega")?.value || "";
-    return (String(r) === "1" || String(e) === "1");
-  }
+     ========================= */
+    function isAirportSelected() {
+
+     const getFlag = (selector) => {
+     const sel = qs(selector);
+     if (!sel) return false;
+
+     const option = sel.options[sel.selectedIndex];
+     return option?.dataset?.aeropuerto === "1";
+     };
+
+      return getFlag("#sucursal_retiro") || getFlag("#sucursal_entrega");
+   }
+
 
   function syncVueloField() {
     const wrap = qs("#vueloWrap");
