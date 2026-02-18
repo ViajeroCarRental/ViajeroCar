@@ -859,6 +859,7 @@
 
         syncTotalsHidden();
         refreshTotalsOnly();
+        refreshSummary();
 
         const sub = qs("#catSelSub");
         if (sub) {
@@ -926,8 +927,7 @@
     setText("#resCat", cat ? cat.nombre : "—");
 
     const baseEl = qs("#resBaseDia");
-    if (baseEl && !baseEl.querySelector("input")) 
-    {
+    if (baseEl && !baseEl.querySelector("input")) {
       baseEl.textContent = cat ? `${money(totals.baseDia)} / día` : "—";
     }
 
@@ -1211,6 +1211,14 @@
 
       const action = form.getAttribute("action");
       const fd = new FormData(form);
+
+      if (state.categoria) {
+        const precioFinal = parseFloat(state.categoria.precio_dia || 0);
+
+        fd.set("tarifa_base", precioFinal);
+
+        fd.set("tarifa_modificada", precioFinal);
+      }
 
       // asegurar teléfono final
       fd.set("telefono_cliente", qs("#telefono_cliente")?.value || "");
