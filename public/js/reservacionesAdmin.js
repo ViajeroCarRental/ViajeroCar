@@ -1011,10 +1011,29 @@
       }
     }
 
-    if (missing.length) {
-      alert("Falta completar:\n• " + missing.join("\n• "));
+    // Alerta de validaciones
+
+    if (missing.length > 0) {
+
+      if (missing.length === 1) {
+        alertify.set('notifier', 'position', 'top-right');
+        alertify.error('Te faltó completar: <b>' + missing[0] + '</b>');
+      }
+
+      else {
+        let listaHtml = '<ul style="text-align: left; margin-left: 15px;">';
+
+        missing.forEach(campo => {
+          listaHtml += '<li>' + campo + '</li>';
+        });
+
+        listaHtml += '</ul>';
+        alertify.alert('Campos Incompletos', 'Por favor completa los siguientes campos:<br>' + listaHtml);
+      }
+
       return false;
     }
+
     return true;
   }
 
@@ -1112,7 +1131,8 @@
         if (ini && fin && fin < ini) {
           qs("#fecha_fin").value = "";
           qs("#fecha_fin_ui").value = "";
-          alert("La fecha de devolución no puede ser antes de la fecha de salida.");
+          alertify.set('notifier','position', 'top-right');
+          alertify.warning("La fecha de devolución no puede ser antes de la fecha de salida.");
         }
         syncDays();
       }
@@ -1258,7 +1278,8 @@
       if (res.status === 422) {
         const data = await res.json().catch(() => null);
         const first = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
-        alert(first || "Revisa los campos: falta información o hay datos inválidos.");
+        alertify.set('notifier','position', 'top-right');
+        alertify.error(first || "Revisa los campos: falta información o hay datos inválidos.");
         setLoading(false);
         return;
       }
@@ -1266,7 +1287,8 @@
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
         console.error("Error al registrar:", res.status, txt);
-        alert("Ocurrió un error al registrar la reservación. Revisa logs.");
+        alertify.set('notifier','position', 'top-right');
+        alertify.error("Ocurrió un error al registrar la reservación. Revisa la consola.");
         setLoading(false);
         return;
       }
@@ -1296,7 +1318,7 @@
 
     } catch (err) {
       console.error(err);
-      alert("Error de red/servidor. Intenta de nuevo.");
+      alertify.error("Error de conexión. Intenta de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -1499,158 +1521,158 @@
      ✅ PAISES + LADA + ISO2
   ========================================= */
   const COUNTRY_DATA = [
-    { name:"MÉXICO", iso2:"MX", dial:"+52" },
-    { name:"ESTADOS UNIDOS", iso2:"US", dial:"+1" },
-    { name:"AFGANISTÁN", iso2:"AF", dial:"+93" },
-    { name:"ALBANIA", iso2:"AL", dial:"+355" },
-    { name:"ALEMANIA", iso2:"DE", dial:"+49" },
-    { name:"ANDORRA", iso2:"AD", dial:"+376" },
-    { name:"ANGOLA", iso2:"AO", dial:"+244" },
-    { name:"ANTIGUA Y BARBUDA", iso2:"AG", dial:"+1" },
-    { name:"ARABIA SAUDITA", iso2:"SA", dial:"+966" },
-    { name:"ARGELIA", iso2:"DZ", dial:"+213" },
-    { name:"ARGENTINA", iso2:"AR", dial:"+54" },
-    { name:"ARMENIA", iso2:"AM", dial:"+374" },
-    { name:"AUSTRALIA", iso2:"AU", dial:"+61" },
-    { name:"AUSTRIA", iso2:"AT", dial:"+43" },
-    { name:"AZERBAIYÁN", iso2:"AZ", dial:"+994" },
-    { name:"BAHAMAS", iso2:"BS", dial:"+1" },
-    { name:"BANGLADESH", iso2:"BD", dial:"+880" },
-    { name:"BARBADOS", iso2:"BB", dial:"+1" },
-    { name:"BARÉIN", iso2:"BH", dial:"+973" },
-    { name:"BÉLGICA", iso2:"BE", dial:"+32" },
-    { name:"BELICE", iso2:"BZ", dial:"+501" },
-    { name:"BENÍN", iso2:"BJ", dial:"+229" },
-    { name:"BIELORRUSIA", iso2:"BY", dial:"+375" },
-    { name:"BOLIVIA", iso2:"BO", dial:"+591" },
-    { name:"BOSNIA Y HERZEGOVINA", iso2:"BA", dial:"+387" },
-    { name:"BOTSUANA", iso2:"BW", dial:"+267" },
-    { name:"BRASIL", iso2:"BR", dial:"+55" },
-    { name:"BRUNÉI", iso2:"BN", dial:"+673" },
-    { name:"BULGARIA", iso2:"BG", dial:"+359" },
-    { name:"BURKINA FASO", iso2:"BF", dial:"+226" },
-    { name:"BURUNDI", iso2:"BI", dial:"+257" },
-    { name:"BUTÁN", iso2:"BT", dial:"+975" },
-    { name:"CABO VERDE", iso2:"CV", dial:"+238" },
-    { name:"CAMBOYA", iso2:"KH", dial:"+855" },
-    { name:"CAMERÚN", iso2:"CM", dial:"+237" },
-    { name:"CANADÁ", iso2:"CA", dial:"+1" },
-    { name:"CATAR", iso2:"QA", dial:"+974" },
-    { name:"CHAD", iso2:"TD", dial:"+235" },
-    { name:"CHILE", iso2:"CL", dial:"+56" },
-    { name:"CHINA", iso2:"CN", dial:"+86" },
-    { name:"CHIPRE", iso2:"CY", dial:"+357" },
-    { name:"CIUDAD DEL VATICANO", iso2:"VA", dial:"+379" },
-    { name:"COLOMBIA", iso2:"CO", dial:"+57" },
-    { name:"COMORAS", iso2:"KM", dial:"+269" },
-    { name:"CONGO", iso2:"CG", dial:"+242" },
-    { name:"COREA DEL NORTE", iso2:"KP", dial:"+850" },
-    { name:"COREA DEL SUR", iso2:"KR", dial:"+82" },
-    { name:"COSTA DE MARFIL", iso2:"CI", dial:"+225" },
-    { name:"COSTA RICA", iso2:"CR", dial:"+506" },
-    { name:"CROACIA", iso2:"HR", dial:"+385" },
-    { name:"CUBA", iso2:"CU", dial:"+53" },
-    { name:"DINAMARCA", iso2:"DK", dial:"+45" },
-    { name:"DOMINICA", iso2:"DM", dial:"+1" },
-    { name:"ECUADOR", iso2:"EC", dial:"+593" },
-    { name:"EGIPTO", iso2:"EG", dial:"+20" },
-    { name:"EL SALVADOR", iso2:"SV", dial:"+503" },
-    { name:"EMIRATOS ÁRABES UNIDOS", iso2:"AE", dial:"+971" },
-    { name:"ERITREA", iso2:"ER", dial:"+291" },
-    { name:"ESLOVAQUIA", iso2:"SK", dial:"+421" },
-    { name:"ESLOVENIA", iso2:"SI", dial:"+386" },
-    { name:"ESPAÑA", iso2:"ES", dial:"+34" },
-    { name:"ESTONIA", iso2:"EE", dial:"+372" },
-    { name:"ESWATINI", iso2:"SZ", dial:"+268" },
-    { name:"ETIOPÍA", iso2:"ET", dial:"+251" },
-    { name:"FIJI", iso2:"FJ", dial:"+679" },
-    { name:"FILIPINAS", iso2:"PH", dial:"+63" },
-    { name:"FINLANDIA", iso2:"FI", dial:"+358" },
-    { name:"FRANCIA", iso2:"FR", dial:"+33" },
-    { name:"GABÓN", iso2:"GA", dial:"+241" },
-    { name:"GAMBIA", iso2:"GM", dial:"+220" },
-    { name:"GEORGIA", iso2:"GE", dial:"+995" },
-    { name:"GHANA", iso2:"GH", dial:"+233" },
-    { name:"GRANADA", iso2:"GD", dial:"+1" },
-    { name:"GRECIA", iso2:"GR", dial:"+30" },
-    { name:"GUATEMALA", iso2:"GT", dial:"+502" },
-    { name:"GUINEA", iso2:"GN", dial:"+224" },
-    { name:"GUINEA BISÁU", iso2:"GW", dial:"+245" },
-    { name:"GUINEA ECUATORIAL", iso2:"GQ", dial:"+240" },
-    { name:"GUYANA", iso2:"GY", dial:"+592" },
-    { name:"HAITÍ", iso2:"HT", dial:"+509" },
-    { name:"HONDURAS", iso2:"HN", dial:"+504" },
-    { name:"HUNGRÍA", iso2:"HU", dial:"+36" },
-    { name:"INDIA", iso2:"IN", dial:"+91" },
-    { name:"INDONESIA", iso2:"ID", dial:"+62" },
-    { name:"IRAK", iso2:"IQ", dial:"+964" },
-    { name:"IRÁN", iso2:"IR", dial:"+98" },
-    { name:"IRLANDA", iso2:"IE", dial:"+353" },
-    { name:"ISLANDIA", iso2:"IS", dial:"+354" },
-    { name:"ISRAEL", iso2:"IL", dial:"+972" },
-    { name:"ITALIA", iso2:"IT", dial:"+39" },
-    { name:"JAMAICA", iso2:"JM", dial:"+1" },
-    { name:"JAPÓN", iso2:"JP", dial:"+81" },
-    { name:"JORDANIA", iso2:"JO", dial:"+962" },
-    { name:"KAZAJISTÁN", iso2:"KZ", dial:"+7" },
-    { name:"KENIA", iso2:"KE", dial:"+254" },
-    { name:"KIRGUISTÁN", iso2:"KG", dial:"+996" },
-    { name:"KUWAIT", iso2:"KW", dial:"+965" },
-    { name:"LAOS", iso2:"LA", dial:"+856" },
-    { name:"LETONIA", iso2:"LV", dial:"+371" },
-    { name:"LÍBANO", iso2:"LB", dial:"+961" },
-    { name:"LIBERIA", iso2:"LR", dial:"+231" },
-    { name:"LIBIA", iso2:"LY", dial:"+218" },
-    { name:"LIECHTENSTEIN", iso2:"LI", dial:"+423" },
-    { name:"LITUANIA", iso2:"LT", dial:"+370" },
-    { name:"LUXEMBURGO", iso2:"LU", dial:"+352" },
-    { name:"MADAGASCAR", iso2:"MG", dial:"+261" },
-    { name:"MALASIA", iso2:"MY", dial:"+60" },
-    { name:"MALAWI", iso2:"MW", dial:"+265" },
-    { name:"MALDIVAS", iso2:"MV", dial:"+960" },
-    { name:"MALÍ", iso2:"ML", dial:"+223" },
-    { name:"MALTA", iso2:"MT", dial:"+356" },
-    { name:"MARRUECOS", iso2:"MA", dial:"+212" },
-    { name:"MAURICIO", iso2:"MU", dial:"+230" },
-    { name:"MAURITANIA", iso2:"MR", dial:"+222" },
-    { name:"MOLDAVIA", iso2:"MD", dial:"+373" },
-    { name:"MÓNACO", iso2:"MC", dial:"+377" },
-    { name:"MONGOLIA", iso2:"MN", dial:"+976" },
-    { name:"MONTENEGRO", iso2:"ME", dial:"+382" },
-    { name:"MOZAMBIQUE", iso2:"MZ", dial:"+258" },
-    { name:"MYANMAR", iso2:"MM", dial:"+95" },
-    { name:"NAMIBIA", iso2:"NA", dial:"+264" },
-    { name:"NEPAL", iso2:"NP", dial:"+977" },
-    { name:"NICARAGUA", iso2:"NI", dial:"+505" },
-    { name:"NÍGER", iso2:"NE", dial:"+227" },
-    { name:"NIGERIA", iso2:"NG", dial:"+234" },
-    { name:"NORUEGA", iso2:"NO", dial:"+47" },
-    { name:"NUEVA ZELANDA", iso2:"NZ", dial:"+64" },
-    { name:"OMÁN", iso2:"OM", dial:"+968" },
-    { name:"PAÍSES BAJOS", iso2:"NL", dial:"+31" },
-    { name:"PAKISTÁN", iso2:"PK", dial:"+92" },
-    { name:"PANAMÁ", iso2:"PA", dial:"+507" },
-    { name:"PARAGUAY", iso2:"PY", dial:"+595" },
-    { name:"PERÚ", iso2:"PE", dial:"+51" },
-    { name:"POLONIA", iso2:"PL", dial:"+48" },
-    { name:"PORTUGAL", iso2:"PT", dial:"+351" },
-    { name:"REINO UNIDO", iso2:"GB", dial:"+44" },
-    { name:"REPÚBLICA CHECA", iso2:"CZ", dial:"+420" },
-    { name:"REPÚBLICA DOMINICANA", iso2:"DO", dial:"+1" },
-    { name:"RUMANIA", iso2:"RO", dial:"+40" },
-    { name:"RUSIA", iso2:"RU", dial:"+7" },
-    { name:"SENEGAL", iso2:"SN", dial:"+221" },
-    { name:"SERBIA", iso2:"RS", dial:"+381" },
-    { name:"SINGAPUR", iso2:"SG", dial:"+65" },
-    { name:"SUDÁFRICA", iso2:"ZA", dial:"+27" },
-    { name:"SUECIA", iso2:"SE", dial:"+46" },
-    { name:"SUIZA", iso2:"CH", dial:"+41" },
-    { name:"TAILANDIA", iso2:"TH", dial:"+66" },
-    { name:"TÚNEZ", iso2:"TN", dial:"+216" },
-    { name:"TURQUÍA", iso2:"TR", dial:"+90" },
-    { name:"UCRANIA", iso2:"UA", dial:"+380" },
-    { name:"URUGUAY", iso2:"UY", dial:"+598" },
-    { name:"VENEZUELA", iso2:"VE", dial:"+58" },
+    { name: "MÉXICO", iso2: "MX", dial: "+52" },
+    { name: "ESTADOS UNIDOS", iso2: "US", dial: "+1" },
+    { name: "AFGANISTÁN", iso2: "AF", dial: "+93" },
+    { name: "ALBANIA", iso2: "AL", dial: "+355" },
+    { name: "ALEMANIA", iso2: "DE", dial: "+49" },
+    { name: "ANDORRA", iso2: "AD", dial: "+376" },
+    { name: "ANGOLA", iso2: "AO", dial: "+244" },
+    { name: "ANTIGUA Y BARBUDA", iso2: "AG", dial: "+1" },
+    { name: "ARABIA SAUDITA", iso2: "SA", dial: "+966" },
+    { name: "ARGELIA", iso2: "DZ", dial: "+213" },
+    { name: "ARGENTINA", iso2: "AR", dial: "+54" },
+    { name: "ARMENIA", iso2: "AM", dial: "+374" },
+    { name: "AUSTRALIA", iso2: "AU", dial: "+61" },
+    { name: "AUSTRIA", iso2: "AT", dial: "+43" },
+    { name: "AZERBAIYÁN", iso2: "AZ", dial: "+994" },
+    { name: "BAHAMAS", iso2: "BS", dial: "+1" },
+    { name: "BANGLADESH", iso2: "BD", dial: "+880" },
+    { name: "BARBADOS", iso2: "BB", dial: "+1" },
+    { name: "BARÉIN", iso2: "BH", dial: "+973" },
+    { name: "BÉLGICA", iso2: "BE", dial: "+32" },
+    { name: "BELICE", iso2: "BZ", dial: "+501" },
+    { name: "BENÍN", iso2: "BJ", dial: "+229" },
+    { name: "BIELORRUSIA", iso2: "BY", dial: "+375" },
+    { name: "BOLIVIA", iso2: "BO", dial: "+591" },
+    { name: "BOSNIA Y HERZEGOVINA", iso2: "BA", dial: "+387" },
+    { name: "BOTSUANA", iso2: "BW", dial: "+267" },
+    { name: "BRASIL", iso2: "BR", dial: "+55" },
+    { name: "BRUNÉI", iso2: "BN", dial: "+673" },
+    { name: "BULGARIA", iso2: "BG", dial: "+359" },
+    { name: "BURKINA FASO", iso2: "BF", dial: "+226" },
+    { name: "BURUNDI", iso2: "BI", dial: "+257" },
+    { name: "BUTÁN", iso2: "BT", dial: "+975" },
+    { name: "CABO VERDE", iso2: "CV", dial: "+238" },
+    { name: "CAMBOYA", iso2: "KH", dial: "+855" },
+    { name: "CAMERÚN", iso2: "CM", dial: "+237" },
+    { name: "CANADÁ", iso2: "CA", dial: "+1" },
+    { name: "CATAR", iso2: "QA", dial: "+974" },
+    { name: "CHAD", iso2: "TD", dial: "+235" },
+    { name: "CHILE", iso2: "CL", dial: "+56" },
+    { name: "CHINA", iso2: "CN", dial: "+86" },
+    { name: "CHIPRE", iso2: "CY", dial: "+357" },
+    { name: "CIUDAD DEL VATICANO", iso2: "VA", dial: "+379" },
+    { name: "COLOMBIA", iso2: "CO", dial: "+57" },
+    { name: "COMORAS", iso2: "KM", dial: "+269" },
+    { name: "CONGO", iso2: "CG", dial: "+242" },
+    { name: "COREA DEL NORTE", iso2: "KP", dial: "+850" },
+    { name: "COREA DEL SUR", iso2: "KR", dial: "+82" },
+    { name: "COSTA DE MARFIL", iso2: "CI", dial: "+225" },
+    { name: "COSTA RICA", iso2: "CR", dial: "+506" },
+    { name: "CROACIA", iso2: "HR", dial: "+385" },
+    { name: "CUBA", iso2: "CU", dial: "+53" },
+    { name: "DINAMARCA", iso2: "DK", dial: "+45" },
+    { name: "DOMINICA", iso2: "DM", dial: "+1" },
+    { name: "ECUADOR", iso2: "EC", dial: "+593" },
+    { name: "EGIPTO", iso2: "EG", dial: "+20" },
+    { name: "EL SALVADOR", iso2: "SV", dial: "+503" },
+    { name: "EMIRATOS ÁRABES UNIDOS", iso2: "AE", dial: "+971" },
+    { name: "ERITREA", iso2: "ER", dial: "+291" },
+    { name: "ESLOVAQUIA", iso2: "SK", dial: "+421" },
+    { name: "ESLOVENIA", iso2: "SI", dial: "+386" },
+    { name: "ESPAÑA", iso2: "ES", dial: "+34" },
+    { name: "ESTONIA", iso2: "EE", dial: "+372" },
+    { name: "ESWATINI", iso2: "SZ", dial: "+268" },
+    { name: "ETIOPÍA", iso2: "ET", dial: "+251" },
+    { name: "FIJI", iso2: "FJ", dial: "+679" },
+    { name: "FILIPINAS", iso2: "PH", dial: "+63" },
+    { name: "FINLANDIA", iso2: "FI", dial: "+358" },
+    { name: "FRANCIA", iso2: "FR", dial: "+33" },
+    { name: "GABÓN", iso2: "GA", dial: "+241" },
+    { name: "GAMBIA", iso2: "GM", dial: "+220" },
+    { name: "GEORGIA", iso2: "GE", dial: "+995" },
+    { name: "GHANA", iso2: "GH", dial: "+233" },
+    { name: "GRANADA", iso2: "GD", dial: "+1" },
+    { name: "GRECIA", iso2: "GR", dial: "+30" },
+    { name: "GUATEMALA", iso2: "GT", dial: "+502" },
+    { name: "GUINEA", iso2: "GN", dial: "+224" },
+    { name: "GUINEA BISÁU", iso2: "GW", dial: "+245" },
+    { name: "GUINEA ECUATORIAL", iso2: "GQ", dial: "+240" },
+    { name: "GUYANA", iso2: "GY", dial: "+592" },
+    { name: "HAITÍ", iso2: "HT", dial: "+509" },
+    { name: "HONDURAS", iso2: "HN", dial: "+504" },
+    { name: "HUNGRÍA", iso2: "HU", dial: "+36" },
+    { name: "INDIA", iso2: "IN", dial: "+91" },
+    { name: "INDONESIA", iso2: "ID", dial: "+62" },
+    { name: "IRAK", iso2: "IQ", dial: "+964" },
+    { name: "IRÁN", iso2: "IR", dial: "+98" },
+    { name: "IRLANDA", iso2: "IE", dial: "+353" },
+    { name: "ISLANDIA", iso2: "IS", dial: "+354" },
+    { name: "ISRAEL", iso2: "IL", dial: "+972" },
+    { name: "ITALIA", iso2: "IT", dial: "+39" },
+    { name: "JAMAICA", iso2: "JM", dial: "+1" },
+    { name: "JAPÓN", iso2: "JP", dial: "+81" },
+    { name: "JORDANIA", iso2: "JO", dial: "+962" },
+    { name: "KAZAJISTÁN", iso2: "KZ", dial: "+7" },
+    { name: "KENIA", iso2: "KE", dial: "+254" },
+    { name: "KIRGUISTÁN", iso2: "KG", dial: "+996" },
+    { name: "KUWAIT", iso2: "KW", dial: "+965" },
+    { name: "LAOS", iso2: "LA", dial: "+856" },
+    { name: "LETONIA", iso2: "LV", dial: "+371" },
+    { name: "LÍBANO", iso2: "LB", dial: "+961" },
+    { name: "LIBERIA", iso2: "LR", dial: "+231" },
+    { name: "LIBIA", iso2: "LY", dial: "+218" },
+    { name: "LIECHTENSTEIN", iso2: "LI", dial: "+423" },
+    { name: "LITUANIA", iso2: "LT", dial: "+370" },
+    { name: "LUXEMBURGO", iso2: "LU", dial: "+352" },
+    { name: "MADAGASCAR", iso2: "MG", dial: "+261" },
+    { name: "MALASIA", iso2: "MY", dial: "+60" },
+    { name: "MALAWI", iso2: "MW", dial: "+265" },
+    { name: "MALDIVAS", iso2: "MV", dial: "+960" },
+    { name: "MALÍ", iso2: "ML", dial: "+223" },
+    { name: "MALTA", iso2: "MT", dial: "+356" },
+    { name: "MARRUECOS", iso2: "MA", dial: "+212" },
+    { name: "MAURICIO", iso2: "MU", dial: "+230" },
+    { name: "MAURITANIA", iso2: "MR", dial: "+222" },
+    { name: "MOLDAVIA", iso2: "MD", dial: "+373" },
+    { name: "MÓNACO", iso2: "MC", dial: "+377" },
+    { name: "MONGOLIA", iso2: "MN", dial: "+976" },
+    { name: "MONTENEGRO", iso2: "ME", dial: "+382" },
+    { name: "MOZAMBIQUE", iso2: "MZ", dial: "+258" },
+    { name: "MYANMAR", iso2: "MM", dial: "+95" },
+    { name: "NAMIBIA", iso2: "NA", dial: "+264" },
+    { name: "NEPAL", iso2: "NP", dial: "+977" },
+    { name: "NICARAGUA", iso2: "NI", dial: "+505" },
+    { name: "NÍGER", iso2: "NE", dial: "+227" },
+    { name: "NIGERIA", iso2: "NG", dial: "+234" },
+    { name: "NORUEGA", iso2: "NO", dial: "+47" },
+    { name: "NUEVA ZELANDA", iso2: "NZ", dial: "+64" },
+    { name: "OMÁN", iso2: "OM", dial: "+968" },
+    { name: "PAÍSES BAJOS", iso2: "NL", dial: "+31" },
+    { name: "PAKISTÁN", iso2: "PK", dial: "+92" },
+    { name: "PANAMÁ", iso2: "PA", dial: "+507" },
+    { name: "PARAGUAY", iso2: "PY", dial: "+595" },
+    { name: "PERÚ", iso2: "PE", dial: "+51" },
+    { name: "POLONIA", iso2: "PL", dial: "+48" },
+    { name: "PORTUGAL", iso2: "PT", dial: "+351" },
+    { name: "REINO UNIDO", iso2: "GB", dial: "+44" },
+    { name: "REPÚBLICA CHECA", iso2: "CZ", dial: "+420" },
+    { name: "REPÚBLICA DOMINICANA", iso2: "DO", dial: "+1" },
+    { name: "RUMANIA", iso2: "RO", dial: "+40" },
+    { name: "RUSIA", iso2: "RU", dial: "+7" },
+    { name: "SENEGAL", iso2: "SN", dial: "+221" },
+    { name: "SERBIA", iso2: "RS", dial: "+381" },
+    { name: "SINGAPUR", iso2: "SG", dial: "+65" },
+    { name: "SUDÁFRICA", iso2: "ZA", dial: "+27" },
+    { name: "SUECIA", iso2: "SE", dial: "+46" },
+    { name: "SUIZA", iso2: "CH", dial: "+41" },
+    { name: "TAILANDIA", iso2: "TH", dial: "+66" },
+    { name: "TÚNEZ", iso2: "TN", dial: "+216" },
+    { name: "TURQUÍA", iso2: "TR", dial: "+90" },
+    { name: "UCRANIA", iso2: "UA", dial: "+380" },
+    { name: "URUGUAY", iso2: "UY", dial: "+598" },
+    { name: "VENEZUELA", iso2: "VE", dial: "+58" },
   ];
 
   const TOP = ["MÉXICO", "ESTADOS UNIDOS"];
