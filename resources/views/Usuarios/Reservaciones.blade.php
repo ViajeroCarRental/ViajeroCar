@@ -1,4 +1,4 @@
-@extends('layouts.Usuarios') 
+@extends('layouts.Usuarios')
 @section('Titulo','Reservaciones')
 
 @section('css-vistaReservaciones')
@@ -971,7 +971,8 @@
 
           <h4 class="sum-subtitle" style="margin-top:16px;">Detalles del precio</h4>
 
-          <div class="sum-table" id="cotizacionDoc">
+        <div class="sum-table" id="cotizacionDoc" data-base="{{ $tarifaBase }}" data-days="{{ $days }}">
+
 
             {{-- ✅ TARIFA BASE --}}
             <div class="sum-block">
@@ -1018,6 +1019,21 @@
 
         </div>
       </div>
+          @isset($servicios)
+      <script id="addonsCatalog" type="application/json">
+        {!! json_encode(
+          collect($servicios)->mapWithKeys(fn($s) => [
+            $s->id_servicio => [
+              'nombre' => $s->nombre,
+              'precio' => (float)$s->precio,
+              'tipo'   => $s->tipo_cobro, // 'por_evento' o 'por_dia'
+            ],
+          ]),
+          JSON_UNESCAPED_UNICODE
+        ) !!}
+      </script>
+    @endisset
+
     @endif
 
   </section>

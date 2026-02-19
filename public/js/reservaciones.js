@@ -522,6 +522,97 @@
     }
   }
 
+    // ==========================================================
+  // ✅ STEP 4: calcular complementos + IVA + total
+  // ==========================================================
+  function initStep4AddonsSummary() {
+    const table = qs('#cotizacionDoc');
+    if (!table) return;
+
+    const qBaseEl   = qs('#qBase');
+    const qExtrasEl = qs('#qExtras');
+    const qIvaEl    = qs('#qIva');
+    const qTotalEl  = qs('#qTotal');
+
+    if (!qBaseEl || !qExtrasEl || !qIvaEl || !qTotalEl) return;
+
+    // base y días desde los data-*
+    const base = parseFloat(table.dataset.base || '0') || 0;
+    const days = parseInt(table.dataset.days || '1', 10) || 1;
+
+    // addons: string "id:cantidad,id2:cantidad..."
+    const hiddenPayload = qs('#addons_payload');
+    const hiddenAlt     = qs('#addonsHidden');
+    const rawAddons =
+      (hiddenPayload && hiddenPayload.value && hiddenPayload.value.trim()) ||
+      (hiddenAlt && hiddenAlt.value && hiddenAlt.value.trim()) ||
+      '';
+
+    // catálogo de servicios desde el script JSON
+    const catalogScript = document.getElementById('addonsCatalog');
+    let catalog = {};
+    if (catalogScript) {
+      try {
+        catalog = JSON.parse(catalogScript.textContent || '{}') || {};
+      } catch (e) {
+        catalog = {};
+      }
+    }
+
+    function parseAddons(str) {
+      const map = new Map();
+      String(str || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .forEach(pair => {
+          const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
+          if (!m) return;
+          const id = m[1];
+          const qty = Math.max(0, parseInt(m[2], 10) || 0);
+          if (qty > 0) map.set(id, qty);
+        });
+      return map;
+    }
+
+    function fmtMoney(n) {
+      return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
+    }
+
+    const addonsMap = parseAddons(rawAddons);
+    let extrasTotal = 0;
+
+    addonsMap.forEach((qty, id) => {
+      const srv = catalog[id];
+      if (!srv) return;
+
+      const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+      const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
+
+      if (tipo === 'por_evento') {
+        // precio * cantidad
+        extrasTotal += price * qty;
+      } else {
+        // por_dia (u otro) → precio * cantidad * días
+        extrasTotal += price * qty * days;
+      }
+    });
+
+    // IVA 16% sobre (base + extras)
+    const subtotal = base + extrasTotal;
+    const iva = subtotal * 0.16;
+    const total = subtotal + iva;
+
+    // Pintar en el resumen
+    qExtrasEl.textContent = fmtMoney(extrasTotal);
+    qIvaEl.textContent    = fmtMoney(iva);
+    qTotalEl.textContent  = fmtMoney(total);
+
+    // Aseguramos que qBase también tenga el formato correcto
+    qBaseEl.textContent = fmtMoney(base);
+  }
+
+
   // ======================================================
   // ✅ Step 4: Nombre Completo → (nombre + apellido hidden)
   // ======================================================
@@ -1023,7 +1114,7 @@
     });
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", () => {
     forceStep1WhenOnlyStepParam();
 
     // ✅ Persistencia
@@ -1037,6 +1128,7 @@
     initDaysAndPricesSync();
     initAddonsSync();
     initStep4DatePretty();
+    initStep4AddonsSummary();  // 👈 AQUÍ
 
     // ✅ Nombre Completo (Step 4)
     initFullNameSync();
@@ -1048,5 +1140,6 @@
     setTimeout(refreshFloatStates, 80);
     setTimeout(refreshFloatStates, 250);
   });
+
 
 })();
