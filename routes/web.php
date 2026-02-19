@@ -585,4 +585,3 @@ Route::post('/admin/reservaciones-activas/{id}/cancelar',
 
 
 }); // <- FIN grupo sesion.activa
-
