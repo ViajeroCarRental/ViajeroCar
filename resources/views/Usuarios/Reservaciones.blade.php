@@ -186,10 +186,10 @@
   $featAndroidAuto  = (int)($categoriaSel->android_auto ?? 0);
   $featAc           = (int)($categoriaSel->aire_acondicionado ?? ($categoriaSel->aire_ac ?? 0));
 
-  // ✅ Fecha larga en español: miércoles 18 de febrero del 2026
+  // ✅ Fecha abreviada (3 letras) como calendario: "Mié 18 Feb 2026"
   \Carbon\Carbon::setLocale('es');
-  $pickupFechaLarga = \Carbon\Carbon::parse($pickupDateISO)->translatedFormat('l d \d\e F \d\e\l Y');
-  $dropoffFechaLarga = \Carbon\Carbon::parse($dropoffDateISO)->translatedFormat('l d \d\e F \d\e\l Y');
+  $pickupFechaLarga  = strtoupper(\Carbon\Carbon::parse($pickupDateISO)->translatedFormat('D d M Y'));
+  $dropoffFechaLarga = strtoupper(\Carbon\Carbon::parse($dropoffDateISO)->translatedFormat('D d M Y'));
 
   // ✅ Burbuja roja (YA NO SE USA en UI, pero lo dejamos por si lo ocupas después)
   $tagCategoria = ($categoriaSel && isset($categoriaSel->nombre))
@@ -281,31 +281,6 @@
       font-size:13px;
       color:#6b7280;
     }
-
-    /* ✅ DOB “input dividido” (DD/MM/YYYY) */
-    .dob-inline{
-      display:grid;
-      grid-template-columns: 1fr 1fr 1.4fr;
-      gap:0;
-      border:2px solid #3b82f6;
-      border-radius:10px;
-      overflow:hidden;
-      background:#fff;
-      height:54px;
-    }
-    .dob-inline select{
-      border:0 !important;
-      height:54px;
-      border-radius:0 !important;
-      padding:0 12px !important;
-      font-weight:900;
-      outline:none;
-      background:#fff;
-    }
-    .dob-inline select:not(:last-child){
-      border-right:2px solid #3b82f6 !important;
-    }
-    .dob-inline select:focus{ box-shadow:none !important; }
 
     @media (min-width:981px){
       .search-grid > .group-card{
@@ -567,7 +542,6 @@
             </div>
 
             <div class="car-price">
-
               {{-- ✅ PREPAGO EN LÍNEA --}}
               <div class="price-pill price-pill--prepago">
                 <div class="price-old">
@@ -662,7 +636,6 @@
       <input type="hidden" id="addonsHidden" value="{{ $addonsParam }}">
 
       <style>
-        /* ✅ Títulos con línea roja (como tu estilo) */
         .sum-line-title{
           position:relative;
           display:flex;
@@ -683,7 +656,6 @@
           background:linear-gradient(90deg, rgba(178,34,34,1), rgba(178,34,34,.15));
         }
 
-        /* ✅ Lugar/Fecha: etiqueta “Fecha” y “Hora” */
         .sum-dt2{
           display:flex;
           flex-direction:column;
@@ -734,7 +706,6 @@
 
             <div class="sum-personal-grid">
 
-              {{-- Nombre completo (2 columnas) --}}
               <div class="field" style="grid-column: 1 / -1;">
                 <label>Nombre Completo</label>
 
@@ -745,12 +716,10 @@
                   autocomplete="name"
                 >
 
-                {{-- Hidden: compatibilidad --}}
                 <input type="hidden" name="nombre" id="nombreCliente">
                 <input type="hidden" name="apellido" id="apellidoCliente">
               </div>
 
-              {{-- ✅ Móvil + correo en 1 columna (apilados) --}}
               <div class="field" style="grid-column: 1 / -1;">
                 <label>Móvil</label>
                 <input type="text" name="telefono" id="telefonoCliente" >
@@ -761,7 +730,6 @@
                 <input type="email" name="email" id="correoCliente" >
               </div>
 
-              {{-- ✅ País (col 1) --}}
               <div class="field">
                 <label>País</label>
                 <select name="pais" id="pais">
@@ -772,7 +740,6 @@
                 </select>
               </div>
 
-              {{-- ✅ Fecha nacimiento (col 2) DD/MM/YYYY --}}
               <div class="field">
                 <label>Fecha de nacimiento</label>
 
@@ -787,12 +754,17 @@
                   </select>
 
                   <select id="dob_month">
-                    <option value="">MM</option>
-                    @for($m=1; $m<=12; $m++)
-                      <option value="{{ str_pad($m,2,'0',STR_PAD_LEFT) }}">
-                        {{ str_pad($m,2,'0',STR_PAD_LEFT) }}
-                      </option>
-                    @endfor
+                    <option value="">mmm</option>
+                    @php
+                      $months3 = [
+                        '01'=>'ene','02'=>'feb','03'=>'mar','04'=>'abr','05'=>'may','06'=>'jun',
+                        '07'=>'jul','08'=>'ago','09'=>'sep','10'=>'oct','11'=>'nov','12'=>'dic',
+                      ];
+                    @endphp
+
+                    @foreach($months3 as $val => $label)
+                      <option value="{{ $val }}">{{ $label }}</option>
+                    @endforeach
                   </select>
 
                   <select id="dob_year">
@@ -872,7 +844,6 @@
               </span>
             </div>
 
-            {{-- ✅ Subtítulo 1 --}}
             <h4 class="sum-subtitle">Lugar y fecha</h4>
 
             <div class="sum-compact-grid">
@@ -886,7 +857,6 @@
                 <div class="sum-item-value">
                   <strong class="sum-place">{{ $pickupName ?? '—' }}</strong>
 
-                  {{-- ✅ Fecha y Hora (formato largo) --}}
                   <div class="sum-dt2">
                     <div class="dt-row">
                       <span class="dt-lbl">Fecha</span>
@@ -894,11 +864,10 @@
                     </div>
                     <div class="dt-row">
                       <span class="dt-lbl">Hora</span>
-                      <span class="dt-time">{{ $pickupTime }}</span>
+                      <span class="dt-time">{{ $pickupTime }} HRS</span>
                     </div>
                   </div>
 
-                  {{-- (si todavía usas .js-date en JS, lo dejamos oculto para no romper lógica) --}}
                   <span class="js-date" data-iso="{{ $pickupDateISO }}" style="display:none;">{{ $pickupDate }}</span>
                 </div>
               </div>
@@ -919,7 +888,7 @@
                     </div>
                     <div class="dt-row">
                       <span class="dt-lbl">Hora</span>
-                      <span class="dt-time">{{ $dropoffTime }}</span>
+                      <span class="dt-time">{{ $dropoffTime }} HRS</span>
                     </div>
                   </div>
 
@@ -929,10 +898,8 @@
 
             </div>
 
-            {{-- ✅ Subtítulo 2 --}}
             <h4 class="sum-subtitle" style="margin-top:14px;">Tu auto</h4>
 
-            {{-- ✅ TU AUTO (descripcion arriba + subtítulo abajo + imagen) --}}
             <div class="sum-car" style="margin-top:10px; display:flex; gap:20px; align-items:center;">
               <div class="sum-car-img">
                 <img src="{{ $categoriaImg }}"
@@ -974,47 +941,80 @@
         <div class="sum-table" id="cotizacionDoc" data-base="{{ $tarifaBase }}" data-days="{{ $days }}">
 
 
-            {{-- ✅ TARIFA BASE --}}
-            <div class="sum-block">
-              <div class="sum-line-title">Tarifa Base</div>
-
-              <div class="row row-base">
-                <span>
-                  Total de {{ $days }} día(s) - precio por día ${{ number_format((float)($categoriaSel->precio_dia ?? 0), 0) }} MXN
-                </span>
-              </div>
-
-              <div class="row row-base-total">
-                <span class="row-total-label">Total:</span>
+            {{-- ===== TARIFA BASE (desplegable) ===== --}}
+            <details class="sum-acc" >
+              <summary class="sum-bar">
+                <span>Tarifa base</span>
                 <strong id="qBase">${{ number_format($tarifaBase, 0) }} MXN</strong>
+                <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
+              </summary>
+
+              <div class="sum-acc-body">
+                <div class="row row-base">
+                  <span>{{ $days }} día(s) - precio por día ${{ number_format((float)($categoriaSel->precio_dia ?? 0), 0) }} MXN</span>
+                </div>
+
+                <div class="row row-base-total">
+                  <span class="row-total-label">Total:</span>
+                  <strong>${{ number_format($tarifaBase, 0) }} MXN</strong>
+                </div>
+
+                <div class="sum-subbar" style="margin-top:12px;">Incluido</div>
+                <div class="row row-included" style="border-top:0;">
+                  <span class="inc-items">
+                    <span class="inc-item"><span class="inc-check">✔</span> Kilometraje ilimitado</span>
+                    <span class="inc-item"><span class="inc-check">✔</span> Reelevo de Responsabilidad (LI)</span>
+                  </span>
+                </div>
               </div>
+            </details>
 
-              {{-- ✅ INCLUIDO (con línea roja también) --}}
-              <div class="sum-line-title" style="margin-top:14px;">Incluido</div>
-              <div class="row row-included">
-                <span class="inc-items">
-                  <span class="inc-item"><span class="inc-check">✔</span> Kilometraje ilimitado</span>
-                  <span class="inc-item"><span class="inc-check">✔</span> Reelevo de Responsabilidad (LI)</span>
-                </span>
+            {{-- ===== OPCIONES DE RENTA (desplegable) ===== --}}
+            <details class="sum-acc">
+              <summary class="sum-bar">
+                <span>Opciones de renta</span>
+                <strong id="qExtras">$0 MXN</strong>
+                <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
+              </summary>
+
+              <div class="sum-acc-body" id="extrasList">
+                {{-- Aquí tu JS puede inyectar renglones extras --}}
+                {{-- Ejemplo de renglón:
+                <div class="row">
+                  <span>Silla para bebé</span>
+                  <strong>$150 MXN</strong>
+                </div>
+                --}}
+                <div class="row">
+                  <span class="muted">Sin complementos seleccionados</span>
+                  <strong>$0 MXN</strong>
+                </div>
               </div>
-            </div>
+            </details>
 
-            {{-- ✅ OPCIONES DE RENTA --}}
-            <div class="sum-block">
-              <div class="sum-line-title">Opciones de Renta</div>
-              <div class="row"><span>Complementos</span><strong id="qExtras">$0 MXN</strong></div>
-            </div>
+            {{-- ===== CARGOS E IVA (desplegable) ===== --}}
+            <details class="sum-acc">
+              <summary class="sum-bar">
+                <span>Cargos e IVA (16%)</span>
+                <strong id="qIva">$0 MXN</strong>
+                <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
+              </summary>
 
-            {{-- ✅ CARGOS E IVA --}}
-            <div class="sum-block">
-              <div class="sum-line-title">Cargos e IVA</div>
-              <div class="row"><span>IVA (16%)</span><strong id="qIva">$0 MXN</strong></div>
-            </div>
+              <div class="sum-acc-body" id="ivaList">
+                {{-- Aquí tu JS puede inyectar cargos/iva/descuentos --}}
+                <div class="row">
+                  <span class="muted">Sin cargos adicionales</span>
+                  <strong>$0 MXN</strong>
+                </div>
+              </div>
+            </details>
 
+            {{-- ===== TOTAL ===== --}}
             <div class="sum-total">
               <span>Total</span>
               <strong id="qTotal">${{ number_format($tarifaBase, 0) }} MXN</strong>
             </div>
+
           </div>
 
         </div>
