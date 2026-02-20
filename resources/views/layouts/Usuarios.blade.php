@@ -184,7 +184,6 @@
   @yield('contenidoFAQ')
   @yield('contenidoLogin')
   @yield('contenidoPerfil')
-  @yield('js-vistaReservaciones')
 
 </div>
 
