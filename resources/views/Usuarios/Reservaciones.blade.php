@@ -129,12 +129,12 @@
     $categoriaSel = collect($categorias)->firstWhere('id_categoria', (int)$categoriaId);
   }
 
-  // ✅ Texto para "Tu auto" (sale de categorias_carros -> descripcion)
+  // ✅ Texto para "Tu auto"
   $autoTitulo = ($categoriaSel && isset($categoriaSel->descripcion) && trim((string)$categoriaSel->descripcion) !== '')
     ? (string)$categoriaSel->descripcion
     : 'Auto o similar';
 
-  // ✅ Línea secundaria tipo "GRANDES | CATEGORÍA E" (NO truena si no viene codigo)
+  // ✅ Línea secundaria
   $catNombreUpper = ($categoriaSel && isset($categoriaSel->nombre))
     ? strtoupper((string)$categoriaSel->nombre)
     : 'CATEGORÍA';
@@ -796,7 +796,13 @@
             <div class="sum-checks">
               <label class="cbox">
                 <input type="checkbox" name="acepto" id="acepto">
-                <span>ESTOY DE ACUERDO Y ACEPTO LAS POLÍTICAS Y PROCEDIMIENTOS PARA LA RENTA.</span>
+                <span>
+                  ESTOY DE ACUERDO Y ACEPTO
+                  <a href="{{ route('rutaPoliticas') }}" class="link-politicas" target="_blank" rel="noopener">
+                    LAS POLÍTICAS
+                  </a>
+                  Y PROCEDIMIENTOS PARA LA RENTA.
+                </span>
               </label>
 
               <label class="cbox">
@@ -806,7 +812,6 @@
             </div>
 
             <div class="wizard-nav" style="margin-top:10px;">
-              <a class="btn btn-ghost" href="{{ $toStep(3) }}">Anterior</a>
               <button id="btnReservar" type="button" class="btn btn-primary">Reservar</button>
             </div>
 
@@ -917,20 +922,31 @@
                   {{ $autoSubtitulo }}
                 </div>
 
-                <div class="r-specs" style="margin-top:14px;">
-                  @if($featAc)
-                    <span class="chip chip-ok"><i class="fa-solid fa-snowflake"></i> A/C</span>
-                  @endif
-                  @if($featAndroidAuto)
-                    <span class="chip chip-ok"><i class="fa-brands fa-android"></i> Android Auto</span>
-                  @endif
-                  @if($featCarplay)
-                    <span class="chip chip-ok"><i class="fa-brands fa-apple"></i> CarPlay</span>
-                  @endif
-                  @if($featPassengers > 0)
-                    <span class="chip"><i class="fa-solid fa-user"></i> {{ $featPassengers }} personas</span>
-                  @endif
+                {{-- ✅ ICONOS como imagen (personas / suitcase rolling / briefcase)
+                     ✅ Dejar solo Android Auto y CarPlay --}}
+                @php
+                  $specPassengers = (int)($categoriaSel->pasajeros ?? 5);
+                  $specRolling    = (int)($categoriaSel->maletas_grandes ?? 2); // maleta grande
+                  $specBriefcase  = (int)($categoriaSel->maletas_chicas ?? 2);  // maleta de mano
+                @endphp
+
+                <div class="car-mini-specs" style="margin-top:14px;">
+                  <ul class="car-specs">
+                    <li><i class="fa-solid fa-user-large"></i> {{ $specPassengers }}</li>
+                    <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $specRolling }}</li>
+                    <li><i class="fa-solid fa-briefcase"></i> {{ $specBriefcase }}</li>
+                  </ul>
+
+                  <div class="car-mini-tech">
+                    @if($featAndroidAuto)
+                      <span class="chip chip-ok"><i class="fa-brands fa-android"></i> Android Auto</span>
+                    @endif
+                    @if($featCarplay)
+                      <span class="chip chip-ok"><i class="fa-brands fa-apple"></i> CarPlay</span>
+                    @endif
+                  </div>
                 </div>
+
               </div>
             </div>
 
@@ -942,7 +958,7 @@
 
 
             {{-- ===== TARIFA BASE (desplegable) ===== --}}
-            <details class="sum-acc" >
+            <details class="sum-acc" open="false">
               <summary class="sum-bar">
                 <span>Tarifa base</span>
                 <strong id="qBase">${{ number_format($tarifaBase, 0) }} MXN</strong>
@@ -978,13 +994,6 @@
               </summary>
 
               <div class="sum-acc-body" id="extrasList">
-                {{-- Aquí tu JS puede inyectar renglones extras --}}
-                {{-- Ejemplo de renglón:
-                <div class="row">
-                  <span>Silla para bebé</span>
-                  <strong>$150 MXN</strong>
-                </div>
-                --}}
                 <div class="row">
                   <span class="muted">Sin complementos seleccionados</span>
                   <strong>$0 MXN</strong>
@@ -1001,7 +1010,6 @@
               </summary>
 
               <div class="sum-acc-body" id="ivaList">
-                {{-- Aquí tu JS puede inyectar cargos/iva/descuentos --}}
                 <div class="row">
                   <span class="muted">Sin cargos adicionales</span>
                   <strong>$0 MXN</strong>
@@ -1100,6 +1108,12 @@
           modalMetodoPago.style.display = 'none';
         });
       }
+
+      // ✅ Por si quieres FORZAR que "Tarifa base" inicie CERRADO:
+      // HTML <details open> lo abre. Sin "open" queda cerrado.
+      // Si tu navegador interpreta open="false" como abierto, lo cerramos aquí:
+      const tarifa = document.querySelector('.sum-table details.sum-acc');
+      if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
     });
   </script>
 @endsection

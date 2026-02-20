@@ -585,3 +585,4 @@ Route::post('/admin/reservaciones-activas/{id}/cancelar',
 
 
 }); // <- FIN grupo sesion.activa
+Route::view('/politicas', 'Usuarios.Politicas')->name('rutaPoliticas');

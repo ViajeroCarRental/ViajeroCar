@@ -1703,3 +1703,61 @@ span.flatpickr-weekday{
 .sum-acc-body .muted{
   color:#6b7280;
 }
+/* ============================
+   STEP 4 - ICONOS (car-specs)
+============================ */
+.car-mini-specs{
+  margin-top:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+}
+
+.car-specs{
+  margin:0;
+  padding:0;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  color:#0f172a;
+  font-weight:900;
+}
+
+.car-specs li{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+  line-height:1;
+}
+
+.car-specs i{
+  font-size:16px;
+  opacity:.95;
+}
+
+.car-mini-tech{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* responsive */
+@media (max-width:760px){
+  .car-mini-specs{
+    justify-content:flex-start;
+  }
+}
+.link-politicas{
+  color: var(--brand);
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.link-politicas:hover{
+  color: var(--brand-dark);
+}
