@@ -1101,4 +1101,71 @@ persistNow();
     setTimeout(refreshFloatStates, 250);
   });
   }
+  // ======================================================
+// ✅ ICONOS DINÁMICOS PICKUP / DROPOFF
+// ======================================================
+document.addEventListener("DOMContentLoaded", function () {
+    // Mapa de iconos por si el data-icon falla
+    const iconMap = [
+        { keyword: 'aeropuerto', class: 'fa-plane-departure' },
+        { keyword: 'central de autobuses', class: 'fa-bus' },
+        { keyword: 'oficina', class: 'fa-building' },
+        { keyword: 'central park', class: 'fa-building' },
+    ];
+
+    function updateIcon(selectId, iconId) {
+        const selectEl = document.getElementById(selectId);
+        const iconEl = document.getElementById(iconId);
+
+        if (!selectEl || !iconEl) return;
+
+        // Obtener la opción seleccionada actualmente
+        const selectedOption = selectEl.options[selectEl.selectedIndex];
+
+        let iconClass = 'fa-location-dot'; // Icono por defecto
+
+        if (selectedOption && selectedOption.value !== "") {
+            // 1. Prioridad: Intentar leer el data-icon que pusiste en el HTML (Blade)
+            if (selectedOption.getAttribute('data-icon')) {
+                // Limpiamos el string por si trae "fa-solid" repetido
+                iconClass = selectedOption.getAttribute('data-icon').replace('fa-solid ', '');
+            }
+            // 2. Respaldo: Buscar por palabra clave en el texto
+            else {
+                const text = selectedOption.text.toLowerCase();
+                for (const item of iconMap) {
+                    if (text.includes(item.keyword)) {
+                        iconClass = item.class;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Aplicamos las clases finales al icono <i>
+        // 'fa-solid' es la base, 'input-icon' es para tu CSS
+        iconEl.className = `fa-solid ${iconClass} input-icon`;
+    }
+
+    // Configuración de los selects que quieres afectar
+    const configs = [
+        { select: 'pickupPlace', icon: 'pickupIcon' },
+        { select: 'dropoffPlace', icon: 'dropoffIcon' }
+    ];
+
+    configs.forEach(conf => {
+        const elSelect = document.getElementById(conf.select);
+
+        if (elSelect) {
+            // Ejecutar al cargar la página por primera vez
+            updateIcon(conf.select, conf.icon);
+
+            // Escuchar cambios: funciona con select normal y con Select2
+            $(elSelect).on('change select2:select', function() {
+                updateIcon(conf.select, conf.icon);
+            });
+        }
+    });
+});
+
 })();

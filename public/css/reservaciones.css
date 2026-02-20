@@ -1254,30 +1254,9 @@ body{
   border-radius:999px;
 }
 
-/* LOGS */
-    .pay-logos {
-    display: flex;
-    gap: 28px;
-    margin-top: 18px;
-    align-items: center;
-    flex-wrap: wrap;
-}
 
-.pay-logos img {
-    height: 34px;
-    object-fit: contain;
-    background: transparent;
-    padding: 0;
-    border-radius: 0;
-    box-shadow: none;
-    opacity: 0.85;
-    transition: all 0.25s ease;
-}
 
-.pay-logos img:hover {
-    opacity: 1;
-    transform: scale(1.05);
-}
+
 /* ==========================================================
    STEP 1
 ========================================================== */
@@ -1359,9 +1338,9 @@ body{
   font-weight:900;
   font-size:14px;
   color:#111827;
-  background:rgba(178,34,34,.12); 
+  background:rgba(178,34,34,.12);
   border:1px solid rgba(178,34,34,.35);
-  backdrop-filter: blur(6px);     
+  backdrop-filter: blur(6px);
   padding:10px 16px;
   border-radius:999px;
 }
@@ -2713,4 +2692,100 @@ span.flatpickr-weekday{
 /* 3) (Opcional) También baja un poquito “Pick-Up / Devolución” */
 .sum-item-label{
   font-size: 11px !important;
+}
+
+/* ==============================
+   SELECT2 estilo igual a tus fields
+============================== */
+
+/* Contenedor principal de Select2 */
+.select2-container--default .select2-selection--single {
+    height: 56px !important;
+    border-radius: 12px !important;
+    padding-left: 44px !important; /* Espacio para que el texto NO pise el icono */
+    display: flex !important;
+    align-items: center !important;
+    border: 1px solid #d9d9d9 !important;
+}
+
+/* Texto dentro de Select2 */
+.select2-container--default .select2-selection__rendered {
+    line-height: normal !important;
+    padding-left: 0 !important;
+    color: #444 !important;
+}
+
+/* Flechita original de Select2 */
+.select2-container--default .select2-selection__arrow {
+    height: 100% !important;
+    right: 12px !important;
+    display: flex;
+    align-items: center;
+}
+
+/* --- EL ICONO DINÁMICO (FontAwesome) --- */
+/* Este selector asegura que tu icono manual NO se empalme */
+.has-ico {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Estilo único para el icono que manejas con JS */
+.has-ico i.input-icon,
+.has-ico .ico {
+    position: absolute;
+    left: 16px; /* Ajustado para que se vea centrado en el padding de 44px */
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    color: #9aa0a6;
+    pointer-events: none; /* Crucial: para que el click pase al select */
+    font-size: 18px;
+    width: 20px;
+    text-align: center;
+}
+
+/* Evitar que Select2 intente renderizar iconos internos si los envías en el texto */
+.select2-selection__rendered i {
+    display: none !important; /* Oculta iconos duplicados dentro del texto de Select2 */
+}
+
+/* Dropdown y Opciones */
+.select2-dropdown {
+    border-radius: 12px !important;
+    border: 1px solid #ddd !important;
+    box-shadow: 0 8px 20px rgba(0,0,0,.08);
+    overflow: hidden;
+    z-index: 9999;
+}
+
+.select2-results__option {
+    padding: 12px 16px;
+}
+
+.select2-results__option--highlighted {
+    background: #f3f3f3 !important;
+    color: #111 !important;
+}
+
+/* Quitar buscador */
+.select2-search--dropdown {
+    display: none !important;
+}
+/* Contenedor padre */
+.ctl.has-ico {
+    position: relative;
+}
+
+/* Tu icono fijo/dinámico en el HTML */
+.ctl.has-ico .ico {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10; /* Por encima de Select2 */
+    color: #9aa0a6;
+    pointer-events: none; /* Para que el click pase al select */
+    font-size: 1.1rem;
 }

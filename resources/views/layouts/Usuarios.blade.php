@@ -25,11 +25,6 @@
   <!-- Estilos propios -->
   <link rel="stylesheet" href="{{ asset('css/navbarUsuarios.css') }}">
   <!-- CSS por vista -->
-
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
   @yield('css-vistaHome')
   @yield('css-VistaCatalogo')
   @yield('css-vistaReservaciones')
@@ -191,8 +186,6 @@
   @yield('contenidoFAQ')
   @yield('contenidoLogin')
   @yield('contenidoPerfil')
-  @yield('js-vistaReservaciones')
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -290,7 +283,7 @@
       <div class="payments-logos">
         <img src="{{ asset('img/visa.jpg') }}" alt="Visa" />
         <img src="{{ asset('img/mastercard.png') }}" alt="Mastercard" />
-        <img src="{{ asset('img/america.png') }}" alt="American Express" />
+        <img src="{{ asset('img/american.png') }}" alt="American Express" />
         <img class="oxxo" src="{{ asset('img/oxxo.png') }}" alt="OXXO" />
         <img class="mp" src="{{ asset('img/pago.png') }}" alt="Mercado Pago" />
         <img src="{{ asset('img/paypal.png') }}" alt="PayPal" />
@@ -344,6 +337,84 @@
     if (e.touches && e.touches.length > 1) e.preventDefault();
   }, {passive:false});
 })();
+</script>
+<!-- jQuery (REQUERIDO para Select2) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. Configuración de los elementos
+    const configs = [
+        { id: 'pickupPlace', icon: 'pickupIcon' },
+        { id: 'dropoffPlace', icon: 'dropoffIcon' }
+    ];
+
+    // 2. Función para los iconos dentro de la lista (dropdown)
+    function formatOptionWithIcon(option) {
+        if (!option.id) return option.text;
+        var iconClass = $(option.element).data('icon');
+        if (iconClass) {
+            // Solo ponemos icono en la lista desplegable
+            return $('<span><i class="' + iconClass + '" style="margin-right: 10px; width: 20px; text-align: center;"></i>' + option.text + '</span>');
+        }
+        return option.text;
+    }
+
+    // 3. Función para actualizar TU icono flotante (el de la izquierda)
+    function updateFloatingIcon(selectId, iconId) {
+        const selectEl = document.getElementById(selectId);
+        const iconEl = document.getElementById(iconId);
+        if (!selectEl || !iconEl) return;
+
+        const selectedOption = selectEl.options[selectEl.selectedIndex];
+        // Sacamos el icono del data-icon de tu HTML
+        const iconClass = (selectedOption && selectedOption.dataset.icon)
+                          ? selectedOption.dataset.icon
+                          : 'fa-solid fa-location-dot';
+
+        iconEl.className = iconClass; // Actualiza el <i>
+    }
+
+    // 4. Inicialización de Select2
+    configs.forEach(conf => {
+        const $select = $('#' + conf.id);
+
+        if ($select.length > 0) {
+            $select.select2({
+                width: '100%',
+                templateResult: formatOptionWithIcon, // Icono en la lista
+                templateSelection: function(data) { return data.text; } // ARRIBA SOLO TEXTO (para no empalmar)
+            });
+
+            // Actualizar icono al cargar
+            updateFloatingIcon(conf.id, conf.icon);
+
+            // Eventos al cambiar
+            $select.on('select2:select change', function () {
+                // 1. Actualizar icono izquierdo
+                updateFloatingIcon(conf.id, conf.icon);
+
+                // 2. Mantener etiquetas flotantes (Floating Labels)
+                this.dispatchEvent(new Event('change', { bubbles: true }));
+                if (typeof refreshFloatStates === 'function') {
+                    refreshFloatStates();
+                }
+            });
+
+            // Quitar clase pristine al abrir para la animación del label
+            $select.on('select2:open', function () {
+                const ctl = this.closest('[data-float]');
+                if (ctl) ctl.classList.remove('pristine');
+            });
+        }
+    });
+});
 </script>
 
 </body>

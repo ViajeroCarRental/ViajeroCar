@@ -21,38 +21,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-p+6F+H1G5p8pP/1hObu/YZ7o2aM5J5lFjAzU5e+0Jx8xR+uEzjFN8IvU3UpUy6v1k3vXv4+XzN0z3VQUpgK6Vw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
-    :root{ --brand:#b22222; --ink:#0f172a; --muted:#6b7280 }
-
-    .hero-badge-3msi{
-      width: clamp(180px, 38vw, 520px);
-      max-width: 100%;
-      height: auto;
-      margin-top: 10px;
-      display: block;
-      filter: drop-shadow(0 8px 24px rgba(0,0,0,.30));
-      pointer-events: none;
-    }
-    @media (max-width:560px){
-      .hero-badge-3msi{ width: clamp(180px, 60vw, 360px); }
-    }
-
-    /* ===== Texto debajo de cada carrusel ===== */
-    .fleet-meta{
-      width:min(1200px,94%);
-      margin:10px auto 24px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:14px;
-      font-size:clamp(12px, 1.8vw, 15px);
-      color:var(--ink);
-      letter-spacing:.2px;
-      line-height:1.3;
-    }
-    .fleet-meta .sep{ opacity:.5; font-style:normal; }
-    @media (max-width:560px){ .fleet-meta{ gap:10px } }
-
-    /* ===== Layout para los iconos del hero (5 items responsivos) ===== */
+/* ===== Layout para los iconos del hero (5 items responsivos) ===== */
     .hero-icons{
       display:flex;
       flex-wrap:wrap;
@@ -262,36 +231,6 @@
       transform: translate(6px, -92px) scale(1);
       opacity:1; pointer-events:auto;
     }
-     /* Select2 */
-
-.select2-container--default .select2-selection--single {
-    display: flex;
-    align-items: center;
-    height: 48px;
-    border-radius: 10px;
-    padding: 0 10px;
-}
-.select2-container--open .select2-dropdown--above {
-    top: 100% !important;
-    bottom: auto !important;
-}
-
-.select2-selection__rendered {
-    display: flex;
-    align-items: center;
-    line-height: normal !important;
-}
-
-.select2-selection__rendered i {
-    margin-right: 8px;
-    font-size: 1.2em;
-}
-
-.select2-results__option .icon-item i {
-    margin-right: 8px;
-    font-size: 1em;
-}
-
 
 
  /* Estilo de SELECT2 */
@@ -322,6 +261,7 @@
 
 
     .social-fab i{ font-size:20px; }
+
   </style>
 @endsection
 
@@ -427,8 +367,8 @@
               <div class="field icon-field">
                 <span class="field-icon" id="pickupIcon"><i class="fa-solid fa-location-dot"></i></span>
                 <select id="pickupPlace" name="pickup_sucursal_id"aria-describedby="pickupHelp" required>
-                  <option value="" disabled selected>¿Dónde inicia tu viaje? (Pick-up)</option>
-                @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
+                  <option value="" disabled selected>¿Dónde inicia tu viaje?</option>
+                 @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
                       @foreach($ciudad->sucursalesActivas as $suc)
                         <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
@@ -985,6 +925,7 @@
             <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
             </article>
 
+{
         <article class="car-card">
           <header class="car-title">
             <h3>PICK UP DOBLE CABINA</h3>
@@ -992,7 +933,7 @@
           </header>
 
           <div class="car-media">
-            <img src="{{ asset('img/Frontier.png') }}" alt="Nissan Frontier o similar">
+            <img src="{{ asset('img/frontier.png') }}" alt="Nissan Frontier o similar">
           </div>
 
          <div class="offer">
@@ -1112,8 +1053,7 @@
                       <div class="tile-body">
                         <h3>AUTOS Y CAMIONETAS 4x4:</h3>
                         <p>Viaja sin límites. Contamos con SUVs, autos todoterreno y camionetas 4x4 ideales para carretera, ciudad o aventura.</p>
-                        <a href="#" class="tile-link">Explora nuestra flota...</a>
-                      </div>
+                      <a href="{{ route('rutaCatalogo') }}" class="tile-link">Explora nuestra flota...</a>
                     </article>
                   </div>
 
@@ -1123,7 +1063,7 @@
                       <div class="tile-body">
                         <h3>CAMIONETAS PARA 13 PASAJEROS:</h3>
                         <p>Perfectas para viajes familiares o empresariales. Comodidad, espacio y seguridad para todos tus acompañantes.</p>
-                        <a href="#" class="tile-link">Reserva la tuya...</a>
+                     <a href="{{ route('rutaReservasIniciar', ['step' => 1,'tipo' => 'camioneta_13']) }}" class="tile-link">Reserva la tuya...</a>
                       </div>
                     </article>
                   </div>
@@ -1134,7 +1074,7 @@
                       <div class="tile-body">
                         <h3>ACEPTAMOS TARJETAS:</h3>
                         <p>Pagos con tarjeta de crédito o débito. Fácil, rápido y seguro. También puedes hacer tu pago final al devolver tu vehículo.</p>
-                        <a href="#" class="tile-link">Conoce nuestras opciones...</a>
+                       <a href="{{ route('rutaReservasIniciar', ['step'=>1, 'tipo'=>'tarjetas']) }}"class="tile-link">Conoce nuestras opciones...</a>
                       </div>
                     </article>
                   </div>
@@ -1145,7 +1085,7 @@
                       <div class="tile-body">
                         <h3>ENTREGA EN AEROPUERTO 24/7:</h3>
                         <p>Recibe o entrega tu auto directamente en el aeropuerto, sin filas ni esperas. Disponible las 24 horas del día.</p>
-                        <a href="#" class="tile-link">Agendar entrega...</a>
+                        <a href="{{ route('rutaReservasIniciar', ['step'=>1, 'tipo'=>'aeropuerto']) }}"class="tile-link">Agendar entrega...</a>
                       </div>
                     </article>
                   </div>
@@ -1156,7 +1096,7 @@
                       <div class="tile-body">
                         <h3>VEHÍCULOS CON VERIFICACIÓN 00:</h3>
                         <p>Todos nuestros autos cumplen con las normas ambientales y están verificados tipo 00 para garantizar su óptimo rendimiento.</p>
-                        <a href="#" class="tile-link">Descubre más...</a>
+                       <a href="{{ route('rutaCatalogo') }}" class="tile-link">Descubre más...</a>
                       </div>
                     </article>
                   </div>
@@ -1167,7 +1107,7 @@
                       <div class="tile-body">
                         <h3>DROP OFF NACIONAL:</h3>
                         <p>Disfruta de tu viaje sin preocupaciones. Devuelve tu auto en otra ciudad con nuestro servicio Drop Off Nacional (con costo adicional).</p>
-                        <a href="#" class="tile-link">Consultar destinos...</a>
+                     <a href="{{ route('rutaReservasIniciar', ['step'=>1, 'tipo'=>'dropoff']) }}"class="tile-link">Consultar destinos...</a>
                       </div>
                     </article>
                   </div>
@@ -1178,7 +1118,7 @@
                       <div class="tile-body">
                         <h3>AUTOS NUEVOS Y MODERNOS:</h3>
                         <p>Conduce con estilo y seguridad. Nuestra flota está compuesta por vehículos recientes, siempre en óptimas condiciones.</p>
-                        <a href="#" class="tile-link">Explora la flota...</a>
+                      <a href="{{ route('rutaCatalogo') }}" class="tile-link">Explora la flota...</a>
                       </div>
                     </article>
                   </div>
@@ -1558,6 +1498,5 @@
     document.addEventListener('DOMContentLoaded', showOnce);
   })();
   </script>
-
 
 @endsection

@@ -4,7 +4,7 @@
 
 @section('contenidoReservaciones')
 
-<div class="container py-4">
+<div class="container" style="padding-top: 100px; padding-bottom: 30px;">
 
 {{-- ================= ALERTAS ================= --}}
 @if(session('success'))
@@ -198,141 +198,101 @@ CARD 1 – VEHÍCULO / CATEGORÍA / SERVICIOS
 {{-- =================================================
 CARD 2 – DATOS DEL CLIENTE
 ================================================= --}}
-<form method="POST"
-      action="{{ route('visor.update', $reservacion->id_reservacion) }}">
-@csrf
-@method('PUT')
+<div class="row">
+    {{-- Columna izquierda: Datos del Cliente --}}
+    <div class="col-md-6 mb-4">
+        <form method="POST" action="{{ route('visor.update', $reservacion->id_reservacion) }}">
+            @csrf
+            @method('PUT')
+            <input type="hidden" name="card" value="card2">
 
-<input type="hidden" name="card" value="card2">
+            <div class="card shadow">
+                <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                    Datos del cliente
+                    <div>
+                        <button type="button" class="btn btn-outline-warning btn-sm" id="btnEditarCliente">Editar</button>
+                        <button type="submit" class="btn btn-primary btn-sm d-none" id="btnGuardarCliente">Actualizar</button>
+                    </div>
+                </div>
 
-<div class="card mb-4 shadow">
-<div class="card-header fw-bold d-flex justify-content-between align-items-center">
-    Datos del cliente
-    <div>
-        <button type="button"
-                class="btn btn-outline-warning btn-sm"
-                id="btnEditarCliente">
-            Editar
-        </button>
-
-        <button type="submit"
-                class="btn btn-primary btn-sm d-none"
-                id="btnGuardarCliente">
-            Actualizar
-        </button>
+                <div class="card-body">
+                    <input class="form-control mb-2 editable-cliente" name="nombre_cliente" value="{{ $cliente->nombre_cliente }}" readonly required>
+                    <input class="form-control mb-2 editable-cliente" name="apellidos_cliente" value="{{ $cliente->apellidos_cliente }}" readonly required>
+                    <input class="form-control mb-2 editable-cliente" type="email" name="email_cliente" value="{{ $cliente->email_cliente }}" readonly required>
+                    <input class="form-control mb-2 editable-cliente" name="telefono_cliente" value="{{ $cliente->telefono_cliente }}" readonly required>
+                </div>
+            </div>
+        </form>
     </div>
-</div>
 
-<div class="card-body">
 
-<input class="form-control mb-2 editable-cliente"
-       name="nombre_cliente"
-       value="{{ $cliente->nombre_cliente }}"
-       readonly required>
-
-<input class="form-control mb-2 editable-cliente"
-       name="apellidos_cliente"
-       value="{{ $cliente->apellidos_cliente }}"
-       readonly required>
-
-<input class="form-control mb-2 editable-cliente"
-       type="email"
-       name="email_cliente"
-       value="{{ $cliente->email_cliente }}"
-       readonly required>
-
-<input class="form-control mb-2 editable-cliente"
-       name="telefono_cliente"
-       value="{{ $cliente->telefono_cliente }}"
-       readonly required>
-
-</div>
-</div>
-</form>
 
 
 {{-- =================================================
 CARD 3 – ITINERARIO
 ================================================= --}}
-<form method="POST"
-      action="{{ route('visor.update', $reservacion->id_reservacion) }}">
-@csrf
-@method('PUT')
+{{-- Columna derecha: Itinerario --}}
+<div class="col-md-6 mb-4">
+    <form method="POST" action="{{ route('visor.update', $reservacion->id_reservacion) }}">
+        @csrf
+        @method('PUT')
+        <input type="hidden" name="card" value="card3">
 
-<input type="hidden" name="card" value="card3">
+        <div class="card shadow">
+            <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                Itinerario
+                <div>
+                    <button type="button" class="btn btn-outline-warning btn-sm" id="btnEditarItinerario">Editar</button>
+                    <button type="submit" class="btn btn-primary btn-sm d-none" id="btnGuardarItinerario">Actualizar</button>
+                </div>
+            </div>
 
-<div class="card mb-4 shadow">
-<div class="card-header fw-bold d-flex justify-content-between align-items-center">
-    Itinerario
-    <div>
-        <button type="button"
-                class="btn btn-outline-warning btn-sm"
-                id="btnEditarItinerario">
-            Editar
-        </button>
+            <div class="card-body">
+                <div class="alert alert-danger d-none" id="alertCard3"></div>
 
-        <button type="submit"
-                class="btn btn-primary btn-sm d-none"
-                id="btnGuardarItinerario">
-            Actualizar
-        </button>
-    </div>
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label>Fecha retiro</label>
+                        <input type="date" class="form-control editable-itinerario" name="fecha_inicio" value="{{ $itinerario->fecha_inicio }}" readonly required>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Fecha entrega</label>
+                        <input type="date" class="form-control editable-itinerario" name="fecha_fin" value="{{ $itinerario->fecha_fin }}" readonly required>
+                    </div>
+                </div>
+
+                <div class="row g-2 mt-2">
+                    <div class="col-md-6">
+                        <label>Hora retiro</label>
+                        <input type="time" class="form-control editable-itinerario" name="hora_retiro" value="{{ $itinerario->hora_retiro }}" readonly required>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Hora entrega</label>
+                        <input type="time" class="form-control editable-itinerario" name="hora_entrega" value="{{ $itinerario->hora_entrega }}" readonly required>
+                    </div>
+                </div>
+
+                <div class="row g-2 mt-2">
+                    <div class="col-md-6">
+                        <select name="sucursal_retiro" class="form-select editable-itinerario bloqueado">
+                            @foreach($sucursales as $s)
+                                <option value="{{ $s->id_sucursal }}" @selected($itinerario->sucursal_retiro == $s->id_sucursal)>{{ $s->nombre_mostrado }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <select name="sucursal_entrega" class="form-select editable-itinerario bloqueado">
+                            @foreach($sucursales as $s)
+                                <option value="{{ $s->id_sucursal }}" @selected($itinerario->sucursal_entrega == $s->id_sucursal)>{{ $s->nombre_mostrado }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
 
-<div class="card-body">
-
-    <div class="alert alert-danger d-none" id="alertCard3"></div>
-
-<label>Fecha retiro</label>
-<input type="date"
-       class="form-control mb-2 editable-itinerario"
-       name="fecha_inicio"
-       value="{{ $itinerario->fecha_inicio }}"
-       readonly required>
-
-<input type="date"
-       class="form-control mb-2 editable-itinerario"
-       name="fecha_fin"
-       value="{{ $itinerario->fecha_fin }}"
-       readonly required>
-
-<input type="time"
-       class="form-control mb-2 editable-itinerario"
-       name="hora_retiro"
-       value="{{ $itinerario->hora_retiro }}"
-       readonly required>
-
-<input type="time"
-       class="form-control mb-2 editable-itinerario"
-       name="hora_entrega"
-       value="{{ $itinerario->hora_entrega }}"
-       readonly required>
-
-<select name="sucursal_retiro"
-        class="form-select mb-2 editable-itinerario bloqueado">
-@foreach($sucursales as $s)
-    <option value="{{ $s->id_sucursal }}"
-        @selected($itinerario->sucursal_retiro == $s->id_sucursal)>
-        {{ $s->nombre_mostrado }}
-    </option>
-@endforeach
-</select>
-
-<select name="sucursal_entrega"
-        class="form-select mb-3 editable-itinerario bloqueado">
-@foreach($sucursales as $s)
-    <option value="{{ $s->id_sucursal }}"
-        @selected($itinerario->sucursal_entrega == $s->id_sucursal)>
-        {{ $s->nombre_mostrado }}
-    </option>
-@endforeach
-</select>
-
-</div>
-</div>
-</form>
-
-</div>
 
 
 
