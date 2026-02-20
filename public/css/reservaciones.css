@@ -1,3 +1,13 @@
+/* ==========================================================================
+   reservaciones.css — FINAL LIMPIO (sin parches)
+   - Fondo SOLO dentro del main (reservas-bg)
+   - Wizard centrado (steps + card)
+   - Step 1 / 2 / 3 / 4
+   - Floating labels (Step 1)
+   - Step 4: 2 panes (izq datos / der resumen+precio)
+   - Flatpickr visible (sin recorte)
+========================================================================== */
+
 :root{
   --brand:#b22222;
   --brand-dark:#8b1d1a;
@@ -19,7 +29,7 @@
   --focus:0 0 0 4px rgba(178,34,34,.12);
 }
 
-*{ box-sizing:border-box }
+*{ box-sizing:border-box; }
 html,body{ width:100%; overflow-x:hidden; }
 
 body{
@@ -32,7 +42,7 @@ body{
 .hidden{ display:none!important; }
 
 /* ==========================================================
-   PAGE
+   PAGE + FONDO (con .reservas-bg del Blade)
 ========================================================== */
 .page{
   position:relative;
@@ -52,30 +62,30 @@ body{
   overflow:visible;
 }
 
-/* fondo */
-.page::before{
-  content:"";
+/* Fondo SOLO dentro del main */
+.reservas-bg{
   position:absolute;
   inset:0;
-  background:url("../img/4x4.png") center / cover no-repeat;
-  z-index:-2;
-  transform:translateZ(0);
+  z-index:0;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg, rgba(15,23,42,.70), rgba(15,23,42,.62)),
+    url("../img/4x4.png");
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
 }
 
-/* overlay */
-.page::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:radial-gradient(1200px 700px at 50% 20%, rgba(255,255,255,.14), rgba(0,0,0,.18));
-  z-index:-1;
-  pointer-events:none;
+.wizard-steps,
+.wizard-card{
+  position:relative;
+  z-index:1;
 }
 
 .wizard-page{ overflow:visible !important; }
 
 /* ==========================================================
-   TOPBAR
+   TOPBAR (por si la usas en layout)
 ========================================================== */
 .topbar{
   position:fixed;
@@ -157,6 +167,7 @@ body{
 
   align-self:flex-start;
 }
+
 @media (max-width:560px){
   .wizard-steps{ margin-top:16px; }
 }
@@ -268,7 +279,7 @@ body{
 }
 
 /* ==========================================================
-   STEP 1: FORM GRID
+   STEP 1: GRID
 ========================================================== */
 .search-grid{
   display:grid;
@@ -318,21 +329,11 @@ body{
 .field-row{ display:grid; gap:10px; }
 .field-row.two{ grid-template-columns:1fr 1fr; }
 
-.small{
-  font-size:12px;
-  color:var(--muted);
-  margin-top:8px;
-  font-weight:800;
-  line-height:1.35;
-}
-
-/* hora/min */
 .time-split{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:12px;
 }
-.time-split .ctl select{ padding-top:10px; }
 
 @media (max-width:980px){
   .wizard-head h2{ font-size:28px; }
@@ -341,7 +342,7 @@ body{
 }
 
 /* ==========================================================
-   CONTROLES + FLOATING LABELS
+   CONTROLES (STEP 1) — Floating label
 ========================================================== */
 .wizard-form .field > label{ display:none !important; }
 
@@ -365,7 +366,6 @@ body{
   z-index:2;
   line-height:1;
 }
-
 
 .ctl .flabel{
   position:absolute;
@@ -425,6 +425,7 @@ body{
   box-shadow:var(--focus);
 }
 
+/* estados manejados por JS: pristine / filled */
 .ctl.pristine .flabel{
   top:50%;
   transform:translateY(-50%);
@@ -446,7 +447,6 @@ body{
 .ctl:focus-within select{
   padding-top:18px;
 }
-
 .ctl.pristine input,
 .ctl.pristine select{
   padding-top:0;
@@ -475,6 +475,8 @@ body{
   gap:18px;
   align-items:center;
   transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  position:relative;
+  overflow:visible;
 }
 .car-card:hover{
   transform:translateY(-1px);
@@ -484,6 +486,31 @@ body{
   border-color:rgba(178,34,34,.35);
   box-shadow:0 16px 45px rgba(178,34,34,.12);
 }
+
+.car-days-badge{
+  position:absolute;
+  top:14px;
+  right:14px;
+  z-index:6;
+
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+
+  height:34px;
+  padding:0 14px;
+  border-radius:999px;
+
+  background: rgba(178,34,34,.06);
+  border: 2px solid rgba(178,34,34,.22);
+  color: #b22222;
+
+  font-weight:900;
+  font-size:13px;
+  letter-spacing:.2px;
+  box-shadow:none;
+}
+.car-days-badge i{ font-size:14px; }
 
 .car-avatar{
   width:100%;
@@ -528,6 +555,7 @@ body{
   gap:10px;
   margin:10px 0 8px;
 }
+
 .chip{
   display:inline-flex;
   align-items:center;
@@ -549,10 +577,10 @@ body{
 }
 .chip i{ opacity:.9; }
 
-.car-price{ 
-  display:grid; 
+.car-price{
+  display:grid;
   gap:10px;
-  padding-top:52px; 
+  padding-top:52px;
 }
 
 .price-pill{
@@ -565,17 +593,18 @@ body{
   color:#6b7280;
   font-weight:800;
 }
-/* ===== Precio prepago estilo oferta ===== */
 
-.price-pill--prepago{
-  text-align:right;
-}
+/* Prepago */
+.price-pill--prepago{ text-align:right; }
 
-.price-old{
+.price-pill--prepago .price-old{
   font-size:14px;
   font-weight:900;
-  color:#9ca3af;
-  text-decoration:line-through;
+  color: rgba(178,34,34,.95);
+  text-decoration: line-through;
+  text-decoration-color: rgba(178,34,34,.95);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
   margin-bottom:4px;
 }
 
@@ -591,44 +620,6 @@ body{
   font-size:14px;
   font-weight:800;
   color:#6b7280;
-}
-
-/* Texto pequeño subrayado arriba del precio */
-.price-hint{
-  display:block;
-  font-size:11px;
-  font-weight:900;
-  color:#6b7280;
-  margin-bottom:6px;
-  text-align:right;
-}
-.price-hint--u{
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 3px;
-}
-
-/* Badge de ahorro debajo del prepago */
-.save-pill{
-  margin-top:8px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-
-  padding:7px 10px;
-  border-radius:999px;
-
-  font-size:12px;
-  font-weight:900;
-
-  color:#8b1d1a;
-  background:rgba(178,34,34,.07);
-  border:1px solid rgba(178,34,34,.20);
-
-  float:right; /* para que quede alineado a la derecha como tu pill */
-}
-.save-pill strong{
-  color:#b22222;
 }
 
 .btn-pay{
@@ -649,52 +640,20 @@ body{
 .btn-pay.primary{ background:#ff3b30; color:#fff; }
 .btn-pay.gray{ background:#9ca3af; color:#fff; }
 
+/* Pago en oficina más grande */
+.car-price > .price-pill:not(.price-pill--prepago){
+  font-size:25px;
+  line-height:1.1;
+}
+.car-price > .price-pill:not(.price-pill--prepago) .js-mostrador-total{
+  font-weight:900;
+}
+
 @media (max-width:980px){
   .car-card{ grid-template-columns:1fr; }
   .car-avatar{ max-width:100%; height:190px; }
   .price-pill{ text-align:left; }
-}
-/* ===============================
-   📅 Badge de días - Step 2
-================================= */
-
-.car-card{
-  position:relative;
-  overflow:visible;
-}
-
-.car-days-badge{
-  position:absolute;
-  top:14px;
-  right:14px;
-  z-index:6;
-
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-
-  height:34px;
-  padding:0 14px;
-  border-radius:999px;
-
-  background: rgba(178,34,34,.06);       /* ✅ rosita suave */
-  border: 2px solid rgba(178,34,34,.22); /* ✅ borde como pill */
-  color: #b22222;
-
-  font-weight:900;
-  font-size:13px;
-  letter-spacing:.2px;
-
-  backdrop-filter:none; /* ✅ pill limpia como la de la imagen */
-  box-shadow:none;      /* ✅ pill limpia */
-}
-.car-days-badge i{
-  font-size:14px;
-}
-
-
-.car-days-badge i{
-  font-size:14px;
+  .car-price{ padding-top:0; }
 }
 
 /* ==========================================================
@@ -726,7 +685,6 @@ body{
   transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 
-/* Barra superior sutil */
 .addon-card::before{
   content:"";
   position:absolute;
@@ -736,7 +694,6 @@ body{
   opacity:.75;
 }
 
-/* Check visual seleccionado */
 .addon-card::after{
   content:"✓";
   position:absolute;
@@ -769,7 +726,15 @@ body{
   transform:scale(1);
 }
 
-.addon-card h4{ margin:0; font-weight:900; }
+.addon-name{
+  margin:0;
+  font-size:15px;
+  letter-spacing:.2px;
+  color:#0f172a;
+  padding-right:38px;
+  font-weight:900;
+}
+
 .addon-card p{
   margin:0;
   font-size:13px;
@@ -778,16 +743,6 @@ body{
   line-height:1.45;
 }
 
-/* Título + jerarquía */
-.addon-name{
-  margin:0;
-  font-size:15px;
-  letter-spacing:.2px;
-  color:#0f172a;
-  padding-right:38px;
-}
-
-/* Badge precio  */
 .addon-card .small{
   margin-top:2px;
   display:inline-flex;
@@ -803,7 +758,6 @@ body{
 }
 .addon-card .small strong{ color:#111827; }
 
-/* Qty */
 .addon-qty{
   display:flex;
   align-items:center;
@@ -826,7 +780,6 @@ body{
   font-weight:900;
 }
 
-/* Botones qty */
 .addon-qty button{
   width:40px;
   height:40px;
@@ -846,22 +799,395 @@ body{
 }
 .addon-qty button:active{ transform:translateY(0) scale(.98); }
 
-.addon-card.qty-zero .qty-btn.minus{
-  opacity:.45;
-  filter:saturate(.6);
+/* ==========================================================
+   STEP 4 — LAYOUT 2 PANELES
+========================================================== */
+.page.wizard-page[data-current-step="4"]{
+  --wizard-w: 1280px;
 }
 
-@media (max-width:980px){
-  .addon-card{ padding:14px; }
+/* Card padre transparente (para que se vean 2 panes) */
+.page.wizard-page[data-current-step="4"] .wizard-card{
+  width: min(var(--wizard-w), 96vw);
+  margin:0 auto;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
 }
-@media (max-width:560px){
-  .addon-card{ padding:14px; }
-  .addon-name{ font-size:14px; }
+
+/* Header de Step 4 como panel */
+.page.wizard-page[data-current-step="4"] .wizard-head{
+  background: rgba(255,255,255,.92);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+  margin: 0 0 18px;
+  backdrop-filter: blur(6px);
+  position:relative;
+  overflow:hidden;
+}
+.page.wizard-page[data-current-step="4"] .wizard-head::before{
+  content:"";
+  position:absolute;
+  left:0; right:0; top:0;
+  height:4px;
+  background:linear-gradient(90deg, var(--brand), rgba(178,34,34,.25), var(--brand-dark));
+  opacity:.95;
+}
+.page.wizard-page[data-current-step="4"] .wizard-head h2,
+.page.wizard-page[data_current_step="4"] .wizard-head p{ color: var(--ink); }
+
+/* 2 columnas */
+.step4-layout{
+  display:grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap:22px;
+  align-items:start;
+}
+.step4-pane{
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  min-width:0;
+}
+
+@media (max-width: 992px){
+  .page.wizard-page[data-current-step="4"]{ --wizard-w: 900px; }
+  .step4-layout{ grid-template-columns:1fr; gap:18px; }
+}
+
+/* Evitar overflow por imágenes/textos */
+.page.wizard-page[data-current-step="4"] img{ max-width:100%; height:auto; }
+.page.wizard-page[data-current-step="4"] .sum-car-info,
+.page.wizard-page[data-current-step="4"] .sum-table,
+.page.wizard-page[data-current-step="4"] .sum-form{ min-width:0; }
+
+/* ==========================================================
+   STEP 4 — DATOS PERSONALES
+========================================================== */
+.sum-section-title{
+  background:transparent;
+  border:0;
+  padding:0;
+  margin:4px 0 12px;
+
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:.6px;
+  color:#000;
+
+  display:flex;
+  align-items:center;
+  gap:14px;
+  text-transform:none;
+}
+.sum-section-title::after{
+  content:"";
+  flex:1;
+  height:2px;
+  background:linear-gradient(90deg, var(--brand), rgba(178,34,34,.15));
+  border-radius:999px;
+}
+
+.sum-form{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  padding:14px;
+}
+
+.sum-form .sum-personal-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px 22px;
+  margin-top:10px;
+  margin-bottom:14px;
+}
+
+.sum-form .sum-personal-grid .field{
+  gap:8px;
+  margin:0;
+}
+
+.sum-form .sum-personal-grid .field > label{
+  display:block;
+  margin:0 0 2px;
+  color:#000;
+  font-weight:900;
+  font-size:13px;
+  letter-spacing:.2px;
+  text-transform:uppercase;
+}
+
+.sum-form input,
+.sum-form select{
+  width:100%;
+  height:54px;
+  padding:0 14px;
+  border-radius:14px;
+  border:2px solid #000;
+  background:#fff;
+  font-weight:900;
+  color:#000;
+  outline:none;
+  box-shadow:none;
+}
+
+.sum-form input::placeholder{
+  color:#000;
+  opacity:1;
+}
+
+.sum-form select{
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #000 50%),
+    linear-gradient(135deg, #000 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 12px) 50%;
+  background-size:6px 6px, 6px 6px;
+  background-repeat:no-repeat;
+  padding-right:34px;
+}
+
+.sum-form input:focus,
+.sum-form select:focus,
+.sum-form input:focus-visible,
+.sum-form select:focus-visible{
+  border-color:#000;
+  outline:none;
+  box-shadow:none;
+}
+
+/* DOB (DD / mmm / YYYY) — pro, sin “azul” */
+.sum-form .dob-inline{
+  display:flex;
+  width:100%;
+  border:2px solid #000 !important;
+  border-radius:14px !important;
+  overflow:hidden;
+  background:#fff;
+  box-shadow:none !important;
+}
+.sum-form .dob-inline select{
+  flex:1;
+  height:54px;
+  border:0 !important;
+  outline:none !important;
+  text-align:center;
+  font-weight:900;
+  font-size:14px;
+  background:#fff !important;
+  color:#000 !important;
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  padding:0 10px;
+}
+.sum-form .dob-inline select:not(:last-child){
+  border-right:2px solid #000 !important;
+}
+.sum-form .dob-inline:focus-within{
+  outline:none !important;
+  box-shadow:none !important;
+  border-color:#000 !important;
+}
+/* el mes (mmm) se ve más “textual” */
+.sum-form #dob_month{ text-transform:lowercase; letter-spacing:.2px; }
+
+.sum-form .sum-checks{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px 22px;
+  margin:10px 0 16px;
+}
+
+.cbox{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  font-weight:900;
+  color:#111827;
+  margin:0;
+  font-size:13px;
+
+  padding:0;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  max-width:none;
+}
+.cbox input{
+  width:18px; height:18px;
+  accent-color:var(--brand);
+  margin-top:3px;
+  flex:0 0 auto;
+}
+.sum-form .cbox span{
+  text-transform:none;
+  letter-spacing:0;
+  font-size:13px;
+  font-weight:800;
+  color:#111827;
+  line-height:1.35;
+}
+
+@media (max-width:760px){
+  .sum-form .sum-personal-grid{ grid-template-columns:1fr; }
+  .sum-form .sum-checks{ grid-template-columns:1fr; }
+}
+
+/* Botón reservar */
+#btnReservar{
+  height:44px;
+  padding:0 26px;
+  width:100%;
+  border-radius:16px;
+  font-size:14px;
+  font-weight:900;
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
+  color:#fff;
+  box-shadow:0 16px 34px rgba(178,34,34,.22);
+  margin-left:auto;
 }
 
 /* ==========================================================
-   STEP 4: RESUMEN 
+   STEP 4 — RESUMEN (compacto + lugar/fecha + auto)
 ========================================================== */
+.sum-compact{
+  margin-top:6px;
+  padding:12px;
+  border-radius:14px;
+  background:linear-gradient(180deg,#fff,#fbfbfd);
+  border:1px solid #eef2f7;
+  box-shadow:0 10px 25px rgba(0,0,0,.06);
+}
+
+.sum-compact-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+  padding-bottom:10px;
+  border-bottom:1px dashed rgba(178,34,34,.18);
+}
+
+.sum-days{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-weight:900;
+  font-size:14px;
+  color:#111827;
+  background:rgba(178,34,34,.12);
+  border:1px solid rgba(178,34,34,.35);
+  padding:10px 16px;
+  border-radius:999px;
+}
+
+/* Subtítulos (Lugar y fecha / Tu auto / Detalles del precio) */
+.sum-subtitle{
+  margin: 12px 0 10px;
+  font-weight: 900;
+  font-size: 17px;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  color: #111827;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.sum-subtitle::after{
+  content:"";
+  flex:1;
+  height:2px;
+  background: linear-gradient(90deg, rgba(178,34,34,.55), rgba(178,34,34,.10));
+  border-radius: 999px;
+}
+
+/* Lugar y fecha grid */
+.sum-compact-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.sum-item{
+  background:#fff;
+  border:1px solid #eef2f7;
+  border-radius:14px;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.sum-item-label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:900;
+  font-size:11px;
+  color:#6b7280;
+  text-transform:uppercase;
+  letter-spacing:.45px;
+}
+.sum-item-value{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.sum-place{
+  font-weight:900;
+  color:#111827;
+  line-height:1.2;
+}
+
+/* Fecha/hora (versión final más chica) */
+.sum-dt2{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  margin-top:3px;
+}
+.sum-dt2 .dt-row{
+  display:flex;
+  gap:6px;
+  align-items:baseline;
+}
+.sum-dt2 .dt-lbl{
+  min-width:52px;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.45px;
+  text-transform:uppercase;
+  color:#6b7280;
+}
+.sum-dt2 .dt-val{
+  font-size:13px;
+  font-weight:800;
+  color:#111827;
+  line-height:1.15;
+}
+.sum-dt2 .dt-time{
+  font-size:13px;
+  font-weight:900;
+  color:#111827;
+}
+
+@media (max-width:760px){
+  .sum-compact-grid{ grid-template-columns:1fr; }
+  .sum-compact-head{ flex-direction:column; align-items:flex-start; }
+}
+
+/* Tu auto (card) */
 .sum-car{
   display:flex;
   gap:14px;
@@ -882,273 +1208,193 @@ body{
   padding:8px;
   border:1px solid #eef2f7;
 }
-.sum-car-info h3{ margin:0 0 6px; font-weight:900; font-size:20px;}
-.sum-car-info p{ margin:0; color:#374151; font-weight:700; line-height:1.45; }
-
+.sum-car-info{ min-width:0; }
 @media (max-width:760px){
   .sum-car{ flex-direction:column; align-items:flex-start; }
   .sum-car img{ width:100%; }
 }
 
-.sum-table{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:14px;
-  overflow:hidden;
-  box-shadow:0 10px 25px rgba(0,0,0,.08);
-  margin-bottom:12px;
-}
-.sum-block{ border-bottom:1px solid #e5e7eb; }
-.sum-block:last-child{ border-bottom:none; }
-
-.sum-block h4{
-  margin:0;
-  padding:12px 14px;
-  font-weight:900;
-  font-size:18px;
-  background:linear-gradient(90deg, rgba(178,34,34,.14), rgba(178,34,34,.06));
-  border-bottom:1px solid rgba(178,34,34,.14);
-  color:#111827;
-  position:relative;
-}
-.sum-block h4::before{
-  content:"";
-  width:10px;
-  height:10px;
-  border-radius:999px;
-  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
-  display:inline-block;
-  margin-right:10px;
-  vertical-align:middle;
-  box-shadow:0 10px 18px rgba(178,34,34,.18);
-}
-
-/* ===========================
-   STEP 4 - Filas de pagos
-   (mismo estilo + alineación perfecta)
-=========================== */
-.sum-block .row:not(.row-included){
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  column-gap: 14px;
-
-  /* 🔒 mantenemos el estilo original */
-  padding: 10px 14px;
-  border-top: 1px solid #eef2f7;
-  font-weight: 800;
-  font-size: 16px;        /* 👈 mismo tamaño que usas arriba */
-  color: #0f172a;
-}
-
-.sum-block .row:not(.row-included) > span{
-  min-width: 0;
-  font-weight: 800;       /* 🔒 mismo peso */
-}
-
-.sum-block .row:not(.row-included) > strong{
-  justify-self: end;
-  white-space: nowrap;
-  font-weight: 900;       /* 🔥 un poquito más fuerte para el precio */
-}
-
-
-.sum-block .row:first-of-type{ border-top:none; }
-
-.sum-total{
-  display:flex;
-  justify-content:space-between;
-  padding:12px 14px;
-  font-weight:900;
-  font-size:20px;
-  background:linear-gradient(90deg, rgba(178,34,34,.10), rgba(255,255,255,1));
-  border-top:1px solid rgba(178,34,34,.16);
-}
-.sum-total span{ font-weight:900; color:#111827; }
-.sum-total strong{
-  padding:8px 12px;
-  border-radius:999px;
-  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
-  color:#fff;
-  box-shadow:0 14px 28px rgba(178,34,34,.22);
-}
-
-.sum-form{
-  background:#fff;
-  border:1px solid #e5e7eb;
-  border-radius:14px;
-  box-shadow:0 10px 25px rgba(0,0,0,.08);
-  padding:14px;
-}
 /* ==========================================================
-   STEP 4 — DATOS PERSONALES 
+   STEP 4 — DETALLES DEL PRECIO (PRO / PREMIUM)
+   Requiere tu HTML con:
+   - .sum-bar   (header con total a la derecha)
+   - .sum-subbar (subheader)
 ========================================================== */
-.sum-form .sum-personal-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:18px 22px;            
-  margin-top:10px;
-  margin-bottom:14px;
-}
-/* ✅ Step 4: hacer que el campo de vuelo ocupe las 2 columnas */
-.sum-form .sum-personal-grid .field:has(#vuelo){
-  grid-column: 1 / -1;
-}
 
-/* cada field sin “saltos raros” */
-.sum-form .sum-personal-grid .field{
-  gap:8px;
-  margin:0;
-}
+/* mata títulos viejos con rayas rojas */
+.sum-line-title{ display:none !important; }
 
-/* labels arriba (como tu screenshot) */
-.sum-form .sum-personal-grid .field > label{
-  display:block;
-  margin:0 0 8px;
-  color:#6b7280;
-  font-weight:900;
-  font-size:13px;
-  letter-spacing:.2px;
-  text-transform:uppercase;
-}
-
-/* por si DOB usa .ctl estilo Step 1, que se alinee bien */
-.sum-form .sum-personal-grid .ctl{
-  margin:0;
-}
-
-/* checks en 2 columnas también (terminos/promo) */
-.sum-form .sum-checks{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px 22px;
-  margin:10px 0 16px;
-}
-.sum-form .sum-checks .cbox,
-.sum-form .sum-checks .return-check{
-  margin:0;               
-  max-width:none;
-}
-
-/* responsive: 1 columna */
-@media (max-width:760px){
-  .sum-form .sum-personal-grid{ grid-template-columns:1fr; }
-  .sum-form .sum-checks{ grid-template-columns:1fr; }
-}
-
-/* labels tipo "Hora/Min" */
-.sum-form .field > label{
-  display:inline-block;
-  margin:0 0 8px;
-  color:#6b7280;
-  font-weight:900;
-  font-size:13px;
-  letter-spacing:.2px;
-  background:#fff;
-  padding:0 6px;
-  border-radius:999px;
-  opacity:.95;
-}
-.sum-form input,
-.sum-form select{
-  width:100%;
-  height:54px;
-  padding:0 14px;
-  border-radius:14px;
-  border:1px solid #e5e7eb;
-  background:#fff;
-  font-weight:900;
-  color:#111827;
-  outline:none;
-  transition:border-color .15s ease, box-shadow .15s ease;
-}
-.sum-form input:focus,
-.sum-form select:focus{
-  border-color:var(--brand);
-  box-shadow:var(--focus);
-}
-.sum-form select{
-  appearance:none;
-  -webkit-appearance:none;
-  -moz-appearance:none;
-  background-image:
-    linear-gradient(45deg, transparent 50%, #9ca3af 50%),
-    linear-gradient(135deg, #9ca3af 50%, transparent 50%);
-  background-position:
-    calc(100% - 18px) 50%,
-    calc(100% - 12px) 50%;
-  background-size:6px 6px, 6px 6px;
-  background-repeat:no-repeat;
-  padding-right:34px;
-}
-
-/* CHECKS compactos */
-.cbox, .return-check{
-  display:flex;
-  align-items:flex-start;
-  gap:10px;
-  font-weight:900;
-  color:#111827;
-  margin:10px 0;
-  font-size:13px;
-
-  padding:0;
+/* tabla “sin marco” */
+.sum-table{
   background:transparent;
   border:0;
   box-shadow:none;
-
-  max-width:680px;
-}
-.cbox input, .return-check input{
-  width:18px; height:18px;
-  accent-color:var(--brand);
-  margin-top:3px;
-  flex:0 0 auto;
-}
-.sum-form .cbox span{
-  text-transform:none;
-  letter-spacing:0;
-  font-size:13px;
-  font-weight:800;
-  color:#111827;
-  line-height:1.35;
-}
-@media (max-width:560px){
-  .cbox, .return-check{ max-width:100%; }
-  .sum-form .cbox span{ font-size:12.5px; }
-}
-/* ===========================
-   STEP 4 - Split Cards
-=========================== */
-.step4-grid{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:22px;
-  align-items:start;
 }
 
-.step4-left,
-.step4-right{
+/* cada bloque como card */
+.sum-block{
+  background:#fff;
+  border:1px solid #eef2f7;
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:12px;
+  box-shadow: 0 14px 30px rgba(0,0,0,.06);
+}
+
+/* Header PRO: blanco glass + acento rojo */
+.sum-bar{
+  position:relative;
   display:flex;
-  flex-direction:column;
-  gap:18px;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+
+  padding:12px 14px 12px 16px;
+  border-radius:14px;
+
+  background: rgba(255,255,255,.75);
+  border:1px solid rgba(15,23,42,.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow: 0 10px 22px rgba(0,0,0,.06);
+  overflow:hidden;
+}
+.sum-bar::before{
+  content:"";
+  position:absolute;
+  left:0; top:10px; bottom:10px;
+  width:4px;
+  border-radius:999px;
+  background: linear-gradient(180deg, var(--brand), var(--brand-dark));
+  box-shadow: 0 8px 18px rgba(178,34,34,.18);
+}
+.sum-bar > span{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.55px;
+  font-size:12px;
+  color:#0f172a;
+}
+.sum-bar > strong{
+  white-space:nowrap;
+  font-weight:900;
+  font-size:14px;
+  color:#0f172a;
+
+  padding:8px 12px;
+  border-radius:999px;
+
+  background: linear-gradient(180deg, rgba(178,34,34,.10), rgba(178,34,34,.05));
+  border:1px solid rgba(178,34,34,.18);
 }
 
-.card-block{
-  background:var(--paper);
-  border-radius:var(--radius);
-  border:1px solid var(--line);
-  box-shadow:var(--shadow);
-  padding:22px;
+/* Subheader simple */
+.sum-subbar{
+  margin-top:12px;
+  margin-bottom:8px;
+
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.55px;
+  font-size:12px;
+  color:#111827;
+
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.sum-subbar::after{
+  content:"";
+  flex:1;
+  height:2px;
+  border-radius:999px;
+  background: linear-gradient(90deg, rgba(15,23,42,.12), rgba(15,23,42,0));
 }
 
-/* responsive */
-@media(max-width: 980px){
-  .step4-grid{ grid-template-columns:1fr; }
+/* Rows internas limpias */
+.sum-block .row{
+  padding:10px 0;
+  border-top:1px solid #f1f5f9;
+  font-weight:800;
+  font-size:14px;
+  color:#0f172a;
+}
+.sum-block .row:first-of-type{ border-top:0; }
+
+/* Tarifa base total en misma fila */
+.row-base-total{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  padding-top:8px !important;
+}
+.row-base-total .row-total-label{
+  font-weight:900;
+  color:#111827;
+}
+.row-base-total strong{
+  font-weight:900;
+  font-size:18px;
+  white-space:nowrap;
+}
+
+/* Incluido chips */
+.inc-items{ display:flex; flex-wrap:wrap; gap:10px; }
+.inc-item{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+
+  font-weight:800;
+  font-size:13px;
+  color:#0f172a;
+
+  padding:8px 12px;
+  border-radius:999px;
+
+  background:#fff;
+  border:1px solid #eef2f7;
+  box-shadow: 0 8px 18px rgba(0,0,0,.04);
+}
+.inc-check{ color:#22c55e; font-weight:900; }
+
+/* Total final */
+.sum-total{
+  margin-top:10px;
+  padding:14px 2px 0;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+
+  border-top:2px solid rgba(178,34,34,.85);
+}
+.sum-total span{
+  font-weight:900;
+  font-size:18px;
+  color:#0f172a;
+}
+.sum-total strong{
+  font-weight:900;
+  font-size:24px;
+  color:#0f172a;
+  letter-spacing:.2px;
+}
+
+@media (max-width:560px){
+  .sum-block{ padding:12px; border-radius:14px; }
+  .sum-bar{ padding:11px 12px 11px 14px; }
+  .sum-bar > strong{ font-size:13px; padding:7px 10px; }
+  .sum-total strong{ font-size:22px; }
 }
 
 /* ==========================================================
-   BOTONES
+   BOTONES GENERALES
 ========================================================== */
 .btn{
   display:inline-flex;
@@ -1171,291 +1417,8 @@ body{
 .btn-secondary{ background:#111827; color:#fff; }
 .btn-ghost{ background:#f1f5f9; color:#0f172a; border:1px solid #e5e7eb; }
 
-/* ==========================================================
-   BOTONES
-========================================================== */
-.sum-form .wizard-nav{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-}
-
-/* Reservar */
-#btnReservar{
-  height:44px;
-  padding:0 26px;
-  max-width:600px;
-  width:100%;
-  border-radius:16px;
-  font-size:14px;
-  font-weight:900;
-  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
-  color:#fff;
-  box-shadow:0 16px 34px rgba(178,34,34,.22);
-  margin-left:auto;
-}
-
-.sum-form .wizard-nav .btn-ghost{
-  height:50px;
-  border-radius:14px;
-}
-
-/* Cotizar */
-.btn-quote{
-  display:block;
-  margin-top:16px;
-  margin-left:auto;
-
-  height:44px;
-  max-width:600px;
-  border-radius:14px;
-  border:2px solid rgba(178,34,34,.55);
-  background:#fff;
-  color:var(--brand);
-  font-weight:900;
-  box-shadow:0 10px 20px rgba(178,34,34,.10);
-  font-size:14px;
-  width:100%;
-}
-.btn-quote:hover{ filter:brightness(.98); }
-.btn-quote i{ font-size:16px; }
-
 @media (max-width:560px){
-  #btnReservar{ width:100%; }
-  .sum-form .wizard-nav{ flex-direction:column; gap:12px; }
-  .btn-quote{ max-width:none; margin-left:0; height:46px; font-size:13.5px; }
-}
-
-/* ==========================================================
-   DATOS PERSONALES 
-========================================================== */
-.sum-section-title{
-  background:transparent;
-  border:0;
-  padding:0;
-  margin:4px 0 12px;
-
-  font-size:18px;
-  font-weight:900;
-  letter-spacing:.6px;
-  color:#111827;
-
-  display:flex;
-  align-items:center;
-  gap:14px;
-  text-transform:none;
-}
-.sum-section-title::after{
-  content:"";
-  flex:1;
-  height:2px;
-  background:linear-gradient(90deg, var(--brand), rgba(178,34,34,.15));
-  border-radius:999px;
-}
-
-/* ==========================================================
-   STEP 1 
-========================================================== */
-.wizard-page[data-current-step="1"] .wizard-card{
-  width: min(1180px, 96vw);
-  padding: 30px;
-  border-radius: 22px;
-  box-shadow: 0 30px 80px rgba(0,0,0,.26);
-  margin-top:35px;
-}
-.wizard-page[data-current-step="1"] .wizard-head{ margin:0 0 16px; }
-.wizard-page[data-current-step="1"] .wizard-head h2{ font-size:28px; }
-.wizard-page[data-current-step="1"] .wizard-head p{ font-size:20px; }
-.wizard-page[data-current-step="1"] .search-grid{
-  gap:26px;
-  grid-template-columns: 1.25fr 1fr 1fr;
-}
-.wizard-page[data-current-step="1"] .ctl input,
-.wizard-page[data-current-step="1"] .ctl select{
-  height:60px;
-  border-radius:16px;
-}
-
-@media (max-width:980px){
-  .wizard-page[data-current-step="1"] .wizard-card{
-    width: min(980px, 96vw);
-    padding: 24px;
-  }
-  .wizard-page[data-current-step="1"] .wizard-head h2{ font-size:30px; }
-}
-@media (max-width:560px){
-  .wizard-page[data-current-step="1"] .wizard-card{
-    width: min(540px, 94vw);
-    padding: 18px;
-    margin-top:10px;
-  }
-  .wizard-page[data-current-step="1"] .wizard-head h2{ font-size:26px; }
-  .wizard-page[data-current-step="1"] .ctl input,
-  .wizard-page[data-current-step="1"] .ctl select{ height:56px; }
-}
-
-/* ==========================================================
-   STEP 4 — Resumen compacto 
-========================================================== */
-.sum-compact{
-  margin-top:6px;
-  padding:12px;
-  border-radius:14px;
-  background:linear-gradient(180deg,#fff,#fbfbfd);
-  border:1px solid #eef2f7;
-  box-shadow:0 10px 25px rgba(0,0,0,.06);
-}
-.sum-compact-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-  padding-bottom:10px;
-  border-bottom:1px dashed rgba(178,34,34,.18);
-}
-.sum-tag{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:8px 12px;
-  border-radius:999px;
-  font-weight:900;
-  font-size:12px;
-  letter-spacing:.4px;
-  color:#fff;
-  background:linear-gradient(90deg, var(--brand), var(--brand-dark));
-  box-shadow:0 10px 22px rgba(178,34,34,.18);
-}
-.sum-days{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  font-weight:900;
-  font-size:12px;
-  color:#111827;
-  background:#fff;
-  border:1px solid #eef2f7;
-  padding:8px 10px;
-  border-radius:999px;
-}
-.sum-compact-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-.sum-item{
-  background:#fff;
-  border:1px solid #eef2f7;
-  border-radius:14px;
-  padding:12px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-.sum-item-label{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-weight:900;
-  font-size:12px;
-  color:#6b7280;
-  text-transform:uppercase;
-  letter-spacing:.45px;
-}
-.sum-item-value{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-.sum-place{
-  font-weight:900;
-  color:#111827;
-  line-height:1.2;
-}
-.sum-dt{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  flex-wrap:wrap;
-  font-weight:900;
-  color:#111827;
-}
-.sum-dt .js-date{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:7px 10px;
-  border-radius:999px;
-  border:1px solid #e5e7eb;
-  background:#f3f4f6;
-  font-size:12px;
-}
-.sum-time{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:7px 10px;
-  border-radius:999px;
-  border:1px solid rgba(178,34,34,.22);
-  background:rgba(178,34,34,.08);
-  color:#8b1d1a;
-  font-size:12px;
-}
-
-@media (max-width:760px){
-  .sum-compact-grid{ grid-template-columns:1fr; }
-  .sum-compact-head{ flex-direction:column; align-items:flex-start; }
-  .sum-dt{ justify-content:flex-start; }
-}
-/* ===========================
-   STEP 4 — 3 CARDS (1 arriba + 2 abajo)
-=========================== */
-.step4-layout{
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-}
-
-/* Card superior full width */
-.step4-top{
-  width:100%;
-}
-
-/* Abajo: 2 columnas */
-.step4-bottom{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:18px;
-  align-items:start;
-}
-
-/* responsive */
-@media(max-width: 980px){
-  .step4-bottom{
-    grid-template-columns: 1fr;
-  }
-}
-
-/* tus cards (si no las tienes ya) */
-.card-block{
-  background:var(--paper);
-  border-radius:var(--radius);
-  border:1px solid var(--line);
-  box-shadow:var(--shadow);
-  padding:22px;
-}
-
-/* evitar doble estilo si sum-car/sum-table/sum-form ya traen fondo/sombra */
-.card-block .sum-car,
-.card-block .sum-table,
-.card-block .sum-form{
-  background:transparent;
-  border:0;
-  box-shadow:none;
-  padding:0;
+  .wizard-nav{ flex-direction:column; gap:12px; }
 }
 
 /* ==========================================================
@@ -1486,17 +1449,10 @@ body{
   gap:.75rem;
   margin-bottom:1rem;
 }
-.pref-input{
-  width:100%;
-  padding:10px;
-  margin:12px 0;
-  border:1px solid #ccc;
-  border-radius:8px;
-}
 .modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
 
 /* ==========================================================
-   FLATPICKR (anclado al input + visible)
+   FLATPICKR (visible + anclado)
 ========================================================== */
 .flatpickr-wrapper{ position:relative; }
 
@@ -1593,285 +1549,215 @@ span.flatpickr-weekday{
 }
 
 /* ==========================================================
+   LINKS
+========================================================== */
+.link-politicas{
+  color: var(--brand);
+  font-weight: 600;
+  text-decoration: underline;
+  transition: .2s ease;
+}
+.link-politicas:hover{
+  color: var(--brand-dark);
+}
+
+/* ==========================================================
+   STEP 1 — más grande SOLO cuando data-current-step="1"
+========================================================== */
+.wizard-page[data-current-step="1"] .wizard-card{
+  width: min(1180px, 96vw);
+  padding: 30px;
+  border-radius: 22px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.26);
+  margin-top:35px;
+}
+.wizard-page[data-current-step="1"] .wizard-head{ margin:0 0 16px; }
+.wizard-page[data-current-step="1"] .wizard-head h2{ font-size:28px; }
+.wizard-page[data-current-step="1"] .wizard-head p{ font-size:20px; }
+.wizard-page[data-current-step="1"] .search-grid{
+  gap:26px;
+  grid-template-columns: 1.25fr 1fr 1fr;
+}
+.wizard-page[data-current-step="1"] .ctl input,
+.wizard-page[data-current-step="1"] .ctl select{
+  height:60px;
+  border-radius:16px;
+}
+
+@media (max-width:980px){
+  .wizard-page[data-current-step="1"] .wizard-card{
+    width: min(980px, 96vw);
+    padding: 24px;
+  }
+  .wizard-page[data-current-step="1"] .wizard-head h2{ font-size:30px; }
+}
+@media (max-width:560px){
+  .wizard-page[data-current-step="1"] .wizard-card{
+    width: min(540px, 94vw);
+    padding: 18px;
+    margin-top:10px;
+  }
+  .wizard-page[data-current-step="1"] .wizard-head h2{ font-size:26px; }
+  .wizard-page[data-current-step="1"] .ctl input,
+  .wizard-page[data-current-step="1"] .ctl select{ height:56px; }
+}
+
+/* ==========================================================
    PRINT
 ========================================================== */
-@page{ size:Letter; margin:12mm }
+@page{ size:Letter; margin:12mm; }
 @media print{
   body{ background:#fff; }
   .topbar,.wizard-steps{ display:none!important; }
   .wizard-card{ box-shadow:none; border:1px solid #e5e7eb; background:#fff; }
 }
-.sum-form .ctl.has-ico .ico{
-  top: 50%;
-  transform: translateY(-50%);
-}
 /* ==========================================================
-   ✅ STEP 4 — DOB SIN FLOATING 
+   STEP 4 — ACORDEONES PRECIO (LIMPIO / PRO)
 ========================================================== */
-.sum-form .sum-personal-grid .ctl{
+
+.sum-acc{
+  background:#fff;
+  border:1px solid #eef2f7;
+  border-radius:16px;
+  box-shadow:0 14px 30px rgba(0,0,0,.06);
+  margin-bottom:12px;
+  overflow:hidden;
+}
+
+/* quitar marcador default */
+.sum-acc > summary{
+  list-style:none;
+  cursor:pointer;
   display:flex;
-  flex-direction:column;
-  align-items:stretch;
+  align-items:center;
+  padding:14px 18px;
+}
+.sum-acc > summary::-webkit-details-marker{ display:none; }
+
+/* HEADER */
+.sum-acc > .sum-bar{
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  padding:14px 18px;
+  gap:8px;
 }
 
-.sum-form .sum-personal-grid .ctl .flabel{
-  position:static !important;
-  transform:none !important;
-  top:auto !important;
-  left:auto !important;
-
-  display:block !important;
-  margin:0 0 8px !important;
-
-  color:#6b7280 !important;
-  font-weight:900 !important;
-  font-size:13px !important;
-  letter-spacing:.2px !important;
-  text-transform:uppercase !important;
-
-  background:transparent !important;
-  padding:0 !important;
-  border-radius:0 !important;
-  opacity:1 !important;
-
-  transition:none !important; 
-}
-
-.sum-form .sum-personal-grid .ctl input,
-.sum-form .sum-personal-grid .ctl select{
-  padding-top:0 !important;
-}
-/* 1) El precio tachado (price-old) ahora rojo */
-.price-pill--prepago .price-old{
-  color: rgba(178,34,34,.95);              /* rojo brand */
-  text-decoration: line-through;
-  text-decoration-color: rgba(178,34,34,.95);
-  text-decoration-thickness: 2px;
-  text-underline-offset: 3px; /* ayuda a que la raya se vea “a la mitad” */
-}
-
-/* 2) Precio en oficina más grande */
-.car-price > .price-pill:not(.price-pill--prepago){
-  font-size: 25px;                          /* sube el total */
-  line-height: 1.1;
-}
-
-/* Mantén el "precio por día" pequeño aunque el total sea grande */
-.car-price > .price-pill:not(.price-pill--prepago) small{
-  font-size: 12px;
-  font-weight: 800;
-  color: #6b7280;
-}
-
-/* Opcional: que el número se vea más pesado */
-.car-price > .price-pill:not(.price-pill--prepago) .js-mostrador-total{
-  font-weight: 900;
-}
-/* ✅ Texto subrayado arriba del precio (más grande + línea a la mitad) */
-.price-hint{
-  font-size: 12.5px;          /* antes 11px */
-  font-weight: 900;
-  line-height: 1.1;
-  margin-bottom: 8px;
-  text-align: right;
-}
-
-/* Línea “a la mitad” (tipo strike, pero sin tachar el texto) */
-.price-hint--u{
-  position: relative;
-  display: inline-block;
-  padding-bottom: 0;          /* sin espacio extra abajo */
-  text-decoration: none;      /* apagamos underline normal */
-}
-
-.price-hint--u::after{
-  content:"";
-  position:absolute;
-  left:0;
-  right:0;
-  top:50%;                    /* ✅ línea al centro vertical */
-  transform: translateY(-50%);
-  height: 2px;                /* grosor */
-  background: rgba(178,34,34,.9);  /* tono rojo */
-  border-radius: 999px;
-}
-/* ===============================
-   STEP 4 Layout
-=================================*/
-
-.step4-layout{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  align-items: start;
-}
-
-/* Columna izquierda */
-.card-left{
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-/* Columna derecha */
-.card-right{
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-@media (max-width: 992px){
-  .step4-layout{
-    grid-template-columns: 1fr;
-  }
-}
-/* ===========================
-   STEP 4: DOS FONDOS SEPARADOS
-=========================== */
-
-/* 1) En Step 4, la card padre ya NO debe verse como fondo blando */
-.page[data-current-step="4"] > .wizard-card,
-.page[data-current-step="4"] .wizard-card{
-  background: transparent !important;
-  box-shadow: none !important;
-  border: 0 !important;
-  padding: 0 !important;
-}
-
-/* 2) Layout 2 columnas */
-.step4-layout{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px;
-  align-items: start;
-}
-
-/* 3) Estas serán tus 2 cards grandes (izq/der) */
-.step4-pane{
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 18px;
-}
-
-/* separación interna dentro de cada pane */
-.step4-pane .card-left,
-.step4-pane .card-right{
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-/* responsive */
-@media (max-width: 992px){
-  .step4-layout{ grid-template-columns: 1fr; }
-}
-.step4-layout{
-  grid-template-columns: 0.95fr 1.05fr;
-}
-/* ===========================
-   STEP 4 - HEADER VISIBLE + MÁS ANCHO
-=========================== */
-
-/* 1) Haz más ancho el contenedor SOLO en Step 4 */
-.page[data-current-step="4"]{
-  --wizard-w: 12 00px; 
-}
-
-@media (min-width: 1200px){
-  .page[data-current-step="4"]{
-    --wizard-w: 1280px;
-  }
-}
-
-/* 2) Header del Step 4 con panel para que no se pierda */
-.page[data-current-step="4"] .wizard-head{
-  background: rgba(255,255,255,.92);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 18px 18px;
-  margin: 0 0 18px;
-  backdrop-filter: blur(6px);
-}
-
-.page[data-current-step="4"] .wizard-head h2,
-.page[data-current-step="4"] .wizard-head p{
-  color: var(--ink);
-}
-
-.page[data-current-step="4"] .step4-layout{
-  grid-template-columns: 0.95fr 1.05fr;
-  gap: 24px;
-}
-
-/* 4) Páneles más grandes */
-.page[data-current-step="4"] .step4-pane{
-  padding: 20px;
-}
-
-/* 5) Ajuste responsive */
-@media (max-width: 992px){
-  .page[data-current-step="4"] .wizard-head{
-    padding: 16px;
-  }
-  .page[data-current-step="4"] .step4-layout{
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-}
-/* ===========================
-   STEP 4 - Incluido con palomitas
-=========================== */
-.sum-block .row.row-included{
-  align-items:flex-start;
-  gap:12px;
-}
-
-.inc-label{
+/* Título */
+.sum-bar > span{
   font-weight:900;
-  color:#111827;
+  text-transform:uppercase;
+  letter-spacing:.55px;
+  font-size:13px;
+  color:#0f172a;
+}
+
+/* PRECIO — sin burbuja */
+.sum-bar > strong{
+  margin-left:auto;          /* empuja a la derecha */
+  margin-right:6px;          /* lo acerca a la flecha */
+  font-size:15px;
+  font-weight:900;
+  color:#0f172a;
+
+  background:none;
+  border:0;
+  padding:0;
+}
+
+/* Flecha */
+.sum-caret{
+  font-size:14px;
+  transition: transform .2s ease;
+  opacity:.8;
+}
+.sum-acc[open] .sum-caret{
+  transform:rotate(180deg);
+}
+
+/* Cuerpo */
+.sum-acc-body{
+  padding:12px 18px 16px;
+  border-top:1px solid #f1f5f9;
+}
+
+/* Filas internas */
+.sum-acc-body .row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:12px;
+  padding:10px 0;
+  border-top:1px solid #f1f5f9;
+  font-weight:800;
+  font-size:14px;
+  color:#0f172a;
+}
+.sum-acc-body .row:first-child{ border-top:0; }
+
+.sum-acc-body .row > strong{
+  font-weight:900;
   white-space:nowrap;
 }
 
-.inc-items{
+.sum-acc-body .muted{
+  color:#6b7280;
+}
+/* ============================
+   STEP 4 - ICONOS (car-specs)
+============================ */
+.car-mini-specs{
+  margin-top:14px;
   display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
   flex-wrap:wrap;
-  gap:10px 14px;
 }
 
-.inc-item{
+.car-specs{
+  margin:0;
+  padding:0;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  color:#0f172a;
+  font-weight:900;
+}
+
+.car-specs li{
   display:inline-flex;
   align-items:center;
   gap:8px;
-  font-weight:800;
-  color:#0f172a;
-  background:#fff;
-  border:1px solid #eef2f7;
-  padding:6px 10px;
-  border-radius:999px;
-}
-
-.inc-check{
-  color:#22c55e;          /* ✅ verde */
-  font-weight:900;
   font-size:14px;
   line-height:1;
 }
-/* ==========================================================
-   ✅ STEP 4: La línea roja (accent bar) arriba del header card
-========================================================== */
-.page[data-current-step="4"] .wizard-head{
-  position: relative;
-  overflow: hidden;                 /* para que la barra respete bordes redondos */
+
+.car-specs i{
+  font-size:16px;
+  opacity:.95;
 }
 
-/* Barra superior igual a la que tenías en .wizard-card::before */
-.page[data-current-step="4"] .wizard-head::before{
-  content:"";
-  position:absolute;
-  left:0; right:0; top:0;
-  height:4px;
-  background:linear-gradient(90deg, var(--brand), rgba(178,34,34,.25), var(--brand-dark));
-  opacity:.95;
+.car-mini-tech{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* responsive */
+@media (max-width:760px){
+  .car-mini-specs{
+    justify-content:flex-start;
+  }
+}
+.link-politicas{
+  color: var(--brand);
+  font-weight: 900;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.link-politicas:hover{
+  color: var(--brand-dark);
 }
