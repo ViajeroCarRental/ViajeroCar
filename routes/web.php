@@ -210,6 +210,11 @@ Route::post('/admin/contrato/cargos', [App\Http\Controllers\ContratoController::
 Route::get('/admin/contrato/cargos/{idContrato}', [App\Http\Controllers\ContratoController::class, 'obtenerCargosContrato'])->name('contrato.obtenerCargos');
 
 // 📄 Guardar documentación subida (Paso 5)
+Route::get(
+    '/admin/contrato/{id}/cliente',
+    [App\Http\Controllers\ContratoController::class, 'obtenerClienteContrato']
+)->name('contrato.obtenerCliente');
+
 Route::post('/admin/contrato/guardar-documentacion', [App\Http\Controllers\ContratoController::class, 'guardarDocumentacion'])->name('contrato.guardarDocumentacion');
 Route::get('/admin/contrato/documentacion/{idContrato}',[App\Http\Controllers\ContratoController::class, 'obtenerDocumentacion'])->name('contrato.obtenerDocumentacion');
 Route::get('/archivo/{id}', function($id){
