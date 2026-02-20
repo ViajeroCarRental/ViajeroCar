@@ -812,7 +812,6 @@
             </div>
 
             <div class="wizard-nav" style="margin-top:10px;">
-              <a class="btn btn-ghost" href="{{ $toStep(3) }}">Anterior</a>
               <button id="btnReservar" type="button" class="btn btn-primary">Reservar</button>
             </div>
 
