@@ -1,178 +1,1877 @@
-/* ==============================
-   🎨 Tokens / Design System
-============================== */
 :root{
-  --brand:#FF1E2D; --brand-2:#D6121F; --brand-3:#ff4956;
+  --brand:#b22222;
+  --brand-dark:#8b1d1a;
+  --ink:#0f172a;
+  --muted:#6b7280;
+  --soft:#f6f7fb;
+  --paper:#fff;
+  --shadow:0 25px 60px rgba(0,0,0,.22);
 
-  --ink:#101828; --muted:#667085; --muted-2:#475467;
-  --bg:#F3F5F9; --paper:#FFFFFF;
+  --wizard-w: 900px;
+  --wizard-gap-top: 88px;
+  --wizard-pad: 16px;
 
-  --stroke:#EAECF0; --stroke-2:#E5E7EB;
-
-  --radius-lg:18px; --radius-md:14px; --radius-sm:10px;
-
-  --shadow-xs:0 1px 3px rgba(16,24,40,.06);
-  --shadow-sm:0 6px 18px rgba(16,24,40,.08);
-  --shadow-md:0 12px 28px rgba(16,24,40,.10);
-
-  --ring:0 0 0 6px #FFECEF;
+  --line:#eef2f7;
+  --line-2:#e5e7eb;
+  --soft-2:#fbfbfd;
+  --radius:18px;
+  --radius-sm:12px;
+  --focus:0 0 0 4px rgba(178,34,34,.12);
 }
 
 *{ box-sizing:border-box }
-html,body{
-  margin:0; background:var(--bg); color:var(--ink);
-  font-family:"Cabin",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-}
-body{ font-size:15px; line-height:1.5 }
-a{ color:inherit; text-decoration:none }
+html,body{ width:100%; overflow-x:hidden; }
 
-/* Scrollbar sutil */
-*::-webkit-scrollbar{height:10px;width:10px}
-*::-webkit-scrollbar-thumb{background:#dfe3ea;border-radius:999px}
-*::-webkit-scrollbar-track{background:transparent}
-
-/* ==============================
-   🧭 Shell / Sidebar / Main
-============================== */
-.wrap{
-  display:grid; grid-template-columns:280px 1fr; min-height:100vh;
-}
-@media (max-width:992px){ .wrap{ grid-template-columns:1fr } }
-
-.side{
-  background:linear-gradient(180deg,var(--brand),var(--brand-2));
-  color:#fff; padding:16px;
-  border-right:1px solid rgba(0,0,0,.06);
-  position:sticky; top:0; height:100vh; overflow:auto;
-  box-shadow:inset 0 -1px 0 rgba(255,255,255,.08);
-}
-.brand{
-  display:flex; justify-content:center; align-items:center;
-  gap:10px; margin-bottom:14px;
-  padding:10px 12px; border-radius:12px;
-  background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.22);
-}
-.brand img{ width:170px; border-radius:12px; filter:drop-shadow(0 8px 22px rgba(0,0,0,.18)) }
-
-/* Menú (si no tienes contenedor .menu no pasa nada) */
-.menu{ display:flex; flex-direction:column; gap:10px }
-.mitem{
-  display:flex; align-items:center; gap:10px;
-  padding:12px; border-radius:14px; font-weight:800; color:#fff;
-  background:rgba(255,255,255,.12);
-  border:1px solid rgba(255,255,255,.18); backdrop-filter:blur(2px);
-  transition:transform .15s, background .15s, box-shadow .15s;
-}
-.mitem:hover{ background:rgba(255,255,255,.18); transform:translateY(-1px); box-shadow:var(--shadow-xs) }
-.mitem.active{ background:#fff; color:var(--brand); border-color:#fff; box-shadow:0 6px 16px rgba(255,255,255,.25) }
-
-.main{ padding:22px }
-.container{ max-width:1120px; margin:0 auto }
-.h1{
-  margin:0 0 14px; font-size:24px; font-weight:900; letter-spacing:.2px;
-  background:linear-gradient(90deg,var(--brand),var(--brand-3));
-  -webkit-background-clip:text; background-clip:text; color:transparent;
+body{
+  margin:0;
+  font-family:'Poppins',system-ui,Arial,sans-serif;
+  color:var(--ink);
+  background:transparent;
 }
 
-/* ==============================
-   🧱 Grid / Cards
-============================== */
-.grid2{
-  display:grid; grid-template-columns:repeat(2, minmax(220px,1fr)); gap:16px;
-}
-@media (max-width:820px){ .grid2{ grid-template-columns:1fr } }
+.hidden{ display:none!important; }
 
-.card{
+/* ==========================================================
+   PAGE
+========================================================== */
+.page{
   position:relative;
+  left:50%;
+  right:50%;
+  margin-left:-50vw;
+  margin-right:-50vw;
+  width:100vw;
+
+  min-height:100vh;
+  padding: var(--wizard-gap-top) var(--wizard-pad) 60px;
+
+  display:grid;
+  justify-items:center;
+  align-content:start;
+
+  overflow:visible;
+}
+
+/* fondo */
+.page::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:url("../img/4x4.png") center / cover no-repeat;
+  z-index:-2;
+  transform:translateZ(0);
+}
+
+/* overlay */
+.page::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:radial-gradient(1200px 700px at 50% 20%, rgba(255,255,255,.14), rgba(0,0,0,.18));
+  z-index:-1;
+  pointer-events:none;
+}
+
+.wizard-page{ overflow:visible !important; }
+
+/* ==========================================================
+   TOPBAR
+========================================================== */
+.topbar{
+  position:fixed;
+  top:16px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:60;
+  width:min(1200px,94%);
+  border-radius:14px;
+  padding:8px 12px;
+  border:1px solid rgba(255,255,255,.20);
+  background:linear-gradient(180deg, rgba(178,34,34,.45), rgba(178,34,34,.22));
+  backdrop-filter:blur(10px);
+  box-shadow:0 10px 30px rgba(0,0,0,.15);
+}
+.topbar.solid{
+  background:rgba(178,34,34,.96);
+  border-color:rgba(255,255,255,.18);
+}
+.nav{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.brand-logo{
+  font-family:'Playfair Display',serif;
+  font-weight:800;
+  letter-spacing:2px;
+  color:#fff;
+  font-size:24px;
+}
+.menu{ display:flex; gap:20px; list-style:none; margin:0; padding:0; }
+.menu a{
+  color:#fff;
+  text-decoration:none;
+  font-weight:700;
+  font-size:13px;
+  text-transform:uppercase;
+  padding:8px 10px;
+  border-radius:10px;
+}
+.menu a:hover{ background:rgba(255,255,255,.14); }
+.menu a.active{ background:rgba(255,255,255,.2); }
+.nav-actions{ display:flex; gap:10px; }
+.login{
+  color:#fff;
+  width:38px;
+  height:38px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:rgba(255,255,255,.16);
+}
+.login:hover{ background:rgba(255,255,255,.22); }
+.login .avatar-mini{
+  width:38px;height:38px;border-radius:10px;
+  display:grid;place-items:center;
+  background:#ffffff26;color:#fff;
+  font-weight:900;font-size:14px;letter-spacing:.4px;
+}
+.hamburger{ display:none; background:transparent; border:0; color:#fff; font-size:22px; }
+@media (max-width:940px){
+  .menu{ display:none; }
+  .hamburger{ display:block; }
+}
+
+/* ==========================================================
+   PASOS
+========================================================== */
+.wizard-steps{
+  width:min(var(--wizard-w), 96vw);
+  margin-left:auto;
+  margin-right:auto;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+
+  margin-top:12px;
+  margin-bottom:16px;
+
+  align-self:flex-start;
+}
+@media (max-width:560px){
+  .wizard-steps{ margin-top:16px; }
+}
+
+.wizard-step{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  text-decoration:none;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.22);
+  background:rgba(255,255,255,.10);
+  backdrop-filter:blur(10px);
+  color:#fff;
+  font-weight:900;
+  box-shadow:0 10px 30px rgba(0,0,0,.18);
+  transition:transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.wizard-step:hover{ transform:translateY(-1px); box-shadow:0 14px 34px rgba(0,0,0,.22); }
+
+.wizard-step .n{
+  width:30px;height:30px;border-radius:999px;
+  display:grid;place-items:center;
+  background:rgba(255,255,255,.18);
+  border:1px solid rgba(255,255,255,.24);
+  font-weight:900;
+}
+.wizard-step.done{
+  border-color:rgba(34,197,94,.50);
+  background:rgba(34,197,94,.14);
+}
+.wizard-step.done .n{
+  background:rgba(34,197,94,.25);
+  border-color:rgba(34,197,94,.45);
+}
+.wizard-step.active{
+  border-color:rgba(255,255,255,.45);
+  background:rgba(178,34,34,.35);
+}
+.wizard-step.active .n{
+  background:rgba(178,34,34,.9);
+  border-color:rgba(255,255,255,.18);
+}
+
+/* ==========================================================
+   CARD PRINCIPAL
+========================================================== */
+.wizard-card{
+  width:min(var(--wizard-w), 96vw);
+  margin-left:auto;
+  margin-right:auto;
+  margin-top:0;
+
+  background:linear-gradient(180deg, #fff, var(--soft-2));
+  border:1px solid rgba(255,255,255,.75);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:16px;
+
+  position:relative;
+  overflow:visible;
+}
+
+.wizard-card::before{
+  content:"";
+  position:absolute;
+  left:0; right:0; top:0;
+  height:4px;
+  background:linear-gradient(90deg, var(--brand), rgba(178,34,34,.25), var(--brand-dark));
+  opacity:.95;
+}
+
+.wizard-card::after{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  background:radial-gradient(700px 220px at 18% 0%, rgba(178,34,34,.08), transparent 60%);
+  pointer-events:none;
+}
+
+.wizard-head{
+  margin:0 0 10px;
+  text-align:left;
+  position:relative;
+  z-index:1;
+}
+.wizard-head h2{
+  margin:0 0 6px;
+  font-weight:900;
+  font-size:30px;
+  letter-spacing:-.2px;
+}
+.wizard-head p{
+  margin:0;
+  color:#374151;
+  font-weight:700;
+  font-size:14px;
+}
+
+.wizard-nav{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-top:14px;
+  flex-wrap:wrap;
+  position:relative;
+  z-index:1;
+}
+
+/* ==========================================================
+   STEP 1: FORM GRID
+========================================================== */
+.search-grid{
+  display:grid;
+  grid-template-columns: 1.15fr 1fr 1fr;
+  gap:18px;
+  align-items:start;
+  position:relative;
+  z-index:1;
+}
+
+.group-card{
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  padding:0;
+}
+
+@media (min-width:981px){
+  .search-grid > .group-card{
+    padding-right:16px;
+    border-right:1px solid var(--line);
+  }
+  .search-grid > .group-card:last-child{
+    border-right:0;
+    padding-right:0;
+  }
+}
+
+.group-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:0 0 10px;
+  padding-bottom:8px;
+  border-bottom:1px dashed rgba(178,34,34,.22);
+}
+
+.group-title{
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.45px;
+  font-size:13px;
+  color:#6b7280;
+}
+
+.field{ display:flex; flex-direction:column; gap:6px; }
+.field-row{ display:grid; gap:10px; }
+.field-row.two{ grid-template-columns:1fr 1fr; }
+
+.small{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:8px;
+  font-weight:800;
+  line-height:1.35;
+}
+
+/* hora/min */
+.time-split{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.time-split .ctl select{ padding-top:10px; }
+
+@media (max-width:980px){
+  .wizard-head h2{ font-size:28px; }
+  .search-grid{ grid-template-columns:1fr; }
+  .group-head{ margin-top:4px; }
+}
+
+/* ==========================================================
+   CONTROLES + FLOATING LABELS
+========================================================== */
+.wizard-form .field > label{ display:none !important; }
+
+.ctl{
+  position:relative;
+  display:flex;
+  align-items:center;
+  width:100%;
+}
+
+.ctl .ico{
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:18px;height:18px;
+  display:grid;place-items:center;
+  color:#9ca3af;
+  pointer-events:none;
+  font-size:15px;
+  z-index:2;
+  line-height:1;
+}
+
+
+.ctl .flabel{
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#6b7280;
+  font-weight:900;
+  font-size:13px;
+  letter-spacing:.2px;
+  pointer-events:none;
+  transition:all .16s ease;
+  z-index:2;
+  background:#fff;
+  padding:0 6px;
+  border-radius:999px;
+  opacity:.95;
+}
+
+.ctl.has-ico .flabel{ left:40px; }
+
+.ctl input,
+.ctl select{
+  width:100%;
+  height:54px;
+  padding:0 14px;
+  border-radius:14px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  font-weight:900;
+  color:#111827;
+  outline:none;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+
+.ctl.has-ico input,
+.ctl.has-ico select{ padding-left:46px; }
+
+.ctl select{
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #9ca3af 50%),
+    linear-gradient(135deg, #9ca3af 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 12px) 50%;
+  background-size:6px 6px, 6px 6px;
+  background-repeat:no-repeat;
+  padding-right:34px;
+}
+
+.ctl:focus-within input,
+.ctl:focus-within select{
+  border-color:var(--brand);
+  box-shadow:var(--focus);
+}
+
+.ctl.pristine .flabel{
+  top:50%;
+  transform:translateY(-50%);
+  font-size:13px;
+  opacity:.95;
+}
+.ctl.filled .flabel,
+.ctl:focus-within .flabel{
+  top:8px;
+  transform:translateY(0);
+  font-size:11px;
+  opacity:1;
+  color:#6b7280;
+}
+
+.ctl.filled input,
+.ctl.filled select,
+.ctl:focus-within input,
+.ctl:focus-within select{
+  padding-top:18px;
+}
+
+.ctl.pristine input,
+.ctl.pristine select{
+  padding-top:0;
+}
+
+@media (max-width:560px){
+  :root{ --wizard-gap-top: 96px; }
+  .wizard-steps, .wizard-card{ width:min(520px, 94vw); }
+  .wizard-head h2{ font-size:24px; }
+  .ctl input, .ctl select{ height:52px; }
+}
+
+/* ==========================================================
+   STEP 2: CARS
+========================================================== */
+.cars{ display:grid; gap:16px; }
+
+.car-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  box-shadow:0 14px 35px rgba(0,0,0,.10);
+  padding:16px;
+  display:grid;
+  grid-template-columns: 260px 1fr 320px;
+  gap:18px;
+  align-items:center;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.car-card:hover{
+  transform:translateY(-1px);
+  box-shadow:0 18px 44px rgba(0,0,0,.12);
+}
+.car-card.active{
+  border-color:rgba(178,34,34,.35);
+  box-shadow:0 16px 45px rgba(178,34,34,.12);
+}
+
+.car-avatar{
+  width:100%;
+  max-width:260px;
+  height:150px;
+  border-radius:14px;
+  border:1px solid #eef2f7;
+  background:linear-gradient(180deg,#f8fafc,#f3f4f6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:10px;
+  overflow:hidden;
+}
+.car-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
+
+.car-meta{ min-width:0; }
+.car-meta .car-top{
+  font-weight:900;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+  color:#111827;
+  font-size:18px;
+  margin:0 0 2px;
+}
+.car-meta .car-sub{
+  margin:0 0 8px;
+  color:#374151;
+  font-weight:700;
+  font-size:13px;
+  line-height:1.4;
+}
+
+.r-specs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin:10px 0 8px;
+}
+.chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:#f3f4f6;
+  border:1px solid #e5e7eb;
+  border-radius:999px;
+  padding:7px 10px;
+  font-weight:900;
+  font-size:12px;
+  color:#111827;
+  line-height:1;
+  white-space:nowrap;
+}
+.chip-ok{
+  background:rgba(34,197,94,.12);
+  border-color:rgba(34,197,94,.28);
+  color:#065f46;
+}
+.chip i{ opacity:.9; }
+
+.car-price{
+  display:grid;
+  gap:10px;
+  padding-top:52px;
+}
+
+.price-pill{
+  text-align:right;
+  font-weight:900;
+  color:#111827;
+}
+.price-pill small{
+  font-size:12px;
+  color:#6b7280;
+  font-weight:800;
+}
+/* ===== Precio prepago estilo oferta ===== */
+
+.price-pill--prepago{
+  text-align:right;
+}
+
+.price-old{
+  font-size:14px;
+  font-weight:900;
+  color:#9ca3af;
+  text-decoration:line-through;
+  margin-bottom:4px;
+}
+
+.price-new{
+  font-size:28px;
+  font-weight:900;
+  color:#000;
+  line-height:1.1;
+}
+
+.price-save{
+  margin-top:4px;
+  font-size:14px;
+  font-weight:800;
+  color:#6b7280;
+}
+
+/* Texto pequeño subrayado arriba del precio */
+.price-hint{
+  display:block;
+  font-size:11px;
+  font-weight:900;
+  color:#6b7280;
+  margin-bottom:6px;
+  text-align:right;
+}
+.price-hint--u{
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* Badge de ahorro debajo del prepago */
+.save-pill{
+  margin-top:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  padding:7px 10px;
+  border-radius:999px;
+
+  font-size:12px;
+  font-weight:900;
+
+  color:#8b1d1a;
+  background:rgba(178,34,34,.07);
+  border:1px solid rgba(178,34,34,.20);
+
+  float:right; /* para que quede alineado a la derecha como tu pill */
+}
+.save-pill strong{
+  color:#b22222;
+}
+
+.btn-pay{
+  width:100%;
+  justify-content:center;
+  padding:12px 14px;
+  border-radius:12px;
+  font-weight:900;
+  border:0;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  transition:transform .15s ease, filter .15s ease;
+}
+.btn-pay:hover{ transform:translateY(-1px); filter:brightness(.98); }
+.btn-pay.primary{ background:#ff3b30; color:#fff; }
+.btn-pay.gray{ background:#9ca3af; color:#fff; }
+
+@media (max-width:980px){
+  .car-card{ grid-template-columns:1fr; }
+  .car-avatar{ max-width:100%; height:190px; }
+  .price-pill{ text-align:left; }
+}
+/* ===============================
+   📅 Badge de días - Step 2
+================================= */
+
+.car-card{
+  position:relative;
+  overflow:visible;
+}
+
+.car-days-badge{
+  position:absolute;
+  top:14px;
+  right:14px;
+  z-index:6;
+
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+
+  height:34px;
+  padding:0 14px;
+  border-radius:999px;
+
+  background: rgba(178,34,34,.06);       /* ✅ rosita suave */
+  border: 2px solid rgba(178,34,34,.22); /* ✅ borde como pill */
+  color: #b22222;
+
+  font-weight:900;
+  font-size:13px;
+  letter-spacing:.2px;
+
+  backdrop-filter:none; /* ✅ pill limpia como la de la imagen */
+  box-shadow:none;      /* ✅ pill limpia */
+}
+.car-days-badge i{
+  font-size:14px;
+}
+
+
+.car-days-badge i{
+  font-size:14px;
+}
+
+/* ==========================================================
+   STEP 3: COMPLEMENTOS
+========================================================== */
+.addons-grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr));
+  gap:14px;
+  margin-top:6px;
+}
+@media (max-width:980px){ .addons-grid{ grid-template-columns:repeat(2, minmax(0,1fr)); } }
+@media (max-width:560px){ .addons-grid{ grid-template-columns:1fr; } }
+
+.addon-card{
+  background:#fff;
+  border-radius:14px;
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(15,23,42,.10);
+  box-shadow:0 14px 35px rgba(0,0,0,.10);
+  transform:translateZ(0);
+
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+/* Barra superior sutil */
+.addon-card::before{
+  content:"";
+  position:absolute;
+  left:0; right:0; top:0;
+  height:4px;
+  background:linear-gradient(90deg, var(--brand), rgba(178,34,34,.20), var(--brand-dark));
+  opacity:.75;
+}
+
+/* Check visual seleccionado */
+.addon-card::after{
+  content:"✓";
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  font-size:14px;
+  color:#fff;
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
+  box-shadow:0 12px 26px rgba(178,34,34,.22);
+  transform:scale(.92);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .18s ease, transform .18s ease;
+}
+
+.addon-card:hover{ transform:translateY(-3px); box-shadow:0 18px 40px rgba(0,0,0,.12); }
+
+.addon-card.selected{
+  border-color:rgba(178,34,34,.35);
+  box-shadow:0 18px 48px rgba(178,34,34,.14);
+}
+.addon-card.selected::after{
+  opacity:1;
+  transform:scale(1);
+}
+
+.addon-card h4{ margin:0; font-weight:900; }
+.addon-card p{
+  margin:0;
+  font-size:13px;
+  color:#374151;
+  font-weight:700;
+  line-height:1.45;
+}
+
+/* Título + jerarquía */
+.addon-name{
+  margin:0;
+  font-size:15px;
+  letter-spacing:.2px;
+  color:#0f172a;
+  padding-right:38px;
+}
+
+/* Badge precio  */
+.addon-card .small{
+  margin-top:2px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  width:fit-content;
+  padding:7px 10px;
+  border-radius:999px;
+  background:rgba(178,34,34,.07);
+  border:1px solid rgba(178,34,34,.18);
+  color:#8b1d1a;
+  font-weight:900;
+}
+.addon-card .small strong{ color:#111827; }
+
+/* Qty */
+.addon-qty{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:auto;
+  padding-top:10px;
+  border-top:1px dashed rgba(178,34,34,.18);
+  justify-content:space-between;
+}
+
+.addon-qty .qty{
+  min-width:34px;
+  height:34px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  font-size:13px;
+  font-weight:900;
+}
+
+/* Botones qty */
+.addon-qty button{
+  width:40px;
+  height:40px;
+  border-radius:999px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  box-shadow:0 8px 18px rgba(0,0,0,.06);
+  font-weight:900;
+  font-size:18px;
+  cursor:pointer;
+  transition:transform .15s ease, filter .15s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.addon-qty button:hover{ transform:translateY(-1px); filter:brightness(.98); }
+.addon-qty button.plus{
+  border-color:rgba(178,34,34,.22);
+  background:linear-gradient(180deg, rgba(178,34,34,.10), rgba(178,34,34,.04));
+}
+.addon-qty button:active{ transform:translateY(0) scale(.98); }
+
+.addon-card.qty-zero .qty-btn.minus{
+  opacity:.45;
+  filter:saturate(.6);
+}
+
+@media (max-width:980px){
+  .addon-card{ padding:14px; }
+}
+@media (max-width:560px){
+  .addon-card{ padding:14px; }
+  .addon-name{ font-size:14px; }
+}
+
+/* ==========================================================
+   STEP 4: RESUMEN
+========================================================== */
+.sum-car{
+  display:flex;
+  gap:14px;
+  align-items:center;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:12px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  margin-bottom:12px;
+}
+.sum-car img{
+  width:210px;
+  height:auto;
+  object-fit:contain;
+  background:#f6f7fb;
+  border-radius:12px;
+  padding:8px;
+  border:1px solid #eef2f7;
+}
+.sum-car-info h3{ margin:0 0 6px; font-weight:900; font-size:20px;}
+.sum-car-info p{ margin:0; color:#374151; font-weight:700; line-height:1.45; }
+
+@media (max-width:760px){
+  .sum-car{ flex-direction:column; align-items:flex-start; }
+  .sum-car img{ width:100%; }
+}
+
+.sum-table{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  margin-bottom:12px;
+}
+.sum-block{ border-bottom:1px solid #e5e7eb; }
+.sum-block:last-child{ border-bottom:none; }
+
+.sum-block h4{
+  margin:0;
+  padding:12px 14px;
+  font-weight:900;
+  font-size:18px;
+  background:linear-gradient(90deg, rgba(178,34,34,.14), rgba(178,34,34,.06));
+  border-bottom:1px solid rgba(178,34,34,.14);
+  color:#111827;
+  position:relative;
+}
+.sum-block h4::before{
+  content:"";
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
+  display:inline-block;
+  margin-right:10px;
+  vertical-align:middle;
+  box-shadow:0 10px 18px rgba(178,34,34,.18);
+}
+
+/* ===========================
+   STEP 4 - Filas de pagos
+   (mismo estilo + alineación perfecta)
+=========================== */
+.sum-block .row:not(.row-included){
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 14px;
+
+  /* 🔒 mantenemos el estilo original */
+  padding: 10px 14px;
+  border-top: 1px solid #eef2f7;
+  font-weight: 800;
+  font-size: 16px;        /* 👈 mismo tamaño que usas arriba */
+  color: #0f172a;
+}
+
+.sum-block .row:not(.row-included) > span{
+  min-width: 0;
+  font-weight: 800;       /* 🔒 mismo peso */
+}
+
+.sum-block .row:not(.row-included) > strong{
+  justify-self: end;
+  white-space: nowrap;
+  font-weight: 900;       /* 🔥 un poquito más fuerte para el precio */
+}
+
+
+.sum-block .row:first-of-type{ border-top:none; }
+
+.sum-total{
+  display:flex;
+  justify-content:space-between;
+  padding:12px 14px;
+  font-weight:900;
+  font-size:20px;
+  background:linear-gradient(90deg, rgba(178,34,34,.10), rgba(255,255,255,1));
+  border-top:1px solid rgba(178,34,34,.16);
+}
+.sum-total span{ font-weight:900; color:#111827; }
+.sum-total strong{
+  padding:8px 12px;
+  border-radius:999px;
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
+  color:#fff;
+  box-shadow:0 14px 28px rgba(178,34,34,.22);
+}
+
+.sum-form{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  box-shadow:0 10px 25px rgba(0,0,0,.08);
+  padding:14px;
+}
+/* ==========================================================
+   STEP 4 — DATOS PERSONALES
+========================================================== */
+.sum-form .sum-personal-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:18px 22px;
+  margin-top:10px;
+  margin-bottom:14px;
+}
+/* ✅ Step 4: hacer que el campo de vuelo ocupe las 2 columnas */
+.sum-form .sum-personal-grid .field:has(#vuelo){
+  grid-column: 1 / -1;
+}
+
+/* cada field sin “saltos raros” */
+.sum-form .sum-personal-grid .field{
+  gap:8px;
+  margin:0;
+}
+
+/* labels arriba (como tu screenshot) */
+.sum-form .sum-personal-grid .field > label{
+  display:block;
+  margin:0 0 8px;
+  color:#6b7280;
+  font-weight:900;
+  font-size:13px;
+  letter-spacing:.2px;
+  text-transform:uppercase;
+}
+
+/* por si DOB usa .ctl estilo Step 1, que se alinee bien */
+.sum-form .sum-personal-grid .ctl{
+  margin:0;
+}
+
+/* checks en 2 columnas también (terminos/promo) */
+.sum-form .sum-checks{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px 22px;
+  margin:10px 0 16px;
+}
+.sum-form .sum-checks .cbox,
+.sum-form .sum-checks .return-check{
+  margin:0;
+  max-width:none;
+}
+
+/* responsive: 1 columna */
+@media (max-width:760px){
+  .sum-form .sum-personal-grid{ grid-template-columns:1fr; }
+  .sum-form .sum-checks{ grid-template-columns:1fr; }
+}
+
+/* labels tipo "Hora/Min" */
+.sum-form .field > label{
+  display:inline-block;
+  margin:0 0 8px;
+  color:#6b7280;
+  font-weight:900;
+  font-size:13px;
+  letter-spacing:.2px;
+  background:#fff;
+  padding:0 6px;
+  border-radius:999px;
+  opacity:.95;
+}
+.sum-form input,
+.sum-form select{
+  width:100%;
+  height:54px;
+  padding:0 14px;
+  border-radius:14px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  font-weight:900;
+  color:#111827;
+  outline:none;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.sum-form input:focus,
+.sum-form select:focus{
+  border-color:var(--brand);
+  box-shadow:var(--focus);
+}
+.sum-form select{
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #9ca3af 50%),
+    linear-gradient(135deg, #9ca3af 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 12px) 50%;
+  background-size:6px 6px, 6px 6px;
+  background-repeat:no-repeat;
+  padding-right:34px;
+}
+
+/* CHECKS compactos */
+.cbox, .return-check{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  font-weight:900;
+  color:#111827;
+  margin:10px 0;
+  font-size:13px;
+
+  padding:0;
+  background:transparent;
+  border:0;
+  box-shadow:none;
+
+  max-width:680px;
+}
+.cbox input, .return-check input{
+  width:18px; height:18px;
+  accent-color:var(--brand);
+  margin-top:3px;
+  flex:0 0 auto;
+}
+.sum-form .cbox span{
+  text-transform:none;
+  letter-spacing:0;
+  font-size:13px;
+  font-weight:800;
+  color:#111827;
+  line-height:1.35;
+}
+@media (max-width:560px){
+  .cbox, .return-check{ max-width:100%; }
+  .sum-form .cbox span{ font-size:12.5px; }
+}
+/* ===========================
+   STEP 4 - Split Cards
+=========================== */
+.step4-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:22px;
+  align-items:start;
+}
+
+.step4-left,
+.step4-right{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.card-block{
   background:var(--paper);
-  border:1.5px solid var(--stroke);
-  border-radius:var(--radius-lg);
-  padding:18px;
-  display:grid; gap:10px; align-content:start;
-  box-shadow:var(--shadow-sm);
-}
-.card::before{
-  /* banda de acento */
-  content:""; position:absolute; inset:0 0 0 auto; width:6px;
-  background:linear-gradient(180deg,var(--brand),var(--brand-2));
-  border-radius:0 var(--radius-lg) var(--radius-lg) 0;
-}
-.card h3{
-  margin:0; font-size:18px; font-weight:900; color:#0f172a;
-}
-.card p{ margin:0; color:var(--muted) }
-
-/* Título de sección opcional con subrayado */
-.card .stitle{
-  margin:0; font-size:14px; font-weight:900; color:var(--muted-2);
-}
-.card .stitle + .hr{
-  height:4px; width:64px; border-radius:999px; margin:6px 0 2px;
-  background:linear-gradient(90deg,var(--brand),var(--brand-2));
+  border-radius:var(--radius);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  padding:22px;
 }
 
-/* ==============================
-   🔘 Botones
-============================== */
+/* responsive */
+@media(max-width: 980px){
+  .step4-grid{ grid-template-columns:1fr; }
+}
+
+/* ==========================================================
+   BOTONES
+========================================================== */
 .btn{
-  border:none; border-radius:12px; padding:12px 14px; font-weight:900; cursor:pointer;
-  transition:transform .05s, box-shadow .15s, filter .15s;
-  display:inline-flex; align-items:center; gap:8px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:10px 16px;
+  border-radius:12px;
+  border:0;
+  cursor:pointer;
+  font-weight:900;
+  text-decoration:none;
+  white-space:nowrap;
+  transition:transform .15s ease, filter .15s ease;
 }
-.btn:active{ transform:translateY(1px) }
+.btn:hover{ transform:translateY(-1px); filter:brightness(.98); }
+.btn:active{ transform:translateY(0); }
+.btn-primary{ background:var(--brand); color:#fff; }
+.btn-gray{ background:#e5e7eb; color:#111; }
+.btn-secondary{ background:#111827; color:#fff; }
+.btn-ghost{ background:#f1f5f9; color:#0f172a; border:1px solid #e5e7eb; }
 
-.primary{
-  background:linear-gradient(180deg,var(--brand-2),var(--brand));
-  color:#fff; box-shadow:0 10px 22px rgba(229,9,20,.22);
-}
-.primary:hover{ filter:brightness(1.03) }
-
-.ghost{
-  background:#fff; border:1px solid var(--stroke); color:var(--brand);
-}
-.ghost:hover{ background:#F8FAFC }
-
-/* Variante sutil “soft” (por si la necesitas) */
-.btn.soft{
-  background:#FFF6F7; color:#B1121B; border:1px solid #FFD4D9;
-}
-
-/* ==============================
-   🧪 Formularios (si los usas aquí)
-============================== */
-.input, .select, input[type="text"], select{
-  height:44px; padding:10px 12px;
-  border:1.25px solid var(--stroke);
-  border-radius:12px; background:#fff; font-size:14px;
-  transition:border .15s, box-shadow .15s;
-}
-.input:focus, .select:focus, input[type="text"]:focus, select:focus{
-  outline:none; border-color:#FFB4BD; box-shadow:var(--ring);
+/* ==========================================================
+   BOTONES
+========================================================== */
+.sum-form .wizard-nav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
 }
 
-/* ==============================
-   🪄 Detalles estéticos
-============================== */
-.card .hint{
-  font-size:12.5px; color:var(--muted); background:#F8FAFC;
-  border:1px dashed var(--stroke); border-radius:10px; padding:8px 10px;
+/* Reservar */
+#btnReservar{
+  height:44px;
+  padding:0 26px;
+  max-width:600px;
+  width:100%;
+  border-radius:16px;
+  font-size:14px;
+  font-weight:900;
+  background:linear-gradient(180deg, var(--brand), var(--brand-dark));
+  color:#fff;
+  box-shadow:0 16px 34px rgba(178,34,34,.22);
+  margin-left:auto;
 }
 
-/* Íconos redondos (kicker visual) */
-.i-round{
-  display:inline-grid; place-items:center; width:28px; height:28px;
-  border-radius:999px; background:#FFF1F2; border:1px solid #FFD7DB; color:#B1121B; font-weight:900;
+.sum-form .wizard-nav .btn-ghost{
+  height:50px;
+  border-radius:14px;
 }
 
-/* ==============================
-   📱 Responsive fino
-============================== */
-@media (max-width:992px){
-  .main{ padding:20px 16px }
-  .container{ max-width:980px }
+/* Cotizar */
+.btn-quote{
+  display:block;
+  margin-top:16px;
+  margin-left:auto;
+
+  height:44px;
+  max-width:600px;
+  border-radius:14px;
+  border:2px solid rgba(178,34,34,.55);
+  background:#fff;
+  color:var(--brand);
+  font-weight:900;
+  box-shadow:0 10px 20px rgba(178,34,34,.10);
+  font-size:14px;
+  width:100%;
 }
-@media (max-width:640px){
-  .h1{ font-size:22px }
-  .btn{ padding:11px 13px }
-  .card{ padding:16px }
+.btn-quote:hover{ filter:brightness(.98); }
+.btn-quote i{ font-size:16px; }
+
+@media (max-width:560px){
+  #btnReservar{ width:100%; }
+  .sum-form .wizard-nav{ flex-direction:column; gap:12px; }
+  .btn-quote{ max-width:none; margin-left:0; height:46px; font-size:13.5px; }
+}
+
+/* ==========================================================
+   DATOS PERSONALES
+========================================================== */
+.sum-section-title{
+  background:transparent;
+  border:0;
+  padding:0;
+  margin:4px 0 12px;
+
+  font-size:18px;
+  font-weight:900;
+  letter-spacing:.6px;
+  color:#111827;
+
+  display:flex;
+  align-items:center;
+  gap:14px;
+  text-transform:none;
+}
+.sum-section-title::after{
+  content:"";
+  flex:1;
+  height:2px;
+  background:linear-gradient(90deg, var(--brand), rgba(178,34,34,.15));
+  border-radius:999px;
+}
+
+/* ==========================================================
+   STEP 1
+========================================================== */
+.wizard-page[data-current-step="1"] .wizard-card{
+  width: min(1180px, 96vw);
+  padding: 30px;
+  border-radius: 22px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.26);
+  margin-top:35px;
+}
+.wizard-page[data-current-step="1"] .wizard-head{ margin:0 0 16px; }
+.wizard-page[data-current-step="1"] .wizard-head h2{ font-size:28px; }
+.wizard-page[data-current-step="1"] .wizard-head p{ font-size:20px; }
+.wizard-page[data-current-step="1"] .search-grid{
+  gap:26px;
+  grid-template-columns: 1.25fr 1fr 1fr;
+}
+.wizard-page[data-current-step="1"] .ctl input,
+.wizard-page[data-current-step="1"] .ctl select{
+  height:60px;
+  border-radius:16px;
+}
+
+@media (max-width:980px){
+  .wizard-page[data-current-step="1"] .wizard-card{
+    width: min(980px, 96vw);
+    padding: 24px;
+  }
+  .wizard-page[data-current-step="1"] .wizard-head h2{ font-size:30px; }
+}
+@media (max-width:560px){
+  .wizard-page[data-current-step="1"] .wizard-card{
+    width: min(540px, 94vw);
+    padding: 18px;
+    margin-top:10px;
+  }
+  .wizard-page[data-current-step="1"] .wizard-head h2{ font-size:26px; }
+  .wizard-page[data-current-step="1"] .ctl input,
+  .wizard-page[data-current-step="1"] .ctl select{ height:56px; }
+}
+
+/* ==========================================================
+   STEP 4 — Resumen compacto
+========================================================== */
+.sum-compact{
+  margin-top:6px;
+  padding:12px;
+  border-radius:14px;
+  background:linear-gradient(180deg,#fff,#fbfbfd);
+  border:1px solid #eef2f7;
+  box-shadow:0 10px 25px rgba(0,0,0,.06);
+}
+.sum-compact-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+  padding-bottom:10px;
+  border-bottom:1px dashed rgba(178,34,34,.18);
+}
+.sum-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+  letter-spacing:.4px;
+  color:#fff;
+  background:linear-gradient(90deg, var(--brand), var(--brand-dark));
+  box-shadow:0 10px 22px rgba(178,34,34,.18);
+}
+.sum-days{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-weight:900;
+  font-size:12px;
+  color:#111827;
+  background:#fff;
+  border:1px solid #eef2f7;
+  padding:8px 10px;
+  border-radius:999px;
+}
+.sum-compact-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.sum-item{
+  background:#fff;
+  border:1px solid #eef2f7;
+  border-radius:14px;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.sum-item-label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:900;
+  font-size:12px;
+  color:#6b7280;
+  text-transform:uppercase;
+  letter-spacing:.45px;
+}
+.sum-item-value{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.sum-place{
+  font-weight:900;
+  color:#111827;
+  line-height:1.2;
+}
+.sum-dt{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  font-weight:900;
+  color:#111827;
+}
+.sum-dt .js-date{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid #e5e7eb;
+  background:#f3f4f6;
+  font-size:12px;
+}
+.sum-time{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid rgba(178,34,34,.22);
+  background:rgba(178,34,34,.08);
+  color:#8b1d1a;
+  font-size:12px;
+}
+
+@media (max-width:760px){
+  .sum-compact-grid{ grid-template-columns:1fr; }
+  .sum-compact-head{ flex-direction:column; align-items:flex-start; }
+  .sum-dt{ justify-content:flex-start; }
+}
+/* ===========================
+   STEP 4 — 3 CARDS (1 arriba + 2 abajo)
+=========================== */
+.step4-layout{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+/* Card superior full width */
+.step4-top{
+  width:100%;
+}
+
+/* Abajo: 2 columnas */
+.step4-bottom{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:18px;
+  align-items:start;
+}
+
+/* responsive */
+@media(max-width: 980px){
+  .step4-bottom{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* tus cards (si no las tienes ya) */
+.card-block{
+  background:var(--paper);
+  border-radius:var(--radius);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  padding:22px;
+}
+
+/* evitar doble estilo si sum-car/sum-table/sum-form ya traen fondo/sombra */
+.card-block .sum-car,
+.card-block .sum-table,
+.card-block .sum-form{
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  padding:0;
+}
+
+/* ==========================================================
+   MODAL
+========================================================== */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+.modal-card{
+  background:#fff;
+  border-radius:12px;
+  padding:2rem;
+  max-width:400px;
+  width:90%;
+  box-shadow:0 12px 30px rgba(0,0,0,.25);
+  text-align:center;
+}
+.modal-card h3{ margin-bottom:1rem; }
+.modal-card .options{
+  display:flex;
+  flex-direction:column;
+  gap:.75rem;
+  margin-bottom:1rem;
+}
+.pref-input{
+  width:100%;
+  padding:10px;
+  margin:12px 0;
+  border:1px solid #ccc;
+  border-radius:8px;
+}
+.modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+
+/* ==========================================================
+   FLATPICKR (anclado al input + visible)
+========================================================== */
+.flatpickr-wrapper{ position:relative; }
+
+.flatpickr-calendar{
+  z-index: 999999 !important;
+  border: 0 !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  box-shadow: 0 26px 70px rgba(0,0,0,.25) !important;
+  font-family: 'Poppins',system-ui,Arial,sans-serif !important;
+
+  transform: none !important;
+  left: auto !important;
+  right: auto !important;
+}
+
+.flatpickr-calendar.open{
+  width: min(860px, 94vw) !important;
+}
+
+.flatpickr-months{
+  background: var(--brand) !important;
+  color: #fff !important;
+}
+.flatpickr-months .flatpickr-month{ height:64px !important; }
+.flatpickr-current-month{
+  color:#fff !important;
+  font-weight:900 !important;
+  font-size:22px !important;
+  padding-top:14px !important;
+}
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month{
+  fill:#fff !important;
+  opacity:1 !important;
+}
+
+.flatpickr-weekdays{
+  background:#fff !important;
+  border-bottom:6px solid var(--brand) !important;
+}
+span.flatpickr-weekday{
+  color:var(--brand) !important;
+  font-weight:900 !important;
+}
+
+.flatpickr-rContainer,
+.flatpickr-days{ width:100% !important; }
+.dayContainer{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+}
+
+.flatpickr-day{
+  border-radius:12px !important;
+  font-weight:900 !important;
+  height:52px !important;
+  line-height:52px !important;
+  max-width:none !important;
+}
+.flatpickr-day:hover{ background:#ffe5e5 !important; }
+
+.flatpickr-day.today:not(.selected):not(.startRange):not(.endRange){
+  border:2px solid var(--brand) !important;
+  color:var(--brand) !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange{
+  background:var(--brand) !important;
+  border-color:var(--brand) !important;
+  color:#fff !important;
+}
+
+.flatpickr-day.inRange{
+  background:#ffe5e5 !important;
+  color:#b22222 !important;
+}
+
+.flatpickr-day.startRange{ border-radius:999px 0 0 999px !important; }
+.flatpickr-day.endRange{ border-radius:0 999px 999px 0 !important; }
+.flatpickr-day.startRange.endRange{ border-radius:999px !important; }
+
+.flatpickr-monthDropdown-months,
+.flatpickr-current-month .numInputWrapper{
+  z-index: 999999 !important;
+}
+
+@media (max-width:560px){
+  .flatpickr-calendar.open{ width: min(520px, 96vw) !important; }
+  .flatpickr-day{ height:44px !important; line-height:44px !important; }
+}
+
+/* ==========================================================
+   PRINT
+========================================================== */
+@page{ size:Letter; margin:12mm }
+@media print{
+  body{ background:#fff; }
+  .topbar,.wizard-steps{ display:none!important; }
+  .wizard-card{ box-shadow:none; border:1px solid #e5e7eb; background:#fff; }
+}
+.sum-form .ctl.has-ico .ico{
+  top: 50%;
+  transform: translateY(-50%);
+}
+/* ==========================================================
+   ✅ STEP 4 — DOB SIN FLOATING
+========================================================== */
+.sum-form .sum-personal-grid .ctl{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+}
+
+.sum-form .sum-personal-grid .ctl .flabel{
+  position:static !important;
+  transform:none !important;
+  top:auto !important;
+  left:auto !important;
+
+  display:block !important;
+  margin:0 0 8px !important;
+
+  color:#6b7280 !important;
+  font-weight:900 !important;
+  font-size:13px !important;
+  letter-spacing:.2px !important;
+  text-transform:uppercase !important;
+
+  background:transparent !important;
+  padding:0 !important;
+  border-radius:0 !important;
+  opacity:1 !important;
+
+  transition:none !important;
+}
+
+.sum-form .sum-personal-grid .ctl input,
+.sum-form .sum-personal-grid .ctl select{
+  padding-top:0 !important;
+}
+/* 1) El precio tachado (price-old) ahora rojo */
+.price-pill--prepago .price-old{
+  color: rgba(178,34,34,.95);              /* rojo brand */
+  text-decoration: line-through;
+  text-decoration-color: rgba(178,34,34,.95);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px; /* ayuda a que la raya se vea “a la mitad” */
+}
+
+/* 2) Precio en oficina más grande */
+.car-price > .price-pill:not(.price-pill--prepago){
+  font-size: 25px;                          /* sube el total */
+  line-height: 1.1;
+}
+
+/* Mantén el "precio por día" pequeño aunque el total sea grande */
+.car-price > .price-pill:not(.price-pill--prepago) small{
+  font-size: 12px;
+  font-weight: 800;
+  color: #6b7280;
+}
+
+/* Opcional: que el número se vea más pesado */
+.car-price > .price-pill:not(.price-pill--prepago) .js-mostrador-total{
+  font-weight: 900;
+}
+/* ✅ Texto subrayado arriba del precio (más grande + línea a la mitad) */
+.price-hint{
+  font-size: 12.5px;          /* antes 11px */
+  font-weight: 900;
+  line-height: 1.1;
+  margin-bottom: 8px;
+  text-align: right;
+}
+
+/* Línea “a la mitad” (tipo strike, pero sin tachar el texto) */
+.price-hint--u{
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0;          /* sin espacio extra abajo */
+  text-decoration: none;      /* apagamos underline normal */
+}
+
+.price-hint--u::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:50%;                    /* ✅ línea al centro vertical */
+  transform: translateY(-50%);
+  height: 2px;                /* grosor */
+  background: rgba(178,34,34,.9);  /* tono rojo */
+  border-radius: 999px;
+}
+/* ===============================
+   STEP 4 Layout
+=================================*/
+
+.step4-layout{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Columna izquierda */
+.card-left{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Columna derecha */
+.card-right{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+@media (max-width: 992px){
+  .step4-layout{
+    grid-template-columns: 1fr;
+  }
+}
+/* ===========================
+   STEP 4: DOS FONDOS SEPARADOS
+=========================== */
+
+/* 1) En Step 4, la card padre ya NO debe verse como fondo blando */
+.page[data-current-step="4"] > .wizard-card,
+.page[data-current-step="4"] .wizard-card{
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+/* 2) Layout 2 columnas */
+.step4-layout{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+/* 3) Estas serán tus 2 cards grandes (izq/der) */
+.step4-pane{
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px;
+}
+
+/* separación interna dentro de cada pane */
+.step4-pane .card-left,
+.step4-pane .card-right{
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* responsive */
+@media (max-width: 992px){
+  .step4-layout{ grid-template-columns: 1fr; }
+}
+.step4-layout{
+  grid-template-columns: 0.95fr 1.05fr;
+}
+/* ===========================
+   STEP 4 - HEADER VISIBLE + MÁS ANCHO
+=========================== */
+
+/* 1) Haz más ancho el contenedor SOLO en Step 4 */
+.page[data-current-step="4"]{
+  --wizard-w: 12 00px;
+}
+
+@media (min-width: 1200px){
+  .page[data-current-step="4"]{
+    --wizard-w: 1280px;
+  }
+}
+
+/* 2) Header del Step 4 con panel para que no se pierda */
+.page[data-current-step="4"] .wizard-head{
+  background: rgba(255,255,255,.92);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 18px;
+  margin: 0 0 18px;
+  backdrop-filter: blur(6px);
+}
+
+.page[data-current-step="4"] .wizard-head h2,
+.page[data-current-step="4"] .wizard-head p{
+  color: var(--ink);
+}
+
+.page[data-current-step="4"] .step4-layout{
+  grid-template-columns: 0.95fr 1.05fr;
+  gap: 24px;
+}
+
+/* 4) Páneles más grandes */
+.page[data-current-step="4"] .step4-pane{
+  padding: 20px;
+}
+
+/* 5) Ajuste responsive */
+@media (max-width: 992px){
+  .page[data-current-step="4"] .wizard-head{
+    padding: 16px;
+  }
+  .page[data-current-step="4"] .step4-layout{
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+/* ===========================
+   STEP 4 - Incluido con palomitas
+=========================== */
+.sum-block .row.row-included{
+  align-items:flex-start;
+  gap:12px;
+}
+
+.inc-label{
+  font-weight:900;
+  color:#111827;
+  white-space:nowrap;
+}
+
+.inc-items{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px 14px;
+}
+
+.inc-item{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-weight:800;
+  color:#0f172a;
+  background:#fff;
+  border:1px solid #eef2f7;
+  padding:6px 10px;
+  border-radius:999px;
+}
+
+.inc-check{
+  color:#22c55e;          /* ✅ verde */
+  font-weight:900;
+  font-size:14px;
+  line-height:1;
+}
+/* ==========================================================
+   ✅ STEP 4: La línea roja (accent bar) arriba del header card
+========================================================== */
+.page[data-current-step="4"] .wizard-head{
+  position: relative;
+  overflow: hidden;                 /* para que la barra respete bordes redondos */
+}
+
+/* Barra superior igual a la que tenías en .wizard-card::before */
+.page[data-current-step="4"] .wizard-head::before{
+  content:"";
+  position:absolute;
+  left:0; right:0; top:0;
+  height:4px;
+  background:linear-gradient(90deg, var(--brand), rgba(178,34,34,.25), var(--brand-dark));
+  opacity:.95;
 }

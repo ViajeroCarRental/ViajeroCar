@@ -339,5 +339,8 @@
 })();
 </script>
 
+@yield('js-vistaCatalogo')
+@yield('js-vistaFAQ')
+
 </body>
 </html>

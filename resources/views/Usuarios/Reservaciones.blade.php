@@ -277,8 +277,8 @@
     <a class="wizard-step {{ $stepCurrent>1?'done':'' }} {{ $stepCurrent===1?'active':'' }}" href="{{ $toStep(1) }}">
       <span class="n">1</span> Generales
     </a>
-    <a class="wizard-step {{ $stepCurrent>2?'done':'' }} {{ $stepCurrent===2?'active':'' }}" href="{{ $toStep(2) }}">
-      <span class="n">2</span> Categoría
+    <a class="wizard-step {{ ($stepCurrent>2 || request('auto')) ? 'done' : '' }} {{ $stepCurrent===2 ? 'active' : '' }}" href="{{ $toStep(2) }}">
+        <span class="n">2</span> Categoría
     </a>
     <a class="wizard-step {{ $stepCurrent>3?'done':'' }} {{ $stepCurrent===3?'active':'' }}" href="{{ $toStep(3) }}">
       <span class="n">3</span> Adicionales
@@ -289,6 +289,7 @@
   </nav>
 
   <section class="wizard-card">
+
 
     {{-- ===================== STEP 1 ===================== --}}
     @if($stepCurrent===1)
@@ -451,8 +452,21 @@
       </form>
     @endif
 
+
+
     {{-- ===================== STEP 2 ===================== --}}
+
     @if($stepCurrent===2)
+   @if($step === 2 && !empty($autoSeleccionado))
+<div class="auto-seleccionado">
+    <h3>Tu auto seleccionado</h3>
+
+    <img src="{{ asset('img/'.$imagenAuto) }}" alt="{{ $nombreAuto }}" class="auto-img">
+    <p>{{ $nombreAuto }}</p>
+    <strong>${{ $precioAuto }} / día</strong>
+</div>
+@endif
+
       <header class="wizard-head">
         <h2>Selecciona tu categoría</h2>
         <p>Tarifa de <strong id="daysLabel">{{ $days }}</strong> día(s) de tu renta.</p>
@@ -460,6 +474,7 @@
 
       <div class="cars">
         @forelse(($categorias ?? []) as $cat)
+        @if(empty($autoSeleccionado) || (string)$cat->id_categoria !== (string)$categoriaId)
           @php
             $imgCat = $catImages[$cat->id_categoria] ?? $placeholder;
 
@@ -547,6 +562,7 @@
               </a>
             </div>
           </article>
+          @endif
         @empty
           <p>No hay categorías disponibles.</p>
         @endforelse

@@ -549,10 +549,10 @@ body{
 }
 .chip i{ opacity:.9; }
 
-.car-price{ 
-  display:grid; 
+.car-price{
+  display:grid;
   gap:10px;
-  padding-top:52px; 
+  padding-top:52px;
 }
 
 .price-pill{
@@ -860,7 +860,7 @@ body{
 }
 
 /* ==========================================================
-   STEP 4: RESUMEN 
+   STEP 4: RESUMEN
 ========================================================== */
 .sum-car{
   display:flex;
@@ -981,12 +981,12 @@ body{
   padding:14px;
 }
 /* ==========================================================
-   STEP 4 — DATOS PERSONALES 
+   STEP 4 — DATOS PERSONALES
 ========================================================== */
 .sum-form .sum-personal-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:18px 22px;            
+  gap:18px 22px;
   margin-top:10px;
   margin-bottom:14px;
 }
@@ -1026,7 +1026,7 @@ body{
 }
 .sum-form .sum-checks .cbox,
 .sum-form .sum-checks .return-check{
-  margin:0;               
+  margin:0;
   max-width:none;
 }
 
@@ -1228,7 +1228,7 @@ body{
 }
 
 /* ==========================================================
-   DATOS PERSONALES 
+   DATOS PERSONALES
 ========================================================== */
 .sum-section-title{
   background:transparent;
@@ -1255,7 +1255,7 @@ body{
 }
 
 /* ==========================================================
-   STEP 1 
+   STEP 1
 ========================================================== */
 .wizard-page[data-current-step="1"] .wizard-card{
   width: min(1180px, 96vw);
@@ -1296,7 +1296,7 @@ body{
 }
 
 /* ==========================================================
-   STEP 4 — Resumen compacto 
+   STEP 4 — Resumen compacto
 ========================================================== */
 .sum-compact{
   margin-top:6px;
@@ -1606,7 +1606,7 @@ span.flatpickr-weekday{
   transform: translateY(-50%);
 }
 /* ==========================================================
-   ✅ STEP 4 — DOB SIN FLOATING 
+   ✅ STEP 4 — DOB SIN FLOATING
 ========================================================== */
 .sum-form .sum-personal-grid .ctl{
   display:flex;
@@ -1634,7 +1634,7 @@ span.flatpickr-weekday{
   border-radius:0 !important;
   opacity:1 !important;
 
-  transition:none !important; 
+  transition:none !important;
 }
 
 .sum-form .sum-personal-grid .ctl input,
@@ -1775,7 +1775,7 @@ span.flatpickr-weekday{
 
 /* 1) Haz más ancho el contenedor SOLO en Step 4 */
 .page[data-current-step="4"]{
-  --wizard-w: 12 00px; 
+  --wizard-w: 12 00px;
 }
 
 @media (min-width: 1200px){

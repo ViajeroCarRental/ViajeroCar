@@ -250,6 +250,22 @@ $vehiculos = collect();
         // Complementos listos por si avanzan
         $servicios = $this->obtenerServiciosActivos();
 
+        // ===============================
+// AUTO SELECCIONADO DESDE WELCOME
+// ===============================
+$autoSeleccionado = false;
+$nombreAuto = null;
+$precioAuto = null;
+$imagenAuto = null;
+
+if ($request->has('auto')) {
+    $autoSeleccionado = true;
+    $nombreAuto = $request->input('nombre');
+    $precioAuto = $request->input('precio');
+    $imagenAuto = $request->input('imagen');
+}
+
+
         return view('Usuarios.Reservaciones', compact(
             'step',
             'filters',
@@ -257,7 +273,11 @@ $vehiculos = collect();
             'vehiculo',
             'ciudades',
             'categorias',
-            'servicios'
+            'servicios',
+            'autoSeleccionado',
+            'nombreAuto',
+            'precioAuto',
+            'imagenAuto'
         ));
     }
 

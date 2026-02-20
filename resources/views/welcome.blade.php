@@ -5,52 +5,282 @@
 @section('css-vistaHome')
   {{-- ✅ Swiper CSS --}}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
-  {{-- Select2 CSS --}}
-
-
-
-    {{--reemplaza visualmente  <select>. --}}
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
- {{--Font Awesome es  el paquete que dibuja íconos. --}}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-p+6F+H1G5p8pP/1hObu/YZ7o2aM5J5lFjAzU5e+0Jx8xR+uEzjFN8IvU3UpUy6v1k3vXv4+XzN0z3VQUpgK6Vw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
 
   {{-- Select2 CSS --}}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-p+6F+H1G5p8pP/1hObu/YZ7o2aM5J5lFjAzU5e+0Jx8xR+uEzjFN8IvU3UpUy6v1k3vXv4+XzN0z3VQUpgK6Vw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <style>
-    :root{ --brand:#b22222; --ink:#0f172a; --muted:#6b7280 }
+    /* Contenedor relativo para posicionar el label */
+.floating-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
 
-    .hero-badge-3msi{
-      width: clamp(180px, 38vw, 520px);
-      max-width: 100%;
-      height: auto;
-      margin-top: 10px;
-      display: block;
-      filter: drop-shadow(0 8px 24px rgba(0,0,0,.30));
-      pointer-events: none;
-    }
-    @media (max-width:560px){
-      .hero-badge-3msi{ width: clamp(180px, 60vw, 360px); }
-    }
+/* Estilo base del label (encima del select) */
+.floating-label {
+  position: absolute;
+  left: 45px; /* Ajusta según el ancho de tu .field-icon */
+  top: 50%;
+  transform: translateY(-50%);
+  color: #999;
+  pointer-events: none; /* Para que el click pase al select */
+  transition: all 0.2s ease-in-out;
+  background-color: white; /* Para tapar la línea del borde si es necesario */
+  padding: 0 4px;
+}
 
-    /* ===== Texto debajo de cada carrusel ===== */
-    .fleet-meta{
-      width:min(1200px,94%);
-      margin:10px auto 24px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:14px;
-      font-size:clamp(12px, 1.8vw, 15px);
-      color:var(--ink);
-      letter-spacing:.2px;
-      line-height:1.3;
-    }
-    .fleet-meta .sep{ opacity:.5; font-style:normal; }
-    @media (max-width:560px){ .fleet-meta{ gap:10px } }
+/* El efecto de "subir":
+   Se activa cuando el select tiene foco (:focus)
+   O cuando el select es válido (:valid), es decir, tiene un valor */
+#pickupPlace:focus ~ .floating-label,
+#pickupPlace:valid ~ .floating-label,
+#dropoffPlace:focus ~ .floating-label,
+#dropoffPlace:valid ~ .floating-label {
+  top: 0;
+  font-size: 12px;
+  color: #b22222; /* Color de énfasis */
+  font-weight: bold;
+}
+
+/* Ajuste opcional para el select si usas bordes */
+#pickupPlace,
+#dropoffPlace {
+  padding-top: 15px; /* Espacio para que el texto no choque al subir */
+  border: 1px solid ##d1d5db; /* Gris claro por defecto */
+  outline: none; /* Quita el borde azul por defecto del navegador */
+  transition: border-color 0.2s ease;
+  background-color: white;
+}
+/* Se mantiene negro si tiene el foco O si tiene un valor válido seleccionado */
+#pickupPlace:focus,
+#pickupPlace:valid,
+#dropoffPlace:focus,
+#dropoffPlace:valid {
+  border: 1px solid #000000 !important; /* Borde negro persistente */
+}
+
+/* Cuando el usuario hace clic o selecciona el campo */
+#pickupPlace:focus,
+#dropoffPlace:focus {
+  border-color: #000000 !important; /* Negro al seleccionar */
+  border-width: 1px; /* Mantén el grosor original */
+}
+
+/* estado oculto */
+#dropoffWrapper.disabled {
+  opacity: 0;
+  transform: translateY(-5px);
+  pointer-events: none;
+}
+
+/* estado visible */
+#dropoffWrapper.enabled {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+/* IMPORTANTE: solo animar label cuando NO esté disabled */
+.floating-group:not(.disabled) select:focus ~ .floating-label,
+.floating-group:not(.disabled) select:valid ~ .floating-label {
+  top: 0;
+  font-size: 12px;
+  color: #b22222;
+  font-weight: bold;
+}
+#dropoffWrapper.disabled {
+  visibility: hidden; /* Mantiene el espacio en el diseño */
+  opacity: 0;
+  pointer-events: none;
+  height: auto; /* Asegúrate de que no colapse */
+}
+
+/* Estado visible */
+#dropoffWrapper.enabled {
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.25s ease;
+}
+/*H Y MIN*/
+/* CONTENEDOR de H y Min */
+.floating {
+    position: relative;
+    display: inline-block;
+}
+
+.floating input {
+    width: 65px; /* Ajustado para que quepan bien */
+    height: 40px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 8px 0px 8px; /* Espacio para que el texto no choque con el label arriba */
+    font-size: 14px;
+    outline: none;
+    text-align: center;
+}
+/* Contenedor de la fila (H y Min juntos) */
+/* Fila de tiempo: asegura que use el 100% del ancho de la columna */
+.time-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+/* Contenedor del select */
+.floating {
+    position: relative;
+    flex: 1; /* Esto obliga a H y Min a crecer hasta llenar la columna */
+    min-width: 0; /* Evita que el select se desborde */
+}
+
+/* Icono de Reloj (Lo inyectamos vía CSS para que no estorbe al select) */
+.floating::before {
+    content: "\f017"; /* Código FontAwesome de un reloj */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 400;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 14px;
+    z-index: 2;
+    pointer-events: none;
+    transition: color 0.2s;
+}
+/* Cambia el color del icono cuando el select tiene foco */
+.floating:focus-within::before {
+    color: var(--brand);
+}
+/* Estilo del Select */
+.floating select {
+    width: 100%;
+    height: 48px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    padding: 14px 10px 0 35px; /* 35px de padding izquierdo para dejar espacio al reloj */
+    font-size: 15px;
+    background-color: white;
+    outline: none;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    position: relative;
+    z-index: 1;
+}
+/* Label flotante (H / Min) */
+.floating .floating-label {
+    position: absolute;
+    left: 35px; /* Alineado con el texto, después del reloj */
+    top: 50%;
+    transform: translateY(-50%);
+    transition: all 0.2s ease;
+    pointer-events: none;
+    color: #9ca3af;
+    background: transparent;
+    padding: 0 4px;
+    z-index: 3;
+}
+/* Regla para el borde negro al seleccionar */
+.floating select:focus,
+.floating select:valid {
+    border-color: #000000;
+}
+
+/* Animación cuando sube */
+.floating select:focus ~ .floating-label,
+.floating select:valid ~ .floating-label {
+    top: 0;
+    left: 12px; /* Se mueve un poco a la izquierda al subir para verse mejor */
+    font-size: 11px;
+    color: var(--brand);
+    font-weight: 700;
+    background: white;
+    transform: translateY(-50%);
+}
+/* fecha pickup y devolucion*/
+/* Asegurar que el input tenga espacio para el texto arriba
+#pickupDate, #dropoffDate {
+    padding-top: 15px !important;
+    border: 1px solid #d1d5db;
+    outline: none;
+    transition: all 0.2s ease;
+}*/
+
+/* Borde negro persistente al enfocar o tener contenido
+#pickupDate:focus,
+#pickupDate:not(:placeholder-shown),
+#dropoffDate:focus,
+#dropoffDate:not(:placeholder-shown) {
+    border-color: #000000 !important;
+}*/
+/* Fuerza al label de fechas a subir y mantenerse */
+.dt-field.floating-group .flatpickr-input:focus ~ .floating-label,
+.dt-field.floating-group .flatpickr-input.active ~ .floating-label,
+.dt-field.floating-group .flatpickr-input.has-value ~ .floating-label {
+    top: 0 !important;
+    font-size: 12px !important;
+    color: #b22222 !important;
+    font-weight: bold !important;
+    background-color: white !important;
+    transform: translateY(-50%);
+    z-index: 10;
+}
+
+/* Reemplaza tus reglas de borde de fecha por esta única regla */
+.flatpickr-input,
+.flatpickr-input.has-value,
+.flatpickr-input:focus {
+    padding-top: 15px !important;
+    border: 1px solid #d1d5db !important; /* Gris por defecto */
+    outline: none !important; /* ESTO QUITA EL AZUL */
+    box-shadow: none !important; /* ESTO QUITA EL REFLEJO AZUL */
+    transition: border-color 0.2s;
+}
+
+/* Cuando el input de fecha está activo o lleno, forzamos el negro */
+.flatpickr-input:focus,
+.flatpickr-input.active,
+.flatpickr-input.has-value {
+    border-color: #000000 !important;
+}
+
+/* Animación de la etiqueta flotante para fechas */
+#pickupDate:focus ~ .floating-label,
+#pickupDate:not(:placeholder-shown) ~ .floating-label,
+#dropoffDate:focus ~ .floating-label,
+#dropoffDate:not(:placeholder-shown) ~ .floating-label {
+    top: 0;
+    font-size: 12px;
+    color: #b22222; /* Tu color de énfasis */
+    font-weight: bold;
+    background-color: white;
+}
+
+/* Ajuste del placeholder para que no estorbe a la etiqueta cuando está abajo */
+#pickupDate::placeholder,
+#dropoffDate::placeholder {
+    color: transparent; /* Oculto por defecto */
+    transition: color 0.2s;
+}
+
+/* Mostrar placeholder solo cuando el input tiene foco */
+#pickupDate:focus::placeholder,
+#dropoffDate:focus::placeholder {
+    color: #999;
+}
+/* === FIX FLOATING LABEL FECHAS === */
+.field input:focus + label,
+.field input.has-value + label {
+  top: -6px;
+  font-size: 12px;
+}
 
     /* ===== Layout para los iconos del hero (5 items responsivos) ===== */
     .hero-icons{
@@ -262,36 +492,6 @@
       transform: translate(6px, -92px) scale(1);
       opacity:1; pointer-events:auto;
     }
-     /* Select2 */
-
-.select2-container--default .select2-selection--single {
-    display: flex;
-    align-items: center;
-    height: 48px;
-    border-radius: 10px;
-    padding: 0 10px;
-}
-.select2-container--open .select2-dropdown--above {
-    top: 100% !important;
-    bottom: auto !important;
-}
-
-.select2-selection__rendered {
-    display: flex;
-    align-items: center;
-    line-height: normal !important;
-}
-
-.select2-selection__rendered i {
-    margin-right: 8px;
-    font-size: 1.2em;
-}
-
-.select2-results__option .icon-item i {
-    margin-right: 8px;
-    font-size: 1em;
-}
-
 
 
  /* Estilo de SELECT2 */
@@ -322,6 +522,48 @@
 
 
     .social-fab i{ font-size:20px; }
+
+/* 1. Forzar borde negro en Select2 cuando hay selección */
+.select2-container--default .select2-selection--single.has-value,
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border: 1px solid #000000 !important;
+}
+
+/* 2. Forzar borde negro en Fechas (Flatpickr) */
+/* Flatpickr crea un input 'altInput', por eso usamos la clase .has-value */
+.flatpickr-input.has-value,
+#pickupDate.has-value,
+#dropoffDate.has-value {
+    border: 1px solid #000000 !important;
+}
+
+/* 3. Asegurar que el label se quede arriba y con color de énfasis cuando hay valor */
+.floating-group .has-value ~ .floating-label,
+.field .has-value + label {
+    top: 0 !important;
+    font-size: 12px !important;
+    color: #b22222 !important;
+    font-weight: bold !important;
+}
+/* 1. Quitamos el borde azul por defecto y ponemos el negro al hacer click */
+.flatpickr-input:focus,
+.flatpickr-input.active,
+.flatpickr-input.has-value {
+    outline: none !important;
+    border: 1px solid #000000 !important;
+    box-shadow: none !important; /* Quita sombras azules en Chrome/Safari */
+}
+
+/* 2. Aseguramos que el label suba cuando tiene el borde negro */
+.dt-field.floating-group .flatpickr-input:focus ~ .floating-label,
+.dt-field.floating-group .flatpickr-input.has-value ~ .floating-label {
+    top: 0 !important;
+    font-size: 12px !important;
+    color: #b22222 !important;
+    font-weight: bold !important;
+    background-color: white;
+    z-index: 10;
+}
   </style>
 @endsection
 
@@ -390,14 +632,12 @@
         </div>
 
         <div class="icon-item">
-           <i class="fa-solid fa-plane-departure"></i>
+          <i class="fa-solid fa-plane-departure"></i>
           <span>Atención en aeropuerto 24/7</span>
-
         </div>
 
         <div class="icon-item">
           <i class="fa-solid fa-car-side"></i>
-
           <span>Autos con modelos recientes</span>
         </div>
       </div>
@@ -419,43 +659,45 @@
                 <span class="field-title">Lugar de renta</span>
 
                 <label class="inline-check" for="differentDropoff">
-                  <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1" checked>
+                  <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1">
                   <span>Devolver en otro destino</span>
                 </label>
               </div>
 
-              <div class="field icon-field">
-                <span class="field-icon" id="pickupIcon"><i class="fa-solid fa-location-dot"></i></span>
-                <select id="pickupPlace" name="pickup_sucursal_id"aria-describedby="pickupHelp" required>
-                  <option value="" disabled selected>¿Dónde inicia tu viaje? (Pick-up)</option>
-                  @foreach($ciudades as $ciudad)
-                    <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
-                      @foreach($ciudad->sucursalesActivas as $suc)
-                        <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
-                          {{ $suc->nombre }}
-                        </option>
-                      @endforeach
-                    </optgroup>
-                  @endforeach
-                </select>
-              </div>
+            <div class="field icon-field floating-group">
+        <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
+        <select id="pickupPlace" name="pickup_sucursal_id" aria-describedby="pickupHelp" required>
+            <option value="" disabled @selected(!request('pickup_sucursal_id'))></option>
+            @foreach($ciudades as $ciudad)
+            <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+                @foreach($ciudad->sucursalesActivas as $suc)
+                <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
+                    {{ $suc->nombre }}
+                </option>
+                @endforeach
+            </optgroup>
+            @endforeach
+        </select>
+        <label for="pickupPlace" class="floating-label">¿Dónde inicia tu viaje?</label>
+        </div>
 
-              <div class="field icon-field" id="dropoffWrapper">
-               <span class="field-icon" id="dropoffIcon"> <i class="fa-solid fa-location-dot"></i></span>
-                <select id="dropoffPlace" name="dropoff_sucursal_id" aria-describedby="dropoffHelp" required>
-                  <option value="" disabled selected>¿Dónde termina tu viaje?</option>
-                  @foreach($ciudades as $ciudad)
-                    <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
-                      @foreach($ciudad->sucursalesActivas as $suc)
-                        <option value="{{ $suc->id_sucursal }}" @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
-                          {{ $suc->nombre }}
-                        </option>
-                      @endforeach
-                    </optgroup>
-                  @endforeach
-                </select>
-              </div>
 
+              <div class="field icon-field floating-group disabled" id="dropoffWrapper">
+                <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
+                <select id="dropoffPlace" name="dropoff_sucursal_id" required>
+                    <option value="" disabled @selected(!request('dropoff_sucursal_id'))></option>
+                    @foreach($ciudades as $ciudad)
+                    <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+                        @foreach($ciudad->sucursalesActivas as $suc)
+                        <option value="{{ $suc->id_sucursal }}"
+                            @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
+                            {{ $suc->nombre }}
+                        </option>
+                        @endforeach
+                    </optgroup>
+                    @endforeach
+                </select>
+                <label for="dropoffPlace" class="floating-label">¿Dónde termina tu viaje?</label></div>
             </div>
 
             {{-- =========================
@@ -469,29 +711,44 @@
                 <div class="datetime-row">
 
                   {{-- FECHA --}}
-                  <div class="dt-field icon-field">
+                  <div class="dt-field icon-field floating-group">
                     <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
                     <input id="pickupDate"
-                           name="pickup_date"
-                           type="text"
-                           placeholder="12/Sep/2024"
-                           value="{{ request('pickup_date') }}"
-                           data-min="{{ now()->toDateString() }}"
-                           required>
-                  </div>
+                        name="pickup_date"
+                        type="text"
+
+                        value="{{ request('pickup_date') }}"
+                        data-min="{{ now()->toDateString() }}"
+                        required>
+                    <label class="floating-label" for="pickupDate">Fecha de pick up</label>
+                </div>
 
                   {{-- HORA (tu JS mete selects debajo del hidden) --}}
-                  <div class="dt-field icon-field time-field">
-                    <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+                  <div class="time-row">
+                    {{-- SELECT DE HORA --}}
+                    <div class="floating">
+                        <select id="pickup_h" name="pickup_h" required>
+                            <option value="" disabled selected></option>
+                            {{-- Ciclo de 1 a 24 --}}
+                            @for ($i = 1; $i <= 24; $i++)
+                                <option value="{{ sprintf('%02d', $i) }}">{{ sprintf('%02d', $i) }}</option>
+                            @endfor
+                        </select>
+                        <span class="floating-label">H</span>
+                    </div>
 
-                    {{-- este es el que se envía al backend (NO se ve) --}}
-                    <input type="hidden"
-                           id="pickupTime"
-                           name="pickup_time"
-                           value="{{ request('pickup_time','12:00') }}">
-                    {{-- tu home.js insertará aquí los selects --}}
-                  </div>
-
+                    {{-- SELECT DE MINUTOS --}}
+                    <div class="floating">
+                        <select id="pickup_m" name="pickup_m" required>
+                            <option value="" disabled selected></option>
+                            {{-- Ciclo de 15 en 15 --}}
+                            @for ($i = 0; $i < 60; $i += 15)
+                                <option value="{{ sprintf('%02d', $i) }}">{{ sprintf('%02d', $i) }}</option>
+                            @endfor
+                        </select>
+                        <span class="floating-label">Min</span>
+                    </div>
+                </div>
                 </div> {{-- /datetime-row --}}
               </div>
             </div>
@@ -507,29 +764,45 @@
                 <div class="datetime-row">
 
                   {{-- FECHA --}}
-                  <div class="dt-field icon-field">
-                    <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                    <input id="dropoffDate"
-                           name="dropoff_date"
-                           type="text"
-                           placeholder="12/Sep/2024"
-                           value="{{ request('dropoff_date') }}"
-                           data-min="{{ now()->toDateString() }}"
-                           required>
-                  </div>
+                  <div class="dt-field icon-field floating-group">
+                <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                <input id="dropoffDate"
+                    name="dropoff_date"
+                    type="text"
+                    placeholder="dd/mm/yyyy"
+                    value="{{ request('dropoff_date') }}"
+                    data-min="{{ now()->toDateString() }}"
+                    required>
+                <label class="floating-label" for="dropoffDate">Fecha de devolución</label>
+            </div>
 
                   {{-- HORA (tu JS mete selects debajo del hidden) --}}
-                  <div class="dt-field icon-field time-field">
-                    <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+                 {{-- Cambia tus bloques de H y Min por este formato --}}
+                <div class="time-row">
+                {{-- SELECT DE HORA --}}
+                <div class="floating">
+                    <select id="pickup_h" name="pickup_h" required>
+                        <option value="" disabled selected></option>
+                        {{-- Ciclo de 1 a 24 --}}
+                        @for ($i = 1; $i <= 24; $i++)
+                            <option value="{{ sprintf('%02d', $i) }}">{{ sprintf('%02d', $i) }}</option>
+                        @endfor
+                    </select>
+                    <span class="floating-label">H</span>
+                </div>
 
-                    {{-- este es el que se envía al backend (NO se ve) --}}
-                    <input type="hidden"
-                           id="dropoffTime"
-                           name="dropoff_time"
-                           value="{{ request('dropoff_time','12:00') }}">
-                    {{-- tu home.js insertará aquí los selects --}}
-                  </div>
-
+                {{-- SELECT DE MINUTOS --}}
+                <div class="floating">
+                    <select id="pickup_m" name="pickup_m" required>
+                        <option value="" disabled selected></option>
+                        {{-- Ciclo de 15 en 15 --}}
+                        @for ($i = 0; $i < 60; $i += 15)
+                            <option value="{{ sprintf('%02d', $i) }}">{{ sprintf('%02d', $i) }}</option>
+                        @endfor
+                    </select>
+                    <span class="floating-label">Min</span>
+                </div>
+            </div>
                 </div> {{-- /datetime-row --}}
               </div>
             </div>
@@ -598,7 +871,8 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservaciones', ['auto' => 'COMPACTO','nombre' => 'Chevrolet Aveo o similar','precio' => 467,'imagen' => 'aveo.png']) }}" class="car-cta">Reservar</a>
+          {{-- <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a> --}}
         </article>
 
         <article class="car-card">
@@ -635,7 +909,8 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+        <a href="{{ route('rutaReservaciones', ['auto' => 'INTERMEDIO','nombre' => 'Volkswagen Virtus o similar','precio' => 600,'imagen' => 'virtus.png']) }}" class="car-cta">Reservar</a>
+          {{-- <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a> --}}
         </article>
 
         <article class="car-card">
@@ -672,7 +947,8 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservaciones', ['auto' => 'Grande','nombre' => 'Volkswagen Jetta o similar','precio' => 800,'imagen' => 'jetta.png']) }}" class="car-cta">Reservar</a>
+          {{-- <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a> --}}
         </article>
 
         <article class="car-card">
@@ -709,51 +985,47 @@
             </span>
           </div>
 
-         <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
-            </article>
+          <a href="{{ route('rutaReservaciones', ['auto' => 'FULL SIZE','nombre' => 'Toyota Camry  o similar','precio' => 1550,'imagen' => 'camry.png']) }}" class="car-cta">Reservar</a>
+          {{-- <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a> --}}
+        </article>
 
-            <article class="car-card">
-              <header class="car-title">
-                <h3>SUV COMPACTA</h3>
-                <p> Jeep Renegade o similar | IC</p>
-              </header>
-              <div class="car-media">
-                <img src="{{ asset('img/renegade.png') }}" alt=" Jeep Renegade o similar">
-              </div>
+        <article class="car-card">
+          <header class="car-title">
+            <h3>PICKUP 4X4 DOBLE CABINA</h3>
+            <p>Toyota Tacoma o similar | F</p>
+          </header>
+          <div class="car-media">
+            <img src="{{ asset('img/Tacoma.png') }}" alt="Toyota Tacoma o similar">
+          </div>
 
-              <div class="offer">
-                <span class="offer-badge">-24%</span>
-                <div class="price-line">
-                  <span class="price-now">$1,600</span><span class="per">/día</span>
-                  <span class="price-old">$2,100</span>
-                </div>
-              </div>
+          <div class="offer">
+            <span class="offer-badge">-13%</span>
+            <div class="price-line">
+              <span class="price-now">$2,600</span><span class="per">/día</span>
+              <span class="price-old">$3,000</span>
+            </div>
+          </div>
 
-              <ul class="car-specs">
-                <li><i class="fa-solid fa-user-large"></i> 5</li>
-                <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
-                <li><i class="fa-solid fa-briefcase"></i> 3</li>
-              </ul>
+          <ul class="car-specs">
+            <li><i class="fa-solid fa-user-large"></i> 5</li>
+            <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
+            <li><i class="fa-solid fa-briefcase"></i> 3</li>
+          </ul>
 
-              <div class="car-connect">
-                <span class="badge-chip badge-apple" title="Apple CarPlay">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                    <polygon points="10,8 16,12 10,16"></polygon>
-                  </svg>
-                  CarPlay
-                </span>
-                <span class="badge-chip badge-android" title="Android Auto">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                  </svg>
-                  Android Auto
-                </span>
-              </div>
+          <div class="car-connect">
+            <span class="badge-chip badge-apple" title="Apple CarPlay">
+              <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
+              CarPlay
+            </span>
+            <span class="badge-chip badge-android" title="Android Auto">
+              <svg viewBox="0 0 24 24"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path></svg>
+              Android Auto
+            </span>
+          </div>
 
-              <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
-            </article>
-
+          <a href="{{ route('rutaReservaciones', ['auto' => 'PICKUP 4X4 DOBLE CABINA','nombre' => 'Toyota Tacoma o similar','precio' => 2600,'imagen' => 'Tacoma.png']) }}" class="car-cta">Reservar</a>
+          {{-- <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a> --}}
+        </article>
 
 
         <article class="car-card">
@@ -790,7 +1062,8 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservaciones', ['auto' => 'SUV MEDINA','nombre' => 'Kia Seltos o similar','precio' => 1800,'imagen' => 'seltos.png']) }}" class="car-cta">Reservar</a>
+          {{-- <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a> --}}
         </article>
 
       </div>
@@ -864,7 +1137,8 @@
               </span>
             </div>
 
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservaciones', ['auto' => 'SUV FAMILIAR COMPACTA','nombre' => 'Toyota avanza o similar','precio' => 1700,'imagen' => 'avanza.png']) }}" class="car-cta">Reservar</a>
+            {{-- <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a> --}}
           </article>
 
           <article class="car-card">
@@ -901,7 +1175,8 @@
               </span>
             </div>
 
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservaciones', ['auto' => 'MINIVAN','nombre' => 'Honda Odyssey o similar','precio' => 2600,'imagen' => 'Odyssey.png']) }}" class="car-cta">Reservar</a>
+            {{-- <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a> --}}
           </article>
 
           <article class="car-card">
@@ -938,13 +1213,13 @@
               </span>
             </div>
 
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservaciones', ['auto' => 'VAN FAMILIAR','nombre' => 'Nissan Urvan o similar','precio' => 2900,'imagen' => 'Urvan.png']) }}" class="car-cta">Reservar</a>
+            {{-- <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a> --}}
           </article>
-
 
           <article class="car-card">
             <header class="car-title">
-              <h3>VAN PASAJEROS</h3>
+              <h3>VAN</h3>
               <p>Toyota Hiace o similar | L</p>
             </header>
             <div class="car-media">
@@ -960,7 +1235,7 @@
             </div>
 
             <ul class="car-specs">
-              <li><i class="fa-solid fa-user-large"></i> 13</li>
+              <li><i class="fa-solid fa-user-large"></i> 5</li>
               <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
               <li><i class="fa-solid fa-briefcase"></i> 3</li>
             </ul>
@@ -981,87 +1256,95 @@
               </span>
             </div>
 
-
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservaciones', ['auto' => 'VAN','nombre' => 'Toyota Hiace o similar','precio' => 2900,'imagen' => 'Hiace.png']) }}" class="car-cta">Reservar</a>
+            {{-- <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a> --}}
             </article>
 
-{
-        <article class="car-card">
-          <header class="car-title">
-            <h3>PICK UP DOBLE CABINA</h3>
-            <p>Nissan Frontier o similar | E</p>
-          </header>
+            <article class="car-card">
+              <header class="car-title">
+                <h3>SUV COMPACTA</h3>
+                <p> Jeep Renegade o similar | IC</p>
+              </header>
+              <div class="car-media">
+                <img src="{{ asset('img/renegade.png') }}" alt=" Jeep Renegade o similar">
+              </div>
 
-          <div class="car-media">
-            <img src="{{ asset('img/frontier.png') }}" alt="Nissan Frontier o similar">
-          </div>
+              <div class="offer">
+                <span class="offer-badge">-24%</span>
+                <div class="price-line">
+                  <span class="price-now">$1,600</span><span class="per">/día</span>
+                  <span class="price-old">$2,100</span>
+                </div>
+              </div>
 
-         <div class="offer">
-           <span class="offer-badge">-13%</span>
-           <div class="price-line">
-            <span class="price-now">$1,950</span><span class="per">/día</span>
-            <span class="price-old">$2,203</span>
-           </div>
-         </div>
+              <ul class="car-specs">
+                <li><i class="fa-solid fa-user-large"></i> 5</li>
+                <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
+                <li><i class="fa-solid fa-briefcase"></i> 3</li>
+              </ul>
 
-         <ul class="car-specs">
-           <li><i class="fa-solid fa-user-large"></i> 5</li>
-           <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-           <li><i class="fa-solid fa-briefcase"></i> 3</li>
-         </ul>
+              <div class="car-connect">
+                <span class="badge-chip badge-apple" title="Apple CarPlay">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
+                    <polygon points="10,8 16,12 10,16"></polygon>
+                  </svg>
+                  CarPlay
+                </span>
+                <span class="badge-chip badge-android" title="Android Auto">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
+                  </svg>
+                  Android Auto
+                </span>
+              </div>
 
-         <div class="car-connect">
-          <span class="badge-chip badge-apple" title="Apple CarPlay">
-            <svg viewBox="0 0 24 24"> <rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
-            CarPlay
-          </span>
-          <span class="badge-chip badge-android" title="Android Auto">
-            <svg viewBox="0 0 24 24"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path></svg>
-            Android Auto
-          </span>
-        </div>
-
-           <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
-          </article>
-
-        <article class="car-card">
-        <article class="car-card">
-          <header class="car-title">
-            <h3>PICK UP 4X4 DOBLE CABINA</h3>
-            <p>Toyota Tacoma o similar | F</p>
-          </header>
-          <div class="car-media">
-            <img src="{{ asset('img/Tacoma.png') }}" alt="Toyota Tacoma o similar">
-          </div>
-
-          <div class="offer">
-            <span class="offer-badge">-13%</span>
-            <div class="price-line">
-              <span class="price-now">$2,600</span><span class="per">/día</span>
-              <span class="price-old">$3,000</span>
-            </div>
-          </div>
-
-          <ul class="car-specs">
-            <li><i class="fa-solid fa-user-large"></i> 5</li>
-            <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-            <li><i class="fa-solid fa-briefcase"></i> 3</li>
-          </ul>
-
-          <div class="car-connect">
-            <span class="badge-chip badge-apple" title="Apple CarPlay">
-              <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
-              CarPlay
-            </span>
-            <span class="badge-chip badge-android" title="Android Auto">
-              <svg viewBox="0 0 24 24"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path></svg>
-              Android Auto
-            </span>
-          </div>
-
-              <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+              <a href="{{ route('rutaReservaciones', ['auto' => 'SUV COMPACTA','nombre' => 'Jeep Renegade o similar','precio' => 1600,'imagen' => 'renegade.png']) }}" class="car-cta">Reservar</a>
+              {{-- <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a> --}}
             </article>
 
+            <article class="car-card">
+              <header class="car-title">
+                <h3>SUV MEDIANA</h3>
+                <p>Kia Seltos o similar | I</p>
+              </header>
+              <div class="car-media">
+                <img src="{{ asset('img/seltos.png') }}" alt="Kia Seltos o similar">
+              </div>
+
+              <div class="offer">
+                <span class="offer-badge">-25%</span>
+                <div class="price-line">
+                  <span class="price-now">$1,800</span><span class="per">/día</span>
+                  <span class="price-old">$2,400</span>
+                </div>
+              </div>
+
+              <ul class="car-specs">
+                <li><i class="fa-solid fa-user-large"></i> 5</li>
+                <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
+                <li><i class="fa-solid fa-briefcase"></i> 3</li>
+              </ul>
+
+              <div class="car-connect">
+                <span class="badge-chip badge-apple" title="Apple CarPlay">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
+                    <polygon points="10,8 16,12 10,16"></polygon>
+                  </svg>
+                  CarPlay
+                </span>
+                <span class="badge-chip badge-android" title="Android Auto">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
+                  </svg>
+                  Android Auto
+                </span>
+              </div>
+
+              <a href="{{ route('rutaReservaciones', ['auto' => 'SUV MEDIANA','nombre' => 'Kia Seltos o similar','precio' => 1800,'imagen' => 'seltos.png']) }}" class="car-cta">Reservar</a>
+              {{-- <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a> --}}
+            </article>
 
             </div>
 
@@ -1113,7 +1396,7 @@
                       <div class="tile-body">
                         <h3>AUTOS Y CAMIONETAS 4x4:</h3>
                         <p>Viaja sin límites. Contamos con SUVs, autos todoterreno y camionetas 4x4 ideales para carretera, ciudad o aventura.</p>
-                        <a href="#" class="tile-link">Explora nuestra flota...</a>
+                        <a href="{{ route('rutaCatalogo') }}" class="tile-link">Explora nuestra flota...</a>
                       </div>
                     </article>
                   </div>
@@ -1124,7 +1407,8 @@
                       <div class="tile-body">
                         <h3>CAMIONETAS PARA 13 PASAJEROS:</h3>
                         <p>Perfectas para viajes familiares o empresariales. Comodidad, espacio y seguridad para todos tus acompañantes.</p>
-                        <a href="#" class="tile-link">Reserva la tuya...</a>
+
+                      <a href="{{ route('rutaReservasIniciar', ['step' => 1,'tipo' => 'camioneta_13']) }}" class="tile-link">Reserva la tuya...</a>
                       </div>
                     </article>
                   </div>
@@ -1135,7 +1419,7 @@
                       <div class="tile-body">
                         <h3>ACEPTAMOS TARJETAS:</h3>
                         <p>Pagos con tarjeta de crédito o débito. Fácil, rápido y seguro. También puedes hacer tu pago final al devolver tu vehículo.</p>
-                        <a href="#" class="tile-link">Conoce nuestras opciones...</a>
+                        <a href="{{ route('rutaReservasIniciar', ['step'=>1, 'tipo'=>'tarjetas']) }}"class="tile-link">Conoce nuestras opciones...</a>
                       </div>
                     </article>
                   </div>
@@ -1146,7 +1430,7 @@
                       <div class="tile-body">
                         <h3>ENTREGA EN AEROPUERTO 24/7:</h3>
                         <p>Recibe o entrega tu auto directamente en el aeropuerto, sin filas ni esperas. Disponible las 24 horas del día.</p>
-                        <a href="#" class="tile-link">Agendar entrega...</a>
+                        <a href="{{ route('rutaReservasIniciar', ['step'=>1, 'tipo'=>'aeropuerto']) }}"class="tile-link">Agendar entrega...</a>
                       </div>
                     </article>
                   </div>
@@ -1157,7 +1441,7 @@
                       <div class="tile-body">
                         <h3>VEHÍCULOS CON VERIFICACIÓN 00:</h3>
                         <p>Todos nuestros autos cumplen con las normas ambientales y están verificados tipo 00 para garantizar su óptimo rendimiento.</p>
-                        <a href="#" class="tile-link">Descubre más...</a>
+                        <a href="{{ route('rutaCatalogo') }}" class="tile-link">Descubre más...</a>
                       </div>
                     </article>
                   </div>
@@ -1168,7 +1452,7 @@
                       <div class="tile-body">
                         <h3>DROP OFF NACIONAL:</h3>
                         <p>Disfruta de tu viaje sin preocupaciones. Devuelve tu auto en otra ciudad con nuestro servicio Drop Off Nacional (con costo adicional).</p>
-                        <a href="#" class="tile-link">Consultar destinos...</a>
+                        <a href="{{ route('rutaReservasIniciar', ['step'=>1, 'tipo'=>'dropoff']) }}"class="tile-link">Consultar destinos...</a>
                       </div>
                     </article>
                   </div>
@@ -1179,7 +1463,7 @@
                       <div class="tile-body">
                         <h3>AUTOS NUEVOS Y MODERNOS:</h3>
                         <p>Conduce con estilo y seguridad. Nuestra flota está compuesta por vehículos recientes, siempre en óptimas condiciones.</p>
-                        <a href="#" class="tile-link">Explora la flota...</a>
+                        <a href="{{ route('rutaCatalogo') }}" class="tile-link">Explora la flota...</a>
                       </div>
                     </article>
                   </div>
@@ -1308,7 +1592,7 @@
 
 @section('js-vistaHome')
 
-{{-- ✅ jQuery  Permite que Select2 funcione--}}
+{{-- ✅ jQuery --}}
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
   {{-- ✅ Swiper JS --}}
@@ -1318,7 +1602,7 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
 
- {{-- ✅ Select2 JS  Convierte el select en avanzado--}}
+ {{-- ✅ Select2 JS --}}
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
   {{-- ✅ Inicializar Select2 básico --}}
@@ -1328,8 +1612,6 @@
         $('#dropoffPlace').select2({ width: '100%' });
     });
   </script>
-
-
 
   {{-- ✅ JS de iconos --}}
   <script src="{{ asset('js/iconos-lugar.js') }}"></script>

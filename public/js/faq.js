@@ -7,7 +7,8 @@
   // ====== AUTH (icono) ======
   (function(){
     const AUTH_KEY = 'vj_auth';
-    const URLS = { LOGIN:'login.html', PROFILE:'perfil.html' };
+    //const URLS = { LOGIN:'login.html', PROFILE:'perfil.html' };
+    const URLS = { LOGIN:'/login', PROFILE:'/perfil' };
     if(!window.VJ_AUTH){
       function getAuth(){ try{ return JSON.parse(localStorage.getItem(AUTH_KEY)||'null'); }catch(e){ return null; } }
       function isLogged(){ return !!localStorage.getItem(AUTH_KEY); }
@@ -66,7 +67,7 @@
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
     // WhatsApp (si existe)
-    const waNumber = '524421234567';
+    const waNumber = '524427169793';
     const btnWhats = qs('#btnWhats');
     if (btnWhats){
       btnWhats.href = `https://wa.me/${waNumber}?text=${encodeURIComponent('Hola, necesito ayuda desde el Centro de Ayuda.')}`;
@@ -87,29 +88,101 @@
     }
 
     const KB = [
-      { q:['documentos','requisitos','licencia','identificación','tarjeta'], cat:'requisitos',
-        a:`Para rentar necesitas:
-• Identificación oficial vigente (INE o Pasaporte).
-• Licencia de conducir vigente (mínimo 1 año).
-• Tarjeta de crédito para depósito en garantía a nombre del conductor.` },
-      { q:['depósito','garantía','bloqueo','retención'], cat:'pagos',
-        a:`El depósito en garantía depende de la categoría:
-• Compacto/Intermedio: $5,000–$10,000 MXN
-• SUV/Lujo: $12,000–$25,000 MXN
-Se libera por tu banco de 3 a 10 días hábiles tras la devolución.` },
-      { q:['efectivo','oxxo','mercado pago','paypal'], cat:'pagos',
-        a:`Puedes pagar en efectivo, OXXO, Mercado Pago o PayPal.
-El depósito en garantía **sí** debe ser con tarjeta de crédito.` },
-      { q:['seguro','cobertura','daños','responsabilidad'], cat:'seguros',
-        a:`Incluimos **Responsabilidad Civil (LI)**. Extras disponibles:
-• SLI (a terceros), LDW (daños al auto), PAI (accidentes personales).` },
-      { q:['horario','entregar','devolver','aeropuerto','pick up','drop off'], cat:'entrega',
-        a:`Horario Lun–Dom 8:00–22:00 h. Pick-up/Drop-off en Central Park Qro., Aeropuerto QRO y Aeropuerto del Bajío (León).` },
-      { q:['modificar','cancelar','cambiar','reprogramar','reembolso'], cat:'reservas',
-        a:`Modifica o cancela en "Mi reserva". Tarifas flexibles sin penalización con 24 h de anticipación. Promo puede no ser reembolsable.` },
-      { q:['edad','25','jóvenes','menor'], cat:'requisitos',
-        a:`Edad mínima **25 años**. De 21–24 años aplica cargo de conductor joven y coberturas adicionales.` },
-    ];
+  {
+    q: ['documentos','requisitos','licencia','identificación','tarjeta'],
+    cat: 'requisitos',
+    a: `<strong>📄 Requisitos para rentar un auto</strong><br><br>
+    Es necesario presentar en <strong>original</strong>:<br><br>
+    1️⃣ <strong>Identificación oficial vigente</strong> (INE o Pasaporte).<br>
+    2️⃣ <strong>Licencia de conducir vigente</strong> con al menos <strong>1 año de antigüedad</strong>.<br>
+    3️⃣ <strong>Tarjeta de crédito</strong> a nombre del titular de la renta con <strong>1 año de antigüedad mínima</strong>.`
+  },
+
+  {
+    q: ['depósito','garantía','bloqueo','retención'],
+    cat: 'pagos',
+    a: `<strong>💳 Depósito y garantía</strong><br><br>
+    El depósito es <strong>obligatorio</strong> y se realiza mediante un <strong>bloqueo (pre-autorización)</strong>
+    exclusivamente en tu <strong>Tarjeta de Crédito</strong> (Visa, Mastercard o American Express).<br><br>
+    La garantía se realiza principalmente con <strong>tarjeta de crédito</strong>.
+    En algunos casos específicos puede aceptarse <strong>tarjeta de débito</strong>.<br><br>
+    💰 El monto depende del auto y la cobertura elegida; por ejemplo:<br>
+    • Auto compacto con cobertura LDW: depósito desde <strong>$5,000 MXN</strong>.<br><br>
+    ⚠️ No se aceptan depósitos en <strong>efectivo</strong> para la garantía.`
+  },
+
+  {
+    q: ['efectivo','oxxo','mercado pago','paypal'],
+    cat: 'pagos',
+    a: `<strong>💵 Formas de pago</strong><br><br>
+    Sí, aceptamos <strong>efectivo</strong> como forma de pago para cubrir el total de tu renta directamente en sucursal.<br><br>
+    ⚠️ Importante: aunque pagues la renta en efectivo, la <strong>tarjeta de crédito para la garantía</strong>
+    sigue siendo un requisito obligatorio.<br><br>
+    También puedes pagar con:<br>
+    • <strong>OXXO</strong><br>
+    • <strong>Mercado Pago</strong><br>
+    • <strong>PayPal</strong>`
+  },
+
+  {
+    q: ['seguro','cobertura','daños','responsabilidad'],
+    cat: 'seguros',
+    a: `<strong>🛡️ Seguros y coberturas</strong><br><br>
+    Nuestras tarifas estándar incluyen <strong>Protección de Responsabilidad Civil (LI)</strong>
+    contra daños a terceros hasta por <strong>$350,000 MXN</strong>.<br><br>
+    Dependiendo del paquete contratado, puedes contar con protección por daños
+    (<strong>LDW / CDW</strong>) que reduce tu responsabilidad económica.<br><br>
+    Te recomendamos consultar en mostrador nuestros <strong>paquetes de Protección Total</strong>
+    para viajar con mayor tranquilidad.`
+  },
+
+  {
+    q: ['horario','entregar','devolver','aeropuerto','pick up','drop off'],
+    cat: 'entrega',
+    a: `<strong>📍 Entrega y devolución</strong><br><br>
+    ⏰ <strong>Horario habitual:</strong><br>
+    8:00 a 22:00 h <em>(sujeto a disponibilidad)</em>.<br><br>
+    📌 Entregamos y recibimos unidades en:<br>
+    • <strong>Central Park Querétaro</strong><br>
+    • <strong>Aeropuerto Internacional de Querétaro (QRO)</strong><br>
+    • <strong>Central de Autobuses de Querétaro (TAQ)</strong><br><br>
+    ⚠️ <strong>Importante:</strong><br>
+    El auto debe devolverse <strong>limpio</strong> y con el <strong>tanque lleno</strong>.<br>
+    Fumar dentro del vehículo o entregarlo con suciedad excesiva genera un cargo
+    de <strong>$4,000 MXN</strong> por limpieza profunda.`
+  },
+
+  {
+    q: ['modificar','cancelar','cambiar','reprogramar','reembolso'],
+    cat: 'reservas',
+    a: `<strong>📝 Modificaciones y cancelaciones</strong><br><br>
+    Puedes modificar o cancelar tu reserva desde <strong>"Mi reserva"</strong>.<br><br>
+    Las cancelaciones están sujetas a la <strong>política vigente</strong> según la anticipación.<br><br>
+    También puedes contratar un <strong>seguro de cancelación</strong>
+    para obtener un reembolso total.`
+  },
+
+  {
+    q: ['edad','25','jóvenes','menor','años','requisitos edad','cuantos años'],
+    cat: 'requisitos',
+    a: `<strong>🎂 Requisitos de edad</strong><br><br>
+    Edad estándar: <strong>25 años</strong>.<br>
+    Edad mínima permitida: <strong>21 años</strong>.<br><br>
+    ⚠️ De <strong>21 a 24 años</strong> aplica cargo de <strong>conductor joven</strong>
+    y coberturas adicionales.`
+  },
+
+  {
+    q: ['reservar','reservación','reservaciones','rentar','alquilar'],
+    cat: 'reservas',
+    a: `<strong>🚗 Iniciar reservación</strong><br><br>
+    👉 <a href="/reservaciones" target="_blank"><strong>Iniciar reservación</strong></a><br><br>
+    💬 Si necesitas ayuda personalizada:<br>
+    <a href="https://wa.me/${waNumber}" target="_blank"><strong>WhatsApp</strong></a>`
+  }
+];
+
+
 
     function scrollBottom(){ chatBody.scrollTop = chatBody.scrollHeight; }
     function bubble(text, from='bot'){
@@ -130,11 +203,18 @@ El depósito en garantía **sí** debe ser con tarjeta de crédito.` },
     function clearHistory(){
       localStorage.removeItem(STORAGE_KEY);
       chatBody.innerHTML='';
-      bubble(`¡Hola! Soy tu asistente de Viajero. Pregúntame lo que necesites 👋`);
+      bubble(`¡Hola! 👋 Soy tu asistente de <strong>Viajero Car Rental</strong>.
+Puedo ayudarte con <strong>reservas, pagos, requisitos, seguros</strong> y <strong>entrega/devolución</strong>.
+
+📅 ¿Quieres reservar ahora?
+👉 <a href="/reservaciones">Iniciar reservación</a>
+
+Usa los botones de abajo 👇`);
+
     }
 
-    const btnClear = qs('#btnClear');
-    if (btnClear) btnClear.addEventListener('click', clearHistory);
+    const btnClear = qs('#clearChat');
+if (btnClear) btnClear.addEventListener('click', clearHistory);
 
     function findAnswer(text, catHint=null){
       const t = (text||'').toLowerCase();
@@ -155,10 +235,25 @@ Si prefieres, puedo conectarte con un agente humano.`;
     });
 
     // Sugerencias
-    qsa('.sg').forEach(b=> b.addEventListener('click', ()=>{
-      input.value = b.dataset.q || b.textContent.trim();
-      form.dispatchEvent(new Event('submit'));
-    }));
+    qsa('.sg').forEach(b => {
+  b.addEventListener('click', (e) => {
+    e.preventDefault(); // 🔥 evita submit real
+    const text = b.dataset.q || b.textContent.trim();
+    if (!text) return;
+
+    bubble(text, 'user');
+    saveHistory();
+    setTyping(true);
+
+    setTimeout(() => {
+      const a = findAnswer(text);
+      setTyping(false);
+      bubble(a, 'bot');
+      saveHistory();
+    }, 400);
+  });
+});
+
 
     // Categorías
     qsa('.pill-cat').forEach(btn=>{
@@ -177,8 +272,8 @@ Si prefieres, puedo conectarte con un agente humano.`;
       btnAgent.addEventListener('click', ()=>{
         bubble('Quiero hablar con un agente.','user');
         bubble(`Con gusto 🙌. Puedes escribirnos a WhatsApp o llamarnos:
-• WhatsApp: <a href="https://wa.me/${waNumber}" target="_blank" rel="noopener">+52 442 123 4567</a>
-• Teléfono: <a href="tel:+524421234567">+52 442 123 4567</a>`, 'bot');
+• WhatsApp: <a href="https://wa.me/${waNumber}" target="_blank" rel="noopener">+52 442 716 9793</a>
+• Teléfono: <a href="tel:+52442 716 9793">+52 442 716 9793</a>`, 'bot');
         saveHistory();
       });
     }

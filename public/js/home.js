@@ -261,25 +261,57 @@
     document.head.appendChild(st);
   })();
 
-  // 1) FECHAS (Flatpickr + rangePlugin)
-  if(window.flatpickr){
+// 1) FECHAS (Flatpickr + rangePlugin)
+if(window.flatpickr){
     const pickup = document.getElementById('pickupDate');
     const min = pickup?.dataset?.min || 'today';
 
     window.flatpickr('#pickupDate', {
-      locale: 'es',
-      altInput: true,
-      altFormat: 'd/m/Y',
-      dateFormat: 'Y-m-d',
-      minDate: min,
-      disableMobile: true,
-      plugins: (typeof window.rangePlugin !== "undefined")
-        ? [ new window.rangePlugin({ input: '#dropoffDate' }) ]
-        : [],
-      onChange: updateSummary
-    });
-  }
+        locale: 'es',
+        altInput: true,
+        altFormat: 'd/m/Y',
+        dateFormat: 'Y-m-d',
+        minDate: min,
+        disableMobile: true,
+        plugins: (typeof window.rangePlugin !== "undefined")
+            ? [ new window.rangePlugin({ input: '#dropoffDate' }) ]
+            : [],
 
+        onReady: function(selectedDates, dateStr, instance) {
+            const altPickup = instance.altInput;
+            const dropoffEl = document.getElementById('dropoffDate');
+
+            const updateLabels = () => {
+                // Pickup
+                if (altPickup) {
+                    if (altPickup.value !== "") altPickup.classList.add('has-value');
+                    else altPickup.classList.remove('has-value');
+                }
+                // Devolución
+                if (dropoffEl && dropoffEl.nextElementSibling) {
+                    const altDropoff = dropoffEl.nextElementSibling;
+                    if (altDropoff.value !== "") altDropoff.classList.add('has-value');
+                    else altDropoff.classList.remove('has-value');
+                }
+            };
+
+            // Forzar al hacer click (para asegurar el borde negro desde el inicio)
+            if(altPickup) {
+                altPickup.addEventListener('focus', () => altPickup.classList.add('has-value'));
+                altPickup.addEventListener('blur', updateLabels);
+            }
+
+            // Ejecutar cuando Flatpickr detecte cambio de fecha
+            instance.config.onChange.push(updateLabels);
+
+            // Ejecución inicial
+            setTimeout(updateLabels, 200);
+        },
+        onChange: function() {
+            if (typeof updateSummary === "function") updateSummary();
+        }
+    });
+}
   /* ==========================
      SELECTS de hora/minuto
   ========================== */
@@ -476,19 +508,28 @@
     const dropDate  = document.getElementById("dropoffDate");
 
     function setDropoffState(){
-      const on = !!(chk && chk.checked);
+  const on = !!(chk && chk.checked);
 
-      if(dropWrap) dropWrap.style.display = on ? "" : "none";
-
-      if(dropSel){
-        if(on){
-          dropSel.setAttribute("required", "required");
-        }else{
-          dropSel.removeAttribute("required");
-          if(pickSel && pickSel.value) dropSel.value = pickSel.value;
-        }
-      }
+  if(dropWrap){
+    if(on){
+      dropWrap.classList.remove("disabled");
+      dropWrap.classList.add("enabled");
     }
+    else{
+      dropWrap.classList.remove("enabled");
+      dropWrap.classList.add("disabled");
+    }
+  }
+
+  if(dropSel){
+    if(on){
+      dropSel.setAttribute("required", "required");
+    }else{
+      dropSel.removeAttribute("required");
+      if(pickSel && pickSel.value) dropSel.value = pickSel.value;
+    }
+  }
+}
 
     pickSel && pickSel.addEventListener("change", ()=>{
       if(chk && !chk.checked && dropSel){
@@ -546,6 +587,32 @@
       if(pickTime && !pickTime.value) pickTime.value = "12:00";
       if(dropTime && !dropTime.value) dropTime.value = "12:00";
     }, { capture:true });
+
+/* === NUEVO: Control de bordes negros para Select2 y otros === */
+const inputsToWatch = [pickSel, dropSel];
+
+inputsToWatch.forEach(el => {
+  if (!el) return;
+
+  // Función para evaluar si tiene valor
+  const toggleHasValue = () => {
+    if (el.value && el.value !== "") {
+      el.classList.add('has-value');
+      // Si usa Select2, aplicamos al contenedor visual que crea la librería
+      $(el).next('.select2-container').find('.select2-selection').addClass('has-value');
+    } else {
+      el.classList.remove('has-value');
+      $(el).next('.select2-container').find('.select2-selection').removeClass('has-value');
+    }
+  };
+
+  // Escuchar cambios (Select2 dispara 'change')
+  $(el).on('change', toggleHasValue);
+
+  // Ejecutar al inicio por si ya vienen con datos
+  setTimeout(toggleHasValue, 500);
+});
+
   })();
 })();
 
