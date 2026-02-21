@@ -81,7 +81,6 @@
 
         // Reglas
         if (!nombre || nombre.value.trim().length < 2) faltantes.push("Nombre");
-        if (!apellido || apellido.value.trim().length < 2) faltantes.push("Apellidos");
         if (!telefono || telefono.value.trim().length < 10) faltantes.push("Teléfono (10 dígitos)");
         if (!nacimiento || nacimiento.value.trim() === "") faltantes.push("Fecha de nacimiento");
 
@@ -579,6 +578,155 @@ persistNow();
     }
   }
 
+    // ==========================================================
+// ✅ STEP 4: calcular complementos + IVA + total
+//      y pintar tabla de opciones de renta + IVA (16%)
+// ==========================================================
+function initStep4AddonsSummary() {
+  const table = qs('#cotizacionDoc');
+  if (!table) return;
+
+  const qBaseEl   = qs('#qBase');
+  const qExtrasEl = qs('#qExtras');
+  const qIvaEl    = qs('#qIva');
+  const qTotalEl  = qs('#qTotal');
+  const extrasList = qs('#extrasList');
+  const ivaList    = qs('#ivaList');
+
+  if (!qBaseEl || !qExtrasEl || !qIvaEl || !qTotalEl) return;
+
+  // base y días desde los data-*
+  const base = parseFloat(table.dataset.base || '0') || 0;
+  const days = parseInt(table.dataset.days || '1', 10) || 1;
+
+  // addons: string "id:cantidad,id2:cantidad..."
+  const hiddenPayload = qs('#addons_payload');
+  const hiddenAlt     = qs('#addonsHidden');
+  const rawAddons =
+    (hiddenPayload && hiddenPayload.value && hiddenPayload.value.trim()) ||
+    (hiddenAlt && hiddenAlt.value && hiddenAlt.value.trim()) ||
+    '';
+
+  // catálogo de servicios desde el script JSON
+  const catalogScript = document.getElementById('addonsCatalog');
+  let catalog = {};
+  if (catalogScript) {
+    try {
+      catalog = JSON.parse(catalogScript.textContent || '{}') || {};
+    } catch (e) {
+      catalog = {};
+    }
+  }
+
+  function parseAddons(str) {
+    const map = new Map();
+    String(str || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .forEach(pair => {
+        const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
+        if (!m) return;
+        const id = m[1];
+        const qty = Math.max(0, parseInt(m[2], 10) || 0);
+        if (qty > 0) map.set(id, qty);
+      });
+    return map;
+  }
+
+  function fmtMoney(n) {
+    return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
+  }
+
+  const addonsMap = parseAddons(rawAddons);
+  let extrasTotal = 0;
+
+  // Limpiar contenedores de detalle
+  if (extrasList) extrasList.innerHTML = '';
+  if (ivaList) ivaList.innerHTML = '';
+
+  // ==============================
+  // 🧮 Construir tabla de opciones de renta
+  // ==============================
+  if (addonsMap.size === 0) {
+    // Sin complementos → mensaje por defecto
+    if (extrasList) {
+      const row = document.createElement('div');
+      row.className = 'row row-empty';
+      row.innerHTML = `
+        <span class="muted">Sin complementos seleccionados</span>
+        <strong>$0 MXN</strong>
+      `;
+      extrasList.appendChild(row);
+    }
+    } else {
+    // 👉 Sin encabezado tipo tabla: cada adicional en una sola línea de texto
+    addonsMap.forEach((qty, id) => {
+      const srv = catalog[id];
+      if (!srv) return;
+
+      const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+      const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
+
+      let lineTotal = 0;
+      if (tipo === 'por_evento') {
+        lineTotal = price * qty;            // precio * cantidad
+      } else {
+        lineTotal = price * qty * days;     // por día → precio * cantidad * días
+      }
+
+      extrasTotal += lineTotal;
+
+      if (extrasList) {
+        const row = document.createElement('div');
+        row.className = 'row row-addon';
+
+        const unidadLabel = (tipo === 'por_evento') ? '/ evento' : 'por día';
+
+        // 👇 Aquí va el formato que quieres: cantidad | descripción | precio por día |   …y el total a la derecha
+        row.innerHTML = `
+          <span style="flex:1;">
+            ${qty} | ${srv.nombre} | ${fmtMoney(price)} ${unidadLabel}
+          </span>
+          <strong style="flex:0 0 110px; text-align:right;">
+            ${fmtMoney(lineTotal)}
+          </strong>
+        `;
+        extrasList.appendChild(row);
+      }
+    });
+  }
+
+
+  // ==============================
+  // 🧮 Subtotal, IVA y Total
+  // ==============================
+  const subtotal = base + extrasTotal;
+  const iva = subtotal * 0.16;
+  const total = subtotal + iva;
+
+  // Pintar totales en las barras de cada acordeón
+  qBaseEl.textContent   = fmtMoney(base);
+  qExtrasEl.textContent = fmtMoney(extrasTotal);
+  qIvaEl.textContent    = fmtMoney(iva);
+  qTotalEl.textContent  = fmtMoney(total);
+
+  // ==============================
+  // 🧾 Detalle de IVA (16%) dentro de "Cargos e IVA"
+  // ==============================
+  if (ivaList) {
+    const row = document.createElement('div');
+    row.className = 'row row-iva';
+    row.innerHTML = `
+      <span>IVA (16%)</span>
+      <strong>${fmtMoney(iva)}</strong>
+    `;
+    ivaList.appendChild(row);
+  }
+}
+
+
+
   // ======================================================
   // ✅ Step 4: Nombre Completo → (nombre + apellido hidden)
   // ======================================================
@@ -592,15 +740,16 @@ persistNow();
     const norm = (s)=> String(s || '').trim().replace(/\s+/g,' ');
 
     function splitFullName(v){
-      const s = norm(v);
-      if (!s) return { nombre:"", apellido:"" };
+  const s = norm(v);
+  if (!s) return { nombre:"", apellido:"" };
 
-      const parts = s.split(' ');
-      if (parts.length === 1) return { nombre: parts[0], apellido: "" };
+  // 👉 Mandamos TODO el texto al campo "nombre" y dejamos "apellido" vacío
+  return {
+    nombre: s,
+    apellido: ""
+  };
+}
 
-      const last = parts.pop();
-      return { nombre: parts.join(' '), apellido: last };
-    }
 
     function syncToHidden(){
       const { nombre: n, apellido: a } = splitFullName(full.value);
@@ -1080,7 +1229,7 @@ persistNow();
     });
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("DOMContentLoaded", () => {
     forceStep1WhenOnlyStepParam();
 
     initWizardStatePersistence();
@@ -1089,6 +1238,7 @@ persistNow();
     initDaysAndPricesSync();
     initAddonsSync();
     initStep4DatePretty();
+    initStep4AddonsSummary();  // 👈 AQUÍ
 
     // ✅ Nombre Completo (Step 4)
     initFullNameSync();
@@ -1167,5 +1317,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
 
 })();

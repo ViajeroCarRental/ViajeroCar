@@ -14,7 +14,7 @@ class StoreCotizacionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'categoria_id'        => 'required|integer',
+            'categoria_id' => 'required|integer|exists:categorias_carros,id_categoria',
             'pickup_date'         => 'required|date_format:Y-m-d',
             'pickup_time'         => 'required|date_format:H:i',
             'dropoff_date'        => 'required|date_format:Y-m-d',

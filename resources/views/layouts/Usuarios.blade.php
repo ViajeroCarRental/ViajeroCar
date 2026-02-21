@@ -308,7 +308,16 @@
     <div class="footer-copy">© <span id="year"></span> Viajero. Todos los derechos reservados.</div>
   </div>
 </footer>
+{{-- 🔹 Scripts específicos por vista --}}
 @yield('js-vistaHome')
+@yield('js-vistaCatalogo')
+@yield('js-vistaReservaciones')
+@yield('js-vistaContacto')
+@yield('js-vistaPoliticas')
+@yield('js-vistaFAQ')
+@yield('js-vistaLogin')
+@yield('js-vistaPerfil')
+
 <script>
   // iOS: bloquear zoom por doble tap / gesto
   (function(){
@@ -419,3 +428,4 @@ document.addEventListener("DOMContentLoaded", function() {
 
 </body>
 </html>
+
