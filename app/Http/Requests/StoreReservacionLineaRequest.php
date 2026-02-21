@@ -16,7 +16,6 @@ class StoreReservacionLineaRequest extends FormRequest
         $rules = parent::rules();
 
         $rules['paypal_order_id'] = 'required|string';
-        $rules['addons'] = ['nullable', 'string'];
 
         return $rules;
     }

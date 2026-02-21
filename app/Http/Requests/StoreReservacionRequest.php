@@ -14,8 +14,7 @@ class StoreReservacionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'categoria_id' => 'required|integer|exists:categorias_carros,id_categoria',
-
+            'categoria_id'        => 'required|integer',
             'pickup_date'         => 'required|date',
             'pickup_time'         => 'required',
             'dropoff_date'        => 'required|date',
@@ -26,7 +25,7 @@ class StoreReservacionRequest extends FormRequest
             'email'               => 'nullable|string|max:120',
             'telefono'            => 'nullable|string|max:40',
             'vuelo'               => 'nullable|string|max:40',
-            'addons'              => ['nullable', 'string'],
+            'addons'              => 'nullable|array',
         ];
     }
 }
