@@ -18,6 +18,7 @@
       <div class="hero-text">
         <h1>Centro de ayuda</h1>
         <p>Resuelve tus dudas conversando con nuestro asistente</p>
+        
       </div>
     </div>
   </section>
@@ -116,3 +117,4 @@
 @section('js-vistaFAQ')
   <script src="{{ asset('js/faq.js') }}"></script>
 @endsection
+ 

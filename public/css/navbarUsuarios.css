@@ -1,9 +1,3 @@
-/* ==========================================================================
-   navbarUsuarios.css — COMPLETO (LIMPIO / RESPONSIVE / iOS-OK)
-   ✅ Mantiene iconos (incluido reloj) y FIX: la lista del timepicker / dropdown
-      se vea SIEMPRE (z-index + overflow + pointer events + wrapper correcto)
-========================================================================== */
-
 :root{
   --brand:#b22222; --brand-dark:#8b1d1a; --brand-2:#8b1d1a;
   --ink:#0f172a; --muted:#6b7280; --soft:#f6f7fb; --paper:#fff;
@@ -131,7 +125,7 @@ body{
 }
 
 /* =========================
-   NAV RESPONSIVE (HAMBURGER) — ÚNICO
+   NAV RESPONSIVE
 ========================= */
 .nav-backdrop{
   opacity:0;
@@ -335,7 +329,7 @@ body.nav-open .topbar{
   }
 }
 
-/* ✅ Tablet/Mobile: 2 columnas + sin transforms */
+/*  Tablet/Mobile: 2 columnas + sin transforms */
 @media (max-width:900px){
   .hero-icons{
     grid-template-columns: repeat(2, minmax(0,1fr));
@@ -347,7 +341,7 @@ body.nav-open .topbar{
   .hero-icons .icon-item:hover{ transform:none !important; }
 }
 
-/* ✅ Móvil */
+/*  Móvil */
 @media (max-width:560px){
   .hero-icons{
     grid-template-columns: repeat(2, minmax(0,1fr));
@@ -384,14 +378,14 @@ body.nav-open .topbar{
   grid-template-columns:repeat(3, minmax(0, 1fr));
   column-gap:16px;
   row-gap:14px;
-  align-items:stretch;  /* ✅ clave para que queden parejos */
+  align-items:stretch;  
 }
-/* ✅ Igualar altura visual de cada columna */
+/* Igualar altura visual de cada columna */
 .sg-col-location,
 .sg-col-datetime{
   min-width:0;
   display:grid;
-  grid-template-rows: 28px auto auto;  /* header fijo + 2 filas */
+  grid-template-rows: 28px auto auto;  
   row-gap:10px;
   align-content:start;
 }
@@ -408,7 +402,7 @@ body.nav-open .topbar{
   justify-content:flex-start;
   gap:10px;
   margin:0;
-  min-height: 18px;   /* ✅ misma altura para “header” de columna */
+  min-height: 18px;   
 }
 
 .field-title{
@@ -513,7 +507,6 @@ input:focus, select:focus{
 .icon-field > input,
 .icon-field > select{ padding-left:42px; }
 
-/* ✅ Icono de reloj (derecha) — se mantiene SIEMPRE */
 .cal-ico{
   position:absolute;
   right:12px;
@@ -527,7 +520,7 @@ input:focus, select:focus{
   place-items: center !important;
 }
 .tp-selects{
-  margin-top: 6px;/* antes 10px */
+  margin-top: 6px;
 }
 input.flatpickr-input{ padding-right:44px; }
 
@@ -559,14 +552,6 @@ input.flatpickr-input{ padding-right:44px; }
   text-transform:uppercase;
 }
 
-/* =========================
-   ✅ LO ÚLTIMO: HACER QUE SE DESPLIEGUE LA LISTA (TIMEPICKER / DROPDOWNS)
-   - 1) No recortar overlays por overflow
-   - 2) Z-index arriba de todo
-   - 3) El wrapper .timepicker-ui sea "clickable" y no tape el icono
-========================= */
-
-/* A) Evita recortes */
 .hero,
 .search-card,
 .search-form,
@@ -575,18 +560,17 @@ input.flatpickr-input{ padding-right:44px; }
   overflow: visible !important;
 }
 
-/* B) Wrapper oficial del timepicker (por si lo agrega el JS) */
+/* B) Wrapper oficial del timepicker */
 .timepicker-ui{
   position: relative;
   display:block;
   width:100%;
-  z-index: 2; /* por encima de layout del form */
+  z-index: 2; 
 }
 .timepicker-ui .timepicker-ui-input{
   cursor: pointer;
 }
 
-/* C) Si el plugin crea dropdown/lista interna, que se vea */
 .timepicker-ui-wrapper,
 .timepicker-ui-modal,
 .timepicker-ui-overlay,
@@ -594,17 +578,14 @@ input.flatpickr-input{ padding-right:44px; }
   z-index: 999999 !important;
 }
 
-/* overlay arriba de TODO (por si iOS se pone raro) */
 .timepicker-ui-overlay{ z-index: 999998 !important; }
 .timepicker-ui-modal{ z-index: 999999 !important; }
 
-/* D) Si tu select/dropdown de ubicaciones trae menú (Bootstrap/etc), también */
 .dropdown-menu{
   z-index: 999999 !important;
 }
 
-/* E) Asegura que nada “invisible” bloquee taps */
-.cal-ico{ pointer-events:none !important; } /* icono no bloquea click */
+.cal-ico{ pointer-events:none !important; } 
 .icon-field{ pointer-events:auto; }
 .icon-field input,
 .icon-field select{
@@ -645,7 +626,6 @@ input.flatpickr-input{ padding-right:44px; }
 .hidden{ display:none !important; }
 .small{ font-size:12px; color:var(--muted); margin-top:4px; }
 
-/* posición del search-card dentro del hero (DESKTOP) */
 .hero .search-card{
   position:static;
   transform:none;
@@ -674,8 +654,8 @@ input.flatpickr-input{ padding-right:44px; }
    RESPONSIVOS
 ========================= */
 .info-media{
-  width:100%; /* ancho del contenedor*/
-  aspect-ratio:16/9;  /* ancho del contenedor*/
+  width:100%; 
+  aspect-ratio:16/9;  
   border-radius:18px;
   overflow:hidden;
   position:relative; /* */
@@ -683,14 +663,12 @@ input.flatpickr-input{ padding-right:44px; }
   background:#000;
 }
 
-/* IMPORTANTE:
-   Si tu media-carousel es FADE con absolute, lo dejamos así */
 .media-carousel .media-slide{
   position:absolute;
   inset:0;
 
-  background-size: cover;   /*La imagen llena el contenedor*/
-  background-position: center; /*Centra la imagen */
+  background-size: cover;   
+  background-position: center;
   background-repeat: no-repeat;
 
   opacity:0;
@@ -700,7 +678,6 @@ input.flatpickr-input{ padding-right:44px; }
 .media-carousel .media-slide.active{
   opacity:1;
 }
-
 
 o-content{
   background:#fff;
@@ -763,7 +740,7 @@ o-content{
 }
 
 /* =========================
-   Social lateral (si lo usas)
+   Social lateral
 ========================= */
 .social{
   position:fixed;
@@ -822,7 +799,7 @@ o-content{
 .modal-actions{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
 
 /* =========================
-   Dropdown (general)
+   Dropdown 
 ========================= */
 .icon-item.dropdown{ position:relative; }
 .dropdown-menu{
@@ -930,12 +907,6 @@ o-content{
 }
 .car-cta:hover{ transform:translateY(-1px); }
 
-/* =========================
-   FLECHAS CARRUSEL (FINAL)
-   🔴 Activo: rojo sólido + blanco
-   ⚪ Disabled: gris + animación
-========================= */
-
 .fleet-btn{
   position:absolute !important;
   top:50% !important;
@@ -964,7 +935,6 @@ o-content{
   pointer-events:auto !important;
 }
 
-/* Hover solo si está activa */
 .fleet-btn:not(.is-disabled):hover{
   background:#8b1d1a !important;
   border-color:#8b1d1a !important;
@@ -972,7 +942,6 @@ o-content{
   box-shadow:0 14px 30px rgba(178,34,34,.55) !important;
 }
 
-/* ⛔ DESHABILITADO (INICIO Y FIN) */
 .fleet-btn.is-disabled,
 .fleet-btn:disabled{
   background:#e5e7eb !important;
@@ -982,12 +951,9 @@ o-content{
   box-shadow:none !important;
   pointer-events:none !important;
   cursor:default !important;
-
-  /* 👇 animación compartida */
   animation:fleet-limit-pop .28s ease-out both;
 }
 
-/* 🎯 Animación sutil al llegar al límite */
 @keyframes fleet-limit-pop{
   0%{
     transform:translateY(-50%) scale(1);
@@ -1000,18 +966,15 @@ o-content{
   }
 }
 
-/* Posiciones desktop */
 .fleet-btn.prev{ left:-62px !important; }
 .fleet-btn.next{ right:-62px !important; }
 
-/* Tablet */
 @media (max-width:1100px){
   .car-card{ flex:0 0 calc((100% - 18px) / 2); }
   .fleet-btn.prev{ left:-48px !important; }
   .fleet-btn.next{ right:-48px !important; }
 }
 
-/* Móvil */
 @media (max-width:720px){
   .car-card{ flex:0 0 100%; }
   .fleet-btn{
@@ -1023,17 +986,14 @@ o-content{
   .fleet{ margin:90px auto 50px !important; }
 }
 
-/* Texto debajo del carrusel */
 #fleet-carousel + .fleet-meta,
 #fleet-carousel-2 + .fleet-meta{
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
   padding: 0 !important;
-
   margin-top: 40px !important;
   margin-bottom: 40px !important;
-
   text-align: center;
   font-family: 'Playfair Display', serif;
   font-size: clamp(16px, 1.8vw, 20px);
@@ -1051,7 +1011,6 @@ o-content{
   font-size: 18px;
 }
 
-/* Ofertas / badge */
 .offer{ margin-top:4px; display:flex; flex-direction:column; gap:4px; }
 .offer-badge{
   position:absolute;
@@ -1095,7 +1054,6 @@ o-content{
 .price-old{ font-size:14px; color:#9aa3b2; text-decoration:line-through; font-weight:800; }
 .price-note{ font-size:12px; color:#6b7280; font-weight:700; }
 
-/* Badges app */
 .car-connect{ margin-top:2px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .badge-chip{
   display:inline-flex;
@@ -1408,7 +1366,6 @@ o-content{
   .headline{ font-size:54px; }
 }
 
-/* ✅ FIX ENSIMADO REAL: en mobile el form NO sube */
 @media (max-width:900px){
   .headline{ font-size:46px; }
 
@@ -1442,7 +1399,7 @@ o-content{
 }
 
 /* =========================
-   Focus (sin outlines raros)
+   Focus 
 ========================= */
 .btn,
 .btn-primary,
@@ -1475,7 +1432,7 @@ input::-moz-focus-inner{ border:0; }
 .btn, .car-cta, .fleet-btn, a.btn{ -webkit-tap-highlight-color:transparent; }
 
 /* =========================
-   TIMEPICKER UI — VIAJERO THEME + (LISTA/VISTA SIEMPRE)
+   TIMEPICKER UI — VIAJERO THEME 
 ========================= */
 .timepicker-ui-modal,
 .timepicker-ui-clock,
@@ -1518,11 +1475,9 @@ input::-moz-focus-inner{ border:0; }
   color: var(--brand) !important;
 }
 
-/* ✅ overlay arriba de TODO */
 .timepicker-ui-overlay{ z-index: 999998 !important; }
 .timepicker-ui-modal{ z-index: 999999 !important; }
 
-/* ✅ IMPORTANTE: el input del timepicker debe permitir tap/click */
 input#pickupTime,
 input#dropoffTime{
   -webkit-tap-highlight-color: transparent;
@@ -1530,11 +1485,9 @@ input#dropoffTime{
   cursor: pointer;
 }
 /* =====================================================================
-   TIME SELECTS (00..24 + 00/15/30/45) — debajo del input
-   ✅ Compatible con tu .field / .icon-field / tokens
+   TIME SELECTS 
 ===================================================================== */
 
-/* 1) Contenedor de los selects debajo del input */
 .tp-selects{
   margin-top: 10px;
   display: grid;
@@ -1543,11 +1496,10 @@ input#dropoffTime{
   width: 100%;
 }
 
-/* 2) Estilo pro y consistente con tu sistema */
 .tp-selects select{
   height: var(--ctl-h);
-  border-radius: 10px;               /* igual que tus inputs */
-  border: 1px solid #d1d5db;         /* igual que inputs */
+  border-radius: 10px;             
+  border: 1px solid #d1d5db;         
   background: #fff;
   padding: 0 12px;
   font-size: 14px;
@@ -1557,53 +1509,41 @@ input#dropoffTime{
   box-sizing: border-box;
 }
 
-/* 3) Focus igual que el form */
 .tp-selects select:focus{
   border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(178,34,34,.15);
 }
 
-/* 4) Si estás usando icon-field, que no se ensime nada */
 .icon-field .tp-selects{
   padding-left: 0;
 }
 
-/* 5) En móvil: una columna para que no se aplaste */
 @media (max-width: 520px){
   .tp-selects{
     grid-template-columns: 1fr;
   }
 }
 /* =========================================================
-   FIX: ícono reloj NO choca con el select de HORA
-   (solo afecta los selects que tu JS crea dentro de .tp-selects)
+   FIX
 ========================================================= */
 
-/* El wrapper del time-field debe ser referencia del icono */
 .time-field{ position: relative; }
 
-/* En .tp-selects: el primer select (HH) necesita espacio extra por el icono */
 .time-field .tp-selects select:first-child{
-  padding-left: 44px !important; /* prueba 42-50 */
+  padding-left: 44px !important; 
 }
 
-/* Opcional: el segundo select (MM) no necesita icono, lo dejamos normal */
 .time-field .tp-selects select:nth-child(2){
   padding-left: 12px !important;
 }
 /* =====================================================================
    PARCHE — Ajuste fino de icono reloj y selects de hora/minuto
-   - No rompe otros iconos
-   - No toca JS ni Blade
-   - Solo afecta el form del hero
 ===================================================================== */
 
-/* 1) Variable exclusiva para el reloj */
 :root{
-  --clock-nudge: 0px; /* ajusta 6px – 14px si lo quieres más abajo/arriba */
+  --clock-nudge: 0px;
 }
 
-/* 2) Baja SOLO el icono del reloj */
 .cal-ico{
   top: calc(
     var(--lab-h)
@@ -1614,33 +1554,24 @@ input#dropoffTime{
   ) !important;
 }
 
-/* 3) Sube ligeramente los selects de hora/minuto */
 .tp-selects{
-  margin-top: 6px !important; /* antes 10px */
-  gap: 8px !important;        /* más compacto */
+  margin-top: 6px !important; 
+  gap: 8px !important;        
 }
-/* =========================================================
-   PARCHE FINAL — reloj a la IZQUIERDA dentro del input (como tu imagen)
-   Pegar AL FINAL del CSS
-========================================================= */
-
 :root{
-  --timeclock-nudge: 4px;  /* + baja el reloj | - sube el reloj */
+  --timeclock-nudge: 4px;  
 }
 
-/* 1) Solo para los campos de hora */
 .search-card .time-field.icon-field{
   position: relative !important;
 }
 
-/* 2) Quita el reloj de la derecha si existe (.cal-ico) */
 .search-card .time-field.icon-field .cal-ico{
   display: none !important;
 }
 
-/* 3) Crea el reloj a la izquierda (aunque NO exista <i>) */
 .search-card .time-field.icon-field::before{
-  content:"\f017"; /* FontAwesome clock */
+  content:"\f017"; 
   font-family:"Font Awesome 6 Free";
   font-weight:900;
 
@@ -1662,37 +1593,29 @@ input#dropoffTime{
   pointer-events:none;
 }
 
-/* 4) El input deja espacio para el reloj (como tu imagen) */
 .search-card .time-field.icon-field input#pickupTime,
 .search-card .time-field.icon-field input#dropoffTime{
   padding-left: 44px !important; /* espacio del icono */
   padding-right: 12px !important;
 }
 
-/* 5) Si tu HTML todavía trae un icono izquierdo viejo (.field-icon), lo escondemos SOLO aquí */
 .search-card .time-field.icon-field .field-icon{
   display:none !important;
 }
-/* =========================================================
-   PARCHE: headers IGUALES en las 3 columnas (quita lo chueco)
-   Pégalo DESPUÉS de tu bloque actual de .search-grid / .sg-col-*
-========================================================= */
 
 :root{
-  --sg-head-h: 34px; /* ajusta a 32/36 si quieres */
+  --sg-head-h: 34px; 
 }
 
-/* 1) MISMA estructura de filas en todas las columnas */
 .search-card .sg-col-location,
 .search-card .sg-col-datetime{
   min-width:0;
   display:grid;
-  grid-template-rows: var(--sg-head-h) auto auto; /* ✅ header fijo */
-  row-gap: 10px;                                  /* ✅ consistente */
+  grid-template-rows: var(--sg-head-h) auto auto; 
+  row-gap: 10px;                                  
   align-content:start;
 }
 
-/* 2) Header izquierdo (Lugar de renta + checkbox) */
 .search-card .sg-col-location .location-head{
   min-height: var(--sg-head-h);
   height: var(--sg-head-h);
@@ -1702,45 +1625,39 @@ input#dropoffTime{
   margin:0;
 }
 
-/* evita que el checkbox “estire” la fila */
 .search-card .sg-col-location .inline-check{
   line-height: 1;
 }
 
-/* 3) Headers de Entrega/Devolución (el texto de arriba) */
 .search-card .sg-col-datetime > .field-title,
 .search-card .sg-col-datetime .field-title:first-child{
   min-height: var(--sg-head-h);
   height: var(--sg-head-h);
   display:flex;
   align-items:center;
-  justify-content:center; /* ✅ se ve pro centrado */
+  justify-content:center; 
   margin:0;
 }
 
-/* 4) Asegura que las cajas crezcan parejo */
 .search-card .sg-col-location > .field,
 .search-card .sg-col-datetime > .field{
   height: 100%;
 }
-/* =========================================================
-   AJUSTE FINO: subir location / bajar datetime
-   (Pegar AL FINAL)
-========================================================= */
+
 :root{
-  --loc-shift: -12px;   /* (-) sube location | (+) baja location */
-  --dt-shift:  10px;    /* (+) baja datetime | (-) sube datetime */
+  --loc-shift: -12px;   
+  --dt-shift:  10px;   
 }
 
 .search-card .sg-col-location{
-  margin-top: var(--loc-shift) !important;  /* (-) sube, (+) baja */
+  margin-top: var(--loc-shift) !important; 
 }
 .search-card .sg-col-datetime{
-  margin-top: var(--dt-shift) !important;   /* (+) baja, (-) sube */
+  margin-top: var(--dt-shift) !important;   
 }
 .search-card .sg-col-location .field.hidden{
-  display: flex !important;         /* mantiene la fila */
-  visibility: hidden !important;    /* se oculta */
+  display: flex !important;        
+  visibility: hidden !important;    
   opacity: 0 !important;
   pointer-events: none !important;
 }
@@ -1752,21 +1669,18 @@ input#dropoffTime{
     margin-top: 18px !important;
   }
 }
-/* 1) Dentro del HERO: cualquier .hidden en la columna location
-      NO debe usar display:none (porque colapsa y mueve todo) */
+
 .search-card .sg-col-location .hidden{
-  display: block !important;          /* evita colapso */
-  visibility: hidden !important;      /* se oculta */
+  display: block !important;         
+  visibility: hidden !important;     
   opacity: 0 !important;
   pointer-events: none !important;
 }
 
-/* 2) Si lo que se oculta es un flex (field), mantenlo como flex */
 .search-card .sg-col-location .field.hidden{
   display: flex !important;
 }
 
-/* 3) Si el JS le pone inline style="display:none", lo matamos igual */
 .search-card .sg-col-location [style*="display: none"]{
   display: block !important;
   visibility: hidden !important;
@@ -1777,66 +1691,52 @@ input#dropoffTime{
   display: flex !important;
 }
 /* =========================================
-   FIX SOLO MÓVIL: el botón BUSCAR NO se encima con los selects
-   Pegar AL FINAL
+   FIX SOLO MÓVIL
 ========================================= */
 @media (max-width:560px){
 
-  /* separa la fila del botón de lo de arriba */
   .search-card .sg-col-submit{
     margin-top: 18px !important;
     align-items: flex-start !important;
   }
 
-  /* evita que el contenedor “estire” raro */
   .search-card .actions{
     display: block !important;
     width: 100% !important;
   }
 
-  /* botón con altura normal (sin empujar hacia arriba) *//* =========================================
-   FIX SOLO MÓVIL: cada recuadro fijo (sin encimarse)
-   El form crece en altura lo necesario
-   Pegar AL FINAL
-========================================= */
 @media (max-width:560px){
 
-  /* 1) El card NO debe recortar ni forzar scroll interno */
   .search-card{
     max-height: none !important;
     overflow: visible !important;
   }
 
-  /* 2) El grid en móvil: stack real y sin "stretch" */
   .search-grid{
     grid-template-columns: 1fr !important;
     align-items: start !important;
-    row-gap: 16px !important; /* separación entre secciones */
+    row-gap: 16px !important; 
   }
 
-  /* 3) Las columnas NO deben tener grid-template-rows fijo en móvil */
   .search-card .sg-col-location,
   .search-card .sg-col-datetime{
     display: block !important;
     margin-top: 0 !important;
   }
 
-  /* 4) Cada field se comporta como bloque independiente con espacio */
   .search-card .field{
-    margin: 0 0 12px !important;   /* espacio por cada recuadro */
+    margin: 0 0 12px !important;   
   }
   .search-card .field:last-child{
     margin-bottom: 0 !important;
   }
 
-  /* 5) Los selects de hora/minuto: que no se aprieten */
   .tp-selects{
     grid-template-columns: 1fr !important;
     gap: 12px !important;
     margin-top: 10px !important;
   }
 
-  /* 6) El botón "Buscar" abajo con espacio real */
   .search-card .sg-col-submit{
     margin-top: 8px !important;
   }
@@ -1847,27 +1747,23 @@ input#dropoffTime{
 
   .search-card .actions button{
     width: 100% !important;
-    padding: 14px 18px !important;  /* un poquito menos que 16px */
-    margin-top: 6px !important;     /* espacio extra por seguridad */
+    padding: 14px 18px !important;  
+    margin-top: 6px !important;    
   }
 }
 /* =========================================================
-   FIX: quitar línea / highlight al abrir calendario (iOS)
-   NO quita focus, NO quita funcionalidad
+   FIX
 ========================================================= */
 
-/* inputs de fecha / flatpickr */
 input.flatpickr-input:focus{
   outline: none !important;
   box-shadow: none !important;
 }
 
-/* iOS: quita la línea azul de tap */
 input.flatpickr-input{
   -webkit-tap-highlight-color: transparent !important;
 }
 
-/* si Safari insiste con focus visual */
 @supports (-webkit-touch-callout: none){
   input.flatpickr-input:focus{
     outline: 0 !important;
@@ -1875,75 +1771,63 @@ input.flatpickr-input{
   }
 }
 /* =========================================================
-   iOS FIX DEFINITIVO: NO zoom + NO re-escala al abrir Flatpickr
-   (Pegar AL FINAL)
+   iOS FIX 
 ========================================================= */
 @supports (-webkit-touch-callout: none){
 
-  /* 1) iOS auto-zoom killer */
   .search-card input,
   .search-card select,
   .search-card textarea{
     font-size:16px !important;
   }
 
-  /* 2) iOS: evita “zoom/reflow” por scroll interno al enfocar */
   .search-card{
     max-height: none !important;
     overflow: visible !important;
   }
 
-  /* 3) Flatpickr arriba siempre */
   .flatpickr-calendar{
     z-index: 999999 !important;
   }
 }
 /* =========================================================
-   FLATPICKR — Calendario más grande (ESCALA)
-   Pegar AL FINAL
+   FLATPICKR — Calendario 
 ========================================================= */
 
-/* Tamaño general (ajusta 1.15 / 1.20 / 1.30) */
 :root{
   --fp-scale: 1.25;
 }
 
-/* Escala el widget completo */
 .flatpickr-calendar{
   transform: scale(var(--fp-scale)) !important;
   transform-origin: top left !important;
 }
 
-/* Evita que se corte por el escalado */
 .flatpickr-calendar.open{
   margin-bottom: 12px !important;
 }
 
-/* En móvil: aún más grande si quieres */
 @media (max-width:560px){
   :root{ --fp-scale: 1.35; }
 }
 /* =========================================================
-   FLATPICKR — Calendario grande + RESPONSIVO (desktop/phone)
-   Pegar AL FINAL
+   FLATPICKR — Calendario + RESPONSIVO 
 ========================================================= */
 
 /* Desktop */
 :root{
   --fp-scale-desktop: 1.20;
-  --fp-scale-mobile:  1.35; /* ajusta 1.25–1.50 */
+  --fp-scale-mobile:  1.35;
 }
 
-/* 1) Escala el calendario */
 .flatpickr-calendar{
   transform: scale(var(--fp-scale-desktop)) !important;
   transform-origin: top left !important;
 }
 
-/* 2) En MÓVIL: que sea grande, centrado y que NO se salga */
+/* En MÓVIL */
 @media (max-width:560px){
 
-  /* Flatpickr a “modal” centrado */
   .flatpickr-calendar.open{
     position: fixed !important;
     left: 50% !important;
@@ -1955,13 +1839,11 @@ input.flatpickr-input{
 
     z-index: 999999 !important;
 
-    /* límite para que no se corte por altura/pantalla */
     max-height: 90vh !important;
     overflow: auto !important;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Asegura que el “triángulo” (si aparece) no estorbe */
   .flatpickr-calendar.arrowTop:before,
   .flatpickr-calendar.arrowTop:after,
   .flatpickr-calendar.arrowBottom:before,
@@ -1970,17 +1852,16 @@ input.flatpickr-input{
   }
 }
 /* =========================================================
-   FLATPICKR — Grande + RESPONSIVO (sin salirse en móvil)
-   Pegar AL FINAL
+   FLATPICKR — RESPONSIVO 
 ========================================================= */
 
-/* ===== Desktop: grande con scale ===== */
+/* Desktop  */
 :root{
   --fp-scale-desktop: 1.18;
 }
 
 .flatpickr-calendar{
-  max-width: calc(100vw - 24px) !important; /* nunca se sale del viewport */
+  max-width: calc(100vw - 24px) !important; 
   box-sizing: border-box !important;
 }
 
@@ -1991,10 +1872,9 @@ input.flatpickr-input{
   }
 }
 
-/* ===== Móvil: NO scale (para que no se salga). Mejor tamaño real ===== */
+/* Móvil */
 @media (max-width:560px){
 
-  /* popup centrado y con ancho que cabe SIEMPRE */
   .flatpickr-calendar.open{
     position: fixed !important;
     left: 12px !important;
@@ -2002,7 +1882,7 @@ input.flatpickr-input{
     top: 50% !important;
     bottom: auto !important;
 
-    transform: translateY(-50%) !important; /* sin scale */
+    transform: translateY(-50%) !important; 
     transform-origin: center !important;
 
     width: auto !important;
@@ -2014,7 +1894,6 @@ input.flatpickr-input{
     z-index: 999999 !important;
   }
 
-  /* Crece “de verdad” para que se vea grande sin salirse */
   .flatpickr-calendar{
     font-size: 16px !important;
   }
@@ -2029,7 +1908,6 @@ input.flatpickr-input{
     font-size: 13px !important;
   }
 
-  /* Quita la flechita del calendario (la que a veces lo descuadra) */
   .flatpickr-calendar.arrowTop:before,
   .flatpickr-calendar.arrowTop:after,
   .flatpickr-calendar.arrowBottom:before,
@@ -2038,40 +1916,28 @@ input.flatpickr-input{
   }
 }
 /* =========================================================
-   FLATPICKR — SOLO RESPONSIVO (NO CAMBIA ESTILO)
-   Evita que se salga en teléfono / pantallas chicas
-   Pegar AL FINAL
+   FLATPICKR — SOLO RESPONSIVO 
 ========================================================= */
 
-/* 1) Nunca más ancho que la pantalla */
 .flatpickr-calendar{
-  max-width: calc(100vw - 24px) !important;  /* respeta 12px de margen a cada lado */
+  max-width: calc(100vw - 24px) !important;  
   box-sizing: border-box !important;
 }
 
-/* 2) En móvil: lo centramos y lo limitamos en alto para que no se corte */
 @media (max-width:560px){
   .flatpickr-calendar.open{
     position: fixed !important;
-
-    /* “encuadro” seguro dentro de la pantalla */
     left: 12px !important;
     right: 12px !important;
-
     top: 50% !important;
     bottom: auto !important;
-
-    /* OJO: NO scale, NO font-size, NO padding => no cambia estilo */
     transform: translateY(-50%) !important;
-
-    max-height: 86vh !important;    /* evita que se salga por abajo/arriba */
-    overflow: auto !important;      /* si no cabe, hace scroll dentro */
+    max-height: 86vh !important;   
+    overflow: auto !important;      
     -webkit-overflow-scrolling: touch;
-
     z-index: 999999 !important;
   }
 
-  /* La flechita (arrow) a veces empuja el layout fuera; esto solo la oculta */
   .flatpickr-calendar.arrowTop:before,
   .flatpickr-calendar.arrowTop:after,
   .flatpickr-calendar.arrowBottom:before,
@@ -2080,17 +1946,13 @@ input.flatpickr-input{
   }
 }
 /* =========================================================
-   FLATPICKR — “Extender” la rejilla para quitar espacio blanco
-   (no cambia colores, solo widths/layout)
-   Pegar AL FINAL
+   FLATPICKR 
 ========================================================= */
 
-/* Asegura que el contenedor del calendario use todo el ancho disponible */
 .flatpickr-calendar.open{
-  width: min(calc(100vw - 24px), 420px) !important;  /* ajusta 420 si quieres más */
+  width: min(calc(100vw - 24px), 420px) !important;  
 }
 
-/* Estira TODO el interior */
 .flatpickr-calendar .flatpickr-innerContainer,
 .flatpickr-calendar .flatpickr-rContainer,
 .flatpickr-calendar .flatpickr-days,
@@ -2101,7 +1963,6 @@ input.flatpickr-input{
   min-width: 100% !important;
 }
 
-/* Hace que cada día ocupe 1/7 del ancho (para que “llene” el calendario) */
 .flatpickr-calendar .dayContainer{
   display: flex !important;
   flex-wrap: wrap !important;
@@ -2112,17 +1973,15 @@ input.flatpickr-input{
   max-width: calc(100% / 7) !important;
   flex: 0 0 calc(100% / 7) !important;
 }
-/* ✅ SOLO MÓVIL: subir "LUGAR DE RENTA" + checkbox (juntos) */
 @media (max-width:560px){
   .search-card .sg-col-location .location-head{
-    margin-top: -8px !important; /* prueba -4, -6, -10 */
+    margin-top: -8px !important; 
   }
 }
-/* ✅ SOLO MÓVIL: subir SOLO el texto "LUGAR DE RENTA" */
 @media (max-width:560px){
   .search-card .sg-col-location .location-head .field-title{
     position: relative;
-    top: -8px; /* prueba -4, -6, -8 */
+    top: -8px; 
   }
 }
 @media (max-width:560px){

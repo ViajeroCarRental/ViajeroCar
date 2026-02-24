@@ -4,7 +4,6 @@
       ? document.addEventListener('DOMContentLoaded', fn, { once: true })
       : fn();
 
-  // ====== AUTH (icono) ======
   (function(){
     const AUTH_KEY = 'vj_auth';
     const URLS = { LOGIN:'login.html', PROFILE:'perfil.html' };
