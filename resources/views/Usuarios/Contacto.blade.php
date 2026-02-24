@@ -21,9 +21,9 @@
     </div>
 
     <div class="hero-chips" aria-label="sucursales">
-      <span class="chip"><i class="fa-solid fa-location-dot"></i> Oficina Central Park, Querétaro</span>
-      <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto de Querétaro</span>
-      <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto de León</span>
+      <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Oficina Central Park, Querétaro</span>
+      <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto Internacional de Querétaro</span>
+      <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Central de Autobuses de Querétaro</span>
     </div>
   </section>
 
@@ -36,6 +36,7 @@
         Central Park, Querétaro
       </div>
       <div class="map-body">
+         <a href="https://www.google.com/maps?q=20.5714388,-100.365049&z=15&output=embed" target="_blank">
         <iframe
           src="https://www.google.com/maps?q=20.5714388,-100.365049&z=15&output=embed"
           style="border:0;"
@@ -43,6 +44,7 @@
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade">
         </iframe>
+        </a>
       </div>
     </div>
 
@@ -54,7 +56,7 @@
       </div>
       <div class="map-body">
         <iframe
-          src="https://www.google.com/maps?q=20.6226379,-100.1900731&z=15&output=embed"
+        src="https://www.google.com/maps?q=20.62280,-100.18758&z=15&output=embed"
           style="border:0;"
           allowfullscreen=""
           loading="lazy"
@@ -71,7 +73,7 @@
       </div>
       <div class="map-body">
         <iframe
-          src="https://www.google.com/maps?q=20.576941,-100.3643343&z=15&output=embed"
+          src="https://www.google.com/maps?q=20.57820,-100.35934&z=15&output=embed"
           style="border:0;"
           allowfullscreen=""
           loading="lazy"
@@ -148,8 +150,22 @@
               <textarea id="fMessage" name="message" rows="5" required maxlength="800"
                         placeholder="Escribe tu mensaje aquí…"
                         class="@error('message') is-invalid @enderror">{{ old('message') }}</textarea>
-              <span class="hint"><span id="charCount">{{ strlen(old('message','')) }}</span>/800</span>
-              @error('message') <small class="error">{{ $message }}</small> @enderror
+                        <span class="hint">
+                <span id="charCount">{{ strlen(old('message','')) }}</span>/800
+            </span>
+            @error('message') <small class="error">{{ $message }}</small> @enderror
+            {{-- Script para el contador de caracteres --}}
+            <script>
+                const mensaje = document.getElementById('fMessage');
+                const contador = document.getElementById('charCount');
+
+                // Inicializa el contador en caso de que haya valor previo
+                contador.textContent = mensaje.value.length;
+
+                mensaje.addEventListener('input', () => {
+                    contador.textContent = mensaje.value.length;
+                });
+            </script>
             </div>
           </div>
 
@@ -160,9 +176,11 @@
           </label>
 
           <div class="form-actions">
-            <button type="button" class="btn btn-ghost" id="btnWhatsapp" disabled title="Disponible próximamente">
+            {{-- WhatsApp funcional --}}
+            <a class="btn btn-ghost" id="btnWhatsapp" href="https://wa.me/524427169793" target="_blank">
               <i class="fa-brands fa-whatsapp"></i> WhatsApp
-            </button>
+            </a>
+            {{-- Enviar formulario --}}
             <button type="submit" class="btn btn-primary">
               Enviar mensaje
             </button>
@@ -172,8 +190,8 @@
 
       <div class="disclaimer">
         Al enviar este formulario aceptas nuestro
-        <a href="politicas.html">aviso de privacidad</a> y nuestras
-        <a href="politicas.html">políticas de uso</a>.
+        <a href="{{ route('rutaPoliticas') }}" target="_blank">Aviso de Privacidad</a> y nuestras
+        <a href="{{ route('rutaPoliticas') }}" target="_blank">Política de Uso</a>
       </div>
     </div>
 
@@ -183,10 +201,12 @@
         <h3>Soporte y atención</h3>
         <p>Nuestro equipo está disponible para resolver tus dudas, cotizar y ayudarte a reservar.</p>
         <div class="cta-actions">
+           {{-- Llamada funcional --}}
           <a class="btn btn-secondary" href="tel:+524421234567">
             <i class="fa-solid fa-phone"></i> Llamar ahora
           </a>
-          <a class="btn btn-primary" id="ctaWhats">
+          {{-- WhatsApp funcional --}}
+          <a class="btn btn-primary" id="ctaWhats" href="https://wa.me/524427169793" target="_blank">
             <i class="fa-brands fa-whatsapp"></i> WhatsApp
           </a>
         </div>

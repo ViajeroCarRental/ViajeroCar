@@ -1761,3 +1761,19 @@ span.flatpickr-weekday{
 .link-politicas:hover{
   color: var(--brand-dark);
 }
+
+/* Asegurar que los botones de filtro de la rama anterior se vean bien */
+.filter-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-card.active {
+  background-color: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+}
+
+.catalog-group {
+  transition: opacity 0.4s ease;
+}

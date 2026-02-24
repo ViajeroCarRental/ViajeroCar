@@ -78,11 +78,15 @@
 
   $isFreshEntry = empty($pickupSucursalId) || empty($dropoffSucursalId);
   $stepCurrent  = $isFreshEntry ? 1 : ($controllerStep ?? $requestedStep);
-
-  if ($stepCurrent >= 2 && $isFreshEntry) $stepCurrent = 1;
-  if ($stepCurrent >= 3 && (empty($categoriaId) || empty($plan))) $stepCurrent = 2;
-  if ($stepCurrent >= 4 && (empty($categoriaId) || empty($plan))) $stepCurrent = 2;
-
+if ($stepCurrent >= 2 && $isFreshEntry) {
+    $stepCurrent = 1;
+  }
+  if ($stepCurrent >= 3 && (empty($categoriaId) || empty($plan))) {
+    $stepCurrent = 2;
+  }
+  if ($stepCurrent >= 4 && (empty($categoriaId) || empty($plan))) {
+    $stepCurrent = 2;
+  }
   // Nombres de sucursales para el encabezado (fallback a $ciudades)
   $pickupName  = null;
   $dropoffName = null;
@@ -164,8 +168,8 @@
 
   $placeholder = asset('img/Logotipo.png');
 
-  $categoriaImg = ($categoriaSel && isset($categoriaSel->id_categoria))
-    ? ($catImages[(int)$categoriaSel->id_categoria] ?? $placeholder)
+  $categoriaImg = $categoriaSel
+    ? ($catImages[$categoriaSel->id_categoria] ?? $placeholder)
     : $placeholder;
 
   $precioDiaCategoria = (float)($categoriaSel->precio_dia ?? 0);
@@ -230,6 +234,10 @@
       color:#9ca3af;
       pointer-events:none;
       font-size:15px;
+    }
+    .sum-form .sum-personal-grid .ctl:has(#dob) > .ico{
+      top: calc(50% + 14px);
+      transform: translateY(-50%);
     }
 
     .ctl input, .ctl select{
@@ -304,8 +312,8 @@
     <a class="wizard-step {{ $stepCurrent>1?'done':'' }} {{ $stepCurrent===1?'active':'' }}" href="{{ $toStep(1) }}">
       <span class="n">1</span> Generales
     </a>
-    <a class="wizard-step {{ $stepCurrent>2?'done':'' }} {{ $stepCurrent===2?'active':'' }}" href="{{ $toStep(2) }}">
-      <span class="n">2</span> Categoría
+    <a class="wizard-step {{ ($stepCurrent>2 || request('auto')) ? 'done' : '' }} {{ $stepCurrent===2 ? 'active' : '' }}" href="{{ $toStep(2) }}">
+        <span class="n">2</span> Categoría
     </a>
     <a class="wizard-step {{ $stepCurrent>3?'done':'' }} {{ $stepCurrent===3?'active':'' }}" href="{{ $toStep(3) }}">
       <span class="n">3</span> Adicionales

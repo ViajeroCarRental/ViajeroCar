@@ -705,3 +705,125 @@ body{
   .chip{ padding:9px 10px; font-size:11px; }
   .car-specs li{ font-size:11px; padding:5px 10px; }
 }
+
+/* ===== FILTRO DE AUTOS ===== */
+
+.filter-wrapper {
+    margin-top: 30px;
+    width: 100%;
+}
+
+.filter-title {
+    color: white;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.car-filter {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* Tarjeta Rectangular */
+.filter-card {
+    /* Tamaño y Espaciado */
+    min-width: 220px;      /* Aumenta el ancho base */
+    padding: 15px 20px;    /* Más espacio interno (arriba/abajo y lados) */
+
+    /* Diseño */
+    display: flex;
+    align-items: center;
+    gap: 15px;             /* Espacio entre la foto y el texto */
+    background: #fff;
+    border-radius: 12px;   /* Bordes más redondeados */
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent; /* Para que el borde rojo no mueva todo al activarse */
+
+    /* Sombra para dar volumen */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Efecto cuando pasas el mouse o está activo */
+.filter-card.active, .filter-card:hover {
+    border-color: #e31010; /* Tu color rojo */
+    transform: translateY(-3px); /* Se eleva un poquito */
+}
+
+/* La foto del auto */
+.filter-card img {
+    width: 90px;           /* Imagen más grande */
+    height: auto;
+    object-fit: contain;
+}
+
+/* El nombre de la categoría (Sedan, SUV, etc) */
+.filter-info span {
+    display: block;
+    font-size: 18px;       /* Texto más grande y legible */
+    font-weight: 800;
+    color: #333;
+    line-height: 1.1;
+}
+
+/* El contador de unidades */
+.count-badge {
+    font-size: 13px;       /* Un poquito más grande que antes */
+    color: #777;
+    font-weight: 500;
+}
+
+.filter-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.filter-card span {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1;
+}
+
+/* Contador de unidades */
+.count-badge {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* Estados */
+.filter-card:hover {
+    transform: translateY(-4px);
+    background: #fff;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+.filter-card.active {
+    border-color: var(--brand);
+    background: #fff;
+    box-shadow: 0 8px 20px rgba(178, 34, 34, 0.3);
+}
+
+.filter-card.active span {
+    color: var(--brand);
+}
+
+/* Ajuste móvil */
+@media (max-width: 600px) {
+    .filter-card {
+        min-width: 100%; /* Ocupa todo el ancho en móviles pequeños */
+        justify-content: flex-start;
+    }
+}
+.filter-card.active {
+    box-shadow: 0 8px 20px rgba(227, 16, 16, 0.3); /* Sombra roja suave */
+}
+
