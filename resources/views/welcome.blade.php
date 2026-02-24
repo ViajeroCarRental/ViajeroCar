@@ -256,7 +256,6 @@
     z-index: 10;
 }
 
-/* Reemplaza tus reglas de borde de fecha por esta única regla */
 .flatpickr-input,
 .flatpickr-input.has-value,
 .flatpickr-input:focus {
