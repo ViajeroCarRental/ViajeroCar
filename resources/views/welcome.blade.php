@@ -428,7 +428,7 @@
                 <span class="field-icon" id="pickupIcon"><i class="fa-solid fa-location-dot"></i></span>
                 <select id="pickupPlace" name="pickup_sucursal_id"aria-describedby="pickupHelp" required>
                   <option value="" disabled selected>¿Dónde inicia tu viaje? (Pick-up)</option>
-                  @foreach($ciudades as $ciudad)
+                  @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
                       @foreach($ciudad->sucursalesActivas as $suc)
                         <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
