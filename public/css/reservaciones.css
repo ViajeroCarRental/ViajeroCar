@@ -1761,19 +1761,30 @@ span.flatpickr-weekday{
 .link-politicas:hover{
   color: var(--brand-dark);
 }
-
-/* Asegurar que los botones de filtro de la rama anterior se vean bien */
-.filter-card {
-  cursor: pointer;
-  transition: all 0.3s ease;
+/* Ajuste para Select2 en contenedores con icono */
+.ctl.has-ico .select2-container--default .select2-selection--single {
+    padding-left: 40px !important;
+    height: 52px !important;
+    display: flex;
+    align-items: center;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
 }
 
-.filter-card.active {
-  background-color: var(--brand);
-  color: #fff;
-  border-color: var(--brand);
+.ctl.has-ico .ico {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    color: #9ca3af;
+    pointer-events: none;
+    font-size: 1.1rem;
 }
 
-.catalog-group {
-  transition: opacity 0.4s ease;
+.select2-selection__rendered {
+    padding-left: 0 !important;
+}
+.select2-search--dropdown {
+    display: none !important;
 }

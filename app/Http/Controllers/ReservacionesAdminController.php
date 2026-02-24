@@ -28,17 +28,20 @@ class ReservacionesAdminController extends Controller
         // ===============================
         // SUCURSALES
         // ===============================
-        $sucursales = DB::table('sucursales as s')
-            ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
-            ->where('s.activo', 1)
-            ->select(
-                's.id_sucursal',
-                DB::raw("CONCAT(s.nombre, ' (', c.nombre, ')') as nombre_mostrado"),
-                'c.id_ciudad as id_ciudad'
-            )
-            ->orderBy('c.nombre')
-            ->get();
-
+     $sucursales = DB::table('sucursales as s')
+    ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
+    ->where('s.activo', 1)
+    ->select(
+        's.id_sucursal',
+        's.nombre as sucursal',
+        'c.nombre as ciudad',
+        'c.id_ciudad'
+    )
+    ->orderByRaw("CASE WHEN c.nombre = 'Querétaro' THEN 0 ELSE 1 END")
+    ->orderBy('c.nombre')
+    ->orderBy('s.nombre')
+    ->get()
+    ->groupBy('ciudad');
         // =====================================================
         // ✅ SEGUROS INDIVIDUALES (TU TABLA REAL)
         // =====================================================

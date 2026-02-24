@@ -340,50 +340,97 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
 
         <div class="search-grid">
 
-          {{-- Lugar --}}
-          <div class="group-card">
-            <div class="group-head"><div class="group-title">Lugar</div></div>
+       {{-- Lugar --}}
+<div class="group-card">
+  <div class="group-head">
+    <div class="group-title">Lugar</div>
+  </div>
 
-            <div class="field-row">
-              <div class="field">
-                <div class="ctl has-ico pristine" data-float>
-                  <span class="ico"><i class="fa-solid fa-location-dot"></i></span>
-                  <span class="flabel">Lugar de Pick-Up</span>
-                  <select name="pickup_sucursal_id" required data-float-select>
-                    <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}></option>
-                    @foreach(($ciudades ?? []) as $ciudad)
-                      <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
-                        @foreach($ciudad->sucursalesActivas ?? [] as $suc)
-                          <option value="{{ $suc->id_sucursal }}" {{ (string)$pickupSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
-                            {{ $suc->nombre }}
-                          </option>
-                        @endforeach
-                      </optgroup>
-                    @endforeach
-                  </select>
-                </div>
-              </div>
+  <div class="field-row">
 
-              <div class="field">
-                <div class="ctl has-ico pristine" data-float>
-                  <span class="ico"><i class="fa-solid fa-location-dot"></i></span>
-                  <span class="flabel">Lugar de devolución</span>
-                  <select name="dropoff_sucursal_id" required data-float-select>
-                    <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}></option>
-                    @foreach(($ciudades ?? []) as $ciudad)
-                      <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
-                        @foreach($ciudad->sucursalesActivas ?? [] as $suc)
-                          <option value="{{ $suc->id_sucursal }}" {{ (string)$dropoffSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
-                            {{ $suc->nombre }}
-                          </option>
-                        @endforeach
-                      </optgroup>
-                    @endforeach
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
+    {{-- PICKUP --}}
+    <div class="field">
+      <div class="ctl has-ico pristine" data-float>
+
+        {{-- ICONO DINÁMICO --}}
+        <span class="ico">
+          <i id="pickupIcon" class="fa-solid fa-location-dot"></i>
+        </span>
+
+        <span class="flabel">Lugar de Pick-Up</span>
+
+        <select id="pickupPlace" name="pickup_sucursal_id" required data-float-select>
+          <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}></option>
+
+          @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
+            <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+
+              @foreach($ciudad->sucursalesActivas ?? [] as $suc)
+                @php
+                  $name = strtolower($suc->nombre);
+                  $icon = 'fa-solid fa-location-dot';
+
+                  if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
+                  elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
+                  elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
+                @endphp
+
+                <option value="{{ $suc->id_sucursal }}"
+                        data-icon="{{ $icon }}"
+                        {{ (string)$pickupSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
+                  {{ $suc->nombre }}
+                </option>
+              @endforeach
+
+            </optgroup>
+          @endforeach
+        </select>
+      </div>
+    </div>
+
+
+    {{-- DROPOFF --}}
+    <div class="field">
+      <div class="ctl has-ico pristine" data-float>
+
+        {{-- ICONO DINÁMICO --}}
+        <span class="ico">
+          <i id="dropoffIcon" class="fa-solid fa-location-dot"></i>
+        </span>
+
+        <span class="flabel">Lugar de devolución</span>
+
+        <select id="dropoffPlace" name="dropoff_sucursal_id" required data-float-select>
+          <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}></option>
+
+          @foreach($ciudades as $ciudad)
+            <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+
+              @foreach($ciudad->sucursalesActivas ?? [] as $suc)
+                @php
+                  $name = strtolower($suc->nombre);
+                  $icon = 'fa-solid fa-location-dot';
+
+                  if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
+                  elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
+                  elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
+                @endphp
+
+                <option value="{{ $suc->id_sucursal }}"
+                        data-icon="{{ $icon }}"
+                        {{ (string)$dropoffSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
+                  {{ $suc->nombre }}
+                </option>
+              @endforeach
+
+            </optgroup>
+          @endforeach
+        </select>
+      </div>
+    </div>
+
+  </div>
+</div>
 
           {{-- Pick-Up --}}
           <div class="group-card">
@@ -479,10 +526,10 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
 
         </div>
 
-        <div class="wizard-nav">
-          <a class="btn btn-ghost" href="{{ route('rutaReservasIniciar', ['step'=>1]) }}">Limpiar</a>
-          <button class="btn btn-primary" type="submit">Siguiente</button>
-        </div>
+      <div class="wizard-nav">
+    <button type="button" class="btn btn-ghost" onclick="limpiarTodoYReiniciar()">Limpiar</button>
+    <button class="btn btn-primary" type="submit">Siguiente</button>
+</div>
       </form>
     @endif
 
@@ -823,11 +870,12 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
               <button id="btnReservar" type="button" class="btn btn-primary">Reservar</button>
             </div>
 
-            <div class="pay-logos" style="display:flex;gap:16px;margin-top:10px;align-items:center;flex-wrap:wrap;">
-              <img src="{{ asset('img/america.png') }}" alt="Amex" onerror="this.style.display='none'" style="height:24px;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,.15)">
-              <img src="{{ asset('img/paypal.png') }}" alt="PayPal" onerror="this.style.display='none'" style="height:24px;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,.15)">
-              <img src="{{ asset('img/oxxo.png') }}" alt="Oxxo" onerror="this.style.display='none'" style="height:24px;background:#fff;padding:6px 10px;border-radius:6px;box-shadow:0 4px 10px rgba(0,0,0,.15)">
-            </div>
+            <div class="pay-logos" style="display: flex; justify-content: center; gap: 40px; align-items: center; flex-wrap: wrap; margin-top: 20px;">
+             <img src="{{ asset('img/american.png') }}" alt="Amex" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+             <img src="{{ asset('img/paypal.png') }}" alt="PayPal" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+<img src="{{ asset('img/oxxo.png') }}" alt="Oxxo" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+ </div>
+
 
             <div id="modalMetodoPago" class="modal-overlay" style="display:none;">
               <div class="modal-card">
