@@ -242,22 +242,7 @@
     background: white;
     transform: translateY(-50%);
 }
-/* fecha pickup y devolucion*/
-/* Asegurar que el input tenga espacio para el texto arriba
-#pickupDate, #dropoffDate {
-    padding-top: 15px !important;
-    border: 1px solid #d1d5db;
-    outline: none;
-    transition: all 0.2s ease;
-}*/
 
-/* Borde negro persistente al enfocar o tener contenido
-#pickupDate:focus,
-#pickupDate:not(:placeholder-shown),
-#dropoffDate:focus,
-#dropoffDate:not(:placeholder-shown) {
-    border-color: #000000 !important;
-}*/
 /* Fuerza al label de fechas a subir y mantenerse */
 .dt-field.floating-group .flatpickr-input:focus ~ .floating-label,
 .dt-field.floating-group .flatpickr-input.active ~ .floating-label,
