@@ -38,7 +38,6 @@
       </div>
 
       <div class="kb-actions">
-        <button id="btnClear" class="btn btn-ghost"><i class="fa-solid fa-broom"></i> Limpiar chat</button>
         <a id="btnWhats" class="btn btn-primary" target="_blank"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>
       </div>
 
@@ -94,18 +93,41 @@
 
       <div class="chat-body" id="chatBody"></div>
 
-      <div class="suggestions" id="suggestions">
-        <button class="sg" data-q="¿Qué documentos necesito para rentar?">¿Qué documentos necesito?</button>
-        <button class="sg" data-q="¿Cuánto es el depósito en garantía?">¿Depósito en garantía?</button>
-        <button class="sg" data-q="¿Puedo pagar en efectivo?">¿Pagar en efectivo?</button>
-        <button class="sg" data-q="¿Qué incluye el seguro?">¿Qué incluye el seguro?</button>
-      </div>
+     <div class="suggestions" id="suggestions">
+  <button type="button" class="sg" data-q="¿Qué documentos necesito para rentar?">
+    ¿Qué documentos necesito?
+  </button>
+  <button type="button" class="sg" data-q="¿Cuánto es el depósito en garantía?">
+    ¿Depósito en garantía?
+  </button>
+  <button type="button" class="sg" data-q="¿Puedo pagar en efectivo?">
+    ¿Pagar en efectivo?
+  </button>
+  <button type="button" class="sg" data-q="¿Qué incluye el seguro?">
+    ¿Qué incluye el seguro?
+  </button>
+  <button type="button" class="sg" data-q="¿Cómo hago una reservación?">
+    ¿Cómo hago una reservación?
+  </button>
+</div>
 
-      <form class="chat-input" id="chatForm">
-        <input id="msg" placeholder="Escribe tu pregunta… (ej. ¿cómo modifico mi reserva?)" autocomplete="off">
-        <button class="btn btn-primary" aria-label="enviar">
-          <i class="fa-solid fa-paper-plane"></i>
-        </button>
+      <form class="chat-input" id="chatForm" autocomplete="off">
+  <input
+    id="msg"
+    type="text"
+    placeholder="Escribe tu pregunta… (ej. ¿cómo modifico mi reserva?)"
+  >
+
+  <div class="input-actions">
+    <button id="sendBtn" type="submit">
+      Enviar <i class="fa-solid fa-paper-plane"></i>
+    </button>
+
+    <button type="button" id="clearChat" class="btn-clear-link">
+      <i class="fa-solid fa-trash-can"></i> <strong>Limpiar chat</strong>
+    </button>
+  </div>
+</form>
       </form>
 
       <div class="typing" id="typing"><span></span><span></span><span></span></div>

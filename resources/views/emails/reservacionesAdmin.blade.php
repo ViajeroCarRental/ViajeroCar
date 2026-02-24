@@ -402,6 +402,21 @@
   display:inline-block;
   margin-right:10px;
 }
+/* Logo del header en correos */
+.header-logo{
+  width: 260px;
+  max-width: 260px;
+  height: auto;
+  display: block;
+  border: none;
+}
+
+.footer-logo-word img{
+  height: 28px;
+  max-height: 28px;
+  width: auto;
+  display: block;
+}
 
 
   </style>
@@ -716,7 +731,7 @@
 
   <p class="info-section-paragraph">
     Los requisitos de renta pueden variar, si requieres más información comunícate al 01 (442) 303 26 68
-    o escríbenos a reservaciones@viajerocar-rental.com
+    o escríbenos a reservaciones@viajerocarental.com
   </p>
 
   <p class="info-section-title">Protección limitada de responsabilidad hacia terceros (LI)</p>
@@ -754,7 +769,7 @@
         </div>
 
         <div class="footer-logo-word">
-          <img src="{{ asset('img/LogoB.png') }}" alt="Viajero" class="footer-logo">
+          <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
         </div>
       </div>
 

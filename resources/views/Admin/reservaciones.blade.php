@@ -57,40 +57,75 @@
       {{-- ======================
            1) UBICACIÓN
       ======================= --}}
-      <section class="stack-card">
-        <div class="stack-head">
-          <div class="stack-title">📍 Ubicación</div>
-          <div class="stack-sub">Selecciona dónde se recoge y se entrega el vehículo.</div>
-        </div>
+     <section class="stack-card">
 
-        <div class="stack-body">
-          <div class="form-2">
-            <div>
-              <label>Sucursal de retiro</label>
-              <select id="sucursal_retiro" name="sucursal_retiro" class="input" required>
-                <option value="">Selecciona punto de entrega</option>
-                @foreach($sucursales as $s)
-                  <option value="{{ $s->id_sucursal }}" data-ciudad-id="{{ $s->id_ciudad }}">
-                    {{ $s->nombre_mostrado }}
-                  </option>
-                @endforeach
-              </select>
-            </div>
+  <div class="stack-head">
+    <div class="stack-title">📍 Ubicación</div>
+    <div class="stack-sub">Selecciona dónde se recoge y se entrega el vehículo.</div>
+  </div>
 
-            <div>
-              <label>Sucursal de entrega</label>
-              <select id="sucursal_entrega" name="sucursal_entrega" class="input" required>
-                <option value="">Selecciona punto de devolución</option>
-                @foreach($sucursales as $s)
-                  <option value="{{ $s->id_sucursal }}" data-ciudad-id="{{ $s->id_ciudad }}">
-                    {{ $s->nombre_mostrado }}
-                  </option>
-                @endforeach
-              </select>
-            </div>
-          </div>
+  <div class="stack-body">
+    <div class="form-2">
+
+      {{-- ======================
+           RETIRO
+      ======================= --}}
+      <div>
+        <label>Sucursal de retiro</label>
+        <select id="sucursal_retiro" name="sucursal_retiro" class="input" required>
+          <option value="">Selecciona punto de entrega</option>
+
+          @foreach($sucursales as $ciudad => $grupo)
+            <optgroup label="{{ $ciudad }} — {{ $ciudad }}">
+              @foreach($grupo as $s)
+                <option value="{{ $s->id_sucursal }}"
+                        data-ciudad-id="{{ $s->id_ciudad }}"
+                        data-nombre="{{ $s->sucursal }}">
+                  {{ $s->sucursal }}
+                </option>
+              @endforeach
+            </optgroup>
+          @endforeach
+
+        </select>
+
+        {{-- CAMPO VUELO --}}
+        <div id="campo_vuelo" style="display:none; margin-top:10px;">
+          <label>Número de vuelo</label>
+          <input type="text"
+                 name="numero_vuelo"
+                 id="numero_vuelo"
+                 class="input"
+                 placeholder="Ej. AA1234">
         </div>
-      </section>
+      </div>
+
+      {{-- ======================
+           ENTREGA
+      ======================= --}}
+      <div>
+        <label>Sucursal de entrega</label>
+        <select id="sucursal_entrega" name="sucursal_entrega" class="input" required>
+          <option value="">Selecciona punto de devolución</option>
+
+          @foreach($sucursales as $ciudad => $grupo)
+            <optgroup label="{{ $ciudad }} — {{ $ciudad }}">
+              @foreach($grupo as $s)
+                <option value="{{ $s->id_sucursal }}"
+                        data-ciudad-id="{{ $s->id_ciudad }}"
+                        data-nombre="{{ $s->sucursal }}">
+                  {{ $s->sucursal }}
+                </option>
+              @endforeach
+            </optgroup>
+          @endforeach
+
+        </select>
+      </div>
+
+    </div>
+  </div>
+</section>
 
       {{-- ======================
            2) FECHAS Y HORAS
@@ -1028,8 +1063,36 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
 
-<script src="{{ asset('js/reservacionesAdmin.js') }}"></script>
+    const retiro = document.getElementById("sucursal_retiro");
+    const entrega = document.getElementById("sucursal_entrega");
+    const vueloWrap = document.getElementById("vueloWrap");
+
+    function esAeropuerto(select){
+        if(!select) return false;
+        const opt = select.options[select.selectedIndex];
+        if(!opt) return false;
+
+        const nombre = (opt.dataset.nombre || "").toLowerCase();
+        return nombre.includes("aeropuerto");
+    }
+
+    function validarVuelo(){
+        if(esAeropuerto(retiro) || esAeropuerto(entrega)){
+            vueloWrap.style.display = "block";
+        }else{
+            vueloWrap.style.display = "none";
+            document.getElementById("no_vuelo").value = "";
+        }
+    }
+
+    retiro.addEventListener("change", validarVuelo);
+    entrega.addEventListener("change", validarVuelo);
+
+});
+</script>
 @endsection
 
 @endsection

@@ -1,15 +1,11 @@
 (function () {
   "use strict";
 
-  /* =========================
-     Helpers
-  ========================= */
-  const qs  = (s) => document.querySelector(s);
+  // --- 1. Utilidades Globales ---
+  const qs = (s) => document.querySelector(s);
   const qsa = (s) => Array.from(document.querySelectorAll(s));
 
-  /* =========================
-     Utilidades de fecha
-  ========================= */
+  // --- 2. Herramientas de Fecha (Para los inputs de entrega/devolución) ---
   function todayISO() {
     const t = new Date();
     const y = t.getFullYear();
@@ -32,181 +28,112 @@
     return `${y}-${m}-${d}`;
   }
 
-  /* =========================
-     DOM Ready
-  ========================= */
+  // --- 3. Ejecución al cargar el DOM ---
   document.addEventListener("DOMContentLoaded", () => {
 
-    /* ===== Topbar sólido al hacer scroll ===== */
+    // ===== Interfaz Básica (Topbar, Menú y Footer) =====
     const topbar = qs(".topbar");
-
-    function toggleTopbar() {
+    const toggleTopbar = () => {
       if (!topbar) return;
-      window.scrollY > 40
-        ? topbar.classList.add("solid")
-        : topbar.classList.remove("solid");
-    }
-
-    toggleTopbar();
+      window.scrollY > 40 ? topbar.classList.add("solid") : topbar.classList.remove("solid");
+    };
     window.addEventListener("scroll", toggleTopbar, { passive: true });
+    toggleTopbar();
 
-    /* ======================================================
-       MENÚ HAMBURGUESA
-    ====================================================== */
-    (function navHamburger() {
-      const btn = qs("#navHamburger") || qs(".hamburger");
-      const menu = qs("#mainMenu") || qs(".menu");
-      const backdrop = qs("#navBackdrop") || qs(".nav-backdrop");
-      if (!btn || !menu) return;
-
-      const MQ = window.matchMedia("(max-width: 940px)");
-
-      const isMobile = () => MQ.matches;
-
-      function openNav() {
-        if (!isMobile()) return;
-        document.body.classList.add("nav-open");
-        if (topbar) topbar.classList.add("nav-open");
-        btn.setAttribute("aria-expanded", "true");
-      }
-
-      function closeNav() {
-        document.body.classList.remove("nav-open");
-        if (topbar) topbar.classList.remove("nav-open");
-        btn.setAttribute("aria-expanded", "false");
-      }
-
-      function toggleNav(e) {
-        if (e) e.preventDefault();
-        document.body.classList.contains("nav-open")
-          ? closeNav()
-          : openNav();
-      }
-
-      btn.setAttribute("type", "button");
-      btn.setAttribute("aria-label", "Abrir menú");
-      btn.setAttribute("aria-expanded", "false");
-
-      btn.addEventListener("click", toggleNav);
-
-      if (backdrop) backdrop.addEventListener("click", closeNav);
-
-      menu.addEventListener("click", (e) => {
-        if (e.target.closest("a")) closeNav();
-      });
-
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closeNav();
-      });
-
-      if (MQ.addEventListener) {
-        MQ.addEventListener("change", () => {
-          if (!isMobile()) closeNav();
-        });
-      } else {
-        window.addEventListener("resize", () => {
-          if (!isMobile()) closeNav();
-        }, { passive: true });
-      }
-    })();
-
-    /* ===== Marcar link activo ===== */
-    (function markActive() {
-      const current = (location.pathname.split("/").pop() || "").toLowerCase();
-      qsa(".menu a").forEach((a) => {
-        const href = (a.getAttribute("href") || "").toLowerCase();
-        if (href && current && href === current) {
-          a.classList.add("active");
+    const hamburger = qs(".hamburger");
+    const menu = qs(".menu");
+    if (hamburger && menu) {
+      hamburger.addEventListener("click", () => {
+        const visible = getComputedStyle(menu).display !== "none";
+        menu.style.display = visible ? "none" : "flex";
+        if (!visible) {
+          menu.style.flexDirection = "column";
+          menu.style.gap = "12px";
         }
       });
-    })();
+    }
 
-    /* ===== Footer: año actual ===== */
-    const year = qs("#year");
-    if (year) year.textContent = new Date().getFullYear();
+    const yearEl = qs("#year");
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    /* ======================================================
-       FECHAS (solo si existen inputs)
-    ====================================================== */
+    // ===== TFiltro Visual de Autos (Categorías) =====
+    // Esto permite filtrar los autos que ya están cargados en pantalla
+    const botonesFiltro = qsa('.filter-card');
+    const autos = qsa(".catalog-group");
+
+    botonesFiltro.forEach(btn => {
+      btn.addEventListener("click", () => {
+        botonesFiltro.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const filtro = btn.dataset.filter;
+        autos.forEach(auto => {
+          if (filtro === "all") {
+            auto.style.display = "block";
+          } else {
+            auto.style.display = auto.dataset.categoria === filtro ? "block" : "none";
+          }
+        });
+      });
+    });
+
+    // ===== Calendarios y Fechas (Flatpickr) =====
     const startInput = qs("#date-start");
-    const endInput   = qs("#date-end");
+    const endInput = qs("#date-end");
 
     if (startInput && endInput) {
-
       startInput.setAttribute("placeholder", "dd/mm/aaaa");
       endInput.setAttribute("placeholder", "dd/mm/aaaa");
 
       if (window.flatpickr) {
-        try {
-          if (flatpickr.l10ns?.es) flatpickr.localize(flatpickr.l10ns.es);
-        } catch (_) {}
+        // Configuración de Flatpickr con soporte de rango
+        const fpConfig = {
+          altInput: true,
+          altFormat: "d/m/Y",
+          dateFormat: "Y-m-d",
+          minDate: "today",
+          allowInput: false,
+        };
 
         if (typeof rangePlugin !== "undefined") {
-          const fpStart = flatpickr("#date-start", {
-            altInput: true,
-            altFormat: "d/m/Y",
-            dateFormat: "Y-m-d",
-            minDate: "today",
-            allowInput: false,
-            clickOpens: true,
+          flatpickr("#date-start", {
+            ...fpConfig,
             plugins: [new rangePlugin({ input: "#date-end" })],
-            onChange(selectedDates) {
-              const s = selectedDates?.[0] || parseYMD(startInput.value);
-              const e = parseYMD(endInput.value);
-              if (s && e && e < s) endInput.value = formatYMD(s);
-            },
           });
-
-          const openRange = () => {
-            try { fpStart.open(); } catch (_) {}
-          };
-          endInput.addEventListener("focus", openRange);
-          endInput.addEventListener("click", openRange);
-
         } else {
-          const fpInicio = flatpickr("#date-start", {
-            altInput: true,
-            altFormat: "d/m/Y",
-            dateFormat: "Y-m-d",
-            minDate: "today",
-            allowInput: false,
-            clickOpens: true,
-          });
-
-          const fpFin = flatpickr("#date-end", {
-            altInput: true,
-            altFormat: "d/m/Y",
-            dateFormat: "Y-m-d",
-            minDate: "today",
-            allowInput: false,
-            clickOpens: true,
-          });
-
-          startInput.addEventListener("change", (e) => {
-            fpFin.set("minDate", e.target.value || "today");
-            const s = parseYMD(e.target.value);
-            const eDate = parseYMD(endInput.value);
-            if (s && eDate && eDate < s) {
-              endInput.value = formatYMD(s);
-            }
-          });
+          // Fallback si no hay plugin de rango
+          flatpickr("#date-start", fpConfig);
+          flatpickr("#date-end", fpConfig);
         }
       } else {
-        startInput.removeAttribute("readonly");
-        endInput.removeAttribute("readonly");
-
+        // Fallback nativo si falla el CDN
         startInput.setAttribute("min", todayISO());
         endInput.setAttribute("min", todayISO());
-
-        startInput.addEventListener("change", () => {
-          const s = parseYMD(startInput.value);
-          if (s) {
-            endInput.setAttribute("min", formatYMD(s));
-            const e = parseYMD(endInput.value);
-            if (e && e < s) endInput.value = formatYMD(s);
-          }
-        });
       }
+    }
+
+    // ===== Botón Filtrar (Envío a Laravel) =====
+    const btnFilter = qs("#btn-filter");
+    if (btnFilter) {
+      btnFilter.addEventListener("click", () => {
+        const params = new URLSearchParams({
+          location: qs("#f-location")?.value || "",
+          type: qs("#f-type")?.value || "",
+          start: qs("#date-start")?.value || "",
+          end: qs("#date-end")?.value || "",
+        });
+
+        if (!params.get("start") || !params.get("end")) {
+          alert("Por favor selecciona las fechas de entrega y devolución.");
+          return;
+        }
+
+        btnFilter.disabled = true;
+        btnFilter.classList.add("loading");
+        setTimeout(() => {
+          window.location.href = `/catalogo/filtrar?${params.toString()}`;
+        }, 250);
+      });
     }
   });
 })();

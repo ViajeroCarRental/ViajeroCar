@@ -6,6 +6,9 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
   <!-- Bootstrap / Fuentes / Iconos -->
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
@@ -33,6 +36,8 @@
     @yield('css-vistaFAQ')
     @yield('css-vistaLogin')
     @yield('css-vistaPerfil')
+
+     <title>@yield('Titulo')</title>
 
   <style>
     /* ==========================
@@ -184,7 +189,6 @@
   @yield('contenidoFAQ')
   @yield('contenidoLogin')
   @yield('contenidoPerfil')
-  @yield('js-vistaReservaciones')
 
 </div>
 
@@ -308,7 +312,16 @@
     <div class="footer-copy">© <span id="year"></span> Viajero. Todos los derechos reservados.</div>
   </div>
 </footer>
+{{-- 🔹 Scripts específicos por vista --}}
 @yield('js-vistaHome')
+@yield('js-vistaCatalogo')
+@yield('js-vistaReservaciones')
+@yield('js-vistaContacto')
+@yield('js-vistaPoliticas')
+@yield('js-vistaFAQ')
+@yield('js-vistaLogin')
+@yield('js-vistaPerfil')
+
 <script>
   // iOS: bloquear zoom por doble tap / gesto
   (function(){
@@ -339,5 +352,14 @@
 })();
 </script>
 
+<!-- jQuery (REQUERIDO para Select2) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
+
 </body>
 </html>
+
