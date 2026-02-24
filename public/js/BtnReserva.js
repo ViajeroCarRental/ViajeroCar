@@ -1,28 +1,25 @@
 // ============================================================
 // === BOTÓN RESERVAR: Muestra modal de pago y ejecuta flujo ===
+// ✅ Versión ajustada: la lógica de "Reservar" por plan
+//    (línea / mostrador) ahora la controla la vista Blade.
+//    Este archivo se enfoca en:
+//      - Pago en mostrador  -> inserta reservación
+//      - Mensaje "Próximamente" para pago en línea
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
-  const btnReservar = document.getElementById("btnReservar");
-  const modalMetodoPago = document.getElementById("modalMetodoPago");
-  const cerrarModal = document.getElementById("cerrarModalMetodo");
   const btnPagoMostrador = document.getElementById("btnPagoMostrador");
-  const btnPagoLinea = document.getElementById("btnPagoLinea");
+  const btnPagoLinea     = document.getElementById("btnPagoLinea");
+  const modalMetodoPago  = document.getElementById("modalMetodoPago");
 
-  // =============================
-  // 🪟 Abrir / Cerrar Modal
-  // =============================
-  if (btnReservar && modalMetodoPago) {
-    btnReservar.addEventListener("click", () => {
-      modalMetodoPago.style.display = "flex";
-    });
-  }
-
-  if (cerrarModal && modalMetodoPago) {
-    cerrarModal.addEventListener("click", () => {
-      modalMetodoPago.style.display = "none";
-    });
-  }
+  // OJO:
+  // 🔹 Ya NO manejamos aquí el click de #btnReservar.
+  //     => Esa decisión (abrir modal o ir directo a pago en línea)
+  //        se hace en el script inline de la vista según data-plan.
+  //
+  // 🔹 Aquí solo se atienden las acciones DENTRO del modal:
+  //     - PAGO EN MOSTRADOR
+  //     - PAGO EN LÍNEA (por ahora: mensaje de "Próximamente")
 
   // ============================================================
   // === OPCIÓN: PAGO EN MOSTRADOR -> Insertar reserva ==========
@@ -49,20 +46,27 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!acepta)   faltantes.push("Aceptar términos y condiciones");
 
       if (faltantes.length > 0) {
-        modalMetodoPago.style.display = "none";
+        if (modalMetodoPago) modalMetodoPago.style.display = "none";
 
-        const msg = "<b>No podemos continuar.</b><br>Por favor completa:<br>• " + faltantes.join("<br>• ");
-        if (window.alertify) alertify.error(msg);
-        else alert("Faltan datos obligatorios.");
+        const msg =
+          "<b>No podemos continuar.</b><br>Por favor completa:<br>• " +
+          faltantes.join("<br>• ");
 
-        if (!nombre) nombreInput.focus();
-        else if (!email) emailInput.focus();
-        else if (!telefono) telefonoInput.focus();
+        if (window.alertify) {
+          alertify.error(msg);
+        } else {
+          alert("Faltan datos obligatorios.");
+        }
+
+        if (!nombre && nombreInput) nombreInput.focus();
+        else if (!email && emailInput) emailInput.focus();
+        else if (!telefono && telefonoInput) telefonoInput.focus();
 
         return;
       }
 
-      modalMetodoPago.style.display = "none";
+      // Cerramos el modal antes de continuar
+      if (modalMetodoPago) modalMetodoPago.style.display = "none";
 
       try {
         // 🧾 Recolectar datos del formulario
@@ -77,24 +81,19 @@ document.addEventListener("DOMContentLoaded", () => {
         // ==== FECHAS / HORAS ================================
         // =====================================================
 
-        // helper para leer valor de un selector
         const val = (sel) => document.querySelector(sel)?.value?.trim() || "";
 
-        // 1) Fechas visibles del step 1 (#start y #end → d-m-Y)
         function toIsoDate(dmy) {
           const s = String(dmy || "").trim();
-          // dd-mm-YYYY
           const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
           if (m) {
-            // YYYY-mm-dd  → formato que espera Laravel
-            return `${m[3]}-${m[2]}-${m[1]}`;
+            return `${m[3]}-${m[2]}-${m[1]}`; // YYYY-mm-dd
           }
-          return s; // por si ya viene en otro formato (por ejemplo ya ISO)
+          return s;
         }
 
         const urlParams = new URLSearchParams(window.location.search);
 
-        // 👇 Primero intentamos leer #start/#end; si no, caemos al URL
         const startRaw =
           val("#start") ||
           urlParams.get("pickup_date") ||
@@ -110,11 +109,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const pickup_date  = toIsoDate(startRaw);
         const dropoff_date = toIsoDate(endRaw);
 
-        // 2) Hora: primero intentamos leer los hidden que ya genera reservaciones.js
         let pickup_time  = val("#pickup_time_hidden");
         let dropoff_time = val("#dropoff_time_hidden");
 
-        // Si por algo los hidden están vacíos, los armamos con H/M
         if (!pickup_time) {
           const h = val("#pickup_h") || "00";
           const m = val("#pickup_m") || "00";
@@ -127,8 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
           dropoff_time = h.padStart(2, "0") + ":" + m.padStart(2, "0");
         }
 
-        // (Opcional) Log para revisar qué se está mandando
-        console.log("PAYLOAD FECHAS/HORAS:", {
+        console.log("PAYLOAD FECHAS/HORAS (MOSTRADOR):", {
           pickup_date,
           dropoff_date,
           pickup_time,
@@ -136,32 +132,26 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         // =====================================================
-        // === ID CATEGORÍA ====================================
+        // === ID CATEGORÍA / SUCURSALES / ADDONS =============
         // =====================================================
-        // 🆕 Primero intenta leer un input hidden #categoria_id,
-        // si no está, usa el parámetro de la URL
         const categoria_id        = val("#categoria_id") || urlParams.get("categoria_id") || "";
         const pickup_sucursal_id  = urlParams.get("pickup_sucursal_id") || "";
         const dropoff_sucursal_id = urlParams.get("dropoff_sucursal_id") || "";
 
-                // Complementos (addons) - cadena "id:cant,id2:cant2"
         const hiddenAddons = document.querySelector("#addonsHidden");
         let addons = "";
 
         if (hiddenAddons && hiddenAddons.value.trim() !== "") {
-          // 👈 Valor que guarda reservaciones.js (ej: "3:1,8:2")
-          addons = hiddenAddons.value.trim();
+          addons = hiddenAddons.value.trim(); // "3:1,8:2"
         } else {
-          // 👈 Fallback: leer de la URL ?addons=...
           const fromUrl = urlParams.get("addons");
           if (fromUrl && fromUrl.trim() !== "") {
             addons = fromUrl.trim();
           }
         }
 
-        console.log("ADDONS ENVIADOS AL BACKEND:", addons);
+        console.log("ADDONS ENVIADOS AL BACKEND (MOSTRADOR):", addons);
 
-        // Payload
         const payload = {
           categoria_id,
           pickup_date,
@@ -177,16 +167,23 @@ document.addEventListener("DOMContentLoaded", () => {
           addons,
         };
 
-        // Endpoint
         const url = "/reservas";
 
-        // Token CSRF
         const token =
           document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||
           form.querySelector('input[name="_token"]')?.value ||
           "";
 
-        // Enviar datos
+        if (!token) {
+          if (window.alertify) {
+            alertify.error("No se encontró el token de seguridad. Actualiza la página e inténtalo de nuevo.");
+          } else {
+            alert("No se encontró el token de seguridad. Actualiza la página e inténtalo de nuevo.");
+          }
+          console.error("CSRF token no encontrado para pago en mostrador.");
+          return;
+        }
+
         const res = await fetch(url, {
           method: "POST",
           headers: {
@@ -198,56 +195,59 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify(payload),
         });
 
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
+
         if (!res.ok || data.ok === false) {
+          console.error("Error al registrar la reservación (mostrador):", data);
           if (window.alertify) alertify.error("No se pudo registrar la reservación.");
           else alert("No se pudo registrar la reservación.");
           return;
         }
 
-        // Si quieres seguir usando estos datos más adelante, los dejamos:
-const folio   = data.folio?.replace(/^COT/, "RES") || "RES-PENDIENTE";
-const pickup  = `${pickup_date} ${pickup_time}`;
-const dropoff = `${dropoff_date} ${dropoff_time}`;
+        // ================================
+        // === ARMAR MENSAJE DE ÉXITO  ===
+        // ================================
+        const pickup  = `${pickup_date} ${pickup_time}`;
+        const dropoff = `${dropoff_date} ${dropoff_time}`;
 
-const subtotal  = data.subtotal || 0;
-const impuestos = data.impuestos || 0;
-const total     = data.total || 0;
+        const subtotal  = data.subtotal || 0;
+        const impuestos = data.impuestos || 0;
+        const total     = data.total || 0;
 
-// Formato de respaldo (por si no encontramos los labels del detalle)
-const fmt = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "MXN",
-});
-const subtotalFmtFallback  = fmt.format(subtotal);
-const impuestosFmtFallback = fmt.format(impuestos);
-const totalFmtFallback     = fmt.format(total);
+        const fmt = new Intl.NumberFormat("es-MX", {
+          style: "currency",
+          currency: "MXN",
+        });
 
-// 🧾 Tomar los mismos valores que se ven en "DETALLES DEL PRECIO"
-const baseLabelEl   = document.querySelector("#qBase");
-const extrasLabelEl = document.querySelector("#qExtras");
-const ivaLabelEl    = document.querySelector("#qIva");
-const totalLabelEl  = document.querySelector("#qTotal");
+        const subtotalFmtFallback  = fmt.format(subtotal);
+        const impuestosFmtFallback = fmt.format(impuestos);
+        const totalFmtFallback     = fmt.format(total);
 
-const baseTxt   = baseLabelEl   ? baseLabelEl.textContent.trim()   : subtotalFmtFallback;
-const extrasTxt = extrasLabelEl ? extrasLabelEl.textContent.trim() : fmt.format(0);
-const ivaTxt    = ivaLabelEl    ? ivaLabelEl.textContent.trim()    : impuestosFmtFallback;
-const totalTxt  = totalLabelEl  ? totalLabelEl.textContent.trim()  : totalFmtFallback;
+        const baseLabelEl   = document.querySelector("#qBase");
+        const extrasLabelEl = document.querySelector("#qExtras");
+        const ivaLabelEl    = document.querySelector("#qIva");
+        const totalLabelEl  = document.querySelector("#qTotal");
 
-// ✅ Confirmación visual con el mismo formato que el acordeón
-const msgExito = `
-  ✅ Su reservación fue registrada correctamente.<br><br>
-  Folio: <b>${folio}</b><br>
-  Entrega: <b>${pickup}</b><br>
-  Devolución: <b>${dropoff}</b><br><br>
+        const baseTxt   = baseLabelEl   ? baseLabelEl.textContent.trim()   : subtotalFmtFallback;
+        const extrasTxt = extrasLabelEl ? extrasLabelEl.textContent.trim() : fmt.format(0);
+        const ivaTxt    = ivaLabelEl    ? ivaLabelEl.textContent.trim()    : impuestosFmtFallback;
+        const totalTxt  = totalLabelEl  ? totalLabelEl.textContent.trim()  : totalFmtFallback;
 
-  <b>Tarifa base:</b> ${baseTxt}<br>
-  <b>Opciones de renta:</b> ${extrasTxt}<br>
-  <b>Cargos e IVA (16%):</b> ${ivaTxt}<br>
-  <b>Total:</b> ${totalTxt}<br><br>
+        const folio = data.folio?.replace(/^COT/, "RES") || "RES-PENDIENTE";
 
-  📩 Recibirá confirmación por correo electrónico.
-`;
+        const msgExito = `
+          ✅ Su reservación fue registrada correctamente.<br><br>
+          Folio: <b>${folio}</b><br>
+          Entrega: <b>${pickup}</b><br>
+          Devolución: <b>${dropoff}</b><br><br>
+
+          <b>Tarifa base:</b> ${baseTxt}<br>
+          <b>Opciones de renta:</b> ${extrasTxt}<br>
+          <b>Cargos e IVA (16%):</b> ${ivaTxt}<br>
+          <b>Total:</b> ${totalTxt}<br><br>
+
+          📩 Recibirá confirmación por correo electrónico.
+        `;
 
         if (window.alertify) {
           alertify.alert("Reservación registrada", msgExito);
@@ -271,12 +271,12 @@ const msgExito = `
   }
 
   // ============================================================
-  // === OPCIÓN: PAGO EN LÍNEA (solo visible por ahora) =========
+  // === OPCIÓN: PAGO EN LÍNEA (placeholder: "Próximamente") ===
   // ============================================================
   if (btnPagoLinea) {
     btnPagoLinea.addEventListener("click", () => {
-      modalMetodoPago.style.display = "none";
-      // 🚧 Aquí conectaremos PayPal real o simulación más adelante
+      if (modalMetodoPago) modalMetodoPago.style.display = "none";
+
       if (window.alertify) {
         alertify.message("💳 Próximamente podrás realizar tu pago en línea con PayPal.");
       } else {
@@ -284,5 +284,4 @@ const msgExito = `
       }
     });
   }
-
 });
