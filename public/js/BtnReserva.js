@@ -4,7 +4,7 @@
 //    (línea / mostrador) ahora la controla la vista Blade.
 //    Este archivo se enfoca en:
 //      - Pago en mostrador  -> inserta reservación
-//      - Mensaje "Próximamente" para pago en línea
+//      - Pago en línea      -> (se maneja en BtnReservaLinea.js)
 // ============================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   //
   // 🔹 Aquí solo se atienden las acciones DENTRO del modal:
   //     - PAGO EN MOSTRADOR
-  //     - PAGO EN LÍNEA (por ahora: mensaje de "Próximamente")
+  //     - PAGO EN LÍNEA (cerrar modal; PayPal lo maneja BtnReservaLinea.js)
 
   // ============================================================
   // === OPCIÓN: PAGO EN MOSTRADOR -> Insertar reserva ==========
@@ -271,17 +271,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ============================================================
-  // === OPCIÓN: PAGO EN LÍNEA (placeholder: "Próximamente") ===
+  // === OPCIÓN: PAGO EN LÍNEA (solo cierra modal) =============
   // ============================================================
   if (btnPagoLinea) {
     btnPagoLinea.addEventListener("click", () => {
       if (modalMetodoPago) modalMetodoPago.style.display = "none";
-
-      if (window.alertify) {
-        alertify.message("💳 Próximamente podrás realizar tu pago en línea con PayPal.");
-      } else {
-        alert("Próximamente podrás realizar tu pago en línea con PayPal.");
-      }
+      // El flujo real de PayPal lo maneja BtnReservaLinea.js
     });
   }
 });

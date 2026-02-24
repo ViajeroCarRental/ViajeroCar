@@ -701,6 +701,15 @@
             <input type="hidden" name="categoria_id" id="categoria_id" value="{{ $categoriaId }}">
             <input type="hidden" name="plan" id="plan" value="{{ $plan }}">
             <input type="hidden" name="addons" id="addons_payload" value="{{ $addonsParam }}">
+              {{-- 🔹 Campos ocultos para que el JS pueda mandar todo a /reservas/linea --}}
+  <input type="hidden" name="pickup_date" id="pickup_date" value="{{ $pickupDateISO }}">
+  <input type="hidden" name="pickup_time" id="pickup_time" value="{{ $pickupTime }}">
+  <input type="hidden" name="dropoff_date" id="dropoff_date" value="{{ $dropoffDateISO }}">
+  <input type="hidden" name="dropoff_time" id="dropoff_time" value="{{ $dropoffTime }}">
+
+  <input type="hidden" name="pickup_sucursal_id" id="pickup_sucursal_id" value="{{ $pickupSucursalId }}">
+  <input type="hidden" name="dropoff_sucursal_id" id="dropoff_sucursal_id" value="{{ $dropoffSucursalId }}">
+
 
             <h2 class="sum-section-title"> Datos personales</h2>
 
