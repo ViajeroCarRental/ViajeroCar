@@ -2,9 +2,6 @@
 (function () {
   "use strict";
 
-  // ✅ Laravel friendly: NO .html, usa URLs reales si existen en tu layout
-  // Si tienes rutas por nombre, lo ideal es inyectarlas desde Blade con data-attributes.
-  // Aquí lo dejamos seguro (no rompe si no están).
   const AUTH_KEY = "vj_auth";
 
   function onReady(fn) {
@@ -15,19 +12,15 @@
     }
   }
 
-  // =========================
   // Helpers
-  // =========================
-  const qs = (s, r = document) => r.querySelector(s);
+  const qs  = (s, r = document) => r.querySelector(s);
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
 
   function safeJsonParse(str) {
     try { return JSON.parse(str); } catch (_) { return null; }
   }
 
-  // =========================
   // Auth helper (si lo usas)
-  // =========================
   if (!window.VJ_AUTH) {
     function getAuth() {
       return safeJsonParse(localStorage.getItem(AUTH_KEY) || "null");
@@ -39,92 +32,79 @@
   }
 
   // =========================
-  // Accordion (genérico)
+  // ✅ Modal
   // =========================
-  function setupAccordion(containerSelector, itemSelector, headSelector, bodySelector, contentSelector) {
-    const root = qs(containerSelector) || document;
-    const items = qsa(itemSelector, root);
-    if (!items.length) return;
+  function setupPolicyModal() {
+    const modal = qs("#policyModal");
+    const modalBody = qs("#policyModalBody");
+    const modalTitle = qs("#policyModalTitle");
 
-    items.forEach((item) => {
-      const head = qs(headSelector, item);
-      const body = qs(bodySelector, item);
-      const content = contentSelector ? qs(contentSelector, item) : (body ? body.firstElementChild : null);
+    if (!modal || !modalBody || !modalTitle) return;
 
-      if (!head || !body) return;
+    let lastFocus = null;
 
-      // estado inicial (cerrado)
-      item.classList.remove("open");
-      head.setAttribute("aria-expanded", "false");
-      body.setAttribute("aria-hidden", "true");
-      body.style.overflow = "hidden";
-      body.style.maxHeight = "0px";
+    function openModal(title, tplId) {
+      const tpl = qs(`#${tplId}`);
+      if (!tpl) return;
 
-      function contentOuterHeight() {
-        if (!content) return 0;
+      lastFocus = document.activeElement;
 
-        // ✅ incluye márgenes (tu .policy-content tiene margin:14px)
-        const cs = window.getComputedStyle(content);
-        const mt = parseFloat(cs.marginTop) || 0;
-        const mb = parseFloat(cs.marginBottom) || 0;
+      modalTitle.textContent = title || "Política";
+      modalBody.innerHTML = tpl.innerHTML;
 
-        // scrollHeight no incluye márgenes
-        return content.scrollHeight + mt + mb;
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+
+      // focus al botón cerrar
+      const closeBtn = qs('[data-close="1"]', modal);
+      if (closeBtn) closeBtn.focus({ preventScroll: true });
+    }
+
+    function closeModal() {
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("modal-open");
+
+      // limpiar contenido (para no mantener tablas/images pesadas en DOM)
+      modalBody.innerHTML = "";
+
+      if (lastFocus && typeof lastFocus.focus === "function") {
+        lastFocus.focus({ preventScroll: true });
       }
+      lastFocus = null;
+    }
 
-      function closeItem(it) {
-        it.classList.remove("open");
-        const h = qs(headSelector, it);
-        const b = qs(bodySelector, it);
-        if (h) h.setAttribute("aria-expanded", "false");
-        if (b) {
-          b.style.maxHeight = "0px";
-          b.setAttribute("aria-hidden", "true");
-        }
-      }
-
-      function openItem(it) {
-        it.classList.add("open");
-        const h = qs(headSelector, it);
-        const b = qs(bodySelector, it);
-        const c = contentSelector ? qs(contentSelector, it) : (b ? b.firstElementChild : null);
-        if (h) h.setAttribute("aria-expanded", "true");
-        if (b && c) {
-          // recalcula con márgenes
-          const cs = window.getComputedStyle(c);
-          const mt = parseFloat(cs.marginTop) || 0;
-          const mb = parseFloat(cs.marginBottom) || 0;
-          b.style.maxHeight = (c.scrollHeight + mt + mb) + "px";
-          b.setAttribute("aria-hidden", "false");
-        }
-      }
-
-      head.addEventListener("click", () => {
-        const isOpen = item.classList.contains("open");
-
-        // cerrar otros dentro del mismo root
-        items.forEach((it) => { if (it !== item) closeItem(it); });
-
-        if (!isOpen) openItem(item);
-        else closeItem(item);
+    // Click en cards
+    qsa(".policy-card").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const tplId = btn.getAttribute("data-modal");
+        const title = btn.getAttribute("data-title") || btn.textContent.trim();
+        if (!tplId) return;
+        openModal(title, tplId);
       });
-
-      // ✅ si cambia el contenido (responsive, fuentes, imágenes), recalcula
-      if (content && "ResizeObserver" in window) {
-        const ro = new ResizeObserver(() => {
-          if (!item.classList.contains("open")) return;
-          body.style.maxHeight = contentOuterHeight() + "px";
-        });
-        ro.observe(content);
-      }
-
-      // ✅ si se cambia el tamaño de la ventana, recalcula abiertos
-      window.addEventListener("resize", () => {
-        if (!item.classList.contains("open")) return;
-        if (!content) return;
-        body.style.maxHeight = contentOuterHeight() + "px";
-      }, { passive: true });
     });
+
+    // cerrar (X o backdrop)
+    qsa('[data-close="1"]', modal).forEach((el) => {
+      el.addEventListener("click", closeModal);
+    });
+
+    // click en backdrop
+    modal.addEventListener("click", (e) => {
+      if (e.target && e.target.matches(".vj-modal__backdrop")) closeModal();
+    });
+
+    // ESC
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.classList.contains("open")) {
+        e.preventDefault();
+        closeModal();
+      }
+    });
+
+    // Exponer por si lo ocupas
+    window.VJ_POLICIES_MODAL = { openModal, closeModal };
   }
 
   // =========================
@@ -132,10 +112,7 @@
   // =========================
   onReady(() => {
 
-    // ---------------------------------
-    // Navbar (todo opcional / seguro)
-    // ---------------------------------
-    // Si tu layout no tiene estos ids, NO pasa nada.
+    // Navbar (opcional / seguro)
     const topbar = qs("#topbar");
     function toggleTopbar() {
       if (!topbar) return;
@@ -163,8 +140,6 @@
       const logged = window.VJ_AUTH?.isLogged?.() || false;
       const auth = window.VJ_AUTH?.getAuth?.() || {};
 
-      // ✅ toma rutas desde data-attributes si las pones en el layout
-      // <a id="accountLink" data-login-url="{{ route('login') }}" data-profile-url="{{ route('perfil') }}">
       const loginUrl = accountLink.getAttribute("data-login-url") || "/login";
       const profileUrl = accountLink.getAttribute("data-profile-url") || "/perfil";
 
@@ -181,7 +156,6 @@
 
       window.addEventListener("storage", (e) => {
         if (e.key !== AUTH_KEY) return;
-        // re-sync rápido
         const logged2 = window.VJ_AUTH?.isLogged?.() || false;
         const auth2 = window.VJ_AUTH?.getAuth?.() || {};
         if (logged2) {
@@ -201,10 +175,7 @@
     const yearEl = qs("#year");
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // ---------------------------------
-    // ✅ Acordeones (los tuyos)
-    // ---------------------------------
-    setupAccordion(".policies-wrap", ".policy-item", ".policy-head", ".policy-body", ".policy-content");
-    setupAccordion("#renta-accordion", ".sub-item", ".sub-head", ".sub-body", ".sub-content");
+    // ✅ Modal policies
+    setupPolicyModal();
   });
 })();
