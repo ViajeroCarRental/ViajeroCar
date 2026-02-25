@@ -2,8 +2,8 @@
   "use strict";
 
   // --- 1. Utilidades Globales ---
-  const qs = (s) => document.querySelector(s);
-  const qsa = (s) => Array.from(document.querySelectorAll(s));
+  const qs = (s, r = document) => r.querySelector(s);
+  const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
 
   // --- 2. Herramientas de Fecha (Para los inputs de entrega/devolución) ---
   function todayISO() {
@@ -26,14 +26,48 @@
     return `${y}-${m}-${d}`;
   }
 
-  // --- 3. Ejecución al cargar el DOM ---
-  document.addEventListener("DOMContentLoaded", () => {
+  // --- Helpers UI ---
+  function smoothScrollIntoView(el) {
+    if (!el) return;
+    const topbar = qs(".topbar");
+    const offset = (topbar ? topbar.offsetHeight : 0) + 16;
 
+    const y = el.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+  }
+
+  // --- Helper acordeón: animación por altura real ---
+  function setPanelOpen(panel, open) {
+    if (!panel) return;
+
+    panel.style.overflow = "hidden";
+
+    if (open) {
+      panel.classList.add("is-open");
+      panel.style.maxHeight = panel.scrollHeight + "px";
+
+      setTimeout(() => {
+        if (panel.classList.contains("is-open")) {
+          panel.style.maxHeight = panel.scrollHeight + "px";
+        }
+      }, 160);
+    } else {
+      panel.style.maxHeight = panel.scrollHeight + "px";
+      requestAnimationFrame(() => {
+        panel.style.maxHeight = "0px";
+        panel.classList.remove("is-open");
+      });
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
     // ===== Interfaz Básica (Topbar, Menú y Footer) =====
     const topbar = qs(".topbar");
     const toggleTopbar = () => {
       if (!topbar) return;
-      window.scrollY > 40 ? topbar.classList.add("solid") : topbar.classList.remove("solid");
+      window.scrollY > 40
+        ? topbar.classList.add("solid")
+        : topbar.classList.remove("solid");
     };
     window.addEventListener("scroll", toggleTopbar, { passive: true });
     toggleTopbar();
@@ -54,24 +88,98 @@
     const yearEl = qs("#year");
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // ===== TFiltro Visual de Autos (Categorías) =====
-    // Esto permite filtrar los autos que ya están cargados en pantalla
-    const botonesFiltro = qsa('.filter-card');
+    // ==========================================================
+    // ✅ ACORDEÓN FILTRO (VANILLA) + CERRAR AL CLICK FUERA + AL SELECCIONAR
+    // ==========================================================
+    let closeFiltroAccordion = null; // <- función global local para cerrar desde otros bloques
+
+    (function initFiltroAccordionVanilla() {
+      const wrapper = qs(".filter-accordion");
+      const btn = qs("#btn-filtro-autos");
+      const panel = qs("#filtro-autos");
+      if (!wrapper || !btn || !panel) return;
+
+      const labelSpan = btn.querySelector(".acc-left span");
+      const icon = btn.querySelector(".acc-icon");
+
+      // Estado inicial cerrado
+      btn.classList.add("collapsed");
+      btn.setAttribute("aria-expanded", "false");
+      if (labelSpan) labelSpan.textContent = "Filtrar categorías";
+      if (icon) icon.style.transform = "rotate(0deg)";
+
+      panel.classList.remove("show");
+      panel.classList.remove("is-open");
+      panel.style.maxHeight = "0px";
+
+      const isOpenNow = () => btn.getAttribute("aria-expanded") === "true";
+
+      const setState = (open) => {
+        btn.setAttribute("aria-expanded", String(open));
+        btn.classList.toggle("collapsed", !open);
+
+        if (labelSpan) {
+          labelSpan.textContent = open ? "Ocultar categorías" : "Filtrar categorías";
+        }
+        if (icon) icon.style.transform = open ? "rotate(180deg)" : "rotate(0deg)";
+
+        setPanelOpen(panel, open);
+        if (open) smoothScrollIntoView(btn);
+      };
+
+      // ✅ expone un "cerrar" para usarlo en el filtro
+      closeFiltroAccordion = () => {
+        if (isOpenNow()) setState(false);
+      };
+
+      // Toggle normal
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        setState(!isOpenNow());
+      });
+
+      // ✅ Cerrar al hacer click fuera
+      document.addEventListener("click", (e) => {
+        if (!isOpenNow()) return;
+        if (!wrapper.contains(e.target)) setState(false);
+      });
+
+      // ✅ Cerrar con tecla ESC
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && isOpenNow()) setState(false);
+      });
+
+      // Recalcular altura si está abierto al redimensionar
+      window.addEventListener("resize", () => {
+        if (isOpenNow()) panel.style.maxHeight = panel.scrollHeight + "px";
+      });
+    })();
+
+    // ===== Filtro Visual de Autos (Categorías) =====
+    const botonesFiltro = qsa(".filter-card");
     const autos = qsa(".catalog-group");
 
-    botonesFiltro.forEach(btn => {
+    botonesFiltro.forEach((btn) => {
       btn.addEventListener("click", () => {
-        botonesFiltro.forEach(b => b.classList.remove("active"));
+        // activar estado visual
+        botonesFiltro.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
 
+        // aplicar filtro
         const filtro = btn.dataset.filter;
-        autos.forEach(auto => {
+
+        autos.forEach((auto) => {
           if (filtro === "all") {
             auto.style.display = "block";
           } else {
             auto.style.display = auto.dataset.categoria === filtro ? "block" : "none";
           }
         });
+
+        // ✅ cerrar acordeón al seleccionar opción
+        if (typeof closeFiltroAccordion === "function") {
+          closeFiltroAccordion();
+        }
       });
     });
 
@@ -84,7 +192,6 @@
       endInput.setAttribute("placeholder", "dd/mm/aaaa");
 
       if (window.flatpickr) {
-        // Configuración de Flatpickr con soporte de rango
         const fpConfig = {
           altInput: true,
           altFormat: "d/m/Y",
@@ -99,12 +206,10 @@
             plugins: [new rangePlugin({ input: "#date-end" })],
           });
         } else {
-          // Fallback si no hay plugin de rango
           flatpickr("#date-start", fpConfig);
           flatpickr("#date-end", fpConfig);
         }
       } else {
-        // Fallback nativo si falla el CDN
         startInput.setAttribute("min", todayISO());
         endInput.setAttribute("min", todayISO());
       }

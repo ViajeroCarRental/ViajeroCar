@@ -1,4 +1,4 @@
-@extends('layouts.Usuarios')
+para que veas mi blade: @extends('layouts.Usuarios')
 
 @section('Titulo','Catálogo de Vehículos')
 
@@ -9,7 +9,6 @@
 @section('contenidoCatalogo')
 
 @php
-
     $mapaCategorias = [
         'C' => 'Sedan', 'D' => 'Sedan', 'E' => 'Sedan', 'F' => 'Sedan',
         'IC' => 'SUV', 'I' => 'SUV', 'IB' => 'SUV',
@@ -66,8 +65,8 @@
   <section class="hero">
     <div class="hero-bg">
       <img src="{{ asset('img/catalogo.png') }}" alt="Catálogo ViajeroCar">
+      <div class="overlay"></div>
     </div>
-    <div class="overlay"></div>
 
     <div class="hero-inner">
       <h1 class="hero-title">¡RENTA HOY, EXPLORA MAÑANA, VIAJA SIEMPRE!</h1>
@@ -78,103 +77,144 @@
         <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Central Autobuses</span>
       </div>
 
-      {{-- FILTROS DENTRO DEL HERO  --}}
-      <div class="filter-wrapper">
-        <h3 class="filter-title">Tipos de autos:</h3>
-        <div class="car-filter">
-          <div class="filter-card active" data-filter="all">
-              <img src="{{ asset('img/aveo.png') }}">
-              <div class="filter-info">
-                  <span>Todos</span>
-                  <small class="count-badge">{{ count($categoriasCards) }} unidades</small>
-              </div>
-          </div>
+      {{-- ✅ Bloque/card dentro del hero --}}
+      <div class="hero-filter-card">
+        <div class="filter-accordion">
+          <button
+            class="accordion-button bg-gray rounded-0 text-dark collapsed"
+            id="btn-filtro-autos"
+            type="button"
+            aria-expanded="false"
+            aria-controls="filtro-autos"
+            aria-label="Despliega el filtro de categorías de autos"
+          >
+            <span class="acc-left">
+              <i class="fa-solid fa-filter"></i>
+              <span>Filtrar categorías</span>
+            </span>
 
-          <div class="filter-card" data-filter="Sedan">
-              <img src="{{ asset('img/camry.png') }}">
-              <div class="filter-info">
-                  <span>Sedan</span>
-                  <small class="count-badge">{{ $conteoTipos['Sedan'] }} unidades</small>
-              </div>
-          </div>
+            <i class="fa-solid fa-chevron-down acc-icon"></i>
+          </button>
 
-          <div class="filter-card" data-filter="SUV">
-              <img src="{{ asset('img/seltos.png') }}">
-              <div class="filter-info">
-                  <span>SUV</span>
-                  <small class="count-badge">{{ $conteoTipos['SUV'] }} unidades</small>
-              </div>
-          </div>
+          <div id="filtro-autos" class="accordion-collapse" aria-labelledby="btn-filtro-autos">
+            <div class="accordion-body">
+              <div class="filter-wrapper">
+                <h3 class="filter-title">Tipos de autos:</h3>
 
-          <div class="filter-card" data-filter="Pickup">
-              <img src="{{ asset('img/Frontier.png') }}">
-              <div class="filter-info">
-                  <span>Pick up</span>
-                  <small class="count-badge">{{ $conteoTipos['Pickup'] }} unidades</small>
-              </div>
-          </div>
+                <div class="car-filter">
+                  <div class="filter-card active" data-filter="all">
+                    <img src="{{ asset('img/aveo.png') }}">
+                    <div class="filter-info">
+                      <span>Todos</span>
+                      <small class="count-badge">{{ count($categoriasCards) }} unidades</small>
+                    </div>
+                  </div>
 
-          <div class="filter-card" data-filter="Van">
-              <img src="{{ asset('img/Hiace.png') }}">
-              <div class="filter-info">
-                  <span>Van</span>
-                  <small class="count-badge">{{ $conteoTipos['Van'] }} unidades</small>
+                  <div class="filter-card" data-filter="Sedan">
+                    <img src="{{ asset('img/camry.png') }}">
+                    <div class="filter-info">
+                      <span>Sedan</span>
+                      <small class="count-badge">{{ $conteoTipos['Sedan'] }} unidades</small>
+                    </div>
+                  </div>
+
+                  <div class="filter-card" data-filter="SUV">
+                    <img src="{{ asset('img/seltos.png') }}">
+                    <div class="filter-info">
+                      <span>SUV</span>
+                      <small class="count-badge">{{ $conteoTipos['SUV'] }} unidades</small>
+                    </div>
+                  </div>
+
+                  <div class="filter-card" data-filter="Pickup">
+                    <img src="{{ asset('img/Frontier.png') }}">
+                    <div class="filter-info">
+                      <span>Pick up</span>
+                      <small class="count-badge">{{ $conteoTipos['Pickup'] }} unidades</small>
+                    </div>
+                  </div>
+
+                  <div class="filter-card" data-filter="Van">
+                    <img src="{{ asset('img/Hiace.png') }}">
+                    <div class="filter-info">
+                      <span>Van</span>
+                      <small class="count-badge">{{ $conteoTipos['Van'] }} unidades</small>
+                    </div>
+                  </div>
+                </div>
+
               </div>
+            </div>
           </div>
         </div>
-      </div> {{-- Fin filter-wrapper --}}
-    </div> {{-- Fin hero-inner --}}
-  </section> {{-- Fin hero --}}
+      </div>
 
-  {{-- ========== CATÁLOGO ========== --}}
+    </div>
+  </section>
+
+  {{-- ========== CATÁLOGO (2 columnas, estilo como tu referencia) ========== --}}
   <section class="catalog">
-    <div class="cars">
+    <div class="cars cars-grid">
       @foreach ($categoriasCards as $cat)
         @php
-          $codigo  = $cat->codigo;
-          $cap = $predeterminados[$codigo] ?? ['pax'=>5,'small'=>2,'big'=>1];
-          $img = img_por_categoria($codigo);
-          $tipo = $mapaCategorias[$codigo] ?? 'Sedan';
+          $codigo = $cat->codigo;
+          $tipo   = $mapaCategorias[$codigo] ?? 'Sedan';
+          $cap    = $predeterminados[$codigo] ?? ['pax'=>5,'small'=>2,'big'=>1];
+          $img    = img_por_categoria($codigo);
+
+          $precio = (float)($cat->precio_dia ?? 0);
+          $desc   = (float)($cat->descuento_miembro ?? 0); // % (0-100)
+          $hayDesc = $desc > 0;
+
+          // precio tachado (antes del descuento)
+          $precioOld = ($hayDesc && $desc < 100) ? ($precio / (1 - ($desc/100))) : 0;
         @endphp
 
-        <div class="catalog-group" data-categoria="{{ $tipo }}">
-          <div class="catalog-group-head">
-            <h2 class="catalog-group-title">{{ $codigo }} · {{ $cat->nombre }}</h2>
-            <p class="catalog-group-subtitle">{{ $cat->descripcion }}</p>
+        <article class="car-card catalog-group" data-categoria="{{ $tipo }}">
+
+          {{-- ✅ badge descuento arriba derecha --}}
+          @if($hayDesc)
+            <span class="offer-badge">-{{ (int)round($desc) }}%</span>
+          @endif
+
+          {{-- ✅ TEXTO con el estilo que ya traíamos (h3 + p) --}}
+          <header class="car-title">
+            <h3>{{ strtoupper($cat->nombre) }}</h3>
+            <p>{{ $cat->descripcion }} | {{ $codigo }}</p>
+          </header>
+
+          <div class="car-media">
+            <img src="{{ $img }}" alt="{{ $cat->nombre }}">
           </div>
 
-          <div class="car-list">
-            <article class="car car-long">
-              <div class="car-media">
-                <img src="{{ $img }}" alt="{{ $cat->nombre }}">
-              </div>
+          {{-- ✅ ICONOS centrados --}}
+          <ul class="car-specs">
+            <li><i class="fa-solid fa-user-large"></i> {{ $cap['pax'] }}</li>
+            <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $cap['small'] }}</li>
+            <li><i class="fa-solid fa-briefcase"></i> {{ $cap['big'] ?? 1 }}</li>
+          </ul>
 
-              <div class="car-main">
-                <span class="car-pill"><i class="fa-solid fa-car-side"></i> {{ $codigo }} · {{ $cat->nombre }}</span>
-                <h3 class="car-name">
-                  <span class="car-brand">Categoría</span>
-                  <span class="car-model">{{ $cat->nombre }}</span>
-                </h3>
-                <ul class="car-specs">
-                  <li><i class="fa-solid fa-user-group"></i> {{ $cap['pax'] }} pasajeros</li>
-                  <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $cap['small'] }} maletas</li>
-                </ul>
-                <p class="incluye">{{ $cat->descripcion }}</p>
-              </div>
+          {{-- ✅ Android Auto / CarPlay: icono como tu imagen + texto con chip --}}
+          <div class="car-connect">
+            <span class="badge-chip badge-apple" title="Apple CarPlay">
+              <span class="icon-badge">
+                <i class="fa-brands fa-apple"></i>
+              </span>
+              CarPlay
+            </span>
 
-              <div class="car-cta">
-                <div class="price">
-                  <span class="from">DESDE</span>
-                  <div class="amount">${{ number_format((float)$cat->precio_dia, 0) }} <small>MXN</small></div>
-                  <span class="per">por día</span>
-                </div>
-                <a href="{{ route('rutaReservasIniciar', ['categoria_id' => $cat->id_categoria]) }}" class="btn btn-primary">
-                  <i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!
-                </a>
-              </div>
-            </article>
+            <span class="badge-chip badge-android" title="Android Auto">
+              <span class="icon-badge">
+                <i class="fa-brands fa-android"></i>
+              </span>
+              Android Auto
+            </span>
           </div>
-        </div>
+
+          <a href="{{ route('rutaReservasIniciar', ['categoria_id' => $cat->id_categoria]) }}" class="car-cta">
+            Reservar
+          </a>
+        </article>
       @endforeach
 
       @if(!$hayAutos)
@@ -189,4 +229,4 @@
 
 @section('js-vistaCatalogo')
   <script src="{{ asset('js/catalogo.js') }}"></script>
-@endsection
+@endsection  
