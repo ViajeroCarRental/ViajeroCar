@@ -1,11 +1,15 @@
 (function () {
   "use strict";
+<<<<<<< Updated upstream
 
   // --- 1. Utilidades Globales ---
   const qs = (s, r = document) => r.querySelector(s);
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
+=======
+  const qs = (s) => document.querySelector(s);
+  const qsa = (s) => Array.from(document.querySelectorAll(s));
+>>>>>>> Stashed changes
 
-  // --- 2. Herramientas de Fecha (Para los inputs de entrega/devolución) ---
   function todayISO() {
     const t = new Date();
     const y = t.getFullYear();
@@ -26,6 +30,7 @@
     return `${y}-${m}-${d}`;
   }
 
+<<<<<<< Updated upstream
   // --- Helpers UI ---
   function smoothScrollIntoView(el) {
     if (!el) return;
@@ -62,6 +67,9 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     // ===== Interfaz Básica (Topbar, Menú y Footer) =====
+=======
+  document.addEventListener("DOMContentLoaded", () => {
+>>>>>>> Stashed changes
     const topbar = qs(".topbar");
     const toggleTopbar = () => {
       if (!topbar) return;
@@ -88,6 +96,7 @@
     const yearEl = qs("#year");
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
+<<<<<<< Updated upstream
     // ==========================================================
     // ✅ ACORDEÓN FILTRO (VANILLA) + CERRAR AL CLICK FUERA + AL SELECCIONAR
     // ==========================================================
@@ -157,6 +166,9 @@
 
     // ===== Filtro Visual de Autos (Categorías) =====
     const botonesFiltro = qsa(".filter-card");
+=======
+    const botonesFiltro = qsa('.filter-card');
+>>>>>>> Stashed changes
     const autos = qsa(".catalog-group");
 
     botonesFiltro.forEach((btn) => {
@@ -183,7 +195,6 @@
       });
     });
 
-    // ===== Calendarios y Fechas (Flatpickr) =====
     const startInput = qs("#date-start");
     const endInput = qs("#date-end");
 
@@ -215,7 +226,6 @@
       }
     }
 
-    // ===== Botón Filtrar (Envío a Laravel) =====
     const btnFilter = qs("#btn-filter");
     if (btnFilter) {
       btnFilter.addEventListener("click", () => {
