@@ -1275,4 +1275,31 @@ window.limpiarTodoYReiniciar = function() {
     // Reemplaza 'reservar' por el nombre de tu ruta base si es diferente
     window.location.href = window.location.pathname + "?step=1";
 };
+
+// Modal de protecciones
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('modalProtecciones');
+    const closeX = document.querySelector('.cerrar-modal-v');
+
+    // Delegación de clic para abrir
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('#info-protecciones')) {
+            e.preventDefault();
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+    });
+
+    // Cerrar
+    const closeModal = () => {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    };
+
+    if (closeX) closeX.onclick = closeModal;
+
+    window.onclick = function(e) {
+        if (e.target === modal) closeModal();
+    };
+});
 })();
