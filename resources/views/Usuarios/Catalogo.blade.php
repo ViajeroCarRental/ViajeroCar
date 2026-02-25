@@ -1,4 +1,4 @@
-para que veas mi blade: @extends('layouts.Usuarios')
+@extends('layouts.Usuarios')
 
 @section('Titulo','Catálogo de Vehículos')
 
