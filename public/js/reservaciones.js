@@ -189,6 +189,31 @@
   // ======================================================
   function initWizardStatePersistence() {
     const LS_KEY = "viajero_resv_filters_v1";
+        // 🔁 MODO RESET:
+    // Si llegamos con ?reset=1 o con step=1 sin parámetros de renta,
+    // NO debemos rehidratar desde localStorage.
+    let isResetMode = false;
+    try {
+      const url = new URL(window.location.href);
+      const p = url.searchParams;
+
+      const resetFlag = p.get('reset');
+      const step = p.get('step');
+
+      const hasMeaningful =
+        p.get('pickup_date') || p.get('dropoff_date') ||
+        p.get('pickup_time') || p.get('dropoff_time') ||
+        p.get('pickup_sucursal_id') || p.get('dropoff_sucursal_id') ||
+        p.get('addons') || p.get('categoria_id') || p.get('plan');
+
+      // reset explícito o entrada “limpia” a step=1
+      if (resetFlag === '1' || (step === '1' && !hasMeaningful)) {
+        isResetMode = true;
+        try {
+          localStorage.removeItem(LS_KEY);
+        } catch (_) { }
+      }
+    } catch (_) { }
 
     const map = {
       pickup_sucursal_id: qs('#pickup_sucursal_id') || qs('[name="pickup_sucursal_id"]'),
@@ -259,7 +284,9 @@
       return obj;
     }
 
-    function readFromLS() {
+        function readFromLS() {
+      // En modo reset, ignoramos totalmente lo que haya en localStorage
+      if (isResetMode) return {};
       try {
         const raw = localStorage.getItem(LS_KEY);
         if (!raw) return {};
@@ -405,7 +432,14 @@
       pushStateToQS(st);
     }, 180);
 
-    function hydrate() {
+        function hydrate() {
+      // 🧼 En modo reset no rellenamos nada desde QS/LS,
+      // dejamos los campos tal como vienen del Blade (en blanco)
+      if (isResetMode) {
+        writeToLS({}); // nos aseguramos de dejar limpio el LS
+        return;
+      }
+
       const fromQS = readFromQS();
       const fromLS = readFromLS();
       const merged = mergePreferNew(fromLS, fromQS);
@@ -996,6 +1030,60 @@ function initStep4AddonsSummary() {
     hydrate();
   }
 
+    // ==========================================================
+  // 🧽 Botón LIMPIAR (Step 1)
+  // - Limpia campos
+  // - Borra estado persistido
+  // - Recarga con ?step=1&reset=1
+  // ==========================================================
+  function initStep1ClearButton() {
+    // ⚠️ Asegúrate que el botón de limpiar tenga este id en el Blade
+    const btnClear = qs('#btnLimpiar');
+    if (!btnClear) return;
+
+    btnClear.addEventListener('click', function (e) {
+      e.preventDefault();
+
+      // 1) Limpiar localStorage del flujo de reservaciones
+      try {
+        localStorage.removeItem("viajero_resv_filters_v1");
+      } catch (_) { }
+
+      // 2) Limpiar parámetros de renta de la URL
+      try {
+        const url = new URL(window.location.href);
+        const p = url.searchParams;
+
+        [
+          'pickup_sucursal_id',
+          'dropoff_sucursal_id',
+          'pickup_date',
+          'dropoff_date',
+          'pickup_time',
+          'dropoff_time',
+          'pickup_h',
+          'pickup_m',
+          'dropoff_h',
+          'dropoff_m',
+          'addons',
+          'categoria_id',
+          'plan'
+        ].forEach(k => p.delete(k));
+
+        // 3) Forzamos un inicio fresco en Step 1 con flag de reset
+        p.set('step', '1');
+        p.set('reset', '1');
+
+        // Recargamos la página con la URL “limpia”
+        window.location.href = url.pathname + '?' + p.toString() + url.hash;
+      } catch (_) {
+        // Si algo truena, al menos hacemos un reset del formulario
+        const step1Form = document.getElementById('step1Form');
+        if (step1Form) step1Form.reset();
+      }
+    });
+  }
+
   // ======================================================
   // 🔥 Floating labels
   // ======================================================
@@ -1172,11 +1260,14 @@ function initStep4AddonsSummary() {
     });
   }
 
-    document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("DOMContentLoaded", () => {
     forceStep1WhenOnlyStepParam();
 
     // ✅ Persistencia
     initWizardStatePersistence();
+
+    // 🧽 Botón LIMPIAR (Step 1)
+    initStep1ClearButton();
 
     initSectionValidators();
 

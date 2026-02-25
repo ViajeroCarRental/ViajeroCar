@@ -19,15 +19,14 @@
   $pickupDateRaw  = $f['pickup_date']  ?? request('pickup_date');
   $dropoffDateRaw = $f['dropoff_date'] ?? request('dropoff_date');
 
-  $pickupTime  = $f['pickup_time']  ?? request('pickup_time')  ?? '12:00';
-  $dropoffTime = $f['dropoff_time'] ?? request('dropoff_time') ?? '12:00';
+  // ⛔ ANTES forzaba '12:00' aquí
+  $pickupTime  = $f['pickup_time']  ?? request('pickup_time');
+  $dropoffTime = $f['dropoff_time'] ?? request('dropoff_time');
 
-  $pickupIsoDefault  = now()->toDateString();
-  $dropoffIsoDefault = now()->addDays(3)->toDateString();
-
-  $toIso = function($val, $defaultIso){
+  // 🔹 Conversor a ISO SIN fechas por defecto
+  $toIso = function($val){
     $val = is_string($val) ? trim($val) : '';
-    if ($val === '') return $defaultIso;
+    if ($val === '') return null;
 
     // d-m-Y
     if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $val)) {
@@ -42,26 +41,27 @@
     try { return \Illuminate\Support\Carbon::parse($val)->format('Y-m-d'); }
     catch(\Throwable $e) {}
 
-    return $defaultIso;
+    return null;
   };
 
-  // ✅ ISO real (para cálculos y Step 4)
-  $pickupDateISO  = $toIso($pickupDateRaw,  $pickupIsoDefault);
-  $dropoffDateISO = $toIso($dropoffDateRaw, $dropoffIsoDefault);
-
-  // ✅ UI (para inputs flatpickr dd-mm-YYYY)
-  $pickupDate  = \Illuminate\Support\Carbon::parse($pickupDateISO)->format('d-m-Y');
-  $dropoffDate = \Illuminate\Support\Carbon::parse($dropoffDateISO)->format('d-m-Y');
+  // ✅ ISO real (para cálculos y Step 4) — solo si el cliente mandó algo
+  $pickupDateISO  = $toIso($pickupDateRaw);
+  $dropoffDateISO = $toIso($dropoffDateRaw);
 
   // ✅ FIX: Si pickup_date viene como rango "YYYY-MM-DD a YYYY-MM-DD"
   if (is_string($pickupDateRaw) && str_contains($pickupDateRaw, ' a ')) {
     [$start, $end] = array_map('trim', explode(' a ', $pickupDateRaw, 2));
-    $pickupDateISO  = $toIso($start, $pickupIsoDefault);
-    $dropoffDateISO = $toIso($end,   $dropoffIsoDefault);
-
-    $pickupDate  = \Illuminate\Support\Carbon::parse($pickupDateISO)->format('d-m-Y');
-    $dropoffDate = \Illuminate\Support\Carbon::parse($dropoffDateISO)->format('d-m-Y');
+    $pickupDateISO  = $toIso($start);
+    $dropoffDateISO = $toIso($end);
   }
+
+  // ✅ UI (para inputs flatpickr dd-mm-YYYY) — si no hay fecha, se queda vacío
+  $pickupDate  = $pickupDateISO
+    ? \Illuminate\Support\Carbon::parse($pickupDateISO)->format('d-m-Y')
+    : '';
+  $dropoffDate = $dropoffDateISO
+    ? \Illuminate\Support\Carbon::parse($dropoffDateISO)->format('d-m-Y')
+    : '';
 
   // ✅ flujo por categoría
   $categoriaId       = $f['categoria_id']        ?? request('categoria_id');
@@ -119,9 +119,14 @@
   };
 
   // ✅ días (mínimo 1)
-  $d1 = \Illuminate\Support\Carbon::parse($pickupDateISO);
-  $d2 = \Illuminate\Support\Carbon::parse($dropoffDateISO);
-  $days = max(1, $d1->diffInDays($d2));
+  if ($pickupDateISO && $dropoffDateISO) {
+    $d1 = \Illuminate\Support\Carbon::parse($pickupDateISO);
+    $d2 = \Illuminate\Support\Carbon::parse($dropoffDateISO);
+    $days = max(1, $d1->diffInDays($d2));
+  } else {
+    // Si no hay fechas aún (primer ingreso), dejamos 1 para no romper cálculos internos
+    $days = 1;
+  }
 
   // ✅ categoría seleccionada
   $categoriaSel = null;
@@ -171,9 +176,20 @@
   $precioDiaCategoria = (float)($categoriaSel->precio_dia ?? 0);
   $tarifaBase = $precioDiaCategoria > 0 ? ($precioDiaCategoria * $days) : 0.0;
 
-  // split hora/min para Step 1 (UI)
-  [$ph, $pm] = array_pad(explode(':', $pickupTime ?? '12:00'), 2, '00');
-  [$dh, $dm] = array_pad(explode(':', $dropoffTime ?? '12:00'), 2, '00');
+  // split hora/min para Step 1 (UI) — sin defaults si no hay hora
+  if (!empty($pickupTime)) {
+    [$ph, $pm] = array_pad(explode(':', $pickupTime), 2, '00');
+  } else {
+    $ph = '';
+    $pm = '';
+  }
+
+  if (!empty($dropoffTime)) {
+    [$dh, $dm] = array_pad(explode(':', $dropoffTime), 2, '00');
+  } else {
+    $dh = '';
+    $dm = '';
+  }
 
   // DOB range: 100 años atrás, hasta (hoy-18)
   $currentYear = now()->year;
@@ -188,8 +204,12 @@
 
   // ✅ Fecha abreviada (3 letras) como calendario: "Mié 18 Feb 2026"
   \Carbon\Carbon::setLocale('es');
-  $pickupFechaLarga  = strtoupper(\Carbon\Carbon::parse($pickupDateISO)->translatedFormat('D d M Y'));
-  $dropoffFechaLarga = strtoupper(\Carbon\Carbon::parse($dropoffDateISO)->translatedFormat('D d M Y'));
+  $pickupFechaLarga  = $pickupDateISO
+    ? strtoupper(\Carbon\Carbon::parse($pickupDateISO)->translatedFormat('D d M Y'))
+    : null;
+  $dropoffFechaLarga = $dropoffDateISO
+    ? strtoupper(\Carbon\Carbon::parse($dropoffDateISO)->translatedFormat('D d M Y'))
+    : null;
 
   // ✅ Burbuja roja (YA NO SE USA en UI, pero lo dejamos por si lo ocupas después)
   $tagCategoria = ($categoriaSel && isset($categoriaSel->nombre))

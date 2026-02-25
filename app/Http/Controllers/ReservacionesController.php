@@ -43,15 +43,7 @@ class ReservacionesController extends Controller
         $pickupTime  = $this->normalizeTime($pickupTimeRaw);
         $dropoffTime = $this->normalizeTime($dropoffTimeRaw);
 
-        if (!$pickupDate || !$dropoffDate) {
-            $defaults    = $this->defaultDates();
-            $pickupDate  = $pickupDate  ?: $defaults['pickup_date'];
-            $dropoffDate = $dropoffDate ?: $defaults['dropoff_date'];
-        }
-        if (!$pickupTime || !$dropoffTime) {
-            $pickupTime  = $pickupTime  ?: '12:00';
-            $dropoffTime = $dropoffTime ?: '12:00';
-        }
+
 
         // --- 2) Si viene vehiculo_id, completar datos desde BD ---
         $vehiculo = null;
@@ -224,43 +216,39 @@ $vehiculos = collect();
      * Paso 1 desde la navbar (form vacío con defaults).
      */
     public function desdeNavbar(Request $request)
-    {
-        $ciudades   = $this->getCiudadesConSucursalesActivas();
-        $categorias = $this->getCategorias();
+{
+    $ciudades   = $this->getCiudadesConSucursalesActivas();
+    $categorias = $this->getCategorias();
 
-        // Defaults hoy 12:00 → +3 días 12:00
-        $now    = Carbon::now('America/Mexico_City');
-        $pickup = (clone $now)->setTime(12, 0);
-        $drop   = (clone $pickup)->addDays(3);
+    // ❌ Sin defaults de fecha/hora: todo en blanco
+    $filters = [
+        'pickup_sucursal_id'  => null,
+        'dropoff_sucursal_id' => null,
+        'pickup_date'         => null,
+        'pickup_time'         => null,
+        'dropoff_date'        => null,
+        'dropoff_time'        => null,
+        'categoria_id'        => null,
+    ];
 
-        $filters = [
-            'pickup_sucursal_id'  => null,
-            'dropoff_sucursal_id' => null,
-            'pickup_date'         => $pickup->format('Y-m-d'),
-            'pickup_time'         => '12:00',
-            'dropoff_date'        => $drop->format('Y-m-d'),
-            'dropoff_time'        => '12:00',
-            'categoria_id'        => null,
-        ];
+    // ✅ Entrar mostrando categorías (Paso 2)
+    $step      = 2;
+    $vehiculos = collect();
+    $vehiculo  = null;
 
-        // ✅ Entrar mostrando categorías (Paso 2)
-        $step      = 2;
-        $vehiculos = collect();
-        $vehiculo  = null;
+    // Complementos listos por si avanzan
+    $servicios = $this->obtenerServiciosActivos();
 
-        // Complementos listos por si avanzan
-        $servicios = $this->obtenerServiciosActivos();
-
-        return view('Usuarios.Reservaciones', compact(
-            'step',
-            'filters',
-            'vehiculos',
-            'vehiculo',
-            'ciudades',
-            'categorias',
-            'servicios'
-        ));
-    }
+    return view('Usuarios.Reservaciones', compact(
+        'step',
+        'filters',
+        'vehiculos',
+        'vehiculo',
+        'ciudades',
+        'categorias',
+        'servicios'
+    ));
+}
 
     /* ===================== NUEVO: generar PDF + guardar en archivos + enviar WhatsApp ===================== */
 

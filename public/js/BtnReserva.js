@@ -250,13 +250,54 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
         if (window.alertify) {
-          alertify.alert("Reservación registrada", msgExito);
-        } else {
-          alert("Reservación registrada correctamente. Revisa tu correo de confirmación.");
-        }
+  alertify.alert("Reservación registrada", msgExito, function () {
+    // 1) Limpiar persistencia del wizard (Paso 1)
+    try {
+      localStorage.removeItem("viajero_resv_filters_v1");
+    } catch (e) {
+      console.warn("No se pudo limpiar localStorage:", e);
+    }
 
-        // Limpia datos temporales del flujo
-        sessionStorage.clear();
+    // 2) Limpiar cualquier dato temporal en sesión
+    try {
+      sessionStorage.clear();
+    } catch (e) {
+      console.warn("No se pudo limpiar sessionStorage:", e);
+    }
+
+    // 3) Redirigir al Paso 1, limpio
+    try {
+      const url = new URL(window.location.href);
+      // limpiamos query y hash actuales
+      url.search = "";
+      url.hash = "";
+
+      url.searchParams.set("step", "1");
+      url.searchParams.set("reset", "1");
+
+      window.location.href = url.pathname + "?" + url.searchParams.toString();
+    } catch (e) {
+      // Fallback simple
+      window.location.href = window.location.pathname + "?step=1&reset=1";
+    }
+  });
+} else {
+  // Fallback sin alertify: alert nativa + reset inmediato
+  alert("Reservación registrada correctamente. Revisa tu correo de confirmación.");
+
+  try {
+    localStorage.removeItem("viajero_resv_filters_v1");
+  } catch (e) {
+    console.warn("No se pudo limpiar localStorage:", e);
+  }
+  try {
+    sessionStorage.clear();
+  } catch (e) {
+    console.warn("No se pudo limpiar sessionStorage:", e);
+  }
+
+  window.location.href = window.location.pathname + "?step=1&reset=1";
+}
 
       } catch (error) {
         console.error("Error en pago mostrador:", error);

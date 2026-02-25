@@ -276,28 +276,176 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       },
 
-      onApprove: function (data, actions) {
-        return actions.order.capture().then(async function () {
+                  onApprove: function (data, actions) {
+        return actions.order.capture().then(async function (orderData) {
+          console.log("✅ PayPal orderData:", orderData);
+
           try {
+            // ==============================
+            // 🔍 Revisar estado del pago
+            // ==============================
+            const overallStatus = orderData?.status;
+            const firstPU       = orderData?.purchase_units?.[0];
+            const firstCapture  = firstPU?.payments?.captures?.[0];
+
+            const captureStatus = firstCapture?.status;
+            const reason        = firstCapture?.status_details?.reason || "";
+
+            // Si NO está COMPLETED, asumimos que el banco/PayPal rechazó el cobro
+            if (overallStatus !== "COMPLETED" || captureStatus !== "COMPLETED") {
+              console.warn("⚠️ Pago no completado:", {
+                overallStatus,
+                captureStatus,
+                reason
+              });
+
+              let msgUser = "Tu banco o PayPal no autorizó el cargo. No se realizó ningún cobro.";
+
+              // Detalles típicos que devuelve PayPal
+              if (reason === "INSUFFICIENT_FUNDS") {
+                msgUser = "Tu banco reportó fondos insuficientes. No se realizó el cobro. Por favor verifica tu saldo e inténtalo de nuevo.";
+              } else if (reason === "PAYER_CANNOT_PAY") {
+                msgUser = "PayPal indicó que el medio de pago no puede procesar el cargo. Intenta con otra tarjeta o forma de pago.";
+              } else if (reason === "RISK_DECLINE") {
+                msgUser = "PayPal rechazó el pago por revisión de seguridad. Intenta nuevamente o usa otro método de pago.";
+              }
+
+              if (window.alertify) {
+                alertify.error(msgUser);
+              } else {
+                alert(msgUser);
+              }
+
+              // ❌ Ojo: NO creamos reservación si el pago no está COMPLETED
+              return;
+            }
+
+            // ==============================
+            // 💾 Aquí ya sabemos que el pago sí fue COMPLETED
+            //    -> ahora sí creamos la reservación en nuestro backend
+            // ==============================
             const result = await enviarReservaLinea(data.orderID);
 
-            const msg = `Reserva confirmada. Folio: ${result.folio || ""}`;
-            if (window.alertify) alertify.success(msg); else alert(msg);
+            const payload = getFormPayload();
+            const { base, extras, iva, total } = calcularTotales();
 
-            // Aquí puedes redirigir al visor de reserva / página de gracias
-            // window.location.href = `/ventas/reservacion/${result.id}`;
+            const fmt = new Intl.NumberFormat("es-MX", {
+              style: "currency",
+              currency: "MXN",
+            });
+
+            const pickup  = `${payload.pickup_date} ${payload.pickup_time}`;
+            const dropoff = `${payload.dropoff_date} ${payload.dropoff_time}`;
+
+            const baseTxt   = fmt.format(base);
+            const extrasTxt = fmt.format(extras);
+            const ivaTxt    = fmt.format(iva);
+            const totalTxt  = fmt.format(total);
+
+            const folio = result.folio || "";
+
+            const msgExito = `
+  ✅ Su reservación en línea fue confirmada correctamente.<br><br>
+  Folio: <b>${folio}</b><br>
+  Entrega: <b>${pickup}</b><br>
+  Devolución: <b>${dropoff}</b><br><br>
+
+  <b>Tarifa base:</b> ${baseTxt}<br>
+  <b>Opciones de renta:</b> ${extrasTxt}<br>
+  <b>Cargos e IVA (16%):</b> ${ivaTxt}<br>
+  <b>Total:</b> ${totalTxt}<br><br>
+
+  📩 Recibirá confirmación por correo electrónico.
+`;
+
+            if (window.alertify) {
+              alertify.alert("Reservación en línea confirmada", msgExito, function () {
+                // 1) Limpiar persistencia del wizard (Paso 1)
+                try {
+                  localStorage.removeItem("viajero_resv_filters_v1");
+                } catch (e) {
+                  console.warn("No se pudo limpiar localStorage:", e);
+                }
+
+                // 2) Limpiar cualquier dato temporal en sesión
+                try {
+                  sessionStorage.clear();
+                } catch (e) {
+                  console.warn("No se pudo limpiar sessionStorage:", e);
+                }
+
+                // 3) Redirigir al Paso 1, limpio
+                try {
+                  const url = new URL(window.location.href);
+                  url.search = "";
+                  url.hash = "";
+
+                  url.searchParams.set("step", "1");
+                  url.searchParams.set("reset", "1");
+
+                  window.location.href = url.pathname + "?" + url.searchParams.toString();
+                } catch (e) {
+                  // Fallback simple
+                  window.location.href = window.location.pathname + "?step=1&reset=1";
+                }
+              });
+            } else {
+              // Fallback sin alertify: alert nativa + reset inmediato
+              alert("Reservación en línea confirmada. Revisa tu correo de confirmación.");
+
+              try {
+                localStorage.removeItem("viajero_resv_filters_v1");
+              } catch (e) {
+                console.warn("No se pudo limpiar localStorage:", e);
+              }
+              try {
+                sessionStorage.clear();
+              } catch (e) {
+                console.warn("No se pudo limpiar sessionStorage:", e);
+              }
+
+              window.location.href = window.location.pathname + "?step=1&reset=1";
+            }
+
           } catch (err) {
-            console.error(err);
-            const msg = err.message || "Ocurrió un error al confirmar tu reserva.";
+            console.error("❌ Error en onApprove / enviarReservaLinea:", err);
+            const msg = err.message || "Ocurrió un error al confirmar tu reserva. No se realizó ningún cargo adicional.";
             if (window.alertify) alertify.error(msg); else alert(msg);
           }
         });
       },
 
+      onCancel: function (data) {
+        console.log("ℹ️ Pago cancelado por el usuario:", data);
+        const msg = "Cancelaste el pago en PayPal. No se realizó ningún cobro ni se generó la reservación.";
+        if (window.alertify) {
+          if (alertify.message) {
+            alertify.message(msg);
+          } else {
+            alertify.error(msg);
+          }
+        } else {
+          alert(msg);
+        }
+      },
+
       onError: function (err) {
-        console.error("Error en PayPal Buttons:", err);
-        const msg = "Ocurrió un problema al procesar el pago con PayPal.";
-        if (window.alertify) alertify.error(msg); else alert(msg);
+        console.error("❌ Error en PayPal Buttons:", err);
+
+        // Mensaje genérico al usuario
+        let msg = "Ocurrió un problema al procesar el pago con PayPal. No se realizó ningún cobro.";
+
+        // Si viene algo de red / conexión lo podemos suavizar un poco
+        const errStr = (err && err.toString && err.toString()) || "";
+        if (errStr.toLowerCase().includes("network") || errStr.toLowerCase().includes("fetch")) {
+          msg = "Parece que hubo un problema de conexión al comunicarse con PayPal. No se realizó ningún cobro. Verifica tu internet e inténtalo de nuevo.";
+        }
+
+        if (window.alertify) {
+          alertify.error(msg);
+        } else {
+          alert(msg);
+        }
       }
     }).render("#paypal-button-container");
   }
