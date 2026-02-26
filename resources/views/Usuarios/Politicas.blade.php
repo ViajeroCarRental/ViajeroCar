@@ -41,6 +41,12 @@
           <span class="pc-title">Depósitos</span>
         </button>
 
+        {{-- ✅ NUEVA: Pre Check-In --}}
+        <button type="button" class="policy-card" data-modal="tpl-precheckin" data-title="Pre Check-In">
+          <span class="pc-icon"><i class="fa-solid fa-circle-check"></i></span>
+          <span class="pc-title">Pre Check-In</span>
+        </button>
+
         {{-- Cancelaciones y reembolsos --}}
         <button type="button" class="policy-card" data-modal="tpl-cancelaciones" data-title="Cancelaciones y reembolsos">
           <span class="pc-icon"><i class="fa-solid fa-rotate-left"></i></span>
@@ -210,6 +216,32 @@
       </div>
     </template>
 
+    {{-- ✅ NUEVO: PRE CHECK-IN --}}
+    <template id="tpl-precheckin">
+      <div class="policy-content">
+        <h4>¿Por qué activar el Pre Check-In en Viajero?</h4>
+        <p><strong>Ahorra tiempo y evita filas</strong> completando tu registro en línea antes de llegar.</p>
+
+        <p><strong>Solo necesitas proporcionar:</strong></p>
+        <ul>
+          <li>Identificación oficial</li>
+          <li>Licencia de conducir vigente</li>
+          <li>Datos de contacto</li>
+          <li>Método de pago</li>
+        </ul>
+
+        <p>Cuando llegues, tu contrato estará listo y tu vehículo preparado. <strong>Comienza tu viaje sin esperas.</strong></p>
+
+        <h4>¿Listo para comenzar?</h4>
+        <ul>
+          <li>Si envías tu información con anticipación, agilizamos tu proceso de entrega.</li>
+          <li>Presenta tu identificación y licencia vigentes al recoger el vehículo.</li>
+          <li>Nuestro equipo te asistirá en mostrador para la firma final y entrega de llaves.</li>
+          <li>Revisa tu unidad y empieza tu experiencia con Viajero.</li>
+        </ul>
+      </div>
+    </template>
+
     {{-- SEGURO CANCELACIÓN --}}
     <template id="tpl-seguro-cancelacion">
       <div class="policy-content">
@@ -346,7 +378,7 @@
       </div>
     </template>
 
-    {{-- INFRACCIONES (no venía tu texto, te lo dejo como placeholder limpio) --}}
+    {{-- INFRACCIONES --}}
     <template id="tpl-infracciones">
       <div class="policy-content">
         <h4>Políticas de infracciones</h4>

@@ -192,6 +192,16 @@
             <li><i class="fa-solid fa-user-large"></i> {{ $cap['pax'] }}</li>
             <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $cap['small'] }}</li>
             <li><i class="fa-solid fa-briefcase"></i> {{ $cap['big'] ?? 1 }}</li>
+
+            {{-- ✅ NUEVO: Transmisión Automática (A) --}}
+            <li title="Transmisión automática">
+              <span class="spec-letter">TA</span>
+            </li>
+
+            {{-- ✅ NUEVO: Aire acondicionado --}}
+            <li title="Aire acondicionado">
+              </i> A/C
+            </li>
           </ul>
 
           {{-- ✅ Android Auto / CarPlay: icono como tu imagen + texto con chip --}}
@@ -229,4 +239,4 @@
 
 @section('js-vistaCatalogo')
   <script src="{{ asset('js/catalogo.js') }}"></script>
-@endsection  
+@endsection   
