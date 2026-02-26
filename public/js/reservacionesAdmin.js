@@ -45,7 +45,7 @@
     if (!/^[A-Z]{2}$/.test(code)) return "🏳️";
     const A = 0x1F1E6;
     return String.fromCodePoint(A + (code.charCodeAt(0) - 65)) +
-           String.fromCodePoint(A + (code.charCodeAt(1) - 65));
+      String.fromCodePoint(A + (code.charCodeAt(1) - 65));
   };
 
   // ✅ CSRF
@@ -80,6 +80,15 @@
       gasolina: false
     },
 
+    // DROPOFF
+    dropoff: {
+      total: 0,
+      km: 0,
+      ubicacion: "",
+      direccion: "",
+      activo: false
+    },
+
     // ✅ DELIVERY (estado interno)
     delivery: {
       total: 0,
@@ -87,7 +96,15 @@
       ubicacion: "",
       direccion: "",
       activo: false
-    }
+    },
+
+    // GASOLINA
+    gasolina: {
+      total: 0,
+      litros: 0,
+      precioLitro: 20,
+      activo: false
+    }
   };
 
   /* =========================
@@ -139,6 +156,30 @@
     ensureHidden("delivery_km", "delivery_km");
     ensureHidden("delivery_direccion", "delivery_direccion");
     ensureHidden("delivery_ubicacion", "delivery_ubicacion");
+  }
+
+  function ensureDropoffHidden() {
+    ensureHidden("dropoff_activo", "dropoff_activo");
+    ensureHidden("dropoff_total", "dropoff_total");
+    ensureHidden("dropoff_km", "dropoff_km");
+    ensureHidden("dropoff_direccion", "dropoff_direccion");
+    ensureHidden("dropoff_ubicacion", "dropoff_ubicacion");
+  }
+
+  function syncDropoffHidden() {
+    ensureDropoffHidden();
+
+    const act = qs("#dropoff_activo");
+    const tot = qs("#dropoff_total");
+    const kms = qs("#dropoff_km");
+    const dir = qs("#dropoff_direccion");
+    const ubi = qs("#dropoff_ubicacion");
+
+    if (act) act.value = state.servicios.dropoff ? "1" : "0";
+    if (tot) tot.value = (state.dropoff.total || 0).toFixed(2);
+    if (kms) kms.value = (state.dropoff.km || 0).toString();
+    if (dir) dir.value = state.dropoff.direccion || "";
+    if (ubi) ubi.value = state.dropoff.ubicacion || "";
   }
 
   function syncProteccionHidden() {
@@ -269,45 +310,39 @@
   function computeDelivery(els) {
     if (!els) return 0;
 
-    const precioKm = getDeliveryPrecioKm(els);
+    const precioKm = parseFloat(state.categoria?.precio_km || 0);
+    
     let km = 0;
-
     const val = String(els.ubicacion?.value || "");
 
     if (val === "0") {
-      km = Number(els.km?.value || 0);
-    } else if (val) {
-      const opt = els.ubicacion?.options?.[els.ubicacion.selectedIndex];
-      km = Number(opt?.dataset?.km || 0);
-    } else {
-      km = 0;
+      km = parseFloat(els.km?.value) || 0;
+    } else if (val !== "") {
+      const opt = els.ubicacion.options[els.ubicacion.selectedIndex];
+      km = opt ? parseFloat(opt.dataset.km) || 0 : 0;
     }
 
-    km = Math.max(0, km);
-    const total = Math.max(0, km * Math.max(0, precioKm));
+    const total = km * precioKm;
 
     state.delivery.km = km;
     state.delivery.total = total;
     state.delivery.ubicacion = val;
-    state.delivery.direccion = String(els.dir?.value || "");
+    state.delivery.direccion = (val === "0") ? String(els.dir?.value || "") : "";
 
     if (els.totalTxt) els.totalTxt.textContent = money(total);
-    if (els.totalHid) els.totalHid.value = String(total);
+    if (els.totalHid) els.totalHid.value = total.toFixed(2);
 
-    if (els.wrap) {
-      els.wrap.dataset.deliveryKm = String(km);
-      els.wrap.dataset.deliveryTotal = String(total);
-      els.wrap.dataset.deliveryUbicacion = val;
-      els.wrap.dataset.deliveryDireccion = state.delivery.direccion;
-    }
-
-    // ✅ hidden backend
     ensureDeliveryHidden();
-    qs("#delivery_activo").value = state.servicios.delivery ? "1" : "0";
-    qs("#delivery_total").value = String(total);
-    qs("#delivery_km").value = String(km);
+    const act = qs("#delivery_activo");
+    if (act) act.value = state.servicios.delivery ? "1" : "0";
+    
+    qs("#delivery_total").value = total.toFixed(2);
+    qs("#delivery_km").value = km.toString();
     qs("#delivery_direccion").value = state.delivery.direccion;
     qs("#delivery_ubicacion").value = val;
+
+    syncTotalsHidden(); 
+    refreshSummary();
 
     return total;
   }
@@ -415,6 +450,237 @@
     });
   }
 
+  // ================================================================= DROPOFF =====================================================
+
+  function getDropoffEls() {
+    const wrap = qs(".dropoff-wrapper");
+    if (!wrap) return null;
+
+    return {
+      wrap,
+      toggle: qs("#dropoffToggle"),
+      fields: qs("#dropoffFields"),
+      ubicacion: qs("#dropUbicacion"),
+      groupDir: qs("#dropGroupDireccion"),
+      groupKm: qs("#dropGroupKm"),
+      dir: qs("#dropDireccion"),
+      km: qs("#dropKm"),
+      totalTxt: qs("#dropTotal"),
+      costoKmHTML: qs("#dropCostoKmHTML"),
+    };
+  }
+
+  function syncDropoffGroups(els) {
+    if (!els) return;
+    const val = String(els.ubicacion?.value || "");
+    const isManual = (val === "0"); // 0 es "Dirección personalizada"
+
+    // Mostramos u ocultamos los grupos según la elección
+    if (els.groupDir) els.groupDir.style.display = isManual ? "block" : "none";
+    if (els.groupKm) els.groupKm.style.display = isManual ? "block" : "none";
+    
+    // El costo por KM solo se ve si hay algo seleccionado
+    const costoBox = qs("#dropCostoKm");
+    if (costoBox) costoBox.style.display = val !== "" ? "block" : "none";
+  }
+
+  function computeDropoff(els) {
+    if (!els) return 0;
+
+    ensureDropoffHidden();
+
+    const precioKm = parseFloat(state.categoria?.precio_km || 0);
+    
+    let km = 0;
+    const val = String(els.ubicacion?.value || "");
+
+    if (val === "0") {
+      km = parseFloat(els.km?.value) || 0;
+    } else if (val !== "") {
+      const opt = els.ubicacion.options[els.ubicacion.selectedIndex];
+      km = opt ? parseFloat(opt.dataset.km) || 0 : 0;
+    }
+
+    const total = km * precioKm;
+
+    state.dropoff.km = km;
+    state.dropoff.total = total;
+    state.dropoff.ubicacion = val;
+    state.dropoff.direccion = (val === "0") ? String(els.dir?.value || "") : "";
+
+    if (els.totalTxt) els.totalTxt.textContent = money(total);
+    if (els.costoKmHTML) els.costoKmHTML.textContent = money(precioKm).replace(" MXN", "");
+
+    qs("#dropoff_activo").value = state.servicios.dropoff ? "1" : "0";
+    qs("#dropoff_total").value = total.toFixed(2);
+    qs("#dropoff_km").value = km.toString();
+    qs("#dropoff_direccion").value = state.dropoff.direccion;
+    qs("#dropoff_ubicacion").value = val;
+
+    syncTotalsHidden();
+    refreshSummary();
+
+    return total;
+  }
+
+  function setDropoffActive(on) {
+    const els = getDropoffEls();
+    state.servicios.dropoff = !!on;
+    state.dropoff.activo = !!on;
+
+    if (els?.toggle) els.toggle.checked = !!on;
+    if (els?.fields) els.fields.style.display = on ? "block" : "none";
+
+    if (!on) {
+        state.dropoff.total = 0;
+        state.dropoff.km = 0;
+        state.dropoff.ubicacion = "";
+        state.dropoff.direccion = "";
+        if (els?.ubicacion) els.ubicacion.value = "";
+        if (els?.totalTxt) els.totalTxt.textContent = money(0);
+    } else {
+        syncDropoffGroups(els);
+        computeDropoff(els);
+    }
+
+    syncServiciosHidden();
+    syncDropoffHidden(); 
+    syncTotalsHidden();
+    refreshSummary();
+  }
+
+  function bindDropoffUI() {
+    const els = getDropoffEls();
+    if (!els) return;
+
+    // Evento del Switch principal (ON/OFF)
+    els.toggle?.addEventListener("change", () => {
+      // Usamos la función maestra para activar/desactivar todo
+      setDropoffActive(!!els.toggle.checked);
+    });
+
+    // Evento del Selector de Ubicación
+    els.ubicacion?.addEventListener("change", () => {
+      // Si elige "Dirección personalizada" (valor "0"), muestra KM y Dirección
+      syncDropoffGroups(els); 
+      
+      // Si el servicio está activo, calculamos el precio
+      if (state.servicios.dropoff) {
+        computeDropoff(els);
+      }
+    });
+
+    // Evento para Kilómetros manuales
+    els.km?.addEventListener("input", () => {
+      if (state.servicios.dropoff) {
+        computeDropoff(els);
+        syncTotalsHidden();
+        refreshSummary();
+      }
+    });
+
+    // Evento para Dirección manual
+    els.dir?.addEventListener("input", () => {
+      state.dropoff.direccion = String(els.dir.value || "");
+      // Sincronizamos con el input oculto para el backend
+      const hid = qs("#dropoff_direccion");
+      if (hid) hid.value = state.dropoff.direccion;
+    });
+  }
+
+  // ================================================================= GASOLINA =====================================================
+
+  function getGasolinaEls() {
+    return {
+      toggle: qs("#gasolinaToggle"),
+      fields: qs("#gasolinaFields"),
+      totalTxt: qs("#gasolinaTotal"),
+      totalHid: qs("#gasolinaTotalHidden"),
+    };
+  }
+
+  function computeGasolina() {
+    const els = getGasolinaEls();
+    if (!els) return 0;
+
+    const litros = parseFloat(state.categoria?.capacidad_tanque || 0);
+    const precio = state.gasolina.precioLitro;
+    const total = litros * precio;
+
+    const label = document.getElementById("litrosLabel");
+    if (label) {
+        label.textContent = litros;
+    }
+
+    state.gasolina.litros = litros;
+    state.gasolina.total = total;
+
+    if (els.totalTxt) els.totalTxt.textContent = money(total);
+    if (els.totalHid) els.totalHid.value = total.toFixed(2);
+
+    syncTotalsHidden();
+    refreshSummary();
+
+    return total;
+  }
+
+  function setGasolinaActive(on) {
+    const els = getGasolinaEls();
+    state.servicios.gasolina = !!on;
+    state.gasolina.activo = !!on;
+
+    syncServiciosHidden();
+
+    if (els?.toggle) els.toggle.checked = !!on;
+    if (els?.fields) els.fields.style.display = on ? "block" : "none";
+
+    if (!on) {
+      state.gasolina.total = 0;
+      if (els?.totalHid) els.totalHid.value = "0";
+    } else {
+      computeGasolina();
+    }
+
+    syncTotalsHidden();
+    refreshSummary();
+  }
+
+  function bindGasolinaUI() {
+    const toggle = qs("#gasolinaToggle");
+    const inputLitros = qs("#gasolinaLitros"); // Si tienes un input de litros
+    
+    if (!toggle) return;
+
+    // 1. Escuchar el Switch (ON/OFF)
+    toggle.addEventListener("change", () => {
+        const active = !!toggle.checked;
+        state.servicios.gasolina = active;
+        
+        // Mostrar/Ocultar campos si tienes un contenedor especial
+        const fields = qs("#gasolinaFields");
+        if (fields) fields.style.display = active ? "block" : "none";
+
+        if (active) {
+            computeGasolina();
+        } else {
+            state.gasolina.total = 0;
+            if (qs("#gasolinaTotalTxt")) qs("#gasolinaTotalTxt").textContent = money(0);
+        }
+
+        syncTotalsHidden();
+        refreshSummary();
+    });
+
+    // 2. Escuchar si cambian los litros (si aplica)
+    inputLitros?.addEventListener("input", () => {
+        if (state.servicios.gasolina) {
+            computeGasolina();
+            syncTotalsHidden();
+            refreshSummary();
+        }
+    });
+}
+
   function getServiciosLabelList() {
     const labels = [];
     if (state.servicios.dropoff) labels.push("🚩 Drop Off");
@@ -422,6 +688,7 @@
     if (state.servicios.gasolina) labels.push("⛽ Gasolina prepago");
     return labels;
   }
+
 
   /* =========================
      Fechas/Horas: UI + Hidden
@@ -548,13 +815,17 @@
     const txt = qs("#catSelTxt");
     const sub = qs("#catSelSub");
     const rem = qs("#catRemove");
+    const mini = qs("#catMiniPreview");
 
     if (!cat) {
       if (txt) txt.textContent = "— Ninguna categoría —";
       if (sub) sub.textContent = "Tarifa base por día y cálculo previo aparecerán aquí.";
       if (rem) rem.style.display = "none";
-      const mini = qs("#catMiniPreview");
       if (mini) mini.style.display = "none";
+
+      const inputPrecioKm = qs("#deliveryPrecioKm");
+      if (inputPrecioKm) inputPrecioKm.value = "0";
+
       syncTotalsHidden();
       refreshSummary();
       return;
@@ -565,6 +836,27 @@
     if (rem) rem.style.display = "";
 
     refreshCategoriaPreview();
+
+    const inputPrecioKm = qs("#deliveryPrecioKm");
+    if (inputPrecioKm) {
+      const precioCoche = cat.precio_km || 0;
+      inputPrecioKm.value = precioCoche;
+    }
+    
+    if (state.servicios.delivery) {
+        const els = getDeliveryEls();
+        if (els) computeDelivery(els); 
+    }
+
+    if (state.servicios.dropoff) {
+      const els = getDropoffEls();
+      if (els) computeDropoff(els);
+    }
+
+    if (state.servicios.gasolina) {
+      computeGasolina();
+    }
+
     syncTotalsHidden();
     refreshSummary();
   }
@@ -769,9 +1061,11 @@
   function calcTotals() {
     const days = Number(state.days || 0);
 
+    // Tarifa del coche
     const baseDia = state.categoria ? Number(state.categoria.precio_dia || 0) : 0;
     const baseTotal = baseDia * days;
 
+    // Protecciones
     const prot = state.proteccion;
     const protPrice = prot ? Number(prot.precio || 0) : 0;
     const protTotal = prot
@@ -781,15 +1075,15 @@
     const indTotal = (!prot) ? calcIndividualesSubtotal() : 0;
     const extrasSub = calcExtrasSubtotal();
 
-    const deliveryTotal = state.servicios.delivery
-      ? Number(qs("#deliveryTotalHidden")?.value || state.delivery.total || 0)
-      : 0;
+    const deliveryTotal = state.servicios.delivery ? (state.delivery.total || 0) : 0;
+    const dropoffTotal  = state.servicios.dropoff  ? (state.dropoff.total  || 0) : 0;
+    const gasolinaTotal = state.servicios.gasolina ? (state.gasolina.total || 0) : 0;
 
-    const subtotal = baseTotal + protTotal + indTotal + extrasSub + deliveryTotal;
+    const subtotal = baseTotal + protTotal + indTotal + extrasSub + deliveryTotal + dropoffTotal + gasolinaTotal;
     const iva = Math.round(subtotal * 0.16 * 100) / 100;
     const total = subtotal + iva;
 
-    return { baseDia, baseTotal, protTotal, indTotal, extrasSub, deliveryTotal, subtotal, iva, total };
+    return { baseDia, baseTotal, protTotal, indTotal, extrasSub, deliveryTotal, gasolinaTotal, dropoffTotal, subtotal, iva, total };
   }
 
   function syncTotalsHidden() {
@@ -800,6 +1094,91 @@
     qs("#subtotal").value = String(totals.subtotal || 0);
     qs("#impuestos").value = String(totals.iva || 0);
     qs("#total").value = String(totals.total || 0);
+  }
+
+  // Funcion de editar tarifa base
+  function initTarifaEdit() {
+    const btn = qs("#btnEditarTarifa");
+    const container = qs("#resBaseDia");
+
+    if (!btn || !container) return;
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+
+      if (!state.categoria) return;
+      if (container.querySelector("input")) return;
+
+      const precioActual = parseFloat(state.categoria.precio_dia || 0);
+
+      const input = document.createElement("input");
+      input.type = "number";
+      input.value = precioActual.toFixed(2);
+      input.min = 0;
+      input.step = 0.01;
+
+      Object.assign(input.style, {
+        width: "90px",
+        padding: "4px",
+        border: "1px solid #2563eb",
+        borderRadius: "6px",
+        fontWeight: "600",
+        fontSize: "14px",
+        color: "#333",
+        outline: "none"
+      });
+
+      container.innerHTML = "";
+      container.appendChild(input);
+      input.focus();
+      input.select();
+
+      const guardar = () => {
+        let nuevoValor = parseFloat(input.value);
+
+        if (isNaN(nuevoValor) || nuevoValor < 0) {
+          nuevoValor = precioActual;
+        }
+
+        state.categoria.precio_dia = nuevoValor;
+
+        container.innerHTML = "";
+
+        syncTotalsHidden();
+        refreshTotalsOnly();
+        refreshSummary();
+
+        const sub = qs("#catSelSub");
+        if (sub) {
+          sub.textContent = `${money(nuevoValor)} / día · ${state.days || 0} día(s)`;
+        }
+
+        refreshCategoriaPreview();
+      };
+
+      input.addEventListener("blur", guardar);
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          input.blur();
+        }
+      });
+    });
+  }
+
+  function refreshTotalsOnly() {
+    const totals = calcTotals();
+    const cat = state.categoria;
+
+    const setText = (id, val) => { const el = qs(id); if (el) el.textContent = val; };
+
+    // Actualizamos "Base x Días"
+    setText("#resBaseTotal", cat ? money(totals.baseTotal) : "—");
+
+    // Actualizamos Totales Finales
+    setText("#resSub", money(totals.subtotal));
+    setText("#resIva", money(totals.iva));
+    setText("#resTotal", money(totals.total));
   }
 
   /* =========================
@@ -833,9 +1212,18 @@
     const totals = calcTotals();
 
     setText("#resCat", cat ? cat.nombre : "—");
-    setText("#resBaseDia", cat ? `${money(totals.baseDia)} / día` : "—");
+
+    const baseEl = qs("#resBaseDia");
+    if (baseEl && !baseEl.querySelector("input")) {
+      baseEl.textContent = cat ? `${money(totals.baseDia)} / día` : "—";
+    }
+
     setText("#resBaseTotal", cat ? money(totals.baseTotal) : "—");
 
+    setText("#resDelivery", state.servicios.delivery ? money(totals.deliveryTotal) : money(0));
+    setText("#resDropoff", state.servicios.dropoff ? money(totals.dropoffTotal) : money(0));
+    setText("#resGasolina", state.servicios.gasolina ? money(totals.gasolinaTotal) : money(0));
+    
     const svcList = getServiciosLabelList();
     setText("#resServicios", svcList.length ? svcList.join(", ") : "—");
 
@@ -914,10 +1302,29 @@
       }
     }
 
-    if (missing.length) {
-      alert("Falta completar:\n• " + missing.join("\n• "));
+    // Alerta de validaciones
+
+    if (missing.length > 0) {
+
+      if (missing.length === 1) {
+        alertify.set('notifier', 'position', 'top-right');
+        alertify.error('Te faltó completar: <b>' + missing[0] + '</b>');
+      }
+
+      else {
+        let listaHtml = '<ul style="text-align: left; margin-left: 15px;">';
+
+        missing.forEach(campo => {
+          listaHtml += '<li>' + campo + '</li>';
+        });
+
+        listaHtml += '</ul>';
+        alertify.alert('Campos Incompletos', 'Por favor completa los siguientes campos:<br>' + listaHtml);
+      }
+
       return false;
     }
+
     return true;
   }
 
@@ -1015,7 +1422,8 @@
         if (ini && fin && fin < ini) {
           qs("#fecha_fin").value = "";
           qs("#fecha_fin_ui").value = "";
-          alert("La fecha de devolución no puede ser antes de la fecha de salida.");
+          alertify.set('notifier', 'position', 'top-right');
+          alertify.warning("La fecha de devolución no puede ser antes de la fecha de salida.");
         }
         syncDays();
       }
@@ -1115,30 +1523,43 @@
       const action = form.getAttribute("action");
       const fd = new FormData(form);
 
+      if (state.categoria) {
+        const precioFinal = parseFloat(state.categoria.precio_dia || 0);
+
+        fd.set("tarifa_base", precioFinal);
+
+        fd.set("tarifa_modificada", precioFinal);
+      }
+
       // asegurar teléfono final
       fd.set("telefono_cliente", qs("#telefono_cliente")?.value || "");
 
       // ✅ asegurar servicios
-      fd.set("svc_dropoff",  state.servicios.dropoff ? "1" : "0");
+      fd.set("svc_dropoff", state.servicios.dropoff ? "1" : "0");
       fd.set("svc_delivery", state.servicios.delivery ? "1" : "0");
       fd.set("svc_gasolina", state.servicios.gasolina ? "1" : "0");
 
       // ✅ delivery (backend)
       if (state.servicios.delivery) {
         const els = getDeliveryEls();
-        if (els) {
-          fd.set("delivery_activo", "1");
-          fd.set("delivery_total", String(Number(els.totalHid?.value || 0)));
-          fd.set("delivery_km", String(Number(els.km?.value || 0)));
-          fd.set("delivery_direccion", String(els.dir?.value || ""));
-          fd.set("delivery_ubicacion", String(els.ubicacion?.value || ""));
-        }
+        if (els) computeDelivery(els);
+
+        fd.set("delivery_activo", "1");
+        fd.set("delivery_total", String(state.delivery.total || 0));
+        fd.set("delivery_km", String(state.delivery.km || 0));
+
+        fd.set("delivery_direccion", String(state.delivery.direccion || ""));
+        fd.set("delivery_ubicacion", String(state.delivery.ubicacion || "0"));
+
+        const precioKm = qs("#deliveryPrecioKm")?.value || "0";
+        fd.set("delivery_precio_km", precioKm);
       } else {
         fd.set("delivery_activo", "0");
         fd.set("delivery_total", "0");
         fd.set("delivery_km", "0");
         fd.set("delivery_direccion", "");
         fd.set("delivery_ubicacion", "");
+        fd.set("delivery_precio_km", "0");
       }
 
       const res = await fetch(action, {
@@ -1153,7 +1574,8 @@
       if (res.status === 422) {
         const data = await res.json().catch(() => null);
         const first = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
-        alert(first || "Revisa los campos: falta información o hay datos inválidos.");
+        alertify.set('notifier', 'position', 'top-right');
+        alertify.error(first || "Revisa los campos: falta información o hay datos inválidos.");
         setLoading(false);
         return;
       }
@@ -1161,7 +1583,8 @@
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
         console.error("Error al registrar:", res.status, txt);
-        alert("Ocurrió un error al registrar la reservación. Revisa logs.");
+        alertify.set('notifier', 'position', 'top-right');
+        alertify.error("Ocurrió un error al registrar la reservación. Revisa la consola.");
         setLoading(false);
         return;
       }
@@ -1191,7 +1614,7 @@
 
     } catch (err) {
       console.error(err);
-      alert("Error de red/servidor. Intenta de nuevo.");
+      alertify.error("Error de conexión. Intenta de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -1266,7 +1689,7 @@
             <p>${escapeHtml(p.desc || (isFree ? "Sin protección adicional." : "Protección para tu viaje."))}</p>
 
             <div class="precio">
-              ${money(p.precio).replace(" MXN","")} <span>MXN${p.charge==="por_dia" ? " / día" : ""}</span>
+              ${money(p.precio).replace(" MXN", "")} <span>MXN${p.charge === "por_dia" ? " / día" : ""}</span>
             </div>
 
             <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:12px;">
@@ -1355,7 +1778,7 @@
           <div class="ad-right">
             <div class="cp-price">
               <div class="muted small">Costo</div>
-              <div class="price-big">${money(precio).replace(" MXN","")} <span>MXN${charge==="por_dia" ? " / día" : ""}</span></div>
+              <div class="price-big">${money(precio).replace(" MXN", "")} <span>MXN${charge === "por_dia" ? " / día" : ""}</span></div>
             </div>
 
             <div class="qty-row">
@@ -1394,158 +1817,158 @@
      ✅ PAISES + LADA + ISO2
   ========================================= */
   const COUNTRY_DATA = [
-    { name:"MÉXICO", iso2:"MX", dial:"+52" },
-    { name:"ESTADOS UNIDOS", iso2:"US", dial:"+1" },
-    { name:"AFGANISTÁN", iso2:"AF", dial:"+93" },
-    { name:"ALBANIA", iso2:"AL", dial:"+355" },
-    { name:"ALEMANIA", iso2:"DE", dial:"+49" },
-    { name:"ANDORRA", iso2:"AD", dial:"+376" },
-    { name:"ANGOLA", iso2:"AO", dial:"+244" },
-    { name:"ANTIGUA Y BARBUDA", iso2:"AG", dial:"+1" },
-    { name:"ARABIA SAUDITA", iso2:"SA", dial:"+966" },
-    { name:"ARGELIA", iso2:"DZ", dial:"+213" },
-    { name:"ARGENTINA", iso2:"AR", dial:"+54" },
-    { name:"ARMENIA", iso2:"AM", dial:"+374" },
-    { name:"AUSTRALIA", iso2:"AU", dial:"+61" },
-    { name:"AUSTRIA", iso2:"AT", dial:"+43" },
-    { name:"AZERBAIYÁN", iso2:"AZ", dial:"+994" },
-    { name:"BAHAMAS", iso2:"BS", dial:"+1" },
-    { name:"BANGLADESH", iso2:"BD", dial:"+880" },
-    { name:"BARBADOS", iso2:"BB", dial:"+1" },
-    { name:"BARÉIN", iso2:"BH", dial:"+973" },
-    { name:"BÉLGICA", iso2:"BE", dial:"+32" },
-    { name:"BELICE", iso2:"BZ", dial:"+501" },
-    { name:"BENÍN", iso2:"BJ", dial:"+229" },
-    { name:"BIELORRUSIA", iso2:"BY", dial:"+375" },
-    { name:"BOLIVIA", iso2:"BO", dial:"+591" },
-    { name:"BOSNIA Y HERZEGOVINA", iso2:"BA", dial:"+387" },
-    { name:"BOTSUANA", iso2:"BW", dial:"+267" },
-    { name:"BRASIL", iso2:"BR", dial:"+55" },
-    { name:"BRUNÉI", iso2:"BN", dial:"+673" },
-    { name:"BULGARIA", iso2:"BG", dial:"+359" },
-    { name:"BURKINA FASO", iso2:"BF", dial:"+226" },
-    { name:"BURUNDI", iso2:"BI", dial:"+257" },
-    { name:"BUTÁN", iso2:"BT", dial:"+975" },
-    { name:"CABO VERDE", iso2:"CV", dial:"+238" },
-    { name:"CAMBOYA", iso2:"KH", dial:"+855" },
-    { name:"CAMERÚN", iso2:"CM", dial:"+237" },
-    { name:"CANADÁ", iso2:"CA", dial:"+1" },
-    { name:"CATAR", iso2:"QA", dial:"+974" },
-    { name:"CHAD", iso2:"TD", dial:"+235" },
-    { name:"CHILE", iso2:"CL", dial:"+56" },
-    { name:"CHINA", iso2:"CN", dial:"+86" },
-    { name:"CHIPRE", iso2:"CY", dial:"+357" },
-    { name:"CIUDAD DEL VATICANO", iso2:"VA", dial:"+379" },
-    { name:"COLOMBIA", iso2:"CO", dial:"+57" },
-    { name:"COMORAS", iso2:"KM", dial:"+269" },
-    { name:"CONGO", iso2:"CG", dial:"+242" },
-    { name:"COREA DEL NORTE", iso2:"KP", dial:"+850" },
-    { name:"COREA DEL SUR", iso2:"KR", dial:"+82" },
-    { name:"COSTA DE MARFIL", iso2:"CI", dial:"+225" },
-    { name:"COSTA RICA", iso2:"CR", dial:"+506" },
-    { name:"CROACIA", iso2:"HR", dial:"+385" },
-    { name:"CUBA", iso2:"CU", dial:"+53" },
-    { name:"DINAMARCA", iso2:"DK", dial:"+45" },
-    { name:"DOMINICA", iso2:"DM", dial:"+1" },
-    { name:"ECUADOR", iso2:"EC", dial:"+593" },
-    { name:"EGIPTO", iso2:"EG", dial:"+20" },
-    { name:"EL SALVADOR", iso2:"SV", dial:"+503" },
-    { name:"EMIRATOS ÁRABES UNIDOS", iso2:"AE", dial:"+971" },
-    { name:"ERITREA", iso2:"ER", dial:"+291" },
-    { name:"ESLOVAQUIA", iso2:"SK", dial:"+421" },
-    { name:"ESLOVENIA", iso2:"SI", dial:"+386" },
-    { name:"ESPAÑA", iso2:"ES", dial:"+34" },
-    { name:"ESTONIA", iso2:"EE", dial:"+372" },
-    { name:"ESWATINI", iso2:"SZ", dial:"+268" },
-    { name:"ETIOPÍA", iso2:"ET", dial:"+251" },
-    { name:"FIJI", iso2:"FJ", dial:"+679" },
-    { name:"FILIPINAS", iso2:"PH", dial:"+63" },
-    { name:"FINLANDIA", iso2:"FI", dial:"+358" },
-    { name:"FRANCIA", iso2:"FR", dial:"+33" },
-    { name:"GABÓN", iso2:"GA", dial:"+241" },
-    { name:"GAMBIA", iso2:"GM", dial:"+220" },
-    { name:"GEORGIA", iso2:"GE", dial:"+995" },
-    { name:"GHANA", iso2:"GH", dial:"+233" },
-    { name:"GRANADA", iso2:"GD", dial:"+1" },
-    { name:"GRECIA", iso2:"GR", dial:"+30" },
-    { name:"GUATEMALA", iso2:"GT", dial:"+502" },
-    { name:"GUINEA", iso2:"GN", dial:"+224" },
-    { name:"GUINEA BISÁU", iso2:"GW", dial:"+245" },
-    { name:"GUINEA ECUATORIAL", iso2:"GQ", dial:"+240" },
-    { name:"GUYANA", iso2:"GY", dial:"+592" },
-    { name:"HAITÍ", iso2:"HT", dial:"+509" },
-    { name:"HONDURAS", iso2:"HN", dial:"+504" },
-    { name:"HUNGRÍA", iso2:"HU", dial:"+36" },
-    { name:"INDIA", iso2:"IN", dial:"+91" },
-    { name:"INDONESIA", iso2:"ID", dial:"+62" },
-    { name:"IRAK", iso2:"IQ", dial:"+964" },
-    { name:"IRÁN", iso2:"IR", dial:"+98" },
-    { name:"IRLANDA", iso2:"IE", dial:"+353" },
-    { name:"ISLANDIA", iso2:"IS", dial:"+354" },
-    { name:"ISRAEL", iso2:"IL", dial:"+972" },
-    { name:"ITALIA", iso2:"IT", dial:"+39" },
-    { name:"JAMAICA", iso2:"JM", dial:"+1" },
-    { name:"JAPÓN", iso2:"JP", dial:"+81" },
-    { name:"JORDANIA", iso2:"JO", dial:"+962" },
-    { name:"KAZAJISTÁN", iso2:"KZ", dial:"+7" },
-    { name:"KENIA", iso2:"KE", dial:"+254" },
-    { name:"KIRGUISTÁN", iso2:"KG", dial:"+996" },
-    { name:"KUWAIT", iso2:"KW", dial:"+965" },
-    { name:"LAOS", iso2:"LA", dial:"+856" },
-    { name:"LETONIA", iso2:"LV", dial:"+371" },
-    { name:"LÍBANO", iso2:"LB", dial:"+961" },
-    { name:"LIBERIA", iso2:"LR", dial:"+231" },
-    { name:"LIBIA", iso2:"LY", dial:"+218" },
-    { name:"LIECHTENSTEIN", iso2:"LI", dial:"+423" },
-    { name:"LITUANIA", iso2:"LT", dial:"+370" },
-    { name:"LUXEMBURGO", iso2:"LU", dial:"+352" },
-    { name:"MADAGASCAR", iso2:"MG", dial:"+261" },
-    { name:"MALASIA", iso2:"MY", dial:"+60" },
-    { name:"MALAWI", iso2:"MW", dial:"+265" },
-    { name:"MALDIVAS", iso2:"MV", dial:"+960" },
-    { name:"MALÍ", iso2:"ML", dial:"+223" },
-    { name:"MALTA", iso2:"MT", dial:"+356" },
-    { name:"MARRUECOS", iso2:"MA", dial:"+212" },
-    { name:"MAURICIO", iso2:"MU", dial:"+230" },
-    { name:"MAURITANIA", iso2:"MR", dial:"+222" },
-    { name:"MOLDAVIA", iso2:"MD", dial:"+373" },
-    { name:"MÓNACO", iso2:"MC", dial:"+377" },
-    { name:"MONGOLIA", iso2:"MN", dial:"+976" },
-    { name:"MONTENEGRO", iso2:"ME", dial:"+382" },
-    { name:"MOZAMBIQUE", iso2:"MZ", dial:"+258" },
-    { name:"MYANMAR", iso2:"MM", dial:"+95" },
-    { name:"NAMIBIA", iso2:"NA", dial:"+264" },
-    { name:"NEPAL", iso2:"NP", dial:"+977" },
-    { name:"NICARAGUA", iso2:"NI", dial:"+505" },
-    { name:"NÍGER", iso2:"NE", dial:"+227" },
-    { name:"NIGERIA", iso2:"NG", dial:"+234" },
-    { name:"NORUEGA", iso2:"NO", dial:"+47" },
-    { name:"NUEVA ZELANDA", iso2:"NZ", dial:"+64" },
-    { name:"OMÁN", iso2:"OM", dial:"+968" },
-    { name:"PAÍSES BAJOS", iso2:"NL", dial:"+31" },
-    { name:"PAKISTÁN", iso2:"PK", dial:"+92" },
-    { name:"PANAMÁ", iso2:"PA", dial:"+507" },
-    { name:"PARAGUAY", iso2:"PY", dial:"+595" },
-    { name:"PERÚ", iso2:"PE", dial:"+51" },
-    { name:"POLONIA", iso2:"PL", dial:"+48" },
-    { name:"PORTUGAL", iso2:"PT", dial:"+351" },
-    { name:"REINO UNIDO", iso2:"GB", dial:"+44" },
-    { name:"REPÚBLICA CHECA", iso2:"CZ", dial:"+420" },
-    { name:"REPÚBLICA DOMINICANA", iso2:"DO", dial:"+1" },
-    { name:"RUMANIA", iso2:"RO", dial:"+40" },
-    { name:"RUSIA", iso2:"RU", dial:"+7" },
-    { name:"SENEGAL", iso2:"SN", dial:"+221" },
-    { name:"SERBIA", iso2:"RS", dial:"+381" },
-    { name:"SINGAPUR", iso2:"SG", dial:"+65" },
-    { name:"SUDÁFRICA", iso2:"ZA", dial:"+27" },
-    { name:"SUECIA", iso2:"SE", dial:"+46" },
-    { name:"SUIZA", iso2:"CH", dial:"+41" },
-    { name:"TAILANDIA", iso2:"TH", dial:"+66" },
-    { name:"TÚNEZ", iso2:"TN", dial:"+216" },
-    { name:"TURQUÍA", iso2:"TR", dial:"+90" },
-    { name:"UCRANIA", iso2:"UA", dial:"+380" },
-    { name:"URUGUAY", iso2:"UY", dial:"+598" },
-    { name:"VENEZUELA", iso2:"VE", dial:"+58" },
+    { name: "MÉXICO", iso2: "MX", dial: "+52" },
+    { name: "ESTADOS UNIDOS", iso2: "US", dial: "+1" },
+    { name: "AFGANISTÁN", iso2: "AF", dial: "+93" },
+    { name: "ALBANIA", iso2: "AL", dial: "+355" },
+    { name: "ALEMANIA", iso2: "DE", dial: "+49" },
+    { name: "ANDORRA", iso2: "AD", dial: "+376" },
+    { name: "ANGOLA", iso2: "AO", dial: "+244" },
+    { name: "ANTIGUA Y BARBUDA", iso2: "AG", dial: "+1" },
+    { name: "ARABIA SAUDITA", iso2: "SA", dial: "+966" },
+    { name: "ARGELIA", iso2: "DZ", dial: "+213" },
+    { name: "ARGENTINA", iso2: "AR", dial: "+54" },
+    { name: "ARMENIA", iso2: "AM", dial: "+374" },
+    { name: "AUSTRALIA", iso2: "AU", dial: "+61" },
+    { name: "AUSTRIA", iso2: "AT", dial: "+43" },
+    { name: "AZERBAIYÁN", iso2: "AZ", dial: "+994" },
+    { name: "BAHAMAS", iso2: "BS", dial: "+1" },
+    { name: "BANGLADESH", iso2: "BD", dial: "+880" },
+    { name: "BARBADOS", iso2: "BB", dial: "+1" },
+    { name: "BARÉIN", iso2: "BH", dial: "+973" },
+    { name: "BÉLGICA", iso2: "BE", dial: "+32" },
+    { name: "BELICE", iso2: "BZ", dial: "+501" },
+    { name: "BENÍN", iso2: "BJ", dial: "+229" },
+    { name: "BIELORRUSIA", iso2: "BY", dial: "+375" },
+    { name: "BOLIVIA", iso2: "BO", dial: "+591" },
+    { name: "BOSNIA Y HERZEGOVINA", iso2: "BA", dial: "+387" },
+    { name: "BOTSUANA", iso2: "BW", dial: "+267" },
+    { name: "BRASIL", iso2: "BR", dial: "+55" },
+    { name: "BRUNÉI", iso2: "BN", dial: "+673" },
+    { name: "BULGARIA", iso2: "BG", dial: "+359" },
+    { name: "BURKINA FASO", iso2: "BF", dial: "+226" },
+    { name: "BURUNDI", iso2: "BI", dial: "+257" },
+    { name: "BUTÁN", iso2: "BT", dial: "+975" },
+    { name: "CABO VERDE", iso2: "CV", dial: "+238" },
+    { name: "CAMBOYA", iso2: "KH", dial: "+855" },
+    { name: "CAMERÚN", iso2: "CM", dial: "+237" },
+    { name: "CANADÁ", iso2: "CA", dial: "+1" },
+    { name: "CATAR", iso2: "QA", dial: "+974" },
+    { name: "CHAD", iso2: "TD", dial: "+235" },
+    { name: "CHILE", iso2: "CL", dial: "+56" },
+    { name: "CHINA", iso2: "CN", dial: "+86" },
+    { name: "CHIPRE", iso2: "CY", dial: "+357" },
+    { name: "CIUDAD DEL VATICANO", iso2: "VA", dial: "+379" },
+    { name: "COLOMBIA", iso2: "CO", dial: "+57" },
+    { name: "COMORAS", iso2: "KM", dial: "+269" },
+    { name: "CONGO", iso2: "CG", dial: "+242" },
+    { name: "COREA DEL NORTE", iso2: "KP", dial: "+850" },
+    { name: "COREA DEL SUR", iso2: "KR", dial: "+82" },
+    { name: "COSTA DE MARFIL", iso2: "CI", dial: "+225" },
+    { name: "COSTA RICA", iso2: "CR", dial: "+506" },
+    { name: "CROACIA", iso2: "HR", dial: "+385" },
+    { name: "CUBA", iso2: "CU", dial: "+53" },
+    { name: "DINAMARCA", iso2: "DK", dial: "+45" },
+    { name: "DOMINICA", iso2: "DM", dial: "+1" },
+    { name: "ECUADOR", iso2: "EC", dial: "+593" },
+    { name: "EGIPTO", iso2: "EG", dial: "+20" },
+    { name: "EL SALVADOR", iso2: "SV", dial: "+503" },
+    { name: "EMIRATOS ÁRABES UNIDOS", iso2: "AE", dial: "+971" },
+    { name: "ERITREA", iso2: "ER", dial: "+291" },
+    { name: "ESLOVAQUIA", iso2: "SK", dial: "+421" },
+    { name: "ESLOVENIA", iso2: "SI", dial: "+386" },
+    { name: "ESPAÑA", iso2: "ES", dial: "+34" },
+    { name: "ESTONIA", iso2: "EE", dial: "+372" },
+    { name: "ESWATINI", iso2: "SZ", dial: "+268" },
+    { name: "ETIOPÍA", iso2: "ET", dial: "+251" },
+    { name: "FIJI", iso2: "FJ", dial: "+679" },
+    { name: "FILIPINAS", iso2: "PH", dial: "+63" },
+    { name: "FINLANDIA", iso2: "FI", dial: "+358" },
+    { name: "FRANCIA", iso2: "FR", dial: "+33" },
+    { name: "GABÓN", iso2: "GA", dial: "+241" },
+    { name: "GAMBIA", iso2: "GM", dial: "+220" },
+    { name: "GEORGIA", iso2: "GE", dial: "+995" },
+    { name: "GHANA", iso2: "GH", dial: "+233" },
+    { name: "GRANADA", iso2: "GD", dial: "+1" },
+    { name: "GRECIA", iso2: "GR", dial: "+30" },
+    { name: "GUATEMALA", iso2: "GT", dial: "+502" },
+    { name: "GUINEA", iso2: "GN", dial: "+224" },
+    { name: "GUINEA BISÁU", iso2: "GW", dial: "+245" },
+    { name: "GUINEA ECUATORIAL", iso2: "GQ", dial: "+240" },
+    { name: "GUYANA", iso2: "GY", dial: "+592" },
+    { name: "HAITÍ", iso2: "HT", dial: "+509" },
+    { name: "HONDURAS", iso2: "HN", dial: "+504" },
+    { name: "HUNGRÍA", iso2: "HU", dial: "+36" },
+    { name: "INDIA", iso2: "IN", dial: "+91" },
+    { name: "INDONESIA", iso2: "ID", dial: "+62" },
+    { name: "IRAK", iso2: "IQ", dial: "+964" },
+    { name: "IRÁN", iso2: "IR", dial: "+98" },
+    { name: "IRLANDA", iso2: "IE", dial: "+353" },
+    { name: "ISLANDIA", iso2: "IS", dial: "+354" },
+    { name: "ISRAEL", iso2: "IL", dial: "+972" },
+    { name: "ITALIA", iso2: "IT", dial: "+39" },
+    { name: "JAMAICA", iso2: "JM", dial: "+1" },
+    { name: "JAPÓN", iso2: "JP", dial: "+81" },
+    { name: "JORDANIA", iso2: "JO", dial: "+962" },
+    { name: "KAZAJISTÁN", iso2: "KZ", dial: "+7" },
+    { name: "KENIA", iso2: "KE", dial: "+254" },
+    { name: "KIRGUISTÁN", iso2: "KG", dial: "+996" },
+    { name: "KUWAIT", iso2: "KW", dial: "+965" },
+    { name: "LAOS", iso2: "LA", dial: "+856" },
+    { name: "LETONIA", iso2: "LV", dial: "+371" },
+    { name: "LÍBANO", iso2: "LB", dial: "+961" },
+    { name: "LIBERIA", iso2: "LR", dial: "+231" },
+    { name: "LIBIA", iso2: "LY", dial: "+218" },
+    { name: "LIECHTENSTEIN", iso2: "LI", dial: "+423" },
+    { name: "LITUANIA", iso2: "LT", dial: "+370" },
+    { name: "LUXEMBURGO", iso2: "LU", dial: "+352" },
+    { name: "MADAGASCAR", iso2: "MG", dial: "+261" },
+    { name: "MALASIA", iso2: "MY", dial: "+60" },
+    { name: "MALAWI", iso2: "MW", dial: "+265" },
+    { name: "MALDIVAS", iso2: "MV", dial: "+960" },
+    { name: "MALÍ", iso2: "ML", dial: "+223" },
+    { name: "MALTA", iso2: "MT", dial: "+356" },
+    { name: "MARRUECOS", iso2: "MA", dial: "+212" },
+    { name: "MAURICIO", iso2: "MU", dial: "+230" },
+    { name: "MAURITANIA", iso2: "MR", dial: "+222" },
+    { name: "MOLDAVIA", iso2: "MD", dial: "+373" },
+    { name: "MÓNACO", iso2: "MC", dial: "+377" },
+    { name: "MONGOLIA", iso2: "MN", dial: "+976" },
+    { name: "MONTENEGRO", iso2: "ME", dial: "+382" },
+    { name: "MOZAMBIQUE", iso2: "MZ", dial: "+258" },
+    { name: "MYANMAR", iso2: "MM", dial: "+95" },
+    { name: "NAMIBIA", iso2: "NA", dial: "+264" },
+    { name: "NEPAL", iso2: "NP", dial: "+977" },
+    { name: "NICARAGUA", iso2: "NI", dial: "+505" },
+    { name: "NÍGER", iso2: "NE", dial: "+227" },
+    { name: "NIGERIA", iso2: "NG", dial: "+234" },
+    { name: "NORUEGA", iso2: "NO", dial: "+47" },
+    { name: "NUEVA ZELANDA", iso2: "NZ", dial: "+64" },
+    { name: "OMÁN", iso2: "OM", dial: "+968" },
+    { name: "PAÍSES BAJOS", iso2: "NL", dial: "+31" },
+    { name: "PAKISTÁN", iso2: "PK", dial: "+92" },
+    { name: "PANAMÁ", iso2: "PA", dial: "+507" },
+    { name: "PARAGUAY", iso2: "PY", dial: "+595" },
+    { name: "PERÚ", iso2: "PE", dial: "+51" },
+    { name: "POLONIA", iso2: "PL", dial: "+48" },
+    { name: "PORTUGAL", iso2: "PT", dial: "+351" },
+    { name: "REINO UNIDO", iso2: "GB", dial: "+44" },
+    { name: "REPÚBLICA CHECA", iso2: "CZ", dial: "+420" },
+    { name: "REPÚBLICA DOMINICANA", iso2: "DO", dial: "+1" },
+    { name: "RUMANIA", iso2: "RO", dial: "+40" },
+    { name: "RUSIA", iso2: "RU", dial: "+7" },
+    { name: "SENEGAL", iso2: "SN", dial: "+221" },
+    { name: "SERBIA", iso2: "RS", dial: "+381" },
+    { name: "SINGAPUR", iso2: "SG", dial: "+65" },
+    { name: "SUDÁFRICA", iso2: "ZA", dial: "+27" },
+    { name: "SUECIA", iso2: "SE", dial: "+46" },
+    { name: "SUIZA", iso2: "CH", dial: "+41" },
+    { name: "TAILANDIA", iso2: "TH", dial: "+66" },
+    { name: "TÚNEZ", iso2: "TN", dial: "+216" },
+    { name: "TURQUÍA", iso2: "TR", dial: "+90" },
+    { name: "UCRANIA", iso2: "UA", dial: "+380" },
+    { name: "URUGUAY", iso2: "UY", dial: "+598" },
+    { name: "VENEZUELA", iso2: "VE", dial: "+58" },
   ];
 
   const TOP = ["MÉXICO", "ESTADOS UNIDOS"];
@@ -1690,18 +2113,23 @@
     });
 
     // ✅ Switches Servicios (NO botones)
-    qs("#dropoffToggle")?.addEventListener("change", (e) => {
-      state.servicios.dropoff = !!e.target.checked;
-      syncServiciosHidden();
-      refreshSummary();
-      syncTotalsHidden();
+
+    // GASOLINA
+    qs("#gasolinaToggle")?.addEventListener("change", (e) => {
+      const active = !!e.target.checked;
+      setGasolinaActive(active); 
     });
 
-    qs("#gasolinaToggle")?.addEventListener("change", (e) => {
-      state.servicios.gasolina = !!e.target.checked;
-      syncServiciosHidden();
-      refreshSummary();
-      syncTotalsHidden();
+    // DROP OFF
+    qs("#dropoffToggle")?.addEventListener("change", (e) => {
+      const active = !!e.target.checked;
+      setDropoffActive(active);
+    });
+
+    // DELIVERY
+    qs("#deliveryToggle")?.addEventListener("change", (e) => {
+      const active = !!e.target.checked;
+      setDeliveryActive(active);
     });
 
     // Categorías modal
@@ -1715,16 +2143,17 @@
 
     catPop?.addEventListener("click", (e) => {
       const card = e.target.closest(".card-pick");
-      const btn = e.target.closest("button");
-      if (!card || !btn) return;
+      if (!card) return;
 
       const id = card.dataset.id;
       const nombre = card.dataset.nombre || "";
       const desc = card.dataset.desc || "";
       const precio = Number(card.dataset.precio || 0);
+      const precioKm = Number(card.dataset.precioKm || 0); 
       const img = card.dataset.img || "";
-
-      setCategoria({ id, nombre, desc, precio_dia: precio, img });
+      const capacidad = parseFloat(card.dataset.litros || 0);
+      
+      setCategoria({ id, nombre, desc, precio_dia: precio, precio_km: precioKm, img, capacidad_tanque: capacidad });
       closePop(catPop);
     });
 
@@ -1822,6 +2251,9 @@
 
     // tabs
     bindProteTabs();
+
+    // funcion de editar tarifa base
+    initTarifaEdit();
   }
 
   /* =========================
@@ -1835,7 +2267,7 @@
     ensureDeliveryHidden();
 
     // estados iniciales switches por hidden
-    state.servicios.dropoff  = String(qs("#svc_dropoff")?.value || "0") === "1";
+    state.servicios.dropoff = String(qs("#svc_dropoff")?.value || "0") === "1";
     state.servicios.gasolina = String(qs("#svc_gasolina")?.value || "0") === "1";
 
     const dropT = qs("#dropoffToggle");
@@ -1848,6 +2280,9 @@
 
     // ✅ Delivery init + listeners (OFF oculta todo)
     bindDeliveryUI();
+
+    // Dropoff
+    bindDropoffUI();
 
     syncDays();
     repaintCategoriaModalEstimados();
