@@ -28,6 +28,112 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================================
   // 📦 Helper: leer y validar datos del formulario
   // ==========================================================
+
+    // ==========================================================
+  // 👶 MENOR DE EDAD – helpers locales para ajustar addons
+  // ==========================================================
+  // 👉 Usa el MISMO ID de servicio que configuraste en los otros JS
+  const YOUNG_DRIVER_SERVICE_ID = '123'; // <-- cámbialo por el id real del servicio "Conductor menor de edad"
+  const YOUNG_DRIVER_MIN_AGE    = 25;    // menor de 25 años paga cargo
+
+  function parseAddonsStringToMapLocal(str) {
+    const map = new Map();
+    String(str || "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean)
+      .forEach(pair => {
+        const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
+        if (m) {
+          const id  = m[1];
+          const qty = Math.max(0, parseInt(m[2], 10) || 0);
+          if (qty > 0) map.set(id, qty);
+        } else {
+          const id = pair.replace(/\D/g, "");
+          if (id) map.set(id, 1);
+        }
+      });
+    return map;
+  }
+
+  function serializeAddonsMapLocal(map) {
+    return Array.from(map.entries())
+      .filter(([, q]) => (q || 0) > 0)
+      .map(([id, q]) => `${id}:${q}`)
+      .join(",");
+  }
+
+  function computeAgeFromDobLocal(dobStr, refDate) {
+    if (!dobStr) return null;
+
+    const m = String(dobStr).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+
+    const birth = new Date(+m[1], +m[2] - 1, +m[3]);
+    if (isNaN(birth.getTime())) return null;
+
+    const ref = (refDate instanceof Date && !isNaN(refDate)) ? refDate : new Date();
+
+    let age = ref.getFullYear() - birth.getFullYear();
+    const mm = ref.getMonth() - birth.getMonth();
+    if (mm < 0 || (mm === 0 && ref.getDate() < birth.getDate())) {
+      age--;
+    }
+
+    if (age < 0 || age > 120) return null;
+    return age;
+  }
+
+  function getPickupDateForAgeLocal() {
+    const pickupInput =
+      document.getElementById("pickup_date") ||
+      document.querySelector('input[name="pickup_date"]');
+
+    if (!pickupInput || !pickupInput.value) return new Date();
+
+    const s = String(pickupInput.value).trim();
+
+    // dd-mm-YYYY
+    let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+
+    // YYYY-mm-dd
+    m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? new Date() : d;
+  }
+
+  // 💡 Recibe el string de addons y regresa una versión ajustada
+  //    agregando/eliminando el servicio de menor de edad según la DOB.
+  function applyYoungDriverAddonOnString(addonsStr) {
+    try {
+      if (!YOUNG_DRIVER_SERVICE_ID) return addonsStr || "";
+
+      const dobHidden = document.querySelector("#dob"); // hidden YYYY-MM-DD
+      if (!dobHidden) return addonsStr || "";
+
+      const dobStr = (dobHidden.value || "").trim();
+      const age = computeAgeFromDobLocal(dobStr, getPickupDateForAgeLocal());
+
+      const map = parseAddonsStringToMapLocal(addonsStr || "");
+
+      if (age != null && age < YOUNG_DRIVER_MIN_AGE) {
+        // Menor de la edad límite → forzamos cantidad 1 del servicio
+        map.set(String(YOUNG_DRIVER_SERVICE_ID), 1);
+      } else {
+        // Mayor o edad inválida → quitamos el cargo automático
+        map.delete(String(YOUNG_DRIVER_SERVICE_ID));
+      }
+
+      return serializeAddonsMapLocal(map);
+    } catch (e) {
+      console.warn("No se pudo aplicar la regla de menor de edad en addons (PayPal):", e);
+      return addonsStr || "";
+    }
+  }
+
   function getFormPayload() {
     const categoriaId        = document.getElementById("categoria_id")?.value || "";
     const plan               = document.getElementById("plan")?.value || "";
@@ -86,10 +192,12 @@ document.addEventListener("DOMContentLoaded", () => {
       throw new Error("Para utilizar pago en línea, selecciona el plan de pago en línea.");
     }
 
+        // 👉 Ajustar addons con la regla de menor de edad (si aplica)
+    const addonsFinal = applyYoungDriverAddonOnString(addonsRaw);
     return {
       categoria_id:        categoriaId,
       plan:                plan,
-      addons:              addonsRaw,
+      addons:              addonsFinal,
       pickup_date:         pickupDate,
       pickup_time:         pickupTime,
       dropoff_date:        dropoffDate,
@@ -115,12 +223,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const base = parseFloat(cotDoc.dataset.base || "0");   // tarifa base por toda la renta
     const days = parseInt(cotDoc.dataset.days || "1", 10) || 1;
 
-    const addonsRawEl = document.getElementById("addons_payload");
+        const addonsRawEl = document.getElementById("addons_payload");
     const addonsRaw   = (addonsRawEl?.value || "").trim();
+
+    // ✅ Aplicar también aquí la regla de menor de edad
+    const addonsForCalc = applyYoungDriverAddonOnString(addonsRaw);
 
     let extrasSubtotal = 0;
 
-    if (addonsRaw) {
+    if (addonsForCalc) {
       const catalogScript = document.getElementById("addonsCatalog");
       let catalog = {};
 
@@ -132,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      const pairs = addonsRaw.split(",");
+      const pairs = addonsForCalc.split(",");
       for (const pair of pairs) {
         const clean = pair.trim();
         if (!clean) continue;
