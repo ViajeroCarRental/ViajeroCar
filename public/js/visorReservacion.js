@@ -96,15 +96,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const categoriasVehiculo = {
         1: { texto: 'C | Compacto',   img: '/img/aveo.png' },
-        2: { texto: 'D | Mediano',    img: '/img/virtus.png' },
+        2: { texto: 'D | Medianos',    img: '/img/virtus.png' },
         3: { texto: 'E | Grande',     img: '/img/jetta.png' },
         4: { texto: 'F | Full Size',  img: '/img/camry.png' },
-        5: { texto: 'IC | SUV Completa' , img: '/img/renegade.png' },
-        6: { texto: 'I | SUV Mediana' , img: '/img/avanza.png' },
-        7: { texto: 'H | Pick Doble Cabina' , img: '/img/Frontier.png' },
+        5: { texto: 'IC | SUV Compacta' , img: '/img/renegade.png' },
+        6: { texto: 'I | SUV Mediana' , img: '/img/seltos.png' },
+        7: { texto: 'IB | SUV Familiar Compacta' , img: '/img/avanza.png' },
         8: { texto: 'M | Minivan' , img: '/img/Odyssey.png' },
-        9: { texto: 'HI | Pickup 4x4 Doble Cabina' , img: '/img/Tacoma.png' },
-        10: { texto: 'L | Van Pasajeros' , img: '/img/Urvan.png' }
+        9: { texto: 'L | Van Pasajeros 13' , img: '/img/Urvan.png' },
+        10: { texto: 'H | Pickup Doble Cabina' , img: '/img/Frontier.png' },
+        11: { texto: 'HI | Pickup 4x4 Doble Cabina' , img: '/img/Tacoma.png' }
     };
 
     if (btnCambiarCategoria && modalCategoriaEl) {

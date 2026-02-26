@@ -431,7 +431,7 @@
     <table class="header-table" role="presentation">
       <tr>
         <td style="vertical-align:middle;">
-          <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
+          <img src="{{ rtrim(config('app.url'), '/') . '/img/Logo3.jpg' }}" alt="Viajero Car Rental">
 
         </td>
 
@@ -455,8 +455,7 @@
 
       <p class="lead">
         Tu vehículo ya está reservado, el siguiente código es tu número de reservación,
-        da da <a href="{{ route('visor.show', ['id' => $reservacion->id_reservacion]) }}">click aquí</a> para más información.
-
+        da <a href="{{ $url_detalle ?? '#' }}">click aquí</a> para más información.
       </p>
 
       <p class="lead" style="margin-top:0;">
@@ -700,6 +699,7 @@
     </td>
   </tr>
   <tr>
+      <tr>
     <td class="p-label price-total">TOTAL</td>
     <td class="p-value price-total">
       ${{ number_format($reservacion->total, 2) }} MXN
@@ -707,7 +707,9 @@
   </tr>
 </table>
 
-</div> {{-- <-- aquí sí cierras .summary-card, justo después del precio --}}
+
+
+<div class="divider"></div>
 
 {{-- 🔻 Texto y línea roja debajo del detalle de precio --}}
 <p class="price-note">
@@ -743,6 +745,8 @@
     al mostrador de cualquiera de nuestras oficinas.
   </p>
 </div>
+
+</div> {{-- <-- aquí sí cierras .summary-card --}}
 
   </div>
 

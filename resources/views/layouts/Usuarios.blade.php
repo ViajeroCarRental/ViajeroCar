@@ -189,7 +189,6 @@
   @yield('contenidoFAQ')
   @yield('contenidoLogin')
   @yield('contenidoPerfil')
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>

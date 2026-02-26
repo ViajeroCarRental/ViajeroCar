@@ -110,6 +110,15 @@ class ServiciosSeeder extends Seeder
                 'created_at'  => $now,
                 'updated_at'  => $now,
             ],
+            [
+                'nombre'      => 'Drop Off',
+                'descripcion' => 'Entrega en sucursal distinta.',
+                'tipo_cobro'  => 'por_evento',
+                'precio'      => 0.00,
+                'activo'      => true,
+                'created_at'  => $now,
+                'updated_at'  => $now,
+            ],
         ];
 
         // Inserta o actualiza por unique(nombre)
