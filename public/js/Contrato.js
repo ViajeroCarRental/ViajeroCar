@@ -171,9 +171,6 @@ function mostrarModalOferta(oferta) {
   modal.classList.add("show");
 }
 
-
-
-
 /* ============================================================
    ⭐ Aplicar upgrade
 ============================================================ */
@@ -219,6 +216,7 @@ async function aceptarUpgrade() {
 
     // 🔄 Recalcular totales
     await actualizarFechasYRecalcular();
+    await refrescarTotalReservado();
     await cargarResumenBasico();
     await cargarResumenBasico();
 
@@ -231,7 +229,6 @@ async function aceptarUpgrade() {
     alertify.error("Error aplicando upgrade.");
   }
 }
-
 
 
 document.getElementById("btnAceptarUpgrade")
@@ -524,7 +521,6 @@ async function actualizarFechasYRecalcular() {
     console.error("❌ Error recalculando:", err);
   }
 }
-
 
 async function guardarNuevaCategoriaEnDB(idCategoria) {
   try {
@@ -3495,8 +3491,13 @@ $("#go2")?.addEventListener("click", async () => {
   $("#go3")?.addEventListener("click", () => {
     guardarDelivery();   // ← AGREGA ESTA LÍNEA
     console.log("➡️ Paso 3");
+    cargarResumenBasico();
     showStep(3);
   });
+
+
+
+
   $("#go4")?.addEventListener("click", () => {
     console.log("➡️ Paso 4");
     // Verificación: no dejar pasar sin seguro activo
@@ -3528,6 +3529,8 @@ $("#go2")?.addEventListener("click", async () => {
   }
 
   showStep(5);
+
+  cargarClienteContrato();
 });
 
   $("#go6")?.addEventListener("click", () => {
@@ -3567,7 +3570,37 @@ if (ID_RESERVACION) {
   const guardado = localStorage.getItem(`contratoPasoActual_${ID_RESERVACION}`);
   pasoGuardado = guardado ? Number(guardado) : 1;
 }
-
 showStep(pasoGuardado);
+
+function cargarClienteContrato() {
+
+    const nombreInput = document.getElementById('nombre');
+    const apP = document.getElementById('apellido_paterno');
+    const apM = document.getElementById('apellido_materno');
+
+    if (!nombreInput) {
+        console.warn('Inputs de cliente no encontrados en Paso 5');
+        return;
+    }
+
+    fetch(window.clienteContratoUrl)
+        .then(res => res.json())
+        .then(data => {
+            if (!data) return;
+
+            // 🛑 opcional: no sobrescribir si ya hay texto
+            if (nombreInput.value.trim() !== '') return;
+
+            nombreInput.value = data.nombre_cliente ?? '';
+
+            if (data.apellidos_cliente) {
+                const partes = data.apellidos_cliente.split(' ');
+                apP.value = partes[0] ?? '';
+                apM.value = partes.slice(1).join(' ') ?? '';
+            }
+        })
+        .catch(err => console.error('Carga cliente error:', err));
+}
+
 });
 
