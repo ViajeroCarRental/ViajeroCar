@@ -4,6 +4,187 @@
   // ===== Helpers =====
   const qs = (s, r = document) => r.querySelector(s);
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
+    // ======================================================
+  // ⚙️ Config menor de edad (AJUSTA ESTE ID Y EDAD)
+  // ======================================================
+  const YOUNG_DRIVER_SERVICE_ID = '5'; // <-- REEMPLAZA 123 por el id_servicio real en BD
+  const YOUNG_DRIVER_MIN_AGE    = 25;    // Edad límite: menor a 25 años paga cargo
+
+  // ✅ Para no mostrar la alerta cada vez que se recalculan los addons
+  let youngDriverAlertShown = false;
+
+  // ======================================================
+  // 🔧 Helpers para addons (map <-> string "id:cant,id2:cant")
+  // ======================================================
+  function parseAddonsStringToMap(str) {
+    const map = new Map();
+    String(str || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .forEach(pair => {
+        const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
+        if (m) {
+          const id  = m[1];
+          const qty = Math.max(0, parseInt(m[2], 10) || 0);
+          if (qty > 0) map.set(id, qty);
+        } else {
+          // Soporte viejo: "15" → cantidad 1
+          const id = pair.replace(/\D/g, '');
+          if (id) map.set(id, 1);
+        }
+      });
+    return map;
+  }
+
+  function serializeAddonsMap(map) {
+    return Array.from(map.entries())
+      .filter(([, q]) => (q || 0) > 0)
+      .map(([id, q]) => `${id}:${q}`)
+      .join(',');
+  }
+
+  // ======================================================
+  // 🔧 Helpers para edad
+  // ======================================================
+  function computeAgeFromDob(dobStr, refDate) {
+    if (!dobStr) return null;
+    const m = String(dobStr).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+
+    const birth = new Date(+m[1], +m[2] - 1, +m[3]);
+    if (isNaN(birth.getTime())) return null;
+
+    const ref = (refDate instanceof Date && !isNaN(refDate)) ? refDate : new Date();
+
+    let age = ref.getFullYear() - birth.getFullYear();
+    const mm = ref.getMonth() - birth.getMonth();
+    if (mm < 0 || (mm === 0 && ref.getDate() < birth.getDate())) {
+      age--;
+    }
+
+    // para evitar locuras tipo 300 años o negativos
+    if (age < 0 || age > 120) return null;
+    return age;
+  }
+
+  function getPickupDateForAge() {
+    const pickupInput = qs("#start") || qs('input[name="pickup_date"]');
+    if (!pickupInput || !pickupInput.value) return new Date();
+
+    const s = String(pickupInput.value).trim();
+
+    // Soporta "dd-mm-YYYY"
+    let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+
+    // Soporta "YYYY-mm-dd"
+    m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? new Date() : d;
+  }
+
+  // ======================================================
+  // 👶 Lógica central: aplicar/quitar addon según edad
+  // ======================================================
+    function applyYoungDriverAddon() {
+    // input oculto donde se guardan los addons
+    const hidden =
+      qs('#addonsHidden') ||
+      qs('input[name="addons"]') ||
+      qs('input[name="addons_ids"]') ||
+      qs('input[name="addonsHidden"]');
+
+    const dobHidden = qs('#dob'); // hidden de fecha de nacimiento (YYYY-MM-DD)
+
+    if (!hidden || !dobHidden || !YOUNG_DRIVER_SERVICE_ID) return;
+
+    const dobStr  = String(dobHidden.value || '').trim();
+    const refDate = getPickupDateForAge();
+    const age     = computeAgeFromDob(dobStr, refDate);
+
+    // 🔹 Map ANTES de aplicar la regla (para saber si ya estaba agregado)
+    const map = parseAddonsStringToMap(hidden.value || '');
+    const hadBefore = map.has(String(YOUNG_DRIVER_SERVICE_ID));
+
+    if (age != null && age < YOUNG_DRIVER_MIN_AGE) {
+      // 👉 Menor de la edad límite: forzamos el addon con cantidad 1
+      map.set(String(YOUNG_DRIVER_SERVICE_ID), 1);
+
+      // =====================================================
+      // 🛎 Alerta solo la primera vez que se agrega el cargo
+      // =====================================================
+      if (!hadBefore && !youngDriverAlertShown && window.alertify) {
+        youngDriverAlertShown = true;
+
+        // Intentamos leer el precio desde el catálogo de addons
+        let montoPorDia = null;
+        try {
+          const script = document.getElementById('addonsCatalog');
+          if (script) {
+            const catalog = JSON.parse(script.textContent || '{}') || {};
+            const srv = catalog[String(YOUNG_DRIVER_SERVICE_ID)];
+            if (srv) {
+              const raw = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+              montoPorDia = raw;
+            }
+          }
+        } catch (_) {}
+
+        const montoStr = (montoPorDia != null)
+          ? Math.round(montoPorDia).toLocaleString('es-MX')
+          : 'X';
+
+        const msg =
+          "Detectamos que el conductor principal tiene menos de 25 años.\n\n" +
+          `Por política de aseguradora, se agregará automáticamente el servicio "Conductor menor de 25 años", ` +
+          `con un cargo adicional de ${montoStr} MXN por día de renta.\n\n` +
+          "Puedes ver este concepto en el desglose de Opciones de renta.";
+
+        // 👇 Confirm con OK / Cancelar (el cargo es obligatorio en ambos casos)
+        alertify.confirm(
+          "Conductor menor de 25 años",
+          msg,
+          function () {
+            // OK → no hacemos nada extra, el cargo ya está aplicado
+          },
+          function () {
+            // Cancelar → por política sigue siendo obligatorio;
+            // solo cerramos el diálogo.
+          }
+        );
+      }
+
+    } else {
+      // 👉 Mayor o sin fecha válida: quitamos el cargo automático
+      map.delete(String(YOUNG_DRIVER_SERVICE_ID));
+    }
+
+    const newValue = serializeAddonsMap(map);
+    hidden.value = newValue;
+
+    try {
+      hidden.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (_) {}
+
+    // Actualizar parámetro ?addons= en la URL para que todo el flujo lo vea
+    try {
+      const url = new URL(window.location.href);
+      if (newValue) {
+        url.searchParams.set('addons', newValue);
+      } else {
+        url.searchParams.delete('addons');
+      }
+      window.history.replaceState({}, document.title, url.toString());
+    } catch (_) {}
+
+    // Recalcular el resumen de Step 4 si estamos en ese paso
+    try {
+      initStep4AddonsSummary();
+    } catch (_) {}
+  }
 
   // Validacines
   function initSectionValidators() {
@@ -790,7 +971,7 @@ function initStep4AddonsSummary() {
       }
     }
 
-    function updateHidden(){
+        function updateHidden(){
       clampDay();
 
       const d = day.value;
@@ -798,12 +979,18 @@ function initStep4AddonsSummary() {
       const y = year.value;
 
       if (d && m && y){
-        hidden.value = `${y}-${m}-${d}`; // ✅ formato backend
+        hidden.value = `${y}-${m}-${d}`; // ✅ formato backend YYYY-MM-DD
       } else {
         hidden.value = '';
       }
 
       try{ hidden.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
+
+      // 👶 Cada vez que cambia la fecha de nacimiento, aplicamos la regla
+      // de "conductor menor de edad" y actualizamos totales
+      try {
+        applyYoungDriverAddon();
+      } catch (_) {}
     }
 
     // ✅ Si ya venía un valor (YYYY-MM-DD) del backend o rehidratado, lo re-partimos
@@ -958,14 +1145,35 @@ function initStep4AddonsSummary() {
       return isNaN(q) ? 0 : q;
     }
 
-    function buildFromUI() {
+        function buildFromUI() {
       const map = new Map();
+
+      // 1) Lo que el usuario selecciona manualmente en las cards
       cards.forEach(card => {
         const id = String(card.getAttribute('data-id') || '').trim();
         if (!id) return;
         const qty = readQty(card);
         if (qty > 0) map.set(id, qty);
       });
+
+      // 2) Regla automática de "conductor menor de edad"
+      try {
+        const dobHidden = qs('#dob');
+        if (dobHidden && dobHidden.value && YOUNG_DRIVER_SERVICE_ID) {
+          const age = computeAgeFromDob(dobHidden.value, getPickupDateForAge());
+          if (age != null && age < YOUNG_DRIVER_MIN_AGE) {
+            map.set(String(YOUNG_DRIVER_SERVICE_ID), 1);
+          } else {
+            map.delete(String(YOUNG_DRIVER_SERVICE_ID));
+          }
+        } else {
+          // Si no hay fecha de nacimiento o no está configurado el ID, quitamos por seguridad
+          map.delete(String(YOUNG_DRIVER_SERVICE_ID));
+        }
+      } catch (_) {
+        // Si algo falla, no reventamos la página, solo seguimos con los addons manuales
+      }
+
       return map;
     }
 
@@ -1260,7 +1468,7 @@ function initStep4AddonsSummary() {
     });
   }
 
-      document.addEventListener("DOMContentLoaded", () => {
+            document.addEventListener("DOMContentLoaded", () => {
     forceStep1WhenOnlyStepParam();
 
     // ✅ Persistencia
@@ -1284,6 +1492,9 @@ function initStep4AddonsSummary() {
 
     // ✅ DOB DD/MM/YYYY (Step 4)
     initDobSelects();
+
+    // 👶 Si ya hay fecha de nacimiento cargada, aplicamos la regla de una vez
+    applyYoungDriverAddon();
 
     refreshFloatStates();
     setTimeout(refreshFloatStates, 80);
