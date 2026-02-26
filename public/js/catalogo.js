@@ -1,15 +1,11 @@
 (function () {
   "use strict";
-<<<<<<< Updated upstream
 
   // --- 1. Utilidades Globales ---
   const qs = (s, r = document) => r.querySelector(s);
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
-=======
-  const qs = (s) => document.querySelector(s);
-  const qsa = (s) => Array.from(document.querySelectorAll(s));
->>>>>>> Stashed changes
 
+  // --- 2. Herramientas de Fecha (Para los inputs de entrega/devolución) ---
   function todayISO() {
     const t = new Date();
     const y = t.getFullYear();
@@ -32,7 +28,6 @@
     return `${y}-${m}-${d}`;
   }
 
-<<<<<<< Updated upstream
   // --- Helpers UI ---
   function smoothScrollIntoView(el) {
     if (!el) return;
@@ -69,9 +64,6 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     // ===== Interfaz Básica (Topbar, Menú y Footer) =====
-=======
-  document.addEventListener("DOMContentLoaded", () => {
->>>>>>> Stashed changes
     const topbar = qs(".topbar");
     const toggleTopbar = () => {
       if (!topbar) return;
@@ -98,9 +90,8 @@
     const yearEl = qs("#year");
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-<<<<<<< Updated upstream
     // ==========================================================
-    // ✅ ACORDEÓN FILTRO (DESKTOP SIEMPRE ABIERTO / MÓVIL NORMAL)
+    // ✅ ACORDEÓN FILTRO (VANILLA) + CERRAR AL CLICK FUERA + AL SELECCIONAR
     // ==========================================================
     let closeFiltroAccordion = null;
 
@@ -113,9 +104,15 @@
       const labelSpan = btn.querySelector(".acc-left span");
       const icon = btn.querySelector(".acc-icon");
 
-      // ✅ Breakpoint: móvil
-      const mqMobile = window.matchMedia("(max-width: 768px)");
-      const isMobile = () => mqMobile.matches;
+      // Estado inicial cerrado
+      btn.classList.add("collapsed");
+      btn.setAttribute("aria-expanded", "false");
+      if (labelSpan) labelSpan.textContent = "Filtrar categorías";
+      if (icon) icon.style.transform = "rotate(0deg)";
+
+      panel.classList.remove("show");
+      panel.classList.remove("is-open");
+      panel.style.maxHeight = "0px";
 
       const isOpenNow = () => btn.getAttribute("aria-expanded") === "true";
 
@@ -129,97 +126,78 @@
         if (icon) icon.style.transform = open ? "rotate(180deg)" : "rotate(0deg)";
 
         setPanelOpen(panel, open);
+        if (open) smoothScrollIntoView(btn);
       };
 
-      // Estado inicial (lo ajusta applyMode)
-      btn.classList.add("collapsed");
-      btn.setAttribute("aria-expanded", "false");
-      if (labelSpan) labelSpan.textContent = "Filtrar categorías";
-      if (icon) icon.style.transform = "rotate(0deg)";
-      panel.classList.remove("show");
-      panel.classList.remove("is-open");
-      panel.style.maxHeight = "0px";
-
-      // --- handlers (referencias para poder removerlos) ---
-      const onBtnClick = (e) => {
-        // En móvil: toggle normal
-        e.preventDefault();
-        setState(!isOpenNow());
-        if (isOpenNow()) smoothScrollIntoView(btn);
-      };
-
-      const onDocClick = (e) => {
-        // En móvil: cerrar al click fuera
-        if (!isOpenNow()) return;
-        if (!wrapper.contains(e.target)) setState(false);
-      };
-
-      const onKeyDown = (e) => {
-        // En móvil: cerrar con ESC
-        if (e.key === "Escape" && isOpenNow()) setState(false);
-      };
-
-      const onResizeOpenHeight = () => {
-        if (isOpenNow()) panel.style.maxHeight = panel.scrollHeight + "px";
-      };
-
-      // ✅ Expone cerrar (pero lo usaremos SOLO en móvil)
       closeFiltroAccordion = () => {
         if (isOpenNow()) setState(false);
       };
 
-      // ✅ Activa / desactiva comportamiento según modo
-      const applyMode = () => {
-        // limpia listeners siempre
-        btn.removeEventListener("click", onBtnClick);
-        document.removeEventListener("click", onDocClick);
-        document.removeEventListener("keydown", onKeyDown);
-        window.removeEventListener("resize", onResizeOpenHeight);
+      // Toggle normal
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        setState(!isOpenNow());
+      });
 
-        if (isMobile()) {
-          // ===== MÓVIL: como lo tenías =====
-          setState(false); // cerrado por defecto
-          btn.addEventListener("click", onBtnClick);
-          document.addEventListener("click", onDocClick);
-          document.addEventListener("keydown", onKeyDown);
-          window.addEventListener("resize", onResizeOpenHeight);
-        } else {
-          // ===== DESKTOP/LAPTOP: SIEMPRE ABIERTO =====
-          setState(true); // abierto siempre
-          // No agregamos listeners de cierre/toggle
-          // (queda fijo en el hero y no se cierra)
-          window.addEventListener("resize", onResizeOpenHeight);
-        }
+      // Cerrar al hacer click fuera
+      document.addEventListener("click", (e) => {
+        if (!isOpenNow()) return;
+        if (!wrapper.contains(e.target)) setState(false);
+      });
+
+      // Cerrar con tecla ESC
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && isOpenNow()) setState(false);
+      });
+
+      // Recalcular altura si está abierto al redimensionar
+      window.addEventListener("resize", () => {
+        if (isOpenNow()) panel.style.maxHeight = panel.scrollHeight + "px";
+      });
+    })();
+
+    // ==========================================================
+    // ✅ STICKY DENTRO DEL HERO (solo desktop) — móvil normal
+    // ==========================================================
+    (function stickyInsideHeroDesktopOnly() {
+      const hero = qs(".hero");
+      const heroInner = qs(".hero-inner");
+      const filterCard = qs(".hero-filter-card");
+      if (!hero || !heroInner || !filterCard) return;
+
+      const mq = window.matchMedia("(max-width: 768px)");
+
+      const apply = () => {
+        // reset
+        filterCard.style.position = "";
+        filterCard.style.top = "";
+        filterCard.style.zIndex = "";
+
+        if (mq.matches) return; // móvil: normal
+
+        const topbar = qs(".topbar");
+        const offset = (topbar ? topbar.offsetHeight : 0) + 22;
+
+        filterCard.style.position = "sticky";
+        filterCard.style.top = offset + "px";
+        filterCard.style.zIndex = "5";
       };
 
-      // Inicializa modo
-      applyMode();
-
-      // Reaplicar al cambiar tamaño
-      if (mqMobile.addEventListener) {
-        mqMobile.addEventListener("change", applyMode);
-      } else {
-        mqMobile.addListener(applyMode); // fallback
-      }
+      apply();
+      window.addEventListener("resize", apply);
+      if (mq.addEventListener) mq.addEventListener("change", apply);
+      else mq.addListener(apply);
     })();
 
     // ===== Filtro Visual de Autos (Categorías) =====
     const botonesFiltro = qsa(".filter-card");
-=======
-    const botonesFiltro = qsa('.filter-card');
->>>>>>> Stashed changes
     const autos = qsa(".catalog-group");
-
-    // breakpoint móvil (para cerrar solo ahí)
-    const mqMobileFilter = window.matchMedia("(max-width: 768px)");
 
     botonesFiltro.forEach((btn) => {
       btn.addEventListener("click", () => {
-        // activar estado visual
         botonesFiltro.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
 
-        // aplicar filtro
         const filtro = btn.dataset.filter;
 
         autos.forEach((auto) => {
@@ -230,13 +208,15 @@
           }
         });
 
-        // ✅ SOLO en móvil: cerrar acordeón al seleccionar opción
-        if (mqMobileFilter.matches && typeof closeFiltroAccordion === "function") {
+        // ✅ cerrar acordeón al seleccionar opción (móvil)
+        // (si luego quieres que solo cierre en móvil, lo ajustamos)
+        if (typeof closeFiltroAccordion === "function") {
           closeFiltroAccordion();
         }
       });
     });
 
+    // ===== Calendarios y Fechas (Flatpickr) =====
     const startInput = qs("#date-start");
     const endInput = qs("#date-end");
 
@@ -268,6 +248,7 @@
       }
     }
 
+    // ===== Botón Filtrar (Envío a Laravel) =====
     const btnFilter = qs("#btn-filter");
     if (btnFilter) {
       btnFilter.addEventListener("click", () => {
