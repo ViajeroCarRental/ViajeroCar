@@ -174,6 +174,55 @@ $reservacion->total        = $total;
                 'updated_at'      => now(),
             ]);
 
+            $serviciosPactados = DB::table('reservacion_servicio')
+                ->where('id_reservacion', $reservacion->id_reservacion)
+                ->whereIn('id_servicio', [1, 11]) 
+                ->get();
+
+            foreach ($serviciosPactados as $sp) {
+                $idConcepto = null;
+                $nombreConcepto = '';
+                $montoTotal = $sp->precio_unitario * $sp->cantidad;
+                $detalle = [];
+
+                if ($sp->id_servicio == 1) {
+                    $idConcepto = 5;
+                    $nombreConcepto = 'Gasolina Prepago';
+                    $detalle = [
+                        'km' => null,
+                        'monto' => $montoTotal,
+                        'litros' => $sp->cantidad,
+                        'destino' => null,
+                        'precio_litro' => $sp->precio_unitario
+                    ];
+                } elseif ($sp->id_servicio == 11) {
+                    $idConcepto = 6;
+                    $nombreConcepto = 'Servicio de Drop Off';
+                    $detalle = [
+                        'km' => (string)($reservacion->dropoff_km ?? '0'),
+                        'monto' => $montoTotal,
+                        'litros' => null,
+                        'destino' => ($reservacion->dropoff_ubicacion == 0) 
+                                    ? ($reservacion->dropoff_direccion ?? 'Dirección manual') 
+                                    : 'Ubicación predefinida',
+                        'precio_litro' => $reservacion->delivery_precio_km ?? 0
+                    ];
+                }
+                
+                if ($idConcepto) {
+                    DB::table('cargo_adicional')->insert([
+                        'id_contrato' => $idContrato,
+                        'id_concepto' => $idConcepto,
+                        'concepto'    => $nombreConcepto,
+                        'monto'       => $montoTotal,
+                        'moneda'      => 'MXN',
+                        'detalle'     => json_encode($detalle),
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
+                    ]);
+                }
+            }
+
             DB::table('contrato_evento')->insert([
                 'id_contrato'  => $idContrato,
                 'evento'       => 'Contrato creado automáticamente',

@@ -11,7 +11,7 @@ return new class extends Migration {
             $table->bigIncrements('id_servicio');
             $table->string('nombre', 120)->unique();
             $table->string('descripcion', 255)->nullable();
-            $table->enum('tipo_cobro', ['por_dia', 'por_evento'])->default('por_dia'); //Diferencia de entre por dia y por evento.
+            $table->enum('tipo_cobro', ['por_dia', 'por_evento'])->default('por_dia');
             $table->decimal('precio', 10, 2)->default(0.00);
             $table->boolean('activo')->default(true);
             $table->timestamp('created_at')->nullable();

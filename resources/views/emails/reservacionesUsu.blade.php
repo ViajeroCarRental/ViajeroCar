@@ -438,10 +438,51 @@
         da <a href="{{ route('visor.show', ['id' => $reservacion->id_reservacion]) }}">click aquí</a> para más información.
       </p>
 
-      <p class="lead" style="margin-top:0;">
+      <!-- <p class="lead" style="margin-top:0;">
         La siguiente información se calculó con los datos proporcionados en el proceso de reservación,
         cualquier modificación relacionada con lo que esta reservación describe podría resultar en una variación contra el precio acordado.
-      </p>
+      </p> -->
+
+    <!-- INFO PRINCIPAL -->
+    <div class="info-box">
+      <p><strong>Código de reserva:</strong> {{ $reservacion->codigo }}</p>
+      <p><strong>Categoría:</strong> {{ $reservacion->vehiculo_categoria ?? 'No especificada' }}</p>
+
+      <p><strong>Cliente:</strong></p>
+      <p>Nombre: {{ $reservacion->nombre_cliente ?? 'No especificado' }}</p>
+      <p>Correo: {{ $reservacion->email_cliente ?? '-' }}</p>
+      <p>Teléfono: {{ $reservacion->telefono_cliente ?? '-' }}</p>
+      <p>Vuelo: {{ $reservacion->no_vuelo ?? '-' }}</p>
+
+      <br>
+
+      <p><strong>Fechas:</strong></p>
+      <p>Entrega: {{ $reservacion->fecha_inicio }} {{ $reservacion->hora_retiro }}</p>
+      <p>Devolución: {{ $reservacion->fecha_fin }} {{ $reservacion->hora_entrega }}</p>
+
+      <br>
+
+      <p><strong>Montos:</strong></p>
+      <p>Subtotal: ${{ number_format($reservacion->subtotal, 2) }} MXN</p>
+      <p>Impuestos: ${{ number_format($reservacion->impuestos, 2) }} MXN</p>
+
+      @if($tipo === 'linea')
+        <p><strong>Total pagado:</strong> ${{ number_format($reservacion->total, 2) }} MXN</p>
+        <p><strong>Método de pago:</strong> PayPal</p>
+        <p><strong>Transacción:</strong> {{ $reservacion->paypal_order_id ?? 'No disponible' }}</p>
+      @else
+        <p><strong>Total a pagar en mostrador:</strong> ${{ number_format($reservacion->total, 2) }} MXN</p>
+      @endif
+
+      <br>
+
+      <p><strong>Tarifa base catálogo:</strong> ${{ number_format($reservacion->tarifa_base ?? 0, 2) }} MXN</p>
+      <p><strong>Tarifa ajustada:</strong> {{ (isset($reservacion->tarifa_base) && (float)$reservacion->tarifa_base != (float)$reservacion->subtotal) ? 'Sí' : 'No' }}</p>
+      <p><strong>Estado:</strong> {{ $tipo === 'linea' ? 'Pagado' : 'Pendiente de pago en mostrador' }}</p>
+
+      <br>
+
+      <p><strong>Fecha de registro:</strong> {{ $reservacion->created_at }}</p>
     </div>
 
     <!-- RESUMEN NUEVO -->
