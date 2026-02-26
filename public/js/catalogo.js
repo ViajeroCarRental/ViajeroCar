@@ -91,9 +91,9 @@
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
     // ==========================================================
-    // ✅ ACORDEÓN FILTRO (VANILLA) + CERRAR AL CLICK FUERA + AL SELECCIONAR
+    // ✅ ACORDEÓN FILTRO (DESKTOP SIEMPRE ABIERTO / MÓVIL NORMAL)
     // ==========================================================
-    let closeFiltroAccordion = null; // <- función global local para cerrar desde otros bloques
+    let closeFiltroAccordion = null;
 
     (function initFiltroAccordionVanilla() {
       const wrapper = qs(".filter-accordion");
@@ -104,15 +104,9 @@
       const labelSpan = btn.querySelector(".acc-left span");
       const icon = btn.querySelector(".acc-icon");
 
-      // Estado inicial cerrado
-      btn.classList.add("collapsed");
-      btn.setAttribute("aria-expanded", "false");
-      if (labelSpan) labelSpan.textContent = "Filtrar categorías";
-      if (icon) icon.style.transform = "rotate(0deg)";
-
-      panel.classList.remove("show");
-      panel.classList.remove("is-open");
-      panel.style.maxHeight = "0px";
+      // ✅ Breakpoint: móvil
+      const mqMobile = window.matchMedia("(max-width: 768px)");
+      const isMobile = () => mqMobile.matches;
 
       const isOpenNow = () => btn.getAttribute("aria-expanded") === "true";
 
@@ -126,40 +120,86 @@
         if (icon) icon.style.transform = open ? "rotate(180deg)" : "rotate(0deg)";
 
         setPanelOpen(panel, open);
-        if (open) smoothScrollIntoView(btn);
       };
 
-      // ✅ expone un "cerrar" para usarlo en el filtro
+      // Estado inicial (lo ajusta applyMode)
+      btn.classList.add("collapsed");
+      btn.setAttribute("aria-expanded", "false");
+      if (labelSpan) labelSpan.textContent = "Filtrar categorías";
+      if (icon) icon.style.transform = "rotate(0deg)";
+      panel.classList.remove("show");
+      panel.classList.remove("is-open");
+      panel.style.maxHeight = "0px";
+
+      // --- handlers (referencias para poder removerlos) ---
+      const onBtnClick = (e) => {
+        // En móvil: toggle normal
+        e.preventDefault();
+        setState(!isOpenNow());
+        if (isOpenNow()) smoothScrollIntoView(btn);
+      };
+
+      const onDocClick = (e) => {
+        // En móvil: cerrar al click fuera
+        if (!isOpenNow()) return;
+        if (!wrapper.contains(e.target)) setState(false);
+      };
+
+      const onKeyDown = (e) => {
+        // En móvil: cerrar con ESC
+        if (e.key === "Escape" && isOpenNow()) setState(false);
+      };
+
+      const onResizeOpenHeight = () => {
+        if (isOpenNow()) panel.style.maxHeight = panel.scrollHeight + "px";
+      };
+
+      // ✅ Expone cerrar (pero lo usaremos SOLO en móvil)
       closeFiltroAccordion = () => {
         if (isOpenNow()) setState(false);
       };
 
-      // Toggle normal
-      btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        setState(!isOpenNow());
-      });
+      // ✅ Activa / desactiva comportamiento según modo
+      const applyMode = () => {
+        // limpia listeners siempre
+        btn.removeEventListener("click", onBtnClick);
+        document.removeEventListener("click", onDocClick);
+        document.removeEventListener("keydown", onKeyDown);
+        window.removeEventListener("resize", onResizeOpenHeight);
 
-      // ✅ Cerrar al hacer click fuera
-      document.addEventListener("click", (e) => {
-        if (!isOpenNow()) return;
-        if (!wrapper.contains(e.target)) setState(false);
-      });
+        if (isMobile()) {
+          // ===== MÓVIL: como lo tenías =====
+          setState(false); // cerrado por defecto
+          btn.addEventListener("click", onBtnClick);
+          document.addEventListener("click", onDocClick);
+          document.addEventListener("keydown", onKeyDown);
+          window.addEventListener("resize", onResizeOpenHeight);
+        } else {
+          // ===== DESKTOP/LAPTOP: SIEMPRE ABIERTO =====
+          setState(true); // abierto siempre
+          // No agregamos listeners de cierre/toggle
+          // (queda fijo en el hero y no se cierra)
+          window.addEventListener("resize", onResizeOpenHeight);
+        }
+      };
 
-      // ✅ Cerrar con tecla ESC
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && isOpenNow()) setState(false);
-      });
+      // Inicializa modo
+      applyMode();
 
-      // Recalcular altura si está abierto al redimensionar
-      window.addEventListener("resize", () => {
-        if (isOpenNow()) panel.style.maxHeight = panel.scrollHeight + "px";
-      });
+      // Reaplicar al cambiar tamaño
+      if (mqMobile.addEventListener) {
+        mqMobile.addEventListener("change", applyMode);
+      } else {
+        mqMobile.addListener(applyMode); // fallback
+      }
     })();
 
     // ===== Filtro Visual de Autos (Categorías) =====
     const botonesFiltro = qsa(".filter-card");
     const autos = qsa(".catalog-group");
+
+    // breakpoint móvil (para cerrar solo ahí)
+    const mqMobileFilter = window.matchMedia("(max-width: 768px)");
 
     botonesFiltro.forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -178,8 +218,8 @@
           }
         });
 
-        // ✅ cerrar acordeón al seleccionar opción
-        if (typeof closeFiltroAccordion === "function") {
+        // ✅ SOLO en móvil: cerrar acordeón al seleccionar opción
+        if (mqMobileFilter.matches && typeof closeFiltroAccordion === "function") {
           closeFiltroAccordion();
         }
       });

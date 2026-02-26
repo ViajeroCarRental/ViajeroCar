@@ -113,7 +113,7 @@
                   <div class="filter-card" data-filter="Sedan">
                     <img src="{{ asset('img/camry.png') }}">
                     <div class="filter-info">
-                      <span>Sedan</span>
+                      <span>Autos</span>
                       <small class="count-badge">{{ $conteoTipos['Sedan'] }} unidades</small>
                     </div>
                   </div>
@@ -121,7 +121,7 @@
                   <div class="filter-card" data-filter="SUV">
                     <img src="{{ asset('img/seltos.png') }}">
                     <div class="filter-info">
-                      <span>SUV</span>
+                      <span>SUVs</span>
                       <small class="count-badge">{{ $conteoTipos['SUV'] }} unidades</small>
                     </div>
                   </div>
@@ -129,15 +129,15 @@
                   <div class="filter-card" data-filter="Pickup">
                     <img src="{{ asset('img/Frontier.png') }}">
                     <div class="filter-info">
-                      <span>Pick up</span>
+                      <span>Pick Ups</span>
                       <small class="count-badge">{{ $conteoTipos['Pickup'] }} unidades</small>
                     </div>
                   </div>
 
                   <div class="filter-card" data-filter="Van">
-                    <img src="{{ asset('img/Hiace.png') }}">
+                    <img src="{{ asset('img/Odyssey.png') }}">
                     <div class="filter-info">
-                      <span>Van</span>
+                      <span>Vans</span>
                       <small class="count-badge">{{ $conteoTipos['Van'] }} unidades</small>
                     </div>
                   </div>
@@ -194,8 +194,10 @@
             <li><i class="fa-solid fa-briefcase"></i> {{ $cap['big'] ?? 1 }}</li>
 
             {{-- ✅ NUEVO: Transmisión Automática (A) --}}
-            <li title="Transmisión automática">
-              <span class="spec-letter">TA</span>
+            <li title="Transmisión">
+              <span class="spec-letter">
+                T | {{ $codigo === 'L' ? 'Estándar' : 'Automática' }}
+              </span>
             </li>
 
             {{-- ✅ NUEVO: Aire acondicionado --}}
