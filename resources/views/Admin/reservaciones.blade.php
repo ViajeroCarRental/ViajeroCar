@@ -276,6 +276,7 @@
       {{-- ======================
            4) SERVICIOS (SWITCHES)
       ======================= --}}
+
       @php
         $deliverySafe = $delivery ?? null;
         $ubicacionesSafe = $ubicaciones ?? [];
@@ -284,6 +285,7 @@
       @endphp
 
       <section class="stack-card">
+
         <div class="stack-head">
           <div class="stack-title">🧰 Servicios</div>
           <div class="stack-sub">Servicios adicionales.</div>
@@ -293,159 +295,145 @@
 
           <div class="svc-grid">
 
-            {{-- 🚩 DROP OFF (SOLO SWITCH, NO TOTAL VISIBLE) --}}
-            <div class="svc-card">
+            {{-- 🚩 DROP OFF --}}
+            <div class="svc-card svc-card--accent dropoff-wrapper">
               <div class="svc-top">
                 <div class="svc-ico">🚩</div>
                 <div class="svc-meta">
                   <div class="svc-name">Drop Off</div>
-                  <div class="svc-desc">Entrega en sucursal distinta o en estado distinto.</div>
+                  <div class="svc-desc">Entrega en sucursal distinta.</div>
                 </div>
               </div>
 
               <div class="svc-bottom">
                 <div class="svc-hint">Activar</div>
-
-                <label class="switch">
-                  <input type="checkbox" id="dropoffToggle" data-precio="250">
+                <label class="switch switch-soft">
+                  <input type="checkbox" id="dropoffToggle">
                   <span class="slider"></span>
                 </label>
               </div>
 
-              {{-- ✅ SOLO SE MUESTRA SI EL SWITCH ESTÁ ACTIVO (lo controla el JS) --}}
-              <div class="svc-fields" id="dropoffFields" style="display:none;">
+              <div class="svc-fields" id="dropoffFields" style="display: none;">
+                <div class="svc-field">
+                  <label class="svc-label">Ubicación de devolución</label>
+                  <select id="dropUbicacion" class="input">
+                    <option value="">Seleccione...</option>
+                    @foreach($ubicaciones as $u)
+                      <option value="{{ $u->id_ubicacion }}" data-km="{{ $u->km ?? 0 }}">
+                        {{ $u->estado }} - {{ $u->destino }} ({{ $u->km ?? 0 }} km)
+                      </option>
+                    @endforeach
+                    <option value="0">Dirección personalizada</option>
+                  </select>
+                </div>
+
+                <div class="svc-field" id="dropGroupDireccion" style="display: none;">
+                  <label class="svc-label">Dirección</label>
+                  <input type="text" id="dropDireccion" class="input" placeholder="Calle, No, Colonia...">
+                </div>
+
+                <div class="svc-field" id="dropGroupKm" style="display: none;">
+                  <label class="svc-label">Kilómetros</label>
+                  <input type="number" id="dropKm" class="input" placeholder="0">
+                </div>
+
                 <div class="svc-total">
                   <span>Total Drop Off</span>
-                  <b id="dropoffTotal">$0.00 MXN</b>
+                  <b id="dropTotal">$0.00 MXN</b>
                 </div>
-              </div>
 
+              </div>
               <input type="hidden" id="dropoffTotalHidden" value="0">
             </div>
 
             {{-- 🚚 DELIVERY --}}
             <div class="svc-card svc-card--accent delivery-wrapper"
-                data-id-reservacion="{{ $idReservacionSafe ?? '' }}"
-                data-delivery-activo="{{ $deliverySafe->activo ?? 0 }}"
-                data-delivery-km="{{ $deliverySafe->kms ?? '' }}"
-                data-delivery-direccion="{{ $deliverySafe->direccion ?? '' }}"
-                data-delivery-total="{{ $deliverySafe->total ?? 0 }}"
-                data-delivery-ubicacion="{{ isset($deliverySafe->id_ubicacion) ? $deliverySafe->id_ubicacion : '' }}"
-                data-costo-km="{{ $costoKmCategoriaSafe }}">
-
+              data-delivery-total="{{ $deliverySafe->total ?? 0 }}"
+              data-costo-km="{{ $costoKmCategoriaSafe }}">
+            
               <div class="svc-top">
                 <div class="svc-ico">🚚</div>
                 <div class="svc-meta">
                   <div class="svc-name">Delivery</div>
-                  <div class="svc-desc">Entrega a domicilio o ubicación especial.</div>
+                  <div class="svc-desc">Entrega a domicilio.</div>
                 </div>
               </div>
 
               <div class="svc-bottom">
                 <div class="svc-hint">Activar</div>
-
                 <label class="switch switch-soft">
-                  <input type="checkbox"
-                        id="deliveryToggle"
-                        name="delivery_activo"
-                        {{ !empty($deliverySafe->activo) ? 'checked' : '' }}>
+                  <input type="checkbox" id="deliveryToggle" {{ !empty($deliverySafe->activo) ? 'checked' : '' }}>
                   <span class="slider"></span>
                 </label>
               </div>
 
-              <div class="svc-fields"
-                  id="deliveryFields"
-                  style="display: {{ !empty($deliverySafe->activo) ? 'block' : 'none' }};">
-
+              <div class="svc-fields" id="deliveryFields" style="display: {{ !empty($deliverySafe->activo) ? 'block' : 'none' }};">
+                
                 <div class="svc-field">
                   <label class="svc-label">Seleccionar ubicación</label>
-                  <select id="deliveryUbicacion" name="delivery_ubicacion" class="input">
+                  <select id="deliveryUbicacion" class="input">
                     <option value="">Seleccione...</option>
-
                     @foreach($ubicacionesSafe as $u)
-                      <option value="{{ $u->id_ubicacion }}"
-                              data-km="{{ $u->km }}"
+                      <option value="{{ $u->id_ubicacion }}" data-km="{{ $u->km ?? 0 }}"
                               {{ (!empty($deliverySafe->id_ubicacion) && $deliverySafe->id_ubicacion == $u->id_ubicacion) ? 'selected' : '' }}>
-                        {{ $u->estado }} - {{ $u->destino }} ({{ $u->km }} km)
+                        {{ $u->estado }} - {{ $u->destino }} ({{ $u->km ?? 0 }} km)
                       </option>
                     @endforeach
-
-                    <option value="0"
-                              {{ (isset($deliverySafe->id_ubicacion) && (int)$deliverySafe->id_ubicacion === 0) ? 'selected' : '' }}>
-                      Dirección personalizada (manual)
-                    </option>
+                    <option value="0" {{ (isset($deliverySafe->id_ubicacion) && (int)$deliverySafe->id_ubicacion === 0) ? 'selected' : '' }}>Dirección personalizada</option>
                   </select>
                 </div>
 
-                <div class="svc-field"
-                    id="groupDireccion"
-                    style="display: {{ (isset($deliverySafe->id_ubicacion) && $deliverySafe->id_ubicacion == 0) ? 'block' : 'none' }};">
-                  <label class="svc-label">Dirección personalizada (opcional)</label>
-                  <input type="text"
-                        id="deliveryDireccion"
-                        name="delivery_direccion"
-                        class="input"
-                        placeholder="Ej. Calle Robles 123, Centro"
-                        value="{{ $deliverySafe->direccion ?? '' }}">
+                <div class="svc-field" id="groupDireccion" style="display: none;">
+                  <label class="svc-label">Dirección</label>
+                  <input type="text" id="deliveryDireccion" class="input" placeholder="Calle, No, Colonia..." value="{{ $deliverySafe->direccion ?? '' }}">
                 </div>
 
-                <div class="svc-field"
-                    id="groupKm"
-                    style="display: {{ (isset($deliverySafe->id_ubicacion) && $deliverySafe->id_ubicacion == 0) ? 'block' : 'none' }};">
-                  <label class="svc-label">Kilómetros personalizados</label>
-                  <input type="number"
-                        min="0"
-                        id="deliveryKm"
-                        name="delivery_km"
-                        class="input"
-                        placeholder="Ej. 15"
-                        value="{{ $deliverySafe->kms ?? '' }}">
+                <div class="svc-field" id="groupKm" style="display: none;">
+                  <label class="svc-label">Kilómetros</label>
+                  <input type="number" id="deliveryKm" class="input" placeholder="0" value="{{ $deliverySafe->km ?? 0 }}">
                 </div>
 
                 <div class="svc-total">
                   <span>Total Delivery</span>
                   <b id="deliveryTotal">${{ number_format($deliverySafe->total ?? 0, 2) }} MXN</b>
                 </div>
-
               </div>
 
-              <input type="hidden" id="deliveryPrecioKm" value="{{ $costoKmCategoriaSafe }}">
               <input type="hidden" id="deliveryTotalHidden" value="{{ $deliverySafe->total ?? 0 }}">
             </div>
 
-            {{-- ⛽ GASOLINA PREPAGO (SOLO SWITCH, NO TOTAL VISIBLE) --}}
-            <div class="svc-card">
+            {{-- ⛽ GASOLINA PREPAGO --}}
+            <div class="svc-card svc-card--accent">
               <div class="svc-top">
                 <div class="svc-ico">⛽</div>
                 <div class="svc-meta">
                   <div class="svc-name">Gasolina prepago</div>
-                  <div class="svc-desc">Se liquida gasolina por adelantado.</div>
+                  <div class="svc-desc">Tanque completo preferencial.</div>
                 </div>
               </div>
 
               <div class="svc-bottom">
                 <div class="svc-hint">Activar</div>
-
                 <label class="switch switch-soft">
-                  <input type="checkbox" id="gasolinaToggle" data-precio="600">
+                  <input type="checkbox" id="gasolinaToggle" data-litros="0" data-costo-litro="20">
                   <span class="slider"></span>
                 </label>
               </div>
 
-              {{-- ✅ SOLO SE MUESTRA SI EL SWITCH ESTÁ ACTIVO (lo controla el JS) --}}
               <div class="svc-fields" id="gasolinaFields" style="display:none;">
                 <div class="svc-total">
-                  <span>Total Gasolina</span>
+                  <span>Total Gasolina (<span id="litrosLabel">0</span>L)</span>
                   <b id="gasolinaTotal">$0.00 MXN</b>
                 </div>
               </div>
-
-              <input type="hidden" id="gasolinaTotalHidden" value="0">
+              <input type="hidden" name="gasolina_prepago_valor" id="gasolinaTotalHidden" value="0">
             </div>
 
           </div>
-
+          <input type="hidden" id="deliveryPrecioKm" value="0">
+          <input type="hidden" name="svc_gasolina" id="svc_gasolina" value="0">
         </div>
+        
       </section>
 
       {{-- ======================
@@ -659,12 +647,13 @@
           @endphp
 
           <article class="card-pick cat-wide"
-              data-id="{{ $cat->id_categoria }}"
-              data-nombre="{{ $cat->nombre }}"
-              data-desc="{{ $cat->descripcion }}"
-              data-precio="{{ $cat->precio_dia }}"
-              data-img="{{ $img }}"
-              data-litros="{{ $cat->litros_gasolina ?? 0 }}"
+            data-id="{{ $cat->id_categoria }}"
+            data-nombre="{{ $cat->nombre }}"
+            data-desc="{{ $cat->descripcion }}"
+            data-precio="{{ $cat->precio_dia }}"
+            data-precio-km="{{ $cat->costo_km ?? 0 }}"
+            data-img="{{ $img }}"
+            data-litros="{{ $cat->litros_maximos ?? 0 }}"
           >
             <div class="cp-img">
               <img src="{{ $img }}" alt="{{ $cat->nombre }}">

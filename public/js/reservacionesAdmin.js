@@ -80,6 +80,15 @@
       gasolina: false
     },
 
+    // DROPOFF
+    dropoff: {
+      total: 0,
+      km: 0,
+      ubicacion: "",
+      direccion: "",
+      activo: false
+    },
+
     // ✅ DELIVERY (estado interno)
     delivery: {
       total: 0,
@@ -87,7 +96,15 @@
       ubicacion: "",
       direccion: "",
       activo: false
-    }
+    },
+
+    // GASOLINA
+    gasolina: {
+      total: 0,
+      litros: 0,
+      precioLitro: 20,
+      activo: false
+    }
   };
 
   /* =========================
@@ -139,6 +156,30 @@
     ensureHidden("delivery_km", "delivery_km");
     ensureHidden("delivery_direccion", "delivery_direccion");
     ensureHidden("delivery_ubicacion", "delivery_ubicacion");
+  }
+
+  function ensureDropoffHidden() {
+    ensureHidden("dropoff_activo", "dropoff_activo");
+    ensureHidden("dropoff_total", "dropoff_total");
+    ensureHidden("dropoff_km", "dropoff_km");
+    ensureHidden("dropoff_direccion", "dropoff_direccion");
+    ensureHidden("dropoff_ubicacion", "dropoff_ubicacion");
+  }
+
+  function syncDropoffHidden() {
+    ensureDropoffHidden();
+
+    const act = qs("#dropoff_activo");
+    const tot = qs("#dropoff_total");
+    const kms = qs("#dropoff_km");
+    const dir = qs("#dropoff_direccion");
+    const ubi = qs("#dropoff_ubicacion");
+
+    if (act) act.value = state.servicios.dropoff ? "1" : "0";
+    if (tot) tot.value = (state.dropoff.total || 0).toFixed(2);
+    if (kms) kms.value = (state.dropoff.km || 0).toString();
+    if (dir) dir.value = state.dropoff.direccion || "";
+    if (ubi) ubi.value = state.dropoff.ubicacion || "";
   }
 
   function syncProteccionHidden() {
@@ -269,45 +310,39 @@
   function computeDelivery(els) {
     if (!els) return 0;
 
-    const precioKm = getDeliveryPrecioKm(els);
+    const precioKm = parseFloat(state.categoria?.precio_km || 0);
+    
     let km = 0;
-
     const val = String(els.ubicacion?.value || "");
 
     if (val === "0") {
-      km = Number(els.km?.value || 0);
-    } else if (val) {
-      const opt = els.ubicacion?.options?.[els.ubicacion.selectedIndex];
-      km = Number(opt?.dataset?.km || 0);
-    } else {
-      km = 0;
+      km = parseFloat(els.km?.value) || 0;
+    } else if (val !== "") {
+      const opt = els.ubicacion.options[els.ubicacion.selectedIndex];
+      km = opt ? parseFloat(opt.dataset.km) || 0 : 0;
     }
 
-    km = Math.max(0, km);
-    const total = Math.max(0, km * Math.max(0, precioKm));
+    const total = km * precioKm;
 
     state.delivery.km = km;
     state.delivery.total = total;
     state.delivery.ubicacion = val;
-    state.delivery.direccion = String(els.dir?.value || "");
+    state.delivery.direccion = (val === "0") ? String(els.dir?.value || "") : "";
 
     if (els.totalTxt) els.totalTxt.textContent = money(total);
-    if (els.totalHid) els.totalHid.value = String(total);
+    if (els.totalHid) els.totalHid.value = total.toFixed(2);
 
-    if (els.wrap) {
-      els.wrap.dataset.deliveryKm = String(km);
-      els.wrap.dataset.deliveryTotal = String(total);
-      els.wrap.dataset.deliveryUbicacion = val;
-      els.wrap.dataset.deliveryDireccion = state.delivery.direccion;
-    }
-
-    // ✅ hidden backend
     ensureDeliveryHidden();
-    qs("#delivery_activo").value = state.servicios.delivery ? "1" : "0";
-    qs("#delivery_total").value = String(total);
-    qs("#delivery_km").value = String(km);
+    const act = qs("#delivery_activo");
+    if (act) act.value = state.servicios.delivery ? "1" : "0";
+    
+    qs("#delivery_total").value = total.toFixed(2);
+    qs("#delivery_km").value = km.toString();
     qs("#delivery_direccion").value = state.delivery.direccion;
     qs("#delivery_ubicacion").value = val;
+
+    syncTotalsHidden(); 
+    refreshSummary();
 
     return total;
   }
@@ -415,6 +450,237 @@
     });
   }
 
+  // ================================================================= DROPOFF =====================================================
+
+  function getDropoffEls() {
+    const wrap = qs(".dropoff-wrapper");
+    if (!wrap) return null;
+
+    return {
+      wrap,
+      toggle: qs("#dropoffToggle"),
+      fields: qs("#dropoffFields"),
+      ubicacion: qs("#dropUbicacion"),
+      groupDir: qs("#dropGroupDireccion"),
+      groupKm: qs("#dropGroupKm"),
+      dir: qs("#dropDireccion"),
+      km: qs("#dropKm"),
+      totalTxt: qs("#dropTotal"),
+      costoKmHTML: qs("#dropCostoKmHTML"),
+    };
+  }
+
+  function syncDropoffGroups(els) {
+    if (!els) return;
+    const val = String(els.ubicacion?.value || "");
+    const isManual = (val === "0"); // 0 es "Dirección personalizada"
+
+    // Mostramos u ocultamos los grupos según la elección
+    if (els.groupDir) els.groupDir.style.display = isManual ? "block" : "none";
+    if (els.groupKm) els.groupKm.style.display = isManual ? "block" : "none";
+    
+    // El costo por KM solo se ve si hay algo seleccionado
+    const costoBox = qs("#dropCostoKm");
+    if (costoBox) costoBox.style.display = val !== "" ? "block" : "none";
+  }
+
+  function computeDropoff(els) {
+    if (!els) return 0;
+
+    ensureDropoffHidden();
+
+    const precioKm = parseFloat(state.categoria?.precio_km || 0);
+    
+    let km = 0;
+    const val = String(els.ubicacion?.value || "");
+
+    if (val === "0") {
+      km = parseFloat(els.km?.value) || 0;
+    } else if (val !== "") {
+      const opt = els.ubicacion.options[els.ubicacion.selectedIndex];
+      km = opt ? parseFloat(opt.dataset.km) || 0 : 0;
+    }
+
+    const total = km * precioKm;
+
+    state.dropoff.km = km;
+    state.dropoff.total = total;
+    state.dropoff.ubicacion = val;
+    state.dropoff.direccion = (val === "0") ? String(els.dir?.value || "") : "";
+
+    if (els.totalTxt) els.totalTxt.textContent = money(total);
+    if (els.costoKmHTML) els.costoKmHTML.textContent = money(precioKm).replace(" MXN", "");
+
+    qs("#dropoff_activo").value = state.servicios.dropoff ? "1" : "0";
+    qs("#dropoff_total").value = total.toFixed(2);
+    qs("#dropoff_km").value = km.toString();
+    qs("#dropoff_direccion").value = state.dropoff.direccion;
+    qs("#dropoff_ubicacion").value = val;
+
+    syncTotalsHidden();
+    refreshSummary();
+
+    return total;
+  }
+
+  function setDropoffActive(on) {
+    const els = getDropoffEls();
+    state.servicios.dropoff = !!on;
+    state.dropoff.activo = !!on;
+
+    if (els?.toggle) els.toggle.checked = !!on;
+    if (els?.fields) els.fields.style.display = on ? "block" : "none";
+
+    if (!on) {
+        state.dropoff.total = 0;
+        state.dropoff.km = 0;
+        state.dropoff.ubicacion = "";
+        state.dropoff.direccion = "";
+        if (els?.ubicacion) els.ubicacion.value = "";
+        if (els?.totalTxt) els.totalTxt.textContent = money(0);
+    } else {
+        syncDropoffGroups(els);
+        computeDropoff(els);
+    }
+
+    syncServiciosHidden();
+    syncDropoffHidden(); 
+    syncTotalsHidden();
+    refreshSummary();
+  }
+
+  function bindDropoffUI() {
+    const els = getDropoffEls();
+    if (!els) return;
+
+    // Evento del Switch principal (ON/OFF)
+    els.toggle?.addEventListener("change", () => {
+      // Usamos la función maestra para activar/desactivar todo
+      setDropoffActive(!!els.toggle.checked);
+    });
+
+    // Evento del Selector de Ubicación
+    els.ubicacion?.addEventListener("change", () => {
+      // Si elige "Dirección personalizada" (valor "0"), muestra KM y Dirección
+      syncDropoffGroups(els); 
+      
+      // Si el servicio está activo, calculamos el precio
+      if (state.servicios.dropoff) {
+        computeDropoff(els);
+      }
+    });
+
+    // Evento para Kilómetros manuales
+    els.km?.addEventListener("input", () => {
+      if (state.servicios.dropoff) {
+        computeDropoff(els);
+        syncTotalsHidden();
+        refreshSummary();
+      }
+    });
+
+    // Evento para Dirección manual
+    els.dir?.addEventListener("input", () => {
+      state.dropoff.direccion = String(els.dir.value || "");
+      // Sincronizamos con el input oculto para el backend
+      const hid = qs("#dropoff_direccion");
+      if (hid) hid.value = state.dropoff.direccion;
+    });
+  }
+
+  // ================================================================= GASOLINA =====================================================
+
+  function getGasolinaEls() {
+    return {
+      toggle: qs("#gasolinaToggle"),
+      fields: qs("#gasolinaFields"),
+      totalTxt: qs("#gasolinaTotal"),
+      totalHid: qs("#gasolinaTotalHidden"),
+    };
+  }
+
+  function computeGasolina() {
+    const els = getGasolinaEls();
+    if (!els) return 0;
+
+    const litros = parseFloat(state.categoria?.capacidad_tanque || 0);
+    const precio = state.gasolina.precioLitro;
+    const total = litros * precio;
+
+    const label = document.getElementById("litrosLabel");
+    if (label) {
+        label.textContent = litros;
+    }
+
+    state.gasolina.litros = litros;
+    state.gasolina.total = total;
+
+    if (els.totalTxt) els.totalTxt.textContent = money(total);
+    if (els.totalHid) els.totalHid.value = total.toFixed(2);
+
+    syncTotalsHidden();
+    refreshSummary();
+
+    return total;
+  }
+
+  function setGasolinaActive(on) {
+    const els = getGasolinaEls();
+    state.servicios.gasolina = !!on;
+    state.gasolina.activo = !!on;
+
+    syncServiciosHidden();
+
+    if (els?.toggle) els.toggle.checked = !!on;
+    if (els?.fields) els.fields.style.display = on ? "block" : "none";
+
+    if (!on) {
+      state.gasolina.total = 0;
+      if (els?.totalHid) els.totalHid.value = "0";
+    } else {
+      computeGasolina();
+    }
+
+    syncTotalsHidden();
+    refreshSummary();
+  }
+
+  function bindGasolinaUI() {
+    const toggle = qs("#gasolinaToggle");
+    const inputLitros = qs("#gasolinaLitros"); // Si tienes un input de litros
+    
+    if (!toggle) return;
+
+    // 1. Escuchar el Switch (ON/OFF)
+    toggle.addEventListener("change", () => {
+        const active = !!toggle.checked;
+        state.servicios.gasolina = active;
+        
+        // Mostrar/Ocultar campos si tienes un contenedor especial
+        const fields = qs("#gasolinaFields");
+        if (fields) fields.style.display = active ? "block" : "none";
+
+        if (active) {
+            computeGasolina();
+        } else {
+            state.gasolina.total = 0;
+            if (qs("#gasolinaTotalTxt")) qs("#gasolinaTotalTxt").textContent = money(0);
+        }
+
+        syncTotalsHidden();
+        refreshSummary();
+    });
+
+    // 2. Escuchar si cambian los litros (si aplica)
+    inputLitros?.addEventListener("input", () => {
+        if (state.servicios.gasolina) {
+            computeGasolina();
+            syncTotalsHidden();
+            refreshSummary();
+        }
+    });
+}
+
   function getServiciosLabelList() {
     const labels = [];
     if (state.servicios.dropoff) labels.push("🚩 Drop Off");
@@ -422,6 +688,7 @@
     if (state.servicios.gasolina) labels.push("⛽ Gasolina prepago");
     return labels;
   }
+
 
   /* =========================
      Fechas/Horas: UI + Hidden
@@ -548,16 +815,16 @@
     const txt = qs("#catSelTxt");
     const sub = qs("#catSelSub");
     const rem = qs("#catRemove");
+    const mini = qs("#catMiniPreview");
 
     if (!cat) {
       if (txt) txt.textContent = "— Ninguna categoría —";
       if (sub) sub.textContent = "Tarifa base por día y cálculo previo aparecerán aquí.";
       if (rem) rem.style.display = "none";
-      const mini = qs("#catMiniPreview");
       if (mini) mini.style.display = "none";
 
-      const baseEl = qs("#resBaseDia");
-      if (baseEl) baseEl.textContent = "—"
+      const inputPrecioKm = qs("#deliveryPrecioKm");
+      if (inputPrecioKm) inputPrecioKm.value = "0";
 
       syncTotalsHidden();
       refreshSummary();
@@ -568,10 +835,28 @@
     if (sub) sub.textContent = `${money(cat.precio_dia)} / día · ${state.days || 0} día(s)`;
     if (rem) rem.style.display = "";
 
-    const baseEl = qs("#resBaseDia");
-    if (baseEl) baseEl.textContent = "";
-
     refreshCategoriaPreview();
+
+    const inputPrecioKm = qs("#deliveryPrecioKm");
+    if (inputPrecioKm) {
+      const precioCoche = cat.precio_km || 0;
+      inputPrecioKm.value = precioCoche;
+    }
+    
+    if (state.servicios.delivery) {
+        const els = getDeliveryEls();
+        if (els) computeDelivery(els); 
+    }
+
+    if (state.servicios.dropoff) {
+      const els = getDropoffEls();
+      if (els) computeDropoff(els);
+    }
+
+    if (state.servicios.gasolina) {
+      computeGasolina();
+    }
+
     syncTotalsHidden();
     refreshSummary();
   }
@@ -776,9 +1061,11 @@
   function calcTotals() {
     const days = Number(state.days || 0);
 
+    // Tarifa del coche
     const baseDia = state.categoria ? Number(state.categoria.precio_dia || 0) : 0;
     const baseTotal = baseDia * days;
 
+    // Protecciones
     const prot = state.proteccion;
     const protPrice = prot ? Number(prot.precio || 0) : 0;
     const protTotal = prot
@@ -788,15 +1075,15 @@
     const indTotal = (!prot) ? calcIndividualesSubtotal() : 0;
     const extrasSub = calcExtrasSubtotal();
 
-    const deliveryTotal = state.servicios.delivery
-      ? Number(qs("#deliveryTotalHidden")?.value || state.delivery.total || 0)
-      : 0;
+    const deliveryTotal = state.servicios.delivery ? (state.delivery.total || 0) : 0;
+    const dropoffTotal  = state.servicios.dropoff  ? (state.dropoff.total  || 0) : 0;
+    const gasolinaTotal = state.servicios.gasolina ? (state.gasolina.total || 0) : 0;
 
-    const subtotal = baseTotal + protTotal + indTotal + extrasSub + deliveryTotal;
+    const subtotal = baseTotal + protTotal + indTotal + extrasSub + deliveryTotal + dropoffTotal + gasolinaTotal;
     const iva = Math.round(subtotal * 0.16 * 100) / 100;
     const total = subtotal + iva;
 
-    return { baseDia, baseTotal, protTotal, indTotal, extrasSub, deliveryTotal, subtotal, iva, total };
+    return { baseDia, baseTotal, protTotal, indTotal, extrasSub, deliveryTotal, gasolinaTotal, dropoffTotal, subtotal, iva, total };
   }
 
   function syncTotalsHidden() {
@@ -933,6 +1220,10 @@
 
     setText("#resBaseTotal", cat ? money(totals.baseTotal) : "—");
 
+    setText("#resDelivery", state.servicios.delivery ? money(totals.deliveryTotal) : money(0));
+    setText("#resDropoff", state.servicios.dropoff ? money(totals.dropoffTotal) : money(0));
+    setText("#resGasolina", state.servicios.gasolina ? money(totals.gasolinaTotal) : money(0));
+    
     const svcList = getServiciosLabelList();
     setText("#resServicios", svcList.length ? svcList.join(", ") : "—");
 
@@ -1131,7 +1422,7 @@
         if (ini && fin && fin < ini) {
           qs("#fecha_fin").value = "";
           qs("#fecha_fin_ui").value = "";
-          alertify.set('notifier','position', 'top-right');
+          alertify.set('notifier', 'position', 'top-right');
           alertify.warning("La fecha de devolución no puede ser antes de la fecha de salida.");
         }
         syncDays();
@@ -1251,19 +1542,24 @@
       // ✅ delivery (backend)
       if (state.servicios.delivery) {
         const els = getDeliveryEls();
-        if (els) {
-          fd.set("delivery_activo", "1");
-          fd.set("delivery_total", String(Number(els.totalHid?.value || 0)));
-          fd.set("delivery_km", String(Number(els.km?.value || 0)));
-          fd.set("delivery_direccion", String(els.dir?.value || ""));
-          fd.set("delivery_ubicacion", String(els.ubicacion?.value || ""));
-        }
+        if (els) computeDelivery(els);
+
+        fd.set("delivery_activo", "1");
+        fd.set("delivery_total", String(state.delivery.total || 0));
+        fd.set("delivery_km", String(state.delivery.km || 0));
+
+        fd.set("delivery_direccion", String(state.delivery.direccion || ""));
+        fd.set("delivery_ubicacion", String(state.delivery.ubicacion || "0"));
+
+        const precioKm = qs("#deliveryPrecioKm")?.value || "0";
+        fd.set("delivery_precio_km", precioKm);
       } else {
         fd.set("delivery_activo", "0");
         fd.set("delivery_total", "0");
         fd.set("delivery_km", "0");
         fd.set("delivery_direccion", "");
         fd.set("delivery_ubicacion", "");
+        fd.set("delivery_precio_km", "0");
       }
 
       const res = await fetch(action, {
@@ -1278,7 +1574,7 @@
       if (res.status === 422) {
         const data = await res.json().catch(() => null);
         const first = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
-        alertify.set('notifier','position', 'top-right');
+        alertify.set('notifier', 'position', 'top-right');
         alertify.error(first || "Revisa los campos: falta información o hay datos inválidos.");
         setLoading(false);
         return;
@@ -1287,7 +1583,7 @@
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
         console.error("Error al registrar:", res.status, txt);
-        alertify.set('notifier','position', 'top-right');
+        alertify.set('notifier', 'position', 'top-right');
         alertify.error("Ocurrió un error al registrar la reservación. Revisa la consola.");
         setLoading(false);
         return;
@@ -1817,18 +2113,23 @@
     });
 
     // ✅ Switches Servicios (NO botones)
-    qs("#dropoffToggle")?.addEventListener("change", (e) => {
-      state.servicios.dropoff = !!e.target.checked;
-      syncServiciosHidden();
-      refreshSummary();
-      syncTotalsHidden();
+
+    // GASOLINA
+    qs("#gasolinaToggle")?.addEventListener("change", (e) => {
+      const active = !!e.target.checked;
+      setGasolinaActive(active); 
     });
 
-    qs("#gasolinaToggle")?.addEventListener("change", (e) => {
-      state.servicios.gasolina = !!e.target.checked;
-      syncServiciosHidden();
-      refreshSummary();
-      syncTotalsHidden();
+    // DROP OFF
+    qs("#dropoffToggle")?.addEventListener("change", (e) => {
+      const active = !!e.target.checked;
+      setDropoffActive(active);
+    });
+
+    // DELIVERY
+    qs("#deliveryToggle")?.addEventListener("change", (e) => {
+      const active = !!e.target.checked;
+      setDeliveryActive(active);
     });
 
     // Categorías modal
@@ -1842,16 +2143,17 @@
 
     catPop?.addEventListener("click", (e) => {
       const card = e.target.closest(".card-pick");
-      const btn = e.target.closest("button");
-      if (!card || !btn) return;
+      if (!card) return;
 
       const id = card.dataset.id;
       const nombre = card.dataset.nombre || "";
       const desc = card.dataset.desc || "";
       const precio = Number(card.dataset.precio || 0);
+      const precioKm = Number(card.dataset.precioKm || 0); 
       const img = card.dataset.img || "";
-
-      setCategoria({ id, nombre, desc, precio_dia: precio, img });
+      const capacidad = parseFloat(card.dataset.litros || 0);
+      
+      setCategoria({ id, nombre, desc, precio_dia: precio, precio_km: precioKm, img, capacidad_tanque: capacidad });
       closePop(catPop);
     });
 
@@ -1978,6 +2280,9 @@
 
     // ✅ Delivery init + listeners (OFF oculta todo)
     bindDeliveryUI();
+
+    // Dropoff
+    bindDropoffUI();
 
     syncDays();
     repaintCategoriaModalEstimados();

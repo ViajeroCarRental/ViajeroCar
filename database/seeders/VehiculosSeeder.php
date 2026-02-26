@@ -37,6 +37,7 @@ class VehiculosSeeder extends Seeder
     'puertas' => 4,
     'kilometraje' => 21000,
     'gasolina_actual' => 10,
+    'capacidad_tanque' => 50.00,
 
     'precio_dia' => 499.00,
     'deposito_garantia' => 1500.00,
@@ -103,6 +104,7 @@ class VehiculosSeeder extends Seeder
     'puertas' => 4,
     'kilometraje' => 18000,
     'gasolina_actual' => 12,
+    'capacidad_tanque' => 60.00,
 
     'precio_dia' => 579.00,
     'deposito_garantia' => 1600.00,
@@ -169,6 +171,7 @@ class VehiculosSeeder extends Seeder
     'puertas' => 4,
     'kilometraje' => 15000,
     'gasolina_actual' => 8,
+    'capacidad_tanque' => 70.00,
 
     'precio_dia' => 699.00,
     'deposito_garantia' => 2000.00,
@@ -235,6 +238,7 @@ class VehiculosSeeder extends Seeder
     'puertas' => 5,
     'kilometraje' => 30000,
     'gasolina_actual' => 6,
+    'capacidad_tanque' => 62.00,
 
     'precio_dia' => 999.00,
     'deposito_garantia' => 2500.00,
@@ -301,6 +305,7 @@ class VehiculosSeeder extends Seeder
     'puertas' => 4,
     'kilometraje' => 42000,
     'gasolina_actual' => 7,
+    'capacidad_tanque' => 62.00,
 
     'precio_dia' => 1299.00,
     'deposito_garantia' => 3000.00,
@@ -367,6 +372,7 @@ class VehiculosSeeder extends Seeder
     'puertas' => 4,
     'kilometraje' => 8000,
     'gasolina_actual' => 14,
+    'capacidad_tanque' => 66.00,
 
     'precio_dia' => 1599.00,
     'deposito_garantia' => 5000.00,
@@ -433,6 +439,7 @@ class VehiculosSeeder extends Seeder
     'puertas' => 2,
     'kilometraje' => 12000,
     'gasolina_actual' => 11,
+    'capacidad_tanque' => 68.00,
 
     'precio_dia' => 1699.00,
     'deposito_garantia' => 4000.00,
@@ -499,6 +506,7 @@ class VehiculosSeeder extends Seeder
     'puertas' => 4,
     'kilometraje' => 25000,
     'gasolina_actual' => 9,
+    'capacidad_tanque' => 70.00,
 
     'precio_dia' => 1099.00,
     'deposito_garantia' => 3000.00,
@@ -565,6 +573,7 @@ class VehiculosSeeder extends Seeder
     'puertas' => 4,
     'kilometraje' => 5000,
     'gasolina_actual' => 0,
+    'capacidad_tanque' => 74.00,
 
     'precio_dia' => 1799.00,
     'deposito_garantia' => 6000.00,
@@ -632,6 +641,7 @@ class VehiculosSeeder extends Seeder
     'puertas' => 5,
     'kilometraje' => 35000,
     'gasolina_actual' => 5,
+    'capacidad_tanque' => 90.00,
 
     'precio_dia' => 1599.00,
     'deposito_garantia' => 4500.00,
