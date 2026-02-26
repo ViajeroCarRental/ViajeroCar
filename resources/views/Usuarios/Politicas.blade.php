@@ -60,9 +60,9 @@
         </button>
 
         {{-- Política de suciedad --}}
-        <button type="button" class="policy-card" data-modal="tpl-limpieza" data-title="Política de suciedad">
+        <button type="button" class="policy-card" data-modal="tpl-limpieza" data-title="Política de limpieza">
           <span class="pc-icon"><i class="fa-solid fa-spray-can-sparkles"></i></span>
-          <span class="pc-title">Política de suciedad</span>
+          <span class="pc-title">Política de limpieza</span>
         </button>
 
         {{-- Políticas de infracciones --}}
