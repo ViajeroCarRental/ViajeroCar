@@ -53,6 +53,8 @@ class ContratoController extends Controller
                 'r.fecha_fin',
                 'r.hora_retiro',
                 'r.hora_entrega',
+                'r.subtotal',      // Actualizar total
+                'r.impuestos',     // Actualizar total
                 'r.total',
                 'sr.nombre as sucursal_retiro_nombre',
                 'se.nombre as sucursal_entrega_nombre',
@@ -65,6 +67,88 @@ class ContratoController extends Controller
         if (!$reservacion) {
             return redirect()->back()->with('error', 'Reservación no encontrada.');
         }
+//=========================================================
+if (!$contrato)
+{
+
+$timezone = 'America/Mexico_City';
+
+/*
+|--------------------------------------------------------------------------
+| 1) Fechas
+|--------------------------------------------------------------------------
+*/
+$fechaInicioOriginal = \Carbon\Carbon::parse($reservacion->fecha_inicio)
+    ->setTimezone($timezone)
+    ->startOfDay();
+
+$fechaInicioNueva = \Carbon\Carbon::now($timezone)->startOfDay();
+
+$fechaFin = \Carbon\Carbon::parse($reservacion->fecha_fin)
+    ->setTimezone($timezone)
+    ->startOfDay();
+
+/*
+|--------------------------------------------------------------------------
+| 2) Días
+|--------------------------------------------------------------------------
+*/
+$diasOriginales = max(1, $fechaInicioOriginal->diffInDays($fechaFin));
+$diasNuevos     = max(1, $fechaInicioNueva->diffInDays($fechaFin));
+
+$diferenciaDias = $diasNuevos - $diasOriginales;
+
+/*
+|--------------------------------------------------------------------------
+| 3) Precio por día (CATEGORÍA)
+|--------------------------------------------------------------------------
+*/
+$precioDia = DB::table('categorias_carros')
+    ->where('id_categoria', $reservacion->id_categoria)
+    ->value('precio_dia') ?? 0;
+
+/*
+|--------------------------------------------------------------------------
+| 4) Ajustes SOLO si hay diferencia
+|--------------------------------------------------------------------------
+*/
+$ajusteSubtotal = $diferenciaDias * $precioDia;
+$ajusteIVA      = $ajusteSubtotal * 0.16;
+
+$nuevoSubtotal  = $reservacion->subtotal + $ajusteSubtotal;
+$nuevoImpuestos = $reservacion->impuestos + $ajusteIVA;
+$nuevoTotal     = $nuevoSubtotal + $nuevoImpuestos;
+
+$subtotal = $nuevoSubtotal;
+$impuestos = $nuevoImpuestos;
+$total = $nuevoTotal;
+/*
+|--------------------------------------------------------------------------
+| 5) Guardar cambios
+|--------------------------------------------------------------------------
+*/
+DB::table('reservaciones')
+    ->where('id_reservacion', $reservacion->id_reservacion)
+    ->update([
+        'fecha_inicio' => $fechaInicioNueva->toDateString(),
+        'subtotal'     => $subtotal,
+        'impuestos'    => $impuestos,
+        'total'        => $total,
+        'updated_at'   => now(),
+    ]);
+
+/*
+|--------------------------------------------------------------------------
+| 6) Mantener objeto sincronizado
+|--------------------------------------------------------------------------
+*/
+$reservacion->fecha_inicio = $fechaInicioNueva->toDateString();
+$reservacion->subtotal     = $subtotal;
+$reservacion->impuestos    = $impuestos;
+$reservacion->total        = $total;
+}
+//============================================================================
+
 
         // =========================================================
         // 2) Buscar o crear contrato para esta reservación
@@ -491,73 +575,118 @@ public function obtenerConductores($idContrato)
     public function actualizarSeguro(Request $request)
 {
     try {
-        $data = $request->validate([
-            'id_reservacion'  => 'required|integer|exists:reservaciones,id_reservacion',
-            'id_paquete'      => 'required|integer|exists:seguro_paquete,id_paquete',
-            'precio_por_dia'  => 'required|numeric|min:0',
+
+        // 🔎 Detectar tipo
+        $esPaquete    = $request->filled('id_paquete');
+        $esIndividual = $request->filled('id_seguro');
+
+        if ($esPaquete === $esIndividual) {
+            return response()->json([
+                'error' => 'Debe enviar paquete O seguro individual, no ambos.'
+            ], 422);
+        }
+
+        // 📋 Validación base
+        $base = $request->validate([
+            'id_reservacion' => 'required|integer|exists:reservaciones,id_reservacion',
         ]);
 
-        $idReservacion = $data['id_reservacion'];
+        $idReservacion = $base['id_reservacion'];
 
-        // 🔥 FIX IMPORTANTE:
-        // Al activar un paquete → eliminar TODOS los individuales
-        DB::table('reservacion_seguro_individual')
-            ->where('id_reservacion', $idReservacion)
-            ->delete();
+        /* =======================
+           🟦 CASO PAQUETE
+        ======================= */
+        if ($esPaquete) {
 
-        // Buscar si ya existía un paquete
-        $existe = DB::table('reservacion_paquete_seguro')
-            ->where('id_reservacion', $idReservacion)
-            ->first();
+            $data = $request->validate([
+                'id_paquete'     => 'required|integer|exists:seguro_paquete,id_paquete',
+                'precio_por_dia' => 'required|numeric|min:0',
+            ]);
 
-        // 🔻 Si precio es 0 → eliminar paquete
-        if ($data['precio_por_dia'] == 0) {
-            if ($existe) {
-                DB::table('reservacion_paquete_seguro')
-                    ->where('id', $existe->id)
-                    ->delete();
+            // 🔥 Paquete activo → eliminar individuales
+            DB::table('reservacion_seguro_individual')
+                ->where('id_reservacion', $idReservacion)
+                ->delete();
+
+            $existe = DB::table('reservacion_paquete_seguro')
+                ->where('id_reservacion', $idReservacion)
+                ->first();
+
+            if ((float)$data['precio_por_dia'] === 0.0) {
+                if ($existe) {
+                    DB::table('reservacion_paquete_seguro')
+                        ->where('id', $existe->id)
+                        ->delete();
+
+                    return response()->json([
+                        'status' => 'deleted',
+                        'msg' => 'Paquete eliminado correctamente.'
+                    ]);
+                }
 
                 return response()->json([
-                    'status' => 'deleted',
-                    'msg'    => 'Paquete eliminado correctamente.'
+                    'status' => 'noop',
+                    'msg' => 'No existía paquete para eliminar.'
                 ]);
             }
 
-            return response()->json([
-                'status' => 'noop',
-                'msg'    => 'No existía paquete para eliminar.'
-            ]);
-        }
+            if ($existe) {
+                DB::table('reservacion_paquete_seguro')
+                    ->where('id', $existe->id)
+                    ->update([
+                        'id_paquete'     => $data['id_paquete'],
+                        'precio_por_dia' => $data['precio_por_dia'],
+                        'updated_at'     => now(),
+                    ]);
 
-        // 🔄 Si ya existía → actualizar
-        if ($existe) {
-            DB::table('reservacion_paquete_seguro')
-                ->where('id', $existe->id)
-                ->update([
-                    'id_paquete'      => $data['id_paquete'],
-                    'precio_por_dia'  => $data['precio_por_dia'],
-                    'updated_at'      => now(),
+                return response()->json([
+                    'status' => 'updated',
+                    'msg' => 'Paquete actualizado correctamente.'
                 ]);
+            }
+
+            DB::table('reservacion_paquete_seguro')->insert([
+                'id_reservacion' => $idReservacion,
+                'id_paquete'     => $data['id_paquete'],
+                'precio_por_dia' => $data['precio_por_dia'],
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
 
             return response()->json([
-                'status' => 'updated',
-                'msg'    => 'Paquete actualizado correctamente.'
+                'status' => 'inserted',
+                'msg' => 'Paquete agregado correctamente.'
             ]);
         }
 
-        // ➕ Insertar nuevo paquete
-        DB::table('reservacion_paquete_seguro')->insert([
-            'id_reservacion'  => $idReservacion,
-            'id_paquete'      => $data['id_paquete'],
-            'precio_por_dia'  => $data['precio_por_dia'],
-            'created_at'      => now(),
-            'updated_at'      => now(),
-        ]);
+        /* =======================
+           🟨 CASO INDIVIDUAL
+        ======================= */
+        if ($esIndividual) {
 
-        return response()->json([
-            'status' => 'inserted',
-            'msg'    => 'Paquete agregado correctamente.'
-        ]);
+            $data = $request->validate([
+                'id_seguro' => 'required|integer|exists:seguros,id_seguro',
+                'precio'    => 'required|numeric|min:0',
+            ]);
+
+            // 🔥 Individual activo → eliminar paquete
+            DB::table('reservacion_paquete_seguro')
+                ->where('id_reservacion', $idReservacion)
+                ->delete();
+
+            DB::table('reservacion_seguro_individual')->insert([
+                'id_reservacion' => $idReservacion,
+                'id_seguro'      => $data['id_seguro'],
+                'precio'         => $data['precio'],
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
+
+            return response()->json([
+                'status' => 'inserted',
+                'msg' => 'Seguro individual agregado correctamente.'
+            ]);
+        }
 
     } catch (\Throwable $e) {
         Log::error('Error en actualizarSeguro: ' . $e->getMessage());
@@ -566,6 +695,7 @@ public function obtenerConductores($idContrato)
         ], 500);
     }
 }
+
 
 
     /**
@@ -880,6 +1010,27 @@ foreach ($archivos as $campo => $file) {
     }
 
 }
+
+
+public function obtenerClienteContrato($idContrato)
+{
+    $contrato = DB::table('contratos')
+        ->join('reservaciones', 'reservaciones.id_reservacion', '=', 'contratos.id_reservacion')
+        ->where('contratos.id_contrato', $idContrato)
+        ->first([
+            'reservaciones.nombre_cliente',
+            'reservaciones.apellidos_cliente'
+        ]);
+
+    if (!$contrato) {
+        return response()->json(null);
+    }
+
+    return response()->json($contrato);
+}
+
+
+
 
 public function obtenerDocumentacion($idContrato)
 {

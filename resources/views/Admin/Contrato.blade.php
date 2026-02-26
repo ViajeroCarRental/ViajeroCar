@@ -66,12 +66,19 @@
       <div class="bloque entrega">
         <div class="titulo">ENTREGA</div>
         <p class="lugar">Sucursal de origen</p>
+<!-------------------------------------------------------------------------------------------------------->
+<!--1374, contrato controller envia el mensaje al admin -->
+ @php
+    $fechaMostrar = \Carbon\Carbon::parse($reservacion->fecha_inicio);
+@endphp
 
-        <!-- FECHA ACTUAL -->
-        <div class="fecha fecha-entrega-display">
-          <div class="dia">{{ \Carbon\Carbon::parse($reservacion->fecha_inicio)->format('d') }}</div>
-          <div class="mes">{{ strtoupper(\Carbon\Carbon::parse($reservacion->fecha_inicio)->format('M')) }}</div>
-          <div class="anio">{{ \Carbon\Carbon::parse($reservacion->fecha_inicio)->format('Y') }}</div>
+<!-- FECHA MOSTRADA -->
+<div class="fecha fecha-entrega-display">
+    <div class="dia">{{ $fechaMostrar->format('d') }}</div>
+    <div class="mes">{{ strtoupper($fechaMostrar->format('M')) }}</div>
+    <div class="anio">{{ $fechaMostrar->format('Y') }}</div>
+
+<!-------------------------------------------------------------------------------------------------------->
 
           <!-- ✏️ Lápiz (solicitar cambio) -->
           <span class="edit-icon fecha-entrega-edit" title="Solicitar cambio">
@@ -133,14 +140,16 @@
           {{ \Carbon\Carbon::parse($reservacion->fecha_inicio)->diffInDays($reservacion->fecha_fin)}} días
         </div>
       </div>
-      <div class="kv total">
+
+    <!--====================================================================================-->
+ <div class="kv total">
         <div style="font-weight:bold;color:#d00;">Total reservado</div>
         <div class="total" id="totalReserva" style="font-weight:bold;color:#d00;">
           ${{ number_format($reservacion->total, 2) }} MXN
         </div>
       </div>
     </div>
-
+    <!---=======================================================================================-->
     <!-- 🔹 SELECT DE CATEGORÍA -->
     <div class="card" style="margin-top:20px;">
       <label style="font-weight:bold;">Categoría reservada</label>
@@ -714,19 +723,19 @@
             </div>
 
             <div class="input-row">
-              <label>Nombres</label>
-              <input id="idNombre" name="nombre" type="text" placeholder="Nombre(s)" required autocomplete="off">
-            </div>
+                <label for="nombre">Nombres</label>
+                <input id="nombre" name="nombre" type="text" required autocomplete="off">
+                </div>
 
-            <div class="input-row">
-              <label>Apellido Paterno</label>
-              <input id="idApP" name="apellido_paterno" type="text" placeholder="Paterno" required autocomplete="off">
-            </div>
+                <div class="input-row">
+                <label for="apellido_paterno">Apellido Paterno</label>
+                <input id="apellido_paterno" name="apellido_paterno" type="text" required>
+                </div>
 
-            <div class="input-row">
-              <label>Apellido Materno</label>
-              <input id="idApM" name="apellido_materno" type="text" placeholder="Materno" required autocomplete="off">
-            </div>
+                <div class="input-row">
+                <label for="apellido_materno">Apellido Materno</label>
+                <input id="apellido_materno" name="apellido_materno" type="text" required>
+                </div>
 
             <!-- ⭐ NUEVO CAMPO (opcional) -->
             <div class="input-row">
@@ -1626,6 +1635,11 @@
 </main>
 @endsection
 @section('js-vistaContrato')
+
+<script>
+     window.contratoId = {{ $contrato->id_contrato }};
+    window.clienteContratoUrl = "{{ route('contrato.obtenerCliente', $contrato->id_contrato) }}";
+</script>
 
 <script src="{{ asset('js/Contrato.js') }}"></script>
 @endsection
