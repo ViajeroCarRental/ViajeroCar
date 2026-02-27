@@ -35,6 +35,18 @@ return new class extends Migration {
             // Estado automático de color
             $table->enum('estatus', ['verde', 'amarillo', 'rojo'])->default('verde');
 
+            // Tipo de mantenimiento
+            $table->enum('tipo_mantenimiento', ['menor', 'mayor'])->default('menor');
+
+            // Checklist mantenimiento menor
+            $table->boolean('rellenar_aceite')->default(false);
+            $table->boolean('nivel_agua')->default(false);
+            $table->boolean('presion_llantas')->default(false);
+            $table->boolean('limpieza_general')->default(false);
+
+            // Otros
+            $table->string('otro')->nullable();
+
             // Timestamps
             $table->timestamps();
 

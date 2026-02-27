@@ -36,6 +36,7 @@ class MantenimientoController extends Controller
                 'm.cambio_filtro',
                 'm.cambio_pastillas',
                 'm.observaciones',
+
                 'm.tipo_mantenimiento',   // 👈 AÑADE ESTA LÍNEA
                 'm.otro',
                 'm.rellenar_aceite',

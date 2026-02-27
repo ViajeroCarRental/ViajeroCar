@@ -418,7 +418,6 @@
   display: block;
 }
 
-
   </style>
 </head>
 
@@ -749,7 +748,6 @@
 </div> {{-- <-- aquí sí cierras .summary-card --}}
 
   </div>
-
    {{-- FOOTER GRANDE TIPO LANDING --}}
   <div class="site-footer">
     <div class="footer-inner">

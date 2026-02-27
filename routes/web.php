@@ -323,6 +323,8 @@ Route::get('/admin/facturar', [App\Http\Controllers\controladorVistasAdmin::clas
 Route::get('/admin/flotilla', [FlotillaController::class, 'indexView'])->name('rutaFlotilla');
 // 🔹 Agregar nuevo vehículo
 Route::post('/admin/flotilla/agregar', [FlotillaController::class, 'store'])->name('flotilla.agregar');
+// 🔹 Consulta vehículo existente
+Route::get('/admin/flotilla/{id}/ver', [FlotillaController::class, 'getVehiculo'])->name('flotilla.ver');
 // 🔹 Actualizar vehículo existente
 Route::post('/admin/flotilla/{id}/actualizar', [FlotillaController::class, 'update'])->name('flotilla.actualizar');
 // 🔹 Eliminar vehículo
@@ -591,3 +593,4 @@ Route::post('/admin/reservaciones-activas/{id}/cancelar',
 
 }); // <- FIN grupo sesion.activa
 Route::view('/politicas', 'Usuarios.Politicas')->name('rutaPoliticas');
+
