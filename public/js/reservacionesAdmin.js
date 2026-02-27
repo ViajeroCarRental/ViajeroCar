@@ -783,9 +783,19 @@
      Aeropuerto (No. vuelo)
   ========================= */
   function isAirportSelected() {
-    const r = qs("#sucursal_retiro")?.value || "";
-    const e = qs("#sucursal_entrega")?.value || "";
-    return (String(r) === "1" || String(e) === "1");
+    const selR = qs("#sucursal_retiro");
+    const selE = qs("#sucursal_entrega");
+
+    const check = (sel) => {
+      if (!sel || sel.selectedIndex < 0) return false;
+      const opt = sel.options[sel.selectedIndex];
+      if (!opt) return false;
+      
+      const nombre = (opt.dataset.nombre || "").toLowerCase();
+      return nombre.includes("aeropuerto");
+    };
+
+    return check(selR) || check(selE);
   }
 
   function syncVueloField() {
@@ -793,12 +803,14 @@
     const vuelo = qs("#no_vuelo");
     const show = isAirportSelected();
 
-    if (wrap) wrap.style.display = show ? "" : "none";
+    if (wrap) wrap.style.display = show ? "block" : "none";
+    
     if (vuelo) {
-      if (show) vuelo.setAttribute("required", "required");
-      else {
+      if (show) {
+        vuelo.setAttribute("required", "required");
+      } else {
         vuelo.removeAttribute("required");
-        vuelo.value = "";
+        vuelo.value = ""; 
       }
     }
   }
