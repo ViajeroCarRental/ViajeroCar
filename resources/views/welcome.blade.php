@@ -32,46 +32,237 @@
       filter: drop-shadow(0 8px 24px rgba(0,0,0,.30));
       pointer-events: none;
     }
-    @media (max-width:560px){
-      .hero-badge-3msi{ width: clamp(180px, 60vw, 360px); }
+
+/* ============================================================
+    1. REGLA BASE MOVIL (Pantallas menores a 1124px)
+   ============================================================ */
+@media (max-width: 1124px) {
+
+    #miBuscador.search-card {
+        display: none;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 10000 !important;
+        background-color: #ffffff !important;
+        margin: 0 !important;
+        padding: 90px 20px 20px 20px !important;
+        overflow-y: auto !important;
+        border-radius: 0 !important;
+        box-sizing: border-box !important;
     }
 
-    /* ===== Texto debajo de cada carrusel ===== */
-    .fleet-meta{
-      width:min(1200px,94%);
-      margin:10px auto 24px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:14px;
-      font-size:clamp(12px, 1.8vw, 15px);
-      color:var(--ink);
-      letter-spacing:.2px;
-      line-height:1.3;
+    #miBuscador.search-card.active {
+        display: block !important;
     }
-    .fleet-meta .sep{ opacity:.5; font-style:normal; }
-    @media (max-width:560px){ .fleet-meta{ gap:10px } }
 
-    /* ===== Layout para los iconos del hero (5 items responsivos) ===== */
-    .hero-icons{
-      display:flex;
-      flex-wrap:wrap;
-      gap:28px;
-      justify-content:center;
+    .btn-close {
+        display: block !important;
+        position: fixed !important;
+        top: 100px !important;
+        right: 25px !important;
+        z-index: 10001 !important;
+        width: 28px !important;
+        height: 28px !important;
+        background-color: #ffffff !important;
+        border: 1px solid #e41515 !important;
+        border-radius: 50% !important;
+        cursor: pointer !important;
     }
-    .hero-icons .icon-item{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      min-width:240px;
+
+    .search-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px !important;
     }
-    @media (min-width:900px){
-      .hero-icons{
-        display:grid;
-        grid-template-columns: repeat(3, minmax(220px,1fr));
-        gap:28px;
-      }
+
+    .sg-col { width: 100% !important; }
+
+    .field select, .field input[type="text"], .dt-field input, .time-field select {
+        width: 100% !important;
+        height: 50px !important;
+        border: 1px solid #d4002a !important;
+        border-radius: 6px !important;
+        padding-left: 45px !important;
+        font-size: 16px !important;
     }
+
+    .sg-col-submit button {
+        width: 100% !important;
+        height: 55px !important;
+        background-color: #d4002a !important;
+        color: white !important;
+        font-weight: bold !important;
+        border-radius: 8px !important;
+    }
+
+    .hero-icons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+    }
+}
+@media (max-width: 699px) {
+    .hero-icons {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 45px !important;
+        padding: 40px 20px !important;
+        width: 100% !important;
+    }
+
+    .hero-icons .icon-item {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        width: 100% !important;
+        max-width: 280px !important;
+        text-align: center !important;
+    }
+
+    .hero-icons .icon-item i {
+        font-size: 50px !important;
+        margin-bottom: 12px !important;
+        color: #ffffff !important;
+    }
+
+    .hero-icons .icon-item span {
+        font-size: 19px !important;
+        font-weight: 600 !important;
+        color: #ffffff !important;
+    }
+}
+/* ============================================================
+    2. AJUSTE DE TABLET (768px a 1124px)
+   ============================================================ */
+@media (min-width: 768px) and (max-width: 1124px) {
+
+    #miBuscador.search-card form {
+        /* Lo bajamos a 90px para dar más aire respecto al menú */
+        margin-top: 90px !important;
+
+        padding: 0 30px !important;
+        max-width: 95% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 20px !important;
+    }
+
+    #miBuscador.search-card {
+        padding-top: 5px !important;
+    }
+
+
+    .sg-col:nth-child(1),
+    .sg-col:nth-child(2) {
+        width: 100% !important;
+        grid-column: span 2 !important;
+    }
+
+    /* Contenedor de la fila (Fecha + Hora + Min) */
+    .datetime-row {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        gap: 15px !important;
+        align-items: flex-end !important;
+        margin-bottom: 15px !important;
+    }
+
+    .datetime-row:nth-of-type(2) {
+        margin-top: 30px !important;
+        position: relative !important;
+    }
+
+    .datetime-row::before {
+        margin-bottom: 10px !important;
+        display: block !important;
+    }
+
+    .datetime-row {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        gap: 15px !important;
+        align-items: flex-end !important;
+        margin-bottom: 25px !important;
+    }
+
+    .datetime-row > div,
+    .datetime-row > .dt-field,
+    .datetime-row > .time-field {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+
+    .datetime-row input[type="text"],
+    .datetime-row select {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* El botón de buscar al 100% */
+    .btn-buscar-container {
+        width: 100% !important;
+    }}
+@media (min-width: 700px) and (max-width: 1124px) {
+    .hero-icons {
+        display: grid !important;
+        grid-template-columns: repeat(6, 1fr) !important;
+        gap: 50px 15px !important;
+        max-width: 900px !important;
+        margin: 0 auto !important;
+        padding: 40px 20px !important;
+    }
+
+    .hero-icons .icon-item:nth-child(1),
+    .hero-icons .icon-item:nth-child(2),
+    .hero-icons .icon-item:nth-child(3) {
+        grid-column: span 2 !important;
+    }
+
+
+    .hero-icons .icon-item:nth-child(4) { grid-column: 2 / span 2 !important; }
+    .hero-icons .icon-item:nth-child(5) { grid-column: 4 / span 2 !important; }
+
+
+    .hero-icons .icon-item i {
+        font-size: 55px !important;
+        margin-bottom: 18px !important;
+        color: #ffffff !important;
+    }
+
+    .hero-icons .icon-item span {
+        font-size: 18px !important;
+        font-weight: 600 !important;
+        color: #ffffff !important;
+        line-height: 1.2 !important;
+        max-width: 220px !important;
+    }
+}
+/* ============================================================
+    3. ESCRITORIO
+   ============================================================ */
+@media (min-width: 1125px) {
+    #miBuscador.search-card {
+        display: block !important;
+        position: relative !important;
+        margin: 0 auto !important;
+        width: 100% !important;
+        max-width: 1100px !important;
+        background: #ffffff !important;
+        border-radius: 15px !important;
+        padding: 20px !important;
+    }
+    .btn-close { display: none !important; }
+
+}
 
     /* ===== Banner Reservas (limpio, sin rayas) ===== */
     .rv-banner-wrap{
@@ -320,8 +511,34 @@
     font-size: 1em;
 }
 
+.social-fab i{ font-size:20px; }
+}
+/* Botones de carrusel */
+.fleet-btn {
+    background-color: #ff0000 !important;
+    color: white !important;
+    opacity: 1 !important;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    pointer-events: auto !important;
+}
+/* Estado DESACTIVADO  */
+.fleet-btn.is-disabled {
+    background-color: #f1f5f9 !important;
+    color: #cbd5e1 !important;
+    cursor: not-allowed;
+    box-shadow: none !important;
+}
+.pulse-animation {
+    animation: pulseLimit 0.3s ease-in-out;
+}
 
-    .social-fab i{ font-size:20px; }
+@keyframes pulseLimit {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.85); }
+    100% { transform: scale(1); }
+}
+
   </style>
 @endsection
 
@@ -402,13 +619,38 @@
         </div>
       </div>
 
-      <!-- ===== NUEVO LAYOUT DEL CUESTIONARIO ===== -->
-      <div class="search-card">
-        <form id="rentalForm" class="search-form" method="GET" action="{{ route('rutaReservacionesUsuario') }}">
+<div class="d-block d-xl-none p-3">
+    <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center;">
+        <p style="margin-bottom: 10px; font-weight: bold; color: #333; font-size: 16px;">Encuentra tu auto aquí</p>
 
-          @csrf
+        <button type="button" id="btn-abrir-buscador" class="btn btn-danger w-100"
+            style="background-color: #d4002a;
+                   border: none;
+                   font-weight: 700;
+                   height: 55px;
+                   font-size: 18px;
+                   display: flex;
+                   align-items: center;
+                   justify-content: center;
+                   gap: 8px;
+                   text-transform: uppercase;
+                   border-radius: 6px;">
+            <i class="fa-solid fa-magnifying-glass" style="font-size: 16px;"></i> BUSCAR
+        </button>
+    </div>
+</div>
 
-          <div class="search-grid">
+<div class="search-card" id="miBuscador">
+
+    <div class="d-block d-xl-none text-end mb-3">
+        <button type="button" id="btn-cerrar-buscador" class="btn-close" style="font-size: 1.5rem;"></button>
+        <h5 class="text-start mt-2">1 Lugar y fecha</h5>
+        <hr>
+    </div>
+
+    <form id="rentalForm" class="search-form" method="GET" action="{{ route('rutaReservacionesUsuario') }}">
+        @csrf
+        <div class="search-grid">
 
             {{-- =========================
                 COLUMNA 1: LUGAR DE RENTA
@@ -545,14 +787,10 @@
               </div>
             </div>
 
-          </div> {{-- /search-grid --}}
-
-          <div id="rangeSummary" class="range-summary" aria-live="polite"></div>
-        </form>
-      </div>
-      <!-- ===== /NUEVO LAYOUT DEL CUESTIONARIO ===== -->
-
-    </div> {{-- cierre .hero-copy --}}
+            </div>
+        <div id="rangeSummary" class="range-summary" aria-live="polite"></div>
+    </form>
+</div>
   </section>
 
   {{-- Sentinel para detectar "salí del hero" --}}
@@ -1339,108 +1577,6 @@
   <script src="{{ asset('js/home.js') }}"></script>
 
   {{-- ✅ (Tu inline script de fleet infinito - lo dejo tal cual) --}}
-  <script>
-  (function(){
-    "use strict";
-
-    const fleets = document.querySelectorAll('.fleet');
-    if(!fleets.length) return;
-
-    fleets.forEach((fleet)=>{
-      const track = fleet.querySelector('.fleet-track');
-      const prev  = fleet.querySelector('.fleet-btn.prev');
-      const next  = fleet.querySelector('.fleet-btn.next');
-      if(!track || !prev || !next) return;
-
-      // Evitar doble init
-      if(track.dataset.fleetReady === "1") return;
-      track.dataset.fleetReady = "1";
-
-      const GAP_FALLBACK = 18;
-      let lock = false;
-
-      function getGapPx(){
-        const st = getComputedStyle(track);
-        const gap = parseFloat(st.columnGap || st.gap) || 0;
-        return gap || GAP_FALLBACK;
-      }
-
-      function getStepPx(){
-        const card = track.querySelector('.car-card');
-        if(!card) return 340;
-        const rect = card.getBoundingClientRect();
-        const cs = getComputedStyle(card);
-        const ml = parseFloat(cs.marginLeft) || 0;
-        const mr = parseFloat(cs.marginRight) || 0;
-        return rect.width + ml + mr + getGapPx();
-      }
-
-      function getMaxScroll(){
-        return Math.max(0, track.scrollWidth - track.clientWidth);
-      }
-
-      function clampScroll(){
-        const max = getMaxScroll();
-        if(track.scrollLeft < 0) track.scrollLeft = 0;
-        if(track.scrollLeft > max) track.scrollLeft = max;
-      }
-
-      function updateBtns(){
-        const max = getMaxScroll();
-        const atStart = track.scrollLeft <= 1;
-        const atEnd   = track.scrollLeft >= (max - 1);
-
-        prev.disabled = atStart;
-        next.disabled = atEnd;
-
-        prev.setAttribute('aria-disabled', atStart ? 'true' : 'false');
-        next.setAttribute('aria-disabled', atEnd ? 'true' : 'false');
-
-        prev.classList.toggle('is-disabled', atStart);
-        next.classList.toggle('is-disabled', atEnd);
-      }
-
-      function moveBy(dir){
-        if(lock) return;
-        lock = true;
-
-        const step = getStepPx();
-        const max  = getMaxScroll();
-        const target = Math.min(max, Math.max(0, track.scrollLeft + dir * step));
-
-        track.scrollTo({ left: target, behavior: 'smooth' });
-
-        window.setTimeout(()=>{
-          clampScroll();
-          updateBtns();
-          lock = false;
-        }, 420);
-      }
-
-      next.addEventListener('click', (e)=>{ e.preventDefault(); moveBy(1); });
-      prev.addEventListener('click', (e)=>{ e.preventDefault(); moveBy(-1); });
-
-      track.addEventListener('scroll', ()=>{
-        if(lock) return;
-        clampScroll();
-        updateBtns();
-      }, { passive:true });
-
-      window.addEventListener('resize', ()=>{
-        requestAnimationFrame(()=>{
-          clampScroll();
-          updateBtns();
-        });
-      }, { passive:true });
-
-      // Init
-      requestAnimationFrame(()=>{
-        clampScroll();
-        updateBtns();
-      });
-    });
-  })();
-  </script>
 
 
   <!-- ===== Toast de reservas ===== -->
@@ -1558,5 +1694,68 @@
     document.addEventListener('DOMContentLoaded', showOnce);
   })();
   </script>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const btnAbrir = document.getElementById('btn-abrir-buscador');
+    const btnCerrar = document.getElementById('btn-cerrar-buscador');
+    const buscador = document.getElementById('miBuscador');
 
+    if (btnAbrir) {
+        btnAbrir.addEventListener('click', function() {
+            buscador.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Bloquea el scroll de la web de fondo
+        });
+    }
+
+    if (btnCerrar) {
+        btnCerrar.addEventListener('click', function() {
+            buscador.classList.remove('active');
+            document.body.style.overflow = 'auto'; // Devuelve el scroll
+        });
+    }
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Identificamos los campos por su atributo "name"
+    const camposNombres = [
+        'pickup_sucursal_id',
+        'dropoff_sucursal_id',
+        'pickup_date',
+        'dropoff_date',
+        'pickup_time',
+        'dropoff_time'
+    ];
+
+    function validarEstado(el) {
+        // Si el campo tiene valor y no es "0"
+        if (el.value && el.value !== "" && el.value !== "0") {
+            // ESTADO VERDE (Lleno)
+            el.style.setProperty('border', '2px solid #28a745', 'important');
+            el.style.boxShadow = '0 0 5px rgba(40, 167, 69, 0.2)';
+        } else {
+            // ESTADO ROJO (Vacío)
+            el.style.setProperty('border', '2px solid #dc3545', 'important');
+            el.style.boxShadow = '0 0 5px rgba(220, 53, 69, 0.1)';
+        }
+    }
+
+    // 2. Aplicamos la lógica a cada campo
+    camposNombres.forEach(nombre => {
+        // Buscamos el elemento que tenga ese name
+        const elemento = document.querySelector(`[name="${nombre}"]`);
+
+        if (elemento) {
+            // Revisar cómo está el campo al cargar la página
+            validarEstado(elemento);
+
+            // Revisar cuando el usuario selecciona algo
+            elemento.addEventListener('change', () => validarEstado(elemento));
+
+            // Revisar mientras el usuario escribe o borra
+            elemento.addEventListener('input', () => validarEstado(elemento));
+        }
+    });
+});
+</script>
 @endsection

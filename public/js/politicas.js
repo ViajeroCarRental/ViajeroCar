@@ -72,6 +72,7 @@
         return content.scrollHeight + mt + mb;
       }
 
+  // CIERRA ACORDEON
       function closeItem(it) {
         it.classList.remove("open");
         const h = qs(headSelector, it);
@@ -82,7 +83,7 @@
           b.setAttribute("aria-hidden", "true");
         }
       }
-
+  // ABRE ACORDEON
       function openItem(it) {
         it.classList.add("open");
         const h = qs(headSelector, it);

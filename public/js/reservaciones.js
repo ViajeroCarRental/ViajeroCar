@@ -1215,7 +1215,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!selectEl || !iconEl) return;
 
         const selectedOption = selectEl.options[selectEl.selectedIndex];
-        // Prioridad: 1. Atributo data-icon, 2. Icono por defecto
+
         const iconClass = (selectedOption && selectedOption.dataset.icon)
                           ? selectedOption.dataset.icon
                           : 'fa-solid fa-location-dot';
@@ -1229,7 +1229,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if ($select.length > 0) {
             $select.select2({
                 width: '100%',
-                // Esto pone iconos en la lista desplegable
+
                 templateResult: function(option) {
                     if (!option.id) return option.text;
                     const icon = $(option.element).data('icon');
@@ -1237,42 +1237,41 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             });
 
-            // Actualizar icono al cargar
+
             updateFloatingIcon(conf.id, conf.icon);
 
-            // Actualizar icono al cambiar
+
             $select.on('select2:select change', function () {
                 updateFloatingIcon(conf.id, conf.icon);
 
-                // Disparar evento para etiquetas flotantes si existen
+
                 this.dispatchEvent(new Event('change', { bubbles: true }));
             });
         }
     });
 });
 window.limpiarTodoYReiniciar = function() {
-    // 1. Borrar la persistencia del localStorage
+
     localStorage.removeItem("viajero_resv_filters_v1");
 
-    // 2. Limpiar los Select2 y los inputs de fecha
-    // Usamos los IDs nuevos: pickupPlace y dropoffPlace
+
+
     const selects = ['#pickupPlace', '#dropoffPlace'];
     selects.forEach(id => {
         const $el = $(id);
         if ($el.length) {
-            $el.val(null).trigger('change'); // Limpia Select2
+            $el.val(null).trigger('change');
         }
     });
 
-    // Limpiar fechas
+
     const inputs = ['#start', '#end', '#pickup_h', '#pickup_m', '#dropoff_h', '#dropoff_m'];
     inputs.forEach(id => {
         const el = document.querySelector(id);
         if (el) el.value = "";
     });
 
-    // 3. Redirigir a la ruta limpia (esto quita los parámetros ?location= de la URL)
-    // Reemplaza 'reservar' por el nombre de tu ruta base si es diferente
+
     window.location.href = window.location.pathname + "?step=1";
 };
 })();
