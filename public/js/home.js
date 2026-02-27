@@ -57,7 +57,6 @@
     const next  = fleet.querySelector('.fleet-btn.next');
     if(!track || !prev || !next) return;
 
-    // Evitar doble init
     if(track.dataset.fleetReady === "1") return;
     track.dataset.fleetReady = "1";
 
@@ -84,105 +83,78 @@
       return Math.max(0, track.scrollWidth - track.clientWidth);
     }
 
-    function clampScroll(){
-      const max = getMaxScroll();
-      if(track.scrollLeft < 0) track.scrollLeft = 0;
-      if(track.scrollLeft > max) track.scrollLeft = max;
-    }
-
-    // ✅ aplica gris al inicio y al final (ambos)
+    // ✅ Función de Gris/Rojo con tolerancia de 10px
     function updateBtns(){
       const max = getMaxScroll();
-      const atStart = track.scrollLeft <= 1;
-      const atEnd   = track.scrollLeft >= (max - 1);
+      const current = track.scrollLeft;
+
+      const atStart = current <= 10;
+      const atEnd   = current >= (max - 10);
 
       prev.disabled = atStart;
       next.disabled = atEnd;
 
       prev.classList.toggle('is-disabled', atStart);
       next.classList.toggle('is-disabled', atEnd);
-
-      prev.setAttribute('aria-disabled', atStart ? 'true' : 'false');
-      next.setAttribute('aria-disabled', atEnd ? 'true' : 'false');
     }
 
-    // ✅ dispara animación cuando topas límite (inicio o fin)
+    // ✅ Función de Animación corregida
     function pulseLimit(btn){
-      // si ya está disabled, re-lanza la animación removiendo y poniendo clase
-      btn.classList.remove('is-disabled');
-      void btn.offsetWidth; // reflow
-      btn.classList.add('is-disabled');
-    }
-
-    function clamp(n, min, max){
-      return Math.max(min, Math.min(max, n));
+      btn.classList.add('animating');
+      setTimeout(() => btn.classList.remove('animating'), 300);
     }
 
     function moveBy(dir){
       if(lock) return;
 
       const maxScroll = getMaxScroll();
+      const from = track.scrollLeft;
       const step = getStepPx();
 
-      const from = track.scrollLeft;
-      const to   = clamp(from + (dir * step), 0, maxScroll);
-
-      // ✅ si ya estás en el borde, no te muevas y anima el botón
-      if(to === from){
-        updateBtns();
-        pulseLimit(dir < 0 ? prev : next);
+      // ✅ Si intentas ir a la derecha y ya es gris (final)
+      if(dir > 0 && from >= (maxScroll - 10)){
+        pulseLimit(next);
         return;
       }
+      // ✅ Si intentas ir a la izquierda y ya es gris (inicio)
+      if(dir < 0 && from <= 10){
+        pulseLimit(prev);
+        return;
+      }
+
+      const to = Math.max(0, Math.min(from + (dir * step), maxScroll));
 
       lock = true;
       track.scrollTo({ left: to, behavior: 'smooth' });
 
       window.setTimeout(()=>{
         lock = false;
-        clampScroll();
         updateBtns();
       }, 420);
     }
 
-    // ✅ Flechas
-    next.addEventListener('click', (e)=>{ e.preventDefault(); moveBy( 1); });
+    next.addEventListener('click', (e)=>{ e.preventDefault(); moveBy(1); });
     prev.addEventListener('click', (e)=>{ e.preventDefault(); moveBy(-1); });
 
-    // ✅ si scrollean con touch/wheel, actualiza estado
     track.addEventListener('scroll', ()=>{
       if(lock) return;
-      clampScroll();
       updateBtns();
     }, { passive:true });
 
-    // ✅ FORZAR inicio real: arregla que en el inicio se vea roja por scrollLeft != 0
     function forceStart(){
-      clampScroll();
-      track.scrollLeft = 0; // <- clave
-      clampScroll();
+      track.scrollLeft = 0;
       updateBtns();
     }
 
-    // rAF doble para esperar layout
     requestAnimationFrame(()=> requestAnimationFrame(forceStart));
-    // cuando cargan imágenes (muy importante)
     window.addEventListener('load', forceStart, { once:true });
-    // fallback extra
-    setTimeout(forceStart, 80);
-
-    window.addEventListener('resize', ()=>{
-      requestAnimationFrame(()=>{
-        clampScroll();
-        updateBtns();
-      });
-    }, { passive:true });
+    setTimeout(forceStart, 100);
   }
 
   document.addEventListener('DOMContentLoaded', ()=>{
     document.querySelectorAll('.fleet').forEach(initFleetControlled);
   });
 })();
-
 /* =====================================================================
    Media carousels: SOLO manual (SIN LOOP / SIN AUTOPLAY)
    Nota: tus .media-carousel son "fade" (position:absolute), aquí no tocamos nada.
@@ -792,4 +764,5 @@ inputsToWatch.forEach(el => {
   });
 
   document.addEventListener('DOMContentLoaded', showOnce);
+
 })();
