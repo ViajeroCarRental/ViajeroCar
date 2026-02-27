@@ -752,7 +752,7 @@ body{
   gap:10px;
 }
 .car-card--v2 .car-price--v2 .price-old{
-  font-size:14px;
+  font-size:17px;
   font-weight:900;
   color: rgba(178,34,34,.95);
   text-decoration: line-through;
