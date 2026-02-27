@@ -6,6 +6,7 @@
    - Floating labels (Step 1)
    - Step 4: 2 panes (izq datos / der resumen+precio)
    - Flatpickr visible (sin recorte)
+   - ✅ Step 2 cards v2 (como tu captura) sin romper JS actual
 ========================================================================== */
 
 :root{
@@ -460,10 +461,31 @@ body{
 }
 
 /* ==========================================================
-   STEP 2: CARS
+   STEP 2 — GRID 2 COLUMNAS
 ========================================================== */
-.cars{ display:grid; gap:16px; }
+.cars{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap:20px;
+  align-items:start;
+}
 
+/* Tablet */
+@media (max-width: 1024px){
+  .cars{
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap:16px;
+  }
+}
+
+/* Móvil */
+@media (max-width: 680px){
+  .cars{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- BASE (desktop antiguo) ---------- */
 .car-card{
   background:#fff;
   border:1px solid #e5e7eb;
@@ -656,6 +678,191 @@ body{
   .car-price{ padding-top:0; }
 }
 
+/* ---------- ✅ NUEVO LAYOUT V2 (como tu captura) ---------- */
+.car-card--v2{
+  grid-template-columns: 1fr;
+  gap:12px;
+  padding:14px;
+}
+
+/* Hero con imagen y badge dentro */
+.car-card--v2 .car-hero{
+  position:relative;
+  border-radius:16px;
+  background:linear-gradient(180deg,#ffffff,#f8fafc);
+  border:1px solid #eef2f7;
+  overflow:hidden;
+  padding:12px;
+}
+.car-card--v2 .car-hero-img{
+  width:100%;
+  height:190px;
+  object-fit:contain;
+  display:block;
+}
+
+/* badge redondeado dentro del hero */
+.car-card--v2 .car-days-badge--v2{
+  position:absolute;
+  top:12px;
+  right:12px;
+  height:34px;
+  padding:0 14px;
+  border-radius:999px;
+  background: rgba(255,255,255,.85);
+  border:2px solid rgba(178,34,34,.22);
+  color: var(--brand);
+  box-shadow:0 10px 26px rgba(0,0,0,.08);
+}
+
+/* body */
+.car-card--v2 .car-body{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:2px 2px 0;
+}
+
+/* ✅ NUEVO ESTILO: textos de categoría + descripción (Step 2) */
+.car-card--v2 .car-top{
+  margin:0;
+  font-size:19px;
+  font-weight:900;
+  letter-spacing:.35px;
+  text-transform:uppercase;
+  color:#0f172a;
+  line-height:1.15;
+}
+.car-card--v2 .car-sub{
+  margin:0;
+  font-size:13px;
+  font-weight:800;
+  color:#6b7280;
+  line-height:1.45;
+}
+
+/* chips */
+.car-card--v2 .r-specs--v2{
+  margin:8px 0 2px;
+}
+
+/* precios */
+.car-card--v2 .car-price--v2{
+  padding-top:0;
+  gap:10px;
+}
+.car-card--v2 .car-price--v2 .price-old{
+  font-size:14px;
+  font-weight:900;
+  color: rgba(178,34,34,.95);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.car-card--v2 .car-price--v2 .price-new{
+  font-size:32px;
+}
+.car-card--v2 .car-price--v2 .price-save{
+  margin-top:-2px;
+}
+
+/* bloque oficina */
+.car-card--v2 .office-wrap{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.car-card--v2 .office-price{
+  font-size:28px;
+  font-weight:900;
+  color:#111827;
+  line-height:1.1;
+}
+
+/* ==========================================================
+   ✅ STEP 2 V2 — ICONOS (FINAL CORRECTO)
+   - Iconos: UNA FILA horizontal (lateral)
+   - Tech: debajo
+   - Todo izquierda + separación pequeña
+========================================================== */
+.car-card--v2 .car-mini-specs{
+  margin:0;
+  padding:0;
+  list-style:none;
+
+  display:flex;
+  flex-direction:column;   /* tech debajo */
+  align-items:flex-start;
+  justify-content:flex-start;
+  gap:6px;
+}
+
+/* fila horizontal */
+.car-card--v2 .car-specs{
+  margin:0;
+  padding:0;
+  list-style:none;
+
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+
+  gap:10px;          /* separación pequeña */
+  flex-wrap:nowrap;  /* UNA fila */
+  color:#0f172a;
+  font-weight:900;
+}
+
+.car-card--v2 .car-specs li{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;           /* icono+valor pegado */
+  font-size:14px;
+  line-height:1;
+  white-space:nowrap;
+}
+
+.car-card--v2 .car-specs i{
+  font-size:16px;
+  opacity:.95;
+}
+
+/* debajo de los iconos */
+.car-card--v2 .car-mini-tech{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+
+  gap:12px;
+  flex-wrap:nowrap;
+  font-weight:900;
+  color:#0f172a;
+}
+
+/* “deschipear” SOLO en V2 */
+.car-card--v2 .car-mini-tech .chip,
+.car-card--v2 .car-mini-tech a,
+.car-card--v2 .car-mini-tech span{
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  padding:0 !important;
+  border-radius:0 !important;
+}
+
+@media (max-width:560px){
+  .car-card--v2{ padding:12px; border-radius:18px; }
+  .car-card--v2 .car-hero-img{ height:170px; }
+  .car-card--v2 .car-price--v2 .price-new{ font-size:28px; }
+  .car-card--v2 .office-price{ font-size:22px; }
+
+  /* si en móvil no cabe, que haga wrap bonito */
+  .car-card--v2 .car-specs{ flex-wrap:wrap; }
+  .car-card--v2 .car-mini-tech{ flex-wrap:wrap; }
+}
+
 /* ==========================================================
    STEP 3: COMPLEMENTOS
 ========================================================== */
@@ -806,7 +1013,6 @@ body{
   --wizard-w: 1280px;
 }
 
-/* Card padre transparente (para que se vean 2 panes) */
 .page.wizard-page[data-current-step="4"] .wizard-card{
   width: min(var(--wizard-w), 96vw);
   margin:0 auto;
@@ -816,7 +1022,6 @@ body{
   padding: 0 !important;
 }
 
-/* Header de Step 4 como panel */
 .page.wizard-page[data-current-step="4"] .wizard-head{
   background: rgba(255,255,255,.92);
   border: 1px solid var(--line);
@@ -839,7 +1044,6 @@ body{
 .page.wizard-page[data-current-step="4"] .wizard-head h2,
 .page.wizard-page[data_current_step="4"] .wizard-head p{ color: var(--ink); }
 
-/* 2 columnas */
 .step4-layout{
   display:grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -860,7 +1064,6 @@ body{
   .step4-layout{ grid-template-columns:1fr; gap:18px; }
 }
 
-/* Evitar overflow por imágenes/textos */
 .page.wizard-page[data-current-step="4"] img{ max-width:100%; height:auto; }
 .page.wizard-page[data-current-step="4"] .sum-car-info,
 .page.wizard-page[data-current-step="4"] .sum-table,
@@ -967,7 +1170,7 @@ body{
   box-shadow:none;
 }
 
-/* DOB (DD / mmm / YYYY) — pro, sin “azul” */
+/* DOB (DD / mmm / YYYY) */
 .sum-form .dob-inline{
   display:flex;
   width:100%;
@@ -1000,7 +1203,6 @@ body{
   box-shadow:none !important;
   border-color:#000 !important;
 }
-/* el mes (mmm) se ve más “textual” */
 .sum-form #dob_month{ text-transform:lowercase; letter-spacing:.2px; }
 
 .sum-form .sum-checks{
@@ -1045,7 +1247,6 @@ body{
   .sum-form .sum-checks{ grid-template-columns:1fr; }
 }
 
-/* Botón reservar */
 #btnReservar{
   height:44px;
   padding:0 26px;
@@ -1060,7 +1261,7 @@ body{
 }
 
 /* ==========================================================
-   STEP 4 — RESUMEN (compacto + lugar/fecha + auto)
+   STEP 4 — RESUMEN (compacto)
 ========================================================== */
 .sum-compact{
   margin-top:6px;
@@ -1094,7 +1295,7 @@ body{
   border-radius:999px;
 }
 
-/* Subtítulos (Lugar y fecha / Tu auto / Detalles del precio) */
+/* Subtítulos */
 .sum-subtitle{
   margin: 12px 0 10px;
   font-weight: 900;
@@ -1150,7 +1351,7 @@ body{
   line-height:1.2;
 }
 
-/* Fecha/hora (versión final más chica) */
+/* Fecha/hora */
 .sum-dt2{
   display:flex;
   flex-direction:column;
@@ -1187,7 +1388,7 @@ body{
   .sum-compact-head{ flex-direction:column; align-items:flex-start; }
 }
 
-/* Tu auto (card) */
+/* Tu auto */
 .sum-car{
   display:flex;
   gap:14px;
@@ -1215,23 +1416,16 @@ body{
 }
 
 /* ==========================================================
-   STEP 4 — DETALLES DEL PRECIO (PRO / PREMIUM)
-   Requiere tu HTML con:
-   - .sum-bar   (header con total a la derecha)
-   - .sum-subbar (subheader)
+   STEP 4 — DETALLES DEL PRECIO
 ========================================================== */
-
-/* mata títulos viejos con rayas rojas */
 .sum-line-title{ display:none !important; }
 
-/* tabla “sin marco” */
 .sum-table{
   background:transparent;
   border:0;
   box-shadow:none;
 }
 
-/* cada bloque como card */
 .sum-block{
   background:#fff;
   border:1px solid #eef2f7;
@@ -1241,7 +1435,6 @@ body{
   box-shadow: 0 14px 30px rgba(0,0,0,.06);
 }
 
-/* Header PRO: blanco glass + acento rojo */
 .sum-bar{
   position:relative;
   display:flex;
@@ -1292,7 +1485,6 @@ body{
   border:1px solid rgba(178,34,34,.18);
 }
 
-/* Subheader simple */
 .sum-subbar{
   margin-top:12px;
   margin-bottom:8px;
@@ -1315,7 +1507,6 @@ body{
   background: linear-gradient(90deg, rgba(15,23,42,.12), rgba(15,23,42,0));
 }
 
-/* Rows internas limpias */
 .sum-block .row{
   padding:10px 0;
   border-top:1px solid #f1f5f9;
@@ -1325,7 +1516,6 @@ body{
 }
 .sum-block .row:first-of-type{ border-top:0; }
 
-/* Tarifa base total en misma fila */
 .row-base-total{
   display:flex;
   align-items:baseline;
@@ -1343,7 +1533,6 @@ body{
   white-space:nowrap;
 }
 
-/* Incluido chips */
 .inc-items{ display:flex; flex-wrap:wrap; gap:10px; }
 .inc-item{
   display:inline-flex;
@@ -1363,7 +1552,6 @@ body{
 }
 .inc-check{ color:#22c55e; font-weight:900; }
 
-/* Total final */
 .sum-total{
   margin-top:10px;
   padding:14px 2px 0;
@@ -1611,10 +1799,10 @@ span.flatpickr-weekday{
   .topbar,.wizard-steps{ display:none!important; }
   .wizard-card{ box-shadow:none; border:1px solid #e5e7eb; background:#fff; }
 }
+
 /* ==========================================================
    STEP 4 — ACORDEONES PRECIO (LIMPIO / PRO)
 ========================================================== */
-
 .sum-acc{
   background:#fff;
   border:1px solid #eef2f7;
@@ -1624,7 +1812,6 @@ span.flatpickr-weekday{
   overflow:hidden;
 }
 
-/* quitar marcador default */
 .sum-acc > summary{
   list-style:none;
   cursor:pointer;
@@ -1634,7 +1821,6 @@ span.flatpickr-weekday{
 }
 .sum-acc > summary::-webkit-details-marker{ display:none; }
 
-/* HEADER */
 .sum-acc > .sum-bar{
   background:transparent;
   border:0;
@@ -1643,7 +1829,6 @@ span.flatpickr-weekday{
   gap:8px;
 }
 
-/* Título */
 .sum-bar > span{
   font-weight:900;
   text-transform:uppercase;
@@ -1652,10 +1837,9 @@ span.flatpickr-weekday{
   color:#0f172a;
 }
 
-/* PRECIO — sin burbuja */
 .sum-bar > strong{
-  margin-left:auto;          /* empuja a la derecha */
-  margin-right:6px;          /* lo acerca a la flecha */
+  margin-left:auto;
+  margin-right:6px;
   font-size:15px;
   font-weight:900;
   color:#0f172a;
@@ -1665,7 +1849,6 @@ span.flatpickr-weekday{
   padding:0;
 }
 
-/* Flecha */
 .sum-caret{
   font-size:14px;
   transition: transform .2s ease;
@@ -1675,13 +1858,11 @@ span.flatpickr-weekday{
   transform:rotate(180deg);
 }
 
-/* Cuerpo */
 .sum-acc-body{
   padding:12px 18px 16px;
   border-top:1px solid #f1f5f9;
 }
 
-/* Filas internas */
 .sum-acc-body .row{
   display:grid;
   grid-template-columns:1fr auto;
@@ -1703,10 +1884,12 @@ span.flatpickr-weekday{
 .sum-acc-body .muted{
   color:#6b7280;
 }
-/* ============================
-   STEP 4 - ICONOS (car-specs)
-============================ */
-.car-mini-specs{
+
+/* ==========================================================
+   ✅ STEP 4 - ICONOS (SOLO resumen)
+   (Aislado para no pisar Step 2)
+========================================================== */
+.step4-pane .car-mini-specs{
   margin-top:14px;
   display:flex;
   align-items:center;
@@ -1715,7 +1898,7 @@ span.flatpickr-weekday{
   flex-wrap:wrap;
 }
 
-.car-specs{
+.step4-pane .car-specs{
   margin:0;
   padding:0;
   list-style:none;
@@ -1726,7 +1909,7 @@ span.flatpickr-weekday{
   font-weight:900;
 }
 
-.car-specs li{
+.step4-pane .car-specs li{
   display:inline-flex;
   align-items:center;
   gap:8px;
@@ -1734,57 +1917,171 @@ span.flatpickr-weekday{
   line-height:1;
 }
 
-.car-specs i{
+.step4-pane .car-specs i{
   font-size:16px;
   opacity:.95;
 }
 
-.car-mini-tech{
+.step4-pane .car-mini-tech{
   display:flex;
   align-items:center;
   gap:10px;
   flex-wrap:wrap;
 }
 
-/* responsive */
 @media (max-width:760px){
-  .car-mini-specs{
+  .step4-pane .car-mini-specs{
     justify-content:flex-start;
   }
 }
-.link-politicas{
-  color: var(--brand);
-  font-weight: 900;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.link-politicas:hover{
-  color: var(--brand-dark);
-}
-/* Ajuste para Select2 en contenedores con icono */
+
+/* ==========================================================
+   Select2 ajustes
+========================================================== */
 .ctl.has-ico .select2-container--default .select2-selection--single {
-    padding-left: 40px !important;
-    height: 52px !important;
-    display: flex;
-    align-items: center;
-    border-radius: 14px;
-    border: 1px solid #e5e7eb;
+  padding-left: 40px !important;
+  height: 52px !important;
+  display: flex;
+  align-items: center;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
 }
-
 .ctl.has-ico .ico {
-    position: absolute;
-    left: 14px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    color: #9ca3af;
-    pointer-events: none;
-    font-size: 1.1rem;
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  color: #9ca3af;
+  pointer-events: none;
+  font-size: 1.1rem;
+}
+.select2-selection__rendered { padding-left: 0 !important; }
+.select2-search--dropdown { display: none !important; }
+
+/* ==========================================================
+   ✅ FIX FINAL — Step 2 V2: specs EN UNA FILA (5 2 1 T|Auto)
+   y CarPlay/Android abajo
+========================================================== */
+
+/* 1) La fila de specs (UL) horizontal */
+.car-card--v2 .car-mini-specs{
+  margin:0 !important;
+  padding:0 !important;
+  list-style:none !important;
+
+  display:flex !important;
+  flex-direction:row !important;     /* ✅ lateral */
+  align-items:center !important;
+  justify-content:flex-start !important;
+
+  gap:10px !important;               /* separación pequeña */
+  flex-wrap:nowrap !important;       /* ✅ que NO se vaya hacia abajo */
 }
 
-.select2-selection__rendered {
-    padding-left: 0 !important;
+/* cada item (5, 2, 1, T | Automática) */
+.car-card--v2 .car-mini-specs > li{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:6px !important;                /* icono + número pegado */
+  white-space:nowrap !important;
+  font-weight:900 !important;
+  color:#0f172a !important;
+  line-height:1 !important;
+  font-size:14px !important;
 }
-.select2-search--dropdown {
-    display: none !important;
+
+.car-card--v2 .car-mini-specs > li i{
+  font-size:16px !important;
+  opacity:.95 !important;
+}
+
+/* 2) CarPlay / Android debajo */
+.car-card--v2 .car-mini-tech{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:12px !important;
+  margin-top:6px !important;         /* ✅ abajo de la fila */
+}
+
+/* (opcional) si no cabe en móvil, entonces sí permite wrap */
+@media (max-width:560px){
+  .car-card--v2 .car-mini-specs{
+    flex-wrap:wrap !important;        /* en móvil sí puede bajar */
+    row-gap:8px !important;
+  }
+}
+/* ==========================================================
+   ✅ STEP 4 — TU AUTO (sum-car) | specs en fila + tech debajo
+   - Quita puntitos/bullets
+   - 5 2 1 T | Automática en una sola fila
+   - CarPlay/Android debajo
+========================================================== */
+
+/* contenedor de la sección TU AUTO (sin cambios agresivos) */
+.page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs{
+  margin-top:8px !important;
+  padding:0 !important;
+  list-style:none !important;
+
+  display:flex !important;
+  flex-direction:row !important;      /* ✅ specs en fila */
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:12px !important;                /* separación pequeña */
+  flex-wrap:nowrap !important;         /* ✅ no baja */
+}
+
+/* ❌ elimina cualquier bullet/punto “decorativo” que te esté metiendo */
+.page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs::before,
+.page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs::after,
+.page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs li::before,
+.page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs li::after{
+  content:none !important;
+  display:none !important;
+}
+
+/* cada item (icono + número / texto) */
+.page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs > li{
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:6px !important;
+  white-space:nowrap !important;
+  font-weight:900 !important;
+  color:#0f172a !important;
+  line-height:1 !important;
+  font-size:14px !important;
+}
+
+/* iconos */
+.page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs > li i{
+  font-size:16px !important;
+  opacity:.95 !important;
+}
+
+/* CarPlay / Android debajo (alineado izq) */
+.page.wizard-page[data-current-step="4"] .sum-car .car-mini-tech{
+  margin-top:8px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:12px !important;
+  flex-wrap:wrap !important; /* si no cabe, baja bonito */
+}
+
+/* (opcional) que los chips se vean consistentes y no gigantes */
+.page.wizard-page[data-current-step="4"] .sum-car .car-mini-tech .chip{
+  padding:8px 12px !important;
+  border-radius:999px !important;
+  font-size:12px !important;
+  font-weight:900 !important;
+}
+
+/* móvil: permite wrap de la fila para que no se rompa */
+@media (max-width:560px){
+  .page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs{
+    flex-wrap:wrap !important;
+    row-gap:10px !important;
+  }
 }
