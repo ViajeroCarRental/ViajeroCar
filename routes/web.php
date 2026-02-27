@@ -99,9 +99,8 @@ Route::get('/admin',  [LoginController::class, 'adminHome'])
     ->name('admin.home')
     ->middleware('sesion.activa');
 
-Route::get('/reservaciones-usuario', function () {
-    return view('Usuarios.Reservaciones');
-})->name('rutaReservacionesUsuario');
+Route::get('/reservaciones-usuario', [ReservacionesController::class, 'desdeNavbar'])
+    ->name('rutaReservacionesUsuario');
 
 
 
