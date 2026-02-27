@@ -27,9 +27,7 @@ class ReservacionesAdminController extends Controller
 
         try
         {
-            // ===============================
-            // CATEGORÍAS
-            // ===============================
+            // categoria
             $categorias = DB::table('categorias_carros as c')
                 ->join('categoria_costo_km as ck', 'c.id_categoria', '=', 'ck.id_categoria')
                 ->leftJoin('vehiculos as v', 'v.id_categoria', '=', 'c.id_categoria')
@@ -43,6 +41,22 @@ class ReservacionesAdminController extends Controller
                 ->orderBy('c.nombre')
                 ->get();
 
+            // Sucursales
+            $sucursales = DB::table('sucursales as s')
+                ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
+                ->where('s.activo', 1)
+                ->select(
+                    's.id_sucursal',
+                    's.nombre as sucursal',
+                    'c.nombre as ciudad',
+                    'c.id_ciudad'
+                )
+                ->orderByRaw("CASE WHEN c.nombre = 'Querétaro' THEN 0 ELSE 1 END")
+                ->orderBy('c.nombre')
+                ->orderBy('s.nombre')
+                ->get()
+                ->groupBy('ciudad');
+
             // Ubicaciones
             $ubicaciones = DB::table('ubicaciones_servicio')
                 ->where('activo', 1)
@@ -54,23 +68,7 @@ class ReservacionesAdminController extends Controller
             $costoKmCategoria = 0;
             $reservacion = (object)['id_reservacion' => null];
 
-            // ===============================
-            // SUCURSALES
-            // ===============================
-            $sucursales = DB::table('sucursales as s')
-                ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
-                ->where('s.activo', 1)
-                ->select(
-                    's.id_sucursal',
-                    DB::raw("CONCAT(s.nombre, ' (', c.nombre, ')') as nombre_mostrado"),
-                    'c.id_ciudad as id_ciudad'
-                )
-                ->orderBy('c.nombre')
-                ->get();
-
-            // =====================================================
-            // ✅ SEGUROS INDIVIDUALES (TU TABLA REAL)
-            // =====================================================
+            // Seguros
             $individuales = DB::table('seguro_individuales')
                 ->select('id_individual', 'nombre', 'descripcion', 'precio_por_dia', 'activo')
                 ->where('activo', 1)

@@ -1060,36 +1060,6 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function(){
-
-    const retiro = document.getElementById("sucursal_retiro");
-    const entrega = document.getElementById("sucursal_entrega");
-    const vueloWrap = document.getElementById("vueloWrap");
-
-    function esAeropuerto(select){
-        if(!select) return false;
-        const opt = select.options[select.selectedIndex];
-        if(!opt) return false;
-
-        const nombre = (opt.dataset.nombre || "").toLowerCase();
-        return nombre.includes("aeropuerto");
-    }
-
-    function validarVuelo(){
-        if(esAeropuerto(retiro) || esAeropuerto(entrega)){
-            vueloWrap.style.display = "block";
-        }else{
-            vueloWrap.style.display = "none";
-            document.getElementById("no_vuelo").value = "";
-        }
-    }
-
-    retiro.addEventListener("change", validarVuelo);
-    entrega.addEventListener("change", validarVuelo);
-
-});
-</script>
-@endsection
+<script src="{{ asset('js/reservacionesAdmin.js') }}"></script>
 
 @endsection
