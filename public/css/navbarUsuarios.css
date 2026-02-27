@@ -2130,3 +2130,94 @@ input.flatpickr-input{
     align-items: center !important;
   }
 }
+/* ===== MÉTODOS DE PAGO FOOTER ===== */
+
+.payments-logos{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:18px;
+  flex-wrap:wrap;
+  margin-top:20px;
+}
+
+.payments-logos img{
+  height:34px;
+  object-fit:contain;
+  background:transparent !important;
+  filter: brightness(1.05);
+  transition:.2s ease;
+}
+
+.payments-logos img:hover{
+  transform:scale(1.08);
+}
+
+/* tamaños específicos */
+.payments-logos img.oxxo{
+  height:38px;
+}
+
+.payments-logos img.mp{
+  height:30px;
+}
+
+/* CENTRAR MÉTODOS DE PAGO */
+
+.footer-row.pay-row{
+  display:flex;
+  justify-content:center;
+}
+
+.payments-logos{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:22px;
+  flex-wrap:wrap;
+}
+
+/* tamaño parejito */
+.payments-logos img{
+  height:34px;
+  object-fit:contain;
+  background:transparent !important;
+  transition:.25s ease;
+}
+
+.payments-logos img:hover{
+  transform:scale(1.1);
+}
+
+.payments-logos img.oxxo{
+  height:38px;
+}
+
+.payments-logos img.mp{
+  height:30px;
+}
+
+/* Contenedor */
+.payments-logos{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:22px;
+}
+
+/* Todos */
+.payments-logos img{
+  height:30px;
+  object-fit:contain;
+}
+
+/* SOLO Mastercard */
+.payments-logos img[src*="master"]{
+  height:42px;
+}
+
+/* SOLO PayPal */
+.payments-logos img[src*="paypal"]{
+  height:42px;
+}

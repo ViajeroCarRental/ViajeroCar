@@ -37,6 +37,8 @@
     @yield('css-vistaLogin')
     @yield('css-vistaPerfil')
 
+     <title>@yield('Titulo')</title>
+
   <style>
     /* ==========================
        FIX FRANJA SUPERIOR (TUYO)

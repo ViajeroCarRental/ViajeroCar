@@ -1,10 +1,11 @@
 (function () {
   "use strict";
 
-  const qs  = (s) => document.querySelector(s);
+  // --- 1. Utilidades Globales ---
+  const qs = (s) => document.querySelector(s);
   const qsa = (s) => Array.from(document.querySelectorAll(s));
 
-  // --- Utilidades de fecha
+  // --- 2. Herramientas de Fecha (Para los inputs de entrega/devolución) ---
   function todayISO() {
     const t = new Date();
     const y = t.getFullYear();
@@ -25,19 +26,18 @@
     return `${y}-${m}-${d}`;
   }
 
-  // Espera al DOM listo
+  // --- 3. Ejecución al cargar el DOM ---
   document.addEventListener("DOMContentLoaded", () => {
-    // ===== Topbar: estilo sólido al hacer scroll
-    const topbar = qs(".topbar");
-    function toggleTopbar() {
-      if (!topbar) return;
-      if (window.scrollY > 40) topbar.classList.add("solid");
-      else topbar.classList.remove("solid");
-    }
-    toggleTopbar();
-    window.addEventListener("scroll", toggleTopbar, { passive: true });
 
-    // ===== Menú hamburguesa (mostrar/ocultar)
+    // ===== Interfaz Básica (Topbar, Menú y Footer) =====
+    const topbar = qs(".topbar");
+    const toggleTopbar = () => {
+      if (!topbar) return;
+      window.scrollY > 40 ? topbar.classList.add("solid") : topbar.classList.remove("solid");
+    };
+    window.addEventListener("scroll", toggleTopbar, { passive: true });
+    toggleTopbar();
+
     const hamburger = qs(".hamburger");
     const menu = qs(".menu");
     if (hamburger && menu) {
@@ -51,135 +51,81 @@
       });
     }
 
-    // ===== Marcar link activo por ruta
-    (function markActive() {
-      // En Laravel usamos routeIs en el Blade, pero por si abres estático:
-      const current = (location.pathname.split("/").pop() || "").toLowerCase();
-      qsa(".menu a").forEach((a) => {
-        const href = (a.getAttribute("href") || "").toLowerCase();
-        if (href && current && href === current) a.classList.add("active");
+    const yearEl = qs("#year");
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+    // ===== TFiltro Visual de Autos (Categorías) =====
+    // Esto permite filtrar los autos que ya están cargados en pantalla
+    const botonesFiltro = qsa('.filter-card');
+    const autos = qsa(".catalog-group");
+
+    botonesFiltro.forEach(btn => {
+      btn.addEventListener("click", () => {
+        botonesFiltro.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const filtro = btn.dataset.filter;
+        autos.forEach(auto => {
+          if (filtro === "all") {
+            auto.style.display = "block";
+          } else {
+            auto.style.display = auto.dataset.categoria === filtro ? "block" : "none";
+          }
+        });
       });
-    })();
+    });
 
-    // ===== Footer: año actual
-    const y = qs("#year");
-    if (y) y.textContent = new Date().getFullYear();
-
-    // ====== FECHAS Catálogo (Entrega/Devolución)
-    // Inputs esperados en la vista:
-    //  - #date-start (Entrega)
-    //  - #date-end   (Devolución)
+    // ===== Calendarios y Fechas (Flatpickr) =====
     const startInput = qs("#date-start");
     const endInput = qs("#date-end");
-    if (!startInput || !endInput) return;
 
-    // Asegura placeholders amigables
-    startInput.setAttribute("placeholder", "dd/mm/aaaa");
-    endInput.setAttribute("placeholder", "dd/mm/aaaa");
+    if (startInput && endInput) {
+      startInput.setAttribute("placeholder", "dd/mm/aaaa");
+      endInput.setAttribute("placeholder", "dd/mm/aaaa");
 
-    // Si Flatpickr está disponible, usamos rango + minDate hoy
-    if (window.flatpickr) {
-      // Localiza a español si está el módulo
-      try {
-        if (flatpickr.l10ns?.es) flatpickr.localize(flatpickr.l10ns.es);
-      } catch (_) {}
-
-      // Preferimos rangePlugin si existe (un solo calendario para ambos)
-      if (typeof rangePlugin !== "undefined") {
-        const fpStart = flatpickr("#date-start", {
+      if (window.flatpickr) {
+        // Configuración de Flatpickr con soporte de rango
+        const fpConfig = {
           altInput: true,
           altFormat: "d/m/Y",
           dateFormat: "Y-m-d",
-          minDate: "today",        // ⛔ nada antes de hoy
+          minDate: "today",
           allowInput: false,
-          clickOpens: true,
-          plugins: [new rangePlugin({ input: "#date-end" })],
-          onChange(selectedDates) {
-            // Garantiza que fin >= inicio
-            const s = selectedDates?.[0] || parseYMD(startInput.value);
-            const e = parseYMD(endInput.value);
-            if (s && e && e < s) endInput.value = formatYMD(s);
-          },
-        });
-
-        // Abrir el mismo calendario cuando se focus/click en devolución
-        const openRange = () => {
-          try {
-            fpStart.open();
-          } catch (_) {}
         };
-        endInput.addEventListener("focus", openRange);
-        endInput.addEventListener("click", openRange);
-      } else {
-        // Sin rangePlugin: dos instancias encadenadas
-        const fpInicio = flatpickr("#date-start", {
-          altInput: true,
-          altFormat: "d/m/Y",
-          dateFormat: "Y-m-d",
-          minDate: "today",
-          allowInput: false,
-          clickOpens: true,
-        });
-        const fpFin = flatpickr("#date-end", {
-          altInput: true,
-          altFormat: "d/m/Y",
-          dateFormat: "Y-m-d",
-          minDate: "today",
-          allowInput: false,
-          clickOpens: true,
-        });
 
-        // Si cambia inicio, sube el minDate de fin
-        startInput.addEventListener("change", (e) => {
-          fpFin.set("minDate", e.target.value || "today");
-          // Si fin quedó antes, corrígelo
-          const s = parseYMD(e.target.value);
-          const eDate = parseYMD(endInput.value);
-          if (s && eDate && eDate < s) endInput.value = formatYMD(s);
-        });
-      }
-    } else {
-      // ===== Fallback sin Flatpickr (CDN caído, modo offline, etc.)
-      startInput.removeAttribute("readonly");
-      endInput.removeAttribute("readonly");
-
-      startInput.setAttribute("min", todayISO());
-      endInput.setAttribute("min", todayISO());
-
-      startInput.addEventListener("change", () => {
-        const s = parseYMD(startInput.value);
-        if (s) {
-          endInput.setAttribute("min", formatYMD(s));
-          const e = parseYMD(endInput.value);
-          if (e && e < s) endInput.value = formatYMD(s);
+        if (typeof rangePlugin !== "undefined") {
+          flatpickr("#date-start", {
+            ...fpConfig,
+            plugins: [new rangePlugin({ input: "#date-end" })],
+          });
+        } else {
+          // Fallback si no hay plugin de rango
+          flatpickr("#date-start", fpConfig);
+          flatpickr("#date-end", fpConfig);
         }
-      });
+      } else {
+        // Fallback nativo si falla el CDN
+        startInput.setAttribute("min", todayISO());
+        endInput.setAttribute("min", todayISO());
+      }
     }
 
-    // ===== BOTÓN FILTRAR (conexión al backend Laravel) =====
+    // ===== Botón Filtrar (Envío a Laravel) =====
     const btnFilter = qs("#btn-filter");
     if (btnFilter) {
       btnFilter.addEventListener("click", () => {
-        const loc = qs("#f-location")?.value || "";
-        const type = qs("#f-type")?.value || "";
-        const start = qs("#date-start")?.value || "";
-        const end = qs("#date-end")?.value || "";
+        const params = new URLSearchParams({
+          location: qs("#f-location")?.value || "",
+          type: qs("#f-type")?.value || "",
+          start: qs("#date-start")?.value || "",
+          end: qs("#date-end")?.value || "",
+        });
 
-        // Validación simple
-        if (!start || !end) {
+        if (!params.get("start") || !params.get("end")) {
           alert("Por favor selecciona las fechas de entrega y devolución.");
           return;
         }
 
-        // Construye URL con parámetros para el controlador
-        const params = new URLSearchParams({
-          location: loc,
-          type: type,
-          start: start,
-          end: end,
-        });
-
-        // Efecto visual breve y redirección al backend
         btnFilter.disabled = true;
         btnFilter.classList.add("loading");
         setTimeout(() => {

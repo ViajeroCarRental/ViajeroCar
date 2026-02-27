@@ -251,6 +251,22 @@ $vehiculos = collect();
         // Complementos listos por si avanzan
         $servicios = $this->obtenerServiciosActivos();
 
+       // ===============================
+// AUTO SELECCIONADO DESDE WELCOME
+// ===============================
+$autoSeleccionado = false;
+$nombreAuto = null;
+$precioAuto = null;
+$imagenAuto = null;
+
+if ($request->has('auto')) {
+    $autoSeleccionado = true;
+    $nombreAuto = $request->input('nombre');
+    $precioAuto = $request->input('precio');
+    $imagenAuto = $request->input('imagen');
+}
+
+
         return view('Usuarios.Reservaciones', compact(
             'step',
             'filters',
@@ -258,19 +274,34 @@ $vehiculos = collect();
             'vehiculo',
             'ciudades',
             'categorias',
-            'servicios'
+            'servicios',
+            'autoSeleccionado',
+            'nombreAuto',
+            'precioAuto',
+            'imagenAuto'
         ));
     }
 
     /* ===================== NUEVO: generar PDF + guardar en archivos + enviar WhatsApp ===================== */
 
-    public function cotizar(StoreCotizacionRequest $request)
+   public function cotizar(Request $request)
 {
     Log::info('🟢 Datos recibidos en cotizar:', $request->all());
 
     // 1️⃣ Validación: ahora trabajamos por CATEGORÍA, no por vehículo
-    $validated = $request->validated();
-
+    $request->validate([
+        'categoria_id'        => 'required|integer',
+        'pickup_date'         => 'required|date_format:Y-m-d',
+        'pickup_time'         => 'required|date_format:H:i',
+        'dropoff_date'        => 'required|date_format:Y-m-d',
+        'dropoff_time'        => 'required|date_format:H:i',
+        'pickup_sucursal_id'  => 'nullable|integer',
+        'dropoff_sucursal_id' => 'nullable|integer',
+        'addons'              => 'nullable|array',
+        'nombre'              => 'nullable|string|max:150',
+        'email'               => 'nullable|email|max:150',
+        'telefono'            => 'nullable|string|max:30',
+    ]);
     // 2️⃣ Buscar la CATEGORÍA y opcionalmente un vehículo ejemplo para la ficha
     $vehiculo = DB::table('categorias_carros as c')
         ->leftJoin('vehiculos as v', 'v.id_categoria', '=', 'c.id_categoria')

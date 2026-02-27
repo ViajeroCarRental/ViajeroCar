@@ -248,9 +248,41 @@
       plugins: (typeof window.rangePlugin !== "undefined")
         ? [ new window.rangePlugin({ input: '#dropoffDate' }) ]
         : [],
-      onChange: updateSummary
+       onReady: function(selectedDates, dateStr, instance) {
+            const altPickup = instance.altInput;
+            const dropoffEl = document.getElementById('dropoffDate');
+
+            const updateLabels = () => {
+                // Pickup
+                if (altPickup) {
+                    if (altPickup.value !== "") altPickup.classList.add('has-value');
+                    else altPickup.classList.remove('has-value');
+                }
+                // Devolución
+                if (dropoffEl && dropoffEl.nextElementSibling) {
+                    const altDropoff = dropoffEl.nextElementSibling;
+                    if (altDropoff.value !== "") altDropoff.classList.add('has-value');
+                    else altDropoff.classList.remove('has-value');
+                }
+            };
+
+            // Forzar al hacer click (para asegurar el borde negro desde el inicio)
+            if(altPickup) {
+                altPickup.addEventListener('focus', () => altPickup.classList.add('has-value'));
+                altPickup.addEventListener('blur', updateLabels);
+            }
+
+            // Ejecutar cuando Flatpickr detecte cambio de fecha
+            instance.config.onChange.push(updateLabels);
+
+            // Ejecución inicial
+            setTimeout(updateLabels, 200);
+        },
+        onChange: function() {
+            if (typeof updateSummary === "function") updateSummary();
+        }
     });
-  }
+}
 
   /* ==========================
      SELECTS de hora/minuto
@@ -452,6 +484,17 @@
 
       if(dropWrap) dropWrap.style.display = on ? "" : "none";
 
+       if(dropWrap){
+    if(on){
+      dropWrap.classList.remove("disabled");
+      dropWrap.classList.add("enabled");
+    }
+    else{
+      dropWrap.classList.remove("enabled");
+      dropWrap.classList.add("disabled");
+    }
+  }
+
       if(dropSel){
         if(on){
           dropSel.setAttribute("required", "required");
@@ -518,6 +561,32 @@
       if(pickTime && !pickTime.value) pickTime.value = "12:00";
       if(dropTime && !dropTime.value) dropTime.value = "12:00";
     }, { capture:true });
+
+/* === NUEVO: Control de bordes negros para Select2 y otros === */
+const inputsToWatch = [pickSel, dropSel];
+
+inputsToWatch.forEach(el => {
+  if (!el) return;
+
+  // Función para evaluar si tiene valor
+  const toggleHasValue = () => {
+    if (el.value && el.value !== "") {
+      el.classList.add('has-value');
+      // Si usa Select2, aplicamos al contenedor visual que crea la librería
+      $(el).next('.select2-container').find('.select2-selection').addClass('has-value');
+    } else {
+      el.classList.remove('has-value');
+      $(el).next('.select2-container').find('.select2-selection').removeClass('has-value');
+    }
+  };
+
+  // Escuchar cambios (Select2 dispara 'change')
+  $(el).on('change', toggleHasValue);
+
+  // Ejecutar al inicio por si ya vienen con datos
+  setTimeout(toggleHasValue, 500);
+});
+
   })();
 })();
 
@@ -556,8 +625,8 @@
 })();
 
 /* =====================================================================
-   Swiper tiles (tarjetas) - CERO AUTOPLAY + SOLO FLECHAS + SIN LOOP
-   ✅ si ya existía un swiper con autoplay de otro script, lo detiene y lo destruye
+   Swiper tiles (tarjetas) - MULTIPLE INSTANCE SUPPORT
+   ✅ Ahora detecta todos los carruseles y los inicializa por separado
 ===================================================================== */
 (function(){
   "use strict";
@@ -565,49 +634,52 @@
   function initTilesSwiper(){
     if(typeof window.Swiper !== "function") return;
 
-    const el = document.querySelector('.vj-tiles-swiper');
-    if(!el) return;
+    // 1. Buscamos TODOS los carruseles con esa clase
+    const allSwipers = document.querySelectorAll('.vj-tiles-swiper');
 
-    // ✅ si alguien lo inicializó antes (y trae autoplay), lo apagamos
-    if(el.swiper){
-      try{
-        if(el.swiper.autoplay) el.swiper.autoplay.stop();
-      }catch(_){}
-      try{
-        el.swiper.destroy(true, true);
-      }catch(_){}
-    }
-
-    if(el.dataset.swReady === "1") return;
-    el.dataset.swReady = "1";
-
-    // eslint-disable-next-line no-new
-    new Swiper('.vj-tiles-swiper', {
-      loop: false,
-      autoplay: false,
-      allowTouchMove: false, // ✅ solo flechas
-      speed: 650,
-      spaceBetween: 18,
-      slidesPerView: 1.06,
-      centeredSlides: false,
-      grabCursor: false,
-      navigation: {
-        nextEl: '.vj-tiles-swiper .swiper-button-next',
-        prevEl: '.vj-tiles-swiper .swiper-button-prev',
-      },
-      pagination: {
-        el: '.vj-tiles-swiper .swiper-pagination',
-        clickable: true
-      },
-      breakpoints: {
-        560:  { slidesPerView: 1.4, spaceBetween: 18 },
-        768:  { slidesPerView: 2,   spaceBetween: 20 },
-        1024: { slidesPerView: 3,   spaceBetween: 22 },
-        1280: { slidesPerView: 3.3, spaceBetween: 24 }
+    allSwipers.forEach((el) => {
+      // ✅ Si ya fue inicializado (ej. por otro script con autoplay), lo limpiamos
+      if(el.swiper){
+        try {
+          if(el.swiper.autoplay) el.swiper.autoplay.stop();
+          el.swiper.destroy(true, true);
+        } catch(_){}
       }
+
+      // Evitar doble inicialización
+      if(el.dataset.swReady === "1") return;
+      el.dataset.swReady = "1";
+
+      // 2. Inicializamos el Swiper usando el elemento actual (el) en lugar del selector de clase
+      new Swiper(el, {
+        loop: false,
+        autoplay: false,
+        allowTouchMove: true, // Te sugiero ponerlo en true para que en móviles se pueda deslizar con el dedo
+        speed: 650,
+        spaceBetween: 18,
+        slidesPerView: 1.06,
+        centeredSlides: false,
+        grabCursor: true,
+        navigation: {
+          // ✅ IMPORTANTE: Busca las flechas DENTRO de este carrusel específico
+          nextEl: el.querySelector('.swiper-button-next'),
+          prevEl: el.querySelector('.swiper-button-prev'),
+        },
+        pagination: {
+          el: el.querySelector('.swiper-pagination'),
+          clickable: true
+        },
+        breakpoints: {
+          560:  { slidesPerView: 1.4, spaceBetween: 18 },
+          768:  { slidesPerView: 2,   spaceBetween: 20 },
+          1024: { slidesPerView: 3,   spaceBetween: 22 },
+          1280: { slidesPerView: 3.3, spaceBetween: 24 }
+        }
+      });
     });
   }
 
+  // Ejecutar al cargar
   document.addEventListener('DOMContentLoaded', initTilesSwiper);
 })();
 
