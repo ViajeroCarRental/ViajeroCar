@@ -56,6 +56,8 @@ public function store(Request $request)
         'kilometraje' => 'nullable|integer|min:0|max:1000000',
         'archivo_poliza' => 'nullable|mimes:pdf,jpg,jpeg,png|max:4096',
         'archivo_verificacion' => 'nullable|mimes:pdf,jpg,jpeg,png|max:4096',
+        'archivo_cartafactura' => 'nullable|mimes:pdf,jpg,jpeg,png|max:4096',
+        'archivo_tarjetacirculacion' => 'nullable|mimes:pdf,jpg,jpeg,png|max:4096',
         'numero_rin' => 'nullable|string|max:100',
         'capacidad_tanque' => 'nullable|numeric|min:0',
         'aceite' => 'nullable|string|max:100',
@@ -63,13 +65,22 @@ public function store(Request $request)
     ]);
 
     // === Subida de archivos ===
-    $archivoPoliza = $request->hasFile('archivo_poliza')
-        ? $request->file('archivo_poliza')->store('polizas', 'public')
-        : null;
+    $archivopoliza = $request->hasFile('archivo_poliza')
+    ? file_get_contents($request->file('archivo_poliza')->getRealPath())
+    : null;
 
-    $archivoVerificacion = $request->hasFile('archivo_verificacion')
-        ? $request->file('archivo_verificacion')->store('verificaciones', 'public')
-        : null;
+    $archivoverificacion = $request->hasFile('archivo_verificacion')
+    ? file_get_contents($request->file('archivo_verificacion')->getRealPath())
+    : null;
+
+    $archivocartafactura = $request->hasFile('archivo_cartafactura')
+    ? file_get_contents($request->file('archivo_cartafactura')->getRealPath())
+    : null;
+
+    $archivotarjetacirculacion = $request->hasFile('archivo_tarjetacirculacion')
+    ? file_get_contents($request->file('archivo_tarjetacirculacion')->getRealPath())
+    : null;
+
 
     // === Inserción completa ===
     DB::table('vehiculos')->insert([
@@ -92,6 +103,7 @@ public function store(Request $request)
         'capacidad_tanque'=> $request->capacidad_tanque,
         'aceite'         => $request->aceite,
         'placa'          => $request->placa,
+        'archivo_cartafactura' => $archivocartafactura,
 
         // 🔹 Datos técnicos
         'cilindros'             => $request->cilindros ?? 4,
@@ -119,14 +131,15 @@ public function store(Request $request)
         'fin_vigencia_poliza'   => $request->fin_vigencia_poliza,
         'tipo_cobertura'        => $request->tipo_cobertura,
         'plan_seguro'           => $request->plan_seguro,
-        'archivo_poliza'        => $archivoPoliza,
+        'archivo_poliza'        => $archivopoliza,
 
         // 🔹 Tarjeta de circulación / verificación
         'folio_tarjeta'           => $request->folio_tarjeta,
         'movimiento_tarjeta'      => $request->movimiento_tarjeta,
         'fecha_expedicion_tarjeta'=> $request->fecha_expedicion_tarjeta,
         'oficina_expedidora'      => $request->oficina_expedidora,
-        'archivo_verificacion'    => $archivoVerificacion,
+        'archivo_verificacion'    => $archivoverificacion,
+        'archivo_tarjetacirculacion' => $archivotarjetacirculacion,
 
         // 🔹 Fechas de auditoría
         'created_at' => now(),
@@ -148,18 +161,160 @@ public function store(Request $request)
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public function getVehiculo($id)
+{
+    $vehiculo = DB::table('vehiculos')
+        ->where('id_vehiculo', $id)
+        ->first();
+
+    if (!$vehiculo) {
+        return response()->json(['error' => 'Vehículo no encontrado'], 404);
+    }
+    // ❌ ELIMINAR CAMPOS BINARIOS
+    unset(
+        $vehiculo->archivo_cartafactura,
+        $vehiculo->archivo_poliza,
+        $vehiculo->archivo_verificacion,
+        $vehiculo->archivo_tarjetacirculacion
+    );
+
+    // 🔒 Normalizar null
+    foreach ($vehiculo as $k => $v) {
+        if ($v === null) {
+            $vehiculo->$k = '';
+        }
+    }
+
+    return response()->json($vehiculo);
+}
+
+
+
     // 🔹 Editar auto existente
     public function update(Request $request, $id)
-    {
-        DB::table('vehiculos')->where('id_vehiculo', $id)->update([
-            'color' => $request->color,
-            'categoria' => $request->categoria,
-            'kilometraje' => $request->kilometraje,
-            'updated_at' => now(),
-        ]);
+{
+     $currentYear = date('Y');
+    $nextYear = $currentYear + 1;
 
-        return redirect()->route('rutaFlotilla')->with('success', 'Vehículo actualizado correctamente.');
+    $validated = $request->validate([
+        'marca' => 'sometimes|required|string|max:100',
+        'modelo' => 'sometimes|required|string|max:100',
+        'anio' => "sometimes|required|integer|min:2000|max:$nextYear",
+        'color' => 'nullable|string|max:40',
+        'kilometraje' => 'nullable|integer|min:0|max:1000000',
+        'archivo_poliza' => 'nullable|mimes:pdf,jpg,jpeg,png|max:4096',
+        'archivo_verificacion' => 'nullable|mimes:pdf,jpg,jpeg,png|max:4096',
+        'archivo_cartafactura' => 'nullable|mimes:pdf,jpg,jpeg,png|max:4096',
+        'archivo_tarjetacirculacion' => 'nullable|mimes:pdf,jpg,jpeg,png|max:4096',
+        'numero_rin' => 'nullable|string|max:100',
+        'capacidad_tanque' => 'nullable|numeric|min:0',
+        'aceite' => 'nullable|string|max:100',
+    ]);
+
+    $vehiculo = DB::table('vehiculos')->where('id_vehiculo', $id)->first();
+    if (!$vehiculo) abort(404);
+
+    $data = [];
+
+$campos = [
+    // Generales
+    'marca',
+    'modelo',
+    'anio',
+    'nombre_publico',
+    'color',
+    'transmision',
+    'combustible',
+    'id_categoria',
+    'numero_serie',
+    'numero_rin',
+    'placa',
+
+    // Técnicos
+    'cilindros',
+    'numero_motor',
+    'holograma',
+    'vigencia_verificacion',
+    'kilometraje',
+    'asientos',
+    'puertas',
+    'capacidad_tanque',
+    'aceite',
+
+    // Propietario
+    'propietario',
+
+    // Seguro
+    'no_poliza',
+    'aseguradora',
+    'inicio_vigencia_poliza',
+    'fin_vigencia_poliza',
+
+    // Tarjeta
+    'folio_tarjeta',
+    'movimiento_tarjeta',
+    'fecha_expedicion_tarjeta',
+];
+
+foreach ($campos as $campo) {
+    if ($request->filled($campo)) {
+        $data[$campo] = $request->$campo;
     }
+}
+
+    // ========= ARCHIVOS (solo si llegan) =========
+    if ($request->hasFile('archivo_poliza')) {
+        $data['archivo_poliza'] = file_get_contents($request->file('archivo_poliza')->getRealPath());
+    }
+
+    if ($request->hasFile('archivo_verificacion')) {
+        $data['archivo_verificacion'] = file_get_contents($request->file('archivo_verificacion')->getRealPath());
+    }
+
+    if ($request->hasFile('archivo_cartafactura')) {
+        $data['archivo_cartafactura'] = file_get_contents($request->file('archivo_cartafactura')->getRealPath());
+    }
+
+    if ($request->hasFile('archivo_tarjetacirculacion')) {
+        $data['archivo_tarjetacirculacion'] = file_get_contents($request->file('archivo_tarjetacirculacion')->getRealPath());
+    }
+
+
+    if (empty($data)) {
+    return back()->with('info', 'No se realizaron cambios.');
+    }
+
+    $data['updated_at'] = now();
+
+    DB::table('vehiculos')->where('id_vehiculo', $id)->update($data);
+
+    if ($request->expectsJson()) {
+        return response()->json([
+            'success' => true,
+            'message' => '🚗 Vehículo actualizado correctamente.'
+        ]);
+    }
+
+    return redirect()
+        ->route('rutaFlotilla')
+        ->with('success', '🚗 Vehículo actualizado correctamente.');
+}
 
     // 🔹 Eliminar auto
     public function destroy($id)
