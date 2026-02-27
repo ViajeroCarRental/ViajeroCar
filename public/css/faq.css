@@ -9,10 +9,11 @@
   --radius:14px;
 }
 
-/* ===== BASE ===== */
+
 *{ box-sizing:border-box }
 html{ scroll-behavior:smooth }
-body{
+body
+{
   margin:0;
   font-family:'Poppins',system-ui,-apple-system,Arial,sans-serif;
   color:var(--ink);
@@ -20,23 +21,14 @@ body{
 }
 img{ max-width:100%; height:auto; display:block }
 
-/* =========================
-   PAGE
-========================= */
+
 .page{
   max-width:1280px;
   margin: clamp(80px,10vw,110px) auto 60px;
   padding:0 clamp(12px,3vw,20px);
 }
 
-/* =========================
-   HERO FAQ
-   ✔ FULL WIDTH
-   ✔ MÁS CORTO
-   ✔ VISUALMENTE AMPLIO
-========================= */
 
-/* hero sale del contenedor */
 .page > .hero.hero-mini{
   width:100vw;
   margin-left: calc(50% - 50vw);
@@ -46,14 +38,14 @@ img{ max-width:100%; height:auto; display:block }
   overflow:hidden;
 }
 
-/* altura controlada (base) */
+
 .hero.hero-mini{
   position:relative;
   height: clamp(160px, 18vw, 260px);
   margin-bottom:18px;
 }
 
-/* fondo */
+
 .hero .hero-bg,
 .hero .hero-bg img{
   position:absolute;
@@ -64,7 +56,7 @@ img{ max-width:100%; height:auto; display:block }
   object-position:center 35%;
 }
 
-/* overlay */
+
 .hero .hero-overlay{
   position:absolute;
   inset:0;
@@ -75,7 +67,6 @@ img{ max-width:100%; height:auto; display:block }
   );
 }
 
-/* contenido */
 .hero .hero-content{
   position:relative;
   z-index:2;
@@ -123,9 +114,7 @@ img{ max-width:100%; height:auto; display:block }
   .hero .hero-bg img{ object-position:center 30%; }
 }
 
-/* =========================
-   FAQ LAYOUT
-========================= */
+
 .faq-wrap{
   display:grid;
   grid-template-columns:320px 1fr;
@@ -180,9 +169,7 @@ img{ max-width:100%; height:auto; display:block }
   flex-wrap:wrap;
 }
 
-/* =========================
-   BUTTONS
-========================= */
+
 .btn{
   display:inline-flex;
   align-items:center;
@@ -198,9 +185,7 @@ img{ max-width:100%; height:auto; display:block }
 .btn-ghost{ background:#e5e7eb; color:#111 }
 .btn-wide{ width:100%; justify-content:center }
 
-/* =========================
-   CHAT
-========================= */
+
 .chat-card{
   background:var(--paper);
   border:1px solid #e5e7eb;
@@ -294,9 +279,7 @@ img{ max-width:100%; height:auto; display:block }
   border:1px solid #d1d5db;
 }
 
-/* =========================
-   REDUCE MOTION
-========================= */
+
 @media (prefers-reduced-motion: reduce){
   *{
     animation:none !important;
@@ -304,19 +287,10 @@ img{ max-width:100%; height:auto; display:block }
   }
 }
 
-/* =========================
-   FIX: eliminar espacio blanco arriba del hero FAQ
-========================= */
 .page{
   margin-top: 0 !important;
 }
 
-/* =====================================
-   FORCE HERO FAQ SIZE (OVERRIDE TOTAL)
-   ✅ “un poco más largo”
-   Desktop: 240px
-   Mobile: 190px
-===================================== */
 .hero.hero-mini{
   height: 380px !important;
   min-height: 380px !important;
