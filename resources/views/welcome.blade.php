@@ -242,22 +242,7 @@
     background: white;
     transform: translateY(-50%);
 }
-/* fecha pickup y devolucion*/
-/* Asegurar que el input tenga espacio para el texto arriba
-#pickupDate, #dropoffDate {
-    padding-top: 15px !important;
-    border: 1px solid #d1d5db;
-    outline: none;
-    transition: all 0.2s ease;
-}*/
 
-/* Borde negro persistente al enfocar o tener contenido
-#pickupDate:focus,
-#pickupDate:not(:placeholder-shown),
-#dropoffDate:focus,
-#dropoffDate:not(:placeholder-shown) {
-    border-color: #000000 !important;
-}*/
 /* Fuerza al label de fechas a subir y mantenerse */
 .dt-field.floating-group .flatpickr-input:focus ~ .floating-label,
 .dt-field.floating-group .flatpickr-input.active ~ .floating-label,
@@ -271,7 +256,6 @@
     z-index: 10;
 }
 
-/* Reemplaza tus reglas de borde de fecha por esta única regla */
 .flatpickr-input,
 .flatpickr-input.has-value,
 .flatpickr-input:focus {
@@ -736,7 +720,7 @@
               <div class="field icon-field">
                 <span class="field-icon" id="pickupIcon"><i class="fa-solid fa-location-dot"></i></span>
                 <select id="pickupPlace" name="pickup_sucursal_id"aria-describedby="pickupHelp" required>
-                  <option value="" disabled selected></option>
+                  <option value="" disabled @selected(!request('pickup_sucursal_id'))></option>
                   @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
                         @foreach($ciudad->sucursalesActivas as $suc)
