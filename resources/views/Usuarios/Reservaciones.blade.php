@@ -78,7 +78,7 @@
 
   $isFreshEntry = empty($pickupSucursalId) || empty($dropoffSucursalId);
   $stepCurrent  = $isFreshEntry ? 1 : ($controllerStep ?? $requestedStep);
-if ($stepCurrent >= 2 && $isFreshEntry) {
+  if ($stepCurrent >= 2 && $isFreshEntry) {
     $stepCurrent = 1;
   }
   if ($stepCurrent >= 3 && (empty($categoriaId) || empty($plan))) {
@@ -87,6 +87,7 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
   if ($stepCurrent >= 4 && (empty($categoriaId) || empty($plan))) {
     $stepCurrent = 2;
   }
+
   // Nombres de sucursales para el encabezado (fallback a $ciudades)
   $pickupName  = null;
   $dropoffName = null;
@@ -128,7 +129,6 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
     $d2 = \Illuminate\Support\Carbon::parse($dropoffDateISO);
     $days = max(1, $d1->diffInDays($d2));
   } else {
-    // Si no hay fechas aún (primer ingreso), dejamos 1 para no romper cálculos internos
     $days = 1;
   }
 
@@ -351,7 +351,7 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
       <span class="n">1</span> Generales
     </a>
     <a class="wizard-step {{ ($stepCurrent>2 || request('auto')) ? 'done' : '' }} {{ $stepCurrent===2 ? 'active' : '' }}" href="{{ $toStep(2) }}">
-        <span class="n">2</span> Categoría
+      <span class="n">2</span> Categoría
     </a>
     <a class="wizard-step {{ $stepCurrent>3?'done':'' }} {{ $stepCurrent===3?'active':'' }}" href="{{ $toStep(3) }}">
       <span class="n">3</span> Adicionales
@@ -378,97 +378,92 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
 
         <div class="search-grid">
 
-       {{-- Lugar --}}
-<div class="group-card">
-  <div class="group-head">
-    <div class="group-title">Lugar</div>
-  </div>
+          {{-- Lugar --}}
+          <div class="group-card">
+            <div class="group-head">
+              <div class="group-title">Lugar</div>
+            </div>
 
-  <div class="field-row">
+            <div class="field-row">
 
-    {{-- PICKUP --}}
-    <div class="field">
-      <div class="ctl has-ico pristine" data-float>
+              {{-- PICKUP --}}
+              <div class="field">
+                <div class="ctl has-ico pristine" data-float>
+                  <span class="ico">
+                    <i id="pickupIcon" class="fa-solid fa-location-dot"></i>
+                  </span>
 
-        {{-- ICONO DINÁMICO --}}
-        <span class="ico">
-          <i id="pickupIcon" class="fa-solid fa-location-dot"></i>
-        </span>
+                  <span class="flabel">Lugar de Pick-Up</span>
 
-        <span class="flabel">Lugar de Pick-Up</span>
+                  <select id="pickupPlace" name="pickup_sucursal_id" required data-float-select>
+                    <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}></option>
 
-        <select id="pickupPlace" name="pickup_sucursal_id" required data-float-select>
-          <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}></option>
+                    @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
+                      <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
 
-          @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
-            <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+                        @foreach($ciudad->sucursalesActivas ?? [] as $suc)
+                          @php
+                            $name = strtolower($suc->nombre);
+                            $icon = 'fa-solid fa-location-dot';
 
-              @foreach($ciudad->sucursalesActivas ?? [] as $suc)
-                @php
-                  $name = strtolower($suc->nombre);
-                  $icon = 'fa-solid fa-location-dot';
+                            if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
+                            elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
+                            elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
+                          @endphp
 
-                  if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
-                  elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
-                  elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
-                @endphp
+                          <option value="{{ $suc->id_sucursal }}"
+                                  data-icon="{{ $icon }}"
+                                  {{ (string)$pickupSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
+                            {{ $suc->nombre }}
+                          </option>
+                        @endforeach
 
-                <option value="{{ $suc->id_sucursal }}"
-                        data-icon="{{ $icon }}"
-                        {{ (string)$pickupSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
-                  {{ $suc->nombre }}
-                </option>
-              @endforeach
+                      </optgroup>
+                    @endforeach
+                  </select>
+                </div>
+              </div>
 
-            </optgroup>
-          @endforeach
-        </select>
-      </div>
-    </div>
+              {{-- DROPOFF --}}
+              <div class="field">
+                <div class="ctl has-ico pristine" data-float>
+                  <span class="ico">
+                    <i id="dropoffIcon" class="fa-solid fa-location-dot"></i>
+                  </span>
 
+                  <span class="flabel">Lugar de devolución</span>
 
-    {{-- DROPOFF --}}
-    <div class="field">
-      <div class="ctl has-ico pristine" data-float>
+                  <select id="dropoffPlace" name="dropoff_sucursal_id" required data-float-select>
+                    <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}></option>
 
-        {{-- ICONO DINÁMICO --}}
-        <span class="ico">
-          <i id="dropoffIcon" class="fa-solid fa-location-dot"></i>
-        </span>
+                    @foreach($ciudades as $ciudad)
+                      <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
 
-        <span class="flabel">Lugar de devolución</span>
+                        @foreach($ciudad->sucursalesActivas ?? [] as $suc)
+                          @php
+                            $name = strtolower($suc->nombre);
+                            $icon = 'fa-solid fa-location-dot';
 
-        <select id="dropoffPlace" name="dropoff_sucursal_id" required data-float-select>
-          <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}></option>
+                            if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
+                            elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
+                            elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
+                          @endphp
 
-          @foreach($ciudades as $ciudad)
-            <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+                          <option value="{{ $suc->id_sucursal }}"
+                                  data-icon="{{ $icon }}"
+                                  {{ (string)$dropoffSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
+                            {{ $suc->nombre }}
+                          </option>
+                        @endforeach
 
-              @foreach($ciudad->sucursalesActivas ?? [] as $suc)
-                @php
-                  $name = strtolower($suc->nombre);
-                  $icon = 'fa-solid fa-location-dot';
+                      </optgroup>
+                    @endforeach
+                  </select>
+                </div>
+              </div>
 
-                  if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
-                  elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
-                  elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
-                @endphp
-
-                <option value="{{ $suc->id_sucursal }}"
-                        data-icon="{{ $icon }}"
-                        {{ (string)$dropoffSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
-                  {{ $suc->nombre }}
-                </option>
-              @endforeach
-
-            </optgroup>
-          @endforeach
-        </select>
-      </div>
-    </div>
-
-  </div>
-</div>
+            </div>
+          </div>
 
           {{-- Pick-Up --}}
           <div class="group-card">
@@ -564,10 +559,10 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
 
         </div>
 
-      <div class="wizard-nav">
-    <button type="button" class="btn btn-ghost" onclick="limpiarTodoYReiniciar()">Limpiar</button>
-    <button class="btn btn-primary" type="submit">Siguiente</button>
-</div>
+        <div class="wizard-nav">
+          <button type="button" class="btn btn-ghost" onclick="limpiarTodoYReiniciar()">Limpiar</button>
+          <button class="btn btn-primary" type="submit">Siguiente</button>
+        </div>
       </form>
     @endif
 
@@ -595,6 +590,11 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
             $appleCarplay = (int)($cat->apple_carplay ?? 0);
             $androidAuto  = (int)($cat->android_auto ?? 0);
 
+            // ✅ NUEVO: transmisión + A/C para el layout de iconos
+            $codigoCat = strtoupper((string)($cat->codigo ?? ''));
+            $tLabelCat = ($codigoCat === 'L') ? 'Estándar' : 'Automática';
+            $tieneACCat = (int)($cat->aire_acondicionado ?? ($cat->aire_ac ?? 0));
+
             $desc = $cat->ejemplo ?? ($cat->descripcion ?? 'Auto o similar. Tarifas sujetas a disponibilidad y temporada.');
 
             $ahorroPct = ($mostradorTotal > 0)
@@ -603,40 +603,65 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
             $ahorroPct = max(0, $ahorroPct);
           @endphp
 
-          <article class="car-card {{ (string)$categoriaId===(string)$cat->id_categoria ? 'active' : '' }}"
+          <article class="car-card car-card--v2 {{ (string)$categoriaId===(string)$cat->id_categoria ? 'active' : '' }}"
                    data-prepago-dia="{{ $prepagoDia }}"
                    data-mostrador-dia="{{ $mostradorDia }}">
 
-            <div class="car-days-badge">
-              <i class="fa-solid fa-calendar-days"></i>
-              <span class="js-days-badge">{{ $days }}</span> día(s)
-            </div>
+            {{-- HERO (imagen + badge) --}}
+            <div class="car-hero">
+              <img class="car-hero-img"
+                   src="{{ $imgCat }}"
+                   alt="{{ $cat->nombre }}"
+                   onerror="this.onerror=null;this.src='{{ $placeholder }}';">
 
-            <div class="car-avatar">
-              <img src="{{ $imgCat }}" alt="{{ $cat->nombre }}" onerror="this.onerror=null;this.src='{{ $placeholder }}';">
-            </div>
-
-            <div class="car-meta">
-              <div class="car-top">{{ strtoupper($cat->nombre) }}</div>
-              <div class="car-sub">{{ $desc }}</div>
-
-              <div class="r-specs" style="margin-top:10px;">
-                <span class="chip"><i class="fa-solid fa-user"></i> {{ $pasajeros }} pasajeros</span>
-                <span class="chip"><i class="fa-solid fa-suitcase-rolling"></i> {{ $malChicas }} maletas chicas</span>
-                <span class="chip"><i class="fa-solid fa-suitcase"></i> {{ $malGrandes }} maletas grandes</span>
-
-                @if($appleCarplay)
-                  <span class="chip chip-ok"><i class="fa-brands fa-apple"></i> Apple CarPlay</span>
-                @endif
-                @if($androidAuto)
-                  <span class="chip chip-ok"><i class="fa-brands fa-android"></i> Android Auto</span>
-                @endif
+              <div class="car-days-badge car-days-badge--v2">
+                <i class="fa-regular fa-calendar-days"></i>
+                <span class="js-days-badge">{{ $days }}</span> día(s)
               </div>
             </div>
 
-            <div class="car-price">
-              {{-- ✅ PREPAGO EN LÍNEA --}}
-              <div class="price-pill price-pill--prepago">
+            {{-- CONTENIDO --}}
+            <div class="car-body">
+              <div class="car-top">{{ strtoupper($cat->nombre) }}</div>
+              <div class="car-sub">{{ $desc }}</div>
+
+              {{-- ✅ NUEVO: iconos arriba + chips CarPlay/Android abajo (como tu imagen) --}}
+              <div class="car-features">
+                <ul class="car-mini-specs">
+                  <li title="Pasajeros"><i class="fa-solid fa-user-large"></i> {{ $pasajeros }}</li>
+                  <li title="Maletas chicas"><i class="fa-solid  fa-suitcase-rolling"></i> {{ $malChicas }}</li>
+                  <li title="Maletas grandes"><i class="fa-solid fa-briefcase"></i> {{ $malGrandes }}</li>
+
+                  <li title="Transmisión">
+                    <span class="spec-letter">T | {{ $tLabelCat }}</span>
+                  </li>
+
+                  @if($tieneACCat)
+                    <li title="Aire acondicionado">
+                      <span class="spec-letter">A/C</span>
+                    </li>
+                  @endif
+                </ul>
+
+                <div class="car-connect">
+                  @if($appleCarplay)
+                    <span class="badge-chip badge-apple" title="Apple CarPlay">
+                      <span class="icon-badge"><i class="fa-brands fa-apple"></i></span>
+                      CarPlay
+                    </span>
+                  @endif
+
+                  @if($androidAuto)
+                    <span class="badge-chip badge-android" title="Android Auto">
+                      <span class="icon-badge"><i class="fa-brands fa-android"></i></span>
+                      Android Auto
+                    </span>
+                  @endif
+                </div>
+              </div>
+
+              {{-- PRECIOS --}}
+              <div class="car-price car-price--v2">
                 <div class="price-old">
                   ${{ number_format($mostradorTotal,0) }} MXN
                 </div>
@@ -650,20 +675,23 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
                     Ahorra <strong class="js-ahorro">{{ $ahorroPct }}</strong>%
                   </div>
                 @endif
+
+                <a class="btn-pay primary"
+                   href="{{ $toStep(3, ['categoria_id'=>$cat->id_categoria, 'plan'=>'linea']) }}">
+                  PREPAGAR EN LÍNEA
+                </a>
+
+                <div class="office-wrap">
+                  <div class="office-price">
+                    $<span class="js-mostrador-total">{{ number_format($mostradorTotal,0) }}</span> MXN
+                  </div>
+
+                  <a class="btn-pay gray"
+                     href="{{ $toStep(3, ['categoria_id'=>$cat->id_categoria, 'plan'=>'mostrador']) }}">
+                    PAGAR EN OFICINA
+                  </a>
+                </div>
               </div>
-
-              <a class="btn-pay primary" href="{{ $toStep(3, ['categoria_id'=>$cat->id_categoria, 'plan'=>'linea']) }}">
-                PREPAGAR EN LÍNEA
-              </a>
-
-              {{-- ✅ PAGO EN OFICINA --}}
-              <div class="price-pill">
-                $<span class="js-mostrador-total">{{ number_format($mostradorTotal,0) }}</span> MXN<br>
-              </div>
-
-              <a class="btn-pay gray" href="{{ $toStep(3, ['categoria_id'=>$cat->id_categoria, 'plan'=>'mostrador']) }}">
-                PAGAR EN OFICINA
-              </a>
             </div>
           </article>
         @empty
@@ -882,15 +910,15 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
             <input type="hidden" name="categoria_id" id="categoria_id" value="{{ $categoriaId }}">
             <input type="hidden" name="plan" id="plan" value="{{ $plan }}">
             <input type="hidden" name="addons" id="addons_payload" value="{{ $addonsParam }}">
-              {{-- 🔹 Campos ocultos para que el JS pueda mandar todo a /reservas/linea --}}
-  <input type="hidden" name="pickup_date" id="pickup_date" value="{{ $pickupDateISO }}">
-  <input type="hidden" name="pickup_time" id="pickup_time" value="{{ $pickupTime }}">
-  <input type="hidden" name="dropoff_date" id="dropoff_date" value="{{ $dropoffDateISO }}">
-  <input type="hidden" name="dropoff_time" id="dropoff_time" value="{{ $dropoffTime }}">
 
-  <input type="hidden" name="pickup_sucursal_id" id="pickup_sucursal_id" value="{{ $pickupSucursalId }}">
-  <input type="hidden" name="dropoff_sucursal_id" id="dropoff_sucursal_id" value="{{ $dropoffSucursalId }}">
+            {{-- 🔹 Campos ocultos para que el JS pueda mandar todo a /reservas/linea --}}
+            <input type="hidden" name="pickup_date" id="pickup_date" value="{{ $pickupDateISO }}">
+            <input type="hidden" name="pickup_time" id="pickup_time" value="{{ $pickupTime }}">
+            <input type="hidden" name="dropoff_date" id="dropoff_date" value="{{ $dropoffDateISO }}">
+            <input type="hidden" name="dropoff_time" id="dropoff_time" value="{{ $dropoffTime }}">
 
+            <input type="hidden" name="pickup_sucursal_id" id="pickup_sucursal_id" value="{{ $pickupSucursalId }}">
+            <input type="hidden" name="dropoff_sucursal_id" id="dropoff_sucursal_id" value="{{ $dropoffSucursalId }}">
 
             <h2 class="sum-section-title"> Datos personales</h2>
 
@@ -1006,11 +1034,10 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
             </div>
 
             <div class="pay-logos" style="display: flex; justify-content: center; gap: 40px; align-items: center; flex-wrap: wrap; margin-top: 20px;">
-             <img src="{{ asset('img/american.png') }}" alt="Amex" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
-             <img src="{{ asset('img/paypal.png') }}" alt="PayPal" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
-<img src="{{ asset('img/oxxo.png') }}" alt="Oxxo" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
- </div>
-
+              <img src="{{ asset('img/american.png') }}" alt="Amex" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+              <img src="{{ asset('img/paypal.png') }}" alt="PayPal" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+              <img src="{{ asset('img/oxxo.png') }}" alt="Oxxo" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+            </div>
 
             <div id="modalMetodoPago" class="modal-overlay" style="display:none;">
               <div class="modal-card">
@@ -1113,27 +1140,50 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
                   {{ $autoSubtitulo }}
                 </div>
 
-                {{-- ✅ ICONOS como imagen (personas / suitcase rolling / briefcase)
-                     ✅ Dejar solo Android Auto y CarPlay --}}
+                {{-- ✅ NUEVO (Step 4): iconos + T | ... + A/C + chips (2 bloques) --}}
                 @php
-                  $specPassengers = (int)($categoriaSel->pasajeros ?? 5);
-                  $specRolling    = (int)($categoriaSel->maletas_grandes ?? 2); // maleta grande
-                  $specBriefcase  = (int)($categoriaSel->maletas_chicas ?? 2);  // maleta de mano
+                  $codigo = strtoupper((string)($categoriaSel->codigo ?? ''));
+                  $tLabel = ($codigo === 'L') ? 'Estándar' : 'Automática';
+
+                  $cap = [
+                    'pax'   => (int)($categoriaSel->pasajeros ?? 5),
+                    'small' => (int)($categoriaSel->maletas_chicas ?? 2),
+                    'big'   => (int)($categoriaSel->maletas_grandes ?? 1),
+                  ];
+
+                  $tieneAC = (int)($categoriaSel->aire_acondicionado ?? ($categoriaSel->aire_ac ?? 0));
                 @endphp
 
-                <div class="car-mini-specs" style="margin-top:14px;">
-                  <ul class="car-specs">
-                    <li><i class="fa-solid fa-user-large"></i> {{ $specPassengers }}</li>
-                    <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $specRolling }}</li>
-                    <li><i class="fa-solid fa-briefcase"></i> {{ $specBriefcase }}</li>
+                <div class="car-features" style="margin-top:14px;">
+                  <ul class="car-mini-specs">
+                    <li><i class="fa-solid fa-user-large"></i> {{ $cap['pax'] }}</li>
+                    <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $cap['small'] }}</li>
+                    <li><i class="fa-solid fa-briefcase"></i> {{ $cap['big'] ?? 1 }}</li>
+
+                    <li title="Transmisión">
+                      <span class="spec-letter">T | {{ $tLabel }}</span>
+                    </li>
+
+                    @if($tieneAC)
+                      <li title="Aire acondicionado">
+                        <span class="spec-letter">A/C</span>
+                      </li>
+                    @endif
                   </ul>
 
-                  <div class="car-mini-tech">
-                    @if($featAndroidAuto)
-                      <span class="chip chip-ok"><i class="fa-brands fa-android"></i> Android Auto</span>
-                    @endif
+                  <div class="car-connect">
                     @if($featCarplay)
-                      <span class="chip chip-ok"><i class="fa-brands fa-apple"></i> CarPlay</span>
+                      <span class="badge-chip badge-apple" title="Apple CarPlay">
+                        <span class="icon-badge"><i class="fa-brands fa-apple"></i></span>
+                        CarPlay
+                      </span>
+                    @endif
+
+                    @if($featAndroidAuto)
+                      <span class="badge-chip badge-android" title="Android Auto">
+                        <span class="icon-badge"><i class="fa-brands fa-android"></i></span>
+                        Android Auto
+                      </span>
                     @endif
                   </div>
                 </div>
@@ -1145,8 +1195,7 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
 
           <h4 class="sum-subtitle" style="margin-top:16px;">Detalles del precio</h4>
 
-        <div class="sum-table" id="cotizacionDoc" data-base="{{ $tarifaBase }}" data-days="{{ $days }}">
-
+          <div class="sum-table" id="cotizacionDoc" data-base="{{ $tarifaBase }}" data-days="{{ $days }}">
 
             {{-- ===== TARIFA BASE (desplegable) ===== --}}
             <details class="sum-acc" open="false">
@@ -1257,20 +1306,20 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
         </div>
       </div>
 
-          @isset($servicios)
-      <script id="addonsCatalog" type="application/json">
-        {!! json_encode(
-          collect($servicios)->mapWithKeys(fn($s) => [
-            $s->id_servicio => [
-              'nombre' => $s->nombre,
-              'precio' => (float)$s->precio,
-              'tipo'   => $s->tipo_cobro, // 'por_evento' o 'por_dia'
-            ],
-          ]),
-          JSON_UNESCAPED_UNICODE
-        ) !!}
-      </script>
-    @endisset
+      @isset($servicios)
+        <script id="addonsCatalog" type="application/json">
+          {!! json_encode(
+            collect($servicios)->mapWithKeys(fn($s) => [
+              $s->id_servicio => [
+                'nombre' => $s->nombre,
+                'precio' => (float)$s->precio,
+                'tipo'   => $s->tipo_cobro, // 'por_evento' o 'por_dia'
+              ],
+            ]),
+            JSON_UNESCAPED_UNICODE
+          ) !!}
+        </script>
+      @endisset
 
     @endif
 
@@ -1354,8 +1403,6 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
       }
 
       // ✅ Por si quieres FORZAR que "Tarifa base" inicie CERRADO:
-      // HTML <details open> lo abre. Sin "open" queda cerrado.
-      // Si tu navegador interpreta open="false" como abierto, lo cerramos aquí:
       const tarifa = document.querySelector('.sum-table details.sum-acc');
       if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
     });

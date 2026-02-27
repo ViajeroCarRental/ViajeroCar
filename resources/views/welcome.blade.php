@@ -1,9 +1,6 @@
 @extends('layouts.Usuarios')
-
 @section('Titulo','Home')
-
 @section('css-vistaHome')
-  {{-- ✅ Swiper CSS --}}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
   {{-- Select2 CSS --}}
 
@@ -11,12 +8,7 @@
 
     {{--reemplaza visualmente  <select>. --}}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
- {{--Font Awesome es  el paquete que dibuja íconos. --}}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-p+6F+H1G5p8pP/1hObu/YZ7o2aM5J5lFjAzU5e+0Jx8xR+uEzjFN8IvU3UpUy6v1k3vXv4+XzN0z3VQUpgK6Vw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-
-  {{-- Select2 CSS --}}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" integrity="sha512-p+6F+H1G5p8pP/1hObu/YZ7o2aM5J5lFjAzU5e+0Jx8xR+uEzjFN8IvU3UpUy6v1k3vXv4+XzN0z3VQUpgK6Vw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
@@ -295,10 +287,8 @@
       70%{ box-shadow:0 0 0 10px rgba(16,185,129,0) }
       100%{ box-shadow:0 0 0 0 rgba(16,185,129,0) }
     }
-
     .rv-text{ font-size:13px; color:#3f3f46 }
     .rv-count{ font-weight:700; color:var(--ink) }
-
     .rv-cta{
       background:var(--brand); color:#fff; border:0; border-radius:10px;
       padding:8px 12px; font-size:13px; font-weight:600; cursor:pointer;
@@ -306,12 +296,10 @@
       transition:opacity .2s ease;
     }
     .rv-cta:hover{ opacity:.95 }
-
     .rv-close{
       border:0; background:transparent; color:#9ca3af; font-size:18px; cursor:pointer;
     }
     .rv-close:hover{ color:#374151 }
-
     .rv-bar{ height:4px; width:100%; background:#f1f5f9 }
     .rv-bar i{
       display:block; height:100%; width:0%;
@@ -319,18 +307,15 @@
       background-size:300% 100%; animation:rv-bar-move 1.6s linear infinite;
     }
     @keyframes rv-bar-move{ from{background-position:0% 50%} to{background-position:200% 50%} }
-
     .rv-in{ animation:rv-drop .35s cubic-bezier(.2,.7,.2,1) forwards }
     .rv-out{ animation:rv-lift .28s ease forwards }
     @keyframes rv-drop{ from{ opacity:0; transform:translateY(-10px) scale(.98) } to{ opacity:1; transform:translateY(0) scale(1) } }
     @keyframes rv-lift{ from{ opacity:1; transform:translateY(0) scale(1) } to{ opacity:0; transform:translateY(-10px) scale(.98) } }
-
     @media (max-width:560px){
       .rv-text{ font-size:12px }
       .rv-cta{ display:none }
     }
 
-    /* ====== Swiper de TARJETAS (tiles) ====== */
     .vj-tiles-swiper{ padding: 6px 10px 42px; width:min(1200px,94%); margin:28px auto; }
     .vj-tiles-swiper .swiper-slide{ height:auto }
 
@@ -347,7 +332,6 @@
     .tile-card p{ margin:0; color:var(--ink); opacity:.85; line-height:1.45 }
     .tile-card .tile-link{ margin-top:auto; font-weight:600; color:var(--brand); text-decoration:none }
     .tile-card .tile-link:hover{ text-decoration:underline }
-
     .vj-tiles-swiper .swiper-button-prev,
     .vj-tiles-swiper .swiper-button-next{
       width:42px; height:42px; border-radius:50%;
@@ -363,8 +347,6 @@
     .vj-tiles-swiper .swiper-pagination-bullet-active{
       opacity:1; transform:scale(1.15)
     }
-
-    /* ==== CARD DE RESEÑAS GOOGLE ==== */
     .tile-card.tile-reviews .tile-body{ gap: 12px; }
 
     .reviews-summary{
@@ -393,7 +375,7 @@
     }
 
     /* =========================
-      ✅ BURBUJA RADIAL (NUEVO)
+      ✅ BURBUJA RADIAL
     ========================= */
     .social-fab{
       position:fixed;
@@ -403,7 +385,6 @@
       width:64px;
       height:64px;
     }
-
     .social-fab .fab-main{
       width:64px; height:64px;
       border-radius:999px;
@@ -417,7 +398,6 @@
       transition: transform .18s ease, filter .18s ease;
     }
     .social-fab .fab-main:hover{ transform: translateY(-2px); filter:brightness(1.02); }
-
     .social-fab .fab-item{
       position:absolute;
       right:6px;
@@ -434,13 +414,9 @@
       pointer-events:none;
       transition: transform .22s cubic-bezier(.2,.9,.2,1), opacity .18s ease;
     }
-
-    /* Colores por red */
     .fab-wp{ background:#22c55e; }
     .fab-fb{ background:#1877f2; }
     .fab-ig{ background: radial-gradient(circle at 30% 30%, #f97316, #d946ef, #0ea5e9); }
-
-    /* posiciones al abrir */
     .social-fab.open .fab-wp{
       transform: translate(-82px, -8px) scale(1);
       opacity:1; pointer-events:auto;
@@ -453,7 +429,6 @@
       transform: translate(6px, -92px) scale(1);
       opacity:1; pointer-events:auto;
     }
-     /* Select2 */
 
 .select2-container--default .select2-selection--single {
     display: flex;
@@ -482,10 +457,6 @@
     margin-right: 8px;
     font-size: 1em;
 }
-
-
-
- /* Estilo de SELECT2 */
 .select2-container--default .select2-selection--single {
     display: flex;
     align-items: center;
@@ -493,7 +464,6 @@
     border-radius: 10px;
     padding: 0 10px;
 }
-
 
 .select2-selection__rendered {
     display: flex;
@@ -551,7 +521,6 @@
 <!-- ===== VISTA INICIO ===== -->
 <section class="v-inicio" data-title="Inicio">
 
-  <!-- ===== Banner Reservas (arriba, centrado) ===== -->
   <div class="rv-banner-wrap" id="rvWrap" aria-live="polite">
     <div class="rv-banner" id="rvBanner" role="status" aria-label="Reservas en vivo">
       <div class="rv-bar"><i id="rvBar"></i></div>
@@ -702,7 +671,6 @@
 
             {{-- =========================
                 COLUMNA 2: ENTREGA
-                (fecha arriba, hora/min abajo)
             ========================= --}}
             <div class="sg-col sg-col-datetime">
               <div class="field">
@@ -740,7 +708,6 @@
 
             {{-- =========================
                 COLUMNA 3: DEVOLUCIÓN
-                (fecha arriba, hora/min abajo)
             ========================= --}}
             <div class="sg-col sg-col-datetime">
               <div class="field">
@@ -1566,14 +1533,7 @@
     });
   </script>
 
-
-
-  {{-- ✅ JS de iconos --}}
   <script src="{{ asset('js/iconos-lugar.js') }}"></script>
-
-
-
-  {{-- ✅ Tu JS --}}
   <script src="{{ asset('js/home.js') }}"></script>
 
   {{-- ✅ (Tu inline script de fleet infinito - lo dejo tal cual) --}}
@@ -1584,8 +1544,7 @@
 <!-- ===== Toast de reservas ===== -->
   <script>
   (function(){
-    // ✅ Orden exacto:
-    // 1 → 2 → 1 → 3 → 1 → 4
+
     const SEQ = [
       {
         title: "Buscando reserva",

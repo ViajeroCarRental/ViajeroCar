@@ -1,10 +1,7 @@
-/* ==============================
-   🎨 Tokens / Design System
-============================== */
 :root{
   --brand:#FF1E2D;
   --brand-2:#D6121F;
-  --brand-3:#ff4956;             /* hover/acento */
+  --brand-3:#ff4956;            
 
   --ink:#101828;
   --muted:#667085;
@@ -42,7 +39,6 @@ html,body{
 body{font-size:15px;line-height:1.5}
 a{text-decoration:none;color:inherit}
 
-/* Scrollbar sutil */
 *::-webkit-scrollbar{height:10px;width:10px}
 *::-webkit-scrollbar-thumb{background:#dfe3ea;border-radius:999px}
 *::-webkit-scrollbar-track{background:transparent}
@@ -101,7 +97,7 @@ a{text-decoration:none;color:inherit}
 /* Main */
 .main{ padding:18px }
 .main .container{
-  max-width:1120px;              /* ✅ centra y limita el ancho de contenido */
+  max-width:1120px;              
   margin:0 auto;
 }
 .top{
@@ -289,12 +285,9 @@ a{text-decoration:none;color:inherit}
   .stats{ grid-template-columns:1fr }
   .filters{ grid-template-columns:1fr }
 }
-/* ============================================================
-   🎨 EFECTO 3D PARA GRÁFICAS CHART.JS
-   ============================================================ */
 
 /* ============================================================
-   🎨 GRÁFICA 3D MINIMALISTA PREMIUM (APPLE / STRIPE STYLE)
+   🎨 GRÁFICA 3D MINIMALISTA PREMIUM 
    ============================================================ */
 
 /* Contenedor limpio, elegante */
