@@ -227,7 +227,7 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
       style="position:relative; overflow:visible;">
 
   {{-- ✅ Fondo SOLO dentro del main (NO footer) --}}
-  <div class="reservas-bg" aria-hidden="true"></div>
+  <div class="fondos-reservaciones" style="background-image: url('../img/banner/banner-reservaciones.webp'); background-attachment: fixed; background-size: cover; background-position: center; min-height: 100vh;">
 
   <style>
     .reservas-bg{
@@ -325,7 +325,25 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
         border-bottom:1px dashed rgba(178,34,34,.22);
       }
     }
+    /* imagen de fondo  fija*/
+    .fondo-fijo-layout {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+        background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("{{ asset('img/4x4.png') }}");
+        background-size: cover;
+        background-position: center center;
+        background-repeat: no-repeat;
+    }
+
+    .fondos-reservaciones {
+        background: transparent !important;
+    }
   </style>
+  <div class="fondo-fijo-layout"></div>
 
   {{-- ===================== PASOS ARRIBA ===================== --}}
   <nav class="wizard-steps" aria-label="Pasos">
@@ -759,6 +777,94 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
           font-weight:900;
           color:#111827;
         }
+
+   /* DISEÑO RESPONSIVO: TARJETA DE RESERVACIÓN  */
+
+/* móvil y tablet */
+@media (max-width:1024px){
+
+    footer, .footer-elegant {
+        position: relative;
+        z-index: 10;
+        background-color: #0b1120 !important;
+    }
+    .step4-pane .sum-total,
+    .sum-form .wizard-nav,
+    #btnReservar {
+    display:none !important;
+}
+    .movil-footer-sticky{
+        display:flex;
+        flex-direction:column;
+        position:fixed;
+        bottom:0;
+        left:0;
+        width:100%;
+        background:#ffffff;
+        padding:20px;
+        box-shadow:0 -10px 40px rgba(0,0,0,0.20);
+        border-radius:25px 25px 0 0;
+        gap:15px;
+        z-index:9999999;
+    }
+
+    .movil-total-wrapper{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        font-weight:900;
+        font-size:20px;
+    }
+
+    .movil-total-label{
+        color:#000;
+        text-transform:uppercase;
+    }
+
+    .movil-total-amount{
+        color:var(--brand);
+        font-size:24px;
+    }
+
+    .btn-reservar-movil{
+        background:var(--brand);
+        color:#fff;
+        border:none;
+        border-radius:14px;
+        padding:20px;
+        font-size:18px;
+        font-weight:900;
+        width:100%;
+        text-transform:uppercase;
+        letter-spacing:1px;
+        cursor:pointer;
+        transition:all .2s ease;
+    }
+
+    .btn-reservar-movil:hover{
+        transform:translateY(-2px);
+        box-shadow:0 8px 20px rgba(178,34,34,.35);
+    }
+
+    /* 2. EL AJUSTE PARA EL SCROLL*/
+    .step4-layout {
+        padding-bottom: 250px !important;
+    }
+
+    body::after {
+        content: "";
+        display: block;
+        height: 160px;
+        width: 100%;
+    }
+}
+
+/* ESCRITORIO */
+@media (min-width:1025px){
+    .movil-footer-sticky{
+        display:none !important;
+    }
+}
       </style>
 
       <div class="step4-layout">
@@ -1150,6 +1256,7 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
 
         </div>
       </div>
+
           @isset($servicios)
       <script id="addonsCatalog" type="application/json">
         {!! json_encode(
@@ -1169,6 +1276,20 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
 
   </section>
 </main>
+{{--TARJETA RESPONSIVA --}}
+        @if($stepCurrent === 4)
+        <div class="movil-footer-sticky">
+            <div class="movil-total-wrapper">
+                <span class="movil-total-label">Total</span>
+                <span id="qTotalMovil" class="movil-total-amount">
+                    ${{ number_format($tarifaBase, 0) }} MXN
+                </span>
+            </div>
+            <button type="button" id="btnReservarMovil" class="btn-reservar-movil">
+                Reservar
+            </button>
+        </div>
+        @endif
 @endsection
 
 @section('js-vistaReservaciones')

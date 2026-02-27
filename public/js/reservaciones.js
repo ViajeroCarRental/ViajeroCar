@@ -1393,4 +1393,33 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target === modal) closeModal();
     };
 });
+
+// tarjeta responsivo reservaciones
+document.addEventListener('DOMContentLoaded', function(){
+
+    const btnOriginal = document.getElementById('btnReservar');
+    const btnMovil = document.getElementById('btnReservarMovil');
+    const totalOriginal = document.getElementById('qTotal');
+    const totalMovil = document.getElementById('qTotalMovil');
+
+    if(btnMovil && btnOriginal){
+        btnMovil.addEventListener('click', function(){
+            btnOriginal.click();
+        });
+    }
+    if(totalOriginal && totalMovil){
+
+        function syncTotal(){
+            totalMovil.innerText = totalOriginal.innerText;
+        }
+        syncTotal();
+
+        const observer = new MutationObserver(syncTotal);
+        observer.observe(totalOriginal, {
+            childList:true,
+            subtree:true,
+            characterData:true
+        });
+    }
+});
 })();
