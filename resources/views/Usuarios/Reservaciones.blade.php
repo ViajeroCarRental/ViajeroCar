@@ -1215,45 +1215,46 @@
                   <strong>${{ number_format($tarifaBase, 0) }} MXN</strong>
                 </div>
 
+                {{--Modal de protecciones--}}
+                <div id="modalProtecciones" class="modal-global-viajero">
+                <div class="modal-global-content">
+                    <span class="cerrar-modal-v">&times;</span>
+
+                    <h2 class="modal-v-header-title">Relevos de responsabilidad (Protecciones)</h2>
+                    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+
+                    <div style="display: flex; gap: 20px; align-items: flex-start;">
+                        <div class="modal-v-escudo-circulo">
+                            <i class="fa-solid fa-shield" style="font-size: 28px;"></i>
+                        </div>
+
+                        <div>
+                            <strong class="modal-v-titulo-negro">PROTECCIÓN LIMITADA DE RESPONSABILIDAD HACIA TERCEROS (LI)</strong>
+                            <p class="modal-v-texto-gris">
+                                Protege a terceros por daños y perjuicios ocasionados en un accidente y cubre la cantidad mínima requerida por ley.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+                        <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 12px;">
+                            Tú eliges el nivel de responsabilidad sobre el auto que más vaya acorde a tus necesidades y presupuesto.
+                        </p>
+                        <p style="font-size: 13px; color: #1e293b; font-weight: 700;">
+                            Pregunta por nuestros Relevos de responsabilidad (opcionales) al llegar al mostrador de cualquiera de nuestras oficinas.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
                <div class="col-12 mt-2">
-    <div class="linea-incluido-box">
-        <p class="incluido-text">
-            <strong>INCLUIDO</strong>
-            <i class="fa-solid fa-circle-question" id="info-protecciones" style="cursor: pointer; color: #b22222; margin-left: 5px; font-size: 1.1rem; vertical-align: middle;"></i>
-        </p>
-    </div>
-</div>
-
-<div id="modalProtecciones" class="modal-global-viajero">
-    <div class="modal-global-content">
-        <span class="cerrar-modal-v">&times;</span>
-
-        <h2 class="modal-v-header-title">Relevos de responsabilidad (Protecciones)</h2>
-        <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
-
-        <div style="display: flex; gap: 20px; align-items: flex-start;">
-            <div class="modal-v-escudo-circulo">
-                <i class="fa-solid fa-shield" style="font-size: 28px;"></i>
+                <div class="linea-incluido-box">
+                    <p class="incluido-text">
+                        <strong>INCLUIDO</strong>
+                        <i class="fa-solid fa-circle-question" id="info-protecciones" style="cursor: pointer; color: #b22222; margin-left: 5px; font-size: 1.1rem; vertical-align: middle;"></i>
+                    </p>
+                </div>
             </div>
-
-            <div>
-                <strong class="modal-v-titulo-negro">PROTECCIÓN LIMITADA DE RESPONSABILIDAD HACIA TERCEROS (LI)</strong>
-                <p class="modal-v-texto-gris">
-                    Protege a terceros por daños y perjuicios ocasionados en un accidente y cubre la cantidad mínima requerida por ley.
-                </p>
-            </div>
-        </div>
-
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
-            <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 12px;">
-                Tú eliges el nivel de responsabilidad sobre el auto que más vaya acorde a tus necesidades y presupuesto.
-            </p>
-            <p style="font-size: 13px; color: #1e293b; font-weight: 700;">
-                Pregunta por nuestros Relevos de responsabilidad (opcionales) al llegar al mostrador de cualquiera de nuestras oficinas.
-            </p>
-        </div>
-    </div>
-</div>
                 <div class="row row-included" style="border-top:0;">
                   <span class="inc-items">
                     <span class="inc-item"><span class="inc-check">✔</span> Kilometraje ilimitado</span>
