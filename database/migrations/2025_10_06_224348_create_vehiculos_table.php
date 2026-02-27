@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     public function up(): void
@@ -18,6 +19,12 @@ return new class extends Migration {
             $table->unsignedBigInteger('id_marca')->nullable();
             $table->unsignedBigInteger('id_modelo')->nullable();
             $table->unsignedBigInteger('id_version')->nullable();
+
+             // 🔹 Archivos guardados en BD (LONGBLOB)
+            $table->binary('archivo_cartafactura')->nullable();
+            $table->binary('archivo_poliza')->nullable();
+            $table->binary('archivo_verificacion')->nullable();
+            $table->binary('archivo_tarjetacirculacion')->nullable();
 
             // Datos
             $table->string('marca', 100);
@@ -69,14 +76,12 @@ return new class extends Migration {
             $table->date('fin_vigencia_poliza')->nullable();
             $table->string('tipo_cobertura', 100)->nullable();
             $table->string('plan_seguro', 100)->nullable();
-            $table->string('archivo_poliza', 255)->nullable();
 
             // 🔹 Tarjeta de circulación
             $table->string('folio_tarjeta', 100)->nullable();
             $table->string('movimiento_tarjeta', 100)->nullable();
             $table->date('fecha_expedicion_tarjeta')->nullable();
             $table->string('oficina_expedidora', 100)->nullable();
-            $table->string('archivo_verificacion', 255)->nullable();
 
             // Uniques
             $table->unique('placa', 'vehiculos_placa_unique');
@@ -118,6 +123,13 @@ return new class extends Migration {
 
             $table->timestamps();
         });
+
+
+           // 🔥  Convertimos los campos a LONGBLOB manualmente
+        DB::statement('ALTER TABLE vehiculos MODIFY archivo_cartafactura LONGBLOB');
+        DB::statement('ALTER TABLE vehiculos MODIFY archivo_poliza LONGBLOB');
+        DB::statement('ALTER TABLE vehiculos MODIFY archivo_verificacion LONGBLOB');
+        DB::statement('ALTER TABLE vehiculos MODIFY archivo_tarjetacirculacion LONGBLOB');
     }
 
     public function down(): void

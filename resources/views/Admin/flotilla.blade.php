@@ -77,7 +77,12 @@
               </div>
 
               <!-- Botón Editar siempre visible -->
-              <button class="btn-sm editBtn" title="Editar"></button>
+              <button
+  type="button"
+  class="btn-sm"
+  title="Editar"
+  onclick="abrirEditarVehiculo({{ $v->id_vehiculo }})"
+>✏️</button>
             </td>
           </tr>
           @endforeach
@@ -90,26 +95,220 @@
   <div id="editModal" class="modal">
     <div class="modal-content glass">
       <div class="modal-header">
-        <span>Editar Vehículo</span>
+        <span>Editar Vehículo 🚗</span>
         <button id="closeModal">&times;</button>
       </div>
-      <form id="editForm" method="POST">
-        @csrf
-        <div class="form-grid">
-          <label>Modelo<input type="text" id="m_modelo" readonly></label>
-          <label>Marca<input type="text" id="m_marca" readonly></label>
-          <label>Año<input type="text" id="m_anio" readonly></label>
-          <label>Color<input type="text" id="m_color" name="color"></label>
-          <label>Categoría<input type="text" id="m_categoria" name="categoria"></label>
-          <label>Kilometraje<input type="number" id="m_kilometraje" name="kilometraje"></label>
-        </div>
-        <div class="actions">
-          <button type="submit" class="btn">💾 Guardar</button>
-          <button type="button" class="btn ghost" id="cancelModal">Cancelar</button>
-        </div>
-      </form>
-    </div>
+      <form id="editForm"
+          method="POST"
+          action=""
+          enctype="multipart/form-data"
+          class="form-grid">
+      @csrf
+
+      {{-- ================= DATOS GENERALES ================= --}}
+      <h3>Datos Generales</h3>
+
+      <label>Marca<input type="text" name="marca" id="e_marca" required></label>
+      <label>Modelo<input type="text" name="modelo" id="e_modelo" required></label>
+      <label>Año<input type="number" name="anio" id="e_anio" min="2000" max="{{ date('Y')+1 }}" required></label>
+      <label>Nombre Público<input type="text" name="nombre_publico" id="e_nombre_publico"></label>
+      <label>Color<input type="text" name="color" id="e_color"></label>
+      <label>Transmisión
+      <select name="transmision" id="e_transmision">
+  <option value="">Seleccione...</option>
+  <option value="Automático">Automático</option>
+  <option value="Manual">Manual</option>
+  <option value="CVT">CVT</option>
+  <option value="Tiptronic">Tiptronic</option>
+</select>
+</label>
+<label>Combustible
+        <select name="combustible" id="e_combustible">
+  <option value="">Seleccione...</option>
+  <option value="Gasolina">Gasolina</option>
+  <option value="Gasolina Premium">Gasolina Premium</option>
+  <option value="Diésel">Diésel</option>
+  <option value="Híbrido">Híbrido</option>
+  <option value="Eléctrico">Eléctrico</option>
+</select>
+      </label>
+
+      <label>Categoría
+        <select name="id_categoria" id="e_id_categoria" required>
+          <option value="" disabled>Seleccione una categoría...</option>
+          @foreach($categorias as $cat)
+            <option value="{{ $cat->id_categoria }}">{{ $cat->nombre }}</option>
+          @endforeach
+        </select>
+      </label>
+
+      <label>Número de Serie
+        <input type="text" name="numero_serie" id="e_numero_serie">
+      </label>
+
+      <label>Número de Rin
+        <input type="text" name="numero_rin" id="e_numero_rin">
+      </label>
+
+      <label>Placa
+        <input type="text" name="placa" id="e_placa">
+      </label>
+
+      {{-- ================= DATOS TÉCNICOS ================= --}}
+      <h3>Datos Técnicos</h3>
+
+      <label>Cilindros
+        <input type="number" name="cilindros" id="e_cilindros" min="1" max="16">
+      </label>
+
+      <label>Número de Motor
+        <input type="text" name="numero_motor" id="e_numero_motor">
+      </label>
+
+      <label>Holograma
+        <input type="text" name="holograma" id="e_holograma">
+      </label>
+
+      <label>Vigencia de Verificación
+        <input type="date" name="vigencia_verificacion" id="e_vigencia_verificacion">
+      </label>
+
+      <label>Archivo de Verificación (opcional)
+        <input type="file" name="archivo_verificacion" accept=".pdf,.jpg,.jpeg,.png">
+      </label>
+
+      <label>Kilometraje
+        <input type="number" name="kilometraje" id="e_kilometraje" min="0">
+      </label>
+
+      <label>Asientos
+        <input type="number" name="asientos" id="e_asientos" min="2" max="10">
+      </label>
+
+      <label>Puertas
+        <input type="number" name="puertas" id="e_puertas" min="2" max="6">
+      </label>
+
+      <label>Capacidad de Tanque (L)
+        <input type="number" step="0.1" name="capacidad_tanque" id="e_capacidad_tanque">
+      </label>
+
+      {{-- ================= ACEITE ================= --}}
+      <label>Tipo de Aceite
+        <select id="e_aceite_select">
+          <option value="" disabled>Seleccione tipo de aceite...</option>
+          <option value="Cvtec">CVT</option>
+          <option value="Atf">ATF</option>
+          <option value="otro">Otro...</option>
+        </select>
+
+        <input
+          type="text"
+          name="aceite"
+          id="e_aceite"
+          placeholder="Ej. 5W30 sintético"
+          style="margin-top:6px;"
+        >
+      </label>
+
+      {{-- ================= PROPIETARIO ================= --}}
+      <h3>Datos del Propietario</h3>
+
+      <select id="e_propietarioSelect">
+        <option value="" disabled>Seleccione...</option>
+        <option value="Juan de Dios">Juan de Dios</option>
+        <option value="José Antonio">José Antonio</option>
+        <option value="otro">Otro...</option>
+    </select>
+
+        <input
+        type="text"
+        name="propietario"
+        id="e_propietarioInput"
+        style="display:none"
+        />
+
+      <label>Carta Factura (opcional)
+        <input type="file" name="archivo_cartafactura" accept=".pdf,.jpg,.jpeg,.png">
+      </label>
+
+      {{-- ================= SEGURO ================= --}}
+      <h3>Póliza de Seguro</h3>
+
+      <label>Número de Póliza
+        <input type="text" name="no_poliza" id="e_no_poliza">
+      </label>
+
+      <label>Aseguradora
+        <input type="text" name="aseguradora" id="e_aseguradora">
+      </label>
+
+      <label>Inicio de Vigencia
+        <input type="date" name="inicio_vigencia_poliza" id="e_inicio_vigencia_poliza">
+      </label>
+
+      <label>Fin de Vigencia
+        <input type="date" name="fin_vigencia_poliza" id="e_fin_vigencia_poliza">
+      </label>
+
+      <label>Archivo de Póliza (opcional)
+        <input type="file" name="archivo_poliza" accept=".pdf,.jpg,.jpeg,.png">
+      </label>
+
+      {{-- ================= TARJETA ================= --}}
+      <h3>Tarjeta de Circulación</h3>
+
+      <label>Folio Tarjeta
+        <input type="text" name="folio_tarjeta" id="e_folio_tarjeta">
+      </label>
+
+      <label>Movimiento
+    <select id="e_movimientoSelect">
+        <option value="" disabled>Seleccione...</option>
+        <option value="Alta">Alta</option>
+        <option value="Baja">Baja</option>
+        <option value="otro">Otro...</option>
+    </select>
+
+    <input
+        type="text"
+        name="movimiento_tarjeta"
+        id="e_movimientoInput"
+        placeholder="Escribe el movimiento..."
+        style="margin-top:6px; display:none;">
+    </label>
+
+
+      <label>Fecha de Expedición
+        <input type="date" name="fecha_expedicion_tarjeta" id="e_fecha_expedicion_tarjeta">
+      </label>
+
+      <label>Tarjeta de Circulación (opcional)
+        <input type="file" name="archivo_tarjetacirculacion" accept=".pdf,.jpg,.jpeg,.png">
+      </label>
+
+
+
+
+
+
+     <h3>Documentos</h3>
+<div id="archivosVehiculo"></div>
+
+
+
+
+
+
+      <div class="actions" style="margin-top:15px;">
+        <button type="submit" class="btn">💾 Actualizar Vehículo</button>
+        <button type="button" class="btn ghost" id="cancelModal">Cancelar</button>
+      </div>
+    </form>
   </div>
+</div>
+
+
 
   <!-- 🔴 MODAL AGREGAR AUTO -->
   <div id="addModal" class="modal">
@@ -170,7 +369,7 @@
         <label>Archivo de Verificación (PDF o Imagen)
           <input
             type="file"
-            name="archivo_verificacion_tecnica"
+            name="archivo_verificacion"
             accept=".pdf,.jpg,.jpeg,.png"
             capture="environment"
           >
@@ -224,7 +423,7 @@
           <span>Carta factura (PDF/Imagen o cámara)</span>
           <input
             type="file"
-            name="carta_factura"
+            name="archivo_cartafactura"
             accept=".pdf,.jpg,.jpeg,.png"
             capture="environment"
           >
@@ -265,7 +464,7 @@
         <label>Tarjeta de Circulación (PDF o Imagen)
           <input
             type="file"
-            name="archivo_verificacion"
+            name="archivo_tarjetacirculacion"
             accept=".pdf,.jpg,.jpeg,.png"
             capture="environment"
           >
@@ -333,7 +532,7 @@ function validarFormVehiculo(form){
 
     // Propietario
     { label: 'Propietario', selector: '#propietarioInput' },
-    { label: 'Carta factura', selector: 'input[name="carta_factura"]', type:'file' },
+    { label: 'Carta factura', selector: 'input[name="archivo_cartafactura"]', type:'file' },
 
     // Seguro
     { label: 'Aseguradora', selector: 'input[name="aseguradora"]' },
@@ -345,7 +544,7 @@ function validarFormVehiculo(form){
     { label: 'Folio tarjeta', selector: 'input[name="folio_tarjeta"]' },
     { label: 'Movimiento', selector: '#movimientoInput' },
     { label: 'Fecha de expedición', selector: 'input[name="fecha_expedicion_tarjeta"]' },
-    { label: 'Tarjeta de circulación (archivo)', selector: 'input[name="archivo_verificacion"]', type:'file' },
+    { label: 'Tarjeta de circulación (archivo)', selector: 'input[name="archivo_tarjetacirculacion"]', type:'file' },
   ];
 
   for (const r of rules) {
@@ -379,29 +578,206 @@ function mostrarFaltantes(faltantes){
 }
 
 /* ==========================================================
-   🧾 MODAL EDITAR
+   🧾 MODAL EDITAR VEHÍCULO (CARGA COMPLETA DESDE BD)
 ========================================================== */
-const modal = document.getElementById('editModal');
-const closeModal = document.getElementById('closeModal');
-const cancelModal = document.getElementById('cancelModal');
-const form = document.getElementById('editForm');
-let currentId = null;
 
-document.querySelectorAll('.editBtn').forEach(btn => {
-  btn.addEventListener('click', e => {
-    const tr = e.target.closest('tr');
-    currentId = tr.dataset.id;
-    document.getElementById('m_modelo').value = tr.dataset.modelo;
-    document.getElementById('m_marca').value = tr.dataset.marca;
-    document.getElementById('m_anio').value = tr.dataset.anio;
-    document.getElementById('m_color').value = tr.dataset.color;
-    document.getElementById('m_categoria').value = tr.dataset.categoria;
-    document.getElementById('m_kilometraje').value = tr.dataset.kilometraje;
-    form.action = `/admin/flotilla/${currentId}/actualizar`;
+async function abrirEditarVehiculo(id) {
+  try {
+    const resp = await fetch(`/admin/flotilla/${id}/ver`);
+
+    if (!resp.ok) {
+      alert('No se pudo cargar el vehículo');
+      return;
+    }
+
+    const v = await resp.json();
+
+    const modal = document.getElementById('editModal');
+    const form  = document.getElementById('editForm');
+
+    // Acción del form
+    form.action = `/admin/flotilla/${id}/actualizar`;
+
+    /* ================= DATOS GENERALES ================= */
+    document.getElementById('e_marca').value = v.marca ?? '';
+    document.getElementById('e_modelo').value = v.modelo ?? '';
+    document.getElementById('e_anio').value = v.anio ?? '';
+    document.getElementById('e_nombre_publico').value = v.nombre_publico ?? '';
+    document.getElementById('e_color').value = v.color ?? '';
+
+    document.getElementById('e_transmision').value = v.transmision ?? '';
+    document.getElementById('e_combustible').value = v.combustible ?? '';
+    document.getElementById('e_id_categoria').value = v.id_categoria ?? '';
+
+    document.getElementById('e_numero_serie').value = v.numero_serie ?? '';
+    document.getElementById('e_numero_rin').value = v.numero_rin ?? '';
+    document.getElementById('e_placa').value = v.placa ?? '';
+
+    /* ================= DATOS TÉCNICOS ================= */
+    document.getElementById('e_cilindros').value = v.cilindros ?? '';
+    document.getElementById('e_numero_motor').value = v.numero_motor ?? '';
+    document.getElementById('e_holograma').value = v.holograma ?? '';
+    document.getElementById('e_vigencia_verificacion').value =
+      v.vigencia_verificacion ? v.vigencia_verificacion.substring(0, 10) : '';
+
+    document.getElementById('e_kilometraje').value = v.kilometraje ?? '';
+    document.getElementById('e_asientos').value = v.asientos ?? '';
+    document.getElementById('e_puertas').value = v.puertas ?? '';
+    document.getElementById('e_capacidad_tanque').value = v.capacidad_tanque ?? '';
+
+    /* ================= ACEITE ================= */
+    const aceiteSelect = document.getElementById('e_aceite_select');
+    const aceiteInput  = document.getElementById('e_aceite');
+
+    if (['Cvtec', 'Atf'].includes(v.aceite)) {
+      aceiteSelect.value = v.aceite;
+      aceiteInput.value = v.aceite;
+      aceiteInput.style.display = 'none';
+    } else if (v.aceite) {
+      aceiteSelect.value = 'otro';
+      aceiteInput.value = v.aceite;
+      aceiteInput.style.display = 'block';
+    } else {
+      aceiteSelect.value = '';
+      aceiteInput.value = '';
+      aceiteInput.style.display = 'none';
+    }
+
+ /* ================= PROPIETARIO ================= */
+const selProp = document.getElementById('e_propietarioSelect');
+const inpProp = document.getElementById('e_propietarioInput');
+
+const opcionesProp = Array.from(selProp.options).map(o => o.value);
+
+if (opcionesProp.includes(v.propietario)) {
+  // Coincide con opción (Juan de Dios, José Antonio, etc)
+  selProp.value = v.propietario;
+  inpProp.style.display = 'none';
+  inpProp.value = v.propietario;
+} else if (v.propietario) {
+  // No existe → usar "otro"
+  selProp.value = 'otro';
+  inpProp.style.display = 'block';
+  inpProp.value = v.propietario;
+} else {
+  // Vacío
+  selProp.value = '';
+  inpProp.style.display = 'none';
+  inpProp.value = '';
+}
+    /* ================= SEGURO ================= */
+    document.getElementById('e_no_poliza').value = v.no_poliza ?? '';
+    document.getElementById('e_aseguradora').value = v.aseguradora ?? '';
+    document.getElementById('e_inicio_vigencia_poliza').value =
+      v.inicio_vigencia_poliza ?? '';
+    document.getElementById('e_fin_vigencia_poliza').value =
+      v.fin_vigencia_poliza ?? '';
+
+    /* ================= TARJETA ================= */
+    document.getElementById('e_folio_tarjeta').value = v.folio_tarjeta ?? '';
+    document.getElementById('e_fecha_expedicion_tarjeta').value =
+      v.fecha_expedicion_tarjeta ?? '';
+
+
+ // ===== MOVIMIENTO TARJETA (SELECT + INPUT) =====
+const movSel = document.getElementById('e_movimientoSelect');
+const movInp = document.getElementById('e_movimientoInput');
+
+const opcionesMov = Array.from(movSel.options).map(o => o.value);
+
+if (opcionesMov.includes(v.movimiento_tarjeta)) {
+  movSel.value = v.movimiento_tarjeta;
+  movInp.style.display = 'none';
+  movInp.value = v.movimiento_tarjeta;
+} else {
+  movSel.value = 'otro';
+  movInp.style.display = 'block';
+  movInp.value = v.movimiento_tarjeta ?? '';
+}
+
     modal.classList.add('active');
-  });
+
+  } catch (err) {
+    console.error('Error al abrir edición:', err);
+    alert('Error al cargar el vehículo');
+  }
+
+}
+
+
+
+/* ==========================================================
+   ❌ CERRAR MODAL EDITAR
+========================================================== */
+document.getElementById('closeModal').onclick =
+document.getElementById('cancelModal').onclick = () => {
+  document.getElementById('editModal').classList.remove('active');
+};
+
+/* ==========================================================
+   🧠 SELECT ACEITE (EDITAR)
+========================================================== */
+document.getElementById('e_aceite_select').addEventListener('change', function () {
+  const input = document.getElementById('e_aceite');
+
+  if (this.value === 'otro') {
+    input.style.display = 'block';
+    input.value = '';
+    input.focus();
+  } else {
+    input.style.display = 'none';
+    input.value = this.value;
+  }
 });
-closeModal.onclick = cancelModal.onclick = () => modal.classList.remove('active');
+
+/* ==========================================================
+   SELECT MOVIMIENTO – EDITAR
+========================================================== */
+const movSelectEdit = document.getElementById('e_movimientoSelect');
+const movInputEdit  = document.getElementById('e_movimientoInput');
+
+if (movSelectEdit && movInputEdit) {
+  movSelectEdit.addEventListener('change', () => {
+    const val = movSelectEdit.value;
+
+    if (val === 'otro') {
+      movInputEdit.style.display = 'block';
+      movInputEdit.value = '';
+      movInputEdit.focus();
+    } else {
+      movInputEdit.style.display = 'none';
+      movInputEdit.value = val;
+    }
+  });
+}
+
+/* ==========================================================
+   🧠 SELECT PROPIETARIO (EDITAR) – LISTENER
+========================================================== */
+const propietarioSelectEdit = document.getElementById('e_propietarioSelect');
+const propietarioInputEdit  = document.getElementById('e_propietarioInput');
+
+if (propietarioSelectEdit && propietarioInputEdit) {
+  propietarioSelectEdit.addEventListener('change', () => {
+    const val = propietarioSelectEdit.value;
+
+    if (val === 'otro') {
+      propietarioInputEdit.style.display = 'block';
+      propietarioInputEdit.value = '';
+      propietarioInputEdit.focus();
+    } else {
+      propietarioInputEdit.style.display = 'none';
+      propietarioInputEdit.value = val;
+    }
+  });
+}
+
+
+
+
+
+
+
 
 /* ==========================================================
    🧾 MODAL AGREGAR
