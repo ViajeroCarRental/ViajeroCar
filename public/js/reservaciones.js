@@ -1156,28 +1156,10 @@ function initStep4AddonsSummary() {
         if (qty > 0) map.set(id, qty);
       });
 
-      // 2) Regla automática de "conductor menor de edad"
-      try {
-        const dobHidden = qs('#dob');
-        if (dobHidden && dobHidden.value && YOUNG_DRIVER_SERVICE_ID) {
-          const age = computeAgeFromDob(dobHidden.value, getPickupDateForAge());
-          if (age != null && age < YOUNG_DRIVER_MIN_AGE) {
-            map.set(String(YOUNG_DRIVER_SERVICE_ID), 1);
-          } else {
-            map.delete(String(YOUNG_DRIVER_SERVICE_ID));
-          }
-        } else {
-          // Si no hay fecha de nacimiento o no está configurado el ID, quitamos por seguridad
-          map.delete(String(YOUNG_DRIVER_SERVICE_ID));
-        }
-      } catch (_) {
-        // Si algo falla, no reventamos la página, solo seguimos con los addons manuales
-      }
-
       return map;
     }
 
-    function writeHiddenAndURL() {
+        function writeHiddenAndURL() {
       const map = buildFromUI();
       const value = serializeMap(map);
       hidden.value = value;
@@ -1187,6 +1169,11 @@ function initStep4AddonsSummary() {
         const url = new URL(window.location.href);
         url.searchParams.set('addons', value);
         window.history.replaceState({}, document.title, url.toString());
+      } catch (_) { }
+
+      // 👶 Después de aplicar los addons manuales, forzamos la regla de menor de 25
+      try {
+        applyYoungDriverAddon();
       } catch (_) { }
     }
 
