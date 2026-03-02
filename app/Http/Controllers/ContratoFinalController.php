@@ -250,7 +250,8 @@ $pdf = Pdf::loadView('Admin.contrato-final-pdf', [
         'subtotal'     => $subtotal,
         'totalFinal'   => $totalFinal,
     ])
-    ->setPaper('legal', 'portrait')
+    // 👇 AQUI EL CAMBIO: de 'legal' a 'a4'
+    ->setPaper('a4', 'portrait')
     ->setOptions([
         'isRemoteEnabled'      => true,
         'isHtml5ParserEnabled' => true,

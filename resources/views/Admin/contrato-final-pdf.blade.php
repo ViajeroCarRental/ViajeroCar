@@ -7,15 +7,12 @@
 
   <style>
   /* ==========================================================
-     ✅ PDF FINAL (DomPDF Friendly)
-     - Hoja 1: info
-     - Hoja 2: cláusulas 1 columna justificado
-     - Fix: SIN hoja en blanco
+     🧾 CONFIG BÁSICA PDF
   ========================================================== */
 
-  /* ✅ Margen real del PDF (AJUSTA AQUÍ) */
   @page{
-    size: legal portrait;
+    /* La hoja ahora es A4 vertical */
+    size: A4 portrait;
     margin: 6mm;
   }
 
@@ -28,14 +25,16 @@
     --paper:#ffffff;
   }
 
-  *{ box-sizing:border-box; }
+  *{
+    box-sizing:border-box;
+  }
 
   html, body{
     margin:0;
     padding:0;
     background:#fff !important;
     color:var(--ink);
-    font-family: DejaVu Sans, Arial, sans-serif !important;
+    font-family: "Bahnschrift", Arial, sans-serif;
   }
 
   .contrato-final-container{
@@ -45,574 +44,851 @@
     background:#fff;
   }
 
-  .acciones-contrato, .acciones-extra, .modal-firma{ display:none !important; }
-
   /* ==========================================================
-     ✅ HOJA 1
+     🧾 ENCABEZADO NUEVO
+     - Logo izquierda
+     - Texto "Gracias por tu reserva, nombre
+     - Texto secundario
+     - Bloque derecho con etiquetas grises + chips rojos
+     - Banda "INFORMACIÓN DE TU VEHÍCULO"
   ========================================================== */
 
-  .contrato-card{
-    background: var(--paper);
-    border: 0;
-    border-radius: 0;
+  .header-contrato{
+    width:100%;
+    padding: 14mm 16mm 6mm 16mm;
+    position:relative;
   }
 
-  .encabezado{
+  .header-layout{
+    display: table;
+    width:100%;
+    table-layout: fixed;
+  }
+
+  .header-left{
+    display: table-cell;
+    width: 60%;
+    vertical-align: top;
+  }
+
+  .header-right{
+    display: table-cell;
+    width: 40%;
+    vertical-align: top;
+    text-align:right;
+    position:relative;
+  }
+
+  /* Logo VIAJERO */
+  .logo-viajero{
+    display:block;
+    height: 12mm;         /* Ajusta si tu logo es más alto/bajo */
+    width:auto;
+    margin-bottom: 8mm;
+  }
+
+  /* Bloque de textos de saludo */
+  .header-textos{
+    margin-top: 0;
+  }
+
+  .header-titulo{
+    margin:0 0 2mm 0;
+    font-size: 18pt;
+    font-weight: 700;
+    color:#3B3B3B;
+  }
+
+  .header-subtitulo{
+    margin:0;
+    font-size: 11pt;
+    font-weight: 400;
+    color:#7A7A7A;
+  }
+
+  /* Figura gris del lado derecho (ruta/gota) */
+  .header-figura{
+    position:absolute;
+    right: 4mm;
+    top: -8mm;
+    height: 60mm;         /* Alto aproximado como en el diseño */
+    width:auto;
+    z-index:1;
+  }
+
+  /* Bloque de datos en la esquina derecha */
+  .header-datos{
+    position:relative;
+    z-index:2;
+    font-size: 9pt;
+    color:#B3B3B3;
+    text-align:right;
+    margin-top: 6mm;
+  }
+
+  .header-datos-linea{
+    margin: 0 0 2.5mm 0;
+    line-height:1.3;
+  }
+
+  .chip-rojo{
+    display:inline-block;
     background: var(--brand);
     color:#fff;
-    padding: 18px 20px;
-    width:100%;
-    display: table;
-    table-layout: fixed;
-  }
-  .encabezado .left{
-    display: table-cell;
-    vertical-align: middle;
-    width:70%;
-  }
-  .encabezado .right{
-    display: table-cell;
-    vertical-align: middle;
-    width:30%;
-    text-align:right;
-    font-size: 12px;
-    line-height: 1.25;
-  }
-
-  .logo-contrato{
-    width: 54px;
-    height:auto;
-    border-radius: 10px;
-    background: rgba(255,255,255,.14);
-    padding: 6px;
-    vertical-align: middle;
-  }
-  .titulo-texto{
-    display:inline-block;
-    vertical-align: middle;
-    margin-left: 12px;
-  }
-  .titulo-texto h2{
-    margin:0;
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing:.2px;
-  }
-  .titulo-texto p{
-    margin:2px 0 0;
-    font-size: 12px;
-    opacity:.95;
-  }
-
-  .secciones{
-    padding: 14px 16px 16px;
-    background:#fff;
-  }
-
-  .bloque{
-    border: 1px solid var(--stroke);
-    border-radius: 14px;
-    background:#fff;
-    padding: 12px 12px 12px 14px;
-    margin-bottom: 10px;
-    border-left: 4px solid var(--brand);
-  }
-  .bloque h3{
-    margin:0 0 8px 0;
-    font-size: 13px;
-    font-weight: 900;
-  }
-  .bloque ul{
-    margin:0;
-    padding-left: 18px;
-  }
-  .bloque ul li{
-    margin: 0 0 5px 0;
-    font-size: 11.2px;
-    line-height: 1.22;
-  }
-
-  /* En PDF, mejor 1 columna (DomPDF) */
-  .bloque.ul-2cols ul{ columns: unset !important; }
-
-  .tabla-tarifas{
-    width:100%;
-    border-collapse: collapse;
-    border:1px solid var(--stroke);
-    font-size: 11px;
-    margin-top: 6px;
-  }
-  .tabla-tarifas th{
-    background:#F8FAFC;
-    text-align:left;
-    font-weight: 900;
-  }
-  .tabla-tarifas th, .tabla-tarifas td{
-    padding: 7px 8px;
-    border:1px solid var(--stroke);
-  }
-
-  .totales{
-    margin-top: 8px;
-    padding: 10px 12px;
-    border: 1px dashed var(--stroke);
-    border-radius: 12px;
-    background:#fff;
-    font-size: 11px;
-  }
-  .totales p{ margin: 4px 0; }
-  .totales .total-final{
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--stroke);
-    font-size: 12.5px;
-    font-weight: 900;
-    color: var(--brand);
-  }
-
-  .firmas{
-    width:100%;
-    display: table;
-    table-layout: fixed;
-    border-collapse: separate;
-    border-spacing: 10px 0;
-    margin-top: 8px;
-  }
-  .firma-box{
-    display: table-cell;
-    width:50%;
-    border: 1px solid var(--stroke);
-    border-radius: 12px;
-    padding: 10px;
-    text-align:center;
-    vertical-align: top;
-    background:#fff;
-  }
-  .firma-box p{
-    margin: 0 0 8px;
-    font-size: 11px;
-    font-weight: 900;
-  }
-  .firma-img{
-    width: 120px;
-    max-width:100%;
-    border: 1px solid var(--stroke);
-    border-radius: 10px;
-    background:#fff;
-    display:block;
-    margin: 0 auto;
-  }
-
-  .pie-contrato{
-    text-align:center;
-    margin: 10px 0 0;
-    padding: 8px 0 0;
-    border-top: 1px solid var(--stroke);
-    font-size: 10.5px;
-    color: var(--muted);
-  }
-
-  /* Evitar cortes feos en hoja 1 */
-  .bloque, .tabla-tarifas, .totales, .firmas{
-    page-break-inside: avoid;
+    padding: 1.4mm 5mm;
+    border-radius: 999px;
+    margin-left: 4mm;
+    font-size: 8.5pt;
+    font-weight:700;
+    white-space: nowrap;
   }
 
   /* ==========================================================
-     ✅ HOJA 2 (Cláusulas)
-     ✅ FIX hoja en blanco:
-        - USAMOS page-break-before en hoja2
-        - NO usamos <div class="page-break">
+     🧾 TÍTULO SECCIÓN: INFORMACIÓN DE TU VEHÍCULO
   ========================================================== */
 
-  .hoja2{
-    width:100%;
-    background:#fff;
-
-    /* ✅ FIX: este es el ÚNICO salto entre hojas */
-    page-break-before: always;
-  }
-
-  /* ✅ OPCIÓN 1 (más ancha): menos “aire” lateral */
-  .hoja2-wrap{
-    width: 100%;
-    padding: 0 10mm; /* antes 12mm -> ahora MÁS ANCHA */
-  }
-
-  .hoja2-marco{
-    border: 2px solid #1f1f1f;
-    border-radius: 46px;
-
-    /* ✅ un poquito menos padding para ganar ancho útil */
-    padding: 14px 12px 12px;
-
-    width: 100%;
-
-    /* ✅ MÁS ANCHO el marco */
-    max-width: 182mm; /* antes 175mm */
-
-    margin: 0 auto;
-
-    /* ✅ OPCIÓN 2 (más larga): más alto */
-    min-height: 336mm; /* antes 330mm */
-  }
-
-  .hoja2-inner{
-    /* ✅ Texto MÁS ANCHO */
-    max-width: 170mm; /* antes 164mm */
-    margin: 0 auto;
-  }
-
-  .hoja2-encabezado{
-    font-size: 9.6px;
-    line-height: 1.16;
-    text-transform: uppercase;
-    text-align: left;
-    margin: 0 0 7px 0;
-  }
-
-  .hoja2-titulo{
-    font-size: 17.5px;
-    font-weight: 900;
-    text-align:center;
-    margin: 0 0 9px 0;
-    letter-spacing: .6px;
-  }
-
-  .clausula{
-    font-size: 9.2px;
-    line-height: 1.16;
-    margin: 0 0 6px 0;
-    text-align: justify;
-    word-break: break-word;
-    overflow-wrap: break-word;
-    hyphens: auto;
-  }
-  .clausula b{ font-weight: 900; }
-
-  .hoja2-pie{
-    margin-top: 10px;
-    font-size: 9.8px;
-  }
-
-  .pie-linea{
-    display:inline-block;
-    border-bottom: 1.8px solid #1f1f1f;
-    height: 14px;
-    vertical-align: bottom;
-  }
-
-  .w1{ width: 320px; }
-  .w2{ width: 90px; }
-  .w3{ width: 160px; }
-  .w4{ width: 140px; }
-
-  .hoja2 .firmas{
-    width:100%;
+  .titulo-seccion-vehiculo{
+    margin: 6mm 16mm 4mm 16mm;
+    /* Usamos "table" para compatibilidad con DomPDF */
     display: table;
-    table-layout: fixed;
-    border-collapse: separate;
-    border-spacing: 10px 0;
-    margin-top: 10px;
+    width: calc(100% - 32mm); /* 16mm izq + 16mm der */
   }
 
-  .hoja2 .firma-box{
+  .titulo-vehiculo-texto{
     display: table-cell;
-    width:50%;
-    text-align:center;
-    font-size: 9.8px;
-    border: none;
-    padding: 0;
-    background: transparent;
+    white-space: nowrap;
+    font-family: "Bahnschrift", Arial, sans-serif;
+    font-weight: 700;
+    font-size: 11.5pt;
+    color: var(--brand);
+    letter-spacing: 0.14em;
+  }
+
+  .titulo-vehiculo-linea{
+    display: table-cell;
+    width: 100%;
+    padding-left: 6mm;
+    vertical-align: middle;
+  }
+
+  .titulo-vehiculo-linea::before{
+    content:"";
+    display:block;
+    border-bottom: 2px solid var(--brand);
+    width: 100%;
+  }
+
+  /* ==========================================================
+     🔴 FRANJA ROJA: INFORMACIÓN DEL VEHÍCULO
+  ========================================================== */
+
+  .vehiculo-info-box{
+    margin: 0 16mm 8mm 16mm;     /* mismos márgenes horizontales que el título */
+    width: calc(100% - 32mm);    /* 16mm izq + 16mm der */
+    background: var(--brand);
+    border-radius: 12mm 12mm 6mm 6mm; /* redondeado fuerte arriba como la imagen */
+    padding: 7mm 10mm 6mm 10mm;
+    color:#ffffff;
+    font-family: Arial, sans-serif;
+    font-size: 9pt;
+  }
+
+  .vehiculo-info-top{
+    display: table;
+    width:100%;
+    table-layout: fixed;
+    margin-bottom: 4mm;
+  }
+
+  .vehiculo-info-item{
+    display: table-cell;
+    vertical-align: top;
+    padding-right: 4mm;
+    text-align:left;
+  }
+
+  .vehiculo-info-label{
+    display:block;
+    font-weight:700;
+    margin-bottom: 1mm;
+  }
+
+  .vehiculo-info-value{
+    display:block;
+    font-weight:400;
+  }
+
+  .vehiculo-info-bottom{
+    display: table;
+    width:100%;
+    table-layout: fixed;
+    margin-top: 1mm;
+  }
+
+  .vehiculo-info-bottom-left,
+  .vehiculo-info-bottom-right{
+    display: table-cell;
+    vertical-align: middle;
+    text-align:left;
+  }
+
+  .vehiculo-info-bottom-right{
+    text-align:right;
+  }
+
+  .vehiculo-gas-icon{
+    display:inline-block;
+    height: 5mm;         /* icono de la gasolinera */
+    width:auto;
+    margin-right: 2mm;
+    vertical-align: middle;
+  }
+
+  .vehiculo-inline-label{
+    font-weight:700;
+  }
+
+  .vehiculo-inline-value{
+    font-weight:400;
+  }
+
+  /* ==========================================================
+     🔴 SECCIÓN ARRENDATARIO / ITINERARIO
+  ========================================================== */
+
+  .seccion-dos-columnas{
+    margin: 6mm 16mm 4mm 16mm;
+    width: calc(100% - 32mm); /* 16mm izq + 16mm der */
+  }
+
+  .seccion-dos-columnas-inner{
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .col-arrendatario,
+  .col-itinerario{
+    display: table-cell;
     vertical-align: top;
   }
 
-  .firma-linea{
-    width: 80%;
-    height: 16px;
-    border-bottom: 1.8px solid #1f1f1f;
-    margin: 0 auto 4px;
+  .col-arrendatario{
+    padding-right: 8mm;
+  }
+
+  .col-itinerario{
+    padding-left: 8mm;
+  }
+
+  .titulo-col-rojo{
+    font-family: "Bahnschrift", Arial, sans-serif;
+    font-weight: 700;
+    font-size: 11.5pt;
+    color: var(--brand);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0 0 3mm 0;
+  }
+
+  .titulo-col-derecha{
+    text-align: right;
+  }
+
+  .arrendatario-datos{
+    font-family: Arial, sans-serif;
+    font-size: 9.3pt;
+    color: #000;
+  }
+
+  .arrendatario-row{
+    margin-bottom: 1.8mm;
+  }
+
+  .arrendatario-label{
+    font-weight: 700;
+  }
+
+  .arrendatario-label-inline{
+    margin-left: 10mm;
+  }
+
+  .arrendatario-value{
+    font-weight: 400;
+  }
+
+  .arrendatario-underline{
+    display: inline-block;
+    padding-bottom: 0.3mm;
+    border-bottom: 0.4pt solid #000;
+    min-width: 35mm;
+  }
+
+  .arrendatario-tabla-licencia{
+    width: 100%;
+    margin-top: 3mm;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    font-size: 8.8pt;
+  }
+
+  .arrendatario-tabla-licencia thead tr th{
+    border-top: 0.5pt solid #000;
+    padding-top: 1.5mm;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .arrendatario-tabla-licencia tbody tr td{
+    padding-top: 0.8mm;
+    font-weight: 400;
+  }
+
+  .itinerario-bloque{
+    font-family: Arial, sans-serif;
+    font-size: 9.3pt;
+    margin-bottom: 6mm;
+  }
+
+  .itinerario-label{
+    font-weight: 700;
+    margin: 0 0 1mm 0;
+  }
+
+  .itinerario-texto{
+    margin: 0;
+    line-height: 1.3;
+  }
+
+    /* ==========================================================
+     🔴 SECCIÓN TARIFAS / ADICIONALES (franja roja abajo)
+  ========================================================== */
+
+  .tarifas-adicionales-wrap{
+    margin-top: 6mm;
+    background: var(--brand);
+    color:#ffffff;
+    padding: 4mm 0 5mm 0;
+    width:100%;
+  }
+
+  .tarifas-adicionales-inner{
+    margin: 0 16mm;
+    width: calc(100% - 32mm); /* 16mm izq + 16mm der */
+    display: table;
+    table-layout: fixed;
+  }
+
+  .tarifas-col{
+    display: table-cell;
+    vertical-align: top;
+    font-family: Arial, sans-serif;
+    font-size: 8.8pt;
+  }
+
+  .tarifas-col-left{
+    padding-right: 4mm;
+    border-right: 0.4pt solid rgba(255,255,255,0.7);
+  }
+
+  .tarifas-col-right{
+    padding-left: 4mm;
+  }
+
+  .tarifas-titulo{
+    font-family: "Bahnschrift", Arial, sans-serif;
+    font-weight: 700;
+    font-size: 11.5pt;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0 0 3mm 0;
+    color:#ffffff;
+  }
+
+  .tarifas-tabla,
+  .adicionales-tabla{
+    width:100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    font-size: 8.8pt;
+  }
+
+  .tarifas-tabla thead th,
+  .adicionales-tabla thead th{
+    padding: 1mm 0;
+    border-bottom: 0.4pt solid rgba(255,255,255,0.7);
+    text-align:left;
+    font-weight:700;
+  }
+
+  .tarifas-tabla tbody td,
+  .adicionales-tabla tbody td{
+    padding: 0.9mm 0;
+    border-bottom: 0.2pt solid rgba(255,255,255,0.25);
+  }
+
+  .tarifas-tabla th:nth-child(2),
+  .tarifas-tabla td:nth-child(2),
+  .tarifas-tabla th:nth-child(3),
+  .tarifas-tabla td:nth-child(3),
+  .tarifas-tabla th:nth-child(4),
+  .tarifas-tabla td:nth-child(4){
+    text-align:right;
+  }
+
+  .adicionales-tabla th:nth-child(2),
+  .adicionales-tabla td:nth-child(2),
+  .adicionales-tabla th:nth-child(3),
+  .adicionales-tabla td:nth-child(3){
+    text-align:right;
+  }
+
+  .tarifas-totales-tabla{
+    width:100%;
+    margin-top: 3mm;
+    border-collapse: collapse;
+    font-size: 9pt;
+  }
+
+  .tarifas-totales-tabla td{
+    padding-top: 0.7mm;
+  }
+
+  .tarifas-totales-tabla .lbl{
+    font-weight:700;
+  }
+
+  .tarifas-totales-tabla .val{
+    text-align:right;
+    font-weight:700;
+  }
+
+  .tarifas-totales-tabla .total-label{
+    padding-top: 1.4mm;
+  }
+
+  .tarifas-totales-tabla .total-value{
+    padding-top: 1.4mm;
+    font-size: 9.5pt;
   }
   </style>
 </head>
 
 <body>
-    @php
+@php
     use Carbon\Carbon;
 
-    // Fecha de retiro
-    $fechaRetiro = Carbon::parse($reservacion->fecha_inicio);
-
-    $dia  = $fechaRetiro->day;
-    $mes  = $fechaRetiro->translatedFormat('F'); // mes en texto
-    $anio = $fechaRetiro->year;
-
-    // Lugar: sucursal de retiro
-    $lugar = $reservacion->sucursal_retiro_nombre ?? '________________';
-
-    // ✅ Nombre completo del cliente (nombre + apellidos)
+    // Nombre completo del cliente
     $nombreCompletoCliente = trim(
         ($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')
     );
+
+    // Nombre que se usará en el saludo
+    $nombreSaludo = $reservacion->nombre_cliente
+        ?? ($nombreCompletoCliente !== '' ? $nombreCompletoCliente : 'Cliente');
+
+    // Tipo de cambio
+    $tipoCambioValor = $tipoCambio ?? null;
+    $textoTipoCambio = $tipoCambioValor !== null
+        ? '$' . number_format($tipoCambioValor, 2) . ' MXN'
+        : '—';
+
+    // Fecha de apertura
+    $fechaAperturaRaw = $contrato->fecha_apertura
+        ?? (isset($reservacion->fecha_inicio)
+            ? ($reservacion->fecha_inicio . ' ' . ($reservacion->hora_retiro ?? '00:00'))
+            : null);
+
+    if ($fechaAperturaRaw) {
+        $fechaAperturaCarbon = Carbon::parse($fechaAperturaRaw);
+        $textoFechaApertura = $fechaAperturaCarbon->format('d/m/y g:i a');
+    } else {
+        $textoFechaApertura = '—';
+    }
 @endphp
 
-  <div class="contrato-final-container">
+<div class="contrato-final-container">
 
-    {{-- ✅ HOJA 1 --}}
-    <section class="contrato-card">
-      <header class="encabezado">
-        <div class="left">
-          <img class="logo-contrato" src="{{ public_path('img/Logo3.jpg') }}" alt="Viajero">
-          <div class="titulo-texto">
-            <h2>VIAJERO CAR RENTAL</h2>
-            <p>Contrato de Arrendamiento / Rental Agreement</p>
-          </div>
-        </div>
+  {{-- 🧾 ENCABEZADO --}}
+  <header class="header-contrato">
+    <div class="header-layout">
+      {{-- LADO IZQUIERDO: LOGO + MENSAJE --}}
+      <div class="header-left">
+        {{-- Cambia la ruta del logo --}}
+        <img
+          class="logo-viajero"
+          src="{{ public_path('img/VIAJEROPDF.png') }}"
+          alt="Viajero Car Rental"
+        >
 
-        <div class="right">
-          <div><b>Contrato:</b> {{ $contrato->numero_contrato ?? '—' }}</div>
-          <div><b>Código:</b> {{ $reservacion->codigo ?? '—' }}</div>
-          <div><b>Fecha:</b> {{ \Carbon\Carbon::now()->format('d/m/Y') }}</div>
-        </div>
-      </header>
-
-      <div class="secciones">
-
-        <article class="bloque ul-2cols">
-  <h3>Datos del Arrendatario</h3>
-  <ul>
-    <li>
-      <b>Nombre:</b>
-      {{ $nombreCompletoCliente !== '' ? $nombreCompletoCliente : ($reservacion->nombre_cliente ?? '—') }}
-    </li>
-    <li><b>Correo:</b> {{ $reservacion->email_cliente ?? '—' }}</li>
-    <li><b>Teléfono:</b> {{ $reservacion->telefono_cliente ?? '—' }}</li>
-    {{-- País viene de la licencia, igual que en la vista --}}
-    <li><b>País:</b> {{ $licencia->pais_emision ?? '—' }}</li>
-    <li><b>Vuelo:</b> {{ $reservacion->no_vuelo ?? '—' }}</li>
-  </ul>
-</article>
-
-
-        <article class="bloque ul-2cols">
-  <h3>Licencia del Cliente</h3>
-  <ul>
-    <li><b>No. Licencia:</b> {{ $licencia->numero_identificacion ?? '—' }}</li>
-    <li><b>Vence:</b> {{ $licencia->fecha_vencimiento ?? '—' }}</li>
-    <li><b>Emitida en:</b> {{ $licencia->pais_emision ?? '—' }}</li>
-  </ul>
-</article>
-
-
-        <article class="bloque ul-2cols">
-          <h3>Itinerario</h3>
-          <ul>
-            <li><b>Oficina de salida:</b> {{ $reservacion->sucursal_retiro_nombre ?? '—' }}</li>
-            <li><b>Fecha/Hora salida:</b> {{ $reservacion->fecha_inicio ?? '—' }} {{ $reservacion->hora_retiro ?? '' }}</li>
-            <li><b>Oficina de regreso:</b> {{ $reservacion->sucursal_entrega_nombre ?? '—' }}</li>
-            <li><b>Fecha/Hora regreso:</b> {{ $reservacion->fecha_fin ?? '—' }} {{ $reservacion->hora_entrega ?? '' }}</li>
-          </ul>
-        </article>
-
-        <article class="bloque ul-2cols">
-          <h3>Vehículo Asignado</h3>
-          <ul>
-            <li><b>Modelo:</b> {{ $vehiculo->modelo ?? '—' }}</li>
-            <li><b>Categoría:</b> {{ $vehiculo->categoria ?? '—' }}</li>
-            <li><b>Color:</b> {{ $vehiculo->color ?? '—' }}</li>
-            <li><b>Transmisión:</b> {{ $vehiculo->transmision ?? '—' }}</li>
-            <li><b>Kilometraje:</b> {{ $vehiculo->kilometraje ?? '—' }}</li>
-            <li><b>Gasolina inicial:</b> {{ $contrato->gasolina_inicial ?? '—' }}</li>
-          </ul>
-        </article>
-
-        <article class="bloque">
-          <h3>Tarifas y Protecciones</h3>
-
-          <table class="tabla-tarifas">
-            <thead>
-              <tr>
-                <th>Concepto</th>
-                <th>Días</th>
-                <th>Precio/Día</th>
-                <th>Total (MXN)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Tarifa Base</td>
-                <td>{{ $dias ?? 1 }}</td>
-                <td>${{ number_format($tarifaBase ?? 0, 2) }}</td>
-                <td>${{ number_format(($tarifaBase ?? 0) * ($dias ?? 1), 2) }}</td>
-              </tr>
-
-              @foreach(($paquetes ?? []) as $p)
-                <tr>
-                  <td>{{ $p->nombre ?? 'Paquete' }}</td>
-                  <td>{{ $dias ?? 1 }}</td>
-                  <td>${{ number_format($p->precio_por_dia ?? 0, 2) }}</td>
-                  <td>${{ number_format(($p->precio_por_dia ?? 0) * ($dias ?? 1), 2) }}</td>
-                </tr>
-              @endforeach
-
-              @foreach(($individuales ?? []) as $i)
-                <tr>
-                  <td>{{ $i->nombre ?? 'Protección' }}</td>
-                  <td>{{ $dias ?? 1 }}</td>
-                  <td>${{ number_format($i->precio_por_dia ?? 0, 2) }}</td>
-                  <td>${{ number_format(($i->precio_por_dia ?? 0) * ($dias ?? 1), 2) }}</td>
-                </tr>
-              @endforeach
-
-              @foreach(($extras ?? []) as $e)
-                <tr>
-                  <td>{{ $e->nombre ?? 'Servicio' }}</td>
-                  <td>{{ $dias ?? 1 }}</td>
-                  <td>${{ number_format($e->precio_unitario ?? 0, 2) }}</td>
-                  <td>${{ number_format(($e->precio_unitario ?? 0) * ($dias ?? 1), 2) }}</td>
-                </tr>
-              @endforeach
-            </tbody>
-          </table>
-
-          @php
-            $subtotalCalc = $subtotal ?? 0;
-            $ivaCalc = $subtotalCalc * 0.16;
-            $totalCalc = $totalFinal ?? ($subtotalCalc + $ivaCalc);
-          @endphp
-
-          <div class="totales">
-            <p><b>Subtotal:</b> ${{ number_format($subtotalCalc, 2) }}</p>
-            <p><b>IVA (16%):</b> ${{ number_format($ivaCalc, 2) }}</p>
-            <p class="total-final">TOTAL: ${{ number_format($totalCalc, 2) }} MXN</p>
-          </div>
-        </article>
-
-        <article class="bloque">
-          <h3>Firmas</h3>
-
-          <div class="firmas">
-            <div class="firma-box">
-              <p>Firma del Cliente</p>
-              @if(!empty($contrato->firma_cliente))
-                <img class="firma-img" src="{{ $contrato->firma_cliente }}" alt="Firma cliente">
-              @else
-                <div style="height:60px;border:1px dashed #e5e7eb;border-radius:10px;"></div>
-              @endif
-            </div>
-
-            <div class="firma-box">
-              <p>Firma del Arrendador</p>
-              @if(!empty($contrato->firma_arrendador))
-                <img class="firma-img" src="{{ $contrato->firma_arrendador }}" alt="Firma arrendador">
-              @else
-                <div style="height:60px;border:1px dashed #e5e7eb;border-radius:10px;"></div>
-              @endif
-            </div>
-          </div>
-
-          <div class="pie-contrato">
-            Documento generado por Viajero Car Rental • {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}
-          </div>
-        </article>
-
-      </div>
-    </section>
-
-    {{-- ✅ HOJA 2 — CLÁUSULAS (1 COLUMNA) --}}
-    <section class="hoja2">
-      <div class="hoja2-wrap">
-        <div class="hoja2-marco">
-          <div class="hoja2-inner">
-
-            <p class="hoja2-encabezado">
-              CONTRATO DE ARRENDAMIENTO, QUE CELEBRA POR UNA PARTE LA COMPAÑÍA CUYA RAZÓN SOCIAL APARECE EN EL APARTADO NO. 1 DEL ANVERSO DE ESTE CONTRATO COMO ARRENDADORA, Y POR LA OTRA, LA PERSONA CUYO NOMBRE APARECE EN EL APARTADO NO. 2 DEL ANVERSO DE ESTE CONTRATO, CON CARÁCTER DE ARRENDATARIA.
-            </p>
-
-            <h2 class="hoja2-titulo">CLAUSULAS</h2>
-
-            {{-- ✅ (NO QUITO NADA) — mismas 20 cláusulas --}}
-            <p class="clausula"><b>PRIMERA.</b> LA ARRENDADORA entrega en arrendamiento a la ARRENDATARIA cuyo nombre aparece en la carátula de este documento, y dicha ARRENDATARIA recibe en tal carácter el vehículo objeto de este contrato en condiciones normales, mecánicas y de carrocería, consignadas en el inventario respectivo, con el carácter de BIEN ARRENDADO, a tener bajo su custodia y a su entera satisfacción, el vehículo de referencia y se obliga a pagar a la ARRENDADORA la renta señalada del contrato y a precisar de mercado, el o los faltantes de accesorios y partes del vehículo que recibe en el momento de entrega del mismo.</p>
-
-            <p class="clausula"><b>SEGUNDA.</b> El término forzoso de este contrato de arrendamiento está señalado en la carátula de este contrato y nunca podrá ser prorrogado por ninguna de las partes, sin que aparezca constancia de voluntad de los mismos, en un nuevo contrato de arrendamiento.</p>
-
-            <p class="clausula"><b>TERCERA.</b> LA ARRENDATARIA pagará como precio del arrendamiento el anticipo y precisamente el lugar donde deberán ser pagadas las cantidades estipuladas en el contrato de arrendamiento. Los pagos serán efectuados conforme a lo indicado en la carátula de este contrato. La renta deberá ser totalmente pagada aun cuando el vehículo se encuentre en uso de LA ARRENDATARIA, desde este momento, en plena posesión del automóvil y hasta la fecha en que lo reciba en devolución, a su entera satisfacción, LA ARRENDADORA.</p>
-
-            <p class="clausula"><b>CUARTA.</b> LA ARRENDATARIA se obliga a entregar en devolución el vehículo arrendado precisamente en la hora y fecha convenidas y en la oficina de la ARRENDADORA en que se hubiera pactado la devolución, apareciendo esos datos en la carátula de este contrato de la misma que el vehículo se encontrará lavado y en condiciones normales, siendo el vehículo devuelto con el tanque lleno de gasolina. LA ARRENDATARIA deberá devolverlo en el lugar indicado en la carátula de este contrato. LA ARRENDATARIA deberá devolver el vehículo al lugar convenido en el contrato y en el plazo estipulado, más el importe que corresponda si la arrendataria del tiempo normal de traslado del lugar donde LA ARRENDATARIA haya dejado el vehículo a la oficina donde debió entregarlo de acuerdo con este contrato, aplicándose en todo caso la cuota diaria.</p>
-
-            <p class="clausula"><b>QUINTA.</b> LA ARRENDATARIA tal como antes se señala se obliga a entregar el vehículo arrendado al término de este contrato, con el solo desgaste del uso normal y moderado, precisamente en la fecha y hora convenida y saldando en la carátula del contrato, con el pago del arrendamiento y en las condiciones señaladas en el contrato.</p>
-
-            <p class="clausula"><b>SEXTA.</b> En caso de que LA ARRENDADORA niegue cualquier diligencia, previa autorización del pago de las prestaciones debidas por LA ARRENDATARIA o bien obtenga el vehículo devuelto legalmente aplicando las medidas de orden judicial o por acuerdo entre las partes, se autoriza a LA ARRENDADORA para disponer del vehículo en la forma que estime más adecuada, ya sea, venderlo, arrendarlo o cualquier otra forma de disposición que convenga a los intereses de LA ARRENDADORA.</p>
-
-            <p class="clausula"><b>SÉPTIMA.</b> LA ARRENDATARIA se obliga a mantener el vehículo en buenas condiciones, realizando los servicios de mantenimiento preventivo y correctivo necesarios para su buen funcionamiento y conservación, así como a cubrir los gastos derivados de su uso normal.</p>
-
-            <p class="clausula"><b>OCTAVA.</b> El vehículo arrendado se destinará única y exclusivamente al transporte de LA ARRENDATARIA y sus acompañantes, y solo podrá ser manejado por LA ARRENDATARIA o por conductores autorizados que cuenten con licencia vigente. Queda prohibido usar el vehículo para fines distintos a los pactados.</p>
-
-            <p class="clausula"><b>NOVENA.</b> El vehículo arrendado no podrá ser conducido fuera de los límites del territorio de la República Mexicana, sin el previo consentimiento expreso y por escrito de LA ARRENDADORA.</p>
-
-            <p class="clausula"><b>DÉCIMA.</b> LA ARRENDATARIA se obliga a no permitir que el vehículo sea utilizado para actividades ilícitas o contrarias a la ley.</p>
-
-            <p class="clausula"><b>DÉCIMA PRIMERA.</b> LA ARRENDATARIA será responsable de cualquier daño, desperfecto o pérdida total o parcial del vehículo durante la vigencia del presente contrato, aun cuando sea causado por terceros.</p>
-
-            <p class="clausula"><b>DÉCIMA SEGUNDA.</b> En caso de accidente, robo o pérdida total del vehículo, LA ARRENDATARIA deberá dar aviso inmediato a LA ARRENDADORA y a las autoridades correspondientes, obligándose a cubrir los daños y perjuicios conforme a lo estipulado en este contrato.</p>
-
-            <p class="clausula"><b>DÉCIMA TERCERA.</b> LA ARRENDATARIA no podrá subarrendar, prestar, ceder o permitir el uso del vehículo a terceros sin autorización previa y por escrito de LA ARRENDADORA.</p>
-
-            <p class="clausula"><b>DÉCIMA CUARTA.</b> LA ARRENDATARIA se obliga a pagar todas las multas, infracciones, gastos de arrastre, corralón y cualquier otro cargo que se genere por el uso del vehículo durante la vigencia del contrato.</p>
-
-            <p class="clausula"><b>DÉCIMA QUINTA.</b> LA ARRENDATARIA deberá cubrir el importe de los daños ocasionados al vehículo por negligencia, imprudencia o mal uso del mismo.</p>
-
-            <p class="clausula"><b>DÉCIMA SEXTA.</b> LA ARRENDADORA no será responsable por los objetos personales dejados dentro del vehículo arrendado durante el tiempo que se encuentre en posesión de LA ARRENDATARIA.</p>
-
-            <p class="clausula"><b>DÉCIMA SÉPTIMA.</b> LA ARRENDATARIA reconoce que ha recibido el vehículo en óptimas condiciones y se obliga a devolverlo en el mismo estado, salvo el desgaste normal por el uso.</p>
-
-            <p class="clausula"><b>DÉCIMA OCTAVA.</b> En caso de incumplimiento de cualquiera de las obligaciones establecidas en el presente contrato, LA ARRENDADORA podrá darlo por rescindido sin necesidad de declaración judicial.</p>
-
-            <p class="clausula"><b>DÉCIMA NOVENA.</b> Para la interpretación y cumplimiento del presente contrato, las partes se someten a la jurisdicción de los tribunales competentes del Estado de Querétaro, renunciando a cualquier otro fuero que pudiera corresponderles por razón de su domicilio presente o futuro.</p>
-
-            <p class="clausula"><b>VIGÉSIMA.</b> Las partes manifiestan que conocen y aceptan todas y cada una de las cláusulas del presente contrato, firmándolo de conformidad.</p>
-
-            <div class="hoja2-pie">
-              <div>
-                En <span class="pie-linea w1">{{ $lugar }}</span>
-                a los <span class="pie-linea w2">{{ $dia }}</span>
-                día del mes de <span class="pie-linea w3">{{ ucfirst($mes) }}</span>
-                de <span class="pie-linea w4">{{ $anio }}</span>
-              </div>
-
-
-              @if(!empty($contrato->firma_arrendador) || !empty($contrato->firma_cliente))
-                  <div class="firmas">
-
-                    {{-- FIRMA DEL ARRENDADOR --}}
-                    @if(!empty($contrato->firma_arrendador))
-                      <div class="firma-box">
-                        <p>Firma del Arrendador</p>
-                        <img class="firma-img" src="{{ $contrato->firma_arrendador }}" alt="Firma arrendador">
-                      </div>
-                    @endif
-
-                    {{-- FIRMA DEL CLIENTE --}}
-                    @if(!empty($contrato->firma_cliente))
-                      <div class="firma-box">
-                        <p>Firma del Cliente</p>
-                        <img class="firma-img" src="{{ $contrato->firma_cliente }}" alt="Firma cliente">
-                            <p style="margin-top:6px;font-size:10px;font-weight:700;">
-      {{ $nombreCompletoCliente !== '' ? $nombreCompletoCliente : ($reservacion->nombre_cliente ?? '—') }}
-    </p>
-
-                      </div>
-                    @endif
-
-                  </div>
-                @endif
-
-
-
-          </div>
+        <div class="header-textos">
+          <h1 class="header-titulo">
+            Gracias por tu reserva, {{ $nombreSaludo }}
+          </h1>
+          <p class="header-subtitulo">
+            Disfruta el camino tanto como tu destino.
+          </p>
         </div>
       </div>
-    </section>
+
+      {{-- LADO DERECHO: FIGURA + ETIQUETAS ROJAS --}}
+      <div class="header-right">
+        {{-- Cambia la ruta de la figura gris --}}
+        <img
+          class="header-figura"
+          src="{{ public_path('img/A.png') }}"
+          alt=""
+        >
+
+        <div class="header-datos">
+          <p class="header-datos-linea">
+            No. Rental Agreement:
+            <span class="chip-rojo">
+              {{ $contrato->numero_contrato ?? '—' }}
+            </span>
+          </p>
+
+          <p class="header-datos-linea">
+            Tipo de cambio:
+            <span class="chip-rojo">
+              {{ $textoTipoCambio }}
+            </span>
+          </p>
+
+          <p class="header-datos-linea">
+            Fecha de apertura:
+            <span class="chip-rojo">
+              {{ $textoFechaApertura }}
+            </span>
+          </p>
+
+          <p class="header-datos-linea">
+            Reservación:
+            <span class="chip-rojo">
+              {{ $reservacion->codigo ?? '—' }}
+            </span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {{-- TÍTULO: INFORMACIÓN DE TU VEHÍCULO --}}
+  <div class="titulo-seccion-vehiculo">
+    <div class="titulo-vehiculo-texto">
+      INFORMACIÓN DE TU VEHÍCULO
+    </div>
+    <div class="titulo-vehiculo-linea"></div>
+  </div>
+
+  {{-- FRANJA ROJA CON DATOS DEL VEHÍCULO --}}
+  <div class="vehiculo-info-box">
+    <div class="vehiculo-info-top">
+      <div class="vehiculo-info-item">
+        <span class="vehiculo-info-label">Modelo:</span>
+        <span class="vehiculo-info-value">
+          {{ $vehiculo->modelo ?? '—' }}
+        </span>
+      </div>
+
+      <div class="vehiculo-info-item">
+        <span class="vehiculo-info-label">Categoría:</span>
+        <span class="vehiculo-info-value">
+          {{ $vehiculo->categoria ?? '—' }}
+        </span>
+      </div>
+
+      <div class="vehiculo-info-item">
+        <span class="vehiculo-info-label">Color:</span>
+        <span class="vehiculo-info-value">
+          {{ $vehiculo->color ?? '—' }}
+        </span>
+      </div>
+
+      <div class="vehiculo-info-item">
+        <span class="vehiculo-info-label">Placas:</span>
+        <span class="vehiculo-info-value">
+          {{ $vehiculo->placas ?? '—' }}
+        </span>
+      </div>
+
+      <div class="vehiculo-info-item">
+        <span class="vehiculo-info-label">Transmisión:</span>
+        <span class="vehiculo-info-value">
+          {{ $vehiculo->transmision ?? '—' }}
+        </span>
+      </div>
+
+      <div class="vehiculo-info-item">
+        <span class="vehiculo-info-label">Kilometraje:</span>
+        <span class="vehiculo-info-value">
+          {{ isset($vehiculo->kilometraje) ? number_format($vehiculo->kilometraje, 0) : '—' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="vehiculo-info-bottom">
+      <div class="vehiculo-info-bottom-left">
+        {{-- Cambia la ruta del icono --}}
+        <img
+          class="vehiculo-gas-icon"
+          src="{{ public_path('img/icono-gasolina.png') }}"
+          alt="Gasolina"
+        >
+        <span class="vehiculo-inline-label">Capacidad del tanque:</span>
+        <span class="vehiculo-inline-value">
+          {{ $vehiculo->capacidad_tanque ?? '—' }}
+        </span>
+      </div>
+
+      <div class="vehiculo-info-bottom-right">
+        <span class="vehiculo-inline-label">Gasolina de salida:</span>
+        <span class="vehiculo-inline-value">
+          {{ $contrato->gasolina_inicial ?? '—' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+</div> {{-- /contrato-final-container --}}
+
+{{-- Cálculos para DOB, edad y fechas de check in/out --}}
+@php
+    $dobTexto = '—';
+    $edadTexto = '—';
+
+    if (!empty($reservacion->fecha_nacimiento)) {
+        $fn = \Carbon\Carbon::parse($reservacion->fecha_nacimiento);
+        $dobTexto  = '(' . $fn->format('d/m/Y') . ')';
+        $edadTexto = $fn->age . ' años';
+    }
+
+    // Check out
+    $textoCheckOut = '—';
+    if (!empty($reservacion->fecha_inicio)) {
+        $co = \Carbon\Carbon::parse(
+            $reservacion->fecha_inicio . ' ' . ($reservacion->hora_retiro ?? '00:00')
+        );
+        $textoCheckOut = $co->format('d/m/y  -  H:i') . ' HRS';
+    }
+
+    // Check in
+    $textoCheckIn = '—';
+    if (!empty($reservacion->fecha_fin)) {
+        $ci = \Carbon\Carbon::parse(
+            $reservacion->fecha_fin . ' ' . ($reservacion->hora_entrega ?? '00:00')
+        );
+        $textoCheckIn = $ci->format('d/m/y  -  H:i') . ' HRS';
+    }
+@endphp
+
+{{-- SECCIÓN: ARRENDATARIO / ITINERARIO --}}
+<div class="seccion-dos-columnas">
+  <div class="seccion-dos-columnas-inner">
+
+    {{-- ARRENDATARIO --}}
+    <div class="col-arrendatario">
+      <h2 class="titulo-col-rojo">ARRENDATARIO</h2>
+
+      <div class="arrendatario-datos">
+
+        <div class="arrendatario-row">
+          <span class="arrendatario-label">Nombre:</span>
+          <span class="arrendatario-value">
+            {{ $nombreCompletoCliente !== '' ? $nombreCompletoCliente : ($reservacion->nombre_cliente ?? '—') }}
+          </span>
+        </div>
+
+        <div class="arrendatario-row">
+          <span class="arrendatario-label">Fecha de nacimiento (DOB):</span>
+          <span class="arrendatario-value">{{ $dobTexto }}</span>
+        </div>
+
+        <div class="arrendatario-row">
+          <span class="arrendatario-label">Edad:</span>
+          <span class="arrendatario-value">{{ $edadTexto }}</span>
+
+          <span class="arrendatario-label arrendatario-label-inline">Teléfono:</span>
+          <span class="arrendatario-value">
+            {{ $reservacion->telefono_cliente ?? '—' }}
+          </span>
+        </div>
+
+        <div class="arrendatario-row">
+          <span class="arrendatario-label">Correo:</span>
+          <span class="arrendatario-value">
+            {{ $reservacion->email_cliente ?? '—' }}
+          </span>
+        </div>
+
+        <div class="arrendatario-row">
+          <span class="arrendatario-label">Dirección:</span>
+          <span class="arrendatario-underline">
+            {{ $reservacion->direccion_cliente ?? '—' }}
+          </span>
+        </div>
+
+        <table class="arrendatario-tabla-licencia">
+          <thead>
+            <tr>
+              <th>No. Licencia</th>
+              <th>Vencimiento</th>
+              <th>País</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>{{ $licencia->numero_identificacion ?? '—' }}</td>
+              <td>{{ $licencia->fecha_vencimiento ?? '—' }}</td>
+              <td>{{ $licencia->pais_emision ?? '—' }}</td>
+              <td>{{ $licencia->estado_emision ?? '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+
+    {{-- ITINERARIO --}}
+    <div class="col-itinerario">
+      <h2 class="titulo-col-rojo titulo-col-derecha">ITINERARIO</h2>
+
+      <div class="itinerario-bloque">
+        <p class="itinerario-label">Check out:</p>
+        <p class="itinerario-texto">
+          {{ $reservacion->sucursal_retiro_nombre ?? '—' }}<br>
+          {{ $textoCheckOut }}
+        </p>
+      </div>
+
+      <div class="itinerario-bloque">
+        <p class="itinerario-label">Check in:</p>
+        <p class="itinerario-texto">
+          {{ $reservacion->sucursal_entrega_nombre ?? '—' }}<br>
+          {{ $textoCheckIn }}
+        </p>
+      </div>
+
+    </div>
 
   </div>
+</div>
+{{-- =======================================================
+     SECCIÓN TARIFAS / ADICIONALES (franja roja)
+   ======================================================= --}}
+@php
+    // Cálculos para mostrar en el cuadro de totales
+    $ivaCalc        = $subtotal * 0.16;
+    $cuotasLocales  = 0; // si más adelante definen un monto, va aquí
+@endphp
+
+<div class="tarifas-adicionales-wrap">
+  <div class="tarifas-adicionales-inner">
+
+    {{-- COLUMNA IZQUIERDA: TARIFAS --}}
+    <div class="tarifas-col tarifas-col-left">
+      <h2 class="tarifas-titulo">TARIFAS</h2>
+
+      <table class="tarifas-tabla">
+        <thead>
+          <tr>
+            <th>Concepto</th>
+            <th>Días</th>
+            <th>Precio por día</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{-- Tarifa base --}}
+          <tr>
+            <td>Tarifa base</td>
+            <td>{{ $dias ?? 1 }}</td>
+            <td>${{ number_format($tarifaBase ?? 0, 2) }}</td>
+            <td>${{ number_format(($tarifaBase ?? 0) * ($dias ?? 1), 2) }}</td>
+          </tr>
+
+          {{-- Paquetes de seguro --}}
+          @foreach(($paquetes ?? []) as $p)
+            <tr>
+              <td>{{ $p->nombre ?? 'Paquete' }}</td>
+              <td>{{ $dias ?? 1 }}</td>
+              <td>${{ number_format($p->precio_por_dia ?? 0, 2) }}</td>
+              <td>${{ number_format(($p->precio_por_dia ?? 0) * ($dias ?? 1), 2) }}</td>
+            </tr>
+          @endforeach
+
+          {{-- Seguros individuales --}}
+          @foreach(($individuales ?? []) as $i)
+            <tr>
+              <td>{{ $i->nombre ?? 'Protección' }}</td>
+              <td>{{ $dias ?? 1 }}</td>
+              <td>${{ number_format($i->precio_por_dia ?? 0, 2) }}</td>
+              <td>${{ number_format(($i->precio_por_dia ?? 0) * ($dias ?? 1), 2) }}</td>
+            </tr>
+          @endforeach
+        </tbody>
+      </table>
+
+      {{-- Totales al pie, igual que en el diseño --}}
+      <table class="tarifas-totales-tabla">
+        <tr>
+          <td class="lbl">Subtotal:</td>
+          <td class="val">
+            ${{ number_format($subtotal ?? 0, 2) }}
+          </td>
+        </tr>
+        <tr>
+          <td class="lbl">I.V.A.</td>
+          <td class="val">
+            ${{ number_format($ivaCalc, 2) }}
+          </td>
+        </tr>
+        <tr>
+          <td class="lbl">Cuotas locales e impuestos federales</td>
+          <td class="val">
+            ${{ number_format($cuotasLocales, 2) }}
+          </td>
+        </tr>
+        <tr>
+          <td class="lbl total-label">TOTAL:</td>
+          <td class="val total-value">
+            ${{ number_format($totalFinal ?? (($subtotal ?? 0) + $ivaCalc + $cuotasLocales), 2) }}
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    {{-- COLUMNA DERECHA: ADICIONALES --}}
+    <div class="tarifas-col tarifas-col-right">
+      <h2 class="tarifas-titulo">ADICIONALES</h2>
+
+      <table class="adicionales-tabla">
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Días</th>
+            <th>Precio por día</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse(($extras ?? []) as $e)
+            <tr>
+              <td>{{ $e->nombre ?? 'Servicio' }}</td>
+              <td>{{ $dias ?? 1 }}</td>
+              <td>${{ number_format($e->precio_unitario ?? 0, 2) }}</td>
+            </tr>
+          @empty
+            {{-- Si no hay extras, dejamos una fila vacía para que no se vea el cuadro en blanco --}}
+            <tr>
+              <td colspan="3">Sin adicionales contratados.</td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
 </body>
 </html>
