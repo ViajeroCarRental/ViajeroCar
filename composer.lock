@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "014d03721079196f7fc3875b687b2b93",
+    "content-hash": "641e62493e6c2c41f1f657988bfb4a58",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -3818,16 +3818,16 @@
         },
         {
             "name": "spatie/browsershot",
-            "version": "5.2.0",
+            "version": "5.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/browsershot.git",
-                "reference": "9bc6b8d67175810d7a399b2588c3401efe2d02a8"
+                "reference": "d2e4ac7c69162999940172a674bf83ddc5ac59ea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/browsershot/zipball/9bc6b8d67175810d7a399b2588c3401efe2d02a8",
-                "reference": "9bc6b8d67175810d7a399b2588c3401efe2d02a8",
+                "url": "https://api.github.com/repos/spatie/browsershot/zipball/d2e4ac7c69162999940172a674bf83ddc5ac59ea",
+                "reference": "d2e4ac7c69162999940172a674bf83ddc5ac59ea",
                 "shasum": ""
             },
             "require": {
@@ -3874,7 +3874,7 @@
                 "webpage"
             ],
             "support": {
-                "source": "https://github.com/spatie/browsershot/tree/5.2.0"
+                "source": "https://github.com/spatie/browsershot/tree/5.2.3"
             },
             "funding": [
                 {
@@ -3882,7 +3882,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-12-22T10:02:16+00:00"
+            "time": "2026-02-18T16:10:58+00:00"
         },
         {
             "name": "spatie/laravel-package-tools",
