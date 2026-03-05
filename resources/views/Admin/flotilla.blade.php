@@ -288,18 +288,6 @@
       </label>
 
 
-
-
-
-
-     <h3>Documentos</h3>
-<div id="archivosVehiculo"></div>
-
-
-
-
-
-
       <div class="actions" style="margin-top:15px;">
         <button type="submit" class="btn">💾 Actualizar Vehículo</button>
         <button type="button" class="btn ghost" id="cancelModal">Cancelar</button>
