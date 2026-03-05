@@ -847,7 +847,7 @@
 
         <div class="header-textos">
           <h1 class="header-titulo">
-            Gracias por tu reserva, {{ $nombreSaludo }}
+            Este es nuestro acuerdo, {{ $nombreSaludo }}
           </h1>
           <p class="header-subtitulo">
             Disfruta el camino tanto como tu destino.
@@ -978,13 +978,22 @@
 
 {{-- Cálculos para DOB, edad y fechas de check in/out --}}
 @php
-    $dobTexto = '—';
+    $dobTexto  = '—';
     $edadTexto = '—';
 
-    if (!empty($reservacion->fecha_nacimiento)) {
-        $fn = \Carbon\Carbon::parse($reservacion->fecha_nacimiento);
-        $dobTexto  = '(' . $fn->format('d/m/Y') . ')';
-        $edadTexto = $fn->age . ' años';
+    // ✅ DOB: ya viene desde reservación o “inyectado” por el controlador (fallback desde contrato_documento)
+    $fechaNacRaw = $reservacion->fecha_nacimiento ?? null;
+
+    if (!empty($fechaNacRaw)) {
+        try {
+            $fn = \Carbon\Carbon::parse($fechaNacRaw);
+            $dobTexto  = $fn->format('d/m/Y');   // si quieres con paréntesis, lo ponemos aquí
+            $edadTexto = $fn->age . ' años';
+        } catch (\Exception $e) {
+            // Si llega en formato raro, no rompemos el PDF
+            $dobTexto  = '—';
+            $edadTexto = '—';
+        }
     }
 
     // Check out
@@ -1025,7 +1034,7 @@
 
         <div class="arrendatario-row">
           <span class="arrendatario-label">Fecha de nacimiento (DOB):</span>
-          <span class="arrendatario-value">{{ $dobTexto }}</span>
+          <span class="arrendatario-value">{{ $dobTexto !== '—' ? '(' . $dobTexto . ')' : '—' }}</span>
         </div>
 
         <div class="arrendatario-row">
@@ -1045,12 +1054,6 @@
           </span>
         </div>
 
-        <div class="arrendatario-row">
-          <span class="arrendatario-label">Dirección:</span>
-          <span class="arrendatario-underline">
-            {{ $reservacion->direccion_cliente ?? '—' }}
-          </span>
-        </div>
 
         <table class="arrendatario-tabla-licencia">
           <thead>
@@ -1079,7 +1082,7 @@
       <h2 class="titulo-col-rojo titulo-col-derecha">ITINERARIO</h2>
 
       <div class="itinerario-bloque">
-        <p class="itinerario-label">Check out:</p>
+        <p class="itinerario-label">Check in:</p>
         <p class="itinerario-texto">
           {{ $reservacion->sucursal_retiro_nombre ?? '—' }}<br>
           {{ $textoCheckOut }}
@@ -1087,7 +1090,7 @@
       </div>
 
       <div class="itinerario-bloque">
-        <p class="itinerario-label">Check in:</p>
+        <p class="itinerario-label">Check out:</p>
         <p class="itinerario-texto">
           {{ $reservacion->sucursal_entrega_nombre ?? '—' }}<br>
           {{ $textoCheckIn }}

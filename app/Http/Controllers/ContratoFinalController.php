@@ -41,6 +41,22 @@ class ContratoFinalController extends Controller
             return back()->with('error', 'Reservación no encontrada.');
         }
 
+        // ✅ DOB fallback: si la reserva NO tiene fecha_nacimiento,
+// entonces tomarla de contrato_documento (identificacion)
+if (empty($reservacion->fecha_nacimiento)) {
+
+    $docIdentTitular = DB::table('contrato_documento')
+        ->where('id_contrato', $idContrato)
+        ->where('tipo', 'identificacion')
+        ->whereNotNull('fecha_nacimiento')
+        ->orderBy('id_documento', 'asc') // agarre el primero registrado
+        ->first();
+
+    if ($docIdentTitular) {
+        $reservacion->fecha_nacimiento = $docIdentTitular->fecha_nacimiento;
+    }
+}
+
         // 3️⃣ Licencia
         $licencia = DB::table('contrato_documento')
             ->where('id_contrato', $idContrato)
@@ -161,6 +177,22 @@ class ContratoFinalController extends Controller
     if (!$reservacion || empty($reservacion->email_cliente)) {
         return response()->json(['ok' => false, 'msg' => 'Correo del cliente no disponible']);
     }
+
+    // ✅ DOB fallback: si la reserva NO tiene fecha_nacimiento,
+// entonces tomarla de contrato_documento (identificacion)
+if (empty($reservacion->fecha_nacimiento)) {
+
+    $docIdentTitular = DB::table('contrato_documento')
+        ->where('id_contrato', $id) // $id es id_contrato
+        ->where('tipo', 'identificacion')
+        ->whereNotNull('fecha_nacimiento')
+        ->orderBy('id_documento', 'asc')
+        ->first();
+
+    if ($docIdentTitular) {
+        $reservacion->fecha_nacimiento = $docIdentTitular->fecha_nacimiento;
+    }
+}
 
     // 3️⃣ LICENCIA (por si la quieres usar en el correo)
     $licencia = DB::table('contrato_documento')
