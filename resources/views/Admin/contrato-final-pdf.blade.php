@@ -978,41 +978,66 @@
 
 {{-- Cálculos para DOB, edad y fechas de check in/out --}}
 @php
-    $dobTexto  = '—';
-    $edadTexto = '—';
+// ✅ Locale español para días/meses
+\Carbon\Carbon::setLocale('es');
 
-    // ✅ DOB: ya viene desde reservación o “inyectado” por el controlador (fallback desde contrato_documento)
-    $fechaNacRaw = $reservacion->fecha_nacimiento ?? null;
+$dobTexto  = '—';
+$edadTexto = '—';
 
-    if (!empty($fechaNacRaw)) {
-        try {
-            $fn = \Carbon\Carbon::parse($fechaNacRaw);
-            $dobTexto  = $fn->format('d/m/Y');   // si quieres con paréntesis, lo ponemos aquí
-            $edadTexto = $fn->age . ' años';
-        } catch (\Exception $e) {
-            // Si llega en formato raro, no rompemos el PDF
-            $dobTexto  = '—';
-            $edadTexto = '—';
-        }
+// ✅ DOB: ya viene desde reservación o “inyectado” por el controlador
+$fechaNacRaw = $reservacion->fecha_nacimiento ?? null;
+
+if (!empty($fechaNacRaw)) {
+    try {
+        $fn = \Carbon\Carbon::parse($fechaNacRaw);
+
+
+        $dobTexto = mb_strtoupper($fn->translatedFormat('d/M/Y'), 'UTF-8');
+
+        $edadTexto = $fn->age . ' años';
+    } catch (\Exception $e) {
+        $dobTexto  = '—';
+        $edadTexto = '—';
     }
+}
 
-    // Check out
-    $textoCheckOut = '—';
-    if (!empty($reservacion->fecha_inicio)) {
-        $co = \Carbon\Carbon::parse(
-            $reservacion->fecha_inicio . ' ' . ($reservacion->hora_retiro ?? '00:00')
-        );
-        $textoCheckOut = $co->format('d/m/y  -  H:i') . ' HRS';
-    }
 
-    // Check in
-    $textoCheckIn = '—';
-    if (!empty($reservacion->fecha_fin)) {
-        $ci = \Carbon\Carbon::parse(
-            $reservacion->fecha_fin . ' ' . ($reservacion->hora_entrega ?? '00:00')
-        );
-        $textoCheckIn = $ci->format('d/m/y  -  H:i') . ' HRS';
-    }
+// Helper para dejarlo como: JUE 05 MAR 2026 - 14:30 HRS
+$formatearItinerario = function ($carbon) {
+
+    // Día y mes en español
+    $fecha = $carbon->translatedFormat('D d M Y');
+
+    // Mayúsculas (incluye acentos)
+    $fecha = mb_strtoupper($fecha, 'UTF-8');
+
+    // Hora 24h
+    $hora = $carbon->format('H:i');
+
+    return $fecha . ' - ' . $hora . ' HRS';
+};
+
+
+// Check out
+$textoCheckOut = '—';
+if (!empty($reservacion->fecha_inicio)) {
+    $co = \Carbon\Carbon::parse(
+        $reservacion->fecha_inicio . ' ' . ($reservacion->hora_retiro ?? '00:00')
+    );
+
+    $textoCheckOut = $formatearItinerario($co);
+}
+
+
+// Check in
+$textoCheckIn = '—';
+if (!empty($reservacion->fecha_fin)) {
+    $ci = \Carbon\Carbon::parse(
+        $reservacion->fecha_fin . ' ' . ($reservacion->hora_entrega ?? '00:00')
+    );
+
+    $textoCheckIn = $formatearItinerario($ci);
+}
 @endphp
 
 {{-- SECCIÓN: ARRENDATARIO / ITINERARIO --}}
@@ -1280,31 +1305,32 @@
 
   {{-- Gasolina + info cargos --}}
   <div class="final-cargos">
-    <div class="nota">
-      <span class="lbl">GASOLINA:</span>
-      PRECIO POR LITRO FALTANTE $13.16 MXN MAS CARGO POR SERVICIO DE 23.96 MXN POR LITRO FALTANTE
-      IMPUESTOS INCLUIDOS (APLICABLE SI LA OPCION DE PREPAGO DE GAS NO FUE ADQUIRIDA)
-    </div>
 
-    <h3>INFORMACIÓN DE LOS CARGOS TOTALES:</h3>
-
-    <div class="nota">
-      (1) Al firmar este contrato el cliente declara tener conocimiento de todas las condiciones establecidas
-      y acepta el clausulado al reverso.
-      (2) Los cargos son ESTIMADOS, el importe total a pagar del contrato aparecera al cierre del mismo.
-      (3) Usted va a alquilar y devolver el vehiculo en el momento y lugares indicados. Gasolina no reembolsable
-      en prepago, EXCEPTO si se regresa con tanque lleno.
-    </div>
-
-    <div class="nota">
-      <span class="lbl">1.</span> NO SE ACEPTA EFECTIVO como pago ni como deposito.
-      <span class="lbl">2.</span> CDW 0% incluye: ROBO %, llantas, rines, cristales y espejos.
-      <span class="lbl">3.</span> CDW20%, CDW10%, PCDW NO incluye llantas, rines, cristales y espejos.
-      <span class="lbl">4.</span> Ninguna protección cubre GPS, Placas o llaves
-      <span class="lbl">5.</span> CDW20%, CDW10%, PDW, LDW revocado en caso de negligencia del conductor o si existen
-      conductores NO autorizados en el contrato.
-    </div>
+  <div class="nota">
+    <span class="lbl">GASOLINA:</span>
+    PRECIO POR LITRO FALTANTE $13.16 MXN MAS CARGO POR SERVICIO DE 23.96 MXN POR LITRO FALTANTE
+    IMPUESTOS INCLUIDOS (APLICABLE SI LA OPCION DE PREPAGO DE GAS NO FUE ADQUIRIDA)
   </div>
+
+  <h3>INFORMACIÓN DE LOS CARGOS TOTALES:</h3>
+
+  <div class="nota">
+    <strong>(1)</strong> Al firmar este contrato el cliente declara tener conocimiento de todas las condiciones establecidas
+    y acepta el clausulado al reverso.
+    <strong>(2)</strong> Los cargos son ESTIMADOS, el importe total a pagar del contrato aparecera al cierre del mismo.
+    <strong>(3)</strong> Usted va a alquilar y devolver el vehiculo en el momento y lugares indicados. Gasolina no reembolsable
+    en prepago, EXCEPTO si se regresa con tanque lleno.
+  </div>
+
+  <div class="nota">
+    <span class="lbl"><strong>1.</strong></span> NO SE ACEPTA EFECTIVO como pago ni como deposito.
+    <span class="lbl"><strong>2.</strong></span> CDW 0% incluye: ROBO %, llantas, rines, cristales y espejos.
+    <span class="lbl"><strong>3.</strong></span> CDW20%, CDW10%, PCDW NO incluye llantas, rines, cristales y espejos.
+    <span class="lbl"><strong>4.</strong></span> Ninguna protección cubre GPS, Placas o llaves
+    <span class="lbl"><strong>5.</strong></span> CDW20%, CDW10%, PDW, LDW revocado en caso de negligencia del conductor o si existen conductores NO autorizados en el contrato.
+  </div>
+
+</div>
 
   <hr class="final-sep-roja">
 
