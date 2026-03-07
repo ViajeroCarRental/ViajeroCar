@@ -219,6 +219,18 @@
   $tagCategoria = ($categoriaSel && isset($categoriaSel->nombre))
     ? strtoupper((string)$categoriaSel->nombre)
     : 'COMPACTO';
+
+  // ✅ SOLO estos extras (Step 3) — máximo 3 por cada uno (lo limita tu JS)
+  $allowedExtras = [
+    'silla para bebé',
+    'conductor adicional',
+    'gasolina prepago',
+  ];
+
+  $serviciosFiltrados = collect($servicios ?? [])->filter(function($s) use ($allowedExtras){
+    $name = mb_strtolower(trim((string)($s->nombre ?? '')));
+    return in_array($name, $allowedExtras, true);
+  })->values();
 @endphp
 
 <main class="page wizard-page"
@@ -708,42 +720,472 @@
     {{-- ===================== STEP 3 ===================== --}}
     @if($stepCurrent===3)
       <header class="wizard-head">
-        <h2>Complementos y adicionales</h2>
-        <p>Selecciona los extras que quieras agregar a tu renta.</p>
+        <h2>Selecciona las opciones adicionales que desees</h2>
+        <p>Revisa protecciones incluidas y agrega equipamiento/servicios extra.</p>
       </header>
 
       <input type="hidden" id="addonsHidden" value="{{ $addonsParam }}">
 
-      <div class="addons-grid">
-        @forelse(($servicios ?? []) as $srv)
-          @php
-            $unidad = $srv->tipo_cobro === 'por_evento' ? '/ evento' : '/ día';
-            $precio = number_format((float)$srv->precio, 0);
-          @endphp
+      <style>
+        .step3-wrap{ display:grid; gap:18px; }
+        .step3-section{
+          background:#fff;
+          border:1px solid #eef2f7;
+          border-radius:18px;
+          padding:16px;
+          box-shadow:0 18px 40px rgba(15,23,42,.08);
+        }
+        .step3-title{
+          display:flex; align-items:center; gap:10px;
+          font-weight:900;
+          font-size:18px;
+          margin:0 0 14px;
+          color:#0f172a;
+        }
+        .step3-title small{
+          font-weight:800; font-size:12px;
+          color:#6b7280; letter-spacing:.4px; text-transform:uppercase;
+        }
+        .step3-info{
+          margin-left:auto;
+          width:30px; height:30px;
+          border-radius:999px;
+          display:grid; place-items:center;
+          background:rgba(178,34,34,.08);
+          color:var(--brand);
+          border:1px solid rgba(178,34,34,.22);
+          cursor:pointer;
+        }
 
-          <div class="addon-card"
-               data-id="{{ $srv->id_servicio }}"
-               data-name="{{ $srv->nombre }}"
-               data-price="{{ (float)$srv->precio }}"
-               data-charge="{{ $srv->tipo_cobro }}">
-            <h4 class="addon-name">{{ $srv->nombre }}</h4>
-            @if(!empty($srv->descripcion))
-              <p>{{ $srv->descripcion }}</p>
-            @endif
+        .prot-grid{
+          display:grid;
+          grid-template-columns: repeat(2, minmax(0,1fr));
+          gap:14px;
+          align-items:stretch;
+        }
+        @media (max-width:840px){
+          .prot-grid{ grid-template-columns:1fr; }
+        }
+        .prot-card{
+          border:1px dashed rgba(178,34,34,.20);
+          border-radius:18px;
+          padding:14px;
+          display:grid;
+          gap:10px;
+          align-content:start;
+        }
+        .prot-top{ display:flex; align-items:flex-start; gap:12px; }
+        .prot-icon{
+          width:70px; height:70px;
+          border-radius:999px;
+          display:grid; place-items:center;
+          border:3px solid #d1d5db;
+          color:#9ca3af;
+          flex:0 0 auto;
+        }
+        .prot-icon.is-on{ border-color:#16a34a; color:#16a34a; }
+        .prot-name{
+          font-weight:900;
+          letter-spacing:.25px;
+          text-transform:uppercase;
+          font-size:13px;
+          color:#0f172a;
+          margin:0 0 6px;
+        }
+        .prot-desc{
+          margin:0;
+          color:#475569;
+          font-weight:700;
+          font-size:13px;
+          line-height:1.45;
+        }
+        .prot-badge{
+          display:inline-flex;
+          align-items:center;
+          gap:8px;
+          font-weight:900;
+          letter-spacing:.4px;
+          text-transform:uppercase;
+          font-size:12px;
+          color:#0f172a;
+          margin-top:10px;
+        }
+        .prot-badge .dot{
+          width:10px; height:10px; border-radius:999px;
+          background:#16a34a;
+          box-shadow:0 0 0 4px rgba(22,163,74,.12);
+        }
 
-            <div class="small"><strong>${{ $precio }}</strong> MXN {{ $unidad }}</div>
+        .equip-grid{
+          display:grid;
+          grid-template-columns: repeat(3, minmax(0,1fr));
+          gap:14px;
+        }
+        @media (max-width:980px){
+          .equip-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+        }
+        @media (max-width:620px){
+          .equip-grid{ grid-template-columns: 1fr; }
+        }
 
-            <div class="addon-qty">
-              <button class="qty-btn minus" type="button">−</button>
-              <span class="qty">0</span>
-              <button class="qty-btn plus" type="button">+</button>
+        .addon-card{
+          border:1px solid #eef2f7;
+          border-radius:18px;
+          padding:14px;
+          background:#fff;
+          box-shadow:0 18px 40px rgba(15,23,42,.06);
+          display:grid;
+          gap:10px;
+        }
+        .addon-top{ display:flex; gap:12px; align-items:flex-start; }
+        .addon-ico{
+          width:70px; height:70px;
+          border-radius:999px;
+          display:grid; place-items:center;
+          border:3px solid #d1d5db;
+          color:#6b7280;
+          flex:0 0 auto;
+        }
+        .addon-name{
+          margin:0;
+          font-weight:900;
+          letter-spacing:.25px;
+          text-transform:uppercase;
+          font-size:13px;
+          color:#0f172a;
+        }
+        .addon-card p{
+          margin:6px 0 0;
+          color:#475569;
+          font-weight:700;
+          font-size:13px;
+          line-height:1.45;
+        }
+        .addon-price{
+          font-weight:900;
+          color:#0f172a;
+          font-size:13px;
+        }
+        .addon-price strong{ color:var(--brand); }
+
+        .addon-qty{
+          display:flex;
+          gap:10px;
+          align-items:center;
+          justify-content:flex-start;
+          margin-top:4px;
+        }
+        .qty-btn{
+          width:42px; height:42px;
+          border-radius:12px;
+          border:1px solid #e5e7eb;
+          background:#fff;
+          font-weight:900;
+          cursor:pointer;
+        }
+        .qty{ min-width:34px; text-align:center; font-weight:900; color:#0f172a; }
+        .qty-hint{
+          font-size:12px;
+          font-weight:800;
+          color:#6b7280;
+          margin-left:auto;
+        }
+
+        /* modal simple (step 3) */
+        .modal-s3{
+          position:fixed;
+          inset:0;
+          display:none;
+          align-items:center;
+          justify-content:center;
+          background:rgba(15,23,42,.55);
+          z-index:999999;
+          padding:18px;
+        }
+        .modal-s3 .card{
+          width:min(720px, 100%);
+          background:#fff;
+          border-radius:18px;
+          border:1px solid #eef2f7;
+          box-shadow:0 25px 60px rgba(0,0,0,.25);
+          padding:18px;
+        }
+        .modal-s3 .x{
+          width:40px; height:40px;
+          border-radius:12px;
+          border:1px solid #e5e7eb;
+          background:#fff;
+          cursor:pointer;
+          display:grid; place-items:center;
+          margin-left:auto;
+        }
+      </style>
+
+      <div class="step3-wrap">
+
+        {{-- Protecciones --}}
+        <section class="step3-section">
+          <div class="step3-title">
+            Relevos de responsabilidad (Protecciones)
+            <button type="button" class="step3-info" id="info-protecciones-step3" title="Más información">
+              <i class="fa-solid fa-circle-info"></i>
+            </button>
+          </div>
+
+          <div class="prot-grid">
+            <div class="prot-card">
+              <div class="prot-top">
+                <div class="prot-icon is-on">
+                  <i class="fa-solid fa-shield"></i>
+                </div>
+                <div>
+                  <p class="prot-name">Protección limitada de responsabilidad hacia terceros (LI)</p>
+                  <p class="prot-desc">
+                    Protege a terceros por daños y perjuicios ocasionados en un accidente y cubre la cantidad mínima requerida por ley.
+                  </p>
+                  <div class="prot-badge"><span class="dot"></span> Incluida</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="prot-card">
+              <div class="prot-top">
+                <div class="prot-icon">
+                  <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                  <p class="prot-name">Protecciones adicionales</p>
+                  <p class="prot-desc">
+                    Tú eliges el nivel de responsabilidad sobre el auto que más vaya acorde a tus necesidades y presupuesto.
+                    Pregunta por nuestros relevos (opcionales) al llegar al mostrador de cualquiera de nuestras oficinas.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        @empty
-          <div style="grid-column:1/-1; text-align:center; padding:.75rem 0;">
-            No hay complementos disponibles por ahora.
+
+          <div id="modalProteccionesStep3" class="modal-s3" aria-hidden="true">
+            <div class="card">
+
+              <button type="button" class="x" id="closeProteccionesStep3" aria-label="Cerrar">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+
+              <h2 class="s3-modal-title">Relevos de responsabilidad (Protecciones)</h2>
+              <p class="s3-modal-sub">Consulta el detalle de cada pack y lo que incluye.</p>
+
+              <div class="s3-body-scroll">
+                <div class="s3-info-top">
+                  <p>
+                    <strong>VIAJERO</strong> ofrece diferentes tipos de Relevos de responsabilidad (Protecciones) opcionales disponibles por
+                    un cargo adicional diario el cual se puede adquirir al reservar o el día de la renta.
+                  </p>
+
+                  <p>
+                    El cliente es responsable de todo daño o robo del vehículo <strong>VIAJERO</strong> sujeto a ciertas exclusiones
+                    contenidas en el contrato de alquiler. <strong>VIAJERO</strong> renunciará o limitará la responsabilidad del cliente
+                    a través de la adquisición de alguno de estos.
+                  </p>
+
+                  <p style="margin-bottom:0;">
+                    Los clientes que reserven utilizando su Número Wizard verán las preferencias de coberturas y seguros seleccionados en su perfil.
+                    También puede acudir a una oficina o llamar al <strong>01 (442) 303 2668</strong> para obtener ayuda.
+                  </p>
+                </div>
+
+                {{-- LDW PACK --}}
+                <details class="s3-acc-item" >
+                  <summary class="s3-acc-sum">
+                    <span class="s3-acc-left">
+                      <span class="s3-acc-badge">LDW</span>
+                      <span class="s3-acc-name">LDW PACK</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                  </summary>
+
+                  <div class="s3-acc-body">
+                    <ul class="s3-list">
+                      <li><strong>LDW:</strong> El cliente es responsable por el <strong>0% deducible</strong>, de lado a lado pase lo que pase con el auto, está cubierto de bumper a bumper.</li>
+                      <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000 MXN</strong> por evento.</li>
+                      <li><strong>PRA:</strong> Asistencia en carretera Premium. Incluye: envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente. <strong>No incluye</strong> costo de llave ni gasolina.</li>
+                      <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
+                      <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
+                      <li><strong>LI:</strong> Responsabilidad civil hasta <strong>$3,000,000 MXN</strong>.</li>
+                    </ul>
+                  </div>
+                </details>
+
+                {{-- PDW PACK --}}
+                <details class="s3-acc-item">
+                  <summary class="s3-acc-sum">
+                    <span class="s3-acc-left">
+                      <span class="s3-acc-badge">PDW</span>
+                      <span class="s3-acc-name">PDW PACK</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                  </summary>
+
+                  <div class="s3-acc-body">
+                    <ul class="s3-list">
+                      <li><strong>PDW:</strong> Cubierta toda la carrocería al <strong>5%</strong>, <strong>10%</strong> pérdida total o robo. <strong>No cubre</strong> llantas, accesorios, rines ni cristales.</li>
+                      <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000 MXN</strong> por evento.</li>
+                      <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es responsable por costos de: grúa (en caso de requerirla), corralón, envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente.</li>
+                      <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
+                      <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
+                      <li><strong>ALI:</strong> Responsabilidad civil hasta <strong>$1,000,000 MXN</strong>.</li>
+                    </ul>
+                  </div>
+                </details>
+
+                {{-- CDW PACK 1 --}}
+                <details class="s3-acc-item">
+                  <summary class="s3-acc-sum">
+                    <span class="s3-acc-left">
+                      <span class="s3-acc-badge">CDW</span>
+                      <span class="s3-acc-name">CDW PACK 1</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                  </summary>
+
+                  <div class="s3-acc-body">
+                    <ul class="s3-list">
+                      <li><strong>CDW 10%:</strong> El cliente es responsable por el <strong>10% deducible</strong> en daños, <strong>20%</strong> pérdida total o robo sobre valor factura.</li>
+                      <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000 MXN</strong> por evento.</li>
+                      <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es responsable por costos de: grúa (en caso de requerirla), corralón, envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente.</li>
+                      <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
+                      <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
+                      <li><strong>ALI:</strong> Responsabilidad civil hasta <strong>$1,000,000 MXN</strong>.</li>
+                    </ul>
+                  </div>
+                </details>
+
+                {{-- CDW PACK 2 --}}
+                <details class="s3-acc-item">
+                  <summary class="s3-acc-sum">
+                    <span class="s3-acc-left">
+                      <span class="s3-acc-badge">CDW</span>
+                      <span class="s3-acc-name">CDW PACK 2</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                  </summary>
+
+                  <div class="s3-acc-body">
+                    <ul class="s3-list">
+                      <li><strong>CDW 20%:</strong> El cliente es responsable por el <strong>20% deducible</strong> en daños, <strong>30%</strong> pérdida total o robo sobre valor factura.</li>
+                      <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000 MXN</strong> por evento.</li>
+                      <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es responsable por costos de: grúa (en caso de requerirla), corralón, envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente.</li>
+                      <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
+                      <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
+                      <li><strong>LI:</strong> Responsabilidad civil hasta <strong>$350,000 MXN</strong>.</li>
+                    </ul>
+                  </div>
+                </details>
+
+                {{-- DECLINE PROTECTIONS --}}
+                <details class="s3-acc-item s3-acc-danger">
+                  <summary class="s3-acc-sum">
+                    <span class="s3-acc-left">
+                      <span class="s3-acc-badge s3-badge-danger">DECLINE</span>
+                      <span class="s3-acc-name">DECLINE PROTECTIONS</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                  </summary>
+
+                  <div class="s3-acc-body">
+                    <ul class="s3-list">
+                      <li><strong>CDW (DECLINADO):</strong> El cliente es responsable por el <strong>100% deducible</strong> sobre valor factura del auto.</li>
+                      <li><strong>No</strong> cubre gastos médicos en caso de accidente.</li>
+                      <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es responsable por costos de: grúa (en caso de requerirla), corralón, envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente.</li>
+                      <li><strong>LOU (DECLINADO):</strong> No cubre tiempo perdido en taller.</li>
+                      <li><strong>LA (DECLINADO):</strong> No cubre asistencia legal.</li>
+                      <li><strong>LI:</strong> Responsabilidad civil hasta <strong>$350,000 MXN</strong>.</li>
+                    </ul>
+                  </div>
+                </details>
+
+              </div>
+            </div>
           </div>
-        @endforelse
+
+          <script>
+            document.addEventListener('DOMContentLoaded', () => {
+              const openBtn = document.getElementById('info-protecciones-step3');
+              const modal   = document.getElementById('modalProteccionesStep3');
+              const closeBtn= document.getElementById('closeProteccionesStep3');
+
+              if(openBtn && modal){
+                openBtn.addEventListener('click', () => { modal.style.display='flex'; });
+              }
+              if(closeBtn && modal){
+                closeBtn.addEventListener('click', () => { modal.style.display='none'; });
+              }
+              if(modal){
+                modal.addEventListener('click', (e) => {
+                  if(e.target === modal) modal.style.display='none';
+                });
+              }
+            });
+          </script>
+        </section>
+
+        {{-- Equipamiento & Servicios --}}
+        <section class="step3-section">
+          <div class="step3-title">
+            Equipamiento & Servicios
+            <small>máximo 3 por opción</small>
+          </div>
+
+          <div class="equip-grid">
+            @forelse($serviciosFiltrados as $srv)
+              @php
+                $unidad = $srv->tipo_cobro === 'por_evento' ? '/ evento' : '/ día';
+                $precio = number_format((float)$srv->precio, 0);
+
+                $n = mb_strtolower(trim((string)($srv->nombre ?? '')));
+                $icon = 'fa-solid fa-circle-plus';
+                if (str_contains($n, 'silla')) $icon = 'fa-solid fa-baby-carriage';
+                elseif (str_contains($n, 'conductor')) $icon = 'fa-solid fa-user-plus';
+                elseif (str_contains($n, 'gasolina')) $icon = 'fa-solid fa-gas-pump';
+              @endphp
+
+              <div class="addon-card"
+                   data-id="{{ $srv->id_servicio }}"
+                   data-name="{{ $srv->nombre }}"
+                   data-price="{{ (float)$srv->precio }}"
+                   data-charge="{{ $srv->tipo_cobro }}"
+                   data-max="3">
+                <div class="addon-top">
+                  <div class="addon-ico">
+                    <i class="{{ $icon }}"></i>
+                  </div>
+
+                  <div style="flex:1;">
+                    <h4 class="addon-name">{{ $srv->nombre }}</h4>
+                    @if(!empty($srv->descripcion))
+                      <p>{{ $srv->descripcion }}</p>
+                    @endif
+                  </div>
+                </div>
+
+                <div class="addon-price">
+                  <strong>${{ $precio }}</strong> MXN {{ $unidad }}
+                </div>
+
+                <div class="addon-qty">
+                  <button class="qty-btn minus" type="button">−</button>
+                  <span class="qty">0</span>
+                  <button class="qty-btn plus" type="button">+</button>
+                  <span class="qty-hint">Máx 3</span>
+                </div>
+              </div>
+            @empty
+              <div style="grid-column:1/-1; text-align:center; padding:.75rem 0;">
+                No hay complementos disponibles por ahora.
+              </div>
+            @endforelse
+          </div>
+        </section>
+
       </div>
 
       <div class="wizard-nav">
@@ -808,7 +1250,6 @@
 
    /* DISEÑO RESPONSIVO: TARJETA DE RESERVACIÓN  */
 
-/* móvil y tablet */
 @media (max-width:1024px){
 
     footer, .footer-elegant {
@@ -1310,7 +1751,7 @@
       @isset($servicios)
         <script id="addonsCatalog" type="application/json">
           {!! json_encode(
-            collect($servicios)->mapWithKeys(fn($s) => [
+            collect($serviciosFiltrados)->mapWithKeys(fn($s) => [
               $s->id_servicio => [
                 'nombre' => $s->nombre,
                 'precio' => (float)$s->precio,
@@ -1325,21 +1766,24 @@
     @endif
 
   </section>
+
+  </div>{{-- /fondos-reservaciones --}}
 </main>
+
 {{--TARJETA RESPONSIVA --}}
-        @if($stepCurrent === 4)
-        <div class="movil-footer-sticky">
-            <div class="movil-total-wrapper">
-                <span class="movil-total-label">Total</span>
-                <span id="qTotalMovil" class="movil-total-amount">
-                    ${{ number_format($tarifaBase, 0) }} MXN
-                </span>
-            </div>
-            <button type="button" id="btnReservarMovil" class="btn-reservar-movil">
-                Reservar
-            </button>
-        </div>
-        @endif
+@if($stepCurrent === 4)
+  <div class="movil-footer-sticky">
+      <div class="movil-total-wrapper">
+          <span class="movil-total-label">Total</span>
+          <span id="qTotalMovil" class="movil-total-amount">
+              ${{ number_format($tarifaBase, 0) }} MXN
+          </span>
+      </div>
+      <button type="button" id="btnReservarMovil" class="btn-reservar-movil">
+          Reservar
+      </button>
+  </div>
+@endif
 @endsection
 
 @section('js-vistaReservaciones')
@@ -1377,25 +1821,25 @@
       const cerrarModalMetodo = document.getElementById('cerrarModalMetodo');
       const btnPagoLinea      = document.getElementById('btnPagoLinea');
 
-      if (!btnReservar) return;
+      if (btnReservar) {
+        btnReservar.addEventListener('click', function (e) {
+          e.preventDefault();
 
-      btnReservar.addEventListener('click', function (e) {
-        e.preventDefault();
+          if (currentPlan === 'linea') {
+            if (btnPagoLinea) btnPagoLinea.click();
+            else if (typeof window.handleReservaPagoEnLinea === 'function') window.handleReservaPagoEnLinea();
+            return;
+          }
 
-        if (currentPlan === 'linea') {
-          if (btnPagoLinea) btnPagoLinea.click();
-          else if (typeof window.handleReservaPagoEnLinea === 'function') window.handleReservaPagoEnLinea();
-          return;
-        }
+          if (currentPlan === 'mostrador') {
+            if (modalMetodoPago) modalMetodoPago.style.display = 'flex';
+            return;
+          }
 
-        if (currentPlan === 'mostrador') {
-          if (modalMetodoPago) modalMetodoPago.style.display = 'flex';
-          return;
-        }
-
-        if (window.alertify) alertify.warning('Selecciona un tipo de pago desde el paso de categoría (Mostrador o Prepago).');
-        else alert('Selecciona un tipo de pago desde el paso de categoría (Mostrador o Prepago).');
-      });
+          if (window.alertify) alertify.warning('Selecciona un tipo de pago desde el paso de categoría (Mostrador o Prepago).');
+          else alert('Selecciona un tipo de pago desde el paso de categoría (Mostrador o Prepago).');
+        });
+      }
 
       if (cerrarModalMetodo && modalMetodoPago) {
         cerrarModalMetodo.addEventListener('click', function () {

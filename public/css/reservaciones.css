@@ -1,14 +1,3 @@
-/* ==========================================================================
-   reservaciones.css — FINAL LIMPIO (sin parches)
-   - Fondo SOLO dentro del main (reservas-bg)
-   - Wizard centrado (steps + card)
-   - Step 1 / 2 / 3 / 4
-   - Floating labels (Step 1)
-   - Step 4: 2 panes (izq datos / der resumen+precio)
-   - Flatpickr visible (sin recorte)
-   - ✅ Step 2 cards v2 (como tu captura) sin romper JS actual
-========================================================================== */
-
 :root{
   --brand:#b22222;
   --brand-dark:#8b1d1a;
@@ -1005,6 +994,683 @@ body{
   background:linear-gradient(180deg, rgba(178,34,34,.10), rgba(178,34,34,.04));
 }
 .addon-qty button:active{ transform:translateY(0) scale(.98); }
+/* ===== MODAL Step 3 (Accordion Packs) ===== */
+.s3-modal-title{
+  margin:0 0 6px;
+  font-weight:500;
+  color:#0f172a;
+  font-size:13px;
+}
+.s3-modal-sub{
+  margin:0 0 14px;
+  color:#64748b;
+  font-weight:700;
+  font-size:13px;
+  line-height:1.45;
+}
+
+.s3-acc{ display:grid; gap:10px; margin-top:6px; }
+
+.s3-acc-item{
+  border:1px solid #eef2f7;
+  border-radius:16px;
+  background:#fff;
+  overflow:hidden;
+}
+.s3-acc-item[open]{ box-shadow:0 14px 28px rgba(15,23,42,.08); }
+
+.s3-acc-sum{
+  list-style:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  cursor:pointer;
+  user-select:none;
+  font-weight:900;
+  color:#0f172a;
+}
+.s3-acc-sum::-webkit-details-marker{ display:none; }
+
+.s3-acc-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+.s3-acc-name{
+  text-transform:uppercase;
+  letter-spacing:.35px;
+  font-size:13px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.s3-acc-badge{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 10px;
+  border-radius:999px;
+  background:rgba(178,34,34,.10);
+  border:1px solid rgba(178,34,34,.25);
+  color:#b22222;
+  font-size:12px;
+  letter-spacing:.35px;
+  text-transform:uppercase;
+}
+
+.s3-acc-caret{
+  transition:transform .2s ease;
+  color:#64748b;
+}
+.s3-acc-item[open] .s3-acc-caret{ transform:rotate(180deg); }
+
+.s3-acc-body{
+  padding:12px 14px 14px;
+  border-top:1px solid #f1f5f9;
+}
+
+.s3-list{
+  margin:0;
+  padding-left:18px;
+  display:grid;
+  gap:8px;
+  color:#475569;
+  font-weight:700;
+  font-size:13px;
+  line-height:1.45;
+}
+.s3-list strong{ color:#0f172a; }
+
+.s3-acc-danger{
+  border-color: rgba(239,68,68,.25);
+}
+.s3-badge-danger{
+  background: rgba(239,68,68,.10);
+  border-color: rgba(239,68,68,.25);
+  color: #ef4444;
+}
+/* Texto informativo arriba de acordeones */
+.s3-info-top{
+  margin: 10px 0 14px;
+  padding: 12px 14px;
+  border: 1px solid #eef2f7;
+  background: #fbfbfd;
+  border-radius: 16px;
+  color: #475569;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 1.55;
+}
+.s3-info-top p{ margin: 0 0 10px; }
+.s3-info-top strong{ color:#0f172a; }
+/* ================================
+   MODAL STEP 3 — RESPONSIVO PRO
+================================ */
+
+/* overlay */
+.modal-s3{
+  padding: clamp(10px, 2.2vw, 18px);
+}
+
+/* card (contenedor) */
+.modal-s3 .card{
+  width: min(720px, 96vw);
+  max-height: min(78vh, 820px);
+  overflow: hidden;            /* evita que se “desborde” */
+  display: flex;
+  flex-direction: column;
+  padding: clamp(12px, 2vw, 18px);
+}
+
+/* botón cerrar siempre visible */
+.modal-s3 .x{
+  position: sticky;
+  top: 0;
+  align-self: flex-end;
+  z-index: 2;
+}
+
+/* título/sub compactos y fluidos */
+.s3-modal-title{
+  font-size: clamp(16px, 2.2vw, 20px);
+  line-height: 1.2;
+}
+.s3-modal-sub{
+  font-size: clamp(12px, 1.6vw, 13px);
+  margin-bottom: 12px;
+}
+
+/* cuerpo scrolleable (texto + acordeones) */
+.s3-body-scroll{
+  overflow: auto;
+  padding-right: 6px; /* espacio para scrollbar */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* scrollbar suave (no rompe nada si no soporta) */
+.s3-body-scroll::-webkit-scrollbar{ width: 10px; }
+.s3-body-scroll::-webkit-scrollbar-thumb{
+  background: rgba(15,23,42,.18);
+  border-radius: 999px;
+}
+.s3-body-scroll::-webkit-scrollbar-track{
+  background: rgba(15,23,42,.06);
+  border-radius: 999px;
+}
+
+/* bloque informativo superior más compacto */
+.s3-info-top{
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: clamp(12px, 1.6vw, 13px);
+}
+.s3-info-top p{ margin: 0 0 8px; }
+
+/* acordeones: resumen compacto */
+.s3-acc{ gap: 10px; }
+.s3-acc-item{ border-radius: 14px; }
+
+.s3-acc-sum{
+  padding: 10px 12px;
+}
+.s3-acc-badge{
+  padding: 5px 9px;
+  font-size: 11px;
+}
+.s3-acc-name{
+  font-size: 12px;
+}
+.s3-acc-body{
+  padding: 10px 12px 12px;
+}
+.s3-list{
+  gap: 7px;
+  font-size: clamp(12px, 1.55vw, 13px);
+  padding-left: 18px;
+}
+
+/* ====== Breakpoints: móvil ====== */
+@media (max-width: 480px){
+  .modal-s3 .card{
+    width: 96vw;
+    max-height: 84vh;
+    border-radius: 16px;
+    padding: 12px;
+  }
+  .modal-s3 .x{
+    width: 38px; height: 38px;
+    border-radius: 12px;
+  }
+  .s3-acc-left{ gap: 8px; }
+  .s3-acc-badge{ padding: 4px 8px; }
+  .s3-acc-sum{ padding: 10px; }
+  .s3-acc-body{ padding: 10px; }
+}
+/* ================================
+   MODAL STEP 3 — SCROLL + ESTILO VIVERO
+================================ */
+
+/* overlay */
+.modal-s3{
+  padding: 16px;
+}
+
+/* card responsiva (igual mood a tus cards) */
+.modal-s3 .card{
+  width: min(760px, 94vw);
+  max-height: min(82vh, 780px);
+  display: flex;
+  flex-direction: column;
+  border-radius: 18px;
+  border: 1px solid #eef2f7;
+  box-shadow: 0 25px 60px rgba(0,0,0,.22);
+  padding: 16px;
+  overflow: hidden; /* clave para que el scroll sea interno */
+}
+
+/* botón cerrar fijo y consistente */
+.modal-s3 .x{
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  margin-left: auto;
+  box-shadow: 0 10px 20px rgba(15,23,42,.08);
+}
+
+/* header del modal */
+.s3-modal-title{
+  margin: 6px 0 4px;
+  font-weight: 900;
+  color: #0f172a;
+  font-size: 18px;
+  letter-spacing: .2px;
+}
+.s3-modal-sub{
+  margin: 0 0 12px;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* ✅ CONTENEDOR CON SCROLL */
+.s3-body-scroll{
+  overflow: auto;
+  padding-right: 8px; /* espacio para scrollbar */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* scrollbar sutil (no rompe en navegadores que no lo soportan) */
+.s3-body-scroll::-webkit-scrollbar{ width: 10px; }
+.s3-body-scroll::-webkit-scrollbar-thumb{
+  background: rgba(15,23,42,.18);
+  border-radius: 999px;
+}
+.s3-body-scroll::-webkit-scrollbar-track{
+  background: rgba(15,23,42,.06);
+  border-radius: 999px;
+}
+
+/* bloque informativo superior (misma vibra de tus cards) */
+.s3-info-top{
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid #eef2f7;
+  background: #fbfbfd;
+  border-radius: 16px;
+  color: #475569;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.s3-info-top p{ margin: 0 0 10px; }
+.s3-info-top p:last-child{ margin-bottom: 0; }
+.s3-info-top strong{ color: #0f172a; }
+
+/* acordeones: mismos radios/espaciados */
+.s3-acc{ display: grid; gap: 10px; }
+
+.s3-acc-item{
+  border: 1px solid #eef2f7;
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.s3-acc-item[open]{
+  box-shadow: 0 18px 40px rgba(15,23,42,.08);
+  border-color: rgba(178,34,34,.20);
+}
+
+.s3-acc-sum{
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+  font-weight: 900;
+  color: #0f172a;
+}
+.s3-acc-sum::-webkit-details-marker{ display: none; }
+
+.s3-acc-badge{
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(178,34,34,.10);
+  border: 1px solid rgba(178,34,34,.25);
+  color: #b22222;
+  font-size: 12px;
+  letter-spacing: .35px;
+  text-transform: uppercase;
+}
+
+.s3-acc-name{
+  text-transform: uppercase;
+  letter-spacing: .35px;
+  font-size: 13px;
+}
+
+.s3-acc-caret{
+  transition: transform .2s ease;
+  color: #64748b;
+}
+.s3-acc-item[open] .s3-acc-caret{ transform: rotate(180deg); }
+
+.s3-acc-body{
+  padding: 12px 14px 14px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.s3-list{
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  color: #475569;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.s3-list strong{ color: #0f172a; }
+
+/* variante danger */
+.s3-acc-danger{ border-color: rgba(239,68,68,.25); }
+.s3-badge-danger{
+  background: rgba(239,68,68,.10);
+  border-color: rgba(239,68,68,.25);
+  color: #ef4444;
+}
+/* =================================================
+   MODAL STEP 3 — VERSION FINAL PRO (RESPONSIVO)
+================================================= */
+
+/* Overlay */
+.modal-s3{
+  position:fixed;
+  inset:0;
+  display:none;
+  justify-content:center;
+  align-items:flex-start; /* más abajo */
+  background:rgba(15,23,42,.55);
+  z-index:999999;
+  padding:110px 16px 120px; /* espacio top y bottom */
+}
+
+/* Card */
+.modal-s3 .card{
+  position:relative;
+  width:min(760px, 94vw);
+  margin:0 auto;
+  max-height:calc(100vh - 110px - 120px);
+  display:flex;
+  flex-direction:column;
+  background:#fff;
+  border-radius:20px;
+  border:1px solid #eef2f7;
+  box-shadow:0 30px 70px rgba(0,0,0,.28);
+  padding:18px;
+  overflow:hidden; /* scroll interno */
+}
+
+/* Botón cerrar */
+.modal-s3 .x{
+  position:absolute;
+  top:14px;
+  right:14px;
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  box-shadow:0 10px 22px rgba(15,23,42,.08);
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  transition:all .15s ease;
+}
+.modal-s3 .x:hover{
+  transform:translateY(-2px);
+  box-shadow:0 16px 32px rgba(0,0,0,.18);
+  border-color:rgba(178,34,34,.35);
+}
+.modal-s3 .x i{ font-size:18px; }
+
+/* Encabezado */
+.s3-modal-title{
+  margin:0;
+  font-weight:950;
+  color:#0f172a;
+  letter-spacing:-.2px;
+  font-size: clamp(18px, 2vw, 22px);
+  padding-right:60px;
+}
+.s3-modal-sub{
+  margin:6px 0 0;
+  color:#64748b;
+  font-weight:800;
+  font-size:13px;
+}
+
+/* Scroll contenedor */
+.s3-body-scroll{
+  margin-top:14px;
+  border-top:1px solid #f1f5f9;
+  padding-top:14px;
+  overflow:auto;
+  padding-right:10px;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* Scrollbar bonito */
+.s3-body-scroll::-webkit-scrollbar{ width:10px; }
+.s3-body-scroll::-webkit-scrollbar-track{
+  background:#f1f5f9;
+  border-radius:999px;
+}
+.s3-body-scroll::-webkit-scrollbar-thumb{
+  background: linear-gradient(180deg, rgba(178,34,34,.7), rgba(178,34,34,.25));
+  border-radius:999px;
+  border:2px solid #f1f5f9;
+}
+
+/* Caja informativa superior */
+.s3-info-top{
+  background:linear-gradient(180deg,#fbfdff,#f8fafc);
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 14px 30px rgba(15,23,42,.06);
+}
+.s3-info-top p{
+  margin:0 0 10px;
+  color:#334155;
+  font-weight:750;
+  font-size:13px;
+  line-height:1.55;
+}
+.s3-info-top p:last-child{ margin-bottom:0; }
+
+/* Acordeones */
+.s3-acc-item{
+  border:1px solid #e5e7eb;
+  border-radius:16px;
+  background:#fff;
+  overflow:hidden;
+  box-shadow:0 12px 26px rgba(15,23,42,.05);
+  margin-top:12px;
+  transition:all .18s ease;
+}
+.s3-acc-item[open]{
+  border-color:rgba(178,34,34,.35);
+  box-shadow:0 20px 45px rgba(178,34,34,.12);
+}
+
+/* Summary */
+.s3-acc-sum{
+  list-style:none;
+  cursor:pointer;
+  user-select:none;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:14px;
+  background:linear-gradient(180deg,#ffffff,#fbfbfd);
+}
+.s3-acc-sum::-webkit-details-marker{ display:none; }
+
+.s3-acc-left{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+
+.s3-acc-name{
+  font-weight:950;
+  color:#0f172a;
+  letter-spacing:.3px;
+  text-transform:uppercase;
+  font-size:13px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* Badge */
+.s3-acc-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:54px;
+  height:34px;
+  padding:0 12px;
+  border-radius:999px;
+  border:1px solid rgba(178,34,34,.35);
+  background:rgba(178,34,34,.08);
+  color:#b22222;
+  font-weight:950;
+  letter-spacing:.6px;
+  font-size:12px;
+}
+
+/* Flecha */
+.s3-acc-caret{
+  transition: transform .18s ease;
+  color:#64748b;
+}
+.s3-acc-item[open] .s3-acc-caret{
+  transform:rotate(180deg);
+  color:var(--brand);
+}
+
+/* Body */
+.s3-acc-body{
+  padding:12px 14px 16px;
+  border-top:1px solid #f1f5f9;
+  background:#fff;
+}
+
+/* Lista */
+.s3-list{
+  margin:0;
+  padding:0;
+  display:grid;
+  gap:10px;
+}
+.s3-list li{
+  list-style:none;
+  position:relative;
+  padding-left:22px;
+  color:#334155;
+  font-weight:750;
+  font-size:13px;
+  line-height:1.55;
+}
+.s3-list li::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:.55em;
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background:rgba(178,34,34,.25);
+  box-shadow:0 0 0 4px rgba(178,34,34,.08);
+}
+.s3-list strong{ color:#0f172a; }
+
+/* Danger (DECLINE) */
+.s3-acc-danger{
+  border-color:rgba(185,28,28,.35);
+}
+.s3-acc-danger[open]{
+  border-color:rgba(185,28,28,.6);
+  box-shadow:0 20px 45px rgba(185,28,28,.15);
+}
+.s3-badge-danger{
+  background:rgba(185,28,28,.08);
+  border-color:rgba(185,28,28,.35);
+  color:#b91c1c;
+}
+
+/* Responsive */
+@media (max-width:520px){
+  .modal-s3{
+    padding:90px 12px 120px;
+  }
+  .modal-s3 .card{
+    width:96vw;
+    max-height:calc(100vh - 90px - 120px);
+    padding:14px;
+    border-radius:18px;
+  }
+  .s3-modal-title{ font-size:16px; }
+  .s3-modal-sub{ font-size:12px; }
+  .s3-acc-name{ font-size:12px; }
+  .s3-list li{ font-size:12px; }
+}
+/* ======= Responsive: más compacto en móvil (SIN tapar navbar) ======= */
+@media (max-width: 520px){
+
+  /* Ajusta estos 2 valores si tu navbar es más alta */
+  :root{
+    --s3-top-safe: 92px;   /* espacio para navbar */
+    --s3-bot-safe: 110px;  /* espacio para footer sticky / safe-area */
+  }
+
+  .modal-s3{
+    align-items:flex-start;
+    padding: var(--s3-top-safe) 12px var(--s3-bot-safe);
+  }
+
+  .modal-s3 .card{
+    width: 96vw;
+    max-height: calc(100vh - var(--s3-top-safe) - var(--s3-bot-safe));
+    padding: 12px;
+    border-radius: 16px;
+    overflow: hidden; /* scroll interno */
+  }
+
+  .s3-modal-title{ font-size: 16px; }
+  .s3-modal-sub{ font-size: 12px; }
+
+  .s3-body-scroll{
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-right:8px;
+  }
+
+  .s3-info-top{ padding: 10px 12px; }
+  .s3-info-top p{ font-size: 12px; }
+
+  .s3-acc-sum{ padding: 10px 12px; }
+  .s3-acc-body{ padding: 10px 12px 12px; }
+
+  .s3-list{ gap: 7px; }
+  .s3-list li{ font-size: 12px; }
+
+  /* iPhone notch safe area (extra abajo) */
+  @supports (padding: max(0px)){
+    .modal-s3{
+      padding-bottom: max(var(--s3-bot-safe), env(safe-area-inset-bottom));
+      padding-top: max(var(--s3-top-safe), env(safe-area-inset-top));
+    }
+  }
+}
 
 /* ==========================================================
    STEP 4 — LAYOUT 2 PANELES
@@ -2154,4 +2820,184 @@ span.flatpickr-weekday{
   transition: color 0.2s;
 }
 .cerrar-modal-v:hover { color: #b22222; }
+/* ==========================================================
+   ✅ FIX REAL: car-connect + chips (Step 2 y Step 4)
+   Tu HTML usa: .car-connect y .badge-chip
+========================================================== */
 
+/* contenedor general de features (para que chips queden abajo) */
+.car-features{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:8px;
+}
+
+/* chips debajo de la fila de specs */
+.car-connect{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:6px;
+}
+
+/* chip base */
+.badge-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+  letter-spacing:.2px;
+  border:1px solid #e5e7eb;
+  background:#f3f4f6;
+  color:#0f172a;
+  line-height:1;
+}
+
+/* iconito dentro del chip */
+.badge-chip .icon-badge{
+  width:22px;
+  height:22px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  border:1px solid #e5e7eb;
+  background:#fff;
+  font-size:13px;
+}
+
+/* variantes */
+.badge-chip.badge-apple{
+  background:rgba(15,23,42,.06);
+  border-color:rgba(15,23,42,.14);
+}
+.badge-chip.badge-android{
+  background:rgba(34,197,94,.10);
+  border-color:rgba(34,197,94,.24);
+}
+
+/* móvil: que no se rompa */
+@media (max-width:560px){
+  .car-connect{ gap:10px; }
+  .badge-chip{ padding:7px 10px; font-size:12px; }
+}
+/* =========================
+   Modal packs (Protecciones)
+========================= */
+.packs-wrap{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  max-height:60vh;
+  overflow:auto;
+  padding-right:6px;
+}
+
+.pack{
+  border:1px solid #eef2f7;
+  border-radius:14px;
+  background:#fff;
+  overflow:hidden;
+}
+
+.pack-title{
+  cursor:pointer;
+  padding:12px 14px;
+  font-weight:900;
+  color:#0f172a;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  list-style:none;
+}
+.pack-title::-webkit-details-marker{ display:none; }
+
+.pack-title::after{
+  content:"\f078";
+  font-family:"Font Awesome 6 Free";
+  font-weight:900;
+  font-size:13px;
+  opacity:.7;
+  transition:transform .18s ease;
+}
+
+.pack[open] .pack-title::after{
+  transform:rotate(180deg);
+}
+
+.pack-body{
+  border-top:1px solid #f1f5f9;
+  padding:12px 14px 14px;
+}
+
+.pack-body ul{
+  margin:0;
+  padding-left:18px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.pack-body li{
+  font-size:13px;
+  line-height:1.45;
+  color:#334155;
+  font-weight:700;
+}
+
+.pack-body strong{
+  color:#0f172a;
+  font-weight:900;
+}
+
+.pack.danger{
+  border-color:rgba(239,68,68,.22);
+  background:rgba(239,68,68,.04);
+}
+/* ===========================
+   FIX ACORDEONES (details/summary)
+   =========================== */
+
+/* Quita marcador nativo */
+details > summary{ list-style:none; }
+details > summary::-webkit-details-marker{ display:none; }
+
+/* Acordeones principales (Tarifa base / Opciones / IVA) */
+.sum-acc .sum-acc-body{
+  display:none !important;
+}
+.sum-acc[open] .sum-acc-body{
+  display:block !important;
+}
+
+/* Packs dentro de Tarifa base */
+.pack .pack-body{
+  display:none !important;
+}
+.pack[open] .pack-body{
+  display:block !important;
+}
+
+/* Asegura que el summary sea clickeable y visible */
+.sum-bar, .pack-title{
+  cursor:pointer;
+  user-select:none;
+}
+
+/* Por si algo lo está recortando */
+.sum-acc-body, .pack-body{
+  overflow:visible;
+}
+
+/* Si tu pack es largo, que no “desborde feo” */
+.pack-body{
+  max-height: 420px;
+  overflow:auto;
+  padding-right: 6px;
+}
