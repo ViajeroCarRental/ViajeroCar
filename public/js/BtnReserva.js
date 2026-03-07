@@ -141,11 +141,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       let faltantes = [];
 
-      if (!nombre)   faltantes.push("Nombre completo");
-      if (!email)    faltantes.push("Correo electrónico");
-      if (!telefono) faltantes.push("Teléfono móvil");
-      if (!acepta)   faltantes.push("Aceptar términos y condiciones");
-
       if (faltantes.length > 0) {
         if (modalMetodoPago) modalMetodoPago.style.display = "none";
 

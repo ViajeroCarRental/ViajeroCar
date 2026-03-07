@@ -19,6 +19,7 @@
       </div>
     </section>
 
+
     {{-- ✅ GRID DE CARDS (REEMPLAZA ACORDEÓN) --}}
     <section class="policies-wrap">
       <div class="policies-grid">
@@ -378,16 +379,39 @@
       </div>
     </template>
 
-    {{-- INFRACCIONES --}}
-    <template id="tpl-infracciones">
-      <div class="policy-content">
-        <h4>Políticas de infracciones</h4>
-        <p>
-          Aquí puedes colocar la información oficial de infracciones (multas, cargos administrativos,
-          detenciones, etc.). Si ya tienes el texto en otro lado, me lo pasas y lo incrusto tal cual.
-        </p>
-      </div>
-    </template>
+   {{-- INFRACCIONES --}}
+<template id="tpl-infracciones">
+  <div class="policy-content">
+    <h4>Políticas de infracciones</h4>
+
+    <p><strong>¿Qué pasa si llego a tener una multa?</strong></p>
+
+    <p>Deberás reportarlo de inmediato a través de los siguientes canales:</p>
+    <ul>
+      <li>
+        <strong>Teléfono:</strong>
+        <a href="tel:524427169793">(+52) 442 716 9793</a>
+      </li>
+      <li>
+        <strong>Correo electrónico:</strong>
+        <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>
+      </li>
+      <li>
+        <strong>Soporte Técnico:</strong>
+        <a href="mailto:soportetecnico@viajerocarental.com">soportetecnico@viajerocarental.com</a>
+      </li>
+    </ul>
+
+    <p>
+      El cliente será responsable de todas las multas generadas durante el periodo de renta.
+      Estas podrían ascender hasta los <strong>$25,000.00 MXN</strong>, dependiendo de la infracción y los reglamentos de tránsito locales.
+    </p>
+
+    <p>
+      <em>Adicionalmente, se aplicará un cargo administrativo de <strong>$1,000.00 MXN</strong> (más fees e impuestos).</em>
+    </p>
+  </div>
+</template>
 
     {{-- TÉRMINOS --}}
     <template id="tpl-terminos">

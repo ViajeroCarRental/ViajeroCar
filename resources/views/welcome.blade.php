@@ -1346,7 +1346,7 @@
 
                   <div class="swiper-slide">
                     <article class="tile-card">
-                      <div class="tile-media" style="background-image:url('{{ asset('img/aeropuerto.png') }}')"></div>
+                      <div class="tile-media" style="background-image:url('{{ asset('img/Aeropuerto.png') }}')"></div>
                       <div class="tile-body">
                         <h3>ENTREGA EN AEROPUERTO 24/7:</h3>
                         <p>Recibe o entrega tu auto directamente en el aeropuerto, sin filas ni esperas. Disponible las 24 horas del día.</p>

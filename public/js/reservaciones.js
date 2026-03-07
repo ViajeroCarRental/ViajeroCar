@@ -246,98 +246,193 @@
       });
     }
 
-    // paso 4
-    const btnReservar = document.getElementById('btnReservar');
-    if (btnReservar) {
-      btnReservar.addEventListener('click', function (e) {
-        let faltantes = [];
+// Validación Paso 4
+const btnReservar = document.getElementById('btnReservar');
+if (btnReservar) {
+    btnReservar.addEventListener('click', function(e) {
+        let hayErrores = false;
 
-        // Obtenemos los campos
-        const nombre = document.getElementById('nombreCliente');
-        const apellido = document.getElementById('apellidoCliente');
-        const telefono = document.getElementById('telefonoCliente');
-        const email = document.getElementById('correoCliente');
-        const terminos = document.getElementById('acepto');
-        const nacimiento = document.getElementById('dob');
+        // LIMPIAR ERRORES ANTERIORES
+        document.querySelectorAll('.field-error').forEach(el => {
+            el.classList.remove('field-error');
+        });
 
-        // Reglas
-        if (!nombre || nombre.value.trim().length < 2) faltantes.push("Nombre");
-        if (!telefono || telefono.value.trim().length < 10) faltantes.push("Teléfono (10 dígitos)");
-        if (!nacimiento || nacimiento.value.trim() === "") faltantes.push("Fecha de nacimiento");
+        document.querySelectorAll('.has-error').forEach(el => {
+            el.classList.remove('has-error');
+        });
 
-        // Validar Email con Regex simple
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email || !emailRegex.test(email.value.trim())) faltantes.push("Correo electrónico válido");
+        document.querySelectorAll('.error-msg').forEach(el => el.remove());
 
-        // Validar Checkbox
-        if (!terminos || !terminos.checked) faltantes.push("Aceptar términos y condiciones");
+        // 1. VALIDAR CAMPOS NORMALES
+        const campos = [
+            { id: 'nombreCompleto', mensaje: 'Nombre completo requerido' },
+            { id: 'telefonoCliente', mensaje: 'El teléfono debe tener 10 dígitos' },
+            { id: 'correoCliente', mensaje: 'Correo electrónico requerido' },
+            { id: 'pais', mensaje: 'Selecciona un país' }
+        ];
 
-        if (faltantes.length > 0) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
+        campos.forEach(campo => {
+            const el = document.getElementById(campo.id);
 
-          // Mensaje detallado
-          if (window.alertify) {
-            alertify.error("<b>Faltan datos obligatorios:</b><br>" + faltantes.join("<br>"));
-          } else {
-            alert("Faltan datos:\n" + faltantes.join("\n"));
-          }
+            if (!el || el.value.trim() === '') {
+                marcarError(el, campo.mensaje);
+                hayErrores = true;
+            }
+
+            // Validación especial teléfono
+            if (campo.id === 'telefonoCliente' && el && el.value.trim() !== '') {
+                const telefono = el.value.trim().replace(/\D/g, '');
+                if (telefono.length !== 10) {
+                    marcarError(el, 'El teléfono debe tener 10 dígitos');
+                    hayErrores = true;
+                }
+            }
+
+            // Validación email
+            if (campo.id === 'correoCliente' && el && el.value.trim() !== '') {
+                const email = el.value.trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    marcarError(el, 'Correo electrónico inválido');
+                    hayErrores = true;
+                }
+            }
+        });
+
+        // 2. VALIDAR FECHA (3 campos independientes)
+        const dia = document.getElementById('dob_day');
+        const mes = document.getElementById('dob_month');
+        const año = document.getElementById('dob_year');
+
+        if (!dia.value || !mes.value || !año.value) {
+            marcarErrorFecha('Fecha de nacimiento incompleta');
+            hayErrores = true;
         }
-      });
-    }
-  }
 
-  // ======================================================
-  // ✅ SIN ALERTAS: bloquear SOLO la alerta de "Campos incompletos"
-  // (Fecha y hora de entrega / devolución)
-  // ======================================================
-  (function disableMissingFieldsAlerts() {
-    const shouldBlock = (msg) => {
-      const s = String(msg || "");
-      return (
-        s.includes("Campos incompletos") ||
-        s.includes("Por favor completa los siguientes campos") ||
-        s.includes("Fecha y hora de entrega") ||
-        s.includes("Fecha y hora de devolución")
-      );
+        // 3. VALIDAR CHECKBOX
+        const acepto = document.getElementById('acepto');
+        if (!acepto.checked) {
+            marcarErrorCheckbox('Debes aceptar las políticas');
+            hayErrores = true;
+        }
+
+        if (hayErrores) {
+            e.preventDefault();
+        } else {
+            document.getElementById('modalMetodoPago').style.display = 'flex';
+        }
+    });
+}
+
+// FUNCIÓN PARA MARCAR ERROR EN CAMPOS NORMALES
+// FUNCIÓN PARA MARCAR ERROR EN CAMPOS NORMALES (mejorada)
+function marcarError(elemento, mensaje) {
+    if (!elemento) return;
+
+    // Buscamos el contenedor padre
+    const contenedor = elemento.closest('.field-floating') ||
+                       elemento.closest('.field-floating-sub') ||
+                       elemento.parentNode;
+
+    // Evitar duplicar mensajes
+    if (contenedor.querySelector('.error-msg')) return;
+
+    elemento.classList.add('field-error');
+    contenedor.classList.add('has-error');
+
+    const errorMsg = document.createElement('span');
+    errorMsg.className = 'error-msg';
+    errorMsg.textContent = mensaje;
+    contenedor.appendChild(errorMsg);
+
+    // FUNCIÓN DE LIMPIEZA
+    const limpiar = function() {
+        elemento.classList.remove('field-error');
+        contenedor.classList.remove('has-error');
+        const msg = contenedor.querySelector('.error-msg');
+        if (msg) msg.remove();
     };
 
-    // 1) Native alert()
-    try {
-      const _alert = window.alert;
-      window.alert = function (msg) {
-        if (shouldBlock(msg)) return;
-        return _alert.call(window, msg);
-      };
-    } catch (_) { }
+    // Escuchamos tanto input como change
+    elemento.addEventListener('input', limpiar, { once: true });
+    elemento.addEventListener('change', limpiar, { once: true });
+}
 
-    // 2) SweetAlert2 (Swal.fire)
-    try {
-      if (window.Swal && typeof window.Swal.fire === "function") {
-        const _fire = window.Swal.fire.bind(window.Swal);
-        window.Swal.fire = function (a, b, c) {
-          const title = (a && typeof a === "object") ? (a.title || "") : (a || "");
-          const text = (a && typeof a === "object") ? (a.text || "") : (b || "");
-          if (shouldBlock(title) || shouldBlock(text)) return Promise.resolve();
-          return _fire(a, b, c);
-        };
-      }
-    } catch (_) { }
+// FUNCIÓN PARA FECHA (3 campos) - MEJORADA
+function marcarErrorFecha(mensaje) {
+    const container = document.querySelector('.field-dob-container');
+    const dobInline = document.querySelector('.dob-inline');
+    const dia = document.getElementById('dob_day');
+    const mes = document.getElementById('dob_month');
+    const año = document.getElementById('dob_year');
 
-    // 3) Fallback: si algún modal/toast aparece con ese texto, lo ocultamos
-    try {
-      const mo = new MutationObserver(() => {
-        const nodes = Array.from(document.querySelectorAll("body *"));
-        nodes.forEach(el => {
-          if (!el || !el.textContent) return;
-          if (!shouldBlock(el.textContent)) return;
-          const modal = el.closest(".modal,.swal2-container,.alert,.toast,[role='dialog']");
-          (modal || el).style.display = "none";
+    if (!container || container.querySelector('.error-msg')) return;
+
+    // Aplicar clases de error
+    container.classList.add('has-error');
+    if (dobInline) dobInline.classList.add('field-error');
+
+    [dia, mes, año].forEach(el => {
+        if (el) {
+            el.classList.add('field-error');
+            const sub = el.closest('.field-floating-sub');
+            if (sub) sub.classList.add('has-error');
+        }
+    });
+
+    const errorMsg = document.createElement('span');
+    errorMsg.className = 'error-msg';
+    errorMsg.textContent = mensaje;
+    container.appendChild(errorMsg);
+
+    const limpiar = function() {
+        container.classList.remove('has-error');
+        if (dobInline) dobInline.classList.remove('field-error');
+
+        [dia, mes, año].forEach(el => {
+            if (el) {
+                el.classList.remove('field-error');
+                const sub = el.closest('.field-floating-sub');
+                if (sub) sub.classList.remove('has-error');
+            }
         });
-      });
-      mo.observe(document.documentElement, { childList: true, subtree: true });
-    } catch (_) { }
-  })();
+
+        if (errorMsg.parentNode) errorMsg.remove();
+    };
+
+    // Listener a los 3 selects
+    [dia, mes, año].forEach(el => {
+        if (el) {
+            el.addEventListener('change', limpiar, { once: true });
+            el.addEventListener('input', limpiar, { once: true });
+        }
+    });
+}
+
+// FUNCIÓN PARA CHECKBOX - MEJORADA
+function marcarErrorCheckbox(mensaje) {
+    const checkbox = document.getElementById('acepto');
+    const container = checkbox ? checkbox.closest('.cbox') : null;
+
+    if (!checkbox || !container || container.querySelector('.error-msg')) return;
+
+    checkbox.classList.add('field-error');
+    container.classList.add('has-error');
+
+    const errorMsg = document.createElement('span');
+    errorMsg.className = 'error-msg';
+    errorMsg.textContent = mensaje;
+    container.appendChild(errorMsg);
+
+    const limpiar = function() {
+        checkbox.classList.remove('field-error');
+        container.classList.remove('has-error');
+        if (errorMsg.parentNode) errorMsg.remove();
+    };
+
+    checkbox.addEventListener('change', limpiar, { once: true });
+}
+  }
 
   // ======================================================
   // ✅ FORZAR SIEMPRE STEP 1 CUANDO SOLO VIENE ?step=2
@@ -1618,4 +1713,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target === modal) closeModal();
     };
 });
+document.querySelectorAll('select').forEach(select => {
+  select.addEventListener('change', function() {
+    if (this.value !== "") {
+      this.setAttribute('value', this.value);
+    } else {
+      this.removeAttribute('value');
+    }
+  });
+});
+
 })();

@@ -119,6 +119,7 @@ class ReservacionesController extends Controller
             ->selectRaw("
                 c.id_categoria,
                 c.nombre,
+                c.descripcion,
                 COALESCE(c.precio_dia, 0) as precio_dia,
 
                 COALESCE(vi.url, '') as img_url,

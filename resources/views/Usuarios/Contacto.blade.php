@@ -33,12 +33,12 @@
     <div class="map-card">
       <div class="map-head">
         <i class="fa-solid fa-map-location-dot"></i>
-        Central Park, Querétaro
+        Oficina Central Park, Querétaro
       </div>
       <div class="map-body">
-         <a href="https://www.google.com/maps?q=20.5714388,-100.365049&z=15&output=embed" target="_blank">
+         <a href="https://www.google.com/maps?q=20.57334,-100.36168&z=15&output=embed" target="_blank">
         <iframe
-          src="https://www.google.com/maps?q=20.5714388,-100.365049&z=15&output=embed"
+          src="https://www.google.com/maps?q=20.57334,-100.36168&z=15&output=embed"
           style="border:0;"
           allowfullscreen=""
           loading="lazy"

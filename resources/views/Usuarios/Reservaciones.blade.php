@@ -78,7 +78,7 @@
 
   $isFreshEntry = empty($pickupSucursalId) || empty($dropoffSucursalId);
   $stepCurrent  = $isFreshEntry ? 1 : ($controllerStep ?? $requestedStep);
-  if ($stepCurrent >= 2 && $isFreshEntry) {
+if ($stepCurrent >= 2 && $isFreshEntry) {
     $stepCurrent = 1;
   }
   if ($stepCurrent >= 3 && (empty($categoriaId) || empty($plan))) {
@@ -87,7 +87,6 @@
   if ($stepCurrent >= 4 && (empty($categoriaId) || empty($plan))) {
     $stepCurrent = 2;
   }
-
   // Nombres de sucursales para el encabezado (fallback a $ciudades)
   $pickupName  = null;
   $dropoffName = null;
@@ -129,6 +128,7 @@
     $d2 = \Illuminate\Support\Carbon::parse($dropoffDateISO);
     $days = max(1, $d1->diffInDays($d2));
   } else {
+    // Si no hay fechas aún (primer ingreso), dejamos 1 para no romper cálculos internos
     $days = 1;
   }
 
@@ -351,7 +351,7 @@
       <span class="n">1</span> Generales
     </a>
     <a class="wizard-step {{ ($stepCurrent>2 || request('auto')) ? 'done' : '' }} {{ $stepCurrent===2 ? 'active' : '' }}" href="{{ $toStep(2) }}">
-      <span class="n">2</span> Categoría
+        <span class="n">2</span> Categoría
     </a>
     <a class="wizard-step {{ $stepCurrent>3?'done':'' }} {{ $stepCurrent===3?'active':'' }}" href="{{ $toStep(3) }}">
       <span class="n">3</span> Adicionales
@@ -378,92 +378,97 @@
 
         <div class="search-grid">
 
-          {{-- Lugar --}}
-          <div class="group-card">
-            <div class="group-head">
-              <div class="group-title">Lugar</div>
-            </div>
+       {{-- Lugar --}}
+<div class="group-card">
+  <div class="group-head">
+    <div class="group-title">Lugar</div>
+  </div>
 
-            <div class="field-row">
+  <div class="field-row">
 
-              {{-- PICKUP --}}
-              <div class="field">
-                <div class="ctl has-ico pristine" data-float>
-                  <span class="ico">
-                    <i id="pickupIcon" class="fa-solid fa-location-dot"></i>
-                  </span>
+    {{-- PICKUP --}}
+    <div class="field">
+      <div class="ctl has-ico pristine" data-float>
 
-                  <span class="flabel">Lugar de Pick-Up</span>
+        {{-- ICONO DINÁMICO --}}
+        <span class="ico">
+          <i id="pickupIcon" class="fa-solid fa-location-dot"></i>
+        </span>
 
-                  <select id="pickupPlace" name="pickup_sucursal_id" required data-float-select>
-                    <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}></option>
+        <span class="flabel">Lugar de Pick-Up</span>
 
-                    @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
-                      <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+        <select id="pickupPlace" name="pickup_sucursal_id" required data-float-select>
+          <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}></option>
 
-                        @foreach($ciudad->sucursalesActivas ?? [] as $suc)
-                          @php
-                            $name = strtolower($suc->nombre);
-                            $icon = 'fa-solid fa-location-dot';
+          @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
+            <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
 
-                            if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
-                            elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
-                            elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
-                          @endphp
+              @foreach($ciudad->sucursalesActivas ?? [] as $suc)
+                @php
+                  $name = strtolower($suc->nombre);
+                  $icon = 'fa-solid fa-location-dot';
 
-                          <option value="{{ $suc->id_sucursal }}"
-                                  data-icon="{{ $icon }}"
-                                  {{ (string)$pickupSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
-                            {{ $suc->nombre }}
-                          </option>
-                        @endforeach
+                  if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
+                  elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
+                  elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
+                @endphp
 
-                      </optgroup>
-                    @endforeach
-                  </select>
-                </div>
-              </div>
+                <option value="{{ $suc->id_sucursal }}"
+                        data-icon="{{ $icon }}"
+                        {{ (string)$pickupSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
+                  {{ $suc->nombre }}
+                </option>
+              @endforeach
 
-              {{-- DROPOFF --}}
-              <div class="field">
-                <div class="ctl has-ico pristine" data-float>
-                  <span class="ico">
-                    <i id="dropoffIcon" class="fa-solid fa-location-dot"></i>
-                  </span>
+            </optgroup>
+          @endforeach
+        </select>
+      </div>
+    </div>
 
-                  <span class="flabel">Lugar de devolución</span>
 
-                  <select id="dropoffPlace" name="dropoff_sucursal_id" required data-float-select>
-                    <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}></option>
+    {{-- DROPOFF --}}
+    <div class="field">
+      <div class="ctl has-ico pristine" data-float>
 
-                    @foreach($ciudades as $ciudad)
-                      <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+        {{-- ICONO DINÁMICO --}}
+        <span class="ico">
+          <i id="dropoffIcon" class="fa-solid fa-location-dot"></i>
+        </span>
 
-                        @foreach($ciudad->sucursalesActivas ?? [] as $suc)
-                          @php
-                            $name = strtolower($suc->nombre);
-                            $icon = 'fa-solid fa-location-dot';
+        <span class="flabel">Lugar de devolución</span>
 
-                            if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
-                            elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
-                            elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
-                          @endphp
+        <select id="dropoffPlace" name="dropoff_sucursal_id" required data-float-select>
+          <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}></option>
 
-                          <option value="{{ $suc->id_sucursal }}"
-                                  data-icon="{{ $icon }}"
-                                  {{ (string)$dropoffSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
-                            {{ $suc->nombre }}
-                          </option>
-                        @endforeach
+          @foreach($ciudades as $ciudad)
+            <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
 
-                      </optgroup>
-                    @endforeach
-                  </select>
-                </div>
-              </div>
+              @foreach($ciudad->sucursalesActivas ?? [] as $suc)
+                @php
+                  $name = strtolower($suc->nombre);
+                  $icon = 'fa-solid fa-location-dot';
 
-            </div>
-          </div>
+                  if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
+                  elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
+                  elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
+                @endphp
+
+                <option value="{{ $suc->id_sucursal }}"
+                        data-icon="{{ $icon }}"
+                        {{ (string)$dropoffSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
+                  {{ $suc->nombre }}
+                </option>
+              @endforeach
+
+            </optgroup>
+          @endforeach
+        </select>
+      </div>
+    </div>
+
+  </div>
+</div>
 
           {{-- Pick-Up --}}
           <div class="group-card">
@@ -559,151 +564,173 @@
 
         </div>
 
-        <div class="wizard-nav">
-          <button type="button" class="btn btn-ghost" onclick="limpiarTodoYReiniciar()">Limpiar</button>
-          <button class="btn btn-primary" type="submit">Siguiente</button>
-        </div>
+      <div class="wizard-nav">
+    <button type="button" class="btn btn-ghost" onclick="limpiarTodoYReiniciar()">Limpiar</button>
+    <button class="btn btn-primary" type="submit">Siguiente</button>
+</div>
       </form>
     @endif
 
+
     {{-- ===================== STEP 2 ===================== --}}
-    @if($stepCurrent===2)
-      <header class="wizard-head">
-        <h2>Selecciona tu categoría</h2>
-        <p>Tarifa de <strong id="daysLabel">{{ $days }}</strong> día(s) de tu renta.</p>
-      </header>
 
-      <div class="cars">
-        @forelse(($categorias ?? []) as $cat)
-          @php
-            $imgCat = $catImages[$cat->id_categoria] ?? $placeholder;
+@if($stepCurrent===2)
+  <header class="wizard-head">
+    <h2>Selecciona tu categoría</h2>
+    <p>Tarifa de <strong id="daysLabel">{{ $days }}</strong> día(s) de tu renta.</p>
+  </header>
 
-            $prepagoDia   = (float)($cat->precio_dia ?? 0);
-            $mostradorDia = round($prepagoDia * 1.15);
+  <div class="cars">
+    @forelse(($categorias ?? []) as $cat)
+        @php
+        $imgCat = $catImages[$cat->id_categoria] ?? $placeholder;
+        $prepagoDia   = (float)($cat->precio_dia ?? 0);
+        $mostradorDia = round($prepagoDia * 1.15);
+        $prepagoTotal   = $prepagoDia * $days;
+        $mostradorTotal = $mostradorDia * $days;
 
-            $prepagoTotal   = $prepagoDia * $days;
-            $mostradorTotal = $mostradorDia * $days;
+        $predeterminadosPorId = [
+        1  => ['pax'=>5,  'small'=>2, 'big'=>1], // ID de C
+        2  => ['pax'=>5,  'small'=>2, 'big'=>1], // ID de D
+        3  => ['pax'=>5,  'small'=>2, 'big'=>2], // ID de E
+        4  => ['pax'=>5,  'small'=>2, 'big'=>2], // ID de F
+        5  => ['pax'=>5,  'small'=>2, 'big'=>2], // ID de IC
+        6  => ['pax'=>5,  'small'=>3, 'big'=>2], // ID de I
+        7  => ['pax'=>7,  'small'=>3, 'big'=>2], // ID de IB
+        8  => ['pax'=>7,  'small'=>4, 'big'=>2], // ID de M
+        9  => ['pax'=>13, 'small'=>4, 'big'=>3], // ID de L
+        10 => ['pax'=>5,  'small'=>3, 'big'=>2], // ID de H
+        11 => ['pax'=>5,  'small'=>3, 'big'=>2], // ID de HI
+        ];
 
-            $pasajeros    = (int)($cat->pasajeros ?? 5);
-            $malChicas    = (int)($cat->maletas_chicas ?? 2);
-            $malGrandes   = (int)($cat->maletas_grandes ?? 1);
-            $appleCarplay = (int)($cat->apple_carplay ?? 0);
-            $androidAuto  = (int)($cat->android_auto ?? 0);
+        $idActual = $cat->id_categoria;
+        $paxFinal = 5; $sFinal = 2; $bFinal = 1; // Valores por defecto
 
-            // ✅ NUEVO: transmisión + A/C para el layout de iconos
-            $codigoCat = strtoupper((string)($cat->codigo ?? ''));
-            $tLabelCat = ($codigoCat === 'L') ? 'Estándar' : 'Automática';
-            $tieneACCat = (int)($cat->aire_acondicionado ?? ($cat->aire_ac ?? 0));
+        if (isset($predeterminadosPorId[$idActual])) {
+            $paxFinal = $predeterminadosPorId[$idActual]['pax'];
+            $sFinal   = $predeterminadosPorId[$idActual]['small'];
+            $bFinal   = $predeterminadosPorId[$idActual]['big'];
+        }
 
-            $desc = $cat->ejemplo ?? ($cat->descripcion ?? 'Auto o similar. Tarifas sujetas a disponibilidad y temporada.');
+        $appleCarplay = (int)($cat->apple_carplay ?? 0);
+        $androidAuto  = (int)($cat->android_auto ?? 0);
+        $codigoCat    = trim(strtoupper((string)($cat->codigo ?? '')));
+        $transmision  = ($cat->id_categoria == 9) ? 'Estándar' : 'Automática';
+        $tieneACCat   = (int)($cat->aire_acondicionado ?? ($cat->aire_ac ?? 1));
 
-            $ahorroPct = ($mostradorTotal > 0)
-              ? round((($mostradorTotal - $prepagoTotal) / $mostradorTotal) * 100)
-              : 0;
-            $ahorroPct = max(0, $ahorroPct);
-          @endphp
+        // *** SOLO CAMBIAMOS ESTA LÍNEA ***
+        // Antes: $desc = $cat->ejemplo ?? ($cat->descripcion ?? 'Auto o similar.');
+        // Ahora: Usamos directamente la descripción de la categoría
+        $desc = $cat->descripcion ?? 'Auto o similar.';
 
-          <article class="car-card car-card--v2 {{ (string)$categoriaId===(string)$cat->id_categoria ? 'active' : '' }}"
-                   data-prepago-dia="{{ $prepagoDia }}"
-                   data-mostrador-dia="{{ $mostradorDia }}">
+        $ahorroPct    = ($mostradorTotal > 0) ? round((($mostradorTotal - $prepagoTotal) / $mostradorTotal) * 100) : 0;
+    @endphp
 
-            {{-- HERO (imagen + badge) --}}
-            <div class="car-hero">
-              <img class="car-hero-img"
-                   src="{{ $imgCat }}"
-                   alt="{{ $cat->nombre }}"
-                   onerror="this.onerror=null;this.src='{{ $placeholder }}';">
+      <article class="car-card car-card--v2 {{ (string)$categoriaId===(string)$cat->id_categoria ? 'active' : '' }}"
+         data-prepago-dia="{{ $prepagoDia }}"
+         data-mostrador-dia="{{ $mostradorDia }}">
 
-              <div class="car-days-badge car-days-badge--v2">
-                <i class="fa-regular fa-calendar-days"></i>
-                <span class="js-days-badge">{{ $days }}</span> día(s)
-              </div>
+        <div class="car-body">
+          {{-- 1. Agrupamos el Título y el Badge en una nueva fila --}}
+          <div class="car-header-row">
+            <div class="car-top">{{ strtoupper($cat->nombre) }}</div>
+
+            {{-- El badge ahora vive aquí arriba, al lado del título --}}
+            <div class="car-days-badge car-days-badge--v2">
+              <i class="fa-regular fa-calendar-days"></i>
+              <span class="js-days-badge">{{ $days }}</span> día(s)
             </div>
+          </div>
 
-            {{-- CONTENIDO --}}
-            <div class="car-body">
-              <div class="car-top">{{ strtoupper($cat->nombre) }}</div>
-              <div class="car-sub">{{ $desc }}</div>
+          {{-- SOLO CAMBIAMOS ESTA PARTE: mostramos la descripción completa --}}
+          <div class="car-sub">{{ $desc }}</div>
 
-              {{-- ✅ NUEVO: iconos arriba + chips CarPlay/Android abajo (como tu imagen) --}}
-              <div class="car-features">
-                <ul class="car-mini-specs">
-                  <li title="Pasajeros"><i class="fa-solid fa-user-large"></i> {{ $pasajeros }}</li>
-                  <li title="Maletas chicas"><i class="fa-solid  fa-suitcase-rolling"></i> {{ $malChicas }}</li>
-                  <li title="Maletas grandes"><i class="fa-solid fa-briefcase"></i> {{ $malGrandes }}</li>
+          {{-- 2. El HERO ahora solo contiene la imagen --}}
+          <div class="car-hero">
+            <img class="car-hero-img"
+                 src="{{ $imgCat }}"
+                 alt="{{ $cat->nombre }}"
+                 onerror="this.onerror=null;this.src='{{ $placeholder }}';">
+          </div>
 
-                  <li title="Transmisión">
-                    <span class="spec-letter">T | {{ $tLabelCat }}</span>
-                  </li>
+          {{-- FEATURES --}}
+          <div class="car-features">
+            <ul class="car-mini-specs">
+              <li title="Pasajeros">
+                <i class="fa-solid fa-user-large"></i> {{ $paxFinal }}
+              </li>
+              <li title="Maletas chicas">
+                <i class="fa-solid fa-suitcase-rolling"></i> {{ $sFinal }}
+              </li>
+              <li title="Maletas grandes">
+                <i class="fa-solid fa-briefcase"></i> {{ $bFinal }}
+              </li>
+              <li title="Transmisión">
+                <span class="spec-letter">T | {{ $transmision }}</span>
+              </li>
+              @if($tieneACCat)
+                <li title="Aire acondicionado">
+                  <i class="fa-regular fa-snowflake"></i>
+                  <span class="spec-letter">A/C</span>
+                </li>
+              @endif
+            </ul>
 
-                  @if($tieneACCat)
-                    <li title="Aire acondicionado">
-                      <span class="spec-letter">A/C</span>
-                    </li>
-                  @endif
-                </ul>
-
-                <div class="car-connect">
-                  @if($appleCarplay)
-                    <span class="badge-chip badge-apple" title="Apple CarPlay">
-                      <span class="icon-badge"><i class="fa-brands fa-apple"></i></span>
-                      CarPlay
-                    </span>
-                  @endif
-
-                  @if($androidAuto)
-                    <span class="badge-chip badge-android" title="Android Auto">
-                      <span class="icon-badge"><i class="fa-brands fa-android"></i></span>
-                      Android Auto
-                    </span>
-                  @endif
-                </div>
-              </div>
-
-              {{-- PRECIOS --}}
-              <div class="car-price car-price--v2">
-                <div class="price-old">
-                  ${{ number_format($mostradorTotal,0) }} MXN
-                </div>
-
-                <div class="price-new">
-                  $<span class="js-prepago-total">{{ number_format($prepagoTotal,0) }}</span> MXN
-                </div>
-
-                @if($ahorroPct > 0)
-                  <div class="price-save">
-                    Ahorra <strong class="js-ahorro">{{ $ahorroPct }}</strong>%
-                  </div>
-                @endif
-
-                <a class="btn-pay primary"
-                   href="{{ $toStep(3, ['categoria_id'=>$cat->id_categoria, 'plan'=>'linea']) }}">
-                  PREPAGAR EN LÍNEA
-                </a>
-
-                <div class="office-wrap">
-                  <div class="office-price">
-                    $<span class="js-mostrador-total">{{ number_format($mostradorTotal,0) }}</span> MXN
-                  </div>
-
-                  <a class="btn-pay gray"
-                     href="{{ $toStep(3, ['categoria_id'=>$cat->id_categoria, 'plan'=>'mostrador']) }}">
-                    PAGAR EN OFICINA
-                  </a>
-                </div>
-              </div>
+            <div class="car-connect">
+              @if($appleCarplay)
+                <span class="badge-chip badge-apple" title="Apple CarPlay">
+                  <span class="icon-badge"><i class="fa-brands fa-apple"></i></span>
+                  CarPlay
+                </span>
+              @endif
+              @if($androidAuto)
+                <span class="badge-chip badge-android" title="Android Auto">
+                  <span class="icon-badge"><i class="fa-brands fa-android"></i></span>
+                  Android Auto
+                </span>
+              @endif
             </div>
-          </article>
-        @empty
-          <p>No hay categorías disponibles.</p>
-        @endforelse
-      </div>
+          </div>
 
-      <div class="wizard-nav">
-        <a class="btn btn-ghost" href="{{ $toStep(1) }}">Anterior</a>
-        <a class="btn btn-primary" href="{{ $toStep(3) }}">Siguiente</a>
-      </div>
-    @endif
+          {{-- PRECIOS --}}
+          <div class="car-price car-price--v2">
+            <div class="price-old">
+              ${{ number_format($mostradorTotal,0) }} MXN
+            </div>
+            <div class="price-new">
+              $<span class="js-prepago-total">{{ number_format($prepagoTotal,0) }}</span> MXN
+            </div>
+            @if($ahorroPct > 0)
+              <div class="price-save">
+                Ahorra <strong class="js-ahorro">{{ $ahorroPct }}</strong>%
+              </div>
+            @endif
+            <a class="btn-pay primary"
+               href="{{ $toStep(3, ['categoria_id'=>$cat->id_categoria, 'plan'=>'linea']) }}">
+              PREPAGAR EN LÍNEA
+            </a>
+            <div class="office-wrap">
+              <div class="office-price">
+                $<span class="js-mostrador-total">{{ number_format($mostradorTotal,0) }}</span> MXN
+              </div>
+              <a class="btn-pay gray"
+                 href="{{ $toStep(3, ['categoria_id'=>$cat->id_categoria, 'plan'=>'mostrador']) }}">
+                PAGAR EN OFICINA
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+    @empty
+      <p>No hay categorías disponibles.</p>
+    @endforelse
+  </div>
+
+  <div class="wizard-nav">
+    <a class="btn btn-ghost" href="{{ $toStep(1) }}">Anterior</a>
+    <a class="btn btn-primary" href="{{ $toStep(3) }}">Siguiente</a>
+  </div>
+@endif
 
     {{-- ===================== STEP 3 ===================== --}}
     @if($stepCurrent===3)
@@ -896,10 +923,21 @@
       </style>
 
       <div class="step4-layout">
+        @php
+  $months3 = [
+    '01' => 'ENE', '02' => 'FEB', '03' => 'MAR', '04' => 'ABR',
+    '05' => 'MAY', '06' => 'JUN', '07' => 'JUL', '08' => 'AGO',
+    '09' => 'SEP', '10' => 'OCT', '11' => 'NOV', '12' => 'DIC'
+  ];
+
+  // Si no tienes definidas estas variables
+  $maxYear = date('Y') - 18;
+  $minYear = $maxYear - 80;
+@endphp
 
         {{-- ===================== PANE IZQUIERDO ===================== --}}
         <div class="step4-pane">
-          <form class="sum-form" id="formCotizacion" onsubmit="return false;">
+          <form class="sum-form" id="formCotizacion" onsubmit="return false;" novalidate>
             <script>
               window.APP_URL_RESERVA_MOSTRADOR = "{{ route('reservas.store') }}";
               window.APP_URL_RESERVA_LINEA     = "{{ route('reservas.linea') }}";
@@ -924,92 +962,84 @@
 
             <div class="sum-personal-grid">
 
-              <div class="field" style="grid-column: 1 / -1;">
-                <label>Nombre Completo</label>
+  {{-- Nombre Completo --}}
+  <div class="field field-floating" style="grid-column: 1 / -1;">
+    <input type="text" class="input-centered" name="nombre_completo" id="nombreCompleto" autocomplete="name" placeholder=" " required>
+    <label for="nombreCompleto">Nombre Completo</label>
+    <input type="hidden" name="nombre" id="nombreCliente">
+    <input type="hidden" name="apellido" id="apellidoCliente">
+  </div>
 
-                <input
-                  type="text"
-                  name="nombre_completo"
-                  id="nombreCompleto"
-                  autocomplete="name"
-                >
+  {{-- Móvil --}}
+  <div class="field field-floating" style="grid-column: 1 / -1;">
+    <input type="text" name="telefono" id="telefonoCliente" placeholder=" " required>
+    <label for="telefonoCliente">Móvil</label>
+  </div>
 
-                <input type="hidden" name="nombre" id="nombreCliente">
-                <input type="hidden" name="apellido" id="apellidoCliente">
-              </div>
+  {{-- Correo electrónico --}}
+  <div class="field field-floating" style="grid-column: 1 / -1;">
+    <input type="email" name="email" id="correoCliente" placeholder=" " required>
+    <label for="correoCliente">Correo electrónico</label>
+  </div>
 
-              <div class="field" style="grid-column: 1 / -1;">
-                <label>Móvil</label>
-                <input type="text" name="telefono" id="telefonoCliente" >
-              </div>
+ {{-- País --}}
+<div class="field field-floating">
+  <select name="pais" id="pais" required>
+    <option value="" disabled selected>Selecciona un país</option>
+    <option value="México">México</option>
+    <option value="Estados Unidos">Estados Unidos</option>
+    <option value="Canadá">Canadá</option>
+  </select>
+  <label for="pais">País</label>
+</div>
 
-              <div class="field" style="grid-column: 1 / -1;">
-                <label>Correo electrónico</label>
-                <input type="email" name="email" id="correoCliente" >
-              </div>
+{{-- Fecha de nacimiento --}}
+<div class="field field-dob-container">
+  <label class="label-dob-main">Fecha de nacimiento</label>  {{-- ESTE LABEL ES IMPORTANTE --}}
+  <div class="dob-inline">
+    <div class="field-floating-sub">
+      <select id="dob_day" class="select-dob" required>
+        <option value="" disabled selected hidden></option>
+        @for($d=1; $d<=31; $d++)
+          <option value="{{ str_pad($d,2,'0',STR_PAD_LEFT) }}">{{ str_pad($d,2,'0',STR_PAD_LEFT) }}</option>
+        @endfor
+      </select>
+      <label>DD</label>
+    </div>
+    <div class="field-floating-sub">
+      <select id="dob_month" class="select-dob" required>
+        <option value="" disabled selected hidden></option>
+        @foreach($months3 as $val => $label)
+          <option value="{{ $val }}">{{ $label }}</option>
+        @endforeach
+      </select>
+      <label>MM</label>
+    </div>
+    <div class="field-floating-sub">
+      <select id="dob_year" class="select-dob" required>
+        <option value="" disabled selected hidden></option>
+        @for($y=$maxYear; $y>=$minYear; $y--)
+          <option value="{{ $y }}">{{ $y }}</option>
+        @endfor
+      </select>
+      <label>YYYY</label>
+    </div>
+  </div>
+</div>
 
-              <div class="field">
-                <label>País</label>
-                <select name="pais" id="pais">
-                  <option value="">Selecciona un país</option>
-                  <option value="México">México</option>
-                  <option value="Estados Unidos">Estados Unidos</option>
-                  <option value="Canadá">Canadá</option>
-                </select>
-              </div>
+  @php
+    $isAirport = (is_string($pickupName) && str_contains(mb_strtolower($pickupName), 'aeropuerto')) ||
+                 (is_string($dropoffName) && str_contains(mb_strtolower($dropoffName), 'aeropuerto'));
+  @endphp
 
-              <div class="field">
-                <label>Fecha de nacimiento</label>
+  @if($isAirport)
+    <div class="field field-floating" style="grid-column: 1 / -1;">
+      <input type="text" name="vuelo" id="vuelo" placeholder=" ">
+      <label for="vuelo">No. de vuelo</label>
+    </div>
+  @endif
 
-                <div class="dob-inline">
-                  <select id="dob_day">
-                    <option value="">DD</option>
-                    @for($d=1; $d<=31; $d++)
-                      <option value="{{ str_pad($d,2,'0',STR_PAD_LEFT) }}">
-                        {{ str_pad($d,2,'0',STR_PAD_LEFT) }}
-                      </option>
-                    @endfor
-                  </select>
-
-                  <select id="dob_month">
-                    <option value="">mmm</option>
-                    @php
-                      $months3 = [
-                        '01'=>'ene','02'=>'feb','03'=>'mar','04'=>'abr','05'=>'may','06'=>'jun',
-                        '07'=>'jul','08'=>'ago','09'=>'sep','10'=>'oct','11'=>'nov','12'=>'dic',
-                      ];
-                    @endphp
-
-                    @foreach($months3 as $val => $label)
-                      <option value="{{ $val }}">{{ $label }}</option>
-                    @endforeach
-                  </select>
-
-                  <select id="dob_year">
-                    <option value="">YYYY</option>
-                    @for($y=$maxYear; $y>=$minYear; $y--)
-                      <option value="{{ $y }}">{{ $y }}</option>
-                    @endfor
-                  </select>
-                </div>
-
-                <input type="hidden" name="nacimiento" id="dob">
-              </div>
-
-              @php
-                $isAirport =
-                  (is_string($pickupName) && str_contains(mb_strtolower($pickupName), 'aeropuerto')) ||
-                  (is_string($dropoffName) && str_contains(mb_strtolower($dropoffName), 'aeropuerto'));
-              @endphp
-
-              @if($isAirport)
-                <div class="field" style="grid-column: 1 / -1;">
-                  <label>No. de vuelo </label>
-                  <input type="text" name="vuelo" id="vuelo" >
-                </div>
-              @endif
-
-            </div>
+</div>
 
             <div class="sum-checks">
               <label class="cbox">
@@ -1142,16 +1172,16 @@
 
                 {{-- ✅ NUEVO (Step 4): iconos + T | ... + A/C + chips (2 bloques) --}}
                 @php
-                  $codigo = strtoupper((string)($categoriaSel->codigo ?? ''));
-                  $tLabel = ($codigo === 'L') ? 'Estándar' : 'Automática';
+                $codigo = strtoupper((string)($categoriaSel->codigo ?? ''));
+                $transmision = ($categoriaSel->id_categoria == 9) ? 'Estándar' : 'Automática';
+                $tieneACCat   = (int)($cat->aire_acondicionado ?? ($cat->aire_ac ?? 1));
+
 
                   $cap = [
                     'pax'   => (int)($categoriaSel->pasajeros ?? 5),
                     'small' => (int)($categoriaSel->maletas_chicas ?? 2),
                     'big'   => (int)($categoriaSel->maletas_grandes ?? 1),
                   ];
-
-                  $tieneAC = (int)($categoriaSel->aire_acondicionado ?? ($categoriaSel->aire_ac ?? 0));
                 @endphp
 
                 <div class="car-features" style="margin-top:14px;">
@@ -1161,11 +1191,12 @@
                     <li><i class="fa-solid fa-briefcase"></i> {{ $cap['big'] ?? 1 }}</li>
 
                     <li title="Transmisión">
-                      <span class="spec-letter">T | {{ $tLabel }}</span>
+                      <span class="spec-letter">T | {{ $transmision }}</span>
                     </li>
 
-                    @if($tieneAC)
+                    @if($tieneACCat)
                       <li title="Aire acondicionado">
+                        <i class="fa-regular fa-snowflake"></i>
                         <span class="spec-letter">A/C</span>
                       </li>
                     @endif
