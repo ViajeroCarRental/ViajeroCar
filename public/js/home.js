@@ -155,6 +155,7 @@
     document.querySelectorAll('.fleet').forEach(initFleetControlled);
   });
 })();
+
 /* =====================================================================
    Media carousels: SOLO manual (SIN LOOP / SIN AUTOPLAY)
    Nota: tus .media-carousel son "fade" (position:absolute), aquí no tocamos nada.
@@ -234,145 +235,157 @@
   })();
 
   // 1) FECHAS (Flatpickr + rangePlugin)
-  if(window.flatpickr){
-    const pickup = document.getElementById('pickupDate');
-    const min = pickup?.dataset?.min || 'today';
+  (function() {
+    "use strict";
 
-    window.flatpickr('#pickupDate', {
-      locale: 'es',
-      altInput: true,
-      altFormat: 'd/m/Y',
-      dateFormat: 'Y-m-d',
-      minDate: min,
-      disableMobile: true,
-      plugins: (typeof window.rangePlugin !== "undefined")
-        ? [ new window.rangePlugin({ input: '#dropoffDate' }) ]
-        : [],
-       onReady: function(selectedDates, dateStr, instance) {
-            const altPickup = instance.altInput;
-            const dropoffEl = document.getElementById('dropoffDate');
+    if (window.flatpickr) {
+        const pickup = document.getElementById('pickupDate');
+        const dropoffEl = document.getElementById('dropoffDate');
+        const minDate = pickup?.dataset?.min || 'today';
 
-            const updateLabels = () => {
-                // Pickup
-                if (altPickup) {
-                    if (altPickup.value !== "") altPickup.classList.add('has-value');
-                    else altPickup.classList.remove('has-value');
+        // Según tus CSS, el cambio de diseño ocurre en 1124px
+        // Desktop/Tablet: >= 1125px | Móvil: <= 1124px
+        const isMobile = window.innerWidth <= 1124;
+
+        // Configuración Base
+        const commonConfig = {
+            locale: 'es',
+            altInput: true,
+            altFormat: 'd/m/Y',
+            dateFormat: 'Y-m-d',
+            minDate: minDate,
+            disableMobile: true,
+            onReady: function(selectedDates, dateStr, instance) {
+                const altPickup = instance.altInput;
+                const updateLabels = () => {
+                    if (altPickup) {
+                        altPickup.value !== "" ? altPickup.classList.add('has-value') : altPickup.classList.remove('has-value');
+                    }
+                    if (dropoffEl && dropoffEl.nextElementSibling) {
+                        const altDropoff = dropoffEl.nextElementSibling;
+                        if (altDropoff.classList.contains('flatpickr-mobile')) return;
+                        altDropoff.value !== "" ? altDropoff.classList.add('has-value') : altDropoff.classList.remove('has-value');
+                    }
+                };
+
+                if(altPickup) {
+                    altPickup.addEventListener('focus', () => altPickup.classList.add('has-value'));
+                    altPickup.addEventListener('blur', updateLabels);
                 }
-                // Devolución
-                if (dropoffEl && dropoffEl.nextElementSibling) {
-                    const altDropoff = dropoffEl.nextElementSibling;
-                    if (altDropoff.value !== "") altDropoff.classList.add('has-value');
-                    else altDropoff.classList.remove('has-value');
-                }
-            };
 
-            // Forzar al hacer click (para asegurar el borde negro desde el inicio)
-            if(altPickup) {
-                altPickup.addEventListener('focus', () => altPickup.classList.add('has-value'));
-                altPickup.addEventListener('blur', updateLabels);
+                instance.config.onChange.push(() => {
+                    updateLabels();
+                    if (typeof updateSummary === "function") updateSummary();
+                });
+                setTimeout(updateLabels, 200);
             }
+        };
 
-            // Ejecutar cuando Flatpickr detecte cambio de fecha
-            instance.config.onChange.push(updateLabels);
+        if (!isMobile) {
+            /* ==========================================
+               MODO DESKTOP / TABLET (Rango Conectado)
+            ========================================== */
+            window.flatpickr('#pickupDate', {
+                ...commonConfig,
+                plugins: (typeof window.rangePlugin !== "undefined")
+                    ? [ new window.rangePlugin({ input: '#dropoffDate' }) ]
+                    : []
+            });
+        } else {
+            /* ==========================================
+               MODO MÓVIL (Selecciones Independientes)
+            ========================================== */
+            // Inicializamos el de salida
+            const fpPickup = window.flatpickr('#pickupDate', {
+                ...commonConfig,
+                onChange: function(selectedDates) {
+                    // Al elegir fecha de salida, la ponemos como mínima en la de llegada
+                    if (selectedDates[0]) {
+                        fpDropoff.set('minDate', selectedDates[0]);
+                    }
+                    if (typeof updateSummary === "function") updateSummary();
+                }
+            });
 
-            // Ejecución inicial
-            setTimeout(updateLabels, 200);
-        },
-        onChange: function() {
-            if (typeof updateSummary === "function") updateSummary();
+            // Inicializamos el de llegada por separado
+            const fpDropoff = window.flatpickr('#dropoffDate', {
+                ...commonConfig,
+                onChange: function() {
+                    if (typeof updateSummary === "function") updateSummary();
+                }
+            });
         }
-    });
-}
+    }
+  })();
 
   /* ==========================
-     SELECTS de hora/minuto
-  ========================== */
-  function pad2(n){ return String(n).padStart(2,"0"); }
+       SELECTS de hora (SOLO HORAS)
+    ========================== */
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
 
-  function createTimeSelectsBelow(input, opts){
-    const { hourMax=24, minuteStep=15, defaultValue="12:00" } = (opts || {});
+  function createTimeSelectsBelow(input, opts) {
+    const { hourMax = 24, defaultValue = "12:00" } = (opts || {});
 
     const wrap = input.closest(".time-field") || input.parentElement;
-    if(wrap && wrap.querySelector(".tp-selects")) return;
+    if (wrap && wrap.querySelector(".tp-selects")) return;
 
     const box = document.createElement("div");
-    box.className = "tp-selects";
+    box.className = "tp-selects w-100";
 
     const selH = document.createElement("select");
-    selH.className = "tp-hour";
+    selH.className = "tp-hour custom-select-clean";
     selH.setAttribute("aria-label", "Hora");
 
-    const selM = document.createElement("select");
-    selM.className = "tp-min";
-    selM.setAttribute("aria-label", "Minutos");
-
-    for(let h=1; h<=hourMax; h++){
+    // Llenamos solo con horas: 01, 02, 03... hasta hourMax
+    for (let h = 1; h <= hourMax; h++) {
       const op = document.createElement("option");
       op.value = String(h);
       op.textContent = pad2(h);
       selH.appendChild(op);
     }
 
-    for(let m=0; m<60; m+=minuteStep){
-      const op = document.createElement("option");
-      op.value = String(m);
-      op.textContent = pad2(m);
-      selM.appendChild(op);
-    }
-
-    const m = String(defaultValue).trim().match(/^(\d{1,2})(?::(\d{2}))?/);
-    let hh = m ? Number(m[1]) : 12;
-    let mm = m ? Number(m[2] || 0) : 0;
-
-    if(hh > hourMax) hh = hourMax;
-    if(hh === 24 && mm !== 0) mm = 0;
-
-    mm = Math.round(mm / minuteStep) * minuteStep;
-    if(mm >= 60) mm = 0;
-
-/* Para visualizar H y Min en los input de Pick-Up y Devolucion */
+    // Placeholder con el texto "Hora"
     selH.selectedIndex = -1;
-    selM.selectedIndex = -1;
+    selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>Hora</option>`);
 
-    selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>H</option>`);
-    selM.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>Min</option>`);
-
-
-    function sync(){
-      const h = Number(selH.value || 0);
-      const mi = Number(selM.value || 0);
-
-      if(h === 24 && mi !== 0){
-        selM.value = "0";
-      }
-
+    function sync() {
       const finalH = pad2(Number(selH.value || 0));
-      const finalM = pad2(Number(selM.value || 0));
-      input.value = `${finalH}:${finalM}`;
-
-      input.dispatchEvent(new Event("input", { bubbles:true }));
+      // Guardamos SOLO la hora, siempre con :00
+      input.value = `${finalH}:00`;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
     }
 
     selH.addEventListener("change", sync);
-    selM.addEventListener("change", sync);
-
     box.appendChild(selH);
-    box.appendChild(selM);
 
-    if(wrap){
+    if (wrap) {
       wrap.appendChild(box);
-    }else{
+    } else {
       input.insertAdjacentElement("afterend", box);
     }
 
-    sync();
+    // Establecer valor por defecto solo si existe y no es "12:00"
+    if (input.value && input.value !== "12:00") {
+      const defaultHour = input.value.split(':')[0];
+      const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
+      if (option) {
+        option.selected = true;
+        sync();
+      }
+    } else {
+      // Mantener placeholder "Seleccionar hora" y limpiar input oculto
+      selH.selectedIndex = 0;
+      input.value = "";
+    }
   }
 
-  function initAnalogTime(id){
+  function initAnalogTime(id) {
     const input = document.getElementById(id);
-    if(!input) return;
+    if (!input) return;
 
-    if(input.dataset.tpReady === "1") return;
+    if (input.dataset.tpReady === "1") return;
     input.dataset.tpReady = "1";
 
     input.setAttribute("readonly", "readonly");
@@ -383,63 +396,57 @@
 
     createTimeSelectsBelow(input, {
       hourMax: 24,
-      minuteStep: 15,
       defaultValue: input.value || "12:00"
     });
 
-    if(!input.value) input.value = "12:00";
+    // NO establecer valor por defecto
+    // if (!input.value) input.value = "12:00";
 
     input.addEventListener("change", updateSummary);
     input.addEventListener("input", updateSummary);
   }
 
-  document.addEventListener("DOMContentLoaded", ()=>{
+  document.addEventListener("DOMContentLoaded", () => {
     initAnalogTime("pickupTime");
     initAnalogTime("dropoffTime");
     updateSummary();
   });
 
-  function parseTimeTo24h(str){
+  function parseTimeTo24h(str) {
     const raw = String(str || '').trim();
-    if(!raw) return { hh:0, mm:0 };
+    if (!raw) return { hh: 0, mm: 0 };
 
-    const m = raw.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
-    if(!m) return { hh:0, mm:0 };
+    // Extraer SOLO la hora, ignorar minutos
+    const m = raw.match(/^(\d{1,2})/);
+    if (!m) return { hh: 0, mm: 0 };
 
     let hh = Number(m[1] || 0);
-    let mm = Number(m[2] || 0);
-    const ap = (m[3] || '').toUpperCase();
 
-    if(ap === 'PM' && hh < 12) hh += 12;
-    if(ap === 'AM' && hh === 12) hh = 0;
+    // Los minutos siempre serán 0
+    const mm = 0;
 
-    if(Number.isFinite(hh)){
+    if (Number.isFinite(hh)) {
       hh = Math.max(0, Math.min(24, hh));
     } else {
       hh = 0;
-    }
-    mm = Number.isFinite(mm) ? Math.max(0, Math.min(59, mm)) : 0;
-
-    if(hh === 24 && mm !== 0){
-      mm = 0;
     }
 
     return { hh, mm };
   }
 
-  function buildDT(dateId, timeId){
+  function buildDT(dateId, timeId) {
     const d = document.getElementById(dateId)?.value;
     const t = document.getElementById(timeId)?.value || '00:00';
-    if(!d) return null;
+    if (!d) return null;
 
     const parts = d.split('-').map(Number);
-    if(parts.length !== 3) return null;
+    if (parts.length !== 3) return null;
     const [y, m, day] = parts;
-    if(!y || !m || !day) return null;
+    if (!y || !m || !day) return null;
 
     const { hh, mm } = parseTimeTo24h(t);
 
-    if(hh === 24){
+    if (hh === 24) {
       const dt = new Date(y, m - 1, day, 0, 0);
       dt.setDate(dt.getDate() + 1);
       return dt;
@@ -448,16 +455,23 @@
     return new Date(y, m - 1, day, hh, mm);
   }
 
-  function updateSummary(){
-    if(!rangeSummary) return;
+  function updateSummary() {
+    const rangeSummary = document.getElementById('rangeSummary');
+    if (!rangeSummary) return;
 
-    const s = buildDT('pickupDate','pickupTime');
-    const e = buildDT('dropoffDate','dropoffTime');
-    if(!s || !e){ rangeSummary.textContent=''; return; }
+    const s = buildDT('pickupDate', 'pickupTime');
+    const e = buildDT('dropoffDate', 'dropoffTime');
+    if (!s || !e) {
+      rangeSummary.textContent = '';
+      return;
+    }
 
     const h = Math.round((e - s) / 36e5);
     const d = Math.ceil(h / 24);
-    if(!Number.isFinite(h) || h <= 0){ rangeSummary.textContent=''; return; }
+    if (!Number.isFinite(h) || h <= 0) {
+      rangeSummary.textContent = '';
+      return;
+    }
 
     rangeSummary.textContent = `Renta por ${d} día(s) · ~${h} hora(s)`;
   }
@@ -479,56 +493,20 @@
     const pickDate  = document.getElementById("pickupDate");
     const dropDate  = document.getElementById("dropoffDate");
 
-    function setDropoffState(){
-      const on = !!(chk && chk.checked);
-
-      if(dropWrap) dropWrap.style.display = on ? "" : "none";
-
-       if(dropWrap){
-    if(on){
-      dropWrap.classList.remove("disabled");
-      dropWrap.classList.add("enabled");
-    }
-    else{
-      dropWrap.classList.remove("enabled");
-      dropWrap.classList.add("disabled");
-    }
-  }
-
-      if(dropSel){
-        if(on){
-          dropSel.setAttribute("required", "required");
-        }else{
-          dropSel.removeAttribute("required");
-          if(pickSel && pickSel.value) dropSel.value = pickSel.value;
-        }
-      }
-    }
-
-    pickSel && pickSel.addEventListener("change", ()=>{
-      if(chk && !chk.checked && dropSel){
-        dropSel.value = pickSel.value;
-      }
-    });
-
-    chk && chk.addEventListener("change", setDropoffState);
-    setDropoffState();
-
+    // Sincronizar hora oculta desde el selector (siempre con :00)
     function syncHiddenFromSelects(hiddenId){
-      const hidden = document.getElementById(hiddenId);
-      if(!hidden) return;
+        const hidden = document.getElementById(hiddenId);
+        if(!hidden) return;
 
-      const wrap = hidden.closest(".time-field") || hidden.parentElement;
-      const selH = wrap ? wrap.querySelector(".tp-selects .tp-hour") : null;
-      const selM = wrap ? wrap.querySelector(".tp-selects .tp-min")  : null;
+        const wrap = hidden.closest(".time-field") || hidden.parentElement;
+        const selH = wrap ? wrap.querySelector(".tp-selects .tp-hour") : null;
 
-      if(selH && selM){
-        const hh = String(selH.value || "0").padStart(2,"0");
-        const mm = String(selM.value || "0").padStart(2,"0");
-        hidden.value = `${hh}:${mm}`;
-      } else {
-        if(!hidden.value) hidden.value = "12:00";
-      }
+        if(selH && selH.value){
+            const hh = String(selH.value).padStart(2,"0");
+            hidden.value = `${hh}:00`; // Siempre mandamos minutos en 00
+        } else {
+            if(!hidden.value) hidden.value = "12:00";
+        }
     }
 
     function normalizeDateInput(input){
@@ -562,33 +540,41 @@
       if(dropTime && !dropTime.value) dropTime.value = "12:00";
     }, { capture:true });
 
-/* === NUEVO: Control de bordes negros para Select2 y otros === */
-const inputsToWatch = [pickSel, dropSel];
+    /* === NUEVO: Control de bordes negros para Select2 y otros === */
+    const inputsToWatch = [pickSel, dropSel];
 
-inputsToWatch.forEach(el => {
-  if (!el) return;
+    inputsToWatch.forEach(el => {
+      if (!el) return;
 
-  // Función para evaluar si tiene valor
-  const toggleHasValue = () => {
-    if (el.value && el.value !== "") {
-      el.classList.add('has-value');
-      // Si usa Select2, aplicamos al contenedor visual que crea la librería
-      $(el).next('.select2-container').find('.select2-selection').addClass('has-value');
-    } else {
-      el.classList.remove('has-value');
-      $(el).next('.select2-container').find('.select2-selection').removeClass('has-value');
-    }
-  };
+      // Función para evaluar si tiene valor
+      const toggleHasValue = () => {
+        if (el.value && el.value !== "") {
+          el.classList.add('has-value');
+          // Si usa Select2, aplicamos al contenedor visual que crea la librería
+          if (typeof $ !== 'undefined') {
+            $(el).next('.select2-container').find('.select2-selection').addClass('has-value');
+          }
+        } else {
+          el.classList.remove('has-value');
+          if (typeof $ !== 'undefined') {
+            $(el).next('.select2-container').find('.select2-selection').removeClass('has-value');
+          }
+        }
+      };
 
-  // Escuchar cambios (Select2 dispara 'change')
-  $(el).on('change', toggleHasValue);
+      // Escuchar cambios (Select2 dispara 'change')
+      if (typeof $ !== 'undefined') {
+        $(el).on('change', toggleHasValue);
+      } else {
+        el.addEventListener('change', toggleHasValue);
+      }
 
-  // Ejecutar al inicio por si ya vienen con datos
-  setTimeout(toggleHasValue, 500);
-});
+      // Ejecutar al inicio por si ya vienen con datos
+      setTimeout(toggleHasValue, 500);
+    });
 
-  })();
-})();
+  })(); // ← Cierra bindFormFixes
+})(); // ← Cierra el IIFE principal de flatpickr
 
 /* ====================
    Burbuja radial redes
@@ -654,14 +640,13 @@ inputsToWatch.forEach(el => {
       new Swiper(el, {
         loop: false,
         autoplay: false,
-        allowTouchMove: true, // Te sugiero ponerlo en true para que en móviles se pueda deslizar con el dedo
+        allowTouchMove: true,
         speed: 650,
         spaceBetween: 18,
         slidesPerView: 1.06,
         centeredSlides: false,
         grabCursor: true,
         navigation: {
-          // ✅ IMPORTANTE: Busca las flechas DENTRO de este carrusel específico
           nextEl: el.querySelector('.swiper-button-next'),
           prevEl: el.querySelector('.swiper-button-prev'),
         },
@@ -756,13 +741,129 @@ inputsToWatch.forEach(el => {
     }, 30);
   });
 
-  close && close.addEventListener('click', ()=>{
-    loop = false;
-    if(hideT) clearTimeout(hideT);
-    if(nextT) clearTimeout(nextT);
-    banner.style.display = 'none';
-  });
-
-  document.addEventListener('DOMContentLoaded', showOnce);
-
 })();
+
+// Control del checkbox con comportamiento mejorado
+function setDropoffState() {
+    const chk = document.getElementById('differentDropoff');
+    const dropWrap = document.getElementById('dropoffWrapper');
+    const wrapper = document.getElementById('locationInputsWrapper');
+    const pickSel = document.getElementById('pickupPlace');
+    const dropSel = document.getElementById('dropoffPlace');
+
+    if (!chk || !dropWrap || !wrapper) return;
+
+    const isMobile = window.innerWidth <= 1124;
+    const isChecked = chk.checked;
+
+    if (isMobile) {
+        // MÓVIL
+        if (isChecked) {
+            dropWrap.style.display = 'flex';
+            dropWrap.style.visibility = 'visible';
+            dropWrap.style.opacity = '1';
+            if (dropSel) dropSel.required = true;
+        } else {
+            dropWrap.style.display = 'none';
+            if (dropSel) {
+                dropSel.required = false;
+                if (pickSel) dropSel.value = pickSel.value;
+            }
+        }
+        dropWrap.classList.remove('show-dropoff', 'hidden-dropoff');
+    } else {
+        // ESCRITORIO
+        if (isChecked) {
+            dropWrap.classList.add('show-dropoff');
+            dropWrap.classList.remove('hidden-dropoff');
+            wrapper.classList.remove('dropoff-hidden');
+            if (dropSel) dropSel.required = true;
+        } else {
+            dropWrap.classList.add('hidden-dropoff');
+            dropWrap.classList.remove('show-dropoff');
+            wrapper.classList.add('dropoff-hidden');
+            if (dropSel) {
+                dropSel.required = false;
+                if (pickSel) dropSel.value = pickSel.value;
+            }
+        }
+        // Limpiar estilos inline
+        dropWrap.style.display = '';
+        dropWrap.style.visibility = '';
+        dropWrap.style.opacity = '';
+    }
+}
+
+// Sincronizar valores cuando cambia pickup
+document.addEventListener('DOMContentLoaded', function() {
+    const pickSel = document.getElementById('pickupPlace');
+    const dropSel = document.getElementById('dropoffPlace');
+    const chk = document.getElementById('differentDropoff');
+
+    if (pickSel && dropSel && chk) {
+        pickSel.addEventListener('change', function() {
+            if (!chk.checked && dropSel) {
+                dropSel.value = this.value;
+            }
+        });
+    }
+
+    // Inicializar estado
+    setDropoffState();
+
+    // Evento del checkbox
+    if (chk) {
+        chk.addEventListener('change', setDropoffState);
+    }
+
+    // Evento resize
+    window.addEventListener('resize', function() {
+        setDropoffState();
+    });
+});
+
+document.getElementById("rentalForm").addEventListener("submit", function(e){
+
+    let valid = true;
+
+    const fields = [
+        {id:"pickupPlace", msg:"Ubicación requerida"},
+        {id:"dropoffPlace", msg:"Ubicación requerida"},
+        {id:"pickupDate", msg:"Fecha requerida"},
+        {id:"pickupTime", msg:"Hora requerida"},
+        {id:"dropoffDate", msg:"Fecha requerida"},
+        {id:"dropoffTime", msg:"Hora requerida"}
+    ];
+
+    fields.forEach(field =>{
+
+        const input = document.getElementById(field.id);
+        const container = input.closest(".icon-field");
+
+        container.classList.remove("field-error","field-success");
+
+        const oldError = container.querySelector(".error-msg");
+        if(oldError) oldError.remove();
+
+        if(!input.value){
+
+            const error = document.createElement("span");
+            error.className = "error-msg";
+            error.textContent = field.msg;
+
+            container.appendChild(error);
+            container.classList.add("field-error");
+
+            valid = false;
+
+        }else{
+            container.classList.add("field-success");
+        }
+
+    });
+
+    if(!valid){
+        e.preventDefault();
+    }
+
+});
