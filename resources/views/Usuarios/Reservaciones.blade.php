@@ -1132,7 +1132,6 @@
         <section class="step3-section">
           <div class="step3-title">
             Equipamiento & Servicios
-            <small>máximo 3 por opción</small>
           </div>
 
           <div class="equip-grid">
