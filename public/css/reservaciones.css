@@ -450,6 +450,86 @@ body{
 }
 
 /* ==========================================================
+   BARRA FLOTANTE ULTRA-ESPECÍFICA (Imagen 2)
+========================================================== */
+
+/* Contenedor de la barra */
+.wizard-page[data-current-step="1"] .barra-busqueda {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    background: #ffffff !important;
+    padding: 15px 25px !important;
+    border-radius: 60px !important; /* Super redondeado */
+    box-shadow: 0 15px 45px rgba(0,0,0,0.3) !important;
+    gap: 15px !important;
+    width: 100% !important;
+    max-width: 1100px !important;
+    margin: 40px auto !important;
+}
+
+/* Labels: Forzamos que se vean (el Blade los ocultaba) */
+.form-barra-flotante .field label,
+.form-barra-flotante .field-grupo-fecha > label {
+    display: block !important;
+    text-align: left !important;
+    font-size: 13px !important;
+    color: #444 !important;
+    font-weight: 700 !important;
+    text-transform: none !important;
+    margin-bottom: 4px !important;
+    padding-left: 10px !important;
+}
+
+/* Forzar altura y estilo de los inputs de la barra */
+.form-barra-flotante .ctl input,
+.form-barra-flotante .ctl select,
+.form-barra-flotante .ctl-fecha input,
+.form-barra-flotante .ctl-hora select {
+    height: 46px !important;
+    border: 1px solid #ddd !important;
+    border-radius: 10px !important;
+    background: #f9f9f9 !important;
+    padding-top: 0 !important; /* Reset del floating label */
+    font-size: 14px !important;
+}
+
+/* Botón Siguiente (Rojo vibrante) */
+.btn-buscar-barra {
+    height: 46px !important;
+    border-radius: 10px !important;
+    background: #e20613 !important;
+    color: white !important;
+    font-weight: 700 !important;
+    padding: 0 40px !important;
+    border: none !important;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-buscar-barra:hover {
+    background: #b22222 !important;
+}
+
+/* Ocultar las etiquetas flotantes viejas (las que el JS movía) */
+.form-barra-flotante .flabel {
+    display: none !important;
+}
+
+/* Responsive Móvil para la barra */
+@media (max-width: 980px) {
+    .wizard-page[data-current-step="1"] .barra-busqueda {
+        flex-direction: column !important;
+        border-radius: 20px;
+        padding: 20px;
+        align-items: stretch !important;
+    }
+    .field-boton { margin-top: 15px; text-align: center;}
+    .btn-buscar-barra { width: 100%; }
+}
+
+
+/* ==========================================================
    STEP 2 — GRID 2 COLUMNAS
 ========================================================== */
 .cars{
@@ -667,7 +747,7 @@ body{
   .car-price{ padding-top:0; }
 }
 
-/* ---------- ✅ NUEVO LAYOUT V2 (como tu captura) ---------- */
+/* ---------- NUEVO LAYOUT V2  ---------- */
 .car-card--v2{
   grid-template-columns: 1fr;
   gap:12px;
@@ -774,71 +854,91 @@ body{
    - Tech: debajo
    - Todo izquierda + separación pequeña
 ========================================================== */
-.car-card--v2 .car-mini-specs{
-  margin:0;
-  padding:0;
-  list-style:none;
-
-  display:flex;
-  flex-direction:column;   /* tech debajo */
-  align-items:flex-start;
-  justify-content:flex-start;
-  gap:6px;
+/* Contenedor de Título y Badge de Días */
+.car-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
 }
 
-/* fila horizontal */
-.car-card--v2 .car-specs{
-  margin:0;
-  padding:0;
-  list-style:none;
-
-  display:flex;
-  flex-direction:row;
-  align-items:center;
-  justify-content:flex-start;
-
-  gap:10px;          /* separación pequeña */
-  flex-wrap:nowrap;  /* UNA fila */
-  color:#0f172a;
-  font-weight:900;
+/* --- ESTILO DE ICONOS (PASO 2) --- */
+.car-features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 0;
 }
 
-.car-card--v2 .car-specs li{
+.car-mini-specs {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: row; /* Alineación horizontal */
+  flex-wrap: wrap;    /* Si es muy pequeño el cel, baja el resto */
+  gap: 8px;           /* Espacio entre cada grupo */
+}
+
+.car-mini-specs li {
+  display: flex;
+  align-items: center;
+  gap: 6px;           /* Espacio icono -> texto */
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.car-mini-specs i {
+  color: #0f172a;    /* El color rojo de tu marca */
+  font-size: 15px;
+  width: 18px;       /* Ancho fijo para que no bailen */
+  text-align: center;
+}
+
+/* Estilo para las letras T y A/C */
+.spec-letter {
+  font-weight: 800;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+/* --- CONECTIVIDAD (Apple/Android) --- */
+.car-connect {
+  display: flex;
+  gap: 8px;
+}
+
+.badge-chip{
   display:inline-flex;
   align-items:center;
-  gap:6px;           /* icono+valor pegado */
-  font-size:14px;
-  line-height:1;
-  white-space:nowrap;
+  gap:6px;
+  padding:5px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+  border:1px solid transparent;
+}
+/* Apple CarPlay */
+.badge-chip.carplay{
+  background:#0f172a;
+  color:#fff;
+  border-color:#0f172a;
 }
 
-.car-card--v2 .car-specs i{
-  font-size:16px;
-  opacity:.95;
+.badge-chip.carplay i{
+  color:#fff;
 }
 
-/* debajo de los iconos */
-.car-card--v2 .car-mini-tech{
-  display:flex;
-  flex-direction:row;
-  align-items:center;
-  justify-content:flex-start;
-
-  gap:12px;
-  flex-wrap:nowrap;
-  font-weight:900;
-  color:#0f172a;
+/* Android Auto */
+.badge-chip.android{
+  background:#e8f7ee;
+  color:#1f7a45;
+  border-color:#cceedd;
 }
 
-/* “deschipear” SOLO en V2 */
-.car-card--v2 .car-mini-tech .chip,
-.car-card--v2 .car-mini-tech a,
-.car-card--v2 .car-mini-tech span{
-  background:transparent !important;
-  border:0 !important;
-  box-shadow:none !important;
-  padding:0 !important;
-  border-radius:0 !important;
+.badge-chip.android i{
+  color:#1f7a45;
 }
 
 @media (max-width:560px){
@@ -1799,7 +1899,7 @@ body{
   height:54px;
   padding:0 14px;
   border-radius:14px;
-  border:2px solid #000;
+  border:1.5px solid #9ca3af;
   background:#fff;
   font-weight:900;
   color:#000;
@@ -1840,11 +1940,10 @@ body{
 .sum-form .dob-inline{
   display:flex;
   width:100%;
-  border:2px solid #000 !important;
-  border-radius:14px !important;
-  overflow:hidden;
+  border:1.5px solid #9ca3af;
+  border-radius:14px;
+  overflow:visible;
   background:#fff;
-  box-shadow:none !important;
 }
 .sum-form .dob-inline select{
   flex:1;
@@ -1862,7 +1961,7 @@ body{
   padding:0 10px;
 }
 .sum-form .dob-inline select:not(:last-child){
-  border-right:2px solid #000 !important;
+  border-right:1.5px solid #9ca3af !important;
 }
 .sum-form .dob-inline:focus-within{
   outline:none !important;
@@ -1883,7 +1982,7 @@ body{
   align-items:flex-start;
   gap:10px;
   font-weight:900;
-  color:#111827;
+  color:#0f172a;
   margin:0;
   font-size:13px;
 
@@ -1899,14 +1998,7 @@ body{
   margin-top:3px;
   flex:0 0 auto;
 }
-.sum-form .cbox span{
-  text-transform:none;
-  letter-spacing:0;
-  font-size:13px;
-  font-weight:800;
-  color:#111827;
-  line-height:1.35;
-}
+
 
 @media (max-width:760px){
   .sum-form .sum-personal-grid{ grid-template-columns:1fr; }
@@ -1925,6 +2017,7 @@ body{
   box-shadow:0 16px 34px rgba(178,34,34,.22);
   margin-left:auto;
 }
+
 
 /* ==========================================================
    STEP 4 — RESUMEN (compacto)
@@ -2248,6 +2341,91 @@ body{
 }
 
 /* ==========================================================
+   STEP 4 - ACORDEONES PRECIO
+========================================================== */
+.sum-acc{
+  background:#fff;
+  border:1px solid #eef2f7;
+  border-radius:16px;
+  box-shadow:0 14px 30px rgba(0,0,0,.06);
+  margin-bottom:12px;
+  overflow:hidden;
+}
+
+.sum-acc > summary{
+  list-style:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  padding:14px 18px;
+}
+.sum-acc > summary::-webkit-details-marker{ display:none; }
+
+.sum-acc > .sum-bar{
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  padding:14px 18px;
+  gap:8px;
+}
+
+.sum-bar > span{
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.55px;
+  font-size:13px;
+  color:#0f172a;
+}
+
+.sum-bar > strong{
+  margin-left:auto;
+  margin-right:6px;
+  font-size:15px;
+  font-weight:900;
+  color:#0f172a;
+
+  background:none;
+  border:0;
+  padding:0;
+}
+
+.sum-caret{
+  font-size:14px;
+  transition: transform .2s ease;
+  opacity:.8;
+}
+.sum-acc[open] .sum-caret{
+  transform:rotate(180deg);
+}
+
+.sum-acc-body{
+  padding:12px 18px 16px;
+  border-top:1px solid #f1f5f9;
+}
+
+.sum-acc-body .row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:12px;
+  padding:10px 0;
+  border-top:1px solid #f1f5f9;
+  font-weight:800;
+  font-size:14px;
+  color:#0f172a;
+}
+.sum-acc-body .row:first-child{ border-top:0; }
+
+.sum-acc-body .row > strong{
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.sum-acc-body .muted{
+  color:#6b7280;
+}
+
+/* ==========================================================
    BOTONES GENERALES
 ========================================================== */
 .btn{
@@ -2271,8 +2449,21 @@ body{
 .btn-secondary{ background:#111827; color:#fff; }
 .btn-ghost{ background:#f1f5f9; color:#0f172a; border:1px solid #e5e7eb; }
 
-@media (max-width:560px){
-  .wizard-nav{ flex-direction:column; gap:12px; }
+@media (max-width: 560px) {
+  .wizard-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 70px;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .wizard-nav .btn {
+    flex: 1;
+    padding: 12px 5px !important;
+    font-size: 14px;
+    text-align: center;
+  }
 }
 
 /* ==========================================================
@@ -2306,7 +2497,7 @@ body{
 .modal-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
 
 /* ==========================================================
-   FLATPICKR (visible + anclado)
+   FLATPICKR
 ========================================================== */
 .flatpickr-wrapper{ position:relative; }
 
@@ -2416,144 +2607,7 @@ span.flatpickr-weekday{
 }
 
 /* ==========================================================
-   STEP 1 — más grande SOLO cuando data-current-step="1"
-========================================================== */
-.wizard-page[data-current-step="1"] .wizard-card{
-  width: min(1180px, 96vw);
-  padding: 30px;
-  border-radius: 22px;
-  box-shadow: 0 30px 80px rgba(0,0,0,.26);
-  margin-top:35px;
-}
-.wizard-page[data-current-step="1"] .wizard-head{ margin:0 0 16px; }
-.wizard-page[data-current-step="1"] .wizard-head h2{ font-size:28px; }
-.wizard-page[data-current-step="1"] .wizard-head p{ font-size:20px; }
-.wizard-page[data-current-step="1"] .search-grid{
-  gap:26px;
-  grid-template-columns: 1.25fr 1fr 1fr;
-}
-.wizard-page[data-current-step="1"] .ctl input,
-.wizard-page[data-current-step="1"] .ctl select{
-  height:60px;
-  border-radius:16px;
-}
-
-@media (max-width:980px){
-  .wizard-page[data-current-step="1"] .wizard-card{
-    width: min(980px, 96vw);
-    padding: 24px;
-  }
-  .wizard-page[data-current-step="1"] .wizard-head h2{ font-size:30px; }
-}
-@media (max-width:560px){
-  .wizard-page[data-current-step="1"] .wizard-card{
-    width: min(540px, 94vw);
-    padding: 18px;
-    margin-top:10px;
-  }
-  .wizard-page[data-current-step="1"] .wizard-head h2{ font-size:26px; }
-  .wizard-page[data-current-step="1"] .ctl input,
-  .wizard-page[data-current-step="1"] .ctl select{ height:56px; }
-}
-
-/* ==========================================================
-   PRINT
-========================================================== */
-@page{ size:Letter; margin:12mm; }
-@media print{
-  body{ background:#fff; }
-  .topbar,.wizard-steps{ display:none!important; }
-  .wizard-card{ box-shadow:none; border:1px solid #e5e7eb; background:#fff; }
-}
-
-/* ==========================================================
-   STEP 4 — ACORDEONES PRECIO (LIMPIO / PRO)
-========================================================== */
-.sum-acc{
-  background:#fff;
-  border:1px solid #eef2f7;
-  border-radius:16px;
-  box-shadow:0 14px 30px rgba(0,0,0,.06);
-  margin-bottom:12px;
-  overflow:hidden;
-}
-
-.sum-acc > summary{
-  list-style:none;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  padding:14px 18px;
-}
-.sum-acc > summary::-webkit-details-marker{ display:none; }
-
-.sum-acc > .sum-bar{
-  background:transparent;
-  border:0;
-  box-shadow:none;
-  padding:14px 18px;
-  gap:8px;
-}
-
-.sum-bar > span{
-  font-weight:900;
-  text-transform:uppercase;
-  letter-spacing:.55px;
-  font-size:13px;
-  color:#0f172a;
-}
-
-.sum-bar > strong{
-  margin-left:auto;
-  margin-right:6px;
-  font-size:15px;
-  font-weight:900;
-  color:#0f172a;
-
-  background:none;
-  border:0;
-  padding:0;
-}
-
-.sum-caret{
-  font-size:14px;
-  transition: transform .2s ease;
-  opacity:.8;
-}
-.sum-acc[open] .sum-caret{
-  transform:rotate(180deg);
-}
-
-.sum-acc-body{
-  padding:12px 18px 16px;
-  border-top:1px solid #f1f5f9;
-}
-
-.sum-acc-body .row{
-  display:grid;
-  grid-template-columns:1fr auto;
-  align-items:center;
-  gap:12px;
-  padding:10px 0;
-  border-top:1px solid #f1f5f9;
-  font-weight:800;
-  font-size:14px;
-  color:#0f172a;
-}
-.sum-acc-body .row:first-child{ border-top:0; }
-
-.sum-acc-body .row > strong{
-  font-weight:900;
-  white-space:nowrap;
-}
-
-.sum-acc-body .muted{
-  color:#6b7280;
-}
-
-/* ==========================================================
-   ✅ STEP 4 - ICONOS (SOLO resumen)
-   (Aislado para no pisar Step 2)
+   STEP 4 - ICONOS (resumen)
 ========================================================== */
 .step4-pane .car-mini-specs{
   margin-top:14px;
@@ -2626,80 +2680,21 @@ span.flatpickr-weekday{
 .select2-search--dropdown { display: none !important; }
 
 /* ==========================================================
-   ✅ FIX FINAL — Step 2 V2: specs EN UNA FILA (5 2 1 T|Auto)
-   y CarPlay/Android abajo
+   STEP 4 — TU AUTO
 ========================================================== */
-
-/* 1) La fila de specs (UL) horizontal */
-.car-card--v2 .car-mini-specs{
-  margin:0 !important;
-  padding:0 !important;
-  list-style:none !important;
-
-  display:flex !important;
-  flex-direction:row !important;     /* ✅ lateral */
-  align-items:center !important;
-  justify-content:flex-start !important;
-
-  gap:10px !important;               /* separación pequeña */
-  flex-wrap:nowrap !important;       /* ✅ que NO se vaya hacia abajo */
-}
-
-/* cada item (5, 2, 1, T | Automática) */
-.car-card--v2 .car-mini-specs > li{
-  display:inline-flex !important;
-  align-items:center !important;
-  gap:6px !important;                /* icono + número pegado */
-  white-space:nowrap !important;
-  font-weight:900 !important;
-  color:#0f172a !important;
-  line-height:1 !important;
-  font-size:14px !important;
-}
-
-.car-card--v2 .car-mini-specs > li i{
-  font-size:16px !important;
-  opacity:.95 !important;
-}
-
-/* 2) CarPlay / Android debajo */
-.car-card--v2 .car-mini-tech{
-  display:flex !important;
-  align-items:center !important;
-  justify-content:flex-start !important;
-  gap:12px !important;
-  margin-top:6px !important;         /* ✅ abajo de la fila */
-}
-
-/* (opcional) si no cabe en móvil, entonces sí permite wrap */
-@media (max-width:560px){
-  .car-card--v2 .car-mini-specs{
-    flex-wrap:wrap !important;        /* en móvil sí puede bajar */
-    row-gap:8px !important;
-  }
-}
-/* ==========================================================
-   ✅ STEP 4 — TU AUTO (sum-car) | specs en fila + tech debajo
-   - Quita puntitos/bullets
-   - 5 2 1 T | Automática en una sola fila
-   - CarPlay/Android debajo
-========================================================== */
-
-/* contenedor de la sección TU AUTO (sin cambios agresivos) */
 .page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs{
   margin-top:8px !important;
   padding:0 !important;
   list-style:none !important;
 
   display:flex !important;
-  flex-direction:row !important;      /* ✅ specs en fila */
+  flex-direction:row !important;
   align-items:center !important;
   justify-content:flex-start !important;
-  gap:12px !important;                /* separación pequeña */
-  flex-wrap:nowrap !important;         /* ✅ no baja */
+  gap:12px !important;
+  flex-wrap:nowrap !important;
 }
 
-/* ❌ elimina cualquier bullet/punto “decorativo” que te esté metiendo */
 .page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs::before,
 .page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs::after,
 .page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs li::before,
@@ -2708,7 +2703,6 @@ span.flatpickr-weekday{
   display:none !important;
 }
 
-/* cada item (icono + número / texto) */
 .page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs > li{
   display:inline-flex !important;
   align-items:center !important;
@@ -2720,23 +2714,20 @@ span.flatpickr-weekday{
   font-size:14px !important;
 }
 
-/* iconos */
 .page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs > li i{
   font-size:16px !important;
   opacity:.95 !important;
 }
 
-/* CarPlay / Android debajo (alineado izq) */
 .page.wizard-page[data-current-step="4"] .sum-car .car-mini-tech{
   margin-top:8px !important;
   display:flex !important;
   align-items:center !important;
   justify-content:flex-start !important;
   gap:12px !important;
-  flex-wrap:wrap !important; /* si no cabe, baja bonito */
+  flex-wrap:wrap !important;
 }
 
-/* (opcional) que los chips se vean consistentes y no gigantes */
 .page.wizard-page[data-current-step="4"] .sum-car .car-mini-tech .chip{
   padding:8px 12px !important;
   border-radius:999px !important;
@@ -2744,14 +2735,16 @@ span.flatpickr-weekday{
   font-weight:900 !important;
 }
 
-/* móvil: permite wrap de la fila para que no se rompa */
 @media (max-width:560px){
   .page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs{
     flex-wrap:wrap !important;
     row-gap:10px !important;
   }
 }
-/* Estilos para el Modal de Protecciones */
+
+/* ==========================================================
+   MODAL DE PROTECCIONES
+========================================================== */
 .modal-global-viajero {
   display: none;
   position: fixed;
@@ -2764,7 +2757,6 @@ span.flatpickr-weekday{
   backdrop-filter: blur(2px);
 }
 
-/* La tarjeta del modal */
 .modal-global-content {
   background: #ffffff !important;
   width: 95%;
@@ -2776,7 +2768,6 @@ span.flatpickr-weekday{
   border: none;
 }
 
-/* Título */
 .modal-v-header-title {
   font-weight: 900;
   color: #0f172a;
@@ -2784,7 +2775,6 @@ span.flatpickr-weekday{
   margin-bottom: 0;
 }
 
-/* El Escudo Verde */
 .modal-v-escudo-circulo {
   min-width: 65px;
   height: 65px;
@@ -2810,7 +2800,6 @@ span.flatpickr-weekday{
   line-height: 1.6;
 }
 
-/* Botón de cerrar  */
 .cerrar-modal-v {
   position: absolute;
   top: 15px; right: 20px;
@@ -2820,184 +2809,224 @@ span.flatpickr-weekday{
   transition: color 0.2s;
 }
 .cerrar-modal-v:hover { color: #b22222; }
+
 /* ==========================================================
-   ✅ FIX REAL: car-connect + chips (Step 2 y Step 4)
-   Tu HTML usa: .car-connect y .badge-chip
+   STEP 4 - VALIDACIONES (AISLADAS)
+   - Solo aplican cuando el step es 4
+========================================================= */
+.page.wizard-page[data-current-step="4"] .sum-personal-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    align-items: end;
+}
+
+.page.wizard-page[data-current-step="4"] .field-floating,
+.page.wizard-page[data-current-step="4"] .field-floating-sub,
+.page.wizard-page[data-current-step="4"] .field-dob-container {
+    position: relative;
+    overflow: visible !important;
+}
+
+/* Inputs de texto */
+.page.wizard-page[data-current-step="4"] .field-floating input {
+    width: 100%;
+    padding: 12px 10px;
+    border: 1px solid #6d2f2f;
+    border-radius: 5px;
+    background-color: #fff !important;
+    color: #000;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+}
+
+.page.wizard-page[data-current-step="4"] .field-floating input:placeholder-shown:not(:focus) + label {
+    color: #9ca3af !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+
+.page.wizard-page[data-current-step="4"] .field-floating input:focus + label,
+.page.wizard-page[data-current-step="4"] .field-floating input:not(:placeholder-shown) + label {
+    top: 0 !important;
+    transform: translateY(-50%) !important;
+    font-size: 11px;
+    color: #000 !important;
+    font-weight: 800 !important;
+    text-transform: uppercase;
+    z-index: 110;
+}
+
+.page.wizard-page[data-current-step="4"] .field-floating input:focus,
+.page.wizard-page[data-current-step="4"] .field-floating input:not(:placeholder-shown) {
+    border-color: #000 !important;
+    font-weight: 600;
+}
+
+.page.wizard-page[data-current-step="4"] .field-floating input::placeholder {
+    color: transparent;
+}
+
+/* Fecha de nacimiento (DOB) */
+.page.wizard-page[data-current-step="4"] .field-dob-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 15px;
+    position: relative;
+    overflow: visible !important;
+}
+
+.page.wizard-page[data-current-step="4"] .field-floating-sub {
+    position: relative;
+    flex: 1;
+    overflow: visible !important;
+}
+
+.page.wizard-page[data-current-step="4"] .field-floating-sub label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff !important;
+    padding: 0 4px;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+.page.wizard-page[data-current-step="4"] .field-floating-sub select:focus + label,
+.page.wizard-page[data-current-step="4"] .field-floating-sub select:not(:invalid) + label {
+    top: 0 !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) scale(0.85) !important;
+    color: #000;
+    font-weight: bold;
+    z-index: 120;
+}
+
+.page.wizard-page[data-current-step="4"] .select-dob {
+    background: #fff !important;
+    position: relative;
+    z-index: 5;
+}
+
+/* Select de país */
+.page.wizard-page[data-current-step="4"] .field-floating select:invalid {
+    color: #9ca3af !important;
+    position: relative;
+    z-index: 5;
+}
+
+.page.wizard-page[data-current-step="4"] .field-floating label {
+    position:absolute;
+    left:10px;
+    top:50%;
+    transform:translateY(-50%);
+    background:#fff;
+    padding:0 4px;
+    color:#9ca3af;
+    transition:all .2s ease;
+    pointer-events:none;
+    z-index:1;
+}
+
+.page.wizard-page[data-current-step="4"] .field-floating select:focus {
+    color: transparent !important;
+}
+
+.page.wizard-page[data-current-step="4"] .field-floating select:focus + label,
+.page.wizard-page[data-current-step="4"] .field-floating select:not(:invalid) + label {
+    opacity: 1;
+    z-index: 10;
+    top: 0 !important;
+    transform: translateY(-50%) !important;
+    font-size: 11px;
+    color: #000;
+    font-weight: bold;
+}
+
+.page.wizard-page[data-current-step="4"] .field-floating select:not(:invalid) {
+    color: #000 !important;
+}
+
+.page.wizard-page[data-current-step="4"] .field-floating input:placeholder-shown + label {
+    opacity: 1;
+}
+
+/* ==========================================================
+   VALIDACIÓN - MENSAJES DE ERROR (SOLO STEP 4)
 ========================================================== */
 
-/* contenedor general de features (para que chips queden abajo) */
-.car-features{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  gap:8px;
+/* Contenedores - SIN padding por defecto */
+.page.wizard-page[data-current-step="4"] .field-floating,
+.page.wizard-page[data-current-step="4"] .field-dob-container,
+.page.wizard-page[data-current-step="4"] .cbox {
+    position: relative;
+    margin-bottom: 5px;
 }
 
-/* chips debajo de la fila de specs */
-.car-connect{
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  gap:12px;
-  flex-wrap:wrap;
-  margin-top:6px;
+.page.wizard-page[data-current-step="4"]
+.field-floating.has-error {
+    padding-bottom: 25px;
+    margin-bottom: 20px;
 }
 
-/* chip base */
-.badge-chip{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:8px 12px;
-  border-radius:999px;
-  font-weight:900;
-  font-size:12px;
-  letter-spacing:.2px;
-  border:1px solid #e5e7eb;
-  background:#f3f4f6;
-  color:#0f172a;
-  line-height:1;
+/* DOB y checkbox NO crecen */
+.page.wizard-page[data-current-step="4"]
+.field-dob-container.has-error,
+.page.wizard-page[data-current-step="4"]
+.cbox.has-error {
+    padding-bottom: 0;
+    margin-bottom: 5px;
 }
 
-/* iconito dentro del chip */
-.badge-chip .icon-badge{
-  width:22px;
-  height:22px;
-  border-radius:999px;
-  display:grid;
-  place-items:center;
-  border:1px solid #e5e7eb;
-  background:#fff;
-  font-size:13px;
+/* Mensaje de error - oculto por defecto */
+.page.wizard-page[data-current-step="4"] .error-msg {
+    display: none; /* OCULTO por defecto */
+    position: relative;
+    bottom: 0;
+    left: 0;
+    color: #b22222;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    width: 100%;
+    z-index: 10;
+    pointer-events: none;
 }
 
-/* variantes */
-.badge-chip.badge-apple{
-  background:rgba(15,23,42,.06);
-  border-color:rgba(15,23,42,.14);
-}
-.badge-chip.badge-android{
-  background:rgba(34,197,94,.10);
-  border-color:rgba(34,197,94,.24);
+/* Cuando el contenedor tiene error, mostramos el mensaje */
+.page.wizard-page[data-current-step="4"] .field-floating.has-error .error-msg,
+.page.wizard-page[data-current-step="4"] .field-dob-container.has-error .error-msg,
+.page.wizard-page[data-current-step="4"] .cbox.has-error .error-msg {
+    display: block; /* VISIBLE solo cuando hay error */
 }
 
-/* móvil: que no se rompa */
-@media (max-width:560px){
-  .car-connect{ gap:10px; }
-  .badge-chip{ padding:7px 10px; font-size:12px; }
-}
-/* =========================
-   Modal packs (Protecciones)
-========================= */
-.packs-wrap{
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-  max-height:60vh;
-  overflow:auto;
-  padding-right:6px;
+
+.page.wizard-page[data-current-step="4"] select.field-error {
+    border: 2px solid #b22222 !important;
 }
 
-.pack{
-  border:1px solid #eef2f7;
-  border-radius:14px;
-  background:#fff;
-  overflow:hidden;
+/* Ajustes específicos para DOB */
+.page.wizard-page[data-current-step="4"] .field-dob-container .error-msg {
+    bottom: -2px;
+    left: 4px;
 }
 
-.pack-title{
-  cursor:pointer;
-  padding:12px 14px;
-  font-weight:900;
-  color:#0f172a;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  list-style:none;
-}
-.pack-title::-webkit-details-marker{ display:none; }
-
-.pack-title::after{
-  content:"\f078";
-  font-family:"Font Awesome 6 Free";
-  font-weight:900;
-  font-size:13px;
-  opacity:.7;
-  transition:transform .18s ease;
+/* Ajustes para checkbox */
+.page.wizard-page[data-current-step="4"] .cbox .error-msg {
+    bottom: -5px;
+    left: 28px;
 }
 
-.pack[open] .pack-title::after{
-  transform:rotate(180deg);
-}
-
-.pack-body{
-  border-top:1px solid #f1f5f9;
-  padding:12px 14px 14px;
-}
-
-.pack-body ul{
-  margin:0;
-  padding-left:18px;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-.pack-body li{
-  font-size:13px;
-  line-height:1.45;
-  color:#334155;
-  font-weight:700;
-}
-
-.pack-body strong{
-  color:#0f172a;
-  font-weight:900;
-}
-
-.pack.danger{
-  border-color:rgba(239,68,68,.22);
-  background:rgba(239,68,68,.04);
-}
-/* ===========================
-   FIX ACORDEONES (details/summary)
-   =========================== */
-
-/* Quita marcador nativo */
-details > summary{ list-style:none; }
-details > summary::-webkit-details-marker{ display:none; }
-
-/* Acordeones principales (Tarifa base / Opciones / IVA) */
-.sum-acc .sum-acc-body{
-  display:none !important;
-}
-.sum-acc[open] .sum-acc-body{
-  display:block !important;
-}
-
-/* Packs dentro de Tarifa base */
-.pack .pack-body{
-  display:none !important;
-}
-.pack[open] .pack-body{
-  display:block !important;
-}
-
-/* Asegura que el summary sea clickeable y visible */
-.sum-bar, .pack-title{
-  cursor:pointer;
-  user-select:none;
-}
-
-/* Por si algo lo está recortando */
-.sum-acc-body, .pack-body{
-  overflow:visible;
-}
-
-/* Si tu pack es largo, que no “desborde feo” */
-.pack-body{
-  max-height: 420px;
-  overflow:auto;
-  padding-right: 6px;
+/* Checkbox con error */
+.page.wizard-page[data-current-step="4"] #acepto.field-error {
+    outline: 2px solid #b22222;
+    outline-offset: 2px;
 }

@@ -359,37 +359,8 @@ body.nav-open .topbar{
 /* =========================================================
    FORMULARIO HERO
 ========================================================= */
-.search-card{
-  position:relative;
-  margin:24px auto 0;
-  width:min(1120px,96%);
-  background:var(--paper);
-  border-radius:16px;
-  box-shadow:var(--shadow);
-  z-index:3;
-  padding:14px 18px 16px;
-  max-height:calc(80vh - 100px);
-  overflow:auto;
-}
+
 .search-form{ display:block; }
-
-.search-grid{
-  display:grid;
-  grid-template-columns:repeat(3, minmax(0, 1fr));
-  column-gap:16px;
-  row-gap:14px;
-  align-items:stretch;  
-}
-/* Igualar altura visual de cada columna */
-.sg-col-location,
-.sg-col-datetime{
-  min-width:0;
-  display:grid;
-  grid-template-rows: 28px auto auto;  
-  row-gap:10px;
-  align-content:start;
-}
-
 /* La fila donde van los inputs (caja principal) que crezca parejo */
 .sg-col-location > .field,
 .sg-col-datetime > .field{
@@ -402,7 +373,7 @@ body.nav-open .topbar{
   justify-content:flex-start;
   gap:10px;
   margin:0;
-  min-height: 18px;   
+  min-height: 18px;
 }
 
 .field-title{
@@ -433,20 +404,9 @@ body.nav-open .topbar{
   margin:0;
 }
 
-.sg-col-datetime{
-  min-width:0;
-  display:grid;
-  grid-template-rows: var(--lab-h) auto auto;
-  row-gap:18px;
-  align-content:start;
-}
 
-.sg-col-submit{
-  grid-column:1 / -1;
-  display:flex;
-  align-items:stretch;
-  margin-top:4px;
-}
+
+
 
 .field{
   display:flex;
@@ -565,7 +525,7 @@ input.flatpickr-input{ padding-right:44px; }
   position: relative;
   display:block;
   width:100%;
-  z-index: 2; 
+  z-index: 2;
 }
 .timepicker-ui .timepicker-ui-input{
   cursor: pointer;
@@ -585,7 +545,7 @@ input.flatpickr-input{ padding-right:44px; }
   z-index: 999999 !important;
 }
 
-.cal-ico{ pointer-events:none !important; } 
+.cal-ico{ pointer-events:none !important; }
 .icon-field{ pointer-events:auto; }
 .icon-field input,
 .icon-field select{
@@ -654,8 +614,8 @@ input.flatpickr-input{ padding-right:44px; }
    RESPONSIVOS
 ========================= */
 .info-media{
-  width:100%; 
-  aspect-ratio:16/9;  
+  width:100%;
+  aspect-ratio:16/9;
   border-radius:18px;
   overflow:hidden;
   position:relative; /* */
@@ -667,7 +627,7 @@ input.flatpickr-input{ padding-right:44px; }
   position:absolute;
   inset:0;
 
-  background-size: cover;   
+  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
 
@@ -799,7 +759,7 @@ o-content{
 .modal-actions{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
 
 /* =========================
-   Dropdown 
+   Dropdown
 ========================= */
 .icon-item.dropdown{ position:relative; }
 .dropdown-menu{
@@ -1399,7 +1359,7 @@ o-content{
 }
 
 /* =========================
-   Focus 
+   Focus
 ========================= */
 .btn,
 .btn-primary,
@@ -1432,7 +1392,7 @@ input::-moz-focus-inner{ border:0; }
 .btn, .car-cta, .fleet-btn, a.btn{ -webkit-tap-highlight-color:transparent; }
 
 /* =========================
-   TIMEPICKER UI — VIAJERO THEME 
+   TIMEPICKER UI — VIAJERO THEME
 ========================= */
 .timepicker-ui-modal,
 .timepicker-ui-clock,
@@ -1485,7 +1445,7 @@ input#dropoffTime{
   cursor: pointer;
 }
 /* =====================================================================
-   TIME SELECTS 
+   TIME SELECTS
 ===================================================================== */
 
 .tp-selects{
@@ -1498,8 +1458,8 @@ input#dropoffTime{
 
 .tp-selects select{
   height: var(--ctl-h);
-  border-radius: 10px;             
-  border: 1px solid #d1d5db;         
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
   background: #fff;
   padding: 0 12px;
   font-size: 14px;
@@ -1530,7 +1490,7 @@ input#dropoffTime{
 .time-field{ position: relative; }
 
 .time-field .tp-selects select:first-child{
-  padding-left: 44px !important; 
+  padding-left: 44px !important;
 }
 
 .time-field .tp-selects select:nth-child(2){
@@ -1555,11 +1515,11 @@ input#dropoffTime{
 }
 
 .tp-selects{
-  margin-top: 6px !important; 
-  gap: 8px !important;        
+  margin-top: 6px !important;
+  gap: 8px !important;
 }
 :root{
-  --timeclock-nudge: 4px;  
+  --timeclock-nudge: 4px;
 }
 
 .search-card .time-field.icon-field{
@@ -1571,9 +1531,9 @@ input#dropoffTime{
 }
 
 .search-card .time-field.icon-field::before{
-  content:"\f017"; 
+  content:"\f017";
   font-family:"Font Awesome 6 Free";
-  font-weight:900;
+  font-weight:400;
 
   position:absolute;
   left:12px;
@@ -1604,15 +1564,15 @@ input#dropoffTime{
 }
 
 :root{
-  --sg-head-h: 34px; 
+  --sg-head-h: 34px;
 }
 
 .search-card .sg-col-location,
 .search-card .sg-col-datetime{
   min-width:0;
   display:grid;
-  grid-template-rows: var(--sg-head-h) auto auto; 
-  row-gap: 10px;                                  
+  grid-template-rows: var(--sg-head-h) auto auto;
+  row-gap: 10px;
   align-content:start;
 }
 
@@ -1635,7 +1595,7 @@ input#dropoffTime{
   height: var(--sg-head-h);
   display:flex;
   align-items:center;
-  justify-content:center; 
+  justify-content:center;
   margin:0;
 }
 
@@ -1645,19 +1605,19 @@ input#dropoffTime{
 }
 
 :root{
-  --loc-shift: -12px;   
-  --dt-shift:  10px;   
+  --loc-shift: -12px;
+  --dt-shift:  10px;
 }
 
 .search-card .sg-col-location{
-  margin-top: var(--loc-shift) !important; 
+  margin-top: var(--loc-shift) !important;
 }
 .search-card .sg-col-datetime{
-  margin-top: var(--dt-shift) !important;   
+  margin-top: var(--dt-shift) !important;
 }
 .search-card .sg-col-location .field.hidden{
-  display: flex !important;        
-  visibility: hidden !important;    
+  display: flex !important;
+  visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
 }
@@ -1671,8 +1631,8 @@ input#dropoffTime{
 }
 
 .search-card .sg-col-location .hidden{
-  display: block !important;         
-  visibility: hidden !important;     
+  display: block !important;
+  visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
 }
@@ -1715,7 +1675,7 @@ input#dropoffTime{
   .search-grid{
     grid-template-columns: 1fr !important;
     align-items: start !important;
-    row-gap: 16px !important; 
+    row-gap: 16px !important;
   }
 
   .search-card .sg-col-location,
@@ -1725,7 +1685,7 @@ input#dropoffTime{
   }
 
   .search-card .field{
-    margin: 0 0 12px !important;   
+    margin: 0 0 12px !important;
   }
   .search-card .field:last-child{
     margin-bottom: 0 !important;
@@ -1747,8 +1707,8 @@ input#dropoffTime{
 
   .search-card .actions button{
     width: 100% !important;
-    padding: 14px 18px !important;  
-    margin-top: 6px !important;    
+    padding: 14px 18px !important;
+    margin-top: 6px !important;
   }
 }
 /* =========================================================
@@ -1771,7 +1731,7 @@ input.flatpickr-input{
   }
 }
 /* =========================================================
-   iOS FIX 
+   iOS FIX
 ========================================================= */
 @supports (-webkit-touch-callout: none){
 
@@ -1791,7 +1751,7 @@ input.flatpickr-input{
   }
 }
 /* =========================================================
-   FLATPICKR — Calendario 
+   FLATPICKR — Calendario
 ========================================================= */
 
 :root{
@@ -1811,7 +1771,7 @@ input.flatpickr-input{
   :root{ --fp-scale: 1.35; }
 }
 /* =========================================================
-   FLATPICKR — Calendario + RESPONSIVO 
+   FLATPICKR — Calendario + RESPONSIVO
 ========================================================= */
 
 /* Desktop */
@@ -1852,7 +1812,7 @@ input.flatpickr-input{
   }
 }
 /* =========================================================
-   FLATPICKR — RESPONSIVO 
+   FLATPICKR — RESPONSIVO
 ========================================================= */
 
 /* Desktop  */
@@ -1861,7 +1821,7 @@ input.flatpickr-input{
 }
 
 .flatpickr-calendar{
-  max-width: calc(100vw - 24px) !important; 
+  max-width: calc(100vw - 24px) !important;
   box-sizing: border-box !important;
 }
 
@@ -1882,7 +1842,7 @@ input.flatpickr-input{
     top: 50% !important;
     bottom: auto !important;
 
-    transform: translateY(-50%) !important; 
+    transform: translateY(-50%) !important;
     transform-origin: center !important;
 
     width: auto !important;
@@ -1916,11 +1876,11 @@ input.flatpickr-input{
   }
 }
 /* =========================================================
-   FLATPICKR — SOLO RESPONSIVO 
+   FLATPICKR — SOLO RESPONSIVO
 ========================================================= */
 
 .flatpickr-calendar{
-  max-width: calc(100vw - 24px) !important;  
+  max-width: calc(100vw - 24px) !important;
   box-sizing: border-box !important;
 }
 
@@ -1932,8 +1892,8 @@ input.flatpickr-input{
     top: 50% !important;
     bottom: auto !important;
     transform: translateY(-50%) !important;
-    max-height: 86vh !important;   
-    overflow: auto !important;      
+    max-height: 86vh !important;
+    overflow: auto !important;
     -webkit-overflow-scrolling: touch;
     z-index: 999999 !important;
   }
@@ -1946,11 +1906,11 @@ input.flatpickr-input{
   }
 }
 /* =========================================================
-   FLATPICKR 
+   FLATPICKR
 ========================================================= */
 
 .flatpickr-calendar.open{
-  width: min(calc(100vw - 24px), 420px) !important;  
+  width: min(calc(100vw - 24px), 420px) !important;
 }
 
 .flatpickr-calendar .flatpickr-innerContainer,
@@ -1975,13 +1935,13 @@ input.flatpickr-input{
 }
 @media (max-width:560px){
   .search-card .sg-col-location .location-head{
-    margin-top: -8px !important; 
+    margin-top: -8px !important;
   }
 }
 @media (max-width:560px){
   .search-card .sg-col-location .location-head .field-title{
     position: relative;
-    top: -8px; 
+    top: -8px;
   }
 }
 @media (max-width:560px){
@@ -2079,4 +2039,1028 @@ input.flatpickr-input{
 /* SOLO PayPal */
 .payments-logos img[src*="paypal"]{
   height:42px;
+}
+/* ============================================================
+    ESCRITORIO (>= 1125px)
+============================================================ */
+@media (min-width: 1125px) {
+
+    :root {
+        --title-height: 30px;
+        --title-margin: 8px;
+        --input-height: 48px;
+        --border-radius: 8px;
+        --brand: #b22222;
+    }
+
+    #miBuscador.search-card {
+        width: 94vw !important;
+        max-width: 1200px !important;
+        margin-left: 50% !important;
+        transform: translateX(-50%) !important;
+        padding: 20px 25px !important;
+        background: #f8f8f8 !important;
+        border-radius: 12px !important;
+        margin-top: 50px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* ===== GRID PRINCIPAL ===== */
+    #miBuscador .search-grid {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: flex-end !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+
+    /* ===== COLUMNA 1: LUGAR DE RENTA ===== */
+    .sg-col-location {
+        flex: 1.5 !important;
+        min-width: 280px !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .location-head {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        height: var(--title-height) !important;
+        margin-bottom: var(--title-margin) !important;
+    }
+
+    .location-head .field-title {
+        font-size: 14px !important;
+        font-weight: 800 !important;
+        color: #333 !important;
+        text-transform: uppercase !important;
+        line-height: var(--title-height) !important;
+        margin: 0 !important;
+    }
+
+    .inline-check {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        font-size: 12px !important;
+        color: #555 !important;
+        white-space: nowrap !important;
+        line-height: var(--title-height) !important;
+        height: var(--title-height) !important;
+    }
+
+    .inline-check input[type="checkbox"] {
+        width: 14px !important;
+        height: 14px !important;
+        accent-color: var(--brand) !important;
+        margin: 0 !important;
+    }
+
+    /* ===== WRAPER DE SELECTS ===== */
+    .location-inputs-wrapper {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        width: 100% !important;
+        height: var(--input-height) !important;
+    }
+
+    .location-inputs-wrapper .field {
+        flex: 1 !important;
+        position: relative !important;
+        height: var(--input-height) !important;
+    }
+
+    .location-inputs-wrapper select {
+        width: 100% !important;
+        height: var(--input-height) !important;
+        padding: 0 8px 0 12px !important;
+        border: 1px solid #ddd !important;
+        border-radius: var(--border-radius) !important;
+        font-size: 13px !important;
+        background: white !important;
+        box-sizing: border-box !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 10px center !important;
+        background-size: 12px !important;
+    }
+
+    /* OCULTAR SOLO LOS ICONOS DE LOS SELECTS DE UBICACIÓN */
+    .location-inputs-wrapper .field .field-icon {
+        display: none !important;
+    }
+
+    /* ===== CONTROL DEL CHECKBOX ===== */
+    #dropoffWrapper {
+        flex: 1 !important;
+        transition: all 0.3s ease !important;
+        height: var(--input-height) !important;
+    }
+
+    #dropoffWrapper.hidden-dropoff {
+        display: none !important;
+    }
+
+    /* ===== COLUMNA DE FECHA/HORA ===== */
+    .sg-col-datetime {
+        flex: 2.2 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 12px !important;
+    }
+
+    .sg-col-datetime .field {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-end !important;
+    }
+
+    .solo-responsivo-izq {
+        display: block !important;
+        height: var(--title-height) !important;
+        margin-bottom: var(--title-margin) !important;
+        font-size: 14px !important;
+        font-weight: 800 !important;
+        color: #333 !important;
+        text-transform: uppercase !important;
+        line-height: var(--title-height) !important;
+        white-space: nowrap !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    .datetime-row {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        width: 100% !important;
+        min-height: var(--input-height) !important;
+    }
+
+    .dt-field {
+        flex: 1 !important;
+        position: relative !important;
+        height: var(--input-height) !important;
+    }
+
+    .dt-field input {
+        width: 100% !important;
+        height: var(--input-height) !important;
+        padding: 0 8px 0 36px !important;
+        border: 1px solid #ddd !important;
+        border-radius: var(--border-radius) !important;
+        font-size: 13px !important;
+        background: white !important;
+        box-sizing: border-box !important;
+        line-height: normal !important;
+    }
+
+    /* ===== ESTILOS PARA SELECTS DE HORA (GENERADOS POR JS) ===== */
+    .tp-selects {
+        height: var(--input-height) !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        position: relative !important;
+    }
+
+    .tp-selects select {
+        width: 100% !important;
+        height: var(--input-height) !important;
+        padding: 0 8px 0 36px !important;
+        border: 1px solid #ddd !important;
+        border-radius: var(--border-radius) !important;
+        font-size: 13px !important;
+        background: white !important;
+        box-sizing: border-box !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 10px center !important;
+        background-size: 12px !important;
+        line-height: normal !important;
+    }
+
+    /* Para que el placeholder "HORA" se vea bien */
+    .tp-selects select option:first-child {
+        color: #999 !important;
+    }
+
+    /* ===== ICONOS - VERSIÓN CORREGIDA ===== */
+    .dt-field .field-icon {
+        position: absolute !important;
+        left: 12px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        color: #999 !important;
+        font-size: 14px !important;
+        z-index: 3 !important;
+        pointer-events: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 16px !important;
+        height: 16px !important;
+        /* Eliminar cualquier margin o padding que pueda afectar */
+        margin: 0 !important;
+        padding: 0 !important;
+        line-height: 1 !important;
+    }
+
+    /* Asegurar que los contenedores no interfieran con la posición absoluta */
+    .dt-field {
+        position: relative !important;
+        height: var(--input-height) !important;
+        /* Eliminar flex que pueda causar problemas */
+        display: block !important;
+    }
+
+    /* El contenedor del select debe mantener el flujo normal */
+    .tp-selects {
+        position: relative !important;
+        display: block !important;
+    }
+
+    /* Mantener la estructura del datetime-row */
+    .datetime-row {
+        align-items: stretch !important;
+    }
+
+    /* Ajuste para el contenedor del campo */
+    .sg-col-datetime .field {
+        height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* ===== BOTÓN BUSCAR ===== */
+    .sg-col-submit {
+        flex: 0.35 !important;
+        min-width: 90px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-end !important;
+    }
+
+    .sg-col-submit::before {
+        content: "";
+        display: block !important;
+        width: 100% !important;
+        height: calc(var(--title-height) + var(--title-margin)) !important;
+        visibility: hidden !important;
+    }
+
+    .actions {
+        height: var(--input-height) !important;
+        width: 100% !important;
+    }
+
+    .actions button {
+        width: 100% !important;
+        height: var(--input-height) !important;
+        background: var(--brand) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: var(--border-radius) !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        text-transform: uppercase !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important;
+        white-space: nowrap !important;
+        padding: 0 8px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* ===== ALINEACIÓN CONSISTENTE ===== */
+    .location-inputs-wrapper,
+    .datetime-row,
+    .actions {
+        height: var(--input-height) !important;
+        margin: 0 !important;
+    }
+
+    .field, .dt-field {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .location-head,
+    .solo-responsivo-izq {
+        height: var(--title-height) !important;
+        margin-bottom: var(--title-margin) !important;
+        box-sizing: border-box !important;
+    }
+}
+/* ============================================================
+    ESCRITORIO (>= 1125px) - SIN CAMBIOS
+============================================================ */
+@media (min-width: 1125px) {
+
+    :root {
+        --title-height: 30px;
+        --title-margin: 8px;
+        --input-height: 48px;
+        --border-radius: 8px;
+        --brand: #b22222;
+    }
+
+   #miBuscador.search-card {
+    width: 94vw !important;
+    max-width: 1200px !important;
+    margin-left: 50% !important;
+    transform: translateX(-50%) !important;
+    padding: 30px 25px 20px !important;  /* 👈 Aumentado padding-top de 20px a 30px */
+    background: #f8f8f8 !important;
+    border-radius: 12px !important;
+    margin-top: 70px !important;  /* 👈 Aumentado de 50px a 70px */
+    box-sizing: border-box !important;
+}
+
+/* ===== GRID PRINCIPAL ===== */
+#miBuscador .search-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    gap: 10px !important;
+    width: 100% !important;
+}
+
+    /* ===== COLUMNA 1: LUGAR DE RENTA ===== */
+    .sg-col-location {
+        flex: 1.5 !important;
+        min-width: 280px !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    .location-head {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        height: var(--title-height) !important;
+        margin-bottom: var(--title-margin) !important;
+    }
+
+    .location-head .field-title {
+        font-size: 14px !important;
+        font-weight: 800 !important;
+        color: #333 !important;
+        text-transform: uppercase !important;
+        line-height: var(--title-height) !important;
+        margin: 0 !important;
+    }
+
+    .inline-check {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        font-size: 12px !important;
+        color: #555 !important;
+        white-space: nowrap !important;
+        line-height: var(--title-height) !important;
+        height: var(--title-height) !important;
+    }
+
+    .inline-check input[type="checkbox"] {
+        width: 14px !important;
+        height: 14px !important;
+        accent-color: var(--brand) !important;
+        margin: 0 !important;
+    }
+
+    /* ===== WRAPER DE SELECTS ===== */
+    .location-inputs-wrapper {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        width: 100% !important;
+        height: var(--input-height) !important;
+    }
+
+    .location-inputs-wrapper .field {
+        flex: 1 !important;
+        position: relative !important;
+        height: var(--input-height) !important;
+    }
+
+    .location-inputs-wrapper select {
+        width: 100% !important;
+        height: var(--input-height) !important;
+        padding: 0 8px 0 12px !important;
+        border: 1px solid #ddd !important;
+        border-radius: var(--border-radius) !important;
+        font-size: 13px !important;
+        background: white !important;
+        box-sizing: border-box !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 10px center !important;
+        background-size: 12px !important;
+    }
+
+    /* OCULTAR SOLO LOS ICONOS DE LOS SELECTS DE UBICACIÓN */
+    .location-inputs-wrapper .field .field-icon {
+        display: none !important;
+    }
+
+    /* ===== CONTROL DEL CHECKBOX ===== */
+    #dropoffWrapper {
+        flex: 1 !important;
+        transition: all 0.3s ease !important;
+        height: var(--input-height) !important;
+    }
+
+    #dropoffWrapper.hidden-dropoff {
+        display: none !important;
+    }
+
+    /* ===== COLUMNA DE FECHA/HORA ===== */
+    .sg-col-datetime {
+        flex: 2.2 !important;
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 12px !important;
+    }
+
+    .sg-col-datetime .field {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-end !important;
+    }
+
+    .solo-responsivo-izq {
+        display: block !important;
+        height: var(--title-height) !important;
+        margin-bottom: var(--title-margin) !important;
+        font-size: 14px !important;
+        font-weight: 800 !important;
+        color: #333 !important;
+        text-transform: uppercase !important;
+        line-height: var(--title-height) !important;
+        white-space: nowrap !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    .datetime-row {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        width: 100% !important;
+        height: var(--input-height) !important;
+    }
+
+    .dt-field {
+        flex: 1 !important;
+        position: relative !important;
+        height: var(--input-height) !important;
+    }
+
+    .dt-field input {
+        width: 100% !important;
+        height: var(--input-height) !important;
+        padding: 0 8px 0 36px !important;
+        border: 1px solid #ddd !important;
+        border-radius: var(--border-radius) !important;
+        font-size: 13px !important;
+        background: white !important;
+        box-sizing: border-box !important;
+    }
+
+    /* MANTENER LOS ICONOS DE LOS CAMPOS DE FECHA/HORA */
+    .dt-field .field-icon {
+        position: absolute !important;
+        left: 12px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        color: #999 !important;
+        font-size: 14px !important;
+        z-index: 2 !important;
+        pointer-events: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 16px !important;
+        height: 16px !important;
+    }
+
+    /* ===== BOTÓN BUSCAR ===== */
+    .sg-col-submit {
+        flex: 0.35 !important;
+        min-width: 90px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-end !important;
+    }
+
+    .sg-col-submit::before {
+        content: "";
+        display: block !important;
+        width: 100% !important;
+        height: calc(var(--title-height) + var(--title-margin)) !important;
+        visibility: hidden !important;
+    }
+
+    .actions {
+        height: var(--input-height) !important;
+        width: 100% !important;
+    }
+
+    .actions button {
+        width: 100% !important;
+        height: var(--input-height) !important;
+        background: var(--brand) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: var(--border-radius) !important;
+        font-weight: 700 !important;
+        font-size: 13px !important;
+        text-transform: uppercase !important;
+        cursor: pointer !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important;
+        white-space: nowrap !important;
+        padding: 0 8px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* ===== ALINEACIÓN CONSISTENTE ===== */
+    .location-inputs-wrapper,
+    .datetime-row,
+    .actions {
+        height: var(--input-height) !important;
+        margin: 0 !important;
+    }
+
+    .field, .dt-field {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .location-head,
+    .solo-responsivo-izq {
+        height: var(--title-height) !important;
+        margin-bottom: var(--title-margin) !important;
+        box-sizing: border-box !important;
+    }
+
+}
+
+/* ============================================================
+    TABLET Y MÓVIL (max-width: 1124px) - MISMO LAYOUT
+============================================================ */
+@media (max-width: 1124px) {
+
+    /* ===== CONTENEDOR PRINCIPAL ===== */
+    #miBuscador.search-card {
+        display: none;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 99999 !important;
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 100px 20px 40px !important;
+        overflow-y: auto !important;
+        border-radius: 0 !important;
+    }
+
+    #miBuscador.search-card.active {
+        display: block !important;
+        padding-top: 60px !important;
+    }
+
+    /* ===== BOTÓN DE CERRAR ===== */
+    .btn-close {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: fixed !important;
+        top: 50px !important;
+        right: 25px !important;
+        z-index: 100002 !important;
+        width: 35px !important;
+        height: 35px !important;
+        background: #ffffff !important;
+        border: 1px solid var(--brand) !important;
+        border-radius: 50% !important;
+        cursor: pointer !important;
+    }
+
+    .btn-close::before {
+        content: "×" !important;
+        display: block !important;
+        font-size: 24px !important;
+        font-weight: 400 !important;
+        color: var(--brand) !important;
+        line-height: 1 !important;
+        transform: translateY(-1px) !important;
+    }
+
+    /* Ocultar elementos cuando el buscador está activo */
+    body:has(#miBuscador.search-card.active) header,
+    body:has(#miBuscador.search-card.active) .navbar,
+    body:has(#miBuscador.search-card.active) .header-rojo,
+    body:has(#miBuscador.search-card.active) .social-fab,
+    body:has(#miBuscador.search-card.active) .fab-main,
+    body:has(#miBuscador.search-card.active) .fab-item {
+        display: none !important;
+    }
+
+    /* ===== GRID ===== */
+    .search-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+
+    .sg-col {
+        width: 100% !important;
+    }
+
+    /* ===== TÍTULOS ALINEADOS A LA IZQUIERDA ===== */
+    .sg-col .field-title,
+    .sg-col .solo-responsivo-izq,
+    .sg-col.location-head .field-title {
+        display: block !important;
+        font-size: 13px !important;
+        font-weight: 800 !important;
+        color: #000 !important;
+        text-transform: uppercase !important;
+        margin: 15px 0 5px !important;
+        text-align: left !important;
+        width: 100% !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    /* Título LUGAR DE RENTA */
+    .sg-col-location .location-head {
+        display: flex !important;
+        justify-content: flex-start !important;
+        gap: 15px !important;
+        margin-bottom: 5px !important;
+    }
+
+    .sg-col-location .location-head .field-title {
+        margin: 0 !important;
+        font-size: 13px !important;
+        text-align: left !important;
+    }
+
+    /* Checkbox */
+    .sg-col-location .inline-check {
+        margin: 0 !important;
+        white-space: nowrap !important;
+    }
+
+    .inline-check input[type="checkbox"] {
+        width: 16px !important;
+        height: 16px !important;
+        accent-color: var(--brand) !important;
+    }
+
+    /* Títulos de PICK-UP y DEVOLUCIÓN */
+    .sg-col-datetime .solo-responsivo-izq {
+        text-align: left !important;
+        margin: 15px 0 5px !important;
+        padding-left: 0 !important;
+    }
+
+    /* ===== INPUTS ===== */
+    .field select,
+    .field input[type="text"],
+    .dt-field input,
+    .dt-field select,
+    .time-field select {
+        width: 100% !important;
+        height: 50px !important;
+        border: 1px solid var(--brand) !important;
+        border-radius: 6px !important;
+        padding-left: 45px !important;
+        font-size: 16px !important;
+        background: white !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Iconos */
+    .field-icon {
+        position: absolute !important;
+        left: 14px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        color: #999 !important;
+        font-size: 16px !important;
+        z-index: 2 !important;
+        pointer-events: none !important;
+    }
+
+    /* Wrapper de selects */
+    .location-inputs-wrapper {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+        width: 100% !important;
+    }
+
+    .location-inputs-wrapper .field {
+        width: 100% !important;
+        position: relative !important;
+    }
+
+    /* Control de devolución */
+    #dropoffWrapper {
+        display: none !important;
+        width: 100% !important;
+    }
+
+    #dropoffWrapper[style*="display: flex"] {
+        display: flex !important;
+    }
+
+    /* Filas de fecha/hora */
+    .datetime-row {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 10px !important;
+        width: 100% !important;
+        align-items: flex-end !important;
+    }
+
+    .datetime-row .dt-field,
+    .datetime-row .time-field {
+        flex: 1 !important;
+        min-width: 0 !important;
+        position: relative !important;
+    }
+
+    /* Botón buscar */
+    .sg-col-submit .actions {
+        margin-top: 15px !important;
+    }
+
+    .sg-col-submit button {
+        width: 100% !important;
+        height: 55px !important;
+        background: var(--brand) !important;
+        color: white !important;
+        font-weight: bold !important;
+        border-radius: 8px !important;
+        border: none !important;
+        font-size: 16px !important;
+        cursor: pointer !important;
+    }
+
+    /* Hero icons */
+    .hero-icons {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 45px !important;
+        padding: 40px 20px !important;
+        width: 100% !important;
+    }
+
+    .hero-icons .icon-item {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        width: 100% !important;
+        max-width: 280px !important;
+        text-align: center !important;
+    }
+
+    .hero-icons .icon-item i {
+        font-size: 50px !important;
+        margin-bottom: 12px !important;
+        color: #ffffff !important;
+    }
+
+    .hero-icons .icon-item span {
+        font-size: 19px !important;
+        font-weight: 600 !important;
+        color: #ffffff !important;
+    }}
+/* ============================================================
+    ELIMINAR ICONOS DE UBICACIÓN Y UNIFICAR ICONOS DE FECHA/HORA
+============================================================ */
+
+/* Eliminar iconos solo de los campos de ubicación (TODOS LOS DISPOSITIVOS) */
+.location-inputs-wrapper .field .field-icon {
+    display: none !important;
+}
+
+/* Ajustar el padding de los selects de ubicación (TODOS LOS DISPOSITIVOS) */
+.location-inputs-wrapper select,
+.location-inputs-wrapper input {
+    padding-left: 12px !important;
+}
+
+/* ===== ESTILOS UNIFICADOS PARA TODOS LOS ICONOS (FECHA Y HORA) ===== */
+
+/* 1️⃣ ICONO DE FECHA - CORREGIDO Y VISIBLE */
+.dt-field .field-icon {
+    display: flex !important;           /* 👈 Hacerlo visible */
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 16px !important;
+    color: #999 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: none !important;
+    z-index: 3 !important;
+}
+
+/* 2️⃣ ICONO DE HORA (pseudo-elemento) - BAJADO UN POCO */
+.search-card .time-field.icon-field::before {
+    content: "\f017" !important;
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 400 !important;
+
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(calc(-50% + 2px)) !important; /* 👈 BAJADO 2px */
+
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 16px !important;
+
+    color: #999 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: none !important;
+    z-index: 99999 !important;
+}
+
+/* Ajustar padding de TODOS los inputs/selects de fecha/hora */
+.dt-field input,
+.dt-field select,
+.tp-selects select {
+    padding-left: 42px !important;
+    padding-right: 12px !important;
+    text-indent: 0 !important;
+    height: 50px !important;
+}
+
+/* Asegurar posicionamiento relativo en contenedores */
+.dt-field,
+.tp-selects,
+.time-field.icon-field {
+    position: relative !important;
+}
+
+/* Ocultar SOLO iconos conflictivos (no el de fecha) */
+.search-card .time-field.icon-field .cal-ico,
+.search-card .time-field.icon-field .field-icon {
+    display: none !important;
+}
+
+/* Ocultar el wrapper de dropoff cuando no está activo */
+#dropoffWrapper[style*="display: none"] {
+    display: none !important;
+}
+
+/* Ajustes para el layout cuando dropoff está oculto */
+.location-inputs-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+/* ============================================================
+                ALERTAS
+============================================================ */
+
+/* =========================
+   ERROR - BORDE INFERIOR MÁS GRUESO
+========================= */
+.icon-field.field-error,
+.dt-field.field-error{
+    box-shadow: 0 0 0 2px #e53935, 0 4px 0 0 #e53935;  /* 👈 Borde inferior extra */
+    border-radius:8px;
+}
+
+/* =========================
+   CORRECTO - BORDE INFERIOR MÁS GRUESO
+========================= */
+.icon-field.field-success,
+.dt-field.field-success{
+    box-shadow: 0 0 0 2px #43a047, 0 4px 0 0 #43a047;  /* 👈 Borde inferior extra */
+    border-radius:8px;
+}
+
+/* quitar bordes internos */
+.icon-field input,
+.icon-field select,
+.dt-field input{
+    border:none;
+    outline:none;
+}
+
+/* evitar cortes y permitir mensaje abajo */
+.icon-field,
+.dt-field{
+    overflow:visible;
+    box-sizing:border-box;
+    transition:box-shadow .2s ease;
+    display:flex;
+    flex-direction:column;
+}
+
+/* icono + input alineados */
+.icon-field > .field-icon{
+    position:absolute;
+}
+
+/* =========================
+   MENSAJES DE ERROR
+========================= */
+.error-msg{
+    color:#e53935;
+    font-size:12px;
+    margin-top:4px;
+    font-weight:500;
+}
+/* subir un poco el mensaje en los selects de ubicación */
+.location-inputs-wrapper .error-msg{
+    margin-top:0px;
+}
+
+/* ============================================================
+   RESPONSIVO BUSCADOR
+============================================================ */
+
+
+@media (max-width:768px){
+
+    /* columnas una debajo de otra */
+    .search-grid{
+        display:flex !important;
+        flex-direction:column;
+        gap:20px;
+    }
+
+    /* inputs de ubicación */
+    .location-inputs-wrapper{
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        width:100%;
+    }
+
+    .location-inputs-wrapper .field{
+        width:100%;
+    }
+
+    /* fecha y hora alineados */
+    .datetime-row{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:12px;
+        width:100%;
+    }
+
+    .dt-field{
+        width:100%;
+    }
+
+    /* botón grande */
+    .sg-col-submit{
+        width:100%;
+    }
+
+    .sg-col-submit button{
+        width:100%;
+        height:52px;
+        font-size:16px;
+    }
+
 }

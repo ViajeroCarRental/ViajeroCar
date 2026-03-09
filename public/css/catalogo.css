@@ -1,4 +1,4 @@
-:root{ 
+:root{
   --brand:#b22222;
   --brand-dark:#8b1d1a;
   --ink:#0f172a;
@@ -131,12 +131,12 @@ body{
 .hero{
   position:relative;
   min-height: clamp(480px, 78vh, 860px);
-  height: auto;   
+  height: auto;
   margin-bottom:30px;
   overflow:visible;
 }
-.hero-bg{ 
-  position:absolute; 
+.hero-bg{
+  position:absolute;
   inset:0;
   overflow:hidden;
  }
@@ -161,7 +161,7 @@ body{
   max-width:1200px;
   margin:0 auto;
 
-  padding: 50px 16px 28px; 
+  padding: 50px 16px 28px;
 }
 
 .hero-title{
@@ -171,7 +171,7 @@ body{
   line-height:1.02;
   text-transform:uppercase;
   letter-spacing:1px;
-  margin: 10px 0 14px; 
+  margin: 10px 0 14px;
 }
 .chips{
   display:flex;
@@ -416,6 +416,12 @@ body{
 .car-card .car-specs i{
   font-size:17px;
   color:#111827;
+}
+/*copo de nieve*/
+.car-specs li i.fa-snowflake {
+    color: #111827;
+    margin-right: 5px;
+    font-size: 1.1em;
 }
 
 /* connect (iconos minimal) */
@@ -805,3 +811,4 @@ body{
     cursor: default;
   }
 }
+
