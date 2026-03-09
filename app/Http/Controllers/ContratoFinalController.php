@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Spatie\Browsershot\Browsershot;
 use PhpOffice\PhpWord\TemplateProcessor;
 use App\Mail\ContratoFinalMail;
 
@@ -40,6 +40,22 @@ class ContratoFinalController extends Controller
         if (!$reservacion) {
             return back()->with('error', 'Reservación no encontrada.');
         }
+
+        // ✅ DOB fallback: si la reserva NO tiene fecha_nacimiento,
+// entonces tomarla de contrato_documento (identificacion)
+if (empty($reservacion->fecha_nacimiento)) {
+
+    $docIdentTitular = DB::table('contrato_documento')
+        ->where('id_contrato', $idContrato)
+        ->where('tipo', 'identificacion')
+        ->whereNotNull('fecha_nacimiento')
+        ->orderBy('id_documento', 'asc') // agarre el primero registrado
+        ->first();
+
+    if ($docIdentTitular) {
+        $reservacion->fecha_nacimiento = $docIdentTitular->fecha_nacimiento;
+    }
+}
 
         // 3️⃣ Licencia
         $licencia = DB::table('contrato_documento')
@@ -110,6 +126,7 @@ class ContratoFinalController extends Controller
             'extras',
             'subtotal',
             'totalFinal'
+
         ));
     }
 
@@ -160,6 +177,22 @@ class ContratoFinalController extends Controller
     if (!$reservacion || empty($reservacion->email_cliente)) {
         return response()->json(['ok' => false, 'msg' => 'Correo del cliente no disponible']);
     }
+
+    // ✅ DOB fallback: si la reserva NO tiene fecha_nacimiento,
+// entonces tomarla de contrato_documento (identificacion)
+if (empty($reservacion->fecha_nacimiento)) {
+
+    $docIdentTitular = DB::table('contrato_documento')
+        ->where('id_contrato', $id) // $id es id_contrato
+        ->where('tipo', 'identificacion')
+        ->whereNotNull('fecha_nacimiento')
+        ->orderBy('id_documento', 'asc')
+        ->first();
+
+    if ($docIdentTitular) {
+        $reservacion->fecha_nacimiento = $docIdentTitular->fecha_nacimiento;
+    }
+}
 
     // 3️⃣ LICENCIA (por si la quieres usar en el correo)
     $licencia = DB::table('contrato_documento')
@@ -234,30 +267,84 @@ if ($firmaAviso) {
     // ⚠️ MUY IMPORTANTE: también actualizar el objeto que se manda al mailable
     $contrato->firma_aviso = $firmaAviso;
 }
+// ✅ Releer contrato para traer firma_cliente/firma_arrendador/firma_aviso actualizados
+$contrato = DB::table('contratos')->where('id_contrato', $id)->first();
+// ======================================================
+// ✅ DATOS HOJA 2: lugar/fecha + arrendador/arrendatario
+// ======================================================
+\Carbon\Carbon::setLocale('es');
+
+// Lugar (sucursal retiro)
+$lugarFirma = $reservacion->sucursal_retiro_nombre
+    ?? '—';
+
+// Fecha inicio reserva -> día/mes/año
+$fechaInicio = !empty($reservacion->fecha_inicio)
+    ? \Carbon\Carbon::parse($reservacion->fecha_inicio)
+    : null;
+
+$diaFirma  = $fechaInicio ? $fechaInicio->format('d') : '—';
+$mesFirma  = $fechaInicio ? ucfirst($fechaInicio->translatedFormat('F')) : '—';
+$anioFirma = $fechaInicio ? $fechaInicio->format('Y') : '—';
+
+// Quién hizo la reservación (arrendador): contrato.id_asesor > reservacion.id_asesor > reservacion.id_usuario
+$idArrendador = $contrato->id_asesor
+    ?? $reservacion->id_asesor
+    ?? $reservacion->id_usuario
+    ?? null;
+
+// Nombre del arrendador desde usuarios
+$arrendadorNombre = '—';
+if (!empty($idArrendador)) {
+    $arr = DB::table('usuarios')
+        ->select('nombres', 'apellidos')
+        ->where('id_usuario', $idArrendador)
+        ->first();
+
+    if ($arr) {
+        $arrendadorNombre = trim(($arr->nombres ?? '') . ' ' . ($arr->apellidos ?? ''));
+        if ($arrendadorNombre === '') $arrendadorNombre = '—';
+    }
+}
+
+// Nombre del arrendatario (cliente) (sale de reservación)
+$arrendatarioNombre = trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? ''));
+if ($arrendatarioNombre === '') {
+    $arrendatarioNombre = $reservacion->nombre_cliente ?? '—';
+}
 
 
-// 1️⃣1️⃣ GENERAR PDF CON TODOS LOS DATOS (LOS MISMOS QUE LA VISTA)
-$pdf = Pdf::loadView('Admin.contrato-final-pdf', [
-        'contrato'     => $contrato,
-        'reservacion'  => $reservacion,
-        'licencia'     => $licencia,
-        'vehiculo'     => $vehiculo,
-        'dias'         => $dias,
-        'tarifaBase'   => $tarifaBase,
-        'paquetes'     => $paquetes,
-        'individuales' => $individuales,
-        'extras'       => $extras,
-        'subtotal'     => $subtotal,
-        'totalFinal'   => $totalFinal,
-    ])
-    ->setPaper('legal', 'portrait')
-    ->setOptions([
-        'isRemoteEnabled'      => true,
-        'isHtml5ParserEnabled' => true,
-    ]);
+// 1️⃣1️⃣ GENERAR PDF (CHROMIUM) CON TODOS LOS DATOS
+$html = view('Admin.contrato-final-pdf', [
+    'contrato'     => $contrato,
+    'reservacion'  => $reservacion,
+    'licencia'     => $licencia,
+    'vehiculo'     => $vehiculo,
+    'dias'         => $dias,
+    'tarifaBase'   => $tarifaBase,
+    'paquetes'     => $paquetes,
+    'individuales' => $individuales,
+    'extras'       => $extras,
+    'subtotal'     => $subtotal,
+    'totalFinal'   => $totalFinal,
+    // ✅ HOJA 2: fecha/lugar
+    'lugarFirma'   => $lugarFirma,
+    'diaFirma'     => $diaFirma,
+    'mesFirma'     => $mesFirma,
+    'anioFirma'    => $anioFirma,
+
+    // ✅ HOJA 2: nombres firmas
+    'arrendadorNombre'   => $arrendadorNombre,
+    'arrendatarioNombre' => $arrendatarioNombre,
+])->render();
 
 $filePath = storage_path("app/public/Contrato_{$id}.pdf");
-$pdf->save($filePath);
+
+Browsershot::html($html)
+    ->format('A4')
+    ->margins(6, 6, 6, 6) // mm aprox; si quieres exacto lo afinamos
+    ->showBackground()    // importante para fondos rojos y colores
+    ->save($filePath);
 
 // 1️⃣2️⃣ ENVIAR CORREO
 $correoReservaciones = config('mail.from.address');

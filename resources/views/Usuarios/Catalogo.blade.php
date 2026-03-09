@@ -72,7 +72,7 @@
       <h1 class="hero-title">¡RENTA HOY, EXPLORA MAÑANA, VIAJA SIEMPRE!</h1>
 
       <div class="chips">
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Oficina Central</span>
+        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Oficina Central Park</span>
         <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto</span>
         <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Central Autobuses</span>
       </div>
@@ -202,7 +202,7 @@
 
             {{-- ✅ NUEVO: Aire acondicionado --}}
             <li title="Aire acondicionado">
-              </i> A/C
+              <i class="fa-regular fa-snowflake"></i> A/C
             </li>
           </ul>
 
@@ -241,4 +241,4 @@
 
 @section('js-vistaCatalogo')
   <script src="{{ asset('js/catalogo.js') }}"></script>
-@endsection   
+@endsection

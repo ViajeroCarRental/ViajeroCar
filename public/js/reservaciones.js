@@ -1,21 +1,12 @@
 (function () {
   "use strict";
 
-  // ===== Helpers =====
   const qs = (s, r = document) => r.querySelector(s);
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
-    // ======================================================
-  // ⚙️ Config menor de edad (AJUSTA ESTE ID Y EDAD)
-  // ======================================================
-  const YOUNG_DRIVER_SERVICE_ID = '5'; // <-- REEMPLAZA 123 por el id_servicio real en BD
-  const YOUNG_DRIVER_MIN_AGE    = 25;    // Edad límite: menor a 25 años paga cargo
-
-  // ✅ Para no mostrar la alerta cada vez que se recalculan los addons
+  const YOUNG_DRIVER_SERVICE_ID = '5';
+  const YOUNG_DRIVER_MIN_AGE    = 25;
   let youngDriverAlertShown = false;
 
-  // ======================================================
-  // 🔧 Helpers para addons (map <-> string "id:cant,id2:cant")
-  // ======================================================
   function parseAddonsStringToMap(str) {
     const map = new Map();
     String(str || '')
@@ -29,7 +20,6 @@
           const qty = Math.max(0, parseInt(m[2], 10) || 0);
           if (qty > 0) map.set(id, qty);
         } else {
-          // Soporte viejo: "15" → cantidad 1
           const id = pair.replace(/\D/g, '');
           if (id) map.set(id, 1);
         }
@@ -44,9 +34,6 @@
       .join(',');
   }
 
-  // ======================================================
-  // 🔧 Helpers para edad
-  // ======================================================
   function computeAgeFromDob(dobStr, refDate) {
     if (!dobStr) return null;
     const m = String(dobStr).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -63,7 +50,6 @@
       age--;
     }
 
-    // para evitar locuras tipo 300 años o negativos
     if (age < 0 || age > 120) return null;
     return age;
   }
@@ -74,11 +60,9 @@
 
     const s = String(pickupInput.value).trim();
 
-    // Soporta "dd-mm-YYYY"
     let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
     if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
 
-    // Soporta "YYYY-mm-dd"
     m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
 
@@ -86,18 +70,14 @@
     return isNaN(d.getTime()) ? new Date() : d;
   }
 
-  // ======================================================
-  // 👶 Lógica central: aplicar/quitar addon según edad
-  // ======================================================
-    function applyYoungDriverAddon() {
-    // input oculto donde se guardan los addons
+  function applyYoungDriverAddon() {
     const hidden =
       qs('#addonsHidden') ||
       qs('input[name="addons"]') ||
       qs('input[name="addons_ids"]') ||
       qs('input[name="addonsHidden"]');
 
-    const dobHidden = qs('#dob'); // hidden de fecha de nacimiento (YYYY-MM-DD)
+    const dobHidden = qs('#dob');
 
     if (!hidden || !dobHidden || !YOUNG_DRIVER_SERVICE_ID) return;
 
@@ -105,21 +85,15 @@
     const refDate = getPickupDateForAge();
     const age     = computeAgeFromDob(dobStr, refDate);
 
-    // 🔹 Map ANTES de aplicar la regla (para saber si ya estaba agregado)
     const map = parseAddonsStringToMap(hidden.value || '');
     const hadBefore = map.has(String(YOUNG_DRIVER_SERVICE_ID));
 
     if (age != null && age < YOUNG_DRIVER_MIN_AGE) {
-      // 👉 Menor de la edad límite: forzamos el addon con cantidad 1
       map.set(String(YOUNG_DRIVER_SERVICE_ID), 1);
 
-      // =====================================================
-      // 🛎 Alerta solo la primera vez que se agrega el cargo
-      // =====================================================
       if (!hadBefore && !youngDriverAlertShown && window.alertify) {
         youngDriverAlertShown = true;
 
-        // Intentamos leer el precio desde el catálogo de addons
         let montoPorDia = null;
         try {
           const script = document.getElementById('addonsCatalog');
@@ -143,22 +117,15 @@
           `con un cargo adicional de ${montoStr} MXN por día de renta.\n\n` +
           "Puedes ver este concepto en el desglose de Opciones de renta.";
 
-        // 👇 Confirm con OK / Cancelar (el cargo es obligatorio en ambos casos)
         alertify.confirm(
           "Conductor menor de 25 años",
           msg,
-          function () {
-            // OK → no hacemos nada extra, el cargo ya está aplicado
-          },
-          function () {
-            // Cancelar → por política sigue siendo obligatorio;
-            // solo cerramos el diálogo.
-          }
+          function () {},
+          function () {}
         );
       }
 
     } else {
-      // 👉 Mayor o sin fecha válida: quitamos el cargo automático
       map.delete(String(YOUNG_DRIVER_SERVICE_ID));
     }
 
@@ -169,7 +136,6 @@
       hidden.dispatchEvent(new Event('change', { bubbles: true }));
     } catch (_) {}
 
-    // Actualizar parámetro ?addons= en la URL para que todo el flujo lo vea
     try {
       const url = new URL(window.location.href);
       if (newValue) {
@@ -180,169 +146,244 @@
       window.history.replaceState({}, document.title, url.toString());
     } catch (_) {}
 
-    // Recalcular el resumen de Step 4 si estamos en ese paso
     try {
       initStep4AddonsSummary();
     } catch (_) {}
   }
 
-  // Validacines
   function initSectionValidators() {
 
-    // paso 1
     const formStep1 = document.getElementById('step1Form');
     if (formStep1) {
       formStep1.addEventListener('submit', function (e) {
-        // Lista de IDs obligatorios en el Paso 1
         const requiredIds = [
           'pickup_sucursal_id', 'dropoff_sucursal_id',
-          'start', 'end', // Inputs de fecha
+          'start', 'end',
           'pickup_h', 'pickup_m',
           'dropoff_h', 'dropoff_m'
         ];
 
         let error = false;
 
-        // Revisamos uno por uno
         for (let id of requiredIds) {
           let el = document.getElementById(id);
-          // Si no existe o está vacío o es nulo
           if (!el || el.value.trim() === "") {
             error = true;
-            // Efecto visual de error
-            el.style.borderColor = 'red';
-            setTimeout(() => el.style.borderColor = '', 3000);
+            if (el) {
+              el.style.borderColor = 'red';
+              setTimeout(() => el.style.borderColor = '', 3000);
+            }
           }
         }
 
         if (error) {
-          e.preventDefault(); // 🛑 ¡ALTO! No deja pasar al Paso 2
+          e.preventDefault();
           e.stopImmediatePropagation();
           if (window.alertify) alertify.error("Completa todos los campos de lugar y fecha para continuar.");
         }
       });
     }
 
-    // paso 2
     const btnNextStep2 = document.querySelector('.wizard-nav a[href*="step=3"]');
 
     if (btnNextStep2) {
       btnNextStep2.addEventListener('click', function (e) {
-        // Verificamos si hay alguna tarjeta de carro activa
         const carSelected = document.querySelector('.car-card.active');
 
-        // O verificamos si la URL ya tiene categoria_id (por si recargó)
         const urlParams = new URLSearchParams(window.location.search);
         const hasCat = urlParams.has('categoria_id');
 
         if (!carSelected && !hasCat) {
-          e.preventDefault(); // 🛑 ¡ALTO! No deja pasar al Paso 3
+          e.preventDefault();
           if (window.alertify) alertify.error("Debes seleccionar un vehículo y un plan de renta.");
-
-          // Scroll hacia los autos para que vea que debe elegir
           const carsContainer = document.querySelector('.cars');
           if (carsContainer) carsContainer.scrollIntoView({ behavior: "smooth" });
         }
       });
     }
 
-    // paso 4
+    // ✅ VALIDACIÓN CORREGIDA DEL PASO 4
     const btnReservar = document.getElementById('btnReservar');
     if (btnReservar) {
-      btnReservar.addEventListener('click', function (e) {
-        let faltantes = [];
+      btnReservar.addEventListener('click', function(e) {
+        let hayErrores = false;
 
-        // Obtenemos los campos
-        const nombre = document.getElementById('nombreCliente');
-        const apellido = document.getElementById('apellidoCliente');
-        const telefono = document.getElementById('telefonoCliente');
-        const email = document.getElementById('correoCliente');
-        const terminos = document.getElementById('acepto');
-        const nacimiento = document.getElementById('dob');
+        // LIMPIAR ERRORES ANTERIORES
+        document.querySelectorAll('.field-error').forEach(el => {
+          el.classList.remove('field-error');
+        });
 
-        // Reglas
-        if (!nombre || nombre.value.trim().length < 2) faltantes.push("Nombre");
-        if (!telefono || telefono.value.trim().length < 10) faltantes.push("Teléfono (10 dígitos)");
-        if (!nacimiento || nacimiento.value.trim() === "") faltantes.push("Fecha de nacimiento");
+        document.querySelectorAll('.has-error').forEach(el => {
+          el.classList.remove('has-error');
+        });
 
-        // Validar Email con Regex simple
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email || !emailRegex.test(email.value.trim())) faltantes.push("Correo electrónico válido");
+        document.querySelectorAll('.error-msg').forEach(el => el.remove());
 
-        // Validar Checkbox
-        if (!terminos || !terminos.checked) faltantes.push("Aceptar términos y condiciones");
+        // 1. VALIDAR CAMPOS NORMALES
+        const campos = [
+          { id: 'nombreCompleto', mensaje: 'Nombre completo requerido' },
+          { id: 'telefonoCliente', mensaje: 'El teléfono debe tener 10 dígitos' },
+          { id: 'correoCliente', mensaje: 'Correo electrónico requerido' },
+          { id: 'pais', mensaje: 'Selecciona un país' }
+        ];
 
-        if (faltantes.length > 0) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
+        campos.forEach(campo => {
+          const el = document.getElementById(campo.id);
 
-          // Mensaje detallado
-          if (window.alertify) {
-            alertify.error("<b>Faltan datos obligatorios:</b><br>" + faltantes.join("<br>"));
-          } else {
-            alert("Faltan datos:\n" + faltantes.join("\n"));
+          if (!el || el.value.trim() === '') {
+            marcarError(el, campo.mensaje);
+            hayErrores = true;
           }
+
+          // Validación especial teléfono
+          if (campo.id === 'telefonoCliente' && el && el.value.trim() !== '') {
+            const telefono = el.value.trim().replace(/\D/g, '');
+            if (telefono.length !== 10) {
+              marcarError(el, 'El teléfono debe tener 10 dígitos');
+              hayErrores = true;
+            }
+          }
+
+          // Validación email
+          if (campo.id === 'correoCliente' && el && el.value.trim() !== '') {
+            const email = el.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+              marcarError(el, 'Correo electrónico inválido');
+              hayErrores = true;
+            }
+          }
+        });
+
+        // 2. VALIDAR FECHA (3 campos independientes)
+        const dia = document.getElementById('dob_day');
+        const mes = document.getElementById('dob_month');
+        const año = document.getElementById('dob_year');
+
+        if (!dia || !mes || !año || !dia.value || !mes.value || !año.value) {
+          marcarErrorFecha('Fecha de nacimiento incompleta');
+          hayErrores = true;
+        }
+
+        // 3. VALIDAR CHECKBOX
+        const acepto = document.getElementById('acepto');
+        if (!acepto || !acepto.checked) {
+          marcarErrorCheckbox('Debes aceptar las políticas');
+          hayErrores = true;
+        }
+
+        if (hayErrores) {
+          e.preventDefault();
+        } else {
+          const modal = document.getElementById('modalMetodoPago');
+          if (modal) modal.style.display = 'flex';
         }
       });
     }
+
+    // FUNCIÓN PARA MARCAR ERROR EN CAMPOS NORMALES
+    function marcarError(elemento, mensaje) {
+      if (!elemento) return;
+
+      const contenedor = elemento.closest('.field-floating') ||
+                        elemento.closest('.field-floating-sub') ||
+                        elemento.parentNode;
+
+      if (contenedor.querySelector('.error-msg')) return;
+
+      elemento.classList.add('field-error');
+      contenedor.classList.add('has-error');
+
+      const errorMsg = document.createElement('span');
+      errorMsg.className = 'error-msg';
+      errorMsg.textContent = mensaje;
+      contenedor.appendChild(errorMsg);
+
+      const limpiar = function() {
+        elemento.classList.remove('field-error');
+        contenedor.classList.remove('has-error');
+        const msg = contenedor.querySelector('.error-msg');
+        if (msg) msg.remove();
+      };
+
+      elemento.addEventListener('input', limpiar, { once: true });
+      elemento.addEventListener('change', limpiar, { once: true });
+    }
+
+    // FUNCIÓN PARA FECHA (3 campos)
+    function marcarErrorFecha(mensaje) {
+      const container = document.querySelector('.field-dob-container');
+      const dobInline = document.querySelector('.dob-inline');
+      const dia = document.getElementById('dob_day');
+      const mes = document.getElementById('dob_month');
+      const año = document.getElementById('dob_year');
+
+      if (!container || container.querySelector('.error-msg')) return;
+
+      container.classList.add('has-error');
+      if (dobInline) dobInline.classList.add('field-error');
+
+      [dia, mes, año].forEach(el => {
+        if (el) {
+          el.classList.add('field-error');
+          const sub = el.closest('.field-floating-sub');
+          if (sub) sub.classList.add('has-error');
+        }
+      });
+
+      const errorMsg = document.createElement('span');
+      errorMsg.className = 'error-msg';
+      errorMsg.textContent = mensaje;
+      container.appendChild(errorMsg);
+
+      const limpiar = function() {
+        container.classList.remove('has-error');
+        if (dobInline) dobInline.classList.remove('field-error');
+
+        [dia, mes, año].forEach(el => {
+          if (el) {
+            el.classList.remove('field-error');
+            const sub = el.closest('.field-floating-sub');
+            if (sub) sub.classList.remove('has-error');
+          }
+        });
+
+        if (errorMsg.parentNode) errorMsg.remove();
+      };
+
+      [dia, mes, año].forEach(el => {
+        if (el) {
+          el.addEventListener('change', limpiar, { once: true });
+          el.addEventListener('input', limpiar, { once: true });
+        }
+      });
+    }
+
+    // FUNCIÓN PARA CHECKBOX
+    function marcarErrorCheckbox(mensaje) {
+      const checkbox = document.getElementById('acepto');
+      const container = checkbox ? checkbox.closest('.cbox') : null;
+
+      if (!checkbox || !container || container.querySelector('.error-msg')) return;
+
+      checkbox.classList.add('field-error');
+      container.classList.add('has-error');
+
+      const errorMsg = document.createElement('span');
+      errorMsg.className = 'error-msg';
+      errorMsg.textContent = mensaje;
+      container.appendChild(errorMsg);
+
+      const limpiar = function() {
+        checkbox.classList.remove('field-error');
+        container.classList.remove('has-error');
+        if (errorMsg.parentNode) errorMsg.remove();
+      };
+
+      checkbox.addEventListener('change', limpiar, { once: true });
+    }
   }
 
-  // ======================================================
-  // ✅ SIN ALERTAS: bloquear SOLO la alerta de "Campos incompletos"
-  // (Fecha y hora de entrega / devolución)
-  // ======================================================
-  (function disableMissingFieldsAlerts() {
-    const shouldBlock = (msg) => {
-      const s = String(msg || "");
-      return (
-        s.includes("Campos incompletos") ||
-        s.includes("Por favor completa los siguientes campos") ||
-        s.includes("Fecha y hora de entrega") ||
-        s.includes("Fecha y hora de devolución")
-      );
-    };
-
-    // 1) Native alert()
-    try {
-      const _alert = window.alert;
-      window.alert = function (msg) {
-        if (shouldBlock(msg)) return;
-        return _alert.call(window, msg);
-      };
-    } catch (_) { }
-
-    // 2) SweetAlert2 (Swal.fire)
-    try {
-      if (window.Swal && typeof window.Swal.fire === "function") {
-        const _fire = window.Swal.fire.bind(window.Swal);
-        window.Swal.fire = function (a, b, c) {
-          const title = (a && typeof a === "object") ? (a.title || "") : (a || "");
-          const text = (a && typeof a === "object") ? (a.text || "") : (b || "");
-          if (shouldBlock(title) || shouldBlock(text)) return Promise.resolve();
-          return _fire(a, b, c);
-        };
-      }
-    } catch (_) { }
-
-    // 3) Fallback: si algún modal/toast aparece con ese texto, lo ocultamos
-    try {
-      const mo = new MutationObserver(() => {
-        const nodes = Array.from(document.querySelectorAll("body *"));
-        nodes.forEach(el => {
-          if (!el || !el.textContent) return;
-          if (!shouldBlock(el.textContent)) return;
-          const modal = el.closest(".modal,.swal2-container,.alert,.toast,[role='dialog']");
-          (modal || el).style.display = "none";
-        });
-      });
-      mo.observe(document.documentElement, { childList: true, subtree: true });
-    } catch (_) { }
-  })();
-
-  // ======================================================
-  // ✅ FORZAR SIEMPRE STEP 1 CUANDO SOLO VIENE ?step=2
-  // (si la URL trae más params, NO toca nada)
-  // ======================================================
   function forceStep1WhenOnlyStepParam() {
     try {
       const url = new URL(window.location.href);
@@ -365,14 +406,8 @@
     } catch (_) { }
   }
 
-  // ======================================================
-  // ✅ PERSISTENCIA (SIN SESIÓN)
-  // ======================================================
   function initWizardStatePersistence() {
     const LS_KEY = "viajero_resv_filters_v1";
-        // 🔁 MODO RESET:
-    // Si llegamos con ?reset=1 o con step=1 sin parámetros de renta,
-    // NO debemos rehidratar desde localStorage.
     let isResetMode = false;
     try {
       const url = new URL(window.location.href);
@@ -387,7 +422,6 @@
         p.get('pickup_sucursal_id') || p.get('dropoff_sucursal_id') ||
         p.get('addons') || p.get('categoria_id') || p.get('plan');
 
-      // reset explícito o entrada “limpia” a step=1
       if (resetFlag === '1' || (step === '1' && !hasMeaningful)) {
         isResetMode = true;
         try {
@@ -465,8 +499,7 @@
       return obj;
     }
 
-        function readFromLS() {
-      // En modo reset, ignoramos totalmente lo que haya en localStorage
+    function readFromLS() {
       if (isResetMode) return {};
       try {
         const raw = localStorage.getItem(LS_KEY);
@@ -574,20 +607,16 @@
 
         setIf('pickup_sucursal_id', state.pickup_sucursal_id);
         setIf('dropoff_sucursal_id', state.dropoff_sucursal_id);
-
         setIf('pickup_date', state.pickup_date);
         setIf('dropoff_date', state.dropoff_date);
-
         setIf('pickup_time', state.pickup_time);
         setIf('dropoff_time', state.dropoff_time);
-
         setIf('pickup_h', state.pickup_h);
         setIf('pickup_m', state.pickup_m);
         setIf('dropoff_h', state.dropoff_h);
         setIf('dropoff_m', state.dropoff_m);
 
         if (state.addons) setIf('addons', state.addons);
-
         if (keepStep) p.set('step', keepStep);
 
         window.history.replaceState({}, document.title, url.pathname + '?' + p.toString() + url.hash);
@@ -613,18 +642,15 @@
       pushStateToQS(st);
     }, 180);
 
-        function hydrate() {
-      // 🧼 En modo reset no rellenamos nada desde QS/LS,
-      // dejamos los campos tal como vienen del Blade (en blanco)
+    function hydrate() {
       if (isResetMode) {
-        writeToLS({}); // nos aseguramos de dejar limpio el LS
+        writeToLS({});
         return;
       }
 
       const fromQS = readFromQS();
       const fromLS = readFromLS();
       const merged = mergePreferNew(fromLS, fromQS);
-
       applyStateToInputs(merged);
 
       try {
@@ -676,9 +702,6 @@
     persistNow();
   }
 
-  // ==============================
-  // 🧽 Normalizador de layout PDF
-  // ==============================
   function normalizePdfLayout(root) {
     if (!root) return;
 
@@ -710,9 +733,6 @@
     });
   }
 
-  // ==========================================================
-  // ✅ Step 4 UI: ISO YYYY-MM-DD → dd-mm-aaaa (solo visual)
-  // ==========================================================
   function initStep4DatePretty() {
     function isoToDMY(iso) {
       if (!iso || typeof iso !== 'string') return iso;
@@ -736,158 +756,131 @@
     }
   }
 
-    // ==========================================================
-// ✅ STEP 4: calcular complementos + IVA + total
-//      y pintar tabla de opciones de renta + IVA (16%)
-// ==========================================================
-function initStep4AddonsSummary() {
-  const table = qs('#cotizacionDoc');
-  if (!table) return;
+  function initStep4AddonsSummary() {
+    const table = qs('#cotizacionDoc');
+    if (!table) return;
 
-  const qBaseEl   = qs('#qBase');
-  const qExtrasEl = qs('#qExtras');
-  const qIvaEl    = qs('#qIva');
-  const qTotalEl  = qs('#qTotal');
-  const extrasList = qs('#extrasList');
-  const ivaList    = qs('#ivaList');
+    const qBaseEl   = qs('#qBase');
+    const qExtrasEl = qs('#qExtras');
+    const qIvaEl    = qs('#qIva');
+    const qTotalEl  = qs('#qTotal');
+    const extrasList = qs('#extrasList');
+    const ivaList    = qs('#ivaList');
 
-  if (!qBaseEl || !qExtrasEl || !qIvaEl || !qTotalEl) return;
+    if (!qBaseEl || !qExtrasEl || !qIvaEl || !qTotalEl) return;
 
-  // base y días desde los data-*
-  const base = parseFloat(table.dataset.base || '0') || 0;
-  const days = parseInt(table.dataset.days || '1', 10) || 1;
+    const base = parseFloat(table.dataset.base || '0') || 0;
+    const days = parseInt(table.dataset.days || '1', 10) || 1;
 
-  // addons: string "id:cantidad,id2:cantidad..."
-  const hiddenPayload = qs('#addons_payload');
-  const hiddenAlt     = qs('#addonsHidden');
-  const rawAddons =
-    (hiddenPayload && hiddenPayload.value && hiddenPayload.value.trim()) ||
-    (hiddenAlt && hiddenAlt.value && hiddenAlt.value.trim()) ||
-    '';
+    const hiddenPayload = qs('#addons_payload');
+    const hiddenAlt     = qs('#addonsHidden');
+    const rawAddons =
+      (hiddenPayload && hiddenPayload.value && hiddenPayload.value.trim()) ||
+      (hiddenAlt && hiddenAlt.value && hiddenAlt.value.trim()) ||
+      '';
 
-  // catálogo de servicios desde el script JSON
-  const catalogScript = document.getElementById('addonsCatalog');
-  let catalog = {};
-  if (catalogScript) {
-    try {
-      catalog = JSON.parse(catalogScript.textContent || '{}') || {};
-    } catch (e) {
-      catalog = {};
-    }
-  }
-
-  function parseAddons(str) {
-    const map = new Map();
-    String(str || '')
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .forEach(pair => {
-        const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
-        if (!m) return;
-        const id = m[1];
-        const qty = Math.max(0, parseInt(m[2], 10) || 0);
-        if (qty > 0) map.set(id, qty);
-      });
-    return map;
-  }
-
-  function fmtMoney(n) {
-    return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
-  }
-
-  const addonsMap = parseAddons(rawAddons);
-  let extrasTotal = 0;
-
-  // Limpiar contenedores de detalle
-  if (extrasList) extrasList.innerHTML = '';
-  if (ivaList) ivaList.innerHTML = '';
-
-  // ==============================
-  // 🧮 Construir tabla de opciones de renta
-  // ==============================
-  if (addonsMap.size === 0) {
-    // Sin complementos → mensaje por defecto
-    if (extrasList) {
-      const row = document.createElement('div');
-      row.className = 'row row-empty';
-      row.innerHTML = `
-        <span class="muted">Sin complementos seleccionados</span>
-        <strong>$0 MXN</strong>
-      `;
-      extrasList.appendChild(row);
-    }
-    } else {
-    // 👉 Sin encabezado tipo tabla: cada adicional en una sola línea de texto
-    addonsMap.forEach((qty, id) => {
-      const srv = catalog[id];
-      if (!srv) return;
-
-      const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
-      const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
-
-      let lineTotal = 0;
-      if (tipo === 'por_evento') {
-        lineTotal = price * qty;            // precio * cantidad
-      } else {
-        lineTotal = price * qty * days;     // por día → precio * cantidad * días
+    const catalogScript = document.getElementById('addonsCatalog');
+    let catalog = {};
+    if (catalogScript) {
+      try {
+        catalog = JSON.parse(catalogScript.textContent || '{}') || {};
+      } catch (e) {
+        catalog = {};
       }
+    }
 
-      extrasTotal += lineTotal;
+    function parseAddons(str) {
+      const map = new Map();
+      String(str || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .forEach(pair => {
+          const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
+          if (!m) return;
+          const id = m[1];
+          const qty = Math.max(0, parseInt(m[2], 10) || 0);
+          if (qty > 0) map.set(id, qty);
+        });
+      return map;
+    }
 
+    function fmtMoney(n) {
+      return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
+    }
+
+    const addonsMap = parseAddons(rawAddons);
+    let extrasTotal = 0;
+
+    if (extrasList) extrasList.innerHTML = '';
+    if (ivaList) ivaList.innerHTML = '';
+
+    if (addonsMap.size === 0) {
       if (extrasList) {
         const row = document.createElement('div');
-        row.className = 'row row-addon';
-
-        const unidadLabel = (tipo === 'por_evento') ? '/ evento' : 'por día';
-
-        // 👇 Aquí va el formato que quieres: cantidad | descripción | precio por día |   …y el total a la derecha
+        row.className = 'row row-empty';
         row.innerHTML = `
-          <span style="flex:1;">
-            ${qty} | ${srv.nombre} | ${fmtMoney(price)} ${unidadLabel}
-          </span>
-          <strong style="flex:0 0 110px; text-align:right;">
-            ${fmtMoney(lineTotal)}
-          </strong>
+          <span class="muted">Sin complementos seleccionados</span>
+          <strong>$0 MXN</strong>
         `;
         extrasList.appendChild(row);
       }
-    });
+    } else {
+      addonsMap.forEach((qty, id) => {
+        const srv = catalog[id];
+        if (!srv) return;
+
+        const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+        const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
+
+        let lineTotal = 0;
+        if (tipo === 'por_evento') {
+          lineTotal = price * qty;
+        } else {
+          lineTotal = price * qty * days;
+        }
+
+        extrasTotal += lineTotal;
+
+        if (extrasList) {
+          const row = document.createElement('div');
+          row.className = 'row row-addon';
+
+          const unidadLabel = (tipo === 'por_evento') ? '/ evento' : 'por día';
+
+          row.innerHTML = `
+            <span style="flex:1;">
+              ${qty} | ${srv.nombre} | ${fmtMoney(price)} ${unidadLabel}
+            </span>
+            <strong style="flex:0 0 110px; text-align:right;">
+              ${fmtMoney(lineTotal)}
+            </strong>
+          `;
+          extrasList.appendChild(row);
+        }
+      });
+    }
+
+    const subtotal = base + extrasTotal;
+    const iva = subtotal * 0.16;
+    const total = subtotal + iva;
+
+    qBaseEl.textContent   = fmtMoney(base);
+    qExtrasEl.textContent = fmtMoney(extrasTotal);
+    qIvaEl.textContent    = fmtMoney(iva);
+    qTotalEl.textContent  = fmtMoney(total);
+
+    if (ivaList) {
+      const row = document.createElement('div');
+      row.className = 'row row-iva';
+      row.innerHTML = `
+        <span>IVA (16%)</span>
+        <strong>${fmtMoney(iva)}</strong>
+      `;
+      ivaList.appendChild(row);
+    }
   }
 
-
-  // ==============================
-  // 🧮 Subtotal, IVA y Total
-  // ==============================
-  const subtotal = base + extrasTotal;
-  const iva = subtotal * 0.16;
-  const total = subtotal + iva;
-
-  // Pintar totales en las barras de cada acordeón
-  qBaseEl.textContent   = fmtMoney(base);
-  qExtrasEl.textContent = fmtMoney(extrasTotal);
-  qIvaEl.textContent    = fmtMoney(iva);
-  qTotalEl.textContent  = fmtMoney(total);
-
-  // ==============================
-  // 🧾 Detalle de IVA (16%) dentro de "Cargos e IVA"
-  // ==============================
-  if (ivaList) {
-    const row = document.createElement('div');
-    row.className = 'row row-iva';
-    row.innerHTML = `
-      <span>IVA (16%)</span>
-      <strong>${fmtMoney(iva)}</strong>
-    `;
-    ivaList.appendChild(row);
-  }
-}
-
-
-
-  // ======================================================
-  // ✅ Step 4: Nombre Completo → (nombre + apellido hidden)
-  // ======================================================
   function initFullNameSync(){
     const full     = qs('#nombreCompleto');
     const nombre   = qs('#nombreCliente');
@@ -898,16 +891,14 @@ function initStep4AddonsSummary() {
     const norm = (s)=> String(s || '').trim().replace(/\s+/g,' ');
 
     function splitFullName(v){
-  const s = norm(v);
-  if (!s) return { nombre:"", apellido:"" };
+      const s = norm(v);
+      if (!s) return { nombre:"", apellido:"" };
 
-  // 👉 Mandamos TODO el texto al campo "nombre" y dejamos "apellido" vacío
-  return {
-    nombre: s,
-    apellido: ""
-  };
-}
-
+      return {
+        nombre: s,
+        apellido: ""
+      };
+    }
 
     function syncToHidden(){
       const { nombre: n, apellido: a } = splitFullName(full.value);
@@ -936,24 +927,17 @@ function initStep4AddonsSummary() {
     apellido.addEventListener('change', hydrateFullFromHidden);
   }
 
-  // ======================================================
-  // ✅ DOB SELECTS (DD/MM/YYYY) → hidden #dob (YYYY-MM-DD)
-  // - años: (hoy - 18) hacia atrás 100 años
-  // - ajusta días por mes/año (febrero 28/29)
-  // ======================================================
   function initDobSelects(){
     const day   = qs('#dob_day');
     const month = qs('#dob_month');
     const year  = qs('#dob_year');
-    const hidden = qs('#dob'); // name="nacimiento" para backend
+    const hidden = qs('#dob');
 
-    // Si no están los selects, no hacemos nada (por si no es Step 4)
     if (!day || !month || !year || !hidden) return;
 
     function pad2(n){ return String(n).padStart(2,'0'); }
 
     function daysInMonth(y, m){
-      // m: 1..12
       if (!y || !m) return 31;
       return new Date(Number(y), Number(m), 0).getDate();
     }
@@ -971,7 +955,7 @@ function initStep4AddonsSummary() {
       }
     }
 
-        function updateHidden(){
+    function updateHidden(){
       clampDay();
 
       const d = day.value;
@@ -979,27 +963,23 @@ function initStep4AddonsSummary() {
       const y = year.value;
 
       if (d && m && y){
-        hidden.value = `${y}-${m}-${d}`; // ✅ formato backend YYYY-MM-DD
+        hidden.value = `${y}-${m}-${d}`;
       } else {
         hidden.value = '';
       }
 
       try{ hidden.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
 
-      // 👶 Cada vez que cambia la fecha de nacimiento, aplicamos la regla
-      // de "conductor menor de edad" y actualizamos totales
       try {
         applyYoungDriverAddon();
       } catch (_) {}
     }
 
-    // ✅ Si ya venía un valor (YYYY-MM-DD) del backend o rehidratado, lo re-partimos
     function hydrateFromHidden(){
       const v = String(hidden.value || '').trim();
       const m = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
       if (!m) return;
 
-      // solo setea si aún están vacíos
       if (!year.value)  year.value  = m[1];
       if (!month.value) month.value = m[2];
       if (!day.value)   day.value   = m[3];
@@ -1015,9 +995,6 @@ function initStep4AddonsSummary() {
     updateHidden();
   }
 
-  // ==========================================================
-  // ✅ DÍAS + ACTUALIZACIÓN DE PRECIOS EN PASO 2
-  // ==========================================================
   function initDaysAndPricesSync() {
     const pickupDate = qs("#start") || qs('input[name="pickup_date"]');
     const dropoffDate = qs("#end") || qs('input[name="dropoff_date"]');
@@ -1099,9 +1076,6 @@ function initStep4AddonsSummary() {
     runUpdate();
   }
 
-  // ==========================================================
-  // ✅ ADICIONALES: guardar + rehidratar + enviar a backend
-  // ==========================================================
   function initAddonsSync() {
     const hidden =
       qs('#addonsHidden') ||
@@ -1145,10 +1119,9 @@ function initStep4AddonsSummary() {
       return isNaN(q) ? 0 : q;
     }
 
-        function buildFromUI() {
+    function buildFromUI() {
       const map = new Map();
 
-      // 1) Lo que el usuario selecciona manualmente en las cards
       cards.forEach(card => {
         const id = String(card.getAttribute('data-id') || '').trim();
         if (!id) return;
@@ -1159,7 +1132,7 @@ function initStep4AddonsSummary() {
       return map;
     }
 
-        function writeHiddenAndURL() {
+    function writeHiddenAndURL() {
       const map = buildFromUI();
       const value = serializeMap(map);
       hidden.value = value;
@@ -1171,7 +1144,6 @@ function initStep4AddonsSummary() {
         window.history.replaceState({}, document.title, url.toString());
       } catch (_) { }
 
-      // 👶 Después de aplicar los addons manuales, forzamos la regla de menor de 25
       try {
         applyYoungDriverAddon();
       } catch (_) { }
@@ -1225,26 +1197,17 @@ function initStep4AddonsSummary() {
     hydrate();
   }
 
-    // ==========================================================
-  // 🧽 Botón LIMPIAR (Step 1)
-  // - Limpia campos
-  // - Borra estado persistido
-  // - Recarga con ?step=1&reset=1
-  // ==========================================================
   function initStep1ClearButton() {
-    // ⚠️ Asegúrate que el botón de limpiar tenga este id en el Blade
     const btnClear = qs('#btnLimpiar');
     if (!btnClear) return;
 
     btnClear.addEventListener('click', function (e) {
       e.preventDefault();
 
-      // 1) Limpiar localStorage del flujo de reservaciones
       try {
         localStorage.removeItem("viajero_resv_filters_v1");
       } catch (_) { }
 
-      // 2) Limpiar parámetros de renta de la URL
       try {
         const url = new URL(window.location.href);
         const p = url.searchParams;
@@ -1265,23 +1228,17 @@ function initStep4AddonsSummary() {
           'plan'
         ].forEach(k => p.delete(k));
 
-        // 3) Forzamos un inicio fresco en Step 1 con flag de reset
         p.set('step', '1');
         p.set('reset', '1');
 
-        // Recargamos la página con la URL “limpia”
         window.location.href = url.pathname + '?' + p.toString() + url.hash;
       } catch (_) {
-        // Si algo truena, al menos hacemos un reset del formulario
         const step1Form = document.getElementById('step1Form');
         if (step1Form) step1Form.reset();
       }
     });
   }
 
-  // ======================================================
-  // 🔥 Floating labels
-  // ======================================================
   function initFloatingLabels() {
     const floats = qsa('[data-float]');
     if (!floats.length) return;
@@ -1319,10 +1276,6 @@ function initStep4AddonsSummary() {
     });
   }
 
-  // ==========================================================
-  // ✅ FLATPICKR: REGLAS 100% (anti doble-init)
-  // - DOB removido porque ahora son selects DD/MM/YYYY
-  // ==========================================================
   function initFlatpickrRules() {
     if (!window.flatpickr) return;
 
@@ -1336,7 +1289,6 @@ function initStep4AddonsSummary() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // ---------- Step 1 pickers ----------
     if (!start || !end) return;
 
     function toDateAtMidnight(d) {
@@ -1373,7 +1325,6 @@ function initStep4AddonsSummary() {
     if (startInit) startFp.setDate(startInit, false);
     if (endInit) endFp.setDate(endInit, false);
 
-    // ✅ solo pasado bloqueado (sin limitar futuro)
     startFp.set("minDate", today);
     endFp.set("minDate", today);
 
@@ -1423,12 +1374,9 @@ function initStep4AddonsSummary() {
     end.addEventListener("blur", applyConstraintsAndFix);
   }
 
-  // ======================================================
-  // ✅ BOOT (flatpickr se carga con defer → esperar)
-  // ======================================================
   function bootWhenFlatpickrReady() {
     let tries = 0;
-    const maxTries = 240; // ~4s
+    const maxTries = 240;
     function tick() {
       tries++;
       if (window.flatpickr) {
@@ -1455,117 +1403,138 @@ function initStep4AddonsSummary() {
     });
   }
 
-            document.addEventListener("DOMContentLoaded", () => {
+  function initStep3ProteccionesModal(){
+    const openId  = 'info-protecciones-step3';
+    const modalId = 'modalProteccionesStep3';
+    const closeId = 'closeProteccionesStep3';
+
+    document.addEventListener('click', (e) => {
+      const modal = document.getElementById(modalId);
+      if (!modal) return;
+
+      if (e.target.closest('#' + openId)) {
+        modal.style.display = 'flex';
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        return;
+      }
+
+      if (e.target.closest('#' + closeId)) {
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+        return;
+      }
+
+      if (e.target === modal) {
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const modal = document.getElementById(modalId);
+      if (!modal) return;
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    });
+  }
+
+  // ===== BOOT =====
+  document.addEventListener("DOMContentLoaded", () => {
     forceStep1WhenOnlyStepParam();
-
-    // ✅ Persistencia
     initWizardStatePersistence();
-
-    // 🧽 Botón LIMPIAR (Step 1)
     initStep1ClearButton();
-
     initSectionValidators();
-
-    // UI
     initFloatingLabels();
     bootWhenFlatpickrReady();
     initDaysAndPricesSync();
     initAddonsSync();
     initStep4DatePretty();
-    initStep4AddonsSummary();  // 👈 AQUÍ
-
-    // ✅ Nombre Completo (Step 4)
+    initStep4AddonsSummary();
     initFullNameSync();
-
-    // ✅ DOB DD/MM/YYYY (Step 4)
     initDobSelects();
-
-    // 👶 Si ya hay fecha de nacimiento cargada, aplicamos la regla de una vez
     applyYoungDriverAddon();
-
     refreshFloatStates();
+
+    initStep3ProteccionesModal();
+
     setTimeout(refreshFloatStates, 80);
     setTimeout(refreshFloatStates, 250);
   });
 
+  // ===== Select2 =====
+  document.addEventListener("DOMContentLoaded", function() {
+    if (!window.jQuery || !window.jQuery.fn || typeof window.jQuery.fn.select2 !== 'function') return;
 
-  // ======================================================
-// ✅ ICONOS DINÁMICOS PICKUP / DROPOFF
-// ======================================================
-document.addEventListener("DOMContentLoaded", function() {
     const configs = [
-        { id: 'pickupPlace', icon: 'pickupIcon' },
-        { id: 'dropoffPlace', icon: 'dropoffIcon' }
+      { id: 'pickupPlace', icon: 'pickupIcon' },
+      { id: 'dropoffPlace', icon: 'dropoffIcon' }
     ];
 
     function updateFloatingIcon(selectId, iconId) {
-        const selectEl = document.getElementById(selectId);
-        const iconEl = document.getElementById(iconId);
-        if (!selectEl || !iconEl) return;
+      const selectEl = document.getElementById(selectId);
+      const iconEl = document.getElementById(iconId);
+      if (!selectEl || !iconEl) return;
 
-        const selectedOption = selectEl.options[selectEl.selectedIndex];
+      const selectedOption = selectEl.options[selectEl.selectedIndex];
 
-        const iconClass = (selectedOption && selectedOption.dataset.icon)
-                          ? selectedOption.dataset.icon
-                          : 'fa-solid fa-location-dot';
+      const iconClass = (selectedOption && selectedOption.dataset.icon)
+        ? selectedOption.dataset.icon
+        : 'fa-solid fa-location-dot';
 
-        iconEl.className = iconClass;
+      iconEl.className = iconClass;
     }
 
     configs.forEach(conf => {
-        const $select = $('#' + conf.id);
+      const $select = $('#' + conf.id);
 
-        if ($select.length > 0) {
-            $select.select2({
-                width: '100%',
+      if ($select.length > 0) {
+        $select.select2({
+          width: '100%',
+          templateResult: function(option) {
+            if (!option.id) return option.text;
+            const icon = $(option.element).data('icon');
+            return $('<span><i class="' + icon + '" style="margin-right:10px;width:20px;text-align:center;"></i>' + option.text + '</span>');
+          }
+        });
 
-                templateResult: function(option) {
-                    if (!option.id) return option.text;
-                    const icon = $(option.element).data('icon');
-                    return $('<span><i class="' + icon + '" style="margin-right:10px;width:20px;text-align:center;"></i>' + option.text + '</span>');
-                }
-            });
+        updateFloatingIcon(conf.id, conf.icon);
 
-
-            updateFloatingIcon(conf.id, conf.icon);
-
-
-            $select.on('select2:select change', function () {
-                updateFloatingIcon(conf.id, conf.icon);
-
-
-                this.dispatchEvent(new Event('change', { bubbles: true }));
-            });
-        }
+        $select.on('select2:select change', function () {
+          updateFloatingIcon(conf.id, conf.icon);
+          this.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      }
     });
-});
-window.limpiarTodoYReiniciar = function() {
+  });
+
+  window.limpiarTodoYReiniciar = function() {
 
     localStorage.removeItem("viajero_resv_filters_v1");
 
-
-
     const selects = ['#pickupPlace', '#dropoffPlace'];
     selects.forEach(id => {
-        const $el = $(id);
-        if ($el.length) {
-            $el.val(null).trigger('change');
-        }
+      const $el = window.jQuery ? $(id) : null;
+      if ($el && $el.length) {
+        $el.val(null).trigger('change');
+      }
     });
-
 
     const inputs = ['#start', '#end', '#pickup_h', '#pickup_m', '#dropoff_h', '#dropoff_m'];
     inputs.forEach(id => {
-        const el = document.querySelector(id);
-        if (el) el.value = "";
+      const el = document.querySelector(id);
+      if (el) el.value = "";
     });
 
-
     window.location.href = window.location.pathname + "?step=1";
-};
+  };
 
-// tarjeta responsivo reservaciones
-document.addEventListener('DOMContentLoaded', function(){
+  // tarjeta responsivo reservaciones
+  document.addEventListener('DOMContentLoaded', function(){
 
     const btnOriginal = document.getElementById('btnReservar');
     const btnMovil = document.getElementById('btnReservarMovil');
@@ -1573,49 +1542,60 @@ document.addEventListener('DOMContentLoaded', function(){
     const totalMovil = document.getElementById('qTotalMovil');
 
     if(btnMovil && btnOriginal){
-        btnMovil.addEventListener('click', function(){
-            btnOriginal.click();
-        });
+      btnMovil.addEventListener('click', function(){
+        btnOriginal.click();
+      });
     }
     if(totalOriginal && totalMovil){
 
-        function syncTotal(){
-            totalMovil.innerText = totalOriginal.innerText;
-        }
-        syncTotal();
+      function syncTotal(){
+        totalMovil.innerText = totalOriginal.innerText;
+      }
+      syncTotal();
 
-        const observer = new MutationObserver(syncTotal);
-        observer.observe(totalOriginal, {
-            childList:true,
-            subtree:true,
-            characterData:true
-        });
+      const observer = new MutationObserver(syncTotal);
+      observer.observe(totalOriginal, {
+        childList:true,
+        subtree:true,
+        characterData:true
+      });
     }
-});
-// Modal de protecciones
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('modalProtecciones');
-    const closeX = document.querySelector('.cerrar-modal-v');
+  });
 
-    // Delegación de clic para abrir
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('#info-protecciones')) {
-            e.preventDefault();
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
+  // modal Step 4
+  document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('modalProtecciones');
+    const btnInfo = document.getElementById('info-protecciones');
+    const closeX = modal ? modal.querySelector('.cerrar-modal-v') : null;
+
+    if (!modal || !btnInfo) return;
+
+    const openModal = () => {
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    };
+
+    const closeModal = () => {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    };
+
+    btnInfo.addEventListener('click', function (e) {
+      e.preventDefault();
+      openModal();
     });
 
-    // Cerrar
-    const closeModal = () => {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    };
+    if (closeX) {
+      closeX.addEventListener('click', closeModal);
+    }
 
-    if (closeX) closeX.onclick = closeModal;
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) closeModal();
+    });
 
-    window.onclick = function(e) {
-        if (e.target === modal) closeModal();
-    };
-});
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeModal();
+    });
+  });
+
 })();

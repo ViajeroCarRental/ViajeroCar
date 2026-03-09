@@ -159,23 +159,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const vuelo              = (vueloEl?.value || "").trim();
 
     // ===== Validaciones mínimas en front =====
-    if (!nombreCompleto) {
-      throw new Error("Por favor ingresa tu nombre completo.");
-    }
-    if (!telefono) {
-      throw new Error("Por favor ingresa tu número de teléfono.");
-    }
-    if (!email) {
-      throw new Error("Por favor ingresa tu correo electrónico.");
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      throw new Error("El correo electrónico no parece válido.");
-    }
-    if (!aceptaEl || !aceptaEl.checked) {
-      throw new Error("Debes aceptar las políticas y procedimientos para continuar.");
-    }
-
     if (!categoriaId) {
       throw new Error("Falta la categoría seleccionada de la renta.");
     }

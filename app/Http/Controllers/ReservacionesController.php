@@ -119,6 +119,7 @@ class ReservacionesController extends Controller
             ->selectRaw("
                 c.id_categoria,
                 c.nombre,
+                c.descripcion,
                 COALESCE(c.precio_dia, 0) as precio_dia,
 
                 COALESCE(vi.url, '') as img_url,
@@ -197,19 +198,19 @@ if ($requestedStep === 1) {
 $vehiculos = collect();
 
 
-        // --- 6) Complementos (SERVICIOS) — SIEMPRE cargar ---
+                // --- 6) Complementos (SERVICIOS) — SIEMPRE cargar ---
         $servicios = $this->obtenerServiciosActivos();
 
-        return view('Usuarios.Reservaciones', compact(
-            'step',
-            'filters',
-            'vehiculos',
-            'vehiculo',
-            'sucursales',
-            'categorias',
-            'ciudades',
-            'servicios'
-        ));
+        return view('Usuarios.Reservaciones', [
+            'step'       => $step,
+            'filters'    => $filters,
+            'vehiculos'  => $vehiculos,
+            'vehiculo'   => $vehiculo,
+            'sucursales' => $sucursales,
+            'categorias' => $categorias,
+            'ciudades'   => $ciudades,   // 👈 ESTA ES LA CLAVE
+            'servicios'  => $servicios,
+        ]);
     }
 
     /**
@@ -217,10 +218,11 @@ $vehiculos = collect();
      */
     public function desdeNavbar(Request $request)
 {
+    // 1) Catálogos base
     $ciudades   = $this->getCiudadesConSucursalesActivas();
     $categorias = $this->getCategorias();
 
-    // ❌ Sin defaults de fecha/hora: todo en blanco
+    // 2) Filtros en blanco (el usuario entra “limpio” desde la navbar)
     $filters = [
         'pickup_sucursal_id'  => null,
         'dropoff_sucursal_id' => null,
@@ -229,25 +231,28 @@ $vehiculos = collect();
         'dropoff_date'        => null,
         'dropoff_time'        => null,
         'categoria_id'        => null,
+        'plan'                => null,
     ];
 
-    // ✅ Entrar mostrando categorías (Paso 2)
+    // 3) Paso inicial: mostramos categorías (Paso 2)
     $step      = 2;
     $vehiculos = collect();
     $vehiculo  = null;
 
-    // Complementos listos por si avanzan
+    // 4) Complementos listos por si avanza al paso 3
     $servicios = $this->obtenerServiciosActivos();
 
-    return view('Usuarios.Reservaciones', compact(
-        'step',
-        'filters',
-        'vehiculos',
-        'vehiculo',
-        'ciudades',
-        'categorias',
-        'servicios'
-    ));
+    // 5) IMPORTANTE: pasar siempre 'ciudades' a la vista
+    return view('Usuarios.Reservaciones', [
+        'step'       => $step,
+        'filters'    => $filters,
+        'vehiculos'  => $vehiculos,
+        'vehiculo'   => $vehiculo,
+        'sucursales' => collect(),   // aquí no los necesitas realmente
+        'categorias' => $categorias,
+        'ciudades'   => $ciudades,   // 👈 esto evita el Undefined variable $ciudades
+        'servicios'  => $servicios,
+    ]);
 }
 
     /* ===================== NUEVO: generar PDF + guardar en archivos + enviar WhatsApp ===================== */

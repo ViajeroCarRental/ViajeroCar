@@ -78,7 +78,7 @@
 
   $isFreshEntry = empty($pickupSucursalId) || empty($dropoffSucursalId);
   $stepCurrent  = $isFreshEntry ? 1 : ($controllerStep ?? $requestedStep);
-  if ($stepCurrent >= 2 && $isFreshEntry) {
+if ($stepCurrent >= 2 && $isFreshEntry) {
     $stepCurrent = 1;
   }
   if ($stepCurrent >= 3 && (empty($categoriaId) || empty($plan))) {
@@ -87,7 +87,6 @@
   if ($stepCurrent >= 4 && (empty($categoriaId) || empty($plan))) {
     $stepCurrent = 2;
   }
-
   // Nombres de sucursales para el encabezado (fallback a $ciudades)
   $pickupName  = null;
   $dropoffName = null;
@@ -129,6 +128,7 @@
     $d2 = \Illuminate\Support\Carbon::parse($dropoffDateISO);
     $days = max(1, $d1->diffInDays($d2));
   } else {
+    // Si no hay fechas aún (primer ingreso), dejamos 1 para no romper cálculos internos
     $days = 1;
   }
 
@@ -219,6 +219,18 @@
   $tagCategoria = ($categoriaSel && isset($categoriaSel->nombre))
     ? strtoupper((string)$categoriaSel->nombre)
     : 'COMPACTO';
+
+  // ✅ SOLO estos extras (Step 3) — máximo 3 por cada uno (lo limita tu JS)
+  $allowedExtras = [
+    'silla para bebé',
+    'conductor adicional',
+    'gasolina prepago',
+  ];
+
+  $serviciosFiltrados = collect($servicios ?? [])->filter(function($s) use ($allowedExtras){
+    $name = mb_strtolower(trim((string)($s->nombre ?? '')));
+    return in_array($name, $allowedExtras, true);
+  })->values();
 @endphp
 
 <main class="page wizard-page"
@@ -351,7 +363,7 @@
       <span class="n">1</span> Generales
     </a>
     <a class="wizard-step {{ ($stepCurrent>2 || request('auto')) ? 'done' : '' }} {{ $stepCurrent===2 ? 'active' : '' }}" href="{{ $toStep(2) }}">
-      <span class="n">2</span> Categoría
+        <span class="n">2</span> Categoría
     </a>
     <a class="wizard-step {{ $stepCurrent>3?'done':'' }} {{ $stepCurrent===3?'active':'' }}" href="{{ $toStep(3) }}">
       <span class="n">3</span> Adicionales
@@ -378,92 +390,97 @@
 
         <div class="search-grid">
 
-          {{-- Lugar --}}
-          <div class="group-card">
-            <div class="group-head">
-              <div class="group-title">Lugar</div>
-            </div>
+       {{-- Lugar --}}
+<div class="group-card">
+  <div class="group-head">
+    <div class="group-title">Lugar</div>
+  </div>
 
-            <div class="field-row">
+  <div class="field-row">
 
-              {{-- PICKUP --}}
-              <div class="field">
-                <div class="ctl has-ico pristine" data-float>
-                  <span class="ico">
-                    <i id="pickupIcon" class="fa-solid fa-location-dot"></i>
-                  </span>
+    {{-- PICKUP --}}
+    <div class="field">
+      <div class="ctl has-ico pristine" data-float>
 
-                  <span class="flabel">Lugar de Pick-Up</span>
+        {{-- ICONO DINÁMICO --}}
+        <span class="ico">
+          <i id="pickupIcon" class="fa-solid fa-location-dot"></i>
+        </span>
 
-                  <select id="pickupPlace" name="pickup_sucursal_id" required data-float-select>
-                    <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}></option>
+        <span class="flabel">Lugar de Pick-Up</span>
 
-                    @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
-                      <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+        <select id="pickupPlace" name="pickup_sucursal_id" required data-float-select>
+          <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}></option>
 
-                        @foreach($ciudad->sucursalesActivas ?? [] as $suc)
-                          @php
-                            $name = strtolower($suc->nombre);
-                            $icon = 'fa-solid fa-location-dot';
+          @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
+            <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
 
-                            if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
-                            elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
-                            elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
-                          @endphp
+              @foreach($ciudad->sucursalesActivas ?? [] as $suc)
+                @php
+                  $name = strtolower($suc->nombre);
+                  $icon = 'fa-solid fa-location-dot';
 
-                          <option value="{{ $suc->id_sucursal }}"
-                                  data-icon="{{ $icon }}"
-                                  {{ (string)$pickupSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
-                            {{ $suc->nombre }}
-                          </option>
-                        @endforeach
+                  if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
+                  elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
+                  elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
+                @endphp
 
-                      </optgroup>
-                    @endforeach
-                  </select>
-                </div>
-              </div>
+                <option value="{{ $suc->id_sucursal }}"
+                        data-icon="{{ $icon }}"
+                        {{ (string)$pickupSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
+                  {{ $suc->nombre }}
+                </option>
+              @endforeach
 
-              {{-- DROPOFF --}}
-              <div class="field">
-                <div class="ctl has-ico pristine" data-float>
-                  <span class="ico">
-                    <i id="dropoffIcon" class="fa-solid fa-location-dot"></i>
-                  </span>
+            </optgroup>
+          @endforeach
+        </select>
+      </div>
+    </div>
 
-                  <span class="flabel">Lugar de devolución</span>
 
-                  <select id="dropoffPlace" name="dropoff_sucursal_id" required data-float-select>
-                    <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}></option>
+    {{-- DROPOFF --}}
+    <div class="field">
+      <div class="ctl has-ico pristine" data-float>
 
-                    @foreach($ciudades as $ciudad)
-                      <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
+        {{-- ICONO DINÁMICO --}}
+        <span class="ico">
+          <i id="dropoffIcon" class="fa-solid fa-location-dot"></i>
+        </span>
 
-                        @foreach($ciudad->sucursalesActivas ?? [] as $suc)
-                          @php
-                            $name = strtolower($suc->nombre);
-                            $icon = 'fa-solid fa-location-dot';
+        <span class="flabel">Lugar de devolución</span>
 
-                            if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
-                            elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
-                            elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
-                          @endphp
+        <select id="dropoffPlace" name="dropoff_sucursal_id" required data-float-select>
+          <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}></option>
 
-                          <option value="{{ $suc->id_sucursal }}"
-                                  data-icon="{{ $icon }}"
-                                  {{ (string)$dropoffSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
-                            {{ $suc->nombre }}
-                          </option>
-                        @endforeach
+          @foreach($ciudades as $ciudad)
+            <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
 
-                      </optgroup>
-                    @endforeach
-                  </select>
-                </div>
-              </div>
+              @foreach($ciudad->sucursalesActivas ?? [] as $suc)
+                @php
+                  $name = strtolower($suc->nombre);
+                  $icon = 'fa-solid fa-location-dot';
 
-            </div>
-          </div>
+                  if (str_contains($name,'aeropuerto')) $icon = 'fa-solid fa-plane-departure';
+                  elseif (str_contains($name,'central de autobuses')) $icon = 'fa-solid fa-bus';
+                  elseif (str_contains($name,'oficina') || str_contains($name,'central park')) $icon = 'fa-solid fa-building';
+                @endphp
+
+                <option value="{{ $suc->id_sucursal }}"
+                        data-icon="{{ $icon }}"
+                        {{ (string)$dropoffSucursalId===(string)$suc->id_sucursal ? 'selected' : '' }}>
+                  {{ $suc->nombre }}
+                </option>
+              @endforeach
+
+            </optgroup>
+          @endforeach
+        </select>
+      </div>
+    </div>
+
+  </div>
+</div>
 
           {{-- Pick-Up --}}
           <div class="group-card">
@@ -559,191 +576,643 @@
 
         </div>
 
-        <div class="wizard-nav">
-          <button type="button" class="btn btn-ghost" onclick="limpiarTodoYReiniciar()">Limpiar</button>
-          <button class="btn btn-primary" type="submit">Siguiente</button>
-        </div>
+      <div class="wizard-nav">
+    <button type="button" class="btn btn-ghost" onclick="limpiarTodoYReiniciar()">Limpiar</button>
+    <button class="btn btn-primary" type="submit">Siguiente</button>
+</div>
       </form>
     @endif
 
+
     {{-- ===================== STEP 2 ===================== --}}
-    @if($stepCurrent===2)
-      <header class="wizard-head">
-        <h2>Selecciona tu categoría</h2>
-        <p>Tarifa de <strong id="daysLabel">{{ $days }}</strong> día(s) de tu renta.</p>
-      </header>
 
-      <div class="cars">
-        @forelse(($categorias ?? []) as $cat)
-          @php
-            $imgCat = $catImages[$cat->id_categoria] ?? $placeholder;
+@if($stepCurrent===2)
+  <header class="wizard-head">
+    <h2>Selecciona tu categoría</h2>
+    <p>Tarifa de <strong id="daysLabel">{{ $days }}</strong> día(s) de tu renta.</p>
+  </header>
 
-            $prepagoDia   = (float)($cat->precio_dia ?? 0);
-            $mostradorDia = round($prepagoDia * 1.15);
+  <div class="cars">
+    @forelse(($categorias ?? []) as $cat)
+        @php
+        $imgCat = $catImages[$cat->id_categoria] ?? $placeholder;
+        $prepagoDia   = (float)($cat->precio_dia ?? 0);
+        $mostradorDia = round($prepagoDia * 1.15);
+        $prepagoTotal   = $prepagoDia * $days;
+        $mostradorTotal = $mostradorDia * $days;
 
-            $prepagoTotal   = $prepagoDia * $days;
-            $mostradorTotal = $mostradorDia * $days;
+        $predeterminadosPorId = [
+        1  => ['pax'=>5,  'small'=>2, 'big'=>1], // ID de C
+        2  => ['pax'=>5,  'small'=>2, 'big'=>1], // ID de D
+        3  => ['pax'=>5,  'small'=>2, 'big'=>2], // ID de E
+        4  => ['pax'=>5,  'small'=>2, 'big'=>2], // ID de F
+        5  => ['pax'=>5,  'small'=>2, 'big'=>2], // ID de IC
+        6  => ['pax'=>5,  'small'=>3, 'big'=>2], // ID de I
+        7  => ['pax'=>7,  'small'=>3, 'big'=>2], // ID de IB
+        8  => ['pax'=>7,  'small'=>4, 'big'=>2], // ID de M
+        9  => ['pax'=>13, 'small'=>4, 'big'=>3], // ID de L
+        10 => ['pax'=>5,  'small'=>3, 'big'=>2], // ID de H
+        11 => ['pax'=>5,  'small'=>3, 'big'=>2], // ID de HI
+        ];
 
-            $pasajeros    = (int)($cat->pasajeros ?? 5);
-            $malChicas    = (int)($cat->maletas_chicas ?? 2);
-            $malGrandes   = (int)($cat->maletas_grandes ?? 1);
-            $appleCarplay = (int)($cat->apple_carplay ?? 0);
-            $androidAuto  = (int)($cat->android_auto ?? 0);
+        $idActual = $cat->id_categoria;
+        $paxFinal = 5; $sFinal = 2; $bFinal = 1; // Valores por defecto
 
-            // ✅ NUEVO: transmisión + A/C para el layout de iconos
-            $codigoCat = strtoupper((string)($cat->codigo ?? ''));
-            $tLabelCat = ($codigoCat === 'L') ? 'Estándar' : 'Automática';
-            $tieneACCat = (int)($cat->aire_acondicionado ?? ($cat->aire_ac ?? 0));
+        if (isset($predeterminadosPorId[$idActual])) {
+            $paxFinal = $predeterminadosPorId[$idActual]['pax'];
+            $sFinal   = $predeterminadosPorId[$idActual]['small'];
+            $bFinal   = $predeterminadosPorId[$idActual]['big'];
+        }
 
-            $desc = $cat->ejemplo ?? ($cat->descripcion ?? 'Auto o similar. Tarifas sujetas a disponibilidad y temporada.');
+        $appleCarplay = (int)($cat->apple_carplay ?? 0);
+        $androidAuto  = (int)($cat->android_auto ?? 0);
+        $codigoCat    = trim(strtoupper((string)($cat->codigo ?? '')));
+        $transmision  = ($cat->id_categoria == 9) ? 'Estándar' : 'Automática';
+        $tieneACCat   = (int)($cat->aire_acondicionado ?? ($cat->aire_ac ?? 1));
 
-            $ahorroPct = ($mostradorTotal > 0)
-              ? round((($mostradorTotal - $prepagoTotal) / $mostradorTotal) * 100)
-              : 0;
-            $ahorroPct = max(0, $ahorroPct);
-          @endphp
+        // *** SOLO CAMBIAMOS ESTA LÍNEA ***
+        // Antes: $desc = $cat->ejemplo ?? ($cat->descripcion ?? 'Auto o similar.');
+        // Ahora: Usamos directamente la descripción de la categoría
+        $desc = $cat->descripcion ?? 'Auto o similar.';
 
-          <article class="car-card car-card--v2 {{ (string)$categoriaId===(string)$cat->id_categoria ? 'active' : '' }}"
-                   data-prepago-dia="{{ $prepagoDia }}"
-                   data-mostrador-dia="{{ $mostradorDia }}">
+        $ahorroPct    = ($mostradorTotal > 0) ? round((($mostradorTotal - $prepagoTotal) / $mostradorTotal) * 100) : 0;
+    @endphp
 
-            {{-- HERO (imagen + badge) --}}
-            <div class="car-hero">
-              <img class="car-hero-img"
-                   src="{{ $imgCat }}"
-                   alt="{{ $cat->nombre }}"
-                   onerror="this.onerror=null;this.src='{{ $placeholder }}';">
+      <article class="car-card car-card--v2 {{ (string)$categoriaId===(string)$cat->id_categoria ? 'active' : '' }}"
+         data-prepago-dia="{{ $prepagoDia }}"
+         data-mostrador-dia="{{ $mostradorDia }}">
 
-              <div class="car-days-badge car-days-badge--v2">
-                <i class="fa-regular fa-calendar-days"></i>
-                <span class="js-days-badge">{{ $days }}</span> día(s)
-              </div>
+        <div class="car-body">
+          {{-- 1. Agrupamos el Título y el Badge en una nueva fila --}}
+          <div class="car-header-row">
+            <div class="car-top">{{ strtoupper($cat->nombre) }}</div>
+
+            {{-- El badge ahora vive aquí arriba, al lado del título --}}
+            <div class="car-days-badge car-days-badge--v2">
+              <i class="fa-regular fa-calendar-days"></i>
+              <span class="js-days-badge">{{ $days }}</span> día(s)
             </div>
+          </div>
 
-            {{-- CONTENIDO --}}
-            <div class="car-body">
-              <div class="car-top">{{ strtoupper($cat->nombre) }}</div>
-              <div class="car-sub">{{ $desc }}</div>
+          {{-- SOLO CAMBIAMOS ESTA PARTE: mostramos la descripción completa --}}
+          <div class="car-sub">{{ $desc }}</div>
 
-              {{-- ✅ NUEVO: iconos arriba + chips CarPlay/Android abajo (como tu imagen) --}}
-              <div class="car-features">
-                <ul class="car-mini-specs">
-                  <li title="Pasajeros"><i class="fa-solid fa-user-large"></i> {{ $pasajeros }}</li>
-                  <li title="Maletas chicas"><i class="fa-solid  fa-suitcase-rolling"></i> {{ $malChicas }}</li>
-                  <li title="Maletas grandes"><i class="fa-solid fa-briefcase"></i> {{ $malGrandes }}</li>
+          {{-- 2. El HERO ahora solo contiene la imagen --}}
+          <div class="car-hero">
+            <img class="car-hero-img"
+                 src="{{ $imgCat }}"
+                 alt="{{ $cat->nombre }}"
+                 onerror="this.onerror=null;this.src='{{ $placeholder }}';">
+          </div>
 
-                  <li title="Transmisión">
-                    <span class="spec-letter">T | {{ $tLabelCat }}</span>
-                  </li>
+          {{-- FEATURES --}}
+          <div class="car-features">
+            <ul class="car-mini-specs">
+              <li title="Pasajeros">
+                <i class="fa-solid fa-user-large"></i> {{ $paxFinal }}
+              </li>
+              <li title="Maletas chicas">
+                <i class="fa-solid fa-suitcase-rolling"></i> {{ $sFinal }}
+              </li>
+              <li title="Maletas grandes">
+                <i class="fa-solid fa-briefcase"></i> {{ $bFinal }}
+              </li>
+              <li title="Transmisión">
+                <span class="spec-letter">T | {{ $transmision }}</span>
+              </li>
+              @if($tieneACCat)
+                <li title="Aire acondicionado">
+                  <i class="fa-regular fa-snowflake"></i>
+                  <span class="spec-letter">A/C</span>
+                </li>
+              @endif
+            </ul>
 
-                  @if($tieneACCat)
-                    <li title="Aire acondicionado">
-                      <span class="spec-letter">A/C</span>
-                    </li>
-                  @endif
-                </ul>
-
-                <div class="car-connect">
-                  @if($appleCarplay)
-                    <span class="badge-chip badge-apple" title="Apple CarPlay">
-                      <span class="icon-badge"><i class="fa-brands fa-apple"></i></span>
-                      CarPlay
-                    </span>
-                  @endif
-
-                  @if($androidAuto)
-                    <span class="badge-chip badge-android" title="Android Auto">
-                      <span class="icon-badge"><i class="fa-brands fa-android"></i></span>
-                      Android Auto
-                    </span>
-                  @endif
-                </div>
-              </div>
-
-              {{-- PRECIOS --}}
-              <div class="car-price car-price--v2">
-                <div class="price-old">
-                  ${{ number_format($mostradorTotal,0) }} MXN
-                </div>
-
-                <div class="price-new">
-                  $<span class="js-prepago-total">{{ number_format($prepagoTotal,0) }}</span> MXN
-                </div>
-
-                @if($ahorroPct > 0)
-                  <div class="price-save">
-                    Ahorra <strong class="js-ahorro">{{ $ahorroPct }}</strong>%
-                  </div>
-                @endif
-
-                <a class="btn-pay primary"
-                   href="{{ $toStep(3, ['categoria_id'=>$cat->id_categoria, 'plan'=>'linea']) }}">
-                  PREPAGAR EN LÍNEA
-                </a>
-
-                <div class="office-wrap">
-                  <div class="office-price">
-                    $<span class="js-mostrador-total">{{ number_format($mostradorTotal,0) }}</span> MXN
-                  </div>
-
-                  <a class="btn-pay gray"
-                     href="{{ $toStep(3, ['categoria_id'=>$cat->id_categoria, 'plan'=>'mostrador']) }}">
-                    PAGAR EN OFICINA
-                  </a>
-                </div>
-              </div>
+            <div class="car-connect">
+              @if($appleCarplay)
+                <span class="badge-chip badge-apple" title="Apple CarPlay">
+                  <span class="icon-badge"><i class="fa-brands fa-apple"></i></span>
+                  CarPlay
+                </span>
+              @endif
+              @if($androidAuto)
+                <span class="badge-chip badge-android" title="Android Auto">
+                  <span class="icon-badge"><i class="fa-brands fa-android"></i></span>
+                  Android Auto
+                </span>
+              @endif
             </div>
-          </article>
-        @empty
-          <p>No hay categorías disponibles.</p>
-        @endforelse
-      </div>
+          </div>
 
-      <div class="wizard-nav">
-        <a class="btn btn-ghost" href="{{ $toStep(1) }}">Anterior</a>
-        <a class="btn btn-primary" href="{{ $toStep(3) }}">Siguiente</a>
-      </div>
-    @endif
+          {{-- PRECIOS --}}
+          <div class="car-price car-price--v2">
+            <div class="price-old">
+              ${{ number_format($mostradorTotal,0) }} MXN
+            </div>
+            <div class="price-new">
+              $<span class="js-prepago-total">{{ number_format($prepagoTotal,0) }}</span> MXN
+            </div>
+            @if($ahorroPct > 0)
+              <div class="price-save">
+                Ahorra <strong class="js-ahorro">{{ $ahorroPct }}</strong>%
+              </div>
+            @endif
+            <a class="btn-pay primary"
+               href="{{ $toStep(3, ['categoria_id'=>$cat->id_categoria, 'plan'=>'linea']) }}">
+              PREPAGAR EN LÍNEA
+            </a>
+            <div class="office-wrap">
+              <div class="office-price">
+                $<span class="js-mostrador-total">{{ number_format($mostradorTotal,0) }}</span> MXN
+              </div>
+              <a class="btn-pay gray"
+                 href="{{ $toStep(3, ['categoria_id'=>$cat->id_categoria, 'plan'=>'mostrador']) }}">
+                PAGAR EN OFICINA
+              </a>
+            </div>
+          </div>
+        </div>
+      </article>
+    @empty
+      <p>No hay categorías disponibles.</p>
+    @endforelse
+  </div>
+
+  <div class="wizard-nav">
+    <a class="btn btn-ghost" href="{{ $toStep(1) }}">Anterior</a>
+    <a class="btn btn-primary" href="{{ $toStep(3) }}">Siguiente</a>
+  </div>
+@endif
 
     {{-- ===================== STEP 3 ===================== --}}
     @if($stepCurrent===3)
       <header class="wizard-head">
-        <h2>Complementos y adicionales</h2>
-        <p>Selecciona los extras que quieras agregar a tu renta.</p>
+        <h2>Selecciona las opciones adicionales que desees</h2>
+        <p>Revisa protecciones incluidas y agrega equipamiento/servicios extra.</p>
       </header>
 
       <input type="hidden" id="addonsHidden" value="{{ $addonsParam }}">
 
-      <div class="addons-grid">
-        @forelse(($servicios ?? []) as $srv)
-          @php
-            $unidad = $srv->tipo_cobro === 'por_evento' ? '/ evento' : '/ día';
-            $precio = number_format((float)$srv->precio, 0);
-          @endphp
+      <style>
+        .step3-wrap{ display:grid; gap:18px; }
+        .step3-section{
+          background:#fff;
+          border:1px solid #eef2f7;
+          border-radius:18px;
+          padding:16px;
+          box-shadow:0 18px 40px rgba(15,23,42,.08);
+        }
+        .step3-title{
+          display:flex; align-items:center; gap:10px;
+          font-weight:900;
+          font-size:18px;
+          margin:0 0 14px;
+          color:#0f172a;
+        }
+        .step3-title small{
+          font-weight:800; font-size:12px;
+          color:#6b7280; letter-spacing:.4px; text-transform:uppercase;
+        }
+        .step3-info{
+          margin-left:auto;
+          width:30px; height:30px;
+          border-radius:999px;
+          display:grid; place-items:center;
+          background:rgba(178,34,34,.08);
+          color:var(--brand);
+          border:1px solid rgba(178,34,34,.22);
+          cursor:pointer;
+        }
 
-          <div class="addon-card"
-               data-id="{{ $srv->id_servicio }}"
-               data-name="{{ $srv->nombre }}"
-               data-price="{{ (float)$srv->precio }}"
-               data-charge="{{ $srv->tipo_cobro }}">
-            <h4 class="addon-name">{{ $srv->nombre }}</h4>
-            @if(!empty($srv->descripcion))
-              <p>{{ $srv->descripcion }}</p>
-            @endif
+        .prot-grid{
+          display:grid;
+          grid-template-columns: repeat(2, minmax(0,1fr));
+          gap:14px;
+          align-items:stretch;
+        }
+        @media (max-width:840px){
+          .prot-grid{ grid-template-columns:1fr; }
+        }
+        .prot-card{
+          border:1px dashed rgba(178,34,34,.20);
+          border-radius:18px;
+          padding:14px;
+          display:grid;
+          gap:10px;
+          align-content:start;
+        }
+        .prot-top{ display:flex; align-items:flex-start; gap:12px; }
+        .prot-icon{
+          width:70px; height:70px;
+          border-radius:999px;
+          display:grid; place-items:center;
+          border:3px solid #d1d5db;
+          color:#9ca3af;
+          flex:0 0 auto;
+        }
+        .prot-icon.is-on{ border-color:#16a34a; color:#16a34a; }
+        .prot-name{
+          font-weight:900;
+          letter-spacing:.25px;
+          text-transform:uppercase;
+          font-size:13px;
+          color:#0f172a;
+          margin:0 0 6px;
+        }
+        .prot-desc{
+          margin:0;
+          color:#475569;
+          font-weight:700;
+          font-size:13px;
+          line-height:1.45;
+        }
+        .prot-badge{
+          display:inline-flex;
+          align-items:center;
+          gap:8px;
+          font-weight:900;
+          letter-spacing:.4px;
+          text-transform:uppercase;
+          font-size:12px;
+          color:#0f172a;
+          margin-top:10px;
+        }
+        .prot-badge .dot{
+          width:10px; height:10px; border-radius:999px;
+          background:#16a34a;
+          box-shadow:0 0 0 4px rgba(22,163,74,.12);
+        }
 
-            <div class="small"><strong>${{ $precio }}</strong> MXN {{ $unidad }}</div>
+        .equip-grid{
+          display:grid;
+          grid-template-columns: repeat(3, minmax(0,1fr));
+          gap:14px;
+        }
+        @media (max-width:980px){
+          .equip-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+        }
+        @media (max-width:620px){
+          .equip-grid{ grid-template-columns: 1fr; }
+        }
 
-            <div class="addon-qty">
-              <button class="qty-btn minus" type="button">−</button>
-              <span class="qty">0</span>
-              <button class="qty-btn plus" type="button">+</button>
+        .addon-card{
+          border:1px solid #eef2f7;
+          border-radius:18px;
+          padding:14px;
+          background:#fff;
+          box-shadow:0 18px 40px rgba(15,23,42,.06);
+          display:grid;
+          gap:10px;
+        }
+        .addon-top{ display:flex; gap:12px; align-items:flex-start; }
+        .addon-ico{
+          width:70px; height:70px;
+          border-radius:999px;
+          display:grid; place-items:center;
+          border:3px solid #d1d5db;
+          color:#6b7280;
+          flex:0 0 auto;
+        }
+        .addon-name{
+          margin:0;
+          font-weight:900;
+          letter-spacing:.25px;
+          text-transform:uppercase;
+          font-size:13px;
+          color:#0f172a;
+        }
+        .addon-card p{
+          margin:6px 0 0;
+          color:#475569;
+          font-weight:700;
+          font-size:13px;
+          line-height:1.45;
+        }
+        .addon-price{
+          font-weight:900;
+          color:#0f172a;
+          font-size:13px;
+        }
+        .addon-price strong{ color:var(--brand); }
+
+        .addon-qty{
+          display:flex;
+          gap:10px;
+          align-items:center;
+          justify-content:flex-start;
+          margin-top:4px;
+        }
+        .qty-btn{
+          width:42px; height:42px;
+          border-radius:12px;
+          border:1px solid #e5e7eb;
+          background:#fff;
+          font-weight:900;
+          cursor:pointer;
+        }
+        .qty{ min-width:34px; text-align:center; font-weight:900; color:#0f172a; }
+        .qty-hint{
+          font-size:12px;
+          font-weight:800;
+          color:#6b7280;
+          margin-left:auto;
+        }
+
+        /* modal simple (step 3) */
+        .modal-s3{
+          position:fixed;
+          inset:0;
+          display:none;
+          align-items:center;
+          justify-content:center;
+          background:rgba(15,23,42,.55);
+          z-index:999999;
+          padding:18px;
+        }
+        .modal-s3 .card{
+          width:min(720px, 100%);
+          background:#fff;
+          border-radius:18px;
+          border:1px solid #eef2f7;
+          box-shadow:0 25px 60px rgba(0,0,0,.25);
+          padding:18px;
+        }
+        .modal-s3 .x{
+          width:40px; height:40px;
+          border-radius:12px;
+          border:1px solid #e5e7eb;
+          background:#fff;
+          cursor:pointer;
+          display:grid; place-items:center;
+          margin-left:auto;
+        }
+      </style>
+
+      <div class="step3-wrap">
+
+        {{-- Protecciones --}}
+        <section class="step3-section">
+          <div class="step3-title">
+            Relevos de responsabilidad (Protecciones)
+            <button type="button" class="step3-info" id="info-protecciones-step3" title="Más información">
+              <i class="fa-solid fa-circle-info"></i>
+            </button>
+          </div>
+
+          <div class="prot-grid">
+            <div class="prot-card">
+              <div class="prot-top">
+                <div class="prot-icon is-on">
+                  <i class="fa-solid fa-shield"></i>
+                </div>
+                <div>
+                  <p class="prot-name">Protección limitada de responsabilidad hacia terceros (LI)</p>
+                  <p class="prot-desc">
+                    Protege a terceros por daños y perjuicios ocasionados en un accidente y cubre la cantidad mínima requerida por ley.
+                  </p>
+                  <div class="prot-badge"><span class="dot"></span> Incluida</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="prot-card">
+              <div class="prot-top">
+                <div class="prot-icon">
+                  <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                  <p class="prot-name">Protecciones adicionales</p>
+                  <p class="prot-desc">
+                    Tú eliges el nivel de responsabilidad sobre el auto que más vaya acorde a tus necesidades y presupuesto.
+                    Pregunta por nuestros relevos (opcionales) al llegar al mostrador de cualquiera de nuestras oficinas.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        @empty
-          <div style="grid-column:1/-1; text-align:center; padding:.75rem 0;">
-            No hay complementos disponibles por ahora.
+
+          <div id="modalProteccionesStep3" class="modal-s3" aria-hidden="true">
+            <div class="card">
+
+              <button type="button" class="x" id="closeProteccionesStep3" aria-label="Cerrar">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+
+              <h2 class="s3-modal-title">Relevos de responsabilidad (Protecciones)</h2>
+              <p class="s3-modal-sub">Consulta el detalle de cada pack y lo que incluye.</p>
+
+              <div class="s3-body-scroll">
+                <div class="s3-info-top">
+                  <p>
+                    <strong>VIAJERO</strong> ofrece diferentes tipos de Relevos de responsabilidad (Protecciones) opcionales disponibles por
+                    un cargo adicional diario el cual se puede adquirir al reservar o el día de la renta.
+                  </p>
+
+                  <p>
+                    El cliente es responsable de todo daño o robo del vehículo <strong>VIAJERO</strong> sujeto a ciertas exclusiones
+                    contenidas en el contrato de alquiler. <strong>VIAJERO</strong> renunciará o limitará la responsabilidad del cliente
+                    a través de la adquisición de alguno de estos.
+                  </p>
+
+                  <p style="margin-bottom:0;">
+                    Los clientes que reserven utilizando su Número Wizard verán las preferencias de coberturas y seguros seleccionados en su perfil.
+                    También puede acudir a una oficina o llamar al <strong>01 (442) 303 2668</strong> para obtener ayuda.
+                  </p>
+                </div>
+
+                {{-- LDW PACK --}}
+                <details class="s3-acc-item" >
+                  <summary class="s3-acc-sum">
+                    <span class="s3-acc-left">
+                      <span class="s3-acc-badge">LDW</span>
+                      <span class="s3-acc-name">LDW PACK</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                  </summary>
+
+                  <div class="s3-acc-body">
+                    <ul class="s3-list">
+                      <li><strong>LDW:</strong> El cliente es responsable por el <strong>0% deducible</strong>, de lado a lado pase lo que pase con el auto, está cubierto de bumper a bumper.</li>
+                      <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000 MXN</strong> por evento.</li>
+                      <li><strong>PRA:</strong> Asistencia en carretera Premium. Incluye: envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente. <strong>No incluye</strong> costo de llave ni gasolina.</li>
+                      <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
+                      <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
+                      <li><strong>LI:</strong> Responsabilidad civil hasta <strong>$3,000,000 MXN</strong>.</li>
+                    </ul>
+                  </div>
+                </details>
+
+                {{-- PDW PACK --}}
+                <details class="s3-acc-item">
+                  <summary class="s3-acc-sum">
+                    <span class="s3-acc-left">
+                      <span class="s3-acc-badge">PDW</span>
+                      <span class="s3-acc-name">PDW PACK</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                  </summary>
+
+                  <div class="s3-acc-body">
+                    <ul class="s3-list">
+                      <li><strong>PDW:</strong> Cubierta toda la carrocería al <strong>5%</strong>, <strong>10%</strong> pérdida total o robo. <strong>No cubre</strong> llantas, accesorios, rines ni cristales.</li>
+                      <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000 MXN</strong> por evento.</li>
+                      <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es responsable por costos de: grúa (en caso de requerirla), corralón, envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente.</li>
+                      <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
+                      <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
+                      <li><strong>ALI:</strong> Responsabilidad civil hasta <strong>$1,000,000 MXN</strong>.</li>
+                    </ul>
+                  </div>
+                </details>
+
+                {{-- CDW PACK 1 --}}
+                <details class="s3-acc-item">
+                  <summary class="s3-acc-sum">
+                    <span class="s3-acc-left">
+                      <span class="s3-acc-badge">CDW</span>
+                      <span class="s3-acc-name">CDW PACK 1</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                  </summary>
+
+                  <div class="s3-acc-body">
+                    <ul class="s3-list">
+                      <li><strong>CDW 10%:</strong> El cliente es responsable por el <strong>10% deducible</strong> en daños, <strong>20%</strong> pérdida total o robo sobre valor factura.</li>
+                      <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000 MXN</strong> por evento.</li>
+                      <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es responsable por costos de: grúa (en caso de requerirla), corralón, envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente.</li>
+                      <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
+                      <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
+                      <li><strong>ALI:</strong> Responsabilidad civil hasta <strong>$1,000,000 MXN</strong>.</li>
+                    </ul>
+                  </div>
+                </details>
+
+                {{-- CDW PACK 2 --}}
+                <details class="s3-acc-item">
+                  <summary class="s3-acc-sum">
+                    <span class="s3-acc-left">
+                      <span class="s3-acc-badge">CDW</span>
+                      <span class="s3-acc-name">CDW PACK 2</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                  </summary>
+
+                  <div class="s3-acc-body">
+                    <ul class="s3-list">
+                      <li><strong>CDW 20%:</strong> El cliente es responsable por el <strong>20% deducible</strong> en daños, <strong>30%</strong> pérdida total o robo sobre valor factura.</li>
+                      <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000 MXN</strong> por evento.</li>
+                      <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es responsable por costos de: grúa (en caso de requerirla), corralón, envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente.</li>
+                      <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
+                      <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
+                      <li><strong>LI:</strong> Responsabilidad civil hasta <strong>$350,000 MXN</strong>.</li>
+                    </ul>
+                  </div>
+                </details>
+
+                {{-- DECLINE PROTECTIONS --}}
+                <details class="s3-acc-item s3-acc-danger">
+                  <summary class="s3-acc-sum">
+                    <span class="s3-acc-left">
+                      <span class="s3-acc-badge s3-badge-danger">DECLINE</span>
+                      <span class="s3-acc-name">DECLINE PROTECTIONS</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                  </summary>
+
+                  <div class="s3-acc-body">
+                    <ul class="s3-list">
+                      <li><strong>CDW (DECLINADO):</strong> El cliente es responsable por el <strong>100% deducible</strong> sobre valor factura del auto.</li>
+                      <li><strong>No</strong> cubre gastos médicos en caso de accidente.</li>
+                      <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es responsable por costos de: grúa (en caso de requerirla), corralón, envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente.</li>
+                      <li><strong>LOU (DECLINADO):</strong> No cubre tiempo perdido en taller.</li>
+                      <li><strong>LA (DECLINADO):</strong> No cubre asistencia legal.</li>
+                      <li><strong>LI:</strong> Responsabilidad civil hasta <strong>$350,000 MXN</strong>.</li>
+                    </ul>
+                  </div>
+                </details>
+
+              </div>
+            </div>
           </div>
-        @endforelse
+
+          <script>
+            document.addEventListener('DOMContentLoaded', () => {
+              const openBtn = document.getElementById('info-protecciones-step3');
+              const modal   = document.getElementById('modalProteccionesStep3');
+              const closeBtn= document.getElementById('closeProteccionesStep3');
+
+              if(openBtn && modal){
+                openBtn.addEventListener('click', () => { modal.style.display='flex'; });
+              }
+              if(closeBtn && modal){
+                closeBtn.addEventListener('click', () => { modal.style.display='none'; });
+              }
+              if(modal){
+                modal.addEventListener('click', (e) => {
+                  if(e.target === modal) modal.style.display='none';
+                });
+              }
+            });
+          </script>
+        </section>
+
+        {{-- Equipamiento & Servicios --}}
+        <section class="step3-section">
+          <div class="step3-title">
+            Equipamiento & Servicios
+            <small>máximo 3 por opción</small>
+          </div>
+
+          <div class="equip-grid">
+            @forelse($serviciosFiltrados as $srv)
+              @php
+                $unidad = $srv->tipo_cobro === 'por_evento' ? '/ evento' : '/ día';
+                $precio = number_format((float)$srv->precio, 0);
+
+                $n = mb_strtolower(trim((string)($srv->nombre ?? '')));
+                $icon = 'fa-solid fa-circle-plus';
+                if (str_contains($n, 'silla')) $icon = 'fa-solid fa-baby-carriage';
+                elseif (str_contains($n, 'conductor')) $icon = 'fa-solid fa-user-plus';
+                elseif (str_contains($n, 'gasolina')) $icon = 'fa-solid fa-gas-pump';
+              @endphp
+
+              <div class="addon-card"
+                   data-id="{{ $srv->id_servicio }}"
+                   data-name="{{ $srv->nombre }}"
+                   data-price="{{ (float)$srv->precio }}"
+                   data-charge="{{ $srv->tipo_cobro }}"
+                   data-max="3">
+                <div class="addon-top">
+                  <div class="addon-ico">
+                    <i class="{{ $icon }}"></i>
+                  </div>
+
+                  <div style="flex:1;">
+                    <h4 class="addon-name">{{ $srv->nombre }}</h4>
+                    @if(!empty($srv->descripcion))
+                      <p>{{ $srv->descripcion }}</p>
+                    @endif
+                  </div>
+                </div>
+
+                <div class="addon-price">
+                  <strong>${{ $precio }}</strong> MXN {{ $unidad }}
+                </div>
+
+                <div class="addon-qty">
+                  <button class="qty-btn minus" type="button">−</button>
+                  <span class="qty">0</span>
+                  <button class="qty-btn plus" type="button">+</button>
+                  <span class="qty-hint">Máx 3</span>
+                </div>
+              </div>
+            @empty
+              <div style="grid-column:1/-1; text-align:center; padding:.75rem 0;">
+                No hay complementos disponibles por ahora.
+              </div>
+            @endforelse
+          </div>
+        </section>
+
       </div>
 
       <div class="wizard-nav">
@@ -808,7 +1277,6 @@
 
    /* DISEÑO RESPONSIVO: TARJETA DE RESERVACIÓN  */
 
-/* móvil y tablet */
 @media (max-width:1024px){
 
     footer, .footer-elegant {
@@ -896,10 +1364,21 @@
       </style>
 
       <div class="step4-layout">
+        @php
+  $months3 = [
+    '01' => 'ENE', '02' => 'FEB', '03' => 'MAR', '04' => 'ABR',
+    '05' => 'MAY', '06' => 'JUN', '07' => 'JUL', '08' => 'AGO',
+    '09' => 'SEP', '10' => 'OCT', '11' => 'NOV', '12' => 'DIC'
+  ];
+
+  // Si no tienes definidas estas variables
+  $maxYear = date('Y') - 18;
+  $minYear = $maxYear - 80;
+@endphp
 
         {{-- ===================== PANE IZQUIERDO ===================== --}}
         <div class="step4-pane">
-          <form class="sum-form" id="formCotizacion" onsubmit="return false;">
+          <form class="sum-form" id="formCotizacion" onsubmit="return false;" novalidate>
             <script>
               window.APP_URL_RESERVA_MOSTRADOR = "{{ route('reservas.store') }}";
               window.APP_URL_RESERVA_LINEA     = "{{ route('reservas.linea') }}";
@@ -924,92 +1403,84 @@
 
             <div class="sum-personal-grid">
 
-              <div class="field" style="grid-column: 1 / -1;">
-                <label>Nombre Completo</label>
+  {{-- Nombre Completo --}}
+  <div class="field field-floating" style="grid-column: 1 / -1;">
+    <input type="text" class="input-centered" name="nombre_completo" id="nombreCompleto" autocomplete="name" placeholder=" " required>
+    <label for="nombreCompleto">Nombre Completo</label>
+    <input type="hidden" name="nombre" id="nombreCliente">
+    <input type="hidden" name="apellido" id="apellidoCliente">
+  </div>
 
-                <input
-                  type="text"
-                  name="nombre_completo"
-                  id="nombreCompleto"
-                  autocomplete="name"
-                >
+  {{-- Móvil --}}
+  <div class="field field-floating" style="grid-column: 1 / -1;">
+    <input type="text" name="telefono" id="telefonoCliente" placeholder=" " required>
+    <label for="telefonoCliente">Móvil</label>
+  </div>
 
-                <input type="hidden" name="nombre" id="nombreCliente">
-                <input type="hidden" name="apellido" id="apellidoCliente">
-              </div>
+  {{-- Correo electrónico --}}
+  <div class="field field-floating" style="grid-column: 1 / -1;">
+    <input type="email" name="email" id="correoCliente" placeholder=" " required>
+    <label for="correoCliente">Correo electrónico</label>
+  </div>
 
-              <div class="field" style="grid-column: 1 / -1;">
-                <label>Móvil</label>
-                <input type="text" name="telefono" id="telefonoCliente" >
-              </div>
+ {{-- País --}}
+<div class="field field-floating">
+  <select name="pais" id="pais" required>
+    <option value="" disabled selected>Selecciona un país</option>
+    <option value="México">México</option>
+    <option value="Estados Unidos">Estados Unidos</option>
+    <option value="Canadá">Canadá</option>
+  </select>
+  <label for="pais">País</label>
+</div>
 
-              <div class="field" style="grid-column: 1 / -1;">
-                <label>Correo electrónico</label>
-                <input type="email" name="email" id="correoCliente" >
-              </div>
+{{-- Fecha de nacimiento --}}
+<div class="field field-dob-container">
+  <label class="label-dob-main">Fecha de nacimiento</label>  {{-- ESTE LABEL ES IMPORTANTE --}}
+  <div class="dob-inline">
+    <div class="field-floating-sub">
+      <select id="dob_day" class="select-dob" required>
+        <option value="" disabled selected hidden></option>
+        @for($d=1; $d<=31; $d++)
+          <option value="{{ str_pad($d,2,'0',STR_PAD_LEFT) }}">{{ str_pad($d,2,'0',STR_PAD_LEFT) }}</option>
+        @endfor
+      </select>
+      <label>DD</label>
+    </div>
+    <div class="field-floating-sub">
+      <select id="dob_month" class="select-dob" required>
+        <option value="" disabled selected hidden></option>
+        @foreach($months3 as $val => $label)
+          <option value="{{ $val }}">{{ $label }}</option>
+        @endforeach
+      </select>
+      <label>MM</label>
+    </div>
+    <div class="field-floating-sub">
+      <select id="dob_year" class="select-dob" required>
+        <option value="" disabled selected hidden></option>
+        @for($y=$maxYear; $y>=$minYear; $y--)
+          <option value="{{ $y }}">{{ $y }}</option>
+        @endfor
+      </select>
+      <label>YYYY</label>
+    </div>
+  </div>
+</div>
 
-              <div class="field">
-                <label>País</label>
-                <select name="pais" id="pais">
-                  <option value="">Selecciona un país</option>
-                  <option value="México">México</option>
-                  <option value="Estados Unidos">Estados Unidos</option>
-                  <option value="Canadá">Canadá</option>
-                </select>
-              </div>
+  @php
+    $isAirport = (is_string($pickupName) && str_contains(mb_strtolower($pickupName), 'aeropuerto')) ||
+                 (is_string($dropoffName) && str_contains(mb_strtolower($dropoffName), 'aeropuerto'));
+  @endphp
 
-              <div class="field">
-                <label>Fecha de nacimiento</label>
+  @if($isAirport)
+    <div class="field field-floating" style="grid-column: 1 / -1;">
+      <input type="text" name="vuelo" id="vuelo" placeholder=" ">
+      <label for="vuelo">No. de vuelo</label>
+    </div>
+  @endif
 
-                <div class="dob-inline">
-                  <select id="dob_day">
-                    <option value="">DD</option>
-                    @for($d=1; $d<=31; $d++)
-                      <option value="{{ str_pad($d,2,'0',STR_PAD_LEFT) }}">
-                        {{ str_pad($d,2,'0',STR_PAD_LEFT) }}
-                      </option>
-                    @endfor
-                  </select>
-
-                  <select id="dob_month">
-                    <option value="">mmm</option>
-                    @php
-                      $months3 = [
-                        '01'=>'ene','02'=>'feb','03'=>'mar','04'=>'abr','05'=>'may','06'=>'jun',
-                        '07'=>'jul','08'=>'ago','09'=>'sep','10'=>'oct','11'=>'nov','12'=>'dic',
-                      ];
-                    @endphp
-
-                    @foreach($months3 as $val => $label)
-                      <option value="{{ $val }}">{{ $label }}</option>
-                    @endforeach
-                  </select>
-
-                  <select id="dob_year">
-                    <option value="">YYYY</option>
-                    @for($y=$maxYear; $y>=$minYear; $y--)
-                      <option value="{{ $y }}">{{ $y }}</option>
-                    @endfor
-                  </select>
-                </div>
-
-                <input type="hidden" name="nacimiento" id="dob">
-              </div>
-
-              @php
-                $isAirport =
-                  (is_string($pickupName) && str_contains(mb_strtolower($pickupName), 'aeropuerto')) ||
-                  (is_string($dropoffName) && str_contains(mb_strtolower($dropoffName), 'aeropuerto'));
-              @endphp
-
-              @if($isAirport)
-                <div class="field" style="grid-column: 1 / -1;">
-                  <label>No. de vuelo </label>
-                  <input type="text" name="vuelo" id="vuelo" >
-                </div>
-              @endif
-
-            </div>
+</div>
 
             <div class="sum-checks">
               <label class="cbox">
@@ -1142,16 +1613,36 @@
 
                 {{-- ✅ NUEVO (Step 4): iconos + T | ... + A/C + chips (2 bloques) --}}
                 @php
-                  $codigo = strtoupper((string)($categoriaSel->codigo ?? ''));
-                  $tLabel = ($codigo === 'L') ? 'Estándar' : 'Automática';
+                $codigo = strtoupper((string)($categoriaSel->codigo ?? ''));
+                $transmision = ($categoriaSel->id_categoria == 9) ? 'Estándar' : 'Automática';
+                $tieneACCat   = (int)($cat->aire_acondicionado ?? ($cat->aire_ac ?? 1));
 
-                  $cap = [
-                    'pax'   => (int)($categoriaSel->pasajeros ?? 5),
-                    'small' => (int)($categoriaSel->maletas_chicas ?? 2),
-                    'big'   => (int)($categoriaSel->maletas_grandes ?? 1),
-                  ];
 
-                  $tieneAC = (int)($categoriaSel->aire_acondicionado ?? ($categoriaSel->aire_ac ?? 0));
+                  $predeterminadosPorId = [
+                    1  => ['pax'=>5,  'small'=>2, 'big'=>1],
+                    2  => ['pax'=>5,  'small'=>2, 'big'=>1],
+                    3  => ['pax'=>5,  'small'=>2, 'big'=>2],
+                    4  => ['pax'=>5,  'small'=>2, 'big'=>2],
+                    5  => ['pax'=>5,  'small'=>2, 'big'=>2],
+                    6  => ['pax'=>5,  'small'=>3, 'big'=>2],
+                    7  => ['pax'=>7,  'small'=>3, 'big'=>2],
+                    8  => ['pax'=>7,  'small'=>4, 'big'=>2],
+                    9  => ['pax'=>13, 'small'=>4, 'big'=>3],
+                    10 => ['pax'=>5,  'small'=>3, 'big'=>2],
+                    11 => ['pax'=>5,  'small'=>3, 'big'=>2],
+                    ];
+
+                    $idActual = $categoriaSel->id_categoria ?? null;
+
+                    if(isset($predeterminadosPorId[$idActual])){
+                    $cap = $predeterminadosPorId[$idActual];
+                    }else{
+                    $cap = [
+                        'pax'   => (int)($categoriaSel->pasajeros ?? 5),
+                        'small' => (int)($categoriaSel->maletas_chicas ?? 2),
+                        'big'   => (int)($categoriaSel->maletas_grandes ?? 1),
+                    ];
+                    }
                 @endphp
 
                 <div class="car-features" style="margin-top:14px;">
@@ -1161,11 +1652,12 @@
                     <li><i class="fa-solid fa-briefcase"></i> {{ $cap['big'] ?? 1 }}</li>
 
                     <li title="Transmisión">
-                      <span class="spec-letter">T | {{ $tLabel }}</span>
+                      <span class="spec-letter">T | {{ $transmision }}</span>
                     </li>
 
-                    @if($tieneAC)
+                    @if($tieneACCat)
                       <li title="Aire acondicionado">
+                        <i class="fa-regular fa-snowflake"></i>
                         <span class="spec-letter">A/C</span>
                       </li>
                     @endif
@@ -1310,7 +1802,7 @@
       @isset($servicios)
         <script id="addonsCatalog" type="application/json">
           {!! json_encode(
-            collect($servicios)->mapWithKeys(fn($s) => [
+            collect($serviciosFiltrados)->mapWithKeys(fn($s) => [
               $s->id_servicio => [
                 'nombre' => $s->nombre,
                 'precio' => (float)$s->precio,
@@ -1325,21 +1817,24 @@
     @endif
 
   </section>
+
+  </div>{{-- /fondos-reservaciones --}}
 </main>
+
 {{--TARJETA RESPONSIVA --}}
-        @if($stepCurrent === 4)
-        <div class="movil-footer-sticky">
-            <div class="movil-total-wrapper">
-                <span class="movil-total-label">Total</span>
-                <span id="qTotalMovil" class="movil-total-amount">
-                    ${{ number_format($tarifaBase, 0) }} MXN
-                </span>
-            </div>
-            <button type="button" id="btnReservarMovil" class="btn-reservar-movil">
-                Reservar
-            </button>
-        </div>
-        @endif
+@if($stepCurrent === 4)
+  <div class="movil-footer-sticky">
+      <div class="movil-total-wrapper">
+          <span class="movil-total-label">Total</span>
+          <span id="qTotalMovil" class="movil-total-amount">
+              ${{ number_format($tarifaBase, 0) }} MXN
+          </span>
+      </div>
+      <button type="button" id="btnReservarMovil" class="btn-reservar-movil">
+          Reservar
+      </button>
+  </div>
+@endif
 @endsection
 
 @section('js-vistaReservaciones')
@@ -1377,25 +1872,25 @@
       const cerrarModalMetodo = document.getElementById('cerrarModalMetodo');
       const btnPagoLinea      = document.getElementById('btnPagoLinea');
 
-      if (!btnReservar) return;
+      if (btnReservar) {
+        btnReservar.addEventListener('click', function (e) {
+          e.preventDefault();
 
-      btnReservar.addEventListener('click', function (e) {
-        e.preventDefault();
+          if (currentPlan === 'linea') {
+            if (btnPagoLinea) btnPagoLinea.click();
+            else if (typeof window.handleReservaPagoEnLinea === 'function') window.handleReservaPagoEnLinea();
+            return;
+          }
 
-        if (currentPlan === 'linea') {
-          if (btnPagoLinea) btnPagoLinea.click();
-          else if (typeof window.handleReservaPagoEnLinea === 'function') window.handleReservaPagoEnLinea();
-          return;
-        }
+          if (currentPlan === 'mostrador') {
+            if (modalMetodoPago) modalMetodoPago.style.display = 'flex';
+            return;
+          }
 
-        if (currentPlan === 'mostrador') {
-          if (modalMetodoPago) modalMetodoPago.style.display = 'flex';
-          return;
-        }
-
-        if (window.alertify) alertify.warning('Selecciona un tipo de pago desde el paso de categoría (Mostrador o Prepago).');
-        else alert('Selecciona un tipo de pago desde el paso de categoría (Mostrador o Prepago).');
-      });
+          if (window.alertify) alertify.warning('Selecciona un tipo de pago desde el paso de categoría (Mostrador o Prepago).');
+          else alert('Selecciona un tipo de pago desde el paso de categoría (Mostrador o Prepago).');
+        });
+      }
 
       if (cerrarModalMetodo && modalMetodoPago) {
         cerrarModalMetodo.addEventListener('click', function () {
