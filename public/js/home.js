@@ -43,10 +43,6 @@
 
 /* =====================================================================
    FLEET: SOLO FLECHAS (SIN LOOP / SIN AUTOPLAY) + TOPES + BOTONES GRIS
-   - avanza 1 card por click
-   - NO duplica HTML
-   - cuando llega al inicio o al final, se queda ahí (NO se mueve)
-   - fuerza inicio real (scrollLeft=0) para que PREV se vea gris desde el arranque
 ===================================================================== */
 (function(){
   "use strict";
@@ -156,15 +152,6 @@
   });
 })();
 
-/* =====================================================================
-   Media carousels: SOLO manual (SIN LOOP / SIN AUTOPLAY)
-   Nota: tus .media-carousel son "fade" (position:absolute), aquí no tocamos nada.
-===================================================================== */
-(function(){
-  "use strict";
-  // Sin autoplay, sin loop, sin timers aquí.
-})();
-
 /* ====================
    Año en footer
 ==================== */
@@ -203,7 +190,7 @@
 })();
 
 /* =====================================================================
-   Flatpickr FECHAS + SELECTS + Resumen
+   FLATPICKR + SELECTS DE HORA + RESUMEN
 ===================================================================== */
 (function(){
   "use strict";
@@ -212,7 +199,6 @@
 
   /* ==========================================================
      ✅ Inyectar CSS para ocultar el input visible de hora
-     (sin tocar tu CSS externo)
   ========================================================== */
   (function injectTimeCss(){
     const id = "tpHideInputStyle";
@@ -234,7 +220,7 @@
     document.head.appendChild(st);
   })();
 
-  // 1) FECHAS (Flatpickr + rangePlugin)
+  // 1) FECHAS (Flatpickr)
   (function() {
     "use strict";
 
@@ -243,10 +229,6 @@
         const dropoffEl = document.getElementById('dropoffDate');
         const minDate = pickup?.dataset?.min || 'today';
 
-        // Según tus CSS, el cambio de diseño ocurre en 1124px
-        // Desktop/Tablet: >= 1125px | Móvil: <= 1124px
-        const isMobile = window.innerWidth <= 1124;
-
         // Configuración Base
         const commonConfig = {
             locale: 'es',
@@ -254,72 +236,19 @@
             altFormat: 'd/m/Y',
             dateFormat: 'Y-m-d',
             minDate: minDate,
-            disableMobile: true,
-            onReady: function(selectedDates, dateStr, instance) {
-                const altPickup = instance.altInput;
-                const updateLabels = () => {
-                    if (altPickup) {
-                        altPickup.value !== "" ? altPickup.classList.add('has-value') : altPickup.classList.remove('has-value');
-                    }
-                    if (dropoffEl && dropoffEl.nextElementSibling) {
-                        const altDropoff = dropoffEl.nextElementSibling;
-                        if (altDropoff.classList.contains('flatpickr-mobile')) return;
-                        altDropoff.value !== "" ? altDropoff.classList.add('has-value') : altDropoff.classList.remove('has-value');
-                    }
-                };
-
-                if(altPickup) {
-                    altPickup.addEventListener('focus', () => altPickup.classList.add('has-value'));
-                    altPickup.addEventListener('blur', updateLabels);
-                }
-
-                instance.config.onChange.push(() => {
-                    updateLabels();
-                    if (typeof updateSummary === "function") updateSummary();
-                });
-                setTimeout(updateLabels, 200);
-            }
+            disableMobile: true
         };
 
-        if (!isMobile) {
-            /* ==========================================
-               MODO DESKTOP / TABLET (Rango Conectado)
-            ========================================== */
-            window.flatpickr('#pickupDate', {
-                ...commonConfig,
-                plugins: (typeof window.rangePlugin !== "undefined")
-                    ? [ new window.rangePlugin({ input: '#dropoffDate' }) ]
-                    : []
-            });
-        } else {
-            /* ==========================================
-               MODO MÓVIL (Selecciones Independientes)
-            ========================================== */
-            // Inicializamos el de salida
-            const fpPickup = window.flatpickr('#pickupDate', {
-                ...commonConfig,
-                onChange: function(selectedDates) {
-                    // Al elegir fecha de salida, la ponemos como mínima en la de llegada
-                    if (selectedDates[0]) {
-                        fpDropoff.set('minDate', selectedDates[0]);
-                    }
-                    if (typeof updateSummary === "function") updateSummary();
-                }
-            });
+        // Pickup Date
+        flatpickr("#pickupDate", commonConfig);
 
-            // Inicializamos el de llegada por separado
-            const fpDropoff = window.flatpickr('#dropoffDate', {
-                ...commonConfig,
-                onChange: function() {
-                    if (typeof updateSummary === "function") updateSummary();
-                }
-            });
-        }
+        // Dropoff Date
+        flatpickr("#dropoffDate", commonConfig);
     }
   })();
 
   /* ==========================
-       SELECTS de hora (SOLO HORAS)
+       SELECTS de hora
     ========================== */
   function pad2(n) {
     return String(n).padStart(2, "0");
@@ -375,7 +304,7 @@
         sync();
       }
     } else {
-      // Mantener placeholder "Seleccionar hora" y limpiar input oculto
+      // Mantener placeholder y limpiar input oculto
       selH.selectedIndex = 0;
       input.value = "";
     }
@@ -399,9 +328,6 @@
       defaultValue: input.value || "12:00"
     });
 
-    // NO establecer valor por defecto
-    // if (!input.value) input.value = "12:00";
-
     input.addEventListener("change", updateSummary);
     input.addEventListener("input", updateSummary);
   }
@@ -416,13 +342,10 @@
     const raw = String(str || '').trim();
     if (!raw) return { hh: 0, mm: 0 };
 
-    // Extraer SOLO la hora, ignorar minutos
     const m = raw.match(/^(\d{1,2})/);
     if (!m) return { hh: 0, mm: 0 };
 
     let hh = Number(m[1] || 0);
-
-    // Los minutos siempre serán 0
     const mm = 0;
 
     if (Number.isFinite(hh)) {
@@ -493,7 +416,7 @@
     const pickDate  = document.getElementById("pickupDate");
     const dropDate  = document.getElementById("dropoffDate");
 
-    // Sincronizar hora oculta desde el selector (siempre con :00)
+    // Sincronizar hora oculta desde el selector
     function syncHiddenFromSelects(hiddenId){
         const hidden = document.getElementById(hiddenId);
         if(!hidden) return;
@@ -503,7 +426,7 @@
 
         if(selH && selH.value){
             const hh = String(selH.value).padStart(2,"0");
-            hidden.value = `${hh}:00`; // Siempre mandamos minutos en 00
+            hidden.value = `${hh}:00`;
         } else {
             if(!hidden.value) hidden.value = "12:00";
         }
@@ -540,17 +463,15 @@
       if(dropTime && !dropTime.value) dropTime.value = "12:00";
     }, { capture:true });
 
-    /* === NUEVO: Control de bordes negros para Select2 y otros === */
+    // Control de bordes para Select2
     const inputsToWatch = [pickSel, dropSel];
 
     inputsToWatch.forEach(el => {
       if (!el) return;
 
-      // Función para evaluar si tiene valor
       const toggleHasValue = () => {
         if (el.value && el.value !== "") {
           el.classList.add('has-value');
-          // Si usa Select2, aplicamos al contenedor visual que crea la librería
           if (typeof $ !== 'undefined') {
             $(el).next('.select2-container').find('.select2-selection').addClass('has-value');
           }
@@ -562,19 +483,17 @@
         }
       };
 
-      // Escuchar cambios (Select2 dispara 'change')
       if (typeof $ !== 'undefined') {
         $(el).on('change', toggleHasValue);
       } else {
         el.addEventListener('change', toggleHasValue);
       }
 
-      // Ejecutar al inicio por si ya vienen con datos
       setTimeout(toggleHasValue, 500);
     });
 
-  })(); // ← Cierra bindFormFixes
-})(); // ← Cierra el IIFE principal de flatpickr
+  })();
+})();
 
 /* ====================
    Burbuja radial redes
@@ -611,8 +530,7 @@
 })();
 
 /* =====================================================================
-   Swiper tiles (tarjetas) - MULTIPLE INSTANCE SUPPORT
-   ✅ Ahora detecta todos los carruseles y los inicializa por separado
+   Swiper tiles (tarjetas)
 ===================================================================== */
 (function(){
   "use strict";
@@ -620,11 +538,9 @@
   function initTilesSwiper(){
     if(typeof window.Swiper !== "function") return;
 
-    // 1. Buscamos TODOS los carruseles con esa clase
     const allSwipers = document.querySelectorAll('.vj-tiles-swiper');
 
     allSwipers.forEach((el) => {
-      // ✅ Si ya fue inicializado (ej. por otro script con autoplay), lo limpiamos
       if(el.swiper){
         try {
           if(el.swiper.autoplay) el.swiper.autoplay.stop();
@@ -632,11 +548,9 @@
         } catch(_){}
       }
 
-      // Evitar doble inicialización
       if(el.dataset.swReady === "1") return;
       el.dataset.swReady = "1";
 
-      // 2. Inicializamos el Swiper usando el elemento actual (el) en lugar del selector de clase
       new Swiper(el, {
         loop: false,
         autoplay: false,
@@ -664,7 +578,6 @@
     });
   }
 
-  // Ejecutar al cargar
   document.addEventListener('DOMContentLoaded', initTilesSwiper);
 })();
 
@@ -743,7 +656,9 @@
 
 })();
 
-// Control del checkbox con comportamiento mejorado
+/* ====================
+   Control del checkbox
+==================== */
 function setDropoffState() {
     const chk = document.getElementById('differentDropoff');
     const dropWrap = document.getElementById('dropoffWrapper');
@@ -787,14 +702,15 @@ function setDropoffState() {
                 if (pickSel) dropSel.value = pickSel.value;
             }
         }
-        // Limpiar estilos inline
         dropWrap.style.display = '';
         dropWrap.style.visibility = '';
         dropWrap.style.opacity = '';
     }
 }
 
-// Sincronizar valores cuando cambia pickup
+/* ====================
+   Sincronizar valores
+==================== */
 document.addEventListener('DOMContentLoaded', function() {
     const pickSel = document.getElementById('pickupPlace');
     const dropSel = document.getElementById('dropoffPlace');
@@ -808,62 +724,337 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Inicializar estado
     setDropoffState();
 
-    // Evento del checkbox
     if (chk) {
         chk.addEventListener('change', setDropoffState);
     }
 
-    // Evento resize
     window.addEventListener('resize', function() {
         setDropoffState();
     });
 });
+/* ============================================================
+    VALIDACIONES DEL FORMULARIO - VERSIÓN ÚNICA Y CORREGIDA
+============================================================ */
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById("rentalForm");
+    if (!form) return;
 
-document.getElementById("rentalForm").addEventListener("submit", function(e){
+    form.addEventListener("submit", function(e) {
+        e.preventDefault();
+        console.log('=== VALIDANDO FORMULARIO ===');
 
-    let valid = true;
+        let valid = true;
 
-    const fields = [
-        {id:"pickupPlace", msg:"Ubicación requerida"},
-        {id:"dropoffPlace", msg:"Ubicación requerida"},
-        {id:"pickupDate", msg:"Fecha requerida"},
-        {id:"pickupTime", msg:"Hora requerida"},
-        {id:"dropoffDate", msg:"Fecha requerida"},
-        {id:"dropoffTime", msg:"Hora requerida"}
-    ];
 
-    fields.forEach(field =>{
+        document.querySelectorAll('.error-msg').forEach(el => el.remove());
+        document.querySelectorAll('.field-error, .field-success').forEach(el => {
+            el.classList.remove('field-error', 'field-success');
+        });
 
-        const input = document.getElementById(field.id);
-        const container = input.closest(".icon-field");
+        /* ===== 1. VALIDAR UBICACIONES ===== */
+        const selects = [
+            { id: 'pickupPlace', msg: 'Ubicación Requerida' },
+            { id: 'dropoffPlace', msg: 'Ubicación Requerida' }
+        ];
 
-        container.classList.remove("field-error","field-success");
+        selects.forEach(campo => {
+            const select = document.getElementById(campo.id);
+            if (!select) return;
 
-        const oldError = container.querySelector(".error-msg");
-        if(oldError) oldError.remove();
+            if (!select.value || select.value === '') {
+                valid = false;
+                select.classList.add('field-error');
 
-        if(!input.value){
 
-            const error = document.createElement("span");
-            error.className = "error-msg";
-            error.textContent = field.msg;
+                const container = select.closest('.field');
+                if (container) {
+                    const msg = document.createElement('span');
+                    msg.className = 'error-msg';
+                    msg.textContent = campo.msg;
+                    container.appendChild(msg);
+                }
+                console.log(`Error: ${campo.id}`);
+            } else {
+                select.classList.add('field-success');
+            }
+        });
 
-            container.appendChild(error);
-            container.classList.add("field-error");
+        /* ===== 2. VALIDAR FECHAS - CORREGIDO PARA FLATPICKR ===== */
+        const fechas = [
+            { id: 'pickupDate', msg: 'Fecha Requerida' },
+            { id: 'dropoffDate', msg: 'Fecha Requerida' }
+        ];
 
-            valid = false;
+        fechas.forEach(campo => {
+            const hiddenInput = document.getElementById(campo.id);
+            if (!hiddenInput) return;
 
-        }else{
-            container.classList.add("field-success");
+            const container = hiddenInput.closest('.dt-field');
+            if (!container) return;
+
+
+            const flatpickrInput = container.querySelector('.flatpickr-input');
+
+            const hasValue = hiddenInput.value && hiddenInput.value.trim() !== '';
+
+            if (!hasValue) {
+                valid = false;
+
+                if (flatpickrInput) {
+                    flatpickrInput.classList.add('field-error');
+                    console.log(`BORDE ROJO aplicado a flatpickr de ${campo.id}`);
+                }
+
+
+                hiddenInput.classList.add('field-error');
+
+                const msg = document.createElement('span');
+                msg.className = 'error-msg';
+                msg.textContent = campo.msg;
+                container.appendChild(msg);
+
+                console.log(`Error: ${campo.id}`);
+            } else {
+
+                if (flatpickrInput) {
+                    flatpickrInput.classList.add('field-success');
+                }
+                hiddenInput.classList.add('field-success');
+                console.log(`OK: ${campo.id} - Fecha: ${hiddenInput.value}`);
+            }
+        });
+
+        /* ===== 3. VALIDAR HORAS - CORREGIDO PARA SELECTS ===== */
+        const horas = [
+            { id: 'pickupTime', msg: 'Hora Requerida' },
+            { id: 'dropoffTime', msg: 'Hora Requerida' }
+        ];
+
+        horas.forEach(campo => {
+            const hiddenInput = document.getElementById(campo.id);
+            if (!hiddenInput) return;
+
+
+            const timeField = hiddenInput.closest('.time-field');
+            if (!timeField) return;
+
+            const hourSelect = timeField.querySelector('.tp-selects .tp-hour');
+
+
+            const hasValue = hourSelect && hourSelect.value && hourSelect.value !== '';
+
+            if (!hasValue) {
+                valid = false;
+
+
+                if (hourSelect) {
+                    hourSelect.classList.add('field-error');
+                }
+
+                hiddenInput.classList.add('field-error');
+
+
+                const msg = document.createElement('span');
+                msg.className = 'error-msg';
+                msg.textContent = campo.msg;
+                timeField.appendChild(msg);
+
+                console.log(`Error: ${campo.id} - SIN HORA`);
+            } else {
+
+                if (hourSelect) {
+                    hourSelect.classList.add('field-success');
+                }
+                hiddenInput.classList.add('field-success');
+                console.log(`OK: ${campo.id} - HORA: ${hourSelect.value}`);
+            }
+        });
+
+        console.log('=== RESULTADO FINAL ===', valid ? 'FORMULARIO VÁLIDO' : 'FORMULARIO INVÁLIDO');
+
+        if (valid) {
+            console.log('Enviando formulario...');
+            form.submit();
         }
+    });
+});
 
+/* ============================================================
+    LIMPIAR ERRORES AL INTERACTUAR
+============================================================ */
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('input, select');
+    const hourSelects = document.querySelectorAll('.tp-selects .tp-hour');
+    const flatpickrInputs = document.querySelectorAll('.flatpickr-input');
+
+    // Limpiar errores de inputs normales
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.classList.contains('field-error')) {
+                this.classList.remove('field-error');
+                const container = this.closest('.field, .dt-field, .time-field');
+                if (container) {
+                    const msg = container.querySelector('.error-msg');
+                    if (msg) msg.remove();
+                }
+            }
+        });
+
+        input.addEventListener('change', function() {
+            if (this.classList.contains('field-error')) {
+                this.classList.remove('field-error');
+                const container = this.closest('.field, .dt-field, .time-field');
+                if (container) {
+                    const msg = container.querySelector('.error-msg');
+                    if (msg) msg.remove();
+                }
+            }
+        });
     });
 
-    if(!valid){
-        e.preventDefault();
-    }
+    // Limpiar errores de los selects de hora
+    hourSelects.forEach(select => {
+        select.addEventListener('change', function() {
+            if (this.classList.contains('field-error')) {
+                this.classList.remove('field-error');
+                const timeField = this.closest('.time-field');
+                if (timeField) {
+                    const msg = timeField.querySelector('.error-msg');
+                    if (msg) msg.remove();
+                }
+            }
+        });
+    });
 
+    // Limpiar errores de los inputs de flatpickr
+    flatpickrInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.classList.contains('field-error')) {
+                this.classList.remove('field-error');
+                const container = this.closest('.dt-field');
+                if (container) {
+                    const msg = container.querySelector('.error-msg');
+                    if (msg) msg.remove();
+                }
+            }
+        });
+
+        input.addEventListener('click', function() {
+            if (this.classList.contains('field-error')) {
+                this.classList.remove('field-error');
+                const container = this.closest('.dt-field');
+                if (container) {
+                    const msg = container.querySelector('.error-msg');
+                    if (msg) msg.remove();
+                }
+            }
+        });
+    });
 });
+
+/* ============================================================
+    INICIALIZAR FLATPICKR - CALENDARIOS
+============================================================ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar Flatpickr para las fechas
+    if (typeof flatpickr !== 'undefined') {
+        // Pickup Date
+        flatpickr("#pickupDate", {
+            dateFormat: "Y-m-d",
+            minDate: "today",
+            allowInput: true,
+            locale: "es"
+        });
+
+        // Dropoff Date
+        flatpickr("#dropoffDate", {
+            dateFormat: "Y-m-d",
+            minDate: "today",
+            allowInput: true,
+            locale: "es"
+        });
+
+        console.log('Flatpickr inicializado correctamente');
+    } else {
+        console.error('Error: Flatpickr no está cargado');
+    }
+});
+/* ============================================================
+    CONTROL DE SCROLL PARA FORMULARIO MÓVIL/TABLET
+============================================================ */
+(function() {
+    "use strict";
+
+    function initScrollControl() {
+        const btnAbrir = document.getElementById('btn-abrir-buscador');
+        const btnCerrar = document.getElementById('btn-cerrar-buscador');
+        const buscador = document.getElementById('miBuscador');
+
+        if (!btnAbrir || !btnCerrar || !buscador) return;
+
+        function bloquearScroll() {
+
+            const scrollY = window.scrollY;
+
+
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.left = '0';
+            document.body.style.right = '0';
+            document.body.style.overflow = 'hidden';
+            document.body.style.width = '100%';
+
+            document.body.dataset.scrollY = scrollY;
+        }
+
+        function restaurarScroll() {
+
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.right = '';
+            document.body.style.overflow = '';
+            document.body.style.width = '';
+
+            const scrollY = document.body.dataset.scrollY || 0;
+            window.scrollTo(0, parseInt(scrollY));
+
+            delete document.body.dataset.scrollY;
+        }
+
+        btnAbrir.addEventListener('click', function(e) {
+            e.preventDefault();
+            buscador.classList.add('active');
+            bloquearScroll();
+        });
+
+        btnCerrar.addEventListener('click', function(e) {
+            e.preventDefault();
+            buscador.classList.remove('active');
+            restaurarScroll();
+        });
+
+        // Opcional: Prevenir scroll con teclado
+        window.addEventListener('keydown', function(e) {
+            if (buscador.classList.contains('active')) {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === ' ' || e.key === 'Spacebar') {
+                    e.preventDefault();
+                }
+            }
+        }, { passive: false });
+
+
+        document.body.addEventListener('touchmove', function(e) {
+            if (buscador.classList.contains('active')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initScrollControl);
+    } else {
+        initScrollControl();
+    }
+})();
