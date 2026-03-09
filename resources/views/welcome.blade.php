@@ -25,237 +25,6 @@
       pointer-events: none;
     }
 
-/* ============================================================
-    1. REGLA BASE MOVIL (Pantallas menores a 1124px)
-   ============================================================ */
-@media (max-width: 1124px) {
-
-    #miBuscador.search-card {
-        display: none;
-        position: fixed !important;
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
-        z-index: 10000 !important;
-        background-color: #ffffff !important;
-        margin: 0 !important;
-        padding: 90px 20px 20px 20px !important;
-        overflow-y: auto !important;
-        border-radius: 0 !important;
-        box-sizing: border-box !important;
-    }
-
-    #miBuscador.search-card.active {
-        display: block !important;
-    }
-
-    .btn-close {
-        display: block !important;
-        position: fixed !important;
-        top: 100px !important;
-        right: 25px !important;
-        z-index: 10001 !important;
-        width: 28px !important;
-        height: 28px !important;
-        background-color: #ffffff !important;
-        border: 1px solid #e41515 !important;
-        border-radius: 50% !important;
-        cursor: pointer !important;
-    }
-
-    .search-grid {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 15px !important;
-    }
-
-    .sg-col { width: 100% !important; }
-
-    .field select, .field input[type="text"], .dt-field input, .time-field select {
-        width: 100% !important;
-        height: 50px !important;
-        border: 1px solid #d4002a !important;
-        border-radius: 6px !important;
-        padding-left: 45px !important;
-        font-size: 16px !important;
-    }
-
-    .sg-col-submit button {
-        width: 100% !important;
-        height: 55px !important;
-        background-color: #d4002a !important;
-        color: white !important;
-        font-weight: bold !important;
-        border-radius: 8px !important;
-    }
-
-    .hero-icons {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 20px;
-    }
-}
-@media (max-width: 699px) {
-    .hero-icons {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 45px !important;
-        padding: 40px 20px !important;
-        width: 100% !important;
-    }
-
-    .hero-icons .icon-item {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        width: 100% !important;
-        max-width: 280px !important;
-        text-align: center !important;
-    }
-
-    .hero-icons .icon-item i {
-        font-size: 50px !important;
-        margin-bottom: 12px !important;
-        color: #ffffff !important;
-    }
-
-    .hero-icons .icon-item span {
-        font-size: 19px !important;
-        font-weight: 600 !important;
-        color: #ffffff !important;
-    }
-}
-/* ============================================================
-    2. AJUSTE DE TABLET (768px a 1124px)
-   ============================================================ */
-@media (min-width: 768px) and (max-width: 1124px) {
-
-    #miBuscador.search-card form {
-        /* Lo bajamos a 90px para dar más aire respecto al menú */
-        margin-top: 90px !important;
-
-        padding: 0 30px !important;
-        max-width: 95% !important;
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 20px !important;
-    }
-
-    #miBuscador.search-card {
-        padding-top: 5px !important;
-    }
-
-
-    .sg-col:nth-child(1),
-    .sg-col:nth-child(2) {
-        width: 100% !important;
-        grid-column: span 2 !important;
-    }
-
-    /* Contenedor de la fila (Fecha + Hora + Min) */
-    .datetime-row {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        width: 100% !important;
-        gap: 15px !important;
-        align-items: flex-end !important;
-        margin-bottom: 15px !important;
-    }
-
-    .datetime-row:nth-of-type(2) {
-        margin-top: 30px !important;
-        position: relative !important;
-    }
-
-    .datetime-row::before {
-        margin-bottom: 10px !important;
-        display: block !important;
-    }
-
-    .datetime-row {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        width: 100% !important;
-        gap: 15px !important;
-        align-items: flex-end !important;
-        margin-bottom: 25px !important;
-    }
-
-    .datetime-row > div,
-    .datetime-row > .dt-field,
-    .datetime-row > .time-field {
-        flex: 1 !important;
-        min-width: 0 !important;
-    }
-
-    .datetime-row input[type="text"],
-    .datetime-row select {
-        width: 100% !important;
-        box-sizing: border-box !important;
-    }
-
-    /* El botón de buscar al 100% */
-    .btn-buscar-container {
-        width: 100% !important;
-    }}
-@media (min-width: 700px) and (max-width: 1124px) {
-    .hero-icons {
-        display: grid !important;
-        grid-template-columns: repeat(6, 1fr) !important;
-        gap: 50px 15px !important;
-        max-width: 900px !important;
-        margin: 0 auto !important;
-        padding: 40px 20px !important;
-    }
-
-    .hero-icons .icon-item:nth-child(1),
-    .hero-icons .icon-item:nth-child(2),
-    .hero-icons .icon-item:nth-child(3) {
-        grid-column: span 2 !important;
-    }
-
-
-    .hero-icons .icon-item:nth-child(4) { grid-column: 2 / span 2 !important; }
-    .hero-icons .icon-item:nth-child(5) { grid-column: 4 / span 2 !important; }
-
-
-    .hero-icons .icon-item i {
-        font-size: 55px !important;
-        margin-bottom: 18px !important;
-        color: #ffffff !important;
-    }
-
-    .hero-icons .icon-item span {
-        font-size: 18px !important;
-        font-weight: 600 !important;
-        color: #ffffff !important;
-        line-height: 1.2 !important;
-        max-width: 220px !important;
-    }
-}
-/* ============================================================
-    3. ESCRITORIO
-   ============================================================ */
-@media (min-width: 1125px) {
-    #miBuscador.search-card {
-        display: block !important;
-        position: relative !important;
-        margin: 0 auto !important;
-        width: 100% !important;
-        max-width: 1100px !important;
-        background: #ffffff !important;
-        border-radius: 15px !important;
-        padding: 20px !important;
-    }
-    .btn-close { display: none !important; }
-
-}
-
     /* ===== Banner Reservas (limpio, sin rayas) ===== */
     .rv-banner-wrap{
       position:fixed; top:10px; left:50%; transform:translateX(-50%);
@@ -617,146 +386,125 @@
         <hr>
     </div>
 
-    <form id="rentalForm" class="search-form" method="GET" action="{{ route('rutaReservacionesUsuario') }}">
-        @csrf
-        <div class="search-grid">
+ <form id="rentalForm" class="search-form" method="GET" action="{{ route('rutaReservacionesUsuario') }}" novalidate>
+    @csrf
 
-            {{-- =========================
-                COLUMNA 1: LUGAR DE RENTA
-            ========================= --}}
-            <div class="sg-col sg-col-location">
+    <div class="search-grid">
 
-              <div class="location-head">
+        {{-- =========================
+           COLUMNA 1: LUGAR DE RENTA (con check alineado)
+        ========================= --}}
+        <div class="sg-col sg-col-location">
+            <div class="location-head">
                 <span class="field-title">Lugar de renta</span>
-
                 <label class="inline-check" for="differentDropoff">
-                  <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1" checked>
-                  <span>Devolver en otro destino</span>
+                    <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1">
+                    <span>Devolver en otro destino</span>
                 </label>
-              </div>
-
-              <div class="field icon-field">
-                <span class="field-icon" id="pickupIcon"><i class="fa-solid fa-location-dot"></i></span>
-                <select id="pickupPlace" name="pickup_sucursal_id"aria-describedby="pickupHelp" required>
-                  <option value="" disabled @selected(!request('pickup_sucursal_id'))>¿Dónde comienza tu viaje?</option>
-                  @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
-                    <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
-                      @foreach($ciudad->sucursalesActivas as $suc)
-                        <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
-                          {{ $suc->nombre }}
-                        </option>
-                      @endforeach
-                    </optgroup>
-                  @endforeach
-                </select>
-              </div>
-
-              <div class="field icon-field" id="dropoffWrapper">
-               <span class="field-icon" id="dropoffIcon"> <i class="fa-solid fa-location-dot"></i></span>
-                <select id="dropoffPlace" name="dropoff_sucursal_id" aria-describedby="dropoffHelp" required>
-                  <option value="" disabled selected>¿Dónde termina tu viaje?</option>
-                  @foreach($ciudades as $ciudad)
-                    <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — '.$ciudad->estado : '' }}">
-                      @foreach($ciudad->sucursalesActivas as $suc)
-                        <option value="{{ $suc->id_sucursal }}" @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
-                          {{ $suc->nombre }}
-                        </option>
-                      @endforeach
-                    </optgroup>
-                  @endforeach
-                </select>
-              </div>
-
             </div>
 
-            {{-- =========================
-                COLUMNA 2: ENTREGA
-            ========================= --}}
-            <div class="sg-col sg-col-datetime">
-              <div class="field">
-                <label>Pick-Up</label>
+            {{-- Contenedor flexible para selects --}}
+            <div class="location-inputs-wrapper" id="locationInputsWrapper">
+                {{-- SELECT PICKUP --}}
+                <div class="field icon-field">
+                    <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
+                    <select id="pickupPlace" name="pickup_sucursal_id" >
+                        <option value="" disabled selected>¿Dónde inicia tu viaje ?</option>
+                        @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
+                            <optgroup label="{{ $ciudad->nombre }}">
+                                @foreach($ciudad->sucursalesActivas as $suc)
+                                    <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
+                                        {{ $suc->nombre }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
 
+                </div>
+
+                {{-- SELECT DROPOFF (controlado por JS) --}}
+                <div class="field icon-field" id="dropoffWrapper">
+                    <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
+                    <select id="dropoffPlace" name="dropoff_sucursal_id">
+                        <option value="" disabled selected>¿Dónde termina tu viaje?</option>
+                        @foreach($ciudades as $ciudad)
+                            <optgroup label="{{ $ciudad->nombre }}">
+                                @foreach($ciudad->sucursalesActivas as $suc)
+                                    <option value="{{ $suc->id_sucursal }}" @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
+                                        {{ $suc->nombre }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+
+                </div>
+            </div>
+        </div>
+
+        {{-- =========================
+           COLUMNA 2: FECHAS Y HORAS (PICKUP Y DROPOFF JUNTOS)
+        ========================= --}}
+        <div class="sg-col sg-col-datetime">
+            {{-- PICKUP --}}
+            <div class="field">
+                <span class="field-title solo-responsivo-izq">Pick-Up</span>
                 <div class="datetime-row">
+                    <div class="dt-field icon-field">
+                        <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                        <input id="pickupDate" name="pickup_date" type="text" placeholder="Fecha"
+                               value="{{ request('pickup_date') }}" data-min="{{ now()->toDateString() }}">
 
-                  {{-- FECHA --}}
-                  <div class="dt-field icon-field">
-                    <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                    <input id="pickupDate"
-                           name="pickup_date"
-                           type="text"
-                           placeholder="12/Sep/2024"
-                           value="{{ request('pickup_date') }}"
-                           data-min="{{ now()->toDateString() }}"
-                           required>
-                  </div>
+                    </div>
+                    <div class="dt-field icon-field time-field">
+                        <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+                        <input type="text" id="pickupTime" name="pickup_time" placeholder="Hora"
+                               value="{{ request('pickup_time') }}" >
 
-                  {{-- HORA (tu JS mete selects debajo del hidden) --}}
-                  <div class="dt-field icon-field time-field">
-                    <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-
-                    {{-- este es el que se envía al backend (NO se ve) --}}
-                    <input type="hidden"
-                           id="pickupTime"
-                           name="pickup_time"
-                           value="{{ request('pickup_time','12:00') }}">
-                    {{-- tu home.js insertará aquí los selects --}}
-                  </div>
-
-                </div> {{-- /datetime-row --}}
-              </div>
+                    </div>
+                </div>
             </div>
 
-            {{-- =========================
-                COLUMNA 3: DEVOLUCIÓN
-            ========================= --}}
-            <div class="sg-col sg-col-datetime">
-              <div class="field">
-                <label>Devolución</label>
-
+            {{-- DROPOFF --}}
+            <div class="field">
+                <span class="field-title solo-responsivo-izq">Devolución</span>
                 <div class="datetime-row">
+                    <div class="dt-field icon-field">
+                        <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                        <input id="dropoffDate" name="dropoff_date" type="text" placeholder="Fecha"
+                               value="{{ request('dropoff_date') }}" data-min="{{ now()->toDateString() }}">
 
-                  {{-- FECHA --}}
-                  <div class="dt-field icon-field">
-                    <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                    <input id="dropoffDate"
-                           name="dropoff_date"
-                           type="text"
-                           placeholder="12/Sep/2024"
-                           value="{{ request('dropoff_date') }}"
-                           data-min="{{ now()->toDateString() }}"
-                           required>
-                  </div>
+                    </div>
+                    <div class="dt-field icon-field time-field">
+                        <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+                        <input type="text" id="dropoffTime" name="dropoff_time" placeholder="Hora"
+                               value="{{ request('dropoff_time') }}">
 
-                  {{-- HORA (tu JS mete selects debajo del hidden) --}}
-                  <div class="dt-field icon-field time-field">
-                    <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-
-                    {{-- este es el que se envía al backend (NO se ve) --}}
-                    <input type="hidden"
-                           id="dropoffTime"
-                           name="dropoff_time"
-                           value="{{ request('dropoff_time','12:00') }}">
-                    {{-- tu home.js insertará aquí los selects --}}
-                  </div>
-
-                </div> {{-- /datetime-row --}}
-              </div>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            {{-- =========================
-                COLUMNA 4: BOTÓN BUSCAR
-            ========================= --}}
-            <div class="sg-col sg-col-submit">
-              <div class="actions">
+        {{-- =========================
+           COLUMNA 3: BOTÓN BUSCAR
+        ========================= --}}
+        <div class="sg-col sg-col-submit">
+            <div class="actions">
                 <button type="submit">
-                  <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
+                    <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
                 </button>
-              </div>
             </div>
+        </div>
 
-            </div>
-        <div id="rangeSummary" class="range-summary" aria-live="polite"></div>
-    </form>
+    </div>
+
+    <div id="rangeSummary" class="range-summary" aria-live="polite">
+        @if(request('pickup_date') && request('dropoff_date'))
+            {{ request('pickup_date') }} - {{ request('dropoff_date') }}
+        @endif
+    </div>
+</form>
 </div>
   </section>
 
@@ -1674,47 +1422,5 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 1. Identificamos los campos por su atributo "name"
-    const camposNombres = [
-        'pickup_sucursal_id',
-        'dropoff_sucursal_id',
-        'pickup_date',
-        'dropoff_date',
-        'pickup_time',
-        'dropoff_time'
-    ];
 
-    function validarEstado(el) {
-        // Si el campo tiene valor y no es "0"
-        if (el.value && el.value !== "" && el.value !== "0") {
-            // ESTADO VERDE (Lleno)
-            el.style.setProperty('border', '2px solid #28a745', 'important');
-            el.style.boxShadow = '0 0 5px rgba(40, 167, 69, 0.2)';
-        } else {
-            // ESTADO ROJO (Vacío)
-            el.style.setProperty('border', '2px solid #dc3545', 'important');
-            el.style.boxShadow = '0 0 5px rgba(220, 53, 69, 0.1)';
-        }
-    }
-
-    // 2. Aplicamos la lógica a cada campo
-    camposNombres.forEach(nombre => {
-        // Buscamos el elemento que tenga ese name
-        const elemento = document.querySelector(`[name="${nombre}"]`);
-
-        if (elemento) {
-            // Revisar cómo está el campo al cargar la página
-            validarEstado(elemento);
-
-            // Revisar cuando el usuario selecciona algo
-            elemento.addEventListener('change', () => validarEstado(elemento));
-
-            // Revisar mientras el usuario escribe o borra
-            elemento.addEventListener('input', () => validarEstado(elemento));
-        }
-    });
-});
-</script>
 @endsection

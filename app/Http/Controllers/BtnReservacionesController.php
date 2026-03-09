@@ -25,10 +25,8 @@ class BtnReservacionesController extends Controller
             // 1️⃣ Validación básica
             $validated = $request->validated();
 
-            // 2️⃣ Generar código RES
-            $fecha  = now()->format('Ymd');
-            $random = strtoupper(Str::random(5));
-            $codigo = "RES-{$fecha}-{$random}";
+            // 2️⃣ Generar folio (MX-E480A1)
+$codigo = $this->generarFolioReservacionUnico();
 
             // 3️⃣ Calcular totales base usando la CATEGORÍA (no el vehículo)
             $categoria = DB::table('categorias_carros')
@@ -349,10 +347,8 @@ class BtnReservacionesController extends Controller
             // 1️⃣ Validación de datos de la reserva + paypal_order_id obligatorio
             $validated = $request->validated();
 
-            // 2️⃣ Código RES
-            $fecha  = now()->format('Ymd');
-            $random = strtoupper(Str::random(5));
-            $codigo = "RES-{$fecha}-{$random}";
+            // 2️⃣ Folio (MX-E480A1)
+$codigo = $this->generarFolioReservacionUnico();
 
             // 3️⃣ Totales base (categoría)
             $categoria = DB::table('categorias_carros')
@@ -761,4 +757,40 @@ class BtnReservacionesController extends Controller
             ], 500);
         }
     }
+
+    // ======================================================
+// ✅ Generación de folio: MX- + L + NNN + L + N
+//    Ej: MX-E480A1 (9 caracteres contando el guion)
+// ======================================================
+private function generarFolioReservacion(): string
+{
+    $letra1 = chr(random_int(65, 90)); // A-Z
+    $num3   = str_pad((string) random_int(0, 999), 3, '0', STR_PAD_LEFT); // 000-999
+    $letra2 = chr(random_int(65, 90)); // A-Z
+    $num1   = (string) random_int(0, 9); // 0-9
+
+    return "MX-{$letra1}{$num3}{$letra2}{$num1}";
+}
+
+/**
+ * Genera un folio y asegura que NO exista en la BD.
+ * (Reintenta varias veces para evitar colisiones).
+ */
+private function generarFolioReservacionUnico(int $maxIntentos = 20): string
+{
+    for ($i = 0; $i < $maxIntentos; $i++) {
+        $folio = $this->generarFolioReservacion();
+
+        $existe = DB::table('reservaciones')
+            ->where('codigo', $folio)
+            ->exists();
+
+        if (!$existe) {
+            return $folio;
+        }
+    }
+
+    // Si llega aquí, es extremadamente raro, pero mejor fallar con mensaje claro
+    throw new \RuntimeException('No se pudo generar un folio único para la reservación.');
+}
 }
