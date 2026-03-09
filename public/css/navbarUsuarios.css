@@ -427,7 +427,7 @@ label{
 }
 
 input, select, textarea{
-  border:1px solid #d1d5db;
+  border:1px solid #ccc;
   border-radius:10px;
   padding:0 12px;
   height: var(--ctl-h);
@@ -1459,8 +1459,7 @@ input#dropoffTime{
 .tp-selects select{
   height: var(--ctl-h);
   border-radius: 10px;
-  border: 1px solid #d1d5db;
-  background: #fff;
+  border: 1px solid #ccc;
   padding: 0 12px;
   font-size: 14px;
   color: var(--ink);
@@ -1468,6 +1467,7 @@ input#dropoffTime{
   width: 100%;
   box-sizing: border-box;
 }
+
 
 .tp-selects select:focus{
   border-color: var(--brand);
@@ -2041,7 +2041,7 @@ input.flatpickr-input{
   height:42px;
 }
 /* ============================================================
-    ESCRITORIO (>= 1125px)
+    ESCRITORIO (>= 1125px) - CORREGIDO (espacios)
 ============================================================ */
 @media (min-width: 1125px) {
 
@@ -2051,6 +2051,10 @@ input.flatpickr-input{
         --input-height: 48px;
         --border-radius: 8px;
         --brand: #b22222;
+        --border-color: #ccc;
+        --text-color: #666;
+        --placeholder-color: #666;
+        --icon-color: #333;
     }
 
     #miBuscador.search-card {
@@ -2061,10 +2065,10 @@ input.flatpickr-input{
         padding: 20px 25px !important;
         background: #f8f8f8 !important;
         border-radius: 12px !important;
-        margin-top: 50px !important;
+        margin-top: 0px !important;
+        margin-bottom: 20px !important;
         box-sizing: border-box !important;
     }
-
     /* ===== GRID PRINCIPAL ===== */
     #miBuscador .search-grid {
         display: flex !important;
@@ -2132,15 +2136,42 @@ input.flatpickr-input{
         height: var(--input-height) !important;
     }
 
-    .location-inputs-wrapper select {
+    /* ESTILOS UNIFICADOS PARA TODOS LOS INPUTS Y SELECTS */
+    .location-inputs-wrapper select,
+    .dt-field input,
+    .dt-field select,
+    .tp-selects select {
         width: 100% !important;
         height: var(--input-height) !important;
-        padding: 0 8px 0 12px !important;
-        border: 1px solid #ddd !important;
+        border: 1px solid var(--border-color) !important;
         border-radius: var(--border-radius) !important;
         font-size: 13px !important;
+        color: var(--text-color) !important;
         background: white !important;
         box-sizing: border-box !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    /* Placeholders con color unificado */
+    .dt-field input::placeholder {
+        color: var(--placeholder-color) !important;
+        opacity: 1 !important;
+        font-weight: 400 !important;
+    }
+
+    /* Focus styles para todos */
+    .location-inputs-wrapper select:focus,
+    .dt-field input:focus,
+    .dt-field select:focus,
+    .tp-selects select:focus {
+        border-color: var(--brand) !important;
+        box-shadow: 0 0 0 3px rgba(178,34,34,.15) !important;
+        outline: none !important;
+    }
+
+    /* Estilos específicos para selects */
+    .location-inputs-wrapper select {
+        padding: 0 8px 0 12px !important;
         appearance: none !important;
         -webkit-appearance: none !important;
         -moz-appearance: none !important;
@@ -2150,7 +2181,12 @@ input.flatpickr-input{
         background-size: 12px !important;
     }
 
-    /* OCULTAR SOLO LOS ICONOS DE LOS SELECTS DE UBICACIÓN */
+    .location-inputs-wrapper select option:first-child,
+    .dt-field select option:first-child,
+    .tp-selects select option:first-child {
+        color: var(--placeholder-color) !important;
+    }
+
     .location-inputs-wrapper .field .field-icon {
         display: none !important;
     }
@@ -2166,12 +2202,13 @@ input.flatpickr-input{
         display: none !important;
     }
 
-    /* ===== COLUMNA DE FECHA/HORA ===== */
+    /* ===== COLUMNA DE FECHAS (PICK-UP Y DEVOLUCIÓN) ===== */
     .sg-col-datetime {
         flex: 2.2 !important;
         display: flex !important;
         flex-direction: row !important;
         gap: 12px !important;
+        justify-content: flex-start !important;
     }
 
     .sg-col-datetime .field {
@@ -2179,6 +2216,7 @@ input.flatpickr-input{
         display: flex !important;
         flex-direction: column !important;
         justify-content: flex-end !important;
+        align-items: flex-start !important;
     }
 
     .solo-responsivo-izq {
@@ -2193,6 +2231,8 @@ input.flatpickr-input{
         white-space: nowrap !important;
         visibility: visible !important;
         opacity: 1 !important;
+        text-align: left !important;
+        width: 100% !important;
     }
 
     .datetime-row {
@@ -2210,18 +2250,9 @@ input.flatpickr-input{
     }
 
     .dt-field input {
-        width: 100% !important;
-        height: var(--input-height) !important;
         padding: 0 8px 0 36px !important;
-        border: 1px solid #ddd !important;
-        border-radius: var(--border-radius) !important;
-        font-size: 13px !important;
-        background: white !important;
-        box-sizing: border-box !important;
-        line-height: normal !important;
     }
 
-    /* ===== ESTILOS PARA SELECTS DE HORA (GENERADOS POR JS) ===== */
     .tp-selects {
         height: var(--input-height) !important;
         margin: 0 !important;
@@ -2230,36 +2261,17 @@ input.flatpickr-input{
     }
 
     .tp-selects select {
-        width: 100% !important;
-        height: var(--input-height) !important;
         padding: 0 8px 0 36px !important;
-        border: 1px solid #ddd !important;
-        border-radius: var(--border-radius) !important;
-        font-size: 13px !important;
-        background: white !important;
-        box-sizing: border-box !important;
-        appearance: none !important;
-        -webkit-appearance: none !important;
-        -moz-appearance: none !important;
-        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
-        background-repeat: no-repeat !important;
-        background-position: right 10px center !important;
-        background-size: 12px !important;
         line-height: normal !important;
     }
 
-    /* Para que el placeholder "HORA" se vea bien */
-    .tp-selects select option:first-child {
-        color: #999 !important;
-    }
-
-    /* ===== ICONOS - VERSIÓN CORREGIDA ===== */
+    /* ===== ICONOS ===== */
     .dt-field .field-icon {
         position: absolute !important;
         left: 12px !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
-        color: #999 !important;
+        color: var(--icon-color) !important;
         font-size: 14px !important;
         z-index: 3 !important;
         pointer-events: none !important;
@@ -2268,32 +2280,15 @@ input.flatpickr-input{
         justify-content: center !important;
         width: 16px !important;
         height: 16px !important;
-        /* Eliminar cualquier margin o padding que pueda afectar */
         margin: 0 !important;
         padding: 0 !important;
         line-height: 1 !important;
     }
 
-    /* Asegurar que los contenedores no interfieran con la posición absoluta */
-    .dt-field {
-        position: relative !important;
-        height: var(--input-height) !important;
-        /* Eliminar flex que pueda causar problemas */
-        display: block !important;
-    }
-
-    /* El contenedor del select debe mantener el flujo normal */
-    .tp-selects {
-        position: relative !important;
-        display: block !important;
-    }
-
-    /* Mantener la estructura del datetime-row */
     .datetime-row {
         align-items: stretch !important;
     }
 
-    /* Ajuste para el contenedor del campo */
     .sg-col-datetime .field {
         height: auto !important;
         display: flex !important;
@@ -2363,268 +2358,7 @@ input.flatpickr-input{
     }
 }
 /* ============================================================
-    ESCRITORIO (>= 1125px) - SIN CAMBIOS
-============================================================ */
-@media (min-width: 1125px) {
-
-    :root {
-        --title-height: 30px;
-        --title-margin: 8px;
-        --input-height: 48px;
-        --border-radius: 8px;
-        --brand: #b22222;
-    }
-
-   #miBuscador.search-card {
-    width: 94vw !important;
-    max-width: 1200px !important;
-    margin-left: 50% !important;
-    transform: translateX(-50%) !important;
-    padding: 30px 25px 20px !important;  /* 👈 Aumentado padding-top de 20px a 30px */
-    background: #f8f8f8 !important;
-    border-radius: 12px !important;
-    margin-top: 70px !important;  /* 👈 Aumentado de 50px a 70px */
-    box-sizing: border-box !important;
-}
-
-/* ===== GRID PRINCIPAL ===== */
-#miBuscador .search-grid {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: flex-end !important;
-    gap: 10px !important;
-    width: 100% !important;
-}
-
-    /* ===== COLUMNA 1: LUGAR DE RENTA ===== */
-    .sg-col-location {
-        flex: 1.5 !important;
-        min-width: 280px !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-
-    .location-head {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        height: var(--title-height) !important;
-        margin-bottom: var(--title-margin) !important;
-    }
-
-    .location-head .field-title {
-        font-size: 14px !important;
-        font-weight: 800 !important;
-        color: #333 !important;
-        text-transform: uppercase !important;
-        line-height: var(--title-height) !important;
-        margin: 0 !important;
-    }
-
-    .inline-check {
-        display: flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-        font-size: 12px !important;
-        color: #555 !important;
-        white-space: nowrap !important;
-        line-height: var(--title-height) !important;
-        height: var(--title-height) !important;
-    }
-
-    .inline-check input[type="checkbox"] {
-        width: 14px !important;
-        height: 14px !important;
-        accent-color: var(--brand) !important;
-        margin: 0 !important;
-    }
-
-    /* ===== WRAPER DE SELECTS ===== */
-    .location-inputs-wrapper {
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 8px !important;
-        width: 100% !important;
-        height: var(--input-height) !important;
-    }
-
-    .location-inputs-wrapper .field {
-        flex: 1 !important;
-        position: relative !important;
-        height: var(--input-height) !important;
-    }
-
-    .location-inputs-wrapper select {
-        width: 100% !important;
-        height: var(--input-height) !important;
-        padding: 0 8px 0 12px !important;
-        border: 1px solid #ddd !important;
-        border-radius: var(--border-radius) !important;
-        font-size: 13px !important;
-        background: white !important;
-        box-sizing: border-box !important;
-        appearance: none !important;
-        -webkit-appearance: none !important;
-        -moz-appearance: none !important;
-        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
-        background-repeat: no-repeat !important;
-        background-position: right 10px center !important;
-        background-size: 12px !important;
-    }
-
-    /* OCULTAR SOLO LOS ICONOS DE LOS SELECTS DE UBICACIÓN */
-    .location-inputs-wrapper .field .field-icon {
-        display: none !important;
-    }
-
-    /* ===== CONTROL DEL CHECKBOX ===== */
-    #dropoffWrapper {
-        flex: 1 !important;
-        transition: all 0.3s ease !important;
-        height: var(--input-height) !important;
-    }
-
-    #dropoffWrapper.hidden-dropoff {
-        display: none !important;
-    }
-
-    /* ===== COLUMNA DE FECHA/HORA ===== */
-    .sg-col-datetime {
-        flex: 2.2 !important;
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 12px !important;
-    }
-
-    .sg-col-datetime .field {
-        flex: 1 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: flex-end !important;
-    }
-
-    .solo-responsivo-izq {
-        display: block !important;
-        height: var(--title-height) !important;
-        margin-bottom: var(--title-margin) !important;
-        font-size: 14px !important;
-        font-weight: 800 !important;
-        color: #333 !important;
-        text-transform: uppercase !important;
-        line-height: var(--title-height) !important;
-        white-space: nowrap !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-    }
-
-    .datetime-row {
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 8px !important;
-        width: 100% !important;
-        height: var(--input-height) !important;
-    }
-
-    .dt-field {
-        flex: 1 !important;
-        position: relative !important;
-        height: var(--input-height) !important;
-    }
-
-    .dt-field input {
-        width: 100% !important;
-        height: var(--input-height) !important;
-        padding: 0 8px 0 36px !important;
-        border: 1px solid #ddd !important;
-        border-radius: var(--border-radius) !important;
-        font-size: 13px !important;
-        background: white !important;
-        box-sizing: border-box !important;
-    }
-
-    /* MANTENER LOS ICONOS DE LOS CAMPOS DE FECHA/HORA */
-    .dt-field .field-icon {
-        position: absolute !important;
-        left: 12px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        color: #999 !important;
-        font-size: 14px !important;
-        z-index: 2 !important;
-        pointer-events: none !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 16px !important;
-        height: 16px !important;
-    }
-
-    /* ===== BOTÓN BUSCAR ===== */
-    .sg-col-submit {
-        flex: 0.35 !important;
-        min-width: 90px !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: flex-end !important;
-    }
-
-    .sg-col-submit::before {
-        content: "";
-        display: block !important;
-        width: 100% !important;
-        height: calc(var(--title-height) + var(--title-margin)) !important;
-        visibility: hidden !important;
-    }
-
-    .actions {
-        height: var(--input-height) !important;
-        width: 100% !important;
-    }
-
-    .actions button {
-        width: 100% !important;
-        height: var(--input-height) !important;
-        background: var(--brand) !important;
-        color: white !important;
-        border: none !important;
-        border-radius: var(--border-radius) !important;
-        font-weight: 700 !important;
-        font-size: 13px !important;
-        text-transform: uppercase !important;
-        cursor: pointer !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 4px !important;
-        white-space: nowrap !important;
-        padding: 0 8px !important;
-        box-sizing: border-box !important;
-    }
-
-    /* ===== ALINEACIÓN CONSISTENTE ===== */
-    .location-inputs-wrapper,
-    .datetime-row,
-    .actions {
-        height: var(--input-height) !important;
-        margin: 0 !important;
-    }
-
-    .field, .dt-field {
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    .location-head,
-    .solo-responsivo-izq {
-        height: var(--title-height) !important;
-        margin-bottom: var(--title-margin) !important;
-        box-sizing: border-box !important;
-    }
-
-}
-
-/* ============================================================
-    TABLET Y MÓVIL (max-width: 1124px) - MISMO LAYOUT
+    TABLET Y MÓVIL (max-width: 1124px)
 ============================================================ */
 @media (max-width: 1124px) {
 
@@ -2690,34 +2424,32 @@ input.flatpickr-input{
     .search-grid {
         display: flex !important;
         flex-direction: column !important;
-        gap: 15px !important;
+        gap: 20px !important;
     }
 
     .sg-col {
         width: 100% !important;
     }
-
-    /* ===== TÍTULOS ALINEADOS A LA IZQUIERDA ===== */
     .sg-col .field-title,
     .sg-col .solo-responsivo-izq,
     .sg-col.location-head .field-title {
         display: block !important;
         font-size: 13px !important;
         font-weight: 800 !important;
-        color: #000 !important;
+        color: #333 !important;
         text-transform: uppercase !important;
-        margin: 15px 0 5px !important;
+        margin: 0 0 8px 0 !important;
         text-align: left !important;
         width: 100% !important;
         letter-spacing: 0.5px !important;
     }
 
-    /* Título LUGAR DE RENTA */
     .sg-col-location .location-head {
         display: flex !important;
-        justify-content: flex-start !important;
-        gap: 15px !important;
-        margin-bottom: 5px !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        margin-bottom: 12px !important;
+        width: 100% !important;
     }
 
     .sg-col-location .location-head .field-title {
@@ -2730,50 +2462,79 @@ input.flatpickr-input{
     .sg-col-location .inline-check {
         margin: 0 !important;
         white-space: nowrap !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        font-size: 12px !important;
+        color: #555 !important;
     }
 
     .inline-check input[type="checkbox"] {
         width: 16px !important;
         height: 16px !important;
         accent-color: var(--brand) !important;
+        margin: 0 !important;
     }
 
-    /* Títulos de PICK-UP y DEVOLUCIÓN */
-    .sg-col-datetime .solo-responsivo-izq {
-        text-align: left !important;
-        margin: 15px 0 5px !important;
-        padding-left: 0 !important;
-    }
-
-    /* ===== INPUTS ===== */
+    /* ===== ESTILOS UNIFICADOS PARA TODOS LOS INPUTS ===== */
     .field select,
     .field input[type="text"],
     .dt-field input,
     .dt-field select,
-    .time-field select {
+    .time-field select,
+    .time-field .tp-selects select,
+    .location-inputs-wrapper select,
+    .location-inputs-wrapper input {
         width: 100% !important;
         height: 50px !important;
-        border: 1px solid var(--brand) !important;
+        border: 1px solid #ccc !important;
         border-radius: 6px !important;
-        padding-left: 45px !important;
         font-size: 16px !important;
+        color: #666 !important;
         background: white !important;
         box-sizing: border-box !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
     }
 
-    /* Iconos */
+    /* Placeholders  */
+    .dt-field input::placeholder,
+    .field input::placeholder {
+        color: #666 !important;
+        opacity: 1 !important;
+        font-weight: 400 !important;
+    }
+
+    /* Focus para todos */
+    .field select:focus,
+    .field input[type="text"]:focus,
+    .dt-field input:focus,
+    .dt-field select:focus,
+    .time-field select:focus,
+    .time-field .tp-selects select:focus,
+    .location-inputs-wrapper select:focus,
+    .location-inputs-wrapper input:focus {
+        border-color: var(--brand) !important;
+        box-shadow: 0 0 0 3px rgba(178,34,34,.15) !important;
+        outline: none !important;
+    }
+
     .field-icon {
         position: absolute !important;
         left: 14px !important;
         top: 50% !important;
         transform: translateY(-50%) !important;
-        color: #999 !important;
+        color: #333 !important;
         font-size: 16px !important;
         z-index: 2 !important;
         pointer-events: none !important;
+        width: 16px !important;
+        height: 16px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
-    /* Wrapper de selects */
+    /* Wrapper de selects de ubicación */
     .location-inputs-wrapper {
         display: flex !important;
         flex-direction: column !important;
@@ -2786,7 +2547,15 @@ input.flatpickr-input{
         position: relative !important;
     }
 
-    /* Control de devolución */
+    .location-inputs-wrapper .field .field-icon {
+        display: none !important;
+    }
+
+    .location-inputs-wrapper select,
+    .location-inputs-wrapper input {
+        padding-left: 12px !important;
+    }
+
     #dropoffWrapper {
         display: none !important;
         width: 100% !important;
@@ -2796,25 +2565,102 @@ input.flatpickr-input{
         display: flex !important;
     }
 
-    /* Filas de fecha/hora */
+    .sg-col-datetime {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 20px !important;
+    }
+
+    .sg-col-datetime .field {
+        width: 100% !important;
+    }
+
     .datetime-row {
         display: flex !important;
         flex-direction: row !important;
         gap: 10px !important;
         width: 100% !important;
-        align-items: flex-end !important;
     }
 
-    .datetime-row .dt-field,
-    .datetime-row .time-field {
-        flex: 1 !important;
+    .datetime-row .dt-field {
+        flex: 1 1 0 !important;
         min-width: 0 !important;
+        position: relative !important;
+        width: 50% !important;
+    }
+
+    .time-field {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
         position: relative !important;
     }
 
-    /* Botón buscar */
+    .time-field .tp-selects {
+        display: flex !important;
+        width: 100% !important;
+        margin-top: 0 !important;
+        position: relative !important;
+        z-index: 1 !important;
+    }
+
+    .time-field .tp-selects select {
+        padding-left: 42px !important;
+        padding-right: 10px !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+    }
+
+    .time-field input.tp-hidden-input {
+        display: none !important;
+    }
+
+    /* Icono de reloj  */
+    .time-field::before {
+        content: "\f017" !important;
+        font-family: "Font Awesome 6 Free" !important;
+        font-weight: 400 !important;
+        position: absolute !important;
+        left: 12px !important;
+        top: 25px !important;
+        transform: translateY(-50%) !important;
+        width: 20px !important;
+        height: 20px !important;
+        font-size: 16px !important;
+        color: #333 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 10 !important;
+        pointer-events: none !important;
+    }
+
+    .time-field .field-icon {
+        display: none !important;
+    }
+
+    .dt-field:not(.time-field) {
+        position: relative !important;
+    }
+
+    .dt-field:not(.time-field) input {
+        padding-left: 42px !important;
+        padding-right: 10px !important;
+    }
+
+    .dt-field:not(.time-field) .field-icon {
+        display: flex !important;
+        position: absolute !important;
+        left: 12px !important;
+        top: 25px !important;
+        transform: translateY(-50%) !important;
+        z-index: 2 !important;
+        color: #333 !important;
+    }
+
+    /* ===== BOTÓN BUSCAR ===== */
     .sg-col-submit .actions {
-        margin-top: 15px !important;
+        margin-top: 10px !important;
     }
 
     .sg-col-submit button {
@@ -2827,58 +2673,214 @@ input.flatpickr-input{
         border: none !important;
         font-size: 16px !important;
         cursor: pointer !important;
+        transition: background 0.2s ease !important;
     }
 
-    /* Hero icons */
+    .sg-col-submit button:hover {
+        background: #8b1a1a !important;
+    }
+
+    /* ===== HERO ICONS ===== */
     .hero-icons {
-        display: flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 45px !important;
-        padding: 40px 20px !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 20px !important;
+        padding: 30px 20px !important;
         width: 100% !important;
+        max-width: 900px !important;
+        margin: 0 auto !important;
     }
 
     .hero-icons .icon-item {
         display: flex !important;
         flex-direction: column !important;
         align-items: center !important;
-        width: 100% !important;
-        max-width: 280px !important;
         text-align: center !important;
+        gap: 10px !important;
+        padding: 12px 8px !important;
+        transition: transform 0.4s ease !important;
     }
 
     .hero-icons .icon-item i {
-        font-size: 50px !important;
-        margin-bottom: 12px !important;
+        font-size: clamp(40px, 4vw, 60px) !important;
+        line-height: 1 !important;
+        filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.25)) !important;
         color: #ffffff !important;
     }
 
     .hero-icons .icon-item span {
-        font-size: 19px !important;
+        font-size: 15px !important;
         font-weight: 600 !important;
+        line-height: 1.35 !important;
+        opacity: 0.95 !important;
         color: #ffffff !important;
-    }}
-/* ============================================================
-    ELIMINAR ICONOS DE UBICACIÓN Y UNIFICAR ICONOS DE FECHA/HORA
-============================================================ */
+    }
 
-/* Eliminar iconos solo de los campos de ubicación (TODOS LOS DISPOSITIVOS) */
+    .hero-icons .icon-item:hover {
+        transform: translateY(-6px) scale(1.05) !important;
+    }
+
+    .hero-icons .icon-item:nth-child(1) {
+        transform: translateY(-10px) !important;
+    }
+    .hero-icons .icon-item:nth-child(2) {
+        transform: translateY(12px) !important;
+    }
+    .hero-icons .icon-item:nth-child(3) {
+        transform: translateY(-10px) !important;
+    }
+
+    .hero-icons .icon-item:nth-child(5) {
+        grid-column: 3 !important;
+        grid-row: 2 !important;
+    }
+}
+
+/* ============================================================
+    FIX ESPECÍFICO PARA MÓVIL (menor a 560px)
+============================================================ */
+@media (max-width: 560px) {
+
+    #miBuscador.search-card.active {
+        padding: 80px 15px 30px !important;
+    }
+
+    .sg-col-datetime {
+        gap: 15px !important;
+    }
+
+    .datetime-row {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+    }
+
+    .datetime-row .dt-field {
+        width: 50% !important;
+    }
+
+    .field select,
+    .field input[type="text"],
+    .dt-field input,
+    .dt-field select,
+    .time-field .tp-selects select,
+    .location-inputs-wrapper select,
+    .location-inputs-wrapper input {
+        height: 48px !important;
+        font-size: 15px !important;
+        padding-left: 40px !important;
+    }
+
+    /* Placeholders en móvil */
+    .dt-field input::placeholder,
+    .field input::placeholder {
+        color: #666 !important;
+    }
+
+    .dt-field:not(.time-field) .field-icon,
+    .time-field::before {
+        left: 10px !important;
+        top: 24px !important;
+        font-size: 15px !important;
+        color: #333 !important;
+    }
+
+    .sg-col-submit button {
+        height: 50px !important;
+        font-size: 15px !important;
+    }
+
+    .sg-col .field-title,
+    .sg-col .solo-responsivo-izq {
+        font-size: 12px !important;
+        margin-bottom: 5px !important;
+    }
+
+    .sg-col-location .inline-check {
+        font-size: 11px !important;
+        gap: 4px !important;
+    }
+
+    .inline-check input[type="checkbox"] {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    .hero-icons {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 15px !important;
+        padding: 20px 15px !important;
+    }
+
+    .hero-icons .icon-item i {
+        font-size: 38px !important;
+    }
+
+    .hero-icons .icon-item span {
+        font-size: 14px !important;
+    }
+
+    .hero-icons .icon-item:nth-child(1),
+    .hero-icons .icon-item:nth-child(2),
+    .hero-icons .icon-item:nth-child(3) {
+        transform: none !important;
+    }
+
+    .hero-icons .icon-item:nth-child(5) {
+        grid-column: auto !important;
+        grid-row: auto !important;
+    }
+}
+
+/* ============================================================
+    FIX PARA MÓVIL MUY PEQUEÑO
+============================================================ */
+@media (max-width: 380px) {
+
+    .datetime-row {
+        gap: 5px !important;
+    }
+
+    .field select,
+    .field input[type="text"],
+    .dt-field input,
+    .dt-field select,
+    .time-field .tp-selects select,
+    .location-inputs-wrapper select,
+    .location-inputs-wrapper input {
+        padding-left: 35px !important;
+        font-size: 14px !important;
+    }
+
+    .dt-field:not(.time-field) .field-icon,
+    .time-field::before {
+        left: 8px !important;
+        width: 16px !important;
+        font-size: 14px !important;
+        color: #333 !important;
+    }
+
+    /* Placeholders en móvil muy pequeño */
+    .dt-field input::placeholder,
+    .field input::placeholder {
+        color: #666 !important;
+        font-size: 13px !important;
+    }
+
+    .hero-icons {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ============================================================
+    ESTILOS GLOBALES
+============================================================ */
 .location-inputs-wrapper .field .field-icon {
     display: none !important;
 }
 
-/* Ajustar el padding de los selects de ubicación (TODOS LOS DISPOSITIVOS) */
-.location-inputs-wrapper select,
-.location-inputs-wrapper input {
-    padding-left: 12px !important;
-}
-
-/* ===== ESTILOS UNIFICADOS PARA TODOS LOS ICONOS (FECHA Y HORA) ===== */
-
-/* 1️⃣ ICONO DE FECHA - CORREGIDO Y VISIBLE */
 .dt-field .field-icon {
-    display: flex !important;           /* 👈 Hacerlo visible */
+    display: flex !important;
     position: absolute !important;
     left: 12px !important;
     top: 50% !important;
@@ -2886,7 +2888,7 @@ input.flatpickr-input{
     width: 20px !important;
     height: 20px !important;
     font-size: 16px !important;
-    color: #999 !important;
+    color: #333 !important;
     align-items: center !important;
     justify-content: center !important;
     margin: 0 !important;
@@ -2895,172 +2897,535 @@ input.flatpickr-input{
     z-index: 3 !important;
 }
 
-/* 2️⃣ ICONO DE HORA (pseudo-elemento) - BAJADO UN POCO */
 .search-card .time-field.icon-field::before {
     content: "\f017" !important;
     font-family: "Font Awesome 6 Free" !important;
     font-weight: 400 !important;
-
     position: absolute !important;
     left: 12px !important;
     top: 50% !important;
-    transform: translateY(calc(-50% + 2px)) !important; /* 👈 BAJADO 2px */
-
+    transform: translateY(calc(-50% + 2px)) !important;
     width: 20px !important;
     height: 20px !important;
     font-size: 16px !important;
-
-    color: #999 !important;
+    color: #333 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-
     margin: 0 !important;
     padding: 0 !important;
     pointer-events: none !important;
     z-index: 99999 !important;
 }
 
-/* Ajustar padding de TODOS los inputs/selects de fecha/hora */
+/* Placeholders global */
+.dt-field input::placeholder {
+    color: #666 !important;
+    opacity: 1 !important;
+}
+
 .dt-field input,
 .dt-field select,
 .tp-selects select {
     padding-left: 42px !important;
     padding-right: 12px !important;
     text-indent: 0 !important;
-    height: 50px !important;
 }
 
-/* Asegurar posicionamiento relativo en contenedores */
 .dt-field,
 .tp-selects,
 .time-field.icon-field {
     position: relative !important;
 }
 
-/* Ocultar SOLO iconos conflictivos (no el de fecha) */
 .search-card .time-field.icon-field .cal-ico,
 .search-card .time-field.icon-field .field-icon {
     display: none !important;
 }
 
-/* Ocultar el wrapper de dropoff cuando no está activo */
 #dropoffWrapper[style*="display: none"] {
     display: none !important;
 }
-
-/* Ajustes para el layout cuando dropoff está oculto */
-.location-inputs-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
 /* ============================================================
-                ALERTAS
+    ALERTAS
 ============================================================ */
 
-/* =========================
-   ERROR - BORDE INFERIOR MÁS GRUESO
-========================= */
-.icon-field.field-error,
-.dt-field.field-error{
-    box-shadow: 0 0 0 2px #e53935, 0 4px 0 0 #e53935;  /* 👈 Borde inferior extra */
-    border-radius:8px;
+.field-error select,
+.field-error input,
+select.field-error,
+input.field-error,
+.field-error .flatpickr-input,
+.flatpickr-input.field-error {
+    border: 2px solid #e53935 !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
-/* =========================
-   CORRECTO - BORDE INFERIOR MÁS GRUESO
-========================= */
-.icon-field.field-success,
-.dt-field.field-success{
-    box-shadow: 0 0 0 2px #43a047, 0 4px 0 0 #43a047;  /* 👈 Borde inferior extra */
-    border-radius:8px;
+.field-success select,
+.field-success input,
+select.field-success,
+input.field-success,
+.field-success .flatpickr-input,
+.flatpickr-input.field-success {
+    border: 2px solid #43a047 !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
-
-/* quitar bordes internos */
-.icon-field input,
-.icon-field select,
-.dt-field input{
-    border:none;
-    outline:none;
-}
-
-/* evitar cortes y permitir mensaje abajo */
-.icon-field,
-.dt-field{
-    overflow:visible;
-    box-sizing:border-box;
-    transition:box-shadow .2s ease;
-    display:flex;
-    flex-direction:column;
-}
-
-/* icono + input alineados */
-.icon-field > .field-icon{
-    position:absolute;
-}
-
-/* =========================
-   MENSAJES DE ERROR
-========================= */
-.error-msg{
-    color:#e53935;
-    font-size:12px;
-    margin-top:4px;
-    font-weight:500;
-}
-/* subir un poco el mensaje en los selects de ubicación */
-.location-inputs-wrapper .error-msg{
-    margin-top:0px;
+.error-msg {
+    color: #e53935 !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    line-height: 1.2 !important;
+    position: absolute !important;
+    pointer-events: none !important;
+    z-index: 9999999 !important;
+    display: block !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
 }
 
 /* ============================================================
-   RESPONSIVO BUSCADOR
+    ESCRITORIO (>= 1125px)
+============================================================ */
+@media (min-width: 1125px) {
+    .field, .dt-field, .time-field, .location-inputs-wrapper .field {
+        position: relative !important;
+    }
+
+    .location-inputs-wrapper .field .error-msg {
+        bottom: -18px !important;
+        left: 0 !important;
+        right: auto !important;
+        font-size: 10px !important;
+        white-space: nowrap !important;
+        width: auto !important;
+        padding-left: 12px !important;
+    }
+    .dt-field .error-msg {
+        bottom: -18px !important;
+        left: 0 !important;
+        right: auto !important;
+        font-size: 10px !important;
+        white-space: nowrap !important;
+        width: auto !important;
+        padding-left: 12px !important;
+    }
+
+    .time-field .error-msg {
+        bottom: -18px !important;
+        left: 0 !important;
+        right: auto !important;
+        font-size: 10px !important;
+        white-space: nowrap !important;
+        width: auto !important;
+        padding-left: 12px !important;
+    }
+    select#pickupPlace.field-error + .select2-container .select2-selection,
+    select#dropoffPlace.field-error + .select2-container .select2-selection,
+    .select2-container .select2-selection.field-error {
+        border: 2px solid #e53935 !important;
+    }
+
+    select#pickupPlace.field-success + .select2-container .select2-selection,
+    select#dropoffPlace.field-success + .select2-container .select2-selection,
+    .select2-container .select2-selection.field-success {
+        border: 2px solid #43a047 !important;
+    }
+
+    .time-field .tp-selects select.tp-hour.field-error {
+        border: 2px solid #e53935 !important;
+    }
+    .time-field .tp-selects select.tp-hour.field-success {
+        border: 2px solid #43a047 !important;
+    }
+}
+
+/* ============================================================
+    TABLET (561px - 1124px)
+============================================================ */
+@media (min-width: 561px) and (max-width: 1124px) {
+    .field, .dt-field, .time-field, .location-inputs-wrapper .field {
+        position: relative !important;
+        margin-bottom: 20px !important;
+    }
+
+    .location-inputs-wrapper .field .error-msg {
+        bottom: -18px !important;
+        left: 0 !important;
+        right: auto !important;
+        font-size: 10px !important;
+        white-space: nowrap !important;
+        width: auto !important;
+        padding-left: 12px !important;
+    }
+    .dt-field .error-msg {
+        bottom: -18px !important;
+        left: 0 !important;
+        right: auto !important;
+        font-size: 10px !important;
+        white-space: nowrap !important;
+        width: auto !important;
+        padding-left: 12px !important;
+    }
+
+    .time-field .error-msg {
+        bottom: -18px !important;
+        left: 0 !important;
+        right: auto !important;
+        font-size: 10px !important;
+        white-space: nowrap !important;
+        width: auto !important;
+        padding-left: 12px !important;
+    }
+    select#pickupPlace.field-error + .select2-container .select2-selection,
+    select#dropoffPlace.field-error + .select2-container .select2-selection {
+        border: 2px solid #e53935 !important;
+    }
+
+    select#pickupPlace.field-success + .select2-container .select2-selection,
+    select#dropoffPlace.field-success + .select2-container .select2-selection {
+        border: 2px solid #43a047 !important;
+    }
+
+    input#pickupDate.field-error,
+    input#dropoffDate.field-error,
+    input#pickupDate.field-error + .flatpickr-input,
+    input#dropoffDate.field-error + .flatpickr-input {
+        border: 2px solid #e53935 !important;
+    }
+
+    input#pickupDate.field-success,
+    input#dropoffDate.field-success,
+    input#pickupDate.field-success + .flatpickr-input,
+    input#dropoffDate.field-success + .flatpickr-input {
+        border: 2px solid #43a047 !important;
+    }
+    .time-field .tp-selects select.tp-hour.field-error {
+        border: 2px solid #e53935 !important;
+    }
+    .time-field .tp-selects select.tp-hour.field-success {
+        border: 2px solid #43a047 !important;
+    }
+}
+
+/* ============================================================
+    MÓVIL (<= 560px) -
+============================================================ */
+@media (max-width: 560px) {
+    .field, .dt-field, .time-field, .location-inputs-wrapper .field {
+        position: relative !important;
+        margin-bottom: 25px !important;
+    }
+
+    .location-inputs-wrapper .field .error-msg {
+        bottom: -18px !important;
+        left: 0 !important;
+        right: auto !important;
+        transform: none !important;
+        font-size: 9px !important;
+        white-space: normal !important;
+        width: 100% !important;
+        text-align: left !important;
+        padding-left: 12px !important;
+        padding-right: 0 !important;
+        margin: 0 !important;
+    }
+    .dt-field .error-msg {
+        bottom: -18px !important;
+        left: 0 !important;
+        right: auto !important;
+        transform: none !important;
+        font-size: 9px !important;
+        white-space: normal !important;
+        width: 100% !important;
+        text-align: left !important;
+        padding-left: 12px !important;
+        padding-right: 0 !important;
+        margin: 0 !important;
+    }
+    .time-field .error-msg {
+        bottom: -18px !important;
+        left: 0 !important;
+        right: auto !important;
+        transform: none !important;
+        font-size: 9px !important;
+        white-space: normal !important;
+        width: 100% !important;
+        text-align: left !important;
+        padding-left: 12px !important;
+        padding-right: 0 !important;
+        margin: 0 !important;
+    }
+    select#pickupPlace.field-error + .select2-container .select2-selection,
+    select#dropoffPlace.field-error + .select2-container .select2-selection {
+        border: 2px solid #e53935 !important;
+    }
+
+    select#pickupPlace.field-success + .select2-container .select2-selection,
+    select#dropoffPlace.field-success + .select2-container .select2-selection {
+        border: 2px solid #43a047 !important;
+    }
+    input#pickupDate.field-error,
+    input#dropoffDate.field-error,
+    input#pickupDate.field-error + .flatpickr-input,
+    input#dropoffDate.field-error + .flatpickr-input {
+        border: 2px solid #e53935 !important;
+    }
+
+    input#pickupDate.field-success,
+    input#dropoffDate.field-success,
+    input#pickupDate.field-success + .flatpickr-input,
+    input#dropoffDate.field-success + .flatpickr-input {
+        border: 2px solid #43a047 !important;
+    }
+
+    /* HORAS SELECTS - ERROR Y SUCCESS PARA MÓVIL */
+    .time-field .tp-selects select.tp-hour.field-error {
+        border: 2px solid #e53935 !important;
+    }
+    .time-field .tp-selects select.tp-hour.field-success {
+        border: 2px solid #43a047 !important;
+    }
+}
+
+/* ============================================================
+    FIX ESPECÍFICO PARA FLATPICKR - CORREGIDO
+============================================================ */
+.dt-field:has(.field-error) .flatpickr-input,
+.dt-field .flatpickr-input.field-error {
+    border: 2px solid #e53935 !important;
+}
+
+.dt-field:has(.field-success) .flatpickr-input,
+.dt-field .flatpickr-input.field-success {
+    border: 2px solid #43a047 !important;
+}
+
+#pickupDate.field-error + .flatpickr-input,
+#pickupDate.field-error {
+    border: 2px solid #e53935 !important;
+}
+
+#pickupDate.field-success + .flatpickr-input,
+#pickupDate.field-success {
+    border: 2px solid #43a047 !important;
+}
+
+#dropoffDate.field-error + .flatpickr-input,
+#dropoffDate.field-error {
+    border: 2px solid #e53935 !important;
+}
+
+#dropoffDate.field-success + .flatpickr-input,
+#dropoffDate.field-success {
+    border: 2px solid #43a047 !important;
+}
+
+/* ============================================================
+    EVITAR DUPLICACIÓN DE MENSAJES
+============================================================ */
+.dt-field:not(.time-field) .error-msg[class*="Hora"] {
+    display: none !important;
+}
+.time-field .error-msg[class*="Fecha"] {
+    display: none !important;
+}
+.location-inputs-wrapper .error-msg[class*="Hora"],
+.location-inputs-wrapper .error-msg[class*="Fecha"] {
+    display: none !important;
+}
+/* ============================================================
+    HERO ICONS - MÓVIL (<= 560px)
+============================================================ */
+@media (max-width: 560px) {
+    .hero-icons {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 25px !important;
+        padding: 30px 20px !important;
+        width: 100% !important;
+        max-width: 400px !important;
+        margin: 0 auto !important;
+    }
+
+    .hero-icons .icon-item {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        max-width: 280px !important;
+        padding: 10px !important;
+        transition: transform 0.3s ease !important;
+    }
+
+    .hero-icons .icon-item i {
+        font-size: 48px !important;
+        line-height: 1 !important;
+        filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.25)) !important;
+        color: #ffffff !important;
+        margin-bottom: 5px !important;
+    }
+
+    .hero-icons .icon-item span {
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        line-height: 1.4 !important;
+        color: #ffffff !important;
+        opacity: 0.95 !important;
+        white-space: normal !important;
+    }
+    .hero-icons .icon-item:hover {
+        transform: translateY(-4px) scale(1.03) !important;
+    }
+
+    .hero-icons .icon-item:nth-child(1),
+    .hero-icons .icon-item:nth-child(2),
+    .hero-icons .icon-item:nth-child(3),
+    .hero-icons .icon-item:nth-child(4),
+    .hero-icons .icon-item:nth-child(5) {
+        transform: none !important;
+        grid-column: auto !important;
+        grid-row: auto !important;
+    }
+}
+
+/* ============================================================
+    FIX CRÍTICO PARA FLATPICKR - TODOS LOS DISPOSITIVOS
 ============================================================ */
 
+.dt-field {
+    position: relative !important;
+}
 
-@media (max-width:768px){
+.flatpickr-input {
+  width: 100% !important;
+  height: 100% !important;
+  border: 1px solid #ccc !important;
+  border-radius: inherit !important;
+}
 
-    /* columnas una debajo de otra */
-    .search-grid{
-        display:flex !important;
-        flex-direction:column;
-        gap:20px;
+input#pickupDate.field-error ~ .flatpickr-input,
+input#dropoffDate.field-error ~ .flatpickr-input,
+input#pickupDate.field-error + .flatpickr-input,
+input#dropoffDate.field-error + .flatpickr-input,
+.dt-field:has(#pickupDate.field-error) .flatpickr-input,
+.dt-field:has(#dropoffDate.field-error) .flatpickr-input {
+    border: 2px solid #e53935 !important;
+}
+
+input#pickupDate.field-success ~ .flatpickr-input,
+input#dropoffDate.field-success ~ .flatpickr-input,
+input#pickupDate.field-success + .flatpickr-input,
+input#dropoffDate.field-success + .flatpickr-input,
+.dt-field:has(#pickupDate.field-success) .flatpickr-input,
+.dt-field:has(#dropoffDate.field-success) .flatpickr-input {
+    border: 2px solid #43a047 !important;
+}
+.flatpickr-input.field-error {
+    border: 2px solid #e53935 !important;
+}
+
+.flatpickr-input.field-success {
+    border: 2px solid #43a047 !important;
+}
+@media (max-width: 1124px) {
+    .flatpickr-input.field-error,
+    .dt-field .flatpickr-input.field-error {
+        border: 2px solid #e53935 !important;
     }
 
-    /* inputs de ubicación */
-    .location-inputs-wrapper{
-        display:flex;
-        flex-direction:column;
-        gap:14px;
-        width:100%;
+    .flatpickr-input.field-success,
+    .dt-field .flatpickr-input.field-success {
+        border: 2px solid #43a047 !important;
+    }
+}
+
+@media (max-width: 560px) {
+    .flatpickr-input.field-error,
+    .dt-field .flatpickr-input.field-error {
+        border: 2px solid #e53935 !important;
     }
 
-    .location-inputs-wrapper .field{
-        width:100%;
+    .flatpickr-input.field-success,
+    .dt-field .flatpickr-input.field-success {
+        border: 2px solid #43a047 !important;
+    }
+}
+/* ============================================================
+    HERO ICONS - MÓVIL MUY PEQUEÑO (<= 380px)
+============================================================ */
+@media (max-width: 380px) {
+    .hero-icons {
+        gap: 20px !important;
+        padding: 25px 15px !important;
     }
 
-    /* fecha y hora alineados */
-    .datetime-row{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:12px;
-        width:100%;
+    .hero-icons .icon-item i {
+        font-size: 42px !important;
     }
 
-    .dt-field{
-        width:100%;
+    .hero-icons .icon-item span {
+        font-size: 15px !important;
+    }
+}
+/* ============================================================
+    HERO ICONS - TABLET (561px - 1124px)
+============================================================ */
+@media (min-width: 561px) and (max-width: 1124px) {
+    .hero-icons {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: var(--hero-icon-gap, 18px) !important;
+        margin-top: clamp(28px, 6vh, 65px) !important;
+        margin-bottom: 18px !important;
+        width: min(980px, 100%) !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        align-items: start !important;
     }
 
-    /* botón grande */
-    .sg-col-submit{
-        width:100%;
+    .hero-icons .icon-item {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        gap: 10px !important;
+        padding: 12px 8px !important;
+        transition: transform 0.4s ease !important;
     }
 
-    .sg-col-submit button{
-        width:100%;
-        height:52px;
-        font-size:16px;
+    .hero-icons .icon-item i {
+        font-size: var(--hero-icon-size, clamp(40px, 4vw, 60px)) !important;
+        line-height: 1 !important;
+        filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.25)) !important;
+        color: #ffffff !important;
     }
 
+    .hero-icons .icon-item span {
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        line-height: 1.35 !important;
+        opacity: 0.95 !important;
+        color: #ffffff !important;
+    }
+    .hero-icons .icon-item:hover {
+        transform: translateY(-6px) scale(1.05) !important;
+    }
+
+    .hero-icons .icon-item:nth-child(1) {
+        transform: translateY(-10px) !important;
+    }
+    .hero-icons .icon-item:nth-child(2) {
+        transform: translateY(12px) !important;
+    }
+    .hero-icons .icon-item:nth-child(3) {
+        transform: translateY(-10px) !important;
+    }
+    .hero-icons .icon-item:nth-child(5) {
+        grid-column: 3 !important;
+        grid-row: 2 !important;
+    }
 }
