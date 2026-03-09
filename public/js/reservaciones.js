@@ -20,7 +20,6 @@
           const qty = Math.max(0, parseInt(m[2], 10) || 0);
           if (qty > 0) map.set(id, qty);
         } else {
-          // Soporte viejo: "15" → cantidad 1
           const id = pair.replace(/\D/g, '');
           if (id) map.set(id, 1);
         }
@@ -61,11 +60,9 @@
 
     const s = String(pickupInput.value).trim();
 
-    // Soporta "dd-mm-YYYY"
     let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
     if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
 
-    // Soporta "YYYY-mm-dd"
     m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
 
@@ -74,14 +71,13 @@
   }
 
   function applyYoungDriverAddon() {
-    // input oculto donde se guardan los addons
     const hidden =
       qs('#addonsHidden') ||
       qs('input[name="addons"]') ||
       qs('input[name="addons_ids"]') ||
       qs('input[name="addonsHidden"]');
 
-    const dobHidden = qs('#dob'); // hidden de fecha de nacimiento (YYYY-MM-DD)
+    const dobHidden = qs('#dob');
 
     if (!hidden || !dobHidden || !YOUNG_DRIVER_SERVICE_ID) return;
 
@@ -89,18 +85,15 @@
     const refDate = getPickupDateForAge();
     const age     = computeAgeFromDob(dobStr, refDate);
 
-    // 🔹 Map ANTES de aplicar la regla (para saber si ya estaba agregado)
     const map = parseAddonsStringToMap(hidden.value || '');
     const hadBefore = map.has(String(YOUNG_DRIVER_SERVICE_ID));
 
     if (age != null && age < YOUNG_DRIVER_MIN_AGE) {
-      // 👉 Menor de la edad límite: forzamos el addon con cantidad 1
       map.set(String(YOUNG_DRIVER_SERVICE_ID), 1);
 
       if (!hadBefore && !youngDriverAlertShown && window.alertify) {
         youngDriverAlertShown = true;
 
-        // Intentamos leer el precio desde el catálogo de addons
         let montoPorDia = null;
         try {
           const script = document.getElementById('addonsCatalog');
@@ -165,7 +158,7 @@
       formStep1.addEventListener('submit', function (e) {
         const requiredIds = [
           'pickup_sucursal_id', 'dropoff_sucursal_id',
-          'start', 'end', // Inputs de fecha
+          'start', 'end',
           'pickup_h', 'pickup_m',
           'dropoff_h', 'dropoff_m'
         ];
@@ -209,112 +202,186 @@
       });
     }
 
+    // ✅ VALIDACIÓN CORREGIDA DEL PASO 4
     const btnReservar = document.getElementById('btnReservar');
     if (btnReservar) {
-      btnReservar.addEventListener('click', function (e) {
-        let faltantes = [];
+      btnReservar.addEventListener('click', function(e) {
+        let hayErrores = false;
 
-        const nombre = document.getElementById('nombreCliente');
-        const telefono = document.getElementById('telefonoCliente');
-        const email = document.getElementById('correoCliente');
-        const terminos = document.getElementById('acepto');
-        const nacimiento = document.getElementById('dob');
+        // LIMPIAR ERRORES ANTERIORES
+        document.querySelectorAll('.field-error').forEach(el => {
+          el.classList.remove('field-error');
+        });
 
-        if (!nombre || nombre.value.trim().length < 2) faltantes.push("Nombre");
-        if (!telefono || telefono.value.trim().length < 10) faltantes.push("Teléfono (10 dígitos)");
-        if (!nacimiento || nacimiento.value.trim() === "") faltantes.push("Fecha de nacimiento");
+        document.querySelectorAll('.has-error').forEach(el => {
+          el.classList.remove('has-error');
+        });
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email || !emailRegex.test(email.value.trim())) faltantes.push("Correo electrónico válido");
+        document.querySelectorAll('.error-msg').forEach(el => el.remove());
 
-        if (!terminos || !terminos.checked) faltantes.push("Aceptar términos y condiciones");
+        // 1. VALIDAR CAMPOS NORMALES
+        const campos = [
+          { id: 'nombreCompleto', mensaje: 'Nombre completo requerido' },
+          { id: 'telefonoCliente', mensaje: 'El teléfono debe tener 10 dígitos' },
+          { id: 'correoCliente', mensaje: 'Correo electrónico requerido' },
+          { id: 'pais', mensaje: 'Selecciona un país' }
+        ];
 
         campos.forEach(campo => {
-            const el = document.getElementById(campo.id);
+          const el = document.getElementById(campo.id);
 
-          if (window.alertify) {
-            alertify.error("<b>Faltan datos obligatorios:</b><br>" + faltantes.join("<br>"));
-          } else {
-            alert("Faltan datos:\n" + faltantes.join("\n"));
+          if (!el || el.value.trim() === '') {
+            marcarError(el, campo.mensaje);
+            hayErrores = true;
           }
+
+          // Validación especial teléfono
+          if (campo.id === 'telefonoCliente' && el && el.value.trim() !== '') {
+            const telefono = el.value.trim().replace(/\D/g, '');
+            if (telefono.length !== 10) {
+              marcarError(el, 'El teléfono debe tener 10 dígitos');
+              hayErrores = true;
+            }
+          }
+
+          // Validación email
+          if (campo.id === 'correoCliente' && el && el.value.trim() !== '') {
+            const email = el.value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+              marcarError(el, 'Correo electrónico inválido');
+              hayErrores = true;
+            }
+          }
+        });
+
+        // 2. VALIDAR FECHA (3 campos independientes)
+        const dia = document.getElementById('dob_day');
+        const mes = document.getElementById('dob_month');
+        const año = document.getElementById('dob_year');
+
+        if (!dia || !mes || !año || !dia.value || !mes.value || !año.value) {
+          marcarErrorFecha('Fecha de nacimiento incompleta');
+          hayErrores = true;
         }
 
-  (function disableMissingFieldsAlerts() {
-    const shouldBlock = (msg) => {
-      const s = String(msg || "");
-      return (
-        s.includes("Campos incompletos") ||
-        s.includes("Por favor completa los siguientes campos") ||
-        s.includes("Fecha y hora de entrega") ||
-        s.includes("Fecha y hora de devolución")
-      );
-    };
+        // 3. VALIDAR CHECKBOX
+        const acepto = document.getElementById('acepto');
+        if (!acepto || !acepto.checked) {
+          marcarErrorCheckbox('Debes aceptar las políticas');
+          hayErrores = true;
+        }
 
-    try {
-      const _alert = window.alert;
-      window.alert = function (msg) {
-        if (shouldBlock(msg)) return;
-        return _alert.call(window, msg);
+        if (hayErrores) {
+          e.preventDefault();
+        } else {
+          const modal = document.getElementById('modalMetodoPago');
+          if (modal) modal.style.display = 'flex';
+        }
+      });
+    }
+
+    // FUNCIÓN PARA MARCAR ERROR EN CAMPOS NORMALES
+    function marcarError(elemento, mensaje) {
+      if (!elemento) return;
+
+      const contenedor = elemento.closest('.field-floating') ||
+                        elemento.closest('.field-floating-sub') ||
+                        elemento.parentNode;
+
+      if (contenedor.querySelector('.error-msg')) return;
+
+      elemento.classList.add('field-error');
+      contenedor.classList.add('has-error');
+
+      const errorMsg = document.createElement('span');
+      errorMsg.className = 'error-msg';
+      errorMsg.textContent = mensaje;
+      contenedor.appendChild(errorMsg);
+
+      const limpiar = function() {
+        elemento.classList.remove('field-error');
+        contenedor.classList.remove('has-error');
+        const msg = contenedor.querySelector('.error-msg');
+        if (msg) msg.remove();
       };
-    } catch (_) { }
 
-    try {
-      if (window.Swal && typeof window.Swal.fire === "function") {
-        const _fire = window.Swal.fire.bind(window.Swal);
-        window.Swal.fire = function (a, b, c) {
-          const title = (a && typeof a === "object") ? (a.title || "") : (a || "");
-          const text = (a && typeof a === "object") ? (a.text || "") : (b || "");
-          if (shouldBlock(title) || shouldBlock(text)) return Promise.resolve();
-          return _fire(a, b, c);
-        };
-      }
-    } catch (_) { }
+      elemento.addEventListener('input', limpiar, { once: true });
+      elemento.addEventListener('change', limpiar, { once: true });
+    }
 
-    try {
-      const mo = new MutationObserver(() => {
-        const nodes = Array.from(document.querySelectorAll("body *"));
-        nodes.forEach(el => {
-          if (!el || !el.textContent) return;
-          if (!shouldBlock(el.textContent)) return;
-          const modal = el.closest(".modal,.swal2-container,.alert,.toast,[role='dialog']");
-          (modal || el).style.display = "none";
+    // FUNCIÓN PARA FECHA (3 campos)
+    function marcarErrorFecha(mensaje) {
+      const container = document.querySelector('.field-dob-container');
+      const dobInline = document.querySelector('.dob-inline');
+      const dia = document.getElementById('dob_day');
+      const mes = document.getElementById('dob_month');
+      const año = document.getElementById('dob_year');
+
+      if (!container || container.querySelector('.error-msg')) return;
+
+      container.classList.add('has-error');
+      if (dobInline) dobInline.classList.add('field-error');
+
+      [dia, mes, año].forEach(el => {
+        if (el) {
+          el.classList.add('field-error');
+          const sub = el.closest('.field-floating-sub');
+          if (sub) sub.classList.add('has-error');
+        }
+      });
+
+      const errorMsg = document.createElement('span');
+      errorMsg.className = 'error-msg';
+      errorMsg.textContent = mensaje;
+      container.appendChild(errorMsg);
+
+      const limpiar = function() {
+        container.classList.remove('has-error');
+        if (dobInline) dobInline.classList.remove('field-error');
+
+        [dia, mes, año].forEach(el => {
+          if (el) {
+            el.classList.remove('field-error');
+            const sub = el.closest('.field-floating-sub');
+            if (sub) sub.classList.remove('has-error');
+          }
         });
 
         if (errorMsg.parentNode) errorMsg.remove();
-    };
+      };
 
-    // Listener a los 3 selects
-    [dia, mes, año].forEach(el => {
+      [dia, mes, año].forEach(el => {
         if (el) {
-            el.addEventListener('change', limpiar, { once: true });
-            el.addEventListener('input', limpiar, { once: true });
+          el.addEventListener('change', limpiar, { once: true });
+          el.addEventListener('input', limpiar, { once: true });
         }
-    });
-}
+      });
+    }
 
-// FUNCIÓN PARA CHECKBOX - MEJORADA
-function marcarErrorCheckbox(mensaje) {
-    const checkbox = document.getElementById('acepto');
-    const container = checkbox ? checkbox.closest('.cbox') : null;
+    // FUNCIÓN PARA CHECKBOX
+    function marcarErrorCheckbox(mensaje) {
+      const checkbox = document.getElementById('acepto');
+      const container = checkbox ? checkbox.closest('.cbox') : null;
 
-    if (!checkbox || !container || container.querySelector('.error-msg')) return;
+      if (!checkbox || !container || container.querySelector('.error-msg')) return;
 
-    checkbox.classList.add('field-error');
-    container.classList.add('has-error');
+      checkbox.classList.add('field-error');
+      container.classList.add('has-error');
 
-    const errorMsg = document.createElement('span');
-    errorMsg.className = 'error-msg';
-    errorMsg.textContent = mensaje;
-    container.appendChild(errorMsg);
+      const errorMsg = document.createElement('span');
+      errorMsg.className = 'error-msg';
+      errorMsg.textContent = mensaje;
+      container.appendChild(errorMsg);
 
-    const limpiar = function() {
+      const limpiar = function() {
         checkbox.classList.remove('field-error');
         container.classList.remove('has-error');
         if (errorMsg.parentNode) errorMsg.remove();
-    };
+      };
 
-    checkbox.addEventListener('change', limpiar, { once: true });
-}
+      checkbox.addEventListener('change', limpiar, { once: true });
+    }
   }
 
   function forceStep1WhenOnlyStepParam() {
@@ -827,7 +894,6 @@ function marcarErrorCheckbox(mensaje) {
       const s = norm(v);
       if (!s) return { nombre:"", apellido:"" };
 
-      // 👉 Mandamos TODO el texto al campo "nombre" y dejamos "apellido" vacío
       return {
         nombre: s,
         apellido: ""
@@ -1078,7 +1144,6 @@ function marcarErrorCheckbox(mensaje) {
         window.history.replaceState({}, document.title, url.toString());
       } catch (_) { }
 
-      // 👶 Después de aplicar los addons manuales, forzamos la regla de menor de 25
       try {
         applyYoungDriverAddon();
       } catch (_) { }
@@ -1311,7 +1376,7 @@ function marcarErrorCheckbox(mensaje) {
 
   function bootWhenFlatpickrReady() {
     let tries = 0;
-    const maxTries = 240; // ~4s
+    const maxTries = 240;
     function tick() {
       tries++;
       if (window.flatpickr) {
@@ -1338,9 +1403,6 @@ function marcarErrorCheckbox(mensaje) {
     });
   }
 
-  // ===============================
-  // ✅ FIX: MODAL PROTECCIONES STEP 3
-  // ===============================
   function initStep3ProteccionesModal(){
     const openId  = 'info-protecciones-step3';
     const modalId = 'modalProteccionesStep3';
@@ -1398,14 +1460,13 @@ function marcarErrorCheckbox(mensaje) {
     applyYoungDriverAddon();
     refreshFloatStates();
 
-    // ✅ AQUI SE ACTIVA EL MODAL STEP 3
     initStep3ProteccionesModal();
 
     setTimeout(refreshFloatStates, 80);
     setTimeout(refreshFloatStates, 250);
   });
 
-  // ===== Select2 (protegido) =====
+  // ===== Select2 =====
   document.addEventListener("DOMContentLoaded", function() {
     if (!window.jQuery || !window.jQuery.fn || typeof window.jQuery.fn.select2 !== 'function') return;
 
@@ -1501,7 +1562,7 @@ function marcarErrorCheckbox(mensaje) {
     }
   });
 
-  // modal Step 4 (como lo tenías)
+  // modal Step 4
   document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('modalProtecciones');
     const btnInfo = document.getElementById('info-protecciones');

@@ -1618,11 +1618,31 @@ if ($stepCurrent >= 2 && $isFreshEntry) {
                 $tieneACCat   = (int)($cat->aire_acondicionado ?? ($cat->aire_ac ?? 1));
 
 
-                  $cap = [
-                    'pax'   => (int)($categoriaSel->pasajeros ?? 5),
-                    'small' => (int)($categoriaSel->maletas_chicas ?? 2),
-                    'big'   => (int)($categoriaSel->maletas_grandes ?? 1),
-                  ];
+                  $predeterminadosPorId = [
+                    1  => ['pax'=>5,  'small'=>2, 'big'=>1],
+                    2  => ['pax'=>5,  'small'=>2, 'big'=>1],
+                    3  => ['pax'=>5,  'small'=>2, 'big'=>2],
+                    4  => ['pax'=>5,  'small'=>2, 'big'=>2],
+                    5  => ['pax'=>5,  'small'=>2, 'big'=>2],
+                    6  => ['pax'=>5,  'small'=>3, 'big'=>2],
+                    7  => ['pax'=>7,  'small'=>3, 'big'=>2],
+                    8  => ['pax'=>7,  'small'=>4, 'big'=>2],
+                    9  => ['pax'=>13, 'small'=>4, 'big'=>3],
+                    10 => ['pax'=>5,  'small'=>3, 'big'=>2],
+                    11 => ['pax'=>5,  'small'=>3, 'big'=>2],
+                    ];
+
+                    $idActual = $categoriaSel->id_categoria ?? null;
+
+                    if(isset($predeterminadosPorId[$idActual])){
+                    $cap = $predeterminadosPorId[$idActual];
+                    }else{
+                    $cap = [
+                        'pax'   => (int)($categoriaSel->pasajeros ?? 5),
+                        'small' => (int)($categoriaSel->maletas_chicas ?? 2),
+                        'big'   => (int)($categoriaSel->maletas_grandes ?? 1),
+                    ];
+                    }
                 @endphp
 
                 <div class="car-features" style="margin-top:14px;">
