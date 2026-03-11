@@ -159,46 +159,46 @@ class ReservacionesController extends Controller
         ];
 
         // ======================================================
-// ✅ NUEVO CONTROL DE FLUJO (POR CATEGORÍA)
-// ======================================================
+        // ✅ NUEVO CONTROL DE FLUJO (POR CATEGORÍA)
+        // ======================================================
 
-// Step solicitado por URL
-$requestedStep = (int) $request->query('step', 0);
+        // Step solicitado por URL
+        $requestedStep = (int) $request->query('step', 0);
 
-// Validar rango
-if ($requestedStep < 1 || $requestedStep > 4) {
-    $requestedStep = 0;
-}
+        // Validar rango
+        if ($requestedStep < 1 || $requestedStep > 4) {
+            $requestedStep = 0;
+        }
 
-// Flags del flujo actual
-$hasCategoria = !empty($categoriaId);
-$hasPlan      = !empty($plan);
+        // Flags del flujo actual
+        $hasCategoria = !empty($categoriaId);
+        $hasPlan      = !empty($plan);
 
-// Decidir paso correcto
-if ($requestedStep === 1) {
-    $step = 1;
-} elseif ($requestedStep === 2) {
-    $step = 2;
-} elseif ($requestedStep === 3) {
-    // Complementos requieren categoría + plan
-    $step = ($hasCategoria && $hasPlan) ? 3 : 2;
-} elseif ($requestedStep === 4) {
-    // 🔥 RESUMEN YA NO REQUIERE vehiculo_id
-    $step = ($hasCategoria && $hasPlan) ? 4 : 2;
-} else {
-    // Sin step explícito
-    if ($hasCategoria && $hasPlan) {
-        $step = 3;
-    } else {
-        $step = 2;
-    }
-}
+        // Decidir paso correcto
+        if ($requestedStep === 1) {
+            $step = 1;
+        } elseif ($requestedStep === 2) {
+            $step = 2;
+        } elseif ($requestedStep === 3) {
+            // Complementos requieren categoría + plan
+            $step = ($hasCategoria && $hasPlan) ? 3 : 2;
+        } elseif ($requestedStep === 4) {
+            // 🔥 RESUMEN YA NO REQUIERE vehiculo_id
+            $step = ($hasCategoria && $hasPlan) ? 4 : 2;
+        } else {
+            // Sin step explícito
+            if ($hasCategoria && $hasPlan) {
+                $step = 3;
+            } else {
+                $step = 2;
+            }
+        }
 
-// Ya no listamos vehículos (flujo por categoría)
-$vehiculos = collect();
+        // Ya no listamos vehículos (flujo por categoría)
+        $vehiculos = collect();
 
 
-                // --- 6) Complementos (SERVICIOS) — SIEMPRE cargar ---
+        // --- 6) Complementos (SERVICIOS) — SIEMPRE cargar ---
         $servicios = $this->obtenerServiciosActivos();
 
         return view('Usuarios.Reservaciones', [
@@ -217,195 +217,195 @@ $vehiculos = collect();
      * Paso 1 desde la navbar (form vacío con defaults).
      */
     public function desdeNavbar(Request $request)
-{
-    // 1) Catálogos base
-    $ciudades   = $this->getCiudadesConSucursalesActivas();
-    $categorias = $this->getCategorias();
+    {
+        // 1) Catálogos base
+        $ciudades   = $this->getCiudadesConSucursalesActivas();
+        $categorias = $this->getCategorias();
 
-    // 2) Filtros en blanco (el usuario entra “limpio” desde la navbar)
-    $filters = [
-        'pickup_sucursal_id'  => null,
-        'dropoff_sucursal_id' => null,
-        'pickup_date'         => null,
-        'pickup_time'         => null,
-        'dropoff_date'        => null,
-        'dropoff_time'        => null,
-        'categoria_id'        => null,
-        'plan'                => null,
-    ];
+        // 2) Filtros en blanco (el usuario entra “limpio” desde la navbar)
+        $filters = [
+            'pickup_sucursal_id'  => null,
+            'dropoff_sucursal_id' => null,
+            'pickup_date'         => null,
+            'pickup_time'         => null,
+            'dropoff_date'        => null,
+            'dropoff_time'        => null,
+            'categoria_id'        => null,
+            'plan'                => null,
+        ];
 
-    // 3) Paso inicial: mostramos categorías (Paso 2)
-    $step      = 2;
-    $vehiculos = collect();
-    $vehiculo  = null;
+        // 3) Paso inicial: mostramos categorías (Paso 2)
+        $step      = 2;
+        $vehiculos = collect();
+        $vehiculo  = null;
 
-    // 4) Complementos listos por si avanza al paso 3
-    $servicios = $this->obtenerServiciosActivos();
+        // 4) Complementos listos por si avanza al paso 3
+        $servicios = $this->obtenerServiciosActivos();
 
-    // 5) IMPORTANTE: pasar siempre 'ciudades' a la vista
-    return view('Usuarios.Reservaciones', [
-        'step'       => $step,
-        'filters'    => $filters,
-        'vehiculos'  => $vehiculos,
-        'vehiculo'   => $vehiculo,
-        'sucursales' => collect(),   // aquí no los necesitas realmente
-        'categorias' => $categorias,
-        'ciudades'   => $ciudades,   // 👈 esto evita el Undefined variable $ciudades
-        'servicios'  => $servicios,
-    ]);
-}
+        // 5) IMPORTANTE: pasar siempre 'ciudades' a la vista
+        return view('Usuarios.Reservaciones', [
+            'step'       => $step,
+            'filters'    => $filters,
+            'vehiculos'  => $vehiculos,
+            'vehiculo'   => $vehiculo,
+            'sucursales' => collect(),   // aquí no los necesitas realmente
+            'categorias' => $categorias,
+            'ciudades'   => $ciudades,   // 👈 esto evita el Undefined variable $ciudades
+            'servicios'  => $servicios,
+        ]);
+    }
 
     /* ===================== NUEVO: generar PDF + guardar en archivos + enviar WhatsApp ===================== */
 
-   public function cotizar(Request $request)
-{
-    Log::info('🟢 Datos recibidos en cotizar:', $request->all());
+    public function cotizar(Request $request)
+    {
+        Log::info('🟢 Datos recibidos en cotizar:', $request->all());
 
-    // 1️⃣ Validación: ahora trabajamos por CATEGORÍA, no por vehículo
-    $request->validate([
-        'categoria_id'        => 'required|integer',
-        'pickup_date'         => 'required|date_format:Y-m-d',
-        'pickup_time'         => 'required|date_format:H:i',
-        'dropoff_date'        => 'required|date_format:Y-m-d',
-        'dropoff_time'        => 'required|date_format:H:i',
-        'pickup_sucursal_id'  => 'nullable|integer',
-        'dropoff_sucursal_id' => 'nullable|integer',
-        'addons'              => 'nullable|array',
-        'nombre'              => 'nullable|string|max:150',
-        'email'               => 'nullable|email|max:150',
-        'telefono'            => 'nullable|string|max:30',
-    ]);
-    // 2️⃣ Buscar la CATEGORÍA y opcionalmente un vehículo ejemplo para la ficha
-    $vehiculo = DB::table('categorias_carros as c')
-        ->leftJoin('vehiculos as v', 'v.id_categoria', '=', 'c.id_categoria')
-        ->leftJoin('vehiculo_imagenes as vi', function ($j) {
-            $j->on('vi.id_vehiculo', '=', 'v.id_vehiculo')->where('vi.orden', 1);
-        })
-        ->leftJoin('sucursales as s', 's.id_sucursal', '=', 'v.id_sucursal')
-        ->selectRaw("
-            c.id_categoria,
-            c.nombre       as categoria_nombre,
-            c.precio_dia   as precio_dia,
-            v.id_vehiculo,
-            v.marca,
-            v.modelo,
-            s.nombre       as sucursal_nombre,
-            COALESCE(vi.url, '') as img_url
-        ")
-        ->where('c.id_categoria', $request->categoria_id)
-        ->first();
+        // 1️⃣ Validación: ahora trabajamos por CATEGORÍA, no por vehículo
+        $request->validate([
+            'categoria_id'        => 'required|integer',
+            'pickup_date'         => 'required|date_format:Y-m-d',
+            'pickup_time'         => 'required|date_format:H:i',
+            'dropoff_date'        => 'required|date_format:Y-m-d',
+            'dropoff_time'        => 'required|date_format:H:i',
+            'pickup_sucursal_id'  => 'nullable|integer',
+            'dropoff_sucursal_id' => 'nullable|integer',
+            'addons'              => 'nullable|array',
+            'nombre'              => 'nullable|string|max:150',
+            'email'               => 'nullable|email|max:150',
+            'telefono'            => 'nullable|string|max:30',
+        ]);
+        // 2️⃣ Buscar la CATEGORÍA y opcionalmente un vehículo ejemplo para la ficha
+        $vehiculo = DB::table('categorias_carros as c')
+            ->leftJoin('vehiculos as v', 'v.id_categoria', '=', 'c.id_categoria')
+            ->leftJoin('vehiculo_imagenes as vi', function ($j) {
+                $j->on('vi.id_vehiculo', '=', 'v.id_vehiculo')->where('vi.orden', 1);
+            })
+            ->leftJoin('sucursales as s', 's.id_sucursal', '=', 'v.id_sucursal')
+            ->selectRaw("
+                c.id_categoria,
+                c.nombre       as categoria_nombre,
+                c.precio_dia   as precio_dia,
+                v.id_vehiculo,
+                v.marca,
+                v.modelo,
+                s.nombre       as sucursal_nombre,
+                COALESCE(vi.url, '') as img_url
+            ")
+            ->where('c.id_categoria', $request->categoria_id)
+            ->first();
 
-    if (!$vehiculo) {
-        return response()->json(['ok' => false, 'message' => 'Categoría no encontrada.'], 404);
-    }
-
-    // 3️⃣ Fechas
-    $pickupDate  = $request->pickup_date;
-    $pickupTime  = $request->pickup_time;
-    $dropoffDate = $request->dropoff_date;
-    $dropoffTime = $request->dropoff_time;
-
-    $d1   = Carbon::createFromFormat('Y-m-d H:i', "{$pickupDate} {$pickupTime}");
-    $d2   = Carbon::createFromFormat('Y-m-d H:i', "{$dropoffDate} {$dropoffTime}");
-    $days = max(1, $d1->diffInDays($d2));
-
-    // 4️⃣ Sucursales (si no se envían, usamos la de la categoría / vehículo ejemplo)
-    $pickupName  = DB::table('sucursales')->where('id_sucursal', $request->pickup_sucursal_id)->value('nombre');
-    $dropoffName = DB::table('sucursales')->where('id_sucursal', $request->dropoff_sucursal_id)->value('nombre');
-
-    $pickupName  = $pickupName  ?: ($vehiculo->sucursal_nombre ?? 'Sucursal por definir');
-    $dropoffName = $dropoffName ?: ($vehiculo->sucursal_nombre ?? 'Sucursal por definir');
-
-    // 5️⃣ Servicios adicionales
-    $addonsQty = $request->input('addons', []);
-    $addons    = [];
-
-    if (!empty($addonsQty)) {
-        $addonsRows = DB::table('servicios')
-            ->select('id_servicio', 'nombre', 'tipo_cobro', 'precio')
-            ->whereIn('id_servicio', array_keys($addonsQty))
-            ->get()
-            ->keyBy('id_servicio');
-
-        foreach ($addonsQty as $id => $qty) {
-            $qty = (int)$qty;
-            if ($qty <= 0) continue;
-
-            $row = $addonsRows->get((int)$id);
-            if (!$row) continue;
-
-            $isPerDay = ($row->tipo_cobro === 'por_dia');
-            $subtotalAddon = (float)$row->precio * ($isPerDay ? $days : 1) * $qty;
-
-            $addons[] = [
-                'id'       => (int)$id,
-                'name'     => $row->nombre,
-                'charge'   => $row->tipo_cobro,
-                'price'    => (float)$row->precio,
-                'qty'      => $qty,
-                'subtotal' => $subtotalAddon,
-            ];
+        if (!$vehiculo) {
+            return response()->json(['ok' => false, 'message' => 'Categoría no encontrada.'], 404);
         }
+
+        // 3️⃣ Fechas
+        $pickupDate  = $request->pickup_date;
+        $pickupTime  = $request->pickup_time;
+        $dropoffDate = $request->dropoff_date;
+        $dropoffTime = $request->dropoff_time;
+
+        $d1   = Carbon::createFromFormat('Y-m-d H:i', "{$pickupDate} {$pickupTime}");
+        $d2   = Carbon::createFromFormat('Y-m-d H:i', "{$dropoffDate} {$dropoffTime}");
+        $days = max(1, $d1->diffInDays($d2));
+
+        // 4️⃣ Sucursales (si no se envían, usamos la de la categoría / vehículo ejemplo)
+        $pickupName  = DB::table('sucursales')->where('id_sucursal', $request->pickup_sucursal_id)->value('nombre');
+        $dropoffName = DB::table('sucursales')->where('id_sucursal', $request->dropoff_sucursal_id)->value('nombre');
+
+        $pickupName  = $pickupName  ?: ($vehiculo->sucursal_nombre ?? 'Sucursal por definir');
+        $dropoffName = $dropoffName ?: ($vehiculo->sucursal_nombre ?? 'Sucursal por definir');
+
+        // 5️⃣ Servicios adicionales
+        $addonsQty = $request->input('addons', []);
+        $addons    = [];
+
+        if (!empty($addonsQty)) {
+            $addonsRows = DB::table('servicios')
+                ->select('id_servicio', 'nombre', 'tipo_cobro', 'precio')
+                ->whereIn('id_servicio', array_keys($addonsQty))
+                ->get()
+                ->keyBy('id_servicio');
+
+            foreach ($addonsQty as $id => $qty) {
+                $qty = (int)$qty;
+                if ($qty <= 0) continue;
+
+                $row = $addonsRows->get((int)$id);
+                if (!$row) continue;
+
+                $isPerDay = ($row->tipo_cobro === 'por_dia');
+                $subtotalAddon = (float)$row->precio * ($isPerDay ? $days : 1) * $qty;
+
+                $addons[] = [
+                    'id'       => (int)$id,
+                    'name'     => $row->nombre,
+                    'charge'   => $row->tipo_cobro,
+                    'price'    => (float)$row->precio,
+                    'qty'      => $qty,
+                    'subtotal' => $subtotalAddon,
+                ];
+            }
+        }
+
+        // 6️⃣ Totales (tarifa base por CATEGORÍA)
+        $tarifaBase = (float)$vehiculo->precio_dia * $days;
+        $extrasSub  = array_sum(array_column($addons, 'subtotal'));
+        $subtotal   = $tarifaBase + $extrasSub;
+        $iva        = round($subtotal * 0.16, 2);
+        $total      = $subtotal + $iva;
+
+        // 7️⃣ Folio y cliente
+        $folio = 'COT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
+
+        $cliente = [
+            'nombre'   => $request->input('nombre', ''),
+            'email'    => $request->input('email', ''),
+            'telefono' => $request->input('telefono', ''),
+        ];
+
+        // 8️⃣ Guardar solo los datos (sin PDF)
+        $idCotizacion = DB::table('cotizaciones')->insertGetId([
+            'folio'              => $folio,
+            'vehiculo_id'        => $vehiculo->id_vehiculo ?? null,      // puede ser null
+            'vehiculo_marca'     => $vehiculo->marca ?? '',               // puede venir vacío
+            'vehiculo_modelo'    => $vehiculo->modelo ?? '',
+            'vehiculo_categoria' => $vehiculo->categoria_nombre ?? '',
+            'pickup_date'        => $pickupDate,
+            'pickup_time'        => $pickupTime,
+            'pickup_name'        => $pickupName,
+            'dropoff_date'       => $dropoffDate,
+            'dropoff_time'       => $dropoffTime,
+            'dropoff_name'       => $dropoffName,
+            'days'               => $days,
+            'tarifa_base'        => $tarifaBase,
+            'extras_sub'         => $extrasSub,
+            'iva'                => $iva,
+            'total'              => $total,
+            'addons'             => json_encode($addons, JSON_UNESCAPED_UNICODE),
+            'cliente'            => json_encode($cliente, JSON_UNESCAPED_UNICODE),
+            'created_at'         => now(),
+            'updated_at'         => now(),
+        ]);
+
+        // 9️⃣ Notificación (sin PDF adjunto)
+        //    $vehiculo aquí representa categoría + posible vehículo ejemplo
+        $this->sendWhatsappToAgent(
+            $folio,
+            $vehiculo,
+            $pickupName,
+            $dropoffName,
+            $days,
+            $total,
+            ''
+        );
+
+        return response()->json([
+            'ok'            => true,
+            'folio'         => $folio,
+            'cotizacion_id' => $idCotizacion,
+        ]);
     }
-
-    // 6️⃣ Totales (tarifa base por CATEGORÍA)
-    $tarifaBase = (float)$vehiculo->precio_dia * $days;
-    $extrasSub  = array_sum(array_column($addons, 'subtotal'));
-    $subtotal   = $tarifaBase + $extrasSub;
-    $iva        = round($subtotal * 0.16, 2);
-    $total      = $subtotal + $iva;
-
-    // 7️⃣ Folio y cliente
-    $folio = 'COT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(5));
-
-    $cliente = [
-        'nombre'   => $request->input('nombre', ''),
-        'email'    => $request->input('email', ''),
-        'telefono' => $request->input('telefono', ''),
-    ];
-
-    // 8️⃣ Guardar solo los datos (sin PDF)
-    $idCotizacion = DB::table('cotizaciones')->insertGetId([
-        'folio'              => $folio,
-        'vehiculo_id'        => $vehiculo->id_vehiculo ?? null,      // puede ser null
-        'vehiculo_marca'     => $vehiculo->marca ?? '',               // puede venir vacío
-        'vehiculo_modelo'    => $vehiculo->modelo ?? '',
-        'vehiculo_categoria' => $vehiculo->categoria_nombre ?? '',
-        'pickup_date'        => $pickupDate,
-        'pickup_time'        => $pickupTime,
-        'pickup_name'        => $pickupName,
-        'dropoff_date'       => $dropoffDate,
-        'dropoff_time'       => $dropoffTime,
-        'dropoff_name'       => $dropoffName,
-        'days'               => $days,
-        'tarifa_base'        => $tarifaBase,
-        'extras_sub'         => $extrasSub,
-        'iva'                => $iva,
-        'total'              => $total,
-        'addons'             => json_encode($addons, JSON_UNESCAPED_UNICODE),
-        'cliente'            => json_encode($cliente, JSON_UNESCAPED_UNICODE),
-        'created_at'         => now(),
-        'updated_at'         => now(),
-    ]);
-
-    // 9️⃣ Notificación (sin PDF adjunto)
-    //    $vehiculo aquí representa categoría + posible vehículo ejemplo
-    $this->sendWhatsappToAgent(
-        $folio,
-        $vehiculo,
-        $pickupName,
-        $dropoffName,
-        $days,
-        $total,
-        ''
-    );
-
-    return response()->json([
-        'ok'            => true,
-        'folio'         => $folio,
-        'cotizacion_id' => $idCotizacion,
-    ]);
-}
 
 
     /* ===================== HELPERS ===================== */
@@ -569,5 +569,41 @@ $vehiculos = collect();
         } catch (\Throwable $e) {
             // Silencioso
         }
+    }
+
+    /**
+     * ✅ NUEVO MÉTODO: Mostrar la vista de políticas con el formulario de búsqueda
+     */
+    public function politicas()
+    {
+        // Obtener ciudades con sucursales activas (igual que en el método iniciar)
+        $ciudades = DB::table('ciudades')
+            ->select('id_ciudad', 'nombre', 'estado', 'pais')
+            ->orderBy('nombre')
+            ->get()
+            ->map(function ($c) {
+                $c->sucursalesActivas = DB::table('sucursales')
+                    ->select('id_sucursal', 'id_ciudad', 'nombre')
+                    ->where('id_ciudad', $c->id_ciudad)
+                    ->where('activo', true)
+                    ->orderBy('nombre')
+                    ->get();
+                return $c;
+            });
+
+        // También podemos pasar filtros vacíos o con valores por defecto
+        $filters = [
+            'pickup_sucursal_id'  => null,
+            'dropoff_sucursal_id' => null,
+            'pickup_date'         => null,
+            'pickup_time'         => null,
+            'dropoff_date'        => null,
+            'dropoff_time'        => null,
+        ];
+
+        return view('Usuarios.Politicas', [
+            'ciudades' => $ciudades,
+            'filters' => $filters
+        ]);
     }
 }
