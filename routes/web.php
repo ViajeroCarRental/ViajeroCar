@@ -104,6 +104,8 @@ Route::get('/admin',  [LoginController::class, 'adminHome'])
 Route::get('/reservaciones-usuario', [ReservacionesController::class, 'desdeNavbar'])
     ->name('rutaReservacionesUsuario');
 
+    Route::post('/visor-reservacion/{id}/reenviar-correo', [VisorReservacionController::class, 'reenviarCorreo'])->name('visor.reenviarCorreo');
+
 
 
 // ======================

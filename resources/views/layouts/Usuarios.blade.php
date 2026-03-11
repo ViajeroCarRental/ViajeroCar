@@ -36,6 +36,7 @@
     @yield('css-vistaFAQ')
     @yield('css-vistaLogin')
     @yield('css-vistaPerfil')
+    @yield('css-visorReservacion')
 
      <title>@yield('Titulo')</title>
 
@@ -319,6 +320,7 @@
 @yield('js-vistaFAQ')
 @yield('js-vistaLogin')
 @yield('js-vistaPerfil')
+@yield('js-visorReservacion')
 
 <script>
   // iOS: bloquear zoom por doble tap / gesto
@@ -360,4 +362,3 @@
 
 </body>
 </html>
-
