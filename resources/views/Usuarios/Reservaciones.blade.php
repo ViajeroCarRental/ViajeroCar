@@ -420,7 +420,7 @@
                         <label class="inline-check" for="differentDropoff">
                             <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1"
                                 {{ request('different_dropoff') ? 'checked' : '' }}>
-                            <span>Devolver en otro destino</span>
+                            <span>Devolver en <br> otro destino</span>
                         </label>
                     </div>
 

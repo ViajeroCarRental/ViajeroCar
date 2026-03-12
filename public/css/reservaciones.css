@@ -408,10 +408,12 @@ UBICACIÓN
 
     display:flex;
     align-items:center;
-    gap:14px;
+    gap:8px;
+    margin-bottom:4px;
 
-    margin-bottom:8px;
-
+}
+.inline-check span{
+    line-height:1.1;
 }
 
 .page.wizard-page[data-current-step="1"] .location-inputs-wrapper{
@@ -3606,7 +3608,7 @@ span.flatpickr-weekday{
 
     /* Checkbox más grande para móvil */
     #miBuscador.active .inline-check {
-        font-size: 16px !important;
+        font-size: 14px !important;
         padding: 10px 0 !important;
     }
 
@@ -3969,4 +3971,18 @@ span.flatpickr-weekday{
     #miBuscador.active .location-head {
         margin-top: 15px !important;
     }
+}
+/* ===== PARCHE BOTON LIMPIAR ===== */
+.page.wizard-page .btn-ghost{
+  background: rgba(178,34,34,0.08) !important; /* glass rojo */
+  color:#b22222 !important;
+  border:2px solid #b22222 !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.page.wizard-page .btn-ghost:hover{
+  background:#b22222 !important;
+  color:#fff !important;
+  border-color:#b22222 !important;
 }
