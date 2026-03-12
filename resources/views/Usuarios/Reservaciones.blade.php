@@ -2280,16 +2280,31 @@
                                 </div>
 
                                 <div id="modalMetodoPago" class="modal-overlay" style="display:none;">
-                                    <div class="modal-card">
-                                        <h3>Selecciona tu método de pago</h3>
-                                        <div class="options">
-                                            <button id="btnPagoLinea" class="btn btn-primary" type="button">Pago en
-                                                línea</button>
-                                            <button id="btnPagoMostrador" class="btn btn-gray" type="button">Pago en
-                                                mostrador</button>
+                                    <div class="modal-card modal-metodo-pago">
+                                        <button id="cerrarModalMetodoX" class="modal-close" type="button" aria-label="Cerrar">×</button>
+
+                                        <div class="mp-head">
+                                            <span class="mp-badge">Resumen de pago</span>
+                                            <h3>Selecciona tu método de pago</h3>
                                         </div>
-                                        <button id="cerrarModalMetodo" class="btn btn-secondary" type="button"
-                                            style="margin-top:10px;">Cancelar</button>
+
+                                        <div class="mp-options">
+                                            <button id="btnPagoLinea" class="mp-pay-card is-online" type="button">
+                                                <span class="mp-old-price" id="mpPrecioMostradorTachado">$0 MXN</span>
+                                                <strong class="mp-price" id="mpPrecioLinea">$0 MXN</strong>
+                                                <span class="mp-save" id="mpTextoAhorro">Ahorra 0%</span>
+                                                <span class="mp-action">PREPAGAR EN LÍNEA</span>
+                                            </button>
+
+                                            <button id="btnPagoMostrador" class="mp-pay-card is-office" type="button">
+                                                <strong class="mp-price" id="mpPrecioMostrador">$0 MXN</strong>
+                                                <span class="mp-action">PAGAR EN OFICINA</span>
+                                            </button>
+                                        </div>
+
+                                        <button id="cerrarModalMetodo" class="btn btn-secondary mp-cancel" type="button">
+                                            Cancelar
+                                        </button>
                                     </div>
                                 </div>
 

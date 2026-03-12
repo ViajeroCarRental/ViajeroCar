@@ -1678,48 +1678,162 @@
     });
   });
 
-  // ===== NUEVO: Manejador del modal de método de pago =====
+  // ===== MODAL DE MÉTODO DE PAGO MEJORADO =====
   document.addEventListener('DOMContentLoaded', function () {
     const main = document.querySelector('main.page');
-    const currentPlan = (main && main.dataset.plan) ? main.dataset.plan : '';
 
     const modalMetodoPago = document.getElementById('modalMetodoPago');
     const cerrarModalMetodo = document.getElementById('cerrarModalMetodo');
+    const cerrarModalMetodoX = document.getElementById('cerrarModalMetodoX');
     const btnPagoLinea = document.getElementById('btnPagoLinea');
     const btnPagoMostrador = document.getElementById('btnPagoMostrador');
 
+    const mpCategoriaNombre = document.getElementById('mpCategoriaNombre');
+    const mpCategoriaResumen = document.getElementById('mpCategoriaResumen');
+    const mpAhorro = document.getElementById('mpAhorro');
+    const mpPrecioLinea = document.getElementById('mpPrecioLinea');
+    const mpPrecioMostrador = document.getElementById('mpPrecioMostrador');
+    const mpPrecioMostradorTachado = document.getElementById('mpPrecioMostradorTachado');
+    const mpTextoAhorro = document.getElementById('mpTextoAhorro');
+
+    function fmtMoney(n) {
+      return '$' + Math.round(Number(n || 0)).toLocaleString('es-MX') + ' MXN';
+    }
+
+    function getCategoriaSeleccionada() {
+      // 1. intenta tomar el nombre desde la tarjeta activa del step 2
+      const activeCard = document.querySelector('.car-card.active');
+      if (activeCard) {
+        const name =
+          activeCard.getAttribute('data-name') ||
+          activeCard.dataset.name ||
+          document.querySelector('.car-card.active .car-name, .car-card.active h3, .car-card.active h4')?.textContent ||
+          '';
+        if (name) return name.trim();
+      }
+
+      // 2. intenta tomarla del resumen del paso 4
+      const sumTitle = document.querySelector('.sum-car h3, .sum-car-title, #tuAutoSection h3');
+      if (sumTitle && sumTitle.textContent.trim()) {
+        return sumTitle.textContent.trim();
+      }
+
+      return 'Categoría seleccionada';
+    }
+
+    function getPreciosSeleccionados() {
+      let precioLinea = 0;
+      let precioMostrador = 0;
+
+      // 1. desde card activa del step 2
+      const activeCard = document.querySelector('.car-card.active');
+      if (activeCard) {
+        precioLinea =
+          parseFloat(activeCard.getAttribute('data-prepago-total')) ||
+          parseFloat(activeCard.getAttribute('data-prepago-dia')) ||
+          0;
+
+        precioMostrador =
+          parseFloat(activeCard.getAttribute('data-mostrador-total')) ||
+          parseFloat(activeCard.getAttribute('data-mostrador-dia')) ||
+          0;
+      }
+
+      // 2. si no encontró, usar resumen actual del paso 4
+      if (!precioLinea || !precioMostrador) {
+        const qBase = document.getElementById('qBase');
+        const qTotal = document.getElementById('qTotal');
+
+        const getNum = (txt) => {
+          if (!txt) return 0;
+          return parseFloat(String(txt).replace(/[^\d.]/g, '')) || 0;
+        };
+
+        if (!precioLinea && qBase) {
+          precioLinea = getNum(qBase.textContent);
+        }
+
+        if (!precioMostrador && qTotal) {
+          precioMostrador = getNum(qTotal.textContent);
+        }
+      }
+
+      // respaldo: si solo hay uno, usarlo en ambos para no dejar 0
+      if (!precioLinea && precioMostrador) precioLinea = precioMostrador;
+      if (!precioMostrador && precioLinea) precioMostrador = precioLinea;
+
+      return { precioLinea, precioMostrador };
+    }
+
+    function fillMetodoPagoModal() {
+      const categoria = getCategoriaSeleccionada();
+      const { precioLinea, precioMostrador } = getPreciosSeleccionados();
+
+      let ahorroPct = 0;
+      if (precioMostrador > 0 && precioLinea > 0 && precioLinea < precioMostrador) {
+        ahorroPct = Math.round(((precioMostrador - precioLinea) / precioMostrador) * 100);
+      }
+
+      if (mpCategoriaNombre) mpCategoriaNombre.textContent = categoria;
+      if (mpCategoriaResumen) mpCategoriaResumen.textContent = categoria;
+      if (mpAhorro) mpAhorro.textContent = ahorroPct + '%';
+      if (mpPrecioLinea) mpPrecioLinea.textContent = fmtMoney(precioLinea);
+      if (mpPrecioMostrador) mpPrecioMostrador.textContent = fmtMoney(precioMostrador);
+      if (mpPrecioMostradorTachado) mpPrecioMostradorTachado.textContent = fmtMoney(precioMostrador);
+      if (mpTextoAhorro) mpTextoAhorro.textContent = ahorroPct > 0 ? `Ahorra ${ahorroPct}%` : 'Mismo precio';
+    }
+
+    function openMetodoPagoModal() {
+      if (!modalMetodoPago) return;
+      fillMetodoPagoModal();
+      modalMetodoPago.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMetodoPagoModal() {
+      if (!modalMetodoPago) return;
+      modalMetodoPago.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
     // Escuchar evento de validación exitosa
-    document.addEventListener('reserva:validacionExitosa', function(e) {
+    document.addEventListener('reserva:validacionExitosa', function (e) {
+      const currentPlan = (main && main.dataset.plan) ? main.dataset.plan : '';
       console.log('Evento recibido, plan:', currentPlan);
 
       if (currentPlan === 'linea') {
-        if (btnPagoLinea) {
-          btnPagoLinea.click();
-        } else if (typeof window.handleReservaPagoEnLinea === 'function') {
+        if (typeof window.handleReservaPagoEnLinea === 'function') {
           window.handleReservaPagoEnLinea();
+        } else if (btnPagoLinea) {
+          btnPagoLinea.click();
         }
       } else if (currentPlan === 'mostrador') {
-        if (modalMetodoPago) {
-          modalMetodoPago.style.display = 'flex';
-        }
+        openMetodoPagoModal();
       }
     });
 
-    // Cerrar modal
-    if (cerrarModalMetodo && modalMetodoPago) {
-      cerrarModalMetodo.addEventListener('click', function () {
-        modalMetodoPago.style.display = 'none';
-      });
+    if (cerrarModalMetodo) {
+      cerrarModalMetodo.addEventListener('click', closeMetodoPagoModal);
+    }
 
-      // Cerrar al hacer clic fuera
-      modalMetodoPago.addEventListener('click', function(e) {
+    if (cerrarModalMetodoX) {
+      cerrarModalMetodoX.addEventListener('click', closeMetodoPagoModal);
+    }
+
+    if (modalMetodoPago) {
+      modalMetodoPago.addEventListener('click', function (e) {
         if (e.target === modalMetodoPago) {
-          modalMetodoPago.style.display = 'none';
+          closeMetodoPagoModal();
         }
       });
     }
 
-    // Por si quieres FORZAR que "Tarifa base" inicie CERRADO:
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        closeMetodoPagoModal();
+      }
+    });
+
     const tarifa = document.querySelector('.sum-table details.sum-acc');
     if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
   });
