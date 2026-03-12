@@ -220,32 +220,6 @@
     document.head.appendChild(st);
   })();
 
-  // 1) FECHAS (Flatpickr)
-  (function() {
-    "use strict";
-
-    if (window.flatpickr) {
-        const pickup = document.getElementById('pickupDate');
-        const dropoffEl = document.getElementById('dropoffDate');
-        const minDate = pickup?.dataset?.min || 'today';
-
-        // Configuración Base
-        const commonConfig = {
-            locale: 'es',
-            altInput: true,
-            altFormat: 'd/m/Y',
-            dateFormat: 'Y-m-d',
-            minDate: minDate,
-            disableMobile: true
-        };
-
-        // Pickup Date
-        flatpickr("#pickupDate", commonConfig);
-
-        // Dropoff Date
-        flatpickr("#dropoffDate", commonConfig);
-    }
-  })();
 
   /* ==========================
        SELECTS de hora
@@ -735,7 +709,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 /* ============================================================
-    VALIDACIONES DEL FORMULARIO - VERSIÓN ÚNICA Y CORREGIDA
+    VALIDACIONES DEL FORMULARIO - VERSIÓN CORREGIDA
 ============================================================ */
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById("rentalForm");
@@ -746,7 +720,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('=== VALIDANDO FORMULARIO ===');
 
         let valid = true;
-
 
         document.querySelectorAll('.error-msg').forEach(el => el.remove());
         document.querySelectorAll('.field-error, .field-success').forEach(el => {
@@ -767,7 +740,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 valid = false;
                 select.classList.add('field-error');
 
-
                 const container = select.closest('.field');
                 if (container) {
                     const msg = document.createElement('span');
@@ -781,50 +753,67 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        /* ===== 2. VALIDAR FECHAS - CORREGIDO PARA FLATPICKR ===== */
-        const fechas = [
-            { id: 'pickupDate', msg: 'Fecha Requerida' },
-            { id: 'dropoffDate', msg: 'Fecha Requerida' }
-        ];
+/* ===== 2. VALIDAR FECHAS - CORREGIDO ===== */
+const fechas = [
+    { id: 'pickupDate', msg: 'Fecha Requerida' },
+    { id: 'dropoffDate', msg: 'Fecha Requerida' }
+];
 
-        fechas.forEach(campo => {
-            const hiddenInput = document.getElementById(campo.id);
-            if (!hiddenInput) return;
+fechas.forEach(campo => {
+    const hiddenInput = document.getElementById(campo.id);
+    if (!hiddenInput) return;
 
-            const container = hiddenInput.closest('.dt-field');
-            if (!container) return;
+    const container = hiddenInput.closest('.dt-field');
+    if (!container) return;
 
+    // Buscar el input visible de Flatpickr
+    let altInput = null;
+    container.querySelectorAll('input').forEach(input => {
+        if (input.type !== 'hidden' && input.classList.contains('flatpickr-input')) {
+            altInput = input;
+        }
+    });
 
-            const flatpickrInput = container.querySelector('.flatpickr-input');
+    // 🔥 ELIMINAR MENSAJES ANTERIORES SIEMPRE
+    const oldMsg = container.querySelector('.error-msg');
+    if (oldMsg) oldMsg.remove();
 
-            const hasValue = hiddenInput.value && hiddenInput.value.trim() !== '';
+    // Limpiar clases anteriores
+    if (altInput) {
+        altInput.classList.remove('field-error', 'field-success');
+    }
+    hiddenInput.classList.remove('field-error', 'field-success');
 
-            if (!hasValue) {
-                valid = false;
+    const hasValue = hiddenInput.value && hiddenInput.value.trim() !== '';
 
-                if (flatpickrInput) {
-                    flatpickrInput.classList.add('field-error');
-                    console.log(`BORDE ROJO aplicado a flatpickr de ${campo.id}`);
-                }
+    if (!hasValue) {
+        valid = false;
 
+        console.log(`❌ ${campo.id} sin valor`);
 
-                hiddenInput.classList.add('field-error');
+        // Aplicar error al input visible
+        if (altInput) {
+            altInput.classList.add('field-error');
+        }
+        hiddenInput.classList.add('field-error');
 
-                const msg = document.createElement('span');
-                msg.className = 'error-msg';
-                msg.textContent = campo.msg;
-                container.appendChild(msg);
+        // 🔥 SOLO crear mensaje si NO tiene valor
+        const msg = document.createElement('span');
+        msg.className = 'error-msg';
+        msg.textContent = campo.msg;
+        container.appendChild(msg);
 
-                console.log(`Error: ${campo.id}`);
-            } else {
+    } else {
+        console.log(`✅ ${campo.id} OK: ${hiddenInput.value}`);
 
-                if (flatpickrInput) {
-                    flatpickrInput.classList.add('field-success');
-                }
-                hiddenInput.classList.add('field-success');
-                console.log(`OK: ${campo.id} - Fecha: ${hiddenInput.value}`);
-            }
-        });
+        // Aplicar éxito al input visible
+        if (altInput) {
+            altInput.classList.add('field-success');
+        }
+        hiddenInput.classList.add('field-success');
+        // 🔥 NO crear mensaje de error (ya se eliminó arriba)
+    }
+});
 
         /* ===== 3. VALIDAR HORAS - CORREGIDO PARA SELECTS ===== */
         const horas = [
@@ -836,25 +825,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const hiddenInput = document.getElementById(campo.id);
             if (!hiddenInput) return;
 
-
             const timeField = hiddenInput.closest('.time-field');
             if (!timeField) return;
 
             const hourSelect = timeField.querySelector('.tp-selects .tp-hour');
-
 
             const hasValue = hourSelect && hourSelect.value && hourSelect.value !== '';
 
             if (!hasValue) {
                 valid = false;
 
-
                 if (hourSelect) {
                     hourSelect.classList.add('field-error');
                 }
 
                 hiddenInput.classList.add('field-error');
-
 
                 const msg = document.createElement('span');
                 msg.className = 'error-msg';
@@ -863,7 +848,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 console.log(`Error: ${campo.id} - SIN HORA`);
             } else {
-
                 if (hourSelect) {
                     hourSelect.classList.add('field-success');
                 }
@@ -928,8 +912,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Limpiar errores de los inputs de flatpickr
+    // Limpiar errores de los inputs de flatpickr (solo los visibles)
     flatpickrInputs.forEach(input => {
+        // Solo procesar inputs que NO son hidden
+        if (input.type === 'hidden') return;
+
         input.addEventListener('change', function() {
             if (this.classList.contains('field-error')) {
                 this.classList.remove('field-error');
@@ -955,28 +942,142 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /* ============================================================
+    DEPURACIÓN - Ver qué clases se están aplicando
+============================================================ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Observar cambios en las clases
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.attributeName === 'class') {
+                console.log('Cambio de clase:', mutation.target, mutation.target.className);
+            }
+        });
+    });
+
+    // Observar los altInputs de flatpickr
+    setTimeout(function() {
+        document.querySelectorAll('.flatpickr-input').forEach(function(input) {
+            if (input.type !== 'hidden') {
+                observer.observe(input, { attributes: true });
+                console.log('Observando:', input);
+            }
+        });
+    }, 1000);
+});
+/* ============================================================
     INICIALIZAR FLATPICKR - CALENDARIOS
 ============================================================ */
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar Flatpickr para las fechas
     if (typeof flatpickr !== 'undefined') {
+
+        // Configuración en español con meses abreviados
+        const localeEs = {
+            firstDayOfWeek: 1,
+            weekdays: {
+                shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+                longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+            },
+            months: {
+                shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+            }
+        };
+
+        // Función para sincronizar clases de validación entre inputs
+        function syncValidationClasses(altInput, hiddenInput) {
+            if (!altInput || !hiddenInput) return;
+
+            // Observar cambios en el hidden input
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === 'class') {
+                        // Copiar clases de validación al altInput
+                        if (hiddenInput.classList.contains('field-error')) {
+                            altInput.classList.add('field-error');
+                        } else {
+                            altInput.classList.remove('field-error');
+                        }
+
+                        if (hiddenInput.classList.contains('field-success')) {
+                            altInput.classList.add('field-success');
+                        } else {
+                            altInput.classList.remove('field-success');
+                        }
+                    }
+                });
+            });
+
+            observer.observe(hiddenInput, { attributes: true });
+        }
+
         // Pickup Date
-        flatpickr("#pickupDate", {
+        const pickupPicker = flatpickr("#pickupDate", {
             dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d-M-Y",
             minDate: "today",
             allowInput: true,
-            locale: "es"
+            locale: localeEs,
+            onReady: function(selectedDates, dateStr, instance) {
+                // Sincronizar clases iniciales
+                const hiddenInput = document.getElementById('pickupDate');
+                syncValidationClasses(instance.altInput, hiddenInput);
+
+                // Si el hidden input ya tiene clases, aplicarlas
+                if (hiddenInput.classList.contains('field-error')) {
+                    instance.altInput.classList.add('field-error');
+                }
+                if (hiddenInput.classList.contains('field-success')) {
+                    instance.altInput.classList.add('field-success');
+                }
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                // Al cambiar la fecha, disparar evento para validaciones
+                const hiddenInput = document.getElementById('pickupDate');
+                hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
         });
 
         // Dropoff Date
-        flatpickr("#dropoffDate", {
+        const dropoffPicker = flatpickr("#dropoffDate", {
             dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d-M-Y",
             minDate: "today",
             allowInput: true,
-            locale: "es"
+            locale: localeEs,
+            onReady: function(selectedDates, dateStr, instance) {
+                // Sincronizar clases iniciales
+                const hiddenInput = document.getElementById('dropoffDate');
+                syncValidationClasses(instance.altInput, hiddenInput);
+
+                // Si el hidden input ya tiene clases, aplicarlas
+                if (hiddenInput.classList.contains('field-error')) {
+                    instance.altInput.classList.add('field-error');
+                }
+                if (hiddenInput.classList.contains('field-success')) {
+                    instance.altInput.classList.add('field-success');
+                }
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                // Al cambiar la fecha, disparar evento para validaciones
+                const hiddenInput = document.getElementById('dropoffDate');
+                hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
         });
 
-        console.log('Flatpickr inicializado correctamente');
+        console.log('Flatpickr inicializado correctamente con formato dd-mmm-yyyy');
+
+        // Forzar minúsculas
+        setTimeout(() => {
+            document.querySelectorAll('.flatpickr-input').forEach(input => {
+                if (input.value && input.value.includes('-')) {
+                    input.value = input.value.toLowerCase();
+                }
+            });
+        }, 100);
+
     } else {
         console.error('Error: Flatpickr no está cargado');
     }

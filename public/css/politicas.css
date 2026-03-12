@@ -1,3 +1,4 @@
+
 :root{
   /* ✅ NUEVO TONO ROJO (más moderno/limpio, menos “ladrillo”) */
   --brand:#b22222;          /* rojo principal */
@@ -88,26 +89,34 @@ body{
     linear-gradient(180deg, rgba(0,0,0,.38) 0%, rgba(0,0,0,.20) 30%, rgba(0,0,0,.65) 100%),
     radial-gradient(120% 100% at 0% 100%, rgba(0,0,0,.25) 0%, rgba(0,0,0,0) 60%);
 }
-
 .hero-content{
   position:absolute; inset:0;
   display:flex; flex-direction:column; justify-content:center; align-items:flex-start;
-  padding-left:clamp(20px, 8vw, 120px);
+  padding-left: clamp(20px, 6vw, 80px);  /* REDUCIDO: antes era 120px, ahora 80px (más a la izquierda) */
   padding-right:clamp(16px, 6vw, 64px);
   color:#fff; text-shadow:0 3px 12px rgba(0,0,0,.45);
+
+  /* PARA SUBIR EL TEXTO */
+  margin-top: -40px;  /* Valor negativo para subir */
 }
+
 .hero-content h1{
-  margin:0 0 10px;
+  margin:0 0 8px;  /* Reducí el margen inferior de 10px a 8px */
   font-weight:900; line-height:1.02;
   font-size:clamp(34px, 6vw, 64px);
   letter-spacing:.2px;
 }
-.hero-content h1 span{font-family:'Playfair Display',serif}
-.hero-content p{
-  margin:0; font-weight:700; opacity:.95;
-  font-size:clamp(14px, 2vw, 20px);
+
+.hero-content h1 span{
+  font-family:'Playfair Display',serif;
 }
 
+.hero-content p{
+  margin:0;
+  font-weight:700;
+  opacity:.95;
+  font-size:clamp(14px, 2vw, 20px);
+}
 /* ===== Policies (acordeón) ===== */
 .policies-wrap{margin-top:24px}
 .policy-list{list-style:none;margin:0;padding:0;display:grid;gap:16px}
@@ -498,4 +507,1146 @@ body.modal-open{ overflow:hidden; }
   .vj-modal__dialog{
     transition:none !important;
   }
+}
+
+/* ============================================================
+   FORMULARIO EN HERO DE POLÍTICAS
+============================================================ */
+
+/* Contenedor principal del hero con formulario */
+.hero-content-politicas {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+   padding: 20px 20px;
+    color: #fff;
+    margin-top: 0;
+}
+
+.hero-texto-superior {
+    width: 100%;
+    max-width: 1200px;
+    margin-bottom: 40px;
+    margin-top: 20px;
+    padding-left: 20px;
+    text-align: left;
+    position: relative;
+    left: -30px;;
+}
+
+.hero-texto-superior h1 {
+    margin: 0 0 8px;
+    font-weight: 900;
+    line-height: 1.02;
+    font-size: clamp(34px, 6vw, 64px);
+    letter-spacing: .2px;
+    text-align: left;
+    color: white;
+}
+
+.hero-texto-superior h1 span {
+    font-family: 'Playfair Display', serif;
+}
+
+.hero-texto-superior p {
+    margin: 0;
+    font-weight: 700;
+    opacity: .95;
+    font-size: clamp(14px, 2vw, 20px);
+    text-align: left;
+    color: white;
+}
+/* Wrapper del formulario */
+.hero-buscador-wrapper {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: center;
+
+}
+
+
+/* ESCRITORIO (>= 1125px) */
+@media (min-width: 1125px) {
+
+    .hero-texto-superior {
+        width: 100%;
+        max-width: 1200px;
+        margin-bottom: 40px;
+        margin-top: 70px !important;
+        padding-left: 20px;
+        text-align: left;
+        position: relative;
+        left: -30px;
+    }
+
+    .hero-texto-superior h1 {
+        margin: 0 0 8px;
+        font-weight: 900;
+        line-height: 1.02;
+        font-size: clamp(34px, 6vw, 64px);
+        letter-spacing: .2px;
+        text-align: left;
+        color: white;
+    }
+
+    .hero-texto-superior h1 span {
+        font-family: 'Playfair Display', serif;
+    }
+
+    .hero-texto-superior p {
+        margin: 0;
+        font-weight: 700;
+        opacity: .95;
+        font-size: clamp(14px, 2vw, 20px);
+        text-align: left;
+        color: white;
+    }
+}
+/* TABLET (561px - 1124px) */
+@media (min-width: 561px) and (max-width: 1124px) {
+    .hero-texto-superior {
+        left: -30px !important;
+        padding-left: 15px !important;
+        max-width: 95% !important;
+    }
+
+    .hero-texto-superior h1 {
+        font-size: 60px !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+
+    .hero-texto-superior p {
+        font-size: 16px !important;
+        max-width: 95% !important;
+    }
+}
+
+/* MÓVIL (hasta 560px) */
+@media (max-width: 560px) {
+    .hero-texto-superior {
+        left: -15px !important;
+        padding-left: 5px !important;
+        max-width: 95% !important;
+    }
+
+    .hero-texto-superior h1 {
+        font-size: 40px !important;
+        word-break: break-word !important;
+    }
+
+    .hero-texto-superior p {
+        font-size: 14px !important;
+        max-width: 95% !important;
+    }
+}
+
+/* MÓVIL MUY PEQUEÑO */
+@media (max-width: 380px) {
+    .hero-texto-superior {
+        left: -10px !important;
+        padding-left: 5px !important;
+    }
+
+    .hero-texto-superior h1 {
+        font-size: 24px !important;
+    }
+}
+@media (max-width: 560px) {
+    .hero-texto-superior {
+        left: -15px;
+        padding-left: 5px;
+        max-width: 95%;
+    }
+
+    .hero-texto-superior h1 {
+        font-size: 28px !important;
+        word-break: break-word;
+    }
+
+    .hero-texto-superior p {
+        font-size: 14px !important;
+        max-width: 95%;
+    }
+}
+
+@media (max-width: 380px) {
+    .hero-texto-superior {
+        left: -10px;
+        padding-left: 5px;
+    }
+
+    .hero-texto-superior h1 {
+        font-size: 24px !important;
+    }
+}
+
+/* Contenedor del formulario */
+#miBuscadorPoliticas {
+    width: 100%;
+    background: transparent;
+}
+
+/* Grid principal del formulario */
+#miBuscadorPoliticas .search-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    gap: 15px !important;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+     padding: 25px 25px 40px 25px;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* ===== COLUMNA 1: LUGAR DE RENTA ===== */
+#miBuscadorPoliticas .sg-col-location {
+    flex: 1.5 !important;
+    min-width: 280px !important;
+}
+
+#miBuscadorPoliticas .location-head {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    height: 30px !important;
+    margin-bottom: 8px !important;
+}
+
+#miBuscadorPoliticas .location-head .field-title {
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: #333 !important;
+    text-transform: uppercase !important;
+    margin: 0 !important;
+}
+
+#miBuscadorPoliticas .inline-check {
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    font-size: 12px !important;
+    color: #555 !important;
+    white-space: nowrap !important;
+}
+
+#miBuscadorPoliticas .inline-check input[type="checkbox"] {
+    width: 14px !important;
+    height: 14px !important;
+    accent-color: var(--brand) !important;
+    margin: 0 !important;
+}
+
+#miBuscadorPoliticas .location-inputs-wrapper {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    height: 48px !important;
+}
+
+#miBuscadorPoliticas .location-inputs-wrapper .field {
+    flex: 1 !important;
+    position: relative !important;
+    height: 48px !important;
+}
+
+/* ===== ESTILOS UNIFICADOS PARA INPUTS Y SELECTS ===== */
+#miBuscadorPoliticas select,
+#miBuscadorPoliticas input {
+    width: 100% !important;
+    height: 48px !important;
+    border: 1px solid #ccc !important;
+    border-radius: 8px !important;
+    font-size: 15px !important;
+    color: #000000 !important;
+    background: white !important;
+    box-sizing: border-box !important;
+    padding: 0 8px 0 36px !important;
+}
+
+#miBuscadorPoliticas select {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 12px !important;
+}
+
+#miBuscadorPoliticas select:focus,
+#miBuscadorPoliticas input:focus {
+    border-color: var(--brand) !important;
+    box-shadow: 0 0 0 3px rgba(178,34,34,.15) !important;
+    outline: none !important;
+}
+
+#miBuscadorPoliticas input::placeholder {
+    color: #151515 !important;
+    opacity: 0.8 !important;
+}
+
+/* ===== ICONOS ===== */
+#miBuscadorPoliticas .field-icon {
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #333 !important;
+    font-size: 14px !important;
+    z-index: 3 !important;
+    pointer-events: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+#miBuscadorPoliticas .location-inputs-wrapper .field-icon {
+    display: flex !important;
+}
+
+/* ===== COLUMNA 2: FECHAS ===== */
+#miBuscadorPoliticas .sg-col-datetime {
+    flex: 2.2 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 12px !important;
+}
+
+#miBuscadorPoliticas .sg-col-datetime .field {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+#miBuscadorPoliticas .solo-responsivo-izq {
+    display: block !important;
+    height: 30px !important;
+    margin-bottom: 8px !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    color: #333 !important;
+    text-transform: uppercase !important;
+    line-height: 30px !important;
+}
+
+#miBuscadorPoliticas .datetime-row {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    height: 48px !important;
+}
+
+#miBuscadorPoliticas .dt-field {
+    flex: 1 !important;
+    position: relative !important;
+    height: 48px !important;
+}
+
+#miBuscadorPoliticas .dt-field .field-icon {
+    display: flex !important;
+    left: 12px !important;
+    top: 50% !important;
+}
+
+/* ===== TIME FIELDS ===== */
+#miBuscadorPoliticas .time-field {
+    position: relative !important;
+}
+
+#miBuscadorPoliticas .time-field .field-icon {
+    display: none !important;
+}
+
+#miBuscadorPoliticas .time-field::before {
+    content: "\f017" !important;
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 400 !important;
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 14px !important;
+    color: #333 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10 !important;
+    pointer-events: none !important;
+}
+
+/* ===== SELECTS DE HORA ===== */
+#miBuscadorPoliticas .tp-selects {
+    display: flex !important;
+    gap: 8px !important;
+    margin-top: 0 !important;
+    width: 100% !important;
+}
+
+#miBuscadorPoliticas .tp-selects select {
+    width: 100% !important;
+    height: 48px !important;
+    border: 1px solid #ccc !important;
+    border-radius: 8px !important;
+    font-size: 16px !important;
+    color: #666 !important;
+    background: white !important;
+    padding: 0 8px 0 36px !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 12px !important;
+}
+
+#miBuscadorPoliticas .tp-hidden-input {
+    display: none !important;
+}
+
+/* ===== COLUMNA 3: BOTÓN ===== */
+#miBuscadorPoliticas .sg-col-submit {
+    flex: 0.35 !important;
+    min-width: 90px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+}
+
+#miBuscadorPoliticas .sg-col-submit::before {
+    content: "";
+    display: block !important;
+    height: 38px !important;
+    visibility: hidden !important;
+}
+
+#miBuscadorPoliticas .actions {
+    height: 48px !important;
+    width: 100% !important;
+}
+
+#miBuscadorPoliticas .actions button {
+    width: 100% !important;
+    height: 48px !important;
+    background: var(--brand) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    transition: background 0.2s ease !important;
+}
+
+#miBuscadorPoliticas .actions button:hover {
+    background: #8b1a1a !important;
+}
+
+/* ===== CHECKBOX  ===== */
+#dropoffWrapperPoliticas {
+    display: none !important;
+    transition: opacity 0.3s ease, visibility 0.3s ease !important;
+    width: 100% !important;
+}
+
+
+#differentDropoffPoliticas:checked ~ * #dropoffWrapperPoliticas,
+#differentDropoffPoliticas:checked + * #dropoffWrapperPoliticas,
+#differentDropoffPoliticas:checked ~ .location-inputs-wrapper #dropoffWrapperPoliticas {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+#dropoffWrapperPoliticas[style*="display: block"] {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+#dropoffWrapperPoliticas .select2-container {
+    width: 100% !important;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+    .hero-content-politicas {
+        margin-top: 0;
+        justify-content: flex-start;
+        padding-top: 100px;
+    }
+
+    .hero-texto-superior {
+        margin-bottom: 20px;
+        padding-left: 20px;
+    }
+
+    #miBuscadorPoliticas .search-grid {
+        flex-direction: column !important;
+        gap: 15px !important;
+        padding: 20px !important;
+    }
+
+    #miBuscadorPoliticas .sg-col-location,
+    #miBuscadorPoliticas .sg-col-datetime,
+    #miBuscadorPoliticas .sg-col-submit {
+        width: 100% !important;
+        min-width: 100% !important;
+    }
+
+    #miBuscadorPoliticas .location-inputs-wrapper {
+        flex-direction: column !important;
+        height: auto !important;
+        gap: 10px !important;
+    }
+
+    #miBuscadorPoliticas .sg-col-datetime {
+        flex-direction: column !important;
+        gap: 15px !important;
+    }
+
+    #miBuscadorPoliticas .sg-col-submit::before {
+        display: none !important;
+    }
+
+    #miBuscadorPoliticas .actions button {
+        height: 55px !important;
+        font-size: 16px !important;
+    }
+}
+
+@media (max-width: 560px) {
+    .hero-content-politicas {
+        padding-top: 80px;
+    }
+
+    .hero-texto-superior h1 {
+        font-size: 32px !important;
+    }
+
+    .hero-texto-superior p {
+        font-size: 16px !important;
+    }
+
+    #miBuscadorPoliticas .search-grid {
+        padding: 15px !important;
+    }
+
+    #miBuscadorPoliticas .datetime-row {
+        flex-direction: row !important;
+        gap: 5px !important;
+    }
+
+    #miBuscadorPoliticas select,
+    #miBuscadorPoliticas input {
+        height: 45px !important;
+        font-size: 14px !important;
+        padding-left: 32px !important;
+    }
+
+    #miBuscadorPoliticas .solo-responsivo-izq {
+        font-size: 12px !important;
+        height: 25px !important;
+    }
+}
+
+@media (max-width: 380px) {
+    .hero-texto-superior h1 {
+        font-size: 28px !important;
+    }
+
+    #miBuscadorPoliticas .datetime-row {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    #miBuscadorPoliticas .dt-field {
+        width: 100% !important;
+    }
+}
+/* ============================================================
+    ALERTAS - POLÍTICAS
+============================================================ */
+#miBuscadorPoliticas .field-error,
+#miBuscadorPoliticas input.field-error,
+#miBuscadorPoliticas select.field-error,
+#miBuscadorPoliticas input[id="pickupDatePoliticas"].field-error,
+#miBuscadorPoliticas input[id="dropoffDatePoliticas"].field-error,
+#miBuscadorPoliticas .flatpickr-input.field-error,
+#miBuscadorPoliticas .tp-selects select.field-error {
+    border: 2px solid #e53935 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: #fff !important;
+}
+
+#miBuscadorPoliticas .field-success,
+#miBuscadorPoliticas input.field-success,
+#miBuscadorPoliticas select.field-success,
+#miBuscadorPoliticas input[id="pickupDatePoliticas"].field-success,
+#miBuscadorPoliticas input[id="dropoffDatePoliticas"].field-success,
+#miBuscadorPoliticas .flatpickr-input.field-success,
+#miBuscadorPoliticas .tp-selects select.field-success {
+    border: 2px solid #43a047 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Para Select2 */
+#miBuscadorPoliticas select.field-error + .select2-container .select2-selection,
+#miBuscadorPoliticas .select2-container .select2-selection.field-error {
+    border: 2px solid #e53935 !important;
+}
+
+#miBuscadorPoliticas select.field-success + .select2-container .select2-selection,
+#miBuscadorPoliticas .select2-container .select2-selection.field-success {
+    border: 2px solid #43a047 !important;
+}
+#miBuscadorPoliticas select:not(.field-error):not(.field-success),
+#miBuscadorPoliticas input:not(.field-error):not(.field-success),
+#miBuscadorPoliticas input[id="pickupDatePoliticas"]:not(.field-error):not(.field-success),
+#miBuscadorPoliticas input[id="dropoffDatePoliticas"]:not(.field-error):not(.field-success),
+#miBuscadorPoliticas .flatpickr-input:not(.field-error):not(.field-success) {
+    border: 1px solid #ccc !important;
+}
+
+/* Mensajes de error */
+#miBuscadorPoliticas .error-msg {
+    color: #e53935 !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    position: absolute !important;
+    bottom: -18px !important;
+    left: 12px !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
+    white-space: nowrap !important;
+    background: transparent !important;
+}
+#miBuscadorPoliticas .field,
+#miBuscadorPoliticas .dt-field,
+#miBuscadorPoliticas .time-field,
+#miBuscadorPoliticas .location-inputs-wrapper .field {
+    position: relative !important;
+    overflow: visible !important;
+}
+
+ /*==========================================================
+   FLATPICKR - ESTILO ÚNICO (CORREGIDO)
+========================================================== */
+.flatpickr-calendar {
+    z-index: 999999 !important;
+    border: 0 !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    box-shadow: 0 26px 70px rgba(0, 0, 0, 0.25) !important;
+    font-family: 'Poppins', system-ui, Arial, sans-serif !important;
+}
+
+.flatpickr-calendar.open {
+    width: min(860px, 94vw) !important;
+}
+
+.flatpickr-months {
+    background: #b22222 !important;
+    color: white !important;
+}
+
+.flatpickr-months * {
+    color: white !important;
+}
+
+.flatpickr-months .flatpickr-month {
+    height: 64px !important;
+    color: white !important;
+}
+
+.flatpickr-current-month {
+    color: white !important;
+    font-weight: 900 !important;
+    font-size: 22px !important;
+    padding-top: 14px !important;
+}
+
+.flatpickr-current-month .cur-month,
+.flatpickr-current-month .cur-year,
+.flatpickr-current-month .numInputWrapper span {
+    color: white !important;
+}
+
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+    fill: white !important;
+    opacity: 1 !important;
+}
+
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg {
+    fill: white !important;
+}
+
+.flatpickr-weekdays {
+    background: white !important;
+    border-bottom: 6px solid #b22222 !important;
+}
+
+span.flatpickr-weekday {
+    color: #b22222 !important;
+    font-weight: 900 !important;
+    background: white !important;
+}
+
+.flatpickr-rContainer,
+.flatpickr-days {
+    width: 100% !important;
+}
+
+.dayContainer {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+}
+
+.flatpickr-day {
+    border-radius: 12px !important;
+    font-weight: 900 !important;
+    height: 52px !important;
+    line-height: 52px !important;
+    max-width: none !important;
+    color: #333 !important;
+    width: calc(100% / 7) !important;
+    flex: 0 0 calc(100% / 7) !important;
+}
+
+.flatpickr-day:hover {
+    background: #ffe5e5 !important;
+    color: #b22222 !important;
+}
+
+.flatpickr-day.today:not(.selected):not(.startRange):not(.endRange) {
+    border: 2px solid #b22222 !important;
+    color: #b22222 !important;
+    background: white !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange {
+    background: #b22222 !important;
+    border-color: #b22222 !important;
+    color: white !important;
+}
+
+.flatpickr-day.inRange {
+    background: #ffe5e5 !important;
+    color: #b22222 !important;
+}
+
+.flatpickr-day.startRange {
+    border-radius: 999px 0 0 999px !important;
+}
+
+.flatpickr-day.endRange {
+    border-radius: 0 999px 999px 0 !important;
+}
+
+.flatpickr-day.startRange.endRange {
+    border-radius: 999px !important;
+}
+
+.flatpickr-monthDropdown-months,
+.flatpickr-current-month .numInputWrapper {
+    z-index: 999999 !important;
+}
+
+.flatpickr-monthDropdown-months {
+    background: #b22222 !important;
+    color: white !important;
+}
+
+.flatpickr-monthDropdown-months option {
+    background: white !important;
+    color: #333 !important;
+}
+
+/* ESCRITORIO (>= 1125px) */
+@media (min-width: 1125px) {
+    .flatpickr-calendar {
+        position: absolute !important;
+        left: 5% !important;
+        top: auto !important;
+        bottom: 60px !important;
+        transform: none !important;
+        width: 90vw !important;
+        max-width: 1100px !important;
+        min-width: 800px !important;
+    }
+
+    .flatpickr-calendar .flatpickr-day {
+        height: 55px !important;
+        line-height: 55px !important;
+        font-size: 18px !important;
+        border-radius: 14px !important;
+    }
+
+    .flatpickr-calendar .flatpickr-weekdays {
+        height: 50px !important;
+    }
+
+    .flatpickr-calendar .flatpickr-weekday {
+        font-size: 16px !important;
+        line-height: 50px !important;
+    }
+
+    .flatpickr-calendar .flatpickr-months .flatpickr-month {
+        height: 65px !important;
+    }
+
+    .flatpickr-calendar .flatpickr-current-month {
+        font-size: 26px !important;
+        padding-top: 15px !important;
+    }
+
+    .flatpickr-months .flatpickr-prev-month svg,
+    .flatpickr-months .flatpickr-next-month svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+}
+
+/* TABLET (561px - 1124px) */
+@media (min-width: 561px) and (max-width: 1124px) {
+    .flatpickr-calendar {
+        position: fixed !important;
+        left: 50% !important;
+        top: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        margin: 0 !important;
+        width: auto !important;
+        max-width: 700px !important;
+        min-width: 500px !important;
+    }
+
+    .flatpickr-calendar .flatpickr-day {
+        height: 50px !important;
+        line-height: 50px !important;
+        font-size: 16px !important;
+        border-radius: 12px !important;
+    }
+
+    .flatpickr-calendar .flatpickr-weekdays {
+        height: 45px !important;
+    }
+
+    .flatpickr-calendar .flatpickr-weekday {
+        font-size: 15px !important;
+        line-height: 45px !important;
+    }
+
+    .flatpickr-calendar .flatpickr-months .flatpickr-month {
+        height: 60px !important;
+    }
+
+    .flatpickr-calendar .flatpickr-current-month {
+        font-size: 22px !important;
+        padding-top: 12px !important;
+    }
+
+    .flatpickr-months .flatpickr-prev-month svg,
+    .flatpickr-months .flatpickr-next-month svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
+}
+
+/* MÓVIL (hasta 560px) */
+@media (max-width: 560px) {
+    .flatpickr-calendar.open {
+        width: min(520px, 96vw) !important;
+    }
+
+    .flatpickr-calendar .flatpickr-day {
+        height: 44px !important;
+        line-height: 44px !important;
+    }
+}
+
+/* MÓVIL MUY PEQUEÑO (hasta 380px) */
+@media (max-width: 380px) {
+    .flatpickr-calendar.open {
+        width: min(450px, 95vw) !important;
+    }
+
+    .flatpickr-calendar .flatpickr-day {
+        height: 38px !important;
+        line-height: 38px !important;
+        font-size: 13px !important;
+    }
+}
+/* ========================================================
+   CONTROL DEL BUSCADOR EN MÓVIL/TABLET - CORREGIDO
+=========================================================== */
+
+/* ESCRITORIO (>= 1125px) */
+@media (min-width: 1125px) {
+    #miBuscadorPoliticas.search-card {
+        display: block !important;
+    }
+    .d-block.d-xl-none {
+        display: none !important;
+    }
+}
+
+/* MÓVIL Y TABLET (<= 1124px) */
+@media (max-width: 1124px) {
+    #miBuscadorPoliticas.search-card {
+        display: none !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 99999 !important;
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 100px 20px 40px !important;
+        overflow-y: auto !important;
+        border-radius: 0 !important;
+    }
+
+    #miBuscadorPoliticas.search-card.active {
+        display: block !important;
+        padding-top: 60px !important;
+    }
+
+
+    body:has(#miBuscadorPoliticas.search-card.active) .hero-content-politicas .hero-texto-superior,
+    body:has(#miBuscadorPoliticas.search-card.active) .hero-bg,
+    body:has(#miBuscadorPoliticas.search-card.active) .hero-overlay,
+    body:has(#miBuscadorPoliticas.search-card.active) .policies-wrap,
+    body:has(#miBuscadorPoliticas.search-card.active) .footer-elegant,
+    body:has(#miBuscadorPoliticas.search-card.active) .topbar,
+    body:has(#miBuscadorPoliticas.search-card.active) .d-block.d-xl-none {
+        display: none !important;
+    }
+
+
+    #miBuscadorPoliticas .btn-close {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: fixed !important;
+        top: 50px !important;
+        right: 25px !important;
+        z-index: 100002 !important;
+        width: 35px !important;
+        height: 35px !important;
+        background: #ffffff !important;
+        border: 1px solid var(--brand) !important;
+        border-radius: 50% !important;
+        cursor: pointer !important;
+    }
+
+    #miBuscadorPoliticas .btn-close::before {
+        content: "×" !important;
+        display: block !important;
+        font-size: 24px !important;
+        font-weight: 400 !important;
+        color: var(--brand) !important;
+        line-height: 1 !important;
+        transform: translateY(-1px) !important;
+    }
+
+
+    body:has(#miBuscadorPoliticas.search-card.active) {
+        overflow: hidden !important;
+    }
+}
+
+/* MÓVIL (menor a 560px)  */
+@media (max-width: 560px) {
+    #miBuscadorPoliticas.search-card.active {
+        padding: 80px 15px 30px !important;
+    }
+}
+
+/* MÓVIL MUY PEQUEÑO */
+@media (max-width: 380px) {
+    #miBuscadorPoliticas.search-card.active {
+        padding: 70px 12px 25px !important;
+    }
+}
+
+/* ============================================================
+   CORRECCIÓN SOLO PARA MÓVIL Y TABLET
+============================================================ */
+@media (max-width: 1124px) {
+    #miBuscadorPoliticas.search-card:not(.active) {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 25px 25px 40px 25px;
+        border-radius: 16px;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.2);
+        margin-top: 20px;
+    }
+
+    #miBuscadorPoliticas.search-card.active {
+        background: #ffffff !important;
+        padding: 80px 20px 40px !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        margin-top: 0 !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 99999 !important;
+        overflow-y: auto !important;
+    }
+    #miBuscadorPoliticas .search-grid {
+        background: transparent !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    body:has(#miBuscadorPoliticas.search-card.active) .d-block.d-xl-none {
+        display: none !important;
+    }
+}
+
+@media (min-width: 561px) and (max-width: 1124px) {
+    #miBuscadorPoliticas.search-card:not(.active) {
+        max-width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+
+@media (max-width: 560px) {
+    #miBuscadorPoliticas.search-card:not(.active) {
+        padding: 20px 15px 30px 15px !important;
+        margin-top: 15px;
+    }
+
+    #miBuscadorPoliticas.search-card.active {
+        padding: 70px 15px 30px !important;
+    }
+}
+/* ============================================================
+   ESTILOS PARA SELECT2
+============================================================ */
+
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #000000 !important;
+    line-height: 48px !important;
+}
+
+
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #000000 !important;
+    opacity: 0.8 !important;
+}
+
+
+.select2-container--default .select2-results__option {
+    color: #000000 !important;
+}
+
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    color: white !important;
+    background: var(--brand) !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected="true"] {
+    color: #000000 !important;
+    background: #f5f5f5 !important;
+}
+
+
+.select2-container--default .select2-selection--single {
+    height: 48px !important;
+    border: 1px solid #ccc !important;
+    border-radius: 8px !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 46px !important;
+}
+/* ===== BOTÓN DE CERRAR - ===== */
+#miBuscadorPoliticas .btn-close-politicas {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 100002 !important;
+    width: 40px !important;
+    height: 40px !important;
+    background: var(--brand) !important;
+    border: none !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(178,34,34,0.3) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+#miBuscadorPoliticas .btn-close-politicas:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 6px 16px rgba(178,34,34,0.4) !important;
+}
+
+#miBuscadorPoliticas .btn-close-politicas:active {
+    transform: scale(0.95) !important;
+}
+
+#miBuscadorPoliticas .btn-close-politicas span {
+    display: none !important;
+}
+
+#miBuscadorPoliticas .btn-close-politicas::before {
+    content: "×" !important;
+    display: block !important;
+    font-size: 32px !important;
+    font-weight: 300 !important;
+    color: white !important;
+    line-height: 1 !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Ajuste para móvil */
+@media (max-width: 560px) {
+    #miBuscadorPoliticas .btn-close-politicas {
+        top: 15px !important;
+        right: 15px !important;
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+    #miBuscadorPoliticas .btn-close-politicas::before {
+        font-size: 28px !important;
+    }
 }
