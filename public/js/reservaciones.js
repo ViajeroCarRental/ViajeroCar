@@ -1847,12 +1847,12 @@ function initMovilTotalSync() {
         }
         syncTotal();
 
-        const observer = new MutationObserver(syncTotal);
-        observer.observe(totalOriginal, {
-            childList:true,
-            subtree:true,
-            characterData:true
-        });
+      const observer = new MutationObserver(syncTotal);
+      observer.observe(totalOriginal, {
+        childList:true,
+        subtree:true,
+        characterData:true
+      });
     }
 }
 
