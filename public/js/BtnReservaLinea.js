@@ -165,9 +165,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!pickupDate || !dropoffDate || !pickupTime || !dropoffTime) {
       throw new Error("Faltan las fechas u horas de la reservación.");
     }
-    if (!pickupSucursalId || !dropoffSucursalId) {
-      throw new Error("Falta seleccionar sucursal de Pick-Up o Devolución.");
-    }
 
         // 💡 Extra: validamos que efectivamente esté seleccionado plan en línea
     // En Blade el value es "linea" o "mostrador"
