@@ -153,33 +153,59 @@
 
   function initSectionValidators() {
 
-    const formStep1 = document.getElementById('step1Form');
-    if (formStep1) {
-      formStep1.addEventListener('submit', function (e) {
-        const requiredIds = [
-          'pickup_sucursal_id', 'dropoff_sucursal_id',
-          'start', 'end',
-          'pickup_h', 'pickup_m',
-          'dropoff_h', 'dropoff_m'
-        ];
+    const step1Form = document.getElementById('step1Form');
+    if (step1Form) {
+      step1Form.addEventListener('submit', function (e) {
+        let requiredIds = ['pickupPlace','start', 'end', 'pickup_h', 'dropoff_h'];
 
-        let error = false;
-
-        for (let id of requiredIds) {
-          let el = document.getElementById(id);
-          if (!el || el.value.trim() === "") {
-            error = true;
-            if (el) {
-              el.style.borderColor = 'red';
-              setTimeout(() => el.style.borderColor = '', 3000);
-            }
+        const otroDestinoCheck = document.getElementById('otroDestino');
+        if (otroDestinoCheck && otroDestinoCheck.checked) {
+          requiredIds.push('dropoffPlace');
+        } else {
+          const pPlace = document.getElementById('pickupPlace');
+          const dPlace = document.getElementById('dropoffPlace');
+          if (pPlace && dPlace) {
+            dPlace.value = pPlace.value;
           }
         }
 
-        if (error) {
+        let firstInvalid = null;
+        requiredIds.forEach(id => {
+          const el = document.getElementById(id);
+          if (el && !el.value) {
+            if (!firstInvalid) firstInvalid = el;
+            el.closest('.ctl')?.classList.add('error');
+          }
+        });
+
+        if (firstInvalid) {
           e.preventDefault();
-          e.stopImmediatePropagation();
-          if (window.alertify) alertify.error("Completa todos los campos de lugar y fecha para continuar.");
+          firstInvalid.focus();
+          console.log("Falta completar: " + firstInvalid.id);
+        }
+      });
+    }
+
+    const checkbox = document.getElementById("otroDestino");
+    const row = document.querySelector(".location-row");
+    const dropoffField = document.querySelector(".dropoff-field");
+    const dropoff = document.getElementById("dropoffPlace");
+
+    if (checkbox && row && dropoffField) {
+      dropoffField.style.display = "none";
+
+      checkbox.addEventListener("change", function () {
+        if (this.checked) {
+          row.style.gridTemplateColumns = "1fr 1fr";
+          dropoffField.style.display = "block";
+          if (dropoff) dropoff.required = true;
+        } else {
+          row.style.gridTemplateColumns = "1fr";
+          dropoffField.style.display = "none";
+          if (dropoff) {
+            dropoff.required = false;
+            dropoff.value = "";
+          }
         }
       });
     }
@@ -189,7 +215,6 @@
     if (btnNextStep2) {
       btnNextStep2.addEventListener('click', function (e) {
         const carSelected = document.querySelector('.car-card.active');
-
         const urlParams = new URLSearchParams(window.location.search);
         const hasCat = urlParams.has('categoria_id');
 
@@ -202,82 +227,134 @@
       });
     }
 
-    // ✅ VALIDACIÓN CORREGIDA DEL PASO 4
+    // ===== VALIDACIÓN CORREGIDA DEL PASO 4 =====
     const btnReservar = document.getElementById('btnReservar');
+
     if (btnReservar) {
       btnReservar.addEventListener('click', function(e) {
         let hayErrores = false;
 
-        // LIMPIAR ERRORES ANTERIORES
+        // Limpiar errores previos
         document.querySelectorAll('.field-error').forEach(el => {
           el.classList.remove('field-error');
         });
-
         document.querySelectorAll('.has-error').forEach(el => {
           el.classList.remove('has-error');
         });
-
-        document.querySelectorAll('.error-msg').forEach(el => el.remove());
-
-        // 1. VALIDAR CAMPOS NORMALES
-        const campos = [
-          { id: 'nombreCompleto', mensaje: 'Nombre completo requerido' },
-          { id: 'telefonoCliente', mensaje: 'El teléfono debe tener 10 dígitos' },
-          { id: 'correoCliente', mensaje: 'Correo electrónico requerido' },
-          { id: 'pais', mensaje: 'Selecciona un país' }
-        ];
-
-        campos.forEach(campo => {
-          const el = document.getElementById(campo.id);
-
-          if (!el || el.value.trim() === '') {
-            marcarError(el, campo.mensaje);
-            hayErrores = true;
-          }
-
-          // Validación especial teléfono
-          if (campo.id === 'telefonoCliente' && el && el.value.trim() !== '') {
-            const telefono = el.value.trim().replace(/\D/g, '');
-            if (telefono.length !== 10) {
-              marcarError(el, 'El teléfono debe tener 10 dígitos');
-              hayErrores = true;
-            }
-          }
-
-          // Validación email
-          if (campo.id === 'correoCliente' && el && el.value.trim() !== '') {
-            const email = el.value.trim();
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-              marcarError(el, 'Correo electrónico inválido');
-              hayErrores = true;
-            }
-          }
+        document.querySelectorAll('.error-msg').forEach(el => {
+          el.remove();
         });
 
-        // 2. VALIDAR FECHA (3 campos independientes)
+        // Obtener referencias a los campos
+        const nombre = document.getElementById('nombreCompleto');
+        const telefono = document.getElementById('telefonoCliente');
+        const correo = document.getElementById('correoCliente');
+        const pais = document.getElementById('pais');
         const dia = document.getElementById('dob_day');
         const mes = document.getElementById('dob_month');
         const año = document.getElementById('dob_year');
+        const acepto = document.getElementById('acepto');
+        const modal = document.getElementById('modalMetodoPago');
 
-        if (!dia || !mes || !año || !dia.value || !mes.value || !año.value) {
-          marcarErrorFecha('Fecha de nacimiento incompleta');
+        // VALIDAR NOMBRE
+        if (!nombre || !nombre.value || nombre.value.trim() === "") {
+          marcarError(nombre, 'Nombre completo requerido');
           hayErrores = true;
         }
 
-        // 3. VALIDAR CHECKBOX
-        const acepto = document.getElementById('acepto');
+        // VALIDAR TELÉFONO
+        if (!telefono || !telefono.value || telefono.value.trim() === "") {
+          marcarError(telefono, 'Teléfono requerido');
+          hayErrores = true;
+        } else {
+          const tel = telefono.value.replace(/\D/g, '');
+          if (tel.length !== 10) {
+            marcarError(telefono, 'El teléfono debe tener 10 dígitos');
+            hayErrores = true;
+          }
+        }
+
+        // VALIDAR CORREO
+        if (!correo || !correo.value || correo.value.trim() === "") {
+          marcarError(correo, 'Correo requerido');
+          hayErrores = true;
+        } else {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(correo.value.trim())) {
+            marcarError(correo, 'Correo electrónico no válido');
+            hayErrores = true;
+          }
+        }
+
+        // VALIDAR PAÍS
+        if (!pais || !pais.value) {
+          marcarError(pais, 'Selecciona un país');
+          hayErrores = true;
+        }
+
+        // VALIDAR FECHA NACIMIENTO
+        if (!dia || !dia.value || !mes || !mes.value || !año || !año.value) {
+          marcarErrorFecha('Fecha de nacimiento incompleta');
+          hayErrores = true;
+        } else {
+          const day = parseInt(dia.value, 10);
+          const month = parseInt(mes.value, 10);
+          const year = parseInt(año.value, 10);
+
+          const date = new Date(year, month - 1, day);
+          if (date.getDate() !== day || date.getMonth() !== month - 1) {
+            marcarErrorFecha('Fecha de nacimiento no válida');
+            hayErrores = true;
+          }
+        }
+
+        // VALIDAR POLÍTICAS
         if (!acepto || !acepto.checked) {
           marcarErrorCheckbox('Debes aceptar las políticas');
           hayErrores = true;
         }
 
+        // 🚨 SI HAY ERRORES: prevenir y NO abrir modal
         if (hayErrores) {
           e.preventDefault();
-        } else {
-          const modal = document.getElementById('modalMetodoPago');
-          if (modal) modal.style.display = 'flex';
+          e.stopPropagation();
+
+          const primerError = document.querySelector('.has-error, .field-error');
+          if (primerError) {
+            primerError.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center'
+            });
+          }
+
+          return false;
         }
+
+        // ✅ TODO OK - Disparar evento personalizado para abrir el modal
+        console.log('✅ Validación exitosa');
+
+        // Obtener el plan actual
+        const mainEl = document.querySelector('main.page');
+        const currentPlan = mainEl ? mainEl.dataset.plan : '';
+
+        // Disparar evento para que el otro script maneje el modal
+        const eventoExito = new CustomEvent('reserva:validacionExitosa', {
+          detail: { plan: currentPlan }
+        });
+        document.dispatchEvent(eventoExito);
+
+        return false;
+      });
+    }
+
+    // Sincronizar botón móvil con la validación
+    const btnMovil = document.getElementById('btnReservarMovil');
+    const btnOriginal = document.getElementById('btnReservar');
+
+    if (btnMovil && btnOriginal) {
+      btnMovil.addEventListener('click', function(e) {
+        e.preventDefault();
+        btnOriginal.click();
       });
     }
 
@@ -287,15 +364,18 @@
 
       const contenedor = elemento.closest('.field-floating') ||
                         elemento.closest('.field-floating-sub') ||
+                        elemento.closest('.ctl') ||
                         elemento.parentNode;
 
-      if (contenedor.querySelector('.error-msg')) return;
+      const msgExistente = contenedor.querySelector('.error-msg');
+      if (msgExistente) msgExistente.remove();
 
       elemento.classList.add('field-error');
       contenedor.classList.add('has-error');
 
       const errorMsg = document.createElement('span');
       errorMsg.className = 'error-msg';
+      errorMsg.style.cssText = 'color: #b22222; font-size: 11px; font-weight: 700; margin-top: 4px; display: block;';
       errorMsg.textContent = mensaje;
       contenedor.appendChild(errorMsg);
 
@@ -310,51 +390,35 @@
       elemento.addEventListener('change', limpiar, { once: true });
     }
 
-    // FUNCIÓN PARA FECHA (3 campos)
+    // FUNCIÓN PARA FECHA
     function marcarErrorFecha(mensaje) {
       const container = document.querySelector('.field-dob-container');
-      const dobInline = document.querySelector('.dob-inline');
       const dia = document.getElementById('dob_day');
       const mes = document.getElementById('dob_month');
       const año = document.getElementById('dob_year');
 
-      if (!container || container.querySelector('.error-msg')) return;
+      if (!container) return;
+
+      const msgExistente = container.querySelector('.error-msg');
+      if (msgExistente) msgExistente.remove();
 
       container.classList.add('has-error');
-      if (dobInline) dobInline.classList.add('field-error');
-
-      [dia, mes, año].forEach(el => {
-        if (el) {
-          el.classList.add('field-error');
-          const sub = el.closest('.field-floating-sub');
-          if (sub) sub.classList.add('has-error');
-        }
-      });
 
       const errorMsg = document.createElement('span');
       errorMsg.className = 'error-msg';
+      errorMsg.style.cssText = 'color: #b22222; font-size: 11px; font-weight: 700; margin-top: 4px; display: block;';
       errorMsg.textContent = mensaje;
       container.appendChild(errorMsg);
 
       const limpiar = function() {
         container.classList.remove('has-error');
-        if (dobInline) dobInline.classList.remove('field-error');
-
-        [dia, mes, año].forEach(el => {
-          if (el) {
-            el.classList.remove('field-error');
-            const sub = el.closest('.field-floating-sub');
-            if (sub) sub.classList.remove('has-error');
-          }
-        });
-
-        if (errorMsg.parentNode) errorMsg.remove();
+        const msg = container.querySelector('.error-msg');
+        if (msg) msg.remove();
       };
 
       [dia, mes, año].forEach(el => {
         if (el) {
           el.addEventListener('change', limpiar, { once: true });
-          el.addEventListener('input', limpiar, { once: true });
         }
       });
     }
@@ -364,20 +428,23 @@
       const checkbox = document.getElementById('acepto');
       const container = checkbox ? checkbox.closest('.cbox') : null;
 
-      if (!checkbox || !container || container.querySelector('.error-msg')) return;
+      if (!checkbox || !container) return;
 
-      checkbox.classList.add('field-error');
+      const msgExistente = container.querySelector('.error-msg');
+      if (msgExistente) msgExistente.remove();
+
       container.classList.add('has-error');
 
       const errorMsg = document.createElement('span');
       errorMsg.className = 'error-msg';
+      errorMsg.style.cssText = 'color: #b22222; font-size: 11px; font-weight: 700; margin-top: 4px; display: block;';
       errorMsg.textContent = mensaje;
       container.appendChild(errorMsg);
 
       const limpiar = function() {
-        checkbox.classList.remove('field-error');
         container.classList.remove('has-error');
-        if (errorMsg.parentNode) errorMsg.remove();
+        const msg = container.querySelector('.error-msg');
+        if (msg) msg.remove();
       };
 
       checkbox.addEventListener('change', limpiar, { once: true });
@@ -433,15 +500,10 @@
     const map = {
       pickup_sucursal_id: qs('#pickup_sucursal_id') || qs('[name="pickup_sucursal_id"]'),
       dropoff_sucursal_id: qs('#dropoff_sucursal_id') || qs('[name="dropoff_sucursal_id"]'),
-
       pickup_date: qs('#start') || qs('[name="pickup_date"]'),
       dropoff_date: qs('#end') || qs('[name="dropoff_date"]'),
-
-      pickup_h: qs('#pickup_h') || qs('[name="pickup_hour"]') || qs('[name="pickup_hora"]') || qs('[name="pickup_h"]'),
-      pickup_m: qs('#pickup_m') || qs('[name="pickup_min"]') || qs('[name="pickup_minuto"]') || qs('[name="pickup_m"]'),
-      dropoff_h: qs('#dropoff_h') || qs('[name="dropoff_hour"]') || qs('[name="dropoff_hora"]') || qs('[name="dropoff_h"]'),
-      dropoff_m: qs('#dropoff_m') || qs('[name="dropoff_min"]') || qs('[name="dropoff_minuto"]') || qs('[name="dropoff_m"]'),
-
+      pickup_h: qs('#pickup_h') || qs('[name="pickup_h"]') || qs('[name="pickup_hora"]') || qs('[name="pickup_h"]'),
+      dropoff_h: qs('#dropoff_h') || qs('[name="dropoff_h"]') || qs('[name="dropoff_hora"]') || qs('[name="dropoff_h"]'),
       pickup_time_hidden: qs('#pickup_time_hidden') || qs('[name="pickup_time"]'),
       dropoff_time_hidden: qs('#dropoff_time_hidden') || qs('[name="dropoff_time"]'),
     };
@@ -467,19 +529,16 @@
 
     function computeTimesIntoHidden() {
       const ph = safeVal(map.pickup_h);
-      const pm = safeVal(map.pickup_m);
       const dh = safeVal(map.dropoff_h);
-      const dm = safeVal(map.dropoff_m);
 
-      if (map.pickup_time_hidden && (ph || pm)) {
-        const hh = (ph || "00").padStart(2, '0');
-        const mm = (pm || "00").padStart(2, '0');
-        map.pickup_time_hidden.value = `${hh}:${mm}`;
+      if (map.pickup_time_hidden && ph) {
+        const hh = ph.padStart(2, '0');
+        map.pickup_time_hidden.value = `${hh}:00`;
       }
-      if (map.dropoff_time_hidden && (dh || dm)) {
-        const hh = (dh || "00").padStart(2, '0');
-        const mm = (dm || "00").padStart(2, '0');
-        map.dropoff_time_hidden.value = `${hh}:${mm}`;
+
+      if (map.dropoff_time_hidden && dh) {
+        const hh = dh.padStart(2, '0');
+        map.dropoff_time_hidden.value = `${hh}:00`;
       }
     }
 
@@ -490,7 +549,7 @@
         'pickup_sucursal_id', 'dropoff_sucursal_id',
         'pickup_date', 'dropoff_date',
         'pickup_time', 'dropoff_time',
-        'pickup_h', 'pickup_m', 'dropoff_h', 'dropoff_m',
+        'pickup_h', 'dropoff_h',
         'addons', 'step', 'categoria_id', 'plan'
       ].forEach(k => {
         const v = p.get(k);
@@ -519,17 +578,12 @@
       const st = {
         pickup_sucursal_id: safeVal(map.pickup_sucursal_id),
         dropoff_sucursal_id: safeVal(map.dropoff_sucursal_id),
-
         pickup_date: safeVal(map.pickup_date),
         dropoff_date: safeVal(map.dropoff_date),
-
         pickup_time: safeVal(map.pickup_time_hidden) || "",
         dropoff_time: safeVal(map.dropoff_time_hidden) || "",
-
         pickup_h: safeVal(map.pickup_h),
-        pickup_m: safeVal(map.pickup_m),
         dropoff_h: safeVal(map.dropoff_h),
-        dropoff_m: safeVal(map.dropoff_m),
       };
 
       if (addonsHidden) st.addons = safeVal(addonsHidden);
@@ -558,15 +612,10 @@
 
       if (map.pickup_sucursal_id && !safeVal(map.pickup_sucursal_id) && state.pickup_sucursal_id) setVal(map.pickup_sucursal_id, state.pickup_sucursal_id);
       if (map.dropoff_sucursal_id && !safeVal(map.dropoff_sucursal_id) && state.dropoff_sucursal_id) setVal(map.dropoff_sucursal_id, state.dropoff_sucursal_id);
-
       if (map.pickup_date && !safeVal(map.pickup_date) && state.pickup_date) setVal(map.pickup_date, state.pickup_date);
       if (map.dropoff_date && !safeVal(map.dropoff_date) && state.dropoff_date) setVal(map.dropoff_date, state.dropoff_date);
-
       if (map.pickup_h && !safeVal(map.pickup_h) && state.pickup_h) setVal(map.pickup_h, state.pickup_h);
-      if (map.pickup_m && !safeVal(map.pickup_m) && state.pickup_m) setVal(map.pickup_m, state.pickup_m);
       if (map.dropoff_h && !safeVal(map.dropoff_h) && state.dropoff_h) setVal(map.dropoff_h, state.dropoff_h);
-      if (map.dropoff_m && !safeVal(map.dropoff_m) && state.dropoff_m) setVal(map.dropoff_m, state.dropoff_m);
-
       if (state.pickup_time && !safeVal(map.pickup_time_hidden) && map.pickup_time_hidden) setVal(map.pickup_time_hidden, state.pickup_time);
       if (state.dropoff_time && !safeVal(map.dropoff_time_hidden) && map.dropoff_time_hidden) setVal(map.dropoff_time_hidden, state.dropoff_time);
 
@@ -576,15 +625,10 @@
         return { h: m[1].padStart(2, '0'), m: m[2].padStart(2, '0') };
       }
       const pHM = splitToHM(state.pickup_time);
-      if (pHM) {
-        if (map.pickup_h && !safeVal(map.pickup_h)) setVal(map.pickup_h, pHM.h);
-        if (map.pickup_m && !safeVal(map.pickup_m)) setVal(map.pickup_m, pHM.m);
-      }
+      if (pHM && map.pickup_h && !safeVal(map.pickup_h)) setVal(map.pickup_h, pHM.h);
+
       const dHM = splitToHM(state.dropoff_time);
-      if (dHM) {
-        if (map.dropoff_h && !safeVal(map.dropoff_h)) setVal(map.dropoff_h, dHM.h);
-        if (map.dropoff_m && !safeVal(map.dropoff_m)) setVal(map.dropoff_m, dHM.m);
-      }
+      if (dHM && map.dropoff_h && !safeVal(map.dropoff_h)) setVal(map.dropoff_h, dHM.h);
 
       if (addonsHidden && !safeVal(addonsHidden) && state.addons) {
         addonsHidden.value = state.addons;
@@ -612,9 +656,7 @@
         setIf('pickup_time', state.pickup_time);
         setIf('dropoff_time', state.dropoff_time);
         setIf('pickup_h', state.pickup_h);
-        setIf('pickup_m', state.pickup_m);
         setIf('dropoff_h', state.dropoff_h);
-        setIf('dropoff_m', state.dropoff_m);
 
         if (state.addons) setIf('addons', state.addons);
         if (keepStep) p.set('step', keepStep);
@@ -670,7 +712,7 @@
     const watch = [
       map.pickup_sucursal_id, map.dropoff_sucursal_id,
       map.pickup_date, map.dropoff_date,
-      map.pickup_h, map.pickup_m, map.dropoff_h, map.dropoff_m,
+      map.pickup_h, map.dropoff_h,
       map.pickup_time_hidden, map.dropoff_time_hidden,
       addonsHidden
     ].filter(Boolean);
@@ -893,11 +935,7 @@
     function splitFullName(v){
       const s = norm(v);
       if (!s) return { nombre:"", apellido:"" };
-
-      return {
-        nombre: s,
-        apellido: ""
-      };
+      return { nombre: s, apellido: "" };
     }
 
     function syncToHidden(){
@@ -911,7 +949,6 @@
     function hydrateFullFromHidden(){
       const n = norm(nombre.value);
       const a = norm(apellido.value);
-
       if (!norm(full.value) && (n || a)){
         full.value = norm([n, a].filter(Boolean).join(' '));
       }
@@ -969,10 +1006,7 @@
       }
 
       try{ hidden.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
-
-      try {
-        applyYoungDriverAddon();
-      } catch (_) {}
+      try { applyYoungDriverAddon(); } catch (_) {}
     }
 
     function hydrateFromHidden(){
@@ -999,9 +1033,7 @@
     const pickupDate = qs("#start") || qs('input[name="pickup_date"]');
     const dropoffDate = qs("#end") || qs('input[name="dropoff_date"]');
     const pickupHour = qs('#pickup_h');
-    const pickupMin = qs('#pickup_m');
     const dropoffHour = qs('#dropoff_h');
-    const dropoffMin = qs('#dropoff_m');
 
     if (!pickupDate || !dropoffDate) return;
 
@@ -1023,8 +1055,7 @@
       const d = parseDateAny(which === "pickup" ? pickupDate.value : dropoffDate.value);
       if (!d) return null;
       const h = which === "pickup" ? pickupHour?.value : dropoffHour?.value;
-      const mi = which === "pickup" ? pickupMin?.value : dropoffMin?.value;
-      d.setHours(+h || 0, +mi || 0, 0, 0);
+      d.setHours(+h || 0, 0, 0, 0);
       return d;
     }
 
@@ -1069,7 +1100,7 @@
       if (qDays) qDays.textContent = days;
     }
 
-    [pickupDate, dropoffDate, pickupHour, pickupMin, dropoffHour, dropoffMin]
+    [pickupDate, dropoffDate, pickupHour, dropoffHour]
       .filter(Boolean)
       .forEach(el => el.addEventListener("change", runUpdate));
 
@@ -1121,14 +1152,12 @@
 
     function buildFromUI() {
       const map = new Map();
-
       cards.forEach(card => {
         const id = String(card.getAttribute('data-id') || '').trim();
         if (!id) return;
         const qty = readQty(card);
         if (qty > 0) map.set(id, qty);
       });
-
       return map;
     }
 
@@ -1144,9 +1173,7 @@
         window.history.replaceState({}, document.title, url.toString());
       } catch (_) { }
 
-      try {
-        applyYoungDriverAddon();
-      } catch (_) { }
+      try { applyYoungDriverAddon(); } catch (_) { }
     }
 
     function hydrate() {
@@ -1220,9 +1247,7 @@
           'pickup_time',
           'dropoff_time',
           'pickup_h',
-          'pickup_m',
           'dropoff_h',
-          'dropoff_m',
           'addons',
           'categoria_id',
           'plan'
@@ -1245,8 +1270,14 @@
 
     const hasValue = (el) => {
       if (!el) return false;
+
+      if (el.tagName === 'SELECT') {
+        const val = el.value;
+        return val && val !== "" && val !== "H" && val !== "0" && val !== "00" && val !== "Hora";
+      }
+
       const v = (el.value ?? "").toString().trim();
-      return v !== "" && v !== "H" && v !== "Min";
+      return v !== "";
     };
 
     function setState(ctl, filled) {
@@ -1255,24 +1286,94 @@
     }
 
     floats.forEach(ctl => {
-      const input = qs('[data-float-input]', ctl);
-      const select = qs('[data-float-select]', ctl);
+      const input = ctl.querySelector('input:not([type="hidden"])');
+      const select = ctl.querySelector('select');
+      const element = input || select;
 
-      if (input) setState(ctl, hasValue(input));
-      if (select) setState(ctl, hasValue(select));
+      if (!element) return;
+
+      setState(ctl, hasValue(element));
 
       if (input) {
-        input.addEventListener('focus', () => ctl.classList.remove('pristine'));
-        input.addEventListener('input', () => setState(ctl, hasValue(input)));
-        input.addEventListener('change', () => setState(ctl, hasValue(input)));
-        input.addEventListener('blur', () => setState(ctl, hasValue(input)));
+        input.addEventListener('focus', () => {
+          ctl.classList.remove('pristine');
+        });
+
+        input.addEventListener('input', () => {
+          setState(ctl, hasValue(input));
+        });
+
+        input.addEventListener('change', () => {
+          setState(ctl, hasValue(input));
+        });
+
+        input.addEventListener('blur', () => {
+          setState(ctl, hasValue(input));
+        });
       }
 
       if (select) {
-        select.addEventListener('focus', () => ctl.classList.remove('pristine'));
-        select.addEventListener('change', () => setState(ctl, hasValue(select)));
-        select.addEventListener('blur', () => setState(ctl, hasValue(select)));
+        select.addEventListener('focus', () => {
+          ctl.classList.remove('pristine');
+        });
+
+        select.addEventListener('change', () => {
+          setState(ctl, hasValue(select));
+        });
+
+        select.addEventListener('blur', () => {
+          setState(ctl, hasValue(select));
+        });
       }
+    });
+  }
+
+  function initTimeSelects() {
+    const hourSelects = qsa('#pickup_h, #dropoff_h');
+    hourSelects.forEach(select => {
+      const ctl = select.closest('[data-float]');
+      if (!ctl) return;
+
+      if (select.value && select.value !== "" && select.value !== "H") {
+        ctl.classList.add('filled');
+        ctl.classList.remove('pristine');
+      }
+
+      select.addEventListener('change', function() {
+        const parentCtl = this.closest('[data-float]');
+        if (parentCtl) {
+          if (this.value && this.value !== "" && this.value !== "H") {
+            parentCtl.classList.add('filled');
+            parentCtl.classList.remove('pristine');
+          } else {
+            parentCtl.classList.remove('filled');
+            parentCtl.classList.add('pristine');
+          }
+        }
+      });
+    });
+  }
+
+  function refreshFloatLabels() {
+    const floats = qsa('[data-float]');
+    floats.forEach(ctl => {
+      const input = ctl.querySelector('input:not([type="hidden"])');
+      const select = ctl.querySelector('select');
+      const element = input || select;
+
+      if (!element) return;
+
+      const hasVal = (() => {
+        if (!element.value) return false;
+        if (element.tagName === 'SELECT') {
+          const val = element.value;
+          return val !== "" && val !== "H" && val !== "0" && val !== "00" && val !== "Hora";
+        }
+        return element.value.trim() !== "";
+      })();
+
+      ctl.classList.toggle('filled', hasVal);
+      ctl.classList.toggle('pristine', !hasVal);
     });
   }
 
@@ -1396,7 +1497,7 @@
       const val = (el) => (el && el.value != null) ? String(el.value).trim() : "";
       const filled =
         (input && val(input) !== "") ||
-        (select && val(select) !== "" && val(select) !== "H" && val(select) !== "Min");
+        (select && val(select) !== "" && val(select) !== "H");
 
       ctl.classList.toggle('filled', filled);
       ctl.classList.toggle('pristine', !filled);
@@ -1459,11 +1560,11 @@
     initDobSelects();
     applyYoungDriverAddon();
     refreshFloatStates();
-
     initStep3ProteccionesModal();
 
-    setTimeout(refreshFloatStates, 80);
-    setTimeout(refreshFloatStates, 250);
+    setTimeout(refreshFloatLabels, 100);
+    setTimeout(refreshFloatLabels, 300);
+    setTimeout(refreshFloatLabels, 500);
   });
 
   // ===== Select2 =====
@@ -1477,16 +1578,18 @@
 
     function updateFloatingIcon(selectId, iconId) {
       const selectEl = document.getElementById(selectId);
-      const iconEl = document.getElementById(iconId);
+      const iconEl   = document.getElementById(iconId);
+
       if (!selectEl || !iconEl) return;
 
       const selectedOption = selectEl.options[selectEl.selectedIndex];
+      let iconClass = 'fa-solid fa-location-dot';
 
-      const iconClass = (selectedOption && selectedOption.dataset.icon)
-        ? selectedOption.dataset.icon
-        : 'fa-solid fa-location-dot';
+      if (selectedOption && selectedOption.dataset.icon) {
+        iconClass = selectedOption.dataset.icon;
+      }
 
-      iconEl.className = iconClass;
+      iconEl.innerHTML = `<i class="${iconClass}"></i>`;
     }
 
     configs.forEach(conf => {
@@ -1497,8 +1600,13 @@
           width: '100%',
           templateResult: function(option) {
             if (!option.id) return option.text;
-            const icon = $(option.element).data('icon');
+            const icon = $(option.element).data('icon') || 'fa-solid fa-location-dot';
             return $('<span><i class="' + icon + '" style="margin-right:10px;width:20px;text-align:center;"></i>' + option.text + '</span>');
+          },
+          templateSelection: function(option){
+            if (!option.id) return option.text;
+            const icon = $(option.element).data('icon') || 'fa-solid fa-location-dot';
+            return $('<span><i class="' + icon + '" style="margin-right:8px;"></i>' + option.text + '</span>');
           }
         });
 
@@ -1513,7 +1621,6 @@
   });
 
   window.limpiarTodoYReiniciar = function() {
-
     localStorage.removeItem("viajero_resv_filters_v1");
 
     const selects = ['#pickupPlace', '#dropoffPlace'];
@@ -1524,7 +1631,7 @@
       }
     });
 
-    const inputs = ['#start', '#end', '#pickup_h', '#pickup_m', '#dropoff_h', '#dropoff_m'];
+    const inputs = ['#start', '#end', '#pickup_h', '#dropoff_h'];
     inputs.forEach(id => {
       const el = document.querySelector(id);
       if (el) el.value = "";
@@ -1533,36 +1640,9 @@
     window.location.href = window.location.pathname + "?step=1";
   };
 
-  // tarjeta responsivo reservaciones
-  document.addEventListener('DOMContentLoaded', function(){
 
-    const btnOriginal = document.getElementById('btnReservar');
-    const btnMovil = document.getElementById('btnReservarMovil');
-    const totalOriginal = document.getElementById('qTotal');
-    const totalMovil = document.getElementById('qTotalMovil');
 
-    if(btnMovil && btnOriginal){
-      btnMovil.addEventListener('click', function(){
-        btnOriginal.click();
-      });
-    }
-    if(totalOriginal && totalMovil){
-
-      function syncTotal(){
-        totalMovil.innerText = totalOriginal.innerText;
-      }
-      syncTotal();
-
-      const observer = new MutationObserver(syncTotal);
-      observer.observe(totalOriginal, {
-        childList:true,
-        subtree:true,
-        characterData:true
-      });
-    }
-  });
-
-  // modal Step 4
+  // modal Step 4 - MODIFICADO para usar evedocument.addEventListener('DOMContentLoaded', function()to personalizado
   document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('modalProtecciones');
     const btnInfo = document.getElementById('info-protecciones');
@@ -1598,4 +1678,729 @@
     });
   });
 
+  // ===== NUEVO: Manejador del modal de método de pago =====
+  document.addEventListener('DOMContentLoaded', function () {
+    const main = document.querySelector('main.page');
+    const currentPlan = (main && main.dataset.plan) ? main.dataset.plan : '';
+
+    const modalMetodoPago = document.getElementById('modalMetodoPago');
+    const cerrarModalMetodo = document.getElementById('cerrarModalMetodo');
+    const btnPagoLinea = document.getElementById('btnPagoLinea');
+    const btnPagoMostrador = document.getElementById('btnPagoMostrador');
+
+    // Escuchar evento de validación exitosa
+    document.addEventListener('reserva:validacionExitosa', function(e) {
+      console.log('Evento recibido, plan:', currentPlan);
+
+      if (currentPlan === 'linea') {
+        if (btnPagoLinea) {
+          btnPagoLinea.click();
+        } else if (typeof window.handleReservaPagoEnLinea === 'function') {
+          window.handleReservaPagoEnLinea();
+        }
+      } else if (currentPlan === 'mostrador') {
+        if (modalMetodoPago) {
+          modalMetodoPago.style.display = 'flex';
+        }
+      }
+    });
+
+    // Cerrar modal
+    if (cerrarModalMetodo && modalMetodoPago) {
+      cerrarModalMetodo.addEventListener('click', function () {
+        modalMetodoPago.style.display = 'none';
+      });
+
+      // Cerrar al hacer clic fuera
+      modalMetodoPago.addEventListener('click', function(e) {
+        if (e.target === modalMetodoPago) {
+          modalMetodoPago.style.display = 'none';
+        }
+      });
+    }
+
+    // Por si quieres FORZAR que "Tarifa base" inicie CERRADO:
+    const tarifa = document.querySelector('.sum-table details.sum-acc');
+    if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
+  });
+  // ===== CONTROL DE VISIBILIDAD DE LA TARJETA MÓVIL =====
+function initMovilCardVisibility() {
+    const tuAutoSection = document.getElementById('tuAutoSection');
+    const movilCard = document.querySelector('.movil-footer-sticky');
+    const step4Layout = document.querySelector('.step4-layout');
+    const body = document.body;
+
+    if (!tuAutoSection || !movilCard || !step4Layout) return;
+
+    // Estado para controlar si ya se mostró
+    let hasShownCard = false;
+
+    // Función para mostrar la tarjeta
+    function showMovilCard() {
+        if (!hasShownCard) {
+            movilCard.classList.add('visible');
+            body.classList.add('has-sticky-card');
+
+            // Ajustar el padding del layout para que no se oculte contenido
+            step4Layout.style.paddingBottom = '220px';
+
+            hasShownCard = true;
+
+            console.log('✅ Tarjeta móvil visible - usuario llegó a Tu Auto');
+        }
+    }
+
+    // Opción 1: Observar cuando la sección "Tu Auto" es visible
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            // Cuando la sección es visible al menos al 30%
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.3) {
+                showMovilCard();
+                // Una vez mostrada, podemos dejar de observar
+                observer.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: [0.3, 0.5, 0.8],
+        rootMargin: '0px'
+    });
+
+    observer.observe(tuAutoSection);
+
+    // Opción 2: Backup - detectar scroll hasta la sección
+    let scrollTimeout;
+    function checkScrollPosition() {
+        if (hasShownCard) return;
+
+        const rect = tuAutoSection.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+
+        // Si la sección está en la mitad superior de la pantalla
+        if (rect.top < windowHeight * 0.7 && rect.bottom > 0) {
+            showMovilCard();
+        }
+    }
+
+    window.addEventListener('scroll', () => {
+        if (!hasShownCard) {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(checkScrollPosition, 100);
+        }
+    });
+
+    // Opción 3: Backup - cuando el usuario interactúa con los campos del formulario
+    // y ya ha hecho scroll significativo
+    const formInputs = document.querySelectorAll('#formCotizacion input, #formCotizacion select');
+    let hasInteracted = false;
+
+    formInputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            hasInteracted = true;
+            if (window.scrollY > 300 && !hasShownCard) {
+                showMovilCard();
+            }
+        });
+
+        input.addEventListener('change', () => {
+            hasInteracted = true;
+            if (window.scrollY > 300 && !hasShownCard) {
+                showMovilCard();
+            }
+        });
+    });
+
+    // Reiniciar estado si el usuario vuelve a editar fechas (por si acaso)
+    const resetButton = document.querySelector('.wizard-nav .btn-ghost');
+    if (resetButton) {
+        resetButton.addEventListener('click', () => {
+            hasShownCard = false;
+            movilCard.classList.remove('visible');
+            body.classList.remove('has-sticky-card');
+            step4Layout.style.paddingBottom = '0';
+        });
+    }
+
+    console.log('🚀 Control de visibilidad de tarjeta móvil inicializado');
+}
+
+// También modifica la sincronización del total para que funcione cuando la tarjeta se muestre
+function initMovilTotalSync() {
+    const btnOriginal = document.getElementById('btnReservar');
+    const btnMovil = document.getElementById('btnReservarMovil');
+    const totalOriginal = document.getElementById('qTotal');
+    const totalMovil = document.getElementById('qTotalMovil');
+
+    if(btnMovil && btnOriginal){
+        btnMovil.addEventListener('click', function(e){
+            e.preventDefault();
+
+            // Pequeño retraso para asegurar que todo esté listo
+            setTimeout(() => {
+                btnOriginal.click();
+            }, 50);
+        });
+    }
+
+    if(totalOriginal && totalMovil){
+        function syncTotal(){
+            totalMovil.innerText = totalOriginal.innerText;
+        }
+        syncTotal();
+
+      const observer = new MutationObserver(syncTotal);
+      observer.observe(totalOriginal, {
+        childList:true,
+        subtree:true,
+        characterData:true
+      });
+    }
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    // Solo inicializar en Step 4
+    const mainEl = document.querySelector('main.page');
+    const currentStep = mainEl ? mainEl.dataset.currentStep : '';
+
+    if (currentStep === '4') {
+        // Pequeño retraso para asegurar que todo el DOM esté renderizado
+        setTimeout(() => {
+            initMovilCardVisibility();
+            initMovilTotalSync();
+        }, 100);
+    }
+});
+
+// También cuando se actualice el summary de addons, mantener la sincronización
+const originalInitStep4AddonsSummary = window.initStep4AddonsSummary || function(){};
+window.initStep4AddonsSummary = function() {
+    originalInitStep4AddonsSummary();
+
+    // Re-sincronizar el total móvil después de actualizar
+    const totalOriginal = document.getElementById('qTotal');
+    const totalMovil = document.getElementById('qTotalMovil');
+
+    if(totalOriginal && totalMovil) {
+        totalMovil.innerText = totalOriginal.innerText;
+    }
+};
+// ===== CONTROL DE VISIBILIDAD DE LA TARJETA MÓVIL (VERSIÓN FINAL) =====
+
+let movilCardState = {
+    hasShownCard: false,
+    pendingHide: false,
+    allFieldsValid: false
+};
+
+function initMovilCardVisibility() {
+    const mainEl = document.querySelector('main.page');
+    const currentStep = mainEl ? mainEl.dataset.currentStep : '';
+
+    if (currentStep !== '4') return;
+
+    const tuAutoSection = document.getElementById('tuAutoSection');
+    const movilCard = document.querySelector('.movil-footer-sticky');
+    const step4Layout = document.querySelector('.step4-layout');
+    const body = document.body;
+
+    if (!tuAutoSection || !movilCard || !step4Layout) {
+        console.warn('Elementos necesarios no encontrados');
+        return;
+    }
+
+    // Función para verificar si TODOS los campos están válidos
+    function checkAllFieldsValid() {
+        const nombre = document.getElementById('nombreCompleto');
+        const telefono = document.getElementById('telefonoCliente');
+        const correo = document.getElementById('correoCliente');
+        const pais = document.getElementById('pais');
+        const dia = document.getElementById('dob_day');
+        const mes = document.getElementById('dob_month');
+        const año = document.getElementById('dob_year');
+        const acepto = document.getElementById('acepto');
+
+        // Verificar campo por campo
+        if (!nombre || !nombre.value || nombre.value.trim() === "") return false;
+
+        const tel = telefono ? telefono.value.replace(/\D/g, '') : '';
+        if (!telefono || !telefono.value || tel.length !== 10) return false;
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!correo || !correo.value || !emailRegex.test(correo.value.trim())) return false;
+
+        if (!pais || !pais.value) return false;
+
+        if (!dia || !dia.value || !mes || !mes.value || !año || !año.value) return false;
+
+        // Validar fecha
+        const day = parseInt(dia.value, 10);
+        const month = parseInt(mes.value, 10);
+        const year = parseInt(año.value, 10);
+        const date = new Date(year, month - 1, day);
+        if (date.getDate() !== day || date.getMonth() !== month - 1) return false;
+
+        if (!acepto || !acepto.checked) return false;
+
+        return true;
+    }
+
+    // Función para actualizar estado de validación
+    function updateValidationState() {
+        const isValid = checkAllFieldsValid();
+        movilCardState.allFieldsValid = isValid;
+        console.log('📝 Campos válidos:', isValid);
+        return isValid;
+    }
+
+    // Función para mostrar la tarjeta
+    function showMovilCard() {
+        if (!movilCardState.hasShownCard && !movilCardState.pendingHide) {
+            movilCard.classList.add('visible');
+            step4Layout.classList.add('has-sticky-card');
+            body.classList.add('has-sticky-card');
+            movilCardState.hasShownCard = true;
+            console.log('✅ Tarjeta móvil visible');
+        }
+    }
+
+    // Función para ocultar la tarjeta (solo cuando hay errores)
+    function hideMovilCard() {
+        if (movilCardState.hasShownCard) {
+            movilCard.classList.remove('visible');
+            step4Layout.classList.remove('has-sticky-card');
+            body.classList.remove('has-sticky-card');
+            movilCardState.hasShownCard = false;
+            console.log('👻 Tarjeta móvil oculta');
+        }
+    }
+
+    // Verificar si estamos en móvil
+    function isMobileView() {
+        return window.innerWidth <= 1024;
+    }
+
+    // OBSERVER para detectar cuando "Tu auto" entra y sale de la vista
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!isMobileView()) return;
+
+            if (entry.isIntersecting) {
+                console.log('🔍 Tu auto visible');
+                // Cuando la sección es visible, mostrar la tarjeta si no está pendiente de ocultar
+                if (!movilCardState.pendingHide) {
+                    showMovilCard();
+                }
+            } else {
+                console.log('🔍 Tu auto NO visible');
+                // Cuando la sección NO es visible:
+                // - Si hay campos inválidos, OCULTAR
+                // - Si todos los campos son válidos, MANTENER visible
+                if (!movilCardState.allFieldsValid) {
+                    hideMovilCard();
+                }
+                // Si los campos son válidos, NO hacemos nada (la tarjeta sigue visible)
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px'
+    });
+
+    observer.observe(tuAutoSection);
+
+    // Backup scroll
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        if (!isMobileView() || movilCardState.pendingHide) return;
+
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            const rect = tuAutoSection.getBoundingClientRect();
+            const windowHeight = window.innerHeight;
+
+            const isVisible = rect.top < windowHeight * 0.9 && rect.bottom > 0;
+
+            if (isVisible) {
+                showMovilCard();
+            } else {
+                // Misma lógica: ocultar solo si hay campos inválidos
+                if (!movilCardState.allFieldsValid) {
+                    hideMovilCard();
+                }
+            }
+        }, 50);
+    }, { passive: true });
+
+    // VALIDACIÓN Y BOTÓN DE RESERVAR
+    const btnOriginal = document.getElementById('btnReservar');
+    if (btnOriginal) {
+        btnOriginal.addEventListener('click', function(e) {
+            // Actualizar estado de validación
+            const isValid = updateValidationState();
+
+            setTimeout(() => {
+                const hasErrors = document.querySelectorAll('.has-error, .field-error').length > 0;
+
+                if (hasErrors) {
+                    console.log('❌ Errores detectados');
+
+                    // Solo ocultar si hay errores
+                    movilCardState.pendingHide = true;
+                    hideMovilCard();
+
+                    const primerError = document.querySelector('.has-error, .field-error');
+                    if (primerError) {
+                        primerError.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+
+                    // Resetear pendingHide después de 2 segundos
+                    setTimeout(() => {
+                        movilCardState.pendingHide = false;
+                        console.log('🔄 Reset pendingHide');
+                    }, 2000);
+                } else {
+                    console.log('✅ Todos los campos válidos - procediendo con pago');
+
+                    // NO ocultar la tarjeta, mantenerla visible
+                    // Disparar evento de validación exitosa
+                    const eventoExito = new CustomEvent('reserva:validacionExitosa', {
+                        detail: { plan: mainEl ? mainEl.dataset.plan : '' }
+                    });
+                    document.dispatchEvent(eventoExito);
+
+                    // Hacer scroll suave hacia arriba para mostrar el modal de pago
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                }
+            }, 100);
+        });
+    }
+
+    // Escuchar cambios en los campos para actualizar estado
+    const inputsToWatch = [
+        'nombreCompleto', 'telefonoCliente', 'correoCliente', 'pais',
+        'dob_day', 'dob_month', 'dob_year', 'acepto'
+    ];
+
+    inputsToWatch.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            ['input', 'change', 'blur'].forEach(eventType => {
+                el.addEventListener(eventType, () => {
+                    updateValidationState();
+                });
+            });
+        }
+    });
+
+    // BOTÓN MÓVIL
+    const btnMovil = document.getElementById('btnReservarMovil');
+    if (btnMovil && btnOriginal) {
+        btnMovil.addEventListener('click', function(e) {
+            e.preventDefault();
+            btnOriginal.click();
+        });
+    }
+
+    // Sincronizar total
+    const totalOriginal = document.getElementById('qTotal');
+    const totalMovil = document.getElementById('qTotalMovil');
+
+    if (totalOriginal && totalMovil) {
+        function syncTotal() {
+            totalMovil.innerText = totalOriginal.innerText;
+        }
+        syncTotal();
+
+        const observer = new MutationObserver(syncTotal);
+        observer.observe(totalOriginal, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    }
+
+    // Verificación inicial
+    setTimeout(() => {
+        updateValidationState();
+    }, 500);
+
+    console.log('🚀 Control de visibilidad de tarjeta móvil inicializado');
+}
+
+// Inicializar en DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    const mainEl = document.querySelector('main.page');
+    const currentStep = mainEl ? mainEl.dataset.currentStep : '';
+
+    if (currentStep === '4') {
+        setTimeout(() => {
+            initMovilCardVisibility();
+        }, 300);
+    }
+});
+
+// Manejar resize
+window.addEventListener('resize', function() {
+    if (window.innerWidth <= 1024) {
+        const movilCard = document.querySelector('.movil-footer-sticky');
+        if (movilCard) {
+            movilCard.classList.remove('visible');
+            document.querySelector('.step4-layout')?.classList.remove('has-sticky-card');
+            document.body.classList.remove('has-sticky-card');
+        }
+
+        movilCardState = {
+            hasShownCard: false,
+            pendingHide: false,
+            allFieldsValid: false
+        };
+
+        setTimeout(() => {
+            initMovilCardVisibility();
+        }, 300);
+    }
+});
+// Función para manejar el toggle del destino
+function initLocationToggle() {
+    const checkbox = document.getElementById('differentDropoff');
+    const locationWrapper = document.querySelector('.location-wrapper');
+    const dropoffField = document.querySelector('.dropoff-field');
+    const dropoffSelect = document.getElementById('dropoffPlace');
+    const pickupSelect = document.getElementById('pickupPlace');
+
+    if (!checkbox || !locationWrapper || !dropoffField || !dropoffSelect) return;
+
+    function toggleDropoffLocation() {
+        if (checkbox.checked) {
+            // Mostrar campo de devolución
+            locationWrapper.classList.add('dropoff-visible');
+            dropoffSelect.required = true;
+            dropoffSelect.disabled = false;
+
+            // Si pickup tiene valor y dropoff está vacío, copiar el valor
+            if (pickupSelect && pickupSelect.value && !dropoffSelect.value) {
+                dropoffSelect.value = pickupSelect.value;
+                dropoffSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        } else {
+            // Ocultar campo de devolución
+            locationWrapper.classList.remove('dropoff-visible');
+            dropoffSelect.required = false;
+            dropoffSelect.disabled = true;
+            dropoffSelect.value = '';
+            dropoffSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // Actualizar floating labels
+        setTimeout(() => {
+            document.querySelectorAll('[data-float]').forEach(container => {
+                const input = container.querySelector('input, select');
+                if (input && input.value && input.value !== '') {
+                    container.classList.add('filled');
+                } else {
+                    container.classList.remove('filled');
+                }
+            });
+        }, 50);
+    }
+
+    // Ejecutar al cargar según el estado guardado
+    setTimeout(toggleDropoffLocation, 100);
+
+    // Escuchar cambios en el checkbox
+    checkbox.addEventListener('change', toggleDropoffLocation);
+
+    // Sincronizar dropoff cuando cambie pickup (solo si checkbox activo y dropoff vacío)
+    if (pickupSelect) {
+        pickupSelect.addEventListener('change', function() {
+            if (checkbox.checked && !dropoffSelect.value) {
+                dropoffSelect.value = this.value;
+                dropoffSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+    }
+}
+
+// Inicializar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLocationToggle);
+} else {
+    initLocationToggle();
+}
+
+
 })();
+
+document.addEventListener('DOMContentLoaded', function() {
+    // ===== FUNCIÓN PARA COMBINAR HORA (simplificada) =====
+    function combineTime() {
+        const pickupH = document.getElementById('pickup_h');
+        const pickupHidden = document.getElementById('pickup_time_hidden');
+        const dropoffH = document.getElementById('dropoff_h');
+        const dropoffHidden = document.getElementById('dropoff_time_hidden');
+
+        if (pickupH && pickupHidden) {
+            pickupHidden.value = pickupH.value ? pickupH.value + ':00' : '';
+        }
+        if (dropoffH && dropoffHidden) {
+            dropoffHidden.value = dropoffH.value ? dropoffH.value + ':00' : '';
+        }
+    }
+
+    // Event listeners para combinar tiempo
+    ['pickup_h', 'dropoff_h'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', combineTime);
+    });
+
+    // ===== MANEJO DEL CHECKBOX =====
+    const differentDropoff = document.getElementById('differentDropoff');
+    const dropoffWrapper = document.getElementById('dropoffWrapper');
+
+    if (differentDropoff && dropoffWrapper) {
+        differentDropoff.addEventListener('change', function() {
+            dropoffWrapper.style.display = this.checked ? 'block' : 'none';
+            if (!this.checked) {
+                document.getElementById('dropoffPlace').value = '';
+
+                // Actualizar Select2 si existe
+                if (typeof $ !== 'undefined' && $.fn.select2) {
+                    $('#dropoffPlace').val('').trigger('change');
+                }
+            }
+        });
+    }
+
+    // ===== INICIALIZAR FLATPICKR =====
+    if (typeof flatpickr !== 'undefined') {
+        const localeEs = {
+            firstDayOfWeek: 1,
+            weekdays: {
+                shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+                longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+            },
+            months: {
+                shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+            }
+        };
+
+        flatpickr("#start, #end", {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d-M-Y",
+            minDate: "today",
+            allowInput: true,
+            locale: localeEs
+        });
+    }
+
+    // ===== ACTUALIZAR ICONOS =====
+    function updateSelectIcon(select, iconElement) {
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption && selectedOption.dataset.icon) {
+            iconElement.className = selectedOption.dataset.icon;
+        } else {
+            iconElement.className = 'fa-solid fa-location-dot';
+        }
+    }
+
+    const pickupSelect = document.getElementById('pickupPlace');
+    const pickupIcon = document.getElementById('pickupIcon');
+    const dropoffSelect = document.getElementById('dropoffPlace');
+    const dropoffIcon = document.getElementById('dropoffIcon');
+
+    if (pickupSelect && pickupIcon) {
+        pickupSelect.addEventListener('change', function() {
+            updateSelectIcon(this, pickupIcon);
+        });
+        updateSelectIcon(pickupSelect, pickupIcon);
+    }
+
+    if (dropoffSelect && dropoffIcon) {
+        dropoffSelect.addEventListener('change', function() {
+            updateSelectIcon(this, dropoffIcon);
+        });
+        updateSelectIcon(dropoffSelect, dropoffIcon);
+    }
+
+
+    // ===== INICIALIZAR SELECT2 (si existe) =====
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+        setTimeout(function() {
+            try {
+                function formatOption(option) {
+                    if (!option.id) {
+                        return $('<span><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
+                    }
+
+                    let iconClass = 'fa-building';
+                    const text = option.text.toLowerCase();
+
+                    if (text.includes('aeropuerto')) {
+                        iconClass = 'fa-plane-departure';
+                    } else if (text.includes('central') || text.includes('terminal')) {
+                        iconClass = 'fa-bus';
+                    }
+
+                    return $('<span><i class="fa-solid ' + iconClass + '" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
+                }
+
+                const select2Config = {
+                    templateResult: formatOption,
+                    templateSelection: formatOption,
+                    escapeMarkup: function(m) { return m; },
+                    width: '100%',
+                    minimumResultsForSearch: Infinity,
+                    allowClear: false
+                };
+
+                $('#pickupPlace').select2({
+                    ...select2Config,
+                    placeholder: '¿Dónde inicia tu viaje?'
+                });
+
+                const isChecked = document.getElementById('differentDropoff')?.checked || false;
+                $('#dropoffPlace').select2({
+                    ...select2Config,
+                    placeholder: '¿Dónde termina tu viaje?',
+                    disabled: !isChecked
+                });
+
+                console.log('Select2 inicializado correctamente');
+            } catch (e) {
+                console.warn('Error inicializando Select2:', e);
+            }
+        }, 300);
+    }
+});
+
+// ===== FUNCIÓN PARA LIMPIAR EL FORMULARIO =====
+function limpiarTodoYReiniciar() {
+    const form = document.getElementById('step1Form');
+    if (form) {
+        form.reset();
+        document.getElementById('pickup_time_hidden').value = '';
+        document.getElementById('dropoff_time_hidden').value = '';
+
+        const dropoffWrapper = document.getElementById('dropoffWrapper');
+        const differentDropoff = document.getElementById('differentDropoff');
+        if (dropoffWrapper && differentDropoff) {
+            dropoffWrapper.style.display = 'none';
+            differentDropoff.checked = false;
+        }
+
+        // Limpiar Select2 si existe
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+            $('#pickupPlace').val('').trigger('change');
+            $('#dropoffPlace').val('').trigger('change');
+        }
+    }
+}
+
