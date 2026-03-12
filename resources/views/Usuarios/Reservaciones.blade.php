@@ -2701,4 +2701,3 @@
             if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
         });
     </script>
-@endsection
