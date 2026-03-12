@@ -1678,7 +1678,7 @@
                             <div class="equip-grid">
                                 @forelse($serviciosFiltrados as $srv)
                                     @php
-                                        $unidad = $srv->tipo_cobro === 'por_evento' ? '/ evento' : '/ día';
+                                        $unidad = $srv->tipo_cobro === 'por_tanque' ? '/ tanque' : '/ evento';;
                                         $precio = number_format((float) $srv->precio, 0);
 
                                         $n = mb_strtolower(trim((string) ($srv->nombre ?? '')));
@@ -1709,7 +1709,11 @@
                                         </div>
 
                                         <div class="addon-price">
-                                            <strong>${{ $precio }}</strong> MXN {{ $unidad }}
+                                            @if($srv->tipo_cobro === 'por_tanque')
+                                                <strong>Cantidad de un tanque</strong>
+                                            @else
+                                                <strong>${{ $precio }}</strong> MXN / evento
+                                            @endif
                                         </div>
 
                                         <div class="addon-qty">
