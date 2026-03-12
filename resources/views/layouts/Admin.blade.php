@@ -74,6 +74,12 @@
       </a>
     </li>
 
+    <li>
+      <a href="{{ route('propietariovehiculo.index') }}">
+        <i class="fas fa-layer-group"></i> Propietario del vehiculo
+      </a>
+    </li>
+
     <li class="menu-section">Navegación</li>
 
     <li>

@@ -55,6 +55,7 @@ return new class extends Migration {
             // 🔹 Datos administrativos y legales
             $table->string('tipo_servicio', 100)->nullable();
             $table->string('propietario', 150)->nullable();
+            $table->longText('firma_propietario')->nullable();
             $table->string('rfc_propietario', 20)->nullable();
             $table->string('domicilio', 255)->nullable();
             $table->string('municipio', 100)->nullable();
