@@ -4,19 +4,175 @@
 
 @section('css-vistaPoliticas')
     <link rel="stylesheet" href="{{ asset('css/politicas.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 @endsection
 
 @section('contenidoHome')
 <main class="page">
     <section class="hero hero-mini">
-      <div class="hero-bg">
-        <img src="{{ asset('img/politicas.png') }}" alt="Politicas">
-      </div>
-      <div class="hero-overlay"></div>
-      <div class="hero-content">
-        <h1>Políticas <span>Viajero</span></h1>
-        <p>Aviso de privacidad, limpieza, renta y términos</p>
-      </div>
+        <div class="hero-bg">
+            <img src="{{ asset('img/politicas.png') }}" alt="Politicas">
+        </div>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content-politicas">
+            {{-- TEXTO ARRIBA A LA IZQUIERDA --}}
+            <div class="hero-texto-superior">
+                <h1>Políticas <span>Viajero</span></h1>
+                <p>Aviso de privacidad, limpieza, renta y términos</p>
+            </div>
+
+      <!-- BOTÓN PARA ABRIR BUSCADOR EN MÓVIL/TABLET -->
+<div class="d-block d-xl-none" style="width: 100%; max-width: 100%; margin: 15px 0; padding: 0 15px;">
+    <div style="background: white;
+                padding: 15px;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                text-align: center;
+                width: 100%;
+                margin: 0 auto;">
+
+        <p style="margin-bottom: 12px;
+                  font-weight: 700;
+                  color: #333;
+                  font-size: 16px;">
+            Encuentra tu auto aquí
+        </p>
+
+        <button type="button" id="btn-abrir-buscador-politicas"
+                style="background-color: #b22222;
+                       border: none;
+                       font-weight: 700;
+                       height: 50px;
+                       font-size: 18px;
+                       display: flex;
+                       align-items: center;
+                       justify-content: center;
+                       gap: 8px;
+                       text-transform: uppercase;
+                       border-radius: 8px;
+                       width: 100%;
+                       color: white;
+                       cursor: pointer;">
+            <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
+        </button>
+    </div>
+</div>
+<div class="hero-buscador-wrapper">
+    <div class="search-card" id="miBuscadorPoliticas">
+        <!-- ✅ BOTÓN DE CERRAR - SIN DIV EXTRA -->
+        <button type="button" id="btn-cerrar-buscador-politicas" class="btn-close-politicas" aria-label="Cerrar">
+            <span>Cerrar</span>
+        </button>
+
+        <form id="rentalFormPoliticas" class="search-form" method="GET" action="{{ route('rutaReservacionesUsuario') }}" novalidate>
+            @csrf
+
+
+                        <div class="search-grid">
+                            {{-- COLUMNA 1: LUGAR DE RENTA --}}
+                            <div class="sg-col sg-col-location">
+                                <div class="location-head">
+                                    <span class="field-title">Lugar de renta</span>
+                                    <label class="inline-check" for="differentDropoffPoliticas">
+                                        <input type="checkbox" id="differentDropoffPoliticas" name="different_dropoff" value="1">
+                                        <span>Devolver en otro destino</span>
+                                    </label>
+                                </div>
+
+                                <div class="location-inputs-wrapper">
+                                    {{-- SELECT PICKUP --}}
+                                    <div class="field icon-field">
+                                        <span class="field-icon"></i></span>  <!-- ✅ VACÍO (como quieres) -->
+                                        <select id="pickupPlacePoliticas" name="pickup_sucursal_id">
+                                            <option value="" disabled selected>¿Dónde inicia tu viaje?</option>
+                                            @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
+                                                <optgroup label="{{ $ciudad->nombre }}">
+                                                    @foreach($ciudad->sucursalesActivas as $suc)
+                                                        <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
+                                                            {{ $suc->nombre }}
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    {{-- SELECT DROPOFF --}}
+                                    <div class="field icon-field" id="dropoffWrapperPoliticas">
+                                        <span class="field-icon"></i></span>  <!-- ✅ VACÍO (como quieres) -->
+                                        <select id="dropoffPlacePoliticas" name="dropoff_sucursal_id">
+                                            <option value="" disabled selected>¿Dónde termina tu viaje?</option>
+                                            @foreach($ciudades as $ciudad)
+                                                <optgroup label="{{ $ciudad->nombre }}">
+                                                    @foreach($ciudad->sucursalesActivas as $suc)
+                                                        <option value="{{ $suc->id_sucursal }}" @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
+                                                            {{ $suc->nombre }}
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- COLUMNA 2: FECHAS --}}
+                            <div class="sg-col sg-col-datetime">
+                                {{-- PICKUP --}}
+                                <div class="field">
+                                    <span class="field-title solo-responsivo-izq">Pick-Up</span>
+                                    <div class="datetime-row">
+                                        <div class="dt-field icon-field">
+                                            <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                                            <input id="pickupDatePoliticas" name="pickup_date" type="text" placeholder="Fecha"
+                                                   value="{{ request('pickup_date') }}" data-min="{{ now()->toDateString() }}">
+                                        </div>
+                                        <div class="dt-field icon-field time-field">
+                                            <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+                                            <input type="text" id="pickupTimePoliticas" name="pickup_time" placeholder="Hora"
+                                                   value="{{ request('pickup_time') }}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- DROPOFF --}}
+                                <div class="field">
+                                    <span class="field-title solo-responsivo-izq">Devolución</span>
+                                    <div class="datetime-row">
+                                        <div class="dt-field icon-field">
+                                            <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                                            <input id="dropoffDatePoliticas" name="dropoff_date" type="text" placeholder="Fecha"
+                                                   value="{{ request('dropoff_date') }}" data-min="{{ now()->toDateString() }}">
+                                        </div>
+                                        <div class="dt-field icon-field time-field">
+                                            <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+                                            <input type="text" id="dropoffTimePoliticas" name="dropoff_time" placeholder="Hora"
+                                                   value="{{ request('dropoff_time') }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- COLUMNA 3: BOTÓN -->
+                            <div class="sg-col sg-col-submit">
+                                <div class="actions">
+                                    <button type="submit">
+                                        <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
+                                    </button>
+                                </div>
+                            </div>
+                        </div>  <!-- Cierre de search-grid -->
+
+                        <div id="rangeSummary" class="range-summary" aria-live="polite">
+                            @if(request('pickup_date') && request('dropoff_date'))
+                                {{ request('pickup_date') }} - {{ request('dropoff_date') }}
+                            @endif
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </section>
 
 
@@ -431,8 +587,18 @@
     </template>
 
 </main>
-@endsection {{-- cierre de contenidoHome --}}
+@endsection
 
 @section('js-vistaPoliticas')
-  <script src="{{ asset('js/politicas.js') }}"></script>
+    <!-- jQuery (necesario para Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Flatpickr -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+     <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">s
+    <!-- Tu JS personalizado -->
+    <script src="{{ asset('js/politicas.js') }}"></script>
 @endsection
