@@ -268,267 +268,424 @@ body{
   z-index:1;
 }
 
-/* ==========================================================
-   STEP 1: GRID
-========================================================== */
-.search-grid{
-  display:grid;
-  grid-template-columns: 1.15fr 1fr 1fr;
-  gap:18px;
-  align-items:start;
-  position:relative;
-  z-index:1;
+/* ============================================================
+   STEP 1 — ESTILO EXACTAMENTE COMO WELCOME
+   Basado en el CSS de welcome proporcionado
+/* ============================================================
+STEP 1 — CONTENEDOR
+============================================================ */
+
+.page.wizard-page[data-current-step="1"]{
+    width:100%;
 }
 
-.group-card{
-  background:transparent;
-  border:0;
-  box-shadow:none;
-  padding:0;
+/* tarjeta */
+.page.wizard-page[data-current-step="1"] .wizard-card{
+    max-width:1500px;
+    width:96vw;
+    margin:0 auto;
 }
 
-@media (min-width:981px){
-  .search-grid > .group-card{
-    padding-right:16px;
-    border-right:1px solid var(--line);
-  }
-  .search-grid > .group-card:last-child{
-    border-right:0;
-    padding-right:0;
-  }
-}
-
-.group-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin:0 0 10px;
-  padding-bottom:8px;
-  border-bottom:1px dashed rgba(178,34,34,.22);
-}
-
-.group-title{
-  font-weight:900;
-  text-transform:uppercase;
-  letter-spacing:.45px;
-  font-size:13px;
-  color:#6b7280;
-}
-
-.field{ display:flex; flex-direction:column; gap:6px; }
-.field-row{ display:grid; gap:10px; }
-.field-row.two{ grid-template-columns:1fr 1fr; }
-
-.time-split{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
-}
-
-@media (max-width:980px){
-  .wizard-head h2{ font-size:28px; }
-  .search-grid{ grid-template-columns:1fr; }
-  .group-head{ margin-top:4px; }
-}
-
-/* ==========================================================
-   CONTROLES (STEP 1) — Floating label
-========================================================== */
-.wizard-form .field > label{ display:none !important; }
-
-.ctl{
-  position:relative;
-  display:flex;
-  align-items:center;
-  width:100%;
-}
-
-.ctl .ico{
-  position:absolute;
-  left:14px;
-  top:50%;
-  transform:translateY(-50%);
-  width:18px;height:18px;
-  display:grid;place-items:center;
-  color:#9ca3af;
-  pointer-events:none;
-  font-size:15px;
-  z-index:2;
-  line-height:1;
-}
-
-.ctl .flabel{
-  position:absolute;
-  left:14px;
-  top:50%;
-  transform:translateY(-50%);
-  color:#6b7280;
-  font-weight:900;
-  font-size:13px;
-  letter-spacing:.2px;
-  pointer-events:none;
-  transition:all .16s ease;
-  z-index:2;
-  background:#fff;
-  padding:0 6px;
-  border-radius:999px;
-  opacity:.95;
-}
-
-.ctl.has-ico .flabel{ left:40px; }
-
-.ctl input,
-.ctl select{
-  width:100%;
-  height:54px;
-  padding:0 14px;
-  border-radius:14px;
-  border:1px solid #e5e7eb;
-  background:#fff;
-  font-weight:900;
-  color:#111827;
-  outline:none;
-  transition:border-color .15s ease, box-shadow .15s ease;
-}
-
-.ctl.has-ico input,
-.ctl.has-ico select{ padding-left:46px; }
-
-.ctl select{
-  appearance:none;
-  -webkit-appearance:none;
-  -moz-appearance:none;
-  background-image:
-    linear-gradient(45deg, transparent 50%, #9ca3af 50%),
-    linear-gradient(135deg, #9ca3af 50%, transparent 50%);
-  background-position:
-    calc(100% - 18px) 50%,
-    calc(100% - 12px) 50%;
-  background-size:6px 6px, 6px 6px;
-  background-repeat:no-repeat;
-  padding-right:34px;
-}
-
-.ctl:focus-within input,
-.ctl:focus-within select{
-  border-color:var(--brand);
-  box-shadow:var(--focus);
-}
-
-/* estados manejados por JS: pristine / filled */
-.ctl.pristine .flabel{
-  top:50%;
-  transform:translateY(-50%);
-  font-size:13px;
-  opacity:.95;
-}
-.ctl.filled .flabel,
-.ctl:focus-within .flabel{
-  top:8px;
-  transform:translateY(0);
-  font-size:11px;
-  opacity:1;
-  color:#6b7280;
-}
-
-.ctl.filled input,
-.ctl.filled select,
-.ctl:focus-within input,
-.ctl:focus-within select{
-  padding-top:18px;
-}
-.ctl.pristine input,
-.ctl.pristine select{
-  padding-top:0;
-}
-
-@media (max-width:560px){
-  :root{ --wizard-gap-top: 96px; }
-  .wizard-steps, .wizard-card{ width:min(520px, 94vw); }
-  .wizard-head h2{ font-size:24px; }
-  .ctl input, .ctl select{ height:52px; }
-}
-
-/* ==========================================================
-   BARRA FLOTANTE ULTRA-ESPECÍFICA (Imagen 2)
-========================================================== */
-
-/* Contenedor de la barra */
-.wizard-page[data-current-step="1"] .barra-busqueda {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: flex-end !important;
-    background: #ffffff !important;
-    padding: 15px 25px !important;
-    border-radius: 60px !important; /* Super redondeado */
-    box-shadow: 0 15px 45px rgba(0,0,0,0.3) !important;
-    gap: 15px !important;
-    width: 100% !important;
-    max-width: 1100px !important;
-    margin: 40px auto !important;
-}
-
-/* Labels: Forzamos que se vean (el Blade los ocultaba) */
-.form-barra-flotante .field label,
-.form-barra-flotante .field-grupo-fecha > label {
-    display: block !important;
-    text-align: left !important;
-    font-size: 13px !important;
-    color: #444 !important;
-    font-weight: 700 !important;
-    text-transform: none !important;
-    margin-bottom: 4px !important;
-    padding-left: 10px !important;
-}
-
-/* Forzar altura y estilo de los inputs de la barra */
-.form-barra-flotante .ctl input,
-.form-barra-flotante .ctl select,
-.form-barra-flotante .ctl-fecha input,
-.form-barra-flotante .ctl-hora select {
-    height: 46px !important;
-    border: 1px solid #ddd !important;
-    border-radius: 10px !important;
-    background: #f9f9f9 !important;
-    padding-top: 0 !important; /* Reset del floating label */
-    font-size: 14px !important;
-}
-
-/* Botón Siguiente (Rojo vibrante) */
-.btn-buscar-barra {
-    height: 46px !important;
-    border-radius: 10px !important;
-    background: #e20613 !important;
-    color: white !important;
-    font-weight: 700 !important;
-    padding: 0 40px !important;
-    border: none !important;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.btn-buscar-barra:hover {
-    background: #b22222 !important;
-}
-
-/* Ocultar las etiquetas flotantes viejas (las que el JS movía) */
-.form-barra-flotante .flabel {
-    display: none !important;
-}
-
-/* Responsive Móvil para la barra */
-@media (max-width: 980px) {
-    .wizard-page[data-current-step="1"] .barra-busqueda {
-        flex-direction: column !important;
-        border-radius: 20px;
-        padding: 20px;
-        align-items: stretch !important;
-    }
-    .field-boton { margin-top: 15px; text-align: center;}
-    .btn-buscar-barra { width: 100%; }
+/* buscador */
+.page.wizard-page[data-current-step="1"] .search-card{
+    width:100%;
+    padding:24px 24px;
+    background:#f8f8f8;
+    border-radius:12px;
 }
 
 
+
+/* ============================================================
+GRID PRINCIPAL
+============================================================ */
+
+.page.wizard-page[data-current-step="1"] .search-grid{
+
+    display:grid !important;
+
+    /* sucursal grande | pickup | devolución | botones */
+    grid-template-columns:
+        minmax(420px,4fr)
+        minmax(170px,1fr)
+        minmax(170px,1fr)
+        240px;
+
+    gap:20px;
+
+    align-items:end;
+
+}
+
+/* =========================================
+Input select
+========================================= */
+.page.wizard-page[data-current-step="1"] .select2-container .select2-selection--single{
+
+    height:48px !important;
+
+    border:1px solid #d1d5db !important;
+    border-radius:10px !important;
+
+    display:flex !important;
+    align-items:center !important;
+
+    padding-left:42px !important;
+
+    background:#fff !important;
+
+}
+
+.page.wizard-page[data-current-step="1"] .select2-selection__rendered{
+
+    line-height:48px !important;
+    font-weight:600;
+
+}
+
+.page.wizard-page[data-current-step="1"] .select2-selection__arrow{
+
+    height:48px !important;
+
+}
+
+/* ============================================================
+COLUMNAS
+============================================================ */
+
+.page.wizard-page[data-current-step="1"] .sg-col{
+    display:flex;
+    flex-direction:column;
+}
+
+.page.wizard-page[data-current-step="1"] .sg-col-datetime{
+    align-items:center;
+}
+
+.page.wizard-page[data-current-step="1"] .sg-col-submit{
+    display:flex;
+    justify-content:flex-end;
+    align-items:end;
+}
+
+
+
+/* ============================================================
+TITULOS
+============================================================ */
+
+.page.wizard-page[data-current-step="1"] .field-title{
+
+    font-weight:800;
+    text-transform:uppercase;
+
+    font-size:13px;
+    color:#6b7280;
+
+    text-align:center;
+
+    margin-bottom:6px;
+
+    white-space:nowrap;
+}
+
+.page.wizard-page[data-current-step="1"] input[type="checkbox"]{
+
+    width:16px;
+    height:16px;
+
+    margin:0;
+
+    accent-color:#b22222;
+
+}
+
+/* ============================================================
+UBICACIÓN
+============================================================ */
+
+.page.wizard-page[data-current-step="1"] .location-head{
+
+    display:flex;
+    align-items:center;
+    gap:14px;
+
+    margin-bottom:8px;
+
+}
+
+.page.wizard-page[data-current-step="1"] .location-inputs-wrapper{
+
+    display:flex;
+    gap:12px;
+
+    width:100%;
+
+}
+
+/* selects grandes */
+
+.page.wizard-page[data-current-step="1"] #pickupPlace,
+.page.wizard-page[data-current-step="1"] #dropoffPlace{
+
+    width:100% !important;
+
+}
+
+
+
+/* ============================================================
+INPUTS
+============================================================ */
+
+/* mismo diseño para todos los inputs */
+
+.page.wizard-page[data-current-step="1"]
+input:not([type="checkbox"]),
+.page.wizard-page[data-current-step="1"]
+select{
+
+    height:48px !important;
+
+    border:1px solid #d1d5db !important;
+    border-radius:10px !important;
+
+    padding:0 14px 0 42px !important;
+
+    font-size:14px !important;
+    font-weight:600 !important;
+
+    background:#fff !important;
+
+}
+.page.wizard-page[data-current-step="1"] .field{
+    position:relative;
+}
+
+.page.wizard-page[data-current-step="1"] .field-icon{
+
+    position:absolute;
+
+    left:12px;
+    top:50%;
+
+    transform:translateY(-50%);
+
+    color:#9ca3af;
+
+}
+
+
+/* ============================================================
+ICONOS
+============================================================ */
+
+.page.wizard-page[data-current-step="1"] .field-icon{
+
+    position:absolute;
+
+    left:12px;
+    top:50%;
+
+    transform:translateY(-50%);
+
+    color:#9ca3af;
+
+}
+
+
+
+/* ============================================================
+FECHA + HORA
+============================================================ */
+
+.page.wizard-page[data-current-step="1"] .datetime-row{
+
+    display:grid;
+
+    grid-template-columns: 140px 95px;
+
+    gap:10px;
+
+}
+
+
+
+/* ============================================================
+BOTONES
+============================================================ */
+
+.page.wizard-page[data-current-step="1"] .actions{
+
+    display:flex;
+
+    gap:10px;
+
+    justify-content:flex-end;
+
+    width:100%;
+
+}
+
+.page.wizard-page[data-current-step="1"] .btn{
+
+    height:44px;
+
+    padding:0 20px;
+
+    border-radius:8px;
+
+    font-weight:700;
+    font-size:13px;
+
+    white-space:nowrap;
+
+}
+
+.page.wizard-page[data-current-step="1"] .btn-ghost{
+
+    background:transparent;
+    border:1px solid #d1d5db;
+
+}
+
+.page.wizard-page[data-current-step="1"] .btn-primary{
+
+    background:#b22222;
+    color:white;
+
+}
+
+
+
+/* ============================================================
+RANGE SUMMARY
+============================================================ */
+
+.page.wizard-page[data-current-step="1"] .range-summary{
+
+    margin-top:14px;
+
+    text-align:center;
+
+    font-size:13px;
+    color:#6b7280;
+
+}
+
+
+
+/* ============================================================
+RESPONSIVE
+============================================================ */
+
+@media (max-width:1100px){
+
+.page.wizard-page[data-current-step="1"] .search-grid{
+
+grid-template-columns:1fr;
+
+}
+
+.page.wizard-page[data-current-step="1"] .datetime-row{
+
+grid-template-columns:1fr;
+
+}
+
+.page.wizard-page[data-current-step="1"] .actions{
+
+justify-content:flex-start;
+
+}
+
+}
+
+
+
+/* ============================================================
+DECORACIONES OFF
+============================================================ */
+
+.page.wizard-page[data-current-step="1"] .wizard-head::after,
+.page.wizard-page[data-current-step="1"] .wizard-card::before{
+
+display:none;
+
+}
+/* =========================================
+FORZAR ANCHOS REALES STEP 1
+========================================= */
+
+.page.wizard-page[data-current-step="1"] .search-grid{
+    grid-template-columns: 4fr 1.2fr 1.2fr 260px !important;
+}
+
+
+/* lugar de renta mucho más grande */
+
+.page.wizard-page[data-current-step="1"] .sg-col-location{
+    width:100% !important;
+}
+
+.page.wizard-page[data-current-step="1"] .location-inputs-wrapper{
+    width:100% !important;
+}
+
+.page.wizard-page[data-current-step="1"] #pickupPlace{
+    width:100% !important;
+}
+
+
+
+/* fechas más pequeñas */
+
+.page.wizard-page[data-current-step="1"] .datetime-row{
+
+    grid-template-columns:
+        120px   /* fecha */
+        90px    /* hora */ !important;
+
+}
+
+
+
+/* evitar que inputs crezcan */
+
+.page.wizard-page[data-current-step="1"] .dt-field{
+    width:auto !important;
+}
+
+
+
+/* botones siempre visibles */
+
+.page.wizard-page[data-current-step="1"] .sg-col-submit{
+
+    min-width:240px !important;
+
+}
+
+.page.wizard-page[data-current-step="1"] .actions{
+
+    justify-content:flex-end !important;
+
+}
+.page.wizard-page[data-current-step="1"] .range-summary{
+    display:none;
+}
+.page.wizard-page[data-current-step="1"] .wizard-card{
+    background:transparent !important;
+    padding:0 !important;
+}
+.page.wizard-page[data-current-step="1"]{
+    border:none !important;
+}
+
+.page.wizard-page[data-current-step="1"] .wizard-card{
+    border:none !important;
+    box-shadow:none !important;
+}
 /* ==========================================================
    STEP 2 — GRID 2 COLUMNAS
 ========================================================== */
@@ -2174,6 +2331,104 @@ body{
   .sum-car img{ width:100%; }
 }
 
+@media (max-width:1024px){
+    footer, .footer-elegant {
+        position: relative;
+        z-index: 10;
+        background-color: #0b1120 !important;
+    }
+    .step4-pane .sum-total,
+    .sum-form .wizard-nav,
+    #btnReservar {
+        display:none !important;
+    }
+
+    /* MODIFICADO: Inicia oculta y SIN TRANSICIÓN hasta que se necesite */
+    .movil-footer-sticky {
+        display: none !important;
+        flex-direction: column;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: #ffffff;
+        padding: 20px;
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.20);
+        border-radius: 25px 25px 0 0;
+        gap: 15px;
+        z-index: 9999999;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    /* Clase para mostrar la tarjeta - SOLO cuando se hace scroll */
+    .movil-footer-sticky.visible {
+        display: flex !important;
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .movil-total-wrapper{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        font-weight:900;
+        font-size:20px;
+    }
+
+    .movil-total-label{
+        color:#000;
+        text-transform:uppercase;
+    }
+
+    .movil-total-amount{
+        color:var(--brand);
+        font-size:24px;
+    }
+
+    .btn-reservar-movil{
+        background:var(--brand);
+        color:#fff;
+        border:none;
+        border-radius:14px;
+        padding:20px;
+        font-size:18px;
+        font-weight:900;
+        width:100%;
+        text-transform:uppercase;
+        letter-spacing:1px;
+        cursor:pointer;
+        transition:all .2s ease;
+    }
+
+    .btn-reservar-movil:hover{
+        transform:translateY(-2px);
+        box-shadow:0 8px 20px rgba(178,34,34,.35);
+    }
+
+    /* Ajuste para el scroll cuando la tarjeta está visible */
+    .step4-layout.has-sticky-card {
+        padding-bottom: 250px !important;
+    }
+
+    body.has-sticky-card::after {
+        content: "";
+        display: block;
+        height: 160px;
+        width: 100%;
+    }
+}
+
+/* ESCRITORIO */
+@media (min-width:1025px){
+    .movil-footer-sticky{
+        display:none !important;
+    }
+    .movil-footer-sticky.visible {
+        display: none !important;
+    }
+}
 /* ==========================================================
    STEP 4 — DETALLES DEL PRECIO
 ========================================================== */
@@ -2692,7 +2947,7 @@ span.flatpickr-weekday{
   align-items:center !important;
   justify-content:flex-start !important;
   gap:12px !important;
-  flex-wrap:nowrap !important;
+  flex-wrap:wrap !important;
 }
 
 .page.wizard-page[data-current-step="4"] .sum-car .car-mini-specs::before,
@@ -2821,6 +3076,96 @@ span.flatpickr-weekday{
     align-items: end;
 }
 
+/* AJUSTE RESPONSIVO - MÓVIL */
+@media (max-width: 760px) {
+    .page.wizard-page[data-current-step="4"] .sum-personal-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* DOB ocupa todo el ancho en móvil */
+    .page.wizard-page[data-current-step="4"] .field-dob-container {
+        grid-column: 1 / -1 !important;
+    }
+}
+
+/* AJUSTE RESPONSIVO - TABLET */
+@media (min-width: 761px) and (max-width: 992px) {
+    .page.wizard-page[data-current-step="4"] .sum-personal-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    /* NUEVO: Hacer que el DOB sea horizontal en tablet */
+    .page.wizard-page[data-current-step="4"] .field-dob-container .dob-inline {
+        display: flex !important;
+        flex-direction: row !important;
+        width: 100%;
+    }
+
+    .page.wizard-page[data-current-step="4"] .field-dob-container .dob-inline select {
+        flex: 1;
+        height: 54px;
+        border-right: 1.5px solid #9ca3af;
+    }
+
+    .page.wizard-page[data-current-step="4"] .field-dob-container .dob-inline select:last-child {
+        border-right: none !important;
+    }
+}
+/* ===== CORRECCIÓN: BORDES SOLO CON ERRORES ===== */
+@media (max-width: 992px) {
+    /* Estado NORMAL (sin error) - Gris */
+    .page.wizard-page[data-current-step="4"] .field-floating:not(.has-error) input,
+    .page.wizard-page[data-current-step="4"] .field-floating:not(.has-error) select,
+    .page.wizard-page[data-current-step="4"] .field-dob-container:not(.has-error) .dob-inline {
+        border: 1.5px solid #9ca3af !important;
+    }
+
+    /* Estado ERROR - Rojo (esto ya existe pero lo reforzamos) */
+    .page.wizard-page[data-current-step="4"] .field-floating.has-error input,
+    .page.wizard-page[data-current-step="4"] .field-floating.has-error select {
+        border: 1px solid #b22222 !important;
+    }
+
+    .page.wizard-page[data-current-step="4"] .field-dob-container.has-error .dob-inline {
+        border: 1px solid #b22222 !important;
+    }
+}
+
+@media (max-width: 760px) {
+    /* Refuerzo para móvil - Estado NORMAL */
+    .page.wizard-page[data-current-step="4"] .field-floating:not(.has-error) input,
+    .page.wizard-page[data-current-step="4"] .field-floating:not(.has-error) select,
+    .page.wizard-page[data-current-step="4"] .field-dob-container:not(.has-error) .dob-inline {
+        border: 1.5px solid #9ca3af !important;
+    }
+
+    /* Refuerzo para móvil - Estado ERROR */
+    .page.wizard-page[data-current-step="4"] .field-floating.has-error input,
+    .page.wizard-page[data-current-step="4"] .field-floating.has-error select {
+        border: 1px solid #b22222 !important;
+    }
+
+    .page.wizard-page[data-current-step="4"] .field-dob-container.has-error .dob-inline {
+        border: 1px solid #b22222 !important;
+    }
+
+    /* El resto de tu código existente para móvil */
+    .page.wizard-page[data-current-step="4"] .field-floating-sub select {
+        font-size: 12px;
+        padding: 0 2px;
+    }
+
+    .page.wizard-page[data-current-step="4"] .field-floating.has-error,
+    .page.wizard-page[data-current-step="4"] .field-dob-container.has-error,
+    .page.wizard-page[data-current-step="4"] .cbox.has-error {
+        margin-bottom: 20px;
+    }
+
+    .page.wizard-page[data-current-step="4"] .cbox .error-msg {
+        margin-left: 24px;
+    }
+}
+
 .page.wizard-page[data-current-step="4"] .field-floating,
 .page.wizard-page[data-current-step="4"] .field-floating-sub,
 .page.wizard-page[data-current-step="4"] .field-dob-container {
@@ -2832,13 +3177,22 @@ span.flatpickr-weekday{
 .page.wizard-page[data-current-step="4"] .field-floating input {
     width: 100%;
     padding: 12px 10px;
-    border: 1px solid #6d2f2f;
+    border: 1px solid #9ca3af;
     border-radius: 5px;
     background-color: #fff !important;
     color: #000;
     outline: none;
     transition: all 0.2s ease;
     box-sizing: border-box;
+}
+/* Solo cuando tiene error, aplicamos el rojo */
+.page.wizard-page[data-current-step="4"] .field-floating.has-error input {
+    border: 1px solid #b22222 !important;
+}
+
+/* Select de país - cuando tiene error */
+.page.wizard-page[data-current-step="4"] .field-floating.has-error select {
+    border: 1px solid #b22222 !important;
 }
 
 .page.wizard-page[data-current-step="4"] .field-floating input:placeholder-shown:not(:focus) + label {
@@ -2878,7 +3232,14 @@ span.flatpickr-weekday{
     flex-direction: column;
     margin-top: 15px;
     position: relative;
-    overflow: visible !important;
+    overflow: hidden !important;
+}
+
+
+/* DOB con error */
+.page.wizard-page[data-current-step="4"] .field-dob-container.has-error .dob-inline {
+    border: 1px solid #b22222 !important;
+    border-radius: 5px;
 }
 
 .page.wizard-page[data-current-step="4"] .field-floating-sub {
@@ -2973,11 +3334,11 @@ span.flatpickr-weekday{
 
 .page.wizard-page[data-current-step="4"]
 .field-floating.has-error {
-    padding-bottom: 25px;
-    margin-bottom: 20px;
+    padding-bottom: 0;
+    margin-bottom: 5px;
 }
 
-/* DOB y checkbox NO crecen */
+/* DOB y checkbox */
 .page.wizard-page[data-current-step="4"]
 .field-dob-container.has-error,
 .page.wizard-page[data-current-step="4"]
@@ -2988,45 +3349,624 @@ span.flatpickr-weekday{
 
 /* Mensaje de error - oculto por defecto */
 .page.wizard-page[data-current-step="4"] .error-msg {
-    display: none; /* OCULTO por defecto */
-    position: relative;
-    bottom: 0;
-    left: 0;
+    display: none;
+    position: static;
+    margin-top: 6px;
     color: #b22222;
     font-size: 11px;
     font-weight: 600;
-    line-height: 1;
     width: 100%;
-    z-index: 10;
-    pointer-events: none;
 }
 
 /* Cuando el contenedor tiene error, mostramos el mensaje */
 .page.wizard-page[data-current-step="4"] .field-floating.has-error .error-msg,
 .page.wizard-page[data-current-step="4"] .field-dob-container.has-error .error-msg,
 .page.wizard-page[data-current-step="4"] .cbox.has-error .error-msg {
-    display: block; /* VISIBLE solo cuando hay error */
+    display: block;
 }
 
-
-.page.wizard-page[data-current-step="4"] select.field-error {
-    border: 2px solid #b22222 !important;
-}
-
-/* Ajustes específicos para DOB */
-.page.wizard-page[data-current-step="4"] .field-dob-container .error-msg {
-    bottom: -2px;
-    left: 4px;
-}
-
-/* Ajustes para checkbox */
-.page.wizard-page[data-current-step="4"] .cbox .error-msg {
-    bottom: -5px;
-    left: 28px;
-}
-
-/* Checkbox con error */
-.page.wizard-page[data-current-step="4"] #acepto.field-error {
+/* Ajustes para checkbox - SOLO borde rojo en el cuadrito */
+.page.wizard-page[data-current-step="4"] .cbox.has-error input[type="checkbox"] {
     outline: 2px solid #b22222;
     outline-offset: 2px;
+    border-radius: 3px;
+}
+
+/* El texto del checkbox no debe tener borde */
+.page.wizard-page[data-current-step="4"] .cbox.has-error span {
+    outline: none;
+    border: none;
+}
+
+.page.wizard-page[data-current-step="4"] select.field-error {
+    border: 1px solid #b22222 !important;
+}
+
+/* Ajustes para checkbox - mensaje debajo */
+.page.wizard-page[data-current-step="4"] .cbox .error-msg {
+    margin-top: 4px;
+    margin-left: 28px; /* Alineado con el texto */
+}
+
+/* ===== AJUSTES RESPONSIVOS ADICIONALES ===== */
+@media (max-width: 992px) {
+
+    /* Mensajes visibles */
+    .page.wizard-page[data-current-step="4"] .error-msg {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 760px) {
+    /* Ajuste para selects de fecha en móvil */
+    .page.wizard-page[data-current-step="4"] .field-floating-sub select {
+        font-size: 12px;
+        padding: 0 2px;
+    }
+
+    /* Espacio para mensajes de error */
+    .page.wizard-page[data-current-step="4"] .field-floating.has-error,
+    .page.wizard-page[data-current-step="4"] .field-dob-container.has-error,
+    .page.wizard-page[data-current-step="4"] .cbox.has-error {
+        margin-bottom: 20px;
+    }
+
+    .page.wizard-page[data-current-step="4"] .cbox .error-msg {
+        margin-left: 24px;
+    }
+}
+/* ============================================================
+   BUSCADOR RESPONSIVO - VERSIÓN INTEGRADA
+============================================================ */
+
+/* Estilos base del buscador (escritorio) - SIN CAMBIOS */
+#miBuscador {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 20px;
+}
+
+#miBuscador .search-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 0.8fr;
+    gap: 15px;
+    align-items: start;
+}
+
+/* Botón para móvil/tablet - visible solo en esos dispositivos */
+.btn-buscador-movil {
+    display: none;
+    width: 100%;
+    max-width: 100%;
+    margin: 15px 0;
+    padding: 0 15px;
+}
+
+.btn-buscador-movil .btn-container {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.btn-buscador-movil p {
+    margin-bottom: 12px;
+    font-weight: 700;
+    color: #333;
+    font-size: 16px;
+}
+
+.btn-buscador-movil button {
+    background-color: #b22222;
+    border: none;
+    font-weight: 700;
+    height: 50px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-transform: uppercase;
+    border-radius: 8px;
+    width: 100%;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-buscador-movil button:hover {
+    background-color: #8b1a1a;
+}
+
+/* ============================================================
+   MÓVIL Y TABLET (<= 1124px) - CORREGIDO PARA BAJAR EL BUSCADOR
+============================================================ */
+@media (max-width: 1124px) {
+    /* Ocultar buscador original en móvil/tablet */
+    #miBuscador {
+        display: none !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        z-index: 99999 !important;
+        background: #ffffff !important;
+        margin: 0 !important;
+        overflow-y: auto !important;
+        border-radius: 0 !important;
+    }
+
+    #miBuscador.active {
+        display: block !important;
+        padding: 250px 20px 40px !important; /* MUCHO MÁS ESPACIO ARRIBA */
+    }
+
+    /* Ajuste específico para tablet */
+    @media (min-width: 561px) and (max-width: 1124px) {
+        #miBuscador.active {
+            padding: 200px 30px 40px !important; /* Más espacio en tablet */
+        }
+    }
+
+    /* Ajuste específico para móvil */
+    @media (max-width: 560px) {
+        #miBuscador.active {
+            padding: 160px 15px 30px !important; /* Espacio en móvil */
+        }
+    }
+
+    /* Mostrar botón en móvil/tablet */
+    .btn-buscador-movil {
+        display: block !important;
+    }
+
+    /* Bloquear scroll cuando el buscador está activo */
+    body:has(#miBuscador.active) {
+        overflow: hidden !important;
+    }
+
+    /* Ocultar contenido principal cuando el buscador está activo */
+    body:has(#miBuscador.active) .hero-content,
+    body:has(#miBuscador.active) .hero-bg,
+    body:has(#miBuscador.active) .hero-overlay,
+    body:has(#miBuscador.active) .container,
+    body:has(#miBuscador.active) .footer,
+    body:has(#miBuscador.active) .topbar,
+    body:has(#miBuscador.active) .btn-buscador-movil {
+        display: none !important;
+    }
+
+    /* Grid responsivo para móvil/tablet */
+    #miBuscador.active .search-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 20px !important;
+        background: transparent !important;
+        padding: 0 !important;
+    }
+
+    #miBuscador.active .sg-col {
+        width: 100% !important;
+    }
+
+    /* Ajustes para campos */
+    #miBuscador.active .field {
+        width: 100% !important;
+        margin-bottom: 15px !important;
+    }
+
+    /* ============================================================
+       CAMBIOS IMPORTANTES: FECHA Y HORA UNO AL LADO DEL OTRO
+    ============================================================ */
+    #miBuscador.active .datetime-row {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 12px !important;
+        width: 100% !important;
+    }
+
+    #miBuscador.active .dt-field {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+
+    /* Asegurar que los inputs ocupen todo el ancho disponible */
+    #miBuscador.active .dt-field input,
+    #miBuscador.active .dt-field select {
+        width: 100% !important;
+    }
+
+    /* Selects y inputs más grandes para móvil */
+    #miBuscador.active select,
+    #miBuscador.active input {
+        height: 50px !important;
+        font-size: 16px !important;
+    }
+
+    /* Botones más grandes */
+    #miBuscador.active .actions {
+        display: flex !important;
+        gap: 10px !important;
+        margin-top: 10px !important;
+    }
+
+    #miBuscador.active .actions button {
+        flex: 1 !important;
+        height: 50px !important;
+        font-size: 16px !important;
+    }
+
+    /* Checkbox más grande para móvil */
+    #miBuscador.active .inline-check {
+        font-size: 16px !important;
+        padding: 10px 0 !important;
+    }
+
+    #miBuscador.active .inline-check input[type="checkbox"] {
+        width: 20px !important;
+        height: 20px !important;
+        margin-right: 8px !important;
+    }
+
+    /* Ajuste para los selects de ubicación */
+    #miBuscador.active .location-inputs-wrapper {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    #miBuscador.active .location-inputs-wrapper .field {
+        margin-bottom: 0 !important;
+    }
+}
+
+/* ============================================================
+   ESCRITORIO (>= 1125px) - SIN CAMBIOS
+============================================================ */
+@media (min-width: 1125px) {
+    #miBuscador {
+        display: block !important;
+    }
+
+    .btn-buscador-movil {
+        display: none !important;
+    }
+}
+
+/* ============================================================
+   ALERTAS PARA EL BUSCADOR
+============================================================ */
+#miBuscador .field-error,
+#miBuscador input.field-error,
+#miBuscador select.field-error,
+#miBuscador .flatpickr-input.field-error,
+#miBuscador .tp-selects select.field-error {
+    border: 2px solid #e53935 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: #fff !important;
+}
+
+#miBuscador .field-success,
+#miBuscador input.field-success,
+#miBuscador select.field-success,
+#miBuscador .flatpickr-input.field-success,
+#miBuscador .tp-selects select.field-success {
+    border: 2px solid #43a047 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Para Select2 */
+#miBuscador select.field-error + .select2-container .select2-selection {
+    border: 2px solid #e53935 !important;
+}
+
+#miBuscador select.field-success + .select2-container .select2-selection {
+    border: 2px solid #43a047 !important;
+}
+
+/* Mensajes de error */
+#miBuscador .error-msg {
+    color: #e53935 !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    position: absolute !important;
+    bottom: -18px !important;
+    left: 12px !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
+    white-space: nowrap !important;
+    background: transparent !important;
+}
+
+#miBuscador .field,
+#miBuscador .dt-field,
+#miBuscador .time-field,
+#miBuscador .location-inputs-wrapper .field {
+    position: relative !important;
+    overflow: visible !important;
+}
+
+/* Ajuste para móvil */
+@media (max-width: 560px) {
+    #miBuscador .error-msg {
+        font-size: 9px !important;
+        bottom: -16px !important;
+    }
+}
+
+/* ============================================================
+   CORRECCIÓN PARA EL CHECKBOX - PERMITIR CONTROL JS
+============================================================ */
+#miBuscador #dropoffWrapper {
+    display: none; /* Valor por defecto - JS lo controlará */
+}
+
+#miBuscador #dropoffWrapper[style*="display: block"] {
+    display: block !important;
+}
+
+#miBuscador #dropoffWrapper[style*="display: none"] {
+    display: none !important;
+}
+
+/* En móvil/tablet, mantener la misma prioridad */
+@media (max-width: 1124px) {
+    #miBuscador.active #dropoffWrapper {
+        display: none; /* JS lo controlará */
+    }
+
+    #miBuscador.active #dropoffWrapper[style*="display: block"] {
+        display: block !important;
+    }
+
+    #miBuscador.active #dropoffWrapper[style*="display: none"] {
+        display: none !important;
+    }
+}
+
+/* ============================================================
+   CORRECCIÓN PARA EL DROPOFF - QUE APAREZCA DEBAJO
+============================================================ */
+/* En tablet y móvil, cuando el dropoff esté visible, que esté debajo */
+@media (max-width: 1124px) {
+    #miBuscador.active #dropoffWrapper {
+        width: 100% !important;
+        margin-top: 10px !important;
+    }
+
+    #miBuscador.active #dropoffWrapper .field {
+        width: 100% !important;
+    }
+}
+
+/* Para tablet específicamente */
+@media (min-width: 561px) and (max-width: 1124px) {
+    #miBuscador.active #dropoffWrapper {
+        grid-column: 1 / -1 !important;
+        width: 100% !important;
+        margin-top: 10px !important;
+    }
+
+    #miBuscador.active .location-inputs-wrapper {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 15px !important;
+    }
+
+    #miBuscador.active #pickupField {
+        grid-column: span 1 !important;
+        min-height: 70px !important;
+    }
+
+    #miBuscador.active #pickupField select {
+        height: 50px !important;
+        width: 100% !important;
+    }
+
+    #miBuscador.active #dropoffWrapper {
+        grid-column: 1 / -1 !important;
+        min-height: 70px !important;
+    }
+
+    #miBuscador.active #dropoffWrapper select {
+        height: 50px !important;
+        width: 100% !important;
+    }
+
+    #miBuscador.active .location-inputs-wrapper .field {
+        margin-bottom: 0 !important;
+        min-height: 70px !important;
+    }
+}
+
+/* Para móvil */
+@media (max-width: 560px) {
+    #miBuscador.active .location-inputs-wrapper {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    #miBuscador.active #dropoffWrapper {
+        width: 100% !important;
+        margin-top: 10px !important;
+    }
+
+    #miBuscador.active #pickupField,
+    #miBuscador.active #dropoffWrapper {
+        min-height: 70px !important;
+    }
+
+    #miBuscador.active #pickupField select,
+    #miBuscador.active #dropoffWrapper select {
+        height: 50px !important;
+        width: 100% !important;
+    }
+}
+
+/* ============================================================
+   BOTÓN DE CERRAR - SOLO EN MÓVIL/TABLET
+============================================================ */
+#btn-cerrar-buscador-politicas {
+    display: none !important;
+}
+
+@media (max-width: 1124px) {
+    #miBuscador.active #btn-cerrar-buscador-politicas {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        position: fixed !important;
+        top: 20px !important;
+        right: 20px !important;
+        z-index: 100002 !important;
+        width: 40px !important;
+        height: 40px !important;
+        background: #b22222 !important;
+        border: none !important;
+        border-radius: 50% !important;
+        cursor: pointer !important;
+        box-shadow: 0 4px 12px rgba(178,34,34,0.3) !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    #miBuscador.active #btn-cerrar-buscador-politicas:hover {
+        transform: scale(1.05) !important;
+        box-shadow: 0 6px 16px rgba(178,34,34,0.4) !important;
+    }
+
+    #miBuscador.active #btn-cerrar-buscador-politicas:active {
+        transform: scale(0.95) !important;
+    }
+
+    #miBuscador.active #btn-cerrar-buscador-politicas span {
+        display: none !important;
+    }
+
+    #miBuscador.active #btn-cerrar-buscador-politicas::before {
+        content: "×" !important;
+        display: block !important;
+        font-size: 32px !important;
+        font-weight: 300 !important;
+        color: white !important;
+        line-height: 1 !important;
+        transform: translateY(-2px) !important;
+    }
+
+    @media (min-width: 561px) and (max-width: 1124px) {
+        #miBuscador.active #btn-cerrar-buscador-politicas {
+            top: 30px !important;
+            right: 30px !important;
+            width: 45px !important;
+            height: 45px !important;
+        }
+    }
+
+    @media (max-width: 560px) {
+        #miBuscador.active #btn-cerrar-buscador-politicas {
+            top: 15px !important;
+            right: 15px !important;
+            width: 36px !important;
+            height: 36px !important;
+        }
+
+        #miBuscador.active #btn-cerrar-buscador-politicas::before {
+            font-size: 28px !important;
+        }
+    }
+}
+/* ============================================================
+   BAJAR EL BOTÓN DE BÚSQUEDA EN MÓVIL/TABLET
+============================================================ */
+@media (max-width: 1124px) {
+    .btn-buscador-movil {
+        margin-top: 80px !important;
+    }
+}
+
+
+@media (min-width: 769px) and (max-width: 1124px) {
+    .btn-buscador-movil {
+        margin-top: 100px !important;
+    }
+}
+
+@media (max-width: 560px) {
+    .btn-buscador-movil {
+        margin-top: 70px !important;
+    }
+}
+
+
+.btn-buscador-movil {
+    margin-bottom: 20px;
+}
+/* ============================================================
+   TABLET - CORRECCIÓN DE ANCHOS PARA CAMPOS DE UBICACIÓN
+============================================================ */
+@media (min-width: 561px) and (max-width: 1124px) {
+    #miBuscador.active .location-inputs-wrapper {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+        width: 100% !important;
+    }
+
+
+    #miBuscador.active #pickupField,
+    #miBuscador.active #dropoffWrapper {
+        width: 100% !important;
+        grid-column: 1 / -1 !important;
+    }
+
+
+    #miBuscador.active #dropoffWrapper[style*="display: block"] {
+        display: block !important;
+        width: 100% !important;
+        margin-top: 0 !important;
+    }
+
+
+    #miBuscador.active #pickupField select,
+    #miBuscador.active #dropoffWrapper select {
+        width: 100% !important;
+    }
+}
+
+/* ============================================================
+   SEPARAR EL CHECKBOX DEL BOTÓN DE CERRAR EN TABLET/MÓVIL
+============================================================ */
+@media (max-width: 1124px) {
+
+    #miBuscador.active .location-head {
+        margin-top: 20px !important;
+        padding-top: 10px !important;
+    }
+
+
+    #miBuscador.active .inline-check {
+        margin-top: 5px !important;
+    }
+}
+
+@media (min-width: 561px) and (max-width: 1124px) {
+    #miBuscador.active .location-head {
+        margin-top: 25px !important;
+    }
+}
+
+
+@media (max-width: 560px) {
+    #miBuscador.active .location-head {
+        margin-top: 15px !important;
+    }
 }
