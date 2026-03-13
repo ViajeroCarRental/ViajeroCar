@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ⚙️ MENOR DE EDAD – CONFIG Y HELPERS SOLO PARA ESTE ARCHIVO
   // ============================================================
   // 👇 Usa el MISMO id_servicio que configuraste en reservaciones.js
-  const YOUNG_DRIVER_SERVICE_ID = '123'; // <-- cámbialo por el id real
+  const YOUNG_DRIVER_SERVICE_ID = '5'; // <-- cámbialo por el id real
   const YOUNG_DRIVER_MIN_AGE    = 25;    // menor de 25 años paga cargo
 
   function parseAddonsStringToMapLocal(str) {

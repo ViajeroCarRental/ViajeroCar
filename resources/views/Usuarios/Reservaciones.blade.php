@@ -2664,19 +2664,20 @@ input:checked + .slider:before {
                     </div>
 
                     @isset($servicios)
-                        <script id="addonsCatalog" type="application/json">
-          {!! json_encode(
-            collect($serviciosFiltrados)->mapWithKeys(fn($s) => [
-              $s->id_servicio => [
-                'nombre' => $s->nombre,
-                'precio' => (float)$s->precio,
-                'tipo'   => $s->tipo_cobro, // 'por_evento' o 'por_dia'
-              ],
-            ]),
-            JSON_UNESCAPED_UNICODE
-          ) !!}
-        </script>
-                    @endisset
+    <script id="addonsCatalog" type="application/json">
+{!! json_encode(
+  collect($servicios)->where('activo', true)->mapWithKeys(fn($s) => [
+    $s->id_servicio => [
+      'nombre' => $s->nombre,
+      'precio' => (float) $s->precio,
+      'tipo'   => $s->tipo_cobro,
+    ],
+  ]),
+  JSON_UNESCAPED_UNICODE
+) !!}
+    </script>
+@endisset
+
 
                 @endif
 

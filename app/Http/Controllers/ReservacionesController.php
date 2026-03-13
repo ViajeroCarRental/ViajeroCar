@@ -36,6 +36,8 @@ class ReservacionesController extends Controller
         // ✅ categoria_id será la selección del Paso 2
         $categoriaId = $request->input('categoria_id') ?? $request->input('type');
         $plan        = $request->input('plan');
+        $addonsParam = $request->input('addons', '');
+
 
         // Normalizar fechas/horas
         $pickupDate  = $this->normalizeDateYmd($pickupDateRaw);
@@ -148,15 +150,17 @@ class ReservacionesController extends Controller
 
         // --- 4) Filtros estándar para la vista ---
         $filters = [
-            'pickup_sucursal_id'  => $pickupSucursalId,
-            'dropoff_sucursal_id' => $dropoffSucursalId,
-            'pickup_date'         => $pickupDate,
-            'pickup_time'         => $pickupTime,
-            'dropoff_date'        => $dropoffDate,
-            'dropoff_time'        => $dropoffTime,
-            'categoria_id'        => $categoriaId,
-            'plan' => $plan,
-        ];
+    'pickup_sucursal_id'  => $pickupSucursalId,
+    'dropoff_sucursal_id' => $dropoffSucursalId,
+    'pickup_date'         => $pickupDate,
+    'pickup_time'         => $pickupTime,
+    'dropoff_date'        => $dropoffDate,
+    'dropoff_time'        => $dropoffTime,
+    'categoria_id'        => $categoriaId,
+    'plan'                => $plan,
+    'addons'              => $addonsParam,
+];
+
 
         // ======================================================
         // ✅ NUEVO CONTROL DE FLUJO (POR CATEGORÍA)
@@ -207,9 +211,9 @@ class ReservacionesController extends Controller
 // CALCULAR ADDONS (SERVICIOS)
 // ======================================================
 
-$addonsParam = $request->query('addons', '');
 $addons = [];
 $extrasTotal = 0;
+
 
 // Obtener vehículo ejemplo de la categoría (para tanque)
 $vehiculoEjemplo = null;
