@@ -979,8 +979,9 @@
                 }
             }
         }
+        console.log("Formulario valido:", valido);
     </script>
-    console.log("Formulario valido:", valido);
+
 @endif
                 {{-- ===================== STEP 2 ===================== --}}
 
