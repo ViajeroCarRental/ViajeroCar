@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 👶 MENOR DE EDAD – helpers locales para ajustar addons
   // ==========================================================
   // 👉 Usa el MISMO ID de servicio que configuraste en los otros JS
-  const YOUNG_DRIVER_SERVICE_ID = '123'; // <-- cámbialo por el id real del servicio "Conductor menor de edad"
+  const YOUNG_DRIVER_SERVICE_ID = '5'; // <-- cámbialo por el id real del servicio "Conductor menor de edad"
   const YOUNG_DRIVER_MIN_AGE    = 25;    // menor de 25 años paga cargo
 
   function parseAddonsStringToMapLocal(str) {

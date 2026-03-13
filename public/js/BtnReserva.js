@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ⚙️ MENOR DE EDAD – CONFIG Y HELPERS SOLO PARA ESTE ARCHIVO
   // ============================================================
   // 👇 Usa el MISMO id_servicio que configuraste en reservaciones.js
-  const YOUNG_DRIVER_SERVICE_ID = '123'; // <-- cámbialo por el id real
+  const YOUNG_DRIVER_SERVICE_ID = '5'; // <-- cámbialo por el id real
   const YOUNG_DRIVER_MIN_AGE    = 25;    // menor de 25 años paga cargo
 
   function parseAddonsStringToMapLocal(str) {
@@ -249,6 +249,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 2) Aplicar la regla de conductor menor de edad
         addons = applyYoungDriverAddonOnString(addons);
+
+
+        const table = document.querySelector("#cotizacionDoc");
+
+let dropoff_total = 0;
+
+if (table) {
+
+  const pickup  = table.dataset.pickup;
+  const dropoff = table.dataset.dropoff;
+  const km      = parseFloat(table.dataset.km || 0);
+  const costokm = parseFloat(table.dataset.costokm || 0);
+
+  if (pickup && dropoff && pickup !== dropoff && km > 0 && costokm > 0) {
+
+    const DROP_SERVICE_ID = 11;
+
+    const map = parseAddonsStringToMapLocal(addons);
+
+    map.set(String(DROP_SERVICE_ID), 1);
+
+    addons = serializeAddonsMapLocal(map);
+
+    // 👇 calcular el total
+    dropoff_total = km * costokm;
+
+  }
+}
 
         console.log("ADDONS ENVIADOS AL BACKEND (MOSTRADOR):", addons);
 

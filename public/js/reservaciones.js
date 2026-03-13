@@ -71,85 +71,107 @@
   }
 
   function applyYoungDriverAddon() {
-    const hidden =
-      qs('#addonsHidden') ||
-      qs('input[name="addons"]') ||
-      qs('input[name="addons_ids"]') ||
-      qs('input[name="addonsHidden"]');
+  const hiddenAlt =
+    qs('#addonsHidden') ||
+    qs('input[name="addons"]') ||
+    qs('input[name="addons_ids"]') ||
+    qs('input[name="addonsHidden"]');
 
-    const dobHidden = qs('#dob');
+  const payloadHidden = qs('#addons_payload');
+  const dobHidden = qs('#dob');
 
-    if (!hidden || !dobHidden || !YOUNG_DRIVER_SERVICE_ID) return;
+  if ((!hiddenAlt && !payloadHidden) || !dobHidden || !YOUNG_DRIVER_SERVICE_ID) return;
 
-    const dobStr  = String(dobHidden.value || '').trim();
-    const refDate = getPickupDateForAge();
-    const age     = computeAgeFromDob(dobStr, refDate);
+  const baseValue =
+    (hiddenAlt && hiddenAlt.value ? hiddenAlt.value.trim() : '') ||
+    (payloadHidden && payloadHidden.value ? payloadHidden.value.trim() : '');
 
-    const map = parseAddonsStringToMap(hidden.value || '');
-    const hadBefore = map.has(String(YOUNG_DRIVER_SERVICE_ID));
+  const dobStr  = String(dobHidden.value || '').trim();
+  const refDate = getPickupDateForAge();
+  const age     = computeAgeFromDob(dobStr, refDate);
 
-    if (age != null && age < YOUNG_DRIVER_MIN_AGE) {
-      map.set(String(YOUNG_DRIVER_SERVICE_ID), 1);
+  const map = parseAddonsStringToMap(baseValue);
+  const hadBefore = map.has(String(YOUNG_DRIVER_SERVICE_ID));
 
-      if (!hadBefore && !youngDriverAlertShown && window.alertify) {
-        youngDriverAlertShown = true;
+  if (age != null && age < YOUNG_DRIVER_MIN_AGE) {
+    map.set(String(YOUNG_DRIVER_SERVICE_ID), 1);
 
-        let montoPorDia = null;
-        try {
-          const script = document.getElementById('addonsCatalog');
-          if (script) {
-            const catalog = JSON.parse(script.textContent || '{}') || {};
-            const srv = catalog[String(YOUNG_DRIVER_SERVICE_ID)];
-            if (srv) {
-              const raw = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
-              montoPorDia = raw;
-            }
+    if (!hadBefore && !youngDriverAlertShown && window.alertify) {
+      youngDriverAlertShown = true;
+
+      let montoPorDia = null;
+      try {
+        const script = document.getElementById('addonsCatalog');
+        if (script) {
+          const catalog = JSON.parse(script.textContent || '{}') || {};
+          const srv = catalog[String(YOUNG_DRIVER_SERVICE_ID)];
+          if (srv) {
+            montoPorDia = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
           }
-        } catch (_) {}
+        }
+      } catch (_) {}
 
-        const montoStr = (montoPorDia != null)
-          ? Math.round(montoPorDia).toLocaleString('es-MX')
-          : 'X';
+      const montoStr = (montoPorDia != null)
+        ? Math.round(montoPorDia).toLocaleString('es-MX')
+        : 'X';
 
-        const msg =
-          "Detectamos que el conductor principal tiene menos de 25 años.\n\n" +
-          `Por política de aseguradora, se agregará automáticamente el servicio "Conductor menor de 25 años", ` +
-          `con un cargo adicional de ${montoStr} MXN por día de renta.\n\n` +
-          "Puedes ver este concepto en el desglose de Opciones de renta.";
+      const msg =
+        "Detectamos que el conductor principal tiene menos de 25 años.\n\n" +
+        `Por política de aseguradora, se agregará automáticamente el servicio "Conductor menor de 25 años", ` +
+        `con un cargo adicional de ${montoStr} MXN por día de renta.\n\n` +
+        "Puedes ver este concepto en el desglose de Opciones de renta.";
 
-        alertify.confirm(
-          "Conductor menor de 25 años",
-          msg,
-          function () {},
-          function () {}
-        );
-      }
-
-    } else {
-      map.delete(String(YOUNG_DRIVER_SERVICE_ID));
+      alertify.confirm(
+        "Conductor menor de 25 años",
+        msg,
+        function () {},
+        function () {}
+      );
     }
+  } else {
+    map.delete(String(YOUNG_DRIVER_SERVICE_ID));
+  }
 
-    const newValue = serializeAddonsMap(map);
-    hidden.value = newValue;
+  const newValue = serializeAddonsMap(map);
+
+  if (hiddenAlt) {
+    hiddenAlt.value = newValue;
+    try {
+      hiddenAlt.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (_) {}
+  }
+
+  if (payloadHidden) {
+    payloadHidden.value = newValue;
+    try {
+      payloadHidden.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (_) {}
+  }
+
+  try {
+    const url = new URL(window.location.href);
+    if (newValue) {
+      url.searchParams.set('addons', newValue);
+    } else {
+      url.searchParams.delete('addons');
+    }
+    window.history.replaceState({}, document.title, url.toString());
+  } catch (_) {}
 
     try {
-      hidden.dispatchEvent(new Event('change', { bubbles: true }));
-    } catch (_) {}
+    initStep4AddonsSummary();
+  } catch (_) {}
 
-    try {
-      const url = new URL(window.location.href);
-      if (newValue) {
-        url.searchParams.set('addons', newValue);
-      } else {
-        url.searchParams.delete('addons');
-      }
-      window.history.replaceState({}, document.title, url.toString());
-    } catch (_) {}
-
+  // ✅ Refuerzo: volver a recalcular un instante después
+  // para asegurar que el payload ya quedó actualizado en DOM
+  setTimeout(() => {
     try {
       initStep4AddonsSummary();
     } catch (_) {}
-  }
+  }, 0);
+}
+
+
 
   function initSectionValidators() {
 
@@ -799,129 +821,169 @@
   }
 
   function initStep4AddonsSummary() {
-    const table = qs('#cotizacionDoc');
-    if (!table) return;
+  const table = qs('#cotizacionDoc');
+  if (!table) return;
 
-    const qBaseEl   = qs('#qBase');
-    const qExtrasEl = qs('#qExtras');
-    const qIvaEl    = qs('#qIva');
-    const qTotalEl  = qs('#qTotal');
-    const extrasList = qs('#extrasList');
-    const ivaList    = qs('#ivaList');
+  const qBaseEl    = qs('#qBase');
+  const qExtrasEl  = qs('#qExtras');
+  const qIvaEl     = qs('#qIva');
+  const qTotalEl   = qs('#qTotal');
+  const extrasList = qs('#extrasList');
+  const ivaList    = qs('#ivaList');
 
-    if (!qBaseEl || !qExtrasEl || !qIvaEl || !qTotalEl) return;
+  if (!qBaseEl || !qExtrasEl || !qIvaEl || !qTotalEl) return;
 
-    const base = parseFloat(table.dataset.base || '0') || 0;
-    const days = parseInt(table.dataset.days || '1', 10) || 1;
+  const base = parseFloat(table.dataset.base || '0') || 0;
+  const days = parseInt(table.dataset.days || '1', 10) || 1;
 
-    const hiddenPayload = qs('#addons_payload');
     const hiddenAlt     = qs('#addonsHidden');
-    const rawAddons =
-      (hiddenPayload && hiddenPayload.value && hiddenPayload.value.trim()) ||
-      (hiddenAlt && hiddenAlt.value && hiddenAlt.value.trim()) ||
-      '';
+  const hiddenPayload = qs('#addons_payload');
 
-    const catalogScript = document.getElementById('addonsCatalog');
-    let catalog = {};
-    if (catalogScript) {
-      try {
-        catalog = JSON.parse(catalogScript.textContent || '{}') || {};
-      } catch (e) {
-        catalog = {};
-      }
-    }
+  // ✅ En Step 4 primero manda el payload final del formulario
+  const rawAddons =
+  (hiddenPayload && hiddenPayload.value ? hiddenPayload.value.trim() : '') ||
+  (hiddenAlt && hiddenAlt.value ? hiddenAlt.value.trim() : '') ||
+  '';
 
-    function parseAddons(str) {
-      const map = new Map();
-      String(str || '')
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean)
-        .forEach(pair => {
-          const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
-          if (!m) return;
-          const id = m[1];
-          const qty = Math.max(0, parseInt(m[2], 10) || 0);
-          if (qty > 0) map.set(id, qty);
-        });
-      return map;
-    }
 
-    function fmtMoney(n) {
-      return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
-    }
 
-    const addonsMap = parseAddons(rawAddons);
-    let extrasTotal = 0;
 
-    if (extrasList) extrasList.innerHTML = '';
-    if (ivaList) ivaList.innerHTML = '';
-
-    if (addonsMap.size === 0) {
-      if (extrasList) {
-        const row = document.createElement('div');
-        row.className = 'row row-empty';
-        row.innerHTML = `
-          <span class="muted">Sin complementos seleccionados</span>
-          <strong>$0 MXN</strong>
-        `;
-        extrasList.appendChild(row);
-      }
-    } else {
-      addonsMap.forEach((qty, id) => {
-        const srv = catalog[id];
-        if (!srv) return;
-
-        const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
-        const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
-
-        let lineTotal = 0;
-        if (tipo === 'por_evento') {
-          lineTotal = price * qty;
-        } else {
-          lineTotal = price * qty * days;
-        }
-
-        extrasTotal += lineTotal;
-
-        if (extrasList) {
-          const row = document.createElement('div');
-          row.className = 'row row-addon';
-
-          const unidadLabel = (tipo === 'por_evento') ? '/ evento' : 'por día';
-
-          row.innerHTML = `
-            <span style="flex:1;">
-              ${qty} | ${srv.nombre} | ${fmtMoney(price)} ${unidadLabel}
-            </span>
-            <strong style="flex:0 0 110px; text-align:right;">
-              ${fmtMoney(lineTotal)}
-            </strong>
-          `;
-          extrasList.appendChild(row);
-        }
-      });
-    }
-
-    const subtotal = base + extrasTotal;
-    const iva = subtotal * 0.16;
-    const total = subtotal + iva;
-
-    qBaseEl.textContent   = fmtMoney(base);
-    qExtrasEl.textContent = fmtMoney(extrasTotal);
-    qIvaEl.textContent    = fmtMoney(iva);
-    qTotalEl.textContent  = fmtMoney(total);
-
-    if (ivaList) {
-      const row = document.createElement('div');
-      row.className = 'row row-iva';
-      row.innerHTML = `
-        <span>IVA (16%)</span>
-        <strong>${fmtMoney(iva)}</strong>
-      `;
-      ivaList.appendChild(row);
+  const catalogScript = document.getElementById('addonsCatalog');
+  let catalog = {};
+  if (catalogScript) {
+    try {
+      catalog = JSON.parse(catalogScript.textContent || '{}') || {};
+    } catch (_) {
+      catalog = {};
     }
   }
+
+  function parseAddons(str) {
+    const map = new Map();
+    String(str || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .forEach(pair => {
+        const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
+        if (!m) return;
+        const id = m[1];
+        const qty = Math.max(0, parseInt(m[2], 10) || 0);
+        if (qty > 0) map.set(id, qty);
+      });
+    return map;
+  }
+
+  function fmtMoney(n) {
+    return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
+  }
+
+  const addonsMap = parseAddons(rawAddons);
+  let extrasTotal = 0;
+  let renderedRows = 0;
+
+  if (extrasList) extrasList.innerHTML = '';
+  if (ivaList) ivaList.innerHTML = '';
+
+  // ======================================================
+  // DROP OFF
+  // ======================================================
+  const pickupId  = table.dataset.pickup;
+  const dropoffId = table.dataset.dropoff;
+  const km        = parseFloat(table.dataset.km || 0);
+  const costoKm   = parseFloat(table.dataset.costokm || 0);
+
+  if (pickupId && dropoffId && pickupId !== dropoffId && km > 0 && costoKm > 0) {
+    const dropoffTotal = km * costoKm;
+    extrasTotal += dropoffTotal;
+
+    if (extrasList) {
+      const row = document.createElement('div');
+      row.className = 'row row-dropoff';
+      row.innerHTML = `
+        <span>Drop Off (${km} km)</span>
+        <strong>${fmtMoney(dropoffTotal)}</strong>
+      `;
+      extrasList.appendChild(row);
+      renderedRows++;
+    }
+  }
+
+  // ======================================================
+  // ADDONS
+  // ======================================================
+  addonsMap.forEach((qty, id) => {
+    const srv = catalog[id];
+    if (!srv) return;
+
+    const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+    const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
+
+    let lineTotal = 0;
+    if (tipo === 'por_evento') {
+      lineTotal = price * qty;
+    } else {
+      lineTotal = price * qty * days;
+    }
+
+    extrasTotal += lineTotal;
+
+    if (extrasList) {
+      const row = document.createElement('div');
+      row.className = 'row row-addon';
+
+      const unidadLabel = (tipo === 'por_evento') ? '/ evento' : 'por día';
+
+      row.innerHTML = `
+        <span style="flex:1;">
+          ${qty} | ${srv.nombre} | ${fmtMoney(price)} ${unidadLabel}
+        </span>
+        <strong style="flex:0 0 110px; text-align:right;">
+          ${fmtMoney(lineTotal)}
+        </strong>
+      `;
+
+      extrasList.appendChild(row);
+      renderedRows++;
+    }
+  });
+
+  // Si no hubo nada
+  if (renderedRows === 0 && extrasList) {
+    const row = document.createElement('div');
+    row.className = 'row row-empty';
+    row.innerHTML = `
+      <span class="muted">Sin complementos seleccionados</span>
+      <strong>$0 MXN</strong>
+    `;
+    extrasList.appendChild(row);
+  }
+
+  const subtotal = base + extrasTotal;
+  const iva = subtotal * 0.16;
+  const total = subtotal + iva;
+
+  qBaseEl.textContent   = fmtMoney(base);
+  qExtrasEl.textContent = fmtMoney(extrasTotal);
+  qIvaEl.textContent    = fmtMoney(iva);
+  qTotalEl.textContent  = fmtMoney(total);
+
+  if (ivaList) {
+    const row = document.createElement('div');
+    row.className = 'row row-iva';
+    row.innerHTML = `
+      <span>IVA (16%)</span>
+      <strong>${fmtMoney(iva)}</strong>
+    `;
+    ivaList.appendChild(row);
+  }
+
+  const totalMovil = document.getElementById('qTotalMovil');
+  if (totalMovil) {
+    totalMovil.textContent = fmtMoney(total);
+  }
+}
+
 
   function initFullNameSync(){
     const full     = qs('#nombreCompleto');
@@ -992,7 +1054,7 @@
       }
     }
 
-    function updateHidden(){
+        function updateHidden(){
       clampDay();
 
       const d = day.value;
@@ -1005,9 +1067,17 @@
         hidden.value = '';
       }
 
-      try{ hidden.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
+      try { hidden.dispatchEvent(new Event('change', { bubbles:true })); } catch(_){}
       try { applyYoungDriverAddon(); } catch (_) {}
+
+      // ✅ Forzar refresco visual del resumen del paso 4
+      try { initStep4AddonsSummary(); } catch (_) {}
+
+      setTimeout(() => {
+        try { initStep4AddonsSummary(); } catch (_) {}
+      }, 0);
     }
+
 
     function hydrateFromHidden(){
       const v = String(hidden.value || '').trim();
@@ -1035,7 +1105,10 @@
     const pickupHour = qs('#pickup_h');
     const dropoffHour = qs('#dropoff_h');
 
-    if (!pickupDate || !dropoffDate) return;
+    if (!pickupDate || !dropoffDate) {
+    console.log("No encontró inputs de fecha");
+    return;
+  }
 
     function parseDateAny(val) {
       if (!val) return null;
@@ -1107,122 +1180,201 @@
     runUpdate();
   }
 
+
+
+
   function initAddonsSync() {
-    const hidden =
-      qs('#addonsHidden') ||
-      qs('input[name="addons"]') ||
-      qs('input[name="addons_ids"]') ||
-      qs('input[name="addonsHidden"]');
+  const hidden =
+    qs('#addonsHidden') ||
+    qs('input[name="addons"]') ||
+    qs('input[name="addons_ids"]') ||
+    qs('input[name="addonsHidden"]');
 
-    const cards = qsa('.addon-card');
-    if (!cards.length || !hidden) return;
+  const payloadHidden = qs('#addons_payload');
+  const cards = qsa('.addon-card');
 
-    function parseMap(str) {
-      const map = new Map();
-      (String(str || '').split(',').map(s => s.trim()).filter(Boolean)).forEach(pair => {
+  if (!cards.length || !hidden) return;
+
+  const SERVICE_GASOLINA_ID = "1";
+
+  function parseMap(str) {
+    const map = new Map();
+    String(str || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .forEach(pair => {
         const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
-        if (m) map.set(m[1], Math.max(0, parseInt(m[2], 10) || 0));
-        else {
+        if (m) {
+          map.set(m[1], Math.max(0, parseInt(m[2], 10) || 0));
+        } else {
           const id = pair.replace(/\D/g, '');
           if (id) map.set(id, 1);
         }
       });
-      return map;
-    }
+    return map;
+  }
 
-    function serializeMap(map) {
-      return Array.from(map.entries())
-        .filter(([, q]) => (q || 0) > 0)
-        .map(([id, q]) => `${id}:${q}`)
-        .join(',');
-    }
+  function serializeMap(map) {
+    return Array.from(map.entries())
+      .filter(([, q]) => (q || 0) > 0)
+      .map(([id, q]) => `${id}:${q}`)
+      .join(',');
+  }
 
-    function setQty(card, qty) {
-      qty = Math.max(0, qty | 0);
-      const qtyEl = qs('.qty', card);
-      if (qtyEl) qtyEl.textContent = String(qty);
+  function getGasolinaSwitch(card) {
+    return qs('.gasolina-switch', card);
+  }
+
+  function setQty(card, qty) {
+    qty = Math.max(0, qty | 0);
+
+    const id = String(card.getAttribute('data-id') || '').trim();
+    const qtyEl = qs('.qty', card);
+
+    if (id === SERVICE_GASOLINA_ID) {
+      const sw = getGasolinaSwitch(card);
+      if (sw) sw.checked = qty > 0;
       card.classList.toggle('selected', qty > 0);
+      return;
     }
 
-    function readQty(card) {
-      const qtyEl = qs('.qty', card);
-      const q = qtyEl ? parseInt(qtyEl.textContent, 10) : 0;
-      return isNaN(q) ? 0 : q;
+    if (qtyEl) qtyEl.textContent = String(qty);
+    card.classList.toggle('selected', qty > 0);
+  }
+
+  function readQty(card) {
+    const id = String(card.getAttribute('data-id') || '').trim();
+
+    if (id === SERVICE_GASOLINA_ID) {
+      const sw = getGasolinaSwitch(card);
+      return sw && sw.checked ? 1 : 0;
     }
 
-    function buildFromUI() {
-      const map = new Map();
-      cards.forEach(card => {
-        const id = String(card.getAttribute('data-id') || '').trim();
-        if (!id) return;
-        const qty = readQty(card);
-        if (qty > 0) map.set(id, qty);
-      });
-      return map;
-    }
+    const qtyEl = qs('.qty', card);
+    const q = qtyEl ? parseInt(qtyEl.textContent, 10) : 0;
+    return isNaN(q) ? 0 : q;
+  }
 
-    function writeHiddenAndURL() {
-      const map = buildFromUI();
-      const value = serializeMap(map);
-      hidden.value = value;
-      try { hidden.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) { }
-
-      try {
-        const url = new URL(window.location.href);
-        url.searchParams.set('addons', value);
-        window.history.replaceState({}, document.title, url.toString());
-      } catch (_) { }
-
-      try { applyYoungDriverAddon(); } catch (_) { }
-    }
-
-    function hydrate() {
-      const fromQS = (() => { try { return new URLSearchParams(location.search).get('addons') || ''; } catch (_) { return ''; } })();
-      const base = fromQS || hidden.value || '';
-      const map = parseMap(base);
-
-      cards.forEach(card => {
-        const id = String(card.getAttribute('data-id') || '').trim();
-        if (!id) return;
-        setQty(card, map.get(id) || 0);
-      });
-
-      writeHiddenAndURL();
-    }
+  function buildFromUI() {
+    const map = new Map();
 
     cards.forEach(card => {
-      const plus = qs('.qty-btn.plus', card);
-      const minus = qs('.qty-btn.minus', card);
+      const id = String(card.getAttribute('data-id') || '').trim();
+      if (!id) return;
 
-      if (plus) {
-        plus.addEventListener('click', () => {
-          setQty(card, readQty(card) + 1);
-          writeHiddenAndURL();
-        });
-      }
-      if (minus) {
-        minus.addEventListener('click', () => {
-          setQty(card, readQty(card) - 1);
-          writeHiddenAndURL();
-        });
+      const qty = readQty(card);
+      if (qty > 0) {
+        map.set(id, qty);
       }
     });
 
-    const toStep4 = qs('#toStep4');
-    if (toStep4) {
-      toStep4.addEventListener('click', (e) => {
-        e.preventDefault();
-        writeHiddenAndURL();
+    return map;
+  }
 
-        const url = new URL(window.location.href);
-        url.searchParams.set('step', '4');
-        window.location.href = url.toString();
+  function writeHiddenAndURL() {
+    const map = buildFromUI();
+    const value = serializeMap(map);
+
+    hidden.value = value;
+    if (payloadHidden) {
+      payloadHidden.value = value;
+    }
+
+    try { hidden.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
+    try {
+      if (payloadHidden) {
+        payloadHidden.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    } catch (_) {}
+
+    try {
+      const url = new URL(window.location.href);
+      if (value) {
+        url.searchParams.set('addons', value);
+      } else {
+        url.searchParams.delete('addons');
+      }
+      window.history.replaceState({}, document.title, url.toString());
+    } catch (_) {}
+
+    try { applyYoungDriverAddon(); } catch (_) {}
+    try { initStep4AddonsSummary(); } catch (_) {}
+  }
+
+  function hydrate() {
+    const fromQS = (() => {
+      try {
+        return new URLSearchParams(location.search).get('addons') || '';
+      } catch (_) {
+        return '';
+      }
+    })();
+
+    const base =
+      fromQS ||
+      (hidden.value || '').trim() ||
+      (payloadHidden && payloadHidden.value ? payloadHidden.value.trim() : '');
+
+    const map = parseMap(base);
+
+    cards.forEach(card => {
+      const id = String(card.getAttribute('data-id') || '').trim();
+      if (!id) return;
+      setQty(card, map.get(id) || 0);
+    });
+
+    writeHiddenAndURL();
+  }
+
+  cards.forEach(card => {
+    const plus  = qs('.qty-btn.plus', card);
+    const minus = qs('.qty-btn.minus', card);
+    const sw    = getGasolinaSwitch(card);
+
+    const id = String(card.getAttribute('data-id') || '').trim();
+    const isGasolina = id === SERVICE_GASOLINA_ID;
+
+    if (isGasolina) {
+      if (sw) {
+        sw.addEventListener('change', () => {
+          writeHiddenAndURL();
+        });
+      }
+      return;
+    }
+
+    if (plus) {
+      plus.addEventListener('click', () => {
+        setQty(card, readQty(card) + 1);
+        writeHiddenAndURL();
       });
     }
 
-    document.addEventListener('wizard:stepChanged', hydrate);
-    hydrate();
+    if (minus) {
+      minus.addEventListener('click', () => {
+        setQty(card, Math.max(0, readQty(card) - 1));
+        writeHiddenAndURL();
+      });
+    }
+  });
+
+  const toStep4 = qs('#toStep4');
+  if (toStep4) {
+    toStep4.addEventListener('click', (e) => {
+      e.preventDefault();
+      writeHiddenAndURL();
+
+      const url = new URL(window.location.href);
+      url.searchParams.set('step', '4');
+      window.location.href = url.toString();
+    });
   }
+
+  document.addEventListener('wizard:stepChanged', hydrate);
+  hydrate();
+}
+
 
   function initStep1ClearButton() {
     const btnClear = qs('#btnLimpiar');
@@ -1612,7 +1764,7 @@
 
         updateFloatingIcon(conf.id, conf.icon);
 
-        $select.on('select2:select change', function () {
+        $select.on('select2:select', function () {
           updateFloatingIcon(conf.id, conf.icon);
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });

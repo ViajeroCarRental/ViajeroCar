@@ -423,11 +423,16 @@ function setupCheckbox() {
         });
       }
 
-      //  VALIDAR UBICACIONES
-      const selects = [
-        { id: 'pickupPlacePoliticas', msg: 'Ubicación Requerida' },
-        { id: 'dropoffPlacePoliticas', msg: 'Ubicación Requerida' }
-      ];
+      const checkbox = document.getElementById('differentDropoffPoliticas');
+
+const selects = [
+  { id: 'pickupPlacePoliticas', msg: 'Ubicación Requerida' }
+];
+
+// solo exigir dropoff si el checkbox está activado
+if (checkbox && checkbox.checked) {
+  selects.push({ id: 'dropoffPlacePoliticas', msg: 'Ubicación Requerida' });
+}
 
       selects.forEach(campo => {
         const select = document.getElementById(campo.id);
@@ -534,6 +539,14 @@ function setupCheckbox() {
       console.log('Resultado:', valid ? ' VÁLIDO' : ' INVÁLIDO');
 
       if (valid) {
+
+        const pickup = document.getElementById('pickupPlacePoliticas');
+  const dropoff = document.getElementById('dropoffPlacePoliticas');
+  const checkbox = document.getElementById('differentDropoffPoliticas');
+
+  if (checkbox && !checkbox.checked) {
+    dropoff.value = pickup.value;
+  }
         form.submit();
       }
     });

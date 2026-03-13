@@ -80,6 +80,13 @@
         $requestedStep = (int) request('step', 1);
         $controllerStep = isset($step) ? (int) $step : null;
 
+        $pickupSucursalId = $f['pickup_sucursal_id'] ?? request('pickup_sucursal_id');
+        $dropoffSucursalId = $f['dropoff_sucursal_id'] ?? request('dropoff_sucursal_id');
+
+        if (empty($dropoffSucursalId) && !empty($pickupSucursalId)) {
+        $dropoffSucursalId = $pickupSucursalId;
+        }
+
         $isFreshEntry = empty($pickupSucursalId) || empty($dropoffSucursalId);
         $stepCurrent = $isFreshEntry ? 1 : $controllerStep ?? $requestedStep;
         if ($stepCurrent >= 2 && $isFreshEntry) {
@@ -854,6 +861,9 @@
             if (form) {
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
+
+                     console.log("SUBMIT DETECTADO");
+
                     limpiarErrores();
 
                     let valido = true;
@@ -970,6 +980,7 @@
             }
         }
     </script>
+    console.log("Formulario valido:", valido);
 @endif
                 {{-- ===================== STEP 2 ===================== --}}
 
@@ -1137,6 +1148,9 @@
                     </div>
                 @endif
 
+                <script>
+                console.log("STEP ACTUAL:", "{{ $stepCurrent }}");
+                </script>
                 {{-- ===================== STEP 3 ===================== --}}
                 @if ($stepCurrent === 3)
                     <header class="wizard-head">
@@ -1694,6 +1708,7 @@
 
                                     <div class="addon-card" data-id="{{ $srv->id_servicio }}"
                                         data-name="{{ $srv->nombre }}" data-price="{{ (float) $srv->precio }}"
+                                        data-gasolina="{{ str_contains(strtolower($srv->nombre),'gasolina') ? 1 : 0 }}"
                                         data-charge="{{ $srv->tipo_cobro }}" data-max="3">
                                         <div class="addon-top">
                                             <div class="addon-ico">
@@ -1715,13 +1730,68 @@
                                                 <strong>${{ $precio }}</strong> MXN / evento
                                             @endif
                                         </div>
+@if($srv->id_servicio == 1)
 
-                                        <div class="addon-qty">
-                                            <button class="qty-btn minus" type="button">−</button>
-                                            <span class="qty">0</span>
-                                            <button class="qty-btn plus" type="button">+</button>
-                                            <span class="qty-hint">Máx 3</span>
-                                        </div>
+<div class="addon-qty gasolina-toggle">
+    <label class="switch">
+        <input type="checkbox" class="gasolina-switch">
+        <span class="slider"></span>
+    </label>
+</div>
+
+@else
+<div class="addon-qty">
+    <button class="qty-btn minus" type="button">−</button>
+    <span class="qty">0</span>
+    <button class="qty-btn plus" type="button">+</button>
+    <span class="qty-hint">Máx 3</span>
+</div>
+
+@endif
+
+<style>
+    .switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  transition: .3s;
+  border-radius: 26px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #c22;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+</style>
                                     </div>
                                 @empty
                                     <div style="grid-column:1/-1; text-align:center; padding:.75rem 0;">
@@ -2478,8 +2548,13 @@
 
                             <h4 class="sum-subtitle" style="margin-top:16px;">Detalles del precio</h4>
 
-                            <div class="sum-table" id="cotizacionDoc" data-base="{{ $tarifaBase }}"
-                                data-days="{{ $days }}">
+                            <div class="sum-table" id="cotizacionDoc"
+                            data-base="{{ $tarifaBase }}"
+                            data-days="{{ $days }}"
+                            data-pickup="{{ $pickupSucursalId }}"
+                            data-dropoff="{{ $dropoffSucursalId }}"
+                            data-km="{{ $dropoffKm }}"
+                            data-costokm="{{ $costoKmCategoria }}">
 
                                 {{-- ===== TARIFA BASE (desplegable) ===== --}}
                                 <details class="sum-acc" open="false">
@@ -2575,7 +2650,7 @@
                                         </div>
                                     </div>
                                 </details>
-
+ {{-- ===== Editar  ===== --}}
                                 {{-- ===== CARGOS E IVA (desplegable) ===== --}}
                                 <details class="sum-acc">
                                     <summary class="sum-bar">
@@ -2604,19 +2679,20 @@
                     </div>
 
                     @isset($servicios)
-                        <script id="addonsCatalog" type="application/json">
-          {!! json_encode(
-            collect($serviciosFiltrados)->mapWithKeys(fn($s) => [
-              $s->id_servicio => [
-                'nombre' => $s->nombre,
-                'precio' => (float)$s->precio,
-                'tipo'   => $s->tipo_cobro, // 'por_evento' o 'por_dia'
-              ],
-            ]),
-            JSON_UNESCAPED_UNICODE
-          ) !!}
-        </script>
-                    @endisset
+    <script id="addonsCatalog" type="application/json">
+{!! json_encode(
+  collect($servicios)->where('activo', true)->mapWithKeys(fn($s) => [
+    $s->id_servicio => [
+      'nombre' => $s->nombre,
+      'precio' => (float) $s->precio,
+      'tipo'   => $s->tipo_cobro,
+    ],
+  ]),
+  JSON_UNESCAPED_UNICODE
+) !!}
+    </script>
+@endisset
+
 
                 @endif
 

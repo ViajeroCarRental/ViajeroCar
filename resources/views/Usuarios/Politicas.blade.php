@@ -65,7 +65,7 @@
             <span>Cerrar</span>
         </button>
 
-        <form id="rentalFormPoliticas" class="search-form" method="GET" action="{{ route('rutaReservacionesUsuario') }}" novalidate>
+        <form id="rentalFormPoliticas" class="search-form" method="GET" action="{{ route('rutaReservasIniciar') }}" novalidate>
             @csrf
 
 

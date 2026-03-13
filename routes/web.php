@@ -34,6 +34,7 @@ use App\Http\Controllers\VisorReservacionesController;
 use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\ChecklistCambioAutoController;
 use App\Http\Controllers\CategoriasController;
+use App\Http\Controllers\PropietarioVehiculoController;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\VisorReservacionController;
 //rutas vistas Usuario
@@ -495,6 +496,23 @@ Route::prefix('admin')->group(function () {
     Route::post('/seguros-individuales', [SeguroIndividualController::class, 'store']);
     Route::put('/seguros-individuales/{id}', [SeguroIndividualController::class, 'update']);
     Route::delete('/seguros-individuales/{id}', [SeguroIndividualController::class, 'destroy']);
+});
+
+Route::prefix('admin')->group(function () {
+
+    Route::get('/propietarios', [PropietarioVehiculoController::class, 'index'])
+        ->name('propietariovehiculo.index');
+
+    Route::get('/propietarios/list', [PropietarioVehiculoController::class, 'list']);
+
+    Route::get('/propietarios/{id}', [PropietarioVehiculoController::class, 'show']);
+
+    Route::post('/propietarios', [PropietarioVehiculoController::class, 'store']);
+
+    Route::put('/propietarios/{id}', [PropietarioVehiculoController::class, 'update']);
+
+    Route::delete('/propietarios/{id}', [PropietarioVehiculoController::class, 'destroy']);
+
 });
 
 Route::post('/contrato/guardar-dato', [ChecklistController::class, 'guardarDato'])

@@ -385,7 +385,7 @@
             <div class="svc-card svc-card--accent delivery-wrapper"
               data-delivery-total="{{ $deliverySafe->total ?? 0 }}"
               data-costo-km="{{ $costoKmCategoriaSafe }}">
-            
+
               <div class="svc-top">
                 <div class="svc-ico">🚚</div>
                 <div class="svc-meta">
@@ -403,7 +403,7 @@
               </div>
 
               <div class="svc-fields" id="deliveryFields" style="display: {{ !empty($deliverySafe->activo) ? 'block' : 'none' }};">
-                
+
                 <div class="svc-field">
                   <label class="svc-label">Seleccionar ubicación</label>
                   <select id="deliveryUbicacion" class="input">
@@ -468,7 +468,7 @@
           <input type="hidden" id="deliveryPrecioKm" value="0">
           <input type="hidden" name="svc_gasolina" id="svc_gasolina" value="0">
         </div>
-        
+
       </section>
 
       {{-- ======================
@@ -1005,7 +1005,7 @@
         <div class="res-row"><div>🚗 Categoría</div><div id="resCat">—</div></div>
         <div class="res-row">
           <div>
-            Tarifa base 
+            Tarifa base
             <button type="button" id="btnEditarTarifa" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:16px;margin-left:6px;">
               ✏️
             </button>
