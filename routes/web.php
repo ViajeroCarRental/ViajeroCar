@@ -230,6 +230,7 @@ Route::get('/admin/contrato2/{id}', [Contrato2Controller::class, 'mostrarContrat
 
 // Paso 4: Cargos Adicionales, Delivery y Vehículo
 Route::post('/admin/contrato/cargos', [Contrato2Controller::class, 'actualizarCargos'])->name('contrato.actualizarCargos');
+Route::post('/admin/contrato/servicios-extra', [Contrato2Controller::class, 'actualizarServiciosExtras'])->name('contrato.servicios_extras');
 Route::get('/admin/contrato/cargos/{idContrato}', [Contrato2Controller::class, 'obtenerCargosContrato'])->name('contrato.obtenerCargos');
 Route::post('/admin/contrato/cargo-variable', [Contrato2Controller::class, 'guardarCargoVariable']);
 Route::post('/admin/reservacion/delivery/guardar', [ContratoController::class, 'guardarDeliveryReservacion'])->name('reservacion.delivery.guardar');

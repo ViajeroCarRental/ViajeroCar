@@ -8,11 +8,54 @@
 @section('contenidoContrato')
 
     @php
-        $fechaInicio = \Carbon\Carbon::parse($reservacion->fecha_inicio);
-        $fechaFin = \Carbon\Carbon::parse($reservacion->fecha_fin);
-        $horaRetiro = \Carbon\Carbon::parse($reservacion->hora_retiro);
-        $horaEntrega = \Carbon\Carbon::parse($reservacion->hora_entrega);
-        $diasTotales = max(1, $fechaInicio->diffInDays($fechaFin));
+        use Carbon\Carbon;
+
+        // Fechas y Días
+        $fechaInicio = Carbon::parse($reservacion->fecha_inicio ?? now());
+        $fechaFin = Carbon::parse($reservacion->fecha_fin ?? now()->addDay());
+        $horaRetiro = Carbon::parse($reservacion->hora_retiro ?? '12:00:00');
+        $horaEntrega = Carbon::parse($reservacion->hora_entrega ?? '12:00:00');
+
+        $diasTotales = $fechaInicio->diffInDays($fechaFin);
+        if ($diasTotales < 1) {
+            $diasTotales = 1;
+        }
+
+        // Precio
+        $catActual = $categorias->where('id_categoria', $reservacion->id_categoria ?? 0)->first();
+        $precioBase = $catActual->precio_dia ?? ($catActual->precio ?? 0);
+
+        $categoriasCol = collect($categorias ?? []);
+        $catActual = $categoriasCol->where('id_categoria', $reservacion->id_categoria ?? 0)->first();
+
+        $esAjustada = $reservacion->tarifa_ajustada ?? 0;
+        $tarifaModificada = $reservacion->tarifa_modificada ?? 0;
+
+        $precioReal = $esAjustada == 1 && $tarifaModificada > 0 ? $tarifaModificada : $precioBase;
+
+        // Cálculos Financieros
+        $subtotal = $diasTotales * $precioReal;
+        $iva = $subtotal * 0.16;
+        $total = $subtotal + $iva;
+
+        // Formato de Teléfono
+        $telOriginal = $reservacion->telefono_cliente ?? '';
+        $soloNumeros = preg_replace('/[^0-9]/', '', $telOriginal);
+
+        if (strlen($soloNumeros) == 12) {
+            $telFinal =
+                '+52 (' .
+                substr($soloNumeros, 2, 3) .
+                ') ' .
+                substr($soloNumeros, 5, 3) .
+                '-' .
+                substr($soloNumeros, 8);
+        } elseif (strlen($soloNumeros) == 10) {
+            $telFinal =
+                '(' . substr($soloNumeros, 0, 3) . ') ' . substr($soloNumeros, 3, 3) . '-' . substr($soloNumeros, 6);
+        } else {
+            $telFinal = $telOriginal ?: '—';
+        }
     @endphp
 
     <main class="main" id="contratoApp" data-id-contrato="{{ $contrato->id_contrato ?? '' }}"
@@ -27,6 +70,7 @@
 
             <section class="steps">
 
+                {{-- Paso 1 --}}
                 <article class="step active" data-step="1">
                     <header>
                         <div class="badge">1</div>
@@ -100,7 +144,9 @@
                         <div class="card resumen-totales">
                             <div class="kv">
                                 <div>Teléfono</div>
-                                <div id="clienteTel">{{ $reservacion->telefono_cliente }}</div>
+                                <div id="clienteTel">
+                                    {{ $telFinal }}
+                                </div>
                             </div>
                             <div class="kv">
                                 <div>Correo electrónico</div>
@@ -135,13 +181,13 @@
                         </div>
 
                         <div class="acciones" style="margin-top:20px;text-align:right;">
-                            <button class="btn primary" id="go2" type="button">✅ Continuar</button>
+                            <button class="btn primary" id="go2" type="button">Continuar</button>
                         </div>
 
                     </div>
                 </article>
 
-
+                {{-- Paso 2 --}}
                 <article class="step" data-step="2">
                     <header>
                         <div class="badge">2</div>
@@ -262,6 +308,7 @@
                     </div>
                 </article>
 
+                {{-- Paso 3 --}}
                 <article class="step" data-step="3">
                     <header>
                         <div class="badge">3</div>
@@ -295,7 +342,8 @@
                                     </div>
                                 </div>
 
-                                <div class="acciones" style="margin-top:20px;">
+                                <div class="acciones" style="margin-top:20px; display:flex; gap:10px;">
+                                    <button class="btn gray" id="back2" type="button">← Atrás</button>
                                     <button type="button" class="btn primary" id="go4"> Continuar → </button>
                                 </div>
                             </div>
@@ -305,6 +353,7 @@
 
             </section>
 
+            {{-- Resumen --}}
             <aside class="sticky">
                 <div class="card resumen-card">
                     <div class="head">Resumen del Contrato</div>
@@ -335,9 +384,17 @@
                             </section>
                             <section class="res-block">
                                 <h4>Datos del cliente</h4>
-                                <p id="detCliente">—</p>
-                                <p id="detTelefono">—</p>
-                                <p id="detEmail">—</p>
+                                <p id="detCliente">
+                                    {{ strtoupper($reservacion->nombre_cliente ?? '—') }}
+                                </p>
+
+                                <p id="detTelefono">
+                                    {{ $telFinal }}
+                                </p>
+
+                                <p id="detEmail">
+                                    {{ $reservacion->email_cliente ?? '—' }}
+                                </p>
                             </section>
                             <section class="res-block">
                                 <h4>Vehículo</h4>
@@ -351,9 +408,21 @@
                             </section>
                             <section class="res-block">
                                 <h4>Fechas y horarios</h4>
-                                <p>Salida: <span id="detFechaSalida">—</span> · <span id="detHoraSalida">—</span></p>
-                                <p>Entrega: <span id="detFechaEntrega">—</span> · <span id="detHoraEntrega">—</span></p>
-                                <p>Días totales: <span id="detDiasRenta">—</span></p>
+
+                                <p>Salida:
+                                    <span id="detFechaSalida">{{ $fechaInicio->format('Y-m-d') }}</span> ·
+                                    <span id="detHoraSalida">{{ $horaRetiro->format('h:i A') }}</span>
+                                </p>
+
+                                <p>Entrega:
+                                    <span id="detFechaEntrega">{{ $fechaFin->format('Y-m-d') }}</span> ·
+                                    <span id="detHoraEntrega">{{ $horaEntrega->format('h:i A') }}</span>
+                                </p>
+
+                                <p>
+                                    <strong>Días totales:</strong>
+                                    <span id="detDiasRenta">{{ $diasTotales }}</span>
+                                </p>
                             </section>
                             <section class="res-block">
                                 <h4>Paquetes de cobertura</h4>
@@ -374,30 +443,29 @@
                                 <ul id="r_cargos_lista" class="det-lista">
                                     <li class="empty">—</li>
                                 </ul>
+                                <p>Total: <b id="r_cargos_total">$0.00 MXN</b></p>
                             </section>
                             <section class="res-block">
                                 <h4>Total desglosado</h4>
-                                <p>Tarifa base: <b id="r_base_precio">—</b> <button id="btnEditarTarifa"
+
+                                <p>Tarifa base:
+                                    <b id="r_base_precio">${{ number_format($precioReal, 2) }}</b>
+                                    <button id="btnEditarTarifa"
                                         style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:15px;margin-left:6px;">✏️</button>
                                 </p>
-                                <p>Horas de cortesía: <span id="r_cortesia">1</span> <button id="btnEditarCortesia"
-                                        style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:15px;margin-left:6px;">✏️</button>
+
+                                <p>Horas de cortesía:
+                                    <b id="r_cortesia">{{ $reservacion->horas_cortesia ?? 1 }}</b>
+                                    <button id="btnEditarCortesia"
+                                        style="background:none; border:none; color:#2563eb; cursor:pointer; font-size:14px; margin-left:4px;"
+                                        title="Editar cortesía">
+                                        ✏️
+                                    </button>
                                 </p>
-                                <div id="editorCortesia" style="display:none; margin-top:6px;">
-                                    <select id="inputCortesia"
-                                        style="padding:4px;border-radius:6px;border:1px solid #ccc;">
-                                        <option value="1">1 hora</option>
-                                        <option value="2">2 horas</option>
-                                        <option value="3">3 horas</option>
-                                    </select>
-                                    <button id="btnGuardarCortesia"
-                                        style="margin-left:8px;background:#2563eb;color:white;border:none;padding:4px 8px;border-radius:6px;cursor:pointer;">Guardar</button>
-                                    <button id="btnCancelarCortesia"
-                                        style="margin-left:4px;background:#ccc;border:none;padding:4px 8px;border-radius:6px;cursor:pointer;">Cancelar</button>
-                                </div>
-                                <p>Subtotal: <b id="r_subtotal">—</b></p>
-                                <p>IVA: <b id="r_iva">—</b></p>
-                                <p>Total contrato: <b id="r_total_final">—</b></p>
+
+                                <p>Subtotal: <b id="r_subtotal">${{ number_format($subtotal, 2) }}</b></p>
+                                <p>IVA: <b id="r_iva">${{ number_format($iva, 2) }}</b></p>
+                                <p>Total contrato: <b id="r_total_final">${{ number_format($total, 2) }}</b></p>
                             </section>
                             <section class="res-block">
                                 <h4>Pagos y saldo</h4>
@@ -409,9 +477,9 @@
                     </div>
                 </div>
             </aside>
-
         </div>
 
+        {{-- Modal de vehiculos --}}
         <div id="modalVehiculos" class="modal-vehiculos">
             <div class="modal-content">
                 <div class="modal-header">
@@ -440,6 +508,7 @@
             </div>
         </div>
 
+        {{-- Modal de upgrade --}}
         <div id="modalUpgrade" class="upgrade-modal">
             <div class="upgrade-card">
                 <button class="upgrade-close" id="cerrarUpgrade">✕</button>
@@ -462,6 +531,7 @@
             </div>
         </div>
 
+        {{-- Modal de paquetes --}}
         <div id="modalPaquetes" class="modal" style="display:none;">
             <div class="modal-content modal-large">
                 <div class="modal-header">
@@ -489,6 +559,7 @@
             </div>
         </div>
 
+        {{-- Modal de paquetes individuales --}}
         <div class="modal" id="modalIndividuales" style="display:none;">
             <div class="modal-content">
                 <header class="modal-header">
@@ -583,7 +654,11 @@
 
 @section('js-vistaContrato')
     <script>
-        window.contratoId = {{ $contrato->id_contrato ?? 'null' }};
+        window.ID_RESERVACION = "{{ $reservacion->id_reservacion ?? '' }}";
+        window.ID_CONTRATO = "{{ $contrato->id_contrato ?? '' }}";
+        window.csrfToken = "{{ csrf_token() }}";
+
+        window.contratoId = window.ID_CONTRATO;
         window.clienteContratoUrl = "{{ route('contrato.obtenerCliente', $contrato->id_contrato ?? 0) }}";
     </script>
     <script src="{{ asset('js/ContratoGlobal.js') }}" defer></script>

@@ -16,10 +16,8 @@ class ContratoBaseController extends Controller
                 ->leftJoin('categoria_costo_km as cck', 'r.id_categoria', '=', 'cck.id_categoria')
                 ->where('r.id_reservacion', $idReservacion)
                 ->select(
-                    'r.codigo',
-                    'r.nombre_cliente',
-                    'r.telefono_cliente',
-                    'r.email_cliente',
+                    'r.*',
+                    'v.id_vehiculo as veh_id',
                     'v.marca as veh_marca',
                     'v.modelo as veh_modelo',
                     'v.transmision as veh_transmision',
@@ -27,36 +25,31 @@ class ContratoBaseController extends Controller
                     'v.puertas as veh_puertas',
                     'v.kilometraje as veh_km',
                     'v.categoria as veh_categoria',
-                    'cck.costo_km as precio_km_dropoff',
-                    'r.fecha_inicio',
-                    'r.hora_retiro',
-                    'r.fecha_fin',
-                    'r.hora_entrega',
-                    'r.tarifa_base',
-                    'r.tarifa_modificada',
-                    'r.delivery_activo',
-                    'r.delivery_km',
-                    'r.delivery_total'
-                )
-                ->first();
+                    'v.placa as veh_placa',
+                    'cck.costo_km as precio_km_dropoff'
+                )->first();
 
             if (!$res) {
-                return response()->json(['success' => false, 'msg' => 'Reservación no encontrada']);
+                return response()->json(['success' => false, 'msg' => 'Reservación no encontrada'], 404);
             }
 
-            $dias = max(1, \Carbon\Carbon::parse($res->fecha_inicio)->diffInDays(\Carbon\Carbon::parse($res->fecha_fin)));
+            $fechaInicio = \Carbon\Carbon::parse($res->fecha_inicio);
+            $fechaFin = \Carbon\Carbon::parse($res->fecha_fin);
+            $dias = max(1, $fechaInicio->diffInDays($fechaFin));
 
-            // 1. Cálculo de Renta Base
-            $precioPorDia = $res->tarifa_modificada ?? $res->tarifa_base;
-            $montoRentaBase = $precioPorDia * $dias;
-
-            // 2. Seguros (Cálculo corregido)
             $seguros = ['tipo' => null, 'lista' => [], 'total' => 0];
+            $listaServicios = [];
+            $listaCargos = [];
+            $totalServiciosAdic = 0;
+            $totalCargosExtra = 0; // Para delivery
+            $totalCargosPaso4 = 0; // Para Gasolina, Sillas, etc.
+            $entregaInfo = null;
+
+            // Cálculo de Seguros (Paquete o Individuales)
             $paquete = DB::table('reservacion_paquete_seguro as rps')
                 ->join('seguro_paquete as sp', 'rps.id_paquete', '=', 'sp.id_paquete')
                 ->where('rps.id_reservacion', $idReservacion)
-                ->select('sp.nombre', 'sp.descripcion', 'rps.precio_por_dia')
-                ->first();
+                ->select('sp.nombre', 'rps.precio_por_dia')->first();
 
             if ($paquete) {
                 $seguros['tipo'] = 'paquete';
@@ -66,77 +59,151 @@ class ContratoBaseController extends Controller
                 $individuales = DB::table('reservacion_seguro_individual as ri')
                     ->join('seguro_individuales as si', 'ri.id_individual', '=', 'si.id_individual')
                     ->where('ri.id_reservacion', $idReservacion)
-                    ->select('si.nombre', 'ri.precio_por_dia')
-                    ->get();
-                if ($individuales->count() > 0) {
-                    $seguros['tipo'] = 'individuales';
-                    foreach ($individuales as $ind) {
-                        $seguros['lista'][] = ['nombre' => $ind->nombre, 'precio' => $ind->precio_por_dia];
-                        $seguros['total'] += ($ind->precio_por_dia * $dias);
-                    }
+                    ->select('si.nombre', 'ri.precio_por_dia')->get();
+                foreach ($individuales as $ind) {
+                    $seguros['lista'][] = ['nombre' => $ind->nombre, 'precio' => $ind->precio_por_dia];
+                    $seguros['total'] += ($ind->precio_por_dia * $dias);
                 }
             }
 
-            // 3. Servicios adicionales (Cálculo corregido)
-            $serviciosData = DB::table('reservacion_servicio as rs')
+            // Cálculo de Servicios Adicionales (Paso 2)
+            $serviciosDB = DB::table('reservacion_servicio as rs')
                 ->join('servicios as s', 'rs.id_servicio', '=', 's.id_servicio')
                 ->where('rs.id_reservacion', $idReservacion)
-                ->select('s.nombre', 'rs.cantidad', 'rs.precio_unitario')
-                ->get();
+                ->select('s.nombre', 'rs.cantidad', 'rs.precio_unitario')->get();
 
-            $listaServicios = [];
-            $totalServiciosAdic = 0;
-            foreach ($serviciosData as $srv) {
+            foreach ($serviciosDB as $srv) {
                 $sub = ($srv->cantidad * $srv->precio_unitario) * $dias;
                 $totalServiciosAdic += $sub;
-                $listaServicios[] = ['nombre' => $srv->nombre, 'cantidad' => $srv->cantidad, 'precio' => $srv->precio_unitario, 'total' => $sub];
+                $listaServicios[] = [
+                    'nombre' => $srv->nombre,
+                    'cantidad' => $srv->cantidad,
+                    'total' => $sub
+                ];
             }
 
-            // 4. Cargos Extras (Delivery)
-            $cargos = [];
-            $totalExtras = 0;
+            // Lógica de Delivery
             if ($res->delivery_activo) {
-                $totalExtras += $res->delivery_total;
-                $cargos[] = ['nombre' => 'Entrega a domicilio', 'km' => $res->delivery_km, 'total' => $res->delivery_total];
+                $totalCargosExtra = $res->delivery_total;
+
+                $listaServicios[] = [
+                    'nombre' => 'Servicio de Delivery',
+                    'cantidad' => 1,
+                    'total' => $res->delivery_total
+                ];
+
+                $entregaInfo = [
+                    'tipo' => 'A domicilio',
+                    'direccion' => $res->direccion_entrega ?? 'Dirección no especificada'
+                ];
             }
 
-            // 5. MATEMÁTICA FINAL (Aquí estaba el error)
-            // Sumamos TODO: Renta + Seguros + Servicios + Delivery
-            $nuevoSubtotal = $montoRentaBase + $seguros['total'] + $totalServiciosAdic + $totalExtras;
-            $nuevoIva = $nuevoSubtotal * 0.16;
-            $nuevoTotal = $nuevoSubtotal + $nuevoIva;
+            // Lógica de Cargos Adicionales (Paso 4: Gasolina, Permisos, Menor Edad, etc.)
+            $contratoLigado = DB::table('contratos')->where('id_reservacion', $idReservacion)->first();
 
-            $totales = [
-                'tarifa_base'      => $res->tarifa_base,
-                'tarifa_modificada' => $res->tarifa_modificada,
-                'subtotal'         => $nuevoSubtotal,
-                'iva'              => $nuevoIva,
-                'total'            => $nuevoTotal
-            ];
+            if ($contratoLigado) {
+                $cargosExtrasDB = DB::table('cargo_adicional')
+                    ->where('id_contrato', $contratoLigado->id_contrato)
+                    ->get();
 
-            // 6. Pagos
+                foreach ($cargosExtrasDB as $cargo) {
+                    $totalCargosPaso4 += (float) $cargo->monto;
+
+                    $listaCargos[] = [
+                        'nombre'   => $cargo->concepto,
+                        'cantidad' => 1,
+                        'total'    => $cargo->monto
+                    ];
+                }
+            } else {
+                $cargosExtrasDB = DB::table('cargo_adicional')
+                    ->where('id_reservacion', $idReservacion)
+                    ->get();
+
+                // Si también quieres procesar los de reservación (por si acaso), haz lo mismo aquí:
+                foreach ($cargosExtrasDB as $cargo) {
+                    $totalCargosPaso4 += (float) $cargo->monto;
+                    $listaCargos[] = [
+                        'nombre'   => $cargo->concepto,
+                        'cantidad' => 1,
+                        'total'    => $cargo->monto
+                    ];
+                }
+            }
+
+            // Matemática de Totales (Añadido $totalCargosPaso4)
+            $precioRentaDia = ($res->tarifa_modificada > 0) ? $res->tarifa_modificada : $res->tarifa_base;
+            $montoRentaBase = $precioRentaDia * $dias;
+
+            $subtotalReal = $montoRentaBase + $seguros['total'] + $totalServiciosAdic + $totalCargosExtra + $totalCargosPaso4;
+            $ivaReal = $subtotalReal * 0.16;
+            $totalReal = $subtotalReal + $ivaReal;
+
+            // Sincronización DB
+            DB::table('reservaciones')->where('id_reservacion', $idReservacion)->update([
+                'subtotal' => $subtotalReal,
+                'impuestos' => $ivaReal,
+                'total' => $totalReal,
+                'updated_at' => now()
+            ]);
+
             $pagosRealizados = DB::table('pagos')
                 ->where('id_reservacion', $idReservacion)
                 ->where('estatus', 'paid')
-                ->sum('monto');
+                ->sum('monto') ?? 0;
 
             return response()->json([
                 'success' => true,
                 'data' => [
                     'codigo'   => $res->codigo,
-                    'cliente'  => ['nombre' => $res->nombre_cliente, 'telefono' => $res->telefono_cliente, 'email' => $res->email_cliente],
-                    'vehiculo' => ['marca' => $res->veh_marca, 'modelo' => $res->veh_modelo, 'categoria' => $res->veh_categoria, 'transmision' => $res->veh_transmision, 'km' => $res->veh_km, 'precio_km_dropoff' => $res->precio_km_dropoff],
-                    'fechas'   => ['inicio' => $res->fecha_inicio, 'fin' => $res->fecha_fin, 'dias' => $dias],
-                    'seguros'  => $seguros,
+                    'cliente'  => [
+                        'nombre'   => $res->nombre_cliente,
+                        'telefono' => $res->telefono_cliente,
+                        'email'    => $res->email_cliente
+                    ],
+                    'vehiculo' => $res->veh_id ? [
+                        'id_vehiculo' => $res->veh_id,
+                        'marca'       => $res->veh_marca,
+                        'modelo'      => $res->veh_modelo,
+                        'categoria'   => $res->veh_categoria,
+                        'transmision' => $res->veh_transmision,
+                        'km'          => $res->veh_km,
+                        'imagen'      => null,
+                        'placa'       => $res->veh_placa,
+                        'asientos'    => $res->veh_asientos,
+                        'puertas'     => $res->veh_puertas
+                    ] : null,
+                    'entrega'  => $entregaInfo,
+                    'fechas'   => [
+                        'inicio'      => $res->fecha_inicio,
+                        'hora_inicio' => \Carbon\Carbon::parse($res->hora_retiro)->format('h:i A'),
+                        'fin'         => $res->fecha_fin,
+                        'hora_fin'    => \Carbon\Carbon::parse($res->hora_entrega)->format('h:i A'),
+                        'dias'        => $dias
+                    ],
+                    'seguros'   => $seguros,
                     'servicios' => $listaServicios,
-                    'cargos'   => $cargos,
-                    'totales'  => $totales,
-                    'pagos'    => ['realizados' => $pagosRealizados, 'saldo' => max(0, $nuevoTotal - $pagosRealizados)]
+
+                    'cargos'    => $listaCargos,
+
+                    'totales'   => [
+                        'tarifa_base'       => $res->tarifa_base,
+                        'tarifa_modificada' => $res->tarifa_modificada,
+                        'subtotal'          => $subtotalReal,
+                        'iva'               => $ivaReal,
+                        'total'             => $totalReal,
+                        'servicios_total'   => ($totalServiciosAdic + $totalCargosExtra),
+                        'horas_cortesia'    => $res->horas_cortesia
+                    ],
+                    'pagos' => [
+                        'realizados' => $pagosRealizados,
+                        'saldo'      => max(0, $totalReal - $pagosRealizados)
+                    ]
                 ]
             ]);
         } catch (\Throwable $e) {
             Log::error("ERROR resumenContrato: " . $e->getMessage());
-            return response()->json(['success' => false, 'msg' => 'Error interno'], 500);
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }
 
