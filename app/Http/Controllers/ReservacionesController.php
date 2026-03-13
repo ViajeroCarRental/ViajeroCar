@@ -201,6 +201,129 @@ class ReservacionesController extends Controller
         // --- 6) Complementos (SERVICIOS) — SIEMPRE cargar ---
         $servicios = $this->obtenerServiciosActivos();
 
+
+
+// ======================================================
+// CALCULAR ADDONS (SERVICIOS)
+// ======================================================
+
+$addonsParam = $request->query('addons', '');
+$addons = [];
+$extrasTotal = 0;
+
+// Obtener vehículo ejemplo de la categoría (para tanque)
+$vehiculoEjemplo = null;
+
+if ($categoriaId) {
+
+    $vehiculoEjemplo = DB::table('vehiculos')
+        ->where('id_categoria', $categoriaId)
+        ->where('id_estatus', 1)
+        ->select('capacidad_tanque')
+        ->first();
+
+}
+
+if ($addonsParam) {
+
+    // convertir "1:1,2:2" → array
+    $pairs = explode(',', $addonsParam);
+
+    $ids = [];
+
+    foreach ($pairs as $pair) {
+
+        if (!str_contains($pair, ':')) continue;
+
+        [$id,$qty] = explode(':',$pair);
+
+        $ids[] = (int)$id;
+    }
+
+    // traer todos los servicios de una vez
+    $serviciosDB = DB::table('servicios')
+        ->whereIn('id_servicio', $ids)
+        ->get()
+        ->keyBy('id_servicio');
+
+    foreach ($pairs as $pair) {
+
+        if (!str_contains($pair, ':')) continue;
+
+        [$id,$qty] = explode(':',$pair);
+
+        $id = (int)$id;
+        $qty = (int)$qty;
+
+        if ($qty <= 0) continue;
+
+        $srv = $serviciosDB->get($id);
+
+        if (!$srv) continue;
+
+        $subtotal = 0;
+
+        // GASOLINA
+if ($id == 1) {
+
+    $litros = (float) $vehiculoEjemplo->capacidad_tanque;
+
+    $subtotal = (float) $srv->precio * $litros;
+
+} else {
+
+    $subtotal = (float) $srv->precio * $qty;
+
+}
+
+        $extrasTotal += $subtotal;
+
+        $addons[] = [
+            'id' => $id,
+            'nombre' => $srv->nombre,
+            'qty' => $qty,
+            'precio' => $srv->precio,
+            'subtotal' => $subtotal
+        ];
+    }
+}
+// ======================================================
+// CALCULAR KM DE DROP OFF
+// ======================================================
+
+$dropoffKm = 0;
+$costoKmCategoria = 0;
+
+if ($dropoffSucursalId) {
+
+    $dropoffName = DB::table('sucursales')
+        ->where('id_sucursal', $dropoffSucursalId)
+        ->value('nombre');
+
+    if ($dropoffName) {
+
+        $km = DB::table('ubicaciones_servicio')
+            ->where('destino', $dropoffName)
+            ->where('activo', true)
+            ->value('km');
+
+        $dropoffKm = $km ?? 0;
+    }
+}
+
+// ======================================================
+// COSTO POR KM SEGÚN CATEGORÍA
+// ======================================================
+
+if ($categoriaId) {
+
+    $costoKmCategoria = DB::table('categoria_costo_km')
+        ->where('id_categoria', $categoriaId)
+        ->where('activo', true)
+        ->value('costo_km') ?? 0;
+}
+
+
         return view('Usuarios.Reservaciones', [
             'step'       => $step,
             'filters'    => $filters,
@@ -210,6 +333,13 @@ class ReservacionesController extends Controller
             'categorias' => $categorias,
             'ciudades'   => $ciudades,   // 👈 ESTA ES LA CLAVE
             'servicios'  => $servicios,
+
+            'addons' => $addons,
+            'extrasTotal' => $extrasTotal,
+
+             // NUEVAS VARIABLES
+            'dropoffKm' => $dropoffKm,
+            'costoKmCategoria' => $costoKmCategoria
         ]);
     }
 
@@ -334,17 +464,7 @@ class ReservacionesController extends Controller
                 $row = $addonsRows->get((int)$id);
                 if (!$row) continue;
 
-                $isPerDay = ($row->tipo_cobro === 'por_dia');
-                $subtotalAddon = (float)$row->precio * ($isPerDay ? $days : 1) * $qty;
 
-                $addons[] = [
-                    'id'       => (int)$id,
-                    'name'     => $row->nombre,
-                    'charge'   => $row->tipo_cobro,
-                    'price'    => (float)$row->precio,
-                    'qty'      => $qty,
-                    'subtotal' => $subtotalAddon,
-                ];
             }
         }
 

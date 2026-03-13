@@ -857,6 +857,33 @@
     if (extrasList) extrasList.innerHTML = '';
     if (ivaList) ivaList.innerHTML = '';
 
+
+    const pickupId = table.dataset.pickup;
+const dropoffId = table.dataset.dropoff;
+const km = parseFloat(table.dataset.km || 0);
+const costoKm = parseFloat(table.dataset.costokm || 0);
+
+if (pickupId && dropoffId && pickupId !== dropoffId) {
+
+    const dropoffTotal = km * costoKm;
+
+    extrasTotal += dropoffTotal;
+
+    if (extrasList) {
+
+        const row = document.createElement('div');
+        row.className = 'row row-dropoff';
+
+        row.innerHTML = `
+            <span>Drop Off (${km} km)</span>
+            <strong>$${Math.round(dropoffTotal).toLocaleString('es-MX')} MXN</strong>
+        `;
+
+        extrasList.appendChild(row);
+    }
+}
+
+
     if (addonsMap.size === 0) {
       if (extrasList) {
         const row = document.createElement('div');
@@ -1035,7 +1062,10 @@
     const pickupHour = qs('#pickup_h');
     const dropoffHour = qs('#dropoff_h');
 
-    if (!pickupDate || !dropoffDate) return;
+    if (!pickupDate || !dropoffDate) {
+    console.log("No encontró inputs de fecha");
+    return;
+  }
 
     function parseDateAny(val) {
       if (!val) return null;
@@ -1106,6 +1136,9 @@
 
     runUpdate();
   }
+
+
+
 
   function initAddonsSync() {
     const hidden =
@@ -1190,23 +1223,80 @@
       writeHiddenAndURL();
     }
 
-    cards.forEach(card => {
-      const plus = qs('.qty-btn.plus', card);
-      const minus = qs('.qty-btn.minus', card);
+   const SERVICE_GASOLINA_ID = "1";
 
-      if (plus) {
-        plus.addEventListener('click', () => {
-          setQty(card, readQty(card) + 1);
-          writeHiddenAndURL();
-        });
-      }
-      if (minus) {
-        minus.addEventListener('click', () => {
-          setQty(card, readQty(card) - 1);
-          writeHiddenAndURL();
-        });
-      }
-    });
+cards.forEach(card => {
+
+  const plus = qs('.qty-btn.plus', card);
+  const minus = qs('.qty-btn.minus', card);
+
+  const id = String(card.getAttribute('data-id') || '').trim();
+  const isGasolina = id === SERVICE_GASOLINA_ID;
+
+  if (isGasolina) {
+
+    if (minus) minus.style.display = "none";
+
+    if (plus) {
+      plus.addEventListener('click', () => {
+
+        const current = readQty(card);
+
+        if (current === 0) {
+          setQty(card, 1);
+        } else {
+          setQty(card, 0);
+        }
+
+        writeHiddenAndURL();
+
+      });
+    }
+
+  } else {
+
+    if (plus) {
+      plus.addEventListener('click', () => {
+        setQty(card, readQty(card) + 1);
+        writeHiddenAndURL();
+      });
+    }
+
+    if (minus) {
+      minus.addEventListener('click', () => {
+        setQty(card, readQty(card) - 1);
+        writeHiddenAndURL();
+      });
+    }
+
+  }
+
+});
+
+// 🔴 Switch especial para gasolina
+document.querySelectorAll('.gasolina-switch').forEach(sw => {
+
+  const card = sw.closest('.addon-card');
+
+  sw.addEventListener('change', () => {
+
+    const qtyEl = card.querySelector('.qty');
+
+    if (sw.checked) {
+
+      if(qtyEl) qtyEl.textContent = "1";
+
+    } else {
+
+      if(qtyEl) qtyEl.textContent = "0";
+
+    }
+
+    writeHiddenAndURL();
+
+  });
+
+});
 
     const toStep4 = qs('#toStep4');
     if (toStep4) {
@@ -1612,7 +1702,7 @@
 
         updateFloatingIcon(conf.id, conf.icon);
 
-        $select.on('select2:select change', function () {
+        $select.on('select2:select', function () {
           updateFloatingIcon(conf.id, conf.icon);
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });

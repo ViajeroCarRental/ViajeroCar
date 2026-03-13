@@ -386,7 +386,7 @@
         <hr>
     </div>
 
- <form id="rentalForm" class="search-form" method="GET" action="{{ route('rutaReservacionesUsuario') }}" novalidate>
+ <form id="rentalForm" class="search-form" method="GET" action="{{ route('rutaReservasIniciar') }}" novalidate>
     @csrf
 
     <div class="search-grid">
