@@ -1325,20 +1325,28 @@
     const SHOW_MS = 7000;
     const HIDE_MS = 25000;
 
+    // ✅ Espera inicial de 15 segundos
+    const INITIAL_DELAY_MS = 10000;
+
+    // ✅ Empezar mostrando primero el mensaje de Central Park
+    const START_INDEX = 5;
+
     const banner = document.getElementById('rvBanner');
     const bar    = document.getElementById('rvBar');
     const title  = document.getElementById('rvTitle');
     const msg    = document.getElementById('rvMsg');
     const close  = document.getElementById('rvClose');
 
-    let idx = 0, loop = true, hideT = null, nextT = null;
+    let idx = START_INDEX, loop = true, hideT = null, nextT = null, startT = null;
     let paused = false, startTs = 0, remaining = SHOW_MS;
 
     function setBar(ms){
+      if(!bar) return;
       bar.style.transition = 'none';
       bar.style.width = '0%';
-      requestAnimationFrame(()=>{
-        requestAnimationFrame(()=>{
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
           bar.style.transition = `width ${ms}ms linear`;
           bar.style.width = '100%';
         });
@@ -1346,7 +1354,7 @@
     }
 
     function showOnce(){
-      if(!banner) return;
+      if(!banner || !title || !msg) return;
 
       const item = SEQ[idx];
       idx = (idx + 1) % SEQ.length;
@@ -1362,67 +1370,71 @@
       startTs = performance.now();
       setBar(SHOW_MS);
 
+      if(hideT) clearTimeout(hideT);
       hideT = setTimeout(hide, SHOW_MS);
     }
 
     function hide(){
+      if(!banner) return;
+
       banner.classList.remove('rv-in');
       banner.classList.add('rv-out');
 
-      setTimeout(()=>{
+      setTimeout(() => {
         banner.style.display = 'none';
-        if(loop){ nextT = setTimeout(showOnce, HIDE_MS); }
+        if(loop){
+          nextT = setTimeout(showOnce, HIDE_MS);
+        }
       }, 260);
     }
 
-    banner && banner.addEventListener('mouseenter', ()=>{
-      paused = true;
-      const elapsed = performance.now() - startTs;
-      remaining = Math.max(0, SHOW_MS - elapsed);
-      if(hideT){ clearTimeout(hideT); hideT = null; }
-      bar.style.transition = 'none';
+    if (banner) {
+      banner.addEventListener('mouseenter', () => {
+        paused = true;
+        const elapsed = performance.now() - startTs;
+        remaining = Math.max(0, SHOW_MS - elapsed);
+
+        if(hideT){
+          clearTimeout(hideT);
+          hideT = null;
+        }
+
+        if(bar){
+          const progress = ((SHOW_MS - remaining) / SHOW_MS) * 100;
+          bar.style.transition = 'none';
+          bar.style.width = `${progress}%`;
+        }
+      });
+
+      banner.addEventListener('mouseleave', () => {
+        if(!paused) return;
+        paused = false;
+
+        setTimeout(() => {
+          setBar(remaining);
+          hideT = setTimeout(hide, remaining);
+          startTs = performance.now() - (SHOW_MS - remaining);
+        }, 30);
+      });
+    }
+
+    if (close) {
+      close.addEventListener('click', () => {
+        loop = false;
+
+        if(hideT) clearTimeout(hideT);
+        if(nextT) clearTimeout(nextT);
+        if(startT) clearTimeout(startT);
+
+        banner.style.display = 'none';
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      startT = setTimeout(showOnce, INITIAL_DELAY_MS);
     });
 
-    banner && banner.addEventListener('mouseleave', ()=>{
-      if(!paused) return;
-      paused = false;
-      setTimeout(()=>{
-        setBar(remaining);
-        hideT = setTimeout(hide, remaining);
-        startTs = performance.now() - (SHOW_MS - remaining);
-      }, 30);
-    });
-
-    close && close.addEventListener('click', ()=>{
-      loop = false;
-      if(hideT) clearTimeout(hideT);
-      if(nextT) clearTimeout(nextT);
-      banner.style.display = 'none';
-    });
-
-    document.addEventListener('DOMContentLoaded', showOnce);
   })();
   </script>
-  <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const btnAbrir = document.getElementById('btn-abrir-buscador');
-    const btnCerrar = document.getElementById('btn-cerrar-buscador');
-    const buscador = document.getElementById('miBuscador');
-
-    if (btnAbrir) {
-        btnAbrir.addEventListener('click', function() {
-            buscador.classList.add('active');
-            document.body.style.overflow = 'hidden'; // Bloquea el scroll de la web de fondo
-        });
-    }
-
-    if (btnCerrar) {
-        btnCerrar.addEventListener('click', function() {
-            buscador.classList.remove('active');
-            document.body.style.overflow = 'auto'; // Devuelve el scroll
-        });
-    }
-});
-</script>
 
 @endsection
