@@ -229,12 +229,25 @@
             $categoriaSel && isset($categoriaSel->nombre) ? strtoupper((string) $categoriaSel->nombre) : 'COMPACTO';
 
         // ✅ SOLO estos extras (Step 3) — máximo 3 por cada uno (lo limita tu JS)
-        $allowedExtras = ['silla para bebé', 'conductor adicional', 'gasolina prepago'];
-
         $serviciosFiltrados = collect($servicios ?? [])
-            ->filter(function ($s) use ($allowedExtras) {
+            ->filter(function ($s) {
+
                 $name = mb_strtolower(trim((string) ($s->nombre ?? '')));
-                return in_array($name, $allowedExtras, true);
+
+                return str_contains($name, 'silla')
+                    || str_contains($name, 'gasolina prepago')
+                    || str_contains($name, 'conductor adicional');
+            })
+            ->sortBy(function ($s) {
+
+                $name = mb_strtolower(trim((string) ($s->nombre ?? '')));
+
+                if (str_contains($name, 'silla')) return 1;
+                if (str_contains($name, 'gasolina')) return 2;
+                if (str_contains($name, 'conductor')) return 3;
+
+                return 99;
+
             })
             ->values();
     @endphp
@@ -1669,7 +1682,7 @@
                                         $n = mb_strtolower(trim((string) ($srv->nombre ?? '')));
                                         $icon = 'fa-solid fa-circle-plus';
                                         if (str_contains($n, 'silla')) {
-                                            $icon = 'fa-solid fa-baby-carriage';
+                                            $icon = 'fa-solid fa-child-reaching';
                                         } elseif (str_contains($n, 'conductor')) {
                                             $icon = 'fa-solid fa-user-plus';
                                         } elseif (str_contains($n, 'gasolina')) {
