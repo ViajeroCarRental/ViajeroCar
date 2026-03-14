@@ -602,7 +602,7 @@ class ReservacionesAdminController extends Controller
                 3  => 'img/jetta.png',
                 4  => 'img/camry.png',
                 5  => 'img/renegade.png',
-                6  => 'img/seltos.png',
+                6  => 'img/taos.png',
                 7  => 'img/avanza.png',
                 8  => 'img/Odyssey.png',
                 9  => 'img/Hiace.png',

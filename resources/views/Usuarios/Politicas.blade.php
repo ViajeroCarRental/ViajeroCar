@@ -521,7 +521,7 @@
               <tr><td>E</td><td>Grandes Volkswagen Jetta o similar</td><td>$MXN5,000</td><td>$MXN8,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN500,000</td></tr>
               <tr><td>F</td><td>Full size Camry o similar</td><td>$MXN5,000</td><td>$MXN15,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN650,000</td></tr>
               <tr><td>IC</td><td>Suv compacta Jeep Renegade o similar</td><td>$MXN5,000</td><td>$MXN8,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN500,000</td></tr>
-              <tr><td>I</td><td>Suv Mediana Kia Seltos o similar</td><td>$MXN5,000</td><td>$MXN10,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN600,000</td></tr>
+              <tr><td>I</td><td>Suv Mediana Volkswagen Taos o similar</td><td>$MXN5,000</td><td>$MXN10,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN600,000</td></tr>
               <tr><td>IB</td><td>Suv Familiar compacta Toyota avanza o similar</td><td>$MXN5,000</td><td>$MXN8,000</td><td>$MXN18,000</td><td>$MXN25,000</td><td>$MXN400,000</td></tr>
               <tr><td>M</td><td>Minivan Honda Odyssey o similar</td><td>$MXN10,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN800,000</td></tr>
               <tr><td>L</td><td>Pasajeros de 12 usuarios Toyota Hiace o similar</td><td>$MXN10,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN800,000</td></tr>

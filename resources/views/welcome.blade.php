@@ -712,10 +712,10 @@
         <article class="car-card">
           <header class="car-title">
             <h3>SUV MEDIANA</h3>
-            <p>Kia Seltos o similar | I</p>
+            <p>Volkswagen Taos  o similar | I</p>
           </header>
           <div class="car-media">
-            <img src="{{ asset('img/seltos.png') }}" alt="Kia Seltos o similar">
+            <img src="{{ asset('img/taos.png') }}" alt="Volkswagen Taos o similar">
           </div>
 
           <div class="offer">

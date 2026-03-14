@@ -98,7 +98,7 @@ CARD 1 – VEHÍCULO / CATEGORÍA / SERVICIOS
                             3 => 'img/jetta.png',
                             4 => 'img/camry.png',
                             5 => 'img/renegade.png',
-                            6 => 'img/seltos.png',
+                            6 => 'img/taos.png',
                             7 => 'img/avanza.png',
                             8 => 'img/Odyssey.png',
                             9 => 'img/Hiace.png',
@@ -383,7 +383,7 @@ CARD 3 – ITINERARIO
                 case 'E':  return asset('img/jetta.png');
                 case 'F':  return asset('img/camry.png');
                 case 'IC': return asset('img/renegade.png');
-                case 'I':  return asset('img/seltos.png');
+                case 'I':  return asset('img/taos.png');
                 case 'IB': return asset('img/avanza.png');
                 case 'M':  return asset('img/Odyssey.png');
                 case 'L':  return asset('img/Hiace.png');

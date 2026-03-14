@@ -644,7 +644,7 @@
             3 => asset('img/jetta.png'),
             4 => asset('img/camry.png'),
             5 => asset('img/renegade.png'),
-            6 => asset('img/seltos.png'),
+            6 => asset('img/taos.png'),
             7 => asset('img/avanza.png'),
             8 => asset('img/Odyssey.png'),
             9 => asset('img/Urvan.png'),

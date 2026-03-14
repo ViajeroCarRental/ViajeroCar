@@ -42,7 +42,7 @@
                 case 'E':  return asset('img/jetta.png');
                 case 'F':  return asset('img/camry.png');
                 case 'IC': return asset('img/renegade.png');
-                case 'I':  return asset('img/seltos.png');
+                case 'I':  return asset('img/taos.png');
                 case 'IB': return asset('img/avanza.png');
                 case 'M':  return asset('img/Odyssey.png');
                 case 'L':  return asset('img/Hiace.png');
@@ -106,7 +106,7 @@
                     <img src="{{ asset('img/aveo.png') }}">
                     <div class="filter-info">
                       <span>Todos</span>
-                      <small class="count-badge">{{ count($categoriasCards) }} unidades</small>
+                      <small class="count-badge">{{ count($categoriasCards) }} categorías</small>
                     </div>
                   </div>
 
@@ -114,15 +114,15 @@
                     <img src="{{ asset('img/camry.png') }}">
                     <div class="filter-info">
                       <span>Autos</span>
-                      <small class="count-badge">{{ $conteoTipos['Sedan'] }} unidades</small>
+                      <small class="count-badge">{{ $conteoTipos['Sedan'] }} categorías</small>
                     </div>
                   </div>
 
                   <div class="filter-card" data-filter="SUV">
-                    <img src="{{ asset('img/seltos.png') }}">
+                    <img src="{{ asset('img/taos.png') }}">
                     <div class="filter-info">
                       <span>SUVs</span>
-                      <small class="count-badge">{{ $conteoTipos['SUV'] }} unidades</small>
+                      <small class="count-badge">{{ $conteoTipos['SUV'] }} categorías</small>
                     </div>
                   </div>
 
@@ -130,7 +130,7 @@
                     <img src="{{ asset('img/Frontier.png') }}">
                     <div class="filter-info">
                       <span>Pick Ups</span>
-                      <small class="count-badge">{{ $conteoTipos['Pickup'] }} unidades</small>
+                      <small class="count-badge">{{ $conteoTipos['Pickup'] }} categorías</small>
                     </div>
                   </div>
 
@@ -138,7 +138,7 @@
                     <img src="{{ asset('img/Odyssey.png') }}">
                     <div class="filter-info">
                       <span>Vans</span>
-                      <small class="count-badge">{{ $conteoTipos['Van'] }} unidades</small>
+                      <small class="count-badge">{{ $conteoTipos['Van'] }} categorías</small>
                     </div>
                   </div>
                 </div>

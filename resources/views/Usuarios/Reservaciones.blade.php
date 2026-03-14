@@ -174,7 +174,7 @@
             3 => asset('img/jetta.png'),
             4 => asset('img/camry.png'),
             5 => asset('img/renegade.png'),
-            6 => asset('img/seltos.png'),
+            6 => asset('img/taos.png'),
             7 => asset('img/avanza.png'),
             8 => asset('img/Odyssey.png'),
             9 => asset('img/Hiace.png'),
@@ -555,7 +555,6 @@
                 ========================= --}}
                 <div class="sg-col sg-col-submit">
                     <div class="actions">
-                        <button type="button" class="btn btn-ghost" onclick="limpiarTodoYReiniciar()">Limpiar</button>
                         <button type="submit" class="btn btn-primary">Siguiente</button>
                     </div>
                 </div>
@@ -1625,35 +1624,6 @@
                                                 </ul>
                                             </div>
                                         </details>
-
-                                        {{-- DECLINE PROTECTIONS --}}
-                                        <details class="s3-acc-item s3-acc-danger">
-                                            <summary class="s3-acc-sum">
-                                                <span class="s3-acc-left">
-                                                    <span class="s3-acc-badge s3-badge-danger">DECLINE</span>
-                                                    <span class="s3-acc-name">DECLINE PROTECTIONS</span>
-                                                </span>
-                                                <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
-                                            </summary>
-
-                                            <div class="s3-acc-body">
-                                                <ul class="s3-list">
-                                                    <li><strong>CDW (DECLINADO):</strong> El cliente es responsable por el
-                                                        <strong>100% deducible</strong> sobre valor factura del auto.</li>
-                                                    <li><strong>No</strong> cubre gastos médicos en caso de accidente.</li>
-                                                    <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es
-                                                        responsable por costos de: grúa (en caso de requerirla), corralón,
-                                                        envío de llaves o gasolina, apertura de auto, cambio de neumático
-                                                        ponchado y paso de corriente.</li>
-                                                    <li><strong>LOU (DECLINADO):</strong> No cubre tiempo perdido en taller.
-                                                    </li>
-                                                    <li><strong>LA (DECLINADO):</strong> No cubre asistencia legal.</li>
-                                                    <li><strong>LI:</strong> Responsabilidad civil hasta <strong>$350,000
-                                                            MXN</strong>.</li>
-                                                </ul>
-                                            </div>
-                                        </details>
-
                                     </div>
                                 </div>
                             </div>
@@ -1786,7 +1756,11 @@
 }
 
 input:checked + .slider {
-  background-color: #c22;
+  background-color: #16a34a;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
 }
 
 input:checked + .slider:before {
