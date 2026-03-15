@@ -1676,20 +1676,24 @@
                             <div class="equip-grid">
                                 @forelse($serviciosFiltrados as $srv)
                                     @php
-                                        $unidad = $srv->tipo_cobro === 'por_tanque' ? '/ tanque' : '/ evento';;
+                                        $unidad = $srv->tipo_cobro === 'por_tanque' ? '/ tanque' : '/ evento';
                                         $precio = number_format((float) $srv->precio, 0);
 
                                         $n = mb_strtolower(trim((string) ($srv->nombre ?? '')));
                                         $icon = 'fa-solid fa-circle-plus';
+                                        $tooltipText = 'Consulta más información sobre este adicional.';
+
                                         if (str_contains($n, 'silla')) {
                                             $icon = 'fa-solid fa-child-reaching';
+                                            $tooltipText = 'Ideal para viajar con menores. Sujeto a disponibilidad al momento de la entrega.';
                                         } elseif (str_contains($n, 'conductor')) {
                                             $icon = 'fa-solid fa-user-plus';
+                                            $tooltipText = 'Agrega un conductor adicional autorizado para manejar el vehículo durante la renta.';
                                         } elseif (str_contains($n, 'gasolina')) {
                                             $icon = 'fa-solid fa-gas-pump';
+                                            $tooltipText = '¿Vuelo temprano? No pierdas tiempo buscando gasolinera.Con Viajero Car Rental, puedes prepagar tu gasolina a un precio preferencial por litro y entregar el vehículo directamente.Simple, rápido y sin estrés.';
                                         }
                                     @endphp
-
                                     <div class="addon-card" data-id="{{ $srv->id_servicio }}"
                                         data-name="{{ $srv->nombre }}" data-price="{{ (float) $srv->precio }}"
                                         data-gasolina="{{ str_contains(strtolower($srv->nombre),'gasolina') ? 1 : 0 }}"
@@ -1700,7 +1704,17 @@
                                             </div>
 
                                             <div style="flex:1;">
-                                                <h4 class="addon-name">{{ $srv->nombre }}</h4>
+                                                <div class="addon-headline">
+                                                    <h4 class="addon-name">{{ $srv->nombre }}</h4>
+
+                                                    <span class="addon-help-wrap" tabindex="0">
+                                                        <button type="button" class="addon-help-btn" aria-label="Más información">
+                                                            <i class="fa-solid fa-info"></i>
+                                                        </button>
+                                                        <span class="addon-tooltip">{{ $tooltipText }}</span>
+                                                    </span>
+                                                </div>
+
                                                 @if (!empty($srv->descripcion))
                                                     <p>{{ $srv->descripcion }}</p>
                                                 @endif
