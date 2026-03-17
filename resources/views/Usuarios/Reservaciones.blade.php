@@ -2556,7 +2556,8 @@ input:checked + .slider:before {
                             data-pickup="{{ $pickupSucursalId }}"
                             data-dropoff="{{ $dropoffSucursalId }}"
                             data-km="{{ $dropoffKm }}"
-                            data-costokm="{{ $costoKmCategoria }}">
+                            data-costokm="{{ $costoKmCategoria }}"
+                            data-tanque="{{ $capacidadTanque ?? 0 }}">>
 
                                 {{-- ===== TARIFA BASE (desplegable) ===== --}}
                                 <details class="sum-acc" open="false">
@@ -2681,19 +2682,19 @@ input:checked + .slider:before {
                     </div>
 
                     @isset($servicios)
-    <script id="addonsCatalog" type="application/json">
-{!! json_encode(
-  collect($servicios)->where('activo', true)->mapWithKeys(fn($s) => [
-    $s->id_servicio => [
-      'nombre' => $s->nombre,
-      'precio' => (float) $s->precio,
-      'tipo'   => $s->tipo_cobro,
-    ],
-  ]),
-  JSON_UNESCAPED_UNICODE
-) !!}
-    </script>
-@endisset
+                        <script id="addonsCatalog" type="application/json">
+                        {!! json_encode(
+                            collect($servicios)->mapWithKeys(fn($s) => [
+                                (string) $s->id_servicio => [
+                                    'nombre' => $s->nombre,
+                                    'precio' => (float) $s->precio,
+                                    'tipo'   => $s->tipo_cobro,
+                                ],
+                            ]),
+                         JSON_UNESCAPED_UNICODE
+                        ) !!}
+                     </script>
+                    @endisset
 
 
                 @endif

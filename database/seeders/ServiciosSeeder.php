@@ -18,8 +18,8 @@ class ServiciosSeeder extends Seeder
             // =======================
             [
                 'nombre'      => 'Gasolina Prepago',
-                'descripcion' => 'Costo por litro x cantidad de litros que tenga el auto.',
-                'tipo_cobro'  => 'por_evento',
+                'descripcion' => 'Tanque completo de capacidad por categoria.',
+                'tipo_cobro'  => 'por_tanque',
                 'precio'      => 20.00,
                 'activo'      => true,
                 'created_at'  => $now,

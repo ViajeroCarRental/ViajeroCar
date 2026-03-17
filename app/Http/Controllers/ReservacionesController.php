@@ -216,16 +216,16 @@ $extrasTotal = 0;
 
 
 // Obtener vehículo ejemplo de la categoría (para tanque)
-$vehiculoEjemplo = null;
+// Obtener capacidad máxima de tanque de la categoría
+$capacidadTanque = 0;
 
 if ($categoriaId) {
-
-    $vehiculoEjemplo = DB::table('vehiculos')
-        ->where('id_categoria', $categoriaId)
-        ->where('id_estatus', 1)
-        ->select('capacidad_tanque')
-        ->first();
-
+    $capacidadTanque = (float) (
+        DB::table('vehiculos')
+            ->where('id_categoria', $categoriaId)
+            ->where('id_estatus', 1)
+            ->max('capacidad_tanque') ?? 0
+    );
 }
 
 if ($addonsParam) {
@@ -266,29 +266,52 @@ if ($addonsParam) {
         if (!$srv) continue;
 
         $subtotal = 0;
+$precioUnitarioMostrado = (float) $srv->precio;
 
-        // GASOLINA
+// GASOLINA PREPAGO
 if ($id == 1) {
-
-    $litros = (float) $vehiculoEjemplo->capacidad_tanque;
-
+    $litros = max(0, (float) $capacidadTanque);
     $subtotal = (float) $srv->precio * $litros;
 
+    $addons[] = [
+        'id' => $id,
+        'nombre' => $srv->nombre,
+        'qty' => 1,
+        'precio' => (float) $srv->precio,
+        'litros' => $litros,
+        'subtotal' => $subtotal
+    ];
 } else {
+    $tipoCobro = strtolower((string) ($srv->tipo_cobro ?? ''));
 
-    $subtotal = (float) $srv->precio * $qty;
+    if ($tipoCobro === 'por_dia') {
+        $dias = 1;
 
+        try {
+            if ($pickupDate && $pickupTime && $dropoffDate && $dropoffTime) {
+                $d1 = Carbon::createFromFormat('Y-m-d H:i', "{$pickupDate} {$pickupTime}");
+                $d2 = Carbon::createFromFormat('Y-m-d H:i', "{$dropoffDate} {$dropoffTime}");
+                $dias = max(1, $d1->diffInDays($d2));
+            }
+        } catch (\Throwable $e) {
+            $dias = 1;
+        }
+
+        $subtotal = (float) $srv->precio * $qty * $dias;
+    } else {
+        $subtotal = (float) $srv->precio * $qty;
+    }
+
+    $addons[] = [
+        'id' => $id,
+        'nombre' => $srv->nombre,
+        'qty' => $qty,
+        'precio' => (float) $srv->precio,
+        'subtotal' => $subtotal
+    ];
 }
 
-        $extrasTotal += $subtotal;
-
-        $addons[] = [
-            'id' => $id,
-            'nombre' => $srv->nombre,
-            'qty' => $qty,
-            'precio' => $srv->precio,
-            'subtotal' => $subtotal
-        ];
+$extrasTotal += $subtotal;
     }
 }
 // ======================================================
@@ -343,7 +366,8 @@ if ($categoriaId) {
 
              // NUEVAS VARIABLES
             'dropoffKm' => $dropoffKm,
-            'costoKmCategoria' => $costoKmCategoria
+            'costoKmCategoria' => $costoKmCategoria,
+            'capacidadTanque' => $capacidadTanque,
         ]);
     }
 
