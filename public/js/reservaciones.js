@@ -888,10 +888,12 @@
   // ======================================================
   // DROP OFF
   // ======================================================
-  const pickupId  = table.dataset.pickup;
-  const dropoffId = table.dataset.dropoff;
-  const km        = parseFloat(table.dataset.km || 0);
-  const costoKm   = parseFloat(table.dataset.costokm || 0);
+ const pickupId  = table.dataset.pickup;
+const dropoffId = table.dataset.dropoff;
+const km        = parseFloat(table.dataset.km || 0);
+const costoKm   = parseFloat(table.dataset.costokm || 0);
+const tanque    = parseFloat(table.dataset.tanque || 0);
+const SERVICE_GASOLINA_ID = '1';
 
   if (pickupId && dropoffId && pickupId !== dropoffId && km > 0 && costoKm > 0) {
     const dropoffTotal = km * costoKm;
@@ -910,44 +912,62 @@
   }
 
   // ======================================================
-  // ADDONS
-  // ======================================================
-  addonsMap.forEach((qty, id) => {
-    const srv = catalog[id];
-    if (!srv) return;
+// ADDONS
+// ======================================================
+addonsMap.forEach((qty, id) => {
+  const srv = catalog[id];
+  if (!srv) return;
 
-    const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
-    const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
+  const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+  const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
 
-    let lineTotal = 0;
-    if (tipo === 'por_evento') {
-      lineTotal = price * qty;
-    } else {
-      lineTotal = price * qty * days;
-    }
+  let lineTotal = 0;
+  let detalleLabel = '';
+  let unidadLabel = '';
 
-    extrasTotal += lineTotal;
+  // GASOLINA PREPAGO
+  if (String(id) === SERVICE_GASOLINA_ID) {
+    const litros = Math.max(0, tanque);
+    lineTotal = price * litros;
 
-    if (extrasList) {
-      const row = document.createElement('div');
-      row.className = 'row row-addon';
+    detalleLabel = `${srv.nombre} | ${litros} L x ${fmtMoney(price)} por litro`;
+    unidadLabel = '';
+  }
+  else if (tipo === 'por_tanque') {
+    const litros = Math.max(0, tanque);
+    lineTotal = price * litros * qty;
 
-      const unidadLabel = (tipo === 'por_evento') ? '/ evento' : 'por día';
+    detalleLabel = `${qty} | ${srv.nombre} | ${litros} L x ${fmtMoney(price)} por litro`;
+    unidadLabel = '';
+  }
+  else if (tipo === 'por_evento') {
+    lineTotal = price * qty;
+    detalleLabel = `${qty} | ${srv.nombre} | ${fmtMoney(price)} / evento`;
+  }
+  else {
+    lineTotal = price * qty * days;
+    detalleLabel = `${qty} | ${srv.nombre} | ${fmtMoney(price)} por día`;
+  }
 
-      row.innerHTML = `
-        <span style="flex:1;">
-          ${qty} | ${srv.nombre} | ${fmtMoney(price)} ${unidadLabel}
-        </span>
-        <strong style="flex:0 0 110px; text-align:right;">
-          ${fmtMoney(lineTotal)}
-        </strong>
-      `;
+  extrasTotal += lineTotal;
 
-      extrasList.appendChild(row);
-      renderedRows++;
-    }
-  });
+  if (extrasList) {
+    const row = document.createElement('div');
+    row.className = 'row row-addon';
 
+    row.innerHTML = `
+      <span style="flex:1;">
+        ${detalleLabel}
+      </span>
+      <strong style="flex:0 0 110px; text-align:right;">
+        ${fmtMoney(lineTotal)}
+      </strong>
+    `;
+
+    extrasList.appendChild(row);
+    renderedRows++;
+  }
+});
   // Si no hubo nada
   if (renderedRows === 0 && extrasList) {
     const row = document.createElement('div');

@@ -70,35 +70,45 @@ $codigo = $this->generarFolioReservacionUnico();
             }
 
             // 3.2️⃣ Calcular subtotal de servicios adicionales
-            $extrasSubtotal = 0.0;
-            $serviciosAdd   = []; // lo reutilizamos después para insertar en reservacion_servicio
+$extrasSubtotal = 0.0;
+$serviciosAdd   = []; // lo reutilizamos después para insertar en reservacion_servicio
 
-            if (!empty($addonsMap)) {
-                $serviciosAdd = DB::table('servicios')
-                    ->whereIn('id_servicio', array_keys($addonsMap))
-                    ->get();
+$capacidadTanque = (float) (
+    DB::table('vehiculos')
+        ->where('id_categoria', $validated['categoria_id'])
+        ->where('id_estatus', 1)
+        ->max('capacidad_tanque') ?? 0
+);
 
-                foreach ($serviciosAdd as $srv) {
-                    $idServicio = (int)$srv->id_servicio;
-                    $cantidad   = $addonsMap[$idServicio] ?? 0;
-                    if ($cantidad <= 0) {
-                        continue;
-                    }
+if (!empty($addonsMap)) {
+    $serviciosAdd = DB::table('servicios')
+        ->whereIn('id_servicio', array_keys($addonsMap))
+        ->get();
 
-                    $precioBase = (float)$srv->precio;
-                    $tipoCobro  = $srv->tipo_cobro; // 'por_dia' o 'por_evento'
+    foreach ($serviciosAdd as $srv) {
+        $idServicio = (int)$srv->id_servicio;
+        $cantidad   = $addonsMap[$idServicio] ?? 0;
+        if ($cantidad <= 0) {
+            continue;
+        }
 
-                    if ($tipoCobro === 'por_evento') {
-                        // precio * cantidad
-                        $lineTotal = $precioBase * $cantidad;
-                    } else {
-                        // por_dia → precio * cantidad * días
-                        $lineTotal = $precioBase * $cantidad * $dias;
-                    }
+        $precioBase = (float)$srv->precio;
+        $tipoCobro  = strtolower((string)$srv->tipo_cobro);
 
-                    $extrasSubtotal += $lineTotal;
-                }
-            }
+        // Gasolina prepago -> precio por litro * litros del tanque
+        if ($idServicio === 1) {
+            $lineTotal = $precioBase * $capacidadTanque;
+        } elseif ($tipoCobro === 'por_tanque') {
+            $lineTotal = $precioBase * $capacidadTanque * $cantidad;
+        } elseif ($tipoCobro === 'por_evento') {
+            $lineTotal = $precioBase * $cantidad;
+        } else {
+            $lineTotal = $precioBase * $cantidad * $dias;
+        }
+
+        $extrasSubtotal += $lineTotal;
+    }
+}
 
             // 3.3️⃣ Subtotal final, IVA y total (base + extras)
             $subtotal  = $subtotalBase + $extrasSubtotal;
@@ -154,37 +164,61 @@ $codigo = $this->generarFolioReservacionUnico();
             ]);
 
             // 5.1️⃣ Insertar servicios adicionales en reservacion_servicio
-            if (!empty($serviciosAdd)) {
-                foreach ($serviciosAdd as $srv) {
-                    $idServicio = (int)$srv->id_servicio;
-                    $cantidad   = $addonsMap[$idServicio] ?? 0;
-                    if ($cantidad <= 0) {
-                        continue;
-                    }
+if (!empty($serviciosAdd)) {
+    foreach ($serviciosAdd as $srv) {
+        $idServicio = (int)$srv->id_servicio;
+        $cantidad   = $addonsMap[$idServicio] ?? 0;
+        if ($cantidad <= 0) {
+            continue;
+        }
 
-                    $precioBase = (float)$srv->precio;
-                    $tipoCobro  = $srv->tipo_cobro;
+        $precioBase = (float)$srv->precio;
+        $tipoCobro  = strtolower((string)$srv->tipo_cobro);
 
-                    // Definimos un precio_unitario que al multiplicar por "cantidad" nos dé el total de esa línea
-                    if ($tipoCobro === 'por_evento') {
-                        // Cada evento ya representa el precio completo
-                        $precioUnitario = $precioBase;
-                    } else {
-                        // por_dia → precio por día * días
-                        $precioUnitario = $precioBase * $dias;
-                    }
+        // Gasolina prepago: guardar litros como cantidad y precio por litro como precio_unitario
+        if ($idServicio === 1) {
+            DB::table('reservacion_servicio')->insert([
+                'id_reservacion'  => $id,
+                'id_servicio'     => $idServicio,
+                'id_contrato'     => null,
+                'cantidad'        => max(1, (int) round($capacidadTanque)),
+                'precio_unitario' => $precioBase,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+            continue;
+        }
 
-                    DB::table('reservacion_servicio')->insert([
-                        'id_reservacion'  => $id,
-                        'id_servicio'     => $idServicio,
-                        'id_contrato'     => null, // se podrá actualizar al generar contrato
-                        'cantidad'        => $cantidad,
-                        'precio_unitario' => $precioUnitario,
-                        'created_at'      => now(),
-                        'updated_at'      => now(),
-                    ]);
-                }
-            }
+        if ($tipoCobro === 'por_tanque') {
+            DB::table('reservacion_servicio')->insert([
+                'id_reservacion'  => $id,
+                'id_servicio'     => $idServicio,
+                'id_contrato'     => null,
+                'cantidad'        => max(1, (int) round($capacidadTanque)) * $cantidad,
+                'precio_unitario' => $precioBase,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+            continue;
+        }
+
+        if ($tipoCobro === 'por_evento') {
+            $precioUnitario = $precioBase;
+        } else {
+            $precioUnitario = $precioBase * $dias;
+        }
+
+        DB::table('reservacion_servicio')->insert([
+            'id_reservacion'  => $id,
+            'id_servicio'     => $idServicio,
+            'id_contrato'     => null,
+            'cantidad'        => $cantidad,
+            'precio_unitario' => $precioUnitario,
+            'created_at'      => now(),
+            'updated_at'      => now(),
+        ]);
+    }
+}
 
             // 6️⃣ Enviar correo con plantilla (PAGO EN MOSTRADOR)
             $reservacion = DB::table('reservaciones')
@@ -391,33 +425,44 @@ $codigo = $this->generarFolioReservacionUnico();
             }
 
             // 3.2️⃣ Subtotal de servicios adicionales
-            $extrasSubtotal = 0.0;
-            $serviciosAdd   = [];
+$extrasSubtotal = 0.0;
+$serviciosAdd   = [];
 
-            if (!empty($addonsMap)) {
-                $serviciosAdd = DB::table('servicios')
-                    ->whereIn('id_servicio', array_keys($addonsMap))
-                    ->get();
+$capacidadTanque = (float) (
+    DB::table('vehiculos')
+        ->where('id_categoria', $validated['categoria_id'])
+        ->where('id_estatus', 1)
+        ->max('capacidad_tanque') ?? 0
+);
 
-                foreach ($serviciosAdd as $srv) {
-                    $idServicio = (int)$srv->id_servicio;
-                    $cantidad   = $addonsMap[$idServicio] ?? 0;
-                    if ($cantidad <= 0) {
-                        continue;
-                    }
+if (!empty($addonsMap)) {
+    $serviciosAdd = DB::table('servicios')
+        ->whereIn('id_servicio', array_keys($addonsMap))
+        ->get();
 
-                    $precioBase = (float)$srv->precio;
-                    $tipoCobro  = $srv->tipo_cobro;
+    foreach ($serviciosAdd as $srv) {
+        $idServicio = (int)$srv->id_servicio;
+        $cantidad   = $addonsMap[$idServicio] ?? 0;
+        if ($cantidad <= 0) {
+            continue;
+        }
 
-                    if ($tipoCobro === 'por_evento') {
-                        $lineTotal = $precioBase * $cantidad;
-                    } else {
-                        $lineTotal = $precioBase * $cantidad * $dias;
-                    }
+        $precioBase = (float)$srv->precio;
+        $tipoCobro  = strtolower((string)$srv->tipo_cobro);
 
-                    $extrasSubtotal += $lineTotal;
-                }
-            }
+        if ($idServicio === 1) {
+            $lineTotal = $precioBase * $capacidadTanque;
+        } elseif ($tipoCobro === 'por_tanque') {
+            $lineTotal = $precioBase * $capacidadTanque * $cantidad;
+        } elseif ($tipoCobro === 'por_evento') {
+            $lineTotal = $precioBase * $cantidad;
+        } else {
+            $lineTotal = $precioBase * $cantidad * $dias;
+        }
+
+        $extrasSubtotal += $lineTotal;
+    }
+}
 
             // 3.3️⃣ Subtotal final, IVA y total
             $subtotal  = $subtotalBase + $extrasSubtotal;
@@ -576,34 +621,60 @@ $codigo = $this->generarFolioReservacionUnico();
             ]);
 
             // 6.1️⃣ Insertar servicios adicionales en reservacion_servicio
-            if (!empty($serviciosAdd)) {
-                foreach ($serviciosAdd as $srv) {
-                    $idServicio = (int)$srv->id_servicio;
-                    $cantidad   = $addonsMap[$idServicio] ?? 0;
-                    if ($cantidad <= 0) {
-                        continue;
-                    }
+if (!empty($serviciosAdd)) {
+    foreach ($serviciosAdd as $srv) {
+        $idServicio = (int)$srv->id_servicio;
+        $cantidad   = $addonsMap[$idServicio] ?? 0;
+        if ($cantidad <= 0) {
+            continue;
+        }
 
-                    $precioBase = (float)$srv->precio;
-                    $tipoCobro  = $srv->tipo_cobro;
+        $precioBase = (float)$srv->precio;
+        $tipoCobro  = strtolower((string)$srv->tipo_cobro);
 
-                    if ($tipoCobro === 'por_evento') {
-                        $precioUnitario = $precioBase;
-                    } else {
-                        $precioUnitario = $precioBase * $dias;
-                    }
+        if ($idServicio === 1) {
+            DB::table('reservacion_servicio')->insert([
+                'id_reservacion'  => $id,
+                'id_servicio'     => $idServicio,
+                'id_contrato'     => null,
+                'cantidad'        => max(1, (int) round($capacidadTanque)),
+                'precio_unitario' => $precioBase,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+            continue;
+        }
 
-                    DB::table('reservacion_servicio')->insert([
-                        'id_reservacion'  => $id,
-                        'id_servicio'     => $idServicio,
-                        'id_contrato'     => null,
-                        'cantidad'        => $cantidad,
-                        'precio_unitario' => $precioUnitario,
-                        'created_at'      => now(),
-                        'updated_at'      => now(),
-                    ]);
-                }
-            }
+        if ($tipoCobro === 'por_tanque') {
+            DB::table('reservacion_servicio')->insert([
+                'id_reservacion'  => $id,
+                'id_servicio'     => $idServicio,
+                'id_contrato'     => null,
+                'cantidad'        => max(1, (int) round($capacidadTanque)) * $cantidad,
+                'precio_unitario' => $precioBase,
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+            continue;
+        }
+
+        if ($tipoCobro === 'por_evento') {
+            $precioUnitario = $precioBase;
+        } else {
+            $precioUnitario = $precioBase * $dias;
+        }
+
+        DB::table('reservacion_servicio')->insert([
+            'id_reservacion'  => $id,
+            'id_servicio'     => $idServicio,
+            'id_contrato'     => null,
+            'cantidad'        => $cantidad,
+            'precio_unitario' => $precioUnitario,
+            'created_at'      => now(),
+            'updated_at'      => now(),
+        ]);
+    }
+}
 
             // 7️⃣ Enviar correo con plantilla (PAGO EN LÍNEA)
             $reservacion = DB::table('reservaciones')

@@ -25,7 +25,7 @@ class CategoriasCarrosSeeder extends Seeder
             [
                 'codigo'        => 'D',
                 'nombre'        => 'Medianos',
-                'descripcion'   => 'Nissan Versa o similar',
+                'descripcion'   => 'Volkswagen Virtus o similar',
                 'precio_dia'    => 600.00,
                 'created_at'    => now(),
                 'updated_at'    => now()
