@@ -337,10 +337,11 @@
   }
 
   .page.wizard-page[data-current-step="1"] .select2-selection__rendered{
-
-      line-height:48px !important;
+      line-height:normal !important;
       font-weight:600;
-
+      display:flex !important;
+      align-items:center !important;
+      height:100% !important;
   }
 
   .page.wizard-page[data-current-step="1"] .select2-selection__arrow{
@@ -476,26 +477,6 @@
       color:#9ca3af;
 
   }
-
-
-  /* ============================================================
-  ICONOS
-  ============================================================ */
-
-  .page.wizard-page[data-current-step="1"] .field-icon{
-
-      position:absolute;
-
-      left:12px;
-      top:50%;
-
-      transform:translateY(-50%);
-
-      color:#9ca3af;
-
-  }
-
-
 
   /* ============================================================
   FECHA + HORA
@@ -4220,3 +4201,162 @@
           margin-top: 15px !important;
       }
   }
+/* ==========================================================
+   FIX SAFARI / MAC — RESERVACIONES
+   Agregar al FINAL del archivo
+========================================================== */
+
+/* Reset base para formularios */
+.page.wizard-page input,
+.page.wizard-page select,
+.page.wizard-page textarea,
+.page.wizard-page button {
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+  border-radius: 0;
+}
+
+/* Mejor renderizado de fuente en Mac */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================
+   STEP 1 — INPUTS / SELECTS
+========================================================== */
+.page.wizard-page[data-current-step="1"] input:not([type="checkbox"]),
+.page.wizard-page[data-current-step="1"] select,
+.page.wizard-page[data-current-step="1"] .select2-container .select2-selection--single {
+  height: 48px !important;
+  min-height: 48px !important;
+  line-height: normal !important;
+  box-sizing: border-box !important;
+  border-radius: 10px !important;
+}
+
+/* El texto del select2 mejor centrado con flex, no con line-height */
+.page.wizard-page[data-current-step="1"] .select2-container .select2-selection--single {
+  display: flex !important;
+  align-items: center !important;
+  padding-left: 42px !important;
+}
+
+.page.wizard-page[data-current-step="1"] .select2-selection__rendered {
+  line-height: normal !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 100% !important;
+  padding-left: 0 !important;
+}
+
+.page.wizard-page[data-current-step="1"] .select2-selection__arrow {
+  height: 100% !important;
+  top: 0 !important;
+}
+
+/* ==========================================================
+   STEP 1 — CAMPOS E ICONOS
+========================================================== */
+.page.wizard-page[data-current-step="1"] .field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.page.wizard-page[data-current-step="1"] .field-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1 !important;
+  pointer-events: none;
+  color: #9ca3af;
+  z-index: 2;
+}
+
+.page.wizard-page[data-current-step="1"] input:not([type="checkbox"]),
+.page.wizard-page[data-current-step="1"] select {
+  padding-left: 42px !important;
+}
+
+/* Safari a veces baja texto de inputs */
+.page.wizard-page[data-current-step="1"] input,
+.page.wizard-page[data-current-step="1"] select {
+  font-size: 16px !important;
+}
+
+/* ==========================================================
+   CHECKBOX
+========================================================== */
+.page.wizard-page[data-current-step="1"] input[type="checkbox"] {
+  -webkit-appearance: checkbox;
+  appearance: auto;
+  width: 16px;
+  height: 16px;
+  accent-color: #b22222;
+}
+
+/* ==========================================================
+   BOTONES
+========================================================== */
+.page.wizard-page[data-current-step="1"] .btn,
+.page.wizard-page[data-current-step="1"] button {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 8px;
+}
+
+/* ==========================================================
+   STEP 4 — FORMULARIO
+========================================================== */
+.page.wizard-page[data-current-step="4"] .sum-form input,
+.page.wizard-page[data-current-step="4"] .sum-form select {
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* Selects DOB y selects normales más estables en Safari */
+.page.wizard-page[data-current-step="4"] .sum-form select,
+.page.wizard-page[data-current-step="4"] .field-floating select,
+.page.wizard-page[data-current-step="4"] .field-floating-sub select {
+  background-clip: padding-box;
+  line-height: normal !important;
+}
+
+/* Labels flotantes más estables en Safari */
+.page.wizard-page[data-current-step="4"] .field-floating label,
+.page.wizard-page[data-current-step="4"] .field-floating-sub label {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* ==========================================================
+   FIX GENERAL SELECT2
+========================================================== */
+.select2-container .select2-selection--single {
+  box-sizing: border-box !important;
+}
+
+.select2-container .select2-selection__rendered {
+  box-sizing: border-box !important;
+}
+
+/* ==========================================================
+   ÍCONOS FONT AWESOME
+========================================================== */
+i.fa-solid,
+i.fa-regular,
+i.fa,
+[class*="fa-"] {
+  line-height: 1 !important;
+  vertical-align: middle;
+}
