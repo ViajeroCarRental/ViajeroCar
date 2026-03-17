@@ -2557,7 +2557,7 @@ input:checked + .slider:before {
                             data-dropoff="{{ $dropoffSucursalId }}"
                             data-km="{{ $dropoffKm }}"
                             data-costokm="{{ $costoKmCategoria }}"
-                            data-tanque="{{ $capacidadTanque ?? 0 }}">>
+                            data-tanque="{{ $capacidadTanque ?? 0 }}">
 
                                 {{-- ===== TARIFA BASE (desplegable) ===== --}}
                                 <details class="sum-acc" open="false">
