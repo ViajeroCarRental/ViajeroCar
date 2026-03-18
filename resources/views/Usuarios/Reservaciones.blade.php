@@ -1721,13 +1721,22 @@
                                             </div>
                                         </div>
 
-                                        <div class="addon-price">
-                                            @if($srv->tipo_cobro === 'por_tanque')
-                                                <strong>Cantidad de un tanque</strong>
-                                            @else
-                                                <strong>${{ $precio }}</strong> MXN / evento
-                                            @endif
-                                        </div>
+                                        @php
+    $unidad = match($srv->tipo_cobro) {
+        'por_tanque' => '/ Por tanque',
+        'por_dia' => '/ Por dia',
+        default => '/ evento',
+    };
+@endphp
+
+<div class="addon-price">
+    @if(str_contains(strtolower($srv->nombre), 'conductor'))
+        <strong>${{ $precio }}</strong> MXN / conductor por día
+    @else
+        <strong>${{ $precio }}</strong> MXN {{ $unidad }}
+    @endif
+</div>
+
 @if($srv->id_servicio == 1)
 
 <div class="addon-qty gasolina-toggle">
