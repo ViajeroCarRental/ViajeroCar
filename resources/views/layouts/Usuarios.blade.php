@@ -13,6 +13,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" rel="stylesheet">
+  <!-- Flag Icons CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@6.6.6/css/flag-icons.min.css">
 
   {{-- AlertifyJS CSS --}}
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
@@ -139,43 +141,73 @@
     </div>
 
     <ul class="menu" id="mainMenu">
-      <li><a href="{{ route('rutaHome') }}" class="{{ request()->routeIs('rutaHome') ? 'active' : '' }}">Inicio</a></li>
-      <li><a href="{{ route('rutaCatalogo') }}" class="{{ request()->routeIs('rutaCatalogo') ? 'active' : '' }}">Catálogo de autos</a></li>
-      <li><a href="{{ route('rutaContacto') }}" class="{{ request()->routeIs('rutaContacto') ? 'active' : '' }}">Contacto</a></li>
-      <li><a href="{{ route('rutaPoliticas') }}" class="{{ request()->routeIs('rutaPoliticas') ? 'active' : '' }}">Políticas</a></li>
-      <li><a href="{{ route('rutaFAQ') }}" class="{{ request()->routeIs('rutaFAQ') ? 'active' : '' }}">F.A.Q</a></li>
+      <li><a href="{{ route('rutaHome') }}" class="{{ request()->routeIs('rutaHome') ? 'active' : '' }}">{{ __('messages.inicio') }}</a></li>
+      <li><a href="{{ route('rutaCatalogo') }}" class="{{ request()->routeIs('rutaCatalogo') ? 'active' : '' }}">{{ __('messages.catalogo') }}</a></li>
+      <li><a href="{{ route('rutaContacto') }}" class="{{ request()->routeIs('rutaContacto') ? 'active' : '' }}">{{ __('messages.contacto') }}</a></li>
+      <li><a href="{{ route('rutaPoliticas') }}" class="{{ request()->routeIs('rutaPoliticas') ? 'active' : '' }}">{{ __('messages.politicas') }}</a></li>
+      <li><a href="{{ route('rutaFAQ') }}" class="{{ request()->routeIs('rutaFAQ') ? 'active' : '' }}">{{ __('messages.faq') }}</a></li>
     </ul>
 
-    <div class="nav-actions">
+<div class="nav-actions">
 
-      @if (session()->has('id_usuario'))
-        <div class="dropdown">
-          <a href="#" class="icon-pill dropdown-toggle" data-bs-toggle="dropdown">
-            <i class="fa-solid fa-user"></i>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end shadow">
-            <li>
-              <a class="dropdown-item" href="{{ route('rutaPerfil') }}">Perfil</a>
-            </li>
-            <li><hr class="dropdown-divider"></li>
-            <li>
-              <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" class="dropdown-item">Cerrar sesión</button>
-              </form>
-            </li>
-          </ul>
-        </div>
-      @else
-        <a href="{{ route('auth.show') }}" class="icon-pill" title="Iniciar sesión">
-          <i class="fa-regular fa-user guest"></i>
-        </a>
+<!-- SELECTOR DE IDIOMAS CON FLAG ICONS -->
+<div class="idioma-selector">
+  <button class="idioma-btn" id="idiomaBtn" type="button">
+    <span class="fi {{ app()->getLocale() == 'es' ? 'fi-mx' : 'fi-us' }} bandera-svg"></span>
+    <span class="idioma-activo">{{ strtoupper(app()->getLocale()) }}</span>
+    <i class="fa-solid fa-chevron-down"></i>
+  </button>
+  <div class="idioma-dropdown" id="idiomaDropdown">
+    <a href="{{ route('lang.switch', 'es') }}" class="idioma-option {{ app()->getLocale() == 'es' ? 'active' : '' }}" data-lang="es">
+      <span>
+        <span class="fi fi-mx bandera-svg"></span>
+        ESP
+      </span>
+      @if(app()->getLocale() == 'es')
+        <i class="fa-solid fa-check"></i>
       @endif
+    </a>
+    <a href="{{ route('lang.switch', 'en') }}" class="idioma-option {{ app()->getLocale() == 'en' ? 'active' : '' }}" data-lang="en">
+      <span>
+        <span class="fi fi-us bandera-svg"></span>
+        ENG
+      </span>
+      @if(app()->getLocale() == 'en')
+        <i class="fa-solid fa-check"></i>
+      @endif
+    </a>
+  </div>
+</div>
 
-      <button class="hamburger" type="button" id="navHamburger" aria-label="Abrir menú">
-        <span class="hb"></span>
-      </button>
+
+  @if (session()->has('id_usuario'))
+    <div class="dropdown">
+      <a href="#" class="icon-pill dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="fa-solid fa-user"></i>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end shadow">
+        <li>
+          <a class="dropdown-item" href="{{ route('rutaPerfil') }}">{{ __('messages.perfil') }}</a>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="dropdown-item">{{ __('messages.cerrar_sesion') }}</button>
+          </form>
+        </li>
+      </ul>
     </div>
+  @else
+    <a href="{{ route('auth.show') }}" class="icon-pill" title="{{ __('messages.iniciar_sesion') }}">
+      <i class="fa-regular fa-user guest"></i>
+    </a>
+  @endif
+
+  <button class="hamburger" type="button" id="navHamburger" aria-label="Abrir menú">
+    <span class="hb"></span>
+  </button>
+</div>
   </nav>
 </header>
 
@@ -202,7 +234,7 @@
   const topbar   = document.querySelector(".topbar");
   const btn      = document.getElementById("navHamburger");
   const menu     = document.getElementById("mainMenu");
-
+  const backdrop = document.querySelector(".nav-backdrop");
 
   if(!topbar || !btn || !menu) return;
 
@@ -220,17 +252,39 @@
     btn.setAttribute("aria-expanded","false");
   }
 
-  btn.addEventListener("click", ()=>{
+  // Toggle al hacer clic en el botón
+  btn.addEventListener("click", (e)=>{
+    e.stopPropagation();
     document.body.classList.contains("nav-open") ? closeNav() : openNav();
   });
 
+  //  Cerrar al hacer clic en el backdrop
+  if (backdrop) {
+    backdrop.addEventListener("click", () => {
+      if (isMobile()) closeNav();
+    });
+  }
 
-  menu.addEventListener("click", (e)=>{
-    if(e.target.closest("a")) closeNav();
+  //  Cerrar al hacer clic fuera del menú
+  document.addEventListener("click", (event) => {
+    if (!isMobile() || !document.body.classList.contains("nav-open")) return;
+
+
+    if (menu.contains(event.target)) return;
+    if (btn.contains(event.target)) return;
+    if (backdrop && backdrop.contains(event.target)) return;
+
+    closeNav();
   });
 
+  // Cerrar al seleccionar una opción
+  menu.addEventListener("click", (e)=>{
+    if(e.target.closest("a") && isMobile()) closeNav();
+  });
+
+  // Cerrar con tecla ESC
   document.addEventListener("keydown", (e)=>{
-    if(e.key === "Escape") closeNav();
+    if(e.key === "Escape" && isMobile()) closeNav();
   });
 
   if(MQ.addEventListener){
@@ -238,7 +292,7 @@
   }
 
   /* =================================================
-     ✅ ÚNICO AGREGADO: GLASS ↔ SOLID POR SCROLL
+     GLASS ↔ SOLID POR SCROLL (se mantiene igual)
   ================================================= */
   const SOLID_AT = 20;
 
@@ -270,15 +324,24 @@
     <div class="footer-row loc-row">
       <div class="loc-card">
         <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
-        <div class="loc-body"><h4>Plaza Central Park, Querétaro Centro</h4><p>Oficina principal</p></div>
+        <div class="loc-body">
+          <h4>Plaza Central Park, Querétaro Centro</h4>
+          <p>{{ __('messages.oficina_principal') }}</p>
+        </div>
       </div>
       <div class="loc-card">
         <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
-        <div class="loc-body"><h4>Aeropuerto Internacional de Querétaro (AIQ)</h4><p>Pick-up / Drop-off</p></div>
+        <div class="loc-body">
+          <h4>Aeropuerto Internacional de Querétaro (AIQ)</h4>
+          <p>{{ __('messages.pickup_dropoff') }}</p>
+        </div>
       </div>
       <div class="loc-card">
         <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
-        <div class="loc-body"><h4>Central de Autobuses de Querétaro (TAQ)</h4><p>Pick-up / Drop-off</p></div>
+        <div class="loc-body">
+          <h4>Central de Autobuses de Querétaro (TAQ)</h4>
+          <p>{{ __('messages.pickup_dropoff') }}</p>
+        </div>
       </div>
     </div>
 
@@ -295,20 +358,20 @@
 
     <div class="footer-row links-row">
       <ul>
-        <li><a href="{{ route('rutaReservaciones') }}">Reserva ahora</a></li>
-        <li><a href="{{ route('rutaCatalogo') }}">Autos Disponibles</a></li>
-        <li><a href="{{ route('rutaPoliticas') }}">Términos y condiciones</a></li>
-        <li><a href="{{ route('rutaContacto') }}">Contacto</a></li>
+        <li><a href="{{ route('rutaReservaciones') }}">{{ __('messages.reserva_ahora') }}</a></li>
+        <li><a href="{{ route('rutaCatalogo') }}">{{ __('messages.autos_disponibles') }}</a></li>
+        <li><a href="{{ route('rutaPoliticas') }}">{{ __('messages.terminos_y_condiciones') }}</a></li>
+        <li><a href="{{ route('rutaContacto') }}">{{ __('messages.contacto') }}</a></li>
       </ul>
       <ul>
-        <li><a href="{{ route('rutaFAQ') }}">F.A.Q.</a></li>
-        <li><a href="{{ route('rutaPoliticas') }}">Aviso de privacidad</a></li>
-        <li><a href="{{ route('rutaPoliticas') }}">Política de limpieza</a></li>
-        <li><a href="{{ route('rutaPoliticas') }}">Política de renta</a></li>
+        <li><a href="{{ route('rutaFAQ') }}">{{ __('messages.faq') }}</a></li>
+        <li><a href="{{ route('rutaPoliticas') }}">{{ __('messages.aviso_privacidad') }}</a></li>
+        <li><a href="{{ route('rutaPoliticas') }}">{{ __('messages.politica_limpieza') }}</a></li>
+        <li><a href="{{ route('rutaPoliticas') }}">{{ __('messages.politica_renta') }}</a></li>
       </ul>
     </div>
 
-    <div class="footer-copy">© <span id="year"></span> Viajero. Todos los derechos reservados.</div>
+    <div class="footer-copy">© <span id="year"></span> Viajero. {{ __('messages.todos_derechos') }}</div>
   </div>
 </footer>
 {{-- 🔹 Scripts específicos por vista --}}
@@ -357,8 +420,6 @@
 
 <!-- Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-
 
 </body>
 </html>

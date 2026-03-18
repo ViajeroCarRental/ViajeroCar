@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
   <meta charset="UTF-8">
   <meta name="color-scheme" content="light dark">
@@ -108,38 +108,36 @@
   <!-- HEADER -->
   <div class="header">
     <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
-    <h1>Cierre de Contrato</h1>
+    <h1>{{ __('messages.cierre_contrato_titulo') }}</h1>
   </div>
 
   <!-- CONTENT -->
   <div class="content">
 
-    <p>Estimado(a) <strong>{{ $reservacion->nombre_cliente }}</strong>
+    <p>{{ __('messages.estimado_cliente') }} <strong>{{ $reservacion->nombre_cliente }}</strong></p>
 
     <p>
-      Le informamos que su <strong>contrato de arrendamiento</strong> ha sido finalizado exitosamente.
-      A continuación encontrará un resumen del cierre de su renta.
+      {!! __('messages.contrato_finalizado') !!}
     </p>
 
     <div class="info-box">
-      <p><strong>Folio del contrato:</strong> {{ $contrato->numero_contrato }}</p>
-      <p><strong>Fecha de cierre:</strong> {{ $contrato->cerrado_en }}</p>
-      <p><strong>Total Pagado:</strong> ${{ number_format($reservacion->total, 2) }} MXN</p>
+      <p><strong>{{ __('messages.folio_contrato') }}</strong> {{ $contrato->numero_contrato }}</p>
+      <p><strong>{{ __('messages.fecha_cierre') }}</strong> {{ $contrato->cerrado_en }}</p>
+      <p><strong>{{ __('messages.total_pagado') }}</strong> ${{ number_format($reservacion->total, 2) }} MXN</p>
     </div>
 
     <p>
-      Agradecemos que haya confiado en <strong>Viajero Car Rental</strong> para su experiencia de renta.
-      Nuestro equipo verificó la entrega del vehículo y se procesaron los cargos correspondientes.
+      {!! __('messages.agradecimiento') !!}
     </p>
 
     <p>
-      Si requiere factura, aclaraciones o desea realizar una nueva reservación, estaremos encantados de asistirle.
+      {{ __('messages.asistencia') }}
     </p>
 
     <div class="divider"></div>
 
     <p style="margin-top:20px;">
-      Gracias nuevamente por permitirnos acompañarle en su viaje.<br>
+      {{ __('messages.gracias_nuevamente') }}<br>
       <strong>Viajero Car Rental</strong>
     </p>
 
@@ -147,7 +145,7 @@
 
   <!-- FOOTER -->
   <div class="footer">
-    © {{ date('Y') }} <strong>Viajero Car Rental</strong> — Todos los derechos reservados.<br>
+    © {{ date('Y') }} <strong>Viajero Car Rental</strong> — {{ __('messages.todos_derechos') }}<br>
     <a href="https://viajerocarental.com">www.viajerocarental.com</a> |
     <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>
   </div>

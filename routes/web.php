@@ -587,3 +587,19 @@ Route::post('/admin/reservaciones-activas/{id}/cancelar',
 }); // <- FIN grupo sesion.activa
 Route::view('/politicas', 'Usuarios.Politicas')->name('rutaPoliticas');
 Route::get('/politicas', [ReservacionesController::class, 'politicas'])->name('rutaPoliticas');
+
+// ======================
+// RUTA PARA CAMBIAR IDIOMAS
+// ======================
+Route::get('lang/{lang}', function ($lang) {
+    // Verificar que el idioma sea válido (español o inglés)
+    if (!in_array($lang, ['es', 'en'])) {
+        abort(400);
+    }
+
+    // Guardar el idioma en la sesión
+    session(['locale' => $lang]);
+
+    // Redirigir a la página anterior
+    return redirect()->back();
+})->name('lang.switch');

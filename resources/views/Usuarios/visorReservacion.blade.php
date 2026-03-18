@@ -1,6 +1,6 @@
 @extends('layouts.Usuarios')
 
-@section('Titulo', 'Visor Reservación')
+@section('Titulo', __('messages.visor_reservacion'))
 
 @section('css-visorReservacion')
 <style>
@@ -68,18 +68,18 @@ CARD 1 – VEHÍCULO / CATEGORÍA / SERVICIOS
     <div class="card mb-4 shadow">
 
         <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-            Vehículo y servicios
+            {{ __('messages.vehiculo_y_servicios') }}
             <div>
                 <button type="button"
                         class="btn btn-outline-warning btn-sm"
                         id="btnEditarServicios">
-                    Editar
+                    {{ __('messages.editar') }}
                 </button>
 
                 <button type="submit"
                         class="btn btn-primary btn-sm d-none"
                         id="btnGuardarCard1">
-                    Guardar
+                    {{ __('messages.guardar') }}
                 </button>
             </div>
         </div>
@@ -128,7 +128,7 @@ CARD 1 – VEHÍCULO / CATEGORÍA / SERVICIOS
                 <button type="button"
                         class="btn btn-outline-primary btn-sm d-none mt-2"
                         id="btnCambiarCategoria">
-                    Cambiar categoría
+                    {{ __('messages.cambiar_categoria') }}
                 </button>
 
             </div>
@@ -140,7 +140,7 @@ CARD 1 – VEHÍCULO / CATEGORÍA / SERVICIOS
                 <div class="row mb-3 d-none" id="contenedorAgregarServicio">
                     <div class="col-md-8">
                         <select id="selectServicio" class="form-select">
-                            <option value="">-- Selecciona un servicio --</option>
+                            <option value="">{{ __('messages.selecciona_servicio') }}</option>
                             @foreach($catalogoServicios as $servicio)
                                 <option value="{{ $servicio->id_servicio }}"
                                         data-nombre="{{ $servicio->nombre }}"
@@ -154,7 +154,7 @@ CARD 1 – VEHÍCULO / CATEGORÍA / SERVICIOS
                         <button type="button"
                                 class="btn btn-success w-100"
                                 id="btnConfirmarAgregar">
-                            Agregar
+                            {{ __('messages.agregar') }}
                         </button>
                     </div>
                 </div>
@@ -162,10 +162,10 @@ CARD 1 – VEHÍCULO / CATEGORÍA / SERVICIOS
                 <table class="table table-sm">
                     <thead>
                         <tr>
-                            <th>Servicio</th>
-                            <th>Cantidad</th>
-                            <th>Precio</th>
-                            <th>Total</th>
+                            <th>{{ __('messages.servicio') }}</th>
+                            <th>{{ __('messages.cantidad') }}</th>
+                            <th>{{ __('messages.precio') }}</th>
+                            <th>{{ __('messages.total') }}</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -206,9 +206,9 @@ CARD 1 – VEHÍCULO / CATEGORÍA / SERVICIOS
                     </tbody>
                 </table>
 
-                <p><strong>Subtotal:</strong> ${{ number_format($subtotal, 2) }}</p>
-                <p><strong>IVA:</strong> ${{ number_format($iva, 2) }}</p>
-                <p><strong>Total:</strong> ${{ number_format($total, 2) }}</p>
+                <p><strong>{{ __('messages.subtotal') }}:</strong> ${{ number_format($subtotal, 2) }}</p>
+                <p><strong>{{ __('messages.iva') }}:</strong> ${{ number_format($iva, 2) }}</p>
+                <p><strong>{{ __('messages.total_general') }}:</strong> ${{ number_format($total, 2) }}</p>
 
             </div>
         </div>
@@ -227,18 +227,18 @@ CARD 2 – DATOS DEL CLIENTE
 
     <div class="card mb-4 shadow">
         <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-            Datos del cliente
+            {{ __('messages.datos_cliente') }}
             <div>
                 <button type="button"
                         class="btn btn-outline-warning btn-sm"
                         id="btnEditarCliente">
-                    Editar
+                    {{ __('messages.editar') }}
                 </button>
 
                 <button type="submit"
                         class="btn btn-primary btn-sm d-none"
                         id="btnGuardarCliente">
-                    Actualizar
+                    {{ __('messages.actualizar') }}
                 </button>
             </div>
         </div>
@@ -277,18 +277,18 @@ CARD 3 – ITINERARIO
 
     <div class="card mb-4 shadow">
         <div class="card-header fw-bold d-flex justify-content-between align-items-center">
-            Itinerario
+            {{ __('messages.itinerario') }}
             <div>
                 <button type="button"
                         class="btn btn-outline-warning btn-sm"
                         id="btnEditarItinerario">
-                    Editar
+                    {{ __('messages.editar') }}
                 </button>
 
                 <button type="submit"
                         class="btn btn-primary btn-sm d-none"
                         id="btnGuardarItinerario">
-                    Actualizar
+                    {{ __('messages.actualizar') }}
                 </button>
             </div>
         </div>
@@ -297,7 +297,7 @@ CARD 3 – ITINERARIO
 
             <div class="alert alert-danger d-none" id="alertCard3"></div>
 
-            <label>Fecha retiro</label>
+            <label>{{ __('messages.fecha_retiro') }}</label>
             <input type="date"
                    class="form-control mb-2 editable-itinerario"
                    name="fecha_inicio"
@@ -351,7 +351,7 @@ CARD 3 – ITINERARIO
         @csrf
 
         <button type="submit" class="btn-confirmar-cambios">
-            Confirmar cambios y reenviar correo
+            {{ __('messages.confirmar_cambios_reenviar') }}
         </button>
 
     </form>
@@ -405,8 +405,8 @@ CARD 3 – ITINERARIO
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Selecciona categoría</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <h5 class="modal-title">{{ __('messages.selecciona_categoria') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('messages.cerrar') }}"></button>
             </div>
 
             <div class="modal-body">
@@ -439,14 +439,14 @@ CARD 3 – ITINERARIO
                                     <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $cap['small'] }}</li>
                                     <li><i class="fa-solid fa-briefcase"></i> {{ $cap['big'] ?? 1 }}</li>
 
-                                    <li title="Transmisión">
+                                    <li title="{{ __('messages.transmision') }}">
                                         <span class="spec-letter">
-                                            T | {{ $codigo === 'L' ? 'Estándar' : 'Automática' }}
+                                            T | {{ $codigo === 'L' ? __('messages.estandar') : __('messages.automatica') }}
                                         </span>
                                     </li>
 
-                                    <li title="Aire acondicionado">
-                                        <i class="fa-regular fa-snowflake"></i> A/C
+                                    <li title="{{ __('messages.aire_acondicionado') }}">
+                                        <i class="fa-regular fa-snowflake"></i> {{ __('messages.aire_acondicionado') }}
                                     </li>
                                 </ul>
 
@@ -471,14 +471,14 @@ CARD 3 – ITINERARIO
                                         data-id="{{ $cat->id_categoria }}"
                                         data-texto="{{ $textoCategoria }}"
                                         data-img="{{ $img }}">
-                                    Elegir
+                                    {{ __('messages.elegir') }}
                                 </button>
                             </article>
                         </div>
                     @empty
                         <div class="col-12">
                             <div class="text-center py-4">
-                                <h5 class="mb-0">No hay categorías disponibles</h5>
+                                <h5 class="mb-0">{{ __('messages.no_categorias_disponibles') }}</h5>
                             </div>
                         </div>
                     @endforelse

@@ -1,6 +1,6 @@
 @extends('layouts.Usuarios')
 
-@section('Titulo','Contacto')
+@section('Titulo', __('messages.contacto_titulo'))
 
 @section('css-vistaContacto')
   <link rel="stylesheet" href="{{ asset('css/contacto.css') }}">
@@ -12,18 +12,18 @@
   {{-- ===== HERO ===== --}}
   <section class="hero" aria-label="cabecera">
     <div class="hero-bg">
-      <img src="{{ asset('img/contacto.png') }}" alt="Contacto">
+      <img src="{{ asset('img/contacto.png') }}" alt="{{ __('messages.contacto_titulo') }}">
     </div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <h1>¡Hablemos! <span>Contáctanos</span></h1>
-      <p>Estamos listos para ayudarte con tu próxima renta</p>
+      <h1>{{ __('messages.hablemos') }} <span>{{ __('messages.contactanos') }}</span></h1>
+      <p>{{ __('messages.estamos_listos') }}</p>
     </div>
 
     <div class="hero-chips" aria-label="sucursales">
-      <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Oficina Central Park, Querétaro</span>
-      <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto Internacional de Querétaro</span>
-      <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Central de Autobuses de Querétaro</span>
+      <span class="chip"><i class="fa-solid fa-location-dot"></i> {{ __('messages.pickup_oficina_central') }}</span>
+      <span class="chip"><i class="fa-solid fa-location-dot"></i> {{ __('messages.pickup_aeropuerto') }}</span>
+      <span class="chip"><i class="fa-solid fa-location-dot"></i> {{ __('messages.pickup_central_autobuses') }}</span>
     </div>
   </section>
 
@@ -33,7 +33,7 @@
     <div class="map-card">
       <div class="map-head">
         <i class="fa-solid fa-map-location-dot"></i>
-        Oficina Central Park, Querétaro
+        {{ __('messages.oficina_central_park') }}
       </div>
       <div class="map-body">
          <a href="https://www.google.com/maps?q=20.57334,-100.36168&z=15&output=embed" target="_blank">
@@ -52,7 +52,7 @@
     <div class="map-card">
       <div class="map-head">
         <i class="fa-solid fa-plane-departure"></i>
-        Aeropuerto Internacional de Querétaro
+        {{ __('messages.aeropuerto_queretaro') }}
       </div>
       <div class="map-body">
         <iframe
@@ -69,7 +69,7 @@
     <div class="map-card">
       <div class="map-head">
         <i class="fa-solid fa-bus"></i>
-        Central de Autobuses de Querétaro
+        {{ __('messages.central_autobuses') }}
       </div>
       <div class="map-body">
         <iframe
@@ -87,7 +87,7 @@
   <section class="contact-grid" aria-label="formulario de contacto">
     <div class="contact-left">
       <div class="form-card">
-        <h2>Contáctanos</h2>
+        <h2>{{ __('messages.contactanos_form') }}</h2>
 
         {{-- === ALERTAS === --}}
         @if (session('ok'))
@@ -98,7 +98,7 @@
 
         @if ($errors->any())
           <div class="alert alert-danger" role="alert">
-            <i class="fa-solid fa-triangle-exclamation"></i> Revisa los campos marcados en rojo.
+            <i class="fa-solid fa-triangle-exclamation"></i> {{ __('messages.revisa_campos') }}
           </div>
         @endif
 
@@ -112,8 +112,8 @@
 
           <div class="row">
             <div class="field">
-              <label for="fName">Nombre completo</label>
-              <input id="fName" name="name" required placeholder="Tu nombre y apellidos"
+              <label for="fName">{{ __('messages.nombre_completo') }}</label>
+              <input id="fName" name="name" required placeholder="{{ __('messages.nombre_placeholder') }}"
                      value="{{ old('name') }}" class="@error('name') is-invalid @enderror">
               @error('name') <small class="error">{{ $message }}</small> @enderror
             </div>
@@ -121,15 +121,15 @@
 
           <div class="row grid-2">
             <div class="field">
-              <label for="fPhone">Móvil</label>
-              <input id="fPhone" name="phone" type="tel" required placeholder="55 1234 5678"
+              <label for="fPhone">{{ __('messages.movil') }}</label>
+              <input id="fPhone" name="phone" type="tel" required placeholder="{{ __('messages.telefono_placeholder') }}"
                      value="{{ old('phone') }}" class="@error('phone') is-invalid @enderror">
-              <span class="hint">Incluye lada. Ej.: 442 123 4567</span>
+              <span class="hint">{{ __('messages.hint_telefono') }}</span>
               @error('phone') <small class="error">{{ $message }}</small> @enderror
             </div>
             <div class="field">
-              <label for="fEmail">Correo electrónico</label>
-              <input id="fEmail" name="email" type="email" required placeholder="tucorreo@dominio.com"
+              <label for="fEmail">{{ __('messages.correo_electronico') }}</label>
+              <input id="fEmail" name="email" type="email" required placeholder="{{ __('messages.email_placeholder') }}"
                      value="{{ old('email') }}" class="@error('email') is-invalid @enderror">
               @error('email') <small class="error">{{ $message }}</small> @enderror
             </div>
@@ -137,8 +137,8 @@
 
           <div class="row">
             <div class="field">
-              <label for="fSubject">Asunto</label>
-              <input id="fSubject" name="subject" placeholder="¿En qué podemos ayudarte?"
+              <label for="fSubject">{{ __('messages.asunto') }}</label>
+              <input id="fSubject" name="subject" placeholder="{{ __('messages.asunto_placeholder') }}"
                      value="{{ old('subject') }}" class="@error('subject') is-invalid @enderror">
               @error('subject') <small class="error">{{ $message }}</small> @enderror
             </div>
@@ -146,12 +146,12 @@
 
           <div class="row">
             <div class="field">
-              <label for="fMessage">Mensaje</label>
+              <label for="fMessage">{{ __('messages.mensaje') }}</label>
               <textarea id="fMessage" name="message" rows="5" required maxlength="800"
-                        placeholder="Escribe tu mensaje aquí…"
+                        placeholder="{{ __('messages.mensaje_placeholder') }}"
                         class="@error('message') is-invalid @enderror">{{ old('message') }}</textarea>
                         <span class="hint">
-                <span id="charCount">{{ strlen(old('message','')) }}</span>/800
+                <span id="charCount">{{ strlen(old('message','')) }}</span>/800 {{ __('messages.caracteres') }}
             </span>
             @error('message') <small class="error">{{ $message }}</small> @enderror
             {{-- Script para el contador de caracteres --}}
@@ -172,49 +172,49 @@
           <label class="cbox">
             <input type="checkbox" id="promo" name="promociones" value="1" {{ old('promociones') ? 'checked' : '' }}>
             <span class="checkmark"></span>
-            <span>Deseo recibir alertas, confirmaciones y promociones por correo o teléfono.</span>
+            <span>{{ __('messages.recibir_promociones') }}</span>
           </label>
 
           <div class="form-actions">
             {{-- WhatsApp funcional --}}
             <a class="btn btn-ghost" id="btnWhatsapp" href="https://wa.me/524427169793" target="_blank">
-              <i class="fa-brands fa-whatsapp"></i> WhatsApp
+              <i class="fa-brands fa-whatsapp"></i> {{ __('messages.whatsapp') }}
             </a>
             {{-- Enviar formulario --}}
             <button type="submit" class="btn btn-primary">
-              Enviar mensaje
+              {{ __('messages.enviar_mensaje') }}
             </button>
           </div>
         </form>
       </div>
 
       <div class="disclaimer">
-        Al enviar este formulario aceptas nuestro
-        <a href="{{ route('rutaPoliticas') }}" target="_blank">Aviso de Privacidad</a> y nuestras
-        <a href="{{ route('rutaPoliticas') }}" target="_blank">Política de Uso</a>
+        {{ __('messages.acepto_aviso') }}
+        <a href="{{ route('rutaPoliticas') }}" target="_blank">{{ __('messages.aviso_privacidad') }}</a> {{ __('messages.y_nuestras') }}
+        <a href="{{ route('rutaPoliticas') }}" target="_blank">{{ __('messages.politica_uso') }}</a>
       </div>
     </div>
 
     <div class="contact-right">
       <div class="card-cta" aria-label="soporte">
         <div class="cta-icon"><i class="fa-solid fa-headset"></i></div>
-        <h3>Soporte y atención</h3>
-        <p>Nuestro equipo está disponible para resolver tus dudas, cotizar y ayudarte a reservar.</p>
+        <h3>{{ __('messages.soporte_atencion') }}</h3>
+        <p>{{ __('messages.soporte_texto') }}</p>
         <div class="cta-actions">
            {{-- Llamada funcional --}}
           <a class="btn btn-secondary" href="tel:+524421234567">
-            <i class="fa-solid fa-phone"></i> Llamar ahora
+            <i class="fa-solid fa-phone"></i> {{ __('messages.llamar_ahora') }}
           </a>
           {{-- WhatsApp funcional --}}
           <a class="btn btn-primary" id="ctaWhats" href="https://wa.me/524427169793" target="_blank">
-            <i class="fa-brands fa-whatsapp"></i> WhatsApp
+            <i class="fa-brands fa-whatsapp"></i> {{ __('messages.whatsapp') }}
           </a>
         </div>
         <div class="cta-hours">
-          <i class="fa-regular fa-clock"></i> Lun–Dom · 8:00 a 22:00 h
+          <i class="fa-regular fa-clock"></i> {{ __('messages.horario_atencion') }}
         </div>
       </div>
-      <img class="illus" alt="Soporte Viajero" src="{{ asset('img/contacto2.png') }}">
+      <img class="illus" alt="{{ __('messages.soporte_viajero') }}" src="{{ asset('img/contacto2.png') }}">
     </div>
   </section>
 </main>

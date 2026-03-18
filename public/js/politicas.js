@@ -184,9 +184,8 @@
 
     console.log('Fechas configuradas: sin valores por defecto');
   }
-
-  // =========================
-//  SELECT2 CON ICONOS - VERSIÓN ÚNICA Y CONSISTENTE (CORREGIDA)
+// =========================
+//  SELECT2 CON ICONOS - VERSIÓN CON TEXTOS DINÁMICOS
 // =========================
 function setupSelect2Iconos() {
   if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
@@ -205,9 +204,9 @@ function setupSelect2Iconos() {
     let iconClass = 'fa-building';
     const text = option.text.toLowerCase();
 
-    if (text.includes('aeropuerto')) {
+    if (text.includes('aeropuerto') || text.includes('airport')) {
       iconClass = 'fa-plane-departure';
-    } else if (text.includes('central de autobuses') || text.includes('terminal')) {
+    } else if (text.includes('central de autobuses') || text.includes('terminal') || text.includes('bus station')) {
       iconClass = 'fa-bus';
     }
 
@@ -228,7 +227,11 @@ function setupSelect2Iconos() {
     dropoffSelect.disabled = false;
   }
 
-  // Configuración base para Select2 - ¡SIEMPRE IGUAL en todos los dispositivos!
+  // OBTENER TEXTOS ACTUALIZADOS DEL HTML
+  const pickupPlaceholder = document.querySelector('#pickupPlacePoliticas option[disabled][selected]')?.textContent || '¿Dónde inicia tu viaje?';
+  const dropoffPlaceholder = document.querySelector('#dropoffPlacePoliticas option[disabled][selected]')?.textContent || '¿Dónde termina tu viaje?';
+
+  // Configuración base para Select2 - CON PLACEHOLDERS DINÁMICOS
   const select2Config = {
     templateResult: formatOption,
     templateSelection: formatOption,
@@ -236,7 +239,7 @@ function setupSelect2Iconos() {
     width: '100%',
     minimumResultsForSearch: Infinity,
     allowClear: false,
-    dropdownParent: modal ? $(modal) : undefined // 👈 SIEMPRE el modal si existe
+    dropdownParent: modal ? $(modal) : undefined
   };
 
   // Destruir instancias existentes
@@ -250,16 +253,16 @@ function setupSelect2Iconos() {
     console.log('Error destruyendo instancias previas:', e);
   }
 
-  // Inicializar pickup - ¡SIEMPRE con los mismos estilos!
+  // Inicializar pickup con placeholder dinámico
   $('#pickupPlacePoliticas').select2({
     ...select2Config,
-    placeholder: '¿Dónde inicia tu viaje?'
+    placeholder: pickupPlaceholder
   });
 
-  // Inicializar dropoff - ¡SIEMPRE con los mismos estilos!
+  // Inicializar dropoff con placeholder dinámico
   $('#dropoffPlacePoliticas').select2({
     ...select2Config,
-    placeholder: '¿Dónde termina tu viaje?'
+    placeholder: dropoffPlaceholder
   });
 
   // Restaurar estado original del dropoff
@@ -275,7 +278,63 @@ function setupSelect2Iconos() {
     }
   }, 100);
 
-  console.log(' Select2 inicializado con estilos consistentes en todos los dispositivos');
+  console.log(' Select2 inicializado con placeholders:', pickupPlaceholder, dropoffPlaceholder);
+}
+// =========================
+//  DETECTOR DE CAMBIO DE IDIOMA
+// =========================
+function detectLanguageChange() {
+  // Guardar el idioma actual
+  let currentLang = document.documentElement.lang || 'es';
+
+  // Observar cambios en el atributo lang del HTML
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.attributeName === 'lang') {
+        const newLang = document.documentElement.lang;
+        console.log('Idioma detectado:', newLang);
+
+        // Re-inicializar componentes que necesitan actualizarse
+        setTimeout(() => {
+          // Destruir y recrear Select2 con los nuevos textos
+          if (typeof $ !== 'undefined' && $.fn.select2) {
+            try {
+              $('#pickupPlacePoliticas').select2('destroy');
+              $('#dropoffPlacePoliticas').select2('destroy');
+            } catch(e) {}
+
+            // Pequeño retraso para asegurar que el DOM se actualizó
+            setTimeout(setupSelect2Iconos, 100);
+          }
+        }, 50);
+      }
+    });
+  });
+
+  // Iniciar observación
+  observer.observe(document.documentElement, { attributes: true });
+
+  // También verificar después de cada clic en cambio de idioma
+  document.querySelectorAll('[href*="lang/"]').forEach(link => {
+    link.addEventListener('click', function() {
+      // Permitir que la página recargue pero marcar que necesitamos reinicializar
+      sessionStorage.setItem('languageJustChanged', 'true');
+    });
+  });
+
+  // Verificar si venimos de un cambio de idioma
+  if (sessionStorage.getItem('languageJustChanged') === 'true') {
+    sessionStorage.removeItem('languageJustChanged');
+    setTimeout(() => {
+      if (typeof $ !== 'undefined' && $.fn.select2) {
+        try {
+          $('#pickupPlacePoliticas').select2('destroy');
+          $('#dropoffPlacePoliticas').select2('destroy');
+        } catch(e) {}
+        setTimeout(setupSelect2Iconos, 100);
+      }
+    }, 150);
+  }
 }
   // =========================
   //  FUNCIÓN PARA CAMBIAR ICONOS SEGÚN SELECCIÓN
@@ -399,158 +458,158 @@ function setupCheckbox() {
     console.log('Error mostrado:', message, 'en', element);
   }
 
-  // =========================
-  //  VALIDACIÓN DEL FORMULARIO - POLÍTICAS
-  // =========================
-  function setupValidation() {
+ // =========================
+//  VALIDACIÓN DEL FORMULARIO - POLÍTICAS
+// =========================
+function setupValidation() {
     const form = document.getElementById('rentalFormPoliticas');
     if (!form) return;
 
     form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      console.log('=== VALIDANDO FORMULARIO POLÍTICAS ===');
+        e.preventDefault();
+        console.log('=== VALIDANDO FORMULARIO POLÍTICAS ===');
 
-      let valid = true;
+        let valid = true;
 
-      form.querySelectorAll('.error-msg').forEach(el => el.remove());
-      form.querySelectorAll('.field-error, .field-success').forEach(el => {
-        el.classList.remove('field-error', 'field-success');
-      });
-
-      if (typeof $ !== 'undefined' && $.fn.select2) {
-        form.querySelectorAll('.select2-selection').forEach(el => {
-          el.classList.remove('field-error', 'field-success');
+        form.querySelectorAll('.error-msg').forEach(el => el.remove());
+        form.querySelectorAll('.field-error, .field-success').forEach(el => {
+            el.classList.remove('field-error', 'field-success');
         });
-      }
 
-      const checkbox = document.getElementById('differentDropoffPoliticas');
-
-const selects = [
-  { id: 'pickupPlacePoliticas', msg: 'Ubicación Requerida' }
-];
-
-// solo exigir dropoff si el checkbox está activado
-if (checkbox && checkbox.checked) {
-  selects.push({ id: 'dropoffPlacePoliticas', msg: 'Ubicación Requerida' });
-}
-
-      selects.forEach(campo => {
-        const select = document.getElementById(campo.id);
-        if (!select) return;
-
-        const container = select.closest('.field');
-
-        if (!select.value) {
-          valid = false;
-          select.classList.add('field-error');
-
-          if (typeof $ !== 'undefined' && $.fn.select2) {
-            $(select).next('.select2-container')
-              .find('.select2-selection')
-              .addClass('field-error');
-          }
-
-          if (container) {
-            const msg = document.createElement('span');
-            msg.className = 'error-msg';
-            msg.textContent = campo.msg;
-            container.appendChild(msg);
-          }
-        } else {
-          select.classList.add('field-success');
-
-          if (typeof $ !== 'undefined' && $.fn.select2) {
-            $(select).next('.select2-container')
-              .find('.select2-selection')
-              .addClass('field-success');
-          }
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+            form.querySelectorAll('.select2-selection').forEach(el => {
+                el.classList.remove('field-error', 'field-success');
+            });
         }
-      });
 
-      //  VALIDAR FECHAS (FLATPICKR)
-      const fechas = [
-        { id: 'pickupDatePoliticas', msg: 'Fecha Requerida' },
-        { id: 'dropoffDatePoliticas', msg: 'Fecha Requerida' }
-      ];
+        const checkbox = document.getElementById('differentDropoffPoliticas');
+        const translations = window.politicasTranslations || {};
 
-      fechas.forEach(campo => {
-        const hiddenInput = document.getElementById(campo.id);
-        if (!hiddenInput) return;
+        const selects = [
+            { id: 'pickupPlacePoliticas', msg: translations.ubicacion_requerida || 'Ubicación Requerida' }
+        ];
 
-        const picker = hiddenInput._flatpickr;
-        const altInput = picker ? picker.altInput : null;
-        const container = hiddenInput.closest('.dt-field');
-        const hasValue = hiddenInput.value && hiddenInput.value.trim() !== '';
-
-        if (!hasValue) {
-          valid = false;
-
-          if (altInput) {
-            altInput.classList.add('field-error');
-            altInput.classList.remove('field-success');
-          }
-
-          if (container) {
-            const msg = document.createElement('span');
-            msg.className = 'error-msg';
-            msg.textContent = campo.msg;
-            container.appendChild(msg);
-          }
-        } else {
-          if (altInput) {
-            altInput.classList.add('field-success');
-            altInput.classList.remove('field-error');
-          }
+        // solo exigir dropoff si el checkbox está activado
+        if (checkbox && checkbox.checked) {
+            selects.push({ id: 'dropoffPlacePoliticas', msg: translations.ubicacion_requerida || 'Ubicación Requerida' });
         }
-      });
 
-      //  VALIDAR HORAS
-      const horas = [
-        { id: 'pickupTimePoliticas', msg: 'Hora Requerida' },
-        { id: 'dropoffTimePoliticas', msg: 'Hora Requerida' }
-      ];
+        selects.forEach(campo => {
+            const select = document.getElementById(campo.id);
+            if (!select) return;
 
-      horas.forEach(campo => {
-        const hiddenInput = document.getElementById(campo.id);
-        if (!hiddenInput) return;
+            const container = select.closest('.field');
 
-        const timeField = hiddenInput.closest('.time-field');
-        if (!timeField) return;
+            if (!select.value) {
+                valid = false;
+                select.classList.add('field-error');
 
-        const hourSelect = timeField.querySelector('.tp-selects .tp-hour');
-        const hasValue = hourSelect && hourSelect.value;
+                if (typeof $ !== 'undefined' && $.fn.select2) {
+                    $(select).next('.select2-container')
+                        .find('.select2-selection')
+                        .addClass('field-error');
+                }
 
-        if (!hasValue) {
-          valid = false;
+                if (container) {
+                    const msg = document.createElement('span');
+                    msg.className = 'error-msg';
+                    msg.textContent = campo.msg;
+                    container.appendChild(msg);
+                }
+            } else {
+                select.classList.add('field-success');
 
-          if (hourSelect) hourSelect.classList.add('field-error');
-          hiddenInput.classList.add('field-error');
+                if (typeof $ !== 'undefined' && $.fn.select2) {
+                    $(select).next('.select2-container')
+                        .find('.select2-selection')
+                        .addClass('field-success');
+                }
+            }
+        });
 
-          const msg = document.createElement('span');
-          msg.className = 'error-msg';
-          msg.textContent = campo.msg;
-          timeField.appendChild(msg);
-        } else {
-          if (hourSelect) hourSelect.classList.add('field-success');
-          hiddenInput.classList.add('field-success');
+        // VALIDAR FECHAS (FLATPICKR)
+        const fechas = [
+            { id: 'pickupDatePoliticas', msg: translations.fecha_requerida || 'Fecha Requerida' },
+            { id: 'dropoffDatePoliticas', msg: translations.fecha_requerida || 'Fecha Requerida' }
+        ];
+
+        fechas.forEach(campo => {
+            const hiddenInput = document.getElementById(campo.id);
+            if (!hiddenInput) return;
+
+            const picker = hiddenInput._flatpickr;
+            const altInput = picker ? picker.altInput : null;
+            const container = hiddenInput.closest('.dt-field');
+            const hasValue = hiddenInput.value && hiddenInput.value.trim() !== '';
+
+            if (!hasValue) {
+                valid = false;
+
+                if (altInput) {
+                    altInput.classList.add('field-error');
+                    altInput.classList.remove('field-success');
+                }
+
+                if (container) {
+                    const msg = document.createElement('span');
+                    msg.className = 'error-msg';
+                    msg.textContent = campo.msg;
+                    container.appendChild(msg);
+                }
+            } else {
+                if (altInput) {
+                    altInput.classList.add('field-success');
+                    altInput.classList.remove('field-error');
+                }
+            }
+        });
+
+        // VALIDAR HORAS
+        const horas = [
+            { id: 'pickupTimePoliticas', msg: translations.hora_requerida || 'Hora Requerida' },
+            { id: 'dropoffTimePoliticas', msg: translations.hora_requerida || 'Hora Requerida' }
+        ];
+
+        horas.forEach(campo => {
+            const hiddenInput = document.getElementById(campo.id);
+            if (!hiddenInput) return;
+
+            const timeField = hiddenInput.closest('.time-field');
+            if (!timeField) return;
+
+            const hourSelect = timeField.querySelector('.tp-selects .tp-hour');
+            const hasValue = hourSelect && hourSelect.value;
+
+            if (!hasValue) {
+                valid = false;
+
+                if (hourSelect) hourSelect.classList.add('field-error');
+                hiddenInput.classList.add('field-error');
+
+                const msg = document.createElement('span');
+                msg.className = 'error-msg';
+                msg.textContent = campo.msg;
+                timeField.appendChild(msg);
+            } else {
+                if (hourSelect) hourSelect.classList.add('field-success');
+                hiddenInput.classList.add('field-success');
+            }
+        });
+
+        console.log('Resultado:', valid ? ' VÁLIDO' : ' INVÁLIDO');
+
+        if (valid) {
+            const pickup = document.getElementById('pickupPlacePoliticas');
+            const dropoff = document.getElementById('dropoffPlacePoliticas');
+            const checkbox = document.getElementById('differentDropoffPoliticas');
+
+            if (checkbox && !checkbox.checked) {
+                dropoff.value = pickup.value;
+            }
+            form.submit();
         }
-      });
-
-      console.log('Resultado:', valid ? ' VÁLIDO' : ' INVÁLIDO');
-
-      if (valid) {
-
-        const pickup = document.getElementById('pickupPlacePoliticas');
-  const dropoff = document.getElementById('dropoffPlacePoliticas');
-  const checkbox = document.getElementById('differentDropoffPoliticas');
-
-  if (checkbox && !checkbox.checked) {
-    dropoff.value = pickup.value;
-  }
-        form.submit();
-      }
     });
-  }
+}
 
   // =========================
   //  FLATPICKR - FORMATO dd-mmm-yyyy (mes abreviado 3 letras)
@@ -770,30 +829,31 @@ if (checkbox && checkbox.checked) {
   //  INICIALIZACIÓN PRINCIPAL
   // =========================
   onReady(() => {
-    console.log('Inicializando políticas.js');
+  console.log('Inicializando políticas.js');
 
-    setupNavbar();
-    setupAccountLink();
-    setupFooterYear();
-    setupPolicyModal();
+  setupNavbar();
+  setupAccountLink();
+  setupFooterYear();
+  setupPolicyModal();
 
-    initAnalogTime("pickupTimePoliticas");
-    initAnalogTime("dropoffTimePoliticas");
+  initAnalogTime("pickupTimePoliticas");
+  initAnalogTime("dropoffTimePoliticas");
 
-    setupFlatpickr();
-    setDefaultDates();
+  setupFlatpickr();
+  setDefaultDates();
+  initBuscadorPoliticas();
 
-    // Inicializar buscador (control de scroll)
-    initBuscadorPoliticas();
+  // Inicializar Select2
+  setTimeout(() => {
+    setupSelect2Iconos();
+    setupIconosDinamicos();
+    setupCheckbox();
+    setupValidation();
+  }, 300);
 
-    // Única inicialización de Select2
-    setTimeout(() => {
-      setupSelect2Iconos();
-      setupIconosDinamicos();
-      setupCheckbox();
-      setupValidation();
-    }, 300);
+  // DETECTOR DE CAMBIO DE IDIOMA
+  detectLanguageChange();
 
-    console.log(' Formulario de políticas listo');
-  });
+  console.log(' Formulario de políticas listo');
+});
 })();

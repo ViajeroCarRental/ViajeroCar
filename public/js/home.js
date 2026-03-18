@@ -503,6 +503,8 @@
   });
 })();
 
+
+
 /* =====================================================================
    Swiper tiles (tarjetas)
 ===================================================================== */
@@ -728,9 +730,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         /* ===== 1. VALIDAR UBICACIONES ===== */
         const selects = [
-            { id: 'pickupPlace', msg: 'Ubicación Requerida' },
-            { id: 'dropoffPlace', msg: 'Ubicación Requerida' }
-        ];
+    { id: 'pickupPlace', msg: window.validacionTranslations?.ubicacion_requerida || 'Ubicación Requerida' },
+    { id: 'dropoffPlace', msg: window.validacionTranslations?.ubicacion_requerida || 'Ubicación Requerida' }
+];
 
         selects.forEach(campo => {
             const select = document.getElementById(campo.id);
@@ -755,8 +757,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* ===== 2. VALIDAR FECHAS - CORREGIDO ===== */
 const fechas = [
-    { id: 'pickupDate', msg: 'Fecha Requerida' },
-    { id: 'dropoffDate', msg: 'Fecha Requerida' }
+    { id: 'pickupDate', msg: window.validacionTranslations?.fecha_requerida || 'Fecha Requerida' },
+    { id: 'dropoffDate', msg: window.validacionTranslations?.fecha_requerida || 'Fecha Requerida' }
 ];
 
 fechas.forEach(campo => {
@@ -816,10 +818,10 @@ fechas.forEach(campo => {
 });
 
         /* ===== 3. VALIDAR HORAS - CORREGIDO PARA SELECTS ===== */
-        const horas = [
-            { id: 'pickupTime', msg: 'Hora Requerida' },
-            { id: 'dropoffTime', msg: 'Hora Requerida' }
-        ];
+       const horas = [
+    { id: 'pickupTime', msg: window.validacionTranslations?.hora_requerida || 'Hora Requerida' },
+    { id: 'dropoffTime', msg: window.validacionTranslations?.hora_requerida || 'Hora Requerida' }
+];
 
         horas.forEach(campo => {
             const hiddenInput = document.getElementById(campo.id);

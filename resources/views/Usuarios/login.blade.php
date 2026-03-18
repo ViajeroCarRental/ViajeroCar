@@ -1,6 +1,6 @@
 @extends('layouts.Usuarios')
 
-@section('Titulo', 'Iniciar sesión')
+@section('Titulo', __('messages.iniciar_sesion'))
 
 @section('css-vistaLogin')
   <link rel="stylesheet" href="{{ asset('css/Login.css') }}">
@@ -24,8 +24,8 @@
     </div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <h1>Bienvenido a <span>Viajero</span></h1>
-      <p>Inicia sesión o crea tu cuenta para continuar</p>
+      <h1>{{ __('messages.bienvenido_a') }} <span>{{ __('messages.viajero') }}</span></h1>
+      <p>{{ __('messages.inicia_sesion_o_crea') }}</p>
     </div>
   </section>
 
@@ -36,8 +36,8 @@
       <!-- Columna formulario -->
       <div class="auth-col form-side">
         <div class="segmented" id="tabs">
-          <button class="seg-btn {{ old('form_type') === 'register' ? '' : 'active' }}" data-target="#panel-login">Iniciar sesión</button>
-          <button class="seg-btn {{ old('form_type') === 'register' ? 'active' : '' }}" data-target="#panel-register">Crear cuenta</button>
+          <button class="seg-btn {{ old('form_type') === 'register' ? '' : 'active' }}" data-target="#panel-login">{{ __('messages.iniciar_sesion') }}</button>
+          <button class="seg-btn {{ old('form_type') === 'register' ? 'active' : '' }}" data-target="#panel-register">{{ __('messages.crear_cuenta') }}</button>
           <span class="seg-slider"></span>
         </div>
 
@@ -49,22 +49,22 @@
 
             <div class="field">
               <input id="loginUser" name="login" type="text" placeholder=" " value="{{ old('login') }}" required />
-              <label for="loginUser"><i class="fa-regular fa-envelope"></i> Correo o Usuario</label>
+              <label for="loginUser"><i class="fa-regular fa-envelope"></i> {{ __('messages.correo_o_usuario') }}</label>
             </div>
 
             <div class="field">
               <input id="loginPass" name="password" type="password" placeholder=" " required />
-              <label for="loginPass"><i class="fa-solid fa-lock"></i> Contraseña</label>
+              <label for="loginPass"><i class="fa-solid fa-lock"></i> {{ __('messages.contraseña') }}</label>
               <button type="button" class="eye" data-target="#loginPass"><i class="fa-regular fa-eye"></i></button>
             </div>
 
             <div class="aux-row">
-              <label class="check"><input type="checkbox" id="rememberMe" name="remember" {{ old('remember') ? 'checked' : '' }}><span>Recordarme</span></label>
-              <a class="link" id="forgotLink">¿Olvidaste tu contraseña?</a>
+              <label class="check"><input type="checkbox" id="rememberMe" name="remember" {{ old('remember') ? 'checked' : '' }}><span>{{ __('messages.recordarme') }}</span></label>
+              <a class="link" id="forgotLink">{{ __('messages.olvidaste_contraseña') }}</a>
             </div>
 
             <button class="btn-primary w100" type="submit">
-              <i class="fa-solid fa-arrow-right-to-bracket"></i> Entrar
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> {{ __('messages.entrar') }}
             </button>
           </form>
         </div>
@@ -78,57 +78,57 @@
             <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <div class="field">
                 <input id="rName" name="nombres" type="text" placeholder=" " value="{{ old('nombres') }}" required />
-                <label for="rName"><i class="fa-regular fa-user"></i> Nombre</label>
+                <label for="rName"><i class="fa-regular fa-user"></i> {{ __('messages.nombre') }}</label>
               </div>
               <div class="field">
                 <input id="rApPat" name="ap_paterno" type="text" placeholder=" " value="{{ old('ap_paterno') }}" required />
-                <label for="rApPat"><i class="fa-regular fa-user"></i> Apellido paterno</label>
+                <label for="rApPat"><i class="fa-regular fa-user"></i> {{ __('messages.apellido_paterno') }}</label>
               </div>
               <div class="field">
                 <input id="rApMat" name="ap_materno" type="text" placeholder=" " value="{{ old('ap_materno') }}" required />
-                <label for="rApMat"><i class="fa-regular fa-user"></i> Apellido materno</label>
+                <label for="rApMat"><i class="fa-regular fa-user"></i> {{ __('messages.apellido_materno') }}</label>
               </div>
               <div class="field">
                 <input id="rBirth" name="fecha_nacimiento" type="date" value="{{ old('fecha_nacimiento') }}" placeholder=" " required />
-                <label for="rBirth"><i class="fa-regular fa-calendar"></i> Fecha de nacimiento</label>
+                <label for="rBirth"><i class="fa-regular fa-calendar"></i> {{ __('messages.fecha_nacimiento') }}</label>
               </div>
             </div>
 
             <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <div class="field">
                 <input id="rEmail" name="correo" type="email" placeholder=" " value="{{ old('correo') }}" required />
-                <label for="rEmail"><i class="fa-regular fa-envelope"></i> Correo</label>
+                <label for="rEmail"><i class="fa-regular fa-envelope"></i> {{ __('messages.correo') }}</label>
               </div>
               <div class="field">
                 <input id="rEmail2" name="correo_confirmacion" type="email" placeholder=" " value="{{ old('correo_confirmacion') }}" required />
-                <label for="rEmail2"><i class="fa-regular fa-circle-check"></i> Confirmación de correo</label>
+                <label for="rEmail2"><i class="fa-regular fa-circle-check"></i> {{ __('messages.confirmacion_correo') }}</label>
               </div>
             </div>
 
             <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <div class="field">
                 <input id="rPass" name="password" type="password" placeholder=" " required />
-                <label for="rPass"><i class="fa-solid fa-key"></i> Contraseña</label>
+                <label for="rPass"><i class="fa-solid fa-key"></i> {{ __('messages.contraseña') }}</label>
                 <button type="button" class="eye" data-target="#rPass"><i class="fa-regular fa-eye"></i></button>
                 <div class="strength" id="passStrength">
                   <span data-lvl="1"></span><span data-lvl="2"></span><span data-lvl="3"></span><span data-lvl="4"></span>
-                  <small id="strengthLabel">Fortaleza: —</small>
+                  <small id="strengthLabel">{{ __('messages.fortaleza') }}: —</small>
                 </div>
               </div>
               <div class="field">
                 <input id="rPass2" name="password_confirmacion" type="password" placeholder=" " required />
-                <label for="rPass2"><i class="fa-regular fa-circle-check"></i> Confirmación de contraseña</label>
+                <label for="rPass2"><i class="fa-regular fa-circle-check"></i> {{ __('messages.confirmacion_contraseña') }}</label>
                 <button type="button" class="eye" data-target="#rPass2"><i class="fa-regular fa-eye"></i></button>
               </div>
             </div>
 
             <label class="check mt8">
               <input type="checkbox" id="rTos" name="acepta_terminos" {{ old('acepta_terminos') ? 'checked' : '' }} required>
-              <span>Acepto el Aviso de Privacidad y los Términos y Condiciones</span>
+              <span>{{ __('messages.acepto_terminos') }}</span>
             </label>
 
             <button class="btn-primary w100" type="submit" id="btnCrearCuenta">
-              <i class="fa-solid fa-user-check"></i> Crear cuenta
+              <i class="fa-solid fa-user-check"></i> {{ __('messages.crear_cuenta_btn') }}
             </button>
           </form>
         </div>
@@ -137,14 +137,14 @@
       <!-- Columna imagen / branding -->
       <aside class="auth-col brand-side">
         <div class="brand-pane">
-          <img src="{{ asset('img/login2.png') }}" alt="auto">
+          <img src="{{ asset('img/login2.png') }}" alt="{{ __('messages.auto_viajero') }}">
           <div class="pane-gradient"></div>
           <div class="pane-info">
-            <h3>Renta hoy,<br>explora mañana</h3>
+            <h3>{{ __('messages.renta_hoy_explora') }}</h3>
             <ul>
-              <li><i class="fa-solid fa-circle-check"></i> Reservas rápidas y seguras</li>
-              <li><i class="fa-solid fa-circle-check"></i> Ofertas y upgrades exclusivos</li>
-              <li><i class="fa-solid fa-circle-check"></i> Administra tus reservas</li>
+              <li><i class="fa-solid fa-circle-check"></i> {{ __('messages.reservas_rapidas') }}</li>
+              <li><i class="fa-solid fa-circle-check"></i> {{ __('messages.ofertas_exclusivas') }}</li>
+              <li><i class="fa-solid fa-circle-check"></i> {{ __('messages.administra_reservas') }}</li>
             </ul>
           </div>
         </div>
@@ -159,8 +159,8 @@
   <div class="modal-backdrop"></div>
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="vTitle">
     <button class="modal-close" id="vClose"><i class="fa-regular fa-circle-xmark"></i></button>
-    <h3 id="vTitle"><i class="fa-regular fa-envelope"></i> Verifica tu correo</h3>
-    <p>Enviamos un código a <strong id="verifyEmail"></strong>. Ingresa el código de 6 dígitos.</p>
+    <h3 id="vTitle"><i class="fa-regular fa-envelope"></i> {{ __('messages.verifica_correo') }}</h3>
+    <p>{{ __('messages.enviamos_codigo') }} <strong id="verifyEmail"></strong>. {{ __('messages.ingresa_codigo') }}</p>
 
     <form id="formVerify" method="POST" action="{{ route('auth.verify') }}">
       @csrf
@@ -175,14 +175,14 @@
       </div>
       <div class="verify-actions" style="margin-top:15px;display:flex;gap:10px;justify-content:center;">
         <button type="submit" class="btn-primary" id="btnVerify">
-          <i class="fa-solid fa-circle-check"></i> Verificar
+          <i class="fa-solid fa-circle-check"></i> {{ __('messages.verificar') }}
         </button>
         <button type="submit" formaction="{{ route('auth.verify.resend') }}" class="btn-ghost" id="btnResend" disabled>
-          Reenviar código <span id="resendTimer">(30s)</span>
+          {{ __('messages.reenviar_codigo') }} <span id="resendTimer">(30s)</span>
         </button>
       </div>
     </form>
-    <small class="hint">¿No llegó? Revisa “Promociones” o “Spam”.</small>
+    <small class="hint">{{ __('messages.no_llego') }}</small>
   </div>
 </div>
 @endsection
@@ -194,10 +194,10 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // === Traducción y configuración Alertify ===
-      alertify.defaults.glossary.title = 'Notificación';
-      alertify.defaults.glossary.ok = 'Aceptar';
-      alertify.defaults.glossary.cancel = 'Cancelar';
-      alertify.defaults.glossary.close = 'Cerrar';
+      alertify.defaults.glossary.title = '{{ __('messages.notificacion') }}';
+      alertify.defaults.glossary.ok = '{{ __('messages.aceptar') }}';
+      alertify.defaults.glossary.cancel = '{{ __('messages.cancelar') }}';
+      alertify.defaults.glossary.close = '{{ __('messages.cerrar') }}';
       alertify.defaults.notifier.position = 'top-center';
 
       // === Mostrar mensajes del backend ===
@@ -222,4 +222,3 @@
     });
   </script>
 @endsection
-

@@ -1,6 +1,6 @@
 @extends('layouts.Usuarios')
 
-@section('Titulo', 'Mi Perfil')
+@section('Titulo', __('messages.mi_perfil'))
 
 {{-- 🎨 Estilos específicos de la vista --}}
 @section('css-vistaPerfil')
@@ -16,73 +16,73 @@
     </div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <h1>Mi <span>perfil</span></h1>
-      <p>Administra tu información, reservaciones y métodos de pago</p>
+      <h1>{{ __('messages.mi_perfil_titulo') }} <span>{{ __('messages.perfil') }}</span></h1>
+      <p>{{ __('messages.administra_info') }}</p>
     </div>
   </section>
 
   <section class="dash">
     <aside class="card pad side">
-      <h3><i class="fa-regular fa-circle-user" style="color:var(--brand)"></i> Cuenta</h3>
+      <h3><i class="fa-regular fa-circle-user" style="color:var(--brand)"></i> {{ __('messages.cuenta') }}</h3>
       <div class="s-menu" id="sMenu">
-        <button class="s-btn active" data-target="#pPerfil"><i class="fa-solid fa-id-card"></i> Mi perfil</button>
-        <button class="s-btn" data-target="#pReservas"><i class="fa-solid fa-calendar-check"></i> Mis reservaciones</button>
-        <button class="s-btn" data-target="#pTarjetas"><i class="fa-solid fa-credit-card"></i> Mis tarjetas</button>
+        <button class="s-btn active" data-target="#pPerfil"><i class="fa-solid fa-id-card"></i> {{ __('messages.mi_perfil_menu') }}</button>
+        <button class="s-btn" data-target="#pReservas"><i class="fa-solid fa-calendar-check"></i> {{ __('messages.mis_reservaciones') }}</button>
+        <button class="s-btn" data-target="#pTarjetas"><i class="fa-solid fa-credit-card"></i> {{ __('messages.mis_tarjetas') }}</button>
       </div>
-      <button class="logout" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+      <button class="logout" id="btnLogout"><i class="fa-solid fa-right-from-bracket"></i> {{ __('messages.cerrar_sesion') }}</button>
     </aside>
 
     <div class="stack">
       {{-- Panel: Mi perfil --}}
       <section class="card pad panel show" id="pPerfil">
-        <h3>Mi perfil</h3>
-        <p class="subtitle">Mantén tus datos al día para agilizar tus reservas</p>
+        <h3>{{ __('messages.mi_perfil_titulo') }}</h3>
+        <p class="subtitle">{{ __('messages.manten_datos') }}</p>
 
         <form id="formPerfil">
           <div class="grid2">
             <div class="field">
-              <label>Nombre completo</label>
-              <input id="pfName" placeholder="Tu nombre y apellidos" disabled>
+              <label>{{ __('messages.nombre_completo') }}</label>
+              <input id="pfName" placeholder="{{ __('messages.nombre_placeholder') }}" disabled>
             </div>
             <div class="field">
-              <label>Correo</label>
-              <input id="pfEmail" type="email" placeholder="tucorreo@dominio.com" disabled>
+              <label>{{ __('messages.correo') }}</label>
+              <input id="pfEmail" type="email" placeholder="{{ __('messages.email_placeholder') }}" disabled>
             </div>
             <div class="field">
-              <label>Teléfono</label>
-              <input id="pfPhone" type="tel" placeholder="55 1234 5678" disabled>
+              <label>{{ __('messages.telefono') }}</label>
+              <input id="pfPhone" type="tel" placeholder="{{ __('messages.telefono_placeholder') }}" disabled>
             </div>
 
             <div class="field">
-              <label>Fecha de nacimiento</label>
+              <label>{{ __('messages.fecha_nacimiento') }}</label>
               <div class="nice-date disabled" id="birthPicker">
                 <i class="fa-regular fa-calendar"></i>
-                <input id="pfBirthDisplay" type="text" placeholder="dd/mm/aaaa" readonly>
+                <input id="pfBirthDisplay" type="text" placeholder="{{ __('messages.fecha_placeholder') }}" readonly>
                 <div class="cal-pop" aria-hidden="true"></div>
               </div>
               <input id="pfBirth" type="hidden">
             </div>
 
             <div class="field">
-              <label>Edad</label>
+              <label>{{ __('messages.edad') }}</label>
               <input id="pfAge" placeholder="—" disabled>
             </div>
             <div class="field">
-              <label>Ubicación</label>
-              <input id="pfLoc" placeholder="Ciudad, Estado" disabled>
+              <label>{{ __('messages.ubicacion') }}</label>
+              <input id="pfLoc" placeholder="{{ __('messages.ubicacion_placeholder') }}" disabled>
             </div>
             <div class="field">
-              <label>No. de membresía</label>
-              <input id="pfMember" placeholder="VJ-XXXX-XXXX" disabled>
+              <label>{{ __('messages.no_membresia') }}</label>
+              <input id="pfMember" placeholder="{{ __('messages.membresia_placeholder') }}" disabled>
             </div>
           </div>
 
           <div class="form-actions">
             <button type="button" class="btn btn-ghost" id="btnEdit">
-              <i class="fa-regular fa-pen-to-square"></i> Editar
+              <i class="fa-regular fa-pen-to-square"></i> {{ __('messages.editar') }}
             </button>
             <button type="submit" class="btn btn-primary" id="btnSave" disabled>
-              <i class="fa-solid fa-floppy-disk"></i> Guardar
+              <i class="fa-solid fa-floppy-disk"></i> {{ __('messages.guardar') }}
             </button>
           </div>
         </form>
@@ -90,21 +90,21 @@
 
       {{-- Panel: Reservas --}}
       <section class="card pad panel" id="pReservas">
-        <h3>Mis reservaciones</h3>
-        <p class="subtitle">Consulta el historial y el estado de tus reservas</p>
+        <h3>{{ __('messages.mis_reservaciones') }}</h3>
+        <p class="subtitle">{{ __('messages.consulta_historial') }}</p>
 
         <div class="filters" id="resFilters">
-          <button class="pill active" data-status="all">Todas</button>
-          <button class="pill" data-status="pendiente">Pendientes</button>
-          <button class="pill" data-status="activa">Activas</button>
-          <button class="pill" data-status="finalizada">Finalizadas</button>
+          <button class="pill active" data-status="all">{{ __('messages.todas') }}</button>
+          <button class="pill" data-status="pendiente">{{ __('messages.pendientes') }}</button>
+          <button class="pill" data-status="activa">{{ __('messages.activas') }}</button>
+          <button class="pill" data-status="finalizada">{{ __('messages.finalizadas') }}</button>
         </div>
 
         <div class="table-wrap">
-          <table class="table" id="resTable" aria-label="Reservaciones">
+          <table class="table" id="resTable" aria-label="{{ __('messages.mis_reservaciones') }}">
             <thead>
               <tr>
-                <th>Contrato</th><th>Auto</th><th>Fechas</th><th>Estatus</th>
+                <th>{{ __('messages.contrato') }}</th><th>{{ __('messages.auto') }}</th><th>{{ __('messages.fechas') }}</th><th>{{ __('messages.estatus') }}</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -116,11 +116,11 @@
       <section class="card pad panel" id="pTarjetas">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <h3>Mis tarjetas</h3>
-            <p class="subtitle">Administra tus métodos de pago guardados</p>
+            <h3>{{ __('messages.mis_tarjetas') }}</h3>
+            <p class="subtitle">{{ __('messages.administra_tarjetas') }}</p>
           </div>
           <button class="btn btn-primary" id="btnAddCard">
-            <i class="fa-solid fa-plus"></i> Agregar tarjeta
+            <i class="fa-solid fa-plus"></i> {{ __('messages.agregar_tarjeta') }}
           </button>
         </div>
 
@@ -134,20 +134,20 @@
 <div class="modal" id="cardModal" aria-hidden="true">
   <div class="modal-backdrop"></div>
   <div class="modal-card" role="dialog" aria-modal="true">
-    <button class="modal-close" id="cardClose" aria-label="Cerrar"><i class="fa-regular fa-circle-xmark"></i></button>
-    <h3 class="modal-title" id="cardModalTitle"><i class="fa-solid fa-credit-card"></i> Método de pago</h3>
+    <button class="modal-close" id="cardClose" aria-label="{{ __('messages.cerrar') }}"><i class="fa-regular fa-circle-xmark"></i></button>
+    <h3 class="modal-title" id="cardModalTitle"><i class="fa-solid fa-credit-card"></i> {{ __('messages.metodo_pago') }}</h3>
     <form id="cardForm">
       <div class="field">
-        <label>Nombre en la tarjeta</label>
-        <input id="ccName" required placeholder="Como aparece en la tarjeta">
+        <label>{{ __('messages.nombre_tarjeta') }}</label>
+        <input id="ccName" required placeholder="{{ __('messages.nombre_tarjeta_placeholder') }}">
       </div>
       <div class="grid2">
         <div class="field">
-          <label>Número</label>
-          <input id="ccNumber" inputmode="numeric" maxlength="19" required placeholder="#### #### #### ####">
+          <label>{{ __('messages.numero_tarjeta') }}</label>
+          <input id="ccNumber" inputmode="numeric" maxlength="19" required placeholder="{{ __('messages.numero_placeholder') }}">
         </div>
         <div class="field">
-          <label>Marca</label>
+          <label>{{ __('messages.marca') }}</label>
           <select id="ccBrand" required>
             <option value="visa">Visa</option>
             <option value="mastercard">Mastercard</option>
@@ -157,17 +157,17 @@
       </div>
       <div class="grid2">
         <div class="field">
-          <label>Expiración (MM/AA)</label>
-          <input id="ccExp" placeholder="MM/AA" maxlength="5" required>
+          <label>{{ __('messages.expiracion') }}</label>
+          <input id="ccExp" placeholder="{{ __('messages.expiracion_placeholder') }}" maxlength="5" required>
         </div>
         <div class="field">
-          <label>Alias (opcional)</label>
-          <input id="ccAlias" placeholder="p.ej. Personal, Empresa">
+          <label>{{ __('messages.alias') }}</label>
+          <input id="ccAlias" placeholder="{{ __('messages.alias_placeholder') }}">
         </div>
       </div>
       <div class="modal-actions">
-        <button type="button" class="btn btn-ghost" id="cardCancel">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-ghost" id="cardCancel">{{ __('messages.cancelar') }}</button>
+        <button type="submit" class="btn btn-primary">{{ __('messages.guardar') }}</button>
       </div>
     </form>
   </div>
@@ -177,23 +177,23 @@
 <div class="modal" id="logoutModal" aria-hidden="true">
   <div class="modal-backdrop"></div>
   <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="loTitle" aria-describedby="loDesc">
-    <button class="modal-close" id="loClose" aria-label="Cerrar"><i class="fa-regular fa-circle-xmark"></i></button>
+    <button class="modal-close" id="loClose" aria-label="{{ __('messages.cerrar') }}"><i class="fa-regular fa-circle-xmark"></i></button>
     <div class="logout-card-head">
       <div class="lo-icon"><i class="fa-solid fa-right-from-bracket"></i></div>
       <div>
-        <h3 class="lo-title" id="loTitle">¿Cerrar sesión?</h3>
-        <p class="lo-sub" id="loDesc">Tu sesión se cerrará en este dispositivo.</p>
+        <h3 class="lo-title" id="loTitle">{{ __('messages.cerrar_sesion_pregunta') }}</h3>
+        <p class="lo-sub" id="loDesc">{{ __('messages.sesion_cerrara') }}</p>
       </div>
     </div>
     <div class="modal-actions">
-      <button class="btn btn-light" id="logoutCancel"><i class="fa-regular fa-circle-xmark"></i> Cancelar</button>
-      <button class="btn btn-danger" id="logoutConfirm"><i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión</button>
+      <button class="btn btn-light" id="logoutCancel"><i class="fa-regular fa-circle-xmark"></i> {{ __('messages.cancelar') }}</button>
+      <button class="btn btn-danger" id="logoutConfirm"><i class="fa-solid fa-right-from-bracket"></i> {{ __('messages.cerrar_sesion') }}</button>
     </div>
   </div>
 </div>
 
 {{-- 🔹 Toast de confirmación --}}
-<div class="toast" id="toast"><i class="fa-solid fa-check"></i> Cambios guardados</div>
+<div class="toast" id="toast"><i class="fa-solid fa-check"></i> {{ __('messages.cambios_guardados') }}</div>
 @endsection
 
 {{-- 🧠 Scripts específicos --}}

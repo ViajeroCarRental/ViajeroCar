@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
   <meta charset="UTF-8">
   <meta name="color-scheme" content="light dark">
@@ -178,37 +178,37 @@
     <!-- HEADER -->
     <div class="header">
       <img src="https://i.ibb.co/rR3WvFNf/image.png" alt="Viajero Car Rental" width="150" style="display:block;margin:auto;border:none;">
-      <h1>Notificación de Póliza</h1>
+      <h1>{{ __('messages.poliza_titulo') }}</h1>
     </div>
 
     <!-- CONTENT -->
     <div class="content">
       <div class="status">
         @if($diasRestantes < 0)
-          <span class="status-danger">🚨 Póliza vencida</span>
+          <span class="status-danger">{{ __('messages.poliza_vencida') }}</span>
         @else
-          <span class="status-warning">⚠️ Póliza próxima a vencer</span>
+          <span class="status-warning">{{ __('messages.poliza_proxima_vencer') }}</span>
         @endif
       </div>
 
       <div class="info">
-        <p><strong>Vehículo:</strong> {{ $vehiculo->nombre_publico }} ({{ $vehiculo->placa }})</p>
-        <p><strong>Aseguradora:</strong> {{ $vehiculo->aseguradora }}</p>
-        <p><strong>Fin de vigencia:</strong> {{ \Carbon\Carbon::parse($vehiculo->fin_vigencia_poliza)->format('d/m/Y') }}</p>
-        <p><strong>Días restantes:</strong> {{ round($diasRestantes) }}</p>
+        <p><strong>{{ __('messages.vehiculo') }}</strong> {{ $vehiculo->nombre_publico }} ({{ $vehiculo->placa }})</p>
+        <p><strong>{{ __('messages.aseguradora') }}</strong> {{ $vehiculo->aseguradora }}</p>
+        <p><strong>{{ __('messages.fin_vigencia') }}</strong> {{ \Carbon\Carbon::parse($vehiculo->fin_vigencia_poliza)->format('d/m/Y') }}</p>
+        <p><strong>{{ __('messages.dias_restantes') }}</strong> {{ round($diasRestantes) }}</p>
       </div>
 
       <div class="divider"></div>
 
       <p class="note">
-        Este mensaje ha sido generado automáticamente por el sistema de <strong>Viajero Car Rental</strong>.<br>
-        Verifique la vigencia de su póliza para mantener la cobertura activa del vehículo.
+        {!! __('messages.mensaje_automatico') !!}<br>
+        {{ __('messages.verificar_vigencia') }}
       </p>
     </div>
 
     <!-- FOOTER -->
     <div class="footer">
-      © {{ date('Y') }} <strong>Viajero Car Rental</strong> — Todos los derechos reservados.<br>
+      © {{ date('Y') }} <strong>Viajero Car Rental</strong> — {{ __('messages.todos_derechos') }}<br>
       <a href="https://viajerocarental.com">www.viajerocarental.com</a> |
       <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>
     </div>

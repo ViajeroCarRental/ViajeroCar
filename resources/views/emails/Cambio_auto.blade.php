@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
   <meta charset="UTF-8">
   <meta name="color-scheme" content="light dark">
@@ -91,55 +91,46 @@
   <!-- HEADER -->
   <div class="header">
     <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
-    <h1>Cambio de Vehículo en su Contrato</h1>
+    <h1>{{ __('messages.cambio_vehiculo_titulo') }}</h1>
   </div>
 
   <!-- CONTENT -->
   <div class="content">
 
     <p>
-      Estimado(a) <strong>{{ $clienteNombre }}</strong>,
+      {{ __('messages.estimado_cliente') }} <strong>{{ $clienteNombre }}</strong>,
     </p>
 
     <p>
-      Le enviamos adjunto el <strong>formato de cambio de vehículo</strong>
-      correspondiente a su reservación
-      <strong>{{ $codigoReservacion ?? '' }}</strong>.
+      {!! __('messages.enviamos_formato_cambio', ['codigo' => $codigoReservacion ?? '']) !!}
     </p>
 
     <p>
-      En este documento encontrará el detalle del vehículo originalmente
-      asignado, el nuevo vehículo entregado, así como el registro de los
-      daños y fotografías asociados a este cambio.
+      {{ __('messages.detalle_documento') }}
     </p>
 
     <div class="info-box">
       <p>
-        Le recomendamos <strong>revisar cuidadosamente la información
-        del documento</strong> y conservarlo como respaldo de las
-        condiciones en que se realizó el cambio de vehículo.
-        Si detecta alguna aclaración o corrección, por favor contacte a
-        nuestros agentes de inmediato.
+        {{ __('messages.revisar_documento') }}
       </p>
     </div>
 
     <p>
-      Nuestro equipo está a su disposición para resolver cualquier duda
-      relacionada con su contrato o con el cambio de vehículo realizado.
+      {{ __('messages.equipo_disponible') }}
     </p>
 
     <div class="divider"></div>
 
     <p style="color:#555;">
-      Gracias por confiar en <strong>Viajero Car Rental</strong>.<br>
-      Será un placer seguir atendiéndole en sus próximos viajes.
+      {{ __('messages.gracias_confianza') }}<br>
+      {{ __('messages.seguir_atendiendo') }}
     </p>
 
   </div>
 
   <!-- FOOTER -->
   <div class="footer">
-    © {{ date('Y') }} <strong>Viajero Car Rental</strong><br>
+    © {{ date('Y') }} <strong>Viajero Car Rental</strong> — {{ __('messages.todos_derechos') }}<br>
     <a href="https://viajerocarental.com">www.viajerocarental.com</a> |
     <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>
   </div>

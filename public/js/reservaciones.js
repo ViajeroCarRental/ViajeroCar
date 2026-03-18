@@ -71,107 +71,85 @@
   }
 
   function applyYoungDriverAddon() {
-  const hiddenAlt =
-    qs('#addonsHidden') ||
-    qs('input[name="addons"]') ||
-    qs('input[name="addons_ids"]') ||
-    qs('input[name="addonsHidden"]');
+    const hidden =
+      qs('#addonsHidden') ||
+      qs('input[name="addons"]') ||
+      qs('input[name="addons_ids"]') ||
+      qs('input[name="addonsHidden"]');
 
-  const payloadHidden = qs('#addons_payload');
-  const dobHidden = qs('#dob');
+    const dobHidden = qs('#dob');
 
-  if ((!hiddenAlt && !payloadHidden) || !dobHidden || !YOUNG_DRIVER_SERVICE_ID) return;
+    if (!hidden || !dobHidden || !YOUNG_DRIVER_SERVICE_ID) return;
 
-  const baseValue =
-    (hiddenAlt && hiddenAlt.value ? hiddenAlt.value.trim() : '') ||
-    (payloadHidden && payloadHidden.value ? payloadHidden.value.trim() : '');
+    const dobStr  = String(dobHidden.value || '').trim();
+    const refDate = getPickupDateForAge();
+    const age     = computeAgeFromDob(dobStr, refDate);
 
-  const dobStr  = String(dobHidden.value || '').trim();
-  const refDate = getPickupDateForAge();
-  const age     = computeAgeFromDob(dobStr, refDate);
+    const map = parseAddonsStringToMap(hidden.value || '');
+    const hadBefore = map.has(String(YOUNG_DRIVER_SERVICE_ID));
 
-  const map = parseAddonsStringToMap(baseValue);
-  const hadBefore = map.has(String(YOUNG_DRIVER_SERVICE_ID));
+    if (age != null && age < YOUNG_DRIVER_MIN_AGE) {
+      map.set(String(YOUNG_DRIVER_SERVICE_ID), 1);
 
-  if (age != null && age < YOUNG_DRIVER_MIN_AGE) {
-    map.set(String(YOUNG_DRIVER_SERVICE_ID), 1);
+      if (!hadBefore && !youngDriverAlertShown && window.alertify) {
+        youngDriverAlertShown = true;
 
-    if (!hadBefore && !youngDriverAlertShown && window.alertify) {
-      youngDriverAlertShown = true;
-
-      let montoPorDia = null;
-      try {
-        const script = document.getElementById('addonsCatalog');
-        if (script) {
-          const catalog = JSON.parse(script.textContent || '{}') || {};
-          const srv = catalog[String(YOUNG_DRIVER_SERVICE_ID)];
-          if (srv) {
-            montoPorDia = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+        let montoPorDia = null;
+        try {
+          const script = document.getElementById('addonsCatalog');
+          if (script) {
+            const catalog = JSON.parse(script.textContent || '{}') || {};
+            const srv = catalog[String(YOUNG_DRIVER_SERVICE_ID)];
+            if (srv) {
+              const raw = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+              montoPorDia = raw;
+            }
           }
-        }
-      } catch (_) {}
+        } catch (_) {}
 
-      const montoStr = (montoPorDia != null)
-        ? Math.round(montoPorDia).toLocaleString('es-MX')
-        : 'X';
+        const montoStr = (montoPorDia != null)
+          ? Math.round(montoPorDia).toLocaleString('es-MX')
+          : 'X';
 
-      const msg =
-        "Detectamos que el conductor principal tiene menos de 25 años.\n\n" +
-        `Por política de aseguradora, se agregará automáticamente el servicio "Conductor menor de 25 años", ` +
-        `con un cargo adicional de ${montoStr} MXN por día de renta.\n\n` +
-        "Puedes ver este concepto en el desglose de Opciones de renta.";
+        const msg =
+          "Detectamos que el conductor principal tiene menos de 25 años.\n\n" +
+          `Por política de aseguradora, se agregará automáticamente el servicio "Conductor menor de 25 años", ` +
+          `con un cargo adicional de ${montoStr} MXN por día de renta.\n\n` +
+          "Puedes ver este concepto en el desglose de Opciones de renta.";
 
-      alertify.confirm(
-        "Conductor menor de 25 años",
-        msg,
-        function () {},
-        function () {}
-      );
-    }
-  } else {
-    map.delete(String(YOUNG_DRIVER_SERVICE_ID));
-  }
+        alertify.confirm(
+          "Conductor menor de 25 años",
+          msg,
+          function () {},
+          function () {}
+        );
+      }
 
-  const newValue = serializeAddonsMap(map);
-
-  if (hiddenAlt) {
-    hiddenAlt.value = newValue;
-    try {
-      hiddenAlt.dispatchEvent(new Event('change', { bubbles: true }));
-    } catch (_) {}
-  }
-
-  if (payloadHidden) {
-    payloadHidden.value = newValue;
-    try {
-      payloadHidden.dispatchEvent(new Event('change', { bubbles: true }));
-    } catch (_) {}
-  }
-
-  try {
-    const url = new URL(window.location.href);
-    if (newValue) {
-      url.searchParams.set('addons', newValue);
     } else {
-      url.searchParams.delete('addons');
+      map.delete(String(YOUNG_DRIVER_SERVICE_ID));
     }
-    window.history.replaceState({}, document.title, url.toString());
-  } catch (_) {}
+
+    const newValue = serializeAddonsMap(map);
+    hidden.value = newValue;
 
     try {
-    initStep4AddonsSummary();
-  } catch (_) {}
+      hidden.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (_) {}
 
-  // ✅ Refuerzo: volver a recalcular un instante después
-  // para asegurar que el payload ya quedó actualizado en DOM
-  setTimeout(() => {
+    try {
+      const url = new URL(window.location.href);
+      if (newValue) {
+        url.searchParams.set('addons', newValue);
+      } else {
+        url.searchParams.delete('addons');
+      }
+      window.history.replaceState({}, document.title, url.toString());
+    } catch (_) {}
+
     try {
       initStep4AddonsSummary();
     } catch (_) {}
-  }, 0);
-}
-
-
+  }
 
   function initSectionValidators() {
 
@@ -821,169 +799,129 @@
   }
 
   function initStep4AddonsSummary() {
-  const table = qs('#cotizacionDoc');
-  if (!table) return;
+    const table = qs('#cotizacionDoc');
+    if (!table) return;
 
-  const qBaseEl    = qs('#qBase');
-  const qExtrasEl  = qs('#qExtras');
-  const qIvaEl     = qs('#qIva');
-  const qTotalEl   = qs('#qTotal');
-  const extrasList = qs('#extrasList');
-  const ivaList    = qs('#ivaList');
+    const qBaseEl   = qs('#qBase');
+    const qExtrasEl = qs('#qExtras');
+    const qIvaEl    = qs('#qIva');
+    const qTotalEl  = qs('#qTotal');
+    const extrasList = qs('#extrasList');
+    const ivaList    = qs('#ivaList');
 
-  if (!qBaseEl || !qExtrasEl || !qIvaEl || !qTotalEl) return;
+    if (!qBaseEl || !qExtrasEl || !qIvaEl || !qTotalEl) return;
 
-  const base = parseFloat(table.dataset.base || '0') || 0;
-  const days = parseInt(table.dataset.days || '1', 10) || 1;
+    const base = parseFloat(table.dataset.base || '0') || 0;
+    const days = parseInt(table.dataset.days || '1', 10) || 1;
 
+    const hiddenPayload = qs('#addons_payload');
     const hiddenAlt     = qs('#addonsHidden');
-  const hiddenPayload = qs('#addons_payload');
+    const rawAddons =
+      (hiddenPayload && hiddenPayload.value && hiddenPayload.value.trim()) ||
+      (hiddenAlt && hiddenAlt.value && hiddenAlt.value.trim()) ||
+      '';
 
-  // ✅ En Step 4 primero manda el payload final del formulario
-  const rawAddons =
-  (hiddenPayload && hiddenPayload.value ? hiddenPayload.value.trim() : '') ||
-  (hiddenAlt && hiddenAlt.value ? hiddenAlt.value.trim() : '') ||
-  '';
-
-
-
-
-  const catalogScript = document.getElementById('addonsCatalog');
-  let catalog = {};
-  if (catalogScript) {
-    try {
-      catalog = JSON.parse(catalogScript.textContent || '{}') || {};
-    } catch (_) {
-      catalog = {};
+    const catalogScript = document.getElementById('addonsCatalog');
+    let catalog = {};
+    if (catalogScript) {
+      try {
+        catalog = JSON.parse(catalogScript.textContent || '{}') || {};
+      } catch (e) {
+        catalog = {};
+      }
     }
-  }
 
-  function parseAddons(str) {
-    const map = new Map();
-    String(str || '')
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .forEach(pair => {
-        const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
-        if (!m) return;
-        const id = m[1];
-        const qty = Math.max(0, parseInt(m[2], 10) || 0);
-        if (qty > 0) map.set(id, qty);
-      });
-    return map;
-  }
-
-  function fmtMoney(n) {
-    return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
-  }
-
-  const addonsMap = parseAddons(rawAddons);
-  let extrasTotal = 0;
-  let renderedRows = 0;
-
-  if (extrasList) extrasList.innerHTML = '';
-  if (ivaList) ivaList.innerHTML = '';
-
-  // ======================================================
-  // DROP OFF
-  // ======================================================
-  const pickupId  = table.dataset.pickup;
-  const dropoffId = table.dataset.dropoff;
-  const km        = parseFloat(table.dataset.km || 0);
-  const costoKm   = parseFloat(table.dataset.costokm || 0);
-
-  if (pickupId && dropoffId && pickupId !== dropoffId && km > 0 && costoKm > 0) {
-    const dropoffTotal = km * costoKm;
-    extrasTotal += dropoffTotal;
-
-    if (extrasList) {
-      const row = document.createElement('div');
-      row.className = 'row row-dropoff';
-      row.innerHTML = `
-        <span>Drop Off (${km} km)</span>
-        <strong>${fmtMoney(dropoffTotal)}</strong>
-      `;
-      extrasList.appendChild(row);
-      renderedRows++;
+    function parseAddons(str) {
+      const map = new Map();
+      String(str || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .forEach(pair => {
+          const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
+          if (!m) return;
+          const id = m[1];
+          const qty = Math.max(0, parseInt(m[2], 10) || 0);
+          if (qty > 0) map.set(id, qty);
+        });
+      return map;
     }
-  }
 
-  // ======================================================
-  // ADDONS
-  // ======================================================
-  addonsMap.forEach((qty, id) => {
-    const srv = catalog[id];
-    if (!srv) return;
+    function fmtMoney(n) {
+      return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
+    }
 
-    const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
-    const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
+    const addonsMap = parseAddons(rawAddons);
+    let extrasTotal = 0;
 
-    let lineTotal = 0;
-    if (tipo === 'por_evento') {
-      lineTotal = price * qty;
+    if (extrasList) extrasList.innerHTML = '';
+    if (ivaList) ivaList.innerHTML = '';
+
+    if (addonsMap.size === 0) {
+      if (extrasList) {
+        const row = document.createElement('div');
+        row.className = 'row row-empty';
+        row.innerHTML = `
+          <span class="muted">Sin complementos seleccionados</span>
+          <strong>$0 MXN</strong>
+        `;
+        extrasList.appendChild(row);
+      }
     } else {
-      lineTotal = price * qty * days;
+      addonsMap.forEach((qty, id) => {
+        const srv = catalog[id];
+        if (!srv) return;
+
+        const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+        const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
+
+        let lineTotal = 0;
+        if (tipo === 'por_evento') {
+          lineTotal = price * qty;
+        } else {
+          lineTotal = price * qty * days;
+        }
+
+        extrasTotal += lineTotal;
+
+        if (extrasList) {
+          const row = document.createElement('div');
+          row.className = 'row row-addon';
+
+          const unidadLabel = (tipo === 'por_evento') ? '/ evento' : 'por día';
+
+          row.innerHTML = `
+            <span style="flex:1;">
+              ${qty} | ${srv.nombre} | ${fmtMoney(price)} ${unidadLabel}
+            </span>
+            <strong style="flex:0 0 110px; text-align:right;">
+              ${fmtMoney(lineTotal)}
+            </strong>
+          `;
+          extrasList.appendChild(row);
+        }
+      });
     }
 
-    extrasTotal += lineTotal;
+    const subtotal = base + extrasTotal;
+    const iva = subtotal * 0.16;
+    const total = subtotal + iva;
 
-    if (extrasList) {
+    qBaseEl.textContent   = fmtMoney(base);
+    qExtrasEl.textContent = fmtMoney(extrasTotal);
+    qIvaEl.textContent    = fmtMoney(iva);
+    qTotalEl.textContent  = fmtMoney(total);
+
+    if (ivaList) {
       const row = document.createElement('div');
-      row.className = 'row row-addon';
-
-      const unidadLabel = (tipo === 'por_evento') ? '/ evento' : 'por día';
-
+      row.className = 'row row-iva';
       row.innerHTML = `
-        <span style="flex:1;">
-          ${qty} | ${srv.nombre} | ${fmtMoney(price)} ${unidadLabel}
-        </span>
-        <strong style="flex:0 0 110px; text-align:right;">
-          ${fmtMoney(lineTotal)}
-        </strong>
+        <span>IVA (16%)</span>
+        <strong>${fmtMoney(iva)}</strong>
       `;
-
-      extrasList.appendChild(row);
-      renderedRows++;
+      ivaList.appendChild(row);
     }
-  });
-
-  // Si no hubo nada
-  if (renderedRows === 0 && extrasList) {
-    const row = document.createElement('div');
-    row.className = 'row row-empty';
-    row.innerHTML = `
-      <span class="muted">Sin complementos seleccionados</span>
-      <strong>$0 MXN</strong>
-    `;
-    extrasList.appendChild(row);
   }
-
-  const subtotal = base + extrasTotal;
-  const iva = subtotal * 0.16;
-  const total = subtotal + iva;
-
-  qBaseEl.textContent   = fmtMoney(base);
-  qExtrasEl.textContent = fmtMoney(extrasTotal);
-  qIvaEl.textContent    = fmtMoney(iva);
-  qTotalEl.textContent  = fmtMoney(total);
-
-  if (ivaList) {
-    const row = document.createElement('div');
-    row.className = 'row row-iva';
-    row.innerHTML = `
-      <span>IVA (16%)</span>
-      <strong>${fmtMoney(iva)}</strong>
-    `;
-    ivaList.appendChild(row);
-  }
-
-  const totalMovil = document.getElementById('qTotalMovil');
-  if (totalMovil) {
-    totalMovil.textContent = fmtMoney(total);
-  }
-}
-
 
   function initFullNameSync(){
     const full     = qs('#nombreCompleto');
@@ -1054,7 +992,7 @@
       }
     }
 
-        function updateHidden(){
+    function updateHidden(){
       clampDay();
 
       const d = day.value;
@@ -1067,17 +1005,9 @@
         hidden.value = '';
       }
 
-      try { hidden.dispatchEvent(new Event('change', { bubbles:true })); } catch(_){}
+      try{ hidden.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
       try { applyYoungDriverAddon(); } catch (_) {}
-
-      // ✅ Forzar refresco visual del resumen del paso 4
-      try { initStep4AddonsSummary(); } catch (_) {}
-
-      setTimeout(() => {
-        try { initStep4AddonsSummary(); } catch (_) {}
-      }, 0);
     }
-
 
     function hydrateFromHidden(){
       const v = String(hidden.value || '').trim();
@@ -1105,10 +1035,7 @@
     const pickupHour = qs('#pickup_h');
     const dropoffHour = qs('#dropoff_h');
 
-    if (!pickupDate || !dropoffDate) {
-    console.log("No encontró inputs de fecha");
-    return;
-  }
+    if (!pickupDate || !dropoffDate) return;
 
     function parseDateAny(val) {
       if (!val) return null;
@@ -1180,201 +1107,122 @@
     runUpdate();
   }
 
-
-
-
   function initAddonsSync() {
-  const hidden =
-    qs('#addonsHidden') ||
-    qs('input[name="addons"]') ||
-    qs('input[name="addons_ids"]') ||
-    qs('input[name="addonsHidden"]');
+    const hidden =
+      qs('#addonsHidden') ||
+      qs('input[name="addons"]') ||
+      qs('input[name="addons_ids"]') ||
+      qs('input[name="addonsHidden"]');
 
-  const payloadHidden = qs('#addons_payload');
-  const cards = qsa('.addon-card');
+    const cards = qsa('.addon-card');
+    if (!cards.length || !hidden) return;
 
-  if (!cards.length || !hidden) return;
-
-  const SERVICE_GASOLINA_ID = "1";
-
-  function parseMap(str) {
-    const map = new Map();
-    String(str || '')
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .forEach(pair => {
+    function parseMap(str) {
+      const map = new Map();
+      (String(str || '').split(',').map(s => s.trim()).filter(Boolean)).forEach(pair => {
         const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
-        if (m) {
-          map.set(m[1], Math.max(0, parseInt(m[2], 10) || 0));
-        } else {
+        if (m) map.set(m[1], Math.max(0, parseInt(m[2], 10) || 0));
+        else {
           const id = pair.replace(/\D/g, '');
           if (id) map.set(id, 1);
         }
       });
-    return map;
-  }
+      return map;
+    }
 
-  function serializeMap(map) {
-    return Array.from(map.entries())
-      .filter(([, q]) => (q || 0) > 0)
-      .map(([id, q]) => `${id}:${q}`)
-      .join(',');
-  }
+    function serializeMap(map) {
+      return Array.from(map.entries())
+        .filter(([, q]) => (q || 0) > 0)
+        .map(([id, q]) => `${id}:${q}`)
+        .join(',');
+    }
 
-  function getGasolinaSwitch(card) {
-    return qs('.gasolina-switch', card);
-  }
-
-  function setQty(card, qty) {
-    qty = Math.max(0, qty | 0);
-
-    const id = String(card.getAttribute('data-id') || '').trim();
-    const qtyEl = qs('.qty', card);
-
-    if (id === SERVICE_GASOLINA_ID) {
-      const sw = getGasolinaSwitch(card);
-      if (sw) sw.checked = qty > 0;
+    function setQty(card, qty) {
+      qty = Math.max(0, qty | 0);
+      const qtyEl = qs('.qty', card);
+      if (qtyEl) qtyEl.textContent = String(qty);
       card.classList.toggle('selected', qty > 0);
-      return;
     }
 
-    if (qtyEl) qtyEl.textContent = String(qty);
-    card.classList.toggle('selected', qty > 0);
-  }
-
-  function readQty(card) {
-    const id = String(card.getAttribute('data-id') || '').trim();
-
-    if (id === SERVICE_GASOLINA_ID) {
-      const sw = getGasolinaSwitch(card);
-      return sw && sw.checked ? 1 : 0;
+    function readQty(card) {
+      const qtyEl = qs('.qty', card);
+      const q = qtyEl ? parseInt(qtyEl.textContent, 10) : 0;
+      return isNaN(q) ? 0 : q;
     }
 
-    const qtyEl = qs('.qty', card);
-    const q = qtyEl ? parseInt(qtyEl.textContent, 10) : 0;
-    return isNaN(q) ? 0 : q;
-  }
-
-  function buildFromUI() {
-    const map = new Map();
-
-    cards.forEach(card => {
-      const id = String(card.getAttribute('data-id') || '').trim();
-      if (!id) return;
-
-      const qty = readQty(card);
-      if (qty > 0) {
-        map.set(id, qty);
-      }
-    });
-
-    return map;
-  }
-
-  function writeHiddenAndURL() {
-    const map = buildFromUI();
-    const value = serializeMap(map);
-
-    hidden.value = value;
-    if (payloadHidden) {
-      payloadHidden.value = value;
+    function buildFromUI() {
+      const map = new Map();
+      cards.forEach(card => {
+        const id = String(card.getAttribute('data-id') || '').trim();
+        if (!id) return;
+        const qty = readQty(card);
+        if (qty > 0) map.set(id, qty);
+      });
+      return map;
     }
 
-    try { hidden.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
-    try {
-      if (payloadHidden) {
-        payloadHidden.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    } catch (_) {}
+    function writeHiddenAndURL() {
+      const map = buildFromUI();
+      const value = serializeMap(map);
+      hidden.value = value;
+      try { hidden.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) { }
 
-    try {
-      const url = new URL(window.location.href);
-      if (value) {
-        url.searchParams.set('addons', value);
-      } else {
-        url.searchParams.delete('addons');
-      }
-      window.history.replaceState({}, document.title, url.toString());
-    } catch (_) {}
-
-    try { applyYoungDriverAddon(); } catch (_) {}
-    try { initStep4AddonsSummary(); } catch (_) {}
-  }
-
-  function hydrate() {
-    const fromQS = (() => {
       try {
-        return new URLSearchParams(location.search).get('addons') || '';
-      } catch (_) {
-        return '';
-      }
-    })();
+        const url = new URL(window.location.href);
+        url.searchParams.set('addons', value);
+        window.history.replaceState({}, document.title, url.toString());
+      } catch (_) { }
 
-    const base =
-      fromQS ||
-      (hidden.value || '').trim() ||
-      (payloadHidden && payloadHidden.value ? payloadHidden.value.trim() : '');
+      try { applyYoungDriverAddon(); } catch (_) { }
+    }
 
-    const map = parseMap(base);
+    function hydrate() {
+      const fromQS = (() => { try { return new URLSearchParams(location.search).get('addons') || ''; } catch (_) { return ''; } })();
+      const base = fromQS || hidden.value || '';
+      const map = parseMap(base);
+
+      cards.forEach(card => {
+        const id = String(card.getAttribute('data-id') || '').trim();
+        if (!id) return;
+        setQty(card, map.get(id) || 0);
+      });
+
+      writeHiddenAndURL();
+    }
 
     cards.forEach(card => {
-      const id = String(card.getAttribute('data-id') || '').trim();
-      if (!id) return;
-      setQty(card, map.get(id) || 0);
-    });
+      const plus = qs('.qty-btn.plus', card);
+      const minus = qs('.qty-btn.minus', card);
 
-    writeHiddenAndURL();
-  }
-
-  cards.forEach(card => {
-    const plus  = qs('.qty-btn.plus', card);
-    const minus = qs('.qty-btn.minus', card);
-    const sw    = getGasolinaSwitch(card);
-
-    const id = String(card.getAttribute('data-id') || '').trim();
-    const isGasolina = id === SERVICE_GASOLINA_ID;
-
-    if (isGasolina) {
-      if (sw) {
-        sw.addEventListener('change', () => {
+      if (plus) {
+        plus.addEventListener('click', () => {
+          setQty(card, readQty(card) + 1);
           writeHiddenAndURL();
         });
       }
-      return;
-    }
-
-    if (plus) {
-      plus.addEventListener('click', () => {
-        setQty(card, readQty(card) + 1);
-        writeHiddenAndURL();
-      });
-    }
-
-    if (minus) {
-      minus.addEventListener('click', () => {
-        setQty(card, Math.max(0, readQty(card) - 1));
-        writeHiddenAndURL();
-      });
-    }
-  });
-
-  const toStep4 = qs('#toStep4');
-  if (toStep4) {
-    toStep4.addEventListener('click', (e) => {
-      e.preventDefault();
-      writeHiddenAndURL();
-
-      const url = new URL(window.location.href);
-      url.searchParams.set('step', '4');
-      window.location.href = url.toString();
+      if (minus) {
+        minus.addEventListener('click', () => {
+          setQty(card, readQty(card) - 1);
+          writeHiddenAndURL();
+        });
+      }
     });
+
+    const toStep4 = qs('#toStep4');
+    if (toStep4) {
+      toStep4.addEventListener('click', (e) => {
+        e.preventDefault();
+        writeHiddenAndURL();
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('step', '4');
+        window.location.href = url.toString();
+      });
+    }
+
+    document.addEventListener('wizard:stepChanged', hydrate);
+    hydrate();
   }
-
-  document.addEventListener('wizard:stepChanged', hydrate);
-  hydrate();
-}
-
 
   function initStep1ClearButton() {
     const btnClear = qs('#btnLimpiar');
@@ -1719,37 +1567,62 @@
     setTimeout(refreshFloatLabels, 500);
   });
 
-  // ===== Select2 =====
-  document.addEventListener("DOMContentLoaded", function() {
-    if (!window.jQuery || !window.jQuery.fn || typeof window.jQuery.fn.select2 !== 'function') return;
+// ===== SELECT2 CON TEXTOS DINÁMICOS =====
+document.addEventListener("DOMContentLoaded", function() {
+  if (!window.jQuery || !window.jQuery.fn || typeof window.jQuery.fn.select2 !== 'function') return;
 
-    const configs = [
-      { id: 'pickupPlace', icon: 'pickupIcon' },
-      { id: 'dropoffPlace', icon: 'dropoffIcon' }
-    ];
+  // Función para obtener textos según idioma
+  function getSelectText(key) {
+    const lang = document.documentElement.lang || 'es';
+    const texts = {
+      'donde_inicia': { es: '¿Dónde inicia tu viaje?', en: 'Where does your trip start?' },
+      'donde_termina': { es: '¿Dónde termina tu viaje?', en: 'Where does your trip end?' }
+    };
+    return texts[key]?.[lang] || (lang === 'en' ? 'Select an option' : 'Selecciona una opción');
+  }
 
-    function updateFloatingIcon(selectId, iconId) {
-      const selectEl = document.getElementById(selectId);
-      const iconEl   = document.getElementById(iconId);
+  const configs = [
+    { id: 'pickupPlace', icon: 'pickupIcon', placeholderKey: 'donde_inicia' },
+    { id: 'dropoffPlace', icon: 'dropoffIcon', placeholderKey: 'donde_termina' }
+  ];
 
-      if (!selectEl || !iconEl) return;
+  function updateFloatingIcon(selectId, iconId) {
+    const selectEl = document.getElementById(selectId);
+    const iconEl   = document.getElementById(iconId);
 
-      const selectedOption = selectEl.options[selectEl.selectedIndex];
-      let iconClass = 'fa-solid fa-location-dot';
+    if (!selectEl || !iconEl) return;
 
-      if (selectedOption && selectedOption.dataset.icon) {
-        iconClass = selectedOption.dataset.icon;
+    const selectedOption = selectEl.options[selectEl.selectedIndex];
+    let iconClass = 'fa-solid fa-location-dot';
+
+    if (selectedOption && selectedOption.dataset.icon) {
+      iconClass = selectedOption.dataset.icon;
+    } else if (selectedOption) {
+      const text = selectedOption.text.toLowerCase();
+      if (text.includes('aeropuerto') || text.includes('airport')) {
+        iconClass = 'fa-solid fa-plane-departure';
+      } else if (text.includes('central') || text.includes('terminal') || text.includes('bus station')) {
+        iconClass = 'fa-solid fa-bus';
       }
-
-      iconEl.innerHTML = `<i class="${iconClass}"></i>`;
     }
 
+    iconEl.innerHTML = `<i class="${iconClass}"></i>`;
+  }
+
+  function initSelect2() {
     configs.forEach(conf => {
       const $select = $('#' + conf.id);
+      const placeholder = getSelectText(conf.placeholderKey);
 
       if ($select.length > 0) {
+        // Destruir instancia anterior si existe
+        if ($select.data('select2')) {
+          $select.select2('destroy');
+        }
+
         $select.select2({
           width: '100%',
+          placeholder: placeholder,
           templateResult: function(option) {
             if (!option.id) return option.text;
             const icon = $(option.element).data('icon') || 'fa-solid fa-location-dot';
@@ -1759,18 +1632,177 @@
             if (!option.id) return option.text;
             const icon = $(option.element).data('icon') || 'fa-solid fa-location-dot';
             return $('<span><i class="' + icon + '" style="margin-right:8px;"></i>' + option.text + '</span>');
-          }
+          },
+          escapeMarkup: function(m) { return m; }
         });
 
         updateFloatingIcon(conf.id, conf.icon);
 
-        $select.on('select2:select', function () {
+        $select.on('select2:select change', function () {
           updateFloatingIcon(conf.id, conf.icon);
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
       }
     });
+
+    // Actualizar estado del dropoff según checkbox
+    const checkbox = document.getElementById('differentDropoff');
+    const dropoffSelect = $('#dropoffPlace');
+
+    if (checkbox && dropoffSelect.length) {
+      dropoffSelect.prop('disabled', !checkbox.checked);
+
+      if (!checkbox.checked) {
+        dropoffSelect.val(null).trigger('change');
+      }
+    }
+  }
+
+  // Inicializar Select2
+  setTimeout(initSelect2, 300);
+
+  // DETECTOR DE CAMBIO DE IDIOMA (SOLO PARA SELECT2)
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.attributeName === 'lang') {
+        setTimeout(() => {
+          if (typeof $ !== 'undefined' && $.fn.select2) {
+            try {
+              $('#pickupPlace').select2('destroy');
+              $('#dropoffPlace').select2('destroy');
+            } catch(e) {}
+            setTimeout(initSelect2, 100);
+          }
+        }, 50);
+      }
+    });
   });
+// ===== SELECT2 CON TEXTOS DINÁMICOS =====
+document.addEventListener("DOMContentLoaded", function() {
+  if (!window.jQuery || !window.jQuery.fn || typeof window.jQuery.fn.select2 !== 'function') return;
+
+  // Usar traducciones de window.reservaTranslations
+  const translations = window.reservaTranslations || {
+    donde_inicia: '¿Dónde inicia tu viaje?',
+    donde_termina: '¿Dónde termina tu viaje?',
+    selecciona_opcion: 'Selecciona una opción'
+  };
+
+  const configs = [
+    { id: 'pickupPlace', icon: 'pickupIcon', placeholderKey: 'donde_inicia' },
+    { id: 'dropoffPlace', icon: 'dropoffIcon', placeholderKey: 'donde_termina' }
+  ];
+
+  function updateFloatingIcon(selectId, iconId) {
+    const selectEl = document.getElementById(selectId);
+    const iconEl   = document.getElementById(iconId);
+
+    if (!selectEl || !iconEl) return;
+
+    const selectedOption = selectEl.options[selectEl.selectedIndex];
+    let iconClass = 'fa-solid fa-location-dot';
+
+    if (selectedOption && selectedOption.dataset.icon) {
+      iconClass = selectedOption.dataset.icon;
+    } else if (selectedOption) {
+      const text = selectedOption.text.toLowerCase();
+      if (text.includes('aeropuerto') || text.includes('airport')) {
+        iconClass = 'fa-solid fa-plane-departure';
+      } else if (text.includes('central') || text.includes('terminal') || text.includes('bus station')) {
+        iconClass = 'fa-solid fa-bus';
+      }
+    }
+
+    iconEl.innerHTML = `<i class="${iconClass}"></i>`;
+  }
+
+  function initSelect2() {
+    configs.forEach(conf => {
+      const $select = $('#' + conf.id);
+      const placeholder = translations[conf.placeholderKey] || translations.selecciona_opcion;
+
+      if ($select.length > 0) {
+        // Destruir instancia anterior si existe
+        if ($select.data('select2')) {
+          $select.select2('destroy');
+        }
+
+        $select.select2({
+          width: '100%',
+          placeholder: placeholder,
+          templateResult: function(option) {
+            if (!option.id) return option.text;
+            const icon = $(option.element).data('icon') || 'fa-solid fa-location-dot';
+            return $('<span><i class="' + icon + '" style="margin-right:10px;width:20px;text-align:center;"></i>' + option.text + '</span>');
+          },
+          templateSelection: function(option){
+            if (!option.id) return option.text;
+            const icon = $(option.element).data('icon') || 'fa-solid fa-location-dot';
+            return $('<span><i class="' + icon + '" style="margin-right:8px;"></i>' + option.text + '</span>');
+          },
+          escapeMarkup: function(m) { return m; }
+        });
+
+        updateFloatingIcon(conf.id, conf.icon);
+
+        $select.on('select2:select change', function () {
+          updateFloatingIcon(conf.id, conf.icon);
+          this.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      }
+    });
+
+    // Actualizar estado del dropoff según checkbox
+    const checkbox = document.getElementById('differentDropoff');
+    const dropoffSelect = $('#dropoffPlace');
+
+    if (checkbox && dropoffSelect.length) {
+      dropoffSelect.prop('disabled', !checkbox.checked);
+
+      if (!checkbox.checked) {
+        dropoffSelect.val(null).trigger('change');
+      }
+    }
+  }
+
+  // Inicializar Select2
+  setTimeout(initSelect2, 300);
+
+  // DETECTOR DE CAMBIO DE IDIOMA
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.attributeName === 'lang') {
+        setTimeout(() => {
+          if (typeof $ !== 'undefined' && $.fn.select2) {
+            try {
+              $('#pickupPlace').select2('destroy');
+              $('#dropoffPlace').select2('destroy');
+            } catch(e) {}
+            setTimeout(initSelect2, 100);
+          }
+        }, 50);
+      }
+    });
+  });
+
+  observer.observe(document.documentElement, { attributes: true });
+});
+  observer.observe(document.documentElement, { attributes: true });
+
+  // Verificar si venimos de cambio de idioma
+  if (sessionStorage.getItem('languageJustChanged') === 'true') {
+    sessionStorage.removeItem('languageJustChanged');
+    setTimeout(() => {
+      if (typeof $ !== 'undefined' && $.fn.select2) {
+        try {
+          $('#pickupPlace').select2('destroy');
+          $('#dropoffPlace').select2('destroy');
+        } catch(e) {}
+        setTimeout(initSelect2, 100);
+      }
+    }, 150);
+  }
+});
 
   window.limpiarTodoYReiniciar = function() {
     localStorage.removeItem("viajero_resv_filters_v1");
@@ -1830,162 +1862,48 @@
     });
   });
 
-  // ===== MODAL DE MÉTODO DE PAGO MEJORADO =====
+  // ===== NUEVO: Manejador del modal de método de pago =====
   document.addEventListener('DOMContentLoaded', function () {
     const main = document.querySelector('main.page');
+    const currentPlan = (main && main.dataset.plan) ? main.dataset.plan : '';
 
     const modalMetodoPago = document.getElementById('modalMetodoPago');
     const cerrarModalMetodo = document.getElementById('cerrarModalMetodo');
-    const cerrarModalMetodoX = document.getElementById('cerrarModalMetodoX');
     const btnPagoLinea = document.getElementById('btnPagoLinea');
     const btnPagoMostrador = document.getElementById('btnPagoMostrador');
 
-    const mpCategoriaNombre = document.getElementById('mpCategoriaNombre');
-    const mpCategoriaResumen = document.getElementById('mpCategoriaResumen');
-    const mpAhorro = document.getElementById('mpAhorro');
-    const mpPrecioLinea = document.getElementById('mpPrecioLinea');
-    const mpPrecioMostrador = document.getElementById('mpPrecioMostrador');
-    const mpPrecioMostradorTachado = document.getElementById('mpPrecioMostradorTachado');
-    const mpTextoAhorro = document.getElementById('mpTextoAhorro');
-
-    function fmtMoney(n) {
-      return '$' + Math.round(Number(n || 0)).toLocaleString('es-MX') + ' MXN';
-    }
-
-    function getCategoriaSeleccionada() {
-      // 1. intenta tomar el nombre desde la tarjeta activa del step 2
-      const activeCard = document.querySelector('.car-card.active');
-      if (activeCard) {
-        const name =
-          activeCard.getAttribute('data-name') ||
-          activeCard.dataset.name ||
-          document.querySelector('.car-card.active .car-name, .car-card.active h3, .car-card.active h4')?.textContent ||
-          '';
-        if (name) return name.trim();
-      }
-
-      // 2. intenta tomarla del resumen del paso 4
-      const sumTitle = document.querySelector('.sum-car h3, .sum-car-title, #tuAutoSection h3');
-      if (sumTitle && sumTitle.textContent.trim()) {
-        return sumTitle.textContent.trim();
-      }
-
-      return 'Categoría seleccionada';
-    }
-
-    function getPreciosSeleccionados() {
-      let precioLinea = 0;
-      let precioMostrador = 0;
-
-      // 1. desde card activa del step 2
-      const activeCard = document.querySelector('.car-card.active');
-      if (activeCard) {
-        precioLinea =
-          parseFloat(activeCard.getAttribute('data-prepago-total')) ||
-          parseFloat(activeCard.getAttribute('data-prepago-dia')) ||
-          0;
-
-        precioMostrador =
-          parseFloat(activeCard.getAttribute('data-mostrador-total')) ||
-          parseFloat(activeCard.getAttribute('data-mostrador-dia')) ||
-          0;
-      }
-
-      // 2. si no encontró, usar resumen actual del paso 4
-      if (!precioLinea || !precioMostrador) {
-        const qBase = document.getElementById('qBase');
-        const qTotal = document.getElementById('qTotal');
-
-        const getNum = (txt) => {
-          if (!txt) return 0;
-          return parseFloat(String(txt).replace(/[^\d.]/g, '')) || 0;
-        };
-
-        if (!precioLinea && qBase) {
-          precioLinea = getNum(qBase.textContent);
-        }
-
-        if (!precioMostrador && qTotal) {
-          precioMostrador = getNum(qTotal.textContent);
-        }
-      }
-
-      // respaldo: si solo hay uno, usarlo en ambos para no dejar 0
-      if (!precioLinea && precioMostrador) precioLinea = precioMostrador;
-      if (!precioMostrador && precioLinea) precioMostrador = precioLinea;
-
-      return { precioLinea, precioMostrador };
-    }
-
-    function fillMetodoPagoModal() {
-      const categoria = getCategoriaSeleccionada();
-      const { precioLinea, precioMostrador } = getPreciosSeleccionados();
-
-      let ahorroPct = 0;
-      if (precioMostrador > 0 && precioLinea > 0 && precioLinea < precioMostrador) {
-        ahorroPct = Math.round(((precioMostrador - precioLinea) / precioMostrador) * 100);
-      }
-
-      if (mpCategoriaNombre) mpCategoriaNombre.textContent = categoria;
-      if (mpCategoriaResumen) mpCategoriaResumen.textContent = categoria;
-      if (mpAhorro) mpAhorro.textContent = ahorroPct + '%';
-      if (mpPrecioLinea) mpPrecioLinea.textContent = fmtMoney(precioLinea);
-      if (mpPrecioMostrador) mpPrecioMostrador.textContent = fmtMoney(precioMostrador);
-      if (mpPrecioMostradorTachado) mpPrecioMostradorTachado.textContent = fmtMoney(precioMostrador);
-      if (mpTextoAhorro) mpTextoAhorro.textContent = ahorroPct > 0 ? `Ahorra ${ahorroPct}%` : 'Mismo precio';
-    }
-
-    function openMetodoPagoModal() {
-      if (!modalMetodoPago) return;
-      fillMetodoPagoModal();
-      modalMetodoPago.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeMetodoPagoModal() {
-      if (!modalMetodoPago) return;
-      modalMetodoPago.style.display = 'none';
-      document.body.style.overflow = '';
-    }
-
     // Escuchar evento de validación exitosa
-    document.addEventListener('reserva:validacionExitosa', function (e) {
-      const currentPlan = (main && main.dataset.plan) ? main.dataset.plan : '';
+    document.addEventListener('reserva:validacionExitosa', function(e) {
       console.log('Evento recibido, plan:', currentPlan);
 
       if (currentPlan === 'linea') {
-        if (typeof window.handleReservaPagoEnLinea === 'function') {
-          window.handleReservaPagoEnLinea();
-        } else if (btnPagoLinea) {
+        if (btnPagoLinea) {
           btnPagoLinea.click();
+        } else if (typeof window.handleReservaPagoEnLinea === 'function') {
+          window.handleReservaPagoEnLinea();
         }
       } else if (currentPlan === 'mostrador') {
-        openMetodoPagoModal();
+        if (modalMetodoPago) {
+          modalMetodoPago.style.display = 'flex';
+        }
       }
     });
 
-    if (cerrarModalMetodo) {
-      cerrarModalMetodo.addEventListener('click', closeMetodoPagoModal);
-    }
+    // Cerrar modal
+    if (cerrarModalMetodo && modalMetodoPago) {
+      cerrarModalMetodo.addEventListener('click', function () {
+        modalMetodoPago.style.display = 'none';
+      });
 
-    if (cerrarModalMetodoX) {
-      cerrarModalMetodoX.addEventListener('click', closeMetodoPagoModal);
-    }
-
-    if (modalMetodoPago) {
-      modalMetodoPago.addEventListener('click', function (e) {
+      // Cerrar al hacer clic fuera
+      modalMetodoPago.addEventListener('click', function(e) {
         if (e.target === modalMetodoPago) {
-          closeMetodoPagoModal();
+          modalMetodoPago.style.display = 'none';
         }
       });
     }
 
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        closeMetodoPagoModal();
-      }
-    });
-
+    // Por si quieres FORZAR que "Tarifa base" inicie CERRADO:
     const tarifa = document.querySelector('.sum-table details.sum-acc');
     if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
   });
@@ -2113,12 +2031,12 @@ function initMovilTotalSync() {
         }
         syncTotal();
 
-      const observer = new MutationObserver(syncTotal);
-      observer.observe(totalOriginal, {
-        childList:true,
-        subtree:true,
-        characterData:true
-      });
+        const observer = new MutationObserver(syncTotal);
+        observer.observe(totalOriginal, {
+            childList:true,
+            subtree:true,
+            characterData:true
+        });
     }
 }
 

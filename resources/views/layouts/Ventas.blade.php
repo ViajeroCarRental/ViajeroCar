@@ -1,119 +1,244 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="{{asset('css/sidebar.css')}}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
-    <link rel="icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
-    <link rel="shortcut icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
+@extends('layouts.Usuarios')
 
-    <!-- Bootstrap Icons -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    @yield('css-vistaHomeVentas')
-    @yield('css-vistareservacionesAdmin')
-    @yield('css-vistaHomeCotizaciones')
-    @yield('css-vistaCotizar')
-    @yield('css-vistaHCotizacionesRecientes')
-    @yield('css-vistaReservacionesActivas')
-    @yield('css-vistaVisorReservaciones')
-    @yield('css-vistaAdministracionReservaciones')
-    @yield('css-vistaHistorial')
-    @yield('css-vistaContrato')
-    @yield('css-vistaAltaCliente')
-    @yield('css-vistaLicencia')
-    @yield('css-vistaRFC-Fiscal')
-    @yield('css-vistaFacturar')
-    @yield('css-VistaCotizacionesRecientes')
-    @yield('css-vistaContratoFinal')
-    @yield('css-vistaEditarContrato')
-    <title>@yield('Titulo')</title>
-</head>
-<body>
+@section('Titulo', __('messages.catalogo_titulo'))
 
-<button class="btn-toggle" id="btnToggleSidebar" type="button" aria-label="Mostrar/Ocultar menú">
-  <i class="bi bi-list"></i>
-</button>
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
+@section('css-VistaCatalogo')
+  <link rel="stylesheet" href="{{ asset('css/catalogo.css') }}">
+@endsection
 
-    <!-- SIDEBAR: Reservaciones -->
-<aside class="sidebar sidebar--reservas">
-  <div class="logo">
-    <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
-  </div>
+@section('contenidoCatalogo')
 
-  <ul class="menu">
-    <li class="menu-section">Reservaciones</li>
-    <li><a href="{{ route('rutaReservacionesAdmin') }}"><i class="fas fa-file-invoice"></i> Reservaciones</a></li>
-    <li><a href="{{ route('rutaCotizar') }}"><i class="fas fa-briefcase"></i> Cotizaciones</a></li>
-    <li><a href="{{ route('rutaReservacionesActivas') }}"><i class="fas fa-check-square"></i>Bookings</a></li>
-    <li><a href="{{ route('rutaVisorReservaciones') }}"><i class="fas fa-eye"></i> Visor de reservaciones</a></li>
-    <li><a href="{{ route('rutaAdministracionReservaciones') }}"><i class="fas fa-cogs"></i> Contratos</a></li>
-    <li><a href="{{ route('ventas.historial') }}"><i class="fas fa-folder-open"></i> Historial completo</a></li>
-    <li><a href="{{ route('rutaAltaCliente') }}"><i class="fas fa-user-plus"></i> Alta Cliente</a></li>
-    <li><a href="{{ route('rutaFacturar') }}"><i class="fas fa-file-invoice-dollar"></i> Facturar</a></li>
+@php
+    $mapaCategorias = [
+        'C' => 'Sedan', 'D' => 'Sedan', 'E' => 'Sedan', 'F' => 'Sedan',
+        'IC' => 'SUV', 'I' => 'SUV', 'IB' => 'SUV',
+        'H' => 'Pickup', 'HI' => 'Pickup',
+        'L' => 'Van', 'M' => 'Van'
+    ];
 
-    <li class="menu-section">Navegación</li>
-    <li><a href="{{route('rutaInicioVentas')}}"><i class="fas fa-arrow-left"></i> Volver al Panel</a></li>
-    <li><a href="{{ route('rutaDashboard') }}"><i class="fas fa-arrow-left"></i> Volver a módulos</a></li>
-  </ul>
-</aside>
-<div class="main-content">
-    @yield('contenidoHomeVentas')
-    @yield('contenidoreservacionesAdmin')
-    @yield('contenidoCotizaciones')
-    @yield('contenidoCotizar')
-    @yield('contenidoCotizacionesRecientes')
-    @yield('contenidoReservacionesActivas')
-    @yield('contenidoVisorReservaciones')
-    @yield('contenidoAdministracionReservaciones')
-    @yield('contenidoHistorial')
-    @yield('contenidoContrato')
-    @yield('contenidoAltaCliente')
-    @yield('contenidoLicencia')
-    @yield('contenidoRFC-Fiscal')
-    @yield('contenidoFacturar')
-    @yield('contenido-VistaCotizacionesRecientes')
-    @yield('contenidoContratoFinal')
-    @yield('contenidoEditarContrato')
-    @yield('contenidoChecklist2')
-</div>
+    $conteoTipos = ['Sedan' => 0, 'SUV' => 0, 'Pickup' => 0, 'Van' => 0];
 
-<div class="containerJS">
-    <script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
-    @yield('js-vistaHomeVentas')
-    @yield('js-vistareservacionesAdmin')
-    @yield('js-vistaHomeCotizaciones')
-    @yield('js-vistaCotizar')
-    @yield('js-vistaCotizacionesRecientes')
-    @yield('js-vistaReservacionesActivas')
-    @yield('js-vistaVisorReservaciones')
-    @yield('js-vistaAdministracionReservaciones')
-    @yield('js-vistaHistorial')
-    @yield('js-vistaContrato')
-    @yield('js-vistaAltaCliente')
-    @yield('js-vistaLicencia')
-    @yield('js-vistaRFC-Fiscal')
-    @yield('js-vistaFacturar')
-    @yield('js-VistaCotizacionesRecientes')
-    @yield('js-vistaContratoFinal')
-    @yield('js-vistaEditarContrato')
-    @yield('js-vistaChecklist2')
-    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
+    foreach($categoriasCards as $cat) {
+        $tipoRelativo = $mapaCategorias[$cat->codigo] ?? null;
+        if($tipoRelativo && isset($conteoTipos[$tipoRelativo])) {
+            $conteoTipos[$tipoRelativo]++;
+        }
+    }
 
-    {{-- ⚠️ Mensaje de sesión expirada --}}
-    @if (session('session_expired'))
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                alertify.error(@json(session('session_expired')));
-            });
-        </script>
-    @endif
-</div>
-</body>
-</html>
+    $predeterminados = [
+      'C'  => ['pax'=>5,  'small'=>2, 'big'=>1], 'D'  => ['pax'=>5,  'small'=>2, 'big'=>1],
+      'E'  => ['pax'=>5,  'small'=>2, 'big'=>2], 'F'  => ['pax'=>5,  'small'=>2, 'big'=>2],
+      'IC' => ['pax'=>5,  'small'=>2, 'big'=>2], 'I'  => ['pax'=>5,  'small'=>3, 'big'=>2],
+      'IB' => ['pax'=>7,  'small'=>3, 'big'=>2], 'M'  => ['pax'=>7,  'small'=>4, 'big'=>2],
+      'L'  => ['pax'=>13, 'small'=>4, 'big'=>3], 'H'  => ['pax'=>5,  'small'=>3, 'big'=>2],
+      'HI' => ['pax'=>5,  'small'=>3, 'big'=>2],
+    ];
 
+    if (!function_exists('img_por_categoria')) {
+        function img_por_categoria($codigo) {
+            switch ($codigo) {
+                case 'C':  return asset('img/aveo.png');
+                case 'D':  return asset('img/virtus.png');
+                case 'E':  return asset('img/jetta.png');
+                case 'F':  return asset('img/camry.png');
+                case 'IC': return asset('img/renegade.png');
+                case 'I':  return asset('img/taos.png');
+                case 'IB': return asset('img/avanza.png');
+                case 'M':  return asset('img/Odyssey.png');
+                case 'L':  return asset('img/Hiace.png');
+                case 'H':  return asset('img/Frontier.png');
+                case 'HI': return asset('img/Tacoma.png');
+                default:   return asset('img/Logotipo.png');
+            }
+        }
+    }
+
+    $ordenCategorias = ['C','D','E','F','IC','I','IB','H','HI','L','M'];
+    $categoriasCards = collect($categoriasCards)->sortBy(function($item) use ($ordenCategorias) {
+        return array_search($item->codigo, $ordenCategorias);
+    });
+
+    $hayAutos = count($categoriasCards) > 0;
+@endphp
+
+  {{-- ========== HERO ========== --}}
+  <section class="hero">
+    <div class="hero-bg">
+      <img src="{{ asset('img/catalogo.png') }}" alt="{{ __('messages.catalogo_titulo') }}">
+      <div class="overlay"></div>
+    </div>
+
+    <div class="hero-inner">
+      <h1 class="hero-title">{{ __('messages.renta_hoy_explora') }}</h1>
+
+      <div class="chips">
+        <span class="chip"><i class="fa-solid fa-location-dot"></i> {{ __('messages.pickup_oficina') }}</span>
+        <span class="chip"><i class="fa-solid fa-location-dot"></i> {{ __('messages.pickup_aeropuerto') }}</span>
+        <span class="chip"><i class="fa-solid fa-location-dot"></i> {{ __('messages.pickup_central') }}</span>
+      </div>
+
+      {{-- ✅ Bloque/card dentro del hero --}}
+      <div class="hero-filter-card">
+        <div class="filter-accordion">
+          <button
+            class="accordion-button bg-gray rounded-0 text-dark collapsed"
+            id="btn-filtro-autos"
+            type="button"
+            aria-expanded="false"
+            aria-controls="filtro-autos"
+            aria-label="{{ __('messages.filtrar_categorias') }}"
+          >
+            <span class="acc-left">
+              <i class="fa-solid fa-filter"></i>
+              <span>{{ __('messages.filtrar_categorias') }}</span>
+            </span>
+
+            <i class="fa-solid fa-chevron-down acc-icon"></i>
+          </button>
+
+          <div id="filtro-autos" class="accordion-collapse" aria-labelledby="btn-filtro-autos">
+            <div class="accordion-body">
+              <div class="filter-wrapper">
+                <h3 class="filter-title">{{ __('messages.tipos_de_autos') }}</h3>
+
+                <div class="car-filter">
+                  <div class="filter-card active" data-filter="all">
+                    <img src="{{ asset('img/aveo.png') }}">
+                    <div class="filter-info">
+                      <span>{{ __('messages.todos') }}</span>
+                      <small class="count-badge">{{ count($categoriasCards) }} {{ __('messages.categorias') }}</small>
+                    </div>
+                  </div>
+
+                  <div class="filter-card" data-filter="Sedan">
+                    <img src="{{ asset('img/camry.png') }}">
+                    <div class="filter-info">
+                      <span>{{ __('messages.autos') }}</span>
+                      <small class="count-badge">{{ $conteoTipos['Sedan'] }} {{ __('messages.categorias') }}</small>
+                    </div>
+                  </div>
+
+                  <div class="filter-card" data-filter="SUV">
+                    <img src="{{ asset('img/taos.png') }}">
+                    <div class="filter-info">
+                      <span>{{ __('messages.suvs') }}</span>
+                      <small class="count-badge">{{ $conteoTipos['SUV'] }} {{ __('messages.categorias') }}</small>
+                    </div>
+                  </div>
+
+                  <div class="filter-card" data-filter="Pickup">
+                    <img src="{{ asset('img/Frontier.png') }}">
+                    <div class="filter-info">
+                      <span>{{ __('messages.pickups') }}</span>
+                      <small class="count-badge">{{ $conteoTipos['Pickup'] }} {{ __('messages.categorias') }}</small>
+                    </div>
+                  </div>
+
+                  <div class="filter-card" data-filter="Van">
+                    <img src="{{ asset('img/Odyssey.png') }}">
+                    <div class="filter-info">
+                      <span>{{ __('messages.vans') }}</span>
+                      <small class="count-badge">{{ $conteoTipos['Van'] }} {{ __('messages.categorias') }}</small>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  {{-- ========== CATÁLOGO (2 columnas, estilo como tu referencia) ========== --}}
+  <section class="catalog">
+    <div class="cars cars-grid">
+      @foreach ($categoriasCards as $cat)
+        @php
+          $codigo = $cat->codigo;
+          $tipo   = $mapaCategorias[$codigo] ?? 'Sedan';
+          $cap    = $predeterminados[$codigo] ?? ['pax'=>5,'small'=>2,'big'=>1];
+          $img    = img_por_categoria($codigo);
+
+          $precio = (float)($cat->precio_dia ?? 0);
+          $desc   = (float)($cat->descuento_miembro ?? 0); // % (0-100)
+          $hayDesc = $desc > 0;
+
+          // precio tachado (antes del descuento)
+          $precioOld = ($hayDesc && $desc < 100) ? ($precio / (1 - ($desc/100))) : 0;
+        @endphp
+
+        <article class="car-card catalog-group" data-categoria="{{ $tipo }}">
+
+          {{-- ✅ badge descuento arriba derecha --}}
+          @if($hayDesc)
+            <span class="offer-badge">-{{ (int)round($desc) }}%</span>
+          @endif
+
+          {{-- ✅ TEXTO con el estilo que ya traíamos (h3 + p) --}}
+          <header class="car-title">
+            <h3>{{ strtoupper($cat->nombre) }}</h3>
+            <p>{{ $cat->descripcion }} | {{ $codigo }}</p>
+          </header>
+
+          <div class="car-media">
+            <img src="{{ $img }}" alt="{{ $cat->nombre }}">
+          </div>
+
+          {{-- ✅ ICONOS centrados --}}
+          <ul class="car-specs">
+            <li><i class="fa-solid fa-user-large"></i> {{ $cap['pax'] }}</li>
+            <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $cap['small'] }}</li>
+            <li><i class="fa-solid fa-briefcase"></i> {{ $cap['big'] ?? 1 }}</li>
+
+            {{-- ✅ NUEVO: Transmisión Automática (A) --}}
+            <li title="{{ __('messages.transmision') }}">
+              <span class="spec-letter">
+                T | {{ $codigo === 'L' ? __('messages.estandar') : __('messages.automatica') }}
+              </span>
+            </li>
+
+            {{-- ✅ NUEVO: Aire acondicionado --}}
+            <li title="{{ __('messages.aire_acondicionado') }}">
+              <i class="fa-regular fa-snowflake"></i> {{ __('messages.aire_acondicionado') }}
+            </li>
+          </ul>
+
+          {{-- ✅ Android Auto / CarPlay: icono como tu imagen + texto con chip --}}
+          <div class="car-connect">
+            <span class="badge-chip badge-apple" title="Apple CarPlay">
+              <span class="icon-badge">
+                <i class="fa-brands fa-apple"></i>
+              </span>
+              CarPlay
+            </span>
+
+            <span class="badge-chip badge-android" title="Android Auto">
+              <span class="icon-badge">
+                <i class="fa-brands fa-android"></i>
+              </span>
+              Android Auto
+            </span>
+          </div>
+
+          <a href="{{ route('rutaReservasIniciar', ['categoria_id' => $cat->id_categoria]) }}" class="car-cta">
+            {{ __('messages.reservar') }}
+          </a>
+        </article>
+      @endforeach
+
+      @if(!$hayAutos)
+        <div class="no-results">
+          <h3>{{ __('messages.sin_vehiculos') }}</h3>
+        </div>
+      @endif
+    </div>
+  </section>
+
+@endsection
+
+@section('js-vistaCatalogo')
+  <script src="{{ asset('js/catalogo.js') }}"></script>
+@endsection

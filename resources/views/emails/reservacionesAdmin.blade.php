@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
   <meta charset="UTF-8">
   <meta name="color-scheme" content="light dark">
@@ -435,7 +435,7 @@
         </td>
 
         <td class="resv-box">
-          <p class="label">Reservación</p>
+          <p class="label">{{ __('messages.reservacion') }}</p>
           <p class="code">{{ $reservacion->codigo }}</p>
         </td>
       </tr>
@@ -449,32 +449,30 @@
         <!-- MENSAJE NUEVO (tipo imagen 1) -->
     <div class="hero">
       <p class="thanks">
-        ¡Gracias! <strong>{{ strtoupper(trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? ''))) }}</strong>
+        {{ __('messages.gracias') }} <strong>{{ strtoupper(trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? ''))) }}</strong>
       </p>
 
       <p class="lead">
-        Tu vehículo ya está reservado, el siguiente código es tu número de reservación,
-        da <a href="{{ $url_detalle ?? '#' }}">click aquí</a> para más información.
+        {!! __('messages.vehiculo_reservado', ['url' => $url_detalle ?? '#']) !!}
       </p>
 
       <p class="lead" style="margin-top:0;">
-        La siguiente información se calculó con los datos proporcionados en el proceso de reservación,
-        cualquier modificación relacionada con lo que esta reservación describe podría resultar en una variación contra el precio acordado.
+        {{ __('messages.info_calculada') }}
       </p>
     </div>
 
 
         <!-- RESUMEN NUEVO (tipo imagen 2) -->
-    <h2 class="summary-title">Resumen de tu reserva</h2>
+    <h2 class="summary-title">{{ __('messages.resumen_reserva') }}</h2>
 
     <div class="summary-card">
 
       <!-- Encabezado interno -->
       <table class="summary-top" role="presentation">
         <tr>
-          <td class="left">Lugar y fecha</td>
+          <td class="left">{{ __('messages.lugar_y_fecha') }}</td>
           <td class="right">
-            RESERVACIÓN<br>
+            {{ __('messages.reservacion') }}<br>
             {{ $reservacion->codigo }}
           </td>
         </tr>
@@ -485,7 +483,7 @@
       <!-- Lugar y fecha -->
       <table class="item" role="presentation">
         <tr>
-          <td class="label">Entrega:</td>
+          <td class="label">{{ __('messages.entrega') }}</td>
           <td class="value">
   <div>{{ $reservacion->fecha_inicio }} {{ $reservacion->hora_retiro ?? '' }}</div>
   <div style="font-size:13px; opacity:.85;">{{ $lugarRetiro ?? '-' }}</div>
@@ -493,7 +491,7 @@
 
         </tr>
         <tr>
-          <td class="label">Devolución:</td>
+          <td class="label">{{ __('messages.devolucion') }}</td>
           <td class="value">
   <div>{{ $reservacion->fecha_fin }} {{ $reservacion->hora_entrega ?? '' }}</div>
   <div style="font-size:13px; opacity:.85;">{{ $lugarEntrega ?? '-' }}</div>
@@ -505,7 +503,7 @@
       <div class="summary-line"></div>
 
      <!-- Tu Auto -->
-<p class="section-title">Tu Auto</p>
+<p class="section-title">{{ __('messages.tu_auto') }}</p>
 
 <table role="presentation" style="width:100%; border-collapse:collapse;">
   <tr>
@@ -513,7 +511,7 @@
     <td style="width:45%; vertical-align:middle; padding:10px 0;">
       <img
         src="{{ $imgCategoria ?? (rtrim(config('app.url'), '/') . '/img/categorias/placeholder.png') }}"
-        alt="Vehículo"
+        alt="{{ __('messages.tu_auto') }}"
         style="width:100%; max-width:260px; height:auto; display:block; border:none;"
       >
     </td>
@@ -525,19 +523,19 @@
       </p>
 
       <p class="auto-subtitle">
-        {{ $tuAuto['subtitulo'] ?? 'CATEGORÍA ' . ($categoria->codigo ?? '-') }}
+        {{ $tuAuto['subtitulo'] ?? __('messages.categoria') . ' ' . ($categoria->codigo ?? '-') }}
       </p>
 
       <div class="auto-specs">
-        <div><strong>{{ $tuAuto['pax'] ?? 5 }}</strong> pasajeros</div>
-        <div><strong>{{ $tuAuto['small'] ?? 2 }}</strong> maletas chicas</div>
-        <div><strong>{{ $tuAuto['big'] ?? 1 }}</strong> maletas grandes</div>
-        <div class="muted">{{ $tuAuto['transmision'] ?? 'Transmisión manual o automática' }}</div>
+        <div><strong>{{ $tuAuto['pax'] ?? 5 }}</strong> {{ __('messages.pasajeros') }}</div>
+        <div><strong>{{ $tuAuto['small'] ?? 2 }}</strong> {{ __('messages.maletas_chicas') }}</div>
+        <div><strong>{{ $tuAuto['big'] ?? 1 }}</strong> {{ __('messages.maletas_grandes') }}</div>
+        <div class="muted">{{ $tuAuto['transmision'] ?? __('messages.transmision') }}</div>
         <div class="muted">{{ $tuAuto['tech'] ?? 'Apple CarPlay | Android Auto' }}</div>
       </div>
 
       <div class="auto-includes">
-        {{ $tuAuto['incluye'] ?? 'KM ilimitados | Reelevo de Responsabilidad (LI)' }}
+        {{ $tuAuto['incluye'] ?? __('messages.incluye') }}
       </div>
     </td>
   </tr>
@@ -547,7 +545,7 @@
 
       <div class="summary-line"></div>
 
-     <p class="section-title">Extras</p>
+     <p class="section-title">{{ __('messages.extras') }}</p>
 <div class="extras-hr" style="height:1px; background:#111; margin:10px 0 14px;"></div>
 
 @php
@@ -559,7 +557,7 @@
       $servCards->push([
         'nombre' => $ex->nombre ?? 'Servicio',
         'precio' => isset($ex->precio_unitario)
-          ? ('$' . number_format((float)$ex->precio_unitario, 2) . ' c/u')
+          ? ('$' . number_format((float)$ex->precio_unitario, 2) . ' ' . __('messages.c_u'))
           : '',
         'tipo'   => 'servicio',
       ]);
@@ -570,9 +568,9 @@
   $segCard = null;
   if (!empty($seguroReserva)) {
     $segCard = [
-      'nombre' => $seguroReserva->nombre ?? 'Seguro',
+      'nombre' => $seguroReserva->nombre ?? __('messages.seguro'),
       'precio' => isset($seguroReserva->precio_por_dia)
-        ? ('$' . number_format((float)$seguroReserva->precio_por_dia, 2) . ' por día')
+        ? ('$' . number_format((float)$seguroReserva->precio_por_dia, 2) . ' ' . __('messages.por_dia'))
         : '',
       'tipo'   => 'seguro',
     ];
@@ -586,7 +584,7 @@
      SERVICIOS (EXTRAS)
 ========================= --}}
 @if($servCards->count() === 0)
-  <div style="font-size:14px; opacity:.85;">No seleccionados</div>
+  <div style="font-size:14px; opacity:.85;">{{ __('messages.no_seleccionados') }}</div>
 @else
   <table role="presentation" style="width:100%; border-collapse:collapse;">
     @foreach($servChunks as $row)
@@ -631,7 +629,7 @@
 @if($segCard)
   <div style="margin-top:10px;"></div>
   <div style="font-size:12px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; opacity:.85; margin:14px 0 8px;">
-    Paquete de seguro
+    {{ __('messages.paquete_seguro') }}
   </div>
 
   <table role="presentation" style="width:100%; border-collapse:collapse;">
@@ -677,29 +675,29 @@
     $tarifaBaseTotal = round($tarifaBaseDia * $diasCorreo, 2);
 @endphp
 
-     <p class="section-title">Detalles del precio</p>
+     <p class="section-title">{{ __('messages.detalles_precio') }}</p>
 <table class="price-table" role="presentation">
   <tr>
-    <td class="p-label">Tarifa base</td>
+    <td class="p-label">{{ __('messages.tarifa_base') }}</td>
     <td class="p-value">
       ${{ number_format($tarifaBaseTotal, 2) }} MXN
     </td>
   </tr>
   <tr>
-    <td class="p-label">Opciones de renta</td>
+    <td class="p-label">{{ __('messages.opciones_renta') }}</td>
     <td class="p-value">
       ${{ number_format((float)($opcionesRentaTotal ?? 0), 2) }} MXN
     </td>
   </tr>
   <tr>
-    <td class="p-label">Cargos e IVA</td>
+    <td class="p-label">{{ __('messages.cargos_e_iva') }}</td>
     <td class="p-value">
       ${{ number_format($reservacion->impuestos, 2) }} MXN
     </td>
   </tr>
   <tr>
       <tr>
-    <td class="p-label price-total">TOTAL</td>
+    <td class="p-label price-total">{{ __('messages.total') }}</td>
     <td class="p-value price-total">
       ${{ number_format($reservacion->total, 2) }} MXN
     </td>
@@ -712,36 +710,30 @@
 
 {{-- 🔻 Texto y línea roja debajo del detalle de precio --}}
 <p class="price-note">
-  VIAJERO te garantiza el tamaño del vehículo y sus características, más no el modelo específico.
-  Nos comprometemos a entregarte un auto de la categoría reservada, por ejemplo un auto compacto,
-  pudiendo ser cualquiera de las marcas que manejamos en nuestra flota dentro de este grupo.
+  {{ __('messages.nota_garantia') }}
 </p>
 <div class="price-note-line"></div>
 
 {{-- Bloque: Requisitos y protección LI --}}
 <div class="info-section">
-  <p class="info-section-title">Requisitos para rentar</p>
+  <p class="info-section-title">{{ __('messages.requisitos_rentar') }}</p>
 
   <ul class="info-section-list">
-    <li>Tarjeta de crédito: Con un mínimo de antigüedad de un año, todas nuestras rentas deben ser amparadas con una tarjeta de crédito.</li>
-    <li>Edad mínima 21 años: Aplica un cargo por conductor joven si eres menor de 25 años.</li>
-    <li>Identificación con fotografía: Credencial del IFE/INE o Pasaporte.</li>
-    <li>Licencia para conducir: Deberá estar vigente.</li>
-    <li>Relevos de responsabilidad: Elegir entre nuestras opciones de protección para el auto (100%, 90%, 80% o 0%).</li>
+    <li>{{ __('messages.requisito1') }}</li>
+    <li>{{ __('messages.requisito2') }}</li>
+    <li>{{ __('messages.requisito3') }}</li>
+    <li>{{ __('messages.requisito4') }}</li>
+    <li>{{ __('messages.requisito5') }}</li>
   </ul>
 
   <p class="info-section-paragraph">
-    Los requisitos de renta pueden variar, si requieres más información comunícate al 01 (442) 303 26 68
-    o escríbenos a reservaciones@viajerocarental.com
+    {{ __('messages.requisitos_variar') }}
   </p>
 
-  <p class="info-section-title">Protección limitada de responsabilidad hacia terceros (LI)</p>
+  <p class="info-section-title">{{ __('messages.proteccion_li') }}</p>
 
   <p class="info-section-paragraph">
-    Protege a terceros por daños y perjuicios ocasionados en un accidente y cubre la cantidad mínima
-    requerida por ley. Tú eliges el nivel de responsabilidad sobre el auto que más vaya acorde a tus
-    necesidades y presupuesto. Pregunta por nuestros relevos de responsabilidad (opcionales) al llegar
-    al mostrador de cualquiera de nuestras oficinas.
+    {{ __('messages.proteccion_li_desc') }}
   </p>
 </div>
 
@@ -781,30 +773,30 @@
       <div class="footer-main">
         {{-- Columna 1: ubicaciones --}}
         <div class="footer-col">
-          <p>📍 OFICINA CENTRAL PARK, QUERÉTARO</p>
-          <p>📍 PICK-UP AEROPUERTO DE QUERÉTARO</p>
-          <p>📍 PICK-UP AEROPUERTO DE LEÓN</p>
+          <p>📍 {{ __('messages.oficina_central') }}</p>
+          <p>📍 {{ __('messages.pickup_aeropuerto_qro') }}</p>
+          <p>📍 {{ __('messages.pickup_aeropuerto_leon') }}</p>
         </div>
 
         {{-- Columna 2: links centro --}}
         <div class="footer-col">
           <ul>
-            <li><a href="{{ route('rutaReservaciones') }}">MI RESERVA</a></li>
-            <li><a href="{{ route('rutaCatalogo') }}">AUTOS</a></li>
-            <li><a href="https://viajerocarental.com/empresas">EMPRESAS</a></li>
-            <li><a href="{{ route('rutaPoliticas') }}">TÉRMINOS Y CONDICIONES</a></li>
-            <li><a href="{{ route('rutaContacto') }}">CONTACTO</a></li>
+            <li><a href="{{ route('rutaReservaciones') }}">{{ __('messages.mi_reserva') }}</a></li>
+            <li><a href="{{ route('rutaCatalogo') }}">{{ __('messages.autos') }}</a></li>
+            <li><a href="https://viajerocarental.com/empresas">{{ __('messages.empresas') }}</a></li>
+            <li><a href="{{ route('rutaPoliticas') }}">{{ __('messages.terminos_condiciones') }}</a></li>
+            <li><a href="{{ route('rutaContacto') }}">{{ __('messages.contacto') }}</a></li>
           </ul>
         </div>
 
         {{-- Columna 3: links derecha --}}
         <div class="footer-col">
           <ul>
-            <li><a href="https://viajerocarental.com/blog">BLOG</a></li>
-            <li><a href="{{ route('rutaFAQ') }}">F.A.Q</a></li>
-            <li><a href="{{ route('rutaPoliticas') }}">AVISO DE PRIVACIDAD</a></li>
-            <li><a href="{{ route('rutaPoliticas') }}">POLÍTICA DE LIMPIEZA</a></li>
-            <li><a href="{{ route('rutaPoliticas') }}">POLÍTICA DE RENTA</a></li>
+            <li><a href="https://viajerocarental.com/blog">{{ __('messages.blog') }}</a></li>
+            <li><a href="{{ route('rutaFAQ') }}">{{ __('messages.faq') }}</a></li>
+            <li><a href="{{ route('rutaPoliticas') }}">{{ __('messages.aviso_privacidad') }}</a></li>
+            <li><a href="{{ route('rutaPoliticas') }}">{{ __('messages.politica_limpieza') }}</a></li>
+            <li><a href="{{ route('rutaPoliticas') }}">{{ __('messages.politica_renta') }}</a></li>
           </ul>
         </div>
       </div>
@@ -825,7 +817,7 @@
 
   <!-- FOOTER SIMPLE EXISTENTE -->
   <div class="footer">
-    © {{ date('Y') }} <strong>Viajero Car Rental</strong><br>
+    © {{ date('Y') }} <strong>Viajero Car Rental</strong> — {{ __('messages.todos_derechos') }}<br>
     <a href="https://viajerocarental.com">www.viajerocarental.com</a> |
     <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>
   </div>

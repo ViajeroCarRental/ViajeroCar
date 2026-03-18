@@ -1,5 +1,5 @@
 @extends('layouts.Usuarios')
-@section('Titulo', 'Reservaciones')
+@section('Titulo', __('messages.reservaciones_titulo'))
 
 @section('css-vistaReservaciones')
     <link rel="stylesheet" href="{{ asset('css/reservaciones.css') }}">
@@ -80,13 +80,6 @@
         $requestedStep = (int) request('step', 1);
         $controllerStep = isset($step) ? (int) $step : null;
 
-        $pickupSucursalId = $f['pickup_sucursal_id'] ?? request('pickup_sucursal_id');
-        $dropoffSucursalId = $f['dropoff_sucursal_id'] ?? request('dropoff_sucursal_id');
-
-        if (empty($dropoffSucursalId) && !empty($pickupSucursalId)) {
-        $dropoffSucursalId = $pickupSucursalId;
-        }
-
         $isFreshEntry = empty($pickupSucursalId) || empty($dropoffSucursalId);
         $stepCurrent = $isFreshEntry ? 1 : $controllerStep ?? $requestedStep;
         if ($stepCurrent >= 2 && $isFreshEntry) {
@@ -156,7 +149,7 @@
         $autoTitulo =
             $categoriaSel && isset($categoriaSel->descripcion) && trim((string) $categoriaSel->descripcion) !== ''
                 ? (string) $categoriaSel->descripcion
-                : 'Auto o similar';
+                : __('messages.auto_similar');
 
         // ✅ Línea secundaria
         $catNombreUpper =
@@ -165,7 +158,7 @@
         $catCodigoUpper =
             $categoriaSel && isset($categoriaSel->codigo) ? strtoupper((string) $categoriaSel->codigo) : '';
 
-        $autoSubtitulo = $catCodigoUpper ? $catNombreUpper . ' | CATEGORÍA ' . $catCodigoUpper : $catNombreUpper;
+        $autoSubtitulo = $catCodigoUpper ? $catNombreUpper . ' | ' . __('messages.categoria') . ' ' . $catCodigoUpper : $catNombreUpper;
 
         // ✅ IMÁGENES
         $catImages = [
@@ -174,7 +167,7 @@
             3 => asset('img/jetta.png'),
             4 => asset('img/camry.png'),
             5 => asset('img/renegade.png'),
-            6 => asset('img/taos.png'),
+            6 => asset('img/seltos.png'),
             7 => asset('img/avanza.png'),
             8 => asset('img/Odyssey.png'),
             9 => asset('img/Hiace.png'),
@@ -229,25 +222,12 @@
             $categoriaSel && isset($categoriaSel->nombre) ? strtoupper((string) $categoriaSel->nombre) : 'COMPACTO';
 
         // ✅ SOLO estos extras (Step 3) — máximo 3 por cada uno (lo limita tu JS)
+        $allowedExtras = ['silla para bebé', 'conductor adicional', 'gasolina prepago'];
+
         $serviciosFiltrados = collect($servicios ?? [])
-            ->filter(function ($s) {
-
+            ->filter(function ($s) use ($allowedExtras) {
                 $name = mb_strtolower(trim((string) ($s->nombre ?? '')));
-
-                return str_contains($name, 'silla')
-                    || str_contains($name, 'gasolina prepago')
-                    || str_contains($name, 'conductor adicional');
-            })
-            ->sortBy(function ($s) {
-
-                $name = mb_strtolower(trim((string) ($s->nombre ?? '')));
-
-                if (str_contains($name, 'silla')) return 1;
-                if (str_contains($name, 'gasolina')) return 2;
-                if (str_contains($name, 'conductor')) return 3;
-
-                return 99;
-
+                return in_array($name, $allowedExtras, true);
             })
             ->values();
     @endphp
@@ -363,21 +343,21 @@
             <div class="fondo-fijo-layout"></div>
 
             {{-- ===================== PASOS ARRIBA ===================== --}}
-            <nav class="wizard-steps" aria-label="Pasos">
+            <nav class="wizard-steps" aria-label="{{ __('messages.pasos') }}">
                 <a class="wizard-step {{ $stepCurrent > 1 ? 'done' : '' }} {{ $stepCurrent === 1 ? 'active' : '' }}"
                     href="{{ $toStep(1) }}">
-                    <span class="n">1</span> Generales
+                    <span class="n">1</span> {{ __('messages.generales') }}
                 </a>
                 <a class="wizard-step {{ $stepCurrent > 2 || request('auto') ? 'done' : '' }} {{ $stepCurrent === 2 ? 'active' : '' }}"
                     href="{{ $toStep(2) }}">
-                    <span class="n">2</span> Categoría
+                    <span class="n">2</span> {{ __('messages.categoria') }}
                 </a>
                 <a class="wizard-step {{ $stepCurrent > 3 ? 'done' : '' }} {{ $stepCurrent === 3 ? 'active' : '' }}"
                     href="{{ $toStep(3) }}">
-                    <span class="n">3</span> Adicionales
+                    <span class="n">3</span> {{ __('messages.adicionales') }}
                 </a>
                 <a class="wizard-step {{ $stepCurrent === 4 ? 'active' : '' }}" href="{{ $toStep(4) }}">
-                    <span class="n">4</span> Confirmación
+                    <span class="n">4</span> {{ __('messages.confirmacion') }}
                 </a>
             </nav>
 
@@ -389,7 +369,7 @@
     <div class="btn-buscador-movil">
         <div class="btn-container">
             <p style="margin-bottom: 12px; font-weight: 700; color: #333; font-size: 16px;">
-                Encuentra tu auto aquí
+                {{ __('messages.encuentra_tu_aqui') }}
             </p>
             <button type="button" id="btn-abrir-buscador-reservas"
                     style="background-color: #b22222;
@@ -406,7 +386,7 @@
                            width: 100%;
                            color: white;
                            cursor: pointer;">
-                <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
+                <i class="fa-solid fa-magnifying-glass"></i> {{ __('messages.buscar') }}
             </button>
         </div>
     </div>
@@ -414,12 +394,12 @@
     {{-- BUSCADOR PRINCIPAL --}}
     <div class="search-card" id="miBuscador">
         {{-- BOTÓN DE CERRAR - DENTRO DEL BUSCADOR --}}
-        <button type="button" id="btn-cerrar-buscador-politicas" class="btn-close-politicas" aria-label="Cerrar">
-            <span>Cerrar</span>
+        <button type="button" id="btn-cerrar-buscador-politicas" class="btn-close-politicas" aria-label="{{ __('messages.cerrar') }}">
+            <span>{{ __('messages.cerrar') }}</span>
         </button>
 
         <header class="wizard-head">
-            <h2>Sobre tu reservación</h2>
+            <h2>{{ __('messages.sobre_tu_reservacion') }}</h2>
         </header>
 
         <form method="GET" action="{{ route('rutaReservasIniciar') }}" class="search-form" id="step1Form" novalidate>
@@ -436,11 +416,11 @@
                 ========================= --}}
                 <div class="sg-col sg-col-location">
                     <div class="location-head">
-                        <span class="field-title">Lugar de renta</span>
+                        <span class="field-title">{{ __('messages.lugar_de_renta') }}</span>
                         <label class="inline-check" for="differentDropoff">
                             <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1"
                                 {{ request('different_dropoff') ? 'checked' : '' }}>
-                            <span>Devolver en <br> otro destino</span>
+                            <span>{{ __('messages.devolver_en_otro') }}</span>
                         </label>
                     </div>
 
@@ -449,7 +429,7 @@
                         <div class="field icon-field" id="pickupField">
                             <span class="field-icon"><i id="pickupIcon" class="fa-solid fa-location-dot"></i></span>
                             <select id="pickupPlace" name="pickup_sucursal_id" required>
-                                <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}>¿Dónde inicia tu viaje?</option>
+                                <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}>{{ __('messages.donde_inicia') }}</option>
                                 @foreach ($ciudades->where('nombre', 'Querétaro') as $ciudad)
                                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                         @foreach ($ciudad->sucursalesActivas ?? [] as $suc)
@@ -479,7 +459,7 @@
                         <div class="field icon-field" id="dropoffWrapper" style="display: {{ request('different_dropoff') ? 'block' : 'none' }};">
                             <span class="field-icon"><i id="dropoffIcon" class="fa-solid fa-location-dot"></i></span>
                             <select id="dropoffPlace" name="dropoff_sucursal_id">
-                                <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}>¿Dónde termina tu viaje?</option>
+                                <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}>{{ __('messages.donde_termina') }}</option>
                                 @foreach ($ciudades as $ciudad)
                                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                         @foreach ($ciudad->sucursalesActivas ?? [] as $suc)
@@ -512,19 +492,19 @@
                 ========================= --}}
                 <div class="sg-col sg-col-datetime">
                     <div class="field">
-                        <span class="field-title solo-responsivo-izq">Pick-Up</span>
+                        <span class="field-title solo-responsivo-izq">{{ __('messages.pickup') }}</span>
                         <div class="datetime-row">
                             <div class="dt-field icon-field">
                                 <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
                                 <input id="start" name="pickup_date" type="text"
-                                    placeholder="Fecha" class="flatpickr-input"
+                                    placeholder="{{ __('messages.fecha') }}" class="flatpickr-input"
                                     value="{{ $pickupDate }}" required>
                             </div>
                             <div class="dt-field icon-field time-field">
                                 <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
                                 <input type="hidden" name="pickup_time" id="pickup_time_hidden" value="{{ $pickupTime }}">
                                 <select id="pickup_h" name="pickup_h" required class="time-select">
-                                    <option value="" disabled {{ empty($ph) ? 'selected' : '' }}>Hora</option>
+                                    <option value="" disabled {{ empty($ph) ? 'selected' : '' }}>{{ __('messages.hora') }}</option>
                                     @for ($i = 0; $i <= 23; $i++)
                                         @php $hh = str_pad((string)$i,2,'0',STR_PAD_LEFT); @endphp
                                         <option value="{{ $hh }}" {{ $hh === $ph ? 'selected' : '' }}>{{ $hh }}:00</option>
@@ -540,19 +520,19 @@
                 ========================= --}}
                 <div class="sg-col sg-col-datetime">
                     <div class="field">
-                        <span class="field-title solo-responsivo-izq">Devolución</span>
+                        <span class="field-title solo-responsivo-izq">{{ __('messages.devolucion') }}</span>
                         <div class="datetime-row">
                             <div class="dt-field icon-field">
                                 <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
                                 <input id="end" name="dropoff_date" type="text"
-                                    placeholder="Fecha" class="flatpickr-input"
+                                    placeholder="{{ __('messages.fecha') }}" class="flatpickr-input"
                                     value="{{ $dropoffDate }}" required>
                             </div>
                             <div class="dt-field icon-field time-field">
                                 <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
                                 <input type="hidden" name="dropoff_time" id="dropoff_time_hidden" value="{{ $dropoffTime }}">
                                 <select id="dropoff_h" name="dropoff_h" required class="time-select">
-                                    <option value="" disabled {{ empty($dh) ? 'selected' : '' }}>Hora</option>
+                                    <option value="" disabled {{ empty($dh) ? 'selected' : '' }}>{{ __('messages.hora') }}</option>
                                     @for ($i = 0; $i <= 23; $i++)
                                         @php $hh = str_pad((string)$i,2,'0',STR_PAD_LEFT); @endphp
                                         <option value="{{ $hh }}" {{ $hh === $dh ? 'selected' : '' }}>{{ $hh }}:00</option>
@@ -568,7 +548,8 @@
                 ========================= --}}
                 <div class="sg-col sg-col-submit">
                     <div class="actions">
-                        <button type="submit" class="btn btn-primary">Siguiente</button>
+                        <button type="button" class="btn btn-ghost" onclick="limpiarTodoYReiniciar()">{{ __('messages.limpiar') }}</button>
+                        <button type="submit" class="btn btn-primary">{{ __('messages.siguiente') }}</button>
                     </div>
                 </div>
 
@@ -873,9 +854,6 @@
             if (form) {
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
-
-                     console.log("SUBMIT DETECTADO");
-
                     limpiarErrores();
 
                     let valido = true;
@@ -884,7 +862,7 @@
                     const pickup = document.getElementById('pickupPlace');
                     if (!pickup.value) {
                         valido = false;
-                        mostrarError(pickup, 'Ubicacion Requerida');
+                        mostrarError(pickup, '{{ __("messages.ubicacion_requerida") }}');
                     } else {
                         pickup.classList.add('field-success');
                     }
@@ -894,7 +872,7 @@
                     const dropoff = document.getElementById('dropoffPlace');
                     if (differentDropoff.checked && !dropoff.value) {
                         valido = false;
-                        mostrarError(dropoff, 'Ubicacion Requerida');
+                        mostrarError(dropoff, '{{ __("messages.ubicacion_requerida") }}');
                     } else if (differentDropoff.checked) {
                         dropoff.classList.add('field-success');
                     }
@@ -903,7 +881,7 @@
                     const start = document.getElementById('start');
                     if (!start.value) {
                         valido = false;
-                        mostrarError(start, 'Fecha Requerida');
+                        mostrarError(start, '{{ __("messages.fecha_requerida") }}');
                     } else {
                         if (start._flatpickr && start._flatpickr.altInput) {
                             start._flatpickr.altInput.classList.add('field-success');
@@ -915,7 +893,7 @@
                     const end = document.getElementById('end');
                     if (!end.value) {
                         valido = false;
-                        mostrarError(end, 'Fecha Requerida');
+                        mostrarError(end, '{{ __("messages.fecha_requerida") }}');
                     } else {
                         if (end._flatpickr && end._flatpickr.altInput) {
                             end._flatpickr.altInput.classList.add('field-success');
@@ -928,7 +906,7 @@
                     const pickupH = document.getElementById('pickup_h');
                     if (!pickupH.value) {
                         valido = false;
-                        mostrarError(pickupH, 'Hora Requerida');
+                        mostrarError(pickupH, '{{ __("messages.hora_requerida") }}');
                     } else {
                         pickupH.classList.add('field-success');
                     }
@@ -936,7 +914,7 @@
                     const dropoffH = document.getElementById('dropoff_h');
                     if (!dropoffH.value) {
                         valido = false;
-                        mostrarError(dropoffH, 'Hora Requerida');
+                        mostrarError(dropoffH, '{{ __("messages.hora_requerida") }}');
                     } else {
                         dropoffH.classList.add('field-success');
                     }
@@ -991,16 +969,14 @@
                 }
             }
         }
-        console.log("Formulario valido:", valido);
     </script>
-
 @endif
                 {{-- ===================== STEP 2 ===================== --}}
 
                 @if ($stepCurrent === 2)
                     <header class="wizard-head">
-                        <h2>Selecciona tu categoría</h2>
-                        <p>Tarifa de <strong id="daysLabel">{{ $days }}</strong> día(s) de tu renta.</p>
+                        <h2>{{ __('messages.selecciona_categoria') }}</h2>
+                        <p>{{ __('messages.tarifa_de') }} <strong id="daysLabel">{{ $days }}</strong> {{ $days == 1 ? __('messages.dia') : __('messages.dias') }} de tu renta.</p>
                     </header>
 
                     <div class="cars">
@@ -1040,13 +1016,13 @@
                                 $appleCarplay = (int) ($cat->apple_carplay ?? 0);
                                 $androidAuto = (int) ($cat->android_auto ?? 0);
                                 $codigoCat = trim(strtoupper((string) ($cat->codigo ?? '')));
-                                $transmision = $cat->id_categoria == 9 ? 'Estándar' : 'Automática';
+                                $transmision = $cat->id_categoria == 9 ? __('messages.estandar') : __('messages.automatica');
                                 $tieneACCat = (int) ($cat->aire_acondicionado ?? ($cat->aire_ac ?? 1));
 
                                 // *** SOLO CAMBIAMOS ESTA LÍNEA ***
                                 // Antes: $desc = $cat->ejemplo ?? ($cat->descripcion ?? 'Auto o similar.');
                                 // Ahora: Usamos directamente la descripción de la categoría
-                                $desc = $cat->descripcion ?? 'Auto o similar.';
+                                $desc = $cat->descripcion ?? __('messages.auto_similar');
 
                                 $ahorroPct =
                                     $mostradorTotal > 0
@@ -1066,7 +1042,7 @@
                                         {{-- El badge ahora vive aquí arriba, al lado del título --}}
                                         <div class="car-days-badge car-days-badge--v2">
                                             <i class="fa-regular fa-calendar-days"></i>
-                                            <span class="js-days-badge">{{ $days }}</span> día(s)
+                                            <span class="js-days-badge">{{ $days }}</span> {{ $days == 1 ? __('messages.dia') : __('messages.dias') }}
                                         </div>
                                     </div>
 
@@ -1082,20 +1058,20 @@
                                     {{-- FEATURES --}}
                                     <div class="car-features">
                                         <ul class="car-mini-specs">
-                                            <li title="Pasajeros">
+                                            <li title="{{ __('messages.pasajeros') }}">
                                                 <i class="fa-solid fa-user-large"></i> {{ $paxFinal }}
                                             </li>
-                                            <li title="Maletas chicas">
+                                            <li title="{{ __('messages.maletas_chicas') }}">
                                                 <i class="fa-solid fa-suitcase-rolling"></i> {{ $sFinal }}
                                             </li>
-                                            <li title="Maletas grandes">
+                                            <li title="{{ __('messages.maletas_grandes') }}">
                                                 <i class="fa-solid fa-briefcase"></i> {{ $bFinal }}
                                             </li>
-                                            <li title="Transmisión">
+                                            <li title="{{ __('messages.transmision') }}">
                                                 <span class="spec-letter">T | {{ $transmision }}</span>
                                             </li>
                                             @if ($tieneACCat)
-                                                <li title="Aire acondicionado">
+                                                <li title="{{ __('messages.aire_acondicionado') }}">
                                                     <i class="fa-regular fa-snowflake"></i>
                                                     <span class="spec-letter">A/C</span>
                                                 </li>
@@ -1129,12 +1105,12 @@
                                         </div>
                                         @if ($ahorroPct > 0)
                                             <div class="price-save">
-                                                Ahorra <strong class="js-ahorro">{{ $ahorroPct }}</strong>%
+                                                {{ __('messages.ahorra') }} <strong class="js-ahorro">{{ $ahorroPct }}</strong>%
                                             </div>
                                         @endif
                                         <a class="btn-pay primary"
                                             href="{{ $toStep(3, ['categoria_id' => $cat->id_categoria, 'plan' => 'linea']) }}">
-                                            PREPAGAR EN LÍNEA
+                                            {{ __('messages.prepagar_en_linea') }}
                                         </a>
                                         <div class="office-wrap">
                                             <div class="office-price">
@@ -1144,31 +1120,28 @@
                                             </div>
                                             <a class="btn-pay gray"
                                                 href="{{ $toStep(3, ['categoria_id' => $cat->id_categoria, 'plan' => 'mostrador']) }}">
-                                                PAGAR EN OFICINA
+                                                {{ __('messages.pagar_en_oficina') }}
                                             </a>
                                         </div>
                                     </div>
                                 </div>
                             </article>
                         @empty
-                            <p>No hay categorías disponibles.</p>
+                            <p>{{ __('messages.no_categorias') }}</p>
                         @endforelse
                     </div>
 
                     <div class="wizard-nav">
-                        <a class="btn btn-ghost" href="{{ $toStep(1) }}">Anterior</a>
-                        <a class="btn btn-primary" href="{{ $toStep(3) }}">Siguiente</a>
+                        <a class="btn btn-ghost" href="{{ $toStep(1) }}">{{ __('messages.anterior') }}</a>
+                        <a class="btn btn-primary" href="{{ $toStep(3) }}">{{ __('messages.siguiente') }}</a>
                     </div>
                 @endif
 
-                <script>
-                console.log("STEP ACTUAL:", "{{ $stepCurrent }}");
-                </script>
                 {{-- ===================== STEP 3 ===================== --}}
                 @if ($stepCurrent === 3)
                     <header class="wizard-head">
-                        <h2>Selecciona las opciones adicionales que desees</h2>
-                        <p>Revisa protecciones incluidas y agrega equipamiento/servicios extra.</p>
+                        <h2>{{ __('messages.selecciona_adicionales') }}</h2>
+                        <p>{{ __('messages.revisa_protecciones') }}</p>
                     </header>
 
                     <input type="hidden" id="addonsHidden" value="{{ $addonsParam }}">
@@ -1442,9 +1415,9 @@
                         {{-- Protecciones --}}
                         <section class="step3-section">
                             <div class="step3-title">
-                                Relevos de responsabilidad (Protecciones)
+                                {{ __('messages.relevos_responsabilidad') }}
                                 <button type="button" class="step3-info" id="info-protecciones-step3"
-                                    title="Más información">
+                                    title="{{ __('messages.mas_informacion') }}">
                                     <i class="fa-solid fa-circle-info"></i>
                                 </button>
                             </div>
@@ -1456,13 +1429,11 @@
                                             <i class="fa-solid fa-shield"></i>
                                         </div>
                                         <div>
-                                            <p class="prot-name">Protección limitada de responsabilidad hacia terceros (LI)
-                                            </p>
+                                            <p class="prot-name">{{ __('messages.proteccion_limitada') }}</p>
                                             <p class="prot-desc">
-                                                Protege a terceros por daños y perjuicios ocasionados en un accidente y
-                                                cubre la cantidad mínima requerida por ley.
+                                                {{ __('messages.proteccion_limitada_desc') }}
                                             </p>
-                                            <div class="prot-badge"><span class="dot"></span> Incluida</div>
+                                            <div class="prot-badge"><span class="dot"></span> {{ __('messages.incluida') }}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1473,12 +1444,9 @@
                                             <i class="fa-solid fa-shield-halved"></i>
                                         </div>
                                         <div>
-                                            <p class="prot-name">Protecciones adicionales</p>
+                                            <p class="prot-name">{{ __('messages.protecciones_adicionales') }}</p>
                                             <p class="prot-desc">
-                                                Tú eliges el nivel de responsabilidad sobre el auto que más vaya acorde a
-                                                tus necesidades y presupuesto.
-                                                Pregunta por nuestros relevos (opcionales) al llegar al mostrador de
-                                                cualquiera de nuestras oficinas.
+                                                {{ __('messages.protecciones_adicionales_desc') }}
                                             </p>
                                         </div>
                                     </div>
@@ -1489,35 +1457,25 @@
                                 <div class="card">
 
                                     <button type="button" class="x" id="closeProteccionesStep3"
-                                        aria-label="Cerrar">
+                                        aria-label="{{ __('messages.cerrar') }}">
                                         <i class="fa-solid fa-xmark"></i>
                                     </button>
 
-                                    <h2 class="s3-modal-title">Relevos de responsabilidad (Protecciones)</h2>
-                                    <p class="s3-modal-sub">Consulta el detalle de cada pack y lo que incluye.</p>
+                                    <h2 class="s3-modal-title">{{ __('messages.relevos_responsabilidad') }}</h2>
+                                    <p class="s3-modal-sub">{{ __('messages.relevos_detalle') }}</p>
 
                                     <div class="s3-body-scroll">
                                         <div class="s3-info-top">
                                             <p>
-                                                <strong>VIAJERO</strong> ofrece diferentes tipos de Relevos de
-                                                responsabilidad (Protecciones) opcionales disponibles por
-                                                un cargo adicional diario el cual se puede adquirir al reservar o el día de
-                                                la renta.
+                                                {{ __('messages.viajero_ofrece') }}
                                             </p>
 
                                             <p>
-                                                El cliente es responsable de todo daño o robo del vehículo
-                                                <strong>VIAJERO</strong> sujeto a ciertas exclusiones
-                                                contenidas en el contrato de alquiler. <strong>VIAJERO</strong> renunciará o
-                                                limitará la responsabilidad del cliente
-                                                a través de la adquisición de alguno de estos.
+                                                {{ __('messages.cliente_responsable') }}
                                             </p>
 
                                             <p style="margin-bottom:0;">
-                                                Los clientes que reserven utilizando su Número Wizard verán las preferencias
-                                                de coberturas y seguros seleccionados en su perfil.
-                                                También puede acudir a una oficina o llamar al <strong>01 (442) 303
-                                                    2668</strong> para obtener ayuda.
+                                                {{ __('messages.preferencias_coberturas') }} <strong>01 (442) 303 2668</strong> {{ __('messages.para_obtener_ayuda') }}
                                             </p>
                                         </div>
 
@@ -1526,26 +1484,19 @@
                                             <summary class="s3-acc-sum">
                                                 <span class="s3-acc-left">
                                                     <span class="s3-acc-badge">LDW</span>
-                                                    <span class="s3-acc-name">LDW PACK</span>
+                                                    <span class="s3-acc-name">{{ __('messages.ldw_pack') }}</span>
                                                 </span>
                                                 <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
                                             </summary>
 
                                             <div class="s3-acc-body">
                                                 <ul class="s3-list">
-                                                    <li><strong>LDW:</strong> El cliente es responsable por el <strong>0%
-                                                            deducible</strong>, de lado a lado pase lo que pase con el auto,
-                                                        está cubierto de bumper a bumper.</li>
-                                                    <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000
-                                                            MXN</strong> por evento.</li>
-                                                    <li><strong>PRA:</strong> Asistencia en carretera Premium. Incluye:
-                                                        envío de llaves o gasolina, apertura de auto, cambio de neumático
-                                                        ponchado y paso de corriente. <strong>No incluye</strong> costo de
-                                                        llave ni gasolina.</li>
-                                                    <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
-                                                    <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
-                                                    <li><strong>LI:</strong> Responsabilidad civil hasta <strong>$3,000,000
-                                                            MXN</strong>.</li>
+                                                    <li><strong>{{ __('messages.ldw_desc') }}</strong></li>
+                                                    <li>{{ __('messages.pai') }}</li>
+                                                    <li>{{ __('messages.pra_premium') }}</li>
+                                                    <li>{{ __('messages.lou') }}</li>
+                                                    <li>{{ __('messages.la') }}</li>
+                                                    <li>{{ __('messages.li') }}</li>
                                                 </ul>
                                             </div>
                                         </details>
@@ -1555,27 +1506,19 @@
                                             <summary class="s3-acc-sum">
                                                 <span class="s3-acc-left">
                                                     <span class="s3-acc-badge">PDW</span>
-                                                    <span class="s3-acc-name">PDW PACK</span>
+                                                    <span class="s3-acc-name">{{ __('messages.pdw_pack') }}</span>
                                                 </span>
                                                 <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
                                             </summary>
 
                                             <div class="s3-acc-body">
                                                 <ul class="s3-list">
-                                                    <li><strong>PDW:</strong> Cubierta toda la carrocería al
-                                                        <strong>5%</strong>, <strong>10%</strong> pérdida total o robo.
-                                                        <strong>No cubre</strong> llantas, accesorios, rines ni cristales.
-                                                    </li>
-                                                    <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000
-                                                            MXN</strong> por evento.</li>
-                                                    <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es
-                                                        responsable por costos de: grúa (en caso de requerirla), corralón,
-                                                        envío de llaves o gasolina, apertura de auto, cambio de neumático
-                                                        ponchado y paso de corriente.</li>
-                                                    <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
-                                                    <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
-                                                    <li><strong>ALI:</strong> Responsabilidad civil hasta <strong>$1,000,000
-                                                            MXN</strong>.</li>
+                                                    <li><strong>{{ __('messages.pdw_desc') }}</strong></li>
+                                                    <li>{{ __('messages.pai') }}</li>
+                                                    <li>{{ __('messages.pra_declinado') }}</li>
+                                                    <li>{{ __('messages.lou') }}</li>
+                                                    <li>{{ __('messages.la') }}</li>
+                                                    <li>{{ __('messages.ali') }}</li>
                                                 </ul>
                                             </div>
                                         </details>
@@ -1585,26 +1528,19 @@
                                             <summary class="s3-acc-sum">
                                                 <span class="s3-acc-left">
                                                     <span class="s3-acc-badge">CDW</span>
-                                                    <span class="s3-acc-name">CDW PACK 1</span>
+                                                    <span class="s3-acc-name">{{ __('messages.cdw_pack_1') }}</span>
                                                 </span>
                                                 <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
                                             </summary>
 
                                             <div class="s3-acc-body">
                                                 <ul class="s3-list">
-                                                    <li><strong>CDW 10%:</strong> El cliente es responsable por el
-                                                        <strong>10% deducible</strong> en daños, <strong>20%</strong>
-                                                        pérdida total o robo sobre valor factura.</li>
-                                                    <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000
-                                                            MXN</strong> por evento.</li>
-                                                    <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es
-                                                        responsable por costos de: grúa (en caso de requerirla), corralón,
-                                                        envío de llaves o gasolina, apertura de auto, cambio de neumático
-                                                        ponchado y paso de corriente.</li>
-                                                    <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
-                                                    <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
-                                                    <li><strong>ALI:</strong> Responsabilidad civil hasta <strong>$1,000,000
-                                                            MXN</strong>.</li>
+                                                    <li><strong>{{ __('messages.cdw_10_desc') }}</strong></li>
+                                                    <li>{{ __('messages.pai') }}</li>
+                                                    <li>{{ __('messages.pra_declinado') }}</li>
+                                                    <li>{{ __('messages.lou') }}</li>
+                                                    <li>{{ __('messages.la') }}</li>
+                                                    <li>{{ __('messages.ali') }}</li>
                                                 </ul>
                                             </div>
                                         </details>
@@ -1614,29 +1550,45 @@
                                             <summary class="s3-acc-sum">
                                                 <span class="s3-acc-left">
                                                     <span class="s3-acc-badge">CDW</span>
-                                                    <span class="s3-acc-name">CDW PACK 2</span>
+                                                    <span class="s3-acc-name">{{ __('messages.cdw_pack_2') }}</span>
                                                 </span>
                                                 <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
                                             </summary>
 
                                             <div class="s3-acc-body">
                                                 <ul class="s3-list">
-                                                    <li><strong>CDW 20%:</strong> El cliente es responsable por el
-                                                        <strong>20% deducible</strong> en daños, <strong>30%</strong>
-                                                        pérdida total o robo sobre valor factura.</li>
-                                                    <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000
-                                                            MXN</strong> por evento.</li>
-                                                    <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es
-                                                        responsable por costos de: grúa (en caso de requerirla), corralón,
-                                                        envío de llaves o gasolina, apertura de auto, cambio de neumático
-                                                        ponchado y paso de corriente.</li>
-                                                    <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
-                                                    <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
-                                                    <li><strong>LI:</strong> Responsabilidad civil hasta <strong>$350,000
-                                                            MXN</strong>.</li>
+                                                    <li><strong>{{ __('messages.cdw_20_desc') }}</strong></li>
+                                                    <li>{{ __('messages.pai') }}</li>
+                                                    <li>{{ __('messages.pra_declinado') }}</li>
+                                                    <li>{{ __('messages.lou') }}</li>
+                                                    <li>{{ __('messages.la') }}</li>
+                                                    <li>{{ __('messages.li') }}</li>
                                                 </ul>
                                             </div>
                                         </details>
+
+                                        {{-- DECLINE PROTECTIONS --}}
+                                        <details class="s3-acc-item s3-acc-danger">
+                                            <summary class="s3-acc-sum">
+                                                <span class="s3-acc-left">
+                                                    <span class="s3-acc-badge s3-badge-danger">DECLINE</span>
+                                                    <span class="s3-acc-name">{{ __('messages.decline_protections') }}</span>
+                                                </span>
+                                                <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                                            </summary>
+
+                                            <div class="s3-acc-body">
+                                                <ul class="s3-list">
+                                                    <li><strong>{{ __('messages.decline_desc') }}</strong></li>
+                                                    <li>{{ __('messages.no_cubre_gastos_medicos') }}</li>
+                                                    <li>{{ __('messages.pra_declinado') }}</li>
+                                                    <li>{{ __('messages.lou_declinado') }}</li>
+                                                    <li>{{ __('messages.la_declinado') }}</li>
+                                                    <li>{{ __('messages.li_350') }}</li>
+                                                </ul>
+                                            </div>
+                                        </details>
+
                                     </div>
                                 </div>
                             </div>
@@ -1669,34 +1621,29 @@
                         {{-- Equipamiento & Servicios --}}
                         <section class="step3-section">
                             <div class="step3-title">
-                                Equipamiento & Servicios
-                                <small>máximo 3 por opción</small>
+                                {{ __('messages.equipamiento_servicios') }}
+                                <small>{{ __('messages.maximo_3') }}</small>
                             </div>
 
                             <div class="equip-grid">
                                 @forelse($serviciosFiltrados as $srv)
                                     @php
-                                        $unidad = $srv->tipo_cobro === 'por_tanque' ? '/ tanque' : '/ evento';
+                                        $unidad = $srv->tipo_cobro === 'por_evento' ? __('messages.por_evento') : __('messages.por_dia');
                                         $precio = number_format((float) $srv->precio, 0);
 
                                         $n = mb_strtolower(trim((string) ($srv->nombre ?? '')));
                                         $icon = 'fa-solid fa-circle-plus';
-                                        $tooltipText = 'Consulta más información sobre este adicional.';
-
                                         if (str_contains($n, 'silla')) {
-                                            $icon = 'fa-solid fa-child-reaching';
-                                            $tooltipText = 'Ideal para viajar con menores. Sujeto a disponibilidad al momento de la entrega.';
+                                            $icon = 'fa-solid fa-baby-carriage';
                                         } elseif (str_contains($n, 'conductor')) {
                                             $icon = 'fa-solid fa-user-plus';
-                                            $tooltipText = 'Agrega un conductor adicional autorizado para manejar el vehículo durante la renta.';
                                         } elseif (str_contains($n, 'gasolina')) {
                                             $icon = 'fa-solid fa-gas-pump';
-                                            $tooltipText = '¿Vuelo temprano? No pierdas tiempo buscando gasolinera.Con Viajero Car Rental, puedes prepagar tu gasolina a un precio preferencial por litro y entregar el vehículo directamente.Simple, rápido y sin estrés.';
                                         }
                                     @endphp
+
                                     <div class="addon-card" data-id="{{ $srv->id_servicio }}"
                                         data-name="{{ $srv->nombre }}" data-price="{{ (float) $srv->precio }}"
-                                        data-gasolina="{{ str_contains(strtolower($srv->nombre),'gasolina') ? 1 : 0 }}"
                                         data-charge="{{ $srv->tipo_cobro }}" data-max="3">
                                         <div class="addon-top">
                                             <div class="addon-ico">
@@ -1704,17 +1651,7 @@
                                             </div>
 
                                             <div style="flex:1;">
-                                                <div class="addon-headline">
-                                                    <h4 class="addon-name">{{ $srv->nombre }}</h4>
-
-                                                    <span class="addon-help-wrap" tabindex="0">
-                                                        <button type="button" class="addon-help-btn" aria-label="Más información">
-                                                            <i class="fa-solid fa-info"></i>
-                                                        </button>
-                                                        <span class="addon-tooltip">{{ $tooltipText }}</span>
-                                                    </span>
-                                                </div>
-
+                                                <h4 class="addon-name">{{ $srv->nombre }}</h4>
                                                 @if (!empty($srv->descripcion))
                                                     <p>{{ $srv->descripcion }}</p>
                                                 @endif
@@ -1722,82 +1659,19 @@
                                         </div>
 
                                         <div class="addon-price">
-                                            @if($srv->tipo_cobro === 'por_tanque')
-                                                <strong>Cantidad de un tanque</strong>
-                                            @else
-                                                <strong>${{ $precio }}</strong> MXN / evento
-                                            @endif
+                                            <strong>${{ $precio }}</strong> MXN {{ $unidad }}
                                         </div>
-@if($srv->id_servicio == 1)
 
-<div class="addon-qty gasolina-toggle">
-    <label class="switch">
-        <input type="checkbox" class="gasolina-switch">
-        <span class="slider"></span>
-    </label>
-</div>
-
-@else
-<div class="addon-qty">
-    <button class="qty-btn minus" type="button">−</button>
-    <span class="qty">0</span>
-    <button class="qty-btn plus" type="button">+</button>
-    <span class="qty-hint">Máx 3</span>
-</div>
-
-@endif
-
-<style>
-    .switch {
-  position: relative;
-  display: inline-block;
-  width: 46px;
-  height: 26px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background-color: #ccc;
-  transition: .3s;
-  border-radius: 26px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 20px;
-  width: 20px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .3s;
-  border-radius: 50%;
-}
-
-input:checked + .slider {
-  background-color: #16a34a;
-}
-
-input:checked + .slider:before {
-  transform: translateX(20px);
-}
-
-input:checked + .slider:before {
-  transform: translateX(20px);
-}
-</style>
+                                        <div class="addon-qty">
+                                            <button class="qty-btn minus" type="button">−</button>
+                                            <span class="qty">0</span>
+                                            <button class="qty-btn plus" type="button">+</button>
+                                            <span class="qty-hint">{{ __('messages.max_3') }}</span>
+                                        </div>
                                     </div>
                                 @empty
                                     <div style="grid-column:1/-1; text-align:center; padding:.75rem 0;">
-                                        No hay complementos disponibles por ahora.
+                                        {{ __('messages.no_complementos') }}
                                     </div>
                                 @endforelse
                             </div>
@@ -1806,8 +1680,8 @@ input:checked + .slider:before {
                     </div>
 
                     <div class="wizard-nav">
-                        <a class="btn btn-ghost" href="{{ $toStep(2) }}">Anterior</a>
-                        <a class="btn btn-primary" id="toStep4" href="{{ $toStep(4) }}">Siguiente</a>
+                        <a class="btn btn-ghost" href="{{ $toStep(2) }}">{{ __('messages.anterior') }}</a>
+                        <a class="btn btn-primary" id="toStep4" href="{{ $toStep(4) }}">{{ __('messages.siguiente') }}</a>
                     </div>
                 @endif
 
@@ -2011,7 +1885,7 @@ input:checked + .slider:before {
                                 <input type="hidden" name="dropoff_sucursal_id" id="dropoff_sucursal_id"
                                     value="{{ $dropoffSucursalId }}">
 
-                                <h2 class="sum-section-title"> Datos personales</h2>
+                                <h2 class="sum-section-title">{{ __('messages.datos_personales') }}</h2>
 
                                 <div class="sum-personal-grid">
 
@@ -2019,7 +1893,7 @@ input:checked + .slider:before {
                                     <div class="field field-floating" style="grid-column: 1 / -1;">
                                         <input type="text" class="input-centered" name="nombre_completo"
                                             id="nombreCompleto" autocomplete="name" placeholder=" " required>
-                                        <label for="nombreCompleto">Nombre Completo</label>
+                                        <label for="nombreCompleto">{{ __('messages.nombre_completo') }}</label>
                                         <input type="hidden" name="nombre" id="nombreCliente">
                                         <input type="hidden" name="apellido" id="apellidoCliente">
                                     </div>
@@ -2028,243 +1902,30 @@ input:checked + .slider:before {
                                     <div class="field field-floating" style="grid-column: 1 / -1;">
                                         <input type="text" name="telefono" id="telefonoCliente" placeholder=" "
                                             required>
-                                        <label for="telefonoCliente">Móvil</label>
+                                        <label for="telefonoCliente">{{ __('messages.movil') }}</label>
                                     </div>
 
                                     {{-- Correo electrónico --}}
                                     <div class="field field-floating" style="grid-column: 1 / -1;">
                                         <input type="email" name="email" id="correoCliente" placeholder=" "
                                             required>
-                                        <label for="correoCliente">Correo electrónico</label>
+                                        <label for="correoCliente">{{ __('messages.correo_electronico') }}</label>
                                     </div>
 
                                     {{-- País --}}
-                                   @php
-                                $paisesPrioritarios = [
-                                    'México' => 'México',
-                                    'Estados Unidos' => 'Estados Unidos',
-                                    'Canadá' => 'Canadá'
-                                ];
-
-                                $todosPaises = [
-                                    'Afganistán' => 'Afganistán',
-                                    'Albania' => 'Albania',
-                                    'Alemania' => 'Alemania',
-                                    'Andorra' => 'Andorra',
-                                    'Angola' => 'Angola',
-                                    'Antigua y Barbuda' => 'Antigua y Barbuda',
-                                    'Arabia Saudita' => 'Arabia Saudita',
-                                    'Argelia' => 'Argelia',
-                                    'Argentina' => 'Argentina',
-                                    'Armenia' => 'Armenia',
-                                    'Australia' => 'Australia',
-                                    'Austria' => 'Austria',
-                                    'Azerbaiyán' => 'Azerbaiyán',
-                                    'Bahamas' => 'Bahamas',
-                                    'Bangladés' => 'Bangladés',
-                                    'Barbados' => 'Barbados',
-                                    'Baréin' => 'Baréin',
-                                    'Bélgica' => 'Bélgica',
-                                    'Belice' => 'Belice',
-                                    'Benín' => 'Benín',
-                                    'Bielorrusia' => 'Bielorrusia',
-                                    'Birmania' => 'Birmania',
-                                    'Bolivia' => 'Bolivia',
-                                    'Bosnia y Herzegovina' => 'Bosnia y Herzegovina',
-                                    'Botsuana' => 'Botsuana',
-                                    'Brasil' => 'Brasil',
-                                    'Brunéi' => 'Brunéi',
-                                    'Bulgaria' => 'Bulgaria',
-                                    'Burkina Faso' => 'Burkina Faso',
-                                    'Burundi' => 'Burundi',
-                                    'Bután' => 'Bután',
-                                    'Cabo Verde' => 'Cabo Verde',
-                                    'Camboya' => 'Camboya',
-                                    'Camerún' => 'Camerún',
-                                    'Chad' => 'Chad',
-                                    'Chile' => 'Chile',
-                                    'China' => 'China',
-                                    'Chipre' => 'Chipre',
-                                    'Colombia' => 'Colombia',
-                                    'Comoras' => 'Comoras',
-                                    'Costa de Marfil' => 'Costa de Marfil',
-                                    'Costa Rica' => 'Costa Rica',
-                                    'Croacia' => 'Croacia',
-                                    'Cuba' => 'Cuba',
-                                    'Dinamarca' => 'Dinamarca',
-                                    'Dominica' => 'Dominica',
-                                    'Ecuador' => 'Ecuador',
-                                    'Egipto' => 'Egipto',
-                                    'El Salvador' => 'El Salvador',
-                                    'Emiratos Árabes Unidos' => 'Emiratos Árabes Unidos',
-                                    'Eritrea' => 'Eritrea',
-                                    'Eslovaquia' => 'Eslovaquia',
-                                    'Eslovenia' => 'Eslovenia',
-                                    'España' => 'España',
-                                    'Estonia' => 'Estonia',
-                                    'Etiopía' => 'Etiopía',
-                                    'Filipinas' => 'Filipinas',
-                                    'Finlandia' => 'Finlandia',
-                                    'Fiyi' => 'Fiyi',
-                                    'Francia' => 'Francia',
-                                    'Gabón' => 'Gabón',
-                                    'Gambia' => 'Gambia',
-                                    'Georgia' => 'Georgia',
-                                    'Ghana' => 'Ghana',
-                                    'Granada' => 'Granada',
-                                    'Grecia' => 'Grecia',
-                                    'Guatemala' => 'Guatemala',
-                                    'Guyana' => 'Guyana',
-                                    'Guinea' => 'Guinea',
-                                    'Guinea-Bisáu' => 'Guinea-Bisáu',
-                                    'Guinea Ecuatorial' => 'Guinea Ecuatorial',
-                                    'Haití' => 'Haití',
-                                    'Honduras' => 'Honduras',
-                                    'Hungría' => 'Hungría',
-                                    'India' => 'India',
-                                    'Indonesia' => 'Indonesia',
-                                    'Irak' => 'Irak',
-                                    'Irán' => 'Irán',
-                                    'Irlanda' => 'Irlanda',
-                                    'Islandia' => 'Islandia',
-                                    'Islas Marshall' => 'Islas Marshall',
-                                    'Islas Salomón' => 'Islas Salomón',
-                                    'Israel' => 'Israel',
-                                    'Italia' => 'Italia',
-                                    'Jamaica' => 'Jamaica',
-                                    'Japón' => 'Japón',
-                                    'Jordania' => 'Jordania',
-                                    'Kazajistán' => 'Kazajistán',
-                                    'Kenia' => 'Kenia',
-                                    'Kirguistán' => 'Kirguistán',
-                                    'Kiribati' => 'Kiribati',
-                                    'Kuwait' => 'Kuwait',
-                                    'Laos' => 'Laos',
-                                    'Lesoto' => 'Lesoto',
-                                    'Letonia' => 'Letonia',
-                                    'Líbano' => 'Líbano',
-                                    'Liberia' => 'Liberia',
-                                    'Libia' => 'Libia',
-                                    'Liechtenstein' => 'Liechtenstein',
-                                    'Lituania' => 'Lituania',
-                                    'Luxemburgo' => 'Luxemburgo',
-                                    'Madagascar' => 'Madagascar',
-                                    'Malasia' => 'Malasia',
-                                    'Malaui' => 'Malaui',
-                                    'Maldivas' => 'Maldivas',
-                                    'Malí' => 'Malí',
-                                    'Malta' => 'Malta',
-                                    'Marruecos' => 'Marruecos',
-                                    'Mauricio' => 'Mauricio',
-                                    'Mauritania' => 'Mauritania',
-                                    'Micronesia' => 'Micronesia',
-                                    'Moldavia' => 'Moldavia',
-                                    'Mónaco' => 'Mónaco',
-                                    'Mongolia' => 'Mongolia',
-                                    'Montenegro' => 'Montenegro',
-                                    'Mozambique' => 'Mozambique',
-                                    'Namibia' => 'Namibia',
-                                    'Nauru' => 'Nauru',
-                                    'Nepal' => 'Nepal',
-                                    'Nicaragua' => 'Nicaragua',
-                                    'Níger' => 'Níger',
-                                    'Nigeria' => 'Nigeria',
-                                    'Noruega' => 'Noruega',
-                                    'Nueva Zelanda' => 'Nueva Zelanda',
-                                    'Omán' => 'Omán',
-                                    'Países Bajos' => 'Países Bajos',
-                                    'Pakistán' => 'Pakistán',
-                                    'Palaos' => 'Palaos',
-                                    'Palestina' => 'Palestina',
-                                    'Panamá' => 'Panamá',
-                                    'Papúa Nueva Guinea' => 'Papúa Nueva Guinea',
-                                    'Paraguay' => 'Paraguay',
-                                    'Perú' => 'Perú',
-                                    'Polonia' => 'Polonia',
-                                    'Portugal' => 'Portugal',
-                                    'Qatar' => 'Qatar',
-                                    'Reino Unido' => 'Reino Unido',
-                                    'República Centroafricana' => 'República Centroafricana',
-                                    'República Checa' => 'República Checa',
-                                    'República del Congo' => 'República del Congo',
-                                    'República Democrática del Congo' => 'República Democrática del Congo',
-                                    'República Dominicana' => 'República Dominicana',
-                                    'Ruanda' => 'Ruanda',
-                                    'Rumanía' => 'Rumanía',
-                                    'Rusia' => 'Rusia',
-                                    'Samoa' => 'Samoa',
-                                    'San Cristóbal y Nieves' => 'San Cristóbal y Nieves',
-                                    'San Marino' => 'San Marino',
-                                    'San Vicente y las Granadinas' => 'San Vicente y las Granadinas',
-                                    'Santa Lucía' => 'Santa Lucía',
-                                    'Santo Tomé y Príncipe' => 'Santo Tomé y Príncipe',
-                                    'Senegal' => 'Senegal',
-                                    'Serbia' => 'Serbia',
-                                    'Seychelles' => 'Seychelles',
-                                    'Sierra Leona' => 'Sierra Leona',
-                                    'Singapur' => 'Singapur',
-                                    'Siria' => 'Siria',
-                                    'Somalia' => 'Somalia',
-                                    'Sri Lanka' => 'Sri Lanka',
-                                    'Suazilandia' => 'Suazilandia',
-                                    'Sudáfrica' => 'Sudáfrica',
-                                    'Sudán' => 'Sudán',
-                                    'Sudán del Sur' => 'Sudán del Sur',
-                                    'Suecia' => 'Suecia',
-                                    'Suiza' => 'Suiza',
-                                    'Surinam' => 'Surinam',
-                                    'Tailandia' => 'Tailandia',
-                                    'Tanzania' => 'Tanzania',
-                                    'Tayikistán' => 'Tayikistán',
-                                    'Timor Oriental' => 'Timor Oriental',
-                                    'Togo' => 'Togo',
-                                    'Tonga' => 'Tonga',
-                                    'Trinidad y Tobago' => 'Trinidad y Tobago',
-                                    'Túnez' => 'Túnez',
-                                    'Turkmenistán' => 'Turkmenistán',
-                                    'Turquía' => 'Turquía',
-                                    'Tuvalu' => 'Tuvalu',
-                                    'Ucrania' => 'Ucrania',
-                                    'Uganda' => 'Uganda',
-                                    'Uruguay' => 'Uruguay',
-                                    'Uzbekistán' => 'Uzbekistán',
-                                    'Vanuatu' => 'Vanuatu',
-                                    'Vaticano' => 'Vaticano',
-                                    'Venezuela' => 'Venezuela',
-                                    'Vietnam' => 'Vietnam',
-                                    'Yemen' => 'Yemen',
-                                    'Yibuti' => 'Yibuti',
-                                    'Zambia' => 'Zambia',
-                                    'Zimbabue' => 'Zimbabue'
-                                ];
-
-                                // Ordenar alfabéticamente
-                                ksort($todosPaises);
-                            @endphp
-
-                            {{-- País --}}
-                            <div class="field field-floating">
-                                <select name="pais" id="pais" required>
-                                    <option value="" disabled selected>Selecciona un país</option>
-
-                                    {{-- Países prioritarios --}}
-                                    @foreach($paisesPrioritarios as $valor => $etiqueta)
-                                        <option value="{{ $valor }}">{{ $etiqueta }}</option>
-                                    @endforeach
-
-                                    <option disabled>──────────</option>
-
-                                    {{-- Resto de países --}}
-                                    @foreach($todosPaises as $valor => $etiqueta)
-                                        <option value="{{ $valor }}">{{ $etiqueta }}</option>
-                                    @endforeach
-                                </select>
-                                <label for="pais">País</label>
-                            </div>
+                                    <div class="field field-floating">
+                                        <select name="pais" id="pais" required>
+                                            <option value="" disabled selected>{{ __('messages.selecciona_pais') }}</option>
+                                            <option value="México">{{ __('messages.mexico') }}</option>
+                                            <option value="Estados Unidos">{{ __('messages.estados_unidos') }}</option>
+                                            <option value="Canadá">{{ __('messages.canada') }}</option>
+                                        </select>
+                                        <label for="pais">{{ __('messages.pais') }}</label>
+                                    </div>
 
                                     {{-- Fecha de nacimiento --}}
                                     <div class="field field-dob-container">
-                                        <label class="label-dob-main">Fecha de nacimiento</label> {{-- ESTE LABEL ES IMPORTANTE --}}
+                                        <label class="label-dob-main">{{ __('messages.fecha_nacimiento') }}</label> {{-- ESTE LABEL ES IMPORTANTE --}}
                                         <div class="dob-inline">
                                             <div class="field-floating-sub">
                                                 <select id="dob_day" class="select-dob" required>
@@ -2274,7 +1935,7 @@ input:checked + .slider:before {
                                                             {{ str_pad($d, 2, '0', STR_PAD_LEFT) }}</option>
                                                     @endfor
                                                 </select>
-                                                <label>DD</label>
+                                                <label>{{ __('messages.dd') }}</label>
                                             </div>
                                             <div class="field-floating-sub">
                                                 <select id="dob_month" class="select-dob" required>
@@ -2284,7 +1945,7 @@ input:checked + .slider:before {
                                                         </option>
                                                     @endforeach
                                                 </select>
-                                                <label>MM</label>
+                                                <label>{{ __('messages.mm') }}</label>
                                             </div>
                                             <div class="field-floating-sub">
                                                 <select id="dob_year" class="select-dob" required>
@@ -2294,7 +1955,7 @@ input:checked + .slider:before {
                                                         </option>
                                                     @endfor
                                                 </select>
-                                                <label>YYYY</label>
+                                                <label>{{ __('messages.yyyy') }}</label>
                                             </div>
                                         </div>
                                         <input type="hidden" id="dob" name="dob">
@@ -2311,7 +1972,7 @@ input:checked + .slider:before {
                                     @if ($isAirport)
                                         <div class="field field-floating" style="grid-column: 1 / -1;">
                                             <input type="text" name="vuelo" id="vuelo" placeholder=" ">
-                                            <label for="vuelo">No. de vuelo</label>
+                                            <label for="vuelo">{{ __('messages.numero_vuelo') }}</label>
                                         </div>
                                     @endif
 
@@ -2321,24 +1982,23 @@ input:checked + .slider:before {
                                     <label class="cbox">
                                         <input type="checkbox" name="acepto" id="acepto">
                                         <span>
-                                            ESTOY DE ACUERDO Y ACEPTO
+                                            {{ __('messages.acepto_politicas') }}
                                             <a href="{{ route('rutaPoliticas') }}" class="link-politicas"
                                                 target="_blank" rel="noopener">
-                                                LAS POLÍTICAS
+                                                {{ __('messages.las_politicas') }}
                                             </a>
-                                            Y PROCEDIMIENTOS PARA LA RENTA.
+                                            {{ __('messages.y_procedimientos') }}
                                         </span>
                                     </label>
 
                                     <label class="cbox">
                                         <input type="checkbox" name="promos" id="promos">
-                                        <span>DESEO RECIBIR ALERTAS, CONFIRMACIONES, OFERTAS Y PROMOCIONES EN MI CORREO Y/O
-                                            TELÉFONO CELULAR.</span>
+                                        <span>{{ __('messages.recibir_promociones') }}</span>
                                     </label>
                                 </div>
 
                                 <div class="wizard-nav" style="margin-top:10px;">
-                                    <button id="btnReservar" type="button" class="btn btn-primary">Reservar</button>
+                                    <button id="btnReservar" type="button" class="btn btn-primary">{{ __('messages.reservar') }}</button>
                                 </div>
 
                                 <div class="pay-logos"
@@ -2352,31 +2012,14 @@ input:checked + .slider:before {
                                 </div>
 
                                 <div id="modalMetodoPago" class="modal-overlay" style="display:none;">
-                                    <div class="modal-card modal-metodo-pago">
-                                        <button id="cerrarModalMetodoX" class="modal-close" type="button" aria-label="Cerrar">×</button>
-
-                                        <div class="mp-head">
-                                            <span class="mp-badge">Resumen de pago</span>
-                                            <h3>Selecciona tu método de pago</h3>
+                                    <div class="modal-card">
+                                        <h3>{{ __('messages.selecciona_metodo_pago') }}</h3>
+                                        <div class="options">
+                                            <button id="btnPagoLinea" class="btn btn-primary" type="button">{{ __('messages.pago_en_linea') }}</button>
+                                            <button id="btnPagoMostrador" class="btn btn-gray" type="button">{{ __('messages.pago_en_mostrador') }}</button>
                                         </div>
-
-                                        <div class="mp-options">
-                                            <button id="btnPagoLinea" class="mp-pay-card is-online" type="button">
-                                                <span class="mp-old-price" id="mpPrecioMostradorTachado">$0 MXN</span>
-                                                <strong class="mp-price" id="mpPrecioLinea">$0 MXN</strong>
-                                                <span class="mp-save" id="mpTextoAhorro">Ahorra 0%</span>
-                                                <span class="mp-action">PREPAGAR EN LÍNEA</span>
-                                            </button>
-
-                                            <button id="btnPagoMostrador" class="mp-pay-card is-office" type="button">
-                                                <strong class="mp-price" id="mpPrecioMostrador">$0 MXN</strong>
-                                                <span class="mp-action">PAGAR EN OFICINA</span>
-                                            </button>
-                                        </div>
-
-                                        <button id="cerrarModalMetodo" class="btn btn-secondary mp-cancel" type="button">
-                                            Cancelar
-                                        </button>
+                                        <button id="cerrarModalMetodo" class="btn btn-secondary" type="button"
+                                            style="margin-top:10px;">{{ __('messages.cancelar') }}</button>
                                     </div>
                                 </div>
 
@@ -2390,22 +2033,22 @@ input:checked + .slider:before {
 
                             <div class="sum-compact" aria-label="Resumen compacto">
                                 <div class="sum-compact-head">
-                                    <h4 class="sum-title"><strong>Resumen de tu reserva</strong></h4>
+                                    <h4 class="sum-title"><strong>{{ __('messages.resumen_reserva') }}</strong></h4>
 
                                     <span class="sum-days">
                                         <i class="fa-regular fa-calendar"></i>
-                                        Días: <strong id="qDays">{{ $days }}</strong>
+                                        {{ __('messages.dias') }}: <strong id="qDays">{{ $days }}</strong>
                                     </span>
                                 </div>
 
-                                <h4 class="sum-subtitle">Lugar y fecha</h4>
+                                <h4 class="sum-subtitle">{{ __('messages.lugar_y_fecha') }}</h4>
 
                                 <div class="sum-compact-grid">
 
                                     {{-- PICKUP --}}
                                     <div class="sum-item">
                                         <div class="sum-item-label">
-                                            <i class="fa-solid fa-location-dot"></i> Pick-Up
+                                            <i class="fa-solid fa-location-dot"></i> {{ __('messages.pickup') }}
                                         </div>
 
                                         <div class="sum-item-value">
@@ -2413,11 +2056,11 @@ input:checked + .slider:before {
 
                                             <div class="sum-dt2">
                                                 <div class="dt-row">
-                                                    <span class="dt-lbl">Fecha</span>
+                                                    <span class="dt-lbl">{{ __('messages.fecha_abrev') }}</span>
                                                     <span class="dt-val">{{ $pickupFechaLarga ?? $pickupDate }}</span>
                                                 </div>
                                                 <div class="dt-row">
-                                                    <span class="dt-lbl">Hora</span>
+                                                    <span class="dt-lbl">{{ __('messages.hora_abrev') }}</span>
                                                     <span class="dt-time">{{ $pickupTime }} HRS</span>
                                                 </div>
                                             </div>
@@ -2430,7 +2073,7 @@ input:checked + .slider:before {
                                     {{-- DROPOFF --}}
                                     <div class="sum-item">
                                         <div class="sum-item-label">
-                                            <i class="fa-solid fa-location-dot"></i> Devolución
+                                            <i class="fa-solid fa-location-dot"></i> {{ __('messages.devolucion') }}
                                         </div>
 
                                         <div class="sum-item-value">
@@ -2438,11 +2081,11 @@ input:checked + .slider:before {
 
                                             <div class="sum-dt2">
                                                 <div class="dt-row">
-                                                    <span class="dt-lbl">Fecha</span>
+                                                    <span class="dt-lbl">{{ __('messages.fecha_abrev') }}</span>
                                                     <span class="dt-val">{{ $dropoffFechaLarga ?? $dropoffDate }}</span>
                                                 </div>
                                                 <div class="dt-row">
-                                                    <span class="dt-lbl">Hora</span>
+                                                    <span class="dt-lbl">{{ __('messages.hora_abrev') }}</span>
                                                     <span class="dt-time">{{ $dropoffTime }} HRS</span>
                                                 </div>
                                             </div>
@@ -2454,7 +2097,7 @@ input:checked + .slider:before {
 
                                 </div>
 
-                                <h4 class="sum-subtitle" style="margin-top:14px;" id="tuAutoSection">Tu auto</h4>
+                                <h4 class="sum-subtitle" style="margin-top:14px;" id="tuAutoSection">{{ __('messages.tu_auto') }}</h4>
 
                                 <div class="sum-car" style="margin-top:10px; display:flex; gap:20px; align-items:center;">
                                     <div class="sum-car-img">
@@ -2477,7 +2120,7 @@ input:checked + .slider:before {
                                         {{-- ✅ NUEVO (Step 4): iconos + T | ... + A/C + chips (2 bloques) --}}
                                         @php
                                             $codigo = strtoupper((string) ($categoriaSel->codigo ?? ''));
-                                            $transmision = $categoriaSel->id_categoria == 9 ? 'Estándar' : 'Automática';
+                                            $transmision = $categoriaSel->id_categoria == 9 ? __('messages.estandar') : __('messages.automatica');
                                             $tieneACCat = (int) ($cat->aire_acondicionado ?? ($cat->aire_ac ?? 1));
 
                                             $predeterminadosPorId = [
@@ -2513,12 +2156,12 @@ input:checked + .slider:before {
                                                 <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $cap['small'] }}</li>
                                                 <li><i class="fa-solid fa-briefcase"></i> {{ $cap['big'] ?? 1 }}</li>
 
-                                                <li title="Transmisión">
+                                                <li title="{{ __('messages.transmision') }}">
                                                     <span class="spec-letter">T | {{ $transmision }}</span>
                                                 </li>
 
                                                 @if ($tieneACCat)
-                                                    <li title="Aire acondicionado">
+                                                    <li title="{{ __('messages.aire_acondicionado') }}">
                                                         <i class="fa-regular fa-snowflake"></i>
                                                         <span class="spec-letter">A/C</span>
                                                     </li>
@@ -2548,33 +2191,28 @@ input:checked + .slider:before {
 
                             </div>
 
-                            <h4 class="sum-subtitle" style="margin-top:16px;">Detalles del precio</h4>
+                            <h4 class="sum-subtitle" style="margin-top:16px;">{{ __('messages.detalles_precio') }}</h4>
 
-                            <div class="sum-table" id="cotizacionDoc"
-                            data-base="{{ $tarifaBase }}"
-                            data-days="{{ $days }}"
-                            data-pickup="{{ $pickupSucursalId }}"
-                            data-dropoff="{{ $dropoffSucursalId }}"
-                            data-km="{{ $dropoffKm }}"
-                            data-costokm="{{ $costoKmCategoria }}">
+                            <div class="sum-table" id="cotizacionDoc" data-base="{{ $tarifaBase }}"
+                                data-days="{{ $days }}">
 
                                 {{-- ===== TARIFA BASE (desplegable) ===== --}}
                                 <details class="sum-acc" open="false">
                                     <summary class="sum-bar">
-                                        <span>Tarifa base</span>
+                                        <span>{{ __('messages.tarifa_base') }}</span>
                                         <strong id="qBase">${{ number_format($tarifaBase, 0) }} MXN</strong>
                                         <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
                                     </summary>
 
                                     <div class="sum-acc-body">
                                         <div class="row row-base">
-                                            <span>{{ $days }} día(s) - precio por día
+                                            <span>{{ $days }} {{ $days == 1 ? __('messages.dia') : __('messages.dias') }} - {{ __('messages.precio_por_dia') }}
                                                 ${{ number_format((float) ($categoriaSel->precio_dia ?? 0), 0) }}
                                                 MXN</span>
                                         </div>
 
                                         <div class="row row-base-total">
-                                            <span class="row-total-label">Total:</span>
+                                            <span class="row-total-label">{{ __('messages.total') }}:</span>
                                             <strong>${{ number_format($tarifaBase, 0) }} MXN</strong>
                                         </div>
 
@@ -2583,7 +2221,7 @@ input:checked + .slider:before {
                                             <div class="modal-global-content">
                                                 <span class="cerrar-modal-v">&times;</span>
 
-                                                <h2 class="modal-v-header-title">Relevos de responsabilidad (Protecciones)
+                                                <h2 class="modal-v-header-title">{{ __('messages.relevos_responsabilidad') }}
                                                 </h2>
                                                 <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
 
@@ -2593,11 +2231,9 @@ input:checked + .slider:before {
                                                     </div>
 
                                                     <div>
-                                                        <strong class="modal-v-titulo-negro">PROTECCIÓN LIMITADA DE
-                                                            RESPONSABILIDAD HACIA TERCEROS (LI)</strong>
+                                                        <strong class="modal-v-titulo-negro">{{ __('messages.proteccion_limitada') }}</strong>
                                                         <p class="modal-v-texto-gris">
-                                                            Protege a terceros por daños y perjuicios ocasionados en un
-                                                            accidente y cubre la cantidad mínima requerida por ley.
+                                                            {{ __('messages.proteccion_limitada_desc') }}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -2606,12 +2242,10 @@ input:checked + .slider:before {
                                                     style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
                                                     <p
                                                         style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 12px;">
-                                                        Tú eliges el nivel de responsabilidad sobre el auto que más vaya
-                                                        acorde a tus necesidades y presupuesto.
+                                                        {{ __('messages.protecciones_adicionales_desc') }}
                                                     </p>
                                                     <p style="font-size: 13px; color: #1e293b; font-weight: 700;">
-                                                        Pregunta por nuestros Relevos de responsabilidad (opcionales) al
-                                                        llegar al mostrador de cualquiera de nuestras oficinas.
+                                                        {{ __('messages.pregunta_relevos') }}
                                                     </p>
                                                 </div>
                                             </div>
@@ -2620,7 +2254,7 @@ input:checked + .slider:before {
                                         <div class="col-12 mt-2">
                                             <div class="linea-incluido-box">
                                                 <p class="incluido-text">
-                                                    <strong>INCLUIDO</strong>
+                                                    <strong>{{ __('messages.incluido') }}</strong>
                                                     <i class="fa-solid fa-circle-question" id="info-protecciones"
                                                         style="cursor: pointer; color: #b22222; margin-left: 5px; font-size: 1.1rem; vertical-align: middle;"></i>
                                                 </p>
@@ -2628,10 +2262,8 @@ input:checked + .slider:before {
                                         </div>
                                         <div class="row row-included" style="border-top:0;">
                                             <span class="inc-items">
-                                                <span class="inc-item"><span class="inc-check">✔</span> Kilometraje
-                                                    ilimitado</span>
-                                                <span class="inc-item"><span class="inc-check">✔</span> Reelevo de
-                                                    Responsabilidad (LI)</span>
+                                                <span class="inc-item"><span class="inc-check">✔</span> {{ __('messages.kilometraje_ilimitado') }}</span>
+                                                <span class="inc-item"><span class="inc-check">✔</span> {{ __('messages.reelevo_responsabilidad') }}</span>
                                             </span>
                                         </div>
                                     </div>
@@ -2640,30 +2272,30 @@ input:checked + .slider:before {
                                 {{-- ===== OPCIONES DE RENTA (desplegable) ===== --}}
                                 <details class="sum-acc">
                                     <summary class="sum-bar">
-                                        <span>Opciones de renta</span>
+                                        <span>{{ __('messages.opciones_renta') }}</span>
                                         <strong id="qExtras">$0 MXN</strong>
                                         <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
                                     </summary>
 
                                     <div class="sum-acc-body" id="extrasList">
                                         <div class="row">
-                                            <span class="muted">Sin complementos seleccionados</span>
+                                            <span class="muted">{{ __('messages.sin_complementos') }}</span>
                                             <strong>$0 MXN</strong>
                                         </div>
                                     </div>
                                 </details>
- {{-- ===== Editar  ===== --}}
+
                                 {{-- ===== CARGOS E IVA (desplegable) ===== --}}
                                 <details class="sum-acc">
                                     <summary class="sum-bar">
-                                        <span>Cargos e IVA (16%)</span>
+                                        <span>{{ __('messages.cargos_e_iva') }}</span>
                                         <strong id="qIva">$0 MXN</strong>
                                         <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
                                     </summary>
 
                                     <div class="sum-acc-body" id="ivaList">
                                         <div class="row">
-                                            <span class="muted">Sin cargos adicionales</span>
+                                            <span class="muted">{{ __('messages.sin_cargos') }}</span>
                                             <strong>$0 MXN</strong>
                                         </div>
                                     </div>
@@ -2671,7 +2303,7 @@ input:checked + .slider:before {
 
                                 {{-- ===== TOTAL ===== --}}
                                 <div class="sum-total">
-                                    <span>Total</span>
+                                    <span>{{ __('messages.total') }}</span>
                                     <strong id="qTotal">${{ number_format($tarifaBase, 0) }} MXN</strong>
                                 </div>
 
@@ -2681,20 +2313,19 @@ input:checked + .slider:before {
                     </div>
 
                     @isset($servicios)
-    <script id="addonsCatalog" type="application/json">
-{!! json_encode(
-  collect($servicios)->where('activo', true)->mapWithKeys(fn($s) => [
-    $s->id_servicio => [
-      'nombre' => $s->nombre,
-      'precio' => (float) $s->precio,
-      'tipo'   => $s->tipo_cobro,
-    ],
-  ]),
-  JSON_UNESCAPED_UNICODE
-) !!}
-    </script>
-@endisset
-
+                        <script id="addonsCatalog" type="application/json">
+          {!! json_encode(
+            collect($serviciosFiltrados)->mapWithKeys(fn($s) => [
+              $s->id_servicio => [
+                'nombre' => $s->nombre,
+                'precio' => (float)$s->precio,
+                'tipo'   => $s->tipo_cobro, // 'por_evento' o 'por_dia'
+              ],
+            ]),
+            JSON_UNESCAPED_UNICODE
+          ) !!}
+        </script>
+                    @endisset
 
                 @endif
 
@@ -2707,13 +2338,13 @@ input:checked + .slider:before {
     @if ($stepCurrent === 4)
         <div class="movil-footer-sticky">
             <div class="movil-total-wrapper">
-                <span class="movil-total-label">Total</span>
+                <span class="movil-total-label">{{ __('messages.total') }}</span>
                 <span id="qTotalMovil" class="movil-total-amount">
                     ${{ number_format($tarifaBase, 0) }} MXN
                 </span>
             </div>
             <button type="button" id="btnReservarMovil" class="btn-reservar-movil">
-                Reservar
+                {{ __('messages.reservar') }}
             </button>
         </div>
     @endif
@@ -2798,3 +2429,4 @@ input:checked + .slider:before {
             if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
         });
     </script>
+@endsection

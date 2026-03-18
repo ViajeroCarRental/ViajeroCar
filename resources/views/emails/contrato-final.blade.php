@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
   <meta charset="UTF-8">
   <meta name="color-scheme" content="light dark">
@@ -162,7 +162,7 @@
   <!-- HEADER -->
   <div class="header">
     <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
-    <h1>Contrato Final de Arrendamiento</h1>
+    <h1>{{ __('messages.contrato_final_titulo') }}</h1>
   </div>
 
   <!-- CONTENT -->
@@ -175,16 +175,16 @@
 @endphp
 
 <p>
-    Estimado(a)
-    <strong>{{ $nombreCompleto !== '' ? $nombreCompleto : ($reservacion->nombre_cliente ?? 'Cliente') }}</strong>,
+    {{ __('messages.estimado_cliente') }}
+    <strong>{{ $nombreCompleto !== '' ? $nombreCompleto : ($reservacion->nombre_cliente ?? __('messages.cliente')) }}</strong>,
 </p>
 
-    <p>Adjuntamos su <strong>Contrato Final de Renta</strong> correspondiente a su reservación.</p>
+    <p>{!! __('messages.adjuntamos_contrato') !!}</p>
 
     <div class="info-box">
-      <p><strong>Fecha inicio:</strong> {{ $reservacion->fecha_inicio }}</p>
-      <p><strong>Fecha fin:</strong> {{ $reservacion->fecha_fin }}</p>
-      <p><strong>Total:</strong> ${{ number_format($totalFinal, 2) }} MXN</p>
+      <p><strong>{{ __('messages.fecha_inicio') }}</strong> {{ $reservacion->fecha_inicio }}</p>
+      <p><strong>{{ __('messages.fecha_fin') }}</strong> {{ $reservacion->fecha_fin }}</p>
+      <p><strong>{{ __('messages.total') }}</strong> ${{ number_format($totalFinal, 2) }} MXN</p>
     </div>
 
             {{-- =============================
@@ -196,7 +196,7 @@
 
     @if($textoAviso !== '')
         <div class="info-box" style="margin-top: 25px;">
-            <h3 style="margin: 0 0 10px; color:#b1060f;">Confirmación del Cliente</h3>
+            <h3 style="margin: 0 0 10px; color:#b1060f;">{{ __('messages.confirmacion_cliente') }}</h3>
 
             {{-- Texto que el cliente aceptó (ya incluye su nombre completo) --}}
             <p style="white-space: pre-wrap; font-size:15px; line-height:1.6; text-align:justify;">
@@ -210,7 +210,7 @@
 
             @if(!empty($firmaBase64))
                 <p class="firma-label" style="margin-top:18px;">
-                    Firma del arrendatario en conformidad con el aviso:
+                    {{ __('messages.firma_arrendatario') }}
                 </p>
 
                 @php
@@ -232,7 +232,7 @@
                 @endphp
 
                 <img src="{{ $cidFirmaAviso }}"
-                alt="Firma del arrendatario"
+                alt="{{ __('messages.firma_arrendatario') }}"
                 class="firma-img"
                 style="display:block; margin:8px auto 0; border:1px solid #ccc; border-radius:6px; width:180px;">
 
@@ -254,20 +254,15 @@
         </div>
     @endif
 
-
-
-
-
-
     <div class="divider"></div>
 
-    <p style="margin-top:20px;">Gracias por elegir <strong>Viajero Car Rental</strong>.</p>
+    <p style="margin-top:20px;">{!! __('messages.gracias_elegir') !!}</p>
 
   </div>
 
   <!-- FOOTER -->
   <div class="footer">
-    © {{ date('Y') }} <strong>Viajero Car Rental</strong> — Todos los derechos reservados.<br>
+    © {{ date('Y') }} <strong>Viajero Car Rental</strong> — {{ __('messages.todos_derechos') }}<br>
     <a href="https://viajerocarental.com">www.viajerocarental.com</a> |
     <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>
   </div>

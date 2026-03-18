@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
   <meta charset="UTF-8">
   <meta name="color-scheme" content="light dark">
@@ -108,92 +108,96 @@
   <!-- HEADER -->
   <div class="header">
     <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
-    <h1>Checklist de Inspección</h1>
+    <h1>{{ __('messages.checklist_titulo') }}</h1>
   </div>
 
   <!-- CONTENT -->
   <div class="content">
 
     <p>
-      Estimado(a)
+      {{ __('messages.estimado_cliente') }}
       <strong>
-        {{ $reservacion->nombre_cliente ?? 'Cliente' }}
+        {{ $reservacion->nombre_cliente ?? __('messages.cliente') }}
       </strong>,
     </p>
 
     <p>
-      Le enviamos el <strong>checklist de salida</strong> correspondiente a su contrato de arrendamiento,
-      el cual fue verificado junto con su agente de
-      <strong>Viajero Car Rental</strong> al momento de la entrega del vehículo.
+      @if(isset($tipo) && $tipo === 'entrada')
+        {!! __('messages.checklist_entrada') !!}
+      @else
+        {!! __('messages.checklist_salida') !!}
+      @endif
     </p>
 
     <p>
-      En el archivo PDF adjunto encontrará el detalle de la inspección realizada, incluyendo
-      el estado del vehículo al momento de la salida, notas de su asesor y cualquier observación registrada.
+      @if(isset($tipo) && $tipo === 'entrada')
+        {{ __('messages.detalle_inspeccion_entrada') }}
+      @else
+        {{ __('messages.detalle_inspeccion') }}
+      @endif
     </p>
 
     <div class="info-box">
-      <p><strong>Folio del contrato:</strong>
+      <p><strong>{{ __('messages.folio_contrato') }}</strong>
         {{ $contrato->numero_contrato ?? $contrato->id_contrato ?? '—' }}
       </p>
 
       @if(!empty($reservacion->fecha_inicio) || !empty($reservacion->hora_retiro))
-        <p><strong>Fecha y hora de salida:</strong>
+        <p>
+          <strong>
+            @if(isset($tipo) && $tipo === 'entrada')
+              {{ __('messages.fecha_hora_devolucion') }}
+            @else
+              {{ __('messages.fecha_hora_salida') }}
+            @endif
+          </strong>
           {{ $reservacion->fecha_inicio ?? '—' }}
           {{ $reservacion->hora_retiro ?? '' }}
         </p>
       @endif
 
       @if(!empty($reservacion->ciudad_retiro_nombre))
-        <p><strong>Oficina / ciudad de salida:</strong>
+        <p>
+          <strong>
+            @if(isset($tipo) && $tipo === 'entrada')
+              {{ __('messages.oficina_ciudad_devolucion') }}
+            @else
+              {{ __('messages.oficina_ciudad_salida') }}
+            @endif
+          </strong>
           {{ $reservacion->ciudad_retiro_nombre }}
         </p>
       @endif
     </div>
 
     <p>
-      Le recordamos que este documento es únicamente informativo y sirve como referencia
-      del estado del vehículo al inicio de su renta.
+      @if(isset($tipo) && $tipo === 'entrada')
+        {{ __('messages.documento_informativo_entrada') }}
+      @else
+        {{ __('messages.documento_informativo') }}
+      @endif
     </p>
 
     <p>
-      Si detecta alguna discrepancia o requiere alguna aclaración sobre la información del checklist,
-      por favor responda a este correo o comuníquese con nuestro equipo de atención.
+      {{ __('messages.discrepancia') }}
     </p>
 
     <div class="divider"></div>
 
     <p style="margin-top:20px;">
-      Gracias por confiar en <strong>Viajero Car Rental</strong> para su experiencia de renta.<br>
-      ¡Esperamos que disfrute su viaje!
-        <p>
-      Estimado(a)
-      <strong>
-        {{ $reservacion->nombre_cliente ?? 'Cliente' }}
-      </strong>,
+      {!! __('messages.gracias_confianza') !!}<br>
+      @if(isset($tipo) && $tipo === 'entrada')
+        {{ __('messages.gracias_visita') }}
+      @else
+        {{ __('messages.disfrute_viaje') }}
+      @endif
     </p>
-
-    <p>
-      Le enviamos el
-      <strong>
-        @if($tipo === 'entrada')
-          checklist de devolución
-        @else
-          checklist de salida
-        @endif
-      </strong>
-      correspondiente a su contrato de arrendamiento,
-      el cual fue verificado junto con su agente de
-      <strong>Viajero Car Rental</strong>.
-    </p>
-
-
 
   </div>
 
   <!-- FOOTER -->
   <div class="footer">
-    © {{ date('Y') }} <strong>Viajero Car Rental</strong> — Todos los derechos reservados.<br>
+    © {{ date('Y') }} <strong>Viajero Car Rental</strong> — {{ __('messages.todos_derechos') }}<br>
     <a href="https://viajerocarental.com">www.viajerocarental.com</a> |
     <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>
   </div>

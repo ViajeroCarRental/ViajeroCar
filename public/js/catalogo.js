@@ -90,71 +90,77 @@
     const yearEl = qs("#year");
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-    // ==========================================================
-    // ✅ ACORDEÓN FILTRO (VANILLA) + CERRAR AL CLICK FUERA + AL SELECCIONAR
-    // ==========================================================
-    let closeFiltroAccordion = null;
+  // ==========================================================
+// ✅ ACORDEÓN FILTRO (VANILLA) + CERRAR AL CLICK FUERA + AL SELECCIONAR
+// ==========================================================
+let closeFiltroAccordion = null;
 
-    (function initFiltroAccordionVanilla() {
-      const wrapper = qs(".filter-accordion");
-      const btn = qs("#btn-filtro-autos");
-      const panel = qs("#filtro-autos");
-      if (!wrapper || !btn || !panel) return;
+(function initFiltroAccordionVanilla() {
+  const wrapper = qs(".filter-accordion");
+  const btn = qs("#btn-filtro-autos");
+  const panel = qs("#filtro-autos");
+  if (!wrapper || !btn || !panel) return;
 
-      const labelSpan = btn.querySelector(".acc-left span");
-      const icon = btn.querySelector(".acc-icon");
+  const labelSpan = btn.querySelector(".acc-left span");
+  const icon = btn.querySelector(".acc-icon");
 
-      // Estado inicial cerrado
-      btn.classList.add("collapsed");
-      btn.setAttribute("aria-expanded", "false");
-      if (labelSpan) labelSpan.textContent = "Filtrar categorías";
-      if (icon) icon.style.transform = "rotate(0deg)";
+  // ✅ Usar traducciones de window.catalogTranslations
+  const translations = window.catalogTranslations || {
+      filtrar: "Filtrar categorías",
+      ocultar: "Ocultar categorías"
+  };
 
-      panel.classList.remove("show");
-      panel.classList.remove("is-open");
-      panel.style.maxHeight = "0px";
+  // Estado inicial cerrado
+  btn.classList.add("collapsed");
+  btn.setAttribute("aria-expanded", "false");
+  if (labelSpan) labelSpan.textContent = translations.filtrar;
+  if (icon) icon.style.transform = "rotate(0deg)";
 
-      const isOpenNow = () => btn.getAttribute("aria-expanded") === "true";
+  panel.classList.remove("show");
+  panel.classList.remove("is-open");
+  panel.style.maxHeight = "0px";
 
-      const setState = (open) => {
-        btn.setAttribute("aria-expanded", String(open));
-        btn.classList.toggle("collapsed", !open);
+  const isOpenNow = () => btn.getAttribute("aria-expanded") === "true";
 
-        if (labelSpan) {
-          labelSpan.textContent = open ? "Ocultar categorías" : "Filtrar categorías";
-        }
-        if (icon) icon.style.transform = open ? "rotate(180deg)" : "rotate(0deg)";
+  const setState = (open) => {
+    btn.setAttribute("aria-expanded", String(open));
+    btn.classList.toggle("collapsed", !open);
 
-        setPanelOpen(panel, open);
-        if (open) smoothScrollIntoView(btn);
-      };
+    if (labelSpan) {
+      labelSpan.textContent = open ? translations.ocultar : translations.filtrar;
+    }
+    if (icon) icon.style.transform = open ? "rotate(180deg)" : "rotate(0deg)";
 
-      closeFiltroAccordion = () => {
-        if (isOpenNow()) setState(false);
-      };
+    setPanelOpen(panel, open);
+    if (open) smoothScrollIntoView(btn);
+  };
 
-      // Toggle normal
-      btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        setState(!isOpenNow());
-      });
+  closeFiltroAccordion = () => {
+    if (isOpenNow()) setState(false);
+  };
 
-      // Cerrar al hacer click fuera
-      document.addEventListener("click", (e) => {
-        if (!isOpenNow()) return;
-        if (!wrapper.contains(e.target)) setState(false);
-      });
+  // Toggle normal
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    setState(!isOpenNow());
+  });
 
-      // Cerrar con tecla ESC
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && isOpenNow()) setState(false);
-      });
+  // Cerrar al hacer click fuera
+  document.addEventListener("click", (e) => {
+    if (!isOpenNow()) return;
+    if (!wrapper.contains(e.target)) setState(false);
+  });
 
-      // Recalcular altura si está abierto al redimensionar
-      window.addEventListener("resize", () => {
-        if (isOpenNow()) panel.style.maxHeight = panel.scrollHeight + "px";
-      });
-    })();
+  // Cerrar con tecla ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && isOpenNow()) setState(false);
+  });
+
+  // Recalcular altura si está abierto al redimensionar
+  window.addEventListener("resize", () => {
+    if (isOpenNow()) panel.style.maxHeight = panel.scrollHeight + "px";
+  });
+})();
 
     // ==========================================================
     // ✅ STICKY DENTRO DEL HERO (solo desktop) — móvil normal

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
   <meta charset="UTF-8">
   <meta name="color-scheme" content="light dark">
@@ -91,43 +91,42 @@
   <!-- HEADER -->
   <div class="header">
     <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
-    <h1>Cotización de Renta de Vehículo</h1>
+    <h1>{{ __('messages.cotizacion_titulo') }}</h1>
   </div>
 
   <!-- CONTENT -->
   <div class="content">
 
     <p>
-      Estimado(a) <strong>{{ $clienteNombre }}</strong>,
+      {{ __('messages.estimado_cliente') }} <strong>{{ $clienteNombre }}</strong>,
     </p>
 
     <p>
-      Adjuntamos tu cotización <strong>{{ $folio }}</strong> en formato PDF con todos los detalles de tu solicitud.
+      {!! __('messages.adjuntamos_cotizacion', ['folio' => $folio]) !!}
     </p>
 
     <div class="info-box">
       <p>
-        Si deseas continuar con este proceso, te recomendamos <strong>contactar a uno de nuestros agentes</strong>,
-        quien se encargará de validar y confirmar tu cotización.
+        {!! __('messages.contactar_agente') !!}
       </p>
     </div>
 
     <p>
-      Nuestro equipo está listo para ayudarte y resolver cualquier duda relacionada con tu cotización.
+      {{ __('messages.equipo_ayuda') }}
     </p>
 
     <div class="divider"></div>
 
     <p style="color:#555;">
-      Gracias por considerar a <strong>Viajero Car Rental</strong>.<br>
-      Será un placer atenderte.
+      {!! __('messages.gracias_considerar') !!}<br>
+      {{ __('messages.placer_atenderte') }}
     </p>
 
   </div>
 
   <!-- FOOTER -->
   <div class="footer">
-    © {{ date('Y') }} <strong>Viajero Car Rental</strong><br>
+    © {{ date('Y') }} <strong>Viajero Car Rental</strong> — {{ __('messages.todos_derechos') }}<br>
     <a href="https://viajerocarental.com">www.viajerocarental.com</a> |
     <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>
   </div>

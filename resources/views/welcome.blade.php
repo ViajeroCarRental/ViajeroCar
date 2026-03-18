@@ -1,5 +1,5 @@
 @extends('layouts.Usuarios')
-@section('Titulo','Home')
+@section('Titulo', __('messages.renta_tu_auto'))
 @section('css-vistaHome')
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
   {{-- Select2 CSS --}}
@@ -288,10 +288,10 @@
 @endphp
 
 <!-- ===== VISTA INICIO ===== -->
-<section class="v-inicio" data-title="Inicio">
+<section class="v-inicio" data-title="{{ __('messages.inicio') }}">
 
   <div class="rv-banner-wrap" id="rvWrap" aria-live="polite">
-    <div class="rv-banner" id="rvBanner" role="status" aria-label="Reservas en vivo">
+    <div class="rv-banner" id="rvBanner" role="status" aria-label="{{ __('messages.buscando_reserva') }}">
       <div class="rv-bar"><i id="rvBar"></i></div>
 
       <div class="rv-row">
@@ -302,15 +302,15 @@
         </div>
 
         <div class="rv-copy" style="flex:1 1 auto">
-          <div class="rv-live" id="rvTitle">Buscando reserva</div>
+          <div class="rv-live" id="rvTitle">{{ __('messages.buscando_reserva') }}</div>
           <div class="rv-text" id="rvMsg">
-            Alguien más está buscando reserva en este momento
+            {{ __('messages.alguien_buscando') }}
           </div>
         </div>
 
 
-        <button class="rv-cta" onclick="location.href='{{ route('rutaReservaciones') }}'">Ver disponibilidad</button>
-        <button class="rv-close" id="rvClose" aria-label="Cerrar">✕</button>
+        <button class="rv-cta" onclick="location.href='{{ route('rutaReservaciones') }}'">{{ __('messages.ver_disponibilidad') }}</button>
+        <button class="rv-close" id="rvClose" aria-label="{{ __('messages.cerrar_sesion') }}">✕</button>
       </div>
     </div>
   </div>
@@ -326,40 +326,40 @@
     </div>
 
     <div class="hero-copy">
-      <h2 class="kicker">RENTA TU AUTO CON VIAJERO</h2>
+      <h2 class="kicker">{{ __('messages.renta_tu_auto') }}</h2>
 
       <div class="hero-icons">
         <div class="icon-item">
           <i class="fa-regular fa-clock"></i>
-          <span>Activos las 24 horas y los 7 días de la semana</span>
+          <span>{{ __('messages.activos_24_7') }}</span>
         </div>
 
         <div class="icon-item">
           <i class="fa-regular fa-credit-card"></i>
-          <span>Aceptamos tarjetas de débito y crédito</span>
+          <span>{{ __('messages.aceptamos_tarjetas') }}</span>
         </div>
 
         <div class="icon-item">
           <i class="fa-solid fa-shield-halved"></i>
-          <span>Contamos con verificación 00</span>
+          <span>{{ __('messages.verificacion_00') }}</span>
         </div>
 
         <div class="icon-item">
            <i class="fa-solid fa-plane-departure"></i>
-          <span>Atención en aeropuerto 24/7</span>
+          <span>{{ __('messages.atencion_aeropuerto') }}</span>
 
         </div>
 
         <div class="icon-item">
           <i class="fa-solid fa-car-side"></i>
 
-          <span>Autos con modelos recientes</span>
+          <span>{{ __('messages.modelos_recientes') }}</span>
         </div>
       </div>
 
 <div class="d-block d-xl-none p-3">
     <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center;">
-        <p style="margin-bottom: 10px; font-weight: bold; color: #333; font-size: 16px;">Encuentra tu auto aquí</p>
+        <p style="margin-bottom: 10px; font-weight: bold; color: #333; font-size: 16px;">{{ __('messages.encuentra_tu_auto') }}</p>
 
         <button type="button" id="btn-abrir-buscador" class="btn btn-danger w-100"
             style="background-color: #d4002a;
@@ -373,7 +373,7 @@
                    gap: 8px;
                    text-transform: uppercase;
                    border-radius: 6px;">
-            <i class="fa-solid fa-magnifying-glass" style="font-size: 16px;"></i> BUSCAR
+            <i class="fa-solid fa-magnifying-glass" style="font-size: 16px;"></i> {{ __('messages.buscar') }}
         </button>
     </div>
 </div>
@@ -382,7 +382,7 @@
 
     <div class="d-block d-xl-none text-end mb-3">
         <button type="button" id="btn-cerrar-buscador" class="btn-close" style="font-size: 1.5rem;"></button>
-        <h5 class="text-start mt-2">1 Lugar y fecha</h5>
+        <h5 class="text-start mt-2">1 {{ __('messages.lugar_y_fecha') }}</h5>
         <hr>
     </div>
 
@@ -396,10 +396,10 @@
         ========================= --}}
         <div class="sg-col sg-col-location">
             <div class="location-head">
-                <span class="field-title">Lugar de renta</span>
+                <span class="field-title">{{ __('messages.lugar_de_renta') }}</span>
                 <label class="inline-check" for="differentDropoff">
                     <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1">
-                    <span>Devolver en otro destino</span>
+                    <span>{{ __('messages.devolver_en_otro') }}</span>
                 </label>
             </div>
 
@@ -409,7 +409,7 @@
                 <div class="field icon-field">
                     <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
                     <select id="pickupPlace" name="pickup_sucursal_id" >
-                        <option value="" disabled selected>¿Dónde inicia tu viaje ?</option>
+                        <option value="" disabled selected>{{ __('messages.donde_inicia') }}</option>
                         @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
                             <optgroup label="{{ $ciudad->nombre }}">
                                 @foreach($ciudad->sucursalesActivas as $suc)
@@ -427,7 +427,7 @@
                 <div class="field icon-field" id="dropoffWrapper">
                     <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
                     <select id="dropoffPlace" name="dropoff_sucursal_id">
-                        <option value="" disabled selected>¿Dónde termina tu viaje?</option>
+                        <option value="" disabled selected>{{ __('messages.donde_termina') }}</option>
                         @foreach($ciudades as $ciudad)
                             <optgroup label="{{ $ciudad->nombre }}">
                                 @foreach($ciudad->sucursalesActivas as $suc)
@@ -449,17 +449,17 @@
         <div class="sg-col sg-col-datetime">
             {{-- PICKUP --}}
             <div class="field">
-                <span class="field-title solo-responsivo-izq">Pick-Up</span>
+                <span class="field-title solo-responsivo-izq">{{ __('messages.pickup') }}</span>
                 <div class="datetime-row">
                     <div class="dt-field icon-field">
                         <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                        <input id="pickupDate" name="pickup_date" type="text" placeholder="Fecha"
+                        <input id="pickupDate" name="pickup_date" type="text" placeholder="{{ __('messages.fecha') }}"
                                value="{{ request('pickup_date') }}" data-min="{{ now()->toDateString() }}">
 
                     </div>
                     <div class="dt-field icon-field time-field">
                         <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-                        <input type="text" id="pickupTime" name="pickup_time" placeholder="Hora"
+                        <input type="text" id="pickupTime" name="pickup_time" placeholder="{{ __('messages.hora') }}"
                                value="{{ request('pickup_time') }}" >
 
                     </div>
@@ -468,17 +468,17 @@
 
             {{-- DROPOFF --}}
             <div class="field">
-                <span class="field-title solo-responsivo-izq">Devolución</span>
+                <span class="field-title solo-responsivo-izq">{{ __('messages.devolucion') }}</span>
                 <div class="datetime-row">
                     <div class="dt-field icon-field">
                         <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                        <input id="dropoffDate" name="dropoff_date" type="text" placeholder="Fecha"
+                        <input id="dropoffDate" name="dropoff_date" type="text" placeholder="{{ __('messages.fecha') }}"
                                value="{{ request('dropoff_date') }}" data-min="{{ now()->toDateString() }}">
 
                     </div>
                     <div class="dt-field icon-field time-field">
                         <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-                        <input type="text" id="dropoffTime" name="dropoff_time" placeholder="Hora"
+                        <input type="text" id="dropoffTime" name="dropoff_time" placeholder="{{ __('messages.hora') }}"
                                value="{{ request('dropoff_time') }}">
 
                     </div>
@@ -492,7 +492,7 @@
         <div class="sg-col sg-col-submit">
             <div class="actions">
                 <button type="submit">
-                    <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
+                    <i class="fa-solid fa-magnifying-glass"></i> {{ __('messages.buscar') }}
                 </button>
             </div>
         </div>
@@ -513,13 +513,13 @@
 
   <section id="fleet-carousel" class="fleet">
     <div class="fleet-viewport" id="fleetViewport">
-      <button class="fleet-btn prev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+      <button class="fleet-btn prev" aria-label="{{ __('messages.anterior') }}"><i class="fa-solid fa-chevron-left"></i></button>
 
       <div class="fleet-track">
 
         <article class="car-card">
           <header class="car-title">
-            <h3>COMPACTO</h3>
+            <h3>{{ __('messages.compacto') }}</h3>
             <p>Chevrolet Aveo o similar | C</p>
           </header>
           <div class="car-media">
@@ -527,9 +527,9 @@
           </div>
 
           <div class="offer">
-            <span class="offer-badge" aria-label="Oferta">-48%</span>
+            <span class="offer-badge" aria-label="{{ __('messages.oferta') }}">-48%</span>
             <div class="price-line">
-              <span class="price-now">$467</span><span class="per">/día</span>
+              <span class="price-now">$467</span><span class="per">/{{ __('messages.dia') }}</span>
               <span class="price-old">$899</span>
             </div>
           </div>
@@ -551,12 +551,12 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservaciones') }}" class="car-cta">{{ __('messages.reservar') }}</a>
         </article>
 
         <article class="car-card">
           <header class="car-title">
-            <h3>INTERMEDIO</h3>
+            <h3>{{ __('messages.intermedio') }}</h3>
             <p>Volkswagen Virtus o similar | D</p>
           </header>
           <div class="car-media">
@@ -566,7 +566,7 @@
           <div class="offer">
             <span class="offer-badge">-43%</span>
             <div class="price-line">
-              <span class="price-now">$600</span><span class="per">/día</span>
+              <span class="price-now">$600</span><span class="per">/{{ __('messages.dia') }}</span>
               <span class="price-old">$1,049</span>
             </div>
           </div>
@@ -588,12 +588,12 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservaciones') }}" class="car-cta">{{ __('messages.reservar') }}</a>
         </article>
 
         <article class="car-card">
           <header class="car-title">
-            <h3>GRANDE</h3>
+            <h3>{{ __('messages.grande') }}</h3>
             <p>Volkswagen Jetta o similar | E</p>
           </header>
           <div class="car-media">
@@ -603,7 +603,7 @@
           <div class="offer">
             <span class="offer-badge">-33%</span>
             <div class="price-line">
-              <span class="price-now">$800</span><span class="per">/día</span>
+              <span class="price-now">$800</span><span class="per">/{{ __('messages.dia') }}</span>
               <span class="price-old">$1,199</span>
             </div>
           </div>
@@ -625,12 +625,12 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservaciones') }}" class="car-cta">{{ __('messages.reservar') }}</a>
         </article>
 
         <article class="car-card">
           <header class="car-title">
-            <h3>FULL SIZE</h3>
+            <h3>{{ __('messages.full_size') }}</h3>
             <p>Toyota Camry o similar | F</p>
           </header>
           <div class="car-media">
@@ -640,7 +640,7 @@
           <div class="offer">
             <span class="offer-badge">-22%</span>
             <div class="price-line">
-              <span class="price-now">$1,550</span><span class="per">/día</span>
+              <span class="price-now">$1,550</span><span class="per">/{{ __('messages.dia') }}</span>
               <span class="price-old">$1,999</span>
             </div>
           </div>
@@ -662,12 +662,12 @@
             </span>
           </div>
 
-         <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+         <a href="{{ route('rutaReservaciones') }}" class="car-cta">{{ __('messages.reservar') }}</a>
             </article>
 
             <article class="car-card">
               <header class="car-title">
-                <h3>SUV COMPACTA</h3>
+                <h3>{{ __('messages.suv_compacta') }}</h3>
                 <p> Jeep Renegade o similar | IC</p>
               </header>
               <div class="car-media">
@@ -677,7 +677,7 @@
               <div class="offer">
                 <span class="offer-badge">-24%</span>
                 <div class="price-line">
-                  <span class="price-now">$1,600</span><span class="per">/día</span>
+                  <span class="price-now">$1,600</span><span class="per">/{{ __('messages.dia') }}</span>
                   <span class="price-old">$2,100</span>
                 </div>
               </div>
@@ -704,14 +704,14 @@
                 </span>
               </div>
 
-              <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+              <a href="{{ route('rutaReservaciones') }}" class="car-cta">{{ __('messages.reservar') }}</a>
             </article>
 
 
 
         <article class="car-card">
           <header class="car-title">
-            <h3>SUV MEDIANA</h3>
+            <h3>{{ __('messages.suv_mediana') }}</h3>
             <p>Volkswagen Taos  o similar | I</p>
           </header>
           <div class="car-media">
@@ -721,7 +721,7 @@
           <div class="offer">
             <span class="offer-badge">-25%</span>
             <div class="price-line">
-              <span class="price-now">$1,800</span><span class="per">/día</span>
+              <span class="price-now">$1,800</span><span class="per">/{{ __('messages.dia') }}</span>
               <span class="price-old">$2,400</span>
             </div>
           </div>
@@ -743,19 +743,19 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservaciones') }}" class="car-cta">{{ __('messages.reservar') }}</a>
         </article>
 
       </div>
 
-      <button class="fleet-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+      <button class="fleet-btn next" aria-label="{{ __('messages.siguiente') }}"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
   </section>
 
-  <div class="fleet-meta" aria-label="Beneficios">
-    <span>KM ilimitados</span>
+  <div class="fleet-meta" aria-label="{{ __('messages.beneficios') }}">
+    <span>{{ __('messages.km_ilimitados') }}</span>
     <i class="sep" aria-hidden="true">|</i>
-    <span>Transmisión Automática</span>
+    <span>{{ __('messages.transmision_automatica') }}</span>
   </div>
 
   <!-- SECCIONES -->
@@ -767,12 +767,12 @@
         <div class="media-slide" style="background-image:url('{{ asset('img/inicio6.png') }}');"></div>
       </div>
       <div class="info-content">
-        <h2>¿Viajero frecuente?</h2>
-        <p>Al convertirte en miembro desbloqueas descuentos exclusivos en todas tus reservas para que cada viaje sea más accesible.</p>
-        <p>Acumula puntos por cada reserva y canjea por más descuentos, upgrades o experiencias especiales.</p>
-        <p>Activa hoy tu membresía y disfruta recompensas exclusivas.</p>
+        <h2>{{ __('messages.viajero_frecuente') }}</h2>
+        <p>{{ __('messages.viajero_frecuente_texto1') }}</p>
+        <p>{{ __('messages.viajero_frecuente_texto2') }}</p>
+        <p>{{ __('messages.viajero_frecuente_texto3') }}</p>
         <div class="cta-group">
-          <a href="{{ route('auth.login') }}" class="btn btn-primary"><i class="fa-solid fa-id-card"></i> Obtén tu membresía</a>
+          <a href="{{ route('auth.login') }}" class="btn btn-primary"><i class="fa-solid fa-id-card"></i> {{ __('messages.obten_membresia') }}</a>
         </div>
       </div>
     </div>
@@ -780,12 +780,12 @@
     {{-- ===== NUEVO CARRUSEL DE AUTOS BAJO "Viajero frecuente" ===== --}}
     <section id="fleet-carousel-2" class="fleet">
       <div class="fleet-viewport">
-        <button class="fleet-btn prev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="fleet-btn prev" aria-label="{{ __('messages.anterior') }}"><i class="fa-solid fa-chevron-left"></i></button>
 
         <div class="fleet-track">
           <article class="car-card">
             <header class="car-title">
-              <h3>SUV FAMILIAR COMPACTA</h3>
+              <h3>{{ __('messages.suv_familiar_compacta') }}</h3>
               <p>Toyota avanza o similar | IB</p>
             </header>
             <div class="car-media">
@@ -795,7 +795,7 @@
             <div class="offer">
               <span class="offer-badge">-23%</span>
               <div class="price-line">
-                <span class="price-now">$1,700</span><span class="per">/día</span>
+                <span class="price-now">$1,700</span><span class="per">/{{ __('messages.dia') }}</span>
                 <span class="price-old">$2,200</span>
               </div>
             </div>
@@ -817,12 +817,12 @@
               </span>
             </div>
 
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservaciones') }}" class="car-cta">{{ __('messages.reservar') }}</a>
           </article>
 
           <article class="car-card">
             <header class="car-title">
-              <h3>MINIVAN</h3>
+              <h3>{{ __('messages.minivan') }}</h3>
               <p> Honda Odyssey o similar | M</p>
             </header>
             <div class="car-media">
@@ -832,7 +832,7 @@
             <div class="offer">
               <span class="offer-badge">-13%</span>
               <div class="price-line">
-                <span class="price-now">$2,600</span><span class="per">/día</span>
+                <span class="price-now">$2,600</span><span class="per">/{{ __('messages.dia') }}</span>
                 <span class="price-old">$3,000</span>
               </div>
             </div>
@@ -854,12 +854,12 @@
               </span>
             </div>
 
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservaciones') }}" class="car-cta">{{ __('messages.reservar') }}</a>
           </article>
 
           <article class="car-card">
             <header class="car-title">
-              <h3>VAN FAMILIAR</h3>
+              <h3>{{ __('messages.van_familiar') }}</h3>
               <p>Nissan Urvan o similar | L | TM </p>
             </header>
             <div class="car-media">
@@ -869,7 +869,7 @@
             <div class="offer">
               <span class="offer-badge">-15%</span>
               <div class="price-line">
-                <span class="price-now">$2,900</span><span class="per">/día</span>
+                <span class="price-now">$2,900</span><span class="per">/{{ __('messages.dia') }}</span>
                 <span class="price-old">$3,400</span>
               </div>
             </div>
@@ -891,13 +891,13 @@
               </span>
             </div>
 
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservaciones') }}" class="car-cta">{{ __('messages.reservar') }}</a>
           </article>
 
 
           <article class="car-card">
             <header class="car-title">
-              <h3>VAN PASAJEROS</h3>
+              <h3>{{ __('messages.van_pasajeros') }}</h3>
               <p>Toyota Hiace o similar | L</p>
             </header>
             <div class="car-media">
@@ -907,7 +907,7 @@
             <div class="offer">
               <span class="offer-badge">-15%</span>
               <div class="price-line">
-                <span class="price-now">$2,900</span><span class="per">/día</span>
+                <span class="price-now">$2,900</span><span class="per">/{{ __('messages.dia') }}</span>
                 <span class="price-old">$9,400</span>
               </div>
             </div>
@@ -935,12 +935,12 @@
             </div>
 
 
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservaciones') }}" class="car-cta">{{ __('messages.reservar') }}</a>
             </article>
 
         <article class="car-card">
           <header class="car-title">
-            <h3>PICK UP DOBLE CABINA</h3>
+            <h3>{{ __('messages.pick_up_doble_cabina') }}</h3>
             <p>Nissan Frontier o similar | E</p>
           </header>
 
@@ -951,7 +951,7 @@
          <div class="offer">
            <span class="offer-badge">-13%</span>
            <div class="price-line">
-            <span class="price-now">$1,950</span><span class="per">/día</span>
+            <span class="price-now">$1,950</span><span class="per">/{{ __('messages.dia') }}</span>
             <span class="price-old">$2,203</span>
            </div>
          </div>
@@ -973,13 +973,13 @@
           </span>
         </div>
 
-           <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+           <a href="{{ route('rutaReservaciones') }}" class="car-cta">{{ __('messages.reservar') }}</a>
           </article>
 
         <article class="car-card">
         <article class="car-card">
           <header class="car-title">
-            <h3>PICK UP 4X4 DOBLE CABINA</h3>
+            <h3>{{ __('messages.pick_up_4x4') }}</h3>
             <p>Toyota Tacoma o similar | F</p>
           </header>
           <div class="car-media">
@@ -989,7 +989,7 @@
           <div class="offer">
             <span class="offer-badge">-13%</span>
             <div class="price-line">
-              <span class="price-now">$2,600</span><span class="per">/día</span>
+              <span class="price-now">$2,600</span><span class="per">/{{ __('messages.dia') }}</span>
               <span class="price-old">$3,000</span>
             </div>
           </div>
@@ -1011,28 +1011,28 @@
             </span>
           </div>
 
-              <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+              <a href="{{ route('rutaReservaciones') }}" class="car-cta">{{ __('messages.reservar') }}</a>
             </article>
 
 
             </div>
 
-            <button class="fleet-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+            <button class="fleet-btn next" aria-label="{{ __('messages.siguiente') }}"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
             </section>
 
-            <div class="fleet-meta" aria-label="Beneficios">
-              <span>KM ilimitados</span>
+            <div class="fleet-meta" aria-label="{{ __('messages.beneficios') }}">
+              <span>{{ __('messages.km_ilimitados') }}</span>
               <i class="sep" aria-hidden="true">|</i>
-              <span>Transmisión Automática</span>
+              <span>{{ __('messages.transmision_automatica') }}</span>
             </div>
               <div class="info-row reverse">
                 <div class="info-content">
-                  <h2>Soluciones empresariales</h2>
-                  <p>Gestionamos tus viajes corporativos de punta a punta para que tu equipo se concentre en lo importante.</p>
-                  <p>Optimiza costos, confort y seguridad con nuestros planes para empresas.</p>
+                  <h2>{{ __('messages.soluciones_empresariales') }}</h2>
+                  <p>{{ __('messages.soluciones_empresariales_texto1') }}</p>
+                  <p>{{ __('messages.soluciones_empresariales_texto2') }}</p>
                   <div class="cta-group">
-                    <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> Reserva ahora</a>
+                    <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> {{ __('messages.reserva_ahora') }}</a>
                   </div>
                 </div>
                 <div class="info-media media-carousel" data-interval="5200">
@@ -1044,7 +1044,7 @@
             </section>
 
             <!-- TARJETAS (Swiper) -->
-            <section aria-label="Explora destinos y servicios">
+            <section aria-label="{{ __('messages.beneficios') }}">
               <div class="swiper vj-tiles-swiper">
                 <div class="swiper-wrapper">
 
@@ -1052,9 +1052,9 @@
                     <article class="tile-card">
                       <div class="tile-media" style="background-image:url('{{ asset('img/24.jpg') }}')"></div>
                       <div class="tile-body">
-                        <h3>Activos 24/7:</h3>
-                        <p>Atención y soporte en todo momento. Nuestro equipo está disponible las 24 horas, los 7 días de la semana, para que viajes con total tranquilidad.</p>
-                        <a href="#" class="tile-link">Leer más…</a>
+                        <h3>{{ __('messages.activos_247_titulo') }}</h3>
+                        <p>{{ __('messages.activos_247_texto') }}</p>
+                        <a href="#" class="tile-link">{{ __('messages.leer_mas') }}</a>
                       </div>
                     </article>
                   </div>
@@ -1063,9 +1063,9 @@
                     <article class="tile-card">
                       <div class="tile-media" style="background-image:url('{{ asset('img/4x4.png') }}')"></div>
                       <div class="tile-body">
-                        <h3>AUTOS Y CAMIONETAS 4x4:</h3>
-                        <p>Viaja sin límites. Contamos con SUVs, autos todoterreno y camionetas 4x4 ideales para carretera, ciudad o aventura.</p>
-                        <a href="#" class="tile-link">Explora nuestra flota...</a>
+                        <h3>{{ __('messages.autos_4x4_titulo') }}</h3>
+                        <p>{{ __('messages.autos_4x4_texto') }}</p>
+                        <a href="#" class="tile-link">{{ __('messages.explora_flota') }}</a>
                       </div>
                     </article>
                   </div>
@@ -1074,9 +1074,9 @@
                     <article class="tile-card">
                       <div class="tile-media" style="background-image:url('{{ asset('img/Urvancard.png') }}')"></div>
                       <div class="tile-body">
-                        <h3>CAMIONETAS PARA 13 PASAJEROS:</h3>
-                        <p>Perfectas para viajes familiares o empresariales. Comodidad, espacio y seguridad para todos tus acompañantes.</p>
-                        <a href="#" class="tile-link">Reserva la tuya...</a>
+                        <h3>{{ __('messages.camionetas_13_titulo') }}</h3>
+                        <p>{{ __('messages.camionetas_13_texto') }}</p>
+                        <a href="#" class="tile-link">{{ __('messages.reserva_tuya') }}</a>
                       </div>
                     </article>
                   </div>
@@ -1085,9 +1085,9 @@
                     <article class="tile-card">
                       <div class="tile-media" style="background-image:url('{{ asset('img/tarjeta.png') }}')"></div>
                       <div class="tile-body">
-                        <h3>ACEPTAMOS TARJETAS:</h3>
-                        <p>Pagos con tarjeta de crédito o débito. Fácil, rápido y seguro. También puedes hacer tu pago final al devolver tu vehículo.</p>
-                        <a href="#" class="tile-link">Conoce nuestras opciones...</a>
+                        <h3>{{ __('messages.aceptamos_tarjetas_titulo') }}</h3>
+                        <p>{{ __('messages.aceptamos_tarjetas_texto') }}</p>
+                        <a href="#" class="tile-link">{{ __('messages.conoce_opciones') }}</a>
                       </div>
                     </article>
                   </div>
@@ -1096,9 +1096,9 @@
                     <article class="tile-card">
                       <div class="tile-media" style="background-image:url('{{ asset('img/Aeropuerto.png') }}')"></div>
                       <div class="tile-body">
-                        <h3>ENTREGA EN AEROPUERTO 24/7:</h3>
-                        <p>Recibe o entrega tu auto directamente en el aeropuerto, sin filas ni esperas. Disponible las 24 horas del día.</p>
-                        <a href="#" class="tile-link">Agendar entrega...</a>
+                        <h3>{{ __('messages.entrega_aeropuerto_titulo') }}</h3>
+                        <p>{{ __('messages.entrega_aeropuerto_texto') }}</p>
+                        <a href="#" class="tile-link">{{ __('messages.agendar_entrega') }}</a>
                       </div>
                     </article>
                   </div>
@@ -1107,9 +1107,9 @@
                     <article class="tile-card">
                       <div class="tile-media" style="background-image:url('{{ asset('img/Verificacion.png') }}')"></div>
                       <div class="tile-body">
-                        <h3>VEHÍCULOS CON VERIFICACIÓN 00:</h3>
-                        <p>Todos nuestros autos cumplen con las normas ambientales y están verificados tipo 00 para garantizar su óptimo rendimiento.</p>
-                        <a href="#" class="tile-link">Descubre más...</a>
+                        <h3>{{ __('messages.verificacion_00_titulo') }}</h3>
+                        <p>{{ __('messages.verificacion_00_texto') }}</p>
+                        <a href="#" class="tile-link">{{ __('messages.descubre_mas') }}</a>
                       </div>
                     </article>
                   </div>
@@ -1118,9 +1118,9 @@
                     <article class="tile-card">
                       <div class="tile-media" style="background-image:url('{{ asset('img/Drop.png') }}')"></div>
                       <div class="tile-body">
-                        <h3>DROP OFF NACIONAL:</h3>
-                        <p>Disfruta de tu viaje sin preocupaciones. Devuelve tu auto en otra ciudad con nuestro servicio Drop Off Nacional (con costo adicional).</p>
-                        <a href="#" class="tile-link">Consultar destinos...</a>
+                        <h3>{{ __('messages.drop_off_nacional_titulo') }}</h3>
+                        <p>{{ __('messages.drop_off_nacional_texto') }}</p>
+                        <a href="#" class="tile-link">{{ __('messages.consultar_destinos') }}</a>
                       </div>
                     </article>
                   </div>
@@ -1129,9 +1129,9 @@
                     <article class="tile-card">
                       <div class="tile-media" style="background-image:url('{{ asset('img/nuevos.png') }}')"></div>
                       <div class="tile-body">
-                        <h3>AUTOS NUEVOS Y MODERNOS:</h3>
-                        <p>Conduce con estilo y seguridad. Nuestra flota está compuesta por vehículos recientes, siempre en óptimas condiciones.</p>
-                        <a href="#" class="tile-link">Explora la flota...</a>
+                        <h3>{{ __('messages.autos_nuevos_titulo') }}</h3>
+                        <p>{{ __('messages.autos_nuevos_texto') }}</p>
+                        <a href="#" class="tile-link">{{ __('messages.explora_flota') }}</a>
                       </div>
                     </article>
                   </div>
@@ -1141,13 +1141,13 @@
                       <div class="tile-media" style="background-image:url('{{ asset('img/Prioridad.png') }}')"></div>
 
                       <div class="tile-body">
-                        <h3>RESEÑAS DE GOOGLE MAPS:</h3>
+                        <h3>{{ __('messages.resenas_google') }}</h3>
 
                         @if(!empty($googleRating))
                           <div class="reviews-summary">
                             <span class="reviews-score">⭐ {{ number_format($googleRating, 1) }}</span>
                             @if(!empty($googleTotal))
-                              <span class="reviews-count">({{ $googleTotal }} opiniones)</span>
+                              <span class="reviews-count">({{ $googleTotal }} {{ __('messages.opiniones') }})</span>
                             @endif
                           </div>
                         @endif
@@ -1157,7 +1157,7 @@
                             @foreach($googleReviews as $review)
                               <div class="review-item">
                                 <div class="review-head">
-                                  <strong>{{ $review['author_name'] ?? 'Usuario de Google' }}</strong>
+                                  <strong>{{ $review['author_name'] ?? __('messages.usuario_google') }}</strong>
                                   @if(!empty($review['rating']))
                                     <span class="review-stars">
                                       @for($i = 0; $i < (int)$review['rating']; $i++)
@@ -1174,7 +1174,7 @@
                           @else
                             <div class="review-item">
                               <p class="review-text">
-                                Pronto verás aquí las opiniones de nuestros clientes en Google Maps.
+                                {{ __('messages.pronto_resenas') }}
                               </p>
                             </div>
                           @endif
@@ -1184,7 +1184,7 @@
                           target="_blank"
                           rel="noopener"
                           class="tile-link">
-                          Ver más reseñas en Google…
+                          {{ __('messages.ver_mas_resenas') }}
                         </a>
                       </div>
                     </article>
@@ -1204,9 +1204,9 @@
               <div class="cta-bg" style="background-image:url('{{ asset('img/inicio10.png') }}');"></div>
               <div class="cta-overlay"></div>
               <div class="cta-inner">
-                <h2>¡RENTA HOY, EXPLORA MAÑANA, VIAJA SIEMPRE!</h2>
+                <h2>{{ __('messages.renta_hoy_explora') }}</h2>
                 <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary btn-lg">
-                  <i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!
+                  <i class="fa-regular fa-calendar-check"></i> {{ __('messages.reserva_ahora') }}
                 </a>
               </div>
             </section>
@@ -1214,7 +1214,7 @@
 
             <!-- ✅ BURBUJA RADIAL DE REDES (NUEVA) -->
             <div class="social-fab" id="socialFab">
-              <button class="fab-main" id="fabMain" type="button" aria-label="Redes sociales" aria-expanded="false">
+              <button class="fab-main" id="fabMain" type="button" aria-label="{{ __('messages.redes_sociales') }}" aria-expanded="false">
                 <i class="fa-solid fa-share-nodes"></i>
               </button>
 
@@ -1247,18 +1247,25 @@
             <div class="modal" id="welcomeModal" aria-hidden="true">
               <div class="modal-backdrop"></div>
               <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="wmTitle">
-                <button class="modal-close" id="wmClose" aria-label="Cerrar"><i class="fa-regular fa-circle-xmark"></i></button>
-                <h3 id="wmTitle"><i class="fa-regular fa-hand-peace"></i> ¡Bienvenido, <span id="wmName">Viajero</span>!</h3>
-                <p>Tu cuenta está lista. ¿Quieres ir directo a tu reserva?</p>
+                <button class="modal-close" id="wmClose" aria-label="{{ __('messages.cerrar_sesion') }}"><i class="fa-regular fa-circle-xmark"></i></button>
+                <h3 id="wmTitle"><i class="fa-regular fa-hand-peace"></i> {{ __('messages.bienvenido') }} <span id="wmName">{{ __('messages.viajero') }}</span>!</h3>
+                <p>{{ __('messages.cuenta_lista') }}</p>
                 <div class="modal-actions">
-                  <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> Ir a mi reserva</a>
-                  <button class="btn btn-ghost" id="wmOk" type="button">Seguir en inicio</button>
+                  <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> {{ __('messages.ir_mi_reserva') }}</a>
+                  <button class="btn btn-ghost" id="wmOk" type="button">{{ __('messages.seguir_inicio') }}</button>
                 </div>
               </div>
             </div>
 @endsection
 
 @section('js-vistaHome')
+<script>
+    window.validacionTranslations = {
+        ubicacion_requerida: "{{ __('messages.ubicacion_requerida') }}",
+        fecha_requerida: "{{ __('messages.fecha_requerida') }}",
+        hora_requerida: "{{ __('messages.hora_requerida') }}"
+    };
+</script>
 
 {{-- ✅ jQuery  Permite que Select2 funcione--}}
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -1289,36 +1296,35 @@
   {{-- ✅ (Tu inline script de fleet infinito - lo dejo tal cual) --}}
 
 
-  <!-- ===== Toast de reservas ===== -->
-  <!-- ===== Toast de reservas ===== -->
+
 <!-- ===== Toast de reservas ===== -->
   <script>
   (function(){
 
     const SEQ = [
       {
-        title: "Buscando reserva",
-        text: "Alguien más está buscando reserva en este momento"
+        title: "{{ __('messages.buscando_reserva') }}",
+        text: "{{ __('messages.alguien_buscando') }}"
       },
       {
-        title: "Otra reserva",
-        text: "Un cliente acaba de reservar en el Aeropuerto de Querétaro (AIQ)"
+        title: "{{ __('messages.otra_reserva') }}",
+        text: "{{ __('messages.reservo_aeropuerto') }}"
       },
       {
-        title: "Buscando reserva",
-        text: "Alguien más está buscando reserva en este momento"
+        title: "{{ __('messages.buscando_reserva') }}",
+        text: "{{ __('messages.alguien_buscando') }}"
       },
       {
-        title: "Otra reserva",
-        text: "Un cliente acaba de reservar en la Central de Autobuses de Querétaro (TAQ)"
+        title: "{{ __('messages.otra_reserva') }}",
+        text: "{{ __('messages.reservo_central') }}"
       },
       {
-        title: "Buscando reserva",
-        text: "Alguien más está buscando reserva en este momento"
+        title: "{{ __('messages.buscando_reserva') }}",
+        text: "{{ __('messages.alguien_buscando') }}"
       },
       {
-        title: "Otra reserva",
-        text: "Un cliente acaba de reservar en la Plaza de Central Park Querétaro"
+        title: "{{ __('messages.otra_reserva') }}",
+        text: "{{ __('messages.reservo_central_park') }}"
       }
     ];
 

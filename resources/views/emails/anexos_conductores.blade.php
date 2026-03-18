@@ -1,6 +1,6 @@
 {{-- resources/views/emails/anexos_conductores.blade.php --}}
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
   <meta charset="UTF-8">
   <meta name="color-scheme" content="light dark">
@@ -109,36 +109,34 @@
   <!-- HEADER -->
   <div class="header">
     <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
-    <h1>Anexos de Conductor Adicional</h1>
+    <h1>{{ __('messages.anexos_titulo_correo') }}</h1>
   </div>
 
   <!-- CONTENT -->
   <div class="content">
 
     <p>
-      Estimado(a)
-      <strong>{{ $reservacion->nombre_cliente ?? 'Cliente' }}</strong>,
+      {{ __('messages.estimado_cliente') }}
+      <strong>{{ $reservacion->nombre_cliente ?? __('messages.cliente') }}</strong>,
     </p>
 
     <p>
-      Le enviamos los <strong>anexos de conductor adicional</strong> correspondientes a su contrato de arrendamiento
-      con <strong>Viajero Car Rental</strong>.
+      {!! __('messages.enviamos_anexos') !!}
     </p>
 
     <p>
-      En los archivos PDF adjuntos encontrará la información de los
-      <strong>conductor(es) adicional(es) autorizado(s)</strong> para manejar el vehículo.
+      {!! __('messages.pdf_adjuntos') !!}
     </p>
 
     <div class="info-box">
       <p>
-        <strong>Folio del contrato:</strong>
+        <strong>{{ __('messages.folio_contrato') }}</strong>
         {{ $contrato->numero_contrato ?? $contrato->id_contrato ?? '—' }}
       </p>
 
       @if(!empty($reservacion->fecha_inicio) || !empty($reservacion->hora_retiro))
         <p>
-          <strong>Fecha y hora de inicio de renta:</strong>
+          <strong>{{ __('messages.fecha_hora_inicio') }}</strong>
           {{ $reservacion->fecha_inicio ?? '—' }}
           {{ $reservacion->hora_retiro ?? '' }}
         </p>
@@ -146,30 +144,28 @@
 
       @if(!empty($reservacion->ciudad_retiro_nombre))
         <p>
-          <strong>Oficina / ciudad de salida:</strong>
+          <strong>{{ __('messages.oficina_ciudad_salida') }}</strong>
           {{ $reservacion->ciudad_retiro_nombre }}
         </p>
       @endif
     </div>
 
     <p>
-      Estos anexos forman parte de la documentación de su contrato y confirman
-      qué personas han sido autorizadas para conducir el vehículo bajo las mismas
-      condiciones y responsabilidades establecidas para el titular.
+      {{ __('messages.anexos_documentacion') }}
     </p>
 
     <div class="divider"></div>
 
     <p style="margin-top:20px;">
-      Gracias por confiar en <strong>Viajero Car Rental</strong> para su experiencia de renta.<br>
-      ¡Le deseamos un excelente viaje!
+      {!! __('messages.gracias_confianza') !!}<br>
+      {{ __('messages.excelente_viaje') }}
     </p>
 
   </div>
 
   <!-- FOOTER -->
   <div class="footer">
-    © {{ date('Y') }} <strong>Viajero Car Rental</strong> — Todos los derechos reservados.<br>
+    © {{ date('Y') }} <strong>Viajero Car Rental</strong> — {{ __('messages.todos_derechos') }}<br>
     <a href="https://viajerocarental.com">www.viajerocarental.com</a> |
     <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>
   </div>

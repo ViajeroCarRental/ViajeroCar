@@ -1,6 +1,6 @@
 @extends('layouts.Usuarios')
 
-@section('Titulo','Catálogo de Vehículos')
+@section('Titulo', __('messages.catalogo_titulo'))
 
 @section('css-VistaCatalogo')
   <link rel="stylesheet" href="{{ asset('css/catalogo.css') }}">
@@ -64,17 +64,17 @@
   {{-- ========== HERO ========== --}}
   <section class="hero">
     <div class="hero-bg">
-      <img src="{{ asset('img/catalogo.png') }}" alt="Catálogo ViajeroCar">
+      <img src="{{ asset('img/catalogo.png') }}" alt="{{ __('messages.catalogo_titulo') }}">
       <div class="overlay"></div>
     </div>
 
     <div class="hero-inner">
-      <h1 class="hero-title">¡RENTA HOY, EXPLORA MAÑANA, VIAJA SIEMPRE!</h1>
+      <h1 class="hero-title">{{ __('messages.renta_hoy_explora') }}</h1>
 
       <div class="chips">
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Oficina Central Park</span>
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto</span>
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Central Autobuses</span>
+        <span class="chip"><i class="fa-solid fa-location-dot"></i> {{ __('messages.pickup_oficina') }}</span>
+        <span class="chip"><i class="fa-solid fa-location-dot"></i> {{ __('messages.pickup_aeropuerto') }}</span>
+        <span class="chip"><i class="fa-solid fa-location-dot"></i> {{ __('messages.pickup_central') }}</span>
       </div>
 
       {{-- ✅ Bloque/card dentro del hero --}}
@@ -86,11 +86,11 @@
             type="button"
             aria-expanded="false"
             aria-controls="filtro-autos"
-            aria-label="Despliega el filtro de categorías de autos"
+            aria-label="{{ __('messages.filtrar_categorias') }}"
           >
             <span class="acc-left">
               <i class="fa-solid fa-filter"></i>
-              <span>Filtrar categorías</span>
+              <span>{{ __('messages.filtrar_categorias') }}</span>
             </span>
 
             <i class="fa-solid fa-chevron-down acc-icon"></i>
@@ -99,46 +99,46 @@
           <div id="filtro-autos" class="accordion-collapse" aria-labelledby="btn-filtro-autos">
             <div class="accordion-body">
               <div class="filter-wrapper">
-                <h3 class="filter-title">Tipos de autos:</h3>
+                <h3 class="filter-title">{{ __('messages.tipos_de_autos') }}</h3>
 
                 <div class="car-filter">
                   <div class="filter-card active" data-filter="all">
                     <img src="{{ asset('img/aveo.png') }}">
                     <div class="filter-info">
-                      <span>Todos</span>
-                      <small class="count-badge">{{ count($categoriasCards) }} categorías</small>
+                      <span>{{ __('messages.todos') }}</span>
+                      <small class="count-badge">{{ count($categoriasCards) }} {{ __('messages.categorias') }}</small>
                     </div>
                   </div>
 
                   <div class="filter-card" data-filter="Sedan">
                     <img src="{{ asset('img/camry.png') }}">
                     <div class="filter-info">
-                      <span>Autos</span>
-                      <small class="count-badge">{{ $conteoTipos['Sedan'] }} categorías</small>
+                      <span>{{ __('messages.autos') }}</span>
+                      <small class="count-badge">{{ $conteoTipos['Sedan'] }} {{ __('messages.categorias') }}</small>
                     </div>
                   </div>
 
                   <div class="filter-card" data-filter="SUV">
                     <img src="{{ asset('img/taos.png') }}">
                     <div class="filter-info">
-                      <span>SUVs</span>
-                      <small class="count-badge">{{ $conteoTipos['SUV'] }} categorías</small>
+                      <span>{{ __('messages.suvs') }}</span>
+                      <small class="count-badge">{{ $conteoTipos['SUV'] }} {{ __('messages.categorias') }}</small>
                     </div>
                   </div>
 
                   <div class="filter-card" data-filter="Pickup">
                     <img src="{{ asset('img/Frontier.png') }}">
                     <div class="filter-info">
-                      <span>Pick Ups</span>
-                      <small class="count-badge">{{ $conteoTipos['Pickup'] }} categorías</small>
+                      <span>{{ __('messages.pickups') }}</span>
+                      <small class="count-badge">{{ $conteoTipos['Pickup'] }} {{ __('messages.categorias') }}</small>
                     </div>
                   </div>
 
                   <div class="filter-card" data-filter="Van">
                     <img src="{{ asset('img/Odyssey.png') }}">
                     <div class="filter-info">
-                      <span>Vans</span>
-                      <small class="count-badge">{{ $conteoTipos['Van'] }} categorías</small>
+                      <span>{{ __('messages.vans') }}</span>
+                      <small class="count-badge">{{ $conteoTipos['Van'] }} {{ __('messages.categorias') }}</small>
                     </div>
                   </div>
                 </div>
@@ -151,6 +151,7 @@
 
     </div>
   </section>
+
 
   {{-- ========== CATÁLOGO (2 columnas, estilo como tu referencia) ========== --}}
   <section class="catalog">
@@ -178,11 +179,15 @@
           @endif
 
           {{-- ✅ TEXTO con el estilo que ya traíamos (h3 + p) --}}
-          <header class="car-title">
-            <h3>{{ strtoupper($cat->nombre) }}</h3>
-            <p>{{ $cat->descripcion }} | {{ $codigo }}</p>
-          </header>
-
+               <header class="car-title">
+    @php
+        $traduccion = trans("categorias.{$cat->codigo}");
+        $nombreTraducido = $traduccion['nombre'] ?? $cat->nombre;
+        $descripcionTraducida = $traduccion['descripcion'] ?? $cat->descripcion;
+    @endphp
+    <h3>{{ strtoupper($nombreTraducido) }}</h3>
+   <p>{{ $descripcionTraducida }}</p>
+</header>
           <div class="car-media">
             <img src="{{ $img }}" alt="{{ $cat->nombre }}">
           </div>
@@ -194,15 +199,15 @@
             <li><i class="fa-solid fa-briefcase"></i> {{ $cap['big'] ?? 1 }}</li>
 
             {{-- ✅ NUEVO: Transmisión Automática (A) --}}
-            <li title="Transmisión">
+            <li title="{{ __('messages.transmision') }}">
               <span class="spec-letter">
-                T | {{ $codigo === 'L' ? 'Estándar' : 'Automática' }}
+                T | {{ $codigo === 'L' ? __('messages.estandar') : __('messages.automatica') }}
               </span>
             </li>
 
             {{-- ✅ NUEVO: Aire acondicionado --}}
-            <li title="Aire acondicionado">
-              <i class="fa-regular fa-snowflake"></i> A/C
+            <li title="{{ __('messages.aire_acondicionado') }}">
+              <i class="fa-regular fa-snowflake"></i> {{ __('messages.aire_acondicionado') }}
             </li>
           </ul>
 
@@ -224,21 +229,27 @@
           </div>
 
           <a href="{{ route('rutaReservasIniciar', ['categoria_id' => $cat->id_categoria]) }}" class="car-cta">
-            Reservar
+            {{ __('messages.reservar') }}
           </a>
         </article>
       @endforeach
 
-      @if(!$hayAutos)
-        <div class="no-results">
-          <h3>Sin vehículos disponibles</h3>
-        </div>
-      @endif
+   @if(!$hayAutos)
+    <div class="no-results">
+        <h3>{{ __('messages.sin_vehiculos') }}</h3>
+    </div>
+@endif
     </div>
   </section>
 
 @endsection
 
 @section('js-vistaCatalogo')
-  <script src="{{ asset('js/catalogo.js') }}"></script>
+<script>
+    window.catalogTranslations = {
+        filtrar: "{{ __('messages.filtrar_categorias') }}",
+        ocultar: "{{ __('messages.ocultar_categorias') }}"
+    };
+</script>
+<script src="{{ asset('js/catalogo.js') }}"></script>
 @endsection

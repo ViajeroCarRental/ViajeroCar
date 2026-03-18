@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
   <meta charset="UTF-8">
-  <title>Ticket de Reserva</title>
+  <title>{{ __('messages.ticket_reserva') }}</title>
   <style>
     body { font-family: DejaVu Sans, sans-serif; margin: 40px; color: #333; }
     .logo { text-align: center; margin-bottom: 20px; }
@@ -16,16 +16,16 @@
   <div class="logo">
     <img src="{{ public_path('img/Logo3.jpg') }}" alt="Viajero Car Rental">
   </div>
-  <h2>Ticket de Reserva</h2>
+  <h2>{{ __('messages.ticket_reserva') }}</h2>
   <div class="data">
-    <p><strong>Folio:</strong> {{ $folio }}</p>
-    <p><strong>Cliente:</strong> {{ $nombre }}</p>
-    <p><strong>Vehículo:</strong> {{ $vehiculo }}</p>
-    <p><strong>Fecha de entrega:</strong> {{ $pickup }}</p>
-    <p><strong>Fecha de devolución:</strong> {{ $dropoff }}</p>
-    <p class="total"><strong>Total a pagar:</strong> ${{ $total }} MXN</p>
-    <p><strong>Método de pago:</strong> {{ $metodo }}</p>
+    <p><strong>{{ __('messages.folio') }}:</strong> {{ $folio }}</p>
+    <p><strong>{{ __('messages.cliente') }}:</strong> {{ $nombre }}</p>
+    <p><strong>{{ __('messages.vehiculo') }}:</strong> {{ $vehiculo }}</p>
+    <p><strong>{{ __('messages.fecha_entrega') }}:</strong> {{ $pickup }}</p>
+    <p><strong>{{ __('messages.fecha_devolucion') }}:</strong> {{ $dropoff }}</p>
+    <p class="total"><strong>{{ __('messages.total_a_pagar') }}:</strong> ${{ $total }} MXN</p>
+    <p><strong>{{ __('messages.metodo_pago') }}:</strong> {{ $metodo }}</p>
   </div>
-  <p style="margin-top:25px; text-align:center; color:#555;">Gracias por elegir Viajero Car Rental.</p>
+  <p style="margin-top:25px; text-align:center; color:#555;">{{ __('messages.gracias_elegir') }}</p>
 </body>
 </html>
