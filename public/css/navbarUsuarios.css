@@ -679,7 +679,7 @@ input.flatpickr-input{ padding-right:44px; }
   opacity:1;
 }
 
-o-content{
+.info-content{
   background:#fff;
   border-radius:18px;
   box-shadow:var(--shadow);
@@ -1574,22 +1574,17 @@ input#dropoffTime{
   content:"\f017";
   font-family:"Font Awesome 6 Free";
   font-weight:400;
-
   position:absolute;
   left:12px;
-  top: calc(var(--lab-h) + var(--lab-gap) + (var(--ctl-h) / 2) + var(--ico-nudge) + var(--timeclock-nudge));
-  transform: translateY(-50%);
-
+  top:50%;
+  transform:translateY(-50%);
   width:18px;
   height:18px;
-  display:grid;
-  place-items:center;
-
+  display:flex;
+  align-items:center;
+  justify-content:center;
   color:#9ca3af;
-  opacity:1;
-  visibility:visible;
-
-  z-index: 99999;
+  z-index:3;
   pointer-events:none;
 }
 
@@ -1693,6 +1688,9 @@ input#dropoffTime{
 /* =========================================
    FIX SOLO MÓVIL
 ========================================= */
+/* =========================================
+   FIX SOLO MÓVIL
+========================================= */
 @media (max-width:560px){
 
   .search-card .sg-col-submit{
@@ -1704,8 +1702,6 @@ input#dropoffTime{
     display: block !important;
     width: 100% !important;
   }
-
-@media (max-width:560px){
 
   .search-card{
     max-height: none !important;
@@ -1727,6 +1723,7 @@ input#dropoffTime{
   .search-card .field{
     margin: 0 0 12px !important;
   }
+
   .search-card .field:last-child{
     margin-bottom: 0 !important;
   }
@@ -1740,15 +1737,11 @@ input#dropoffTime{
   .search-card .sg-col-submit{
     margin-top: 8px !important;
   }
-  .search-card .actions button{
-    margin-top: 10px !important;
-  }
-}
 
   .search-card .actions button{
     width: 100% !important;
     padding: 14px 18px !important;
-    margin-top: 6px !important;
+    margin-top: 10px !important;
   }
 }
 /* =========================================================
@@ -3373,176 +3366,138 @@ span.flatpickr-weekday {
     }
 }
 /* ==========================================================
-   SELECTOR DE IDIOMAS CON BANDERAS EMOJI
+   FIX SAFARI / MAC — WELCOME
+   Agregar al FINAL del archivo
 ========================================================== */
-.idioma-selector {
-    position: relative;
-    display: inline-block;
+
+/* Renderizado más estable en Mac */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.idioma-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 12px;
-    background: rgba(255, 255, 255, 0.15);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 10px;
-    color: white;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    height: 40px;
+/* Reset base de formularios */
+.search-card input,
+.search-card select,
+.search-card textarea,
+.search-card button,
+#miBuscador input,
+#miBuscador select,
+#miBuscador textarea,
+#miBuscador button {
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+  box-sizing: border-box;
 }
 
-.idioma-btn:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: translateY(-1px);
+/* Mantener checkbox nativo */
+.search-card input[type="checkbox"],
+#miBuscador input[type="checkbox"] {
+  -webkit-appearance: checkbox;
+  appearance: auto;
 }
 
-.idioma-btn i {
-    font-size: 12px;
-    opacity: 0.8;
+/* Inputs/selects más estables */
+.search-card input,
+.search-card select,
+#miBuscador input,
+#miBuscador select,
+.dt-field input,
+.dt-field select,
+.tp-selects select {
+  line-height: normal !important;
+  min-height: 48px !important;
 }
 
-/* Estilo para las banderas emoji */
-.bandera-emoji {
-    font-size: 20px;
-    line-height: 1;
-    display: inline-block;
-    margin-right: 4px;
-    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
+/* Safari centra mejor con font-size 16 */
+.search-card input,
+.search-card select,
+#miBuscador input,
+#miBuscador select,
+.dt-field input,
+.dt-field select,
+.tp-selects select {
+  font-size: 16px !important;
 }
 
-.idioma-dropdown {
-    position: absolute;
-    top: calc(100% + 5px);
-    right: 0;
-    min-width: 120px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-5px);
-    transition: all 0.2s ease;
-    z-index: 1000;
-    border: 1px solid rgba(0,0,0,0.1);
-}
-
-.idioma-selector:hover .idioma-dropdown {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.idioma-option {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 15px;
-    color: #333;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 14px;
-    transition: background 0.2s ease;
-}
-
-.idioma-option:first-child {
-    border-radius: 10px 10px 0 0;
-}
-
-.idioma-option:last-child {
-    border-radius: 0 0 10px 10px;
-}
-
-.idioma-option:hover {
-    background: #f5f5f5;
-}
-
-.idioma-option.active {
-    color: #b22222;
-    background: rgba(178,34,34,0.05);
-}
-
-.idioma-option .bandera-emoji {
-    font-size: 22px;
-    margin-right: 8px;
-}
-
-.idioma-option span {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.idioma-option i {
-    font-size: 12px;
-    color: #b22222;
-}
-
-/* Responsive para móvil */
-@media (max-width: 940px) {
-    .idioma-btn {
-        padding: 6px 10px;
-        font-size: 13px;
-        height: 36px;
-    }
-
-    .bandera-emoji {
-        font-size: 18px;
-    }
-
-    .nav-actions {
-        gap: 8px;
-    }
-}
-
-/* Ocultar idiomas cuando el menú móvil está abierto */
-body.nav-open .idioma-selector {
-    display: none;
-}
 /* ==========================================================
-   BANDERAS SVG (FLAG ICONS)
+   ICONOS
 ========================================================== */
-.bandera-svg {
-    font-size: 20px;
-    margin-right: 4px;
-    border-radius: 3px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.field-icon,
+.dt-field .field-icon,
+.search-card .time-field.icon-field::before,
+.time-field::before {
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-.idioma-btn .bandera-svg {
-    font-size: 18px;
+.field-icon,
+.dt-field .field-icon {
+  width: 18px !important;
+  height: 18px !important;
+  pointer-events: none !important;
 }
 
-.idioma-option .bandera-svg {
-    font-size: 20px;
-    margin-right: 8px;
+/* Iconos dentro de campos */
+.icon-field,
+.dt-field,
+.time-field,
+.location-inputs-wrapper .field {
+  position: relative !important;
 }
+
 /* ==========================================================
-   FLAG ICONS - AJUSTES FINOS
+   FECHAS Y HORAS
 ========================================================== */
-.fi {
-    margin-right: 6px;
-    border-radius: 3px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.dt-field input,
+.dt-field select,
+.tp-selects select,
+.search-card .time-field.icon-field input#pickupTime,
+.search-card .time-field.icon-field input#dropoffTime {
+  padding-left: 42px !important;
+  padding-right: 12px !important;
 }
 
-.idioma-btn .fi {
-    font-size: 18px;
-    margin-right: 4px;
+/* ==========================================================
+   BOTONES
+========================================================== */
+.actions button,
+.btn-close,
+button {
+  -webkit-appearance: none;
+  appearance: none;
 }
 
-.idioma-option .fi {
-    font-size: 20px;
-    margin-right: 8px;
+/* ==========================================================
+   FLATPICKR
+========================================================== */
+.flatpickr-input {
+  line-height: normal !important;
+  box-sizing: border-box !important;
 }
 
-/* Ajuste para que las banderas se vean bien en el botón */
-.idioma-btn {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+.flatpickr-calendar {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* ==========================================================
+   SELECTS
+========================================================== */
+select {
+  background-clip: padding-box;
+}
+
+/* ==========================================================
+   FONT AWESOME
+========================================================== */
+i.fa-solid,
+i.fa-regular,
+i.fa,
+[class*="fa-"] {
+  line-height: 1 !important;
+  vertical-align: middle;
 }

@@ -1624,7 +1624,10 @@ span.flatpickr-weekday {
 
 .select2-container--default .select2-selection--single .select2-selection__rendered {
     color: #000000 !important;
-    line-height: 48px !important;
+    line-height: normal !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
 }
 
 
@@ -1713,4 +1716,131 @@ span.flatpickr-weekday {
     #miBuscadorPoliticas .btn-close-politicas::before {
         font-size: 28px !important;
     }
+}
+/* ==========================================================
+   FIX SAFARI / MAC — POLITICAS
+   Agregar al FINAL del archivo
+========================================================== */
+
+/* Renderizado más estable en Mac */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reset base para controles del buscador */
+#miBuscadorPoliticas input,
+#miBuscadorPoliticas select,
+#miBuscadorPoliticas textarea,
+#miBuscadorPoliticas button {
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* Checkbox: conservar estilo nativo */
+#miBuscadorPoliticas input[type="checkbox"] {
+  -webkit-appearance: checkbox;
+  appearance: auto;
+}
+
+/* ==========================================================
+   CAMPOS DEL BUSCADOR
+========================================================== */
+#miBuscadorPoliticas .field,
+#miBuscadorPoliticas .dt-field,
+#miBuscadorPoliticas .time-field,
+#miBuscadorPoliticas .location-inputs-wrapper .field {
+  position: relative !important;
+  display: flex;
+  align-items: center;
+  overflow: visible !important;
+}
+
+#miBuscadorPoliticas input,
+#miBuscadorPoliticas select {
+  height: 48px !important;
+  min-height: 48px !important;
+  line-height: normal !important;
+  border-radius: 8px !important;
+}
+
+/* Safari suele renderizar mejor así */
+#miBuscadorPoliticas input,
+#miBuscadorPoliticas select,
+#miBuscadorPoliticas .tp-selects select {
+  font-size: 16px !important;
+}
+
+/* ==========================================================
+   ICONOS
+========================================================== */
+#miBuscadorPoliticas .field-icon,
+#miBuscadorPoliticas .dt-field .field-icon,
+#miBuscadorPoliticas .time-field::before {
+  line-height: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#miBuscadorPoliticas .field-icon {
+  width: 16px !important;
+  height: 16px !important;
+  z-index: 3 !important;
+  pointer-events: none !important;
+}
+
+/* ==========================================================
+   SELECT2
+========================================================== */
+#miBuscadorPoliticas .select2-container {
+  width: 100% !important;
+}
+
+#miBuscadorPoliticas .select2-container--default .select2-selection--single {
+  height: 48px !important;
+  min-height: 48px !important;
+  display: flex !important;
+  align-items: center !important;
+  border: 1px solid #ccc !important;
+  border-radius: 8px !important;
+  padding-left: 36px !important;
+  box-sizing: border-box !important;
+}
+
+#miBuscadorPoliticas .select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: normal !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  padding-left: 0 !important;
+  color: #000 !important;
+}
+
+#miBuscadorPoliticas .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 100% !important;
+  top: 0 !important;
+}
+
+/* ==========================================================
+   BOTONES
+========================================================== */
+#miBuscadorPoliticas .actions button,
+#miBuscadorPoliticas .btn-close,
+#miBuscadorPoliticas .btn-close-politicas {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ==========================================================
+   FONT AWESOME
+========================================================== */
+i.fa-solid,
+i.fa-regular,
+i.fa,
+[class*="fa-"] {
+  line-height: 1 !important;
+  vertical-align: middle;
 }

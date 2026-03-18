@@ -2193,8 +2193,14 @@
 
                             <h4 class="sum-subtitle" style="margin-top:16px;">{{ __('messages.detalles_precio') }}</h4>
 
-                            <div class="sum-table" id="cotizacionDoc" data-base="{{ $tarifaBase }}"
-                                data-days="{{ $days }}">
+                            <div class="sum-table" id="cotizacionDoc"
+                            data-base="{{ $tarifaBase }}"
+                            data-days="{{ $days }}"
+                            data-pickup="{{ $pickupSucursalId }}"
+                            data-dropoff="{{ $dropoffSucursalId }}"
+                            data-km="{{ $dropoffKm }}"
+                            data-costokm="{{ $costoKmCategoria }}"
+                            data-tanque="{{ $capacidadTanque ?? 0 }}">
 
                                 {{-- ===== TARIFA BASE (desplegable) ===== --}}
                                 <details class="sum-acc" open="false">

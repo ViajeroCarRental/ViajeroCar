@@ -831,96 +831,124 @@
       }
     }
 
-    function parseAddons(str) {
-      const map = new Map();
-      String(str || '')
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean)
-        .forEach(pair => {
-          const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
-          if (!m) return;
-          const id = m[1];
-          const qty = Math.max(0, parseInt(m[2], 10) || 0);
-          if (qty > 0) map.set(id, qty);
-        });
-      return map;
-    }
-
-    function fmtMoney(n) {
-      return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
-    }
-
-    const addonsMap = parseAddons(rawAddons);
-    let extrasTotal = 0;
-
-    if (extrasList) extrasList.innerHTML = '';
-    if (ivaList) ivaList.innerHTML = '';
-
-    if (addonsMap.size === 0) {
-      if (extrasList) {
-        const row = document.createElement('div');
-        row.className = 'row row-empty';
-        row.innerHTML = `
-          <span class="muted">Sin complementos seleccionados</span>
-          <strong>$0 MXN</strong>
-        `;
-        extrasList.appendChild(row);
-      }
-    } else {
-      addonsMap.forEach((qty, id) => {
-        const srv = catalog[id];
-        if (!srv) return;
-
-        const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
-        const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
-
-        let lineTotal = 0;
-        if (tipo === 'por_evento') {
-          lineTotal = price * qty;
-        } else {
-          lineTotal = price * qty * days;
-        }
-
-        extrasTotal += lineTotal;
-
-        if (extrasList) {
-          const row = document.createElement('div');
-          row.className = 'row row-addon';
-
-          const unidadLabel = (tipo === 'por_evento') ? '/ evento' : 'por día';
-
-          row.innerHTML = `
-            <span style="flex:1;">
-              ${qty} | ${srv.nombre} | ${fmtMoney(price)} ${unidadLabel}
-            </span>
-            <strong style="flex:0 0 110px; text-align:right;">
-              ${fmtMoney(lineTotal)}
-            </strong>
-          `;
-          extrasList.appendChild(row);
-        }
+  function parseAddons(str) {
+    const map = new Map();
+    String(str || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .forEach(pair => {
+        const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
+        if (!m) return;
+        const id = m[1];
+        const qty = Math.max(0, parseInt(m[2], 10) || 0);
+        if (qty > 0) map.set(id, qty);
       });
-    }
+    return map;
+  }
 
-    const subtotal = base + extrasTotal;
-    const iva = subtotal * 0.16;
-    const total = subtotal + iva;
+  function fmtMoney(n) {
+    return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
+  }
 
-    qBaseEl.textContent   = fmtMoney(base);
-    qExtrasEl.textContent = fmtMoney(extrasTotal);
-    qIvaEl.textContent    = fmtMoney(iva);
-    qTotalEl.textContent  = fmtMoney(total);
+  const addonsMap = parseAddons(rawAddons);
+  let extrasTotal = 0;
+  let renderedRows = 0;
 
-    if (ivaList) {
+  if (extrasList) extrasList.innerHTML = '';
+  if (ivaList) ivaList.innerHTML = '';
+
+  // ======================================================
+  // DROP OFF
+  // ======================================================
+ const pickupId  = table.dataset.pickup;
+const dropoffId = table.dataset.dropoff;
+const km        = parseFloat(table.dataset.km || 0);
+const costoKm   = parseFloat(table.dataset.costokm || 0);
+const tanque    = parseFloat(table.dataset.tanque || 0);
+const SERVICE_GASOLINA_ID = '1';
+
+  if (pickupId && dropoffId && pickupId !== dropoffId && km > 0 && costoKm > 0) {
+    const dropoffTotal = km * costoKm;
+    extrasTotal += dropoffTotal;
+
+    if (extrasList) {
       const row = document.createElement('div');
-      row.className = 'row row-iva';
+      row.className = 'row row-dropoff';
       row.innerHTML = `
-        <span>IVA (16%)</span>
-        <strong>${fmtMoney(iva)}</strong>
+        <span>Drop Off (${km} km)</span>
+        <strong>${fmtMoney(dropoffTotal)}</strong>
       `;
-      ivaList.appendChild(row);
+      extrasList.appendChild(row);
+      renderedRows++;
     }
+
+  // ======================================================
+// ADDONS
+// ======================================================
+addonsMap.forEach((qty, id) => {
+  const srv = catalog[id];
+  if (!srv) return;
+
+  const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+  const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
+
+  let lineTotal = 0;
+  let detalleLabel = '';
+  let unidadLabel = '';
+
+  // GASOLINA PREPAGO
+  if (String(id) === SERVICE_GASOLINA_ID) {
+    const litros = Math.max(0, tanque);
+    lineTotal = price * litros;
+
+    detalleLabel = `${srv.nombre} | ${litros} L x ${fmtMoney(price)} por litro`;
+    unidadLabel = '';
+  }
+  else if (tipo === 'por_tanque') {
+    const litros = Math.max(0, tanque);
+    lineTotal = price * litros * qty;
+
+    detalleLabel = `${qty} | ${srv.nombre} | ${litros} L x ${fmtMoney(price)} por litro`;
+    unidadLabel = '';
+  }
+  else if (tipo === 'por_evento') {
+    lineTotal = price * qty;
+    detalleLabel = `${qty} | ${srv.nombre} | ${fmtMoney(price)} / evento`;
+  }
+  else {
+    lineTotal = price * qty * days;
+    detalleLabel = `${qty} | ${srv.nombre} | ${fmtMoney(price)} por día`;
+  }
+
+  extrasTotal += lineTotal;
+
+  if (extrasList) {
+    const row = document.createElement('div');
+    row.className = 'row row-addon';
+
+    row.innerHTML = `
+      <span style="flex:1;">
+        ${detalleLabel}
+      </span>
+      <strong style="flex:0 0 110px; text-align:right;">
+        ${fmtMoney(lineTotal)}
+      </strong>
+    `;
+
+    extrasList.appendChild(row);
+    renderedRows++;
+  }
+});
+  // Si no hubo nada
+  if (renderedRows === 0 && extrasList) {
+    const row = document.createElement('div');
+    row.className = 'row row-empty';
+    row.innerHTML = `
+      <span class="muted">Sin complementos seleccionados</span>
+      <strong>$0 MXN</strong>
+    `;
+    extrasList.appendChild(row);
   }
 
   function initFullNameSync(){
@@ -2419,7 +2447,6 @@ if (document.readyState === 'loading') {
 }
 
 
-})();
 
 document.addEventListener('DOMContentLoaded', function() {
     // ===== FUNCIÓN PARA COMBINAR HORA (simplificada) =====
@@ -2580,11 +2607,8 @@ function limpiarTodoYReiniciar() {
             differentDropoff.checked = false;
         }
 
-        // Limpiar Select2 si existe
-        if (typeof $ !== 'undefined' && $.fn.select2) {
-            $('#pickupPlace').val('').trigger('change');
-            $('#dropoffPlace').val('').trigger('change');
-        }
-    }
+// Limpiar Select2 si existe
+if (typeof $ !== 'undefined' && $.fn.select2) {
+    $('#pickupPlace').val('').trigger('change');
+    $('#dropoffPlace').val('').trigger('change');   // ← CORREGIDO
 }
-
