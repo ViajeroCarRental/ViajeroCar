@@ -954,5 +954,5 @@
     </script>
 
     <script src="{{ asset('js/ContratoGlobal.js') }}" defer></script>
-    <script src="{{ asset('js/Contrato2.js') }}" defer></script>
+    <script src="{{ asset('js/contrato2.js') }}" defer></script>
 @endsection
