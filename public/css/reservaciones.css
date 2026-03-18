@@ -743,25 +743,21 @@
     top:14px;
     right:14px;
     z-index:6;
-
     display:inline-flex;
     align-items:center;
     gap:8px;
-
     height:34px;
     padding:0 14px;
     border-radius:999px;
-
     background: rgba(178,34,34,.06);
     border: 2px solid rgba(178,34,34,.22);
     color: #b22222;
-
-    font-weight:900;
-    font-size:13px;
+    font-weight:800;
+    font-size:12px;
     letter-spacing:.2px;
     box-shadow:none;
   }
-  .car-days-badge i{ font-size:14px; }
+  .car-days-badge i{ font-size:13px; }
 
   .car-avatar{
     width:100%;
@@ -955,9 +951,9 @@
   /* ✅ NUEVO ESTILO: textos de categoría + descripción (Step 2) */
   .car-card--v2 .car-top{
     margin:0;
-    font-size:19px;
+    font-size:16.5px;
     font-weight:900;
-    letter-spacing:.35px;
+    letter-spacing:.25px;
     text-transform:uppercase;
     color:#0f172a;
     line-height:1.15;
@@ -989,7 +985,7 @@
     text-underline-offset: 3px;
   }
   .car-card--v2 .car-price--v2 .price-new{
-    font-size:32px;
+    font-size:30px;
   }
   .car-card--v2 .car-price--v2 .price-save{
     margin-top:-2px;
@@ -1104,7 +1100,7 @@
   @media (max-width:560px){
     .car-card--v2{ padding:12px; border-radius:18px; }
     .car-card--v2 .car-hero-img{ height:170px; }
-    .car-card--v2 .car-price--v2 .price-new{ font-size:28px; }
+    .car-card--v2 .car-price--v2 .price-new{ font-size:25px; }
     .car-card--v2 .office-price{ font-size:22px; }
 
     /* si en móvil no cabe, que haga wrap bonito */
