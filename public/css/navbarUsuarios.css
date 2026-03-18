@@ -2038,100 +2038,117 @@ input.flatpickr-input{
     #dropoffWrapper.hidden-dropoff {
         display: none !important;
     }
+/* ===== COLUMNA DE FECHAS (PICK-UP Y DEVOLUCIÓN) ===== */
+.sg-col-datetime {
+    flex: 2.2 !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 12px !important;
+    justify-content: flex-start !important;
+}
 
-    /* ===== COLUMNA DE FECHAS (PICK-UP Y DEVOLUCIÓN) ===== */
-    .sg-col-datetime {
-        flex: 2.2 !important;
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 12px !important;
-        justify-content: flex-start !important;
-    }
+.sg-col-datetime .field {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    align-items: flex-start !important;
+}
 
-    .sg-col-datetime .field {
-        flex: 1 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: flex-end !important;
-        align-items: flex-start !important;
-    }
+.solo-responsivo-izq {
+    display: block !important;
+    height: var(--title-height) !important;
+    margin-bottom: var(--title-margin) !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: #333 !important;
+    text-transform: uppercase !important;
+    line-height: var(--title-height) !important;
+    white-space: nowrap !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    text-align: left !important;
+    width: 100% !important;
+}
 
-    .solo-responsivo-izq {
-        display: block !important;
-        height: var(--title-height) !important;
-        margin-bottom: var(--title-margin) !important;
-        font-size: 14px !important;
-        font-weight: 800 !important;
-        color: #333 !important;
-        text-transform: uppercase !important;
-        line-height: var(--title-height) !important;
-        white-space: nowrap !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        text-align: left !important;
-        width: 100% !important;
-    }
+.datetime-row {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    width: 100% !important;
+    min-height: var(--input-height) !important;
+}
 
+/* Campo de fecha y hora - MISMO TAMAÑO */
+.dt-field:not(.time-field),
+.time-field {
+    flex: 1 1 0 !important;        /* ← MISMO valor para ambos */
+    min-width: 100px !important;    /* ← MISMO mínimo para ambos */
+    position: relative !important;
+}
+
+.dt-field input {
+    padding: 0 8px 0 36px !important;
+    width: 100% !important;
+}
+
+.tp-selects {
+    height: var(--input-height) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: relative !important;
+    width: 100% !important;
+    min-width: 100px !important;    /* ← Ajustado también */
+}
+
+.tp-selects select {
+    padding: 0 8px 0 36px !important;
+    line-height: normal !important;
+    width: 100% !important;
+}
+
+/* ===== ICONOS ===== */
+.dt-field .field-icon {
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: var(--icon-color) !important;
+    font-size: 14px !important;
+    z-index: 3 !important;
+    pointer-events: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1 !important;
+}
+
+.datetime-row {
+    align-items: stretch !important;
+}
+
+.sg-col-datetime .field {
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+/* Responsive para móvil */
+@media (max-width: 560px) {
     .datetime-row {
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 8px !important;
-        width: 100% !important;
-        min-height: var(--input-height) !important;
+        flex-wrap: wrap !important;
     }
 
-    .dt-field {
-        flex: 1 !important;
-        position: relative !important;
-        height: var(--input-height) !important;
+    .dt-field:not(.time-field),
+    .time-field {
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
     }
-
-    .dt-field input {
-        padding: 0 8px 0 36px !important;
-    }
-
-    .tp-selects {
-        height: var(--input-height) !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        position: relative !important;
-    }
-
-    .tp-selects select {
-        padding: 0 8px 0 36px !important;
-        line-height: normal !important;
-    }
-
-    /* ===== ICONOS ===== */
-    .dt-field .field-icon {
-        position: absolute !important;
-        left: 12px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        color: var(--icon-color) !important;
-        font-size: 14px !important;
-        z-index: 3 !important;
-        pointer-events: none !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 16px !important;
-        height: 16px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        line-height: 1 !important;
-    }
-
-    .datetime-row {
-        align-items: stretch !important;
-    }
-
-    .sg-col-datetime .field {
-        height: auto !important;
-        display: flex !important;
-        flex-direction: column !important;
-    }
-
+}
     /* ===== BOTÓN BUSCAR ===== */
     .sg-col-submit {
         flex: 0.35 !important;
@@ -2436,13 +2453,11 @@ body:has(#miBuscador.search-card.active) .car-connect {
         position: relative !important;
         width: 50% !important;
     }
-
-    .time-field {
-        display: flex !important;
-        flex-direction: column !important;
-        width: 100% !important;
-        position: relative !important;
-    }
+.time-field {
+    min-width: 140px !important;
+    width: auto !important;
+    flex: 1.2 1 auto !important;  /
+}
 
     .time-field .tp-selects {
         display: flex !important;
@@ -2489,6 +2504,8 @@ body:has(#miBuscador.search-card.active) .car-connect {
 
     .dt-field:not(.time-field) {
         position: relative !important;
+
+    min-width: 120px !important;
     }
 
     .dt-field:not(.time-field) input {
@@ -3260,6 +3277,7 @@ span.flatpickr-weekday {
     }
 }
 
+
 /* ============================================================
    POSICIÓN PARA TABLET Y MÓVI
 ============================================================ */
@@ -3500,4 +3518,444 @@ i.fa,
 [class*="fa-"] {
   line-height: 1 !important;
   vertical-align: middle;
+}
+
+/* ==========================================================
+              CAMBIO DE IDIOMA
+========================================================== */
+.idioma-selector {
+  position: relative;
+  display: inline-block;
+}
+
+.idioma-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.idioma-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.idioma-btn .bandera-svg {
+  width: 20px;
+  height: 15px;
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.idioma-btn .idioma-activo {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.idioma-btn i {
+  font-size: 12px;
+  opacity: 0.7;
+  transition: transform 0.2s ease;
+}
+
+.idioma-selector.active .idioma-btn i {
+  transform: rotate(180deg);
+}
+
+.idioma-dropdown {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  min-width: 100px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.idioma-selector.active .idioma-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.idioma-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.idioma-option:last-child {
+  border-bottom: none;
+}
+
+.idioma-option:hover {
+  background: #f8f8f8;
+}
+
+.idioma-option.active {
+  background: #f0f0f0;
+  color: #b22222;
+}
+
+.idioma-option .bandera-svg {
+  width: 20px;
+  height: 15px;
+  border-radius: 3px;
+}
+
+.idioma-option i.fa-check {
+  margin-left: auto;
+  color: #b22222;
+  font-size: 14px;
+}
+/* ============================================================
+    SOLO CORRECCIONES PARA CAMPO DE HORA - ICONO Y ALERTA
+============================================================ */
+
+/* Icono de reloj - CORREGIDO (centrado verticalmente) */
+.time-field::before {
+    content: "\f017" !important;
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 400 !important;
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 16px !important;
+    color: #9ca3af !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10 !important;
+    pointer-events: none !important;
+    /* Asegurar centrado perfecto */
+    margin-top: 0 !important;
+    line-height: 1 !important;
+}
+
+/* Mensaje de error de hora - CORREGIDO (subido) */
+.time-field .error-msg {
+    position: absolute !important;
+    bottom: -18px !important;  /* Subido de -20px a -18px */
+    left: 12px !important;
+    color: #e53935 !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    z-index: 5 !important;
+    line-height: 1.2 !important;
+}
+
+/* Ocultar el icono original del campo de hora */
+.time-field .field-icon {
+    display: none !important;
+}
+
+/* Ajuste responsive para móvil */
+@media (max-width: 560px) {
+    .time-field::before {
+        left: 10px !important;
+        font-size: 15px !important;
+    }
+
+    .time-field .error-msg {
+        bottom: -16px !important;  /* Subido para móvil */
+        font-size: 10px !important;
+    }
+}
+/* ============================================================
+    ESTILOS CORREGIDOS PARA SELECTS DE HORA - VERSIÓN FINAL
+============================================================ */
+
+/* Contenedor del select de hora */
+.tp-selects {
+    display: flex !important;
+    gap: 8px !important;
+    width: 100% !important;
+    height: 48px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: relative !important;
+}
+
+/* Estilo del select - FORZAR APARIENCIA NORMAL */
+.tp-selects select {
+    width: 100% !important;
+    height: 48px !important;
+    border: 1px solid #ccc !important;
+    border-radius: 8px !important;
+    padding: 0 8px 0 36px !important;
+    font-size: 14px !important;
+    color: #333 !important;
+    background-color: white !important;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 12px !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    line-height: normal !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+}
+
+/* Estilo cuando el select está abierto */
+.tp-selects select:focus {
+    border-color: #b22222 !important;
+    box-shadow: 0 0 0 3px rgba(178,34,34,.15) !important;
+}
+
+/* FECHA Y HORA - MISMO TAMAÑO */
+.dt-field:not(.time-field),
+.time-field {
+    flex: 1 1 120px !important;
+    min-width: 120px !important;
+    position: relative !important;
+}
+
+/* Icono de reloj */
+.time-field::before {
+    content: "\f017" !important;
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 400 !important;
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 16px !important;
+    color: #9ca3af !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 10 !important;
+    pointer-events: none !important;
+}
+
+/* Ocultar icono original */
+.time-field .field-icon {
+    display: none !important;
+}
+
+/* Ocultar input original */
+.tp-hidden-input {
+    display: none !important;
+}
+
+/* Mensaje de error */
+.time-field .error-msg {
+    position: absolute !important;
+    bottom: -18px !important;
+    left: 12px !important;
+    color: #e53935 !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    z-index: 5 !important;
+}
+
+/* Responsive para tablet */
+@media (min-width: 561px) and (max-width: 1124px) {
+    .dt-field:not(.time-field),
+    .time-field {
+        flex: 1 1 120px !important;
+        min-width: 120px !important;
+    }
+}
+
+/* Responsive para móvil */
+@media (max-width: 560px) {
+    .dt-field:not(.time-field),
+    .time-field {
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+
+    .tp-selects select {
+        font-size: 16px !important;
+    }
+}
+/* ============================================================
+   CARRUSEL 3 - VERSIÓN EXTREMA (MUCHO MÁS PEQUEÑO)
+============================================================ */
+
+/* Tarjeta extremadamente pequeña */
+#fleet-carousel-3 .car-card {
+    min-height: auto !important;
+    max-height: 220px !important;  /* MUCHO MÁS BAJO */
+    padding: 5px !important;
+}
+
+/* Imagen miniatura */
+#fleet-carousel-3 .car-media {
+    height: 60px !important;
+    margin: 0 !important;
+}
+
+#fleet-carousel-3 .car-media img {
+    max-height: 55px !important;
+}
+
+/* Títulos en miniatura */
+#fleet-carousel-3 .car-title h3 {
+    font-size: 10px !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+
+#fleet-carousel-3 .car-title p {
+    font-size: 8px !important;
+    margin: 0 !important;
+    line-height: 1 !important;
+}
+
+/* Especificaciones ultra compactas */
+#fleet-carousel-3 .car-specs {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 2px !important;
+    margin: 1px 0 !important;
+    padding: 0 !important;
+}
+
+#fleet-carousel-3 .car-specs li {
+    font-size: 7px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    background: #f5f5f5 !important;
+    padding: 1px 3px !important;
+    border-radius: 3px !important;
+    margin: 0 !important;
+}
+
+#fleet-carousel-3 .car-specs i {
+    font-size: 6px !important;
+    margin-right: 1px !important;
+}
+
+/* Badge de oferta ultra pequeño */
+#fleet-carousel-3 .offer-badge {
+    font-size: 7px !important;
+    padding: 1px 3px !important;
+    right: 3px !important;
+    top: 3px !important;
+    border-radius: 3px !important;
+    box-shadow: 0 2px 4px rgba(178,34,34,0.3) !important;
+}
+
+/* Precios ultra compactos */
+#fleet-carousel-3 .price-line {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 2px !important;
+    margin: 1px 0 !important;
+}
+
+#fleet-carousel-3 .price-now {
+    font-size: 10px !important;
+    font-weight: 800 !important;
+}
+
+#fleet-carousel-3 .per {
+    font-size: 6px !important;
+    margin-left: -1px !important;
+}
+
+#fleet-carousel-3 .price-old {
+    font-size: 7px !important;
+    text-decoration: line-through !important;
+    color: #999 !important;
+}
+
+/* Chips de conectividad ultra pequeños */
+#fleet-carousel-3 .car-connect {
+    display: flex !important;
+    gap: 2px !important;
+    margin: 1px 0 !important;
+}
+
+#fleet-carousel-3 .badge-chip {
+    font-size: 6px !important;
+    padding: 1px 2px !important;
+    border-radius: 3px !important;
+    gap: 1px !important;
+    line-height: 1 !important;
+}
+
+#fleet-carousel-3 .badge-chip i {
+    font-size: 6px !important;
+}
+
+/* Botón CTA ultra pequeño */
+#fleet-carousel-3 .car-cta {
+    padding: 3px !important;
+    font-size: 8px !important;
+    margin-top: 1px !important;
+    border-radius: 3px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.2px !important;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+    #fleet-carousel-3 .car-card {
+        max-height: 200px !important;
+    }
+
+    #fleet-carousel-3 .car-media {
+        height: 50px !important;
+    }
+
+    #fleet-carousel-3 .car-media img {
+        max-height: 45px !important;
+    }
+}
+
+@media (max-width: 560px) {
+    #fleet-carousel-3 .car-card {
+        max-height: 180px !important;
+        padding: 4px !important;
+    }
+
+    #fleet-carousel-3 .car-media {
+        height: 45px !important;
+    }
+
+    #fleet-carousel-3 .car-media img {
+        max-height: 40px !important;
+    }
+
+    #fleet-carousel-3 .car-specs li {
+        font-size: 6px !important;
+        padding: 1px 2px !important;
+    }
+
+    #fleet-carousel-3 .price-now {
+        font-size: 9px !important;
+    }
 }

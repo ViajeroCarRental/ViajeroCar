@@ -420,6 +420,47 @@
 
 <!-- Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const idiomaBtn = document.getElementById('idiomaBtn');
+  const idiomaSelector = document.querySelector('.idioma-selector');
+
+  if (idiomaBtn && idiomaSelector) {
+    // Toggle al hacer click en el botón
+    idiomaBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      idiomaSelector.classList.toggle('active');
+    });
+
+    // Cerrar al hacer click fuera
+    document.addEventListener('click', function(e) {
+      if (!idiomaSelector.contains(e.target)) {
+        idiomaSelector.classList.remove('active');
+      }
+    });
+
+    // Cerrar con tecla ESC
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        idiomaSelector.classList.remove('active');
+      }
+    });
+
+    // Evitar que los clicks en las opciones cierren sin navegar
+    const opciones = document.querySelectorAll('.idioma-option');
+    opciones.forEach(opcion => {
+      opcion.addEventListener('click', function(e) {
+        // Dejar que el enlace haga su trabajo normal
+        // pero cerrar el dropdown (opcional)
+        setTimeout(() => {
+          idiomaSelector.classList.remove('active');
+        }, 100);
+      });
+    });
+  }
+});
+</script>
 
 </body>
 </html>

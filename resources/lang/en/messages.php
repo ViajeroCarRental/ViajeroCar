@@ -142,6 +142,8 @@ return [
     'ubicacion_requerida' => 'Location Required',
     'fecha_requerida' => 'Date Required',
     'hora_requerida' => 'Time Required',
+    'otra_reserva' => 'Another booking',
+    'rent_tu_auto' => 'RENT YOUR CAR WITH VIAJERO',
 
      // ==================== CONTACT ====================
     'contacto_titulo' => 'Contact',
@@ -575,6 +577,9 @@ return [
     'ubicacion_requerida' => 'Location Required',
     'fecha_requerida' => 'Date Required',
     'hora_requerida' => 'Time Required',
+    // ==================== CHECKBOX (with line break) ====================
+'devolver_en_otro_1' => 'Return in',
+'devolver_en_otro_2' => 'another location',
 
     // ==================== STEP 2 ====================
     'selecciona_categoria' => 'Select your category',
@@ -585,6 +590,18 @@ return [
     'pagar_en_oficina' => 'PAY AT OFFICE',
     'ahorra' => 'Save',
     'no_categorias' => 'No categories available.',
+        // ==================== CATEGORIES ====================
+'categoria_1' => 'COMPACT',
+'categoria_2' => 'MIDSIZE',
+'categoria_3' => 'LARGE',
+'categoria_4' => 'FULL SIZE',
+'categoria_5' => 'COMPACT SUV',
+'categoria_6' => 'MID-SIZE SUV',
+'categoria_7' => 'COMPACT FAMILY SUV',
+'categoria_8' => 'MINIVAN',
+'categoria_9' => 'FAMILY VAN',
+'categoria_10' => 'DOUBLE CAB PICK UP',
+'categoria_11' => '4X4 DOUBLE CAB PICK UP',
 
     // ==================== STEP 3 ====================
     'selecciona_adicionales' => 'Select the additional options you want',
@@ -602,6 +619,13 @@ return [
     'por_dia' => '/ day',
     'max_3' => 'Max 3',
     'no_complementos' => 'No extras available at this time.',
+    // ==================== SERVICES (EXTRAS) ====================
+'servicio_silla_bebe' => 'BABY SEAT',
+'servicio_silla_bebe_desc' => 'Safety seat for baby.',
+'servicio_gasolina_prepago' => 'PREPAID GASOLINE',
+'servicio_gasolina_prepago_desc' => 'Cost per liter x number of liters in the car.',
+'servicio_conductor_adicional' => 'ADDITIONAL DRIVER',
+'servicio_conductor_adicional_desc' => 'Add an extra driver.',
 
     // ==================== STEP 4 ====================
     'datos_personales' => 'Personal information',
@@ -638,6 +662,22 @@ return [
     'reelevo_responsabilidad' => 'Liability Waiver (LI)',
     'sin_complementos' => 'No extras selected',
     'sin_cargos' => 'No additional charges',
+    'resumen_pago' => 'Payment summary',
+    'prepagar_en_linea_btn' => 'PREPAY ONLINE',
+    'pagar_en_oficina_btn' => 'PAY AT OFFICE',
+    'cancelar' => 'Cancel',
+    // Success messages for reservations
+'reserva_exitosa' => 'Your reservation has been successfully recorded.',
+'itinerario' => 'Itinerary',
+'folio' => 'Folio',
+'entrega' => 'Pick-up',
+'devolucion' => 'Return',
+'resumen_pago' => 'Payment summary',
+'tarifa_base' => 'Base rate',
+'opciones_renta' => 'Rental options',
+'cargos_e_iva' => 'Charges and VAT (16%)',
+'total' => 'Total',
+'confirmacion_correo' => 'You will receive confirmation by email.',
 
     // ==================== PROTECTIONS MODAL ====================
     'relevos_detalle' => 'See the details of each pack and what it includes.',
@@ -884,5 +924,51 @@ return [
     'aviso_privacidad' => 'PRIVACY NOTICE',
     'politica_limpieza' => 'CLEANING POLICY',
     'politica_renta' => 'RENTAL POLICY',
+
+// Días de la semana (abreviados)
+'dom' => 'Sun',
+'lun' => 'Mon',
+'mar' => 'Tue',
+'mie' => 'Wed',
+'jue' => 'Thu',
+'vie' => 'Fri',
+'sab' => 'Sat',
+
+// Días de la semana (completos)
+'domingo' => 'Sunday',
+'lunes' => 'Monday',
+'martes' => 'Tuesday',
+'miercoles' => 'Wednesday',
+'jueves' => 'Thursday',
+'viernes' => 'Friday',
+'sabado' => 'Saturday',
+
+// Meses (abreviados)
+'ene' => 'Jan',
+'feb' => 'Feb',
+'mar' => 'Mar',
+'abr' => 'Apr',
+'may' => 'May',
+'jun' => 'Jun',
+'jul' => 'Jul',
+'ago' => 'Aug',
+'sep' => 'Sep',
+'oct' => 'Oct',
+'nov' => 'Nov',
+'dic' => 'Dec',
+
+// Meses (completos)
+'enero' => 'January',
+'febrero' => 'February',
+'marzo' => 'March',
+'abril' => 'April',
+'mayo' => 'May',
+'junio' => 'June',
+'julio' => 'July',
+'agosto' => 'August',
+'septiembre' => 'September',
+'octubre' => 'October',
+'noviembre' => 'November',
+'diciembre' => 'December',
 
 ];

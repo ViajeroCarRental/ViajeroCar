@@ -108,6 +108,12 @@
 
   function createTimeSelectsBelow(input, opts) {
     const { hourMax = 24, defaultValue = "12:00" } = (opts || {});
+
+    // Usar traducciones de window.politicasTranslations
+    const translations = window.politicasTranslations || {
+        hora: "Hora"  // Valor por defecto
+    };
+
     const wrap = input.closest(".time-field") || input.parentElement;
     if (wrap && wrap.querySelector(".tp-selects")) return;
 
@@ -116,45 +122,46 @@
 
     const selH = document.createElement("select");
     selH.className = "tp-hour";
-    selH.setAttribute("aria-label", "Hora");
-    selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>Hora</option>`);
+    selH.setAttribute("aria-label", translations.hora);
+
+    // Placeholder con el texto traducido
+    selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>${translations.hora}</option>`);
 
     for (let h = 1; h <= hourMax; h++) {
-      const op = document.createElement("option");
-      op.value = String(h);
-      op.textContent = pad2(h);
-      selH.appendChild(op);
+        const op = document.createElement("option");
+        op.value = String(h);
+        op.textContent = pad2(h);
+        selH.appendChild(op);
     }
 
     function sync() {
-      const finalH = pad2(Number(selH.value || 0));
-      input.value = `${finalH}:00`;
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.dispatchEvent(new Event("change", { bubbles: true }));
+        const finalH = pad2(Number(selH.value || 0));
+        input.value = `${finalH}:00`;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
     }
 
     selH.addEventListener("change", sync);
     box.appendChild(selH);
 
     if (wrap) {
-      wrap.appendChild(box);
+        wrap.appendChild(box);
     } else {
-      input.insertAdjacentElement("afterend", box);
+        input.insertAdjacentElement("afterend", box);
     }
 
     if (input.value && input.value !== "12:00") {
-      const defaultHour = input.value.split(':')[0];
-      const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
-      if (option) {
-        option.selected = true;
-        sync();
-      }
+        const defaultHour = input.value.split(':')[0];
+        const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
+        if (option) {
+            option.selected = true;
+            sync();
+        }
     } else {
-      selH.selectedIndex = 0;
-      input.value = "";
+        selH.selectedIndex = 0;
+        input.value = "";
     }
-  }
-
+}
   function initAnalogTime(id) {
     const input = document.getElementById(id);
     if (!input) return;
@@ -493,7 +500,6 @@ function setupValidation() {
         if (checkbox && checkbox.checked) {
             selects.push({ id: 'dropoffPlacePoliticas', msg: translations.ubicacion_requerida || 'Ubicación Requerida' });
         }
-
         selects.forEach(campo => {
             const select = document.getElementById(campo.id);
             if (!select) return;
@@ -611,64 +617,7 @@ function setupValidation() {
     });
 }
 
-  // =========================
-  //  FLATPICKR - FORMATO dd-mmm-yyyy (mes abreviado 3 letras)
-  // =========================
-  function setupFlatpickr() {
-    if (typeof flatpickr === 'undefined') {
-      console.error('Flatpickr no está cargado');
-      return;
-    }
 
-    console.log(' Flatpickr detectado, inicializando...');
-
-    const localeEs = {
-      firstDayOfWeek: 1,
-      weekdays: {
-        shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
-        longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-      },
-      months: {
-        shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-        longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-      }
-    };
-
-    const pickupInput = document.getElementById('pickupDatePoliticas');
-    if (pickupInput) {
-      flatpickr(pickupInput, {
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d-M-Y",
-        minDate: "today",
-        allowInput: true,
-        locale: localeEs,
-        onChange: function(selectedDates, dateStr, instance) {
-          console.log('Pickup date changed:', dateStr);
-          if (selectedDates[0]) {
-            const dropoffPicker = document.getElementById('dropoffDatePoliticas')._flatpickr;
-            if (dropoffPicker) {
-              dropoffPicker.set('minDate', selectedDates[0]);
-            }
-          }
-        }
-      });
-      console.log(' Pickup date inicializado');
-    }
-
-    const dropoffInput = document.getElementById('dropoffDatePoliticas');
-    if (dropoffInput) {
-      flatpickr(dropoffInput, {
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d-M-Y",
-        minDate: "today",
-        allowInput: true,
-        locale: localeEs
-      });
-      console.log(' Dropoff date inicializado');
-    }
-  }
 
   // =========================
   //  MODAL
@@ -839,7 +788,7 @@ function setupValidation() {
   initAnalogTime("pickupTimePoliticas");
   initAnalogTime("dropoffTimePoliticas");
 
-  setupFlatpickr();
+
   setDefaultDates();
   initBuscadorPoliticas();
 

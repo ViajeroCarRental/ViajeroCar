@@ -80,6 +80,13 @@
         $requestedStep = (int) request('step', 1);
         $controllerStep = isset($step) ? (int) $step : null;
 
+        $pickupSucursalId = $f['pickup_sucursal_id'] ?? request('pickup_sucursal_id');
+        $dropoffSucursalId = $f['dropoff_sucursal_id'] ?? request('dropoff_sucursal_id');
+
+        if (empty($dropoffSucursalId) && !empty($pickupSucursalId)) {
+        $dropoffSucursalId = $pickupSucursalId;
+        }
+
         $isFreshEntry = empty($pickupSucursalId) || empty($dropoffSucursalId);
         $stepCurrent = $isFreshEntry ? 1 : $controllerStep ?? $requestedStep;
         if ($stepCurrent >= 2 && $isFreshEntry) {
@@ -149,7 +156,7 @@
         $autoTitulo =
             $categoriaSel && isset($categoriaSel->descripcion) && trim((string) $categoriaSel->descripcion) !== ''
                 ? (string) $categoriaSel->descripcion
-                : __('messages.auto_similar');
+                : __('messages.auto_o_similar');
 
         // ✅ Línea secundaria
         $catNombreUpper =
@@ -158,7 +165,7 @@
         $catCodigoUpper =
             $categoriaSel && isset($categoriaSel->codigo) ? strtoupper((string) $categoriaSel->codigo) : '';
 
-        $autoSubtitulo = $catCodigoUpper ? $catNombreUpper . ' | ' . __('messages.categoria') . ' ' . $catCodigoUpper : $catNombreUpper;
+        $autoSubtitulo = $catCodigoUpper ? $catNombreUpper . ' | ' . __('messages.categoria_abrev') . ' ' . $catCodigoUpper : $catNombreUpper;
 
         // ✅ IMÁGENES
         $catImages = [
@@ -167,7 +174,7 @@
             3 => asset('img/jetta.png'),
             4 => asset('img/camry.png'),
             5 => asset('img/renegade.png'),
-            6 => asset('img/seltos.png'),
+            6 => asset('img/taos.png'),
             7 => asset('img/avanza.png'),
             8 => asset('img/Odyssey.png'),
             9 => asset('img/Hiace.png'),
@@ -222,12 +229,25 @@
             $categoriaSel && isset($categoriaSel->nombre) ? strtoupper((string) $categoriaSel->nombre) : 'COMPACTO';
 
         // ✅ SOLO estos extras (Step 3) — máximo 3 por cada uno (lo limita tu JS)
-        $allowedExtras = ['silla para bebé', 'conductor adicional', 'gasolina prepago'];
-
         $serviciosFiltrados = collect($servicios ?? [])
-            ->filter(function ($s) use ($allowedExtras) {
+            ->filter(function ($s) {
+
                 $name = mb_strtolower(trim((string) ($s->nombre ?? '')));
-                return in_array($name, $allowedExtras, true);
+
+                return str_contains($name, 'silla')
+                    || str_contains($name, 'gasolina prepago')
+                    || str_contains($name, 'conductor adicional');
+            })
+            ->sortBy(function ($s) {
+
+                $name = mb_strtolower(trim((string) ($s->nombre ?? '')));
+
+                if (str_contains($name, 'silla')) return 1;
+                if (str_contains($name, 'gasolina')) return 2;
+                if (str_contains($name, 'conductor')) return 3;
+
+                return 99;
+
             })
             ->values();
     @endphp
@@ -369,7 +389,7 @@
     <div class="btn-buscador-movil">
         <div class="btn-container">
             <p style="margin-bottom: 12px; font-weight: 700; color: #333; font-size: 16px;">
-                {{ __('messages.encuentra_tu_aqui') }}
+                {{ __('messages.encuentra_tu_auto_aqui') }}
             </p>
             <button type="button" id="btn-abrir-buscador-reservas"
                     style="background-color: #b22222;
@@ -417,11 +437,11 @@
                 <div class="sg-col sg-col-location">
                     <div class="location-head">
                         <span class="field-title">{{ __('messages.lugar_de_renta') }}</span>
-                        <label class="inline-check" for="differentDropoff">
-                            <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1"
-                                {{ request('different_dropoff') ? 'checked' : '' }}>
-                            <span>{{ __('messages.devolver_en_otro') }}</span>
-                        </label>
+                       <label class="inline-check" for="differentDropoff">
+    <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1"
+        {{ request('different_dropoff') ? 'checked' : '' }}>
+    <span>{{ __('messages.devolver_en_otro_1') }}<br>{{ __('messages.devolver_en_otro_2') }}</span>
+</label>
                     </div>
 
                     <div class="location-inputs-wrapper" id="locationInputsWrapper">
@@ -429,7 +449,7 @@
                         <div class="field icon-field" id="pickupField">
                             <span class="field-icon"><i id="pickupIcon" class="fa-solid fa-location-dot"></i></span>
                             <select id="pickupPlace" name="pickup_sucursal_id" required>
-                                <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}>{{ __('messages.donde_inicia') }}</option>
+                           <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}>{{ __('messages.donde_termina') }}</option>
                                 @foreach ($ciudades->where('nombre', 'Querétaro') as $ciudad)
                                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                         @foreach ($ciudad->sucursalesActivas ?? [] as $suc)
@@ -459,7 +479,7 @@
                         <div class="field icon-field" id="dropoffWrapper" style="display: {{ request('different_dropoff') ? 'block' : 'none' }};">
                             <span class="field-icon"><i id="dropoffIcon" class="fa-solid fa-location-dot"></i></span>
                             <select id="dropoffPlace" name="dropoff_sucursal_id">
-                                <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}>{{ __('messages.donde_termina') }}</option>
+                             <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}>{{ __('messages.donde_termina_viaje') }}</option>
                                 @foreach ($ciudades as $ciudad)
                                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                         @foreach ($ciudad->sucursalesActivas ?? [] as $suc)
@@ -548,7 +568,6 @@
                 ========================= --}}
                 <div class="sg-col sg-col-submit">
                     <div class="actions">
-                        <button type="button" class="btn btn-ghost" onclick="limpiarTodoYReiniciar()">{{ __('messages.limpiar') }}</button>
                         <button type="submit" class="btn btn-primary">{{ __('messages.siguiente') }}</button>
                     </div>
                 </div>
@@ -631,64 +650,170 @@
                 }
             }
 
-            // ============================================================
-            // INICIALIZAR FLATPICKR CON SOPORTE PARA ALTINPUT
-            // ============================================================
-            if (typeof flatpickr !== 'undefined') {
-                // Para pickup date
-                const startInput = document.getElementById('start');
-                if (startInput) {
-                    startInput._flatpickr = flatpickr(startInput, {
-                        dateFormat: "Y-m-d",
-                        altInput: true,
-                        altFormat: "d M Y",
-                        minDate: "today",
-                        locale: {
-                            firstDayOfWeek: 1,
-                            months: {
-                                shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-                                longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-                            }
-                        },
-                        onChange: function(selectedDates, dateStr, instance) {
-                            // Sincronizar clases entre el input original y el altInput
-                            if (dateStr) {
-                                instance.altInput.classList.add('field-success');
-                                instance.altInput.classList.remove('field-error');
-                            } else {
-                                instance.altInput.classList.remove('field-success', 'field-error');
-                            }
-                        }
-                    });
+  // ============================================================
+// INICIALIZAR FLATPICKR CON TRADUCCIONES DE LARAVEL (VERSIÓN DEFINITIVA)
+// ============================================================
+if (typeof flatpickr !== 'undefined') {
+
+    // Obtener idioma actual desde el HTML (recomendado)
+    const currentLang = document.documentElement.lang || 'es';
+    console.log('🌐 IDIOMA DETECTADO PARA FLATPICKR:', currentLang);
+
+    // Configuración con traducciones de Laravel
+    const localeConfig = {
+        firstDayOfWeek: 1,
+        weekdays: {
+            shorthand: [
+                '{{ __("messages.dom") }}',
+                '{{ __("messages.lun") }}',
+                '{{ __("messages.mar") }}',
+                '{{ __("messages.mie") }}',
+                '{{ __("messages.jue") }}',
+                '{{ __("messages.vie") }}',
+                '{{ __("messages.sab") }}'
+            ],
+            longhand: [
+                '{{ __("messages.domingo") }}',
+                '{{ __("messages.lunes") }}',
+                '{{ __("messages.martes") }}',
+                '{{ __("messages.miercoles") }}',
+                '{{ __("messages.jueves") }}',
+                '{{ __("messages.viernes") }}',
+                '{{ __("messages.sabado") }}'
+            ]
+        },
+        months: {
+            shorthand: [
+                '{{ __("messages.ene") }}',
+                '{{ __("messages.feb") }}',
+                '{{ __("messages.mar") }}',
+                '{{ __("messages.abr") }}',
+                '{{ __("messages.may") }}',
+                '{{ __("messages.jun") }}',
+                '{{ __("messages.jul") }}',
+                '{{ __("messages.ago") }}',
+                '{{ __("messages.sep") }}',
+                '{{ __("messages.oct") }}',
+                '{{ __("messages.nov") }}',
+                '{{ __("messages.dic") }}'
+            ],
+            longhand: [
+                '{{ __("messages.enero") }}',
+                '{{ __("messages.febrero") }}',
+                '{{ __("messages.marzo") }}',
+                '{{ __("messages.abril") }}',
+                '{{ __("messages.mayo") }}',
+                '{{ __("messages.junio") }}',
+                '{{ __("messages.julio") }}',
+                '{{ __("messages.agosto") }}',
+                '{{ __("messages.septiembre") }}',
+                '{{ __("messages.octubre") }}',
+                '{{ __("messages.noviembre") }}',
+                '{{ __("messages.diciembre") }}'
+            ]
+        }
+    };
+
+    // Formato según idioma
+    const altFormat = currentLang === 'en' ? "M d, Y" : "d M Y";
+
+    // Función para sincronizar clases de validación
+    function syncValidationClasses(altInput, hiddenInput) {
+        if (!altInput || !hiddenInput) return;
+
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'class') {
+                    if (hiddenInput.classList.contains('field-error')) {
+                        altInput.classList.add('field-error');
+                    } else {
+                        altInput.classList.remove('field-error');
+                    }
+                    if (hiddenInput.classList.contains('field-success')) {
+                        altInput.classList.add('field-success');
+                    } else {
+                        altInput.classList.remove('field-success');
+                    }
+                }
+            });
+        });
+        observer.observe(hiddenInput, { attributes: true });
+    }
+
+    // Inicializar pickup date
+    const startInput = document.getElementById('start');
+    if (startInput) {
+        // Destruir instancia anterior si existe
+        if (startInput._flatpickr) {
+            startInput._flatpickr.destroy();
+        }
+
+        startInput._flatpickr = flatpickr(startInput, {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: altFormat,
+            minDate: "today",
+            locale: localeConfig,
+            onReady: function(selectedDates, dateStr, instance) {
+                const hiddenInput = document.getElementById('start');
+                syncValidationClasses(instance.altInput, hiddenInput);
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                const hiddenInput = document.getElementById('start');
+                hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+                // Actualizar minDate del dropoff
+                if (selectedDates[0]) {
+                    const dropoffPicker = document.getElementById('end')._flatpickr;
+                    if (dropoffPicker) {
+                        dropoffPicker.set('minDate', selectedDates[0]);
+                    }
                 }
 
-                // Para dropoff date
-                const endInput = document.getElementById('end');
-                if (endInput) {
-                    endInput._flatpickr = flatpickr(endInput, {
-                        dateFormat: "Y-m-d",
-                        altInput: true,
-                        altFormat: "d M Y",
-                        minDate: "today",
-                        locale: {
-                            firstDayOfWeek: 1,
-                            months: {
-                                shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-                                longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-                            }
-                        },
-                        onChange: function(selectedDates, dateStr, instance) {
-                            // Sincronizar clases entre el input original y el altInput
-                            if (dateStr) {
-                                instance.altInput.classList.add('field-success');
-                                instance.altInput.classList.remove('field-error');
-                            } else {
-                                instance.altInput.classList.remove('field-success', 'field-error');
-                            }
-                        }
-                    });
+                if (dateStr) {
+                    instance.altInput.classList.add('field-success');
+                    instance.altInput.classList.remove('field-error');
+                } else {
+                    instance.altInput.classList.remove('field-success', 'field-error');
                 }
             }
+        });
+        console.log('✅ Calendario pickup inicializado');
+    }
+
+    // Inicializar dropoff date
+    const endInput = document.getElementById('end');
+    if (endInput) {
+        // Destruir instancia anterior si existe
+        if (endInput._flatpickr) {
+            endInput._flatpickr.destroy();
+        }
+
+        endInput._flatpickr = flatpickr(endInput, {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: altFormat,
+            minDate: "today",
+            locale: localeConfig,
+            onReady: function(selectedDates, dateStr, instance) {
+                const hiddenInput = document.getElementById('end');
+                syncValidationClasses(instance.altInput, hiddenInput);
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                const hiddenInput = document.getElementById('end');
+                hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+                if (dateStr) {
+                    instance.altInput.classList.add('field-success');
+                    instance.altInput.classList.remove('field-error');
+                } else {
+                    instance.altInput.classList.remove('field-success', 'field-error');
+                }
+            }
+        });
+        console.log('✅ Calendario dropoff inicializado');
+    }
+}
 
             // Inicializar iconos en selects
             function updateSelectIcon(select, iconElement) {
@@ -851,9 +976,19 @@
             // ============================================================
             const form = document.getElementById('step1Form');
 
+            // 🔥 NUEVO: Objeto de traducciones para validaciones
+            const translations = {
+                ubicacion_requerida: "{{ __('messages.ubicacion_requerida') }}",
+                fecha_requerida: "{{ __('messages.fecha_requerida') }}",
+                hora_requerida: "{{ __('messages.hora_requerida') }}"
+            };
+
             if (form) {
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
+
+                     console.log("SUBMIT DETECTADO");
+
                     limpiarErrores();
 
                     let valido = true;
@@ -862,7 +997,7 @@
                     const pickup = document.getElementById('pickupPlace');
                     if (!pickup.value) {
                         valido = false;
-                        mostrarError(pickup, '{{ __("messages.ubicacion_requerida") }}');
+                        mostrarError(pickup, translations.ubicacion_requerida);
                     } else {
                         pickup.classList.add('field-success');
                     }
@@ -872,7 +1007,7 @@
                     const dropoff = document.getElementById('dropoffPlace');
                     if (differentDropoff.checked && !dropoff.value) {
                         valido = false;
-                        mostrarError(dropoff, '{{ __("messages.ubicacion_requerida") }}');
+                        mostrarError(dropoff, translations.ubicacion_requerida);
                     } else if (differentDropoff.checked) {
                         dropoff.classList.add('field-success');
                     }
@@ -881,7 +1016,7 @@
                     const start = document.getElementById('start');
                     if (!start.value) {
                         valido = false;
-                        mostrarError(start, '{{ __("messages.fecha_requerida") }}');
+                        mostrarError(start, translations.fecha_requerida);
                     } else {
                         if (start._flatpickr && start._flatpickr.altInput) {
                             start._flatpickr.altInput.classList.add('field-success');
@@ -893,7 +1028,7 @@
                     const end = document.getElementById('end');
                     if (!end.value) {
                         valido = false;
-                        mostrarError(end, '{{ __("messages.fecha_requerida") }}');
+                        mostrarError(end, translations.fecha_requerida);
                     } else {
                         if (end._flatpickr && end._flatpickr.altInput) {
                             end._flatpickr.altInput.classList.add('field-success');
@@ -906,7 +1041,7 @@
                     const pickupH = document.getElementById('pickup_h');
                     if (!pickupH.value) {
                         valido = false;
-                        mostrarError(pickupH, '{{ __("messages.hora_requerida") }}');
+                        mostrarError(pickupH, translations.hora_requerida);
                     } else {
                         pickupH.classList.add('field-success');
                     }
@@ -914,7 +1049,7 @@
                     const dropoffH = document.getElementById('dropoff_h');
                     if (!dropoffH.value) {
                         valido = false;
-                        mostrarError(dropoffH, '{{ __("messages.hora_requerida") }}');
+                        mostrarError(dropoffH, translations.hora_requerida);
                     } else {
                         dropoffH.classList.add('field-success');
                     }
@@ -969,7 +1104,9 @@
                 }
             }
         }
+        console.log("Formulario valido:", valido);
     </script>
+
 @endif
                 {{-- ===================== STEP 2 ===================== --}}
 
@@ -1022,7 +1159,7 @@
                                 // *** SOLO CAMBIAMOS ESTA LÍNEA ***
                                 // Antes: $desc = $cat->ejemplo ?? ($cat->descripcion ?? 'Auto o similar.');
                                 // Ahora: Usamos directamente la descripción de la categoría
-                                $desc = $cat->descripcion ?? __('messages.auto_similar');
+                                $desc = $cat->descripcion ?? __('messages.auto_o_similar');
 
                                 $ahorroPct =
                                     $mostradorTotal > 0
@@ -1037,7 +1174,7 @@
                                 <div class="car-body">
                                     {{-- 1. Agrupamos el Título y el Badge en una nueva fila --}}
                                     <div class="car-header-row">
-                                        <div class="car-top">{{ strtoupper($cat->nombre) }}</div>
+                                        <div class="car-top">{{ strtoupper(__('messages.categoria_' . $cat->id_categoria)) }}</div>
 
                                         {{-- El badge ahora vive aquí arriba, al lado del título --}}
                                         <div class="car-days-badge car-days-badge--v2">
@@ -1137,553 +1274,655 @@
                     </div>
                 @endif
 
-                {{-- ===================== STEP 3 ===================== --}}
-                @if ($stepCurrent === 3)
-                    <header class="wizard-head">
-                        <h2>{{ __('messages.selecciona_adicionales') }}</h2>
-                        <p>{{ __('messages.revisa_protecciones') }}</p>
-                    </header>
-
-                    <input type="hidden" id="addonsHidden" value="{{ $addonsParam }}">
-
-                    <style>
-                        .step3-wrap {
-                            display: grid;
-                            gap: 18px;
-                        }
-
-                        .step3-section {
-                            background: #fff;
-                            border: 1px solid #eef2f7;
-                            border-radius: 18px;
-                            padding: 16px;
-                            box-shadow: 0 18px 40px rgba(15, 23, 42, .08);
-                        }
-
-                        .step3-title {
-                            display: flex;
-                            align-items: center;
-                            gap: 10px;
-                            font-weight: 900;
-                            font-size: 18px;
-                            margin: 0 0 14px;
-                            color: #0f172a;
-                        }
-
-                        .step3-title small {
-                            font-weight: 800;
-                            font-size: 12px;
-                            color: #6b7280;
-                            letter-spacing: .4px;
-                            text-transform: uppercase;
-                        }
-
-                        .step3-info {
-                            margin-left: auto;
-                            width: 30px;
-                            height: 30px;
-                            border-radius: 999px;
-                            display: grid;
-                            place-items: center;
-                            background: rgba(178, 34, 34, .08);
-                            color: var(--brand);
-                            border: 1px solid rgba(178, 34, 34, .22);
-                            cursor: pointer;
-                        }
-
-                        .prot-grid {
-                            display: grid;
-                            grid-template-columns: repeat(2, minmax(0, 1fr));
-                            gap: 14px;
-                            align-items: stretch;
-                        }
-
-                        @media (max-width:840px) {
-                            .prot-grid {
-                                grid-template-columns: 1fr;
-                            }
-                        }
-
-                        .prot-card {
-                            border: 1px dashed rgba(178, 34, 34, .20);
-                            border-radius: 18px;
-                            padding: 14px;
-                            display: grid;
-                            gap: 10px;
-                            align-content: start;
-                        }
-
-                        .prot-top {
-                            display: flex;
-                            align-items: flex-start;
-                            gap: 12px;
-                        }
-
-                        .prot-icon {
-                            width: 70px;
-                            height: 70px;
-                            border-radius: 999px;
-                            display: grid;
-                            place-items: center;
-                            border: 3px solid #d1d5db;
-                            color: #9ca3af;
-                            flex: 0 0 auto;
-                        }
-
-                        .prot-icon.is-on {
-                            border-color: #16a34a;
-                            color: #16a34a;
-                        }
-
-                        .prot-name {
-                            font-weight: 900;
-                            letter-spacing: .25px;
-                            text-transform: uppercase;
-                            font-size: 13px;
-                            color: #0f172a;
-                            margin: 0 0 6px;
-                        }
-
-                        .prot-desc {
-                            margin: 0;
-                            color: #475569;
-                            font-weight: 700;
-                            font-size: 13px;
-                            line-height: 1.45;
-                        }
-
-                        .prot-badge {
-                            display: inline-flex;
-                            align-items: center;
-                            gap: 8px;
-                            font-weight: 900;
-                            letter-spacing: .4px;
-                            text-transform: uppercase;
-                            font-size: 12px;
-                            color: #0f172a;
-                            margin-top: 10px;
-                        }
-
-                        .prot-badge .dot {
-                            width: 10px;
-                            height: 10px;
-                            border-radius: 999px;
-                            background: #16a34a;
-                            box-shadow: 0 0 0 4px rgba(22, 163, 74, .12);
-                        }
-
-                        .equip-grid {
-                            display: grid;
-                            grid-template-columns: repeat(3, minmax(0, 1fr));
-                            gap: 14px;
-                        }
-
-                        @media (max-width:980px) {
-                            .equip-grid {
-                                grid-template-columns: repeat(2, minmax(0, 1fr));
-                            }
-                        }
-
-                        @media (max-width:620px) {
-                            .equip-grid {
-                                grid-template-columns: 1fr;
-                            }
-                        }
-
-                        .addon-card {
-                            border: 1px solid #eef2f7;
-                            border-radius: 18px;
-                            padding: 14px;
-                            background: #fff;
-                            box-shadow: 0 18px 40px rgba(15, 23, 42, .06);
-                            display: grid;
-                            gap: 10px;
-                        }
-
-                        .addon-top {
-                            display: flex;
-                            gap: 12px;
-                            align-items: flex-start;
-                        }
-
-                        .addon-ico {
-                            width: 70px;
-                            height: 70px;
-                            border-radius: 999px;
-                            display: grid;
-                            place-items: center;
-                            border: 3px solid #d1d5db;
-                            color: #6b7280;
-                            flex: 0 0 auto;
-                        }
-
-                        .addon-name {
-                            margin: 0;
-                            font-weight: 900;
-                            letter-spacing: .25px;
-                            text-transform: uppercase;
-                            font-size: 13px;
-                            color: #0f172a;
-                        }
-
-                        .addon-card p {
-                            margin: 6px 0 0;
-                            color: #475569;
-                            font-weight: 700;
-                            font-size: 13px;
-                            line-height: 1.45;
-                        }
-
-                        .addon-price {
-                            font-weight: 900;
-                            color: #0f172a;
-                            font-size: 13px;
-                        }
-
-                        .addon-price strong {
-                            color: var(--brand);
-                        }
-
-                        .addon-qty {
-                            display: flex;
-                            gap: 10px;
-                            align-items: center;
-                            justify-content: flex-start;
-                            margin-top: 4px;
-                        }
-
-                        .qty-btn {
-                            width: 42px;
-                            height: 42px;
-                            border-radius: 12px;
-                            border: 1px solid #e5e7eb;
-                            background: #fff;
-                            font-weight: 900;
-                            cursor: pointer;
-                        }
-
-                        .qty {
-                            min-width: 34px;
-                            text-align: center;
-                            font-weight: 900;
-                            color: #0f172a;
-                        }
-
-                        .qty-hint {
-                            font-size: 12px;
-                            font-weight: 800;
-                            color: #6b7280;
-                            margin-left: auto;
-                        }
-
-                        /* modal simple (step 3) */
-                        .modal-s3 {
-                            position: fixed;
-                            inset: 0;
-                            display: none;
-                            align-items: center;
-                            justify-content: center;
-                            background: rgba(15, 23, 42, .55);
-                            z-index: 999999;
-                            padding: 18px;
-                        }
-
-                        .modal-s3 .card {
-                            width: min(720px, 100%);
-                            background: #fff;
-                            border-radius: 18px;
-                            border: 1px solid #eef2f7;
-                            box-shadow: 0 25px 60px rgba(0, 0, 0, .25);
-                            padding: 18px;
-                        }
-
-                        .modal-s3 .x {
-                            width: 40px;
-                            height: 40px;
-                            border-radius: 12px;
-                            border: 1px solid #e5e7eb;
-                            background: #fff;
-                            cursor: pointer;
-                            display: grid;
-                            place-items: center;
-                            margin-left: auto;
-                        }
-                    </style>
-
-                    <div class="step3-wrap">
-
-                        {{-- Protecciones --}}
-                        <section class="step3-section">
-                            <div class="step3-title">
-                                {{ __('messages.relevos_responsabilidad') }}
-                                <button type="button" class="step3-info" id="info-protecciones-step3"
-                                    title="{{ __('messages.mas_informacion') }}">
-                                    <i class="fa-solid fa-circle-info"></i>
-                                </button>
-                            </div>
-
-                            <div class="prot-grid">
-                                <div class="prot-card">
-                                    <div class="prot-top">
-                                        <div class="prot-icon is-on">
-                                            <i class="fa-solid fa-shield"></i>
-                                        </div>
-                                        <div>
-                                            <p class="prot-name">{{ __('messages.proteccion_limitada') }}</p>
-                                            <p class="prot-desc">
-                                                {{ __('messages.proteccion_limitada_desc') }}
-                                            </p>
-                                            <div class="prot-badge"><span class="dot"></span> {{ __('messages.incluida') }}</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="prot-card">
-                                    <div class="prot-top">
-                                        <div class="prot-icon">
-                                            <i class="fa-solid fa-shield-halved"></i>
-                                        </div>
-                                        <div>
-                                            <p class="prot-name">{{ __('messages.protecciones_adicionales') }}</p>
-                                            <p class="prot-desc">
-                                                {{ __('messages.protecciones_adicionales_desc') }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="modalProteccionesStep3" class="modal-s3" aria-hidden="true">
-                                <div class="card">
-
-                                    <button type="button" class="x" id="closeProteccionesStep3"
-                                        aria-label="{{ __('messages.cerrar') }}">
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
-
-                                    <h2 class="s3-modal-title">{{ __('messages.relevos_responsabilidad') }}</h2>
-                                    <p class="s3-modal-sub">{{ __('messages.relevos_detalle') }}</p>
-
-                                    <div class="s3-body-scroll">
-                                        <div class="s3-info-top">
-                                            <p>
-                                                {{ __('messages.viajero_ofrece') }}
-                                            </p>
-
-                                            <p>
-                                                {{ __('messages.cliente_responsable') }}
-                                            </p>
-
-                                            <p style="margin-bottom:0;">
-                                                {{ __('messages.preferencias_coberturas') }} <strong>01 (442) 303 2668</strong> {{ __('messages.para_obtener_ayuda') }}
-                                            </p>
-                                        </div>
-
-                                        {{-- LDW PACK --}}
-                                        <details class="s3-acc-item">
-                                            <summary class="s3-acc-sum">
-                                                <span class="s3-acc-left">
-                                                    <span class="s3-acc-badge">LDW</span>
-                                                    <span class="s3-acc-name">{{ __('messages.ldw_pack') }}</span>
-                                                </span>
-                                                <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
-                                            </summary>
-
-                                            <div class="s3-acc-body">
-                                                <ul class="s3-list">
-                                                    <li><strong>{{ __('messages.ldw_desc') }}</strong></li>
-                                                    <li>{{ __('messages.pai') }}</li>
-                                                    <li>{{ __('messages.pra_premium') }}</li>
-                                                    <li>{{ __('messages.lou') }}</li>
-                                                    <li>{{ __('messages.la') }}</li>
-                                                    <li>{{ __('messages.li') }}</li>
-                                                </ul>
-                                            </div>
-                                        </details>
-
-                                        {{-- PDW PACK --}}
-                                        <details class="s3-acc-item">
-                                            <summary class="s3-acc-sum">
-                                                <span class="s3-acc-left">
-                                                    <span class="s3-acc-badge">PDW</span>
-                                                    <span class="s3-acc-name">{{ __('messages.pdw_pack') }}</span>
-                                                </span>
-                                                <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
-                                            </summary>
-
-                                            <div class="s3-acc-body">
-                                                <ul class="s3-list">
-                                                    <li><strong>{{ __('messages.pdw_desc') }}</strong></li>
-                                                    <li>{{ __('messages.pai') }}</li>
-                                                    <li>{{ __('messages.pra_declinado') }}</li>
-                                                    <li>{{ __('messages.lou') }}</li>
-                                                    <li>{{ __('messages.la') }}</li>
-                                                    <li>{{ __('messages.ali') }}</li>
-                                                </ul>
-                                            </div>
-                                        </details>
-
-                                        {{-- CDW PACK 1 --}}
-                                        <details class="s3-acc-item">
-                                            <summary class="s3-acc-sum">
-                                                <span class="s3-acc-left">
-                                                    <span class="s3-acc-badge">CDW</span>
-                                                    <span class="s3-acc-name">{{ __('messages.cdw_pack_1') }}</span>
-                                                </span>
-                                                <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
-                                            </summary>
-
-                                            <div class="s3-acc-body">
-                                                <ul class="s3-list">
-                                                    <li><strong>{{ __('messages.cdw_10_desc') }}</strong></li>
-                                                    <li>{{ __('messages.pai') }}</li>
-                                                    <li>{{ __('messages.pra_declinado') }}</li>
-                                                    <li>{{ __('messages.lou') }}</li>
-                                                    <li>{{ __('messages.la') }}</li>
-                                                    <li>{{ __('messages.ali') }}</li>
-                                                </ul>
-                                            </div>
-                                        </details>
-
-                                        {{-- CDW PACK 2 --}}
-                                        <details class="s3-acc-item">
-                                            <summary class="s3-acc-sum">
-                                                <span class="s3-acc-left">
-                                                    <span class="s3-acc-badge">CDW</span>
-                                                    <span class="s3-acc-name">{{ __('messages.cdw_pack_2') }}</span>
-                                                </span>
-                                                <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
-                                            </summary>
-
-                                            <div class="s3-acc-body">
-                                                <ul class="s3-list">
-                                                    <li><strong>{{ __('messages.cdw_20_desc') }}</strong></li>
-                                                    <li>{{ __('messages.pai') }}</li>
-                                                    <li>{{ __('messages.pra_declinado') }}</li>
-                                                    <li>{{ __('messages.lou') }}</li>
-                                                    <li>{{ __('messages.la') }}</li>
-                                                    <li>{{ __('messages.li') }}</li>
-                                                </ul>
-                                            </div>
-                                        </details>
-
-                                        {{-- DECLINE PROTECTIONS --}}
-                                        <details class="s3-acc-item s3-acc-danger">
-                                            <summary class="s3-acc-sum">
-                                                <span class="s3-acc-left">
-                                                    <span class="s3-acc-badge s3-badge-danger">DECLINE</span>
-                                                    <span class="s3-acc-name">{{ __('messages.decline_protections') }}</span>
-                                                </span>
-                                                <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
-                                            </summary>
-
-                                            <div class="s3-acc-body">
-                                                <ul class="s3-list">
-                                                    <li><strong>{{ __('messages.decline_desc') }}</strong></li>
-                                                    <li>{{ __('messages.no_cubre_gastos_medicos') }}</li>
-                                                    <li>{{ __('messages.pra_declinado') }}</li>
-                                                    <li>{{ __('messages.lou_declinado') }}</li>
-                                                    <li>{{ __('messages.la_declinado') }}</li>
-                                                    <li>{{ __('messages.li_350') }}</li>
-                                                </ul>
-                                            </div>
-                                        </details>
-
-                                    </div>
-                                </div>
-                            </div>
-
-                            <script>
-                                document.addEventListener('DOMContentLoaded', () => {
-                                    const openBtn = document.getElementById('info-protecciones-step3');
-                                    const modal = document.getElementById('modalProteccionesStep3');
-                                    const closeBtn = document.getElementById('closeProteccionesStep3');
-
-                                    if (openBtn && modal) {
-                                        openBtn.addEventListener('click', () => {
-                                            modal.style.display = 'flex';
-                                        });
-                                    }
-                                    if (closeBtn && modal) {
-                                        closeBtn.addEventListener('click', () => {
-                                            modal.style.display = 'none';
-                                        });
-                                    }
-                                    if (modal) {
-                                        modal.addEventListener('click', (e) => {
-                                            if (e.target === modal) modal.style.display = 'none';
-                                        });
-                                    }
-                                });
-                            </script>
-                        </section>
-
-                        {{-- Equipamiento & Servicios --}}
-                        <section class="step3-section">
-                            <div class="step3-title">
-                                {{ __('messages.equipamiento_servicios') }}
-                                <small>{{ __('messages.maximo_3') }}</small>
-                            </div>
-
-                            <div class="equip-grid">
-                                @forelse($serviciosFiltrados as $srv)
-                                    @php
-                                        $unidad = $srv->tipo_cobro === 'por_evento' ? __('messages.por_evento') : __('messages.por_dia');
-                                        $precio = number_format((float) $srv->precio, 0);
-
-                                        $n = mb_strtolower(trim((string) ($srv->nombre ?? '')));
-                                        $icon = 'fa-solid fa-circle-plus';
-                                        if (str_contains($n, 'silla')) {
-                                            $icon = 'fa-solid fa-baby-carriage';
-                                        } elseif (str_contains($n, 'conductor')) {
-                                            $icon = 'fa-solid fa-user-plus';
-                                        } elseif (str_contains($n, 'gasolina')) {
-                                            $icon = 'fa-solid fa-gas-pump';
-                                        }
-                                    @endphp
-
-                                    <div class="addon-card" data-id="{{ $srv->id_servicio }}"
-                                        data-name="{{ $srv->nombre }}" data-price="{{ (float) $srv->precio }}"
-                                        data-charge="{{ $srv->tipo_cobro }}" data-max="3">
-                                        <div class="addon-top">
-                                            <div class="addon-ico">
-                                                <i class="{{ $icon }}"></i>
-                                            </div>
-
-                                            <div style="flex:1;">
-                                                <h4 class="addon-name">{{ $srv->nombre }}</h4>
-                                                @if (!empty($srv->descripcion))
-                                                    <p>{{ $srv->descripcion }}</p>
-                                                @endif
-                                            </div>
-                                        </div>
-
-                                        <div class="addon-price">
-                                            <strong>${{ $precio }}</strong> MXN {{ $unidad }}
-                                        </div>
-
-                                        <div class="addon-qty">
-                                            <button class="qty-btn minus" type="button">−</button>
-                                            <span class="qty">0</span>
-                                            <button class="qty-btn plus" type="button">+</button>
-                                            <span class="qty-hint">{{ __('messages.max_3') }}</span>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <div style="grid-column:1/-1; text-align:center; padding:.75rem 0;">
-                                        {{ __('messages.no_complementos') }}
-                                    </div>
-                                @endforelse
-                            </div>
-                        </section>
-
+                <script>
+                console.log("STEP ACTUAL:", "{{ $stepCurrent }}");
+                </script>
+              {{-- ===================== STEP 3 ===================== --}}
+@if ($stepCurrent === 3)
+    <header class="wizard-head">
+        <h2>{{ __('messages.selecciona_adicionales') }}</h2>
+        <p>{{ __('messages.revisa_protecciones') }}</p>
+    </header>
+
+    <input type="hidden" id="addonsHidden" value="{{ $addonsParam }}">
+
+    <style>
+        .step3-wrap {
+            display: grid;
+            gap: 18px;
+        }
+
+        .step3-section {
+            background: #fff;
+            border: 1px solid #eef2f7;
+            border-radius: 18px;
+            padding: 16px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, .08);
+        }
+
+        .step3-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 900;
+            font-size: 18px;
+            margin: 0 0 14px;
+            color: #0f172a;
+        }
+
+        .step3-title small {
+            font-weight: 800;
+            font-size: 12px;
+            color: #6b7280;
+            letter-spacing: .4px;
+            text-transform: uppercase;
+        }
+
+        .step3-info {
+            margin-left: auto;
+            width: 30px;
+            height: 30px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            background: rgba(178, 34, 34, .08);
+            color: var(--brand);
+            border: 1px solid rgba(178, 34, 34, .22);
+            cursor: pointer;
+        }
+
+        .prot-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            align-items: stretch;
+        }
+
+        @media (max-width:840px) {
+            .prot-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .prot-card {
+            border: 1px dashed rgba(178, 34, 34, .20);
+            border-radius: 18px;
+            padding: 14px;
+            display: grid;
+            gap: 10px;
+            align-content: start;
+        }
+
+        .prot-top {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .prot-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            border: 3px solid #d1d5db;
+            color: #9ca3af;
+            flex: 0 0 auto;
+        }
+
+        .prot-icon.is-on {
+            border-color: #16a34a;
+            color: #16a34a;
+        }
+
+        .prot-name {
+            font-weight: 900;
+            letter-spacing: .25px;
+            text-transform: uppercase;
+            font-size: 13px;
+            color: #0f172a;
+            margin: 0 0 6px;
+        }
+
+        .prot-desc {
+            margin: 0;
+            color: #475569;
+            font-weight: 700;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .prot-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 900;
+            letter-spacing: .4px;
+            text-transform: uppercase;
+            font-size: 12px;
+            color: #0f172a;
+            margin-top: 10px;
+        }
+
+        .prot-badge .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: #16a34a;
+            box-shadow: 0 0 0 4px rgba(22, 163, 74, .12);
+        }
+
+        .equip-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        @media (max-width:980px) {
+            .equip-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width:620px) {
+            .equip-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .addon-card {
+            border: 1px solid #eef2f7;
+            border-radius: 18px;
+            padding: 14px;
+            background: #fff;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, .06);
+            display: grid;
+            gap: 10px;
+        }
+
+        .addon-top {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .addon-ico {
+            width: 70px;
+            height: 70px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            border: 3px solid #d1d5db;
+            color: #6b7280;
+            flex: 0 0 auto;
+        }
+
+        .addon-name {
+            margin: 0;
+            font-weight: 900;
+            letter-spacing: .25px;
+            text-transform: uppercase;
+            font-size: 13px;
+            color: #0f172a;
+        }
+
+        .addon-card p {
+            margin: 6px 0 0;
+            color: #475569;
+            font-weight: 700;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .addon-price {
+            font-weight: 900;
+            color: #0f172a;
+            font-size: 13px;
+        }
+
+        .addon-price strong {
+            color: var(--brand);
+        }
+
+        .addon-qty {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: flex-start;
+            margin-top: 4px;
+        }
+
+        .qty-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .qty {
+            min-width: 34px;
+            text-align: center;
+            font-weight: 900;
+            color: #0f172a;
+        }
+
+        .qty-hint {
+            font-size: 12px;
+            font-weight: 800;
+            color: #6b7280;
+            margin-left: auto;
+        }
+
+        /* modal simple (step 3) */
+        .modal-s3 {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, .55);
+            z-index: 999999;
+            padding: 18px;
+        }
+
+        .modal-s3 .card {
+            width: min(720px, 100%);
+            background: #fff;
+            border-radius: 18px;
+            border: 1px solid #eef2f7;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, .25);
+            padding: 18px;
+        }
+
+        .modal-s3 .x {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            margin-left: auto;
+        }
+    </style>
+
+    <div class="step3-wrap">
+
+        {{-- Protecciones --}}
+        <section class="step3-section">
+            <div class="step3-title">
+                {{ __('messages.relevos_responsabilidad') }}
+                <button type="button" class="step3-info" id="info-protecciones-step3"
+                    title="{{ __('messages.mas_informacion') }}">
+                    <i class="fa-solid fa-circle-info"></i>
+                </button>
+            </div>
+
+            <div class="prot-grid">
+                <div class="prot-card">
+                    <div class="prot-top">
+                        <div class="prot-icon is-on">
+                            <i class="fa-solid fa-shield"></i>
+                        </div>
+                        <div>
+                            <p class="prot-name">{{ __('messages.proteccion_limitada') }}
+                            </p>
+                            <p class="prot-desc">
+                                {{ __('messages.proteccion_limitada_desc') }}
+                            </p>
+                            <div class="prot-badge"><span class="dot"></span> {{ __('messages.incluida') }}</div>
+                        </div>
                     </div>
+                </div>
 
-                    <div class="wizard-nav">
-                        <a class="btn btn-ghost" href="{{ $toStep(2) }}">{{ __('messages.anterior') }}</a>
-                        <a class="btn btn-primary" id="toStep4" href="{{ $toStep(4) }}">{{ __('messages.siguiente') }}</a>
+                <div class="prot-card">
+                    <div class="prot-top">
+                        <div class="prot-icon">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div>
+                            <p class="prot-name">{{ __('messages.protecciones_adicionales') }}</p>
+                            <p class="prot-desc">
+                                {{ __('messages.protecciones_adicionales_desc') }}
+                            </p>
+                        </div>
                     </div>
-                @endif
+                </div>
+            </div>
+
+            <div id="modalProteccionesStep3" class="modal-s3" aria-hidden="true">
+                <div class="card">
+
+                    <button type="button" class="x" id="closeProteccionesStep3"
+                        aria-label="{{ __('messages.cerrar') }}">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                    <h2 class="s3-modal-title">{{ __('messages.relevos_responsabilidad') }}</h2>
+                    <p class="s3-modal-sub">Consulta el detalle de cada pack y lo que incluye.</p>
+
+                    <div class="s3-body-scroll">
+                        <div class="s3-info-top">
+                            <p>
+                                <strong>VIAJERO</strong> ofrece diferentes tipos de Relevos de
+                                responsabilidad (Protecciones) opcionales disponibles por
+                                un cargo adicional diario el cual se puede adquirir al reservar o el día de
+                                la renta.
+                            </p>
+
+                            <p>
+                                El cliente es responsable de todo daño o robo del vehículo
+                                <strong>VIAJERO</strong> sujeto a ciertas exclusiones
+                                contenidas en el contrato de alquiler. <strong>VIAJERO</strong> renunciará o
+                                limitará la responsabilidad del cliente
+                                a través de la adquisición de alguno de estos.
+                            </p>
+
+                            <p style="margin-bottom:0;">
+                                Los clientes que reserven utilizando su Número Wizard verán las preferencias
+                                de coberturas y seguros seleccionados en su perfil.
+                                También puede acudir a una oficina o llamar al <strong>01 (442) 303
+                                    2668</strong> para obtener ayuda.
+                            </p>
+                        </div>
+
+                        {{-- LDW PACK --}}
+                        <details class="s3-acc-item">
+                            <summary class="s3-acc-sum">
+                                <span class="s3-acc-left">
+                                    <span class="s3-acc-badge">LDW</span>
+                                    <span class="s3-acc-name">LDW PACK</span>
+                                </span>
+                                <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                            </summary>
+
+                            <div class="s3-acc-body">
+                                <ul class="s3-list">
+                                    <li><strong>LDW:</strong> El cliente es responsable por el <strong>0%
+                                            deducible</strong>, de lado a lado pase lo que pase con el auto,
+                                        está cubierto de bumper a bumper.</li>
+                                    <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000
+                                            MXN</strong> por evento.</li>
+                                    <li><strong>PRA:</strong> Asistencia en carretera Premium. Incluye:
+                                        envío de llaves o gasolina, apertura de auto, cambio de neumático
+                                        ponchado y paso de corriente. <strong>No incluye</strong> costo de
+                                        llave ni gasolina.</li>
+                                    <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
+                                    <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
+                                    <li><strong>LI:</strong> Responsabilidad civil hasta <strong>$3,000,000
+                                            MXN</strong>.</li>
+                                </ul>
+                            </div>
+                        </details>
+
+                        {{-- PDW PACK --}}
+                        <details class="s3-acc-item">
+                            <summary class="s3-acc-sum">
+                                <span class="s3-acc-left">
+                                    <span class="s3-acc-badge">PDW</span>
+                                    <span class="s3-acc-name">PDW PACK</span>
+                                </span>
+                                <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                            </summary>
+
+                            <div class="s3-acc-body">
+                                <ul class="s3-list">
+                                    <li><strong>PDW:</strong> Cubierta toda la carrocería al
+                                        <strong>5%</strong>, <strong>10%</strong> pérdida total o robo.
+                                        <strong>No cubre</strong> llantas, accesorios, rines ni cristales.
+                                    </li>
+                                    <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000
+                                            MXN</strong> por evento.</li>
+                                    <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es
+                                        responsable por costos de: grúa (en caso de requerirla), corralón,
+                                        envío de llaves o gasolina, apertura de auto, cambio de neumático
+                                        ponchado y paso de corriente.</li>
+                                    <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
+                                    <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
+                                    <li><strong>ALI:</strong> Responsabilidad civil hasta <strong>$1,000,000
+                                            MXN</strong>.</li>
+                                </ul>
+                            </div>
+                        </details>
+
+                        {{-- CDW PACK 1 --}}
+                        <details class="s3-acc-item">
+                            <summary class="s3-acc-sum">
+                                <span class="s3-acc-left">
+                                    <span class="s3-acc-badge">CDW</span>
+                                    <span class="s3-acc-name">CDW PACK 1</span>
+                                </span>
+                                <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                            </summary>
+
+                            <div class="s3-acc-body">
+                                <ul class="s3-list">
+                                    <li><strong>CDW 10%:</strong> El cliente es responsable por el
+                                        <strong>10% deducible</strong> en daños, <strong>20%</strong>
+                                        pérdida total o robo sobre valor factura.</li>
+                                    <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000
+                                            MXN</strong> por evento.</li>
+                                    <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es
+                                        responsable por costos de: grúa (en caso de requerirla), corralón,
+                                        envío de llaves o gasolina, apertura de auto, cambio de neumático
+                                        ponchado y paso de corriente.</li>
+                                    <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
+                                    <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
+                                    <li><strong>ALI:</strong> Responsabilidad civil hasta <strong>$1,000,000
+                                            MXN</strong>.</li>
+                                </ul>
+                            </div>
+                        </details>
+
+                        {{-- CDW PACK 2 --}}
+                        <details class="s3-acc-item">
+                            <summary class="s3-acc-sum">
+                                <span class="s3-acc-left">
+                                    <span class="s3-acc-badge">CDW</span>
+                                    <span class="s3-acc-name">CDW PACK 2</span>
+                                </span>
+                                <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                            </summary>
+
+                            <div class="s3-acc-body">
+                                <ul class="s3-list">
+                                    <li><strong>CDW 20%:</strong> El cliente es responsable por el
+                                        <strong>20% deducible</strong> en daños, <strong>30%</strong>
+                                        pérdida total o robo sobre valor factura.</li>
+                                    <li><strong>PAI:</strong> Gastos médicos cubiertos <strong>$250,000
+                                            MXN</strong> por evento.</li>
+                                    <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es
+                                        responsable por costos de: grúa (en caso de requerirla), corralón,
+                                        envío de llaves o gasolina, apertura de auto, cambio de neumático
+                                        ponchado y paso de corriente.</li>
+                                    <li><strong>LOU:</strong> Tiempo perdido en taller, cubierto.</li>
+                                    <li><strong>LA:</strong> Asistencia legal, cubierta.</li>
+                                    <li><strong>LI:</strong> Responsabilidad civil hasta <strong>$350,000
+                                            MXN</strong>.</li>
+                                </ul>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const openBtn = document.getElementById('info-protecciones-step3');
+                    const modal = document.getElementById('modalProteccionesStep3');
+                    const closeBtn = document.getElementById('closeProteccionesStep3');
+
+                    if (openBtn && modal) {
+                        openBtn.addEventListener('click', () => {
+                            modal.style.display = 'flex';
+                        });
+                    }
+                    if (closeBtn && modal) {
+                        closeBtn.addEventListener('click', () => {
+                            modal.style.display = 'none';
+                        });
+                    }
+                    if (modal) {
+                        modal.addEventListener('click', (e) => {
+                            if (e.target === modal) modal.style.display = 'none';
+                        });
+                    }
+                });
+            </script>
+        </section>
+
+        {{-- Equipamiento & Servicios --}}
+        <section class="step3-section">
+            <div class="step3-title">
+                {{ __('messages.equipamiento_servicios') }}
+                <small>{{ __('messages.maximo_3') }}</small>
+            </div>
+
+            <div class="equip-grid">
+                @forelse($serviciosFiltrados as $srv)
+                    @php
+                        $unidad = $srv->tipo_cobro === 'por_tanque' ? __('messages.por_tanque') : __('messages.por_evento');
+                        $precio = number_format((float) $srv->precio, 0);
+
+                        $n = mb_strtolower(trim((string) ($srv->nombre ?? '')));
+                        $icon = 'fa-solid fa-circle-plus';
+                        $tooltipText = __('messages.info_adicional');
+
+                        // Variables para nombre y descripción traducidos
+                        $nombreTraducido = $srv->nombre;
+                        $descripcionTraducida = $srv->descripcion ?? '';
+
+                        if (str_contains($n, 'silla')) {
+                            $icon = 'fa-solid fa-child-reaching';
+                            $tooltipText = __('messages.silla_bebe_desc');
+                            $nombreTraducido = __('messages.servicio_silla_bebe');
+                            $descripcionTraducida = __('messages.servicio_silla_bebe_desc');
+                        } elseif (str_contains($n, 'conductor')) {
+                            $icon = 'fa-solid fa-user-plus';
+                            $tooltipText = __('messages.conductor_adicional_desc');
+                            $nombreTraducido = __('messages.servicio_conductor_adicional');
+                            $descripcionTraducida = __('messages.servicio_conductor_adicional_desc');
+                        } elseif (str_contains($n, 'gasolina')) {
+                            $icon = 'fa-solid fa-gas-pump';
+                            $tooltipText = __('messages.gasolina_prepago_desc');
+                            $nombreTraducido = __('messages.servicio_gasolina_prepago');
+                            $descripcionTraducida = __('messages.servicio_gasolina_prepago_desc');
+                        }
+                    @endphp
+                    <div class="addon-card" data-id="{{ $srv->id_servicio }}"
+                        data-name="{{ $srv->nombre }}" data-price="{{ (float) $srv->precio }}"
+                        data-gasolina="{{ str_contains(strtolower($srv->nombre),'gasolina') ? 1 : 0 }}"
+                        data-charge="{{ $srv->tipo_cobro }}" data-max="3">
+                        <div class="addon-top">
+                            <div class="addon-ico">
+                                <i class="{{ $icon }}"></i>
+                            </div>
+
+                            <div style="flex:1;">
+                                <div class="addon-headline">
+                                    <h4 class="addon-name">{{ $nombreTraducido }}</h4>
+
+                                    <span class="addon-help-wrap" tabindex="0">
+                                        <button type="button" class="addon-help-btn" aria-label="{{ __('messages.mas_informacion') }}">
+                                            <i class="fa-solid fa-info"></i>
+                                        </button>
+                                        <span class="addon-tooltip">{{ $tooltipText }}</span>
+                                    </span>
+                                </div>
+
+                                @if (!empty($descripcionTraducida))
+                                    <p>{{ $descripcionTraducida }}</p>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="addon-price">
+                            @if($srv->tipo_cobro === 'por_tanque')
+                                <strong>{{ __('messages.cantidad_tanque') }}</strong>
+                            @else
+                                <strong>${{ $precio }}</strong> MXN {{ $unidad }}
+                            @endif
+                        </div>
+
+                        @if($srv->id_servicio == 1)
+                            <div class="addon-qty gasolina-toggle">
+                                <label class="switch">
+                                    <input type="checkbox" class="gasolina-switch">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        @else
+                            <div class="addon-qty">
+                                <button class="qty-btn minus" type="button">−</button>
+                                <span class="qty">0</span>
+                                <button class="qty-btn plus" type="button">+</button>
+                                <span class="qty-hint">{{ __('messages.max_3') }}</span>
+                            </div>
+                        @endif
+                    </div>
+                @empty
+                    <div style="grid-column:1/-1; text-align:center; padding:.75rem 0;">
+                        {{ __('messages.no_complementos') }}
+                    </div>
+                @endforelse
+            </div>
+        </section>
+
+        <style>
+            .switch {
+                position: relative;
+                display: inline-block;
+                width: 46px;
+                height: 26px;
+            }
+
+            .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+            .slider {
+                position: absolute;
+                cursor: pointer;
+                inset: 0;
+                background-color: #ccc;
+                transition: .3s;
+                border-radius: 26px;
+            }
+
+            .slider:before {
+                position: absolute;
+                content: "";
+                height: 20px;
+                width: 20px;
+                left: 3px;
+                bottom: 3px;
+                background-color: white;
+                transition: .3s;
+                border-radius: 50%;
+            }
+
+            input:checked + .slider {
+                background-color: #16a34a;
+            }
+
+            input:checked + .slider:before {
+                transform: translateX(20px);
+            }
+        </style>
+
+    </div>
+
+    <div class="wizard-nav">
+        <a class="btn btn-ghost" href="{{ $toStep(2) }}">{{ __('messages.anterior') }}</a>
+        <a class="btn btn-primary" id="toStep4" href="{{ $toStep(4) }}">{{ __('messages.siguiente') }}</a>
+    </div>
+@endif
 
                 {{-- ===================== STEP 4 ===================== --}}
                 @if ($stepCurrent === 4)
@@ -1913,15 +2152,228 @@
                                     </div>
 
                                     {{-- País --}}
-                                    <div class="field field-floating">
-                                        <select name="pais" id="pais" required>
-                                            <option value="" disabled selected>{{ __('messages.selecciona_pais') }}</option>
-                                            <option value="México">{{ __('messages.mexico') }}</option>
-                                            <option value="Estados Unidos">{{ __('messages.estados_unidos') }}</option>
-                                            <option value="Canadá">{{ __('messages.canada') }}</option>
-                                        </select>
-                                        <label for="pais">{{ __('messages.pais') }}</label>
-                                    </div>
+                                   @php
+                                $paisesPrioritarios = [
+                                    'México' => 'México',
+                                    'Estados Unidos' => 'Estados Unidos',
+                                    'Canadá' => 'Canadá'
+                                ];
+
+                                $todosPaises = [
+                                    'Afganistán' => 'Afganistán',
+                                    'Albania' => 'Albania',
+                                    'Alemania' => 'Alemania',
+                                    'Andorra' => 'Andorra',
+                                    'Angola' => 'Angola',
+                                    'Antigua y Barbuda' => 'Antigua y Barbuda',
+                                    'Arabia Saudita' => 'Arabia Saudita',
+                                    'Argelia' => 'Argelia',
+                                    'Argentina' => 'Argentina',
+                                    'Armenia' => 'Armenia',
+                                    'Australia' => 'Australia',
+                                    'Austria' => 'Austria',
+                                    'Azerbaiyán' => 'Azerbaiyán',
+                                    'Bahamas' => 'Bahamas',
+                                    'Bangladés' => 'Bangladés',
+                                    'Barbados' => 'Barbados',
+                                    'Baréin' => 'Baréin',
+                                    'Bélgica' => 'Bélgica',
+                                    'Belice' => 'Belice',
+                                    'Benín' => 'Benín',
+                                    'Bielorrusia' => 'Bielorrusia',
+                                    'Birmania' => 'Birmania',
+                                    'Bolivia' => 'Bolivia',
+                                    'Bosnia y Herzegovina' => 'Bosnia y Herzegovina',
+                                    'Botsuana' => 'Botsuana',
+                                    'Brasil' => 'Brasil',
+                                    'Brunéi' => 'Brunéi',
+                                    'Bulgaria' => 'Bulgaria',
+                                    'Burkina Faso' => 'Burkina Faso',
+                                    'Burundi' => 'Burundi',
+                                    'Bután' => 'Bután',
+                                    'Cabo Verde' => 'Cabo Verde',
+                                    'Camboya' => 'Camboya',
+                                    'Camerún' => 'Camerún',
+                                    'Chad' => 'Chad',
+                                    'Chile' => 'Chile',
+                                    'China' => 'China',
+                                    'Chipre' => 'Chipre',
+                                    'Colombia' => 'Colombia',
+                                    'Comoras' => 'Comoras',
+                                    'Costa de Marfil' => 'Costa de Marfil',
+                                    'Costa Rica' => 'Costa Rica',
+                                    'Croacia' => 'Croacia',
+                                    'Cuba' => 'Cuba',
+                                    'Dinamarca' => 'Dinamarca',
+                                    'Dominica' => 'Dominica',
+                                    'Ecuador' => 'Ecuador',
+                                    'Egipto' => 'Egipto',
+                                    'El Salvador' => 'El Salvador',
+                                    'Emiratos Árabes Unidos' => 'Emiratos Árabes Unidos',
+                                    'Eritrea' => 'Eritrea',
+                                    'Eslovaquia' => 'Eslovaquia',
+                                    'Eslovenia' => 'Eslovenia',
+                                    'España' => 'España',
+                                    'Estonia' => 'Estonia',
+                                    'Etiopía' => 'Etiopía',
+                                    'Filipinas' => 'Filipinas',
+                                    'Finlandia' => 'Finlandia',
+                                    'Fiyi' => 'Fiyi',
+                                    'Francia' => 'Francia',
+                                    'Gabón' => 'Gabón',
+                                    'Gambia' => 'Gambia',
+                                    'Georgia' => 'Georgia',
+                                    'Ghana' => 'Ghana',
+                                    'Granada' => 'Granada',
+                                    'Grecia' => 'Grecia',
+                                    'Guatemala' => 'Guatemala',
+                                    'Guyana' => 'Guyana',
+                                    'Guinea' => 'Guinea',
+                                    'Guinea-Bisáu' => 'Guinea-Bisáu',
+                                    'Guinea Ecuatorial' => 'Guinea Ecuatorial',
+                                    'Haití' => 'Haití',
+                                    'Honduras' => 'Honduras',
+                                    'Hungría' => 'Hungría',
+                                    'India' => 'India',
+                                    'Indonesia' => 'Indonesia',
+                                    'Irak' => 'Irak',
+                                    'Irán' => 'Irán',
+                                    'Irlanda' => 'Irlanda',
+                                    'Islandia' => 'Islandia',
+                                    'Islas Marshall' => 'Islas Marshall',
+                                    'Islas Salomón' => 'Islas Salomón',
+                                    'Israel' => 'Israel',
+                                    'Italia' => 'Italia',
+                                    'Jamaica' => 'Jamaica',
+                                    'Japón' => 'Japón',
+                                    'Jordania' => 'Jordania',
+                                    'Kazajistán' => 'Kazajistán',
+                                    'Kenia' => 'Kenia',
+                                    'Kirguistán' => 'Kirguistán',
+                                    'Kiribati' => 'Kiribati',
+                                    'Kuwait' => 'Kuwait',
+                                    'Laos' => 'Laos',
+                                    'Lesoto' => 'Lesoto',
+                                    'Letonia' => 'Letonia',
+                                    'Líbano' => 'Líbano',
+                                    'Liberia' => 'Liberia',
+                                    'Libia' => 'Libia',
+                                    'Liechtenstein' => 'Liechtenstein',
+                                    'Lituania' => 'Lituania',
+                                    'Luxemburgo' => 'Luxemburgo',
+                                    'Madagascar' => 'Madagascar',
+                                    'Malasia' => 'Malasia',
+                                    'Malaui' => 'Malaui',
+                                    'Maldivas' => 'Maldivas',
+                                    'Malí' => 'Malí',
+                                    'Malta' => 'Malta',
+                                    'Marruecos' => 'Marruecos',
+                                    'Mauricio' => 'Mauricio',
+                                    'Mauritania' => 'Mauritania',
+                                    'Micronesia' => 'Micronesia',
+                                    'Moldavia' => 'Moldavia',
+                                    'Mónaco' => 'Mónaco',
+                                    'Mongolia' => 'Mongolia',
+                                    'Montenegro' => 'Montenegro',
+                                    'Mozambique' => 'Mozambique',
+                                    'Namibia' => 'Namibia',
+                                    'Nauru' => 'Nauru',
+                                    'Nepal' => 'Nepal',
+                                    'Nicaragua' => 'Nicaragua',
+                                    'Níger' => 'Níger',
+                                    'Nigeria' => 'Nigeria',
+                                    'Noruega' => 'Noruega',
+                                    'Nueva Zelanda' => 'Nueva Zelanda',
+                                    'Omán' => 'Omán',
+                                    'Países Bajos' => 'Países Bajos',
+                                    'Pakistán' => 'Pakistán',
+                                    'Palaos' => 'Palaos',
+                                    'Palestina' => 'Palestina',
+                                    'Panamá' => 'Panamá',
+                                    'Papúa Nueva Guinea' => 'Papúa Nueva Guinea',
+                                    'Paraguay' => 'Paraguay',
+                                    'Perú' => 'Perú',
+                                    'Polonia' => 'Polonia',
+                                    'Portugal' => 'Portugal',
+                                    'Qatar' => 'Qatar',
+                                    'Reino Unido' => 'Reino Unido',
+                                    'República Centroafricana' => 'República Centroafricana',
+                                    'República Checa' => 'República Checa',
+                                    'República del Congo' => 'República del Congo',
+                                    'República Democrática del Congo' => 'República Democrática del Congo',
+                                    'República Dominicana' => 'República Dominicana',
+                                    'Ruanda' => 'Ruanda',
+                                    'Rumanía' => 'Rumanía',
+                                    'Rusia' => 'Rusia',
+                                    'Samoa' => 'Samoa',
+                                    'San Cristóbal y Nieves' => 'San Cristóbal y Nieves',
+                                    'San Marino' => 'San Marino',
+                                    'San Vicente y las Granadinas' => 'San Vicente y las Granadinas',
+                                    'Santa Lucía' => 'Santa Lucía',
+                                    'Santo Tomé y Príncipe' => 'Santo Tomé y Príncipe',
+                                    'Senegal' => 'Senegal',
+                                    'Serbia' => 'Serbia',
+                                    'Seychelles' => 'Seychelles',
+                                    'Sierra Leona' => 'Sierra Leona',
+                                    'Singapur' => 'Singapur',
+                                    'Siria' => 'Siria',
+                                    'Somalia' => 'Somalia',
+                                    'Sri Lanka' => 'Sri Lanka',
+                                    'Suazilandia' => 'Suazilandia',
+                                    'Sudáfrica' => 'Sudáfrica',
+                                    'Sudán' => 'Sudán',
+                                    'Sudán del Sur' => 'Sudán del Sur',
+                                    'Suecia' => 'Suecia',
+                                    'Suiza' => 'Suiza',
+                                    'Surinam' => 'Surinam',
+                                    'Tailandia' => 'Tailandia',
+                                    'Tanzania' => 'Tanzania',
+                                    'Tayikistán' => 'Tayikistán',
+                                    'Timor Oriental' => 'Timor Oriental',
+                                    'Togo' => 'Togo',
+                                    'Tonga' => 'Tonga',
+                                    'Trinidad y Tobago' => 'Trinidad y Tobago',
+                                    'Túnez' => 'Túnez',
+                                    'Turkmenistán' => 'Turkmenistán',
+                                    'Turquía' => 'Turquía',
+                                    'Tuvalu' => 'Tuvalu',
+                                    'Ucrania' => 'Ucrania',
+                                    'Uganda' => 'Uganda',
+                                    'Uruguay' => 'Uruguay',
+                                    'Uzbekistán' => 'Uzbekistán',
+                                    'Vanuatu' => 'Vanuatu',
+                                    'Vaticano' => 'Vaticano',
+                                    'Venezuela' => 'Venezuela',
+                                    'Vietnam' => 'Vietnam',
+                                    'Yemen' => 'Yemen',
+                                    'Yibuti' => 'Yibuti',
+                                    'Zambia' => 'Zambia',
+                                    'Zimbabue' => 'Zimbabue'
+                                ];
+
+                                // Ordenar alfabéticamente
+                                ksort($todosPaises);
+                            @endphp
+
+                            {{-- País --}}
+                            <div class="field field-floating">
+                                <select name="pais" id="pais" required>
+                                    <option value="" disabled selected>{{ __('messages.selecciona_pais') }}</option>
+
+                                    {{-- Países prioritarios --}}
+                                    @foreach($paisesPrioritarios as $valor => $etiqueta)
+                                        <option value="{{ $valor }}">{{ $etiqueta }}</option>
+                                    @endforeach
+
+                                    <option disabled>──────────</option>
+
+                                    {{-- Resto de países --}}
+                                    @foreach($todosPaises as $valor => $etiqueta)
+                                        <option value="{{ $valor }}">{{ $etiqueta }}</option>
+                                    @endforeach
+                                </select>
+                                <label for="pais">{{ __('messages.pais') }}</label>
+                            </div>
 
                                     {{-- Fecha de nacimiento --}}
                                     <div class="field field-dob-container">
@@ -2012,14 +2464,31 @@
                                 </div>
 
                                 <div id="modalMetodoPago" class="modal-overlay" style="display:none;">
-                                    <div class="modal-card">
-                                        <h3>{{ __('messages.selecciona_metodo_pago') }}</h3>
-                                        <div class="options">
-                                            <button id="btnPagoLinea" class="btn btn-primary" type="button">{{ __('messages.pago_en_linea') }}</button>
-                                            <button id="btnPagoMostrador" class="btn btn-gray" type="button">{{ __('messages.pago_en_mostrador') }}</button>
+                                    <div class="modal-card modal-metodo-pago">
+                                        <button id="cerrarModalMetodoX" class="modal-close" type="button" aria-label="{{ __('messages.cerrar') }}">×</button>
+
+                                        <div class="mp-head">
+                                            <span class="mp-badge">{{ __('messages.resumen_pago') }}</span>
+                                            <h3>{{ __('messages.selecciona_metodo_pago') }}</h3>
                                         </div>
-                                        <button id="cerrarModalMetodo" class="btn btn-secondary" type="button"
-                                            style="margin-top:10px;">{{ __('messages.cancelar') }}</button>
+
+                                        <div class="mp-options">
+                                            <button id="btnPagoLinea" class="mp-pay-card is-online" type="button">
+                                                <span class="mp-old-price" id="mpPrecioMostradorTachado">$0 MXN</span>
+                                                <strong class="mp-price" id="mpPrecioLinea">$0 MXN</strong>
+                                                <span class="mp-save" id="mpTextoAhorro">{{ __('messages.ahorra') }} 0%</span>
+                                                <span class="mp-action">{{ __('messages.prepagar_en_linea_btn') }}</span>
+                                            </button>
+
+                                            <button id="btnPagoMostrador" class="mp-pay-card is-office" type="button">
+                                                <strong class="mp-price" id="mpPrecioMostrador">$0 MXN</strong>
+                                                <span class="mp-action">{{ __('messages.pagar_en_oficina_btn') }}</span>
+                                            </button>
+                                        </div>
+
+                                        <button id="cerrarModalMetodo" class="btn btn-secondary mp-cancel" type="button">
+                                            {{ __('messages.cancelar') }}
+                                        </button>
                                     </div>
                                 </div>
 
@@ -2031,13 +2500,13 @@
                         {{-- ===================== PANE DERECHO ===================== --}}
                         <div class="step4-pane">
 
-                            <div class="sum-compact" aria-label="Resumen compacto">
+                            <div class="sum-compact" aria-label="{{ __('messages.resumen_reserva') }}">
                                 <div class="sum-compact-head">
                                     <h4 class="sum-title"><strong>{{ __('messages.resumen_reserva') }}</strong></h4>
 
                                     <span class="sum-days">
                                         <i class="fa-regular fa-calendar"></i>
-                                        {{ __('messages.dias') }}: <strong id="qDays">{{ $days }}</strong>
+                                        {{ __('messages.dias_abrev') }}: <strong id="qDays">{{ $days }}</strong>
                                     </span>
                                 </div>
 
@@ -2101,7 +2570,7 @@
 
                                 <div class="sum-car" style="margin-top:10px; display:flex; gap:20px; align-items:center;">
                                     <div class="sum-car-img">
-                                        <img src="{{ $categoriaImg }}" alt="Auto"
+                                        <img src="{{ $categoriaImg }}" alt="{{ __('messages.tu_auto') }}"
                                             onerror="this.onerror=null;this.src='{{ $placeholder }}';"
                                             style="width:200px; border-radius:14px;">
                                     </div>
@@ -2320,18 +2789,19 @@
 
                     @isset($servicios)
                         <script id="addonsCatalog" type="application/json">
-          {!! json_encode(
-            collect($serviciosFiltrados)->mapWithKeys(fn($s) => [
-              $s->id_servicio => [
-                'nombre' => $s->nombre,
-                'precio' => (float)$s->precio,
-                'tipo'   => $s->tipo_cobro, // 'por_evento' o 'por_dia'
-              ],
-            ]),
-            JSON_UNESCAPED_UNICODE
-          ) !!}
-        </script>
+                        {!! json_encode(
+                            collect($servicios)->mapWithKeys(fn($s) => [
+                                (string) $s->id_servicio => [
+                                    'nombre' => $s->nombre,
+                                    'precio' => (float) $s->precio,
+                                    'tipo'   => $s->tipo_cobro,
+                                ],
+                            ]),
+                         JSON_UNESCAPED_UNICODE
+                        ) !!}
+                     </script>
                     @endisset
+
 
                 @endif
 
@@ -2435,4 +2905,25 @@
             if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
         });
     </script>
+<script>
+window.reservaTranslations = {
+    donde_inicia: "{{ __('messages.donde_inicia') }}",
+    donde_termina: "{{ __('messages.donde_termina') }}",
+    ubicacion_requerida: "{{ __('messages.ubicacion_requerida') }}",
+    fecha_requerida: "{{ __('messages.fecha_requerida') }}",
+    hora_requerida: "{{ __('messages.hora_requerida') }}",
+    reserva_exitosa: "{{ __('messages.reserva_exitosa') }}",
+    itinerario: "{{ __('messages.itinerario') }}",
+    folio: "{{ __('messages.folio') }}",
+    entrega: "{{ __('messages.entrega') }}",
+    devolucion: "{{ __('messages.devolucion') }}",
+    resumen_pago: "{{ __('messages.resumen_pago') }}",
+    tarifa_base: "{{ __('messages.tarifa_base') }}",
+    opciones_renta: "{{ __('messages.opciones_renta') }}",
+    cargos_e_iva: "{{ __('messages.cargos_e_iva') }}",
+    total: "{{ __('messages.total') }}",
+    confirmacion_correo: "{{ __('messages.confirmacion_correo') }}"
+};
+console.log('📝 Traducciones cargadas:', window.reservaTranslations);
+</script>
 @endsection

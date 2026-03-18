@@ -335,8 +335,8 @@ if (table) {
         // ================================
         // === ARMAR MENSAJE DE ÉXITO  ===
         // ================================
-        const pickup  = `${pickup_date} ${pickup_time}`;
-        const dropoff = `${dropoff_date} ${dropoff_time}`;
+        const pickup  = `${pickup_date} `;
+        const dropoff = `${dropoff_date} `;
 
         const subtotal  = data.subtotal || 0;
         const impuestos = data.impuestos || 0;
@@ -363,69 +363,147 @@ if (table) {
 
         const folio = data.folio?.replace(/^COT/, "RES") || "RES-PENDIENTE";
 
-        const msgExito = `
-          ✅ Su reservación fue registrada correctamente.<br><br>
-          Folio: <b>${folio}</b><br>
-          Entrega: <b>${pickup}</b><br>
-          Devolución: <b>${dropoff}</b><br><br>
+        function formatFechaBonita(fechaISO) {
+          try {
+            const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
-          <b>Tarifa base:</b> ${baseTxt}<br>
-          <b>Opciones de renta:</b> ${extrasTxt}<br>
-          <b>Cargos e IVA (16%):</b> ${ivaTxt}<br>
-          <b>Total:</b> ${totalTxt}<br><br>
+            const f = String(fechaISO || "").trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (!f) return fechaISO;
 
-          📩 Recibirá confirmación por correo electrónico.
-        `;
+            const yyyy = f[1];
+            const mm   = parseInt(f[2], 10);
+            const dd   = f[3];
+
+            return `${dd}-${meses[mm - 1]}-${yyyy}`;
+          } catch (e) {
+            return fechaISO;
+          }
+        }
+
+        const pickupPretty  = formatFechaBonita(pickup_date);
+        const dropoffPretty = formatFechaBonita(dropoff_date);
+// Obtener traducciones desde window.reservaTranslations
+const trans = window.reservaTranslations || {};
+
+const msgExito = `
+  <div class="resv-alert-success">
+
+    <div class="resv-alert-check-card">
+      <div class="resv-alert-check-icon-wrap">
+        <span class="resv-alert-check-icon">✓</span>
+      </div>
+      <div class="resv-alert-check-text">
+        ${trans.reserva_exitosa || 'Su reservación fue registrada correctamente.'}
+      </div>
+    </div>
+
+    <div class="resv-alert-card resv-alert-itinerary">
+      <div class="resv-alert-card-title">${trans.itinerario || 'Itinerario'}</div>
+
+      <div class="resv-alert-item">
+        <span class="resv-alert-label">${trans.folio || 'Folio'}</span>
+        <b>${folio}</b>
+      </div>
+
+      <div class="resv-alert-item">
+        <span class="resv-alert-label">${trans.entrega || 'Entrega'}</span>
+        <b>${pickupPretty}</b>
+      </div>
+
+      <div class="resv-alert-item">
+        <span class="resv-alert-label">${trans.devolucion || 'Devolución'}</span>
+        <b>${dropoffPretty}</b>
+      </div>
+    </div>
+
+    <div class="resv-alert-card">
+      <div class="resv-alert-card-title">${trans.resumen_pago || 'Resumen de pago'}</div>
+
+      <div class="resv-alert-item">
+        <span class="resv-alert-label">${trans.tarifa_base || 'Tarifa base'}</span>
+        <span>${baseTxt}</span>
+      </div>
+
+      <div class="resv-alert-item">
+        <span class="resv-alert-label">${trans.opciones_renta || 'Opciones de renta'}</span>
+        <span>${extrasTxt}</span>
+      </div>
+
+      <div class="resv-alert-item">
+        <span class="resv-alert-label">${trans.cargos_e_iva || 'Cargos e IVA (16%)'}</span>
+        <span>${ivaTxt}</span>
+      </div>
+
+      <div class="resv-alert-item resv-alert-total">
+        <span class="resv-alert-label">${trans.total || 'Total'}</span>
+        <b>${totalTxt}</b>
+      </div>
+    </div>
+
+    <div class="resv-alert-mail-glass">
+      <span class="resv-alert-mail-icon">✉</span>
+      <span>${trans.confirmacion_correo || 'Recibirá confirmación por correo electrónico.'}</span>
+    </div>
+
+  </div>
+`;
 
         if (window.alertify) {
-  alertify.alert("Reservación registrada", msgExito, function () {
-    // 1) Limpiar persistencia del wizard (Paso 1)
-    try {
-      localStorage.removeItem("viajero_resv_filters_v1");
-    } catch (e) {
-      console.warn("No se pudo limpiar localStorage:", e);
-    }
+          const alerta = alertify.alert("", msgExito, function () {
+            // 1) Limpiar persistencia del wizard (Paso 1)
+            try {
+              localStorage.removeItem("viajero_resv_filters_v1");
+            } catch (e) {
+              console.warn("No se pudo limpiar localStorage:", e);
+            }
 
-    // 2) Limpiar cualquier dato temporal en sesión
-    try {
-      sessionStorage.clear();
-    } catch (e) {
-      console.warn("No se pudo limpiar sessionStorage:", e);
-    }
+            // 2) Limpiar cualquier dato temporal en sesión
+            try {
+              sessionStorage.clear();
+            } catch (e) {
+              console.warn("No se pudo limpiar sessionStorage:", e);
+            }
 
-    // 3) Redirigir al Paso 1, limpio
-    try {
-      const url = new URL(window.location.href);
-      // limpiamos query y hash actuales
-      url.search = "";
-      url.hash = "";
+            // 3) Redirigir al Paso 1, limpio
+            try {
+              window.location.href = "/";
+            } catch (e) {
+              window.location.href = "/";
+            }
+          });
 
-      url.searchParams.set("step", "1");
-      url.searchParams.set("reset", "1");
+          alerta.set("labels", { ok: "Ir al inicio" });
+          alerta.set("closable", true);
+          alerta.set("movable", false);
+          alerta.set("resizable", false);
+          alerta.set("pinnable", false);
+          alerta.set("transition", "zoom");
 
-      window.location.href = url.pathname + "?" + url.searchParams.toString();
-    } catch (e) {
-      // Fallback simple
-      window.location.href = window.location.pathname + "?step=1&reset=1";
-    }
-  });
-} else {
-  // Fallback sin alertify: alert nativa + reset inmediato
-  alert("Reservación registrada correctamente. Revisa tu correo de confirmación.");
+          alerta.set("onshow", function () {
+            this.elements.dialog.classList.add("resv-alertify-success");
+          });
 
-  try {
-    localStorage.removeItem("viajero_resv_filters_v1");
-  } catch (e) {
-    console.warn("No se pudo limpiar localStorage:", e);
-  }
-  try {
-    sessionStorage.clear();
-  } catch (e) {
-    console.warn("No se pudo limpiar sessionStorage:", e);
-  }
+          alerta.set("onclose", function () {
+            this.elements.dialog.classList.remove("resv-alertify-success");
+          });
 
-  window.location.href = window.location.pathname + "?step=1&reset=1";
-}
+        } else {
+          // Fallback sin alertify: alert nativa + reset inmediato
+          alert("Reservación registrada correctamente. Revisa tu correo de confirmación.");
+
+          try {
+            localStorage.removeItem("viajero_resv_filters_v1");
+          } catch (e) {
+            console.warn("No se pudo limpiar localStorage:", e);
+          }
+          try {
+            sessionStorage.clear();
+          } catch (e) {
+            console.warn("No se pudo limpiar sessionStorage:", e);
+          }
+
+          window.location.href = "/";
+        }
 
       } catch (error) {
         console.error("Error en pago mostrador:", error);
@@ -448,4 +526,4 @@ if (table) {
       // El flujo real de PayPal lo maneja BtnReservaLinea.js
     });
   }
-});
+});s

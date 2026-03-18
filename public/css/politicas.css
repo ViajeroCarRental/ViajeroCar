@@ -767,7 +767,7 @@ body.modal-open{ overflow:hidden; }
     color: #000000 !important;
     background: white !important;
     box-sizing: border-box !important;
-    padding: 0 8px 0 36px !important;
+ padding: 0 24px 0 45px !important;
 }
 
 #miBuscadorPoliticas select {
@@ -900,7 +900,7 @@ body.modal-open{ overflow:hidden; }
     font-size: 16px !important;
     color: #666 !important;
     background: white !important;
-    padding: 0 8px 0 36px !important;
+    padding: 0 28px 0 45px !important;
     appearance: none !important;
     -webkit-appearance: none !important;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
@@ -1806,7 +1806,7 @@ body {
   align-items: center !important;
   border: 1px solid #ccc !important;
   border-radius: 8px !important;
-  padding-left: 36px !important;
+  padding-left: 45px !important;
   box-sizing: border-box !important;
 }
 
@@ -1843,4 +1843,67 @@ i.fa,
 [class*="fa-"] {
   line-height: 1 !important;
   vertical-align: middle;
+}
+
+/* ===== BOTÓN DE CERRAR - SOLO EN MÓVIL/TABLET ===== */
+#miBuscadorPoliticas .btn-close-politicas {
+    display: none !important;  /* Oculto por defecto en escritorio */
+    align-items: center !important;
+    justify-content: center !important;
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 100002 !important;
+    width: 40px !important;
+    height: 40px !important;
+    background: var(--brand) !important;
+    border: none !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(178,34,34,0.3) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+/* Mostrar solo en móvil y tablet (menor a 1124px) */
+@media (max-width: 1124px) {
+    #miBuscadorPoliticas .btn-close-politicas {
+        display: flex !important;
+    }
+}
+
+#miBuscadorPoliticas .btn-close-politicas:hover {
+    transform: scale(1.05) !important;
+    box-shadow: 0 6px 16px rgba(178,34,34,0.4) !important;
+}
+
+#miBuscadorPoliticas .btn-close-politicas:active {
+    transform: scale(0.95) !important;
+}
+
+#miBuscadorPoliticas .btn-close-politicas span {
+    display: none !important;
+}
+
+#miBuscadorPoliticas .btn-close-politicas::before {
+    content: "×" !important;
+    display: block !important;
+    font-size: 32px !important;
+    font-weight: 300 !important;
+    color: white !important;
+    line-height: 1 !important;
+    transform: translateY(-2px) !important;
+}
+
+/* Ajuste para móvil */
+@media (max-width: 560px) {
+    #miBuscadorPoliticas .btn-close-politicas {
+        top: 15px !important;
+        right: 15px !important;
+        width: 36px !important;
+        height: 36px !important;
+    }
+
+    #miBuscadorPoliticas .btn-close-politicas::before {
+        font-size: 28px !important;
+    }
 }

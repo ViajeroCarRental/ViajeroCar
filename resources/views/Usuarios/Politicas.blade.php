@@ -533,22 +533,137 @@
 @endsection
 
 @section('js-vistaPoliticas')
- <script>
-        window.politicasTranslations = {
-            ubicacion_requerida: "{{ __('messages.ubicacion_requerida') }}",
-            fecha_requerida: "{{ __('messages.fecha_requerida') }}",
-            hora_requerida: "{{ __('messages.hora_requerida') }}"
-        };
-    </script>
-    <!-- jQuery (necesario para Select2) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Select2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <!-- Flatpickr -->
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-     <!-- Flatpickr CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <!-- Tu JS personalizado -->
-    <script src="{{ asset('js/politicas.js') }}"></script>
+<script>
+    window.politicasTranslations = {
+        hora: "{{ __('messages.hora') }}",
+        fecha: "{{ __('messages.fecha') }}",
+        ubicacion_requerida: "{{ __('messages.ubicacion_requerida') }}",
+        fecha_requerida: "{{ __('messages.fecha_requerida') }}",
+        hora_requerida: "{{ __('messages.hora_requerida') }}"
+    };
+</script>
+
+<!-- jQuery (necesario para Select2) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- Flatpickr -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
+<!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<!-- INICIALIZAR FLATPICKR CON TRADUCCIONES -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof flatpickr === 'undefined') {
+        console.error('Flatpickr no está cargado');
+        return;
+    }
+
+    // Configuración con meses abreviados usando traducciones de Laravel
+    const localeConfig = {
+        firstDayOfWeek: 1,
+        weekdays: {
+            shorthand: ['{{ __("messages.dom") }}', '{{ __("messages.lun") }}', '{{ __("messages.mar") }}',
+                       '{{ __("messages.mie") }}', '{{ __("messages.jue") }}', '{{ __("messages.vie") }}',
+                       '{{ __("messages.sab") }}'],
+            longhand: ['{{ __("messages.domingo") }}', '{{ __("messages.lunes") }}', '{{ __("messages.martes") }}',
+                      '{{ __("messages.miercoles") }}', '{{ __("messages.jueves") }}', '{{ __("messages.viernes") }}',
+                      '{{ __("messages.sabado") }}']
+        },
+        months: {
+            shorthand: ['{{ __("messages.ene") }}', '{{ __("messages.feb") }}', '{{ __("messages.mar") }}',
+                       '{{ __("messages.abr") }}', '{{ __("messages.may") }}', '{{ __("messages.jun") }}',
+                       '{{ __("messages.jul") }}', '{{ __("messages.ago") }}', '{{ __("messages.sep") }}',
+                       '{{ __("messages.oct") }}', '{{ __("messages.nov") }}', '{{ __("messages.dic") }}'],
+            longhand: ['{{ __("messages.enero") }}', '{{ __("messages.febrero") }}', '{{ __("messages.marzo") }}',
+                      '{{ __("messages.abril") }}', '{{ __("messages.mayo") }}', '{{ __("messages.junio") }}',
+                      '{{ __("messages.julio") }}', '{{ __("messages.agosto") }}', '{{ __("messages.septiembre") }}',
+                      '{{ __("messages.octubre") }}', '{{ __("messages.noviembre") }}', '{{ __("messages.diciembre") }}']
+        }
+    };
+
+    // Función para sincronizar clases de validación
+    function syncValidationClasses(altInput, hiddenInput) {
+        if (!altInput || !hiddenInput) return;
+
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'class') {
+                    if (hiddenInput.classList.contains('field-error')) {
+                        altInput.classList.add('field-error');
+                    } else {
+                        altInput.classList.remove('field-error');
+                    }
+                    if (hiddenInput.classList.contains('field-success')) {
+                        altInput.classList.add('field-success');
+                    } else {
+                        altInput.classList.remove('field-success');
+                    }
+                }
+            });
+        });
+        observer.observe(hiddenInput, { attributes: true });
+    }
+
+    // Pickup Date
+    const pickupInput = document.getElementById('pickupDatePoliticas');
+    if (pickupInput) {
+        flatpickr(pickupInput, {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d-M-Y",
+            minDate: "today",
+            allowInput: true,
+            locale: localeConfig,
+            onReady: function(selectedDates, dateStr, instance) {
+                const hiddenInput = document.getElementById('pickupDatePoliticas');
+                syncValidationClasses(instance.altInput, hiddenInput);
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                const hiddenInput = document.getElementById('pickupDatePoliticas');
+                hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+                // Actualizar minDate del dropoff
+                if (selectedDates[0]) {
+                    const dropoffPicker = document.getElementById('dropoffDatePoliticas')._flatpickr;
+                    if (dropoffPicker) {
+                        dropoffPicker.set('minDate', selectedDates[0]);
+                    }
+                }
+            }
+        });
+        console.log('✅ Calendario pickup en políticas inicializado');
+    }
+
+    // Dropoff Date
+    const dropoffInput = document.getElementById('dropoffDatePoliticas');
+    if (dropoffInput) {
+        flatpickr(dropoffInput, {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d-M-Y",
+            minDate: "today",
+            allowInput: true,
+            locale: localeConfig,
+            onReady: function(selectedDates, dateStr, instance) {
+                const hiddenInput = document.getElementById('dropoffDatePoliticas');
+                syncValidationClasses(instance.altInput, hiddenInput);
+            },
+            onChange: function(selectedDates, dateStr, instance) {
+                const hiddenInput = document.getElementById('dropoffDatePoliticas');
+                hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+        console.log('✅ Calendario dropoff en políticas inicializado');
+    }
+});
+</script>
+
+<!-- Tu JS personalizado -->
+<script src="{{ asset('js/politicas.js') }}"></script>
 @endsection

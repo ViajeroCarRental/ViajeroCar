@@ -143,6 +143,8 @@ return [
     'ubicacion_requerida' => 'Ubicación Requerida',
     'fecha_requerida' => 'Fecha Requerida',
     'hora_requerida' => 'Hora Requerida',
+    'otra_reserva' => 'Otra reserva',
+    'renta_tu_auto' => 'RENTA TU AUTO CON VIAJERO',
 
       // ==================== CONTACTO ====================
     'contacto_titulo' => 'Contacto',
@@ -576,6 +578,9 @@ return [
     'ubicacion_requerida' => 'Ubicación Requerida',
     'fecha_requerida' => 'Fecha Requerida',
     'hora_requerida' => 'Hora Requerida',
+    // ==================== CHECKBOX s ====================
+'devolver_en_otro_1' => 'Devolver en',
+'devolver_en_otro_2' => 'otro destino',
 
     // ==================== STEP 2 ====================
     'selecciona_categoria' => 'Selecciona tu categoría',
@@ -586,6 +591,18 @@ return [
     'pagar_en_oficina' => 'PAGAR EN OFICINA',
     'ahorra' => 'Ahorra',
     'no_categorias' => 'No hay categorías disponibles.',
+    // ==================== CATEGORÍAS ====================
+'categoria_1' => 'COMPACTO',
+'categoria_2' => 'MEDIANOS',
+'categoria_3' => 'GRANDE',
+'categoria_4' => 'FULL SIZE',
+'categoria_5' => 'SUV COMPACTA',
+'categoria_6' => 'SUV MEDIANA',
+'categoria_7' => 'SUV FAMILIAR COMPACTA',
+'categoria_8' => 'MINIVAN',
+'categoria_9' => 'VAN FAMILIAR',
+'categoria_10' => 'PICK UP DOBLE CABINA',
+'categoria_11' => 'PICK UP 4X4 DOBLE CABINA',
 
     // ==================== STEP 3 ====================
     'selecciona_adicionales' => 'Selecciona las opciones adicionales que desees',
@@ -603,6 +620,13 @@ return [
     'por_dia' => '/ día',
     'max_3' => 'Máx 3',
     'no_complementos' => 'No hay complementos disponibles por ahora.',
+    // ==================== SERVICIOS (EXTRAS) ====================
+'servicio_silla_bebe' => 'SILLA DE BEBÉ',
+'servicio_silla_bebe_desc' => 'Silla de seguridad para bebé.',
+'servicio_gasolina_prepago' => 'GASOLINA PREPAGO',
+'servicio_gasolina_prepago_desc' => 'Costo por litro x cantidad de litros que tenga el auto.',
+'servicio_conductor_adicional' => 'CONDUCTOR ADICIONAL',
+'servicio_conductor_adicional_desc' => 'Agregar un conductor extra.',
 
     // ==================== STEP 4 ====================
     'datos_personales' => 'Datos personales',
@@ -639,6 +663,22 @@ return [
     'reelevo_responsabilidad' => 'Relevo de Responsabilidad (LI)',
     'sin_complementos' => 'Sin complementos seleccionados',
     'sin_cargos' => 'Sin cargos adicionales',
+    'resumen_pago' => 'Resumen de pago',
+    'prepagar_en_linea_btn' => 'PREPAGAR EN LÍNEA',
+    'pagar_en_oficina_btn' => 'PAGAR EN OFICINA',
+    'cancelar' => 'Cancelar',
+    // Mensajes de éxito en reservaciones
+'reserva_exitosa' => 'Su reservación fue registrada correctamente.',
+'itinerario' => 'Itinerario',
+'folio' => 'Folio',
+'entrega' => 'Entrega',
+'devolucion' => 'Devolución',
+'resumen_pago' => 'Resumen de pago',
+'tarifa_base' => 'Tarifa base',
+'opciones_renta' => 'Opciones de renta',
+'cargos_e_iva' => 'Cargos e IVA (16%)',
+'total' => 'Total',
+'confirmacion_correo' => 'Recibirá confirmación por correo electrónico.',
 
     // ==================== MODAL PROTECCIONES ====================
     'relevos_detalle' => 'Consulta el detalle de cada pack y lo que incluye.',
@@ -909,6 +949,50 @@ return [
     'politica_limpieza' => 'POLÍTICA DE LIMPIEZA',
     'politica_renta' => 'POLÍTICA DE RENTA',
 
+// Días de la semana (abreviados)
+'dom' => 'Dom',
+'lun' => 'Lun',
+'mar' => 'Mar',
+'mie' => 'Mié',
+'jue' => 'Jue',
+'vie' => 'Vie',
+'sab' => 'Sáb',
 
+// Días de la semana (completos)
+'domingo' => 'Domingo',
+'lunes' => 'Lunes',
+'martes' => 'Martes',
+'miercoles' => 'Miércoles',
+'jueves' => 'Jueves',
+'viernes' => 'Viernes',
+'sabado' => 'Sábado',
+
+// Meses (abreviados)
+'ene' => 'Ene',
+'feb' => 'Feb',
+'mar' => 'Mar',
+'abr' => 'Abr',
+'may' => 'May',
+'jun' => 'Jun',
+'jul' => 'Jul',
+'ago' => 'Ago',
+'sep' => 'Sep',
+'oct' => 'Oct',
+'nov' => 'Nov',
+'dic' => 'Dic',
+
+// Meses (completos)
+'enero' => 'Enero',
+'febrero' => 'Febrero',
+'marzo' => 'Marzo',
+'abril' => 'Abril',
+'mayo' => 'Mayo',
+'junio' => 'Junio',
+'julio' => 'Julio',
+'agosto' => 'Agosto',
+'septiembre' => 'Septiembre',
+'octubre' => 'Octubre',
+'noviembre' => 'Noviembre',
+'diciembre' => 'Diciembre',
 
     ];

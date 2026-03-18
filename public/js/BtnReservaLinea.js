@@ -275,8 +275,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const script = document.createElement("script");
       // Para sandbox / live el dominio es el mismo, cambia el client-id
       script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(
-        clientId
-      )}&currency=MXN&intent=capture`;
+  clientId
+)}&currency=MXN&intent=capture&locale=en_US`;
       script.async = true;
       script.onload = () => resolve();
       script.onerror = () => reject(new Error("No se pudo cargar el SDK de PayPal."));

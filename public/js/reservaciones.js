@@ -831,124 +831,96 @@
       }
     }
 
-  function parseAddons(str) {
-    const map = new Map();
-    String(str || '')
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .forEach(pair => {
-        const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
-        if (!m) return;
-        const id = m[1];
-        const qty = Math.max(0, parseInt(m[2], 10) || 0);
-        if (qty > 0) map.set(id, qty);
-      });
-    return map;
-  }
-
-  function fmtMoney(n) {
-    return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
-  }
-
-  const addonsMap = parseAddons(rawAddons);
-  let extrasTotal = 0;
-  let renderedRows = 0;
-
-  if (extrasList) extrasList.innerHTML = '';
-  if (ivaList) ivaList.innerHTML = '';
-
-  // ======================================================
-  // DROP OFF
-  // ======================================================
- const pickupId  = table.dataset.pickup;
-const dropoffId = table.dataset.dropoff;
-const km        = parseFloat(table.dataset.km || 0);
-const costoKm   = parseFloat(table.dataset.costokm || 0);
-const tanque    = parseFloat(table.dataset.tanque || 0);
-const SERVICE_GASOLINA_ID = '1';
-
-  if (pickupId && dropoffId && pickupId !== dropoffId && km > 0 && costoKm > 0) {
-    const dropoffTotal = km * costoKm;
-    extrasTotal += dropoffTotal;
-
-    if (extrasList) {
-      const row = document.createElement('div');
-      row.className = 'row row-dropoff';
-      row.innerHTML = `
-        <span>Drop Off (${km} km)</span>
-        <strong>${fmtMoney(dropoffTotal)}</strong>
-      `;
-      extrasList.appendChild(row);
-      renderedRows++;
+    function parseAddons(str) {
+      const map = new Map();
+      String(str || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .forEach(pair => {
+          const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
+          if (!m) return;
+          const id = m[1];
+          const qty = Math.max(0, parseInt(m[2], 10) || 0);
+          if (qty > 0) map.set(id, qty);
+        });
+      return map;
     }
 
-  // ======================================================
-// ADDONS
-// ======================================================
-addonsMap.forEach((qty, id) => {
-  const srv = catalog[id];
-  if (!srv) return;
+    function fmtMoney(n) {
+      return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
+    }
 
-  const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
-  const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
+    const addonsMap = parseAddons(rawAddons);
+    let extrasTotal = 0;
 
-  let lineTotal = 0;
-  let detalleLabel = '';
-  let unidadLabel = '';
+    if (extrasList) extrasList.innerHTML = '';
+    if (ivaList) ivaList.innerHTML = '';
 
-  // GASOLINA PREPAGO
-  if (String(id) === SERVICE_GASOLINA_ID) {
-    const litros = Math.max(0, tanque);
-    lineTotal = price * litros;
+    if (addonsMap.size === 0) {
+      if (extrasList) {
+        const row = document.createElement('div');
+        row.className = 'row row-empty';
+        row.innerHTML = `
+          <span class="muted">Sin complementos seleccionados</span>
+          <strong>$0 MXN</strong>
+        `;
+        extrasList.appendChild(row);
+      }
+    } else {
+      addonsMap.forEach((qty, id) => {
+        const srv = catalog[id];
+        if (!srv) return;
 
-    detalleLabel = `${srv.nombre} | ${litros} L x ${fmtMoney(price)} por litro`;
-    unidadLabel = '';
-  }
-  else if (tipo === 'por_tanque') {
-    const litros = Math.max(0, tanque);
-    lineTotal = price * litros * qty;
+        const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+        const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
 
-    detalleLabel = `${qty} | ${srv.nombre} | ${litros} L x ${fmtMoney(price)} por litro`;
-    unidadLabel = '';
-  }
-  else if (tipo === 'por_evento') {
-    lineTotal = price * qty;
-    detalleLabel = `${qty} | ${srv.nombre} | ${fmtMoney(price)} / evento`;
-  }
-  else {
-    lineTotal = price * qty * days;
-    detalleLabel = `${qty} | ${srv.nombre} | ${fmtMoney(price)} por día`;
-  }
+        let lineTotal = 0;
+        if (tipo === 'por_evento') {
+          lineTotal = price * qty;
+        } else {
+          lineTotal = price * qty * days;
+        }
 
-  extrasTotal += lineTotal;
+        extrasTotal += lineTotal;
 
-  if (extrasList) {
-    const row = document.createElement('div');
-    row.className = 'row row-addon';
+        if (extrasList) {
+          const row = document.createElement('div');
+          row.className = 'row row-addon';
 
-    row.innerHTML = `
-      <span style="flex:1;">
-        ${detalleLabel}
-      </span>
-      <strong style="flex:0 0 110px; text-align:right;">
-        ${fmtMoney(lineTotal)}
-      </strong>
-    `;
+          const unidadLabel = (tipo === 'por_evento') ? '/ evento' : 'por día';
 
-    extrasList.appendChild(row);
-    renderedRows++;
-  }
-});
-  // Si no hubo nada
-  if (renderedRows === 0 && extrasList) {
-    const row = document.createElement('div');
-    row.className = 'row row-empty';
-    row.innerHTML = `
-      <span class="muted">Sin complementos seleccionados</span>
-      <strong>$0 MXN</strong>
-    `;
-    extrasList.appendChild(row);
+          row.innerHTML = `
+            <span style="flex:1;">
+              ${qty} | ${srv.nombre} | ${fmtMoney(price)} ${unidadLabel}
+            </span>
+            <strong style="flex:0 0 110px; text-align:right;">
+              ${fmtMoney(lineTotal)}
+            </strong>
+          `;
+          extrasList.appendChild(row);
+        }
+      });
+    }
+
+    const subtotal = base + extrasTotal;
+    const iva = subtotal * 0.16;
+    const total = subtotal + iva;
+
+    qBaseEl.textContent   = fmtMoney(base);
+    qExtrasEl.textContent = fmtMoney(extrasTotal);
+    qIvaEl.textContent    = fmtMoney(iva);
+    qTotalEl.textContent  = fmtMoney(total);
+
+    if (ivaList) {
+      const row = document.createElement('div');
+      row.className = 'row row-iva';
+      row.innerHTML = `
+        <span>IVA (16%)</span>
+        <strong>${fmtMoney(iva)}</strong>
+      `;
+      ivaList.appendChild(row);
+    }
   }
 
   function initFullNameSync(){
@@ -1405,117 +1377,6 @@ addonsMap.forEach((qty, id) => {
     });
   }
 
-  function initFlatpickrRules() {
-    if (!window.flatpickr) return;
-
-    try {
-      if (window.flatpickr?.l10ns?.es) window.flatpickr.localize(window.flatpickr.l10ns.es);
-    } catch (_) { }
-
-    const start = qs("#start");
-    const end = qs("#end");
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (!start || !end) return;
-
-    function toDateAtMidnight(d) {
-      const x = new Date(d.getTime());
-      x.setHours(0, 0, 0, 0);
-      return x;
-    }
-
-    function parseAnyToDate(val) {
-      if (!val) return null;
-      const s = String(val).trim();
-
-      let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-      if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
-
-      m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
-
-      const d = new Date(s);
-      return isNaN(d.getTime()) ? null : d;
-    }
-
-    try { if (start._flatpickr) start._flatpickr.destroy(); } catch (_) { }
-    try { if (end._flatpickr) end._flatpickr.destroy(); } catch (_) { }
-
-    const baseCfg = { dateFormat: "d-m-Y", allowInput: true, disableMobile: true };
-
-    const startFp = window.flatpickr(start, { ...baseCfg });
-    const endFp = window.flatpickr(end, { ...baseCfg });
-
-    const startInit = parseAnyToDate(start.value);
-    const endInit = parseAnyToDate(end.value);
-
-    if (startInit) startFp.setDate(startInit, false);
-    if (endInit) endFp.setDate(endInit, false);
-
-    startFp.set("minDate", today);
-    endFp.set("minDate", today);
-
-    const jumpToCurrentMonth = (fp) => {
-      const d = fp.selectedDates?.[0] || today;
-      fp.jumpToDate(d, true);
-    };
-    startFp.set("onOpen", [() => jumpToCurrentMonth(startFp)]);
-    endFp.set("onOpen", [() => jumpToCurrentMonth(endFp)]);
-
-    let lock = false;
-
-    function applyConstraintsAndFix() {
-      if (lock) return;
-      lock = true;
-
-      const sRaw = startFp.selectedDates?.[0] || null;
-      const eRaw = endFp.selectedDates?.[0] || null;
-
-      const s = sRaw ? toDateAtMidnight(sRaw) : null;
-      const e = eRaw ? toDateAtMidnight(eRaw) : null;
-
-      if (s && s < today) startFp.setDate(today, false);
-      if (e && e < today) endFp.setDate(today, false);
-
-      const s2 = startFp.selectedDates?.[0] ? toDateAtMidnight(startFp.selectedDates[0]) : null;
-      const e2 = endFp.selectedDates?.[0] ? toDateAtMidnight(endFp.selectedDates[0]) : null;
-
-      endFp.set("minDate", s2 || today);
-
-      if (s2 && e2 && s2.getTime() > e2.getTime()){
-        endFp.setDate(s2, false);
-        endFp.set("minDate", s2);
-      }
-
-      jumpToCurrentMonth(startFp);
-      jumpToCurrentMonth(endFp);
-
-      lock = false;
-    }
-
-    startFp.set("onChange", [applyConstraintsAndFix]);
-    endFp.set("onChange", [applyConstraintsAndFix]);
-
-    applyConstraintsAndFix();
-    start.addEventListener("blur", applyConstraintsAndFix);
-    end.addEventListener("blur", applyConstraintsAndFix);
-  }
-
-  function bootWhenFlatpickrReady() {
-    let tries = 0;
-    const maxTries = 240;
-    function tick() {
-      tries++;
-      if (window.flatpickr) {
-        initFlatpickrRules();
-        return;
-      }
-      if (tries < maxTries) requestAnimationFrame(tick);
-    }
-    tick();
-  }
 
   function refreshFloatStates() {
     qsa('[data-float]').forEach(ctl => {
@@ -1595,62 +1456,37 @@ addonsMap.forEach((qty, id) => {
     setTimeout(refreshFloatLabels, 500);
   });
 
-// ===== SELECT2 CON TEXTOS DINÁMICOS =====
-document.addEventListener("DOMContentLoaded", function() {
-  if (!window.jQuery || !window.jQuery.fn || typeof window.jQuery.fn.select2 !== 'function') return;
+  // ===== Select2 =====
+  document.addEventListener("DOMContentLoaded", function() {
+    if (!window.jQuery || !window.jQuery.fn || typeof window.jQuery.fn.select2 !== 'function') return;
 
-  // Función para obtener textos según idioma
-  function getSelectText(key) {
-    const lang = document.documentElement.lang || 'es';
-    const texts = {
-      'donde_inicia': { es: '¿Dónde inicia tu viaje?', en: 'Where does your trip start?' },
-      'donde_termina': { es: '¿Dónde termina tu viaje?', en: 'Where does your trip end?' }
-    };
-    return texts[key]?.[lang] || (lang === 'en' ? 'Select an option' : 'Selecciona una opción');
-  }
+    const configs = [
+      { id: 'pickupPlace', icon: 'pickupIcon' },
+      { id: 'dropoffPlace', icon: 'dropoffIcon' }
+    ];
 
-  const configs = [
-    { id: 'pickupPlace', icon: 'pickupIcon', placeholderKey: 'donde_inicia' },
-    { id: 'dropoffPlace', icon: 'dropoffIcon', placeholderKey: 'donde_termina' }
-  ];
+    function updateFloatingIcon(selectId, iconId) {
+      const selectEl = document.getElementById(selectId);
+      const iconEl   = document.getElementById(iconId);
 
-  function updateFloatingIcon(selectId, iconId) {
-    const selectEl = document.getElementById(selectId);
-    const iconEl   = document.getElementById(iconId);
+      if (!selectEl || !iconEl) return;
 
-    if (!selectEl || !iconEl) return;
+      const selectedOption = selectEl.options[selectEl.selectedIndex];
+      let iconClass = 'fa-solid fa-location-dot';
 
-    const selectedOption = selectEl.options[selectEl.selectedIndex];
-    let iconClass = 'fa-solid fa-location-dot';
-
-    if (selectedOption && selectedOption.dataset.icon) {
-      iconClass = selectedOption.dataset.icon;
-    } else if (selectedOption) {
-      const text = selectedOption.text.toLowerCase();
-      if (text.includes('aeropuerto') || text.includes('airport')) {
-        iconClass = 'fa-solid fa-plane-departure';
-      } else if (text.includes('central') || text.includes('terminal') || text.includes('bus station')) {
-        iconClass = 'fa-solid fa-bus';
+      if (selectedOption && selectedOption.dataset.icon) {
+        iconClass = selectedOption.dataset.icon;
       }
+
+      iconEl.innerHTML = `<i class="${iconClass}"></i>`;
     }
 
-    iconEl.innerHTML = `<i class="${iconClass}"></i>`;
-  }
-
-  function initSelect2() {
     configs.forEach(conf => {
       const $select = $('#' + conf.id);
-      const placeholder = getSelectText(conf.placeholderKey);
 
       if ($select.length > 0) {
-        // Destruir instancia anterior si existe
-        if ($select.data('select2')) {
-          $select.select2('destroy');
-        }
-
         $select.select2({
           width: '100%',
-          placeholder: placeholder,
           templateResult: function(option) {
             if (!option.id) return option.text;
             const icon = $(option.element).data('icon') || 'fa-solid fa-location-dot';
@@ -1660,8 +1496,7 @@ document.addEventListener("DOMContentLoaded", function() {
             if (!option.id) return option.text;
             const icon = $(option.element).data('icon') || 'fa-solid fa-location-dot';
             return $('<span><i class="' + icon + '" style="margin-right:8px;"></i>' + option.text + '</span>');
-          },
-          escapeMarkup: function(m) { return m; }
+          }
         });
 
         updateFloatingIcon(conf.id, conf.icon);
@@ -1672,165 +1507,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
       }
     });
-
-    // Actualizar estado del dropoff según checkbox
-    const checkbox = document.getElementById('differentDropoff');
-    const dropoffSelect = $('#dropoffPlace');
-
-    if (checkbox && dropoffSelect.length) {
-      dropoffSelect.prop('disabled', !checkbox.checked);
-
-      if (!checkbox.checked) {
-        dropoffSelect.val(null).trigger('change');
-      }
-    }
-  }
-
-  // Inicializar Select2
-  setTimeout(initSelect2, 300);
-
-  // DETECTOR DE CAMBIO DE IDIOMA (SOLO PARA SELECT2)
-  const observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-      if (mutation.attributeName === 'lang') {
-        setTimeout(() => {
-          if (typeof $ !== 'undefined' && $.fn.select2) {
-            try {
-              $('#pickupPlace').select2('destroy');
-              $('#dropoffPlace').select2('destroy');
-            } catch(e) {}
-            setTimeout(initSelect2, 100);
-          }
-        }, 50);
-      }
-    });
   });
-// ===== SELECT2 CON TEXTOS DINÁMICOS =====
-document.addEventListener("DOMContentLoaded", function() {
-  if (!window.jQuery || !window.jQuery.fn || typeof window.jQuery.fn.select2 !== 'function') return;
-
-  // Usar traducciones de window.reservaTranslations
-  const translations = window.reservaTranslations || {
-    donde_inicia: '¿Dónde inicia tu viaje?',
-    donde_termina: '¿Dónde termina tu viaje?',
-    selecciona_opcion: 'Selecciona una opción'
-  };
-
-  const configs = [
-    { id: 'pickupPlace', icon: 'pickupIcon', placeholderKey: 'donde_inicia' },
-    { id: 'dropoffPlace', icon: 'dropoffIcon', placeholderKey: 'donde_termina' }
-  ];
-
-  function updateFloatingIcon(selectId, iconId) {
-    const selectEl = document.getElementById(selectId);
-    const iconEl   = document.getElementById(iconId);
-
-    if (!selectEl || !iconEl) return;
-
-    const selectedOption = selectEl.options[selectEl.selectedIndex];
-    let iconClass = 'fa-solid fa-location-dot';
-
-    if (selectedOption && selectedOption.dataset.icon) {
-      iconClass = selectedOption.dataset.icon;
-    } else if (selectedOption) {
-      const text = selectedOption.text.toLowerCase();
-      if (text.includes('aeropuerto') || text.includes('airport')) {
-        iconClass = 'fa-solid fa-plane-departure';
-      } else if (text.includes('central') || text.includes('terminal') || text.includes('bus station')) {
-        iconClass = 'fa-solid fa-bus';
-      }
-    }
-
-    iconEl.innerHTML = `<i class="${iconClass}"></i>`;
-  }
-
-  function initSelect2() {
-    configs.forEach(conf => {
-      const $select = $('#' + conf.id);
-      const placeholder = translations[conf.placeholderKey] || translations.selecciona_opcion;
-
-      if ($select.length > 0) {
-        // Destruir instancia anterior si existe
-        if ($select.data('select2')) {
-          $select.select2('destroy');
-        }
-
-        $select.select2({
-          width: '100%',
-          placeholder: placeholder,
-          templateResult: function(option) {
-            if (!option.id) return option.text;
-            const icon = $(option.element).data('icon') || 'fa-solid fa-location-dot';
-            return $('<span><i class="' + icon + '" style="margin-right:10px;width:20px;text-align:center;"></i>' + option.text + '</span>');
-          },
-          templateSelection: function(option){
-            if (!option.id) return option.text;
-            const icon = $(option.element).data('icon') || 'fa-solid fa-location-dot';
-            return $('<span><i class="' + icon + '" style="margin-right:8px;"></i>' + option.text + '</span>');
-          },
-          escapeMarkup: function(m) { return m; }
-        });
-
-        updateFloatingIcon(conf.id, conf.icon);
-
-        $select.on('select2:select change', function () {
-          updateFloatingIcon(conf.id, conf.icon);
-          this.dispatchEvent(new Event('change', { bubbles: true }));
-        });
-      }
-    });
-
-    // Actualizar estado del dropoff según checkbox
-    const checkbox = document.getElementById('differentDropoff');
-    const dropoffSelect = $('#dropoffPlace');
-
-    if (checkbox && dropoffSelect.length) {
-      dropoffSelect.prop('disabled', !checkbox.checked);
-
-      if (!checkbox.checked) {
-        dropoffSelect.val(null).trigger('change');
-      }
-    }
-  }
-
-  // Inicializar Select2
-  setTimeout(initSelect2, 300);
-
-  // DETECTOR DE CAMBIO DE IDIOMA
-  const observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(mutation) {
-      if (mutation.attributeName === 'lang') {
-        setTimeout(() => {
-          if (typeof $ !== 'undefined' && $.fn.select2) {
-            try {
-              $('#pickupPlace').select2('destroy');
-              $('#dropoffPlace').select2('destroy');
-            } catch(e) {}
-            setTimeout(initSelect2, 100);
-          }
-        }, 50);
-      }
-    });
-  });
-
-  observer.observe(document.documentElement, { attributes: true });
-});
-  observer.observe(document.documentElement, { attributes: true });
-
-  // Verificar si venimos de cambio de idioma
-  if (sessionStorage.getItem('languageJustChanged') === 'true') {
-    sessionStorage.removeItem('languageJustChanged');
-    setTimeout(() => {
-      if (typeof $ !== 'undefined' && $.fn.select2) {
-        try {
-          $('#pickupPlace').select2('destroy');
-          $('#dropoffPlace').select2('destroy');
-        } catch(e) {}
-        setTimeout(initSelect2, 100);
-      }
-    }, 150);
-  }
-});
 
   window.limpiarTodoYReiniciar = function() {
     localStorage.removeItem("viajero_resv_filters_v1");
@@ -2447,6 +2124,7 @@ if (document.readyState === 'loading') {
 }
 
 
+})();
 
 document.addEventListener('DOMContentLoaded', function() {
     // ===== FUNCIÓN PARA COMBINAR HORA (simplificada) =====
@@ -2488,29 +2166,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== INICIALIZAR FLATPICKR =====
-    if (typeof flatpickr !== 'undefined') {
-        const localeEs = {
-            firstDayOfWeek: 1,
-            weekdays: {
-                shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
-                longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-            },
-            months: {
-                shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-                longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-            }
-        };
-
-        flatpickr("#start, #end", {
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d-M-Y",
-            minDate: "today",
-            allowInput: true,
-            locale: localeEs
-        });
-    }
 
     // ===== ACTUALIZAR ICONOS =====
     function updateSelectIcon(select, iconElement) {
@@ -2541,55 +2196,77 @@ document.addEventListener('DOMContentLoaded', function() {
         updateSelectIcon(dropoffSelect, dropoffIcon);
     }
 
+// ===== INICIALIZAR SELECT2 CON TRADUCCIONES =====
+if (typeof $ !== 'undefined' && $.fn.select2) {
+    setTimeout(function() {
+        try {
 
-    // ===== INICIALIZAR SELECT2 (si existe) =====
-    if (typeof $ !== 'undefined' && $.fn.select2) {
-        setTimeout(function() {
-            try {
-                function formatOption(option) {
-                    if (!option.id) {
-                        return $('<span><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
-                    }
+            let dondeInicia = '¿Dónde inicia tu viaje?';
+            let dondeTermina = '¿Dónde termina tu viaje?';
 
-                    let iconClass = 'fa-building';
-                    const text = option.text.toLowerCase();
+            // Si existe el objeto de traducciones, usarlo
+            if (window.reservaTranslations) {
+                dondeInicia = window.reservaTranslations.donde_inicia || dondeInicia;
+                dondeTermina = window.reservaTranslations.donde_termina || dondeTermina;
+            }
 
-                    if (text.includes('aeropuerto')) {
-                        iconClass = 'fa-plane-departure';
-                    } else if (text.includes('central') || text.includes('terminal')) {
-                        iconClass = 'fa-bus';
-                    }
+            // También intentar obtener del HTML si existe un elemento con las traducciones
+            const scriptTranslations = document.querySelector('script[data-translations]');
+            if (scriptTranslations) {
+                try {
+                    const trans = JSON.parse(scriptTranslations.textContent);
+                    dondeInicia = trans.donde_inicia || dondeInicia;
+                    dondeTermina = trans.donde_termina || dondeTermina;
+                } catch(e) {}
+            }
 
-                    return $('<span><i class="fa-solid ' + iconClass + '" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
+            function formatOption(option) {
+                if (!option.id) {
+                    return $('<span><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
                 }
 
-                const select2Config = {
-                    templateResult: formatOption,
-                    templateSelection: formatOption,
-                    escapeMarkup: function(m) { return m; },
-                    width: '100%',
-                    minimumResultsForSearch: Infinity,
-                    allowClear: false
-                };
+                let iconClass = 'fa-building';
+                const text = option.text.toLowerCase();
 
-                $('#pickupPlace').select2({
-                    ...select2Config,
-                    placeholder: '¿Dónde inicia tu viaje?'
-                });
+                if (text.includes('aeropuerto')) {
+                    iconClass = 'fa-plane-departure';
+                } else if (text.includes('central') || text.includes('terminal')) {
+                    iconClass = 'fa-bus';
+                }
 
-                const isChecked = document.getElementById('differentDropoff')?.checked || false;
-                $('#dropoffPlace').select2({
-                    ...select2Config,
-                    placeholder: '¿Dónde termina tu viaje?',
-                    disabled: !isChecked
-                });
-
-                console.log('Select2 inicializado correctamente');
-            } catch (e) {
-                console.warn('Error inicializando Select2:', e);
+                return $('<span><i class="fa-solid ' + iconClass + '" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
             }
-        }, 300);
-    }
+
+            const select2Config = {
+                templateResult: formatOption,
+                templateSelection: formatOption,
+                escapeMarkup: function(m) { return m; },
+                width: '100%',
+                minimumResultsForSearch: Infinity,
+                allowClear: false
+            };
+
+            // Inicializar pickup con la traducción
+            $('#pickupPlace').select2({
+                ...select2Config,
+                placeholder: dondeInicia
+            });
+
+            // Inicializar dropoff
+            const isChecked = document.getElementById('differentDropoff')?.checked || false;
+            $('#dropoffPlace').select2({
+                ...select2Config,
+                placeholder: dondeTermina,
+                disabled: !isChecked
+            });
+
+            console.log('✅ Select2 inicializado con traducciones:', dondeInicia, dondeTermina);
+        } catch (e) {
+            console.warn('Error inicializando Select2:', e);
+        }
+    }, 500);
+}
+
 });
 
 // ===== FUNCIÓN PARA LIMPIAR EL FORMULARIO =====
@@ -2607,8 +2284,11 @@ function limpiarTodoYReiniciar() {
             differentDropoff.checked = false;
         }
 
-// Limpiar Select2 si existe
-if (typeof $ !== 'undefined' && $.fn.select2) {
-    $('#pickupPlace').val('').trigger('change');
-    $('#dropoffPlace').val('').trigger('change');   // ← CORREGIDO
+        // Limpiar Select2 si existe
+        if (typeof $ !== 'undefined' && $.fn.select2) {
+            $('#pickupPlace').val('').trigger('change');
+            $('#dropoffPlace').val('').trigger('change');
+        }
+    }
 }
+
