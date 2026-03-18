@@ -80,13 +80,6 @@
         $requestedStep = (int) request('step', 1);
         $controllerStep = isset($step) ? (int) $step : null;
 
-        $pickupSucursalId = $f['pickup_sucursal_id'] ?? request('pickup_sucursal_id');
-        $dropoffSucursalId = $f['dropoff_sucursal_id'] ?? request('dropoff_sucursal_id');
-
-        if (empty($dropoffSucursalId) && !empty($pickupSucursalId)) {
-        $dropoffSucursalId = $pickupSucursalId;
-        }
-
         $isFreshEntry = empty($pickupSucursalId) || empty($dropoffSucursalId);
         $stepCurrent = $isFreshEntry ? 1 : $controllerStep ?? $requestedStep;
         if ($stepCurrent >= 2 && $isFreshEntry) {
@@ -174,7 +167,7 @@
             3 => asset('img/jetta.png'),
             4 => asset('img/camry.png'),
             5 => asset('img/renegade.png'),
-            6 => asset('img/taos.png'),
+            6 => asset('img/seltos.png'),
             7 => asset('img/avanza.png'),
             8 => asset('img/Odyssey.png'),
             9 => asset('img/Hiace.png'),
@@ -229,25 +222,12 @@
             $categoriaSel && isset($categoriaSel->nombre) ? strtoupper((string) $categoriaSel->nombre) : 'COMPACTO';
 
         // ✅ SOLO estos extras (Step 3) — máximo 3 por cada uno (lo limita tu JS)
+        $allowedExtras = ['silla para bebé', 'conductor adicional', 'gasolina prepago'];
+
         $serviciosFiltrados = collect($servicios ?? [])
-            ->filter(function ($s) {
-
+            ->filter(function ($s) use ($allowedExtras) {
                 $name = mb_strtolower(trim((string) ($s->nombre ?? '')));
-
-                return str_contains($name, 'silla')
-                    || str_contains($name, 'gasolina prepago')
-                    || str_contains($name, 'conductor adicional');
-            })
-            ->sortBy(function ($s) {
-
-                $name = mb_strtolower(trim((string) ($s->nombre ?? '')));
-
-                if (str_contains($name, 'silla')) return 1;
-                if (str_contains($name, 'gasolina')) return 2;
-                if (str_contains($name, 'conductor')) return 3;
-
-                return 99;
-
+                return in_array($name, $allowedExtras, true);
             })
             ->values();
     @endphp
@@ -385,38 +365,8 @@
 {{-- ===================== STEP 1 ===================== --}}
 @if ($stepCurrent === 1)
 
-    {{-- BOTÓN PARA ABRIR BUSCADOR EN MÓVIL/TABLET --}}
-    <div class="btn-buscador-movil">
-        <div class="btn-container">
-            <p style="margin-bottom: 12px; font-weight: 700; color: #333; font-size: 16px;">
-                Encuentra tu auto aquí
-            </p>
-            <button type="button" id="btn-abrir-buscador-reservas"
-                    style="background-color: #b22222;
-                           border: none;
-                           font-weight: 700;
-                           height: 50px;
-                           font-size: 18px;
-                           display: flex;
-                           align-items: center;
-                           justify-content: center;
-                           gap: 8px;
-                           text-transform: uppercase;
-                           border-radius: 8px;
-                           width: 100%;
-                           color: white;
-                           cursor: pointer;">
-                <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
-            </button>
-        </div>
-    </div>
-
     {{-- BUSCADOR PRINCIPAL --}}
     <div class="search-card" id="miBuscador">
-        {{-- BOTÓN DE CERRAR - DENTRO DEL BUSCADOR --}}
-        <button type="button" id="btn-cerrar-buscador-politicas" class="btn-close-politicas" aria-label="Cerrar">
-            <span>Cerrar</span>
-        </button>
 
         <header class="wizard-head">
             <h2>Sobre tu reservación</h2>
@@ -440,7 +390,7 @@
                         <label class="inline-check" for="differentDropoff">
                             <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1"
                                 {{ request('different_dropoff') ? 'checked' : '' }}>
-                            <span>Devolver en <br> otro destino</span>
+                            <span>Devolver en otro destino</span>
                         </label>
                     </div>
 
@@ -568,6 +518,7 @@
                 ========================= --}}
                 <div class="sg-col sg-col-submit">
                     <div class="actions">
+                        <button type="button" class="btn btn-ghost" onclick="limpiarTodoYReiniciar()">Limpiar</button>
                         <button type="submit" class="btn btn-primary">Siguiente</button>
                     </div>
                 </div>
@@ -576,424 +527,321 @@
         </form>
     </div>
 <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Función para combinar hora
-            function combineTime() {
-                const pickupH = document.getElementById('pickup_h');
-                const pickupHidden = document.getElementById('pickup_time_hidden');
-                const dropoffH = document.getElementById('dropoff_h');
-                const dropoffHidden = document.getElementById('dropoff_time_hidden');
+document.addEventListener('DOMContentLoaded', function() {
+    // Función para combinar hora
+    function combineTime() {
+        const pickupH = document.getElementById('pickup_h');
+        const pickupHidden = document.getElementById('pickup_time_hidden');
+        const dropoffH = document.getElementById('dropoff_h');
+        const dropoffHidden = document.getElementById('dropoff_time_hidden');
 
-                if (pickupH && pickupHidden) {
-                    pickupHidden.value = pickupH.value ? pickupH.value + ':00:00' : '';
-                }
+        if (pickupH && pickupHidden) {
+            pickupHidden.value = pickupH.value ? pickupH.value + ':00:00' : '';
+        }
 
-                if (dropoffH && dropoffHidden) {
-                    dropoffHidden.value = dropoffH.value ? dropoffH.value + ':00:00' : '';
+        if (dropoffH && dropoffHidden) {
+            dropoffHidden.value = dropoffH.value ? dropoffH.value + ':00:00' : '';
+        }
+    }
+
+    ['pickup_h', 'dropoff_h'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', combineTime);
+    });
+
+    // ============================================================
+    // 🟢 SOLUCIÓN: MANEJADOR MEJORADO PARA CHECKBOX DE DIFERENTE DESTINO
+    // ============================================================
+    const differentDropoff = document.getElementById('differentDropoff');
+    const dropoffWrapper = document.getElementById('dropoffWrapper');
+    const pickupSelect = document.getElementById('pickupPlace');
+    const dropoffSelect = document.getElementById('dropoffPlace');
+
+    if (differentDropoff && dropoffWrapper && dropoffSelect) {
+
+        function actualizarDropoff() {
+            const isChecked = differentDropoff.checked;
+
+            // 1. Controlar visibilidad
+            dropoffWrapper.style.display = isChecked ? 'block' : 'none';
+
+            // 2. 🔴 CRÍTICO: Habilitar/deshabilitar el select correctamente
+            dropoffSelect.disabled = !isChecked;
+            dropoffSelect.required = isChecked;
+
+            // 3. Gestionar el valor cuando está deshabilitado
+            if (!isChecked) {
+                // Si se desmarca, copiar el valor de pickup (mismo lugar)
+                if (pickupSelect && pickupSelect.value) {
+                    dropoffSelect.value = pickupSelect.value;
                 }
+                // Marcar el select como no requerido para validación HTML5
+                dropoffSelect.removeAttribute('required');
+            } else {
+                // Si se marca, requerir selección
+                dropoffSelect.setAttribute('required', 'required');
+                // NO copiar automáticamente, dejar que el usuario elija
             }
 
-            // Event listeners para combinar tiempo
-            ['pickup_h', 'dropoff_h'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.addEventListener('change', combineTime);
-            });
+            console.log('Dropoff actualizado - Visible:', isChecked, 'Valor:', dropoffSelect.value);
+        }
 
-            // ============================================================
-            // MANEJAR CHECKBOX DE DIFERENTE DESTINO - VERSIÓN MEJORADA
-            // ============================================================
-            const differentDropoff = document.getElementById('differentDropoff');
-            const dropoffWrapper = document.getElementById('dropoffWrapper');
-            const pickupSelect = document.getElementById('pickupPlace');
-            const dropoffSelect = document.getElementById('dropoffPlace');
+        // Ejecutar al cargar la página
+        actualizarDropoff();
 
-            if (differentDropoff && dropoffWrapper) {
-                // Función para actualizar el estado del dropoff
-                function actualizarDropoff() {
-                    const isChecked = differentDropoff.checked;
+        // Escuchar cambios en el checkbox
+        differentDropoff.addEventListener('change', function() {
+            actualizarDropoff();
+        });
 
-                    // Mostrar/ocultar el wrapper
-                    dropoffWrapper.style.display = isChecked ? 'block' : 'none';
-
-                    // Habilitar/deshabilitar el select
-                    if (dropoffSelect) {
-                        dropoffSelect.disabled = !isChecked;
-                        dropoffSelect.required = isChecked;
-
-                        // Si está deshabilitado, copiar valor de pickup
-                        if (!isChecked && pickupSelect && pickupSelect.value) {
-                            dropoffSelect.value = pickupSelect.value;
-                        } else if (!isChecked) {
-                            dropoffSelect.value = '';
-                        }
-                    }
-
-                    console.log('Checkbox cambiado:', isChecked ? 'Mostrar dropoff' : 'Ocultar dropoff');
-                }
-
-                // Ejecutar al cargar la página (para mantener estado)
-                actualizarDropoff();
-
-                // Escuchar cambios en el checkbox
-                differentDropoff.addEventListener('change', function() {
-                    actualizarDropoff();
-                });
-
-                // Si pickup cambia y dropoff está deshabilitado, actualizar valor
-                if (pickupSelect && dropoffSelect) {
-                    pickupSelect.addEventListener('change', function() {
-                        if (!differentDropoff.checked) {
-                            dropoffSelect.value = this.value;
-                            console.log('Pickup cambiado, dropoff actualizado:', this.value);
-                        }
-                    });
-                }
-            }
-
-            // ============================================================
-            // INICIALIZAR FLATPICKR CON SOPORTE PARA ALTINPUT
-            // ============================================================
-            if (typeof flatpickr !== 'undefined') {
-                // Para pickup date
-                const startInput = document.getElementById('start');
-                if (startInput) {
-                    startInput._flatpickr = flatpickr(startInput, {
-                        dateFormat: "Y-m-d",
-                        altInput: true,
-                        altFormat: "d M Y",
-                        minDate: "today",
-                        locale: {
-                            firstDayOfWeek: 1,
-                            months: {
-                                shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-                                longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-                            }
-                        },
-                        onChange: function(selectedDates, dateStr, instance) {
-                            // Sincronizar clases entre el input original y el altInput
-                            if (dateStr) {
-                                instance.altInput.classList.add('field-success');
-                                instance.altInput.classList.remove('field-error');
-                            } else {
-                                instance.altInput.classList.remove('field-success', 'field-error');
-                            }
-                        }
-                    });
-                }
-
-                // Para dropoff date
-                const endInput = document.getElementById('end');
-                if (endInput) {
-                    endInput._flatpickr = flatpickr(endInput, {
-                        dateFormat: "Y-m-d",
-                        altInput: true,
-                        altFormat: "d M Y",
-                        minDate: "today",
-                        locale: {
-                            firstDayOfWeek: 1,
-                            months: {
-                                shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-                                longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-                            }
-                        },
-                        onChange: function(selectedDates, dateStr, instance) {
-                            // Sincronizar clases entre el input original y el altInput
-                            if (dateStr) {
-                                instance.altInput.classList.add('field-success');
-                                instance.altInput.classList.remove('field-error');
-                            } else {
-                                instance.altInput.classList.remove('field-success', 'field-error');
-                            }
-                        }
-                    });
-                }
-            }
-
-            // Inicializar iconos en selects
-            function updateSelectIcon(select, iconElement) {
-                const selectedOption = select.options[select.selectedIndex];
-                if (selectedOption && selectedOption.dataset.icon) {
-                    iconElement.className = selectedOption.dataset.icon;
-                } else {
-                    iconElement.className = 'fa-solid fa-location-dot';
-                }
-            }
-
-            const pickupIcon = document.getElementById('pickupIcon');
-            const dropoffIcon = document.getElementById('dropoffIcon');
-
-            if (pickupSelect && pickupIcon) {
-                pickupSelect.addEventListener('change', function() {
-                    updateSelectIcon(this, pickupIcon);
-                });
-                updateSelectIcon(pickupSelect, pickupIcon);
-            }
-
-            if (dropoffSelect && dropoffIcon) {
-                dropoffSelect.addEventListener('change', function() {
-                    updateSelectIcon(this, dropoffIcon);
-                });
-                updateSelectIcon(dropoffSelect, dropoffIcon);
-            }
-
-            // ============================================================
-            // CONTROL DEL BUSCADOR RESPONSIVO - CON BOTÓN DE CERRAR
-            // ============================================================
-            const btnAbrir = document.getElementById('btn-abrir-buscador-reservas');
-            const btnCerrar = document.getElementById('btn-cerrar-buscador-politicas');
-            const buscador = document.getElementById('miBuscador');
-
-            if (btnAbrir && btnCerrar && buscador) {
-                function bloquearScroll() {
-                    const scrollY = window.scrollY;
-                    document.body.style.position = 'fixed';
-                    document.body.style.top = `-${scrollY}px`;
-                    document.body.style.left = '0';
-                    document.body.style.right = '0';
-                    document.body.style.overflow = 'hidden';
-                    document.body.style.width = '100%';
-                    document.body.dataset.scrollY = scrollY;
-                }
-
-                function restaurarScroll() {
-                    document.body.style.position = '';
-                    document.body.style.top = '';
-                    document.body.style.left = '';
-                    document.body.style.right = '';
-                    document.body.style.overflow = '';
-                    document.body.style.width = '';
-                    const scrollY = document.body.dataset.scrollY || 0;
-                    window.scrollTo(0, parseInt(scrollY));
-                    delete document.body.dataset.scrollY;
-                }
-
-                btnAbrir.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    buscador.classList.add('active');
-                    bloquearScroll();
-
-                    // Forzar actualización del checkbox cuando se abre el buscador
-                    setTimeout(function() {
-                        const differentDropoff = document.getElementById('differentDropoff');
-                        const dropoffWrapper = document.getElementById('dropoffWrapper');
-                        const dropoffSelect = document.getElementById('dropoffPlace');
-
-                        if (differentDropoff && dropoffWrapper) {
-                            // Aplicar el estado actual del checkbox
-                            const isChecked = differentDropoff.checked;
-                            dropoffWrapper.style.display = isChecked ? 'block' : 'none';
-
-                            if (dropoffSelect) {
-                                dropoffSelect.disabled = !isChecked;
-                                dropoffSelect.required = isChecked;
-                            }
-                        }
-                    }, 100);
-                });
-
-                btnCerrar.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    buscador.classList.remove('active');
-                    restaurarScroll();
-                });
-
-                // Cerrar con Escape
-                window.addEventListener('keydown', function(e) {
-                    if (e.key === 'Escape' && buscador.classList.contains('active')) {
-                        buscador.classList.remove('active');
-                        restaurarScroll();
-                    }
-                });
-
-                // Prevenir scroll cuando el buscador está abierto
-                document.body.addEventListener('touchmove', function(e) {
-                    if (buscador.classList.contains('active')) {
-                        e.preventDefault();
-                    }
-                }, { passive: false });
-            }
-
-            // ============================================================
-            // FUNCIÓN MEJORADA PARA MOSTRAR ERRORES (SOPORTA FLATPICKR)
-            // ============================================================
-            function mostrarError(element, mensaje) {
-                // Limpiar error anterior
-                const existingError = element.parentElement?.querySelector('.error-msg');
-                if (existingError) existingError.remove();
-
-                // Verificar si es un input de flatpickr y tiene altInput
-                if (element._flatpickr && element._flatpickr.altInput) {
-                    const altInput = element._flatpickr.altInput;
-                    altInput.classList.remove('field-success');
-                    altInput.classList.add('field-error');
-
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'error-msg';
-                    errorDiv.textContent = mensaje;
-                    altInput.parentElement?.appendChild(errorDiv);
-                } else {
-                    // Para elementos normales
-                    element.classList.remove('field-success');
-                    element.classList.add('field-error');
-
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'error-msg';
-                    errorDiv.textContent = mensaje;
-                    element.parentElement?.appendChild(errorDiv);
-                }
-            }
-
-            function limpiarErrores() {
-                // Limpiar mensajes de error
-                document.querySelectorAll('.error-msg').forEach(el => el.remove());
-
-                // Limpiar clases de todos los elementos
-                document.querySelectorAll('.field-error, .field-success').forEach(el => {
-                    el.classList.remove('field-error', 'field-success');
-                });
-
-                // Limpiar también los altInputs de flatpickr
-                const start = document.getElementById('start');
-                const end = document.getElementById('end');
-
-                if (start && start._flatpickr && start._flatpickr.altInput) {
-                    start._flatpickr.altInput.classList.remove('field-error', 'field-success');
-                }
-
-                if (end && end._flatpickr && end._flatpickr.altInput) {
-                    end._flatpickr.altInput.classList.remove('field-error', 'field-success');
-                }
-            }
-
-            // ============================================================
-            // VALIDACIÓN DEL FORMULARIO
-            // ============================================================
-            const form = document.getElementById('step1Form');
-
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-
-                     console.log("SUBMIT DETECTADO");
-
-                    limpiarErrores();
-
-                    let valido = true;
-
-                    // Validar pickup
-                    const pickup = document.getElementById('pickupPlace');
-                    if (!pickup.value) {
-                        valido = false;
-                        mostrarError(pickup, 'Ubicacion Requerida');
-                    } else {
-                        pickup.classList.add('field-success');
-                    }
-
-                    // Validar dropoff si está visible (usando differentDropoff.checked)
-                    const differentDropoff = document.getElementById('differentDropoff');
-                    const dropoff = document.getElementById('dropoffPlace');
-                    if (differentDropoff.checked && !dropoff.value) {
-                        valido = false;
-                        mostrarError(dropoff, 'Ubicacion Requerida');
-                    } else if (differentDropoff.checked) {
-                        dropoff.classList.add('field-success');
-                    }
-
-                    // Validar fechas (con soporte para flatpickr)
-                    const start = document.getElementById('start');
-                    if (!start.value) {
-                        valido = false;
-                        mostrarError(start, 'Fecha Requerida');
-                    } else {
-                        if (start._flatpickr && start._flatpickr.altInput) {
-                            start._flatpickr.altInput.classList.add('field-success');
-                        } else {
-                            start.classList.add('field-success');
-                        }
-                    }
-
-                    const end = document.getElementById('end');
-                    if (!end.value) {
-                        valido = false;
-                        mostrarError(end, 'Fecha Requerida');
-                    } else {
-                        if (end._flatpickr && end._flatpickr.altInput) {
-                            end._flatpickr.altInput.classList.add('field-success');
-                        } else {
-                            end.classList.add('field-success');
-                        }
-                    }
-
-                    // Validar horas
-                    const pickupH = document.getElementById('pickup_h');
-                    if (!pickupH.value) {
-                        valido = false;
-                        mostrarError(pickupH, 'Hora Requerida');
-                    } else {
-                        pickupH.classList.add('field-success');
-                    }
-
-                    const dropoffH = document.getElementById('dropoff_h');
-                    if (!dropoffH.value) {
-                        valido = false;
-                        mostrarError(dropoffH, 'Hora Requerida');
-                    } else {
-                        dropoffH.classList.add('field-success');
-                    }
-
-                    if (valido) {
-                        form.submit();
-                    }
-                });
+        // Si pickup cambia y dropoff está deshabilitado, actualizar valor
+        pickupSelect.addEventListener('change', function() {
+            if (!differentDropoff.checked) {
+                dropoffSelect.value = this.value;
+                console.log('Pickup cambió, dropoff actualizado a:', this.value);
             }
         });
 
-        // Función para limpiar el formulario
-        function limpiarTodoYReiniciar() {
-            const form = document.getElementById('step1Form');
-            if (form) {
-                form.reset();
-                document.getElementById('pickup_time_hidden').value = '';
-                document.getElementById('dropoff_time_hidden').value = '';
-
-                const dropoffWrapper = document.getElementById('dropoffWrapper');
-                const differentDropoff = document.getElementById('differentDropoff');
-                const dropoffSelect = document.getElementById('dropoffPlace');
-
-                if (dropoffWrapper && differentDropoff) {
-                    dropoffWrapper.style.display = 'none';
-                    differentDropoff.checked = false;
-
-                    // Resetear estado del dropoff
-                    if (dropoffSelect) {
-                        dropoffSelect.disabled = true;
-                        dropoffSelect.required = false;
-                        dropoffSelect.value = '';
-                    }
-                }
-
-                // Limpiar errores
-                document.querySelectorAll('.error-msg').forEach(el => el.remove());
-                document.querySelectorAll('.field-error, .field-success').forEach(el => {
-                    el.classList.remove('field-error', 'field-success');
-                });
-
-                // Limpiar altInputs de flatpickr
-                const start = document.getElementById('start');
-                const end = document.getElementById('end');
-
-                if (start && start._flatpickr && start._flatpickr.altInput) {
-                    start._flatpickr.altInput.classList.remove('field-error', 'field-success');
-                }
-
-                if (end && end._flatpickr && end._flatpickr.altInput) {
-                    end._flatpickr.altInput.classList.remove('field-error', 'field-success');
+        // IMPORTANTE: Asegurar que el select mantenga su ícono
+        const dropoffIcon = document.getElementById('dropoffIcon');
+        if (dropoffIcon) {
+            function updateDropoffIcon() {
+                const selected = dropoffSelect.options[dropoffSelect.selectedIndex];
+                if (selected && selected.dataset.icon) {
+                    dropoffIcon.className = selected.dataset.icon;
                 }
             }
-        }
-        console.log("Formulario valido:", valido);
-    </script>
 
+            dropoffSelect.addEventListener('change', updateDropoffIcon);
+            // Actualizar ícono inicial
+            setTimeout(updateDropoffIcon, 100);
+        }
+    }
+
+    // ============================================================
+    // INICIALIZAR FLATPICKR (sin cambios)
+    // ============================================================
+    if (typeof flatpickr !== 'undefined') {
+        const startInput = document.getElementById('start');
+        if (startInput) {
+            startInput._flatpickr = flatpickr(startInput, {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d M Y",
+                minDate: "today",
+                locale: {
+                    firstDayOfWeek: 1,
+                    months: {
+                        shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                        longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+                    }
+                },
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (dateStr) {
+                        instance.altInput.classList.add('field-success');
+                        instance.altInput.classList.remove('field-error');
+                    } else {
+                        instance.altInput.classList.remove('field-success', 'field-error');
+                    }
+                }
+            });
+        }
+
+        const endInput = document.getElementById('end');
+        if (endInput) {
+            endInput._flatpickr = flatpickr(endInput, {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d M Y",
+                minDate: "today",
+                locale: {
+                    firstDayOfWeek: 1,
+                    months: {
+                        shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                        longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+                    }
+                },
+                onChange: function(selectedDates, dateStr, instance) {
+                    if (dateStr) {
+                        instance.altInput.classList.add('field-success');
+                        instance.altInput.classList.remove('field-error');
+                    } else {
+                        instance.altInput.classList.remove('field-success', 'field-error');
+                    }
+                }
+            });
+        }
+    }
+
+    // ============================================================
+    // VALIDACIÓN DEL FORMULARIO (MEJORADA)
+    // ============================================================
+    function mostrarError(element, mensaje) {
+        // Limpiar error anterior
+        const existingError = element.parentElement?.querySelector('.error-msg');
+        if (existingError) existingError.remove();
+
+        // Verificar si es un input de flatpickr y tiene altInput
+        if (element._flatpickr && element._flatpickr.altInput) {
+            const altInput = element._flatpickr.altInput;
+            altInput.classList.remove('field-success');
+            altInput.classList.add('field-error');
+
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-msg';
+            errorDiv.textContent = mensaje;
+            altInput.parentElement?.appendChild(errorDiv);
+        } else {
+            element.classList.remove('field-success');
+            element.classList.add('field-error');
+
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-msg';
+            errorDiv.textContent = mensaje;
+            element.parentElement?.appendChild(errorDiv);
+        }
+    }
+
+    function limpiarErrores() {
+        document.querySelectorAll('.error-msg').forEach(el => el.remove());
+        document.querySelectorAll('.field-error, .field-success').forEach(el => {
+            el.classList.remove('field-error', 'field-success');
+        });
+
+        const start = document.getElementById('start');
+        const end = document.getElementById('end');
+
+        if (start && start._flatpickr && start._flatpickr.altInput) {
+            start._flatpickr.altInput.classList.remove('field-error', 'field-success');
+        }
+
+        if (end && end._flatpickr && end._flatpickr.altInput) {
+            end._flatpickr.altInput.classList.remove('field-error', 'field-success');
+        }
+    }
+
+    const form = document.getElementById('step1Form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            limpiarErrores();
+
+            let valido = true;
+
+            const pickup = document.getElementById('pickupPlace');
+            if (!pickup.value) {
+                valido = false;
+                mostrarError(pickup, 'Ubicación Requerida');
+            } else {
+                pickup.classList.add('field-success');
+            }
+
+            // 🟢 VALIDACIÓN CORREGIDA PARA DROPOFF
+            const differentDropoff = document.getElementById('differentDropoff');
+            const dropoff = document.getElementById('dropoffPlace');
+
+            // Solo validar dropoff si el checkbox está marcado
+            if (differentDropoff.checked) {
+                if (!dropoff.value) {
+                    valido = false;
+                    mostrarError(dropoff, 'Ubicación Requerida');
+                } else {
+                    dropoff.classList.add('field-success');
+                }
+            }
+
+            const start = document.getElementById('start');
+            if (!start.value) {
+                valido = false;
+                mostrarError(start, 'Fecha Requerida');
+            } else {
+                if (start._flatpickr && start._flatpickr.altInput) {
+                    start._flatpickr.altInput.classList.add('field-success');
+                } else {
+                    start.classList.add('field-success');
+                }
+            }
+
+            const end = document.getElementById('end');
+            if (!end.value) {
+                valido = false;
+                mostrarError(end, 'Fecha Requerida');
+            } else {
+                if (end._flatpickr && end._flatpickr.altInput) {
+                    end._flatpickr.altInput.classList.add('field-success');
+                } else {
+                    end.classList.add('field-success');
+                }
+            }
+
+            const pickupH = document.getElementById('pickup_h');
+            if (!pickupH.value) {
+                valido = false;
+                mostrarError(pickupH, 'Hora Requerida');
+            } else {
+                pickupH.classList.add('field-success');
+            }
+
+            const dropoffH = document.getElementById('dropoff_h');
+            if (!dropoffH.value) {
+                valido = false;
+                mostrarError(dropoffH, 'Hora Requerida');
+            } else {
+                dropoffH.classList.add('field-success');
+            }
+
+            if (valido) {
+                form.submit();
+            }
+        });
+    }
+});
+
+function limpiarTodoYReiniciar() {
+    const form = document.getElementById('step1Form');
+    if (form) {
+        form.reset();
+        document.getElementById('pickup_time_hidden').value = '';
+        document.getElementById('dropoff_time_hidden').value = '';
+
+        const dropoffWrapper = document.getElementById('dropoffWrapper');
+        const differentDropoff = document.getElementById('differentDropoff');
+        const dropoffSelect = document.getElementById('dropoffPlace');
+        const pickupSelect = document.getElementById('pickupPlace');
+
+        if (dropoffWrapper && differentDropoff && dropoffSelect) {
+            // Resetear estado
+            differentDropoff.checked = false;
+            dropoffWrapper.style.display = 'none';
+            dropoffSelect.disabled = true;
+            dropoffSelect.required = false;
+
+            // Sincronizar con pickup si tiene valor
+            if (pickupSelect && pickupSelect.value) {
+                dropoffSelect.value = pickupSelect.value;
+            } else {
+                dropoffSelect.value = '';
+            }
+        }
+
+        document.querySelectorAll('.error-msg').forEach(el => el.remove());
+        document.querySelectorAll('.field-error, .field-success').forEach(el => {
+            el.classList.remove('field-error', 'field-success');
+        });
+
+        const start = document.getElementById('start');
+        const end = document.getElementById('end');
+
+        if (start && start._flatpickr && start._flatpickr.altInput) {
+            start._flatpickr.altInput.classList.remove('field-error', 'field-success');
+        }
+
+        if (end && end._flatpickr && end._flatpickr.altInput) {
+            end._flatpickr.altInput.classList.remove('field-error', 'field-success');
+        }
+    }
+}
+</script>
 @endif
                 {{-- ===================== STEP 2 ===================== --}}
 
@@ -1161,9 +1009,6 @@
                     </div>
                 @endif
 
-                <script>
-                console.log("STEP ACTUAL:", "{{ $stepCurrent }}");
-                </script>
                 {{-- ===================== STEP 3 ===================== --}}
                 @if ($stepCurrent === 3)
                     <header class="wizard-head">
@@ -1637,6 +1482,35 @@
                                                 </ul>
                                             </div>
                                         </details>
+
+                                        {{-- DECLINE PROTECTIONS --}}
+                                        <details class="s3-acc-item s3-acc-danger">
+                                            <summary class="s3-acc-sum">
+                                                <span class="s3-acc-left">
+                                                    <span class="s3-acc-badge s3-badge-danger">DECLINE</span>
+                                                    <span class="s3-acc-name">DECLINE PROTECTIONS</span>
+                                                </span>
+                                                <i class="fa-solid fa-chevron-down s3-acc-caret" aria-hidden="true"></i>
+                                            </summary>
+
+                                            <div class="s3-acc-body">
+                                                <ul class="s3-list">
+                                                    <li><strong>CDW (DECLINADO):</strong> El cliente es responsable por el
+                                                        <strong>100% deducible</strong> sobre valor factura del auto.</li>
+                                                    <li><strong>No</strong> cubre gastos médicos en caso de accidente.</li>
+                                                    <li><strong>PRA (DECLINADO):</strong> Asistencia Premium: el cliente es
+                                                        responsable por costos de: grúa (en caso de requerirla), corralón,
+                                                        envío de llaves o gasolina, apertura de auto, cambio de neumático
+                                                        ponchado y paso de corriente.</li>
+                                                    <li><strong>LOU (DECLINADO):</strong> No cubre tiempo perdido en taller.
+                                                    </li>
+                                                    <li><strong>LA (DECLINADO):</strong> No cubre asistencia legal.</li>
+                                                    <li><strong>LI:</strong> Responsabilidad civil hasta <strong>$350,000
+                                                            MXN</strong>.</li>
+                                                </ul>
+                                            </div>
+                                        </details>
+
                                     </div>
                                 </div>
                             </div>
@@ -1676,27 +1550,22 @@
                             <div class="equip-grid">
                                 @forelse($serviciosFiltrados as $srv)
                                     @php
-                                        $unidad = $srv->tipo_cobro === 'por_tanque' ? '/ tanque' : '/ evento';
+                                        $unidad = $srv->tipo_cobro === 'por_evento' ? '/ evento' : '/ día';
                                         $precio = number_format((float) $srv->precio, 0);
 
                                         $n = mb_strtolower(trim((string) ($srv->nombre ?? '')));
                                         $icon = 'fa-solid fa-circle-plus';
-                                        $tooltipText = 'Consulta más información sobre este adicional.';
-
                                         if (str_contains($n, 'silla')) {
-                                            $icon = 'fa-solid fa-child-reaching';
-                                            $tooltipText = 'Ideal para viajar con menores. Sujeto a disponibilidad al momento de la entrega.';
+                                            $icon = 'fa-solid fa-baby-carriage';
                                         } elseif (str_contains($n, 'conductor')) {
                                             $icon = 'fa-solid fa-user-plus';
-                                            $tooltipText = 'Agrega un conductor adicional autorizado para manejar el vehículo durante la renta.';
                                         } elseif (str_contains($n, 'gasolina')) {
                                             $icon = 'fa-solid fa-gas-pump';
-                                            $tooltipText = '¿Vuelo temprano? No pierdas tiempo buscando gasolinera.Con Viajero Car Rental, puedes prepagar tu gasolina a un precio preferencial por litro y entregar el vehículo directamente.Simple, rápido y sin estrés.';
                                         }
                                     @endphp
+
                                     <div class="addon-card" data-id="{{ $srv->id_servicio }}"
                                         data-name="{{ $srv->nombre }}" data-price="{{ (float) $srv->precio }}"
-                                        data-gasolina="{{ str_contains(strtolower($srv->nombre),'gasolina') ? 1 : 0 }}"
                                         data-charge="{{ $srv->tipo_cobro }}" data-max="3">
                                         <div class="addon-top">
                                             <div class="addon-ico">
@@ -1704,17 +1573,7 @@
                                             </div>
 
                                             <div style="flex:1;">
-                                                <div class="addon-headline">
-                                                    <h4 class="addon-name">{{ $srv->nombre }}</h4>
-
-                                                    <span class="addon-help-wrap" tabindex="0">
-                                                        <button type="button" class="addon-help-btn" aria-label="Más información">
-                                                            <i class="fa-solid fa-info"></i>
-                                                        </button>
-                                                        <span class="addon-tooltip">{{ $tooltipText }}</span>
-                                                    </span>
-                                                </div>
-
+                                                <h4 class="addon-name">{{ $srv->nombre }}</h4>
                                                 @if (!empty($srv->descripcion))
                                                     <p>{{ $srv->descripcion }}</p>
                                                 @endif
@@ -1722,78 +1581,15 @@
                                         </div>
 
                                         <div class="addon-price">
-                                            @if($srv->tipo_cobro === 'por_tanque')
-                                                <strong>Cantidad de un tanque</strong>
-                                            @else
-                                                <strong>${{ $precio }}</strong> MXN / evento
-                                            @endif
+                                            <strong>${{ $precio }}</strong> MXN {{ $unidad }}
                                         </div>
-@if($srv->id_servicio == 1)
 
-<div class="addon-qty gasolina-toggle">
-    <label class="switch">
-        <input type="checkbox" class="gasolina-switch">
-        <span class="slider"></span>
-    </label>
-</div>
-
-@else
-<div class="addon-qty">
-    <button class="qty-btn minus" type="button">−</button>
-    <span class="qty">0</span>
-    <button class="qty-btn plus" type="button">+</button>
-    <span class="qty-hint">Máx 3</span>
-</div>
-
-@endif
-
-<style>
-    .switch {
-  position: relative;
-  display: inline-block;
-  width: 46px;
-  height: 26px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  inset: 0;
-  background-color: #ccc;
-  transition: .3s;
-  border-radius: 26px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 20px;
-  width: 20px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .3s;
-  border-radius: 50%;
-}
-
-input:checked + .slider {
-  background-color: #16a34a;
-}
-
-input:checked + .slider:before {
-  transform: translateX(20px);
-}
-
-input:checked + .slider:before {
-  transform: translateX(20px);
-}
-</style>
+                                        <div class="addon-qty">
+                                            <button class="qty-btn minus" type="button">−</button>
+                                            <span class="qty">0</span>
+                                            <button class="qty-btn plus" type="button">+</button>
+                                            <span class="qty-hint">Máx 3</span>
+                                        </div>
                                     </div>
                                 @empty
                                     <div style="grid-column:1/-1; text-align:center; padding:.75rem 0;">
@@ -2242,25 +2038,67 @@ input:checked + .slider:before {
                                 ksort($todosPaises);
                             @endphp
 
-                            {{-- País --}}
-                            <div class="field field-floating">
-                                <select name="pais" id="pais" required>
-                                    <option value="" disabled selected>Selecciona un país</option>
+                                    {{-- País --}}
+                                    <div class="field field-floating">
+                                        <input type="text"
+                                            name="pais"
+                                            id="pais"
+                                            list="paises-list"
+                                            placeholder=" "
+                                            autocomplete="off"
+                                            value="{{ old('pais') }}"
+                                            required>
+                                        <label for="pais">Selecciona un país</label> {{-- CAMBIO: Aquí va "Selecciona un país" --}}
 
-                                    {{-- Países prioritarios --}}
-                                    @foreach($paisesPrioritarios as $valor => $etiqueta)
-                                        <option value="{{ $valor }}">{{ $etiqueta }}</option>
-                                    @endforeach
+                                        <datalist id="paises-list">
+                                            @foreach($paisesPrioritarios as $valor => $etiqueta)
+                                                <option value="{{ $etiqueta }}">{{ $etiqueta }}</option>
+                                            @endforeach
 
-                                    <option disabled>──────────</option>
+                                            @foreach($todosPaises as $valor => $etiqueta)
+                                                <option value="{{ $etiqueta }}">{{ $etiqueta }}</option>
+                                            @endforeach
+                                        </datalist>
+                                    </div>
 
-                                    {{-- Resto de países --}}
-                                    @foreach($todosPaises as $valor => $etiqueta)
-                                        <option value="{{ $valor }}">{{ $etiqueta }}</option>
-                                    @endforeach
-                                </select>
-                                <label for="pais">País</label>
-                            </div>
+                                    <script>
+                                    (function() {
+                                        const paisInput = document.getElementById('pais');
+                                        if (!paisInput) return;
+
+                                        const container = paisInput.closest('.field-floating');
+                                        const label = container.querySelector('label');
+
+                                        function updateFloatingState() {
+                                            const hasValue = paisInput.value.trim() !== '';
+                                            const hasFocus = document.activeElement === paisInput;
+
+                                            if (hasValue || hasFocus) {
+                                                // Cuando tiene valor o foco: el label sube y muestra "País"
+                                                container.classList.add('filled');
+                                                label.textContent = 'País'; // Cambia el texto del label
+                                            } else {
+                                                // Cuando está vacío y sin foco: el label baja y muestra "Selecciona un país"
+                                                container.classList.remove('filled');
+                                                label.textContent = 'Selecciona un país'; // Cambia el texto del label
+                                            }
+                                        }
+
+                                        // Eventos
+                                        paisInput.addEventListener('input', updateFloatingState);
+                                        paisInput.addEventListener('focus', updateFloatingState);
+                                        paisInput.addEventListener('blur', updateFloatingState);
+                                        paisInput.addEventListener('change', updateFloatingState);
+
+                                        // Estado inicial
+                                        updateFloatingState();
+
+                                        // Si selecciona una opción del datalist
+                                        paisInput.addEventListener('change', function() {
+                                            updateFloatingState();
+                                        });
+                                    })();
+                                    </script>
 
                                     {{-- Fecha de nacimiento --}}
                                     <div class="field field-dob-container">
@@ -2352,31 +2190,16 @@ input:checked + .slider:before {
                                 </div>
 
                                 <div id="modalMetodoPago" class="modal-overlay" style="display:none;">
-                                    <div class="modal-card modal-metodo-pago">
-                                        <button id="cerrarModalMetodoX" class="modal-close" type="button" aria-label="Cerrar">×</button>
-
-                                        <div class="mp-head">
-                                            <span class="mp-badge">Resumen de pago</span>
-                                            <h3>Selecciona tu método de pago</h3>
+                                    <div class="modal-card">
+                                        <h3>Selecciona tu método de pago</h3>
+                                        <div class="options">
+                                            <button id="btnPagoLinea" class="btn btn-primary" type="button">Pago en
+                                                línea</button>
+                                            <button id="btnPagoMostrador" class="btn btn-gray" type="button">Pago en
+                                                mostrador</button>
                                         </div>
-
-                                        <div class="mp-options">
-                                            <button id="btnPagoLinea" class="mp-pay-card is-online" type="button">
-                                                <span class="mp-old-price" id="mpPrecioMostradorTachado">$0 MXN</span>
-                                                <strong class="mp-price" id="mpPrecioLinea">$0 MXN</strong>
-                                                <span class="mp-save" id="mpTextoAhorro">Ahorra 0%</span>
-                                                <span class="mp-action">PREPAGAR EN LÍNEA</span>
-                                            </button>
-
-                                            <button id="btnPagoMostrador" class="mp-pay-card is-office" type="button">
-                                                <strong class="mp-price" id="mpPrecioMostrador">$0 MXN</strong>
-                                                <span class="mp-action">PAGAR EN OFICINA</span>
-                                            </button>
-                                        </div>
-
-                                        <button id="cerrarModalMetodo" class="btn btn-secondary mp-cancel" type="button">
-                                            Cancelar
-                                        </button>
+                                        <button id="cerrarModalMetodo" class="btn btn-secondary" type="button"
+                                            style="margin-top:10px;">Cancelar</button>
                                     </div>
                                 </div>
 
@@ -2550,13 +2373,8 @@ input:checked + .slider:before {
 
                             <h4 class="sum-subtitle" style="margin-top:16px;">Detalles del precio</h4>
 
-                            <div class="sum-table" id="cotizacionDoc"
-                            data-base="{{ $tarifaBase }}"
-                            data-days="{{ $days }}"
-                            data-pickup="{{ $pickupSucursalId }}"
-                            data-dropoff="{{ $dropoffSucursalId }}"
-                            data-km="{{ $dropoffKm }}"
-                            data-costokm="{{ $costoKmCategoria }}">
+                            <div class="sum-table" id="cotizacionDoc" data-base="{{ $tarifaBase }}"
+                                data-days="{{ $days }}">
 
                                 {{-- ===== TARIFA BASE (desplegable) ===== --}}
                                 <details class="sum-acc" open="false">
@@ -2652,7 +2470,7 @@ input:checked + .slider:before {
                                         </div>
                                     </div>
                                 </details>
- {{-- ===== Editar  ===== --}}
+
                                 {{-- ===== CARGOS E IVA (desplegable) ===== --}}
                                 <details class="sum-acc">
                                     <summary class="sum-bar">
@@ -2681,20 +2499,19 @@ input:checked + .slider:before {
                     </div>
 
                     @isset($servicios)
-    <script id="addonsCatalog" type="application/json">
-{!! json_encode(
-  collect($servicios)->where('activo', true)->mapWithKeys(fn($s) => [
-    $s->id_servicio => [
-      'nombre' => $s->nombre,
-      'precio' => (float) $s->precio,
-      'tipo'   => $s->tipo_cobro,
-    ],
-  ]),
-  JSON_UNESCAPED_UNICODE
-) !!}
-    </script>
-@endisset
-
+                        <script id="addonsCatalog" type="application/json">
+          {!! json_encode(
+            collect($serviciosFiltrados)->mapWithKeys(fn($s) => [
+              $s->id_servicio => [
+                'nombre' => $s->nombre,
+                'precio' => (float)$s->precio,
+                'tipo'   => $s->tipo_cobro, // 'por_evento' o 'por_dia'
+              ],
+            ]),
+            JSON_UNESCAPED_UNICODE
+          ) !!}
+        </script>
+                    @endisset
 
                 @endif
 
@@ -2798,3 +2615,4 @@ input:checked + .slider:before {
             if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
         });
     </script>
+@endsection

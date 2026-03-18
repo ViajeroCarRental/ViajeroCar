@@ -1065,7 +1065,7 @@
                       <div class="tile-body">
                         <h3>AUTOS Y CAMIONETAS 4x4:</h3>
                         <p>Viaja sin límites. Contamos con SUVs, autos todoterreno y camionetas 4x4 ideales para carretera, ciudad o aventura.</p>
-                        <a href="#" class="tile-link">Explora nuestra flota...</a>
+                        <a href="{{ route('rutaCatalogo') }}" class="tile-link">Explora nuestra flota...</a>
                       </div>
                     </article>
                   </div>
@@ -1076,7 +1076,7 @@
                       <div class="tile-body">
                         <h3>CAMIONETAS PARA 13 PASAJEROS:</h3>
                         <p>Perfectas para viajes familiares o empresariales. Comodidad, espacio y seguridad para todos tus acompañantes.</p>
-                        <a href="#" class="tile-link">Reserva la tuya...</a>
+                        <a href="{{ route('rutaReservasIniciar', ['step' => 1,'tipo' => 'camioneta_13']) }}" class="tile-link">Reserva la tuya...</a>
                       </div>
                     </article>
                   </div>
@@ -1087,7 +1087,7 @@
                       <div class="tile-body">
                         <h3>ACEPTAMOS TARJETAS:</h3>
                         <p>Pagos con tarjeta de crédito o débito. Fácil, rápido y seguro. También puedes hacer tu pago final al devolver tu vehículo.</p>
-                        <a href="#" class="tile-link">Conoce nuestras opciones...</a>
+                        <a href="{{ route('rutaReservasIniciar', ['step'=>1, 'tipo'=>'tarjetas']) }}"class="tile-link">Conoce nuestras opciones...</a>
                       </div>
                     </article>
                   </div>
@@ -1098,7 +1098,7 @@
                       <div class="tile-body">
                         <h3>ENTREGA EN AEROPUERTO 24/7:</h3>
                         <p>Recibe o entrega tu auto directamente en el aeropuerto, sin filas ni esperas. Disponible las 24 horas del día.</p>
-                        <a href="#" class="tile-link">Agendar entrega...</a>
+                        <a href="{{ route('rutaReservasIniciar', ['step'=>1, 'tipo'=>'aeropuerto']) }}"class="tile-link">Agendar entrega...</a>
                       </div>
                     </article>
                   </div>
@@ -1109,7 +1109,7 @@
                       <div class="tile-body">
                         <h3>VEHÍCULOS CON VERIFICACIÓN 00:</h3>
                         <p>Todos nuestros autos cumplen con las normas ambientales y están verificados tipo 00 para garantizar su óptimo rendimiento.</p>
-                        <a href="#" class="tile-link">Descubre más...</a>
+                        <a href="{{ route('rutaCatalogo') }}" class="tile-link">Descubre más...</a>
                       </div>
                     </article>
                   </div>
@@ -1120,7 +1120,7 @@
                       <div class="tile-body">
                         <h3>DROP OFF NACIONAL:</h3>
                         <p>Disfruta de tu viaje sin preocupaciones. Devuelve tu auto en otra ciudad con nuestro servicio Drop Off Nacional (con costo adicional).</p>
-                        <a href="#" class="tile-link">Consultar destinos...</a>
+                        <a href="{{ route('rutaReservasIniciar', ['step'=>1, 'tipo'=>'dropoff']) }}"class="tile-link">Consultar destinos...</a>
                       </div>
                     </article>
                   </div>

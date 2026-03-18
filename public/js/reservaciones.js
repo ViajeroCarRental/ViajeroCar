@@ -71,107 +71,85 @@
   }
 
   function applyYoungDriverAddon() {
-  const hiddenAlt =
-    qs('#addonsHidden') ||
-    qs('input[name="addons"]') ||
-    qs('input[name="addons_ids"]') ||
-    qs('input[name="addonsHidden"]');
+    const hidden =
+      qs('#addonsHidden') ||
+      qs('input[name="addons"]') ||
+      qs('input[name="addons_ids"]') ||
+      qs('input[name="addonsHidden"]');
 
-  const payloadHidden = qs('#addons_payload');
-  const dobHidden = qs('#dob');
+    const dobHidden = qs('#dob');
 
-  if ((!hiddenAlt && !payloadHidden) || !dobHidden || !YOUNG_DRIVER_SERVICE_ID) return;
+    if (!hidden || !dobHidden || !YOUNG_DRIVER_SERVICE_ID) return;
 
-  const baseValue =
-    (hiddenAlt && hiddenAlt.value ? hiddenAlt.value.trim() : '') ||
-    (payloadHidden && payloadHidden.value ? payloadHidden.value.trim() : '');
+    const dobStr  = String(dobHidden.value || '').trim();
+    const refDate = getPickupDateForAge();
+    const age     = computeAgeFromDob(dobStr, refDate);
 
-  const dobStr  = String(dobHidden.value || '').trim();
-  const refDate = getPickupDateForAge();
-  const age     = computeAgeFromDob(dobStr, refDate);
+    const map = parseAddonsStringToMap(hidden.value || '');
+    const hadBefore = map.has(String(YOUNG_DRIVER_SERVICE_ID));
 
-  const map = parseAddonsStringToMap(baseValue);
-  const hadBefore = map.has(String(YOUNG_DRIVER_SERVICE_ID));
+    if (age != null && age < YOUNG_DRIVER_MIN_AGE) {
+      map.set(String(YOUNG_DRIVER_SERVICE_ID), 1);
 
-  if (age != null && age < YOUNG_DRIVER_MIN_AGE) {
-    map.set(String(YOUNG_DRIVER_SERVICE_ID), 1);
+      if (!hadBefore && !youngDriverAlertShown && window.alertify) {
+        youngDriverAlertShown = true;
 
-    if (!hadBefore && !youngDriverAlertShown && window.alertify) {
-      youngDriverAlertShown = true;
-
-      let montoPorDia = null;
-      try {
-        const script = document.getElementById('addonsCatalog');
-        if (script) {
-          const catalog = JSON.parse(script.textContent || '{}') || {};
-          const srv = catalog[String(YOUNG_DRIVER_SERVICE_ID)];
-          if (srv) {
-            montoPorDia = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+        let montoPorDia = null;
+        try {
+          const script = document.getElementById('addonsCatalog');
+          if (script) {
+            const catalog = JSON.parse(script.textContent || '{}') || {};
+            const srv = catalog[String(YOUNG_DRIVER_SERVICE_ID)];
+            if (srv) {
+              const raw = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+              montoPorDia = raw;
+            }
           }
-        }
-      } catch (_) {}
+        } catch (_) {}
 
-      const montoStr = (montoPorDia != null)
-        ? Math.round(montoPorDia).toLocaleString('es-MX')
-        : 'X';
+        const montoStr = (montoPorDia != null)
+          ? Math.round(montoPorDia).toLocaleString('es-MX')
+          : 'X';
 
-      const msg =
-        "Detectamos que el conductor principal tiene menos de 25 años.\n\n" +
-        `Por política de aseguradora, se agregará automáticamente el servicio "Conductor menor de 25 años", ` +
-        `con un cargo adicional de ${montoStr} MXN por día de renta.\n\n` +
-        "Puedes ver este concepto en el desglose de Opciones de renta.";
+        const msg =
+          "Detectamos que el conductor principal tiene menos de 25 años.\n\n" +
+          `Por política de aseguradora, se agregará automáticamente el servicio "Conductor menor de 25 años", ` +
+          `con un cargo adicional de ${montoStr} MXN por día de renta.\n\n` +
+          "Puedes ver este concepto en el desglose de Opciones de renta.";
 
-      alertify.confirm(
-        "Conductor menor de 25 años",
-        msg,
-        function () {},
-        function () {}
-      );
-    }
-  } else {
-    map.delete(String(YOUNG_DRIVER_SERVICE_ID));
-  }
+        alertify.confirm(
+          "Conductor menor de 25 años",
+          msg,
+          function () {},
+          function () {}
+        );
+      }
 
-  const newValue = serializeAddonsMap(map);
-
-  if (hiddenAlt) {
-    hiddenAlt.value = newValue;
-    try {
-      hiddenAlt.dispatchEvent(new Event('change', { bubbles: true }));
-    } catch (_) {}
-  }
-
-  if (payloadHidden) {
-    payloadHidden.value = newValue;
-    try {
-      payloadHidden.dispatchEvent(new Event('change', { bubbles: true }));
-    } catch (_) {}
-  }
-
-  try {
-    const url = new URL(window.location.href);
-    if (newValue) {
-      url.searchParams.set('addons', newValue);
     } else {
-      url.searchParams.delete('addons');
+      map.delete(String(YOUNG_DRIVER_SERVICE_ID));
     }
-    window.history.replaceState({}, document.title, url.toString());
-  } catch (_) {}
+
+    const newValue = serializeAddonsMap(map);
+    hidden.value = newValue;
 
     try {
-    initStep4AddonsSummary();
-  } catch (_) {}
+      hidden.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (_) {}
 
-  // ✅ Refuerzo: volver a recalcular un instante después
-  // para asegurar que el payload ya quedó actualizado en DOM
-  setTimeout(() => {
+    try {
+      const url = new URL(window.location.href);
+      if (newValue) {
+        url.searchParams.set('addons', newValue);
+      } else {
+        url.searchParams.delete('addons');
+      }
+      window.history.replaceState({}, document.title, url.toString());
+    } catch (_) {}
+
     try {
       initStep4AddonsSummary();
     } catch (_) {}
-  }, 0);
-}
-
-
+  }
 
   function initSectionValidators() {
 
@@ -821,169 +799,129 @@
   }
 
   function initStep4AddonsSummary() {
-  const table = qs('#cotizacionDoc');
-  if (!table) return;
+    const table = qs('#cotizacionDoc');
+    if (!table) return;
 
-  const qBaseEl    = qs('#qBase');
-  const qExtrasEl  = qs('#qExtras');
-  const qIvaEl     = qs('#qIva');
-  const qTotalEl   = qs('#qTotal');
-  const extrasList = qs('#extrasList');
-  const ivaList    = qs('#ivaList');
+    const qBaseEl   = qs('#qBase');
+    const qExtrasEl = qs('#qExtras');
+    const qIvaEl    = qs('#qIva');
+    const qTotalEl  = qs('#qTotal');
+    const extrasList = qs('#extrasList');
+    const ivaList    = qs('#ivaList');
 
-  if (!qBaseEl || !qExtrasEl || !qIvaEl || !qTotalEl) return;
+    if (!qBaseEl || !qExtrasEl || !qIvaEl || !qTotalEl) return;
 
-  const base = parseFloat(table.dataset.base || '0') || 0;
-  const days = parseInt(table.dataset.days || '1', 10) || 1;
+    const base = parseFloat(table.dataset.base || '0') || 0;
+    const days = parseInt(table.dataset.days || '1', 10) || 1;
 
+    const hiddenPayload = qs('#addons_payload');
     const hiddenAlt     = qs('#addonsHidden');
-  const hiddenPayload = qs('#addons_payload');
+    const rawAddons =
+      (hiddenPayload && hiddenPayload.value && hiddenPayload.value.trim()) ||
+      (hiddenAlt && hiddenAlt.value && hiddenAlt.value.trim()) ||
+      '';
 
-  // ✅ En Step 4 primero manda el payload final del formulario
-  const rawAddons =
-  (hiddenPayload && hiddenPayload.value ? hiddenPayload.value.trim() : '') ||
-  (hiddenAlt && hiddenAlt.value ? hiddenAlt.value.trim() : '') ||
-  '';
-
-
-
-
-  const catalogScript = document.getElementById('addonsCatalog');
-  let catalog = {};
-  if (catalogScript) {
-    try {
-      catalog = JSON.parse(catalogScript.textContent || '{}') || {};
-    } catch (_) {
-      catalog = {};
+    const catalogScript = document.getElementById('addonsCatalog');
+    let catalog = {};
+    if (catalogScript) {
+      try {
+        catalog = JSON.parse(catalogScript.textContent || '{}') || {};
+      } catch (e) {
+        catalog = {};
+      }
     }
-  }
 
-  function parseAddons(str) {
-    const map = new Map();
-    String(str || '')
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .forEach(pair => {
-        const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
-        if (!m) return;
-        const id = m[1];
-        const qty = Math.max(0, parseInt(m[2], 10) || 0);
-        if (qty > 0) map.set(id, qty);
-      });
-    return map;
-  }
-
-  function fmtMoney(n) {
-    return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
-  }
-
-  const addonsMap = parseAddons(rawAddons);
-  let extrasTotal = 0;
-  let renderedRows = 0;
-
-  if (extrasList) extrasList.innerHTML = '';
-  if (ivaList) ivaList.innerHTML = '';
-
-  // ======================================================
-  // DROP OFF
-  // ======================================================
-  const pickupId  = table.dataset.pickup;
-  const dropoffId = table.dataset.dropoff;
-  const km        = parseFloat(table.dataset.km || 0);
-  const costoKm   = parseFloat(table.dataset.costokm || 0);
-
-  if (pickupId && dropoffId && pickupId !== dropoffId && km > 0 && costoKm > 0) {
-    const dropoffTotal = km * costoKm;
-    extrasTotal += dropoffTotal;
-
-    if (extrasList) {
-      const row = document.createElement('div');
-      row.className = 'row row-dropoff';
-      row.innerHTML = `
-        <span>Drop Off (${km} km)</span>
-        <strong>${fmtMoney(dropoffTotal)}</strong>
-      `;
-      extrasList.appendChild(row);
-      renderedRows++;
+    function parseAddons(str) {
+      const map = new Map();
+      String(str || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .forEach(pair => {
+          const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
+          if (!m) return;
+          const id = m[1];
+          const qty = Math.max(0, parseInt(m[2], 10) || 0);
+          if (qty > 0) map.set(id, qty);
+        });
+      return map;
     }
-  }
 
-  // ======================================================
-  // ADDONS
-  // ======================================================
-  addonsMap.forEach((qty, id) => {
-    const srv = catalog[id];
-    if (!srv) return;
+    function fmtMoney(n) {
+      return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
+    }
 
-    const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
-    const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
+    const addonsMap = parseAddons(rawAddons);
+    let extrasTotal = 0;
 
-    let lineTotal = 0;
-    if (tipo === 'por_evento') {
-      lineTotal = price * qty;
+    if (extrasList) extrasList.innerHTML = '';
+    if (ivaList) ivaList.innerHTML = '';
+
+    if (addonsMap.size === 0) {
+      if (extrasList) {
+        const row = document.createElement('div');
+        row.className = 'row row-empty';
+        row.innerHTML = `
+          <span class="muted">Sin complementos seleccionados</span>
+          <strong>$0 MXN</strong>
+        `;
+        extrasList.appendChild(row);
+      }
     } else {
-      lineTotal = price * qty * days;
+      addonsMap.forEach((qty, id) => {
+        const srv = catalog[id];
+        if (!srv) return;
+
+        const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+        const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
+
+        let lineTotal = 0;
+        if (tipo === 'por_evento') {
+          lineTotal = price * qty;
+        } else {
+          lineTotal = price * qty * days;
+        }
+
+        extrasTotal += lineTotal;
+
+        if (extrasList) {
+          const row = document.createElement('div');
+          row.className = 'row row-addon';
+
+          const unidadLabel = (tipo === 'por_evento') ? '/ evento' : 'por día';
+
+          row.innerHTML = `
+            <span style="flex:1;">
+              ${qty} | ${srv.nombre} | ${fmtMoney(price)} ${unidadLabel}
+            </span>
+            <strong style="flex:0 0 110px; text-align:right;">
+              ${fmtMoney(lineTotal)}
+            </strong>
+          `;
+          extrasList.appendChild(row);
+        }
+      });
     }
 
-    extrasTotal += lineTotal;
+    const subtotal = base + extrasTotal;
+    const iva = subtotal * 0.16;
+    const total = subtotal + iva;
 
-    if (extrasList) {
+    qBaseEl.textContent   = fmtMoney(base);
+    qExtrasEl.textContent = fmtMoney(extrasTotal);
+    qIvaEl.textContent    = fmtMoney(iva);
+    qTotalEl.textContent  = fmtMoney(total);
+
+    if (ivaList) {
       const row = document.createElement('div');
-      row.className = 'row row-addon';
-
-      const unidadLabel = (tipo === 'por_evento') ? '/ evento' : 'por día';
-
+      row.className = 'row row-iva';
       row.innerHTML = `
-        <span style="flex:1;">
-          ${qty} | ${srv.nombre} | ${fmtMoney(price)} ${unidadLabel}
-        </span>
-        <strong style="flex:0 0 110px; text-align:right;">
-          ${fmtMoney(lineTotal)}
-        </strong>
+        <span>IVA (16%)</span>
+        <strong>${fmtMoney(iva)}</strong>
       `;
-
-      extrasList.appendChild(row);
-      renderedRows++;
+      ivaList.appendChild(row);
     }
-  });
-
-  // Si no hubo nada
-  if (renderedRows === 0 && extrasList) {
-    const row = document.createElement('div');
-    row.className = 'row row-empty';
-    row.innerHTML = `
-      <span class="muted">Sin complementos seleccionados</span>
-      <strong>$0 MXN</strong>
-    `;
-    extrasList.appendChild(row);
   }
-
-  const subtotal = base + extrasTotal;
-  const iva = subtotal * 0.16;
-  const total = subtotal + iva;
-
-  qBaseEl.textContent   = fmtMoney(base);
-  qExtrasEl.textContent = fmtMoney(extrasTotal);
-  qIvaEl.textContent    = fmtMoney(iva);
-  qTotalEl.textContent  = fmtMoney(total);
-
-  if (ivaList) {
-    const row = document.createElement('div');
-    row.className = 'row row-iva';
-    row.innerHTML = `
-      <span>IVA (16%)</span>
-      <strong>${fmtMoney(iva)}</strong>
-    `;
-    ivaList.appendChild(row);
-  }
-
-  const totalMovil = document.getElementById('qTotalMovil');
-  if (totalMovil) {
-    totalMovil.textContent = fmtMoney(total);
-  }
-}
-
 
   function initFullNameSync(){
     const full     = qs('#nombreCompleto');
@@ -1054,7 +992,7 @@
       }
     }
 
-        function updateHidden(){
+    function updateHidden(){
       clampDay();
 
       const d = day.value;
@@ -1067,17 +1005,9 @@
         hidden.value = '';
       }
 
-      try { hidden.dispatchEvent(new Event('change', { bubbles:true })); } catch(_){}
+      try{ hidden.dispatchEvent(new Event('change', { bubbles:true })); }catch(_){}
       try { applyYoungDriverAddon(); } catch (_) {}
-
-      // ✅ Forzar refresco visual del resumen del paso 4
-      try { initStep4AddonsSummary(); } catch (_) {}
-
-      setTimeout(() => {
-        try { initStep4AddonsSummary(); } catch (_) {}
-      }, 0);
     }
-
 
     function hydrateFromHidden(){
       const v = String(hidden.value || '').trim();
@@ -1105,10 +1035,7 @@
     const pickupHour = qs('#pickup_h');
     const dropoffHour = qs('#dropoff_h');
 
-    if (!pickupDate || !dropoffDate) {
-    console.log("No encontró inputs de fecha");
-    return;
-  }
+    if (!pickupDate || !dropoffDate) return;
 
     function parseDateAny(val) {
       if (!val) return null;
@@ -1180,201 +1107,122 @@
     runUpdate();
   }
 
-
-
-
   function initAddonsSync() {
-  const hidden =
-    qs('#addonsHidden') ||
-    qs('input[name="addons"]') ||
-    qs('input[name="addons_ids"]') ||
-    qs('input[name="addonsHidden"]');
+    const hidden =
+      qs('#addonsHidden') ||
+      qs('input[name="addons"]') ||
+      qs('input[name="addons_ids"]') ||
+      qs('input[name="addonsHidden"]');
 
-  const payloadHidden = qs('#addons_payload');
-  const cards = qsa('.addon-card');
+    const cards = qsa('.addon-card');
+    if (!cards.length || !hidden) return;
 
-  if (!cards.length || !hidden) return;
-
-  const SERVICE_GASOLINA_ID = "1";
-
-  function parseMap(str) {
-    const map = new Map();
-    String(str || '')
-      .split(',')
-      .map(s => s.trim())
-      .filter(Boolean)
-      .forEach(pair => {
+    function parseMap(str) {
+      const map = new Map();
+      (String(str || '').split(',').map(s => s.trim()).filter(Boolean)).forEach(pair => {
         const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
-        if (m) {
-          map.set(m[1], Math.max(0, parseInt(m[2], 10) || 0));
-        } else {
+        if (m) map.set(m[1], Math.max(0, parseInt(m[2], 10) || 0));
+        else {
           const id = pair.replace(/\D/g, '');
           if (id) map.set(id, 1);
         }
       });
-    return map;
-  }
+      return map;
+    }
 
-  function serializeMap(map) {
-    return Array.from(map.entries())
-      .filter(([, q]) => (q || 0) > 0)
-      .map(([id, q]) => `${id}:${q}`)
-      .join(',');
-  }
+    function serializeMap(map) {
+      return Array.from(map.entries())
+        .filter(([, q]) => (q || 0) > 0)
+        .map(([id, q]) => `${id}:${q}`)
+        .join(',');
+    }
 
-  function getGasolinaSwitch(card) {
-    return qs('.gasolina-switch', card);
-  }
-
-  function setQty(card, qty) {
-    qty = Math.max(0, qty | 0);
-
-    const id = String(card.getAttribute('data-id') || '').trim();
-    const qtyEl = qs('.qty', card);
-
-    if (id === SERVICE_GASOLINA_ID) {
-      const sw = getGasolinaSwitch(card);
-      if (sw) sw.checked = qty > 0;
+    function setQty(card, qty) {
+      qty = Math.max(0, qty | 0);
+      const qtyEl = qs('.qty', card);
+      if (qtyEl) qtyEl.textContent = String(qty);
       card.classList.toggle('selected', qty > 0);
-      return;
     }
 
-    if (qtyEl) qtyEl.textContent = String(qty);
-    card.classList.toggle('selected', qty > 0);
-  }
-
-  function readQty(card) {
-    const id = String(card.getAttribute('data-id') || '').trim();
-
-    if (id === SERVICE_GASOLINA_ID) {
-      const sw = getGasolinaSwitch(card);
-      return sw && sw.checked ? 1 : 0;
+    function readQty(card) {
+      const qtyEl = qs('.qty', card);
+      const q = qtyEl ? parseInt(qtyEl.textContent, 10) : 0;
+      return isNaN(q) ? 0 : q;
     }
 
-    const qtyEl = qs('.qty', card);
-    const q = qtyEl ? parseInt(qtyEl.textContent, 10) : 0;
-    return isNaN(q) ? 0 : q;
-  }
-
-  function buildFromUI() {
-    const map = new Map();
-
-    cards.forEach(card => {
-      const id = String(card.getAttribute('data-id') || '').trim();
-      if (!id) return;
-
-      const qty = readQty(card);
-      if (qty > 0) {
-        map.set(id, qty);
-      }
-    });
-
-    return map;
-  }
-
-  function writeHiddenAndURL() {
-    const map = buildFromUI();
-    const value = serializeMap(map);
-
-    hidden.value = value;
-    if (payloadHidden) {
-      payloadHidden.value = value;
+    function buildFromUI() {
+      const map = new Map();
+      cards.forEach(card => {
+        const id = String(card.getAttribute('data-id') || '').trim();
+        if (!id) return;
+        const qty = readQty(card);
+        if (qty > 0) map.set(id, qty);
+      });
+      return map;
     }
 
-    try { hidden.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) {}
-    try {
-      if (payloadHidden) {
-        payloadHidden.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    } catch (_) {}
+    function writeHiddenAndURL() {
+      const map = buildFromUI();
+      const value = serializeMap(map);
+      hidden.value = value;
+      try { hidden.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) { }
 
-    try {
-      const url = new URL(window.location.href);
-      if (value) {
-        url.searchParams.set('addons', value);
-      } else {
-        url.searchParams.delete('addons');
-      }
-      window.history.replaceState({}, document.title, url.toString());
-    } catch (_) {}
-
-    try { applyYoungDriverAddon(); } catch (_) {}
-    try { initStep4AddonsSummary(); } catch (_) {}
-  }
-
-  function hydrate() {
-    const fromQS = (() => {
       try {
-        return new URLSearchParams(location.search).get('addons') || '';
-      } catch (_) {
-        return '';
-      }
-    })();
+        const url = new URL(window.location.href);
+        url.searchParams.set('addons', value);
+        window.history.replaceState({}, document.title, url.toString());
+      } catch (_) { }
 
-    const base =
-      fromQS ||
-      (hidden.value || '').trim() ||
-      (payloadHidden && payloadHidden.value ? payloadHidden.value.trim() : '');
+      try { applyYoungDriverAddon(); } catch (_) { }
+    }
 
-    const map = parseMap(base);
+    function hydrate() {
+      const fromQS = (() => { try { return new URLSearchParams(location.search).get('addons') || ''; } catch (_) { return ''; } })();
+      const base = fromQS || hidden.value || '';
+      const map = parseMap(base);
+
+      cards.forEach(card => {
+        const id = String(card.getAttribute('data-id') || '').trim();
+        if (!id) return;
+        setQty(card, map.get(id) || 0);
+      });
+
+      writeHiddenAndURL();
+    }
 
     cards.forEach(card => {
-      const id = String(card.getAttribute('data-id') || '').trim();
-      if (!id) return;
-      setQty(card, map.get(id) || 0);
-    });
+      const plus = qs('.qty-btn.plus', card);
+      const minus = qs('.qty-btn.minus', card);
 
-    writeHiddenAndURL();
-  }
-
-  cards.forEach(card => {
-    const plus  = qs('.qty-btn.plus', card);
-    const minus = qs('.qty-btn.minus', card);
-    const sw    = getGasolinaSwitch(card);
-
-    const id = String(card.getAttribute('data-id') || '').trim();
-    const isGasolina = id === SERVICE_GASOLINA_ID;
-
-    if (isGasolina) {
-      if (sw) {
-        sw.addEventListener('change', () => {
+      if (plus) {
+        plus.addEventListener('click', () => {
+          setQty(card, readQty(card) + 1);
           writeHiddenAndURL();
         });
       }
-      return;
-    }
-
-    if (plus) {
-      plus.addEventListener('click', () => {
-        setQty(card, readQty(card) + 1);
-        writeHiddenAndURL();
-      });
-    }
-
-    if (minus) {
-      minus.addEventListener('click', () => {
-        setQty(card, Math.max(0, readQty(card) - 1));
-        writeHiddenAndURL();
-      });
-    }
-  });
-
-  const toStep4 = qs('#toStep4');
-  if (toStep4) {
-    toStep4.addEventListener('click', (e) => {
-      e.preventDefault();
-      writeHiddenAndURL();
-
-      const url = new URL(window.location.href);
-      url.searchParams.set('step', '4');
-      window.location.href = url.toString();
+      if (minus) {
+        minus.addEventListener('click', () => {
+          setQty(card, readQty(card) - 1);
+          writeHiddenAndURL();
+        });
+      }
     });
+
+    const toStep4 = qs('#toStep4');
+    if (toStep4) {
+      toStep4.addEventListener('click', (e) => {
+        e.preventDefault();
+        writeHiddenAndURL();
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('step', '4');
+        window.location.href = url.toString();
+      });
+    }
+
+    document.addEventListener('wizard:stepChanged', hydrate);
+    hydrate();
   }
-
-  document.addEventListener('wizard:stepChanged', hydrate);
-  hydrate();
-}
-
 
   function initStep1ClearButton() {
     const btnClear = qs('#btnLimpiar');
@@ -1764,7 +1612,7 @@
 
         updateFloatingIcon(conf.id, conf.icon);
 
-        $select.on('select2:select', function () {
+        $select.on('select2:select change', function () {
           updateFloatingIcon(conf.id, conf.icon);
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
@@ -1830,162 +1678,48 @@
     });
   });
 
-  // ===== MODAL DE MÉTODO DE PAGO MEJORADO =====
+  // ===== NUEVO: Manejador del modal de método de pago =====
   document.addEventListener('DOMContentLoaded', function () {
     const main = document.querySelector('main.page');
+    const currentPlan = (main && main.dataset.plan) ? main.dataset.plan : '';
 
     const modalMetodoPago = document.getElementById('modalMetodoPago');
     const cerrarModalMetodo = document.getElementById('cerrarModalMetodo');
-    const cerrarModalMetodoX = document.getElementById('cerrarModalMetodoX');
     const btnPagoLinea = document.getElementById('btnPagoLinea');
     const btnPagoMostrador = document.getElementById('btnPagoMostrador');
 
-    const mpCategoriaNombre = document.getElementById('mpCategoriaNombre');
-    const mpCategoriaResumen = document.getElementById('mpCategoriaResumen');
-    const mpAhorro = document.getElementById('mpAhorro');
-    const mpPrecioLinea = document.getElementById('mpPrecioLinea');
-    const mpPrecioMostrador = document.getElementById('mpPrecioMostrador');
-    const mpPrecioMostradorTachado = document.getElementById('mpPrecioMostradorTachado');
-    const mpTextoAhorro = document.getElementById('mpTextoAhorro');
-
-    function fmtMoney(n) {
-      return '$' + Math.round(Number(n || 0)).toLocaleString('es-MX') + ' MXN';
-    }
-
-    function getCategoriaSeleccionada() {
-      // 1. intenta tomar el nombre desde la tarjeta activa del step 2
-      const activeCard = document.querySelector('.car-card.active');
-      if (activeCard) {
-        const name =
-          activeCard.getAttribute('data-name') ||
-          activeCard.dataset.name ||
-          document.querySelector('.car-card.active .car-name, .car-card.active h3, .car-card.active h4')?.textContent ||
-          '';
-        if (name) return name.trim();
-      }
-
-      // 2. intenta tomarla del resumen del paso 4
-      const sumTitle = document.querySelector('.sum-car h3, .sum-car-title, #tuAutoSection h3');
-      if (sumTitle && sumTitle.textContent.trim()) {
-        return sumTitle.textContent.trim();
-      }
-
-      return 'Categoría seleccionada';
-    }
-
-    function getPreciosSeleccionados() {
-      let precioLinea = 0;
-      let precioMostrador = 0;
-
-      // 1. desde card activa del step 2
-      const activeCard = document.querySelector('.car-card.active');
-      if (activeCard) {
-        precioLinea =
-          parseFloat(activeCard.getAttribute('data-prepago-total')) ||
-          parseFloat(activeCard.getAttribute('data-prepago-dia')) ||
-          0;
-
-        precioMostrador =
-          parseFloat(activeCard.getAttribute('data-mostrador-total')) ||
-          parseFloat(activeCard.getAttribute('data-mostrador-dia')) ||
-          0;
-      }
-
-      // 2. si no encontró, usar resumen actual del paso 4
-      if (!precioLinea || !precioMostrador) {
-        const qBase = document.getElementById('qBase');
-        const qTotal = document.getElementById('qTotal');
-
-        const getNum = (txt) => {
-          if (!txt) return 0;
-          return parseFloat(String(txt).replace(/[^\d.]/g, '')) || 0;
-        };
-
-        if (!precioLinea && qBase) {
-          precioLinea = getNum(qBase.textContent);
-        }
-
-        if (!precioMostrador && qTotal) {
-          precioMostrador = getNum(qTotal.textContent);
-        }
-      }
-
-      // respaldo: si solo hay uno, usarlo en ambos para no dejar 0
-      if (!precioLinea && precioMostrador) precioLinea = precioMostrador;
-      if (!precioMostrador && precioLinea) precioMostrador = precioLinea;
-
-      return { precioLinea, precioMostrador };
-    }
-
-    function fillMetodoPagoModal() {
-      const categoria = getCategoriaSeleccionada();
-      const { precioLinea, precioMostrador } = getPreciosSeleccionados();
-
-      let ahorroPct = 0;
-      if (precioMostrador > 0 && precioLinea > 0 && precioLinea < precioMostrador) {
-        ahorroPct = Math.round(((precioMostrador - precioLinea) / precioMostrador) * 100);
-      }
-
-      if (mpCategoriaNombre) mpCategoriaNombre.textContent = categoria;
-      if (mpCategoriaResumen) mpCategoriaResumen.textContent = categoria;
-      if (mpAhorro) mpAhorro.textContent = ahorroPct + '%';
-      if (mpPrecioLinea) mpPrecioLinea.textContent = fmtMoney(precioLinea);
-      if (mpPrecioMostrador) mpPrecioMostrador.textContent = fmtMoney(precioMostrador);
-      if (mpPrecioMostradorTachado) mpPrecioMostradorTachado.textContent = fmtMoney(precioMostrador);
-      if (mpTextoAhorro) mpTextoAhorro.textContent = ahorroPct > 0 ? `Ahorra ${ahorroPct}%` : 'Mismo precio';
-    }
-
-    function openMetodoPagoModal() {
-      if (!modalMetodoPago) return;
-      fillMetodoPagoModal();
-      modalMetodoPago.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeMetodoPagoModal() {
-      if (!modalMetodoPago) return;
-      modalMetodoPago.style.display = 'none';
-      document.body.style.overflow = '';
-    }
-
     // Escuchar evento de validación exitosa
-    document.addEventListener('reserva:validacionExitosa', function (e) {
-      const currentPlan = (main && main.dataset.plan) ? main.dataset.plan : '';
+    document.addEventListener('reserva:validacionExitosa', function(e) {
       console.log('Evento recibido, plan:', currentPlan);
 
       if (currentPlan === 'linea') {
-        if (typeof window.handleReservaPagoEnLinea === 'function') {
-          window.handleReservaPagoEnLinea();
-        } else if (btnPagoLinea) {
+        if (btnPagoLinea) {
           btnPagoLinea.click();
+        } else if (typeof window.handleReservaPagoEnLinea === 'function') {
+          window.handleReservaPagoEnLinea();
         }
       } else if (currentPlan === 'mostrador') {
-        openMetodoPagoModal();
+        if (modalMetodoPago) {
+          modalMetodoPago.style.display = 'flex';
+        }
       }
     });
 
-    if (cerrarModalMetodo) {
-      cerrarModalMetodo.addEventListener('click', closeMetodoPagoModal);
-    }
+    // Cerrar modal
+    if (cerrarModalMetodo && modalMetodoPago) {
+      cerrarModalMetodo.addEventListener('click', function () {
+        modalMetodoPago.style.display = 'none';
+      });
 
-    if (cerrarModalMetodoX) {
-      cerrarModalMetodoX.addEventListener('click', closeMetodoPagoModal);
-    }
-
-    if (modalMetodoPago) {
-      modalMetodoPago.addEventListener('click', function (e) {
+      // Cerrar al hacer clic fuera
+      modalMetodoPago.addEventListener('click', function(e) {
         if (e.target === modalMetodoPago) {
-          closeMetodoPagoModal();
+          modalMetodoPago.style.display = 'none';
         }
       });
     }
 
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        closeMetodoPagoModal();
-      }
-    });
-
+    // Por si quieres FORZAR que "Tarifa base" inicie CERRADO:
     const tarifa = document.querySelector('.sum-table details.sum-acc');
     if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
   });
@@ -2113,12 +1847,12 @@ function initMovilTotalSync() {
         }
         syncTotal();
 
-      const observer = new MutationObserver(syncTotal);
-      observer.observe(totalOriginal, {
-        childList:true,
-        subtree:true,
-        characterData:true
-      });
+        const observer = new MutationObserver(syncTotal);
+        observer.observe(totalOriginal, {
+            childList:true,
+            subtree:true,
+            characterData:true
+        });
     }
 }
 
@@ -2150,12 +1884,11 @@ window.initStep4AddonsSummary = function() {
         totalMovil.innerText = totalOriginal.innerText;
     }
 };
-// ===== CONTROL DE VISIBILIDAD DE LA TARJETA MÓVIL (VERSIÓN FINAL) =====
+// ===== CONTROL DE VISIBILIDAD DE LA TARJETA MÓVIL (VERSIÓN SIMPLIFICADA) =====
 
 let movilCardState = {
     hasShownCard: false,
-    pendingHide: false,
-    allFieldsValid: false
+    isModalOpen: false
 };
 
 function initMovilCardVisibility() {
@@ -2168,59 +1901,17 @@ function initMovilCardVisibility() {
     const movilCard = document.querySelector('.movil-footer-sticky');
     const step4Layout = document.querySelector('.step4-layout');
     const body = document.body;
+    const modalMetodoPago = document.getElementById('modalMetodoPago');
 
     if (!tuAutoSection || !movilCard || !step4Layout) {
         console.warn('Elementos necesarios no encontrados');
         return;
     }
 
-    // Función para verificar si TODOS los campos están válidos
-    function checkAllFieldsValid() {
-        const nombre = document.getElementById('nombreCompleto');
-        const telefono = document.getElementById('telefonoCliente');
-        const correo = document.getElementById('correoCliente');
-        const pais = document.getElementById('pais');
-        const dia = document.getElementById('dob_day');
-        const mes = document.getElementById('dob_month');
-        const año = document.getElementById('dob_year');
-        const acepto = document.getElementById('acepto');
-
-        // Verificar campo por campo
-        if (!nombre || !nombre.value || nombre.value.trim() === "") return false;
-
-        const tel = telefono ? telefono.value.replace(/\D/g, '') : '';
-        if (!telefono || !telefono.value || tel.length !== 10) return false;
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!correo || !correo.value || !emailRegex.test(correo.value.trim())) return false;
-
-        if (!pais || !pais.value) return false;
-
-        if (!dia || !dia.value || !mes || !mes.value || !año || !año.value) return false;
-
-        // Validar fecha
-        const day = parseInt(dia.value, 10);
-        const month = parseInt(mes.value, 10);
-        const year = parseInt(año.value, 10);
-        const date = new Date(year, month - 1, day);
-        if (date.getDate() !== day || date.getMonth() !== month - 1) return false;
-
-        if (!acepto || !acepto.checked) return false;
-
-        return true;
-    }
-
-    // Función para actualizar estado de validación
-    function updateValidationState() {
-        const isValid = checkAllFieldsValid();
-        movilCardState.allFieldsValid = isValid;
-        console.log('📝 Campos válidos:', isValid);
-        return isValid;
-    }
-
     // Función para mostrar la tarjeta
     function showMovilCard() {
-        if (!movilCardState.hasShownCard && !movilCardState.pendingHide) {
+        // Solo mostrar si el modal NO está abierto
+        if (!movilCardState.isModalOpen && !movilCardState.hasShownCard) {
             movilCard.classList.add('visible');
             step4Layout.classList.add('has-sticky-card');
             body.classList.add('has-sticky-card');
@@ -2229,7 +1920,7 @@ function initMovilCardVisibility() {
         }
     }
 
-    // Función para ocultar la tarjeta (solo cuando hay errores)
+    // Función para ocultar la tarjeta
     function hideMovilCard() {
         if (movilCardState.hasShownCard) {
             movilCard.classList.remove('visible');
@@ -2240,31 +1931,74 @@ function initMovilCardVisibility() {
         }
     }
 
+    // 🔥 Monitorear el estado del modal
+    function initModalObserver() {
+        if (!modalMetodoPago) return;
+
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    const isOpen = modalMetodoPago.style.display === 'flex';
+
+                    // Actualizar estado
+                    movilCardState.isModalOpen = isOpen;
+
+                    if (isOpen) {
+                        // Modal se abre: Ocultar tarjeta SIEMPRE
+                        console.log('🔴 Modal abierto - Ocultando tarjeta');
+                        hideMovilCard();
+                    } else {
+                        // Modal se cierra: Restaurar según visibilidad de "Tu auto"
+                        console.log('🟢 Modal cerrado - Restaurando según visibilidad');
+
+                        // Verificar si la sección "Tu auto" es visible
+                        setTimeout(() => {
+                            const rect = tuAutoSection.getBoundingClientRect();
+                            const windowHeight = window.innerHeight;
+                            const isVisible = rect.top < windowHeight * 0.9 && rect.bottom > 0;
+
+                            console.log('📏 ¿Tu auto visible?', isVisible);
+
+                            if (isVisible) {
+                                showMovilCard();
+                            }
+                        }, 100);
+                    }
+                }
+            });
+        });
+
+        observer.observe(modalMetodoPago, { attributes: true });
+
+        // Escuchar clic en Cancelar específicamente
+        const cerrarModalMetodo = document.getElementById('cerrarModalMetodo');
+        if (cerrarModalMetodo) {
+            cerrarModalMetodo.addEventListener('click', function() {
+                console.log('👆 Clic en Cancelar');
+                // La restauración la hará el MutationObserver
+            });
+        }
+    }
+
     // Verificar si estamos en móvil
     function isMobileView() {
         return window.innerWidth <= 1024;
     }
 
-    // OBSERVER para detectar cuando "Tu auto" entra y sale de la vista
+    // OBSERVER para detectar cuando "Tu auto" entra en vista
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (!isMobileView()) return;
 
             if (entry.isIntersecting) {
-                console.log('🔍 Tu auto visible');
-                // Cuando la sección es visible, mostrar la tarjeta si no está pendiente de ocultar
-                if (!movilCardState.pendingHide) {
+                console.log('🔍 Tu auto visible - Mostrando tarjeta');
+                // Solo mostrar si el modal NO está abierto
+                if (!movilCardState.isModalOpen) {
                     showMovilCard();
                 }
             } else {
-                console.log('🔍 Tu auto NO visible');
-                // Cuando la sección NO es visible:
-                // - Si hay campos inválidos, OCULTAR
-                // - Si todos los campos son válidos, MANTENER visible
-                if (!movilCardState.allFieldsValid) {
-                    hideMovilCard();
-                }
-                // Si los campos son válidos, NO hacemos nada (la tarjeta sigue visible)
+                console.log('🔍 Tu auto NO visible - Ocultando tarjeta');
+                hideMovilCard();
             }
         });
     }, {
@@ -2274,130 +2008,56 @@ function initMovilCardVisibility() {
 
     observer.observe(tuAutoSection);
 
-    // Backup scroll
-    let scrollTimeout;
-    window.addEventListener('scroll', () => {
-        if (!isMobileView() || movilCardState.pendingHide) return;
-
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-            const rect = tuAutoSection.getBoundingClientRect();
-            const windowHeight = window.innerHeight;
-
-            const isVisible = rect.top < windowHeight * 0.9 && rect.bottom > 0;
-
-            if (isVisible) {
-                showMovilCard();
-            } else {
-                // Misma lógica: ocultar solo si hay campos inválidos
-                if (!movilCardState.allFieldsValid) {
-                    hideMovilCard();
-                }
-            }
-        }, 50);
-    }, { passive: true });
-
-    // VALIDACIÓN Y BOTÓN DE RESERVAR
-    const btnOriginal = document.getElementById('btnReservar');
-    if (btnOriginal) {
-        btnOriginal.addEventListener('click', function(e) {
-            // Actualizar estado de validación
-            const isValid = updateValidationState();
-
-            setTimeout(() => {
-                const hasErrors = document.querySelectorAll('.has-error, .field-error').length > 0;
-
-                if (hasErrors) {
-                    console.log('❌ Errores detectados');
-
-                    // Solo ocultar si hay errores
-                    movilCardState.pendingHide = true;
-                    hideMovilCard();
-
-                    const primerError = document.querySelector('.has-error, .field-error');
-                    if (primerError) {
-                        primerError.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'center'
-                        });
-                    }
-
-                    // Resetear pendingHide después de 2 segundos
-                    setTimeout(() => {
-                        movilCardState.pendingHide = false;
-                        console.log('🔄 Reset pendingHide');
-                    }, 2000);
-                } else {
-                    console.log('✅ Todos los campos válidos - procediendo con pago');
-
-                    // NO ocultar la tarjeta, mantenerla visible
-                    // Disparar evento de validación exitosa
-                    const eventoExito = new CustomEvent('reserva:validacionExitosa', {
-                        detail: { plan: mainEl ? mainEl.dataset.plan : '' }
-                    });
-                    document.dispatchEvent(eventoExito);
-
-                    // Hacer scroll suave hacia arriba para mostrar el modal de pago
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
-                }
-            }, 100);
-        });
-    }
-
-    // Escuchar cambios en los campos para actualizar estado
-    const inputsToWatch = [
-        'nombreCompleto', 'telefonoCliente', 'correoCliente', 'pais',
-        'dob_day', 'dob_month', 'dob_year', 'acepto'
-    ];
-
-    inputsToWatch.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            ['input', 'change', 'blur'].forEach(eventType => {
-                el.addEventListener(eventType, () => {
-                    updateValidationState();
-                });
-            });
-        }
-    });
-
-    // BOTÓN MÓVIL
-    const btnMovil = document.getElementById('btnReservarMovil');
-    if (btnMovil && btnOriginal) {
-        btnMovil.addEventListener('click', function(e) {
-            e.preventDefault();
-            btnOriginal.click();
-        });
-    }
-
-    // Sincronizar total
-    const totalOriginal = document.getElementById('qTotal');
-    const totalMovil = document.getElementById('qTotalMovil');
-
-    if (totalOriginal && totalMovil) {
-        function syncTotal() {
-            totalMovil.innerText = totalOriginal.innerText;
-        }
-        syncTotal();
-
-        const observer = new MutationObserver(syncTotal);
-        observer.observe(totalOriginal, {
-            childList: true,
-            subtree: true,
-            characterData: true
-        });
-    }
+    // Inicializar observador del modal
+    initModalObserver();
 
     // Verificación inicial
     setTimeout(() => {
-        updateValidationState();
+        const rect = tuAutoSection.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const isVisible = rect.top < windowHeight * 0.9 && rect.bottom > 0;
+
+        if (isVisible && !movilCardState.isModalOpen) {
+            showMovilCard();
+        }
     }, 500);
 
-    console.log('🚀 Control de visibilidad de tarjeta móvil inicializado');
+    console.log('🚀 Control de visibilidad de tarjeta móvil inicializado (versión simplificada)');
 }
+
+// Inicializar en DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    const mainEl = document.querySelector('main.page');
+    const currentStep = mainEl ? mainEl.dataset.currentStep : '';
+
+    if (currentStep === '4') {
+        setTimeout(() => {
+            initMovilCardVisibility();
+        }, 300);
+    }
+});
+
+// Manejar resize
+window.addEventListener('resize', function() {
+    if (window.innerWidth <= 1024) {
+        // Resetear estado al cambiar tamaño
+        const movilCard = document.querySelector('.movil-footer-sticky');
+        if (movilCard) {
+            movilCard.classList.remove('visible');
+            document.querySelector('.step4-layout')?.classList.remove('has-sticky-card');
+            document.body.classList.remove('has-sticky-card');
+        }
+
+        movilCardState = {
+            hasShownCard: false,
+            isModalOpen: false
+        };
+
+        setTimeout(() => {
+            initMovilCardVisibility();
+        }, 300);
+    }
+});
 
 // Inicializar en DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -2645,6 +2305,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 300);
     }
+
+
 });
 
 // ===== FUNCIÓN PARA LIMPIAR EL FORMULARIO =====
@@ -2669,4 +2331,5 @@ function limpiarTodoYReiniciar() {
         }
     }
 }
+
 
