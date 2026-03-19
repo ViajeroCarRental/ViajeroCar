@@ -222,7 +222,7 @@ body.nav-open .topbar{
   -webkit-backdrop-filter: none !important;
 }
 select {
-  touch-action: manipulation;
+  touch-action: pan-y;
 }
 
 @media (max-width: 768px) {
