@@ -1768,8 +1768,13 @@ addonsMap.forEach((qty, id) => {
       const $select = $('#' + conf.id);
 
       if ($select.length > 0) {
+        if (window.innerWidth < 768) {
+      $select.select2('destroy');
+      return; // 👈 IMPORTANTE para que no se inicialice
+    }
         $select.select2({
           width: '100%',
+          dropdownParent: $('body'),
           templateResult: function(option) {
             if (!option.id) return option.text;
             const icon = $(option.element).data('icon') || 'fa-solid fa-location-dot';
@@ -2009,105 +2014,6 @@ addonsMap.forEach((qty, id) => {
     const tarifa = document.querySelector('.sum-table details.sum-acc');
     if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
   });
-  // ===== CONTROL DE VISIBILIDAD DE LA TARJETA MÓVIL =====
-function initMovilCardVisibility() {
-    const tuAutoSection = document.getElementById('tuAutoSection');
-    const movilCard = document.querySelector('.movil-footer-sticky');
-    const step4Layout = document.querySelector('.step4-layout');
-    const body = document.body;
-
-    if (!tuAutoSection || !movilCard || !step4Layout) return;
-
-    // Estado para controlar si ya se mostró
-    let hasShownCard = false;
-
-    // Función para mostrar la tarjeta
-    function showMovilCard() {
-        if (!hasShownCard) {
-            movilCard.classList.add('visible');
-            body.classList.add('has-sticky-card');
-
-            // Ajustar el padding del layout para que no se oculte contenido
-            step4Layout.style.paddingBottom = '220px';
-
-            hasShownCard = true;
-
-            console.log('✅ Tarjeta móvil visible - usuario llegó a Tu Auto');
-        }
-    }
-
-    // Opción 1: Observar cuando la sección "Tu Auto" es visible
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            // Cuando la sección es visible al menos al 30%
-            if (entry.isIntersecting && entry.intersectionRatio >= 0.3) {
-                showMovilCard();
-                // Una vez mostrada, podemos dejar de observar
-                observer.unobserve(entry.target);
-            }
-        });
-    }, {
-        threshold: [0.3, 0.5, 0.8],
-        rootMargin: '0px'
-    });
-
-    observer.observe(tuAutoSection);
-
-    // Opción 2: Backup - detectar scroll hasta la sección
-    let scrollTimeout;
-    function checkScrollPosition() {
-        if (hasShownCard) return;
-
-        const rect = tuAutoSection.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
-
-        // Si la sección está en la mitad superior de la pantalla
-        if (rect.top < windowHeight * 0.7 && rect.bottom > 0) {
-            showMovilCard();
-        }
-    }
-
-    window.addEventListener('scroll', () => {
-        if (!hasShownCard) {
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(checkScrollPosition, 100);
-        }
-    });
-
-    // Opción 3: Backup - cuando el usuario interactúa con los campos del formulario
-    // y ya ha hecho scroll significativo
-    const formInputs = document.querySelectorAll('#formCotizacion input, #formCotizacion select');
-    let hasInteracted = false;
-
-    formInputs.forEach(input => {
-        input.addEventListener('focus', () => {
-            hasInteracted = true;
-            if (window.scrollY > 300 && !hasShownCard) {
-                showMovilCard();
-            }
-        });
-
-        input.addEventListener('change', () => {
-            hasInteracted = true;
-            if (window.scrollY > 300 && !hasShownCard) {
-                showMovilCard();
-            }
-        });
-    });
-
-    // Reiniciar estado si el usuario vuelve a editar fechas (por si acaso)
-    const resetButton = document.querySelector('.wizard-nav .btn-ghost');
-    if (resetButton) {
-        resetButton.addEventListener('click', () => {
-            hasShownCard = false;
-            movilCard.classList.remove('visible');
-            body.classList.remove('has-sticky-card');
-            step4Layout.style.paddingBottom = '0';
-        });
-    }
-
-    console.log('🚀 Control de visibilidad de tarjeta móvil inicializado');
-}
 
 // También modifica la sincronización del total para que funcione cuando la tarjeta se muestre
 function initMovilTotalSync() {
@@ -2171,11 +2077,9 @@ window.initStep4AddonsSummary = function() {
     }
 };
 // ===== CONTROL DE VISIBILIDAD DE LA TARJETA MÓVIL (VERSIÓN FINAL) =====
-
 let movilCardState = {
     hasShownCard: false,
-    pendingHide: false,
-    allFieldsValid: false
+    isModalOpen: false
 };
 
 function initMovilCardVisibility() {
@@ -2188,59 +2092,17 @@ function initMovilCardVisibility() {
     const movilCard = document.querySelector('.movil-footer-sticky');
     const step4Layout = document.querySelector('.step4-layout');
     const body = document.body;
+    const modalMetodoPago = document.getElementById('modalMetodoPago');
 
     if (!tuAutoSection || !movilCard || !step4Layout) {
         console.warn('Elementos necesarios no encontrados');
         return;
     }
 
-    // Función para verificar si TODOS los campos están válidos
-    function checkAllFieldsValid() {
-        const nombre = document.getElementById('nombreCompleto');
-        const telefono = document.getElementById('telefonoCliente');
-        const correo = document.getElementById('correoCliente');
-        const pais = document.getElementById('pais');
-        const dia = document.getElementById('dob_day');
-        const mes = document.getElementById('dob_month');
-        const año = document.getElementById('dob_year');
-        const acepto = document.getElementById('acepto');
-
-        // Verificar campo por campo
-        if (!nombre || !nombre.value || nombre.value.trim() === "") return false;
-
-        const tel = telefono ? telefono.value.replace(/\D/g, '') : '';
-        if (!telefono || !telefono.value || tel.length !== 10) return false;
-
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!correo || !correo.value || !emailRegex.test(correo.value.trim())) return false;
-
-        if (!pais || !pais.value) return false;
-
-        if (!dia || !dia.value || !mes || !mes.value || !año || !año.value) return false;
-
-        // Validar fecha
-        const day = parseInt(dia.value, 10);
-        const month = parseInt(mes.value, 10);
-        const year = parseInt(año.value, 10);
-        const date = new Date(year, month - 1, day);
-        if (date.getDate() !== day || date.getMonth() !== month - 1) return false;
-
-        if (!acepto || !acepto.checked) return false;
-
-        return true;
-    }
-
-    // Función para actualizar estado de validación
-    function updateValidationState() {
-        const isValid = checkAllFieldsValid();
-        movilCardState.allFieldsValid = isValid;
-        console.log('📝 Campos válidos:', isValid);
-        return isValid;
-    }
-
     // Función para mostrar la tarjeta
     function showMovilCard() {
-        if (!movilCardState.hasShownCard && !movilCardState.pendingHide) {
+        // Solo mostrar si el modal NO está abierto
+        if (!movilCardState.isModalOpen && !movilCardState.hasShownCard) {
             movilCard.classList.add('visible');
             step4Layout.classList.add('has-sticky-card');
             body.classList.add('has-sticky-card');
@@ -2249,7 +2111,7 @@ function initMovilCardVisibility() {
         }
     }
 
-    // Función para ocultar la tarjeta (solo cuando hay errores)
+    // Función para ocultar la tarjeta
     function hideMovilCard() {
         if (movilCardState.hasShownCard) {
             movilCard.classList.remove('visible');
@@ -2260,31 +2122,74 @@ function initMovilCardVisibility() {
         }
     }
 
+    // 🔥 Monitorear el estado del modal
+    function initModalObserver() {
+        if (!modalMetodoPago) return;
+
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    const isOpen = modalMetodoPago.style.display === 'flex';
+
+                    // Actualizar estado
+                    movilCardState.isModalOpen = isOpen;
+
+                    if (isOpen) {
+                        // Modal se abre: Ocultar tarjeta SIEMPRE
+                        console.log('🔴 Modal abierto - Ocultando tarjeta');
+                        hideMovilCard();
+                    } else {
+                        // Modal se cierra: Restaurar según visibilidad de "Tu auto"
+                        console.log('🟢 Modal cerrado - Restaurando según visibilidad');
+
+                        // Verificar si la sección "Tu auto" es visible
+                        setTimeout(() => {
+                            const rect = tuAutoSection.getBoundingClientRect();
+                            const windowHeight = window.innerHeight;
+                            const isVisible = rect.top < windowHeight * 0.9 && rect.bottom > 0;
+
+                            console.log('📏 ¿Tu auto visible?', isVisible);
+
+                            if (isVisible) {
+                                showMovilCard();
+                            }
+                        }, 100);
+                    }
+                }
+            });
+        });
+
+        observer.observe(modalMetodoPago, { attributes: true });
+
+        // Escuchar clic en Cancelar específicamente
+        const cerrarModalMetodo = document.getElementById('cerrarModalMetodo');
+        if (cerrarModalMetodo) {
+            cerrarModalMetodo.addEventListener('click', function() {
+                console.log('👆 Clic en Cancelar');
+                // La restauración la hará el MutationObserver
+            });
+        }
+    }
+
     // Verificar si estamos en móvil
     function isMobileView() {
         return window.innerWidth <= 1024;
     }
 
-    // OBSERVER para detectar cuando "Tu auto" entra y sale de la vista
+    // OBSERVER para detectar cuando "Tu auto" entra en vista
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (!isMobileView()) return;
 
             if (entry.isIntersecting) {
-                console.log('🔍 Tu auto visible');
-                // Cuando la sección es visible, mostrar la tarjeta si no está pendiente de ocultar
-                if (!movilCardState.pendingHide) {
+                console.log('🔍 Tu auto visible - Mostrando tarjeta');
+                // Solo mostrar si el modal NO está abierto
+                if (!movilCardState.isModalOpen) {
                     showMovilCard();
                 }
             } else {
-                console.log('🔍 Tu auto NO visible');
-                // Cuando la sección NO es visible:
-                // - Si hay campos inválidos, OCULTAR
-                // - Si todos los campos son válidos, MANTENER visible
-                if (!movilCardState.allFieldsValid) {
-                    hideMovilCard();
-                }
-                // Si los campos son válidos, NO hacemos nada (la tarjeta sigue visible)
+                console.log('🔍 Tu auto NO visible - Ocultando tarjeta');
+                hideMovilCard();
             }
         });
     }, {
@@ -2294,129 +2199,21 @@ function initMovilCardVisibility() {
 
     observer.observe(tuAutoSection);
 
-    // Backup scroll
-    let scrollTimeout;
-    window.addEventListener('scroll', () => {
-        if (!isMobileView() || movilCardState.pendingHide) return;
-
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-            const rect = tuAutoSection.getBoundingClientRect();
-            const windowHeight = window.innerHeight;
-
-            const isVisible = rect.top < windowHeight * 0.9 && rect.bottom > 0;
-
-            if (isVisible) {
-                showMovilCard();
-            } else {
-                // Misma lógica: ocultar solo si hay campos inválidos
-                if (!movilCardState.allFieldsValid) {
-                    hideMovilCard();
-                }
-            }
-        }, 50);
-    }, { passive: true });
-
-    // VALIDACIÓN Y BOTÓN DE RESERVAR
-    const btnOriginal = document.getElementById('btnReservar');
-    if (btnOriginal) {
-        btnOriginal.addEventListener('click', function(e) {
-            // Actualizar estado de validación
-            const isValid = updateValidationState();
-
-            setTimeout(() => {
-                const hasErrors = document.querySelectorAll('.has-error, .field-error').length > 0;
-
-                if (hasErrors) {
-                    console.log('❌ Errores detectados');
-
-                    // Solo ocultar si hay errores
-                    movilCardState.pendingHide = true;
-                    hideMovilCard();
-
-                    const primerError = document.querySelector('.has-error, .field-error');
-                    if (primerError) {
-                        primerError.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'center'
-                        });
-                    }
-
-                    // Resetear pendingHide después de 2 segundos
-                    setTimeout(() => {
-                        movilCardState.pendingHide = false;
-                        console.log('🔄 Reset pendingHide');
-                    }, 2000);
-                } else {
-                    console.log('✅ Todos los campos válidos - procediendo con pago');
-
-                    // NO ocultar la tarjeta, mantenerla visible
-                    // Disparar evento de validación exitosa
-                    const eventoExito = new CustomEvent('reserva:validacionExitosa', {
-                        detail: { plan: mainEl ? mainEl.dataset.plan : '' }
-                    });
-                    document.dispatchEvent(eventoExito);
-
-                    // Hacer scroll suave hacia arriba para mostrar el modal de pago
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
-                }
-            }, 100);
-        });
-    }
-
-    // Escuchar cambios en los campos para actualizar estado
-    const inputsToWatch = [
-        'nombreCompleto', 'telefonoCliente', 'correoCliente', 'pais',
-        'dob_day', 'dob_month', 'dob_year', 'acepto'
-    ];
-
-    inputsToWatch.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            ['input', 'change', 'blur'].forEach(eventType => {
-                el.addEventListener(eventType, () => {
-                    updateValidationState();
-                });
-            });
-        }
-    });
-
-    // BOTÓN MÓVIL
-    const btnMovil = document.getElementById('btnReservarMovil');
-    if (btnMovil && btnOriginal) {
-        btnMovil.addEventListener('click', function(e) {
-            e.preventDefault();
-            btnOriginal.click();
-        });
-    }
-
-    // Sincronizar total
-    const totalOriginal = document.getElementById('qTotal');
-    const totalMovil = document.getElementById('qTotalMovil');
-
-    if (totalOriginal && totalMovil) {
-        function syncTotal() {
-            totalMovil.innerText = totalOriginal.innerText;
-        }
-        syncTotal();
-
-        const observer = new MutationObserver(syncTotal);
-        observer.observe(totalOriginal, {
-            childList: true,
-            subtree: true,
-            characterData: true
-        });
-    }
+    // Inicializar observador del modal
+    initModalObserver();
 
     // Verificación inicial
     setTimeout(() => {
-        updateValidationState();
+        const rect = tuAutoSection.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const isVisible = rect.top < windowHeight * 0.9 && rect.bottom > 0;
+
+        if (isVisible && !movilCardState.isModalOpen) {
+            showMovilCard();
+        }
     }, 500);
 
-    console.log('🚀 Control de visibilidad de tarjeta móvil inicializado');
+    console.log('🚀 Control de visibilidad de tarjeta móvil inicializado (versión simplificada)');
 }
 
 // Inicializar en DOMContentLoaded
@@ -2434,6 +2231,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Manejar resize
 window.addEventListener('resize', function() {
     if (window.innerWidth <= 1024) {
+        // Resetear estado al cambiar tamaño
         const movilCard = document.querySelector('.movil-footer-sticky');
         if (movilCard) {
             movilCard.classList.remove('visible');
@@ -2443,8 +2241,7 @@ window.addEventListener('resize', function() {
 
         movilCardState = {
             hasShownCard: false,
-            pendingHide: false,
-            allFieldsValid: false
+            isModalOpen: false
         };
 
         setTimeout(() => {
