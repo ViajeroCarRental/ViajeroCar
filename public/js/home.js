@@ -1142,15 +1142,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, { passive: false });
 
-        document.body.addEventListener('touchmove', function(e) {
-            if (!buscador.classList.contains('active')) return;
-
-            // Permitir scroll dentro del buscador
-            if (e.target.closest('#miBuscador')) return;
-
-            // Bloquear solo el fondo
-            e.preventDefault();
-        }, { passive: false });
+        
 
         if (dropoffPlace) {
             dropoffPlace.addEventListener('touchstart', function(e) {
@@ -1182,4 +1174,59 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
         initScrollControl();
     }
+
+    /* ============================================================
+   PARCHE RÁPIDO: SCROLL MANUAL SOBRE #dropoffWrapper EN MÓVIL
+============================================================ */
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('miBuscador');
+    const dropoffWrapper = document.getElementById('dropoffWrapper');
+
+    if (!modal || !dropoffWrapper) return;
+
+    let startY = 0;
+    let startScrollTop = 0;
+    let dragging = false;
+
+    function isMobileFormOpen() {
+        return window.innerWidth <= 1124 && modal.classList.contains('active');
+    }
+
+    dropoffWrapper.addEventListener('touchstart', function (e) {
+        if (!isMobileFormOpen()) return;
+
+        startY = e.touches[0].clientY;
+        startScrollTop = modal.scrollTop;
+        dragging = false;
+    }, { passive: true });
+
+    dropoffWrapper.addEventListener('touchmove', function (e) {
+        if (!isMobileFormOpen()) return;
+
+        const currentY = e.touches[0].clientY;
+        const diffY = startY - currentY;
+
+        if (Math.abs(diffY) > 6) {
+            dragging = true;
+            e.preventDefault(); // evita que el select se robe el gesto
+            modal.scrollTop = startScrollTop + diffY;
+        }
+    }, { passive: false });
+
+    dropoffWrapper.addEventListener('touchend', function () {
+        setTimeout(() => {
+            dragging = false;
+        }, 50);
+    }, { passive: true });
+
+    const dropoffPlace = document.getElementById('dropoffPlace');
+    if (dropoffPlace) {
+        dropoffPlace.addEventListener('click', function (e) {
+            if (dragging) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+    }
+});
 })();
