@@ -209,7 +209,7 @@ body{
 
   body.nav-open{
     overflow:hidden;
-    touch-action: none;
+    touch-action: auto !important;
   }
 }
 body.nav-open .topbar{
