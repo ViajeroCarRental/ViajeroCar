@@ -3309,21 +3309,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Reset base de formularios */
-.search-card input,
-.search-card select,
-.search-card textarea,
-.search-card button,
-#miBuscador input,
-#miBuscador select,
-#miBuscador textarea,
-#miBuscador button {
-  -webkit-appearance: none;
-  appearance: none;
-  font-family: inherit;
-  box-sizing: border-box;
-}
-
 /* Mantener checkbox nativo */
 .search-card input[type="checkbox"],
 #miBuscador input[type="checkbox"] {
@@ -3455,9 +3440,59 @@ i.fa,
   #miBuscador input {
     touch-action: pan-y !important;
   }
+  /* =========================================
+   FIX REAL SCROLL + SELECT NATIVO EN MÓVIL
+========================================= */
+@media (max-width: 1124px) {
 
-  #miBuscador select {
-    -webkit-appearance: none;
-    appearance: none;
+  #miBuscador.search-card {
+    position: fixed !important;
+    inset: 0 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
   }
+
+  /* NO forzar touch-action sobre controles */
+  #miBuscador .search-grid,
+  #miBuscador .sg-col,
+  #miBuscador .field,
+  #miBuscador .dt-field,
+  #miBuscador .location-inputs-wrapper,
+  #miBuscador #dropoffWrapper,
+  #miBuscador input,
+  #miBuscador select {
+    touch-action: auto !important;
+  }
+
+  /* Select nativo para que móvil maneje bien el gesto */
+  #miBuscador select,
+  #miBuscador select:focus,
+  #miBuscador select:active {
+    -webkit-appearance: menulist !important;
+    appearance: auto !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 5 !important;
+    background-image: none !important;
+  }
+
+  /* Contenedores de ubicación sin bloquear toque */
+  #miBuscador .location-inputs-wrapper,
+  #miBuscador .location-inputs-wrapper .field,
+  #miBuscador #dropoffWrapper {
+    position: relative !important;
+    overflow: visible !important;
+    z-index: 1 !important;
+  }
+
+  /* Iconos nunca bloquean el dedo */
+  #miBuscador .field-icon,
+  #miBuscador .field-icon i,
+  #miBuscador .cal-ico,
+  #miBuscador .time-field::before,
+  #miBuscador .search-card .time-field.icon-field::before {
+    pointer-events: none !important;
+  }
+}
 }
