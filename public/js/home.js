@@ -241,11 +241,10 @@
     selH.className = "tp-hour custom-select-clean";
     selH.setAttribute("aria-label", "Hora");
 
-    // Llenamos solo con horas: 01, 02, 03... hasta hourMax
     for (let h = 1; h <= hourMax; h++) {
       const op = document.createElement("option");
-      op.value = String(h);
-      op.textContent = pad2(h);
+      op.value = pad2(h);
+      op.textContent = `${pad2(h)}:00`;
       selH.appendChild(op);
     }
 
