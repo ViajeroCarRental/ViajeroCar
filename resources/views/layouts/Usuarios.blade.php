@@ -57,7 +57,7 @@
     .nav-actions{display:flex; align-items:center; gap:12px;}
     .nav-actions .icon-pill{
       display:flex; align-items:center; justify-content:center;
-      width:42px; height:42px; border-radius:999px;
+      width:36px; height:36px; border-radius:999px;
       background: rgba(255,255,255,.15);
       transition: all .3s ease;
       text-decoration:none;
@@ -71,7 +71,7 @@
 
     /* ===== HAMBURGER ===== */
     .hamburger{
-      width:40px; height:40px;
+      width:34px; height:34px;
       border-radius:14px;
       border:1px solid rgba(255,255,255,.25);
       background: rgba(255,255,255,.12);
@@ -221,7 +221,7 @@ body.nav-open .language-selector {
 
 /* Mejorar el botón principal */
 .lang-btn.dropdown-toggle::after {
-    margin-left: 8px;
+    margin-left: 2px;
     color: white;
     
 }
@@ -235,7 +235,7 @@ body.nav-open .language-selector {
     padding: 2px 8px;   /* antes seguro está más grande */
     font-size: 11px;     /* reduce el texto */
     border-radius: 8px;  /* opcional, más compacto */
-    height: 32px; 
+    height: 30px; 
 
 }
 
