@@ -3712,7 +3712,23 @@
     }
 }
   }
+.page.wizard-page .wizard-card{
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
 
+    /* Firefox */
+    scrollbar-width: none !important;
+
+    /* IE / Edge antiguo */
+    -ms-overflow-style: none !important;
+}
+
+/* Chrome, Edge, Safari */
+.page.wizard-page .wizard-card::-webkit-scrollbar{
+    width: 0px !important;
+    height: 0px !important;
+    display: none !important;
+}
   /* ============================================================
     ALERTAS PARA EL BUSCADOR
   ============================================================ */
