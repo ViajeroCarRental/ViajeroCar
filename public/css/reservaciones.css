@@ -3761,7 +3761,17 @@
   #miBuscador select.field-success + .select2-container .select2-selection {
       border: 2px solid #43a047 !important;
   }
-
+.select2-results__options {
+  max-height: 250px !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+.select2-dropdown {
+  z-index: 999999 !important;
+}
+.select2-container {
+  touch-action: manipulation !important;
+}
   /* Mensajes de error */
   #miBuscador .error-msg {
       color: #e53935 !important;
@@ -3953,6 +3963,20 @@
         min-height: auto !important;
         height: auto !important;
     }
+
+}
+@media (max-width: 768px) {
+
+  #miBuscador .datetime-row {
+    flex-direction: column !important;
+    display: flex !important;
+  }
+
+  #miBuscador .dt-field {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
 
 }
   /* =========================================================

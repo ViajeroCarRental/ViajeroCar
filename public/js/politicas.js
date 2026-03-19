@@ -189,6 +189,16 @@
 //  SELECT2 CON ICONOS - VERSIÓN ÚNICA Y CONSISTENTE (CORREGIDA)
 // =========================
 function setupSelect2Iconos() {
+if (window.innerWidth < 768) {
+  try {
+    $('#pickupPlacePoliticas').select2('destroy');
+    $('#dropoffPlacePoliticas').select2('destroy');
+  } catch (e) {}
+
+  console.log('Select2 desactivado en móvil (políticas)');
+  return;
+}
+
   if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
     console.warn(' Select2 no está disponible');
     return;
@@ -236,7 +246,7 @@ function setupSelect2Iconos() {
     width: '100%',
     minimumResultsForSearch: Infinity,
     allowClear: false,
-    dropdownParent: modal ? $(modal) : undefined // 👈 SIEMPRE el modal si existe
+    dropdownParent: $('body') // 👈 SIEMPRE el modal si existe
   };
 
   // Destruir instancias existentes

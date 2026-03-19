@@ -1653,6 +1653,46 @@ span.flatpickr-weekday {
         font-size: 28px !important;
     }
 }
+@media (max-width: 768px) {
+
+  #miBuscadorPoliticas .search-grid {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 20px !important;
+  }
+
+}
+@media (max-width: 768px) {
+
+  #miBuscadorPoliticas .location-inputs-wrapper {
+    flex-direction: column !important;
+    height: auto !important;
+    gap: 10px !important;
+  }
+
+}
+@media (max-width: 768px) {
+
+  #miBuscadorPoliticas .sg-col-datetime {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  #miBuscadorPoliticas .datetime-row {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+
+}
+@media (max-width: 768px) {
+
+  #miBuscadorPoliticas .field,
+  #miBuscadorPoliticas .dt-field {
+    height: auto !important;
+  }
+
+}
 /* ==========================================================
    FIX SAFARI / MAC — POLITICAS
    Agregar al FINAL del archivo
@@ -1758,6 +1798,14 @@ body {
 #miBuscadorPoliticas .select2-container--default .select2-selection--single .select2-selection__arrow {
   height: 100% !important;
   top: 0 !important;
+}
+.select2-results__options {
+  max-height: 250px !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+.select2-container {
+  touch-action: manipulation !important;
 }
 
 /* ==========================================================

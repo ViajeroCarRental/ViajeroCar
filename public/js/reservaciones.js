@@ -1769,8 +1769,10 @@ addonsMap.forEach((qty, id) => {
 
       if ($select.length > 0) {
         if (window.innerWidth < 768) {
-      $select.select2('destroy');
-      return; // 👈 IMPORTANTE para que no se inicialice
+      if ($select.hasClass("select2-hidden-accessible")) {
+        $select.select2('destroy');
+      }
+      return;
     }
         $select.select2({
           width: '100%',
