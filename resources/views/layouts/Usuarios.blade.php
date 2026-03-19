@@ -103,7 +103,14 @@
     transition: opacity .2s ease;
     z-index: 10;
 }
-   body.nav-open .nav-backdrop
+   body.nav-open .nav-backdrop {
+    opacity: 1;
+    pointer-events: auto;
+}
+body.nav-open .language-selector {
+    opacity: 0;
+    pointer-events: none;
+}
 
     header.topbar{
       transition:
@@ -175,38 +182,7 @@
     iframe.goog-te-banner-frame {
         display: none !important;
     }
-/* SELECTOR DE IDIOMAS TIPO SELECT */
-.lang-select {
-    width: 120px;
-    height: 40px;
-    padding: 5px 10px 5px 40px; /* Ajustado para la bandera */
-    border-radius: 30px;
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.25);
-    color: white;
-    font-weight: 500;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    background-repeat: no-repeat, no-repeat;
-    background-position: 10px center, right 10px center;
-    background-size: 20px, 16px;
-}
 
-.lang-select option {
-    background: #333;
-    color: white;
-}
-
-/* Bandera para español */
-.lang-select.es {
-    background-image: url('https://flagcdn.com/w40/mx.png'), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-}
-
-/* Bandera para inglés */
-.lang-select.en {
-    background-image: url('https://flagcdn.com/w40/us.png'), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-}
 
   </style>
 </head>
