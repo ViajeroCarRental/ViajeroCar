@@ -3418,81 +3418,22 @@ i.fa,
 [class*="fa-"] {
   line-height: 1 !important;
   vertical-align: middle;
-}
-/* =========================================
-   FIX SCROLL MÓVIL EN FORMULARIO BUSCADOR
-========================================= */
-@media (max-width: 1124px) {
+
+  @media (max-width: 1124px) {
   #miBuscador.search-card {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior-y: contain !important;
-    touch-action: pan-y !important;
   }
 
-  #miBuscador .search-grid,
-  #miBuscador .sg-col,
-  #miBuscador .field,
-  #miBuscador .dt-field,
-  #miBuscador .location-inputs-wrapper,
-  #miBuscador #dropoffWrapper,
-  #miBuscador select,
-  #miBuscador input {
-    touch-action: pan-y !important;
-  }
-  /* =========================================
-   FIX REAL SCROLL + SELECT NATIVO EN MÓVIL
-========================================= */
-@media (max-width: 1124px) {
-
-  #miBuscador.search-card {
-    position: fixed !important;
-    inset: 0 !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain !important;
-  }
-
-  /* NO forzar touch-action sobre controles */
-  #miBuscador .search-grid,
-  #miBuscador .sg-col,
-  #miBuscador .field,
-  #miBuscador .dt-field,
-  #miBuscador .location-inputs-wrapper,
-  #miBuscador #dropoffWrapper,
-  #miBuscador input,
-  #miBuscador select {
+  #dropoffPlace {
     touch-action: auto !important;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
-  /* Select nativo para que móvil maneje bien el gesto */
-  #miBuscador select,
-  #miBuscador select:focus,
-  #miBuscador select:active {
-    -webkit-appearance: menulist !important;
-    appearance: auto !important;
-    pointer-events: auto !important;
-    position: relative !important;
-    z-index: 5 !important;
-    background-image: none !important;
-  }
-
-  /* Contenedores de ubicación sin bloquear toque */
-  #miBuscador .location-inputs-wrapper,
-  #miBuscador .location-inputs-wrapper .field,
-  #miBuscador #dropoffWrapper {
-    position: relative !important;
-    overflow: visible !important;
-    z-index: 1 !important;
-  }
-
-  /* Iconos nunca bloquean el dedo */
-  #miBuscador .field-icon,
-  #miBuscador .field-icon i,
-  #miBuscador .cal-ico,
-  #miBuscador .time-field::before,
-  #miBuscador .search-card .time-field.icon-field::before {
-    pointer-events: none !important;
+  .location-inputs-wrapper select,
+  .location-inputs-wrapper input {
+    padding-left: 12px !important;
   }
 }
 }

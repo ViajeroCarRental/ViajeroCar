@@ -1091,13 +1091,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const btnAbrir = document.getElementById('btn-abrir-buscador');
         const btnCerrar = document.getElementById('btn-cerrar-buscador');
         const buscador = document.getElementById('miBuscador');
+        const dropoffPlace = document.getElementById('dropoffPlace');
 
         if (!btnAbrir || !btnCerrar || !buscador) return;
 
         function bloquearScroll() {
-
             const scrollY = window.scrollY;
-
 
             document.body.style.position = 'fixed';
             document.body.style.top = `-${scrollY}px`;
@@ -1110,7 +1109,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         function restaurarScroll() {
-
             document.body.style.position = '';
             document.body.style.top = '';
             document.body.style.left = '';
@@ -1119,7 +1117,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.style.width = '';
 
             const scrollY = document.body.dataset.scrollY || 0;
-            window.scrollTo(0, parseInt(scrollY));
+            window.scrollTo(0, parseInt(scrollY, 10));
 
             delete document.body.dataset.scrollY;
         }
@@ -1136,7 +1134,6 @@ document.addEventListener('DOMContentLoaded', function() {
             restaurarScroll();
         });
 
-        // Opcional: Prevenir scroll con teclado
         window.addEventListener('keydown', function(e) {
             if (buscador.classList.contains('active')) {
                 if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === ' ' || e.key === 'Spacebar') {
@@ -1145,13 +1142,41 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, { passive: false });
 
-
         document.body.addEventListener('touchmove', function(e) {
-            if (buscador.classList.contains('active')) {
-                e.preventDefault();
-            }
+            if (!buscador.classList.contains('active')) return;
+
+            // Permitir scroll dentro del buscador
+            if (e.target.closest('#miBuscador')) return;
+
+            // Bloquear solo el fondo
+            e.preventDefault();
         }, { passive: false });
+
+        if (dropoffPlace) {
+            dropoffPlace.addEventListener('touchstart', function(e) {
+                this.dataset.touchStartY = e.touches[0].clientY;
+                this.dataset.isDragging = '0';
+            }, { passive: true });
+
+            dropoffPlace.addEventListener('touchmove', function(e) {
+                const startY = parseFloat(this.dataset.touchStartY || '0');
+                const currentY = e.touches[0].clientY;
+                const diffY = Math.abs(currentY - startY);
+
+                if (diffY > 8) {
+                    this.dataset.isDragging = '1';
+                }
+            }, { passive: true });
+
+            dropoffPlace.addEventListener('touchend', function() {
+                if (this.dataset.isDragging === '1') {
+                    this.dataset.isDragging = '0';
+                    return;
+                }
+            }, { passive: true });
+        }
     }
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initScrollControl);
     } else {

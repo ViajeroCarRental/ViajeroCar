@@ -426,7 +426,7 @@
                 {{-- SELECT DROPOFF (controlado por JS) --}}
                 <div class="field icon-field" id="dropoffWrapper">
                     <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
-                    <select id="dropoffPlace" name="dropoff_sucursal_id">
+                    <select id="dropoffPlace" name="dropoff_sucursal_id" class="no-scroll-trap">
                         <option value="" disabled selected>¿Dónde termina tu viaje?</option>
                         @foreach($ciudades as $ciudad)
                             <optgroup label="{{ $ciudad->nombre }}">
