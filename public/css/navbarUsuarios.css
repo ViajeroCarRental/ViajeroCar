@@ -3434,3 +3434,30 @@ i.fa,
   line-height: 1 !important;
   vertical-align: middle;
 }
+/* =========================================
+   FIX SCROLL MÓVIL EN FORMULARIO BUSCADOR
+========================================= */
+@media (max-width: 1124px) {
+  #miBuscador.search-card {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+    touch-action: pan-y !important;
+  }
+
+  #miBuscador .search-grid,
+  #miBuscador .sg-col,
+  #miBuscador .field,
+  #miBuscador .dt-field,
+  #miBuscador .location-inputs-wrapper,
+  #miBuscador #dropoffWrapper,
+  #miBuscador select,
+  #miBuscador input {
+    touch-action: pan-y !important;
+  }
+
+  #miBuscador select {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
