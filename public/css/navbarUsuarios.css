@@ -3070,7 +3070,54 @@ span.flatpickr-weekday {
     background: white !important;
     color: #333 !important;
 }
+/* ==========================================================
+   DIAS DESHABILITADOS
+========================================================== */
 
+.flatpickr-day.prevMonthDay {
+    opacity: 0.4 !important;
+    color: #999 !important;
+    background: #f5f5f5 !important;
+    cursor: default !important;
+}
+.flatpickr-day.disabled,
+.flatpickr-day.flatpickr-disabled {
+    opacity: 0.4 !important;
+    color: #999 !important;
+    background: #f5f5f5 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+.flatpickr-day.nextMonthDay {
+    opacity: 1 !important;
+    color: #333 !important;
+    background: white !important;
+    cursor: pointer !important;
+}
+.flatpickr-day.disabled:hover,
+.flatpickr-day.flatpickr-disabled:hover,
+.flatpickr-day.prevMonthDay:hover {
+    background: #f5f5f5 !important;
+    color: #999 !important;
+}
+.flatpickr-day.nextMonthDay:hover {
+    background: #ffe5e5 !important;
+    color: #b22222 !important;
+}
+.flatpickr-day.today.disabled,
+.flatpickr-day.today.flatpickr-disabled {
+    border: 2px solid #b22222 !important;
+    color: #b22222 !important;
+    background: white !important;
+    opacity: 1 !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected.disabled {
+    background: #b22222 !important;
+    color: white !important;
+    opacity: 1 !important;
+}
 /* ============================================================
    POSICIÓN PARA TABLET Y MÓVI
 ============================================================ */

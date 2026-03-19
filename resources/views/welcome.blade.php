@@ -1289,13 +1289,16 @@
   {{-- ✅ (Tu inline script de fleet infinito - lo dejo tal cual) --}}
 
 
-  <!-- ===== Toast de reservas ===== -->
-  <!-- ===== Toast de reservas ===== -->
-<!-- ===== Toast de reservas ===== -->
-  <script>
-  (function(){
 
-    const SEQ = [
+<!-- ===== TOAST DE RESERVAS BILINGÜE ===== -->
+<script>
+(function(){
+  // Detectar idioma actual
+  const idiomaActual = localStorage.getItem('idiomaPreferido') || 'es';
+
+  // SECUENCIA DE MENSAJES EN ESPAÑOL E INGLÉS
+  const SEQ = {
+    'es': [
       {
         title: "Buscando reserva",
         text: "Alguien más está buscando reserva en este momento"
@@ -1320,121 +1323,164 @@
         title: "Otra reserva",
         text: "Un cliente acaba de reservar en la Plaza de Central Park Querétaro"
       }
-    ];
+    ],
+    'en': [
+      {
+        title: "Searching for booking",
+        text: "Someone else is looking for a reservation right now"
+      },
+      {
+        title: "Another booking",
+        text: "A customer just booked at Querétaro Airport (AIQ)"
+      },
+      {
+        title: "Searching for booking",
+        text: "Someone else is looking for a reservation right now"
+      },
+      {
+        title: "Another booking",
+        text: "A customer just booked at Querétaro Bus Station (TAQ)"
+      },
+      {
+        title: "Searching for booking",
+        text: "Someone else is looking for a reservation right now"
+      },
+      {
+        title: "Another booking",
+        text: "A customer just booked at Plaza Central Park Querétaro"
+      }
+    ]
+  };
 
-    const SHOW_MS = 7000;
-    const HIDE_MS = 25000;
+  const SHOW_MS = 7000;
+  const HIDE_MS = 25000;
+  const INITIAL_DELAY_MS = 10000;
+  const START_INDEX = 5;
 
-    // ✅ Espera inicial de 15 segundos
-    const INITIAL_DELAY_MS = 10000;
+  const banner = document.getElementById('rvBanner');
+  const bar    = document.getElementById('rvBar');
+  const title  = document.getElementById('rvTitle');
+  const msg    = document.getElementById('rvMsg');
+  const close  = document.getElementById('rvClose');
 
-    // ✅ Empezar mostrando primero el mensaje de Central Park
-    const START_INDEX = 5;
+  let idx = START_INDEX, loop = true, hideT = null, nextT = null, startT = null;
+  let paused = false, startTs = 0, remaining = SHOW_MS;
 
-    const banner = document.getElementById('rvBanner');
-    const bar    = document.getElementById('rvBar');
-    const title  = document.getElementById('rvTitle');
-    const msg    = document.getElementById('rvMsg');
-    const close  = document.getElementById('rvClose');
+  // Función para obtener el mensaje según el idioma actual
+  function getMensajeActual() {
+    const idioma = localStorage.getItem('idiomaPreferido') || 'es';
+    return SEQ[idioma] || SEQ['es'];
+  }
 
-    let idx = START_INDEX, loop = true, hideT = null, nextT = null, startT = null;
-    let paused = false, startTs = 0, remaining = SHOW_MS;
+  function setBar(ms){
+    if(!bar) return;
+    bar.style.transition = 'none';
+    bar.style.width = '0%';
 
-    function setBar(ms){
-      if(!bar) return;
-      bar.style.transition = 'none';
-      bar.style.width = '0%';
-
+    requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          bar.style.transition = `width ${ms}ms linear`;
-          bar.style.width = '100%';
-        });
+        bar.style.transition = `width ${ms}ms linear`;
+        bar.style.width = '100%';
       });
-    }
+    });
+  }
 
-    function showOnce(){
-      if(!banner || !title || !msg) return;
+  function showOnce(){
+    if(!banner || !title || !msg) return;
 
-      const item = SEQ[idx];
-      idx = (idx + 1) % SEQ.length;
+    const mensajes = getMensajeActual();
+    const item = mensajes[idx];
+    idx = (idx + 1) % mensajes.length;
 
-      title.textContent = item.title;
-      msg.textContent   = item.text;
+    title.textContent = item.title;
+    msg.textContent   = item.text;
 
-      banner.style.display = 'block';
-      banner.classList.remove('rv-out');
-      banner.classList.add('rv-in');
+    banner.style.display = 'block';
+    banner.classList.remove('rv-out');
+    banner.classList.add('rv-in');
 
-      remaining = SHOW_MS;
-      startTs = performance.now();
-      setBar(SHOW_MS);
+    remaining = SHOW_MS;
+    startTs = performance.now();
+    setBar(SHOW_MS);
 
-      if(hideT) clearTimeout(hideT);
-      hideT = setTimeout(hide, SHOW_MS);
-    }
+    if(hideT) clearTimeout(hideT);
+    hideT = setTimeout(hide, SHOW_MS);
+  }
 
-    function hide(){
-      if(!banner) return;
+  function hide(){
+    if(!banner) return;
 
-      banner.classList.remove('rv-in');
-      banner.classList.add('rv-out');
+    banner.classList.remove('rv-in');
+    banner.classList.add('rv-out');
 
-      setTimeout(() => {
-        banner.style.display = 'none';
-        if(loop){
-          nextT = setTimeout(showOnce, HIDE_MS);
-        }
-      }, 260);
-    }
+    setTimeout(() => {
+      banner.style.display = 'none';
+      if(loop){
+        nextT = setTimeout(showOnce, HIDE_MS);
+      }
+    }, 260);
+  }
 
-    if (banner) {
-      banner.addEventListener('mouseenter', () => {
-        paused = true;
-        const elapsed = performance.now() - startTs;
-        remaining = Math.max(0, SHOW_MS - elapsed);
+  if (banner) {
+    banner.addEventListener('mouseenter', () => {
+      paused = true;
+      const elapsed = performance.now() - startTs;
+      remaining = Math.max(0, SHOW_MS - elapsed);
 
-        if(hideT){
-          clearTimeout(hideT);
-          hideT = null;
-        }
+      if(hideT){
+        clearTimeout(hideT);
+        hideT = null;
+      }
 
-        if(bar){
-          const progress = ((SHOW_MS - remaining) / SHOW_MS) * 100;
-          bar.style.transition = 'none';
-          bar.style.width = `${progress}%`;
-        }
-      });
-
-      banner.addEventListener('mouseleave', () => {
-        if(!paused) return;
-        paused = false;
-
-        setTimeout(() => {
-          setBar(remaining);
-          hideT = setTimeout(hide, remaining);
-          startTs = performance.now() - (SHOW_MS - remaining);
-        }, 30);
-      });
-    }
-
-    if (close) {
-      close.addEventListener('click', () => {
-        loop = false;
-
-        if(hideT) clearTimeout(hideT);
-        if(nextT) clearTimeout(nextT);
-        if(startT) clearTimeout(startT);
-
-        banner.style.display = 'none';
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      startT = setTimeout(showOnce, INITIAL_DELAY_MS);
+      if(bar){
+        const progress = ((SHOW_MS - remaining) / SHOW_MS) * 100;
+        bar.style.transition = 'none';
+        bar.style.width = `${progress}%`;
+      }
     });
 
-  })();
-  </script>
+    banner.addEventListener('mouseleave', () => {
+      if(!paused) return;
+      paused = false;
+
+      setTimeout(() => {
+        setBar(remaining);
+        hideT = setTimeout(hide, remaining);
+        startTs = performance.now() - (SHOW_MS - remaining);
+      }, 30);
+    });
+  }
+
+  if (close) {
+    close.addEventListener('click', () => {
+      loop = false;
+
+      if(hideT) clearTimeout(hideT);
+      if(nextT) clearTimeout(nextT);
+      if(startT) clearTimeout(startT);
+
+      banner.style.display = 'none';
+    });
+  }
+
+  // Escuchar cambios de idioma para actualizar las notificaciones
+  window.addEventListener('storage', function(e) {
+    if (e.key === 'idiomaPreferido') {
+      // Reiniciar el ciclo con el nuevo idioma
+      loop = true;
+        if(hideT) clearTimeout(hideT);
+        if(nextT) clearTimeout(nextT);
+        showOnce();
+      }
+    }
+  });
+
+  // Iniciar
+  document.addEventListener('DOMContentLoaded', () => {
+    startT = setTimeout(showOnce, INITIAL_DELAY_MS);
+  });
+
+})();
+</script>
 
 @endsection

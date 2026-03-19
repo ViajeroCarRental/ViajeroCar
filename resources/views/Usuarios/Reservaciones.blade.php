@@ -2754,7 +2754,6 @@ input:checked + .slider:before {
     <script defer src="{{ asset('js/BtnReserva.js') }}"></script>
     <script defer src="{{ asset('js/BtnReservaLinea.js') }}"></script>
 
-    {{-- modal: si plan=mostrador abre selector; si plan=linea fuerza pago línea --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const main = document.querySelector('main.page');
@@ -2764,8 +2763,6 @@ input:checked + .slider:before {
             const cerrarModalMetodo = document.getElementById('cerrarModalMetodo');
             const btnPagoLinea = document.getElementById('btnPagoLinea');
             const btnPagoMostrador = document.getElementById('btnPagoMostrador');
-
-            // Escuchar el evento de validación exitosa (disparado desde reservaciones.js)
             document.addEventListener('reserva:validacionExitosa', function(e) {
                 console.log('✅ Validación exitosa, plan:', currentPlan);
 
@@ -2803,8 +2800,46 @@ input:checked + .slider:before {
                 });
             }
 
-            // ✅ Por si quieres FORZAR que "Tarifa base" inicie CERRADO:
             const tarifa = document.querySelector('.sum-table details.sum-acc');
             if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
         });
     </script>
+<script>
+
+// js/traduccion-return.js
+function traducirReturnDestination() {
+    const idioma = localStorage.getItem('idiomaPreferido') || 'es';
+    const returnElement = document.querySelector('.inline-check span');
+
+    if (returnElement) {
+        if (idioma === 'en') {
+            // INGLÉS: 3 líneas
+            returnElement.innerHTML = 'RETURN TO<br>ANOTHER<br>DESTINATION';
+            returnElement.style.lineHeight = '1.2';
+            returnElement.style.display = 'block';
+            returnElement.style.whiteSpace = 'normal';
+            returnElement.style.fontWeight = 'bold';
+        } else {
+            // ESPAÑOL: 2 líneas
+            returnElement.innerHTML = 'DEVOLVER EN<br>OTRO DESTINO';
+            returnElement.style.lineHeight = '1.2';
+            returnElement.style.display = 'block';
+            returnElement.style.whiteSpace = 'normal';
+            returnElement.style.fontWeight = 'bold';
+        }
+    }
+}
+document.addEventListener('DOMContentLoaded', traducirReturnDestination);
+window.addEventListener('storage', function(e) {
+    if (e.key === 'idiomaPreferido') {
+        traducirReturnDestination();
+    }
+});
+setTimeout(traducirReturnDestination, 500);
+document.addEventListener('click', function(e) {
+    const langBtn = e.target.closest('.lang-btn, [data-lang]');
+    if (langBtn) {
+        setTimeout(traducirReturnDestination, 300);
+    }
+});
+</script>

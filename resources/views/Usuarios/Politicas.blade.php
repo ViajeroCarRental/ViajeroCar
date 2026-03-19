@@ -601,4 +601,5 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">s
     <!-- Tu JS personalizado -->
     <script src="{{ asset('js/politicas.js') }}"></script>
+
 @endsection

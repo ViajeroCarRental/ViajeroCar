@@ -6,9 +6,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
   <!-- Bootstrap / Fuentes / Iconos -->
-
-<!-- Select2 CSS -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
@@ -25,20 +23,20 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_red.css">
 
-    <!-- Estilos propios -->
-    <link rel="stylesheet" href="{{ asset('css/navbarUsuarios.css') }}">
-    <!-- CSS por vista -->
-    @yield('css-vistaHome')
-    @yield('css-VistaCatalogo')
-    @yield('css-vistaReservaciones')
-    @yield('css-vistaContacto')
-    @yield('css-vistaPoliticas')
-    @yield('css-vistaFAQ')
-    @yield('css-vistaLogin')
-    @yield('css-vistaPerfil')
-    @yield('css-visorReservacion')
+  <!-- Estilos propios -->
+  <link rel="stylesheet" href="{{ asset('css/navbarUsuarios.css') }}">
+  <!-- CSS por vista -->
+  @yield('css-vistaHome')
+  @yield('css-VistaCatalogo')
+  @yield('css-vistaReservaciones')
+  @yield('css-vistaContacto')
+  @yield('css-vistaPoliticas')
+  @yield('css-vistaFAQ')
+  @yield('css-vistaLogin')
+  @yield('css-vistaPerfil')
+  @yield('css-visorReservacion')
 
-     <title>@yield('Titulo')</title>
+  <title>@yield('Titulo')</title>
 
   <style>
     /* ==========================
@@ -96,21 +94,17 @@
     .hamburger .hb::after{ top: 6px; }
 
     /* Backdrop */
-    .nav-backdrop{
-      position:fixed; inset:0;
-      background: rgba(0,0,0,.45);
-      opacity:0; pointer-events:none;
-      transition: opacity .2s ease;
-      z-index: 9998;
-    }
-    body.nav-open .nav-backdrop{
-      opacity:1; pointer-events:auto;
-    }
+   .nav-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+    z-index: 10;
+}
+   body.nav-open .nav-backdrop
 
-    /* =================================================
-       ✅ ÚNICO AGREGADO: TRANSICIÓN GLASS → SOLID
-       (NO cambia estilos, solo anima el cambio)
-    ================================================= */
     header.topbar{
       transition:
         background .35s ease,
@@ -118,17 +112,109 @@
         backdrop-filter .35s ease,
         -webkit-backdrop-filter .35s ease;
     }
-    /* anti auto-zoom iOS al enfocar (flatpickr incluido) */
     .search-card input,
     .search-card select,
     .search-card textarea{
       font-size:16px !important;
     }
+    .language-selector {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-right: 10px;
+        z-index: 10000;
+    }
+
+    .lang-btn {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-radius: 30px;
+        padding: 5px 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s ease;
+        color: white;
+        font-weight: 500;
+        font-size: 13px;
+    }
+
+    .lang-btn img {
+        width: 20px;
+        height: 15px;
+        border-radius: 2px;
+        object-fit: cover;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .lang-btn:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-1px);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .lang-btn.active {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.8);
+    }
+    .goog-te-banner-frame {
+        display: none !important;
+    }
+    .goog-te-gadget-simple {
+        display: none !important;
+    }
+    body {
+        top: 0px !important;
+    }
+    .skiptranslate {
+        display: none !important;
+    }
+    iframe.goog-te-banner-frame {
+        display: none !important;
+    }
+/* SELECTOR DE IDIOMAS TIPO SELECT */
+.lang-select {
+    width: 120px;
+    height: 40px;
+    padding: 5px 10px 5px 40px; /* Ajustado para la bandera */
+    border-radius: 30px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-repeat: no-repeat, no-repeat;
+    background-position: 10px center, right 10px center;
+    background-size: 20px, 16px;
+}
+
+.lang-select option {
+    background: #333;
+    color: white;
+}
+
+/* Bandera para español */
+.lang-select.es {
+    background-image: url('https://flagcdn.com/w40/mx.png'), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+}
+
+/* Bandera para inglés */
+.lang-select.en {
+    background-image: url('https://flagcdn.com/w40/us.png'), url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+}
 
   </style>
 </head>
 
 <body>
+
+<!-- 🔹 BACKDROP AGREGADO  -->
+<div class="nav-backdrop"></div>
 
 <header class="topbar glass">
   <nav class="nav">
@@ -147,6 +233,17 @@
     </ul>
 
     <div class="nav-actions">
+      <!-- 🔹 SELECTOR DE IDIOMAS-->
+      <div class="language-selector" id="languageSelector">
+        <button class="lang-btn" data-lang="es">
+          <img src="https://flagcdn.com/w40/mx.png" alt="Español">
+          <span>ES</span>
+        </button>
+        <button class="lang-btn" data-lang="en">
+          <img src="https://flagcdn.com/w40/us.png" alt="English">
+          <span>EN</span>
+        </button>
+      </div>
 
       @if (session()->has('id_usuario'))
         <div class="dropdown">
@@ -179,7 +276,6 @@
   </nav>
 </header>
 
-
 <div class="containerVS">
   @yield('contenidoHome')
   @yield('contenidoCatalogo')
@@ -191,71 +287,158 @@
   @yield('contenidoPerfil')
 </div>
 
+<!-- 🔹 SCRIPTS-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
 (function(){
-  "use strict";
+    "use strict";
 
-  const topbar   = document.querySelector(".topbar");
-  const btn      = document.getElementById("navHamburger");
-  const menu     = document.getElementById("mainMenu");
+    // ==============================================
+    // CÓDIGO DE TÚ MENÚ HAMBURGUESA (LIGERAMENTE MODIFICADO)
+    // ==============================================
+    const topbar = document.querySelector(".topbar");
+    const btn = document.getElementById("navHamburger");
+    const menu = document.getElementById("mainMenu");
+    const backdrop = document.querySelector(".nav-backdrop");
 
+    if(!topbar || !btn || !menu) return;
 
-  if(!topbar || !btn || !menu) return;
+    const MQ = window.matchMedia("(max-width: 940px)");
+    const isMobile = ()=> MQ.matches;
 
-  const MQ = window.matchMedia("(max-width: 940px)");
-  const isMobile = ()=> MQ.matches;
-
-  function openNav(){
-    if(!isMobile()) return;
-    document.body.classList.add("nav-open");
-    btn.setAttribute("aria-expanded","true");
-  }
-
-  function closeNav(){
-    document.body.classList.remove("nav-open");
-    btn.setAttribute("aria-expanded","false");
-  }
-
-  btn.addEventListener("click", ()=>{
-    document.body.classList.contains("nav-open") ? closeNav() : openNav();
-  });
-
-
-  menu.addEventListener("click", (e)=>{
-    if(e.target.closest("a")) closeNav();
-  });
-
-  document.addEventListener("keydown", (e)=>{
-    if(e.key === "Escape") closeNav();
-  });
-
-  if(MQ.addEventListener){
-    MQ.addEventListener("change", ()=>{ if(!isMobile()) closeNav(); });
-  }
-
-  /* =================================================
-     ✅ ÚNICO AGREGADO: GLASS ↔ SOLID POR SCROLL
-  ================================================= */
-  const SOLID_AT = 20;
-
-  function syncTopbar(){
-    if(window.scrollY > SOLID_AT){
-      topbar.classList.add("solid");
-      topbar.classList.remove("glass");
-    }else{
-      topbar.classList.add("glass");
-      topbar.classList.remove("solid");
+    function openNav(){
+        if(!isMobile()) return;
+        document.body.classList.add("nav-open");
+        btn.setAttribute("aria-expanded","true");
     }
-  }
 
-  syncTopbar();
-  window.addEventListener("scroll", syncTopbar, { passive:true });
+    function closeNav(){
+        document.body.classList.remove("nav-open");
+        btn.setAttribute("aria-expanded","false");
+    }
+
+    btn.addEventListener("click", (e)=>{
+        e.stopPropagation();
+        document.body.classList.contains("nav-open") ? closeNav() : openNav();
+    });
+
+    if (backdrop) {
+        backdrop.addEventListener("click", closeNav);
+    }
+
+    // ⚠️⚠️⚠️ ATENCIÓN: ESTA ES LA PARTE MODIFICADA ⚠️⚠️⚠️
+    // Antes tenías: if (menu.contains(event.target)) return;
+    // El problema es que los botones de traducción están DENTRO del header, no del menu.
+    // Por eso al hacer clic en ellos, el menú se cerraba.
+    document.addEventListener("click", (event) => {
+        if (!isMobile() || !document.body.classList.contains("nav-open")) return;
+        if (menu.contains(event.target)) return;
+
+
+        if (btn.contains(event.target)) return;
+        if (backdrop && backdrop.contains(event.target)) return;
+
+
+        const languageSelector = document.getElementById('languageSelector');
+        if (languageSelector && languageSelector.contains(event.target)) return;
+
+        // Si no fue en ninguna de las partes permitidas, cerramos el menú.
+        closeNav();
+    });
+    // ===== FIN DE LA MODIFICACIÓN =====
+
+    menu.addEventListener("click", (e)=>{
+        if(e.target.closest("a") && isMobile()) closeNav();
+    });
+
+    document.addEventListener("keydown", (e)=>{
+        if(e.key === "Escape" && isMobile()) closeNav();
+    });
+
+    if(MQ.addEventListener){
+        MQ.addEventListener("change", ()=>{ if(!isMobile()) closeNav(); });
+    }
+
+    const SOLID_AT = 20;
+
+    function syncTopbar(){
+        if(window.scrollY > SOLID_AT){
+            topbar.classList.add("solid");
+            topbar.classList.remove("glass");
+        }else{
+            topbar.classList.add("glass");
+            topbar.classList.remove("solid");
+        }
+    }
+
+    syncTopbar();
+    window.addEventListener("scroll", syncTopbar, { passive:true });
 
 })();
+
+// ==============================================
+// CÓDIGO DE GOOGLE TRANSLATE
+// ==============================================
+function googleTranslateElementInit() {
+    new google.translate.TranslateElement({
+        pageLanguage: 'es',
+        includedLanguages: 'es,en',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+    }, '');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Cargar script de Google Translate
+    const script = document.createElement('script');
+    script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    document.head.appendChild(script);
+
+    // UNCIÓN PARA CAMBIAR IDIOMA
+    window.cambiarIdioma = function(idioma) {
+        localStorage.setItem('idiomaPreferido', idioma);
+
+        // Establecer cookie para Google Translate
+        document.cookie = `googtrans=/es/${idioma}; path=/; max-age=31536000`;
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if(btn.dataset.lang === idioma) {
+                btn.classList.add('active');
+            }
+        });
+        location.reload();
+    };
+
+    // 🔹 RESTAURAR IDIOMA GUARDADO
+    const idiomaGuardado = localStorage.getItem('idiomaPreferido');
+    if (idiomaGuardado) {
+        document.cookie = `googtrans=/es/${idiomaGuardado}; path=/; max-age=31536000`;
+
+        // Marcar botón activo
+        setTimeout(() => {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.dataset.lang === idiomaGuardado) {
+                    btn.classList.add('active');
+                }
+            });
+        }, 100);
+    }
+
+    // 🔹 ASIGNAR EVENTOS A BOTONES
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const lang = this.dataset.lang;
+            cambiarIdioma(lang);
+        });
+    });
+});
 </script>
 
 <!-- FOOTER -->
@@ -311,6 +494,7 @@
     <div class="footer-copy">© <span id="year"></span> Viajero. Todos los derechos reservados.</div>
   </div>
 </footer>
+
 {{-- 🔹 Scripts específicos por vista --}}
 @yield('js-vistaHome')
 @yield('js-vistaCatalogo')
@@ -323,7 +507,7 @@
 @yield('js-visorReservacion')
 
 <script>
-  // iOS: bloquear zoom por doble tap / gesto
+  // iOS: bloquear zoom
   (function(){
     document.addEventListener('gesturestart', e => e.preventDefault(), {passive:false});
     document.addEventListener('touchmove', e => {
@@ -337,26 +521,21 @@
       last = now;
     }, {passive:false});
   })();
+
+  (function(){
+    document.addEventListener('gesturestart', e => e.preventDefault(), {passive:false});
+    document.addEventListener('gesturechange', e => e.preventDefault(), {passive:false});
+    document.addEventListener('gestureend',   e => e.preventDefault(), {passive:false});
+    document.addEventListener('touchmove', e => {
+      if (e.touches && e.touches.length > 1) e.preventDefault();
+    }, {passive:false});
+  })();
 </script>
+
 <script>
-(function(){
-  // Bloquea pinch/gesture zoom (iOS)
-  document.addEventListener('gesturestart', e => e.preventDefault(), {passive:false});
-  document.addEventListener('gesturechange', e => e.preventDefault(), {passive:false});
-  document.addEventListener('gestureend',   e => e.preventDefault(), {passive:false});
-
-  // Bloquea zoom con 2 dedos
-  document.addEventListener('touchmove', e => {
-    if (e.touches && e.touches.length > 1) e.preventDefault();
-  }, {passive:false});
-})();
+  // Actualizar año en footer
+  document.getElementById('year').textContent = new Date().getFullYear();
 </script>
-
-<!-- jQuery (REQUERIDO para Select2) -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<!-- Select2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 
 

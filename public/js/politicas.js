@@ -185,18 +185,20 @@
     console.log('Fechas configuradas: sin valores por defecto');
   }
 
-  // =========================
-//  SELECT2 CON ICONOS - VERSIÓN ÚNICA Y CONSISTENTE (CORREGIDA)
+// =========================
+//  SELECT2 CON ICONOS
 // =========================
 function setupSelect2Iconos() {
   if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
-    console.warn(' Select2 no está disponible');
+    console.warn('Select2 no está disponible');
     return;
   }
 
-  console.log(' Inicializando Select2 con iconos...');
+  console.log('Inicializando Select2 con iconos...');
 
-  // Función ÚNICA de formato (definida una sola vez)
+  // =========================
+  // FORMATO DE OPCIONES
+  // =========================
   function formatOption(option) {
     if (!option.id) {
       return $('<span><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
@@ -207,7 +209,7 @@ function setupSelect2Iconos() {
 
     if (text.includes('aeropuerto')) {
       iconClass = 'fa-plane-departure';
-    } else if (text.includes('central de autobuses') || text.includes('terminal')) {
+    } else if (text.includes('central') || text.includes('terminal')) {
       iconClass = 'fa-bus';
     }
 
@@ -218,17 +220,20 @@ function setupSelect2Iconos() {
   const dropoffWrapper = document.getElementById('dropoffWrapperPoliticas');
   const dropoffSelect = document.getElementById('dropoffPlacePoliticas');
 
-  // Guardar estado original del dropoff
+  // =========================
+  // GUARDAR ESTADO ORIGINAL
+  // =========================
   let originalDisplay = dropoffWrapper ? dropoffWrapper.style.display : null;
   let originalDisabled = dropoffSelect ? dropoffSelect.disabled : null;
 
-  // Temporalmente habilitar dropoff para inicialización
   if (dropoffWrapper && dropoffSelect) {
     dropoffWrapper.style.display = 'block';
     dropoffSelect.disabled = false;
   }
 
-  // Configuración base para Select2 - ¡SIEMPRE IGUAL en todos los dispositivos!
+  // =========================
+  // CONFIG BASE
+  // =========================
   const select2Config = {
     templateResult: formatOption,
     templateSelection: formatOption,
@@ -236,10 +241,12 @@ function setupSelect2Iconos() {
     width: '100%',
     minimumResultsForSearch: Infinity,
     allowClear: false,
-    dropdownParent: modal ? $(modal) : undefined // 👈 SIEMPRE el modal si existe
+    dropdownParent: modal ? $(modal) : undefined
   };
 
-  // Destruir instancias existentes
+  // =========================
+  // DESTRUIR INSTANCIAS PREVIAS
+  // =========================
   try {
     ['#pickupPlacePoliticas', '#dropoffPlacePoliticas'].forEach(selector => {
       if ($(selector).data('select2')) {
@@ -247,35 +254,47 @@ function setupSelect2Iconos() {
       }
     });
   } catch(e) {
-    console.log('Error destruyendo instancias previas:', e);
+    console.log('Error destruyendo instancias:', e);
   }
 
-  // Inicializar pickup - ¡SIEMPRE con los mismos estilos!
+  // =========================
+  // INICIALIZAR PICKUP
+  // =========================
   $('#pickupPlacePoliticas').select2({
     ...select2Config,
-    placeholder: '¿Dónde inicia tu viaje?'
+    placeholder: $('#pickupPlacePoliticas option:first').text()
   });
 
-  // Inicializar dropoff - ¡SIEMPRE con los mismos estilos!
+  // =========================
+  // INICIALIZAR DROPOFF
+  // =========================
   $('#dropoffPlacePoliticas').select2({
     ...select2Config,
-    placeholder: '¿Dónde termina tu viaje?'
+    placeholder: $('#dropoffPlacePoliticas option:first').text()
   });
 
-  // Restaurar estado original del dropoff
+  setTimeout(() => {
+    $('#pickupPlacePoliticas').val(null).trigger('change.select2');
+    $('#dropoffPlacePoliticas').val(null).trigger('change.select2');
+  }, 300);
+
+  // =========================
+  // RESTAURAR ESTADO ORIGINAL
+  // =========================
   setTimeout(() => {
     if (dropoffWrapper && dropoffSelect) {
       dropoffWrapper.style.display = originalDisplay === 'none' ? 'none' : originalDisplay;
       dropoffSelect.disabled = originalDisabled;
 
-      // Si estaba deshabilitado, actualizar Select2
       if (originalDisabled) {
-        $('#dropoffPlacePoliticas').prop('disabled', true);
+        $('#dropoffPlacePoliticas')
+          .prop('disabled', true)
+          .trigger('change.select2');
       }
     }
-  }, 100);
+  }, 150);
 
-  console.log(' Select2 inicializado con estilos consistentes en todos los dispositivos');
+  console.log('Select2 listo y funcionando correctamente 🔥');
 }
   // =========================
   //  FUNCIÓN PARA CAMBIAR ICONOS SEGÚN SELECCIÓN
@@ -792,7 +811,7 @@ if (checkbox && checkbox.checked) {
       setupIconosDinamicos();
       setupCheckbox();
       setupValidation();
-    }, 300);
+    }, 800);
 
     console.log(' Formulario de políticas listo');
   });
