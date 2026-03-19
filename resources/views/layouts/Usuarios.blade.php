@@ -188,7 +188,7 @@ body.nav-open .language-selector {
 }
 
 .language-selector .dropdown-menu {
-    min-width: 120px;
+    min-width: 100px;
     background: white;
     border: none;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
@@ -223,6 +223,7 @@ body.nav-open .language-selector {
 .lang-btn.dropdown-toggle::after {
     margin-left: 8px;
     color: white;
+    
 }
 
 .lang-btn.dropdown-toggle {
@@ -231,6 +232,11 @@ body.nav-open .language-selector {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 2px 8px;   /* antes seguro está más grande */
+    font-size: 11px;     /* reduce el texto */
+    border-radius: 8px;  /* opcional, más compacto */
+    height: 32px; 
+
 }
 
   </style>
