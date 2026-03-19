@@ -182,7 +182,56 @@ body.nav-open .language-selector {
     iframe.goog-te-banner-frame {
         display: none !important;
     }
+/* ===== ESTILOS PARA DROPDOWN DE IDIOMAS ===== */
+.language-selector.dropdown {
+    position: relative;
+}
 
+.language-selector .dropdown-menu {
+    min-width: 120px;
+    background: white;
+    border: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    border-radius: 10px;
+    padding: 8px 0;
+    margin-top: 5px;
+}
+
+.language-selector .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    cursor: pointer;
+    color: #333;
+    font-weight: 500;
+    transition: background 0.2s ease;
+}
+
+.language-selector .dropdown-item:hover {
+    background: #f8f9fa;
+}
+
+.language-selector .dropdown-item img {
+    width: 24px;
+    height: 18px;
+    object-fit: cover;
+    border-radius: 3px;
+}
+
+/* Mejorar el botón principal */
+.lang-btn.dropdown-toggle::after {
+    margin-left: 8px;
+    color: white;
+}
+
+.lang-btn.dropdown-toggle {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
 
   </style>
 </head>
@@ -209,18 +258,25 @@ body.nav-open .language-selector {
     </ul>
 
     <div class="nav-actions">
-      <!-- 🔹 SELECTOR DE IDIOMAS-->
-      <div class="language-selector" id="languageSelector">
-        <button class="lang-btn" data-lang="es">
-          <img src="https://flagcdn.com/w40/mx.png" alt="Español">
-          <span>ES</span>
-        </button>
-        <button class="lang-btn" data-lang="en">
-          <img src="https://flagcdn.com/w40/us.png" alt="English">
-          <span>EN</span>
-        </button>
-      </div>
+    <div class="language-selector dropdown">
+  <button class="lang-btn dropdown-toggle" data-bs-toggle="dropdown">
+    <img id="currentFlag" src="https://flagcdn.com/w40/mx.png">
+    <span id="currentLang">ES</span>
+  </button>
 
+  <ul class="dropdown-menu dropdown-menu-end shadow">
+    <li>
+      <a class="dropdown-item lang-option" data-lang="en">
+        <img src="https://flagcdn.com/w40/us.png"> ENG
+      </a>
+    </li>
+    <li>
+      <a class="dropdown-item lang-option" data-lang="es">
+        <img src="https://flagcdn.com/w40/mx.png"> ESP
+      </a>
+    </li>
+  </ul>
+</div>
       @if (session()->has('id_usuario'))
         <div class="dropdown">
           <a href="#" class="icon-pill dropdown-toggle" data-bs-toggle="dropdown">
@@ -357,8 +413,8 @@ body.nav-open .language-selector {
 
 })();
 
-// ==============================================
-// CÓDIGO DE GOOGLE TRANSLATE
+/// ==============================================
+// CÓDIGO DE GOOGLE TRANSLATE CON SELECTOR DROPDOWN
 // ==============================================
 function googleTranslateElementInit() {
     new google.translate.TranslateElement({
@@ -375,45 +431,77 @@ document.addEventListener('DOMContentLoaded', function() {
     script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
     document.head.appendChild(script);
 
-    // UNCIÓN PARA CAMBIAR IDIOMA
+    // Función para cambiar idioma
     window.cambiarIdioma = function(idioma) {
+        // Guardar preferencia
         localStorage.setItem('idiomaPreferido', idioma);
 
         // Establecer cookie para Google Translate
         document.cookie = `googtrans=/es/${idioma}; path=/; max-age=31536000`;
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if(btn.dataset.lang === idioma) {
-                btn.classList.add('active');
-            }
-        });
-        location.reload();
+
+        // Actualizar el botón visual inmediatamente
+        actualizarBotonIdioma(idioma);
+
+        // Intentar cambiar el select de Google Translate si ya existe
+        cambiarSelectGoogle(idioma);
+
+        // Recargar para aplicar traducción completa
+        setTimeout(() => {
+            location.reload();
+        }, 500);
     };
 
-    // 🔹 RESTAURAR IDIOMA GUARDADO
+    // Función para actualizar el botón visual
+    function actualizarBotonIdioma(idioma) {
+        const flagImg = document.getElementById('currentFlag');
+        const langSpan = document.getElementById('currentLang');
+
+        if (idioma === 'en') {
+            flagImg.src = 'https://flagcdn.com/w40/us.png';
+            langSpan.textContent = 'EN';
+        } else {
+            flagImg.src = 'https://flagcdn.com/w40/mx.png';
+            langSpan.textContent = 'ES';
+        }
+    }
+
+    // Función para cambiar el select de Google Translate
+    function cambiarSelectGoogle(idioma) {
+        const select = document.querySelector(".goog-te-combo");
+        if (select) {
+            select.value = idioma;
+            select.dispatchEvent(new Event("change"));
+        }
+    }
+
+    // Restaurar idioma guardado
     const idiomaGuardado = localStorage.getItem('idiomaPreferido');
     if (idiomaGuardado) {
         document.cookie = `googtrans=/es/${idiomaGuardado}; path=/; max-age=31536000`;
+        actualizarBotonIdioma(idiomaGuardado);
 
-        // Marcar botón activo
+        // Intentar cambiar el select después de que Google cargue
         setTimeout(() => {
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.classList.remove('active');
-                if(btn.dataset.lang === idiomaGuardado) {
-                    btn.classList.add('active');
-                }
-            });
-        }, 100);
+            cambiarSelectGoogle(idiomaGuardado);
+        }, 1000);
     }
 
-    // 🔹 ASIGNAR EVENTOS A BOTONES
-    document.querySelectorAll('.lang-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
+    // Event listeners para las opciones del dropdown
+    document.querySelectorAll('.lang-option').forEach(option => {
+        option.addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation();
+
             const lang = this.dataset.lang;
-            cambiarIdioma(lang);
+            console.log('Cambiando a idioma:', lang); // Para depurar
+
+            if (lang) {
+                cambiarIdioma(lang);
+            }
         });
     });
+
+    // También permitir que el botón principal abra el dropdown (Bootstrap lo maneja)
 });
 </script>
 
@@ -512,8 +600,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // Actualizar año en footer
   document.getElementById('year').textContent = new Date().getFullYear();
 </script>
-
-
 
 </body>
 </html>

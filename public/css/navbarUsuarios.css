@@ -2837,6 +2837,33 @@ select.field-success + .select2-container .select2-selection {
 /* ============================================================
     HERO ICONS - MÓVIL MUY PEQUEÑO (<= 380px)
 ============================================================ */
+
+@media (max-width: 560px) {
+    .hero-icons {
+        grid-template-columns: 1fr !important;  /* UNA SOLA COLUMNA */
+        gap: 20px !important;
+        padding: 25px 15px !important;
+        width: 100% !important;
+        max-width: 400px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    .hero-icons .icon-item {
+        transform: none !important;  /* Quita cualquier desplazamiento */
+        width: 100% !important;
+        margin: 0 auto !important;
+    }
+
+    .hero-icons .icon-item i {
+        font-size: 42px !important;
+    }
+
+    .hero-icons .icon-item span {
+        font-size: 15px !important;
+    }
+}
+
 @media (max-width: 380px) {
     .hero-icons {
         gap: 20px !important;
