@@ -245,6 +245,7 @@ Route::post('/admin/contrato/{id}/rechazar-upgrade', [Contrato2Controller::class
 
 // Paso 5: Documentación y Conductores
 Route::get('/admin/contrato/{id}/cliente', [Contrato2Controller::class, 'obtenerClienteContrato'])->name('contrato.obtenerCliente');
+Route::post('/admin/contrato/validar-documento-maestro', [Contrato2Controller::class, 'validarDocumentoMaestro'])->name('contrato.validar.doc');
 Route::post('/admin/contrato/guardar-documentacion', [Contrato2Controller::class, 'guardarDocumentacion'])->name('contrato.guardarDocumentacion');
 Route::get('/admin/contrato/documentacion/{idContrato}', [Contrato2Controller::class, 'obtenerDocumentacion'])->name('contrato.obtenerDocumentacion');
 Route::get('/admin/contrato/{id}/documentos-existen', [Contrato2Controller::class, 'verificarDocumentosExistentes'])->name('contrato.documentos.existen');

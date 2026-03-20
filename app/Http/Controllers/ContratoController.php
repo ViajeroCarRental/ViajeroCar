@@ -33,10 +33,10 @@ class ContratoController extends ContratoBaseController
                 ->leftJoin('sucursales as se', 'r.sucursal_entrega', '=', 'se.id_sucursal')
                 ->leftJoin('categoria_costo_km as cck', 'r.id_categoria', '=', 'cck.id_categoria')
                 ->select(
-                    'r.*', 
+                    'r.*',
                     'sr.nombre as sucursal_retiro_nombre',
                     'se.nombre as sucursal_entrega_nombre',
-                    'cck.costo_km' 
+                    'cck.costo_km'
                 )
                 ->where('r.id_reservacion', $idReservacion)
                 ->first();
@@ -62,7 +62,7 @@ class ContratoController extends ContratoBaseController
 
                 // Consulta rápida a categoría base
                 $precioDia = DB::table('categorias_carros')->where('id_categoria', $reservacion->id_categoria)->value('precio_dia') ?? 0;
-                
+
                 $ajusteSubtotal = $diferenciaDias * $precioDia;
                 $ajusteIVA      = $ajusteSubtotal * 0.16;
 
@@ -86,17 +86,25 @@ class ContratoController extends ContratoBaseController
                 $reservacion->impuestos    = $impuestos;
                 $reservacion->total        = $total;
 
-                // Crear contrato en BD
-                $numeroContrato = 'CTR-' . strtoupper(substr($reservacion->codigo, 0, 4)) . '-' . now()->format('ymdHis');
-                $idContrato = DB::table('contratos')->insertGetId([
-                    'id_reservacion'  => $reservacion->id_reservacion,
-                    'id_asesor'       => $asesorId,
-                    'numero_contrato' => $numeroContrato,
-                    'estado'          => 'abierto',
-                    'abierto_en'      => now(),
-                    'created_at'      => now(),
-                    'updated_at'      => now(),
-                ]);
+                $idContrato = DB::transaction(function () use ($reservacion, $asesorId) {
+                    $nuevoId = DB::table('contratos')->insertGetId([
+                        'id_reservacion'  => $reservacion->id_reservacion,
+                        'id_asesor'       => $asesorId,
+                        'numero_contrato' => 'TEMP',
+                        'estado'          => 'abierto',
+                        'abierto_en'      => now(),
+                        'created_at'      => now(),
+                        'updated_at'      => now(),
+                    ]);
+
+                    $folioFormateado = str_pad($nuevoId, 4, '0', STR_PAD_LEFT);
+
+                    DB::table('contratos')
+                        ->where('id_contrato', $nuevoId)
+                        ->update(['numero_contrato' => $folioFormateado]);
+
+                    return $nuevoId;
+                });
 
                 $contrato = DB::table('contratos')->where('id_contrato', $idContrato)->first();
             } else {
@@ -114,9 +122,17 @@ class ContratoController extends ContratoBaseController
             // 🚀 3) CACHÉ DE CATÁLOGOS (Solo lo que necesitan Pasos 1-3)
             // =========================================================
             $categorias = cache()->remember('cat_carros', 86400, fn() => DB::table('categorias_carros')->select('id_categoria', 'nombre', 'codigo')->orderBy('nombre')->get());
-            $servicios = cache()->remember('cat_servicios', 86400, fn() => DB::table('servicios')->where('activo', true)->get());
+            // $servicios = cache()->remember('cat_servicios', 86400, fn() => DB::table('servicios')->where('activo', true)->get());
+
+            $servicios = cache()->remember('cat_servicios_contrato', 86400, function () {
+                return DB::table('servicios')
+                    ->where('activo', true)
+                    ->whereIn('id_servicio', [1, 4, 5, 7]) // Gasolina Prepago, Conductor Adicional, Conductor Menor, Silla de Bebé
+                    ->get();
+            });
+
             $ubicaciones = cache()->remember('cat_ubicaciones', 86400, fn() => DB::table('ubicaciones_servicio')->where('activo', 1)->orderBy('estado')->orderBy('destino')->get());
-            
+
             $seguros = cache()->remember('cat_seguros', 86400, fn() => DB::table('seguro_paquete')->where('activo', true)->select('id_paquete as id_seguro', 'nombre', 'descripcion as cobertura', 'precio_por_dia')->get());
             $individuales = cache()->remember('cat_individuales', 86400, fn() => DB::table('seguro_individuales')->where('activo', true)->select('id_individual', 'nombre', 'descripcion', 'precio_por_dia')->get());
 
@@ -139,9 +155,9 @@ class ContratoController extends ContratoBaseController
             // 4) Datos dinámicos para la vista
             // =========================================================
             $vehiculo = $reservacion->id_vehiculo ? DB::table('vehiculos')->where('id_vehiculo', $reservacion->id_vehiculo)->first() : null;
-            
+
             $seguroSeleccionado = DB::table('reservacion_paquete_seguro as rps')->join('seguro_paquete as sp', 'rps.id_paquete', '=', 'sp.id_paquete')->select('sp.id_paquete as id_seguro', 'sp.nombre', 'sp.precio_por_dia')->where('rps.id_reservacion', $reservacion->id_reservacion)->first();
-            
+
             $serviciosReservados = DB::table('reservacion_servicio')->where('id_reservacion', $reservacion->id_reservacion)->pluck('cantidad', 'id_servicio')->toArray();
 
             // Mapeo del objeto Delivery usando los datos que ya trajimos en la MEGA-CONSULTA
@@ -153,7 +169,7 @@ class ContratoController extends ContratoBaseController
                 'precio_km' => $reservacion->delivery_precio_km,
                 'total' => $reservacion->delivery_total
             ];
-            
+
             $costoKmCategoria = $reservacion->costo_km ?? 0;
 
             // =========================================================
@@ -173,9 +189,8 @@ class ContratoController extends ContratoBaseController
                 'costoKmCategoria'   => $costoKmCategoria,
                 'delivery'           => $delivery,
                 'individuales'       => $individuales,
-                'serviciosReservados'=> $serviciosReservados,
+                'serviciosReservados' => $serviciosReservados,
             ]);
-
         } catch (\Throwable $e) {
             Log::error('Error en ContratoController@mostrarContrato: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Ocurrió un error al cargar la reservación.');

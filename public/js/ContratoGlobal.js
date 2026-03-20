@@ -173,7 +173,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (secDelivery) secDelivery.style.display = "none";
             }
 
-            // Listados (Seguros, Servicios, Cargos)
+            if (r.costo_km !== undefined) {
+                const inputPrecioKm = window.$("#deliveryPrecioKm");
+                if (inputPrecioKm) inputPrecioKm.value = r.costo_km;
+
+                const spanCostoKm = window.$("#dropCostoKmHTML");
+                if (spanCostoKm) spanCostoKm.textContent = window.money ? window.money(r.costo_km) : `$${parseFloat(r.costo_km).toFixed(2)} MXN`;
+            }
+
+            // // Listados (Seguros, Servicios, Cargos)
             const mapList = (id, list, keyPrecio) => {
                 const el = window.$(id);
                 if (el) el.innerHTML = (list && list.length > 0)
@@ -187,23 +195,26 @@ document.addEventListener("DOMContentLoaded", () => {
             const ulCargos = window.$("#r_cargos_lista");
 
             if (ulCargos) {
-                ulCargos.innerHTML = (r.cargos && r.cargos.length > 0)
-                    ? r.cargos.map(c => {
+                let itemsCargos = [];
 
-                        // Detecta cualquier tipo de campo de monto
-                        let valorCargo =
-                            c.total ??
-                            c.monto ??
-                            c.monto_variable ??
-                            c.precio ??
-                            0;
-
-                        valorCargo = parseFloat(valorCargo) || 0;
-
+                // Cargos normales
+                if (r.cargos && r.cargos.length > 0) {
+                    r.cargos.forEach(c => {
+                        let valorCargo = parseFloat(c.total ?? c.monto ?? c.monto_variable ?? c.precio ?? 0) || 0;
                         sumaCargos += valorCargo;
+                        itemsCargos.push(`<li>${c.nombre} — ${window.money(valorCargo)}</li>`);
+                    });
+                }
+                
+                if (r.entrega && parseFloat(r.entrega.total ?? r.entrega.monto ?? 0) > 0) {
+                    const montoDelivery = parseFloat(r.entrega.total ?? r.entrega.monto ?? 0);
+                    const dirDelivery = r.entrega.direccion ? ` · ${r.entrega.direccion}` : "";
+                    sumaCargos += montoDelivery;
+                    itemsCargos.push(`<li>🚚 Dropoff${dirDelivery} — ${window.money(montoDelivery)}</li>`);
+                }
 
-                        return `<li>${c.nombre} — ${window.money(valorCargo)}</li>`;
-                    }).join("")
+                ulCargos.innerHTML = itemsCargos.length > 0
+                    ? itemsCargos.join("")
                     : `<li class="empty">—</li>`;
             }
 
@@ -283,21 +294,65 @@ document.addEventListener("DOMContentLoaded", () => {
     window.$("#btnEditarTarifa")?.addEventListener("click", () => {
         const contenedor = window.$("#r_base_precio");
         if (!contenedor) return;
+
         let precioActual = contenedor.textContent.replace(/[^\d.-]/g, '');
         const input = document.createElement("input");
-        input.type = "number"; input.value = parseFloat(precioActual) || 0; input.step = "0.01";
-        Object.assign(input.style, { border: "none", background: "#f8fafc", width: "100px", fontWeight: "bold" });
-        contenedor.innerHTML = ""; contenedor.appendChild(input);
-        input.focus(); input.select();
+        input.type = "number";
+        input.value = parseFloat(precioActual) || 0;
+        input.step = "0.01";
+        Object.assign(input.style, { border: "1px solid #2563eb", background: "#fff", width: "100px", fontWeight: "bold", padding: "2px 4px", borderRadius: "4px" });
+
+        contenedor.innerHTML = "";
+        contenedor.appendChild(input);
+        input.focus();
+        input.select();
+
         input.addEventListener("blur", async () => {
-            if (!isNaN(input.value) && input.value >= 0) {
-                contenedor.textContent = "...";
-                await window.actualizarFechasYRecalcular(parseFloat(input.value));
+            let nuevoPrecio = parseFloat(input.value);
+
+            if (!isNaN(nuevoPrecio) && nuevoPrecio >= 0) {
+                contenedor.textContent = "Guardando...";
+
+                try {
+                    const resp = await fetch(`/admin/contrato/${window.ID_RESERVACION}/editar-tarifa`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": window.csrfToken
+                        },
+                        body: JSON.stringify({ tarifa_modificada: nuevoPrecio })
+                    });
+
+                    const data = await resp.json();
+
+                    if (data.ok) {
+                        if (typeof window.cargarResumenBasico === 'function') {
+                            await window.cargarResumenBasico();
+                        }
+
+                        if (typeof window.cargarPaso6 === 'function' && window.$("#baseAmt")) {
+                            window.cargarPaso6();
+                        }
+
+                        if (window.alertify) alertify.success("Tarifa actualizada");
+                    } else {
+                        contenedor.textContent = window.money(precioActual);
+                        if (window.alertify) alertify.error("Error al actualizar");
+                    }
+                } catch (e) {
+                    console.error("Error al guardar tarifa:", e);
+                    contenedor.textContent = window.money(precioActual);
+                    if (window.alertify) alertify.error("Error de conexión");
+                }
             } else {
                 contenedor.textContent = window.money(precioActual);
             }
         });
-        input.addEventListener("keydown", (e) => { if (e.key === "Enter") input.blur(); });
+
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") input.blur();
+            if (e.key === "Escape") contenedor.textContent = window.money(precioActual);
+        });
     });
 
     window.$("#btnEditarCortesia")?.addEventListener("click", () => {

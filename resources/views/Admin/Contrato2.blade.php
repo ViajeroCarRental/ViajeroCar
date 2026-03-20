@@ -150,7 +150,7 @@
                                 </div>
 
                                 {{-- Gasolina Faltante --}}
-                                <div class="card">
+                                {{-- <div class="card">
                                     <div class="head">
                                         <div class="hTitle">
                                             <div class="hIcon">⛽</div> Gasolina faltante
@@ -192,7 +192,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> --}}
 
                                 {{-- Dropoff --}}
                                 <div class="card cargo-item {{ $dropActivo ? 'active' : '' }}" data-id="6"
@@ -243,17 +243,16 @@
                                             </div>
                                             <div
                                                 style="margin-top:15px; font-weight:bold; text-align:right; color:var(--primary);">
-                                                Total Dropoff: <span
-                                                    id="dropTotalHTML">${{ number_format($dropTotal, 2) }} MXN</span>
+                                                Total Dropoff: <span id="dropTotalHTML">${{ number_format($dropTotal, 2) }}
+                                                    MXN</span>
                                             </div>
                                         </div>
-                                        <input type="hidden" id="deliveryPrecioKm"
-                                            value="{{ $costoKmCategoria ?? 0 }}">
+                                        <input type="hidden" id="deliveryPrecioKm" value="{{ $costoKmCategoria ?? 0 }}">
                                     </div>
                                 </div>
 
                                 {{-- Otros Cargos Adicionales --}}
-                                <div class="card">
+                                {{-- <div class="card">
                                     <div class="head">
                                         <div class="hTitle">
                                             <div class="hIcon">💰</div> Otros cargos adicionales
@@ -287,7 +286,7 @@
                                             @endforeach
                                         </div>
 
-                                        {{-- Totalizador --}}
+                                        
                                         <div class="totalBox"
                                             style="margin-top:18px; border-top: 2px solid #eee; padding-top: 15px;">
                                             <div class="kv">
@@ -299,7 +298,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> --}}
 
                                 <div class="acciones" style="margin-top:20px;">
                                     <a href="/admin/contrato/{{ $idReservacion }}" class="btn gray"
@@ -326,18 +325,18 @@
                         <form id="formDocumentacion" action="{{ route('contrato.guardarDocumentacion') }}"
                             method="POST" enctype="multipart/form-data">
                             @csrf
-                            {{-- Datos de control --}}
+
                             <input type="hidden" name="id_reservacion" value="{{ $idReservacion }}">
                             <input type="hidden" name="id_contrato" value="{{ $idContratoReal ?? '' }}">
 
-                            {{-- Indice 0 --}}
+                            {{-- TITULAR --}}
                             <div class="bloque-conductor-individual">
                                 <section class="section">
                                     <div class="head">
                                         <span>Documentación del Titular: {{ $reservacion->nombre_cliente }}</span>
                                     </div>
+
                                     <div class="cnt">
-                                        {{-- Identificadores ocultos --}}
                                         <input type="hidden" name="conductores[0][id_conductor]" value="">
                                         <input type="hidden" name="conductores[0][es_titular]" value="1">
 
@@ -345,38 +344,47 @@
                                             <div class="input-row">
                                                 <label>Tipo de Identificación</label>
                                                 <select name="conductores[0][tipo_identificacion]" required>
-                                                    <option value="INE">Credencial para Votar (INE/IFE)</option>
-                                                    <option value="Pasaporte">Pasaporte</option>
-                                                    <option value="Cedula">Cédula Profesional</option>
+                                                    <option value="" disabled selected>Selecciona una opción...
+                                                    </option>
+                                                    <option value="ine">Credencial para Votar (INE/IFE)</option>
+                                                    <option value="pasaporte">Pasaporte</option>
+                                                    <option value="cedula">Cédula Profesional</option>
                                                 </select>
                                             </div>
+
                                             <div class="input-row">
                                                 <label>Número de Identificación</label>
                                                 <input name="conductores[0][numero_identificacion]" type="text"
                                                     placeholder="XXXX-XXXX-XXXX" maxlength="18" required>
                                             </div>
+
                                             <div class="input-row">
                                                 <label>Nombres</label>
                                                 <input name="conductores[0][nombre]" type="text"
                                                     value="{{ $reservacion->nombre_cliente }}" required>
                                             </div>
+
                                             <div class="input-row">
                                                 <label>Apellido Paterno</label>
                                                 <input name="conductores[0][apellido_paterno]" type="text" required>
                                             </div>
+
                                             <div class="input-row">
                                                 <label>Apellido Materno</label>
                                                 <input name="conductores[0][apellido_materno]" type="text" required>
                                             </div>
+
                                             <div class="input-row">
                                                 <label>Contacto de Emergencia</label>
                                                 <input name="conductores[0][contacto_emergencia]" type="text"
-                                                    placeholder="Nombre y teléfono">
+                                                    maxlength="10" placeholder="Contacto de Emergencia" required>
                                             </div>
+
                                             <div class="input-row">
                                                 <label>Fecha de Nacimiento</label>
                                                 <input name="conductores[0][fecha_nacimiento]" type="date" required>
                                             </div>
+
                                             <div class="input-row">
                                                 <label>Fecha de Vencimiento del ID</label>
                                                 <input name="conductores[0][fecha_vencimiento_id]" type="date"
@@ -387,22 +395,48 @@
                                         <div class="form-grid" style="margin-top:12px">
                                             <div>
                                                 <label>Fotografía Identificación — Frente</label>
-                                                <div class="uploader"><input name="conductores[0][idFrente]"
-                                                        type="file" accept="image/*" required></div>
+                                                <div class="uploader">
+                                                    <input name="conductores[0][idFrente]" type="file"
+                                                        accept="image/*" required>
+                                                </div>
                                                 <div class="preview"></div>
                                             </div>
+
                                             <div>
                                                 <label>Fotografía Identificación — Reverso</label>
-                                                <div class="uploader"><input name="conductores[0][idReverso]"
-                                                        type="file" accept="image/*" required></div>
+                                                <div class="uploader">
+                                                    <input name="conductores[0][idReverso]" type="file"
+                                                        accept="image/*" required>
+                                                </div>
                                                 <div class="preview"></div>
                                             </div>
                                         </div>
                                     </div>
                                 </section>
 
+                                {{-- LICENCIA TITULAR --}}
                                 <section class="section" style="margin-top:18px">
-                                    <div class="head">Licencia de Conducir (Titular)</div>
+                                    {{-- <div class="head">Licencia de Conducir (Titular)</div> --}}
+
+                                    <div class="head" style="display: flex; align-items: center; gap: 8px;">
+                                        Licencia de Conducir (Titular)
+
+                                        <button type="button" id="btnInfoLicencia" title="Aviso importante"
+                                            style="background: transparent; border: none; cursor: pointer; font-size: 18px; color: #3b82f6; padding: 0; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;"
+                                            onmouseover="this.style.transform='scale(1.1)'"
+                                            onmouseout="this.style.transform='scale(1)'">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="10"></circle>
+                                                <line x1="12" y1="16" x2="12" y2="12">
+                                                </line>
+                                                <line x1="12" y1="8" x2="12.01" y2="8">
+                                                </line>
+                                            </svg>
+                                        </button>
+                                    </div>
+
                                     <div class="cnt">
                                         <div class="form-grid">
                                             <div class="input-row">
@@ -410,39 +444,46 @@
                                                 <input name="conductores[0][numero_licencia]" type="text"
                                                     placeholder="Ej. QRO-123456" required>
                                             </div>
+
                                             <div class="input-row">
                                                 <label>PAIS</label>
-                                                <select name="conductores[0][emite_licencia]" required>
+                                                <select name="conductores[0][id_pais]" required>
                                                     <option value="">Selecciona…</option>
-                                                    <option>México</option>
-                                                    <option>U.S.A</option>
-                                                    <option>BRASIL</option>
-                                                    <option>COLOMBIA</option>
-                                                    <option>CANADA</option>
+                                                    <option value="MX">México</option>
+                                                    <option value="US">U.S.A</option>
+                                                    <option value="BR">Brasil</option>
+                                                    <option value="CO">Colombia</option>
+                                                    <option value="CA">Canadá</option>
                                                 </select>
                                             </div>
+
                                             <div class="input-row">
                                                 <label>Fecha de Emisión</label>
-                                                <input name="conductores[0][fecha_emision_licencia]" type="date"
-                                                    required>
+                                                <input name="conductores[0][fecha_emision]" type="date" required>
                                             </div>
+
                                             <div class="input-row">
                                                 <label>Fecha de Vencimiento de la Licencia</label>
-                                                <input name="conductores[0][fecha_vencimiento_licencia]" type="date"
-                                                    required>
+                                                <input name="conductores[0][fecha_vencimiento]" type="date" required>
                                             </div>
                                         </div>
+
                                         <div class="form-grid" style="margin-top:12px">
                                             <div>
                                                 <label>Licencia — Frente</label>
-                                                <div class="uploader"><input name="conductores[0][licFrente]"
-                                                        type="file" accept="image/*" required></div>
+                                                <div class="uploader">
+                                                    <input name="conductores[0][licFrente]" type="file"
+                                                        accept="image/*" required>
+                                                </div>
                                                 <div class="preview"></div>
                                             </div>
+
                                             <div>
                                                 <label>Licencia — Reverso</label>
-                                                <div class="uploader"><input name="conductores[0][licReverso]"
-                                                        type="file" accept="image/*" required></div>
+                                                <div class="uploader">
+                                                    <input name="conductores[0][licReverso]" type="file"
+                                                        accept="image/*" required>
+                                                </div>
                                                 <div class="preview"></div>
                                             </div>
                                         </div>
@@ -450,17 +491,19 @@
                                 </section>
                             </div>
 
-                            {{-- Bloque Extra--}}
+                            {{-- CONDUCTORES ADICIONALES --}}
                             @foreach ($conductoresExtras as $index => $extra)
                                 @php $idx = $index + 1; @endphp
+
                                 <div class="bloque-conductor-individual"
                                     style="margin-top: 50px; border-top: 3px dashed #cbd5e1; padding-top: 30px;">
+
                                     <section class="section">
                                         <div class="head" style="background: #64748b;">
                                             <span>Documentación Conductor Adicional: {{ $extra['nombres'] }}</span>
                                         </div>
+
                                         <div class="cnt">
-                                            {{-- Identificadores adicionales --}}
                                             <input type="hidden" name="conductores[{{ $idx }}][id_conductor]"
                                                 value="{{ $extra['id_conductor'] }}">
                                             <input type="hidden" name="conductores[{{ $idx }}][es_titular]"
@@ -471,41 +514,48 @@
                                                     <label>Tipo de Identificación</label>
                                                     <select name="conductores[{{ $idx }}][tipo_identificacion]"
                                                         required>
-                                                        <option value="INE">INE/IFE</option>
-                                                        <option value="Pasaporte">Pasaporte</option>
-                                                        <option value="Cedula">Cédula</option>
+                                                        <option value="ine">INE/IFE</option>
+                                                        <option value="pasaporte">Pasaporte</option>
+                                                        <option value="cedula">Cédula</option>
                                                     </select>
                                                 </div>
+
                                                 <div class="input-row">
                                                     <label>Número de Identificación</label>
                                                     <input name="conductores[{{ $idx }}][numero_identificacion]"
-                                                        type="text" placeholder="XXXX-XXXX-XXXX" required>
+                                                        type="text" required>
                                                 </div>
+
                                                 <div class="input-row">
                                                     <label>Nombres</label>
                                                     <input name="conductores[{{ $idx }}][nombre]" type="text"
                                                         value="{{ $extra['nombres'] }}" required>
                                                 </div>
+
                                                 <div class="input-row">
                                                     <label>Apellido Paterno</label>
                                                     <input name="conductores[{{ $idx }}][apellido_paterno]"
                                                         type="text" required>
                                                 </div>
+
                                                 <div class="input-row">
                                                     <label>Apellido Materno</label>
                                                     <input name="conductores[{{ $idx }}][apellido_materno]"
                                                         type="text" required>
                                                 </div>
+
                                                 <div class="input-row">
                                                     <label>Contacto de Emergencia</label>
                                                     <input name="conductores[{{ $idx }}][contacto_emergencia]"
-                                                        type="text" placeholder="Nombre y teléfono">
+                                                        type="text" maxlength="10" placeholder="Ej. 4421234567">
                                                 </div>
+
                                                 <div class="input-row">
                                                     <label>Fecha de Nacimiento</label>
                                                     <input name="conductores[{{ $idx }}][fecha_nacimiento]"
                                                         type="date" required>
                                                 </div>
+
                                                 <div class="input-row">
                                                     <label>Fecha de Vencimiento del ID</label>
                                                     <input name="conductores[{{ $idx }}][fecha_vencimiento_id]"
@@ -516,25 +566,30 @@
                                             <div class="form-grid" style="margin-top:12px">
                                                 <div>
                                                     <label>Identificación — Frente</label>
-                                                    <div class="uploader"><input
-                                                            name="conductores[{{ $idx }}][idFrente]"
-                                                            type="file" accept="image/*" required></div>
+                                                    <div class="uploader">
+                                                        <input name="conductores[{{ $idx }}][idFrente]"
+                                                            type="file" accept="image/*" required>
+                                                    </div>
                                                     <div class="preview"></div>
                                                 </div>
+
                                                 <div>
                                                     <label>Identificación — Reverso</label>
-                                                    <div class="uploader"><input
-                                                            name="conductores[{{ $idx }}][idReverso]"
-                                                            type="file" accept="image/*" required></div>
+                                                    <div class="uploader">
+                                                        <input name="conductores[{{ $idx }}][idReverso]"
+                                                            type="file" accept="image/*" required>
+                                                    </div>
                                                     <div class="preview"></div>
                                                 </div>
                                             </div>
                                         </div>
                                     </section>
 
+                                    {{-- LICENCIA ADICIONAL --}}
                                     <section class="section" style="margin-top:18px">
                                         <div class="head" style="background: #94a3b8;">Licencia de Conducir (Adicional)
                                         </div>
+
                                         <div class="cnt">
                                             <div class="form-grid">
                                                 <div class="input-row">
@@ -542,43 +597,48 @@
                                                     <input name="conductores[{{ $idx }}][numero_licencia]"
                                                         type="text" required>
                                                 </div>
+
                                                 <div class="input-row">
                                                     <label>PAIS</label>
-                                                    <select name="conductores[{{ $idx }}][emite_licencia]"
-                                                        required>
+                                                    <select name="conductores[{{ $idx }}][id_pais]" required>
                                                         <option value="">Selecciona…</option>
-                                                        <option>México</option>
-                                                        <option>U.S.A</option>
-                                                        <option>BRASIL</option>
-                                                        <option>COLOMBIA</option>
-                                                        <option>CANADA</option>
+                                                        <option value="MX">México</option>
+                                                        <option value="US">U.S.A</option>
+                                                        <option value="BR">Brasil</option>
+                                                        <option value="CO">Colombia</option>
+                                                        <option value="CA">Canadá</option>
                                                     </select>
                                                 </div>
+
                                                 <div class="input-row">
                                                     <label>Fecha de Emisión</label>
-                                                    <input name="conductores[{{ $idx }}][fecha_emision_licencia]"
+                                                    <input name="conductores[{{ $idx }}][fecha_emision]"
                                                         type="date" required>
                                                 </div>
+
                                                 <div class="input-row">
                                                     <label>Fecha de Vencimiento de la Licencia</label>
-                                                    <input
-                                                        name="conductores[{{ $idx }}][fecha_vencimiento_licencia]"
+                                                    <input name="conductores[{{ $idx }}][fecha_vencimiento]"
                                                         type="date" required>
                                                 </div>
                                             </div>
+
                                             <div class="form-grid" style="margin-top:12px">
                                                 <div>
                                                     <label>Licencia — Frente</label>
-                                                    <div class="uploader"><input
-                                                            name="conductores[{{ $idx }}][licFrente]"
-                                                            type="file" accept="image/*" required></div>
+                                                    <div class="uploader">
+                                                        <input name="conductores[{{ $idx }}][licFrente]"
+                                                            type="file" accept="image/*" required>
+                                                    </div>
                                                     <div class="preview"></div>
                                                 </div>
+
                                                 <div>
                                                     <label>Licencia — Reverso</label>
-                                                    <div class="uploader"><input
-                                                            name="conductores[{{ $idx }}][licReverso]"
-                                                            type="file" accept="image/*" required></div>
+                                                    <div class="uploader">
+                                                        <input name="conductores[{{ $idx }}][licReverso]"
+                                                            type="file" accept="image/*" required>
+                                                    </div>
                                                     <div class="preview"></div>
                                                 </div>
                                             </div>
@@ -590,10 +650,12 @@
                             <div class="acciones"
                                 style="margin-top:30px; padding: 20px; background: #f8fafc; border-radius: 8px;">
                                 <button class="btn gray" id="back4" type="button">← Atrás</button>
-                                <button class="btn primary" id="btnContinuarDoc" type="submit">Guardar Toda la
-                                    Documentación →</button>
-                                <button class="btn success" id="btnSaltarDoc" type="button"
-                                    style="margin-left:8px;">Continuar sin volver a subir →</button>
+                                <button class="btn primary" id="btnContinuarDoc" type="submit">
+                                    Guardar Toda la Documentación →
+                                </button>
+                                <button class="btn success" id="btnSaltarDoc" type="button" style="margin-left:8px;">
+                                    Continuar sin volver a subir →
+                                </button>
                             </div>
                         </form>
                     </div>
