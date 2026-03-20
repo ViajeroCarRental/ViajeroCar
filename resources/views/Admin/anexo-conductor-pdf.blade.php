@@ -386,7 +386,7 @@ h1, h2, h3, h4, p {
                     <div class="meta-item">
                         <span class="meta-label">Fecha</span>
                         <span class="meta-value">
-                            {{ \Carbon\Carbon::now()->format('d/m/Y') }}
+                            {{ \Carbon\Carbon::now()->translatedFormat('d-M-Y') }}
                         </span>
                     </div>
                 </div>

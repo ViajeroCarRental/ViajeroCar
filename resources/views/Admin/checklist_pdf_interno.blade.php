@@ -585,8 +585,16 @@ th,td{
           —
         @endif
       </td>
-      <td>{{ $firma_cliente_fecha ?? $firmaClienteFecha ?? '—' }}</td>
-      <td>{{ $firma_cliente_hora ?? $firmaClienteHora ?? '—' }}</td>
+<td>{{
+    ($firma_cliente_fecha ?? $firmaClienteFecha)
+    ? \Carbon\Carbon::parse($firma_cliente_fecha ?? $firmaClienteFecha)->translatedFormat('d-M-Y')
+    : '—'
+}}</td>
+<td>{{
+    ($firma_cliente_hora ?? $firmaClienteHora)
+    ? \Carbon\Carbon::parse($firma_cliente_hora ?? $firmaClienteHora)->format('H:i')
+    : '—'
+}}</td>
     </tr>
   </table>
 
@@ -609,8 +617,17 @@ th,td{
           —
         @endif
       </td>
-      <td>{{ $entrego_fecha ?? '—' }}</td>
-      <td>{{ $entrego_hora ?? '—' }}</td>
+<td>{{
+      $entrego_fecha
+    ? \Carbon\Carbon::parse($entrego_fecha)->translatedFormat('d-M-Y')
+    : '—'
+}}</td>
+
+<td>{{
+    $entrego_hora
+    ? \Carbon\Carbon::parse($entrego_hora)->format('H:i')
+    : '—'
+}}</td>
     </tr>
 
     <tr>
@@ -629,8 +646,17 @@ th,td{
           —
         @endif
       </td>
-      <td>{{ $recibio_fecha ?? '—' }}</td>
-      <td>{{ $recibio_hora ?? '—' }}</td>
+<td>{{
+    $recibio_fecha
+    ? \Carbon\Carbon::parse($recibio_fecha)->translatedFormat('d-M-Y')
+    : '—'
+}}</td>
+
+<td>{{
+    $recibio_hora
+    ? \Carbon\Carbon::parse($recibio_hora)->format('H:i')
+    : '—'
+}}</td>
     </tr>
   </table>
 </section>

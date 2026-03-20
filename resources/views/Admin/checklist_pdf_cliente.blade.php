@@ -361,6 +361,7 @@
             width: 100%;
             max-width: 260px;      /* ancho máx. del diagrama */
             margin: 0 auto;
+            height:320px;
         }
 
         .car-diagram-img{
@@ -376,6 +377,9 @@
             left:0;
             width:100%;
             height:100%;
+
+            /* Para el equipo de front, aqui se ajusta la posición de los circulos de daños. */
+            transform: translate(-14px, -75px);
         }
 
         .damage-dot{
@@ -384,13 +388,13 @@
     height:16px;
     border-radius:50%;
     box-sizing:border-box;
-    transform: translate(-50%, -50%);
     background: transparent;        /* sin relleno cuando NO hay daño */
     border: 2px solid #ff4d6a;      /* solo aro rojo */
 }
 
 .damage-dot.selected{
-    background:#ff4d6a;             /* relleno rojo cuando SÍ hay daño */
+     background:#ff4d6a;             /* relleno rojo cuando SÍ hay daño */
+     /*background: blue;*/
     border-color:#ff4d6a;           /* mismo color en el borde */
     box-shadow: 0 0 8px rgba(255,77,106,.6); /* glow tipo la captura */
 }
@@ -931,8 +935,17 @@
                         —
                     @endif
                 </td>
-                <td>{{ $firma_cliente_fecha ?? $firmaClienteFecha ?? '—' }}</td>
-                <td>{{ $firma_cliente_hora ?? $firmaClienteHora ?? '—' }}</td>
+                <td>{{
+        ($firma_cliente_fecha ?? $firmaClienteFecha)
+        ? \Carbon\Carbon::parse($firma_cliente_fecha ?? $firmaClienteFecha)->translatedFormat('d-M-Y')
+        : '—'
+                }}</td>
+
+                <td>{{
+        ($firma_cliente_hora ?? $firmaClienteHora)
+        ? \Carbon\Carbon::parse($firma_cliente_hora ?? $firmaClienteHora)->format('H:i')
+        : '—'
+                }}</td>
             </tr>
         </table>
 
@@ -956,8 +969,17 @@
                         —
                     @endif
                 </td>
-                <td>{{ $entrego_fecha ?? '—' }}</td>
-                <td>{{ $entrego_hora ?? '—' }}</td>
+                <td>{{
+        $entrego_fecha
+        ? \Carbon\Carbon::parse($entrego_fecha)->translatedFormat('d-M-Y')
+        : '—'
+                }}</td>
+
+                <td>{{
+        $entrego_hora
+        ? \Carbon\Carbon::parse($entrego_hora)->format('H:i')
+        : '—'
+                }}</td>
             </tr>
 
             {{-- RECIBIÓ: SOLO EN ENTRADA --}}
@@ -977,8 +999,17 @@
                             —
                         @endif
                     </td>
-                    <td>{{ $recibio_fecha ?? '—' }}</td>
-                    <td>{{ $recibio_hora ?? '—' }}</td>
+                    <td>{{
+        $recibio_fecha
+        ? \Carbon\Carbon::parse($recibio_fecha)->translatedFormat('d-M-Y')
+        : '—'
+                    }}</td>
+
+                    <td>{{
+        $recibio_hora
+        ? \Carbon\Carbon::parse($recibio_hora)->format('H:i')
+        : '—'
+                    }}</td>
                 </tr>
             @endif
         </table>
@@ -1159,7 +1190,7 @@
 
     <div class="footer-note">
         Documento generado por Viajero Car Rental ·
-        {{ \Carbon\Carbon::now()->format('d/m/Y H:i') }}
+        {{ \Carbon\Carbon::now()->translatedFormat('d-M-Y H:i') }}
     </div>
 
 </div>

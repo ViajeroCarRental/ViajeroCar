@@ -251,7 +251,7 @@ class ChecklistCambioAutoController extends Controller
             ]);
 
             return redirect()
-                ->route('checklist2', ['id' => $contrato->id_contrato])
+                ->route('contrato.final', ['id' => $contrato->id_contrato])
                 ->with('success', 'Cambio de vehículo y daños guardados correctamente.');
 
         } catch (\Throwable $e) {
@@ -944,7 +944,7 @@ class ChecklistCambioAutoController extends Controller
                 ]);
 
                 return redirect()
-                    ->route('checklist2', ['id' => $contrato->id_contrato])
+                    ->route('contrato.final', ['id' => $contrato->id_contrato])
                     ->with('success', 'Cambio de vehículo confirmado y fotografías guardadas, pero la reservación no tiene correo de cliente para enviar el mail.');
             }
 
@@ -955,7 +955,7 @@ class ChecklistCambioAutoController extends Controller
             ]);
 
             return redirect()
-                ->route('checklist2', ['id' => $contrato->id_contrato])
+                ->route('contrato.final', ['id' => $contrato->id_contrato])
                 ->with('success', 'Cambio de vehículo confirmado, fotografías guardadas y correo enviado correctamente al cliente.');
 
         } catch (\Throwable $e) {
@@ -969,7 +969,7 @@ class ChecklistCambioAutoController extends Controller
             ]);
 
             return redirect()
-                ->route('checklist2', ['id' => $contrato->id_contrato])
+                ->route('contrato.final', ['id' => $contrato->id_contrato])
                 ->with('success', 'Cambio de vehículo confirmado y fotografías guardadas correctamente.')
                 ->with('error', 'Sin embargo, ocurrió un error al enviar el correo al cliente. Revisa el log o intenta reenviar manualmente.');
         }

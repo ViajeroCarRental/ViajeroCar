@@ -342,6 +342,10 @@ document.addEventListener("click", async (e) => {
                     }
 
                     alertify.success("Contrato finalizado y correo enviado.");
+                    // 🔥 REDIRECCIÓN AUTOMÁTICA AL CHECKLIST (REGRESO)
+                    setTimeout(() => {
+                    window.location.href = `/admin/reservacion/${idContrato}/checklist?modo=regreso`;
+                    }, 800);
                 } catch (err) {
                     console.error(err);
                     alertify.error("Error al procesar finalización.");

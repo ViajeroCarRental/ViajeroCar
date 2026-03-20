@@ -96,14 +96,18 @@
                     <ul>
                         <li><b>Oficina de salida:</b> {{ $reservacion->sucursal_retiro_nombre ?? '—' }}</li>
                         <li><b>Fecha/Hora salida:</b>
-                            {{ $reservacion->fecha_inicio ?? '—' }}
-                            {{ $reservacion->hora_retiro ?? '—' }}
-                        </li>
+    {{ $reservacion->fecha_inicio
+        ? \Carbon\Carbon::parse($reservacion->fecha_inicio)->format('d-M-Y') : '—' }}
+    {{ $reservacion->hora_retiro
+        ? \Carbon\Carbon::parse($reservacion->hora_retiro)->format('H:i') : '—' }}
+</li>
 
                         <li><b>Oficina de regreso:</b> {{ $reservacion->sucursal_entrega_nombre ?? '—' }}</li>
                         <li><b>Fecha/Hora regreso:</b>
-                            {{ $reservacion->fecha_fin ?? '—' }}
-                            {{ $reservacion->hora_entrega ?? '—' }}
+                            {{ $reservacion->fecha_fin
+        ? \Carbon\Carbon::parse($reservacion->fecha_fin)->format('d-M-Y') : '—' }}
+                            {{ $reservacion->hora_entrega
+        ? \Carbon\Carbon::parse($reservacion->hora_entrega)->format('H:i') : '—' }}
                         </li>
 
                         <li><b>Días de renta:</b> {{ $dias }}</li>
@@ -238,11 +242,11 @@
                         <div class="firma-item">
                             <p><b>FIRMA DE ARRENDADOR(A):</b></p>
 
-                            @if ($contrato->firma_arrendador)
-                                <img src="{{ $contrato->firma_arrendador }}" class="firma-img">
-                            @else
-                                <button id="btnFirmaArrendador" class="btn btn-blue">Capturar firma arrendador</button>
-                            @endif
+                           @if (!empty($vehiculo?->firma_propietario))
+    <img src="{{ $vehiculo->firma_propietario }}" class="firma-img">
+@else
+    <p>No hay firma</p>
+@endif
                         </div>
 
                     </div>

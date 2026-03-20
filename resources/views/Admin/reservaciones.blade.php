@@ -76,6 +76,7 @@
           <option value="">Selecciona punto de entrega</option>
 
           @foreach($sucursales as $ciudad => $grupo)
+          @if($ciudad === 'Querétaro')
             <optgroup label="{{ $ciudad }} — {{ $ciudad }}">
               @foreach($grupo as $s)
                 <option value="{{ $s->id_sucursal }}"
@@ -85,6 +86,7 @@
                 </option>
               @endforeach
             </optgroup>
+            @endif
           @endforeach
 
         </select>
