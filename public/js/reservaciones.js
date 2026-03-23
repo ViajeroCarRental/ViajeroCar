@@ -2564,47 +2564,6 @@ if (typeof flatpickr !== 'undefined') {
     }
 
 
-
-                    let iconClass = 'fa-building';
-                    const text = option.text.toLowerCase();
-
-                    if (text.includes('aeropuerto')) {
-                        iconClass = 'fa-plane-departure';
-                    } else if (text.includes('central') || text.includes('terminal')) {
-                        iconClass = 'fa-bus';
-                    }
-
-                    return $('<span><i class="fa-solid ' + iconClass + '" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
-                }
-
-                const select2Config = {
-                    templateResult: formatOption,
-                    templateSelection: formatOption,
-                    escapeMarkup: function(m) { return m; },
-                    width: '100%',
-                    minimumResultsForSearch: Infinity,
-                    allowClear: false
-                };
-
-                $('#pickupPlace').select2({
-                    ...select2Config,
-                    placeholder: '¿Dónde inicia tu viaje?'
-                });
-
-                const isChecked = document.getElementById('differentDropoff')?.checked || false;
-                $('#dropoffPlace').select2({
-                    ...select2Config,
-                    placeholder: '¿Dónde termina tu viaje?',
-                    disabled: !isChecked
-                });
-
-                console.log('Select2 inicializado correctamente');
-            } catch (e) {
-                console.warn('Error inicializando Select2:', e);
-            }
-        }, 300);
-    }
-
 //nuevo agregadi
 function syncFlatpickrAfterStepChange() {
     // Observar cambios en el atributo data-current-step
