@@ -519,7 +519,7 @@
                             <span class="field-icon"><i id="dropoffIcon" class="fa-solid fa-location-dot"></i></span>
                             <select id="dropoffPlace" name="dropoff_sucursal_id">
                                 <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}>¿Dónde termina tu viaje?</option>
-                                @foreach ($ciudades as $ciudad)
+                               @foreach ($ciudades->sortByDesc(function($c) { return $c->nombre === 'Querétaro';}) as $ciudad)
                                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                         @foreach ($ciudad->sucursalesActivas ?? [] as $suc)
                                             @php
