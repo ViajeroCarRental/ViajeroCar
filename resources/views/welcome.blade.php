@@ -551,7 +551,7 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
         </article>
 
         <article class="car-card">
@@ -588,7 +588,7 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
         </article>
 
         <article class="car-card">
@@ -625,7 +625,7 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
         </article>
 
         <article class="car-card">
@@ -662,7 +662,7 @@
             </span>
           </div>
 
-         <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+         <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
             </article>
 
             <article class="car-card">
@@ -704,7 +704,7 @@
                 </span>
               </div>
 
-              <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+              <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
             </article>
 
 
@@ -743,7 +743,7 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
         </article>
 
       </div>
@@ -817,7 +817,7 @@
               </span>
             </div>
 
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
           </article>
 
           <article class="car-card">
@@ -854,7 +854,7 @@
               </span>
             </div>
 
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
           </article>
 
           <article class="car-card">
@@ -891,7 +891,7 @@
               </span>
             </div>
 
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
           </article>
 
 
@@ -935,7 +935,7 @@
             </div>
 
 
-            <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
             </article>
 
         <article class="car-card">
@@ -973,7 +973,7 @@
           </span>
         </div>
 
-           <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+           <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
           </article>
 
         <article class="car-card">
@@ -1011,7 +1011,7 @@
             </span>
           </div>
 
-              <a href="{{ route('rutaReservaciones') }}" class="car-cta">Reservar</a>
+              <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
             </article>
 
 
@@ -1032,7 +1032,7 @@
                   <p>Gestionamos tus viajes corporativos de punta a punta para que tu equipo se concentre en lo importante.</p>
                   <p>Optimiza costos, confort y seguridad con nuestros planes para empresas.</p>
                   <div class="cta-group">
-                    <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> Reserva ahora</a>
+                    <a href="{{ route('rutaReservaciones', ['from' => 'welcome']) }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> Reserva ahora</a>
                   </div>
                 </div>
                 <div class="info-media media-carousel" data-interval="5200">
@@ -1065,7 +1065,7 @@
                       <div class="tile-body">
                         <h3>AUTOS Y CAMIONETAS 4x4:</h3>
                         <p>Viaja sin límites. Contamos con SUVs, autos todoterreno y camionetas 4x4 ideales para carretera, ciudad o aventura.</p>
-                        <a href="#" class="tile-link">Explora nuestra flota...</a>
+                        <a href="{{ route('rutaCatalogo') }}" class="tile-link">Explora nuestra flota...</a>
                       </div>
                     </article>
                   </div>
@@ -1076,7 +1076,7 @@
                       <div class="tile-body">
                         <h3>CAMIONETAS PARA 13 PASAJEROS:</h3>
                         <p>Perfectas para viajes familiares o empresariales. Comodidad, espacio y seguridad para todos tus acompañantes.</p>
-                        <a href="#" class="tile-link">Reserva la tuya...</a>
+                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome'], ['step' => 1,'tipo' => 'camioneta_13']) }}" class="tile-link">Reserva la tuya...</a>
                       </div>
                     </article>
                   </div>
@@ -1087,7 +1087,7 @@
                       <div class="tile-body">
                         <h3>ACEPTAMOS TARJETAS:</h3>
                         <p>Pagos con tarjeta de crédito o débito. Fácil, rápido y seguro. También puedes hacer tu pago final al devolver tu vehículo.</p>
-                        <a href="#" class="tile-link">Conoce nuestras opciones...</a>
+                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome'], ['step'=>1, 'tipo'=>'tarjetas']) }}"class="tile-link">Conoce nuestras opciones...</a>
                       </div>
                     </article>
                   </div>
@@ -1098,7 +1098,7 @@
                       <div class="tile-body">
                         <h3>ENTREGA EN AEROPUERTO 24/7:</h3>
                         <p>Recibe o entrega tu auto directamente en el aeropuerto, sin filas ni esperas. Disponible las 24 horas del día.</p>
-                        <a href="#" class="tile-link">Agendar entrega...</a>
+                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome'], ['step'=>1, 'tipo'=>'aeropuerto']) }}"class="tile-link">Agendar entrega...</a>
                       </div>
                     </article>
                   </div>
@@ -1109,7 +1109,7 @@
                       <div class="tile-body">
                         <h3>VEHÍCULOS CON VERIFICACIÓN 00:</h3>
                         <p>Todos nuestros autos cumplen con las normas ambientales y están verificados tipo 00 para garantizar su óptimo rendimiento.</p>
-                        <a href="#" class="tile-link">Descubre más...</a>
+                        <a href="{{ route('rutaCatalogo') }}" class="tile-link">Descubre más...</a>
                       </div>
                     </article>
                   </div>
@@ -1120,7 +1120,7 @@
                       <div class="tile-body">
                         <h3>DROP OFF NACIONAL:</h3>
                         <p>Disfruta de tu viaje sin preocupaciones. Devuelve tu auto en otra ciudad con nuestro servicio Drop Off Nacional (con costo adicional).</p>
-                        <a href="#" class="tile-link">Consultar destinos...</a>
+                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome'], ['step'=>1, 'tipo'=>'dropoff']) }}"class="tile-link">Consultar destinos...</a>
                       </div>
                     </article>
                   </div>
@@ -1131,7 +1131,7 @@
                       <div class="tile-body">
                         <h3>AUTOS NUEVOS Y MODERNOS:</h3>
                         <p>Conduce con estilo y seguridad. Nuestra flota está compuesta por vehículos recientes, siempre en óptimas condiciones.</p>
-                        <a href="#" class="tile-link">Explora la flota...</a>
+                        <a href="{{ route('rutaCatalogo') }}" class="tile-link">Explora la flota...</a>
                       </div>
                     </article>
                   </div>
@@ -1205,7 +1205,7 @@
               <div class="cta-overlay"></div>
               <div class="cta-inner">
                 <h2>¡RENTA HOY, EXPLORA MAÑANA, VIAJA SIEMPRE!</h2>
-                <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary btn-lg">
+                <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="btn btn-primary btn-lg">
                   <i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!
                 </a>
               </div>

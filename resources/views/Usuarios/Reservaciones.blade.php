@@ -251,8 +251,11 @@
             })
             ->values();
     @endphp
+    @php
+    $fromWelcome = request()->get('from') === 'welcome';
+@endphp
 
-    <main class="page wizard-page" data-current-step="{{ $stepCurrent }}" data-plan="{{ $plan ?? '' }}"
+    <main class="page wizard-page {{ $fromWelcome ? 'modo-welcome' : '' }}" data-current-step="{{ $stepCurrent }}" data-plan="{{ $plan ?? '' }}"
         style="position:relative; overflow:visible;">
 
         {{-- ✅ Fondo SOLO dentro del main (NO footer) --}}
@@ -360,7 +363,7 @@
                     background: transparent !important;
                 }
             </style>
-            <div class="fondo-fijo-layout"></div>
+            <div class="fondo-fijo-layout" style="pointer-events:none;"></div>
 
             {{-- ===================== PASOS ARRIBA ===================== --}}
             <nav class="wizard-steps" aria-label="Pasos">
@@ -440,7 +443,7 @@
                         <label class="inline-check" for="differentDropoff">
                             <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1"
                                 {{ request('different_dropoff') ? 'checked' : '' }}>
-                            <span>Devolver en <br> otro destino</span>
+                            <span class="checkbox-text">Devolver en<br>otro destino</span>
                         </label>
                     </div>
 
@@ -576,6 +579,12 @@
         </form>
     </div>
 <script>
+if (window.location.search.includes('from=welcome')) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('from');
+    window.history.replaceState({}, document.title, url.pathname + '?' + url.searchParams.toString());
+}
+
         document.addEventListener('DOMContentLoaded', function() {
             // Función para combinar hora
             function combineTime() {
@@ -679,6 +688,11 @@
                             }
                         }
                     });
+                    setTimeout(() => {
+                    if (startInput && startInput._flatpickr) {
+                        startInput._flatpickr.setDate(startInput.value, true);
+                    }
+                }, 50);
                 }
 
                 // Para dropoff date
@@ -706,6 +720,11 @@
                             }
                         }
                     });
+                    setTimeout(() => {
+                    if (endInput && endInput._flatpickr) {
+                        endInput._flatpickr.setDate(endInput.value, true);
+                    }
+                }, 50);
                 }
             }
 
@@ -746,31 +765,19 @@
             if (btnAbrir && btnCerrar && buscador) {
                 function bloquearScroll() {
                     const scrollY = window.scrollY;
-                    document.body.style.position = 'fixed';
                     document.body.style.top = `-${scrollY}px`;
                     document.body.style.left = '0';
                     document.body.style.right = '0';
-                    document.body.style.overflow = 'hidden';
                     document.body.style.width = '100%';
                     document.body.dataset.scrollY = scrollY;
                 }
 
                 function restaurarScroll() {
-                    document.body.style.position = '';
-                    document.body.style.top = '';
-                    document.body.style.left = '';
-                    document.body.style.right = '';
-                    document.body.style.overflow = '';
-                    document.body.style.width = '';
-                    const scrollY = document.body.dataset.scrollY || 0;
-                    window.scrollTo(0, parseInt(scrollY));
-                    delete document.body.dataset.scrollY;
                 }
 
                 btnAbrir.addEventListener('click', function(e) {
                     e.preventDefault();
                     buscador.classList.add('active');
-                    bloquearScroll();
 
                     // Forzar actualización del checkbox cuando se abre el buscador
                     setTimeout(function() {
@@ -794,7 +801,6 @@
                 btnCerrar.addEventListener('click', function(e) {
                     e.preventDefault();
                     buscador.classList.remove('active');
-                    restaurarScroll();
                 });
 
                 // Cerrar con Escape
@@ -1892,95 +1898,94 @@ input:checked + .slider:before {
                             color: #111827;
                         }
 
-                        /* DISEÑO RESPONSIVO: TARJETA DE RESERVACIÓN  */
+                        /* DISEÑO RESPONSIVO: TARJETA DE RESERVACIÓN - SOLO MÓVIL/TABLET */
+@media (max-width:1024px) {
+    footer,
+    .footer-elegant {
+        position: relative;
+        z-index: 10;
+        background-color: #0b1120 !important;
+    }
 
-                        @media (max-width:1024px) {
+    .step4-pane .sum-total,
+    .sum-form .wizard-nav,
+    #btnReservar {
+        display: none !important;
+    }
 
-                            footer,
-                            .footer-elegant {
-                                position: relative;
-                                z-index: 10;
-                                background-color: #0b1120 !important;
-                            }
+    /* ESTILO BASE DE LA TARJETA - INICIALMENTE OCULTA */
+    .movil-footer-sticky {
+        display: flex !important;
+        flex-direction: column;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: #ffffff;
+        padding: 20px;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.20);
+        border-radius: 25px 25px 0 0;
+        gap: 15px;
+        z-index: 9999999;
+        transform: translateY(100%);
+        transition: transform 0.3s ease-in-out;
+    }
 
-                            .step4-pane .sum-total,
-                            .sum-form .wizard-nav,
-                            #btnReservar {
-                                display: none !important;
-                            }
+    /* CUANDO TIENE LA CLASE 'visible' - SE MUESTRA */
+    .movil-footer-sticky.visible {
+        transform: translateY(0);
+    }
 
-                            .movil-footer-sticky {
-                                display: flex;
-                                flex-direction: column;
-                                position: fixed;
-                                bottom: 0;
-                                left: 0;
-                                width: 100%;
-                                background: #ffffff;
-                                padding: 20px;
-                                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.20);
-                                border-radius: 25px 25px 0 0;
-                                gap: 15px;
-                                z-index: 9999999;
-                            }
+    .movil-total-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 900;
+        font-size: 20px;
+    }
 
-                            .movil-total-wrapper {
-                                display: flex;
-                                justify-content: space-between;
-                                align-items: center;
-                                font-weight: 900;
-                                font-size: 20px;
-                            }
+    .movil-total-label {
+        color: #000;
+        text-transform: uppercase;
+    }
 
-                            .movil-total-label {
-                                color: #000;
-                                text-transform: uppercase;
-                            }
+    .movil-total-amount {
+        color: #b22222;
+        font-size: 24px;
+    }
 
-                            .movil-total-amount {
-                                color: var(--brand);
-                                font-size: 24px;
-                            }
+    .btn-reservar-movil {
+        background: #b22222;
+        color: #fff;
+        border: none;
+        border-radius: 14px;
+        padding: 20px;
+        font-size: 18px;
+        font-weight: 900;
+        width: 100%;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: all .2s ease;
+    }
 
-                            .btn-reservar-movil {
-                                background: var(--brand);
-                                color: #fff;
-                                border: none;
-                                border-radius: 14px;
-                                padding: 20px;
-                                font-size: 18px;
-                                font-weight: 900;
-                                width: 100%;
-                                text-transform: uppercase;
-                                letter-spacing: 1px;
-                                cursor: pointer;
-                                transition: all .2s ease;
-                            }
+    .btn-reservar-movil:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(178, 34, 34, .35);
+    }
 
-                            .btn-reservar-movil:hover {
-                                transform: translateY(-2px);
-                                box-shadow: 0 8px 20px rgba(178, 34, 34, .35);
-                            }
+    /* AJUSTE PARA EL SCROLL */
+    .step4-layout {
+        padding-bottom: 250px !important;
+    }
+}
 
-                            /* 2. EL AJUSTE PARA EL SCROLL*/
-                            .step4-layout {
-                                padding-bottom: 250px !important;
-                            }
-
-                            body::after {
-                                content: "";
-                                display: block;
-                                height: 160px;
-                                width: 100%;
-                            }
-                        }
-
-                        /* ESCRITORIO */
-                        @media (min-width:1025px) {
-                            .movil-footer-sticky {
-                                display: none !important;
-                            }
-                        }
+/* ESCRITORIO - OCULTA COMPLETAMENTE LA TARJETA */
+@media (min-width:1025px) {
+    .movil-footer-sticky {
+        display: none !important;
+    }
+}
                     </style>
 
                     <div class="step4-layout">
@@ -2866,7 +2871,7 @@ function traducirReturnDestination() {
             returnElement.style.fontWeight = 'bold';
         } else {
             // ESPAÑOL: 2 líneas
-            returnElement.innerHTML = 'DEVOLVER EN<br>OTRO DESTINO';
+            returnElement.innerHTML = 'DEVOLVER EN <br>OTRO DESTINO';
             returnElement.style.lineHeight = '1.2';
             returnElement.style.display = 'block';
             returnElement.style.whiteSpace = 'normal';
