@@ -4,7 +4,23 @@
 @section('css-vistaReservaciones')
     <link rel="stylesheet" href="{{ asset('css/reservaciones.css') }}">
 @endsection
+<script>
+(function() {
+  const navEntries = performance.getEntriesByType("navigation");
+  const isReload = navEntries.length > 0 && navEntries[0].type === "reload";
 
+  if (isReload) {
+    const url = new URL(window.location.href);
+    url.search = '';
+    url.searchParams.set('step', '1');
+    url.searchParams.set('reset', '1');
+
+    document.write('');
+
+    window.location.replace(url.toString());
+  }
+})();
+</script>
 @section('contenidoReservaciones')
     @php
         // ====== Estado recibido por GET (sin sesión) ======
@@ -16,12 +32,11 @@
         // =========================
         // ✅ Fechas robustas (ISO para lógica, DMY para UI)
         // =========================
-        $pickupDateRaw = $f['pickup_date'] ?? request('pickup_date');
-        $dropoffDateRaw = $f['dropoff_date'] ?? request('dropoff_date');
-
-        // ⛔ ANTES forzaba '12:00' aquí
-        $pickupTime = $f['pickup_time'] ?? request('pickup_time');
-        $dropoffTime = $f['dropoff_time'] ?? request('dropoff_time');
+        $reset = request('reset') == '1';
+        $pickupDateRaw = $reset ? null : ($f['pickup_date'] ?? request('pickup_date'));
+        $dropoffDateRaw = $reset ? null : ($f['dropoff_date'] ?? request('dropoff_date'));
+        $pickupTime = $reset ? null : ($f['pickup_time'] ?? request('pickup_time'));
+        $dropoffTime = $reset ? null : ($f['dropoff_time'] ?? request('dropoff_time'));
 
         // 🔹 Conversor a ISO SIN fechas por defecto
         $toIso = function ($val) {
@@ -78,29 +93,53 @@
         // ✅ STEP RESOLVER (FIX REAL)
         // ==========================================================
         $requestedStep = (int) request('step', 1);
-        $controllerStep = isset($step) ? (int) $step : null;
+            $controllerStep = isset($step) ? (int) $step : null;
 
-        $pickupSucursalId = $f['pickup_sucursal_id'] ?? request('pickup_sucursal_id');
-        $dropoffSucursalId = $f['dropoff_sucursal_id'] ?? request('dropoff_sucursal_id');
+            $pickupSucursalId = $f['pickup_sucursal_id'] ?? request('pickup_sucursal_id');
+            $dropoffSucursalId = $f['dropoff_sucursal_id'] ?? request('dropoff_sucursal_id');
 
-        if (empty($dropoffSucursalId) && !empty($pickupSucursalId)) {
-        $dropoffSucursalId = $pickupSucursalId;
-        }
+            if (empty($dropoffSucursalId) && !empty($pickupSucursalId)) {
+                $dropoffSucursalId = $pickupSucursalId;
+            }
 
-        $isFreshEntry = empty($pickupSucursalId) || empty($dropoffSucursalId);
-        $stepCurrent = $isFreshEntry ? 1 : $controllerStep ?? $requestedStep;
-        if ($stepCurrent >= 2 && $isFreshEntry) {
-            $stepCurrent = 1;
-        }
-        if ($stepCurrent >= 3 && (empty($categoriaId) || empty($plan))) {
-            $stepCurrent = 2;
-        }
-        if ($stepCurrent >= 4 && (empty($categoriaId) || empty($plan))) {
-            $stepCurrent = 2;
-        }
-        // Nombres de sucursales para el encabezado (fallback a $ciudades)
-        $pickupName = null;
-        $dropoffName = null;
+            $step1DataComplete =!empty($pickupSucursalId) &&
+                                !empty($dropoffSucursalId) &&
+                                !empty($pickupDateISO) &&
+                                !empty($dropoffDateISO) &&
+                                !empty($pickupTime) &&
+                                !empty($dropoffTime);
+
+            if ($reset) {
+                $stepCurrent = 1;
+            }else if (!$step1DataComplete) {
+                $stepCurrent = 1;
+            } else {
+                $stepCurrent = $controllerStep ?? $requestedStep;
+
+                if ($stepCurrent >= 3 && (empty($categoriaId) || empty($plan))) {
+                    $stepCurrent = 2;
+                }
+                if ($stepCurrent >= 4 && (empty($categoriaId) || empty($plan))) {
+                    $stepCurrent = 2;
+                }
+            }
+            $stepCurrent = max(1, min(4, $stepCurrent));
+
+            if (request()->get('from') === 'welcome') {
+                session(['from_welcome' => true]);
+            }
+            if ($step1DataComplete) {
+                session()->forget('from_welcome');
+            }
+
+            $fromWelcome = request()->get('from') === 'welcome' || session('from_welcome');
+
+            if ($stepCurrent == 1 && $step1DataComplete) {
+                $fromWelcome = false;
+            }
+
+            $pickupName = null;
+            $dropoffName = null;
 
         if (!empty($sucursales)) {
             $sucById = collect($sucursales)->keyBy('id_sucursal');
@@ -251,9 +290,6 @@
             })
             ->values();
     @endphp
-    @php
-    $fromWelcome = request()->get('from') === 'welcome';
-@endphp
 
     <main class="page wizard-page {{ $fromWelcome ? 'modo-welcome' : '' }}" data-current-step="{{ $stepCurrent }}" data-plan="{{ $plan ?? '' }}"
         style="position:relative; overflow:visible;">
@@ -2769,7 +2805,6 @@ input:checked + .slider:before {
     <script defer src="{{ asset('js/reservaciones.js') }}"></script>
     <script defer src="{{ asset('js/BtnReserva.js') }}"></script>
     <script defer src="{{ asset('js/BtnReservaLinea.js') }}"></script>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const main = document.querySelector('main.page');
