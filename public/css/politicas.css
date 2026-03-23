@@ -1289,10 +1289,10 @@ span.flatpickr-weekday {
 @media (min-width: 1125px) {
     .flatpickr-calendar {
         position: absolute !important;
-        left: 5% !important;
-        top: auto !important;
-        bottom: 60px !important;
-        transform: none !important;
+        left: 50% !important;
+        top: 120px !important;
+        bottom: auto !important;
+        transform: translateX(-50%) !important;
         width: 90vw !important;
         max-width: 1100px !important;
         min-width: 800px !important;
