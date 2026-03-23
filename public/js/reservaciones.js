@@ -2113,6 +2113,7 @@ function initMovilCardVisibility() {
     const tuAutoSection = document.getElementById('tuAutoSection');
     const movilCard = document.querySelector('.movil-footer-sticky');
     const modalMetodoPago = document.getElementById('modalMetodoPago');
+    const modalPagoOnline = document.getElementById('modalPagoOnline');
 
     // Verificar que los elementos existan
     if (!tuAutoSection || !movilCard) {
@@ -2158,6 +2159,39 @@ function initMovilCardVisibility() {
         }
     }
 
+    // 🟢 FUNCIÓN UNIFICADA PARA VERIFICAR SI ALGÚN MODAL ESTÁ ABIERTO
+    function isAnyModalOpen() {
+        const isMetodoPagoOpen = modalMetodoPago && modalMetodoPago.style.display === 'flex';
+        const isPagoOnlineOpen = modalPagoOnline && modalPagoOnline.style.display === 'flex';
+        return isMetodoPagoOpen || isPagoOnlineOpen;
+    }
+
+    // 🟢 FUNCIÓN PARA ACTUALIZAR ESTADO DE MODALES Y VISIBILIDAD
+    function updateModalState() {
+        const anyModalOpen = isAnyModalOpen();
+
+        if (anyModalOpen !== movilCardState.isModalOpen) {
+            movilCardState.isModalOpen = anyModalOpen;
+
+            if (anyModalOpen) {
+                // Si se abre cualquier modal, ocultar la tarjeta inmediatamente
+                hideMovilCard();
+                console.log('🔴 Modal abierto - Tarjeta oculta');
+            } else {
+                // Si se cierra cualquier modal, restaurar según estado de datos
+                setTimeout(() => {
+                    if (movilCardState.isStep4DataComplete) {
+                        showMovilCard();
+                        console.log('🟢 Modal cerrado - Datos completos, tarjeta visible');
+                    } else {
+                        handleScroll();
+                        console.log('🟢 Modal cerrado - Restaurando scroll');
+                    }
+                }, 100);
+            }
+        }
+    }
+
     // Observar cambios en los campos del formulario
     function initFormObserver() {
         const fields = ['#nombreCompleto', '#telefonoCliente', '#correoCliente', '#pais', '#dob_day', '#dob_month', '#dob_year', '#acepto'];
@@ -2192,33 +2226,41 @@ function initMovilCardVisibility() {
         setTimeout(checkDataComplete, 100);
     }
 
-    // Observar el modal de pago
+    // Observar los modales (Método de pago y Pago en línea)
     function initModalObserver() {
-        if (!modalMetodoPago) return;
+        if (!modalMetodoPago && !modalPagoOnline) return;
 
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                    const isOpen = modalMetodoPago.style.display === 'flex';
-                    movilCardState.isModalOpen = isOpen;
+        // Función para observar cambios en el style de un modal
+        function observeModal(modal, modalName) {
+            if (!modal) return;
 
-                    if (isOpen) {
-                        hideMovilCard();
-                    } else {
-                        // Modal cerrado - restaurar según estado
-                        setTimeout(() => {
-                            if (movilCardState.isStep4DataComplete) {
-                                showMovilCard();
-                            } else {
-                                handleScroll();
-                            }
-                        }, 100);
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                        console.log(`🔄 Cambio detectado en modal: ${modalName}`);
+                        updateModalState();
                     }
-                }
+                });
             });
-        });
 
-        observer.observe(modalMetodoPago, { attributes: true });
+            observer.observe(modal, { attributes: true });
+        }
+
+        observeModal(modalMetodoPago, 'MetodoPago');
+        observeModal(modalPagoOnline, 'PagoOnline');
+
+        // También observar si se añade dinámicamente al DOM
+        const checkForModals = setInterval(() => {
+            const mpModal = document.getElementById('modalMetodoPago');
+            const poModal = document.getElementById('modalPagoOnline');
+            if ((mpModal && !modalMetodoPago) || (poModal && !modalPagoOnline)) {
+                console.log('🔍 Modales detectados después de carga inicial');
+                clearInterval(checkForModals);
+                location.reload(); // Recargar para asegurar que todo esté bien inicializado
+            }
+        }, 500);
+
+        setTimeout(() => clearInterval(checkForModals), 5000);
     }
 
     // Botón de reservar - mantener tarjeta visible
@@ -2266,9 +2308,9 @@ function initMovilCardVisibility() {
     // Verificación inicial
     setTimeout(() => {
         if (isMobileView()) {
-            if (movilCardState.isStep4DataComplete) {
+            if (movilCardState.isStep4DataComplete && !movilCardState.isModalOpen) {
                 showMovilCard();
-            } else {
+            } else if (!movilCardState.isStep4DataComplete) {
                 handleScroll();
             }
         }
