@@ -1,6 +1,31 @@
 (function () {
   "use strict";
 
+  document.addEventListener('DOMContentLoaded', () => {
+
+  const navEntries = performance.getEntriesByType("navigation");
+  const isReload = navEntries.length > 0 && navEntries[0].type === "reload";
+
+  if (isReload) {
+
+    console.log("Recarga → reset real");
+
+    // borrar storage
+    localStorage.removeItem("viajero_resv_filters_v1");
+
+    const url = new URL(window.location.href);
+
+    // marcar reset para backend
+    url.search = '';
+    url.searchParams.set('step', '1');
+    url.searchParams.set('reset', '1');
+
+    // REDIRECCIÓN REAL (NO replaceState)
+    window.location.replace(url.toString());
+  }
+
+});
+
   const qs = (s, r = document) => r.querySelector(s);
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
   const YOUNG_DRIVER_SERVICE_ID = '5';
@@ -496,6 +521,12 @@
   }
 
   function initWizardStatePersistence() {
+    const url = new URL(window.location.href);
+const isReset = url.searchParams.get('reset') === '1';
+
+if (isReset) {
+  console.log("Reset activo → no persistir nada");
+}
     const LS_KEY = "viajero_resv_filters_v1";
     let isResetMode = false;
     try {
