@@ -2159,11 +2159,40 @@ function initMovilCardVisibility() {
         }
     }
 
-    // 🟢 FUNCIÓN UNIFICADA PARA VERIFICAR SI ALGÚN MODAL ESTÁ ABIERTO
+    // 🟢 NUEVA FUNCIÓN: Verificar si hay una alerta de Alertify visible
+    function isAlertifyOpen() {
+        // Verificar si hay algún elemento de Alertify visible
+        const alertifyDialogs = document.querySelectorAll('.ajs-dialog, .ajs-modal');
+        for (let dialog of alertifyDialogs) {
+            const style = window.getComputedStyle(dialog);
+            if (style.display !== 'none' && style.visibility !== 'hidden') {
+                // También verificar que no esté oculto por clase
+                if (!dialog.classList.contains('ajs-hidden') && !dialog.classList.contains('ajs-out')) {
+                    console.log('🔔 Alerta Alertify detectada:', dialog);
+                    return true;
+                }
+            }
+        }
+
+        // Verificar también el contenedor principal de Alertify
+        const alertifyContainer = document.querySelector('.alertify');
+        if (alertifyContainer) {
+            const style = window.getComputedStyle(alertifyContainer);
+            if (style.display !== 'none') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // 🟢 FUNCIÓN UNIFICADA PARA VERIFICAR SI ALGÚN MODAL O ALERTA ESTÁ ABIERTO
     function isAnyModalOpen() {
         const isMetodoPagoOpen = modalMetodoPago && modalMetodoPago.style.display === 'flex';
         const isPagoOnlineOpen = modalPagoOnline && modalPagoOnline.style.display === 'flex';
-        return isMetodoPagoOpen || isPagoOnlineOpen;
+        const isAlertOpen = isAlertifyOpen();
+
+        return isMetodoPagoOpen || isPagoOnlineOpen || isAlertOpen;
     }
 
     // 🟢 FUNCIÓN PARA ACTUALIZAR ESTADO DE MODALES Y VISIBILIDAD
@@ -2174,22 +2203,76 @@ function initMovilCardVisibility() {
             movilCardState.isModalOpen = anyModalOpen;
 
             if (anyModalOpen) {
-                // Si se abre cualquier modal, ocultar la tarjeta inmediatamente
+                // Si se abre cualquier modal o alerta, ocultar la tarjeta inmediatamente
                 hideMovilCard();
-                console.log('🔴 Modal abierto - Tarjeta oculta');
+                console.log('🔴 Modal/Alerta abierto - Tarjeta oculta');
             } else {
                 // Si se cierra cualquier modal, restaurar según estado de datos
                 setTimeout(() => {
                     if (movilCardState.isStep4DataComplete) {
                         showMovilCard();
-                        console.log('🟢 Modal cerrado - Datos completos, tarjeta visible');
+                        console.log('🟢 Modal/Alerta cerrado - Datos completos, tarjeta visible');
                     } else {
                         handleScroll();
-                        console.log('🟢 Modal cerrado - Restaurando scroll');
+                        console.log('🟢 Modal/Alerta cerrado - Restaurando scroll');
                     }
                 }, 100);
             }
         }
+    }
+
+    //  NUEVA FUNCIÓN: Observar cambios en Alertify
+    function initAlertifyObserver() {
+        // Observar cambios en el body para detectar cuando se añade Alertify
+        const bodyObserver = new MutationObserver((mutations) => {
+            for (let mutation of mutations) {
+                if (mutation.type === 'childList') {
+                    // Verificar si se añadió algún elemento de Alertify
+                    const addedNodes = Array.from(mutation.addedNodes);
+                    for (let node of addedNodes) {
+                        if (node.nodeType === 1) { // Element node
+                            if (node.classList && (
+                                node.classList.contains('alertify') ||
+                                node.classList.contains('ajs-dialog') ||
+                                node.classList.contains('ajs-modal')
+                            )) {
+                                console.log('🔔 Alertify detectada en DOM');
+                                updateModalState();
+                                break;
+                            }
+                        }
+                    }
+
+                    // Verificar si se eliminó algún elemento de Alertify
+                    const removedNodes = Array.from(mutation.removedNodes);
+                    for (let node of removedNodes) {
+                        if (node.nodeType === 1) {
+                            if (node.classList && (
+                                node.classList.contains('alertify') ||
+                                node.classList.contains('ajs-dialog') ||
+                                node.classList.contains('ajs-modal')
+                            )) {
+                                console.log('🔔 Alertify eliminada del DOM');
+                                setTimeout(updateModalState, 100);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        bodyObserver.observe(document.body, { childList: true, subtree: true });
+
+        // También observar cambios en style de posibles alertas existentes
+        const checkAlertifyInterval = setInterval(() => {
+            if (isAlertifyOpen() !== movilCardState.isModalOpen) {
+                updateModalState();
+            }
+        }, 200);
+
+        // Limpiar intervalo después de un tiempo (opcional)
+        setTimeout(() => clearInterval(checkAlertifyInterval), 30000);
     }
 
     // Observar cambios en los campos del formulario
@@ -2303,6 +2386,7 @@ function initMovilCardVisibility() {
     // Inicializar todo
     initFormObserver();
     initModalObserver();
+    initAlertifyObserver();
     initReservationObserver();
 
     // Verificación inicial
