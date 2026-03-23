@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('id_contrato')->nullable();
 
             // 🔗 Identificador de origen del pago
-            $table->enum('origen_pago', ['online','mostrador','terminal','cripto'])->nullable();
+            $table->string('origen_pago', 50)->nullable();
 
             // 🔗 Ruta o nombre del archivo comprobante (solo texto)
             $table->string('comprobante', 255)->nullable();
