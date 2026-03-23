@@ -15,8 +15,9 @@ class ChecklistController extends Controller
     // ============================================================
     //   🟦 MOSTRAR CHECKLIST (RUTA PRINCIPAL)
     // ============================================================
-    public function showChecklist($id)
+    public function showChecklist(Request $request, $id)
 {
+    $modo = $request->get('modo', 'salida');
     // ✅ 1) Contrato
     $contrato = DB::table('contratos')->where('id_contrato', $id)->first();
     if (!$contrato) abort(404, "Contrato no encontrado");
@@ -130,6 +131,7 @@ if (!empty($reservacion->nombre_cliente) || !empty($reservacion->apellidos_clien
         'id'          => $contrato->id_contrato,
         'contrato'    => $contrato,
         'reservacion' => $reservacion,
+        'modo' => $modo,
 
         // 🔹 Nombres para la sección de firmas
         'clienteNombre' => $clienteNombre,
@@ -676,6 +678,20 @@ public function guardarFirmaRecibio(Request $req)
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+//---------------------------------------------------------------------------
 public function enviarChecklistSalida(Request $request, $id)
 {
     // 👇 Aumentar memoria solo para esta petición
@@ -951,6 +967,18 @@ public function enviarChecklistSalida(Request $request, $id)
 
         // 🔹 Daños y inventario del contrato
         $danos      = $this->obtenerDanosContrato($contrato->id_contrato);
+
+        $danosPorZona = [];
+
+foreach ($danos as $d) {
+    if (isset($d['zona'])) {
+        $danosPorZona[] = (int) $d['zona'];
+    }
+}
+
+$danosPorZona = array_unique($danosPorZona);
+
+
         $inventario = $this->obtenerInventarioSalidaContrato($contrato->id_contrato);
 
         // 🔹 Agrupar fotos de salida por categoría para el PDF
@@ -1128,7 +1156,6 @@ public function enviarChecklistSalida(Request $request, $id)
             $ciudadRecibe = DB::table('ciudades')
                 ->where('id_ciudad', $reservacion->ciudad_retiro)
                 ->value('nombre');
-
             $dataPdf = [
                 'reservacion'    => $reservacion,
                 'contrato'       => $contrato,
@@ -1149,6 +1176,7 @@ public function enviarChecklistSalida(Request $request, $id)
                 'gasolinaSalida'  => $gasolinaSalida,
                 'gasolinaRegreso' => $gasolinaRegreso,
 
+                'datosPorZona' => $danosPorZona,
                 // Comentarios checklist
                 'comentario_cliente' => $comentario_cliente,
                 'danos_interiores'   => $danos_interiores,
@@ -1767,6 +1795,13 @@ foreach ($fotosEntrada as $f) {
         if (!$correoClienteEnviado || !$correoInternoEnviado) {
             $msg = 'Checklist de regreso guardado correctamente, pero hubo un problema al enviar uno o más correos. Revisa tu correo y el log.';
         }
+
+        // 🔥 CERRAR CONTRATO
+DB::table('contratos')
+    ->where('id_contrato', $contrato->id_contrato)
+    ->update([
+        'estado' => 'cerrado'
+    ]);
 
         return response()->json([
            'ok'  => true,

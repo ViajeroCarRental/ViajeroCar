@@ -16,6 +16,9 @@
         "3/4","13/16","14/16","15/16","1"
     ];
 @endphp
+@php
+    $modo = $modo ?? 'salida';
+@endphp
 <input type="hidden" id="idContrato" value="{{ $contrato->id_contrato }}">
 
 <div class="checklist-container">
@@ -182,7 +185,8 @@
             <label class="fuel-label">Seleccionar nivel</label>
             <select id="selectGasSalida"
         class="fuel-select"
-        data-inicial="{{ $gasolinaSalida ?? '' }}">
+        data-inicial="{{ $gasolinaSalida ?? '' }}"
+        {{ $modo === 'regreso' ? 'disabled' : '' }}>
 
                 <option value="">—</option>
                 @foreach($niveles as $i => $n)
@@ -255,7 +259,8 @@
             <label class="fuel-label">Seleccionar nivel</label>
             <select id="selectGasRecibe"
                     class="fuel-select"
-                    data-inicial="{{ $gasolinaRegreso ?? '' }}">
+                    data-inicial="{{ $gasolinaRegreso ?? '' }}"
+                    {{ $modo === 'salida' ? 'disabled' : '' }}>
                 <option value="">—</option>
                 @foreach($niveles as $i => $n)
                     <option value="{{ $n }}"
@@ -304,7 +309,8 @@
               type="file"
               name="frente_salida"
               accept="image/*"
-              capture="environment">
+              capture="environment"
+              {{ $modo === 'regreso' ? 'disabled' : '' }}>
         </div>
         <div class="photo-preview" id="prev-frenteSalida"></div>
       </div>
@@ -318,7 +324,8 @@
               type="file"
               name="parabrisas_salida"
               accept="image/*"
-              capture="environment">
+              capture="environment"
+              {{ $modo === 'regreso' ? 'disabled' : '' }}>
         </div>
         <div class="photo-preview" id="prev-parabrisasSalida"></div>
       </div>
@@ -332,7 +339,8 @@
               type="file"
               name="lado_conductor_salida"
               accept="image/*"
-              capture="environment">
+              capture="environment"
+              {{ $modo === 'regreso' ? 'disabled' : '' }}>
         </div>
         <div class="photo-preview" id="prev-ladoConductorSalida"></div>
       </div>
@@ -346,7 +354,8 @@
               type="file"
               name="lado_pasajero_salida"
               accept="image/*"
-              capture="environment">
+              capture="environment"
+              {{ $modo === 'regreso' ? 'disabled' : '' }}>
         </div>
         <div class="photo-preview" id="prev-ladoPasajeroSalida"></div>
       </div>
@@ -360,7 +369,8 @@
               type="file"
               name="atras_salida"
               accept="image/*"
-              capture="environment">
+              capture="environment"
+              {{ $modo === 'regreso' ? 'disabled' : '' }}>
         </div>
         <div class="photo-preview" id="prev-atrasSalida"></div>
       </div>
@@ -375,7 +385,8 @@
               name="interiores_salida[]"
               accept="image/*"
               capture="environment"
-              multiple>
+              multiple
+              {{ $modo === 'regreso' ? 'disabled' : '' }}>
         </div>
         <div class="photo-preview" id="prev-interioresSalida"></div>
       </div>
@@ -394,7 +405,8 @@
               type="file"
               name="frente_regreso"
               accept="image/*"
-              capture="environment">
+              capture="environment"
+              {{ $modo === 'salida' ? 'disabled' : '' }}>
         </div>
         <div class="photo-preview" id="prev-frenteRegreso"></div>
       </div>
@@ -408,7 +420,8 @@
               type="file"
               name="parabrisas_regreso"
               accept="image/*"
-              capture="environment">
+              capture="environment"
+              {{ $modo === 'salida' ? 'disabled' : '' }}>
         </div>
         <div class="photo-preview" id="prev-parabrisasRegreso"></div>
       </div>
@@ -422,7 +435,8 @@
               type="file"
               name="lado_conductor_regreso"
               accept="image/*"
-              capture="environment">
+              capture="environment"
+              {{ $modo === 'salida' ? 'disabled' : '' }}>
         </div>
         <div class="photo-preview" id="prev-ladoConductorRegreso"></div>
       </div>
@@ -436,7 +450,8 @@
               type="file"
               name="lado_pasajero_regreso"
               accept="image/*"
-              capture="environment">
+              capture="environment"
+              {{ $modo === 'salida' ? 'disabled' : '' }}>
         </div>
         <div class="photo-preview" id="prev-ladoPasajeroRegreso"></div>
       </div>
@@ -450,7 +465,8 @@
               type="file"
               name="atras_regreso"
               accept="image/*"
-              capture="environment">
+              capture="environment"
+              {{ $modo === 'salida' ? 'disabled' : '' }}>
         </div>
         <div class="photo-preview" id="prev-atrasRegreso"></div>
       </div>
@@ -465,7 +481,8 @@
               name="interiores_regreso[]"
               accept="image/*"
               capture="environment"
-              multiple>
+              multiple
+              {{ $modo === 'salida' ? 'disabled' : '' }}>
         </div>
         <div class="photo-preview" id="prev-interioresRegreso"></div>
       </div>
@@ -1385,6 +1402,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 alertify.success(data.msg || "Checklist de salida guardado correctamente.");
+                setTimeout(() => {
+                window.location.href = `/admin/contrato-final/${CHECKLIST_ID}`;
+                }, 800);
             } catch (err) {
                 console.error(err);
 
@@ -1520,6 +1540,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 alertify.success(data.msg || "Checklist de regreso guardado correctamente.");
+                setTimeout(() => {
+                window.location.href = `/admin/contrato-final/${CHECKLIST_ID}`;
+                }, 800);
             } catch (err) {
                 console.error(err);
 

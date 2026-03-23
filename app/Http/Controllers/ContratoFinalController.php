@@ -109,6 +109,7 @@ if (empty($reservacion->fecha_nacimiento)) {
                 'v.transmision',
                 'v.kilometraje',
                 'v.gasolina_actual',
+                'v.firma_propietario',
                 DB::raw('COALESCE(c.nombre, v.categoria) as categoria')
             )
             ->where('v.id_vehiculo', $reservacion->id_vehiculo)

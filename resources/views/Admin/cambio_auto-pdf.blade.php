@@ -377,7 +377,9 @@ h1,h2,h3,h4,p{
 
                 <div class="label small">Fecha de Cambio</div>
                 <div class="value small">
-                    {{ $fechaCambio ?? now()->format('d/m/Y H:i') }}
+                    {{ $fechaCambio
+                    ? \Carbon\Carbon::parse($fechaCambio)->translatedFormat('d-M-Y H:i')
+                    : \Carbon\Carbon::now()->translatedFormat('d-M-Y H:i') }}
                 </div>
             </div>
 

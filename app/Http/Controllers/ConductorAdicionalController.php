@@ -456,11 +456,14 @@ public function enviarAnexos($id)
             }
         }
 
-        return back()->with('ok', 'Se generaron los anexos correctamente y se enviaron los correos al cliente y a reservaciones.');
+        return redirect()
+        ->route('contrato.final', ['id' => $id])
+        ->with('success', 'Se generaron los anexos correctamente y se enviaron los correos.');
     } catch (\Throwable $e) {
         Log::error('Error al enviar anexos de conductores adicionales: ' . $e->getMessage());
 
-        return back()->with('error', 'Ocurrió un error al generar o enviar los anexos de conductores.');
+        //return back()->with('error', 'Ocurrió un error al generar o enviar los anexos de conductores.');
+       return back()->with('error', 'Ocurrió un error al generar o enviar los anexos.');
     }
 }
 

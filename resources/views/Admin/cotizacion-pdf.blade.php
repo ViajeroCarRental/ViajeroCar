@@ -83,7 +83,7 @@
             <td class="folio">
                 <strong>NO. DE COTIZACIÓN</strong><br>
                 <span>{{ $folio }}</span><br>
-                <small>Fecha: {{ $fechaHoy }}</small>
+               <small>Fecha: {{ $fechaHoy ? \Carbon\Carbon::parse($fechaHoy)->translatedFormat('d-M-Y') : '—' }}</small>
             </td>
         </tr>
     </table>
@@ -93,8 +93,31 @@
     <!-- RESUMEN -->
     <h2>Resumen de tu cotización</h2>
 
-    <p><strong>Entrega:</strong> {{ $pickup_name }} ({{ $pickup_date }} {{ $pickup_time }})</p>
-    <p><strong>Devolución:</strong> {{ $dropoff_name }} ({{ $dropoff_date }} {{ $dropoff_time }})</p>
+   <p>
+  <strong>Entrega:</strong>
+  {{ $pickup_name }}
+  (
+    {{ $pickup_date
+        ? \Carbon\Carbon::parse($pickup_date)->translatedFormat('d-M-Y')
+        : '—' }}
+    {{ $pickup_time
+        ? \Carbon\Carbon::parse($pickup_time)->format('H:i')
+        : '' }}
+  )
+</p>
+
+<p>
+  <strong>Devolución:</strong>
+  {{ $dropoff_name }}
+  (
+    {{ $dropoff_date
+        ? \Carbon\Carbon::parse($dropoff_date)->translatedFormat('d-M-Y')
+        : '—' }}
+    {{ $dropoff_time
+        ? \Carbon\Carbon::parse($dropoff_time)->format('H:i')
+        : '' }}
+  )
+</p>
     <p><strong>Días:</strong> {{ $dias }}</p>
 
     <!-- CATEGORÍA -->
