@@ -20,7 +20,9 @@
   }
 
   *{ box-sizing:border-box; }
-  html,body{ width:100%; overflow-x:hidden; }
+  html,body{ width:100%; overflow-x:hidden;
+            overflow-y: auto !important;
+}
 
   body{
     margin:0;
@@ -42,7 +44,7 @@
     margin-right:-50vw;
     width:100vw;
 
-    min-height:100vh;
+    min-height: auto;
     padding: var(--wizard-gap-top) var(--wizard-pad) 60px;
 
     display:grid;
@@ -267,428 +269,706 @@
     position:relative;
     z-index:1;
   }
-
-  /* ============================================================
-    STEP 1 — ESTILO EXACTAMENTE COMO WELCOME
-    Basado en el CSS de welcome proporcionado
-  /* ============================================================
+/* =====================
+  INICIO STEP 1
   STEP 1 — CONTENEDOR
-  ============================================================ */
+======================= */
+.page.wizard-page[data-current-step="1"] {
+    width: 100%;
+    border: none !important;
+}
+.page.wizard-page[data-current-step="1"] .wizard-card {
+    max-width: 1500px;
+    width: 96vw;
+    margin: 0 auto;
+    background: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+/* tarjeta */
+.page.wizard-page[data-current-step="1"] .search-card {
+    width: 100%;
+    padding: 24px 24px;
+    background: #f8f8f8;
+    border-radius: 12px;
+}
 
-  .page.wizard-page[data-current-step="1"]{
-      width:100%;
-  }
-
-  /* tarjeta */
-  .page.wizard-page[data-current-step="1"] .wizard-card{
-      max-width:1500px;
-      width:96vw;
-      margin:0 auto;
-  }
-
-  /* buscador */
-  .page.wizard-page[data-current-step="1"] .search-card{
-      width:100%;
-      padding:24px 24px;
-      background:#f8f8f8;
-      border-radius:12px;
-  }
-
-
-
-  /* ============================================================
+/* =================
   GRID PRINCIPAL
-  ============================================================ */
+==================== */
+.page.wizard-page[data-current-step="1"] .search-grid {
+    display: grid !important;
+    grid-template-columns: minmax(420px, 4fr) minmax(170px, 1fr) minmax(170px, 1fr) 240px;
+    gap: 20px;
+    align-items: end;
+}
 
-  .page.wizard-page[data-current-step="1"] .search-grid{
-
-      display:grid !important;
-
-      /* sucursal grande | pickup | devolución | botones */
-      grid-template-columns:
-          minmax(420px,4fr)
-          minmax(170px,1fr)
-          minmax(170px,1fr)
-          240px;
-
-      gap:20px;
-
-      align-items:end;
-
-  }
-
-  /* =========================================
+/* =========================================
   Input select
-  ========================================= */
-  .page.wizard-page[data-current-step="1"] .select2-container .select2-selection--single{
+========================================= */
+.page.wizard-page[data-current-step="1"] .select2-container .select2-selection--single {
+    height: 48px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    padding-left: 42px !important;
+    background: #fff !important;
+}
 
-      height:48px !important;
+.page.wizard-page[data-current-step="1"] .select2-selection__rendered {
+    line-height: 48px !important;
+    font-weight: 600;
+}
 
-      border:1px solid #d1d5db !important;
-      border-radius:10px !important;
+.page.wizard-page[data-current-step="1"] .select2-selection__arrow {
+    height: 48px !important;
+}
 
-      display:flex !important;
-      align-items:center !important;
-
-      padding-left:42px !important;
-
-      background:#fff !important;
-
-  }
-
-  .page.wizard-page[data-current-step="1"] .select2-selection__rendered{
-
-      line-height:48px !important;
-      font-weight:600;
-
-  }
-
-  .page.wizard-page[data-current-step="1"] .select2-selection__arrow{
-
-      height:48px !important;
-
-  }
-
-  /* ============================================================
+/* ================
   COLUMNAS
-  ============================================================ */
+===================*/
+.page.wizard-page[data-current-step="1"] .sg-col {
+    display: flex;
+    flex-direction: column;
+}
+.page.wizard-page[data-current-step="1"] .sg-col-datetime {
+    align-items: center;
+}
+.page.wizard-page[data-current-step="1"] .sg-col-submit {
+    display: flex;
+    justify-content: flex-end;
+    align-items: end;
+    min-width: 240px !important;
+}
 
-  .page.wizard-page[data-current-step="1"] .sg-col{
-      display:flex;
-      flex-direction:column;
-  }
-
-  .page.wizard-page[data-current-step="1"] .sg-col-datetime{
-      align-items:center;
-  }
-
-  .page.wizard-page[data-current-step="1"] .sg-col-submit{
-      display:flex;
-      justify-content:flex-end;
-      align-items:end;
-  }
-
-
-
-  /* ============================================================
+/* ====================
   TITULOS
-  ============================================================ */
+=======================*/
+.page.wizard-page[data-current-step="1"] .field-title {
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 13px;
+    color: #6b7280;
+    text-align: center;
+    margin-bottom: 6px;
+    white-space: nowrap;
+}
 
-  .page.wizard-page[data-current-step="1"] .field-title{
+.page.wizard-page[data-current-step="1"] input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: #b22222;
+}
 
-      font-weight:800;
-      text-transform:uppercase;
-
-      font-size:13px;
-      color:#6b7280;
-
-      text-align:center;
-
-      margin-bottom:6px;
-
-      white-space:nowrap;
-  }
-
-  .page.wizard-page[data-current-step="1"] input[type="checkbox"]{
-
-      width:16px;
-      height:16px;
-
-      margin:0;
-
-      accent-color:#b22222;
-
-  }
-
-  /* ============================================================
+/* ====================
   UBICACIÓN
-  ============================================================ */
+======================= */
+.page.wizard-page[data-current-step="1"] .location-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+.inline-check span {
+    line-height: 1.1;
+}
+.page.wizard-page[data-current-step="1"] .location-inputs-wrapper {
+    display: flex;
+    gap: 12px;
+    width: 100% !important;
+}
+/* selects grandes */
+.page.wizard-page[data-current-step="1"] #pickupPlace,
+.page.wizard-page[data-current-step="1"] #dropoffPlace {
+    width: 100% !important;
+}
+.page.wizard-page[data-current-step="1"] .sg-col-location {
+    width: 100% !important;
+}
 
-  .page.wizard-page[data-current-step="1"] .location-head{
-
-      display:flex;
-      align-items:center;
-      gap:8px;
-      margin-bottom:4px;
-
-  }
-  .inline-check span{
-      line-height:1.1;
-  }
-
-  .page.wizard-page[data-current-step="1"] .location-inputs-wrapper{
-
-      display:flex;
-      gap:12px;
-
-      width:100%;
-
-  }
-
-  /* selects grandes */
-
-  .page.wizard-page[data-current-step="1"] #pickupPlace,
-  .page.wizard-page[data-current-step="1"] #dropoffPlace{
-
-      width:100% !important;
-
-  }
-
-
-
-  /* ============================================================
+/* =================
   INPUTS
-  ============================================================ */
+====================*/
+/* mismo diseño para todos los inputs */
+.page.wizard-page[data-current-step="1"] input:not([type="checkbox"]),
+.page.wizard-page[data-current-step="1"] select {
+    height: 48px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 10px !important;
+    padding: 0 14px 0 42px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    background: #fff !important;
+}
+.page.wizard-page[data-current-step="1"] .field {
+    position: relative;
+}
+.page.wizard-page[data-current-step="1"] .field-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+}
 
-  /* mismo diseño para todos los inputs */
-
-  .page.wizard-page[data-current-step="1"]
-  input:not([type="checkbox"]),
-  .page.wizard-page[data-current-step="1"]
-  select{
-
-      height:48px !important;
-
-      border:1px solid #d1d5db !important;
-      border-radius:10px !important;
-
-      padding:0 14px 0 42px !important;
-
-      font-size:14px !important;
-      font-weight:600 !important;
-
-      background:#fff !important;
-
-  }
-  .page.wizard-page[data-current-step="1"] .field{
-      position:relative;
-  }
-
-  .page.wizard-page[data-current-step="1"] .field-icon{
-
-      position:absolute;
-
-      left:12px;
-      top:50%;
-
-      transform:translateY(-50%);
-
-      color:#9ca3af;
-
-  }
-
-
-  /* ============================================================
-  ICONOS
-  ============================================================ */
-
-  .page.wizard-page[data-current-step="1"] .field-icon{
-
-      position:absolute;
-
-      left:12px;
-      top:50%;
-
-      transform:translateY(-50%);
-
-      color:#9ca3af;
-
-  }
-
-
-
-  /* ============================================================
+/* ====================
   FECHA + HORA
-  ============================================================ */
+======================= */
+.page.wizard-page[data-current-step="1"] .datetime-row {
+    display: grid;
+    grid-template-columns: 140px 95px;
+    gap: 10px;
+}
+/* evita que inputs crezcan */
+.page.wizard-page[data-current-step="1"] .dt-field {
+    width: auto !important;
+}
 
-  .page.wizard-page[data-current-step="1"] .datetime-row{
-
-      display:grid;
-
-      grid-template-columns: 140px 95px;
-
-      gap:10px;
-
-  }
-
-
-
-  /* ============================================================
+/* ===================
   BOTONES
-  ============================================================ */
+====================== */
+.page.wizard-page[data-current-step="1"] .actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    width: 100%;
+}
+.page.wizard-page[data-current-step="1"] .btn {
+    height: 44px;
+    padding: 0 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    white-space: nowrap;
+}
+.page.wizard-page[data-current-step="1"] .btn-ghost {
+    background: transparent;
+    border: 1px solid #d1d5db;
+}
+.page.wizard-page[data-current-step="1"] .btn-primary {
+    background: #b22222;
+    color: white;
+    padding: 8px 18px;
+    font-size: 14px;
+    width: auto;
+}
 
-  .page.wizard-page[data-current-step="1"] .actions{
-
-      display:flex;
-
-      gap:10px;
-
-      justify-content:flex-end;
-
-      width:100%;
-
-  }
-
-  .page.wizard-page[data-current-step="1"] .btn{
-
-      height:44px;
-
-      padding:0 20px;
-
-      border-radius:8px;
-
-      font-weight:700;
-      font-size:13px;
-
-      white-space:nowrap;
-
-  }
-
-  .page.wizard-page[data-current-step="1"] .btn-ghost{
-
-      background:transparent;
-      border:1px solid #d1d5db;
-
-  }
-
-  .page.wizard-page[data-current-step="1"] .btn-primary{
-
-      background:#b22222;
-      color:white;
-      padding:8px 18px;   /* controla el tamaño del botón */
-      font-size:14px;     /* tamaño del texto */
-      width:auto;         /* evita que se estire */
-
-  }
-
-  /* ============================================================
+/* ===================
   RANGE SUMMARY
-  ============================================================ */
+====================== */
+.page.wizard-page[data-current-step="1"] .range-summary {
+    margin-top: 14px;
+    text-align: center;
+    font-size: 13px;
+    color: #6b7280;
+    display: none;
+}
 
-  .page.wizard-page[data-current-step="1"] .range-summary{
-
-      margin-top:14px;
-
-      text-align:center;
-
-      font-size:13px;
-      color:#6b7280;
-
-  }
-
-
-
-  /* ============================================================
-  RESPONSIVE
-  ============================================================ */
-
-  @media (max-width:1100px){
-
-  .page.wizard-page[data-current-step="1"] .search-grid{
-
-  grid-template-columns:1fr;
-
-  }
-
-  .page.wizard-page[data-current-step="1"] .datetime-row{
-
-  grid-template-columns:1fr;
-
-  }
-
-  .page.wizard-page[data-current-step="1"] .actions{
-
-  justify-content:flex-start;
-
-  }
-
-  }
-
-
-
-  /* ============================================================
+/* ================
   DECORACIONES OFF
-  ============================================================ */
+=================== */
+.page.wizard-page[data-current-step="1"] .wizard-head::after,
+.page.wizard-page[data-current-step="1"] .wizard-card::before,
+.page.wizard-page[data-current-step="1"] .wizard-card::after {
+    display: none;
+}
+.page.wizard-page[data-current-step="1"] .wizard-card::before {
+    opacity: 0 !important;
+    height: 0 !important;
+}
 
-  .page.wizard-page[data-current-step="1"] .wizard-head::after,
-  .page.wizard-page[data-current-step="1"] .wizard-card::before{
+/* =========================================
+  ANCHOS REALES STEP 1
+========================================= */
+.page.wizard-page[data-current-step="1"] .search-grid {
+    grid-template-columns: 4fr 1.2fr 1.2fr 260px !important;
+}
+/* fechas más pequeñas */
+.page.wizard-page[data-current-step="1"] .datetime-row {
+    grid-template-columns: 120px 90px !important;
+}
+.page.wizard-page[data-current-step="1"] .actions {
+    justify-content: flex-end !important;
+}
 
-  display:none;
+/* ============================================================
+  ALERTAS PARA EL BUSCADOR
+============================================================ */
+#miBuscador .field-error,
+#miBuscador input.field-error,
+#miBuscador select.field-error,
+#miBuscador .flatpickr-input.field-error,
+#miBuscador .tp-selects select.field-error {
+    border: 2px solid #e53935 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: #fff !important;
+}
 
-  }
-  /* =========================================
-  FORZAR ANCHOS REALES STEP 1
-  ========================================= */
+#miBuscador .field-success,
+#miBuscador input.field-success,
+#miBuscador select.field-success,
+#miBuscador .flatpickr-input.field-success,
+#miBuscador .tp-selects select.field-success {
+    border: 2px solid #43a047 !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
 
-  .page.wizard-page[data-current-step="1"] .search-grid{
-      grid-template-columns: 4fr 1.2fr 1.2fr 260px !important;
-  }
+/* Para Select2 */
+#miBuscador select.field-error + .select2-container .select2-selection {
+    border: 2px solid #e53935 !important;
+}
+#miBuscador select.field-success + .select2-container .select2-selection {
+    border: 2px solid #43a047 !important;
+}
 
+.select2-results__options {
+    max-height: 250px !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+.select2-dropdown {
+    z-index: 999999 !important;
+}
+.select2-container {
+    touch-action: manipulation !important;
+}
 
-  /* lugar de renta mucho más grande */
+/* Mensajes de error */
+#miBuscador .error-msg {
+    color: #e53935 !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    position: absolute !important;
+    bottom: -18px !important;
+    left: 12px !important;
+    pointer-events: none !important;
+    z-index: 10 !important;
+    white-space: nowrap !important;
+    background: transparent !important;
+}
 
-  .page.wizard-page[data-current-step="1"] .sg-col-location{
-      width:100% !important;
-  }
+#miBuscador .field,
+#miBuscador .dt-field,
+#miBuscador .time-field,
+#miBuscador .location-inputs-wrapper .field {
+    position: relative !important;
+    overflow: visible !important;
+}
 
-  .page.wizard-page[data-current-step="1"] .location-inputs-wrapper{
-      width:100% !important;
-  }
+/* ============================================================
+  CORRECCIÓN PARA EL CHECKBOX - PERMITIR CONTROL JS
+============================================================ */
+#miBuscador #dropoffWrapper {
+    display: none;
+}
+#miBuscador #dropoffWrapper[style*="display: block"] {
+    display: block !important;
+}
+#miBuscador #dropoffWrapper[style*="display: none"] {
+    display: none !important;
+}
 
-  .page.wizard-page[data-current-step="1"] #pickupPlace{
-      width:100% !important;
-  }
+/* ============================================================
+  SOLUCIÓN - VER EN MÓVIL/TABLET
+============================================================ */
+@media (max-width: 1124px) {
+    /* Reset de desbordamiento */
+    body,
+    html,
+    .containerVS,
+    .page.wizard-page {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+        position: relative !important;
+        overflow-y: auto !important;
+    }
 
+    /* Estilos para #miBuscador en móvil */
+    #miBuscador {
+        display: block !important;
+        position: relative !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 auto !important;
+        padding: 15px !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+    }
 
+    .page.wizard-page[data-current-step="1"] #miBuscador {
+        display: block !important;
+        position: relative !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 20px !important;
+    }
 
-  /* fechas más pequeñas */
+    #miBuscador {
+        max-width: calc(100% - 0px) !important;
+        width: calc(100% - 15px) !important;
+        margin-left: 0px !important;
+        padding: 18px 15px !important;
+        border-radius: 12px !important;
+    }
+    #miBuscador .search-grid {
+        display: block !important;
+        width: 100% !important;
+    }
+    #miBuscador .datetime-row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+    /* Fecha y hora en 2 columnas TAMBIÉN EN MÓVIL */
+    #miBuscador .dt-field {
+        flex: 1 1 calc(50% - 5px) !important;
+        max-width: calc(50% - 5px) !important;
+        min-width: 120px !important;
+    }
+    #miBuscador .field,
+    #miBuscador .time-field,
+    #miBuscador input,
+    #miBuscador select {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
 
-  .page.wizard-page[data-current-step="1"] .datetime-row{
+    .btn-buscador-movil {
+        display: block !important;
+        width: calc(100% - 15px) !important;
+        margin: 15px 0 15px 15px !important;
+        padding: 0 !important;
+    }
+    .btn-buscador-movil .btn-container {
+        width: 100% !important;
+        padding: 15px !important;
+        box-sizing: border-box !important;
+        border-radius: 12px !important;
+    }
+    .btn-buscador-movil button {
+        width: 100% !important;
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        border-radius: 8px !important;
+    }
 
-      grid-template-columns:
-          120px   /* fecha */
-          90px    /* hora */ !important;
+    /* Forzar mensajes de error */
+    #miBuscador .error-msg {
+        white-space: normal !important;
+        font-size: 9px !important;
+        bottom: -20px !important;
+        left: 5px !important;
+        right: 5px !important;
+        width: auto !important;
+    }
+    /* Forzar select2 si existe */
+    #miBuscador .select2-container {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
 
-  }
+/* Para móviles muy pequeños - ajustes generales */
+@media (max-width: 480px) {
+    .inline-check .checkbox-text {
+        font-size: 10px !important;
+    }
+}
 
+/* Móviles hasta 560px - diseño responsive */
+@media (max-width: 560px) {
+    #miBuscador .field {
+        min-height: auto !important;
+        height: auto !important;
+    }
 
+    #miBuscador .error-msg {
+        position: static !important;
+        display: block !important;
+        margin-top: 4px !important;
+    }
 
-  /* evitar que inputs crezcan */
+    /* Layout principal en vertical */
+    #miBuscador .search-grid {
+        display: block !important;
+        width: 100% !important;
+    }
 
-  .page.wizard-page[data-current-step="1"] .dt-field{
-      width:auto !important;
-  }
+    /* Cada columna ocupa todo el ancho */
+    #miBuscador .sg-col {
+        width: 100% !important;
+        margin-bottom: 16px !important;
+    }
 
+    #miBuscador .sg-col-location {
+        margin-bottom: 16px !important;
+    }
 
+    /* Ubicación en columna */
+    #miBuscador .location-inputs-wrapper {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
 
-  /* botones siempre visibles */
+    /* FECHA Y HORA EN 2 COLUMNAS (fecha | hora) */
+    #miBuscador .datetime-row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+        width: 100% !important;
+    }
 
-  .page.wizard-page[data-current-step="1"] .sg-col-submit{
+    /* Cada campo (fecha y hora) ocupa el 50% del ancho */
+    #miBuscador .dt-field {
+        flex: 1 1 calc(50% - 6px) !important;
+        max-width: calc(50% - 6px) !important;
+        min-width: 0 !important;
+        margin-bottom: 0 !important;
+    }
 
-      min-width:240px !important;
+    /* Ajuste para los títulos de fecha/hora */
+    #miBuscador .sg-col-datetime {
+        align-items: flex-start !important;
+    }
 
-  }
+    /* Botón de acción */
+    #miBuscador .actions {
+        justify-content: center !important;
+        margin-top: 8px !important;
+    }
 
-  .page.wizard-page[data-current-step="1"] .actions{
+    #miBuscador .btn {
+        width: 100% !important;
+        height: 48px !important;
+        font-size: 14px !important;
+    }
 
-      justify-content:flex-end !important;
+    /* Checkbox y texto */
+    .inline-check {
+        justify-content: flex-start !important;
+        margin-top: 8px !important;
+        margin-bottom: 12px !important;
+    }
 
-  }
-  .page.wizard-page[data-current-step="1"] .range-summary{
-      display:none;
-  }
-  .page.wizard-page[data-current-step="1"] .wizard-card{
-      background:transparent !important;
-      padding:0 !important;
-  }
-  .page.wizard-page[data-current-step="1"]{
-      border:none !important;
-  }
+    .inline-check .checkbox-text {
+        font-size: 11px !important;
+        white-space: normal !important;
+        line-height: 1.3 !important;
+    }
 
-  .page.wizard-page[data-current-step="1"] .wizard-card{
-      border:none !important;
-      box-shadow:none !important;
-  }
+    /* Espaciado general */
+    #miBuscador .search-card {
+        padding: 16px !important;
+    }
+}
+
+/* Pantallas de 0 a 380px - ajustes finos */
+@media (max-width: 380px) {
+    #miBuscador {
+        padding: 12px !important;
+        border-radius: 10px !important;
+    }
+
+    #miBuscador .field-title {
+        font-size: 10px !important;
+        text-align: left !important;
+        margin-bottom: 4px !important;
+    }
+
+    #miBuscador input,
+    #miBuscador select {
+        font-size: 13px !important;
+        height: 44px !important;
+        border-radius: 8px !important;
+        padding: 0 12px 0 38px !important;
+    }
+
+    /* Fecha y hora en 2 columnas - ajuste fino para pantallas muy pequeñas */
+    #miBuscador .datetime-row {
+        gap: 8px !important;
+    }
+
+    #miBuscador .dt-field {
+        flex: 1 1 calc(50% - 4px) !important;
+        max-width: calc(50% - 4px) !important;
+    }
+
+    .btn-buscador-movil .btn-container {
+        padding: 12px !important;
+        border-radius: 10px !important;
+    }
+
+    #miBuscador .btn {
+        height: 44px !important;
+        font-size: 13px !important;
+    }
+
+    .inline-check .checkbox-text {
+        font-size: 10px !important;
+    }
+}
+
+/* Para pantallas entre 381px y 480px - mantener 2 columnas */
+@media (min-width: 381px) and (max-width: 480px) {
+    #miBuscador .datetime-row {
+        display: flex !important;
+        gap: 12px !important;
+    }
+
+    #miBuscador .dt-field {
+        flex: 1 1 calc(50% - 6px) !important;
+        max-width: calc(50% - 6px) !important;
+    }
+}
+
+.flatpickr-input[readonly] {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* =========================================================
+   MODO WELCOME (SOLO STEP 1 EN MÓVIL)
+========================================================= */
+@media (max-width: 1124px) {
+    /* SOLO cuando viene de welcome Y está en step 1 */
+    .modo-welcome.page.wizard-page[data-current-step="1"] {
+        background: #fff !important;
+        padding-top: 20px !important;
+    }
+    /* Quitar fondo oscuro */
+    .modo-welcome.page.wizard-page[data-current-step="1"] .reservas-bg {
+        display: none !important;
+    }
+    /* Ocultar pasos */
+    .modo-welcome.page.wizard-page[data-current-step="1"] .wizard-steps {
+        display: none !important;
+    }
+    /* Quitar estilo card fancy */
+    .modo-welcome.page.wizard-page[data-current-step="1"] .wizard-card {
+        background: #fff !important;
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 20px !important;
+    }
+    /* Quitar header */
+    .modo-welcome.page.wizard-page[data-current-step="1"] .wizard-head {
+        display: none !important;
+    }
+
+    /* HACER QUE EL WELCOME MANDE */
+    .modo-welcome #miBuscador .search-grid {
+        display: block !important;
+    }
+    .modo-welcome #miBuscador .datetime-row {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        gap: 10px !important;
+    }
+    .modo-welcome #miBuscador .dt-field {
+        flex: 1 !important;
+        max-width: 50% !important;
+    }
+    /* INPUTS EXACTOS */
+    .modo-welcome #miBuscador input,
+    .modo-welcome #miBuscador select {
+        height: 48px !important;
+        border-radius: 10px !important;
+        font-size: 14px !important;
+    }
+    /* BOTÓN */
+    .modo-welcome #miBuscador .btn {
+        width: 100% !important;
+        height: 52px !important;
+        border-radius: 12px !important;
+    }
+
+    /* OCULTAR HEADER Y FOOTER EN MODO WELCOME (STEP 1) */
+    .modo-welcome.page.wizard-page[data-current-step="1"] ~ header,
+    .modo-welcome.page.wizard-page[data-current-step="1"] ~ footer {
+        display: none !important;
+    }
+    body:has(.modo-welcome.page.wizard-page[data-current-step="1"]) header.topbar {
+        display: none !important;
+    }
+    body:has(.modo-welcome.page.wizard-page[data-current-step="1"]) footer {
+        display: none !important;
+    }
+}
+
+.modo-welcome #miBuscador .flatpickr-input,
+.modo-welcome #miBuscador input[readonly] {
+    height: 48px !important;
+    border-radius: 10px !important;
+}
+
+/* ============================================================
+   FIX: "DEVOLVER EN OTRO DESTINO" CON CONTROL EXACTO
+   - Desktop (min-width: 1124px): 2 líneas con <br>
+   - Móvil/Tablet (max-width: 1123px): 1 línea sin <br>
+============================================================ */
+/* Desktop: de 2 líneas */
+@media (min-width: 1124px) {
+    .inline-check {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    .inline-check .checkbox-text {
+        display: inline-block !important;
+        line-height: 1.3 !important;
+        font-size: 11px !important;
+        font-weight: bold !important;
+        text-align: left !important;
+        white-space: normal !important;
+    }
+    .inline-check .checkbox-text br {
+        display: inline !important;
+        content: "" !important;
+    }
+}
+/* Móvil y Tablet: checkbox 1 línea */
+@media (max-width: 1123px) {
+    .inline-check {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+    .inline-check .checkbox-text {
+        display: inline-block !important;
+        white-space: nowrap !important;
+        font-size: 11px !important;
+        font-weight: bold !important;
+        line-height: normal !important;
+    }
+    .inline-check .checkbox-text br {
+        display: none !important;
+    }
+}
+
+/* ======================
+  RESPONSIVE (MEDIA QUERY ORIGINAL 1100px)
+========================= */
+@media (max-width: 1100px) {
+    .page.wizard-page[data-current-step="1"] .search-grid {
+        grid-template-columns: 1fr;
+    }
+    .page.wizard-page[data-current-step="1"] .datetime-row {
+        grid-template-columns: 1fr;
+    }
+    .page.wizard-page[data-current-step="1"] .actions {
+        justify-content: flex-start;
+    }
+}
+
+/*FIN STEP 1*/
   /* ==========================================================
     STEP 2 — GRID 2 COLUMNAS
   ========================================================== */
@@ -3033,7 +3313,6 @@
     z-index: 999999 !important;
     border: 0 !important;
     border-radius: 18px !important;
-    overflow: hidden !important;
     box-shadow: 0 26px 70px rgba(0,0,0,.25) !important;
     font-family: 'Poppins',system-ui,Arial,sans-serif !important;
 
@@ -3116,6 +3395,15 @@
     z-index: 999999 !important;
   }
 
+.flatpickr-wrapper {
+  width:100% !important;
+}
+.flatpickr-input,
+.flatpickr-alt-input {
+  height:48px !important;
+  border-radius:10px !important;
+  font-size:14px !important;
+}
   @media (max-width:560px){
     .flatpickr-calendar.open{ width: min(520px, 96vw) !important; }
     .flatpickr-day{ height:44px !important; line-height:44px !important; }
@@ -3688,297 +3976,6 @@
           margin-left: 24px;
       }
   }
-  /* ============================================================
-    MÓVIL Y TABLET (<= 1124px) - formulario step 1
-  ============================================================ */
-  @media (max-width: 1124px) {
-    #miBuscador {
-       display: block !important;
-        position: relative !important;
-        width: 100% !important;
-        height: auto !important;
-        margin: 0 auto !important;
-        padding: 15px !important;
-        overflow: visible !important;
-        box-sizing: border-box !important;
-    }
-    @media (max-width: 1124px) {
-    .page.wizard-page[data-current-step="1"] #miBuscador {
-        display: block !important;
-        position: relative !important;
-        height: auto !important;
-        overflow: visible !important;
-        padding: 20px !important;
-    }
-}
-  }
-.page.wizard-page .wizard-card{
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-
-    /* Firefox */
-    scrollbar-width: none !important;
-
-    /* IE / Edge antiguo */
-    -ms-overflow-style: none !important;
-}
-
-/* Chrome, Edge, Safari */
-.page.wizard-page .wizard-card::-webkit-scrollbar{
-    width: 0px !important;
-    height: 0px !important;
-    display: none !important;
-}
-  /* ============================================================
-    ALERTAS PARA EL BUSCADOR
-  ============================================================ */
-  #miBuscador .field-error,
-  #miBuscador input.field-error,
-  #miBuscador select.field-error,
-  #miBuscador .flatpickr-input.field-error,
-  #miBuscador .tp-selects select.field-error {
-      border: 2px solid #e53935 !important;
-      outline: none !important;
-      box-shadow: none !important;
-      background-color: #fff !important;
-  }
-
-  #miBuscador .field-success,
-  #miBuscador input.field-success,
-  #miBuscador select.field-success,
-  #miBuscador .flatpickr-input.field-success,
-  #miBuscador .tp-selects select.field-success {
-      border: 2px solid #43a047 !important;
-      outline: none !important;
-      box-shadow: none !important;
-  }
-
-  /* Para Select2 */
-  #miBuscador select.field-error + .select2-container .select2-selection {
-      border: 2px solid #e53935 !important;
-  }
-
-  #miBuscador select.field-success + .select2-container .select2-selection {
-      border: 2px solid #43a047 !important;
-  }
-.select2-results__options {
-  max-height: 250px !important;
-  overflow-y: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-}
-.select2-dropdown {
-  z-index: 999999 !important;
-}
-.select2-container {
-  touch-action: manipulation !important;
-}
-  /* Mensajes de error */
-  #miBuscador .error-msg {
-      color: #e53935 !important;
-      font-size: 10px !important;
-      font-weight: 500 !important;
-      position: absolute !important;
-      bottom: -18px !important;
-      left: 12px !important;
-      pointer-events: none !important;
-      z-index: 10 !important;
-      white-space: nowrap !important;
-      background: transparent !important;
-  }
-
-  #miBuscador .field,
-  #miBuscador .dt-field,
-  #miBuscador .time-field,
-  #miBuscador .location-inputs-wrapper .field {
-      position: relative !important;
-      overflow: visible !important;
-  }
-
-  /* Ajuste para móvil */
-  @media (max-width: 560px) {
-      #miBuscador .error-msg {
-          position: static !important;
-        display: block !important;
-        margin-top: 4px !important;
-      }
-  }
-
-  /* ============================================================
-    CORRECCIÓN PARA EL CHECKBOX - PERMITIR CONTROL JS
-  ============================================================ */
-  #miBuscador #dropoffWrapper {
-      display: none; /* Valor por defecto - JS lo controlará */
-  }
-
-  #miBuscador #dropoffWrapper[style*="display: block"] {
-      display: block !important;
-  }
-
-  #miBuscador #dropoffWrapper[style*="display: none"] {
-      display: none !important;
-  }
-
-
-/* ============================================================
-    SOLUCIÓN - VER TODO COMPLETO EN MÓVIL/TABLET
-  ============================================================ */
-  @media (max-width: 1124px) {
-    body,
-    html,
-    .containerVS,
-    .page.wizard-page {
-        overflow-x: hidden !important;
-        max-width: 100vw !important;
-        position: relative !important;
-    }
-
-    /* Forzar buscador a mantenerse dentro - CON ESPACIO SOLO IZQUIERDO Y BORDES REDONDEADOS */
-    #miBuscador {
-        max-width: calc(100% - 0px) !important; /* Solo resta el margen izquierdo */
-        width: calc(100% - 15px) !important;
-        margin-left: 0px !important;  /* Espacio izquierdo */
-        padding: 18px 15px !important;
-        box-sizing: border-box !important;
-        border-radius: 12px !important; /* Bordes redondeados SOLO aquí */
-    }
-
-    /* Forzar todos los elementos internos a respetar el ancho */
-    #miBuscador * {
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-    }
-
-    /* Forzar grid a una sola columna */
-    #miBuscador .search-grid {
-        display: block !important;
-        width: 100% !important;
-    }
-
-    /* Forzar filas de fecha a no desbordarse */
-    #miBuscador .datetime-row {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 10px !important;
-        width: 100% !important;
-    }
-
-    /* Fecha y hora en 2 columnas TAMBIÉN EN MÓVIL */
-    #miBuscador .dt-field {
-        flex: 1 1 calc(50% - 5px) !important;
-        max-width: calc(50% - 5px) !important;
-        min-width: 120px !important;
-    }
-
-    /* Para móviles muy pequeños */
-    @media (max-width: 380px) {
-        #miBuscador .dt-field {
-            flex: 1 1 calc(50% - 4px) !important;
-            max-width: calc(50% - 4px) !important;
-        }
-    }
-
-    /* Forzar campos individuales */
-    #miBuscador .field,
-    #miBuscador .time-field,
-    #miBuscador input,
-    #miBuscador select {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-    }
-
-    /* Forzar botón móvil - ajustado también */
-    .btn-buscador-movil {
-        display: block !important;
-        width: calc(100% - 15px) !important; /* Mismo ancho que el buscador */
-        margin: 15px 0 15px 15px !important; /* Solo margen izquierdo */
-        padding: 0 !important;
-    }
-
-    .btn-buscador-movil .btn-container {
-        width: 100% !important;
-        padding: 15px !important;
-        box-sizing: border-box !important;
-        border-radius: 12px !important;
-    }
-
-    .btn-buscador-movil button {
-        width: 100% !important;
-        white-space: normal !important;
-        word-wrap: break-word !important;
-        border-radius: 8px !important;
-    }
-
-    /* Forzar mensajes de error */
-    #miBuscador .error-msg {
-        white-space: normal !important;
-        font-size: 9px !important;
-        bottom: -20px !important;
-        left: 5px !important;
-        right: 5px !important;
-        width: auto !important;
-    }
-
-    /* Forzar select2 si existe */
-    #miBuscador .select2-container {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-}
-
-/* Solución adicional para el fondo */
-.fondo-fijo-layout,
-.fondos-reservaciones {
-    max-width: 100vw !important;
-    overflow-x: hidden !important;
-}
-
-/* Para pantallas muy pequeñas - ajustes finos */
-@media (max-width: 380px) {
-    #miBuscador {
-        padding-left: 12px !important;
-        padding-right: 12px !important;
-        border-radius: 10px !important;
-    }
-
-    #miBuscador .field-title {
-        font-size: 10px !important;
-    }
-
-    #miBuscador input,
-    #miBuscador select {
-        font-size: 13px !important;
-        height: 40px !important;
-        border-radius: 6px !important;
-    }
-
-    .btn-buscador-movil .btn-container {
-        padding: 12px !important;
-        border-radius: 10px !important;
-    }
-}
-@media (max-width: 560px) {
-
-    #miBuscador .field {
-        min-height: auto !important;
-        height: auto !important;
-    }
-
-}
-@media (max-width: 768px) {
-
-  #miBuscador .datetime-row {
-    flex-direction: column !important;
-    display: flex !important;
-  }
-
-  #miBuscador .dt-field {
-    flex: 1 1 100% !important;
-    max-width: 100% !important;
-    width: 100% !important;
-  }
-
-}
   /* =========================================================
    ALERTA ÉXITO RESERVACIÓN
 ========================================================= */

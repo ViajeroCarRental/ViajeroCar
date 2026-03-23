@@ -1553,7 +1553,7 @@ addonsMap.forEach((qty, id) => {
     if (!window.flatpickr) return;
 
     try {
-      if (window.flatpickr?.l10ns?.es) window.flatpickr.localize(window.flatpickr.l10ns.es);
+        if (window.flatpickr?.l10ns?.es) window.flatpickr.localize(window.flatpickr.l10ns.es);
     } catch (_) { }
 
     const start = qs("#start");
@@ -1565,78 +1565,104 @@ addonsMap.forEach((qty, id) => {
     if (!start || !end) return;
 
     function toDateAtMidnight(d) {
-      const x = new Date(d.getTime());
-      x.setHours(0, 0, 0, 0);
-      return x;
+        const x = new Date(d.getTime());
+        x.setHours(0, 0, 0, 0);
+        return x;
     }
 
     function parseAnyToDate(val) {
-      if (!val) return null;
-      const s = String(val).trim();
+        if (!val) return null;
+        const s = String(val).trim();
 
-      let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-      if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+        let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+        if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
 
-      m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+        m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
 
-      const d = new Date(s);
-      return isNaN(d.getTime()) ? null : d;
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? null : d;
     }
 
+    // Destruir instancias anteriores si existen
     try { if (start._flatpickr) start._flatpickr.destroy(); } catch (_) { }
     try { if (end._flatpickr) end._flatpickr.destroy(); } catch (_) { }
 
-    const baseCfg = { dateFormat: "d-m-Y", allowInput: true, disableMobile: true };
+    const baseCfg = {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d M Y",
+        allowInput: true,
+        disableMobile: true,
+        locale: "es"
+    };
 
-    const startFp = window.flatpickr(start, { ...baseCfg });
-    const endFp = window.flatpickr(end, { ...baseCfg });
+    const startFp = flatpickr(start, { ...baseCfg });
+    const endFp = flatpickr(end, { ...baseCfg });
 
+    // Sincronizar valores existentes
     const startInit = parseAnyToDate(start.value);
     const endInit = parseAnyToDate(end.value);
 
-    if (startInit) startFp.setDate(startInit, false);
-    if (endInit) endFp.setDate(endInit, false);
+    if (startInit) {
+        startFp.setDate(startInit, false);
+        // Forzar actualización del altInput
+        setTimeout(() => {
+            if (startFp.altInput) {
+                startFp.altInput.value = startFp.formatDate(startInit, startFp.config.altFormat);
+            }
+        }, 0);
+    }
+
+    if (endInit) {
+        endFp.setDate(endInit, false);
+        setTimeout(() => {
+            if (endFp.altInput) {
+                endFp.altInput.value = endFp.formatDate(endInit, endFp.config.altFormat);
+            }
+        }, 0);
+    }
 
     startFp.set("minDate", today);
     endFp.set("minDate", today);
 
     const jumpToCurrentMonth = (fp) => {
-      const d = fp.selectedDates?.[0] || today;
-      fp.jumpToDate(d, true);
+        const d = fp.selectedDates?.[0] || today;
+        fp.jumpToDate(d, true);
     };
+
     startFp.set("onOpen", [() => jumpToCurrentMonth(startFp)]);
     endFp.set("onOpen", [() => jumpToCurrentMonth(endFp)]);
 
     let lock = false;
 
     function applyConstraintsAndFix() {
-      if (lock) return;
-      lock = true;
+        if (lock) return;
+        lock = true;
 
-      const sRaw = startFp.selectedDates?.[0] || null;
-      const eRaw = endFp.selectedDates?.[0] || null;
+        const sRaw = startFp.selectedDates?.[0] || null;
+        const eRaw = endFp.selectedDates?.[0] || null;
 
-      const s = sRaw ? toDateAtMidnight(sRaw) : null;
-      const e = eRaw ? toDateAtMidnight(eRaw) : null;
+        const s = sRaw ? toDateAtMidnight(sRaw) : null;
+        const e = eRaw ? toDateAtMidnight(eRaw) : null;
 
-      if (s && s < today) startFp.setDate(today, false);
-      if (e && e < today) endFp.setDate(today, false);
+        if (s && s < today) startFp.setDate(today, false);
+        if (e && e < today) endFp.setDate(today, false);
 
-      const s2 = startFp.selectedDates?.[0] ? toDateAtMidnight(startFp.selectedDates[0]) : null;
-      const e2 = endFp.selectedDates?.[0] ? toDateAtMidnight(endFp.selectedDates[0]) : null;
+        const s2 = startFp.selectedDates?.[0] ? toDateAtMidnight(startFp.selectedDates[0]) : null;
+        const e2 = endFp.selectedDates?.[0] ? toDateAtMidnight(endFp.selectedDates[0]) : null;
 
-      endFp.set("minDate", s2 || today);
+        endFp.set("minDate", s2 || today);
 
-      if (s2 && e2 && s2.getTime() > e2.getTime()){
-        endFp.setDate(s2, false);
-        endFp.set("minDate", s2);
-      }
+        if (s2 && e2 && s2.getTime() > e2.getTime()) {
+            endFp.setDate(s2, false);
+            endFp.set("minDate", s2);
+        }
 
-      jumpToCurrentMonth(startFp);
-      jumpToCurrentMonth(endFp);
+        jumpToCurrentMonth(startFp);
+        jumpToCurrentMonth(endFp);
 
-      lock = false;
+        lock = false;
     }
 
     startFp.set("onChange", [applyConstraintsAndFix]);
@@ -1645,7 +1671,23 @@ addonsMap.forEach((qty, id) => {
     applyConstraintsAndFix();
     start.addEventListener("blur", applyConstraintsAndFix);
     end.addEventListener("blur", applyConstraintsAndFix);
-  }
+
+    // 🔥 IMPORTANTE: Forzar sincronización después de que la persistencia cargue
+    setTimeout(() => {
+        const startVal = start.value;
+        const endVal = end.value;
+
+        if (startVal && startVal !== startFp.selectedDates?.[0]?.toISOString().split('T')[0]) {
+            const parsed = parseAnyToDate(startVal);
+            if (parsed) startFp.setDate(parsed, true);
+        }
+
+        if (endVal && endVal !== endFp.selectedDates?.[0]?.toISOString().split('T')[0]) {
+            const parsed = parseAnyToDate(endVal);
+            if (parsed) endFp.setDate(parsed, true);
+        }
+    }, 200);
+}
 
   function bootWhenFlatpickrReady() {
     let tries = 0;
@@ -2017,7 +2059,6 @@ addonsMap.forEach((qty, id) => {
     if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
   });
 
-// También modifica la sincronización del total para que funcione cuando la tarjeta se muestre
 function initMovilTotalSync() {
     const btnOriginal = document.getElementById('btnReservar');
     const btnMovil = document.getElementById('btnReservarMovil');
@@ -2078,38 +2119,64 @@ window.initStep4AddonsSummary = function() {
         totalMovil.innerText = totalOriginal.innerText;
     }
 };
-// ===== CONTROL DE VISIBILIDAD DE LA TARJETA MÓVIL (VERSIÓN FINAL) =====
+
+// ===== CONTROL DE VISIBILIDAD DE LA TARJETA MÓVIL (SOLO MÓVIL/TABLET) =====
 let movilCardState = {
     hasShownCard: false,
-    isModalOpen: false
+    isModalOpen: false,
+    isStep4DataComplete: false
 };
+
+// Función para verificar si los datos REQUERIDOS están completos
+function isStep4DataFilled() {
+    const nombre = document.getElementById('nombreCompleto');
+    const telefono = document.getElementById('telefonoCliente');
+    const correo = document.getElementById('correoCliente');
+    const pais = document.getElementById('pais');
+    const dia = document.getElementById('dob_day');
+    const mes = document.getElementById('dob_month');
+    const año = document.getElementById('dob_year');
+    const acepto = document.getElementById('acepto');
+
+    if (!nombre || !telefono || !correo || !pais || !dia || !mes || !año || !acepto) {
+        return false;
+    }
+
+    return nombre.value.trim() !== "" &&
+        telefono.value.trim() !== "" &&
+        correo.value.trim() !== "" &&
+        pais.value.trim() !== "" &&
+        dia.value !== "" &&
+        mes.value !== "" &&
+        año.value !== "" &&
+        acepto.checked === true;
+}
 
 function initMovilCardVisibility() {
     const mainEl = document.querySelector('main.page');
     const currentStep = mainEl ? mainEl.dataset.currentStep : '';
 
+    // Solo ejecutar en Step 4
     if (currentStep !== '4') return;
 
     const tuAutoSection = document.getElementById('tuAutoSection');
     const movilCard = document.querySelector('.movil-footer-sticky');
-    const step4Layout = document.querySelector('.step4-layout');
-    const body = document.body;
     const modalMetodoPago = document.getElementById('modalMetodoPago');
 
-    if (!tuAutoSection || !movilCard || !step4Layout) {
-        console.warn('Elementos necesarios no encontrados');
+    // Verificar que los elementos existan
+    if (!tuAutoSection || !movilCard) {
+        console.warn('Elementos necesarios no encontrados:', { tuAutoSection, movilCard });
         return;
     }
 
+    console.log('✅ Inicializando tarjeta móvil');
+
     // Función para mostrar la tarjeta
     function showMovilCard() {
-        // Solo mostrar si el modal NO está abierto
-        if (!movilCardState.isModalOpen && !movilCardState.hasShownCard) {
+        if (!movilCardState.hasShownCard && !movilCardState.isModalOpen) {
             movilCard.classList.add('visible');
-            step4Layout.classList.add('has-sticky-card');
-            body.classList.add('has-sticky-card');
             movilCardState.hasShownCard = true;
-            console.log('✅ Tarjeta móvil visible');
+            console.log('✅ Tarjeta visible');
         }
     }
 
@@ -2117,14 +2184,64 @@ function initMovilCardVisibility() {
     function hideMovilCard() {
         if (movilCardState.hasShownCard) {
             movilCard.classList.remove('visible');
-            step4Layout.classList.remove('has-sticky-card');
-            body.classList.remove('has-sticky-card');
             movilCardState.hasShownCard = false;
-            console.log('👻 Tarjeta móvil oculta');
+            console.log('👻 Tarjeta oculta');
         }
     }
 
-    // 🔥 Monitorear el estado del modal
+    // Función para actualizar estado según scroll (solo si datos NO están completos)
+    function handleScroll() {
+        // Si los datos están completos, NO ocultar nunca por scroll
+        if (movilCardState.isStep4DataComplete) {
+            return;
+        }
+
+        const rect = tuAutoSection.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const isVisible = rect.top < windowHeight * 0.9 && rect.bottom > 0;
+
+        if (isVisible && !movilCardState.isModalOpen) {
+            showMovilCard();
+        } else if (!isVisible && !movilCardState.isModalOpen) {
+            hideMovilCard();
+        }
+    }
+
+    // Observar cambios en los campos del formulario
+    function initFormObserver() {
+        const fields = ['#nombreCompleto', '#telefonoCliente', '#correoCliente', '#pais', '#dob_day', '#dob_month', '#dob_year', '#acepto'];
+
+        const checkDataComplete = () => {
+            const wasComplete = movilCardState.isStep4DataComplete;
+            const isNowComplete = isStep4DataFilled();
+
+            movilCardState.isStep4DataComplete = isNowComplete;
+            console.log(`📝 Datos completos: ${isNowComplete ? 'SÍ' : 'NO'}`);
+
+            if (isNowComplete && !wasComplete) {
+                // Datos recién completados -> mostrar tarjeta y mantenerla
+                console.log('🎉 Datos completados - Tarjeta permanente');
+                showMovilCard();
+            } else if (!isNowComplete && wasComplete) {
+                // Datos ya no están completos -> restaurar comportamiento por scroll
+                console.log('⚠️ Datos incompletos - Restaurando scroll');
+                handleScroll();
+            }
+        };
+
+        fields.forEach(selector => {
+            const field = document.querySelector(selector);
+            if (field) {
+                field.addEventListener('input', checkDataComplete);
+                field.addEventListener('change', checkDataComplete);
+            }
+        });
+
+        // Verificación inicial
+        setTimeout(checkDataComplete, 100);
+    }
+
+    // Observar el modal de pago
     function initModalObserver() {
         if (!modalMetodoPago) return;
 
@@ -2132,28 +2249,17 @@ function initMovilCardVisibility() {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                     const isOpen = modalMetodoPago.style.display === 'flex';
-
-                    // Actualizar estado
                     movilCardState.isModalOpen = isOpen;
 
                     if (isOpen) {
-                        // Modal se abre: Ocultar tarjeta SIEMPRE
-                        console.log('🔴 Modal abierto - Ocultando tarjeta');
                         hideMovilCard();
                     } else {
-                        // Modal se cierra: Restaurar según visibilidad de "Tu auto"
-                        console.log('🟢 Modal cerrado - Restaurando según visibilidad');
-
-                        // Verificar si la sección "Tu auto" es visible
+                        // Modal cerrado - restaurar según estado
                         setTimeout(() => {
-                            const rect = tuAutoSection.getBoundingClientRect();
-                            const windowHeight = window.innerHeight;
-                            const isVisible = rect.top < windowHeight * 0.9 && rect.bottom > 0;
-
-                            console.log('📏 ¿Tu auto visible?', isVisible);
-
-                            if (isVisible) {
+                            if (movilCardState.isStep4DataComplete) {
                                 showMovilCard();
+                            } else {
+                                handleScroll();
                             }
                         }, 100);
                     }
@@ -2162,95 +2268,103 @@ function initMovilCardVisibility() {
         });
 
         observer.observe(modalMetodoPago, { attributes: true });
-
-        // Escuchar clic en Cancelar específicamente
-        const cerrarModalMetodo = document.getElementById('cerrarModalMetodo');
-        if (cerrarModalMetodo) {
-            cerrarModalMetodo.addEventListener('click', function() {
-                console.log('👆 Clic en Cancelar');
-                // La restauración la hará el MutationObserver
-            });
-        }
     }
 
-    // Verificar si estamos en móvil
+    // Botón de reservar - mantener tarjeta visible
+    function initReservationObserver() {
+        const btnReservar = document.getElementById('btnReservar');
+        const btnReservarMovil = document.getElementById('btnReservarMovil');
+
+        const onReservarClick = () => {
+            if (movilCardState.isStep4DataComplete) {
+                setTimeout(() => showMovilCard(), 50);
+            }
+        };
+
+        if (btnReservar) btnReservar.addEventListener('click', onReservarClick);
+        if (btnReservarMovil) btnReservarMovil.addEventListener('click', onReservarClick);
+    }
+
+    // Verificar si es móvil/tablet
     function isMobileView() {
         return window.innerWidth <= 1024;
     }
 
-    // OBSERVER para detectar cuando "Tu auto" entra en vista
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (!isMobileView()) return;
-
-            if (entry.isIntersecting) {
-                console.log('🔍 Tu auto visible - Mostrando tarjeta');
-                // Solo mostrar si el modal NO está abierto
-                if (!movilCardState.isModalOpen) {
-                    showMovilCard();
-                }
-            } else {
-                console.log('🔍 Tu auto NO visible - Ocultando tarjeta');
-                hideMovilCard();
-            }
-        });
-    }, {
-        threshold: 0.1,
-        rootMargin: '0px'
+    // Evento de scroll con throttle
+    let scrollTimeout;
+    window.addEventListener('scroll', function() {
+        if (!isMobileView()) return;
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(handleScroll, 50);
     });
 
-    observer.observe(tuAutoSection);
+    // Evento de resize
+    window.addEventListener('resize', function() {
+        if (!isMobileView()) {
+            hideMovilCard();
+        } else {
+            setTimeout(handleScroll, 100);
+        }
+    });
 
-    // Inicializar observador del modal
+    // Inicializar todo
+    initFormObserver();
     initModalObserver();
+    initReservationObserver();
 
     // Verificación inicial
     setTimeout(() => {
-        const rect = tuAutoSection.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
-        const isVisible = rect.top < windowHeight * 0.9 && rect.bottom > 0;
-
-        if (isVisible && !movilCardState.isModalOpen) {
-            showMovilCard();
+        if (isMobileView()) {
+            if (movilCardState.isStep4DataComplete) {
+                showMovilCard();
+            } else {
+                handleScroll();
+            }
         }
-    }, 500);
+    }, 300);
 
-    console.log('🚀 Control de visibilidad de tarjeta móvil inicializado (versión simplificada)');
+    console.log('🚀 Control de tarjeta inicializado');
 }
 
-// Inicializar en DOMContentLoaded
+// Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     const mainEl = document.querySelector('main.page');
     const currentStep = mainEl ? mainEl.dataset.currentStep : '';
 
     if (currentStep === '4') {
-        setTimeout(() => {
-            initMovilCardVisibility();
-        }, 300);
+        setTimeout(initMovilCardVisibility, 500);
     }
 });
 
-// Manejar resize
-window.addEventListener('resize', function() {
-    if (window.innerWidth <= 1024) {
-        // Resetear estado al cambiar tamaño
-        const movilCard = document.querySelector('.movil-footer-sticky');
-        if (movilCard) {
-            movilCard.classList.remove('visible');
-            document.querySelector('.step4-layout')?.classList.remove('has-sticky-card');
-            document.body.classList.remove('has-sticky-card');
-        }
+// Sincronizar total móvil
+function initMovilTotalSync() {
+    const btnOriginal = document.getElementById('btnReservar');
+    const btnMovil = document.getElementById('btnReservarMovil');
+    const totalOriginal = document.getElementById('qTotal');
+    const totalMovil = document.getElementById('qTotalMovil');
 
-        movilCardState = {
-            hasShownCard: false,
-            isModalOpen: false
-        };
+    if (btnMovil && btnOriginal) {
+        btnMovil.addEventListener('click', function(e) {
+            e.preventDefault();
+            setTimeout(() => btnOriginal.click(), 50);
+        });
+    }
 
-        setTimeout(() => {
-            initMovilCardVisibility();
-        }, 300);
+    if (totalOriginal && totalMovil) {
+        const syncTotal = () => { totalMovil.innerText = totalOriginal.innerText; };
+        syncTotal();
+        const observer = new MutationObserver(syncTotal);
+        observer.observe(totalOriginal, { childList: true, subtree: true, characterData: true });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const mainEl = document.querySelector('main.page');
+    if (mainEl && mainEl.dataset.currentStep === '4') {
+        setTimeout(initMovilTotalSync, 100);
     }
 });
+
 // Función para manejar el toggle del destino
 function initLocationToggle() {
     const checkbox = document.getElementById('differentDropoff');
@@ -2363,28 +2477,142 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ===== INICIALIZAR FLATPICKR =====
-    if (typeof flatpickr !== 'undefined') {
-        const localeEs = {
-            firstDayOfWeek: 1,
-            weekdays: {
-                shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
-                longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-            },
-            months: {
-                shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-                longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-            }
-        };
+    // ============================================================
+// INICIALIZAR FLATPICKR CON SOPORTE PARA PERSISTENCIA
+// ============================================================
+if (typeof flatpickr !== 'undefined') {
+    const startInput = document.getElementById('start');
+    const endInput = document.getElementById('end');
 
-        flatpickr("#start, #end", {
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d-M-Y",
-            minDate: "today",
-            allowInput: true,
-            locale: localeEs
-        });
+    // Función para parsear fecha en múltiples formatos
+    function parseDateAny(val) {
+        if (!val) return null;
+        const s = String(val).trim();
+
+        // Formato dd-mm-yyyy
+        let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+        if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+
+        // Formato yyyy-mm-dd
+        m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+
+        // Intento con Date nativo
+        const d = new Date(s);
+        return isNaN(d.getTime()) ? null : d;
     }
+
+    // Función para obtener valor actual respetando el estado persistido
+    function getCurrentDateValue(inputEl) {
+        // Primero verificar si hay un valor en el input
+        let rawValue = inputEl.value;
+        if (rawValue && rawValue.trim() !== '') {
+            return rawValue;
+        }
+
+        // Si no, verificar en los parámetros de URL o localStorage
+        // a través de los campos ocultos que usa tu persistencia
+        const hiddenDateInput = inputEl.id === 'start' ?
+            document.querySelector('input[name="pickup_date"]') :
+            document.querySelector('input[name="dropoff_date"]');
+
+        if (hiddenDateInput && hiddenDateInput.value) {
+            return hiddenDateInput.value;
+        }
+
+        return null;
+    }
+
+    // Configuración común para ambos datepickers
+    const commonConfig = {
+        dateFormat: "Y-m-d",          // Formato interno para el input oculto
+        altInput: true,                // Mostrar formato amigable al usuario
+        altFormat: "d M Y",            // Formato: "15 Mar 2026"
+        allowInput: true,              // Permitir escritura manual
+        locale: "es",                  // Español
+        minDate: "today",
+        disableMobile: true,           // Evitar el selector nativo en móvil
+        onReady: function(selectedDates, dateStr, instance) {
+            // Forzar la sincronización de clases
+            if (dateStr && dateStr !== '') {
+                instance.altInput.classList.add('field-success');
+                instance.altInput.classList.remove('field-error');
+            }
+        },
+        onChange: function(selectedDates, dateStr, instance) {
+            // Sincronizar clases con el altInput
+            if (dateStr && dateStr !== '') {
+                instance.altInput.classList.add('field-success');
+                instance.altInput.classList.remove('field-error');
+            } else {
+                instance.altInput.classList.remove('field-success', 'field-error');
+            }
+
+            // Disparar evento change para que la persistencia lo capture
+            instance.input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    };
+
+    // Inicializar pickup date
+    if (startInput) {
+        // Destruir instancia anterior si existe
+        if (startInput._flatpickr) {
+            startInput._flatpickr.destroy();
+        }
+
+        // Obtener valor actual
+        const currentValue = getCurrentDateValue(startInput);
+        if (currentValue) {
+            const parsedDate = parseDateAny(currentValue);
+            if (parsedDate) {
+                startInput.value = parsedDate.toISOString().split('T')[0];
+            }
+        }
+
+        // Inicializar Flatpickr
+        startInput._flatpickr = flatpickr(startInput, commonConfig);
+
+        // Asegurar que el altInput muestre la fecha correctamente
+        setTimeout(() => {
+            if (startInput._flatpickr && startInput.value) {
+                const parsed = parseDateAny(startInput.value);
+                if (parsed) {
+                    startInput._flatpickr.setDate(parsed, true);
+                }
+            }
+        }, 50);
+    }
+
+    // Inicializar dropoff date
+    if (endInput) {
+        // Destruir instancia anterior si existe
+        if (endInput._flatpickr) {
+            endInput._flatpickr.destroy();
+        }
+
+        // Obtener valor actual
+        const currentValue = getCurrentDateValue(endInput);
+        if (currentValue) {
+            const parsedDate = parseDateAny(currentValue);
+            if (parsedDate) {
+                endInput.value = parsedDate.toISOString().split('T')[0];
+            }
+        }
+
+        // Inicializar Flatpickr
+        endInput._flatpickr = flatpickr(endInput, commonConfig);
+
+        // Asegurar que el altInput muestre la fecha correctamente
+        setTimeout(() => {
+            if (endInput._flatpickr && endInput.value) {
+                const parsed = parseDateAny(endInput.value);
+                if (parsed) {
+                    endInput._flatpickr.setDate(parsed, true);
+                }
+            }
+        }, 50);
+    }
+}
 
     // ===== ACTUALIZAR ICONOS =====
     function updateSelectIcon(select, iconElement) {
@@ -2464,6 +2692,58 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 300);
     }
+
+//nuevo agregadi
+function syncFlatpickrAfterStepChange() {
+    // Observar cambios en el atributo data-current-step
+    const main = document.querySelector('main.page');
+    if (!main) return;
+
+    const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'data-current-step') {
+                // Cuando cambia el step, forzar resincronización de Flatpickr
+                setTimeout(() => {
+                    const start = document.getElementById('start');
+                    const end = document.getElementById('end');
+
+                    if (start && start._flatpickr && start.value) {
+                        const parsed = parseAnyToDate(start.value);
+                        if (parsed) start._flatpickr.setDate(parsed, true);
+                    }
+
+                    if (end && end._flatpickr && end.value) {
+                        const parsed = parseAnyToDate(end.value);
+                        if (parsed) end._flatpickr.setDate(parsed, true);
+                    }
+                }, 100);
+            }
+        });
+    });
+
+    observer.observe(main, { attributes: true });
+}
+
+// Función auxiliar para parsear fechas (la misma que usamos antes)
+function parseAnyToDate(val) {
+    if (!val) return null;
+    const s = String(val).trim();
+
+    let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+
+    m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+}
+
+// Inicializar el observador
+document.addEventListener('DOMContentLoaded', () => {
+    syncFlatpickrAfterStepChange();
+});
+
 });
 
 // ===== FUNCIÓN PARA LIMPIAR EL FORMULARIO =====
