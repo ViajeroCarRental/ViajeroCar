@@ -1739,86 +1739,6 @@ addonsMap.forEach((qty, id) => {
     setTimeout(refreshFloatLabels, 500);
   });
 
-  // ===== Select2 =====
-  document.addEventListener("DOMContentLoaded", function() {
-    if (!window.jQuery || !window.jQuery.fn || typeof window.jQuery.fn.select2 !== 'function') return;
-
-    const configs = [
-      { id: 'pickupPlace', icon: 'pickupIcon' },
-      { id: 'dropoffPlace', icon: 'dropoffIcon' }
-    ];
-
-    function updateFloatingIcon(selectId, iconId) {
-      const selectEl = document.getElementById(selectId);
-      const iconEl   = document.getElementById(iconId);
-
-      if (!selectEl || !iconEl) return;
-
-      const selectedOption = selectEl.options[selectEl.selectedIndex];
-      let iconClass = 'fa-solid fa-location-dot';
-
-      if (selectedOption && selectedOption.dataset.icon) {
-        iconClass = selectedOption.dataset.icon;
-      }
-
-      iconEl.innerHTML = `<i class="${iconClass}"></i>`;
-    }
-
-    configs.forEach(conf => {
-      const $select = $('#' + conf.id);
-
-      if ($select.length > 0) {
-        if (window.innerWidth < 768) {
-      if ($select.hasClass("select2-hidden-accessible")) {
-        $select.select2('destroy');
-      }
-      return;
-    }
-        $select.select2({
-          width: '100%',
-          dropdownParent: $('body'),
-          templateResult: function(option) {
-            if (!option.id) return option.text;
-            const icon = $(option.element).data('icon') || 'fa-solid fa-location-dot';
-            return $('<span><i class="' + icon + '" style="margin-right:10px;width:20px;text-align:center;"></i>' + option.text + '</span>');
-          },
-          templateSelection: function(option){
-            if (!option.id) return option.text;
-            const icon = $(option.element).data('icon') || 'fa-solid fa-location-dot';
-            return $('<span><i class="' + icon + '" style="margin-right:8px;"></i>' + option.text + '</span>');
-          }
-        });
-
-        updateFloatingIcon(conf.id, conf.icon);
-
-        $select.on('select2:select', function () {
-          updateFloatingIcon(conf.id, conf.icon);
-          this.dispatchEvent(new Event('change', { bubbles: true }));
-        });
-      }
-    });
-  });
-
-  window.limpiarTodoYReiniciar = function() {
-    localStorage.removeItem("viajero_resv_filters_v1");
-
-    const selects = ['#pickupPlace', '#dropoffPlace'];
-    selects.forEach(id => {
-      const $el = window.jQuery ? $(id) : null;
-      if ($el && $el.length) {
-        $el.val(null).trigger('change');
-      }
-    });
-
-    const inputs = ['#start', '#end', '#pickup_h', '#dropoff_h'];
-    inputs.forEach(id => {
-      const el = document.querySelector(id);
-      if (el) el.value = "";
-    });
-
-    window.location.href = window.location.pathname + "?step=1";
-  };
-
 
 
   // modal Step 4 - MODIFICADO para usar evedocument.addEventListener('DOMContentLoaded', function()to personalizado
@@ -2416,54 +2336,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    // ===== INICIALIZAR SELECT2 (si existe) =====
-    if (typeof $ !== 'undefined' && $.fn.select2) {
-        setTimeout(function() {
-            try {
-                function formatOption(option) {
-                    if (!option.id) {
-                        return $('<span><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
-                    }
 
-                    let iconClass = 'fa-building';
-                    const text = option.text.toLowerCase();
-
-                    if (text.includes('aeropuerto')) {
-                        iconClass = 'fa-plane-departure';
-                    } else if (text.includes('central') || text.includes('terminal')) {
-                        iconClass = 'fa-bus';
-                    }
-
-                    return $('<span><i class="fa-solid ' + iconClass + '" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
-                }
-
-                const select2Config = {
-                    templateResult: formatOption,
-                    templateSelection: formatOption,
-                    escapeMarkup: function(m) { return m; },
-                    width: '100%',
-                    minimumResultsForSearch: Infinity,
-                    allowClear: false
-                };
-
-                $('#pickupPlace').select2({
-                    ...select2Config,
-                    placeholder: '¿Dónde inicia tu viaje?'
-                });
-
-                const isChecked = document.getElementById('differentDropoff')?.checked || false;
-                $('#dropoffPlace').select2({
-                    ...select2Config,
-                    placeholder: '¿Dónde termina tu viaje?',
-                    disabled: !isChecked
-                });
-
-                console.log('Select2 inicializado correctamente');
-            } catch (e) {
-                console.warn('Error inicializando Select2:', e);
-            }
-        }, 300);
-    }
 });
 
 // ===== FUNCIÓN PARA LIMPIAR EL FORMULARIO =====
@@ -2489,3 +2362,74 @@ function limpiarTodoYReiniciar() {
     }
 }
 
+// ===== Select2 UNIFICADO (funciona en todos los dispositivos) =====
+document.addEventListener("DOMContentLoaded", function() {
+    if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
+        console.warn('Select2 no disponible');
+        return;
+    }
+
+    function formatOption(option) {
+        if (!option.id) {
+            return $('<span><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
+        }
+
+        // Usar data-icon del elemento HTML
+        let icon = $(option.element).data('icon');
+        if (!icon) {
+            icon = 'fa-solid fa-location-dot';
+        }
+        return $('<span><i class="' + icon + '" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
+    }
+
+    const select2Config = {
+        width: '100%',
+        dropdownParent: $('body'),
+        templateResult: formatOption,
+        templateSelection: formatOption,
+        escapeMarkup: function(m) { return m; },
+        minimumResultsForSearch: Infinity,
+        allowClear: false
+    };
+
+    // Inicializar pickup
+    $('#pickupPlace').select2({
+        ...select2Config,
+        placeholder: $('#pickupPlace option:first').text()
+    });
+
+    // Inicializar dropoff
+    const isChecked = document.getElementById('differentDropoff')?.checked || false;
+    $('#dropoffPlace').select2({
+        ...select2Config,
+        placeholder: $('#dropoffPlace option:first').text(),
+        disabled: !isChecked
+    });
+
+    // Actualizar icono flotante cuando cambia la selección
+    function updateFloatingIcon(selectId, iconId) {
+        const selectEl = document.getElementById(selectId);
+        const iconEl = document.getElementById(iconId);
+        if (!selectEl || !iconEl) return;
+
+        const selectedOption = selectEl.options[selectEl.selectedIndex];
+        let iconClass = 'fa-solid fa-location-dot';
+        if (selectedOption && selectedOption.dataset && selectedOption.dataset.icon) {
+            iconClass = selectedOption.dataset.icon;
+        }
+        iconEl.className = iconClass;
+    }
+
+    updateFloatingIcon('pickupPlace', 'pickupIcon');
+    updateFloatingIcon('dropoffPlace', 'dropoffIcon');
+
+    $('#pickupPlace').on('change', function() {
+        updateFloatingIcon('pickupPlace', 'pickupIcon');
+    });
+
+    $('#dropoffPlace').on('change', function() {
+        updateFloatingIcon('dropoffPlace', 'dropoffIcon');
+    });
+
+    console.log('Select2 unificado inicializado correctamente');
+});

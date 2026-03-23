@@ -1142,7 +1142,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, { passive: false });
 
-        
+
 
         if (dropoffPlace) {
             dropoffPlace.addEventListener('touchstart', function(e) {
@@ -1230,3 +1230,31 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 })();
+/* ============================================================
+                                SELECT2
+============================================================ */
+$(document).ready(function() {
+
+  function formatOption(option) {
+    if (!option.id) {
+      return $('<span class="icon-item"><i class="fa-solid fa-location-dot"></i> ' + option.text + '</span>');
+    }
+
+    // Usar el mapa global generado desde PHP
+    let iconClass = window.iconosPorId ? (window.iconosPorId[option.id] || 'fa-building') : 'fa-building';
+
+    return $(
+        '<span class="icon-item"><i class="fa-solid ' + iconClass + '"></i> ' +
+        option.text +
+        '</span>');
+  }
+
+  $('#pickupPlace, #dropoffPlace').select2({
+    templateResult: formatOption,
+    templateSelection: formatOption,
+    escapeMarkup: function(markup) { return markup; },
+    width: '100%',
+    minimumResultsForSearch: Infinity
+  });
+
+});

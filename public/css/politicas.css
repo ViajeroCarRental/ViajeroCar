@@ -1736,9 +1736,17 @@ span.flatpickr-weekday {
     gap: 10px !important;
   }
 
+  /* Mantener fecha y hora en horizontal hasta 560px */
   #miBuscadorPoliticas .datetime-row {
-    flex-direction: column !important;
+    flex-direction: row !important;
+    gap: 10px !important;
     height: auto !important;
+  }
+
+  /* Cada campo ocupa 50% */
+  #miBuscadorPoliticas .datetime-row .dt-field {
+    flex: 1 !important;
+    width: 50% !important;
   }
 
 }
@@ -1752,7 +1760,7 @@ span.flatpickr-weekday {
 }
 /* ==========================================================
    FIX SAFARI / MAC — POLITICAS
-   Agregar al FINAL del archivo
+
 ========================================================== */
 
 /* Renderizado más estable en Mac */
@@ -1884,4 +1892,49 @@ i.fa,
 [class*="fa-"] {
   line-height: 1 !important;
   vertical-align: middle;
+}
+
+
+/* ==========================================================
+                     BOTON DE BUSCAR
+========================================================== */
+@media (max-width: 560px) {
+
+  .hero-content-politicas {
+    position: relative !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+
+    padding-top: 120px !important;
+    padding-bottom: 40px !important;
+    gap: 15px;
+  }
+
+  .hero-texto-superior {
+    margin: 0 !important;
+    padding-left: 10px !important;
+  }
+
+  .hero-buscador-wrapper {
+    margin: 0 !important;
+    padding: 0 10px !important;
+  }
+
+  #miBuscadorPoliticas.search-card:not(.active) {
+    position: relative !important;
+    margin-top: 0 !important;
+  }
+
+}
+/* ==========================================================
+   OCULTAR BOTÓN DE CERRAR EN ESCRITORIO
+   ========================================================== */
+@media (min-width: 1125px) {
+    #miBuscadorPoliticas .btn-close-politicas,
+    #btn-cerrar-buscador-politicas,
+    .btn-close-politicas {
+        display: none !important;
+    }
 }

@@ -5,6 +5,7 @@
 @section('css-vistaPoliticas')
     <link rel="stylesheet" href="{{ asset('css/politicas.css') }}">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 @endsection
 
 @section('contenidoHome')
@@ -601,5 +602,35 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">s
     <!-- Tu JS personalizado -->
     <script src="{{ asset('js/politicas.js') }}"></script>
+<script>
+    // Generar mapa de iconos desde PHP (se ejecuta antes de la traducción)
+    window.iconosPorId = {
+        @foreach($ciudades as $ciudad)
+            @foreach($ciudad->sucursalesActivas as $suc)
+                @php
+                    $name = strtolower($suc->nombre);
+                    $icon = 'fa-building';
+
+                    // ✈️ Aeropuerto
+                    if (str_contains($name, 'aeropuerto')) {
+                        $icon = 'fa-plane-departure';
+                    }
+                    elseif (str_contains($name, 'central') && !str_contains($name, 'plaza central park')) {
+                        $icon = 'fa-bus';
+                    }
+                    // 🚌 Terminal
+                    elseif (str_contains($name, 'terminal')) {
+                        $icon = 'fa-bus';
+                    }
+                    // 🏢 Oficina / Plaza Central Park (edificio)
+                    else {
+                        $icon = 'fa-building';
+                    }
+                @endphp
+                {{ $suc->id_sucursal }}: '{{ $icon }}',
+            @endforeach
+        @endforeach
+    };
+</script>
 
 @endsection

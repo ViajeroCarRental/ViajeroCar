@@ -384,8 +384,39 @@
             <section class="wizard-card">
 {{-- ===================== STEP 1 ===================== --}}
 @if ($stepCurrent === 1)
+
+    {{-- BOTÓN PARA ABRIR BUSCADOR EN MÓVIL/TABLET --}}
+    <div class="btn-buscador-movil">
+        <div class="btn-container">
+            <p style="margin-bottom: 12px; font-weight: 700; color: #333; font-size: 16px;">
+                Encuentra tu auto aquí
+            </p>
+            <button type="button" id="btn-abrir-buscador-reservas"
+                    style="background-color: #b22222;
+                           border: none;
+                           font-weight: 700;
+                           height: 50px;
+                           font-size: 18px;
+                           display: flex;
+                           align-items: center;
+                           justify-content: center;
+                           gap: 8px;
+                           text-transform: uppercase;
+                           border-radius: 8px;
+                           width: 100%;
+                           color: white;
+                           cursor: pointer;">
+                <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
+            </button>
+        </div>
+    </div>
+
     {{-- BUSCADOR PRINCIPAL --}}
     <div class="search-card" id="miBuscador">
+        {{-- BOTÓN DE CERRAR - DENTRO DEL BUSCADOR --}}
+        <button type="button" id="btn-cerrar-buscador-politicas" class="btn-close-politicas" aria-label="Cerrar">
+            <span>Cerrar</span>
+        </button>
 
         <header class="wizard-head">
             <h2>Sobre tu reservación</h2>
@@ -1699,12 +1730,25 @@
 @endphp
 
 <div class="addon-price">
-    @if(str_contains(strtolower($srv->nombre), 'conductor'))
+    @if(str_contains(strtolower($srv->nombre), 'gasolina'))
+
+        @php
+            $totalGasolina = $capacidadTanque * $srv->precio;
+        @endphp
+
+        <strong>${{ number_format($totalGasolina, 0) }}</strong> MXN / Por tanque
+
+    @elseif(str_contains(strtolower($srv->nombre), 'conductor'))
+
         <strong>${{ $precio }}</strong> MXN / conductor por día
+
     @else
+
         <strong>${{ $precio }}</strong> MXN {{ $unidad }}
+
     @endif
 </div>
+
 
 @if($srv->id_servicio == 1)
 
@@ -2221,66 +2265,24 @@ input:checked + .slider:before {
                             @endphp
 
                             {{-- País --}}
-                                    <div class="field field-floating">
-                                        <input type="text"
-                                            name="pais"
-                                            id="pais"
-                                            list="paises-list"
-                                            placeholder=" "
-                                            autocomplete="off"
-                                            value="{{ old('pais') }}"
-                                            required>
-                                        <label for="pais">Selecciona un país</label> {{-- CAMBIO: Aquí va "Selecciona un país" --}}
+                            <div class="field field-floating">
+                                <select name="pais" id="pais" required>
+                                    <option value="" disabled selected>Selecciona un país</option>
 
-                                        <datalist id="paises-list">
-                                            @foreach($paisesPrioritarios as $valor => $etiqueta)
-                                                <option value="{{ $etiqueta }}">{{ $etiqueta }}</option>
-                                            @endforeach
+                                    {{-- Países prioritarios --}}
+                                    @foreach($paisesPrioritarios as $valor => $etiqueta)
+                                        <option value="{{ $valor }}">{{ $etiqueta }}</option>
+                                    @endforeach
 
-                                            @foreach($todosPaises as $valor => $etiqueta)
-                                                <option value="{{ $etiqueta }}">{{ $etiqueta }}</option>
-                                            @endforeach
-                                        </datalist>
-                                    </div>
+                                    <option disabled>──────────</option>
 
-                                    <script>
-                                    (function() {
-                                        const paisInput = document.getElementById('pais');
-                                        if (!paisInput) return;
-
-                                        const container = paisInput.closest('.field-floating');
-                                        const label = container.querySelector('label');
-
-                                        function updateFloatingState() {
-                                            const hasValue = paisInput.value.trim() !== '';
-                                            const hasFocus = document.activeElement === paisInput;
-
-                                            if (hasValue || hasFocus) {
-                                                // Cuando tiene valor o foco: el label sube y muestra "País"
-                                                container.classList.add('filled');
-                                                label.textContent = 'País'; // Cambia el texto del label
-                                            } else {
-                                                // Cuando está vacío y sin foco: el label baja y muestra "Selecciona un país"
-                                                container.classList.remove('filled');
-                                                label.textContent = 'Selecciona un país'; // Cambia el texto del label
-                                            }
-                                        }
-
-                                        // Eventos
-                                        paisInput.addEventListener('input', updateFloatingState);
-                                        paisInput.addEventListener('focus', updateFloatingState);
-                                        paisInput.addEventListener('blur', updateFloatingState);
-                                        paisInput.addEventListener('change', updateFloatingState);
-
-                                        // Estado inicial
-                                        updateFloatingState();
-
-                                        // Si selecciona una opción del datalist
-                                        paisInput.addEventListener('change', function() {
-                                            updateFloatingState();
-                                        });
-                                    })();
-                                    </script>
+                                    {{-- Resto de países --}}
+                                    @foreach($todosPaises as $valor => $etiqueta)
+                                        <option value="{{ $valor }}">{{ $etiqueta }}</option>
+                                    @endforeach
+                                </select>
+                                <label for="pais">País</label>
+                            </div>
 
                                     {{-- Fecha de nacimiento --}}
                                     <div class="field field-dob-container">
@@ -2400,8 +2402,7 @@ input:checked + .slider:before {
                                     </div>
                                 </div>
 
-                                <div id="paypal-button-container"
-                                    style="display:none; text-align:center; margin-top:20px;"></div>
+
                             </form>
                         </div>
 
@@ -2725,19 +2726,52 @@ input:checked + .slider:before {
     </main>
 
     {{-- TARJETA RESPONSIVA --}}
-    @if ($stepCurrent === 4)
-        <div class="movil-footer-sticky">
-            <div class="movil-total-wrapper">
-                <span class="movil-total-label">Total</span>
-                <span id="qTotalMovil" class="movil-total-amount">
-                    ${{ number_format($tarifaBase, 0) }} MXN
-                </span>
-            </div>
-            <button type="button" id="btnReservarMovil" class="btn-reservar-movil">
-                Reservar
-            </button>
+@if ($stepCurrent === 4)
+    <div class="movil-footer-sticky">
+        <div class="movil-total-wrapper">
+            <span class="movil-total-label">Total</span>
+            <span id="qTotalMovil" class="movil-total-amount">
+                ${{ number_format($tarifaBase, 0) }} MXN
+            </span>
         </div>
-    @endif
+        <button type="button" id="btnReservarMovil" class="btn-reservar-movil">
+            Reservar
+        </button>
+    </div>
+
+{{-- MODAL DE PAGO EN LÍNEA --}}
+<div id="modalPagoOnline" class="modal-overlay" style="display:none;">
+    <div class="modal-card">
+        <button id="cerrarModalPagoOnline" class="modal-close" type="button">×</button>
+
+        <!-- HEADER -->
+        <div class="modal-linea-head">
+            <span class="modal-linea-badge">
+                <i class="fa-regular fa-credit-card"></i> Pago seguro
+            </span>
+            <h3>Pago en línea</h3>
+            <div class="modal-linea-sub">Completa tu reserva de forma segura</div>
+        </div>
+
+        <div class="modal-linea-scrollable">
+            <div class="modal-linea-body">
+                <!-- Contenedor de PayPal -->
+                <div id="paypal-button-container">
+                    <div class="modal-linea-loading">
+                        <i class="fa-regular fa-credit-card"></i>
+                        <p>Cargando opciones de pago...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-linea-security">
+            <i class="fa-regular fa-lock"></i>
+            <span>Pago seguro procesado por PayPal</span>
+            <i class="fa-regular fa-shield-haltered"></i>
+        </div>
+    </div>
+</div>
+@endif
 @endsection
 
 @section('js-vistaReservaciones')

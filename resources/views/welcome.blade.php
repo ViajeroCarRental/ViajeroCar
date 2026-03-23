@@ -1482,5 +1482,34 @@
 
 })();
 </script>
+<script>
+    window.iconosPorId = {
+        @foreach($ciudades as $ciudad)
+            @foreach($ciudad->sucursalesActivas as $suc)
+                @php
+                    $name = strtolower($suc->nombre);
+                    $icon = 'fa-building';
+
+                    if (str_contains($name, 'aeropuerto')) {
+                        $icon = 'fa-plane-departure';
+                    }
+
+                    elseif (str_contains($name, 'central') && !str_contains($name, 'plaza central park')) {
+                        $icon = 'fa-bus';
+                    }
+
+                    elseif (str_contains($name, 'terminal')) {
+                        $icon = 'fa-bus';
+                    }
+
+                    else {
+                        $icon = 'fa-building';
+                    }
+                @endphp
+                {{ $suc->id_sucursal }}: '{{ $icon }}',
+            @endforeach
+        @endforeach
+    };
+</script>
 
 @endsection
