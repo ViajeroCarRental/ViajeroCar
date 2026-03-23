@@ -98,7 +98,7 @@
                                 </div>
                                 <div>
                                     <h4>Titular de la reservación</h4>
-                                    <p id="clienteNombre">{{ strtoupper($reservacion->nombre_cliente ?? '—') }}</p>
+                                    <p id="clienteNombre">{{ strtoupper(trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? ''))) ?: '—' }}</p>
                                 </div>
                             </div>
                         </div>

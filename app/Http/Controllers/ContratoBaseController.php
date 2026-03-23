@@ -12,11 +12,14 @@ class ContratoBaseController extends Controller
     {
         try {
             $res = DB::table('reservaciones as r')
+                ->leftJoin('contratos as c', 'r.id_reservacion', '=', 'c.id_reservacion')
                 ->leftJoin('vehiculos as v', 'r.id_vehiculo', '=', 'v.id_vehiculo')
                 ->leftJoin('categoria_costo_km as cck', 'r.id_categoria', '=', 'cck.id_categoria')
                 ->where('r.id_reservacion', $idReservacion)
                 ->select(
                     'r.*',
+                    'c.numero_contrato',
+                    'c.id_contrato as contrato_id',
                     'v.id_vehiculo as veh_id',
                     'v.marca as veh_marca',
                     'v.modelo as veh_modelo',
@@ -44,6 +47,23 @@ class ContratoBaseController extends Controller
             $totalCargosExtra = 0; // Para delivery
             $totalCargosPaso4 = 0; // Para Gasolina, Sillas, etc.
             $entregaInfo = null;
+
+
+            // if ($res->delivery_activo && $res->delivery_total > 0) {
+            //     $totalCargosPaso4 += (float) $res->delivery_total;
+            //     $listaCargos[] = [
+            //         'nombre'   => '🚚 Servicio de Dropoff',
+            //         'cantidad' => 1,
+            //         'total'    => (float) $res->delivery_total
+            //     ];
+
+            //     $entregaInfo = [
+            //         'tipo'      => 'A domicilio',
+            //         'direccion' => $res->delivery_direccion ?? '—',
+            //         'monto'     => (float) $res->delivery_total,
+            //         'total'     => (float) $res->delivery_total,
+            //     ];
+            // }
 
             // Cálculo de Seguros (Paquete o Individuales)
             $paquete = DB::table('reservacion_paquete_seguro as rps')
@@ -94,11 +114,10 @@ class ContratoBaseController extends Controller
 
                 $entregaInfo = [
                     'tipo' => 'A domicilio',
-                    'direccion' => $res->direccion_entrega ?? 'Dirección no especificada'
+                    'direccion' => $res->delivery_direccion ?? 'Dirección no especificada'
                 ];
             }
 
-            // Lógica de Cargos Adicionales (Paso 4: Gasolina, Permisos, Menor Edad, etc.)
             $contratoLigado = DB::table('contratos')->where('id_reservacion', $idReservacion)->first();
 
             if ($contratoLigado) {
@@ -156,6 +175,8 @@ class ContratoBaseController extends Controller
                 'success' => true,
                 'data' => [
                     'codigo'   => $res->codigo,
+                    'numero_contrato' => $res->numero_contrato ?? 'SIN GENERAR',
+                    'id_contrato'     => $res->contrato_id,
                     'cliente'  => [
                         'nombre'   => $res->nombre_cliente,
                         'telefono' => $res->telefono_cliente,
@@ -174,6 +195,8 @@ class ContratoBaseController extends Controller
                         'puertas'     => $res->veh_puertas
                     ] : null,
                     'entrega'  => $entregaInfo,
+                    'costo_km' => $res->precio_km_dropoff ?? 0,
+
                     'fechas'   => [
                         'inicio'      => $res->fecha_inicio,
                         'hora_inicio' => \Carbon\Carbon::parse($res->hora_retiro)->format('h:i A'),
@@ -192,7 +215,8 @@ class ContratoBaseController extends Controller
                         'subtotal'          => $subtotalReal,
                         'iva'               => $ivaReal,
                         'total'             => $totalReal,
-                        'servicios_total'   => ($totalServiciosAdic + $totalCargosExtra),
+                        // 'servicios_total' => ($totalServiciosAdic + $totalCargosExtra + $totalCargosPaso4),
+                        'servicios_total' => ($totalServiciosAdic + $totalCargosExtra),
                         'horas_cortesia'    => $res->horas_cortesia
                     ],
                     'pagos' => [

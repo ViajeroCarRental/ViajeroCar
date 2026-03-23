@@ -338,7 +338,7 @@ $html = view('Admin.contrato-final-pdf', [
     'arrendatarioNombre' => $arrendatarioNombre,
 ])->render();
 
-$filePath = storage_path("app/public/Contrato_{$id}.pdf");
+$filePath = storage_path("app/public/Contrato_{$contrato->numero_contrato}.pdf");
 
 Browsershot::html($html)
     ->format('A4')
