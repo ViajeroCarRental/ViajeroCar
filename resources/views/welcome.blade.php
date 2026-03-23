@@ -426,7 +426,7 @@
                 {{-- SELECT DROPOFF (controlado por JS) --}}
                 <div class="field icon-field" id="dropoffWrapper">
                     <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
-                    <select id="dropoffPlace" name="dropoff_sucursal_id">
+                    <select id="dropoffPlace" name="dropoff_sucursal_id" class="no-scroll-trap">
                         <option value="" disabled selected>¿Dónde termina tu viaje?</option>
                         @foreach($ciudades as $ciudad)
                             <optgroup label="{{ $ciudad->nombre }}">
@@ -1481,6 +1481,35 @@
   });
 
 })();
+</script>
+<script>
+    window.iconosPorId = {
+        @foreach($ciudades as $ciudad)
+            @foreach($ciudad->sucursalesActivas as $suc)
+                @php
+                    $name = strtolower($suc->nombre);
+                    $icon = 'fa-building';
+
+                    if (str_contains($name, 'aeropuerto')) {
+                        $icon = 'fa-plane-departure';
+                    }
+
+                    elseif (str_contains($name, 'central') && !str_contains($name, 'plaza central park')) {
+                        $icon = 'fa-bus';
+                    }
+
+                    elseif (str_contains($name, 'terminal')) {
+                        $icon = 'fa-bus';
+                    }
+
+                    else {
+                        $icon = 'fa-building';
+                    }
+                @endphp
+                {{ $suc->id_sucursal }}: '{{ $icon }}',
+            @endforeach
+        @endforeach
+    };
 </script>
 
 @endsection

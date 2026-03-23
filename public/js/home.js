@@ -241,11 +241,10 @@
     selH.className = "tp-hour custom-select-clean";
     selH.setAttribute("aria-label", "Hora");
 
-    // Llenamos solo con horas: 01, 02, 03... hasta hourMax
     for (let h = 1; h <= hourMax; h++) {
       const op = document.createElement("option");
-      op.value = String(h);
-      op.textContent = pad2(h);
+      op.value = pad2(h);
+      op.textContent = `${pad2(h)}:00`;
       selH.appendChild(op);
     }
 
@@ -1092,13 +1091,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const btnAbrir = document.getElementById('btn-abrir-buscador');
         const btnCerrar = document.getElementById('btn-cerrar-buscador');
         const buscador = document.getElementById('miBuscador');
+        const dropoffPlace = document.getElementById('dropoffPlace');
 
         if (!btnAbrir || !btnCerrar || !buscador) return;
 
         function bloquearScroll() {
-
             const scrollY = window.scrollY;
-
 
             document.body.style.position = 'fixed';
             document.body.style.top = `-${scrollY}px`;
@@ -1111,7 +1109,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         function restaurarScroll() {
-
             document.body.style.position = '';
             document.body.style.top = '';
             document.body.style.left = '';
@@ -1120,7 +1117,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.style.width = '';
 
             const scrollY = document.body.dataset.scrollY || 0;
-            window.scrollTo(0, parseInt(scrollY));
+            window.scrollTo(0, parseInt(scrollY, 10));
 
             delete document.body.dataset.scrollY;
         }
@@ -1137,7 +1134,6 @@ document.addEventListener('DOMContentLoaded', function() {
             restaurarScroll();
         });
 
-        // Opcional: Prevenir scroll con teclado
         window.addEventListener('keydown', function(e) {
             if (buscador.classList.contains('active')) {
                 if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === ' ' || e.key === 'Spacebar') {
@@ -1147,15 +1143,118 @@ document.addEventListener('DOMContentLoaded', function() {
         }, { passive: false });
 
 
-        document.body.addEventListener('touchmove', function(e) {
-            if (buscador.classList.contains('active')) {
-                e.preventDefault();
-            }
-        }, { passive: false });
+
+        if (dropoffPlace) {
+            dropoffPlace.addEventListener('touchstart', function(e) {
+                this.dataset.touchStartY = e.touches[0].clientY;
+                this.dataset.isDragging = '0';
+            }, { passive: true });
+
+            dropoffPlace.addEventListener('touchmove', function(e) {
+                const startY = parseFloat(this.dataset.touchStartY || '0');
+                const currentY = e.touches[0].clientY;
+                const diffY = Math.abs(currentY - startY);
+
+                if (diffY > 8) {
+                    this.dataset.isDragging = '1';
+                }
+            }, { passive: true });
+
+            dropoffPlace.addEventListener('touchend', function() {
+                if (this.dataset.isDragging === '1') {
+                    this.dataset.isDragging = '0';
+                    return;
+                }
+            }, { passive: true });
+        }
     }
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initScrollControl);
     } else {
         initScrollControl();
     }
+
+    /* ============================================================
+   PARCHE RÁPIDO: SCROLL MANUAL SOBRE #dropoffWrapper EN MÓVIL
+============================================================ */
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('miBuscador');
+    const dropoffWrapper = document.getElementById('dropoffWrapper');
+
+    if (!modal || !dropoffWrapper) return;
+
+    let startY = 0;
+    let startScrollTop = 0;
+    let dragging = false;
+
+    function isMobileFormOpen() {
+        return window.innerWidth <= 1124 && modal.classList.contains('active');
+    }
+
+    dropoffWrapper.addEventListener('touchstart', function (e) {
+        if (!isMobileFormOpen()) return;
+
+        startY = e.touches[0].clientY;
+        startScrollTop = modal.scrollTop;
+        dragging = false;
+    }, { passive: true });
+
+    dropoffWrapper.addEventListener('touchmove', function (e) {
+        if (!isMobileFormOpen()) return;
+
+        const currentY = e.touches[0].clientY;
+        const diffY = startY - currentY;
+
+        if (Math.abs(diffY) > 6) {
+            dragging = true;
+            e.preventDefault(); // evita que el select se robe el gesto
+            modal.scrollTop = startScrollTop + diffY;
+        }
+    }, { passive: false });
+
+    dropoffWrapper.addEventListener('touchend', function () {
+        setTimeout(() => {
+            dragging = false;
+        }, 50);
+    }, { passive: true });
+
+    const dropoffPlace = document.getElementById('dropoffPlace');
+    if (dropoffPlace) {
+        dropoffPlace.addEventListener('click', function (e) {
+            if (dragging) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+    }
+});
 })();
+/* ============================================================
+                                SELECT2
+============================================================ */
+$(document).ready(function() {
+
+  function formatOption(option) {
+    if (!option.id) {
+      return $('<span class="icon-item"><i class="fa-solid fa-location-dot"></i> ' + option.text + '</span>');
+    }
+
+    // Usar el mapa global generado desde PHP
+    let iconClass = window.iconosPorId ? (window.iconosPorId[option.id] || 'fa-building') : 'fa-building';
+
+    return $(
+        '<span class="icon-item"><i class="fa-solid ' + iconClass + '"></i> ' +
+        option.text +
+        '</span>');
+  }
+
+  $('#pickupPlace, #dropoffPlace').select2({
+    templateResult: formatOption,
+    templateSelection: formatOption,
+    escapeMarkup: function(markup) { return markup; },
+    width: '100%',
+    minimumResultsForSearch: Infinity
+  });
+
+});

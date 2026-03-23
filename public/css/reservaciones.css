@@ -2044,7 +2044,27 @@
       padding:10px 12px;
     }
   }
+@media (max-width: 640px){
 
+  .addon-tooltip{
+    left: auto !important;
+    right: 0 !important;
+    transform: translateY(8px) !important;
+
+    width: 180px !important;
+    font-size: 11px !important;
+
+    text-align: center !important;
+    padding: 10px 12px !important;
+  }
+
+  .addon-tooltip::after{
+    left: auto !important;
+    right: 10px !important;
+    transform: none !important;
+  }
+
+}
   /* ==========================================================
     STEP 4 — LAYOUT 2 PANELES
   ========================================================== */
@@ -3689,46 +3709,231 @@
       }
   }
   /* ============================================================
-    MÓVIL Y TABLET (<= 1124px) - formulario step 1
+    BUSCADOR RESPONSIVO - VERSIÓN INTEGRADA
+  ============================================================ */
+
+  /* Estilos base del buscador (escritorio) - SIN CAMBIOS */
+  #miBuscador {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 20px;
+  }
+
+  #miBuscador .search-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 0.8fr;
+      gap: 15px;
+      align-items: start;
+  }
+
+  /* Botón para móvil/tablet - visible solo en esos dispositivos */
+  .btn-buscador-movil {
+      display: none;
+      width: 100%;
+      max-width: 100%;
+      margin: 15px 0;
+      padding: 0 15px;
+  }
+
+  .btn-buscador-movil .btn-container {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      text-align: center;
+      width: 100%;
+      margin: 0 auto;
+  }
+
+  .btn-buscador-movil p {
+      margin-bottom: 12px;
+      font-weight: 700;
+      color: #333;
+      font-size: 16px;
+  }
+
+  .btn-buscador-movil button {
+      background-color: #b22222;
+      border: none;
+      font-weight: 700;
+      height: 50px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-transform: uppercase;
+      border-radius: 8px;
+      width: 100%;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+  }
+
+  .btn-buscador-movil button:hover {
+      background-color: #8b1a1a;
+  }
+
+  /* ============================================================
+    MÓVIL Y TABLET (<= 1124px) - CORREGIDO PARA BAJAR EL BUSCADOR
   ============================================================ */
   @media (max-width: 1124px) {
-    #miBuscador {
-       display: block !important;
-        position: relative !important;
-        width: 100% !important;
-        height: auto !important;
-        margin: 0 auto !important;
-        padding: 15px !important;
-        overflow: visible !important;
-        box-sizing: border-box !important;
-    }
-    @media (max-width: 1124px) {
-    .page.wizard-page[data-current-step="1"] #miBuscador {
-        display: block !important;
-        position: relative !important;
-        height: auto !important;
-        overflow: visible !important;
-        padding: 20px !important;
-    }
-}
+      /* Ocultar buscador original en móvil/tablet */
+      #miBuscador {
+          display: none !important;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100vw !important;
+          height: 100vh !important;
+          z-index: 99999 !important;
+          background: #ffffff !important;
+          margin: 0 !important;
+          overflow-y: auto !important;
+          border-radius: 0 !important;
+      }
+
+      #miBuscador.active {
+          display: block !important;
+          padding: 250px 20px 40px !important; /* MUCHO MÁS ESPACIO ARRIBA */
+      }
+
+      /* Ajuste específico para tablet */
+      @media (min-width: 561px) and (max-width: 1124px) {
+          #miBuscador.active {
+              padding: 200px 30px 40px !important; /* Más espacio en tablet */
+          }
+      }
+
+      /* Ajuste específico para móvil */
+      @media (max-width: 560px) {
+          #miBuscador.active {
+              padding: 160px 15px 30px !important; /* Espacio en móvil */
+          }
+      }
+
+      /* Mostrar botón en móvil/tablet */
+      .btn-buscador-movil {
+          display: block !important;
+      }
+
+      /* Bloquear scroll cuando el buscador está activo */
+      body:has(#miBuscador.active) {
+          overflow: hidden !important;
+      }
+
+      /* Ocultar contenido principal cuando el buscador está activo */
+      body:has(#miBuscador.active) .hero-content,
+      body:has(#miBuscador.active) .hero-bg,
+      body:has(#miBuscador.active) .hero-overlay,
+      body:has(#miBuscador.active) .container,
+      body:has(#miBuscador.active) .footer,
+      body:has(#miBuscador.active) .topbar,
+      body:has(#miBuscador.active) .btn-buscador-movil {
+          display: none !important;
+      }
+
+      /* Grid responsivo para móvil/tablet */
+      #miBuscador.active .search-grid {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 20px !important;
+          background: transparent !important;
+          padding: 0 !important;
+      }
+
+      #miBuscador.active .sg-col {
+          width: 100% !important;
+      }
+
+      /* Ajustes para campos */
+      #miBuscador.active .field {
+          width: 100% !important;
+          margin-bottom: 15px !important;
+      }
+
+      /* ============================================================
+        CAMBIOS IMPORTANTES: FECHA Y HORA UNO AL LADO DEL OTRO
+      ============================================================ */
+      #miBuscador.active .datetime-row {
+          display: flex !important;
+          flex-direction: row !important;
+          gap: 12px !important;
+          width: 100% !important;
+      }
+
+      #miBuscador.active .dt-field {
+          flex: 1 !important;
+          min-width: 0 !important;
+      }
+
+      /* Asegurar que los inputs ocupen todo el ancho disponible */
+      #miBuscador.active .dt-field input,
+      #miBuscador.active .dt-field select {
+          width: 100% !important;
+      }
+
+      /* Selects y inputs más grandes para móvil */
+      #miBuscador.active select,
+      #miBuscador.active input {
+          height: 50px !important;
+          font-size: 16px !important;
+      }
+
+      /* Botones más grandes */
+      #miBuscador.active .actions {
+          display: flex !important;
+          gap: 10px !important;
+          margin-top: 10px !important;
+      }
+
+      #miBuscador.active .actions button {
+          flex: 1 !important;
+          height: 50px !important;
+          font-size: 16px !important;
+      }
+
+      /* Checkbox más grande para móvil */
+      #miBuscador.active .inline-check {
+          font-size: 14px !important;
+          padding: 10px 0 !important;
+      }
+
+      #miBuscador.active .inline-check input[type="checkbox"] {
+          width: 20px !important;
+          height: 20px !important;
+          margin-right: 8px !important;
+      }
+
+      /* Ajuste para los selects de ubicación */
+      #miBuscador.active .location-inputs-wrapper {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 12px !important;
+      }
+
+      #miBuscador.active .location-inputs-wrapper .field {
+          margin-bottom: 0 !important;
+      }
   }
-.page.wizard-page .wizard-card{
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
 
-    /* Firefox */
-    scrollbar-width: none !important;
+  /* ============================================================
+    ESCRITORIO (>= 1125px) - SIN CAMBIOS
+  ============================================================ */
+  @media (min-width: 1125px) {
+      #miBuscador {
+          display: block !important;
+      }
 
-    /* IE / Edge antiguo */
-    -ms-overflow-style: none !important;
-}
+      .btn-buscador-movil {
+          display: none !important;
+      }
+  }
 
-/* Chrome, Edge, Safari */
-.page.wizard-page .wizard-card::-webkit-scrollbar{
-    width: 0px !important;
-    height: 0px !important;
-    display: none !important;
-}
   /* ============================================================
     ALERTAS PARA EL BUSCADOR
   ============================================================ */
@@ -3787,9 +3992,8 @@
   /* Ajuste para móvil */
   @media (max-width: 560px) {
       #miBuscador .error-msg {
-          position: static !important;
-        display: block !important;
-        margin-top: 4px !important;
+          font-size: 9px !important;
+          bottom: -16px !important;
       }
   }
 
@@ -3808,153 +4012,258 @@
       display: none !important;
   }
 
+  /* En móvil/tablet, mantener la misma prioridad */
+  @media (max-width: 1124px) {
+      #miBuscador.active #dropoffWrapper {
+          display: none; /* JS lo controlará */
+      }
 
-/* ============================================================
-    SOLUCIÓN - VER TODO COMPLETO EN MÓVIL/TABLET
+      #miBuscador.active #dropoffWrapper[style*="display: block"] {
+          display: block !important;
+      }
+
+      #miBuscador.active #dropoffWrapper[style*="display: none"] {
+          display: none !important;
+      }
+  }
+
+  /* ============================================================
+    CORRECCIÓN PARA EL DROPOFF - QUE APAREZCA DEBAJO
+  ============================================================ */
+  /* En tablet y móvil, cuando el dropoff esté visible, que esté debajo */
+  @media (max-width: 1124px) {
+      #miBuscador.active #dropoffWrapper {
+          width: 100% !important;
+          margin-top: 10px !important;
+      }
+
+      #miBuscador.active #dropoffWrapper .field {
+          width: 100% !important;
+      }
+  }
+
+  /* Para tablet específicamente */
+  @media (min-width: 561px) and (max-width: 1124px) {
+      #miBuscador.active #dropoffWrapper {
+          grid-column: 1 / -1 !important;
+          width: 100% !important;
+          margin-top: 10px !important;
+      }
+
+      #miBuscador.active .location-inputs-wrapper {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+          gap: 15px !important;
+      }
+
+      #miBuscador.active #pickupField {
+          grid-column: span 1 !important;
+          min-height: 70px !important;
+      }
+
+      #miBuscador.active #pickupField select {
+          height: 50px !important;
+          width: 100% !important;
+      }
+
+      #miBuscador.active #dropoffWrapper {
+          grid-column: 1 / -1 !important;
+          min-height: 70px !important;
+      }
+
+      #miBuscador.active #dropoffWrapper select {
+          height: 50px !important;
+          width: 100% !important;
+      }
+
+      #miBuscador.active .location-inputs-wrapper .field {
+          margin-bottom: 0 !important;
+          min-height: 70px !important;
+      }
+  }
+
+  /* Para móvil */
+  @media (max-width: 560px) {
+      #miBuscador.active .location-inputs-wrapper {
+          display: flex !important;
+          flex-direction: column !important;
+      }
+
+      #miBuscador.active #dropoffWrapper {
+          width: 100% !important;
+          margin-top: 10px !important;
+      }
+
+      #miBuscador.active #pickupField,
+      #miBuscador.active #dropoffWrapper {
+          min-height: 70px !important;
+      }
+
+      #miBuscador.active #pickupField select,
+      #miBuscador.active #dropoffWrapper select {
+          height: 50px !important;
+          width: 100% !important;
+      }
+  }
+
+  /* ============================================================
+    BOTÓN DE CERRAR - SOLO EN MÓVIL/TABLET
+  ============================================================ */
+  #btn-cerrar-buscador-politicas {
+      display: none !important;
+  }
+
+  @media (max-width: 1124px) {
+      #miBuscador.active #btn-cerrar-buscador-politicas {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          position: fixed !important;
+          top: 20px !important;
+          right: 20px !important;
+          z-index: 100002 !important;
+          width: 40px !important;
+          height: 40px !important;
+          background: #b22222 !important;
+          border: none !important;
+          border-radius: 50% !important;
+          cursor: pointer !important;
+          box-shadow: 0 4px 12px rgba(178,34,34,0.3) !important;
+          transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+      }
+
+      #miBuscador.active #btn-cerrar-buscador-politicas:hover {
+          transform: scale(1.05) !important;
+          box-shadow: 0 6px 16px rgba(178,34,34,0.4) !important;
+      }
+
+      #miBuscador.active #btn-cerrar-buscador-politicas:active {
+          transform: scale(0.95) !important;
+      }
+
+      #miBuscador.active #btn-cerrar-buscador-politicas span {
+          display: none !important;
+      }
+
+      #miBuscador.active #btn-cerrar-buscador-politicas::before {
+          content: "×" !important;
+          display: block !important;
+          font-size: 32px !important;
+          font-weight: 300 !important;
+          color: white !important;
+          line-height: 1 !important;
+          transform: translateY(-2px) !important;
+      }
+
+      @media (min-width: 561px) and (max-width: 1124px) {
+          #miBuscador.active #btn-cerrar-buscador-politicas {
+              top: 30px !important;
+              right: 30px !important;
+              width: 45px !important;
+              height: 45px !important;
+          }
+      }
+
+      @media (max-width: 560px) {
+          #miBuscador.active #btn-cerrar-buscador-politicas {
+              top: 15px !important;
+              right: 15px !important;
+              width: 36px !important;
+              height: 36px !important;
+          }
+
+          #miBuscador.active #btn-cerrar-buscador-politicas::before {
+              font-size: 28px !important;
+          }
+      }
+  }
+  /* ============================================================
+    BAJAR EL BOTÓN DE BÚSQUEDA EN MÓVIL/TABLET
   ============================================================ */
   @media (max-width: 1124px) {
-    body,
-    html,
-    .containerVS,
-    .page.wizard-page {
-        overflow-x: hidden !important;
-        max-width: 100vw !important;
-        position: relative !important;
-    }
+      .btn-buscador-movil {
+          margin-top: 80px !important;
+      }
+  }
 
-    /* Forzar buscador a mantenerse dentro - CON ESPACIO SOLO IZQUIERDO Y BORDES REDONDEADOS */
-    #miBuscador {
-        max-width: calc(100% - 0px) !important; /* Solo resta el margen izquierdo */
-        width: calc(100% - 15px) !important;
-        margin-left: 0px !important;  /* Espacio izquierdo */
-        padding: 18px 15px !important;
-        box-sizing: border-box !important;
-        border-radius: 12px !important; /* Bordes redondeados SOLO aquí */
-    }
 
-    /* Forzar todos los elementos internos a respetar el ancho */
-    #miBuscador * {
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-    }
+  @media (min-width: 769px) and (max-width: 1124px) {
+      .btn-buscador-movil {
+          margin-top: 100px !important;
+      }
+  }
 
-    /* Forzar grid a una sola columna */
-    #miBuscador .search-grid {
-        display: block !important;
-        width: 100% !important;
-    }
+  @media (max-width: 560px) {
+      .btn-buscador-movil {
+          margin-top: 70px !important;
+      }
+  }
 
-    /* Forzar filas de fecha a no desbordarse */
-    #miBuscador .datetime-row {
-        display: flex !important;
-        flex-wrap: wrap !important;
-        gap: 10px !important;
-        width: 100% !important;
-    }
 
-    /* Fecha y hora en 2 columnas TAMBIÉN EN MÓVIL */
-    #miBuscador .dt-field {
-        flex: 1 1 calc(50% - 5px) !important;
-        max-width: calc(50% - 5px) !important;
-        min-width: 120px !important;
-    }
+  .btn-buscador-movil {
+      margin-bottom: 20px;
+  }
+  /* ============================================================
+    TABLET - CORRECCIÓN DE ANCHOS PARA CAMPOS DE UBICACIÓN
+  ============================================================ */
+  @media (min-width: 561px) and (max-width: 1124px) {
+      #miBuscador.active .location-inputs-wrapper {
+          display: grid !important;
+          grid-template-columns: 1fr !important;
+          gap: 15px !important;
+          width: 100% !important;
+      }
 
-    /* Para móviles muy pequeños */
-    @media (max-width: 380px) {
-        #miBuscador .dt-field {
-            flex: 1 1 calc(50% - 4px) !important;
-            max-width: calc(50% - 4px) !important;
-        }
-    }
 
-    /* Forzar campos individuales */
-    #miBuscador .field,
-    #miBuscador .time-field,
-    #miBuscador input,
-    #miBuscador select {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-    }
+      #miBuscador.active #pickupField,
+      #miBuscador.active #dropoffWrapper {
+          width: 100% !important;
+          grid-column: 1 / -1 !important;
+      }
 
-    /* Forzar botón móvil - ajustado también */
-    .btn-buscador-movil {
-        display: block !important;
-        width: calc(100% - 15px) !important; /* Mismo ancho que el buscador */
-        margin: 15px 0 15px 15px !important; /* Solo margen izquierdo */
-        padding: 0 !important;
-    }
 
-    .btn-buscador-movil .btn-container {
-        width: 100% !important;
-        padding: 15px !important;
-        box-sizing: border-box !important;
-        border-radius: 12px !important;
-    }
+      #miBuscador.active #dropoffWrapper[style*="display: block"] {
+          display: block !important;
+          width: 100% !important;
+          margin-top: 0 !important;
+      }
 
-    .btn-buscador-movil button {
-        width: 100% !important;
-        white-space: normal !important;
-        word-wrap: break-word !important;
-        border-radius: 8px !important;
-    }
 
-    /* Forzar mensajes de error */
-    #miBuscador .error-msg {
-        white-space: normal !important;
-        font-size: 9px !important;
-        bottom: -20px !important;
-        left: 5px !important;
-        right: 5px !important;
-        width: auto !important;
-    }
+      #miBuscador.active #pickupField select,
+      #miBuscador.active #dropoffWrapper select {
+          width: 100% !important;
+      }
+  }
 
-    /* Forzar select2 si existe */
-    #miBuscador .select2-container {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-}
+  /* ============================================================
+    SEPARAR EL CHECKBOX DEL BOTÓN DE CERRAR EN TABLET/MÓVIL
+  ============================================================ */
+  @media (max-width: 1124px) {
 
-/* Solución adicional para el fondo */
-.fondo-fijo-layout,
-.fondos-reservaciones {
-    max-width: 100vw !important;
-    overflow-x: hidden !important;
-}
+      #miBuscador.active .location-head {
+          margin-top: 20px !important;
+          padding-top: 10px !important;
+      }
 
-/* Para pantallas muy pequeñas - ajustes finos */
-@media (max-width: 380px) {
-    #miBuscador {
-        padding-left: 12px !important;
-        padding-right: 12px !important;
-        border-radius: 10px !important;
-    }
 
-    #miBuscador .field-title {
-        font-size: 10px !important;
-    }
+      #miBuscador.active .inline-check {
+          margin-top: 5px !important;
+      }
+  }
 
-    #miBuscador input,
-    #miBuscador select {
-        font-size: 13px !important;
-        height: 40px !important;
-        border-radius: 6px !important;
-    }
+  @media (min-width: 561px) and (max-width: 1124px) {
+      #miBuscador.active .location-head {
+          margin-top: 25px !important;
+      }
+  }
 
-    .btn-buscador-movil .btn-container {
-        padding: 12px !important;
-        border-radius: 10px !important;
-    }
-}
-@media (max-width: 560px) {
 
-    #miBuscador .field {
-        min-height: auto !important;
-        height: auto !important;
-    }
+  @media (max-width: 560px) {
+      #miBuscador.active .location-head {
+          margin-top: 15px !important;
+      }
+  }
 
-}
   /* =========================================================
    ALERTA ÉXITO RESERVACIÓN
 ========================================================= */
@@ -4445,4 +4754,341 @@
   .resv-alert-mail-glass{
     align-items: flex-start;
   }
+}
+
+/* =========================================================
+MODAL----PAGO EN LINEA
+========================================================= */
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    overflow-y: auto;
+}
+
+.modal-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+    margin: 20px auto;
+}
+
+@media (max-width: 768px) {
+    .modal-card {
+        max-width: 95%;
+        max-height: 85vh;
+        padding: 20px;
+    }
+}
+
+.modal-card::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-card::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.modal-card::-webkit-scrollbar-thumb {
+    background: #b22222;
+    border-radius: 10px;
+}
+
+.modal-card::-webkit-scrollbar-thumb:hover {
+    background: #8b1a1a;
+}
+body.modal-open {
+    overflow: hidden;
+    padding-right: 15px;
+}
+#modalPagoOnline .modal-card {
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modal-linea-scrollable {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 4px 0 0;
+}
+.modal-linea-scrollable::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-linea-scrollable::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.modal-linea-scrollable::-webkit-scrollbar-thumb {
+    background: #b22222;
+    border-radius: 10px;
+}
+
+.modal-linea-scrollable::-webkit-scrollbar-thumb:hover {
+    background: #8b1a1a;
+}
+
+
+#modalPagoOnline .modal-close {
+    position: sticky;
+    top: 12px;
+    right: 12px;
+    float: right;
+    margin: 12px 12px 0 0;
+    z-index: 20;
+}
+
+
+.modal-linea-head {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 15;
+    border-bottom: 1px solid #eef2f7;
+}
+
+.modal-linea-security {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    z-index: 15;
+    margin-bottom: 0;
+}
+/* =========================================================
+   MODAL DE PAGO EN LÍNEA
+========================================================= */
+#modalPagoOnline.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 99999;
+}
+
+#modalPagoOnline .modal-card {
+    position: relative;
+    width: min(100%, 420px);
+    max-height: 85vh;
+    background: #fff;
+    border-radius: 24px;
+    padding: 0;
+    box-shadow: 0 24px 55px rgba(0,0,0,.18);
+    border: 1px solid #eef2f7;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+
+#modalPagoOnline .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: #f8fafc;
+    color: #0f172a;
+    font-size: 22px;
+    font-weight: 400;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+#modalPagoOnline .modal-close:hover {
+    background: #eef2f7;
+    transform: scale(1.05);
+}
+
+.modal-linea-head {
+    padding: 24px 24px 16px;
+    text-align: center;
+    border-bottom: 1px solid #eef2f7;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+}
+
+.modal-linea-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(178,34,34,.08);
+    color: var(--brand, #b22222);
+    font-weight: 700;
+    font-size: 11px;
+    margin-bottom: 12px;
+}
+
+.modal-linea-head h3 {
+    margin: 0;
+    font-size: 22px;
+    color: #0f172a;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+}
+
+.modal-linea-sub {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+
+.modal-linea-scrollable {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 0;
+}
+
+
+.modal-linea-scrollable::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-linea-scrollable::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.modal-linea-scrollable::-webkit-scrollbar-thumb {
+    background: #b22222;
+    border-radius: 10px;
+}
+
+.modal-linea-scrollable::-webkit-scrollbar-thumb:hover {
+    background: #8b1a1a;
+}
+
+/* Cuerpo del modal */
+.modal-linea-body {
+    padding: 20px 24px;
+}
+
+.modal-linea-paypal {
+    margin: 0 0 16px 0;
+}
+
+#paypal-button-container {
+    width: 100%;
+    min-height: auto;
+}
+
+/* Info de seguridad */
+.modal-linea-security {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 12px 24px;
+    border-top: 1px solid #eef2f7;
+    font-size: 12px;
+    color: #6b7280;
+    background: white;
+    position: sticky;
+    bottom: 0;
+}
+
+.modal-linea-security i {
+    color: #22c55e;
+    font-size: 12px;
+}
+
+/* Mensaje de carga */
+.modal-linea-loading {
+    text-align: center;
+    padding: 24px 20px;
+    color: #6b7280;
+}
+
+.modal-linea-loading i {
+    font-size: 28px;
+    color: #b22222;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.modal-linea-loading p {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 560px) {
+    #modalPagoOnline .modal-card {
+        width: min(100%, 360px);
+        border-radius: 20px;
+    }
+
+    #modalPagoOnline .modal-close {
+        top: 12px;
+        right: 12px;
+        width: 30px;
+        height: 30px;
+        font-size: 20px;
+    }
+
+    .modal-linea-head {
+        padding: 20px 20px 12px;
+    }
+
+    .modal-linea-head h3 {
+        font-size: 20px;
+    }
+
+    .modal-linea-body {
+        padding: 16px 20px;
+    }
+
+    .modal-linea-security {
+        padding: 10px 20px;
+        font-size: 11px;
+    }
+
+    .modal-linea-loading {
+        padding: 20px 16px;
+    }
+
+    .modal-linea-loading i {
+        font-size: 24px;
+    }
 }

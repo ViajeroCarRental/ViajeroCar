@@ -186,35 +186,32 @@
   }
 
 // =========================
-//  SELECT2 CON ICONOS
+//  SELECT2 CON ICONOS (AHORA FUNCIONA EN TODOS LOS DISPOSITIVOS)
 // =========================
 function setupSelect2Iconos() {
+  // 🔥 ELIMINADA LA CONDICIÓN que desactivaba Select2 en móvil
+
   if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
     console.warn('Select2 no está disponible');
     return;
   }
 
-  console.log('Inicializando Select2 con iconos...');
+  console.log('Inicializando Select2 con iconos en todos los dispositivos...');
 
-  // =========================
-  // FORMATO DE OPCIONES
-  // =========================
-  function formatOption(option) {
+
+// =========================
+// FORMATO DE OPCIONES
+// =========================
+function formatOption(option) {
     if (!option.id) {
-      return $('<span><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
+        return $('<span><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
     }
 
-    let iconClass = 'fa-building';
-    const text = option.text.toLowerCase();
-
-    if (text.includes('aeropuerto')) {
-      iconClass = 'fa-plane-departure';
-    } else if (text.includes('central') || text.includes('terminal')) {
-      iconClass = 'fa-bus';
-    }
+    // Usar el mapa generado desde PHP
+    let iconClass = window.iconosPorId ? (window.iconosPorId[option.id] || 'fa-building') : 'fa-building';
 
     return $('<span><i class="fa-solid ' + iconClass + '" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
-  }
+}
 
   const modal = document.getElementById('miBuscadorPoliticas');
   const dropoffWrapper = document.getElementById('dropoffWrapperPoliticas');
@@ -241,7 +238,7 @@ function setupSelect2Iconos() {
     width: '100%',
     minimumResultsForSearch: Infinity,
     allowClear: false,
-    dropdownParent: modal ? $(modal) : undefined
+    dropdownParent: modal ? $(modal) : $('body')
   };
 
   // =========================
@@ -294,7 +291,7 @@ function setupSelect2Iconos() {
     }
   }, 150);
 
-  console.log('Select2 listo y funcionando correctamente 🔥');
+  console.log('Select2 listo y funcionando correctamente en todos los dispositivos 🔥');
 }
   // =========================
   //  FUNCIÓN PARA CAMBIAR ICONOS SEGÚN SELECCIÓN

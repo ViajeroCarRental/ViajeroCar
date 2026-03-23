@@ -9,7 +9,6 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   const btnPagoMostrador = document.getElementById("btnPagoMostrador");
-  const btnPagoLinea     = document.getElementById("btnPagoLinea");
   const modalMetodoPago  = document.getElementById("modalMetodoPago");
 
     // ============================================================
@@ -515,13 +514,5 @@ if (table) {
     });
   }
 
-  // ============================================================
-  // === OPCIÓN: PAGO EN LÍNEA (solo cierra modal) =============
-  // ============================================================
-  if (btnPagoLinea) {
-    btnPagoLinea.addEventListener("click", () => {
-      if (modalMetodoPago) modalMetodoPago.style.display = "none";
-      // El flujo real de PayPal lo maneja BtnReservaLinea.js
-    });
-  }
+
 });

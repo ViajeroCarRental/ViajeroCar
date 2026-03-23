@@ -1710,21 +1710,57 @@ span.flatpickr-weekday {
         font-size: 28px !important;
     }
 }
-#btn-cerrar-buscador-politicas.btn-close-politicas {
-    display: none !important;
-}
+@media (max-width: 768px) {
 
-/* Mostrar solo en móvil/tablet (hasta 1124px) */
-@media (max-width: 1124px) {
-    #btn-cerrar-buscador-politicas.btn-close-politicas {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-    }
+  #miBuscadorPoliticas .search-grid {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 20px !important;
+  }
+
+}
+@media (max-width: 768px) {
+
+  #miBuscadorPoliticas .location-inputs-wrapper {
+    flex-direction: column !important;
+    height: auto !important;
+    gap: 10px !important;
+  }
+
+}
+@media (max-width: 768px) {
+
+  #miBuscadorPoliticas .sg-col-datetime {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  /* Mantener fecha y hora en horizontal hasta 560px */
+  #miBuscadorPoliticas .datetime-row {
+    flex-direction: row !important;
+    gap: 10px !important;
+    height: auto !important;
+  }
+
+  /* Cada campo ocupa 50% */
+  #miBuscadorPoliticas .datetime-row .dt-field {
+    flex: 1 !important;
+    width: 50% !important;
+  }
+
+}
+@media (max-width: 768px) {
+
+  #miBuscadorPoliticas .field,
+  #miBuscadorPoliticas .dt-field {
+    height: auto !important;
+  }
+
 }
 /* ==========================================================
    FIX SAFARI / MAC — POLITICAS
-   Agregar al FINAL del archivo
+
 ========================================================== */
 
 /* Renderizado más estable en Mac */
@@ -1828,6 +1864,14 @@ body {
   height: 100% !important;
   top: 0 !important;
 }
+.select2-results__options {
+  max-height: 250px !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+.select2-container {
+  touch-action: manipulation !important;
+}
 
 /* ==========================================================
    BOTONES
@@ -1848,4 +1892,49 @@ i.fa,
 [class*="fa-"] {
   line-height: 1 !important;
   vertical-align: middle;
+}
+
+
+/* ==========================================================
+                     BOTON DE BUSCAR
+========================================================== */
+@media (max-width: 560px) {
+
+  .hero-content-politicas {
+    position: relative !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+
+    padding-top: 120px !important;
+    padding-bottom: 40px !important;
+    gap: 15px;
+  }
+
+  .hero-texto-superior {
+    margin: 0 !important;
+    padding-left: 10px !important;
+  }
+
+  .hero-buscador-wrapper {
+    margin: 0 !important;
+    padding: 0 10px !important;
+  }
+
+  #miBuscadorPoliticas.search-card:not(.active) {
+    position: relative !important;
+    margin-top: 0 !important;
+  }
+
+}
+/* ==========================================================
+   OCULTAR BOTÓN DE CERRAR EN ESCRITORIO
+   ========================================================== */
+@media (min-width: 1125px) {
+    #miBuscadorPoliticas .btn-close-politicas,
+    #btn-cerrar-buscador-politicas,
+    .btn-close-politicas {
+        display: none !important;
+    }
 }
