@@ -966,12 +966,27 @@ document.addEventListener('DOMContentLoaded', function() {
 /* ============================================================
     INICIALIZAR FLATPICKR - CALENDARIOS
 ============================================================ */
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar Flatpickr para las fechas
-    if (typeof flatpickr !== 'undefined') {
+(function() {
+    "use strict";
 
-        // Configuración en español con meses abreviados
-        const localeEs = {
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFlatpickr);
+    } else {
+        initFlatpickr();
+    }
+
+    function initFlatpickr() {
+        // Verificar que Flatpickr existe
+        if (typeof flatpickr === 'undefined') {
+            console.error('❌ Flatpickr no está cargado');
+            return;
+        }
+
+        console.log('✅ Flatpickr encontrado, inicializando...');
+
+        // Configuración básica en español
+        const esLocale = {
             firstDayOfWeek: 1,
             weekdays: {
                 shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
@@ -983,104 +998,87 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
 
-        // Función para sincronizar clases de validación entre inputs
-        function syncValidationClasses(altInput, hiddenInput) {
-            if (!altInput || !hiddenInput) return;
+        // Configuración común
+        const commonConfig = {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            locale: esLocale,
+            allowInput: true,
+            disableMobile: true
+        };
 
-            // Observar cambios en el hidden input
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.attributeName === 'class') {
-                        // Copiar clases de validación al altInput
-                        if (hiddenInput.classList.contains('field-error')) {
-                            altInput.classList.add('field-error');
-                        } else {
-                            altInput.classList.remove('field-error');
-                        }
+        // Obtener elementos
+        const pickupElement = document.getElementById('pickupDate');
+        const dropoffElement = document.getElementById('dropoffDate');
 
-                        if (hiddenInput.classList.contains('field-success')) {
-                            altInput.classList.add('field-success');
-                        } else {
-                            altInput.classList.remove('field-success');
-                        }
-                    }
-                });
-            });
-
-            observer.observe(hiddenInput, { attributes: true });
+        if (!pickupElement) {
+            console.error('❌ No se encontró el elemento pickupDate');
+            return;
         }
 
-        // Pickup Date
-        const pickupPicker = flatpickr("#pickupDate", {
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d-M-Y",
-            minDate: "today",
-            allowInput: true,
-            locale: localeEs,
-            onReady: function(selectedDates, dateStr, instance) {
-                // Sincronizar clases iniciales
-                const hiddenInput = document.getElementById('pickupDate');
-                syncValidationClasses(instance.altInput, hiddenInput);
+        if (!dropoffElement) {
+            console.error('❌ No se encontró el elemento dropoffDate');
+            return;
+        }
 
-                // Si el hidden input ya tiene clases, aplicarlas
-                if (hiddenInput.classList.contains('field-error')) {
-                    instance.altInput.classList.add('field-error');
+        // Inicializar Pickup Date
+        let pickupPicker;
+        try {
+            pickupPicker = flatpickr(pickupElement, {
+                ...commonConfig,
+                minDate: "today",
+                onChange: function(selectedDates, dateStr, instance) {
+                    console.log('Pickup date changed:', dateStr);
+                    pickupElement.value = dateStr;
+                    pickupElement.dispatchEvent(new Event('change', { bubbles: true }));
+                    if (dropoffPicker && selectedDates[0]) {
+                        const minDate = new Date(selectedDates[0]);
+                        minDate.setDate(minDate.getDate() + 1);
+                        dropoffPicker.set('minDate', minDate);
+                    }
                 }
-                if (hiddenInput.classList.contains('field-success')) {
-                    instance.altInput.classList.add('field-success');
+            });
+            console.log('✅ Pickup date inicializado');
+        } catch(e) {
+            console.error('Error en pickup:', e);
+        }
+
+        // Inicializar Dropoff Date
+        let dropoffPicker;
+        try {
+            let minDate = "today";
+            if (pickupElement.value) {
+                const pickupDate = new Date(pickupElement.value);
+                if (!isNaN(pickupDate)) {
+                    pickupDate.setDate(pickupDate.getDate() + 1);
+                    minDate = pickupDate;
                 }
-            },
-            onChange: function(selectedDates, dateStr, instance) {
-                // Al cambiar la fecha, disparar evento para validaciones
-                const hiddenInput = document.getElementById('pickupDate');
-                hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
             }
-        });
 
-        // Dropoff Date
-        const dropoffPicker = flatpickr("#dropoffDate", {
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d-M-Y",
-            minDate: "today",
-            allowInput: true,
-            locale: localeEs,
-            onReady: function(selectedDates, dateStr, instance) {
-                // Sincronizar clases iniciales
-                const hiddenInput = document.getElementById('dropoffDate');
-                syncValidationClasses(instance.altInput, hiddenInput);
-
-                // Si el hidden input ya tiene clases, aplicarlas
-                if (hiddenInput.classList.contains('field-error')) {
-                    instance.altInput.classList.add('field-error');
+            dropoffPicker = flatpickr(dropoffElement, {
+                ...commonConfig,
+                minDate: minDate,
+                onChange: function(selectedDates, dateStr, instance) {
+                    console.log('Dropoff date changed:', dateStr);
+                    dropoffElement.value = dateStr;
+                    dropoffElement.dispatchEvent(new Event('change', { bubbles: true }));
                 }
-                if (hiddenInput.classList.contains('field-success')) {
-                    instance.altInput.classList.add('field-success');
-                }
-            },
-            onChange: function(selectedDates, dateStr, instance) {
-                // Al cambiar la fecha, disparar evento para validaciones
-                const hiddenInput = document.getElementById('dropoffDate');
-                hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-        });
-
-        console.log('Flatpickr inicializado correctamente con formato dd-mmm-yyyy');
-
-        // Forzar minúsculas
+            });
+            console.log('✅ Dropoff date inicializado');
+        } catch(e) {
+            console.error('Error en dropoff:', e);
+        }
         setTimeout(() => {
-            document.querySelectorAll('.flatpickr-input').forEach(input => {
-                if (input.value && input.value.includes('-')) {
-                    input.value = input.value.toLowerCase();
+            const flatpickrInputs = document.querySelectorAll('.flatpickr-input');
+            flatpickrInputs.forEach(input => {
+                if (!input.value) {
+                    input.placeholder = 'dd/mm/yyyy';
                 }
             });
         }, 100);
-
-    } else {
-        console.error('Error: Flatpickr no está cargado');
     }
-});
+})();
 /* ============================================================
     CONTROL DE SCROLL PARA FORMULARIO MÓVIL/TABLET
 ============================================================ */
