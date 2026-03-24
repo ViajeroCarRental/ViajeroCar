@@ -423,40 +423,8 @@
             <section class="wizard-card">
 {{-- ===================== STEP 1 ===================== --}}
 @if ($stepCurrent === 1)
-
-    {{-- BOTÓN PARA ABRIR BUSCADOR EN MÓVIL/TABLET --}}
-    <div class="btn-buscador-movil">
-        <div class="btn-container">
-            <p style="margin-bottom: 12px; font-weight: 700; color: #333; font-size: 16px;">
-                Encuentra tu auto aquí
-            </p>
-            <button type="button" id="btn-abrir-buscador-reservas"
-                    style="background-color: #b22222;
-                           border: none;
-                           font-weight: 700;
-                           height: 50px;
-                           font-size: 18px;
-                           display: flex;
-                           align-items: center;
-                           justify-content: center;
-                           gap: 8px;
-                           text-transform: uppercase;
-                           border-radius: 8px;
-                           width: 100%;
-                           color: white;
-                           cursor: pointer;">
-                <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
-            </button>
-        </div>
-    </div>
-
     {{-- BUSCADOR PRINCIPAL --}}
     <div class="search-card" id="miBuscador">
-        {{-- BOTÓN DE CERRAR - DENTRO DEL BUSCADOR --}}
-        <button type="button" id="btn-cerrar-buscador-politicas" class="btn-close-politicas" aria-label="Cerrar">
-            <span>Cerrar</span>
-        </button>
-
         <header class="wizard-head">
             <h2>Sobre tu reservación</h2>
         </header>

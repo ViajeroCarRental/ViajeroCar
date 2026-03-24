@@ -537,16 +537,67 @@ document.addEventListener("DOMContentLoaded", () => {
 // ==========================================================
 
 // Abrir modal de selección de método de pago (botón Reservar)
-const botonesReservar = [btnReservar, btnReservarMovil].filter(b => b);
-botonesReservar.forEach(btn => {
-    if (btn) {
-        btn.addEventListener("click", function() {
-            if (!modalLineaAbierto && modalMetodoPago) {
-                modalMetodoPago.style.display = "flex";
-            }
-        });
+document.addEventListener('reserva:validacionExitosa', function(e) {
+    // Verificar que no haya un modal de línea abierto
+    if (modalLineaAbierto) return;
+
+    const currentPlan = e.detail?.plan;
+    console.log('🎯 Evento recibido en BtnReservaLinea, plan:', currentPlan);
+
+    // Si el plan es "mostrador", abrir el modal de selección
+    if (currentPlan === 'mostrador' && modalMetodoPago) {
+        modalMetodoPago.style.display = "flex";
+        console.log('📱 Modal de método de pago abierto (mostrador)');
+    }
+    // Si el plan es "linea", iniciar pago en línea directamente
+    else if (currentPlan === 'linea') {
+        iniciarPagoEnLinea();
+        console.log('💳 Iniciando pago en línea directamente');
     }
 });
+
+// Cerrar modal de selección de método (botones X y Cancelar)
+if (cerrarModalMetodoX) {
+    cerrarModalMetodoX.addEventListener("click", cerrarModalSeleccion);
+}
+if (cerrarModalMetodo) {
+    cerrarModalMetodo.addEventListener("click", cerrarModalSeleccion);
+}
+
+// Cerrar modal de pago en línea (SOLO con la X)
+if (cerrarModalPagoOnline) {
+    cerrarModalPagoOnline.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        cerrarModalPago();
+    });
+}
+
+// ✅ Mantener: cerrar modal de selección al hacer clic fuera
+if (modalMetodoPago) {
+    modalMetodoPago.addEventListener("click", function(e) {
+        if (e.target === modalMetodoPago && !modalLineaAbierto) {
+            modalMetodoPago.style.display = "none";
+        }
+    });
+}
+
+// Botón "PREPAGAR EN LÍNEA" en el modal de selección
+if (btnPagoLinea) {
+    btnPagoLinea.addEventListener("click", function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const planInput = document.getElementById("plan");
+        if (planInput) planInput.value = "linea";
+
+        iniciarPagoEnLinea();
+    });
+}
+
+window.handleReservaPagoEnLinea = iniciarPagoEnLinea;
+
+console.log("✅ Módulo de pago en línea inicializado (event-driven)");
 
 // Cerrar modal de selección de método (botones X y Cancelar)
 if (cerrarModalMetodoX) {
