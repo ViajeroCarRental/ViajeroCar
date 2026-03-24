@@ -287,15 +287,27 @@ if ($id == 1) {
     if ($tipoCobro === 'por_dia') {
         $dias = 1;
 
-        try {
-            if ($pickupDate && $pickupTime && $dropoffDate && $dropoffTime) {
-                $d1 = Carbon::createFromFormat('Y-m-d H:i', "{$pickupDate} {$pickupTime}");
-                $d2 = Carbon::createFromFormat('Y-m-d H:i', "{$dropoffDate} {$dropoffTime}");
-                $dias = max(1, $d1->diffInDays($d2));
-            }
-        } catch (\Throwable $e) {
-            $dias = 1;
+try {
+    if ($pickupDate && $pickupTime && $dropoffDate && $dropoffTime) {
+
+        $d1 = Carbon::createFromFormat('Y-m-d H:i', "{$pickupDate} {$pickupTime}");
+        $d2 = Carbon::createFromFormat('Y-m-d H:i', "{$dropoffDate} {$dropoffTime}");
+
+        $horasTotales = $d1->diffInHours($d2);
+
+        $diasBase = intdiv($horasTotales, 24);
+        $horasExtra = $horasTotales % 24;
+
+        // ✅ 1 hora de tolerancia
+        if ($horasExtra > 1) {
+            $dias = $diasBase + 1;
+        } else {
+            $dias = max(1, $diasBase);
         }
+    }
+} catch (\Throwable $e) {
+    $dias = 1;
+}
 
         $subtotal = (float) $srv->precio * $qty * $dias;
     } else {

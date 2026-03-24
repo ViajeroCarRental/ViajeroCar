@@ -1224,11 +1224,24 @@ addonsMap.forEach((qty, id) => {
 
     function calcDays() {
       const a = getDateTime("pickup");
-      const b = getDateTime("dropoff");
-      if (!a || !b) return 1;
-      const diff = b - a;
-      if (diff <= 0) return 1;
-      return Math.ceil(diff / (24 * 60 * 60 * 1000));
+  const b = getDateTime("dropoff");
+
+  if (!a || !b) return 1;
+
+  const diff = b - a;
+  if (diff <= 0) return 1;
+
+  const horasTotales = Math.floor(diff / (1000 * 60 * 60));
+
+  const diasBase = Math.floor(horasTotales / 24);
+  const horasExtra = horasTotales % 24;
+
+  // ✅ misma lógica que backend
+  if (horasExtra > 1) {
+    return diasBase + 1;
+  } else {
+    return Math.max(1, diasBase);
+  }
     }
 
     function runUpdate() {
