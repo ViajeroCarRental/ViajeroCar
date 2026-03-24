@@ -2,6 +2,15 @@
   "use strict";
 
   document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('refreshMovilCard', function () {
+    console.log('🔄 Refrescando tarjeta móvil');
+
+    try {
+        initStep4AddonsSummary();
+    } catch (e) {
+        console.log('Error al refrescar resumen:', e);
+    }
+});
 
   const navEntries = performance.getEntriesByType("navigation");
   const isReload = navEntries.length > 0 && navEntries[0].type === "reload";
@@ -146,11 +155,34 @@
         `con un cargo adicional de ${montoStr} MXN por día de renta.\n\n` +
         "Puedes ver este concepto en el desglose de Opciones de renta.";
 
-      alertify.confirm(
+      alertify.alert(
         "Conductor menor de 25 años",
         msg,
-        function () {},
-        function () {}
+        function() {
+          console.log('🔔 Alerta cerrada');
+
+          // Primero, asegurarse de que no estamos en modo reserva
+          const refreshEvent = new CustomEvent('refreshMovilCard', {
+            detail: { fromAlert: true }
+          });
+          document.dispatchEvent(refreshEvent);
+
+          // Esto permite que si hay datos incompletos, la tarjeta vuelva a responder al scroll
+          setTimeout(() => {
+
+            window.dispatchEvent(new Event('scroll'));
+
+            const movilCardState = window.__movilCardState;
+            if (movilCardState) {
+
+              if (!movilCardState.isStep4DataComplete) {
+                movilCardState.isReserving = false;
+                movilCardState.isConfirming = false;
+                console.log('🔄 Alerta cerrada con datos incompletos - restaurando modo scroll');
+              }
+            }
+          }, 100);
+        }
       );
     }
   } else {
@@ -183,12 +215,10 @@
     window.history.replaceState({}, document.title, url.toString());
   } catch (_) {}
 
-    try {
+  try {
     initStep4AddonsSummary();
   } catch (_) {}
 
-  // ✅ Refuerzo: volver a recalcular un instante después
-  // para asegurar que el payload ya quedó actualizado en DOM
   setTimeout(() => {
     try {
       initStep4AddonsSummary();
@@ -361,49 +391,58 @@
           hayErrores = true;
         }
 
-        // 🚨 SI HAY ERRORES: prevenir y NO abrir modal
-        if (hayErrores) {
-          e.preventDefault();
-          e.stopPropagation();
+            // SI HAY ERRORES: prevenir y NO abrir modal
+            if (hayErrores) {
+            e.preventDefault();
+            e.stopPropagation();
 
-          const primerError = document.querySelector('.has-error, .field-error');
-          if (primerError) {
-            primerError.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center'
+            // disparar evento para refrescar
+            const refreshEvent = new CustomEvent('refreshMovilCard');
+            document.dispatchEvent(refreshEvent);
+
+            const primerError = document.querySelector('.has-error, .field-error');
+            if (primerError) {
+                primerError.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+                });
+            }
+
+            return false;
+            }
+
+            // TODO OK - Disparar evento personalizado para abrir el modal
+            console.log('✅ Validación exitosa');
+
+            // solo refrescar
+            const refreshEvent = new CustomEvent('refreshMovilCard');
+            document.dispatchEvent(refreshEvent);
+
+            // Obtener el plan actual
+            const mainEl = document.querySelector('main.page');
+            const currentPlan = mainEl ? mainEl.dataset.plan : '';
+
+            // Disparar evento para que el otro script maneje el modal
+            const eventoExito = new CustomEvent('reserva:validacionExitosa', {
+            detail: { plan: currentPlan }
             });
-          }
+            document.dispatchEvent(eventoExito);
 
-          return false;
-        }
+            return false;
 
-        // ✅ TODO OK - Disparar evento personalizado para abrir el modal
-        console.log('✅ Validación exitosa');
+                });
+                }
 
-        // Obtener el plan actual
-        const mainEl = document.querySelector('main.page');
-        const currentPlan = mainEl ? mainEl.dataset.plan : '';
+                // Sincronizar botón móvil con la validación
+                const btnMovil = document.getElementById('btnReservarMovil');
+                const btnOriginal = document.getElementById('btnReservar');
 
-        // Disparar evento para que el otro script maneje el modal
-        const eventoExito = new CustomEvent('reserva:validacionExitosa', {
-          detail: { plan: currentPlan }
-        });
-        document.dispatchEvent(eventoExito);
-
-        return false;
-      });
-    }
-
-    // Sincronizar botón móvil con la validación
-    const btnMovil = document.getElementById('btnReservarMovil');
-    const btnOriginal = document.getElementById('btnReservar');
-
-    if (btnMovil && btnOriginal) {
-      btnMovil.addEventListener('click', function(e) {
-        e.preventDefault();
-        btnOriginal.click();
-      });
-    }
+                if (btnMovil && btnOriginal) {
+                btnMovil.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    btnOriginal.click();
+                });
+                }
 
     // FUNCIÓN PARA MARCAR ERROR EN CAMPOS NORMALES
     function marcarError(elemento, mensaje) {
@@ -2072,11 +2111,6 @@ window.initStep4AddonsSummary = function() {
 };
 
 // ===== CONTROL DE VISIBILIDAD DE LA TARJETA MÓVIL (SOLO MÓVIL/TABLET) =====
-let movilCardState = {
-    hasShownCard: false,
-    isModalOpen: false,
-    isStep4DataComplete: false
-};
 
 // Función para verificar si los datos REQUERIDOS están completos
 function isStep4DataFilled() {
@@ -2103,6 +2137,7 @@ function isStep4DataFilled() {
         acepto.checked === true;
 }
 
+// ===== CONTROL DE VISIBILIDAD DE LA TARJETA MÓVIL (CORREGIDO CON DETECCIÓN DE ALERTA DE CONFIRMACIÓN) =====
 function initMovilCardVisibility() {
     const mainEl = document.querySelector('main.page');
     const currentStep = mainEl ? mainEl.dataset.currentStep : '';
@@ -2115,16 +2150,73 @@ function initMovilCardVisibility() {
     const modalMetodoPago = document.getElementById('modalMetodoPago');
     const modalPagoOnline = document.getElementById('modalPagoOnline');
 
-    // Verificar que los elementos existan
+    // CORRECCIÓN: Buscar el modal de confirmación (puede tener otro ID)
+    const modalConfirmacion = document.getElementById('modalConfirmacion') ||
+                              document.querySelector('.modal-confirmacion, [id*="confirm"]');
+
     if (!tuAutoSection || !movilCard) {
-        console.warn('Elementos necesarios no encontrados:', { tuAutoSection, movilCard });
+        console.warn('Elementos necesarios no encontrados');
         return;
     }
 
-    console.log('✅ Inicializando tarjeta móvil');
+    // Estado de la tarjeta
+    let movilCardState = {
+        hasShownCard: false,
+        isModalOpen: false,
+        isStep4DataComplete: false,
+        isReserving: false,
+        isConfirming: false
+    };
+
+    // EXPONER EL ESTADO GLOBALMENTE PARA QUE OTRAS FUNCIONES PUEDAN ACCEDER
+    window.__movilCardState = movilCardState;
+
+    // Función para verificar si los datos REQUERIDOS están completos
+    function isStep4DataFilled() {
+        const nombre = document.getElementById('nombreCompleto');
+        const telefono = document.getElementById('telefonoCliente');
+        const correo = document.getElementById('correoCliente');
+        const pais = document.getElementById('pais');
+        const dia = document.getElementById('dob_day');
+        const mes = document.getElementById('dob_month');
+        const año = document.getElementById('dob_year');
+        const acepto = document.getElementById('acepto');
+
+        if (!nombre || !telefono || !correo || !pais || !dia || !mes || !año || !acepto) {
+            return false;
+        }
+
+        const nombreValido = nombre.value && nombre.value.trim() !== "";
+        const telefonoValido = telefono.value && telefono.value.trim() !== "";
+        const correoValido = correo.value && correo.value.trim() !== "";
+        const paisValido = pais.value && pais.value.trim() !== "";
+        const fechaValida = dia.value !== "" && mes.value !== "" && año.value !== "";
+
+        let fechaCompletaValida = true;
+        if (fechaValida) {
+            const day = parseInt(dia.value, 10);
+            const month = parseInt(mes.value, 10);
+            const year = parseInt(año.value, 10);
+            const date = new Date(year, month - 1, day);
+            fechaCompletaValida = date.getDate() === day && date.getMonth() === month - 1;
+        }
+
+        return nombreValido &&
+               telefonoValido &&
+               correoValido &&
+               paisValido &&
+               fechaValida &&
+               fechaCompletaValida &&
+               acepto.checked === true;
+    }
 
     // Función para mostrar la tarjeta
     function showMovilCard() {
+        if (movilCardState.isReserving || movilCardState.isConfirming) {
+            console.log('⏸️ En proceso de reserva/confirmación - tarjeta no se muestra');
+            return;
+        }
+
         if (!movilCardState.hasShownCard && !movilCardState.isModalOpen) {
             movilCard.classList.add('visible');
             movilCardState.hasShownCard = true;
@@ -2141,16 +2233,151 @@ function initMovilCardVisibility() {
         }
     }
 
-    // Función para actualizar estado según scroll (solo si datos NO están completos)
-    function handleScroll() {
-        // Si los datos están completos, NO ocultar nunca por scroll
-        if (movilCardState.isStep4DataComplete) {
+    // Función para actualizar la visibilidad según el estado
+    function updateCardVisibility() {
+        const datosCompletos = isStep4DataFilled();
+        const anyModalOpen = isAnyModalOpen();
+
+        // Actualizar estado
+        movilCardState.isStep4DataComplete = datosCompletos;
+        movilCardState.isModalOpen = anyModalOpen;
+
+        console.log('🔍 Actualizando visibilidad - Datos:', datosCompletos, 'Modal:', anyModalOpen, 'Reservando:', movilCardState.isReserving, 'Confirmando:', movilCardState.isConfirming);
+
+        // Si estamos en proceso de reserva o confirmación, ocultar siempre
+        if (movilCardState.isReserving || movilCardState.isConfirming) {
+            hideMovilCard();
             return;
         }
+
+        // Lógica principal: SI DATOS COMPLETOS Y SIN MODAL -> MOSTRAR
+        if (datosCompletos && !anyModalOpen) {
+            showMovilCard();
+        }
+        // SI DATOS NO COMPLETOS O MODAL ABIERTO -> OCULTAR
+        else {
+            hideMovilCard();
+        }
+    }
+
+    // Verificar si hay alguna alerta de Alertify visible
+    function isAlertifyOpen() {
+        const alertifyDialogs = document.querySelectorAll('.ajs-dialog, .ajs-modal, .alertify');
+        for (let dialog of alertifyDialogs) {
+            const style = window.getComputedStyle(dialog);
+            if (style.display !== 'none' && style.visibility !== 'hidden') {
+                if (!dialog.classList.contains('ajs-hidden') && !dialog.classList.contains('ajs-out')) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Detectar alertas de éxito (confirmación de reserva)
+    function isSuccessAlertOpen() {
+        const successDialogs = document.querySelectorAll('.resv-alertify-success, .ajs-dialog.resv-alertify-success');
+        for (let dialog of successDialogs) {
+            const style = window.getComputedStyle(dialog);
+            if (style.display !== 'none' && style.visibility !== 'hidden') {
+                console.log('🎉 Alerta de éxito detectada');
+                return true;
+            }
+        }
+
+        const allDialogs = document.querySelectorAll('.ajs-dialog, .ajs-modal');
+        for (let dialog of allDialogs) {
+            if (dialog.textContent && (
+                dialog.textContent.includes('reservación fue registrada correctamente') ||
+                dialog.textContent.includes('Su reservación fue registrada')
+            )) {
+                console.log('🎉 Alerta de éxito detectada por texto');
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Verificar si algún modal está abierto
+    function isAnyModalOpen() {
+        const isMetodoPagoOpen = modalMetodoPago && modalMetodoPago.style.display === 'flex';
+        const isPagoOnlineOpen = modalPagoOnline && modalPagoOnline.style.display === 'flex';
+        const isConfirmacionOpen = modalConfirmacion && modalConfirmacion.style.display === 'flex';
+        const isAlertOpen = isAlertifyOpen();
+        const isSuccessAlert = isSuccessAlertOpen();
+
+        return isMetodoPagoOpen || isPagoOnlineOpen || isConfirmacionOpen || isAlertOpen || isSuccessAlert;
+    }
+
+    // Manejar el clic en reservar
+    function initReservationHandler() {
+        const btnReservar = document.getElementById('btnReservar');
+        const btnReservarMovil = document.getElementById('btnReservarMovil');
+
+        if (!btnReservar) return;
+
+        const handleReservationStart = () => {
+            if (isStep4DataFilled()) {
+                console.log('🔒 Iniciando proceso de reserva - ocultando tarjeta');
+                movilCardState.isReserving = true;
+                hideMovilCard();
+            }
+        };
+
+        btnReservar.addEventListener('click', handleReservationStart);
+        if (btnReservarMovil) {
+            btnReservarMovil.addEventListener('click', handleReservationStart);
+        }
+
+        document.addEventListener('reserva:completada', function() {
+            console.log('✅ Reserva completada - activando modo confirmación');
+            movilCardState.isReserving = false;
+            movilCardState.isConfirming = true;
+            hideMovilCard();
+
+            const checkSuccessAlert = setInterval(() => {
+                if (!isSuccessAlertOpen()) {
+                    console.log('🔓 Alerta de éxito cerrada - restaurando estado');
+                    movilCardState.isConfirming = false;
+                    clearInterval(checkSuccessAlert);
+                    setTimeout(() => updateCardVisibility(), 200);
+                }
+            }, 200);
+
+            setTimeout(() => {
+                if (movilCardState.isConfirming) {
+                    console.log('⏰ Timeout - restaurando estado');
+                    movilCardState.isConfirming = false;
+                    updateCardVisibility();
+                }
+            }, 10000);
+        });
+
+        document.addEventListener('reserva:cancelada', function() {
+            console.log('❌ Reserva cancelada - restaurando estado');
+            movilCardState.isReserving = false;
+            movilCardState.isConfirming = false;
+            setTimeout(() => updateCardVisibility(), 100);
+        });
+    }
+
+    // Manejar scroll SOLO cuando los datos NO están completos
+    function handleScroll() {
+        // 🔥 CORRECCIÓN: Si estamos en modo confirmación, no hacer nada
+        if (movilCardState.isConfirming) {
+            console.log('⏸️ Modo confirmación - scroll ignorado');
+            return;
+        }
+
+        if (movilCardState.isReserving) return;
+        if (movilCardState.isStep4DataComplete) return;
 
         const rect = tuAutoSection.getBoundingClientRect();
         const windowHeight = window.innerHeight;
         const isVisible = rect.top < windowHeight * 0.9 && rect.bottom > 0;
+
+        console.log('📜 Scroll check - Visible:', isVisible, 'Modal:', movilCardState.isModalOpen);
 
         if (isVisible && !movilCardState.isModalOpen) {
             showMovilCard();
@@ -2159,142 +2386,23 @@ function initMovilCardVisibility() {
         }
     }
 
-    // 🟢 NUEVA FUNCIÓN: Verificar si hay una alerta de Alertify visible
-    function isAlertifyOpen() {
-        // Verificar si hay algún elemento de Alertify visible
-        const alertifyDialogs = document.querySelectorAll('.ajs-dialog, .ajs-modal');
-        for (let dialog of alertifyDialogs) {
-            const style = window.getComputedStyle(dialog);
-            if (style.display !== 'none' && style.visibility !== 'hidden') {
-                // También verificar que no esté oculto por clase
-                if (!dialog.classList.contains('ajs-hidden') && !dialog.classList.contains('ajs-out')) {
-                    console.log('🔔 Alerta Alertify detectada:', dialog);
-                    return true;
-                }
-            }
-        }
-
-        // Verificar también el contenedor principal de Alertify
-        const alertifyContainer = document.querySelector('.alertify');
-        if (alertifyContainer) {
-            const style = window.getComputedStyle(alertifyContainer);
-            if (style.display !== 'none') {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    // 🟢 FUNCIÓN UNIFICADA PARA VERIFICAR SI ALGÚN MODAL O ALERTA ESTÁ ABIERTO
-    function isAnyModalOpen() {
-        const isMetodoPagoOpen = modalMetodoPago && modalMetodoPago.style.display === 'flex';
-        const isPagoOnlineOpen = modalPagoOnline && modalPagoOnline.style.display === 'flex';
-        const isAlertOpen = isAlertifyOpen();
-
-        return isMetodoPagoOpen || isPagoOnlineOpen || isAlertOpen;
-    }
-
-    // 🟢 FUNCIÓN PARA ACTUALIZAR ESTADO DE MODALES Y VISIBILIDAD
-    function updateModalState() {
-        const anyModalOpen = isAnyModalOpen();
-
-        if (anyModalOpen !== movilCardState.isModalOpen) {
-            movilCardState.isModalOpen = anyModalOpen;
-
-            if (anyModalOpen) {
-                // Si se abre cualquier modal o alerta, ocultar la tarjeta inmediatamente
-                hideMovilCard();
-                console.log('🔴 Modal/Alerta abierto - Tarjeta oculta');
-            } else {
-                // Si se cierra cualquier modal, restaurar según estado de datos
-                setTimeout(() => {
-                    if (movilCardState.isStep4DataComplete) {
-                        showMovilCard();
-                        console.log('🟢 Modal/Alerta cerrado - Datos completos, tarjeta visible');
-                    } else {
-                        handleScroll();
-                        console.log('🟢 Modal/Alerta cerrado - Restaurando scroll');
-                    }
-                }, 100);
-            }
-        }
-    }
-
-    //  NUEVA FUNCIÓN: Observar cambios en Alertify
-    function initAlertifyObserver() {
-        // Observar cambios en el body para detectar cuando se añade Alertify
-        const bodyObserver = new MutationObserver((mutations) => {
-            for (let mutation of mutations) {
-                if (mutation.type === 'childList') {
-                    // Verificar si se añadió algún elemento de Alertify
-                    const addedNodes = Array.from(mutation.addedNodes);
-                    for (let node of addedNodes) {
-                        if (node.nodeType === 1) { // Element node
-                            if (node.classList && (
-                                node.classList.contains('alertify') ||
-                                node.classList.contains('ajs-dialog') ||
-                                node.classList.contains('ajs-modal')
-                            )) {
-                                console.log('🔔 Alertify detectada en DOM');
-                                updateModalState();
-                                break;
-                            }
-                        }
-                    }
-
-                    // Verificar si se eliminó algún elemento de Alertify
-                    const removedNodes = Array.from(mutation.removedNodes);
-                    for (let node of removedNodes) {
-                        if (node.nodeType === 1) {
-                            if (node.classList && (
-                                node.classList.contains('alertify') ||
-                                node.classList.contains('ajs-dialog') ||
-                                node.classList.contains('ajs-modal')
-                            )) {
-                                console.log('🔔 Alertify eliminada del DOM');
-                                setTimeout(updateModalState, 100);
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        bodyObserver.observe(document.body, { childList: true, subtree: true });
-
-        // También observar cambios en style de posibles alertas existentes
-        const checkAlertifyInterval = setInterval(() => {
-            if (isAlertifyOpen() !== movilCardState.isModalOpen) {
-                updateModalState();
-            }
-        }, 200);
-
-        // Limpiar intervalo después de un tiempo (opcional)
-        setTimeout(() => clearInterval(checkAlertifyInterval), 30000);
-    }
-
     // Observar cambios en los campos del formulario
     function initFormObserver() {
         const fields = ['#nombreCompleto', '#telefonoCliente', '#correoCliente', '#pais', '#dob_day', '#dob_month', '#dob_year', '#acepto'];
 
+        let timeoutId = null;
         const checkDataComplete = () => {
-            const wasComplete = movilCardState.isStep4DataComplete;
-            const isNowComplete = isStep4DataFilled();
+            if (timeoutId) clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => {
+                const isNowComplete = isStep4DataFilled();
 
-            movilCardState.isStep4DataComplete = isNowComplete;
-            console.log(`📝 Datos completos: ${isNowComplete ? 'SÍ' : 'NO'}`);
+                if (movilCardState.isReserving && !isNowComplete) {
+                    console.log('🔄 Datos cambiaron a incompletos durante reserva - saliendo modo reserva');
+                    movilCardState.isReserving = false;
+                }
 
-            if (isNowComplete && !wasComplete) {
-                // Datos recién completados -> mostrar tarjeta y mantenerla
-                console.log('🎉 Datos completados - Tarjeta permanente');
-                showMovilCard();
-            } else if (!isNowComplete && wasComplete) {
-                // Datos ya no están completos -> restaurar comportamiento por scroll
-                console.log('⚠️ Datos incompletos - Restaurando scroll');
-                handleScroll();
-            }
+                updateCardVisibility();
+            }, 50);
         };
 
         fields.forEach(selector => {
@@ -2305,60 +2413,112 @@ function initMovilCardVisibility() {
             }
         });
 
-        // Verificación inicial
         setTimeout(checkDataComplete, 100);
     }
 
-    // Observar los modales (Método de pago y Pago en línea)
+    // Observar cambios en modales
     function initModalObserver() {
-        if (!modalMetodoPago && !modalPagoOnline) return;
-
-        // Función para observar cambios en el style de un modal
         function observeModal(modal, modalName) {
             if (!modal) return;
 
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                        console.log(`🔄 Cambio detectado en modal: ${modalName}`);
-                        updateModalState();
-                    }
-                });
+            const observer = new MutationObserver(() => {
+                const isOpen = modal.style.display === 'flex';
+                console.log(`📱 Modal ${modalName} ${isOpen ? 'abierto' : 'cerrado'}`);
+
+                if (!isOpen && (modalName === 'MetodoPago' || modalName === 'PagoOnline')) {
+                    console.log('🔓 Modal de pago cerrado - restaurando estado normal');
+                    movilCardState.isReserving = false;
+                }
+
+                updateCardVisibility();
             });
 
-            observer.observe(modal, { attributes: true });
+            observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
         }
 
         observeModal(modalMetodoPago, 'MetodoPago');
         observeModal(modalPagoOnline, 'PagoOnline');
-
-        // También observar si se añade dinámicamente al DOM
-        const checkForModals = setInterval(() => {
-            const mpModal = document.getElementById('modalMetodoPago');
-            const poModal = document.getElementById('modalPagoOnline');
-            if ((mpModal && !modalMetodoPago) || (poModal && !modalPagoOnline)) {
-                console.log('🔍 Modales detectados después de carga inicial');
-                clearInterval(checkForModals);
-                location.reload(); // Recargar para asegurar que todo esté bien inicializado
-            }
-        }, 500);
-
-        setTimeout(() => clearInterval(checkForModals), 5000);
+        if (modalConfirmacion) observeModal(modalConfirmacion, 'Confirmacion');
     }
 
-    // Botón de reservar - mantener tarjeta visible
-    function initReservationObserver() {
-        const btnReservar = document.getElementById('btnReservar');
-        const btnReservarMovil = document.getElementById('btnReservarMovil');
+    // Observar cambios en Alertify
+function initAlertifyObserver() {
+    let lastAlertState = false;
+    let lastSuccessState = false;
 
-        const onReservarClick = () => {
-            if (movilCardState.isStep4DataComplete) {
-                setTimeout(() => showMovilCard(), 50);
+    const checkAlertState = () => {
+        const isOpen = isAlertifyOpen();
+        const isSuccess = isSuccessAlertOpen();
+
+        // DETECTAR CUANDO SE CIERRA UNA ALERTA DE ÉXITO
+        if (lastSuccessState && !isSuccess) {
+            console.log('🎉 Alerta de éxito cerrada');
+            movilCardState.isConfirming = false;
+            setTimeout(() => updateCardVisibility(), 150);
+        }
+
+        // DETECTAR CUANDO SE CIERRA UNA ALERTA NORMAL (como la de menor de 25 años)
+        if (lastAlertState && !isOpen && !isSuccess) {
+            console.log('🔔 Alerta normal cerrada - verificando estado de datos');
+
+            // Limpiar cualquier flag que pueda estar bloqueando la tarjeta
+            movilCardState.isReserving = false;
+            movilCardState.isConfirming = false;
+
+            setTimeout(() => {
+                const datosCompletos = isStep4DataFilled();
+
+                if (!datosCompletos) {
+                    console.log('⚠️ Alerta cerrada con datos incompletos - restaurando scroll');
+
+                    // que isModalOpen sea false
+                    movilCardState.isModalOpen = false;
+
+
+                    setTimeout(() => {
+                        handleScroll();
+
+                        window.dispatchEvent(new Event('scroll'));
+                    }, 50);
+                } else {
+                    // Si los datos están completos, actualizar visibilidad
+                    updateCardVisibility();
+                }
+            }, 100);
+        }
+
+        lastAlertState = isOpen;
+        lastSuccessState = isSuccess;
+    };
+
+    // Observar cambios en el DOM para detectar apertura/cierre de alertas
+    const bodyObserver = new MutationObserver(() => {
+        checkAlertState();
+    });
+
+    bodyObserver.observe(document.body, { childList: true, subtree: true });
+
+    // Intervalo de respaldo para asegurar que detectamos cambios
+    setInterval(checkAlertState, 200);
+}
+
+    // Observar cambios en alertas de éxito
+    function initSuccessAlertObserver() {
+        const bodyObserver = new MutationObserver(() => {
+            const successAlertOpen = isSuccessAlertOpen();
+
+            if (successAlertOpen && !movilCardState.isConfirming) {
+                console.log('🎉 Alerta de éxito detectada - activando modo confirmación');
+                movilCardState.isConfirming = true;
+                hideMovilCard();
+            } else if (!successAlertOpen && movilCardState.isConfirming) {
+                console.log('🔓 Alerta de éxito cerrada - restaurando');
+                movilCardState.isConfirming = false;
+                setTimeout(() => updateCardVisibility(), 200);
             }
-        };
+        });
 
-        if (btnReservar) btnReservar.addEventListener('click', onReservarClick);
-        if (btnReservarMovil) btnReservarMovil.addEventListener('click', onReservarClick);
+        bodyObserver.observe(document.body, { childList: true, subtree: true });
     }
 
     // Verificar si es móvil/tablet
@@ -2379,28 +2539,43 @@ function initMovilCardVisibility() {
         if (!isMobileView()) {
             hideMovilCard();
         } else {
-            setTimeout(handleScroll, 100);
+            setTimeout(updateCardVisibility, 100);
         }
     });
 
+    // Evento personalizado para refrescar la tarjeta
+    document.addEventListener('refreshMovilCard', function(e) {
+        console.log('🔄 Evento refreshMovilCard recibido', e?.detail);
+        setTimeout(() => {
+            // Si viene de una alerta, asegurar que los flags estén correctos
+            if (e?.detail?.fromAlert) {
+                if (!movilCardState.isStep4DataComplete) {
+                    movilCardState.isReserving = false;
+                    movilCardState.isConfirming = false;
+                    console.log('🔄 Refresh desde alerta - restaurando modo scroll');
+                }
+            }
+            if (!movilCardState.isReserving && !movilCardState.isConfirming) {
+                updateCardVisibility();
+            }
+        }, 100);
+    });
+
     // Inicializar todo
+    initReservationHandler();
     initFormObserver();
     initModalObserver();
     initAlertifyObserver();
-    initReservationObserver();
+    initSuccessAlertObserver();
 
     // Verificación inicial
     setTimeout(() => {
         if (isMobileView()) {
-            if (movilCardState.isStep4DataComplete && !movilCardState.isModalOpen) {
-                showMovilCard();
-            } else if (!movilCardState.isStep4DataComplete) {
-                handleScroll();
-            }
+            updateCardVisibility();
         }
     }, 300);
 
-    console.log('🚀 Control de tarjeta inicializado');
+    console.log('🚀 Control de tarjeta inicializado correctamente');
 }
 
 // Inicializar cuando el DOM esté listo
