@@ -411,7 +411,7 @@
                     <select id="pickupPlace" name="pickup_sucursal_id" >
                         <option value="" disabled selected>¿Dónde inicia tu viaje ?</option>
                         @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
-                            <optgroup label="{{ $ciudad->nombre }}">
+                            <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                 @foreach($ciudad->sucursalesActivas as $suc)
                                     <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
                                         {{ $suc->nombre }}
@@ -429,7 +429,7 @@
                     <select id="dropoffPlace" name="dropoff_sucursal_id" class="no-scroll-trap">
                         <option value="" disabled selected>¿Dónde termina tu viaje?</option>
                         @foreach($ciudades as $ciudad)
-                            <optgroup label="{{ $ciudad->nombre }}">
+                           <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                 @foreach($ciudad->sucursalesActivas as $suc)
                                     <option value="{{ $suc->id_sucursal }}" @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
                                         {{ $suc->nombre }}
