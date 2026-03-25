@@ -1518,7 +1518,7 @@ class Contrato2Controller extends ContratoBaseController
             $cargos = 0;
             if ($contrato) {
                 $cargos = DB::table('cargo_adicional')
-                    ->where('id_reservacion', $idReservacion)
+                    ->where('id_contrato', $contrato->id_contrato)
                     ->sum('monto');
             }
 
@@ -1878,7 +1878,7 @@ class Contrato2Controller extends ContratoBaseController
             $nuevoEstadoReserva = $res->estado;
         } else {
             $nuevoEstadoPago = 'Pendiente';
-            $nuevoEstadoReserva = 'pendiente';
+            $nuevoEstadoReserva = 'pendiente_pago';
         }
 
         // Actualizar una sola vez
