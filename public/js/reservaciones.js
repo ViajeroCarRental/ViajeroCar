@@ -890,7 +890,7 @@ if (isReset) {
     }
   }
 
-  function initStep4AddonsSummary() {
+ function initStep4AddonsSummary() {
   const table = qs('#cotizacionDoc');
   if (!table) return;
 
@@ -903,20 +903,58 @@ if (isReset) {
 
   if (!qBaseEl || !qExtrasEl || !qIvaEl || !qTotalEl) return;
 
-  const base = parseFloat(table.dataset.base || '0') || 0;
+  // ========== NUEVO: DETECTAR EL PLAN SELECCIONADO ==========
+  const main = document.querySelector('main.page');
+  const plan = main ? main.dataset.plan : 'linea';
+  let planFromURL = 'linea';
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    planFromURL = urlParams.get('plan') || 'linea';
+  } catch(e) {}
+
+  const planSeleccionado = plan || planFromURL;
+  console.log('Plan seleccionado:', planSeleccionado);
+
   const days = parseInt(table.dataset.days || '1', 10) || 1;
 
-    const hiddenAlt     = qs('#addonsHidden');
+  // ========== NUEVO: OBTENER EL PRECIO BASE CORRECTO ==========
+  let base = 0;
+
+  const activeCard = document.querySelector('.car-card.active');
+
+  if (planSeleccionado === 'linea') {
+
+    if (activeCard) {
+      const prepagoDia = parseFloat(activeCard.getAttribute('data-prepago-dia') || '0');
+      base = prepagoDia * days;
+    }
+
+    if (base === 0) {
+      base = parseFloat(table.dataset.base || '0') || 0;
+    }
+  } else {
+
+    if (activeCard) {
+      const mostradorDia = parseFloat(activeCard.getAttribute('data-mostrador-dia') || '0');
+      if (mostradorDia > 0) {
+        base = mostradorDia * days;
+      }
+    }
+    if (base === 0) {
+      const precioLinea = parseFloat(table.dataset.base || '0') || 0;
+      base = precioLinea * 1.15;
+    }
+  }
+  base = Math.max(0, base);
+  console.log('Precio base calculado:', base);
+
+
+  const hiddenAlt = qs('#addonsHidden');
   const hiddenPayload = qs('#addons_payload');
-
-  // ✅ En Step 4 primero manda el payload final del formulario
   const rawAddons =
-  (hiddenPayload && hiddenPayload.value ? hiddenPayload.value.trim() : '') ||
-  (hiddenAlt && hiddenAlt.value ? hiddenAlt.value.trim() : '') ||
-  '';
-
-
-
+    (hiddenPayload && hiddenPayload.value ? hiddenPayload.value.trim() : '') ||
+    (hiddenAlt && hiddenAlt.value ? hiddenAlt.value.trim() : '') ||
+    '';
 
   const catalogScript = document.getElementById('addonsCatalog');
   let catalog = {};
@@ -955,15 +993,13 @@ if (isReset) {
   if (extrasList) extrasList.innerHTML = '';
   if (ivaList) ivaList.innerHTML = '';
 
-  // ======================================================
-  // DROP OFF
-  // ======================================================
- const pickupId  = table.dataset.pickup;
-const dropoffId = table.dataset.dropoff;
-const km        = parseFloat(table.dataset.km || 0);
-const costoKm   = parseFloat(table.dataset.costokm || 0);
-const tanque    = parseFloat(table.dataset.tanque || 0);
-const SERVICE_GASOLINA_ID = '1';
+  // Drop Off
+  const pickupId  = table.dataset.pickup;
+  const dropoffId = table.dataset.dropoff;
+  const km        = parseFloat(table.dataset.km || 0);
+  const costoKm   = parseFloat(table.dataset.costokm || 0);
+  const tanque    = parseFloat(table.dataset.tanque || 0);
+  const SERVICE_GASOLINA_ID = '1';
 
   if (pickupId && dropoffId && pickupId !== dropoffId && km > 0 && costoKm > 0) {
     const dropoffTotal = km * costoKm;
@@ -981,64 +1017,50 @@ const SERVICE_GASOLINA_ID = '1';
     }
   }
 
-  // ======================================================
-// ADDONS
-// ======================================================
-addonsMap.forEach((qty, id) => {
-  const srv = catalog[id];
-  if (!srv) return;
+  // Addons
+  addonsMap.forEach((qty, id) => {
+    const srv = catalog[id];
+    if (!srv) return;
 
-  const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
-  const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
+    const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
+    const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
 
-  let lineTotal = 0;
-  let detalleLabel = '';
-  let unidadLabel = '';
+    let lineTotal = 0;
+    let detalleLabel = '';
 
-  // GASOLINA PREPAGO
-  if (String(id) === SERVICE_GASOLINA_ID) {
-    const litros = Math.max(0, tanque);
-    lineTotal = price * litros;
+    if (String(id) === SERVICE_GASOLINA_ID) {
+      const litros = Math.max(0, tanque);
+      lineTotal = price * litros;
+      detalleLabel = `${srv.nombre} | ${litros} L x ${fmtMoney(price)} por litro`;
+    }
+    else if (tipo === 'por_tanque') {
+      const litros = Math.max(0, tanque);
+      lineTotal = price * litros * qty;
+      detalleLabel = `${qty} | ${srv.nombre} | ${litros} L x ${fmtMoney(price)} por litro`;
+    }
+    else if (tipo === 'por_evento') {
+      lineTotal = price * qty;
+      detalleLabel = `${qty} | ${srv.nombre} | ${fmtMoney(price)} / evento`;
+    }
+    else {
+      lineTotal = price * qty * days;
+      detalleLabel = `${qty} | ${srv.nombre} | ${fmtMoney(price)} por día`;
+    }
 
-    detalleLabel = `${srv.nombre} | ${litros} L x ${fmtMoney(price)} por litro`;
-    unidadLabel = '';
-  }
-  else if (tipo === 'por_tanque') {
-    const litros = Math.max(0, tanque);
-    lineTotal = price * litros * qty;
+    extrasTotal += lineTotal;
 
-    detalleLabel = `${qty} | ${srv.nombre} | ${litros} L x ${fmtMoney(price)} por litro`;
-    unidadLabel = '';
-  }
-  else if (tipo === 'por_evento') {
-    lineTotal = price * qty;
-    detalleLabel = `${qty} | ${srv.nombre} | ${fmtMoney(price)} / evento`;
-  }
-  else {
-    lineTotal = price * qty * days;
-    detalleLabel = `${qty} | ${srv.nombre} | ${fmtMoney(price)} por día`;
-  }
+    if (extrasList) {
+      const row = document.createElement('div');
+      row.className = 'row row-addon';
+      row.innerHTML = `
+        <span style="flex:1;">${detalleLabel}</span>
+        <strong style="flex:0 0 110px; text-align:right;">${fmtMoney(lineTotal)}</strong>
+      `;
+      extrasList.appendChild(row);
+      renderedRows++;
+    }
+  });
 
-  extrasTotal += lineTotal;
-
-  if (extrasList) {
-    const row = document.createElement('div');
-    row.className = 'row row-addon';
-
-    row.innerHTML = `
-      <span style="flex:1;">
-        ${detalleLabel}
-      </span>
-      <strong style="flex:0 0 110px; text-align:right;">
-        ${fmtMoney(lineTotal)}
-      </strong>
-    `;
-
-    extrasList.appendChild(row);
-    renderedRows++;
-  }
-});
-  // Si no hubo nada
   if (renderedRows === 0 && extrasList) {
     const row = document.createElement('div');
     row.className = 'row row-empty';
@@ -1224,11 +1246,24 @@ addonsMap.forEach((qty, id) => {
 
     function calcDays() {
       const a = getDateTime("pickup");
-      const b = getDateTime("dropoff");
-      if (!a || !b) return 1;
-      const diff = b - a;
-      if (diff <= 0) return 1;
-      return Math.ceil(diff / (24 * 60 * 60 * 1000));
+  const b = getDateTime("dropoff");
+
+  if (!a || !b) return 1;
+
+  const diff = b - a;
+  if (diff <= 0) return 1;
+
+  const horasTotales = Math.floor(diff / (1000 * 60 * 60));
+
+  const diasBase = Math.floor(horasTotales / 24);
+  const horasExtra = horasTotales % 24;
+
+  // ✅ misma lógica que backend
+  if (horasExtra > 1) {
+    return diasBase + 1;
+  } else {
+    return Math.max(1, diasBase);
+  }
     }
 
     function runUpdate() {
@@ -1932,50 +1967,36 @@ addonsMap.forEach((qty, id) => {
       return 'Categoría seleccionada';
     }
 
-    function getPreciosSeleccionados() {
-      let precioLinea = 0;
-      let precioMostrador = 0;
+  function getPreciosSeleccionados() {
 
-      // 1. desde card activa del step 2
-      const activeCard = document.querySelector('.car-card.active');
-      if (activeCard) {
-        precioLinea =
-          parseFloat(activeCard.getAttribute('data-prepago-total')) ||
-          parseFloat(activeCard.getAttribute('data-prepago-dia')) ||
-          0;
+  const qTotal = document.getElementById('qTotal');
 
-        precioMostrador =
-          parseFloat(activeCard.getAttribute('data-mostrador-total')) ||
-          parseFloat(activeCard.getAttribute('data-mostrador-dia')) ||
-          0;
-      }
+  const getNum = (txt) => {
+    if (!txt) return 0;
+    return parseFloat(String(txt).replace(/[^\d.]/g, '')) || 0;
+  };
 
-      // 2. si no encontró, usar resumen actual del paso 4
-      if (!precioLinea || !precioMostrador) {
-        const qBase = document.getElementById('qBase');
-        const qTotal = document.getElementById('qTotal');
+  let totalActual = qTotal ? getNum(qTotal.textContent) : 0;
 
-        const getNum = (txt) => {
-          if (!txt) return 0;
-          return parseFloat(String(txt).replace(/[^\d.]/g, '')) || 0;
-        };
+  // Detectar qué plan está activo actualmente
+  const main = document.querySelector('main.page');
+  const currentPlan = main ? main.dataset.plan : '';
 
-        if (!precioLinea && qBase) {
-          precioLinea = getNum(qBase.textContent);
-        }
+  let precioLinea = 0;
+  let precioMostrador = 0;
 
-        if (!precioMostrador && qTotal) {
-          precioMostrador = getNum(qTotal.textContent);
-        }
-      }
+  if (currentPlan === 'linea') {
+    precioLinea = totalActual;
 
-      // respaldo: si solo hay uno, usarlo en ambos para no dejar 0
-      if (!precioLinea && precioMostrador) precioLinea = precioMostrador;
-      if (!precioMostrador && precioLinea) precioMostrador = precioLinea;
+    // calcular cuánto sería mostrador sumando diferencia base
+    precioMostrador = totalActual + 70; // ← usa tu diferencia real
+  } else {
+    precioMostrador = totalActual;
+    precioLinea = totalActual - 70; // ← misma diferencia
+  }
 
-      return { precioLinea, precioMostrador };
-    }
-
+  return { precioLinea, precioMostrador };
+}
     function fillMetodoPagoModal() {
       const categoria = getCategoriaSeleccionada();
       const { precioLinea, precioMostrador } = getPreciosSeleccionados();

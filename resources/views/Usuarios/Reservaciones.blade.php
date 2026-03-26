@@ -175,15 +175,37 @@
             return route('rutaReservasIniciar', array_merge($baseParams, ['step' => $to], $extra));
         };
 
-        // ✅ días (mínimo 1)
-        if ($pickupDateISO && $dropoffDateISO) {
-            $d1 = \Illuminate\Support\Carbon::parse($pickupDateISO);
-            $d2 = \Illuminate\Support\Carbon::parse($dropoffDateISO);
-            $days = max(1, $d1->diffInDays($d2));
+        // ✅ días (mínimo 1)abc
+        $days = 1;
+
+try {
+    if ($pickupDateISO && $pickupTime && $dropoffDateISO && $dropoffTime) {
+
+        $d1 = \Illuminate\Support\Carbon::createFromFormat(
+            'Y-m-d H:i',
+            "{$pickupDateISO} {$pickupTime}"
+        );
+
+        $d2 = \Illuminate\Support\Carbon::createFromFormat(
+            'Y-m-d H:i',
+            "{$dropoffDateISO} {$dropoffTime}"
+        );
+
+        $horasTotales = $d1->diffInHours($d2);
+
+        $diasBase = intdiv($horasTotales, 24);
+        $horasExtra = $horasTotales % 24;
+
+        // ✅ misma lógica que controller y JS
+        if ($horasExtra > 1) {
+            $days = $diasBase + 1;
         } else {
-            // Si no hay fechas aún (primer ingreso), dejamos 1 para no romper cálculos internos
-            $days = 1;
+            $days = max(1, $diasBase);
         }
+    }
+} catch (\Throwable $e) {
+    $days = 1;
+}
 
         // ✅ categoría seleccionada
         $categoriaSel = null;
@@ -487,7 +509,7 @@
                             <span class="field-icon"><i id="dropoffIcon" class="fa-solid fa-location-dot"></i></span>
                             <select id="dropoffPlace" name="dropoff_sucursal_id">
                                 <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}>¿Dónde termina tu viaje?</option>
-                                @foreach ($ciudades as $ciudad)
+                               @foreach ($ciudades->sortByDesc(function($c) { return $c->nombre === 'Querétaro';}) as $ciudad)
                                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                         @foreach ($ciudad->sucursalesActivas ?? [] as $suc)
                                             @php
@@ -2404,10 +2426,6 @@ input:checked + .slider:before {
                                                 <span class="mp-action">PAGAR EN OFICINA</span>
                                             </button>
                                         </div>
-
-                                        <button id="cerrarModalMetodo" class="btn btn-secondary mp-cancel" type="button">
-                                            Cancelar
-                                        </button>
                                     </div>
                                 </div>
 

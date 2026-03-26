@@ -35,6 +35,7 @@ use App\Http\Controllers\HistorialController;
 use App\Http\Controllers\ChecklistCambioAutoController;
 use App\Http\Controllers\CategoriasController;
 use App\Http\Controllers\PropietarioVehiculoController;
+use App\Http\Controllers\VehiculoDocumentosController;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\VisorReservacionController;
 //rutas vistas Usuario
@@ -129,6 +130,24 @@ Route::get('/admin/polizas', [App\Http\Controllers\controladorVistasAdmin::class
 Route::get('/admin/carroceria', [App\Http\Controllers\controladorVistasAdmin::class, 'carroceria'])->name('rutaCarroceria');
 //gastos
 Route::get('/admin/gastos', [App\Http\Controllers\controladorVistasAdmin::class, 'gastos'])->name('rutaGastos');
+
+Route::prefix('admin')->group(function () {
+
+    Route::get('/vehiculos/documentos', [VehiculoDocumentosController::class, 'index'])
+        ->name('vehiculos.documentos');
+
+    Route::get('/vehiculos/documentos/list', [VehiculoDocumentosController::class, 'list']);
+
+    Route::get('/vehiculos/documentos/{id}/{tipo}', [VehiculoDocumentosController::class, 'getArchivo']);
+
+    Route::post('/vehiculos/documentos/{id}/{tipo}', [VehiculoDocumentosController::class, 'store']);
+
+    Route::delete('/vehiculos/documentos/{id}/{tipo}', [VehiculoDocumentosController::class, 'destroy']);
+
+});
+
+
+
 
 //Vistas Usuarios Admin
 //usuarios
