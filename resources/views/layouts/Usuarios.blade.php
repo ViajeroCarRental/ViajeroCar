@@ -34,7 +34,7 @@
   @yield('css-vistaFAQ')
   @yield('css-vistaLogin')
   @yield('css-vistaPerfil')
-  @yield('css-visorReservacion')
+  @yield('css-visorReservaciones')
 
   <title>@yield('Titulo')</title>
 

@@ -2426,10 +2426,6 @@ input:checked + .slider:before {
                                                 <span class="mp-action">PAGAR EN OFICINA</span>
                                             </button>
                                         </div>
-
-                                        <button id="cerrarModalMetodo" class="btn btn-secondary mp-cancel" type="button">
-                                            Cancelar
-                                        </button>
                                     </div>
                                 </div>
 

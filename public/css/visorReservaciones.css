@@ -1,171 +1,710 @@
-/* ==============================
-   🎨 Tokens / Design System
-============================== */
+/* =========================================================
+   VISOR RESERVACIONES
+========================================================= */
+
 :root{
-  --brand:#FF1E2D; --brand-2:#D6121F; --brand-3:#ff4956;
+  --vr-brand:#b22222;
+  --vr-brand-dark:#8f1b1b;
+  --vr-brand-soft:#fff5f5;
 
-  --ink:#101828; --muted:#667085; --muted-2:#475467;
-  --bg:#F3F5F9; --paper:#fff;
-  --stroke:#EAECF0; --stroke-2:#E5E7EB;
+  --vr-ink:#1f2937;
+  --vr-text:#374151;
+  --vr-muted:#6b7280;
 
-  --ok:#12B76A; --warn:#F59E0B; --err:#F04438; --info:#1D4ED8;
+  --vr-line:#e5e7eb;
+  --vr-line-soft:#eef2f7;
+  --vr-bg:#f6f8fb;
+  --vr-white:#ffffff;
 
-  --radius-lg:18px; --radius-md:14px; --radius-sm:10px;
+  --vr-success:#15803d;
+  --vr-success-dark:#166534;
+  --vr-warning:#f59e0b;
+  --vr-danger:#dc2626;
 
-  --shadow-xs:0 1px 3px rgba(16,24,40,.06);
-  --shadow-sm:0 4px 12px rgba(16,24,40,.08);
-  --shadow-md:0 10px 28px rgba(16,24,40,.10);
+  --vr-radius-xl:24px;
+  --vr-radius-lg:20px;
+  --vr-radius-md:16px;
+  --vr-radius-sm:12px;
 
-  --ring:0 0 0 6px #FFECEF;
+  --vr-shadow-sm:0 8px 20px rgba(15,23,42,.06);
+  --vr-shadow-md:0 16px 40px rgba(15,23,42,.10);
+  --vr-shadow-lg:0 24px 60px rgba(15,23,42,.14);
 }
 
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Cabin",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-body{font-size:15px;line-height:1.5}
-a{text-decoration:none;color:inherit}
-
-/* Scrollbar sutil */
-*::-webkit-scrollbar{height:10px;width:10px}
-*::-webkit-scrollbar-thumb{background:#dfe3ea;border-radius:999px}
-*::-webkit-scrollbar-track{background:transparent}
-
-/* ==============================
-   🧭 Shell / Sidebar / Main
-============================== */
-.wrap{display:grid;grid-template-columns:280px 1fr;min-height:100vh}
-@media(max-width:992px){.wrap{grid-template-columns:1fr}}
-
-.side{
-  background:linear-gradient(180deg,var(--brand),var(--brand-2));
-  color:#fff;padding:16px;border-right:1px solid rgba(0,0,0,.06);
-  position:sticky;top:0;height:100vh;overflow:auto;
-  box-shadow:inset 0 -1px 0 rgba(255,255,255,.08);
-}
-.brand{display:flex;justify-content:center;margin-bottom:14px}
-.brand img{width:170px;border-radius:12px;filter:drop-shadow(0 6px 20px rgba(0,0,0,.15))}
-.menu{display:flex;flex-direction:column;gap:10px}
-.mitem{
-  display:flex;align-items:center;gap:10px;padding:12px;border-radius:14px;
-  font-weight:800;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);
-  transition:transform .15s,background .15s,box-shadow .15s;
-}
-.mitem:hover{background:rgba(255,255,255,.18);transform:translateY(-1px);box-shadow:var(--shadow-xs)}
-.mitem.active{background:#fff;color:var(--brand);border-color:#fff;box-shadow:0 6px 16px rgba(255,255,255,.25)}
-
-.main{padding:22px}
-.container{max-width:1120px;margin:0 auto}
-.h1{margin:0 0 14px;font-size:24px;font-weight:900;letter-spacing:.2px}
-
-/* ==============================
-   🧰 Toolbar / Controles
-============================== */
-.toolbar{
-  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-  justify-content:space-between;margin-bottom:12px
-}
-.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-label{font-size:13px;color:var(--muted-2);font-weight:700}
-
-select,input[type=text]{
-  height:44px; padding:10px 12px; border:1.25px solid var(--stroke);
-  border-radius:12px; background:#fff; font-size:14px; transition:border .15s,box-shadow .15s
-}
-input[type=text]{min-width:260px}
-select:focus, input[type=text]:focus{outline:none;border-color:#FFB4BD;box-shadow:var(--ring)}
-
-.btn{
-  border:none;border-radius:12px;padding:9px 12px;font-weight:800;cursor:pointer;
-  display:inline-flex;align-items:center;gap:8px;transition:transform .15s,box-shadow .15s,background .15s;
-}
-.btn.primary{background:var(--brand);color:#fff;box-shadow:var(--shadow-sm)}
-.btn.primary:hover{background:var(--brand-3);transform:translateY(-1px)}
-.btn.ghost{background:#fff;border:1px solid var(--stroke);color:var(--brand)}
-.btn.gray{background:#F8FAFC;border:1px solid var(--stroke)}
-
-/* ==============================
-   📊 Tabla estilo “cards”
-============================== */
-/* Envoltura con scroll horizontal en móvil */
-.table-wrap{overflow:auto;border-radius:14px}
-.table-wrap::-webkit-scrollbar{height:10px}
-.table-wrap::-webkit-scrollbar-thumb{background:#e5e7eb;border-radius:999px}
-
-/* Header sticky con degradado de marca */
-.table{width:100%;border-collapse:separate;border-spacing:0 8px}
-.table thead th{
-  position:sticky; top:0; z-index:1;
-  background:linear-gradient(90deg,var(--brand),var(--brand-3));
-  color:#fff; padding:12px 14px; text-align:left; letter-spacing:.3px;
-  text-transform:uppercase; font-size:12px; border-bottom:1px solid var(--stroke);
+/* =========================================================
+   CONTENEDOR GENERAL
+========================================================= */
+body{
+  background: var(--vr-bg);
 }
 
-/* Filas como cards separadas */
-.table tbody tr{
-  background:#fff; border:1px solid var(--stroke); border-radius:14px;
-  box-shadow:var(--shadow-xs);
-}
-.table tbody td{
-  padding:12px 14px; border-bottom:1px dashed #EFF2F7; font-size:14px; vertical-align:top
-}
-.table tbody tr td:first-child{border-top-left-radius:14px;border-bottom-left-radius:14px}
-.table tbody tr td:last-child{border-top-right-radius:14px;border-bottom-right-radius:14px}
-.table tbody tr:hover{box-shadow:var(--shadow-sm);background:#FFF6F7}
-
-/* Helpers dentro de celdas */
-.cell-flex{display:flex;align-items:center;gap:8px}
-.dot{width:10px;height:10px;border-radius:50%}
-.dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.err{background:var(--err)} .dot.info{background:var(--info)}
-
-.badge{
-  display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;
-  font-size:12px;border:1px solid #E9EAEE;background:#F9FAFB;color:#475467;font-weight:800
-}
-.tag{
-  display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;font-size:12px;
-  border:1px solid #FFE1E4;background:#FFF5F6;color:#E31B23;font-weight:800
+.visor-reservacion{
+  padding-top: 22px;
+  padding-bottom: 40px;
 }
 
-/* Toggle & fila de detalles */
-.toggle{
-  background:#fff;border:1px solid var(--stroke);width:28px;height:28px;border-radius:8px;
-  display:inline-grid;place-items:center;cursor:pointer;font-weight:900;transition:background .15s
-}
-.toggle:hover{background:#F8FAFC}
-.cell-toggle{cursor:pointer}
-
-.details-row td{padding:0;border:none}
-.details{
-  display:grid; gap:10px; padding:12px 14px; background:#F9FAFB; border-top:1px dashed #e8edf3
-}
-.kv{display:grid;grid-template-columns:160px 1fr;gap:8px}
-.k{color:var(--muted)}
-
-/* ==============================
-   ⏭️ Paginación
-============================== */
-.pager{
-  display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:12px
-}
-.pager .range{color:var(--muted)}
-.pager .btn{
-  padding:8px 12px;border:1px solid var(--stroke);border-radius:10px;background:#fff;font-weight:800;cursor:pointer
-}
-.pager .btn:hover{background:#F8FAFC}
-
-/* ==============================
-   📱 Responsive fino
-============================== */
-@media (max-width:900px){
-  /* oculta columnas menos críticas en mobile si usas data-k/c- prefijos */
-  th[data-k="categoria"], td.c-categoria,
-  th[data-k="dias"], td.c-dias,
-  th[data-k="fechaCheckout"], td.c-fecha { display:none }
-
-  input[type=text]{min-width:180px}
-  .kv{grid-template-columns:130px 1fr}
+.visor-reservacion.container{
+  max-width: 1240px;
 }
 
-@media (max-width:680px){
-  .h1{font-size:22px}
-  select,input[type=text]{height:42px}
+/* =========================================================
+   ALERTAS
+========================================================= */
+.visor-alert{
+  border-radius: var(--vr-radius-md);
+  box-shadow: var(--vr-shadow-sm);
+  padding: 14px 16px;
+  margin-bottom: 18px;
+}
+
+.visor-alert.alert-success{
+  background: #ecfdf3;
+  border: 1px solid #b7ebc6;
+  color: #166534;
+}
+
+.visor-alert.alert-danger{
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.visor-alert ul{
+  margin: 0;
+  padding-left: 18px;
+}
+
+/* =========================================================
+   GRID SUPERIOR
+========================================================= */
+.visor-grid-top{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+
+.visor-card{
+  margin: 0;
+}
+
+/* =========================================================
+   PANEL / TARJETAS
+========================================================= */
+.visor-panel{
+  border: 1px solid var(--vr-line);
+  border-radius: var(--vr-radius-xl);
+  overflow: hidden;
+  background: var(--vr-white);
+  box-shadow: var(--vr-shadow-md);
+  height: 100%;
+}
+
+.visor-panel-wide{
+  width: 100%;
+}
+
+.visor-card-header{
+  background: linear-gradient(135deg, var(--vr-brand), var(--vr-brand-dark));
+  color: #fff;
+  padding: 18px 20px;
+  border-bottom: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.visor-card-title{
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.visor-card-title h5{
+  margin: 0;
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: .2px;
+}
+
+.visor-pill{
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.20);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.visor-actions{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.visor-card-body{
+  padding: 22px;
+}
+
+/* =========================================================
+   FORMULARIOS
+========================================================= */
+.visor-field-group{
+  margin-bottom: 15px;
+}
+
+.visor-field-group:last-child{
+  margin-bottom: 0;
+}
+
+.visor-field-group label{
+  display: block;
+  margin-bottom: 7px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #374151;
+  letter-spacing: .1px;
+}
+
+.visor-field-group .form-control,
+.visor-field-group .form-select{
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1.2px solid #dbe2ea;
+  background: #fff;
+  color: var(--vr-text);
+  box-shadow: none;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.visor-field-group .form-control:focus,
+.visor-field-group .form-select:focus{
+  border-color: rgba(178,34,34,.35);
+  box-shadow: 0 0 0 5px rgba(178,34,34,.10);
+}
+
+.visor-field-group .form-control[readonly]{
+  background: #f8fafc;
+}
+
+.visor-two-cols{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 4px;
+}
+
+.bloqueado{
+  pointer-events: none;
+  background-color: #eef2f6 !important;
+  opacity: 1;
+}
+
+.border-warning{
+  border-color: var(--vr-warning) !important;
+  box-shadow: 0 0 0 4px rgba(245,158,11,.12) !important;
+}
+
+/* =========================================================
+   GRID INFERIOR
+========================================================= */
+.visor-bottom-grid{
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 26px;
+  align-items: start;
+}
+
+/* =========================================================
+   VEHÍCULO
+========================================================= */
+.visor-vehicle-box{
+  background: linear-gradient(180deg, #ffffff 0%, #fff5f5 100%);
+  border: 1px solid #f3d6d6;
+  border-radius: 22px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+}
+
+.visor-vehicle-media{
+  min-height: 190px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.visor-vehicle-media img{
+  max-width: 100%;
+  max-height: 185px;
+  object-fit: contain;
+}
+
+.visor-category-name{
+  color: var(--vr-ink);
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 0;
+  line-height: 1.35;
+}
+
+/* =========================================================
+   SERVICIOS
+========================================================= */
+.visor-services-box{
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#contenedorAgregarServicio{
+  background: #fff8f8;
+  border: 1px dashed rgba(178,34,34,.20);
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 0 !important;
+}
+
+/* =========================================================
+   TABLA SERVICIOS
+========================================================= */
+.visor-table-wrap{
+  border: 1px solid var(--vr-line);
+  border-radius: 18px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.visor-table{
+  width: 100%;
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.visor-table thead th{
+  background: #fff2f2;
+  color: var(--vr-brand);
+  font-size: 13px;
+  font-weight: 800;
+  border-bottom: 1px solid #f1d4d4;
+  white-space: nowrap;
+  padding: 13px 14px;
+  text-transform: none;
+}
+
+.visor-table td{
+  padding: 13px 14px;
+  vertical-align: middle;
+  border-top: 1px solid #f3f4f6;
+  color: var(--vr-text);
+}
+
+.visor-table tbody tr:first-child td{
+  border-top: none;
+}
+
+.visor-table tbody tr:hover{
+  background: #fffafa;
+}
+
+.visor-table input.form-control{
+  min-width: 86px;
+  min-height: 42px;
+  border-radius: 12px;
+}
+
+/* =========================================================
+   TOTALES
+========================================================= */
+.visor-totals{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.visor-total-item{
+  background: #f8fafc;
+  border: 1px solid #e7edf3;
+  border-radius: 16px;
+  padding: 15px 16px;
+  color: #475467;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(15,23,42,.03);
+}
+
+.visor-total-item strong{
+  color: var(--vr-ink);
+}
+
+.visor-total-main{
+  background: linear-gradient(135deg, #fff1f1, #ffe5e5);
+  border-color: #f8caca;
+  color: var(--vr-brand);
+}
+
+.visor-total-main strong{
+  color: var(--vr-brand-dark);
+}
+
+/* =========================================================
+   BOTONES INTERNOS
+========================================================= */
+.visor-card .btn{
+  border-radius: 12px;
+  font-weight: 800;
+  padding: 9px 15px;
+  transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+.visor-card .btn:hover{
+  transform: translateY(-1px);
+}
+
+.visor-card .btn-primary{
+  background: linear-gradient(135deg, var(--vr-brand), var(--vr-brand-dark));
+  border: none;
+  box-shadow: 0 10px 22px rgba(178,34,34,.18);
+}
+
+.visor-card .btn-primary:hover{
+  filter: brightness(1.04);
+}
+
+.visor-card .btn-outline-warning{
+  border: 1px solid #f5c56a;
+  color: #8a5a00;
+  background: #fffaf0;
+}
+
+.visor-card .btn-outline-warning:hover{
+  background: #fff3d9;
+  color: #7a4d00;
+}
+
+.visor-card .btn-outline-primary{
+  border: 1px solid rgba(178,34,34,.20);
+  color: var(--vr-brand);
+  background: #fff;
+}
+
+.visor-card .btn-outline-primary:hover{
+  background: #fff5f5;
+}
+
+.visor-card .btn-success{
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  border: none;
+  box-shadow: 0 10px 20px rgba(21,128,61,.16);
+}
+
+.visor-card .btn-danger{
+  border: none;
+  box-shadow: 0 8px 18px rgba(220,38,38,.12);
+}
+
+/* =========================================================
+   BOTÓN FINAL
+========================================================= */
+.visor-confirm-wrap{
+  margin-top: 26px;
+}
+
+.btn-confirmar-cambios{
+  background: linear-gradient(135deg, var(--vr-success), var(--vr-success-dark));
+  color: #fff;
+  border: none;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 800;
+  border-radius: 14px;
+  transition: all .2s ease;
+  box-shadow: 0 12px 26px rgba(21,128,61,.18);
+}
+
+.btn-confirmar-cambios:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+/* =========================================================
+   MODAL CATEGORÍAS
+========================================================= */
+#modalCategoria .modal-content{
+  border: none;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(15,23,42,.18);
+}
+
+#modalCategoria .modal-header{
+  background: linear-gradient(135deg, var(--vr-brand), var(--vr-brand-dark));
+  color: #fff;
+  border-bottom: none;
+  padding: 18px 20px;
+}
+
+#modalCategoria .modal-title{
+  font-weight: 800;
+}
+
+#modalCategoria .btn-close{
+  filter: brightness(0) invert(1);
+  opacity: .95;
+}
+
+#modalCategoria .modal-body{
+  background: #fcfcfd;
+  padding: 22px;
+}
+
+/* =========================================================
+   CARDS DEL MODAL
+========================================================= */
+.car-card.catalog-group{
+  border: 1px solid #eceff3;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(15,23,42,.06);
+  overflow: hidden;
+  position: relative;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  padding: 18px;
+}
+
+.car-card.catalog-group:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 18px 34px rgba(15,23,42,.10);
+  border-color: rgba(178,34,34,.18);
+}
+
+.offer-badge{
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: linear-gradient(135deg, var(--vr-brand), var(--vr-brand-dark));
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 11px;
+  font-size: 12px;
+  font-weight: 800;
+  box-shadow: 0 10px 20px rgba(178,34,34,.18);
+}
+
+.car-title h3{
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.car-title p{
+  margin: 0;
+  color: var(--vr-muted);
+  font-size: .92rem;
+}
+
+.car-media{
+  min-height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 16px 0 12px;
+}
+
+.car-media img{
+  max-width: 100%;
+  max-height: 165px;
+  object-fit: contain;
+}
+
+.car-specs{
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 10px;
+}
+
+.car-specs li{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f9fafb;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #374151;
+  font-weight: 700;
+  font-size: .92rem;
+}
+
+.spec-letter{
+  font-weight: 800;
+  color: var(--vr-brand-dark);
+}
+
+.car-connect{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.badge-chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: .85rem;
+  font-weight: 700;
+  border: 1px solid #ebeef3;
+  background: #fff;
+}
+
+.icon-badge{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #f3f4f6;
+}
+
+.badge-apple .icon-badge{
+  color: #111827;
+}
+
+.badge-android .icon-badge{
+  color: #15803d;
+}
+
+.car-cta{
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--vr-brand), var(--vr-brand-dark));
+  color: #fff;
+  font-weight: 800;
+  font-size: .95rem;
+  box-shadow: 0 12px 22px rgba(178,34,34,.18);
+  transition: transform .18s ease, filter .18s ease;
+}
+
+.car-cta:hover{
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+@media (max-width: 1199px){
+  .visor-bottom-grid{
+    grid-template-columns: 300px 1fr;
+  }
+}
+
+@media (max-width: 991px){
+  .visor-grid-top{
+    grid-template-columns: 1fr;
+  }
+
+  .visor-bottom-grid{
+    grid-template-columns: 1fr;
+  }
+
+  .visor-vehicle-box{
+    max-width: 100%;
+  }
+
+  .visor-vehicle-media{
+    min-height: 165px;
+  }
+
+  .visor-vehicle-media img{
+    max-height: 160px;
+  }
+}
+
+@media (max-width: 767px){
+  .visor-reservacion{
+    padding-top: 16px;
+    padding-bottom: 28px;
+  }
+
+  .visor-card-header{
+    padding: 15px;
+  }
+
+  .visor-card-body{
+    padding: 16px;
+  }
+
+  .visor-actions{
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .visor-two-cols{
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .visor-totals{
+    grid-template-columns: 1fr;
+  }
+
+  .visor-table-wrap{
+    overflow-x: auto;
+  }
+
+  .visor-table{
+    min-width: 680px;
+  }
+
+  #contenedorAgregarServicio .col-md-8,
+  #contenedorAgregarServicio .col-md-4{
+    width: 100%;
+  }
+
+  .car-specs{
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 575px){
+  .visor-card-title h5{
+    font-size: 1rem;
+  }
+
+  .visor-pill{
+    font-size: 11px;
+  }
+
+  .btn-confirmar-cambios{
+    width: 100%;
+  }
+
+  .car-connect{
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .badge-chip{
+    justify-content: center;
+  }
 }
