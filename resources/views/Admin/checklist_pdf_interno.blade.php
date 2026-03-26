@@ -414,11 +414,309 @@ th,td{
   page-break-inside: avoid;
 }
 
+
+/* ===========================
+   DIAGRAMA + INVENTARIO
+=========================== */
+
+.diagram-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.diagram-cell{
+    width:50%;
+    vertical-align:top;
+    padding:8px;
+}
+
+/* ===========================
+   DIAGRAMA + PUNTOS
+=========================== */
+
+.car-box-pdf{
+    position: relative;
+    width: 100%;
+    max-width: 260px;
+    margin: 0 auto;
+    height:320px;
+}
+
+.car-diagram-img{
+    display:block;
+    width:100%;
+    height:auto;
+    max-height: 320px;
+}
+
+.car-damage-layer{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    transform: translate(-14px, -75px);
+}
+
+.damage-dot{
+    position:absolute;
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    box-sizing:border-box;
+    background: transparent;
+    border: 2px solid #ff4d6a;
+}
+
+.damage-dot.selected{
+    background:#ff4d6a;
+    border-color:#ff4d6a;
+    box-shadow: 0 0 8px rgba(255,77,106,.6);
+}
+
+/* Posiciones */
+.damage-z1  { top:  9.4%; left: 50%; }
+.damage-z2  { top: 16.4%; left: 50%; }
+.damage-z5  { top: 28.5%; left: 50%; }
+
+.damage-z3  { top: 30.1%; left: 19.4%; }
+.damage-z4  { top: 30.1%; left: 80.6%; }
+
+.damage-z6  { top: 41.0%; left: 19.4%; }
+.damage-z7  { top: 41.0%; left: 80.6%; }
+
+.damage-z8  { top: 53.5%; left: 19.4%; }
+.damage-z9  { top: 53.5%; left: 80.6%; }
+
+.damage-z10 { top: 50.0%; left: 50%; }
+
+.damage-z11 { top: 66.0%; left: 19.4%; }
+.damage-z12 { top: 66.0%; left: 80.6%; }
+
+.damage-z13 { top: 78.9%; left: 50%; }
+
+.damage-z15 { top: 35.8%; left: 14.6%; }
+.damage-z16 { top: 35.8%; left: 85.3%; }
+.damage-z17 { top: 70.9%; left: 14.6%; }
+.damage-z18 { top: 70.9%; left: 85.3%; }
+
+/* ===========================
+   INVENTARIO
+=========================== */
+
+.entrega-title{
+    font-weight:900;
+    margin-bottom:10px;
+    font-size:12px;
+    text-align:center;
+}
+
+.entrega-table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:10.5px;
+}
+
+.entrega-table td{
+    padding:6px 8px;
+    border-bottom:1px solid #eee;
+}
+
+.entrega-table tr:nth-child(even){
+    background:#f7f7f7;
+}
+
+.entrega-table td:nth-child(2),
+.entrega-table td:nth-child(4){
+    text-align:right;
+    font-weight:bold;
+}
+
+/* ===========================
+   FOTOS (4 POR HOJA)
+=========================== */
+
+.foto-page{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.foto-page td{
+    width: 50%;
+}
+
+.foto-big-cell{
+    padding: 12mm 8mm;
+    text-align:center;
+    vertical-align:middle;
+}
+
+.foto-big{
+    width:100%;
+    object-fit:contain;
+    border-radius:10px;
+    border:1px solid #e5e7eb;
+}
+
+.foto-big-4{
+    max-height: 80mm;
+}
+
+.foto-big-cell-4{
+    padding: 5mm 6mm;
+}
+
+.foto-label-big{
+    font-size:10px;
+    color:#6b7280;
+    margin-top:4px;
+}
+
 </style>
 
 </head>
 
 <body>
+<body>
+@php
+
+ // Tipo de checklist: salida / entrada (USADO EN VARIAS PARTES)
+    $tipoChecklistLocal = $tipoChecklist ?? ($tipo ?? 'salida');
+
+ // ============================
+    // 2) Inicializar arreglos seguros
+    // ============================
+    $danosPorZona      = $danosPorZona      ?? null;
+    $inventarioCliente = $inventarioCliente ?? null;
+    $fotosChecklist    = $fotosChecklist    ?? null;
+
+    if (!is_array($danosPorZona)) {
+        $danosPorZona = [];
+    }
+    if (!is_array($inventarioCliente)) {
+        $inventarioCliente = [];
+    }
+    if (!is_array($fotosChecklist)) {
+        $fotosChecklist = [];
+    }
+
+    /*
+     * ADAPTADOR PARA LOS NUEVOS DATOS DEL CONTROLADOR
+     * - $danos        -> $danosPorZona (para el diagrama)
+     * - $inventario   -> $inventarioCliente (para la tabla con ✔)
+     * - $fotosSalidaPdf / $fotosEntradaPdf -> $fotosChecklist (para fotos grandes)
+     */
+
+    // ============================
+    // 3) Daños -> zonas para el diagrama
+    // ============================
+    if (empty($danosPorZona) && !empty($danos ?? null) && is_array($danos)) {
+        $zonasTmp = [];
+        foreach ($danos as $d) {
+            if (isset($d['zona'])) {
+                $zonasTmp[] = (int) $d['zona'];
+            } elseif (isset($d['zona_id'])) {
+                $zonasTmp[] = (int) $d['zona_id'];
+            }
+        }
+        // Quitar nulls, duplicados y reindexar
+        $danosPorZona = array_values(
+            array_unique(
+                array_filter($zonasTmp, function ($z) {
+                    return !is_null($z);
+                })
+            )
+        );
+    }
+
+    // ============================
+    // 4) Inventario -> mapa clave => valor (1 / 0)
+    // ============================
+    if (empty($inventarioCliente) && !empty($inventario ?? null) && is_array($inventario)) {
+        foreach ($inventario as $item) {
+            $clave = $item['clave'] ?? null;
+            if (!$clave) {
+                continue;
+            }
+            $inventarioCliente[$clave] = (int) ($item['valor'] ?? 0);
+        }
+    }
+
+    // ============================
+    // 5) Fotos -> $fotosChecklist
+    // ============================
+    if (empty($fotosChecklist)) {
+        $fotosChecklist = [
+            'frente'         => null,
+            'atras'          => null,
+            'lado_izquierdo' => null,
+            'lado_derecho'   => null,
+            'interiores'     => [],
+        ];
+
+        // Bloque que viene del controlador según salida / entrada
+        $bloqueFotos = $tipoChecklistLocal === 'entrada'
+            ? ($fotosEntradaPdf ?? [])
+            : ($fotosSalidaPdf ?? []);
+
+        if (!empty($bloqueFotos) && is_array($bloqueFotos)) {
+            // Mapeamos categorías de la API a las llaves que usa esta vista
+            $mapCategorias = [
+                'frente'         => 'frente',
+                'atras'          => 'atras',
+                'lado_conductor' => 'lado_izquierdo',
+                'lado_pasajero'  => 'lado_derecho',
+            ];
+
+            foreach ($mapCategorias as $catOrigen => $catDestino) {
+                if (!empty($bloqueFotos[$catOrigen])) {
+                    $f = $bloqueFotos[$catOrigen];
+
+                    // Puede venir como stdClass o como array
+                    $archivo = is_array($f) ? ($f['archivo'] ?? null) : ($f->archivo ?? null);
+                    $mime    = is_array($f) ? ($f['mime_type'] ?? 'image/jpeg') : ($f->mime_type ?? 'image/jpeg');
+
+                    if ($archivo) {
+                        $fotosChecklist[$catDestino] =
+                            'data:' . $mime . ';base64,' . base64_encode($archivo);
+                    }
+                }
+            }
+
+            // Interiores: TODAS las fotos en un arreglo
+            if (!empty($bloqueFotos['interiores']) && is_array($bloqueFotos['interiores'])) {
+                foreach ($bloqueFotos['interiores'] as $fotoInt) {
+                    if (!$fotoInt) {
+                        continue;
+                    }
+
+                    $archivo = is_array($fotoInt)
+                        ? ($fotoInt['archivo'] ?? null)
+                        : ($fotoInt->archivo ?? null);
+
+                    $mime = is_array($fotoInt)
+                        ? ($fotoInt['mime_type'] ?? 'image/jpeg')
+                        : ($fotoInt->mime_type ?? 'image/jpeg');
+
+                    if ($archivo) {
+                        $fotosChecklist['interiores'][] =
+                            'data:' . $mime . ';base64,' . base64_encode($archivo);
+                    }
+                }
+            }
+        }
+    }
+
+    // ============================
+    // 6) Diagrama del carro en base64 para DomPDF
+    // ============================
+    $carDiagramPath   = public_path('img/diagrama-carro-danos3.png');
+    $carDiagramExists = file_exists($carDiagramPath);
+@endphp
+
+
+
+
   <div class="checklist-container-pdf">
 
     {{-- ========================= CABECERA ========================= --}}
@@ -497,6 +795,124 @@ th,td{
           <td>{{ $gasolinaRegreso ?? '—' }}</td>
         </tr>
       </table>
+    </section>
+
+     {{-- DIAGRAMA + INVENTARIO --}}
+    <section class="sec-block">
+        <h3 class="sec-title center">Diagrama de daños y equipo entregado</h3>
+
+        <table class="diagram-table">
+            <tr>
+                                        {{-- DIAGRAMA --}}
+            <td class="diagram-cell">
+                <div class="car-box-pdf">
+                    @if($carDiagramExists)
+                        {{-- Imagen del diagrama desde public/img --}}
+                        <img src="{{ $carDiagramPath }}"
+                             alt="Diagrama de vehículo"
+                             class="car-diagram-img">
+
+                        {{-- Capa de puntos encima del diagrama --}}
+                        <div class="car-damage-layer">
+                            {{-- DEFENSA DELANTERA --}}
+                            <div class="damage-dot damage-z1  {{ in_array(1,  $danosPorZona) ? 'selected' : '' }}"></div>
+                            <div class="damage-dot damage-z2  {{ in_array(2,  $danosPorZona) ? 'selected' : '' }}"></div>
+
+                            {{-- COFRE / PARABRISAS --}}
+                            <div class="damage-dot damage-z5  {{ in_array(5,  $danosPorZona) ? 'selected' : '' }}"></div>
+
+                            {{-- COSTADOS FRONTALES --}}
+                            <div class="damage-dot damage-z3  {{ in_array(3,  $danosPorZona) ? 'selected' : '' }}"></div>
+                            <div class="damage-dot damage-z4  {{ in_array(4,  $danosPorZona) ? 'selected' : '' }}"></div>
+
+                            {{-- PUERTAS DELANTERAS --}}
+                            <div class="damage-dot damage-z6  {{ in_array(6,  $danosPorZona) ? 'selected' : '' }}"></div>
+                            <div class="damage-dot damage-z7  {{ in_array(7,  $danosPorZona) ? 'selected' : '' }}"></div>
+
+                            {{-- PUERTAS TRASERAS --}}
+                            <div class="damage-dot damage-z8  {{ in_array(8,  $danosPorZona) ? 'selected' : '' }}"></div>
+                            <div class="damage-dot damage-z9  {{ in_array(9,  $danosPorZona) ? 'selected' : '' }}"></div>
+
+                            {{-- TECHO --}}
+                            <div class="damage-dot damage-z10 {{ in_array(10, $danosPorZona) ? 'selected' : '' }}"></div>
+
+                            {{-- COSTADOS TRASEROS --}}
+                            <div class="damage-dot damage-z11 {{ in_array(11, $danosPorZona) ? 'selected' : '' }}"></div>
+                            <div class="damage-dot damage-z12 {{ in_array(12, $danosPorZona) ? 'selected' : '' }}"></div>
+
+                            {{-- DEFENSA TRASERA --}}
+                            <div class="damage-dot damage-z13 {{ in_array(13, $danosPorZona) ? 'selected' : '' }}"></div>
+
+                            {{-- LLANTAS --}}
+                            <div class="damage-dot damage-z15 {{ in_array(15, $danosPorZona) ? 'selected' : '' }}"></div>
+                            <div class="damage-dot damage-z16 {{ in_array(16, $danosPorZona) ? 'selected' : '' }}"></div>
+                            <div class="damage-dot damage-z17 {{ in_array(17, $danosPorZona) ? 'selected' : '' }}"></div>
+                            <div class="damage-dot damage-z18 {{ in_array(18, $danosPorZona) ? 'selected' : '' }}"></div>
+                        </div>
+                    @else
+                        <span style="font-size:9px; color:red;">
+                            No se encontró img/diagrama-carro-danos3.png
+                        </span>
+                    @endif
+                </div>
+            </td>
+
+                {{-- INVENTARIO --}}
+                <td class="diagram-cell">
+                    <div class="entrega-title">EL CLIENTE SE LO LLEVA</div>
+
+                    <table class="entrega-table">
+                        <tr>
+                            <td>PLACAS</td>
+                            <td>{{ ($inventarioCliente['placas'] ?? 0) ? '✔' : '—' }}</td>
+
+                            <td>ESPEJOS LATERALES</td>
+                            <td>{{ ($inventarioCliente['espejos_laterales'] ?? 0) ? '✔' : '—' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td>TOLDO-JEEP</td>
+                            <td>{{ ($inventarioCliente['toldo'] ?? 0) ? '✔' : '—' }}</td>
+
+                            <td>ESPEJO INTERIOR</td>
+                            <td>{{ ($inventarioCliente['espejo_interior'] ?? 0) ? '✔' : '—' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td>TARJETA DE CIRCULACIÓN</td>
+                            <td>{{ ($inventarioCliente['tcirculacion'] ?? 0) ? '✔' : '—' }}</td>
+
+                            <td>ANTENA</td>
+                            <td>{{ ($inventarioCliente['antena'] ?? 0) ? '✔' : '—' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td>PÓLIZA DE SEGURO</td>
+                            <td>{{ ($inventarioCliente['poliza'] ?? 0) ? '✔' : '—' }}</td>
+
+                            <td>TAPÓN DE GASOLINA</td>
+                            <td>{{ ($inventarioCliente['tapon_gasolina'] ?? 0) ? '✔' : '—' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td>LLANTA DE REFACCIÓN</td>
+                            <td>{{ ($inventarioCliente['refaccion'] ?? 0) ? '✔' : '—' }}</td>
+
+                            <td>TAPETES</td>
+                            <td>{{ ($inventarioCliente['tapetes'] ?? 0) ? '✔' : '—' }}</td>
+                        </tr>
+
+                        <tr>
+                            <td>GATO</td>
+                            <td>{{ ($inventarioCliente['gato'] ?? 0) ? '✔' : '—' }}</td>
+
+                            <td>LLAVE DE ENCENDIDO</td>
+                            <td>{{ ($inventarioCliente['llave_encendido'] ?? 0) ? '✔' : '—' }}</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
     </section>
 
     {{-- COMENTARIOS Y DAÑOS --}}
@@ -660,6 +1076,186 @@ th,td{
     </tr>
   </table>
 </section>
+
+  {{-- =========================================
+         FOTOS – EVIDENCIA FOTOGRÁFICA (4 POR HOJA)
+       ========================================= --}}
+    @php
+        $fotoFrente   = $fotosChecklist['frente']         ?? null;
+        $fotoAtras    = $fotosChecklist['atras']          ?? null;
+        $fotoIzq      = $fotosChecklist['lado_izquierdo'] ?? null;
+        $fotoDer      = $fotosChecklist['lado_derecho']   ?? null;
+        $interiores   = $fotosChecklist['interiores']     ?? [];
+        $tituloEvid   = 'Evidencia fotográfica – ' . ((($tipo ?? 'salida') === 'entrada') ? 'Regreso' : 'Salida');
+
+        // 🔹 Construimos un arreglo con las fotos EXTERIORES en orden
+        $fotosExteriores = [];
+
+        if ($fotoFrente) {
+            $fotosExteriores[] = [
+                'src'   => $fotoFrente,
+                'label' => 'Foto delantera',
+            ];
+        }
+
+        if ($fotoAtras) {
+            $fotosExteriores[] = [
+                'src'   => $fotoAtras,
+                'label' => 'Foto trasera',
+            ];
+        }
+
+        if ($fotoIzq) {
+            $fotosExteriores[] = [
+                'src'   => $fotoIzq,
+                'label' => 'Lado izquierdo',
+            ];
+        }
+
+        if ($fotoDer) {
+            $fotosExteriores[] = [
+                'src'   => $fotoDer,
+                'label' => 'Lado derecho',
+            ];
+        }
+    @endphp
+
+    @if(!empty($fotosExteriores) || !empty($interiores))
+
+        {{-- ======================================
+             EXTERIORES – HASTA 4 POR HOJA (2x2)
+           ====================================== --}}
+        @if(!empty($fotosExteriores))
+            @for($i = 0; $i < count($fotosExteriores); $i += 4)
+                <div style="page-break-before: always;"></div>
+                <section class="sec-block">
+                    <h3 class="sec-title center">{{ $tituloEvid }}</h3>
+
+                    <table class="foto-page">
+                        {{-- Fila superior: izquierda (i) y derecha (i+1) --}}
+                        <tr>
+                            {{-- Celda superior izquierda --}}
+                            <td class="foto-big-cell foto-big-cell-4">
+                                @if(isset($fotosExteriores[$i]))
+                                    <img src="{{ $fotosExteriores[$i]['src'] }}"
+                                         class="foto-big foto-big-4"
+                                         alt="{{ $fotosExteriores[$i]['label'] }}">
+                                    <div class="foto-label-big">{{ $fotosExteriores[$i]['label'] }}</div>
+                                @endif
+                            </td>
+
+                            {{-- Celda superior derecha --}}
+                            <td class="foto-big-cell foto-big-cell-4">
+                                @if(isset($fotosExteriores[$i + 1]))
+                                    <img src="{{ $fotosExteriores[$i + 1]['src'] }}"
+                                         class="foto-big foto-big-4"
+                                         alt="{{ $fotosExteriores[$i + 1]['label'] }}">
+                                    <div class="foto-label-big">{{ $fotosExteriores[$i + 1]['label'] }}</div>
+                                @endif
+                            </td>
+                        </tr>
+
+                        {{-- Fila inferior: izquierda (i+2) y derecha (i+3) si existen --}}
+                        @if(isset($fotosExteriores[$i + 2]) || isset($fotosExteriores[$i + 3]))
+                            <tr>
+                                {{-- Celda inferior izquierda --}}
+                                <td class="foto-big-cell foto-big-cell-4">
+                                    @if(isset($fotosExteriores[$i + 2]))
+                                        <img src="{{ $fotosExteriores[$i + 2]['src'] }}"
+                                             class="foto-big foto-big-4"
+                                             alt="{{ $fotosExteriores[$i + 2]['label'] }}">
+                                        <div class="foto-label-big">{{ $fotosExteriores[$i + 2]['label'] }}</div>
+                                    @endif
+                                </td>
+
+                                {{-- Celda inferior derecha --}}
+                                <td class="foto-big-cell foto-big-cell-4">
+                                    @if(isset($fotosExteriores[$i + 3]))
+                                        <img src="{{ $fotosExteriores[$i + 3]['src'] }}"
+                                             class="foto-big foto-big-4"
+                                             alt="{{ $fotosExteriores[$i + 3]['label'] }}">
+                                        <div class="foto-label-big">{{ $fotosExteriores[$i + 3]['label'] }}</div>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endif
+                    </table>
+                </section>
+            @endfor
+        @endif
+
+        {{-- ======================================
+             INTERIORES – 4 POR HOJA (2x2)
+           ====================================== --}}
+        @if(!empty($interiores))
+            @for($i = 0; $i < count($interiores); $i += 4)
+                <div style="page-break-before: always;"></div>
+                <section class="sec-block">
+                    <h3 class="sec-title center">{{ $tituloEvid }} – Interior</h3>
+
+                    <table class="foto-page">
+                        {{-- Fila superior: izquierda (i) y derecha (i+1) --}}
+                        <tr>
+                            {{-- Celda superior izquierda --}}
+                            <td class="foto-big-cell foto-big-cell-4">
+                                @if(isset($interiores[$i]))
+                                    <img src="{{ $interiores[$i] }}"
+                                         class="foto-big foto-big-4"
+                                         alt="Foto de interior {{ $i + 1 }}">
+                                    <div class="foto-label-big">Foto de interior {{ $i + 1 }}</div>
+                                @endif
+                            </td>
+
+                            {{-- Celda superior derecha --}}
+                            <td class="foto-big-cell foto-big-cell-4">
+                                @if(isset($interiores[$i + 1]))
+                                    <img src="{{ $interiores[$i + 1] }}"
+                                         class="foto-big foto-big-4"
+                                         alt="Foto de interior {{ $i + 2 }}">
+                                    <div class="foto-label-big">Foto de interior {{ $i + 2 }}</div>
+                                @endif
+                            </td>
+                        </tr>
+
+                        {{-- Fila inferior: izquierda (i+2) y derecha (i+3) si existen --}}
+                        @if(isset($interiores[$i + 2]) || isset($interiores[$i + 3]))
+                            <tr>
+                                {{-- Celda inferior izquierda --}}
+                                <td class="foto-big-cell foto-big-cell-4">
+                                    @if(isset($interiores[$i + 2]))
+                                        <img src="{{ $interiores[$i + 2] }}"
+                                             class="foto-big foto-big-4"
+                                             alt="Foto de interior {{ $i + 3 }}">
+                                        <div class="foto-label-big">Foto de interior {{ $i + 3 }}</div>
+                                    @endif
+                                </td>
+
+                                {{-- Celda inferior derecha --}}
+                                <td class="foto-big-cell foto-big-cell-4">
+                                    @if(isset($interiores[$i + 3]))
+                                        <img src="{{ $interiores[$i + 3] }}"
+                                             class="foto-big foto-big-4"
+                                             alt="Foto de interior {{ $i + 4 }}">
+                                        <div class="foto-label-big">Foto de interior {{ $i + 4 }}</div>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endif
+                    </table>
+                </section>
+            @endfor
+        @endif
+
+    @endif
+
+
+
+    <div class="footer-note">
+        Documento generado por Viajero Car Rental ·
+        {{ \Carbon\Carbon::now()->translatedFormat('d-M-Y H:i') }}
+    </div>
+
+
 
   </div>
 </body>
