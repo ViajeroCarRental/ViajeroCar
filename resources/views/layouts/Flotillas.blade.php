@@ -46,6 +46,7 @@
     <li><a href="{{ route('rutaCarroceria') }}"><i class="fas fa-car-side"></i> Carrocería</a></li>
     <li><a href="{{ route('rutaSeguros') }}"><i class="fas fa-shield-alt"></i> Seguros</a></li>
     <li><a href="{{ route('rutaGastos') }}"><i class="fas fa-coins"></i> Gastos</a></li>
+    <li><a href="{{ route('vehiculos.documentos') }}"><i class="fas fa-coins"></i> Documentacion</a></li>
 
     <li class="menu-section">Navegación</li>
     <li><a href="{{ route('rutaDashboard') }}"><i class="fas fa-arrow-left"></i> Volver al panel</a></li>
@@ -59,6 +60,7 @@
     @yield('contenidoCarroceria')
     @yield('contenidoSeguros')
     @yield('contenidoGastos')
+    @yield('contenidoDocumentos')
 </div>
 
 
@@ -73,6 +75,7 @@
     @yield('js-vistaCarroceria')
     @yield('js-vistaSeguros')
     @yield('js-vistaGastos')
+    @yield('js-vistaDocumentacion')
 
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 
