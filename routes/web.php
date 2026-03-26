@@ -243,6 +243,9 @@ Route::delete('/admin/contrato/seguros-individuales/todos', [ContratoController:
 // Utilidades del Paso 1-3
 Route::get('/admin/contrato/{id_reservacion}/resumen', [ContratoBaseController::class, 'resumenContrato'])->name('contrato.resumen');
 Route::get('/contrato/{id}/exportar-word', [ContratoController::class, 'exportarWord'])->name('contrato.exportarWord');
+Route::get('/admin/contrato/vehiculos-por-categoria/{idCategoria}/{idReservacion}', [ContratoBaseController::class, 'vehiculosPorCategoria'])->name('contrato.vehiculosPorCategoria');
+Route::post('/admin/contrato/asignar-vehiculo', [ContratoBaseController::class, 'asignarVehiculo'])->name('contrato.asignarVehiculo');
+Route::get('/admin/contrato/vehiculo-random/{idCategoria}', [ContratoBaseController::class, 'vehiculoRandom'])->name('contrato.vehiculo-random');
 
 // Contrato2Controller
 Route::get('/admin/contrato2/{id}', [Contrato2Controller::class, 'mostrarContrato2'])->name('contrato.mostrar2');
@@ -253,9 +256,6 @@ Route::post('/admin/contrato/servicios-extra', [Contrato2Controller::class, 'act
 Route::get('/admin/contrato/cargos/{idContrato}', [Contrato2Controller::class, 'obtenerCargosContrato'])->name('contrato.obtenerCargos');
 Route::post('/admin/contrato/cargo-variable', [Contrato2Controller::class, 'guardarCargoVariable']);
 Route::post('/admin/reservacion/delivery/guardar', [ContratoController::class, 'guardarDeliveryReservacion'])->name('reservacion.delivery.guardar');
-Route::get('/admin/contrato/vehiculos-por-categoria/{idCategoria}', [Contrato2Controller::class, 'vehiculosPorCategoria'])->name('contrato.vehiculosPorCategoria');
-Route::post('/admin/contrato/asignar-vehiculo', [Contrato2Controller::class, 'asignarVehiculo'])->name('contrato.asignarVehiculo');
-Route::get('/admin/contrato/vehiculo-random/{idCategoria}', [Contrato2Controller::class, 'vehiculoRandom'])->name('contrato.vehiculo-random');
 
 // Upgrade (Dentro del flujo del Paso 4)
 Route::get('/admin/contrato/{id}/oferta-upgrade', [Contrato2Controller::class, 'obtenerOfertaUpgrade'])->name('contrato.oferta-upgrade');

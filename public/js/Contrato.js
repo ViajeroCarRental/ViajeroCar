@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("✅ DOM listo, iniciando navegación de pasos (1-3)...");
 
     let intervaloAprobacion = null;
-    const ORDEN_CATEGORIAS = ["C", "D", "E", "F", "IC", "I", "IB", "M", "L", "H", "HI"];
+    // const ORDEN_CATEGORIAS = ["C", "D", "E", "F", "IC", "I", "IB", "M", "L", "H", "HI"];
 
     const selectCategoriaOutside = document.getElementById("selectCategoria");
     const selectCategoriaModal = document.getElementById("selectCategoriaModal");
@@ -90,15 +90,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        // Modales
-        window.$("#btnElegirVehiculo")?.addEventListener("click", abrirModalVehiculos);
-        window.$("#cerrarModalVehiculos")?.addEventListener("click", cerrarModalVehiculos);
-        window.$("#cerrarModalVehiculos2")?.addEventListener("click", cerrarModalVehiculos);
+        window.$("#btnElegirVehiculo")?.addEventListener("click", () => {
+            window.abrirModalVehiculos(categoriaActual);
+        });
     })();
 
     // ================================ VEHÍCULOS Y UPGRADES ===============================
-
-    function sincronizarCategoriaModal() { if (selectCategoriaModal) selectCategoriaModal.value = categoriaActual; }
 
     async function construirOfertaCategoria(codigoCategoria) {
         if (!codigoCategoria) return null;
@@ -169,120 +166,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({ id_categoria: categoriaActual }),
             });
             alertify.success("Categoría actualizada.");
-            cargarVehiculosCategoriaModal();
+            await window.cargarVehiculosCategoriaModal(categoriaActual);
 
             if (typeof window.actualizarFechasYRecalcular === 'function') {
                 await window.actualizarFechasYRecalcular();
             }
         } catch (err) { console.error("❌ Error modal", err); }
     });
-
-    let listaVehiculosOriginal = [];
-
-    async function abrirModalVehiculos() {
-        const modal = window.$("#modalVehiculos");
-        if (modal) modal.classList.add("show-modal");
-        sincronizarCategoriaModal();
-        try {
-            const resp = await fetch(`/admin/contrato/vehiculos-por-categoria/${categoriaActual}`);
-            const data = await resp.json();
-            if (data.success) { listaVehiculosOriginal = data.data; renderVehiculosEnModal(data.data); }
-        } catch (err) { console.error(err); }
-    }
-
-    async function cargarVehiculosCategoriaModal() {
-        try {
-            const resp = await fetch(`/admin/contrato/vehiculos-por-categoria/${categoriaActual}`);
-            const data = await resp.json();
-            if (data.success) { listaVehiculosOriginal = data.data; renderVehiculosEnModal(data.data); }
-        } catch (err) { console.error(err); }
-    }
-
-    function cerrarModalVehiculos() { window.$("#modalVehiculos")?.classList.remove("show-modal"); }
-
-    function renderVehiculosEnModal(lista) {
-        const cont = window.$("#listaVehiculos");
-        if (!cont) return;
-        cont.innerHTML = "";
-
-        if (!lista || lista.length === 0) {
-            cont.innerHTML = `<p style="padding:20px; text-align:center; color:#555;">No hay vehículos disponibles en esta categoría.</p>`;
-            return;
-        }
-
-        lista.forEach((v) => {
-            // Gasolina vissual
-            const g = v.gasolina_actual ?? 0;
-            const filled = "█".repeat(g);
-            const empty = "░".repeat(16 - g);
-            const barraGas = `${filled}${empty}`;
-
-            const comunes = { 2: "1/8", 4: "1/4", 6: "3/8", 8: "1/2", 10: "5/8", 12: "3/4", 14: "7/8", 16: "1" };
-            const fraccionComun = comunes[g] ? ` – ${comunes[g]}` : "";
-
-            // Mantenimiento
-            let iconMant = "⚪";
-            if (v.color_mantenimiento === "verde") iconMant = "🟢";
-            if (v.color_mantenimiento === "amarillo") iconMant = "🟡";
-            if (v.color_mantenimiento === "rojo") iconMant = "🔴";
-
-            const kmRest = v.km_restantes !== null ? `${v.km_restantes} km restantes` : "—";
-
-            // Placa y poliza
-            const placaVehiculo = v.placa ? v.placa : "Sin Placa";
-            const vigenciaPoliza = v.fin_vigencia_poliza ? v.fin_vigencia_poliza : "No registrada";
-
-            cont.innerHTML += `
-              <div class="vehiculo-card" style="display:flex; gap:15px; margin-bottom:12px; padding:15px; border:1px solid var(--stroke); border-radius:8px; align-items: center;">
-                <img src="${v.foto_url ?? '/img/default-car.png'}" style="width:120px; height:85px; object-fit:cover; border-radius:6px;">
-                
-                <div class="vehiculo-info" style="flex:1;">
-                  <h4 style="margin:0 0 4px; font-size:16px;">${v.nombre_publico || (v.marca + ' ' + v.modelo)}</h4>
-                  
-                  <p style="margin:0 0 6px 0; font-size:13px; color:#666;">
-                    ${v.transmision} · ${v.asientos} asientos · ${v.puertas} puertas <br>
-                    Color: ${v.color ?? "—"} | Placa: <b style="background:#f1f5f9; border:1px solid #cbd5e1; padding:2px 6px; border-radius:4px; color:#0f172a; letter-spacing: 0.5px;">${placaVehiculo}</b>
-                  </p>
-                  
-                  <p style="margin:2px 0; font-size:13px; font-family: monospace;"><b>Gasolina:</b> ${barraGas} <span style="font-family: sans-serif;">(${g}/16${fraccionComun})</span></p>
-                  <p style="margin:2px 0; font-size:13px;"><b>Kilometraje:</b> ${v.kilometraje?.toLocaleString() ?? "—"} km</p>
-                  <p style="margin:2px 0; font-size:13px;"><b>Mantenimiento:</b> ${iconMant} ${kmRest} <span style="color:#ccc;">|</span> <b>Vigencia póliza:</b> ${vigenciaPoliza}</p>
-                </div>
-
-                <div>
-                  <button type="button" class="btn primary btn-vehiculo" data-id="${v.id_vehiculo}" style="padding: 8px 16px;">
-                    Seleccionar
-                  </button>
-                </div>
-              </div>
-            `;
-        });
-
-        // Evento para seleccionar
-        window.$$(".btn-vehiculo").forEach(btn => btn.addEventListener("click", () => seleccionarVehiculo(btn.dataset.id)));
-    }
-
-    ["filtroColor", "filtroModelo", "filtroSerie"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener("input", () => {
-            const c = window.$("#filtroColor")?.value.toLowerCase() || "";
-            const m = window.$("#filtroModelo")?.value.toLowerCase() || "";
-            const s = window.$("#filtroSerie")?.value.toLowerCase() || "";
-            renderVehiculosEnModal(listaVehiculosOriginal.filter(v => (v.color ?? "").toLowerCase().includes(c) && (v.modelo ?? "").toLowerCase().includes(m) && (v.numero_serie ?? "").toLowerCase().includes(s)));
-        });
-    });
-
-    async function seleccionarVehiculo(idVehiculo) {
-        try {
-            await fetch("/admin/contrato/asignar-vehiculo", {
-                method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": window.csrfToken },
-                body: JSON.stringify({ id_reservacion: window.ID_RESERVACION, id_vehiculo: idVehiculo }),
-            });
-            alertify.success("Vehículo asignado.");
-            setTimeout(() => window.cargarResumenBasico(), 150);
-            cerrarModalVehiculos();
-        } catch (err) { alert("Error asignando vehículo."); }
-    }
 
     // ================================ SOLICITUDES DE CAMBIO ===============================
 
