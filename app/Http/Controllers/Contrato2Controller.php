@@ -210,75 +210,6 @@ class Contrato2Controller extends ContratoBaseController
     /**
      * 💰 Activa o desactiva cargos adicionales (toggle ON/OFF).
      */
-    // public function actualizarCargos(Request $request)
-    // {
-    //     try {
-    //         $idContrato = !empty($request->id_contrato) ? $request->id_contrato : null;
-    //         $idConcepto = $request->id_concepto;
-
-    //         // 🟢 NUEVO: Recibe la orden estricta del JavaScript
-    //         $forzar = $request->forzar ?? null;
-
-    //         if (!$idContrato || !$idConcepto) {
-    //             return response()->json(['success' => false, 'msg' => 'Falta el ID del contrato o el concepto.']);
-    //         }
-
-    //         $query = DB::table('cargo_adicional')
-    //             ->where('id_concepto', $idConcepto)
-    //             ->where('id_contrato', $idContrato);
-
-    //         $existe = $query->exists();
-
-    //         // ==========================================
-    //         // 🟢 LÓGICA ESTRICTA (Ignora el toggle si recibe orden)
-    //         // ==========================================
-    //         if ($forzar === 'off') {
-    //             if ($existe) {
-    //                 $query->delete();
-    //             }
-    //             return response()->json(['success' => true, 'action' => 'deleted']);
-    //         }
-
-    //         if ($forzar === 'on') {
-    //             if (!$existe) {
-    //                 $conceptoDb = DB::table('cargo_concepto')->where('id_concepto', $idConcepto)->first()
-    //                     ?? DB::table('cargo_concepto')->where('id', $idConcepto)->first();
-
-    //                 DB::table('cargo_adicional')->insert([
-    //                     'id_contrato'    => $idContrato,
-    //                     'id_reservacion' => $request->id_reservacion,
-    //                     'id_concepto'    => $idConcepto,
-    //                     'concepto'       => $conceptoDb->nombre ?? 'Cargo adicional',
-    //                     'monto'          => $conceptoDb->monto_base ?? 0
-    //                 ]);
-    //             }
-    //             return response()->json(['success' => true, 'action' => 'inserted']);
-    //         }
-
-    //         // ==========================================
-    //         // 🟢 LÓGICA TOGGLE ORIGINAL (Para clics manuales del Paso 4)
-    //         // ==========================================
-    //         if ($existe) {
-    //             $query->delete();
-    //             return response()->json(['success' => true, 'action' => 'deleted']);
-    //         } else {
-    //             $conceptoDb = DB::table('cargo_concepto')->where('id_concepto', $idConcepto)->first()
-    //                 ?? DB::table('cargo_concepto')->where('id', $idConcepto)->first();
-
-    //             DB::table('cargo_adicional')->insert([
-    //                 'id_contrato'    => $idContrato,
-    //                 'id_concepto'    => $idConcepto,
-    //                 'concepto'       => $conceptoDb->nombre ?? 'Cargo adicional',
-    //                 'monto'          => $conceptoDb->monto_base ?? 0
-    //             ]);
-    //             return response()->json(['success' => true, 'action' => 'inserted']);
-    //         }
-    //     } catch (\Exception $e) {
-    //         Log::error("ERROR actualizarCargos: " . $e->getMessage());
-    //         return response()->json(['success' => false, 'msg' => $e->getMessage()]);
-    //     }
-    // }
-
     public function actualizarCargos(Request $request)
     {
         try {
@@ -447,162 +378,7 @@ class Contrato2Controller extends ContratoBaseController
             return response()->json(['success' => false, 'msg' => 'Error en servidor']);
         }
     }
-
-    public function asignarVehiculo(Request $request)
-    {
-        try {
-            $data = $request->validate([
-                'id_reservacion' => 'required|integer|exists:reservaciones,id_reservacion',
-                'id_vehiculo'    => 'required|integer|exists:vehiculos,id_vehiculo',
-            ]);
-
-            DB::table('reservaciones')
-                ->where('id_reservacion', $data['id_reservacion'])
-                ->update([
-                    'id_vehiculo' => $data['id_vehiculo'],
-                    'updated_at'  => now(),
-                ]);
-
-            // 🔹 Obtener vehículo asignado
-            $vehiculo = DB::table('vehiculos')
-                ->where('id_vehiculo', $data['id_vehiculo'])
-                ->first();
-
-            return response()->json([
-                'success' => true,
-                'msg'     => 'Vehículo asignado correctamente.',
-                'vehiculo' => $vehiculo
-            ]);
-        } catch (\Throwable $e) {
-            Log::error("Error asignando vehículo: " . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'error'   => 'Error interno'
-            ], 500);
-        }
-    }
-
-    /**
-     * 🚗 Obtener vehículos disponibles por categoría
-     * Usado por el modal del paso 1 del contrato.
-     */
-    public function vehiculosPorCategoria($idCategoria)
-    {
-        try {
-
-            Log::info("🔍 Buscando vehículos para categoría: $idCategoria");
-
-            $vehiculos = DB::table('vehiculos as v')
-                ->leftJoin('vehiculo_imagenes as img', function ($join) {
-                    $join->on('img.id_vehiculo', '=', 'v.id_vehiculo')
-                        ->where('img.orden', 0);
-                })
-                ->leftJoin('mantenimientos as m', 'm.id_vehiculo', '=', 'v.id_vehiculo')
-                ->select(
-                    'v.id_vehiculo',
-                    'v.nombre_publico',
-                    'v.marca',
-                    'v.modelo',
-                    'v.color',
-                    'v.transmision',
-                    'v.asientos',
-                    'v.puertas',
-                    'v.numero_serie',
-                    'v.placa',
-                    'v.kilometraje',
-                    'v.gasolina_actual',
-                    'v.fin_vigencia_poliza',
-                    'img.url as foto_url',
-
-                    // mantenimiento
-                    'm.kilometraje_actual',
-                    'm.proximo_servicio'
-                )
-                ->where('v.id_categoria', $idCategoria)
-                ->orderBy('v.marca')
-                ->orderBy('v.modelo')
-                ->get();
-
-            // Procesar km restantes + color
-            $vehiculos->transform(function ($v) {
-
-                // calcular km restantes
-                if ($v->proximo_servicio && $v->kilometraje) {
-                    $v->km_restantes = $v->proximo_servicio - $v->kilometraje;
-                } else {
-                    $v->km_restantes = null;
-                }
-
-                // color
-                if ($v->km_restantes === null) {
-                    $v->color_mantenimiento = "gris";
-                } elseif ($v->km_restantes > 1200) {
-                    $v->color_mantenimiento = "verde";
-                } elseif ($v->km_restantes > 600) {
-                    $v->color_mantenimiento = "amarillo";
-                } else {
-                    $v->color_mantenimiento = "rojo";
-                }
-
-                return $v;
-            });
-
-            return response()->json([
-                "success" => true,
-                "data" => $vehiculos
-            ]);
-        } catch (\Throwable $e) {
-
-            Log::error("❌ ERROR vehiculosPorCategoria: " . $e->getMessage());
-
-            return response()->json([
-                "success" => false,
-                "error" => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    public function vehiculoRandom($idCategoria)
-    {
-        try {
-            // Buscar vehículos disponibles de esa categoría
-            $vehiculos = DB::table('vehiculos')
-                ->leftJoin('vehiculo_imagenes', 'vehiculos.id_vehiculo', '=', 'vehiculo_imagenes.id_vehiculo')
-                ->where('vehiculos.id_categoria', $idCategoria)
-                ->select(
-                    'vehiculos.id_vehiculo',
-                    'vehiculos.nombre_publico',
-                    'vehiculos.transmision',
-                    'vehiculos.asientos',
-                    'vehiculos.puertas',
-                    'vehiculos.color',
-                    'vehiculo_imagenes.url AS foto_url'
-                )
-                ->inRandomOrder()
-                ->first();
-
-            if (!$vehiculos) {
-                return response()->json([
-                    'success' => false,
-                    'error'   => 'No hay vehículos disponibles para esta categoría'
-                ]);
-            }
-
-            return response()->json([
-                'success'  => true,
-                'vehiculo' => $vehiculos
-            ]);
-        } catch (\Throwable $e) {
-            Log::error("Error vehiculoRandom: " . $e->getMessage());
-
-            return response()->json([
-                'success' => false,
-                'error'   => 'Error interno'
-            ], 500);
-        }
-    }
-
+    
     public function obtenerOfertaUpgrade($idReservacion)
     {
         try {
@@ -1858,16 +1634,13 @@ class Contrato2Controller extends ContratoBaseController
 
     private function sincronizarEstadoPago($idReservacion)
     {
-        // Obtener el total real de la reservación
         $res = DB::table('reservaciones')->where('id_reservacion', $idReservacion)->first();
 
-        // Sumar todos los pagos confirmados
         $totalPagado = DB::table('pagos')
             ->where('id_reservacion', $idReservacion)
             ->where('estatus', 'paid')
             ->sum('monto');
 
-        // Determinar el nuevo estado
         $saldo = $res->total - $totalPagado;
 
         if ($saldo <= 0) {

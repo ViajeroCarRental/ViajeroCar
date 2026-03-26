@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -231,24 +232,189 @@ class ContratoBaseController extends Controller
         }
     }
 
+    /**
+     * Asigna un vehículo específico a una reservación y actualiza su historial de estatus.
+     */
+    public function asignarVehiculo(Request $request)
+    {
+        try {
+            // validacion: Asegura que el ID de reservación y el del vehículo existan en las tablas
+            $data = $request->validate([
+                'id_reservacion' => 'required|integer|exists:reservaciones,id_reservacion',
+                'id_vehiculo'    => 'required|integer|exists:vehiculos,id_vehiculo',
+            ]);
+
+            // Traemos la info de la reserva para usar el 'codigo' en el motivo del historial.
+            $res = DB::table('reservaciones')->where('id_reservacion', $data['id_reservacion'])->first();
+
+            DB::transaction(function () use ($data, $res) {
+
+                // A. ACTUALIZAR RESERVA: 
+                // Vinculamos el ID del vehículo elegido a la fila de la reservación.
+                DB::table('reservaciones')
+                    ->where('id_reservacion', $data['id_reservacion'])
+                    ->update([
+                        'id_vehiculo' => $data['id_vehiculo'],
+                        'updated_at'  => now()
+                    ]);
+
+                // B. HISTORIAL: Insertamos el registro en la tabla de estatus historial.
+                // Nota: id_estatus => 2 representa que el vehículo pasa a estar "Ocupado" o "Rentado".
+                DB::table('vehiculo_estatus_historial')->insert([
+                    'id_vehiculo' => $data['id_vehiculo'],
+                    'id_estatus'  => 2,
+                    'motivo'      => 'Asignado a reservación ' . $res->codigo,
+                    'cambiado_en' => now(),
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ]);
+            });
+
+            return response()->json(['success' => true, 'msg' => 'Vehículo asignado y estatus actualizado.']);
+        } catch (\Exception $e) {
+            Log::error("Error asignarVehiculo: " . $e->getMessage());
+            return response()->json(['success' => false, 'error' => "No se pudo asignar el coche"], 500);
+        }
+    }
+
+    /**
+     * Obtener vehículos disponibles por categoría
+     * Usado por el modal del paso 1 y paso 4 del contrato
+     */
+    public function vehiculosPorCategoria($idCategoria, $idReservacion)
+    {
+        try {
+            $resActual = DB::table('reservaciones')->where('id_reservacion', $idReservacion)->first();
+            if (!$resActual) return response()->json(['success' => false, 'error' => 'Reserva no encontrada'], 404);
+
+            $inicioReq = $resActual->fecha_inicio . ' ' . $resActual->hora_retiro;
+            $finReq    = $resActual->fecha_fin . ' ' . $resActual->hora_entrega;
+            $idVehiculoActual = $resActual->id_vehiculo ?? 0;
+
+            $vehiculos = DB::table('vehiculos as v')
+                ->leftJoin('vehiculo_imagenes as img', function ($j) {
+                    $j->on('img.id_vehiculo', '=', 'v.id_vehiculo')->where('img.orden', 0);
+                })
+                ->leftJoin('mantenimientos as m', 'm.id_vehiculo', '=', 'v.id_vehiculo')
+                ->where('v.id_categoria', $idCategoria)
+                ->select('v.*', 'img.url as foto_url', 'm.proximo_servicio')
+
+                // SUB-CONSULTA DE BLOQUEO
+                ->selectSub(function ($query) use ($idReservacion, $inicioReq, $finReq) {
+                    $query->from('reservaciones as r')
+                        ->leftJoin('contratos as c', 'r.id_reservacion', '=', 'c.id_reservacion')
+                        ->select('r.codigo')
+                        ->whereColumn('r.id_vehiculo', 'v.id_vehiculo')
+                        ->where('r.id_reservacion', '!=', $idReservacion)
+                        ->where(function ($q) use ($inicioReq, $finReq) {
+
+                            /**
+                             * REGLA 1 y 3: Solo bloquea si está CONFIRMADA
+                             * Si la reserva está en 'hold' o 'pendiente_pago', el coche sigue LIBRE.
+                             * El pago ay esta confirmado solomanete
+                             */
+                            $q->where(function ($sub) use ($inicioReq, $finReq) {
+                                $sub->whereRaw("CONCAT(r.fecha_inicio, ' ', r.hora_retiro) < ?", [$finReq])
+                                    ->whereRaw("CONCAT(r.fecha_fin, ' ', r.hora_entrega) > ?", [$inicioReq])
+                                    ->where('r.estado', 'confirmada'); // <--- Cambio clave aquí
+                            })
+
+                                /**
+                                 * REGLA 2: Estado del Contrato
+                                 * Si ya hay un contrato físico, bloqueamos a menos que esté cerrado/cancelado.
+                                 */
+                                ->orWhere(function ($sub) {
+                                    $sub->whereNotNull('c.id_contrato')
+                                        ->whereNotIn('c.estado', ['cerrado', 'cancelado']);
+                                });
+                        })
+                        ->limit(1);
+                }, 'bloqueado_por_codigo')
+
+                ->addSelect(DB::raw("(v.id_vehiculo = $idVehiculoActual) as es_el_actual"))
+                ->get();
+
+            // Procesamiento de datos para la vista
+            $vehiculos->transform(function ($v) {
+                $v->km_restantes = ($v->proximo_servicio && $v->kilometraje) ? ($v->proximo_servicio - $v->kilometraje) : null;
+
+                if ($v->km_restantes === null) $v->color_mantenimiento = "gris";
+                elseif ($v->km_restantes > 1200) $v->color_mantenimiento = "verde";
+                elseif ($v->km_restantes > 600) $v->color_mantenimiento = "amarillo";
+                else $v->color_mantenimiento = "rojo";
+
+                return $v;
+            });
+
+            return response()->json(['success' => true, 'data' => $vehiculos]);
+        } catch (\Exception $e) {
+            Log::error("Error en vehiculosPorCategoria: " . $e->getMessage());
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function vehiculoRandom($idCategoria)
+    {
+        try {
+            // Buscar vehículos disponibles de esa categoría
+            $vehiculos = DB::table('vehiculos')
+                ->leftJoin('vehiculo_imagenes', 'vehiculos.id_vehiculo', '=', 'vehiculo_imagenes.id_vehiculo')
+                ->where('vehiculos.id_categoria', $idCategoria)
+                ->select(
+                    'vehiculos.id_vehiculo',
+                    'vehiculos.nombre_publico',
+                    'vehiculos.transmision',
+                    'vehiculos.asientos',
+                    'vehiculos.puertas',
+                    'vehiculos.color',
+                    'vehiculo_imagenes.url AS foto_url'
+                )
+                ->inRandomOrder()
+                ->first();
+
+            if (!$vehiculos) {
+                return response()->json([
+                    'success' => false,
+                    'error'   => 'No hay vehículos disponibles para esta categoría'
+                ]);
+            }
+
+            return response()->json([
+                'success'  => true,
+                'vehiculo' => $vehiculos
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Error vehiculoRandom: " . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'error'   => 'Error interno'
+            ], 500);
+        }
+    }
+
     protected function calcularTotalProtecciones($idReservacion)
     {
-        $dias = DB::table('reservaciones')
-            ->selectRaw("DATEDIFF(fecha_fin, fecha_inicio)   as dias")
+        $res = DB::table('reservaciones')
+            ->select('fecha_inicio', 'fecha_fin')
             ->where('id_reservacion', $idReservacion)
-            ->value('dias') ?? 1;
+            ->first();
 
+        if (!$res) return 0;
 
-        // Paquete
+        $inicio = \Carbon\Carbon::parse($res->fecha_inicio);
+        $fin = \Carbon\Carbon::parse($res->fecha_fin);
+
+        $dias = max(1, $inicio->diffInDays($fin));
+
         $paquete = DB::table('reservacion_paquete_seguro')
             ->where('id_reservacion', $idReservacion)
             ->first();
 
         if ($paquete) {
-            return $paquete->precio_por_dia * $dias;
+            return floatval($paquete->precio_por_dia) * $dias;
         }
 
-        // Individuales
         return DB::table('reservacion_seguro_individual')
             ->where('id_reservacion', $idReservacion)
             ->sum(DB::raw("precio_por_dia * {$dias}"));

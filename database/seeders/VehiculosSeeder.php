@@ -146,6 +146,72 @@ class VehiculosSeeder extends Seeder
 ],
 
 /* ============================================================
+    Compacto — Seat Ibiza
+============================================================ */
+[
+    'id_ciudad' => 1, 
+    'id_sucursal' => 1, 
+    'id_categoria' => 2,
+    'id_estatus' => 1, 
+    'id_marca' => 6, 
+    'id_modelo' => 6, 
+    'id_version' => 6,
+
+    'marca' => 'Seat', 
+    'modelo' => 'Ibiza', 
+    'numero_serie' => 'SEA-IBZ-011',
+    'categoria' => 'Compacto', 
+    'anio' => 2023, 
+    'nombre_publico' => 'Seat Ibiza o similar',
+
+    'transmision' => 'Automática', 
+    'combustible' => 'Gasolina', 
+    'color' => 'Azul',
+    'asientos' => 5, 
+    'puertas' => 5, 
+    'kilometraje' => 12500,
+    'gasolina_actual' => 15, 
+    'capacidad_tanque' => 40.00,
+
+    'precio_dia' => 650.00, 
+    'deposito_garantia' => 1800.00,
+    'placa' => 'IBZ-011', 'vin' => 'VSSZZZKJZN0123456',
+    'descripcion' => 'Diseño deportivo y excelente tecnología interior.',
+
+    'tipo_servicio' => 'Arrendamiento', 
+    'propietario' => 'Viajero Car Rental',
+    'rfc_propietario' => 'VCR2024A12', 
+    'domicilio' => 'Querétaro, Qro.',
+    'municipio' => 'Querétaro', 
+    'estado' => 'Querétaro', 
+    'pais' => 'México',
+
+    'cilindros' => 4, 
+    'numero_motor' => 'MOT-IBZ-011', 
+    'holograma' => '00',
+    'vigencia_verificacion' => '2025-10', 
+    'no_centro_verificacion' => 'CEN-142',
+    'tipo_verificacion' => 'Ordinaria', 
+
+    'no_poliza' => 'POL-IBZ-011',
+    'aseguradora' => 'Mapfre', 
+    'inicio_vigencia_poliza' => '2024-03-01',
+    'fin_vigencia_poliza' => '2025-03-01', 
+    'tipo_cobertura' => 'Amplia',
+    'plan_seguro' => 'Platinum', 
+    'archivo_poliza' => null,
+
+    'folio_tarjeta' => 'TC-IBZ-011', 
+    'movimiento_tarjeta' => 'Alta 2023',
+    'fecha_expedicion_tarjeta' => '2023-05-15', 
+    'oficina_expedidora' => 'Querétaro SAT',
+    'archivo_verificacion' => null, 
+
+    'created_at' => now(), 
+    'updated_at' => now(),
+],
+
+/* ============================================================
    3) Sedán — Volkswagen Virtus
 ============================================================ */
 [

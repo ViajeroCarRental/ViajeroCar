@@ -37,6 +37,8 @@ window.money = function (amount) {
     }) + ' MXN';
 };
 
+window.listaVehiculosOriginal = [];
+
 document.addEventListener("DOMContentLoaded", () => {
     const contratoApp = document.getElementById("contratoApp") || document.getElementById("contratoInicial");
     window.ID_CONTRATO = contratoApp?.dataset.idContrato || null;
@@ -59,6 +61,32 @@ document.addEventListener("DOMContentLoaded", () => {
             setTimeout(() => window.actualizarFechasYRecalcular(), 200);
         }
     }
+
+    window.abrirModalVehiculos = async (categoria) => {
+        const modal = window.$("#modalVehiculos");
+        if (modal) {
+            modal.style.display = "flex";
+            modal.classList.add("show-modal", "active");
+            document.body.style.overflow = "hidden";
+        }
+
+        const selModal = window.$("#selectCategoriaModal");
+        if (selModal) selModal.value = categoria;
+
+        await window.cargarVehiculosCategoriaModal(categoria);
+    }
+
+    window.cerrarModalVehiculos = () => {
+        const modal = document.getElementById("modalVehiculos");
+        if (modal) {
+            modal.classList.remove("show", "show-modal", "active");
+            modal.style.display = "none";
+            document.body.style.overflow = "auto"; // Libera el scroll
+        }
+    };
+
+    document.getElementById("cerrarModalVehiculos")?.addEventListener("click", window.cerrarModalVehiculos);
+    document.getElementById("cerrarModalVehiculos2")?.addEventListener("click", window.cerrarModalVehiculos);
 
     // Navegación de pasos
     window.showStep = (n) => {
@@ -205,7 +233,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         itemsCargos.push(`<li>${c.nombre} — ${window.money(valorCargo)}</li>`);
                     });
                 }
-                
+
                 if (r.entrega && parseFloat(r.entrega.total ?? r.entrega.monto ?? 0) > 0) {
                     const montoDelivery = parseFloat(r.entrega.total ?? r.entrega.monto ?? 0);
                     const dirDelivery = r.entrega.direccion ? ` · ${r.entrega.direccion}` : "";
@@ -249,6 +277,162 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } catch (e) { console.error("❌ Error cargarResumenBasico:", e); }
     };
+
+    window.seleccionarVehiculo = async (idVehiculo) => {
+        try {
+            const btn = event.target;
+            if (btn) btn.innerHTML = "⌛...";
+
+            const resp = await fetch("/admin/contrato/asignar-vehiculo", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": window.csrfToken },
+                body: JSON.stringify({ id_reservacion: window.ID_RESERVACION, id_vehiculo: idVehiculo }),
+            });
+
+            const data = await resp.json();
+
+            if (data.success) {
+                alertify.success("Vehículo asignado.");
+
+                window.cerrarModalVehiculos();
+
+                setTimeout(() => {
+                    if (typeof window.cargarResumenBasico === 'function') {
+                        window.cargarResumenBasico();
+                    }
+                }, 150);
+            } else {
+                alertify.error(data.error || "Error al asignar.");
+                if (btn) btn.innerHTML = "Seleccionar";
+            }
+        } catch (err) {
+            console.error(err);
+            alertify.error("Error de conexión.");
+        }
+    };
+
+    window.cargarVehiculosCategoriaModal = async function (idCategoria) {
+        if (!idCategoria || !window.ID_RESERVACION) return;
+        try {
+            const resp = await fetch(`/admin/contrato/vehiculos-por-categoria/${idCategoria}/${window.ID_RESERVACION}`);
+            const data = await resp.json();
+            if (data.success) {
+                window.listaVehiculosOriginal = data.data;
+                window.renderVehiculosEnModal(data.data);
+            }
+        } catch (err) { console.error("Error al cargar vehículos:", err); }
+    };
+
+    window.renderVehiculosEnModal = (lista) => {
+        const cont = window.$("#listaVehiculos");
+        if (!cont) return;
+
+        // 1. Limpieza inicial y validación
+        cont.innerHTML = "";
+        if (!lista || lista.length === 0) {
+            cont.innerHTML = `<p style="padding:20px; text-align:center; color:#555;">No hay vehículos disponibles en esta categoría.</p>`;
+            return;
+        }
+
+        let htmlFinal = ""; // Variable para acumular el diseño y renderizar una sola vez
+
+        lista.forEach((v) => {
+            // --- LÓGICA DE GASOLINA ---
+            const g = v.gasolina_actual ?? 0;
+            const filled = "█".repeat(g);
+            const empty = "░".repeat(16 - g);
+            const barraGas = `${filled}${empty}`;
+            const comunes = { 2: "1/8", 4: "1/4", 6: "3/8", 8: "1/2", 10: "5/8", 12: "3/4", 14: "7/8", 16: "1" };
+            const fraccionComun = comunes[g] ? ` – ${comunes[g]}` : "";
+
+            // --- LÓGICA DE MANTENIMIENTO ---
+            let iconMant = v.color_mantenimiento === "verde" ? "🟢" : (v.color_mantenimiento === "amarillo" ? "🟡" : (v.color_mantenimiento === "rojo" ? "🔴" : "⚪"));
+            const kmRest = v.km_restantes !== null ? `${v.km_restantes} km restantes` : "—";
+
+            // --- LÓGICA DE ACCIÓN (BOTONES Y ESTADOS) ---
+            let htmlAccion = "";
+            let estiloCard = "";
+
+            if (v.es_el_actual) {
+                // ESTADO: Es el vehículo que ya tiene esta reserva (Seleccionado)
+                estiloCard = "border: 2px solid #22c55e; background-color: #f0fdf4;";
+                htmlAccion = `
+                <div style="text-align: center;">
+                    <span style="color: #166534; font-weight: bold; background: #dcfce7; padding: 8px 12px; border-radius: 6px; display: inline-block; font-size: 13px; border: 1px solid #bbf7d0;">
+                        ✅ Seleccionado
+                    </span>
+                </div>`;
+            } else if (v.bloqueado_por_codigo) {
+                // ESTADO: Ocupado por otro contrato (Reglas 1, 2 o 3 del controlador)
+                estiloCard = "opacity: 0.7; background-color: #f8fafc; border: 1px dashed #cbd5e1;";
+                htmlAccion = `
+                <div style="text-align: center; min-width: 100px;">
+                    <small style="color: #ef4444; font-weight: bold; display: block; margin-bottom: 4px; font-size: 10px; text-transform: uppercase;">Ocupado</small>
+                    <span style="background: #fee2e2; color: #b91c1c; padding: 4px 8px; border-radius: 4px; font-size: 11px; border: 1px solid #fca5a5; display: inline-block; font-weight: 600;">
+                        ${v.bloqueado_por_codigo}
+                    </span>
+                    <p style="font-size: 9px; color: #991b1b; margin-top: 4px; line-height: 1;">Contrato abierto o deuda</p>
+                </div>`;
+            } else {
+                // ESTADO: Vehículo libre para elegir
+                htmlAccion = `
+                <button type="button" class="btn primary btn-vehiculo" data-id="${v.id_vehiculo}" style="padding: 8px 16px;">
+                    Seleccionar
+                </button>`;
+            }
+
+            // --- VALORES DE RESPALDO (PLACAS Y PÓLIZA) ---
+            const placaVehiculo = v.placa ? v.placa : "Sin Placa";
+            const vigenciaPoliza = v.fin_vigencia_poliza ? v.fin_vigencia_poliza : "No registrada";
+
+            // --- CONSTRUCCIÓN DEL HTML ---
+            htmlFinal += `
+            <div class="vehiculo-card" style="display:flex; gap:15px; margin-bottom:12px; padding:15px; border:1px solid var(--stroke); border-radius:8px; align-items: center; ${estiloCard}">
+                <img src="${v.foto_url ?? '/img/default-car.png'}" style="width:120px; height:85px; object-fit:cover; border-radius:6px; border: 1px solid #eee;">
+                
+                <div class="vehiculo-info" style="flex:1;">
+                    <h4 style="margin:0 0 4px; font-size:16px; color: #1e293b;">${v.nombre_publico || (v.marca + ' ' + v.modelo)}</h4>
+                    
+                    <p style="margin:0 0 6px 0; font-size:13px; color:#64748b;">
+                        ${v.transmision} · ${v.asientos} asientos · ${v.puertas} puertas <br>
+                        Color: ${v.color ?? "—"} | Placa: <b style="background:#f1f5f9; border:1px solid #cbd5e1; padding:2px 6px; border-radius:4px; color:#0f172a; letter-spacing: 0.5px;">${placaVehiculo}</b>
+                    </p>
+                    
+                    <p style="margin:2px 0; font-size:13px; font-family: monospace; color:#059669;"><b>Gasolina:</b> ${barraGas} <span style="font-family: sans-serif;">(${g}/16${fraccionComun})</span></p>
+                    <p style="margin:2px 0; font-size:13px;"><b>Kilometraje:</b> ${v.kilometraje?.toLocaleString() ?? "—"} km</p>
+                    <p style="margin:2px 0; font-size:13px;"><b>Mantenimiento:</b> ${iconMant} ${kmRest} <span style="color:#ccc;">|</span> <b>Vigencia póliza:</b> ${vigenciaPoliza}</p>
+                </div>
+
+                <div class="vehiculo-accion">
+                    ${htmlAccion}
+                </div>
+            </div>
+        `;
+        });
+
+        // 2. Inyectar el HTML acumulado
+        cont.innerHTML = htmlFinal;
+
+        // 3. Re-asignar eventos (solo a los botones de "Seleccionar" que existan)
+        window.$$(".btn-vehiculo").forEach(btn => {
+            btn.onclick = () => window.seleccionarVehiculo(btn.dataset.id);
+        });
+    }
+
+    ["filtroColor", "filtroModelo", "filtroSerie"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener("input", () => {
+            const c = window.$("#filtroColor")?.value.toLowerCase() || "";
+            const m = window.$("#filtroModelo")?.value.toLowerCase() || "";
+            const s = window.$("#filtroSerie")?.value.toLowerCase() || "";
+            const filtrados = window.listaVehiculosOriginal.filter(v =>
+                (v.color ?? "").toLowerCase().includes(c) &&
+                (v.modelo ?? "").toLowerCase().includes(m) &&
+                (v.numero_serie ?? "").toLowerCase().includes(s)
+            );
+            window.renderVehiculosEnModal(filtrados);
+        });
+    });
 
     window.actualizarFechasYRecalcular = async function (tarifaManual = null, cortesiaManual = null) {
         const cIni = document.getElementById("contratoInicial");
