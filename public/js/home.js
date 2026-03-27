@@ -1256,3 +1256,191 @@ $(document).ready(function() {
   });
 
 });
+/* ============================================================
+   MODAL MEMBRESÍA - CON DOS BOTONES QUE ABREN EL MODAL
+============================================================ */
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('membershipModal');
+    const openBtnCorner = document.getElementById('openMembershipModalBtn');
+    const openBtnMain = document.getElementById('openMembershipModalFromBtn');
+    const closeBtn = document.getElementById('closeMembershipModalBtn');
+
+    if (!modal || !closeBtn) return;
+
+    function openModal() {
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    if (openBtnCorner) {
+        openBtnCorner.addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal();
+        });
+    }
+
+    if (openBtnMain) {
+        openBtnMain.addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal();
+        });
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeModal);
+    }
+
+    modal.addEventListener('click', function(event) {
+        if (event.target === modal || event.target.classList.contains('modal-membership-backdrop')) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && modal.classList.contains('show')) {
+            closeModal();
+        }
+    });
+});
+/* ============================================================
+   CONVERSIÓN DE MONEDA CON INDICADORES MXN/USD
+============================================================ */
+(function() {
+    "use strict";
+
+    const EXCHANGE_RATE = 20;
+
+    function getCurrentLanguage() {
+        return localStorage.getItem('idiomaPreferido') || 'es';
+    }
+
+    function getCurrencyCode(language) {
+        return language === 'en' ? 'USD' : 'MXN';
+    }
+
+    function formatAmount(amount, currencyCode) {
+        if (currencyCode === 'USD') {
+            return amount.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        } else {
+            return amount.toLocaleString('es-MX', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        }
+    }
+
+    function convertPrices() {
+        const language = getCurrentLanguage();
+        const currencyCode = getCurrencyCode(language);
+
+        console.log('🔄 Convertiendo precios a:', currencyCode);
+
+        const carCards = document.querySelectorAll('.car-card');
+
+        carCards.forEach((card) => {
+            const priceMXN = parseFloat(card.dataset.priceMxn);
+            const oldPriceMXN = parseFloat(card.dataset.oldPriceMxn);
+
+            if (isNaN(priceMXN)) return;
+
+            let displayPrice, displayOldPrice;
+
+            if (currencyCode === 'USD') {
+                displayPrice = priceMXN / EXCHANGE_RATE;
+                if (!isNaN(oldPriceMXN)) {
+                    displayOldPrice = oldPriceMXN / EXCHANGE_RATE;
+                }
+            } else {
+                displayPrice = priceMXN;
+                displayOldPrice = oldPriceMXN;
+            }
+
+            // Formatear números
+            const formattedPrice = formatAmount(displayPrice, currencyCode);
+            const formattedOldPrice = formatAmount(displayOldPrice, currencyCode);
+
+            // Actualizar precio actual
+            const priceNowSpan = card.querySelector('.price-now');
+            if (priceNowSpan) {
+                priceNowSpan.textContent = formattedPrice;
+            }
+
+            // Actualizar precio anterior
+            const priceOldSpan = card.querySelector('.price-old');
+            if (priceOldSpan && !isNaN(displayOldPrice)) {
+                priceOldSpan.textContent = formattedOldPrice;
+            }
+
+            // ACTUALIZAR CÓDIGOS DE MONEDA - PARTE CRÍTICA
+            const currencyCodeSpan = card.querySelector('.currency-code');
+            if (currencyCodeSpan) {
+                currencyCodeSpan.textContent = currencyCode;
+                console.log('✅ Actualizado código moneda a:', currencyCode);
+            }
+
+            const currencyCodeOldSpan = card.querySelector('.currency-code-old');
+            if (currencyCodeOldSpan) {
+                currencyCodeOldSpan.textContent = currencyCode;
+            }
+        });
+
+        // Mostrar en consola qué moneda se está usando
+        console.log('💰 Moneda actual:', currencyCode);
+    }
+
+    function listenForLanguageChanges() {
+        // Escuchar cambios en localStorage
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'idiomaPreferido') {
+                console.log('🌐 Idioma cambiado a:', e.newValue);
+                convertPrices();
+            }
+        });
+
+        // Escuchar clics en selectores de idioma
+        document.addEventListener('click', function(e) {
+            const languageSelectors = document.querySelectorAll('[data-language-selector], .language-selector, #languageSelect, select[name="language"]');
+            languageSelectors.forEach(selector => {
+                if (selector.contains(e.target) || selector === e.target) {
+                    setTimeout(convertPrices, 150);
+                }
+            });
+        });
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            convertPrices();
+        });
+
+        window.addEventListener('load', function() {
+            convertPrices();
+        });
+
+        // Forzar cada 2 segundos por si algo interfiere (solo para debugging)
+        setInterval(() => {
+            const currentCode = getCurrencyCode(getCurrentLanguage());
+            const visibleCodes = document.querySelectorAll('.currency-code');
+            if (visibleCodes.length > 0 && visibleCodes[0].textContent !== currentCode) {
+                console.log('⚠️ Detectada inconsistencia, forzando conversión...');
+                convertPrices();
+            }
+        }, 3000);
+    }
+
+    // Iniciar
+    convertPrices();
+    listenForLanguageChanges();
+
+    // Exponer funciones para debugging
+    window.convertPrices = convertPrices;
+    window.getCurrentCurrency = () => getCurrencyCode(getCurrentLanguage());
+    window.EXCHANGE_RATE = EXCHANGE_RATE;
+})();

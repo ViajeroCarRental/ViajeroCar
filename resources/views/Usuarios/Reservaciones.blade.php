@@ -2372,7 +2372,7 @@ input:checked + .slider:before {
 
                                 <div class="sum-checks">
                                     <label class="cbox">
-                                        <input type="checkbox" name="acepto" id="acepto">
+                                        <input type="checkbox" name="acepto" id="acepto" checked>
                                         <span>
                                             ESTOY DE ACUERDO Y ACEPTO
                                             <a href="{{ route('rutaPoliticas') }}" class="link-politicas"

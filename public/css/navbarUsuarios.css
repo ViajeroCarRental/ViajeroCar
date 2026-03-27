@@ -3438,3 +3438,343 @@ i.fa,
 }
 
 }
+/* ============================================================
+   BOTÓN INTERROGACIÓN EN ESQUINA SUPERIOR DERECHA
+============================================================ */
+.btn-icon-question-corner {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(178, 34, 34, 0.1);
+    border: 1px solid rgba(178, 34, 34, 0.25);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    color: var(--brand, #b22222);
+    font-size: 16px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    z-index: 2;
+}
+
+.btn-icon-question-corner:hover {
+    background: var(--brand, #b22222);
+    border-color: var(--brand, #b22222);
+    color: #fff;
+    transform: scale(1.08);
+    box-shadow: 0 6px 16px rgba(178, 34, 34, 0.25);
+}
+
+/* Asegurar que el contenido no quede oculto detrás del botón */
+.info-content {
+    position: relative;
+    padding-top: 30px; /* Espacio para el botón en la esquina */
+}
+
+/* Ajuste responsive para móvil */
+@media (max-width: 560px) {
+    .btn-icon-question-corner {
+        width: 32px;
+        height: 32px;
+        top: 12px;
+        right: 12px;
+        font-size: 14px;
+    }
+
+    .info-content {
+        padding-top: 45px; /* Más espacio en móvil para no tapar el título */
+    }
+}
+
+/* ============================================================
+   MODAL MEMBRESÍA
+============================================================ */
+.modal-membership {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, visibility 0.25s;
+}
+
+.modal-membership.show {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-membership-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.modal-membership-card {
+    position: relative;
+    z-index: 1;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+    width: min(480px, 92%);
+    padding: 28px 24px 32px;
+    text-align: center;
+    border: 1px solid rgba(178, 34, 34, 0.15);
+    transform: scale(0.95);
+    transition: transform 0.25s ease;
+}
+
+.modal-membership.show .modal-membership-card {
+    transform: scale(1);
+}
+
+/* Botón cerrar */
+.modal-membership-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal-membership-close:hover {
+    color: var(--brand, #b22222);
+}
+
+/* Ícono superior */
+.modal-membership-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(178, 34, 34, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+}
+
+.modal-membership-icon i {
+    font-size: 26px;
+    color: var(--brand, #b22222);
+}
+
+/* Título */
+.modal-membership-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    color: #0f172a;
+    margin-bottom: 12px;
+}
+
+/* Texto JUSTIFICADO BIEN */
+.modal-membership-card p {
+    color: #4b5563;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    text-align: center;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Botones */
+.modal-membership-actions {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-contact {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+
+/* Teléfono */
+.btn-call {
+    background: #0f172a;
+    color: #fff;
+}
+
+.btn-call:hover {
+    background: #6b7280;
+    transform: translateY(-2px);
+}
+
+/* WhatsApp */
+.btn-whatsapp {
+    background: #b22222;
+    color: #fff;
+}
+
+.btn-whatsapp:hover {
+    background: #8b1d1a;
+    transform: translateY(-2px);
+}
+
+.btn-contact i {
+    font-size: 16px;
+}
+
+/* Footer */
+.modal-membership-phone {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 18px;
+    border-top: 1px solid #eee;
+    padding-top: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 560px) {
+    .modal-membership-card {
+        padding: 22px 18px 26px;
+    }
+
+    .modal-membership-card h3 {
+        font-size: 22px;
+    }
+}
+/* ========================
+   ESTILOS PARA PRECIOS
+=========================== */
+
+/* Contenedor principal de precios */
+.price-line {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 12px 0;
+}
+
+/* Wrappers para mantener $ pegado al número */
+.price-now-wrapper,
+.price-old-wrapper {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0;
+}
+
+/* Símbolo de $ - ROJO */
+.currency-symbol {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--brand) !important;
+    display: inline-block;
+}
+
+/* Precio actual - ROJO */
+.price-now {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--brand) !important;
+    display: inline-block;
+}
+
+/* Código de moneda (MXN o USD) - ROJO Y MÁS PEGADO */
+.currency-code {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--brand) !important;
+    display: inline-block;
+    margin-left: 0px; /* Cambiado de 3px a 0px */
+    padding-left: 0px; /* Sin padding */
+}
+
+/* Texto "/día" - GRIS con separación */
+.per {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #6b7280 !important;
+    display: inline-block;
+    margin-left: 4px; /* Separación antes de /día */
+    margin-right: 2px;
+}
+
+/* Precio anterior (tachado) - TODO EN GRIS */
+.price-old-wrapper {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0;
+    margin-left: 4px;
+}
+
+.currency-symbol-old {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #9ca3af !important;
+    display: inline-block;
+}
+
+.price-old {
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: line-through;
+    color: #9ca3af !important;
+    display: inline-block;
+}
+
+/* Código de moneda anterior - MÁS PEGADO TAMBIÉN */
+.currency-code-old {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #9ca3af !important;
+    display: inline-block;
+    margin-left: 0px; /* Cambiado de 2px a 0px */
+    padding-left: 0px;
+}
+
+/* Versión móvil */
+@media (max-width: 768px) {
+    .currency-symbol,
+    .price-now {
+        font-size: 1.2rem;
+    }
+
+    .currency-code {
+        font-size: 0.7rem;
+        margin-left: 0px;
+    }
+
+    .per {
+        font-size: 0.7rem;
+    }
+
+    .currency-symbol-old,
+    .price-old {
+        font-size: 0.8rem;
+    }
+
+    .currency-code-old {
+        font-size: 0.65rem;
+        margin-left: 0px;
+    }
+}

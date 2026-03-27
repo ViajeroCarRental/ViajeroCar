@@ -517,7 +517,7 @@
 
       <div class="fleet-track">
 
-        <article class="car-card">
+        <article class="car-card" data-price-mxn="467" data-old-price-mxn="899">
           <header class="car-title">
             <h3>COMPACTO</h3>
             <p>Chevrolet Aveo o similar | C</p>
@@ -529,8 +529,10 @@
           <div class="offer">
             <span class="offer-badge" aria-label="Oferta">-48%</span>
             <div class="price-line">
-              <span class="price-now">$467</span><span class="per">/día</span>
-              <span class="price-old">$899</span>
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span>
+              <span class="price-now">467</span></span><span class="currency-code">MXN</span><span class="per">/día</span>
+              <span class="price-old-wrapper"><span class="currency-symbol-old">$</span>
+              <span class="price-old">899</span></span><span class="currency-code-old">MXN</span>
             </div>
           </div>
 
@@ -554,7 +556,7 @@
           <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
         </article>
 
-        <article class="car-card">
+        <article class="car-card" data-price-mxn="600" data-old-price-mxn="1049">
           <header class="car-title">
             <h3>INTERMEDIO</h3>
             <p>Volkswagen Virtus o similar | D</p>
@@ -566,8 +568,10 @@
           <div class="offer">
             <span class="offer-badge">-43%</span>
             <div class="price-line">
-              <span class="price-now">$600</span><span class="per">/día</span>
-              <span class="price-old">$1,049</span>
+              <span class="price-now-wrapper"><span class="currency-symbol">$</span>
+              <span class="price-now">$600</span></span><span class="currency-code">MXN</span><span class="per">/día</span>
+              <span class="price-old-wrapper"><span class="currency-symbol-old">$</span>
+              <span class="price-old">$1,049</span></span><span class="currency-code-old">MXN</span>
             </div>
           </div>
 
@@ -591,7 +595,7 @@
           <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
         </article>
 
-        <article class="car-card">
+        <article class="car-card" data-price-mxn="800" data-old-price-mxn="1199">
           <header class="car-title">
             <h3>GRANDE</h3>
             <p>Volkswagen Jetta o similar | E</p>
@@ -603,8 +607,10 @@
           <div class="offer">
             <span class="offer-badge">-33%</span>
             <div class="price-line">
-              <span class="price-now">$800</span><span class="per">/día</span>
-              <span class="price-old">$1,199</span>
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span>
+              <span class="price-now">$800</span></span><span class="currency-code">MXN</span><span class="per">/día</span>
+              <span class="price-old-wrapper"><span class="currency-symbol-old">$</span>
+              <span class="price-old">$1,199</span></span><span class="currency-code-old">MXN</span>
             </div>
           </div>
 
@@ -628,7 +634,7 @@
           <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
         </article>
 
-        <article class="car-card">
+        <article class="car-card" data-price-mxn="1550" data-old-price-mxn="1999">
           <header class="car-title">
             <h3>FULL SIZE</h3>
             <p>Toyota Camry o similar | F</p>
@@ -640,8 +646,10 @@
           <div class="offer">
             <span class="offer-badge">-22%</span>
             <div class="price-line">
-              <span class="price-now">$1,550</span><span class="per">/día</span>
-              <span class="price-old">$1,999</span>
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span>
+              <span class="price-now">$1,550</span></span><span class="currency-code">MXN</span><span class="per">/día</span>
+              <span class="price-old-wrapper"><span class="currency-symbol-old">$</span>
+              <span class="price-old">$1,999</span></span><span class="currency-code-old">MXN</span>
             </div>
           </div>
 
@@ -665,7 +673,7 @@
          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
             </article>
 
-            <article class="car-card">
+            <article class="car-card" data-price-mxn="1600" data-old-price-mxn="2100">
               <header class="car-title">
                 <h3>SUV COMPACTA</h3>
                 <p> Jeep Renegade o similar | IC</p>
@@ -677,8 +685,10 @@
               <div class="offer">
                 <span class="offer-badge">-24%</span>
                 <div class="price-line">
-                  <span class="price-now">$1,600</span><span class="per">/día</span>
-                  <span class="price-old">$2,100</span>
+                    <span class="price-now-wrapper"><span class="currency-symbol">$</span>
+                  <span class="price-now">$1,600</span></span><span class="currency-code">MXN</span><span class="per">/día</span>
+                  <span class="price-old-wrapper"><span class="currency-symbol-old">$</span>
+                  <span class="price-old">$2,100</span></span><span class="currency-code-old">MXN</span>
                 </div>
               </div>
 
@@ -709,7 +719,7 @@
 
 
 
-        <article class="car-card">
+        <article class="car-card" data-price-mxn="1800" data-old-price-mxn="2400">
           <header class="car-title">
             <h3>SUV MEDIANA</h3>
             <p>Volkswagen Taos  o similar | I</p>
@@ -721,8 +731,10 @@
           <div class="offer">
             <span class="offer-badge">-25%</span>
             <div class="price-line">
-              <span class="price-now">$1,800</span><span class="per">/día</span>
-              <span class="price-old">$2,400</span>
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span>
+              <span class="price-now">$1,800</span></span><span class="currency-code">MXN</span><span class="per">/día</span>
+              <span class="price-old-wrapper"><span class="currency-symbol-old">$</span>
+              <span class="price-old">$2,400</span></span><span class="currency-code-old">MXN</span>
             </div>
           </div>
 
@@ -766,24 +778,56 @@
         <div class="media-slide" style="background-image:url('{{ asset('img/inicio5.png') }}');"></div>
         <div class="media-slide" style="background-image:url('{{ asset('img/inicio6.png') }}');"></div>
       </div>
-      <div class="info-content">
-        <h2>¿Viajero frecuente?</h2>
-        <p>Al convertirte en miembro desbloqueas descuentos exclusivos en todas tus reservas para que cada viaje sea más accesible.</p>
-        <p>Acumula puntos por cada reserva y canjea por más descuentos, upgrades o experiencias especiales.</p>
-        <p>Activa hoy tu membresía y disfruta recompensas exclusivas.</p>
-        <div class="cta-group">
-          <a href="{{ route('auth.login') }}" class="btn btn-primary"><i class="fa-solid fa-id-card"></i> Obtén tu membresía</a>
+<div class="info-content">
+    <button type="button" class="btn-icon-question-corner" id="openMembershipModalBtn" aria-label="Más información sobre membresías">
+        <i class="fa-solid fa-question"></i>
+    </button>
+    <h2>¿Viajero frecuente?</h2>
+    <p>Al convertirte en miembro desbloqueas descuentos exclusivos en todas tus reservas para que cada viaje sea más accesible.</p>
+    <p>Acumula puntos por cada reserva y canjea por más descuentos, upgrades o experiencias especiales.</p>
+    <p>Activa hoy tu membresía y disfruta recompensas exclusivas.</p>
+    <div class="cta-group" style="align-items: center; gap: 12px;">
+        <button type="button" class="btn btn-primary" id="openMembershipModalFromBtn">
+            <i class="fa-solid fa-id-card"></i> Obtén tu membresía
+        </button>
+    </div>
+</div>
+
+{{-- MODAL --}}
+<div class="modal-membership" id="membershipModal" aria-hidden="true">
+    <div class="modal-membership-backdrop"></div>
+    <div class="modal-membership-card" role="dialog" aria-modal="true" aria-labelledby="membershipModalTitle">
+        <button class="modal-membership-close" id="closeMembershipModalBtn" aria-label="Cerrar">
+            <i class="fa-regular fa-circle-xmark"></i>
+        </button>
+        <div class="modal-membership-icon">
+            <i class="fa-regular fa-id-card"></i>
         </div>
-      </div>
+        <h3 id="membershipModalTitle">¿Necesitas más información?</h3>
+        <p>Para obtener más información de las membresías y recibir atención personalizada, contáctanos directamente a través de nuestro número de teléfono
+            o manda un mensaje a nuestro número de WhatsApp.</p>
+        <div class="modal-membership-actions">
+            <a href="tel:+524427169793" class="btn-contact btn-call">
+                <i class="fa-solid fa-phone"></i> Llámanos
+            </a>
+            <a href="https://wa.me/5214427169793" target="_blank" rel="noopener" class="btn-contact btn-whatsapp">
+                <i class="fa-brands fa-whatsapp"></i> WhatsApp
+            </a>
+        </div>
+        <p class="modal-membership-phone">
+            <i class="fa-regular fa-clock"></i> Lunes a Domingo | 8:00 AM - 22:00 PM
+        </p>
+    </div>
+    </div>
     </div>
 
     {{-- ===== NUEVO CARRUSEL DE AUTOS BAJO "Viajero frecuente" ===== --}}
-    <section id="fleet-carousel-2" class="fleet">
+    <section id="fleet-carousel-2" class="fleet" >
       <div class="fleet-viewport">
         <button class="fleet-btn prev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
 
         <div class="fleet-track">
-          <article class="car-card">
+          <article class="car-card" data-price-mxn="1700" data-old-price-mxn="2200">
             <header class="car-title">
               <h3>SUV FAMILIAR COMPACTA</h3>
               <p>Toyota avanza o similar | IB</p>
@@ -795,8 +839,10 @@
             <div class="offer">
               <span class="offer-badge">-23%</span>
               <div class="price-line">
-                <span class="price-now">$1,700</span><span class="per">/día</span>
-                <span class="price-old">$2,200</span>
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span>
+                <span class="price-now">$1,700</span></span><span class="currency-code">MXN</span><span class="per">/día</span>
+                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span>
+                <span class="price-old">$2,200</span></span><span class="currency-code-old">MXN</span>
               </div>
             </div>
 
@@ -820,7 +866,7 @@
             <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
           </article>
 
-          <article class="car-card">
+          <article class="car-card" data-price-mxn="2600" data-old-price-mxn="3000">
             <header class="car-title">
               <h3>MINIVAN</h3>
               <p> Honda Odyssey o similar | M</p>
@@ -832,8 +878,10 @@
             <div class="offer">
               <span class="offer-badge">-13%</span>
               <div class="price-line">
-                <span class="price-now">$2,600</span><span class="per">/día</span>
-                <span class="price-old">$3,000</span>
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span>
+                <span class="price-now">$2,600</span></span><span class="currency-code">MXN</span><span class="per">/día</span>
+                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span>
+                <span class="price-old">$3,000</span></span><span class="currency-code-old">MXN</span>
               </div>
             </div>
 
@@ -857,7 +905,7 @@
             <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
           </article>
 
-          <article class="car-card">
+          <article class="car-card" data-price-mxn="2900" data-old-price-mxn="3400">
             <header class="car-title">
               <h3>VAN FAMILIAR</h3>
               <p>Nissan Urvan o similar | L | TM </p>
@@ -869,8 +917,10 @@
             <div class="offer">
               <span class="offer-badge">-15%</span>
               <div class="price-line">
-                <span class="price-now">$2,900</span><span class="per">/día</span>
-                <span class="price-old">$3,400</span>
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span>
+                <span class="price-now">$2,900</span></span><span class="currency-code">MXN</span><span class="per">/día</span>
+                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span>
+                <span class="price-old">$3,400</span></span><span class="currency-code-old">MXN</span>
               </div>
             </div>
 
@@ -895,7 +945,7 @@
           </article>
 
 
-          <article class="car-card">
+          <article class="car-card" data-price-mxn="2900" data-old-price-mxn="9400">
             <header class="car-title">
               <h3>VAN PASAJEROS</h3>
               <p>Toyota Hiace o similar | L</p>
@@ -907,8 +957,10 @@
             <div class="offer">
               <span class="offer-badge">-15%</span>
               <div class="price-line">
-                <span class="price-now">$2,900</span><span class="per">/día</span>
-                <span class="price-old">$9,400</span>
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span>
+                <span class="price-now">$2,900</span></span><span class="currency-code">MXN</span><span class="per">/día</span>
+                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span>
+                <span class="price-old">$9,400</span></span><span class="currency-code-old">MXN</span>
               </div>
             </div>
 
@@ -938,7 +990,7 @@
             <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
             </article>
 
-        <article class="car-card">
+        <article class="car-card" data-price-mxn="1950" data-old-price-mxn="2203">
           <header class="car-title">
             <h3>PICK UP DOBLE CABINA</h3>
             <p>Nissan Frontier o similar | E</p>
@@ -951,8 +1003,10 @@
          <div class="offer">
            <span class="offer-badge">-13%</span>
            <div class="price-line">
-            <span class="price-now">$1,950</span><span class="per">/día</span>
-            <span class="price-old">$2,203</span>
+            <span class="price-now-wrapper"><span class="currency-symbol">$</span>
+            <span class="price-now">$1,950</span></span><span class="currency-code">MXN</span><span class="per">/día</span>
+            <span class="price-old-wrapper"><span class="currency-symbol-old">$</span>
+            <span class="price-old">$2,203</span></span><span class="currency-code-old">MXN</span>
            </div>
          </div>
 
@@ -976,8 +1030,7 @@
            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
           </article>
 
-        <article class="car-card">
-        <article class="car-card">
+        <article class="car-card" data-price-mxn="2600" data-old-price-mxn="3000">
           <header class="car-title">
             <h3>PICK UP 4X4 DOBLE CABINA</h3>
             <p>Toyota Tacoma o similar | F</p>
@@ -989,8 +1042,10 @@
           <div class="offer">
             <span class="offer-badge">-13%</span>
             <div class="price-line">
-              <span class="price-now">$2,600</span><span class="per">/día</span>
-              <span class="price-old">$3,000</span>
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span>
+              <span class="price-now">$2,600</span></span><span class="currency-code">MXN</span><span class="per">/día</span>
+              <span class="price-old-wrapper"><span class="currency-symbol-old">$</span>
+              <span class="price-old">$3,000</span></span><span class="currency-code-old">MXN</span>
             </div>
           </div>
 

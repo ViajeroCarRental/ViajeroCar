@@ -151,7 +151,7 @@
 
       const msg =
         "Detectamos que el conductor principal tiene menos de 25 años.\n\n" +
-        `Por política de aseguradora, se agregará automáticamente el servicio "Conductor menor de 25 años", ` +
+        `Por política de aseguradora, se agregará automáticamente la protección "Conductor menor de 25 años", ` +
         `con un cargo adicional de ${montoStr} MXN por día de renta.\n\n` +
         "Puedes ver este concepto en el desglose de Opciones de renta.";
 
@@ -3064,3 +3064,158 @@ document.addEventListener("DOMContentLoaded", function() {
 
     console.log('Select2 unificado inicializado correctamente');
 });
+/* ============================================================
+   CONVERSIÓN DE MONEDA PARA STEP 2 - RESERVACIONES
+============================================================ */
+(function() {
+    "use strict";
+
+    const EXCHANGE_RATE = 20;
+
+    function getCurrentLanguage() {
+        return localStorage.getItem('idiomaPreferido') || 'es';
+    }
+
+    function getCurrencyCode(language) {
+        return language === 'en' ? 'USD' : 'MXN';
+    }
+
+    function formatAmount(amount, currencyCode) {
+        if (currencyCode === 'USD') {
+            return amount.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        } else {
+            return amount.toLocaleString('es-MX', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        }
+    }
+
+    function convertPricesStep2() {
+        const language = getCurrentLanguage();
+        const currencyCode = getCurrencyCode(language);
+
+        // Solo ejecutar en STEP 2
+        const main = document.querySelector('main.page');
+        const currentStep = main ? main.dataset.currentStep : '';
+        if (currentStep !== '2') return;
+
+        console.log('🔄 Convertiendo precios STEP 2 a:', currencyCode);
+
+        const carCards = document.querySelectorAll('.car-card--v2');
+
+        carCards.forEach((card) => {
+            const priceMXN = parseFloat(card.dataset.priceMxn);
+            const oldPriceMXN = parseFloat(card.dataset.oldPriceMxn);
+
+            if (isNaN(priceMXN)) return;
+
+            let displayPrice, displayOldPrice;
+
+            if (currencyCode === 'USD') {
+                displayPrice = priceMXN / EXCHANGE_RATE;
+                if (!isNaN(oldPriceMXN)) {
+                    displayOldPrice = oldPriceMXN / EXCHANGE_RATE;
+                }
+            } else {
+                displayPrice = priceMXN;
+                displayOldPrice = oldPriceMXN;
+            }
+
+            const formattedPrice = formatAmount(displayPrice, currencyCode);
+            const formattedOldPrice = formatAmount(displayOldPrice, currencyCode);
+
+            // Actualizar precio prepago (nuevo)
+            const priceNowSpan = card.querySelector('.price-now-number');
+            const currencyCodeSpan = card.querySelector('.price-new .currency-code');
+
+            if (priceNowSpan) {
+                priceNowSpan.textContent = formattedPrice;
+            }
+
+            if (currencyCodeSpan) {
+                currencyCodeSpan.textContent = currencyCode;
+            }
+
+            // Actualizar precio mostrador (anterior)
+            const priceOldSpan = card.querySelector('.price-old-number');
+            const currencyCodeOldSpan = card.querySelector('.price-old .currency-code-old');
+
+            if (priceOldSpan && !isNaN(displayOldPrice)) {
+                priceOldSpan.textContent = formattedOldPrice;
+            }
+
+            if (currencyCodeOldSpan) {
+                currencyCodeOldSpan.textContent = currencyCode;
+            }
+
+            // Actualizar precio oficina (office)
+            const officePriceSpan = card.querySelector('.price-office-number');
+            const officeCurrencySpan = card.querySelector('.office-price .currency-code-office');
+
+            if (officePriceSpan && !isNaN(displayOldPrice)) {
+                officePriceSpan.textContent = formattedOldPrice;
+            }
+
+            if (officeCurrencySpan) {
+                officeCurrencySpan.textContent = currencyCode;
+            }
+        });
+
+        console.log('💰 Moneda actual STEP 2:', currencyCode);
+    }
+
+    function listenForLanguageChangesStep2() {
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'idiomaPreferido') {
+                console.log('🌐 Idioma cambiado a:', e.newValue);
+                setTimeout(convertPricesStep2, 100);
+            }
+        });
+
+        // Observar cambios en el atributo data-current-step
+        const main = document.querySelector('main.page');
+        if (main) {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === 'data-current-step') {
+                        const newStep = main.dataset.currentStep;
+                        if (newStep === '2') {
+                            setTimeout(convertPricesStep2, 150);
+                        }
+                    }
+                });
+            });
+            observer.observe(main, { attributes: true });
+        }
+
+        // Inicializar cuando se carga la página
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(convertPricesStep2, 200);
+            });
+        } else {
+            setTimeout(convertPricesStep2, 200);
+        }
+
+        // También ejecutar cuando se abre el modal de addons
+        document.addEventListener('click', function(e) {
+            const languageSelectors = document.querySelectorAll('[data-language-selector], .language-selector, #languageSelect');
+            languageSelectors.forEach(selector => {
+                if (selector.contains(e.target) || selector === e.target) {
+                    setTimeout(convertPricesStep2, 150);
+                }
+            });
+        });
+    }
+
+    // Iniciar
+    convertPricesStep2();
+    listenForLanguageChangesStep2();
+
+    // Exponer función globalmente
+    window.convertPricesStep2 = convertPricesStep2;
+})();

@@ -71,12 +71,6 @@
     <div class="hero-inner">
       <h1 class="hero-title">¡RENTA HOY, EXPLORA MAÑANA, VIAJA SIEMPRE!</h1>
 
-      <div class="chips">
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Oficina Central Park</span>
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto</span>
-        <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Central Autobuses</span>
-      </div>
-
       {{-- ✅ Bloque/card dentro del hero --}}
       <div class="hero-filter-card">
         <div class="filter-accordion">

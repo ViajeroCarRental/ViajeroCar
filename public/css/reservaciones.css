@@ -2455,6 +2455,49 @@ SIN SCROLL - PANTALLA FIJA
   }
 
 }
+
+/* =========================================
+   TOOLTIP STEP 3 — DISEÑO PRO (HORIZONTAL)
+========================================= */
+/* contenedor del tooltip */
+body [class*="tooltip"] {
+    max-width: 420px !important;
+    width: max-content !important;
+    min-width: 280px !important;
+
+    padding: 14px 16px !important;
+    border-radius: 14px !important;
+
+    text-align: justify !important;
+    text-align: left !important;
+    line-height: 1.6 !important;
+    font-size: 14px !important;
+    hyphens: auto !important;
+    word-spacing: -0.5px;
+
+    background: #f3f4f6 !important;
+    color: #374151 !important;
+
+    box-shadow: 0 12px 30px rgba(0,0,0,.15) !important;
+
+    white-space: normal !important;
+}
+
+/* =========================================
+   MOBILE FIX (QUE NO SE HAGA VERTICAL)
+========================================= */
+@media (max-width: 768px) {
+
+    body [class*="tooltip"] {
+        max-width: 85vw !important;
+        min-width: 260px !important;
+
+        font-size: 15px !important;
+        line-height: 1.7 !important;
+
+        padding: 16px !important;
+    }
+}
   /* ==========================================================
     STEP 4 — LAYOUT 2 PANELES
   ========================================================== */
