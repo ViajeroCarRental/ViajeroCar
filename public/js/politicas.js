@@ -12,6 +12,74 @@
     }
   }
 
+  // ============================================================
+  // FUNCIÓN PARA OBTENER EL IDIOMA ACTUAL
+  // ============================================================
+  function getCurrentLocale() {
+    const htmlLang = document.documentElement.lang || 'es';
+    return htmlLang === 'en' ? 'en' : 'es';
+  }
+
+  // ============================================================
+  // LOCALE PARA FLATPICKR (ESPAÑOL E INGLÉS)
+  // ============================================================
+  function getFlatpickrLocale() {
+    const locale = getCurrentLocale();
+    if (locale === 'en') {
+      return {
+        firstDayOfWeek: 0,
+        weekdays: {
+          shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+          longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        },
+        months: {
+          shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          longhand: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        }
+      };
+    }
+    return {
+      firstDayOfWeek: 1,
+      weekdays: {
+        shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+        longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+      },
+      months: {
+        shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+        longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+      }
+    };
+  }
+
+  // ============================================================
+  // FUNCIÓN PARA ACTUALIZAR FLATPICKR CON IDIOMA ACTUAL
+  // ============================================================
+  function updateFlatpickrLocale() {
+    const localeData = getFlatpickrLocale();
+    const pickupInput = document.getElementById('pickupDatePoliticas');
+    const dropoffInput = document.getElementById('dropoffDatePoliticas');
+
+    if (pickupInput && pickupInput._flatpickr) {
+      pickupInput._flatpickr.set('locale', localeData);
+    }
+    if (dropoffInput && dropoffInput._flatpickr) {
+      dropoffInput._flatpickr.set('locale', localeData);
+    }
+  }
+
+  // ============================================================
+  // FUNCIÓN PARA TEXTO DE ERRORES (VALIDACIÓN)
+  // ============================================================
+  function getErrorMessage(fieldType) {
+    const locale = getCurrentLocale();
+    const messages = {
+      location: { es: 'Ubicación requerida', en: 'Location required' },
+      date: { es: 'Fecha requerida', en: 'Date required' },
+      time: { es: 'Hora requerida', en: 'Time required' }
+    };
+    return messages[fieldType]?.[locale] || messages[fieldType]?.es || 'Campo requerido';
+  }
+
   // Helpers
   const qs = (s, r = document) => r.querySelector(s);
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
@@ -116,13 +184,16 @@
 
     const selH = document.createElement("select");
     selH.className = "tp-hour";
-    selH.setAttribute("aria-label", "Hora");
-    selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>Hora</option>`);
 
-    for (let h = 1; h <= hourMax; h++) {
+    const locale = getCurrentLocale();
+    const hourPlaceholder = locale === 'en' ? 'Time' : 'Hora';
+    selH.setAttribute("aria-label", hourPlaceholder);
+    selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>${hourPlaceholder}</option>`);
+
+    for (let h = 0; h <= 23; h++) {
       const op = document.createElement("option");
       op.value = String(h);
-      op.textContent = pad2(h);
+      op.innerHTML = `<span>${pad2(h)}:00</span>`;
       selH.appendChild(op);
     }
 
@@ -168,9 +239,21 @@
 
     createTimeSelectsBelow(input, {
       hourMax: 24,
-      defaultValue: input.value || "12:00"
+      defaultValue: input.value || "0"
     });
   }
+
+  function force24h() {
+    document.querySelectorAll('.tp-hour option').forEach(opt => {
+      if (opt.value !== "") {
+        opt.textContent = String(opt.value).padStart(2, '0') + ':00';
+      }
+    });
+  }
+  setTimeout(force24h, 0);
+  setTimeout(force24h, 100);
+  setTimeout(force24h, 500);
+  setTimeout(force24h, 1000);
 
   // =========================
   //  FUNCIÓN PARA FECHAS POR DEFECTO (AHORA VACÍO)
@@ -185,114 +268,87 @@
     console.log('Fechas configuradas: sin valores por defecto');
   }
 
-// =========================
-//  SELECT2 CON ICONOS (AHORA FUNCIONA EN TODOS LOS DISPOSITIVOS)
-// =========================
-function setupSelect2Iconos() {
-  // 🔥 ELIMINADA LA CONDICIÓN que desactivaba Select2 en móvil
+  // =========================
+  //  SELECT2 CON ICONOS (AHORA FUNCIONA EN TODOS LOS DISPOSITIVOS)
+  // =========================
+  function setupSelect2Iconos() {
+    if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
+      console.warn('Select2 no está disponible');
+      return;
+    }
 
-  if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
-    console.warn('Select2 no está disponible');
-    return;
-  }
+    console.log('Inicializando Select2 con iconos en todos los dispositivos...');
 
-  console.log('Inicializando Select2 con iconos en todos los dispositivos...');
-
-
-// =========================
-// FORMATO DE OPCIONES
-// =========================
-function formatOption(option) {
-    if (!option.id) {
+    function formatOption(option) {
+      if (!option.id) {
         return $('<span><i class="fa-solid fa-location-dot" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
+      }
+      let iconClass = window.iconosPorId ? (window.iconosPorId[option.id] || 'fa-building') : 'fa-building';
+      return $('<span><i class="fa-solid ' + iconClass + '" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
     }
 
-    // Usar el mapa generado desde PHP
-    let iconClass = window.iconosPorId ? (window.iconosPorId[option.id] || 'fa-building') : 'fa-building';
+    const modal = document.getElementById('miBuscadorPoliticas');
+    const dropoffWrapper = document.getElementById('dropoffWrapperPoliticas');
+    const dropoffSelect = document.getElementById('dropoffPlacePoliticas');
 
-    return $('<span><i class="fa-solid ' + iconClass + '" style="margin-right: 8px; color: #333;"></i> ' + option.text + '</span>');
-}
+    let originalDisplay = dropoffWrapper ? dropoffWrapper.style.display : null;
+    let originalDisabled = dropoffSelect ? dropoffSelect.disabled : null;
 
-  const modal = document.getElementById('miBuscadorPoliticas');
-  const dropoffWrapper = document.getElementById('dropoffWrapperPoliticas');
-  const dropoffSelect = document.getElementById('dropoffPlacePoliticas');
-
-  // =========================
-  // GUARDAR ESTADO ORIGINAL
-  // =========================
-  let originalDisplay = dropoffWrapper ? dropoffWrapper.style.display : null;
-  let originalDisabled = dropoffSelect ? dropoffSelect.disabled : null;
-
-  if (dropoffWrapper && dropoffSelect) {
-    dropoffWrapper.style.display = 'block';
-    dropoffSelect.disabled = false;
-  }
-
-  // =========================
-  // CONFIG BASE
-  // =========================
-  const select2Config = {
-    templateResult: formatOption,
-    templateSelection: formatOption,
-    escapeMarkup: function(m) { return m; },
-    width: '100%',
-    minimumResultsForSearch: Infinity,
-    allowClear: false,
-    dropdownParent: modal ? $(modal) : $('body')
-  };
-
-  // =========================
-  // DESTRUIR INSTANCIAS PREVIAS
-  // =========================
-  try {
-    ['#pickupPlacePoliticas', '#dropoffPlacePoliticas'].forEach(selector => {
-      if ($(selector).data('select2')) {
-        $(selector).select2('destroy');
-      }
-    });
-  } catch(e) {
-    console.log('Error destruyendo instancias:', e);
-  }
-
-  // =========================
-  // INICIALIZAR PICKUP
-  // =========================
-  $('#pickupPlacePoliticas').select2({
-    ...select2Config,
-    placeholder: $('#pickupPlacePoliticas option:first').text()
-  });
-
-  // =========================
-  // INICIALIZAR DROPOFF
-  // =========================
-  $('#dropoffPlacePoliticas').select2({
-    ...select2Config,
-    placeholder: $('#dropoffPlacePoliticas option:first').text()
-  });
-
-  setTimeout(() => {
-    $('#pickupPlacePoliticas').val(null).trigger('change.select2');
-    $('#dropoffPlacePoliticas').val(null).trigger('change.select2');
-  }, 300);
-
-  // =========================
-  // RESTAURAR ESTADO ORIGINAL
-  // =========================
-  setTimeout(() => {
     if (dropoffWrapper && dropoffSelect) {
-      dropoffWrapper.style.display = originalDisplay === 'none' ? 'none' : originalDisplay;
-      dropoffSelect.disabled = originalDisabled;
-
-      if (originalDisabled) {
-        $('#dropoffPlacePoliticas')
-          .prop('disabled', true)
-          .trigger('change.select2');
-      }
+      dropoffWrapper.style.display = 'block';
+      dropoffSelect.disabled = false;
     }
-  }, 150);
 
-  console.log('Select2 listo y funcionando correctamente en todos los dispositivos 🔥');
-}
+    const select2Config = {
+      templateResult: formatOption,
+      templateSelection: formatOption,
+      escapeMarkup: function(m) { return m; },
+      width: '100%',
+      minimumResultsForSearch: Infinity,
+      allowClear: false,
+      dropdownParent: modal ? $(modal) : $('body')
+    };
+
+    try {
+      ['#pickupPlacePoliticas', '#dropoffPlacePoliticas'].forEach(selector => {
+        if ($(selector).data('select2')) {
+          $(selector).select2('destroy');
+        }
+      });
+    } catch(e) {
+      console.log('Error destruyendo instancias:', e);
+    }
+
+    $('#pickupPlacePoliticas').select2({
+      ...select2Config,
+      placeholder: $('#pickupPlacePoliticas option:first').text()
+    });
+
+    $('#dropoffPlacePoliticas').select2({
+      ...select2Config,
+      placeholder: $('#dropoffPlacePoliticas option:first').text()
+    });
+
+    setTimeout(() => {
+      $('#pickupPlacePoliticas').val(null).trigger('change.select2');
+      $('#dropoffPlacePoliticas').val(null).trigger('change.select2');
+    }, 300);
+
+    setTimeout(() => {
+      if (dropoffWrapper && dropoffSelect) {
+        dropoffWrapper.style.display = originalDisplay === 'none' ? 'none' : originalDisplay;
+        dropoffSelect.disabled = originalDisabled;
+        if (originalDisabled) {
+          $('#dropoffPlacePoliticas')
+            .prop('disabled', true)
+            .trigger('change.select2');
+        }
+      }
+    }, 150);
+
+    console.log('Select2 listo y funcionando correctamente en todos los dispositivos 🔥');
+  }
+
   // =========================
   //  FUNCIÓN PARA CAMBIAR ICONOS SEGÚN SELECCIÓN
   // =========================
@@ -304,9 +360,9 @@ function formatOption(option) {
 
     function getIconClass(text) {
       const textoLower = text.toLowerCase();
-      if (textoLower.includes('aeropuerto')) {
+      if (textoLower.includes('aeropuerto') || textoLower.includes('airport')) {
         return 'fa-plane-departure';
-      } else if (textoLower.includes('central') || textoLower.includes('terminal')) {
+      } else if (textoLower.includes('central') || textoLower.includes('terminal') || textoLower.includes('bus')) {
         return 'fa-bus';
       }
       return 'fa-building';
@@ -314,7 +370,6 @@ function formatOption(option) {
 
     function updateIcon(select, iconElement) {
       if (!select || !iconElement) return;
-
       if (select.value && select.value !== '') {
         const selectedOption = select.options[select.selectedIndex];
         const iconClass = getIconClass(selectedOption.text);
@@ -328,7 +383,6 @@ function formatOption(option) {
       updateIcon(pickupSelect, pickupIcon);
       pickupSelect.addEventListener('change', () => updateIcon(pickupSelect, pickupIcon));
     }
-
     if (dropoffSelect && dropoffIcon) {
       updateIcon(dropoffSelect, dropoffIcon);
       dropoffSelect.addEventListener('change', () => updateIcon(dropoffSelect, dropoffIcon));
@@ -336,87 +390,71 @@ function formatOption(option) {
   }
 
   // =========================
-//  CHECKBOX - CONTROL DROPOFF (VERSIÓN MEJORADA)
-// =========================
-function setupCheckbox() {
-  const chk = document.getElementById('differentDropoffPoliticas');
-  const dropWrap = document.getElementById('dropoffWrapperPoliticas');
-  const pickSel = document.getElementById('pickupPlacePoliticas');
-  const dropSel = document.getElementById('dropoffPlacePoliticas');
+  //  CHECKBOX - CONTROL DROPOFF (VERSIÓN MEJORADA)
+  // =========================
+  function setupCheckbox() {
+    const chk = document.getElementById('differentDropoffPoliticas');
+    const dropWrap = document.getElementById('dropoffWrapperPoliticas');
+    const pickSel = document.getElementById('pickupPlacePoliticas');
+    const dropSel = document.getElementById('dropoffPlacePoliticas');
 
-  if (!chk || !dropWrap) return;
+    if (!chk || !dropWrap) return;
 
-  function updateDropoffState() {
-    const isChecked = chk.checked;
-
-    dropWrap.style.display = isChecked ? 'block' : 'none';
-
-    if (dropSel) {
-      dropSel.disabled = !isChecked;
-      dropSel.required = isChecked;
-
-      // Actualizar Select2
-      if (typeof $ !== 'undefined' && $.fn.select2) {
-        $('#dropoffPlacePoliticas').prop('disabled', !isChecked).trigger('change');
-      }
-
-      // Si está deshabilitado, copiar valor de pickup
-      if (!isChecked && pickSel && pickSel.value) {
-        dropSel.value = pickSel.value;
+    function updateDropoffState() {
+      const isChecked = chk.checked;
+      dropWrap.style.display = isChecked ? 'block' : 'none';
+      if (dropSel) {
+        dropSel.disabled = !isChecked;
+        dropSel.required = isChecked;
         if (typeof $ !== 'undefined' && $.fn.select2) {
-          $('#dropoffPlacePoliticas').val(pickSel.value).trigger('change');
+          $('#dropoffPlacePoliticas').prop('disabled', !isChecked).trigger('change');
+        }
+        if (!isChecked && pickSel && pickSel.value) {
+          dropSel.value = pickSel.value;
+          if (typeof $ !== 'undefined' && $.fn.select2) {
+            $('#dropoffPlacePoliticas').val(pickSel.value).trigger('change');
+          }
         }
       }
     }
-  }
-
-  // Estado inicial
-  updateDropoffState();
-
-  // Escuchar cambios
-  chk.addEventListener('change', updateDropoffState);
-
-  // Si pickup cambia y dropoff está deshabilitado, actualizar
-  if (pickSel && dropSel) {
-    pickSel.addEventListener('change', function() {
-      if (!chk.checked) {
-        dropSel.value = this.value;
-        if (typeof $ !== 'undefined' && $.fn.select2) {
-          $('#dropoffPlacePoliticas').val(this.value).trigger('change');
+    updateDropoffState();
+    chk.addEventListener('change', updateDropoffState);
+    if (pickSel && dropSel) {
+      pickSel.addEventListener('change', function() {
+        if (!chk.checked) {
+          dropSel.value = this.value;
+          if (typeof $ !== 'undefined' && $.fn.select2) {
+            $('#dropoffPlacePoliticas').val(this.value).trigger('change');
+          }
         }
-      }
-    });
+      });
+    }
   }
-}
+
   // =========================
-  //  ERRORES
+  //  ERRORES (CON TRADUCCIÓN)
   // =========================
   function showError(element, message) {
     if (!element) return;
-
     element.classList.remove('field-success');
     element.classList.remove('field-error');
     const oldError = element.parentElement?.querySelector('.error-msg');
     if (oldError) oldError.remove();
-
     element.classList.add('field-error');
-
     if (typeof $ !== 'undefined' && $.fn.select2) {
-        $(element).next('.select2-container').find('.select2-selection')
-            .removeClass('field-success')
-            .addClass('field-error');
+      $(element).next('.select2-container').find('.select2-selection')
+        .removeClass('field-success')
+        .addClass('field-error');
     }
-
     const errorDiv = document.createElement('div');
     errorDiv.className = 'error-msg';
     errorDiv.textContent = message;
     element.parentElement?.appendChild(errorDiv);
-
     console.log('Error mostrado:', message, 'en', element);
   }
 
   // =========================
-  //  VALIDACIÓN DEL FORMULARIO - POLÍTICAS
+  //  VALIDACIÓN DEL FORMULARIO - POLÍTICAS (CON TRADUCCIÓN)
   // =========================
   function setupValidation() {
     const form = document.getElementById('rentalFormPoliticas');
@@ -425,14 +463,11 @@ function setupCheckbox() {
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       console.log('=== VALIDANDO FORMULARIO POLÍTICAS ===');
-
       let valid = true;
-
       form.querySelectorAll('.error-msg').forEach(el => el.remove());
       form.querySelectorAll('.field-error, .field-success').forEach(el => {
         el.classList.remove('field-error', 'field-success');
       });
-
       if (typeof $ !== 'undefined' && $.fn.select2) {
         form.querySelectorAll('.select2-selection').forEach(el => {
           el.classList.remove('field-error', 'field-success');
@@ -440,76 +475,58 @@ function setupCheckbox() {
       }
 
       const checkbox = document.getElementById('differentDropoffPoliticas');
-
-const selects = [
-  { id: 'pickupPlacePoliticas', msg: 'Ubicación Requerida' }
-];
-
-// solo exigir dropoff si el checkbox está activado
-if (checkbox && checkbox.checked) {
-  selects.push({ id: 'dropoffPlacePoliticas', msg: 'Ubicación Requerida' });
-}
+      const selects = [
+        { id: 'pickupPlacePoliticas', msgKey: 'location' }
+      ];
+      if (checkbox && checkbox.checked) {
+        selects.push({ id: 'dropoffPlacePoliticas', msgKey: 'location' });
+      }
 
       selects.forEach(campo => {
         const select = document.getElementById(campo.id);
         if (!select) return;
-
         const container = select.closest('.field');
-
         if (!select.value) {
           valid = false;
           select.classList.add('field-error');
-
           if (typeof $ !== 'undefined' && $.fn.select2) {
-            $(select).next('.select2-container')
-              .find('.select2-selection')
-              .addClass('field-error');
+            $(select).next('.select2-container').find('.select2-selection').addClass('field-error');
           }
-
           if (container) {
             const msg = document.createElement('span');
             msg.className = 'error-msg';
-            msg.textContent = campo.msg;
+            msg.textContent = getErrorMessage(campo.msgKey);
             container.appendChild(msg);
           }
         } else {
           select.classList.add('field-success');
-
           if (typeof $ !== 'undefined' && $.fn.select2) {
-            $(select).next('.select2-container')
-              .find('.select2-selection')
-              .addClass('field-success');
+            $(select).next('.select2-container').find('.select2-selection').addClass('field-success');
           }
         }
       });
 
-      //  VALIDAR FECHAS (FLATPICKR)
       const fechas = [
-        { id: 'pickupDatePoliticas', msg: 'Fecha Requerida' },
-        { id: 'dropoffDatePoliticas', msg: 'Fecha Requerida' }
+        { id: 'pickupDatePoliticas', msgKey: 'date' },
+        { id: 'dropoffDatePoliticas', msgKey: 'date' }
       ];
-
       fechas.forEach(campo => {
         const hiddenInput = document.getElementById(campo.id);
         if (!hiddenInput) return;
-
         const picker = hiddenInput._flatpickr;
         const altInput = picker ? picker.altInput : null;
         const container = hiddenInput.closest('.dt-field');
         const hasValue = hiddenInput.value && hiddenInput.value.trim() !== '';
-
         if (!hasValue) {
           valid = false;
-
           if (altInput) {
             altInput.classList.add('field-error');
             altInput.classList.remove('field-success');
           }
-
           if (container) {
             const msg = document.createElement('span');
             msg.className = 'error-msg';
-            msg.textContent = campo.msg;
+            msg.textContent = getErrorMessage(campo.msgKey);
             container.appendChild(msg);
           }
         } else {
@@ -520,31 +537,24 @@ if (checkbox && checkbox.checked) {
         }
       });
 
-      //  VALIDAR HORAS
       const horas = [
-        { id: 'pickupTimePoliticas', msg: 'Hora Requerida' },
-        { id: 'dropoffTimePoliticas', msg: 'Hora Requerida' }
+        { id: 'pickupTimePoliticas', msgKey: 'time' },
+        { id: 'dropoffTimePoliticas', msgKey: 'time' }
       ];
-
       horas.forEach(campo => {
         const hiddenInput = document.getElementById(campo.id);
         if (!hiddenInput) return;
-
         const timeField = hiddenInput.closest('.time-field');
         if (!timeField) return;
-
         const hourSelect = timeField.querySelector('.tp-selects .tp-hour');
         const hasValue = hourSelect && hourSelect.value;
-
         if (!hasValue) {
           valid = false;
-
           if (hourSelect) hourSelect.classList.add('field-error');
           hiddenInput.classList.add('field-error');
-
           const msg = document.createElement('span');
           msg.className = 'error-msg';
-          msg.textContent = campo.msg;
+          msg.textContent = getErrorMessage(campo.msgKey);
           timeField.appendChild(msg);
         } else {
           if (hourSelect) hourSelect.classList.add('field-success');
@@ -553,56 +563,45 @@ if (checkbox && checkbox.checked) {
       });
 
       console.log('Resultado:', valid ? ' VÁLIDO' : ' INVÁLIDO');
-
       if (valid) {
-
         const pickup = document.getElementById('pickupPlacePoliticas');
-  const dropoff = document.getElementById('dropoffPlacePoliticas');
-  const checkbox = document.getElementById('differentDropoffPoliticas');
-
-  if (checkbox && !checkbox.checked) {
-    dropoff.value = pickup.value;
-  }
+        const dropoff = document.getElementById('dropoffPlacePoliticas');
+        const checkbox = document.getElementById('differentDropoffPoliticas');
+        if (checkbox && !checkbox.checked) {
+          dropoff.value = pickup.value;
+        }
         form.submit();
       }
     });
   }
 
   // =========================
-  //  FLATPICKR - FORMATO dd-mmm-yyyy (mes abreviado 3 letras)
+  //  FLATPICKR - CON IDIOMA DINÁMICO
   // =========================
   function setupFlatpickr() {
     if (typeof flatpickr === 'undefined') {
       console.error('Flatpickr no está cargado');
       return;
     }
-
     console.log(' Flatpickr detectado, inicializando...');
 
-    const localeEs = {
-      firstDayOfWeek: 1,
-      weekdays: {
-        shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
-        longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-      },
-      months: {
-        shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-        longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-      }
-    };
-
     const pickupInput = document.getElementById('pickupDatePoliticas');
-    if (pickupInput) {
-      flatpickr(pickupInput, {
+    const dropoffInput = document.getElementById('dropoffDatePoliticas');
+
+    function initPicker(input) {
+      if (!input) return;
+      const localeData = getFlatpickrLocale();
+      const picker = flatpickr(input, {
         dateFormat: "Y-m-d",
         altInput: true,
-        altFormat: "d-M-Y",
+        altFormat: "d-M-y",
         minDate: "today",
-        allowInput: true,
-        locale: localeEs,
+        allowInput: false,
+        disableMobile: true,
+        locale: localeData,
         onChange: function(selectedDates, dateStr, instance) {
-          console.log('Pickup date changed:', dateStr);
-          if (selectedDates[0]) {
+          console.log('Date changed:', dateStr);
+          if (input.id === 'pickupDatePoliticas' && selectedDates[0]) {
             const dropoffPicker = document.getElementById('dropoffDatePoliticas')._flatpickr;
             if (dropoffPicker) {
               dropoffPicker.set('minDate', selectedDates[0]);
@@ -610,21 +609,11 @@ if (checkbox && checkbox.checked) {
           }
         }
       });
-      console.log(' Pickup date inicializado');
+      return picker;
     }
 
-    const dropoffInput = document.getElementById('dropoffDatePoliticas');
-    if (dropoffInput) {
-      flatpickr(dropoffInput, {
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d-M-Y",
-        minDate: "today",
-        allowInput: true,
-        locale: localeEs
-      });
-      console.log(' Dropoff date inicializado');
-    }
+    if (pickupInput) initPicker(pickupInput);
+    if (dropoffInput) initPicker(dropoffInput);
   }
 
   // =========================
@@ -699,15 +688,16 @@ if (checkbox && checkbox.checked) {
     const auth = window.VJ_AUTH?.getAuth?.() || {};
     const loginUrl = accountLink.getAttribute("data-login-url") || "/login";
     const profileUrl = accountLink.getAttribute("data-profile-url") || "/perfil";
+    const locale = getCurrentLocale();
 
     if (logged) {
       accountLink.href = profileUrl;
-      accountLink.title = "Mi perfil";
+      accountLink.title = locale === 'en' ? 'My profile' : 'Mi perfil';
       const letter = (auth.name?.[0] || auth.email?.[0] || "U").toUpperCase();
       accountLink.innerHTML = `<span class="avatar-mini">${letter}</span>`;
     } else {
       accountLink.href = loginUrl;
-      accountLink.title = "Iniciar sesión";
+      accountLink.title = locale === 'en' ? 'Sign in' : 'Iniciar sesión';
       accountLink.innerHTML = `<i class="fa-regular fa-user"></i>`;
     }
   }
@@ -799,10 +789,8 @@ if (checkbox && checkbox.checked) {
     setupFlatpickr();
     setDefaultDates();
 
-    // Inicializar buscador (control de scroll)
     initBuscadorPoliticas();
 
-    // Única inicialización de Select2
     setTimeout(() => {
       setupSelect2Iconos();
       setupIconosDinamicos();
@@ -810,6 +798,122 @@ if (checkbox && checkbox.checked) {
       setupValidation();
     }, 800);
 
+    // Escuchar cambios de idioma para actualizar Flatpickr y placeholders
+    const observer = new MutationObserver(() => {
+      updateFlatpickrLocale();
+      // Actualizar placeholder de horas
+      const locale = getCurrentLocale();
+      const hourPlaceholder = locale === 'en' ? 'Hour' : 'Hora';
+      document.querySelectorAll('.tp-hour').forEach(select => {
+        if (select.options[0] && select.options[0].textContent !== hourPlaceholder) {
+          select.options[0].textContent = hourPlaceholder;
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+
     console.log(' Formulario de políticas listo');
   });
+})();
+/* ==========================================================
+   FONDO BORROSO EN MÓVIL - PARA PICKUP Y DROPOFF
+========================================================== */
+(function() {
+    "use strict";
+
+    function isMobile() {
+        return window.innerWidth <= 560;
+    }
+
+    let activeCalendar = null;
+
+    // Función para aplicar blur al fondo
+    function applyBlur() {
+        if (!isMobile()) return;
+
+        // Agregar clase al body
+        document.body.classList.add('flatpickr-open');
+
+        // Asegurar que el calendario activo tenga el z-index correcto
+        if (activeCalendar) {
+            activeCalendar.style.zIndex = '99999';
+            activeCalendar.style.position = 'fixed';
+            activeCalendar.style.top = '50%';
+            activeCalendar.style.left = '50%';
+            activeCalendar.style.transform = 'translate(-50%, -50%)';
+        }
+    }
+
+    // Función para quitar blur
+    function removeBlur() {
+        if (!isMobile()) return;
+        document.body.classList.remove('flatpickr-open');
+        activeCalendar = null;
+    }
+
+    // Función para detectar cuando se abre cualquier calendario
+    function detectCalendarOpen() {
+        const calendar = document.querySelector('.flatpickr-calendar.open');
+        if (calendar && isMobile()) {
+            if (!activeCalendar) {
+                activeCalendar = calendar;
+                applyBlur();
+            }
+        } else if (!calendar && activeCalendar) {
+            removeBlur();
+        }
+    }
+
+    // Observar cambios en el DOM para detectar apertura/cierre
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            // Buscar si hay algún calendario abierto
+            const calendar = document.querySelector('.flatpickr-calendar.open');
+
+            if (calendar && isMobile()) {
+                if (!activeCalendar) {
+                    activeCalendar = calendar;
+                    applyBlur();
+                }
+            } else if (!calendar && activeCalendar) {
+                removeBlur();
+            }
+        });
+    });
+
+    // Iniciar observación en todo el documento
+    observer.observe(document.body, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        attributeFilter: ['class']
+    });
+
+    // También detectar clicks en inputs de fecha
+    function setupInputListeners() {
+        const inputs = document.querySelectorAll('.flatpickr-input');
+        inputs.forEach(input => {
+            if (input.type === 'hidden') return;
+
+            input.addEventListener('click', function() {
+                setTimeout(() => {
+                    const calendar = document.querySelector('.flatpickr-calendar.open');
+                    if (calendar && isMobile()) {
+                        activeCalendar = calendar;
+                        applyBlur();
+                    }
+                }, 50);
+            });
+        });
+    }
+
+    // Inicializar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupInputListeners);
+    } else {
+        setupInputListeners();
+    }
+
+    // Revisar periódicamente (por si acaso)
+    setInterval(detectCalendarOpen, 200);
 })();

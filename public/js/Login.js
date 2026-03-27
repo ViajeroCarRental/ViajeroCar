@@ -151,38 +151,45 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ================================
-     💪 BARRA DE FORTALEZA DE CONTRASEÑA
-  ================================= */
-  const passField = document.getElementById('rPass');
-  const passStrength = document.getElementById('passStrength');
-  const strengthLabel = document.getElementById('strengthLabel');
-  if (passField && passStrength && strengthLabel) {
-    passField.addEventListener('input', () => {
-      const val = passField.value;
-      let lvl = 0;
-      if (val.length >= 8) lvl++;
-      if (/[A-Z]/.test(val)) lvl++;
-      if (/[a-z]/.test(val)) lvl++;
-      if (/\d/.test(val) || /[^\w\s]/.test(val)) lvl++;
-      passStrength.querySelectorAll('span').forEach((sp, i) =>
-        sp.classList.toggle('active', i < lvl)
-      );
-      const labels = ['—', 'Débil', 'Media', 'Buena', 'Fuerte'];
-      strengthLabel.textContent = 'Fortaleza: ' + labels[lvl];
-    });
-  }
+   💪 BARRA DE FORTALEZA DE CONTRASEÑA
+================================= */
+const passField = document.getElementById('rPass');
+const passStrength = document.getElementById('passStrength');
+const strengthLabel = document.getElementById('strengthLabel');
+if (passField && passStrength && strengthLabel) {
+  passField.addEventListener('input', () => {
+    const val = passField.value;
+    let lvl = 0;
+    if (val.length >= 8) lvl++;
+    if (/[A-Z]/.test(val)) lvl++;
+    if (/[a-z]/.test(val)) lvl++;
+    if (/\d/.test(val) || /[^\w\s]/.test(val)) lvl++;
+    passStrength.querySelectorAll('span').forEach((sp, i) =>
+      sp.classList.toggle('active', i < lvl)
+    );
 
-  /* ================================
-     🔔 ALERTIFY MENSAJES EN ESPAÑOL
-  ================================= */
-  if (typeof alertify !== 'undefined') {
-    alertify.defaults.glossary.title = 'Notificación';
-    alertify.defaults.glossary.ok = 'Aceptar';
-    alertify.defaults.glossary.cancel = 'Cancelar';
-    alertify.defaults.glossary.close = 'Cerrar';
-    alertify.defaults.notifier.position = 'top-center';
-  }
+    // Traducciones según idioma
+    const locale = document.documentElement.lang || 'es';
+    const strengthText = locale === 'en' ? 'Strength: ' : 'Fortaleza: ';
+    const labels = locale === 'en'
+      ? ['—', 'Weak', 'Medium', 'Good', 'Strong']
+      : ['—', 'Débil', 'Media', 'Buena', 'Fuerte'];
 
+    strengthLabel.textContent = strengthText + labels[lvl];
+  });
+}
+
+/* ================================
+   🔔 ALERTIFY MENSAJES (BILINGÜE)
+================================= */
+if (typeof alertify !== 'undefined') {
+  const locale = document.documentElement.lang || 'es';
+  alertify.defaults.glossary.title = locale === 'en' ? 'Notification' : 'Notificación';
+  alertify.defaults.glossary.ok = locale === 'en' ? 'OK' : 'Aceptar';
+  alertify.defaults.glossary.cancel = locale === 'en' ? 'Cancel' : 'Cancelar';
+  alertify.defaults.glossary.close = locale === 'en' ? 'Close' : 'Cerrar';
+  alertify.defaults.notifier.position = 'top-center';
+}
   /* ================================
      🎯 MOSTRAR MODAL AUTOMÁTICAMENTE
      SI EL BACKEND LO INDICA

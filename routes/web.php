@@ -607,3 +607,21 @@ Route::post('/admin/reservaciones-activas/{id}/cancelar',
 }); // <- FIN grupo sesion.activa
 Route::view('/politicas', 'Usuarios.Politicas')->name('rutaPoliticas');
 Route::get('/politicas', [ReservacionesController::class, 'politicas'])->name('rutaPoliticas');
+
+// Ruta para cambiar idioma
+Route::get('/lang/{locale}', function ($locale) {
+    // Forzar el idioma
+    if ($locale == 'en') {
+        session(['locale' => 'en']);
+        $_SESSION['locale'] = 'en';
+    } else {
+        session(['locale' => 'es']);
+        $_SESSION['locale'] = 'es';
+    }
+
+    // Forzar también en la aplicación
+    app()->setLocale(session('locale'));
+
+    // Redirigir a la misma página con el idioma en la URL (opcional)
+    return redirect()->back();
+})->name('cambiar.idioma');

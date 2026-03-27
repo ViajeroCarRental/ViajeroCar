@@ -1,6 +1,6 @@
 @extends('layouts.Usuarios')
 
-@section('Titulo','F.A.Q | ViajeroCar')
+@section('Titulo', __('FAQ | ViajeroCar'))
 
 @section('css-vistaFAQ')
   <link rel="stylesheet" href="{{ asset('css/faq.css') }}">
@@ -16,9 +16,9 @@
     <div class="hero-overlay"></div>
     <div class="hero-content left">
       <div class="hero-text">
-        <h1>Centro de ayuda</h1>
-        <p>Resuelve tus dudas conversando con nuestro asistente</p>
-        
+        <h1>{{ __('Help center') }}</h1>
+        <p>{{ __('Resolve your questions by chatting with our assistant') }}</p>
+
       </div>
     </div>
   </section>
@@ -26,15 +26,15 @@
   <!-- FAQ -->
   <section class="faq-wrap">
     <aside class="faq-side">
-      <h3><i class="fa-solid fa-folder-open"></i> Categorías</h3>
+      <h3><i class="fa-solid fa-folder-open"></i> {{ __('Categories') }}</h3>
 
       <div class="cat-list" id="catList">
-        <button class="pill-cat" data-cat="reservas"><i class="fa-solid fa-calendar-check"></i> Reservas</button>
-        <button class="pill-cat" data-cat="pagos"><i class="fa-solid fa-credit-card"></i> Pagos</button>
-        <button class="pill-cat" data-cat="requisitos"><i class="fa-solid fa-id-card"></i> Requisitos</button>
-        <button class="pill-cat" data-cat="seguros"><i class="fa-solid fa-shield-halved"></i> Seguros</button>
-        <button class="pill-cat" data-cat="entrega"><i class="fa-solid fa-car-side"></i> Entrega/Devolución</button>
-        <button class="pill-cat" data-cat="otros"><i class="fa-solid fa-circle-question"></i> Otros</button>
+        <button class="pill-cat" data-cat="reservas"><i class="fa-solid fa-calendar-check"></i> {{ __('Bookings') }}</button>
+        <button class="pill-cat" data-cat="pagos"><i class="fa-solid fa-credit-card"></i> {{ __('Payments') }}</button>
+        <button class="pill-cat" data-cat="requisitos"><i class="fa-solid fa-id-card"></i> {{ __('Requirements') }}</button>
+        <button class="pill-cat" data-cat="seguros"><i class="fa-solid fa-shield-halved"></i> {{ __('Insurance') }}</button>
+        <button class="pill-cat" data-cat="entrega"><i class="fa-solid fa-car-side"></i> {{ __('Pick-up / Return') }}</button>
+        <button class="pill-cat" data-cat="otros"><i class="fa-solid fa-circle-question"></i> {{ __('Other') }}</button>
       </div>
 
       <div class="kb-actions">
@@ -45,8 +45,8 @@
       <div class="car-widget">
         <div class="cw-head">
           <div>
-            <div class="cw-title">¿Listo para manejar?</div>
-            <div class="cw-sub">Explora el catálogo y elige tu auto ideal</div>
+            <div class="cw-title">{{ __('Ready to drive?') }}</div>
+            <div class="cw-sub">{{ __('Explore the catalog and choose your ideal car') }}</div>
           </div>
           <i class="fa-solid fa-bolt cw-bolt"></i>
         </div>
@@ -70,7 +70,7 @@
 
         {{-- si tienes ruta del catálogo, usa route('catalogo') --}}
         <a href="{{ url('/catalogo') }}" class="btn btn-secondary btn-wide">
-          <i class="fa-solid fa-car"></i> Ver catálogo de autos
+          <i class="fa-solid fa-car"></i> {{ __('View vehicle catalog') }}
         </a>
       </div>
       <!-- /car-widget -->
@@ -82,32 +82,32 @@
         <div class="agent">
           <div class="avatar">V</div>
           <div>
-            <div class="agent-name">Viajero Bot</div>
-            <div class="agent-sub">Respuestas inmediatas · 24/7</div>
+            <div class="agent-name">{{ __('Viajero Bot') }}</div>
+            <div class="agent-sub">{{ __('Instant answers · 24/7') }}</div>
           </div>
         </div>
         <button class="btn btn-secondary btn-agent" id="btnAgent">
-          <i class="fa-solid fa-headset"></i> Hablar con un agente
+          <i class="fa-solid fa-headset"></i> {{ __('Talk to an agent') }}
         </button>
       </div>
 
       <div class="chat-body" id="chatBody"></div>
 
      <div class="suggestions" id="suggestions">
-  <button type="button" class="sg" data-q="¿Qué documentos necesito para rentar?">
-    ¿Qué documentos necesito?
+  <button type="button" class="sg" data-q="{{ __('What documents do I need to rent a car?') }}">
+    {{ __('What documents do I need?') }}
   </button>
-  <button type="button" class="sg" data-q="¿Cuánto es el depósito en garantía?">
-    ¿Depósito en garantía?
+  <button type="button" class="sg" data-q="{{ __('How much is the security deposit?') }}">
+    {{ __('Security deposit?') }}
   </button>
-  <button type="button" class="sg" data-q="¿Puedo pagar en efectivo?">
-    ¿Pagar en efectivo?
+  <button type="button" class="sg" data-q="{{ __('Can I pay in cash?') }}">
+    {{ __('Pay in cash?') }}
   </button>
-  <button type="button" class="sg" data-q="¿Qué incluye el seguro?">
-    ¿Qué incluye el seguro?
+  <button type="button" class="sg" data-q="{{ __('What does the insurance include?') }}">
+    {{ __('What does insurance include?') }}
   </button>
-  <button type="button" class="sg" data-q="¿Cómo hago una reservación?">
-    ¿Cómo hago una reservación?
+  <button type="button" class="sg" data-q="{{ __('How do I make a reservation?') }}">
+    {{ __('How do I make a reservation?') }}
   </button>
 </div>
 
@@ -115,16 +115,16 @@
   <input
     id="msg"
     type="text"
-    placeholder="Escribe tu pregunta… (ej. ¿cómo modifico mi reserva?)"
+    placeholder="{{ __('Type your question… (e.g. how do I modify my reservation?)') }}"
   >
 
   <div class="input-actions">
     <button id="sendBtn" type="submit">
-      Enviar <i class="fa-solid fa-paper-plane"></i>
+      {{ __('Send') }} <i class="fa-solid fa-paper-plane"></i>
     </button>
 
     <button type="button" id="clearChat" class="btn-clear-link">
-      <i class="fa-solid fa-trash-can"></i> <strong>Limpiar chat</strong>
+      <i class="fa-solid fa-trash-can"></i> <strong>{{ __('Clear chat') }}</strong>
     </button>
   </div>
 </form>
@@ -139,4 +139,3 @@
 @section('js-vistaFAQ')
   <script src="{{ asset('js/faq.js') }}"></script>
 @endsection
- 

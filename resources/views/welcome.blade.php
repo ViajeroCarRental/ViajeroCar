@@ -278,6 +278,299 @@
     100% { transform: scale(1); }
 }
 
+/* ========================
+   ESTILOS PARA PRECIOS
+=========================== */
+.price-line {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 12px 0;
+}
+
+.price-now-wrapper,
+.price-old-wrapper {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0;
+}
+
+.currency-symbol {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--brand) !important;
+    display: inline-block;
+}
+
+.price-now {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--brand) !important;
+    display: inline-block;
+}
+
+.currency-code {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--brand) !important;
+    display: inline-block;
+    margin-left: 0px;
+    padding-left: 0px;
+}
+
+.per {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #6b7280 !important;
+    display: inline-block;
+    margin-left: 4px;
+    margin-right: 2px;
+}
+
+.price-old-wrapper {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0;
+    margin-left: 4px;
+}
+
+.currency-symbol-old {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #9ca3af !important;
+    display: inline-block;
+}
+
+.price-old {
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: line-through;
+    color: #9ca3af !important;
+    display: inline-block;
+}
+
+.currency-code-old {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #9ca3af !important;
+    display: inline-block;
+    margin-left: 0px;
+    padding-left: 0px;
+}
+
+/* ============================================================
+   MODAL MEMBRESÍA
+============================================================ */
+.modal-membership {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, visibility 0.25s;
+}
+
+.modal-membership.show {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-membership-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.modal-membership-card {
+    position: relative;
+    z-index: 1;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+    width: min(480px, 92%);
+    padding: 28px 24px 32px;
+    text-align: center;
+    border: 1px solid rgba(178, 34, 34, 0.15);
+    transform: scale(0.95);
+    transition: transform 0.25s ease;
+}
+
+.modal-membership.show .modal-membership-card {
+    transform: scale(1);
+}
+
+.modal-membership-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.modal-membership-close:hover {
+    color: var(--brand, #b22222);
+}
+
+.modal-membership-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(178, 34, 34, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+}
+
+.modal-membership-icon i {
+    font-size: 26px;
+    color: var(--brand, #b22222);
+}
+
+.modal-membership-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    color: #0f172a;
+    margin-bottom: 12px;
+}
+
+.modal-membership-card p {
+    color: #4b5563;
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    text-align: center;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.modal-membership-actions {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-contact {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+
+.btn-call {
+    background: #0f172a;
+    color: #fff;
+}
+
+.btn-call:hover {
+    background: #6b7280;
+    transform: translateY(-2px);
+}
+
+.btn-whatsapp {
+    background: #b22222;
+    color: #fff;
+}
+
+.btn-whatsapp:hover {
+    background: #8b1d1a;
+    transform: translateY(-2px);
+}
+
+.btn-contact i {
+    font-size: 16px;
+}
+
+.modal-membership-phone {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 18px;
+    border-top: 1px solid #eee;
+    padding-top: 14px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}
+
+@media (max-width: 560px) {
+    .modal-membership-card {
+        padding: 22px 18px 26px;
+    }
+    .modal-membership-card h3 {
+        font-size: 22px;
+    }
+}
+
+/* ============================================================
+   BOTÓN INTERROGACIÓN
+============================================================ */
+.btn-icon-question-corner {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(178, 34, 34, 0.1);
+    border: 1px solid rgba(178, 34, 34, 0.25);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    color: var(--brand, #b22222);
+    font-size: 16px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    z-index: 2;
+}
+
+.btn-icon-question-corner:hover {
+    background: var(--brand, #b22222);
+    border-color: var(--brand, #b22222);
+    color: #fff;
+    transform: scale(1.08);
+    box-shadow: 0 6px 16px rgba(178, 34, 34, 0.25);
+}
+
+.info-content {
+    position: relative;
+    padding-top: 30px;
+}
+
+@media (max-width: 560px) {
+    .btn-icon-question-corner {
+        width: 32px;
+        height: 32px;
+        top: 12px;
+        right: 12px;
+        font-size: 14px;
+    }
+    .info-content {
+        padding-top: 45px;
+    }
+}
+
   </style>
 @endsection
 
@@ -302,15 +595,15 @@
         </div>
 
         <div class="rv-copy" style="flex:1 1 auto">
-          <div class="rv-live" id="rvTitle">Buscando reserva</div>
+          <div class="rv-live" id="rvTitle">{{ __('Searching for booking') }}</div>
           <div class="rv-text" id="rvMsg">
-            Alguien más está buscando reserva en este momento
+            {{ __('Someone else is looking for a reservation right now') }}
           </div>
         </div>
 
 
-        <button class="rv-cta" onclick="location.href='{{ route('rutaReservaciones') }}'">Ver disponibilidad</button>
-        <button class="rv-close" id="rvClose" aria-label="Cerrar">✕</button>
+        <button class="rv-cta" onclick="location.href='{{ route('rutaReservaciones') }}'">{{ __('Check availability') }}</button>
+        <button class="rv-close" id="rvClose" aria-label="{{ __('Close') }}">✕</button>
       </div>
     </div>
   </div>
@@ -326,40 +619,38 @@
     </div>
 
     <div class="hero-copy">
-      <h2 class="kicker">RENTA TU AUTO CON VIAJERO</h2>
+   <h2 class="kicker">{{ __('Rent your car with Viajero') }}</h2>
 
-      <div class="hero-icons">
-        <div class="icon-item">
-          <i class="fa-regular fa-clock"></i>
-          <span>Activos las 24 horas y los 7 días de la semana</span>
-        </div>
+<div class="hero-icons">
+  <div class="icon-item">
+    <i class="fa-regular fa-clock"></i>
+    <span>{{ __('Active 24 hours a day, 7 days a week') }}</span>
+  </div>
 
-        <div class="icon-item">
-          <i class="fa-regular fa-credit-card"></i>
-          <span>Aceptamos tarjetas de débito y crédito</span>
-        </div>
+  <div class="icon-item">
+    <i class="fa-regular fa-credit-card"></i>
+    <span>{{ __('We accept debit and credit cards') }}</span>
+  </div>
 
-        <div class="icon-item">
-          <i class="fa-solid fa-shield-halved"></i>
-          <span>Contamos con verificación 00</span>
-        </div>
+  <div class="icon-item">
+    <i class="fa-solid fa-shield-halved"></i>
+    <span>{{ __('We have 00 verification') }}</span>
+  </div>
 
-        <div class="icon-item">
-           <i class="fa-solid fa-plane-departure"></i>
-          <span>Atención en aeropuerto 24/7</span>
+  <div class="icon-item">
+     <i class="fa-solid fa-plane-departure"></i>
+    <span>{{ __('24/7 Airport Assistance') }}</span>
+  </div>
 
-        </div>
-
-        <div class="icon-item">
-          <i class="fa-solid fa-car-side"></i>
-
-          <span>Autos con modelos recientes</span>
-        </div>
-      </div>
+  <div class="icon-item">
+    <i class="fa-solid fa-car-side"></i>
+    <span>{{ __('Cars with recent models') }}</span>
+  </div>
+</div>
 
 <div class="d-block d-xl-none p-3">
     <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center;">
-        <p style="margin-bottom: 10px; font-weight: bold; color: #333; font-size: 16px;">Encuentra tu auto aquí</p>
+        <p style="margin-bottom: 10px; font-weight: bold; color: #333; font-size: 16px;">{{ __('Find your car here') }}</p>
 
         <button type="button" id="btn-abrir-buscador" class="btn btn-danger w-100"
             style="background-color: #d4002a;
@@ -373,7 +664,7 @@
                    gap: 8px;
                    text-transform: uppercase;
                    border-radius: 6px;">
-            <i class="fa-solid fa-magnifying-glass" style="font-size: 16px;"></i> BUSCAR
+            <i class="fa-solid fa-magnifying-glass" style="font-size: 16px;"></i> {{ __('Search') }}
         </button>
     </div>
 </div>
@@ -382,7 +673,7 @@
 
     <div class="d-block d-xl-none text-end mb-3">
         <button type="button" id="btn-cerrar-buscador" class="btn-close" style="font-size: 1.5rem;"></button>
-        <h5 class="text-start mt-2">1 Lugar y fecha</h5>
+        <h5 class="text-start mt-2">{{ __('1 Location & date') }}</h5>
         <hr>
     </div>
 
@@ -396,10 +687,10 @@
         ========================= --}}
         <div class="sg-col sg-col-location">
             <div class="location-head">
-                <span class="field-title">Lugar de renta</span>
+               <span class="field-title" data-i18n="rental_location">{{ __('Pick-up location') }}</span>
                 <label class="inline-check" for="differentDropoff">
                     <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1">
-                    <span>Devolver en otro destino</span>
+                    <span>{{ __('Different return location') }}</span>
                 </label>
             </div>
 
@@ -409,7 +700,7 @@
                 <div class="field icon-field">
                     <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
                     <select id="pickupPlace" name="pickup_sucursal_id" >
-                        <option value="" disabled selected>¿Dónde inicia tu viaje ?</option>
+                        <option value="" disabled selected data-i18n="where_start">{{ __('Where does your trip begin?') }}</option>
                         @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
                             <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                 @foreach($ciudad->sucursalesActivas as $suc)
@@ -427,7 +718,7 @@
                 <div class="field icon-field" id="dropoffWrapper">
                     <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
                     <select id="dropoffPlace" name="dropoff_sucursal_id" class="no-scroll-trap">
-                        <option value="" disabled selected>¿Dónde termina tu viaje?</option>
+                        <option value="" disabled selected>{{ __('Where does your trip end?') }}</option>
                         @foreach($ciudades as $ciudad)
                            <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                 @foreach($ciudad->sucursalesActivas as $suc)
@@ -444,22 +735,22 @@
         </div>
 
         {{-- =========================
-           COLUMNA 2: FECHAS Y HORAS (PICKUP Y DROPOFF JUNTOS)
+           COLUMNA 2: FECHAS Y HORAS
         ========================= --}}
         <div class="sg-col sg-col-datetime">
             {{-- PICKUP --}}
             <div class="field">
-                <span class="field-title solo-responsivo-izq">Pick-Up</span>
+                <span class="field-title solo-responsivo-izq">{{ __('Pick-up') }}</span>
                 <div class="datetime-row">
                     <div class="dt-field icon-field">
                         <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                        <input id="pickupDate" name="pickup_date" type="text" placeholder="Fecha"
+                        <input id="pickupDate" name="pickup_date" type="text" placeholder="{{ __('Date') }}"
                                value="{{ request('pickup_date') }}" data-min="{{ now()->toDateString() }}">
 
                     </div>
                     <div class="dt-field icon-field time-field">
                         <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-                        <input type="text" id="pickupTime" name="pickup_time" placeholder="Hora"
+                        <input type="text" id="pickupTime" name="pickup_time" placeholder="{{ __('Time') }}"
                                value="{{ request('pickup_time') }}" >
 
                     </div>
@@ -468,17 +759,17 @@
 
             {{-- DROPOFF --}}
             <div class="field">
-                <span class="field-title solo-responsivo-izq">Devolución</span>
+                <span class="field-title solo-responsivo-izq">{{ __('Return') }}</span>
                 <div class="datetime-row">
                     <div class="dt-field icon-field">
                         <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                        <input id="dropoffDate" name="dropoff_date" type="text" placeholder="Fecha"
+                        <input id="dropoffDate" name="dropoff_date" type="text" placeholder="{{ __('Date') }}"
                                value="{{ request('dropoff_date') }}" data-min="{{ now()->toDateString() }}">
 
                     </div>
                     <div class="dt-field icon-field time-field">
                         <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-                        <input type="text" id="dropoffTime" name="dropoff_time" placeholder="Hora"
+                        <input type="text" id="dropoffTime" name="dropoff_time" placeholder="{{ __('Time') }}"
                                value="{{ request('dropoff_time') }}">
 
                     </div>
@@ -491,9 +782,10 @@
         ========================= --}}
         <div class="sg-col sg-col-submit">
             <div class="actions">
-                <button type="submit">
-                    <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
-                </button>
+              <button type="submit">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span data-i18n="search">{{ __('Search') }}</span>
+</button>
             </div>
         </div>
 
@@ -517,10 +809,10 @@
 
       <div class="fleet-track">
 
-        <article class="car-card">
+        <article class="car-card" data-price-mxn="467" data-old-price-mxn="899">
           <header class="car-title">
-            <h3>COMPACTO</h3>
-            <p>Chevrolet Aveo o similar | C</p>
+            <h3>{{ __('Compact') }}</h3>
+            <p>{{ __('Chevrolet Aveo or similar | C') }}</p>
           </header>
           <div class="car-media">
             <img src="{{ asset('img/aveo.png') }}" alt="Chevrolet Aveo o similar">
@@ -529,8 +821,11 @@
           <div class="offer">
             <span class="offer-badge" aria-label="Oferta">-48%</span>
             <div class="price-line">
-              <span class="price-now">$467</span><span class="per">/día</span>
-              <span class="price-old">$899</span>
+              <span class="price-now-wrapper"><span class="currency-symbol">$</span><span class="price-now">467</span></span>
+              <span class="currency-code">MXN</span>
+              <span class="per">{{ __('/day') }}</span>
+              <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span class="price-old">899</span></span>
+              <span class="currency-code-old">MXN</span>
             </div>
           </div>
 
@@ -551,13 +846,13 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
         </article>
 
-        <article class="car-card">
+        <article class="car-card" data-price-mxn="600" data-old-price-mxn="1049">
           <header class="car-title">
-            <h3>INTERMEDIO</h3>
-            <p>Volkswagen Virtus o similar | D</p>
+            <h3>{{ __('Intermediate') }}</h3>
+            <p>{{ __('Volkswagen Virtus or similar | D') }}</p>
           </header>
           <div class="car-media">
             <img src="{{ asset('img/virtus.png') }}" alt="Volkswagen Virtus o similar">
@@ -566,8 +861,11 @@
           <div class="offer">
             <span class="offer-badge">-43%</span>
             <div class="price-line">
-              <span class="price-now">$600</span><span class="per">/día</span>
-              <span class="price-old">$1,049</span>
+              <span class="price-now-wrapper"><span class="currency-symbol">$</span><span class="price-now">600</span></span>
+              <span class="currency-code">MXN</span>
+              <span class="per">{{ __('/day') }}</span>
+              <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span class="price-old">1049</span></span>
+              <span class="currency-code-old">MXN</span>
             </div>
           </div>
 
@@ -588,13 +886,13 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
         </article>
 
-        <article class="car-card">
+        <article class="car-card" data-price-mxn="800" data-old-price-mxn="1199">
           <header class="car-title">
-            <h3>GRANDE</h3>
-            <p>Volkswagen Jetta o similar | E</p>
+            <h3>{{ __('Full Size') }}</h3>
+            <p>{{ __('Volkswagen Jetta or similar | E') }}</p>
           </header>
           <div class="car-media">
             <img src="{{ asset('img/jetta.png') }}" alt="Volkswagen Jetta o similar">
@@ -603,8 +901,11 @@
           <div class="offer">
             <span class="offer-badge">-33%</span>
             <div class="price-line">
-              <span class="price-now">$800</span><span class="per">/día</span>
-              <span class="price-old">$1,199</span>
+              <span class="price-now-wrapper"><span class="currency-symbol">$</span><span class="price-now">800</span></span>
+              <span class="currency-code">MXN</span>
+              <span class="per">{{ __('/day') }}</span>
+              <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span class="price-old">1199</span></span>
+              <span class="currency-code-old">MXN</span>
             </div>
           </div>
 
@@ -625,13 +926,13 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
         </article>
 
-        <article class="car-card">
+        <article class="car-card" data-price-mxn="1550" data-old-price-mxn="1999">
           <header class="car-title">
-            <h3>FULL SIZE</h3>
-            <p>Toyota Camry o similar | F</p>
+            <h3>{{ __('Full Size') }}</h3>
+            <p>{{ __('Toyota Camry or similar | F') }}</p>
           </header>
           <div class="car-media">
             <img src="{{ asset('img/camry.png') }}" alt="Toyota Camry  o similar">
@@ -640,8 +941,11 @@
           <div class="offer">
             <span class="offer-badge">-22%</span>
             <div class="price-line">
-              <span class="price-now">$1,550</span><span class="per">/día</span>
-              <span class="price-old">$1,999</span>
+              <span class="price-now-wrapper"><span class="currency-symbol">$</span><span class="price-now">1550</span></span>
+              <span class="currency-code">MXN</span>
+              <span class="per">{{ __('/day') }}</span>
+              <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span class="price-old">1999</span></span>
+              <span class="currency-code-old">MXN</span>
             </div>
           </div>
 
@@ -662,57 +966,58 @@
             </span>
           </div>
 
-         <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
-            </article>
+         <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
+        </article>
 
-            <article class="car-card">
-              <header class="car-title">
-                <h3>SUV COMPACTA</h3>
-                <p> Jeep Renegade o similar | IC</p>
-              </header>
-              <div class="car-media">
-                <img src="{{ asset('img/renegade.png') }}" alt=" Jeep Renegade o similar">
-              </div>
-
-              <div class="offer">
-                <span class="offer-badge">-24%</span>
-                <div class="price-line">
-                  <span class="price-now">$1,600</span><span class="per">/día</span>
-                  <span class="price-old">$2,100</span>
-                </div>
-              </div>
-
-              <ul class="car-specs">
-                <li><i class="fa-solid fa-user-large"></i> 5</li>
-                <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
-                <li><i class="fa-solid fa-briefcase"></i> 3</li>
-              </ul>
-
-              <div class="car-connect">
-                <span class="badge-chip badge-apple" title="Apple CarPlay">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                    <polygon points="10,8 16,12 10,16"></polygon>
-                  </svg>
-                  CarPlay
-                </span>
-                <span class="badge-chip badge-android" title="Android Auto">
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                  </svg>
-                  Android Auto
-                </span>
-              </div>
-
-              <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
-            </article>
-
-
-
-        <article class="car-card">
+        <article class="car-card" data-price-mxn="1600" data-old-price-mxn="2100">
           <header class="car-title">
-            <h3>SUV MEDIANA</h3>
-            <p>Volkswagen Taos  o similar | I</p>
+            <h3>{{ __('Compact SUV') }}</h3>
+            <p>{{ __('Jeep Renegade or similar | IC') }}</p>
+          </header>
+          <div class="car-media">
+            <img src="{{ asset('img/renegade.png') }}" alt=" Jeep Renegade o similar">
+          </div>
+
+          <div class="offer">
+            <span class="offer-badge">-24%</span>
+            <div class="price-line">
+              <span class="price-now-wrapper"><span class="currency-symbol">$</span><span class="price-now">1600</span></span>
+              <span class="currency-code">MXN</span>
+              <span class="per">{{ __('/day') }}</span>
+              <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span class="price-old">2100</span></span>
+              <span class="currency-code-old">MXN</span>
+            </div>
+          </div>
+
+          <ul class="car-specs">
+            <li><i class="fa-solid fa-user-large"></i> 5</li>
+            <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
+            <li><i class="fa-solid fa-briefcase"></i> 3</li>
+          </ul>
+
+          <div class="car-connect">
+            <span class="badge-chip badge-apple" title="Apple CarPlay">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="2" y="2" width="20" height="20" rx="5"></rect>
+                <polygon points="10,8 16,12 10,16"></polygon>
+              </svg>
+              CarPlay
+            </span>
+            <span class="badge-chip badge-android" title="Android Auto">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
+              </svg>
+              Android Auto
+            </span>
+          </div>
+
+          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
+        </article>
+
+        <article class="car-card" data-price-mxn="1800" data-old-price-mxn="2400">
+          <header class="car-title">
+            <h3>{{ __('Midsize SUV') }}</h3>
+            <p>{{ __('Volkswagen Taos or similar | I') }}</p>
           </header>
           <div class="car-media">
             <img src="{{ asset('img/taos.png') }}" alt="Volkswagen Taos o similar">
@@ -721,8 +1026,11 @@
           <div class="offer">
             <span class="offer-badge">-25%</span>
             <div class="price-line">
-              <span class="price-now">$1,800</span><span class="per">/día</span>
-              <span class="price-old">$2,400</span>
+              <span class="price-now-wrapper"><span class="currency-symbol">$</span><span class="price-now">1800</span></span>
+              <span class="currency-code">MXN</span>
+              <span class="per">{{ __('/day') }}</span>
+              <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span class="price-old">2400</span></span>
+              <span class="currency-code-old">MXN</span>
             </div>
           </div>
 
@@ -743,7 +1051,7 @@
             </span>
           </div>
 
-          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
+          <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
         </article>
 
       </div>
@@ -753,9 +1061,9 @@
   </section>
 
   <div class="fleet-meta" aria-label="Beneficios">
-    <span>KM ilimitados</span>
+    <span>{{ __('Unlimited mileage') }}</span>
     <i class="sep" aria-hidden="true">|</i>
-    <span>Transmisión Automática</span>
+    <span>{{ __('Automatic transmission') }}</span>
   </div>
 
   <!-- SECCIONES -->
@@ -767,12 +1075,17 @@
         <div class="media-slide" style="background-image:url('{{ asset('img/inicio6.png') }}');"></div>
       </div>
       <div class="info-content">
-        <h2>¿Viajero frecuente?</h2>
-        <p>Al convertirte en miembro desbloqueas descuentos exclusivos en todas tus reservas para que cada viaje sea más accesible.</p>
-        <p>Acumula puntos por cada reserva y canjea por más descuentos, upgrades o experiencias especiales.</p>
-        <p>Activa hoy tu membresía y disfruta recompensas exclusivas.</p>
-        <div class="cta-group">
-          <a href="{{ route('auth.login') }}" class="btn btn-primary"><i class="fa-solid fa-id-card"></i> Obtén tu membresía</a>
+        <button type="button" class="btn-icon-question-corner" id="openMembershipModalBtn" aria-label="Más información sobre membresías">
+          <i class="fa-solid fa-question"></i>
+        </button>
+        <h2>{{ __('Frequent traveler?') }}</h2>
+        <p>{{ __('Become a member and unlock exclusive discounts on all your bookings, making every trip more affordable.') }}</p>
+        <p>{{ __('Earn points for every rental and redeem them for discounts, upgrades, or special experiences.') }}</p>
+        <p>{{ __('Activate your membership today and enjoy exclusive rewards.') }}</p>
+        <div class="cta-group" style="align-items: center; gap: 12px;">
+          <button type="button" class="btn btn-primary" id="openMembershipModalFromBtn">
+            <i class="fa-solid fa-id-card"></i> {{ __('Get your membership') }}
+          </button>
         </div>
       </div>
     </div>
@@ -783,10 +1096,10 @@
         <button class="fleet-btn prev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
 
         <div class="fleet-track">
-          <article class="car-card">
+          <article class="car-card" data-price-mxn="1700" data-old-price-mxn="2200">
             <header class="car-title">
-              <h3>SUV FAMILIAR COMPACTA</h3>
-              <p>Toyota avanza o similar | IB</p>
+              <h3>{{ __('Compact Family SUV') }}</h3>
+              <p>{{ __('Toyota Avanza or similar | IB') }}</p>
             </header>
             <div class="car-media">
               <img src="{{ asset('img/avanza.png') }}" alt="Toyota avanza o similar">
@@ -795,8 +1108,11 @@
             <div class="offer">
               <span class="offer-badge">-23%</span>
               <div class="price-line">
-                <span class="price-now">$1,700</span><span class="per">/día</span>
-                <span class="price-old">$2,200</span>
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span class="price-now">1700</span></span>
+                <span class="currency-code">MXN</span>
+                <span class="per">{{ __('/day') }}</span>
+                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span class="price-old">2200</span></span>
+                <span class="currency-code-old">MXN</span>
               </div>
             </div>
 
@@ -817,13 +1133,13 @@
               </span>
             </div>
 
-            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
           </article>
 
-          <article class="car-card">
+          <article class="car-card" data-price-mxn="2600" data-old-price-mxn="3000">
             <header class="car-title">
-              <h3>MINIVAN</h3>
-              <p> Honda Odyssey o similar | M</p>
+              <h3>{{ __('Minivan') }}</h3>
+              <p>{{ __('Honda Odyssey or similar | M') }}</p>
             </header>
             <div class="car-media">
               <img src="{{ asset('img/Odyssey.png') }}" alt=" Honda Odyssey o similar">
@@ -832,8 +1148,11 @@
             <div class="offer">
               <span class="offer-badge">-13%</span>
               <div class="price-line">
-                <span class="price-now">$2,600</span><span class="per">/día</span>
-                <span class="price-old">$3,000</span>
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span class="price-now">2600</span></span>
+                <span class="currency-code">MXN</span>
+                <span class="per">{{ __('/day') }}</span>
+                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span class="price-old">3000</span></span>
+                <span class="currency-code-old">MXN</span>
               </div>
             </div>
 
@@ -854,13 +1173,13 @@
               </span>
             </div>
 
-            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
           </article>
 
-          <article class="car-card">
+          <article class="car-card" data-price-mxn="2900" data-old-price-mxn="3400">
             <header class="car-title">
-              <h3>VAN FAMILIAR</h3>
-              <p>Nissan Urvan o similar | L | TM </p>
+              <h3>{{ __('Passenger Van') }}</h3>
+              <p>{{ __('Nissan Urvan or similar | L | MT') }}</p>
             </header>
             <div class="car-media">
               <img src="{{ asset('img/Urvan.png') }}" alt="Nissan Urvan o similar">
@@ -869,8 +1188,11 @@
             <div class="offer">
               <span class="offer-badge">-15%</span>
               <div class="price-line">
-                <span class="price-now">$2,900</span><span class="per">/día</span>
-                <span class="price-old">$3,400</span>
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span class="price-now">2900</span></span>
+                <span class="currency-code">MXN</span>
+                <span class="per">{{ __('/day') }}</span>
+                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span class="price-old">3400</span></span>
+                <span class="currency-code-old">MXN</span>
               </div>
             </div>
 
@@ -891,14 +1213,13 @@
               </span>
             </div>
 
-            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
           </article>
 
-
-          <article class="car-card">
+          <article class="car-card" data-price-mxn="2900" data-old-price-mxn="9400">
             <header class="car-title">
-              <h3>VAN PASAJEROS</h3>
-              <p>Toyota Hiace o similar | L</p>
+              <h3>{{ __('Passenger Van') }}</h3>
+              <p>{{ __('Toyota Hiace or similar | L') }}</p>
             </header>
             <div class="car-media">
               <img src="{{ asset('img/Hiace.png') }}" alt="Toyota Hiace o similar">
@@ -907,8 +1228,11 @@
             <div class="offer">
               <span class="offer-badge">-15%</span>
               <div class="price-line">
-                <span class="price-now">$2,900</span><span class="per">/día</span>
-                <span class="price-old">$9,400</span>
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span class="price-now">2900</span></span>
+                <span class="currency-code">MXN</span>
+                <span class="per">{{ __('/day') }}</span>
+                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span class="price-old">9400</span></span>
+                <span class="currency-code-old">MXN</span>
               </div>
             </div>
 
@@ -934,328 +1258,359 @@
               </span>
             </div>
 
-
-            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
-            </article>
-
-        <article class="car-card">
-          <header class="car-title">
-            <h3>PICK UP DOBLE CABINA</h3>
-            <p>Nissan Frontier o similar | E</p>
-          </header>
-
-          <div class="car-media">
-            <img src="{{ asset('img/Frontier.png') }}" alt="Nissan Frontier o similar">
-          </div>
-
-         <div class="offer">
-           <span class="offer-badge">-13%</span>
-           <div class="price-line">
-            <span class="price-now">$1,950</span><span class="per">/día</span>
-            <span class="price-old">$2,203</span>
-           </div>
-         </div>
-
-         <ul class="car-specs">
-           <li><i class="fa-solid fa-user-large"></i> 5</li>
-           <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-           <li><i class="fa-solid fa-briefcase"></i> 3</li>
-         </ul>
-
-         <div class="car-connect">
-          <span class="badge-chip badge-apple" title="Apple CarPlay">
-            <svg viewBox="0 0 24 24"> <rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
-            CarPlay
-          </span>
-          <span class="badge-chip badge-android" title="Android Auto">
-            <svg viewBox="0 0 24 24"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path></svg>
-            Android Auto
-          </span>
-        </div>
-
-           <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
+            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
           </article>
 
-        <article class="car-card">
-        <article class="car-card">
-          <header class="car-title">
-            <h3>PICK UP 4X4 DOBLE CABINA</h3>
-            <p>Toyota Tacoma o similar | F</p>
-          </header>
-          <div class="car-media">
-            <img src="{{ asset('img/Tacoma.png') }}" alt="Toyota Tacoma o similar">
-          </div>
+          <article class="car-card" data-price-mxn="1950" data-old-price-mxn="2203">
+            <header class="car-title">
+              <h3>{{ __('Double Cab Pickup') }}</h3>
+              <p>{{ __('Nissan Frontier or similar | E') }}</p>
+            </header>
 
-          <div class="offer">
-            <span class="offer-badge">-13%</span>
-            <div class="price-line">
-              <span class="price-now">$2,600</span><span class="per">/día</span>
-              <span class="price-old">$3,000</span>
-            </div>
-          </div>
-
-          <ul class="car-specs">
-            <li><i class="fa-solid fa-user-large"></i> 5</li>
-            <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-            <li><i class="fa-solid fa-briefcase"></i> 3</li>
-          </ul>
-
-          <div class="car-connect">
-            <span class="badge-chip badge-apple" title="Apple CarPlay">
-              <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
-              CarPlay
-            </span>
-            <span class="badge-chip badge-android" title="Android Auto">
-              <svg viewBox="0 0 24 24"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path></svg>
-              Android Auto
-            </span>
-          </div>
-
-              <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">Reservar</a>
-            </article>
-
-
+            <div class="car-media">
+              <img src="{{ asset('img/Frontier.png') }}" alt="Nissan Frontier o similar">
             </div>
 
-            <button class="fleet-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
-            </div>
-            </section>
-
-            <div class="fleet-meta" aria-label="Beneficios">
-              <span>KM ilimitados</span>
-              <i class="sep" aria-hidden="true">|</i>
-              <span>Transmisión Automática</span>
-            </div>
-              <div class="info-row reverse">
-                <div class="info-content">
-                  <h2>Soluciones empresariales</h2>
-                  <p>Gestionamos tus viajes corporativos de punta a punta para que tu equipo se concentre en lo importante.</p>
-                  <p>Optimiza costos, confort y seguridad con nuestros planes para empresas.</p>
-                  <div class="cta-group">
-                    <a href="{{ route('rutaReservaciones', ['from' => 'welcome']) }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> Reserva ahora</a>
-                  </div>
-                </div>
-                <div class="info-media media-carousel" data-interval="5200">
-                  <div class="media-slide active" style="background-image:url('{{ asset('img/inicio7.png') }}');"></div>
-                  <div class="media-slide" style="background-image:url('{{ asset('img/inicio8.png') }}');"></div>
-                  <div class="media-slide" style="background-image:url('{{ asset('img/inicio9.png') }}');"></div>
-                </div>
+            <div class="offer">
+              <span class="offer-badge">-13%</span>
+              <div class="price-line">
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span class="price-now">1950</span></span>
+                <span class="currency-code">MXN</span>
+                <span class="per">{{ __('/day') }}</span>
+                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span class="price-old">2203</span></span>
+                <span class="currency-code-old">MXN</span>
               </div>
-            </section>
+            </div>
 
-            <!-- TARJETAS (Swiper) -->
-            <section aria-label="Explora destinos y servicios">
-              <div class="swiper vj-tiles-swiper">
-                <div class="swiper-wrapper">
+            <ul class="car-specs">
+              <li><i class="fa-solid fa-user-large"></i> 5</li>
+              <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
+              <li><i class="fa-solid fa-briefcase"></i> 3</li>
+            </ul>
 
-                  <div class="swiper-slide">
-                    <article class="tile-card">
-                      <div class="tile-media" style="background-image:url('{{ asset('img/24.jpg') }}')"></div>
-                      <div class="tile-body">
-                        <h3>Activos 24/7:</h3>
-                        <p>Atención y soporte en todo momento. Nuestro equipo está disponible las 24 horas, los 7 días de la semana, para que viajes con total tranquilidad.</p>
-                        <a href="#" class="tile-link">Leer más…</a>
-                      </div>
-                    </article>
-                  </div>
+            <div class="car-connect">
+              <span class="badge-chip badge-apple" title="Apple CarPlay">
+                <svg viewBox="0 0 24 24"> <rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
+                CarPlay
+              </span>
+              <span class="badge-chip badge-android" title="Android Auto">
+                <svg viewBox="0 0 24 24"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path></svg>
+                Android Auto
+              </span>
+            </div>
 
-                  <div class="swiper-slide">
-                    <article class="tile-card">
-                      <div class="tile-media" style="background-image:url('{{ asset('img/4x4.png') }}')"></div>
-                      <div class="tile-body">
-                        <h3>AUTOS Y CAMIONETAS 4x4:</h3>
-                        <p>Viaja sin límites. Contamos con SUVs, autos todoterreno y camionetas 4x4 ideales para carretera, ciudad o aventura.</p>
-                        <a href="{{ route('rutaCatalogo') }}" class="tile-link">Explora nuestra flota...</a>
-                      </div>
-                    </article>
-                  </div>
+            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
+          </article>
 
-                  <div class="swiper-slide">
-                    <article class="tile-card">
-                      <div class="tile-media" style="background-image:url('{{ asset('img/Urvancard.png') }}')"></div>
-                      <div class="tile-body">
-                        <h3>CAMIONETAS PARA 13 PASAJEROS:</h3>
-                        <p>Perfectas para viajes familiares o empresariales. Comodidad, espacio y seguridad para todos tus acompañantes.</p>
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome'], ['step' => 1,'tipo' => 'camioneta_13']) }}" class="tile-link">Reserva la tuya...</a>
-                      </div>
-                    </article>
-                  </div>
+          <article class="car-card" data-price-mxn="2600" data-old-price-mxn="3000">
+            <header class="car-title">
+              <h3>{{ __('4x4 Double Cab Pickup') }}</h3>
+              <p>{{ __('Toyota Tacoma or similar | F') }}</p>
+            </header>
+            <div class="car-media">
+              <img src="{{ asset('img/Tacoma.png') }}" alt="Toyota Tacoma o similar">
+            </div>
 
-                  <div class="swiper-slide">
-                    <article class="tile-card">
-                      <div class="tile-media" style="background-image:url('{{ asset('img/tarjeta.png') }}')"></div>
-                      <div class="tile-body">
-                        <h3>ACEPTAMOS TARJETAS:</h3>
-                        <p>Pagos con tarjeta de crédito o débito. Fácil, rápido y seguro. También puedes hacer tu pago final al devolver tu vehículo.</p>
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome'], ['step'=>1, 'tipo'=>'tarjetas']) }}"class="tile-link">Conoce nuestras opciones...</a>
-                      </div>
-                    </article>
-                  </div>
+            <div class="offer">
+              <span class="offer-badge">-13%</span>
+              <div class="price-line">
+                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span class="price-now">2600</span></span>
+                <span class="currency-code">MXN</span>
+                <span class="per">{{ __('/day') }}</span>
+                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span class="price-old">3000</span></span>
+                <span class="currency-code-old">MXN</span>
+              </div>
+            </div>
 
-                  <div class="swiper-slide">
-                    <article class="tile-card">
-                      <div class="tile-media" style="background-image:url('{{ asset('img/Aeropuerto.png') }}')"></div>
-                      <div class="tile-body">
-                        <h3>ENTREGA EN AEROPUERTO 24/7:</h3>
-                        <p>Recibe o entrega tu auto directamente en el aeropuerto, sin filas ni esperas. Disponible las 24 horas del día.</p>
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome'], ['step'=>1, 'tipo'=>'aeropuerto']) }}"class="tile-link">Agendar entrega...</a>
-                      </div>
-                    </article>
-                  </div>
+            <ul class="car-specs">
+              <li><i class="fa-solid fa-user-large"></i> 5</li>
+              <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
+              <li><i class="fa-solid fa-briefcase"></i> 3</li>
+            </ul>
 
-                  <div class="swiper-slide">
-                    <article class="tile-card">
-                      <div class="tile-media" style="background-image:url('{{ asset('img/Verificacion.png') }}')"></div>
-                      <div class="tile-body">
-                        <h3>VEHÍCULOS CON VERIFICACIÓN 00:</h3>
-                        <p>Todos nuestros autos cumplen con las normas ambientales y están verificados tipo 00 para garantizar su óptimo rendimiento.</p>
-                        <a href="{{ route('rutaCatalogo') }}" class="tile-link">Descubre más...</a>
-                      </div>
-                    </article>
-                  </div>
+            <div class="car-connect">
+              <span class="badge-chip badge-apple" title="Apple CarPlay">
+                <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"></rect><polygon points="10,8 16,12 10,16"></polygon></svg>
+                CarPlay
+              </span>
+              <span class="badge-chip badge-android" title="Android Auto">
+                <svg viewBox="0 0 24 24"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path></svg>
+                Android Auto
+              </span>
+            </div>
 
-                  <div class="swiper-slide">
-                    <article class="tile-card">
-                      <div class="tile-media" style="background-image:url('{{ asset('img/Drop.png') }}')"></div>
-                      <div class="tile-body">
-                        <h3>DROP OFF NACIONAL:</h3>
-                        <p>Disfruta de tu viaje sin preocupaciones. Devuelve tu auto en otra ciudad con nuestro servicio Drop Off Nacional (con costo adicional).</p>
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome'], ['step'=>1, 'tipo'=>'dropoff']) }}"class="tile-link">Consultar destinos...</a>
-                      </div>
-                    </article>
-                  </div>
+            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
+          </article>
 
-                  <div class="swiper-slide">
-                    <article class="tile-card">
-                      <div class="tile-media" style="background-image:url('{{ asset('img/nuevos.png') }}')"></div>
-                      <div class="tile-body">
-                        <h3>AUTOS NUEVOS Y MODERNOS:</h3>
-                        <p>Conduce con estilo y seguridad. Nuestra flota está compuesta por vehículos recientes, siempre en óptimas condiciones.</p>
-                        <a href="{{ route('rutaCatalogo') }}" class="tile-link">Explora la flota...</a>
-                      </div>
-                    </article>
-                  </div>
+        </div>
 
-                  <div class="swiper-slide">
-                    <article class="tile-card tile-reviews">
-                      <div class="tile-media" style="background-image:url('{{ asset('img/Prioridad.png') }}')"></div>
+        <button class="fleet-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </section>
 
-                      <div class="tile-body">
-                        <h3>RESEÑAS DE GOOGLE MAPS:</h3>
+    <div class="fleet-meta" aria-label="Beneficios">
+      <span>{{ __('Unlimited mileage') }}</span>
+      <i class="sep" aria-hidden="true">|</i>
+      <span>{{ __('Automatic transmission') }}</span>
+    </div>
 
-                        @if(!empty($googleRating))
-                          <div class="reviews-summary">
-                            <span class="reviews-score">⭐ {{ number_format($googleRating, 1) }}</span>
-                            @if(!empty($googleTotal))
-                              <span class="reviews-count">({{ $googleTotal }} opiniones)</span>
-                            @endif
-                          </div>
+    <div class="info-row reverse">
+      <div class="info-content">
+        <h2>{{ __('Business solutions') }}</h2>
+        <p>{{ __('We manage your corporate travel end-to-end so your team can focus on what matters.') }}</p>
+        <p>{{ __('Optimize costs, comfort and safety with our corporate plans.') }}</p>
+        <div class="cta-group">
+          <a href="{{ route('rutaReservaciones', ['from' => 'welcome']) }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> {{ __('Book now') }}</a>
+        </div>
+      </div>
+      <div class="info-media media-carousel" data-interval="5200">
+        <div class="media-slide active" style="background-image:url('{{ asset('img/inicio7.png') }}');"></div>
+        <div class="media-slide" style="background-image:url('{{ asset('img/inicio8.png') }}');"></div>
+        <div class="media-slide" style="background-image:url('{{ asset('img/inicio9.png') }}');"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TARJETAS (Swiper) -->
+  <section aria-label="Explora destinos y servicios">
+    <div class="swiper vj-tiles-swiper">
+      <div class="swiper-wrapper">
+
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/24.jpg') }}')"></div>
+            <div class="tile-body">
+              <h3>{{ __('Available 24/7') }}</h3>
+              <p>{{ __('Service and support at all times. Our team is available 24 hours a day, 7 days a week, so you can travel with peace of mind.') }}</p>
+              <a href="#" class="tile-link">{{ __('Read more...') }}</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/4x4.png') }}')"></div>
+            <div class="tile-body">
+              <h3>{{ __('4x4 Cars & Trucks') }}</h3>
+              <p>{{ __('Travel without limits. We have SUVs, off-road vehicles and 4x4 trucks ideal for highways, city or adventure.') }}</p>
+              <a href="{{ route('rutaCatalogo') }}" class="tile-link">{{ __('Explore our fleet...') }}</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/Urvancard.png') }}')"></div>
+            <div class="tile-body">
+              <h3>{{ __('13-Passenger Vans') }}</h3>
+              <p>{{ __('Perfect for family or business trips. Comfort, space and safety for all your companions.') }}</p>
+              <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome'], ['step' => 1,'tipo' => 'camioneta_13']) }}" class="tile-link">{{ __('Book yours...') }}</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/tarjeta.png') }}')"></div>
+            <div class="tile-body">
+              <h3>{{ __('We accept cards') }}</h3>
+              <p>{{ __('Pay with credit or debit card. Easy, fast and secure. You can also make your final payment when returning your vehicle.') }}</p>
+              <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome'], ['step'=>1, 'tipo'=>'tarjetas']) }}"class="tile-link">{{ __('Learn about our options...') }}</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/Aeropuerto.png') }}')"></div>
+            <div class="tile-body">
+              <h3>{{ __('24/7 Airport Delivery') }}</h3>
+              <p>{{ __('Pick up or drop off your car directly at the airport, no lines or waiting. Available 24 hours a day.') }}</p>
+              <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome'], ['step'=>1, 'tipo'=>'aeropuerto']) }}"class="tile-link">{{ __('Schedule delivery...') }}</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/Verificacion.png') }}')"></div>
+            <div class="tile-body">
+              <h3>{{ __('00 Verified Vehicles') }}</h3>
+              <p>{{ __('All our cars meet environmental standards and are 00 verified to ensure optimal performance.') }}</p>
+              <a href="{{ route('rutaCatalogo') }}" class="tile-link">{{ __('Discover more...') }}</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/Drop.png') }}')"></div>
+            <div class="tile-body">
+              <h3>{{ __('Nationwide Drop-off') }}</h3>
+              <p>{{ __('Enjoy your trip without worries. Return your car in another city with our Nationwide Drop-off service (additional cost applies).') }}</p>
+              <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome'], ['step'=>1, 'tipo'=>'dropoff']) }}"class="tile-link">{{ __('Check destinations...') }}</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="swiper-slide">
+          <article class="tile-card">
+            <div class="tile-media" style="background-image:url('{{ asset('img/nuevos.png') }}')"></div>
+            <div class="tile-body">
+              <h3>{{ __('New & Modern Cars') }}</h3>
+              <p>{{ __('Drive with style and safety. Our fleet consists of recent vehicles, always in optimal condition.') }}</p>
+              <a href="{{ route('rutaCatalogo') }}" class="tile-link">{{ __('Explore the fleet...') }}</a>
+            </div>
+          </article>
+        </div>
+
+        <div class="swiper-slide">
+          <article class="tile-card tile-reviews">
+            <div class="tile-media" style="background-image:url('{{ asset('img/Prioridad.png') }}')"></div>
+
+            <div class="tile-body">
+              <h3>{{ __('Google Maps Reviews') }}</h3>
+
+              @if(!empty($googleRating))
+                <div class="reviews-summary">
+                  <span class="reviews-score">⭐ {{ number_format($googleRating, 1) }}</span>
+                  @if(!empty($googleTotal))
+                    <span class="reviews-count">({{ $googleTotal }} {{ __('reviews') }})</span>
+                  @endif
+                </div>
+              @endif
+
+              <div class="reviews-list">
+                @if(isset($googleReviews) && $googleReviews->isNotEmpty())
+                  @foreach($googleReviews as $review)
+                    <div class="review-item">
+                      <div class="review-head">
+                        <strong>{{ $review['author_name'] ?? __('Google User') }}</strong>
+                        @if(!empty($review['rating']))
+                          <span class="review-stars">
+                            @for($i = 0; $i < (int)$review['rating']; $i++)
+                              ★
+                            @endfor
+                          </span>
                         @endif
-
-                        <div class="reviews-list">
-                          @if(isset($googleReviews) && $googleReviews->isNotEmpty())
-                            @foreach($googleReviews as $review)
-                              <div class="review-item">
-                                <div class="review-head">
-                                  <strong>{{ $review['author_name'] ?? 'Usuario de Google' }}</strong>
-                                  @if(!empty($review['rating']))
-                                    <span class="review-stars">
-                                      @for($i = 0; $i < (int)$review['rating']; $i++)
-                                        ★
-                                      @endfor
-                                    </span>
-                                  @endif
-                                </div>
-                                <p class="review-text">
-                                  {{ Str::limit($review['text'] ?? '', 120) }}
-                                </p>
-                              </div>
-                            @endforeach
-                          @else
-                            <div class="review-item">
-                              <p class="review-text">
-                                Pronto verás aquí las opiniones de nuestros clientes en Google Maps.
-                              </p>
-                            </div>
-                          @endif
-                        </div>
-
-                        <a href="https://www.google.com/maps/place/VIAJERO+CAR+RENTAL+Centro+Sur"
-                          target="_blank"
-                          rel="noopener"
-                          class="tile-link">
-                          Ver más reseñas en Google…
-                        </a>
                       </div>
-                    </article>
+                      <p class="review-text">
+                        {{ Str::limit($review['text'] ?? '', 120) }}
+                      </p>
+                    </div>
+                  @endforeach
+                @else
+                  <div class="review-item">
+                    <p class="review-text">
+                      {{ __('Soon you will see our customers reviews on Google Maps.') }}
+                    </p>
                   </div>
-
-                </div>
-
-                <div class="swiper-button-prev"></div>
-                <div class="swiper-button-next"></div>
-                <div class="swiper-pagination"></div>
+                @endif
               </div>
-            </section>
-            <!-- /TARJETAS (Swiper) -->
 
-            <!-- CTA FINAL -->
-            <section class="cta-hero">
-              <div class="cta-bg" style="background-image:url('{{ asset('img/inicio10.png') }}');"></div>
-              <div class="cta-overlay"></div>
-              <div class="cta-inner">
-                <h2>¡RENTA HOY, EXPLORA MAÑANA, VIAJA SIEMPRE!</h2>
-                <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="btn btn-primary btn-lg">
-                  <i class="fa-regular fa-calendar-check"></i> ¡Reserva ahora!
-                </a>
-              </div>
-            </section>
-            </section>
-
-            <!-- ✅ BURBUJA RADIAL DE REDES (NUEVA) -->
-            <div class="social-fab" id="socialFab">
-              <button class="fab-main" id="fabMain" type="button" aria-label="Redes sociales" aria-expanded="false">
-                <i class="fa-solid fa-share-nodes"></i>
-              </button>
-
-              <a class="fab-item fab-wp"
-                href="https://wa.me/5214427169793"
+              <a href="https://www.google.com/maps/place/VIAJERO+CAR+RENTAL+Centro+Sur"
                 target="_blank"
                 rel="noopener"
-                aria-label="WhatsApp">
-                <i class="fa-brands fa-whatsapp"></i>
-              </a>
-
-              <a class="fab-item fab-fb"
-                href="https://www.facebook.com/ViajeroCarRentalQueretaro?locale=es_LA"
-                target="_blank"
-                rel="noopener"
-                aria-label="Facebook">
-                <i class="fa-brands fa-facebook-f"></i>
-              </a>
-
-              <a class="fab-item fab-ig"
-                href="https://www.instagram.com/viajerocarental/"
-                target="_blank"
-                rel="noopener"
-                aria-label="Instagram">
-                <i class="fa-brands fa-instagram"></i>
+                class="tile-link">
+                {{ __('See more reviews on Google...') }}
               </a>
             </div>
+          </article>
+        </div>
 
-            <!-- Modal de Bienvenida -->
-            <div class="modal" id="welcomeModal" aria-hidden="true">
-              <div class="modal-backdrop"></div>
-              <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="wmTitle">
-                <button class="modal-close" id="wmClose" aria-label="Cerrar"><i class="fa-regular fa-circle-xmark"></i></button>
-                <h3 id="wmTitle"><i class="fa-regular fa-hand-peace"></i> ¡Bienvenido, <span id="wmName">Viajero</span>!</h3>
-                <p>Tu cuenta está lista. ¿Quieres ir directo a tu reserva?</p>
-                <div class="modal-actions">
-                  <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> Ir a mi reserva</a>
-                  <button class="btn btn-ghost" id="wmOk" type="button">Seguir en inicio</button>
-                </div>
-              </div>
-            </div>
+      </div>
+
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-button-next"></div>
+      <div class="swiper-pagination"></div>
+    </div>
+  </section>
+  <!-- /TARJETAS (Swiper) -->
+
+  <!-- CTA FINAL -->
+  <section class="cta-hero">
+    <div class="cta-bg" style="background-image:url('{{ asset('img/inicio10.png') }}');"></div>
+    <div class="cta-overlay"></div>
+    <div class="cta-inner">
+      <h2>{{ __('RENT TODAY, EXPLORE TOMORROW, TRAVEL FOREVER!') }}</h2>
+      <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="btn btn-primary btn-lg">
+        <i class="fa-regular fa-calendar-check"></i> {{ __('Book now') }}
+      </a>
+    </div>
+  </section>
+
+</section>
+
+<!-- MODAL MEMBRESÍA -->
+<div class="modal-membership" id="membershipModal" aria-hidden="true">
+  <div class="modal-membership-backdrop"></div>
+  <div class="modal-membership-card" role="dialog" aria-modal="true" aria-labelledby="membershipModalTitle">
+    <button class="modal-membership-close" id="closeMembershipModalBtn" aria-label="{{ __('Close') }}">
+      <i class="fa-regular fa-circle-xmark"></i>
+    </button>
+    <div class="modal-membership-icon">
+      <i class="fa-regular fa-id-card"></i>
+    </div>
+    <h3 id="membershipModalTitle">{{ __('Need more information?') }}</h3>
+    <p>{{ __('To get more information about memberships and receive personalized assistance, contact us directly by phone or send a message to our WhatsApp number.') }}</p>
+    <div class="modal-membership-actions">
+      <a href="tel:+524427169793" class="btn-contact btn-call">
+        <i class="fa-solid fa-phone"></i> {{ __('Call us') }}
+      </a>
+      <a href="https://wa.me/5214427169793" target="_blank" rel="noopener" class="btn-contact btn-whatsapp">
+        <i class="fa-brands fa-whatsapp"></i> WhatsApp
+      </a>
+    </div>
+    <p class="modal-membership-phone">
+      <i class="fa-regular fa-clock"></i> {{ __('Monday to Sunday | 8:00 AM - 10:00 PM') }}
+    </p>
+  </div>
+</div>
+
+<!-- ✅ BURBUJA RADIAL DE REDES (NUEVA) -->
+<div class="social-fab" id="socialFab">
+  <button class="fab-main" id="fabMain" type="button" aria-label="{{ __('Social media') }}" aria-expanded="false">
+    <i class="fa-solid fa-share-nodes"></i>
+  </button>
+
+  <a class="fab-item fab-wp"
+    href="https://wa.me/5214427169793"
+    target="_blank"
+    rel="noopener"
+    aria-label="WhatsApp">
+    <i class="fa-brands fa-whatsapp"></i>
+  </a>
+
+  <a class="fab-item fab-fb"
+    href="https://www.facebook.com/ViajeroCarRentalQueretaro?locale=es_LA"
+    target="_blank"
+    rel="noopener"
+    aria-label="Facebook">
+    <i class="fa-brands fa-facebook-f"></i>
+  </a>
+
+  <a class="fab-item fab-ig"
+    href="https://www.instagram.com/viajerocarental/"
+    target="_blank"
+    rel="noopener"
+    aria-label="Instagram">
+    <i class="fa-brands fa-instagram"></i>
+  </a>
+</div>
+
+<!-- Modal de Bienvenida -->
+<div class="modal" id="welcomeModal" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="wmTitle">
+    <button class="modal-close" id="wmClose" aria-label="{{ __('Close') }}"><i class="fa-regular fa-circle-xmark"></i></button>
+    <h3 id="wmTitle"><i class="fa-regular fa-hand-peace"></i> {{ __('Welcome') }}, <span id="wmName">{{ __('Traveler') }}</span>!</h3>
+    <p>{{ __('Your account is ready. Do you want to go directly to your reservation?') }}</p>
+    <div class="modal-actions">
+      <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> {{ __('Go to my reservation') }}</a>
+      <button class="btn btn-ghost" id="wmOk" type="button">{{ __('Stay on homepage') }}</button>
+    </div>
+  </div>
+</div>
 @endsection
 
 @section('js-vistaHome')
@@ -1287,8 +1642,6 @@
   <script src="{{ asset('js/home.js') }}"></script>
 
   {{-- ✅ (Tu inline script de fleet infinito - lo dejo tal cual) --}}
-
-
 
 <!-- ===== TOAST DE RESERVAS BILINGÜE ===== -->
 <script>
@@ -1510,6 +1863,161 @@
             @endforeach
         @endforeach
     };
+</script>
+
+<script>
+/* ============================================================
+   CONVERSIÓN DE MONEDA CON INDICADORES MXN/USD
+============================================================ */
+(function() {
+    "use strict";
+
+    const EXCHANGE_RATE = 20;
+
+    function getCurrentLanguage() {
+        return localStorage.getItem('idiomaPreferido') || 'es';
+    }
+
+    function getCurrencyCode(language) {
+        return language === 'en' ? 'USD' : 'MXN';
+    }
+
+    function formatAmount(amount, currencyCode) {
+        if (currencyCode === 'USD') {
+            return amount.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        } else {
+            return amount.toLocaleString('es-MX', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            });
+        }
+    }
+
+    function convertPrices() {
+        const language = getCurrentLanguage();
+        const currencyCode = getCurrencyCode(language);
+
+        console.log('🔄 Convirtiendo precios a:', currencyCode);
+
+        const carCards = document.querySelectorAll('.car-card');
+
+        carCards.forEach((card) => {
+            const priceMXN = parseFloat(card.dataset.priceMxn);
+            const oldPriceMXN = parseFloat(card.dataset.oldPriceMxn);
+
+            if (isNaN(priceMXN)) return;
+
+            let displayPrice, displayOldPrice;
+
+            if (currencyCode === 'USD') {
+                displayPrice = priceMXN / EXCHANGE_RATE;
+                if (!isNaN(oldPriceMXN)) {
+                    displayOldPrice = oldPriceMXN / EXCHANGE_RATE;
+                }
+            } else {
+                displayPrice = priceMXN;
+                displayOldPrice = oldPriceMXN;
+            }
+
+            const formattedPrice = formatAmount(displayPrice, currencyCode);
+            const formattedOldPrice = formatAmount(displayOldPrice, currencyCode);
+
+            const priceNowSpan = card.querySelector('.price-now');
+            const priceOldSpan = card.querySelector('.price-old');
+            const currencyCodeSpan = card.querySelector('.currency-code');
+            const currencyCodeOldSpan = card.querySelector('.currency-code-old');
+
+            if (priceNowSpan) {
+                priceNowSpan.textContent = formattedPrice;
+            }
+            if (priceOldSpan && !isNaN(displayOldPrice)) {
+                priceOldSpan.textContent = formattedOldPrice;
+            }
+            if (currencyCodeSpan) {
+                currencyCodeSpan.textContent = currencyCode;
+            }
+            if (currencyCodeOldSpan) {
+                currencyCodeOldSpan.textContent = currencyCode;
+            }
+        });
+
+        console.log('💰 Moneda actual:', currencyCode);
+    }
+
+    function initCurrencyConversion() {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', convertPrices);
+        } else {
+            convertPrices();
+        }
+
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'idiomaPreferido') {
+                setTimeout(convertPrices, 100);
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            const langBtn = e.target.closest('.lang-btn, .dropdown-item[href*="/lang/"]');
+            if (langBtn) {
+                setTimeout(convertPrices, 300);
+            }
+        });
+
+        const observer = new MutationObserver(function() {
+            const lang = document.documentElement.lang;
+            if (lang === 'en' || lang === 'es') {
+                convertPrices();
+            }
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+    }
+
+    initCurrencyConversion();
+})();
+</script>
+
+<script>
+/* ============================================================
+   MODAL MEMBRESÍA
+============================================================ */
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('membershipModal');
+    const openBtn = document.getElementById('openMembershipModalBtn');
+    const openBtnMain = document.getElementById('openMembershipModalFromBtn');
+    const closeBtn = document.getElementById('closeMembershipModalBtn');
+
+    if (!modal || !closeBtn) return;
+
+    function openModal() {
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+
+    if (openBtn) openBtn.addEventListener('click', openModal);
+    if (openBtnMain) openBtnMain.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', function(event) {
+        if (event.target === modal || event.target.classList.contains('modal-membership-backdrop')) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && modal.classList.contains('show')) {
+            closeModal();
+        }
+    });
+});
 </script>
 
 @endsection

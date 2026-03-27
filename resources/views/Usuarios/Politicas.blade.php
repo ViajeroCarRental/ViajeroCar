@@ -1,6 +1,6 @@
 @extends('layouts.Usuarios')
 
-@section('Titulo','Politicas de Privacidad y Términos de Servicio')
+@section('Titulo','Privacy Policy and Terms of Service')
 
 @section('css-vistaPoliticas')
     <link rel="stylesheet" href="{{ asset('css/politicas.css') }}">
@@ -12,18 +12,18 @@
 <main class="page">
     <section class="hero hero-mini">
         <div class="hero-bg">
-            <img src="{{ asset('img/politicas.png') }}" alt="Politicas">
+            <img src="{{ asset('img/politicas.png') }}" alt="Policies">
         </div>
         <div class="hero-overlay"></div>
 
         <div class="hero-content-politicas">
-            {{-- TEXTO ARRIBA A LA IZQUIERDA --}}
+            {{-- TEXT TOP LEFT --}}
             <div class="hero-texto-superior">
-                <h1>Políticas <span>Viajero</span></h1>
-                <p>Aviso de privacidad, limpieza, renta y términos</p>
+                <h1>{{ __('Policies') }} <span>{{ __('Viajero') }}</span></h1>
+                <p>{{ __('Privacy notice, cleaning, rental policy and terms') }}</p>
             </div>
 
-      <!-- BOTÓN PARA ABRIR BUSCADOR EN MÓVIL/TABLET -->
+      <!-- MOBILE/TABLET SEARCH BUTTON -->
 <div class="d-block d-xl-none" style="width: 100%; max-width: 100%; margin: 15px 0; padding: 0 15px;">
     <div style="background: white;
                 padding: 15px;
@@ -37,7 +37,7 @@
                   font-weight: 700;
                   color: #333;
                   font-size: 16px;">
-            Encuentra tu auto aquí
+            {{ __('Find your car here') }}
         </p>
 
         <button type="button" id="btn-abrir-buscador-politicas"
@@ -55,15 +55,15 @@
                        width: 100%;
                        color: white;
                        cursor: pointer;">
-            <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
+            <i class="fa-solid fa-magnifying-glass"></i> {{ __('SEARCH') }}
         </button>
     </div>
 </div>
 <div class="hero-buscador-wrapper">
     <div class="search-card" id="miBuscadorPoliticas">
-        <!-- ✅ BOTÓN DE CERRAR - SIN DIV EXTRA -->
-        <button type="button" id="btn-cerrar-buscador-politicas" class="btn-close-politicas" aria-label="Cerrar">
-            <span>Cerrar</span>
+        <!-- ✅ CLOSE BUTTON -->
+        <button type="button" id="btn-cerrar-buscador-politicas" class="btn-close-politicas" aria-label="{{ __('Close') }}">
+            <span>{{ __('Close') }}</span>
         </button>
 
         <form id="rentalFormPoliticas" class="search-form" method="GET" action="{{ route('rutaReservasIniciar') }}" novalidate>
@@ -71,22 +71,22 @@
 
 
                         <div class="search-grid">
-                            {{-- COLUMNA 1: LUGAR DE RENTA --}}
+                            {{-- COLUMN 1: PICK-UP LOCATION --}}
                             <div class="sg-col sg-col-location">
                                 <div class="location-head">
-                                    <span class="field-title">Lugar de renta</span>
+                                    <span class="field-title">{{ __('Pick-up location') }}</span>
                                     <label class="inline-check" for="differentDropoffPoliticas">
                                         <input type="checkbox" id="differentDropoffPoliticas" name="different_dropoff" value="1">
-                                        <span>Devolver en otro destino</span>
+                                        <span>{{ __('Different return location') }}</span>
                                     </label>
                                 </div>
 
                                 <div class="location-inputs-wrapper">
                                     {{-- SELECT PICKUP --}}
                                     <div class="field icon-field">
-                                        <span class="field-icon"></i></span>  <!-- ✅ VACÍO (como quieres) -->
+                                        <span class="field-icon"></i></span>
                                         <select id="pickupPlacePoliticas" name="pickup_sucursal_id">
-                                            <option value="" disabled selected>¿Dónde inicia tu viaje?</option>
+                                            <option value="" disabled selected>{{ __('Where does your trip begin?') }}</option>
                                             @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
                                                 <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                                     @foreach($ciudad->sucursalesActivas as $suc)
@@ -101,9 +101,9 @@
 
                                     {{-- SELECT DROPOFF --}}
                                     <div class="field icon-field" id="dropoffWrapperPoliticas">
-                                        <span class="field-icon"></i></span>  <!-- ✅ VACÍO (como quieres) -->
+                                        <span class="field-icon"></i></span>
                                         <select id="dropoffPlacePoliticas" name="dropoff_sucursal_id">
-                                            <option value="" disabled selected>¿Dónde termina tu viaje?</option>
+                                            <option value="" disabled selected>{{ __('Where does your trip end?') }}</option>
                                            @foreach ($ciudades->sortByDesc(function($c) { return $c->nombre === 'Querétaro';}) as $ciudad)
                                                <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                                     @foreach($ciudad->sucursalesActivas as $suc)
@@ -118,20 +118,20 @@
                                 </div>
                             </div>
 
-                            {{-- COLUMNA 2: FECHAS --}}
+                            {{-- COLUMN 2: DATES --}}
                             <div class="sg-col sg-col-datetime">
                                 {{-- PICKUP --}}
                                 <div class="field">
-                                    <span class="field-title solo-responsivo-izq">Pick-Up</span>
+                                    <span class="field-title solo-responsivo-izq">{{ __('Pick-up') }}</span>
                                     <div class="datetime-row">
                                         <div class="dt-field icon-field">
                                             <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                                            <input id="pickupDatePoliticas" name="pickup_date" type="text" placeholder="Fecha"
+                                            <input id="pickupDatePoliticas" name="pickup_date" type="text" placeholder="{{ __('Date') }}"
                                                    value="{{ request('pickup_date') }}" data-min="{{ now()->toDateString() }}">
                                         </div>
                                         <div class="dt-field icon-field time-field">
                                             <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-                                            <input type="text" id="pickupTimePoliticas" name="pickup_time" placeholder="Hora"
+                                            <input type="text" id="pickupTimePoliticas" name="pickup_time" placeholder="{{ __('Time') }}"
                                                    value="{{ request('pickup_time') }}">
                                         </div>
                                     </div>
@@ -139,31 +139,31 @@
 
                                 {{-- DROPOFF --}}
                                 <div class="field">
-                                    <span class="field-title solo-responsivo-izq">Devolución</span>
+                                    <span class="field-title solo-responsivo-izq">{{ __('Return') }}</span>
                                     <div class="datetime-row">
                                         <div class="dt-field icon-field">
                                             <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                                            <input id="dropoffDatePoliticas" name="dropoff_date" type="text" placeholder="Fecha"
+                                            <input id="dropoffDatePoliticas" name="dropoff_date" type="text" placeholder="{{ __('Date') }}"
                                                    value="{{ request('dropoff_date') }}" data-min="{{ now()->toDateString() }}">
                                         </div>
                                         <div class="dt-field icon-field time-field">
                                             <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-                                            <input type="text" id="dropoffTimePoliticas" name="dropoff_time" placeholder="Hora"
+                                            <input type="text" id="dropoffTimePoliticas" name="dropoff_time" placeholder="{{ __('Time') }}"
                                                    value="{{ request('dropoff_time') }}">
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- COLUMNA 3: BOTÓN -->
+                            <!-- COLUMN 3: BUTTON -->
                             <div class="sg-col sg-col-submit">
                                 <div class="actions">
                                     <button type="submit">
-                                        <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
+                                        <i class="fa-solid fa-magnifying-glass"></i> {{ __('SEARCH') }}
                                     </button>
                                 </div>
                             </div>
-                        </div>  <!-- Cierre de search-grid -->
+                        </div>  <!-- End search-grid -->
 
                         <div id="rangeSummary" class="range-summary" aria-live="polite">
                             @if(request('pickup_date') && request('dropoff_date'))
@@ -177,421 +177,398 @@
     </section>
 
 
-    {{-- ✅ GRID DE CARDS (REEMPLAZA ACORDEÓN) --}}
+    {{-- ✅ POLICY CARDS GRID (REPLACES ACCORDION) --}}
     <section class="policies-wrap">
       <div class="policies-grid">
 
-        {{-- Requisitos de renta --}}
-        <button type="button" class="policy-card" data-modal="tpl-requisitos" data-title="Requisitos de renta">
+        {{-- Rental requirements --}}
+        <button type="button" class="policy-card" data-modal="tpl-requisitos" data-title="{{ __('Rental requirements') }}">
           <span class="pc-icon"><i class="fa-solid fa-clipboard-check"></i></span>
-          <span class="pc-title">Requisitos de renta</span>
+          <span class="pc-title">{{ __('Rental requirements') }}</span>
         </button>
 
-        {{-- Formas de pago --}}
-        <button type="button" class="policy-card" data-modal="tpl-pago" data-title="Formas de pago">
+        {{-- Payment methods --}}
+        <button type="button" class="policy-card" data-modal="tpl-pago" data-title="{{ __('Payment methods') }}">
           <span class="pc-icon"><i class="fa-solid fa-wallet"></i></span>
-          <span class="pc-title">Formas de pago</span>
+          <span class="pc-title">{{ __('Payment methods') }}</span>
         </button>
 
-        {{-- Depósitos --}}
-        <button type="button" class="policy-card" data-modal="tpl-depositos" data-title="Depósitos">
+        {{-- Deposits --}}
+        <button type="button" class="policy-card" data-modal="tpl-depositos" data-title="{{ __('Security deposits') }}">
           <span class="pc-icon"><i class="fa-solid fa-mobile-screen-button"></i></span>
-          <span class="pc-title">Depósitos</span>
+          <span class="pc-title">{{ __('Security deposits') }}</span>
         </button>
 
-        {{-- ✅ NUEVA: Pre Check-In --}}
-        <button type="button" class="policy-card" data-modal="tpl-precheckin" data-title="Pre Check-In">
+        {{-- ✅ NEW: Pre Check-In --}}
+        <button type="button" class="policy-card" data-modal="tpl-precheckin" data-title="{{ __('Pre Check-In') }}">
           <span class="pc-icon"><i class="fa-solid fa-circle-check"></i></span>
-          <span class="pc-title">Pre Check-In</span>
+          <span class="pc-title">{{ __('Pre Check-In') }}</span>
         </button>
 
-        {{-- Cancelaciones y reembolsos --}}
-        <button type="button" class="policy-card" data-modal="tpl-cancelaciones" data-title="Cancelaciones y reembolsos">
+        {{-- Cancellations and refunds --}}
+        <button type="button" class="policy-card" data-modal="tpl-cancelaciones" data-title="{{ __('Cancellations and refunds') }}">
           <span class="pc-icon"><i class="fa-solid fa-rotate-left"></i></span>
-          <span class="pc-title">Cancelaciones y reembolsos</span>
+          <span class="pc-title">{{ __('Cancellations and refunds') }}</span>
         </button>
 
-        {{-- Seguro de cancelación --}}
-        <button type="button" class="policy-card" data-modal="tpl-seguro-cancelacion" data-title="Seguro de cancelación">
+        {{-- Cancellation insurance --}}
+        <button type="button" class="policy-card" data-modal="tpl-seguro-cancelacion" data-title="{{ __('Cancellation insurance') }}">
           <span class="pc-icon"><i class="fa-solid fa-shield-heart"></i></span>
-          <span class="pc-title">Seguro de cancelación</span>
+          <span class="pc-title">{{ __('Cancellation insurance') }}</span>
         </button>
 
-        {{-- Política de suciedad --}}
-        <button type="button" class="policy-card" data-modal="tpl-limpieza" data-title="Política de limpieza">
+        {{-- Cleaning policy --}}
+        <button type="button" class="policy-card" data-modal="tpl-limpieza" data-title="{{ __('Cleaning policy') }}">
           <span class="pc-icon"><i class="fa-solid fa-spray-can-sparkles"></i></span>
-          <span class="pc-title">Política de limpieza</span>
+          <span class="pc-title">{{ __('Cleaning policy') }}</span>
         </button>
 
-        {{-- Políticas de infracciones --}}
-        <button type="button" class="policy-card" data-modal="tpl-infracciones" data-title="Políticas de infracciones">
+        {{-- Infractions policy --}}
+        <button type="button" class="policy-card" data-modal="tpl-infracciones" data-title="{{ __('Infractions policy') }}">
           <span class="pc-icon"><i class="fa-solid fa-file-lines"></i></span>
-          <span class="pc-title">Políticas de infracciones</span>
+          <span class="pc-title">{{ __('Infractions policy') }}</span>
         </button>
 
-        {{-- (Opcional) Aviso de privacidad --}}
-        <button type="button" class="policy-card" data-modal="tpl-privacidad" data-title="Aviso de privacidad">
+        {{-- Privacy notice --}}
+        <button type="button" class="policy-card" data-modal="tpl-privacidad" data-title="{{ __('Privacy notice') }}">
           <span class="pc-icon"><i class="fa-solid fa-shield-halved"></i></span>
-          <span class="pc-title">Aviso de privacidad</span>
+          <span class="pc-title">{{ __('Privacy notice') }}</span>
         </button>
 
-        {{-- (Opcional) Términos y condiciones --}}
-        <button type="button" class="policy-card" data-modal="tpl-terminos" data-title="Términos y condiciones">
+        {{-- Terms and conditions --}}
+        <button type="button" class="policy-card" data-modal="tpl-terminos" data-title="{{ __('Terms and conditions') }}">
           <span class="pc-icon"><i class="fa-solid fa-scale-balanced"></i></span>
-          <span class="pc-title">Términos y condiciones</span>
+          <span class="pc-title">{{ __('Terms and conditions') }}</span>
         </button>
 
-        {{-- (Opcional) Definiciones de cargos e impuestos --}}
-        <button type="button" class="policy-card" data-modal="tpl-cargos" data-title="Definiciones de cargos e impuestos">
+        {{-- Charges and taxes definitions --}}
+        <button type="button" class="policy-card" data-modal="tpl-cargos" data-title="{{ __('Charges and taxes definitions') }}">
           <span class="pc-icon"><i class="fa-solid fa-receipt"></i></span>
-          <span class="pc-title">Definiciones de cargos e impuestos</span>
+          <span class="pc-title">{{ __('Charges and taxes definitions') }}</span>
         </button>
 
       </div>
     </section>
 
-    {{-- ✅ MODAL REUTILIZABLE --}}
+    {{-- ✅ REUSABLE MODAL --}}
     <div class="vj-modal" id="policyModal" aria-hidden="true">
       <div class="vj-modal__backdrop" data-close="1"></div>
 
       <div class="vj-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="policyModalTitle">
         <div class="vj-modal__header">
-          <h3 class="vj-modal__title" id="policyModalTitle">Título</h3>
-          <button type="button" class="vj-modal__close" aria-label="Cerrar" data-close="1">
+          <h3 class="vj-modal__title" id="policyModalTitle">{{ __('Title') }}</h3>
+          <button type="button" class="vj-modal__close" aria-label="{{ __('Close') }}" data-close="1">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
 
         <div class="vj-modal__body" id="policyModalBody">
-          {{-- aquí se inyecta contenido --}}
+          {{-- content injected here --}}
         </div>
       </div>
     </div>
 
-    {{-- ✅ TEMPLATES DE CONTENIDO (NO VISIBLES) --}}
+    {{-- ✅ CONTENT TEMPLATES (HIDDEN) --}}
 
-    {{-- AVISO PRIVACIDAD --}}
+    {{-- PRIVACY NOTICE --}}
     <template id="tpl-privacidad">
       <div class="policy-content">
-        <p><strong>ELABORADO POR VIAJERO CAR RENTAL, PARA LA PROTECCIÓN DE DATOS DE SUS CLIENTES</strong></p>
-        <p>Persona física con Actividad Empresarial, con domicilio fiscal en Blvd. Bernardo Quintana 8300, Centro Sur, 76090 Santiago de Querétaro, Qro., tratará sus datos personales recabados para fines de identificación, operación, administración y comercialización relacionada con el alquiler de vehículos automotores. Si Usted no manifiesta su oposición para que sus datos personales sean tratados, se entenderá que ha otorgado su consentimiento para ello.</p>
-        <p>Los datos personales pueden ser recabados de manera directa —como cuando se proporcionan de manera personal—, o por medio indirecto —ya sean directorios telefónicos, de servicios o laborales—, y son entre otros: Nombres y apellidos, género, fecha de nacimiento, domicilio, teléfono fijo y/o móvil, correo electrónico, etc. En cuanto a los datos financieros, de conformidad con las excepciones que señalan los artículos 8, 10 y 37 de la Ley, no son considerados como que requieran de consentimiento expreso para ser utilizados.</p>
-        <p>Los datos serán utilizados estrictamente para las actividades que se desprendan de brindarle algún bien o servicio, que en forma enunciativa pero no limitativa se describen a continuación: La renta de automóviles, así como la prestación de servicios inherentes a sus viajes de placer o negocios, de actualización y confirmación, con fines promocionales, publicitarios y de contratación y crediticios, realizar estudios sobre hábitos de consumo y preferencias, la preparación de opciones financieras, la cobranza y procuración de pago y contactarlo para cualquier tema relacionado a los servicios que prestamos o a la presente política de privacidad. De conformidad con lo estipulado en el artículo 37 fracción III de la Ley, los datos personales no serán transferidos a terceros sin consentimiento, con excepción de aquellas sociedades que forman parte de nuestro grupo o socios comerciales.</p>
-        <p>Se podrán ejercitar, a partir del día 6 de julio del año 2018, los derechos ARCO, o sea de acceder, rectificar y cancelar datos personales, así como a oponerse al tratamiento de los mismos o revocar el consentimiento que para tal fin se haya otorgado, a través del procedimiento que hemos implementado, es decir, bastará con dirigirse al C. Juan de Dios Hernadez Resendiz, encargado del área de atención a cliente por teléfono al número <strong>(442) 716 9793</strong>, o por medio de su correo electrónico <a href="mailto:reservaciones@viajerocar-rental.mx">reservaciones@viajerocar-rental.mx</a>, redactando un documento en idioma español, en donde agregue nombre completo, copia simple de su identificación oficial o, en medios electrónicos versión digitalizada de la misma (escaneo), indicación del correo electrónico o dirección física que designe para notificaciones y algún número telefónico de contacto. Una vez hecho, en un plazo máximo de 20 días hábiles se le informará de la procedencia de dicha solicitud; en caso de que se le envíe carta de respuesta al domicilio físico indicado, los veinte días se darán por cumplidos al momento de entregar el documento al servicio postal.</p>
-        <p>La falta de oposición para que los datos personales sean transferidos como se menciona, será interpretada en el sentido de que ha otorgado su consentimiento para ello.</p>
-        <p>Nos reservamos el derecho a efectuar en cualquier momento modificaciones o actualizaciones al presente aviso de privacidad, en atención de novedades legislativas, políticas internas o nuevos requerimientos para la prestación u ofrecimiento de nuestros servicios o productos. Estas modificaciones estarán disponibles al público a través de nuestra página de Internet, vía correo electrónico o por escrito.</p>
+        <p><strong>{{ __('PREPARED BY VIAJERO CAR RENTAL, FOR THE PROTECTION OF ITS CLIENTS\' DATA') }}</strong></p>
+        <p>{{ __('Individual with Business Activity, with fiscal address at Blvd. Bernardo Quintana 8300, Centro Sur, 76090 Santiago de Querétaro, Qro., will process your personal data collected for identification, operation, administration and marketing purposes related to vehicle rental. If you do not express your opposition for your personal data to be processed, it will be understood that you have given your consent for it.') }}</p>
+        <p>{{ __('Personal data may be collected directly —such as when provided personally—, or indirectly —through telephone directories, services or employment directories—, and include, among others: First and last names, gender, date of birth, address, landline and/or mobile phone, email, etc. Regarding financial data, in accordance with the exceptions set forth in articles 8, 10 and 37 of the Law, they are not considered to require express consent to be used.') }}</p>
+        <p>{{ __('The data will be used strictly for activities arising from providing you with a good or service, which in an illustrative but not limited manner are described below: Car rental, as well as the provision of services inherent to your leisure or business trips, updating and confirmation, for promotional, advertising, contracting and credit purposes, conducting studies on consumption habits and preferences, preparing financial options, collection and payment enforcement, and contacting you for any matter related to the services we provide or to this privacy policy. In accordance with the provisions of Article 37, Section III of the Law, personal data will not be transferred to third parties without consent, except for those companies that are part of our group or business partners.') }}</p>
+        <p>{{ __('You may exercise your ARCO rights (Access, Rectification, Cancellation and Opposition) starting July 6, 2018, through the procedure we have implemented. Simply contact Mr. Juan de Dios Hernandez Resendiz, head of customer service, by phone at') }} <strong>(442) 716 9793</strong>, {{ __('or by email at') }} <a href="mailto:reservaciones@viajerocar-rental.mx">reservaciones@viajerocar-rental.mx</a>, {{ __('drafting a document in Spanish, including your full name, a simple copy of your official ID or, in electronic media, a digital version (scan), an indication of the email or physical address designated for notifications and a contact phone number. Once done, within a maximum of 20 business days you will be informed of the validity of said request; if a response letter is sent to the indicated physical address, the twenty days will be considered fulfilled at the time the document is handed over to the postal service.') }}</p>
+        <p>{{ __('Lack of opposition for personal data to be transferred as mentioned will be interpreted as having given your consent for it.') }}</p>
+        <p>{{ __('We reserve the right to make modifications or updates to this privacy notice at any time, in response to legislative developments, internal policies or new requirements for the provision or offering of our services or products. These modifications will be available to the public through our website, email or in writing.') }}</p>
       </div>
     </template>
 
-    {{-- POLÍTICA LIMPIEZA / SUCIEDAD --}}
+    {{-- CLEANING POLICY --}}
     <template id="tpl-limpieza">
       <div class="policy-content">
-        <h4>Política libre de tabaco, suciedad y olores desagradables – Viajero Car Rental</h4>
+        <h4>{{ __('Smoke-free, dirt and unpleasant odors policy – Viajero Car Rental') }}</h4>
         <p>
-          En <strong>Viajero Car Rental</strong> entregamos todos nuestros vehículos limpios, ventilados y en condiciones
-          óptimas de higiene para tu comodidad y la de los siguientes clientes. Por ello, contamos con una
-          <strong>política estricta libre de tabaco, suciedad excesiva y olores desagradables</strong>.
+          <strong>{{ __('Viajero Car Rental') }}</strong> {{ __('delivers all our vehicles clean, ventilated and in optimal hygiene conditions for your comfort and for the next customers. Therefore, we have a') }} <strong>{{ __('strict smoke-free, excessive dirt and unpleasant odors policy') }}</strong>.
         </p>
 
         <p>
-          <strong>Recuerda:</strong> Devolver el vehículo con presencia de humo de tabaco, suciedad excesiva o con olores
-          fuertes que requieran limpieza profunda originará un <strong>cargo de $4,000 MXN (aprox. $250 USD)</strong>, que
-          será aplicado a la forma de pago registrada en tu contrato de renta.
+          <strong>{{ __('Remember:') }}</strong> {{ __('Returning the vehicle with tobacco smoke, excessive dirt or strong odors requiring deep cleaning will result in a') }} <strong>$4,000 MXN (approx. $250 USD)</strong> {{ __('charge, which will be applied to the payment method registered in your rental contract.') }}
         </p>
 
-        <h5>¿Qué se considera suciedad u olor que viola esta política?</h5>
-        <p>Entre otros, se consideran motivos para aplicar el cargo de limpieza especial:</p>
+        <h5>{{ __('What is considered dirt or odor that violates this policy?') }}</h5>
+        <p>{{ __('Among others, the following are reasons to apply the special cleaning charge:') }}</p>
         <ul>
-          <li>Olor evidente a <strong>cigarro, tabaco, vape o marihuana</strong> dentro del vehículo.</li>
-          <li>Restos de <strong>ceniza, colillas</strong> o quemaduras en vestiduras o tapicería.</li>
-          <li>Manchas excesivas de comida, bebidas, grasa, lodo, vómito u otros residuos difíciles de remover.</li>
-          <li>Olores fuertes a químicos, cloro, humedad, basura o alimentos en descomposición.</li>
-          <li>Acumulación de pelo de mascota, restos orgánicos o insectos por falta de limpieza básica.</li>
+          <li>{{ __('Strong smell of') }} <strong>{{ __('cigarette, tobacco, vape or marijuana') }}</strong> {{ __('inside the vehicle.') }}</li>
+          <li>{{ __('Remains of') }} <strong>{{ __('ash, cigarette butts') }}</strong> {{ __('or burns on upholstery.') }}</li>
+          <li>{{ __('Excessive stains from food, drinks, grease, mud, vomit or other difficult-to-remove residues.') }}</li>
+          <li>{{ __('Strong odors of chemicals, chlorine, moisture, garbage or decomposing food.') }}</li>
+          <li>{{ __('Accumulation of pet hair, organic residues or insects due to lack of basic cleaning.') }}</li>
         </ul>
 
-        <h5>¿Cómo se valida este cargo?</h5>
+        <h5>{{ __('How is this charge validated?') }}</h5>
         <ul>
-          <li>Al momento de la devolución, el vehículo es inspeccionado por el personal de <strong>Viajero Car Rental</strong>.</li>
-          <li>En caso de detectar suciedad u olor que requiera limpieza profunda, se <strong>tomarán fotografías</strong> y se documentará la condición del vehículo.</li>
-          <li>Se aplicará la <strong>cuota fija de $4,000 MXN</strong> por limpieza profunda y desodorización.</li>
+          <li>{{ __('At the time of return, the vehicle is inspected by') }} <strong>{{ __('Viajero Car Rental') }}</strong> {{ __('staff.') }}</li>
+          <li>{{ __('If dirt or odor requiring deep cleaning is detected,') }} <strong>{{ __('photographs will be taken') }}</strong> {{ __('and the condition of the vehicle will be documented.') }}</li>
+          <li>{{ __('The') }} <strong>{{ __('fixed fee of $4,000 MXN') }}</strong> {{ __('will be applied for deep cleaning and deodorization.') }}</li>
         </ul>
 
-        <h5>¿Qué puedes hacer para evitar este cargo?</h5>
+        <h5>{{ __('What can you do to avoid this charge?') }}</h5>
         <ul>
-          <li>No fumar dentro del vehículo bajo ninguna circunstancia.</li>
-          <li>Evitar consumir alimentos o bebidas que puedan derramarse o dejar olores fuertes.</li>
-          <li>Retirar toda la basura y pertenencias personales antes de la devolución.</li>
-          <li>Si viajas con mascotas, utilizar fundas, mantas o accesorios que protejan las vestiduras.</li>
+          <li>{{ __('Do not smoke inside the vehicle under any circumstances.') }}</li>
+          <li>{{ __('Avoid consuming food or beverages that may spill or leave strong odors.') }}</li>
+          <li>{{ __('Remove all trash and personal belongings before returning the vehicle.') }}</li>
+          <li>{{ __('If traveling with pets, use covers, blankets or accessories that protect the upholstery.') }}</li>
         </ul>
 
         <p>
-          Esta política tiene como objetivo garantizar que cada vehículo de <strong>Viajero Car Rental</strong>
-          se entregue siempre en las mejores condiciones posibles para todos nuestros clientes.
+          {{ __('This policy aims to ensure that every vehicle from') }} <strong>{{ __('Viajero Car Rental') }}</strong>
+          {{ __('is always delivered in the best possible condition for all our customers.') }}
         </p>
       </div>
     </template>
 
-    {{-- REQUISITOS RENTA --}}
+    {{-- RENTAL REQUIREMENTS --}}
     <template id="tpl-requisitos">
       <div class="policy-content">
-        <h4>Edad mínima</h4>
+        <h4>{{ __('Minimum age') }}</h4>
         <p>
-          La edad mínima para rentar un vehículo con <strong>Viajero Car Rental</strong> es de 21 años.
-          Se aplica un cargo por conductor joven para clientes entre 21 y 24 años, con un costo de
-          <strong>$241 MXN por día</strong>. Este cargo puede estar sujeto a tarifa de aeropuerto
-          y otros cargos aplicables más IVA.
+          {{ __('The minimum age to rent a vehicle with') }} <strong>{{ __('Viajero Car Rental') }}</strong> {{ __('is 21 years. A young driver fee applies for customers between 21 and 24 years old, with a cost of') }}
+          <strong>$241 MXN {{ __('per day') }}</strong>. {{ __('This fee may be subject to airport fees and other applicable charges plus VAT.') }}
         </p>
 
-        <h4>Licencia de conducir vigente</h4>
+        <h4>{{ __('Valid driver\'s license') }}</h4>
         <p>
-          El cliente principal deberá presentar una licencia de conducir vigente del país de
-          residencia con un mínimo de un año de antigüedad. Viajero Car Rental se reserva el
-          derecho de verificar la licencia y negar la renta si no cumple con los lineamientos.
-          Para conductores adicionales solo se requiere licencia vigente, sin antigüedad mínima.
+          {{ __('The primary customer must present a valid driver\'s license from their country of residence with a minimum of one year of seniority. Viajero Car Rental reserves the right to verify the license and deny the rental if it does not meet the guidelines. For additional drivers, only a valid license is required, without a minimum seniority.') }}
         </p>
 
-        <h4>Identificación oficial vigente</h4>
+        <h4>{{ __('Valid official ID') }}</h4>
         <p>
-          Se debe presentar una identificación oficial con fotografía. Para ciudadanos mexicanos
-          se solicita INE/IFE con al menos un año de antigüedad. Para extranjeros se acepta
-          pasaporte, Passport Card, FM2, FM3 o Residencia Permanente.
+          {{ __('A valid official photo ID must be presented. For Mexican citizens, an INE/IFE with at least one year of seniority is required. For foreigners, a passport, Passport Card, FM2, FM3 or Permanent Residence is accepted.') }}
         </p>
 
-        <h4>Tarjeta de crédito a nombre del titular</h4>
+        <h4>{{ __('Credit card in the renter\'s name') }}</h4>
         <p>
-          Es indispensable presentar una tarjeta de crédito bancaria a nombre del titular para
-          iniciar la renta. El pago final puede hacerse con tarjeta de débito. Se aceptan
-          American Express, Visa y MasterCard. La tarjeta debe tener mínimo un año de antigüedad.
-          Viajero Car Rental puede rechazar tarjetas en mal estado, ilegibles o de programas
-          especiales no compatibles.
+          {{ __('It is essential to present a bank credit card in the renter\'s name to start the rental. The final payment can be made with a debit card. American Express, Visa and MasterCard are accepted. The card must have a minimum of one year of seniority. Viajero Car Rental may reject damaged, illegible cards or special program cards that are not compatible.') }}
         </p>
 
-        <h4>Derecho a negar el servicio</h4>
+        <h4>{{ __('Right to deny service') }}</h4>
         <p>
-          Viajero Car Rental se reserva el derecho de no completar la renta si cualquiera de los
-          requisitos no se cumple o si se detecta alguna irregularidad en la documentación presentada.
+          {{ __('Viajero Car Rental reserves the right not to complete the rental if any of the requirements are not met or if any irregularity is detected in the documentation presented.') }}
         </p>
       </div>
     </template>
 
-    {{-- ✅ NUEVO: PRE CHECK-IN --}}
+    {{-- PRE CHECK-IN --}}
     <template id="tpl-precheckin">
       <div class="policy-content">
-        <h4>¿Por qué activar el Pre Check-In en Viajero?</h4>
-        <p><strong>Ahorra tiempo y evita filas</strong> completando tu registro en línea antes de llegar.</p>
+        <h4>{{ __('Why activate Pre Check-In with Viajero?') }}</h4>
+        <p><strong>{{ __('Save time and avoid lines') }}</strong> {{ __('by completing your online registration before you arrive.') }}</p>
 
-        <p><strong>Solo necesitas proporcionar:</strong></p>
+        <p><strong>{{ __('You only need to provide:') }}</strong></p>
         <ul>
-          <li>Identificación oficial</li>
-          <li>Licencia de conducir vigente</li>
-          <li>Datos de contacto</li>
-          <li>Método de pago</li>
+          <li>{{ __('Official ID') }}</li>
+          <li>{{ __('Valid driver\'s license') }}</li>
+          <li>{{ __('Contact information') }}</li>
+          <li>{{ __('Payment method') }}</li>
         </ul>
 
-        <p>Cuando llegues, tu contrato estará listo y tu vehículo preparado. <strong>Comienza tu viaje sin esperas.</strong></p>
+        <p>{{ __('When you arrive, your contract will be ready and your vehicle prepared.') }} <strong>{{ __('Start your trip without waiting.') }}</strong></p>
 
-        <h4>¿Listo para comenzar?</h4>
+        <h4>{{ __('Ready to start?') }}</h4>
         <ul>
-          <li>Si envías tu información con anticipación, agilizamos tu proceso de entrega.</li>
-          <li>Presenta tu identificación y licencia vigentes al recoger el vehículo.</li>
-          <li>Nuestro equipo te asistirá en mostrador para la firma final y entrega de llaves.</li>
-          <li>Revisa tu unidad y empieza tu experiencia con Viajero.</li>
+          <li>{{ __('If you send your information in advance, we expedite your delivery process.') }}</li>
+          <li>{{ __('Present your valid ID and driver\'s license when picking up the vehicle.') }}</li>
+          <li>{{ __('Our team will assist you at the counter for final signature and key delivery.') }}</li>
+          <li>{{ __('Inspect your vehicle and begin your Viajero experience.') }}</li>
         </ul>
       </div>
     </template>
 
-    {{-- SEGURO CANCELACIÓN --}}
+    {{-- CANCELLATION INSURANCE --}}
     <template id="tpl-seguro-cancelacion">
       <div class="policy-content">
-        <h4>Términos y condiciones del seguro de cancelación – Viajero Car Rental</h4>
+        <h4>{{ __('Cancellation insurance terms and conditions – Viajero Car Rental') }}</h4>
         <p>
-          Para realizar la cancelación de una reserva prepagada y comenzar el proceso de reembolso
-          del total prepagado, el cliente deberá comunicarse con <strong>Viajero Car Rental</strong>
-          al teléfono <strong>01 (442) 716 9793</strong> o escribir al correo
-          <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>.
+          {{ __('To cancel a prepaid reservation and begin the refund process for the total prepaid amount, the customer must contact') }} <strong>{{ __('Viajero Car Rental') }}</strong>
+          {{ __('by phone at') }} <strong>01 (442) 716 9793</strong> {{ __('or email') }} <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>.
         </p>
-        <p>En caso de haber adquirido el <strong>seguro de cancelación</strong>, este reembolsará el <strong>100% del total prepagado</strong> por la renta.</p>
-        <p>El cliente podrá solicitar su reembolso hasta <strong>24 horas antes</strong> de la fecha y hora programadas de inicio de la renta.</p>
-        <p>El pago de <strong>$200 MXN</strong> por el seguro de cancelación <strong>no es reembolsable</strong>.</p>
+        <p>{{ __('If the') }} <strong>{{ __('cancellation insurance') }}</strong> {{ __('was purchased, it will refund') }} <strong>{{ __('100% of the total prepaid rental amount') }}</strong>.</p>
+        <p>{{ __('The customer may request their refund up to') }} <strong>{{ __('24 hours before') }}</strong> {{ __('the scheduled start date and time of the rental.') }}</p>
+        <p>{{ __('The') }} <strong>$200 MXN</strong> {{ __('payment for cancellation insurance') }} <strong>{{ __('is non-refundable') }}</strong>.</p>
         <p>
-          El reembolso se procesará y se reflejará en la tarjeta con la que se realizó el prepago,
-          en un lapso de hasta <strong>8 días hábiles</strong>.
+          {{ __('The refund will be processed and reflected on the card used for the prepayment, within a period of up to') }} <strong>{{ __('8 business days') }}</strong>.
         </p>
       </div>
     </template>
 
-    {{-- CARGOS E IMPUESTOS --}}
+    {{-- CHARGES AND TAXES --}}
     <template id="tpl-cargos">
       <div class="policy-content">
-        <h4>Impuesto (IVA)</h4>
-        <p>Todos los cargos relacionados con la renta del vehículo están sujetos al <strong>IVA</strong> vigente.</p>
+        <h4>{{ __('Tax (VAT)') }}</h4>
+        <p>{{ __('All charges related to the vehicle rental are subject to the applicable') }} <strong>{{ __('VAT') }}</strong>.</p>
 
-        <h4>Cargo por recuperación de aeropuerto (Airport Fee)</h4>
-        <p>Aplica únicamente en sucursales ubicadas dentro de un aeropuerto.</p>
+        <h4>{{ __('Airport recovery fee') }}</h4>
+        <p>{{ __('Applies only to branches located within an airport.') }}</p>
 
-        <h4>Cargo por telemetría (Telematic Fee)</h4>
-        <p>Corresponde al <strong>7.5% sobre todos los conceptos de la renta</strong>.</p>
+        <h4>{{ __('Telemetry fee') }}</h4>
+        <p>{{ __('Corresponds to') }} <strong>{{ __('7.5% on all rental concepts') }}</strong>.</p>
 
-        <h4>Cargo por dejar el vehículo en otra ciudad (Drop-Off / One-Way)</h4>
-        <p>Aplica cuando el cliente toma el automóvil en una ciudad y lo devuelve en otra distinta.</p>
+        <h4>{{ __('Drop-off / One-Way fee') }}</h4>
+        <p>{{ __('Applies when the customer picks up the vehicle in one city and returns it in a different city.') }}</p>
 
-        <h4>Cargo por gasolina</h4>
-        <p>La gasolina no está incluida en la tarifa. El vehículo debe devolverse con el tanque lleno.</p>
+        <h4>{{ __('Fuel charge') }}</h4>
+        <p>{{ __('Fuel is not included in the rate. The vehicle must be returned with a full tank.') }}</p>
       </div>
     </template>
 
-    {{-- FORMAS DE PAGO --}}
+    {{-- PAYMENT METHODS --}}
     <template id="tpl-pago">
       <div class="policy-content">
-        <h4>Formas de pago aceptadas por Viajero Car Rental</h4>
-        <h5>Tarjetas bancarias (crédito y débito)</h5>
+        <h4>{{ __('Payment methods accepted by Viajero Car Rental') }}</h4>
+        <h5>{{ __('Bank cards (credit and debit)') }}</h5>
         <ul>
-          <li><strong>American Express</strong></li>
-          <li><strong>Visa</strong></li>
-          <li><strong>Mastercard</strong></li>
+          <li><strong>{{ __('American Express') }}</strong></li>
+          <li><strong>{{ __('Visa') }}</strong></li>
+          <li><strong>{{ __('Mastercard') }}</strong></li>
         </ul>
 
-        <h5>PayPal</h5>
-        <p>Puedes realizar tu pago mediante <strong>PayPal</strong> cuando esté habilitado o vía enlace seguro.</p>
+        <h5>{{ __('PayPal') }}</h5>
+        <p>{{ __('You can make your payment via') }} <strong>{{ __('PayPal') }}</strong> {{ __('when enabled or through a secure link.') }}</p>
 
-        <h5>Pago en efectivo</h5>
-        <p><strong>Sí aceptamos efectivo</strong> para el total de la renta, pero la garantía se realiza con tarjeta.</p>
+        <h5>{{ __('Cash payment') }}</h5>
+        <p><strong>{{ __('Yes, we accept cash') }}</strong> {{ __('for the total rental amount, but the guarantee is made with a card.') }}</p>
 
-        <h5>Depósitos en OXXO</h5>
-        <p>Requiere coordinación con un asesor para referencia y confirmación.</p>
+        <h5>{{ __('OXXO deposits') }}</h5>
+        <p>{{ __('Requires coordination with an advisor for reference and confirmation.') }}</p>
 
-        <h5>Mercado Pago</h5>
-        <p>Pago por enlace o QR generado por asesor.</p>
+        <h5>{{ __('Mercado Pago') }}</h5>
+        <p>{{ __('Payment via link or QR generated by an advisor.') }}</p>
       </div>
     </template>
 
-    {{-- CANCELACIONES --}}
+    {{-- CANCELLATIONS --}}
     <template id="tpl-cancelaciones">
       <div class="policy-content">
-        <h4>Política de cancelaciones, no llegada (No show) y reembolsos – Viajero Car Rental</h4>
+        <h4>{{ __('Cancellation, no-show and refund policy – Viajero Car Rental') }}</h4>
 
-        <h5>Reembolso del 100%</h5>
-        <p>Cancelación <strong>21 días o más</strong> antes de la fecha de renta (prepago).</p>
+        <h5>{{ __('100% refund') }}</h5>
+        <p>{{ __('Cancellation') }} <strong>{{ __('21 days or more') }}</strong> {{ __('before the rental date (prepayment).') }}</p>
 
-        <h5>Reembolso del 50%</h5>
-        <p>Cancelación entre <strong>20 y 15 días</strong> previos (prepago).</p>
+        <h5>{{ __('50% refund') }}</h5>
+        <p>{{ __('Cancellation between') }} <strong>{{ __('20 and 15 days') }}</strong> {{ __('in advance (prepayment).') }}</p>
 
-        <h5>Reembolso del 25%</h5>
-        <p>Cancelación entre <strong>14 y 7 días</strong> previos (prepago).</p>
+        <h5>{{ __('25% refund') }}</h5>
+        <p>{{ __('Cancellation between') }} <strong>{{ __('14 and 7 days') }}</strong> {{ __('in advance (prepayment).') }}</p>
 
-        <h5>Sin reembolso</h5>
-        <p>Cancelación <strong>6 días o menos</strong> y casos de <strong>No show</strong>.</p>
+        <h5>{{ __('No refund') }}</h5>
+        <p>{{ __('Cancellation') }} <strong>{{ __('6 days or less') }}</strong> {{ __('and') }} <strong>{{ __('No-show') }}</strong> {{ __('cases.') }}</p>
 
-        <h5>Procedimiento</h5>
-        <p>Teléfono: <strong>01 (442) 303 2668</strong> · Correo: <a href="mailto:reservaciones@viajerocar-rental.mx">reservaciones@viajerocar-rental.mx</a></p>
+        <h5>{{ __('Procedure') }}</h5>
+        <p>{{ __('Phone:') }} <strong>01 (442) 303 2668</strong> · {{ __('Email:') }} <a href="mailto:reservaciones@viajerocar-rental.mx">reservaciones@viajerocar-rental.mx</a></p>
       </div>
     </template>
 
-    {{-- DEPÓSITOS (GARANTÍA / PRE-AUTORIZACIÓN) --}}
+    {{-- DEPOSITS (GUARANTEE / PRE-AUTHORIZATION) --}}
     <template id="tpl-depositos">
       <div class="policy-content">
-        <h4>Garantía de renta o pre-autorizaciones – Viajero Car Rental</h4>
+        <h4>{{ __('Rental guarantee or pre-authorizations – Viajero Car Rental') }}</h4>
         <p>
-          La <strong>garantía</strong> o <strong>pre-autorización</strong> es un monto retenido temporalmente en la tarjeta del cliente
-          como respaldo por la renta. <strong>No es un cargo definitivo</strong> al abrir contrato.
+          {{ __('The') }} <strong>{{ __('guarantee') }}</strong> {{ __('or') }} <strong>{{ __('pre-authorization') }}</strong> {{ __('is an amount temporarily held on the customer\'s card as a backup for the rental.') }} <strong>{{ __('It is not a final charge') }}</strong> {{ __('when opening the contract.') }}
         </p>
 
-        <h5>Liberación</h5>
+        <h5>{{ __('Release') }}</h5>
         <p>
-          Se libera generalmente dentro de <strong>48 horas hábiles</strong> tras la devolución,
-          o en el plazo que indique el banco emisor, siempre que la unidad se entregue en condiciones.
+          {{ __('It is generally released within') }} <strong>{{ __('48 business hours') }}</strong> {{ __('after return, or within the period indicated by the issuing bank, provided the vehicle is returned in proper condition.') }}
         </p>
 
-        <h5>Tabla referencial de garantías</h5>
+        <h5>{{ __('Reference guarantee table') }}</h5>
         <div class="tabla-garantias">
           <table class="tabla-viajero">
             <thead>
               <tr>
-                <th>Categoría</th>
-                <th>Tamaño</th>
-                <th>LDW</th>
-                <th>PDW</th>
-                <th>CDW 10%</th>
-                <th>CDW 20%</th>
-                <th>CDW declinado</th>
+                <th>{{ __('Category') }}</th>
+                <th>{{ __('Size') }}</th>
+                <th>{{ __('LDW') }}</th>
+                <th>{{ __('PDW') }}</th>
+                <th>{{ __('CDW 10%') }}</th>
+                <th>{{ __('CDW 20%') }}</th>
+                <th>{{ __('CDW declined') }}</th>
               </tr>
             </thead>
             <tbody>
-              <tr><td>C</td><td>Compacto Chevrolet aveo o similar</td><td>$MXN5,000</td><td>$MXN8,000</td><td>$MXN15,000</td><td>$MXN25,000</td><td>$MXN330,000</td></tr>
-              <tr><td>D</td><td>Medianos Nissan Virtus o similar</td><td>$MXN5,000</td><td>$MXN8,000</td><td>$MXN18,000</td><td>$MXN25,000</td><td>$MXN380,000</td></tr>
-              <tr><td>E</td><td>Grandes Volkswagen Jetta o similar</td><td>$MXN5,000</td><td>$MXN8,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN500,000</td></tr>
-              <tr><td>F</td><td>Full size Camry o similar</td><td>$MXN5,000</td><td>$MXN15,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN650,000</td></tr>
-              <tr><td>IC</td><td>Suv compacta Jeep Renegade o similar</td><td>$MXN5,000</td><td>$MXN8,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN500,000</td></tr>
-              <tr><td>I</td><td>Suv Mediana Volkswagen Taos o similar</td><td>$MXN5,000</td><td>$MXN10,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN600,000</td></tr>
-              <tr><td>IB</td><td>Suv Familiar compacta Toyota avanza o similar</td><td>$MXN5,000</td><td>$MXN8,000</td><td>$MXN18,000</td><td>$MXN25,000</td><td>$MXN400,000</td></tr>
-              <tr><td>M</td><td>Minivan Honda Odyssey o similar</td><td>$MXN10,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN800,000</td></tr>
-              <tr><td>L</td><td>Pasajeros de 12 usuarios Toyota Hiace o similar</td><td>$MXN10,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN800,000</td></tr>
-              <tr><td>H</td><td>Pick up Doble Cabina Nissan Frontier o similar</td><td>$MXN10,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN600,000</td></tr>
-              <tr><td>HI</td><td>Pick up 4x4 Doble Cabina Toyota Tacoma o similar</td><td>$MXN10,000</td><td>$MXN20,000</td><td>$MXN30,000</td><td>$MXN40,000</td><td>$MXN900,000</td></tr>
+              <tr><td>{{ __('C') }}</td><td>{{ __('Compact Chevrolet Aveo or similar') }}</td><td>$5,000 MXN</td><td>$8,000 MXN</td><td>$15,000 MXN</td><td>$25,000 MXN</td><td>$330,000 MXN</td></tr>
+              <tr><td>{{ __('D') }}</td><td>{{ __('Intermediate Nissan Virtus or similar') }}</td><td>$5,000 MXN</td><td>$8,000 MXN</td><td>$18,000 MXN</td><td>$25,000 MXN</td><td>$380,000 MXN</td></tr>
+              <tr><td>{{ __('E') }}</td><td>{{ __('Full Size Volkswagen Jetta or similar') }}</td><td>$5,000 MXN</td><td>$8,000 MXN</td><td>$20,000 MXN</td><td>$30,000 MXN</td><td>$500,000 MXN</td></tr>
+              <tr><td>{{ __('F') }}</td><td>{{ __('Full size Camry or similar') }}</td><td>$5,000 MXN</td><td>$15,000 MXN</td><td>$30,000 MXN</td><td>$40,000 MXN</td><td>$650,000 MXN</td></tr>
+              <tr><td>{{ __('IC') }}</td><td>{{ __('Compact SUV Jeep Renegade or similar') }}</td><td>$5,000 MXN</td><td>$8,000 MXN</td><td>$20,000 MXN</td><td>$30,000 MXN</td><td>$500,000 MXN</td></tr>
+              <tr><td>{{ __('I') }}</td><td>{{ __('Midsize SUV Volkswagen Taos or similar') }}</td><td>$5,000 MXN</td><td>$10,000 MXN</td><td>$30,000 MXN</td><td>$40,000 MXN</td><td>$600,000 MXN</td></tr>
+              <tr><td>{{ __('IB') }}</td><td>{{ __('Compact Family SUV Toyota Avanza or similar') }}</td><td>$5,000 MXN</td><td>$8,000 MXN</td><td>$18,000 MXN</td><td>$25,000 MXN</td><td>$400,000 MXN</td></tr>
+              <tr><td>{{ __('M') }}</td><td>{{ __('Minivan Honda Odyssey or similar') }}</td><td>$10,000 MXN</td><td>$20,000 MXN</td><td>$30,000 MXN</td><td>$40,000 MXN</td><td>$800,000 MXN</td></tr>
+              <tr><td>{{ __('L') }}</td><td>{{ __('12-Passenger Van Toyota Hiace or similar') }}</td><td>$10,000 MXN</td><td>$20,000 MXN</td><td>$30,000 MXN</td><td>$40,000 MXN</td><td>$800,000 MXN</td></tr>
+              <tr><td>{{ __('H') }}</td><td>{{ __('Double Cab Pickup Nissan Frontier or similar') }}</td><td>$10,000 MXN</td><td>$20,000 MXN</td><td>$30,000 MXN</td><td>$40,000 MXN</td><td>$600,000 MXN</td></tr>
+              <tr><td>{{ __('HI') }}</td><td>{{ __('4x4 Double Cab Pickup Toyota Tacoma or similar') }}</td><td>$10,000 MXN</td><td>$20,000 MXN</td><td>$30,000 MXN</td><td>$40,000 MXN</td><td>$900,000 MXN</td></tr>
             </tbody>
           </table>
         </div>
 
-        <p style="margin-top: 1rem;"><em>Montos sujetos a cambio sin previo aviso.</em></p>
+        <p style="margin-top: 1rem;"><em>{{ __('Amounts subject to change without prior notice.') }}</em></p>
       </div>
     </template>
 
-   {{-- INFRACCIONES --}}
+   {{-- INFRACTIONS POLICY --}}
 <template id="tpl-infracciones">
   <div class="policy-content">
-    <h4>Políticas de infracciones</h4>
+    <h4>{{ __('Infractions policy') }}</h4>
 
-    <p><strong>¿Qué pasa si llego a tener una multa?</strong></p>
+    <p><strong>{{ __('What if I get a ticket?') }}</strong></p>
 
-    <p>Deberás reportarlo de inmediato a través de los siguientes canales:</p>
+    <p>{{ __('You must report it immediately through the following channels:') }}</p>
     <ul>
       <li>
-        <strong>Teléfono:</strong>
+        <strong>{{ __('Phone:') }}</strong>
         <a href="tel:524427169793">(+52) 442 716 9793</a>
       </li>
       <li>
-        <strong>Correo electrónico:</strong>
+        <strong>{{ __('Email:') }}</strong>
         <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>
       </li>
       <li>
-        <strong>Soporte Técnico:</strong>
+        <strong>{{ __('Technical Support:') }}</strong>
         <a href="mailto:soportetecnico@viajerocarental.com">soportetecnico@viajerocarental.com</a>
       </li>
     </ul>
 
     <p>
-      El cliente será responsable de todas las multas generadas durante el periodo de renta.
-      Estas podrían ascender hasta los <strong>$25,000.00 MXN</strong>, dependiendo de la infracción y los reglamentos de tránsito locales.
+      {{ __('The customer will be responsible for all fines incurred during the rental period. These may amount up to') }} <strong>$25,000.00 MXN</strong>, {{ __('depending on the violation and local traffic regulations.') }}
     </p>
 
     <p>
-      <em>Adicionalmente, se aplicará un cargo administrativo de <strong>$1,000.00 MXN</strong> (más fees e impuestos).</em>
+      <em>{{ __('Additionally, an administrative fee of') }} <strong>$1,000.00 MXN</strong> {{ __('(plus fees and taxes) will apply.') }}</em>
     </p>
   </div>
 </template>
 
-    {{-- TÉRMINOS --}}
+    {{-- TERMS AND CONDITIONS --}}
     <template id="tpl-terminos">
       <div class="policy-content">
-        <h4>Políticas y Procedimientos</h4>
+        <h4>{{ __('Policies and Procedures') }}</h4>
         <p>
-          El total aproximado del alquiler está basado en la información suministrada al momento de hacer su reservación.
-          El conductor deberá presentar una tarjeta de crédito vigente con suficiente saldo disponible, licencia de
-          conducir vigente y una identificación oficial a la hora de aperturar el contrato...
+          {{ __('The approximate total rental amount is based on the information provided at the time of booking. The driver must present a valid credit card with sufficient available balance, a valid driver\'s license and an official ID when opening the contract...') }}
         </p>
         <p>
-          Atención y aclaraciones:
-          Teléfono: <a href="tel:+524423032668">01 (442) 303 2668</a> ·
-          Correo: <a href="mailto:reservaciones@viajerocar-rental.mx">reservaciones@viajerocar-rental.mx</a>
+          {{ __('Customer service and inquiries:') }}
+          {{ __('Phone:') }} <a href="tel:+524423032668">01 (442) 303 2668</a> ·
+          {{ __('Email:') }} <a href="mailto:reservaciones@viajerocar-rental.mx">reservaciones@viajerocar-rental.mx</a>
         </p>
       </div>
     </template>
 
 </main>
+
 @endsection
 
 @section('js-vistaPoliticas')
-    <!-- jQuery (necesario para Select2) -->
+    <!-- jQuery (required for Select2) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -599,11 +576,11 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
      <!-- Flatpickr CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">s
-    <!-- Tu JS personalizado -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Your custom JS -->
     <script src="{{ asset('js/politicas.js') }}"></script>
 <script>
-    // Generar mapa de iconos desde PHP (se ejecuta antes de la traducción)
+    // Generate icon map from PHP (executed before translation)
     window.iconosPorId = {
         @foreach($ciudades as $ciudad)
             @foreach($ciudad->sucursalesActivas as $suc)
@@ -611,18 +588,18 @@
                     $name = strtolower($suc->nombre);
                     $icon = 'fa-building';
 
-                    // ✈️ Aeropuerto
+                    // ✈️ Airport
                     if (str_contains($name, 'aeropuerto')) {
                         $icon = 'fa-plane-departure';
                     }
                     elseif (str_contains($name, 'central') && !str_contains($name, 'plaza central park')) {
                         $icon = 'fa-bus';
                     }
-                    // 🚌 Terminal
+                    // 🚌 Bus Terminal
                     elseif (str_contains($name, 'terminal')) {
                         $icon = 'fa-bus';
                     }
-                    // 🏢 Oficina / Plaza Central Park (edificio)
+                    // 🏢 Office / Plaza Central Park (building)
                     else {
                         $icon = 'fa-building';
                     }

@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Ticket de Reserva</title>
+  <title>{{ __('Reservation Ticket') }}</title>
   <style>
     body { font-family: DejaVu Sans, sans-serif; margin: 40px; color: #333; }
     .logo { text-align: center; margin-bottom: 20px; }
@@ -15,17 +15,15 @@
 <body>
   <div class="logo">
     <img src="{{ public_path('img/Logo3.jpg') }}" alt="Viajero Car Rental">
+   <div class="data">
+    <p><strong>{{ __('Folio:') }}</strong> {{ $folio }}</p>
+    <p><strong>{{ __('Customer:') }}</strong> {{ $nombre }}</p>
+    <p><strong>{{ __('Vehicle:') }}</strong> {{ $vehiculo }}</p>
+    <p><strong>{{ __('Pick-up date:') }}</strong> {{ $pickup }}</p>
+    <p><strong>{{ __('Return date:') }}</strong> {{ $dropoff }}</p>
+    <p class="total"><strong>{{ __('Total to pay:') }}</strong> ${{ $total }} MXN</p>
+    <p><strong>{{ __('Payment method:') }}</strong> {{ $metodo }}</p>
   </div>
-  <h2>Ticket de Reserva</h2>
-  <div class="data">
-    <p><strong>Folio:</strong> {{ $folio }}</p>
-    <p><strong>Cliente:</strong> {{ $nombre }}</p>
-    <p><strong>Vehículo:</strong> {{ $vehiculo }}</p>
-    <p><strong>Fecha de entrega:</strong> {{ $pickup }}</p>
-    <p><strong>Fecha de devolución:</strong> {{ $dropoff }}</p>
-    <p class="total"><strong>Total a pagar:</strong> ${{ $total }} MXN</p>
-    <p><strong>Método de pago:</strong> {{ $metodo }}</p>
-  </div>
-  <p style="margin-top:25px; text-align:center; color:#555;">Gracias por elegir Viajero Car Rental.</p>
+  <p style="margin-top:25px; text-align:center; color:#555;">{{ __('Thank you for choosing Viajero Car Rental.') }}</p>
 </body>
 </html>
