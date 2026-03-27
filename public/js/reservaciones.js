@@ -918,32 +918,24 @@ if (isReset) {
   const days = parseInt(table.dataset.days || '1', 10) || 1;
 
   // ========== NUEVO: OBTENER EL PRECIO BASE CORRECTO ==========
-  let base = 0;
+  let base = parseFloat(table.dataset.base || '0') || 0;
 
-  const activeCard = document.querySelector('.car-card.active');
-
-  if (planSeleccionado === 'linea') {
-
-    if (activeCard) {
-      const prepagoDia = parseFloat(activeCard.getAttribute('data-prepago-dia') || '0');
-      base = prepagoDia * days;
-    }
-
-    if (base === 0) {
-      base = parseFloat(table.dataset.base || '0') || 0;
-    }
-  } else {
-
-    if (activeCard) {
-      const mostradorDia = parseFloat(activeCard.getAttribute('data-mostrador-dia') || '0');
-      if (mostradorDia > 0) {
-        base = mostradorDia * days;
+  if (base === 0) {
+      const activeCard = document.querySelector('.car-card.active');
+      if (activeCard) {
+          if (planSeleccionado === 'linea') {
+              const prepagoDia = parseFloat(activeCard.getAttribute('data-prepago-dia') || '0');
+              base = prepagoDia * days;
+          } else {
+              const mostradorDia = parseFloat(activeCard.getAttribute('data-mostrador-dia') || '0');
+              if (mostradorDia > 0) {
+                base = mostradorDia * days;
+              } else {
+                 const precioLinea = parseFloat(table.dataset.base || '0') || 0; // Fallback
+                 base = precioLinea * 1.15;
+              }
+          }
       }
-    }
-    if (base === 0) {
-      const precioLinea = parseFloat(table.dataset.base || '0') || 0;
-      base = precioLinea * 1.15;
-    }
   }
   base = Math.max(0, base);
   console.log('Precio base calculado:', base);

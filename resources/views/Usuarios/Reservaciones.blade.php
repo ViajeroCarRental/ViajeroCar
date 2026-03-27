@@ -248,6 +248,9 @@ try {
         $categoriaImg = $categoriaSel ? $catImages[$categoriaSel->id_categoria] ?? $placeholder : $placeholder;
 
         $precioDiaCategoria = (float) ($categoriaSel->precio_dia ?? 0);
+        if ($plan === 'mostrador') {
+            $precioDiaCategoria = round($precioDiaCategoria * 1.15);
+        }
         $tarifaBase = $precioDiaCategoria > 0 ? $precioDiaCategoria * $days : 0.0;
 
         // split hora/min para Step 1 (UI) — sin defaults si no hay hora
@@ -2442,7 +2445,7 @@ input:checked + .slider:before {
 
                                     <span class="sum-days">
                                         <i class="fa-regular fa-calendar"></i>
-                                        Días: <strong id="qDays">{{ $days }}</strong>
+                                        Días: <strong>{{ $days }}</strong>
                                     </span>
                                 </div>
 
