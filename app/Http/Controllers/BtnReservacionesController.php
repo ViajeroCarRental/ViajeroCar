@@ -26,7 +26,7 @@ class BtnReservacionesController extends Controller
             $validated = $request->validated();
 
             // 2️⃣ Generar folio (MX-E480A1)
-$codigo = $this->generarFolioReservacionUnico();
+            $codigo = $this->generarFolioReservacionUnico();
 
             // 3️⃣ Calcular totales base usando la CATEGORÍA (no el vehículo)
             $categoria = DB::table('categorias_carros')
@@ -34,11 +34,27 @@ $codigo = $this->generarFolioReservacionUnico();
                 ->where('id_categoria', $validated['categoria_id'])
                 ->first();
 
-            $fechaInicio = Carbon::parse($validated['pickup_date']);
-            $fechaFin    = Carbon::parse($validated['dropoff_date']);
-            $dias        = max(1, $fechaInicio->diffInDays($fechaFin));
+            // ✅ CÁLCULO DE TIEMPO EXACTO
+            $fechaInicio = Carbon::parse($validated['pickup_date'] . ' ' . $validated['pickup_time']);
+            $fechaFin    = Carbon::parse($validated['dropoff_date'] . ' ' . $validated['dropoff_time']);
 
-            $precioDia    = $categoria ? (float)$categoria->precio_dia : 0.0;
+            $horasTotales = $fechaInicio->diffInHours($fechaFin);
+            $diasBase = intdiv($horasTotales, 24);
+            $horasExtra = $horasTotales % 24;
+
+            // ✅ 1 hora de tolerancia
+            if ($horasExtra > 1) {
+                $dias = $diasBase + 1;
+            } else {
+                $dias = max(1, $diasBase);
+            }
+
+            $precioDia = $categoria ? (float)$categoria->precio_dia : 0.0;
+
+            if ($precioDia > 0) {
+                $precioDia = round($precioDia * 1.15);
+            }
+
             $subtotalBase = $precioDia * $dias;
 
             // 3.1️⃣ ADDONS: parsear cadena "id:cant,id2:cant2"
@@ -70,45 +86,77 @@ $codigo = $this->generarFolioReservacionUnico();
             }
 
             // 3.2️⃣ Calcular subtotal de servicios adicionales
-$extrasSubtotal = 0.0;
-$serviciosAdd   = []; // lo reutilizamos después para insertar en reservacion_servicio
+            $extrasSubtotal = 0.0;
+            $serviciosAdd   = []; // lo reutilizamos después para insertar en reservacion_servicio
 
-$capacidadTanque = (float) (
-    DB::table('vehiculos')
-        ->where('id_categoria', $validated['categoria_id'])
-        ->where('id_estatus', 1)
-        ->max('capacidad_tanque') ?? 0
-);
+            $capacidadTanque = (float) (
+                DB::table('vehiculos')
+                ->where('id_categoria', $validated['categoria_id'])
+                ->where('id_estatus', 1)
+                ->max('capacidad_tanque') ?? 0
+            );
 
-if (!empty($addonsMap)) {
-    $serviciosAdd = DB::table('servicios')
-        ->whereIn('id_servicio', array_keys($addonsMap))
-        ->get();
+            if (!empty($addonsMap)) {
+                $serviciosAdd = DB::table('servicios')
+                    ->whereIn('id_servicio', array_keys($addonsMap))
+                    ->get();
 
-    foreach ($serviciosAdd as $srv) {
-        $idServicio = (int)$srv->id_servicio;
-        $cantidad   = $addonsMap[$idServicio] ?? 0;
-        if ($cantidad <= 0) {
-            continue;
-        }
+                foreach ($serviciosAdd as $srv) {
+                    $idServicio = (int)$srv->id_servicio;
 
-        $precioBase = (float)$srv->precio;
-        $tipoCobro  = strtolower((string)$srv->tipo_cobro);
+                    // ✅ SALTAMOS EL DROPOFF PARA EVITAR DUPLICADOS (ERROR 1062)
+                    if ($idServicio === 11) {
+                        continue;
+                    }
 
-        // Gasolina prepago -> precio por litro * litros del tanque
-        if ($idServicio === 1) {
-            $lineTotal = $precioBase * $capacidadTanque;
-        } elseif ($tipoCobro === 'por_tanque') {
-            $lineTotal = $precioBase * $capacidadTanque * $cantidad;
-        } elseif ($tipoCobro === 'por_evento') {
-            $lineTotal = $precioBase * $cantidad;
-        } else {
-            $lineTotal = $precioBase * $cantidad * $dias;
-        }
+                    $cantidad   = $addonsMap[$idServicio] ?? 0;
+                    if ($cantidad <= 0) {
+                        continue;
+                    }
 
-        $extrasSubtotal += $lineTotal;
-    }
-}
+                    $precioBase = (float)$srv->precio;
+                    $tipoCobro  = strtolower((string)$srv->tipo_cobro);
+
+                    // Gasolina prepago -> precio por litro * litros del tanque
+                    if ($idServicio === 1) {
+                        $lineTotal = $precioBase * $capacidadTanque;
+                    } elseif ($tipoCobro === 'por_tanque') {
+                        $lineTotal = $precioBase * $capacidadTanque * $cantidad;
+                    } elseif ($tipoCobro === 'por_evento') {
+                        $lineTotal = $precioBase * $cantidad;
+                    } else {
+                        $lineTotal = $precioBase * $cantidad * $dias;
+                    }
+
+                    $extrasSubtotal += $lineTotal;
+                }
+            }
+
+            // ======================================================
+            // ✅ CALCULAR DROP OFF DINÁMICO
+            // ======================================================
+            $montoDropoff = 0;
+            if (!empty($validated['pickup_sucursal_id']) && !empty($validated['dropoff_sucursal_id']) && $validated['pickup_sucursal_id'] != $validated['dropoff_sucursal_id']) {
+
+                $nombreDestino = DB::table('sucursales')
+                    ->where('id_sucursal', $validated['dropoff_sucursal_id'])
+                    ->value('nombre');
+
+                if ($nombreDestino) {
+                    $km = DB::table('ubicaciones_servicio')
+                        ->where('destino', $nombreDestino)
+                        ->where('activo', true)
+                        ->value('km') ?? 0;
+
+                    $costoKm = DB::table('categoria_costo_km')
+                        ->where('id_categoria', $validated['categoria_id'])
+                        ->where('activo', true)
+                        ->value('costo_km') ?? 0;
+
+                    $montoDropoff = (float)$km * (float)$costoKm;
+                    $extrasSubtotal += $montoDropoff; // 👈 Aquí se suma al subtotal de la tabla
+                }
+            }
 
             // 3.3️⃣ Subtotal final, IVA y total (base + extras)
             $subtotal  = $subtotalBase + $extrasSubtotal;
@@ -140,7 +188,6 @@ if (!empty($addonsMap)) {
                 'id_vehiculo'      => null, // 👉 se asigna después en el contrato
                 'id_categoria'     => $validated['categoria_id'],
                 'tarifa_base'      => $precioDia,
-                'tarifa_base'      => $precioDia,
                 'ciudad_retiro'    => $ciudadRetiro,
                 'ciudad_entrega'   => $ciudadEntrega,
                 'sucursal_retiro'  => $validated['pickup_sucursal_id'] ?? null,
@@ -164,61 +211,80 @@ if (!empty($addonsMap)) {
             ]);
 
             // 5.1️⃣ Insertar servicios adicionales en reservacion_servicio
-if (!empty($serviciosAdd)) {
-    foreach ($serviciosAdd as $srv) {
-        $idServicio = (int)$srv->id_servicio;
-        $cantidad   = $addonsMap[$idServicio] ?? 0;
-        if ($cantidad <= 0) {
-            continue;
-        }
+            if (!empty($serviciosAdd)) {
+                foreach ($serviciosAdd as $srv) {
+                    $idServicio = (int)$srv->id_servicio;
 
-        $precioBase = (float)$srv->precio;
-        $tipoCobro  = strtolower((string)$srv->tipo_cobro);
+                    // ✅ EVITAR INSERTAR DROP OFF AQUÍ
+                    if ($idServicio === 11) {
+                        continue;
+                    }
 
-        // Gasolina prepago: guardar litros como cantidad y precio por litro como precio_unitario
-        if ($idServicio === 1) {
-            DB::table('reservacion_servicio')->insert([
-                'id_reservacion'  => $id,
-                'id_servicio'     => $idServicio,
-                'id_contrato'     => null,
-                'cantidad'        => max(1, (int) round($capacidadTanque)),
-                'precio_unitario' => $precioBase,
-                'created_at'      => now(),
-                'updated_at'      => now(),
-            ]);
-            continue;
-        }
+                    $cantidad   = $addonsMap[$idServicio] ?? 0;
+                    if ($cantidad <= 0) {
+                        continue;
+                    }
 
-        if ($tipoCobro === 'por_tanque') {
-            DB::table('reservacion_servicio')->insert([
-                'id_reservacion'  => $id,
-                'id_servicio'     => $idServicio,
-                'id_contrato'     => null,
-                'cantidad'        => max(1, (int) round($capacidadTanque)) * $cantidad,
-                'precio_unitario' => $precioBase,
-                'created_at'      => now(),
-                'updated_at'      => now(),
-            ]);
-            continue;
-        }
+                    $precioBase = (float)$srv->precio;
+                    $tipoCobro  = strtolower((string)$srv->tipo_cobro);
 
-        if ($tipoCobro === 'por_evento') {
-            $precioUnitario = $precioBase;
-        } else {
-            $precioUnitario = $precioBase * $dias;
-        }
+                    // Gasolina prepago: guardar litros como cantidad y precio por litro como precio_unitario
+                    if ($idServicio === 1) {
+                        DB::table('reservacion_servicio')->insert([
+                            'id_reservacion'  => $id,
+                            'id_servicio'     => $idServicio,
+                            'id_contrato'     => null,
+                            'cantidad'        => max(1, (int) round($capacidadTanque)),
+                            'precio_unitario' => $precioBase,
+                            'created_at'      => now(),
+                            'updated_at'      => now(),
+                        ]);
+                        continue;
+                    }
 
-        DB::table('reservacion_servicio')->insert([
-            'id_reservacion'  => $id,
-            'id_servicio'     => $idServicio,
-            'id_contrato'     => null,
-            'cantidad'        => $cantidad,
-            'precio_unitario' => $precioUnitario,
-            'created_at'      => now(),
-            'updated_at'      => now(),
-        ]);
-    }
-}
+                    if ($tipoCobro === 'por_tanque') {
+                        DB::table('reservacion_servicio')->insert([
+                            'id_reservacion'  => $id,
+                            'id_servicio'     => $idServicio,
+                            'id_contrato'     => null,
+                            'cantidad'        => max(1, (int) round($capacidadTanque)) * $cantidad,
+                            'precio_unitario' => $precioBase,
+                            'created_at'      => now(),
+                            'updated_at'      => now(),
+                        ]);
+                        continue;
+                    }
+
+                    if ($tipoCobro === 'por_evento') {
+                        $precioUnitario = $precioBase;
+                    } else {
+                        $precioUnitario = $precioBase * $dias;
+                    }
+
+                    DB::table('reservacion_servicio')->insert([
+                        'id_reservacion'  => $id,
+                        'id_servicio'     => $idServicio,
+                        'id_contrato'     => null,
+                        'cantidad'        => $cantidad,
+                        'precio_unitario' => $precioUnitario,
+                        'created_at'      => now(),
+                        'updated_at'      => now(),
+                    ]);
+                }
+            }
+
+            // ✅ GUARDAR EL DROP-OFF EN EL DESGLOSE DE MANERA ÚNICA
+            if ($montoDropoff > 0) {
+                DB::table('reservacion_servicio')->insert([
+                    'id_reservacion'  => $id,
+                    'id_servicio'     => 11,
+                    'id_contrato'     => null,
+                    'cantidad'        => 1,
+                    'precio_unitario' => $montoDropoff,
+                    'created_at'      => now(),
+                    'updated_at'      => now(),
+                ]);
+            }
 
             // 6️⃣ Enviar correo con plantilla (PAGO EN MOSTRADOR)
             $reservacion = DB::table('reservaciones')
@@ -229,27 +295,27 @@ if (!empty($serviciosAdd)) {
             // ✅ Ficha "Tu Auto" (como en admin)
             // ===============================
             $predeterminados = [
-                'C'  => ['pax'=>5,  'small'=>2, 'big'=>1],
-                'D'  => ['pax'=>5,  'small'=>2, 'big'=>1],
-                'E'  => ['pax'=>5,  'small'=>2, 'big'=>2],
-                'F'  => ['pax'=>5,  'small'=>2, 'big'=>2],
-                'IC' => ['pax'=>5,  'small'=>2, 'big'=>2],
-                'I'  => ['pax'=>5,  'small'=>3, 'big'=>2],
-                'IB' => ['pax'=>7,  'small'=>3, 'big'=>2],
-                'M'  => ['pax'=>7,  'small'=>4, 'big'=>2],
-                'L'  => ['pax'=>13, 'small'=>4, 'big'=>3],
-                'H'  => ['pax'=>5,  'small'=>3, 'big'=>2],
-                'HI' => ['pax'=>5,  'small'=>3, 'big'=>2],
+                'C'  => ['pax' => 5,  'small' => 2, 'big' => 1],
+                'D'  => ['pax' => 5,  'small' => 2, 'big' => 1],
+                'E'  => ['pax' => 5,  'small' => 2, 'big' => 2],
+                'F'  => ['pax' => 5,  'small' => 2, 'big' => 2],
+                'IC' => ['pax' => 5,  'small' => 2, 'big' => 2],
+                'I'  => ['pax' => 5,  'small' => 3, 'big' => 2],
+                'IB' => ['pax' => 7,  'small' => 3, 'big' => 2],
+                'M'  => ['pax' => 7,  'small' => 4, 'big' => 2],
+                'L'  => ['pax' => 13, 'small' => 4, 'big' => 3],
+                'H'  => ['pax' => 5,  'small' => 3, 'big' => 2],
+                'HI' => ['pax' => 5,  'small' => 3, 'big' => 2],
             ];
 
             $codigoCat = strtoupper(trim((string)($categoria->codigo ?? '')));
-            $cap = $predeterminados[$codigoCat] ?? ['pax'=>5,'small'=>2,'big'=>1];
+            $cap = $predeterminados[$codigoCat] ?? ['pax' => 5, 'small' => 2, 'big' => 1];
 
             // Nombre en singular para subtítulo
             $nombreCat = trim((string)($categoria->nombre ?? ''));
             $singular = $nombreCat;
             if (mb_substr($singular, -1) === 's') {
-                $singular = mb_substr($singular, 0, mb_strlen($singular)-1);
+                $singular = mb_substr($singular, 0, mb_strlen($singular) - 1);
             }
             $singular = mb_strtoupper($singular);
 
@@ -265,7 +331,7 @@ if (!empty($serviciosAdd)) {
                 'pax'        => (int)$cap['pax'],
                 'small'      => (int)$cap['small'],
                 'big'        => (int)$cap['big'],
-                'transmision'=> 'Transmisión manual o automática',
+                'transmision' => 'Transmisión manual o automática',
                 'tech'       => 'Apple CarPlay | Android Auto',
                 'incluye'    => 'KM ilimitados | Reelevo de Responsabilidad (LI)',
             ];
@@ -363,7 +429,6 @@ if (!empty($serviciosAdd)) {
                 'estado'    => $estado,
                 'message'   => 'Reservación creada con éxito y correo enviado.',
             ]);
-
         } catch (\Throwable $e) {
             Log::error('❌ Error creando reservación (mostrador): ' . $e->getMessage());
 
@@ -382,7 +447,7 @@ if (!empty($serviciosAdd)) {
             $validated = $request->validated();
 
             // 2️⃣ Folio (MX-E480A1)
-$codigo = $this->generarFolioReservacionUnico();
+            $codigo = $this->generarFolioReservacionUnico();
 
             // 3️⃣ Totales base (categoría)
             $categoria = DB::table('categorias_carros')
@@ -425,44 +490,44 @@ $codigo = $this->generarFolioReservacionUnico();
             }
 
             // 3.2️⃣ Subtotal de servicios adicionales
-$extrasSubtotal = 0.0;
-$serviciosAdd   = [];
+            $extrasSubtotal = 0.0;
+            $serviciosAdd   = [];
 
-$capacidadTanque = (float) (
-    DB::table('vehiculos')
-        ->where('id_categoria', $validated['categoria_id'])
-        ->where('id_estatus', 1)
-        ->max('capacidad_tanque') ?? 0
-);
+            $capacidadTanque = (float) (
+                DB::table('vehiculos')
+                ->where('id_categoria', $validated['categoria_id'])
+                ->where('id_estatus', 1)
+                ->max('capacidad_tanque') ?? 0
+            );
 
-if (!empty($addonsMap)) {
-    $serviciosAdd = DB::table('servicios')
-        ->whereIn('id_servicio', array_keys($addonsMap))
-        ->get();
+            if (!empty($addonsMap)) {
+                $serviciosAdd = DB::table('servicios')
+                    ->whereIn('id_servicio', array_keys($addonsMap))
+                    ->get();
 
-    foreach ($serviciosAdd as $srv) {
-        $idServicio = (int)$srv->id_servicio;
-        $cantidad   = $addonsMap[$idServicio] ?? 0;
-        if ($cantidad <= 0) {
-            continue;
-        }
+                foreach ($serviciosAdd as $srv) {
+                    $idServicio = (int)$srv->id_servicio;
+                    $cantidad   = $addonsMap[$idServicio] ?? 0;
+                    if ($cantidad <= 0) {
+                        continue;
+                    }
 
-        $precioBase = (float)$srv->precio;
-        $tipoCobro  = strtolower((string)$srv->tipo_cobro);
+                    $precioBase = (float)$srv->precio;
+                    $tipoCobro  = strtolower((string)$srv->tipo_cobro);
 
-        if ($idServicio === 1) {
-            $lineTotal = $precioBase * $capacidadTanque;
-        } elseif ($tipoCobro === 'por_tanque') {
-            $lineTotal = $precioBase * $capacidadTanque * $cantidad;
-        } elseif ($tipoCobro === 'por_evento') {
-            $lineTotal = $precioBase * $cantidad;
-        } else {
-            $lineTotal = $precioBase * $cantidad * $dias;
-        }
+                    if ($idServicio === 1) {
+                        $lineTotal = $precioBase * $capacidadTanque;
+                    } elseif ($tipoCobro === 'por_tanque') {
+                        $lineTotal = $precioBase * $capacidadTanque * $cantidad;
+                    } elseif ($tipoCobro === 'por_evento') {
+                        $lineTotal = $precioBase * $cantidad;
+                    } else {
+                        $lineTotal = $precioBase * $cantidad * $dias;
+                    }
 
-        $extrasSubtotal += $lineTotal;
-    }
-}
+                    $extrasSubtotal += $lineTotal;
+                }
+            }
 
             // 3.3️⃣ Subtotal final, IVA y total
             $subtotal  = $subtotalBase + $extrasSubtotal;
@@ -621,60 +686,60 @@ if (!empty($addonsMap)) {
             ]);
 
             // 6.1️⃣ Insertar servicios adicionales en reservacion_servicio
-if (!empty($serviciosAdd)) {
-    foreach ($serviciosAdd as $srv) {
-        $idServicio = (int)$srv->id_servicio;
-        $cantidad   = $addonsMap[$idServicio] ?? 0;
-        if ($cantidad <= 0) {
-            continue;
-        }
+            if (!empty($serviciosAdd)) {
+                foreach ($serviciosAdd as $srv) {
+                    $idServicio = (int)$srv->id_servicio;
+                    $cantidad   = $addonsMap[$idServicio] ?? 0;
+                    if ($cantidad <= 0) {
+                        continue;
+                    }
 
-        $precioBase = (float)$srv->precio;
-        $tipoCobro  = strtolower((string)$srv->tipo_cobro);
+                    $precioBase = (float)$srv->precio;
+                    $tipoCobro  = strtolower((string)$srv->tipo_cobro);
 
-        if ($idServicio === 1) {
-            DB::table('reservacion_servicio')->insert([
-                'id_reservacion'  => $id,
-                'id_servicio'     => $idServicio,
-                'id_contrato'     => null,
-                'cantidad'        => max(1, (int) round($capacidadTanque)),
-                'precio_unitario' => $precioBase,
-                'created_at'      => now(),
-                'updated_at'      => now(),
-            ]);
-            continue;
-        }
+                    if ($idServicio === 1) {
+                        DB::table('reservacion_servicio')->insert([
+                            'id_reservacion'  => $id,
+                            'id_servicio'     => $idServicio,
+                            'id_contrato'     => null,
+                            'cantidad'        => max(1, (int) round($capacidadTanque)),
+                            'precio_unitario' => $precioBase,
+                            'created_at'      => now(),
+                            'updated_at'      => now(),
+                        ]);
+                        continue;
+                    }
 
-        if ($tipoCobro === 'por_tanque') {
-            DB::table('reservacion_servicio')->insert([
-                'id_reservacion'  => $id,
-                'id_servicio'     => $idServicio,
-                'id_contrato'     => null,
-                'cantidad'        => max(1, (int) round($capacidadTanque)) * $cantidad,
-                'precio_unitario' => $precioBase,
-                'created_at'      => now(),
-                'updated_at'      => now(),
-            ]);
-            continue;
-        }
+                    if ($tipoCobro === 'por_tanque') {
+                        DB::table('reservacion_servicio')->insert([
+                            'id_reservacion'  => $id,
+                            'id_servicio'     => $idServicio,
+                            'id_contrato'     => null,
+                            'cantidad'        => max(1, (int) round($capacidadTanque)) * $cantidad,
+                            'precio_unitario' => $precioBase,
+                            'created_at'      => now(),
+                            'updated_at'      => now(),
+                        ]);
+                        continue;
+                    }
 
-        if ($tipoCobro === 'por_evento') {
-            $precioUnitario = $precioBase;
-        } else {
-            $precioUnitario = $precioBase * $dias;
-        }
+                    if ($tipoCobro === 'por_evento') {
+                        $precioUnitario = $precioBase;
+                    } else {
+                        $precioUnitario = $precioBase * $dias;
+                    }
 
-        DB::table('reservacion_servicio')->insert([
-            'id_reservacion'  => $id,
-            'id_servicio'     => $idServicio,
-            'id_contrato'     => null,
-            'cantidad'        => $cantidad,
-            'precio_unitario' => $precioUnitario,
-            'created_at'      => now(),
-            'updated_at'      => now(),
-        ]);
-    }
-}
+                    DB::table('reservacion_servicio')->insert([
+                        'id_reservacion'  => $id,
+                        'id_servicio'     => $idServicio,
+                        'id_contrato'     => null,
+                        'cantidad'        => $cantidad,
+                        'precio_unitario' => $precioUnitario,
+                        'created_at'      => now(),
+                        'updated_at'      => now(),
+                    ]);
+                }
+            }
 
             // 7️⃣ Enviar correo con plantilla (PAGO EN LÍNEA)
             $reservacion = DB::table('reservaciones')
@@ -685,26 +750,26 @@ if (!empty($serviciosAdd)) {
             // ✅ Ficha "Tu Auto" (misma lógica que en mostrador)
             // ===============================
             $predeterminados = [
-                'C'  => ['pax'=>5,  'small'=>2, 'big'=>1],
-                'D'  => ['pax'=>5,  'small'=>2, 'big'=>1],
-                'E'  => ['pax'=>5,  'small'=>2, 'big'=>2],
-                'F'  => ['pax'=>5,  'small'=>2, 'big'=>2],
-                'IC' => ['pax'=>5,  'small'=>2, 'big'=>2],
-                'I'  => ['pax'=>5,  'small'=>3, 'big'=>2],
-                'IB' => ['pax'=>7,  'small'=>3, 'big'=>2],
-                'M'  => ['pax'=>7,  'small'=>4, 'big'=>2],
-                'L'  => ['pax'=>13, 'small'=>4, 'big'=>3],
-                'H'  => ['pax'=>5,  'small'=>3, 'big'=>2],
-                'HI' => ['pax'=>5,  'small'=>3, 'big'=>2],
+                'C'  => ['pax' => 5,  'small' => 2, 'big' => 1],
+                'D'  => ['pax' => 5,  'small' => 2, 'big' => 1],
+                'E'  => ['pax' => 5,  'small' => 2, 'big' => 2],
+                'F'  => ['pax' => 5,  'small' => 2, 'big' => 2],
+                'IC' => ['pax' => 5,  'small' => 2, 'big' => 2],
+                'I'  => ['pax' => 5,  'small' => 3, 'big' => 2],
+                'IB' => ['pax' => 7,  'small' => 3, 'big' => 2],
+                'M'  => ['pax' => 7,  'small' => 4, 'big' => 2],
+                'L'  => ['pax' => 13, 'small' => 4, 'big' => 3],
+                'H'  => ['pax' => 5,  'small' => 3, 'big' => 2],
+                'HI' => ['pax' => 5,  'small' => 3, 'big' => 2],
             ];
 
             $codigoCat = strtoupper(trim((string)($categoria->codigo ?? '')));
-            $cap = $predeterminados[$codigoCat] ?? ['pax'=>5,'small'=>2,'big'=>1];
+            $cap = $predeterminados[$codigoCat] ?? ['pax' => 5, 'small' => 2, 'big' => 1];
 
             $nombreCat = trim((string)($categoria->nombre ?? ''));
             $singular = $nombreCat;
             if (mb_substr($singular, -1) === 's') {
-                $singular = mb_substr($singular, 0, mb_strlen($singular)-1);
+                $singular = mb_substr($singular, 0, mb_strlen($singular) - 1);
             }
             $singular = mb_strtoupper($singular);
 
@@ -717,7 +782,7 @@ if (!empty($serviciosAdd)) {
                 'pax'        => (int)$cap['pax'],
                 'small'      => (int)$cap['small'],
                 'big'        => (int)$cap['big'],
-                'transmision'=> 'Transmisión manual o automática',
+                'transmision' => 'Transmisión manual o automática',
                 'tech'       => 'Apple CarPlay | Android Auto',
                 'incluye'    => 'KM ilimitados | Reelevo de Responsabilidad (LI)',
             ];
@@ -815,7 +880,6 @@ if (!empty($serviciosAdd)) {
                 'estado'    => 'confirmada',
                 'message'   => 'Pago validado con PayPal y reserva confirmada correctamente.',
             ]);
-
         } catch (\Throwable $e) {
             Log::error('❌ Error en reservarLinea: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -830,38 +894,38 @@ if (!empty($serviciosAdd)) {
     }
 
     // ======================================================
-// ✅ Generación de folio: MX- + L + NNN + L + N
-//    Ej: MX-E480A1 (9 caracteres contando el guion)
-// ======================================================
-private function generarFolioReservacion(): string
-{
-    $letra1 = chr(random_int(65, 90)); // A-Z
-    $num3   = str_pad((string) random_int(0, 999), 3, '0', STR_PAD_LEFT); // 000-999
-    $letra2 = chr(random_int(65, 90)); // A-Z
-    $num1   = (string) random_int(0, 9); // 0-9
+    // ✅ Generación de folio: MX- + L + NNN + L + N
+    //    Ej: MX-E480A1 (9 caracteres contando el guion)
+    // ======================================================
+    private function generarFolioReservacion(): string
+    {
+        $letra1 = chr(random_int(65, 90)); // A-Z
+        $num3   = str_pad((string) random_int(0, 999), 3, '0', STR_PAD_LEFT); // 000-999
+        $letra2 = chr(random_int(65, 90)); // A-Z
+        $num1   = (string) random_int(0, 9); // 0-9
 
-    return "MX-{$letra1}{$num3}{$letra2}{$num1}";
-}
-
-/**
- * Genera un folio y asegura que NO exista en la BD.
- * (Reintenta varias veces para evitar colisiones).
- */
-private function generarFolioReservacionUnico(int $maxIntentos = 20): string
-{
-    for ($i = 0; $i < $maxIntentos; $i++) {
-        $folio = $this->generarFolioReservacion();
-
-        $existe = DB::table('reservaciones')
-            ->where('codigo', $folio)
-            ->exists();
-
-        if (!$existe) {
-            return $folio;
-        }
+        return "MX-{$letra1}{$num3}{$letra2}{$num1}";
     }
 
-    // Si llega aquí, es extremadamente raro, pero mejor fallar con mensaje claro
-    throw new \RuntimeException('No se pudo generar un folio único para la reservación.');
-}
+    /**
+     * Genera un folio y asegura que NO exista en la BD.
+     * (Reintenta varias veces para evitar colisiones).
+     */
+    private function generarFolioReservacionUnico(int $maxIntentos = 20): string
+    {
+        for ($i = 0; $i < $maxIntentos; $i++) {
+            $folio = $this->generarFolioReservacion();
+
+            $existe = DB::table('reservaciones')
+                ->where('codigo', $folio)
+                ->exists();
+
+            if (!$existe) {
+                return $folio;
+            }
+        }
+
+        // Si llega aquí, es extremadamente raro, pero mejor fallar con mensaje claro
+        throw new \RuntimeException('No se pudo generar un folio único para la reservación.');
+    }
 }
