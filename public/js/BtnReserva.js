@@ -191,23 +191,42 @@ document.addEventListener("DOMContentLoaded", () => {
         let pickup_time  = val("#pickup_time_hidden");
         let dropoff_time = val("#dropoff_time_hidden");
 
-        if (!pickup_time) {
-          const h = val("#pickup_h") || "00";
-          const m = val("#pickup_m") || "00";
-          pickup_time = h.padStart(2, "0") + ":" + m.padStart(2, "0");
-        }
+        function getTimeFromSummary(selector, index = 0) {
+  const el = document.querySelectorAll(selector)[index];
+  if (!el) return "";
 
-        if (!dropoff_time) {
-          const h = val("#dropoff_h") || "00";
-          const m = val("#dropoff_m") || "00";
-          dropoff_time = h.padStart(2, "0") + ":" + m.padStart(2, "0");
-        }
+  const txt = el.textContent.trim(); // "10:00 HRS"
+  const match = txt.match(/(\d{2}:\d{2})/);
+
+  return match ? match[1] : "";
+}
+
+if (!pickup_time) {
+  pickup_time = getTimeFromSummary(".dt-time", 0) || "00:00";
+}
+
+if (!dropoff_time) {
+  pickup_time = pickup_time || "00:00"; // fallback
+  dropoff_time = getTimeFromSummary(".dt-time", 1) || "00:00";
+}
 
         const category_id         = val("#categoria_id") || urlParams.get("categoria_id") || "";
         const pickup_branch_id    = urlParams.get("pickup_sucursal_id") || "";
         const dropoff_branch_id   = urlParams.get("dropoff_sucursal_id") || "";
 
-        const hiddenAddons = document.querySelector("#addonsHidden");
+        console.log("🕐 FINAL TIMES:", {
+  pickup_time,
+  dropoff_time
+});
+
+        // =====================================================
+        // === ID CATEGORÍA / SUCURSALES / ADDONS =============
+        // =====================================================
+        const categoria_id        = val("#categoria_id") || urlParams.get("categoria_id") || "";
+        const pickup_sucursal_id  = urlParams.get("pickup_sucursal_id") || "";
+        const dropoff_sucursal_id = urlParams.get("dropoff_sucursal_id") || "";
+
+                const hiddenAddons = document.querySelector("#addonsHidden");
         let addons = "";
 
         if (hiddenAddons && hiddenAddons.value.trim() !== "") {
@@ -239,6 +258,13 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
 
+        console.log("🕐 HORAS REALES:", {
+pickup_h: val("#pickup_h"),
+  dropoff_h: val("#dropoff_h"),
+  pickup_hidden: val("#pickup_time_hidden"),
+  dropoff_hidden: val("#dropoff_time_hidden"),
+});
+
         const payload = {
           categoria_id: category_id,
           pickup_date,
@@ -252,7 +278,10 @@ document.addEventListener("DOMContentLoaded", () => {
           telefono: phone,
           vuelo: flight,
           addons,
+
+           dropoff_total
         };
+        console.log("🚀 PAYLOAD ENVIADO:", payload);
 
         const url = "/reservas";
 
