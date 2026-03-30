@@ -4,17 +4,17 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   // Elementos del DOM
-  const modalMetodoPago   = document.getElementById("modalMetodoPago");
-  const modalPagoOnline   = document.getElementById("modalPagoOnline");
-  const btnPagoLinea      = document.getElementById("btnPagoLinea");
-  const btnReservar       = document.getElementById("btnReservar");
-  const btnReservarMovil  = document.getElementById("btnReservarMovil");
-  const form              = document.getElementById("formCotizacion");
-  const paypalContainer   = document.getElementById("paypal-button-container");
+  const modalMetodoPago = document.getElementById("modalMetodoPago");
+  const modalPagoOnline = document.getElementById("modalPagoOnline");
+  const btnPagoLinea = document.getElementById("btnPagoLinea");
+  const btnReservar = document.getElementById("btnReservar");
+  const btnReservarMovil = document.getElementById("btnReservarMovil");
+  const form = document.getElementById("formCotizacion");
+  const paypalContainer = document.getElementById("paypal-button-container");
 
   // Botones de cierre
-  const cerrarModalMetodoX   = document.getElementById("cerrarModalMetodoX");
-  const cerrarModalMetodo    = document.getElementById("cerrarModalMetodo");
+  const cerrarModalMetodoX = document.getElementById("cerrarModalMetodoX");
+  const cerrarModalMetodo = document.getElementById("cerrarModalMetodo");
   const cerrarModalPagoOnline = document.getElementById("cerrarModalPagoOnline");
 
   // Variables de control
@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 👶 MENOR DE EDAD – helpers locales para ajustar addons
   // ==========================================================
   const YOUNG_DRIVER_SERVICE_ID = '5';
-  const YOUNG_DRIVER_MIN_AGE    = 25;
+  const YOUNG_DRIVER_MIN_AGE = 25;
 
   function parseAddonsStringToMapLocal(str) {
     const map = new Map();
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .forEach(pair => {
         const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
         if (m) {
-          const id  = m[1];
+          const id = m[1];
           const qty = Math.max(0, parseInt(m[2], 10) || 0);
           if (qty > 0) map.set(id, qty);
         } else {
@@ -118,23 +118,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getFormPayload() {
-    const categoriaId        = document.getElementById("categoria_id")?.value || "";
-    const plan               = document.getElementById("plan")?.value || "";
-    const addonsRaw          = document.getElementById("addons_payload")?.value || "";
-    const pickupDate         = document.getElementById("pickup_date")?.value || "";
-    const pickupTime         = document.getElementById("pickup_time")?.value || "";
-    const dropoffDate        = document.getElementById("dropoff_date")?.value || "";
-    const dropoffTime        = document.getElementById("dropoff_time")?.value || "";
-    const pickupSucursalId   = document.getElementById("pickup_sucursal_id")?.value || "";
-    const dropoffSucursalId  = document.getElementById("dropoff_sucursal_id")?.value || "";
-    const nombreCompletoEl   = document.getElementById("nombreCompleto");
-    const telefonoEl         = document.getElementById("telefonoCliente");
-    const correoEl           = document.getElementById("correoCliente");
-    const vueloEl            = document.getElementById("vuelo");
-    const nombreCompleto     = (nombreCompletoEl?.value || "").trim();
-    const telefono           = (telefonoEl?.value || "").trim();
-    const email              = (correoEl?.value || "").trim();
-    const vuelo              = (vueloEl?.value || "").trim();
+    const categoriaId = document.getElementById("categoria_id")?.value || "";
+    const plan = document.getElementById("plan")?.value || "";
+    const addonsRaw = document.getElementById("addons_payload")?.value || "";
+    const pickupDate = document.getElementById("pickup_date")?.value || "";
+    const pickupTime = document.getElementById("pickup_time")?.value || "";
+    const dropoffDate = document.getElementById("dropoff_date")?.value || "";
+    const dropoffTime = document.getElementById("dropoff_time")?.value || "";
+    const pickupSucursalId = document.getElementById("pickup_sucursal_id")?.value || "";
+    const dropoffSucursalId = document.getElementById("dropoff_sucursal_id")?.value || "";
+    const nombreCompletoEl = document.getElementById("nombreCompleto");
+    const telefonoEl = document.getElementById("telefonoCliente");
+    const correoEl = document.getElementById("correoCliente");
+    const vueloEl = document.getElementById("vuelo");
+    const nombreCompleto = (nombreCompletoEl?.value || "").trim();
+    const telefono = (telefonoEl?.value || "").trim();
+    const email = (correoEl?.value || "").trim();
+    const vuelo = (vueloEl?.value || "").trim();
 
     if (!categoriaId) {
       throw new Error("Falta la categoría seleccionada de la renta.");
@@ -148,19 +148,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const addonsFinal = applyYoungDriverAddonOnString(addonsRaw);
     return {
-      categoria_id:        categoriaId,
-      plan:                plan,
-      addons:              addonsFinal,
-      pickup_date:         pickupDate,
-      pickup_time:         pickupTime,
-      dropoff_date:        dropoffDate,
-      dropoff_time:        dropoffTime,
-      pickup_sucursal_id:  pickupSucursalId,
+      categoria_id: categoriaId,
+      plan: plan,
+      addons: addonsFinal,
+      pickup_date: pickupDate,
+      pickup_time: pickupTime,
+      dropoff_date: dropoffDate,
+      dropoff_time: dropoffTime,
+      pickup_sucursal_id: pickupSucursalId,
       dropoff_sucursal_id: dropoffSucursalId,
-      nombre:              nombreCompleto,
-      telefono:            telefono,
-      email:               email,
-      vuelo:               vuelo
+      nombre: nombreCompleto,
+      telefono: telefono,
+      email: email,
+      vuelo: vuelo
     };
   }
 
@@ -173,10 +173,21 @@ document.addEventListener("DOMContentLoaded", () => {
       return { base: 0, extras: 0, iva: 0, total: 0 };
     }
 
-    const base = parseFloat(cotDoc.dataset.base || "0");
+    let base = parseFloat(cotDoc.dataset.base || "0");
     const days = parseInt(cotDoc.dataset.days || "1", 10) || 1;
+
+    const planActual = document.getElementById("plan")?.value || "linea";
+    const urlParams = new URLSearchParams(window.location.search);
+    const planUrl = urlParams.get("plan") || "linea";
+
+    if (planUrl === 'mostrador' && planActual === 'linea') {
+      let precioDiaInflado = base / days;
+      let precioDiaNormal = Math.round(precioDiaInflado / 1.13);
+      base = precioDiaNormal * days;
+    }
+
     const addonsRawEl = document.getElementById("addons_payload");
-    const addonsRaw   = (addonsRawEl?.value || "").trim();
+    const addonsRaw = (addonsRawEl?.value || "").trim();
     const addonsForCalc = applyYoungDriverAddonOnString(addonsRaw);
 
     let extrasSubtotal = 0;
@@ -198,12 +209,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const clean = pair.trim();
         if (!clean) continue;
         const [idStr, qtyStr] = clean.split(":");
-        const id  = parseInt(idStr || "0", 10);
+        const id = parseInt(idStr || "0", 10);
         const qty = parseInt(qtyStr || "0", 10);
         if (!id || !qty || !catalog[id]) continue;
-        const srv   = catalog[id];
+        const srv = catalog[id];
         const price = parseFloat(srv.precio || 0);
-        const tipo  = srv.tipo || "por_evento";
+        const tipo = srv.tipo || "por_evento";
         let lineTotal = 0;
         if (tipo === "por_evento") {
           lineTotal = price * qty;
@@ -215,8 +226,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const subtotal = base + extrasSubtotal;
-    const iva      = Math.round(subtotal * 0.16 * 100) / 100;
-    const total    = subtotal + iva;
+    const iva = Math.round(subtotal * 0.16 * 100) / 100;
+    const total = subtotal + iva;
 
     return { base, extras: extrasSubtotal, iva, total };
   }
@@ -272,7 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const csrf = getCsrfToken();
     const basePayload = getFormPayload();
-    const { total }   = calcularTotales();
+    const totalCobrado = obtenerTotalParaPayPal();
 
     const payload = {
       ...basePayload,
@@ -309,8 +320,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // 🧷 Inicializar botones de PayPal en el contenedor
   // ==========================================================
   function initPaypalButtons() {
-    const { total } = calcularTotales();
-    const amount    = (total > 0 ? total : 0).toFixed(2);
+    const totalExacto = obtenerTotalParaPayPal();
+    const amount = (totalExacto > 0 ? totalExacto : 0).toFixed(2);
 
     console.log("💰 Total a pagar:", amount, "MXN");
 
@@ -330,9 +341,9 @@ document.addEventListener("DOMContentLoaded", () => {
       paypal.Buttons({
         style: {
           layout: "vertical",
-          color:  "gold",
-          shape:  "rect",
-          label:  "paypal"
+          color: "gold",
+          shape: "rect",
+          label: "paypal"
         },
 
         createOrder: function (data, actions) {
@@ -352,10 +363,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             try {
               const overallStatus = orderData?.status;
-              const firstPU       = orderData?.purchase_units?.[0];
-              const firstCapture  = firstPU?.payments?.captures?.[0];
+              const firstPU = orderData?.purchase_units?.[0];
+              const firstCapture = firstPU?.payments?.captures?.[0];
               const captureStatus = firstCapture?.status;
-              const reason        = firstCapture?.status_details?.reason || "";
+              const reason = firstCapture?.status_details?.reason || "";
 
               if (overallStatus !== "COMPLETED" || captureStatus !== "COMPLETED") {
                 console.warn("⚠️ Pago no completado:", { overallStatus, captureStatus, reason });
@@ -384,12 +395,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 currency: "MXN",
               });
 
-              const pickup  = `${payload.pickup_date} ${payload.pickup_time}`;
+              const pickup = `${payload.pickup_date} ${payload.pickup_time}`;
               const dropoff = `${payload.dropoff_date} ${payload.dropoff_time}`;
-              const baseTxt   = fmt.format(base);
+              const baseTxt = fmt.format(base);
               const extrasTxt = fmt.format(extras);
-              const ivaTxt    = fmt.format(iva);
-              const totalTxt  = fmt.format(total);
+              const ivaTxt = fmt.format(iva);
+              const totalTxt = fmt.format(total);
               const folio = result.folio || "";
 
               const msgExito = `
@@ -406,8 +417,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
               if (window.alertify) {
                 alertify.alert("Reservación en línea confirmada", msgExito, function () {
-                  try { localStorage.removeItem("viajero_resv_filters_v1"); } catch (e) {}
-                  try { sessionStorage.clear(); } catch (e) {}
+                  try { localStorage.removeItem("viajero_resv_filters_v1"); } catch (e) { }
+                  try { sessionStorage.clear(); } catch (e) { }
                   window.location.href = window.location.pathname + "?step=1&reset=1";
                 });
               } else {
@@ -541,12 +552,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-// ==========================================================
-// 📌 Configuración de eventos
-// ==========================================================
+  // ==========================================================
+  // 📌 Configuración de eventos
+  // ==========================================================
 
-// Abrir modal de selección de método de pago (botón Reservar)
-document.addEventListener('reserva:validacionExitosa', function(e) {
+  // Abrir modal de selección de método de pago (botón Reservar)
+  document.addEventListener('reserva:validacionExitosa', function (e) {
     // Verificar que no haya un modal de línea abierto
     if (modalLineaAbierto) return;
 
@@ -555,98 +566,98 @@ document.addEventListener('reserva:validacionExitosa', function(e) {
 
     // Si el plan es "mostrador", abrir el modal de selección
     if (currentPlan === 'mostrador' && modalMetodoPago) {
-        modalMetodoPago.style.display = "flex";
-        console.log('📱 Modal de método de pago abierto (mostrador)');
+      modalMetodoPago.style.display = "flex";
+      console.log('📱 Modal de método de pago abierto (mostrador)');
     }
     // Si el plan es "linea", iniciar pago en línea directamente
     else if (currentPlan === 'linea') {
-        iniciarPagoEnLinea();
-        console.log('💳 Iniciando pago en línea directamente');
+      iniciarPagoEnLinea();
+      console.log('💳 Iniciando pago en línea directamente');
     }
-});
+  });
 
-// Cerrar modal de selección de método (botones X y Cancelar)
-if (cerrarModalMetodoX) {
+  // Cerrar modal de selección de método (botones X y Cancelar)
+  if (cerrarModalMetodoX) {
     cerrarModalMetodoX.addEventListener("click", cerrarModalSeleccion);
-}
-if (cerrarModalMetodo) {
+  }
+  if (cerrarModalMetodo) {
     cerrarModalMetodo.addEventListener("click", cerrarModalSeleccion);
-}
+  }
 
-// Cerrar modal de pago en línea (SOLO con la X)
-if (cerrarModalPagoOnline) {
-    cerrarModalPagoOnline.addEventListener("click", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        cerrarModalPago();
+  // Cerrar modal de pago en línea (SOLO con la X)
+  if (cerrarModalPagoOnline) {
+    cerrarModalPagoOnline.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      cerrarModalPago();
     });
-}
+  }
 
-// ✅ Mantener: cerrar modal de selección al hacer clic fuera
-if (modalMetodoPago) {
-    modalMetodoPago.addEventListener("click", function(e) {
-        if (e.target === modalMetodoPago && !modalLineaAbierto) {
-            modalMetodoPago.style.display = "none";
-        }
+  // ✅ Mantener: cerrar modal de selección al hacer clic fuera
+  if (modalMetodoPago) {
+    modalMetodoPago.addEventListener("click", function (e) {
+      if (e.target === modalMetodoPago && !modalLineaAbierto) {
+        modalMetodoPago.style.display = "none";
+      }
     });
-}
+  }
 
-// Botón "PREPAGAR EN LÍNEA" en el modal de selección
-if (btnPagoLinea) {
-    btnPagoLinea.addEventListener("click", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
+  // Botón "PREPAGAR EN LÍNEA" en el modal de selección
+  if (btnPagoLinea) {
+    btnPagoLinea.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
 
-        const planInput = document.getElementById("plan");
-        if (planInput) planInput.value = "linea";
+      const planInput = document.getElementById("plan");
+      if (planInput) planInput.value = "linea";
 
-        iniciarPagoEnLinea();
+      iniciarPagoEnLinea();
     });
-}
+  }
 
-window.handleReservaPagoEnLinea = iniciarPagoEnLinea;
+  window.handleReservaPagoEnLinea = iniciarPagoEnLinea;
 
-console.log("✅ Módulo de pago en línea inicializado (event-driven)");
+  console.log("✅ Módulo de pago en línea inicializado (event-driven)");
 
-// Cerrar modal de selección de método (botones X y Cancelar)
-if (cerrarModalMetodoX) {
+  // Cerrar modal de selección de método (botones X y Cancelar)
+  if (cerrarModalMetodoX) {
     cerrarModalMetodoX.addEventListener("click", cerrarModalSeleccion);
-}
-if (cerrarModalMetodo) {
+  }
+  if (cerrarModalMetodo) {
     cerrarModalMetodo.addEventListener("click", cerrarModalSeleccion);
-}
+  }
 
-// Cerrar modal de pago en línea (SOLO con la X)
-if (cerrarModalPagoOnline) {
-    cerrarModalPagoOnline.addEventListener("click", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        cerrarModalPago();
+  // Cerrar modal de pago en línea (SOLO con la X)
+  if (cerrarModalPagoOnline) {
+    cerrarModalPagoOnline.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      cerrarModalPago();
     });
-}
+  }
 
-// ❌ NO AGREGAR event listener para cerrar al hacer clic fuera del modal de línea
-// ✅ Solo permitir cerrar el modal de selección al hacer clic fuera
-if (modalMetodoPago) {
-    modalMetodoPago.addEventListener("click", function(e) {
-        if (e.target === modalMetodoPago && !modalLineaAbierto) {
-            modalMetodoPago.style.display = "none";
-        }
+  // ❌ NO AGREGAR event listener para cerrar al hacer clic fuera del modal de línea
+  // ✅ Solo permitir cerrar el modal de selección al hacer clic fuera
+  if (modalMetodoPago) {
+    modalMetodoPago.addEventListener("click", function (e) {
+      if (e.target === modalMetodoPago && !modalLineaAbierto) {
+        modalMetodoPago.style.display = "none";
+      }
     });
-}
+  }
 
-// Botón "PREPAGAR EN LÍNEA" en el modal de selección
-if (btnPagoLinea) {
-    btnPagoLinea.addEventListener("click", function(e) {
-        e.preventDefault();
-        e.stopPropagation();
+  // Botón "PREPAGAR EN LÍNEA" en el modal de selección
+  if (btnPagoLinea) {
+    btnPagoLinea.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
 
-        const planInput = document.getElementById("plan");
-        if (planInput) planInput.value = "linea";
+      const planInput = document.getElementById("plan");
+      if (planInput) planInput.value = "linea";
 
-        iniciarPagoEnLinea();
+      iniciarPagoEnLinea();
     });
-}
+  }
 
   window.handleReservaPagoEnLinea = iniciarPagoEnLinea;
 
