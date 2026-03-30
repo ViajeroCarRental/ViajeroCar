@@ -2390,7 +2390,6 @@ input:checked + .slider:before {
                                             <button id="btnPagoLinea" class="mp-pay-card is-online" type="button">
                                                 <span class="mp-old-price" id="mpPrecioMostradorTachado">$0 MXN</span>
                                                 <strong class="mp-price" id="mpPrecioLinea">$0 MXN</strong>
-                                                <span class="mp-save" id="mpTextoAhorro">{{ __('Save 0%') }}</span>
                                                 <span class="mp-action">{{ __('PREPAY ONLINE') }}</span>
                                             </button>
 

@@ -259,7 +259,7 @@ body.nav-open .language-selector {
     </ul>
 
     <div class="nav-actions">
-  <<div class="language-selector dropdown">
+    <div class="language-selector dropdown">
     <button class="lang-btn dropdown-toggle" data-bs-toggle="dropdown">
         <img id="currentFlag" src="{{ app()->getLocale() == 'en' ? 'https://flagcdn.com/w40/us.png' : 'https://flagcdn.com/w40/mx.png' }}">
         <span id="currentLang">{{ strtoupper(app()->getLocale()) }}</span>
