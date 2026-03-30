@@ -1,12 +1,42 @@
 @extends('layouts.Usuarios')
 
-@section('Titulo','Catálogo de Vehículos')
+@section('Titulo', __('Vehicle Catalog'))
 
 @section('css-VistaCatalogo')
   <link rel="stylesheet" href="{{ asset('css/catalogo.css') }}">
 @endsection
 
 @section('contenidoCatalogo')
+@php
+    // Claves para traducción (NO las traducciones directas)
+    $nombresClave = [
+        'C' => 'Compact',
+        'D' => 'Intermediate',
+        'E' => 'Full Size',
+        'F' => 'Full Size',
+        'IC' => 'Compact SUV',
+        'I' => 'Midsize SUV',
+        'IB' => 'Compact Family SUV',
+        'H' => 'Double Cab Pickup',
+        'HI' => '4x4 Double Cab Pickup',
+        'L' => 'Passenger Van',
+        'M' => 'Minivan',
+    ];
+
+    $descripcionesClave = [
+        'C' => 'Chevrolet Aveo or similar | C',
+        'D' => 'Volkswagen Virtus or similar | D',
+        'E' => 'Volkswagen Jetta or similar | E',
+        'F' => 'Toyota Camry or similar | F',
+        'IC' => 'Jeep Renegade or similar | IC',
+        'I' => 'Volkswagen Taos or similar | I',
+        'IB' => 'Toyota Avanza or similar | IB',
+        'H' => 'Nissan Frontier or similar | E',
+        'HI' => 'Toyota Tacoma or similar | F',
+        'L' => 'Toyota Hiace or similar | L',
+        'M' => 'Honda Odyssey or similar | M',
+    ];
+@endphp
 
 @php
     $mapaCategorias = [
@@ -69,22 +99,24 @@
     </div>
 
     <div class="hero-inner">
-      <h1 class="hero-title">¡RENTA HOY, EXPLORA MAÑANA, VIAJA SIEMPRE!</h1>
+      <h1 class="hero-title">{{ __('RENT TODAY, EXPLORE TOMORROW, TRAVEL FOREVER!') }}</h1>
 
       {{-- ✅ Bloque/card dentro del hero --}}
       <div class="hero-filter-card">
         <div class="filter-accordion">
-          <button
-            class="accordion-button bg-gray rounded-0 text-dark collapsed"
-            id="btn-filtro-autos"
-            type="button"
-            aria-expanded="false"
-            aria-controls="filtro-autos"
-            aria-label="Despliega el filtro de categorías de autos"
-          >
+         <button
+    class="accordion-button bg-gray rounded-0 text-dark collapsed"
+    id="btn-filtro-autos"
+    type="button"
+    aria-expanded="false"
+    aria-controls="filtro-autos"
+    aria-label="{{ __('Filter categories') }}"
+    data-text-open="{{ __('Hide categories') }}"
+    data-text-closed="{{ __('Filter categories') }}"
+>
             <span class="acc-left">
               <i class="fa-solid fa-filter"></i>
-              <span>Filtrar categorías</span>
+              <span>{{ __('Filter categories') }}</span>
             </span>
 
             <i class="fa-solid fa-chevron-down acc-icon"></i>
@@ -93,46 +125,46 @@
           <div id="filtro-autos" class="accordion-collapse" aria-labelledby="btn-filtro-autos">
             <div class="accordion-body">
               <div class="filter-wrapper">
-                <h3 class="filter-title">Tipos de autos:</h3>
+                <h3 class="filter-title">{{ __('Vehicle types:') }}</h3>
 
                 <div class="car-filter">
                   <div class="filter-card active" data-filter="all">
                     <img src="{{ asset('img/aveo.png') }}">
                     <div class="filter-info">
-                      <span>Todos</span>
-                      <small class="count-badge">{{ count($categoriasCards) }} categorías</small>
+                      <span>{{ __('All') }}</span>
+                      <small class="count-badge">{{ count($categoriasCards) }} {{ __('categories') }}</small>
                     </div>
                   </div>
 
                   <div class="filter-card" data-filter="Sedan">
                     <img src="{{ asset('img/camry.png') }}">
                     <div class="filter-info">
-                      <span>Autos</span>
-                      <small class="count-badge">{{ $conteoTipos['Sedan'] }} categorías</small>
+                      <span>{{ __('Cars') }}</span>
+                      <small class="count-badge">{{ $conteoTipos['Sedan'] }} {{ __('categories') }}</small>
                     </div>
                   </div>
 
                   <div class="filter-card" data-filter="SUV">
                     <img src="{{ asset('img/taos.png') }}">
                     <div class="filter-info">
-                      <span>SUVs</span>
-                      <small class="count-badge">{{ $conteoTipos['SUV'] }} categorías</small>
+                      <span>{{ __('SUVs') }}</span>
+                      <small class="count-badge">{{ $conteoTipos['SUV'] }} {{ __('categories') }}</small>
                     </div>
                   </div>
 
                   <div class="filter-card" data-filter="Pickup">
                     <img src="{{ asset('img/Frontier.png') }}">
                     <div class="filter-info">
-                      <span>Pick Ups</span>
-                      <small class="count-badge">{{ $conteoTipos['Pickup'] }} categorías</small>
+                      <span>{{ __('Pickups') }}</span>
+                      <small class="count-badge">{{ $conteoTipos['Pickup'] }} {{ __('categories') }}</small>
                     </div>
                   </div>
 
                   <div class="filter-card" data-filter="Van">
                     <img src="{{ asset('img/Odyssey.png') }}">
                     <div class="filter-info">
-                      <span>Vans</span>
-                      <small class="count-badge">{{ $conteoTipos['Van'] }} categorías</small>
+                      <span>{{ __('Vans') }}</span>
+                      <small class="count-badge">{{ $conteoTipos['Van'] }} {{ __('categories') }}</small>
                     </div>
                   </div>
                 </div>
@@ -172,10 +204,10 @@
           @endif
 
           {{-- ✅ TEXTO con el estilo que ya traíamos (h3 + p) --}}
-          <header class="car-title">
-            <h3>{{ strtoupper($cat->nombre) }}</h3>
-            <p>{{ $cat->descripcion }} | {{ $codigo }}</p>
-          </header>
+      <header class="car-title">
+    <h3>{{ strtoupper(__($nombresClave[$codigo] ?? $cat->nombre)) }}</h3>
+    <p>{{ __($descripcionesClave[$codigo] ?? $cat->descripcion) }} | {{ $codigo }}</p>
+</header>
 
           <div class="car-media">
             <img src="{{ $img }}" alt="{{ $cat->nombre }}">
@@ -188,14 +220,14 @@
             <li><i class="fa-solid fa-briefcase"></i> {{ $cap['big'] ?? 1 }}</li>
 
             {{-- ✅ NUEVO: Transmisión Automática (A) --}}
-            <li title="Transmisión">
+            <li title="{{ __('Transmission') }}">
               <span class="spec-letter">
-                T | {{ $codigo === 'L' ? 'Estándar' : 'Automática' }}
+                T | {{ $codigo === 'L' ? __('Manual') : __('Automatic') }}
               </span>
             </li>
 
             {{-- ✅ NUEVO: Aire acondicionado --}}
-            <li title="Aire acondicionado">
+            <li title="{{ __('Air conditioning') }}">
               <i class="fa-regular fa-snowflake"></i> A/C
             </li>
           </ul>
@@ -218,14 +250,14 @@
           </div>
 
           <a href="{{ route('rutaReservasIniciar', ['categoria_id' => $cat->id_categoria]) }}" class="car-cta">
-            Reservar
+            {{ __('Book now') }}
           </a>
         </article>
       @endforeach
 
       @if(!$hayAutos)
         <div class="no-results">
-          <h3>Sin vehículos disponibles</h3>
+          <h3>{{ __('No vehicles available') }}</h3>
         </div>
       @endif
     </div>

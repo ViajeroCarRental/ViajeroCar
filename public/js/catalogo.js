@@ -107,7 +107,8 @@
       // Estado inicial cerrado
       btn.classList.add("collapsed");
       btn.setAttribute("aria-expanded", "false");
-      if (labelSpan) labelSpan.textContent = "Filtrar categorías";
+     const textClosed = btn.dataset.textClosed || "Filtrar categorías";
+if (labelSpan) labelSpan.textContent = textClosed;
       if (icon) icon.style.transform = "rotate(0deg)";
 
       panel.classList.remove("show");
@@ -120,9 +121,9 @@
         btn.setAttribute("aria-expanded", String(open));
         btn.classList.toggle("collapsed", !open);
 
-        if (labelSpan) {
-          labelSpan.textContent = open ? "Ocultar categorías" : "Filtrar categorías";
-        }
+       if (labelSpan) {
+  labelSpan.textContent = open ? btn.dataset.textOpen : btn.dataset.textClosed;
+}
         if (icon) icon.style.transform = open ? "rotate(180deg)" : "rotate(0deg)";
 
         setPanelOpen(panel, open);

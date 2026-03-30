@@ -61,7 +61,11 @@ const ContratoPaso4 = {
         window.dropoffTotal = this.dropoffTotal; // Sincronizar variable global legada
 
         // Vehículos
-        document.getElementById("editVeh")?.addEventListener("click", (e) => this.abrirModalVehiculo(e));
+        document.getElementById("editVeh")?.addEventListener("click", (e) => {
+            e.preventDefault();
+            const idCat = ContratoUI.DOM.app?.dataset.idCategoria || window.$("#detCategoria").textContent;
+            window.abrirModalVehiculos(idCat);
+        });
         document.getElementById("cerrarModalVehiculos")?.addEventListener("click", () => document.getElementById("modalVehiculos").classList.remove("show-modal"));
         document.getElementById("cerrarModalVehiculos2")?.addEventListener("click", () => document.getElementById("modalVehiculos").classList.remove("show-modal"));
         document.getElementById("selectCategoriaModal")?.addEventListener("change", (e) => this.cambiarCategoria(e));
@@ -167,7 +171,7 @@ const ContratoPaso4 = {
 
                     await this.apiGuardarCargo(6, {
                         id_reservacion: window.ID_RESERVACION,
-                        monto_variable: 0, 
+                        monto_variable: 0,
                         km: 0,
                         destino: null,
                         precio_km: 0
@@ -199,15 +203,14 @@ const ContratoPaso4 = {
     // --- Funciones Vehículos ---
     abrirModalVehiculo: function (e) {
         if (e) e.preventDefault();
-        const modal = document.getElementById("modalVehiculos");
-        if (!modal) return;
-        modal.classList.add("show-modal");
 
-        const selectCat = document.getElementById("selectCategoriaModal");
-        if (selectCat && (!selectCat.value || selectCat.value === "")) {
-            selectCat.value = window.ContratoStore?.get('categoriaElegida') || ContratoUI.DOM.app?.dataset.idCategoria;
+        const idCat = ContratoUI.DOM.app?.dataset.idCategoria || document.getElementById("detCategoria")?.textContent;
+
+        if (typeof window.abrirModalVehiculos === 'function') {
+            window.abrirModalVehiculos(idCat);
+        } else {
+            console.error("No se encontró la función global abrirModalVehiculos");
         }
-        if (selectCat?.value) this.cargarVehiculos(selectCat.value);
     },
 
     cambiarCategoria: async function (e) {
@@ -242,8 +245,13 @@ const ContratoPaso4 = {
                 if (switchDropoff && switchDropoff.classList.contains("on")) {
                     switchDropoff.classList.remove("on");
                     document.getElementById("dropoffFields").style.display = "none";
-                    ['dropUbicacion', 'dropDireccion', 'dropKm'].forEach(id => document.getElementById(id).value = "");
-                    document.getElementById("dropTotalHTML").textContent = "$0.00 MXN";
+                    ['dropUbicacion', 'dropDireccion', 'dropKm'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = "";
+                    });
+
+                    const dropTotalHTML = document.getElementById("dropTotalHTML");
+                    if (dropTotalHTML) dropTotalHTML.textContent = "$0.00 MXN";
 
                     window.dropoffTotal = 0;
                     this.updateCargoMonto(6, 0);
@@ -253,104 +261,27 @@ const ContratoPaso4 = {
                         await fetch('/admin/reservacion/delivery/guardar', {
                             method: "POST",
                             headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": window.csrfToken },
-                            body: JSON.stringify({ id_reservacion: window.ID_RESERVACION, delivery_activo: 0, delivery_km: 0, delivery_precio_km: 0, delivery_total: 0 })
+                            body: JSON.stringify({
+                                id_reservacion: window.ID_RESERVACION, delivery_activo: 0, delivery_km: 0, delivery_precio_km: 0, delivery_total: 0
+                            })
                         });
                         this.recalcularTotal();
                     } catch (err) { console.error("Error BD Dropoff", err); }
 
-                    if (window.alertify) alertify.warning("🚚 <b>Delivery Removido</b><br>Al cambiar la categoría, la tarifa por Km cambia. Vuelve a configurar el servicio de entrega.");
+                    if (window.alertify) {
+                        alertify.warning("🚚 <b>Delivery Removido</b><br>Al cambiar la categoría, el costo por Km cambia. Vuelve a configurar el servicio de entrega.");
+                    }
                 }
 
-                if (typeof window.cargarResumenBasico === 'function') await window.cargarResumenBasico();
-                this.cargarVehiculos(idCat);
+                if (typeof window.cargarResumenBasico === 'function') {
+                    await window.cargarResumenBasico();
+                }
+
+                if (typeof window.cargarVehiculosCategoriaModal === 'function') {
+                    await window.cargarVehiculosCategoriaModal(idCat);
+                }
             }
         } catch (err) { console.error("Error actualizando categoría", err); }
-    },
-
-    cargarVehiculos: async function (idCategoria) {
-        const listVeh = document.getElementById("listaVehiculos");
-        if (!listVeh) return;
-        let finalId = typeof idCategoria === 'object' ? idCategoria.target?.value : idCategoria;
-
-        if (!finalId || finalId == 0) {
-            listVeh.innerHTML = "<p style='padding:20px; text-align:center;'>⚠️ Selecciona una categoría válida.</p>";
-            return;
-        }
-        listVeh.innerHTML = "<p style='padding:20px; text-align:center;'>🔍 Buscando vehículos...</p>";
-
-        try {
-            const resp = await fetch(`/admin/contrato/vehiculos-por-categoria/${finalId}`);
-            const data = await resp.json();
-            if (data.success && data.data.length > 0) this.renderVehiculos(data.data);
-            else listVeh.innerHTML = `<div style="padding:40px; text-align:center; color:#666;"><p>No hay unidades disponibles.</p></div>`;
-        } catch (e) {
-            listVeh.innerHTML = "<p style='padding:20px; color:red; text-align:center;'>Error de conexión.</p>";
-        }
-    },
-
-    renderVehiculos: function (lista) {
-        const cont = document.getElementById("listaVehiculos");
-        let htmlContent = "";
-
-        lista.forEach((v) => {
-            const g = v.gasolina_actual ?? 0;
-            const barraGas = `${"█".repeat(g)}${"░".repeat(16 - g)}`;
-            const comunes = { 2: "1/8", 4: "1/4", 6: "3/8", 8: "1/2", 10: "5/8", 12: "3/4", 14: "7/8", 16: "1" };
-            const frac = comunes[g] ? ` – ${comunes[g]}` : "";
-            let iconMant = v.color_mantenimiento === "verde" ? "🟢" : (v.color_mantenimiento === "amarillo" ? "🟡" : (v.color_mantenimiento === "rojo" ? "🔴" : "⚪"));
-            const kmRest = v.km_restantes !== null ? `${v.km_restantes} km restantes` : "—";
-
-            htmlContent += `
-            <div class="vehiculo-card" style="display:flex; gap:15px; margin-bottom:12px; padding:15px; border:1px solid var(--stroke); border-radius:8px; align-items: center; background:#fff;">
-                <img src="${v.foto_url ?? '/img/default-car.png'}" style="width:120px; height:85px; object-fit:cover; border-radius:6px; border:1px solid #eee;">
-                <div class="vehiculo-info" style="flex:1;">
-                    <h4 style="margin:0 0 4px; font-size:16px; color:#333;">${v.nombre_publico || (v.marca + ' ' + v.modelo)}</h4>
-                    <p style="margin:0 0 6px 0; font-size:13px; color:#666;">
-                        ${v.transmision} · ${v.asientos} asientos · ${v.puertas} puertas <br>
-                        Color: ${v.color ?? "—"} | Placa: <b style="background:#f1f5f9; border:1px solid #cbd5e1; padding:2px 6px; border-radius:4px;">${v.placa || "Sin Placa"}</b>
-                    </p>
-                    <p style="margin:2px 0; font-size:12px; font-family: monospace; color:#059669;"><b>Gas:</b> ${barraGas} <span>(${g}/16${frac})</span></p>
-                    <p style="margin:2px 0; font-size:11px; color:#777;"><b>Mant:</b> ${iconMant} ${kmRest} | <b>Póliza:</b> ${v.fin_vigencia_poliza || "No registrada"}</p>
-                </div>
-                <div><button type="button" class="btn primary btn-seleccionar-unidad" data-id="${v.id_vehiculo}" style="padding: 8px 16px;">Seleccionar</button></div>
-            </div>`;
-        });
-
-        cont.innerHTML = htmlContent;
-        cont.querySelectorAll(".btn-seleccionar-unidad").forEach(btn => {
-            btn.onclick = () => this.asignarVehiculo(btn.getAttribute("data-id"));
-        });
-    },
-
-    asignarVehiculo: async function (idVehiculo) {
-        try {
-            const resp = await fetch("/admin/contrato/asignar-vehiculo", {
-                method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": window.csrfToken },
-                body: JSON.stringify({ id_reservacion: window.ID_RESERVACION, id_vehiculo: idVehiculo })
-            });
-            const data = await resp.json();
-
-            if (data.success) {
-                alertify.success("Vehículo asignado correctamente");
-                document.getElementById("modalVehiculos").classList.remove("show-modal");
-
-                const sel = document.getElementById("vehAssign");
-                if (sel) sel.innerHTML = `<option value="${data.vehiculo.id_vehiculo}" selected>${data.vehiculo.placa}</option>`;
-
-                const uiVehiculo = document.getElementById("vehiculoAsignadoUI");
-                if (uiVehiculo) {
-                    uiVehiculo.innerHTML = `
-                        <div style="display:flex; align-items:center; gap:15px; padding:12px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;">
-                            <div style="font-size:24px; background:#fff; padding:8px; border-radius:50%; box-shadow:0 2px 4px rgba(0,0,0,0.05);">✅</div>
-                            <div>
-                                <h4 style="margin:0; font-size:15px; color:#166534;">${data.vehiculo.marca} ${data.vehiculo.modelo}</h4>
-                                <p style="margin:4px 0 0 0; font-size:12px; color:#166534;">Placa: <b>${data.vehiculo.placa}</b> | Color: ${data.vehiculo.color}</p>
-                            </div>
-                        </div>`;
-                }
-                if (window.cargarResumenBasico) await window.cargarResumenBasico();
-            } else alertify.error("Error: " + (data.error || "No se pudo asignar"));
-        } catch (e) { alertify.error("Error de conexión"); }
     },
 
     // --- Utilidades Paso 4 ---
@@ -1161,4 +1092,26 @@ document.addEventListener("DOMContentLoaded", () => {
         ContratoPaso4.recalcularTotal();
         if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
     }, 200);
+
+    const originalCargarResumen = window.cargarResumenBasico;
+
+    window.cargarResumenBasico = async function () {
+        await originalCargarResumen();
+
+        const marca = document.getElementById("detMarca")?.textContent;
+        const modelo = document.getElementById("detModelo")?.textContent;
+        const placa = document.getElementById("detPlaca")?.textContent || "S/P";
+
+        const uiVehiculo = document.getElementById("vehiculoAsignadoUI");
+        if (uiVehiculo && marca !== "—") {
+            uiVehiculo.innerHTML = `
+            <div style="display:flex; align-items:center; gap:15px; padding:12px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;">
+                <div style="font-size:24px;">✅</div>
+                <div>
+                    <h4 style="margin:0; font-size:15px; color:#166534;">${marca} ${modelo}</h4>
+                    <p style="margin:4px 0 0 0; font-size:12px; color:#166534;">Placa: <b>${placa}</b></p>
+                </div>
+            </div>`;
+        }
+    };
 });

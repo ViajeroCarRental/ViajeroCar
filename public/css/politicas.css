@@ -1373,20 +1373,74 @@ span.flatpickr-weekday {
         width: 16px !important;
         height: 16px !important;
     }
+
 }
 
-/* MÓVIL (hasta 560px) */
+/* ==========================================================
+   MÓVIL (hasta 560px)
+========================================================== */
 @media (max-width: 560px) {
-    .flatpickr-calendar.open {
-        width: min(520px, 96vw) !important;
+.flatpickr-calendar {
+    position: fixed !important;
+    left: 50% !important;
+     top: 16vh !important;
+    padding-top: 30px !important;
+    transform: translateX(-50%) !important;
+
+}
+.flatpickr-months .flatpickr-month {
+    height: 50px !important;
+}
+    .flatpickr-current-month {
+        padding-top: 10px !important;
     }
 
-    .flatpickr-calendar .flatpickr-day {
-        height: 44px !important;
-        line-height: 44px !important;
-    }
+.flatpickr-calendar.open {
+     width: min(420px, 90vw) !important;
+    height: auto !important;
+    padding-top: 15px !important;
+    padding-bottom: 15px !important;
+
 }
 
+.flatpickr-months {
+    margin-bottom: 8px !important;
+}
+.flatpickr-day {
+    line-height: 48px !important;
+    font-size: 14px !important;
+}
+
+.dayContainer {
+    row-gap: 11px !important;
+}
+.flatpickr-day {
+    height: 62px !important;
+    line-height: 62px !important;
+}
+/* BORROSO */
+body.flatpickr-open {
+    overflow: hidden;
+}
+
+body.flatpickr-open > *:not(.flatpickr-calendar) {
+    filter: blur(8px);
+    -webkit-filter: blur(8px);
+    transition: filter 0.3s ease;
+}
+
+
+.flatpickr-calendar.open {
+    filter: none !important;
+    -webkit-filter: none !important;
+    z-index: 99999 !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+}
 /* MÓVIL MUY PEQUEÑO (hasta 380px) */
 @media (max-width: 380px) {
     .flatpickr-calendar.open {

@@ -11,10 +11,10 @@ class ContactoController extends Controller
     {
         // 🪤 Honeypot (si el bot llena este campo, ignoramos silenciosamente)
         if ($request->filled('company')) {
-            return back()->with('ok', 'Gracias, tu mensaje fue enviado.'); // Silencio elegante
+            return back()->with('ok', __('Thank you, your message was sent.'));
         }
 
-        // ✅ Validación
+        // ✅ Validación con traducciones
         $data = $request->validate(
             [
                 'name'    => ['required','string','max:120'],
@@ -25,17 +25,17 @@ class ContactoController extends Controller
                 'promociones' => ['nullable','boolean'],
             ],
             [
-                'name.required'    => 'El nombre es obligatorio.',
-                'name.max'         => 'El nombre no debe exceder 120 caracteres.',
-                'phone.required'   => 'El móvil es obligatorio.',
-                'phone.regex'      => 'El móvil no tiene un formato válido.',
-                'phone.max'        => 'El móvil no debe exceder 20 caracteres.',
-                'email.required'   => 'El correo es obligatorio.',
-                'email.email'      => 'Debe ser un correo válido.',
-                'email.max'        => 'El correo no debe exceder 120 caracteres.',
-                'subject.max'      => 'El asunto no debe exceder 150 caracteres.',
-                'message.required' => 'El mensaje es obligatorio.',
-                'message.max'      => 'El mensaje no debe exceder 800 caracteres.',
+                'name.required'    => __('The name field is required.'),
+                'name.max'         => __('The name must not exceed 120 characters.'),
+                'phone.required'   => __('The mobile number is required.'),
+                'phone.regex'      => __('The mobile number format is invalid.'),
+                'phone.max'        => __('The mobile number must not exceed 20 characters.'),
+                'email.required'   => __('The email field is required.'),
+                'email.email'      => __('Please enter a valid email address.'),
+                'email.max'        => __('The email must not exceed 120 characters.'),
+                'subject.max'      => __('The subject must not exceed 150 characters.'),
+                'message.required' => __('The message field is required.'),
+                'message.max'      => __('The message must not exceed 800 characters.'),
             ]
         );
 
@@ -56,8 +56,6 @@ class ContactoController extends Controller
             'updated_at'  => now(),
         ]);
 
-        // Podrías disparar un correo aquí si quieres (Mail::to(...)->send(...))
-
-        return back()->with('ok', '¡Listo! Tu mensaje fue enviado. Te contactaremos muy pronto.');
+        return back()->with('ok', __('Done! Your message has been sent. We will contact you shortly.'));
     }
 }

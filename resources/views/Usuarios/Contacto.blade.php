@@ -1,6 +1,6 @@
 @extends('layouts.Usuarios')
 
-@section('Titulo','Contacto')
+@section('Titulo', __('Contact'))
 
 @section('css-vistaContacto')
   <link rel="stylesheet" href="{{ asset('css/contacto.css') }}">
@@ -16,14 +16,14 @@
     </div>
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <h1>¡Hablemos! <span>Contáctanos</span></h1>
-      <p>Estamos listos para ayudarte con tu próxima renta</p>
+      <h1>{{ __('Let\'s talk!') }} <span>{{ __('Contact us') }}</span></h1>
+      <p>{{ __('We are ready to help you with your next rental') }}</p>
     </div>
 
     <div class="hero-chips" aria-label="sucursales">
-      <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Oficina Central Park, Querétaro</span>
-      <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Aeropuerto Internacional de Querétaro</span>
-      <span class="chip"><i class="fa-solid fa-location-dot"></i> Pick-up Central de Autobuses de Querétaro</span>
+      <span class="chip"><i class="fa-solid fa-location-dot"></i> {{ __('Pick-up Central Park Office, Querétaro') }}</span>
+      <span class="chip"><i class="fa-solid fa-location-dot"></i> {{ __('Pick-up Querétaro International Airport') }}</span>
+      <span class="chip"><i class="fa-solid fa-location-dot"></i> {{ __('Pick-up Querétaro Bus Station') }}</span>
     </div>
   </section>
 
@@ -33,7 +33,7 @@
     <div class="map-card">
       <div class="map-head">
         <i class="fa-solid fa-map-location-dot"></i>
-        Oficina Central Park, Querétaro
+        {{ __('Central Park Office, Querétaro') }}
       </div>
       <div class="map-body">
          <a href="https://www.google.com/maps?q=20.57334,-100.36168&z=15&output=embed" target="_blank">
@@ -52,7 +52,7 @@
     <div class="map-card">
       <div class="map-head">
         <i class="fa-solid fa-plane-departure"></i>
-        Aeropuerto Internacional de Querétaro
+        {{ __('Querétaro International Airport') }}
       </div>
       <div class="map-body">
         <iframe
@@ -69,7 +69,7 @@
     <div class="map-card">
       <div class="map-head">
         <i class="fa-solid fa-bus"></i>
-        Central de Autobuses de Querétaro
+        {{ __('Querétaro Bus Station') }}
       </div>
       <div class="map-body">
         <iframe
@@ -87,7 +87,7 @@
   <section class="contact-grid" aria-label="formulario de contacto">
     <div class="contact-left">
       <div class="form-card">
-        <h2>Contáctanos</h2>
+        <h2>{{ __('Contact us') }}</h2>
 
         {{-- === ALERTAS === --}}
         @if (session('ok'))
@@ -98,7 +98,7 @@
 
         @if ($errors->any())
           <div class="alert alert-danger" role="alert">
-            <i class="fa-solid fa-triangle-exclamation"></i> Revisa los campos marcados en rojo.
+            <i class="fa-solid fa-triangle-exclamation"></i> {{ __('Please check the fields marked in red.') }}
           </div>
         @endif
 
@@ -112,8 +112,8 @@
 
           <div class="row">
             <div class="field">
-              <label for="fName">Nombre completo</label>
-              <input id="fName" name="name" required placeholder="Tu nombre y apellidos"
+              <label for="fName">{{ __('Full name') }}</label>
+              <input id="fName" name="name" required placeholder="{{ __('Your full name') }}"
                      value="{{ old('name') }}" class="@error('name') is-invalid @enderror">
               @error('name') <small class="error">{{ $message }}</small> @enderror
             </div>
@@ -121,15 +121,15 @@
 
           <div class="row grid-2">
             <div class="field">
-              <label for="fPhone">Móvil</label>
+              <label for="fPhone">{{ __('Mobile') }}</label>
               <input id="fPhone" name="phone" type="tel" required placeholder="55 1234 5678"
                      value="{{ old('phone') }}" class="@error('phone') is-invalid @enderror">
-              <span class="hint">Incluye lada. Ej.: 442 123 4567</span>
+              <span class="hint">{{ __('Include area code. Ex.: 442 123 4567') }}</span>
               @error('phone') <small class="error">{{ $message }}</small> @enderror
             </div>
             <div class="field">
-              <label for="fEmail">Correo electrónico</label>
-              <input id="fEmail" name="email" type="email" required placeholder="tucorreo@dominio.com"
+              <label for="fEmail">{{ __('Email address') }}</label>
+              <input id="fEmail" name="email" type="email" required placeholder="{{ __('youremail@domain.com') }}"
                      value="{{ old('email') }}" class="@error('email') is-invalid @enderror">
               @error('email') <small class="error">{{ $message }}</small> @enderror
             </div>
@@ -137,8 +137,8 @@
 
           <div class="row">
             <div class="field">
-              <label for="fSubject">Asunto</label>
-              <input id="fSubject" name="subject" placeholder="¿En qué podemos ayudarte?"
+              <label for="fSubject">{{ __('Subject') }}</label>
+              <input id="fSubject" name="subject" placeholder="{{ __('How can we help you?') }}"
                      value="{{ old('subject') }}" class="@error('subject') is-invalid @enderror">
               @error('subject') <small class="error">{{ $message }}</small> @enderror
             </div>
@@ -146,9 +146,9 @@
 
           <div class="row">
             <div class="field">
-              <label for="fMessage">Mensaje</label>
+              <label for="fMessage">{{ __('Message') }}</label>
               <textarea id="fMessage" name="message" rows="5" required maxlength="800"
-                        placeholder="Escribe tu mensaje aquí…"
+                        placeholder="{{ __('Write your message here...') }}"
                         class="@error('message') is-invalid @enderror">{{ old('message') }}</textarea>
                         <span class="hint">
                 <span id="charCount">{{ strlen(old('message','')) }}</span>/800
@@ -172,7 +172,7 @@
           <label class="cbox">
             <input type="checkbox" id="promo" name="promociones" value="1" {{ old('promociones') ? 'checked' : '' }}>
             <span class="checkmark"></span>
-            <span>Deseo recibir alertas, confirmaciones y promociones por correo o teléfono.</span>
+            <span>{{ __('I wish to receive alerts, confirmations and promotions by email or phone.') }}</span>
           </label>
 
           <div class="form-actions">
@@ -182,28 +182,28 @@
             </a>
             {{-- Enviar formulario --}}
             <button type="submit" class="btn btn-primary">
-              Enviar mensaje
+              {{ __('Send message') }}
             </button>
           </div>
         </form>
       </div>
 
       <div class="disclaimer">
-        Al enviar este formulario aceptas nuestro
-        <a href="{{ route('rutaPoliticas') }}" target="_blank">Aviso de Privacidad</a> y nuestras
-        <a href="{{ route('rutaPoliticas') }}" target="_blank">Política de Uso</a>
+        {{ __('By submitting this form you agree to our') }}
+        <a href="{{ route('rutaPoliticas') }}" target="_blank">{{ __('Privacy Policy') }}</a> {{ __('and our') }}
+        <a href="{{ route('rutaPoliticas') }}" target="_blank">{{ __('Terms of Use') }}</a>
       </div>
     </div>
 
     <div class="contact-right">
       <div class="card-cta" aria-label="soporte">
         <div class="cta-icon"><i class="fa-solid fa-headset"></i></div>
-        <h3>Soporte y atención</h3>
-        <p>Nuestro equipo está disponible para resolver tus dudas, cotizar y ayudarte a reservar.</p>
+        <h3>{{ __('Support & assistance') }}</h3>
+        <p>{{ __('Our team is available to answer your questions, provide quotes and help you book.') }}</p>
         <div class="cta-actions">
            {{-- Llamada funcional --}}
           <a class="btn btn-secondary" href="tel:+524421234567">
-            <i class="fa-solid fa-phone"></i> Llamar ahora
+            <i class="fa-solid fa-phone"></i> {{ __('Call now') }}
           </a>
           {{-- WhatsApp funcional --}}
           <a class="btn btn-primary" id="ctaWhats" href="https://wa.me/524427169793" target="_blank">
@@ -211,7 +211,7 @@
           </a>
         </div>
         <div class="cta-hours">
-          <i class="fa-regular fa-clock"></i> Lun–Dom · 8:00 a 22:00 h
+          <i class="fa-regular fa-clock"></i> {{ __('Mon–Sun · 8:00 AM – 10:00 PM') }}
         </div>
       </div>
       <img class="illus" alt="Soporte Viajero" src="{{ asset('img/contacto2.png') }}">

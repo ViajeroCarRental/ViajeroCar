@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="{{ app()->getLocale() }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
@@ -167,21 +167,7 @@ body.nav-open .language-selector {
         background: rgba(255, 255, 255, 0.3);
         border-color: rgba(255, 255, 255, 0.8);
     }
-    .goog-te-banner-frame {
-        display: none !important;
-    }
-    .goog-te-gadget-simple {
-        display: none !important;
-    }
-    body {
-        top: 0px !important;
-    }
-    .skiptranslate {
-        display: none !important;
-    }
-    iframe.goog-te-banner-frame {
-        display: none !important;
-    }
+
 /* ===== ESTILOS PARA DROPDOWN DE IDIOMAS ===== */
 .language-selector.dropdown {
     position: relative;
@@ -206,10 +192,12 @@ body.nav-open .language-selector {
     color: #333;
     font-weight: 500;
     transition: background 0.2s ease;
+    text-decoration: none;
 }
 
 .language-selector .dropdown-item:hover {
     background: #f8f9fa;
+    color: #333;
 }
 
 .language-selector .dropdown-item img {
@@ -223,7 +211,7 @@ body.nav-open .language-selector {
 .lang-btn.dropdown-toggle::after {
     margin-left: 2px;
     color: white;
-    
+
 }
 
 .lang-btn.dropdown-toggle {
@@ -232,10 +220,10 @@ body.nav-open .language-selector {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.25);
-    padding: 2px 8px;   /* antes seguro está más grande */
-    font-size: 11px;     /* reduce el texto */
-    border-radius: 8px;  /* opcional, más compacto */
-    height: 30px; 
+    padding: 2px 8px;
+    font-size: 11px;
+    border-radius: 8px;
+    height: 30px;
 
 }
 
@@ -243,6 +231,13 @@ body.nav-open .language-selector {
 </head>
 
 <body>
+@php
+
+    if (session()->has('locale')) {
+        App::setLocale(session('locale'));
+    }
+@endphp
+
 
 <!-- 🔹 BACKDROP AGREGADO  -->
 <div class="nav-backdrop"></div>
@@ -256,32 +251,32 @@ body.nav-open .language-selector {
     </div>
 
     <ul class="menu" id="mainMenu">
-      <li><a href="{{ route('rutaHome') }}" class="{{ request()->routeIs('rutaHome') ? 'active' : '' }}">Inicio</a></li>
-      <li><a href="{{ route('rutaCatalogo') }}" class="{{ request()->routeIs('rutaCatalogo') ? 'active' : '' }}">Catálogo de autos</a></li>
-      <li><a href="{{ route('rutaContacto') }}" class="{{ request()->routeIs('rutaContacto') ? 'active' : '' }}">Contacto</a></li>
-      <li><a href="{{ route('rutaPoliticas') }}" class="{{ request()->routeIs('rutaPoliticas') ? 'active' : '' }}">Políticas</a></li>
-      <li><a href="{{ route('rutaFAQ') }}" class="{{ request()->routeIs('rutaFAQ') ? 'active' : '' }}">F.A.Q</a></li>
+      <li><a href="{{ route('rutaHome') }}" class="{{ request()->routeIs('rutaHome') ? 'active' : '' }}">{{ __('Home') }}</a></li>
+      <li><a href="{{ route('rutaCatalogo') }}" class="{{ request()->routeIs('rutaCatalogo') ? 'active' : '' }}">{{ __('Vehicles') }}</a></li>
+      <li><a href="{{ route('rutaContacto') }}" class="{{ request()->routeIs('rutaContacto') ? 'active' : '' }}">{{ __('Contact') }}</a></li>
+      <li><a href="{{ route('rutaPoliticas') }}" class="{{ request()->routeIs('rutaPoliticas') ? 'active' : '' }}">{{ __('Policies') }}</a></li>
+      <li><a href="{{ route('rutaFAQ') }}" class="{{ request()->routeIs('rutaFAQ') ? 'active' : '' }}">{{ __('FAQ') }}</a></li>
     </ul>
 
     <div class="nav-actions">
-    <div class="language-selector dropdown">
-  <button class="lang-btn dropdown-toggle" data-bs-toggle="dropdown">
-    <img id="currentFlag" src="https://flagcdn.com/w40/mx.png">
-    <span id="currentLang">ES</span>
-  </button>
+  <<div class="language-selector dropdown">
+    <button class="lang-btn dropdown-toggle" data-bs-toggle="dropdown">
+        <img id="currentFlag" src="{{ app()->getLocale() == 'en' ? 'https://flagcdn.com/w40/us.png' : 'https://flagcdn.com/w40/mx.png' }}">
+        <span id="currentLang">{{ strtoupper(app()->getLocale()) }}</span>
+    </button>
 
-  <ul class="dropdown-menu dropdown-menu-end shadow">
-    <li>
-      <a class="dropdown-item lang-option" data-lang="en">
-        <img src="https://flagcdn.com/w40/us.png"> ENG
-      </a>
-    </li>
-    <li>
-      <a class="dropdown-item lang-option" data-lang="es">
-        <img src="https://flagcdn.com/w40/mx.png"> ESP
-      </a>
-    </li>
-  </ul>
+    <ul class="dropdown-menu dropdown-menu-end shadow">
+        <li>
+            <a class="dropdown-item" href="/lang/en">
+                <img src="https://flagcdn.com/w40/us.png"> ENG
+            </a>
+        </li>
+        <li>
+            <a class="dropdown-item" href="/lang/es">
+                <img src="https://flagcdn.com/w40/mx.png"> ESP
+            </a>
+        </li>
+    </ul>
 </div>
       @if (session()->has('id_usuario'))
         <div class="dropdown">
@@ -290,19 +285,19 @@ body.nav-open .language-selector {
           </a>
           <ul class="dropdown-menu dropdown-menu-end shadow">
             <li>
-              <a class="dropdown-item" href="{{ route('rutaPerfil') }}">Perfil</a>
+              <a class="dropdown-item" href="{{ route('rutaPerfil') }}">{{ __('Profile') }}</a>
             </li>
             <li><hr class="dropdown-divider"></li>
             <li>
               <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="dropdown-item">Cerrar sesión</button>
+                <button type="submit" class="dropdown-item">{{ __('Logout') }}</button>
               </form>
             </li>
           </ul>
         </div>
       @else
-        <a href="{{ route('auth.show') }}" class="icon-pill" title="Iniciar sesión">
+        <a href="{{ route('auth.show') }}" class="icon-pill" title="{{ __('Sign in') }}">
           <i class="fa-regular fa-user guest"></i>
         </a>
       @endif
@@ -337,7 +332,7 @@ body.nav-open .language-selector {
     "use strict";
 
     // ==============================================
-    // CÓDIGO DE TÚ MENÚ HAMBURGUESA (LIGERAMENTE MODIFICADO)
+    // CÓDIGO DE TÚ MENÚ HAMBURGUESA
     // ==============================================
     const topbar = document.querySelector(".topbar");
     const btn = document.getElementById("navHamburger");
@@ -369,26 +364,17 @@ body.nav-open .language-selector {
         backdrop.addEventListener("click", closeNav);
     }
 
-    // ⚠️⚠️⚠️ ATENCIÓN: ESTA ES LA PARTE MODIFICADA ⚠️⚠️⚠️
-    // Antes tenías: if (menu.contains(event.target)) return;
-    // El problema es que los botones de traducción están DENTRO del header, no del menu.
-    // Por eso al hacer clic en ellos, el menú se cerraba.
     document.addEventListener("click", (event) => {
         if (!isMobile() || !document.body.classList.contains("nav-open")) return;
         if (menu.contains(event.target)) return;
-
-
         if (btn.contains(event.target)) return;
         if (backdrop && backdrop.contains(event.target)) return;
 
-
-        const languageSelector = document.getElementById('languageSelector');
+        const languageSelector = document.querySelector('.language-selector');
         if (languageSelector && languageSelector.contains(event.target)) return;
 
-        // Si no fue en ninguna de las partes permitidas, cerramos el menú.
         closeNav();
     });
-    // ===== FIN DE LA MODIFICACIÓN =====
 
     menu.addEventListener("click", (e)=>{
         if(e.target.closest("a") && isMobile()) closeNav();
@@ -418,97 +404,6 @@ body.nav-open .language-selector {
     window.addEventListener("scroll", syncTopbar, { passive:true });
 
 })();
-
-/// ==============================================
-// CÓDIGO DE GOOGLE TRANSLATE CON SELECTOR DROPDOWN
-// ==============================================
-function googleTranslateElementInit() {
-    new google.translate.TranslateElement({
-        pageLanguage: 'es',
-        includedLanguages: 'es,en',
-        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-        autoDisplay: false
-    }, '');
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Cargar script de Google Translate
-    const script = document.createElement('script');
-    script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-    document.head.appendChild(script);
-
-    // Función para cambiar idioma
-    window.cambiarIdioma = function(idioma) {
-        // Guardar preferencia
-        localStorage.setItem('idiomaPreferido', idioma);
-
-        // Establecer cookie para Google Translate
-        document.cookie = `googtrans=/es/${idioma}; path=/; max-age=31536000`;
-
-        // Actualizar el botón visual inmediatamente
-        actualizarBotonIdioma(idioma);
-
-        // Intentar cambiar el select de Google Translate si ya existe
-        cambiarSelectGoogle(idioma);
-
-        // Recargar para aplicar traducción completa
-        setTimeout(() => {
-            location.reload();
-        }, 500);
-    };
-
-    // Función para actualizar el botón visual
-    function actualizarBotonIdioma(idioma) {
-        const flagImg = document.getElementById('currentFlag');
-        const langSpan = document.getElementById('currentLang');
-
-        if (idioma === 'en') {
-            flagImg.src = 'https://flagcdn.com/w40/us.png';
-            langSpan.textContent = 'EN';
-        } else {
-            flagImg.src = 'https://flagcdn.com/w40/mx.png';
-            langSpan.textContent = 'ES';
-        }
-    }
-
-    // Función para cambiar el select de Google Translate
-    function cambiarSelectGoogle(idioma) {
-        const select = document.querySelector(".goog-te-combo");
-        if (select) {
-            select.value = idioma;
-            select.dispatchEvent(new Event("change"));
-        }
-    }
-
-    // Restaurar idioma guardado
-    const idiomaGuardado = localStorage.getItem('idiomaPreferido');
-    if (idiomaGuardado) {
-        document.cookie = `googtrans=/es/${idiomaGuardado}; path=/; max-age=31536000`;
-        actualizarBotonIdioma(idiomaGuardado);
-
-        // Intentar cambiar el select después de que Google cargue
-        setTimeout(() => {
-            cambiarSelectGoogle(idiomaGuardado);
-        }, 1000);
-    }
-
-    // Event listeners para las opciones del dropdown
-    document.querySelectorAll('.lang-option').forEach(option => {
-        option.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            const lang = this.dataset.lang;
-            console.log('Cambiando a idioma:', lang); // Para depurar
-
-            if (lang) {
-                cambiarIdioma(lang);
-            }
-        });
-    });
-
-    // También permitir que el botón principal abra el dropdown (Bootstrap lo maneja)
-});
 </script>
 
 <!-- FOOTER -->
@@ -523,15 +418,15 @@ document.addEventListener('DOMContentLoaded', function() {
     <div class="footer-row loc-row">
       <div class="loc-card">
         <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
-        <div class="loc-body"><h4>Plaza Central Park, Querétaro Centro</h4><p>Oficina principal</p></div>
+        <div class="loc-body"><h4>Plaza Central Park, Querétaro Centro</h4><p>{{ __('Main office') }}</p></div>
       </div>
       <div class="loc-card">
         <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
-        <div class="loc-body"><h4>Aeropuerto Internacional de Querétaro (AIQ)</h4><p>Pick-up / Drop-off</p></div>
+        <div class="loc-body"><h4>Aeropuerto Internacional de Querétaro (AIQ)</h4><p>{{ __('Pick-up / Drop-off') }}</p></div>
       </div>
       <div class="loc-card">
         <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
-        <div class="loc-body"><h4>Central de Autobuses de Querétaro (TAQ)</h4><p>Pick-up / Drop-off</p></div>
+        <div class="loc-body"><h4>Central de Autobuses de Querétaro (TAQ)</h4><p>{{ __('Pick-up / Drop-off') }}</p></div>
       </div>
     </div>
 
@@ -548,20 +443,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     <div class="footer-row links-row">
       <ul>
-        <li><a href="{{ route('rutaReservaciones') }}">Reserva ahora</a></li>
-        <li><a href="{{ route('rutaCatalogo') }}">Autos Disponibles</a></li>
-        <li><a href="{{ route('rutaPoliticas') }}">Términos y condiciones</a></li>
-        <li><a href="{{ route('rutaContacto') }}">Contacto</a></li>
+        <li><a href="{{ route('rutaReservaciones') }}">{{ __('Book now') }}</a></li>
+        <li><a href="{{ route('rutaCatalogo') }}">{{ __('Available cars') }}</a></li>
+        <li><a href="{{ route('rutaPoliticas') }}">{{ __('Terms and conditions') }}</a></li>
+        <li><a href="{{ route('rutaContacto') }}">{{ __('Contact') }}</a></li>
       </ul>
       <ul>
-        <li><a href="{{ route('rutaFAQ') }}">F.A.Q.</a></li>
-        <li><a href="{{ route('rutaPoliticas') }}">Aviso de privacidad</a></li>
-        <li><a href="{{ route('rutaPoliticas') }}">Política de limpieza</a></li>
-        <li><a href="{{ route('rutaPoliticas') }}">Política de renta</a></li>
+        <li><a href="{{ route('rutaFAQ') }}">{{ __('FAQ') }}</a></li>
+        <li><a href="{{ route('rutaPoliticas') }}">{{ __('Privacy policy') }}</a></li>
+        <li><a href="{{ route('rutaPoliticas') }}">{{ __('Cleaning policy') }}</a></li>
+        <li><a href="{{ route('rutaPoliticas') }}">{{ __('Rental policy') }}</a></li>
       </ul>
     </div>
 
-    <div class="footer-copy">© <span id="year"></span> Viajero. Todos los derechos reservados.</div>
+    <div class="footer-copy">© <span id="year"></span> Viajero. {{ __('All rights reserved') }}.</div>
   </div>
 </footer>
 

@@ -3010,7 +3010,7 @@ input#dropoffDate.field-success,
     }
 }
 
-/*/* ==========================================================
+/* ==========================================================
    FLATPICKR - ESTILO DE CALENDARIO
 ========================================================== */
 .flatpickr-calendar {
@@ -3020,10 +3020,20 @@ input#dropoffDate.field-success,
     overflow: hidden !important;
     box-shadow: 0 26px 70px rgba(0, 0, 0, 0.25) !important;
     font-family: 'Poppins', system-ui, Arial, sans-serif !important;
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    width: auto !important;
+    max-width: 95vw !important;
 }
 
 .flatpickr-calendar.open {
     width: min(860px, 94vw) !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 .flatpickr-months {
@@ -3145,6 +3155,7 @@ span.flatpickr-weekday {
     background: white !important;
     color: #333 !important;
 }
+
 /* ==========================================================
    DIAS DESHABILITADOS
 ========================================================== */
@@ -3242,39 +3253,72 @@ span.flatpickr-weekday {
     }
 }
 
-/* MÓVIL (hasta 560px) - CENTRADO */
+/* Movil (560px) */
 @media (max-width: 560px) {
-    .flatpickr-calendar.open {
+    .flatpickr-calendar {
         position: fixed !important;
         left: 50% !important;
-        top: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        width: min(520px, 95vw) !important;
-        max-width: 95vw !important;
-        max-height: 90vh !important;
-        overflow: auto !important;
-        -webkit-overflow-scrolling: touch;
-        margin: 0 !important;
+        top: 10vh !important;
+        transform: translateX(-50%) !important;
+        padding-top: 30px !important;
     }
 
-    .flatpickr-calendar .flatpickr-day {
-        height: 44px !important;
-        line-height: 44px !important;
+    .flatpickr-calendar.open {
+         width: min(420px, 90vw) !important;
+        height: auto !important;
+        padding-top: 15px !important;
+        padding-bottom: 15px !important;
+    }
+
+    .flatpickr-months .flatpickr-month {
+        height: 50px !important;
+    }
+
+    .flatpickr-current-month {
+        padding-top: 10px !important;
+        font-size: 20px !important;
+    }
+
+    .flatpickr-months {
+        margin-bottom: 8px !important;
+    }
+
+    .flatpickr-day {
+        height: 62px !important;
+        line-height: 62px !important;
         font-size: 14px !important;
     }
 
-    .flatpickr-calendar .flatpickr-weekday {
+    .dayContainer {
+        row-gap: 11px !important;
+    }
+
+    .flatpickr-weekday {
         font-size: 13px !important;
     }
+    /* BORROSO */
+body.flatpickr-open {
+    overflow: hidden;
+}
 
-    .flatpickr-calendar .flatpickr-current-month {
-        font-size: 20px !important;
-        padding-top: 12px !important;
-    }
+body.flatpickr-open > *:not(.flatpickr-calendar) {
+    filter: blur(8px);
+    -webkit-filter: blur(8px);
+    transition: filter 0.3s ease;
+}
 
-    .flatpickr-calendar .flatpickr-months .flatpickr-month {
-        height: 55px !important;
-    }
+
+.flatpickr-calendar.open {
+    filter: none !important;
+    -webkit-filter: none !important;
+    z-index: 99999 !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+
 }
 
 /* MÓVIL MUY PEQUEÑO (hasta 380px) */

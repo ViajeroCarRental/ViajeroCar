@@ -52,11 +52,16 @@
     syncCount();
   }
 
-  // ----- Toast (solo UI; no se invoca desde lógica de envío)
-  window.showToast = function (msg = '¡Mensaje enviado! Te contactaremos muy pronto.') {
+  // ----- Toast (solo UI; con traducciones)
+  window.showToast = function (msg) {
+    // Si no se pasa mensaje, usar traducción por defecto
+    const defaultMsg = document.documentElement.lang === 'en'
+      ? 'Message sent! We will contact you shortly.'
+      : '¡Mensaje enviado! Te contactaremos muy pronto.';
+
     const toast = qs('#toast');
     if (!toast) return;
-    toast.innerHTML = `<i class="fa-solid fa-check"></i> ${msg}`;
+    toast.innerHTML = `<i class="fa-solid fa-check"></i> ${msg || defaultMsg}`;
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3200);
   };

@@ -17,6 +17,58 @@
   }
 })();
 
+// ============================================================
+// FUNCIÓN PARA OBTENER EL IDIOMA ACTUAL
+// ============================================================
+function getCurrentLocale() {
+  const htmlLang = document.documentElement.lang || 'es';
+  return htmlLang === 'en' ? 'en' : 'es';
+}
+
+// ============================================================
+// LOCALE PARA FLATPICKR (ESPAÑOL E INGLÉS)
+// ============================================================
+function getFlatpickrLocale() {
+  const locale = getCurrentLocale();
+  if (locale === 'en') {
+    return {
+      firstDayOfWeek: 0,
+      weekdays: {
+        shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+        longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+      },
+      months: {
+        shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        longhand: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+      }
+    };
+  }
+  return {
+    firstDayOfWeek: 1,
+    weekdays: {
+      shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+      longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+    },
+    months: {
+      shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+      longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    }
+  };
+}
+
+// ============================================================
+// FUNCIÓN PARA TEXTO DE ERRORES (VALIDACIÓN)
+// ============================================================
+function getErrorMessage(fieldType) {
+  const locale = getCurrentLocale();
+  const messages = {
+    location: { es: 'Ubicación requerida', en: 'Location required' },
+    date: { es: 'Fecha requerida', en: 'Date required' },
+    time: { es: 'Hora requerida', en: 'Time required' }
+  };
+  return messages[fieldType]?.[locale] || messages[fieldType]?.es || 'Campo requerido';
+}
+
 /* ====================
    Icono de cuenta
 ==================== */
@@ -31,10 +83,12 @@
     const initial = (name?.trim()[0] || email?.trim()[0] || '').toUpperCase();
 
     if(initial){
-      if(!link.title) link.title = 'Mi perfil';
+      const locale = getCurrentLocale();
+      link.title = locale === 'en' ? 'My profile' : 'Mi perfil';
       link.innerHTML = `<span class="avatar-mini">${initial}</span>`;
     } else {
-      if(!link.title) link.title = 'Iniciar sesión';
+      const locale = getCurrentLocale();
+      link.title = locale === 'en' ? 'Sign in' : 'Iniciar sesión';
       link.innerHTML = '<i class="fa-regular fa-user"></i>';
     }
   }
@@ -79,7 +133,6 @@
       return Math.max(0, track.scrollWidth - track.clientWidth);
     }
 
-    // ✅ Función de Gris/Rojo con tolerancia de 10px
     function updateBtns(){
       const max = getMaxScroll();
       const current = track.scrollLeft;
@@ -94,7 +147,6 @@
       next.classList.toggle('is-disabled', atEnd);
     }
 
-    // ✅ Función de Animación corregida
     function pulseLimit(btn){
       btn.classList.add('animating');
       setTimeout(() => btn.classList.remove('animating'), 300);
@@ -107,12 +159,10 @@
       const from = track.scrollLeft;
       const step = getStepPx();
 
-      // ✅ Si intentas ir a la derecha y ya es gris (final)
       if(dir > 0 && from >= (maxScroll - 10)){
         pulseLimit(next);
         return;
       }
-      // ✅ Si intentas ir a la izquierda y ya es gris (inicio)
       if(dir < 0 && from <= 10){
         pulseLimit(prev);
         return;
@@ -239,22 +289,23 @@
 
     const selH = document.createElement("select");
     selH.className = "tp-hour custom-select-clean";
-    selH.setAttribute("aria-label", "Hora");
 
-    for (let h = 1; h <= hourMax; h++) {
+    const locale = getCurrentLocale();
+    const hourPlaceholder = locale === 'en' ? 'Time' : 'Hora';
+    selH.setAttribute("aria-label", hourPlaceholder);
+
+    // Placeholder con el texto traducido
+    selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>${hourPlaceholder}</option>`);
+
+    for (let h = 0; h < hourMax; h++) {
       const op = document.createElement("option");
       op.value = pad2(h);
       op.textContent = `${pad2(h)}:00`;
       selH.appendChild(op);
     }
 
-    // Placeholder con el texto "Hora"
-    selH.selectedIndex = -1;
-    selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>Hora</option>`);
-
     function sync() {
       const finalH = pad2(Number(selH.value || 0));
-      // Guardamos SOLO la hora, siempre con :00
       input.value = `${finalH}:00`;
       input.dispatchEvent(new Event("input", { bubbles: true }));
     }
@@ -268,7 +319,6 @@
       input.insertAdjacentElement("afterend", box);
     }
 
-    // Establecer valor por defecto solo si existe y no es "12:00"
     if (input.value && input.value !== "12:00") {
       const defaultHour = input.value.split(':')[0];
       const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
@@ -277,7 +327,6 @@
         sync();
       }
     } else {
-      // Mantener placeholder y limpiar input oculto
       selH.selectedIndex = 0;
       input.value = "";
     }
@@ -322,7 +371,7 @@
     const mm = 0;
 
     if (Number.isFinite(hh)) {
-      hh = Math.max(0, Math.min(24, hh));
+      hh = Math.max(0, Math.min(23, hh));
     } else {
       hh = 0;
     }
@@ -369,7 +418,10 @@
       return;
     }
 
-    rangeSummary.textContent = `Renta por ${d} día(s) · ~${h} hora(s)`;
+    const locale = getCurrentLocale();
+    const daysText = locale === 'en' ? 'day(s)' : 'día(s)';
+    const hoursText = locale === 'en' ? 'hour(s)' : 'hora(s)';
+    rangeSummary.textContent = `Rental for ${d} ${daysText} · ~${h} ${hoursText}`;
   }
 
   (function bindFormFixes(){
@@ -389,7 +441,6 @@
     const pickDate  = document.getElementById("pickupDate");
     const dropDate  = document.getElementById("dropoffDate");
 
-    // Sincronizar hora oculta desde el selector
     function syncHiddenFromSelects(hiddenId){
         const hidden = document.getElementById(hiddenId);
         if(!hidden) return;
@@ -436,7 +487,6 @@
       if(dropTime && !dropTime.value) dropTime.value = "12:00";
     }, { capture:true });
 
-    // Control de bordes para Select2
     const inputsToWatch = [pickSel, dropSel];
 
     inputsToWatch.forEach(el => {
@@ -645,7 +695,6 @@ function setDropoffState() {
     const isChecked = chk.checked;
 
     if (isMobile) {
-        // MÓVIL
         if (isChecked) {
             dropWrap.style.display = 'flex';
             dropWrap.style.visibility = 'visible';
@@ -660,7 +709,6 @@ function setDropoffState() {
         }
         dropWrap.classList.remove('show-dropoff', 'hidden-dropoff');
     } else {
-        // ESCRITORIO
         if (isChecked) {
             dropWrap.classList.add('show-dropoff');
             dropWrap.classList.remove('hidden-dropoff');
@@ -707,8 +755,9 @@ document.addEventListener('DOMContentLoaded', function() {
         setDropoffState();
     });
 });
+
 /* ============================================================
-    VALIDACIONES DEL FORMULARIO - VERSIÓN CORREGIDA
+    VALIDACIONES DEL FORMULARIO - VERSIÓN CORREGIDA CON TRADUCCIÓN
 ============================================================ */
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById("rentalForm");
@@ -727,8 +776,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         /* ===== 1. VALIDAR UBICACIONES ===== */
         const selects = [
-            { id: 'pickupPlace', msg: 'Ubicación Requerida' },
-            { id: 'dropoffPlace', msg: 'Ubicación Requerida' }
+            { id: 'pickupPlace', msgKey: 'location' },
+            { id: 'dropoffPlace', msgKey: 'location' }
         ];
 
         selects.forEach(campo => {
@@ -743,7 +792,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (container) {
                     const msg = document.createElement('span');
                     msg.className = 'error-msg';
-                    msg.textContent = campo.msg;
+                    msg.textContent = getErrorMessage(campo.msgKey);
                     container.appendChild(msg);
                 }
                 console.log(`Error: ${campo.id}`);
@@ -752,10 +801,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-/* ===== 2. VALIDAR FECHAS - CORREGIDO ===== */
+       /* ===== 2. VALIDAR FECHAS - CORREGIDO ===== */
 const fechas = [
-    { id: 'pickupDate', msg: 'Fecha Requerida' },
-    { id: 'dropoffDate', msg: 'Fecha Requerida' }
+    { id: 'pickupDate', msgKey: 'date' },
+    { id: 'dropoffDate', msgKey: 'date' }
 ];
 
 fechas.forEach(campo => {
@@ -765,19 +814,24 @@ fechas.forEach(campo => {
     const container = hiddenInput.closest('.dt-field');
     if (!container) return;
 
-    // Buscar el input visible de Flatpickr
+    // Buscar el input visible de Flatpickr (altInput)
     let altInput = null;
-    container.querySelectorAll('input').forEach(input => {
-        if (input.type !== 'hidden' && input.classList.contains('flatpickr-input')) {
-            altInput = input;
-        }
-    });
+    // Primero buscar por la clase flatpickr-input
+    altInput = container.querySelector('.flatpickr-input');
 
-    // 🔥 ELIMINAR MENSAJES ANTERIORES SIEMPRE
+    // Si no se encuentra, buscar cualquier input visible que no sea hidden
+    if (!altInput) {
+        container.querySelectorAll('input').forEach(input => {
+            if (input.type !== 'hidden' && input !== hiddenInput) {
+                altInput = input;
+            }
+        });
+    }
+
     const oldMsg = container.querySelector('.error-msg');
     if (oldMsg) oldMsg.remove();
 
-    // Limpiar clases anteriores
+    // Limpiar clases de error en ambos inputs
     if (altInput) {
         altInput.classList.remove('field-error', 'field-success');
     }
@@ -787,19 +841,18 @@ fechas.forEach(campo => {
 
     if (!hasValue) {
         valid = false;
-
         console.log(`❌ ${campo.id} sin valor`);
 
-        // Aplicar error al input visible
+        // 🔥 Aplicar error al input visible (altInput)
         if (altInput) {
             altInput.classList.add('field-error');
+            altInput.classList.remove('field-success');
         }
         hiddenInput.classList.add('field-error');
 
-        // 🔥 SOLO crear mensaje si NO tiene valor
         const msg = document.createElement('span');
         msg.className = 'error-msg';
-        msg.textContent = campo.msg;
+        msg.textContent = getErrorMessage(campo.msgKey);
         container.appendChild(msg);
 
     } else {
@@ -808,16 +861,16 @@ fechas.forEach(campo => {
         // Aplicar éxito al input visible
         if (altInput) {
             altInput.classList.add('field-success');
+            altInput.classList.remove('field-error');
         }
         hiddenInput.classList.add('field-success');
-        // 🔥 NO crear mensaje de error (ya se eliminó arriba)
     }
 });
 
         /* ===== 3. VALIDAR HORAS - CORREGIDO PARA SELECTS ===== */
         const horas = [
-            { id: 'pickupTime', msg: 'Hora Requerida' },
-            { id: 'dropoffTime', msg: 'Hora Requerida' }
+            { id: 'pickupTime', msgKey: 'time' },
+            { id: 'dropoffTime', msgKey: 'time' }
         ];
 
         horas.forEach(campo => {
@@ -842,7 +895,7 @@ fechas.forEach(campo => {
 
                 const msg = document.createElement('span');
                 msg.className = 'error-msg';
-                msg.textContent = campo.msg;
+                msg.textContent = getErrorMessage(campo.msgKey);
                 timeField.appendChild(msg);
 
                 console.log(`Error: ${campo.id} - SIN HORA`);
@@ -872,7 +925,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const hourSelects = document.querySelectorAll('.tp-selects .tp-hour');
     const flatpickrInputs = document.querySelectorAll('.flatpickr-input');
 
-    // Limpiar errores de inputs normales
     inputs.forEach(input => {
         input.addEventListener('input', function() {
             if (this.classList.contains('field-error')) {
@@ -897,7 +949,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Limpiar errores de los selects de hora
     hourSelects.forEach(select => {
         select.addEventListener('change', function() {
             if (this.classList.contains('field-error')) {
@@ -911,9 +962,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Limpiar errores de los inputs de flatpickr (solo los visibles)
     flatpickrInputs.forEach(input => {
-        // Solo procesar inputs que NO son hidden
         if (input.type === 'hidden') return;
 
         input.addEventListener('change', function() {
@@ -941,34 +990,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /* ============================================================
-    DEPURACIÓN - Ver qué clases se están aplicando
-============================================================ */
-document.addEventListener('DOMContentLoaded', function() {
-    // Observar cambios en las clases
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.attributeName === 'class') {
-                console.log('Cambio de clase:', mutation.target, mutation.target.className);
-            }
-        });
-    });
-
-    // Observar los altInputs de flatpickr
-    setTimeout(function() {
-        document.querySelectorAll('.flatpickr-input').forEach(function(input) {
-            if (input.type !== 'hidden') {
-                observer.observe(input, { attributes: true });
-                console.log('Observando:', input);
-            }
-        });
-    }, 1000);
-});
-/* ============================================================
-    INICIALIZAR FLATPICKR - CALENDARIOS
+    INICIALIZAR FLATPICKR - CALENDARIOS CON IDIOMA DINÁMICO
 ============================================================ */
 (function() {
     "use strict";
-
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initFlatpickr);
@@ -977,7 +1002,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function initFlatpickr() {
-        // Verificar que Flatpickr existe
         if (typeof flatpickr === 'undefined') {
             console.error('❌ Flatpickr no está cargado');
             return;
@@ -985,30 +1009,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         console.log('✅ Flatpickr encontrado, inicializando...');
 
-        // Configuración básica en español
-        const esLocale = {
-            firstDayOfWeek: 1,
-            weekdays: {
-                shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
-                longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-            },
-            months: {
-                shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-                longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-            }
-        };
-
-        // Configuración común
-        const commonConfig = {
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d/m/Y",
-            locale: esLocale,
-            allowInput: true,
-            disableMobile: true
-        };
-
-        // Obtener elementos
         const pickupElement = document.getElementById('pickupDate');
         const dropoffElement = document.getElementById('dropoffDate');
 
@@ -1022,63 +1022,99 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Inicializar Pickup Date
         let pickupPicker;
-        try {
-            pickupPicker = flatpickr(pickupElement, {
-                ...commonConfig,
-                minDate: "today",
-                onChange: function(selectedDates, dateStr, instance) {
-                    console.log('Pickup date changed:', dateStr);
-                    pickupElement.value = dateStr;
-                    pickupElement.dispatchEvent(new Event('change', { bubbles: true }));
-                    if (dropoffPicker && selectedDates[0]) {
-                        const minDate = new Date(selectedDates[0]);
-                        minDate.setDate(minDate.getDate() + 1);
-                        dropoffPicker.set('minDate', minDate);
-                    }
-                }
-            });
-            console.log('✅ Pickup date inicializado');
-        } catch(e) {
-            console.error('Error en pickup:', e);
-        }
-
-        // Inicializar Dropoff Date
         let dropoffPicker;
-        try {
-            let minDate = "today";
-            if (pickupElement.value) {
-                const pickupDate = new Date(pickupElement.value);
-                if (!isNaN(pickupDate)) {
-                    pickupDate.setDate(pickupDate.getDate() + 1);
-                    minDate = pickupDate;
-                }
+
+        function initPickers() {
+            const localeData = getFlatpickrLocale();
+            const commonConfig = {
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d-M-y",
+                locale: localeData,
+                allowInput: false,
+                disableMobile: true
+            };
+
+            // Inicializar Pickup Date
+            try {
+                if (pickupPicker) pickupPicker.destroy();
+                pickupPicker = flatpickr(pickupElement, {
+                    ...commonConfig,
+                    minDate: "today",
+                    onChange: function(selectedDates, dateStr, instance) {
+                        console.log('Pickup date changed:', dateStr);
+                        pickupElement.value = dateStr;
+                        pickupElement.dispatchEvent(new Event('change', { bubbles: true }));
+                        if (dropoffPicker && selectedDates[0]) {
+                            const minDate = new Date(selectedDates[0]);
+                            minDate.setDate(minDate.getDate() + 1);
+                            dropoffPicker.set('minDate', minDate);
+                        }
+                    }
+                });
+                console.log('✅ Pickup date inicializado');
+            } catch(e) {
+                console.error('Error en pickup:', e);
             }
 
-            dropoffPicker = flatpickr(dropoffElement, {
-                ...commonConfig,
-                minDate: minDate,
-                onChange: function(selectedDates, dateStr, instance) {
-                    console.log('Dropoff date changed:', dateStr);
-                    dropoffElement.value = dateStr;
-                    dropoffElement.dispatchEvent(new Event('change', { bubbles: true }));
+            // Inicializar Dropoff Date
+            try {
+                let minDate = "today";
+                if (pickupElement.value) {
+                    const pickupDate = new Date(pickupElement.value);
+                    if (!isNaN(pickupDate)) {
+                        pickupDate.setDate(pickupDate.getDate() + 1);
+                        minDate = pickupDate;
+                    }
+                }
+
+                if (dropoffPicker) dropoffPicker.destroy();
+                dropoffPicker = flatpickr(dropoffElement, {
+                    ...commonConfig,
+                    minDate: minDate,
+                    onChange: function(selectedDates, dateStr, instance) {
+                        console.log('Dropoff date changed:', dateStr);
+                        dropoffElement.value = dateStr;
+                        dropoffElement.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                });
+                console.log('✅ Dropoff date inicializado');
+            } catch(e) {
+                console.error('Error en dropoff:', e);
+            }
+        }
+
+        initPickers();
+
+        // Escuchar cambios de idioma para actualizar Flatpickr y placeholders
+        const observer = new MutationObserver(() => {
+            initPickers();
+            // Actualizar placeholder de horas
+            const locale = getCurrentLocale();
+            const hourPlaceholder = locale === 'en' ? 'Hour' : 'Hora';
+            document.querySelectorAll('.tp-hour').forEach(select => {
+                if (select.options[0] && select.options[0].textContent !== hourPlaceholder) {
+                    select.options[0].textContent = hourPlaceholder;
                 }
             });
-            console.log('✅ Dropoff date inicializado');
-        } catch(e) {
-            console.error('Error en dropoff:', e);
-        }
+            // Actualizar resumen
+            updateSummary();
+        });
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+
         setTimeout(() => {
             const flatpickrInputs = document.querySelectorAll('.flatpickr-input');
             flatpickrInputs.forEach(input => {
                 if (!input.value) {
-                    input.placeholder = 'dd/mm/yyyy';
+                    const locale = getCurrentLocale();
+                    input.placeholder = locale === 'en' ? 'dd-Mmm-yy' : 'dd-Mmm-yy';
                 }
             });
         }, 100);
     }
 })();
+
 /* ============================================================
     CONTROL DE SCROLL PARA FORMULARIO MÓVIL/TABLET
 ============================================================ */
@@ -1139,8 +1175,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }, { passive: false });
-
-
 
         if (dropoffPlace) {
             dropoffPlace.addEventListener('touchstart', function(e) {
@@ -1206,7 +1240,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (Math.abs(diffY) > 6) {
             dragging = true;
-            e.preventDefault(); // evita que el select se robe el gesto
+            e.preventDefault();
             modal.scrollTop = startScrollTop + diffY;
         }
     }, { passive: false });
@@ -1228,6 +1262,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 })();
+
 /* ============================================================
                                 SELECT2
 ============================================================ */
@@ -1238,7 +1273,6 @@ $(document).ready(function() {
       return $('<span class="icon-item"><i class="fa-solid fa-location-dot"></i> ' + option.text + '</span>');
     }
 
-    // Usar el mapa global generado desde PHP
     let iconClass = window.iconosPorId ? (window.iconosPorId[option.id] || 'fa-building') : 'fa-building';
 
     return $(
@@ -1256,6 +1290,108 @@ $(document).ready(function() {
   });
 
 });
+/* ==========================================================
+   FONDO BORROSO EN MÓVIL - PARA PICKUP Y DROPOFF
+========================================================== */
+(function() {
+    "use strict";
+
+    function isMobile() {
+        return window.innerWidth <= 560;
+    }
+
+    let activeCalendar = null;
+
+    // Función para aplicar blur al fondo
+    function applyBlur() {
+        if (!isMobile()) return;
+
+        // Agregar clase al body
+        document.body.classList.add('flatpickr-open');
+
+        // Asegurar que el calendario activo tenga el z-index correcto
+        if (activeCalendar) {
+            activeCalendar.style.zIndex = '99999';
+            activeCalendar.style.position = 'fixed';
+            activeCalendar.style.top = '50%';
+            activeCalendar.style.left = '50%';
+            activeCalendar.style.transform = 'translate(-50%, -50%)';
+        }
+    }
+
+    // Función para quitar blur
+    function removeBlur() {
+        if (!isMobile()) return;
+        document.body.classList.remove('flatpickr-open');
+        activeCalendar = null;
+    }
+
+    // Función para detectar cuando se abre cualquier calendario
+    function detectCalendarOpen() {
+        const calendar = document.querySelector('.flatpickr-calendar.open');
+        if (calendar && isMobile()) {
+            if (!activeCalendar) {
+                activeCalendar = calendar;
+                applyBlur();
+            }
+        } else if (!calendar && activeCalendar) {
+            removeBlur();
+        }
+    }
+
+    // Observar cambios en el DOM para detectar apertura/cierre
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            // Buscar si hay algún calendario abierto
+            const calendar = document.querySelector('.flatpickr-calendar.open');
+
+            if (calendar && isMobile()) {
+                if (!activeCalendar) {
+                    activeCalendar = calendar;
+                    applyBlur();
+                }
+            } else if (!calendar && activeCalendar) {
+                removeBlur();
+            }
+        });
+    });
+
+    // Iniciar observación en todo el documento
+    observer.observe(document.body, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        attributeFilter: ['class']
+    });
+
+    // También detectar clicks en inputs de fecha
+    function setupInputListeners() {
+        const inputs = document.querySelectorAll('.flatpickr-input');
+        inputs.forEach(input => {
+            if (input.type === 'hidden') return;
+
+            input.addEventListener('click', function() {
+                setTimeout(() => {
+                    const calendar = document.querySelector('.flatpickr-calendar.open');
+                    if (calendar && isMobile()) {
+                        activeCalendar = calendar;
+                        applyBlur();
+                    }
+                }, 50);
+            });
+        });
+    }
+
+    // Inicializar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupInputListeners);
+    } else {
+        setupInputListeners();
+    }
+
+    // Revisar periódicamente (por si acaso)
+    setInterval(detectCalendarOpen, 200);
+})();
 /* ============================================================
    MODAL MEMBRESÍA - CON DOS BOTONES QUE ABREN EL MODAL
 ============================================================ */
@@ -1308,23 +1444,24 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 /* ============================================================
-   CONVERSIÓN DE MONEDA CON INDICADORES MXN/USD
+   CONVERSIÓN DE MONEDA UNIFICADA
+
 ============================================================ */
 (function() {
     "use strict";
 
     const EXCHANGE_RATE = 20;
+    let conversionAttempts = 0;
+    const MAX_ATTEMPTS = 10;
 
-    function getCurrentLanguage() {
-        return localStorage.getItem('idiomaPreferido') || 'es';
+    function getCurrencyFromHtml() {
+        const currentLang = document.documentElement.lang || 'es';
+        return currentLang === 'en' ? 'USD' : 'MXN';
     }
 
-    function getCurrencyCode(language) {
-        return language === 'en' ? 'USD' : 'MXN';
-    }
 
-    function formatAmount(amount, currencyCode) {
-        if (currencyCode === 'USD') {
+    function formatAmount(amount, currency) {
+        if (currency === 'USD') {
             return amount.toLocaleString('en-US', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
@@ -1336,14 +1473,25 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
-
-    function convertPrices() {
-        const language = getCurrentLanguage();
-        const currencyCode = getCurrencyCode(language);
-
-        console.log('🔄 Convertiendo precios a:', currencyCode);
-
+    function convertAllPrices(force = false) {
+        const targetCurrency = getCurrencyFromHtml();
         const carCards = document.querySelectorAll('.car-card');
+
+        console.log(`🔄 Convirtiendo precios a: ${targetCurrency} - Tarjetas: ${carCards.length}`);
+
+
+        if (carCards.length === 0 && !force && conversionAttempts < MAX_ATTEMPTS) {
+            conversionAttempts++;
+            console.log(`⏳ Reintento ${conversionAttempts}/${MAX_ATTEMPTS} en 300ms...`);
+            setTimeout(() => convertAllPrices(true), 300);
+            return;
+        }
+
+        if (carCards.length > 0) {
+            conversionAttempts = 0;
+        }
+
+        let convertedCount = 0;
 
         carCards.forEach((card) => {
             const priceMXN = parseFloat(card.dataset.priceMxn);
@@ -1353,94 +1501,144 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let displayPrice, displayOldPrice;
 
-            if (currencyCode === 'USD') {
+            if (targetCurrency === 'USD') {
                 displayPrice = priceMXN / EXCHANGE_RATE;
-                if (!isNaN(oldPriceMXN)) {
-                    displayOldPrice = oldPriceMXN / EXCHANGE_RATE;
-                }
+                displayOldPrice = !isNaN(oldPriceMXN) ? oldPriceMXN / EXCHANGE_RATE : null;
             } else {
                 displayPrice = priceMXN;
                 displayOldPrice = oldPriceMXN;
             }
 
-            // Formatear números
-            const formattedPrice = formatAmount(displayPrice, currencyCode);
-            const formattedOldPrice = formatAmount(displayOldPrice, currencyCode);
-
-            // Actualizar precio actual
             const priceNowSpan = card.querySelector('.price-now');
-            if (priceNowSpan) {
-                priceNowSpan.textContent = formattedPrice;
-            }
-
-            // Actualizar precio anterior
             const priceOldSpan = card.querySelector('.price-old');
-            if (priceOldSpan && !isNaN(displayOldPrice)) {
-                priceOldSpan.textContent = formattedOldPrice;
-            }
+            const currencySpan = card.querySelector('.currency-code');
+            const oldCurrencySpan = card.querySelector('.currency-code-old');
 
-            // ACTUALIZAR CÓDIGOS DE MONEDA - PARTE CRÍTICA
-            const currencyCodeSpan = card.querySelector('.currency-code');
-            if (currencyCodeSpan) {
-                currencyCodeSpan.textContent = currencyCode;
-                console.log('✅ Actualizado código moneda a:', currencyCode);
+            if (priceNowSpan) {
+                priceNowSpan.textContent = formatAmount(displayPrice, targetCurrency);
+                convertedCount++;
             }
-
-            const currencyCodeOldSpan = card.querySelector('.currency-code-old');
-            if (currencyCodeOldSpan) {
-                currencyCodeOldSpan.textContent = currencyCode;
+            if (priceOldSpan && displayOldPrice) {
+                priceOldSpan.textContent = formatAmount(displayOldPrice, targetCurrency);
             }
+            if (currencySpan) currencySpan.textContent = targetCurrency;
+            if (oldCurrencySpan) oldCurrencySpan.textContent = targetCurrency;
         });
 
-        // Mostrar en consola qué moneda se está usando
-        console.log('💰 Moneda actual:', currencyCode);
+        console.log(`💰 Conversión completada: ${convertedCount} tarjetas a ${targetCurrency}`);
+
+        if (typeof updateSummary === 'function') {
+            setTimeout(updateSummary, 50);
+        }
     }
 
-    function listenForLanguageChanges() {
-        // Escuchar cambios en localStorage
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'idiomaPreferido') {
-                console.log('🌐 Idioma cambiado a:', e.newValue);
-                convertPrices();
+    function observeLangChanges() {
+        const observer = new MutationObserver(() => {
+            console.log('🔔 Atributo lang cambiado a:', document.documentElement.lang);
+            conversionAttempts = 0;
+            setTimeout(() => convertAllPrices(true), 100);
+        });
+
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['lang']
+        });
+
+        console.log('✅ Observador de idioma iniciado');
+    }
+    function observeNewCards() {
+        const cardObserver = new MutationObserver((mutations) => {
+            let hasNewCards = false;
+
+            mutations.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1) {
+                        if (node.classList && node.classList.contains('car-card')) {
+                            hasNewCards = true;
+                        }
+                        if (node.querySelectorAll && node.querySelectorAll('.car-card').length > 0) {
+                            hasNewCards = true;
+                        }
+                    }
+                });
+            });
+
+            if (hasNewCards) {
+                console.log('🆕 Nuevas tarjetas detectadas');
+                setTimeout(() => convertAllPrices(true), 100);
             }
         });
 
-        // Escuchar clics en selectores de idioma
-        document.addEventListener('click', function(e) {
-            const languageSelectors = document.querySelectorAll('[data-language-selector], .language-selector, #languageSelect, select[name="language"]');
-            languageSelectors.forEach(selector => {
-                if (selector.contains(e.target) || selector === e.target) {
-                    setTimeout(convertPrices, 150);
-                }
+        cardObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
+    function listenLanguageButtons() {
+        document.addEventListener('click', (e) => {
+            const langButton = e.target.closest('.lang-btn, .dropdown-item[href*="/lang/"]');
+            if (langButton) {
+                console.log('🔘 Click en selector de idioma');
+                conversionAttempts = 0;
+
+
+                setTimeout(() => convertAllPrices(true), 50);
+                setTimeout(() => convertAllPrices(true), 200);
+                setTimeout(() => convertAllPrices(true), 500);
+            }
+        });
+    }
+
+
+    function observeLocalStorage() {
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'idiomaPreferido') {
+                console.log('📦 Storage: idioma cambiado a', e.newValue);
+                conversionAttempts = 0;
+                setTimeout(() => convertAllPrices(true), 100);
+            }
+        });
+    }
+
+
+    function init() {
+        console.log('🚀 Iniciando sistema de conversión de moneda');
+
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(() => convertAllPrices(), 100);
             });
-        });
+        } else {
+            setTimeout(() => convertAllPrices(), 100);
+        }
 
-        // Inicializar
-        document.addEventListener('DOMContentLoaded', function() {
-            convertPrices();
-        });
 
-        window.addEventListener('load', function() {
-            convertPrices();
-        });
+        observeLangChanges();
+        observeNewCards();
+        listenLanguageButtons();
+        observeLocalStorage();
 
-        // Forzar cada 2 segundos por si algo interfiere (solo para debugging)
+        let lastCurrency = getCurrencyFromHtml();
         setInterval(() => {
-            const currentCode = getCurrencyCode(getCurrentLanguage());
-            const visibleCodes = document.querySelectorAll('.currency-code');
-            if (visibleCodes.length > 0 && visibleCodes[0].textContent !== currentCode) {
-                console.log('⚠️ Detectada inconsistencia, forzando conversión...');
-                convertPrices();
+            const currentCurrency = getCurrencyFromHtml();
+            if (currentCurrency !== lastCurrency) {
+                lastCurrency = currentCurrency;
+                convertAllPrices(true);
+            } else {
+
+                const carCards = document.querySelectorAll('.car-card');
+                if (carCards.length > 0) {
+                    const firstPrice = carCards[0].querySelector('.price-now')?.textContent;
+                    if (!firstPrice || firstPrice === '') {
+                        convertAllPrices(true);
+                    }
+                }
             }
         }, 3000);
     }
 
-    // Iniciar
-    convertPrices();
-    listenForLanguageChanges();
+    init();
 
-    // Exponer funciones para debugging
-    window.convertPrices = convertPrices;
-    window.getCurrentCurrency = () => getCurrencyCode(getCurrentLanguage());
-    window.EXCHANGE_RATE = EXCHANGE_RATE;
+
+    window.convertCarPrices = convertAllPrices;
+    window.getCurrentCurrency = getCurrencyFromHtml;
 })();

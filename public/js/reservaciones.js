@@ -1,6 +1,95 @@
 (function () {
   "use strict";
 
+  // ============================================================
+  // FUNCIÓN PARA OBTENER EL IDIOMA ACTUAL
+  // ============================================================
+  function getCurrentLocale() {
+    const htmlLang = document.documentElement.lang || 'es';
+    return htmlLang === 'en' ? 'en' : 'es';
+  }
+
+  // ============================================================
+  // LOCALE PARA FLATPICKR (ESPAÑOL E INGLÉS)
+  // ============================================================
+  function getFlatpickrLocale() {
+    const locale = getCurrentLocale();
+    if (locale === 'en') {
+      return {
+        firstDayOfWeek: 0,
+        weekdays: {
+          shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+          longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        },
+        months: {
+          shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          longhand: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        }
+      };
+    }
+    return {
+      firstDayOfWeek: 1,
+      weekdays: {
+        shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+        longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+      },
+      months: {
+        shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+        longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+      }
+    };
+  }
+
+  // ============================================================
+  // FUNCIÓN PARA TEXTO DE ERRORES
+  // ============================================================
+  function getErrorMessage(fieldType) {
+    const locale = getCurrentLocale();
+    const messages = {
+      location: { es: 'Ubicación requerida', en: 'Location required' },
+      date: { es: 'Fecha requerida', en: 'Date required' },
+      time: { es: 'Hora requerida', en: 'Time required' },
+      fullname: { es: 'Nombre completo requerido', en: 'Full name required' },
+      phone: { es: 'Teléfono requerido', en: 'Phone required' },
+      phone_invalid: { es: 'El teléfono debe tener 10 dígitos', en: 'Phone must have 10 digits' },
+      email: { es: 'Correo requerido', en: 'Email required' },
+      email_invalid: { es: 'Correo electrónico no válido', en: 'Invalid email address' },
+      country: { es: 'Selecciona un país', en: 'Select a country' },
+      dob_incomplete: { es: 'Fecha de nacimiento incompleta', en: 'Incomplete date of birth' },
+      dob_invalid: { es: 'Fecha de nacimiento no válida', en: 'Invalid date of birth' },
+      policies: { es: 'Debes aceptar las políticas', en: 'You must accept the policies' }
+    };
+    return messages[fieldType]?.[locale] || messages[fieldType]?.es || 'Field required';
+  }
+
+  // ============================================================
+  // FUNCIÓN PARA MENSAJE DE CONDUCTOR JOVEN
+  // ============================================================
+  function getYoungDriverMessage(amount) {
+    const locale = getCurrentLocale();
+    const amountStr = Math.round(amount).toLocaleString(locale === 'en' ? 'en-US' : 'es-MX');
+    if (locale === 'en') {
+     return "We detected that the main driver is under 25 years old.\n\n" +
+            "For insurance policy reasons, the 'Young Driver' protection will be automatically added, " +
+            `with an additional charge of $${amountStr} MXN per rental day.\n\n` +
+            "You can see this concept in the breakdown of Rental options.";
+    }
+    return "Detectamos que el conductor principal tiene menos de 25 años.\n\n" +
+        `Por política de aseguradora, se agregará automáticamente la protección "Conductor menor de 25 años", ` +
+        `con un cargo adicional de $${amountStr} MXN por día de renta.\n\n` +
+        "Puedes ver este concepto en el desglose de Opciones de renta.";
+}
+  // ============================================================
+  // FUNCIÓN PARA MENSAJE DE ALERTA DE SELECCIÓN
+  // ============================================================
+  function getSelectVehicleMessage() {
+    const locale = getCurrentLocale();
+    if (locale === 'en') {
+      return "You must select a vehicle and a rental plan.";
+    }
+    return "Debes seleccionar un vehículo y un plan de renta.";
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('refreshMovilCard', function () {
     console.log('🔄 Refrescando tarjeta móvil');
@@ -146,17 +235,13 @@
       } catch (_) {}
 
       const montoStr = (montoPorDia != null)
-        ? Math.round(montoPorDia).toLocaleString('es-MX')
+        ? Math.round(montoPorDia).toLocaleString(getCurrentLocale() === 'en' ? 'en-US' : 'es-MX')
         : 'X';
 
-      const msg =
-        "Detectamos que el conductor principal tiene menos de 25 años.\n\n" +
-        `Por política de aseguradora, se agregará automáticamente la protección "Conductor menor de 25 años", ` +
-        `con un cargo adicional de ${montoStr} MXN por día de renta.\n\n` +
-        "Puedes ver este concepto en el desglose de Opciones de renta.";
+      const msg = getYoungDriverMessage(montoPorDia || 0);
 
       alertify.alert(
-        "Conductor menor de 25 años",
+        getCurrentLocale() === 'en' ? "Young driver" : "Conductor menor de 25 años",
         msg,
         function() {
           console.log('🔔 Alerta cerrada');
@@ -297,7 +382,7 @@
 
         if (!carSelected && !hasCat) {
           e.preventDefault();
-          if (window.alertify) alertify.error("Debes seleccionar un vehículo y un plan de renta.");
+          if (window.alertify) alertify.error(getSelectVehicleMessage());
           const carsContainer = document.querySelector('.cars');
           if (carsContainer) carsContainer.scrollIntoView({ behavior: "smooth" });
         }
@@ -335,43 +420,43 @@
 
         // VALIDAR NOMBRE
         if (!nombre || !nombre.value || nombre.value.trim() === "") {
-          marcarError(nombre, 'Nombre completo requerido');
+          marcarError(nombre, getErrorMessage('fullname'));
           hayErrores = true;
         }
 
         // VALIDAR TELÉFONO
         if (!telefono || !telefono.value || telefono.value.trim() === "") {
-          marcarError(telefono, 'Teléfono requerido');
+          marcarError(telefono, getErrorMessage('phone'));
           hayErrores = true;
         } else {
           const tel = telefono.value.replace(/\D/g, '');
           if (tel.length !== 10) {
-            marcarError(telefono, 'El teléfono debe tener 10 dígitos');
+            marcarError(telefono, getErrorMessage('phone_invalid'));
             hayErrores = true;
           }
         }
 
         // VALIDAR CORREO
         if (!correo || !correo.value || correo.value.trim() === "") {
-          marcarError(correo, 'Correo requerido');
+          marcarError(correo, getErrorMessage('email'));
           hayErrores = true;
         } else {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(correo.value.trim())) {
-            marcarError(correo, 'Correo electrónico no válido');
+            marcarError(correo, getErrorMessage('email_invalid'));
             hayErrores = true;
           }
         }
 
         // VALIDAR PAÍS
         if (!pais || !pais.value) {
-          marcarError(pais, 'Selecciona un país');
+          marcarError(pais, getErrorMessage('country'));
           hayErrores = true;
         }
 
         // VALIDAR FECHA NACIMIENTO
         if (!dia || !dia.value || !mes || !mes.value || !año || !año.value) {
-          marcarErrorFecha('Fecha de nacimiento incompleta');
+          marcarErrorFecha(getErrorMessage('dob_incomplete'));
           hayErrores = true;
         } else {
           const day = parseInt(dia.value, 10);
@@ -380,14 +465,14 @@
 
           const date = new Date(year, month - 1, day);
           if (date.getDate() !== day || date.getMonth() !== month - 1) {
-            marcarErrorFecha('Fecha de nacimiento no válida');
+            marcarErrorFecha(getErrorMessage('dob_invalid'));
             hayErrores = true;
           }
         }
 
         // VALIDAR POLÍTICAS
         if (!acepto || !acepto.checked) {
-          marcarErrorCheckbox('Debes aceptar las políticas');
+          marcarErrorCheckbox(getErrorMessage('policies'));
           hayErrores = true;
         }
 
@@ -975,7 +1060,8 @@ if (isReset) {
   }
 
   function fmtMoney(n) {
-    return '$' + Math.round(n).toLocaleString('es-MX') + ' MXN';
+    const locale = getCurrentLocale();
+    return '$' + Math.round(n).toLocaleString(locale === 'en' ? 'en-US' : 'es-MX') + ' MXN';
   }
 
   const addonsMap = parseAddons(rawAddons);
@@ -1057,7 +1143,7 @@ if (isReset) {
     const row = document.createElement('div');
     row.className = 'row row-empty';
     row.innerHTML = `
-      <span class="muted">Sin complementos seleccionados</span>
+      <span class="muted">${getCurrentLocale() === 'en' ? 'No add-ons selected' : 'Sin complementos seleccionados'}</span>
       <strong>$0 MXN</strong>
     `;
     extrasList.appendChild(row);
@@ -1076,7 +1162,7 @@ if (isReset) {
     const row = document.createElement('div');
     row.className = 'row row-iva';
     row.innerHTML = `
-      <span>IVA (16%)</span>
+      <span>${getCurrentLocale() === 'en' ? 'VAT (16%)' : 'IVA (16%)'}</span>
       <strong>${fmtMoney(iva)}</strong>
     `;
     ivaList.appendChild(row);
@@ -1273,7 +1359,7 @@ if (isReset) {
         const prepagoTotal = prepagoDia * days;
         const mostradorTotal = mostradorDia * days;
 
-        const fmt = (n) => Math.round(n).toLocaleString('es-MX');
+        const fmt = (n) => Math.round(n).toLocaleString(getCurrentLocale() === 'en' ? 'en-US' : 'es-MX');
 
         const elPrepTotal = qs('.js-prepago-total', card);
         const elMostTotal = qs('.js-mostrador-total', card);
@@ -1542,7 +1628,7 @@ if (isReset) {
 
       if (el.tagName === 'SELECT') {
         const val = el.value;
-        return val && val !== "" && val !== "H" && val !== "0" && val !== "00" && val !== "Hora";
+        return val && val !== "" && val !== "H" && val !== "0" && val !== "00" && val !== "Hora" && val !== "Time" && val !== "Hour";
       }
 
       const v = (el.value ?? "").toString().trim();
@@ -1603,7 +1689,7 @@ if (isReset) {
       const ctl = select.closest('[data-float]');
       if (!ctl) return;
 
-      if (select.value && select.value !== "" && select.value !== "H") {
+      if (select.value && select.value !== "" && select.value !== "H" && select.value !== "Hour" && select.value !== "Time") {
         ctl.classList.add('filled');
         ctl.classList.remove('pristine');
       }
@@ -1611,7 +1697,7 @@ if (isReset) {
       select.addEventListener('change', function() {
         const parentCtl = this.closest('[data-float]');
         if (parentCtl) {
-          if (this.value && this.value !== "" && this.value !== "H") {
+          if (this.value && this.value !== "" && this.value !== "H" && this.value !== "Hour" && this.value !== "Time") {
             parentCtl.classList.add('filled');
             parentCtl.classList.remove('pristine');
           } else {
@@ -1636,7 +1722,7 @@ if (isReset) {
         if (!element.value) return false;
         if (element.tagName === 'SELECT') {
           const val = element.value;
-          return val !== "" && val !== "H" && val !== "0" && val !== "00" && val !== "Hora";
+          return val !== "" && val !== "H" && val !== "0" && val !== "00" && val !== "Hora" && val !== "Time" && val !== "Hour";
         }
         return element.value.trim() !== "";
       })();
@@ -1685,13 +1771,15 @@ if (isReset) {
     try { if (start._flatpickr) start._flatpickr.destroy(); } catch (_) { }
     try { if (end._flatpickr) end._flatpickr.destroy(); } catch (_) { }
 
+    const localeData = getFlatpickrLocale();
+
     const baseCfg = {
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "d M Y",
         allowInput: true,
         disableMobile: true,
-        locale: "es"
+        locale: localeData
     };
 
     const startFp = flatpickr(start, { ...baseCfg });
@@ -1703,7 +1791,6 @@ if (isReset) {
 
     if (startInit) {
         startFp.setDate(startInit, false);
-        // Forzar actualización del altInput
         setTimeout(() => {
             if (startFp.altInput) {
                 startFp.altInput.value = startFp.formatDate(startInit, startFp.config.altFormat);
@@ -1769,7 +1856,6 @@ if (isReset) {
     start.addEventListener("blur", applyConstraintsAndFix);
     end.addEventListener("blur", applyConstraintsAndFix);
 
-    // 🔥 IMPORTANTE: Forzar sincronización después de que la persistencia cargue
     setTimeout(() => {
         const startVal = start.value;
         const endVal = end.value;
@@ -1784,6 +1870,14 @@ if (isReset) {
             if (parsed) endFp.setDate(parsed, true);
         }
     }, 200);
+
+    // Escuchar cambios de idioma para actualizar Flatpickr
+    const observer = new MutationObserver(() => {
+        const newLocale = getFlatpickrLocale();
+        if (startFp) startFp.set('locale', newLocale);
+        if (endFp) endFp.set('locale', newLocale);
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 }
 
   function bootWhenFlatpickrReady() {
@@ -1808,7 +1902,7 @@ if (isReset) {
       const val = (el) => (el && el.value != null) ? String(el.value).trim() : "";
       const filled =
         (input && val(input) !== "") ||
-        (select && val(select) !== "" && val(select) !== "H");
+        (select && val(select) !== "" && val(select) !== "H" && val(select) !== "Hour" && val(select) !== "Time");
 
       ctl.classList.toggle('filled', filled);
       ctl.classList.toggle('pristine', !filled);
@@ -1935,7 +2029,8 @@ if (isReset) {
     const mpTextoAhorro = document.getElementById('mpTextoAhorro');
 
     function fmtMoney(n) {
-      return '$' + Math.round(Number(n || 0)).toLocaleString('es-MX') + ' MXN';
+      const locale = getCurrentLocale();
+      return '$' + Math.round(Number(n || 0)).toLocaleString(locale === 'en' ? 'en-US' : 'es-MX') + ' MXN';
     }
 
     function getCategoriaSeleccionada() {
@@ -1956,7 +2051,7 @@ if (isReset) {
         return sumTitle.textContent.trim();
       }
 
-      return 'Categoría seleccionada';
+      return getCurrentLocale() === 'en' ? 'Selected category' : 'Categoría seleccionada';
     }
 
   function getPreciosSeleccionados() {
@@ -2004,7 +2099,7 @@ if (isReset) {
       if (mpPrecioLinea) mpPrecioLinea.textContent = fmtMoney(precioLinea);
       if (mpPrecioMostrador) mpPrecioMostrador.textContent = fmtMoney(precioMostrador);
       if (mpPrecioMostradorTachado) mpPrecioMostradorTachado.textContent = fmtMoney(precioMostrador);
-      if (mpTextoAhorro) mpTextoAhorro.textContent = ahorroPct > 0 ? `Ahorra ${ahorroPct}%` : 'Mismo precio';
+      if (mpTextoAhorro) mpTextoAhorro.textContent = ahorroPct > 0 ? (getCurrentLocale() === 'en' ? `Save ${ahorroPct}%` : `Ahorra ${ahorroPct}%`) : (getCurrentLocale() === 'en' ? 'Same price' : 'Mismo precio');
     }
 
     function openMetodoPagoModal() {
@@ -2302,7 +2397,8 @@ function initMovilCardVisibility() {
         for (let dialog of allDialogs) {
             if (dialog.textContent && (
                 dialog.textContent.includes('reservación fue registrada correctamente') ||
-                dialog.textContent.includes('Su reservación fue registrada')
+                dialog.textContent.includes('Your reservation has been successfully registered') ||
+                dialog.textContent.includes('reservation was successfully registered')
             )) {
                 console.log('🎉 Alerta de éxito detectada por texto');
                 return true;
@@ -2741,13 +2837,42 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ===== INICIALIZAR FLATPICKR =====
+
     // ============================================================
 // INICIALIZAR FLATPICKR CON SOPORTE PARA PERSISTENCIA
 // ============================================================
 if (typeof flatpickr !== 'undefined') {
     const startInput = document.getElementById('start');
     const endInput = document.getElementById('end');
+
+    // Función para obtener el locale actual
+    function getFlatpickrLocale() {
+        const htmlLang = document.documentElement.lang || 'es';
+        if (htmlLang === 'en') {
+            return {
+                firstDayOfWeek: 0,
+                weekdays: {
+                    shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                    longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+                },
+                months: {
+                    shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    longhand: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+                }
+            };
+        }
+        return {
+            firstDayOfWeek: 1,
+            weekdays: {
+                shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+                longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+            },
+            months: {
+                shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+            }
+        };
+    }
 
     // Función para parsear fecha en múltiples formatos
     function parseDateAny(val) {
@@ -2789,34 +2914,31 @@ if (typeof flatpickr !== 'undefined') {
     }
 
     // Configuración común para ambos datepickers
-    const commonConfig = {
-        dateFormat: "Y-m-d",          // Formato interno para el input oculto
-        altInput: true,                // Mostrar formato amigable al usuario
-        altFormat: "d M Y",            // Formato: "15 Mar 2026"
-        allowInput: true,              // Permitir escritura manual
-        locale: "es",                  // Español
-        minDate: "today",
-        disableMobile: true,           // Evitar el selector nativo en móvil
-        onReady: function(selectedDates, dateStr, instance) {
-            // Forzar la sincronización de clases
-            if (dateStr && dateStr !== '') {
-                instance.altInput.classList.add('field-success');
-                instance.altInput.classList.remove('field-error');
-            }
-        },
-        onChange: function(selectedDates, dateStr, instance) {
-            // Sincronizar clases con el altInput
-            if (dateStr && dateStr !== '') {
-                instance.altInput.classList.add('field-success');
-                instance.altInput.classList.remove('field-error');
-            } else {
-                instance.altInput.classList.remove('field-success', 'field-error');
-            }
-
-            // Disparar evento change para que la persistencia lo capture
-            instance.input.dispatchEvent(new Event('change', { bubbles: true }));
+   const commonConfig = {
+    dateFormat: "Y-m-d",
+    altInput: true,
+    altFormat: "d-M-y",
+    allowInput: false,
+    locale: getFlatpickrLocale(),
+    minDate: "today",
+    disableMobile: true,
+    onReady: function(selectedDates, dateStr, instance) {
+        if (dateStr && dateStr !== '') {
+            instance.altInput.classList.add('field-success');
+            instance.altInput.classList.remove('field-error');
         }
-    };
+    },
+    onChange: function(selectedDates, dateStr, instance) {
+        if (dateStr && dateStr !== '') {
+            instance.altInput.classList.add('field-success');
+            instance.altInput.classList.remove('field-error');
+        } else {
+            instance.altInput.classList.remove('field-success', 'field-error');
+        }
+
+        instance.input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+};
 
     // Inicializar pickup date
     if (startInput) {
@@ -2877,6 +2999,14 @@ if (typeof flatpickr !== 'undefined') {
             }
         }, 50);
     }
+
+    // Escuchar cambios de idioma para actualizar Flatpickr
+    const observer = new MutationObserver(() => {
+        const newLocale = getFlatpickrLocale();
+        if (startInput && startInput._flatpickr) startInput._flatpickr.set('locale', newLocale);
+        if (endInput && endInput._flatpickr) endInput._flatpickr.set('locale', newLocale);
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 }
 
     // ===== ACTUALIZAR ICONOS =====
@@ -3056,6 +3186,109 @@ document.addEventListener("DOMContentLoaded", function() {
 
     console.log('Select2 unificado inicializado correctamente');
 });
+
+/* ==========================================================
+   FONDO BORROSO EN MÓVIL - PARA PICKUP Y DROPOFF
+========================================================== */
+(function() {
+    "use strict";
+
+    function isMobile() {
+        return window.innerWidth <= 560;
+    }
+
+    let activeCalendar = null;
+
+    // Función para aplicar blur al fondo
+    function applyBlur() {
+        if (!isMobile()) return;
+
+        // Agregar clase al body
+        document.body.classList.add('flatpickr-open');
+
+        // Asegurar que el calendario activo tenga el z-index correcto
+        if (activeCalendar) {
+            activeCalendar.style.zIndex = '99999';
+            activeCalendar.style.position = 'fixed';
+            activeCalendar.style.top = '50%';
+            activeCalendar.style.left = '50%';
+            activeCalendar.style.transform = 'translate(-50%, -50%)';
+        }
+    }
+
+    // Función para quitar blur
+    function removeBlur() {
+        if (!isMobile()) return;
+        document.body.classList.remove('flatpickr-open');
+        activeCalendar = null;
+    }
+
+    // Función para detectar cuando se abre cualquier calendario
+    function detectCalendarOpen() {
+        const calendar = document.querySelector('.flatpickr-calendar.open');
+        if (calendar && isMobile()) {
+            if (!activeCalendar) {
+                activeCalendar = calendar;
+                applyBlur();
+            }
+        } else if (!calendar && activeCalendar) {
+            removeBlur();
+        }
+    }
+
+    // Observar cambios en el DOM para detectar apertura/cierre
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            // Buscar si hay algún calendario abierto
+            const calendar = document.querySelector('.flatpickr-calendar.open');
+
+            if (calendar && isMobile()) {
+                if (!activeCalendar) {
+                    activeCalendar = calendar;
+                    applyBlur();
+                }
+            } else if (!calendar && activeCalendar) {
+                removeBlur();
+            }
+        });
+    });
+
+    // Iniciar observación en todo el documento
+    observer.observe(document.body, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        attributeFilter: ['class']
+    });
+
+    // También detectar clicks en inputs de fecha
+    function setupInputListeners() {
+        const inputs = document.querySelectorAll('.flatpickr-input');
+        inputs.forEach(input => {
+            if (input.type === 'hidden') return;
+
+            input.addEventListener('click', function() {
+                setTimeout(() => {
+                    const calendar = document.querySelector('.flatpickr-calendar.open');
+                    if (calendar && isMobile()) {
+                        activeCalendar = calendar;
+                        applyBlur();
+                    }
+                }, 50);
+            });
+        });
+    }
+
+    // Inicializar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupInputListeners);
+    } else {
+        setupInputListeners();
+    }
+
+    // Revisar periódicamente (por si acaso)
+    setInterval(detectCalendarOpen, 200);
+})();
 /* ============================================================
    CONVERSIÓN DE MONEDA PARA STEP 2 - RESERVACIONES
 ============================================================ */
