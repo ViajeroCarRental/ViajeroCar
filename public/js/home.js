@@ -801,7 +801,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-       /* ===== 2. VALIDAR FECHAS - CORREGIDO ===== */
+/* ===== 2. VALIDAR FECHAS  ===== */
 const fechas = [
     { id: 'pickupDate', msgKey: 'date' },
     { id: 'dropoffDate', msgKey: 'date' }
@@ -814,59 +814,27 @@ fechas.forEach(campo => {
     const container = hiddenInput.closest('.dt-field');
     if (!container) return;
 
-    // Buscar el input visible de Flatpickr (altInput)
-    let altInput = null;
-    // Primero buscar por la clase flatpickr-input
-    altInput = container.querySelector('.flatpickr-input');
 
-    // Si no se encuentra, buscar cualquier input visible que no sea hidden
-    if (!altInput) {
-        container.querySelectorAll('input').forEach(input => {
-            if (input.type !== 'hidden' && input !== hiddenInput) {
-                altInput = input;
-            }
-        });
-    }
+    container.querySelectorAll('.error-msg').forEach(el => el.remove());
 
-    const oldMsg = container.querySelector('.error-msg');
-    if (oldMsg) oldMsg.remove();
+    const todosLosInputs = container.querySelectorAll('input');
 
-    // Limpiar clases de error en ambos inputs
-    if (altInput) {
-        altInput.classList.remove('field-error', 'field-success');
-    }
-    hiddenInput.classList.remove('field-error', 'field-success');
-
-    const hasValue = hiddenInput.value && hiddenInput.value.trim() !== '';
-
-    if (!hasValue) {
+    if (!hiddenInput.value || hiddenInput.value.trim() === '') {
         valid = false;
-        console.log(`❌ ${campo.id} sin valor`);
 
-        // 🔥 Aplicar error al input visible (altInput)
-        if (altInput) {
-            altInput.classList.add('field-error');
-            altInput.classList.remove('field-success');
-        }
-        hiddenInput.classList.add('field-error');
+        todosLosInputs.forEach(inp => inp.classList.add('field-error'));
 
         const msg = document.createElement('span');
         msg.className = 'error-msg';
         msg.textContent = getErrorMessage(campo.msgKey);
         container.appendChild(msg);
-
     } else {
-        console.log(`✅ ${campo.id} OK: ${hiddenInput.value}`);
-
-        // Aplicar éxito al input visible
-        if (altInput) {
-            altInput.classList.add('field-success');
-            altInput.classList.remove('field-error');
-        }
-        hiddenInput.classList.add('field-success');
+        todosLosInputs.forEach(inp => {
+            inp.classList.remove('field-error');
+            inp.classList.add('field-success');
+        });
     }
 });
-
         /* ===== 3. VALIDAR HORAS - CORREGIDO PARA SELECTS ===== */
         const horas = [
             { id: 'pickupTime', msgKey: 'time' },
