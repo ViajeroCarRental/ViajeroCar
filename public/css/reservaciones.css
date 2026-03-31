@@ -4609,14 +4609,50 @@ body.flatpickr-open > *:not(.flatpickr-calendar) {
 .resv-alert-itinerary{
   background: linear-gradient(180deg, #ffffff, #fcfcfd);
 }
-
-.resv-alert-card-title{
-  margin-bottom: 12px;
-  font-size: 13px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  color: #8b1d1a;
+.resv-alert-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #b22222;
+  margin-bottom: 10px;}
+  /*alerta de confirmacion boton reserva step 4 */
+.resv-section-title {
+  color: #b22222;
+  font-weight: 700;
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+.resv-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin: 3px 0;
+}
+.resv-row-inline {
+  display: flex;
+  justify-content: space-between;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+.resv-alert-card .resv-row span,
+.resv-alert-card .resv-row-inline span {
+  font-weight: 400 !important;
+  color: #777;
+}
+.resv-alert-card .resv-row b,
+.resv-alert-card .resv-row-inline b {
+  font-weight: 700 !important;
+  color: #222;
+}
+.resv-row-inline.total b {
+  color: #b22222;
+  font-size: 16px;
+}
+.resv-alert-item span.resv-alert-label {
+  font-weight: 400 !important;
+  color: #6b7280 !important;
+}
+.resv-alert-item b {
+  font-weight: 700 !important;
 }
 
 .resv-alert-item{

@@ -206,7 +206,7 @@
           {{-- ✅ TEXTO con el estilo que ya traíamos (h3 + p) --}}
       <header class="car-title">
     <h3>{{ strtoupper(__($nombresClave[$codigo] ?? $cat->nombre)) }}</h3>
-    <p>{{ __($descripcionesClave[$codigo] ?? $cat->descripcion) }} | {{ $codigo }}</p>
+  <p>{{ __($descripcionesClave[$codigo] ?? $cat->descripcion) }}</p>
 </header>
 
           <div class="car-media">

@@ -233,11 +233,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================================
-  // 📥 Cargar SDK de PayPal dinámicamente
+  // 📥 Cargar SDK de PayPal dinámicamente con Idioma Dinámico
   // ==========================================================
   function loadPayPalSDK() {
     return new Promise((resolve, reject) => {
-      if (window.paypal && paypalSDKLoaded) {
+      if (window.paypal && window.paypalSDKLoaded) {
         resolve();
         return;
       }
@@ -251,33 +251,27 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      // --- DETECTAR IDIOMA ACTUAL ---
+      // Obtenemos el idioma de <html lang="..."> que definiste en tu layout
+      const currentLang = document.documentElement.lang || 'es';
+
+      // Mapeamos el idioma al formato de PayPal
+      // Si es 'es' usamos es_MX, si no, por defecto en_US
+      const paypalLocale = (currentLang === 'es') ? 'es_MX' : 'en_US';
+
       const script = document.createElement("script");
-      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=MXN&intent=capture&locale=en_US`;
+      // Usamos la variable paypalLocale en el parámetro &locale=
+      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=MXN&intent=capture&locale=${paypalLocale}`;
+
       script.async = true;
       script.onload = () => {
-        paypalSDKLoaded = true;
+        window.paypalSDKLoaded = true;
         resolve();
       };
       script.onerror = () => reject(new Error("No se pudo cargar el SDK de PayPal."));
       document.head.appendChild(script);
     });
   }
-
-  function obtenerTotalParaPayPal() {
-    const precioLineaEl = document.getElementById("mpPrecioLinea");
-    let totalModal = 0;
-
-    if (precioLineaEl && precioLineaEl.textContent.trim() !== "" && precioLineaEl.textContent !== "$0 MXN") {
-      totalModal = parseFloat(precioLineaEl.textContent.replace(/[^\d.]/g, ''));
-    }
-
-    if (totalModal > 0) {
-      return totalModal;
-    } else {
-      return calcularTotales().total;
-    }
-  }
-
   // ==========================================================
   // 🚀 Enviar reserva a /reservas/linea después de onApprove
   // ==========================================================

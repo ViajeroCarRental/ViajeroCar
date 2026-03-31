@@ -472,7 +472,7 @@ try {
                         <label class="inline-check" for="differentDropoff">
                             <input type="checkbox" id="differentDropoff" name="different_dropoff" value="1"
                                 {{ request('different_dropoff') ? 'checked' : '' }}>
-                            <span class="checkbox-text">{{ __('Different return<br>location') }}</span>
+                           <span class="checkbox-text">{{ __('Different return location') }}</span>
                         </label>
                     </div>
 
@@ -2841,45 +2841,7 @@ input:checked + .slider:before {
             if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
         });
     </script>
-<script>
 
-// js/traduccion-return.js
-function traducirReturnDestination() {
-    const idioma = localStorage.getItem('idiomaPreferido') || 'es';
-    const returnElement = document.querySelector('.inline-check span');
-
-    if (returnElement) {
-        if (idioma === 'en') {
-            // INGLÉS: 3 líneas
-            returnElement.innerHTML = 'RETURN TO<br>ANOTHER<br>DESTINATION';
-            returnElement.style.lineHeight = '1.2';
-            returnElement.style.display = 'block';
-            returnElement.style.whiteSpace = 'normal';
-            returnElement.style.fontWeight = 'bold';
-        } else {
-            // ESPAÑOL: 2 líneas
-            returnElement.innerHTML = 'DEVOLVER EN <br>OTRO DESTINO';
-            returnElement.style.lineHeight = '1.2';
-            returnElement.style.display = 'block';
-            returnElement.style.whiteSpace = 'normal';
-            returnElement.style.fontWeight = 'bold';
-        }
-    }
-}
-document.addEventListener('DOMContentLoaded', traducirReturnDestination);
-window.addEventListener('storage', function(e) {
-    if (e.key === 'idiomaPreferido') {
-        traducirReturnDestination();
-    }
-});
-setTimeout(traducirReturnDestination, 500);
-document.addEventListener('click', function(e) {
-    const langBtn = e.target.closest('.lang-btn, [data-lang]');
-    if (langBtn) {
-        setTimeout(traducirReturnDestination, 300);
-    }
-});
-</script>
 <script>
     window.PAYPAL_MODE = "{{ $paypalMode }}";
     window.PAYPAL_CLIENT_ID = "{{ $paypalClientId }}";
