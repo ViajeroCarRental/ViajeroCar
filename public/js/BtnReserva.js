@@ -245,17 +245,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 const dropoff_date = toIsoDate(endRaw);
 
                 let pickup_time =
+                    val("#pickup_time") ||
                     val("#pickup_time_hidden") ||
-                    (val("#pickup_h") ? val("#pickup_h") + ":00" : "00:00");
+                    (val("#pickup_h") ? val("#pickup_h").padStart(2, "0") + ":00" : "");
 
                 let dropoff_time =
+                    val("#dropoff_time") ||
                     val("#dropoff_time_hidden") ||
-                    (val("#dropoff_h") ? val("#dropoff_h") + ":00" : "00:00");
+                    (val("#dropoff_h") ? val("#dropoff_h").padStart(2, "0") + ":00" : "");
 
                 if (!pickup_time) {
-                    const h = val("#pickup_h") || "00";
-                    const m = val("#pickup_m") || "00";
-                    pickup_time = h.padStart(2, "0") + ":" + m.padStart(2, "0");
+                    throw new Error("No se encontró la hora de recogida.");
+                }
+
+                if (!dropoff_time) {
+                    throw new Error("No se encontró la hora de devolución.");
                 }
 
                 if (!dropoff_time) {
