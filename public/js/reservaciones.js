@@ -1290,98 +1290,159 @@ if (isReset) {
   }
 
   function initDaysAndPricesSync() {
-    const pickupDate = qs("#start") || qs('input[name="pickup_date"]');
-    const dropoffDate = qs("#end") || qs('input[name="dropoff_date"]');
-    const pickupHour = qs('#pickup_h');
-    const dropoffHour = qs('#dropoff_h');
+  const pickupDate = qs("#start") || qs('input[name="pickup_date"]');
+  const dropoffDate = qs("#end") || qs('input[name="dropoff_date"]');
+  const pickupHour = qs('#pickup_h');
+  const dropoffHour = qs('#dropoff_h');
+  const pickupHidden = qs('#pickup_time_hidden');
 
-    if (!pickupDate || !dropoffDate) {
+  if (!pickupDate || !dropoffDate) {
     console.log("No encontró inputs de fecha");
     return;
   }
 
-    function parseDateAny(val) {
-      if (!val) return null;
-      const s = String(val).trim();
-
-      let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-      if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
-
-      m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
-
-      const d = new Date(s);
-      return isNaN(d.getTime()) ? null : d;
-    }
-
-    function getDateTime(which) {
-      const d = parseDateAny(which === "pickup" ? pickupDate.value : dropoffDate.value);
-      if (!d) return null;
-      const h = which === "pickup" ? pickupHour?.value : dropoffHour?.value;
-      d.setHours(+h || 0, 0, 0, 0);
-      return d;
-    }
-
-    function calcDays() {
-      const a = getDateTime("pickup");
-  const b = getDateTime("dropoff");
-
-  if (!a || !b) return 1;
-
-  const diff = b - a;
-  if (diff <= 0) return 1;
-
-  const horasTotales = Math.floor(diff / (1000 * 60 * 60));
-
-  const diasBase = Math.floor(horasTotales / 24);
-  const horasExtra = horasTotales % 24;
-
-  // ✅ misma lógica que backend
-  if (horasExtra > 1) {
-    return diasBase + 1;
-  } else {
-    return Math.max(1, diasBase);
+  function pad2(n) {
+    return String(n).padStart(2, '0');
   }
-    }
 
-    function runUpdate() {
-      const days = calcDays();
+  function parseDateAny(val) {
+    if (!val) return null;
+    const s = String(val).trim();
 
-      const daysLabel = qs('#daysLabel');
-      if (daysLabel) daysLabel.textContent = days;
+    let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
 
-      qsa(".js-days").forEach(el => el.textContent = days);
+    m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
 
-      qsa('.car-card').forEach(card => {
-        const prepagoDia = parseFloat(card.getAttribute('data-prepago-dia') || '0') || 0;
-        const mostradorDia = parseFloat(card.getAttribute('data-mostrador-dia') || '0') || 0;
-
-        const prepagoTotal = prepagoDia * days;
-        const mostradorTotal = mostradorDia * days;
-
-        const fmt = (n) => Math.round(n).toLocaleString(getCurrentLocale() === 'en' ? 'en-US' : 'es-MX');
-
-        const elPrepTotal = qs('.js-prepago-total', card);
-        const elMostTotal = qs('.js-mostrador-total', card);
-        const elPrepDia = qs('.js-prepago-dia', card);
-        const elMostDia = qs('.js-mostrador-dia', card);
-
-        if (elPrepDia) elPrepDia.textContent = fmt(prepagoDia);
-        if (elMostDia) elMostDia.textContent = fmt(mostradorDia);
-        if (elPrepTotal) elPrepTotal.textContent = fmt(prepagoTotal);
-        if (elMostTotal) elMostTotal.textContent = fmt(mostradorTotal);
-      });
-
-      const qDays = qs('#qDays');
-      if (qDays) qDays.textContent = days;
-    }
-
-    [pickupDate, dropoffDate, pickupHour, dropoffHour]
-      .filter(Boolean)
-      .forEach(el => el.addEventListener("change", runUpdate));
-
-    runUpdate();
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
   }
+
+  function isSameLocalDate(a, b) {
+    if (!(a instanceof Date) || isNaN(a) || !(b instanceof Date) || isNaN(b)) return false;
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
+  }
+
+  function rebuildPickupHours() {
+    if (!pickupHour) return;
+
+    const selectedDate = parseDateAny(pickupDate.value);
+    const now = new Date();
+
+    let minHour = 0;
+
+    // SOLO pickup: si la fecha seleccionada es hoy, ocultar horas ya pasadas
+    if (selectedDate && isSameLocalDate(selectedDate, now)) {
+      minHour = now.getHours() + 1;
+    }
+
+    const previousValue = pickupHour.value;
+    const locale = getCurrentLocale();
+    const placeholderText = locale === 'en' ? 'Time' : 'Hora';
+
+    pickupHour.innerHTML = '';
+    pickupHour.insertAdjacentHTML(
+      'afterbegin',
+      `<option value="" disabled selected>${placeholderText}</option>`
+    );
+
+    for (let i = minHour; i <= 23; i++) {
+      const hh = pad2(i);
+      const option = document.createElement('option');
+      option.value = hh;
+      option.textContent = `${hh}:00`;
+      pickupHour.appendChild(option);
+    }
+
+    const stillExists = Array.from(pickupHour.options).some(opt => opt.value === previousValue);
+
+    if (stillExists && previousValue !== '') {
+      pickupHour.value = previousValue;
+      if (pickupHidden) pickupHidden.value = `${previousValue}:00:00`;
+    } else {
+      pickupHour.value = '';
+      if (pickupHidden) pickupHidden.value = '';
+    }
+
+    try {
+      pickupHour.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (_) {}
+  }
+
+  function getDateTime(which) {
+    const d = parseDateAny(which === "pickup" ? pickupDate.value : dropoffDate.value);
+    if (!d) return null;
+    const h = which === "pickup" ? pickupHour?.value : dropoffHour?.value;
+    d.setHours(+h || 0, 0, 0, 0);
+    return d;
+  }
+
+  function calcDays() {
+    const a = getDateTime("pickup");
+    const b = getDateTime("dropoff");
+
+    if (!a || !b) return 1;
+
+    const diff = b - a;
+    if (diff <= 0) return 1;
+
+    const horasTotales = Math.floor(diff / (1000 * 60 * 60));
+    const diasBase = Math.floor(horasTotales / 24);
+    const horasExtra = horasTotales % 24;
+
+    if (horasExtra > 1) {
+      return diasBase + 1;
+    } else {
+      return Math.max(1, diasBase);
+    }
+  }
+
+  function runUpdate() {
+    rebuildPickupHours();
+
+    const days = calcDays();
+
+    const daysLabel = qs('#daysLabel');
+    if (daysLabel) daysLabel.textContent = days;
+
+    qsa(".js-days").forEach(el => el.textContent = days);
+
+    qsa('.car-card').forEach(card => {
+      const prepagoDia = parseFloat(card.getAttribute('data-prepago-dia') || '0') || 0;
+      const mostradorDia = parseFloat(card.getAttribute('data-mostrador-dia') || '0') || 0;
+
+      const prepagoTotal = prepagoDia * days;
+      const mostradorTotal = mostradorDia * days;
+
+      const fmt = (n) => Math.round(n).toLocaleString(getCurrentLocale() === 'en' ? 'en-US' : 'es-MX');
+
+      const elPrepTotal = qs('.js-prepago-total', card);
+      const elMostTotal = qs('.js-mostrador-total', card);
+      const elPrepDia = qs('.js-prepago-dia', card);
+      const elMostDia = qs('.js-mostrador-dia', card);
+
+      if (elPrepDia) elPrepDia.textContent = fmt(prepagoDia);
+      if (elMostDia) elMostDia.textContent = fmt(mostradorDia);
+      if (elPrepTotal) elPrepTotal.textContent = fmt(prepagoTotal);
+      if (elMostTotal) elMostTotal.textContent = fmt(mostradorTotal);
+    });
+
+    const qDays = qs('#qDays');
+    if (qDays) qDays.textContent = days;
+  }
+
+  [pickupDate, dropoffDate, pickupHour, dropoffHour]
+    .filter(Boolean)
+    .forEach(el => el.addEventListener("change", runUpdate));
+
+  rebuildPickupHours();
+  runUpdate();
+}
 
 
 
