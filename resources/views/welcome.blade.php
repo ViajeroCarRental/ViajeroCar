@@ -1087,20 +1087,6 @@
             <i class="fa-solid fa-id-card"></i> {{ __('Get your membership') }}
           </button>
         </div>
-        <h3 id="membershipModalTitle">¿Necesitas más información?</h3>
-        <p>Para obtener más información de las membresías y recibir atención personalizada, contáctanos directamente a través de nuestro número de teléfono
-            o manda un mensaje a nuestro número de WhatsApp.</p>
-        <div class="modal-membership-actions">
-            <a href="tel:+524427169793" class="btn-contact btn-call">
-                <i class="fa-solid fa-phone"></i> Llámanos
-            </a>
-            <a href="https://wa.me/5214427169793" target="_blank" rel="noopener" class="btn-contact btn-whatsapp">
-                <i class="fa-brands fa-whatsapp"></i> WhatsApp
-            </a>
-        </div>
-        <p class="modal-membership-phone">
-            <i class="fa-regular fa-clock"></i> Lunes a Domingo | 8:00 AM - 22:00 PM
-        </p>
     </div>
     </div>
     </div>
