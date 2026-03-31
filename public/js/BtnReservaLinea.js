@@ -273,191 +273,195 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   // ==========================================================
-  // 🚀 Enviar reserva a /reservas/linea después de onApprove
-  // ==========================================================
-  async function enviarReservaLinea(paypalOrderId) {
-    const url = window.APP_URL_RESERVA_LINEA;
-    if (!url) {
-      throw new Error("No está definida APP_URL_RESERVA_LINEA.");
-    }
+// 💰 Helper: total exacto para PayPal
+// ==========================================================
+function obtenerTotalParaPayPal() {
+  const { total } = calcularTotales();
+  return Number(total || 0);
+}
 
-    const csrf = getCsrfToken();
-    const basePayload = getFormPayload();
-    const totalCobrado = obtenerTotalParaPayPal();
-
-    const payload = {
-      ...basePayload,
-      paypal_order_id: paypalOrderId,
-      total_local: total
-    };
-
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-TOKEN": csrf
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!resp.ok) {
-      const text = await resp.text();
-      console.error("Error HTTP al crear la reserva en línea:", text);
-      throw new Error("No se pudo crear la reservación en línea. Intenta nuevamente.");
-    }
-
-    const data = await resp.json();
-
-    if (!data.ok) {
-      console.error("Respuesta de reserva en línea con error:", data);
-      throw new Error(data.message || "Error al confirmar la reservación en línea.");
-    }
-
-    return data;
+// ==========================================================
+// 🚀 Enviar reserva a /reservas/linea después de onApprove
+// ==========================================================
+async function enviarReservaLinea(paypalOrderId) {
+  const url = window.APP_URL_RESERVA_LINEA;
+  if (!url) {
+    throw new Error("No está definida APP_URL_RESERVA_LINEA.");
   }
+
+  const csrf = getCsrfToken();
+  const basePayload = getFormPayload();
+  const totalCobrado = obtenerTotalParaPayPal();
+
+  const payload = {
+    ...basePayload,
+    paypal_order_id: paypalOrderId,
+    total_local: totalCobrado
+  };
+
+  const resp = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-TOKEN": csrf,
+      "X-Requested-With": "XMLHttpRequest",
+      "Accept": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await resp.json().catch(() => ({}));
+
+  if (!resp.ok || data.ok === false) {
+    console.error("Error HTTP / lógica al crear la reserva en línea:", data);
+    throw new Error(data.message || "No se pudo crear la reservación en línea. Intenta nuevamente.");
+  }
+
+  return data;
+}
 
   // ==========================================================
   // 🧷 Inicializar botones de PayPal en el contenedor
   // ==========================================================
   function initPaypalButtons() {
-    const totalExacto = obtenerTotalParaPayPal();
-    const amount = (totalExacto > 0 ? totalExacto : 0).toFixed(2);
+  const totalExacto = obtenerTotalParaPayPal();
+  const amount = (totalExacto > 0 ? totalExacto : 0).toFixed(2);
 
-    console.log("💰 Total a pagar:", amount, "MXN");
+  console.log("💰 Total a pagar:", amount, "MXN");
 
-    if (!window.paypal || typeof window.paypal.Buttons !== "function") {
-      const msg = "PayPal SDK no está disponible tras la carga.";
-      console.error(msg);
-      if (window.alertify) alertify.error(msg); else alert(msg);
-      return;
-    }
+  if (!window.paypal || typeof window.paypal.Buttons !== "function") {
+    const msg = "PayPal SDK no está disponible tras la carga.";
+    console.error(msg);
+    if (window.alertify) alertify.error(msg); else alert(msg);
+    return;
+  }
 
-    if (paypalContainer) {
-      paypalContainer.innerHTML = "";
-      paypalContainer.style.display = "block";
-    }
+  if (paypalContainer) {
+    paypalContainer.innerHTML = "";
+    paypalContainer.style.display = "block";
+  }
 
-    try {
-      paypal.Buttons({
-        style: {
-          layout: "vertical",
-          color: "gold",
-          shape: "rect",
-          label: "paypal"
-        },
+  try {
+    window.paypal.Buttons({
+      style: {
+        layout: "vertical",
+        color: "gold",
+        shape: "rect",
+        label: "paypal"
+      },
 
-        createOrder: function (data, actions) {
-          return actions.order.create({
-            purchase_units: [{
-              amount: {
-                value: amount,
-                currency_code: "MXN"
-              }
-            }]
-          });
-        },
-
-        onApprove: function (data, actions) {
-          return actions.order.capture().then(async function (orderData) {
-            console.log("✅ PayPal orderData:", orderData);
-
-            try {
-              const overallStatus = orderData?.status;
-              const firstPU = orderData?.purchase_units?.[0];
-              const firstCapture = firstPU?.payments?.captures?.[0];
-              const captureStatus = firstCapture?.status;
-              const reason = firstCapture?.status_details?.reason || "";
-
-              if (overallStatus !== "COMPLETED" || captureStatus !== "COMPLETED") {
-                console.warn("⚠️ Pago no completado:", { overallStatus, captureStatus, reason });
-
-                let msgUser = "Tu banco o PayPal no autorizó el cargo. No se realizó ningún cobro.";
-
-                if (reason === "INSUFFICIENT_FUNDS") {
-                  msgUser = "Tu banco reportó fondos insuficientes. No se realizó el cobro.";
-                } else if (reason === "PAYER_CANNOT_PAY") {
-                  msgUser = "PayPal indicó que el medio de pago no puede procesar el cargo.";
-                } else if (reason === "RISK_DECLINE") {
-                  msgUser = "PayPal rechazó el pago por revisión de seguridad.";
-                }
-
-                if (window.alertify) alertify.error(msgUser);
-                else alert(msgUser);
-                return;
-              }
-
-              const result = await enviarReservaLinea(data.orderID);
-              const payload = getFormPayload();
-              const { base, extras, iva, total } = calcularTotales();
-
-              const fmt = new Intl.NumberFormat("es-MX", {
-                style: "currency",
-                currency: "MXN",
-              });
-
-              const pickup = `${payload.pickup_date} ${payload.pickup_time}`;
-              const dropoff = `${payload.dropoff_date} ${payload.dropoff_time}`;
-              const baseTxt = fmt.format(base);
-              const extrasTxt = fmt.format(extras);
-              const ivaTxt = fmt.format(iva);
-              const totalTxt = fmt.format(total);
-              const folio = result.folio || "";
-
-              const msgExito = `
-    ✅ Su reservación en línea fue confirmada correctamente.<br><br>
-    Folio: <b>${folio}</b><br>
-    Entrega: <b>${pickup}</b><br>
-    Devolución: <b>${dropoff}</b><br><br>
-    <b>Tarifa base:</b> ${baseTxt}<br>
-    <b>Opciones de renta:</b> ${extrasTxt}<br>
-    <b>Cargos e IVA (16%):</b> ${ivaTxt}<br>
-    <b>Total:</b> ${totalTxt}<br><br>
-    📩 Recibirá confirmación por correo electrónico.
-  `;
-
-              if (window.alertify) {
-                alertify.alert("Reservación en línea confirmada", msgExito, function () {
-                  try { localStorage.removeItem("viajero_resv_filters_v1"); } catch (e) { }
-                  try { sessionStorage.clear(); } catch (e) { }
-                  window.location.href = window.location.pathname + "?step=1&reset=1";
-                });
-              } else {
-                alert("Reservación en línea confirmada.");
-                window.location.href = window.location.pathname + "?step=1&reset=1";
-              }
-
-            } catch (err) {
-              console.error("❌ Error:", err);
-              const msg = err.message || "Error al confirmar tu reserva.";
-              if (window.alertify) alertify.error(msg); else alert(msg);
+      createOrder: function (data, actions) {
+        return actions.order.create({
+          purchase_units: [{
+            amount: {
+              value: amount,
+              currency_code: "MXN"
             }
-          });
-        },
+          }]
+        });
+      },
 
-        onCancel: function (data) {
-          console.log("ℹ️ Pago cancelado");
-          const msg = "Cancelaste el pago en PayPal.";
-          if (window.alertify) alertify.message(msg);
-          else alert(msg);
-        },
+      onApprove: function (data, actions) {
+        return actions.order.capture().then(async function (orderData) {
+          console.log("✅ PayPal orderData:", orderData);
 
-        onError: function (err) {
-          console.error("❌ Error en PayPal:", err);
-          let msg = "Error al procesar el pago.";
-          if (window.alertify) alertify.error(msg);
-          else alert(msg);
-        }
-      }).render("#paypal-button-container");
+          try {
+            const overallStatus = orderData?.status;
+            const firstPU = orderData?.purchase_units?.[0];
+            const firstCapture = firstPU?.payments?.captures?.[0];
+            const captureStatus = firstCapture?.status;
+            const reason = firstCapture?.status_details?.reason || "";
 
-      console.log("✅ Botones de PayPal renderizados");
+            if (overallStatus !== "COMPLETED" || captureStatus !== "COMPLETED") {
+              console.warn("⚠️ Pago no completado:", { overallStatus, captureStatus, reason });
 
-    } catch (err) {
-      console.error("❌ Error:", err);
-      if (paypalContainer) {
-        paypalContainer.innerHTML = '<div style="text-align:center; color:red;">Error al cargar PayPal.</div>';
+              let msgUser = "Tu banco o PayPal no autorizó el cargo. No se realizó ningún cobro.";
+
+              if (reason === "INSUFFICIENT_FUNDS") {
+                msgUser = "Tu banco reportó fondos insuficientes. No se realizó el cobro.";
+              } else if (reason === "PAYER_CANNOT_PAY") {
+                msgUser = "PayPal indicó que el medio de pago no puede procesar el cargo.";
+              } else if (reason === "RISK_DECLINE") {
+                msgUser = "PayPal rechazó el pago por revisión de seguridad.";
+              }
+
+              if (window.alertify) alertify.error(msgUser);
+              else alert(msgUser);
+              return;
+            }
+
+            const result = await enviarReservaLinea(data.orderID);
+            const payload = getFormPayload();
+            const { base, extras, iva, total } = calcularTotales();
+
+            const fmt = new Intl.NumberFormat("es-MX", {
+              style: "currency",
+              currency: "MXN"
+            });
+
+            const pickup = `${payload.pickup_date} ${payload.pickup_time}`;
+            const dropoff = `${payload.dropoff_date} ${payload.dropoff_time}`;
+            const baseTxt = fmt.format(base);
+            const extrasTxt = fmt.format(extras);
+            const ivaTxt = fmt.format(iva);
+            const totalTxt = fmt.format(total);
+            const folio = result.folio || "";
+
+            const msgExito = `
+✅ Su reservación en línea fue confirmada correctamente.<br><br>
+Folio: <b>${folio}</b><br>
+Entrega: <b>${pickup}</b><br>
+Devolución: <b>${dropoff}</b><br><br>
+<b>Tarifa base:</b> ${baseTxt}<br>
+<b>Opciones de renta:</b> ${extrasTxt}<br>
+<b>Cargos e IVA (16%):</b> ${ivaTxt}<br>
+<b>Total:</b> ${totalTxt}<br><br>
+📩 Recibirá confirmación por correo electrónico.
+`;
+
+            if (window.alertify) {
+              alertify.alert("Reservación en línea confirmada", msgExito, function () {
+                try { localStorage.removeItem("viajero_resv_filters_v1"); } catch (e) {}
+                try { sessionStorage.clear(); } catch (e) {}
+                window.location.href = window.location.pathname + "?step=1&reset=1";
+              });
+            } else {
+              alert("Reservación en línea confirmada.");
+              window.location.href = window.location.pathname + "?step=1&reset=1";
+            }
+
+          } catch (err) {
+            console.error("❌ Error en onApprove:", err);
+            const msg = err.message || "Error al confirmar tu reserva.";
+            if (window.alertify) alertify.error(msg); else alert(msg);
+          }
+        });
+      },
+
+      onCancel: function () {
+        console.log("ℹ️ Pago cancelado");
+        const msg = "Cancelaste el pago en PayPal.";
+        if (window.alertify) alertify.message(msg);
+        else alert(msg);
+      },
+
+      onError: function (err) {
+        console.error("❌ Error en PayPal:", err);
+        const msg = "Error al procesar el pago.";
+        if (window.alertify) alertify.error(msg);
+        else alert(msg);
       }
+    }).render("#paypal-button-container");
+
+    console.log("✅ Botones de PayPal renderizados");
+
+  } catch (err) {
+    console.error("❌ Error al renderizar PayPal:", err);
+    if (paypalContainer) {
+      paypalContainer.innerHTML = '<div style="text-align:center; color:red;">Error al cargar PayPal.</div>';
     }
   }
+}
 
   // ==========================================================
   // 🔒 Funciones para controlar el scroll del body

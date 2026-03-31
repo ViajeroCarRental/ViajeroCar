@@ -174,74 +174,158 @@
     return String(n).padStart(2, "0");
   }
 
-  function createTimeSelectsBelow(input, opts) {
-    const { hourMax = 24, defaultValue = "12:00" } = (opts || {});
-    const wrap = input.closest(".time-field") || input.parentElement;
-    if (wrap && wrap.querySelector(".tp-selects")) return;
+  function isSameLocalDate(dateStr, dateObj) {
+  if (!dateStr || !dateObj) return false;
 
-    const box = document.createElement("div");
-    box.className = "tp-selects w-100";
+  const y = dateObj.getFullYear();
+  const m = pad2(dateObj.getMonth() + 1);
+  const d = pad2(dateObj.getDate());
 
-    const selH = document.createElement("select");
-    selH.className = "tp-hour";
+  return dateStr === `${y}-${m}-${d}`;
+}
 
-    const locale = getCurrentLocale();
-    const hourPlaceholder = locale === 'en' ? 'Time' : 'Hora';
-    selH.setAttribute("aria-label", hourPlaceholder);
-    selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>${hourPlaceholder}</option>`);
+function getMinPickupHour() {
+  const now = new Date();
+  return now.getHours() + 1;
+}
 
-    for (let h = 0; h <= 23; h++) {
-      const op = document.createElement("option");
-      op.value = String(h);
-      op.innerHTML = `<span>${pad2(h)}:00</span>`;
-      selH.appendChild(op);
+function rebuildHourOptions(input, opts = {}) {
+  const { hourMax = 24 } = opts;
+
+  const wrap = input.closest(".time-field") || input.parentElement;
+  if (!wrap) return;
+
+  const selH = wrap.querySelector(".tp-selects .tp-hour");
+  if (!selH) return;
+
+  const previousValue = selH.value;
+  const locale = getCurrentLocale();
+  const hourPlaceholder = locale === 'en' ? 'Time' : 'Hora';
+
+  let startHour = 0;
+
+  // SOLO pickupTimePoliticas debe bloquear horas pasadas si la fecha es hoy
+  if (input.id === "pickupTimePoliticas") {
+    const pickupDateValue = document.getElementById("pickupDatePoliticas")?.value || "";
+    if (isSameLocalDate(pickupDateValue, new Date())) {
+      startHour = getMinPickupHour();
     }
+  }
 
-    function sync() {
-      const finalH = pad2(Number(selH.value || 0));
-      input.value = `${finalH}:00`;
+  selH.innerHTML = "";
+  selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>${hourPlaceholder}</option>`);
+
+  for (let h = startHour; h < hourMax; h++) {
+    const op = document.createElement("option");
+    op.value = pad2(h);
+    op.textContent = `${pad2(h)}:00`;
+    selH.appendChild(op);
+  }
+
+  const stillExists = Array.from(selH.options).some(opt => opt.value === previousValue);
+
+  if (stillExists && previousValue !== "") {
+    selH.value = previousValue;
+    input.value = `${previousValue}:00`;
+  } else {
+    selH.selectedIndex = 0;
+    input.value = "";
+  }
+
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function createTimeSelectsBelow(input, opts) {
+  const { hourMax = 24, defaultValue = "12:00" } = (opts || {});
+  const wrap = input.closest(".time-field") || input.parentElement;
+  if (wrap && wrap.querySelector(".tp-selects")) return;
+
+  const box = document.createElement("div");
+  box.className = "tp-selects w-100";
+
+  const selH = document.createElement("select");
+  selH.className = "tp-hour";
+
+  const locale = getCurrentLocale();
+  const hourPlaceholder = locale === 'en' ? 'Time' : 'Hora';
+  selH.setAttribute("aria-label", hourPlaceholder);
+
+  box.appendChild(selH);
+
+  if (wrap) {
+    wrap.appendChild(box);
+  } else {
+    input.insertAdjacentElement("afterend", box);
+  }
+
+  rebuildHourOptions(input, { hourMax });
+
+  function sync() {
+    if (!selH.value) {
+      input.value = "";
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.dispatchEvent(new Event("change", { bubbles: true }));
+      return;
     }
 
-    selH.addEventListener("change", sync);
-    box.appendChild(selH);
+    const finalH = pad2(Number(selH.value || 0));
+    input.value = `${finalH}:00`;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
 
-    if (wrap) {
-      wrap.appendChild(box);
-    } else {
-      input.insertAdjacentElement("afterend", box);
+  selH.addEventListener("change", sync);
+
+  if (input.value && input.value !== "12:00") {
+    const defaultHour = input.value.split(':')[0];
+    const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
+    if (option) {
+      selH.value = defaultHour;
+      sync();
     }
-
-    if (input.value && input.value !== "12:00") {
-      const defaultHour = input.value.split(':')[0];
-      const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
-      if (option) {
-        option.selected = true;
-        sync();
-      }
+  } else if (defaultValue && defaultValue !== "12:00") {
+    const defaultHour = defaultValue.split(':')[0];
+    const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
+    if (option) {
+      selH.value = defaultHour;
+      sync();
     } else {
       selH.selectedIndex = 0;
       input.value = "";
     }
+  } else {
+    selH.selectedIndex = 0;
+    input.value = "";
   }
+}
 
-  function initAnalogTime(id) {
-    const input = document.getElementById(id);
-    if (!input) return;
-    if (input.dataset.tpReady === "1") return;
-    input.dataset.tpReady = "1";
+function initAnalogTime(id) {
+  const input = document.getElementById(id);
+  if (!input) return;
+  if (input.dataset.tpReady === "1") return;
+  input.dataset.tpReady = "1";
 
-    input.setAttribute("readonly", "readonly");
-    input.setAttribute("inputmode", "none");
-    input.classList.add("tp-hidden-input");
-    input.setAttribute("aria-hidden", "true");
+  input.setAttribute("readonly", "readonly");
+  input.setAttribute("inputmode", "none");
+  input.classList.add("tp-hidden-input");
+  input.setAttribute("aria-hidden", "true");
 
-    createTimeSelectsBelow(input, {
-      hourMax: 24,
-      defaultValue: input.value || "0"
-    });
+  createTimeSelectsBelow(input, {
+    hourMax: 24,
+    defaultValue: input.value || "0"
+  });
+
+  // SOLO pickupTimePoliticas reacciona al cambio de fecha
+  if (id === "pickupTimePoliticas") {
+    const pickupDate = document.getElementById("pickupDatePoliticas");
+    if (pickupDate) {
+      pickupDate.addEventListener("change", function() {
+        rebuildHourOptions(input, { hourMax: 24 });
+      });
+    }
   }
+}
 
   function force24h() {
     document.querySelectorAll('.tp-hour option').forEach(opt => {
