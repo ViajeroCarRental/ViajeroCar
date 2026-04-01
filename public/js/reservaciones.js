@@ -1060,9 +1060,17 @@ if (isReset) {
   }
 
   function fmtMoney(n) {
-    const locale = getCurrentLocale();
-    return '$' + Math.round(n).toLocaleString(locale === 'en' ? 'en-US' : 'es-MX') + ' MXN';
-  }
+    const locale = document.documentElement.lang === 'en' ? 'en' : 'es';
+    const isUSD = locale === 'en';
+
+    const EXCHANGE_RATE = 20;
+
+    let amount = isUSD ? n / EXCHANGE_RATE : n;
+
+    return isUSD
+        ? '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USD'
+        : '$' + Math.round(amount).toLocaleString('es-MX') + ' MXN';
+}
 
   const addonsMap = parseAddons(rawAddons);
   let extrasTotal = 0;
@@ -2030,7 +2038,8 @@ if (isReset) {
 
     function fmtMoney(n) {
       const locale = getCurrentLocale();
-      return '$' + Math.round(Number(n || 0)).toLocaleString(locale === 'en' ? 'en-US' : 'es-MX') + ' MXN';
+return '$' +Math.round(Number(n || 0)).toLocaleString(locale === 'en' ? 'en-US' : 'es-MX') +
+  (locale === 'en' ? ' USD' : ' MXN');
     }
 
     function getCategoriaSeleccionada() {
@@ -3292,15 +3301,15 @@ document.addEventListener("DOMContentLoaded", function() {
 /* ============================================================
    CONVERSIÓN DE MONEDA PARA STEP 2 - RESERVACIONES
 ============================================================ */
-(function() {
+(function () {
     "use strict";
 
     const EXCHANGE_RATE = 20;
 
     function getCurrentLanguage() {
-        return localStorage.getItem('idiomaPreferido') || 'es';
-    }
-
+    const htmlLang = document.documentElement.lang || 'es';
+    return htmlLang === 'en' ? 'en' : 'es';
+}
     function getCurrencyCode(language) {
         return language === 'en' ? 'USD' : 'MXN';
     }
@@ -3323,7 +3332,6 @@ document.addEventListener("DOMContentLoaded", function() {
         const language = getCurrentLanguage();
         const currencyCode = getCurrencyCode(language);
 
-        // Solo ejecutar en STEP 2
         const main = document.querySelector('main.page');
         const currentStep = main ? main.dataset.currentStep : '';
         if (currentStep !== '2') return;
@@ -3338,77 +3346,57 @@ document.addEventListener("DOMContentLoaded", function() {
 
             if (isNaN(priceMXN)) return;
 
-            let displayPrice, displayOldPrice;
+            let displayPrice = currencyCode === 'USD'
+                ? priceMXN / EXCHANGE_RATE
+                : priceMXN;
 
-            if (currencyCode === 'USD') {
-                displayPrice = priceMXN / EXCHANGE_RATE;
-                if (!isNaN(oldPriceMXN)) {
-                    displayOldPrice = oldPriceMXN / EXCHANGE_RATE;
-                }
-            } else {
-                displayPrice = priceMXN;
-                displayOldPrice = oldPriceMXN;
-            }
+            let displayOldPrice = !isNaN(oldPriceMXN)
+                ? (currencyCode === 'USD' ? oldPriceMXN / EXCHANGE_RATE : oldPriceMXN)
+                : null;
 
             const formattedPrice = formatAmount(displayPrice, currencyCode);
-            const formattedOldPrice = formatAmount(displayOldPrice, currencyCode);
+            const formattedOldPrice = displayOldPrice !== null
+                ? formatAmount(displayOldPrice, currencyCode)
+                : null;
 
-            // Actualizar precio prepago (nuevo)
-            const priceNowSpan = card.querySelector('.price-now-number');
-            const currencyCodeSpan = card.querySelector('.price-new .currency-code');
+            // ✅ ACTUALIZAR SOLO LOS NÚMEROS
+            const priceNowSpan = card.querySelector('.js-prepago-total');
+            const priceOldSpan = card.querySelector('.js-mostrador-total');
 
             if (priceNowSpan) {
                 priceNowSpan.textContent = formattedPrice;
             }
 
-            if (currencyCodeSpan) {
-                currencyCodeSpan.textContent = currencyCode;
-            }
-
-            // Actualizar precio mostrador (anterior)
-            const priceOldSpan = card.querySelector('.price-old-number');
-            const currencyCodeOldSpan = card.querySelector('.price-old .currency-code-old');
-
-            if (priceOldSpan && !isNaN(displayOldPrice)) {
+            if (priceOldSpan && formattedOldPrice) {
                 priceOldSpan.textContent = formattedOldPrice;
             }
 
-            if (currencyCodeOldSpan) {
-                currencyCodeOldSpan.textContent = currencyCode;
-            }
+            // ✅ CAMBIAR TEXTO MXN ↔ USD SIN ROMPER HTML
+            const containers = card.querySelectorAll('.price-new, .price-old, .office-price');
 
-            // Actualizar precio oficina (office)
-            const officePriceSpan = card.querySelector('.price-office-number');
-            const officeCurrencySpan = card.querySelector('.office-price .currency-code-office');
-
-            if (officePriceSpan && !isNaN(displayOldPrice)) {
-                officePriceSpan.textContent = formattedOldPrice;
-            }
-
-            if (officeCurrencySpan) {
-                officeCurrencySpan.textContent = currencyCode;
-            }
+            containers.forEach(el => {
+                el.innerHTML = el.innerHTML.replace(/MXN|USD/g, currencyCode);
+            });
         });
 
         console.log('💰 Moneda actual STEP 2:', currencyCode);
     }
 
     function listenForLanguageChangesStep2() {
-        window.addEventListener('storage', function(e) {
+        // ⚠️ storage NO funciona en misma pestaña, pero lo dejamos por si acaso
+        window.addEventListener('storage', function (e) {
             if (e.key === 'idiomaPreferido') {
-                console.log('🌐 Idioma cambiado a:', e.newValue);
                 setTimeout(convertPricesStep2, 100);
             }
         });
 
-        // Observar cambios en el atributo data-current-step
+        // Detectar cambio de step
         const main = document.querySelector('main.page');
         if (main) {
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
+            const observer = new MutationObserver(function (mutations) {
+                mutations.forEach(function (mutation) {
                     if (mutation.attributeName === 'data-current-step') {
-                        const newStep = main.dataset.currentStep;
-                        if (newStep === '2') {
+                        if (main.dataset.currentStep === '2') {
                             setTimeout(convertPricesStep2, 150);
                         }
                     }
@@ -3417,30 +3405,27 @@ document.addEventListener("DOMContentLoaded", function() {
             observer.observe(main, { attributes: true });
         }
 
-        // Inicializar cuando se carga la página
+        // Al cargar
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', function() {
+            document.addEventListener('DOMContentLoaded', function () {
                 setTimeout(convertPricesStep2, 200);
             });
         } else {
             setTimeout(convertPricesStep2, 200);
         }
 
-        // También ejecutar cuando se abre el modal de addons
-        document.addEventListener('click', function(e) {
-            const languageSelectors = document.querySelectorAll('[data-language-selector], .language-selector, #languageSelect');
-            languageSelectors.forEach(selector => {
-                if (selector.contains(e.target) || selector === e.target) {
-                    setTimeout(convertPricesStep2, 150);
-                }
-            });
+        // Cuando cambias idioma manualmente
+        document.addEventListener('click', function (e) {
+            if (e.target.closest('[data-language-selector], .language-selector, #languageSelect')) {
+                setTimeout(convertPricesStep2, 150);
+            }
         });
     }
 
-    // Iniciar
+    // 🚀 INICIO
     convertPricesStep2();
     listenForLanguageChangesStep2();
 
-    // Exponer función globalmente
     window.convertPricesStep2 = convertPricesStep2;
+
 })();
