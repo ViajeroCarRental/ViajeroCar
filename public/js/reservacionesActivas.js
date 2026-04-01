@@ -29,6 +29,79 @@ const toDMY = (dateStr) => {
 window.addEventListener("DOMContentLoaded", () => {
   console.log("✅ JS cargado correctamente - Reservaciones Activas");
 
+
+  /* ==========================================================
+     🗓️ Lista: +
+  =========================================================== */
+ document.addEventListener("click", function(e) {
+  const btn = e.target.closest(".btn-plus");
+  if (!btn) return;
+
+  const row = btn.closest(".row");
+  const detail = row.nextElementSibling;
+
+  if (!detail || !detail.classList.contains("row-detail")) return;
+
+  const isVisible = detail.style.display === "block";
+
+  detail.style.display = isVisible ? "none" : "block";
+
+  // cambiar + a -
+  btn.textContent = isVisible ? "+" : "-";
+});
+
+/* ==========================================================
+     🗓️ Lista: + // Editar
+  =========================================================== */
+
+document.addEventListener("click", function(e) {
+  console.log("CLICK DETECTADO", e.target);
+
+  const btn = e.target.closest(".btn-edit-direct");
+
+  if (!btn) {
+    console.log("NO es botón editar");
+    return;
+  }
+
+  console.log("✅ BOTÓN EDITAR DETECTADO");
+
+  const row = btn.closest(".row-detail")?.previousElementSibling;
+
+  console.log("ROW:", row);
+
+  current = {
+    codigo: row.dataset.codigo,
+    nombre_cliente: row.dataset.cliente,
+    email_cliente: row.dataset.email,
+    telefono_cliente: row.dataset.numero,
+    fecha_inicio: row.dataset.fechaSalida,
+    hora_retiro: row.dataset.hora_retiro,
+    fecha_fin: row.dataset.fechaFin,
+    hora_entrega: row.dataset.hora_entrega
+  };
+
+  console.log("🧾 CURRENT:", current);
+
+  openEditModal();
+});
+/* ==========================================================
+     🗓️ Lista: + // Eliminar
+  =========================================================== */
+
+  document.addEventListener("click", function(e) {
+  const btn = e.target.closest(".btn-delete-direct");
+  if (!btn) return;
+
+  const url = btn.dataset.url;
+
+  const form = document.getElementById("aDeleteForm");
+  form.action = url;
+
+  // 🔥 envía directamente
+  form.submit();
+});
+
   /* ==========================================================
      🗓️ MODAL: RESERVACIONES ANTERIORES
   =========================================================== */
@@ -109,18 +182,18 @@ window.addEventListener("DOMContentLoaded", () => {
       current = data;
 
       $("#mTitle").textContent = `Detalle Reservación ${data.codigo || "—"}`;
-      $("#mCodigo").textContent = data.codigo || "—";
+      //$("#mCodigo").textContent = data.codigo || "—";
 
       const fullName = [data.nombre_cliente, data.apellidos_cliente]
         .filter(Boolean)
         .join(" ")
         .trim();
 
-      $("#mCliente").textContent = fullName || data.nombre_cliente || "—";
-      $("#mEmail").textContent = data.email_cliente || "—";
-      $("#mNumero").textContent = data.telefono_cliente || "—";
-      $("#mCategoria").textContent = data.categoria || "—";
-      $("#mEstado").textContent = data.estado || "—";
+      //$("#mCliente").textContent = fullName || data.nombre_cliente || "—";
+      //$("#mEmail").textContent = data.email_cliente || "—";
+      //$("#mNumero").textContent = data.telefono_cliente || "—";
+      //$("#mCategoria").textContent = data.categoria || "—";
+      //$("#mEstado").textContent = data.estado || "—";
 
       const salida = data.fecha_inicio
         ? `${toDMY(data.fecha_inicio)} ${String(data.hora_retiro || "").slice(0, 5)}`
@@ -129,15 +202,18 @@ window.addEventListener("DOMContentLoaded", () => {
         ? `${toDMY(data.fecha_fin)} ${String(data.hora_entrega || "").slice(0, 5)}`
         : "—";
 
-      $("#mSalida").textContent = salida;
-      $("#mEntrega").textContent = entrega;
+      //$("#mSalida").textContent = salida;
+      //$("#mEntrega").textContent = entrega;
 
+      $("#mFechas").textContent = `${salida} al ${entrega}`;
+      $("#mVehiculo").textContent = `${data.categoria || ""} ${data.categoria_nombre || ""} ${data.categoria_descripcion || ""}`;
       $("#mFormaPago").textContent = data.metodo_pago || "—";
-      $("#mTotal").textContent = Fmx(data.total);
 
-      $("#mTarifaModificada").textContent = data.tarifa_modificada
-        ? Fmx(data.tarifa_modificada)
-        : "—";
+      //$("#mTotal").textContent = Fmx(data.total);
+
+      //$("#mTarifaModificada").textContent = data.tarifa_modificada
+        //? Fmx(data.tarifa_modificada)
+        //: "—";
 
       $("#modal").classList.add("show");
       console.log("🪟 Modal abierto con reservación:", current);

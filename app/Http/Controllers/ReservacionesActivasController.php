@@ -25,6 +25,10 @@ class ReservacionesActivasController extends Controller
     {
         try {
             $sucursal = $request->input('sucursal');
+            $sucursal2 = $request->input('sucursal2');
+            $perPage     = $request->input('per_page', 10);
+            $fechaInicio = $request->input('fecha_inicio');
+            $fechaFin    = $request->input('fecha_fin');
             $codigo   = trim((string)$request->input('codigo'));
             $search   = trim((string)$request->input('q'));
 
@@ -36,6 +40,7 @@ class ReservacionesActivasController extends Controller
             ========================================================== */
             $reservaciones = DB::table('reservaciones as r')
                 ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
+                ->leftJoin('vehiculos as v', 'r.id_vehiculo', '=', 'v.id_vehiculo')
                 ->select(
                     'r.id_reservacion',
                     'r.codigo',
@@ -50,35 +55,50 @@ class ReservacionesActivasController extends Controller
                     'r.metodo_pago',
                     'r.fecha_inicio',
                     'r.hora_retiro',
+                    'r.hora_entrega',
                     'r.fecha_fin',
                     'r.total',
                     'r.sucursal_retiro',
                     'r.no_vuelo',
-                    'c.codigo as categoria'
+                    'r.created_at',
+                    'c.codigo as categoria',
+                    'c.nombre as categoria_nombre',
+                    'c.descripcion as categoria_descripcion',
+                    'c.precio_dia',
+                    'v.transmision',
+                    'v.marca as vehiculo_marca',
+                    'v.modelo as vehiculo_modelo'
                 )
 
                 // ✅ solo activas
                 ->whereNotIn('r.estado', ['cancelada', 'expirada', 'no_show'])
 
-                // ✅ SOLO HOY Y FUTURAS (robusto)
-                ->where(function ($q) use ($hoy) {
-                    // 1) Si fecha_inicio es DATE/DATETIME real
-                    $q->whereDate('r.fecha_inicio', '>=', $hoy)
-
-                    // 2) Si está como string 'YYYY-MM-DD'
-                    ->orWhere('r.fecha_inicio', '>=', $hoy)
-
-                    // 3) Si está como string 'DD/MM/YYYY'
-                    ->orWhereRaw(
-                        "STR_TO_DATE(r.fecha_inicio, '%d/%m/%Y') >= STR_TO_DATE(?, '%Y-%m-%d')",
-                        [$hoy]
-                    );
-                })
 
                 // filtro por sucursal
-                ->when($sucursal, function ($q, $sucursal) {
-                    $q->where('r.sucursal_retiro', $sucursal);
-                })
+                ->when($sucursal || $sucursal2, function ($q) use ($sucursal, $sucursal2) {
+    $q->where(function ($sub) use ($sucursal, $sucursal2) {
+
+        if ($sucursal) {
+            $sub->where('r.sucursal_retiro', $sucursal);
+        }
+
+        if ($sucursal2) {
+            $sub->orWhere('r.sucursal_retiro', $sucursal2);
+        }
+
+    });
+})
+
+//Filtro por fecha
+// 🔥 Filtro por fecha (rango)
+->when($fechaInicio && $fechaFin, function ($q) use ($fechaInicio, $fechaFin) {
+    $q->whereBetween('r.fecha_inicio', [$fechaInicio, $fechaFin]);
+})
+
+// 🔥 Si NO hay fechas → usar hoy
+->when(!($fechaInicio && $fechaFin), function ($q) use ($hoy) {
+    $q->whereDate('r.fecha_inicio', '>=', $hoy);
+})
 
                 // filtro por código
                 ->when($codigo, function ($q, $codigo) {
@@ -99,8 +119,14 @@ class ReservacionesActivasController extends Controller
                 // orden
                 ->orderBy('r.fecha_inicio', 'asc')
                 ->orderBy('r.hora_retiro', 'asc')
-                ->get();
+                ->paginate($perPage)->withQueryString();
 
+
+            $servicios = DB::table('reservacion_servicio as rs')
+                ->join('servicios as s', 'rs.id_servicio', '=', 's.id_servicio')
+                ->select('rs.id_reservacion', 's.nombre', 'rs.cantidad')
+                ->get()
+                ->groupBy('id_reservacion');
 
             /* ==========================================================
                ✅ RESERVACIONES ANTERIORES (AYER)
@@ -177,6 +203,7 @@ class ReservacionesActivasController extends Controller
 
             return view('Admin.ReservacionesActivas', [
                 'reservaciones'            => $reservaciones,
+                'servicios' => $servicios,
                 'reservaciones_anteriores' => $reservaciones_anteriores, // ✅ YA VA AL BLADE
                 'sucursalSeleccionada'      => $sucursal,
             ]);
@@ -215,7 +242,9 @@ class ReservacionesActivasController extends Controller
                     'r.tarifa_modificada',
                     'r.no_vuelo',
                     DB::raw('DATEDIFF(r.fecha_fin, r.fecha_inicio) as dias'),
-                    'c.codigo as categoria'
+                    'c.codigo as categoria',
+                    'c.nombre as categoria_nombre',
+                    'c.descripcion as categoria_descripcion'
                 )
                 ->where('r.codigo', $codigo)
                 ->first();

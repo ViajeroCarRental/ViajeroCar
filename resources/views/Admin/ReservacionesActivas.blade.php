@@ -46,7 +46,49 @@
       <option value="3" {{ request('sucursal') == '3' ? 'selected' : '' }}>Central Park</option>
     </select>
 
-    <span class="badge gray">Total <b id="count">{{ count($reservaciones) }}</b></span>
+    <select
+  id="fSucursal2"
+  name="sucursal2"
+  class="input select-ubicacion"
+  style="max-width: 220px;"
+  onchange="this.form.submit()"
+>
+      <option value="0"  {{ request('sucursal2') == '' ? 'selected' : '' }}>Segundo filtro</option>
+      <option value="1" {{ request('sucursal2') == '1' ? 'selected' : '' }}>Aeropuerto de Querétaro</option>
+      <option value="2" {{ request('sucursal2') == '2' ? 'selected' : '' }}>Central de autobuses</option>
+      <option value="3" {{ request('sucursal2') == '3' ? 'selected' : '' }}>Central Park</option>
+    </select>
+
+    <select
+  name="per_page"
+  class="input"
+  style="max-width:120px;"
+  onchange="this.form.submit()"
+>
+  <option value="10"  {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
+  <option value="20"  {{ request('per_page') == 20 ? 'selected' : '' }}>20</option>
+  <option value="50"  {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+  <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+</select>
+
+<input
+  type="date"
+  name="fecha_inicio"
+  class="input"
+  value="{{ request('fecha_inicio') }}"
+  onchange="this.form.submit()"
+>
+
+<input
+  type="date"
+  name="fecha_fin"
+  class="input"
+  value="{{ request('fecha_fin') }}"
+  onchange="this.form.submit()"
+>
+
+
+    <span class="badge gray">Total <b id="count">{{ $reservaciones->total() }}</b></span>
 
     {{-- ✅ Botón exportar --}}
     <button
@@ -75,6 +117,7 @@
   {{-- ✅ ID para que exporte solo esta tabla --}}
   <section id="tablaActivas" class="table {{ $esAeropuerto ? 'is-airport' : '' }}" data-cols="{{ $cols }}">
     <div class="thead">
+      <div></div>
       <div>No. de Reservacion</div>
       <div>Check in</div>
       <div>Hora (IN)</div>
@@ -91,7 +134,7 @@
       <div>Correo</div>
       <div>Estatus de pago</div>
       <div>Total</div>
-      <div>Acciones</div>
+      {{--<div>Acciones</div> --}}
     </div>
 
     <div class="tbody">
@@ -126,7 +169,16 @@
              data-categoria="{{ $r->categoria }}"
              data-fecha-salida="{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}"
              data-estado="{{ $r->estado }}"
-             data-sucursal="{{ $r->sucursal_retiro }}">
+             data-sucursal="{{ $r->sucursal_retiro }}"
+
+            data-hora_retiro="{{ $r->hora_retiro }}"
+            data-fecha_fin="{{ \Carbon\Carbon::parse($r->fecha_fin)->format('Y-m-d') }}"
+            data-hora_entrega="{{ $r->hora_entrega }}"
+             >
+
+        <div>
+            <button type="button" class="btn-plus">+</button>
+        </div>
 
           <div>{{ $r->codigo }}</div>
           <div>{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('d/m/Y') }}</div>
@@ -158,21 +210,72 @@
 
           <div>${{ number_format($r->total, 2) }} MXN</div>
 
-          <div class="actions-wrap">
-            <button
-              type="button"
-              class="iconbtn more"
-              title="Más acciones"
-              data-open-actions
-              data-id="{{ $r->id_reservacion }}"
-              data-codigo="{{ $r->codigo }}"
-              data-delete-url="{{ route('rutaEliminarReservacionActiva', $r->id_reservacion) }}"
-            >
-              ⋯
-            </button>
-          </div>
-
         </div>
+
+<div class="row-detail" style="display:none;">
+  <div style="grid-column: 1 / -1; padding:15px; background:#f9f9f9;">
+
+    <b>Reservación Confirmada el:</b> {{ \Carbon\Carbon::parse($r->created_at)->format('d/m/Y') }} <br>
+    <b>Datos de Contacto:</b> MEXICO (MX) {{ $r->telefono_cliente }} <br>
+    <b>Entrega:</b> {{ \Carbon\Carbon::parse($r->fecha_inicio)->format('d/m/Y') }} a las {{ $r->hora_retiro ? \Carbon\Carbon::parse($r->hora_retiro)->format('H:i') : '—' }} HRS<br>
+    <b>Devolución:</b> {{ \Carbon\Carbon::parse($r->fecha_fin)->format('d/m/Y') }} a las {{ $r->hora_entrega ? \Carbon\Carbon::parse($r->hora_entrega)->format('H:i') : '—' }} HRS<br>
+    <b>Total(MXN):</b> ${{ number_format($r->total,2)}} - Forma de pago: ({{ $r->metodo_pago}}) <br>
+    <b>Vehículo Requerido:</b> {{ $r->categoria }} | {{ $r->categoria_nombre ?? 'Sin asignar' }} {{ $r->transmision ?? 'Sin transmisión' }} {{ $r->categoria_descripcion ?? '' }} |
+Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ number_format($r->precio_dia * 1.15, 2) }} <br>
+    <b>Número de vuelo:</b> {{ $r->no_vuelo ?? '—' }} <br>
+    <b>Adicionales Requeridos:</b><br>
+@php
+  $extras = $servicios[$r->id_reservacion] ?? [];
+@endphp
+
+@if(count($extras))
+  @foreach($extras as $e)
+    - {{ $e->nombre }} (x{{ $e->cantidad }}) <br>
+  @endforeach
+@else
+  <span style="color:#999;">Ninguno</span><br>
+@endif
+
+    <b>Canal de venta:</b><br>
+    <b>Acciones:</b><br>
+
+<div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
+
+  {{-- ✏️ Editar --}}
+  <button
+  type="button"
+  class="btn gray btn-edit-direct"
+>
+  ✏️ Editar Reservación
+</button>
+
+  {{-- 🗑️ Eliminar --}}
+ <button
+  type="button"
+  class="iconbtn more"
+  title="Más acciones"
+  data-open-actions
+  data-id="{{ $r->id_reservacion }}"
+  data-codigo="{{ $r->codigo }}"
+  data-delete-url="{{ route('rutaEliminarReservacionActiva', $r->id_reservacion) }}"
+>
+  🗑️ Cancelar Reservación
+</button>
+
+  {{-- 📧 Correo --}}
+  <button
+    type="button"
+    class="btn primary"
+    onclick="alert('Próximamente envío de correo')"
+  >
+    📧 Reenviar correo de reservación
+  </button>
+
+</div>
+
+  </div>
+</div>
+
       @empty
         <div class="row">
           <div style="grid-column: 1 / -1; text-align:center;">No hay reservaciones activas.</div>
@@ -241,6 +344,7 @@
               @endphp
 
               <div class="row"
+                   data-id="{{ $r->id_reservacion }}"
                    data-codigo="{{ $r->codigo }}"
                    data-cliente="{{ $nombreCompleto }}"
                    data-email="{{ $r->email_cliente }}"
@@ -317,30 +421,22 @@
     <div class="box">
       <header>
         <div>
-          <div id="mTitle">Detalle reservación</div>
-          <span>Resumen del booking</span>
+          <div id="mTitle">Contrato reservación</div>
         </div>
         <button type="button" id="mClose">&times;</button>
       </header>
 
       <div class="cnt">
-        <div class="kv"><strong>Código</strong><span id="mCodigo">—</span></div>
-        <div class="kv"><strong>Cliente</strong><span id="mCliente">—</span></div>
-        <div class="kv"><strong>Correo</strong><span id="mEmail">—</span></div>
-        <div class="kv"><strong>Teléfono</strong><span id="mNumero">—</span></div>
-        <div class="kv"><strong>Categoría</strong><span id="mCategoria">—</span></div>
-        <div class="kv"><strong>Estado</strong><span id="mEstado">—</span></div>
-        <div class="kv"><strong>Salida</strong><span id="mSalida">—</span></div>
-        <div class="kv"><strong>Entrega</strong><span id="mEntrega">—</span></div>
-        <div class="kv"><strong>Forma de pago</strong><span id="mFormaPago">—</span></div>
-        <div class="kv"><strong>Total</strong><span id="mTotal">—</span></div>
-        <div class="kv"><strong>Tarifa modificada</strong><span id="mTarifaModificada">—</span></div>
+
+        <div class="kv"><strong>Fechas -</strong><span id="mFechas">—</span></div>
+        <div class="kv"><strong>Vehículo -</strong><span id="mVehiculo">—</span></div>
+        <div class="kv"><strong>Forma de pago -</strong><span id="mFormaPago">—</span></div>
       </div>
 
       <div class="actions">
         <button type="button" class="btn gray" id="mCancel">Cerrar</button>
         <button type="button" class="btn gray" id="mEdit">Editar</button>
-        <button type="button" class="btn primary" id="mGo">Ir a contrato</button>
+        <button type="button" class="btn primary" id="mGo">Capturar contrato</button>
       </div>
     </div>
   </div>
@@ -453,6 +549,7 @@
     </div>
   </div>
 
+  {{ $reservaciones->links() }}
 </main>
 @endsection
 
