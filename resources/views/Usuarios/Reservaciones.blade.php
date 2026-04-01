@@ -1091,7 +1091,8 @@ if (window.location.search.includes('from=welcome')) {
 
                             <article
                                 class="car-card car-card--v2 {{ (string) $categoriaId === (string) $cat->id_categoria ? 'active' : '' }}"
-                                data-prepago-dia="{{ $prepagoDia }}" data-mostrador-dia="{{ $mostradorDia }}">
+                                data-prepago-dia="{{ $prepagoDia }}" data-mostrador-dia="{{ $mostradorDia }}"  data-price-mxn="{{ $prepagoTotal }}"
+                                data-old-price-mxn="{{ $mostradorTotal }}">
 
                                 <div class="car-body">
                                     {{-- 1. Agrupamos el Título y el Badge en una nueva fila --}}
