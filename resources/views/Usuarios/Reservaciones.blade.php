@@ -1736,6 +1736,11 @@ if (window.location.search.includes('from=welcome')) {
     };
 @endphp
 
+@php
+    $isUSD = app()->getLocale() === 'en';
+    $rate = 20;
+@endphp
+
 <div class="addon-price">
     @if(str_contains(strtolower($srv->nombre), 'gasolina'))
 
@@ -1743,15 +1748,18 @@ if (window.location.search.includes('from=welcome')) {
             $totalGasolina = $capacidadTanque * $srv->precio;
         @endphp
 
-        <strong>${{ number_format($totalGasolina, 0) }}</strong> MXN / {{ __('tank') }}
+        <strong>${{ $isUSD ? number_format($totalGasolina / $rate, 2) : number_format($totalGasolina, 0) }}</strong>
+        {{ $isUSD ? 'USD' : 'MXN' }} / {{ __('tank') }}
 
     @elseif(str_contains(strtolower($srv->nombre), 'conductor'))
 
-        <strong>${{ $precio }}</strong> MXN / {{ __('driver per day') }}
+        <strong>${{ $isUSD ? number_format($precio / $rate, 2) : number_format($precio, 0) }}</strong>
+        {{ $isUSD ? 'USD' : 'MXN' }} / {{ __('driver per day') }}
 
     @else
 
-        <strong>${{ $precio }}</strong> MXN {{ $unidad }}
+        <strong>${{ $isUSD ? number_format($precio / $rate, 2) : number_format($precio, 0) }}</strong>
+        {{ $isUSD ? 'USD' : 'MXN' }} {{ $unidad }}
 
     @endif
 </div>
