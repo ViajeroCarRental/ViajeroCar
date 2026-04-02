@@ -587,6 +587,76 @@
       display:inline-block;
       margin-right:10px;
     }
+
+@media only screen and (max-width: 600px) {
+  .footer-col {
+    display: block !important;
+    width: 100% !important;
+    text-align: center !important;
+    margin-bottom: 15px !important;
+
+  }
+
+  .footer-main {
+      text-align: left !important;
+  }
+
+  .footer-col ul {
+    padding: 0 !important;
+  }
+
+  .footer-pay img {
+    width: 35px !important;
+    margin-bottom: 5px !important;
+  }
+}
+@media only screen and (max-width: 600px) {
+  .auto-container table td {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .auto-container table td:first-child {
+    text-align: center !important;
+    padding: 0 !important;
+  }
+
+  .auto-container table td:last-child {
+    padding-top: 12px !important;
+    text-align: left !important;
+  }
+
+  /* Imagen grande */
+  .auto-container table img {
+    width: 90% !important;
+    max-width: 280px !important;
+    margin: 0 auto 10px auto !important;
+    display: block !important;
+  }
+
+  /* =========================
+     EXTRAS RESPONSIVE
+  ========================= */
+  .extras-responsive td {
+    display: block !important;
+    width: 100% !important;
+    padding-bottom: 12px !important;
+  }
+
+  /* =========================
+     AJUSTES GENERALES
+  ========================= */
+  .content {
+    padding: 20px !important;
+  }
+
+  .summary-card {
+    padding: 14px !important;
+  }
+
+}
+
+
   </style>
 </head>
 
@@ -595,14 +665,14 @@
 <div class="container">
 
  <!-- HEADER NUEVO -->
- <div class="header" style="background-color: #b1060f; padding: 20px 26px; border-radius: 16px 16px 0 0; overflow: hidden;">
+<div class="header" style="background-color: #E50914; padding: 20px 26px; border-radius: 16px 16px 0 0; overflow: hidden;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse: collapse;">
         <tr>
             <td align="left" valign="middle">
-                <img src="{{ url('img/Logo3.jpg') }}"
+                 <img src="https://imgur.com/kreor7B.jpg"
                      alt="Viajero Car Rental"
-                     width="180"
-                     style="display: block; width: 180px; max-width: 100%; height: auto; border: 0; outline: none; text-decoration: none;">
+                     width="220px"
+                     style="display: block; width: 220pxpx; max-width: 100%; height: auto; border: 0; outline: none; text-decoration: none;">
             </td>
 
             <td align="right" style="vertical-align: middle; color: #ffffff; font-family: 'Poppins', Arial, sans-serif;">
@@ -813,98 +883,98 @@
 <div style="margin:15px 0;">
 
     <table role="presentation" width="100%">
-        <tr>
+  <tr>
 
-            <!-- IMAGEN -->
-            <td width="130" style="vertical-align: top;">
-                <img src="{{ $imgCategoria }}" width="120"
-                     style="display:block; border-radius:12px;">
-            </td>
+    <!-- IMAGEN GRANDE -->
+    <td width="240" style="vertical-align: middle;">
+      <img src="{{ $imgCategoria }}"
+           width="200"
+           style="display:block; width:200px; max-width:100%; height:auto; border-radius:12px;">
+    </td>
 
-            <!-- INFO -->
-            <td style="padding-left:15px; vertical-align: top;">
+    <!-- INFO A LA DERECHA -->
+    <td style="padding-left:20px; vertical-align: middle;">
 
-                <!-- TITULO -->
-                <div style="font-size:18px; font-weight:800; color:#111827;">
-                    {{ $categoria->descripcion }}
-                </div>
+      <!-- TITULO -->
+      <div style="font-size:20px; font-weight:800; color:#111827; margin-bottom:4px;">
+        {{ $categoria->descripcion }}
+      </div>
 
-                <!-- SUBTITULO -->
-                <div style="font-size:12px; font-weight:700; color:#6b7280; margin-bottom:10px;">
-                    {{ strtoupper($categoria->nombre) }} | CATEGORÍA {{ $categoria->codigo }}
-                </div>
+      <!-- SUBTITULO -->
+      <div style="font-size:12px; font-weight:700; color:#6b7280; margin-bottom:10px;">
+        {{ strtoupper($categoria->nombre) }} | CATEGORÍA {{ $categoria->codigo }}
+      </div>
 
-                <!-- ICONOS -->
-                <div style="font-size:13px; color:#111; margin-top:6px;">
+      <!-- ICONOS -->
+      <div style="font-size:13px; color:#111; margin-bottom:10px;">
 
-                    <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/user.svg"
-                         width="14" style="vertical-align:middle;">
-                    <strong>{{ $tuAuto['pax'] }}</strong>
+        <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/user.svg"
+             width="14" style="vertical-align:middle;">
+        <strong>{{ $tuAuto['pax'] }}</strong>
 
-                    &nbsp;&nbsp;
+        &nbsp;&nbsp;
 
-                    <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/suitcase-rolling.svg"
-                         width="14" style="vertical-align:middle;">
-                    <strong>{{ $tuAuto['small'] }}</strong>
+        <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/suitcase-rolling.svg"
+             width="14" style="vertical-align:middle;">
+        <strong>{{ $tuAuto['small'] }}</strong>
 
-                    &nbsp;&nbsp;
+        &nbsp;&nbsp;
 
-                    <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/briefcase.svg"
-                         width="14" style="vertical-align:middle;">
-                    <strong>{{ $tuAuto['big'] }}</strong>
+        <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/briefcase.svg"
+             width="14" style="vertical-align:middle;">
+        <strong>{{ $tuAuto['big'] }}</strong>
 
-                    &nbsp;&nbsp;
+        &nbsp;&nbsp;
 
-                    <span style="font-weight:600;">
-                    T | {{ __('Automatic') }}
-                    </span>
+        <span style="font-weight:600;">
+          T | {{ __('Automatic') }}
+        </span>
 
-                    &nbsp;&nbsp;
+        &nbsp;&nbsp;
 
-                    <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/regular/snowflake.svg"
-                         width="14" style="vertical-align:middle;">
-                    <span style="font-weight:600;">A/C</span>
+        <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/regular/snowflake.svg"
+             width="14" style="vertical-align:middle;">
+        <span style="font-weight:600;">A/C</span>
 
-                </div>
+      </div>
 
-                <!-- CARPLAY / ANDROID -->
-                <div style="margin-top:10px;">
+      <!-- TAGS -->
+      <div style="margin-bottom:10px;">
 
-                    <span style="
-                        background:#111827;
-                        color:#fff;
-                        padding:6px 12px;
-                        border-radius:20px;
-                        font-size:12px;
-                        font-weight:600;
-                        display:inline-block;
-                        margin-right:6px;
-                    ">
-                        CarPlay
-                    </span>
+        <span style="
+          background:#111827;
+          color:#fff;
+          padding:6px 12px;
+          border-radius:20px;
+          font-size:12px;
+          font-weight:600;
+          display:inline-block;
+          margin-right:6px;">
+          CarPlay
+        </span>
 
-                    <span style="
-                        background:#16a34a;
-                        color:#fff;
-                        padding:6px 12px;
-                        border-radius:20px;
-                        font-size:12px;
-                        font-weight:600;
-                        display:inline-block;
-                    ">
-                        Android Auto
-                    </span>
+        <span style="
+          background:#16a34a;
+          color:#fff;
+          padding:6px 12px;
+          border-radius:20px;
+          font-size:12px;
+          font-weight:600;
+          display:inline-block;">
+          Android Auto
+        </span>
 
-                </div>
+      </div>
 
-                <!-- INCLUYE -->
-                <div style="margin-top:10px; font-size:13px; color:#111;">
-                    ✓ KM ilimitados | Relevo de Responsabilidad (LI)
-                </div>
+      <!-- INCLUYE -->
+      <div style="font-size:13px; color:#111;">
+        ✓ KM ilimitados | Relevo de Responsabilidad (LI)
+      </div>
 
-            </td>
-        </tr>
-    </table>
+    </td>
+
+  </tr>
+</table>
 
 </div>
 
@@ -1029,7 +1099,7 @@
 
 </div>{{-- cierre .summary-card --}}
 
-    {{-- Texto y línea roja debajo del detalle de precio --}}
+   {{-- Texto y línea roja debajo del detalle de precio --}}
     <p class="price-note" style="text-align: justify; font-size: 14px; line-height: 1.7; color: #111; margin: 18px 0 10px;">
      VIAJERO te garantiza el tamaño del vehículo y sus características, más no el modelo
      específico. Nos comprometemos a entregarte un auto de la categoría reservada, por
@@ -1073,26 +1143,39 @@
   <div class="site-footer">
     <div class="footer-inner">
 
-      <div class="footer-top">
-        <div class="footer-social">
-          <a href="https://wa.me/524423032668">
-            <img src="{{ asset('img/email/whatsapp-black.png') }}" alt="WhatsApp">
-          </a>
-          <a href="https://www.facebook.com/viajerocarental">
-            <img src="{{ asset('img/email/facebook-black.png') }}" alt="Facebook">
-          </a>
-          <a href="https://www.instagram.com/viajerocarental">
-            <img src="{{ asset('img/email/instagram-black.png') }}" alt="Instagram">
-          </a>
-          <a href="https://www.tiktok.com/@viajerocarental">
-            <img src="{{ asset('img/email/tiktok-black.png') }}" alt="TikTok">
-          </a>
-        </div>
 
-        <div class="footer-logo-word">
-          <img src="{{ asset('img/LogoB.png') }}" alt="Viajero" class="footer-logo">
+       <div class="footer-social" style="display:flex; align-items:center; gap:12px;">
+
+  <a href="https://wa.me/524423032668">
+    <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png"
+         alt="WhatsApp"
+         style="width:22px; height:22px; object-fit:contain;">
+  </a>
+
+  <a href="https://www.facebook.com/viajerocarental">
+    <img src="https://viajerocar-production.up.railway.app/img/facebook.png"
+         alt="Facebook"
+         style="width:22px; height:22px; object-fit:contain;">
+  </a>
+
+  <a href="https://www.instagram.com/viajerocarental">
+    <img src="https://viajerocar-production.up.railway.app/img/instagram.png"
+         alt="Instagram"
+         style="width:22px; height:22px; object-fit:contain;">
+  </a>
+
+  <a href="https://www.tiktok.com/@viajerocarental">
+    <img src="https://viajerocar-production.up.railway.app/img/tiktok.png"
+         alt="TikTok"
+         style="width:22px; height:22px; object-fit:contain;">
+  </a>
+
+
+        <div class="footer-logo-word" style="margin-left: auto; flex-shrink: 0;">
+          <img src="https://viajerocar-production.up.railway.app/img/LogoR.png" width="140" style="display: block; width: 140px; height: auto; border: 0;">
         </div>
-      </div>
+       </div>
+       </div>
 
       <div class="footer-sep"></div>
 
@@ -1141,15 +1224,14 @@
         </div>
       </div>
 
-      <div class="footer-pay">
-        <img src="{{ asset('img/visa.jpg') }}" alt="Visa">
-        <img src="{{ asset('img/mastercard.png') }}" alt="Mastercard">
-        <img src="{{ asset('img/america.png') }}" alt="American Express">
-        <img src="{{ asset('img/oxxo.png') }}" alt="OXXO">
-        <img src="{{ asset('img/pago.png') }}" alt="Mercado Pago">
-        <img src="{{ asset('img/paypal.png') }}" alt="PayPal">
-      </div>
-
+    <div class="footer-pay" style="padding-top:10px;">
+        <img src="https://viajerocar-production.up.railway.app/img/visa.jpg" alt="Visa" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
+        <img src="https://viajerocar-production.up.railway.app/img/mastercard.png" alt="Mastercard" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
+        <img src="https://viajerocar-production.up.railway.app/img/america.png" alt="American Express" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
+        <img src="https://viajerocar-production.up.railway.app/img/oxxo.png" alt="OXXO" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
+        <img src="https://viajerocar-production.up.railway.app/img/pago.png" alt="Mercado Pago" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
+        <img src="https://viajerocar-production.up.railway.app/img/paypal.png" alt="PayPal" width="40" style="display:inline-block; width:40px; height:auto; border:0;">
+     </div>
     </div>
   </div>
 
