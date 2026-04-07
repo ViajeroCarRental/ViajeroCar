@@ -8,6 +8,45 @@
     const htmlLang = document.documentElement.lang || 'es';
     return htmlLang === 'en' ? 'en' : 'es';
   }
+    // ============================================================
+  // ACTUALIZAR MESES DEL SELECT DE FECHA DE NACIMIENTO
+  // ============================================================
+  function updateDobMonthsShort() {
+    const monthSelect = document.getElementById('dob_month');
+    if (!monthSelect) return;
+
+    const locale = getCurrentLocale();
+
+    const monthsShort = {
+      es: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+      en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    };
+
+    const months = monthsShort[locale] || monthsShort.es;
+    const currentValue = monthSelect.value;
+
+    for (let i = 0; i < months.length; i++) {
+      const option = monthSelect.options[i + 1];
+      if (option) {
+        const monthName = months[i];
+        option.textContent = monthName.charAt(0).toUpperCase() + monthName.slice(1).toLowerCase();
+      }
+    }
+
+    if (currentValue) monthSelect.value = currentValue;
+  }
+
+  // ============================================================
+  // OBSERVAR CAMBIOS DE IDIOMA PARA ACTUALIZAR MESES
+  // ============================================================
+  function initDobMonthsShortObserver() {
+    const observer = new MutationObserver(() => updateDobMonthsShort());
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['lang']
+    });
+    updateDobMonthsShort();
+  }
 
   // ============================================================
   // LOCALE PARA FLATPICKR (ESPAÑOL E INGLÉS)
@@ -311,9 +350,7 @@
   }, 0);
 }
 
-
-
-  function initSectionValidators() {
+function initSectionValidators() {
 
     const step1Form = document.getElementById('step1Form');
     if (step1Form) {
@@ -988,7 +1025,26 @@ if (isReset) {
 
   if (!qBaseEl || !qExtrasEl || !qIvaEl || !qTotalEl) return;
 
-  // ========== NUEVO: DETECTAR EL PLAN SELECCIONADO ==========
+  // ========== OBTENER IDIOMA ACTUAL ==========
+  const currentLocale = getCurrentLocale(); // 'es' o 'en'
+
+  // ========== MAPEO DE TRADUCCIONES PARA SERVICIOS ==========
+  const serviceTranslations = {
+    'Silla de bebé': { es: 'Silla de bebé', en: 'Baby seat' },
+    'Gasolina Prepago': { es: 'Gasolina Prepago', en: 'Prepaid fuel' },
+    'Conductor adicional': { es: 'Conductor adicional', en: 'Additional driver' }
+  };
+
+  // Función para traducir nombre del servicio
+  function translateServiceName(spanishName) {
+    if (!spanishName) return spanishName;
+    if (serviceTranslations[spanishName] && serviceTranslations[spanishName][currentLocale]) {
+      return serviceTranslations[spanishName][currentLocale];
+    }
+    return spanishName;
+  }
+
+  // ========== DETECTAR PLAN SELECCIONADO ==========
   const main = document.querySelector('main.page');
   const plan = main ? main.dataset.plan : 'linea';
   let planFromURL = 'linea';
@@ -1002,7 +1058,7 @@ if (isReset) {
 
   const days = parseInt(table.dataset.days || '1', 10) || 1;
 
-  // ========== NUEVO: OBTENER EL PRECIO BASE CORRECTO ==========
+  // ========== PRECIO BASE ==========
   let base = parseFloat(table.dataset.base || '0') || 0;
 
   if (base === 0) {
@@ -1016,7 +1072,7 @@ if (isReset) {
               if (mostradorDia > 0) {
                 base = mostradorDia * days;
               } else {
-                 const precioLinea = parseFloat(table.dataset.base || '0') || 0; // Fallback
+                 const precioLinea = parseFloat(table.dataset.base || '0') || 0;
                  base = precioLinea * 1.15;
               }
           }
@@ -1024,7 +1080,6 @@ if (isReset) {
   }
   base = Math.max(0, base);
   console.log('Precio base calculado:', base);
-
 
   const hiddenAlt = qs('#addonsHidden');
   const hiddenPayload = qs('#addons_payload');
@@ -1060,9 +1115,8 @@ if (isReset) {
   }
 
   function fmtMoney(n) {
-    const locale = document.documentElement.lang === 'en' ? 'en' : 'es';
+    const locale = getCurrentLocale();
     const isUSD = locale === 'en';
-
     const EXCHANGE_RATE = 20;
 
     let amount = isUSD ? n / EXCHANGE_RATE : n;
@@ -1070,7 +1124,7 @@ if (isReset) {
     return isUSD
         ? '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USD'
         : '$' + Math.round(amount).toLocaleString('es-MX') + ' MXN';
-}
+  }
 
   const addonsMap = parseAddons(rawAddons);
   let extrasTotal = 0;
@@ -1094,8 +1148,9 @@ if (isReset) {
     if (extrasList) {
       const row = document.createElement('div');
       row.className = 'row row-dropoff';
+      const dropoffLabel = currentLocale === 'en' ? 'Drop Off' : 'Drop Off';
       row.innerHTML = `
-        <span>Drop Off (${km} km)</span>
+        <span>${dropoffLabel} (${km} km)</span>
         <strong>${fmtMoney(dropoffTotal)}</strong>
       `;
       extrasList.appendChild(row);
@@ -1103,7 +1158,7 @@ if (isReset) {
     }
   }
 
-  // Addons
+  // Addons - CON TRADUCCIÓN DE NOMBRES
   addonsMap.forEach((qty, id) => {
     const srv = catalog[id];
     if (!srv) return;
@@ -1111,26 +1166,35 @@ if (isReset) {
     const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
     const tipo  = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
 
+    // ✅ OBTENER NOMBRE TRADUCIDO
+    const spanishName = srv.nombre || '';
+    const translatedName = translateServiceName(spanishName);
+
     let lineTotal = 0;
     let detalleLabel = '';
 
     if (String(id) === SERVICE_GASOLINA_ID) {
       const litros = Math.max(0, tanque);
       lineTotal = price * litros;
-      detalleLabel = `${srv.nombre} | ${litros} L x ${fmtMoney(price)} por litro`;
+      // ✅ Usar nombre traducido
+      const porLitroLabel = currentLocale === 'en' ? 'per liter' : 'por litro';
+      detalleLabel = `${translatedName} | ${litros} L x ${fmtMoney(price)} ${porLitroLabel}`;
     }
     else if (tipo === 'por_tanque') {
       const litros = Math.max(0, tanque);
       lineTotal = price * litros * qty;
-      detalleLabel = `${qty} | ${srv.nombre} | ${litros} L x ${fmtMoney(price)} por litro`;
+      const porLitroLabel = currentLocale === 'en' ? 'per liter' : 'por litro';
+      detalleLabel = `${qty} | ${translatedName} | ${litros} L x ${fmtMoney(price)} ${porLitroLabel}`;
     }
     else if (tipo === 'por_evento') {
       lineTotal = price * qty;
-      detalleLabel = `${qty} | ${srv.nombre} | ${fmtMoney(price)} / evento`;
+      const porEventoLabel = currentLocale === 'en' ? 'per event' : 'por evento';
+      detalleLabel = `${qty} | ${translatedName} | ${fmtMoney(price)} ${porEventoLabel}`;
     }
     else {
       lineTotal = price * qty * days;
-      detalleLabel = `${qty} | ${srv.nombre} | ${fmtMoney(price)} por día`;
+      const porDiaLabel = currentLocale === 'en' ? 'per day' : 'por día';
+      detalleLabel = `${qty} | ${translatedName} | ${fmtMoney(price)} ${porDiaLabel}`;
     }
 
     extrasTotal += lineTotal;
@@ -1150,9 +1214,10 @@ if (isReset) {
   if (renderedRows === 0 && extrasList) {
     const row = document.createElement('div');
     row.className = 'row row-empty';
+    const noAddonsText = currentLocale === 'en' ? 'No add-ons selected' : 'Sin complementos seleccionados';
     row.innerHTML = `
-      <span class="muted">${getCurrentLocale() === 'en' ? 'No add-ons selected' : 'Sin complementos seleccionados'}</span>
-      <strong>$0 MXN</strong>
+      <span class="muted">${noAddonsText}</span>
+      <strong>$0 ${currentLocale === 'en' ? 'USD' : 'MXN'}</strong>
     `;
     extrasList.appendChild(row);
   }
@@ -1169,8 +1234,9 @@ if (isReset) {
   if (ivaList) {
     const row = document.createElement('div');
     row.className = 'row row-iva';
+    const taxesLabel = currentLocale === 'en' ? 'TAXES (16%)' : 'IVA (16%)';
     row.innerHTML = `
-      <span>${getCurrentLocale() === 'en' ? 'VAT (16%)' : 'IVA (16%)'}</span>
+      <span>${taxesLabel}</span>
       <strong>${fmtMoney(iva)}</strong>
     `;
     ivaList.appendChild(row);
@@ -1298,98 +1364,159 @@ if (isReset) {
   }
 
   function initDaysAndPricesSync() {
-    const pickupDate = qs("#start") || qs('input[name="pickup_date"]');
-    const dropoffDate = qs("#end") || qs('input[name="dropoff_date"]');
-    const pickupHour = qs('#pickup_h');
-    const dropoffHour = qs('#dropoff_h');
+  const pickupDate = qs("#start") || qs('input[name="pickup_date"]');
+  const dropoffDate = qs("#end") || qs('input[name="dropoff_date"]');
+  const pickupHour = qs('#pickup_h');
+  const dropoffHour = qs('#dropoff_h');
+  const pickupHidden = qs('#pickup_time_hidden');
 
-    if (!pickupDate || !dropoffDate) {
+  if (!pickupDate || !dropoffDate) {
     console.log("No encontró inputs de fecha");
     return;
   }
 
-    function parseDateAny(val) {
-      if (!val) return null;
-      const s = String(val).trim();
-
-      let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-      if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
-
-      m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
-
-      const d = new Date(s);
-      return isNaN(d.getTime()) ? null : d;
-    }
-
-    function getDateTime(which) {
-      const d = parseDateAny(which === "pickup" ? pickupDate.value : dropoffDate.value);
-      if (!d) return null;
-      const h = which === "pickup" ? pickupHour?.value : dropoffHour?.value;
-      d.setHours(+h || 0, 0, 0, 0);
-      return d;
-    }
-
-    function calcDays() {
-      const a = getDateTime("pickup");
-  const b = getDateTime("dropoff");
-
-  if (!a || !b) return 1;
-
-  const diff = b - a;
-  if (diff <= 0) return 1;
-
-  const horasTotales = Math.floor(diff / (1000 * 60 * 60));
-
-  const diasBase = Math.floor(horasTotales / 24);
-  const horasExtra = horasTotales % 24;
-
-  // ✅ misma lógica que backend
-  if (horasExtra > 1) {
-    return diasBase + 1;
-  } else {
-    return Math.max(1, diasBase);
+  function pad2(n) {
+    return String(n).padStart(2, '0');
   }
-    }
 
-    function runUpdate() {
-      const days = calcDays();
+  function parseDateAny(val) {
+    if (!val) return null;
+    const s = String(val).trim();
 
-      const daysLabel = qs('#daysLabel');
-      if (daysLabel) daysLabel.textContent = days;
+    let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
 
-      qsa(".js-days").forEach(el => el.textContent = days);
+    m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
 
-      qsa('.car-card').forEach(card => {
-        const prepagoDia = parseFloat(card.getAttribute('data-prepago-dia') || '0') || 0;
-        const mostradorDia = parseFloat(card.getAttribute('data-mostrador-dia') || '0') || 0;
-
-        const prepagoTotal = prepagoDia * days;
-        const mostradorTotal = mostradorDia * days;
-
-        const fmt = (n) => Math.round(n).toLocaleString(getCurrentLocale() === 'en' ? 'en-US' : 'es-MX');
-
-        const elPrepTotal = qs('.js-prepago-total', card);
-        const elMostTotal = qs('.js-mostrador-total', card);
-        const elPrepDia = qs('.js-prepago-dia', card);
-        const elMostDia = qs('.js-mostrador-dia', card);
-
-        if (elPrepDia) elPrepDia.textContent = fmt(prepagoDia);
-        if (elMostDia) elMostDia.textContent = fmt(mostradorDia);
-        if (elPrepTotal) elPrepTotal.textContent = fmt(prepagoTotal);
-        if (elMostTotal) elMostTotal.textContent = fmt(mostradorTotal);
-      });
-
-      const qDays = qs('#qDays');
-      if (qDays) qDays.textContent = days;
-    }
-
-    [pickupDate, dropoffDate, pickupHour, dropoffHour]
-      .filter(Boolean)
-      .forEach(el => el.addEventListener("change", runUpdate));
-
-    runUpdate();
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
   }
+
+  function isSameLocalDate(a, b) {
+    if (!(a instanceof Date) || isNaN(a) || !(b instanceof Date) || isNaN(b)) return false;
+    return (
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate()
+    );
+  }
+
+  function rebuildPickupHours() {
+    if (!pickupHour) return;
+
+    const selectedDate = parseDateAny(pickupDate.value);
+    const now = new Date();
+
+    let minHour = 0;
+
+    // SOLO pickup: si la fecha seleccionada es hoy, ocultar horas ya pasadas
+    if (selectedDate && isSameLocalDate(selectedDate, now)) {
+      minHour = now.getHours() + 1;
+    }
+
+    const previousValue = pickupHour.value;
+    const locale = getCurrentLocale();
+    const placeholderText = locale === 'en' ? 'Time' : 'Hora';
+
+    pickupHour.innerHTML = '';
+    pickupHour.insertAdjacentHTML(
+      'afterbegin',
+      `<option value="" disabled selected>${placeholderText}</option>`
+    );
+
+    for (let i = minHour; i <= 23; i++) {
+      const hh = pad2(i);
+      const option = document.createElement('option');
+      option.value = hh;
+      option.textContent = `${hh}:00`;
+      pickupHour.appendChild(option);
+    }
+
+    const stillExists = Array.from(pickupHour.options).some(opt => opt.value === previousValue);
+
+    if (stillExists && previousValue !== '') {
+      pickupHour.value = previousValue;
+      if (pickupHidden) pickupHidden.value = `${previousValue}:00:00`;
+    } else {
+      pickupHour.value = '';
+      if (pickupHidden) pickupHidden.value = '';
+    }
+
+    try {
+      pickupHour.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (_) {}
+  }
+
+  function getDateTime(which) {
+    const d = parseDateAny(which === "pickup" ? pickupDate.value : dropoffDate.value);
+    if (!d) return null;
+    const h = which === "pickup" ? pickupHour?.value : dropoffHour?.value;
+    d.setHours(+h || 0, 0, 0, 0);
+    return d;
+  }
+
+  function calcDays() {
+    const a = getDateTime("pickup");
+    const b = getDateTime("dropoff");
+
+    if (!a || !b) return 1;
+
+    const diff = b - a;
+    if (diff <= 0) return 1;
+
+    const horasTotales = Math.floor(diff / (1000 * 60 * 60));
+    const diasBase = Math.floor(horasTotales / 24);
+    const horasExtra = horasTotales % 24;
+
+    if (horasExtra > 1) {
+      return diasBase + 1;
+    } else {
+      return Math.max(1, diasBase);
+    }
+  }
+
+  function runUpdate() {
+    rebuildPickupHours();
+
+    const days = calcDays();
+
+    const daysLabel = qs('#daysLabel');
+    if (daysLabel) daysLabel.textContent = days;
+
+    qsa(".js-days").forEach(el => el.textContent = days);
+
+    qsa('.car-card').forEach(card => {
+      const prepagoDia = parseFloat(card.getAttribute('data-prepago-dia') || '0') || 0;
+      const mostradorDia = parseFloat(card.getAttribute('data-mostrador-dia') || '0') || 0;
+
+      const prepagoTotal = prepagoDia * days;
+      const mostradorTotal = mostradorDia * days;
+
+      const fmt = (n) => Math.round(n).toLocaleString(getCurrentLocale() === 'en' ? 'en-US' : 'es-MX');
+
+      const elPrepTotal = qs('.js-prepago-total', card);
+      const elMostTotal = qs('.js-mostrador-total', card);
+      const elPrepDia = qs('.js-prepago-dia', card);
+      const elMostDia = qs('.js-mostrador-dia', card);
+
+      if (elPrepDia) elPrepDia.textContent = fmt(prepagoDia);
+      if (elMostDia) elMostDia.textContent = fmt(mostradorDia);
+      if (elPrepTotal) elPrepTotal.textContent = fmt(prepagoTotal);
+      if (elMostTotal) elMostTotal.textContent = fmt(mostradorTotal);
+    });
+
+    const qDays = qs('#qDays');
+    if (qDays) qDays.textContent = days;
+  }
+
+  [pickupDate, dropoffDate, pickupHour, dropoffHour]
+    .filter(Boolean)
+    .forEach(el => el.addEventListener("change", runUpdate));
+
+  rebuildPickupHours();
+  runUpdate();
+}
 
 
 
@@ -1971,6 +2098,7 @@ if (isReset) {
     initStep4AddonsSummary();
     initFullNameSync();
     initDobSelects();
+    initDobMonthsShortObserver();
     applyYoungDriverAddon();
     refreshFloatStates();
     initStep3ProteccionesModal();
@@ -2846,8 +2974,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-
-    // ============================================================
+// ============================================================
 // INICIALIZAR FLATPICKR CON SOPORTE PARA PERSISTENCIA
 // ============================================================
 if (typeof flatpickr !== 'undefined') {
@@ -2903,14 +3030,12 @@ if (typeof flatpickr !== 'undefined') {
 
     // Función para obtener valor actual respetando el estado persistido
     function getCurrentDateValue(inputEl) {
-        // Primero verificar si hay un valor en el input
         let rawValue = inputEl.value;
         if (rawValue && rawValue.trim() !== '') {
             return rawValue;
         }
 
-        // Si no, verificar en los parámetros de URL o localStorage
-        // a través de los campos ocultos que usa tu persistencia
+
         const hiddenDateInput = inputEl.id === 'start' ?
             document.querySelector('input[name="pickup_date"]') :
             document.querySelector('input[name="dropoff_date"]');
@@ -2923,7 +3048,7 @@ if (typeof flatpickr !== 'undefined') {
     }
 
     // Configuración común para ambos datepickers
-   const commonConfig = {
+const commonConfig = {
     dateFormat: "Y-m-d",
     altInput: true,
     altFormat: "d-M-y",
@@ -2931,12 +3056,25 @@ if (typeof flatpickr !== 'undefined') {
     locale: getFlatpickrLocale(),
     minDate: "today",
     disableMobile: true,
+
+    // --- NUEVA LÓGICA DE FONDO OSCURO ---
+    onOpen: function(selectedDates, dateStr, instance) {
+        const overlay = document.getElementById('fp-view-overlay');
+        if (overlay) overlay.classList.add('active');
+    },
+    onClose: function(selectedDates, dateStr, instance) {
+        const overlay = document.getElementById('fp-view-overlay');
+        if (overlay) overlay.classList.remove('active');
+    },
+
+
     onReady: function(selectedDates, dateStr, instance) {
         if (dateStr && dateStr !== '') {
             instance.altInput.classList.add('field-success');
             instance.altInput.classList.remove('field-error');
         }
     },
+  // --- LÓGICA DE CAMBIO Y BLOQUEO DE FECHAS ---
     onChange: function(selectedDates, dateStr, instance) {
         if (dateStr && dateStr !== '') {
             instance.altInput.classList.add('field-success');
@@ -2945,18 +3083,24 @@ if (typeof flatpickr !== 'undefined') {
             instance.altInput.classList.remove('field-success', 'field-error');
         }
 
+        if (instance.element.id === 'start' && selectedDates[0]) {
+            const endDatePicker = document.getElementById('end')._flatpickr;
+            if (endDatePicker) {
+                const minDropoffDate = new Date(selectedDates[0]);
+                minDropoffDate.setDate(minDropoffDate.getDate() + 1);
+                endDatePicker.set('minDate', minDropoffDate);
+            }
+        }
+
         instance.input.dispatchEvent(new Event('change', { bubbles: true }));
     }
 };
 
     // Inicializar pickup date
     if (startInput) {
-        // Destruir instancia anterior si existe
         if (startInput._flatpickr) {
             startInput._flatpickr.destroy();
         }
-
-        // Obtener valor actual
         const currentValue = getCurrentDateValue(startInput);
         if (currentValue) {
             const parsedDate = parseDateAny(currentValue);
@@ -2967,8 +3111,6 @@ if (typeof flatpickr !== 'undefined') {
 
         // Inicializar Flatpickr
         startInput._flatpickr = flatpickr(startInput, commonConfig);
-
-        // Asegurar que el altInput muestre la fecha correctamente
         setTimeout(() => {
             if (startInput._flatpickr && startInput.value) {
                 const parsed = parseDateAny(startInput.value);
@@ -2981,12 +3123,9 @@ if (typeof flatpickr !== 'undefined') {
 
     // Inicializar dropoff date
     if (endInput) {
-        // Destruir instancia anterior si existe
         if (endInput._flatpickr) {
             endInput._flatpickr.destroy();
         }
-
-        // Obtener valor actual
         const currentValue = getCurrentDateValue(endInput);
         if (currentValue) {
             const parsedDate = parseDateAny(currentValue);
@@ -2997,8 +3136,6 @@ if (typeof flatpickr !== 'undefined') {
 
         // Inicializar Flatpickr
         endInput._flatpickr = flatpickr(endInput, commonConfig);
-
-        // Asegurar que el altInput muestre la fecha correctamente
         setTimeout(() => {
             if (endInput._flatpickr && endInput.value) {
                 const parsed = parseDateAny(endInput.value);
@@ -3008,8 +3145,6 @@ if (typeof flatpickr !== 'undefined') {
             }
         }, 50);
     }
-
-    // Escuchar cambios de idioma para actualizar Flatpickr
     const observer = new MutationObserver(() => {
         const newLocale = getFlatpickrLocale();
         if (startInput && startInput._flatpickr) startInput._flatpickr.set('locale', newLocale);
@@ -3057,7 +3192,6 @@ function syncFlatpickrAfterStepChange() {
     const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
             if (mutation.attributeName === 'data-current-step') {
-                // Cuando cambia el step, forzar resincronización de Flatpickr
                 setTimeout(() => {
                     const start = document.getElementById('start');
                     const end = document.getElementById('end');
@@ -3079,7 +3213,7 @@ function syncFlatpickrAfterStepChange() {
     observer.observe(main, { attributes: true });
 }
 
-// Función auxiliar para parsear fechas (la misma que usamos antes)
+// Función auxiliar para parsear fechas
 function parseAnyToDate(val) {
     if (!val) return null;
     const s = String(val).trim();
@@ -3098,6 +3232,15 @@ function parseAnyToDate(val) {
 document.addEventListener('DOMContentLoaded', () => {
     syncFlatpickrAfterStepChange();
 });
+
+// inyectamos el Overlay
+(function injectFpOverlay() {
+    if (document.getElementById("fp-view-overlay")) return;
+    const overlay = document.createElement("div");
+    overlay.id = "fp-view-overlay";
+    overlay.className = "fp-view-overlay";
+    document.body.appendChild(overlay);
+})();
 
 });
 
@@ -3196,108 +3339,7 @@ document.addEventListener("DOMContentLoaded", function() {
     console.log('Select2 unificado inicializado correctamente');
 });
 
-/* ==========================================================
-   FONDO BORROSO EN MÓVIL - PARA PICKUP Y DROPOFF
-========================================================== */
-(function() {
-    "use strict";
 
-    function isMobile() {
-        return window.innerWidth <= 560;
-    }
-
-    let activeCalendar = null;
-
-    // Función para aplicar blur al fondo
-    function applyBlur() {
-        if (!isMobile()) return;
-
-        // Agregar clase al body
-        document.body.classList.add('flatpickr-open');
-
-        // Asegurar que el calendario activo tenga el z-index correcto
-        if (activeCalendar) {
-            activeCalendar.style.zIndex = '99999';
-            activeCalendar.style.position = 'fixed';
-            activeCalendar.style.top = '50%';
-            activeCalendar.style.left = '50%';
-            activeCalendar.style.transform = 'translate(-50%, -50%)';
-        }
-    }
-
-    // Función para quitar blur
-    function removeBlur() {
-        if (!isMobile()) return;
-        document.body.classList.remove('flatpickr-open');
-        activeCalendar = null;
-    }
-
-    // Función para detectar cuando se abre cualquier calendario
-    function detectCalendarOpen() {
-        const calendar = document.querySelector('.flatpickr-calendar.open');
-        if (calendar && isMobile()) {
-            if (!activeCalendar) {
-                activeCalendar = calendar;
-                applyBlur();
-            }
-        } else if (!calendar && activeCalendar) {
-            removeBlur();
-        }
-    }
-
-    // Observar cambios en el DOM para detectar apertura/cierre
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            // Buscar si hay algún calendario abierto
-            const calendar = document.querySelector('.flatpickr-calendar.open');
-
-            if (calendar && isMobile()) {
-                if (!activeCalendar) {
-                    activeCalendar = calendar;
-                    applyBlur();
-                }
-            } else if (!calendar && activeCalendar) {
-                removeBlur();
-            }
-        });
-    });
-
-    // Iniciar observación en todo el documento
-    observer.observe(document.body, {
-        attributes: true,
-        childList: true,
-        subtree: true,
-        attributeFilter: ['class']
-    });
-
-    // También detectar clicks en inputs de fecha
-    function setupInputListeners() {
-        const inputs = document.querySelectorAll('.flatpickr-input');
-        inputs.forEach(input => {
-            if (input.type === 'hidden') return;
-
-            input.addEventListener('click', function() {
-                setTimeout(() => {
-                    const calendar = document.querySelector('.flatpickr-calendar.open');
-                    if (calendar && isMobile()) {
-                        activeCalendar = calendar;
-                        applyBlur();
-                    }
-                }, 50);
-            });
-        });
-    }
-
-    // Inicializar cuando el DOM esté listo
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupInputListeners);
-    } else {
-        setupInputListeners();
-    }
-
-    // Revisar periódicamente (por si acaso)
-    setInterval(detectCalendarOpen, 200);
-})();
 /* ============================================================
    CONVERSIÓN DE MONEDA PARA STEP 2 - RESERVACIONES
 ============================================================ */
@@ -3428,4 +3470,85 @@ document.addEventListener("DOMContentLoaded", function() {
 
     window.convertPricesStep2 = convertPricesStep2;
 
+})();
+// ============================================================
+// SETEAR HORA PREDETERMINADA 13:00 PARA PICKUP Y DROPOFF
+// ============================================================
+(function setDefaultTimesOnLoad() {
+    "use strict";
+
+    function setDefaultTimes() {
+        // Pickup (recogida)
+        const pickupHour = document.getElementById('pickup_h');
+        const pickupTimeHidden = document.getElementById('pickup_time_hidden');
+
+        if (pickupHour && !pickupHour.value) {
+            pickupHour.value = '13';
+            if (pickupTimeHidden) pickupTimeHidden.value = '13:00:00';
+            pickupHour.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log('⏰ Pickup hora por defecto: 13:00');
+        }
+
+        // Dropoff (devolución)
+        const dropoffHour = document.getElementById('dropoff_h');
+        const dropoffTimeHidden = document.getElementById('dropoff_time_hidden');
+
+        if (dropoffHour && !dropoffHour.value) {
+            dropoffHour.value = '13';
+            if (dropoffTimeHidden) dropoffTimeHidden.value = '13:00:00';
+            dropoffHour.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log('⏰ Dropoff hora por defecto: 13:00');
+        }
+    }
+
+    // Ejecutar cuando el DOM esté listo
+    function runWhenReady() {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(setDefaultTimes, 100);
+            });
+        } else {
+            setTimeout(setDefaultTimes, 100);
+        }
+    }
+
+    runWhenReady();
+
+    // Observar cambios de step (por si se recarga el step 1)
+    const main = document.querySelector('main.page');
+    if (main) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'data-current-step') {
+                    if (main.dataset.currentStep === '1') {
+                        setTimeout(setDefaultTimes, 150);
+                    }
+                }
+            });
+        });
+        observer.observe(main, { attributes: true, attributeFilter: ['data-current-step'] });
+    }
+
+    // También observar cuando se selecciona una fecha (por si regenera las horas)
+    const pickupDate = document.getElementById('start');
+    const dropoffDate = document.getElementById('end');
+
+    if (pickupDate) {
+        pickupDate.addEventListener('change', function() {
+            setTimeout(setDefaultTimes, 50);
+        });
+    }
+
+    if (dropoffDate) {
+        dropoffDate.addEventListener('change', function() {
+            setTimeout(setDefaultTimes, 50);
+        });
+    }
+
+    // Para Select2 si existe
+    if (typeof $ !== 'undefined') {
+        $(document).on('select2:open', function() {
+            setTimeout(setDefaultTimes, 100);
+        });
+    }
 })();

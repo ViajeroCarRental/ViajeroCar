@@ -278,87 +278,169 @@ function getErrorMessage(fieldType) {
     return String(n).padStart(2, "0");
   }
 
-  function createTimeSelectsBelow(input, opts) {
-    const { hourMax = 24, defaultValue = "12:00" } = (opts || {});
+  function isSameLocalDate(dateStr, dateObj) {
+  if (!dateStr || !dateObj) return false;
 
-    const wrap = input.closest(".time-field") || input.parentElement;
-    if (wrap && wrap.querySelector(".tp-selects")) return;
+  const y = dateObj.getFullYear();
+  const m = pad2(dateObj.getMonth() + 1);
+  const d = pad2(dateObj.getDate());
 
-    const box = document.createElement("div");
-    box.className = "tp-selects w-100";
+  return dateStr === `${y}-${m}-${d}`;
+}
 
-    const selH = document.createElement("select");
-    selH.className = "tp-hour custom-select-clean";
+function getMinPickupHour() {
+  const now = new Date();
+  return now.getHours() + 1;
+}
 
-    const locale = getCurrentLocale();
-    const hourPlaceholder = locale === 'en' ? 'Time' : 'Hora';
-    selH.setAttribute("aria-label", hourPlaceholder);
+function rebuildHourOptions(input, opts = {}) {
+  const { hourMax = 24 } = opts;
 
-    // Placeholder con el texto traducido
-    selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>${hourPlaceholder}</option>`);
+  const wrap = input.closest(".time-field") || input.parentElement;
+  if (!wrap) return;
 
-    for (let h = 0; h < hourMax; h++) {
-      const op = document.createElement("option");
-      op.value = pad2(h);
-      op.textContent = `${pad2(h)}:00`;
-      selH.appendChild(op);
+  const selH = wrap.querySelector(".tp-selects .tp-hour");
+  if (!selH) return;
+
+  const previousValue = selH.value;
+  const locale = getCurrentLocale();
+  const hourPlaceholder = locale === 'en' ? 'Time' : 'Hora';
+
+  let startHour = 0;
+
+  // SOLO pickupTime debe bloquear horas pasadas si la fecha es hoy
+  if (input.id === "pickupTime") {
+    const pickupDateValue = document.getElementById("pickupDate")?.value || "";
+    if (isSameLocalDate(pickupDateValue, new Date())) {
+      startHour = getMinPickupHour();
     }
+  }
 
-    function sync() {
-      const finalH = pad2(Number(selH.value || 0));
-      input.value = `${finalH}:00`;
+  selH.innerHTML = "";
+  selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>${hourPlaceholder}</option>`);
+
+  for (let h = startHour; h < hourMax; h++) {
+    const op = document.createElement("option");
+    op.value = pad2(h);
+    op.textContent = `${pad2(h)}:00`;
+    selH.appendChild(op);
+  }
+
+  const stillExists = Array.from(selH.options).some(opt => opt.value === previousValue);
+
+  if (stillExists && previousValue !== "") {
+    selH.value = previousValue;
+    input.value = `${previousValue}:00`;
+  } else {
+    selH.selectedIndex = 0;
+    input.value = "";
+  }
+
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+function createTimeSelectsBelow(input, opts) {
+  const { hourMax = 24, defaultValue = "12:00" } = (opts || {});
+
+  const wrap = input.closest(".time-field") || input.parentElement;
+  if (wrap && wrap.querySelector(".tp-selects")) return;
+
+  const box = document.createElement("div");
+  box.className = "tp-selects w-100";
+
+  const selH = document.createElement("select");
+  selH.className = "tp-hour custom-select-clean";
+
+  const locale = getCurrentLocale();
+  const hourPlaceholder = locale === 'en' ? 'Time' : 'Hora';
+  selH.setAttribute("aria-label", hourPlaceholder);
+
+  box.appendChild(selH);
+
+  if (wrap) {
+    wrap.appendChild(box);
+  } else {
+    input.insertAdjacentElement("afterend", box);
+  }
+
+  rebuildHourOptions(input, { hourMax });
+
+  function sync() {
+    if (!selH.value) {
+      input.value = "";
       input.dispatchEvent(new Event("input", { bubbles: true }));
+      return;
     }
 
-    selH.addEventListener("change", sync);
-    box.appendChild(selH);
+    const finalH = pad2(Number(selH.value || 0));
+    input.value = `${finalH}:00`;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
 
-    if (wrap) {
-      wrap.appendChild(box);
-    } else {
-      input.insertAdjacentElement("afterend", box);
+  selH.addEventListener("change", sync);
+
+  if (input.value && input.value !== "12:00") {
+    const defaultHour = input.value.split(':')[0];
+    const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
+    if (option) {
+      selH.value = defaultHour;
+      sync();
     }
-
-    if (input.value && input.value !== "12:00") {
-      const defaultHour = input.value.split(':')[0];
-      const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
-      if (option) {
-        option.selected = true;
-        sync();
-      }
+  } else if (defaultValue && defaultValue !== "12:00") {
+    const defaultHour = defaultValue.split(':')[0];
+    const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
+    if (option) {
+      selH.value = defaultHour;
+      sync();
     } else {
       selH.selectedIndex = 0;
       input.value = "";
     }
+  } else {
+    selH.selectedIndex = 0;
+    input.value = "";
   }
+}
 
-  function initAnalogTime(id) {
-    const input = document.getElementById(id);
-    if (!input) return;
+function initAnalogTime(id) {
+  const input = document.getElementById(id);
+  if (!input) return;
 
-    if (input.dataset.tpReady === "1") return;
-    input.dataset.tpReady = "1";
+  if (input.dataset.tpReady === "1") return;
+  input.dataset.tpReady = "1";
 
-    input.setAttribute("readonly", "readonly");
-    input.setAttribute("inputmode", "none");
+  input.setAttribute("readonly", "readonly");
+  input.setAttribute("inputmode", "none");
 
-    input.classList.add("tp-hidden-input");
-    input.setAttribute("aria-hidden", "true");
+  input.classList.add("tp-hidden-input");
+  input.setAttribute("aria-hidden", "true");
 
-    createTimeSelectsBelow(input, {
-      hourMax: 24,
-      defaultValue: input.value || "12:00"
-    });
-
-    input.addEventListener("change", updateSummary);
-    input.addEventListener("input", updateSummary);
-  }
-
-  document.addEventListener("DOMContentLoaded", () => {
-    initAnalogTime("pickupTime");
-    initAnalogTime("dropoffTime");
-    updateSummary();
+  // Cambiado: valor por defecto a "13:00"
+  createTimeSelectsBelow(input, {
+    hourMax: 24,
+    defaultValue: input.value || "13:00"
   });
+
+  input.addEventListener("change", updateSummary);
+  input.addEventListener("input", updateSummary);
+
+  // SOLO pickupTime reacciona al cambio de fecha
+  if (id === "pickupTime") {
+    const pickupDate = document.getElementById("pickupDate");
+    if (pickupDate) {
+      pickupDate.addEventListener("change", function() {
+        rebuildHourOptions(input, { hourMax: 24 });
+      });
+    }
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initAnalogTime("pickupTime");
+  initAnalogTime("dropoffTime");
+  updateSummary();
+});
 
   function parseTimeTo24h(str) {
     const raw = String(str || '').trim();
@@ -801,7 +883,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-       /* ===== 2. VALIDAR FECHAS - CORREGIDO ===== */
+/* ===== 2. VALIDAR FECHAS  ===== */
 const fechas = [
     { id: 'pickupDate', msgKey: 'date' },
     { id: 'dropoffDate', msgKey: 'date' }
@@ -814,59 +896,27 @@ fechas.forEach(campo => {
     const container = hiddenInput.closest('.dt-field');
     if (!container) return;
 
-    // Buscar el input visible de Flatpickr (altInput)
-    let altInput = null;
-    // Primero buscar por la clase flatpickr-input
-    altInput = container.querySelector('.flatpickr-input');
 
-    // Si no se encuentra, buscar cualquier input visible que no sea hidden
-    if (!altInput) {
-        container.querySelectorAll('input').forEach(input => {
-            if (input.type !== 'hidden' && input !== hiddenInput) {
-                altInput = input;
-            }
-        });
-    }
+    container.querySelectorAll('.error-msg').forEach(el => el.remove());
 
-    const oldMsg = container.querySelector('.error-msg');
-    if (oldMsg) oldMsg.remove();
+    const todosLosInputs = container.querySelectorAll('input');
 
-    // Limpiar clases de error en ambos inputs
-    if (altInput) {
-        altInput.classList.remove('field-error', 'field-success');
-    }
-    hiddenInput.classList.remove('field-error', 'field-success');
-
-    const hasValue = hiddenInput.value && hiddenInput.value.trim() !== '';
-
-    if (!hasValue) {
+    if (!hiddenInput.value || hiddenInput.value.trim() === '') {
         valid = false;
-        console.log(`❌ ${campo.id} sin valor`);
 
-        // 🔥 Aplicar error al input visible (altInput)
-        if (altInput) {
-            altInput.classList.add('field-error');
-            altInput.classList.remove('field-success');
-        }
-        hiddenInput.classList.add('field-error');
+        todosLosInputs.forEach(inp => inp.classList.add('field-error'));
 
         const msg = document.createElement('span');
         msg.className = 'error-msg';
         msg.textContent = getErrorMessage(campo.msgKey);
         container.appendChild(msg);
-
     } else {
-        console.log(`✅ ${campo.id} OK: ${hiddenInput.value}`);
-
-        // Aplicar éxito al input visible
-        if (altInput) {
-            altInput.classList.add('field-success');
-            altInput.classList.remove('field-error');
-        }
-        hiddenInput.classList.add('field-success');
+        todosLosInputs.forEach(inp => {
+            inp.classList.remove('field-error');
+            inp.classList.add('field-success');
+        });
     }
 });
-
         /* ===== 3. VALIDAR HORAS - CORREGIDO PARA SELECTS ===== */
         const horas = [
             { id: 'pickupTime', msgKey: 'time' },
@@ -988,12 +1038,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-
 /* ============================================================
     INICIALIZAR FLATPICKR - CALENDARIOS CON IDIOMA DINÁMICO
 ============================================================ */
 (function() {
     "use strict";
+
+    // --- FUNCIÓN PARA INYECTAR EL OVERLAY ---
+    function injectOverlay() {
+        if (document.getElementById("fp-view-overlay-3")) return;
+        const overlay = document.createElement("div");
+        overlay.id = "fp-view-overlay-3";
+        overlay.className = "fp-view-overlay-3";
+        document.body.appendChild(overlay);
+    }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initFlatpickr);
@@ -1007,33 +1065,34 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        console.log('✅ Flatpickr encontrado, inicializando...');
+        injectOverlay(); // Inyectamos el fondo gris al inicio
 
         const pickupElement = document.getElementById('pickupDate');
         const dropoffElement = document.getElementById('dropoffDate');
+        const overlay = document.getElementById('fp-view-overlay-3');
 
-        if (!pickupElement) {
-            console.error('❌ No se encontró el elemento pickupDate');
-            return;
-        }
-
-        if (!dropoffElement) {
-            console.error('❌ No se encontró el elemento dropoffDate');
-            return;
-        }
+        if (!pickupElement || !dropoffElement) return;
 
         let pickupPicker;
         let dropoffPicker;
 
         function initPickers() {
             const localeData = getFlatpickrLocale();
+
+            // CONFIGURACIÓN COMÚN CON EVENTOS DE OVERLAY
             const commonConfig = {
                 dateFormat: "Y-m-d",
                 altInput: true,
                 altFormat: "d-M-y",
                 locale: localeData,
                 allowInput: false,
-                disableMobile: true
+                disableMobile: true,
+                onOpen: function() {
+                    if (overlay) overlay.classList.add('active');
+                },
+                onClose: function() {
+                    if (overlay) overlay.classList.remove('active');
+                }
             };
 
             // Inicializar Pickup Date
@@ -1043,7 +1102,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     ...commonConfig,
                     minDate: "today",
                     onChange: function(selectedDates, dateStr, instance) {
-                        console.log('Pickup date changed:', dateStr);
                         pickupElement.value = dateStr;
                         pickupElement.dispatchEvent(new Event('change', { bubbles: true }));
                         if (dropoffPicker && selectedDates[0]) {
@@ -1053,10 +1111,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 });
-                console.log('✅ Pickup date inicializado');
-            } catch(e) {
-                console.error('Error en pickup:', e);
-            }
+            } catch(e) { console.error('Error en pickup:', e); }
 
             // Inicializar Dropoff Date
             try {
@@ -1074,41 +1129,37 @@ document.addEventListener('DOMContentLoaded', function() {
                     ...commonConfig,
                     minDate: minDate,
                     onChange: function(selectedDates, dateStr, instance) {
-                        console.log('Dropoff date changed:', dateStr);
                         dropoffElement.value = dateStr;
                         dropoffElement.dispatchEvent(new Event('change', { bubbles: true }));
                     }
                 });
-                console.log('✅ Dropoff date inicializado');
-            } catch(e) {
-                console.error('Error en dropoff:', e);
-            }
+            } catch(e) { console.error('Error en dropoff:', e); }
         }
+
 
         initPickers();
 
-        // Escuchar cambios de idioma para actualizar Flatpickr y placeholders
+        // --- OBSERVER PARA CAMBIOS DE IDIOMA ---
         const observer = new MutationObserver(() => {
             initPickers();
-            // Actualizar placeholder de horas
-            const locale = getCurrentLocale();
+            const locale = (typeof getCurrentLocale === 'function') ? getCurrentLocale() : 'es';
             const hourPlaceholder = locale === 'en' ? 'Hour' : 'Hora';
+
             document.querySelectorAll('.tp-hour').forEach(select => {
-                if (select.options[0] && select.options[0].textContent !== hourPlaceholder) {
-                    select.options[0].textContent = hourPlaceholder;
-                }
+                if (select.options[0]) select.options[0].textContent = hourPlaceholder;
             });
-            // Actualizar resumen
-            updateSummary();
+
+            if (typeof updateSummary === 'function') updateSummary();
         });
+
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
+        // --- PLACEHOLDERS INICIALES ---
         setTimeout(() => {
             const flatpickrInputs = document.querySelectorAll('.flatpickr-input');
             flatpickrInputs.forEach(input => {
                 if (!input.value) {
-                    const locale = getCurrentLocale();
-                    input.placeholder = locale === 'en' ? 'dd-Mmm-yy' : 'dd-Mmm-yy';
+                    input.placeholder = 'dd-Mmm-yy';
                 }
             });
         }, 100);
@@ -1290,108 +1341,6 @@ $(document).ready(function() {
   });
 
 });
-/* ==========================================================
-   FONDO BORROSO EN MÓVIL - PARA PICKUP Y DROPOFF
-========================================================== */
-(function() {
-    "use strict";
-
-    function isMobile() {
-        return window.innerWidth <= 560;
-    }
-
-    let activeCalendar = null;
-
-    // Función para aplicar blur al fondo
-    function applyBlur() {
-        if (!isMobile()) return;
-
-        // Agregar clase al body
-        document.body.classList.add('flatpickr-open');
-
-        // Asegurar que el calendario activo tenga el z-index correcto
-        if (activeCalendar) {
-            activeCalendar.style.zIndex = '99999';
-            activeCalendar.style.position = 'fixed';
-            activeCalendar.style.top = '50%';
-            activeCalendar.style.left = '50%';
-            activeCalendar.style.transform = 'translate(-50%, -50%)';
-        }
-    }
-
-    // Función para quitar blur
-    function removeBlur() {
-        if (!isMobile()) return;
-        document.body.classList.remove('flatpickr-open');
-        activeCalendar = null;
-    }
-
-    // Función para detectar cuando se abre cualquier calendario
-    function detectCalendarOpen() {
-        const calendar = document.querySelector('.flatpickr-calendar.open');
-        if (calendar && isMobile()) {
-            if (!activeCalendar) {
-                activeCalendar = calendar;
-                applyBlur();
-            }
-        } else if (!calendar && activeCalendar) {
-            removeBlur();
-        }
-    }
-
-    // Observar cambios en el DOM para detectar apertura/cierre
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            // Buscar si hay algún calendario abierto
-            const calendar = document.querySelector('.flatpickr-calendar.open');
-
-            if (calendar && isMobile()) {
-                if (!activeCalendar) {
-                    activeCalendar = calendar;
-                    applyBlur();
-                }
-            } else if (!calendar && activeCalendar) {
-                removeBlur();
-            }
-        });
-    });
-
-    // Iniciar observación en todo el documento
-    observer.observe(document.body, {
-        attributes: true,
-        childList: true,
-        subtree: true,
-        attributeFilter: ['class']
-    });
-
-    // También detectar clicks en inputs de fecha
-    function setupInputListeners() {
-        const inputs = document.querySelectorAll('.flatpickr-input');
-        inputs.forEach(input => {
-            if (input.type === 'hidden') return;
-
-            input.addEventListener('click', function() {
-                setTimeout(() => {
-                    const calendar = document.querySelector('.flatpickr-calendar.open');
-                    if (calendar && isMobile()) {
-                        activeCalendar = calendar;
-                        applyBlur();
-                    }
-                }, 50);
-            });
-        });
-    }
-
-    // Inicializar cuando el DOM esté listo
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupInputListeners);
-    } else {
-        setupInputListeners();
-    }
-
-    // Revisar periódicamente (por si acaso)
-    setInterval(detectCalendarOpen, 200);
-})();
 /* ============================================================
    MODAL MEMBRESÍA - CON DOS BOTONES QUE ABREN EL MODAL
 ============================================================ */

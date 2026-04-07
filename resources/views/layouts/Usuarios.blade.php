@@ -259,7 +259,7 @@ body.nav-open .language-selector {
     </ul>
 
     <div class="nav-actions">
-  <<div class="language-selector dropdown">
+    <div class="language-selector dropdown">
     <button class="lang-btn dropdown-toggle" data-bs-toggle="dropdown">
         <img id="currentFlag" src="{{ app()->getLocale() == 'en' ? 'https://flagcdn.com/w40/us.png' : 'https://flagcdn.com/w40/mx.png' }}">
         <span id="currentLang">{{ strtoupper(app()->getLocale()) }}</span>
@@ -470,7 +470,9 @@ body.nav-open .language-selector {
 @yield('js-vistaLogin')
 @yield('js-vistaPerfil')
 @yield('js-visorReservacion')
+<script>
 
+</script>
 <script>
   // iOS: bloquear zoom
   (function(){
@@ -501,6 +503,118 @@ body.nav-open .language-selector {
   // Actualizar año en footer
   document.getElementById('year').textContent = new Date().getFullYear();
 </script>
+<script src="{{ asset('js/sucursalesTraducciones.js') }}"></script>
 
+<script>
+/* ============================================================
+   TRADUCCIÓN DE SELECT2 - GLOBAL PARA TODOS LOS FORMULARIOS
+
+============================================================ */
+(function() {
+    "use strict";
+
+    function traducirSelect(selectElement) {
+        if (!selectElement) return false;
+
+        if (!window.sucursalesTraducciones || Object.keys(window.sucursalesTraducciones).length === 0) {
+            console.log('⚠️ No hay traducciones de sucursales cargadas');
+            return false;
+        }
+
+        const locale = document.documentElement.lang || 'es';
+        let traduccionesRealizadas = 0;
+
+        for (let i = 0; i < selectElement.options.length; i++) {
+            const option = selectElement.options[i];
+            const textoOriginal = option.textContent.trim();
+
+            if (window.sucursalesTraducciones[textoOriginal]) {
+                const textoTraducido = window.sucursalesTraducciones[textoOriginal][locale];
+                if (textoTraducido && option.textContent !== textoTraducido) {
+                    option.textContent = textoTraducido;
+                    traduccionesRealizadas++;
+                }
+            }
+        }
+
+        if (typeof $ !== 'undefined' && $(selectElement).data('select2')) {
+            $(selectElement).trigger('change.select2');
+        }
+
+        if (traduccionesRealizadas > 0) {
+            console.log(`✅ Select traducido: ${selectElement.id || selectElement.name}`);
+        }
+
+        return traduccionesRealizadas > 0;
+    }
+
+    function traducirTodosLosSelects() {
+        // TODOS los IDs  DE  LOS formularios
+        const posiblesIds = [
+            // Home (welcome)
+            'pickupPlace',
+            'dropoffPlace',
+            // Reservaciones
+            'pickup_sucursal_id',
+            'dropoff_sucursal_id',
+            // Políticas
+            'pickupPlacePoliticas',
+            'dropoffPlacePoliticas'
+        ];
+
+        // Traducir por ID
+        posiblesIds.forEach(id => {
+            const select = document.getElementById(id);
+            if (select) traducirSelect(select);
+        });
+
+        const selectsPorNombre = document.querySelectorAll('select[name*="sucursal"], select[name*="pickup"], select[name*="dropoff"]');
+        selectsPorNombre.forEach(select => {
+            if (select.id && !posiblesIds.includes(select.id)) {
+                traducirSelect(select);
+            }
+        });
+
+        console.log('Búsqueda de selects completada');
+    }
+
+    // Escuchar cambios de idioma
+    const observer = new MutationObserver(() => {
+        console.log('Cambio de idioma detectado');
+        setTimeout(traducirTodosLosSelects, 100);
+        setTimeout(traducirTodosLosSelects, 300);
+        setTimeout(traducirTodosLosSelects, 600);
+    });
+
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['lang']
+    });
+
+    // Escuchar clicks en botones de idioma
+    document.addEventListener('click', (e) => {
+        const langBtn = e.target.closest('.lang-btn, .dropdown-item[href*="/lang/"]');
+        if (langBtn) {
+            console.log('Click en botón de idioma');
+            setTimeout(traducirTodosLosSelects, 150);
+            setTimeout(traducirTodosLosSelects, 400);
+            setTimeout(traducirTodosLosSelects, 800);
+        }
+    });
+
+    // Inicializar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(traducirTodosLosSelects, 300);
+            setTimeout(traducirTodosLosSelects, 800);
+            setTimeout(traducirTodosLosSelects, 1500);
+        });
+    } else {
+        setTimeout(traducirTodosLosSelects, 300);
+        setTimeout(traducirTodosLosSelects, 800);
+        setTimeout(traducirTodosLosSelects, 1500);
+    }
+})();
+</script>
 </body>
 </html>

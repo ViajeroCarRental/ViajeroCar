@@ -388,7 +388,7 @@ class BtnReservacionesController extends Controller
             ];
 
             $catId  = (int)($categoria->id_categoria ?? 0);
-            $baseUrl = rtrim(config('app.url'), '/');
+            $baseUrl = 'https://viajerocar-production.up.railway.app';
             $imgPath = $catImages[$catId] ?? 'img/categorias/placeholder.png';
             $imgCategoria = $baseUrl . '/' . ltrim($imgPath, '/');
 
