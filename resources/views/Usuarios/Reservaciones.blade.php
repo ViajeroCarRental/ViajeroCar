@@ -249,7 +249,7 @@ try {
 
         $precioDiaCategoria = (float) ($categoriaSel->precio_dia ?? 0);
         if ($plan === 'mostrador') {
-            $precioDiaCategoria = round($precioDiaCategoria * 1.15);
+            $precioDiaCategoria = round($precioDiaCategoria * 1.25);
         }
         $tarifaBase = $precioDiaCategoria > 0 ? $precioDiaCategoria * $days : 0.0;
 
@@ -2619,7 +2619,10 @@ input:checked + .slider:before {
     data-costokm="{{ $costoKmCategoria }}"
     data-tanque="{{ $capacidadTanque ?? 0 }}">
 
-        {{-- ===== TARIFA BASE ===== --}}
+       {{-- ===== TARIFA BASE ===== --}}
+        @php
+    $precioDia = (float) ($categoriaSel->precio_dia ?? 0);
+@endphp
         <details class="sum-acc" open="false">
             <summary class="sum-bar">
                 <span>{{ __('Base rate') }}</span>
@@ -2629,9 +2632,10 @@ input:checked + .slider:before {
 
             <div class="sum-acc-body">
                 <div class="row row-base">
-                    <span>{{ $days }} {{ __('day(s) - price per day') }}
-    {{ formatCurrency((float) ($categoriaSel->precio_dia ?? 0), $isUSD, $exchangeRate) }}
-                </span>
+                    <span>
+                    {{ $days }} {{ __('day(s) - price per day') }}
+                     {{ formatCurrency($precioDiaCategoria, $isUSD, $exchangeRate) }}
+                    </span>
                 </div>
 
                 <div class="row row-base-total">
