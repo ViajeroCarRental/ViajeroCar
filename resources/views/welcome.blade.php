@@ -833,6 +833,8 @@
             <li><i class="fa-solid fa-user-large"></i> 5</li>
             <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
             <li><i class="fa-solid fa-briefcase"></i> 1</li>
+            <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Automatic') }}</span></li>
+            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
           </ul>
 
           <div class="car-connect">
@@ -873,6 +875,8 @@
             <li><i class="fa-solid fa-user-large"></i> 5</li>
             <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
             <li><i class="fa-solid fa-briefcase"></i> 2</li>
+            <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Automatic') }}</span></li>
+            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
           </ul>
 
           <div class="car-connect">
@@ -913,6 +917,8 @@
             <li><i class="fa-solid fa-user-large"></i> 5</li>
             <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
             <li><i class="fa-solid fa-briefcase"></i> 3</li>
+            <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Automatic') }}</span></li>
+            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
           </ul>
 
           <div class="car-connect">
@@ -953,6 +959,8 @@
             <li><i class="fa-solid fa-user-large"></i> 5</li>
             <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
             <li><i class="fa-solid fa-briefcase"></i> 3</li>
+            <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Automatic') }}</span></li>
+            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
           </ul>
 
           <div class="car-connect">
@@ -993,6 +1001,8 @@
             <li><i class="fa-solid fa-user-large"></i> 5</li>
             <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
             <li><i class="fa-solid fa-briefcase"></i> 3</li>
+            <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Automatic') }}</span></li>
+            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
           </ul>
 
           <div class="car-connect">
@@ -1038,6 +1048,8 @@
             <li><i class="fa-solid fa-user-large"></i> 5</li>
             <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
             <li><i class="fa-solid fa-briefcase"></i> 3</li>
+            <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Automatic') }}</span></li>
+            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
           </ul>
 
           <div class="car-connect">
@@ -1121,6 +1133,8 @@
               <li><i class="fa-solid fa-user-large"></i> 7</li>
               <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
               <li><i class="fa-solid fa-briefcase"></i> 2</li>
+              <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Automatic') }}</span></li>
+            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
             </ul>
 
             <div class="car-connect">
@@ -1161,6 +1175,8 @@
               <li><i class="fa-solid fa-user-large"></i> 8</li>
               <li><i class="fa-solid fa-suitcase-rolling"></i> 8</li>
               <li><i class="fa-solid fa-briefcase"></i>4</li>
+              <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Automatic') }}</span></li>
+            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
             </ul>
 
             <div class="car-connect">
@@ -1201,6 +1217,8 @@
               <li><i class="fa-solid fa-user-large"></i> 13</li>
               <li><i class="fa-solid fa-suitcase-rolling"></i> 5</li>
               <li><i class="fa-solid fa-briefcase"></i> 5</li>
+              <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Standard') }}</span></li>
+            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
             </ul>
 
             <div class="car-connect">
@@ -1241,6 +1259,8 @@
               <li><i class="fa-solid fa-user-large"></i> 13</li>
               <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
               <li><i class="fa-solid fa-briefcase"></i> 3</li>
+              <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Standard') }}</span></li>
+            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
             </ul>
 
             <div class="car-connect">
@@ -1287,6 +1307,8 @@
               <li><i class="fa-solid fa-user-large"></i> 5</li>
               <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
               <li><i class="fa-solid fa-briefcase"></i> 3</li>
+              <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Automatic') }}</span></li>
+            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
             </ul>
 
             <div class="car-connect">
@@ -1327,6 +1349,8 @@
               <li><i class="fa-solid fa-user-large"></i> 5</li>
               <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
               <li><i class="fa-solid fa-briefcase"></i> 3</li>
+              <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Automatic') }}</span></li>
+            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
             </ul>
 
             <div class="car-connect">

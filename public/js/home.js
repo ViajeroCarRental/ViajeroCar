@@ -416,15 +416,16 @@ function initAnalogTime(id) {
   input.classList.add("tp-hidden-input");
   input.setAttribute("aria-hidden", "true");
 
+  // Cambiado: valor por defecto a "13:00"
   createTimeSelectsBelow(input, {
     hourMax: 24,
-    defaultValue: input.value || "12:00"
+    defaultValue: input.value || "13:00"
   });
 
   input.addEventListener("change", updateSummary);
   input.addEventListener("input", updateSummary);
 
-  // SOLO pickupTime reacciona al cambio de fecha para recalcular horas disponibles
+  // SOLO pickupTime reacciona al cambio de fecha
   if (id === "pickupTime") {
     const pickupDate = document.getElementById("pickupDate");
     if (pickupDate) {
@@ -1037,12 +1038,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-
 /* ============================================================
     INICIALIZAR FLATPICKR - CALENDARIOS CON IDIOMA DINÁMICO
 ============================================================ */
 (function() {
     "use strict";
+
+    // --- FUNCIÓN PARA INYECTAR EL OVERLAY ---
+    function injectOverlay() {
+        if (document.getElementById("fp-view-overlay-3")) return;
+        const overlay = document.createElement("div");
+        overlay.id = "fp-view-overlay-3";
+        overlay.className = "fp-view-overlay-3";
+        document.body.appendChild(overlay);
+    }
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initFlatpickr);
@@ -1056,33 +1065,34 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        console.log('✅ Flatpickr encontrado, inicializando...');
+        injectOverlay(); // Inyectamos el fondo gris al inicio
 
         const pickupElement = document.getElementById('pickupDate');
         const dropoffElement = document.getElementById('dropoffDate');
+        const overlay = document.getElementById('fp-view-overlay-3');
 
-        if (!pickupElement) {
-            console.error('❌ No se encontró el elemento pickupDate');
-            return;
-        }
-
-        if (!dropoffElement) {
-            console.error('❌ No se encontró el elemento dropoffDate');
-            return;
-        }
+        if (!pickupElement || !dropoffElement) return;
 
         let pickupPicker;
         let dropoffPicker;
 
         function initPickers() {
             const localeData = getFlatpickrLocale();
+
+            // CONFIGURACIÓN COMÚN CON EVENTOS DE OVERLAY
             const commonConfig = {
                 dateFormat: "Y-m-d",
                 altInput: true,
                 altFormat: "d-M-y",
                 locale: localeData,
                 allowInput: false,
-                disableMobile: true
+                disableMobile: true,
+                onOpen: function() {
+                    if (overlay) overlay.classList.add('active');
+                },
+                onClose: function() {
+                    if (overlay) overlay.classList.remove('active');
+                }
             };
 
             // Inicializar Pickup Date
@@ -1092,7 +1102,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     ...commonConfig,
                     minDate: "today",
                     onChange: function(selectedDates, dateStr, instance) {
-                        console.log('Pickup date changed:', dateStr);
                         pickupElement.value = dateStr;
                         pickupElement.dispatchEvent(new Event('change', { bubbles: true }));
                         if (dropoffPicker && selectedDates[0]) {
@@ -1102,10 +1111,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 });
-                console.log('✅ Pickup date inicializado');
-            } catch(e) {
-                console.error('Error en pickup:', e);
-            }
+            } catch(e) { console.error('Error en pickup:', e); }
 
             // Inicializar Dropoff Date
             try {
@@ -1123,41 +1129,37 @@ document.addEventListener('DOMContentLoaded', function() {
                     ...commonConfig,
                     minDate: minDate,
                     onChange: function(selectedDates, dateStr, instance) {
-                        console.log('Dropoff date changed:', dateStr);
                         dropoffElement.value = dateStr;
                         dropoffElement.dispatchEvent(new Event('change', { bubbles: true }));
                     }
                 });
-                console.log('✅ Dropoff date inicializado');
-            } catch(e) {
-                console.error('Error en dropoff:', e);
-            }
+            } catch(e) { console.error('Error en dropoff:', e); }
         }
+
 
         initPickers();
 
-        // Escuchar cambios de idioma para actualizar Flatpickr y placeholders
+        // --- OBSERVER PARA CAMBIOS DE IDIOMA ---
         const observer = new MutationObserver(() => {
             initPickers();
-            // Actualizar placeholder de horas
-            const locale = getCurrentLocale();
+            const locale = (typeof getCurrentLocale === 'function') ? getCurrentLocale() : 'es';
             const hourPlaceholder = locale === 'en' ? 'Hour' : 'Hora';
+
             document.querySelectorAll('.tp-hour').forEach(select => {
-                if (select.options[0] && select.options[0].textContent !== hourPlaceholder) {
-                    select.options[0].textContent = hourPlaceholder;
-                }
+                if (select.options[0]) select.options[0].textContent = hourPlaceholder;
             });
-            // Actualizar resumen
-            updateSummary();
+
+            if (typeof updateSummary === 'function') updateSummary();
         });
+
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
+        // --- PLACEHOLDERS INICIALES ---
         setTimeout(() => {
             const flatpickrInputs = document.querySelectorAll('.flatpickr-input');
             flatpickrInputs.forEach(input => {
                 if (!input.value) {
-                    const locale = getCurrentLocale();
-                    input.placeholder = locale === 'en' ? 'dd-Mmm-yy' : 'dd-Mmm-yy';
+                    input.placeholder = 'dd-Mmm-yy';
                 }
             });
         }, 100);
@@ -1339,108 +1341,6 @@ $(document).ready(function() {
   });
 
 });
-/* ==========================================================
-   FONDO BORROSO EN MÓVIL - PARA PICKUP Y DROPOFF
-========================================================== */
-(function() {
-    "use strict";
-
-    function isMobile() {
-        return window.innerWidth <= 560;
-    }
-
-    let activeCalendar = null;
-
-    // Función para aplicar blur al fondo
-    function applyBlur() {
-        if (!isMobile()) return;
-
-        // Agregar clase al body
-        document.body.classList.add('flatpickr-open');
-
-        // Asegurar que el calendario activo tenga el z-index correcto
-        if (activeCalendar) {
-            activeCalendar.style.zIndex = '99999';
-            activeCalendar.style.position = 'fixed';
-            activeCalendar.style.top = '50%';
-            activeCalendar.style.left = '50%';
-            activeCalendar.style.transform = 'translate(-50%, -50%)';
-        }
-    }
-
-    // Función para quitar blur
-    function removeBlur() {
-        if (!isMobile()) return;
-        document.body.classList.remove('flatpickr-open');
-        activeCalendar = null;
-    }
-
-    // Función para detectar cuando se abre cualquier calendario
-    function detectCalendarOpen() {
-        const calendar = document.querySelector('.flatpickr-calendar.open');
-        if (calendar && isMobile()) {
-            if (!activeCalendar) {
-                activeCalendar = calendar;
-                applyBlur();
-            }
-        } else if (!calendar && activeCalendar) {
-            removeBlur();
-        }
-    }
-
-    // Observar cambios en el DOM para detectar apertura/cierre
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            // Buscar si hay algún calendario abierto
-            const calendar = document.querySelector('.flatpickr-calendar.open');
-
-            if (calendar && isMobile()) {
-                if (!activeCalendar) {
-                    activeCalendar = calendar;
-                    applyBlur();
-                }
-            } else if (!calendar && activeCalendar) {
-                removeBlur();
-            }
-        });
-    });
-
-    // Iniciar observación en todo el documento
-    observer.observe(document.body, {
-        attributes: true,
-        childList: true,
-        subtree: true,
-        attributeFilter: ['class']
-    });
-
-    // También detectar clicks en inputs de fecha
-    function setupInputListeners() {
-        const inputs = document.querySelectorAll('.flatpickr-input');
-        inputs.forEach(input => {
-            if (input.type === 'hidden') return;
-
-            input.addEventListener('click', function() {
-                setTimeout(() => {
-                    const calendar = document.querySelector('.flatpickr-calendar.open');
-                    if (calendar && isMobile()) {
-                        activeCalendar = calendar;
-                        applyBlur();
-                    }
-                }, 50);
-            });
-        });
-    }
-
-    // Inicializar cuando el DOM esté listo
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupInputListeners);
-    } else {
-        setupInputListeners();
-    }
-
-    // Revisar periódicamente (por si acaso)
-    setInterval(detectCalendarOpen, 200);
-})();
 /* ============================================================
    MODAL MEMBRESÍA - CON DOS BOTONES QUE ABREN EL MODAL
 ============================================================ */

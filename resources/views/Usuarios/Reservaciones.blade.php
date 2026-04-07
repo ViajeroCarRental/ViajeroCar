@@ -900,87 +900,99 @@ if (window.location.search.includes('from=welcome')) {
                 }
             }
 
-            // ============================================================
-            // VALIDACIÓN DEL FORMULARIO
-            // ============================================================
-            const form = document.getElementById('step1Form');
+// ============================================================
+            // VALIDACIÓN DEL FORMULARIO STEP 1 (CON IDIOMA DINÁMICO)
+             // ============================================================
 
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
+// Función para obtener mensajes en el idioma actual
+function getStep1ErrorMessage(fieldType) {
+    const isEnglish = document.documentElement.lang === 'en';
+    const messages = {
+        location: isEnglish ? 'Location required' : 'Ubicación requerida',
+        date: isEnglish ? 'Date required' : 'Fecha requerida',
+        time: isEnglish ? 'Time required' : 'Hora requerida'
+    };
+    return messages[fieldType] || (isEnglish ? 'Required field' : 'Campo requerido');
+}
 
-                     console.log("SUBMIT DETECTADO");
+const form = document.getElementById('step1Form');
 
-                    limpiarErrores();
+if (form) {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
 
-                    let valido = true;
+        console.log("SUBMIT DETECTADO");
 
-                    // Validar pickup
-                    const pickup = document.getElementById('pickupPlace');
-                    if (!pickup.value) {
-                        valido = false;
-                        mostrarError(pickup, '{{ __("Location required") }}');
-                    } else {
-                        pickup.classList.add('field-success');
-                    }
+        limpiarErrores();
 
-                    // Validar dropoff si está visible (usando differentDropoff.checked)
-                    const differentDropoff = document.getElementById('differentDropoff');
-                    const dropoff = document.getElementById('dropoffPlace');
-                    if (differentDropoff.checked && !dropoff.value) {
-                        valido = false;
-                        mostrarError(dropoff, '{{ __("Location required") }}');
-                    } else if (differentDropoff.checked) {
-                        dropoff.classList.add('field-success');
-                    }
+        let valido = true;
 
-                    // Validar fechas (con soporte para flatpickr)
-                    const start = document.getElementById('start');
-                    if (!start.value) {
-                        valido = false;
-                        mostrarError(start, '{{ __("Date required") }}');
-                    } else {
-                        if (start._flatpickr && start._flatpickr.altInput) {
-                            start._flatpickr.altInput.classList.add('field-success');
-                        } else {
-                            start.classList.add('field-success');
-                        }
-                    }
+        // Validar pickup
+        const pickup = document.getElementById('pickupPlace');
+        if (!pickup.value) {
+            valido = false;
+            mostrarError(pickup, getStep1ErrorMessage('location'));
+        } else {
+            pickup.classList.add('field-success');
+        }
 
-                    const end = document.getElementById('end');
-                    if (!end.value) {
-                        valido = false;
-                        mostrarError(end, '{{ __("Date required") }}');
-                    } else {
-                        if (end._flatpickr && end._flatpickr.altInput) {
-                            end._flatpickr.altInput.classList.add('field-success');
-                        } else {
-                            end.classList.add('field-success');
-                        }
-                    }
+        // Validar dropoff si está visible
+        const differentDropoff = document.getElementById('differentDropoff');
+        const dropoff = document.getElementById('dropoffPlace');
+        if (differentDropoff && differentDropoff.checked && !dropoff.value) {
+            valido = false;
+            mostrarError(dropoff, getStep1ErrorMessage('location'));
+        } else if (differentDropoff && differentDropoff.checked) {
+            dropoff.classList.add('field-success');
+        }
 
-                    // Validar horas
-                    const pickupH = document.getElementById('pickup_h');
-                    if (!pickupH.value) {
-                        valido = false;
-                        mostrarError(pickupH, '{{ __("Time required") }}');
-                    } else {
-                        pickupH.classList.add('field-success');
-                    }
-
-                    const dropoffH = document.getElementById('dropoff_h');
-                    if (!dropoffH.value) {
-                        valido = false;
-                        mostrarError(dropoffH, '{{ __("Time required") }}');
-                    } else {
-                        dropoffH.classList.add('field-success');
-                    }
-
-                    if (valido) {
-                        form.submit();
-                    }
-                });
+        // Validar fechas
+        const start = document.getElementById('start');
+        if (!start.value) {
+            valido = false;
+            mostrarError(start, getStep1ErrorMessage('date'));
+        } else {
+            if (start._flatpickr && start._flatpickr.altInput) {
+                start._flatpickr.altInput.classList.add('field-success');
+            } else {
+                start.classList.add('field-success');
             }
+        }
+
+        const end = document.getElementById('end');
+        if (!end.value) {
+            valido = false;
+            mostrarError(end, getStep1ErrorMessage('date'));
+        } else {
+            if (end._flatpickr && end._flatpickr.altInput) {
+                end._flatpickr.altInput.classList.add('field-success');
+            } else {
+                end.classList.add('field-success');
+            }
+        }
+
+        // Validar horas
+        const pickupH = document.getElementById('pickup_h');
+        if (!pickupH.value) {
+            valido = false;
+            mostrarError(pickupH, getStep1ErrorMessage('time'));
+        } else {
+            pickupH.classList.add('field-success');
+        }
+
+        const dropoffH = document.getElementById('dropoff_h');
+        if (!dropoffH.value) {
+            valido = false;
+            mostrarError(dropoffH, getStep1ErrorMessage('time'));
+        } else {
+            dropoffH.classList.add('field-success');
+        }
+
+        if (valido) {
+            form.submit();
+        }
+    });
+}
         });
 
         // Función para limpiar el formulario
@@ -1028,7 +1040,6 @@ if (window.location.search.includes('from=welcome')) {
         }
         console.log("Formulario valido:", valido);
     </script>
-
 @endif
                 {{-- ===================== STEP 2 ===================== --}}
 
@@ -1043,7 +1054,7 @@ if (window.location.search.includes('from=welcome')) {
                             @php
                                 $imgCat = $catImages[$cat->id_categoria] ?? $placeholder;
                                 $prepagoDia = (float) ($cat->precio_dia ?? 0);
-                                $mostradorDia = round($prepagoDia * 1.15);
+                                $mostradorDia = round($prepagoDia * 1.25);
                                 $prepagoTotal = $prepagoDia * $days;
                                 $mostradorTotal = $mostradorDia * $days;
 
@@ -1661,16 +1672,16 @@ if (window.location.search.includes('from=welcome')) {
 @php
     // Mapeo de traducciones para nombres de servicios
     $serviciosNombres = [
-        'Silla de bebé' => __('Baby seat'),
-        'Gasolina Prepago' => __('Prepaid fuel'),
-        'Conductor adicional' => __('Additional driver'),
+    'Silla de bebé' => 'Baby seat',
+    'Gasolina Prepago' => 'Prepaid fuel',
+    'Conductor adicional' => 'Additional driver',
     ];
 
     // Mapeo de traducciones para descripciones de servicios
     $serviciosDescripciones = [
-        'Silla de seguridad para bebé.' => __('Baby safety seat.'),
-        'Tanque completo de capacidad por categoria.' => __('Full tank based on vehicle category.'),
-        'Agregar un conductor extra.' => __('Add an extra driver.'),
+    'Silla de seguridad para bebé.' => 'Baby safety seat.',
+    'Tanque completo de capacidad por categoria.' => 'Full tank based on vehicle category.',
+    'Agregar un conductor extra.' => 'Add an extra driver.',
     ];
 @endphp
                         {{-- Equipamiento & Servicios --}}
@@ -1712,7 +1723,7 @@ if (window.location.search.includes('from=welcome')) {
 
                                             <div style="flex:1;">
                                                 <div class="addon-headline">
-                                                  <h4 class="addon-name">{{ $serviciosNombres[$srv->nombre] ?? $srv->nombre }}</h4>
+                                                  <h4 class="addon-name">{{ __($serviciosNombres[$srv->nombre] ?? $srv->nombre) }}</h4>
 
                                                     <span class="addon-help-wrap" tabindex="0">
                                                         <button type="button" class="addon-help-btn" aria-label="{{ __('More information') }}">
@@ -1723,7 +1734,7 @@ if (window.location.search.includes('from=welcome')) {
                                                 </div>
 
                                               @if (!empty($srv->descripcion))
-    <p>{{ $serviciosDescripciones[$srv->descripcion] ?? $srv->descripcion }}</p>
+    <p>{{ __($serviciosDescripciones[$srv->descripcion] ?? $srv->descripcion) }}</p>
 @endif
                                             </div>
                                         </div>
@@ -1743,24 +1754,17 @@ if (window.location.search.includes('from=welcome')) {
 
 <div class="addon-price">
     @if(str_contains(strtolower($srv->nombre), 'gasolina'))
-
         @php
-            $totalGasolina = $capacidadTanque * $srv->precio;
+            $totalGasolina = ($capacidadTanque ?? 50) * $srv->precio;
         @endphp
-
-        <strong>${{ $isUSD ? number_format($totalGasolina / $rate, 2) : number_format($totalGasolina, 0) }}</strong>
+        <strong>{{ $isUSD ? '$' . number_format($totalGasolina / $rate, 2) : '$' . number_format($totalGasolina, 0) }}</strong>
         {{ $isUSD ? 'USD' : 'MXN' }} / {{ __('tank') }}
-
     @elseif(str_contains(strtolower($srv->nombre), 'conductor'))
-
-        <strong>${{ $isUSD ? number_format($precio / $rate, 2) : number_format($precio, 0) }}</strong>
+        <strong>{{ $isUSD ? '$' . number_format($srv->precio / $rate, 2) : '$' . number_format($srv->precio, 0) }}</strong>
         {{ $isUSD ? 'USD' : 'MXN' }} / {{ __('driver per day') }}
-
     @else
-
-        <strong>${{ $isUSD ? number_format($precio / $rate, 2) : number_format($precio, 0) }}</strong>
+        <strong>{{ $isUSD ? '$' . number_format($srv->precio / $rate, 2) : '$' . number_format($srv->precio, 0) }}</strong>
         {{ $isUSD ? 'USD' : 'MXN' }} {{ $unidad }}
-
     @endif
 </div>
 
@@ -1995,29 +1999,58 @@ input:checked + .slider:before {
         display: none !important;
     }
 }
+
+/*  letra mayúscula en los mesess */
+#dob_month option {
+    text-transform: capitalize !important;
+}
                     </style>
 
                     <div class="step4-layout">
-                        @php
+                       @php
+                           $locale = app()->getLocale();
+                           if ($locale === 'en') {
                             $months3 = [
-                                '01' => 'JAN',
-                                '02' => 'FEB',
-                                '03' => 'MAR',
-                                '04' => 'APR',
-                                '05' => 'MAY',
-                                '06' => 'JUN',
-                                '07' => 'JUL',
-                                '08' => 'AUG',
-                                '09' => 'SEP',
-                                '10' => 'OCT',
-                                '11' => 'NOV',
-                                '12' => 'DEC',
-                            ];
+                             '01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr',
+                             '05' => 'May', '06' => 'Jun', '07' => 'Jul', '08' => 'Aug',
+                             '09' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dec',
+                              ];
+                              } else {
+                            $months3 = [
+                            '01' => 'Ene', '02' => 'Feb', '03' => 'Mar', '04' => 'Abr',
+                            '05' => 'May', '06' => 'Jun', '07' => 'Jul', '08' => 'Ago',
+                            '09' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dic',
+                               ];
+                               }
+
 
                             // Si no tienes definidas estas variables
                             $maxYear = date('Y') - 18;
                             $minYear = $maxYear - 80;
                         @endphp
+                        @php
+    // ====== CONFIGURACIÓN DE MONEDA ======
+    $locale = app()->getLocale();
+    $isUSD = $locale === 'en';
+    $exchangeRate = 20; // Tasa de cambio fija (1 USD = 20 MXN)
+
+    // Función para formatear moneda según idioma
+    function formatCurrency($amountMXN, $isUSD, $rate = 20) {
+        if ($isUSD) {
+            $amountUSD = $amountMXN / $rate;
+            return '$' . number_format($amountUSD, 2) . ' USD';
+        }
+        return '$' . number_format($amountMXN, 0) . ' MXN';
+    }
+
+    // Versión corta sin símbolo (para valores numéricos)
+    function currencyValue($amountMXN, $isUSD, $rate = 20) {
+        if ($isUSD) {
+            return number_format($amountMXN / $rate, 2);
+        }
+        return number_format($amountMXN, 0);
+    }
+@endphp
 
                         {{-- ===================== PANE IZQUIERDO ===================== --}}
                         <div class="step4-pane">
@@ -2413,295 +2446,293 @@ input:checked + .slider:before {
 
                             </form>
                         </div>
+{{-- ===================== PANE DERECHO ===================== --}}
+<div class="step4-pane">
 
-                        {{-- ===================== PANE DERECHO ===================== --}}
-                        <div class="step4-pane">
+    <div class="sum-compact" aria-label="{{ __('Compact summary') }}">
+        <div class="sum-compact-head">
+            <h4 class="sum-title"><strong>{{ __('Booking summary') }}</strong></h4>
 
-                            <div class="sum-compact" aria-label="{{ __('Compact summary') }}">
-                                <div class="sum-compact-head">
-                                    <h4 class="sum-title"><strong>{{ __('Booking summary') }}</strong></h4>
+            <span class="sum-days">
+                <i class="fa-regular fa-calendar"></i>
+                {{ __('Days') }}: <strong>{{ $days }}</strong>
+            </span>
+        </div>
 
-                                    <span class="sum-days">
-                                        <i class="fa-regular fa-calendar"></i>
-                                        Días: <strong>{{ $days }}</strong>
-                                    </span>
-                                </div>
+        <h4 class="sum-subtitle">{{ __('Location and date') }}</h4>
 
-                                <h4 class="sum-subtitle">{{ __('Location and date') }}</h4>
+        <div class="sum-compact-grid">
 
-                                <div class="sum-compact-grid">
+            {{-- PICKUP --}}
+            <div class="sum-item">
+                <div class="sum-item-label">
+                    <i class="fa-solid fa-location-dot"></i> {{ __('Pick-up') }}
+                </div>
 
-                                    {{-- PICKUP --}}
-                                    <div class="sum-item">
-                                        <div class="sum-item-label">
-                                            <i class="fa-solid fa-location-dot"></i> {{ __('Pick-up') }}
-                                        </div>
+                <div class="sum-item-value">
+                    <strong class="sum-place">{{ $pickupName ?? '—' }}</strong>
 
-                                        <div class="sum-item-value">
-                                            <strong class="sum-place">{{ $pickupName ?? '—' }}</strong>
-
-                                            <div class="sum-dt2">
-                                                <div class="dt-row">
-                                                    <span class="dt-lbl">{{ __('Date') }}</span>
-                                                    <span class="dt-val">{{ $pickupFechaLarga ?? $pickupDate }}</span>
-                                                </div>
-                                                <div class="dt-row">
-                                                    <span class="dt-lbl">{{ __('Time') }}</span>
-                                                    <span class="dt-time">{{ $pickupTime }} HRS</span>
-                                                </div>
-                                            </div>
-
-                                            <span class="js-date" data-iso="{{ $pickupDateISO }}"
-                                                style="display:none;">{{ $pickupDate }}</span>
-                                        </div>
-                                    </div>
-
-                                    {{-- DROPOFF --}}
-                                    <div class="sum-item">
-                                        <div class="sum-item-label">
-                                            <i class="fa-solid fa-location-dot"></i> {{ __('Return') }}
-                                        </div>
-
-                                        <div class="sum-item-value">
-                                            <strong class="sum-place">{{ $dropoffName ?? '—' }}</strong>
-
-                                            <div class="sum-dt2">
-                                                <div class="dt-row">
-                                                    <span class="dt-lbl">{{ __('Date') }}</span>
-                                                    <span class="dt-val">{{ $dropoffFechaLarga ?? $dropoffDate }}</span>
-                                                </div>
-                                                <div class="dt-row">
-                                                    <span class="dt-lbl">{{ __('Time') }}</span>
-                                                    <span class="dt-time">{{ $dropoffTime }} HRS</span>
-                                                </div>
-                                            </div>
-
-                                            <span class="js-date" data-iso="{{ $dropoffDateISO }}"
-                                                style="display:none;">{{ $dropoffDate }}</span>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                                <h4 class="sum-subtitle" style="margin-top:14px;" id="tuAutoSection">{{ __('Your vehicle') }}</h4>
-
-                                <div class="sum-car" style="margin-top:10px; display:flex; gap:20px; align-items:center;">
-                                    <div class="sum-car-img">
-                                        <img src="{{ $categoriaImg }}" alt="Auto"
-                                            onerror="this.onerror=null;this.src='{{ $placeholder }}';"
-                                            style="width:200px; border-radius:14px;">
-                                    </div>
-
-                                    <div class="sum-car-info" style="flex:1;">
-                                        <div class="car-mini-name"
-                                            style="font-weight:900; font-size:20px; color:#111827;">
-                                            {{ $autoTitulo }}
-                                        </div>
-
-                                        <div class="car-mini-sub"
-                                            style="margin-top:4px; font-weight:800; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#111827;">
-                                            {{ $autoSubtitulo }}
-                                        </div>
-
-                                        {{-- ✅ NUEVO (Step 4): iconos + T | ... + A/C + chips (2 bloques) --}}
-                                        @php
-                                            $codigo = strtoupper((string) ($categoriaSel->codigo ?? ''));
-                                            $transmision = $categoriaSel->id_categoria == 9 ? __('Manual') : __('Automatic');
-                                            $tieneACCat = (int) ($cat->aire_acondicionado ?? ($cat->aire_ac ?? 1));
-
-                                            $predeterminadosPorId = [
-                                                1 => ['pax' => 5, 'small' => 2, 'big' => 1],
-                                                2 => ['pax' => 5, 'small' => 2, 'big' => 1],
-                                                3 => ['pax' => 5, 'small' => 2, 'big' => 2],
-                                                4 => ['pax' => 5, 'small' => 2, 'big' => 2],
-                                                5 => ['pax' => 5, 'small' => 2, 'big' => 2],
-                                                6 => ['pax' => 5, 'small' => 3, 'big' => 2],
-                                                7 => ['pax' => 7, 'small' => 3, 'big' => 2],
-                                                8 => ['pax' => 7, 'small' => 4, 'big' => 2],
-                                                9 => ['pax' => 13, 'small' => 4, 'big' => 3],
-                                                10 => ['pax' => 5, 'small' => 3, 'big' => 2],
-                                                11 => ['pax' => 5, 'small' => 3, 'big' => 2],
-                                            ];
-
-                                            $idActual = $categoriaSel->id_categoria ?? null;
-
-                                            if (isset($predeterminadosPorId[$idActual])) {
-                                                $cap = $predeterminadosPorId[$idActual];
-                                            } else {
-                                                $cap = [
-                                                    'pax' => (int) ($categoriaSel->pasajeros ?? 5),
-                                                    'small' => (int) ($categoriaSel->maletas_chicas ?? 2),
-                                                    'big' => (int) ($categoriaSel->maletas_grandes ?? 1),
-                                                ];
-                                            }
-                                        @endphp
-
-                                        <div class="car-features" style="margin-top:14px;">
-                                            <ul class="car-mini-specs">
-                                                <li><i class="fa-solid fa-user-large"></i> {{ $cap['pax'] }}</li>
-                                                <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $cap['small'] }}</li>
-                                                <li><i class="fa-solid fa-briefcase"></i> {{ $cap['big'] ?? 1 }}</li>
-
-                                                <li title="{{ __('Transmission') }}">
-                                                    <span class="spec-letter">T | {{ $transmision }}</span>
-                                                </li>
-
-                                                @if ($tieneACCat)
-                                                    <li title="{{ __('Air conditioning') }}">
-                                                        <i class="fa-regular fa-snowflake"></i>
-                                                        <span class="spec-letter">A/C</span>
-                                                    </li>
-                                                @endif
-                                            </ul>
-
-                                            <div class="car-connect">
-                                                @if ($featCarplay)
-                                                    <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                                        <span class="icon-badge"><i class="fa-brands fa-apple"></i></span>
-                                                        CarPlay
-                                                    </span>
-                                                @endif
-
-                                                @if ($featAndroidAuto)
-                                                    <span class="badge-chip badge-android" title="Android Auto">
-                                                        <span class="icon-badge"><i
-                                                                class="fa-brands fa-android"></i></span>
-                                                        Android Auto
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-
-                            </div>
-
-                            <h4 class="sum-subtitle" style="margin-top:16px;">{{ __('Price details') }}</h4>
-
-                            <div class="sum-table" id="cotizacionDoc"
-                            data-base="{{ $tarifaBase }}"
-                            data-days="{{ $days }}"
-                            data-pickup="{{ $pickupSucursalId }}"
-                            data-dropoff="{{ $dropoffSucursalId }}"
-                            data-km="{{ $dropoffKm }}"
-                            data-costokm="{{ $costoKmCategoria }}"
-                            data-tanque="{{ $capacidadTanque ?? 0 }}">
-
-                                {{-- ===== TARIFA BASE (desplegable) ===== --}}
-                                <details class="sum-acc" open="false">
-                                    <summary class="sum-bar">
-                                        <span>{{ __('Base rate') }}</span>
-                                        <strong id="qBase">${{ number_format($tarifaBase, 0) }} MXN</strong>
-                                        <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
-                                    </summary>
-
-                                    <div class="sum-acc-body">
-                                        <div class="row row-base">
-                                            <span>{{ $days }} {{ __('day(s) - price per day') }}
-                                                ${{ number_format((float) ($categoriaSel->precio_dia ?? 0), 0) }}
-                                                MXN</span>
-                                        </div>
-
-                                        <div class="row row-base-total">
-                                            <span class="row-total-label">{{ __('Total:') }}</span>
-                                            <strong>${{ number_format($tarifaBase, 0) }} MXN</strong>
-                                        </div>
-
-                                        {{-- Modal de protecciones --}}
-                                        <div id="modalProtecciones" class="modal-global-viajero">
-                                            <div class="modal-global-content">
-                                                <span class="cerrar-modal-v">&times;</span>
-
-                                                <h2 class="modal-v-header-title">{{ __('Liability waivers (Protections)') }}
-                                                </h2>
-                                                <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
-
-                                                <div style="display: flex; gap: 20px; align-items: flex-start;">
-                                                    <div class="modal-v-escudo-circulo">
-                                                        <i class="fa-solid fa-shield" style="font-size: 28px;"></i>
-                                                    </div>
-
-                                                    <div>
-                                                        <strong class="modal-v-titulo-negro">{{ __('LIMITED THIRD-PARTY LIABILITY PROTECTION (LI)') }}</strong>
-                                                        <p class="modal-v-texto-gris">
-                                                            {{ __('Protects third parties for damages and injuries caused in an accident and covers the minimum amount required by law.') }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-
-                                                <div
-                                                    style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
-                                                    <p
-                                                        style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 12px;">
-                                                        {{ __('You choose the level of liability for the vehicle that best fits your needs and budget.') }}
-                                                    </p>
-                                                    <p style="font-size: 13px; color: #1e293b; font-weight: 700;">
-                                                        {{ __('Ask about our Liability Waivers (optional) when you arrive at any of our branches.') }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-12 mt-2">
-                                            <div class="linea-incluido-box">
-                                                <p class="incluido-text">
-                                                    <strong>{{ __('INCLUDED') }}</strong>
-                                                    <i class="fa-solid fa-circle-question" id="info-protecciones"
-                                                        style="cursor: pointer; color: #b22222; margin-left: 5px; font-size: 1.1rem; vertical-align: middle;"></i>
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <div class="row row-included" style="border-top:0;">
-                                            <span class="inc-items">
-                                                <span class="inc-item"><span class="inc-check">✔</span> {{ __('Unlimited mileage') }}</span>
-                                                <span class="inc-item"><span class="inc-check">✔</span> {{ __('Liability Waiver (LI)') }}</span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </details>
-
-                                {{-- ===== OPCIONES DE RENTA (desplegable) ===== --}}
-                                <details class="sum-acc">
-                                    <summary class="sum-bar">
-                                        <span>{{ __('Rental options') }}</span>
-                                        <strong id="qExtras">$0 MXN</strong>
-                                        <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
-                                    </summary>
-
-                                    <div class="sum-acc-body" id="extrasList">
-                                        <div class="row">
-                                            <span class="muted">{{ __('No add-ons selected') }}</span>
-                                            <strong>$0 MXN</strong>
-                                        </div>
-                                    </div>
-                                </details>
- {{-- ===== Editar  ===== --}}
-                                {{-- ===== CARGOS E IVA (desplegable) ===== --}}
-                                <details class="sum-acc">
-                                    <summary class="sum-bar">
-                                        <span>{{ __('Charges and VAT (16%)') }}</span>
-                                        <strong id="qIva">$0 MXN</strong>
-                                        <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
-                                    </summary>
-
-                                    <div class="sum-acc-body" id="ivaList">
-                                        <div class="row">
-                                            <span class="muted">{{ __('No additional charges') }}</span>
-                                            <strong>$0 MXN</strong>
-                                        </div>
-                                    </div>
-                                </details>
-
-                                {{-- ===== TOTAL ===== --}}
-                                <div class="sum-total">
-                                    <span>{{ __('Total') }}</span>
-                                    <strong id="qTotal">${{ number_format($tarifaBase, 0) }} MXN</strong>
-                                </div>
-
-                            </div>
-
+                    <div class="sum-dt2">
+                        <div class="dt-row">
+                            <span class="dt-lbl">{{ __('Date') }}</span>
+                            <span class="dt-val">{{ $pickupFechaLarga ?? $pickupDate }}</span>
                         </div>
+                        <div class="dt-row">
+                            <span class="dt-lbl">{{ __('Time') }}</span>
+                            <span class="dt-time">{{ $pickupTime }} {{ __('HRS') }}</span>
+                        </div>
+                    </div>
+
+                    <span class="js-date" data-iso="{{ $pickupDateISO }}"
+                        style="display:none;">{{ $pickupDate }}</span>
+                </div>
+            </div>
+
+            {{-- DROPOFF --}}
+            <div class="sum-item">
+                <div class="sum-item-label">
+                    <i class="fa-solid fa-location-dot"></i> {{ __('Return') }}
+                </div>
+
+                <div class="sum-item-value">
+                    <strong class="sum-place">{{ $dropoffName ?? '—' }}</strong>
+
+                    <div class="sum-dt2">
+                        <div class="dt-row">
+                            <span class="dt-lbl">{{ __('Date') }}</span>
+                            <span class="dt-val">{{ $dropoffFechaLarga ?? $dropoffDate }}</span>
+                        </div>
+                        <div class="dt-row">
+                            <span class="dt-lbl">{{ __('Time') }}</span>
+                            <span class="dt-time">{{ $dropoffTime }} {{ __('HRS') }}</span>
+                        </div>
+                    </div>
+
+                    <span class="js-date" data-iso="{{ $dropoffDateISO }}"
+                        style="display:none;">{{ $dropoffDate }}</span>
+                </div>
+            </div>
+
+        </div>
+
+        <h4 class="sum-subtitle" style="margin-top:14px;" id="tuAutoSection">{{ __('Your vehicle') }}</h4>
+
+        <div class="sum-car" style="margin-top:10px; display:flex; gap:20px; align-items:center;">
+            <div class="sum-car-img">
+                <img src="{{ $categoriaImg }}" alt="{{ __('Car') }}"
+                    onerror="this.onerror=null;this.src='{{ $placeholder }}';"
+                    style="width:200px; border-radius:14px;">
+            </div>
+
+            <div class="sum-car-info" style="flex:1;">
+                <div class="car-mini-name"
+                    style="font-weight:900; font-size:20px; color:#111827;">
+                    {{ $autoTitulo }}
+                </div>
+
+                <div class="car-mini-sub"
+                    style="margin-top:4px; font-weight:800; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#111827;">
+                    {{ $autoSubtitulo }}
+                </div>
+
+                {{-- Features --}}
+                @php
+                    $codigo = strtoupper((string) ($categoriaSel->codigo ?? ''));
+                    $transmision = $categoriaSel->id_categoria == 9 ? __('Manual') : __('Automatic');
+                    $tieneACCat = (int) ($cat->aire_acondicionado ?? ($cat->aire_ac ?? 1));
+
+                    $predeterminadosPorId = [
+                        1 => ['pax' => 5, 'small' => 2, 'big' => 1],
+                        2 => ['pax' => 5, 'small' => 2, 'big' => 1],
+                        3 => ['pax' => 5, 'small' => 2, 'big' => 2],
+                        4 => ['pax' => 5, 'small' => 2, 'big' => 2],
+                        5 => ['pax' => 5, 'small' => 2, 'big' => 2],
+                        6 => ['pax' => 5, 'small' => 3, 'big' => 2],
+                        7 => ['pax' => 7, 'small' => 3, 'big' => 2],
+                        8 => ['pax' => 7, 'small' => 4, 'big' => 2],
+                        9 => ['pax' => 13, 'small' => 4, 'big' => 3],
+                        10 => ['pax' => 5, 'small' => 3, 'big' => 2],
+                        11 => ['pax' => 5, 'small' => 3, 'big' => 2],
+                    ];
+
+                    $idActual = $categoriaSel->id_categoria ?? null;
+
+                    if (isset($predeterminadosPorId[$idActual])) {
+                        $cap = $predeterminadosPorId[$idActual];
+                    } else {
+                        $cap = [
+                            'pax' => (int) ($categoriaSel->pasajeros ?? 5),
+                            'small' => (int) ($categoriaSel->maletas_chicas ?? 2),
+                            'big' => (int) ($categoriaSel->maletas_grandes ?? 1),
+                        ];
+                    }
+                @endphp
+
+                <div class="car-features" style="margin-top:14px;">
+                    <ul class="car-mini-specs">
+                        <li><i class="fa-solid fa-user-large"></i> {{ $cap['pax'] }}</li>
+                        <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $cap['small'] }}</li>
+                        <li><i class="fa-solid fa-briefcase"></i> {{ $cap['big'] ?? 1 }}</li>
+
+                        <li title="{{ __('Transmission') }}">
+                            <span class="spec-letter">T | {{ $transmision }}</span>
+                        </li>
+
+                        @if ($tieneACCat)
+                            <li title="{{ __('Air conditioning') }}">
+                                <i class="fa-regular fa-snowflake"></i>
+                                <span class="spec-letter">{{ __('A/C') }}</span>
+                            </li>
+                        @endif
+                    </ul>
+
+                    <div class="car-connect">
+                        @if ($featCarplay)
+                            <span class="badge-chip badge-apple" title="Apple CarPlay">
+                                <span class="icon-badge"><i class="fa-brands fa-apple"></i></span>
+                                {{ __('CarPlay') }}
+                            </span>
+                        @endif
+
+                        @if ($featAndroidAuto)
+                            <span class="badge-chip badge-android" title="Android Auto">
+                                <span class="icon-badge"><i class="fa-brands fa-android"></i></span>
+                                {{ __('Android Auto') }}
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <h4 class="sum-subtitle" style="margin-top:16px;">{{ __('Price details') }}</h4>
+
+    <div class="sum-table" id="cotizacionDoc"
+    data-base="{{ $tarifaBase }}"
+    data-days="{{ $days }}"
+    data-pickup="{{ $pickupSucursalId }}"
+    data-dropoff="{{ $dropoffSucursalId }}"
+    data-km="{{ $dropoffKm }}"
+    data-costokm="{{ $costoKmCategoria }}"
+    data-tanque="{{ $capacidadTanque ?? 0 }}">
+
+        {{-- ===== TARIFA BASE ===== --}}
+        <details class="sum-acc" open="false">
+            <summary class="sum-bar">
+                <span>{{ __('Base rate') }}</span>
+                <strong id="qBase">{{ formatCurrency($tarifaBase, $isUSD, $exchangeRate) }}</strong>
+                <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
+            </summary>
+
+            <div class="sum-acc-body">
+                <div class="row row-base">
+                    <span>{{ $days }} {{ __('day(s) - price per day') }}
+    {{ formatCurrency((float) ($categoriaSel->precio_dia ?? 0), $isUSD, $exchangeRate) }}
+                </span>
+                </div>
+
+                <div class="row row-base-total">
+                    <span class="row-total-label">{{ __('Total') }}:</span>
+                    <strong>{{ formatCurrency($tarifaBase, $isUSD, $exchangeRate) }}</strong>
+                </div>
+
+                {{-- Modal de protecciones --}}
+                <div id="modalProtecciones" class="modal-global-viajero">
+                    <div class="modal-global-content">
+                        <span class="cerrar-modal-v">&times;</span>
+
+                        <h2 class="modal-v-header-title">{{ __('Liability waivers (Protections)') }}
+                        </h2>
+                        <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+
+                        <div style="display: flex; gap: 20px; align-items: flex-start;">
+                            <div class="modal-v-escudo-circulo">
+                                <i class="fa-solid fa-shield" style="font-size: 28px;"></i>
+                            </div>
+
+                            <div>
+                                <strong class="modal-v-titulo-negro">{{ __('LIMITED THIRD-PARTY LIABILITY PROTECTION (LI)') }}</strong>
+                                <p class="modal-v-texto-gris">
+                                    {{ __('Protects third parties for damages and injuries caused in an accident and covers the minimum amount required by law.') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div
+                            style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+                            <p
+                                style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 12px;">
+                                {{ __('You choose the level of liability for the vehicle that best fits your needs and budget.') }}
+                            </p>
+                            <p style="font-size: 13px; color: #1e293b; font-weight: 700;">
+                                {{ __('Ask about our Liability Waivers (optional) when you arrive at any of our branches.') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 mt-2">
+                    <div class="linea-incluido-box">
+                        <p class="incluido-text">
+                            <strong>{{ __('INCLUDED') }}</strong>
+                            <i class="fa-solid fa-circle-question" id="info-protecciones"
+                                style="cursor: pointer; color: #b22222; margin-left: 5px; font-size: 1.1rem; vertical-align: middle;"></i>
+                        </p>
+                    </div>
+                </div>
+                <div class="row row-included" style="border-top:0;">
+                    <span class="inc-items">
+                        <span class="inc-item"><span class="inc-check">✔</span> {{ __('Unlimited mileage') }}</span>
+                        <span class="inc-item"><span class="inc-check">✔</span> {{ __('Liability Waiver (LI)') }}</span>
+                    </span>
+                </div>
+            </div>
+        </details>
+
+        {{-- ===== OPCIONES DE RENTA ===== --}}
+        <details class="sum-acc">
+            <summary class="sum-bar">
+                <span>{{ __('Rental options') }}</span>
+                <strong id="qExtras">$0 MXN</strong>
+                <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
+            </summary>
+
+            <div class="sum-acc-body" id="extrasList">
+                <div class="row">
+                    <span class="muted">{{ __('No add-ons selected') }}</span>
+                    <strong>$0 MXN</strong>
+                </div>
+            </div>
+        </details>
+
+        {{-- ===== CARGOS E IVA ===== --}}
+        <details class="sum-acc">
+            <summary class="sum-bar">
+                <span>{{ __('Charges and TAXES (16%)') }}</span>
+                <strong id="qIva">$0 MXN</strong>
+                <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
+            </summary>
+
+            <div class="sum-acc-body" id="ivaList">
+                <div class="row">
+                    <span class="muted">{{ __('No additional charges') }}</span>
+                    <strong>$0 MXN</strong>
+                </div>
+            </div>
+        </details>
+
+        {{-- ===== TOTAL ===== --}}
+        <div class="sum-total">
+            <span>{{ __('Total') }}</span>
+            <strong id="qTotal">{{ formatCurrency($tarifaBase, $isUSD, $exchangeRate) }}</strong>
+        </div>
+
+    </div>
+
+</div>
                     </div>
 
                     @isset($servicios)
@@ -2881,7 +2912,7 @@ input:checked + .slider:before {
     payment_summary: "{{ __('Payment Summary') }}",
     base_rate: "{{ __('Base rate') }}",
     rental_options: "{{ __('Rental options') }}",
-    charges_vat: "{{ __('Charges and VAT (16%)') }}",
+    charges_vat: "{{ __('Charges and TAXES (16%)') }}",
     total_label: "{{ __('Total') }}",
     confirmation_email: "{{ __('You will receive a confirmation by email.') }}",
     go_to_homepage: "{{ __('Go to homepage') }}",

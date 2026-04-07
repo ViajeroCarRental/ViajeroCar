@@ -64,6 +64,7 @@
 
     "Unlimited mileage": "Kilometraje ilimitado",
     "Automatic transmission": "Transmisión automática",
+    "Standard": "Estándar",
 
     "========================= HOME - SECCIONES INFORMATIVAS =========================": "",
     "Frequent traveler?": "¿Viajero frecuente?",
@@ -354,7 +355,7 @@
     "The refund will be processed and reflected on the card used for the prepayment, within a period of up to": "El reembolso se procesará y se reflejará en la tarjeta con la que se realizó el prepago, en un lapso de hasta",
     "business days.": "días hábiles.",
 
-    "Tax (VAT)": "Impuesto (IVA)",
+    "Tax (TAXES)": "Impuesto (IVA)",
     "All charges related to the vehicle rental are subject to the applicable": "Todos los cargos relacionados con la renta del vehículo están sujetos al",
     "Airport recovery fee": "Cargo por recuperación de aeropuerto",
     "Applies only to branches located within an airport.": "Aplica únicamente en sucursales ubicadas dentro de un aeropuerto.",
@@ -574,7 +575,7 @@
     "Folio": "Folio",
     "Payment Summary": "Resumen de pago",
     "Rental options": "Opciones de renta",
-    "Charges and VAT (16%)": "Cargos e IVA (16%)",
+    "Charges and TAXES (16%)": "Cargos e IVA (16%)",
     "Total": "Total",
     "You will receive a confirmation by email.": "Recibirá confirmación por correo electrónico.",
     "Go to homepage": "Ir al inicio",

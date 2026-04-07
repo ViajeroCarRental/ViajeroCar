@@ -1077,6 +1077,87 @@ SIN SCROLL - PANTALLA FIJA
         overflow: hidden !important;
     }
 }
+
+/* ==========================================================
+   SAFARI/MAC FIX - SOLO PARA INPUTS DE HORA
+   (Sin afectar íconos de selects)
+========================================================== */
+
+/* 1. Solo para selects de hora - altura consistente */
+.page.wizard-page[data-current-step="1"] .tp-selects select {
+    height: 48px !important;
+    min-height: 48px !important;
+    line-height: normal !important;
+    font-size: 16px !important;
+    box-sizing: border-box !important;
+}
+
+/* 2. Padding izquierdo solo para selects de hora (NO para otros selects) */
+.page.wizard-page[data-current-step="1"] .tp-selects select {
+    padding-left: 42px !important;
+    padding-right: 28px !important;
+}
+
+/* 3. Ícono de reloj - posicionamiento correcto (sin duplicar) */
+.page.wizard-page[data-current-step="1"] .time-field {
+    position: relative !important;
+}
+
+/* Solo crear el ícono si NO existe ya un field-icon */
+.page.wizard-page[data-current-step="1"] .time-field:not(.icon-field)::before {
+    content: "\f017";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 400;
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    font-size: 16px;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* 4. Si ya existe .field-icon, NO crear duplicado */
+.page.wizard-page[data-current-step="1"] .time-field.icon-field::before {
+    display: none !important;
+}
+
+/* 5. Asegurar que el field-icon existente se vea bien */
+.page.wizard-page[data-current-step="1"] .time-field .field-icon {
+    position: absolute !important;
+    left: 12px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    pointer-events: none !important;
+    z-index: 5 !important;
+}
+
+/* 6. Corregir selects de hora en Safari (sin afectar otros selects) */
+@media not all and (min-resolution:.001dpcm) {
+    @supports (-webkit-appearance:none) and (stroke-color:transparent) {
+        .page.wizard-page[data-current-step="1"] .tp-selects select {
+            padding-top: 12px !important;
+            padding-bottom: 12px !important;
+            background-position: right 10px center !important;
+        }
+    }
+}
+
+/* 7. iOS - evitar zoom en selects de hora */
+@supports (-webkit-touch-callout: none) {
+    .page.wizard-page[data-current-step="1"] .tp-selects select {
+        font-size: 16px !important;
+    }
+}
 /*FIN STEP 1*/
 
   /* ==========================================================
@@ -3518,7 +3599,8 @@ body [class*="tooltip"] {
     }
 
   }
- /* ==========================================================
+
+  /* ==========================================================
     FLATPICKR
   ========================================================== */
   .flatpickr-wrapper{ position:relative; }
@@ -3624,69 +3706,72 @@ body [class*="tooltip"] {
   border-radius:10px !important;
   font-size:14px !important;
 }
+
+
+/* Movil (560px) */
 @media (max-width: 560px) {
     .flatpickr-calendar {
         position: fixed !important;
         left: 50% !important;
-        top: 14vh !important;
+        top: 10vh !important;
         transform: translateX(-50%) !important;
-        padding-top: 8px !important;
+        padding-top: 30px !important;
          background: #ffffff !important;
-    opacity: 1 !important;
-    z-index: 9999 !important;
+        opacity: 1 !important;
+       z-index: 999999 !important;
     }
 
     .flatpickr-calendar.open {
-        width: min(390px, 90vw) !important;
-        padding-top: 6px !important;
-        padding-bottom: 6px !important;
-         box-shadow: 0 10px 30px rgba(0,0,0,0.2) !important;
+        width: min(420px, 90vw) !important;
+        height: auto !important;
+        padding-top: 15px !important;
+        padding-bottom: 15px !important;
+         box-shadow: 0 20px 50px rgba(0,0,0,0.3) !important;
     }
 
     .flatpickr-day {
-        height: 46px !important;
-        line-height: 46px !important;
-        font-size: 13px !important;
+        height: 62px !important;
+        line-height: 62px !important;
+        font-size: 14px !important;
     }
 
     .dayContainer {
-        row-gap: 8px !important; /
+        row-gap: 11px !important; /
     }
 
     .flatpickr-months .flatpickr-month {
-        height: 42px !important;
+        height: 50px !important;
     }
 
     .flatpickr-current-month {
-        padding-top: 4px !important;
-        font-size: 17px !important;
+        padding-top: 10px !important;
+        font-size: 20px !important;
     }
-    /* BORROSO */
-body.flatpickr-open {
-    overflow: hidden;
-}
-
-body.flatpickr-open > *:not(.flatpickr-calendar) {
-    filter: blur(8px);
-    -webkit-filter: blur(8px);
-    transition: filter 0.3s ease;
-}
-
-
-.flatpickr-calendar.open {
-    filter: none !important;
-    -webkit-filter: none !important;
-    z-index: 99999 !important;
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-}
-
-
+    span.flatpickr-weekday {
+        font-size: 13px !important;
+        padding-bottom: 5px !important;
+    }
 
 
 }
+/* Capa de fondo oscura  */
+.fp-view-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(3px);
+    z-index: 999998;
+    display: none;
+    transition: opacity 0.3s ease;
+}
+
+.fp-view-overlay.active {
+    display: block;
+}
+
   /* ==========================================================
     LINKS
   ========================================================== */

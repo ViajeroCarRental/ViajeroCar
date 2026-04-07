@@ -166,6 +166,14 @@
     `;
     document.head.appendChild(st);
   })();
+  // Inyectar el div del overlay si no existe
+(function injectOverlay() {
+    if (document.getElementById("fp-overlay")) return;
+    const overlay = document.createElement("div");
+    overlay.id = "fp-overlay";
+    overlay.className = "fp-overlay";
+    document.body.appendChild(overlay);
+})();
 
   // =========================
   //  SELECTS DE HORA
@@ -313,7 +321,7 @@ function initAnalogTime(id) {
 
   createTimeSelectsBelow(input, {
     hourMax: 24,
-    defaultValue: input.value || "0"
+    defaultValue: input.value || "13:00"
   });
 
   // SOLO pickupTimePoliticas reacciona al cambio de fecha
@@ -339,18 +347,44 @@ function initAnalogTime(id) {
   setTimeout(force24h, 500);
   setTimeout(force24h, 1000);
 
-  // =========================
-  //  FUNCIÓN PARA FECHAS POR DEFECTO (AHORA VACÍO)
-  // =========================
-  function setDefaultDates() {
+ // =========================
+//  FUNCIÓN PARA HORAS POR DEFECTO A LAS 13:00
+// =========================
+function setDefaultDates() {
     const pickupTime = document.getElementById('pickupTimePoliticas');
     const dropoffTime = document.getElementById('dropoffTimePoliticas');
 
-    if (pickupTime && !pickupTime.value) pickupTime.value = "10:00";
-    if (dropoffTime && !dropoffTime.value) dropoffTime.value = "10:00";
+    // Establecer hora predeterminada a las 13:00 (1:00 PM)
+    if (pickupTime && !pickupTime.value) {
+        pickupTime.value = "13:00";
+        // También actualizar el select visual si existe
+        const pickupField = pickupTime.closest('.time-field');
+        if (pickupField) {
+            const hourSelect = pickupField.querySelector('.tp-selects .tp-hour');
+            if (hourSelect && hourSelect.value !== '13') {
+                hourSelect.value = '13';
+                hourSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+        pickupTime.dispatchEvent(new Event('change', { bubbles: true }));
+    }
 
-    console.log('Fechas configuradas: sin valores por defecto');
-  }
+    if (dropoffTime && !dropoffTime.value) {
+        dropoffTime.value = "13:00";
+        // También actualizar el select visual si existe
+        const dropoffField = dropoffTime.closest('.time-field');
+        if (dropoffField) {
+            const hourSelect = dropoffField.querySelector('.tp-selects .tp-hour');
+            if (hourSelect && hourSelect.value !== '13') {
+                hourSelect.value = '13';
+                hourSelect.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+        dropoffTime.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    console.log('⏰ Horas configuradas por defecto: pickup 13:00, dropoff 13:00');
+}
 
   // =========================
   //  SELECT2 CON ICONOS (AHORA FUNCIONA EN TODOS LOS DISPOSITIVOS)
@@ -659,47 +693,63 @@ function initAnalogTime(id) {
     });
   }
 
+   // =========================
+  // FLATPICKR - CON IDIOMA DINÁMICO (VISTA POLÍTICAS)
   // =========================
-  //  FLATPICKR - CON IDIOMA DINÁMICO
-  // =========================
+
   function setupFlatpickr() {
     if (typeof flatpickr === 'undefined') {
-      console.error('Flatpickr no está cargado');
-      return;
+        console.error('Flatpickr no está cargado');
+        return;
     }
-    console.log(' Flatpickr detectado, inicializando...');
 
     const pickupInput = document.getElementById('pickupDatePoliticas');
     const dropoffInput = document.getElementById('dropoffDatePoliticas');
+    const overlay = document.getElementById('fp-overlay');
 
     function initPicker(input) {
-      if (!input) return;
-      const localeData = getFlatpickrLocale();
-      const picker = flatpickr(input, {
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d-M-y",
-        minDate: "today",
-        allowInput: false,
-        disableMobile: true,
-        locale: localeData,
-        onChange: function(selectedDates, dateStr, instance) {
-          console.log('Date changed:', dateStr);
-          if (input.id === 'pickupDatePoliticas' && selectedDates[0]) {
-            const dropoffPicker = document.getElementById('dropoffDatePoliticas')._flatpickr;
-            if (dropoffPicker) {
-              dropoffPicker.set('minDate', selectedDates[0]);
+        if (!input) return;
+        const localeData = getFlatpickrLocale();
+
+        const picker = flatpickr(input, {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d-M-y",
+            minDate: "today",
+            allowInput: false,
+            disableMobile: true,
+            locale: localeData,
+
+            // EVENTOS PARA EL FONDO
+            onOpen: function() {
+                if (overlay) overlay.classList.add('active');
+            },
+            onClose: function() {
+                if (overlay) overlay.classList.remove('active');
+            },
+
+            onChange: function(selectedDates, dateStr, instance) {
+
+                if (input.id === 'pickupDatePoliticas' && selectedDates[0]) {
+                    const dropoffPicker = document.getElementById('dropoffDatePoliticas')._flatpickr;
+
+                    if (dropoffPicker) {
+                        const minDropoffDate = new Date(selectedDates[0]);
+
+                        minDropoffDate.setDate(minDropoffDate.getDate() + 1);
+
+
+                        dropoffPicker.set('minDate', minDropoffDate);
+                    }
+                }
             }
-          }
-        }
-      });
-      return picker;
+        });
+        return picker;
     }
 
     if (pickupInput) initPicker(pickupInput);
     if (dropoffInput) initPicker(dropoffInput);
-  }
-
+}
   // =========================
   //  MODAL
   // =========================
@@ -898,106 +948,4 @@ function initAnalogTime(id) {
 
     console.log(' Formulario de políticas listo');
   });
-})();
-/* ==========================================================
-   FONDO BORROSO EN MÓVIL - PARA PICKUP Y DROPOFF
-========================================================== */
-(function() {
-    "use strict";
-
-    function isMobile() {
-        return window.innerWidth <= 560;
-    }
-
-    let activeCalendar = null;
-
-    // Función para aplicar blur al fondo
-    function applyBlur() {
-        if (!isMobile()) return;
-
-        // Agregar clase al body
-        document.body.classList.add('flatpickr-open');
-
-        // Asegurar que el calendario activo tenga el z-index correcto
-        if (activeCalendar) {
-            activeCalendar.style.zIndex = '99999';
-            activeCalendar.style.position = 'fixed';
-            activeCalendar.style.top = '50%';
-            activeCalendar.style.left = '50%';
-            activeCalendar.style.transform = 'translate(-50%, -50%)';
-        }
-    }
-
-    // Función para quitar blur
-    function removeBlur() {
-        if (!isMobile()) return;
-        document.body.classList.remove('flatpickr-open');
-        activeCalendar = null;
-    }
-
-    // Función para detectar cuando se abre cualquier calendario
-    function detectCalendarOpen() {
-        const calendar = document.querySelector('.flatpickr-calendar.open');
-        if (calendar && isMobile()) {
-            if (!activeCalendar) {
-                activeCalendar = calendar;
-                applyBlur();
-            }
-        } else if (!calendar && activeCalendar) {
-            removeBlur();
-        }
-    }
-
-    // Observar cambios en el DOM para detectar apertura/cierre
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            // Buscar si hay algún calendario abierto
-            const calendar = document.querySelector('.flatpickr-calendar.open');
-
-            if (calendar && isMobile()) {
-                if (!activeCalendar) {
-                    activeCalendar = calendar;
-                    applyBlur();
-                }
-            } else if (!calendar && activeCalendar) {
-                removeBlur();
-            }
-        });
-    });
-
-    // Iniciar observación en todo el documento
-    observer.observe(document.body, {
-        attributes: true,
-        childList: true,
-        subtree: true,
-        attributeFilter: ['class']
-    });
-
-    // También detectar clicks en inputs de fecha
-    function setupInputListeners() {
-        const inputs = document.querySelectorAll('.flatpickr-input');
-        inputs.forEach(input => {
-            if (input.type === 'hidden') return;
-
-            input.addEventListener('click', function() {
-                setTimeout(() => {
-                    const calendar = document.querySelector('.flatpickr-calendar.open');
-                    if (calendar && isMobile()) {
-                        activeCalendar = calendar;
-                        applyBlur();
-                    }
-                }, 50);
-            });
-        });
-    }
-
-    // Inicializar cuando el DOM esté listo
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupInputListeners);
-    } else {
-        setupInputListeners();
-    }
-
-    // Revisar periódicamente (por si acaso)
-    setInterval(detectCalendarOpen, 200);
 })();

@@ -927,7 +927,7 @@
         &nbsp;&nbsp;
 
         <span style="font-weight:600;">
-          T | {{ __('Automatic') }}
+        T | @if(isset($categoria) && $categoria->id_categoria == 9) {{ __('Manual') }} @else {{ __('Automatic') }} @endif
         </span>
 
         &nbsp;&nbsp;
