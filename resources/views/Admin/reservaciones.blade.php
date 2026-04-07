@@ -7,6 +7,10 @@
 
 @section('contenidoreservacionesAdmin')
 
+@php
+  $edit = isset($reservacion) && !empty($reservacion->id_reservacion);
+@endphp
+
 <div class="wrap">
   <main class="main">
 
@@ -22,16 +26,21 @@
     </div>
 
     <form
-      id="formReserva"
-      action="{{ route('reservaciones.guardar') }}"
-      method="POST"
-      novalidate
-      data-redirect="{{ route('rutaReservacionesActivas') }}"
-    >
-      @csrf
+  id="formReserva"
+  action="{{ $edit
+      ? route('reservaciones.update', $reservacion->id_reservacion)
+      : route('reservaciones.guardar') }}"
+  method="POST"
+>
+  @csrf
+
+  @if($edit)
+    @method('PUT')
+  @endif
 
       {{-- Hidden “state” --}}
-      <input type="hidden" id="categoria_id" name="categoria_id" value="">
+      <input type="hidden" id="categoria_id" name="categoria_id"
+      value="{{ $reservacion->id_categoria ?? '' }}">
       <input type="hidden" id="proteccion_id" name="proteccion_id" value="">
       <div id="addonsHidden"></div>
 
@@ -51,7 +60,7 @@
       <div id="insHidden"></div>
 
       {{-- ✅ Teléfono final (backend) --}}
-      <input type="hidden" id="telefono_cliente" name="telefono_cliente" value="">
+      <input type="hidden" id="telefono_cliente" name="telefono_cliente" value="{{ $reservacion->telefono_cliente ?? '' }}">
       <input type="hidden" id="telefono_lada" name="telefono_lada" value="+52">
 
       {{-- ======================
@@ -81,7 +90,8 @@
               @foreach($grupo as $s)
                 <option value="{{ $s->id_sucursal }}"
                         data-ciudad-id="{{ $s->id_ciudad }}"
-                        data-nombre="{{ $s->sucursal }}">
+                        data-nombre="{{ $s->sucursal }}"
+                        {{ ($reservacion->sucursal_retiro ?? null) == $s->id_sucursal ? 'selected' : '' }}>
                   {{ $s->sucursal }}
                 </option>
               @endforeach
@@ -98,7 +108,8 @@
                  name="numero_vuelo"
                  id="numero_vuelo"
                  class="input"
-                 placeholder="Ej. AA1234">
+                 placeholder="Ej. AA1234"
+                 value="{{ $reservacion->no_vuelo ?? '' }}">
         </div>
       </div>
 
@@ -115,7 +126,8 @@
               @foreach($grupo as $s)
                 <option value="{{ $s->id_sucursal }}"
                         data-ciudad-id="{{ $s->id_ciudad }}"
-                        data-nombre="{{ $s->sucursal }}">
+                        data-nombre="{{ $s->sucursal }}"
+                        {{ ($reservacion->sucursal_entrega ?? null) == $s->id_sucursal ? 'selected' : '' }}>
                   {{ $s->sucursal }}
                 </option>
               @endforeach
@@ -235,30 +247,34 @@
           <div class="form-2">
             <div class="dt-field">
               <label>Fecha de salida</label>
-              <input id="fecha_inicio_ui" class="input input-lg fp-ui" type="text" placeholder="dd/mm/aaaa" autocomplete="off" required>
+              <input id="fecha_inicio_ui" class="input input-lg fp-ui" type="text" placeholder="dd/mm/aaaa" autocomplete="off" required
+              value="{{ isset($reservacion->fecha_inicio) ? \Carbon\Carbon::parse($reservacion->fecha_inicio)->format('d/m/Y') : '' }}">>
               <span class="dt-ico">📅</span>
-              <input id="fecha_inicio" name="fecha_inicio" type="hidden">
+              <input id="fecha_inicio" name="fecha_inicio" type="hidden" value="{{ $reservacion->fecha_inicio ?? '' }}">
             </div>
 
             <div class="dt-field">
               <label>Hora de salida</label>
-              <input id="hora_retiro_ui" class="input input-lg fp-ui" type="text" placeholder="hh:mm" autocomplete="off" required>
+              <input id="hora_retiro_ui" class="input input-lg fp-ui" type="text" placeholder="hh:mm" autocomplete="off" required
+              value="{{ isset($reservacion->hora_retiro) ? \Carbon\Carbon::parse($reservacion->hora_retiro)->format('H:i') : '' }}">
               <span class="dt-ico">🕒</span>
-              <input id="hora_retiro" name="hora_retiro" type="hidden">
+              <input id="hora_retiro" name="hora_retiro" type="hidden"  value="{{ $reservacion->hora_retiro ?? '' }}">
             </div>
 
             <div class="dt-field">
               <label>Fecha de llegada</label>
-              <input id="fecha_fin_ui" class="input input-lg fp-ui" type="text" placeholder="dd/mm/aaaa" autocomplete="off" required>
+              <input id="fecha_fin_ui" class="input input-lg fp-ui" type="text" placeholder="dd/mm/aaaa" autocomplete="off" required
+               value="{{ isset($reservacion->fecha_fin) ? \Carbon\Carbon::parse($reservacion->fecha_fin)->format('d/m/Y') : '' }}">
               <span class="dt-ico">📅</span>
-              <input id="fecha_fin" name="fecha_fin" type="hidden">
+              <input id="fecha_fin" name="fecha_fin" type="hidden"  value="{{ $reservacion->fecha_fin ?? '' }}">
             </div>
 
             <div class="dt-field">
               <label>Hora de llegada</label>
-              <input id="hora_entrega_ui" class="input input-lg fp-ui" type="text" placeholder="hh:mm" autocomplete="off" required>
+              <input id="hora_entrega_ui" class="input input-lg fp-ui" type="text" placeholder="hh:mm" autocomplete="off" required
+               value="{{ isset($reservacion->hora_entrega) ? \Carbon\Carbon::parse($reservacion->hora_entrega)->format('H:i') : '' }}">
               <span class="dt-ico">🕒</span>
-              <input id="hora_entrega" name="hora_entrega" type="hidden">
+              <input id="hora_entrega" name="hora_entrega" type="hidden" value="{{ $reservacion->hora_entrega ?? '' }}">
             </div>
           </div>
 
@@ -534,17 +550,17 @@
           <div class="form-2">
             <div>
               <label>Nombre</label>
-              <input id="nombre_cliente" name="nombre_cliente" class="input" type="text" required>
+              <input id="nombre_cliente" name="nombre_cliente" class="input" type="text" required  value="{{ $reservacion->nombre_cliente ?? '' }}">
             </div>
 
             <div>
               <label>Apellidos</label>
-              <input id="apellidos_cliente" name="apellidos_cliente" class="input" type="text" required>
+              <input id="apellidos_cliente" name="apellidos_cliente" class="input" type="text" required  value="{{ $reservacion->apellidos_cliente ?? '' }}">
             </div>
 
             <div>
               <label>Email</label>
-              <input id="email_cliente" name="email_cliente" class="input" type="email" required>
+              <input id="email_cliente" name="email_cliente" class="input" type="email" required  value="{{ $reservacion->email_cliente ?? '' }}" >
             </div>
 
             <div>
@@ -556,7 +572,7 @@
                   <span class="chev">▾</span>
                 </button>
 
-                <input id="telefono_ui" class="input" type="tel" inputmode="tel" placeholder="4421234567" required>
+                <input id="telefono_ui" class="input" type="tel" inputmode="tel" placeholder="4421234567" required value="{{ $reservacion->telefono_cliente ?? '' }}">
 
                 <div class="combo-dd phone-dd" id="phone_dd" role="listbox" aria-label="Lista de ladas">
                   <div class="dd-head">
@@ -1057,7 +1073,11 @@
     </footer>
   </div>
 </div>
-
+<script>
+  window.reservacionEditar = @json($reservacion ?? null);
+  window.serviciosEditar = @json($serviciosReserva ?? []);
+  window.seguroEditar = @json($seguroReserva ?? null);
+</script>
 @section('js-vistareservacionesAdmin')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>

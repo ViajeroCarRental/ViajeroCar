@@ -102,6 +102,148 @@ document.addEventListener("click", function(e) {
   form.submit();
 });
 
+/* ==========================================================
+     🗓️ Lista: + // Reenviar correo.
+  =========================================================== */
+window.reenviarCorreo = function(id, btn) {
+
+    if (!confirm("¿Reenviar correo al cliente?")) return;
+
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = "Enviando... ⏳";
+
+    fetch(`/reservaciones/${id}/reenviar-correo`, {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+    })
+    .catch(() => {
+        alert("Error al enviar correo");
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+};
+
+/* ==========================================================
+     🗓️ MODAL: Lista de vehiculos
+  =========================================================== */
+const modalVehiculos = document.getElementById("modalVehiculos");
+const tablaVehiculos = document.getElementById("tablaVehiculos");
+
+document.addEventListener("click", async (e) => {
+
+  const btn = e.target.closest(".btn-apartar-auto");
+  if (!btn) return;
+
+  modalVehiculos.classList.add("show");
+
+  tablaVehiculos.innerHTML = `<tr><td colspan="13">Cargando...</td></tr>`;
+
+  try {
+    const res = await fetch('/admin/vehiculos-disponibles');
+    const data = await res.json();
+
+    tablaVehiculos.innerHTML = "";
+
+    data.forEach(v => {
+      tablaVehiculos.innerHTML += `
+        <tr>
+          <td>${v.id_vehiculo}</td>
+          <td>${v.placa ?? '-'}</td>
+          <td>${v.categoria ?? '-'}</td>
+          <td>${v.tamano ?? '-'}</td>
+          <td>${v.modelo ?? '-'}</td>
+          <td>${v.transmision ?? '-'}</td>
+          <td>${v.color ?? '-'}</td>
+          <td>${v.gasolina_fraccion ?? 0}/16</td>
+          <td>${v.gasolina_actual ?? '-'}</td>
+          <td>${v.kilometraje ?? '-'}</td>
+          <td>${v.vigencia_verificacion ?? '-'}</td>
+          <td>${v.intervalo_km ?? '-'}</td>
+          <td>${v.fin_vigencia_poliza ?? '-'}</td>
+          <td>
+            <button class="btn success btn-select-auto" data-id="${v.id_vehiculo}">
+            Seleccionar
+            </button>
+            </td>
+        </tr>
+      `;
+    });
+
+  } catch (err) {
+    console.error(err);
+    tablaVehiculos.innerHTML = `<tr><td colspan="13">Error</td></tr>`;
+  }
+});
+
+
+document.getElementById("vClose")?.addEventListener("click", () => {
+  modalVehiculos.classList.remove("show");
+});
+
+document.getElementById("vCancel")?.addEventListener("click", () => {
+  modalVehiculos.classList.remove("show");
+});
+
+
+let reservacionSeleccionada = null;
+
+document.addEventListener("click", async (e) => {
+
+  const btn = e.target.closest(".btn-apartar-auto");
+  if (!btn) return;
+
+  reservacionSeleccionada = btn.dataset.id;
+
+  modalVehiculos.classList.add("show");
+});
+
+document.addEventListener("click", async (e) => {
+
+  const btn = e.target.closest(".btn-select-auto");
+  if (!btn) return;
+
+  const idVehiculo = btn.dataset.id;
+
+  if (!reservacionSeleccionada) {
+    alert("No hay reservación seleccionada");
+    return;
+  }
+
+  try {
+    const res = await fetch('/admin/crear-contrato', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+      },
+      body: JSON.stringify({
+        id_reservacion: reservacionSeleccionada,
+        id_vehiculo: idVehiculo
+      })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.message);
+
+    // 🔥 REDIRECCIÓN
+    window.location.href = `/admin/reservacion/${data.id_contrato}/checklist?modo=salida`;
+
+  } catch (err) {
+    console.error(err);
+    alert("Error al crear contrato");
+  }
+});
+
   /* ==========================================================
      🗓️ MODAL: RESERVACIONES ANTERIORES
   =========================================================== */

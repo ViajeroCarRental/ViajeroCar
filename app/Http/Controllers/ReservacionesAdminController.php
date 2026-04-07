@@ -726,4 +726,134 @@ private function generarFolioReservacionUnico(int $maxIntentos = 20): string
 }
 //--------------------------------------------------------
 
+//Editar desde activos
+public function editar($id)
+{
+    // 🔹 RESERVACIÓN
+    $reservacion = DB::table('reservaciones')
+        ->where('id_reservacion', $id)
+        ->first();
+
+    if (!$reservacion) {
+        abort(404, 'Reservación no encontrada');
+    }
+
+    // 🔵 SUCURSALES (igual que index)
+    $sucursales = DB::table('sucursales as s')
+        ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
+        ->where('s.activo', 1)
+        ->select(
+            's.id_sucursal',
+            's.nombre as sucursal',
+            'c.nombre as ciudad',
+            'c.id_ciudad'
+        )
+        ->orderByRaw("CASE WHEN c.nombre = 'Querétaro' THEN 0 ELSE 1 END")
+        ->orderBy('c.nombre')
+        ->orderBy('s.nombre')
+        ->get()
+        ->groupBy('ciudad');
+
+    // 🟣 CATEGORÍAS
+    $categorias = DB::table('categorias_carros as c')
+    ->join('categoria_costo_km as ck', 'c.id_categoria', '=', 'ck.id_categoria')
+    ->leftJoin('vehiculos as v', 'v.id_categoria', '=', 'c.id_categoria')
+    ->where('ck.activo', 1)
+    ->select(
+        'c.id_categoria',
+        'c.codigo',
+        'c.nombre',
+        'c.descripcion',
+        'c.precio_dia',
+        'c.activo',
+        'ck.costo_km',
+        DB::raw('MAX(v.capacidad_tanque) as litros_maximos')
+    )
+    ->groupBy(
+        'c.id_categoria',
+        'c.codigo',
+        'c.nombre',
+        'c.descripcion',
+        'c.precio_dia',
+        'c.activo',
+        'ck.costo_km'
+    )
+    ->orderBy('c.nombre')
+    ->get();
+
+    // 🟡 UBICACIONES
+    $ubicaciones = DB::table('ubicaciones_servicio')
+        ->where('activo', 1)
+        ->orderBy('estado')
+        ->orderBy('destino')
+        ->get();
+
+    // 🔵 SERVICIOS (ADICIONALES + GASOLINA + DROPOFF)
+    $serviciosReserva = DB::table('reservacion_servicio as rs')
+        ->join('servicios as s', 's.id_servicio', '=', 'rs.id_servicio')
+        ->where('rs.id_reservacion', $id)
+        ->select(
+            's.id_servicio',
+            's.nombre',
+            'rs.cantidad',
+            'rs.precio_unitario'
+        )
+        ->get();
+
+    // 🟣 SEGURO (PROTECCIÓN)
+    $seguroReserva = DB::table('reservacion_paquete_seguro as rps')
+        ->join('seguro_paquete as sp', 'sp.id_paquete', '=', 'rps.id_paquete')
+        ->where('rps.id_reservacion', $id)
+        ->select(
+            'sp.id_paquete',
+            'sp.nombre',
+            'sp.descripcion',
+            'rps.precio_por_dia'
+        )
+        ->first();
+
+    // 🔴 DELIVERY (si tienes datos guardados)
+    $delivery = (object)[
+        'activo' => $reservacion->delivery_activo ?? 0,
+        'total' => $reservacion->delivery_total ?? 0,
+        'kms' => $reservacion->delivery_km ?? 0,
+        'direccion' => $reservacion->delivery_direccion ?? '',
+        'id_ubicacion' => $reservacion->delivery_ubicacion ?? null,
+    ];
+
+    $costoKmCategoria = 0;
+
+    return view('Admin.reservaciones', [
+        'reservacion' => $reservacion,
+        'sucursales' => $sucursales,
+        'categorias' => $categorias,
+        'ubicaciones' => $ubicaciones,
+        'delivery' => $delivery,
+        'costoKmCategoria' => $costoKmCategoria,
+
+        // 🔥 NUEVOS (CLAVE)
+        'serviciosReserva' => $serviciosReserva,
+        'seguroReserva' => $seguroReserva,
+    ]);
+}
+
+public function update(Request $request, $id)
+{
+    DB::table('reservaciones')
+        ->where('id_reservacion', $id)
+        ->update([
+            'nombre_cliente' => $request->nombre_cliente,
+            'apellidos_cliente' => $request->apellidos_cliente,
+            'email_cliente' => $request->email_cliente,
+            'telefono_cliente' => $request->telefono_cliente,
+            'fecha_inicio' => $request->fecha_inicio,
+            'hora_retiro' => $request->hora_retiro,
+            'fecha_fin' => $request->fecha_fin,
+            'hora_entrega' => $request->hora_entrega,
+        ]);
+
+    return redirect()->route('rutaReservacionesActivas')
+        ->with('success', 'Reservación actualizada');
+}
+
 }

@@ -236,7 +236,6 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
   <span style="color:#999;">Ninguno</span><br>
 @endif
 
-    <b>Canal de venta:</b><br>
     <b>Acciones:</b><br>
 
 <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
@@ -244,7 +243,8 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
   {{-- ✏️ Editar --}}
   <button
   type="button"
-  class="btn gray btn-edit-direct"
+  class="btn gray"
+  onclick="window.location.href='/admin/reservaciones/{{ $r->id_reservacion }}/editar'"
 >
   ✏️ Editar Reservación
 </button>
@@ -264,12 +264,21 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
 
   {{-- 📧 Correo --}}
   <button
-    type="button"
-    class="btn primary"
-    onclick="alert('Próximamente envío de correo')"
-  >
-    📧 Reenviar correo de reservación
-  </button>
+  type="button"
+  class="btn primary"
+  onclick="reenviarCorreo({{ $r->id_reservacion }}, this)"
+>
+  📧 Reenviar correo de reservación
+</button>
+
+  {{-- 🚗 Apartar auto --}}
+<button
+  type="button"
+  class="btn success btn-apartar-auto"
+  data-id="{{ $r->id_reservacion }}"
+>
+  🚗 Apartar auto
+</button>
 
 </div>
 
@@ -435,7 +444,7 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
 
       <div class="actions">
         <button type="button" class="btn gray" id="mCancel">Cerrar</button>
-        <button type="button" class="btn gray" id="mEdit">Editar</button>
+        {{-- <button type="button" class="btn gray" id="mEdit">Editar</button> --}}
         <button type="button" class="btn primary" id="mGo">Capturar contrato</button>
       </div>
     </div>
@@ -548,6 +557,48 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
       </div>
     </div>
   </div>
+
+
+  {{-- ============================
+     🪟 MODAL apartar vehiculo
+  ============================= --}}
+  <div class="pop" id="modalVehiculos">
+  <div class="box box-xl">
+    <header>
+      <div>
+        <div>Seleccionar vehículo</div>
+      </div>
+      <button type="button" id="vClose">&times;</button>
+    </header>
+
+    <div class="cnt table-cnt">
+      <table style="width:100%">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Placas</th>
+            <th>Categoría</th>
+            <th>Tamaño</th>
+            <th>Modelo</th>
+            <th>Transmisión</th>
+            <th>Color</th>
+            <th>Gasolina</th>
+            <th>Litros</th>
+            <th>KM</th>
+            <th>Verificación</th>
+            <th>Mantenimiento</th>
+            <th>Seguro</th>
+          </tr>
+        </thead>
+        <tbody id="tablaVehiculos"></tbody>
+      </table>
+    </div>
+
+    <div class="actions">
+      <button class="btn gray" id="vCancel">Cerrar</button>
+    </div>
+  </div>
+</div>
 
   {{ $reservaciones->links() }}
 </main>

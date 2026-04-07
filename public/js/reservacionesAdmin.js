@@ -311,7 +311,7 @@
     if (!els) return 0;
 
     const precioKm = parseFloat(state.categoria?.precio_km || 0);
-    
+
     let km = 0;
     const val = String(els.ubicacion?.value || "");
 
@@ -335,13 +335,13 @@
     ensureDeliveryHidden();
     const act = qs("#delivery_activo");
     if (act) act.value = state.servicios.delivery ? "1" : "0";
-    
+
     qs("#delivery_total").value = total.toFixed(2);
     qs("#delivery_km").value = km.toString();
     qs("#delivery_direccion").value = state.delivery.direccion;
     qs("#delivery_ubicacion").value = val;
 
-    syncTotalsHidden(); 
+    syncTotalsHidden();
     refreshSummary();
 
     return total;
@@ -478,7 +478,7 @@
     // Mostramos u ocultamos los grupos según la elección
     if (els.groupDir) els.groupDir.style.display = isManual ? "block" : "none";
     if (els.groupKm) els.groupKm.style.display = isManual ? "block" : "none";
-    
+
     // El costo por KM solo se ve si hay algo seleccionado
     const costoBox = qs("#dropCostoKm");
     if (costoBox) costoBox.style.display = val !== "" ? "block" : "none";
@@ -490,7 +490,7 @@
     ensureDropoffHidden();
 
     const precioKm = parseFloat(state.categoria?.precio_km || 0);
-    
+
     let km = 0;
     const val = String(els.ubicacion?.value || "");
 
@@ -544,7 +544,7 @@
     }
 
     syncServiciosHidden();
-    syncDropoffHidden(); 
+    syncDropoffHidden();
     syncTotalsHidden();
     refreshSummary();
   }
@@ -562,8 +562,8 @@
     // Evento del Selector de Ubicación
     els.ubicacion?.addEventListener("change", () => {
       // Si elige "Dirección personalizada" (valor "0"), muestra KM y Dirección
-      syncDropoffGroups(els); 
-      
+      syncDropoffGroups(els);
+
       // Si el servicio está activo, calculamos el precio
       if (state.servicios.dropoff) {
         computeDropoff(els);
@@ -643,19 +643,21 @@
 
     syncTotalsHidden();
     refreshSummary();
+console.log("⛽ GASOLINA STATE:", state.servicios.gasolina);
+console.log("⛽ LITROS:", state.categoria?.capacidad_tanque);
   }
 
   function bindGasolinaUI() {
     const toggle = qs("#gasolinaToggle");
     const inputLitros = qs("#gasolinaLitros"); // Si tienes un input de litros
-    
+
     if (!toggle) return;
 
     // 1. Escuchar el Switch (ON/OFF)
     toggle.addEventListener("change", () => {
         const active = !!toggle.checked;
         state.servicios.gasolina = active;
-        
+
         // Mostrar/Ocultar campos si tienes un contenedor especial
         const fields = qs("#gasolinaFields");
         if (fields) fields.style.display = active ? "block" : "none";
@@ -790,7 +792,7 @@
       if (!sel || sel.selectedIndex < 0) return false;
       const opt = sel.options[sel.selectedIndex];
       if (!opt) return false;
-      
+
       const nombre = (opt.dataset.nombre || "").toLowerCase();
       return nombre.includes("aeropuerto");
     };
@@ -804,13 +806,13 @@
     const show = isAirportSelected();
 
     if (wrap) wrap.style.display = show ? "block" : "none";
-    
+
     if (vuelo) {
       if (show) {
         vuelo.setAttribute("required", "required");
       } else {
         vuelo.removeAttribute("required");
-        vuelo.value = ""; 
+        vuelo.value = "";
       }
     }
   }
@@ -854,10 +856,10 @@
       const precioCoche = cat.precio_km || 0;
       inputPrecioKm.value = precioCoche;
     }
-    
+
     if (state.servicios.delivery) {
         const els = getDeliveryEls();
-        if (els) computeDelivery(els); 
+        if (els) computeDelivery(els);
     }
 
     if (state.servicios.dropoff) {
@@ -1235,7 +1237,7 @@
     setText("#resDelivery", state.servicios.delivery ? money(totals.deliveryTotal) : money(0));
     setText("#resDropoff", state.servicios.dropoff ? money(totals.dropoffTotal) : money(0));
     setText("#resGasolina", state.servicios.gasolina ? money(totals.gasolinaTotal) : money(0));
-    
+
     const svcList = getServiciosLabelList();
     setText("#resServicios", svcList.length ? svcList.join(", ") : "—");
 
@@ -2129,7 +2131,7 @@
     // GASOLINA
     qs("#gasolinaToggle")?.addEventListener("change", (e) => {
       const active = !!e.target.checked;
-      setGasolinaActive(active); 
+      setGasolinaActive(active);
     });
 
     // DROP OFF
@@ -2161,10 +2163,10 @@
       const nombre = card.dataset.nombre || "";
       const desc = card.dataset.desc || "";
       const precio = Number(card.dataset.precio || 0);
-      const precioKm = Number(card.dataset.precioKm || 0); 
+      const precioKm = Number(card.dataset.precioKm || 0);
       const img = card.dataset.img || "";
       const capacidad = parseFloat(card.dataset.litros || 0);
-      
+     
       setCategoria({ id, nombre, desc, precio_dia: precio, precio_km: precioKm, img, capacidad_tanque: capacidad });
       closePop(catPop);
     });
@@ -2317,4 +2319,182 @@
     bindUI();
   });
 
+
+  /* =========================
+     🔥 EXPONER API GLOBAL
+  ========================= */
+ window._reservaAPI = {
+  setGasolinaActive,
+  setDropoffActive,
+  setDeliveryActive,
+  setAddonQty,
+  setProteccion,
+  setCategoria,
+  syncTotalsHidden,
+  refreshSummary,
+  getState: () => state // 🔥 mejor que exponer directo
+};
+
 })();
+
+
+window.addEventListener("DOMContentLoaded", async () => {
+
+  const API = window._reservaAPI;
+
+  if (!window.reservacionEditar || !API) {
+    console.warn("⚠️ No hay reservación o API");
+    return;
+  }
+
+  const r = window.reservacionEditar;
+
+  console.log("🟢 EDITANDO:", r);
+
+  // =========================
+  // 🚗 CATEGORÍA (SIN CLICK)
+  // =========================
+  if (r.id_categoria) {
+
+    const card = document.querySelector(`.card-pick[data-id="${r.id_categoria}"]`);
+
+    if (card) {
+
+      const categoria = {
+        id: card.dataset.id,
+        nombre: card.dataset.nombre,
+        desc: card.dataset.desc,
+        precio_dia: parseFloat(card.dataset.precio || 0),
+
+        // 🔥 DATOS REALES
+        precio_km: parseFloat(card.dataset.precioKm || 0),
+        capacidad_tanque: parseFloat(card.dataset.litros || 0)
+      };
+
+      console.log("🚗 SET CATEGORIA:", categoria);
+
+      API.setCategoria(categoria);
+
+      // 🔥 importante esperar a que se procese
+      await new Promise(res => setTimeout(res, 150));
+
+    } else {
+      console.warn("❌ No encontró categoría en DOM");
+    }
+  }
+
+  // =========================
+  // 🚚 DELIVERY
+  // =========================
+  if (r.delivery_activo == 1) {
+
+    console.log("🚚 Activando delivery");
+
+    API.setDeliveryActive(true);
+
+    await new Promise(res => setTimeout(res, 150));
+
+    const sel = document.getElementById("deliveryUbicacion");
+    const km = document.getElementById("deliveryKm");
+    const dir = document.getElementById("deliveryDireccion");
+
+    if (sel && r.delivery_ubicacion != null) {
+      sel.value = String(r.delivery_ubicacion);
+      sel.dispatchEvent(new Event("change"));
+    }
+
+    if (km && r.delivery_km) {
+      km.value = r.delivery_km;
+      km.dispatchEvent(new Event("input"));
+    }
+
+    if (dir && r.delivery_direccion) {
+      dir.value = r.delivery_direccion;
+    }
+  }
+
+  // =========================
+  // 🧰 SERVICIOS
+  // =========================
+  if (window.serviciosEditar?.length) {
+
+    for (const s of window.serviciosEditar) {
+
+      console.log("➡️ Servicio:", s);
+
+      // ⛽ GASOLINA
+      if (s.id_servicio == 1) {
+        API.setGasolinaActive(true);
+      }
+
+      // 🚩 DROPOFF
+      if (s.id_servicio == 11) {
+
+        API.setDropoffActive(true);
+
+        await new Promise(res => setTimeout(res, 150));
+
+        const sel = document.getElementById("dropUbicacion");
+        const km = document.getElementById("dropKm");
+        const dir = document.getElementById("dropDireccion");
+
+        if (sel && r.dropoff_ubicacion) {
+          sel.value = String(r.dropoff_ubicacion);
+          sel.dispatchEvent(new Event("change"));
+        }
+
+        if (km && r.dropoff_km) {
+          km.value = r.dropoff_km;
+          km.dispatchEvent(new Event("input"));
+        }
+
+        if (dir && r.dropoff_direccion) {
+          dir.value = r.dropoff_direccion;
+        }
+      }
+
+      // 🚚 DELIVERY (por si viene como servicio también)
+      if (s.id_servicio == 12) {
+        API.setDeliveryActive(true);
+      }
+
+      // ➕ ADICIONALES
+      if (![1, 11, 12].includes(s.id_servicio)) {
+
+        const item = {
+          id: s.id_servicio,
+          nombre: s.nombre,
+          precio: s.precio_unitario,
+          charge: "por_evento"
+        };
+
+        API.setAddonQty(item, s.cantidad || 1);
+      }
+    }
+  }
+
+  // =========================
+  // 🔒 PROTECCIÓN
+  // =========================
+  if (window.seguroEditar) {
+
+    console.log("🔒 Cargando protección");
+
+    API.setProteccion({
+      id: window.seguroEditar.id_paquete,
+      nombre: window.seguroEditar.nombre,
+      precio: window.seguroEditar.precio_por_dia,
+      charge: "por_dia"
+    });
+  }
+
+  // =========================
+  // 🔄 REFRESH FINAL
+  // =========================
+  API.syncTotalsHidden();
+  API.refreshSummary();
+
+  console.log("🧠 STATE FINAL:", API.getState());
+  console.log("✅ EDICIÓN CARGADA COMPLETA");
+
+});

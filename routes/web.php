@@ -206,6 +206,25 @@ Route::get('/admin/cotizaciones/limpiar-vencidas', [App\Http\Controllers\Cotizac
 Route::get('/admin/reservaciones-activas',
 [ReservacionesActivasController::class, 'index'])->name('rutaReservacionesActivas');
 
+//modal de vehiculos
+Route::get('/admin/vehiculos-disponibles',
+[ReservacionesActivasController::class, 'vehiculosDisponibles']);;
+
+//Editar
+Route::get('/admin/reservaciones/{id}/editar',
+[ReservacionesAdminController::class, 'editar'])->name('reservaciones.editar');
+Route::put('/admin/reservaciones/{id}',
+[ReservacionesAdminController::class, 'update'])
+->name('reservaciones.update');
+
+//Enviar Correo.
+Route::post('/reservaciones/{id}/reenviar-correo', [ReservacionesActivasController::class, 'reenviarCorreo']);
+
+
+//Crear contrato para entrar al checklist.
+Route::post('/admin/crear-contrato',
+[ReservacionesActivasController::class, 'crearContrato']);
+
 // 🔧 ACTUALIZAR + ENVIAR CORREO
 Route::put('/admin/reservaciones-activas/{id}',
 [ReservacionesActivasController::class, 'updateDatos'])->name('rutaUpdateReservacionActiva');
@@ -217,6 +236,8 @@ Route::get('/admin/reservaciones-activas/{codigo}',
 // 🗑️ ELIMINAR
 Route::delete('/admin/reservaciones-activas/{id}',
 [ReservacionesActivasController::class, 'destroy'])->name('rutaEliminarReservacionActiva');
+
+
 
 // ContratoController
 
