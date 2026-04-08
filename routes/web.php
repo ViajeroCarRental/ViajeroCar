@@ -629,20 +629,15 @@ Route::post('/admin/reservaciones-activas/{id}/cancelar',
 Route::view('/politicas', 'Usuarios.Politicas')->name('rutaPoliticas');
 Route::get('/politicas', [ReservacionesController::class, 'politicas'])->name('rutaPoliticas');
 
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\App;
+
 // Ruta para cambiar idioma
 Route::get('/lang/{locale}', function ($locale) {
-    // Forzar el idioma
-    if ($locale == 'en') {
-        session(['locale' => 'en']);
-        $_SESSION['locale'] = 'en';
-    } else {
-        session(['locale' => 'es']);
-        $_SESSION['locale'] = 'es';
-    }
+    $locale = in_array($locale, ['es', 'en']) ? $locale : 'es';
 
-    // Forzar también en la aplicación
-    app()->setLocale(session('locale'));
+    Session::put('locale', $locale);
+    App::setLocale($locale);
 
-    // Redirigir a la misma página con el idioma en la URL (opcional)
     return redirect()->back();
 })->name('cambiar.idioma');

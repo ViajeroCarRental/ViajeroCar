@@ -611,20 +611,6 @@
   }
 }
 @media only screen and (max-width: 600px) {
-  .auto-container table td {
-    display: block !important;
-    width: 100% !important;
-  }
-
-  .auto-container table td:first-child {
-    text-align: center !important;
-    padding: 0 !important;
-  }
-
-  .auto-container table td:last-child {
-    padding-top: 12px !important;
-    text-align: left !important;
-  }
 
   /* Imagen grande */
   .auto-container table img {
@@ -655,7 +641,94 @@
   }
 
 }
+@media only screen and (max-width: 600px) {
 
+  .auto-container table tr {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* TEXTO ARRIBA */
+  .auto-container table tr td:last-child {
+    order: 1;
+    padding: 0 !important;
+  }
+
+  /* IMAGEN ABAJO */
+  .auto-container table tr td:first-child {
+    order: 2;
+    text-align: center !important;
+    margin-top: 10px !important;
+  }
+
+  .auto-container table img {
+    width: 85% !important;
+    max-width: 260px !important;
+  }
+}
+
+/* Desktop */
+.auto-desktop {
+  display: block;
+}
+
+/* Mobile oculto */
+.auto-mobile {
+  display: none;
+}
+
+/* En móvil */
+@media only screen and (max-width: 600px) {
+  .auto-desktop {
+    display: none !important;
+  }
+  .auto-mobile {
+    display: block !important;
+  }
+
+  /* Reset para la tabla de precios */
+  .price-table {
+    display: table !important;
+    width: 100% !important;
+    table-layout: auto !important;
+  }
+
+  .price-table tbody {
+    display: table-row-group !important;
+  }
+
+  .price-table tr {
+    display: table-row !important;
+  }
+
+  .price-table td {
+    display: table-cell !important;
+  }
+
+  /* Específico para la fila total */
+  .price-table .total-row {
+    display: table-row !important;
+  }
+
+  .price-table .total-row td {
+    display: table-cell !important;
+    white-space: nowrap !important;
+    float: none !important;
+    width: auto !important;
+  }
+
+  /* Ajustar la primera celda (label) */
+  .price-table .total-label {
+    width: 60% !important;
+    text-align: left !important;
+  }
+
+  /* Ajustar la segunda celda (value) */
+  .price-table .total-value {
+    width: 40% !important;
+    text-align: right !important;
+  }
+}
 
   </style>
 </head>
@@ -678,9 +751,9 @@
             <td align="right" style="vertical-align: middle; color: #ffffff; font-family: 'Poppins', Arial, sans-serif;">
                 <p style=" margin:0; font-size:14px; text-transform:uppercase; font-weight:400; letter-spacing:1.5px; display:inline-block; min-width:220px; text-align:right; padding-right:8px;">
                    @if($tipo === 'linea' || $tipo === 'en_linea')
-                      Reserva confirmada
+                      {{ __('Reserva confirmada') }}
                    @else
-                      RESERVACIÓN
+                      {{ __('RESERVACIÓN') }}
                    @endif
                 </p>
                 <p style="margin: 5px 0 0 0; font-size: 22px; font-weight: 700; letter-spacing: 1px;">
@@ -725,31 +798,32 @@
     ];
 @endphp
 
-  <!-- MENSAJE NUEVO -->
-  <div class="hero">
+ <!-- MENSAJE NUEVO -->
+
+<div class="hero">
     <p class="thanks">
-      ¡Gracias!
-      <strong>{{ strtoupper(trim(($reservacion->nombre_cliente ?? 'Cliente') . ' ' . ($reservacion->apellidos_cliente ?? ''))) }}</strong>
+        {{ __('¡Gracias!') }}
+        <strong>{{ strtoupper(trim(($reservacion->nombre_cliente ?? 'Cliente') . ' ' . ($reservacion->apellidos_cliente ?? ''))) }}</strong>
     </p>
 
     <p class="lead">
-      @if($tipo === 'linea' || $tipo === 'en_linea')
-        Tu vehículo ya está reservado, el pago ha sido recibido exitosamente.
-      @else
-        Tu vehículo ya está reservado
-      @endif
-      , el siguiente código es tu número de reservación,
-      da <a href="{{ route('visor.show', ['id' => $reservacion->id_reservacion]) }}">click aquí</a> para más información.
+        @if($tipo === 'linea' || $tipo === 'en_linea')
+            {{ __('Tu vehículo ya está reservado, el pago ha sido recibido exitosamente.') }}
+        @else
+            {{ __('Tu vehículo ya está reservado') }}
+        @endif
+        {{ __(', el siguiente código es tu número de reservación, da') }}
+        <a href="{{ route('visor.show', ['id' => $reservacion->id_reservacion]) }}">{{ __('click aquí') }}</a>
+        {{ __('para más información.') }}
     </p>
 
-     <p class="lead" style="margin-top:0; text-align: justify; font-size: 16px; line-height: 1.75;">
-        La siguiente información se calculó con los datos proporcionados en el proceso de reservación,
-        cualquier modificación relacionada con lo que esta reservación describe podría resultar en una variación contra el precio acordado.
-     </p>
-   </div>
+    <p class="lead" style="margin-top:0; text-align: justify; font-size: 16px; line-height: 1.75;">
+        {{ __('La siguiente información se calculó con los datos proporcionados en el proceso de reservación, cualquier modificación relacionada con lo que esta reservación describe podría resultar en una variación contra el precio acordado.') }}
+    </p>
+</div>
 
    <!-- ===================== RESUMEN ===================== -->
-<h2 class="summary-title">Resumen de tu reserva</h2>
+<h2 class="summary-title">{{ __('Resumen de tu reserva') }}</h2>
 
 <div class="summary-card">
 
@@ -771,9 +845,9 @@
 <!-- ENCABEZADO -->
 <table class="summary-top" role="presentation">
     <tr>
-        <td class="left">Lugar y fecha</td>
+        <td class="left">{{ __('Lugar y fecha') }}</td>
         <td class="right">
-            RESERVACIÓN<br>
+            {{ __('RESERVACIÓN') }}<br>
             {{ $reservacion->codigo }}
         </td>
     </tr>
@@ -782,7 +856,7 @@
 <div class="summary-line-red"></div>
 <!-- ===================== LUGAR Y FECHA ===================== -->
 @php
-    \Carbon\Carbon::setLocale('es');
+    \Carbon\Carbon::setLocale(app()->getLocale());
 
     // Fuente 1: Variables pasadas directamente al mail (si existen)
     $pickupTimeRaw = $pickupTime ?? null;
@@ -839,149 +913,348 @@
     }
 @endphp
 
+@php
+    // Obtener el idioma actual
+    $locale = app()->getLocale();
+
+    // Mapeo de traducciones de sucursales (Español → Inglés)
+    $traduccionesLugares = [
+        // Querétaro
+        'Querétaro Aeropuerto' => 'Querétaro Airport',
+        'Querétaro Central de Autobuses' => 'Querétaro Bus Station',
+        'Querétaro Oficina Plaza Central Park' => 'Querétaro Central Park Office',
+        'Querétaro - Querétaro Aeropuerto' => 'Querétaro - Querétaro Airport',
+        'Querétaro - Querétaro Central de Autobuses' => 'Querétaro - Querétaro Bus Station',
+        'Querétaro - Oficina Central Park' => 'Querétaro - Central Park Office',
+
+        // Guanajuato
+        'Guanajuato - Central de Autobuses León de los Aldamas' => 'Guanajuato - Leon Bus Station',
+        'Central de Autobuses León de los Aldamas' => 'Leon Bus Station',
+        'Aeropuerto Internacional de Guanajuato, Silao' => 'Guanajuato International Airport, Silao',
+
+        // Aguascalientes
+        'Aeropuerto Internacional de Aguascalientes' => 'Aguascalientes International Airport',
+
+        // CDMX
+        'Aeropuerto Internacional de Ciudad de México' => 'Mexico City International Airport',
+        'Aeropuerto Internacional Felipe Ángeles' => 'Felipe Ángeles International Airport',
+
+        // Durango
+        'Aeropuerto Internacional de Durango' => 'Durango International Airport',
+
+        // Guerrero
+        'Aeropuerto Internacional de Acapulco' => 'Acapulco International Airport',
+
+        // Jalisco
+        'Aeropuerto Internacional Miguel Hidalgo (GDL)' => 'Miguel Hidalgo International Airport (GDL)',
+        'Aeropuerto Internacional Puerto Vallarta' => 'Puerto Vallarta International Airport',
+
+        // Monterrey
+        'Aeropuerto Internacional de Monterrey' => 'Monterrey International Airport',
+
+        // Morelia
+        'Aeropuerto Internacional General Francisco Mujica' => 'General Francisco Mujica International Airport',
+
+        // Oaxaca
+        'Aeropuerto Internacional de Oaxaca' => 'Oaxaca International Airport',
+
+        // Puebla
+        'Aeropuerto Internacional de Puebla' => 'Puebla International Airport',
+
+        // San Luis Potosí
+        'Aeropuerto Internacional de San Luis Potosí' => 'San Luis Potosí International Airport',
+
+        // Tabasco
+        'Aeropuerto Internacional Carlos Rovirosa Pérez (VSA)' => 'Carlos Rovirosa Pérez International Airport (VSA)',
+
+        // Tamaulipas
+        'Aeropuerto Internacional de Tampico' => 'Tampico International Airport',
+        'Tamaulipas - Aeropuerto Internacional de Tampico' => 'Tamaulipas - Tampico International Airport',
+
+        // Toluca
+        'Aeropuerto Internacional de Toluca' => 'Toluca International Airport',
+
+        // Veracruz
+        'Aeropuerto Internacional de Veracruz' => 'Veracruz International Airport',
+
+        // Zacatecas
+        'Aeropuerto Internacional de Zacatecas' => 'Zacatecas International Airport',
+    ];
+
+    // Función para traducir el lugar (VERSIÓN FLEXIBLE con coincidencia parcial)
+    function traducirLugar($lugar, $traducciones, $locale) {
+        if (empty($lugar)) {
+            return __('Lugar no especificado');
+        }
+
+        // Si es español, devolver el original
+        if ($locale === 'es') {
+            return $lugar;
+        }
+
+        // Buscar traducción exacta
+        if (isset($traducciones[$lugar])) {
+            return $traducciones[$lugar];
+        }
+
+        // 🔥 NUEVO: Buscar coincidencia parcial (más flexible)
+        foreach ($traducciones as $es => $en) {
+            if (str_contains($lugar, $es)) {
+                // Reemplazar la parte que coincide
+                return str_replace($es, $en, $lugar);
+            }
+        }
+
+        // Si no hay traducción, devolver original
+        return $lugar;
+    }
+
+    // Aplicar traducción
+    $lugarRetiroTraducido = traducirLugar($lugarRetiro ?? '', $traduccionesLugares, $locale);
+    $lugarEntregaTraducido = traducirLugar($lugarEntrega ?? '', $traduccionesLugares, $locale);
+@endphp
+
 <div style="margin-bottom: 20px;">
+
     <!-- PICK-UP -->
-    <div style="margin-bottom: 16px;">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-            <img src="https://imgur.com/UymwMqF.png" alt="icon" width="20" height="20" style="display: block; margin-right:6px;">
-            <div style="font-weight: 700; font-size: 13px;">
-                PICK-UP:
-            </div>
-        </div>
-        <div style="font-weight: 600; font-size: 14px; margin-left: 28px;">
-            {{ $pickupFormatted }}
-        </div>
-        <div style="font-size: 13px; color: #6b7280; margin-left: 28px;">
-            {{ $lugarRetiro ?? 'Lugar no especificado' }}
-        </div>
-    </div>
+    <table role="presentation" width="100%" style="margin-bottom:16px;">
+        <tr>
+            <td width="24" style="vertical-align:top;">
+                <img src="https://imgur.com/UymwMqF.png" width="20" style="display:block;">
+            </td>
+            <td style="padding-left:8px;">
+                <div style="font-weight:700; font-size:13px; margin-bottom:6px;">
+                    {{ __('PICK-UP') }}
+                </div>
+                <table role="presentation" width="100%" style="font-size:13px;">
+                    <tr>
+                        <td style="color:#6b7280; width:60px;">{{ __('Date') }}:</td>
+                        <td style="font-weight:600;">
+                            {{ ucfirst(\Carbon\Carbon::parse($reservacion->fecha_inicio)->translatedFormat('D. d M. Y')) }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="color:#6b7280;">{{ __('Time') }}:</td>
+                        <td style="font-weight:600;">
+                            {{ \Carbon\Carbon::parse($reservacion->hora_retiro)->format('g:i A') }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="color:#6b7280;">{{ __('Location') }}:</td>
+                        <td style="font-weight:600;">
+                            {{ $lugarRetiroTraducido }}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 
     <!-- DEVOLUCIÓN -->
-    <div>
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-            <img src="https://imgur.com/UymwMqF.png" alt="icon" width="20" height="20" style="display: block; margin-right:6px;">
-            <div style="font-weight: 700; font-size: 13px;">
-                DEVOLUCIÓN:
-            </div>
-        </div>
-        <div style="font-weight: 600; font-size: 14px; margin-left: 28px;">
-            {{ $dropoffFormatted }}
-        </div>
-        <div style="font-size: 13px; color: #6b7280; margin-left: 28px;">
-            {{ $lugarEntrega ?? 'Lugar no especificado' }}
-        </div>
-    </div>
+    <table role="presentation" width="100%">
+        <tr>
+            <td width="24" style="vertical-align:top;">
+                <img src="https://imgur.com/UymwMqF.png" width="20" style="display:block;">
+            </td>
+            <td style="padding-left:8px;">
+                <div style="font-weight:700; font-size:13px; margin-bottom:6px;">
+                    {{ __('RETURN') }}
+                </div>
+                <table role="presentation" width="100%" style="font-size:13px;">
+                    <tr>
+                        <td style="color:#6b7280; width:60px;">{{ __('Date') }}:</td>
+                        <td style="font-weight:600;">
+                            {{ ucfirst(\Carbon\Carbon::parse($reservacion->fecha_fin)->translatedFormat('D. d M. Y')) }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="color:#6b7280;">{{ __('Time') }}:</td>
+                        <td style="font-weight:600;">
+                            {{ \Carbon\Carbon::parse($reservacion->hora_entrega)->format('g:i A') }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="color:#6b7280;">{{ __('Location') }}:</td>
+                        <td style="font-weight:600;">
+                            {{ $lugarEntregaTraducido }}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
 </div>
 
 <!-- ===================== TU AUTO ===================== -->
 <div style="font-weight:700; font-size:16px; margin-bottom:12px;">
-    TU AUTO
+    {{ __('YOUR CAR') }}
 </div>
 
 <div style="border-top:2px solid #e11d48; width:100%; margin-bottom:15px;"></div>
 
-<div style="margin:15px 0;">
 
-    <table role="presentation" width="100%">
-  <tr>
+<!-- ===================== DESKTOP ===================== -->
+<div class="auto-desktop" style="margin:15px 0;">
 
-    <!-- IMAGEN GRANDE -->
-    <td width="240" style="vertical-align: middle;">
-      <img src="{{ $imgCategoria }}"
-           width="200"
-           style="display:block; width:200px; max-width:100%; height:auto; border-radius:12px;">
-    </td>
+<table role="presentation" width="100%">
+<tr>
 
-    <!-- INFO A LA DERECHA -->
-    <td style="padding-left:20px; vertical-align: middle;">
+  <!-- IMAGEN IZQUIERDA -->
+  <td width="200" style="vertical-align:middle;">
+    <img src="{{ $imgCategoria }}" style="width:200px; border-radius:12px;">
+  </td>
 
-      <!-- TITULO -->
-      <div style="font-size:20px; font-weight:800; color:#111827; margin-bottom:4px;">
-        {{ $categoria->descripcion }}
-      </div>
+  <!-- INFO -->
+  <td style="padding-left:20px;">
 
-      <!-- SUBTITULO -->
-      <div style="font-size:12px; font-weight:700; color:#6b7280; margin-bottom:10px;">
-        {{ strtoupper($categoria->nombre) }} | CATEGORÍA {{ $categoria->codigo }}
-      </div>
+    <!-- TITULO -->
+    <div style="font-size:20px; font-weight:800; color:#111827; margin-bottom:4px;">
+      {{ $categoria->descripcion }}
+    </div>
 
-      <!-- ICONOS -->
-      <div style="font-size:13px; color:#111; margin-bottom:10px;">
+    <!-- SUBTITULO -->
+    <div style="font-size:12px; font-weight:700; color:#6b7280; margin-bottom:10px;">
+      {{ strtoupper($categoria->nombre) }} | {{ __('CATEGORY') }} {{ $categoria->codigo }}
+    </div>
 
-        <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/user.svg"
-             width="14" style="vertical-align:middle;">
-        <strong>{{ $tuAuto['pax'] }}</strong>
+    <!-- ICONOS -->
+    <table role="presentation" style="margin-bottom:10px; white-space:nowrap;">
+      <tr>
 
-        &nbsp;&nbsp;
+        <td style="font-size:13px; padding-right:12px; white-space:nowrap;">
+          <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/user.svg" style="width:14px;">
+          <strong>{{ $tuAuto['pax'] }}</strong>
+        </td>
 
-        <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/suitcase-rolling.svg"
-             width="14" style="vertical-align:middle;">
-        <strong>{{ $tuAuto['small'] }}</strong>
+        <td style="font-size:13px; padding-right:12px;">
+          <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/suitcase-rolling.svg" style="width:14px;">
+          <strong>{{ $tuAuto['small'] }}</strong>
+        </td>
 
-        &nbsp;&nbsp;
+        <td style="font-size:13px; padding-right:12px;">
+          <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/briefcase.svg" style="width:14px;">
+          <strong>{{ $tuAuto['big'] }}</strong>
+        </td>
 
-        <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/briefcase.svg"
-             width="14" style="vertical-align:middle;">
-        <strong>{{ $tuAuto['big'] }}</strong>
+        <td style="font-size:13px; padding-right:12px;">
+          <strong>T | {{ $categoria->id_categoria == 9 ? __('Manual') : __('Automatic') }}</strong>
+        </td>
 
-        &nbsp;&nbsp;
+        <td style="font-size:13px;">
+          <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/regular/snowflake.svg" style="width:14px;">
+          <span style="font-weight:600;">A/C</span>
+        </td>
 
-        <span style="font-weight:600;">
-        T | @if(isset($categoria) && $categoria->id_categoria == 9) {{ __('Manual') }} @else {{ __('Automatic') }} @endif
-        </span>
+      </tr>
+    </table>
 
-        &nbsp;&nbsp;
+    <!-- TAGS -->
+    <div style="margin-bottom:10px;">
+      <span style="background:#111827;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;">
+        CarPlay
+      </span>
 
-        <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/regular/snowflake.svg"
-             width="14" style="vertical-align:middle;">
-        <span style="font-weight:600;">A/C</span>
+      <span style="background:#16a34a;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;">
+        Android Auto
+      </span>
+    </div>
 
-      </div>
+    <!-- INCLUYE -->
+    <div style="font-size:13px; color:#111;">
+      ✓ {{ __('Unlimited KM') }} | {{ __('Third-party liability protection (LI)') }}
+    </div>
 
-      <!-- TAGS -->
-      <div style="margin-bottom:10px;">
+  </td>
 
-        <span style="
-          background:#111827;
-          color:#fff;
-          padding:6px 12px;
-          border-radius:20px;
-          font-size:12px;
-          font-weight:600;
-          display:inline-block;
-          margin-right:6px;">
-          CarPlay
-        </span>
-
-        <span style="
-          background:#16a34a;
-          color:#fff;
-          padding:6px 12px;
-          border-radius:20px;
-          font-size:12px;
-          font-weight:600;
-          display:inline-block;">
-          Android Auto
-        </span>
-
-      </div>
-
-      <!-- INCLUYE -->
-      <div style="font-size:13px; color:#111;">
-        ✓ KM ilimitados | Relevo de Responsabilidad (LI)
-      </div>
-
-    </td>
-
-  </tr>
+</tr>
 </table>
 
 </div>
 
+
+<!-- ===================== MOBILE ===================== -->
+<div class="auto-mobile" style="margin:15px 0;">
+
+<table role="presentation" width="100%">
+
+<tr>
+<td>
+
+  <!-- TITULO -->
+  <div style="font-size:20px; font-weight:800; color:#111827; margin-bottom:4px;">
+    {{ $categoria->descripcion }}
+  </div>
+
+  <!-- SUBTITULO -->
+  <div style="font-size:12px; font-weight:700; color:#6b7280; margin-bottom:10px;">
+    {{ strtoupper($categoria->nombre) }} | {{ __('CATEGORY') }} {{ $categoria->codigo }}
+  </div>
+
+  <!-- ICONOS -->
+  <table role="presentation" style="margin-bottom:10px; white-space:nowrap;">
+    <tr>
+
+      <td style="font-size:13px; padding-right:12px;">
+        <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/user.svg" style="width:14px;">
+        <strong>{{ $tuAuto['pax'] }}</strong>
+      </td>
+
+      <td style="font-size:13px; padding-right:12px;">
+        <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/suitcase-rolling.svg" style="width:14px;">
+        <strong>{{ $tuAuto['small'] }}</strong>
+      </td>
+
+      <td style="font-size:13px; padding-right:12px;">
+        <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/solid/briefcase.svg" style="width:14px;">
+        <strong>{{ $tuAuto['big'] }}</strong>
+      </td>
+
+      <td style="font-size:13px; padding-right:12px;">
+        <strong>T | {{ $categoria->id_categoria == 9 ? 'Manual' : 'Automática' }}</strong>
+      </td>
+
+      <td style="font-size:13px;">
+        <img src="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/svgs/regular/snowflake.svg" style="width:14px;">
+        <span style="font-weight:600;">A/C</span>
+      </td>
+
+    </tr>
+  </table>
+
+  <!-- TAGS -->
+  <div style="margin-bottom:10px;">
+    <span style="background:#111827;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;">
+      CarPlay
+    </span>
+
+    <span style="background:#16a34a;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;">
+      Android Auto
+    </span>
+  </div>
+
+  <!-- INCLUYE -->
+  <div style="font-size:13px; color:#111;">
+    ✓ {{ __('Unlimited KM') }} | {{ __('Third-party liability protection (LI)') }}
+  </div>
+
+</td>
+</tr>
+
+<!-- IMAGEN ABAJO SOLO EN MOBILE -->
+<tr>
+<td align="center" style="padding-top:10px;">
+  <img src="{{ $imgCategoria }}" style="width:90%; max-width:260px; border-radius:12px;">
+</td>
+</tr>
+
+</table>
+
+</div>
 <!-- ===================== EXTRAS ===================== -->
- <div style="font-weight: 700; font-size: 16px; margin-bottom: 12px;">
-        EXTRAS
-    </div>
+<div style="font-weight: 700; font-size: 16px; margin-bottom: 12px;">
+    {{ __('EXTRAS') }}
+</div>
 <div class="summary-line-red"></div>
 
 <div style="margin: 15px 0;">
@@ -995,6 +1268,24 @@
                     $seleccionado = collect($extrasReserva)
                         ->pluck('nombre')
                         ->contains($servicio['nombre']);
+
+                    // ============================================
+                    // CONVERSIÓN DE MONEDA PARA EXTRAS
+                    // ============================================
+                    $tipoCambio = 20; // 1 USD = 20 MXN
+                    $locale = app()->getLocale();
+                    $moneda = $locale === 'en' ? 'USD' : 'MXN';
+                    $simboloMoneda = '$';
+
+                    // Convertir precio del extra si está en inglés
+                    $precioExtra = $servicio['precio'];
+                    if ($moneda === 'USD') {
+                        $precioExtra = $precioExtra / $tipoCambio;
+                    }
+                    $precioExtraFormateado = number_format($precioExtra, $moneda === 'USD' ? 2 : 0);
+
+                    // Traducir la unidad
+                    $unidadTraducida = __($servicio['unidad']);
                 @endphp
 
                 <td width="33%" style="vertical-align: top; padding-bottom: 12px;">
@@ -1023,15 +1314,15 @@
                             <!-- TEXTO -->
                             <td>
                                 <div style="font-size:13px; font-weight:700; color:#111;">
-                                    {{ $servicio['nombre'] }}
+                                    {{ __($servicio['nombre']) }}
                                 </div>
 
                                 <div style="font-size:11px; color:#6b7280;">
-                                    {{ $servicio['desc'] }}
+                                    {{ __($servicio['desc']) }}
                                 </div>
 
                                 <div style="font-size:11px; font-weight:600; color:#111;">
-                                    ${{ number_format($servicio['precio'],0) }} / {{ $servicio['unidad'] }}
+                                    {{ $simboloMoneda }}{{ $precioExtraFormateado }} / {{ $unidadTraducida }} {{ $moneda === 'USD' ? 'USD' : 'MXN' }}
                                 </div>
                             </td>
 
@@ -1041,7 +1332,9 @@
                 </td>
 
                 @if(($index + 1) % 3 == 0)
-                    </tr><tr>
+                    <tr>
+                        @if(!$loop->last)
+                            <tr> @endif
                 @endif
 
             @endforeach
@@ -1050,27 +1343,54 @@
     </table>
 </div>
 
+@php
+    // ============================================
+    // LÓGICA DE CONVERSIÓN DE MONEDA
+    // ============================================
+    $tipoCambio = 20; // 1 USD = 20 MXN
+
+    // Detectar idioma actual
+    $locale = app()->getLocale();
+    $moneda = $locale === 'en' ? 'USD' : 'MXN';
+    $simboloMoneda = '$'; // El símbolo es el mismo para ambas
+
+    // Función para formatear precio según moneda
+    function formatearPrecioEmail($montoMXN, $moneda, $tipoCambio) {
+        if ($moneda === 'USD') {
+            $monto = $montoMXN / $tipoCambio;
+            return number_format($monto, 2);
+        }
+        return number_format($montoMXN, 2);
+    }
+
+    // Aplicar conversión a todas las variables de precio
+    $tarifaBaseTotalConvertida = formatearPrecioEmail($tarifaBaseTotal, $moneda, $tipoCambio);
+    $opcionesRentaTotalConvertida = formatearPrecioEmail($opcionesRentaTotal, $moneda, $tipoCambio);
+    $impuestosConvertidos = formatearPrecioEmail($reservacion->impuestos, $moneda, $tipoCambio);
+    $totalConvertido = formatearPrecioEmail($reservacion->total, $moneda, $tipoCambio);
+@endphp
+
 <!-- ===================== PRECIOS ===================== -->
-<p class="section-title">Detalles del precio</p>
+<p class="section-title">{{ __('Price details') }}</p>
 <div class="summary-line-red"></div>
 
 <table class="price-table" role="presentation">
     <!-- Tarifa base -->
     <tr>
-        <td class="price-label">Tarifa base</td>
-        <td class="price-value">${{ number_format($tarifaBaseTotal, 2) }} MXN</td>
+        <td class="price-label">{{ __('Base rate') }}</td>
+        <td class="price-value">{{ $simboloMoneda }}{{ $tarifaBaseTotalConvertida }} {{ $moneda }}</td>
     </tr>
 
     <!-- Opciones de renta -->
     <tr>
-        <td class="price-label">Opciones de renta</td>
-        <td class="price-value">${{ number_format($opcionesRentaTotal, 2) }} MXN</td>
+        <td class="price-label">{{ __('Rental options') }}</td>
+        <td class="price-value">{{ $simboloMoneda }}{{ $opcionesRentaTotalConvertida }} {{ $moneda }}</td>
     </tr>
 
     <!-- Cargos e IVA -->
     <tr>
-        <td class="price-label">Cargos e IVA</td>
-        <td class="price-value">${{ number_format($reservacion->impuestos, 2) }} MXN</td>
+        <td class="price-label">{{ __('Charges and Taxes') }}</td>
+        <td class="price-value">{{ $simboloMoneda }}{{ $impuestosConvertidos }} {{ $moneda }}</td>
     </tr>
 
     <!-- Línea divisora gris -->
@@ -1082,18 +1402,20 @@
 
     <!-- TOTAL (en rojo) -->
     <tr class="total-row">
-        <td class="total-label"><strong>TOTAL</strong></td>
-        <td class="total-value"><strong>${{ number_format($reservacion->total, 2) }} MXN</strong></td>
+        <td class="total-label"><strong>{{ __('TOTAL') }}</strong></td>
+        <td class="total-value"><strong>{{ $simboloMoneda }}{{ $totalConvertido }} {{ $moneda }}</strong></td>
     </tr>
 </table>
 
 <!-- ===================== PAGO ===================== -->
 <p style="margin-top:15px;">
 @if($tipo === 'linea')
-    <strong>Método de pago:</strong> PayPal<br>
-    <strong>Total pagado:</strong> ${{ number_format($reservacion->total, 2) }} MXN
+    <strong>{{ __('Payment method') }}:</strong> {{ __('PayPal') }}<br>
+    <strong>{{ __('Total paid') }}:</strong> {{ $simboloMoneda }}{{ $totalConvertido }} {{ $moneda }}
 @else
-    <strong>Método de pago:</strong> Pago en mostrador<br>
+    <strong>{{ __('Payment method') }}:</strong> {{ __('Counter payment') }}<br>
+    @if($locale === 'en')
+    @endif
 @endif
 </p>
 
@@ -1101,44 +1423,126 @@
 
    {{-- Texto y línea roja debajo del detalle de precio --}}
     <p class="price-note" style="text-align: justify; font-size: 14px; line-height: 1.7; color: #111; margin: 18px 0 10px;">
-     VIAJERO te garantiza el tamaño del vehículo y sus características, más no el modelo
-     específico. Nos comprometemos a entregarte un auto de la categoría reservada, por
-     ejemplo un auto compacto, pudiendo ser cualquiera de las marcas que manejamos en
-     nuestra flota dentro de este grupo.
-    </p>
+    {{ __('VIAJERO te garantiza el tamaño del vehículo y sus características, más no el modelo específico. Nos comprometemos a entregarte un auto de la categoría reservada, por ejemplo un auto compacto, pudiendo ser cualquiera de las marcas que manejamos en nuestra flota dentro de este grupo.') }}
+</p>
     <div class="price-note-line"></div>
 
-          {{-- Bloque: Requisitos y protección LI --}}
-    <div class="info-section">
-       <p class="info-section-title" style="font-size: 15px; font-weight: 700; margin: 0 0 6px;">
-           Requisitos para rentar
-       </p>
+        {{-- Bloque: Requisitos y protección LI --}}
+          <div class="info-section">
 
-     <ul class="info-section-list" style="margin: 0 0 12px; padding-left: 18px; text-align: justify;">
-    <li style="margin: 0 0 4px; text-align: justify;">Tarjeta de crédito: Con un mínimo de antigüedad de un año, todas nuestras rentas deben ser amparadas con una tarjeta de crédito.</li>
-    <li style="margin: 0 0 4px; text-align: justify;">Edad mínima 21 años: Aplica un cargo por conductor joven si eres menor de 25 años.</li>
-    <li style="margin: 0 0 4px; text-align: justify;">Identificación con fotografía: Credencial del IFE/INE o Pasaporte.</li>
-    <li style="margin: 0 0 4px; text-align: justify;">Licencia para conducir: Deberá estar vigente.</li>
-    <li style="margin: 0 0 4px; text-align: justify;">Relevos de responsabilidad: Elegir entre nuestras opciones de protección para el auto (100%, 90%, 80% o 0%).</li>
-  </ul>
+        <!-- ¿Necesitas factura? -->
+         <p class="info-section-title" style="font-size: 15px; font-weight: 700; margin: 0 0 8px 0; text-align: justify;">
+              {{ __('¿Necesitas factura?') }}
+         </p>
+         <p class="info-section-paragraph" style="margin: 0 0 18px 0; text-align: justify; font-size: 14px; line-height: 1.7;">
+             {{ __('Viajero Car Rental cuenta con lineamientos específicos para la emisión de facturas, los cuales dependen de la fecha de cierre del contrato. Se recomienda realizar la solicitud dentro de los tiempos establecidos para garantizar su correcto procesamiento.') }}
+         </p>
 
+        <!-- Política de combustible -->
+    <p class="info-section-title" style="font-size: 15px; font-weight: 700; margin: 0 0 8px 0; text-align: justify;">
+        {{ __('Política de combustible') }}
+    </p>
+    <p class="info-section-paragraph" style="margin: 0 0 18px 0; text-align: justify; font-size: 14px; line-height: 1.7;">
+        {{ __('El combustible no está incluido en la tarifa. El vehículo deberá devolverse con el tanque lleno; de lo contrario, se aplicará un cargo adicional por servicio de recarga.') }}
+    </p>
 
-      <p class="info-section-paragraph" style="margin: 0 0 16px; text-align: justify; font-size: 14px; line-height: 1.7;">
-        Los requisitos de renta pueden variar, si requieres más información comunícate al 01 (442) 303 26 68 o escríbenos a reservaciones@viajerocar-rental.com
-     </p>
+    <!-- Requisitos para rentar un vehículo -->
+    <p class="info-section-title" style="font-size: 15px; font-weight: 700; margin: 0 0 8px 0; text-align: justify;">
+        {{ __('Requisitos para rentar un vehículo') }}
+    </p>
+    <ul class="info-section-list" style="margin: 0 0 12px; padding-left: 18px; text-align: justify;">
+        <li style="margin: 0 0 4px; text-align: justify;">
+    <strong>{{ __('Tarjeta de crédito:') }}</strong> {{ __('Es indispensable contar con una tarjeta de crédito a nombre del titular, con al menos un año de antigüedad, para garantizar la renta.') }}
+</li>
 
-      <p class="info-section-title">Protección limitada de responsabilidad hacia terceros (LI)</p>
+<li style="margin: 0 0 4px; text-align: justify;">
+    <strong>{{ __('Edad mínima:') }}</strong> {{ __('21 años. Aplica un cargo adicional para conductores menores de 25 años.') }}
+</li>
 
-      <p class="info-section-paragraph" style="text-align: justify;">
-         Protege a terceros por daños y perjuicios ocasionados en un accidente y cubre la cantidad mínima
-         requerida por ley. Tú eliges el nivel de responsabilidad sobre el auto que más vaya acorde a tus
-         necesidades y presupuesto. Pregunta por nuestros relevos de responsabilidad (opcionales) al llegar
-        al mostrador de cualquiera de nuestras oficinas.
-      </p>
+<li style="margin: 0 0 4px; text-align: justify;">
+    <strong>{{ __('Identificación oficial:') }}</strong> {{ __('INE/IFE (mexicanos) o pasaporte (extranjeros), vigente y con fotografía.') }}
+</li>
+
+<li style="margin: 0 0 4px; text-align: justify;">
+    <strong>{{ __('Licencia de conducir:') }}</strong> {{ __('Vigente y válida.') }}
+</li>
+
+<li style="margin: 0 0 4px; text-align: justify;">
+    <strong>{{ __('Relevos de responsabilidad:') }}</strong> {{ __('El cliente deberá elegir una opción de protección para el vehículo (100%, 90%, 80% o sin protección).') }}
+</li>
+
+<li style="margin: 0 0 4px; text-align: justify;">
+    <strong>{{ __('Variaciones:') }}</strong> {{ __('Los requisitos pueden variar. Para más información: 01 (442) 303 26 68 o reservaciones@viajerocar-rental.com') }}
+</li>
+    </ul>
+
+    <!-- Protección a terceros (LI – Responsabilidad civil) -->
+    <p class="info-section-title" style="font-size: 15px; font-weight: 700; margin: 0 0 8px 0; text-align: justify;">
+        {{ __('Protección a terceros (LI – Responsabilidad civil)') }}
+    </p>
+    <p class="info-section-paragraph" style="margin: 0 0 18px 0; text-align: justify; font-size: 14px; line-height: 1.7;">
+        {{ __('Esta protección cubre daños a terceros ocasionados durante un accidente, conforme a los mínimos establecidos por la ley. El cliente puede elegir el nivel de cobertura que mejor se adapte a sus necesidades y presupuesto, incluyendo opciones adicionales disponibles en mostrador.') }}
+    </p>
+
+    <!-- Depósito en garantía -->
+    <p class="info-section-title" style="font-size: 15px; font-weight: 700; margin: 0 0 8px 0; text-align: justify;">
+        {{ __('Depósito en garantía') }}
+    </p>
+    <p class="info-section-paragraph" style="margin: 0 0 18px 0; text-align: justify; font-size: 14px; line-height: 1.7;">
+        {{ __('Se realizará una preautorización en la tarjeta de crédito como respaldo de la renta. Este monto no representa un cargo definitivo y será liberado posteriormente, sujeto a la revisión del vehículo.') }}
+    </p>
+
+    <!-- Cancelaciones y reembolsos -->
+    <p class="info-section-title" style="font-size: 15px; font-weight: 700; margin: 0 0 8px 0; text-align: justify;">
+        {{ __('Cancelaciones y reembolsos') }}
+    </p>
+    <p class="info-section-paragraph" style="margin: 0 0 18px 0; text-align: justify; font-size: 14px; line-height: 1.7;">
+        {{ __('Los reembolsos se determinan según el tiempo de anticipación de la cancelación. En cancelaciones tardías o en caso de no presentarse, no aplicará reembolso.') }}
+    </p>
+
+    <!-- Política de limpieza -->
+    <p class="info-section-title" style="font-size: 15px; font-weight: 700; margin: 0 0 8px 0; text-align: justify;">
+        {{ __('Política de limpieza') }}
+    </p>
+    <p class="info-section-paragraph" style="margin: 0 0 18px 0; text-align: justify; font-size: 14px; line-height: 1.7;">
+        {{ __('Los vehículos deben devolverse en condiciones adecuadas. Se aplicará un cargo de $4,000 MXN en caso de suciedad excesiva, olores fuertes o evidencia de consumo de tabaco.') }}
+    </p>
+
+    <!-- Infracciones y responsabilidades -->
+    <p class="info-section-title" style="font-size: 15px; font-weight: 700; margin: 0 0 8px 0; text-align: justify;">
+        {{ __('Infracciones y responsabilidades') }}
+    </p>
+    <p class="info-section-paragraph" style="margin: 0 0 18px 0; text-align: justify; font-size: 14px; line-height: 1.7;">
+        {{ __('El cliente será responsable de todas las infracciones generadas durante el periodo de renta. Podrá aplicarse un cargo administrativo adicional.') }}
+    </p>
+
+    <!-- Cargos e impuestos -->
+    <p class="info-section-title" style="font-size: 15px; font-weight: 700; margin: 0 0 8px 0; text-align: justify;">
+        {{ __('Cargos e impuestos') }}
+    </p>
+    <p class="info-section-paragraph" style="margin: 0 0 18px 0; text-align: justify; font-size: 14px; line-height: 1.7;">
+        {{ __('Todos los servicios están sujetos a IVA y pueden incluir cargos adicionales como aeropuerto, telemetría o devolución en otra ubicación.') }}
+    </p>
+
+    <!-- Aviso de privacidad -->
+    <p class="info-section-title" style="font-size: 15px; font-weight: 700; margin: 0 0 8px 0; text-align: justify;">
+        {{ __('Aviso de privacidad') }}
+    </p>
+    <p class="info-section-paragraph" style="margin: 0 0 18px 0; text-align: justify; font-size: 14px; line-height: 1.7;">
+        {{ __('Los datos personales serán utilizados exclusivamente para fines operativos, administrativos y comerciales relacionados con el servicio. El cliente podrá ejercer sus derechos ARCO en cualquier momento.') }}
+    </p>
+
+    <!-- Términos y condiciones -->
+    <p class="info-section-title" style="font-size: 15px; font-weight: 700; margin: 0 0 8px 0; text-align: justify;">
+        {{ __('Términos y condiciones') }}
+    </p>
+    <p class="info-section-paragraph" style="margin: 0 0 18px 0; text-align: justify; font-size: 14px; line-height: 1.7;">
+        {{ __('El monto final de la renta puede variar según las condiciones al momento de la contratación. Viajero Car Rental se reserva el derecho de negar el servicio en caso de incumplimiento de los requisitos establecidos.') }}
+    </p>
+
+</div>
+
     </div>
-
-  </div>
-
       {{-- FOOTER GRANDE TIPO LANDING --}}
   <div class="site-footer">
     <div class="footer-inner">
@@ -1184,42 +1588,42 @@
          <p style="margin:5px 0;">
             <img src="https://i.imgur.com/l9Ib5lO.png"  width="16" style="vertical-align:middle; margin-right:8px;">
             <span style="vertical-align:middle;">
-                 OFICINA CENTRAL PARK, QUERÉTARO
+                {{ __('OFICINA CENTRAL PARK, QUERÉTARO') }}
           </span>
          </p>
 
          <p style="margin:5px 0;">
            <img src="https://i.imgur.com/l9Ib5lO.png" width="16" style="vertical-align:middle; margin-right:8px;">
             <span style="vertical-align:middle;">
-                  PICK-UP AEROPUERTO DE QUERÉTARO
+                 {{ __('PICK-UP AEROPUERTO DE QUERÉTARO') }}
             </span>
          </p>
 
         <p style="margin:5px 0;">
           <img src="https://i.imgur.com/l9Ib5lO.png"  width="16" style="vertical-align:middle; margin-right:8px;">
            <span style="vertical-align:middle;">
-                 PICK-UP CENTRAL DE AUTOBUSES QUERÉTARO
+                  {{ __('PICK-UP CENTRAL DE AUTOBUSES QUERÉTARO') }}
            </span>
         </p>
         </div>
 
         <div class="footer-col">
           <ul>
-            <li><a href="{{ route('rutaReservaciones') }}">MI RESERVA</a></li>
-            <li><a href="{{ route('rutaCatalogo') }}">AUTOS</a></li>
-            <li><a href="https://viajerocarental.com/empresas">EMPRESAS</a></li>
-            <li><a href="{{ route('rutaPoliticas') }}">TÉRMINOS Y CONDICIONES</a></li>
-            <li><a href="{{ route('rutaContacto') }}">CONTACTO</a></li>
+            <li><a href="{{ route('rutaReservaciones') }}">{{ __('MI RESERVA') }}</a></li>
+            <li><a href="{{ route('rutaCatalogo') }}">{{ __('AUTOS') }}</a></li>
+            <li><a href="https://viajerocarental.com/empresas">{{ __('EMPRESAS') }}</a></li>
+            <li><a href="{{ route('rutaPoliticas') }}">{{ __('TÉRMINOS Y CONDICIONES') }}</a></li>
+            <li><a href="{{ route('rutaContacto') }}">{{ __('CONTACTO') }}</a></li>
           </ul>
         </div>
 
          <div class="footer-col" style="text-align: right;">
           <ul style="list-style: none; padding-left: 0; margin-left: 0;">
-           <li><a href="https://viajerocarental.com/blog">BLOG</a></li>
-           <li><a href="{{ route('rutaFAQ') }}">F.A.Q</a></li>
-           <li><a href="{{ route('rutaPoliticas') }}">AVISO DE PRIVACIDAD</a></li>
-           <li><a href="{{ route('rutaPoliticas') }}">POLÍTICA DE LIMPIEZA</a></li>
-           <li><a href="{{ route('rutaPoliticas') }}">POLÍTICA DE RENTA</a></li>
+           <li><a href="https://viajerocarental.com/blog">{{ __('BLOG') }}</a></li>
+           <li><a href="{{ route('rutaFAQ') }}">{{ __('F.A.Q') }}</a></li>
+           <li><a href="{{ route('rutaPoliticas') }}">{{ __('AVISO DE PRIVACIDAD') }}</a></li>
+           <li><a href="{{ route('rutaPoliticas') }}">{{ __('POLÍTICA DE LIMPIEZA') }}</a></li>
+           <li><a href="{{ route('rutaPoliticas') }}">{{ __('POLÍTICA DE RENTA') }}</a></li>
          </ul>
         </div>
       </div>
@@ -1237,7 +1641,7 @@
 
   <!-- FOOTER SIMPLE -->
   <div class="footer">
-    © {{ date('Y') }} <strong>Viajero Car Rental</strong><br>
+    © {{ date('Y') }} <strong>{{ __('Viajero Car Rental') }}</strong><br>
     <a href="https://viajerocarental.com">www.viajerocarental.com</a> |
     <a href="mailto:reservaciones@viajerocarental.com">reservaciones@viajerocarental.com</a>
   </div>
