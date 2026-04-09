@@ -1608,9 +1608,8 @@ console.log("⛽ LITROS:", state.categoria?.capacidad_tanque);
 
       const confirmPop = qs("#confirmPop");
       const redirectToActivas = () => {
-        const url = form.dataset.redirect || "/";
-        window.location.href = url;
-      };
+  window.location.href = "/admin/reservaciones-activas";
+    };
 
       if (confirmPop && !confirmPop.dataset.bound) {
         confirmPop.dataset.bound = "1";
@@ -2166,7 +2165,7 @@ console.log("⛽ LITROS:", state.categoria?.capacidad_tanque);
       const precioKm = Number(card.dataset.precioKm || 0);
       const img = card.dataset.img || "";
       const capacidad = parseFloat(card.dataset.litros || 0);
-     
+
       setCategoria({ id, nombre, desc, precio_dia: precio, precio_km: precioKm, img, capacidad_tanque: capacidad });
       closePop(catPop);
     });
@@ -2320,6 +2319,34 @@ console.log("⛽ LITROS:", state.categoria?.capacidad_tanque);
   });
 
 
+  function forceRecalc() {
+  console.log("🔥 FORZANDO RECÁLCULO TOTAL");
+
+  // recalcula días
+  syncDays();
+
+  // delivery
+  if (state.servicios.delivery) {
+    const els = getDeliveryEls();
+    if (els) computeDelivery(els);
+  }
+
+  // dropoff
+  if (state.servicios.dropoff) {
+    const els = getDropoffEls();
+    if (els) computeDropoff(els);
+  }
+
+  // gasolina
+  if (state.servicios.gasolina) {
+    computeGasolina();
+  }
+
+  // totales
+  syncTotalsHidden();
+  refreshSummary();
+}
+
   /* =========================
      🔥 EXPONER API GLOBAL
   ========================= */
@@ -2332,6 +2359,7 @@ console.log("⛽ LITROS:", state.categoria?.capacidad_tanque);
   setCategoria,
   syncTotalsHidden,
   refreshSummary,
+  forceRecalc,
   getState: () => state // 🔥 mejor que exponer directo
 };
 
@@ -2428,30 +2456,36 @@ window.addEventListener("DOMContentLoaded", async () => {
       }
 
       // 🚩 DROPOFF
-      if (s.id_servicio == 11) {
+      // 🚩 DROPOFF
+if (s.id_servicio == 11) {
 
-        API.setDropoffActive(true);
+  API.setDropoffActive(true);
 
-        await new Promise(res => setTimeout(res, 150));
+  await new Promise(res => setTimeout(res, 150));
 
-        const sel = document.getElementById("dropUbicacion");
-        const km = document.getElementById("dropKm");
-        const dir = document.getElementById("dropDireccion");
+  // 🔥 COPIAR DELIVERY → DROPOFF (LO QUE QUIERES)
+  const dSel = document.getElementById("deliveryUbicacion");
+  const dKm  = document.getElementById("deliveryKm");
+  const dDir = document.getElementById("deliveryDireccion");
 
-        if (sel && r.dropoff_ubicacion) {
-          sel.value = String(r.dropoff_ubicacion);
-          sel.dispatchEvent(new Event("change"));
-        }
+  const sel = document.getElementById("dropUbicacion");
+  const km  = document.getElementById("dropKm");
+  const dir = document.getElementById("dropDireccion");
 
-        if (km && r.dropoff_km) {
-          km.value = r.dropoff_km;
-          km.dispatchEvent(new Event("input"));
-        }
+  if (dSel && sel) {
+    sel.value = dSel.value;
+    sel.dispatchEvent(new Event("change"));
+  }
 
-        if (dir && r.dropoff_direccion) {
-          dir.value = r.dropoff_direccion;
-        }
-      }
+  if (dKm && km) {
+    km.value = dKm.value;
+    km.dispatchEvent(new Event("input"));
+  }
+
+  if (dDir && dir) {
+    dir.value = dDir.value;
+  }
+}
 
       // 🚚 DELIVERY (por si viene como servicio también)
       if (s.id_servicio == 12) {
@@ -2491,8 +2525,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   // =========================
   // 🔄 REFRESH FINAL
   // =========================
-  API.syncTotalsHidden();
-  API.refreshSummary();
+ API.forceRecalc();
 
   console.log("🧠 STATE FINAL:", API.getState());
   console.log("✅ EDICIÓN CARGADA COMPLETA");
