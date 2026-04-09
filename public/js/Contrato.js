@@ -4,235 +4,328 @@
 document.addEventListener("DOMContentLoaded", () => {
     console.log("✅ DOM listo, iniciando navegación de pasos (1-3)...");
 
-    let intervaloAprobacion = null;
-    // const ORDEN_CATEGORIAS = ["C", "D", "E", "F", "IC", "I", "IB", "M", "L", "H", "HI"];
+    // ================================ UTILIDADES ===============================
 
-    const selectCategoriaOutside = document.getElementById("selectCategoria");
-    const selectCategoriaModal = document.getElementById("selectCategoriaModal");
-    let categoriaActual = selectCategoriaOutside?.value || null;
+    // Función de Debounce para no saturar el servidor en eventos de "input"
+    const debounce = (func, delay = 300) => {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => func.apply(this, args), delay);
+        };
+    };
 
-    // ================================ EVENTOS DE EDICIÓN Y CATEGORÍA (PASO 1) ===============================
+    // Helper para formatear fechas de input (YYYY-MM-DDTHH:mm)
+    const formatFechaInput = (dateObj) => {
+        const yyyy = dateObj.getFullYear();
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        const hh = String(dateObj.getHours()).padStart(2, '0');
+        const min = String(dateObj.getMinutes()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+    };
 
-    function obtenerHoraActual() { return new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); }
+    // Helper estandarizado para seleccionar elementos del DOM
+    const $el = (selector) => document.querySelector(selector);
+    const $elId = (id) => document.getElementById(id);
 
-    (function inicializarPaso1() {
-        const lblHoraEntrega = window.$(".bloque.entrega .hora");
-        if (lblHoraEntrega) lblHoraEntrega.textContent = obtenerHoraActual();
+    // ================================ ESTADO Y MÓDULOS ===============================
 
-        // Edicion Salida
-        window.$$(".fecha-entrega-edit").forEach(btn => btn.addEventListener("click", () => {
-            const cont = window.$(".fecha-edicion-entrega");
-            if (cont) {
-                if (cont.style.display === "none" || cont.style.display === "") {
-                    cont.style.display = "block";
-                    window.$("#nuevaFechaEntrega").disabled = false;
-                    window.$("#nuevaFechaEntrega").value = document.getElementById("contratoInicial")?.dataset.inicio || "";
-                    window.$("#nuevaHoraEntrega").disabled = false;
-                    window.$("#nuevaHoraEntrega").value = obtenerHoraActual();
+    const mesesArr = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
 
-                    if (window.$("#btnSolicitarCambioEntrega")) {
-                        window.$("#btnSolicitarCambioEntrega").style.display = "inline-flex";
-                    }
-                } else {
-                    cont.style.display = "none";
-                }
+    const ContratoState = {
+        intervaloAprobacion: null,
+        deliveryTotalActual: 0,
+        dropoffTotal: 0,
+        gasolinaTotal: 0
+    };
+
+    // Actualiza el estado local (sin contaminar todo el window innecesariamente)
+    const setState = (key, value) => {
+        ContratoState[key] = value;
+        return value;
+    };
+
+    const ContratoUI = {
+        money(value) {
+            const amount = parseFloat(value || 0);
+            return window.money ? window.money(amount) : `$${amount.toFixed(2)} MXN`;
+        },
+        notify(type, message) {
+            if (window.alertify) {
+                if (type === "error") return alertify.error(message);
+                if (type === "warning") return alertify.warning(message);
+                return alertify.success(message);
             }
-        }));
+            if (type === "error") return alert(message);
+            console[type === "warning" ? "warn" : "log"](message);
+        },
+        setText(element, value) {
+            if (element) element.textContent = value;
+        },
+        toggle(element, visible) {
+            if (element) element.style.display = visible ? "block" : "none";
+        }
+    };
 
-        // Edicion Devolucion
-        window.$$(".fecha-devolucion-edit").forEach(btn => btn.addEventListener("click", () => {
-            const cont = window.$(".fecha-edicion-devolucion");
-            if (cont) {
-                if (cont.style.display === "none" || cont.style.display === "") {
-                    cont.style.display = "block";
-                    window.$("#nuevaFechaDevolucion").value = document.getElementById("contratoInicial")?.dataset.fin || "";
-                    window.$("#nuevaHoraDevolucion").value = document.getElementById("contratoInicial")?.dataset.horaEntrega || "";
-                } else {
-                    cont.style.display = "none";
-                }
-            }
-        }));
-
-        // Guardar Devolucion
-        window.$("#btnGuardarFechaDevolucion")?.addEventListener("click", async () => {
-            const btn = window.$("#btnGuardarFechaDevolucion");
-            const textoOriginal = btn.innerHTML;
-            btn.innerHTML = "⏳...";
-
-            if (typeof window.actualizarFechasYRecalcular === 'function') {
-                await window.actualizarFechasYRecalcular();
-            }
-
-            const cont = window.$(".fecha-edicion-devolucion");
-            if (cont) cont.style.display = "none";
-
-            btn.innerHTML = textoOriginal;
-        });
-
-        // Cambio Categoria
-        selectCategoriaOutside?.addEventListener("change", async (e) => {
-            categoriaActual = e.target.value;
-            if (window.ContratoStore) window.ContratoStore.set('categoriaElegida', categoriaActual);
-
-            if (window.$("#totalReserva")) window.$("#totalReserva").textContent = "...";
-            const IDsResumen = ["r_base_precio", "r_subtotal", "r_iva", "r_total_final"];
-            IDsResumen.forEach(id => { const el = document.getElementById(id); if (el) el.style.opacity = "0.5"; });
+    const ContratoAPI = {
+        async request(url, options = {}) {
+            const isFormData = options.body instanceof FormData;
+            const headers = {
+                Accept: "application/json",
+                "X-CSRF-TOKEN": window.csrfToken,
+                ...(isFormData ? {} : options.body !== undefined ? { "Content-Type": "application/json" } : {}),
+                ...(options.headers || {})
+            };
 
             try {
-                if (typeof window.actualizarFechasYRecalcular === 'function') {
-                    await window.actualizarFechasYRecalcular(null);
-                }
-                alertify.success("Categoría actualizada.");
-            } catch (err) {
-                alertify.error("Error al actualizar categoría.");
-            } finally {
-                IDsResumen.forEach(id => { const el = document.getElementById(id); if (el) el.style.opacity = "1"; });
-            }
-        });
+                const response = await fetch(url, {
+                    ...options,
+                    headers,
+                    body: isFormData ? options.body : (options.body !== undefined ? JSON.stringify(options.body) : undefined)
+                });
 
-        window.$("#btnElegirVehiculo")?.addEventListener("click", () => {
-            window.abrirModalVehiculos(categoriaActual);
+                if (!response.ok) throw new Error(`HTTP ${response.status} en ${url}`);
+
+                const contentType = response.headers.get("content-type") || "";
+                return contentType.includes("application/json") ? response.json() : response.text();
+            } catch (error) {
+                if (error instanceof TypeError && error.message === "Failed to fetch") {
+                    throw new Error("Servidor no disponible (Conexión rechazada)");
+                }
+                throw error;
+            }
+        },
+        getJSON(url) { return this.request(url); },
+        postJSON(url, body) { return this.request(url, { method: "POST", body }); },
+        deleteJSON(url, body) { return this.request(url, { method: "DELETE", body }); }
+    };
+
+    // ================================ PASO 1: FECHAS ===============================
+
+    (function inicializarPaso1() {
+        function validarYPintarFechas() {
+            const inputE = $elId('inputOcultoEntrega');
+            const inputD = $elId('inputOcultoDevolucion');
+
+            if (!inputE || !inputD || !inputE.value || !inputD.value) return;
+
+            let dateE = new Date(inputE.value);
+            let dateD = new Date(inputD.value);
+            const hoy = new Date();
+
+            const esHoy = (dateE.getFullYear() === hoy.getFullYear() &&
+                dateE.getMonth() === hoy.getMonth() &&
+                dateE.getDate() === hoy.getDate());
+
+            dateE.setHours(esHoy ? hoy.getHours() : 12);
+            dateE.setMinutes(esHoy ? hoy.getMinutes() : 0);
+
+            let warning = false;
+            if (dateD <= dateE) {
+                dateD = new Date(dateE);
+                dateD.setDate(dateE.getDate() + 1);
+                dateD.setHours(dateE.getHours());
+                dateD.setMinutes(dateE.getMinutes());
+                warning = true;
+            }
+
+            const ui = {
+                valE: formatFechaInput(dateE),
+                valD: formatFechaInput(dateD),
+                entrega: {
+                    dia: String(dateE.getDate()).padStart(2, '0'),
+                    mes: mesesArr[dateE.getMonth()],
+                    anio: dateE.getFullYear(),
+                    hora: `${String(dateE.getHours() % 12 || 12).padStart(2, '0')}:${String(dateE.getMinutes()).padStart(2, '0')} ${dateE.getHours() >= 12 ? 'PM' : 'AM'}`
+                },
+                devolucion: {
+                    dia: String(dateD.getDate()).padStart(2, '0'),
+                    mes: mesesArr[dateD.getMonth()],
+                    anio: dateD.getFullYear(),
+                    hora: `${String(dateD.getHours() % 12 || 12).padStart(2, '0')}:${String(dateD.getMinutes()).padStart(2, '0')} ${dateD.getHours() >= 12 ? 'PM' : 'AM'}`
+                }
+            };
+
+            window.requestAnimationFrame(() => {
+                inputE.value = ui.valE;
+                inputD.value = ui.valD;
+
+                if (warning) {
+                    ContratoUI.notify("warning", "Fecha ajustada: La devolución debe ser posterior a la entrega.");
+                }
+
+                ContratoUI.setText($elId('txtDiaEntrega'), ui.entrega.dia);
+                ContratoUI.setText($elId('txtMesEntrega'), ui.entrega.mes);
+                ContratoUI.setText($elId('txtAnioEntrega'), ui.entrega.anio);
+                ContratoUI.setText($elId('txtHoraEntrega'), ui.entrega.hora);
+
+                ContratoUI.setText($elId('txtDiaDevolucion'), ui.devolucion.dia);
+                ContratoUI.setText($elId('txtMesDevolucion'), ui.devolucion.mes);
+                ContratoUI.setText($elId('txtAnioDevolucion'), ui.devolucion.anio);
+                ContratoUI.setText($elId('txtHoraDevolucion'), ui.devolucion.hora);
+            });
+        }
+        function iniciarMonitoreoAprobacion() {
+            const solicitud = JSON.parse(sessionStorage.getItem("solicitudCambio") || "{}");
+            if (!solicitud.activa) return;
+
+            if (ContratoState.intervaloAprobacion) clearInterval(ContratoState.intervaloAprobacion);
+
+            ContratoState.intervaloAprobacion = setInterval(async () => {
+                try {
+                    const data = await ContratoAPI.getJSON(`/admin/contrato/cambio-fecha/estado/${solicitud.id_reservacion}`);
+
+                    if (data.estado === "aprobado" || data.estado === "rechazado") {
+                        clearInterval(ContratoState.intervaloAprobacion);
+                        ContratoState.intervaloAprobacion = null;
+                        sessionStorage.removeItem("solicitudCambio");
+
+                        if (data.estado === "aprobado") {
+                            const inputE = $elId("inputOcultoEntrega");
+                            if (inputE) inputE.value = `${solicitud.f}T${solicitud.h}`;
+                            validarYPintarFechas();
+                            if (typeof window.actualizarFechasYRecalcular === 'function') await window.actualizarFechasYRecalcular();
+                            ContratoUI.notify("success", "✅ Cambio de fecha aprobado.");
+                        } else {
+                            ContratoUI.notify("error", "❌ Solicitud de cambio rechazada.");
+                        }
+                    }
+                } catch (err) {
+                    if (err.message.includes('Failed to fetch') || err.name === 'TypeError') {
+                        console.warn("⚠️ El servidor no responde. Reintentando monitoreo en 8 segundos...");
+                    } else {
+                        console.error("Error en monitoreo:", err);
+                    }
+                }
+            }, 8000);
+        }
+
+        if (JSON.parse(sessionStorage.getItem("solicitudCambio") || "{}").activa) iniciarMonitoreoAprobacion();
+
+        function vincularCalendario(inputId) {
+            const input = $elId(inputId);
+            if (!input) return;
+
+            let fechaOriginal = input.value;
+
+            input.addEventListener('click', (e) => {
+                e.preventDefault();
+                fechaOriginal = input.value;
+                try { input.showPicker(); } catch (error) { input.focus(); }
+            });
+
+            input.addEventListener('change', (e) => {
+                const nuevaFechaFull = e.target.value;
+
+                if (!nuevaFechaFull || nuevaFechaFull === fechaOriginal) return;
+
+                if (inputId === 'inputOcultoEntrega') {
+                    const [f, h] = nuevaFechaFull.split('T');
+
+                    alertify.confirm(
+                        "⚠️ Requiere Autorización",
+                        "Cambiar la fecha de Entrega requiere autorización de un supervisor. ¿Deseas enviar la solicitud de cambio?",
+                        async () => {
+                            try {
+                                const data = await ContratoAPI.postJSON("/admin/contrato/solicitar-cambio-fecha", {
+                                    id_reservacion: window.ID_RESERVACION,
+                                    nueva_fecha: f,
+                                    nueva_hora: h,
+                                    motivo: "Modificación en mostrador"
+                                });
+
+                                ContratoUI.notify("success", data.msg || "Solicitud enviada. Esperando aprobación...");
+                                sessionStorage.setItem("solicitudCambio", JSON.stringify({
+                                    activa: true,
+                                    id_reservacion: window.ID_RESERVACION,
+                                    f, h
+                                }));
+
+                                if (typeof iniciarMonitoreoAprobacion === 'function') {
+                                    iniciarMonitoreoAprobacion();
+                                }
+                            } catch (err) {
+                                ContratoUI.notify("error", "Error enviando solicitud.");
+                            }
+                        },
+                        () => {
+                            input.value = fechaOriginal;
+                        }
+                    ).set('labels', { ok: 'Enviar Solicitud', cancel: 'Cancelar' });
+
+                    e.target.value = fechaOriginal;
+                    return;
+                }
+
+                validarYPintarFechas();
+                if (typeof window.actualizarFechasYRecalcular === 'function') {
+                    window.actualizarFechasYRecalcular();
+                }
+            });
+        }
+
+        vincularCalendario('inputOcultoEntrega');
+        vincularCalendario('inputOcultoDevolucion');
+        validarYPintarFechas();
+
+        $el("#btnElegirVehiculo")?.addEventListener("click", () => {
+            if (typeof window.abrirModalVehiculos === 'function') window.abrirModalVehiculos();
         });
     })();
 
     // ================================ VEHÍCULOS Y UPGRADES ===============================
 
-    async function construirOfertaCategoria(codigoCategoria) {
-        if (!codigoCategoria) return null;
-        try {
-            const resp = await fetch(`/admin/contrato/categoria-info/${codigoCategoria}`);
-            const data = await resp.json();
-            if (!data.success || !data.categoria) return null;
-
-            const cat = data.categoria;
-            const respVeh = await fetch(`/admin/contrato/vehiculo-random/${cat.id_categoria}`);
-            const dataVeh = await respVeh.json();
-            const veh = (dataVeh.success && dataVeh.vehiculo) ? dataVeh.vehiculo : null;
-
-            const precioReal = Number(cat.precio_dia);
-            const precioInflado = Math.round(precioReal * 1.35);
-            return {
-                id_categoria: cat.id_categoria, codigo: cat.codigo, nombre: cat.nombre, descripcion: cat.descripcion,
-                precioReal, precioInflado, descuento: Math.round(((precioInflado - precioReal) / precioInflado) * 100),
-                imagen: veh?.foto_url ?? "/img/default-car.jpg", nombre_vehiculo: veh?.nombre_publico ?? cat.nombre,
-                transmision: veh?.transmision ?? null, asientos: veh?.asientos ?? null, puertas: veh?.puertas ?? null, color: veh?.color ?? null
-            };
-        } catch (err) { return null; }
-    }
-
     function mostrarModalOferta(oferta) {
-        const modal = document.getElementById("modalUpgrade");
-        document.getElementById("upgTitulo").textContent = oferta.nombre;
-        document.getElementById("upgPrecioInflado").textContent = `$${oferta.precioInflado}`;
-        document.getElementById("upgPrecioReal").textContent = `$${oferta.precioReal}`;
-        document.getElementById("upgDescuento").textContent = `${oferta.descuento}%`;
-        document.getElementById("upgDescripcion").textContent = oferta.descripcion;
-        document.getElementById("upgImagenVehiculo").src = oferta.imagen;
-        document.getElementById("upgNombreVehiculo").textContent = oferta.nombre_vehiculo;
-        document.getElementById("upgSpecs").innerHTML = `<div>${oferta.transmision ?? "—"}</div><div>${oferta.asientos ?? "--"} asientos</div><div>${oferta.puertas ?? "--"} puertas</div><div>${oferta.color ?? "—"}</div>`;
+        const modal = $elId("modalUpgrade");
+        if (!modal) return;
+        ContratoUI.setText($elId("upgTitulo"), oferta.nombre);
+        ContratoUI.setText($elId("upgPrecioInflado"), `$${oferta.precioInflado}`);
+        ContratoUI.setText($elId("upgPrecioReal"), `$${oferta.precioReal}`);
+        ContratoUI.setText($elId("upgDescuento"), `${oferta.descuento}%`);
+        ContratoUI.setText($elId("upgDescripcion"), oferta.descripcion);
+        $elId("upgImagenVehiculo").src = oferta.imagen;
+        ContratoUI.setText($elId("upgNombreVehiculo"), oferta.nombre_vehiculo);
+        $elId("upgSpecs").innerHTML = `<div>${oferta.transmision ?? "—"}</div><div>${oferta.asientos ?? "--"} asientos</div><div>${oferta.puertas ?? "--"} puertas</div><div>${oferta.color ?? "—"}</div>`;
         modal.dataset.idCategoriaUpgrade = oferta.id_categoria;
         modal.classList.add("show");
     }
 
-    document.getElementById("btnAceptarUpgrade")?.addEventListener("click", async () => {
-        const modal = document.getElementById("modalUpgrade");
-        const btn = document.getElementById("btnAceptarUpgrade");
+    $elId("btnAceptarUpgrade")?.addEventListener("click", async () => {
+        const modal = $elId("modalUpgrade");
+        const btn = $elId("btnAceptarUpgrade");
         btn.disabled = true; btn.innerHTML = "Aplicando...";
         try {
-            const resp = await fetch(`/admin/contrato/${window.ID_RESERVACION}/actualizar-categoria`, {
-                method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": window.csrfToken },
-                body: JSON.stringify({ id_categoria: modal.dataset.idCategoriaUpgrade }),
+            const result = await ContratoAPI.postJSON(`/admin/contrato/${window.ID_RESERVACION}/actualizar-categoria`, {
+                id_categoria: modal.dataset.idCategoriaUpgrade
             });
-            const result = await resp.json();
             if (result.success) {
                 if (typeof window.cargarResumenBasico === 'function') await window.cargarResumenBasico();
-                alertify.success("Upgrade aplicado.");
+                ContratoUI.notify("success", "Upgrade aplicado.");
                 modal.classList.remove("show");
                 window.showStep(2);
             }
-        } catch (e) { alertify.error("Error de conexión."); btn.disabled = false; btn.innerHTML = "Aceptar upgrade"; }
+        } catch (e) {
+            ContratoUI.notify("error", "Error de conexión.");
+            btn.disabled = false; btn.innerHTML = "Aceptar upgrade";
+        }
     });
 
-    document.getElementById("btnRechazarUpgrade")?.addEventListener("click", () => { document.getElementById("modalUpgrade").classList.remove("show"); window.showStep(2); });
-    document.getElementById("cerrarUpgrade")?.addEventListener("click", () => document.getElementById("modalUpgrade").classList.remove("show"));
-
-    // Modal Cambio de Categoria
-    selectCategoriaModal?.addEventListener("change", async (e) => {
-        categoriaActual = e.target.value;
-        if (selectCategoriaOutside) selectCategoriaOutside.value = categoriaActual;
-        try {
-            await fetch(`/admin/contrato/${window.ID_RESERVACION}/actualizar-categoria`, {
-                method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": window.csrfToken },
-                body: JSON.stringify({ id_categoria: categoriaActual }),
-            });
-            alertify.success("Categoría actualizada.");
-            await window.cargarVehiculosCategoriaModal(categoriaActual);
-
-            if (typeof window.actualizarFechasYRecalcular === 'function') {
-                await window.actualizarFechasYRecalcular();
-            }
-        } catch (err) { console.error("❌ Error modal", err); }
-    });
-
-    // ================================ SOLICITUDES DE CAMBIO ===============================
-
-    window.$("#btnSolicitarCambioEntrega")?.addEventListener("click", async () => {
-        const f = window.$("#nuevaFechaEntrega")?.value;
-        const h = window.$("#nuevaHoraEntrega")?.value;
-        if (!f || !h) return alert("Seleccione fecha y hora.");
-        try {
-            const resp = await fetch("/admin/contrato/solicitar-cambio-fecha", {
-                method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": window.csrfToken },
-                body: JSON.stringify({ id_reservacion: window.ID_RESERVACION, nueva_fecha: f, nueva_hora: h, motivo: "Asesor" }),
-            });
-            const data = await resp.json();
-            alert(data.msg || "Solicitud enviada.");
-            sessionStorage.setItem("solicitudCambio", JSON.stringify({ activa: true, id_reservacion: window.ID_RESERVACION }));
-            iniciarMonitoreoAprobacion();
-            window.$(".fecha-edicion-entrega").style.display = "none";
-        } catch (err) { alert("Error enviando solicitud."); }
-    });
-
-    function iniciarMonitoreoAprobacion() {
-        const solicitud = JSON.parse(sessionStorage.getItem("solicitudCambio") || "{}");
-        if (!solicitud.activa) return;
-        if (intervaloAprobacion) clearInterval(intervaloAprobacion);
-        intervaloAprobacion = setInterval(async () => {
-            try {
-                const resp = await fetch(`/admin/contrato/cambio-fecha/estado/${solicitud.id_reservacion}`);
-                const data = await resp.json();
-                if (data.estado === "aprobado") {
-                    clearInterval(intervaloAprobacion);
-                    sessionStorage.removeItem("solicitudCambio");
-                    document.getElementById("contratoInicial").dataset.inicio = data.fecha_nueva;
-                    if (typeof window.actualizarFechasYRecalcular === 'function') {
-                        await window.actualizarFechasYRecalcular();
-                    }
-                    alertify.success("Cambio aprobado.");
-                } else if (data.estado === "rechazado") {
-                    clearInterval(intervaloAprobacion);
-                    sessionStorage.removeItem("solicitudCambio");
-                    alertify.error("Solicitud rechazada.");
-                }
-            } catch (err) { console.error(err); }
-        }, 8000);
-    }
-
-    if (JSON.parse(sessionStorage.getItem("solicitudCambio") || "{}").activa) iniciarMonitoreoAprobacion();
+    $elId("btnRechazarUpgrade")?.addEventListener("click", () => { $elId("modalUpgrade").classList.remove("show"); window.showStep(2); });
+    $elId("cerrarUpgrade")?.addEventListener("click", () => $elId("modalUpgrade").classList.remove("show"));
 
     // ================================ LÓGICA DEL DELIVERY ===============================
-    const deliveryToggle = window.$("#deliveryToggle");
-    const deliveryFields = window.$("#deliveryFields");
-    const deliveryUbicacion = window.$("#deliveryUbicacion");
-    const deliveryDireccion = window.$("#deliveryDireccion");
-    const deliveryKm = window.$("#deliveryKm");
 
-    // Función segura para obtener el costo
-    const getCostoKm = () => parseFloat(window.$("#deliveryPrecioKm")?.value || 0);
+    const deliveryToggle = $el("#deliveryToggle");
+    const deliveryFields = $el("#deliveryFields");
+    const deliveryUbicacion = $el("#deliveryUbicacion");
+    const deliveryDireccion = $el("#deliveryDireccion");
+    const deliveryKm = $el("#deliveryKm");
+
+    const getCostoKm = () => parseFloat($el("#deliveryPrecioKm")?.value || 0);
 
     const recalcularDelivery = () => {
         let kms = 0;
-
         if (deliveryToggle?.checked) {
             if (deliveryUbicacion?.value && deliveryUbicacion.value !== "0") {
                 kms = parseFloat(deliveryUbicacion.options[deliveryUbicacion.selectedIndex].dataset.km || 0);
@@ -241,323 +334,594 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        window.deliveryTotalActual = kms * getCostoKm();
-
-        const textTotal = window.$("#deliveryTotal");
-        if (textTotal) textTotal.textContent = window.money ? window.money(window.deliveryTotalActual) : `$${window.deliveryTotalActual.toFixed(2)} MXN`;
-
+        setState("deliveryTotalActual", kms * getCostoKm());
+        ContratoUI.setText($el("#deliveryTotal"), ContratoUI.money(ContratoState.deliveryTotalActual));
         actualizarTotalServicios();
     };
 
-    let timerDelivery = null;
-
-    // Guardad Delivery
-    function guardarDeliverySeguro(inmediato = false) {
+    const enviarDeliveryAPI = async () => {
         if (!window.ID_RESERVACION) return;
+        let kms = 0, ubicacionVal = "0";
 
-        clearTimeout(timerDelivery);
-
-        const ejecutarGuardado = async () => {
-            let kms = 0;
-            let ubicacionVal = "0";
-
-            if (deliveryToggle?.checked) {
-                if (deliveryUbicacion?.value && deliveryUbicacion?.value !== "0") {
-                    kms = parseFloat(deliveryUbicacion.options[deliveryUbicacion.selectedIndex].dataset.km || 0);
-                    ubicacionVal = deliveryUbicacion.value;
-                } else {
-                    kms = parseFloat(deliveryKm?.value || 0);
-                }
+        if (deliveryToggle?.checked) {
+            if (deliveryUbicacion?.value && deliveryUbicacion?.value !== "0") {
+                kms = parseFloat(deliveryUbicacion.options[deliveryUbicacion.selectedIndex].dataset.km || 0);
+                ubicacionVal = deliveryUbicacion.value;
+            } else {
+                kms = parseFloat(deliveryKm?.value || 0);
             }
-
-            try {
-                await fetch(`/admin/reservacion/delivery/guardar`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": window.csrfToken },
-                    body: JSON.stringify({
-                        id_reservacion: window.ID_RESERVACION,
-                        delivery_activo: deliveryToggle?.checked ? 1 : 0,
-                        delivery_ubicacion: ubicacionVal,
-                        delivery_direccion: deliveryToggle?.checked ? (deliveryDireccion?.value || null) : null,
-                        delivery_km: kms,
-                        delivery_precio_km: getCostoKm(),
-                        delivery_total: window.deliveryTotalActual || 0
-                    }),
-                });
-                if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
-            } catch (err) { console.error("Error guardando delivery:", err); }
-        };
-
-        if (inmediato) {
-            ejecutarGuardado();
-        } else {
-            timerDelivery = setTimeout(ejecutarGuardado, 600);
         }
+
+        try {
+            await ContratoAPI.postJSON(`/admin/reservacion/delivery/guardar`, {
+                id_reservacion: window.ID_RESERVACION,
+                delivery_activo: deliveryToggle?.checked ? 1 : 0,
+                delivery_ubicacion: ubicacionVal,
+                delivery_direccion: deliveryToggle?.checked ? (deliveryDireccion?.value || null) : null,
+                delivery_km: kms,
+                delivery_precio_km: getCostoKm(),
+                delivery_total: ContratoState.deliveryTotalActual || 0
+            });
+            if (typeof window.cargarResumenBasico === 'function') await window.cargarResumenBasico();
+        } catch (err) { console.error("Error guardando delivery:", err); }
+    };
+
+    const guardarDeliveryDebounced = debounce(enviarDeliveryAPI, 300);
+
+    function guardarDeliverySeguro(inmediato = false) {
+        inmediato ? enviarDeliveryAPI() : guardarDeliveryDebounced();
     }
 
-    deliveryToggle?.addEventListener("change", () => {
-        deliveryFields.style.display = deliveryToggle.checked ? "block" : "none";
+    const syncDeliveryUI = () => {
+        const isOn = !!deliveryToggle?.checked;
+        if (deliveryFields) deliveryFields.style.display = isOn ? "block" : "none";
+        const card = document.querySelector(".delivery-wrapper");
+        if (card) card.classList.toggle("active", isOn);
+    };
 
+    deliveryToggle?.addEventListener("change", () => {
+        syncDeliveryUI();
         if (!deliveryToggle.checked) {
-            // Si se apaga, limpiar variables globales e inputs visuales
-            window.deliveryTotalActual = 0;
+            setState("deliveryTotalActual", 0);
             if (deliveryUbicacion) deliveryUbicacion.value = "";
             if (deliveryKm) deliveryKm.value = "";
-            if (window.$("#groupDireccion")) window.$("#groupDireccion").style.display = "none";
-            if (window.$("#groupKm")) window.$("#groupKm").style.display = "none";
-
-            recalcularDelivery();
-            guardarDeliverySeguro(true); // Guardar inmediato al apagar
+            if ($el("#groupDireccion")) $el("#groupDireccion").style.display = "none";
+            if ($el("#groupKm")) $el("#groupKm").style.display = "none";
+            ContratoUI.setText($el("#deliveryTotal"), ContratoUI.money(0));
+            actualizarTotalServicios();
+            guardarDeliverySeguro(true);
         } else {
             recalcularDelivery();
-            guardarDeliverySeguro(); // Guardar con debounce al encender
+            guardarDeliverySeguro();
         }
     });
 
     deliveryUbicacion?.addEventListener("change", () => {
         const esManual = deliveryUbicacion.value === "0";
-        if (window.$("#groupDireccion")) window.$("#groupDireccion").style.display = esManual ? "block" : "none";
-        if (window.$("#groupKm")) window.$("#groupKm").style.display = esManual ? "block" : "none";
+        if ($el("#groupDireccion")) $el("#groupDireccion").style.display = esManual ? "block" : "none";
+        if ($el("#groupKm")) $el("#groupKm").style.display = esManual ? "block" : "none";
         recalcularDelivery();
         guardarDeliverySeguro();
     });
 
     deliveryKm?.addEventListener("input", () => { recalcularDelivery(); guardarDeliverySeguro(); });
-    deliveryDireccion?.addEventListener("input", () => { guardarDeliverySeguro(); });
+    deliveryDireccion?.addEventListener("input", () => guardarDeliverySeguro());
 
-    if (window.$("#deliveryTotalHidden")) {
-        window.deliveryTotalActual = parseFloat(window.$("#deliveryTotalHidden").value || 0);
+    if ($el("#deliveryTotalHidden")) {
+        setState("deliveryTotalActual", parseFloat($el("#deliveryTotalHidden").value || 0));
         actualizarTotalServicios();
+    }
+
+    syncDeliveryUI();
+    if (deliveryToggle?.checked) recalcularDelivery();
+
+    // ================================ LÓGICA DEL DROPOFF ===============================
+
+    const dropSwitch = $elId("switchDropoffCheckbox");
+    const dropoffFields = $elId("dropoffFields");
+    const dropUbicacion = $elId("dropUbicacion");
+    const dropDireccion = $elId("dropDireccion");
+    const dropKm = $elId("dropKm");
+
+    const getCostoKmDropoff = () => parseFloat($elId("deliveryPrecioKm")?.value || 15);
+
+    const enviarDropoffAPI = async (isCustom, kms, precioKmActual) => {
+        try {
+            await ContratoAPI.postJSON('/admin/contrato/cargo-variable', {
+                id_reservacion: window.ID_RESERVACION,
+                id_contrato: window.ID_CONTRATO,
+                id_concepto: 6,
+                destino: isCustom ? (dropDireccion?.value || "") : dropUbicacion.options[dropUbicacion.selectedIndex]?.text,
+                km: kms,
+                precio_km: precioKmActual,
+                monto_variable: ContratoState.dropoffTotal
+            });
+            if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
+        } catch (e) { console.error("Error guardando dropoff", e); }
+    };
+
+    const enviarDropoffDebounced = debounce(enviarDropoffAPI, 300);
+
+    function handleDropoffUpdate(inmediato = false) {
+        if (!dropUbicacion) return;
+
+        const val = dropUbicacion.value;
+        const isCustom = (val === "0");
+
+        if ($elId("dropGroupDireccion")) $elId("dropGroupDireccion").style.display = isCustom ? "block" : "none";
+        if ($elId("dropGroupKm")) $elId("dropGroupKm").style.display = isCustom ? "block" : "none";
+
+        let precioKmActual = getCostoKmDropoff();
+        if (val !== "") ContratoUI.setText($elId("dropCostoKmHTML"), ContratoUI.money(precioKmActual));
+
+        let kms = isCustom
+            ? parseFloat(dropKm?.value || 0)
+            : parseFloat(dropUbicacion.options[dropUbicacion.selectedIndex]?.dataset.km || 0);
+
+        setState("dropoffTotal", kms * precioKmActual);
+        ContratoUI.setText($elId("dropTotalHTML"), ContratoUI.money(ContratoState.dropoffTotal));
+
+        const card = document.querySelector('.cargo-item[data-id="6"]');
+        if (card) card.dataset.monto = ContratoState.dropoffTotal;
+
+        actualizarTotalServicios();
+
+        if (inmediato) enviarDropoffAPI(isCustom, kms, precioKmActual);
+        else enviarDropoffDebounced(isCustom, kms, precioKmActual);
+    }
+
+    dropSwitch?.addEventListener("change", async () => {
+        const isOn = dropSwitch.checked;
+        if (dropoffFields) dropoffFields.style.display = isOn ? "block" : "none";
+
+        const card = document.querySelector('.cargo-item[data-id="6"]');
+        if (card) card.classList.toggle("active", isOn);
+
+        if (!isOn) {
+            setState("dropoffTotal", 0);
+            if (card) card.dataset.monto = "0";
+            ContratoUI.setText($elId("dropTotalHTML"), ContratoUI.money(0));
+            actualizarTotalServicios();
+
+            try {
+                await ContratoAPI.postJSON('/admin/contrato/cargo-variable', {
+                    id_reservacion: window.ID_RESERVACION,
+                    id_contrato: window.ID_CONTRATO,
+                    id_concepto: 6,
+                    monto_variable: 0
+                });
+
+                setTimeout(() => {
+                    if (typeof window.cargarResumenBasico === 'function') {
+                        window.cargarResumenBasico();
+                    }
+                }, 150);
+
+            } catch (e) { console.error("Error al borrar dropoff:", e); }
+        } else {
+            handleDropoffUpdate(true);
+        }
+    });
+    dropUbicacion?.addEventListener("change", () => handleDropoffUpdate(true));
+
+    $elId("dropoffFields")?.addEventListener("input", (e) => {
+        if (['dropKm', 'dropDireccion'].includes(e.target.id)) handleDropoffUpdate(false);
+    });
+
+    if (dropSwitch && dropSwitch.checked) {
+        const card = document.querySelector('.cargo-item[data-id="6"]');
+        setState("dropoffTotal", parseFloat(card?.dataset.monto || 0));
+        handleDropoffUpdate(true);
+    } else {
+        setState("dropoffTotal", 0);
+    }
+
+    // ================================ LÓGICA DE GASOLINA PREPAGO ===============================
+
+    const gasSwitch = $elId("switchGasolinaCheckbox");
+    const gasolinaFields = $elId("gasolinaFields");
+
+    const syncGasolinaUI = () => {
+        const isOn = !!gasSwitch?.checked;
+        if (gasolinaFields) gasolinaFields.style.display = isOn ? "block" : "none";
+        const card = document.querySelector('.cargo-item[data-id="5"]');
+        if (card) card.classList.toggle("active", isOn);
+    };
+
+    gasSwitch?.addEventListener("change", async () => {
+        const isOn = gasSwitch.checked;
+        syncGasolinaUI();
+
+        if (!isOn) {
+            setState("gasolinaTotal", 0);
+            const card = document.querySelector('.cargo-item[data-id="5"]');
+            if (card) card.dataset.monto = "0";
+            ContratoUI.setText($elId("gasTotalHTML"), ContratoUI.money(0));
+            actualizarTotalServicios();
+
+            try {
+                await ContratoAPI.postJSON('/admin/contrato/cargo-variable', {
+                    id_reservacion: window.ID_RESERVACION,
+                    id_contrato: window.ID_CONTRATO,
+                    id_concepto: 5,
+                    monto_variable: 0
+                });
+
+                setTimeout(() => {
+                    if (typeof window.cargarResumenBasico === 'function') {
+                        window.cargarResumenBasico();
+                    }
+                }, 150);
+            } catch (e) { console.error("Error al borrar gasolina:", e); }
+        } else {
+            window.handleGasolinaUpdate();
+        }
+    });
+
+    window.handleGasolinaUpdate = function () {
+        const gasSwitch = $elId("switchGasolinaCheckbox");
+        if (!gasSwitch || !gasSwitch.checked) return;
+
+        const inputGasNivelActual = $elId("gasNivelActual");
+        const inputGasPrecioLitro = $elId("gasPrecioLitro");
+
+        let valorCrudo = inputGasNivelActual?.value || "16";
+        let coincidencia = String(valorCrudo).match(/\d+/);
+        let nivelActual = coincidencia ? parseFloat(coincidencia[0]) : 16;
+        let capacidadTanque = 16;
+        let precioLitro = parseFloat(inputGasPrecioLitro?.value || 20);
+
+        if (nivelActual > capacidadTanque) nivelActual = capacidadTanque;
+
+        let faltante = capacidadTanque - nivelActual;
+        setState("gasolinaTotal", faltante > 0 ? (faltante * precioLitro) : 0);
+
+        ContratoUI.setText($elId("gasNivelTexto"), `${nivelActual}/${capacidadTanque}`);
+        ContratoUI.setText($elId("gasLitrosTexto"), `${faltante} L`);
+        ContratoUI.setText($elId("gasTotalHTML"), ContratoUI.money(ContratoState.gasolinaTotal));
+
+        const card = document.querySelector('.cargo-item[data-id="5"]');
+        if (card) card.dataset.monto = ContratoState.gasolinaTotal;
+
+        if (typeof actualizarTotalServicios === 'function') actualizarTotalServicios();
+
+        ContratoAPI.postJSON('/admin/contrato/cargo-variable', {
+            id_reservacion: window.ID_RESERVACION, id_contrato: window.ID_CONTRATO, id_concepto: 5,
+            litros: faltante, precio_litro: precioLitro, monto_variable: ContratoState.gasolinaTotal
+        }).then(async () => {
+            if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
+        }).catch(e => console.error("Error gasolina:", e));
+    };
+
+    syncGasolinaUI();
+
+    if (gasSwitch && gasSwitch.checked) {
+        const card = document.querySelector('.cargo-item[data-id="5"]');
+        setState("gasolinaTotal", parseFloat(card?.dataset.monto || 0));
+        window.handleGasolinaUpdate();
+    } else {
+        setState("gasolinaTotal", 0);
     }
 
     // ================================ PASO 2: SERVICIOS ===============================
 
     function actualizarTotalServicios() {
-        let total = 0;
-        // Obtenemos cuántos días dura la renta desde el Aside
-        let diasRenta = parseInt(window.$("#detDiasRenta")?.textContent || 1);
+        const elDiasRenta = document.getElementById("detDiasRenta");
+        const diasRenta = parseInt(elDiasRenta?.textContent || 1);
+        const cards = document.querySelectorAll(".card-servicio");
+        const displayTotal = document.querySelector("#total_servicios");
 
-        document.querySelectorAll(".card-servicio").forEach(card => {
+        let subtotalServicios = 0;
+
+        cards.forEach(card => {
             const precio = parseFloat(card.dataset.precio || 0);
-            const cantidad = parseInt(card.querySelector(".cantidad").textContent || 0);
+            const cantidad = parseInt(card.querySelector(".cantidad")?.textContent || 0);
             const tipoCobro = card.dataset.tipo;
 
             if (tipoCobro === 'por_dia') {
-                total += (precio * cantidad) * diasRenta;
+                subtotalServicios += (precio * cantidad) * diasRenta;
             } else {
-                total += (precio * cantidad);
+                subtotalServicios += (precio * cantidad);
             }
         });
 
-        if (window.deliveryTotalActual) total += window.deliveryTotalActual;
+        const totalFinal = subtotalServicios +
+            parseFloat(ContratoState.deliveryTotalActual || 0) +
+            parseFloat(ContratoState.dropoffTotal || 0) +
+            parseFloat(ContratoState.gasolinaTotal || 0);
 
-        const el = document.querySelector("#total_servicios");
-        if (el) el.textContent = window.money ? window.money(total) : `$${total.toFixed(2)} MXN`;
+        window.requestAnimationFrame(() => {
+            if (displayTotal) {
+                ContratoUI.setText(displayTotal, ContratoUI.money(totalFinal));
+            }
+        });
     }
 
-    let timerServicios = null;
+    const timersServicios = {};
 
-    window.$("#serviciosGrid")?.addEventListener("click", (e) => {
-        const btn = e.target;
-        if (!btn.classList.contains("mas") && !btn.classList.contains("menos")) return;
+    const gridServicios = document.querySelector("#serviciosGrid");
 
-        const card = btn.closest(".card-servicio");
-        const cantEl = card.querySelector(".cantidad");
-        let cant = parseInt(cantEl.textContent);
+    if (gridServicios) {
+        gridServicios.addEventListener("click", (e) => {
+            const btn = e.target;
+            if (!btn.classList.contains("mas") && !btn.classList.contains("menos")) return;
 
-        if (btn.classList.contains("mas")) cant++;
-        else if (cant > 0) cant--;
+            const card = btn.closest(".card-servicio");
+            const idServicio = card.dataset.id;
+            const cantEl = card.querySelector(".cantidad");
+            let cant = parseInt(cantEl.textContent);
 
-        cantEl.textContent = cant;
+            if (btn.classList.contains("mas")) cant++;
+            else if (cant > 0) cant--;
 
-        actualizarTotalServicios();
+            cantEl.textContent = cant;
 
-        clearTimeout(timerServicios);
-        timerServicios = setTimeout(async () => {
-            try {
-                await fetch(`/admin/contrato/servicios`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": window.csrfToken },
-                    body: JSON.stringify({
+            actualizarTotalServicios();
+
+            // 3. Limpiamos el temporizador SOLO de este servicio específico
+            if (timersServicios[idServicio]) {
+                clearTimeout(timersServicios[idServicio]);
+            }
+
+            timersServicios[idServicio] = setTimeout(async () => {
+                try {
+                    await ContratoAPI.postJSON(`/admin/contrato/servicios`, {
                         id_reservacion: window.ID_RESERVACION,
-                        id_servicio: card.dataset.id,
+                        id_servicio: idServicio,
                         cantidad: cant,
                         precio_unitario: card.dataset.precio
-                    }),
-                });
-                if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
-            } catch (err) { console.error(err); }
-        }, 500);
-    });
+                    });
+
+                    setTimeout(() => {
+                        if (typeof window.cargarResumenBasico === 'function') {
+                            window.cargarResumenBasico();
+                        }
+                    }, 150);
+
+                } catch (err) {
+                    console.error("Error al guardar el servicio:", err);
+                    if (typeof window.cargarResumenBasico === 'function') {
+                        window.cargarResumenBasico();
+                    }
+                }
+            }, 400);
+        });
+    }
 
     // ================================ PASO 3: SEGUROS ===============================
 
     function recalcularTotalProtecciones() {
-        const display = document.getElementById("total_seguros");
-        const btnGo = document.getElementById("go4");
-        if (!display) return;
+        const display = $elId("total_seguros");
+        const btnGo = $elId("go4");
 
         let subtotalPorDia = 0;
+        let haySeleccion = false;
 
-        const packActive = document.querySelector("#packGrid .switch.on");
+        // 1. Buscamos si hay un paquete completo seleccionado (radio button)
+        const packActive = document.querySelector(".input-paquete:checked");
+
         if (packActive) {
             subtotalPorDia = parseFloat(packActive.closest(".seguro-item").dataset.precio || 0);
+            haySeleccion = true;
         } else {
-            document.querySelectorAll(".switch-individual.on").forEach(sw => {
-                subtotalPorDia += parseFloat(sw.closest(".individual-item").dataset.precio || 0);
-            });
+            // 2. Si no hay paquete, sumamos las protecciones individuales (checkboxes)
+            const individualesActivos = document.querySelectorAll(".switch-individual:checked");
+            if (individualesActivos.length > 0) {
+                haySeleccion = true;
+                individualesActivos.forEach(checkbox => {
+                    subtotalPorDia += parseFloat(checkbox.closest(".individual-item").dataset.precio || 0);
+                });
+            }
         }
 
-        const diasRenta = parseInt(window.$("#detDiasRenta")?.textContent || 1);
-        const totalReal = subtotalPorDia * diasRenta;
+        if (display) {
+            const diasRenta = parseInt($elId("detDiasRenta")?.textContent || 1);
+            display.textContent = ContratoUI.money(subtotalPorDia * diasRenta);
+        }
 
-        display.textContent = window.money ? window.money(totalReal) : `$${totalReal.toFixed(2)}`;
-
+        // 3. Lógica para obligar a seleccionar (Habilitar/Deshabilitar botón de continuar)
         if (btnGo) {
-            btnGo.style.opacity = "1";
-            btnGo.style.pointerEvents = "auto";
+            if (haySeleccion) {
+                btnGo.classList.remove("disabled");
+                btnGo.style.opacity = "1";
+                btnGo.style.pointerEvents = "auto";
+            } else {
+                btnGo.classList.add("disabled");
+                btnGo.style.opacity = "0.5";
+                btnGo.style.pointerEvents = "none";
+            }
         }
     }
 
-    // Modales de seguro
-    window.$("#btnVerPaquetes")?.addEventListener("click", () => window.$("#modalPaquetes").style.display = "flex");
-    window.$("#btnVerIndividuales")?.addEventListener("click", () => window.$("#modalIndividuales").style.display = "flex");
+    // --- LÓGICA PARA CAMBIAR VISTAS (PAQUETES VS INDIVIDUALES) ---
+    const btnVerPaquetes = $elId('btnVerPaquetes');
+    const btnVerIndividuales = $elId('btnVerIndividuales');
+    const btnToggleVista = $elId('btnToggleVista');
+    const btnContinuar = $elId('go4');
 
-    // Cerrar con botones 'X'
-    document.querySelectorAll(".close-modal").forEach(btn => btn.addEventListener("click", () => {
-        if (window.$("#modalPaquetes")) window.$("#modalPaquetes").style.display = "none";
-        if (window.$("#modalIndividuales")) window.$("#modalIndividuales").style.display = "none";
-    }));
+    const vistaPaquetes = $elId('vista-paquetes');
+    const vistaIndividuales = $elId('vista-individuales');
 
-    window.$("#btnListoIndividuales")?.addEventListener("click", () => {
-        if (window.$("#modalIndividuales")) window.$("#modalIndividuales").style.display = "none";
-    });
+    // Función centralizada para alternar las vistas
+    function cambiarVistaProtecciones(vistaDestino) {
+        if (vistaDestino === 'paquetes') {
+            if (vistaIndividuales) vistaIndividuales.style.display = 'none';
+            if (vistaPaquetes) vistaPaquetes.style.display = 'block';
 
-    // click a fuera para modal
-    window.addEventListener("click", (event) => {
-        const modalPaquetes = window.$("#modalPaquetes");
-        const modalIndividuales = window.$("#modalIndividuales");
-        if (event.target === modalPaquetes) modalPaquetes.style.display = "none";
-        if (event.target === modalIndividuales) modalIndividuales.style.display = "none";
-    });
+            // Actualizar textos y estilos
+            if (btnToggleVista) btnToggleVista.innerText = 'SELECCIÓN INDIVIDUAL';
 
-    // ================================ PAQUETES ===============================
-
-    // Paquetes completos
-    document.getElementById("packGrid")?.addEventListener("click", async (e) => {
-        const label = e.target.closest(".seguro-item");
-        if (!label) return;
-        const sw = label.querySelector(".switch");
-        if (!sw || sw.classList.contains("on")) return;
-
-        // Magia visual: Apagamos TODO (Paquetes e Individuales) y prendemos el seleccionado
-        document.querySelectorAll(".switch, .switch-individual").forEach(s => s.classList.remove("on"));
-        sw.classList.add("on");
-
-        // Recalculamos la pantalla
-        recalcularTotalProtecciones();
-
-        try {
-            await fetch(`/admin/contrato/seguros`, {
-                method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": window.csrfToken },
-                body: JSON.stringify({ id_reservacion: window.ID_RESERVACION, id_paquete: sw.dataset.id, precio_por_dia: label.dataset.precio })
-            });
-            if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
-        } catch (err) { console.error(err); }
-    });
-
-    // Paquetes individuales
-    document.getElementById("modalIndividuales")?.addEventListener("click", async (e) => {
-        const label = e.target.closest(".individual-item");
-        if (!label) return;
-        const sw = label.querySelector(".switch-individual");
-        if (!sw) return;
-
-        const estaPrendido = sw.classList.contains("on");
-
-        // Magia visual: Si prendo un individual (!estaPrendido), aseguro que todos los paquetes se apaguen
-        if (!estaPrendido) {
-            document.querySelectorAll("#packGrid .switch").forEach(s => s.classList.remove("on"));
-        }
-
-        // Si intenta apagar la única que queda encendida, lo bloqueamos
-        if (estaPrendido && document.querySelectorAll(".switch-individual.on").length <= 1) {
-            return typeof alertify !== 'undefined'
-                ? alertify.warning("Debes tener al menos una protección.")
-                : alert("Debes tener al menos una protección.");
-        }
-
-        // Toggle visual
-        if (estaPrendido) sw.classList.remove("on");
-        else sw.classList.add("on");
-
-        // Recalculamos la pantalla INSTANTÁNEAMENTE
-        recalcularTotalProtecciones();
-
-        try {
-            if (estaPrendido) {
-                // Lo está apagando -> DELETE
-                await fetch(`/admin/contrato/seguros-individuales`, {
-                    method: "DELETE", headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": window.csrfToken },
-                    body: JSON.stringify({ id_reservacion: window.ID_RESERVACION, id_seguro: sw.dataset.id })
-                });
-            } else {
-                // Lo está prendiendo -> POST
-                await fetch(`/admin/contrato/seguros-individuales`, {
-                    method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": window.csrfToken },
-                    body: JSON.stringify({ id_reservacion: window.ID_RESERVACION, id_seguro: sw.dataset.id, precio_por_dia: label.dataset.precio })
-                });
+            if (btnVerPaquetes) {
+                btnVerPaquetes.classList.add('primary');
+                btnVerPaquetes.classList.remove('gray');
             }
-            if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
-        } catch (err) { console.error(err); }
-    });
+            if (btnVerIndividuales) {
+                btnVerIndividuales.classList.add('gray');
+                btnVerIndividuales.classList.remove('primary');
+            }
+        } else {
+            if (vistaPaquetes) vistaPaquetes.style.display = 'none';
+            if (vistaIndividuales) vistaIndividuales.style.display = 'block';
 
-    setTimeout(recalcularTotalProtecciones, 800);
+            // Actualizar textos y estilos
+            if (btnToggleVista) btnToggleVista.innerText = 'VER PAQUETES';
+
+            if (btnVerIndividuales) {
+                btnVerIndividuales.classList.add('primary');
+                btnVerIndividuales.classList.remove('gray');
+            }
+            if (btnVerPaquetes) {
+                btnVerPaquetes.classList.add('gray');
+                btnVerPaquetes.classList.remove('primary');
+            }
+        }
+    }
+
+    // Conectar botones superiores
+    if (btnVerPaquetes) btnVerPaquetes.addEventListener('click', () => cambiarVistaProtecciones('paquetes'));
+    if (btnVerIndividuales) btnVerIndividuales.addEventListener('click', () => cambiarVistaProtecciones('individuales'));
+
+    // Conectar botón inferior
+    if (btnToggleVista) {
+        btnToggleVista.addEventListener('click', function () {
+            const vistaActual = (vistaPaquetes && vistaPaquetes.style.display !== 'none') ? 'individuales' : 'paquetes';
+            cambiarVistaProtecciones(vistaActual);
+        });
+    }
+
+    // --- LÓGICA DE SELECCIÓN PARA PAQUETES (Radio Buttons) ---
+    if (vistaPaquetes) {
+        vistaPaquetes.addEventListener("change", async (e) => {
+            if (e.target.classList.contains("input-paquete")) {
+                const inputPaquete = e.target;
+                const label = inputPaquete.closest(".seguro-item");
+
+                // Si selecciona un paquete, desmarcamos todos los individuales
+                document.querySelectorAll(".switch-individual").forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+
+                recalcularTotalProtecciones();
+
+                try {
+                    await ContratoAPI.postJSON(`/admin/contrato/seguros`, {
+                        id_reservacion: window.ID_RESERVACION,
+                        id_paquete: inputPaquete.value,
+                        precio_por_dia: label.dataset.precio
+                    });
+                    if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
+                } catch (err) { console.error(err); }
+            }
+        });
+    }
+
+    // --- LÓGICA DE SELECCIÓN PARA INDIVIDUALES (Checkboxes) ---
+    if (vistaIndividuales) {
+        vistaIndividuales.addEventListener("change", async (e) => {
+            if (e.target.classList.contains("switch-individual")) {
+                const checkbox = e.target;
+                const label = checkbox.closest(".individual-item");
+                const estaPrendido = checkbox.checked;
+
+                // Si prende un individual, desmarcamos los paquetes completos
+                if (estaPrendido) {
+                    document.querySelectorAll(".input-paquete").forEach(radio => radio.checked = false);
+                }
+
+                recalcularTotalProtecciones();
+
+                try {
+                    if (!estaPrendido) {
+                        // Si se apagó, lo borramos
+                        await ContratoAPI.deleteJSON(`/admin/contrato/seguros-individuales`, {
+                            id_reservacion: window.ID_RESERVACION,
+                            id_seguro: checkbox.dataset.id || checkbox.value
+                        });
+                    } else {
+                        // Si se prendió, lo agregamos
+                        await ContratoAPI.postJSON(`/admin/contrato/seguros-individuales`, {
+                            id_reservacion: window.ID_RESERVACION,
+                            id_seguro: checkbox.dataset.id || checkbox.value,
+                            precio_por_dia: label.dataset.precio
+                        });
+                    }
+                    if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
+                } catch (err) { console.error(err); }
+            }
+        });
+    }
+
+    // Ejecutar al cargar para configurar estado inicial
+    setTimeout(recalcularTotalProtecciones, 300);
 
     // ================================ NAVEGACIÓN Y GUARDADO ===============================
 
-    function guardarDatosPaso1() {
-        sessionStorage.setItem("contratoPaso1", JSON.stringify({
-            codigo: window.$("#codigo")?.textContent.trim() || "",
-            duracion: window.$("#diasBadge")?.textContent.trim() || "",
-            total: window.$("#totalReserva")?.textContent.trim() || ""
-        }));
+    function precargarPaso4() {
+        const idReservacion = window.ID_RESERVACION;
+        if (!idReservacion) return;
+
+        if (!document.querySelector(`link[data-contrato-prefetch="${idReservacion}"]`)) {
+            const link = document.createElement("link");
+            link.rel = "prefetch";
+            link.as = "document";
+            link.href = `/admin/contrato2/${idReservacion}`;
+            link.dataset.contratoPrefetch = idReservacion;
+            document.head.appendChild(link);
+        }
     }
 
-    window.$("#go2")?.addEventListener("click", async () => {
+    function obtenerVehiculoSeleccionadoId() {
+        return $elId("contratoInicial")?.dataset?.idVehiculo?.trim() || "";
+    }
+
+    $el("#go2")?.addEventListener("click", async () => {
+        if (!obtenerVehiculoSeleccionadoId()) {
+            return ContratoUI.notify("error", "Debes seleccionar un vehiculo antes de continuar.");
+        }
+
+        const btn = $elId("go2");
+        const textoOriginal = btn.innerHTML;
+        btn.innerHTML = "Cargando oferta...";
+        btn.style.pointerEvents = "none";
+
         try {
-            const resp = await fetch(`/admin/contrato/${window.ID_RESERVACION}/oferta-upgrade`);
-            const data = await resp.json();
+            const data = await ContratoAPI.getJSON(`/admin/contrato/${window.ID_RESERVACION}/oferta-upgrade`);
+            btn.innerHTML = textoOriginal;
+            btn.style.pointerEvents = "auto";
+
             if (!data.success || !data.categoria) return window.showStep(2);
-            mostrarModalOferta(await construirOfertaCategoria(data.categoria.codigo));
-        } catch (e) { window.showStep(2); }
+
+            mostrarModalOferta(data.categoria);
+        } catch (e) {
+            console.error(e);
+            btn.innerHTML = textoOriginal;
+            btn.style.pointerEvents = "auto";
+            window.showStep(2);
+        }
     });
 
-    window.$("#go3")?.addEventListener("click", () => {
-        if (typeof guardarDeliverySeguro === 'function') {
-            guardarDeliverySeguro(true);
-        }
+    $el("#go3")?.addEventListener("click", () => {
+        if (typeof guardarDeliverySeguro === 'function') guardarDeliverySeguro(true);
         setTimeout(() => {
             if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
         }, 150);
+        precargarPaso4();
         window.showStep(3);
     });
 
-    window.$("#go4")?.addEventListener("click", (e) => {
+    $el("#go4")?.addEventListener("click", (e) => {
         e.preventDefault();
 
-        const elInicial = document.getElementById("contratoInicial");
+        const elInicial = $elId("contratoInicial");
         const idReservacion = window.ID_RESERVACION || (elInicial ? elInicial.dataset.idReservacion : null);
 
-        if (!idReservacion) {
-            if (window.alertify) return alertify.error("Error: ID de reservación perdido.");
-            return alert("Error: ID de reservación perdido.");
-        }
+        if (!idReservacion) return ContratoUI.notify("error", "Error: ID de reservación perdido.");
 
-        const seguro = document.querySelector("#packGrid .switch.on") || document.querySelector(".switch-individual.on");
-        if (!seguro) {
-            if (window.alertify) return alertify.warning("Selecciona una protección.");
-            return alert("Selecciona una protección.");
+        const paqueteSeleccionado = document.querySelector(".input-paquete:checked");
+        const individualSeleccionado = document.querySelector(".switch-individual:checked");
+
+        if (!paqueteSeleccionado && !individualSeleccionado) {
+            return ContratoUI.notify("warning", "Selecciona al menos un paquete o una protección para continuar.");
         }
 
         localStorage.setItem(`contratoPasoActual_${idReservacion}`, '4');
@@ -566,18 +930,50 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.innerHTML = "Cargando Paso 4...";
         btn.style.pointerEvents = "none";
 
+        precargarPaso4();
         window.location.href = `/admin/contrato2/${idReservacion}`;
     });
 
-    window.$("#back1")?.addEventListener("click", () => window.showStep(1));
-    window.$("#back2")?.addEventListener("click", () => window.showStep(2));
-    window.$("#back3")?.addEventListener("click", () => window.showStep(3));
+    $el("#back1")?.addEventListener("click", () => window.showStep(1));
+    $el("#back2")?.addEventListener("click", () => window.showStep(2));
+    $el("#back3")?.addEventListener("click", () => window.showStep(3));
 
-    let pasoGuardado = localStorage.getItem(`contratoPasoActual_${window.ID_RESERVACION}`);
-    pasoGuardado = [1, 2, 3].includes(Number(pasoGuardado)) ? Number(pasoGuardado) : 1;
+    const ejecutarSaltoDePaso = () => {
+        const idRes = window.ID_RESERVACION || $elId("contratoInicial")?.dataset.idReservacion;
+        if (!idRes) return;
 
-    setTimeout(() => {
-        window.showStep(pasoGuardado);
-    }, 50);
+        const storageKey = `contratoPasoActual_${idRes}`;
+        const pasoSolicitado = localStorage.getItem(storageKey);
 
+        if (pasoSolicitado) {
+            const pasoN = Number(pasoSolicitado);
+            if ([1, 2, 3].includes(pasoN)) {
+                console.log(`🚀 Saltando automáticamente al Paso: ${pasoN}`);
+                if (typeof window.showStep === 'function') window.showStep(pasoN);
+                if (typeof window.actualizarStepper === 'function') window.actualizarStepper(pasoN);
+            }
+            localStorage.removeItem(storageKey);
+        }
+    };
+
+    setTimeout(ejecutarSaltoDePaso, 50);
+
+    setTimeout(async () => {
+        const gasSwitch = $elId("switchGasolinaCheckbox");
+        if (gasSwitch && gasSwitch.checked) {
+            const cardGas = document.querySelector('.cargo-item[data-id="5"]');
+            const montoGuardado = parseFloat(cardGas?.dataset.monto || 0);
+
+            if (montoGuardado > 0) {
+                setState("gasolinaTotal", montoGuardado);
+                ContratoUI.setText($elId("gasTotalHTML"), ContratoUI.money(montoGuardado));
+
+                const inputNivel = $elId("gasNivelActual")?.value || "16/16";
+                let nivel = parseInt(inputNivel.split('/')[0]) || 16;
+                ContratoUI.setText($elId("gasLitrosTexto"), `${16 - nivel} L`);
+            } else {
+                if (typeof window.handleGasolinaUpdate === 'function') window.handleGasolinaUpdate();
+            }
+        }
+    }, 800);
 });
