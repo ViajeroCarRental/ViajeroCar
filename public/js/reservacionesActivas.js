@@ -236,7 +236,7 @@ document.addEventListener("click", async (e) => {
     if (!data.success) throw new Error(data.message);
 
     // 🔥 REDIRECCIÓN
-    window.location.href = `/admin/reservacion/${data.id_contrato}/checklist?modo=salida`;
+    window.location.href = `/admin/reservacion/${data.id_contrato}/checklist?modo=salida&from=apartar`;
 
   } catch (err) {
     console.error(err);
