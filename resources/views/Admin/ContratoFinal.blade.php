@@ -8,8 +8,8 @@
     <div class="contrato-final-container" id="contratoApp" data-id-contrato="{{ $contrato->id_contrato }}">
 
         <!-- ============================
-                BOTONES SUPERIORES
-        ============================= -->
+                    BOTONES SUPERIORES
+            ============================= -->
         <div class="acciones-contrato">
             <button class="btn btn-pdf">Imprimir / Guardar PDF</button>
             <button id="btnAbrirModalAviso">Enviar correo</button>
@@ -19,8 +19,8 @@
         </div>
 
         <!-- ============================
-                 TARJETA DEL CONTRATO
-        ============================= -->
+                     TARJETA DEL CONTRATO
+            ============================= -->
         <div class="contrato-card">
 
             <!-- ENCABEZADO ROJO -->
@@ -43,8 +43,8 @@
             <div class="secciones">
 
                 <!-- ============================
-                        DATOS DEL ARRENDATARIO
-                ============================= -->
+                            DATOS DEL ARRENDATARIO
+                    ============================= -->
                 <section class="bloque">
                     <h3>Datos de Arrendatario</h3>
                     <ul>
@@ -62,8 +62,8 @@
 
 
                 <!-- ============================
-                           LICENCIA
-                ============================= -->
+                               LICENCIA
+                    ============================= -->
                 <section class="bloque">
                     <h3>Atención / Licencia</h3>
                     <ul>
@@ -75,39 +75,35 @@
 
 
                 <!-- ============================
-                        DATOS FISCALES
+                            DATOS FISCALES
 
-                <section class="bloque">
-                    <h3>Datos Fiscales</h3>
-                    <ul>
-                        <li><b>RFC:</b> —</li>
-                        <li><b>Razón Social:</b> PÚBLICO EN GENERAL</li>
-                        <li><b>Dirección:</b> —</li>
-                        <li><b>Estado / País:</b> —</li>
-                    </ul>
-                </section>
-                ============================= -->
+                    <section class="bloque">
+                        <h3>Datos Fiscales</h3>
+                        <ul>
+                            <li><b>RFC:</b> —</li>
+                            <li><b>Razón Social:</b> PÚBLICO EN GENERAL</li>
+                            <li><b>Dirección:</b> —</li>
+                            <li><b>Estado / País:</b> —</li>
+                        </ul>
+                    </section>
+                    ============================= -->
 
                 <!-- ============================
-                         ITINERARIO
-                ============================= -->
+                             ITINERARIO
+                    ============================= -->
                 <section class="bloque">
                     <h3>Itinerario</h3>
                     <ul>
                         <li><b>Oficina de salida:</b> {{ $reservacion->sucursal_retiro_nombre ?? '—' }}</li>
                         <li><b>Fecha/Hora salida:</b>
-    {{ $reservacion->fecha_inicio
-        ? \Carbon\Carbon::parse($reservacion->fecha_inicio)->format('d-M-Y') : '—' }}
-    {{ $reservacion->hora_retiro
-        ? \Carbon\Carbon::parse($reservacion->hora_retiro)->format('H:i') : '—' }}
-</li>
+                            {{ $reservacion->fecha_inicio ? \Carbon\Carbon::parse($reservacion->fecha_inicio)->format('d-M-Y') : '—' }}
+                            {{ $reservacion->hora_retiro ? \Carbon\Carbon::parse($reservacion->hora_retiro)->format('H:i') : '—' }}
+                        </li>
 
                         <li><b>Oficina de regreso:</b> {{ $reservacion->sucursal_entrega_nombre ?? '—' }}</li>
                         <li><b>Fecha/Hora regreso:</b>
-                            {{ $reservacion->fecha_fin
-        ? \Carbon\Carbon::parse($reservacion->fecha_fin)->format('d-M-Y') : '—' }}
-                            {{ $reservacion->hora_entrega
-        ? \Carbon\Carbon::parse($reservacion->hora_entrega)->format('H:i') : '—' }}
+                            {{ $reservacion->fecha_fin ? \Carbon\Carbon::parse($reservacion->fecha_fin)->format('d-M-Y') : '—' }}
+                            {{ $reservacion->hora_entrega ? \Carbon\Carbon::parse($reservacion->hora_entrega)->format('H:i') : '—' }}
                         </li>
 
                         <li><b>Días de renta:</b> {{ $dias }}</li>
@@ -116,8 +112,8 @@
 
 
                 <!-- ============================
-             VEHÍCULO
-    ============================= -->
+                 VEHÍCULO
+        ============================= -->
                 <section class="bloque bloque-mitad">
                     <h3>Vehículo</h3>
                     <ul>
@@ -145,8 +141,8 @@
 
 
                 <!-- ============================
-         TARIFAS Y PROTECCIONES
-    ============================ -->
+             TARIFAS Y PROTECCIONES
+        ============================ -->
                 <section class="bloque bloque-mitad">
                     <h3>Tarifas y Protecciones</h3>
 
@@ -225,28 +221,34 @@
 
                 <section class="bloque">
                     <h3>Firmas</h3>
-                    <div class="firmas">
-
-                        <!-- Firma del cliente -->
+                    <div class="firmas" style="display: flex; justify-content: space-around; align-items: flex-end; text-align: center; margin-top: 20px;">
+                        
                         <div class="firma-item">
-                            <p><b>FIRMA DE ARRENDATARIO(A):</b></p>
-
-                            @if ($contrato->firma_cliente)
-                                <img src="{{ $contrato->firma_cliente }}" class="firma-img">
+                            <p><b>Firma de Arrendatario:</b></p>
+                            <br>
+                            @if (!empty($contrato->firma_cliente))
+                                <img src="{{ $contrato->firma_cliente }}" class="firma-img" style="max-width: 250px; max-height: 120px;">
                             @else
-                                <button id="btnFirmaCliente" class="btn btn-red">Capturar firma cliente</button>
+                                <div style="width: 250px; height: 60px; margin: 0 auto;"></div>
+                                <p style="color: #999;">No hay firma del cliente</p>
                             @endif
+                            <hr style="border: 0; border-bottom: 1px solid #000; width: 80%; margin: 10px auto;">
+                            <p style="font-size: 12px; margin-top: 5px;">
+                                {{ trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')) ?: 'CLIENTE' }}
+                            </p>
                         </div>
 
-                        <!-- Firma del arrendador -->
                         <div class="firma-item">
-                            <p><b>FIRMA DE ARRENDADOR(A):</b></p>
-
-                           @if (!empty($vehiculo?->firma_propietario))
-    <img src="{{ $vehiculo->firma_propietario }}" class="firma-img">
-@else
-    <p>No hay firma</p>
-@endif
+                            <p><b>Firma de Arrendador(a):</b></p>
+                            <br>
+                            @if (!empty($vehiculo?->firma_propietario))
+                                <img src="{{ $vehiculo->firma_propietario }}" class="firma-img" style="max-width: 250px; max-height: 120px;">
+                            @else
+                                <div style="width: 250px; height: 60px; margin: 0 auto;"></div>
+                                <p style="color: #999;">No hay firma</p>
+                            @endif
+                            <hr style="border: 0; border-bottom: 1px solid #000; width: 80%; margin: 10px auto;">
+                            <p style="font-size: 12px; margin-top: 5px;">VIAJERO CAR RENTAL</p>
                         </div>
 
                     </div>
@@ -255,8 +257,8 @@
 
 
                 <!-- ============================
-                       COMBUSTIBLE
-                ============================= -->
+                           COMBUSTIBLE
+                    ============================= -->
                 <section class="bloque">
                     <h3>Combustible</h3>
                     <p>
@@ -267,8 +269,8 @@
                 </section>
 
                 <!-- ============================
-                  NOTAS FINALES / AVISOS
-                ============================= -->
+                      NOTAS FINALES / AVISOS
+                    ============================= -->
                 <section class="bloque notas">
                     <p>(1) Al firmar este contrato el cliente declara tener conocimiento de todas las condiciones
                         establecidas...</p>
@@ -349,21 +351,6 @@
         </a>
     </div>
 
-
-
-
-    <div id="modalCliente" class="modal-firma">
-        <div class="modal-body">
-            <h3>Firma del Cliente</h3>
-            <canvas id="padCliente" width="500" height="200"></canvas>
-
-            <div class="firma-buttons">
-                <button id="clearCliente" class="btn btn-gray">Limpiar</button>
-                <button id="saveCliente" class="btn btn-red">Guardar firma</button>
-            </div>
-        </div>
-    </div>
-
     <div id="modalArrendador" class="modal-firma">
         <div class="modal-body">
             <h3>Firma del Arrendador</h3>
@@ -439,7 +426,5 @@
 @endsection
 
 @section('js-vistaContratoFinal')
-    <!-- Librería oficial SignaturePad -->
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
     <script src="{{ asset('js/ContratoFinal.js') }}"></script>
 @endsection

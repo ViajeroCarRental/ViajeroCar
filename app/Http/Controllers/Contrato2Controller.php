@@ -11,6 +11,99 @@ use Illuminate\Support\Facades\Cache;
 
 class Contrato2Controller extends ContratoBaseController
 {
+    private function pagosReservacionQuery($idReservacion)
+    {
+        return DB::table('pagos')
+            ->where('id_reservacion', $idReservacion)
+            ->where('estatus', 'paid')
+            ->where(function ($query) {
+                $query->whereNull('tipo_pago')
+                    ->orWhereRaw('UPPER(TRIM(tipo_pago)) <> ?', ['GARANTIA']);
+            });
+    }
+
+    private function pagosGarantiaQuery($idReservacion)
+    {
+        return DB::table('pagos')
+            ->where('id_reservacion', $idReservacion)
+            ->where('estatus', 'paid')
+            ->whereRaw('UPPER(TRIM(COALESCE(tipo_pago, ""))) = ?', ['GARANTIA']);
+    }
+
+    private function tablaGarantiasSeguro(): array
+    {
+        return [
+            'C' => ['ldw' => 5000, 'pdw' => 8000, 'cdw10' => 15000, 'cdw20' => 25000, 'declined' => 330000],
+            'D' => ['ldw' => 5000, 'pdw' => 8000, 'cdw10' => 18000, 'cdw20' => 25000, 'declined' => 380000],
+            'E' => ['ldw' => 5000, 'pdw' => 8000, 'cdw10' => 20000, 'cdw20' => 30000, 'declined' => 500000],
+            'F' => ['ldw' => 5000, 'pdw' => 15000, 'cdw10' => 30000, 'cdw20' => 40000, 'declined' => 650000],
+            'IC' => ['ldw' => 5000, 'pdw' => 8000, 'cdw10' => 20000, 'cdw20' => 30000, 'declined' => 500000],
+            'I' => ['ldw' => 5000, 'pdw' => 10000, 'cdw10' => 30000, 'cdw20' => 40000, 'declined' => 600000],
+            'IB' => ['ldw' => 5000, 'pdw' => 8000, 'cdw10' => 18000, 'cdw20' => 25000, 'declined' => 400000],
+            'M' => ['ldw' => 10000, 'pdw' => 20000, 'cdw10' => 30000, 'cdw20' => 40000, 'declined' => 800000],
+            'L' => ['ldw' => 10000, 'pdw' => 20000, 'cdw10' => 30000, 'cdw20' => 40000, 'declined' => 800000],
+            'H' => ['ldw' => 10000, 'pdw' => 20000, 'cdw10' => 30000, 'cdw20' => 40000, 'declined' => 600000],
+            'HI' => ['ldw' => 10000, 'pdw' => 20000, 'cdw10' => 30000, 'cdw20' => 40000, 'declined' => 900000],
+        ];
+    }
+
+    private function claveGarantiaPorSeguro(?string $nombreSeguro): string
+    {
+        $nombre = strtolower(trim($nombreSeguro ?? ''));
+
+        if ($nombre === '') {
+            return 'declined';
+        }
+
+        if (str_contains($nombre, 'pdw')) {
+            return 'pdw';
+        }
+
+        if (str_contains($nombre, 'ldw')) {
+            return 'ldw';
+        }
+
+        if (str_contains($nombre, '10')) {
+            return 'cdw10';
+        }
+
+        if (str_contains($nombre, '20')) {
+            return 'cdw20';
+        }
+
+        if (str_contains($nombre, 'declin')) {
+            return 'declined';
+        }
+
+        return 'declined';
+    }
+
+    private function obtenerGarantiaSeguro(?string $codigoCategoria, ?string $nombreSeguro): array
+    {
+        $codigo = strtoupper($codigoCategoria ?: 'C');
+        $clave = $this->claveGarantiaPorSeguro($nombreSeguro);
+        $tabla = $this->tablaGarantiasSeguro();
+        $monto = $tabla[$codigo][$clave] ?? 0;
+
+        return [
+            'codigo_categoria' => $codigo,
+            'tipo_seguro' => $clave,
+            'nombre_seguro' => $nombreSeguro ?: 'Sin paquete',
+            'monto' => $monto,
+        ];
+    }
+
+    private function formatearTelefonoContrato(?string $telefono): string
+    {
+        $soloNumeros = preg_replace('/[^0-9]/', '', $telefono ?? '');
+
+        if (strlen($soloNumeros) === 10) {
+            return '(' . substr($soloNumeros, 0, 3) . ') ' . substr($soloNumeros, 3, 3) . '-' . substr($soloNumeros, 6);
+        }
+
+        return $telefono ?: '--';
+    }
+
     public function mostrarContrato2($id)
     {
         try {
@@ -20,8 +113,10 @@ class Contrato2Controller extends ContratoBaseController
                 ->leftJoin('sucursales as se', 'r.sucursal_entrega', '=', 'se.id_sucursal')
                 ->leftJoin('vehiculos as v', 'r.id_vehiculo', '=', 'v.id_vehiculo')
                 ->leftJoin('categoria_costo_km as cck', 'r.id_categoria', '=', 'cck.id_categoria')
-                ->where('r.id_reservacion', $id)
-                ->orWhere('c.id_contrato', $id)
+                ->where(function ($query) use ($id) {
+                    $query->where('r.id_reservacion', $id)
+                        ->orWhere('c.id_contrato', $id);
+                })
                 ->select(
                     'r.*',
                     'c.id_contrato',
@@ -48,25 +143,7 @@ class Contrato2Controller extends ContratoBaseController
             $idContrato = $reservacion->id_contrato;
 
             if (!$idContrato) {
-                $idContrato = DB::transaction(function () use ($idReservacion) {
-                    $nuevoId = DB::table('contratos')->insertGetId([
-                        'id_reservacion'  => $idReservacion,
-                        'id_asesor'       => session('id_usuario') ?? null,
-                        'numero_contrato' => 'TEMP',
-                        'estado'          => 'abierto',
-                        'abierto_en'      => now(),
-                        'created_at'      => now(),
-                        'updated_at'      => now(),
-                    ]);
-
-                    $folioFormateado = str_pad($nuevoId, 4, '0', STR_PAD_LEFT);
-                    DB::table('contratos')
-                        ->where('id_contrato', $nuevoId)
-                        ->update(['numero_contrato' => $folioFormateado]);
-
-                    return $nuevoId;
-                });
-
+                $idContrato = $this->crearContratoRapido($idReservacion);
                 $reservacion->id_contrato = $idContrato;
                 $reservacion->numero_contrato = str_pad($idContrato, 4, '0', STR_PAD_LEFT);
             }
@@ -74,7 +151,8 @@ class Contrato2Controller extends ContratoBaseController
             $ubicaciones = Cache::remember('ubicaciones_servicio', 86400, function () {
                 return DB::table('ubicaciones_servicio')
                     ->select('id_ubicacion', 'estado', 'destino', 'km')
-                    ->where('activo', 1)->get();
+                    ->where('activo', 1)
+                    ->get();
             });
 
             $conceptos = Cache::remember('cargo_concepto_filtrado', 86400, function () {
@@ -97,25 +175,20 @@ class Contrato2Controller extends ContratoBaseController
                 ->pluck('cantidad', 'id_servicio')
                 ->toArray();
 
-            $cargosDelContrato = DB::table('cargo_adicional')
-                ->where('id_contrato', $idContrato)
-                ->get();
-
-            $cargosActivosIds = $cargosDelContrato->pluck('id_concepto')->toArray();
-            $cargoGas         = $cargosDelContrato->where('id_concepto', 5)->first();
-            $cargoDrop        = $cargosDelContrato->where('id_concepto', 6)->first();
-            $totalPaso4Server = $cargosDelContrato->sum('monto');
-
             $conductoresExtras = collect();
-            $idServicioConductor = 4; // Conductor Adicional
+            $idServicioConductor = 4;
 
             if (isset($serviciosReservados[$idServicioConductor])) {
                 $cantidad = $serviciosReservados[$idServicioConductor];
+
+                // UNA SOLA QUERY para todos los conductores
+                $conductoresDb = DB::table('contrato_conductor_adicional')
+                    ->where('id_contrato', $idContrato)
+                    ->limit($cantidad)
+                    ->get();
+
                 for ($i = 1; $i <= $cantidad; $i++) {
-                    // Buscamos si ya tiene registro físico en la tabla de conductores
-                    $conductorDb = DB::table('contrato_conductor_adicional')
-                        ->where('id_contrato', $idContrato)
-                        ->skip($i - 1)->first();
+                    $conductorDb = $conductoresDb[$i - 1] ?? null;
 
                     $conductoresExtras->push([
                         'id_conductor' => $conductorDb->id_conductor ?? null,
@@ -125,8 +198,27 @@ class Contrato2Controller extends ContratoBaseController
             }
 
             $idServicioMenor = Cache::remember('id_servicio_menor', 86400, function () {
-                return DB::table('servicios')->where('nombre', 'LIKE', '%menor%')->value('id_servicio');
+                return DB::table('servicios')
+                    ->where('nombre', 'LIKE', '%menor%')
+                    ->value('id_servicio');
             });
+
+            $catActual = $categorias->firstWhere('id_categoria', $reservacion->id_categoria);
+            $fechaInicio = Carbon::parse($reservacion->fecha_inicio ?? now());
+            $fechaFin = Carbon::parse($reservacion->fecha_fin ?? now()->addDay());
+            $horaRetiro = Carbon::parse($reservacion->hora_retiro ?? '12:00:00');
+            $horaEntrega = Carbon::parse($reservacion->hora_entrega ?? '12:00:00');
+            $diasTotales = max(1, $fechaInicio->diffInDays($fechaFin));
+
+            $precioBase = $catActual->precio_dia ?? ($catActual->precio ?? 0);
+            $precioReal = ($reservacion->tarifa_ajustada == 1 && $reservacion->tarifa_modificada > 0)
+                ? $reservacion->tarifa_modificada
+                : $precioBase;
+
+            $subtotal = $diasTotales * $precioReal;
+            $iva = $subtotal * 0.16;
+            $total = $subtotal + $iva;
+            $telFinal = $this->formatearTelefonoContrato($reservacion->telefono_cliente ?? '');
 
             return view('Admin.Contrato2', [
                 'reservacion'         => $reservacion,
@@ -141,17 +233,23 @@ class Contrato2Controller extends ContratoBaseController
                 'conductoresExtras'   => $conductoresExtras,
                 'serviciosReservados' => $serviciosReservados,
                 'idServicioMenor'     => $idServicioMenor ?? 0,
+                'fechaInicio'         => $fechaInicio,
+                'fechaFin'            => $fechaFin,
+                'horaRetiro'          => $horaRetiro,
+                'horaEntrega'         => $horaEntrega,
+                'diasTotales'         => $diasTotales,
+                'precioReal'          => $precioReal,
+                'subtotal'            => $subtotal,
+                'iva'                 => $iva,
+                'total'               => $total,
+                'telFinal'            => $telFinal,
                 'delivery' => (object)[
                     'activo'       => $reservacion->delivery_activo,
                     'id_ubicacion' => $reservacion->delivery_ubicacion,
                     'direccion'    => $reservacion->delivery_direccion,
                     'kms'          => $reservacion->delivery_km,
                     'total'        => $reservacion->delivery_total
-                ],
-                'cargosActivos'    => $cargosActivosIds,
-                'cargoGas'         => $cargoGas,
-                'cargoDrop'        => $cargoDrop,
-                'totalPaso4Server' => $totalPaso4Server,
+                ]
             ]);
         } catch (\Throwable $e) {
             Log::error("Error en mostrarContrato2: " . $e->getMessage());
@@ -159,10 +257,29 @@ class Contrato2Controller extends ContratoBaseController
         }
     }
 
-    /**
-     * 🟢 NUEVO: Activa o desactiva servicios adicionales (como el Menor de Edad).
-     * Se guarda en reservacion_servicio y lee el catálogo de servicios.
-     */
+    private function crearContratoRapido($idReservacion)
+    {
+        return DB::transaction(function () use ($idReservacion) {
+            $nuevoId = DB::table('contratos')->insertGetId([
+                'id_reservacion'  => $idReservacion,
+                'id_asesor'       => session('id_usuario') ?? null,
+                'numero_contrato' => 'TEMP',
+                'estado'          => 'abierto',
+                'abierto_en'      => now(),
+                'created_at'      => now(),
+                'updated_at'      => now(),
+            ]);
+
+            $folioFormateado = str_pad($nuevoId, 4, '0', STR_PAD_LEFT);
+
+            DB::table('contratos')
+                ->where('id_contrato', $nuevoId)
+                ->update(['numero_contrato' => $folioFormateado]);
+
+            return $nuevoId;
+        });
+    }
+
     public function actualizarServiciosExtras(Request $request)
     {
         try {
@@ -310,75 +427,6 @@ class Contrato2Controller extends ContratoBaseController
         }
     }
 
-    public function guardarCargoVariable(Request $request)
-    {
-        try {
-            $idContrato    = $request->id_contrato;
-            $idReservacion = $request->id_reservacion;
-            $idConcepto    = $request->id_concepto;
-
-            // ✅ Solo requerimos id_concepto + al menos uno de los dos IDs
-            if (!$idConcepto || (!$idContrato && !$idReservacion)) {
-                return response()->json(['success' => false, 'msg' => 'Datos incompletos']);
-            }
-
-            $montoVariable = $request->monto_variable ?? 0;
-            $kilometros    = $request->km ?? null;
-            $destino       = $request->destino ?? null;
-            $litros        = $request->litros ?? null;
-            $precioLitro   = $request->precio_litro ?? null;
-
-            $json = [
-                'km'          => $kilometros,
-                'destino'     => $destino,
-                'litros'      => $litros,
-                'precio_litro' => $precioLitro,
-                'monto'       => $montoVariable,
-            ];
-
-            // ✅ Buscar por contrato O por reservación
-            $query = DB::table('cargo_adicional')->where('id_concepto', $idConcepto);
-            if ($idContrato) {
-                $query->where('id_contrato', $idContrato);
-            } else {
-                $query->where('id_reservacion', $idReservacion)->whereNull('id_contrato');
-            }
-            $existe = $query->first();
-
-            // Si monto es 0 → borrar
-            if ($montoVariable == 0) {
-                $query->delete();
-                return response()->json(['success' => true, 'action' => 'deleted']);
-            }
-
-            if ($existe) {
-                $query->update([
-                    'monto'      => $montoVariable,
-                    'detalle'    => json_encode($json),
-                    'updated_at' => now()
-                ]);
-                return response()->json(['success' => true, 'action' => 'updated']);
-            }
-
-            // ✅ Insert con lo que tengamos disponible
-            DB::table('cargo_adicional')->insert([
-                'id_contrato'    => $idContrato ?? null,
-                'id_reservacion' => $idReservacion,
-                'id_concepto'    => $idConcepto,
-                'concepto'       => DB::table('cargo_concepto')->where('id_concepto', $idConcepto)->value('nombre'),
-                'monto'          => $montoVariable,
-                'detalle'        => json_encode($json),
-                'created_at'     => now(),
-                'updated_at'     => now(),
-            ]);
-
-            return response()->json(['success' => true, 'action' => 'inserted']);
-        } catch (\Exception $e) {
-            Log::error("ERROR guardarCargoVariable: " . $e->getMessage());
-            return response()->json(['success' => false, 'msg' => 'Error en servidor']);
-        }
-    }
-    
     public function obtenerOfertaUpgrade($idReservacion)
     {
         try {
@@ -1043,138 +1091,95 @@ class Contrato2Controller extends ContratoBaseController
     public function obtenerDocumentacion($idContrato)
     {
         try {
-
-            // ====================================================
-            // 🔧 Función interna para crear URL de archivo
-            // ====================================================
             $makeUrl = function ($idArchivo) {
                 return $idArchivo ? route('archivo.mostrar', ['id' => $idArchivo]) : null;
             };
 
-            // ====================================================
-            // 🔹 OBTENER DOCUMENTOS DEL TITULAR
-            // ====================================================
-            $docsTitular = DB::table('contrato_documento')
+            $todosDocumentos = DB::table('contrato_documento')
                 ->where('id_contrato', $idContrato)
-                ->whereNull('id_conductor')
-                ->get();
-
-            $ident = $docsTitular->firstWhere('tipo', 'identificacion');
-            $lic   = $docsTitular->firstWhere('tipo', 'licencia');
-
-            // ====================================================
-            // 🔹 Determinar si la licencia está vencida
-            // ====================================================
-            $licenciaVencida = false;
-            if ($lic && $lic->fecha_vencimiento) {
-                $licenciaVencida = \Carbon\Carbon::parse($lic->fecha_vencimiento)->isPast();
-            }
-
-            // ====================================================
-            // 🔹 UNIFICAR CAMPOS DEL TITULAR
-            // ====================================================
-            $titularCampos = [
-                // Identificación
-                'tipo_identificacion'   => $ident->tipo_identificacion ?? null,
-                'numero_identificacion' => $ident->numero_identificacion ?? null,
-                'nombre'                => $ident->nombre ?? null,
-                'apellido_paterno'      => $ident->apellido_paterno ?? null,
-                'apellido_materno'      => $ident->apellido_materno ?? null,
-                'fecha_nacimiento'      => $ident->fecha_nacimiento ?? null,
-                'fecha_vencimiento_id'  => $ident->fecha_vencimiento ?? null,
-
-                // Licencia
-                'numero_licencia'         => $lic->numero_identificacion ?? null,
-                'pais_emision'            => $lic->pais_emision ?? null,
-                'fecha_emision_licencia'  => $lic->fecha_emision ?? null,
-                'fecha_vencimiento_licencia' => $lic->fecha_vencimiento ?? null,
-
-                // Contacto
-                'contacto_emergencia' => null // No estaba en esta tabla
-            ];
-
-            // ====================================================
-            // 🔹 UNIFICAR ARCHIVOS DE TITULAR
-            // ====================================================
-            $titularArchivos = [
-                'idFrente_url'  => $ident ? $makeUrl($ident->id_archivo_frente) : null,
-                'idReverso_url' => $ident ? $makeUrl($ident->id_archivo_reverso) : null,
-                'licFrente_url' => $lic   ? $makeUrl($lic->id_archivo_frente)  : null,
-                'licReverso_url' => $lic   ? $makeUrl($lic->id_archivo_reverso) : null,
-            ];
-
-            // ====================================================
-            // 🔹 TITULAR FINAL, FORMATO EXACTO PARA JS
-            // ====================================================
-            $titular = [
-                'campos'           => $titularCampos,
-                'archivos'         => $titularArchivos,
-                'licencia_vencida' => $licenciaVencida,
-            ];
-
-            // ====================================================
-            // 🔹 OBTENER CONDUCTORES ADICIONALES
-            // ====================================================
-            $conductores = DB::table('contrato_conductor_adicional')
-                ->where('id_contrato', $idContrato)
-                ->get();
-
-            $docsAdicionales = DB::table('contrato_documento')
-                ->where('id_contrato', $idContrato)
-                ->whereNotNull('id_conductor')
                 ->get()
                 ->groupBy('id_conductor');
 
+            // Documentos del titular (id_conductor = null)
+            $docsTitular = $todosDocumentos->get(null, collect());
+            $ident = $docsTitular->firstWhere('tipo', 'identificacion');
+            $lic   = $docsTitular->firstWhere('tipo', 'licencia');
+
+            $licenciaVencida = false;
+            if ($lic && $lic->fecha_vencimiento) {
+                $licenciaVencida = Carbon::parse($lic->fecha_vencimiento)->isPast();
+            }
+
+            $titular = [
+                'campos' => [
+                    'tipo_identificacion'   => $ident->tipo_identificacion ?? null,
+                    'numero_identificacion' => $ident->numero_identificacion ?? null,
+                    'nombre'                => $ident->nombre ?? null,
+                    'apellido_paterno'      => $ident->apellido_paterno ?? null,
+                    'apellido_materno'      => $ident->apellido_materno ?? null,
+                    'fecha_nacimiento'      => $ident->fecha_nacimiento ?? null,
+                    'fecha_vencimiento_id'  => $ident->fecha_vencimiento ?? null,
+                    'numero_licencia'         => $lic->numero_identificacion ?? null,
+                    'pais_emision'            => $lic->pais_emision ?? null,
+                    'fecha_emision_licencia'  => $lic->fecha_emision ?? null,
+                    'fecha_vencimiento_licencia' => $lic->fecha_vencimiento ?? null,
+                    'contacto_emergencia' => null
+                ],
+                'archivos' => [
+                    'idFrente_url'  => $ident ? $makeUrl($ident->id_archivo_frente) : null,
+                    'idReverso_url' => $ident ? $makeUrl($ident->id_archivo_reverso) : null,
+                    'licFrente_url' => $lic   ? $makeUrl($lic->id_archivo_frente)  : null,
+                    'licReverso_url' => $lic   ? $makeUrl($lic->id_archivo_reverso) : null,
+                ],
+                'licencia_vencida' => $licenciaVencida,
+            ];
+
+            $conductores = DB::table('contrato_conductor_adicional')
+                ->where('id_contrato', $idContrato)
+                ->get()
+                ->keyBy('id_conductor');
+
             $adicionalesData = [];
 
-            foreach ($conductores as $c) {
+            foreach ($todosDocumentos as $idConductor => $grupo) {
+                if ($idConductor === null) continue; // Saltamos al titular
 
-                $grupo = $docsAdicionales->get($c->id_conductor, collect());
+                $c = $conductores->get($idConductor);
+                if (!$c) continue;
+
                 $ident = $grupo->firstWhere('tipo', 'identificacion');
                 $lic   = $grupo->firstWhere('tipo', 'licencia');
 
                 $vencida = false;
                 if ($lic && $lic->fecha_vencimiento) {
-                    $vencida = \Carbon\Carbon::parse($lic->fecha_vencimiento)->isPast();
+                    $vencida = Carbon::parse($lic->fecha_vencimiento)->isPast();
                 }
 
-                // 📌 Unificar campos del adicional
-                $campos = [
-                    'tipo_identificacion'   => $ident->tipo_identificacion ?? null,
-                    'numero_identificacion' => $ident->numero_identificacion ?? null,
-                    'nombre'                => $ident->nombre ?? $c->nombres,
-                    'apellido_paterno'      => $ident->apellido_paterno ?? null,
-                    'apellido_materno'      => $ident->apellido_materno ?? null,
-                    'fecha_nacimiento'      => $ident->fecha_nacimiento ?? $c->fecha_nacimiento,
-                    'fecha_vencimiento_id'  => $ident->fecha_vencimiento ?? null,
-
-                    'numero_licencia'         => $lic->numero_identificacion ?? $c->numero_licencia,
-                    'pais_emision'            => $lic->pais_emision ?? $c->pais_licencia,
-                    'fecha_emision_licencia'  => $lic->fecha_emision ?? null,
-                    'fecha_vencimiento_licencia' => $lic->fecha_vencimiento ?? null,
-
-                    'contacto_emergencia'     => $c->contacto,
-                ];
-
-                // 📌 Unificar archivos del adicional
-                $archivos = [
-                    'idFrente_url'  => $ident ? $makeUrl($ident->id_archivo_frente) : null,
-                    'idReverso_url' => $ident ? $makeUrl($ident->id_archivo_reverso) : null,
-                    'licFrente_url' => $lic   ? $makeUrl($lic->id_archivo_frente)  : null,
-                    'licReverso_url' => $lic   ? $makeUrl($lic->id_archivo_reverso) : null,
-                ];
-
-                // 📌 Estructura EXACTA para JS
-                $adicionalesData[$c->id_conductor] = [
-                    'campos'           => $campos,
-                    'archivos'         => $archivos,
+                $adicionalesData[$idConductor] = [
+                    'campos' => [
+                        'tipo_identificacion'   => $ident->tipo_identificacion ?? null,
+                        'numero_identificacion' => $ident->numero_identificacion ?? null,
+                        'nombre'                => $ident->nombre ?? $c->nombres,
+                        'apellido_paterno'      => $ident->apellido_paterno ?? null,
+                        'apellido_materno'      => $ident->apellido_materno ?? null,
+                        'fecha_nacimiento'      => $ident->fecha_nacimiento ?? $c->fecha_nacimiento,
+                        'fecha_vencimiento_id'  => $ident->fecha_vencimiento ?? null,
+                        'numero_licencia'         => $lic->numero_identificacion ?? $c->numero_licencia,
+                        'pais_emision'            => $lic->pais_emision ?? $c->pais_licencia,
+                        'fecha_emision_licencia'  => $lic->fecha_emision ?? null,
+                        'fecha_vencimiento_licencia' => $lic->fecha_vencimiento ?? null,
+                        'contacto_emergencia'     => $c->contacto,
+                    ],
+                    'archivos' => [
+                        'idFrente_url'  => $ident ? $makeUrl($ident->id_archivo_frente) : null,
+                        'idReverso_url' => $ident ? $makeUrl($ident->id_archivo_reverso) : null,
+                        'licFrente_url' => $lic   ? $makeUrl($lic->id_archivo_frente)  : null,
+                        'licReverso_url' => $lic   ? $makeUrl($lic->id_archivo_reverso) : null,
+                    ],
                     'licencia_vencida' => $vencida,
                 ];
             }
 
-            // ====================================================
-            // 🎯 RESPUESTA EXACTA PARA EL JS
-            // ====================================================
             return response()->json([
                 'success'    => true,
                 'documentos' => [
@@ -1183,9 +1188,7 @@ class Contrato2Controller extends ContratoBaseController
                 ],
             ]);
         } catch (\Throwable $e) {
-
             Log::error("ERROR obtenerDocumentacion: " . $e->getMessage());
-
             return response()->json([
                 'success' => false,
                 'msg'     => 'Error interno al obtener documentación'
@@ -1233,143 +1236,128 @@ class Contrato2Controller extends ContratoBaseController
     public function resumenPaso6($idReservacion)
     {
         try {
-            $res = DB::table('reservaciones')
-                ->where('id_reservacion', $idReservacion)
-                ->first();
+            $res = DB::table('reservaciones')->where('id_reservacion', $idReservacion)->first();
+            if (!$res) return response()->json(['ok' => false, 'msg' => 'No encontrada']);
 
-            if (!$res) {
-                return response()->json([
-                    'ok' => false,
-                    'msg' => 'Reservación no encontrada'
-                ]);
-            }
-
-            // ===============================
-            // 2) Calcular días
-            // ===============================
             $inicio = Carbon::parse($res->fecha_inicio);
             $fin = Carbon::parse($res->fecha_fin);
+            $dias = max(1, $inicio->diffInDays($fin));
 
-            $dias = $inicio->diffInDays($fin);
-
-            // Evitamos que cobre 0 días si la renta es menor a un bloque estricto de 24 horas.
-            if ($dias == 0) {
-                $dias = 1;
-            }
-
-            // ===============================
-            // 3) Tarifa correcta
-            // ===============================
-            $tarifaModificada = floatval($res->tarifa_modificada);
-            $tarifaBase = floatval($res->tarifa_base);
-
-            $tarifa = $tarifaModificada > 0 ? $tarifaModificada : $tarifaBase;
+            $tarifa = ($res->tarifa_modificada > 0) ? $res->tarifa_modificada : $res->tarifa_base;
             $baseTotal = $tarifa * $dias;
 
-            // ===============================
-            // 4) Servicios adicionales
-            // ===============================
-            $adds = DB::table('reservacion_servicio')
-                ->where('id_reservacion', $idReservacion)
-                ->selectRaw("SUM(cantidad * precio_unitario * ?) as total", [$dias])
-                ->first()->total ?? 0;
+            $serviciosData = DB::table('reservacion_servicio as rs')
+                ->join('servicios as s', 'rs.id_servicio', '=', 's.id_servicio')
+                ->where('rs.id_reservacion', $idReservacion)
+                ->select('s.nombre', 'rs.cantidad', 'rs.precio_unitario', 's.tipo_cobro')
+                ->get();
 
-            // ===============================
-            // 5) Delivery
-            // ===============================
-            $delivery = floatval($res->delivery_total ?? 0);
+            $listaAdicionales = [];
+            $totalServicios = 0;
 
-            // ===============================
-            // 6) Seguros
-            // ===============================
-            $precioSeguros = floatval($this->calcularTotalProtecciones($idReservacion));
+            foreach ($serviciosData as $s) {
+                $sub = ($s->tipo_cobro === 'por_dia')
+                    ? ($s->cantidad * $s->precio_unitario * $dias)
+                    : ($s->cantidad * $s->precio_unitario);
 
-            // ===============================
-            // 7) Cargos adicionales del contrato
-            // ===============================
-            $contrato = DB::table('contratos')
-                ->where('id_reservacion', $idReservacion)
-                ->first();
-
-            $cargos = 0;
-            if ($contrato) {
-                $cargos = DB::table('cargo_adicional')
-                    ->where('id_contrato', $contrato->id_contrato)
-                    ->sum('monto');
+                $totalServicios += $sub;
+                $listaAdicionales[] = [
+                    'nombre' => $s->nombre,
+                    'cantidad' => $s->cantidad,
+                    'total' => $sub
+                ];
             }
 
-            // ===============================
-            // 8) Subtotal, IVA, total
-            // ===============================
-            $subtotal = $baseTotal + floatval($adds) + $delivery + $precioSeguros + floatval($cargos);
+            $delivery = floatval($res->delivery_total ?? 0);
+            if ($res->delivery_activo && $delivery > 0) {
+                $listaAdicionales[] = [
+                    'nombre' => 'Servicio de Delivery',
+                    'cantidad' => 1,
+                    'total' => $delivery
+                ];
+            }
+
+            $precioSeguros = floatval($this->calcularTotalProtecciones($idReservacion));
+
+            $nombreSeguro = DB::table('reservacion_paquete_seguro as rps')
+                ->join('seguro_paquete as p', 'rps.id_paquete', '=', 'p.id_paquete')
+                ->where('rps.id_reservacion', $idReservacion)
+                ->value('p.nombre') ?? 'Protecciones seleccionadas';
+
+            $codigoCategoria = DB::table('categorias_carros')
+                ->where('id_categoria', $res->id_categoria)
+                ->value('codigo') ?? 'C';
+
+            $garantia = $this->obtenerGarantiaSeguro($codigoCategoria, $nombreSeguro);
+
+            $subtotal = $baseTotal + $totalServicios + $delivery + $precioSeguros;
             $iva = $subtotal * 0.16;
             $totalContrato = $subtotal + $iva;
 
-            // ===============================
-            // 9.1 Guardar totales reales en DB
-            // ===============================
-            DB::table('reservaciones')
+            $reservacionActual = DB::table('reservaciones')
                 ->where('id_reservacion', $idReservacion)
-                ->update([
-                    'subtotal'   => $subtotal,
-                    'impuestos'  => $iva,
-                    'total'      => $totalContrato,
-                    'updated_at' => now(),
-                ]);
+                ->first(['subtotal', 'impuestos', 'total']);
 
-            // ===============================
-            // 9) Pagos
-            // ===============================
+            if (
+                !$reservacionActual ||
+                abs($reservacionActual->total - $totalContrato) > 0.01
+            ) {
+
+                DB::table('reservaciones')
+                    ->where('id_reservacion', $idReservacion)
+                    ->update([
+                        'subtotal' => $subtotal,
+                        'impuestos' => $iva,
+                        'total' => $totalContrato,
+                        'updated_at' => now(),
+                    ]);
+            }
+
             $pagos = DB::table('pagos')
                 ->where('id_reservacion', $idReservacion)
-                ->orderBy('created_at')
-                ->get()
-                ->map(function ($p) {
-                    return [
-                        'id_pago' => $p->id_pago,
-                        'fecha'   => Carbon::parse($p->created_at)->format('Y-m-d H:i'),
-                        'tipo'    => $p->tipo_pago,
-                        'origen'  => $p->origen_pago ?? $p->metodo,
-                        'monto'   => $p->monto,
-                    ];
-                });
+                ->where('estatus', 'paid')
+                ->orderByDesc('created_at')
+                ->get();
 
-            $totalPagado = $pagos->sum('monto');
+            $totalPagado = $this->pagosReservacionQuery($idReservacion)->sum('monto');
+            $totalGarantiaPagada = $this->pagosGarantiaQuery($idReservacion)->sum('monto');
+
             $saldoPendiente = $totalContrato - $totalPagado;
+            $garantiaPendiente = max(0, ($garantia['monto'] ?? 0) - $totalGarantiaPagada);
 
-            // ===============================
-            // 🔥 10) Respuesta final (JSON)
-            // ===============================
             return response()->json([
-                'ok' => true,
+                'success' => true,
                 'data' => [
                     'base' => [
-                        'dias'              => $dias,
-                        'tarifa'            => $tarifa,
-                        'tarifa_base'       => $res->tarifa_base,
-                        'tarifa_modificada' => $res->tarifa_modificada,
-                        'descripcion'       => "{$dias} días · $" . number_format($tarifa, 2) . " por día",
-                        'total'             => $baseTotal
+                        'total' => $baseTotal,
+                        'descripcion' => "{$dias} días · $" . number_format($tarifa, 2)
                     ],
                     'adicionales' => [
-                        'servicios' => $adds,
-                        'delivery'  => $delivery,
-                        'seguros'   => $precioSeguros,
-                        'cargos'    => $cargos,
-                        'total'     => floatval($adds) + $delivery + $precioSeguros + floatval($cargos)
+                        'lista' => $listaAdicionales,
+                        'total' => $totalServicios + $delivery
                     ],
                     'totales' => [
-                        'subtotal'        => $subtotal,
-                        'iva'             => $iva,
-                        'total_contrato'  => $totalContrato,
+                        'nombre_seguro' => $nombreSeguro,
+                        'monto_seguros' => $precioSeguros,
+                        'subtotal' => $subtotal,
+                        'iva' => $iva,
+                        'total_contrato' => $totalContrato,
                         'saldo_pendiente' => $saldoPendiente,
+                        'garantia' => $garantia,
                     ],
-                    'pagos' => $pagos,
+                    'pagos' => [
+                        'realizados' => $totalPagado,
+                        'saldo'      => $saldoPendiente,
+                        'garantia'   => [
+                            'realizados' => $totalGarantiaPagada,
+                            'pendiente'  => $garantiaPendiente,
+                        ],
+                        'lista'      => $pagos // Esta es la colección de la base de datos
+                    ]
                 ]
             ]);
         } catch (\Throwable $e) {
-            Log::error("Error resumenPaso6: " . $e->getMessage());
-            return response()->json(['ok' => false, 'msg' => 'Error interno'], 500);
+            return response()->json(['ok' => false, 'msg' => $e->getMessage()]);
         }
     }
 
@@ -1461,6 +1449,8 @@ class Contrato2Controller extends ContratoBaseController
                 return response()->json(['ok' => false, 'msg' => 'Reservación no encontrada'], 404);
             }
 
+            $tipoPago = strtoupper(trim($req->input('tipo_pago', 'PAGO RESERVACION')));
+
             // Crear el registro de pago
             $idPago = DB::table('pagos')->insertGetId([
                 'id_reservacion'       => $req->id_reservacion,
@@ -1472,8 +1462,10 @@ class Contrato2Controller extends ContratoBaseController
 
                 'estatus'              => 'paid',
                 'metodo'               => 'PayPal',
+                'tipo_pago'            => $tipoPago,
                 'tipo_pago'            => 'PAGO RESERVACIÓN',
 
+                'tipo_pago'            => $tipoPago,
                 'monto'                => $req->monto,
                 'moneda'               => 'MXN',
 
@@ -1557,13 +1549,15 @@ class Contrato2Controller extends ContratoBaseController
                 $filePath = $req->file('comprobante')->store('pagos', 'public');
             }
 
+            $tipoPago = strtoupper(trim($req->tipo_pago));
+
             // 3) Insertar el pago
             $idPago = DB::table('pagos')->insertGetId([
                 'id_reservacion' => $req->id_reservacion,
                 'id_contrato'    => null,
                 'origen_pago'    => $origen, // Guardará el nombre bonito
                 'metodo'         => strtoupper($req->metodo),
-                'tipo_pago'      => strtoupper($req->tipo_pago),
+                'tipo_pago'      => $tipoPago,
                 'monto'          => $req->monto,
                 'moneda'         => 'MXN',
                 'estatus'        => 'paid',
@@ -1636,10 +1630,7 @@ class Contrato2Controller extends ContratoBaseController
     {
         $res = DB::table('reservaciones')->where('id_reservacion', $idReservacion)->first();
 
-        $totalPagado = DB::table('pagos')
-            ->where('id_reservacion', $idReservacion)
-            ->where('estatus', 'paid')
-            ->sum('monto');
+        $totalPagado = $this->pagosReservacionQuery($idReservacion)->sum('monto');
 
         $saldo = $res->total - $totalPagado;
 
@@ -2038,5 +2029,33 @@ class Contrato2Controller extends ContratoBaseController
 
 
         return response()->json($res);
+    }
+
+    public function guardarFirmaCliente(Request $request)
+    {
+        try {
+            $request->validate([
+                'id_contrato' => 'required|integer|exists:contratos,id_contrato',
+                'firma'       => 'required|string', // Debe ser la cadena Base64
+            ]);
+
+            DB::table('contratos')
+                ->where('id_contrato', $request->id_contrato)
+                ->update([
+                    'firma_cliente' => $request->firma,
+                    'updated_at'    => now()
+                ]);
+
+            return response()->json([
+                'ok' => true,
+                'msg' => 'Firma guardada correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Error al guardar firma en Paso 5: " . $e->getMessage());
+            return response()->json([
+                'ok' => false,
+                'msg' => 'Error interno al guardar la firma.'
+            ], 500);
+        }
     }
 }

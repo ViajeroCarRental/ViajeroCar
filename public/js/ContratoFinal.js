@@ -52,53 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* =======================================
-     2) FIRMA CLIENTE
-  ======================================= */
-  const modalCliente = document.getElementById("modalCliente");
-  const btnCliente   = document.getElementById("btnFirmaCliente");
-  const canvasC      = document.getElementById("padCliente");
-  const clearCliente = document.getElementById("clearCliente");
-  const saveCliente  = document.getElementById("saveCliente");
-
-  let padCliente = null;
-  if (canvasC && window.SignaturePad) {
-    padCliente = new SignaturePad(canvasC, { minWidth: 1, maxWidth: 2 });
-  }
-
-  btnCliente?.addEventListener("click", () => {
-    if (!modalCliente || !padCliente) return;
-    modalCliente.style.display = "flex";
-    padCliente.clear();
-  });
-
-  clearCliente?.addEventListener("click", () => padCliente?.clear());
-
-  saveCliente?.addEventListener("click", async () => {
-    try {
-      if (!padCliente) return;
-      if (!id) return alert("No se detectó el ID del contrato.");
-      if (padCliente.isEmpty()) return alert("Firma vacía");
-
-      saveCliente.disabled = true;
-      saveCliente.textContent = "Guardando...";
-
-      await postJSON("/contrato/firma-cliente", {
-        id_contrato: id,
-        firma: padCliente.toDataURL("image/png")
-      });
-
-      alert("✅ Firma del cliente guardada");
-      modalCliente.style.display = "none";
-      location.reload();
-    } catch (e) {
-      alert("❌ No se pudo guardar la firma: " + e.message);
-    } finally {
-      saveCliente.disabled = false;
-      saveCliente.textContent = "Guardar";
-    }
-  });
-
-  /* =======================================
      3) FIRMA ARRENDADOR
   ======================================= */
   const modalArr = document.getElementById("modalArrendador");

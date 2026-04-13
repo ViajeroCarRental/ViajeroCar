@@ -7,333 +7,207 @@
 
 @section('contenidoContrato')
 
-    @php
-        use Carbon\Carbon;
+    <main class="main" id="contratoApp" data-id-contrato="{{ $contrato->id_contrato ?? '' }}"
+        data-id-reservacion="{{ $reservacion->id_reservacion }}">
 
-        $idReservacion = $reservacion->id_reservacion;
-        $idContratoReal = $contrato?->id_contrato;
+        <header class="contrato-header-top">
+            <div class="header-left">
+                <h1 class="h1" style="margin-bottom:4px;">Gestión de Contrato</h1>
+                <p style="color:#666; margin:0;">
+                    <b>No. Contrato:</b> {{ $contrato->numero_contrato ?? '—' }}
+                </p>
+            </div>
 
-        // fechas
-        $fechaInicio = Carbon::parse($reservacion->fecha_inicio ?? now());
-        $fechaFin = Carbon::parse($reservacion->fecha_fin ?? now()->addDay());
-        $horaRetiro = Carbon::parse($reservacion->hora_retiro ?? '12:00:00');
-        $horaEntrega = Carbon::parse($reservacion->hora_entrega ?? '12:00:00');
-        $diasTotales = max(1, $fechaInicio->diffInDays($fechaFin));
+            {{-- Resumen --}}
+            <div class="header-right">
+                <button type="button" class="resumen-barra-verde" id="btnToggleDetalle">
+                    <div class="resumen-textos">
+                        <span class="resumen-lbl">Total a pagar</span>
+                        <div class="resumen-precio-mxn" id="resumenTotalBarra">
+                            ${{ number_format($total ?? 0, 2) }} MXN
+                        </div>
+                        <div class="resumen-precio-usd" id="resumenTotalUsd">
+                            ${{ number_format(($total ?? 0) / 18.5, 2) }} USD
+                        </div>
+                    </div>
+                    <div class="resumen-iconos">
+                        <span class="icono-flecha" id="iconoFlechaResumen">▼</span>
+                        <span style="font-size: 24px;">🇲🇽</span>
+                    </div>
+                </button>
 
-        // Cargos
+                <div class="resumen-detalle-desplegable" id="resumenDetalleContainer">
 
-        // Dropoff (Concepto 6)
-        $dropActivo = (bool) ($cargoDrop ?? false);
-        $dropDetalle = $dropActivo && isset($cargoDrop->detalle) ? json_decode($cargoDrop->detalle) : null;
-        $dropDest = $dropDetalle->destino ?? '';
-        $dropKm = $dropDetalle->km ?? '';
-        $dropTotal = $cargoDrop->monto ?? 0;
-        $esManual = $dropActivo && $dropKm > 0 && !str_contains($dropDest, ' - ');
+                    <div class="card resumen-card">
+                        <div class="head">Resumen del Contrato</div>
 
-        // Gasolina (Concepto 5)
-        $gasActivo = (bool) ($cargoGas ?? false);
-        $gasDetalle = $gasActivo && isset($cargoGas->detalle) ? json_decode($cargoGas->detalle) : null;
+                        <div class="cnt resumen-compacto" id="resumenCompacto">
+                            <div id="vehiculo_info" class="vehiculo-mini-wrap">
+                                <img id="resumenImgVeh" src="{{ $vehiculo->imagen_render ?? '' }}"
+                                    alt="Imagen de {{ $vehiculo->marca ?? 'vehículo' }} {{ $vehiculo->modelo ?? '' }}"
+                                    class="vehiculo-img">
+                                <p class="vehiculo-nombre" id="resumenVehCompacto">—</p>
+                                <p class="vehiculo-mini" id="resumenCategoriaCompacto">Categoría: —</p>
+                                <p class="vehiculo-mini" id="resumenDiasCompacto">Días de renta: —</p>
+                                <p class="vehiculo-mini" id="resumenFechasCompacto">— / —</p>
+                            </div>
+                            <div class="totalBox" style="margin-top:12px;">
+                                <div class="kv">
+                                    <div>Total actual</div>
+                                    <div class="total" id="resumenTotalCompacto">${{ number_format($total ?? 0, 2) }} MXN
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="btnVerDetalle" class="btn-resumen">Ver detalle ▼</button>
+                        </div>
 
-        // Precios y Tarifas
-        $categoriasCol = collect($categorias ?? []);
-        $catActual = $categoriasCol->where('id_categoria', $reservacion->id_categoria ?? 0)->first();
-        $precioBase = $catActual->precio_dia ?? ($catActual->precio ?? 0);
+                        <div class="cnt resumen-detalle" id="resumenDetalle" style="display:none;">
+                            <div id="detalleContenido">
+                                <section class="res-block">
+                                    <h4>Código de reservación</h4>
+                                    <p id="detCodigo">—</p>
+                                </section>
+                                <section class="res-block">
+                                    <h4>Datos del cliente</h4>
+                                    <p id="detCliente">{{ strtoupper($reservacion->nombre_cliente ?? '—') }}</p>
+                                    <p id="detTelefono">{{ $telFinal }}</p>
+                                    <p id="detEmail">{{ $reservacion->email_cliente ?? '—' }}</p>
+                                </section>
+                                <section class="res-block">
+                                    <h4>Vehículo</h4>
+                                    <p><b id="detModelo">—</b></p>
+                                    <p>Marca: <span id="detMarca">—</span></p>
+                                    <p>Categoría: <span id="detCategoria">—</span></p>
+                                    <p>Transmisión: <span id="detTransmision">—</span></p>
+                                    <p>Pasajeros: <span id="detPasajeros">—</span></p>
+                                    <p>Puertas: <span id="detPuertas">—</span></p>
+                                    <p>Kilometraje actual: <span id="detKm">—</span></p>
+                                </section>
+                                <section class="res-block">
+                                    <h4>Fechas y horarios</h4>
+                                    <p>Salida: <span id="detFechaSalida">{{ $fechaInicio->format('Y-m-d') }}</span> ·
+                                        <span id="detHoraSalida">{{ $horaRetiro->format('h:i A') }}</span>
+                                    </p>
+                                    <p>Entrega: <span id="detFechaEntrega">{{ $fechaFin->format('Y-m-d') }}</span> · <span
+                                            id="detHoraEntrega">{{ $horaEntrega->format('h:i A') }}</span></p>
+                                    <p><strong>Días totales:</strong> <span id="detDiasRenta">{{ $diasTotales }}</span>
+                                    </p>
+                                </section>
+                                <section class="res-block">
+                                    <h4>Paquetes de cobertura</h4>
+                                    <ul id="r_seguros_lista" class="det-lista">
+                                        <li class="empty">—</li>
+                                    </ul>
+                                    <p>Total: <b id="r_seguros_total">—</b></p>
+                                </section>
+                                <section class="res-block">
+                                    <h4>Adicionales</h4>
+                                    <ul id="r_servicios_lista" class="det-lista">
+                                        <li class="empty">—</li>
+                                    </ul>
+                                    <p>Total: <b id="r_servicios_total">—</b></p>
+                                </section>
+                                {{-- <section class="res-block">
+                                    <h4>Servicios adicionales</h4>
+                                    <ul id="r_cargos_lista" class="det-lista">
+                                        <li class="empty">—</li>
+                                    </ul>
+                                    <p>Total: <b id="r_cargos_total">$0.00 MXN</b></p>
+                                </section> --}}
+                                <section class="res-block">
+                                    <h4>Total desglosado</h4>
+                                    <p>Tarifa base: <b id="r_base_precio">${{ number_format($precioReal, 2) }}</b>
+                                        <button id="btnEditarTarifa"
+                                            style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:15px;margin-left:6px;">✏️</button>
+                                    </p>
+                                    <p>Horas de cortesía: <b id="r_cortesia">{{ $reservacion->horas_cortesia ?? 1 }}</b>
+                                        <button id="btnEditarCortesia"
+                                            style="background:none; border:none; color:#2563eb; cursor:pointer; font-size:14px; margin-left:4px;">✏️</button>
+                                    </p>
+                                    <p>Subtotal: <b id="r_subtotal">${{ number_format($subtotal, 2) }}</b></p>
+                                    <p>IVA: <b id="r_iva">${{ number_format($iva, 2) }}</b></p>
+                                    <p>Total contrato: <b id="r_total_final">${{ number_format($total, 2) }}</b></p>
+                                </section>
+                                <section class="res-block">
+                                    <h4>Pagos y saldo</h4>
+                                    <p>Pagos realizados: <b id="detPagos">—</b></p>
+                                    <p>Saldo pendiente: <b id="detSaldo">—</b></p>
+                                </section>
+                            </div>
+                            <button id="btnOcultarDetalle" class="btn-resumen">Ocultar detalle ▲</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
 
-        $precioReal =
-            $reservacion->tarifa_ajustada == 1 && $reservacion->tarifa_modificada > 0
-                ? $reservacion->tarifa_modificada
-                : $precioBase;
+        <nav class="stepper-navbar">
+            <ul class="stepper-list">
+                <li class="stepper-item completed" data-step-indicator="1">
+                    <div class="stepper-circle">1</div>
+                    <div class="stepper-title">Reservación</div>
+                </li>
+                <li class="stepper-line completed"></li>
 
-        $subtotal = $diasTotales * $precioReal;
-        $iva = $subtotal * 0.16;
-        $total = $subtotal + $iva;
+                <li class="stepper-item completed" data-step-indicator="2">
+                    <div class="stepper-circle">2</div>
+                    <div class="stepper-title">Servicios</div>
+                </li>
+                <li class="stepper-line completed"></li>
 
-        // Formato de Telefono
-        $telOriginal = $reservacion->telefono_cliente ?? '';
-        $soloNumeros = preg_replace('/[^0-9]/', '', $telOriginal);
-        $telFinal =
-            strlen($soloNumeros) == 10
-                ? '(' . substr($soloNumeros, 0, 3) . ') ' . substr($soloNumeros, 3, 3) . '-' . substr($soloNumeros, 6)
-                : ($telOriginal ?:
-                '—');
-    @endphp
+                <li class="stepper-item completed" data-step-indicator="3">
+                    <div class="stepper-circle">3</div>
+                    <div class="stepper-title">Protecciones</div>
+                </li>
+                <li class="stepper-line completed"></li>
 
-    <main class="main" id="contratoApp" data-id-contrato="{{ $idContratoReal ?? '' }}"
-        data-numero="{{ $contrato?->numero_contrato ?? '' }}" data-id-reservacion="{{ $idReservacion ?? '' }}"
-        data-id-categoria="{{ $reservacion->id_categoria ?? '' }}">
+                <li class="stepper-item" data-step-indicator="4">
+                    <div class="stepper-circle">4</div>
+                    <div class="stepper-title">Documentación</div>
+                </li>
+                <li class="stepper-line"></li>
 
-        <h1 class="h1">Gestión de Contrato</h1>
-        <p style="color:#666; margin-bottom:10px;">
-            <b>No. Contrato:</b> {{ $contrato?->numero_contrato ?? 'En proceso...' }}
-        </p>
+                <li class="stepper-item" data-step-indicator="5">
+                    <div class="stepper-circle">5</div>
+                    <div class="stepper-title">Revisión Final</div>
+                </li>
+                <li class="stepper-line"></li>
 
-        <div class="grid">
+                <li class="stepper-item" data-step-indicator="6">
+                    <div class="stepper-circle">6</div>
+                    <div class="stepper-title">Pago</div>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="grid full-width-grid">
 
             <section class="steps">
 
                 {{-- Paso 4 --}}
-                <article class="step active" data-step="4">
-                    <header>
-                        <div class="badge">4</div>
-                        <h3>PASO 4 · Configuración final</h3>
-                    </header>
-
-                    <div class="body">
-                        <section class="section">
-                            <div class="head">Ajusta asignación y cargos opcionales</div>
-                            <div class="cnt">
-
-                                {{-- Itinerario --}}
-                                <div class="card">
-                                    <div class="head">
-                                        <div class="hTitle">
-                                            <div class="hIcon">🗓️</div> Itinerario programado
-                                        </div>
-                                    </div>
-                                    <div class="body">
-                                        <div class="note">
-                                            <div class="ic">ℹ️</div>
-                                            <div>
-                                                <div><b>Entrega:</b> <span
-                                                        id="lblSedePick">{{ $reservacion->sucursal_retiro_nombre ?? '—' }}</span>
-                                                </div>
-                                                <div><b>Devolución:</b> <span
-                                                        id="lblSedeDrop">{{ $reservacion->sucursal_entrega_nombre ?? '—' }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-
-                                <div class="card">
-                                    <div class="head">
-                                        <div class="hTitle">
-                                            <div class="hIcon">🚗</div> Vehículo asignado
-                                        </div>
-                                        <button id="editVeh" class="btn"
-                                            style="background:#fff; border:1px solid var(--stroke); font-size:13px; padding:4px 10px;">
-                                            ✏️ Cambiar unidad
-                                        </button>
-                                    </div>
-                                    <div class="body">
-                                        <div id="vehiculoAsignadoUI">
-                                            @if (!empty($reservacion->id_vehiculo))
-                                                <div
-                                                    style="display:flex; align-items:center; gap:15px; padding:12px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;">
-                                                    <div
-                                                        style="font-size:24px; background:#fff; padding:8px; border-radius:50%; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-                                                        ✅</div>
-                                                    <div>
-                                                        <h4 style="margin:0; font-size:15px; color:#166534;">
-                                                            {{ $reservacion->marca }} {{ $reservacion->modelo }}</h4>
-                                                        <p style="margin:4px 0 0 0; font-size:12px; color:#166534;">
-                                                            Placa: <b>{{ $reservacion->placa }}</b> | Color:
-                                                            {{ $reservacion->color }}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            @else
-                                                <div
-                                                    style="padding:15px; background:#fef2f2; border:1px dashed #f87171; border-radius:8px; color:#b91c1c; text-align:center; font-size:13px;">
-                                                    ⚠️ No hay unidad asignada. Por favor haz clic en "Cambiar unidad".
-                                                </div>
-                                            @endif
-                                        </div>
-                                        <select id="vehAssign" style="display:none;">
-                                            @if (!empty($reservacion->id_vehiculo))
-                                                <option value="{{ $reservacion->id_vehiculo }}" selected>
-                                                    {{ $reservacion->placa }}</option>
-                                            @endif
-                                        </select>
-                                    </div>
-                                </div>
-
-                                {{-- Gasolina Faltante --}}
-                                {{-- <div class="card">
-                                    <div class="head">
-                                        <div class="hTitle">
-                                            <div class="hIcon">⛽</div> Gasolina faltante
-                                        </div>
-                                    </div>
-                                    <div class="body">
-                                        <div class="cargo-item" data-tipo="litros-gasolina" data-id="5">
-                                            <div class="head">
-                                                <div class="hTitle">
-                                                    <div class="hIcon">🛢️</div> Litros faltantes
-                                                </div>
-                                                <div class="switch {{ $gasActivo ? 'on' : '' }}" id="switchGasLit"
-                                                    data-idconcepto="5"></div>
-                                            </div>
-                                            <div class="body">
-                                                <div id="gasLitrosInputs"
-                                                    style="display:{{ $gasActivo ? 'block' : 'none' }}; margin-top:10px;">
-                                                    <div class="form-grid">
-                                                        <div>
-                                                            <label>Precio por litro:</label>
-                                                            <input type="number" min="0" step="0.01"
-                                                                id="gasPrecioL" class="form-control"
-                                                                value="{{ $gasDetalle->precio_litro ?? '' }}">
-                                                        </div>
-                                                        <div>
-                                                            <label>Litros faltantes:</label>
-                                                            <input type="number" min="0" step="1"
-                                                                id="gasCantL" class="form-control"
-                                                                value="{{ $gasDetalle->litros ?? '' }}">
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        style="margin-top:10px; font-weight:bold; text-align:right; color:var(--primary);">
-                                                        Total gasolina: <span
-                                                            id="gasTotalHTML">${{ number_format($cargoGas->monto ?? 0, 2) }}
-                                                            MXN</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div> --}}
-
-                                {{-- Dropoff --}}
-                                <div class="card cargo-item {{ $dropActivo ? 'active' : '' }}" data-id="6"
-                                    data-monto="{{ $dropTotal }}">
-                                    <div class="head">
-                                        <div class="hTitle">
-                                            <div class="hIcon">📍</div> Dropoff
-                                        </div>
-                                        <div class="switch {{ $dropActivo ? 'on' : '' }}" id="switchDropoff"
-                                            data-idconcepto="6"></div>
-                                    </div>
-                                    <div class="body">
-                                        <div class="note">Selecciona la ubicación donde el cliente devolverá el vehículo.
-                                        </div>
-                                        <div id="dropoffFields"
-                                            style="display:{{ $dropActivo ? 'block' : 'none' }}; margin-top:15px;">
-                                            <div class="form-group">
-                                                <label>Seleccionar ubicación</label>
-                                                <select id="dropUbicacion" class="form-control">
-                                                    <option value="">Seleccione...</option>
-                                                    @foreach ($ubicaciones as $u)
-                                                        @php $nombreUbi = $u->estado . ' - ' . $u->destino; @endphp
-                                                        <option value="{{ $u->id_ubicacion }}"
-                                                            data-km="{{ $u->km }}"
-                                                            {{ $dropDest == $nombreUbi ? 'selected' : '' }}>
-                                                            {{ $nombreUbi }} ({{ $u->km }} km)
-                                                        </option>
-                                                    @endforeach
-                                                    <option value="0" {{ $esManual ? 'selected' : '' }}>Dirección
-                                                        personalizada (manual)</option>
-                                                </select>
-                                            </div>
-                                            <div id="dropGroupDireccion" class="form-group"
-                                                style="display:{{ $esManual ? 'block' : 'none' }}; margin-top:10px;">
-                                                <label>Dirección personalizada</label>
-                                                <input type="text" id="dropDireccion" class="form-control"
-                                                    value="{{ $dropDest }}" placeholder="Ej. Calle Las Flores 123">
-                                            </div>
-                                            <div id="dropGroupKm" class="form-group"
-                                                style="display:{{ $esManual ? 'block' : 'none' }}; margin-top:10px;">
-                                                <label>Kilómetros personalizados</label>
-                                                <input type="number" min="0" id="dropKm" class="form-control"
-                                                    value="{{ $dropKm }}" placeholder="Ej. 25">
-                                            </div>
-                                            <div id="dropCostoKm" style="margin-top:10px; color:#666; font-size:13px;">
-                                                Costo por km: <b><span
-                                                        id="dropCostoKmHTML">${{ number_format($costoKmCategoria ?? 0, 2) }}</span></b>
-                                            </div>
-                                            <div
-                                                style="margin-top:15px; font-weight:bold; text-align:right; color:var(--primary);">
-                                                Total Dropoff: <span id="dropTotalHTML">${{ number_format($dropTotal, 2) }}
-                                                    MXN</span>
-                                            </div>
-                                        </div>
-                                        <input type="hidden" id="deliveryPrecioKm" value="{{ $costoKmCategoria ?? 0 }}">
-                                    </div>
-                                </div>
-
-                                {{-- Otros Cargos Adicionales --}}
-                                {{-- <div class="card">
-                                    <div class="head">
-                                        <div class="hTitle">
-                                            <div class="hIcon">💰</div> Otros cargos adicionales
-                                        </div>
-                                    </div>
-                                    <div class="body">
-                                        <div class="note">Activa solo los cargos que correspondan.</div>
-                                        <div id="cargosGrid" class="add-grid">
-                                            @foreach ($cargos_conceptos as $cargo)
-                                                @php
-                                                    $activo = in_array($cargo->id_concepto, $cargosActivos ?? []);
-                                                @endphp
-                                                <div class="card cargo-item {{ $activo ? 'active' : '' }}"
-                                                    data-id="{{ $cargo->id_concepto }}"
-                                                    data-monto="{{ $cargo->monto_base ?? 0 }}">
-                                                    <div class="head">
-                                                        <div class="hTitle">
-                                                            <div class="hIcon">🧾</div>
-                                                            <b>{{ $cargo->nombre }}</b>
-                                                        </div>
-                                                        <div class="switch {{ $activo ? 'on' : '' }}"
-                                                            data-id="{{ $cargo->id_concepto }}"></div>
-                                                    </div>
-                                                    <div class="body">
-                                                        <div class="precio"
-                                                            style="font-weight: bold; color: var(--primary);">
-                                                            ${{ number_format($cargo->monto_base, 2) }} MXN
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-
-                                        
-                                        <div class="totalBox"
-                                            style="margin-top:18px; border-top: 2px solid #eee; padding-top: 15px;">
-                                            <div class="kv">
-                                                <div style="font-weight: bold; color:#d00;">Total cargos opcionales</div>
-                                                <div class="total" id="total_cargos"
-                                                    style="font-size: 22px; font-weight: bold; color:#d00;">
-                                                    ${{ number_format($totalPaso4Server ?? 0, 2) }} MXN
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div> --}}
-
-                                <div class="acciones" style="margin-top:20px;">
-                                    <a href="/admin/contrato/{{ $idReservacion }}" class="btn gray"
-                                        onclick="localStorage.setItem('contratoPasoActual_{{ $idReservacion }}', '3');">
-                                        ← Volver a Seguros
-                                    </a>
-                                    <button class="btn primary" id="go5" type="button">Continuar a Documentos
-                                        →</button>
-                                </div>
-
-                            </div>
-                        </section>
-                    </div>
-                </article>
-
-                {{-- Paso 5 --}}
-                <article class="step" data-step="5">
-                    <header>
-                        <div class="badge">5</div>
-                        <h3>PASO 5 · Documentación de Conductores</h3>
-                    </header>
-
+                <article class="step" data-step="4">
                     <div class="body">
                         <form id="formDocumentacion" action="{{ route('contrato.guardarDocumentacion') }}"
                             method="POST" enctype="multipart/form-data">
                             @csrf
 
                             <input type="hidden" name="id_reservacion" value="{{ $idReservacion }}">
-                            <input type="hidden" name="id_contrato" value="{{ $idContratoReal ?? '' }}">
+                            <input type="hidden" name="id_contrato" value="{{ $idContrato ?? '' }}">
 
                             {{-- TITULAR --}}
                             <div class="bloque-conductor-individual">
                                 <section class="section">
                                     <div class="head">
-                                        <span>Documentación del Titular: {{ $reservacion->nombre_cliente }}</span>
+                                        <span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                                <circle cx="12" cy="7" r="4"></circle>
+                                            </svg>
+                                            Documentación del Titular: {{ $reservacion->nombre_cliente ?? '' }}
+                                            {{ $reservacion->apellidos_cliente ?? '' }}
+                                        </span>
                                     </div>
 
                                     <div class="cnt">
@@ -361,23 +235,28 @@
                                             <div class="input-row">
                                                 <label>Nombres</label>
                                                 <input name="conductores[0][nombre]" type="text"
-                                                    value="{{ $reservacion->nombre_cliente }}" required>
+                                                    value="{{ $reservacion->nombre_cliente ?? '' }}" readonly
+                                                    class="input-readonly">
                                             </div>
 
                                             <div class="input-row">
                                                 <label>Apellido Paterno</label>
-                                                <input name="conductores[0][apellido_paterno]" type="text" required>
+                                                <input name="conductores[0][apellido_paterno]" type="text"
+                                                    value="{{ $reservacion->apellido_paterno ?? ($reservacion->apellidos_cliente ?? '') }}"
+                                                    readonly class="input-readonly">
                                             </div>
 
                                             <div class="input-row">
                                                 <label>Apellido Materno</label>
-                                                <input name="conductores[0][apellido_materno]" type="text" required>
+                                                <input name="conductores[0][apellido_materno]" type="text"
+                                                    value="{{ $reservacion->apellido_materno ?? '' }}" readonly
+                                                    class="input-readonly">
                                             </div>
 
                                             <div class="input-row">
                                                 <label>Contacto de Emergencia</label>
                                                 <input name="conductores[0][contacto_emergencia]" type="text"
-                                                    maxlength="10" placeholder="Contacto de Emergencia" required>
+                                                    maxlength="10" placeholder="Ej. 4421234567" required>
                                             </div>
 
                                             <div class="input-row">
@@ -392,12 +271,22 @@
                                             </div>
                                         </div>
 
-                                        <div class="form-grid" style="margin-top:12px">
+                                        <div class="form-grid mt-12">
                                             <div>
                                                 <label>Fotografía Identificación — Frente</label>
                                                 <div class="uploader">
                                                     <input name="conductores[0][idFrente]" type="file"
                                                         accept="image/*" required>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"
+                                                        viewBox="0 0 24 24" fill="none" stroke="#9ca3af"
+                                                        stroke-width="1.5" stroke-linecap="round"
+                                                        stroke-linejoin="round">
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                                        <line x1="12" y1="3" x2="12"
+                                                            y2="15"></line>
+                                                    </svg>
+                                                    <div class="msg">Haz clic o arrastra la imagen aquí</div>
                                                 </div>
                                                 <div class="preview"></div>
                                             </div>
@@ -407,6 +296,16 @@
                                                 <div class="uploader">
                                                     <input name="conductores[0][idReverso]" type="file"
                                                         accept="image/*" required>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"
+                                                        viewBox="0 0 24 24" fill="none" stroke="#9ca3af"
+                                                        stroke-width="1.5" stroke-linecap="round"
+                                                        stroke-linejoin="round">
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                                        <line x1="12" y1="3" x2="12"
+                                                            y2="15"></line>
+                                                    </svg>
+                                                    <div class="msg">Haz clic o arrastra la imagen aquí</div>
                                                 </div>
                                                 <div class="preview"></div>
                                             </div>
@@ -415,16 +314,25 @@
                                 </section>
 
                                 {{-- LICENCIA TITULAR --}}
-                                <section class="section" style="margin-top:18px">
-                                    {{-- <div class="head">Licencia de Conducir (Titular)</div> --}}
+                                <section class="section mt-18">
+                                    <div class="head flex-head">
+                                        <span style="display: flex; align-items: center; gap: 8px;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                                                <circle cx="12" cy="5" r="2"></circle>
+                                                <path d="M12 7v4"></path>
+                                                <line x1="8" y1="16" x2="8.01" y2="16">
+                                                </line>
+                                                <line x1="16" y1="16" x2="16.01" y2="16">
+                                                </line>
+                                            </svg>
+                                            Licencia de Conducir (Titular)
+                                        </span>
 
-                                    <div class="head" style="display: flex; align-items: center; gap: 8px;">
-                                        Licencia de Conducir (Titular)
-
-                                        <button type="button" id="btnInfoLicencia" title="Aviso importante"
-                                            style="background: transparent; border: none; cursor: pointer; font-size: 18px; color: #3b82f6; padding: 0; display: flex; align-items: center; justify-content: center; transition: transform 0.2s;"
-                                            onmouseover="this.style.transform='scale(1.1)'"
-                                            onmouseout="this.style.transform='scale(1)'">
+                                        <button type="button" id="btnInfoLicencia" class="btn-info-licencia"
+                                            title="Aviso importante">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -468,12 +376,22 @@
                                             </div>
                                         </div>
 
-                                        <div class="form-grid" style="margin-top:12px">
+                                        <div class="form-grid mt-12">
                                             <div>
                                                 <label>Licencia — Frente</label>
                                                 <div class="uploader">
                                                     <input name="conductores[0][licFrente]" type="file"
                                                         accept="image/*" required>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"
+                                                        viewBox="0 0 24 24" fill="none" stroke="#9ca3af"
+                                                        stroke-width="1.5" stroke-linecap="round"
+                                                        stroke-linejoin="round">
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                                        <line x1="12" y1="3" x2="12"
+                                                            y2="15"></line>
+                                                    </svg>
+                                                    <div class="msg">Haz clic o arrastra la imagen aquí</div>
                                                 </div>
                                                 <div class="preview"></div>
                                             </div>
@@ -483,6 +401,16 @@
                                                 <div class="uploader">
                                                     <input name="conductores[0][licReverso]" type="file"
                                                         accept="image/*" required>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28"
+                                                        viewBox="0 0 24 24" fill="none" stroke="#9ca3af"
+                                                        stroke-width="1.5" stroke-linecap="round"
+                                                        stroke-linejoin="round">
+                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                                        <line x1="12" y1="3" x2="12"
+                                                            y2="15"></line>
+                                                    </svg>
+                                                    <div class="msg">Haz clic o arrastra la imagen aquí</div>
                                                 </div>
                                                 <div class="preview"></div>
                                             </div>
@@ -495,12 +423,20 @@
                             @foreach ($conductoresExtras as $index => $extra)
                                 @php $idx = $index + 1; @endphp
 
-                                <div class="bloque-conductor-individual"
-                                    style="margin-top: 50px; border-top: 3px dashed #cbd5e1; padding-top: 30px;">
-
+                                <div class="bloque-conductor-individual bloque-conductor-adicional">
                                     <section class="section">
-                                        <div class="head" style="background: #64748b;">
-                                            <span>Documentación Conductor Adicional: {{ $extra['nombres'] }}</span>
+                                        <div class="head bg-slate">
+                                            <span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                                    <circle cx="9" cy="7" r="4"></circle>
+                                                    <path d="M19 8v6"></path>
+                                                    <path d="M22 11h-6"></path>
+                                                </svg>
+                                                Documentación Conductor Adicional: {{ $extra['nombres'] }}
+                                            </span>
                                         </div>
 
                                         <div class="cnt">
@@ -563,12 +499,22 @@
                                                 </div>
                                             </div>
 
-                                            <div class="form-grid" style="margin-top:12px">
+                                            <div class="form-grid mt-12">
                                                 <div>
                                                     <label>Identificación — Frente</label>
                                                     <div class="uploader">
                                                         <input name="conductores[{{ $idx }}][idFrente]"
                                                             type="file" accept="image/*" required>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="28"
+                                                            height="28" viewBox="0 0 24 24" fill="none"
+                                                            stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                                            <line x1="12" y1="3" x2="12"
+                                                                y2="15"></line>
+                                                        </svg>
+                                                        <div class="msg">Haz clic o arrastra la imagen aquí</div>
                                                     </div>
                                                     <div class="preview"></div>
                                                 </div>
@@ -578,6 +524,16 @@
                                                     <div class="uploader">
                                                         <input name="conductores[{{ $idx }}][idReverso]"
                                                             type="file" accept="image/*" required>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="28"
+                                                            height="28" viewBox="0 0 24 24" fill="none"
+                                                            stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                                            <line x1="12" y1="3" x2="12"
+                                                                y2="15"></line>
+                                                        </svg>
+                                                        <div class="msg">Haz clic o arrastra la imagen aquí</div>
                                                     </div>
                                                     <div class="preview"></div>
                                                 </div>
@@ -586,8 +542,20 @@
                                     </section>
 
                                     {{-- LICENCIA ADICIONAL --}}
-                                    <section class="section" style="margin-top:18px">
-                                        <div class="head" style="background: #94a3b8;">Licencia de Conducir (Adicional)
+                                    <section class="section mt-18">
+                                        <div class="head bg-slate-light">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+                                                <circle cx="12" cy="5" r="2"></circle>
+                                                <path d="M12 7v4"></path>
+                                                <line x1="8" y1="16" x2="8.01" y2="16">
+                                                </line>
+                                                <line x1="16" y1="16" x2="16.01" y2="16">
+                                                </line>
+                                            </svg>
+                                            Licencia de Conducir (Adicional)
                                         </div>
 
                                         <div class="cnt">
@@ -623,12 +591,22 @@
                                                 </div>
                                             </div>
 
-                                            <div class="form-grid" style="margin-top:12px">
+                                            <div class="form-grid mt-12">
                                                 <div>
                                                     <label>Licencia — Frente</label>
                                                     <div class="uploader">
                                                         <input name="conductores[{{ $idx }}][licFrente]"
                                                             type="file" accept="image/*" required>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="28"
+                                                            height="28" viewBox="0 0 24 24" fill="none"
+                                                            stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                                            <line x1="12" y1="3" x2="12"
+                                                                y2="15"></line>
+                                                        </svg>
+                                                        <div class="msg">Haz clic o arrastra la imagen aquí</div>
                                                     </div>
                                                     <div class="preview"></div>
                                                 </div>
@@ -638,6 +616,16 @@
                                                     <div class="uploader">
                                                         <input name="conductores[{{ $idx }}][licReverso]"
                                                             type="file" accept="image/*" required>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="28"
+                                                            height="28" viewBox="0 0 24 24" fill="none"
+                                                            stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                                            <line x1="12" y1="3" x2="12"
+                                                                y2="15"></line>
+                                                        </svg>
+                                                        <div class="msg">Haz clic o arrastra la imagen aquí</div>
                                                     </div>
                                                     <div class="preview"></div>
                                                 </div>
@@ -647,203 +635,362 @@
                                 </div>
                             @endforeach
 
-                            <div class="acciones"
-                                style="margin-top:30px; padding: 20px; background: #f8fafc; border-radius: 8px;">
-                                <button class="btn gray" id="back4" type="button">← Atrás</button>
-                                <button class="btn primary" id="btnContinuarDoc" type="submit">
-                                    Guardar Toda la Documentación →
-                                </button>
-                                <button class="btn success" id="btnSaltarDoc" type="button" style="margin-left:8px;">
-                                    Continuar sin volver a subir →
-                                </button>
+                            {{-- BOTONES DE NAVEGACIÓN Y GUARDADO --}}
+                            <div class="acciones-finales">
+                                <button class="btn gray" id="back_to_step3" type="button">← Atrás</button>
+
+                                <div class="btn-group">
+                                    <button class="btn primary" id="btnContinuarDoc" type="submit">Guardar y Revisar
+                                        →</button>
+                                    <button class="btn success btn-saltar" id="btnSaltarDoc" type="button">Continuar a
+                                        Revisión →</button>
+                                </div>
                             </div>
                         </form>
                     </div>
                 </article>
 
+                {{-- Paso 5 --}}
+                <article class="step" data-step="5">
+                    <div class="body">
+                        <div class="contrato-preview-container">
+
+                            <h2 class="preview-title">
+                                Contrato <span
+                                    id="res-numero-contrato">{{ $contrato?->numero_contrato ?? 'PREVIEW' }}</span>
+                            </h2>
+
+                            <div class="preview-grid">
+                                {{-- DATOS BÁSICOS --}}
+                                <div class="preview-col">
+                                    <div class="preview-card">
+                                        <h5>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                style="color: #64748b;">
+                                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                                <circle cx="9" cy="7" r="4"></circle>
+                                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                            </svg>
+                                            Conductores
+                                        </h5>
+                                        <div id="res-lista-conductores">
+                                            <p class="txt-primary">
+                                                {{ $reservacion->nombre_cliente }} {{ $reservacion->apellidos_cliente }}
+                                                <span class="txt-muted">(Titular)</span>
+                                            </p>
+                                            @if (isset($conductoresExtras) && count($conductoresExtras) > 0)
+                                                @foreach ($conductoresExtras as $extra)
+                                                    <p class="txt-secondary">
+                                                        • {{ $extra['nombres'] ?? 'Conductor' }}
+                                                        {{ $extra['apellidos'] ?? '' }}
+                                                        <span class="txt-muted">(Adicional)</span>
+                                                    </p>
+                                                @endforeach
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <div class="preview-card">
+                                        <h5>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                style="color: #64748b;">
+                                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                                <circle cx="12" cy="10" r="3"></circle>
+                                            </svg>
+                                            Oficina
+                                        </h5>
+                                        <div class="loc-block">
+                                            <label>ENTREGA</label>
+                                            <p><b>{{ $reservacion->sucursal_retiro_nombre ?? 'Sucursal no asignada' }}</b>
+                                            </p>
+                                            <p class="loc-date">
+                                                {{ \Carbon\Carbon::parse($reservacion->fecha_inicio)->format('d M Y - h:i A') }}
+                                            </p>
+                                        </div>
+                                        <div class="loc-block">
+                                            <label>DEVOLUCIÓN</label>
+                                            <p><b>{{ $reservacion->sucursal_entrega_nombre ?? 'Sucursal no asignada' }}</b>
+                                            </p>
+                                            <p class="loc-date">
+                                                {{ \Carbon\Carbon::parse($reservacion->fecha_fin)->format('d M Y - h:i A') }}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="preview-card">
+                                        <h5>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                style="color: #64748b;">
+                                                <path
+                                                    d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a2 2 0 0 0-1.6-.8H5.32a2 2 0 0 0-1.69.94L1 12v4h3m4 0h6m-6 0a2 2 0 1 1-4 0m10 0a2 2 0 1 1-4 0">
+                                                </path>
+                                            </svg>
+                                            Auto
+                                        </h5>
+                                        <p id="res-auto-nombre" class="txt-primary">
+                                            {{ $vehiculo->marca ?? '' }}
+                                            {{ $vehiculo->modelo ?? 'Vehículo Seleccionado' }}
+                                        </p>
+                                        <p class="txt-secondary text-sm">VIN: <span
+                                                id="res-auto-vin">{{ $vehiculo->numero_serie ?? '---' }}</span></p>
+                                        <p class="txt-secondary text-sm">Placa: <span
+                                                id="res-auto-placa">{{ $vehiculo->placa ?? '---' }}</span></p>
+                                    </div>
+                                </div>
+
+                                {{-- COBERTURAS Y PAGOS --}}
+                                <div class="preview-col">
+                                    <div class="preview-card">
+                                        <h5>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                style="color: #64748b;">
+                                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                            </svg>
+                                            Coberturas
+                                        </h5>
+                                        <ul id="res-lista-coberturas" class="res-list">
+                                            <li class="txt-muted">Cargando protecciones...</li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="preview-card">
+                                        <h5>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                style="color: #64748b;">
+                                                <rect x="3" y="3" width="18" height="18" rx="2"
+                                                    ry="2"></rect>
+                                                <line x1="12" y1="8" x2="12" y2="16">
+                                                </line>
+                                                <line x1="8" y1="12" x2="16" y2="12">
+                                                </line>
+                                            </svg>
+                                            Extras
+                                        </h5>
+                                        <ul id="res-lista-extras" class="res-list">
+                                            <li class="txt-muted">Cargando adicionales...</li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="preview-card highlight-pago">
+                                        <h5>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                style="color: #64748b;">
+                                                <line x1="12" y1="1" x2="12" y2="23">
+                                                </line>
+                                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                                            </svg>
+                                            Pago Estimado
+                                        </h5>
+                                        <div
+                                            style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; margin: 12px 0;">
+                                            <label class="pago-label" style="margin-bottom: 4px;">TOTAL A PAGAR</label>
+                                            <h4 id="res-total-final-p5" class="pago-total"
+                                                style="color: var(--brand, #FF1E2D);">$0.00 MXN</h4>
+                                        </div>
+                                        <p class="pago-disclaimer">
+                                            Todos los cargos son sólo aproximados, sujetos a cambios si el vehículo no es
+                                            devuelto en el lugar y fecha especificados, o si existen daños o accesorios
+                                            faltantes al momento de la devolución.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {{-- FIRMA Y TEXTO LEGAL --}}
+                                <div class="preview-col">
+                                    <div class="signature-section">
+                                        <div class="signature-pad-wrapper"
+                                            style="border: 2px dashed #cbd5e1; border-radius: 10px; height: 200px; position: relative;">
+
+                                            <canvas id="padPaso5"
+                                                style="touch-action: none; width: 100%; height: 100%; display: block;"></canvas>
+
+                                            <button type="button" id="clearPaso5"
+                                                style="position: absolute; bottom: 10px; right: 10px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer; color: #64748b; z-index: 10;">
+                                                Limpiar Firma
+                                            </button>
+                                        </div>
+
+                                        <p class="txt-primary mb-2" style="margin-top: 15px;">
+                                            {{ $reservacion->nombre_cliente }} {{ $reservacion->apellidos_cliente }}
+                                        </p>
+                                        <p class="txt-muted mb-15">Firma de aceptación del contrato</p>
+
+                                        {{-- Input oculto --}}
+                                        <input type="hidden" id="firma_cliente_paso5" name="firma_cliente_paso5">
+
+                                        <div class="legal-text">
+                                            Al firmar acepto plenamente las obligaciones descritas en la carátula y en el
+                                            clausulado de este contrato, así como las coberturas y servicios contratados.
+                                            Declaro haber recibido el auto en las condiciones descritas y acepto las
+                                            condiciones del reverso de este documento, así como el aviso de privacidad que
+                                            se encuentra a mi disposición en:
+                                            <br><br>
+                                            <a href="https://www.europcar.com.mx/privacidad.php" target="_blank"
+                                                class="privacy-link">Aviso de privacidad</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="acciones-finales">
+                                <button class="btn gray" id="back4" type="button">← Corregir Documentos</button>
+                                <button class="btn-continuar-yellow" id="go6" type="button">Continuar →</button>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                {{-- BLOQUE OCULTO: Fuente de datos para la Tablet (inline limpiado) --}}
+                <div id="fuente-datos-contrato">
+                    <div id="fuente-seguros">
+                        @forelse($segurosSeleccionados ?? [] as $s)
+                            <li class="fuente-li">
+                                <span>{{ $s->nombre }}</span>
+                                <b>${{ number_format($s->monto, 2) }}</b>
+                            </li>
+                        @empty
+                            <li>Protección Básica (TPL)</li>
+                        @endforelse
+                    </div>
+
+                    <div id="fuente-extras">
+                        @if (isset($cargoGas) && $cargoGas)
+                            <li>Gasolina Prepago</li>
+                        @endif
+                        @if (isset($cargoDrop) && $cargoDrop)
+                            <li>Servicio Dropoff</li>
+                        @endif
+                        @foreach ($serviciosExtras ?? [] as $se)
+                            <li class="fuente-li">
+                                <span>{{ $se['nombre'] ?? $se->nombre }} (x{{ $se['cantidad'] ?? $se->cantidad }})</span>
+                                <b>${{ number_format($se['monto'] ?? ($se->monto ?? 0), 2) }}</b>
+                            </li>
+                        @endforeach
+                    </div>
+                </div>
+
                 {{-- Paso 6 --}}
                 <article class="step" data-step="6">
-                    <header>
-                        <div class="badge">6</div>
-                        <h3>PASO 6 · Estado de cuenta y pagos</h3>
-                    </header>
-
                     <div class="body">
                         <section class="section">
-                            <div class="head">Desglose de Pagos</div>
+                            <div class="head">Detalle de Cargos Finales</div>
                             <div class="cnt">
-                                <div class="row">
-                                    <div>Tarifa Base (<span id="baseDescr">—</span>)</div>
-                                    <div id="baseAmt">$0</div>
+                                {{-- RENTA DEL VEHÍCULO --}}
+                                <div class="row row-border-bottom row-pb-12">
+                                    <div>
+                                        <span class="row-label">Renta de Vehículo</span>
+                                        <small id="baseDescr" class="row-small">3 días · $600.00</small>
+                                    </div>
+                                    <div id="baseAmt" class="row-amount">$1,800.00</div>
                                 </div>
-                                <div class="row">
-                                    <div>Opciones de Renta</div>
-                                    <div id="addsAmt">$0</div>
+
+                                {{-- PROTECCIONES --}}
+                                <div class="row row-protection">
+                                    <div>
+                                        <span class="row-label">Protecciones y Coberturas</span>
+                                        <small id="insDescr" class="row-small">LDW PACK (3 días · $1,120.00)</small>
+                                    </div>
+                                    <div id="insAmt" class="row-amount-green">$3,360.00</div>
                                 </div>
-                                <div class="row">
-                                    <div>Subtotal</div>
-                                    <div id="ivaAmt">$0</div>
-                                </div>
-                                <div class="row">
-                                    <div class="small">IVA (16%)</div>
-                                    <div id="ivaOnly">$0</div>
+
+                                {{-- EXTRAS --}}
+                                <div id="listaExtrasP6"></div>
+
+                                {{-- TOTALIZACIÓN --}}
+                                <div class="totalization-box">
+                                    <div class="row">
+                                        <div class="totalization-label">Subtotal</div>
+                                        <div id="subtotalAmt" class="totalization-value">$5,760.00</div>
+                                    </div>
+                                    <div class="row row-mt-5">
+                                        <div class="totalization-label">IVA (16%)</div>
+                                        <div id="ivaOnly" class="totalization-value">$921.60</div>
+                                    </div>
+                                    <div class="row row-total-final">
+                                        <div class="total-final-label">TOTAL CONTRATO</div>
+                                        <div id="totalContrato" class="total-final-value">$6,681.60</div>
+                                    </div>
                                 </div>
                             </div>
                         </section>
 
-                        <section class="section" style="margin-top:16px">
+                        <section class="section section-mt-16">
                             <div class="head">Estado de Cuenta</div>
                             <div class="cnt">
-                                <div
-                                    style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+                                <div class="flex-between-wrap">
                                     <div>
                                         <div class="small">Total del Contrato</div>
-                                        <div class="total" id="totalContrato">$0</div>
+                                        <div class="total" id="detTotalFinalCuenta">$0.00 MXN</div>
                                     </div>
                                     <div>
                                         <div class="small">Saldo Pendiente</div>
-                                        <div class="badge" id="saldoPendiente">$0</div>
+                                        <div class="badge badge-saldo" id="detSaldo">$0.00 MXN</div>
                                     </div>
                                 </div>
 
-                                <h3 style="margin:6px 0 6px;font-size:14px">Pagos</h3>
-                                <table class="table" id="tblPagos">
+                                <div class="garantia-box">
+                                    <div>
+                                        <div class="small">Garantía / Preautorización</div>
+                                        <div id="detGarantiaSeguro" class="garantia-monto">$0.00 MXN</div>
+                                        <div id="detGarantiaSeguroMeta" class="garantia-meta">Sin paquete</div>
+                                        <div id="detGarantiaSeguroStatus" class="garantia-status">Pendiente: $0.00 MXN
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h3 class="historial-title">Historial de Pagos</h3>
+                                <table class="table table-pagos" id="tblPagos">
                                     <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Fecha</th>
-                                            <th>Tipo</th>
-                                            <th>Origen</th>
-                                            <th>Monto</th>
+                                        <tr class="table-header-row">
+                                            <th class="th-left">#</th>
+                                            <th class="th-left">Fecha</th>
+                                            <th class="th-left">Método</th>
+                                            <th class="th-left">Origen</th>
+                                            <th class="th-right">Monto</th>
                                             <th></th>
                                         </tr>
                                     </thead>
                                     <tbody id="payBody">
                                         <tr>
-                                            <td colspan="6" style="text-align:center;color:#667085">NO EXISTEN PAGOS
-                                                REGISTRADOS</td>
+                                            <td colspan="6" class="table-loading">Cargando historial de pagos...</td>
                                         </tr>
                                     </tbody>
                                 </table>
 
-                                <div class="right" style="margin-top:10px">
-                                    <button id="btnAdd" class="btn primary">REGISTRAR PAGO</button>
+                                <div class="pagos-footer">
+                                    <div class="pagos-realizados">
+                                        Pagos realizados: <b id="detPagos" class="pagos-realizados-valor">$0.00</b>
+                                    </div>
+                                    <button id="btnAdd" class="btn-registrar-pago">+ Registrar Pago</button>
                                 </div>
                             </div>
                         </section>
 
-                        <div class="acciones" style="margin-top:20px;">
-                            <button class="btn gray" id="back5" type="button">← Atrás</button>
-                            <form id="formFinalizar" action="{{ route('contrato.finalizar', $idReservacion) }}"
+                        <div class="acciones acciones-mt-20">
+                            <button class="btn gray" id="back5" type="button">← Volver a Revisión</button>
+                            <form id="formFinalizarContrato" action="{{ route('contrato.finalizar', $idReservacion) }}"
                                 method="POST">
                                 @csrf
-                                <button class="btn primary" id="btnFinalizar">Crear Contrato</button>
+                                <button type="submit" class="btn-finalizar">Finalizar Contrato y Generar PDF →</button>
                             </form>
                         </div>
                     </div>
                 </article>
 
             </section>
-
-            {{-- Resumen --}}
-            <aside class="sticky">
-                <div class="card resumen-card">
-                    <div class="head">Resumen del Contrato</div>
-
-                    <div class="cnt resumen-compacto" id="resumenCompacto">
-                        <div id="vehiculo_info" class="vehiculo-mini-wrap">
-                            <img id="resumenImgVeh" src="{{ asset('img/default-car.png') }}" loading="lazy"
-                                alt="Vehículo" class="vehiculo-img">
-                            <p class="vehiculo-nombre" id="resumenVehCompacto">—</p>
-                            <p class="vehiculo-mini" id="resumenCategoriaCompacto">Categoría: —</p>
-                            <p class="vehiculo-mini" id="resumenDiasCompacto">Días de renta: —</p>
-                            <p class="vehiculo-mini" id="resumenFechasCompacto">— / —</p>
-                        </div>
-                        <div class="totalBox" style="margin-top:12px;">
-                            <div class="kv">
-                                <div>Total actual</div>
-                                <div class="total" id="resumenTotalCompacto">$0.00 MXN</div>
-                            </div>
-                        </div>
-                        <button id="btnVerDetalle" class="btn-resumen">Ver detalle ▼</button>
-                    </div>
-
-                    <div class="cnt resumen-detalle" id="resumenDetalle" style="display:none;">
-                        <div id="detalleContenido">
-                            <section class="res-block">
-                                <h4>Código de reservación</h4>
-                                <p id="detCodigo">—</p>
-                            </section>
-                            <section class="res-block">
-                                <h4>Datos del cliente</h4>
-                                <p id="detCliente">{{ strtoupper($reservacion->nombre_cliente ?? '—') }}</p>
-                                <p id="detTelefono">{{ $telFinal }}</p>
-                                <p id="detEmail">{{ $reservacion->email_cliente ?? '—' }}</p>
-                            </section>
-                            <section class="res-block">
-                                <h4>Vehículo</h4>
-                                <p><b id="detModelo">—</b></p>
-                                <p>Marca: <span id="detMarca">—</span></p>
-                                <p>Categoría: <span id="detCategoria">—</span></p>
-                                <p>Transmisión: <span id="detTransmision">—</span></p>
-                                <p>Pasajeros: <span id="detPasajeros">—</span></p>
-                                <p>Puertas: <span id="detPuertas">—</span></p>
-                                <p>Kilometraje actual: <span id="detKm">—</span></p>
-                            </section>
-                            <section class="res-block">
-                                <h4>Fechas y horarios</h4>
-                                <p>Salida: <span id="detFechaSalida">{{ $fechaInicio->format('Y-m-d') }}</span> · <span
-                                        id="detHoraSalida">{{ $horaRetiro->format('h:i A') }}</span></p>
-                                <p>Entrega: <span id="detFechaEntrega">{{ $fechaFin->format('Y-m-d') }}</span> · <span
-                                        id="detHoraEntrega">{{ $horaEntrega->format('h:i A') }}</span></p>
-                                <p><strong>Días totales:</strong> <span id="detDiasRenta">{{ $diasTotales }}</span></p>
-                            </section>
-                            <section class="res-block">
-                                <h4>Paquetes de cobertura</h4>
-                                <ul id="r_seguros_lista" class="det-lista">
-                                    <li class="empty">—</li>
-                                </ul>
-                                <p>Total: <b id="r_seguros_total">—</b></p>
-                            </section>
-                            <section class="res-block">
-                                <h4>Adicionales</h4>
-                                <ul id="r_servicios_lista" class="det-lista">
-                                    <li class="empty">—</li>
-                                </ul>
-                                <p>Total: <b id="r_servicios_total">—</b></p>
-                            </section>
-                            <section class="res-block">
-                                <h4>Servicios adicionales</h4>
-                                <ul id="r_cargos_lista" class="det-lista">
-                                    <li class="empty">—</li>
-                                </ul>
-                                <p>Total: <b id="r_cargos_total">$0.00 MXN</b></p>
-                            </section>
-                            <section class="res-block">
-                                <h4>Total desglosado</h4>
-                                <p>Tarifa base: <b id="r_base_precio">${{ number_format($precioReal, 2) }}</b>
-                                    <button id="btnEditarTarifa"
-                                        style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:15px;margin-left:6px;">✏️</button>
-                                </p>
-                                <p>Horas de cortesía: <b id="r_cortesia">{{ $reservacion->horas_cortesia ?? 1 }}</b>
-                                    <button id="btnEditarCortesia"
-                                        style="background:none; border:none; color:#2563eb; cursor:pointer; font-size:14px; margin-left:4px;"
-                                        title="Editar cortesía">✏️</button>
-                                </p>
-                                <p>Subtotal: <b id="r_subtotal">${{ number_format($subtotal, 2) }}</b></p>
-                                <p>IVA: <b id="r_iva">${{ number_format($iva, 2) }}</b></p>
-                                <p>Total contrato: <b id="r_total_final">${{ number_format($total, 2) }}</b></p>
-                            </section>
-                            <section class="res-block">
-                                <h4>Pagos y saldo</h4>
-                                <p>Pagos realizados: <b id="detPagos">—</b></p>
-                                <p>Saldo pendiente: <b id="detSaldo">—</b></p>
-                            </section>
-                        </div>
-                        <button id="btnOcultarDetalle" class="btn-resumen">Ocultar detalle ▲</button>
-                    </div>
-                </div>
-            </aside>
 
         </div>
 
@@ -852,7 +999,7 @@
             <div class="modal modal-pagos">
                 <div class="head">
                     Registrar Pago
-                    <button id="mx" class="btn gray" style="padding:6px 10px">✕</button>
+                    <button id="mx" class="btn gray btn-close-modal">✕</button>
                 </div>
                 <div class="body">
                     <div class="pay-groups" id="payTabs">
@@ -861,6 +1008,9 @@
                         <button class="tab" data-tab="efectivo">Efectivo</button>
                         <button class="tab" data-tab="transferencia">Transferencia / Depósito</button>
                     </div>
+                    <div id="pFlowHint" class="small flow-hint">
+                        Pago 1 de 2: registra primero el monto de la reservación.
+                    </div>
                     <div id="methods">
                         <div data-pane="paypal">
                             <p class="small">Al seleccionar PayPal, se abrirá la pasarela en línea.</p>
@@ -868,7 +1018,7 @@
                                 <div id="paypal-button-container-modal"></div>
                             </div>
                         </div>
-                        <div data-pane="tarjeta" style="display:none;">
+                        <div data-pane="tarjeta" class="pane-hidden">
                             <div class="method-grid">
                                 <label class="mcard"><input type="radio" name="m" value="VISA"><img
                                         src="../assets/media/visa.png" alt="">
@@ -899,15 +1049,15 @@
                                     </div>
                                 </label>
                             </div>
-                            <div style="margin-top:15px;">
+                            <div class="upload-section">
                                 <label>Foto del ticket (obligatorio)</label>
                                 <input id="fileTerminal" type="file" accept="image/*,.pdf">
                             </div>
                         </div>
-                        <div data-pane="efectivo" style="display:none;">
+                        <div data-pane="efectivo" class="pane-hidden">
                             <p class="small">Se generará automáticamente un ticket interno.</p>
                         </div>
-                        <div data-pane="transferencia" style="display:none;">
+                        <div data-pane="transferencia" class="pane-hidden">
                             <div class="method-grid">
                                 <label class="mcard"><input type="radio" name="m" value="TRANSFERENCIA"><img
                                         src="../assets/media/transfe.jpg" alt="">
@@ -928,14 +1078,14 @@
                                     </div>
                                 </label>
                             </div>
-                            <div style="margin-top:15px;">
+                            <div class="upload-section">
                                 <label>Comprobante del pago (obligatorio)</label>
                                 <input id="fileTransfer" type="file" accept="image/*,.pdf">
                             </div>
                         </div>
                     </div>
 
-                    <fieldset style="margin-top:18px;">
+                    <fieldset class="payment-detail-fieldset">
                         <legend>Detalle del pago</legend>
                         <div class="form-grid">
                             <div>
@@ -945,6 +1095,7 @@
                                     <option value="ANTICIPO">ANTICIPO</option>
                                     <option value="DEPÓSITO">DEPÓSITO</option>
                                     <option value="LIQUIDACIÓN">LIQUIDACIÓN</option>
+                                    <option value="GARANTIA">GARANTIA / PREAUTORIZACION</option>
                                 </select>
                             </div>
                             <div>
@@ -952,7 +1103,7 @@
                                 <input id="pMonto" type="number" step="0.01" min="0" placeholder="0.00">
                                 <div class="err" id="pErr"></div>
                             </div>
-                            <div style="grid-column:1/-1;">
+                            <div class="full-width">
                                 <label>Notas (opcional)</label>
                                 <textarea id="pNotes" rows="2"></textarea>
                             </div>
@@ -965,56 +1116,22 @@
             </div>
         </div>
 
-        {{-- Modal Vehículos --}}
-        <div id="modalVehiculos" class="modal-vehiculos">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <span>Vehículos disponibles</span>
-                    <button type="button" id="cerrarModalVehiculos" class="close-btn">✕</button>
-                </div>
-                <div class="modal-select-categoria" style="margin: 15px 0;">
-                    <label style="font-weight:600; font-size:14px;">Filtrar por categoría</label>
-                    <select id="selectCategoriaModal" class="filtro-input" style="width: 100%; min-width: 200px;">
-                        <option value="">Selecciona categoría...</option>
-                        @foreach ($categorias as $cat)
-                            <option value="{{ $cat->id_categoria }}"
-                                {{ ($reservacion->id_categoria ?? 0) == $cat->id_categoria ? 'selected' : '' }}>
-                                {{ $cat->nombre }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="modal-filtros">
-                    <div class="filtros-grid">
-                        <input type="text" id="filtroColor" placeholder="Color" class="filtro-input">
-                        <input type="text" id="filtroModelo" placeholder="Modelo" class="filtro-input">
-                        <input type="text" id="filtroSerie" placeholder="Número de serie (VIN)" class="filtro-input">
-                    </div>
-                </div>
-                <div id="listaVehiculos" class="modal-lista"></div>
-                <div class="modal-footer">
-                    <button id="cerrarModalVehiculos2" class="btn-cerrar">Cerrar</button>
-                </div>
-            </div>
-        </div>
-
     </main>
 @endsection
 
 @section('js-vistaContrato')
     <script>
         window.ID_RESERVACION = "{{ $idReservacion }}";
-        window.ID_CONTRATO = "{{ $idContratoReal ?? '' }}";
+        window.ID_CONTRATO = "{{ $idContrato ?? '' }}";
         window.csrfToken = "{{ csrf_token() }}";
 
         window.ID_SERVICIO_MENOR = {{ $idServicioMenor ?? 0 }};
 
         window.contratoId = window.ID_CONTRATO;
-        window.clienteContratoUrl = "{{ route('contrato.obtenerCliente', $idContratoReal ?? 0) }}";
-
-        localStorage.setItem(`contratoPasoActual_${window.ID_RESERVACION}`, '4');
+        window.clienteContratoUrl = "{{ route('contrato.obtenerCliente', $idContrato ?? 0) }}";
     </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
     <script src="{{ asset('js/ContratoGlobal.js') }}" defer></script>
     <script src="{{ asset('js/contrato2.js') }}" defer></script>
 @endsection

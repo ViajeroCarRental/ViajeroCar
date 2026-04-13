@@ -134,14 +134,6 @@ if (empty($reservacion->fecha_nacimiento)) {
     /* =========================================================
        GUARDAR FIRMAS
     ========================================================= */
-    public function guardarFirmaCliente(Request $request)
-    {
-        DB::table('contratos')
-            ->where('id_contrato', $request->id_contrato)
-            ->update(['firma_cliente' => $request->firma]);
-
-        return response()->json(['ok' => true]);
-    }
 
     public function guardarFirmaArr(Request $request)
     {
