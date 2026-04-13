@@ -443,6 +443,11 @@ Route::post('/admin/anexo/{id}/enviar-anexos',[ConductorAdicionalController::cla
 // 📄 Mostrar checklist (usando el controlador)
 Route::get('/admin/reservacion/{id}/checklist',[ChecklistController::class, 'showChecklist'])->name('checklist.ver');
 
+//Checklist de apartar de la vista de reservaciones activas
+Route::post('/admin/checklist/{id}/actualizar-km-salida', [ChecklistController::class, 'actualizarKmSalida']);
+Route::post('/admin/checklist/{id}/guardar-gasolina-salida', [ChecklistController::class, 'guardarGasolinaSalida']);
+Route::post('/admin/checklist/{id}/guardar-fotos-salida', [ChecklistController::class, 'guardarFotosSalida']);
+
 // 📤 Enviar checklist de SALIDA (fotos + comentarios + fechas/horas)
 Route::post('/admin/checklist/{id}/enviar-salida',[ChecklistController::class, 'enviarChecklistSalida'])->name('checklist.enviarSalida');
 

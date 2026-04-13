@@ -18,6 +18,9 @@ class ChecklistController extends Controller
     public function showChecklist(Request $request, $id)
 {
     $modo = $request->get('modo', 'salida');
+    $from = $request->get('from'); // 👈 IMPORTANTE
+
+
     // ✅ 1) Contrato
     $contrato = DB::table('contratos')->where('id_contrato', $id)->first();
     if (!$contrato) abort(404, "Contrato no encontrado");
@@ -124,6 +127,72 @@ if (!empty($reservacion->nombre_cliente) || !empty($reservacion->apellidos_clien
         ->orderBy('nombre')
         ->get();
 
+// Recargar cuando se hizo en apartar
+// 🔥 FOTOS SALIDA
+$fotosSalida = DB::table('inspeccion_fotos_comentarios')
+    ->where('id_contrato', $contrato->id_contrato)
+    ->where('tipo', 'salida')
+    ->get();
+
+// Agrupar igual que en PDF
+$fotosSalidaAgrupadas = [
+    'frente' => null,
+    'parabrisas' => null,
+    'lado_conductor' => null,
+    'lado_pasajero' => null,
+    'atras' => null,
+    'interiores' => [],
+];
+
+foreach ($fotosSalida as $f) {
+    switch ($f->foto_categoria) {
+        case 'frente':
+            $fotosSalidaAgrupadas['frente'] = $f;
+            break;
+        case 'parabrisas':
+            $fotosSalidaAgrupadas['parabrisas'] = $f;
+            break;
+        case 'lado_conductor':
+            $fotosSalidaAgrupadas['lado_conductor'] = $f;
+            break;
+        case 'lado_pasajero':
+            $fotosSalidaAgrupadas['lado_pasajero'] = $f;
+            break;
+        case 'atras':
+            $fotosSalidaAgrupadas['atras'] = $f;
+            break;
+        case 'interiores':
+            $fotosSalidaAgrupadas['interiores'][] = $f;
+            break;
+    }
+}
+
+
+        // 🔥 SOLO SI VIENE DE APARTAR
+
+
+if ($from === 'apartar') {
+
+    $existeSalida = DB::table('inspeccion')
+        ->where('id_contrato', $contrato->id_contrato)
+        ->where('tipo', 'salida')
+        ->first();
+
+    if (!$existeSalida) {
+
+        DB::table('inspeccion')->insert([
+            'id_contrato'       => $contrato->id_contrato,
+            'tipo'              => 'salida',
+            'fecha'             => now(),
+            'odometro_km'       => $vehiculo->kilometraje ?? 0,
+            'nivel_combustible' => $vehiculo->gasolina_actual
+                ? round($vehiculo->gasolina_actual / 16, 2)
+                : null,
+            'created_at'        => now(),
+            'updated_at'        => now(),
+        ]);
+    }
+}
 
 
         // ✅ 5) Retornar vista
@@ -132,6 +201,7 @@ if (!empty($reservacion->nombre_cliente) || !empty($reservacion->apellidos_clien
         'contrato'    => $contrato,
         'reservacion' => $reservacion,
         'modo' => $modo,
+        'fotosSalida' => $fotosSalidaAgrupadas,
 
         // 🔹 Nombres para la sección de firmas
         'clienteNombre' => $clienteNombre,
@@ -1821,5 +1891,219 @@ DB::table('contratos')
     }
 }
 
+
+public function actualizarKmSalida(Request $request, $id)
+{
+    $request->validate([
+        'km_salida' => 'required|integer|min:0'
+    ]);
+
+    // 1) Contrato
+    $contrato = DB::table('contratos')
+        ->where('id_contrato', $id)
+        ->first();
+
+    if (!$contrato) {
+        return response()->json(['ok' => false, 'msg' => 'Contrato no encontrado'], 404);
+    }
+
+    // 2) Reservación
+    $reservacion = DB::table('reservaciones')
+        ->where('id_reservacion', $contrato->id_reservacion)
+        ->first();
+
+    if (!$reservacion || !$reservacion->id_vehiculo) {
+        return response()->json(['ok' => false, 'msg' => 'Vehículo no encontrado'], 404);
+    }
+
+    // ==========================================================
+    // 🔥 3) ACTUALIZAR VEHÍCULO
+    // ==========================================================
+    DB::table('vehiculos')
+        ->where('id_vehiculo', $reservacion->id_vehiculo)
+        ->update([
+            'kilometraje' => $request->km_salida,
+            'updated_at'  => now()
+        ]);
+
+    // ==========================================================
+    // 🔥 4) SI YA EXISTE INSPECCIÓN SALIDA → ACTUALIZARLA
+    // ==========================================================
+    $inspeccionSalida = DB::table('inspeccion')
+        ->where('id_contrato', $id)
+        ->where('tipo', 'salida')
+        ->first();
+
+    if ($inspeccionSalida) {
+        DB::table('inspeccion')
+            ->where('id_inspeccion', $inspeccionSalida->id_inspeccion)
+            ->update([
+                'odometro_km' => $request->km_salida,
+                'updated_at'  => now()
+            ]);
+    }
+
+    return response()->json([
+        'ok' => true,
+        'msg' => 'Kilometraje actualizado correctamente (vehículo + inspección si existía).'
+    ]);
+}
+public function guardarGasolinaSalida(Request $req, $id)
+{
+    $req->validate([
+        'gasolina_salida' => 'required|string'
+    ]);
+
+    // Convertir a entero (0–16)
+    $entero = $this->convertirFraccion16AEntero($req->gasolina_salida);
+
+    if ($entero === null) {
+        return response()->json([
+            'ok' => false,
+            'msg' => 'Nivel de gasolina inválido'
+        ], 422);
+    }
+
+    // Convertir a decimal
+    $decimal = round($entero / 16, 2);
+
+    // Buscar contrato
+    $contrato = DB::table('contratos')
+        ->where('id_contrato', $id)
+        ->first();
+
+    if (!$contrato) {
+        return response()->json([
+            'ok' => false,
+            'msg' => 'Contrato no encontrado'
+        ], 404);
+    }
+
+    // 🔥 ACTUALIZAR VEHÍCULO
+    $reservacion = DB::table('reservaciones')
+        ->where('id_reservacion', $contrato->id_reservacion)
+        ->first();
+
+    if ($reservacion && $reservacion->id_vehiculo) {
+        DB::table('vehiculos')
+            ->where('id_vehiculo', $reservacion->id_vehiculo)
+            ->update([
+                'gasolina_actual' => $entero,
+                'updated_at' => now()
+            ]);
+    }
+
+    // 🔥 ACTUALIZAR INSPECCIÓN SALIDA SI EXISTE
+    $inspeccion = DB::table('inspeccion')
+        ->where('id_contrato', $id)
+        ->where('tipo', 'salida')
+        ->first();
+
+    if ($inspeccion) {
+        DB::table('inspeccion')
+            ->where('id_inspeccion', $inspeccion->id_inspeccion)
+            ->update([
+                'nivel_combustible' => $decimal,
+                'updated_at' => now()
+            ]);
+    }
+
+    return response()->json([
+        'ok' => true,
+        'msg' => 'Gasolina de salida guardada correctamente'
+    ]);
+}
+
+public function guardarFotosSalida(Request $request, $id)
+{
+    // 👉 SOLO en apartar
+    if ($request->query('from') !== 'apartar') {
+        return response()->json(['ok' => false], 403);
+    }
+
+    // 1) Contrato
+    $contrato = DB::table('contratos')
+        ->where('id_contrato', $id)
+        ->first();
+
+    if (!$contrato) {
+        return response()->json(['ok' => false], 404);
+    }
+
+    // 2) Reservación
+    $reservacion = DB::table('reservaciones')
+        ->where('id_reservacion', $contrato->id_reservacion)
+        ->first();
+
+    // 3) Obtener o crear inspección salida
+    $insp = DB::table('inspeccion')
+        ->where('id_contrato', $id)
+        ->where('tipo', 'salida')
+        ->first();
+
+    if (!$insp) {
+        $idInspeccion = DB::table('inspeccion')->insertGetId([
+            'id_contrato' => $id,
+            'tipo' => 'salida',
+            'fecha' => now(),
+            'odometro_km' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    } else {
+        $idInspeccion = $insp->id_inspeccion;
+    }
+
+    // 4) Guardar SOLO las fotos que vienen
+    $map = [
+        'frente_salida' => 'frente',
+        'parabrisas_salida' => 'parabrisas',
+        'lado_conductor_salida' => 'lado_conductor',
+        'lado_pasajero_salida' => 'lado_pasajero',
+        'atras_salida' => 'atras',
+    ];
+
+    foreach ($map as $input => $categoria) {
+        if ($request->hasFile($input)) {
+            $file = $request->file($input);
+
+            DB::table('inspeccion_fotos_comentarios')->insert([
+                'id_reservacion' => $reservacion->id_reservacion,
+                'id_contrato'    => $id,
+                'id_inspeccion'  => $idInspeccion,
+                'tipo'           => 'salida',
+                'foto_categoria' => $categoria,
+                'archivo'        => file_get_contents($file->getRealPath()),
+                'mime_type'      => $file->getClientMimeType(),
+                'nombre_archivo' => $file->getClientOriginalName(),
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
+        }
+    }
+
+    // interiores (varios)
+    if ($request->hasFile('interiores_salida')) {
+        $index = 1;
+
+        foreach ($request->file('interiores_salida') as $file) {
+            DB::table('inspeccion_fotos_comentarios')->insert([
+                'id_reservacion' => $reservacion->id_reservacion,
+                'id_contrato'    => $id,
+                'id_inspeccion'  => $idInspeccion,
+                'tipo'           => 'salida',
+                'foto_categoria' => 'interiores',
+                'interior_index' => $index++,
+                'archivo'        => file_get_contents($file->getRealPath()),
+                'mime_type'      => $file->getClientMimeType(),
+                'nombre_archivo' => $file->getClientOriginalName(),
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
+        }
+    }
+
+    return response()->json(['ok' => true]);
+}
 
 }

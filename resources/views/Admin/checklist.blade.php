@@ -18,6 +18,7 @@
 @endphp
 @php
     $modo = $modo ?? 'salida';
+    $from = request()->get('from'); // 👈 NUEVO
 @endphp
 <input type="hidden" id="idContrato" value="{{ $contrato->id_contrato }}">
 
@@ -83,7 +84,24 @@
             <td>{{ $ciudadRecibe ?? '—' }}</td>
 
             <th>KILOMETRAJE SALIDA</th>
-            <td>{{ $kmSalida ?? '—' }}</td>
+    <td>
+    <span id="kmSalidaText"
+          style="cursor:pointer; text-decoration:underline;">
+        {{ $kmSalida ?? '—' }}
+    </span>
+
+    <input type="number"
+           id="kmSalidaInput"
+           value="{{ $kmSalida ?? '' }}"
+           style="display:none; width:100px;"
+           min="0">
+
+    <button id="btnGuardarKmSalida"
+            style="display:none;"
+            class="btn btn-sm btn-primary">
+        Guardar
+    </button>
+</td>
 
             <td>
     <span id="kmRegresoText"
@@ -312,7 +330,13 @@
               capture="environment"
               {{ $modo === 'regreso' ? 'disabled' : '' }}>
         </div>
-        <div class="photo-preview" id="prev-frenteSalida"></div>
+        <div class="photo-preview" id="prev-frenteSalida">
+            @if(!empty($fotosSalida['frente']))
+        <div class="thumb">
+          <img src="data:{{ $fotosSalida['frente']->mime_type }};base64,{{ base64_encode($fotosSalida['frente']->archivo) }}">
+        </div>
+      @endif
+        </div>
       </div>
 
       <!-- 2. PARABRISAS (1 sola foto) -->
@@ -327,7 +351,13 @@
               capture="environment"
               {{ $modo === 'regreso' ? 'disabled' : '' }}>
         </div>
-        <div class="photo-preview" id="prev-parabrisasSalida"></div>
+        <div class="photo-preview" id="prev-parabrisasSalida">
+            @if(!empty($fotosSalida['parabrisas']))
+        <div class="thumb">
+          <img src="data:{{ $fotosSalida['parabrisas']->mime_type }};base64,{{ base64_encode($fotosSalida['parabrisas']->archivo) }}">
+        </div>
+      @endif
+        </div>
       </div>
 
       <!-- 3. LADO CONDUCTOR (1 sola foto) -->
@@ -342,7 +372,13 @@
               capture="environment"
               {{ $modo === 'regreso' ? 'disabled' : '' }}>
         </div>
-        <div class="photo-preview" id="prev-ladoConductorSalida"></div>
+        <div class="photo-preview" id="prev-ladoConductorSalida">
+            @if(!empty($fotosSalida['lado_conductor']))
+        <div class="thumb">
+          <img src="data:{{ $fotosSalida['lado_conductor']->mime_type }};base64,{{ base64_encode($fotosSalida['lado_conductor']->archivo) }}">
+        </div>
+      @endif
+        </div>
       </div>
 
       <!-- 4. LADO PASAJERO (1 sola foto) -->
@@ -357,7 +393,13 @@
               capture="environment"
               {{ $modo === 'regreso' ? 'disabled' : '' }}>
         </div>
-        <div class="photo-preview" id="prev-ladoPasajeroSalida"></div>
+        <div class="photo-preview" id="prev-ladoPasajeroSalida">
+             @if(!empty($fotosSalida['lado_pasajero']))
+        <div class="thumb">
+          <img src="data:{{ $fotosSalida['lado_pasajero']->mime_type }};base64,{{ base64_encode($fotosSalida['lado_pasajero']->archivo) }}">
+        </div>
+      @endif
+        </div>
       </div>
 
       <!-- 5. ATRÁS (1 sola foto) -->
@@ -372,7 +414,13 @@
               capture="environment"
               {{ $modo === 'regreso' ? 'disabled' : '' }}>
         </div>
-        <div class="photo-preview" id="prev-atrasSalida"></div>
+        <div class="photo-preview" id="prev-atrasSalida">
+            @if(!empty($fotosSalida['atras']))
+        <div class="thumb">
+          <img src="data:{{ $fotosSalida['atras']->mime_type }};base64,{{ base64_encode($fotosSalida['atras']->archivo) }}">
+        </div>
+      @endif
+        </div>
       </div>
 
       <!-- 6. INTERIORES (MÁX 8 fotos) -->
@@ -388,7 +436,15 @@
               multiple
               {{ $modo === 'regreso' ? 'disabled' : '' }}>
         </div>
-        <div class="photo-preview" id="prev-interioresSalida"></div>
+        <div class="photo-preview" id="prev-interioresSalida">
+             @if(!empty($fotosSalida['interiores']))
+        @foreach($fotosSalida['interiores'] as $foto)
+          <div class="thumb">
+            <img src="data:{{ $foto->mime_type }};base64,{{ base64_encode($foto->archivo) }}">
+          </div>
+        @endforeach
+      @endif
+        </div>
       </div>
     </div>
 
@@ -728,13 +784,15 @@
     <div class="checklist-actions">
         <button type="button"
                 id="btnChecklistSalida"
-                class="btn btn-primary">
+                class="btn btn-primary"
+                {{ $from === 'apartar' ? 'disabled' : ($modo === 'regreso' ? 'disabled' : '') }}>
             Enviar checklist de salida
         </button>
 
         <button type="button"
                 id="btnChecklistEntrada"
-                class="btn btn-outline-primary">
+                class="btn btn-outline-primary"
+                {{ $from === 'apartar' ? 'disabled' : ($modo === 'salida' ? 'disabled' : '') }}>
             Enviar checklist de regreso
         </button>
     </div>
@@ -1116,6 +1174,103 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     /* ==========================================================
+   EDITAR KM SALIDA SOLO SI VIENE DE APARTAR
+============================================================= */
+const kmSalidaText = document.getElementById("kmSalidaText");
+const kmSalidaInput = document.getElementById("kmSalidaInput");
+const btnGuardarKmSalida = document.getElementById("btnGuardarKmSalida");
+
+const FROM = "{{ $from }}";
+
+if (kmSalidaText && kmSalidaInput && btnGuardarKmSalida) {
+
+    // 👉 SOLO permitir si viene de apartar
+    if (FROM === "apartar") {
+
+        kmSalidaText.addEventListener("click", () => {
+            kmSalidaText.style.display = "none";
+            kmSalidaInput.style.display = "inline-block";
+            btnGuardarKmSalida.style.display = "inline-block";
+            kmSalidaInput.focus();
+        });
+
+        btnGuardarKmSalida.addEventListener("click", async () => {
+
+            const km = kmSalidaInput.value;
+
+            if (!km || km < 0) {
+                alertify.warning("Kilometraje inválido.");
+                return;
+            }
+
+            const resp = await fetch(`/admin/checklist/${CHECKLIST_ID}/actualizar-km-salida`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    km_salida: km
+                })
+            });
+
+            if (!resp.ok) {
+                alertify.error("Error al guardar kilometraje de salida.");
+                return;
+            }
+
+            kmSalidaText.textContent = km;
+
+            kmSalidaInput.style.display = "none";
+            btnGuardarKmSalida.style.display = "none";
+            kmSalidaText.style.display = "inline";
+
+            alertify.success("Kilometraje de salida guardado.");
+
+            // 🔥 OPCIONAL (recomendado para asegurar sync)
+            location.reload();
+        });
+
+    }
+}
+
+ /* ==========================================================
+       EDITAR + GUARDAR KILOMETRAJE DE salida en apartar.
+    ============================================================= */
+const selectGasSalidaEl = document.getElementById("selectGasSalida");
+
+if (selectGasSalidaEl) {
+    selectGasSalidaEl.addEventListener("change", async (e) => {
+
+        const FROM = "{{ $from }}";
+
+        // 👉 SOLO permitir en "apartar"
+        if (FROM !== "apartar") return;
+
+        const nivel = e.target.value;
+
+        const resp = await fetch(`/checklist/${CHECKLIST_ID}/guardar-gasolina-salida`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                gasolina_salida: nivel
+            })
+        });
+
+        const data = await resp.json();
+
+        if (data.ok) {
+            alertify.success("Gasolina de salida guardada.");
+        } else {
+            alertify.error("Error al guardar gasolina.");
+        }
+    });
+}
+
+    /* ==========================================================
        EDITAR + GUARDAR KILOMETRAJE DE REGRESO
     ============================================================= */
     const kmText = document.getElementById("kmRegresoText");
@@ -1250,6 +1405,62 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Agregar los archivos comprimidos al arreglo existente
             uploaderFiles[slotName] = uploaderFiles[slotName].concat(compressedList);
+
+            // 🔥 AUTO GUARDAR SOLO EN APARTAR
+const FROM = "{{ $from }}";
+const MODO = "{{ $modo }}";
+
+if (FROM === "apartar" && MODO === "salida") {
+
+    try {
+        const token = document.querySelector('meta[name="csrf-token"]').content;
+
+        const formData = new FormData();
+
+        // 🔁 Mapear slots → backend
+        const mapSlotsToFields = {
+            frenteSalida:        "frente_salida",
+            parabrisasSalida:    "parabrisas_salida",
+            ladoConductorSalida: "lado_conductor_salida",
+            ladoPasajeroSalida:  "lado_pasajero_salida",
+            atrasSalida:         "atras_salida",
+            interioresSalida:    "interiores_salida[]",
+        };
+
+        for (const [slot, field] of Object.entries(mapSlotsToFields)) {
+            const files = uploaderFiles[slot] || [];
+            if (!files.length) continue;
+
+            if (slot === "interioresSalida") {
+                files.forEach(f => formData.append(field, f));
+            } else {
+                const f = files[files.length - 1];
+                formData.append(field, f);
+            }
+        }
+
+        const resp = await fetch(`/admin/checklist/${CHECKLIST_ID}/guardar-fotos-salida?from=apartar`, {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": token
+            },
+            body: formData
+        });
+
+        const data = await resp.json();
+
+        if (data.ok) {
+            alertify.success("Imágenes guardadas automáticamente.");
+
+        } else {
+            alertify.error(data.msg || "Error al guardar imágenes.");
+        }
+
+    } catch (err) {
+        console.error(err);
+        alertify.error("Error al guardar imágenes automáticamente.");
+    }
+}
 
             // Limpiar el input para permitir volver a abrir cámara/galería
             input.value = "";
