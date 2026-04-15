@@ -14,37 +14,68 @@ use App\Mail\CotizacionAdminMail;
 
 class CotizacionesAdminController extends Controller
 {
-    /**
-     * 🧭 Vista principal de Cotizar (Admin)
-     */
-    public function index()
-    {
-        $ciudades = DB::table('ciudades')
-            ->select('id_ciudad', 'nombre', 'estado', 'pais')
-            ->orderBy('nombre')
-            ->get();
-
-        $sucursales = DB::table('sucursales as s')
-            ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
+  /**
+ * 🚗 Obtener todas las categorías para el modal (AJAX)
+ * EXACTAMENTE COMO EN RESERVACIONES
+ */
+public function getCategorias()
+{
+    try {
+        $categorias = DB::table('categorias_carros as c')
+            ->join('categoria_costo_km as ck', 'c.id_categoria', '=', 'ck.id_categoria')
+            ->leftJoin('vehiculos as v', 'v.id_categoria', '=', 'c.id_categoria')
+            ->where('ck.activo', 1)
             ->select(
-                's.id_sucursal',
-                DB::raw("CONCAT(s.nombre, ' - ', c.nombre, ', ', c.estado) as nombre_mostrado"),
-                'c.id_ciudad',
-                'c.pais'
+                'c.id_categoria',
+                'c.codigo',
+                'c.nombre',
+                'c.descripcion',
+                'c.precio_dia',
+                'c.activo',
+                'ck.costo_km',
+                DB::raw('MAX(v.capacidad_tanque) as litros_maximos')
             )
-            ->where('s.activo', true)
-            ->orderBy('c.nombre')
-            ->orderBy('s.nombre')
+            ->groupBy('c.id_categoria', 'c.codigo', 'c.nombre', 'c.descripcion', 'c.precio_dia', 'c.activo', 'ck.costo_km')
+            ->orderBy('c.precio_dia')
             ->get();
 
-        $categorias = DB::table('categorias_carros')
-            ->select('id_categoria', 'nombre', 'descripcion', 'precio_dia')
-            ->where('activo', 1)
-            ->orderBy('nombre')
-            ->get();
-
-        return view('Admin.Cotizar', compact('ciudades', 'sucursales', 'categorias'));
+        return response()->json($categorias);
+    } catch (\Throwable $e) {
+        Log::error("❌ Error al obtener categorías: " . $e->getMessage());
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
+ public function index()
+{
+    $ciudades = DB::table('ciudades')
+        ->select('id_ciudad', 'nombre', 'estado', 'pais')
+        ->orderBy('nombre')
+        ->get();
+
+
+    $sucursales = DB::table('sucursales as s')
+        ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
+        ->where('s.activo', 1)
+        ->select(
+            's.id_sucursal',
+            's.nombre as sucursal',
+            'c.nombre as ciudad',
+            'c.id_ciudad'
+        )
+        ->orderByRaw("CASE WHEN c.nombre = 'Querétaro' THEN 0 ELSE 1 END")
+        ->orderBy('c.nombre')
+        ->orderBy('s.nombre')
+        ->get()
+        ->groupBy('ciudad');
+
+    $categorias = DB::table('categorias_carros')
+        ->select('id_categoria', 'nombre', 'descripcion', 'precio_dia')
+        ->where('activo', 1)
+        ->orderBy('nombre')
+        ->get();
+
+    return view('Admin.Cotizar', compact('ciudades', 'sucursales', 'categorias'));
+}
 
     /**
      * 🛡️ Obtener paquetes de seguros activos (Cotizar)
