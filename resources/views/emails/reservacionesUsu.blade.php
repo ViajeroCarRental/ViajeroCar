@@ -1389,7 +1389,7 @@
 
     <!-- Cargos e IVA -->
     <tr>
-        <td class="price-label">{{ __('Charges and Taxes') }}</td>
+        <td class="price-label">{{ __('Fees and taxes') }}</td>
         <td class="price-value">{{ $simboloMoneda }}{{ $impuestosConvertidos }} {{ $moneda }}</td>
     </tr>
 

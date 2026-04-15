@@ -226,7 +226,26 @@ body.nav-open .language-selector {
     height: 30px;
 
 }
+/* ============================================================
+   OCULTAR/MOSTRAR LOGIN SEGÚN DISPOSITIVO
+============================================================ */
+/* Ocultar ícono de escritorio en móvil */
+@media (max-width: 940px) {
+    .nav-actions > a.icon-pill {
+        display: none !important;
+    }
+}
 
+/* Mostrar opción en menú móvil SOLO en móvil */
+.mobile-login-item {
+    display: none;
+}
+
+@media (max-width: 940px) {
+    .mobile-login-item {
+        display: block;
+    }
+}
   </style>
 </head>
 
@@ -256,6 +275,7 @@ body.nav-open .language-selector {
       <li><a href="{{ route('rutaContacto') }}" class="{{ request()->routeIs('rutaContacto') ? 'active' : '' }}">{{ __('Contact') }}</a></li>
       <li><a href="{{ route('rutaPoliticas') }}" class="{{ request()->routeIs('rutaPoliticas') ? 'active' : '' }}">{{ __('Policies') }}</a></li>
       <li><a href="{{ route('rutaFAQ') }}" class="{{ request()->routeIs('rutaFAQ') ? 'active' : '' }}">{{ __('FAQ') }}</a></li>
+      <li class="mobile-login-item"><a href="{{ route('auth.show') }}"></i> {{ __('Sign in') }}</a></li>
     </ul>
 
     <div class="nav-actions">

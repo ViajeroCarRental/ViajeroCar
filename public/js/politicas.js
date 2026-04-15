@@ -228,10 +228,6 @@ function rebuildHourOptions(input, opts = {}) {
     op.value = val24;
     op.textContent = `${val24}:00`;
 
-    if (val24 === "13") {
-      op.selected = true;
-    }
-
     selH.appendChild(op);
   }
 
@@ -290,22 +286,16 @@ function createTimeSelectsBelow(input, opts) {
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  selH.addEventListener("change", sync);
+    selH.addEventListener("change", sync);
 
-  if (input.value && input.value !== "") {
-    const defaultHour = input.value.split(':')[0];
-    const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
-    /*
-    if (option) {
-      selH.value = defaultHour;
-      sync();
-    }
-    */
-    selH.selectedIndex = 0;
-  } else {
-    selH.selectedIndex = 0;
-    //input.value = "";
-  }
+  // Marcar que el usuario ha interactuado con este select
+  selH.addEventListener("focus", function() {
+    this.setAttribute('data-user-interacted', 'true');
+  });
+
+  selH.addEventListener("change", function() {
+    this.setAttribute('data-user-interacted', 'true');
+  });
 
 }
 
@@ -652,30 +642,43 @@ function setDefaultDates() {
         }
       });
 
+            // ===== 3. VALIDAR HORAS - SOLO SI EL USUARIO HA INTERACTUADO =====
       const horas = [
         { id: 'pickupTimePoliticas', msgKey: 'time' },
         { id: 'dropoffTimePoliticas', msgKey: 'time' }
       ];
+
       horas.forEach(campo => {
         const hiddenInput = document.getElementById(campo.id);
         if (!hiddenInput) return;
         const timeField = hiddenInput.closest('.time-field');
         if (!timeField) return;
         const hourSelect = timeField.querySelector('.tp-selects .tp-hour');
-        const hasValue = hiddenInput.value && hiddenInput.value.trim() !== '';
 
-        if (!hasValue) {
+        // Verificar si el usuario ha interactuado con el select
+        const userInteracted = hourSelect && hourSelect.hasAttribute('data-user-interacted');
+        // Verificar si tiene un valor REAL seleccionado (no el default interno)
+        const hasRealValue = hourSelect && hourSelect.value && hourSelect.value !== "";
+
+        // Solo es válido si el usuario ha interactuado Y tiene un valor seleccionado
+        const isValid = userInteracted && hasRealValue;
+
+        if (!isValid) {
           valid = false;
-          if (hourSelect) hourSelect.classList.add('field-error');
+          if (hourSelect) {
+            hourSelect.classList.add('field-error');
+            hourSelect.classList.remove('field-success');
+          }
           hiddenInput.classList.add('field-error');
+          hiddenInput.classList.remove('field-success');
           const msg = document.createElement('span');
           msg.className = 'error-msg';
           msg.textContent = getErrorMessage(campo.msgKey);
           timeField.appendChild(msg);
         } else {
           if (hourSelect) {
-              hourSelect.classList.remove('field-error');
-              hourSelect.classList.add('field-success');
+            hourSelect.classList.remove('field-error');
+            hourSelect.classList.add('field-success');
           }
           hiddenInput.classList.remove('field-error');
           hiddenInput.classList.add('field-success');
