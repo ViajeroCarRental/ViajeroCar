@@ -52,6 +52,45 @@ const state = {
 };
 
 /* ==========================================================
+   2.5️⃣ FUNCIÓN DE ALERTA PEQUEÑA (TOAST)
+========================================================== */
+function mostrarToast(mensaje, tipo = 'warning') {
+    if (typeof alertify !== 'undefined') {
+        switch(tipo) {
+            case 'warning':
+                alertify.warning(mensaje);
+                break;
+            case 'error':
+                alertify.error(mensaje);
+                break;
+            case 'success':
+                alertify.success(mensaje);
+                break;
+            default:
+                alertify.warning(mensaje);
+        }
+    } else {
+        const toast = document.createElement('div');
+        toast.textContent = mensaje;
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: ${tipo === 'warning' ? '#f59e0b' : tipo === 'error' ? '#ef4444' : '#10b981'};
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 10000;
+            animation: slideInRight 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        `;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+}
+
+/* ==========================================================
    3️⃣ FLATPICKR MODAL
 ========================================================== */
 function initFlatpickrModal() {
@@ -127,6 +166,15 @@ function initFlatpickrModal() {
     clickOpens: true,
     minDate: "today",
     onOpen: (sel, str, instance) => {
+      const sucRetiro = document.getElementById("sucursal_retiro")?.value;
+      const sucEntrega = document.getElementById("sucursal_entrega")?.value;
+
+      if (!sucRetiro || !sucEntrega) {
+        mostrarToast('⚠️ Primero debes seleccionar las sucursales de RETIRO y ENTREGA', 'warning');
+        instance.close();
+        return false;
+      }
+
       openModal(instance);
       centerCalendar(instance);
       if (!instance._actionsAdded) {
@@ -164,6 +212,22 @@ function initFlatpickrModal() {
     clickOpens: true,
     minDate: "today",
     onOpen: (sel, str, instance) => {
+      const sucRetiro = document.getElementById("sucursal_retiro")?.value;
+      const sucEntrega = document.getElementById("sucursal_entrega")?.value;
+      const fechaInicio = document.getElementById("fecha_inicio")?.value;
+
+      if (!sucRetiro || !sucEntrega) {
+        mostrarToast('⚠️ Primero debes seleccionar las sucursales de RETIRO y ENTREGA', 'warning');
+        instance.close();
+        return false;
+      }
+
+      if (!fechaInicio) {
+        mostrarToast('⚠️ Primero debes seleccionar la FECHA DE SALIDA', 'warning');
+        instance.close();
+        return false;
+      }
+
       openModal(instance);
       centerCalendar(instance);
       if (!instance._actionsAdded) {
@@ -194,7 +258,7 @@ function initFlatpickrModal() {
       horaRetiroInput.dataset.tpReady = "1";
       horaRetiroInput.setAttribute("readonly", "readonly");
       horaRetiroInput.classList.add("tp-hidden-input");
-      createTimeSelectsBelow(horaRetiroInput, horaRetiroHidden, "Hora ");
+      createTimeSelectsBelow(horaRetiroInput, horaRetiroHidden, "Hora");
     }
 
     const horaEntregaInput = document.getElementById("hora_entrega_ui");
@@ -265,6 +329,27 @@ function initFlatpickrModal() {
     }
 
     selH.addEventListener("change", sync);
+
+    // VALIDACIÓN: Mostrar toast si intenta abrir el select sin ubicación
+    selH.addEventListener("click", function(e) {
+      const sucRetiro = document.getElementById("sucursal_retiro")?.value;
+      const sucEntrega = document.getElementById("sucursal_entrega")?.value;
+      const fechaInicio = document.getElementById("fecha_inicio")?.value;
+
+      if (!sucRetiro || !sucEntrega) {
+        e.stopPropagation();
+        mostrarToast('⚠️ Primero debes seleccionar las sucursales de RETIRO y ENTREGA', 'warning');
+        this.blur();
+        return false;
+      }
+
+      if (!fechaInicio) {
+        e.stopPropagation();
+        mostrarToast('⚠️ Primero debes seleccionar la FECHA DE SALIDA', 'warning');
+        this.blur();
+        return false;
+      }
+    });
   }
 
   if (document.readyState === "loading") {
@@ -318,6 +403,7 @@ function calcularDias() {
 
   return days;
 }
+
 
 /* ==========================================================
    6️⃣ CATEGORÍA
@@ -900,10 +986,48 @@ function obtenerDatosCotizacion() {
 }
 
 /* ==========================================================
-   1️⃣2️⃣ EVENTOS Y MODALES
+   1️⃣2️⃣ FUNCIONES DE VALIDACIÓN CON ALERTAS TOAST
+========================================================== */
+function validarSucursales() {
+  const sucRetiro = document.getElementById("sucursal_retiro")?.value;
+  const sucEntrega = document.getElementById("sucursal_entrega")?.value;
+
+  if (!sucRetiro || !sucEntrega) {
+    mostrarToast('⚠️ Primero debes seleccionar las sucursales de RETIRO y ENTREGA', 'warning');
+    return false;
+  }
+  return true;
+}
+
+function validarFechasHoras() {
+  if (!validarSucursales()) return false;
+
+  const fechaInicio = document.getElementById("fecha_inicio")?.value;
+  const fechaFin = document.getElementById("fecha_fin")?.value;
+  const horaRetiro = document.getElementById("hora_retiro")?.value;
+  const horaEntrega = document.getElementById("hora_entrega")?.value;
+
+  if (!fechaInicio || !fechaFin || !horaRetiro || !horaEntrega) {
+    mostrarToast('⚠️ Completa FECHA y HORA de salida y llegada', 'warning');
+    return false;
+  }
+  return true;
+}
+
+function validarCategoria() {
+  if (!validarFechasHoras()) return false;
+
+  if (!state.categoria) {
+    mostrarToast('⚠️ Selecciona una CATEGORÍA de vehículo', 'warning');
+    return false;
+  }
+  return true;
+}
+
+/* ==========================================================
+   1️⃣3️⃣ EVENTOS Y MODALES
 ========================================================== */
 function bindUI() {
-  // Categorías
   const btnCategorias = document.getElementById("btnCategorias");
   const catPop = document.getElementById("catPop");
   const catClose = document.getElementById("catClose");
@@ -913,6 +1037,8 @@ function bindUI() {
 
   if (btnCategorias) {
     btnCategorias.addEventListener("click", async () => {
+      if (!validarFechasHoras()) return;
+
       await cargarCategorias();
       repaintCategoriaModalEstimados();
       if (catPop) openPop(catPop);
@@ -939,7 +1065,6 @@ function bindUI() {
 
   if (catRemove) catRemove.addEventListener("click", () => setCategoria(null));
 
-  // Protecciones
   const btnProtecciones = document.getElementById("btnProtecciones");
   const protePop = document.getElementById("proteccionPop");
   const proteClose = document.getElementById("proteClose");
@@ -974,7 +1099,6 @@ function bindUI() {
 
   if (proteRemove) proteRemove.addEventListener("click", () => setProteccion(null));
 
-  // Adicionales
   const btnAddons = document.getElementById("btnAddons");
   const addonsPop = document.getElementById("addonsPop");
   const addonsClose = document.getElementById("addonsClose");
@@ -1031,7 +1155,6 @@ function bindUI() {
     });
   }
 
-  // Resumen modal
   const btnResumen = document.getElementById("btnResumen");
   const resumenPop = document.getElementById("resumenPop");
   const resumenClose = document.getElementById("resumenClose");
@@ -1048,7 +1171,6 @@ function bindUI() {
   if (resumenClose) resumenClose.addEventListener("click", () => closePop(resumenPop));
   if (resumenOk) resumenOk.addEventListener("click", () => closePop(resumenPop));
 
-  // Editar tarifa
   const btnEditarTarifa = document.getElementById("btnEditarTarifa");
   if (btnEditarTarifa) {
     btnEditarTarifa.addEventListener("click", () => {
@@ -1082,14 +1204,16 @@ function bindUI() {
     });
   }
 
-  // Botones de envío
   const btnGuardar = document.getElementById("btnGuardarYEnviar");
   const btnConfirmar = document.getElementById("btnConfirmarCotizacion");
 
   if (btnGuardar) {
     btnGuardar.addEventListener("click", async () => {
-      if (!state.categoria) return alertify.warning("⚠️ Selecciona una categoría");
-      if (!document.getElementById("nombre_cliente")?.value) return alertify.warning("⚠️ Completa los datos del cliente");
+      if (!validarCategoria()) return;
+      if (!document.getElementById("nombre_cliente")?.value) {
+        mostrarToast('⚠️ Completa los datos del cliente', 'warning');
+        return;
+      }
 
       const payload = obtenerDatosCotizacion();
       payload.enviarCorreo = true;
@@ -1099,10 +1223,11 @@ function bindUI() {
 
   if (btnConfirmar) {
     btnConfirmar.addEventListener("click", async () => {
-      if (!state.categoria) return alertify.warning("⚠️ Selecciona una categoría");
-      if (!document.getElementById("sucursal_retiro")?.value) return alertify.warning("⚠️ Selecciona sucursal de retiro");
-      if (!document.getElementById("fecha_inicio")?.value) return alertify.warning("⚠️ Completa las fechas");
-      if (!document.getElementById("nombre_cliente")?.value) return alertify.warning("⚠️ Completa los datos del cliente");
+      if (!validarCategoria()) return;
+      if (!document.getElementById("nombre_cliente")?.value) {
+        mostrarToast('⚠️ Completa los datos del cliente', 'warning');
+        return;
+      }
 
       const payload = obtenerDatosCotizacion();
       payload.confirmar = true;
@@ -1110,19 +1235,16 @@ function bindUI() {
     });
   }
 
-  // Moneda y TC
   const moneda = document.getElementById("moneda");
   const tc = document.getElementById("tc");
   if (moneda) moneda.addEventListener("change", actualizarTotal);
   if (tc) tc.addEventListener("input", actualizarTotal);
 
-  // Sucursales y fechas
   const sucRetiro = document.getElementById("sucursal_retiro");
   const sucEntrega = document.getElementById("sucursal_entrega");
   if (sucRetiro) sucRetiro.addEventListener("change", actualizarResumenViaje);
   if (sucEntrega) sucEntrega.addEventListener("change", actualizarResumenViaje);
 
-  // Cerrar modales al hacer clic fuera
   qsa(".pop.modal").forEach((pop) => {
     pop.addEventListener("click", (e) => {
       if (e.target === pop) closePop(pop);
@@ -1131,7 +1253,7 @@ function bindUI() {
 }
 
 /* ==========================================================
-   1️⃣3️⃣ SELECT2 CON ICONOS
+   1️⃣4️⃣ SELECT2 CON ICONOS
 ========================================================== */
 window.iconosPorId = window.iconosPorId || {};
 
@@ -1184,7 +1306,7 @@ function initSelect2Sucursales() {
 }
 
 /* ==========================================================
-   1️⃣4️⃣ INICIALIZACIÓN PRINCIPAL
+   1️⃣5️⃣ INICIALIZACIÓN PRINCIPAL
 ========================================================== */
 document.addEventListener("DOMContentLoaded", () => {
   initFlatpickrModal();
