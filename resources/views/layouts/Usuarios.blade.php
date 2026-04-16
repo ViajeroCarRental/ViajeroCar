@@ -514,7 +514,9 @@ body.nav-open .language-selector {
     "use strict";
 
     function traducirSelect(selectElement) {
-        if (!selectElement) return false;
+        if (!selectElement || !selectElement.options) {
+          return false; 
+        }
 
         if (!window.sucursalesTraducciones || Object.keys(window.sucursalesTraducciones).length === 0) {
             console.log('⚠️ No hay traducciones de sucursales cargadas');

@@ -680,6 +680,8 @@
  <form id="rentalForm" class="search-form" method="GET" action="{{ route('rutaReservasIniciar') }}" novalidate>
     @csrf
 
+    <input type="hidden" name="step" value="2">
+
     <div class="search-grid">
 
         {{-- =========================

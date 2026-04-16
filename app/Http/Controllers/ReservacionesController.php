@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
-use Spatie\LaravelPdf\Facades\Pdf;          // << Spatie PDF
+use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\StoreCotizacionRequest;
@@ -21,408 +21,437 @@ class ReservacionesController extends Controller
      */
     public function iniciar(Request $request)
     {
-        // --- 1) Leer parámetros (acepta alias desde Catálogo) ---
-        $vehiculoId = $request->input('vehiculo_id');
+        $reset = $request->input('reset') == '1';
 
-        $pickupDateRaw  = $request->input('pickup_date')  ?? $request->input('start');
-        $dropoffDateRaw = $request->input('dropoff_date') ?? $request->input('end');
+        $pickupDateRaw  = $reset ? null : ($request->input('pickup_date')  ?? $request->input('start'));
+        $dropoffDateRaw = $reset ? null : ($request->input('dropoff_date') ?? $request->input('end'));
 
-        $pickupTimeRaw  = $request->input('pickup_time');
-        $dropoffTimeRaw = $request->input('dropoff_time');
+        if (is_string($pickupDateRaw) && str_contains($pickupDateRaw, ' a ')) {
+            [$pickupDateRaw, $dropoffDateRaw] = array_map('trim', explode(' a ', $pickupDateRaw, 2));
+        }
+
+        $pickupDateISO  = $this->normalizeDateYmd($pickupDateRaw);
+        $dropoffDateISO = $this->normalizeDateYmd($dropoffDateRaw);
+
+        $pTimeRaw = $request->input('pickup_time') ?? ($request->input('pickup_h') ? $request->input('pickup_h') . ':00' : null);
+        $dTimeRaw = $request->input('dropoff_time') ?? ($request->input('dropoff_h') ? $request->input('dropoff_h') . ':00' : null);
+
+        $pickupTime  = $reset ? null : $this->normalizeTime($pTimeRaw);
+        $dropoffTime = $reset ? null : $this->normalizeTime($dTimeRaw);
 
         $pickupSucursalId  = $request->input('pickup_sucursal_id')  ?? $request->input('location');
         $dropoffSucursalId = $request->input('dropoff_sucursal_id') ?? $request->input('location');
+        $dropoffSucursalId = empty($dropoffSucursalId) && !empty($pickupSucursalId) ? $pickupSucursalId : $dropoffSucursalId;
 
-        // ✅ categoria_id será la selección del Paso 2
         $categoriaId = $request->input('categoria_id') ?? $request->input('type');
         $plan        = $request->input('plan');
         $addonsParam = $request->input('addons', '');
+        $vehiculoId  = $request->input('vehiculo_id');
 
+        $step1DataComplete = !empty($pickupSucursalId) && !empty($dropoffSucursalId) && !empty($pickupDateISO) && !empty($dropoffDateISO) && !empty($pickupTime) && !empty($dropoffTime);
 
-        // Normalizar fechas/horas
-        $pickupDate  = $this->normalizeDateYmd($pickupDateRaw);
-        $dropoffDate = $this->normalizeDateYmd($dropoffDateRaw);
-        $pickupTime  = $this->normalizeTime($pickupTimeRaw);
-        $dropoffTime = $this->normalizeTime($dropoffTimeRaw);
+        $requestedStep = (int) $request->input('step', 1);
 
-
-
-        // --- 2) Si viene vehiculo_id, completar datos desde BD ---
-        $vehiculo = null;
-        if ($vehiculoId) {
-            $vehiculo = DB::table('vehiculos as v')
-                ->leftJoin('vehiculo_imagenes as vi', function ($j) {
-                    $j->on('vi.id_vehiculo', '=', 'v.id_vehiculo')->where('vi.orden', 1);
-                })
-                ->leftJoin('sucursales as s', 's.id_sucursal', '=', 'v.id_sucursal')
-                ->leftJoin('categorias_carros as c', 'c.id_categoria', '=', 'v.id_categoria')
-                ->selectRaw("
-                    v.*,
-                    s.nombre as sucursal_nombre,
-                    c.nombre as categoria_nombre,
-                    COALESCE(vi.url, '') as img_url
-                ")
-                ->where('v.id_vehiculo', $vehiculoId)
-                ->first();
-
-            if (!$vehiculo) {
-                return redirect()->route('rutaCatalogo')
-                    ->withErrors(['catalogo' => 'El vehículo seleccionado no existe o no está disponible.']);
-            }
-
-            // Completar filtros si faltaban
-            $pickupSucursalId  = $pickupSucursalId  ?: $vehiculo->id_sucursal;
-            $dropoffSucursalId = $dropoffSucursalId ?: $vehiculo->id_sucursal;
-            $categoriaId       = $categoriaId       ?: $vehiculo->id_categoria;
+        if ($reset || (!$step1DataComplete && $requestedStep > 1)) {
+            $stepCurrent = 1;
+        } else {
+            $stepCurrent = $requestedStep;
         }
 
-        // --- 3) Datos para selects (panel de edición) ---
-        $ciudades = DB::table('ciudades')
-            ->select('id_ciudad', 'nombre', 'estado', 'pais')
+        if ($stepCurrent >= 3 && (empty($categoriaId) || empty($plan))) {
+            $stepCurrent = 2;
+        }
+
+        $step = max(1, min(4, $stepCurrent));
+
+        if ($request->get('from') === 'welcome') session(['from_welcome' => true]);
+        if ($step1DataComplete) session()->forget('from_welcome');
+
+        $fromWelcome = $request->get('from') === 'welcome' || session('from_welcome');
+        if ($step == 1 && $step1DataComplete) $fromWelcome = false;
+
+        $vehiculo = $this->obtenerVehiculoSeleccionado($vehiculoId);
+        if ($vehiculoId && !$vehiculo) {
+            return redirect()->route('rutaCatalogo')->withErrors(['catalogo' => 'El vehículo seleccionado no existe.']);
+        }
+
+        if ($vehiculo) {
+            $pickupSucursalId  = $pickupSucursalId ?: $vehiculo->id_sucursal;
+            $dropoffSucursalId = $dropoffSucursalId ?: $vehiculo->id_sucursal;
+            $categoriaId       = $categoriaId ?: $vehiculo->id_categoria;
+        }
+
+        $days              = $this->calcularDiasDeRenta($pickupDateISO, $pickupTime, $dropoffDateISO, $dropoffTime);
+        $catalogos         = $this->obtenerCatalogos();
+        $fechas            = $this->formatearFechas($pickupDateISO, $dropoffDateISO, $pickupTime, $dropoffTime);
+        $detallesCategoria = $this->procesarCategoria($catalogos['categorias'], $categoriaId, $plan, $days);
+        $detallesAddons    = $this->procesarAddons($addonsParam, $categoriaId, $days);
+
+        $pickupName  = $pickupSucursalId ? optional($catalogos['sucursales']->get((int)$pickupSucursalId))->nombre : null;
+        $dropoffName = $dropoffSucursalId ? optional($catalogos['sucursales']->get((int)$dropoffSucursalId))->nombre : null;
+
+        $dropoffKm        = $dropoffName ? (DB::table('ubicaciones_servicio')->where('destino', $dropoffName)->where('activo', true)->value('km') ?? 0) : 0;
+        $costoKmCategoria = $categoriaId ? (DB::table('categoria_costo_km')->where('id_categoria', $categoriaId)->where('activo', true)->value('costo_km') ?? 0) : 0;
+
+        $paises = DB::table('paises')->where('activo', true)->orderBy('prioritario', 'desc')->orderBy('nombre', 'asc')->get();
+
+        $baseParams = array_filter([
+            'pickup_sucursal_id'  => $pickupSucursalId,
+            'dropoff_sucursal_id' => $dropoffSucursalId,
+            'pickup_date'         => $fechas['pickupDate'],
+            'pickup_time'         => $pickupTime,
+            'dropoff_date'        => $fechas['dropoffDate'],
+            'dropoff_time'        => $dropoffTime,
+            'categoria_id'        => $categoriaId,
+            'plan'                => $plan,
+            'addons'              => $addonsParam,
+        ], fn($v) => $v !== null && $v !== '');
+
+        $filters = array_merge($baseParams, [
+            'pickup_date'  => $fechas['pickupDate'],
+            'dropoff_date' => $fechas['dropoffDate']
+        ]);
+
+        // ==========================================
+        // VARIABLES EXTRAS PARA EL PASO 4 (LIMPIEZA DE BLADE)
+        // ==========================================
+
+        // 1. Detección de Aeropuerto
+        $isAirport = (is_string($pickupName) && str_contains(mb_strtolower($pickupName), 'aeropuerto')) ||
+            (is_string($dropoffName) && str_contains(mb_strtolower($dropoffName), 'aeropuerto'));
+
+        // 2. Moneda y Formateo
+        $isUSD = app()->getLocale() === 'en';
+        $exchangeRate = 20;
+
+        $formatCurrency = function ($amountMXN) use ($isUSD, $exchangeRate) {
+            return $isUSD ? '$' . number_format($amountMXN / $exchangeRate, 2) . ' USD'
+                : '$' . number_format($amountMXN, 0) . ' MXN';
+        };
+
+        $tarifaBaseFormateada = $formatCurrency($detallesCategoria['tarifaBase'] ?? 0);
+
+        $precioDiaOriginal = (float) (optional($detallesCategoria['categoriaSel'])->precio_dia ?? 0);
+        $precioDiaCalculado = $plan === 'mostrador' ? round($precioDiaOriginal * 1.25) : $precioDiaOriginal;
+        $precioDiaFormateado = $formatCurrency($precioDiaCalculado);
+
+        // 3. Fechas para el formulario
+        $months3 = $isUSD
+            ? ['01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr', '05' => 'May', '06' => 'Jun', '07' => 'Jul', '08' => 'Aug', '09' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dec']
+            : ['01' => 'Ene', '02' => 'Feb', '03' => 'Mar', '04' => 'Abr', '05' => 'May', '06' => 'Jun', '07' => 'Jul', '08' => 'Ago', '09' => 'Sep', '10' => 'Oct', '11' => 'Nov', '12' => 'Dic'];
+
+        $maxYear = date('Y') - 18;
+        $minYear = $maxYear - 80;
+
+        return view('Usuarios.Reservaciones', array_merge(compact(
+            'step',
+            'stepCurrent',
+            'filters',
+            'baseParams',
+            'fromWelcome',
+            'pickupSucursalId',
+            'dropoffSucursalId',
+            'pickupTime',
+            'dropoffTime',
+            'categoriaId',
+            'plan',
+            'vehiculo',
+            'pickupName',
+            'dropoffName',
+            'days',
+            'dropoffKm',
+            'costoKmCategoria',
+            'paises',
+            'isUSD', 
+            'isAirport', 
+            'exchangeRate', 
+            'tarifaBaseFormateada', 
+            'precioDiaFormateado', 
+            'months3', 
+            'maxYear', 
+            'minYear',
+            'formatCurrency'
+        ), $catalogos, $fechas, $detallesCategoria, $detallesAddons));
+    }
+
+    private function calcularDiasDeRenta($pickupDateISO, $pickupTime, $dropoffDateISO, $dropoffTime)
+    {
+        if (!$pickupDateISO || !$pickupTime || !$dropoffDateISO || !$dropoffTime) return 1;
+
+        try {
+            $d1 = \Carbon\Carbon::createFromFormat('Y-m-d H:i', "{$pickupDateISO} {$pickupTime}");
+            $d2 = \Carbon\Carbon::createFromFormat('Y-m-d H:i', "{$dropoffDateISO} {$dropoffTime}");
+            $horasTotales = $d1->diffInHours($d2);
+            $diasBase = intdiv($horasTotales, 24);
+            $horasExtra = $horasTotales % 24;
+
+            return $horasExtra > 1 ? $diasBase + 1 : max(1, $diasBase);
+        } catch (\Throwable $e) {
+            return 1;
+        }
+    }
+
+    private function obtenerVehiculoSeleccionado($vehiculoId)
+    {
+        if (!$vehiculoId) return null;
+
+        return DB::table('vehiculos as v')
+            ->leftJoin('vehiculo_imagenes as vi', function ($j) {
+                $j->on('vi.id_vehiculo', '=', 'v.id_vehiculo')->where('vi.orden', 1);
+            })
+            ->leftJoin('sucursales as s', 's.id_sucursal', '=', 'v.id_sucursal')
+            ->leftJoin('categorias_carros as c', 'c.id_categoria', '=', 'v.id_categoria')
+            ->selectRaw("v.*, s.nombre as sucursal_nombre, c.nombre as categoria_nombre, COALESCE(vi.url, '') as img_url")
+            ->where('v.id_vehiculo', $vehiculoId)
+            ->first();
+    }
+
+    private function obtenerCatalogos()
+    {
+        $sucursales = DB::table('sucursales')
+            ->select('id_sucursal', 'id_ciudad', 'nombre')
+            ->where('activo', true)
             ->orderBy('nombre')
             ->get()
-            ->map(function ($c) {
-                $c->sucursalesActivas = DB::table('sucursales')
-                    ->select('id_sucursal', 'id_ciudad', 'nombre')
-                    ->where('id_ciudad', $c->id_ciudad)
-                    ->where('activo', true)
-                    ->orderBy('nombre')
-                    ->get();
+            ->map(function ($suc) {
+                $name = strtolower($suc->nombre);
+                $suc->icon_class = match (true) {
+                    str_contains($name, 'aeropuerto') => 'fa-solid fa-plane-departure',
+                    str_contains($name, 'bus') || str_contains($name, 'autobuses') => 'fa-solid fa-bus',
+                    str_contains($name, 'oficina') || str_contains($name, 'park') => 'fa-solid fa-building',
+                    default => 'fa-solid fa-location-dot',
+                };
+                return $suc;
+            });
+
+        $sucursalesPorCiudad = $sucursales->groupBy('id_ciudad');
+
+        $ciudadesBase = DB::table('ciudades')
+            ->select('id_ciudad', 'nombre', 'estado', 'pais')
+            ->get()
+            ->map(function ($c) use ($sucursalesPorCiudad) {
+                $c->sucursalesActivas = $sucursalesPorCiudad->get($c->id_ciudad, collect());
                 return $c;
             });
 
-        /**
-         * ✅ CATEGORÍAS con:
-         * - precio_dia (desde categorias_carros)
-         * - imagen representativa (tomando 1 vehículo disponible por categoría)
-         * - specs (chips) desde el vehículo ejemplo
-         *
-         * Si no hay vehículos disponibles en una categoría, img_url quedará vacío.
-         */
+        $ciudadesPickup = $ciudadesBase->where('nombre', 'Querétaro');
+
+        $ciudadesDropoff = $ciudadesBase->sortByDesc(fn($c) => $c->nombre === 'Querétaro')->values();
+
+        $horasDropdown = collect(range(0, 23))->map(fn($i) => str_pad($i, 2, '0', STR_PAD_LEFT));
+
         $categorias = DB::table('categorias_carros as c')
-            // 1) Tomar 1 vehículo disponible por categoría (vehículo ejemplo)
             ->leftJoinSub(
-                DB::table('vehiculos')
-                    ->selectRaw('MIN(id_vehiculo) as id_vehiculo, id_categoria')
-                    ->where('id_estatus', 1) // disponible
-                    ->groupBy('id_categoria'),
+                DB::table('vehiculos')->selectRaw('MIN(id_vehiculo) as id_vehiculo, id_categoria')->where('id_estatus', 1)->groupBy('id_categoria'),
                 'vx',
                 'vx.id_categoria',
                 '=',
                 'c.id_categoria'
             )
-            // 2) Traer datos del vehículo ejemplo
             ->leftJoin('vehiculos as v', 'v.id_vehiculo', '=', 'vx.id_vehiculo')
-            // 3) Traer imagen principal del vehículo ejemplo
             ->leftJoin('vehiculo_imagenes as vi', function ($j) {
-                $j->on('vi.id_vehiculo', '=', 'v.id_vehiculo')
-                    ->where('vi.orden', 1);
+                $j->on('vi.id_vehiculo', '=', 'v.id_vehiculo')->where('vi.orden', 1);
             })
             ->selectRaw("
-                c.id_categoria,
-                c.nombre,
-                c.descripcion,
-                COALESCE(c.precio_dia, 0) as precio_dia,
-
-                COALESCE(vi.url, '') as img_url,
-
-                COALESCE(v.marca, '')  as marca,
-                COALESCE(v.modelo, '') as modelo,
-
-                COALESCE(v.transmision, 'Manual o automática') as transmision,
-                COALESCE(v.asientos, 0) as pasajeros,
-
-                -- defaults (si luego los haces reales en BD, los cambiamos)
-                2 as maletas_chicas,
-                1 as maletas_grandes,
-
-                1 as apple_carplay,
-                1 as android_auto
+                c.id_categoria, c.nombre, c.descripcion, c.precio_dia, c.codigo,
+                1 as aire_ac, 1 as apple_carplay, 1 as android_auto,
+                COALESCE(vi.url, '') as img_url
             ")
             ->orderBy('c.id_categoria', 'asc')
             ->get();
 
-        $sucursales = DB::table('sucursales')
-            ->select('id_sucursal', 'nombre')
-            ->where('activo', true)
-            ->orderBy('nombre')
-            ->get();
+        $serviciosRaw = $this->obtenerServiciosActivos();
+        $capacidad = request('categoria_id')
+            ? (float) DB::table('vehiculos')->where('id_categoria', request('categoria_id'))->max('capacidad_tanque')
+            : 50.0;
 
-        // --- 4) Filtros estándar para la vista ---
-        $filters = [
-    'pickup_sucursal_id'  => $pickupSucursalId,
-    'dropoff_sucursal_id' => $dropoffSucursalId,
-    'pickup_date'         => $pickupDate,
-    'pickup_time'         => $pickupTime,
-    'dropoff_date'        => $dropoffDate,
-    'dropoff_time'        => $dropoffTime,
-    'categoria_id'        => $categoriaId,
-    'plan'                => $plan,
-    'addons'              => $addonsParam,
-];
+        $serviciosProcesados = $this->preprocesarServicios($serviciosRaw, $capacidad);
 
+        $serviciosFiltrados = $serviciosProcesados->filter(function ($s) {
+            $n = mb_strtolower(trim($s->nombre));
 
-        // ======================================================
-        // ✅ NUEVO CONTROL DE FLUJO (POR CATEGORÍA)
-        // ======================================================
+            $esSilla     = str_contains($n, 'silla');
+            $esGasolina  = str_contains($n, 'gasolina') && str_contains($n, 'prepago'); 
+            $esConductor = str_contains($n, 'conductor') && str_contains($n, 'adicional');
 
-        // Step solicitado por URL
-        $requestedStep = (int) $request->query('step', 0);
+            return $esSilla || $esGasolina || $esConductor;
+        })->values();
 
-        // Validar rango
-        if ($requestedStep < 1 || $requestedStep > 4) {
-            $requestedStep = 0;
-        }
+        return [
+            'sucursales'         => $sucursales->keyBy('id_sucursal'),
+            'ciudadesPickup'     => $ciudadesPickup,
+            'ciudadesDropoff'    => $ciudadesDropoff,
+            'horasDropdown'      => $horasDropdown,
+            'isDifferentDropoff' => request('different_dropoff') == '1',
+            'categorias'         => $categorias,
+            'servicios'          => $serviciosProcesados,
+            'serviciosFiltrados' => $serviciosFiltrados,
+        ];
+    }
 
-        // Flags del flujo actual
-        $hasCategoria = !empty($categoriaId);
-        $hasPlan      = !empty($plan);
+    private function formatearFechas($pickupDateISO, $dropoffDateISO, $pickupTime, $dropoffTime)
+    {
+        \Carbon\Carbon::setLocale('es');
+        $ph = $pm = $dh = $dm = '';
+        if ($pickupTime)  [$ph, $pm] = array_pad(explode(':', $pickupTime), 2, '00');
+        if ($dropoffTime) [$dh, $dm] = array_pad(explode(':', $dropoffTime), 2, '00');
 
-        // Decidir paso correcto
-        if ($requestedStep === 1) {
-            $step = 1;
-        } elseif ($requestedStep === 2) {
-            $step = 2;
-        } elseif ($requestedStep === 3) {
-            // Complementos requieren categoría + plan
-            $step = ($hasCategoria && $hasPlan) ? 3 : 2;
-        } elseif ($requestedStep === 4) {
-            // 🔥 RESUMEN YA NO REQUIERE vehiculo_id
-            $step = ($hasCategoria && $hasPlan) ? 4 : 2;
-        } else {
-            // Sin step explícito
-            if ($hasCategoria && $hasPlan) {
-                $step = 3;
+        return [
+            'pickupDate'        => $pickupDateISO ? \Carbon\Carbon::parse($pickupDateISO)->format('d-m-Y') : '',
+            'dropoffDate'       => $dropoffDateISO ? \Carbon\Carbon::parse($dropoffDateISO)->format('d-m-Y') : '',
+            'pickupFechaLarga'  => $pickupDateISO ? strtoupper(\Carbon\Carbon::parse($pickupDateISO)->translatedFormat('D d M Y')) : null,
+            'dropoffFechaLarga' => $dropoffDateISO ? strtoupper(\Carbon\Carbon::parse($dropoffDateISO)->translatedFormat('D d M Y')) : null,
+            'ph' => $ph,
+            'pm' => $pm,
+            'dh' => $dh,
+            'dm' => $dm
+        ];
+    }
+
+    private function procesarCategoria($categorias, $categoriaId, $plan, $days)
+    {
+        $specsMap = [
+            1 => ['pax' => 5, 'small' => 2, 'big' => 1],
+            2 => ['pax' => 5, 'small' => 2, 'big' => 1],
+            3 => ['pax' => 5, 'small' => 2, 'big' => 2],
+            4 => ['pax' => 5, 'small' => 2, 'big' => 2],
+            5 => ['pax' => 5, 'small' => 2, 'big' => 2],
+            6 => ['pax' => 5, 'small' => 3, 'big' => 2],
+            7 => ['pax' => 7, 'small' => 3, 'big' => 2],
+            8 => ['pax' => 7, 'small' => 4, 'big' => 2],
+            9 => ['pax' => 13, 'small' => 4, 'big' => 3],
+            10 => ['pax' => 5, 'small' => 3, 'big' => 2],
+            11 => ['pax' => 5, 'small' => 3, 'big' => 2],
+        ];
+
+        $catImages = [
+            1 => asset('img/aveo.png'),
+            2 => asset('img/virtus.png'),
+            3 => asset('img/jetta.png'),
+            4 => asset('img/camry.png'),
+            5 => asset('img/renegade.png'),
+            6 => asset('img/taos.png'),
+            7 => asset('img/avanza.png'),
+            8 => asset('img/Odyssey.png'),
+            9 => asset('img/Hiace.png'),
+            10 => asset('img/Frontier.png'),
+            11 => asset('img/Tacoma.png'),
+        ];
+
+        $categoriasPreprocesadas = $categorias->map(function ($cat) use ($specsMap, $catImages, $days) {
+            $prepagoDia = (float)($cat->precio_dia ?? 0);
+            $mostradorDia = round($prepagoDia * 1.25);
+
+            $cat->prepago_total = $prepagoDia * $days;
+            $cat->mostrador_total = $mostradorDia * $days;
+            $cat->ahorro_pct = $cat->mostrador_total > 0 ? round((($cat->mostrador_total - $cat->prepago_total) / $cat->mostrador_total) * 100) : 0;
+
+            $cat->img_url = $catImages[$cat->id_categoria]
+                ?? (!empty($cat->img_url) ? $cat->img_url : asset('img/Logotipo.png'));
+
+            $spec = $specsMap[$cat->id_categoria] ?? ['pax' => 5, 'small' => 2, 'big' => 1];
+            $cat->pax = $spec['pax'];
+            $cat->s_luggage = $spec['small'];
+            $cat->b_luggage = $spec['big'];
+
+            $cat->tiene_ac = (bool)$cat->aire_ac;
+            $cat->tiene_carplay = true;
+            $cat->tiene_android = true;
+
+            $cat->transmision_txt = $cat->id_categoria == 9 ? __('Manual') : __('Automatic');
+
+            return $cat;
+        });
+
+        $categoriaSel = $categoriaId ? $categoriasPreprocesadas->firstWhere('id_categoria', (int)$categoriaId) : null;
+        $autoTitulo = $categoriaSel ? ($categoriaSel->descripcion ?: __('Car or similar')) : __('Car or similar');
+        $autoSubtitulo = $categoriaSel ? strtoupper($categoriaSel->nombre) : 'CATEGORY';
+        $categoriaImg = $categoriaSel ? $categoriaSel->img_url : asset('img/Logotipo.png');
+        $tarifaBase = $categoriaSel ? ($plan === 'mostrador' ? $categoriaSel->mostrador_total : $categoriaSel->prepago_total) : 0.0;
+
+        return [
+            'categorias' => $categoriasPreprocesadas,
+            'categoriaSel' => $categoriaSel,
+            'autoTitulo' => $autoTitulo,
+            'autoSubtitulo' => $autoSubtitulo,
+            'categoriaImg' => $categoriaImg,
+            'tarifaBase' => $tarifaBase
+        ];
+    }
+
+    private function preprocesarServicios($servicios, $capacidadTanque)
+    {
+        $isUSD = app()->getLocale() === 'en';
+        $rate = 20;
+
+        return collect($servicios)->map(function ($srv) use ($isUSD, $rate, $capacidadTanque) {
+            $nombreLower = mb_strtolower($srv->nombre);
+
+            $srv->icon = match (true) {
+                str_contains($nombreLower, 'silla') => 'fa-solid fa-child-reaching',
+                str_contains($nombreLower, 'conductor') => 'fa-solid fa-user-plus',
+                str_contains($nombreLower, 'gasolina') => 'fa-solid fa-gas-pump',
+                default => 'fa-solid fa-circle-plus'
+            };
+
+            $srv->tooltip = match (true) {
+                str_contains($nombreLower, 'silla') => __('Ideal for traveling with children. Subject to availability.'),
+                str_contains($nombreLower, 'conductor') => __('Add an additional authorized driver.'),
+                str_contains($nombreLower, 'gasolina') => __('Early flight? Prepay your fuel and return the vehicle directly.'),
+                default => __('Check more information about this add-on.')
+            };
+
+            $precioBase = (float) $srv->precio;
+            if (str_contains($nombreLower, 'gasolina')) {
+                $precioBase *= ($capacidadTanque ?: 50);
+                $srv->unidad_txt = __(' / tank');
             } else {
-                $step = 2;
+                $srv->unidad_txt = ($srv->tipo_cobro === 'por_dia') ? __(' / day') : __(' / event');
+            }
+
+            $montoFinal = $isUSD ? ($precioBase / $rate) : $precioBase;
+            $srv->precio_formateado = '$' . number_format($montoFinal, ($isUSD ? 2 : 0));
+            $srv->moneda_txt = $isUSD ? 'USD' : 'MXN';
+
+            return $srv;
+        });
+    }
+
+    private function procesarAddons($addonsParam, $categoriaId, $days)
+    {
+        $addons = [];
+        $extrasTotal = 0;
+        $capacidadTanque = $categoriaId ? (float) (DB::table('vehiculos')->where('id_categoria', $categoriaId)->where('id_estatus', 1)->max('capacidad_tanque') ?? 0) : 0;
+
+        if ($addonsParam) {
+            $pairs = explode(',', $addonsParam);
+            $ids = [];
+            foreach ($pairs as $pair) {
+                if (str_contains($pair, ':')) $ids[] = (int) explode(':', $pair)[0];
+            }
+
+            $serviciosDB = DB::table('servicios')->whereIn('id_servicio', $ids)->get()->keyBy('id_servicio');
+
+            foreach ($pairs as $pair) {
+                if (!str_contains($pair, ':')) continue;
+                [$id, $qty] = array_map('intval', explode(':', $pair));
+
+                if ($qty <= 0 || !($srv = $serviciosDB->get($id))) continue;
+
+                if ($id === 1) { // GASOLINA PREPAGO
+                    $litros = max(0, $capacidadTanque);
+                    $subtotal = (float) $srv->precio * $litros;
+                    $addons[] = ['id' => $id, 'nombre' => $srv->nombre, 'qty' => 1, 'precio' => (float) $srv->precio, 'litros' => $litros, 'subtotal' => $subtotal];
+                } else {
+                    $tipoCobro = strtolower((string) ($srv->tipo_cobro ?? ''));
+                    $subtotal = $tipoCobro === 'por_dia' ? (float) $srv->precio * $qty * $days : (float) $srv->precio * $qty;
+                    $addons[] = ['id' => $id, 'nombre' => $srv->nombre, 'qty' => $qty, 'precio' => (float) $srv->precio, 'subtotal' => $subtotal];
+                }
+                $extrasTotal += $subtotal;
             }
         }
 
-        // Ya no listamos vehículos (flujo por categoría)
-        $vehiculos = collect();
-
-
-        // --- 6) Complementos (SERVICIOS) — SIEMPRE cargar ---
-        $servicios = $this->obtenerServiciosActivos();
-
-
-
-// ======================================================
-// CALCULAR ADDONS (SERVICIOS)
-// ======================================================
-
-$addons = [];
-$extrasTotal = 0;
-
-
-// Obtener vehículo ejemplo de la categoría (para tanque)
-// Obtener capacidad máxima de tanque de la categoría
-$capacidadTanque = 0;
-
-if ($categoriaId) {
-    $capacidadTanque = (float) (
-        DB::table('vehiculos')
-            ->where('id_categoria', $categoriaId)
-            ->where('id_estatus', 1)
-            ->max('capacidad_tanque') ?? 0
-    );
-}
-
-if ($addonsParam) {
-
-    // convertir "1:1,2:2" → array
-    $pairs = explode(',', $addonsParam);
-
-    $ids = [];
-
-    foreach ($pairs as $pair) {
-
-        if (!str_contains($pair, ':')) continue;
-
-        [$id,$qty] = explode(':',$pair);
-
-        $ids[] = (int)$id;
-    }
-
-    // traer todos los servicios de una vez
-    $serviciosDB = DB::table('servicios')
-        ->whereIn('id_servicio', $ids)
-        ->get()
-        ->keyBy('id_servicio');
-
-    foreach ($pairs as $pair) {
-
-        if (!str_contains($pair, ':')) continue;
-
-        [$id,$qty] = explode(':',$pair);
-
-        $id = (int)$id;
-        $qty = (int)$qty;
-
-        if ($qty <= 0) continue;
-
-        $srv = $serviciosDB->get($id);
-
-        if (!$srv) continue;
-
-        $subtotal = 0;
-$precioUnitarioMostrado = (float) $srv->precio;
-
-// GASOLINA PREPAGO
-if ($id == 1) {
-    $litros = max(0, (float) $capacidadTanque);
-    $subtotal = (float) $srv->precio * $litros;
-
-    $addons[] = [
-        'id' => $id,
-        'nombre' => $srv->nombre,
-        'qty' => 1,
-        'precio' => (float) $srv->precio,
-        'litros' => $litros,
-        'subtotal' => $subtotal
-    ];
-} else {
-    $tipoCobro = strtolower((string) ($srv->tipo_cobro ?? ''));
-
-    if ($tipoCobro === 'por_dia') {
-        $dias = 1;
-
-try {
-    if ($pickupDate && $pickupTime && $dropoffDate && $dropoffTime) {
-
-        $d1 = Carbon::createFromFormat('Y-m-d H:i', "{$pickupDate} {$pickupTime}");
-        $d2 = Carbon::createFromFormat('Y-m-d H:i', "{$dropoffDate} {$dropoffTime}");
-
-        $horasTotales = $d1->diffInHours($d2);
-
-        $diasBase = intdiv($horasTotales, 24);
-        $horasExtra = $horasTotales % 24;
-
-        // ✅ 1 hora de tolerancia
-        if ($horasExtra > 1) {
-            $dias = $diasBase + 1;
-        } else {
-            $dias = max(1, $diasBase);
-        }
-    }
-} catch (\Throwable $e) {
-    $dias = 1;
-}
-
-        $subtotal = (float) $srv->precio * $qty * $dias;
-    } else {
-        $subtotal = (float) $srv->precio * $qty;
-    }
-
-    $addons[] = [
-        'id' => $id,
-        'nombre' => $srv->nombre,
-        'qty' => $qty,
-        'precio' => (float) $srv->precio,
-        'subtotal' => $subtotal
-    ];
-}
-
-$extrasTotal += $subtotal;
-    }
-}
-// ======================================================
-// CALCULAR KM DE DROP OFF
-// ======================================================
-
-$dropoffKm = 0;
-$costoKmCategoria = 0;
-
-if ($dropoffSucursalId) {
-
-    $dropoffName = DB::table('sucursales')
-        ->where('id_sucursal', $dropoffSucursalId)
-        ->value('nombre');
-
-    if ($dropoffName) {
-
-        $km = DB::table('ubicaciones_servicio')
-            ->where('destino', $dropoffName)
-            ->where('activo', true)
-            ->value('km');
-
-        $dropoffKm = $km ?? 0;
-    }
-}
-
-// ======================================================
-// COSTO POR KM SEGÚN CATEGORÍA
-// ======================================================
-
-if ($categoriaId) {
-
-    $costoKmCategoria = DB::table('categoria_costo_km')
-        ->where('id_categoria', $categoriaId)
-        ->where('activo', true)
-        ->value('costo_km') ?? 0;
-}
-
-
-        return view('Usuarios.Reservaciones', [
-            'step'       => $step,
-            'filters'    => $filters,
-            'vehiculos'  => $vehiculos,
-            'vehiculo'   => $vehiculo,
-            'sucursales' => $sucursales,
-            'categorias' => $categorias,
-            'ciudades'   => $ciudades,   // 👈 ESTA ES LA CLAVE
-            'servicios'  => $servicios,
-
-            'addons' => $addons,
-            'extrasTotal' => $extrasTotal,
-
-             // NUEVAS VARIABLES
-            'dropoffKm' => $dropoffKm,
-            'costoKmCategoria' => $costoKmCategoria,
-            'capacidadTanque' => $capacidadTanque,
-        ]);
-    }
-
-    /**
-     * Paso 1 desde la navbar (form vacío con defaults).
-     */
-    public function desdeNavbar(Request $request)
-    {
-        // 1) Catálogos base
-        $ciudades   = $this->getCiudadesConSucursalesActivas();
-        $categorias = $this->getCategorias();
-
-        // 2) Filtros en blanco (el usuario entra “limpio” desde la navbar)
-        $filters = [
-            'pickup_sucursal_id'  => null,
-            'dropoff_sucursal_id' => null,
-            'pickup_date'         => null,
-            'pickup_time'         => null,
-            'dropoff_date'        => null,
-            'dropoff_time'        => null,
-            'categoria_id'        => null,
-            'plan'                => null,
-        ];
-
-        // 3) Paso inicial: mostramos categorías (Paso 2)
-        $step      = 2;
-        $vehiculos = collect();
-        $vehiculo  = null;
-
-        // 4) Complementos listos por si avanza al paso 3
-        $servicios = $this->obtenerServiciosActivos();
-
-        // 5) IMPORTANTE: pasar siempre 'ciudades' a la vista
-        return view('Usuarios.Reservaciones', [
-            'step'       => $step,
-            'filters'    => $filters,
-            'vehiculos'  => $vehiculos,
-            'vehiculo'   => $vehiculo,
-            'sucursales' => collect(),   // aquí no los necesitas realmente
-            'categorias' => $categorias,
-            'ciudades'   => $ciudades,   // 👈 esto evita el Undefined variable $ciudades
-            'servicios'  => $servicios,
-        ]);
+        return compact('addons', 'extrasTotal', 'capacidadTanque');
     }
 
     /* ===================== NUEVO: generar PDF + guardar en archivos + enviar WhatsApp ===================== */
@@ -477,7 +506,7 @@ if ($categoriaId) {
 
         $d1   = Carbon::createFromFormat('Y-m-d H:i', "{$pickupDate} {$pickupTime}");
         $d2   = Carbon::createFromFormat('Y-m-d H:i', "{$dropoffDate} {$dropoffTime}");
-        $days = max(1, $d1->diffInDays($d2));
+        $days = $this->calcularDiasDeRenta($pickupDate, $pickupTime, $dropoffDate, $dropoffTime);
 
         // 4️⃣ Sucursales (si no se envían, usamos la de la categoría / vehículo ejemplo)
         $pickupName  = DB::table('sucursales')->where('id_sucursal', $request->pickup_sucursal_id)->value('nombre');
@@ -503,8 +532,6 @@ if ($categoriaId) {
 
                 $row = $addonsRows->get((int)$id);
                 if (!$row) continue;
-
-
             }
         }
 
@@ -567,74 +594,7 @@ if ($categoriaId) {
         ]);
     }
 
-
     /* ===================== HELPERS ===================== */
-
-    /** Listado de vehículos disponibles según filtros básicos. */
-    private function listarVehiculosDisponibles(array $filters)
-    {
-        $q = DB::table('vehiculos as v')
-            ->leftJoin('vehiculo_imagenes as vi', function ($j) {
-                $j->on('vi.id_vehiculo', '=', 'v.id_vehiculo')
-                    ->where('vi.orden', 1);
-            })
-            ->leftJoin('categorias_carros as c', 'c.id_categoria', '=', 'v.id_categoria')
-            ->leftJoin('sucursales as s', 's.id_sucursal', '=', 'v.id_sucursal')
-            ->selectRaw("
-                v.id_vehiculo,
-                v.nombre_publico,
-                v.marca,
-                v.modelo,
-                v.anio,
-                v.transmision,
-                v.asientos,
-                v.puertas,
-                v.precio_dia,
-                v.descripcion,
-                v.id_categoria,
-                c.nombre as categoria_nombre,
-                s.nombre as sucursal_nombre,
-                COALESCE(vi.url, '') as img_url
-            ")
-            ->where('v.id_estatus', 1); // Disponible
-
-        if (!empty($filters['categoria_id'])) {
-            $q->where('v.id_categoria', (int)$filters['categoria_id']);
-        }
-
-        // ✅ Orden por categoría ID, luego marca/modelo
-        return $q->orderBy('c.id_categoria', 'asc')
-            ->orderBy('v.marca')
-            ->orderBy('v.modelo')
-            ->get();
-    }
-
-    /** Ciudades con sus sucursales activas (para poblar los <select>). */
-    private function getCiudadesConSucursalesActivas()
-    {
-        return DB::table('ciudades')
-            ->select('id_ciudad', 'nombre', 'estado', 'pais')
-            ->orderBy('nombre')
-            ->get()
-            ->map(function ($c) {
-                $c->sucursalesActivas = DB::table('sucursales')
-                    ->select('id_sucursal', 'id_ciudad', 'nombre')
-                    ->where('id_ciudad', $c->id_ciudad)
-                    ->where('activo', true)
-                    ->orderBy('nombre')
-                    ->get();
-                return $c;
-            });
-    }
-
-    /** Catálogos de categorías (simple). */
-    private function getCategorias()
-    {
-        return DB::table('categorias_carros')
-            ->select('id_categoria', 'nombre')
-            ->orderBy('id_categoria', 'asc')
-            ->get();
-    }
 
     /** Complementos activos (servicios) para Paso 3. */
     private function obtenerServiciosActivos()
@@ -653,18 +613,16 @@ if ($categoriaId) {
         if (!$date) return null;
         $date = trim($date);
 
-        // dd/mm/YYYY → Y-m-d
-        if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $date)) {
-            [$d, $m, $y] = array_map('intval', explode('/', $date));
-            return sprintf('%04d-%02d-%02d', $y, $m, $d);
+        // dd-mm-YYYY o dd/mm/YYYY -> Y-m-d
+        if (preg_match('/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/', $date)) {
+            $parts = preg_split('/[\/\-]/', $date);
+            return sprintf('%04d-%02d-%02d', (int)$parts[2], (int)$parts[1], (int)$parts[0]);
         }
 
-        // Y-m-d (válido)
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
             return $date;
         }
 
-        // fallback
         $ts = strtotime($date);
         return $ts ? date('Y-m-d', $ts) : null;
     }
@@ -673,32 +631,9 @@ if ($categoriaId) {
     {
         if (!$time) return null;
         $time = trim($time);
-
-        // HH:MM (24h)
-        if (preg_match('/^\d{2}:\d{2}$/', $time)) {
-            return $time;
-        }
-
-        // Intentar parsear 12h "h:i am/pm"
+        if (preg_match('/^\d{2}:\d{2}$/', $time)) return $time;
         $ts = strtotime($time);
         return $ts ? date('H:i', $ts) : null;
-    }
-
-    private function mergeDateTime(string $date, string $time): Carbon
-    {
-        return Carbon::createFromFormat('Y-m-d H:i', "{$date} {$time}", 'America/Mexico_City');
-    }
-
-    private function defaultDates(): array
-    {
-        $now    = Carbon::now('America/Mexico_City');
-        $pickup = (clone $now)->setTime(12, 0);
-        $drop   = (clone $pickup)->addDays(3);
-
-        return [
-            'pickup_date'  => $pickup->format('Y-m-d'),
-            'dropoff_date' => $drop->format('Y-m-d'),
-        ];
     }
 
     /* ===================== Helper privado: WhatsApp Cloud API ===================== */
@@ -736,22 +671,8 @@ if ($categoriaId) {
      */
     public function politicas()
     {
-        // Obtener ciudades con sucursales activas (igual que en el método iniciar)
-        $ciudades = DB::table('ciudades')
-            ->select('id_ciudad', 'nombre', 'estado', 'pais')
-            ->orderBy('nombre')
-            ->get()
-            ->map(function ($c) {
-                $c->sucursalesActivas = DB::table('sucursales')
-                    ->select('id_sucursal', 'id_ciudad', 'nombre')
-                    ->where('id_ciudad', $c->id_ciudad)
-                    ->where('activo', true)
-                    ->orderBy('nombre')
-                    ->get();
-                return $c;
-            });
+        $ciudades = $this->obtenerCiudadesConSucursales();
 
-        // También podemos pasar filtros vacíos o con valores por defecto
         $filters = [
             'pickup_sucursal_id'  => null,
             'dropoff_sucursal_id' => null,
@@ -765,5 +686,24 @@ if ($categoriaId) {
             'ciudades' => $ciudades,
             'filters' => $filters
         ]);
+    }
+
+    private function obtenerCiudadesConSucursales()
+    {
+        $sucursalesPorCiudad = DB::table('sucursales')
+            ->select('id_sucursal', 'id_ciudad', 'nombre')
+            ->where('activo', true)
+            ->orderBy('nombre')
+            ->get()
+            ->groupBy('id_ciudad');
+
+        return DB::table('ciudades')
+            ->select('id_ciudad', 'nombre', 'estado', 'pais')
+            ->orderBy('nombre')
+            ->get()
+            ->map(function ($ciudad) use ($sucursalesPorCiudad) {
+                $ciudad->sucursalesActivas = $sucursalesPorCiudad->get($ciudad->id_ciudad, collect());
+                return $ciudad;
+            });
     }
 }
