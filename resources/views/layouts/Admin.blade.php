@@ -75,8 +75,14 @@
     </li>
 
     <li>
-      <a href="{{ route('propietariovehiculo.index') }}">
-        <i class="fas fa-layer-group"></i> Propietario del vehiculo
+      <a href="{{ route('dropoff.index') }}">
+        <i class="fas fa-layer-group"></i> Dropoff
+      </a>
+    </li>
+
+    <li>
+      <a href="{{ route('dropoff.index') }}">
+        <i class="fas fa-layer-group"></i> Valor del dolar
       </a>
     </li>
 
@@ -93,8 +99,8 @@
 <div class="main-content">
     @yield('contenidoUsuariosAdmin')
     @yield('contenidoRoles')
-
     @yield('contenido')
+    @yield('contenidoDropoff')
 </div>
 
 <div class="containerJS">
@@ -103,6 +109,7 @@
 
     @yield('js-vistaUsuariosAdmin')
     @yield('js-vistaRoles')
+    @yield('js-vistaDropoff')
 
     @yield('js')
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>

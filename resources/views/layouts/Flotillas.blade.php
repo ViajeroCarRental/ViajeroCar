@@ -47,6 +47,7 @@
     <li><a href="{{ route('rutaSeguros') }}"><i class="fas fa-shield-alt"></i> Seguros</a></li>
     <li><a href="{{ route('rutaGastos') }}"><i class="fas fa-coins"></i> Gastos</a></li>
     <li><a href="{{ route('vehiculos.documentos') }}"><i class="fas fa-coins"></i> Documentacion</a></li>
+    <li><a href="{{ route('propietariovehiculo.index') }}"><i class="fas fa-layer-group"></i> Propietario del vehiculo</a></li>
 
     <li class="menu-section">Navegación</li>
     <li><a href="{{ route('rutaDashboard') }}"><i class="fas fa-arrow-left"></i> Volver al panel</a></li>
@@ -61,6 +62,7 @@
     @yield('contenidoSeguros')
     @yield('contenidoGastos')
     @yield('contenidoDocumentos')
+    @yield('contenidoFirmas')
 </div>
 
 
@@ -76,6 +78,7 @@
     @yield('js-vistaSeguros')
     @yield('js-vistaGastos')
     @yield('js-vistaDocumentacion')
+    @yield('js-vistaFirmas')
 
     <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 

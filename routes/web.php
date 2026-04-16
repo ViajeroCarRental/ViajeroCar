@@ -38,6 +38,7 @@ use App\Http\Controllers\PropietarioVehiculoController;
 use App\Http\Controllers\VehiculoDocumentosController;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\VisorReservacionController;
+use App\Http\Controllers\DropoffController;
 //rutas vistas Usuario
 
 
@@ -562,6 +563,14 @@ Route::prefix('admin')->group(function () {
 
     Route::delete('/propietarios/{id}', [PropietarioVehiculoController::class, 'destroy']);
 
+});
+
+//Dropoff en administración
+Route::prefix('admin')->group(function () {
+Route::get('/dropoff', [DropoffController::class, 'index'])->name('dropoff.index');
+Route::get('/dropoff/data', [DropoffController::class, 'data']);
+Route::post('/dropoff/update-km', [DropoffController::class, 'updateKm']);
+Route::post('/dropoff/update-costo', [DropoffController::class, 'updateCostoKm']);
 });
 
 Route::post('/contrato/guardar-dato', [ChecklistController::class, 'guardarDato'])
