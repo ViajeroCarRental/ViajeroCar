@@ -13,7 +13,7 @@
   --ico-nudge:-20px;
 
   /* ✅ HERO FIX: espacio y tamaños fluidos */
-  --hero-form-gap: clamp(190px, 22vh, 320px);
+  --hero-form-gap: clamp(100px, 5vh, 200px);
   --hero-icon-size: clamp(46px, 5vw, 70px);
   --hero-icon-gap: clamp(12px, 2vw, 18px);
 
@@ -268,11 +268,11 @@ select {
 /* =========================
    HERO
 ========================= */
-.hero{ position:relative; min-height:125vh; padding-top: calc(var(--topbar-h) + 8px); }
+.hero{ position:relative; min-height:85vh; padding-top: calc(var(--topbar-h) + 8px); }
 .carousel{ position:absolute; inset:0; overflow:hidden; z-index:0; }
 .slide{
   position:absolute; inset:0;
-  background-size:cover; background-position:center;
+  background-size:cover; background-position:center 75%; /*tamaño de la imagen*/
   opacity:0; transform:scale(1.04);
   transition:opacity .9s, transform 1.5s;
 }
@@ -331,7 +331,7 @@ select {
   grid-template-columns: repeat(3, minmax(0,1fr));
   gap: var(--hero-icon-gap);
   margin-top: clamp(28px, 6vh, 65px);
-  margin-bottom: 18px; /* ✅ separa del form */
+  margin-bottom: 40px; /* ✅ separa del form */
   width: min(980px, 100%);
   margin-left:auto;
   margin-right:auto;
@@ -875,7 +875,7 @@ input.flatpickr-input{ padding-right:44px; }
 .fleet{
   position:relative;
   width:min(1200px,94%);
-  margin:120px auto 80px;
+  margin:80px auto 80px; /*espacio entre hero y carrusel*/
   background:transparent !important;
   border:none;
   border-radius:0;
@@ -1034,14 +1034,44 @@ input.flatpickr-input{ padding-right:44px; }
   .fleet{ margin:90px auto 50px !important; }
 }
 
+/* ============================================================
+   AJUSTE RESPONSIVO: SEPARACIÓN CARRUSEL - TEXTO
+============================================================ */
+
+@media (max-width: 720px) {
+    .fleet {
+        margin-bottom: 70px !important;
+    }
+    #fleet-carousel + .fleet-meta {
+        margin-top: -20px !important;
+        margin-bottom: 50px !important;
+    }
+}
+
+@media (max-width: 560px) {
+    #fleet-carousel + .fleet-meta {
+        margin-top: -10px !important;
+        margin-bottom: 40px !important;
+        font-size: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #fleet-carousel + .fleet-meta {
+        margin-top: 0px !important;
+        margin-bottom: 30px !important;
+        font-size: 10px !important;
+    }
+}
+
 #fleet-carousel + .fleet-meta,
 #fleet-carousel-2 + .fleet-meta{
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
   padding: 0 !important;
-  margin-top: 40px !important;
-  margin-bottom: 40px !important;
+  margin-top: -50px !important;
+  margin-bottom: 70px !important;
   text-align: center;
   font-family: 'Playfair Display', serif;
   font-size: clamp(16px, 1.8vw, 20px);
@@ -2081,6 +2111,11 @@ input.flatpickr-input{
         flex: 1 !important;
         transition: all 0.3s ease !important;
         height: var(--input-height) !important;
+        display: none !important;
+    }
+
+    #dropoffWrapper.show-dropoff {
+        display: flex !important;
     }
 
     #dropoffWrapper.hidden-dropoff {

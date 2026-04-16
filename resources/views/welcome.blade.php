@@ -583,30 +583,38 @@
 <!-- ===== VISTA INICIO ===== -->
 <section class="v-inicio" data-title="Inicio">
 
-  <div class="rv-banner-wrap" id="rvWrap" aria-live="polite">
-    <div class="rv-banner" id="rvBanner" role="status" aria-label="Reservas en vivo">
-      <div class="rv-bar"><i id="rvBar"></i></div>
+  <!-- ===== Banner Reservas ===== -->
+<div class="rv-banner-wrap" id="rvWrap" aria-live="polite">
+  <div class="rv-banner" id="rvBanner" role="status" aria-label="Reservas en vivo">
+    <div class="rv-bar-container">
+      <div class="rv-bar" id="rvBar"></div>
+    </div>
 
-      <div class="rv-row">
-        <div class="rv-car" aria-hidden="true">
-          <svg width="18" height="18" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M5 11l1-3.2A2 2 0 0 1 7.9 6h8.2a2 2 0 0 1 1.9 1.8L20 11v5a1 1 0 0 1-1 1h-1a1.5 1.5 0 0 1 0-3h1v-1H5v1h1a1.5 1.5 0 1 1 0 3H5a1 1 0 0 1-1-1v-5Zm3.2-3a.8.8 0 0 0-.77.6L6.9 10h10.2l-.53-1.4a.8.8 0 0 0-.77-.6H8.2Z"/>
-          </svg>
-        </div>
-
-        <div class="rv-copy" style="flex:1 1 auto">
-          <div class="rv-live" id="rvTitle">{{ __('Searching for booking') }}</div>
-          <div class="rv-text" id="rvMsg">
-            {{ __('Someone else is looking for a reservation right now') }}
-          </div>
-        </div>
-
-
-        <button class="rv-cta" onclick="location.href='{{ route('rutaReservaciones') }}'">{{ __('Check availability') }}</button>
-        <button class="rv-close" id="rvClose" aria-label="{{ __('Close') }}">✕</button>
+    <div class="rv-row">
+      <div class="rv-car" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M5 11l1-3.2A2 2 0 0 1 7.9 6h8.2a2 2 0 0 1 1.9 1.8L20 11v5a1 1 0 0 1-1 1h-1a1.5 1.5 0 0 1 0-3h1v-1H5v1h1a1.5 1.5 0 1 1 0 3H5a1 1 0 0 1-1-1v-5Zm3.2-3a.8.8 0 0 0-.77.6L6.9 10h10.2l-.53-1.4a.8.8 0 0 0-.77-.6H8.2Z"/>
+        </svg>
       </div>
+
+      <div class="rv-copy" style="flex:1 1 auto">
+        <div class="rv-live" id="rvTitle">{{ __('Searching for booking') }}</div>
+        <div class="rv-text" id="rvMsg">
+          {{ __('Someone else is looking for a reservation right now') }}
+        </div>
+      </div>
+
+      <!-- Contador de personas -->
+      <div class="rv-count-wrapper">
+        <span id="rvCount">5</span>
+        <span class="rv-unit">{{ __('people') }}</span>
+      </div>
+
+      <button class="rv-cta" onclick="location.href='{{ route('rutaReservaciones') }}'">{{ __('Check availability') }}</button>
+      <button class="rv-close" id="rvClose" aria-label="{{ __('Close') }}">✕</button>
     </div>
   </div>
+</div>
   <!-- ===== /Banner Reservas ===== -->
 
   <!-- HERO -->
@@ -621,34 +629,7 @@
     <div class="hero-copy">
    <h2 class="kicker">{{ __('Rent your car with Viajero') }}</h2>
 
-<div class="hero-icons">
-  <div class="icon-item">
-    <i class="fa-regular fa-clock"></i>
-    <span>{{ __('Active 24 hours a day, 7 days a week') }}</span>
-  </div>
-
-  <div class="icon-item">
-    <i class="fa-regular fa-credit-card"></i>
-    <span>{{ __('We accept debit and credit cards') }}</span>
-  </div>
-
-  <div class="icon-item">
-    <i class="fa-solid fa-shield-halved"></i>
-    <span>{{ __('We have 00 verification') }}</span>
-  </div>
-
-  <div class="icon-item">
-     <i class="fa-solid fa-plane-departure"></i>
-    <span>{{ __('24/7 Airport Assistance') }}</span>
-  </div>
-
-  <div class="icon-item">
-    <i class="fa-solid fa-car-side"></i>
-    <span>{{ __('Cars with recent models') }}</span>
-  </div>
-</div>
-
-<div class="d-block d-xl-none p-3">
+   <div class="d-block d-xl-none p-3">
     <div style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center;">
         <p style="margin-bottom: 10px; font-weight: bold; color: #333; font-size: 16px;">{{ __('Find your car here') }}</p>
 
@@ -667,6 +648,34 @@
             <i class="fa-solid fa-magnifying-glass" style="font-size: 16px;"></i> {{ __('Search') }}
         </button>
     </div>
+</div>
+
+<div class="hero-icons">
+
+<div class="icon-item">
+     <i class="fa-solid fa-plane-departure"></i>
+    <span>{{ __('24/7 Airport Assistance') }}</span>
+  </div>
+
+  <div class="icon-item">
+    <i class="fa-regular fa-credit-card"></i>
+    <span>{{ __('We accept debit and credit cards') }}</span>
+  </div>
+
+  <div class="icon-item">
+    <i class="fa-regular fa-clock"></i>
+    <span>{{ __('Active 24 hours a day, 7 days a week') }}</span>
+  </div>
+
+  <div class="icon-item">
+    <i class="fa-solid fa-shield-halved"></i>
+    <span>{{ __('We have 00 verification') }}</span>
+  </div>
+
+  <div class="icon-item">
+    <i class="fa-solid fa-car-side"></i>
+    <span>{{ __('Cars with recent models') }}</span>
+  </div>
 </div>
 
 <div class="search-card" id="miBuscador">
@@ -1068,50 +1077,7 @@
           <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
         </article>
 
-      </div>
-
-      <button class="fleet-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
-    </div>
-  </section>
-
-  <div class="fleet-meta" aria-label="Beneficios">
-    <span>{{ __('Unlimited mileage') }}</span>
-    <i class="sep" aria-hidden="true">|</i>
-    <span>{{ __('Automatic transmission') }}</span>
-  </div>
-
-  <!-- SECCIONES -->
-  <section class="info-sections">
-    <div class="info-row">
-      <div class="info-media media-carousel" data-interval="4500">
-        <div class="media-slide active" style="background-image:url('{{ asset('img/inicio4.png') }}');"></div>
-        <div class="media-slide" style="background-image:url('{{ asset('img/inicio5.png') }}');"></div>
-        <div class="media-slide" style="background-image:url('{{ asset('img/inicio6.png') }}');"></div>
-      </div>
-      <div class="info-content">
-        <button type="button" class="btn-icon-question-corner" id="openMembershipModalBtn" aria-label="Más información sobre membresías">
-          <i class="fa-solid fa-question"></i>
-        </button>
-        <h2>{{ __('Frequent traveler?') }}</h2>
-        <p>{{ __('Become a member and unlock exclusive discounts on all your bookings, making every trip more affordable.') }}</p>
-        <p>{{ __('Earn points for every rental and redeem them for discounts, upgrades, or special experiences.') }}</p>
-        <p>{{ __('Activate your membership today and enjoy exclusive rewards.') }}</p>
-        <div class="cta-group" style="align-items: center; gap: 12px;">
-          <button type="button" class="btn btn-primary" id="openMembershipModalFromBtn">
-            <i class="fa-solid fa-id-card"></i> {{ __('Get your membership') }}
-          </button>
-        </div>
-    </div>
-    </div>
-    </div>
-
-    {{-- ===== NUEVO CARRUSEL DE AUTOS BAJO "Viajero frecuente" ===== --}}
-    <section id="fleet-carousel-2" class="fleet" >
-      <div class="fleet-viewport">
-        <button class="fleet-btn prev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
-
-        <div class="fleet-track">
-          <article class="car-card" data-price-mxn="1700" data-old-price-mxn="2200">
+            <article class="car-card" data-price-mxn="1700" data-old-price-mxn="2200">
             <header class="car-title">
               <h3>{{ __('Compact Family SUV') }}</h3>
               <p>{{ __('Toyota Avanza or similar | IB') }}</p>
@@ -1219,7 +1185,7 @@
               <li><i class="fa-solid fa-user-large"></i> 13</li>
               <li><i class="fa-solid fa-suitcase-rolling"></i> 5</li>
               <li><i class="fa-solid fa-briefcase"></i> 5</li>
-              <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Standard') }}</span></li>
+              <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Manual') }}</span></li>
             <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
             </ul>
 
@@ -1261,7 +1227,7 @@
               <li><i class="fa-solid fa-user-large"></i> 13</li>
               <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
               <li><i class="fa-solid fa-briefcase"></i> 3</li>
-              <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Standard') }}</span></li>
+              <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ __('Manual') }}</span></li>
             <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
             </ul>
 
@@ -1369,34 +1335,18 @@
             <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="car-cta">{{ __('Book now') }}</a>
           </article>
 
-        </div>
 
-        <button class="fleet-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
       </div>
-    </section>
 
-    <div class="fleet-meta" aria-label="Beneficios">
-      <span>{{ __('Unlimited mileage') }}</span>
-      <i class="sep" aria-hidden="true">|</i>
-      <span>{{ __('Automatic transmission') }}</span>
-    </div>
-
-    <div class="info-row reverse">
-      <div class="info-content">
-        <h2>{{ __('Business solutions') }}</h2>
-        <p>{{ __('We manage your corporate travel end-to-end so your team can focus on what matters.') }}</p>
-        <p>{{ __('Optimize costs, comfort and safety with our corporate plans.') }}</p>
-        <div class="cta-group">
-          <a href="{{ route('rutaReservaciones', ['from' => 'welcome']) }}" class="btn btn-primary"><i class="fa-regular fa-calendar-check"></i> {{ __('Book now') }}</a>
-        </div>
-      </div>
-      <div class="info-media media-carousel" data-interval="5200">
-        <div class="media-slide active" style="background-image:url('{{ asset('img/inicio7.png') }}');"></div>
-        <div class="media-slide" style="background-image:url('{{ asset('img/inicio8.png') }}');"></div>
-        <div class="media-slide" style="background-image:url('{{ asset('img/inicio9.png') }}');"></div>
-      </div>
+      <button class="fleet-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
     </div>
   </section>
+
+  <div class="fleet-meta" aria-label="Beneficios">
+    <span>{{ __('Unlimited mileage') }}</span>
+    <i class="sep" aria-hidden="true">|</i>
+    <span>{{ __('Automatic transmission') }}</span>
+  </div>
 
   <!-- TARJETAS (Swiper) -->
   <section aria-label="Explora destinos y servicios">

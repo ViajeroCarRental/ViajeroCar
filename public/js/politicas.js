@@ -219,16 +219,19 @@ function rebuildHourOptions(input, opts = {}) {
       startHour = getMinPickupHour();
     }
   }
-
   selH.innerHTML = "";
-  selH.insertAdjacentHTML("afterbegin", `<option value="" disabled selected>${hourPlaceholder}</option>`);
+  selH.insertAdjacentHTML("afterbegin", `<option value="" disabled>${hourPlaceholder}</option>`);
 
   for (let h = startHour; h < hourMax; h++) {
+    const val24 = pad2(h);
     const op = document.createElement("option");
-    op.value = pad2(h);
-    op.textContent = `${pad2(h)}:00`;
+    op.value = val24;
+    op.textContent = `${val24}:00`;
+
     selH.appendChild(op);
   }
+
+  input.value = `${selH.value}:00`;
 
   const stillExists = Array.from(selH.options).some(opt => opt.value === previousValue);
 
@@ -283,29 +286,17 @@ function createTimeSelectsBelow(input, opts) {
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  selH.addEventListener("change", sync);
+    selH.addEventListener("change", sync);
 
-  if (input.value && input.value !== "12:00") {
-    const defaultHour = input.value.split(':')[0];
-    const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
-    if (option) {
-      selH.value = defaultHour;
-      sync();
-    }
-  } else if (defaultValue && defaultValue !== "12:00") {
-    const defaultHour = defaultValue.split(':')[0];
-    const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
-    if (option) {
-      selH.value = defaultHour;
-      sync();
-    } else {
-      selH.selectedIndex = 0;
-      input.value = "";
-    }
-  } else {
-    selH.selectedIndex = 0;
-    input.value = "";
-  }
+  // Marcar que el usuario ha interactuado con este select
+  selH.addEventListener("focus", function() {
+    this.setAttribute('data-user-interacted', 'true');
+  });
+
+  selH.addEventListener("change", function() {
+    this.setAttribute('data-user-interacted', 'true');
+  });
+
 }
 
 function initAnalogTime(id) {
@@ -354,36 +345,32 @@ function setDefaultDates() {
     const pickupTime = document.getElementById('pickupTimePoliticas');
     const dropoffTime = document.getElementById('dropoffTimePoliticas');
 
-    // Establecer hora predeterminada a las 13:00 (1:00 PM)
-    if (pickupTime && !pickupTime.value) {
-        pickupTime.value = "13:00";
-        // También actualizar el select visual si existe
-        const pickupField = pickupTime.closest('.time-field');
-        if (pickupField) {
-            const hourSelect = pickupField.querySelector('.tp-selects .tp-hour');
-            if (hourSelect && hourSelect.value !== '13') {
-                hourSelect.value = '13';
-                hourSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    const setDefaults = (input) => {
+        if (!input) return;
+
+        input.value = "13:00";
+
+        const field = input.closest('.time-field');
+        if (field) {
+            const hourSelect = field.querySelector('.tp-selects .tp-hour');
+            if (hourSelect) {
+                hourSelect.value = "13";
+
+                if (hourSelect.options[0].value === "") {
+                    hourSelect.options[0].selected = true;
+                }
+
+                hourSelect.addEventListener('mousedown', () => {
+                    if (hourSelect.value === "") {
+                        hourSelect.value = "13";
+                    }
+                }, { once: true });
             }
         }
-        pickupTime.dispatchEvent(new Event('change', { bubbles: true }));
-    }
+    };
 
-    if (dropoffTime && !dropoffTime.value) {
-        dropoffTime.value = "13:00";
-        // También actualizar el select visual si existe
-        const dropoffField = dropoffTime.closest('.time-field');
-        if (dropoffField) {
-            const hourSelect = dropoffField.querySelector('.tp-selects .tp-hour');
-            if (hourSelect && hourSelect.value !== '13') {
-                hourSelect.value = '13';
-                hourSelect.dispatchEvent(new Event('change', { bubbles: true }));
-            }
-        }
-        dropoffTime.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-
-    console.log('⏰ Horas configuradas por defecto: pickup 13:00, dropoff 13:00');
+    setDefaults(pickupTime);
+    setDefaults(dropoffTime);
 }
 
   // =========================
@@ -655,27 +642,45 @@ function setDefaultDates() {
         }
       });
 
+            // ===== 3. VALIDAR HORAS - SOLO SI EL USUARIO HA INTERACTUADO =====
       const horas = [
         { id: 'pickupTimePoliticas', msgKey: 'time' },
         { id: 'dropoffTimePoliticas', msgKey: 'time' }
       ];
+
       horas.forEach(campo => {
         const hiddenInput = document.getElementById(campo.id);
         if (!hiddenInput) return;
         const timeField = hiddenInput.closest('.time-field');
         if (!timeField) return;
         const hourSelect = timeField.querySelector('.tp-selects .tp-hour');
-        const hasValue = hourSelect && hourSelect.value;
-        if (!hasValue) {
+
+        // Verificar si el usuario ha interactuado con el select
+        const userInteracted = hourSelect && hourSelect.hasAttribute('data-user-interacted');
+        // Verificar si tiene un valor REAL seleccionado (no el default interno)
+        const hasRealValue = hourSelect && hourSelect.value && hourSelect.value !== "";
+
+        // Solo es válido si el usuario ha interactuado Y tiene un valor seleccionado
+        const isValid = userInteracted && hasRealValue;
+
+        if (!isValid) {
           valid = false;
-          if (hourSelect) hourSelect.classList.add('field-error');
+          if (hourSelect) {
+            hourSelect.classList.add('field-error');
+            hourSelect.classList.remove('field-success');
+          }
           hiddenInput.classList.add('field-error');
+          hiddenInput.classList.remove('field-success');
           const msg = document.createElement('span');
           msg.className = 'error-msg';
           msg.textContent = getErrorMessage(campo.msgKey);
           timeField.appendChild(msg);
         } else {
-          if (hourSelect) hourSelect.classList.add('field-success');
+          if (hourSelect) {
+            hourSelect.classList.remove('field-error');
+            hourSelect.classList.add('field-success');
+          }
+          hiddenInput.classList.remove('field-error');
           hiddenInput.classList.add('field-success');
         }
       });
@@ -900,11 +905,15 @@ function setDefaultDates() {
     });
 
     document.body.addEventListener('touchmove', function(e) {
-      if (buscador.classList.contains('active')) {
-        e.preventDefault();
-      }
+        if (buscador.classList.contains('active')) {
+            const target = e.target;
+            const isScrollable = target.closest('.select2-results__options, .select2-dropdown, select, .vj-modal__body');
+            if (!isScrollable) {
+                e.preventDefault();
+            }
+        }
     }, { passive: false });
-  }
+}
 
   // =========================
   //  INICIALIZACIÓN PRINCIPAL

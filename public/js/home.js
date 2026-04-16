@@ -326,9 +326,14 @@ function rebuildHourOptions(input, opts = {}) {
     selH.appendChild(op);
   }
 
-  const stillExists = Array.from(selH.options).some(opt => opt.value === previousValue);
+    const stillExists = Array.from(selH.options).some(opt => opt.value === previousValue);
 
-  if (stillExists && previousValue !== "") {
+  // Si el input tiene "13:00" (default), mantener placeholder
+  if (input.value === "13:00" && !previousValue) {
+    selH.selectedIndex = 0;
+    selH.setAttribute('data-default-value', '13');
+    // input.value ya es "13:00", no cambiar
+  } else if (stillExists && previousValue !== "") {
     selH.value = previousValue;
     input.value = `${previousValue}:00`;
   } else {
@@ -338,6 +343,46 @@ function rebuildHourOptions(input, opts = {}) {
 
   input.dispatchEvent(new Event("input", { bubbles: true }));
   input.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+// =========================
+//  FUNCIÓN PARA HORAS POR DEFECTO A LAS 13:00 (SOLO INTERNAMENTE)
+// =========================
+function setDefaultTimes() {
+    const pickupTime = document.getElementById('pickupTime');
+    const dropoffTime = document.getElementById('dropoffTime');
+
+    // Configurar pickup time
+    if (pickupTime && !pickupTime.value) {
+        pickupTime.value = "13:00";
+
+        const pickupField = pickupTime.closest('.time-field');
+        if (pickupField) {
+            const hourSelect = pickupField.querySelector('.tp-selects .tp-hour');
+            if (hourSelect) {
+                // Mantener placeholder visual
+                hourSelect.selectedIndex = 0;
+                hourSelect.setAttribute('data-default-value', '13');
+            }
+        }
+    }
+
+    // Configurar dropoff time
+    if (dropoffTime && !dropoffTime.value) {
+        dropoffTime.value = "13:00";
+
+        const dropoffField = dropoffTime.closest('.time-field');
+        if (dropoffField) {
+            const hourSelect = dropoffField.querySelector('.tp-selects .tp-hour');
+            if (hourSelect) {
+                // Mantener placeholder visual
+                hourSelect.selectedIndex = 0;
+                hourSelect.setAttribute('data-default-value', '13');
+            }
+        }
+    }
+
+    console.log('⏰ Hora interna 13:00 establecida (UI muestra placeholder)');
 }
 
 function createTimeSelectsBelow(input, opts) {
@@ -380,6 +425,18 @@ function createTimeSelectsBelow(input, opts) {
 
   selH.addEventListener("change", sync);
 
+    // Cuando el usuario hace foco, mostrar el valor default si existe
+  selH.addEventListener("focus", function() {
+    const defaultValue = this.getAttribute('data-default-value');
+    if (defaultValue && (!this.value || this.value === "")) {
+      const option = Array.from(this.options).find(opt => opt.value === defaultValue);
+      if (option) {
+        this.value = defaultValue;
+        sync();
+      }
+    }
+  });
+
   if (input.value && input.value !== "12:00") {
     const defaultHour = input.value.split(':')[0];
     const option = Array.from(selH.options).find(opt => opt.value === defaultHour);
@@ -419,7 +476,7 @@ function initAnalogTime(id) {
   // Cambiado: valor por defecto a "13:00"
   createTimeSelectsBelow(input, {
     hourMax: 24,
-    defaultValue: input.value || "13:00"
+    defaultValue: null
   });
 
   input.addEventListener("change", updateSummary);
@@ -439,6 +496,7 @@ function initAnalogTime(id) {
 document.addEventListener("DOMContentLoaded", () => {
   initAnalogTime("pickupTime");
   initAnalogTime("dropoffTime");
+  setDefaultTimes();
   updateSummary();
 });
 
@@ -701,14 +759,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const count  = document.getElementById('rvCount');
   const close  = document.getElementById('rvClose');
 
-  if(!banner || !bar || !count) return;
-  if(banner.dataset.rvReady === "1") return;
-  banner.dataset.rvReady = "1";
+  // 1: Si no existe count, que no falle
+  if(!banner || !bar) return;
 
   let idx = 0, loop = true, hideT = null, nextT = null;
   let paused = false, startTs = 0, remaining = SHOW_MS;
 
   function setBar(ms){
+    if(!bar) return;
     bar.style.transition = 'none';
     bar.style.width = '0%';
     requestAnimationFrame(()=>{ requestAnimationFrame(()=>{
@@ -718,9 +776,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function showOnce(){
-    count.textContent = SEQ[idx];
+    // 2: Actualizar contador solo si existe
+    if(count) count.textContent = SEQ[idx];
     idx = (idx + 1) % SEQ.length;
 
+    if(!banner) return;
     banner.style.display = 'block';
     banner.classList.remove('rv-out');
     banner.classList.add('rv-in');
@@ -729,36 +789,59 @@ document.addEventListener("DOMContentLoaded", () => {
     startTs = performance.now();
     setBar(SHOW_MS);
 
+    if(hideT) clearTimeout(hideT);
     hideT = setTimeout(hide, SHOW_MS);
   }
 
   function hide(){
+    if(!banner) return;
     banner.classList.remove('rv-in');
     banner.classList.add('rv-out');
     setTimeout(()=>{
-      banner.style.display = 'none';
-      if(loop){ nextT = setTimeout(showOnce, HIDE_MS); }
+      if(banner) banner.style.display = 'none';
+      if(loop && !paused){
+        if(nextT) clearTimeout(nextT);
+        nextT = setTimeout(showOnce, HIDE_MS);
+      }
     }, 260);
   }
 
-  banner.addEventListener('mouseenter', ()=>{
-    paused = true;
-    const elapsed = performance.now() - startTs;
-    remaining = Math.max(0, SHOW_MS - elapsed);
-    if(hideT){ clearTimeout(hideT); hideT = null; }
-    bar.style.transition = 'none';
-  });
+  if(banner){
+    banner.addEventListener('mouseenter', ()=>{
+      if(!banner.style.display || banner.style.display === 'none') return;
+      paused = true;
+      const elapsed = performance.now() - startTs;
+      remaining = Math.max(0, SHOW_MS - elapsed);
+      if(hideT){ clearTimeout(hideT); hideT = null; }
+      if(bar){
+        bar.style.transition = 'none';
+        const progress = ((SHOW_MS - remaining) / SHOW_MS) * 100;
+        bar.style.width = `${progress}%`;
+      }
+    });
 
-  banner.addEventListener('mouseleave', ()=>{
-    if(!paused) return;
-    paused = false;
-    setTimeout(()=>{
-      setBar(remaining);
-      hideT = setTimeout(hide, remaining);
-      startTs = performance.now() - (SHOW_MS - remaining);
-    }, 30);
-  });
+    banner.addEventListener('mouseleave', ()=>{
+      if(!paused) return;
+      paused = false;
+      setTimeout(()=>{
+        setBar(remaining);
+        hideT = setTimeout(hide, remaining);
+        startTs = performance.now() - (SHOW_MS - remaining);
+      }, 30);
+    });
+  }
 
+  if(close){
+    close.addEventListener('click', ()=>{
+      loop = false;
+      if(hideT) clearTimeout(hideT);
+      if(nextT) clearTimeout(nextT);
+      if(banner) banner.style.display = 'none';
+    });
+  }
+
+  // 3: Iniciar después de 10 segundos
+  setTimeout(showOnce, 10000);
 })();
 
 /* ====================
