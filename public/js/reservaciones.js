@@ -533,138 +533,147 @@
 
     if (btnReservar) {
       btnReservar.addEventListener('click', function (e) {
+        e.preventDefault();
         let hayErrores = false;
 
-        // Limpiar errores previos
-        document.querySelectorAll('.field-error').forEach(el => {
-          el.classList.remove('field-error');
-        });
-        document.querySelectorAll('.has-error').forEach(el => {
-          el.classList.remove('has-error');
-        });
-        document.querySelectorAll('.error-msg').forEach(el => {
-          el.remove();
-        });
+        // 1. Limpiar todos los errores previos de un golpe
+        document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+        document.querySelectorAll('.has-error').forEach(el => el.classList.remove('has-error'));
+        document.querySelectorAll('.error-msg').forEach(el => el.remove());
 
-        // Obtener referencias a los campos
+        // 2. Super función para inyectar los textos rojos
+        const marcarError = (elementoId, mensaje, esFecha = false, esCheckbox = false) => {
+          const el = document.getElementById(elementoId);
+          if (!el) return;
+
+          let contenedor;
+
+          if (esFecha) {
+            contenedor = el.closest('.field-dob-container');
+            // Pintar los 3 selects de rojo
+            ['dob_day', 'dob_month', 'dob_year'].forEach(id => {
+              const select = document.getElementById(id);
+              if (select) select.classList.add('field-error');
+            });
+          } else if (esCheckbox) {
+            contenedor = el.closest('.cbox');
+          } else {
+            contenedor = el.closest('.field-floating') || el.closest('.field') || el.parentNode;
+            el.classList.add('field-error');
+          }
+
+          if (contenedor) {
+            contenedor.classList.add('has-error');
+            const errorSpan = document.createElement('span');
+            errorSpan.className = 'error-msg';
+            errorSpan.style.cssText = 'color: #b22222; font-size: 11px; font-weight: 700; margin-top: 4px; display: block;';
+            errorSpan.textContent = mensaje;
+            contenedor.appendChild(errorSpan);
+          }
+          hayErrores = true;
+
+          // Evento para quitar el rojo al escribir/cambiar
+          if (!esFecha && !esCheckbox) {
+            el.addEventListener('input', function () {
+              el.classList.remove('field-error');
+              if (contenedor) {
+                contenedor.classList.remove('has-error');
+                const msg = contenedor.querySelector('.error-msg');
+                if (msg) msg.remove();
+              }
+            }, { once: true });
+          }
+        };
+
+        // 3. A EVALUAR TODOS LOS CAMPOS SIMULTÁNEAMENTE
+
+        // Nombre
         const nombre = document.getElementById('nombreCompleto');
-        const telefono = document.getElementById('telefonoCliente');
+        if (!nombre || !nombre.value.trim()) marcarError('nombreCompleto', getErrorMessage('fullname'));
+
+        // Teléfono
+        const tel = document.getElementById('telefonoCliente');
+        if (!tel || !tel.value.trim()) {
+          marcarError('telefonoCliente', getErrorMessage('phone'));
+        } else if (tel.value.replace(/\D/g, '').length < 10) {
+          marcarError('telefonoCliente', getErrorMessage('phone_invalid'));
+        }
+
+        // Correo
         const correo = document.getElementById('correoCliente');
+        const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!correo || !correo.value.trim()) {
+          marcarError('correoCliente', getErrorMessage('email'));
+        } else if (!regexCorreo.test(correo.value.trim())) {
+          marcarError('correoCliente', getErrorMessage('email_invalid'));
+        }
+
+        // País
         const pais = document.getElementById('pais');
+        if (!pais || !pais.value) marcarError('pais', getErrorMessage('country'));
+
+        // Fechas
         const dia = document.getElementById('dob_day');
         const mes = document.getElementById('dob_month');
-        const año = document.getElementById('dob_year');
+        const anio = document.getElementById('dob_year');
+        if (!dia || !dia.value || !mes || !mes.value || !anio || !anio.value) {
+          marcarError('dob_day', getErrorMessage('dob_incomplete'), true);
+        } else {
+          const d = parseInt(dia.value, 10);
+          const m = parseInt(mes.value, 10);
+          const a = parseInt(anio.value, 10);
+          const fecha = new Date(a, m - 1, d);
+          if (fecha.getDate() !== d || fecha.getMonth() !== m - 1) {
+            marcarError('dob_day', getErrorMessage('dob_invalid'), true);
+          }
+        }
+
+        // Políticas
         const acepto = document.getElementById('acepto');
-        const modal = document.getElementById('modalMetodoPago');
-
-        // VALIDAR NOMBRE
-        if (!nombre || !nombre.value || nombre.value.trim() === "") {
-          marcarError(nombre, getErrorMessage('fullname'));
-          hayErrores = true;
-        }
-
-        // VALIDAR TELÉFONO
-        if (!telefono || !telefono.value || telefono.value.trim() === "") {
-          marcarError(telefono, getErrorMessage('phone'));
-          hayErrores = true;
-        } else {
-          const tel = telefono.value.replace(/\D/g, '');
-          if (tel.length !== 10) {
-            marcarError(telefono, getErrorMessage('phone_invalid'));
-            hayErrores = true;
-          }
-        }
-
-        // VALIDAR CORREO
-        if (!correo || !correo.value || correo.value.trim() === "") {
-          marcarError(correo, getErrorMessage('email'));
-          hayErrores = true;
-        } else {
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          if (!emailRegex.test(correo.value.trim())) {
-            marcarError(correo, getErrorMessage('email_invalid'));
-            hayErrores = true;
-          }
-        }
-
-        // VALIDAR PAÍS
-        if (!pais || !pais.value) {
-          marcarError(pais, getErrorMessage('country'));
-          hayErrores = true;
-        }
-
-        // VALIDAR FECHA NACIMIENTO
-        if (!dia || !dia.value || !mes || !mes.value || !año || !año.value) {
-          marcarErrorFecha(getErrorMessage('dob_incomplete'));
-          hayErrores = true;
-        } else {
-          const day = parseInt(dia.value, 10);
-          const month = parseInt(mes.value, 10);
-          const year = parseInt(año.value, 10);
-
-          const date = new Date(year, month - 1, day);
-          if (date.getDate() !== day || date.getMonth() !== month - 1) {
-            marcarErrorFecha(getErrorMessage('dob_invalid'));
-            hayErrores = true;
-          }
-        }
-
-        // VALIDAR POLÍTICAS
         if (!acepto || !acepto.checked) {
-          marcarErrorCheckbox(getErrorMessage('policies'));
-          hayErrores = true;
+          marcarError('acepto', getErrorMessage('policies'), false, true);
+          acepto.addEventListener('change', function () {
+            const cbox = this.closest('.cbox');
+            if (cbox) {
+              cbox.classList.remove('has-error');
+              const msg = cbox.querySelector('.error-msg');
+              if (msg) msg.remove();
+            }
+          }, { once: true });
         }
 
-        // SI HAY ERRORES: prevenir y NO abrir modal
+        // 4. RESULTADO
         if (hayErrores) {
-          e.preventDefault();
           e.stopPropagation();
+          document.dispatchEvent(new CustomEvent('refreshMovilCard'));
 
-          // disparar evento para refrescar
-          const refreshEvent = new CustomEvent('refreshMovilCard');
-          document.dispatchEvent(refreshEvent);
-
+          // Navegar suavemente al primer error visible
           const primerError = document.querySelector('.has-error, .field-error');
           if (primerError) {
-            primerError.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center'
-            });
+            primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
-
           return false;
         }
 
-        // TODO OK - Disparar evento personalizado para abrir el modal
+        // Todo válido
         console.log('✅ Validación exitosa');
+        document.dispatchEvent(new CustomEvent('refreshMovilCard'));
 
-        // solo refrescar
-        const refreshEvent = new CustomEvent('refreshMovilCard');
-        document.dispatchEvent(refreshEvent);
-
-        // Obtener el plan actual
         const mainEl = document.querySelector('main.page');
         const currentPlan = mainEl ? mainEl.dataset.plan : '';
 
-        // Disparar evento para que el otro script maneje el modal
-        const eventoExito = new CustomEvent('reserva:validacionExitosa', {
+        document.dispatchEvent(new CustomEvent('reserva:validacionExitosa', {
           detail: { plan: currentPlan }
-        });
-        document.dispatchEvent(eventoExito);
-
-        return false;
-
+        }));
       });
     }
 
-    // Sincronizar botón móvil con la validación
+    // Sincronizar botón móvil
     const btnMovil = document.getElementById('btnReservarMovil');
-    const btnOriginal = document.getElementById('btnReservar');
-
-    if (btnMovil && btnOriginal) {
+    if (btnMovil && btnReservar) {
       btnMovil.addEventListener('click', function (e) {
         e.preventDefault();
-        btnOriginal.click();
+        btnReservar.click();
       });
     }
 
@@ -1350,7 +1359,6 @@
     }
   }
 
-
   function initFullNameSync() {
     const full = qs('#nombreCompleto');
     const nombre = qs('#nombreCliente');
@@ -1468,9 +1476,10 @@
   function initDaysAndPricesSync() {
     const pickupDate = qs("#start") || qs('input[name="pickup_date"]');
     const dropoffDate = qs("#end") || qs('input[name="dropoff_date"]');
-    const pickupHour = qs('#pickup_h');
-    const dropoffHour = qs('#dropoff_h');
+    const pickupHour = qs('select[name="pickup_h"]');
+    const dropoffHour = qs('select[name="dropoff_h"]');
     const pickupHidden = qs('#pickup_time_hidden');
+    const dropoffHidden = qs('#dropoff_time_hidden');
 
     if (!pickupDate || !dropoffDate) {
       console.log("No encontró inputs de fecha");
@@ -1505,39 +1514,38 @@
     }
 
     function rebuildPickupHours() {
-      console.log('🔄 rebuildPickupHours ejecutada');
-      if (!pickupHour) {
-        console.warn('❌ pickupHour no existe');
-        return;
-      }
+      const pickupHourEl = document.querySelector('select[name="pickup_h"]');
+      const pickupDateEl = document.querySelector('#start') || document.querySelector('input[name="pickup_date"]');
+      const pickupHiddenEl = document.querySelector('#pickup_time_hidden') || document.querySelector('input[name="pickup_time"]');
 
-      const selectedDate = parseDateAny(pickupDate.value);
+      const dropoffHourEl = document.querySelector('select[name="dropoff_h"]');
+      const dropoffHiddenEl = document.querySelector('#dropoff_time_hidden') || document.querySelector('input[name="dropoff_time"]');
+
+      if (!pickupHourEl) return;
+
+      const selectedDate = parseDateAny(pickupDateEl?.value);
       const now = new Date();
       const isToday = selectedDate && isSameLocalDate(selectedDate, now);
-      console.log('📅 Fecha seleccionada:', selectedDate, '¿Es hoy?', isToday);
 
       let minHour = 0;
       if (isToday) {
         minHour = now.getHours() + 1;
+        if (minHour > 23) minHour = 23;
       }
-      console.log('⏰ minHour:', minHour);
 
-      const previousValue = pickupHour.value;
+      const previousValue = pickupHourEl.value;
       const locale = getCurrentLocale();
       const placeholderText = locale === 'en' ? 'Time' : 'Hora';
 
-      pickupHour.innerHTML = '';
-      pickupHour.insertAdjacentHTML(
-        'afterbegin',
-        `<option value="" disabled selected>${placeholderText}</option>`
-      );
+      pickupHourEl.innerHTML = '';
+      pickupHourEl.insertAdjacentHTML('afterbegin', `<option value="" disabled selected>${placeholderText}</option>`);
 
       for (let i = minHour; i <= 23; i++) {
         const hh = pad2(i);
         const option = document.createElement('option');
         option.value = hh;
         option.textContent = `${hh}:00`;
-        pickupHour.appendChild(option);
+        pickupHourEl.appendChild(option);
       }
 
       let newValue = '';
@@ -1545,28 +1553,37 @@
         if (previousValue && parseInt(previousValue, 10) >= minHour) {
           newValue = previousValue;
         } else {
-          newValue = '';
+          newValue = pad2(minHour);
         }
       } else {
-        newValue = '13';
-        console.log('👉 Forzando valor 13:00 (no es hoy)');
+        newValue = '13'; // Forzar 13:00 para fechas futuras
       }
-
-      console.log('✅ Valor seleccionado:', newValue);
 
       if (newValue) {
-        pickupHour.value = newValue;
-        if (pickupHidden) pickupHidden.value = `${newValue}:00:00`;
-      } else {
-        pickupHour.value = '';
-        if (pickupHidden) pickupHidden.value = '';
+        pickupHourEl.value = newValue;
+        if (pickupHiddenEl) pickupHiddenEl.value = `${newValue}:00:00`;
       }
 
-      try {
-        if (pickupHour.value !== previousValue) {
-          pickupHour.dispatchEvent(new Event('change', { bubbles: true }));
+      if (pickupHourEl.value !== previousValue) {
+        pickupHourEl.classList.remove('field-error');
+        const ctl = pickupHourEl.closest('.field, [data-float]');
+        if (ctl) {
+          ctl.classList.remove('has-error');
+          ctl.classList.add('filled');
+          const msg = ctl.querySelector('.error-msg');
+          if (msg) msg.remove();
         }
-      } catch (_) { }
+      }
+
+      if (dropoffHourEl) {
+        if (!dropoffHourEl.value) {
+          dropoffHourEl.value = '13';
+          if (dropoffHiddenEl) dropoffHiddenEl.value = '13:00:00';
+
+          const dCtl = dropoffHourEl.closest('[data-float]');
+          if (dCtl) dCtl.classList.add('filled');
+        }
+      }
     }
 
     function getDateTime(which) {
@@ -1638,9 +1655,6 @@
     rebuildPickupHours();
     runUpdate();
   }
-
-
-
 
   function initAddonsSync() {
     const hidden =
@@ -1895,32 +1909,6 @@
           setState(ctl, hasValue(select));
         });
       }
-    });
-  }
-
-  function initTimeSelects() {
-    const hourSelects = qsa('#pickup_h, #dropoff_h');
-    hourSelects.forEach(select => {
-      const ctl = select.closest('[data-float]');
-      if (!ctl) return;
-
-      if (select.value && select.value !== "" && select.value !== "H" && select.value !== "Hour" && select.value !== "Time") {
-        ctl.classList.add('filled');
-        ctl.classList.remove('pristine');
-      }
-
-      select.addEventListener('change', function () {
-        const parentCtl = this.closest('[data-float]');
-        if (parentCtl) {
-          if (this.value && this.value !== "" && this.value !== "H" && this.value !== "Hour" && this.value !== "Time") {
-            parentCtl.classList.add('filled');
-            parentCtl.classList.remove('pristine');
-          } else {
-            parentCtl.classList.remove('filled');
-            parentCtl.classList.add('pristine');
-          }
-        }
-      });
     });
   }
 

@@ -22,7 +22,7 @@ class BtnReservacionesController extends Controller
     {
         try {
             $validated = $request->validated();
-            
+
             // Delegar todos los cálculos complejos a la función centralizada
             $data = $this->procesarCalculosYResumen($validated, 'mostrador');
 
@@ -73,7 +73,6 @@ class BtnReservacionesController extends Controller
                 'estado'    => 'pendiente_pago',
                 'message'   => 'Reservación creada con éxito y correo enviado.',
             ]);
-
         } catch (\Throwable $e) {
             Log::error('❌ Error creando reservación (mostrador): ' . $e->getMessage());
             return response()->json([
@@ -97,7 +96,7 @@ class BtnReservacionesController extends Controller
 
             // Validar pago con PayPal
             $paypalValidado = $this->validarPagoPayPal($validated['paypal_order_id'], $data['total']);
-            
+
             if (!$paypalValidado['ok']) {
                 return response()->json($paypalValidado, 422);
             }
@@ -152,7 +151,6 @@ class BtnReservacionesController extends Controller
                 'estado'    => 'confirmada',
                 'message'   => 'Pago validado con PayPal y reserva confirmada correctamente.',
             ]);
-
         } catch (\Throwable $e) {
             Log::error('❌ Error en reservarLinea: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return response()->json([
@@ -185,10 +183,10 @@ class BtnReservacionesController extends Controller
             ->first();
 
         $precioDia = $categoria ? (float)$categoria->precio_dia : 0.0;
-        
+
         // Si eligen mostrador, el precio diario se infla un 15%
         if ($tipoPlan === 'mostrador' && $precioDia > 0) {
-            $precioDia = round($precioDia * 1.15); 
+            $precioDia = round($precioDia * 1.15);
         }
 
         $subtotalBase = $precioDia * $dias;
@@ -222,7 +220,7 @@ class BtnReservacionesController extends Controller
                 $cantidad = $addonsMap[$srv->id_servicio] ?? 0;
                 $precioBase = (float)$srv->precio;
                 $tipoCobro = strtolower((string)$srv->tipo_cobro);
-                
+
                 $cantParaDB = $cantidad;
                 $precioUnitarioDB = $precioBase;
                 $lineTotal = 0;
@@ -261,12 +259,12 @@ class BtnReservacionesController extends Controller
         $montoDropoff = 0;
         if (!empty($validated['pickup_sucursal_id']) && !empty($validated['dropoff_sucursal_id']) && $validated['pickup_sucursal_id'] != $validated['dropoff_sucursal_id']) {
             $nombreDestino = DB::table('sucursales')->where('id_sucursal', $validated['dropoff_sucursal_id'])->value('nombre');
-            
+
             if ($nombreDestino) {
                 $km = DB::table('ubicaciones_servicio')->where('destino', $nombreDestino)->where('activo', true)->value('km') ?? 0;
                 $costoKm = DB::table('categoria_costo_km')->where('id_categoria', $validated['categoria_id'])->where('activo', true)->value('costo_km') ?? 0;
                 $montoDropoff = (float)$km * (float)$costoKm;
-                
+
                 if ($montoDropoff > 0) {
                     $extrasSubtotal += $montoDropoff;
                     $serviciosAInsertar[] = [
@@ -274,7 +272,7 @@ class BtnReservacionesController extends Controller
                         'cantidad'        => 1,
                         'precio_unitario' => $montoDropoff,
                     ];
-                    
+
                     $extrasParaCorreo->push((object)[
                         'id_servicio' => 11,
                         'nombre' => 'Cargo por Devolución (Drop-off)',
@@ -315,7 +313,7 @@ class BtnReservacionesController extends Controller
 
         $codigoCat = strtoupper(trim((string)($categoria->codigo ?? '')));
         $cap = $predeterminados[$codigoCat] ?? ['pax' => 5, 'small' => 2, 'big' => 1];
-        
+
         $singular = rtrim(mb_strtoupper(trim((string)($categoria->nombre ?? ''))), 'S');
         $tuAuto = [
             'titulo'      => trim((string)($categoria->descripcion ?? 'Auto o similar')),
@@ -330,9 +328,17 @@ class BtnReservacionesController extends Controller
 
         // Enlaces de imagen
         $catImages = [
-            1 => 'img/aveo.png', 2 => 'img/virtus.png', 3 => 'img/jetta.png', 4 => 'img/camry.png',
-            5 => 'img/renegade.png', 6 => 'img/taos.png', 7 => 'img/avanza.png', 8 => 'img/Odyssey.png',
-            9 => 'img/Hiace.png', 10 => 'img/Frontier.png', 11 => 'img/Tacoma.png',
+            1 => 'img/aveo.png',
+            2 => 'img/virtus.png',
+            3 => 'img/jetta.png',
+            4 => 'img/camry.png',
+            5 => 'img/renegade.png',
+            6 => 'img/taos.png',
+            7 => 'img/avanza.png',
+            8 => 'img/Odyssey.png',
+            9 => 'img/Hiace.png',
+            10 => 'img/Frontier.png',
+            11 => 'img/Tacoma.png',
         ];
         $catId = (int)($categoria->id_categoria ?? 0);
         $imgCategoria = rtrim(config('app.url', 'https://viajerocar-production.up.railway.app'), '/') . '/' . ltrim($catImages[$catId] ?? 'img/categorias/placeholder.png', '/');
@@ -373,7 +379,7 @@ class BtnReservacionesController extends Controller
                 'updated_at'      => now(),
             ];
         }
-        
+
         DB::table('reservacion_servicio')->insert($insertData);
     }
 
@@ -387,14 +393,15 @@ class BtnReservacionesController extends Controller
 
         $nombresSucursales = DB::table('sucursales as s')
             ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
+            ->select('s.id_sucursal', 's.nombre as nombre_sucursal', 'c.nombre as nombre_ciudad')
             ->whereIn('s.id_sucursal', array_filter([$reservacion->sucursal_retiro, $reservacion->sucursal_entrega]))
             ->get()->keyBy('id_sucursal');
 
         $infoRetiro = $nombresSucursales->get($reservacion->sucursal_retiro);
         $infoEntrega = $nombresSucursales->get($reservacion->sucursal_entrega);
 
-        $lugarRetiro  = $infoRetiro ? "{$infoRetiro->ciudad} - {$infoRetiro->nombre}" : '-';
-        $lugarEntrega = $infoEntrega ? "{$infoEntrega->ciudad} - {$infoEntrega->nombre}" : '-';
+        $lugarRetiro  = $infoRetiro ? "{$infoRetiro->nombre_ciudad} - {$infoRetiro->nombre_sucursal}" : '-';
+        $lugarEntrega = $infoEntrega ? "{$infoEntrega->nombre_ciudad} - {$infoEntrega->nombre_sucursal}" : '-';
 
         Mail::to($reservacion->email_cliente)
             ->cc(env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocar-rental.com'))
@@ -436,7 +443,7 @@ class BtnReservacionesController extends Controller
         }
 
         $orderResponse = Http::withToken($accessToken)->get("$baseUrl/v2/checkout/orders/$paypalOrderId");
-        
+
         if (!$orderResponse->ok()) {
             return ['ok' => false, 'message' => 'No se pudo validar la orden de pago con PayPal.'];
         }

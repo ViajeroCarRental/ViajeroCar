@@ -11,6 +11,7 @@ use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use App\Http\Requests\StoreCotizacionRequest;
+use App\Models\Pais;
 
 class ReservacionesController extends Controller
 {
@@ -93,7 +94,10 @@ class ReservacionesController extends Controller
         $dropoffKm        = $dropoffName ? (DB::table('ubicaciones_servicio')->where('destino', $dropoffName)->where('activo', true)->value('km') ?? 0) : 0;
         $costoKmCategoria = $categoriaId ? (DB::table('categoria_costo_km')->where('id_categoria', $categoriaId)->where('activo', true)->value('costo_km') ?? 0) : 0;
 
-        $paises = DB::table('paises')->where('activo', true)->orderBy('prioritario', 'desc')->orderBy('nombre', 'asc')->get();
+        $paises = Pais::where('activo', true)
+            ->orderBy('prioritario', 'desc')
+            ->orderBy('nombre', 'asc')
+            ->get();
 
         $baseParams = array_filter([
             'pickup_sucursal_id'  => $pickupSucursalId,
@@ -162,13 +166,13 @@ class ReservacionesController extends Controller
             'dropoffKm',
             'costoKmCategoria',
             'paises',
-            'isUSD', 
-            'isAirport', 
-            'exchangeRate', 
-            'tarifaBaseFormateada', 
-            'precioDiaFormateado', 
-            'months3', 
-            'maxYear', 
+            'isUSD',
+            'isAirport',
+            'exchangeRate',
+            'tarifaBaseFormateada',
+            'precioDiaFormateado',
+            'months3',
+            'maxYear',
             'minYear',
             'formatCurrency'
         ), $catalogos, $fechas, $detallesCategoria, $detallesAddons));
@@ -270,9 +274,10 @@ class ReservacionesController extends Controller
         $serviciosFiltrados = $serviciosProcesados->filter(function ($s) {
             $n = mb_strtolower(trim($s->nombre));
 
-            $esSilla     = str_contains($n, 'silla');
-            $esGasolina  = str_contains($n, 'gasolina') && str_contains($n, 'prepago'); 
-            $esConductor = str_contains($n, 'conductor') && str_contains($n, 'adicional');
+            // Ahora los nombres están en inglés
+            $esSilla     = str_contains($n, 'baby') && str_contains($n, 'seat');
+            $esGasolina  = str_contains($n, 'prepaid') && str_contains($n, 'fuel');
+            $esConductor = str_contains($n, 'additional') && str_contains($n, 'driver');
 
             return $esSilla || $esGasolina || $esConductor;
         })->values();
@@ -388,23 +393,26 @@ class ReservacionesController extends Controller
             $nombreLower = mb_strtolower($srv->nombre);
 
             $srv->icon = match (true) {
-                str_contains($nombreLower, 'silla') => 'fa-solid fa-child-reaching',
-                str_contains($nombreLower, 'conductor') => 'fa-solid fa-user-plus',
-                str_contains($nombreLower, 'gasolina') => 'fa-solid fa-gas-pump',
+                str_contains($nombreLower, 'silla') || str_contains($nombreLower, 'baby') => 'fa-solid fa-child-reaching',
+                str_contains($nombreLower, 'conductor') || str_contains($nombreLower, 'driver') => 'fa-solid fa-user-plus',
+                str_contains($nombreLower, 'gasolina') || str_contains($nombreLower, 'fuel') => 'fa-solid fa-gas-pump',
                 default => 'fa-solid fa-circle-plus'
             };
 
             $srv->tooltip = match (true) {
-                str_contains($nombreLower, 'silla') => __('Ideal for traveling with children. Subject to availability.'),
-                str_contains($nombreLower, 'conductor') => __('Add an additional authorized driver.'),
-                str_contains($nombreLower, 'gasolina') => __('Early flight? Prepay your fuel and return the vehicle directly.'),
+                str_contains($nombreLower, 'silla') || str_contains($nombreLower, 'baby') => __('Ideal for traveling with children. Subject to availability at the time of delivery.'),
+                str_contains($nombreLower, 'conductor') || str_contains($nombreLower, 'driver') => __('Add an additional authorized driver to operate the vehicle during the rental.'),
+                str_contains($nombreLower, 'gasolina') || str_contains($nombreLower, 'fuel') => __('Early flight? Don\'t waste time looking for a gas station. With Viajero Car Rental, you can prepay your fuel at a preferred rate per liter and return the vehicle directly. Simple, fast and stress-free.'),
                 default => __('Check more information about this add-on.')
             };
 
             $precioBase = (float) $srv->precio;
-            if (str_contains($nombreLower, 'gasolina')) {
+
+            if (str_contains($nombreLower, 'gasolina') || str_contains($nombreLower, 'prepaid fuel')) {
                 $precioBase *= ($capacidadTanque ?: 50);
                 $srv->unidad_txt = __(' / tank');
+            } elseif (str_contains($nombreLower, 'additional driver')) {
+                $srv->unidad_txt = __('driver per day');
             } else {
                 $srv->unidad_txt = ($srv->tipo_cobro === 'por_dia') ? __(' / day') : __(' / event');
             }

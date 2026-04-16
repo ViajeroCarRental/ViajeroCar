@@ -607,7 +607,7 @@
                 </a>
                 <a class="wizard-step {{ $step === 4 ? 'active' : '' }}"
                     href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 4])) }}">
-                    <span class="n">4</span> {{ __('Summary') }}
+                    <span class="n">4</span> {{ __('Confirmation') }}
                 </a>
             </nav>
 
@@ -870,7 +870,7 @@
                                         <div class="prot-icon is-on"><i class="fa-solid fa-shield"></i></div>
                                         <div>
                                             <p class="prot-name">{{ __('Limited third-party liability protection (LI)') }}</p>
-                                            <p class="prot-desc">{{ __('Protects third parties for damages and injuries caused in an accident.') }}</p>
+                                            <p class="prot-desc">{{ __('Protects third parties for damages and injuries caused in an accident and covers the minimum amount required by law.') }}</p>
                                             <div class="prot-badge"><span class="dot"></span> {{ __('Included') }}</div>
                                         </div>
                                     </div>
@@ -1010,12 +1010,11 @@
 
                             <div class="equip-grid">
                                 @forelse($serviciosFiltrados as $srv)
-                                    {{-- ATRIBUTOS DATA-* REINTEGRADOS --}}
                                     <div class="addon-card" 
                                         data-id="{{ $srv->id_servicio }}" 
                                         data-name="{{ $srv->nombre }}" 
                                         data-price="{{ (float) $srv->precio }}"
-                                        data-gasolina="{{ str_contains(strtolower($srv->nombre), 'gasolina') ? 1 : 0 }}"
+                                        data-gasolina="{{ str_contains(strtolower($srv->nombre), 'prepaid fuel') ? 1 : 0 }}"
                                         data-charge="{{ $srv->tipo_cobro ?? 'por_evento' }}" 
                                         data-max="3">
                                         
@@ -1025,13 +1024,11 @@
                                                 <div class="addon-headline">
                                                     <h4 class="addon-name">{{ __($srv->nombre) }}</h4>
                                                     
-                                                    {{-- TOOLTIP REINTEGRADO --}}
                                                     <span class="addon-help-wrap" tabindex="0">
                                                         <button type="button" class="addon-help-btn" aria-label="{{ __('More information') }}">
                                                             <i class="fa-solid fa-info"></i>
                                                         </button>
-                                                        {{-- Nota: si tienes la propiedad tooltip en tu controller, cámbialo a $srv->tooltip --}}
-                                                        <span class="addon-tooltip">{{ __('Check more information about this add-on.') }}</span>
+                                                        <span class="addon-tooltip">{{ __($srv->tooltip ?? 'Check more information about this add-on.') }}</span>
                                                     </span>
                                                 </div>
                                                 <p>{{ __($srv->descripcion) }}</p>
@@ -1039,11 +1036,33 @@
                                         </div>
                                         
                                         <div class="addon-price">
-                                            <strong>{{ $srv->precio_formateado }}</strong> {{ $srv->moneda_txt }}{{ $srv->unidad_txt }}
+                                            @php
+                                                $locale = app()->getLocale();
+                                                $isUSD = $locale === 'en';
+                                                $rate = 20;
+                                                
+                                                $precio = (float) $srv->precio;
+                                                $monto = $isUSD ? $precio / $rate : $precio;
+                                                $moneda = $isUSD ? 'USD' : 'MXN';
+                                                $formato = $isUSD ? number_format($monto, 2) : number_format($monto, 0);
+                                                
+                                                $nombreLower = strtolower($srv->nombre);
+                                            
+                                                if (str_contains($nombreLower, 'driver') || str_contains($nombreLower, 'conductor')) {
+                                                    $unidad = __('/driver per day');
+                                                } else {
+                                                    $unidad = match($srv->tipo_cobro) {
+                                                        'por_tanque' => __('/tank'),
+                                                        'por_dia'    => __('/day'),
+                                                        default      => __('/event'),
+                                                    };
+                                                }
+                                            @endphp
+                                            <strong>${{ $formato }}</strong> {{ $moneda }} {{ $unidad }}
                                         </div>
 
                                         <div class="addon-qty">
-                                            @if (str_contains(strtolower($srv->nombre), 'gasolina'))
+                                            @if (str_contains($nombreLower, 'prepaid fuel') || str_contains($nombreLower, 'gasolina'))
                                                 <label class="switch">
                                                     <input type="checkbox" class="gasolina-switch">
                                                     <span class="slider"></span>
@@ -1052,7 +1071,6 @@
                                                 <button class="qty-btn minus" type="button">−</button>
                                                 <span class="qty">0</span>
                                                 <button class="qty-btn plus" type="button">+</button>
-                                                {{-- ETIQUETA MAX 3 REINTEGRADA --}}
                                                 <span class="qty-hint">{{ __('Max 3') }}</span>
                                             @endif
                                         </div>
@@ -1117,16 +1135,22 @@
                                         <label for="correoCliente">{{ __('Email address') }}</label>
                                     </div>
 
-                                    <select name="pais" id="pais" required>
-                                        <option value="" disabled selected>{{ __('Select a country') }}</option>
-                                        @foreach ($paises->where('prioritario', true) as $pais)
-                                            <option value="{{ $pais->nombre }}">{{ $isUSD ? ($pais->nombre_en ?? $pais->nombre) : $pais->nombre }}</option>
-                                        @endforeach
-                                        <option disabled>──────────</option>
-                                        @foreach ($paises->where('prioritario', false) as $pais)
-                                            <option value="{{ $pais->nombre }}">{{ $isUSD ? ($pais->nombre_en ?? $pais->nombre) : $pais->nombre }}</option>
-                                        @endforeach
-                                    </select>
+                                    <div class="field field-floating">
+                                        <select name="pais" id="pais" required style="width: 100%; height: 50px; border: 1px solid #d1d5db; border-radius: 8px; padding: 0 12px; background-color: #fff; font-size: 16px; outline: none; margin-top: 18px;">
+                                            <option value="" disabled selected></option>
+                    
+                                            @foreach ($paises->where('prioritario', true) as $pais)
+                                                <option value="{{ $pais->nombre }}">{{ $isUSD ? ($pais->nombre_en ?? $pais->nombre) : $pais->nombre }}</option>
+                                            @endforeach
+                                            
+                                            <option disabled>──────────</option>
+                                            
+                                            @foreach ($paises->where('prioritario', false) as $pais)
+                                                <option value="{{ $pais->nombre }}">{{ $isUSD ? ($pais->nombre_en ?? $pais->nombre) : $pais->nombre }}</option>
+                                            @endforeach
+                                        </select>
+                                        <label for="pais" style="top: 0; transform: translateY(-50%) scale(0.8); background: #fff; padding: 0 4px;">{{ __('Country') }}</label>
+                                    </div>
 
                                     <div class="field field-dob-container">
                                         <label class="label-dob-main">{{ __('Date of birth') }}</label>
@@ -1226,7 +1250,7 @@
                             <div class="sum-compact" aria-label="{{ __('Compact summary') }}">
                                 <div class="sum-compact-head">
                                     <h4 class="sum-title"><strong>{{ __('Booking summary') }}</strong></h4>
-                                    <span class="sum-days"><i class="fa-regular fa-calendar"></i> {{ __('Days') }}: <strong>{{ $days }}</strong></span>
+                                    <span class="sum-days"><i class="fa-regular fa-calendar"></i> {{ __('Days:') }} <strong>{{ $days }}</strong></span>
                                 </div>
 
                                 <h4 class="sum-subtitle">{{ __('Location and date') }}</h4>
