@@ -1334,22 +1334,77 @@
                                     data-costokm="{{ $costoKmCategoria ?? 0 }}" 
                                     data-tanque="{{ $capacidadTanque ?? 0 }}">
 
-                                    <details class="sum-acc" open="false">
+                                    <details class="sum-acc">
                                         <summary class="sum-bar">
                                             <span>{{ __('Base rate') }}</span>
                                             <strong id="qBase">{{ $tarifaBaseFormateada }}</strong>
                                             <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
                                         </summary>
+
                                         <div class="sum-acc-body">
+                                            {{-- Detalle de días --}}
                                             <div class="row row-base">
-                                                <span>{{ $days ?? 1 }} {{ __('day(s) - price per day') }} {{ $precioDiaFormateado }}</span>
+                                                <span>
+                                                    {{ $days ?? 1 }} {{ __('day(s) - price per day') }} {{ $precioDiaFormateado }}
+                                                </span>
                                             </div>
+
+                                            {{-- Fila del Total de Base --}}
                                             <div class="row row-base-total">
                                                 <span class="row-total-label">{{ __('Total') }}:</span>
                                                 <strong>{{ $tarifaBaseFormateada }}</strong>
                                             </div>
+
+                                            {{-- Sección de Incluidos --}}
+                                            <div class="col-12 mt-2">
+                                                <div class="linea-incluido-box">
+                                                    <p class="incluido-text">
+                                                        <strong>{{ __('INCLUDED') }}</strong>
+                                                        <i class="fa-solid fa-circle-question" id="info-protecciones"
+                                                            style="cursor: pointer; color: #b22222; margin-left: 5px; font-size: 1.1rem; vertical-align: middle;"></i>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div class="row row-included" style="border-top:0;">
+                                                <span class="inc-items">
+                                                    <span class="inc-item"><span class="inc-check">✔</span> {{ __('Unlimited mileage') }}</span>
+                                                    <span class="inc-item"><span class="inc-check">✔</span> {{ __('Liability Waiver (LI)') }}</span>
+                                                </span>
+                                            </div>
                                         </div>
                                     </details>
+
+                                    {{-- MODAL DE PROTECCIONES --}}
+                                    <div id="modalProtecciones" class="modal-global-viajero" style="display:none;">
+                                        <div class="modal-global-content">
+                                            <span class="cerrar-modal-v">&times;</span>
+                                            
+                                            <h2 class="modal-v-header-title">{{ __('Liability waivers (Protections)') }}</h2>
+                                            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+
+                                            <div style="display: flex; gap: 20px; align-items: flex-start;">
+                                                <div class="modal-v-escudo-circulo">
+                                                    <i class="fa-solid fa-shield" style="font-size: 28px;"></i>
+                                                </div>
+                                                <div>
+                                                    <strong class="modal-v-titulo-negro">{{ __('LIMITED THIRD-PARTY LIABILITY PROTECTION (LI)') }}</strong>
+                                                    <p class="modal-v-texto-gris">
+                                                        {{ __('Protects third parties for damages and injuries caused in an accident and covers the minimum amount required by law.') }}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+                                                <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 12px;">
+                                                    {{ __('You choose the level of liability for the vehicle that best fits your needs and budget.') }}
+                                                </p>
+                                                <p style="font-size: 13px; color: #1e293b; font-weight: 700;">
+                                                    {{ __('Ask about our Liability Waivers (optional) when you arrive at any of our branches.') }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <details class="sum-acc">
                                         <summary class="sum-bar">
@@ -1364,7 +1419,7 @@
 
                                     <details class="sum-acc">
                                         <summary class="sum-bar">
-                                            <span>{{ __('Charges and TAXES (16%)') }}</span>
+                                            <span>{{ __('Fees and TAXES (16%)') }}</span>
                                             <strong id="qIva">$0 MXN</strong>
                                             <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
                                         </summary>
@@ -1508,7 +1563,7 @@
             payment_summary: "{{ __('Payment Summary') }}",
             base_rate: "{{ __('Base rate') }}",
             rental_options: "{{ __('Rental options') }}",
-            charges_vat: "{{ __('Charges and TAXES (16%)') }}",
+            charges_vat: "{{ __('Fees and TAXES (16%)') }}",
             total_label: "{{ __('Total') }}",
             confirmation_email: "{{ __('You will receive a confirmation by email.') }}",
             go_to_homepage: "{{ __('Go to homepage') }}",
