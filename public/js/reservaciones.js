@@ -285,13 +285,11 @@
           function () {
             console.log('🔔 Alerta cerrada');
 
-            // Primero, asegurarse de que no estamos en modo reserva
             const refreshEvent = new CustomEvent('refreshMovilCard', {
               detail: { fromAlert: true }
             });
             document.dispatchEvent(refreshEvent);
 
-            // Esto permite que si hay datos incompletos, la tarjeta vuelva a responder al scroll
             setTimeout(() => {
 
               window.dispatchEvent(new Event('scroll'));
@@ -420,9 +418,7 @@
         asignarListeners(dropoffSelect, 'location');
 
         checkDiff.addEventListener('change', function () {
-          if (this.checked) {
-            validarCampo(dropoffSelect, 'location');
-          } else {
+          if (!this.checked) {
             dropoffSelect.classList.remove('field-error', 'field-success');
             const cont = dropoffSelect.closest('.field');
             if (cont) {
@@ -536,12 +532,10 @@
         e.preventDefault();
         let hayErrores = false;
 
-        // 1. Limpiar todos los errores previos de un golpe
         document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
         document.querySelectorAll('.has-error').forEach(el => el.classList.remove('has-error'));
         document.querySelectorAll('.error-msg').forEach(el => el.remove());
 
-        // 2. Super función para inyectar los textos rojos
         const marcarError = (elementoId, mensaje, esFecha = false, esCheckbox = false) => {
           const el = document.getElementById(elementoId);
           if (!el) return;
@@ -550,7 +544,6 @@
 
           if (esFecha) {
             contenedor = el.closest('.field-dob-container');
-            // Pintar los 3 selects de rojo
             ['dob_day', 'dob_month', 'dob_year'].forEach(id => {
               const select = document.getElementById(id);
               if (select) select.classList.add('field-error');
@@ -572,7 +565,6 @@
           }
           hayErrores = true;
 
-          // Evento para quitar el rojo al escribir/cambiar
           if (!esFecha && !esCheckbox) {
             el.addEventListener('input', function () {
               el.classList.remove('field-error');
@@ -585,13 +577,9 @@
           }
         };
 
-        // 3. A EVALUAR TODOS LOS CAMPOS SIMULTÁNEAMENTE
-
-        // Nombre
         const nombre = document.getElementById('nombreCompleto');
         if (!nombre || !nombre.value.trim()) marcarError('nombreCompleto', getErrorMessage('fullname'));
 
-        // Teléfono
         const tel = document.getElementById('telefonoCliente');
         if (!tel || !tel.value.trim()) {
           marcarError('telefonoCliente', getErrorMessage('phone'));
@@ -599,7 +587,6 @@
           marcarError('telefonoCliente', getErrorMessage('phone_invalid'));
         }
 
-        // Correo
         const correo = document.getElementById('correoCliente');
         const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!correo || !correo.value.trim()) {
@@ -608,11 +595,9 @@
           marcarError('correoCliente', getErrorMessage('email_invalid'));
         }
 
-        // País
         const pais = document.getElementById('pais');
         if (!pais || !pais.value) marcarError('pais', getErrorMessage('country'));
 
-        // Fechas
         const dia = document.getElementById('dob_day');
         const mes = document.getElementById('dob_month');
         const anio = document.getElementById('dob_year');
@@ -628,7 +613,6 @@
           }
         }
 
-        // Políticas
         const acepto = document.getElementById('acepto');
         if (!acepto || !acepto.checked) {
           marcarError('acepto', getErrorMessage('policies'), false, true);
@@ -642,12 +626,10 @@
           }, { once: true });
         }
 
-        // 4. RESULTADO
         if (hayErrores) {
           e.stopPropagation();
           document.dispatchEvent(new CustomEvent('refreshMovilCard'));
 
-          // Navegar suavemente al primer error visible
           const primerError = document.querySelector('.has-error, .field-error');
           if (primerError) {
             primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -655,8 +637,7 @@
           return false;
         }
 
-        // Todo válido
-        console.log('✅ Validación exitosa');
+        console.log('Validación exitosa');
         document.dispatchEvent(new CustomEvent('refreshMovilCard'));
 
         const mainEl = document.querySelector('main.page');
@@ -1136,21 +1117,21 @@
 
     if (!qBaseEl || !qExtrasEl || !qIvaEl || !qTotalEl) return;
 
-    // ========== OBTENER IDIOMA ACTUAL ==========
     const currentLocale = getCurrentLocale(); // 'es' o 'en'
 
-    // ========== MAPEO DE TRADUCCIONES PARA SERVICIOS ==========
     const serviceTranslations = {
       'Silla de bebé': { es: 'Silla de bebé', en: 'Baby seat' },
       'Gasolina Prepago': { es: 'Gasolina Prepago', en: 'Prepaid fuel' },
-      'Conductor adicional': { es: 'Conductor adicional', en: 'Additional driver' }
+      'Conductor adicional': { es: 'Conductor adicional', en: 'Additional driver' },
+      'Conductor menor de 25 años': { es: 'Conductor menor de 25 años', en: 'Young driver (under 25)' }
     };
 
-    // Función para traducir nombre del servicio
     function translateServiceName(spanishName) {
       if (!spanishName) return spanishName;
-      if (serviceTranslations[spanishName] && serviceTranslations[spanishName][currentLocale]) {
-        return serviceTranslations[spanishName][currentLocale];
+      for (const [key, value] of Object.entries(serviceTranslations)) {
+        if (spanishName === key || spanishName === value.en || spanishName === value.es) {
+          return value[currentLocale] || key;
+        }
       }
       return spanishName;
     }
@@ -1269,7 +1250,6 @@
       }
     }
 
-    // Addons - CON TRADUCCIÓN DE NOMBRES
     addonsMap.forEach((qty, id) => {
       const srv = catalog[id];
       if (!srv) return;
@@ -1277,17 +1257,19 @@
       const price = parseFloat(srv.precio ?? srv.price ?? 0) || 0;
       const tipo = String(srv.tipo || srv.tipo_cobro || '').toLowerCase();
 
-      // ✅ OBTENER NOMBRE TRADUCIDO
       const spanishName = srv.nombre || '';
-      const translatedName = translateServiceName(spanishName);
+      let translatedName = translateServiceName(spanishName);
 
       let lineTotal = 0;
       let detalleLabel = '';
 
+      if (String(id) === YOUNG_DRIVER_SERVICE_ID) {
+        translatedName = currentLocale === 'en' ? 'Young driver (under 25)' : 'Conductor menor de 25 años';
+      }
+
       if (String(id) === SERVICE_GASOLINA_ID) {
         const litros = Math.max(0, tanque);
         lineTotal = price * litros;
-        // ✅ Usar nombre traducido
         const porLitroLabel = currentLocale === 'en' ? 'per liter' : 'por litro';
         detalleLabel = `${translatedName} | ${litros} L x ${fmtMoney(price)} ${porLitroLabel}`;
       }
@@ -1443,8 +1425,7 @@
 
       try { hidden.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) { }
       try { applyYoungDriverAddon(); } catch (_) { }
-
-      // ✅ Forzar refresco visual del resumen del paso 4
+      
       try { initStep4AddonsSummary(); } catch (_) { }
 
       setTimeout(() => {
@@ -1700,7 +1681,8 @@
     }
 
     function setQty(card, qty) {
-      qty = Math.max(0, qty | 0);
+      const max = parseInt(card.dataset.max, 10) || Infinity;
+      qty = Math.min(Math.max(0, qty | 0), max);
 
       const id = String(card.getAttribute('data-id') || '').trim();
       const qtyEl = qs('.qty', card);
@@ -1819,7 +1801,10 @@
 
       if (plus) {
         plus.addEventListener('click', () => {
-          setQty(card, readQty(card) + 1);
+          const max = parseInt(card.dataset.max, 10) || Infinity;
+          const current = readQty(card);
+          const newQty = Math.min(current + 1, max);
+          setQty(card, newQty);
           writeHiddenAndURL();
         });
       }
