@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
 <head>
+  <!-- Google Tag Manager -->
+  <script>
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-PB88VSKW');
+  </script>
+  <!-- End Google Tag Manager -->
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
   <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -168,95 +178,99 @@ body.nav-open .language-selector {
         border-color: rgba(255, 255, 255, 0.8);
     }
 
-/* ===== ESTILOS PARA DROPDOWN DE IDIOMAS ===== */
-.language-selector.dropdown {
-    position: relative;
-}
-
-.language-selector .dropdown-menu {
-    min-width: 100px;
-    background: white;
-    border: none;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    border-radius: 10px;
-    padding: 8px 0;
-    margin-top: 5px;
-}
-
-.language-selector .dropdown-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 15px;
-    cursor: pointer;
-    color: #333;
-    font-weight: 500;
-    transition: background 0.2s ease;
-    text-decoration: none;
-}
-
-.language-selector .dropdown-item:hover {
-    background: #f8f9fa;
-    color: #333;
-}
-
-.language-selector .dropdown-item img {
-    width: 24px;
-    height: 18px;
-    object-fit: cover;
-    border-radius: 3px;
-}
-
-/* Mejorar el botón principal */
-.lang-btn.dropdown-toggle::after {
-    margin-left: 2px;
-    color: white;
-
-}
-
-.lang-btn.dropdown-toggle {
-    display: flex;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    padding: 2px 8px;
-    font-size: 11px;
-    border-radius: 8px;
-    height: 30px;
-
-}
-/* ============================================================
-   OCULTAR/MOSTRAR LOGIN SEGÚN DISPOSITIVO
-============================================================ */
-/* Ocultar ícono de escritorio en móvil */
-@media (max-width: 940px) {
-    .nav-actions > a.icon-pill {
-        display: none !important;
+    /* ===== ESTILOS PARA DROPDOWN DE IDIOMAS ===== */
+    .language-selector.dropdown {
+        position: relative;
     }
-}
 
-/* Mostrar opción en menú móvil SOLO en móvil */
-.mobile-login-item {
-    display: none;
-}
+    .language-selector .dropdown-menu {
+        min-width: 100px;
+        background: white;
+        border: none;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        border-radius: 10px;
+        padding: 8px 0;
+        margin-top: 5px;
+    }
 
-@media (max-width: 940px) {
+    .language-selector .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 15px;
+        cursor: pointer;
+        color: #333;
+        font-weight: 500;
+        transition: background 0.2s ease;
+        text-decoration: none;
+    }
+
+    .language-selector .dropdown-item:hover {
+        background: #f8f9fa;
+        color: #333;
+    }
+
+    .language-selector .dropdown-item img {
+        width: 24px;
+        height: 18px;
+        object-fit: cover;
+        border-radius: 3px;
+    }
+
+    /* Mejorar el botón principal */
+    .lang-btn.dropdown-toggle::after {
+        margin-left: 2px;
+        color: white;
+    }
+
+    .lang-btn.dropdown-toggle {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        padding: 2px 8px;
+        font-size: 11px;
+        border-radius: 8px;
+        height: 30px;
+    }
+
+    /* ============================================================
+       OCULTAR/MOSTRAR LOGIN SEGÚN DISPOSITIVO
+    ============================================================ */
+    /* Ocultar ícono de escritorio en móvil */
+    @media (max-width: 940px) {
+        .nav-actions > a.icon-pill {
+            display: none !important;
+        }
+    }
+
+    /* Mostrar opción en menú móvil SOLO en móvil */
     .mobile-login-item {
-        display: block;
+        display: none;
     }
-}
+
+    @media (max-width: 940px) {
+        .mobile-login-item {
+            display: block;
+        }
+    }
   </style>
 </head>
 
 <body>
-@php
+<!-- Google Tag Manager (noscript) -->
+<noscript>
+  <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PB88VSKW"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe>
+</noscript>
+<!-- End Google Tag Manager (noscript) -->
 
+@php
     if (session()->has('locale')) {
         App::setLocale(session('locale'));
     }
 @endphp
-
 
 <!-- 🔹 BACKDROP AGREGADO  -->
 <div class="nav-backdrop"></div>
@@ -275,29 +289,30 @@ body.nav-open .language-selector {
       <li><a href="{{ route('rutaContacto') }}" class="{{ request()->routeIs('rutaContacto') ? 'active' : '' }}">{{ __('Contact') }}</a></li>
       <li><a href="{{ route('rutaPoliticas') }}" class="{{ request()->routeIs('rutaPoliticas') ? 'active' : '' }}">{{ __('Policies') }}</a></li>
       <li><a href="{{ route('rutaFAQ') }}" class="{{ request()->routeIs('rutaFAQ') ? 'active' : '' }}">{{ __('FAQ') }}</a></li>
-      <li class="mobile-login-item"><a href="{{ route('auth.show') }}"></i> {{ __('Sign in') }}</a></li>
+      <li class="mobile-login-item"><a href="{{ route('auth.show') }}">{{ __('Sign in') }}</a></li>
     </ul>
 
     <div class="nav-actions">
-    <div class="language-selector dropdown">
-    <button class="lang-btn dropdown-toggle" data-bs-toggle="dropdown">
-        <img id="currentFlag" src="{{ app()->getLocale() == 'en' ? 'https://flagcdn.com/w40/us.png' : 'https://flagcdn.com/w40/mx.png' }}">
-        <span id="currentLang">{{ strtoupper(app()->getLocale()) }}</span>
-    </button>
+      <div class="language-selector dropdown">
+        <button class="lang-btn dropdown-toggle" data-bs-toggle="dropdown">
+          <img id="currentFlag" src="{{ app()->getLocale() == 'en' ? 'https://flagcdn.com/w40/us.png' : 'https://flagcdn.com/w40/mx.png' }}">
+          <span id="currentLang">{{ strtoupper(app()->getLocale()) }}</span>
+        </button>
 
-    <ul class="dropdown-menu dropdown-menu-end shadow">
-        <li>
+        <ul class="dropdown-menu dropdown-menu-end shadow">
+          <li>
             <a class="dropdown-item" href="/lang/en">
-                <img src="https://flagcdn.com/w40/us.png"> ENG
+              <img src="https://flagcdn.com/w40/us.png"> ENG
             </a>
-        </li>
-        <li>
+          </li>
+          <li>
             <a class="dropdown-item" href="/lang/es">
-                <img src="https://flagcdn.com/w40/mx.png"> ESP
+              <img src="https://flagcdn.com/w40/mx.png"> ESP
             </a>
-        </li>
-    </ul>
-</div>
+          </li>
+        </ul>
+      </div>
+
       @if (session()->has('id_usuario'))
         <div class="dropdown">
           <a href="#" class="icon-pill dropdown-toggle" data-bs-toggle="dropdown">
@@ -490,9 +505,7 @@ body.nav-open .language-selector {
 @yield('js-vistaLogin')
 @yield('js-vistaPerfil')
 @yield('js-visorReservacion')
-<script>
 
-</script>
 <script>
   // iOS: bloquear zoom
   (function(){
@@ -523,12 +536,12 @@ body.nav-open .language-selector {
   // Actualizar año en footer
   document.getElementById('year').textContent = new Date().getFullYear();
 </script>
+
 <script src="{{ asset('js/sucursalesTraducciones.js') }}"></script>
 
 <script>
 /* ============================================================
    TRADUCCIÓN DE SELECT2 - GLOBAL PARA TODOS LOS FORMULARIOS
-
 ============================================================ */
 (function() {
     "use strict";
@@ -569,7 +582,7 @@ body.nav-open .language-selector {
     }
 
     function traducirTodosLosSelects() {
-        // TODOS los IDs  DE  LOS formularios
+        // TODOS los IDs DE LOS formularios
         const posiblesIds = [
             // Home (welcome)
             'pickupPlace',
