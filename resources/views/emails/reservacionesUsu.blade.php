@@ -1101,9 +1101,24 @@
 <tr>
 
   <!-- IMAGEN IZQUIERDA -->
-  <td width="200" style="vertical-align:middle;">
-    <img src="{{ $imgCategoria }}" style="width:200px; border-radius:12px;">
-  </td>
+ <td width="200" style="vertical-align:middle; padding-right: 20px;">
+  @php
+    //  Se limpia variable
+    $imgLimpia = str_replace(
+        ['https://viajerocar-production.up.railway.app', 'http://localhost', 'localhost'],
+        '',
+        $imgCategoria
+    );
+
+    //  dominio activo
+    $urlFinalCategoria = 'https://www.viajerocarental.com/' . ltrim($imgLimpia, '/');
+  @endphp
+
+  <img src="{{ $urlFinalCategoria }}"
+       alt="Categoría"
+       width="200"
+       style="width:200px; max-width:200px; display:block; border-radius:12px; border:0;">
+</td>
 
   <!-- INFO -->
   <td style="padding-left:20px;">
@@ -1550,36 +1565,35 @@
 
        <div class="footer-social" style="display:flex; align-items:center; gap:12px;">
 
-  <a href="https://wa.me/524423032668">
-    <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png"
-         alt="WhatsApp"
-         style="width:22px; height:22px; object-fit:contain;">
-  </a>
+      <a href="https://wa.me/524423032668">
+         <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png"
+              alt="WhatsApp"
+              style="width:22px; height:22px; object-fit:contain;">
+      </a>
 
-  <a href="https://www.facebook.com/viajerocarental">
-    <img src="https://viajerocar-production.up.railway.app/img/facebook.png"
-         alt="Facebook"
-         style="width:22px; height:22px; object-fit:contain;">
-  </a>
+      <a href="https://www.facebook.com/viajerocarental">
+         <img src="https://www.viajerocarental.com/img/facebook.png"
+               alt="Facebook"
+               style="width:22px; height:22px; object-fit:contain;">
+     </a>
 
-  <a href="https://www.instagram.com/viajerocarental">
-    <img src="https://viajerocar-production.up.railway.app/img/instagram.png"
-         alt="Instagram"
-         style="width:22px; height:22px; object-fit:contain;">
-  </a>
+     <a href="https://www.instagram.com/viajerocarental">
+        <img src="https://www.viajerocarental.com/img/instagram.png"
+             alt="Instagram"
+             style="width:22px; height:22px; object-fit:contain;">
+     </a>
 
-  <a href="https://www.tiktok.com/@viajerocarental">
-    <img src="https://viajerocar-production.up.railway.app/img/tiktok.png"
-         alt="TikTok"
-         style="width:22px; height:22px; object-fit:contain;">
-  </a>
+     <a href="https://www.tiktok.com/@viajerocarental">
+        <img src="https://www.viajerocarental.com/img/tiktok.png"
+             alt="TikTok"
+            style="width:22px; height:22px; object-fit:contain;">
+     </a>
 
-
-        <div class="footer-logo-word" style="margin-left: auto; flex-shrink: 0;">
-          <img src="https://viajerocar-production.up.railway.app/img/LogoR.png" width="140" style="display: block; width: 140px; height: auto; border: 0;">
-        </div>
-       </div>
-       </div>
+       <div class="footer-logo-word" style="margin-left: auto; flex-shrink: 0;">
+              <img src="https://www.viajerocarental.com/img/LogoR.png" width="140" style="display: block; width: 140px; height: auto; border: 0;" alt="ViajeroCar Logo">
+      </div>
+     </div>
+   </div>
 
       <div class="footer-sep"></div>
 
@@ -1629,13 +1643,13 @@
       </div>
 
     <div class="footer-pay" style="padding-top:10px;">
-        <img src="https://viajerocar-production.up.railway.app/img/visa.jpg" alt="Visa" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
-        <img src="https://viajerocar-production.up.railway.app/img/mastercard.png" alt="Mastercard" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
-        <img src="https://viajerocar-production.up.railway.app/img/america.png" alt="American Express" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
-        <img src="https://viajerocar-production.up.railway.app/img/oxxo.png" alt="OXXO" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
-        <img src="https://viajerocar-production.up.railway.app/img/pago.png" alt="Mercado Pago" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
-        <img src="https://viajerocar-production.up.railway.app/img/paypal.png" alt="PayPal" width="40" style="display:inline-block; width:40px; height:auto; border:0;">
-     </div>
+         <img src="https://www.viajerocarental.com/img/visa.jpg" alt="Visa" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
+         <img src="https://www.viajerocarental.com/img/mastercard.png" alt="Mastercard" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
+         <img src="https://www.viajerocarental.com/img/america.png" alt="American Express" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
+         <img src="https://www.viajerocarental.com/img/oxxo.png" alt="OXXO" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
+         <img src="https://www.viajerocarental.com/img/pago.png" alt="Mercado Pago" width="40" style="display:inline-block; width:40px; height:auto; border:0; margin-right:8px;">
+         <img src="https://www.viajerocarental.com/img/paypal.png" alt="PayPal" width="40" style="display:inline-block; width:40px; height:auto; border:0;">
+    </div>
     </div>
   </div>
 
