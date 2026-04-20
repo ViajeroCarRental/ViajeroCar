@@ -1278,7 +1278,7 @@
                                     </div>
                                 </div>
 
-                                <h4 class="sum-subtitle" style="margin-top:14px;">{{ __('Your vehicle') }}</h4>
+                                <h4 class="sum-subtitle" id="tuAutoSection" style="margin-top:14px;">{{ __('Your vehicle') }}</h4>
                                 <div class="sum-car" style="margin-top:10px; display:flex; gap:20px; align-items:center;">
                                     <div class="sum-car-img">
                                         <img src="{{ $categoriaImg ?? asset('img/Logotipo.png') }}" alt="{{ __('Car') }}"
