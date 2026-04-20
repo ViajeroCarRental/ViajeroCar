@@ -1,28 +1,70 @@
 (function () {
   "use strict";
 
-  // ============================================================
-  // 🚨 FUNCIÓN DE ALERTA TOAST (IGUAL QUE COTIZACIONES)
-  // ============================================================
-  function mostrarToast(mensaje, tipo = 'warning') {
-    if (typeof alertify !== 'undefined') {
-      alertify.set('notifier', 'position', 'top-right');
+// ============================================================
+// 🚨 FUNCIÓN DE ALERTA CON SWEETALERT2 (CENTRADA - IGUAL COTIZACIONES)
+// ============================================================
+function mostrarToast(mensaje, tipo = 'warning') {
+    let iconColor = '#f59e0b';
+    let bgColor = '#fffbeb';
+    let borderColor = '#f59e0b';
 
-      switch(tipo) {
-        case 'warning':
-          alertify.warning(mensaje);
-          break;
-        case 'error':
-          alertify.error(mensaje);
-          break;
-        case 'success':
-          alertify.success(mensaje);
-          break;
-        default:
-          alertify.warning(mensaje);
-      }
+    if (tipo === 'error') {
+        iconColor = '#ef4444';
+        bgColor = '#fef2f2';
+        borderColor = '#ef4444';
+    } else if (tipo === 'success') {
+        iconColor = '#10b981';
+        bgColor = '#ecfdf5';
+        borderColor = '#10b981';
+    } else if (tipo === 'info') {
+        iconColor = '#3b82f6';
+        bgColor = '#eff6ff';
+        borderColor = '#3b82f6';
     }
-  }
+
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'center',
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+        },
+        customClass: {
+            popup: 'custom-toast-center'
+        }
+    });
+
+    if (!document.querySelector('#toast-center-style')) {
+        const style = document.createElement('style');
+        style.id = 'toast-center-style';
+        style.textContent = `
+            .custom-toast-center {
+                border-radius: 12px !important;
+                border-left: 4px solid ${borderColor} !important;
+                box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1) !important;
+                font-weight: 500 !important;
+                min-width: 300px !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    let icon = 'warning';
+    if (tipo === 'error') icon = 'error';
+    if (tipo === 'success') icon = 'success';
+    if (tipo === 'info') icon = 'info';
+
+    Toast.fire({
+        icon: icon,
+        title: mensaje,
+        background: bgColor,
+        iconColor: iconColor
+    });
+}
 
   // ============================================================
   // 📍 FUNCIONES DE VALIDACIÓN POR PASOS (IGUAL COTIZACIONES)
@@ -63,8 +105,6 @@
     return true;
   }
 function validarCliente() {
-    // ❌ ELIMINA ESTA LÍNEA: if (!validarCategoria()) return false;
-
     const nombre = document.getElementById("nombre_cliente")?.value?.trim();
     const apellidos = document.getElementById("apellidos_cliente")?.value?.trim();
     const email = document.getElementById("email_cliente")?.value?.trim();
@@ -96,7 +136,6 @@ function validarCliente() {
         return false;
     }
 
-    // Validar vuelo si es aeropuerto
     if (typeof isAirportSelected === 'function' && isAirportSelected()) {
         const vuelo = document.getElementById("no_vuelo")?.value?.trim();
         if (!vuelo) {
@@ -107,7 +146,6 @@ function validarCliente() {
 
     return true;
 }
-
 
 
   // ============================================================
@@ -787,6 +825,7 @@ function validarCliente() {
     const val = String(ui.value || "").trim();
     if (!val) { hid.value = ""; return; }
 
+    // Soporta dd/mm/aaaa
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
       const [d, m, y] = val.split("/").map(Number);
       const date = new Date(y, m - 1, d, 0, 0, 0);
@@ -794,13 +833,22 @@ function validarCliente() {
       return;
     }
 
+    // Soporta dd-mm-aaaa
+    if (/^\d{2}-\d{2}-\d{4}$/.test(val)) {
+      const [d, m, y] = val.split("-").map(Number);
+      const date = new Date(y, m - 1, d, 0, 0, 0);
+      hid.value = toISODate(date);
+      return;
+    }
+
+    // Soporta yyyy-mm-dd
     if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
       hid.value = val;
       return;
     }
 
     hid.value = "";
-  }
+}
 
   function syncTimeHiddenFromUI(uiId, hiddenId) {
     const ui = qs(uiId);
@@ -819,10 +867,17 @@ function validarCliente() {
     if (!fi || !ff) return 0;
 
     const parseDate = (val) => {
+      // dd/mm/aaaa
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
         const [d, m, y] = val.split("/").map(Number);
         return new Date(y, m - 1, d, 0, 0, 0);
       }
+      // dd-mm-aaaa
+      if (/^\d{2}-\d{2}-\d{4}$/.test(val)) {
+        const [d, m, y] = val.split("-").map(Number);
+        return new Date(y, m - 1, d, 0, 0, 0);
+      }
+      // yyyy-mm-dd
       if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return new Date(val + "T00:00:00");
       return new Date(val);
     };
@@ -831,7 +886,7 @@ function validarCliente() {
     const d2 = parseDate(ff);
     const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
     return Math.max(1, Number.isFinite(diff) ? diff : 0);
-  }
+}
 
   function repaintCategoriaModalEstimados() {
     const dias = Number(state.days || 0);
@@ -1351,13 +1406,13 @@ function validarCliente() {
     if (out) out.value = num ? `${lada}${num}` : "";
   }
 
-  function validateBeforeSubmit() {
+function validateBeforeSubmit() {
     const missing = [];
 
     const req = (id, label) => {
-      const el = qs(id);
-      const val = el ? String(el.value || "").trim() : "";
-      if (!val) missing.push(label);
+        const el = qs(id);
+        const val = el ? String(el.value || "").trim() : "";
+        if (!val) missing.push(label);
     };
 
     req("#sucursal_retiro", "Sucursal de retiro");
@@ -1377,39 +1432,34 @@ function validarCliente() {
     req("#pais", "País");
 
     if (isAirportSelected()) {
-      const vuelo = qs("#no_vuelo")?.value?.trim() || "";
-      if (!vuelo) missing.push("No. vuelo (Aeropuerto)");
+        const vuelo = qs("#no_vuelo")?.value?.trim() || "";
+        if (!vuelo) missing.push("No. vuelo (Aeropuerto)");
     }
 
     if (state.servicios.delivery) {
-      const els = getDeliveryEls();
-      if (els) {
-        const ub = String(els.ubicacion?.value || "");
-        if (!ub) missing.push("Delivery: seleccionar ubicación");
-        if (ub === "0") {
-          const km = Number(els.km?.value || 0);
-          if (!(km > 0)) missing.push("Delivery: kilómetros personalizados");
+        const els = getDeliveryEls();
+        if (els) {
+            const ub = String(els.ubicacion?.value || "");
+            if (!ub) missing.push("Delivery: seleccionar ubicación");
+            if (ub === "0") {
+                const km = Number(els.km?.value || 0);
+                if (!(km > 0)) missing.push("Delivery: kilómetros personalizados");
+            }
         }
-      }
     }
 
     if (missing.length > 0) {
-      if (missing.length === 1) {
-        alertify.set('notifier', 'position', 'top-right');
-        alertify.error('Te faltó completar: <b>' + missing[0] + '</b>');
-      } else {
-        let listaHtml = '<ul style="text-align: left; margin-left: 15px;">';
-        missing.forEach(campo => {
-          listaHtml += '<li>' + campo + '</li>';
-        });
-        listaHtml += '</ul>';
-        alertify.alert('Campos Incompletos', 'Por favor completa los siguientes campos:<br>' + listaHtml);
-      }
-      return false;
+        if (missing.length === 1) {
+            mostrarToast(`⚠️ Te faltó completar: ${missing[0]}`, 'warning');
+        } else {
+            mostrarToast(`⚠️ Faltan ${missing.length} campos por completar`, 'warning');
+            console.log("Campos faltantes:", missing);
+        }
+        return false;
     }
 
     return true;
-  }
+}
 
   // ============================================================
   // 1️⃣8️⃣ FLATPICKR (CALENDARIO)
@@ -1457,7 +1507,7 @@ function validarCliente() {
 
     window.flatpickr("#fecha_inicio_ui", {
       locale: "es",
-      dateFormat: "Y-m-d",
+      dateFormat: "d-m-Y",
       altInput: true,
       altFormat: "d-M-y",
       allowInput: false,
@@ -1496,7 +1546,7 @@ function validarCliente() {
 
     window.flatpickr("#fecha_fin_ui", {
       locale: "es",
-      dateFormat: "Y-m-d",
+      dateFormat: "d-m-Y",
       altInput: true,
       altFormat: "d-M-y",
       allowInput: false,
@@ -1536,14 +1586,13 @@ function validarCliente() {
         if (ini && fin && fin < ini) {
           qs("#fecha_fin").value = "";
           qs("#fecha_fin_ui").value = "";
-          alertify.set('notifier', 'position', 'top-right');
-          alertify.warning("La fecha de devolución no puede ser antes de la fecha de salida.");
+          // ✅ CORREGIDO: usar mostrarToast en lugar de alertify
+          mostrarToast("⚠️ La fecha de devolución no puede ser antes de la fecha de salida", 'warning');
         }
         syncDays();
       }
     });
   }
-
   // ============================================================
   // 1️⃣9️⃣ SELECTOR DE HORA CON <SELECT> (desde cotización)
   // ============================================================
@@ -1649,19 +1698,31 @@ function validarCliente() {
     });
   }
 
-  // ============================================================
-  // 2️⃣0️⃣ SUBMIT POR AJAX (CON VALIDACIÓN DE CLIENTE)
-  // ============================================================
+  /* =========================
+     SUBMIT POR AJAX (CORREGIDO)
+  ========================= */
   async function submitReservaAjax(e) {
     e.preventDefault();
 
-    // 🚨 VALIDACIÓN: Primero cliente completo
-    if (!validarCliente()) {
-      return false;
-    }
-
     const form = qs("#formReserva");
     if (!form) return;
+
+    // 🔥 VALIDACIÓN: Verificar que haya una categoría seleccionada
+    if (!state.categoria) {
+        mostrarToast('⚠️ Debes seleccionar una categoría de vehículo', 'warning');
+        return;
+    }
+
+    // 🔥 Asegurar que el ID de categoría se envíe correctamente
+    const catInput = qs("#categoria_id");
+    if (catInput) {
+        catInput.value = state.categoria.id;
+        catInput.name = "id_categoria";
+    }
+
+    // 🔥 Verificación de que el campo está listo (para depuración)
+    console.log("📦 Categoría a enviar:", state.categoria.id);
+    console.log("📦 Input categoria_id value:", qs("#categoria_id")?.value);
 
     ensureCategoriaHiddenFix();
     ensureTotalsHidden();
@@ -1679,6 +1740,7 @@ function validarCliente() {
     repaintCategoriaModalEstimados();
     refreshSummary();
 
+    // ✅ delivery: si está activo recalcula
     if (state.servicios.delivery) {
       const els = getDeliveryEls();
       if (els) computeDelivery(els);
@@ -1695,6 +1757,7 @@ function validarCliente() {
     syncAddonsHidden();
     syncTotalsHidden();
 
+    // ✅ arma teléfono final
     syncTelefonoFinal();
 
     if (!validateBeforeSubmit()) return;
@@ -1714,17 +1777,23 @@ function validarCliente() {
       const action = form.getAttribute("action");
       const fd = new FormData(form);
 
+      // 🔥 Asegurar que id_categoria esté en FormData
       if (state.categoria) {
+        fd.set("id_categoria", String(state.categoria.id));
         const precioFinal = parseFloat(state.categoria.precio_dia || 0);
-        fd.set("tarifa_base", precioFinal);
-        fd.set("tarifa_modificada", precioFinal);
+        fd.set("tarifa_base", String(precioFinal));
+        fd.set("tarifa_modificada", String(precioFinal));
       }
 
+      // asegurar teléfono final
       fd.set("telefono_cliente", qs("#telefono_cliente")?.value || "");
+
+      // ✅ asegurar servicios
       fd.set("svc_dropoff", state.servicios.dropoff ? "1" : "0");
       fd.set("svc_delivery", state.servicios.delivery ? "1" : "0");
       fd.set("svc_gasolina", state.servicios.gasolina ? "1" : "0");
 
+      // ✅ delivery (backend)
       if (state.servicios.delivery) {
         const els = getDeliveryEls();
         if (els) computeDelivery(els);
@@ -1746,6 +1815,9 @@ function validarCliente() {
         fd.set("delivery_precio_km", "0");
       }
 
+      // 🔥 Depuración: ver qué se envía
+      console.log("📤 Enviando FormData con id_categoria:", fd.get("id_categoria"));
+
       const res = await fetch(action, {
         method: "POST",
         headers: {
@@ -1757,9 +1829,26 @@ function validarCliente() {
 
       if (res.status === 422) {
         const data = await res.json().catch(() => null);
-        const first = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
-        alertify.set('notifier', 'position', 'top-right');
-        alertify.error(first || "Revisa los campos: falta información o hay datos inválidos.");
+        const errors = data?.errors || {};
+
+        // 🔥 Mostrar errores específicos
+        let errorMsg = "Revisa los campos: falta información o hay datos inválidos.";
+        if (errors.id_categoria) {
+            errorMsg = "❌ Categoría: " + errors.id_categoria[0];
+        } else if (errors.sucursal_retiro) {
+            errorMsg = "❌ Sucursal de retiro: " + errors.sucursal_retiro[0];
+        } else if (errors.sucursal_entrega) {
+            errorMsg = "❌ Sucursal de entrega: " + errors.sucursal_entrega[0];
+        } else if (errors.fecha_inicio) {
+            errorMsg = "❌ Fecha de salida: " + errors.fecha_inicio[0];
+        } else if (errors.fecha_fin) {
+            errorMsg = "❌ Fecha de llegada: " + errors.fecha_fin[0];
+        } else {
+            const first = Object.values(errors)[0]?.[0];
+            if (first) errorMsg = first;
+        }
+
+        mostrarToast(errorMsg, 'error');
         setLoading(false);
         return;
       }
@@ -1767,8 +1856,7 @@ function validarCliente() {
       if (!res.ok) {
         const txt = await res.text().catch(() => "");
         console.error("Error al registrar:", res.status, txt);
-        alertify.set('notifier', 'position', 'top-right');
-        alertify.error("Ocurrió un error al registrar la reservación. Revisa la consola.");
+        mostrarToast("Ocurrió un error al registrar la reservación. Revisa la consola.", 'error');
         setLoading(false);
         return;
       }
@@ -1784,9 +1872,23 @@ function validarCliente() {
       if (confirmPop && !confirmPop.dataset.bound) {
         confirmPop.dataset.bound = "1";
 
-        qs("#confirmOk")?.addEventListener("click", redirectToActivas);
-        qs("#confirmClose")?.addEventListener("click", redirectToActivas);
+        // Limpiar y reasignar eventos del botón "Ir a Bookings"
+        const confirmOk = qs("#confirmOk");
+        if (confirmOk) {
+            const newConfirmOk = confirmOk.cloneNode(true);
+            confirmOk.parentNode.replaceChild(newConfirmOk, confirmOk);
+            newConfirmOk.addEventListener("click", redirectToActivas);
+        }
 
+        // Limpiar y reasignar eventos del botón "NO" o cerrar
+        const confirmClose = qs("#confirmClose");
+        if (confirmClose) {
+            const newConfirmClose = confirmClose.cloneNode(true);
+            confirmClose.parentNode.replaceChild(newConfirmClose, confirmClose);
+            newConfirmClose.addEventListener("click", redirectToActivas);
+        }
+
+        // Clic fuera del modal
         confirmPop.addEventListener("click", (ev) => {
           if (ev.target === confirmPop) redirectToActivas();
         });
@@ -1797,7 +1899,7 @@ function validarCliente() {
 
     } catch (err) {
       console.error(err);
-      alertify.error("Error de conexión. Intenta de nuevo.");
+      mostrarToast("Error de conexión. Intenta de nuevo.", 'error');
     } finally {
       setLoading(false);
     }
@@ -2381,15 +2483,14 @@ function validarCliente() {
       toggleIndividualFromCard(card);
     });
 
-    // Addons modal (CON VALIDACIÓN)
-    const addPop = qs("#addonsPop");
-    qs("#btnAddons")?.addEventListener("click", async () => {
-      // ✅ VALIDACIÓN: Verificar que haya categoría seleccionada
-      if (!validarCategoria()) return;
+   // Addons modal (SIN VALIDACIÓN - SOLO ABRE)
+const addPop = qs("#addonsPop");
+qs("#btnAddons")?.addEventListener("click", async () => {
+  // ✅ SIN VALIDACIÓN - Solo abre el modal de adicionales
+  openPop(addPop);
+  await loadAddons();
+});
 
-      openPop(addPop);
-      await loadAddons();
-    });
     qs("#addonsClose")?.addEventListener("click", () => closePop(addPop));
     qs("#addonsCancel")?.addEventListener("click", () => closePop(addPop));
     qs("#addonsApply")?.addEventListener("click", () => {
@@ -2406,18 +2507,17 @@ function validarCliente() {
       refreshSummary();
     });
 
-    // Resumen modal (CON VALIDACIÓN)
-    const resPop = qs("#resumenPop");
-    qs("#btnResumen")?.addEventListener("click", () => {
-      // ✅ VALIDACIÓN: Verificar que cliente esté completo
-      if (!validarCliente()) return;
-
-      syncDays();
-      repaintCategoriaModalEstimados();
-      refreshProteccionUIHeader();
-      refreshSummary();
-      openPop(resPop);
-    });
+  // Resumen modal (SIN VALIDACIÓN - SOLO ABRE)
+const resPop = qs("#resumenPop");
+qs("#btnResumen")?.addEventListener("click", () => {
+  // ✅ SIN VALIDACIÓN - Solo abre el resumen
+  syncDays();
+  repaintCategoriaModalEstimados();
+  refreshProteccionUIHeader();
+  refreshSummary();
+  openPop(resPop);
+});
+state
     qs("#resumenClose")?.addEventListener("click", () => closePop(resPop));
     qs("#resumenOk")?.addEventListener("click", () => closePop(resPop));
 

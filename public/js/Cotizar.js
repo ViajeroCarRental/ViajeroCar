@@ -1,5 +1,5 @@
 /* ==========================================================
-   🚗 COTIZACIONES - SISTEMA COMPLETO
+   🚗 COTIZACIONES - SISTEMA COMPLETO CON ALERTAS
    ========================================================= */
 
 /* ==========================================================
@@ -51,43 +51,79 @@ const state = {
   tarifaEditada: false
 };
 
+// Estado de servicios
+const serviciosState = {
+  dropoff: { active: false, total: 0, km: 0, ubicacion: "", direccion: "" },
+  delivery: { active: false, total: 0, km: 0, ubicacion: "", direccion: "" },
+  gasolina: { active: false, total: 0, litros: 0, precioLitro: 24 }
+};
+
+// Estado de protecciones individuales
+const individualesState = new Map();
+
 /* ==========================================================
-   2.5️⃣ FUNCIÓN DE ALERTA PEQUEÑA (TOAST)
+   2.5️⃣ FUNCIÓN DE ALERTA CON SWEETALERT2 (CENTRADA)
 ========================================================== */
 function mostrarToast(mensaje, tipo = 'warning') {
-    if (typeof alertify !== 'undefined') {
-        switch(tipo) {
-            case 'warning':
-                alertify.warning(mensaje);
-                break;
-            case 'error':
-                alertify.error(mensaje);
-                break;
-            case 'success':
-                alertify.success(mensaje);
-                break;
-            default:
-                alertify.warning(mensaje);
-        }
-    } else {
-        const toast = document.createElement('div');
-        toast.textContent = mensaje;
-        toast.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: ${tipo === 'warning' ? '#f59e0b' : tipo === 'error' ? '#ef4444' : '#10b981'};
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 13px;
-            z-index: 10000;
-            animation: slideInRight 0.3s ease;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        `;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
+    let iconColor = '#f59e0b';
+    let bgColor = '#fffbeb';
+    let borderColor = '#f59e0b';
+
+    if (tipo === 'error') {
+        iconColor = '#ef4444';
+        bgColor = '#fef2f2';
+        borderColor = '#ef4444';
+    } else if (tipo === 'success') {
+        iconColor = '#10b981';
+        bgColor = '#ecfdf5';
+        borderColor = '#10b981';
+    } else if (tipo === 'info') {
+        iconColor = '#3b82f6';
+        bgColor = '#eff6ff';
+        borderColor = '#3b82f6';
     }
+
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'center',
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
+        },
+        customClass: {
+            popup: 'custom-toast-center'
+        }
+    });
+
+    if (!document.querySelector('#toast-center-style')) {
+        const style = document.createElement('style');
+        style.id = 'toast-center-style';
+        style.textContent = `
+            .custom-toast-center {
+                border-radius: 12px !important;
+                border-left: 4px solid ${borderColor} !important;
+                box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1) !important;
+                font-weight: 500 !important;
+                min-width: 300px !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    let icon = 'warning';
+    if (tipo === 'error') icon = 'error';
+    if (tipo === 'success') icon = 'success';
+    if (tipo === 'info') icon = 'info';
+
+    Toast.fire({
+        icon: icon,
+        title: mensaje,
+        background: bgColor,
+        iconColor: iconColor
+    });
 }
 
 /* ==========================================================
@@ -330,7 +366,6 @@ function initFlatpickrModal() {
 
     selH.addEventListener("change", sync);
 
-    // VALIDACIÓN: Mostrar toast si intenta abrir el select sin ubicación
     selH.addEventListener("click", function(e) {
       const sucRetiro = document.getElementById("sucursal_retiro")?.value;
       const sucEntrega = document.getElementById("sucursal_entrega")?.value;
@@ -404,7 +439,6 @@ function calcularDias() {
   return days;
 }
 
-
 /* ==========================================================
    6️⃣ CATEGORÍA
 ========================================================== */
@@ -426,6 +460,7 @@ function setCategoria(cat) {
     if (rem) rem.style.display = "none";
     if (mini) mini.style.display = "none";
     actualizarTotal();
+    mostrarToast('🚗 Categoría eliminada', 'warning');
     return;
   }
 
@@ -491,6 +526,7 @@ async function cargarCategorias() {
 
     if (!categorias.length) {
       grid.innerHTML = '<div class="loading">No hay categorías disponibles.</div>';
+      mostrarToast('⚠️ No hay categorías disponibles', 'warning');
       return;
     }
 
@@ -574,11 +610,12 @@ async function cargarCategorias() {
   } catch (err) {
     console.error("Error:", err);
     grid.innerHTML = '<div class="loading">Error al cargar categorías.</div>';
+    mostrarToast('❌ Error al cargar las categorías', 'error');
   }
 }
 
 /* ==========================================================
-   8️⃣ PROTECCIONES
+   8️⃣ PROTECCIONES (CON ALERTAS Y VALIDACIÓN DE CATEGORÍA)
 ========================================================== */
 async function cargarProtecciones() {
   const list = document.getElementById("proteList");
@@ -592,6 +629,7 @@ async function cargarProtecciones() {
 
     if (!data || !data.length) {
       list.innerHTML = '<div class="loading">No hay protecciones disponibles.</div>';
+      mostrarToast('⚠️ No hay paquetes de protección disponibles', 'warning');
       return;
     }
 
@@ -646,6 +684,7 @@ async function cargarProtecciones() {
   } catch (err) {
     console.error("Error cargando protecciones:", err);
     list.innerHTML = '<div class="loading">Error al cargar datos.</div>';
+    mostrarToast('❌ Error al cargar las protecciones', 'error');
   }
 }
 
@@ -658,11 +697,13 @@ function initDeclineLogic() {
   if (!btnDecline) return;
 
   btnDecline.onclick = () => {
+    mostrarToast('⚠️ Revisa los términos antes de declinar las protecciones', 'warning');
     if (modalDecline) modalDecline.style.display = "flex";
   };
 
   if (btnCancelar) {
     btnCancelar.onclick = () => {
+      mostrarToast('🔓 Has cancelado la declinación de protecciones', 'info');
       if (modalDecline) modalDecline.style.display = "none";
     };
   }
@@ -688,6 +729,14 @@ function initDeclineLogic() {
 
 function setProteccion(p) {
   if (typeof state === 'undefined') window.state = {};
+
+  // Si seleccionamos un paquete, limpiar individuales
+  if (p && p.id !== "decline_0") {
+    individualesState.clear();
+    syncIndividualesHiddenCotizacion();
+    repaintIndividualesUICotizacion();
+  }
+
   state.proteccion = p;
 
   const hid = document.getElementById("proteccion_id");
@@ -702,6 +751,7 @@ function setProteccion(p) {
     if (sub) sub.textContent = "Costo se refleja en el resumen.";
     if (rem) rem.style.display = "none";
     if (typeof actualizarTotal === 'function') actualizarTotal();
+    mostrarToast('🔓 Protección eliminada', 'warning');
     return;
   }
 
@@ -714,6 +764,10 @@ function setProteccion(p) {
 
   if (rem) rem.style.display = "";
   if (typeof actualizarTotal === 'function') actualizarTotal();
+
+  if (p.nombre === "DECLINE PROTECTIONS") {
+    mostrarToast('⚠️ Has declinado las protecciones. Eres responsable por daños.', 'warning');
+  }
 }
 
 document.addEventListener('click', (e) => {
@@ -850,7 +904,111 @@ function calcExtrasSubtotal() {
 }
 
 /* ==========================================================
-   1️⃣0️⃣ TOTALES Y RESUMEN
+   1️⃣0️⃣ PROTECCIONES INDIVIDUALES (ACTUALIZADO PARA NUEVAS CLASES)
+========================================================== */
+function toggleIndividualFromCardCotizacion(card) {
+  if (!card) return;
+
+  if (state.proteccion) setProteccion(null);
+
+  const id = String(card.dataset.id || "");
+  const precio = Number(card.dataset.precio || 0);
+
+  // ACTUALIZADO: Ahora usa .ins-pack-title y .ins-pack-bullet
+  const nombre = card.querySelector(".ins-pack-title")?.textContent?.trim() ||
+                 card.querySelector("h4")?.textContent?.trim() || "Seguro individual";
+
+  // Obtener descripción de los beneficios
+  const beneficios = Array.from(card.querySelectorAll(".ins-pack-bullet"))
+    .map(b => b.textContent?.trim().replace(/^•\s*/, ""))
+    .filter(t => t);
+  const desc = beneficios.join(". ") || "";
+
+  const exists = individualesState.has(id);
+  if (exists) individualesState.delete(id);
+  else individualesState.set(id, { id, nombre, desc, precio, charge: "por_dia" });
+
+  repaintIndividualesUICotizacion();
+  actualizarTotal();
+  refreshProteccionUIHeaderCotizacion();
+  syncIndividualesHiddenCotizacion();
+}
+
+function repaintIndividualesUICotizacion() {
+  // ACTUALIZADO: Ahora busca .ins-card-pack
+  document.querySelectorAll(".ins-card-pack").forEach((card) => {
+    const id = String(card.dataset.id || "");
+    const on = individualesState.has(id);
+    card.classList.toggle("is-selected", on);
+  });
+}
+
+function refreshProteccionUIHeaderCotizacion() {
+  const txt = document.getElementById("proteSelTxt");
+  const sub = document.getElementById("proteSelSub");
+  const rem = document.getElementById("proteRemove");
+
+  const inds = Array.from(individualesState.values());
+  if (state.proteccion) return;
+
+  if (!inds.length) {
+    if (txt) txt.textContent = "— Ninguna protección —";
+    if (sub) sub.textContent = "Costo se refleja en el resumen.";
+    if (rem) rem.style.display = "none";
+    return;
+  }
+
+  if (rem) rem.style.display = "";
+  if (txt) txt.textContent = `🧩 ${inds.length} individual(es)`;
+  const subTot = calcIndividualesSubtotalCotizacion();
+  if (sub) sub.textContent = `Estimado individuales: ${money(subTot)} (${state.days || 0} día(s))`;
+}
+
+function calcIndividualesSubtotalCotizacion() {
+  const days = Number(state.days || 0);
+  let sum = 0;
+  individualesState.forEach((it) => {
+    const price = Number(it.precio || 0);
+    sum += price * days;
+  });
+  return sum;
+}
+
+function syncIndividualesHiddenCotizacion() {
+  const wrap = document.getElementById("individualesHidden");
+  if (!wrap) return;
+
+  wrap.innerHTML = "";
+  let i = 0;
+  const items = Array.from(individualesState.values());
+  items.forEach((it) => {
+    const fields = [
+      ["id", it.id],
+      ["precio", Number(it.precio || 0)],
+      ["nombre", it.nombre || ""],
+      ["descripcion", it.desc || ""],
+      ["charge", "por_dia"],
+    ];
+    fields.forEach(([k, v]) => {
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = `individualesSeleccionados[${i}][${k}]`;
+      input.value = String(v ?? "");
+      wrap.appendChild(input);
+    });
+    i++;
+  });
+}
+
+function clearIndividualesCotizacion() {
+  individualesState.clear();
+  repaintIndividualesUICotizacion();
+  refreshProteccionUIHeaderCotizacion();
+  syncIndividualesHiddenCotizacion();
+}
+
+/* ==========================================================
+   1️⃣1️⃣ TOTALES Y RESUMEN
 ========================================================== */
 function actualizarTotal() {
   const days = state.days;
@@ -858,11 +1016,17 @@ function actualizarTotal() {
   const baseTotal = baseDia * days;
 
   const protPrice = state.proteccion ? Number(state.proteccion.precio || 0) : 0;
-  const protTotal = protPrice * days;
+  const protTotal = state.proteccion ? protPrice * days : 0;
 
+  const individualesTotal = !state.proteccion ? calcIndividualesSubtotalCotizacion() : 0;
   const extrasTotal = calcExtrasSubtotal();
 
-  const subtotal = baseTotal + protTotal + extrasTotal;
+  const dropoffTotal = serviciosState.dropoff.active ? serviciosState.dropoff.total : 0;
+  const deliveryTotal = serviciosState.delivery.active ? serviciosState.delivery.total : 0;
+  const gasolinaTotal = serviciosState.gasolina.active ? serviciosState.gasolina.total : 0;
+  const serviciosTotal = dropoffTotal + deliveryTotal + gasolinaTotal;
+
+  const subtotal = baseTotal + protTotal + individualesTotal + extrasTotal + serviciosTotal;
   const iva = subtotal * 0.16;
   const total = subtotal + iva;
 
@@ -881,7 +1045,18 @@ function actualizarTotal() {
 
   if (resBaseDia) resBaseDia.innerHTML = state.categoria ? `${money(baseDia)} / día` : "—";
   if (resBaseTotal) resBaseTotal.textContent = state.categoria ? money(baseTotal) : "—";
-  if (resProte) resProte.textContent = state.proteccion ? `${state.proteccion.nombre} (${money(protPrice)}/día)` : "—";
+
+  if (state.proteccion) {
+    resProte.textContent = `${state.proteccion.nombre} (${money(protPrice)}/día)`;
+  } else {
+    const inds = Array.from(individualesState.values());
+    if (!inds.length) resProte.textContent = "—";
+    else {
+      const preview = inds.slice(0, 3).map(x => x.nombre).join(", ");
+      const rest = inds.length > 3 ? ` +${inds.length - 3} más` : "";
+      resProte.textContent = `🧩 ${preview}${rest}`;
+    }
+  }
 
   const items = Array.from(state.addons.values()).filter(x => Number(x.qty || 0) > 0);
   if (resAdds) resAdds.textContent = items.length ? items.map(x => `${x.nombre} ×${x.qty}`).join(", ") : "—";
@@ -922,18 +1097,64 @@ function actualizarResumenViaje() {
   if (resFechaFin) resFechaFin.textContent = fechaFinUi?.value || "—";
   if (resHoraFin) resHoraFin.textContent = horaEntregaUi?.value || "—";
   if (resDias) resDias.textContent = `${state.days || 0} día(s)`;
+
+  // Servicios en resumen
+  const serviciosList = [];
+  if (serviciosState.dropoff.active) {
+    serviciosList.push(`<i class='bx bx-flag' style="margin-right: 4px; vertical-align: middle; color: #6b7280;"></i> Drop Off: ${money(serviciosState.dropoff.total)}`);
+  }
+  if (serviciosState.delivery.active) {
+    serviciosList.push(`<i class='bx bxs-truck' style="margin-right: 4px; vertical-align: middle; color: #6b7280;"></i> Delivery: ${money(serviciosState.delivery.total)}`);
+  }
+  if (serviciosState.gasolina.active) {
+    serviciosList.push(`<i class='bx bx-gas-pump' style="margin-right: 4px; vertical-align: middle; color: #6b7280;"></i> Gasolina: ${money(serviciosState.gasolina.total)}`);
+  }
+
+  const resServicios = document.getElementById("resServicios");
+  if (resServicios) {
+    if (serviciosList.length) {
+      resServicios.innerHTML = serviciosList.join(' · ');
+    } else {
+      resServicios.innerHTML = '—';
+    }
+  }
 }
 
 /* ==========================================================
-   1️⃣1️⃣ ENVÍO DE COTIZACIÓN
+   1️⃣2️⃣ ENVÍO DE COTIZACIÓN
 ========================================================== */
 async function enviarCotizacion(data, accion) {
+  // Validación de fechas antes de enviar
+  const fechaInicio = document.getElementById("fecha_inicio")?.value;
+  const fechaFin = document.getElementById("fecha_fin")?.value;
+
+  if (!fechaInicio || !fechaFin) {
+    mostrarToast('⚠️ Completa las fechas de salida y llegada', 'warning');
+    return;
+  }
+
+  if (new Date(fechaFin) < new Date(fechaInicio)) {
+    mostrarToast('⚠️ La fecha de devolución no puede ser menor que la de salida', 'warning');
+    return;
+  }
+
+  const btn = accion.includes("confirmada")
+    ? document.getElementById("btnConfirmarCotizacion")
+    : document.getElementById("btnGuardarYEnviar");
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = accion.includes("confirmada")
+      ? '<i class="bx bx-loader-alt bx-spin"></i> Confirmando...'
+      : '<i class="bx bx-loader-alt bx-spin"></i> Guardando...';
+  }
+
   try {
     const res = await fetch("/admin/cotizaciones/guardar", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.content || '',
       },
       body: JSON.stringify(data),
     });
@@ -941,52 +1162,192 @@ async function enviarCotizacion(data, accion) {
     const result = await res.json();
 
     if (res.ok && result.success) {
-      alertify.success(`✅ Cotización ${accion} correctamente`);
+      mostrarToast(`✅ Cotización ${accion} correctamente`, 'success');
 
       if (accion.includes("confirmada")) {
-        setTimeout(() => (window.location.href = "/admin/reservaciones-activas"), 1500);
+        mostrarToast('🔄 Redirigiendo al módulo de reservaciones...', 'info');
+        setTimeout(() => {
+          window.location.href = "/admin/reservaciones-activas";
+        }, 1500);
       } else {
+        mostrarToast('📧 Cotización guardada y enviada al cliente', 'success');
+        limpiarFormularioCompleto();
         const confirmPop = document.getElementById("confirmPop");
         if (confirmPop) openPop(confirmPop);
-        setTimeout(() => window.location.reload(), 2000);
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       }
     } else {
-      alertify.error(`⚠️ Error al ${accion} cotización`);
+      mostrarToast(`⚠️ Error al ${accion} cotización: ${result.message || 'Error desconocido'}`, 'error');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = accion.includes("confirmada")
+          ? "✅ Confirmar y reservar"
+          : "💾 Guardar y enviar";
+      }
     }
   } catch (err) {
-    console.error(err);
-    alertify.error("Error de conexión con el servidor");
+    console.error("Error en envío:", err);
+    mostrarToast("❌ Error de conexión con el servidor", 'error');
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = accion.includes("confirmada")
+        ? "✅ Confirmar y reservar"
+        : "💾 Guardar y enviar";
+    }
   }
 }
 
+function limpiarFormularioCompleto() {
+  const inputs = ['nombre_cliente', 'apellidos', 'email_cliente', 'telefono_cliente', 'pais', 'no_vuelo'];
+  inputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  state.categoria = null;
+  state.proteccion = null;
+  state.addons.clear();
+  individualesState.clear();
+  state.tarifaEditada = false;
+
+  serviciosState.dropoff = { active: false, total: 0, km: 0, ubicacion: "", direccion: "" };
+  serviciosState.delivery = { active: false, total: 0, km: 0, ubicacion: "", direccion: "" };
+  serviciosState.gasolina = { active: false, total: 0, litros: 0, precioLitro: 24 };
+
+  const toggles = ['dropoffToggle', 'deliveryToggle', 'gasolinaToggle'];
+  toggles.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.checked = false;
+  });
+
+  const fields = ['dropoffFields', 'deliveryFields', 'gasolinaFields'];
+  fields.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+
+  const catSelTxt = document.getElementById("catSelTxt");
+  const catSelSub = document.getElementById("catSelSub");
+  const catRemove = document.getElementById("catRemove");
+  const catMiniPreview = document.getElementById("catMiniPreview");
+
+  if (catSelTxt) catSelTxt.textContent = "— Ninguna categoría —";
+  if (catSelSub) catSelSub.textContent = "Tarifa base por día y cálculo previo aparecerán aquí.";
+  if (catRemove) catRemove.style.display = "none";
+  if (catMiniPreview) catMiniPreview.style.display = "none";
+
+  const proteSelTxt = document.getElementById("proteSelTxt");
+  const proteSelSub = document.getElementById("proteSelSub");
+  const proteRemove = document.getElementById("proteRemove");
+
+  if (proteSelTxt) proteSelTxt.textContent = "— Ninguna protección —";
+  if (proteSelSub) proteSelSub.textContent = "Costo se refleja en el resumen.";
+  if (proteRemove) proteRemove.style.display = "none";
+
+  const addonsSelTxt = document.getElementById("addonsSelTxt");
+  const addonsSelSub = document.getElementById("addonsSelSub");
+  const addonsClear = document.getElementById("addonsClear");
+
+  if (addonsSelTxt) addonsSelTxt.textContent = "— Ninguno —";
+  if (addonsSelSub) addonsSelSub.textContent = "Subtotal estimado aparecerá aquí.";
+  if (addonsClear) addonsClear.style.display = "none";
+
+  state.days = 0;
+  const diasTxt = document.getElementById("diasTxt");
+  if (diasTxt) diasTxt.textContent = "0";
+
+  actualizarTotal();
+  actualizarResumenViaje();
+
+  if (typeof showStep === 'function') {
+    showStep(1);
+  }
+}
+
+/* ==========================================================
+   1️⃣2️⃣.5️⃣ OBTENER DATOS DE COTIZACIÓN
+========================================================== */
 function obtenerDatosCotizacion() {
+  const sucRetiroSelect = document.getElementById("sucursal_retiro");
+  const sucEntregaSelect = document.getElementById("sucursal_entrega");
+
+  const pickupSucursalId = sucRetiroSelect?.value || "";
+  const dropoffSucursalId = sucEntregaSelect?.value || "";
+
+  const baseTotal = (state.categoria?.precio_dia || 0) * state.days;
+  const protTotal = state.proteccion ? (state.proteccion.precio || 0) * state.days : 0;
+  const individualesTotal = !state.proteccion ? calcIndividualesSubtotalCotizacion() : 0;
+  const extrasTotal = calcExtrasSubtotal();
+
+  const dropoffTotal = serviciosState.dropoff.active ? serviciosState.dropoff.total : 0;
+  const deliveryTotal = serviciosState.delivery.active ? serviciosState.delivery.total : 0;
+  const gasolinaTotal = serviciosState.gasolina.active ? serviciosState.gasolina.total : 0;
+  const serviciosTotal = dropoffTotal + deliveryTotal + gasolinaTotal;
+
+  const subtotal = baseTotal + protTotal + individualesTotal + extrasTotal + serviciosTotal;
+  const iva = subtotal * 0.16;
+  const total = subtotal + iva;
+
+  const getVal = (id) => document.getElementById(id)?.value || "";
+
   return {
-    categoria_id: document.getElementById("categoriaSelect")?.value,
-    tarifa_base: state.categoria?.precio_dia || 0,
-    pickup_sucursal_id: document.getElementById("sucursal_retiro")?.value,
-    dropoff_sucursal_id: document.getElementById("sucursal_entrega")?.value,
-    pickup_date: document.getElementById("fecha_inicio")?.value,
-    pickup_time: document.getElementById("hora_retiro")?.value,
-    dropoff_date: document.getElementById("fecha_fin")?.value,
-    dropoff_time: document.getElementById("hora_entrega")?.value,
+    pickup_sucursal_id: pickupSucursalId,
+    dropoff_sucursal_id: dropoffSucursalId,
+    pickup_date: getVal("fecha_inicio"),
+    pickup_time: getVal("hora_retiro"),
+    dropoff_date: getVal("fecha_fin"),
+    dropoff_time: getVal("hora_entrega"),
     days: state.days,
+    categoria_id: state.categoria?.id || null,
+    tarifa_base: state.categoria?.precio_dia || 0,
+    tarifa_modificada: state.tarifaEditada ? (state.categoria?.precio_dia || 0) : 0,
+    tarifa_ajustada: state.tarifaEditada ? 1 : 0,
+    proteccion_id: state.proteccion?.id || null,
     seguro: state.proteccion,
-    extras: Array.from(state.addons.values()),
-    moneda: document.getElementById("moneda")?.value,
-    tipo_cambio: parseFloat(document.getElementById("tc")?.value || 17),
+    individuales: Array.from(individualesState.values()),
+    extras: Array.from(state.addons.values()).filter(item => Number(item.qty || 0) > 0),
+    extras_sub: extrasTotal,
+    servicios: {
+      dropoff: {
+        activo: serviciosState.dropoff.active,
+        total: serviciosState.dropoff.total,
+        km: serviciosState.dropoff.km,
+        ubicacion: serviciosState.dropoff.ubicacion,
+        direccion: serviciosState.dropoff.direccion
+      },
+      delivery: {
+        activo: serviciosState.delivery.active,
+        total: serviciosState.delivery.total,
+        km: serviciosState.delivery.km,
+        ubicacion: serviciosState.delivery.ubicacion,
+        direccion: serviciosState.delivery.direccion
+      },
+      gasolina: {
+        activo: serviciosState.gasolina.active,
+        total: serviciosState.gasolina.total,
+        litros: serviciosState.gasolina.litros
+      }
+    },
+    subtotal: subtotal,
+    iva: iva,
+    total: total,
+    moneda: getVal("moneda") || "MXN",
+    tipo_cambio: parseFloat(getVal("tc")) || 17,
     cliente: {
-      nombre: document.getElementById("nombre_cliente")?.value,
-      apellidos: document.getElementById("apellidos")?.value,
-      email: document.getElementById("email_cliente")?.value,
-      telefono: document.getElementById("telefono_cliente")?.value,
-      pais: document.getElementById("pais")?.value,
-      vuelo: document.getElementById("no_vuelo")?.value,
+      nombre: getVal("nombre_cliente"),
+      apellidos: getVal("apellidos"),
+      email: getVal("email_cliente"),
+      telefono: getVal("telefono_cliente"),
+      pais: getVal("pais") || "MÉXICO",
+      vuelo: getVal("no_vuelo") || "",
     },
   };
 }
 
 /* ==========================================================
-   1️⃣2️⃣ FUNCIONES DE VALIDACIÓN CON ALERTAS TOAST
+   1️⃣3️⃣ FUNCIONES DE VALIDACIÓN CON ALERTAS TOAST
 ========================================================== */
 function validarSucursales() {
   const sucRetiro = document.getElementById("sucursal_retiro")?.value;
@@ -1015,17 +1376,265 @@ function validarFechasHoras() {
 }
 
 function validarCategoria() {
-  if (!validarFechasHoras()) return false;
-
   if (!state.categoria) {
-    mostrarToast('⚠️ Selecciona una CATEGORÍA de vehículo', 'warning');
+    mostrarToast('⚠️ Primero debes seleccionar una CATEGORÍA de vehículo', 'warning');
+    return false;
+  }
+  return true;
+}
+
+function validarProtecciones() {
+  if (!state.proteccion && individualesState.size === 0) {
+    mostrarToast('💡 Sugerencia: Puedes agregar una protección para mayor cobertura', 'info');
+  }
+  return true;
+}
+
+function validarDatosCliente() {
+  const nombre = document.getElementById("nombre_cliente")?.value?.trim();
+  const apellidos = document.getElementById("apellidos")?.value?.trim();
+  const email = document.getElementById("email_cliente")?.value?.trim();
+  const telefono = document.getElementById("telefono_cliente")?.value?.trim();
+  const pais = document.getElementById("pais")?.value?.trim();
+
+  if (!nombre) {
+    mostrarToast('⚠️ Ingresa el NOMBRE del cliente', 'warning');
+    return false;
+  }
+  if (!apellidos) {
+    mostrarToast('⚠️ Ingresa los APELLIDOS del cliente', 'warning');
+    return false;
+  }
+  if (!email) {
+    mostrarToast('⚠️ Ingresa el EMAIL del cliente', 'warning');
+    return false;
+  }
+  if (!email.includes('@') || !email.includes('.')) {
+    mostrarToast('⚠️ Ingresa un EMAIL válido (ej: cliente@email.com)', 'warning');
+    return false;
+  }
+  if (!telefono) {
+    mostrarToast('⚠️ Ingresa el TELÉFONO del cliente', 'warning');
+    return false;
+  }
+  if (!pais) {
+    mostrarToast('⚠️ Ingresa el PAÍS del cliente', 'warning');
     return false;
   }
   return true;
 }
 
 /* ==========================================================
-   1️⃣3️⃣ EVENTOS Y MODALES
+   1️⃣4️⃣ SERVICIOS (DROP OFF, DELIVERY, GASOLINA)
+========================================================== */
+function initServicios() {
+  // ---------- DROP OFF ----------
+  const dropoffToggle = document.getElementById('dropoffToggle');
+  const dropoffFields = document.getElementById('dropoffFields');
+  const dropUbicacion = document.getElementById('dropUbicacion');
+  const dropDireccion = document.getElementById('dropDireccion');
+  const dropKm = document.getElementById('dropKm');
+  const dropTotal = document.getElementById('dropTotal');
+  const dropGroupDireccion = document.getElementById('dropGroupDireccion');
+  const dropGroupKm = document.getElementById('dropGroupKm');
+
+  if (dropoffToggle) {
+    dropoffToggle.addEventListener('change', function() {
+      const isActive = this.checked;
+      serviciosState.dropoff.active = isActive;
+      dropoffFields.style.display = isActive ? 'block' : 'none';
+      document.getElementById('svc_dropoff').value = isActive ? '1' : '0';
+
+      if (!isActive) {
+        serviciosState.dropoff.total = 0;
+        serviciosState.dropoff.km = 0;
+        document.getElementById('dropoffTotalHidden').value = '0';
+        if (dropTotal) dropTotal.textContent = '$0.00 MXN';
+      } else {
+        calcularDropOffTotal();
+      }
+      actualizarTotal();
+      actualizarResumenViaje();
+    });
+  }
+
+  if (dropUbicacion) {
+    dropUbicacion.addEventListener('change', function() {
+      const val = this.value;
+      const isCustom = val === '0';
+
+      if (dropGroupDireccion) dropGroupDireccion.style.display = isCustom ? 'block' : 'none';
+      if (dropGroupKm) dropGroupKm.style.display = isCustom ? 'block' : 'none';
+
+      if (!isCustom && val) {
+        const km = parseFloat(this.options[this.selectedIndex]?.dataset?.km || 0);
+        if (dropKm) dropKm.value = km;
+      }
+
+      calcularDropOffTotal();
+    });
+  }
+
+  if (dropKm) {
+    dropKm.addEventListener('input', calcularDropOffTotal);
+  }
+
+  if (dropDireccion) {
+    dropDireccion.addEventListener('input', function() {
+      serviciosState.dropoff.direccion = this.value;
+    });
+  }
+
+  function calcularDropOffTotal() {
+    if (!dropoffToggle?.checked) return;
+
+    const precioKm = parseFloat(state.categoria?.precio_km || 15);
+    let km = 0;
+    const ubicacionVal = dropUbicacion?.value;
+
+    if (ubicacionVal && ubicacionVal !== '0') {
+      km = parseFloat(dropUbicacion.options[dropUbicacion.selectedIndex]?.dataset?.km || 0);
+    } else if (ubicacionVal === '0') {
+      km = parseFloat(dropKm?.value || 0);
+    }
+
+    const total = km * precioKm;
+    serviciosState.dropoff.total = total;
+    serviciosState.dropoff.km = km;
+    serviciosState.dropoff.ubicacion = ubicacionVal || "";
+
+    if (dropTotal) dropTotal.textContent = `$${total.toFixed(2)} MXN`;
+    document.getElementById('dropoffTotalHidden').value = total.toFixed(2);
+    actualizarTotal();
+    actualizarResumenViaje();
+  }
+
+  // ---------- DELIVERY ----------
+  const deliveryToggle = document.getElementById('deliveryToggle');
+  const deliveryFields = document.getElementById('deliveryFields');
+  const deliveryUbicacion = document.getElementById('deliveryUbicacion');
+  const deliveryDireccion = document.getElementById('deliveryDireccion');
+  const deliveryKm = document.getElementById('deliveryKm');
+  const deliveryTotal = document.getElementById('deliveryTotal');
+  const groupDireccion = document.getElementById('groupDireccion');
+  const groupKm = document.getElementById('groupKm');
+
+  if (deliveryToggle) {
+    deliveryToggle.addEventListener('change', function() {
+      const isActive = this.checked;
+      serviciosState.delivery.active = isActive;
+      deliveryFields.style.display = isActive ? 'block' : 'none';
+      document.getElementById('svc_delivery').value = isActive ? '1' : '0';
+
+      if (!isActive) {
+        serviciosState.delivery.total = 0;
+        serviciosState.delivery.km = 0;
+        document.getElementById('deliveryTotalHidden').value = '0';
+        if (deliveryTotal) deliveryTotal.textContent = '$0.00 MXN';
+      } else {
+        calcularDeliveryTotal();
+      }
+      actualizarTotal();
+      actualizarResumenViaje();
+    });
+  }
+
+  if (deliveryUbicacion) {
+    deliveryUbicacion.addEventListener('change', function() {
+      const val = this.value;
+      const isCustom = val === '0';
+
+      if (groupDireccion) groupDireccion.style.display = isCustom ? 'block' : 'none';
+      if (groupKm) groupKm.style.display = isCustom ? 'block' : 'none';
+
+      if (!isCustom && val) {
+        const km = parseFloat(this.options[this.selectedIndex]?.dataset?.km || 0);
+        if (deliveryKm) deliveryKm.value = km;
+      }
+
+      calcularDeliveryTotal();
+    });
+  }
+
+  if (deliveryKm) {
+    deliveryKm.addEventListener('input', calcularDeliveryTotal);
+  }
+
+  if (deliveryDireccion) {
+    deliveryDireccion.addEventListener('input', function() {
+      serviciosState.delivery.direccion = this.value;
+    });
+  }
+
+  function calcularDeliveryTotal() {
+    if (!deliveryToggle?.checked) return;
+
+    const precioKm = parseFloat(state.categoria?.precio_km || 15);
+    let km = 0;
+    const ubicacionVal = deliveryUbicacion?.value;
+
+    if (ubicacionVal && ubicacionVal !== '0') {
+      km = parseFloat(deliveryUbicacion.options[deliveryUbicacion.selectedIndex]?.dataset?.km || 0);
+    } else if (ubicacionVal === '0') {
+      km = parseFloat(deliveryKm?.value || 0);
+    }
+
+    const total = km * precioKm;
+    serviciosState.delivery.total = total;
+    serviciosState.delivery.km = km;
+    serviciosState.delivery.ubicacion = ubicacionVal || "";
+
+    if (deliveryTotal) deliveryTotal.textContent = `$${total.toFixed(2)} MXN`;
+    document.getElementById('deliveryTotalHidden').value = total.toFixed(2);
+    actualizarTotal();
+    actualizarResumenViaje();
+  }
+
+  // ---------- GASOLINA PREPAGO ----------
+  const gasolinaToggle = document.getElementById('gasolinaToggle');
+  const gasolinaFields = document.getElementById('gasolinaFields');
+  const gasolinaTotal = document.getElementById('gasolinaTotal');
+  const litrosLabel = document.getElementById('litrosLabel');
+
+  if (gasolinaToggle) {
+    gasolinaToggle.addEventListener('change', function() {
+      const isActive = this.checked;
+      serviciosState.gasolina.active = isActive;
+      gasolinaFields.style.display = isActive ? 'block' : 'none';
+      document.getElementById('svc_gasolina').value = isActive ? '1' : '0';
+
+      if (!isActive) {
+        serviciosState.gasolina.total = 0;
+        document.getElementById('gasolinaTotalHidden').value = '0';
+        if (gasolinaTotal) gasolinaTotal.textContent = '$0.00 MXN';
+      } else {
+        calcularGasolinaTotal();
+      }
+      actualizarTotal();
+      actualizarResumenViaje();
+    });
+  }
+
+  function calcularGasolinaTotal() {
+    if (!gasolinaToggle?.checked) return;
+
+    const litros = parseFloat(state.categoria?.capacidad_tanque || 45);
+    const precioLitro = parseFloat(document.getElementById('gasolinaPrecioLitro')?.value || 24);
+    const total = litros * precioLitro;
+
+    serviciosState.gasolina.litros = litros;
+    serviciosState.gasolina.total = total;
+
+    if (litrosLabel) litrosLabel.textContent = litros;
+    if (gasolinaTotal) gasolinaTotal.textContent = `$${total.toFixed(2)} MXN`;
+    document.getElementById('gasolinaTotalHidden').value = total.toFixed(2);
+    actualizarTotal();
+    actualizarResumenViaje();
+  }
+}
+
+/* ==========================================================
+   1️⃣5️⃣ EVENTOS Y MODALES
 ========================================================== */
 function bindUI() {
   const btnCategorias = document.getElementById("btnCategorias");
@@ -1038,7 +1647,6 @@ function bindUI() {
   if (btnCategorias) {
     btnCategorias.addEventListener("click", async () => {
       if (!validarFechasHoras()) return;
-
       await cargarCategorias();
       repaintCategoriaModalEstimados();
       if (catPop) openPop(catPop);
@@ -1052,7 +1660,6 @@ function bindUI() {
     categoriasGrid.addEventListener("click", (e) => {
       const card = e.target.closest(".card-pick");
       if (!card) return;
-
       setCategoria({
         id: card.dataset.id,
         nombre: card.dataset.nombre,
@@ -1069,11 +1676,15 @@ function bindUI() {
   const protePop = document.getElementById("proteccionPop");
   const proteClose = document.getElementById("proteClose");
   const proteCancel = document.getElementById("proteCancel");
-  const proteList = document.getElementById("proteList");
   const proteRemove = document.getElementById("proteRemove");
 
   if (btnProtecciones) {
     btnProtecciones.addEventListener("click", async () => {
+      if (!state.categoria) {
+        mostrarToast('⚠️ Primero debes seleccionar una CATEGORÍA de vehículo', 'warning');
+        return;
+      }
+      if (!validarFechasHoras()) return;
       await cargarProtecciones();
       if (protePop) openPop(protePop);
     });
@@ -1082,22 +1693,61 @@ function bindUI() {
   if (proteClose) proteClose.addEventListener("click", () => closePop(protePop));
   if (proteCancel) proteCancel.addEventListener("click", () => closePop(protePop));
 
-  if (proteList) {
-    proteList.addEventListener("click", (e) => {
-      const btn = e.target.closest(".selectProteccion");
-      if (!btn) return;
-      const card = btn.closest(".seg-card");
+  if (proteRemove) proteRemove.addEventListener("click", () => setProteccion(null));
 
-      setProteccion({
-        id: card.dataset.id,
-        nombre: card.dataset.nombre,
-        precio: Number(card.dataset.precio),
-      });
-      closePop(protePop);
+  // Botón Protecciones Individuales
+  const btnIndividualesModal = document.getElementById("btnIndividualesModal");
+  const proteIndividualPop = document.getElementById("proteccionIndividualPop");
+  const proteIndividualClose = document.getElementById("proteIndividualClose");
+  const proteIndividualCancel = document.getElementById("proteIndividualCancel");
+  const proteIndividualApply = document.getElementById("proteIndividualApply");
+
+  if (btnIndividualesModal) {
+    btnIndividualesModal.addEventListener("click", () => {
+      if (!state.categoria) {
+        mostrarToast('⚠️ Primero debes seleccionar una CATEGORÍA de vehículo', 'warning');
+        return;
+      }
+      if (!validarFechasHoras()) return;
+      repaintIndividualesUICotizacion();
+      openPop(proteIndividualPop);
     });
   }
 
-  if (proteRemove) proteRemove.addEventListener("click", () => setProteccion(null));
+  if (proteIndividualClose) proteIndividualClose.addEventListener("click", () => closePop(proteIndividualPop));
+  if (proteIndividualCancel) proteIndividualCancel.addEventListener("click", () => closePop(proteIndividualPop));
+ if (proteIndividualApply) {
+  proteIndividualApply.addEventListener("click", () => {
+    // Sincronizar datos
+    syncIndividualesHiddenCotizacion();
+    refreshProteccionUIHeaderCotizacion();
+    actualizarTotal();
+
+    // Cerrar el modal de protecciones individuales
+    closePop(proteIndividualPop);
+
+    // También cerrar el modal principal de protecciones si está abierto
+    const protePop = document.getElementById("proteccionPop");
+    if (protePop && protePop.style.display === "flex") {
+      closePop(protePop);
+    }
+
+  });
+}
+
+  // NUEVO: Manejar clic en botón "Seleccionar" dentro de cada tarjeta
+  document.addEventListener("click", (e) => {
+    const selectBtn = e.target.closest(".btn-ins-pack-select");
+    if (!selectBtn) return;
+
+    e.stopPropagation();
+    const card = selectBtn.closest(".ins-card-pack");
+    if (card) {
+      toggleIndividualFromCardCotizacion(card);
+      const isSelected = card.classList.contains("is-selected");
+
+    }
+  });
 
   const btnAddons = document.getElementById("btnAddons");
   const addonsPop = document.getElementById("addonsPop");
@@ -1136,11 +1786,9 @@ function bindUI() {
     addonsList.addEventListener("click", (e) => {
       const card = e.target.closest(".card-addon");
       if (!card) return;
-
       const plus = e.target.closest(".plus");
       const minus = e.target.closest(".minus");
       if (!plus && !minus) return;
-
       const item = {
         id: card.dataset.id,
         nombre: card.dataset.nombre,
@@ -1148,7 +1796,6 @@ function bindUI() {
       };
       const cur = state.addons.get(String(item.id))?.qty || 0;
       const next = Math.max(0, Number(cur) + (plus ? 1 : -1));
-
       setAddonQty(item, next);
       const qtyEl = card.querySelector("[data-qty]");
       if (qtyEl) qtyEl.textContent = next;
@@ -1175,10 +1822,8 @@ function bindUI() {
   if (btnEditarTarifa) {
     btnEditarTarifa.addEventListener("click", () => {
       if (!state.categoria) return;
-
       const container = document.getElementById("resBaseDia");
       if (!container || container.querySelector("input")) return;
-
       const input = document.createElement("input");
       input.type = "number";
       input.value = state.categoria.precio_dia.toFixed(2);
@@ -1186,11 +1831,9 @@ function bindUI() {
       input.style.padding = "4px";
       input.style.border = "1px solid #2563eb";
       input.style.borderRadius = "6px";
-
       container.innerHTML = "";
       container.appendChild(input);
       input.focus();
-
       input.addEventListener("blur", () => {
         const nuevo = parseFloat(input.value);
         if (!isNaN(nuevo) && nuevo > 0) {
@@ -1210,10 +1853,8 @@ function bindUI() {
   if (btnGuardar) {
     btnGuardar.addEventListener("click", async () => {
       if (!validarCategoria()) return;
-      if (!document.getElementById("nombre_cliente")?.value) {
-        mostrarToast('⚠️ Completa los datos del cliente', 'warning');
-        return;
-      }
+      if (!validarProtecciones()) return;
+      if (!validarDatosCliente()) return;
 
       const payload = obtenerDatosCotizacion();
       payload.enviarCorreo = true;
@@ -1224,10 +1865,8 @@ function bindUI() {
   if (btnConfirmar) {
     btnConfirmar.addEventListener("click", async () => {
       if (!validarCategoria()) return;
-      if (!document.getElementById("nombre_cliente")?.value) {
-        mostrarToast('⚠️ Completa los datos del cliente', 'warning');
-        return;
-      }
+      if (!validarProtecciones()) return;
+      if (!validarDatosCliente()) return;
 
       const payload = obtenerDatosCotizacion();
       payload.confirmar = true;
@@ -1253,7 +1892,7 @@ function bindUI() {
 }
 
 /* ==========================================================
-   1️⃣4️⃣ SELECT2 CON ICONOS
+   1️⃣6️⃣ SELECT2 CON ICONOS
 ========================================================== */
 window.iconosPorId = window.iconosPorId || {};
 
@@ -1263,13 +1902,10 @@ function initSelect2Sucursales() {
     return;
   }
 
-  console.log('Inicializando Select2 con iconos negros...');
-
   function formatOption(option) {
     if (!option.id) {
       return $('<span><i class="fa-solid fa-location-dot" style="margin-right: 10px; color: #000000; font-size: 18px;"></i> ' + option.text + '</span>');
     }
-
     let iconClass = window.iconosPorId[option.id] || 'fa-building';
     return $('<span><i class="fa-solid ' + iconClass + '" style="margin-right: 10px; color: #000000; font-size: 18px;"></i> ' + option.text + '</span>');
   }
@@ -1278,7 +1914,6 @@ function initSelect2Sucursales() {
     if (!option.id) {
       return $('<span><i class="fa-solid fa-location-dot" style="margin-right: 10px; color: #000000; font-size: 18px;"></i> ' + option.text + '</span>');
     }
-
     let iconClass = window.iconosPorId[option.id] || 'fa-building';
     return $('<span><i class="fa-solid ' + iconClass + '" style="margin-right: 10px; color: #000000; font-size: 18px;"></i> ' + option.text + '</span>');
   }
@@ -1301,17 +1936,16 @@ function initSelect2Sucursales() {
 
   $('#sucursal_retiro').select2(select2Config);
   $('#sucursal_entrega').select2(select2Config);
-
-  console.log('✅ Select2 inicializado correctamente');
 }
 
 /* ==========================================================
-   1️⃣5️⃣ INICIALIZACIÓN PRINCIPAL
+   1️⃣7️⃣ INICIALIZACIÓN PRINCIPAL
 ========================================================== */
 document.addEventListener("DOMContentLoaded", () => {
   initFlatpickrModal();
   calcularDias();
   actualizarResumenViaje();
+  initServicios();
   bindUI();
 });
 

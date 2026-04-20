@@ -784,7 +784,7 @@ span.flatpickr-weekday {
               <label>Fecha de salida</label>
               <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
               <input id="fecha_inicio_ui" class="input input-lg" type="text" placeholder="Fecha" autocomplete="off">
-              <input id="fecha_inicio" type="hidden">
+              <input id="fecha_inicio" name="fecha_inicio" type="hidden">
             </div>
 
             <!-- HORA DE SALIDA -->
@@ -792,7 +792,7 @@ span.flatpickr-weekday {
               <label>Hora de salida</label>
               <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
               <input id="hora_retiro_ui" class="input input-lg" type="text" placeholder="Hora" autocomplete="off">
-              <input id="hora_retiro" type="hidden">
+              <input id="hora_retiro" name="hora_retiro" type="hidden">
             </div>
 
             <!-- FECHA DE LLEGADA -->
@@ -800,7 +800,7 @@ span.flatpickr-weekday {
               <label>Fecha de llegada</label>
               <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
               <input id="fecha_fin_ui" class="input input-lg" type="text" placeholder="Fecha" autocomplete="off">
-              <input id="fecha_fin" type="hidden">
+              <input id="fecha_fin" name="fecha_fin" type="hidden">
             </div>
 
             <!-- HORA DE LLEGADA -->
@@ -808,7 +808,7 @@ span.flatpickr-weekday {
               <label>Hora de llegada</label>
               <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
               <input id="hora_entrega_ui" class="input input-lg" type="text" placeholder="" autocomplete="off">
-              <input id="hora_entrega" type="hidden">
+              <input id="hora_entrega" name="hora_entrega" type="hidden">
             </div>
           </div>
 
@@ -1162,7 +1162,7 @@ span.flatpickr-weekday {
           display: grid !important;
           grid-template-columns: 1fr !important;
           gap: 16px !important;
-          padding: 10px 0;
+          padding: 1s0px 0;
         }
 
         /* 2. Tarjeta Estilo Horizontal */
@@ -1716,6 +1716,7 @@ span.flatpickr-weekday {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
     <script>
