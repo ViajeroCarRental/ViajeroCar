@@ -431,6 +431,10 @@ class ReservacionesController extends Controller
         $extrasTotal = 0;
         $capacidadTanque = $categoriaId ? (float) (DB::table('vehiculos')->where('id_categoria', $categoriaId)->where('id_estatus', 1)->max('capacidad_tanque') ?? 0) : 0;
 
+        if ($capacidadTanque <= 0) {
+            $capacidadTanque = 50.0;
+        }
+
         if ($addonsParam) {
             $pairs = explode(',', $addonsParam);
             $ids = [];
@@ -446,7 +450,12 @@ class ReservacionesController extends Controller
 
                 if ($qty <= 0 || !($srv = $serviciosDB->get($id))) continue;
 
-                if ($id === 1) { // GASOLINA PREPAGO
+                $nombreLower = mb_strtolower(trim($srv->nombre));
+                $esGasolina = str_contains($nombreLower, 'gasolina') || str_contains($nombreLower, 'prepaid fuel');
+
+                $nombreLower = mb_strtolower(trim($srv->nombre));
+
+                if ($esGasolina || $id === 1) { // GASOLINA PREPAGO
                     $litros = max(0, $capacidadTanque);
                     $subtotal = (float) $srv->precio * $litros;
                     $addons[] = ['id' => $id, 'nombre' => $srv->nombre, 'qty' => 1, 'precio' => (float) $srv->precio, 'litros' => $litros, 'subtotal' => $subtotal];
