@@ -178,6 +178,7 @@ Route::get('/admin/cotizaciones', [controladorVistasAdmin::class, 'cotizaciones'
 Route::get('/admin/cotizaciones-activas', [App\Http\Controllers\controladorVistasAdmin::class, 'cotizacionesRecientes'])->name('rutaCotizacionesRecientes');
 Route::get('/admin/cotizar', [App\Http\Controllers\CotizacionesAdminController::class, 'index'])->name('rutaCotizar');
 
+Route::get('/admin/cotizaciones/categorias', [App\Http\Controllers\CotizacionesAdminController::class, 'getCategorias'])->name('cotizaciones.categorias');
 // Guardar la cotización
 Route::post('/admin/cotizaciones/guardar', [App\Http\Controllers\CotizacionesAdminController::class, 'guardarCotizacion'])->name('rutaGuardarCotizacion');
 

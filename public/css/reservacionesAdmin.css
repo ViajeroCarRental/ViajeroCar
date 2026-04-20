@@ -1,26 +1,25 @@
-:root{
-  --brand:#b22222;
-  --brand-dark:#8b1d1a;
-  --ink:#0f172a;
-  --muted:#6b7280;
-  --soft:#f6f7fb;
-  --paper:#fff;
-  --shadow:0 25px 60px rgba(0,0,0,.14);
-  --stroke:#e5e7eb;
-  --ok:#16a34a;
-
-  /* extra */
-  --card-gap:22px;
-  --card-radius:18px;
-  --card-shadow:0 22px 55px rgba(15,23,42,.12);
-  --card-border:rgba(15,23,42,.08);
-
-  /* extras UI */
-  --chip:#f1f5f9;
-  --chip-stroke:#e5e7eb;
-  --glow:0 0 0 4px rgba(178,34,34,.12);
-  --glass:rgba(255,255,255,.86);
+/* =========================================
+   1️⃣ VARIABLES Y RESET - ROJO VIBRANTE
+========================================= */
+:root {
+  --brand: #f44336;
+  --brand-dark: #d32f2f;
+  --brand-rgb: 244, 67, 54;
+  --glow: 0 0 0 4px rgba(244, 67, 54, 0.15);
+  --ink: #0f172a;
+  --muted: #6b7280;
+  --soft: #f6f7fb;
+  --paper: #fff;
+  --shadow: 0 25px 60px rgba(0, 0, 0, 0.14);
+  --stroke: #e5e7eb;
+  --ok: #16a34a;
+  --card-gap: 22px;
+  --card-radius: 18px;
+  --card-shadow: 0 22px 55px rgba(15, 23, 42, 0.12);
+  --card-border: rgba(15, 23, 42, 0.08);
+  --glass: rgba(255, 255, 255, 0.86);
 }
+
 
 *{box-sizing:border-box}
 body{
@@ -30,7 +29,9 @@ body{
   background:var(--soft);
 }
 
-/* ✅ más “aire” general + full width agradable */
+/* =========================================
+   2️⃣ LAYOUT PRINCIPAL
+========================================= */
 .wrap{
   width:100%;
   max-width:1100px;
@@ -50,7 +51,9 @@ body{
 .h1{ margin:0; font-size:28px; font-weight:900; letter-spacing:.2px; }
 .top-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 
-/* ===== UI atoms ===== */
+/* =========================================
+   3️⃣ UI ATOMS (LABELS, INPUTS, BOTONES)
+========================================= */
 label{
   display:block;
   font-size:12px;
@@ -140,7 +143,9 @@ label{
   100%{ box-shadow:0 0 0 14px rgba(255,255,255,0); opacity:.9; }
 }
 
-/* ===== Cards stack ===== */
+/* =========================================
+   4️⃣ CARDS STACK (SECCIONES)
+========================================= */
 .stack-card{
   background:var(--glass);
   border:1px solid var(--card-border);
@@ -150,7 +155,7 @@ label{
   margin-bottom:var(--card-gap);
 }
 
-/* ✅ Header de card: rojo sólido */
+/* Header de card: rojo sólido */
 .stack-head{
   padding:14px 16px;
   background:linear-gradient(180deg, var(--brand), var(--brand-dark));
@@ -209,7 +214,9 @@ label{
   font-size:13px;
 }
 
-/* ===== Picker row ===== */
+/* =========================================
+   5️⃣ PICKER ROW (CATEGORÍAS, PROTECCIONES, ADICIONALES)
+========================================= */
 .picker-row{
   display:flex;
   gap:10px;
@@ -279,7 +286,9 @@ label{
   justify-content:flex-end;
 }
 
-/* ===== MODALS ===== */
+/* =========================================
+   6️⃣ MODALES
+========================================= */
 .pop{
   position:fixed;
   inset:0;
@@ -386,7 +395,7 @@ label{
 .cp-price{ text-align:right; }
 .cp-price .price-big{ font-size:18px; }
 
-/* ✅ Categorías con imagen horizontal */
+/* Categorías con imagen horizontal */
 .cat-wide{
   grid-template-columns:220px 1.2fr .7fr;
 }
@@ -472,7 +481,7 @@ label{
   margin:10px 0;
 }
 
-/* ✅ Protección $0 como botón chiquito */
+/* Protección $0 como botón chiquito */
 .prot-free-row{
   grid-column:1/-1;
   display:flex;
@@ -494,7 +503,7 @@ label{
 
 body.no-scroll{ overflow:hidden; }
 
-/* ✅ Date/Time más pro */
+/* Date/Time más pro */
 input[type="date"].input-lg,
 input[type="time"].input-lg{
   height:54px;
@@ -513,173 +522,8 @@ input[type="date"].input-lg{ padding-right:44px; background-image: linear-gradie
 input[type="time"].input-lg{ padding-right:44px; background-image: linear-gradient(transparent,transparent); }
 
 /* =========================================
-   ✅ FLATPICKR (CALENDARIO + HORA) — MODAL PRO
+   7️⃣ COMBOS (PAÍS + LADA)
 ========================================= */
-
-/* Backdrop (tu JS crea .fp-backdrop) */
-.fp-backdrop{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.55);
-  opacity:0;
-  pointer-events:none;
-  transition:opacity .15s ease;
-  z-index:9998;
-}
-.fp-backdrop.is-open{
-  opacity:1;
-  pointer-events:auto;
-}
-
-/* Calendar container como modal centrado */
-.flatpickr-calendar{
-  border:1px solid var(--stroke) !important;
-  border-radius:18px !important;
-  box-shadow:0 30px 80px rgba(0,0,0,.22) !important;
-  overflow:hidden !important;
-  z-index:9999 !important;
-}
-
-/* ✅ lo centramos como modal cuando está abierto */
-.flatpickr-calendar.open,
-.flatpickr-calendar.inline{
-  position:fixed !important;
-  top:50% !important;
-  left:50% !important;
-  transform:translate(-50%, -50%) !important;
-}
-
-/* Header rojo (mes/año) */
-.flatpickr-months{
-  background:linear-gradient(180deg, var(--brand), var(--brand-dark)) !important;
-  padding:10px 10px !important;
-}
-.flatpickr-months .flatpickr-month{ color:#fff !important; }
-.flatpickr-current-month{
-  font-size:18px !important;
-  font-weight:900 !important;
-}
-.flatpickr-current-month .cur-month,
-.flatpickr-current-month .numInputWrapper,
-.flatpickr-current-month .numInput.cur-year{
-  color:#fff !important;
-  font-weight:900 !important;
-}
-
-/* Flechas grandes */
-.flatpickr-prev-month, .flatpickr-next-month{ padding:10px !important; }
-.flatpickr-prev-month svg, .flatpickr-next-month svg{
-  width:22px !important;
-  height:22px !important;
-  fill:#111827 !important;
-}
-.flatpickr-prev-month:hover svg,
-.flatpickr-next-month:hover svg{ fill:#000 !important; }
-
-/* Días de la semana */
-.flatpickr-weekdays{
-  background:#fff !important;
-  border-bottom:1px solid var(--stroke) !important;
-}
-.flatpickr-weekday{
-  color:#6b7280 !important;
-  font-weight:900 !important;
-  font-size:12px !important;
-}
-
-/* Celdas día */
-.flatpickr-day{
-  border-radius:12px !important;
-  font-weight:800 !important;
-  color:#111827 !important;
-}
-.flatpickr-day:hover{
-  background:rgba(178,34,34,.10) !important;
-  border-color:rgba(178,34,34,.10) !important;
-}
-
-/* Selección */
-.flatpickr-day.selected,
-.flatpickr-day.startRange,
-.flatpickr-day.endRange{
-  background:var(--brand) !important;
-  border-color:var(--brand) !important;
-  color:#fff !important;
-  box-shadow:0 10px 22px rgba(178,34,34,.25) !important;
-}
-
-/* Rango */
-.flatpickr-day.inRange{
-  background:rgba(178,34,34,.12) !important;
-  border-color:rgba(178,34,34,.12) !important;
-}
-
-/* Días deshabilitados / otros meses */
-.flatpickr-day.disabled,
-.flatpickr-day.prevMonthDay,
-.flatpickr-day.nextMonthDay{
-  color:#cbd5e1 !important;
-}
-
-/* ✅ Footer acciones (tu JS agrega .fp-actions) */
-.fp-actions{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  padding:12px 14px;
-  border-top:1px solid var(--stroke);
-  background:#fff;
-}
-.fp-actions button{
-  border:1px solid var(--stroke);
-  background:#fff;
-  padding:10px 14px;
-  border-radius:12px;
-  font-weight:900;
-  cursor:pointer;
-}
-.fp-actions .fp-today{ color:#111827; }
-.fp-actions .fp-clear{
-  color:#dc2626;
-  border-color:rgba(220,38,38,.25);
-}
-.fp-actions .fp-label{
-  color:#334155;
-  background:#f8fafc;
-}
-.fp-actions button:hover{
-  box-shadow:0 10px 22px rgba(15,23,42,.10);
-  transform:translateY(-1px);
-}
-
-/* =========================================
-   ✅ TIME PICKER (HORA) — PRO
-========================================= */
-.flatpickr-time{ border-top:1px solid var(--stroke) !important; }
-.flatpickr-time .numInputWrapper{ border-radius:14px !important; }
-.flatpickr-time input{
-  font-weight:900 !important;
-  font-size:16px !important;
-}
-.flatpickr-time .flatpickr-am-pm{ font-weight:900 !important; }
-
-/* Inputs (se ven grandes y pro) */
-input.flatpickr-input.input-lg{
-  height:54px;
-  font-size:16px;
-  letter-spacing:.2px;
-}
-
-/* Quita el iconito nativo (por si algún browser insiste) */
-input[type="date"]::-webkit-calendar-picker-indicator,
-input[type="time"]::-webkit-calendar-picker-indicator{
-  display:none;
-}
-
-/* =========================
-   ✅ COMBOS (PAÍS + LADA)
-========================= */
 .combo{ position:relative; width:100%; }
 .combo-field{
   display:flex;
@@ -820,9 +664,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   .phone-prefix{ justify-content:space-between; }
 }
 
-/* =========================
-   ✅ PAÍS readonly UI
-========================= */
+/* ===== País readonly UI ===== */
 .readonly-country{
   display:flex;
   align-items:center;
@@ -832,9 +674,9 @@ input[type="time"]::-webkit-calendar-picker-indicator{
 }
 .readonly-country #pais_flag_ui{ font-size:18px; }
 
-/* ==========================================================
-   ✅ PROTECCIONES (MODAL) — PAQUETES + INDIVIDUALES ESTÉTICO
-========================================================== */
+/* =========================================
+   8️⃣ PROTECCIONES (MODAL) — PAQUETES + INDIVIDUALES
+========================================= */
 
 /* Tabs */
 .modal-prote-tabs .tabs-bar{
@@ -870,7 +712,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
 .modal-prote-tabs .tab-panel{ display:none; }
 .modal-prote-tabs .tab-panel.is-active{ display:block; }
 
-/* ===== Carrusel horizontal ===== */
+/* Carrusel horizontal */
 .scroll-h{
   display:flex;
   gap:16px;
@@ -883,9 +725,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
 .scroll-h::-webkit-scrollbar-thumb{ background:#e5e7eb; border-radius:999px; }
 .scroll-h::-webkit-scrollbar-track{ background:transparent; }
 
-/* ==========================================================
-   ✅ PAQUETES DE PROTECCIÓN (cards del carrusel)
-========================================================== */
+/* Paquetes de protección (cards del carrusel) */
 .prote-pack,
 .pack-card,
 .prote-card,
@@ -1075,7 +915,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   padding:11px 14px;
 }
 
-/* ===== Individuales (ins-card) ===== */
+/* Individuales (ins-card) */
 .cat-title{
   margin:18px 0 10px;
   font-size:14px;
@@ -1163,7 +1003,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   gap:10px;
 }
 
-/* ✅ Switch INDIVIDUAL (solo modal protecciones) */
+/* Switch INDIVIDUAL (solo modal protecciones) */
 #proteccionPop .switch.switch-individual{
   width:56px;
   height:32px;
@@ -1230,9 +1070,9 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   .modal-prote-tabs .tab-btn{ width:100%; justify-content:center; }
 }
 
-/* =========================
-   SERVICIOS: 1 fila (cards lado a lado)
-========================= */
+/* =========================================
+   9️⃣ SERVICIOS
+========================================= */
 .svc-grid{
   display:grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1327,7 +1167,7 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   box-shadow: 0 18px 46px rgba(178,34,34,.14);
 }
 
-/* ✅ SWITCH SOLO PARA SERVICIOS (input + span.slider) */
+/* Switch SOLO PARA SERVICIOS (input + span.slider) */
 .svc-card label.switch{
   position:relative;
   display:inline-block;
@@ -1373,10 +1213,229 @@ input[type="time"]::-webkit-calendar-picker-indicator{
   box-shadow:0 0 0 4px rgba(178,34,34,.20);
 }
 
-/* Responsive */
+/* Responsive servicios */
 @media (max-width: 1100px){
   .svc-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 720px){
   .svc-grid{ grid-template-columns: 1fr; }
+}
+
+/* =========================================
+   1️⃣0️⃣ ICONOS DEL RESUMEN - ESTILO GRIS SUAVE
+========================================= */
+.res-row i.bx {
+  font-size: 18px;
+  color: #6b7280 !important;
+  width: 22px;
+  text-align: center;
+  transition: color 0.2s ease;
+}
+
+.modal-title i.bx {
+  color: #ffffff !important;
+  font-size: 20px;
+}
+
+#btnEditarTarifa i.bx {
+  color: #3b82f6 !important;
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+#btnEditarTarifa i.bx:hover {
+  opacity: 1;
+  color: #2563eb !important;
+}
+
+.res-row:hover i.bx {
+  color: #9ca3af !important;
+}
+
+.res-row i.bx.bx-map-pin { color: #6b7280 !important; }
+.res-row i.bx.bx-flag { color: #6b7280 !important; }
+.res-row i.bx.bx-calendar-event { color: #6b7280 !important; }
+.res-row i.bx.bx-time-five { color: #6b7280 !important; }
+.res-row i.bx.bx-calendar-check { color: #6b7280 !important; }
+.res-row i.bx.bx-time { color: #6b7280 !important; }
+.res-row i.bx.bx-timer { color: #6b7280 !important; }
+.res-row i.bx.bx-car { color: #6b7280 !important; }
+.res-row i.bx.bx-money { color: #6b7280 !important; }
+.res-row i.bx.bx-calculator { color: #6b7280 !important; }
+.res-row i.bx.bx-wrench { color: #6b7280 !important; }
+.res-row i.bx.bx-shield-quarter { color: #6b7280 !important; }
+.res-row i.bx.bx-plus-circle { color: #6b7280 !important; }
+.res-row i.bx.bx-cart { color: #6b7280 !important; }
+.res-row i.bx.bx-percent { color: #6b7280 !important; }
+.res-row i.bx.bx-dollar-circle { color: #6b7280 !important; }
+
+/* =========================================
+   1️⃣1️⃣ SELECT2 CON ICONOS NEGROS
+========================================= */
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #f0f4f8 !important;
+    color: #000 !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] i {
+    color: #000 !important;
+}
+
+.select2-container--default .select2-results__option[aria-selected="true"] {
+    background-color: #e2e8f0 !important;
+    color: #000 !important;
+}
+
+.select2-dropdown {
+    border-radius: 12px !important;
+    border: 1px solid #ccc !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.select2-results__option--highlighted[aria-selected] {
+    background-color: #b22222 !important;
+}
+
+.select2-results__option i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+
+.dt-field label {
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    color: #64748b !important;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.select2-container--default .select2-selection--single {
+    height: 50px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    background-color: #fff !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 50px !important;
+    padding-left: 15px !important;
+    font-weight: 500;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 48px !important;
+    right: 10px !important;
+}
+
+/* =========================================
+   1️⃣2️⃣ ICONOS EN CAMPOS DE FECHA/HORA
+========================================= */
+.dt-field {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.icon-field .field-icon {
+  position: absolute !important;
+  right: 14px !important;
+  bottom: 24px !important;
+  transform: translateY(50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #333 !important;
+  font-size: 18px !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 50px !important;
+    padding-left: 45px !important;
+    font-weight: 500;
+    position: relative;
+}
+
+.select2-selection__rendered i {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #000 !important;
+    font-size: 18px !important;
+}
+
+.select2-results__option i {
+    margin-right: 15px !important;
+    width: 20px;
+    text-align: center;
+    color: #000 !important;
+}
+
+/* =========================================
+   1️⃣3️⃣ ICONOS CATEGORÍAS - ESTILO COTIZACIONES
+========================================= */
+#catPop .cp-features {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
+}
+
+#catPop .cp-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 12px !important;
+  border-radius: 40px !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  transition: all 0.2s ease !important;
+  line-height: 1 !important;
+}
+
+#catPop .cp-chip i {
+  font-size: 14px !important;
+  color: #475569 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#catPop .cp-chip:hover {
+  background: #e2e8f0 !important;
+  transform: translateY(-1px);
+}
+
+#catPop .cp-chip.chip-apple {
+  background: #1a1a1a !important;
+  border-color: #333 !important;
+  color: #fff !important;
+}
+
+#catPop .cp-chip.chip-apple i {
+  color: #ffffff !important;
+}
+
+#catPop .cp-chip.chip-android i {
+  color: #3ddc84 !important;
+}
+
+@media (max-width: 640px) {
+  #catPop .cp-chip {
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+  }
+  #catPop .cp-chip i {
+    font-size: 12px !important;
+  }
 }
