@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'google' => [
+        'places_key'        => env('GOOGLE_PLACES_KEY'),
+        'viajero_place_id'  => env('GOOGLE_VIAJERO_PLACE_ID'),
+    ],
+
 ];
