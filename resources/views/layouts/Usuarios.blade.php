@@ -257,7 +257,7 @@ body.nav-open .language-selector {
 
 @php
 
-@php
+
     if (session()->has('locale')) {
         App::setLocale(session('locale'));
     }
