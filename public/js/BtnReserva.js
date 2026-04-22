@@ -48,21 +48,21 @@ function actualizarTraduccionesGlobales() {
             : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
     };
 
-    console.log('🌐 Traducciones actualizadas a:', locale);
+    // console.log('🌐 Traducciones actualizadas a:', locale);
 }
 
-// Inicializar traducciones
 actualizarTraduccionesGlobales();
 
 // Escuchar cambios de idioma para actualizar traducciones globales
 const langObserver = new MutationObserver(() => {
-    console.log('🔔 Idioma cambiado, actualizando traducciones...');
+    // console.log('🔔 Idioma cambiado, actualizando traducciones...');
     actualizarTraduccionesGlobales();
 });
 langObserver.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ['lang']
 });
+
 document.addEventListener("DOMContentLoaded", () => {
     const btnCounterPayment = document.getElementById("btnPagoMostrador");
     const paymentModal = document.getElementById("modalMetodoPago");
@@ -244,28 +244,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 const pickup_date = toIsoDate(startRaw);
                 const dropoff_date = toIsoDate(endRaw);
 
-                let pickup_time =
-                    val("#pickup_time") ||
-                    val("#pickup_time_hidden") ||
-                    (val("#pickup_h") ? val("#pickup_h").padStart(2, "0") + ":00" : "");
-
-                let dropoff_time =
-                    val("#dropoff_time") ||
-                    val("#dropoff_time_hidden") ||
-                    (val("#dropoff_h") ? val("#dropoff_h").padStart(2, "0") + ":00" : "");
-
+                // ===== EXTRACCIÓN Y FALLBACK SEGURO DE HORAS =====
+                let pickup_time = val("#pickup_time") || val("#pickup_time_hidden");
                 if (!pickup_time) {
-                    throw new Error("No se encontró la hora de recogida.");
+                    const ph = val("#pickup_h");
+                    pickup_time = ph ? ph.padStart(2, "0") + ":00" : "12:00"; 
                 }
 
+                let dropoff_time = val("#dropoff_time") || val("#dropoff_time_hidden");
                 if (!dropoff_time) {
-                    throw new Error("No se encontró la hora de devolución.");
-                }
-
-                if (!dropoff_time) {
-                    const h = val("#dropoff_h") || "00";
-                    const m = val("#dropoff_m") || "00";
-                    dropoff_time = h.padStart(2, "0") + ":" + m.padStart(2, "0");
+                    const dh = val("#dropoff_h") || "12";
+                    const dm = val("#dropoff_m") || "00";
+                    dropoff_time = dh.padStart(2, "0") + ":" + dm.padStart(2, "0"); 
                 }
 
                 const category_id = val("#categoria_id") || urlParams.get("categoria_id") || "";
@@ -380,69 +370,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 const totalText = totalLabelEl ? totalLabelEl.textContent.trim() : totalFallback;
 
                 const folio = data.folio?.replace(/^COT/, "RES") || "RES-PENDING";
+                
+                const places = document.querySelectorAll('.sum-place');
+                const pickupBranchName = places[0] ? places[0].innerText.trim() : 'No especificado';
+                const dropoffBranchName = places[1] ? places[1].innerText.trim() : pickupBranchName;
 
-                // ===== FUNCIONES PARA EXTRAER LUGAR Y HORA =====
-                function getLocation(isPickup) {
-                    // Buscar dentro de los elementos .sum-item
-                    const sumItems = document.querySelectorAll('.sum-item');
+                const finalPickupTime = pickup_time || '00:00';
+                const finalDropoffTime = dropoff_time || '00:00';
 
-                    for (let item of sumItems) {
-                        const label = item.querySelector('.sum-item-label');
-                        if (label) {
-                            const labelText = label.innerText.trim();
-                            // Buscar el bloque que corresponda (Pick-up o Return)
-                            if (isPickup && (labelText.includes('Pick-up') || labelText.includes('Recogida'))) {
-                                const placeElement = item.querySelector('.sum-place');
-                                return placeElement ? placeElement.innerText.trim() : '';
-                            }
-                            if (!isPickup && (labelText.includes('Return') || labelText.includes('Devolución'))) {
-                                const placeElement = item.querySelector('.sum-place');
-                                return placeElement ? placeElement.innerText.trim() : '';
-                            }
-                        }
-                    }
-
-                    // Fallback: intentar obtener del resumen del auto
-                    if (isPickup) {
-                        const pickupText = document.querySelector('.sum-item:first-child .sum-item-value')?.innerText || '';
-                        return pickupText.split('\n')[0].trim();
-                    } else {
-                        const dropoffText = document.querySelector('.sum-item:last-child .sum-item-value')?.innerText || '';
-                        return dropoffText.split('\n')[0].trim();
-                    }
-                }
-                // Después de formatPrettyDate, asegúrate de tener esto:
-                function getTime(index) {
-                    const elements = document.querySelectorAll('.dt-time');
-
-                    if (!elements[index]) return '';
-
-                    const text = elements[index].innerText;
-
-                    const match = text.match(/(\d{2}:\d{2})/);
-
-                    return match ? match[1] : '';
-                }
-
-                // Extraer los valores después de tener la respuesta del servidor
-                const pickupBranchName = getLocation(true);
-                const dropoffBranchName = getLocation(false);
-                await new Promise(resolve => setTimeout(resolve, 150));
-
-                const pickupTime = getTime(0) || '00:00';
-                const dropoffTime = getTime(1) || '00:00';
-
-                // Debug para verificar
-                console.log('📍 Datos extraídos:', {
-                    pickupBranchName,
-                    dropoffBranchName,
-                    pickupTime,
-                    dropoffTime,
-                    pickup_date,
-                    dropoff_date
-                });
-
-                // Función para formatear fecha (ya la tienes)
+                // Función para formatear fecha
                 function formatPrettyDate(dateISO) {
                     try {
                         const months = window.translations?.months || ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -483,12 +419,11 @@ document.addEventListener("DOMContentLoaded", () => {
                             <b>${folio}</b>
                         </div>
 
-                        <!-- PICKUP SECTION -->
                         <div class="resv-section-title">Pick-up:</div>
 
                         <div class="resv-alert-item">
                             <span class="resv-alert-label">${window.translations?.place_label || "Location"}:</span>
-                            <b>${pickupBranchName || 'No especificado'}</b>
+                            <b>${pickupBranchName}</b>
                         </div>
 
                         <div class="resv-alert-item">
@@ -498,15 +433,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         <div class="resv-alert-item">
                             <span class="resv-alert-label">${window.translations?.time_label || "Time"}:</span>
-                            <b>${pickupTime} HRS</b>
+                            <b>${finalPickupTime} HRS</b>
                         </div>
 
-                        <!-- RETURN SECTION -->
                         <div class="resv-section-title">${window.translations?.return_label || "Return"}</div>
 
                         <div class="resv-alert-item">
                             <span class="resv-alert-label">${window.translations?.place_label || "Location"}:</span>
-                            <b>${dropoffBranchName || 'No especificado'}</b>
+                            <b>${dropoffBranchName}</b>
                         </div>
 
                         <div class="resv-alert-item">
@@ -516,7 +450,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                         <div class="resv-alert-item">
                             <span class="resv-alert-label">${window.translations?.time_label || "Time"}:</span>
-                            <b>${dropoffTime} HRS</b>
+                            <b>${finalDropoffTime} HRS</b>
                         </div>
                     </div>
 

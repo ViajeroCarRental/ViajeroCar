@@ -22,7 +22,7 @@
     "Active 24 hours a day, 7 days a week": "Activo 24/7, los 7 días de la semana",
     "We accept debit and credit cards": "Aceptamos tarjetas de débito y crédito",
     "We have 00 verification": "Contamos con verificación 00",
-    "24/7 Airport Assistance": "Asistencia en aeropuerto 24/7",
+    "24/7 Airport Assistance": "Servicio en aeropuerto 24 horas",
     "Cars with recent models": "Autos con modelos recientes",
     "Search": "Buscar",
 
@@ -511,8 +511,7 @@
     "/tank": "/tanque",
     "/day": "/día",
     "/event": "/evento",
-    "tank": "tanque",
-    "driver per day": "conductor por día",
+    "/driver per day": "/conductor por día",
     "Max 3": "Máx 3",
     "No add-ons available at the moment.": "No hay complementos disponibles por ahora.",
     "Personal information": "Datos personales",
