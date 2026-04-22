@@ -279,7 +279,7 @@ body.nav-open .language-selector {
   <nav class="nav">
     <div class="brand">
       <a href="{{ route('rutaHome') }}" class="brand-link" aria-label="Viajero">
-        <img src="{{ asset('img/LogoB.png') }}" alt="Viajero" class="brand-logo-img">
+        <img src="{{ asset('img/LogoB.webp') }}" alt="Viajero" class="brand-logo-img">
       </a>
     </div>
 
@@ -447,7 +447,7 @@ body.nav-open .language-selector {
   <div class="footer-overlay"></div>
   <div class="footer-content">
     <div class="footer-brandmark">
-      <img src="{{ asset('img/LogoB.png') }}" alt="Viajero" class="footer-logo">
+      <img src="{{ asset('img/LogoB.webp') }}" alt="Viajero" class="footer-logo">
     </div>
 
     <div class="footer-row loc-row">
@@ -467,12 +467,12 @@ body.nav-open .language-selector {
 
     <div class="footer-row pay-row">
       <div class="payments-logos">
-        <img src="{{ asset('img/visa.jpg') }}" alt="Visa" />
-        <img src="{{ asset('img/mastercard.png') }}" alt="Mastercard" />
-        <img src="{{ asset('img/america.png') }}" alt="American Express" />
-        <img class="oxxo" src="{{ asset('img/oxxo.png') }}" alt="OXXO" />
-        <img class="mp" src="{{ asset('img/pago.png') }}" alt="Mercado Pago" />
-        <img src="{{ asset('img/paypal.png') }}" alt="PayPal" />
+        <img src="{{ asset('img/visa.webp') }}" alt="Visa" />
+        <img src="{{ asset('img/mastercard.webp') }}" alt="Mastercard" />
+        <img src="{{ asset('img/america.webp') }}" alt="American Express" />
+        <img class="oxxo" src="{{ asset('img/oxxo.webp') }}" alt="OXXO" />
+        <img class="mp" src="{{ asset('img/pago.webp') }}" alt="Mercado Pago" />
+        <img src="{{ asset('img/paypal.webp') }}" alt="PayPal" />
       </div>
     </div>
 

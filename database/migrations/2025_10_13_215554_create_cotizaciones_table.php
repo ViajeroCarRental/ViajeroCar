@@ -41,15 +41,17 @@ return new class extends Migration {
             $table->boolean('tarifa_ajustada')->default(false);
 
             $table->decimal('extras_sub', 12, 2)->default(0.00);
+            $table->decimal('servicios_total', 12, 2)->default(0.00);
             $table->decimal('iva', 12, 2)->default(0.00);
             $table->decimal('total', 12, 2)->default(0.00);
 
             // 🧩 JSON: servicios, seguros, cliente
             $table->json('addons')->nullable();
             $table->json('seguro')->nullable();
+            $table->json('servicios')->nullable();                     
             $table->json('cliente')->nullable();
 
-            // ✅ Timestamps nullable (como tu tabla real)
+            // ✅ Timestamps nullable
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
         });
