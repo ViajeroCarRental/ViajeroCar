@@ -147,6 +147,8 @@ class ReservacionesController extends Controller
         $maxYear = date('Y') - 18;
         $minYear = $maxYear - 80;
 
+        $capacidadTanque = $detallesAddons['capacidadTanque'] ?? 50.0;
+
         return view('Usuarios.Reservaciones', array_merge(compact(
             'step',
             'stepCurrent',
@@ -174,7 +176,8 @@ class ReservacionesController extends Controller
             'months3',
             'maxYear',
             'minYear',
-            'formatCurrency'
+            'formatCurrency',
+            'capacidadTanque'
         ), $catalogos, $fechas, $detallesCategoria, $detallesAddons));
     }
 
@@ -407,17 +410,20 @@ class ReservacionesController extends Controller
             };
 
             $precioBase = (float) $srv->precio;
+            $precioMostrar = $precioBase;
 
             if (str_contains($nombreLower, 'gasolina') || str_contains($nombreLower, 'prepaid fuel')) {
-                $precioBase *= ($capacidadTanque ?: 50);
+                $capacidad = $capacidadTanque ?: 50;
+                $precioMostrar = $precioBase * $capacidad;
                 $srv->unidad_txt = __(' / tank');
+                $srv->precio_total_tanque = $precioMostrar;
             } elseif (str_contains($nombreLower, 'additional driver')) {
                 $srv->unidad_txt = __('driver per day');
             } else {
                 $srv->unidad_txt = ($srv->tipo_cobro === 'por_dia') ? __(' / day') : __(' / event');
             }
 
-            $montoFinal = $isUSD ? ($precioBase / $rate) : $precioBase;
+            $montoFinal = $isUSD ? ($precioMostrar / $rate) : $precioMostrar;
             $srv->precio_formateado = '$' . number_format($montoFinal, ($isUSD ? 2 : 0));
             $srv->moneda_txt = $isUSD ? 'USD' : 'MXN';
 
