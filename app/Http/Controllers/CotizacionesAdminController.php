@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -109,22 +110,37 @@ class CotizacionesAdminController extends Controller
 
         // Agrupar por categorías
         $grupo_colision = $individuales->filter(fn($r) => $match($r, [
-            'LDW', 'PDW', 'CDW', 'collision', 'damage waiver',
-            'loss damage', 'robo', 'theft', 'decline cdw'
+            'LDW',
+            'PDW',
+            'CDW',
+            'collision',
+            'damage waiver',
+            'loss damage',
+            'robo',
+            'theft',
+            'decline cdw'
         ]))->values();
 
         $grupo_medicos = $individuales->filter(fn($r) => $match($r, [
-            'PAI', 'personal accident', 'gastos medicos',
-            'medico', 'medical'
+            'PAI',
+            'personal accident',
+            'gastos medicos',
+            'medico',
+            'medical'
         ]))->values();
 
         $grupo_asistencia = $individuales->filter(fn($r) => $match($r, [
-            'PRA', 'road assistance', 'asistencia',
-            'carretera', 'camino'
+            'PRA',
+            'road assistance',
+            'asistencia',
+            'carretera',
+            'camino'
         ]))->values();
 
         $grupo_terceros = $individuales->filter(fn($r) => $match($r, [
-            'LI', 'liability', 'responsabilidad civil',
+            'LI',
+            'liability',
+            'responsabilidad civil',
             'terceros'
         ]))->values();
 
@@ -140,9 +156,15 @@ class CotizacionesAdminController extends Controller
             ->values();
 
         return view('Admin.Cotizar', compact(
-            'ciudades', 'sucursales', 'categorias', 'ubicaciones',
-            'grupo_colision', 'grupo_medicos', 'grupo_asistencia',
-            'grupo_terceros', 'grupo_protecciones'
+            'ciudades',
+            'sucursales',
+            'categorias',
+            'ubicaciones',
+            'grupo_colision',
+            'grupo_medicos',
+            'grupo_asistencia',
+            'grupo_terceros',
+            'grupo_protecciones'
         ));
     }
 
@@ -418,24 +440,29 @@ class CotizacionesAdminController extends Controller
 
                 // Delivery (id_servicio = 12)
                 if (!empty($servicios['delivery']) && ($servicios['delivery']['activo'] ?? false)) {
-                    DB::table('reservacion_servicio')->insert([
-                        'id_reservacion'  => $idReserva,
-                        'id_servicio'     => 12,
-                        'cantidad'        => 1,
-                        'precio_unitario' => $servicios['delivery']['total'],
-                        'created_at'      => now(),
-                        'updated_at'      => now(),
-                    ]);
+                    DB::table('reservaciones')
+                        ->where('id_reservacion', $idReserva)
+                        ->update([
+                            'delivery_activo'    => 1,
+                            'delivery_total'     => $servicios['delivery']['total'] ?? 0,
+                            'delivery_km'        => $servicios['delivery']['km'] ?? 0,
+                            'delivery_direccion' => $servicios['delivery']['direccion'] ?? '',
+                            'delivery_ubicacion' => $servicios['delivery']['ubicacion'] ?? null,
+                            'delivery_precio_km' => $servicios['delivery']['precio_km'] ?? 0,
+                        ]);
                 }
 
                 // Gasolina Prepago (id_servicio = 1)
                 if (!empty($servicios['gasolina']) && ($servicios['gasolina']['activo'] ?? false)) {
-                    $litros = $servicios['gasolina']['litros'] ?? 45;
+                    $capacidadMax = DB::table('vehiculos')
+                        ->where('id_categoria', $request->categoria_id)
+                        ->max('capacidad_tanque') ?? 0;
+
                     DB::table('reservacion_servicio')->insert([
                         'id_reservacion'  => $idReserva,
                         'id_servicio'     => 1,
-                        'cantidad'        => $litros,
-                        'precio_unitario' => 24,
+                        'cantidad'        => $capacidadMax,
+                        'precio_unitario' => 20.00,
                         'created_at'      => now(),
                         'updated_at'      => now(),
                     ]);
@@ -476,7 +503,6 @@ class CotizacionesAdminController extends Controller
                 'id'      => $idCotizacion,
                 'message' => "Cotización {$accion} correctamente.",
             ]);
-
         } catch (\Throwable $e) {
             Log::error("❌ Error en guardarCotizacion: " . $e->getMessage());
             return response()->json([
@@ -598,7 +624,7 @@ class CotizacionesAdminController extends Controller
                         'id_reservacion' => $idReserva,
                         'id_servicio'    => $srv['id'],
                         'cantidad'       => $srv['cantidad'],
-                        'precio_unitario'=> $srv['precio'],
+                        'precio_unitario' => $srv['precio'],
                         'created_at'     => now(),
                         'updated_at'     => now(),
                     ]);
@@ -623,39 +649,44 @@ class CotizacionesAdminController extends Controller
                 Log::info("ℹ️ [Convertir] La cotización no tenía paquete de seguro.");
             }
 
-            // 9.5️⃣ Guardar servicios (Drop Off, Delivery, Gasolina)
-            if (!empty($servicios)) {
-                if (isset($servicios['dropoff']) && ($servicios['dropoff']['activo'] ?? false)) {
-                    DB::table('reservacion_servicio')->insert([
-                        'id_reservacion'  => $idReserva,
-                        'id_servicio'     => 11,
-                        'cantidad'        => 1,
-                        'precio_unitario' => $servicios['dropoff']['total'],
-                        'created_at'      => now(),
-                        'updated_at'      => now(),
+            // 9. Guardar servicios (Drop Off, Delivery, Gasolina)
+            if (isset($servicios['dropoff']) && ($servicios['dropoff']['activo'] ?? false)) {
+                DB::table('reservacion_servicio')->insert([
+                    'id_reservacion'  => $idReserva,
+                    'id_servicio'     => 11,
+                    'cantidad'        => 1,
+                    'precio_unitario' => $servicios['dropoff']['total'],
+                    'created_at'      => now(),
+                    'updated_at'      => now(),
+                ]);
+            }
+
+            if (isset($servicios['delivery']) && ($servicios['delivery']['activo'] ?? false)) {
+                DB::table('reservaciones')
+                    ->where('id_reservacion', $idReserva)
+                    ->update([
+                        'delivery_activo'    => 1,
+                        'delivery_total'     => $servicios['delivery']['total'] ?? 0,
+                        'delivery_km'        => $servicios['delivery']['km'] ?? 0,
+                        'delivery_direccion' => $servicios['delivery']['direccion'] ?? '',
+                        'delivery_ubicacion' => $servicios['delivery']['ubicacion'] ?? null,
+                        'delivery_precio_km' => $servicios['delivery']['precio_km'] ?? 0,
                     ]);
-                }
-                if (isset($servicios['delivery']) && ($servicios['delivery']['activo'] ?? false)) {
-                    DB::table('reservacion_servicio')->insert([
-                        'id_reservacion'  => $idReserva,
-                        'id_servicio'     => 12,
-                        'cantidad'        => 1,
-                        'precio_unitario' => $servicios['delivery']['total'],
-                        'created_at'      => now(),
-                        'updated_at'      => now(),
-                    ]);
-                }
-                if (isset($servicios['gasolina']) && ($servicios['gasolina']['activo'] ?? false)) {
-                    $litros = $servicios['gasolina']['litros'] ?? 45;
-                    DB::table('reservacion_servicio')->insert([
-                        'id_reservacion'  => $idReserva,
-                        'id_servicio'     => 1,
-                        'cantidad'        => $litros,
-                        'precio_unitario' => 24,
-                        'created_at'      => now(),
-                        'updated_at'      => now(),
-                    ]);
-                }
+            }
+
+            if (isset($servicios['gasolina']) && ($servicios['gasolina']['activo'] ?? false)) {
+                $capacidadMax = DB::table('vehiculos')
+                    ->where('id_categoria', $cot->id_categoria)
+                    ->max('capacidad_tanque') ?? 0;
+
+                DB::table('reservacion_servicio')->insert([
+                    'id_reservacion'  => $idReserva,
+                    'id_servicio'     => 1,
+                    'cantidad'        => $capacidadMax,
+                    'precio_unitario' => 20.00,
+                    'created_at'      => now(),
+                    'updated_at'      => now(),
+                ]);
             }
 
             // 🔟 Eliminar PDF
@@ -674,7 +705,6 @@ class CotizacionesAdminController extends Controller
                 'codigo'  => $codigo,
                 'message' => 'Cotización convertida en reservación correctamente.'
             ]);
-
         } catch (\Throwable $e) {
             Log::error("❌ Error al convertir cotización ID {$id}: " . $e->getMessage());
             return response()->json([
@@ -742,7 +772,6 @@ class CotizacionesAdminController extends Controller
                 'success' => true,
                 'message' => "📨 Cotización reenviada correctamente a {$emailCliente}."
             ]);
-
         } catch (\Throwable $e) {
             Log::error("❌ Error al reenviar cotización: " . $e->getMessage());
             return response()->json([
@@ -784,7 +813,6 @@ class CotizacionesAdminController extends Controller
                 'success' => true,
                 'message' => "✅ Cotización {$cotizacion->folio} eliminada correctamente."
             ]);
-
         } catch (\Throwable $e) {
             Log::error("❌ Error al eliminar cotización ID {$id}: " . $e->getMessage());
             return response()->json([
@@ -823,7 +851,6 @@ class CotizacionesAdminController extends Controller
                 'success' => true,
                 'message' => "🧼 Limpieza completada. Cotizaciones eliminadas: {$totalEliminadas}"
             ]);
-
         } catch (\Throwable $e) {
             Log::error("❌ Error en limpieza automática: " . $e->getMessage());
             return response()->json([
@@ -834,4 +861,3 @@ class CotizacionesAdminController extends Controller
         }
     }
 }
-
