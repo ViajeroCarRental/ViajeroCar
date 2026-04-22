@@ -245,35 +245,54 @@ function getErrorMessage(fieldType) {
   }
 
   function createTimeSelectsBelow(input, opts) {
-    const { hourMax = 24, defaultValue = "13:00" } = opts || {};
-    const wrap = input.closest(".time-field") || input.parentElement;
-    if (wrap?.querySelector(".tp-selects")) return;
+  const { hourMax = 24, defaultValue = "13:00" } = opts || {};
+  const wrap = input.closest(".time-field") || input.parentElement;
+  if (wrap?.querySelector(".tp-selects")) return;
 
-    const box  = document.createElement("div");
-    box.className = "tp-selects w-100";
-    const selH = document.createElement("select");
-    selH.className = "tp-hour custom-select-clean";
-    selH.setAttribute("aria-label", getCurrentLocale() === 'en' ? 'Time' : 'Hora');
-    box.appendChild(selH);
-    if (wrap) wrap.appendChild(box); else input.insertAdjacentElement("afterend", box);
+  const box  = document.createElement("div");
+  box.className = "tp-selects w-100";
+  const selH = document.createElement("select");
+  selH.className = "tp-hour custom-select-clean";
+  selH.setAttribute("aria-label", getCurrentLocale() === 'en' ? 'Time' : 'Hora');
+  box.appendChild(selH);
+  if (wrap) wrap.appendChild(box); else input.insertAdjacentElement("afterend", box);
 
-    rebuildHourOptions(input, { hourMax });
+  rebuildHourOptions(input, { hourMax });
 
-    function sync() {
-      if (!selH.value) { input.value = ""; input.dispatchEvent(new Event("input", { bubbles: true })); return; }
-      input.value = `${pad2(Number(selH.value))}:00`;
+  function sync() {
+    if (!selH.value) {
+      input.value = "";
       input.dispatchEvent(new Event("input", { bubbles: true }));
+      return;
     }
-    selH.addEventListener("change", sync);
+    input.value = `${pad2(Number(selH.value))}:00`;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  selH.addEventListener("change", sync);
 
-    const initVal = input.value || defaultValue;
-    if (initVal && initVal !== "12:00") {
-      const h = initVal.split(':')[0];
-      if (Array.from(selH.options).some(o => o.value === h)) { selH.value = h; sync(); }
-      else { selH.selectedIndex = 0; input.value = ""; }
-    } else {
-      selH.selectedIndex = 0; input.value = "";
+  selH.addEventListener("focus", function() {
+    if (!this.value || this.value === "") {
+      const option13 = Array.from(this.options).find(opt => opt.value === "13");
+      if (option13) {
+        this.value = "13";
+        sync();
+      } else if (this.options.length > 1) {
+        this.selectedIndex = 1;
+        sync();
+      }
     }
+  });
+
+  if (input.value && input.value !== "") {
+    const h = input.value.split(':')[0];
+    if (Array.from(selH.options).some(o => o.value === h)) {
+      selH.value = h;
+      sync();
+    }
+  } else {
+    selH.selectedIndex = 0;
+    input.value = "";
+  }
   }
 
   function initAnalogTime(id) {
@@ -666,8 +685,7 @@ document.addEventListener('DOMContentLoaded', function () {
         hiddenInput.classList.add('field-success');
       }
     });
-
-    if (valid) form.submit();
+if (valid) form.submit();
   });
 });
 
@@ -1053,4 +1071,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     window.addEventListener('load', initCarouselLazyLoad);
   })();
+
+
 })();

@@ -450,9 +450,9 @@
 
         if (!formValido) {
           e.preventDefault();
+          e.stopPropagation();
           if (primerInvalido) {
             setTimeout(() => {
-              primerInvalido.focus();
               primerInvalido.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 50);
           }
@@ -1488,78 +1488,111 @@
       );
     }
 
-    function rebuildPickupHours() {
-      const pickupHourEl = document.querySelector('select[name="pickup_h"]');
-      const pickupDateEl = document.querySelector('#start') || document.querySelector('input[name="pickup_date"]');
-      const pickupHiddenEl = document.querySelector('#pickup_time_hidden') || document.querySelector('input[name="pickup_time"]');
+   function rebuildPickupHours() {
+  const pickupHourEl = document.querySelector('select[name="pickup_h"]');
+  const pickupDateEl = document.querySelector('#start') || document.querySelector('input[name="pickup_date"]');
+  const pickupHiddenEl = document.querySelector('#pickup_time_hidden') || document.querySelector('input[name="pickup_time"]');
 
-      const dropoffHourEl = document.querySelector('select[name="dropoff_h"]');
-      const dropoffHiddenEl = document.querySelector('#dropoff_time_hidden') || document.querySelector('input[name="dropoff_time"]');
+  const dropoffHourEl = document.querySelector('select[name="dropoff_h"]');
+  const dropoffHiddenEl = document.querySelector('#dropoff_time_hidden') || document.querySelector('input[name="dropoff_time"]');
 
-      if (!pickupHourEl) return;
+  if (!pickupHourEl) return;
 
-      const selectedDate = parseDateAny(pickupDateEl?.value);
-      const now = new Date();
-      const isToday = selectedDate && isSameLocalDate(selectedDate, now);
+  const selectedDate = parseDateAny(pickupDateEl?.value);
+  const now = new Date();
+  const isToday = selectedDate && isSameLocalDate(selectedDate, now);
 
-      let minHour = 0;
-      if (isToday) {
-        minHour = now.getHours() + 1;
-        if (minHour > 23) minHour = 23;
-      }
+  let minHour = 0;
+  if (isToday) {
+    minHour = now.getHours() + 1;
+    if (minHour > 23) minHour = 23;
+  }
 
-      const previousValue = pickupHourEl.value;
-      const locale = getCurrentLocale();
-      const placeholderText = locale === 'en' ? 'Time' : 'Hora';
+  const previousValue = pickupHourEl.value;
+  const locale = getCurrentLocale();
+  const placeholderText = locale === 'en' ? 'Time' : 'Hora';
 
-      pickupHourEl.innerHTML = '';
-      pickupHourEl.insertAdjacentHTML('afterbegin', `<option value="" disabled selected>${placeholderText}</option>`);
+  pickupHourEl.innerHTML = '';
+  pickupHourEl.insertAdjacentHTML('afterbegin', `<option value="" disabled selected>${placeholderText}</option>`);
 
-      for (let i = minHour; i <= 23; i++) {
-        const hh = pad2(i);
-        const option = document.createElement('option');
-        option.value = hh;
-        option.textContent = `${hh}:00`;
-        pickupHourEl.appendChild(option);
-      }
+  for (let i = minHour; i <= 23; i++) {
+    const hh = pad2(i);
+    const option = document.createElement('option');
+    option.value = hh;
+    option.textContent = `${hh}:00`;
+    pickupHourEl.appendChild(option);
+  }
 
-      let newValue = '';
-      if (isToday) {
-        if (previousValue && parseInt(previousValue, 10) >= minHour) {
-          newValue = previousValue;
-        } else {
-          newValue = pad2(minHour);
-        }
-      } else {
-        newValue = '13'; // Forzar 13:00 para fechas futuras
-      }
+  let newValue = '';
 
-      if (newValue) {
-        pickupHourEl.value = newValue;
-        if (pickupHiddenEl) pickupHiddenEl.value = `${newValue}:00:00`;
-      }
-
-      if (pickupHourEl.value !== previousValue) {
-        pickupHourEl.classList.remove('field-error');
-        const ctl = pickupHourEl.closest('.field, [data-float]');
-        if (ctl) {
-          ctl.classList.remove('has-error');
-          ctl.classList.add('filled');
-          const msg = ctl.querySelector('.error-msg');
-          if (msg) msg.remove();
-        }
-      }
-
-      if (dropoffHourEl) {
-        if (!dropoffHourEl.value) {
-          dropoffHourEl.value = '13';
-          if (dropoffHiddenEl) dropoffHiddenEl.value = '13:00:00';
-
-          const dCtl = dropoffHourEl.closest('[data-float]');
-          if (dCtl) dCtl.classList.add('filled');
-        }
+  if (isToday) {
+    if (previousValue && previousValue !== "" && parseInt(previousValue, 10) >= minHour) {
+      const optionExists = Array.from(pickupHourEl.options).some(opt => opt.value === previousValue);
+      if (optionExists) {
+        newValue = previousValue;
       }
     }
+  } else {
+    if (previousValue && previousValue !== "") {
+      const optionExists = Array.from(pickupHourEl.options).some(opt => opt.value === previousValue);
+      if (optionExists) {
+        newValue = previousValue;
+      }
+    }
+  }
+
+  if (newValue) {
+    pickupHourEl.value = newValue;
+    if (pickupHiddenEl) pickupHiddenEl.value = `${newValue}:00:00`;
+  } else {
+    pickupHourEl.selectedIndex = 0;
+    if (pickupHiddenEl) pickupHiddenEl.value = '';
+  }
+
+  if (dropoffHourEl) {
+    if (!dropoffHourEl.value || dropoffHourEl.value === "") {
+      dropoffHourEl.selectedIndex = 0;
+      if (dropoffHiddenEl) dropoffHiddenEl.value = '';
+    }
+  }
+}
+
+function initHourSelectFocusBehavior() {
+  const pickupHour = document.querySelector('select[name="pickup_h"]');
+  const dropoffHour = document.querySelector('select[name="dropoff_h"]');
+
+  function handleFocus(select, hiddenId) {
+    // Solo aplicar si no tiene valor seleccionado
+    if (!select.value || select.value === "") {
+      // Buscar la opción con valor "13"
+      let option13 = Array.from(select.options).find(opt => opt.value === "13");
+
+      // Si no existe "13", buscar la primera opción después del placeholder
+      if (!option13 && select.options.length > 1) {
+        option13 = select.options[1];
+      }
+
+      if (option13 && option13.value) {
+        select.value = option13.value;
+        select.setAttribute('data-user-interacted', 'true');
+
+        // Disparar evento change para sincronizar
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+
+        // Actualizar hidden correspondiente
+        const hiddenEl = document.querySelector(hiddenId);
+        if (hiddenEl) hiddenEl.value = `${option13.value}:00:00`;
+      }
+    }
+  }
+
+  if (pickupHour) {
+    pickupHour.addEventListener('focus', () => handleFocus(pickupHour, '#pickup_time_hidden'));
+  }
+  if (dropoffHour) {
+    dropoffHour.addEventListener('focus', () => handleFocus(dropoffHour, '#dropoff_time_hidden'));
+  }
+}
 
     function getDateTime(which) {
       const d = parseDateAny(which === "pickup" ? pickupDate.value : dropoffDate.value);
@@ -1629,6 +1662,7 @@
 
     rebuildPickupHours();
     runUpdate();
+    initHourSelectFocusBehavior();
   }
 
   function initAddonsSync() {
