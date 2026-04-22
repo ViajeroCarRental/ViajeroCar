@@ -346,8 +346,8 @@
             display: none;
             align-items: center;
             justify-content: center;
-            background: rgba(0, 0, 0, 0.8) !important; 
-            z-index: 99999999 !important; 
+            background: rgba(0, 0, 0, 0.8) !important;
+            z-index: 99999999 !important;
             padding: 18px;
             backdrop-filter: blur(5px);
             overscroll-behavior: contain;
@@ -621,7 +621,8 @@
                             <h2>{{ __('About your reservation') }}</h2>
                         </header>
 
-                        <form method="GET" action="{{ route('rutaReservasIniciar') }}" class="search-form" id="step1Form" novalidate>
+                        <form method="GET" action="{{ route('rutaReservasIniciar') }}" class="search-form" id="step1Form"
+                            novalidate>
                             <input type="hidden" name="step" value="2">
                             @if (!empty($addonsParam))
                                 <input type="hidden" name="addons" value="{{ $addonsParam }}">
@@ -652,9 +653,10 @@
 
                                                 {{-- Solo itera Querétaro --}}
                                                 @foreach ($ciudadesPickup as $ciudad)
-                                                    <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
+                                                    <optgroup
+                                                        label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                                         @foreach ($ciudad->sucursalesActivas as $suc)
-                                                            <option value="{{ $suc->id_sucursal }}" 
+                                                            <option value="{{ $suc->id_sucursal }}"
                                                                 data-icon="{{ $suc->icon_class }}"
                                                                 {{ (string) $pickupSucursalId === (string) $suc->id_sucursal ? 'selected' : '' }}>
                                                                 {{ $suc->nombre }}
@@ -666,7 +668,7 @@
                                         </div>
 
                                         {{-- SELECT DROPOFF --}}
-                                        <div class="field icon-field" id="dropoffWrapper" 
+                                        <div class="field icon-field" id="dropoffWrapper"
                                             style="display: {{ $isDifferentDropoff ? 'block' : 'none' }};">
                                             <span class="field-icon">
                                                 <i id="dropoffIcon" class="fa-solid fa-location-dot"></i>
@@ -678,9 +680,10 @@
 
                                                 {{-- Itera todas las ciudades (con Querétaro al principio) --}}
                                                 @foreach ($ciudadesDropoff as $ciudad)
-                                                    <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
+                                                    <optgroup
+                                                        label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                                         @foreach ($ciudad->sucursalesActivas as $suc)
-                                                            <option value="{{ $suc->id_sucursal }}" 
+                                                            <option value="{{ $suc->id_sucursal }}"
                                                                 data-icon="{{ $suc->icon_class }}"
                                                                 {{ (string) $dropoffSucursalId === (string) $suc->id_sucursal ? 'selected' : '' }}>
                                                                 {{ $suc->nombre }}
@@ -700,15 +703,19 @@
                                         <div class="datetime-row">
                                             <div class="dt-field icon-field">
                                                 <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                                                <input id="start" name="pickup_date" type="text" placeholder="{{ __('Date') }}" 
-                                                    class="flatpickr-input" value="{{ $pickupDate }}" required>
+                                                <input id="start" name="pickup_date" type="text"
+                                                    placeholder="{{ __('Date') }}" class="flatpickr-input"
+                                                    value="{{ $pickupDate }}" required>
                                             </div>
                                             <div class="dt-field icon-field time-field">
                                                 <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
                                                 <select name="pickup_h" required class="time-select">
-                                                    <option value="" disabled {{ empty($ph) ? 'selected' : '' }}>{{ __('Time') }}</option>
-                                                    @foreach($horasDropdown as $hh)
-                                                        <option value="{{ $hh }}" {{ $hh === $ph ? 'selected' : '' }}>{{ $hh }}:00</option>
+                                                    <option value="" disabled {{ empty($ph) ? 'selected' : '' }}>
+                                                        {{ __('Time') }}</option>
+                                                    @foreach ($horasDropdown as $hh)
+                                                        <option value="{{ $hh }}"
+                                                            {{ $hh === $ph ? 'selected' : '' }}>{{ $hh }}:00
+                                                        </option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -722,16 +729,21 @@
                                         <span class="field-title solo-responsivo-izq">{{ __('Return') }}</span>
                                         <div class="datetime-row">
                                             <div class="dt-field icon-field">
-                                                <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                                                <input id="end" name="dropoff_date" type="text" placeholder="{{ __('Date') }}" 
-                                                    class="flatpickr-input" value="{{ $dropoffDate }}" required>
+                                                <span class="field-icon"><i
+                                                        class="fa-regular fa-calendar-days"></i></span>
+                                                <input id="end" name="dropoff_date" type="text"
+                                                    placeholder="{{ __('Date') }}" class="flatpickr-input"
+                                                    value="{{ $dropoffDate }}" required>
                                             </div>
                                             <div class="dt-field icon-field time-field">
                                                 <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
                                                 <select name="dropoff_h" required class="time-select">
-                                                    <option value="" disabled {{ empty($dh) ? 'selected' : '' }}>{{ __('Time') }}</option>
-                                                    @foreach($horasDropdown as $hh)
-                                                        <option value="{{ $hh }}" {{ $hh === $dh ? 'selected' : '' }}>{{ $hh }}:00</option>
+                                                    <option value="" disabled {{ empty($dh) ? 'selected' : '' }}>
+                                                        {{ __('Time') }}</option>
+                                                    @foreach ($horasDropdown as $hh)
+                                                        <option value="{{ $hh }}"
+                                                            {{ $hh === $dh ? 'selected' : '' }}>{{ $hh }}:00
+                                                        </option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -754,15 +766,17 @@
                 @if ($step === 2)
                     <header class="wizard-head">
                         <h2>{{ __('Select your category') }}</h2>
-                        <p>{{ __('Rate for') }} <strong id="daysLabel">{{ $days }}</strong> {{ __('day(s) of your rental.') }}</p>
+                        <p>{{ __('Rate for') }} <strong id="daysLabel">{{ $days }}</strong>
+                            {{ __('day(s) of your rental.') }}</p>
                     </header>
 
                     <div class="cars">
                         @forelse($categorias as $cat)
-                            <article class="car-card car-card--v2 {{ (string)request('categoria_id') === (string)$cat->id_categoria ? 'active' : '' }}"
-                                data-prepago-dia="{{ $cat->precio_dia }}" 
+                            <article
+                                class="car-card car-card--v2 {{ (string) request('categoria_id') === (string) $cat->id_categoria ? 'active' : '' }}"
+                                data-prepago-dia="{{ $cat->precio_dia }}"
                                 data-mostrador-dia="{{ round($cat->precio_dia * 1.25) }}"
-                                data-price-mxn="{{ $cat->prepago_total }}" 
+                                data-price-mxn="{{ $cat->prepago_total }}"
                                 data-old-price-mxn="{{ $cat->mostrador_total }}">
 
                                 <div class="car-body">
@@ -782,14 +796,20 @@
 
                                     <div class="car-features">
                                         <ul class="car-mini-specs">
-                                            <li title="{{ __('Passengers') }}"><i class="fa-solid fa-user-large"></i> {{ $cat->pax }}</li>
-                                            <li title="{{ __('Small suitcases') }}"><i class="fa-solid fa-suitcase-rolling"></i> {{ $cat->s_luggage }}</li>
-                                            <li title="{{ __('Large suitcases') }}"><i class="fa-solid fa-briefcase"></i> {{ $cat->b_luggage }}</li>
-                                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ $cat->transmision_txt }}</span></li>
-                                            
+                                            <li title="{{ __('Passengers') }}"><i class="fa-solid fa-user-large"></i>
+                                                {{ $cat->pax }}</li>
+                                            <li title="{{ __('Small suitcases') }}"><i
+                                                    class="fa-solid fa-suitcase-rolling"></i> {{ $cat->s_luggage }}</li>
+                                            <li title="{{ __('Large suitcases') }}"><i class="fa-solid fa-briefcase"></i>
+                                                {{ $cat->b_luggage }}</li>
+                                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
+                                                    {{ $cat->transmision_txt }}</span></li>
+
                                             {{-- Aire acondicionado --}}
-                                            @if($cat->tiene_ac)
-                                                <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i> <span class="spec-letter">A/C</span></li>
+                                            @if ($cat->tiene_ac)
+                                                <li title="{{ __('Air conditioning') }}"><i
+                                                        class="fa-regular fa-snowflake"></i> <span
+                                                        class="spec-letter">A/C</span></li>
                                             @endif
                                         </ul>
 
@@ -813,19 +833,26 @@
 
                                     <div class="car-price car-price--v2">
                                         <div class="price-old">${{ number_format($cat->mostrador_total, 0) }} MXN</div>
-                                        <div class="price-new">$<span class="js-prepago-total">{{ number_format($cat->prepago_total, 0) }}</span> MXN</div>
-                                        
+                                        <div class="price-new">$<span
+                                                class="js-prepago-total">{{ number_format($cat->prepago_total, 0) }}</span>
+                                            MXN</div>
+
                                         @if ($cat->ahorro_pct > 0)
-                                            <div class="price-save">{{ __('Save') }} <strong class="js-ahorro">{{ $cat->ahorro_pct }}</strong>%</div>
+                                            <div class="price-save">{{ __('Save') }} <strong
+                                                    class="js-ahorro">{{ $cat->ahorro_pct }}</strong>%</div>
                                         @endif
-                                        
-                                        <a class="btn-pay primary" href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3, 'categoria_id' => $cat->id_categoria, 'plan' => 'linea'])) }}">
+
+                                        <a class="btn-pay primary"
+                                            href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3, 'categoria_id' => $cat->id_categoria, 'plan' => 'linea'])) }}">
                                             {{ __('PREPAY ONLINE') }}
                                         </a>
-                                        
+
                                         <div class="office-wrap">
-                                            <div class="office-price">$<span class="js-mostrador-total">{{ number_format($cat->mostrador_total, 0) }}</span> MXN</div>
-                                            <a class="btn-pay gray" href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3, 'categoria_id' => $cat->id_categoria, 'plan' => 'mostrador'])) }}">
+                                            <div class="office-price">$<span
+                                                    class="js-mostrador-total">{{ number_format($cat->mostrador_total, 0) }}</span>
+                                                MXN</div>
+                                            <a class="btn-pay gray"
+                                                href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3, 'categoria_id' => $cat->id_categoria, 'plan' => 'mostrador'])) }}">
                                                 {{ __('PAY AT OFFICE') }}
                                             </a>
                                         </div>
@@ -838,8 +865,10 @@
                     </div>
 
                     <div class="wizard-nav">
-                        <a class="btn btn-ghost" href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 1])) }}">{{ __('Previous') }}</a>
-                        <a class="btn btn-primary" href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3])) }}">{{ __('Next') }}</a>
+                        <a class="btn btn-ghost"
+                            href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 1])) }}">{{ __('Previous') }}</a>
+                        <a class="btn btn-primary"
+                            href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3])) }}">{{ __('Next') }}</a>
                     </div>
                 @endif
 
@@ -854,24 +883,29 @@
                     <input type="hidden" id="addonsHidden" value="{{ $filters['addons'] ?? '' }}">
 
                     <div class="step3-wrap">
-                        
+
                         {{-- SECCIÓN PROTECCIONES --}}
                         <section class="step3-section">
                             <div class="step3-title">{{ __('Liability waivers (Protections)') }}
-                                <button type="button" class="step3-info" id="info-protecciones-step3" title="{{ __('More information') }}">
+                                <button type="button" class="step3-info" id="info-protecciones-step3"
+                                    title="{{ __('More information') }}">
                                     <i class="fa-solid fa-circle-info"></i>
                                 </button>
                             </div>
-                            
+
                             <div class="prot-grid">
                                 {{-- Protección 1: Básica --}}
                                 <div class="prot-card">
                                     <div class="prot-top">
                                         <div class="prot-icon is-on"><i class="fa-solid fa-shield"></i></div>
                                         <div>
-                                            <p class="prot-name">{{ __('Limited third-party liability protection (LI)') }}</p>
-                                            <p class="prot-desc">{{ __('Protects third parties for damages and injuries caused in an accident and covers the minimum amount required by law.') }}</p>
-                                            <div class="prot-badge"><span class="dot"></span> {{ __('Included') }}</div>
+                                            <p class="prot-name">
+                                                {{ __('Limited third-party liability protection (LI)') }}</p>
+                                            <p class="prot-desc">
+                                                {{ __('Protects third parties for damages and injuries caused in an accident and covers the minimum amount required by law.') }}
+                                            </p>
+                                            <div class="prot-badge"><span class="dot"></span> {{ __('Included') }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -893,23 +927,27 @@
                             {{-- MODAL DE PROTECCIONES REINTEGRADO --}}
                             <div id="modalProteccionesStep3" class="modal-s3" aria-hidden="true">
                                 <div class="card">
-                                    <button type="button" class="x" id="closeProteccionesStep3" aria-label="{{ __('Close') }}">
+                                    <button type="button" class="x" id="closeProteccionesStep3"
+                                        aria-label="{{ __('Close') }}">
                                         <i class="fa-solid fa-xmark"></i>
                                     </button>
 
                                     <h2 class="s3-modal-title">{{ __('Liability waivers (Protections)') }}</h2>
-                                    <p class="s3-modal-sub">{{ __('Check the details of each package and what it includes.') }}</p>
+                                    <p class="s3-modal-sub">
+                                        {{ __('Check the details of each package and what it includes.') }}</p>
 
                                     <div class="s3-body-scroll">
                                         <div class="s3-info-top">
                                             <p>
-                                                <strong>{{ __('VIAJERO') }}</strong> {{ __('offers different types of optional Liability Waivers (Protections) available for an additional daily fee, which can be purchased when booking or on the rental day.') }}
+                                                <strong>{{ __('VIAJERO') }}</strong>
+                                                {{ __('offers different types of optional Liability Waivers (Protections) available for an additional daily fee, which can be purchased when booking or on the rental day.') }}
                                             </p>
                                             <p>
                                                 {{ __('The customer is responsible for any damage or theft of the VIAJERO vehicle subject to certain exclusions contained in the rental agreement. VIAJERO will waive or limit the customer\'s liability by purchasing any of these.') }}
                                             </p>
                                             <p style="margin-bottom:0;">
-                                                {{ __('Customers booking using their Wizard Number will see the coverage and insurance preferences selected in their profile. You can also visit a branch or call') }} <strong>01 (442) 303 2668</strong> {{ __('for assistance.') }}
+                                                {{ __('Customers booking using their Wizard Number will see the coverage and insurance preferences selected in their profile. You can also visit a branch or call') }}
+                                                <strong>01 (442) 303 2668</strong> {{ __('for assistance.') }}
                                             </p>
                                         </div>
 
@@ -924,12 +962,20 @@
                                             </summary>
                                             <div class="s3-acc-body">
                                                 <ul class="s3-list">
-                                                    <li><strong>LDW:</strong> {{ __('The customer is responsible for 0% deductible, bumper to bumper coverage no matter what happens to the car.') }}</li>
-                                                    <li><strong>PAI:</strong> {{ __('Medical expenses covered') }} <strong>$250,000 MXN</strong> {{ __('per event.') }}</li>
-                                                    <li><strong>PRA:</strong> {{ __('Premium roadside assistance. Includes: key or fuel delivery, car unlocking, flat tire change and jump start. Does not include key or fuel cost.') }}</li>
+                                                    <li><strong>LDW:</strong>
+                                                        {{ __('The customer is responsible for 0% deductible, bumper to bumper coverage no matter what happens to the car.') }}
+                                                    </li>
+                                                    <li><strong>PAI:</strong> {{ __('Medical expenses covered') }}
+                                                        <strong>$250,000 MXN</strong> {{ __('per event.') }}
+                                                    </li>
+                                                    <li><strong>PRA:</strong>
+                                                        {{ __('Premium roadside assistance. Includes: key or fuel delivery, car unlocking, flat tire change and jump start. Does not include key or fuel cost.') }}
+                                                    </li>
                                                     <li><strong>LOU:</strong> {{ __('Loss of use, covered.') }}</li>
                                                     <li><strong>LA:</strong> {{ __('Legal assistance, covered.') }}</li>
-                                                    <li><strong>LI:</strong> {{ __('Liability insurance up to') }} <strong>$3,000,000 MXN</strong>.</li>
+                                                    <li><strong>LI:</strong> {{ __('Liability insurance up to') }}
+                                                        <strong>$3,000,000 MXN</strong>.
+                                                    </li>
                                                 </ul>
                                             </div>
                                         </details>
@@ -945,12 +991,20 @@
                                             </summary>
                                             <div class="s3-acc-body">
                                                 <ul class="s3-list">
-                                                    <li><strong>PDW:</strong> {{ __('Covers the entire bodywork at 5%, 10% for total loss or theft. Does not cover tires, accessories, rims or windows.') }}</li>
-                                                    <li><strong>PAI:</strong> {{ __('Medical expenses covered') }} <strong>$250,000 MXN</strong> {{ __('per event.') }}</li>
-                                                    <li><strong>PRA (DECLINED):</strong> {{ __('Premium Assistance: the customer is responsible for costs of: tow truck (if needed), impound lot, key or fuel delivery, car unlocking, flat tire change and jump start.') }}</li>
+                                                    <li><strong>PDW:</strong>
+                                                        {{ __('Covers the entire bodywork at 5%, 10% for total loss or theft. Does not cover tires, accessories, rims or windows.') }}
+                                                    </li>
+                                                    <li><strong>PAI:</strong> {{ __('Medical expenses covered') }}
+                                                        <strong>$250,000 MXN</strong> {{ __('per event.') }}
+                                                    </li>
+                                                    <li><strong>PRA (DECLINED):</strong>
+                                                        {{ __('Premium Assistance: the customer is responsible for costs of: tow truck (if needed), impound lot, key or fuel delivery, car unlocking, flat tire change and jump start.') }}
+                                                    </li>
                                                     <li><strong>LOU:</strong> {{ __('Loss of use, covered.') }}</li>
                                                     <li><strong>LA:</strong> {{ __('Legal assistance, covered.') }}</li>
-                                                    <li><strong>ALI:</strong> {{ __('Liability insurance up to') }} <strong>$1,000,000 MXN</strong>.</li>
+                                                    <li><strong>ALI:</strong> {{ __('Liability insurance up to') }}
+                                                        <strong>$1,000,000 MXN</strong>.
+                                                    </li>
                                                 </ul>
                                             </div>
                                         </details>
@@ -966,12 +1020,20 @@
                                             </summary>
                                             <div class="s3-acc-body">
                                                 <ul class="s3-list">
-                                                    <li><strong>CDW 10%:</strong> {{ __('The customer is responsible for 10% deductible on damages, 20% for total loss or theft based on invoice value.') }}</li>
-                                                    <li><strong>PAI:</strong> {{ __('Medical expenses covered') }} <strong>$250,000 MXN</strong> {{ __('per event.') }}</li>
-                                                    <li><strong>PRA (DECLINED):</strong> {{ __('Premium Assistance: the customer is responsible for costs of: tow truck (if needed), impound lot, key or fuel delivery, car unlocking, flat tire change and jump start.') }}</li>
+                                                    <li><strong>CDW 10%:</strong>
+                                                        {{ __('The customer is responsible for 10% deductible on damages, 20% for total loss or theft based on invoice value.') }}
+                                                    </li>
+                                                    <li><strong>PAI:</strong> {{ __('Medical expenses covered') }}
+                                                        <strong>$250,000 MXN</strong> {{ __('per event.') }}
+                                                    </li>
+                                                    <li><strong>PRA (DECLINED):</strong>
+                                                        {{ __('Premium Assistance: the customer is responsible for costs of: tow truck (if needed), impound lot, key or fuel delivery, car unlocking, flat tire change and jump start.') }}
+                                                    </li>
                                                     <li><strong>LOU:</strong> {{ __('Loss of use, covered.') }}</li>
                                                     <li><strong>LA:</strong> {{ __('Legal assistance, covered.') }}</li>
-                                                    <li><strong>ALI:</strong> {{ __('Liability insurance up to') }} <strong>$1,000,000 MXN</strong>.</li>
+                                                    <li><strong>ALI:</strong> {{ __('Liability insurance up to') }}
+                                                        <strong>$1,000,000 MXN</strong>.
+                                                    </li>
                                                 </ul>
                                             </div>
                                         </details>
@@ -987,12 +1049,20 @@
                                             </summary>
                                             <div class="s3-acc-body">
                                                 <ul class="s3-list">
-                                                    <li><strong>CDW 20%:</strong> {{ __('The customer is responsible for 20% deductible on damages, 30% for total loss or theft based on invoice value.') }}</li>
-                                                    <li><strong>PAI:</strong> {{ __('Medical expenses covered') }} <strong>$250,000 MXN</strong> {{ __('per event.') }}</li>
-                                                    <li><strong>PRA (DECLINED):</strong> {{ __('Premium Assistance: the customer is responsible for costs of: tow truck (if needed), impound lot, key or fuel delivery, car unlocking, flat tire change and jump start.') }}</li>
+                                                    <li><strong>CDW 20%:</strong>
+                                                        {{ __('The customer is responsible for 20% deductible on damages, 30% for total loss or theft based on invoice value.') }}
+                                                    </li>
+                                                    <li><strong>PAI:</strong> {{ __('Medical expenses covered') }}
+                                                        <strong>$250,000 MXN</strong> {{ __('per event.') }}
+                                                    </li>
+                                                    <li><strong>PRA (DECLINED):</strong>
+                                                        {{ __('Premium Assistance: the customer is responsible for costs of: tow truck (if needed), impound lot, key or fuel delivery, car unlocking, flat tire change and jump start.') }}
+                                                    </li>
                                                     <li><strong>LOU:</strong> {{ __('Loss of use, covered.') }}</li>
                                                     <li><strong>LA:</strong> {{ __('Legal assistance, covered.') }}</li>
-                                                    <li><strong>LI:</strong> {{ __('Liability insurance up to') }} <strong>$350,000 MXN</strong>.</li>
+                                                    <li><strong>LI:</strong> {{ __('Liability insurance up to') }}
+                                                        <strong>$350,000 MXN</strong>.
+                                                    </li>
                                                 </ul>
                                             </div>
                                         </details>
@@ -1010,55 +1080,67 @@
 
                             <div class="equip-grid">
                                 @forelse($serviciosFiltrados as $srv)
-                                    <div class="addon-card" 
-                                        data-id="{{ $srv->id_servicio }}" 
-                                        data-name="{{ $srv->nombre }}" 
-                                        data-price="{{ (float) $srv->precio }}"
+                                    <div class="addon-card" data-id="{{ $srv->id_servicio }}"
+                                        data-name="{{ $srv->nombre }}" data-price="{{ (float) $srv->precio }}"
                                         data-gasolina="{{ str_contains(strtolower($srv->nombre), 'prepaid fuel') ? 1 : 0 }}"
-                                        data-charge="{{ $srv->tipo_cobro ?? 'por_evento' }}" 
-                                        data-max="3">
-                                        
+                                        data-charge="{{ $srv->tipo_cobro ?? 'por_evento' }}" data-max="3">
+
                                         <div class="addon-top">
                                             <div class="addon-ico"><i class="{{ $srv->icon }}"></i></div>
                                             <div style="flex:1;">
                                                 <div class="addon-headline">
                                                     <h4 class="addon-name">{{ __($srv->nombre) }}</h4>
-                                                    
+
                                                     <span class="addon-help-wrap" tabindex="0">
-                                                        <button type="button" class="addon-help-btn" aria-label="{{ __('More information') }}">
+                                                        <button type="button" class="addon-help-btn"
+                                                            aria-label="{{ __('More information') }}">
                                                             <i class="fa-solid fa-info"></i>
                                                         </button>
-                                                        <span class="addon-tooltip">{{ __($srv->tooltip ?? 'Check more information about this add-on.') }}</span>
+                                                        <span
+                                                            class="addon-tooltip">{{ __($srv->tooltip ?? 'Check more information about this add-on.') }}</span>
                                                     </span>
                                                 </div>
                                                 <p>{{ __($srv->descripcion) }}</p>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="addon-price">
                                             @php
                                                 $locale = app()->getLocale();
                                                 $isUSD = $locale === 'en';
                                                 $rate = 20;
-                                                
-                                                $precio = (float) $srv->precio;
-                                                $monto = $isUSD ? $precio / $rate : $precio;
+                                                $nombreLower = strtolower($srv->nombre);
+
+                                                $esGasolina =
+                                                    str_contains($nombreLower, 'prepaid fuel') ||
+                                                    str_contains($nombreLower, 'gasolina');
+
+                                                if ($esGasolina) {
+                                                    $precioMostrar =
+                                                        $srv->precio_total_tanque ??
+                                                        (float) $srv->precio * ($capacidadTanque ?? 50);
+                                                    $unidad = '';
+                                                } else {
+                                                    $precioMostrar = (float) $srv->precio;
+                                                    if (
+                                                        str_contains($nombreLower, 'driver') ||
+                                                        str_contains($nombreLower, 'conductor')
+                                                    ) {
+                                                        $unidad = __('/driver per day');
+                                                    } else {
+                                                        $unidad = match ($srv->tipo_cobro) {
+                                                            'por_dia' => __('/day'),
+                                                            default => __('/event'),
+                                                        };
+                                                    }
+                                                }
+
+                                                $monto = $isUSD ? $precioMostrar / $rate : $precioMostrar;
                                                 $moneda = $isUSD ? 'USD' : 'MXN';
                                                 $formato = $isUSD ? number_format($monto, 2) : number_format($monto, 0);
-                                                
-                                                $nombreLower = strtolower($srv->nombre);
-                                            
-                                                if (str_contains($nombreLower, 'driver') || str_contains($nombreLower, 'conductor')) {
-                                                    $unidad = __('/driver per day');
-                                                } else {
-                                                    $unidad = match($srv->tipo_cobro) {
-                                                        'por_tanque' => __('/tank'),
-                                                        'por_dia'    => __('/day'),
-                                                        default      => __('/event'),
-                                                    };
-                                                }
                                             @endphp
-                                            <strong>${{ $formato }}</strong> {{ $moneda }} {{ $unidad }}
+                                            <strong>${{ $formato }}</strong> {{ $moneda }}
+                                            {{ $unidad }}
                                         </div>
 
                                         <div class="addon-qty">
@@ -1085,8 +1167,10 @@
                     </div>
 
                     <div class="wizard-nav">
-                        <a class="btn btn-ghost" href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 2])) }}">{{ __('Previous') }}</a>
-                        <a class="btn btn-primary" id="toStep4" href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 4])) }}">{{ __('Next') }}</a>
+                        <a class="btn btn-ghost"
+                            href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 2])) }}">{{ __('Previous') }}</a>
+                        <a class="btn btn-primary" id="toStep4"
+                            href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 4])) }}">{{ __('Next') }}</a>
                     </div>
                 @endif
 
@@ -1096,60 +1180,77 @@
                     <input type="hidden" id="addonsHidden" value="{{ $filters['addons'] ?? '' }}">
 
                     <div class="step4-layout">
-                        
+
                         {{-- ===================== PANE IZQUIERDO (FORMULARIO) ===================== --}}
                         <div class="step4-pane">
                             <form class="sum-form" id="formCotizacion" onsubmit="return false;" novalidate>
                                 @csrf
 
                                 {{-- Campos ocultos para enviar a la BD --}}
-                                <input type="hidden" name="categoria_id" id="categoria_id" value="{{ $categoriaId ?? '' }}">
+                                <input type="hidden" name="categoria_id" id="categoria_id"
+                                    value="{{ $categoriaId ?? '' }}">
                                 <input type="hidden" name="plan" id="plan" value="{{ $plan ?? '' }}">
-                                <input type="hidden" name="addons" id="addons_payload" value="{{ $filters['addons'] ?? '' }}">
+                                <input type="hidden" name="addons" id="addons_payload"
+                                    value="{{ $filters['addons'] ?? '' }}">
 
-                                <input type="hidden" name="pickup_date" id="pickup_date" value="{{ $pickupDate ?? '' }}">
-                                <input type="hidden" name="pickup_time" id="pickup_time" value="{{ $pickupTime ?? '' }}">
-                                <input type="hidden" name="dropoff_date" id="dropoff_date" value="{{ $dropoffDate ?? '' }}">
-                                <input type="hidden" name="dropoff_time" id="dropoff_time" value="{{ $dropoffTime ?? '' }}">
+                                <input type="hidden" name="pickup_date" id="pickup_date"
+                                    value="{{ $pickupDate ?? '' }}">
+                                <input type="hidden" name="pickup_time" id="pickup_time"
+                                    value="{{ $pickupTime ?? '' }}">
+                                <input type="hidden" name="dropoff_date" id="dropoff_date"
+                                    value="{{ $dropoffDate ?? '' }}">
+                                <input type="hidden" name="dropoff_time" id="dropoff_time"
+                                    value="{{ $dropoffTime ?? '' }}">
 
-                                <input type="hidden" name="pickup_sucursal_id" id="pickup_sucursal_id" value="{{ $pickupSucursalId ?? '' }}">
-                                <input type="hidden" name="dropoff_sucursal_id" id="dropoff_sucursal_id" value="{{ $dropoffSucursalId ?? '' }}">
+                                <input type="hidden" name="pickup_sucursal_id" id="pickup_sucursal_id"
+                                    value="{{ $pickupSucursalId ?? '' }}">
+                                <input type="hidden" name="dropoff_sucursal_id" id="dropoff_sucursal_id"
+                                    value="{{ $dropoffSucursalId ?? '' }}">
 
                                 <h2 class="sum-section-title">{{ __('Personal information') }}</h2>
 
                                 <div class="sum-personal-grid">
                                     <div class="field field-floating" style="grid-column: 1 / -1;">
-                                        <input type="text" class="input-centered" name="nombre_completo" id="nombreCompleto" autocomplete="name" placeholder=" " required>
+                                        <input type="text" class="input-centered" name="nombre_completo"
+                                            id="nombreCompleto" autocomplete="name" placeholder=" " required>
                                         <label for="nombreCompleto">{{ __('Full name') }}</label>
                                         <input type="hidden" name="nombre" id="nombreCliente">
                                         <input type="hidden" name="apellido" id="apellidoCliente">
                                     </div>
 
                                     <div class="field field-floating" style="grid-column: 1 / -1;">
-                                        <input type="text" name="telefono" id="telefonoCliente" placeholder=" " required>
+                                        <input type="text" name="telefono" id="telefonoCliente" placeholder=" "
+                                            required>
                                         <label for="telefonoCliente">{{ __('Mobile') }}</label>
                                     </div>
 
                                     <div class="field field-floating" style="grid-column: 1 / -1;">
-                                        <input type="email" name="email" id="correoCliente" placeholder=" " required>
+                                        <input type="email" name="email" id="correoCliente" placeholder=" "
+                                            required>
                                         <label for="correoCliente">{{ __('Email address') }}</label>
                                     </div>
 
                                     <div class="field field-floating">
-                                        <select name="pais" id="pais" required style="width: 100%; height: 50px; border: 1px solid #d1d5db; border-radius: 8px; padding: 0 12px; background-color: #fff; font-size: 16px; outline: none; margin-top: 18px;">
+                                        <select name="pais" id="pais" required
+                                            style="width: 100%; height: 50px; border: 1px solid #d1d5db; border-radius: 8px; padding: 0 12px; background-color: #fff; font-size: 16px; outline: none; margin-top: 18px;">
                                             <option value="" disabled selected></option>
-                    
+
                                             @foreach ($paises->where('prioritario', true) as $pais)
-                                                <option value="{{ $pais->nombre }}">{{ $isUSD ? ($pais->nombre_en ?? $pais->nombre) : $pais->nombre }}</option>
+                                                <option value="{{ $pais->nombre }}">
+                                                    {{ $isUSD ? $pais->nombre_en ?? $pais->nombre : $pais->nombre }}
+                                                </option>
                                             @endforeach
-                                            
+
                                             <option disabled>──────────</option>
-                                            
+
                                             @foreach ($paises->where('prioritario', false) as $pais)
-                                                <option value="{{ $pais->nombre }}">{{ $isUSD ? ($pais->nombre_en ?? $pais->nombre) : $pais->nombre }}</option>
+                                                <option value="{{ $pais->nombre }}">
+                                                    {{ $isUSD ? $pais->nombre_en ?? $pais->nombre : $pais->nombre }}
+                                                </option>
                                             @endforeach
                                         </select>
-                                        <label for="pais" style="top: 0; transform: translateY(-50%) scale(0.8); background: #fff; padding: 0 4px;">{{ __('Country') }}</label>
+                                        <label for="pais"
+                                            style="top: 0; transform: translateY(-50%) scale(0.8); background: #fff; padding: 0 4px;">{{ __('Country') }}</label>
                                     </div>
 
                                     <div class="field field-dob-container">
@@ -1159,7 +1260,8 @@
                                                 <select id="dob_day" class="select-dob" required>
                                                     <option value="" disabled selected hidden></option>
                                                     @for ($d = 1; $d <= 31; $d++)
-                                                        <option value="{{ str_pad($d, 2, '0', STR_PAD_LEFT) }}">{{ str_pad($d, 2, '0', STR_PAD_LEFT) }}</option>
+                                                        <option value="{{ str_pad($d, 2, '0', STR_PAD_LEFT) }}">
+                                                            {{ str_pad($d, 2, '0', STR_PAD_LEFT) }}</option>
                                                     @endfor
                                                 </select>
                                                 <label>DD</label>
@@ -1168,7 +1270,8 @@
                                                 <select id="dob_month" class="select-dob" required>
                                                     <option value="" disabled selected hidden></option>
                                                     @foreach ($months3 as $val => $label)
-                                                        <option value="{{ $val }}">{{ $label }}</option>
+                                                        <option value="{{ $val }}">{{ $label }}
+                                                        </option>
                                                     @endforeach
                                                 </select>
                                                 <label>MM</label>
@@ -1177,7 +1280,8 @@
                                                 <select id="dob_year" class="select-dob" required>
                                                     <option value="" disabled selected hidden></option>
                                                     @for ($y = $maxYear; $y >= $minYear; $y--)
-                                                        <option value="{{ $y }}">{{ $y }}</option>
+                                                        <option value="{{ $y }}">{{ $y }}
+                                                        </option>
                                                     @endfor
                                                 </select>
                                                 <label>YYYY</label>
@@ -1200,7 +1304,8 @@
                                         <input type="checkbox" name="acepto" id="acepto" checked>
                                         <span>
                                             {{ __('I AGREE AND ACCEPT') }}
-                                            <a href="{{ route('rutaPoliticas') }}" class="link-politicas" target="_blank" rel="noopener">{{ __('THE POLICIES') }}</a>
+                                            <a href="{{ route('rutaPoliticas') }}" class="link-politicas"
+                                                target="_blank" rel="noopener">{{ __('THE POLICIES') }}</a>
                                             {{ __('AND PROCEDURES FOR THE RENTAL.') }}
                                         </span>
                                     </label>
@@ -1212,19 +1317,25 @@
                                 </div>
 
                                 <div class="wizard-nav" style="margin-top:10px;">
-                                    <button id="btnReservar" type="button" class="btn btn-primary">{{ __('Book') }}</button>
+                                    <button id="btnReservar" type="button"
+                                        class="btn btn-primary">{{ __('Book') }}</button>
                                 </div>
 
-                                <div class="pay-logos" style="display: flex; justify-content: center; gap: 40px; align-items: center; flex-wrap: wrap; margin-top: 20px;">
-                                    <img src="{{ asset('img/american.png') }}" alt="Amex" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
-                                    <img src="{{ asset('img/paypal.png') }}" alt="PayPal" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
-                                    <img src="{{ asset('img/oxxo.png') }}" alt="Oxxo" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+                                <div class="pay-logos"
+                                    style="display: flex; justify-content: center; gap: 40px; align-items: center; flex-wrap: wrap; margin-top: 20px;">
+                                    <img src="{{ asset('img/american.png') }}" alt="Amex"
+                                        onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+                                    <img src="{{ asset('img/paypal.png') }}" alt="PayPal"
+                                        onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+                                    <img src="{{ asset('img/oxxo.png') }}" alt="Oxxo"
+                                        onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
                                 </div>
 
                                 {{-- Modal Métodos de Pago --}}
                                 <div id="modalMetodoPago" class="modal-overlay" style="display:none;">
                                     <div class="modal-card modal-metodo-pago">
-                                        <button id="cerrarModalMetodoX" class="modal-close" type="button" aria-label="{{ __('Close') }}">×</button>
+                                        <button id="cerrarModalMetodoX" class="modal-close" type="button"
+                                            aria-label="{{ __('Close') }}">×</button>
                                         <div class="mp-head">
                                             <span class="mp-badge">{{ __('Payment summary') }}</span>
                                             <h3>{{ __('Select your payment method') }}</h3>
@@ -1244,60 +1355,84 @@
                                 </div>
                             </form>
                         </div>
-                        
+
                         {{-- ===================== PANE DERECHO (RESUMEN) ===================== --}}
                         <div class="step4-pane">
                             <div class="sum-compact" aria-label="{{ __('Compact summary') }}">
                                 <div class="sum-compact-head">
                                     <h4 class="sum-title"><strong>{{ __('Booking summary') }}</strong></h4>
-                                    <span class="sum-days"><i class="fa-regular fa-calendar"></i> {{ __('Days:') }} <strong>{{ $days }}</strong></span>
+                                    <span class="sum-days"><i class="fa-regular fa-calendar"></i> {{ __('Days:') }}
+                                        <strong>{{ $days }}</strong></span>
                                 </div>
 
                                 <h4 class="sum-subtitle">{{ __('Location and date') }}</h4>
                                 <div class="sum-compact-grid">
                                     <div class="sum-item">
-                                        <div class="sum-item-label"><i class="fa-solid fa-location-dot"></i> {{ __('Pick-up') }}</div>
+                                        <div class="sum-item-label"><i class="fa-solid fa-location-dot"></i>
+                                            {{ __('Pick-up') }}</div>
                                         <div class="sum-item-value">
                                             <strong class="sum-place">{{ $pickupName ?? '—' }}</strong>
                                             <div class="sum-dt2">
-                                                <div class="dt-row"><span class="dt-lbl">{{ __('Date') }}</span><span class="dt-val">{{ $pickupFechaLarga ?? ($pickupDate ?? '') }}</span></div>
-                                                <div class="dt-row"><span class="dt-lbl">{{ __('Time') }}</span><span class="dt-time">{{ $pickupTime ?? '' }} {{ __('HRS') }}</span></div>
+                                                <div class="dt-row"><span class="dt-lbl">{{ __('Date') }}</span><span
+                                                        class="dt-val">{{ $pickupFechaLarga ?? ($pickupDate ?? '') }}</span>
+                                                </div>
+                                                <div class="dt-row"><span class="dt-lbl">{{ __('Time') }}</span><span
+                                                        class="dt-time">{{ $pickupTime ?? '' }}
+                                                        {{ __('HRS') }}</span></div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div class="sum-item">
-                                        <div class="sum-item-label"><i class="fa-solid fa-location-dot"></i> {{ __('Return') }}</div>
+                                        <div class="sum-item-label"><i class="fa-solid fa-location-dot"></i>
+                                            {{ __('Return') }}</div>
                                         <div class="sum-item-value">
                                             <strong class="sum-place">{{ $dropoffName ?? '—' }}</strong>
                                             <div class="sum-dt2">
-                                                <div class="dt-row"><span class="dt-lbl">{{ __('Date') }}</span><span class="dt-val">{{ $dropoffFechaLarga ?? ($dropoffDate ?? '') }}</span></div>
-                                                <div class="dt-row"><span class="dt-lbl">{{ __('Time') }}</span><span class="dt-time">{{ $dropoffTime ?? '' }} {{ __('HRS') }}</span></div>
+                                                <div class="dt-row"><span class="dt-lbl">{{ __('Date') }}</span><span
+                                                        class="dt-val">{{ $dropoffFechaLarga ?? ($dropoffDate ?? '') }}</span>
+                                                </div>
+                                                <div class="dt-row"><span class="dt-lbl">{{ __('Time') }}</span><span
+                                                        class="dt-time">{{ $dropoffTime ?? '' }}
+                                                        {{ __('HRS') }}</span></div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <h4 class="sum-subtitle" id="tuAutoSection" style="margin-top:14px;">{{ __('Your vehicle') }}</h4>
+                                <h4 class="sum-subtitle" id="tuAutoSection" style="margin-top:14px;">
+                                    {{ __('Your vehicle') }}</h4>
                                 <div class="sum-car" style="margin-top:10px; display:flex; gap:20px; align-items:center;">
                                     <div class="sum-car-img">
-                                        <img src="{{ $categoriaImg ?? asset('img/Logotipo.png') }}" alt="{{ __('Car') }}"
+                                        <img src="{{ $categoriaImg ?? asset('img/Logotipo.png') }}"
+                                            alt="{{ __('Car') }}"
                                             onerror="this.onerror=null;this.src='{{ asset('img/Logotipo.png') }}';"
                                             style="width:200px; border-radius:14px;">
                                     </div>
 
                                     <div class="sum-car-info" style="flex:1;">
-                                        <div class="car-mini-name" style="font-weight:900; font-size:20px; color:#111827;">{{ $autoTitulo ?? '' }}</div>
-                                        <div class="car-mini-sub" style="margin-top:4px; font-weight:800; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#111827;">{{ $autoSubtitulo ?? '' }}</div>
+                                        <div class="car-mini-name"
+                                            style="font-weight:900; font-size:20px; color:#111827;">
+                                            {{ $autoTitulo ?? '' }}</div>
+                                        <div class="car-mini-sub"
+                                            style="margin-top:4px; font-weight:800; font-size:12px; letter-spacing:.6px; text-transform:uppercase; color:#111827;">
+                                            {{ $autoSubtitulo ?? '' }}</div>
 
                                         <div class="car-features" style="margin-top:14px;">
                                             <ul class="car-mini-specs">
-                                                <li><i class="fa-solid fa-user-large"></i> {{ $categoriaSel->pax ?? 5 }}</li>
-                                                <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $categoriaSel->s_luggage ?? 2 }}</li>
-                                                <li><i class="fa-solid fa-briefcase"></i> {{ $categoriaSel->b_luggage ?? 1 }}</li>
-                                                <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ $categoriaSel->transmision_txt ?? __('Automatic') }}</span></li>
+                                                <li><i class="fa-solid fa-user-large"></i> {{ $categoriaSel->pax ?? 5 }}
+                                                </li>
+                                                <li><i class="fa-solid fa-suitcase-rolling"></i>
+                                                    {{ $categoriaSel->s_luggage ?? 2 }}</li>
+                                                <li><i class="fa-solid fa-briefcase"></i>
+                                                    {{ $categoriaSel->b_luggage ?? 1 }}</li>
+                                                <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
+                                                        {{ $categoriaSel->transmision_txt ?? __('Automatic') }}</span>
+                                                </li>
                                                 @if ($categoriaSel->tiene_ac ?? true)
-                                                    <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i> <span class="spec-letter">{{ __('A/C') }}</span></li>
+                                                    <li title="{{ __('Air conditioning') }}"><i
+                                                            class="fa-regular fa-snowflake"></i> <span
+                                                            class="spec-letter">{{ __('A/C') }}</span></li>
                                                 @endif
                                             </ul>
 
@@ -1325,14 +1460,11 @@
                                 </div>
 
                                 <h4 class="sum-subtitle" style="margin-top:16px;">{{ __('Price details') }}</h4>
-                                <div class="sum-table" id="cotizacionDoc" 
-                                    data-base="{{ $tarifaBase ?? 0 }}"
-                                    data-days="{{ $days ?? 1 }}" 
-                                    data-pickup="{{ $pickupSucursalId ?? '' }}"
-                                    data-dropoff="{{ $dropoffSucursalId ?? '' }}" 
-                                    data-km="{{ $dropoffKm ?? 0 }}"
-                                    data-costokm="{{ $costoKmCategoria ?? 0 }}" 
-                                    data-tanque="{{ $capacidadTanque ?? 0 }}">
+                                <div id="cotizacionDoc" data-base="{{ $tarifaBase }}"
+                                    data-days="{{ $days }}" data-pickup="{{ $pickupSucursalId }}"
+                                    data-dropoff="{{ $dropoffSucursalId }}" data-km="{{ $dropoffKm }}"
+                                    data-costokm="{{ $costoKmCategoria }}"
+                                    data-tanque="{{ $detallesAddons['capacidadTanque'] ?? 50 }}">
 
                                     <details class="sum-acc">
                                         <summary class="sum-bar">
@@ -1345,7 +1477,8 @@
                                             {{-- Detalle de días --}}
                                             <div class="row row-base">
                                                 <span>
-                                                    {{ $days ?? 1 }} {{ __('day(s) - price per day') }} {{ $precioDiaFormateado }}
+                                                    {{ $days ?? 1 }} {{ __('day(s) - price per day') }}
+                                                    {{ $precioDiaFormateado }}
                                                 </span>
                                             </div>
 
@@ -1368,8 +1501,10 @@
 
                                             <div class="row row-included" style="border-top:0;">
                                                 <span class="inc-items">
-                                                    <span class="inc-item"><span class="inc-check">✔</span> {{ __('Unlimited mileage') }}</span>
-                                                    <span class="inc-item"><span class="inc-check">✔</span> {{ __('Liability Waiver (LI)') }}</span>
+                                                    <span class="inc-item"><span class="inc-check">✔</span>
+                                                        {{ __('Unlimited mileage') }}</span>
+                                                    <span class="inc-item"><span class="inc-check">✔</span>
+                                                        {{ __('Liability Waiver (LI)') }}</span>
                                                 </span>
                                             </div>
                                         </div>
@@ -1379,8 +1514,9 @@
                                     <div id="modalProtecciones" class="modal-global-viajero" style="display:none;">
                                         <div class="modal-global-content">
                                             <span class="cerrar-modal-v">&times;</span>
-                                            
-                                            <h2 class="modal-v-header-title">{{ __('Liability waivers (Protections)') }}</h2>
+
+                                            <h2 class="modal-v-header-title">{{ __('Liability waivers (Protections)') }}
+                                            </h2>
                                             <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
 
                                             <div style="display: flex; gap: 20px; align-items: flex-start;">
@@ -1388,15 +1524,18 @@
                                                     <i class="fa-solid fa-shield" style="font-size: 28px;"></i>
                                                 </div>
                                                 <div>
-                                                    <strong class="modal-v-titulo-negro">{{ __('LIMITED THIRD-PARTY LIABILITY PROTECTION (LI)') }}</strong>
+                                                    <strong
+                                                        class="modal-v-titulo-negro">{{ __('LIMITED THIRD-PARTY LIABILITY PROTECTION (LI)') }}</strong>
                                                     <p class="modal-v-texto-gris">
                                                         {{ __('Protects third parties for damages and injuries caused in an accident and covers the minimum amount required by law.') }}
                                                     </p>
                                                 </div>
                                             </div>
 
-                                            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
-                                                <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 12px;">
+                                            <div
+                                                style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #f1f5f9;">
+                                                <p
+                                                    style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 12px;">
                                                     {{ __('You choose the level of liability for the vehicle that best fits your needs and budget.') }}
                                                 </p>
                                                 <p style="font-size: 13px; color: #1e293b; font-weight: 700;">
@@ -1413,7 +1552,9 @@
                                             <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
                                         </summary>
                                         <div class="sum-acc-body" id="extrasList">
-                                            <div class="row"><span class="muted">{{ __('No add-ons selected') }}</span><strong>$0 MXN</strong></div>
+                                            <div class="row"><span
+                                                    class="muted">{{ __('No add-ons selected') }}</span><strong>$0
+                                                    MXN</strong></div>
                                         </div>
                                     </details>
 
@@ -1424,7 +1565,9 @@
                                             <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
                                         </summary>
                                         <div class="sum-acc-body" id="ivaList">
-                                            <div class="row"><span class="muted">{{ __('No additional charges') }}</span><strong>$0 MXN</strong></div>
+                                            <div class="row"><span
+                                                    class="muted">{{ __('No additional charges') }}</span><strong>$0
+                                                    MXN</strong></div>
                                         </div>
                                     </details>
 
@@ -1529,7 +1672,6 @@
     <script defer src="{{ asset('js/BtnReserva.js') }}"></script>
     <script defer src="{{ asset('js/BtnReservaLinea.js') }}"></script>
     <script>
-
         window.PAYPAL_MODE = "{{ $paypalMode }}";
         window.PAYPAL_CLIENT_ID = "{{ $paypalClientId }}";
 
@@ -1569,7 +1711,6 @@
             go_to_homepage: "{{ __('Go to homepage') }}",
             reservation_success_fallback: "{{ __('Reservation registered successfully. Check your confirmation email.') }}",
         };
-        
     </script>
 
 @endsection
