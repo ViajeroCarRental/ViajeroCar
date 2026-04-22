@@ -147,6 +147,8 @@ class ReservacionesController extends Controller
         $maxYear = date('Y') - 18;
         $minYear = $maxYear - 80;
 
+        $capacidadTanque = $detallesAddons['capacidadTanque'] ?? 50.0;
+
         return view('Usuarios.Reservaciones', array_merge(compact(
             'step',
             'stepCurrent',
@@ -174,7 +176,8 @@ class ReservacionesController extends Controller
             'months3',
             'maxYear',
             'minYear',
-            'formatCurrency'
+            'formatCurrency',
+            'capacidadTanque'
         ), $catalogos, $fechas, $detallesCategoria, $detallesAddons));
     }
 

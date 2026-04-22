@@ -1119,7 +1119,7 @@
                                                     $precioMostrar =
                                                         $srv->precio_total_tanque ??
                                                         (float) $srv->precio * ($capacidadTanque ?? 50);
-                                                    $unidad = '';
+                                                    $unidad = ''; // Sin unidad
                                                 } else {
                                                     $precioMostrar = (float) $srv->precio;
                                                     if (
@@ -1464,7 +1464,7 @@
                                     data-days="{{ $days }}" data-pickup="{{ $pickupSucursalId }}"
                                     data-dropoff="{{ $dropoffSucursalId }}" data-km="{{ $dropoffKm }}"
                                     data-costokm="{{ $costoKmCategoria }}"
-                                    data-tanque="{{ $detallesAddons['capacidadTanque'] ?? 50 }}">
+                                    data-tanque="{{ $capacidadTanque ?? 50 }}">
 
                                     <details class="sum-acc">
                                         <summary class="sum-bar">
