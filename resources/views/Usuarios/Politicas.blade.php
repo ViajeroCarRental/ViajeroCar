@@ -67,8 +67,9 @@
         </button>
 
         <form id="rentalFormPoliticas" class="search-form" method="GET" action="{{ route('rutaReservasIniciar') }}" novalidate>
-            @csrf
+    @csrf
 
+    <input type="hidden" name="step" value="2">
 
                         <div class="search-grid">
                             {{-- COLUMN 1: PICK-UP LOCATION --}}
