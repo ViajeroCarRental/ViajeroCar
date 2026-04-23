@@ -21,7 +21,7 @@ const closePop = (el) => { if (el) el.style.display = "none"; };
 
 function escapeHtml(str) {
   if (!str) return "";
-  return str.replace(/[&<>]/g, function(m) {
+  return str.replace(/[&<>]/g, function (m) {
     if (m === "&") return "&amp;";
     if (m === "<") return "&lt;";
     if (m === ">") return "&gt;";
@@ -65,43 +65,43 @@ const individualesState = new Map();
    2.5️⃣ FUNCIÓN DE ALERTA CON SWEETALERT2 (CENTRADA)
 ========================================================== */
 function mostrarToast(mensaje, tipo = 'warning') {
-    let iconColor = '#f59e0b';
-    let bgColor = '#fffbeb';
-    let borderColor = '#f59e0b';
+  let iconColor = '#f59e0b';
+  let bgColor = '#fffbeb';
+  let borderColor = '#f59e0b';
 
-    if (tipo === 'error') {
-        iconColor = '#ef4444';
-        bgColor = '#fef2f2';
-        borderColor = '#ef4444';
-    } else if (tipo === 'success') {
-        iconColor = '#10b981';
-        bgColor = '#ecfdf5';
-        borderColor = '#10b981';
-    } else if (tipo === 'info') {
-        iconColor = '#3b82f6';
-        bgColor = '#eff6ff';
-        borderColor = '#3b82f6';
+  if (tipo === 'error') {
+    iconColor = '#ef4444';
+    bgColor = '#fef2f2';
+    borderColor = '#ef4444';
+  } else if (tipo === 'success') {
+    iconColor = '#10b981';
+    bgColor = '#ecfdf5';
+    borderColor = '#10b981';
+  } else if (tipo === 'info') {
+    iconColor = '#3b82f6';
+    bgColor = '#eff6ff';
+    borderColor = '#3b82f6';
+  }
+
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'center',
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer);
+      toast.addEventListener('mouseleave', Swal.resumeTimer);
+    },
+    customClass: {
+      popup: 'custom-toast-center'
     }
+  });
 
-    const Toast = Swal.mixin({
-        toast: true,
-        position: 'center',
-        showConfirmButton: false,
-        timer: 2500,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer);
-            toast.addEventListener('mouseleave', Swal.resumeTimer);
-        },
-        customClass: {
-            popup: 'custom-toast-center'
-        }
-    });
-
-    if (!document.querySelector('#toast-center-style')) {
-        const style = document.createElement('style');
-        style.id = 'toast-center-style';
-        style.textContent = `
+  if (!document.querySelector('#toast-center-style')) {
+    const style = document.createElement('style');
+    style.id = 'toast-center-style';
+    style.textContent = `
             .custom-toast-center {
                 border-radius: 12px !important;
                 border-left: 4px solid ${borderColor} !important;
@@ -110,20 +110,20 @@ function mostrarToast(mensaje, tipo = 'warning') {
                 min-width: 300px !important;
             }
         `;
-        document.head.appendChild(style);
-    }
+    document.head.appendChild(style);
+  }
 
-    let icon = 'warning';
-    if (tipo === 'error') icon = 'error';
-    if (tipo === 'success') icon = 'success';
-    if (tipo === 'info') icon = 'info';
+  let icon = 'warning';
+  if (tipo === 'error') icon = 'error';
+  if (tipo === 'success') icon = 'success';
+  if (tipo === 'info') icon = 'info';
 
-    Toast.fire({
-        icon: icon,
-        title: mensaje,
-        background: bgColor,
-        iconColor: iconColor
-    });
+  Toast.fire({
+    icon: icon,
+    title: mensaje,
+    background: bgColor,
+    iconColor: iconColor
+  });
 }
 
 /* ==========================================================
@@ -366,7 +366,7 @@ function initFlatpickrModal() {
 
     selH.addEventListener("change", sync);
 
-    selH.addEventListener("click", function(e) {
+    selH.addEventListener("click", function (e) {
       const sucRetiro = document.getElementById("sucursal_retiro")?.value;
       const sucEntrega = document.getElementById("sucursal_entrega")?.value;
       const fechaInicio = document.getElementById("fecha_inicio")?.value;
@@ -445,6 +445,9 @@ function calcularDias() {
 function setCategoria(cat) {
   state.categoria = cat;
   state.tarifaOriginal = cat?.precio_dia || 0;
+  cat.litros_maximos = cat.litros_maximos || cat.capacidad_tanque || 45;
+
+  cat.precio_km = parseFloat(cat.costo_km || 15);
 
   const hid = document.getElementById("categoria_id");
   if (hid) hid.value = cat ? String(cat.id) : "";
@@ -471,6 +474,16 @@ function setCategoria(cat) {
 
   refreshCategoriaPreview();
   actualizarTotal();
+
+  if (serviciosState.dropoff.active) {
+    calcularDropOffTotal();
+  }
+  if (serviciosState.delivery.active) {
+    calcularDeliveryTotal();
+  }
+  if (serviciosState.gasolina.active) {
+    calcularGasolinaTotal();
+  }
 }
 
 function refreshCategoriaPreview() {
@@ -571,7 +584,8 @@ async function cargarCategorias() {
           data-nombre="${escapeHtml(cat.nombre)}"
           data-desc="${escapeHtml(cat.descripcion || '')}"
           data-precio="${precioDia}"
-          data-precio-km="${cat.costo_km || 0}"
+          data-costo-km="${cat.costo_km || 15}"
+          data-litros="${cat.litros_maximos || 45}"
           data-img="${img}">
           <div class="cp-img">
             <img src="${img}" alt="${escapeHtml(cat.nombre)}">
@@ -643,26 +657,26 @@ async function cargarProtecciones() {
       <div class="prote-content-wrapper" style="position: relative; padding-top: 50px;">
         <div class="prote-carousel">
           ${proteccionesActivas.map(p => {
-            let listaHtml = '';
-            if (p.descripcion) {
-              let puntos = p.descripcion
-                .split(/\r?\n|-/)
-                .map(linea => linea.trim())
-                .filter(linea => linea.length > 0 && linea !== '-');
+      let listaHtml = '';
+      if (p.descripcion) {
+        let puntos = p.descripcion
+          .split(/\r?\n|-/)
+          .map(linea => linea.trim())
+          .filter(linea => linea.length > 0 && linea !== '-');
 
-              if (puntos.length === 1 && !p.descripcion.includes('-') && p.descripcion.includes('.')) {
-                puntos = p.descripcion
-                  .split('.')
-                  .map(linea => linea.trim())
-                  .filter(linea => linea.length > 0);
-              }
+        if (puntos.length === 1 && !p.descripcion.includes('-') && p.descripcion.includes('.')) {
+          puntos = p.descripcion
+            .split('.')
+            .map(linea => linea.trim())
+            .filter(linea => linea.length > 0);
+        }
 
-              listaHtml = puntos.length > 0
-                ? `<ul class="lista-protecciones">${puntos.map(punto => `<li>${escapeHtml(punto)}</li>`).join('')}</ul>`
-                : `<p>${escapeHtml(p.descripcion)}</p>`;
-            }
+        listaHtml = puntos.length > 0
+          ? `<ul class="lista-protecciones">${puntos.map(punto => `<li>${escapeHtml(punto)}</li>`).join('')}</ul>`
+          : `<p>${escapeHtml(p.descripcion)}</p>`;
+      }
 
-            return `
+      return `
               <div class="seg-card" data-id="${p.id_paquete}" data-nombre="${escapeHtml(p.nombre)}" data-precio="${p.precio_por_dia}">
                 <h4>${escapeHtml(p.nombre)}</h4>
                 <div class="seg-body">
@@ -674,7 +688,7 @@ async function cargarProtecciones() {
                 </div>
               </div>
             `;
-          }).join("")}
+    }).join("")}
         </div>
       </div>
     `;
@@ -916,7 +930,7 @@ function toggleIndividualFromCardCotizacion(card) {
 
   // ACTUALIZADO: Ahora usa .ins-pack-title y .ins-pack-bullet
   const nombre = card.querySelector(".ins-pack-title")?.textContent?.trim() ||
-                 card.querySelector("h4")?.textContent?.trim() || "Seguro individual";
+    card.querySelector("h4")?.textContent?.trim() || "Seguro individual";
 
   // Obtener descripción de los beneficios
   const beneficios = Array.from(card.querySelectorAll(".ins-pack-bullet"))
@@ -1322,7 +1336,8 @@ function obtenerDatosCotizacion() {
         total: serviciosState.delivery.total,
         km: serviciosState.delivery.km,
         ubicacion: serviciosState.delivery.ubicacion,
-        direccion: serviciosState.delivery.direccion
+        direccion: serviciosState.delivery.direccion,
+        precio_km: state.categoria?.precio_km || 15
       },
       gasolina: {
         activo: serviciosState.gasolina.active,
@@ -1439,7 +1454,7 @@ function initServicios() {
   const dropGroupKm = document.getElementById('dropGroupKm');
 
   if (dropoffToggle) {
-    dropoffToggle.addEventListener('change', function() {
+    dropoffToggle.addEventListener('change', function () {
       const isActive = this.checked;
       serviciosState.dropoff.active = isActive;
       dropoffFields.style.display = isActive ? 'block' : 'none';
@@ -1459,7 +1474,7 @@ function initServicios() {
   }
 
   if (dropUbicacion) {
-    dropUbicacion.addEventListener('change', function() {
+    dropUbicacion.addEventListener('change', function () {
       const val = this.value;
       const isCustom = val === '0';
 
@@ -1480,7 +1495,7 @@ function initServicios() {
   }
 
   if (dropDireccion) {
-    dropDireccion.addEventListener('input', function() {
+    dropDireccion.addEventListener('input', function () {
       serviciosState.dropoff.direccion = this.value;
     });
   }
@@ -1520,7 +1535,7 @@ function initServicios() {
   const groupKm = document.getElementById('groupKm');
 
   if (deliveryToggle) {
-    deliveryToggle.addEventListener('change', function() {
+    deliveryToggle.addEventListener('change', function () {
       const isActive = this.checked;
       serviciosState.delivery.active = isActive;
       deliveryFields.style.display = isActive ? 'block' : 'none';
@@ -1540,7 +1555,7 @@ function initServicios() {
   }
 
   if (deliveryUbicacion) {
-    deliveryUbicacion.addEventListener('change', function() {
+    deliveryUbicacion.addEventListener('change', function () {
       const val = this.value;
       const isCustom = val === '0';
 
@@ -1561,7 +1576,7 @@ function initServicios() {
   }
 
   if (deliveryDireccion) {
-    deliveryDireccion.addEventListener('input', function() {
+    deliveryDireccion.addEventListener('input', function () {
       serviciosState.delivery.direccion = this.value;
     });
   }
@@ -1597,7 +1612,7 @@ function initServicios() {
   const litrosLabel = document.getElementById('litrosLabel');
 
   if (gasolinaToggle) {
-    gasolinaToggle.addEventListener('change', function() {
+    gasolinaToggle.addEventListener('change', function () {
       const isActive = this.checked;
       serviciosState.gasolina.active = isActive;
       gasolinaFields.style.display = isActive ? 'block' : 'none';
@@ -1617,9 +1632,8 @@ function initServicios() {
 
   function calcularGasolinaTotal() {
     if (!gasolinaToggle?.checked) return;
-
-    const litros = parseFloat(state.categoria?.capacidad_tanque || 45);
-    const precioLitro = parseFloat(document.getElementById('gasolinaPrecioLitro')?.value || 24);
+    const litros = parseFloat(state.categoria?.litros_maximos || 45);
+    const precioLitro = parseFloat(document.getElementById('gasolinaPrecioLitro')?.value || 20);
     const total = litros * precioLitro;
 
     serviciosState.gasolina.litros = litros;
@@ -1665,6 +1679,8 @@ function bindUI() {
         nombre: card.dataset.nombre,
         desc: card.dataset.desc,
         precio_dia: Number(card.dataset.precio),
+        costo_km: Number(card.dataset.costoKm || 15),
+        litros_maximos: Number(card.dataset.litros || 45)
       });
       closePop(catPop);
     });
@@ -1716,24 +1732,24 @@ function bindUI() {
 
   if (proteIndividualClose) proteIndividualClose.addEventListener("click", () => closePop(proteIndividualPop));
   if (proteIndividualCancel) proteIndividualCancel.addEventListener("click", () => closePop(proteIndividualPop));
- if (proteIndividualApply) {
-  proteIndividualApply.addEventListener("click", () => {
-    // Sincronizar datos
-    syncIndividualesHiddenCotizacion();
-    refreshProteccionUIHeaderCotizacion();
-    actualizarTotal();
+  if (proteIndividualApply) {
+    proteIndividualApply.addEventListener("click", () => {
+      // Sincronizar datos
+      syncIndividualesHiddenCotizacion();
+      refreshProteccionUIHeaderCotizacion();
+      actualizarTotal();
 
-    // Cerrar el modal de protecciones individuales
-    closePop(proteIndividualPop);
+      // Cerrar el modal de protecciones individuales
+      closePop(proteIndividualPop);
 
-    // También cerrar el modal principal de protecciones si está abierto
-    const protePop = document.getElementById("proteccionPop");
-    if (protePop && protePop.style.display === "flex") {
-      closePop(protePop);
-    }
+      // También cerrar el modal principal de protecciones si está abierto
+      const protePop = document.getElementById("proteccionPop");
+      if (protePop && protePop.style.display === "flex") {
+        closePop(protePop);
+      }
 
-  });
-}
+    });
+  }
 
   // NUEVO: Manejar clic en botón "Seleccionar" dentro de cada tarjeta
   document.addEventListener("click", (e) => {
@@ -1928,7 +1944,7 @@ function initSelect2Sucursales() {
   const select2Config = {
     templateResult: formatOption,
     templateSelection: formatSelection,
-    escapeMarkup: function(markup) { return markup; },
+    escapeMarkup: function (markup) { return markup; },
     width: '100%',
     minimumResultsForSearch: Infinity,
     allowClear: false
@@ -1949,6 +1965,6 @@ document.addEventListener("DOMContentLoaded", () => {
   bindUI();
 });
 
-$(document).ready(function() {
+$(document).ready(function () {
   setTimeout(initSelect2Sucursales, 300);
 });

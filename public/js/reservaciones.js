@@ -1267,17 +1267,11 @@
         translatedName = currentLocale === 'en' ? 'Young driver (under 25)' : 'Conductor menor de 25 años';
       }
 
-      if (String(id) === SERVICE_GASOLINA_ID) {
+      if (tipo === 'por_tanque' || String(id) === '1') {
         const litros = Math.max(0, tanque);
         lineTotal = price * litros;
         const porLitroLabel = currentLocale === 'en' ? 'per liter' : 'por litro';
         detalleLabel = `${translatedName} | ${litros} L x ${fmtMoney(price)} ${porLitroLabel}`;
-      }
-      else if (tipo === 'por_tanque') {
-        const litros = Math.max(0, tanque);
-        lineTotal = price * litros * qty;
-        const porLitroLabel = currentLocale === 'en' ? 'per liter' : 'por litro';
-        detalleLabel = `${qty} | ${translatedName} | ${litros} L x ${fmtMoney(price)} ${porLitroLabel}`;
       }
       else if (tipo === 'por_evento') {
         lineTotal = price * qty;
@@ -1296,9 +1290,9 @@
         const row = document.createElement('div');
         row.className = 'row row-addon';
         row.innerHTML = `
-        <span style="flex:1;">${detalleLabel}</span>
-        <strong style="flex:0 0 110px; text-align:right;">${fmtMoney(lineTotal)}</strong>
-      `;
+          <span style="flex:1;">${detalleLabel}</span>
+          <strong style="flex:0 0 110px; text-align:right;">${fmtMoney(lineTotal)}</strong>
+        `;
         extrasList.appendChild(row);
         renderedRows++;
       }
@@ -1425,7 +1419,7 @@
 
       try { hidden.dispatchEvent(new Event('change', { bubbles: true })); } catch (_) { }
       try { applyYoungDriverAddon(); } catch (_) { }
-      
+
       try { initStep4AddonsSummary(); } catch (_) { }
 
       setTimeout(() => {
@@ -1684,10 +1678,10 @@
       const max = parseInt(card.dataset.max, 10) || Infinity;
       qty = Math.min(Math.max(0, qty | 0), max);
 
-      const id = String(card.getAttribute('data-id') || '').trim();
+      const isGasolina = card.dataset.gasolina === "1";
       const qtyEl = qs('.qty', card);
 
-      if (id === SERVICE_GASOLINA_ID) {
+      if (isGasolina) {
         const sw = getGasolinaSwitch(card);
         if (sw) sw.checked = qty > 0;
         card.classList.toggle('selected', qty > 0);
@@ -1699,9 +1693,9 @@
     }
 
     function readQty(card) {
-      const id = String(card.getAttribute('data-id') || '').trim();
+      const isGasolina = card.dataset.gasolina === "1";
 
-      if (id === SERVICE_GASOLINA_ID) {
+      if (isGasolina) {
         const sw = getGasolinaSwitch(card);
         return sw && sw.checked ? 1 : 0;
       }
@@ -1787,8 +1781,7 @@
       const minus = qs('.qty-btn.minus', card);
       const sw = getGasolinaSwitch(card);
 
-      const id = String(card.getAttribute('data-id') || '').trim();
-      const isGasolina = id === SERVICE_GASOLINA_ID;
+      const isGasolina = card.dataset.gasolina === "1";
 
       if (isGasolina) {
         if (sw) {
@@ -2306,12 +2299,22 @@
       fillMetodoPagoModal();
       modalMetodoPago.style.display = 'flex';
       document.body.style.overflow = 'hidden';
+
+      const footerMovil = document.querySelector('.movil-footer-sticky');
+      if (footerMovil) {
+        footerMovil.style.display = 'none';
+      }
     }
 
     function closeMetodoPagoModal() {
       if (!modalMetodoPago) return;
       modalMetodoPago.style.display = 'none';
       document.body.style.overflow = '';
+
+      const footerMovil = document.querySelector('.movil-footer-sticky');
+      if (footerMovil) {
+        footerMovil.style.display = '';
+      }
     }
 
     // Escuchar evento de validación exitosa
@@ -2351,6 +2354,34 @@
         closeMetodoPagoModal();
       }
     });
+
+    if (btnPagoMostrador) {
+      btnPagoMostrador.addEventListener('click', function () {
+        if (window.__movilCardState) {
+          window.__movilCardState.isReserving = true;
+          window.__movilCardState.isConfirming = true;
+        }
+        const footerMovil = document.querySelector('.movil-footer-sticky');
+        if (footerMovil) {
+          footerMovil.style.display = 'none';
+          footerMovil.classList.remove('visible');
+        }
+      });
+    }
+
+    if (btnPagoLinea) {
+      btnPagoLinea.addEventListener('click', function () {
+        if (window.__movilCardState) {
+          window.__movilCardState.isReserving = true;
+          window.__movilCardState.isConfirming = true;
+        }
+        const footerMovil = document.querySelector('.movil-footer-sticky');
+        if (footerMovil) {
+          footerMovil.style.display = 'none';
+          footerMovil.classList.remove('visible');
+        }
+      });
+    }
 
     const tarifa = document.querySelector('.sum-table details.sum-acc');
     if (tarifa && tarifa.hasAttribute('open')) tarifa.removeAttribute('open');
@@ -2734,8 +2765,10 @@
           console.log(`📱 Modal ${modalName} ${isOpen ? 'abierto' : 'cerrado'}`);
 
           if (!isOpen && (modalName === 'MetodoPago' || modalName === 'PagoOnline')) {
-            console.log('🔓 Modal de pago cerrado - restaurando estado normal');
-            movilCardState.isReserving = false;
+            if (!movilCardState.isConfirming) {
+              console.log('🔓 Modal de pago cerrado - restaurando estado normal');
+              movilCardState.isReserving = false;
+            }
           }
 
           updateCardVisibility();
@@ -2747,6 +2780,24 @@
       observeModal(modalMetodoPago, 'MetodoPago');
       observeModal(modalPagoOnline, 'PagoOnline');
       if (modalConfirmacion) observeModal(modalConfirmacion, 'Confirmacion');
+
+      const bMostrador = document.getElementById('btnPagoMostrador');
+      const bLinea = document.getElementById('btnPagoLinea');
+
+      if (bMostrador) {
+        bMostrador.addEventListener('click', () => {
+          console.log('Procesando pago mostrador - bloqueando tarjeta');
+          movilCardState.isConfirming = true;
+          hideMovilCard();
+        });
+      }
+      if (bLinea) {
+        bLinea.addEventListener('click', () => {
+          console.log('Procesando pago linea - bloqueando tarjeta');
+          movilCardState.isConfirming = true;
+          hideMovilCard();
+        });
+      }
     }
 
     // Observar cambios en Alertify

@@ -1258,9 +1258,22 @@
 
 <!-- IMAGEN ABAJO SOLO EN MOBILE -->
 <tr>
-<td align="center" style="padding-top:10px;">
-  <img src="{{ $imgCategoria }}" style="width:90%; max-width:260px; border-radius:12px;">
-</td>
+  <td align="center" style="padding-top:10px;">
+    @php
+      // Limpiamos la ruta para quitar dominios viejos o localhost
+      $imgMobileLimpia = str_replace(
+          ['https://viajerocar-production.up.railway.app', 'http://localhost', 'localhost'],
+          '',
+          $imgCategoria
+      );
+      // Forzamos el dominio real
+      $urlMobileFinal = 'https://www.viajerocarental.com/' . ltrim($imgMobileLimpia, '/');
+    @endphp
+
+    <img src="{{ $urlMobileFinal }}"
+         alt="Categoría Vehículo"
+         style="width:90%; max-width:260px; height:auto; display:block; border-radius:12px; border:0;">
+  </td>
 </tr>
 
 </table>
