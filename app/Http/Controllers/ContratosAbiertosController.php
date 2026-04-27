@@ -6,12 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\CierreContratoMail;
+use Carbon\Carbon;
 
 class ContratosAbiertosController extends Controller
 {
     public function index()
     {
-        return view('Admin.AdministracionReservas');
+        $soloSuperAdmin = $this->soloSuperAdmin();
+         return view('Admin.AdministracionReservas', compact('soloSuperAdmin'));
     }
 
     public function api(Request $req)
@@ -22,12 +24,28 @@ class ContratosAbiertosController extends Controller
 
     $query = DB::table('contratos AS c')
         ->join('reservaciones AS r', 'c.id_reservacion', '=', 'r.id_reservacion')
+        ->leftJoin('categorias_carros AS cat', 'r.id_categoria', '=', 'cat.id_categoria')
+        ->leftJoin('ubicaciones_servicio AS us', 'r.delivery_ubicacion', '=', 'us.id_ubicacion')
         ->select(
     'c.id_contrato',
     'c.numero_contrato',
     'c.estado',
     'r.fecha_fin',
     'r.hora_entrega',
+    'cat.nombre AS categoria',
+    'r.delivery_ubicacion',
+    'r.delivery_direccion',
+    'us.estado AS ubic_estado',
+    'us.destino AS ubic_destino',
+
+     DB::raw("
+        EXISTS(
+            SELECT 1
+            FROM reservacion_servicio rs
+            WHERE rs.id_reservacion = r.id_reservacion
+            AND rs.id_servicio = 11
+        ) AS tiene_dropoff
+    "),
     'r.nombre_cliente   AS nombre',
     'r.apellidos_cliente AS apellidos',
     'r.email_cliente    AS email'
@@ -68,6 +86,7 @@ class ContratosAbiertosController extends Controller
         ->leftJoin('reservaciones AS r','c.id_reservacion','=','r.id_reservacion')
         ->leftJoin('vehiculos AS v','r.id_vehiculo','=','v.id_vehiculo')
         ->leftJoin('categorias_carros AS cat','r.id_categoria','=','cat.id_categoria')
+        ->leftJoin('sucursales AS se', 'r.sucursal_entrega', '=', 'se.id_sucursal')
         ->select(
             'c.id_contrato',
             'c.numero_contrato',
@@ -76,6 +95,7 @@ class ContratosAbiertosController extends Controller
 
             DB::raw('r.codigo AS clave'),
             DB::raw('r.nombre_cliente AS nombre_cliente'),
+            DB::raw('r.apellidos_cliente AS apellidos_cliente'),
             DB::raw('r.email_cliente AS email_cliente'),
             DB::raw('r.telefono_cliente AS telefono'),
 
@@ -83,8 +103,11 @@ class ContratosAbiertosController extends Controller
 
             'v.marca',
             'v.modelo',
+            'v.capacidad_tanque',
             'cat.nombre AS categoria',
+            'cat.codigo AS categoria_codigo',
 
+            DB::raw('se.nombre AS sucursal_entrega_nombre'),
             DB::raw('r.fecha_inicio AS entrega_fecha'),
             DB::raw('r.hora_retiro AS entrega_hora'),
             DB::raw('r.fecha_fin AS dev_fecha'),
@@ -97,11 +120,97 @@ class ContratosAbiertosController extends Controller
             'r.metodo_pago',
             'r.delivery_activo',
             'r.delivery_total',
+            'r.tarifa_base',
 
             DB::raw('NULL AS adicionales')
         )
         ->where('c.id_contrato', $id)
         ->first();
+
+        $segurosPaquete = DB::table('reservacion_paquete_seguro as rps')
+            ->leftJoin('seguro_paquete as sp', 'rps.id_paquete', '=', 'sp.id_paquete')
+            ->where('rps.id_reservacion', $ctr->id_reservacion)
+            ->select('sp.nombre', 'rps.precio_por_dia')
+            ->get();
+
+        $segurosIndividuales = DB::table('reservacion_seguro_individual as rsi')
+            ->leftJoin('seguro_individuales as si', 'rsi.id_individual', '=', 'si.id_individual')
+            ->where('rsi.id_reservacion', $ctr->id_reservacion)
+            ->select('si.nombre', 'rsi.precio_por_dia', 'rsi.cantidad')
+            ->get();
+
+            //Calcular litros faltantes. //PD no lo suma en el total
+        $inspSalida = DB::table('inspeccion')
+            ->where('id_contrato', $id)
+            ->where('tipo', 'salida')
+            ->first();
+
+        $inspEntrada = DB::table('inspeccion')
+            ->where('id_contrato', $id)
+            ->where('tipo', 'entrada')
+            ->first();
+
+        $litrosSalida = ($inspSalida && $ctr->capacidad_tanque)
+            ? $inspSalida->nivel_combustible * $ctr->capacidad_tanque
+            : 0;
+
+        $litrosEntrada = ($inspEntrada && $ctr->capacidad_tanque)
+            ? $inspEntrada->nivel_combustible * $ctr->capacidad_tanque
+            : 0;
+
+        $litrosFaltantes = max(0, $litrosSalida - $litrosEntrada);
+
+        $servicioGasolina = DB::table('servicios')
+            ->where('id_servicio', 3)
+            ->first();
+
+        $precioLitro = $servicioGasolina->precio ?? 0;
+
+        $totalGasolina = $litrosFaltantes * $precioLitro;
+
+        //Detecta los daños nuevos
+        $danosNuevos = DB::table('contrato_evento')
+    ->where('id_contrato', $id)
+    ->where('evento', 'dano')
+    ->whereNotNull('detalle')
+    ->get()
+    ->filter(function ($e) {
+        $detalle = json_decode($e->detalle, true);
+        return isset($detalle['modo']) && $detalle['modo'] === 'regreso';
+    })
+    ->map(function ($e) {
+
+        $mapZonas = [
+            1  => "Defensa delantera",
+            2  => "Defensa delantera superior",
+            3  => "Costado izquierdo frontal",
+            4  => "Costado derecho frontal",
+            5  => "Cofre / parabrisas",
+            6  => "Puerta delantera izquierda",
+            7  => "Puerta delantera derecha",
+            8  => "Puerta trasera izquierda",
+            9  => "Puerta trasera derecha",
+            10 => "Techo",
+            11 => "Costado trasero izquierdo",
+            12 => "Costado trasero derecho",
+            13 => "Defensa trasera",
+            15 => "Llanta delantera izquierda",
+            16 => "Llanta delantera derecha",
+            17 => "Llanta trasera izquierda",
+            18 => "Llanta trasera derecha",
+        ];
+
+        $detalle = json_decode($e->detalle, true);
+
+        $zona = (int) ($detalle['zona'] ?? 0);
+
+        return [
+            'zona' => $zona,
+            'nombre_zona' => $mapZonas[$zona] ?? ('Zona ' . $zona),
+            'comentario' => $detalle['comentario'] ?? '',
+        ];
+    })
+    ->values();
 
     if (!$ctr) {
         return response()->json(['ok' => false], 404);
@@ -110,6 +219,17 @@ class ContratosAbiertosController extends Controller
     return response()->json([
         'ok' => true,
         'data' => $ctr,
+        'segurosPaquete' => $segurosPaquete,
+        'segurosIndividuales' => $segurosIndividuales,
+
+    'combustible' => [
+        'salida' => round($litrosSalida, 2),
+        'entrada' => round($litrosEntrada, 2),
+        'faltante' => round($litrosFaltantes, 2),
+        'precio_litro' => $precioLitro,
+        'total' => round($totalGasolina, 2),
+    ],
+    'danos_nuevos' => $danosNuevos
     ]);
 }
 
@@ -161,6 +281,29 @@ public function saldo($idContrato)
 public function finalizarContrato($id)
 {
     try {
+
+
+        $contrato = DB::table('contratos')->where('id_contrato', $id)->first();
+
+    $reservacion = DB::table('reservaciones')
+        ->where('id_reservacion', $contrato->id_reservacion)
+        ->first();
+
+        $now = Carbon::now();
+
+        DB::table('contratos')
+            ->where('id_contrato', $id)
+            ->update([
+                'estado' => 'cerrado',
+                'cerrado_en' => $now
+            ]);
+
+        DB::table('reservaciones')
+            ->where('id_reservacion', $reservacion->id_reservacion)
+            ->update([
+                'fecha_fin' => $now->toDateString(),
+            ]);
+
 
         // 1) Obtener contrato
         $contrato = DB::table('contratos')->where('id_contrato', $id)->first();
@@ -252,6 +395,20 @@ public function finalizarContrato($id)
     }
 }
 
+
+private function soloSuperAdmin()
+{
+    $idUsuario = session('id_usuario');
+
+    if (!$idUsuario) {
+        return false;
+    }
+
+    return DB::table('usuario_rol')
+        ->where('id_usuario', $idUsuario)
+        ->where('id_rol', 1)
+        ->exists();
+}
 
 
 

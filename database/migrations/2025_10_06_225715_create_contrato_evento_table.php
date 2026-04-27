@@ -12,6 +12,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('id_contrato');
             $table->string('evento', 120);
             $table->json('detalle')->nullable();
+            $table->string('foto')->nullable();
             $table->unsignedBigInteger('realizado_por')->nullable();
             $table->dateTime('realizado_en')->useCurrent();
             $table->timestamp('created_at')->nullable();

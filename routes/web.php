@@ -616,6 +616,9 @@ Route::get('/api/historial', [HistorialController::class, 'api'])
     ->name('api.historial');
 
     //administracion de reservaciones
+//Route::get('/admin/administracion-reservaciones', [ContratosAbiertosController::class, 'index'])
+    //->middleware('auth')
+    //->name('rutaAdministracionReservaciones');
 Route::get('/admin/administracion-reservaciones', [ContratosAbiertosController::class, 'index'])->name('rutaAdministracionReservaciones');
 Route::get('/api/contratos-abiertos/{id}', [ContratosAbiertosController::class, 'detalle'])
     ->name('contratos.detalle');

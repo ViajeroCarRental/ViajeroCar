@@ -43,10 +43,9 @@
         <th style="width:40px"></th>
         <th>No. Contrato</th>
         <th>Fecha Checkout</th>
+        <th>Categoría</th>
+        <th>Dropoff</th>
         <th>Hora Checkout</th>
-        <th>Nombre</th>
-        <th>Apellidos</th>
-        <th>Email</th>
         <th>Estatus</th>
         <th class="col-actions"></th>
     </tr>
@@ -106,6 +105,9 @@
 }
 </style>
 
+<script>
+    const esSuperAdmin = @json($soloSuperAdmin);
+</script>
 @endsection
 
 @section('js-vistaAdministracionReservaciones')
