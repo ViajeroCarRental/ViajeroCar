@@ -1,233 +1,33 @@
-/* ================================
-   SIDEBAR — LIQUID GLASS ROJO INTENSO
-================================== */
-
-.sidebar{
-  width:260px;
-  height:100dvh;
-  position:fixed;
-  inset:0 auto 0 0;
-  z-index:100;
-  display:flex;
-  flex-direction:column;
-  padding:20px 14px;
-  overflow-y:auto;
-  overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-gutter:stable;
-  border-radius:14px;
-  isolation:isolate;
-
-
-  /* Rojo intenso tipo Viajero */
-  background:
-    radial-gradient(160% 140% at 0% 0%, rgba(255,255,255,.08), rgba(255,255,255,0) 60%),
-    linear-gradient(180deg, rgba(255,0,20,.92) 0%, rgba(210,0,0,.94) 60%, rgba(160,0,0,.95) 100%);
-  border-right:1px solid rgba(0,0,0,.12);
-  border-left:1px solid rgba(255,255,255,.15);
-  backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
-  box-shadow: 8px 0 36px rgba(0,0,0,.22), inset 0 0 20px rgba(255,255,255,.06);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-}
-
-/* Reflejo superior */
-.sidebar::before{
-  content:"";
-  position:absolute; inset:0;
-  background: linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,0) 40%);
-  pointer-events:none;
-  mix-blend-mode:screen;
-}
-
-/* Contorno interno */
-.sidebar::after{
-  content:"";
-  position:absolute; inset:0;
-  border-radius:14px;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
-  pointer-events:none;
-}
-
-/* Scrollbar */
-.sidebar::-webkit-scrollbar{ width:10px }
-.sidebar::-webkit-scrollbar-thumb{
-  background: rgba(255,255,255,.28);
-  border:3px solid transparent;
-  border-radius:999px;
-  background-clip: padding-box;
-}
-.sidebar::-webkit-scrollbar-track{ background: transparent }
-
-/* ===== Logo ===== */
-.sidebar .logo{ text-align:center; margin-bottom:22px }
-.sidebar .logo img{
-  max-width:180px;
-  border-radius:12px;
-  box-shadow: 0 10px 22px rgba(0,0,0,.3);
-}
-
-/* ===== Menú ===== */
-.sidebar .menu{ list-style:none; margin:0; padding:0; flex:1 }
-.sidebar .menu li{ margin-bottom:8px }
-
-/* Secciones */
-.sidebar .menu-section{
-  font-size:13px;
-  font-weight:700;
-  color:#ffe6e8;
-  text-transform:uppercase;
-  letter-spacing:.6px;
-  margin:18px 0 8px 12px;
-}
-
-/* Enlaces */
-.sidebar .menu a{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:12px 14px;
-  text-decoration:none;
-  border-radius:12px;
-  font-weight:600;
-  font-size:14px;
-  color:#fff;
-  background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
-  border:1px solid rgba(255,255,255,.16);
-  outline:none;
-  transition:background .2s ease, color .2s ease, transform .12s ease, box-shadow .25s ease;
-}
-.sidebar .menu a:hover{
-  background:#fff;
-  color:#C10A14;
-  transform:translateX(3px);
-  box-shadow:0 8px 20px rgba(0,0,0,.25);
-}
-.sidebar .menu a.active,
-.sidebar .menu a[aria-current="page"]{
-  background:#fff;
-  color:#C10A14;
-  font-weight:700;
-}
-
-/* Íconos */
-.sidebar .menu a i{
-  font-size:16px;
-  width:26px;
-  height:26px;
-  display:grid;
-  place-items:center;
-  background:rgba(255,255,255,.18);
-  border:1px solid rgba(255,255,255,.35);
-  border-radius:10px;
-  color:#fff;
-  transition:color .2s ease, transform .2s ease, background .2s ease;
-}
-.sidebar .menu a:hover i{
-  color:#E50914;
-  background:#fff;
-  transform:scale(1.1);
-}
-
-/* ===== Contenido principal ===== */
 .main-content{
-  margin-left:260px;
-  padding:20px;
-  flex:1;
-  background:
-    radial-gradient(1200px 600px at 100% -10%, rgba(14,165,233,.08), transparent 60%),
-    linear-gradient(180deg,#f6f8ff 0%,#f5f7ff 36%,#f0f4ff 100%);
+  margin-left:0 !important;
   min-height:100vh;
-  transition:margin-left .3s ease;
+  padding:28px;
+  background:#f5f7ff;
 }
 
-
-/* ===== Dark Mode ===== */
-@media(prefers-color-scheme:dark){
-  .sidebar{
-    background:
-      radial-gradient(160% 140% at 0% 0%, rgba(255,255,255,.06), rgba(255,255,255,0) 60%),
-      linear-gradient(180deg, rgba(255,0,20,.9) 0%, rgba(210,0,0,.92) 60%, rgba(160,0,0,.95));
-    border-color:rgba(255,255,255,.15);
-  }
-  .sidebar .menu a{ color:#fefefe }
-  .sidebar .menu a:hover{ color:#E50914 }
+.flotilla-internal-content{
+  padding:28px 40px;
 }
 
-
-.btn-toggle {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 150;
-  background: #fff;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,.2);
-  cursor: pointer;
-  transition: background .2s;
-}
-.btn-toggle:hover {
-  background: #f5f5f5;
-}
-.btn-toggle i {
-  color: #C10A14;
-  font-size: 20px;
+.inner-back-wrap{
+  margin-bottom:20px;
 }
 
-
-/* Estado oculto */
-.sidebar.sidebar-hidden {
-  transform: translateX(-100%);
-  box-shadow: none;
+.inner-back-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:11px 18px;
+  border-radius:12px;
+  background:#fff;
+  color:#b22222;
+  border:1px solid rgba(178,34,34,.25);
+  text-decoration:none;
+  font-weight:800;
+  box-shadow:0 10px 25px rgba(0,0,0,.06);
 }
 
-/* Transición suave */
-.sidebar {
-  transition: transform .3s ease;
-}
-
-.sidebar.sidebar-hidden ~ .main-content {
-  margin-left: 0 !important;
-}
-/* Overlay para móvil */
-.sidebar-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.35);
-  z-index:90; /* debajo del sidebar (100) y debajo del botón (150) */
-  opacity:0;
-  pointer-events:none;
-  transition:opacity .25s ease;
-}
-
-/* cuando el sidebar está abierto en móvil, mostramos overlay */
-body.sidebar-open .sidebar-overlay{
-  opacity:1;
-  pointer-events:auto;
-}
-
-/* Botón toggle: cuando sidebar está visible, lo empujamos a la derecha */
-body.sidebar-open .btn-toggle{
-  left: 276px; /* 260 + margen */
-}
-
-/* En pantallas pequeñas, el sidebar se oculta completamente (no modo mini) */
-@media(max-width:768px){
-  .sidebar{
-    transform: translateX(-100%);
-    width:260px; /* full */
-  }
-  body.sidebar-open .sidebar{
-    transform: translateX(0);
-  }
-
-  .main-content{
-    margin-left:0 !important;
-  }
-
-  body.sidebar-open .btn-toggle{
-    left:16px; /* que no se vaya a la derecha en móvil */
-  }
+.inner-back-btn:hover{
+  background:#b22222;
+  color:#fff;
 }

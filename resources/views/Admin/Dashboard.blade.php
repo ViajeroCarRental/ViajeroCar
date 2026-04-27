@@ -4,7 +4,13 @@
 <meta charset="UTF-8" />
 <title>Panel | Viajero Car Rental</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<<<<<<< Updated upstream
 <link rel="stylesheet" href="{{ asset('assets/style.css') }}" />
+=======
+
+<link rel="stylesheet" href="{{ asset('css/dashboard.css') }}" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+>>>>>>> Stashed changes
 <link rel="icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
 <link rel="shortcut icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
 
@@ -440,26 +446,63 @@ body{
 <section class="section">
   <h3 style="margin:0 0 8px">Módulos</h3>
   <div class="grid">
+<<<<<<< Updated upstream
     <!-- AUTOS: ahora sí usa route() de Laravel -->
     <article class="mod" id="modAutos" data-link="{{ route('rutaFlotilla') }}" data-theme="autos">
       <div class="head"><div class="ic">🚗</div>Flotilla</div>
+=======
+
+    <!-- FLOTILLA -->
+    <article class="mod" id="modAutos" data-link="{{ route('rutaMenuFlotilla') }}">
+      <div class="head">
+        <div class="ic">
+          <i class="fa-solid fa-car-side"></i>
+        </div>
+        Flotilla
+      </div>
+
+>>>>>>> Stashed changes
       <div class="body">
         <p>Flotilla, mantenimiento, pólizas, carrocería y gastos.</p>
         <div class="go">Entrar →</div>
       </div>
     </article>
 
+<<<<<<< Updated upstream
     <article class="mod" id="modRentas" data-link="{{route('rutaInicioVentas')}}" data-theme="rentas">
       <div class="head"><div class="ic">🧾</div>Rentas</div>
+=======
+    <!-- RENTAS -->
+    <article class="mod" id="modRentas" data-link="{{ route('rutaMenuVentas') }}">
+      <div class="head">
+        <div class="ic">
+          <i class="fa-regular fa-file-lines"></i>
+        </div>
+        Rentas
+      </div>
+
+>>>>>>> Stashed changes
       <div class="body">
         <p>Reservaciones, cotizaciones y seguimiento de contratos.</p>
         <div class="go">Entrar →</div>
       </div>
     </article>
 
+<<<<<<< Updated upstream
     <article class="mod" id="modAdmin" data-link="{{route('admin.usuarios.index')}}"
  data-theme="admin">
       <div class="head"><div class="ic">⚙</div>Administración</div>
+=======
+    <!-- ADMIN -->
+    <article class="mod" id="modAdmin" data-link="{{ route('rutaMenuAdmin') }}">
+      <div class="head">
+        <div class="ic">
+          <i class="fa-solid fa-gear"></i>
+        </div>
+        Administración
+      </div>
+
+>>>>>>> Stashed changes
       <div class="body">
         <p>Usuarios, roles/permisos, sedes, auditoría y seguridad.</p>
         <div class="go">Entrar →</div>
@@ -471,7 +514,10 @@ body{
 <p class="foot">© Viajero Car Rental · Panel interno</p>
 
 
+<<<<<<< Updated upstream
 <script src="{{ asset('assets/session.js') }}"></script>
+=======
+>>>>>>> Stashed changes
 <script>
 /* ==============================
    🔐 Sesión y bienvenida

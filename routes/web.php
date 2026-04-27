@@ -120,10 +120,18 @@ Route::middleware('sesion.activa')->group(function () {
 //Vistas Flotilla
 //inicio
 Route::get('/admin/dashboard', [App\Http\Controllers\controladorVistasAdmin::class, 'dashboard'])->name('rutaDashboard');
+Route::view('/flotilla/menu', 'Admin.menuFlotilla')
+    ->name('rutaMenuFlotilla');
+
+Route::view('/admin/menu', 'Admin.menuAdmin')->name('rutaMenuAdmin');
+
+Route::view('/ventas/menu', 'Admin.menuVentas')
+    ->name('rutaMenuVentas');
 //mantenimiento
 Route::get('/admin/mantenimiento', [App\Http\Controllers\controladorVistasAdmin::class, 'mantenimiento'])->name('rutaMantenimiento');
 //flotilla
 Route::get('/admin/flotilla', [App\Http\Controllers\controladorVistasAdmin::class, 'flotilla'])->name('rutaFlotilla');
+
 //polizas
 Route::get('/admin/polizas', [App\Http\Controllers\controladorVistasAdmin::class, 'polizas'])->name('rutaPolizas');
 //carroceria
