@@ -15,11 +15,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css"/>
 
-    @yield('css-vistaUsuariosAdmin')
-    @yield('css-vistaRoles')
-    @yield('css')
-
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
+
+@yield('css-vistaUsuariosAdmin')
+@yield('css-vistaRoles')
+@yield('css')
 </head>
 
 <body>
