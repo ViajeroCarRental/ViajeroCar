@@ -9,163 +9,147 @@ use Carbon\Carbon;
 
 class ContratoBaseController extends Controller
 {
-    protected function mapaImagenesCategoria(): array
-    {
-        return [
-            'C'  => 'aveo.png',
-            'D'  => 'virtus.png',
-            'E'  => 'jetta.png',
-            'F'  => 'camry.png',
-            'IC' => 'renegade.png',
-            'I'  => 'taos.png',
-            'IB' => 'avanza.png',
-            'M'  => 'Odyssey.png',
-            'L'  => 'Hiace.png',
-            'H'  => 'Frontier.png',
-            'HI' => 'Tacoma.png',
-        ];
-    }
+    // ---------------------------------------------------------------------
+    // Constantes y configuración
+    // ---------------------------------------------------------------------
 
+    /** @var float IVA aplicable a los totales */
+    private const IVA = 0.16;
+
+    /** @var array Nombres de servicios que se manejan como cargos adicionales y no deben duplicarse */
+    private const SERVICIOS_EXCLUIDOS = [
+        'Gasolina Prepago',
+        'Drop Off',
+        'Dropoff',
+        'Delivery',
+        'Servicio de Delivery',
+        'Prepaid fuel',
+    ];
+
+    /** @var array Mapa de códigos de categoría a imagen de contrato */
+    private const MAPA_IMAGENES_CATEGORIA = [
+        'C'  => 'aveo.webp',
+        'D'  => 'virtus.webp',
+        'E'  => 'jetta.webp',
+        'F'  => 'camry.webp',
+        'IC' => 'renegade.webp',
+        'I'  => 'taos.webp',
+        'IB' => 'avanza.webp',
+        'M'  => 'Odyssey.webp',
+        'L'  => 'Hiace.webp',
+        'H'  => 'Frontier.webp',
+        'HI' => 'Tacoma.webp',
+    ];
+
+    // ---------------------------------------------------------------------
+    // Helpers básicos (reutilizables)
+    // ---------------------------------------------------------------------
+
+    /** Obtiene la imagen de contrato según la categoría de la reserva */
     protected function imagenContratoPorCategoria(?string $codigoCategoria): string
     {
-        $archivo = $this->mapaImagenesCategoria()[$codigoCategoria ?? ''] ?? 'Logotipo.png';
-
+        $archivo = self::MAPA_IMAGENES_CATEGORIA[$codigoCategoria ?? ''] ?? 'Logotipo.png';
         return asset("img/{$archivo}");
     }
 
+    /** Calcula los días de renta entre dos fechas, mínimo 1 día */
     protected function calcularDiasRenta($fechaInicio, $fechaFin): int
     {
         return max(1, Carbon::parse($fechaInicio)->diffInDays(Carbon::parse($fechaFin)));
     }
 
+    /** Obtiene el IVA configurado (puede venir de BD en el futuro) */
+    protected function getIva(): float
+    {
+        return self::IVA;
+    }
+
+    // ---------------------------------------------------------------------
+    // Lógica central: resumen del contrato
+    // ---------------------------------------------------------------------
+
     public function resumenContrato($idReservacion)
     {
         try {
-            $res = DB::table('reservaciones as r')
-                ->leftJoin('vehiculos as v', 'r.id_vehiculo', '=', 'v.id_vehiculo')
-                ->leftJoin('categorias_carros as cc', 'r.id_categoria', '=', 'cc.id_categoria')
-                ->select(
-                    'r.*',
-                    'v.id_vehiculo as vehiculo_id',
-                    'v.marca as vehiculo_marca',
-                    'v.modelo as vehiculo_modelo',
-                    'v.nombre_publico as vehiculo_nombre_publico',
-                    'v.categoria as vehiculo_categoria',
-                    'v.transmision as vehiculo_transmision',
-                    'v.kilometraje as vehiculo_km',
-                    'v.placa as vehiculo_placa',
-                    'v.asientos as vehiculo_asientos',
-                    'v.puertas as vehiculo_puertas',
-                    'cc.codigo as codigo_categoria'
-                )
-                ->where('r.id_reservacion', $idReservacion)
-                ->first();
-            if (!$res) return response()->json(['success' => false, 'msg' => 'Reservacion no encontrada'], 404);
+            $res = $this->obtenerReservacionBase($idReservacion);
+            if (!$res) {
+                return response()->json(['success' => false, 'msg' => 'Reservación no encontrada'], 404);
+            }
 
+            $dias = $this->calcularDiasRenta($res->fecha_inicio, $res->fecha_fin);
             $codigoCat = $res->codigo_categoria ?? 'C';
 
-            // --- LÓGICA DE IMAGEN FIJA POR CATEGORÍA ---
-            $imgFinal = $this->imagenContratoPorCategoria($codigoCat);
-            $dias = $this->calcularDiasRenta($res->fecha_inicio, $res->fecha_fin);
+            // Componentes del resumen
+            $vehiculoData = $this->buildVehiculoData($res, $codigoCat);
+            $seguros      = $this->buildSeguros($idReservacion, $dias);
+            $servicios    = $this->buildServicios($idReservacion, $dias);
+            $cargos       = $this->buildCargosAdicionales($idReservacion);
+            $totales      = $this->buildTotales($res, $dias, $seguros, $servicios, $cargos);
+            $pagos        = $this->buildPagos($idReservacion, $totales['total']);
 
-            $seguros = ['tipo' => null, 'lista' => [], 'total' => 0];
-            $listaServicios = [];
-            $sumaServicios = 0;
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'codigo'   => $res->codigo,
+                    'cliente'  => [
+                        'nombre'   => $res->nombre_cliente,
+                        'telefono' => $res->telefono_cliente,
+                        'email'    => $res->email_cliente,
+                    ],
+                    'vehiculo'  => $vehiculoData,
+                    'fechas'    => [
+                        'inicio'      => $res->fecha_inicio,
+                        'hora_inicio' => Carbon::parse($res->hora_retiro)->format('h:i A'),
+                        'fin'         => $res->fecha_fin,
+                        'hora_fin'    => Carbon::parse($res->hora_entrega)->format('h:i A'),
+                        'dias'        => $dias,
+                    ],
+                    'seguros'   => $seguros,
+                    'servicios' => $servicios['lista'],
+                    'cargos'    => $cargos['lista'],
+                    'totales'   => $totales,
+                    'pagos'     => $pagos,
+                ]
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("ERROR resumenContrato: " . $e->getMessage());
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
 
-            $listaCargos = [];
-            $sumaCargos = 0;
+    // ---------------------------------------------------------------------
+    // Subconsultas del resumen (privadas)
+    // ---------------------------------------------------------------------
 
-            // 4. SEGUROS
-            $paquete = DB::table('reservacion_paquete_seguro as rps')
-                ->join('seguro_paquete as sp', 'rps.id_paquete', '=', 'sp.id_paquete')
-                ->where('rps.id_reservacion', $idReservacion)
-                ->select('sp.nombre', 'rps.precio_por_dia')->first();
+    private function obtenerReservacionBase(int $idReservacion)
+    {
+        return DB::table('reservaciones as r')
+            ->leftJoin('vehiculos as v', 'r.id_vehiculo', '=', 'v.id_vehiculo')
+            ->leftJoin('categorias_carros as cc', 'r.id_categoria', '=', 'cc.id_categoria')
+            ->select(
+                'r.*',
+                'v.id_vehiculo as vehiculo_id',
+                'v.marca as vehiculo_marca',
+                'v.modelo as vehiculo_modelo',
+                'v.nombre_publico as vehiculo_nombre_publico',
+                'v.categoria as vehiculo_categoria',
+                'v.transmision as vehiculo_transmision',
+                'v.kilometraje as vehiculo_km',
+                'v.placa as vehiculo_placa',
+                'v.asientos as vehiculo_asientos',
+                'v.puertas as vehiculo_puertas',
+                'cc.codigo as codigo_categoria'
+            )
+            ->where('r.id_reservacion', $idReservacion)
+            ->first();
+    }
 
-            if ($paquete) {
-                $seguros['tipo'] = 'paquete';
-                $seguros['lista'][] = ['nombre' => $paquete->nombre, 'precio' => $paquete->precio_por_dia];
-                $seguros['total'] = (float)$paquete->precio_por_dia * $dias;
-            } else {
-                $individuales = DB::table('reservacion_seguro_individual as ri')
-                    ->join('seguro_individuales as si', 'ri.id_individual', '=', 'si.id_individual')
-                    ->where('ri.id_reservacion', $idReservacion)
-                    ->select('si.nombre', 'ri.precio_por_dia')->get();
-                foreach ($individuales as $ind) {
-                    $seguros['lista'][] = ['nombre' => $ind->nombre, 'precio' => $ind->precio_por_dia];
-                    $seguros['total'] += ((float)$ind->precio_por_dia * $dias);
-                }
-            }
+    private function buildVehiculoData($res, string $codigoCat): array
+    {
+        $imgFinal = $this->imagenContratoPorCategoria($codigoCat);
 
-            // 5. DELIVERY
-            if ($res->delivery_activo && (float)$res->delivery_total > 0) {
-                $montoDev = (float)$res->delivery_total;
-                $listaServicios[] = ['nombre' => 'Delivery', 'cantidad' => 1, 'total' => $montoDev];
-                $sumaServicios += $montoDev;
-            }
-
-            // 6. SERVICIOS DEL PASO 2
-            $serviciosDB = DB::table('reservacion_servicio as rs')
-                ->join('servicios as s', 'rs.id_servicio', '=', 's.id_servicio')
-                ->where('rs.id_reservacion', $idReservacion)
-                ->select('s.nombre', 'rs.cantidad', 'rs.precio_unitario', 's.tipo_cobro')->get();
-
-            foreach ($serviciosDB as $srv) {
-                $sub = ($srv->tipo_cobro === 'por_dia')
-                    ? ((float)$srv->cantidad * (float)$srv->precio_unitario * $dias)
-                    : ((float)$srv->cantidad * (float)$srv->precio_unitario);
-                $listaServicios[] = ['nombre' => $srv->nombre, 'cantidad' => $srv->cantidad, 'total' => $sub];
-                $sumaServicios += $sub;
-            }
-
-            // 7. CARGOS ADICIONALES (Dropoff y Gasolina)
-            $idContrato = DB::table('contratos')
-                ->where('id_reservacion', $idReservacion)
-                ->orderBy('id_contrato', 'desc')
-                ->value('id_contrato');
-
-            if ($idContrato) {
-                $cargosExtras = DB::table('cargo_adicional')
-                    ->where('id_contrato', $idContrato)
-                    ->get();
-
-                foreach ($cargosExtras as $cargo) {
-                    $monto = (float)($cargo->monto ?? 0);
-
-                    if ($monto <= 0) continue;
-
-                    $nombre = $cargo->concepto;
-                    if (empty($nombre)) {
-                        if ($cargo->id_concepto == 5) $nombre = 'Gasolina Prepago';
-                        elseif ($cargo->id_concepto == 6) $nombre = 'Dropoff';
-                        else $nombre = 'Cargo Adicional';
-                    }
-
-                    // 🔥 CORRECCIÓN: Se agregan a listaCargos y sumaCargos, no a servicios
-                    $listaCargos[] = ['nombre' => $nombre, 'cantidad' => 1, 'total' => $monto];
-                    $sumaCargos += $monto;
-                }
-            }
-
-            // 8. TOTALES FINALES
-            $precioRentaDia = (float)(($res->tarifa_modificada > 0) ? $res->tarifa_modificada : $res->tarifa_base);
-            $montoRentaBase = $precioRentaDia * $dias;
-
-            $subtotalReal = $montoRentaBase + $seguros['total'] + $sumaServicios + $sumaCargos;
-            $ivaReal = $subtotalReal * 0.16;
-            $totalReal = $subtotalReal + $ivaReal;
-
-            // 🚀 OPTIMIZACIÓN: Solo actualiza si los valores cambiaron (ahorra milisegundos de DB)
-            
-
-            $pagosRealizados = DB::table('pagos')
-                ->where('id_reservacion', $idReservacion)
-                ->where('estatus', 'paid')
-                ->where(function ($query) {
-                    $query->whereNull('tipo_pago')
-                        ->orWhereRaw('UPPER(TRIM(tipo_pago)) <> ?', ['GARANTIA']);
-                })
-                ->sum('monto') ?? 0;
-            $vehiculoData = $res->vehiculo_id ? [
+        if ($res->vehiculo_id) {
+            return [
                 'id_vehiculo'      => $res->vehiculo_id,
                 'marca'            => $res->vehiculo_marca,
                 'modelo'           => $res->vehiculo_modelo,
@@ -177,55 +161,169 @@ class ContratoBaseController extends Controller
                 'placa'            => $res->vehiculo_placa,
                 'asientos'         => $res->vehiculo_asientos,
                 'puertas'          => $res->vehiculo_puertas,
-                'imagen_render'    => $imgFinal
-            ] : [
                 'imagen_render'    => $imgFinal,
-                'categoria'        => $codigoCat,
-                'codigo_categoria' => $codigoCat,
             ];
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'codigo' => $res->codigo,
-                    'cliente' => ['nombre' => $res->nombre_cliente, 'telefono' => $res->telefono_cliente, 'email' => $res->email_cliente],
-                    'vehiculo' => $vehiculoData,
-                    'fechas' => [
-                        'inicio' => $res->fecha_inicio,
-                        'hora_inicio' => \Carbon\Carbon::parse($res->hora_retiro)->format('h:i A'),
-                        'fin' => $res->fecha_fin,
-                        'hora_fin' => \Carbon\Carbon::parse($res->hora_entrega)->format('h:i A'),
-                        'dias' => $dias
-                    ],
-                    'seguros' => $seguros,
-                    'servicios' => $listaServicios,
-                    'cargos' => $listaCargos,
-                    'totales' => [
-                        'tarifa_base' => $precioRentaDia,
-                        'tarifa_modificada' => (float)($res->tarifa_modificada ?? 0),
-                        'subtotal' => $subtotalReal,
-                        'iva' => $ivaReal,
-                        'total' => $totalReal,
-                        'servicios_total' => $sumaServicios,
-                        'cargos_total' => $sumaCargos,
-                        'horas_cortesia' => $res->horas_cortesia
-                    ],
-                    'pagos' => ['realizados' => $pagosRealizados, 'saldo' => max(0, $totalReal - $pagosRealizados)]
-                ]
-            ]);
-        } catch (\Throwable $e) {
-            Log::error("ERROR resumenContrato: " . $e->getMessage());
-            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
+
+        return [
+            'imagen_render'    => $imgFinal,
+            'categoria'        => $codigoCat,
+            'codigo_categoria' => $codigoCat,
+        ];
     }
 
-    /**
-     * Asigna un vehículo específico a una reservación y actualiza su historial de estatus.
-     */
+    private function buildSeguros(int $idReservacion, int $dias): array
+    {
+        $seguros = ['tipo' => null, 'lista' => [], 'total' => 0];
+
+        $paquete = DB::table('reservacion_paquete_seguro as rps')
+            ->join('seguro_paquete as sp', 'rps.id_paquete', '=', 'sp.id_paquete')
+            ->where('rps.id_reservacion', $idReservacion)
+            ->select('sp.nombre', 'rps.precio_por_dia')
+            ->first();
+
+        if ($paquete) {
+            $seguros['tipo'] = 'paquete';
+            $seguros['lista'][] = ['nombre' => $paquete->nombre, 'precio' => $paquete->precio_por_dia];
+            $seguros['total'] = (float) $paquete->precio_por_dia * $dias;
+        } else {
+            $individuales = DB::table('reservacion_seguro_individual as ri')
+                ->join('seguro_individuales as si', 'ri.id_individual', '=', 'si.id_individual')
+                ->where('ri.id_reservacion', $idReservacion)
+                ->select('si.nombre', 'ri.precio_por_dia')
+                ->get();
+
+            foreach ($individuales as $ind) {
+                $seguros['lista'][] = ['nombre' => $ind->nombre, 'precio' => $ind->precio_por_dia];
+                $seguros['total'] += (float) $ind->precio_por_dia * $dias;
+            }
+        }
+
+        return $seguros;
+    }
+
+    private function buildServicios(int $idReservacion, int $dias): array
+    {
+        $lista   = [];
+        $suma    = 0;
+
+        // Delivery (si existe como campo en la reservación)
+        $res = DB::table('reservaciones')
+            ->select('delivery_activo', 'delivery_total')
+            ->where('id_reservacion', $idReservacion)
+            ->first();
+
+        if ($res && $res->delivery_activo && (float) $res->delivery_total > 0) {
+            $monto = (float) $res->delivery_total;
+            $lista[] = ['nombre' => 'Delivery', 'cantidad' => 1, 'total' => $monto];
+            $suma += $monto;
+        }
+
+        // Servicios extra excluyendo los que son cargos adicionales
+        $serviciosDB = DB::table('reservacion_servicio as rs')
+            ->join('servicios as s', 'rs.id_servicio', '=', 's.id_servicio')
+            ->where('rs.id_reservacion', $idReservacion)
+            ->whereNotIn('s.nombre', self::SERVICIOS_EXCLUIDOS)
+            ->select('s.nombre', 'rs.cantidad', 'rs.precio_unitario', 's.tipo_cobro')
+            ->get();
+
+        foreach ($serviciosDB as $srv) {
+            $sub = ($srv->tipo_cobro === 'por_dia')
+                ? (float) $srv->cantidad * (float) $srv->precio_unitario * $dias
+                : (float) $srv->cantidad * (float) $srv->precio_unitario;
+
+            $lista[] = ['nombre' => $srv->nombre, 'cantidad' => $srv->cantidad, 'total' => $sub];
+            $suma += $sub;
+        }
+
+        return ['lista' => $lista, 'total' => $suma];
+    }
+
+    private function buildCargosAdicionales(int $idReservacion): array
+    {
+        $lista = [];
+        $suma  = 0;
+
+        $idContrato = DB::table('contratos')
+            ->where('id_reservacion', $idReservacion)
+            ->orderBy('id_contrato', 'desc')
+            ->value('id_contrato');
+
+        if (!$idContrato) {
+            return ['lista' => $lista, 'total' => $suma];
+        }
+
+        $cargosExtras = DB::table('cargo_adicional')
+            ->where('id_contrato', $idContrato)
+            ->get();
+
+        foreach ($cargosExtras as $cargo) {
+            $monto = (float) ($cargo->monto ?? 0);
+            if ($monto <= 0) {
+                continue;
+            }
+
+            $nombre = $cargo->concepto;
+            if (empty($nombre)) {
+                $nombre = match ((int) $cargo->id_concepto) {
+                    5 => 'Gasolina Prepago',
+                    6 => 'Dropoff',
+                    default => 'Cargo Adicional',
+                };
+            }
+
+            $lista[] = ['nombre' => $nombre, 'cantidad' => 1, 'total' => $monto];
+            $suma += $monto;
+        }
+
+        return ['lista' => $lista, 'total' => $suma];
+    }
+
+    private function buildTotales($res, int $dias, array $seguros, array $servicios, array $cargos): array
+    {
+        $precioRentaDia = (float) (($res->tarifa_modificada > 0) ? $res->tarifa_modificada : $res->tarifa_base);
+        $montoRentaBase = $precioRentaDia * $dias;
+
+        $subtotalReal = $montoRentaBase + $seguros['total'] + $servicios['total'] + $cargos['total'];
+        $ivaReal = $subtotalReal * $this->getIva();
+        $totalReal = $subtotalReal + $ivaReal;
+
+        return [
+            'tarifa_base'       => $precioRentaDia,
+            'tarifa_modificada' => (float) ($res->tarifa_modificada ?? 0),
+            'subtotal'          => $subtotalReal,
+            'iva'               => $ivaReal,
+            'total'             => $totalReal,
+            'servicios_total'   => $servicios['total'],
+            'cargos_total'      => $cargos['total'],
+            'horas_cortesia'    => $res->horas_cortesia,
+        ];
+    }
+
+    private function buildPagos(int $idReservacion, float $totalReal): array
+    {
+        $pagosRealizados = DB::table('pagos')
+            ->where('id_reservacion', $idReservacion)
+            ->where('estatus', 'paid')
+            ->where(function ($query) {
+                $query->whereNull('tipo_pago')
+                      ->orWhereRaw('UPPER(TRIM(tipo_pago)) <> ?', ['GARANTIA']);
+            })
+            ->sum('monto') ?? 0;
+
+        return [
+            'realizados' => $pagosRealizados,
+            'saldo'      => max(0, $totalReal - $pagosRealizados),
+        ];
+    }
+
+    // ---------------------------------------------------------------------
+    // Asignación de vehículo
+    // ---------------------------------------------------------------------
+
     public function asignarVehiculo(Request $request)
     {
         try {
-            // validacion: Asegura que el ID de reservación y el del vehículo existan en las tablas
             $data = $request->validate([
                 'id_reservacion' => 'required|integer|exists:reservaciones,id_reservacion',
                 'id_vehiculo'    => 'required|integer|exists:vehiculos,id_vehiculo',
@@ -233,49 +331,27 @@ class ContratoBaseController extends Controller
 
             $res = DB::table('reservaciones')->where('id_reservacion', $data['id_reservacion'])->first();
             if (!$res) {
-                return response()->json(['success' => false, 'error' => 'Reservacion no encontrada'], 404);
+                return response()->json(['success' => false, 'error' => 'Reservación no encontrada'], 404);
             }
 
             $inicioReq = $res->fecha_inicio . ' ' . $res->hora_retiro;
-            $finReq = $res->fecha_fin . ' ' . $res->hora_entrega;
+            $finReq    = $res->fecha_fin . ' ' . $res->hora_entrega;
 
-            $vehiculoBloqueado = DB::table('reservaciones as r')
-                ->leftJoin('contratos as c', 'r.id_reservacion', '=', 'c.id_reservacion')
-                ->where('r.id_vehiculo', $data['id_vehiculo'])
-                ->where('r.id_reservacion', '!=', $data['id_reservacion'])
-                ->where(function ($q) use ($inicioReq, $finReq) {
-                    $q->where(function ($sub) use ($inicioReq, $finReq) {
-                        $sub->whereRaw("CONCAT(r.fecha_inicio, ' ', r.hora_retiro) < ?", [$finReq])
-                            ->whereRaw("CONCAT(r.fecha_fin, ' ', r.hora_entrega) > ?", [$inicioReq])
-                            ->where('r.estado', 'confirmada');
-                    })->orWhere(function ($sub) {
-                        $sub->whereNotNull('c.id_contrato')
-                            ->whereNotIn('c.estado', ['cerrado', 'cancelado']);
-                    });
-                })
-                ->select('r.codigo')
-                ->first();
-
-            if ($vehiculoBloqueado) {
+            if ($this->vehiculoEstaBloqueado($data['id_vehiculo'], $inicioReq, $finReq, $data['id_reservacion'])) {
                 return response()->json([
                     'success' => false,
-                    'error' => 'Este vehiculo ya esta asignado a otra reservacion o contrato activo.'
+                    'error'   => 'Este vehículo ya está asignado a otra reservación o contrato activo.'
                 ], 422);
             }
 
             DB::transaction(function () use ($data, $res) {
-
-                // A. ACTUALIZAR RESERVA: 
-                // Vinculamos el ID del vehículo elegido a la fila de la reservación.
                 DB::table('reservaciones')
                     ->where('id_reservacion', $data['id_reservacion'])
                     ->update([
                         'id_vehiculo' => $data['id_vehiculo'],
-                        'updated_at'  => now()
+                        'updated_at'  => now(),
                     ]);
 
-                // B. HISTORIAL: Insertamos el registro en la tabla de estatus historial.
-                // Nota: id_estatus => 2 representa que el vehículo pasa a estar "Ocupado" o "Rentado".
                 DB::table('vehiculo_estatus_historial')->insert([
                     'id_vehiculo' => $data['id_vehiculo'],
                     'id_estatus'  => 2,
@@ -293,15 +369,17 @@ class ContratoBaseController extends Controller
         }
     }
 
-    /**
-     * Obtener vehículos disponibles por categoría
-     * Usado por el modal del paso 1 y paso 4 del contrato
-     */
+    // ---------------------------------------------------------------------
+    // Vehículos por categoría (modal)
+    // ---------------------------------------------------------------------
+
     public function vehiculosPorCategoria($idCategoria, $idReservacion)
     {
         try {
             $resActual = DB::table('reservaciones')->where('id_reservacion', $idReservacion)->first();
-            if (!$resActual) return response()->json(['success' => false, 'error' => 'Reserva no encontrada'], 404);
+            if (!$resActual) {
+                return response()->json(['success' => false, 'error' => 'Reserva no encontrada'], 404);
+            }
 
             $inicioReq = $resActual->fecha_inicio . ' ' . $resActual->hora_retiro;
             $finReq    = $resActual->fecha_fin . ' ' . $resActual->hora_entrega;
@@ -314,50 +392,27 @@ class ContratoBaseController extends Controller
                 ->leftJoin('mantenimientos as m', 'm.id_vehiculo', '=', 'v.id_vehiculo')
                 ->where('v.id_categoria', $idCategoria)
                 ->select('v.*', 'img.url as foto_url', 'm.proximo_servicio')
-
-                // SUB-CONSULTA DE BLOQUEO
-                ->selectSub(function ($query) use ($idReservacion, $inicioReq, $finReq) {
-                    $query->from('reservaciones as r')
-                        ->leftJoin('contratos as c', 'r.id_reservacion', '=', 'c.id_reservacion')
-                        ->select('r.codigo')
-                        ->whereColumn('r.id_vehiculo', 'v.id_vehiculo')
-                        ->where('r.id_reservacion', '!=', $idReservacion)
-                        ->where(function ($q) use ($inicioReq, $finReq) {
-
-                            /**
-                             * REGLA 1 y 3: Solo bloquea si está CONFIRMADA
-                             * Si la reserva está en 'hold' o 'pendiente_pago', el coche sigue LIBRE.
-                             * El pago ay esta confirmado solomanete
-                             */
-                            $q->where(function ($sub) use ($inicioReq, $finReq) {
-                                $sub->whereRaw("CONCAT(r.fecha_inicio, ' ', r.hora_retiro) < ?", [$finReq])
-                                    ->whereRaw("CONCAT(r.fecha_fin, ' ', r.hora_entrega) > ?", [$inicioReq])
-                                    ->where('r.estado', 'confirmada'); // <--- Cambio clave aquí
-                            })
-
-                                /**
-                                 * REGLA 2: Estado del Contrato
-                                 * Si ya hay un contrato físico, bloqueamos a menos que esté cerrado/cancelado.
-                                 */
-                                ->orWhere(function ($sub) {
-                                    $sub->whereNotNull('c.id_contrato')
-                                        ->whereNotIn('c.estado', ['cerrado', 'cancelado']);
-                                });
-                        })
-                        ->limit(1);
-                }, 'bloqueado_por_codigo')
-
-                ->addSelect(DB::raw("(v.id_vehiculo = $idVehiculoActual) as es_el_actual"))
+                ->selectSub(
+                    $this->subqueryBloqueo($inicioReq, $finReq, $idReservacion),
+                    'bloqueado_por_codigo'
+                )
+                ->addSelect(DB::raw("(v.id_vehiculo = {$idVehiculoActual}) as es_el_actual"))
                 ->get();
 
-            // Procesamiento de datos para la vista
             $vehiculos->transform(function ($v) {
-                $v->km_restantes = ($v->proximo_servicio && $v->kilometraje) ? ($v->proximo_servicio - $v->kilometraje) : null;
+                $v->km_restantes = ($v->proximo_servicio && $v->kilometraje)
+                    ? ($v->proximo_servicio - $v->kilometraje)
+                    : null;
 
-                if ($v->km_restantes === null) $v->color_mantenimiento = "gris";
-                elseif ($v->km_restantes > 1200) $v->color_mantenimiento = "verde";
-                elseif ($v->km_restantes > 600) $v->color_mantenimiento = "amarillo";
-                else $v->color_mantenimiento = "rojo";
+                if ($v->km_restantes === null) {
+                    $v->color_mantenimiento = "gris";
+                } elseif ($v->km_restantes > 1200) {
+                    $v->color_mantenimiento = "verde";
+                } elseif ($v->km_restantes > 600) {
+                    $v->color_mantenimiento = "amarillo";
+                } else {
+                    $v->color_mantenimiento = "rojo";
+                }
 
                 return $v;
             });
@@ -369,11 +424,14 @@ class ContratoBaseController extends Controller
         }
     }
 
+    // ---------------------------------------------------------------------
+    // Vehículo aleatorio (solo catálogo)
+    // ---------------------------------------------------------------------
+
     public function vehiculoRandom($idCategoria)
     {
         try {
-            // Buscar vehículos disponibles de esa categoría
-            $vehiculos = DB::table('vehiculos')
+            $vehiculo = DB::table('vehiculos')
                 ->leftJoin('vehiculo_imagenes', 'vehiculos.id_vehiculo', '=', 'vehiculo_imagenes.id_vehiculo')
                 ->where('vehiculos.id_categoria', $idCategoria)
                 ->select(
@@ -388,7 +446,7 @@ class ContratoBaseController extends Controller
                 ->inRandomOrder()
                 ->first();
 
-            if (!$vehiculos) {
+            if (!$vehiculo) {
                 return response()->json([
                     'success' => false,
                     'error'   => 'No hay vehículos disponibles para esta categoría'
@@ -397,17 +455,20 @@ class ContratoBaseController extends Controller
 
             return response()->json([
                 'success'  => true,
-                'vehiculo' => $vehiculos
+                'vehiculo' => $vehiculo
             ]);
         } catch (\Throwable $e) {
             Log::error("Error vehiculoRandom: " . $e->getMessage());
-
             return response()->json([
                 'success' => false,
                 'error'   => 'Error interno'
             ], 500);
         }
     }
+
+    // ---------------------------------------------------------------------
+    // Cargo variable
+    // ---------------------------------------------------------------------
 
     public function guardarCargoVariable(Request $request)
     {
@@ -425,7 +486,7 @@ class ContratoBaseController extends Controller
             $litros        = $request->litros ?? null;
             $precioLitro   = $request->precio_litro ?? null;
 
-            $json = [
+            $detalle = [
                 'km'           => $kilometros,
                 'destino'      => $destino,
                 'litros'       => $litros,
@@ -439,10 +500,9 @@ class ContratoBaseController extends Controller
 
             $existe = $query->first();
 
-            $esApagado = ($montoVariable <= 0 && $idConcepto == 5) || ($montoVariable <= 0 && $idConcepto == 6);
-
+            // Si el monto es 0 y es un concepto apagable, se elimina el registro
+            $esApagado = ($montoVariable <= 0 && in_array($idConcepto, [5, 6]));
             if ($esApagado) {
-                // Si el monto es 0, borramos el registro de la tabla para que no salga en el resumen
                 $query->delete();
                 return response()->json(['success' => true, 'action' => 'deleted']);
             }
@@ -450,17 +510,20 @@ class ContratoBaseController extends Controller
             if ($existe) {
                 $query->update([
                     'monto'      => $montoVariable,
-                    'detalle'    => json_encode($json),
-                    'updated_at' => now()
+                    'detalle'    => json_encode($detalle),
+                    'updated_at' => now(),
                 ]);
                 $action = 'updated';
             } else {
-                $nombreConcepto = DB::table('cargo_concepto')->where('id_concepto', $idConcepto)->value('nombre');
+                $nombreConcepto = DB::table('cargo_concepto')
+                    ->where('id_concepto', $idConcepto)
+                    ->value('nombre');
+
                 if (!$nombreConcepto) {
-                    $nombreConcepto = match ((int)$idConcepto) {
+                    $nombreConcepto = match ((int) $idConcepto) {
                         5 => 'Gasolina Prepago',
                         6 => 'Servicio de Dropoff',
-                        default => 'Cargo Adicional'
+                        default => 'Cargo Adicional',
                     };
                 }
 
@@ -469,7 +532,7 @@ class ContratoBaseController extends Controller
                     'id_concepto' => $idConcepto,
                     'concepto'    => $nombreConcepto,
                     'monto'       => $montoVariable,
-                    'detalle'     => json_encode($json),
+                    'detalle'     => json_encode($detalle),
                     'created_at'  => now(),
                     'updated_at'  => now(),
                 ]);
@@ -483,6 +546,62 @@ class ContratoBaseController extends Controller
         }
     }
 
+    // ---------------------------------------------------------------------
+    // Métodos auxiliares de disponibilidad y reutilizables
+    // ---------------------------------------------------------------------
+
+    /**
+     * Subconsulta que devuelve el código de la reservación que bloquea al vehículo,
+     * o NULL si está libre.
+     */
+    private function subqueryBloqueo(string $inicio, string $fin, int $idReservacionExcluir)
+    {
+        return function ($query) use ($inicio, $fin, $idReservacionExcluir) {
+            $query->from('reservaciones as r')
+                ->leftJoin('contratos as c', 'r.id_reservacion', '=', 'c.id_reservacion')
+                ->select('r.codigo')
+                ->whereColumn('r.id_vehiculo', 'v.id_vehiculo')
+                ->where('r.id_reservacion', '!=', $idReservacionExcluir)
+                ->where(function ($q) use ($inicio, $fin) {
+                    $q->where(function ($sub) use ($inicio, $fin) {
+                        $sub->whereRaw("CONCAT(r.fecha_inicio, ' ', r.hora_retiro) < ?", [$fin])
+                            ->whereRaw("CONCAT(r.fecha_fin, ' ', r.hora_entrega) > ?", [$inicio])
+                            ->where('r.estado', 'confirmada');
+                    })->orWhere(function ($sub) {
+                        $sub->whereNotNull('c.id_contrato')
+                            ->whereNotIn('c.estado', ['cerrado', 'cancelado']);
+                    });
+                })
+                ->limit(1);
+        };
+    }
+
+    /**
+     * Verifica si un vehículo tiene conflictos de calendario con otra reservación o contrato.
+     */
+    private function vehiculoEstaBloqueado(int $idVehiculo, string $inicio, string $fin, int $excluirReservaId): bool
+    {
+        return DB::table('reservaciones as r')
+            ->leftJoin('contratos as c', 'r.id_reservacion', '=', 'c.id_reservacion')
+            ->where('r.id_vehiculo', $idVehiculo)
+            ->where('r.id_reservacion', '!=', $excluirReservaId)
+            ->where(function ($q) use ($inicio, $fin) {
+                $q->where(function ($sub) use ($inicio, $fin) {
+                    $sub->whereRaw("CONCAT(r.fecha_inicio, ' ', r.hora_retiro) < ?", [$fin])
+                        ->whereRaw("CONCAT(r.fecha_fin, ' ', r.hora_entrega) > ?", [$inicio])
+                        ->where('r.estado', 'confirmada');
+                })->orWhere(function ($sub) {
+                    $sub->whereNotNull('c.id_contrato')
+                        ->whereNotIn('c.estado', ['cerrado', 'cancelado']);
+                });
+            })
+            ->exists();
+    }
+
+    // ---------------------------------------------------------------------
+    // Protecciones (mantenidos por compatibilidad)
+    // ---------------------------------------------------------------------
+
     protected function calcularTotalProtecciones($idReservacion)
     {
         $res = DB::table('reservaciones')
@@ -492,10 +611,7 @@ class ContratoBaseController extends Controller
 
         if (!$res) return 0;
 
-        $inicio = \Carbon\Carbon::parse($res->fecha_inicio);
-        $fin = \Carbon\Carbon::parse($res->fecha_fin);
-
-        $dias = max(1, $inicio->diffInDays($fin));
+        $dias = $this->calcularDiasRenta($res->fecha_inicio, $res->fecha_fin);
 
         $paquete = DB::table('reservacion_paquete_seguro')
             ->where('id_reservacion', $idReservacion)
@@ -523,4 +639,4 @@ class ContratoBaseController extends Controller
             ->where('rsi.id_reservacion', $idReservacion)
             ->get();
     }
-}
+}				
