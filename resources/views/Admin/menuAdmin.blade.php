@@ -160,6 +160,116 @@
                 height:150px;
             }
         }
+        /* ========================================
+        RESPONSIVE (SIN MODIFICAR TU DISEÑO)
+        ======================================== */
+
+        /* 💻 Tablet grande */
+        @media (max-width: 1024px){
+
+            .dashboard-grid,
+            .cards-dashboard,
+            .grid-dashboard {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 22px !important;
+            }
+
+            .card,
+            .dashboard-card {
+                height: auto;
+                min-height: 150px;
+            }
+
+            .main-content {
+                padding: 90px 28px 40px;
+            }
+
+        }
+
+        /* 📱 Tablet vertical */
+        @media (max-width: 768px){
+
+            .dashboard-grid,
+            .cards-dashboard,
+            .grid-dashboard {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 18px !important;
+            }
+
+            .card,
+            .dashboard-card {
+                font-size: 15px;
+                padding: 16px;
+            }
+
+            .card i,
+            .dashboard-card i {
+                font-size: 28px;
+            }
+
+            .header-dashboard,
+            .dashboard-header {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .header-dashboard h1,
+            .dashboard-header h1 {
+                font-size: 26px;
+            }
+
+        }
+
+        /* 📱 Celulares */
+        @media (max-width: 560px){
+
+            .dashboard-grid,
+            .cards-dashboard,
+            .grid-dashboard {
+                grid-template-columns: 1fr !important;
+                gap: 14px !important;
+            }
+
+            .card,
+            .dashboard-card {
+                width: 100%;
+                min-height: 120px;
+                font-size: 14px;
+                border-radius: 14px;
+            }
+
+            .card i,
+            .dashboard-card i {
+                font-size: 24px;
+            }
+
+            .main-content {
+                padding: 80px 16px 28px;
+            }
+
+        }
+
+        /* 📱 iPhone chico */
+        @media (max-width: 390px){
+
+            .card,
+            .dashboard-card {
+                min-height: 105px;
+            }
+
+            .header-dashboard h1,
+            .dashboard-header h1 {
+                font-size: 22px;
+            }
+
+            .main-content {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+
+        }
     </style>
 </head>
 

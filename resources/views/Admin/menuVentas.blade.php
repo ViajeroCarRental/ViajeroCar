@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menú Ventas</title>
+    <title>Menú Flotilla</title>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
 
     <style>
-        *{ box-sizing:border-box; }
+        *{
+            box-sizing:border-box;
+        }
 
         body{
             margin:0;
@@ -25,16 +27,17 @@
             position:relative;
         }
 
-        .ventas-home{
+        .flotilla-home{
             width:100%;
             max-width:1200px;
         }
 
-        /* BOTÓN DASHBOARD */
+        /* 👇 SOLO SE AGREGÓ z-index */
         .btn-dashboard{
             position:absolute;
             top:30px;
             right:40px;
+            z-index:9999;
 
             display:inline-flex;
             align-items:center;
@@ -59,8 +62,7 @@
             color:#fff;
         }
 
-        /* HEADER */
-        .ventas-menu-header{
+        .flotilla-menu-header{
             position:relative;
             width:100%;
             margin-bottom:50px;
@@ -77,7 +79,7 @@
             width:150px;
         }
 
-        .ventas-menu-header h1{
+        .flotilla-menu-header h1{
             margin:0;
             font-size:34px;
             font-weight:900;
@@ -85,7 +87,7 @@
             text-align:center;
         }
 
-        .ventas-menu-header::after{
+        .flotilla-menu-header::after{
             content:"";
             position:absolute;
             bottom:-15px;
@@ -95,15 +97,13 @@
             background:#e5e7eb;
         }
 
-        /* GRID */
-        .ventas-home-grid{
+        .flotilla-home-grid{
             display:grid;
             grid-template-columns:repeat(3,1fr);
             gap:30px;
         }
 
-        /* CARDS */
-        .ventas-home-card{
+        .flotilla-home-card{
             height:180px;
             background:#fff;
             border-radius:14px;
@@ -118,69 +118,99 @@
             text-decoration:none;
             color:#111;
             font-weight:800;
-            font-size:17px;
+            font-size:18px;
             text-align:center;
 
             transition:.2s ease;
         }
 
-        .ventas-home-card i{
-            font-size:34px;
+        .flotilla-home-card i{
+            font-size:36px;
             color:#b22222;
         }
 
-        .ventas-home-card:hover{
+        .flotilla-home-card:hover{
             border-color:#b22222;
             box-shadow:0 10px 30px rgba(178,34,34,.15);
             transform:translateY(-3px);
         }
 
-        /* RESPONSIVE */
+        /* =========================
+           TU RESPONSIVE ORIGINAL
+        ========================= */
+
         @media(max-width:900px){
-            .ventas-home-grid{
+            .flotilla-home-grid{
                 grid-template-columns:repeat(2,1fr);
             }
-        }
 
-        @media(max-width:500px){
             .main-content{
-                padding:24px;
                 align-items:flex-start;
+                padding:100px 24px 40px;
             }
 
-            .ventas-menu-header{
-                padding-top:55px;
+            .flotilla-menu-header{
                 flex-direction:column;
-                gap:10px;
-                margin-bottom:35px;
+                gap:12px;
+                margin-bottom:44px;
             }
 
             .logo-menu{
                 position:static;
                 transform:none;
-                width:120px;
+                width:145px;
             }
 
-            .ventas-menu-header h1{
-                font-size:28px;
+            .flotilla-menu-header h1{
+                font-size:32px;
+            }
+        }
+
+        @media(max-width:500px){
+            .main-content{
+                padding:96px 12px 28px;
+            }
+
+            .flotilla-home-grid{
+                grid-template-columns:1fr;
+                gap:22px;
+            }
+
+            .flotilla-home-card{
+                height:150px;
+            }
+
+            .logo-menu{
+                width:130px;
+            }
+
+            .flotilla-menu-header h1{
+                font-size:30px;
+                line-height:1.1;
             }
 
             .btn-dashboard{
                 right:20px;
                 top:20px;
-                padding:9px 14px;
-                font-size:14px;
-            }
-
-            .ventas-home-grid{
-                grid-template-columns:1fr;
-                gap:18px;
-            }
-
-            .ventas-home-card{
-                height:150px;
+                z-index:9999;
             }
         }
+
+        @media(max-width:390px){
+            .logo-menu{
+                width:120px;
+            }
+
+            .flotilla-menu-header h1{
+                font-size:27px;
+            }
+
+            .main-content{
+                padding-left:12px;
+                padding-right:12px;
+            }
+        }
+
     </style>
 </head>
 
@@ -188,61 +218,53 @@
 
 <div class="main-content">
 
-    <!-- BOTÓN DASHBOARD -->
-    <a href="{{ route('rutaDashboard') }}" class="btn-dashboard">
+    <a href="http://127.0.0.1:8000/admin/dashboard" class="btn-dashboard">
         <i class="fas fa-arrow-left"></i>
         Dashboard
     </a>
 
-    <div class="ventas-home">
+    <div class="flotilla-home">
 
-        <!-- HEADER -->
-        <div class="ventas-menu-header">
-            <img src="{{ asset('img/Logo5.png') }}" class="logo-menu" alt="Viajero Car Rental">
-            <h1>Menú Ventas</h1>
+        <div class="flotilla-menu-header">
+            <img src="http://127.0.0.1:8000/img/Logo5.png" class="logo-menu" alt="Logo">
+            <h1>Menú de flotilla</h1>
         </div>
 
-        <!-- GRID -->
-        <div class="ventas-home-grid">
+        <div class="flotilla-home-grid">
 
-            <a href="{{ route('rutaReservacionesAdmin') }}" class="ventas-home-card">
-                <i class="fas fa-file-invoice"></i>
-                <span>Reservaciones</span>
+            <a href="#" class="flotilla-home-card">
+                <i class="fas fa-truck"></i>
+                <span>Flotilla</span>
             </a>
 
-            <a href="{{ route('rutaCotizar') }}" class="ventas-home-card">
-                <i class="fas fa-briefcase"></i>
-                <span>Cotizaciones</span>
+            <a href="#" class="flotilla-home-card">
+                <i class="fas fa-wrench"></i>
+                <span>Mantenimiento</span>
             </a>
 
-            <a href="{{ route('rutaReservacionesActivas') }}" class="ventas-home-card">
-                <i class="fas fa-check-square"></i>
-                <span>Bookings</span>
+            <a href="#" class="flotilla-home-card">
+                <i class="fas fa-file-alt"></i>
+                <span>Pólizas</span>
             </a>
 
-            <a href="{{ route('rutaVisorReservaciones') }}" class="ventas-home-card">
-                <i class="fas fa-eye"></i>
-                <span>Visor</span>
+            <a href="#" class="flotilla-home-card">
+                <i class="fas fa-car-side"></i>
+                <span>Carrocería</span>
             </a>
 
-            <a href="{{ route('rutaAdministracionReservaciones') }}" class="ventas-home-card">
-                <i class="fas fa-cogs"></i>
-                <span>Contratos</span>
+            <a href="#" class="flotilla-home-card">
+                <i class="fas fa-shield-alt"></i>
+                <span>Seguros</span>
             </a>
 
-            <a href="{{ route('ventas.historial') }}" class="ventas-home-card">
+            <a href="#" class="flotilla-home-card">
+                <i class="fas fa-coins"></i>
+                <span>Gastos</span>
+            </a>
+
+            <a href="#" class="flotilla-home-card">
                 <i class="fas fa-folder-open"></i>
-                <span>Historial</span>
-            </a>
-
-            <a href="{{ route('rutaAltaCliente') }}" class="ventas-home-card">
-                <i class="fas fa-user-plus"></i>
-                <span>Alta Cliente</span>
-            </a>
-
-            <a href="{{ route('rutaFacturar') }}" class="ventas-home-card">
-                <i class="fas fa-file-invoice-dollar"></i>
-                <span>Facturar</span>
+                <span>Documentación</span>
             </a>
 
         </div>
