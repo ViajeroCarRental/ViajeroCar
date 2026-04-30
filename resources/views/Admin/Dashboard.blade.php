@@ -5,14 +5,14 @@
 <title>Panel | Viajero Car Rental</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<link rel="stylesheet" href="{{ asset('assets/style.css') }}" />
-<link rel="stylesheet" href="{{ asset('css/dashboard.css') }}" />
+<link rel="stylesheet" href="{{ asset('css/sidebar.css') }}" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <link rel="icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
 <link rel="shortcut icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
 </head>
 
 <body>
+
 <!-- ===== NAVBAR ===== -->
 <div class="top">
   <div class="brand">
@@ -35,7 +35,7 @@
     <div class="wrow">
       <div>
         <div class="hi">
-          Bienvenido(a), <span id="who">colaborador</span> 
+          Bienvenido(a), <span id="who">colaborador</span>
         </div>
 
         <p class="sub">
@@ -53,7 +53,7 @@
   <div class="grid">
 
     <!-- FLOTILLA -->
-    <article class="mod" id="modAutos" data-link="{{ route('rutaFlotilla') }}">
+    <article class="mod" id="modAutos" data-link="{{ route('rutaMenuFlotilla') }}">
       <div class="head">
         <div class="ic">
           <i class="fa-solid fa-car-side"></i>
@@ -68,7 +68,7 @@
     </article>
 
     <!-- RENTAS -->
-    <article class="mod" id="modRentas" data-link="{{ route('rutaInicioVentas') }}">
+    <article class="mod" id="modRentas" data-link="{{ route('rutaMenuVentas') }}">
       <div class="head">
         <div class="ic">
           <i class="fa-regular fa-file-lines"></i>
@@ -83,7 +83,7 @@
     </article>
 
     <!-- ADMIN -->
-    <article class="mod" id="modAdmin" data-link="{{ route('admin.usuarios.index') }}">
+    <article class="mod" id="modAdmin" data-link="{{ route('rutaMenuAdmin') }}">
       <div class="head">
         <div class="ic">
           <i class="fa-solid fa-gear"></i>
@@ -100,32 +100,19 @@
   </div>
 </section>
 
-<!-- ===== FOOTER ===== -->
 <p class="foot">
   © Viajero Car Rental · Panel interno
 </p>
 
-<!-- ===== JS ===== -->
-<script src="{{ asset('assets/session.js') }}"></script>
-
 <script>
-/* ==============================
-   🔐 Sesión
-============================== */
 document.getElementById('hello').textContent = "{{ session('rol') }}";
 document.getElementById('who').textContent = "{{ session('nombre') ?? 'colaborador' }}";
 
-/* ==============================
-   🚪 Logout
-============================== */
 document.getElementById('logout').onclick = () => {
   const logoutForm = document.getElementById('logoutForm');
   if (logoutForm) logoutForm.submit();
 };
 
-/* ==============================
-   🧭 Navegación módulos
-============================== */
 document.querySelectorAll('.mod').forEach(el => {
   el.addEventListener('click', () => {
     const href = el.getAttribute('data-link');
@@ -136,9 +123,6 @@ document.querySelectorAll('.mod').forEach(el => {
   });
 });
 
-/* ==============================
-   🔒 Control por rol
-============================== */
 document.addEventListener("DOMContentLoaded", () => {
   const rol = "{{ session('rol') }}";
 
