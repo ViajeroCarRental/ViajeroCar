@@ -147,11 +147,37 @@
             .flotilla-home-grid{
                 grid-template-columns:repeat(2,1fr);
             }
+
+            .main-content{
+                align-items:flex-start;
+                padding:100px 24px 40px;
+            }
+
+            .flotilla-menu-header{
+                flex-direction:column;
+                gap:12px;
+                margin-bottom:44px;
+            }
+
+            .logo-menu{
+                position:static;
+                transform:none;
+                width:145px;
+            }
+
+            .flotilla-menu-header h1{
+                font-size:32px;
+            }
         }
 
         @media(max-width:500px){
+            .main-content{
+                padding:96px 12px 28px;
+            }
+
             .flotilla-home-grid{
                 grid-template-columns:1fr;
+                gap:22px;
             }
 
             .flotilla-home-card{
@@ -159,12 +185,32 @@
             }
 
             .logo-menu{
-                width:120px;
+                width:130px;
+            }
+
+            .flotilla-menu-header h1{
+                font-size:30px;
+                line-height:1.1;
             }
 
             .btn-dashboard{
                 right:20px;
                 top:20px;
+            }
+        }
+
+        @media(max-width:390px){
+            .logo-menu{
+                width:120px;
+            }
+
+            .flotilla-menu-header h1{
+                font-size:27px;
+            }
+
+            .main-content{
+                padding-left:12px;
+                padding-right:12px;
             }
         }
     </style>
