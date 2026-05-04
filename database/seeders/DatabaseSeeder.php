@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
         CategoriaCostoKmSeeder::class,
         UbicacionesServicioSeeder::class,
         SeguroIndividualesSeeder::class,
+        PaisSeeder::class,
         ]);
     }
 

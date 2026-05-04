@@ -121,10 +121,18 @@ Route::middleware('sesion.activa')->group(function () {
 //Vistas Flotilla
 //inicio
 Route::get('/admin/dashboard', [App\Http\Controllers\controladorVistasAdmin::class, 'dashboard'])->name('rutaDashboard');
+Route::view('/flotilla/menu', 'Admin.menuFlotilla')
+    ->name('rutaMenuFlotilla');
+
+Route::view('/admin/menu', 'Admin.menuAdmin')->name('rutaMenuAdmin');
+
+Route::view('/ventas/menu', 'Admin.menuVentas')
+    ->name('rutaMenuVentas');
 //mantenimiento
 Route::get('/admin/mantenimiento', [App\Http\Controllers\controladorVistasAdmin::class, 'mantenimiento'])->name('rutaMantenimiento');
 //flotilla
 Route::get('/admin/flotilla', [App\Http\Controllers\controladorVistasAdmin::class, 'flotilla'])->name('rutaFlotilla');
+
 //polizas
 Route::get('/admin/polizas', [App\Http\Controllers\controladorVistasAdmin::class, 'polizas'])->name('rutaPolizas');
 //carroceria
@@ -179,6 +187,7 @@ Route::get('/admin/cotizaciones', [controladorVistasAdmin::class, 'cotizaciones'
 Route::get('/admin/cotizaciones-activas', [App\Http\Controllers\controladorVistasAdmin::class, 'cotizacionesRecientes'])->name('rutaCotizacionesRecientes');
 Route::get('/admin/cotizar', [App\Http\Controllers\CotizacionesAdminController::class, 'index'])->name('rutaCotizar');
 
+Route::get('/admin/cotizaciones/categorias', [App\Http\Controllers\CotizacionesAdminController::class, 'getCategorias'])->name('cotizaciones.categorias');
 // Guardar la cotización
 Route::post('/admin/cotizaciones/guardar', [App\Http\Controllers\CotizacionesAdminController::class, 'guardarCotizacion'])->name('rutaGuardarCotizacion');
 

@@ -17,8 +17,8 @@ class ServiciosSeeder extends Seeder
             // GASOLINA Y LITROS
             // =======================
             [
-                'nombre'      => 'Gasolina Prepago',
-                'descripcion' => 'Tanque completo de capacidad por categoria.',
+                'nombre'      => 'Prepaid fuel',
+                'descripcion' => 'Full tank based on vehicle category.',
                 'tipo_cobro'  => 'por_tanque',
                 'precio'      => 20.00,
                 'activo'      => true,
@@ -48,8 +48,8 @@ class ServiciosSeeder extends Seeder
             // SERVICIOS ADICIONALES
             // =======================
             [
-                'nombre'      => 'Conductor adicional',
-                'descripcion' => 'Agregar un conductor extra.',
+                'nombre'      => 'Additional driver',
+                'descripcion' => 'Add an extra driver.',
                 'tipo_cobro'  => 'por_dia',
                 'precio'      => 150.00,
                 'activo'      => true,
@@ -75,8 +75,8 @@ class ServiciosSeeder extends Seeder
                 'updated_at'  => $now,
             ],
             [
-                'nombre'      => 'Silla de bebé',
-                'descripcion' => 'Silla de seguridad para bebé.',
+                'nombre'      => 'Baby seat',
+                'descripcion' => 'Baby safety seat.',
                 'tipo_cobro'  => 'por_dia',
                 'precio'      => 150.00,
                 'activo'      => true,

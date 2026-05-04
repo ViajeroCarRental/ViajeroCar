@@ -2,7 +2,11 @@
 @section('Titulo', 'reservacionesAdmin')
 
 @section('css-vistaHomeVentas')
-<link rel="stylesheet" href="{{ asset('css/reservacionesAdmin.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/reservacionesAdmin.css') }}">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 @endsection
 
 @section('contenidoreservacionesAdmin')
@@ -31,6 +35,7 @@
       ? route('reservaciones.update', $reservacion->id_reservacion)
       : route('reservaciones.guardar') }}"
   method="POST"
+   novalidate
 >
   @csrf
 
@@ -62,12 +67,7 @@
       {{-- ✅ Teléfono final (backend) --}}
       <input type="hidden" id="telefono_cliente" name="telefono_cliente" value="{{ $reservacion->telefono_cliente ?? '' }}">
       <input type="hidden" id="telefono_lada" name="telefono_lada" value="+52">
-
-      {{-- ======================
-           1) UBICACIÓN
-      ======================= --}}
-     <section class="stack-card">
-
+<section class="stack-card">
   <div class="stack-head">
     <div class="stack-title">📍 Ubicación</div>
     <div class="stack-sub">Selecciona dónde se recoge y se entrega el vehículo.</div>
@@ -75,71 +75,52 @@
 
   <div class="stack-body">
     <div class="form-2">
-
-      {{-- ======================
-           RETIRO
-      ======================= --}}
-      <div>
-        <label>Sucursal de retiro</label>
+      <div class="dt-field">
+        <label>SUCURSAL DE RETIRO</label>
         <select id="sucursal_retiro" name="sucursal_retiro" class="input" required>
           <option value="">Selecciona punto de entrega</option>
-
           @foreach($sucursales as $ciudad => $grupo)
-          @if($ciudad === 'Querétaro')
-            <optgroup label="{{ $ciudad }} — {{ $ciudad }}">
-              @foreach($grupo as $s)
-                <option value="{{ $s->id_sucursal }}"
-                        data-ciudad-id="{{ $s->id_ciudad }}"
-                        data-nombre="{{ $s->sucursal }}"
-                        {{ ($reservacion->sucursal_retiro ?? null) == $s->id_sucursal ? 'selected' : '' }}>
-                  {{ $s->sucursal }}
-                </option>
-              @endforeach
-            </optgroup>
+            @if($ciudad === 'Querétaro')
+              <optgroup label="{{ $ciudad }} — {{ $ciudad }}">
+                @foreach($grupo as $s)
+                  <option value="{{ $s->id_sucursal }}"
+                          data-ciudad-id="{{ $s->id_ciudad }}"
+                          data-nombre="{{ $s->sucursal }}">
+                    {{ $s->sucursal }}
+                  </option>
+                @endforeach
+              </optgroup>
             @endif
           @endforeach
-
         </select>
 
-        {{-- CAMPO VUELO --}}
         <div id="campo_vuelo" style="display:none; margin-top:10px;">
           <label>Número de vuelo</label>
-          <input type="text"
-                 name="numero_vuelo"
-                 id="numero_vuelo"
-                 class="input"
-                 placeholder="Ej. AA1234"
-                 value="{{ $reservacion->no_vuelo ?? '' }}">
+          <input type="text" name="numero_vuelo" id="numero_vuelo" class="input" placeholder="Ej. AA1234">
         </div>
       </div>
 
-      {{-- ======================
-           ENTREGA
-      ======================= --}}
-      <div>
-        <label>Sucursal de entrega</label>
+      <div class="dt-field">
+        <label>SUCURSAL DE ENTREGA</label>
         <select id="sucursal_entrega" name="sucursal_entrega" class="input" required>
           <option value="">Selecciona punto de devolución</option>
-
           @foreach($sucursales as $ciudad => $grupo)
             <optgroup label="{{ $ciudad }} — {{ $ciudad }}">
               @foreach($grupo as $s)
                 <option value="{{ $s->id_sucursal }}"
                         data-ciudad-id="{{ $s->id_ciudad }}"
-                        data-nombre="{{ $s->sucursal }}"
-                        {{ ($reservacion->sucursal_entrega ?? null) == $s->id_sucursal ? 'selected' : '' }}>
+                        data-nombre="{{ $s->sucursal }}">
                   {{ $s->sucursal }}
                 </option>
               @endforeach
             </optgroup>
           @endforeach
-
         </select>
       </div>
-
     </div>
   </div>
 </section>
+
 
       {{-- ======================
            2) FECHAS Y HORAS
@@ -150,131 +131,36 @@
           <div class="stack-sub">Define inicio/fin. Se calculan los días automáticamente.</div>
         </div>
 
-        <div class="stack-body">
+                <div class="stack-body">
           <datalist id="time10"></datalist>
 
-          <style>
-            .fp-backdrop{
-              position:fixed; inset:0;
-              background:rgba(0,0,0,.55);
-              display:none; z-index:9998;
-            }
-            .fp-backdrop.is-open{ display:block; }
-
-            .flatpickr-calendar.open{
-              z-index:9999 !important;
-              position:fixed !important;
-              top:50% !important;
-              left:50% !important;
-              transform:translate(-50%,-50%) !important;
-              margin:0 !important;
-              box-shadow:0 28px 80px rgba(0,0,0,.30) !important;
-              border-radius:12px !important;
-              overflow:hidden !important;
-            }
-
-            .flatpickr-months{
-              background:var(--brand) !important;
-              color:#fff !important;
-              padding:6px 6px !important;
-            }
-            .flatpickr-months .flatpickr-prev-month,
-            .flatpickr-months .flatpickr-next-month{
-              color:#fff !important;
-              fill:#fff !important;
-            }
-            .flatpickr-current-month .cur-month,
-            .flatpickr-current-month .numInputWrapper span,
-            .flatpickr-current-month .numInput.cur-year{
-              color:#fff !important;
-              font-weight:900 !important;
-            }
-
-            .flatpickr-weekdays{
-              background:#fff !important;
-              border-bottom:1px solid #eef2f7 !important;
-            }
-            .flatpickr-weekday{
-              color:#6b7280 !important;
-              font-weight:900 !important;
-            }
-
-            .flatpickr-day{
-              border-radius:10px !important;
-              font-weight:800 !important;
-            }
-            .flatpickr-day.today{
-              border-color:transparent !important;
-              box-shadow:inset 0 0 0 2px rgba(178,34,34,.35) !important;
-            }
-            .flatpickr-day.selected,
-            .flatpickr-day.startRange,
-            .flatpickr-day.endRange{
-              background:var(--brand) !important;
-              border-color:var(--brand) !important;
-              color:#fff !important;
-            }
-
-            .fp-actions{
-              display:flex; justify-content:space-between; align-items:center;
-              gap:10px;
-              padding:10px 12px;
-              border-top:1px solid #eef2f7;
-              background:#fff;
-            }
-            .fp-actions button{
-              border:0; background:transparent;
-              font-weight:900; cursor:pointer;
-            }
-            .fp-actions .fp-today{ color:#2563eb; }
-            .fp-actions .fp-clear{ color:#ef4444; }
-            .fp-actions .fp-label{ color:#111827; opacity:.85; }
-
-            .dt-field{ position:relative; }
-            .dt-ico{
-              position:absolute; right:12px; top:50%;
-              transform:translateY(-50%);
-              color:#9ca3af; pointer-events:none;
-              font-size:16px;
-            }
-            input.fp-ui{
-              cursor:pointer;
-              background:#fff;
-              padding-right:44px;
-            }
-          </style>
-
           <div class="form-2">
-            <div class="dt-field">
+            <div class="dt-field icon-field">
               <label>Fecha de salida</label>
-              <input id="fecha_inicio_ui" class="input input-lg fp-ui" type="text" placeholder="dd/mm/aaaa" autocomplete="off" required
-              value="{{ isset($reservacion->fecha_inicio) ? \Carbon\Carbon::parse($reservacion->fecha_inicio)->format('d/m/Y') : '' }}">>
-              <span class="dt-ico">📅</span>
-              <input id="fecha_inicio" name="fecha_inicio" type="hidden" value="{{ $reservacion->fecha_inicio ?? '' }}">
+              <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+              <input id="fecha_inicio_ui" class="input input-lg" type="text" placeholder="Fecha" autocomplete="off">
+              <input id="fecha_inicio" name="fecha_inicio" type="hidden">
             </div>
 
-            <div class="dt-field">
+            <div class="dt-field icon-field time-field">
               <label>Hora de salida</label>
-              <input id="hora_retiro_ui" class="input input-lg fp-ui" type="text" placeholder="hh:mm" autocomplete="off" required
-              value="{{ isset($reservacion->hora_retiro) ? \Carbon\Carbon::parse($reservacion->hora_retiro)->format('H:i') : '' }}">
-              <span class="dt-ico">🕒</span>
-              <input id="hora_retiro" name="hora_retiro" type="hidden"  value="{{ $reservacion->hora_retiro ?? '' }}">
+              <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+              <input id="hora_retiro_ui" class="input input-lg" type="text" placeholder="Hora" autocomplete="off">
+              <input id="hora_retiro" name="hora_retiro" type="hidden">
             </div>
 
-            <div class="dt-field">
+            <div class="dt-field icon-field">
               <label>Fecha de llegada</label>
-              <input id="fecha_fin_ui" class="input input-lg fp-ui" type="text" placeholder="dd/mm/aaaa" autocomplete="off" required
-               value="{{ isset($reservacion->fecha_fin) ? \Carbon\Carbon::parse($reservacion->fecha_fin)->format('d/m/Y') : '' }}">
-              <span class="dt-ico">📅</span>
-              <input id="fecha_fin" name="fecha_fin" type="hidden"  value="{{ $reservacion->fecha_fin ?? '' }}">
+              <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+              <input id="fecha_fin_ui" class="input input-lg" type="text" placeholder="Fecha" autocomplete="off">
+              <input id="fecha_fin" name="fecha_fin" type="hidden">
             </div>
 
-            <div class="dt-field">
+            <div class="dt-field icon-field time-field">
               <label>Hora de llegada</label>
-              <input id="hora_entrega_ui" class="input input-lg fp-ui" type="text" placeholder="hh:mm" autocomplete="off" required
-               value="{{ isset($reservacion->hora_entrega) ? \Carbon\Carbon::parse($reservacion->hora_entrega)->format('H:i') : '' }}">
-              <span class="dt-ico">🕒</span>
-              <input id="hora_entrega" name="hora_entrega" type="hidden" value="{{ $reservacion->hora_entrega ?? '' }}">
+              <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+              <input id="hora_entrega_ui" class="input input-lg" type="text" placeholder="Hora" autocomplete="off">
+              <input id="hora_entrega" name="hora_entrega" type="hidden">
             </div>
           </div>
 
@@ -610,76 +496,31 @@
   </main>
 </div>
 
-{{-- =========================
-   MODAL: CATEGORÍAS
-========================= --}}
+{{-- =========================================
+     MODAL: CATEGORÍAS (ESTILO UNIFICADO V2)
+========================================= --}}
 <div class="pop modal" id="catPop">
-  <div class="box modal-box">
-    <header class="modal-head">
-      <div class="modal-title">🚗 Selecciona una categoría</div>
-      <button class="btn gray" id="catClose" type="button">✖</button>
+  <div class="box modal-box" style="max-width: 950px;">
+    <header class="modal-head" style="background: var(--brand); color: #fff;">
+      <div class="modal-title" style="color:#fff;">🚗 Selecciona una categoría</div>
+      <button class="btn" id="catClose" type="button" onclick="closePop('catPop')" style="background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">✖</button>
     </header>
 
-    <div class="modal-body">
+    <div class="modal-body" style="background: #f1f5f9;">
 
-      <style>
-        #catPop .grid-cards{
-          display:grid !important;
-          grid-template-columns: 1fr !important;
-          gap: 14px !important;
-        }
-        #catPop .card-pick{ width: 100% !important; }
-
-        #catPop .cp-features{
-          display:flex;
-          flex-wrap:wrap;
-          gap:8px;
-          margin-top:10px;
-        }
-        #catPop .cp-chip{
-          display:inline-flex;
-          align-items:center;
-          gap:6px;
-          padding:6px 10px;
-          border-radius:999px;
-          border:1px solid rgba(0,0,0,.10);
-          background:rgba(255,255,255,.7);
-          font-size:12px;
-          line-height:1;
-          white-space:nowrap;
-          color:#111827;
-        }
-        #catPop .cp-right .cp-price{ padding:10px 0; border-bottom:1px dashed rgba(0,0,0,.10); }
-        #catPop .cp-right .cp-price:last-of-type{ border-bottom:0; }
-        #catPop .cat-estimado{ font-weight:900; }
-      </style>
 
       <div class="grid-cards">
         @php
           $imgCategorias = [
-            1 => asset('img/aveo.png'),
-            2 => asset('img/virtus.png'),
-            3 => asset('img/jetta.png'),
-            4 => asset('img/camry.png'),
-            5 => asset('img/renegade.png'),
-            6 => asset('img/taos.png'),
-            7 => asset('img/avanza.png'),
-            8 => asset('img/Odyssey.png'),
-            9 => asset('img/Urvan.png'),
-            10 => asset('img/Frontier.png'),
-            11 => asset('img/Tacoma.png'),
+            1 => asset('img/aveo.png'), 2 => asset('img/virtus.png'), 3 => asset('img/jetta.png'),
+            4 => asset('img/camry.png'), 5 => asset('img/renegade.png'), 6 => asset('img/taos.png'),
+            7 => asset('img/avanza.png'), 8 => asset('img/Odyssey.png'), 9 => asset('img/Urvan.png'),
+            10 => asset('img/Frontier.png'), 11 => asset('img/Tacoma.png'),
           ];
-
-          $pasajeros = [
-            1 => 5, 2 => 5, 3 => 5, 4 => 5, 5 => 5, 6 => 5,
-            7 => 7, 8 => 8, 9 => 13, 10 => 5, 11 => 5,
-          ];
-
+          $pasajeros = [ 1=>5, 2=>5, 3=>5, 4=>5, 5=>5, 6=>5, 7=>7, 8=>8, 9=>13, 10=>5, 11=>5 ];
           $transmision = [ 9 => 'Manual' ];
 
-          $categoriasOrdenadas = $categorias->sortBy(function($c){
-            return (float) ($c->precio_dia ?? 0);
-          })->values();
+          $categoriasOrdenadas = $categorias->sortBy(fn($c) => (float)($c->precio_dia ?? 0))->values();
         @endphp
 
         @foreach($categoriasOrdenadas as $cat)
@@ -688,25 +529,24 @@
             $cap = $pasajeros[$cat->id_categoria] ?? 5;
             $tran = $transmision[$cat->id_categoria] ?? 'Automático';
 
+            // Arreglo de características con Boxicons
             $features = [
-              "♾️ Km ilimitados",
-              "🛡️ Relevo de responsabilidad",
-              "👥 {$cap} pasajeros",
-              "🍎 Apple CarPlay",
-              "🤖 Android Auto",
-              "❄️ Aire acondicionado",
-              ($tran === 'Manual' ? "🕹️ Manual" : "🕹️ Automático"),
+                ['icon' => 'bx-infinite', 'text' => "Km ilimitados"],
+                ['icon' => 'bx-shield-quarter', 'text' => "Relevo responsabilidad"],
+                ['icon' => 'bx-user', 'text' => "{$cap} pasajeros"],
+                ['icon' => 'bxl-apple', 'text' => "Apple CarPlay"],
+                ['icon' => 'bxl-android', 'text' => "Android Auto"],
+                ['icon' => 'bx-wind', 'text' => "Aire Acondicionado"],
+                ['icon' => ($tran === 'Manual' ? 'bx-joystick' : 'bx-cog'), 'text' => $tran],
             ];
           @endphp
 
-          <article class="card-pick cat-wide"
+          <article class="card-pick"
+            onclick="seleccionarCategoriaReservacion(this)"
             data-id="{{ $cat->id_categoria }}"
             data-nombre="{{ $cat->nombre }}"
-            data-desc="{{ $cat->descripcion }}"
             data-precio="{{ $cat->precio_dia }}"
-            data-precio-km="{{ $cat->costo_km ?? 0 }}"
             data-img="{{ $img }}"
-            data-litros="{{ $cat->litros_maximos ?? 0 }}"
           >
             <div class="cp-img">
               <img src="{{ $img }}" alt="{{ $cat->nombre }}">
@@ -714,40 +554,39 @@
 
             <div class="cp-left">
               <div class="cp-title">{{ $cat->nombre }}</div>
-              <div class="cp-sub">{{ $cat->descripcion }}</div>
+              <div class="cp-sub">{{ $cat->descripcion ?? 'Chevrolet Aveo o similar' }}</div>
 
               <div class="cp-features">
                 @foreach($features as $f)
-                  <span class="cp-chip">{{ $f }}</span>
+                  <span class="cp-chip">
+                    <i class='bx {{ $f['icon'] }}'></i>
+                    <span>{{ $f['text'] }}</span>
+                  </span>
                 @endforeach
               </div>
 
               <div class="cp-meta">
                 <span class="pill">Código: {{ $cat->codigo }}</span>
-                @if(isset($cat->activo))
-                  <span class="pill {{ (int)$cat->activo===1 ? 'pill-ok' : '' }}">
-                    {{ (int)$cat->activo===1 ? 'Activo' : 'Inactivo' }}
-                  </span>
+                @if(isset($cat->activo) && (int)$cat->activo === 1)
+                  <span class="pill pill-ok">Activo</span>
                 @endif
               </div>
             </div>
 
             <div class="cp-right">
-              <div class="cp-price">
-                <div class="muted small">Tarifa base</div>
-                <div class="price-big">
-                  ${{ number_format((float)$cat->precio_dia, 2) }} <span>MXN / día</span>
+              <div class="price-block">
+                <div class="price-label">Tarifa base</div>
+                <div class="price-value">${{ number_format((float)$cat->precio_dia, 2) }} <span>/ día</span></div>
+              </div>
+
+              <div class="price-block">
+                <div class="price-label">Estimado</div>
+                <div class="price-value" style="color:var(--brand)">
+                    <span class="cat-estimado">$0.00</span> <span>MXN</span>
                 </div>
               </div>
 
-              <div class="cp-price" style="margin-top:10px;">
-                <div class="muted small">Estimado (base × días)</div>
-                <div class="price-big">
-                  <span class="cat-estimado">$0.00</span> <span>MXN</span>
-                </div>
-              </div>
-
-              <button class="btn primary btn-block" type="button">Elegir</button>
+              <button class="btn primary btn-block" type="button" style="margin-top:10px; border-radius: 12px; font-weight: 800; height: 45px;">Seleccionar</button>
             </div>
           </article>
         @endforeach
@@ -755,7 +594,7 @@
     </div>
 
     <footer class="modal-foot">
-      <button class="btn gray" id="catCancel" type="button">Cerrar</button>
+      <button class="btn gray" id="catCancel" type="button" onclick="closePop('catPop')">Cerrar</button>
     </footer>
   </div>
 </div>
@@ -768,102 +607,6 @@
       <button class="btn gray" id="proteClose" type="button">✖</button>
     </header>
 
-    <style>
-      #proteccionPop .tabs-bar{
-        display:flex; gap:10px; align-items:center;
-        padding:12px 14px;
-        border-bottom:1px solid rgba(17,24,39,.08);
-        background:#fff;
-      }
-      #proteccionPop .tab-btn{
-        border:1px solid rgba(17,24,39,.12);
-        background:#f8fafc;
-        color:#111827;
-        padding:10px 14px;
-        border-radius:999px;
-        font-weight:900;
-        cursor:pointer;
-        display:inline-flex;
-        gap:8px;
-        align-items:center;
-      }
-      #proteccionPop .tab-btn.is-active{
-        background:rgba(178,34,34,.10);
-        border-color:rgba(178,34,34,.30);
-        color:#7a1414;
-      }
-      #proteccionPop .tab-panel{ display:none; }
-      #proteccionPop .tab-panel.is-active{ display:block; }
-      #proteccionPop .scroll-h{
-        display:flex;
-        gap:12px;
-        overflow-x:auto;
-        padding:10px 2px 14px;
-        scroll-snap-type:x mandatory;
-        -webkit-overflow-scrolling:touch;
-      }
-      #proteccionPop .scroll-h::-webkit-scrollbar{ height:10px; }
-      #proteccionPop .scroll-h::-webkit-scrollbar-thumb{
-        background:rgba(17,24,39,.18);
-        border-radius:999px;
-      }
-      #proteccionPop .cat-title{
-        margin:14px 0 8px;
-        font-weight:1000;
-        color:#111827;
-        text-transform:uppercase;
-        letter-spacing:.02em;
-        font-size:14px;
-      }
-      #proteccionPop .ins-card{
-        min-width:280px;
-        max-width:320px;
-        background:#fff;
-        border:1px solid rgba(17,24,39,.10);
-        border-radius:16px;
-        box-shadow:0 10px 26px rgba(0,0,0,.08);
-        scroll-snap-align:start;
-        padding:14px;
-        user-select:none;
-      }
-      #proteccionPop .ins-card h4{ margin:0 0 6px; color:#111827; font-weight:1000; }
-      #proteccionPop .ins-card p{ margin:0 0 10px; color:#6b7280; font-weight:700; }
-      #proteccionPop .ins-card .precio{ font-weight:1000; color:#111827; }
-      #proteccionPop .ins-card .precio span{ font-weight:900; color:#6b7280; margin-left:6px; }
-      #proteccionPop .ins-card .small{ margin-top:8px; font-weight:900; color:#6b7280; }
-      #proteccionPop .ins-card.is-selected{
-        border-color:rgba(178,34,34,.55);
-        box-shadow:0 16px 40px rgba(178,34,34,.18);
-      }
-      #proteccionPop .switch-individual{
-        width:44px; height:26px;
-        border-radius:999px;
-        background:rgba(17,24,39,.12);
-        position:relative;
-        margin-top:10px;
-      }
-      #proteccionPop .switch-individual::after{
-        content:"";
-        position:absolute;
-        width:20px; height:20px;
-        border-radius:999px;
-        background:#fff;
-        top:3px; left:3px;
-        box-shadow:0 8px 20px rgba(0,0,0,.18);
-        transition:.15s ease;
-      }
-      #proteccionPop .switch-individual.is-on{
-        background:rgba(178,34,34,.85);
-      }
-      #proteccionPop .switch-individual.is-on::after{
-        left:21px;
-      }
-      #proteccionPop .foot-split{
-        display:flex;
-        justify-content:space-between;
-        gap:12px;
-      }
-    </style>
 
     <div class="tabs-bar">
       <button type="button" class="tab-btn is-active" data-tab="tab-paquetes">🛡️ Protecciones</button>
@@ -998,50 +741,103 @@
   </div>
 </div>
 
-{{-- MODAL: RESUMEN --}}
+{{-- MODAL: RESUMEN CON ICONOS --}}
 <div class="pop modal" id="resumenPop">
   <div class="box modal-box resumen-box">
     <header class="modal-head">
-      <div class="modal-title">🧾 Resumen de reservación</div>
+      <div class="modal-title">
+        <i class='bx bx-spreadsheet' style="vertical-align: middle; margin-right: 5px;"></i>
+         Resumen de reservación
+      </div>
       <button class="btn gray" id="resumenClose" type="button">✖</button>
     </header>
 
     <div class="modal-body">
       <div class="resumen-card">
-        <div class="res-row"><div>📍 Retiro</div><div id="resSucursalRetiro">—</div></div>
-        <div class="res-row"><div>🏁 Entrega</div><div id="resSucursalEntrega">—</div></div>
+        <!-- Ubicación con iconos -->
+        <div class="res-row">
+          <div><i class='bx bx-map-pin'></i> Retiro</div>
+          <div id="resSucursalRetiro">—</div>
+        </div>
+        <div class="res-row">
+          <div><i class='bx bx-flag'></i> Entrega</div>
+          <div id="resSucursalEntrega">—</div>
+        </div>
 
-        <div class="res-row"><div>🗓️ Salida</div><div id="resFechaInicio">—</div></div>
-        <div class="res-row"><div>🕑 Hora salida</div><div id="resHoraInicio">—</div></div>
-        <div class="res-row"><div>🗓️ Llegada</div><div id="resFechaFin">—</div></div>
-        <div class="res-row"><div>🕓 Hora llegada</div><div id="resHoraFin">—</div></div>
+        <!-- Fechas y horas con iconos -->
+        <div class="res-row">
+          <div><i class='bx bx-calendar-event'></i> Salida</div>
+          <div id="resFechaInicio">—</div>
+        </div>
+        <div class="res-row">
+          <div><i class='bx bx-time-five'></i> Hora salida</div>
+          <div id="resHoraInicio">—</div>
+        </div>
+        <div class="res-row">
+          <div><i class='bx bx-calendar-check'></i> Llegada</div>
+          <div id="resFechaFin">—</div>
+        </div>
+        <div class="res-row">
+          <div><i class='bx bx-time'></i> Hora llegada</div>
+          <div id="resHoraFin">—</div>
+        </div>
 
-        <div class="res-row"><div>⏱️ Días</div><div id="resDias">—</div></div>
+        <!-- Días -->
+        <div class="res-row">
+          <div><i class='bx bx-timer'></i> Días</div>
+          <div id="resDias">—</div>
+        </div>
 
         <div class="divider"></div>
 
-        <div class="res-row"><div>🚗 Categoría</div><div id="resCat">—</div></div>
+        <!-- Categoría y tarifa -->
+        <div class="res-row">
+          <div><i class='bx bx-car'></i> Categoría</div>
+          <div id="resCat">—</div>
+        </div>
         <div class="res-row">
           <div>
-            Tarifa base
+            <i class='bx bx-money'></i> Tarifa base
             <button type="button" id="btnEditarTarifa" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:16px;margin-left:6px;">
-              ✏️
+              <i class='bx bx-edit-alt'></i>
             </button>
           </div>
-            <div id="resBaseDia">—</div>
+          <div id="resBaseDia">—</div>
         </div>
-        <div class="res-row"><div>Base × días</div><div id="resBaseTotal">—</div></div>
+        <div class="res-row">
+          <div><i class='bx bx-calculator'></i> Base × días</div>
+          <div id="resBaseTotal">—</div>
+        </div>
 
-        <div class="res-row"><div>🧰 Servicios</div><div id="resServicios">—</div></div>
-
-        <div class="res-row"><div>🔒 Protección</div><div id="resProte">—</div></div>
-        <div class="res-row"><div>➕ Adicionales</div><div id="resAdds">—</div></div>
+        <!-- Servicios, Protecciones, Adicionales -->
+        <div class="res-row">
+          <div><i class='bx bx-wrench'></i> Servicios</div>
+          <div id="resServicios">—</div>
+        </div>
+        <div class="res-row">
+          <div><i class='bx bx-shield-quarter'></i> Protección</div>
+          <div id="resProte">—</div>
+        </div>
+        <div class="res-row">
+          <div><i class='bx bx-plus-circle'></i> Adicionales</div>
+          <div id="resAdds">—</div>
+        </div>
 
         <div class="divider"></div>
 
-        <div class="res-row"><div>Subtotal</div><div id="resSub">$0.00 MXN</div></div>
-        <div class="res-row"><div>IVA (16%)</div><div id="resIva">$0.00 MXN</div></div>
-        <div class="res-row total"><div>Total</div><div id="resTotal">$0.00 MXN</div></div>
+        <!-- Totales -->
+        <div class="res-row">
+          <div><i class='bx bx-cart'></i> Subtotal</div>
+          <div id="resSub">$0.00 MXN</div>
+        </div>
+        <div class="res-row">
+          <div><i class='bx bx-percent'></i> IVA (16%)</div>
+          <div id="resIva">$0.00 MXN</div>
+        </div>
+        <div class="res-row total">
+          <div><i class='bx bx-dollar-circle'></i> Total</div>
+          <div id="resTotal">$0.00 MXN</div>
+        </div>
       </div>
     </div>
 
@@ -1078,10 +874,33 @@
   window.serviciosEditar = @json($serviciosReserva ?? []);
   window.seguroEditar = @json($seguroReserva ?? null);
 </script>
-@section('js-vistareservacionesAdmin')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-<script src="{{ asset('js/reservacionesAdmin.js') }}"></script>
 
+@endsection
+
+@section('js-vistareservacionesAdmin')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+    <script>
+        window.iconosPorId = {
+            @foreach($sucursales as $ciudad => $grupo)
+                @foreach($grupo as $s)
+                    @php
+                        $nombre = strtolower($s->sucursal);
+                        $icono = 'fa-building';
+                        if (str_contains($nombre, 'aeropuerto')) { $icono = 'fa-plane-departure'; }
+                        elseif ((str_contains($nombre, 'central') || str_contains($nombre, 'autobuses')) && !str_contains($nombre, 'plaza central park')) { $icono = 'fa-bus'; }
+                    @endphp
+                    {{ $s->id_sucursal }}: '{{ $icono }}',
+                @endforeach
+            @endforeach
+        };
+    </script>
+
+    <script src="{{ asset('js/reservacionesAdmin.js') }}"></script>
 @endsection
