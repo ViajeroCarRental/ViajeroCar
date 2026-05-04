@@ -10,19 +10,32 @@
   <h1 class="h1">Bookings</h1>
 
   @php
-    // ¿El filtro actual es Aeropuerto?
-    $esAeropuerto = request('sucursal') === '1';
-    // Número de columnas según si mostramos No. Vuelo o no
-    $cols = $esAeropuerto ? 12 : 11;
+    \Carbon\Carbon::setLocale('es');
 
-    // Por si no viene del controller (evita error)
+    $esAeropuerto = request('sucursal') === '1';
+    $cols = $esAeropuerto ? 13 : 12;
     $reservaciones_anteriores = $reservaciones_anteriores ?? [];
+
+    $fmtFecha = function ($fecha) {
+      if (!$fecha) return '—';
+
+      return str_replace(
+        '.',
+        '',
+        strtolower(\Carbon\Carbon::parse($fecha)->translatedFormat('d/M/Y'))
+      );
+    };
+
+    $fmtHora = function ($hora) {
+      return $hora
+        ? \Carbon\Carbon::parse($hora)->format('H:i')
+        : '—';
+    };
   @endphp
 
   {{-- ===================== 🔍 FILTROS ===================== --}}
   <form method="GET" class="toolbar">
 
-    {{-- 🔵 Buscador por nombre o correo --}}
     <input
       id="q"
       name="q"
@@ -32,7 +45,6 @@
       value="{{ request('q') }}"
     >
 
-    {{-- Select desplegable para sucursal (ubicación) --}}
     <select
       id="fSucursal"
       name="sucursal"
@@ -47,50 +59,48 @@
     </select>
 
     <select
-  id="fSucursal2"
-  name="sucursal2"
-  class="input select-ubicacion"
-  style="max-width: 220px;"
-  onchange="this.form.submit()"
->
-      <option value="0"  {{ request('sucursal2') == '' ? 'selected' : '' }}>Segundo filtro</option>
+      id="fSucursal2"
+      name="sucursal2"
+      class="input select-ubicacion"
+      style="max-width: 220px;"
+      onchange="this.form.submit()"
+    >
+      <option value="0" {{ request('sucursal2') == '' ? 'selected' : '' }}>Segundo filtro</option>
       <option value="1" {{ request('sucursal2') == '1' ? 'selected' : '' }}>Aeropuerto de Querétaro</option>
       <option value="2" {{ request('sucursal2') == '2' ? 'selected' : '' }}>Central de autobuses</option>
       <option value="3" {{ request('sucursal2') == '3' ? 'selected' : '' }}>Central Park</option>
     </select>
 
     <select
-  name="per_page"
-  class="input"
-  style="max-width:120px;"
-  onchange="this.form.submit()"
->
-  <option value="10"  {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
-  <option value="20"  {{ request('per_page') == 20 ? 'selected' : '' }}>20</option>
-  <option value="50"  {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-  <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
-</select>
+      name="per_page"
+      class="input"
+      style="max-width:120px;"
+      onchange="this.form.submit()"
+    >
+      <option value="10"  {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
+      <option value="20"  {{ request('per_page') == 20 ? 'selected' : '' }}>20</option>
+      <option value="50"  {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+      <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+    </select>
 
-<input
-  type="date"
-  name="fecha_inicio"
-  class="input"
-  value="{{ request('fecha_inicio') }}"
-  onchange="this.form.submit()"
->
+    <input
+      type="date"
+      name="fecha_inicio"
+      class="input"
+      value="{{ request('fecha_inicio') }}"
+      onchange="this.form.submit()"
+    >
 
-<input
-  type="date"
-  name="fecha_fin"
-  class="input"
-  value="{{ request('fecha_fin') }}"
-  onchange="this.form.submit()"
->
-
+    <input
+      type="date"
+      name="fecha_fin"
+      class="input"
+      value="{{ request('fecha_fin') }}"
+      onchange="this.form.submit()"
+    >
 
     <span class="badge gray">Total <b id="count">{{ $reservaciones->total() }}</b></span>
 
-    {{-- ✅ Botón exportar --}}
     <button
       type="button"
       class="btn primary"
@@ -100,7 +110,6 @@
       ⬇️ Exportar Excel
     </button>
 
-    {{-- ✅ NUEVO: Reservaciones anteriores --}}
     <button
       type="button"
       class="btn gray"
@@ -113,17 +122,15 @@
 
   </form>
 
-  <!-- ======================= 📋 TABLA ACTUAL ======================= -->
-  {{-- ✅ ID para que exporte solo esta tabla --}}
+  {{-- ======================= 📋 TABLA ACTUAL ======================= --}}
   <section id="tablaActivas" class="table {{ $esAeropuerto ? 'is-airport' : '' }}" data-cols="{{ $cols }}">
     <div class="thead">
       <div></div>
       <div>No. de Reservacion</div>
-      <div>oficina comprimida</div>
+      <div>oficina </div>
       <div>Check in</div>
       <div>Hora (IN)</div>
 
-      {{-- Solo mostramos la columna No. Vuelo si es Aeropuerto --}}
       @if($esAeropuerto)
         <div>No. Vuelo</div>
       @endif
@@ -135,7 +142,6 @@
       <div>Correo</div>
       <div>Estatus de pago</div>
       <div>Total</div>
-      {{--<div>Acciones</div> --}}
     </div>
 
     <div class="tbody">
@@ -157,49 +163,63 @@
           $fin    = \Carbon\Carbon::parse($r->fecha_fin);
           $dias   = $inicio->diffInDays($fin);
 
-          $horaIn = $r->hora_retiro
-            ? \Carbon\Carbon::parse($r->hora_retiro)->format('H:i')
-            : '—';
+          $horaIn = $fmtHora($r->hora_retiro);
+
+          $estado = $r->estado;
+          $color = match($estado) {
+            'confirmada' => 'ok',
+            'pendiente_pago' => 'warn',
+            'hold' => 'gray',
+            'cancelada' => 'danger',
+            default => 'gray'
+          };
+
+          $extras = $servicios[$r->id_reservacion] ?? [];
         @endphp
 
-        <div class="row"
-             data-codigo="{{ $r->codigo }}"
-             data-cliente="{{ $nombreCompleto }}"
-             data-email="{{ $r->email_cliente }}"
-             data-numero="{{ $r->telefono_cliente }}"
-             data-categoria="{{ $r->categoria }}"
-             data-fecha-salida="{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}"
-             data-estado="{{ $r->estado }}"
-             data-sucursal="{{ $r->sucursal_retiro }}"
-
-            data-hora_retiro="{{ $r->hora_retiro }}"
-            data-fecha_fin="{{ \Carbon\Carbon::parse($r->fecha_fin)->format('Y-m-d') }}"
-            data-hora_entrega="{{ $r->hora_entrega }}"
-             >
-
-        <div>
-            <button type="button" class="btn-plus">+</button>
-        </div>
+        <div
+          class="row"
+          data-codigo="{{ $r->codigo }}"
+          data-cliente="{{ $nombreCompleto }}"
+          data-email="{{ $r->email_cliente }}"
+          data-numero="{{ $r->telefono_cliente }}"
+          data-categoria="{{ $r->categoria }}"
+          data-fecha-salida="{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}"
+          data-estado="{{ $r->estado }}"
+          data-sucursal="{{ $r->sucursal_retiro }}"
+          data-hora_retiro="{{ $r->hora_retiro }}"
+          data-fecha_fin="{{ \Carbon\Carbon::parse($r->fecha_fin)->format('Y-m-d') }}"
+          data-hora_entrega="{{ $r->hora_entrega }}"
+        >
+          <div>
+            <button type="button" class="btn-more" data-toggle-detail>+</button>
+          </div>
 
           <div>{{ $r->codigo }}</div>
-        <div>
+
+          <div>
             @if(!empty($r->oficina_compacta))
+              @php
+                $aeropuertos = ['AIA','AIFA','AICM','BJX','QRO','MID','CUN','GDL','MTY','QA'];
+              @endphp
 
-                @php
-                    $aeropuertos = ['AIA','AIFA','AICM','BJX','QRO','MID','CUN','GDL','MTY','QA'];
-                @endphp
-
-                @if(in_array($r->oficina_compacta, $aeropuertos))
-                    ✈️ {{ $r->oficina_compacta }}
-                @else
-                    🏢 {{ $r->oficina_compacta }}
-                @endif
-
+              @if(in_array($r->oficina_compacta, $aeropuertos))
+                <span class="oficina-icon">
+                  <i class="fa-solid fa-plane"></i>
+                  {{ $r->oficina_compacta }}
+                </span>
+              @else
+                <span class="oficina-icon">
+                  <i class="fa-solid fa-building"></i>
+                  {{ $r->oficina_compacta }}
+                </span>
+              @endif
             @else
-                —
+              —
             @endif
-        </div>
-          <div>{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('d/m/Y') }}</div>
+          </div>
+
+          <div>{{ $fmtFecha($r->fecha_inicio) }}</div>
           <div>{{ $horaIn }}</div>
 
           @if($esAeropuerto)
@@ -213,95 +233,108 @@
           <div>{{ $r->email_cliente ?? '—' }}</div>
 
           <div>
-            @php
-              $estado = $r->estado;
-              $color = match($estado) {
-                'confirmada' => 'ok',
-                'pendiente_pago' => 'warn',
-                'hold' => 'gray',
-                'cancelada' => 'danger',
-                default => 'gray'
-              };
-            @endphp
             <span class="state {{ $color }}">{{ ucfirst($estado) }}</span>
           </div>
 
           <div>${{ number_format($r->total, 2) }} MXN</div>
-
         </div>
 
-<div class="row-detail" style="display:none;">
-  <div style="grid-column: 1 / -1; padding:15px; background:#f9f9f9;">
+        <div class="row-detail" style="display:none;">
+          <div class="reserva-summary">
 
-    <b>Reservación Confirmada el:</b> {{ \Carbon\Carbon::parse($r->created_at)->format('d/m/Y') }} <br>
-    <b>Datos de Contacto:</b> MEXICO (MX) {{ $r->telefono_cliente }} <br>
-    <b>Entrega:</b> {{ \Carbon\Carbon::parse($r->fecha_inicio)->format('d/m/Y') }} a las {{ $r->hora_retiro ? \Carbon\Carbon::parse($r->hora_retiro)->format('H:i') : '—' }} HRS<br>
-    <b>Devolución:</b> {{ \Carbon\Carbon::parse($r->fecha_fin)->format('d/m/Y') }} a las {{ $r->hora_entrega ? \Carbon\Carbon::parse($r->hora_entrega)->format('H:i') : '—' }} HRS<br>
-    <b>Total(MXN):</b> ${{ number_format($r->total,2)}} - Forma de pago: ({{ $r->metodo_pago}}) <br>
-    <b>Vehículo Requerido:</b> {{ $r->categoria }} | {{ $r->categoria_nombre ?? 'Sin asignar' }} {{ $r->transmision ?? 'Sin transmisión' }} {{ $r->categoria_descripcion ?? '' }} |
-Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ number_format($r->precio_dia * 1.15, 2) }} <br>
-    <b>Número de vuelo:</b> {{ $r->no_vuelo ?? '—' }} <br>
-    <b>Adicionales Requeridos:</b><br>
-@php
-  $extras = $servicios[$r->id_reservacion] ?? [];
-@endphp
+            <div class="summary-title">
+              Reservación Confirmada el: {{ $fmtFecha($r->created_at) }}
+            </div>
 
-@if(count($extras))
-  @foreach($extras as $e)
-    - {{ $e->nombre }} (x{{ $e->cantidad }}) <br>
-  @endforeach
-@else
-  <span style="color:#999;">Ninguno</span><br>
-@endif
+            <div class="reserva-summary-line">
+              <b>Datos de Contacto:</b>
+              MEXICO (MX) {{ $r->telefono_cliente ?? '—' }}
+            </div>
 
-    <b>Acciones:</b><br>
+            <div class="reserva-summary-line">
+              <b>Entrega:</b>
+              {{ $fmtFecha($r->fecha_inicio) }}
+              a las {{ $fmtHora($r->hora_retiro) }} HRS
+            </div>
 
-<div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
+            <div class="reserva-summary-line">
+              <b>Devolución:</b>
+              {{ $fmtFecha($r->fecha_fin) }}
+              a las {{ $fmtHora($r->hora_entrega) }} HRS
+            </div>
 
-  {{-- ✏️ Editar --}}
-  <button
-  type="button"
-  class="btn gray"
-  onclick="window.location.href='/admin/reservaciones/{{ $r->id_reservacion }}/editar'"
->
-  ✏️ Editar Reservación
-</button>
+            <div class="reserva-summary-line">
+              <b>Total(MXN):</b>
+              ${{ number_format($r->total, 2) }} - Forma de pago: ({{ $r->metodo_pago ?? 'mostrador' }})
+            </div>
 
-  {{-- 🗑️ Eliminar --}}
- <button
-  type="button"
-  class="iconbtn more"
-  title="Más acciones"
-  data-open-actions
-  data-id="{{ $r->id_reservacion }}"
-  data-codigo="{{ $r->codigo }}"
-  data-delete-url="{{ route('rutaEliminarReservacionActiva', $r->id_reservacion) }}"
->
-  🗑️ Cancelar Reservación
-</button>
+            <div class="reserva-summary-line summary-full">
+              <b>Vehículo Requerido:</b>
+              {{ $r->categoria }}
+              | {{ $r->categoria_nombre ?? 'Sin asignar' }}
+              {{ $r->transmision ?? 'Sin transmisión' }}
+              {{ $r->categoria_descripcion ?? '' }}
+              | Costo online: ${{ number_format($r->precio_dia ?? 0, 2) }}
+              | Costo oficina: ${{ number_format(($r->precio_dia ?? 0) * 1.15, 2) }}
+            </div>
 
-  {{-- 📧 Correo --}}
-  <button
-  type="button"
-  class="btn primary"
-  onclick="reenviarCorreo({{ $r->id_reservacion }}, this)"
->
-  📧 Reenviar correo de reservación
-</button>
+            <div class="reserva-summary-line">
+              <b>Número de vuelo:</b>
+              {{ $r->no_vuelo ?? '—' }}
+            </div>
 
-  {{-- 🚗 Apartar auto --}}
-<button
-  type="button"
-  class="btn success btn-apartar-auto"
-  data-id="{{ $r->id_reservacion }}"
->
-  🚗 Apartar auto
-</button>
+            <div class="reserva-summary-line">
+              <b>Adicionales Requeridos:</b>
 
-</div>
+              @if(count($extras))
+                @foreach($extras as $e)
+                  <div>- {{ $e->nombre }} (x{{ $e->cantidad }})</div>
+                @endforeach
+              @else
+                <span style="color:#999;">Ninguno</span>
+              @endif
+            </div>
 
-  </div>
-</div>
+            <div class="summary-actions">
+              <button
+                type="button"
+                class="btn gray"
+                onclick="window.location.href='/admin/reservaciones/{{ $r->id_reservacion }}/editar'"
+              >
+                ✏️ Editar Reservación
+              </button>
+
+              <button
+                type="button"
+                class="iconbtn more"
+                title="Más acciones"
+                data-open-actions
+                data-id="{{ $r->id_reservacion }}"
+                data-codigo="{{ $r->codigo }}"
+                data-delete-url="{{ route('rutaEliminarReservacionActiva', $r->id_reservacion) }}"
+              >
+                🗑️ Cancelar Reservación
+              </button>
+
+              <button
+                type="button"
+                class="btn primary"
+                onclick="reenviarCorreo({{ $r->id_reservacion }}, this)"
+              >
+                📧 Reenviar correo de reservación
+              </button>
+
+              <button
+                type="button"
+                class="btn success btn-apartar-auto"
+                data-id="{{ $r->id_reservacion }}"
+              >
+                🚗 Apartar auto
+              </button>
+            </div>
+
+          </div>
+        </div>
 
       @empty
         <div class="row">
@@ -312,8 +345,7 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
   </section>
 
   {{-- ==========================================================
-     🗓️ MODAL: RESERVACIONES ANTERIORES (AYER)
-     ✅ TABLA IDÉNTICA + MISMAS ACCIONES
+     🗓️ MODAL: RESERVACIONES ANTERIORES
   =========================================================== --}}
   <div class="pop" id="modalPrev" aria-hidden="true">
     <div class="box box-xl">
@@ -328,6 +360,7 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
       <div class="cnt table-cnt">
         <section id="tablaPrevias" class="table {{ $esAeropuerto ? 'is-airport' : '' }}" data-cols="{{ $cols }}">
           <div class="thead">
+            <div></div>
             <div>No. de Reservacion</div>
             <div>Check in</div>
             <div>Hora (IN)</div>
@@ -365,24 +398,33 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
                 $fin    = \Carbon\Carbon::parse($r->fecha_fin);
                 $dias   = $inicio->diffInDays($fin);
 
-                $horaIn = $r->hora_retiro
-                  ? \Carbon\Carbon::parse($r->hora_retiro)->format('H:i')
-                  : '—';
+                $horaIn = $fmtHora($r->hora_retiro);
+
+                $estado = $r->estado;
+                $color = match($estado) {
+                  'confirmada' => 'ok',
+                  'pendiente_pago' => 'warn',
+                  'hold' => 'gray',
+                  'cancelada' => 'danger',
+                  default => 'gray'
+                };
               @endphp
 
-              <div class="row"
-                   data-id="{{ $r->id_reservacion }}"
-                   data-codigo="{{ $r->codigo }}"
-                   data-cliente="{{ $nombreCompleto }}"
-                   data-email="{{ $r->email_cliente }}"
-                   data-numero="{{ $r->telefono_cliente }}"
-                   data-categoria="{{ $r->categoria }}"
-                   data-fecha-salida="{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}"
-                   data-estado="{{ $r->estado }}"
-                   data-sucursal="{{ $r->sucursal_retiro }}">
-
+              <div
+                class="row"
+                data-id="{{ $r->id_reservacion }}"
+                data-codigo="{{ $r->codigo }}"
+                data-cliente="{{ $nombreCompleto }}"
+                data-email="{{ $r->email_cliente }}"
+                data-numero="{{ $r->telefono_cliente }}"
+                data-categoria="{{ $r->categoria }}"
+                data-fecha-salida="{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('Y-m-d') }}"
+                data-estado="{{ $r->estado }}"
+                data-sucursal="{{ $r->sucursal_retiro }}"
+              >
+                <div></div>
                 <div>{{ $r->codigo }}</div>
-                <div>{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('d/m/Y') }}</div>
+                <div>{{ $fmtFecha($r->fecha_inicio) }}</div>
                 <div>{{ $horaIn }}</div>
 
                 @if($esAeropuerto)
@@ -396,16 +438,6 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
                 <div>{{ $r->email_cliente ?? '—' }}</div>
 
                 <div>
-                  @php
-                    $estado = $r->estado;
-                    $color = match($estado) {
-                      'confirmada' => 'ok',
-                      'pendiente_pago' => 'warn',
-                      'hold' => 'gray',
-                      'cancelada' => 'danger',
-                      default => 'gray'
-                    };
-                  @endphp
                   <span class="state {{ $color }}">{{ ucfirst($estado) }}</span>
                 </div>
 
@@ -424,7 +456,6 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
                     ⋯
                   </button>
                 </div>
-
               </div>
             @empty
               <div class="row">
@@ -454,7 +485,6 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
       </header>
 
       <div class="cnt">
-
         <div class="kv"><strong>Fechas -</strong><span id="mFechas">—</span></div>
         <div class="kv"><strong>Vehículo -</strong><span id="mVehiculo">—</span></div>
         <div class="kv"><strong>Forma de pago -</strong><span id="mFormaPago">—</span></div>
@@ -462,7 +492,6 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
 
       <div class="actions">
         <button type="button" class="btn gray" id="mCancel">Cerrar</button>
-        {{-- <button type="button" class="btn gray" id="mEdit">Editar</button> --}}
         <button type="button" class="btn primary" id="mGo">Capturar contrato</button>
       </div>
     </div>
@@ -519,7 +548,7 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
   </div>
 
   {{-- ============================
-     🪟 MODAL ACCIONES (No Show / Cancelar / Eliminar)
+     🪟 MODAL ACCIONES
   ============================= --}}
   <div class="pop" id="modalActions" aria-hidden="true">
     <div class="box box-sm">
@@ -547,7 +576,6 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
           </form>
         </div>
 
-        {{-- ✅ SOLO PARA NO SHOW / CANCELAR --}}
         <div id="aExtraFields" class="a-extra" style="display:none;">
           <div class="a-field">
             <label for="aComentarios">Comentarios</label>
@@ -576,46 +604,45 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
     </div>
   </div>
 
-
   {{-- ============================
-     🪟 MODAL apartar vehiculo
+     🪟 MODAL APARTAR VEHÍCULO
   ============================= --}}
   <div class="pop" id="modalVehiculos">
-  <div class="box box-xl">
-    <header>
-      <div>
-        <div>Seleccionar vehículo</div>
+    <div class="box box-xl">
+      <header>
+        <div>
+          <div>Seleccionar vehículo</div>
+        </div>
+        <button type="button" id="vClose">&times;</button>
+      </header>
+
+      <div class="cnt table-cnt">
+        <table style="width:100%">
+          <thead>
+            <tr>
+              <th>Placas</th>
+              <th>Categoría</th>
+              <th>Tamaño</th>
+              <th>Modelo</th>
+              <th>Transmisión</th>
+              <th>Color</th>
+              <th>Gasolina</th>
+              <th>Litros</th>
+              <th>KM</th>
+              <th>Verificación</th>
+              <th>Mantenimiento</th>
+              <th>Seguro</th>
+            </tr>
+          </thead>
+          <tbody id="tablaVehiculos"></tbody>
+        </table>
       </div>
-      <button type="button" id="vClose">&times;</button>
-    </header>
 
-    <div class="cnt table-cnt">
-      <table style="width:100%">
-        <thead>
-          <tr>
-            <th>Placas</th>
-            <th>Categoría</th>
-            <th>Tamaño</th>
-            <th>Modelo</th>
-            <th>Transmisión</th>
-            <th>Color</th>
-            <th>Gasolina</th>
-            <th>Litros</th>
-            <th>KM</th>
-            <th>Verificación</th>
-            <th>Mantenimiento</th>
-            <th>Seguro</th>
-          </tr>
-        </thead>
-        <tbody id="tablaVehiculos"></tbody>
-      </table>
-    </div>
-
-    <div class="actions">
-      <button class="btn gray" id="vCancel">Cerrar</button>
+      <div class="actions">
+        <button class="btn gray" id="vCancel">Cerrar</button>
+      </div>
     </div>
   </div>
-</div>
 
   {{ $reservaciones->links() }}
 </main>
@@ -653,7 +680,7 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
 
       btn.addEventListener('click', () => {
         const thead = document.querySelector('#tablaActivas .thead');
-        const rows  = Array.from(document.querySelectorAll('#tablaActivas .tbody .row'));
+        const rows  = Array.from(document.querySelectorAll('#tablaActivas .tbody > .row'));
 
         if (!thead) {
           alert('No encontré el encabezado de la tabla.');
@@ -667,15 +694,18 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
           return;
         }
 
-        const headers = Array.from(thead.children).map(h => h.innerText.trim());
-        const headersNoActions = headers.slice(0, -1);
+        const headers = Array.from(thead.children)
+          .slice(1)
+          .map(h => h.innerText.trim());
 
         const SEP = ';';
-        let csv = headersNoActions.map(csvCell).join(SEP) + '\n';
+        let csv = headers.map(csvCell).join(SEP) + '\n';
 
         dataRows.forEach(row => {
-          const cells = Array.from(row.children);
-          const dataCells = cells.slice(0, -1).map(cell => cell.innerText);
+          const dataCells = Array.from(row.children)
+            .slice(1)
+            .map(cell => cell.innerText);
+
           csv += dataCells.map(csvCell).join(SEP) + '\n';
         });
 
@@ -686,6 +716,25 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
 
         downloadCSV(`bookings_${y}-${m}-${d}.csv`, csv);
       });
+    });
+  </script>
+
+  {{-- ✅ Abrir/cerrar resumen de reservación --}}
+  <script>
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('[data-toggle-detail]');
+      if (!btn) return;
+
+      const row = btn.closest('.row');
+      const detail = row ? row.nextElementSibling : null;
+
+      if (!detail || !detail.classList.contains('row-detail')) return;
+
+      const isOpen = detail.style.display !== 'none';
+
+      detail.style.display = isOpen ? 'none' : 'block';
+      btn.textContent = isOpen ? '+' : '−';
+      btn.classList.toggle('is-open', !isOpen);
     });
   </script>
 @endsection
