@@ -281,8 +281,7 @@
                                 </div>
 
                                 <div class="botones-accion-paso1">
-                                    <button type="button" class="btn secondary" id="btnElegirVehiculo">Cambiar
-                                        Vehículo</button>
+                                    <button type="button" class="btn secondary" id="btnElegirVehiculo">Elegir vehículo</button>
                                     <button class="btn primary" id="go2">Continuar</button>
                                 </div>
                             </div>

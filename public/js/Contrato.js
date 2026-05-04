@@ -122,12 +122,22 @@ document.addEventListener("DOMContentLoaded", () => {
             dateE.setMinutes(esHoy ? hoy.getMinutes() : 0);
 
             let warning = false;
-            if (dateD <= dateE) {
+
+            const soloFechaE = new Date(dateE.getFullYear(), dateE.getMonth(), dateE.getDate());
+            const soloFechaD = new Date(dateD.getFullYear(), dateD.getMonth(), dateD.getDate());
+
+            if (soloFechaD < soloFechaE) {
                 dateD = new Date(dateE);
                 dateD.setDate(dateE.getDate() + 1);
-                dateD.setHours(dateE.getHours());
-                dateD.setMinutes(dateE.getMinutes());
                 warning = true;
+            } else if (soloFechaD.getTime() === soloFechaE.getTime() && dateD <= dateE) {
+                dateD = new Date(dateE);
+                dateD.setHours(dateE.getHours() + 1);
+                warning = true;
+            }
+
+            if (dateD.toDateString() !== dateE.toDateString()) {
+                dateD.setHours(12, 0, 0, 0);
             }
 
             const ui = {
@@ -147,10 +157,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             };
 
-            window.requestAnimationFrame(() => {
-                inputE.value = ui.valE;
-                inputD.value = ui.valD;
+            inputE.value = ui.valE;
+            inputD.value = ui.valD;
 
+            window.requestAnimationFrame(() => {
                 if (warning) {
                     ContratoUI.notify("warning", "Fecha ajustada: La devolución debe ser posterior a la entrega.");
                 }

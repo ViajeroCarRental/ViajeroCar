@@ -2600,6 +2600,13 @@ body {
   grid-column: 1 / -1;
 }
 
+.mcard .img-method {
+    width: 40px;          
+    height: 40px;         
+    object-fit: contain;  
+    margin-right: 10px;
+}
+
 /* ==========================
       UTILIDADES EXTRA
     ========================== */

@@ -25,6 +25,7 @@ return new class extends Migration {
             $table->date('fecha_emision')->nullable();
             $table->date('fecha_vencimiento')->nullable();
             $table->string('pais_emision', 100)->nullable();
+            $table->string('contacto_emergencia', 20)->nullable();
 
             // 📎 Archivos asociados (front y back)
             $table->unsignedBigInteger('id_archivo_frente')->nullable();
@@ -40,7 +41,7 @@ return new class extends Migration {
 
             // 🔗 Índices y llaves foráneas
             $table->index('id_contrato', 'ctr_doc_ctr_idx');
-            $table->foreign('id_contrato')
+            $table->foreign('id_contrato')  
                 ->references('id_contrato')->on('contratos')
                 ->onDelete('cascade');
 
