@@ -272,6 +272,11 @@
                 <span>Documentación</span>
             </a>
 
+            <a href="{{ route('propietariovehiculo.index') }}" class="flotilla-home-card">
+                <i class="fas fa-car"></i>
+                <span>Propietario del vehículo</span>
+            </a>
+
         </div>
 
     </div>

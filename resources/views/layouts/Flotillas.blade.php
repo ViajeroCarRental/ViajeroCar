@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('titulo', 'Flotilla')</title>
 
     <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
@@ -35,6 +36,7 @@
     @yield('contenidoSeguros')
     @yield('contenidoGastos')
     @yield('contenidoDocumentos')
+    @yield('contenidoFirmas')
 </div>
 
 @yield('js-vistaFlotilla')
@@ -44,6 +46,7 @@
 @yield('js-vistaSeguros')
 @yield('js-vistaGastos')
 @yield('js-vistaDocumentacion')
+@yield('js-vistaFirmas')
 
 </body>
 </html>
