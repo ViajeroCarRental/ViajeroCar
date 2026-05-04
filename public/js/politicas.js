@@ -655,13 +655,10 @@ function setDefaultDates() {
         if (!timeField) return;
         const hourSelect = timeField.querySelector('.tp-selects .tp-hour');
 
-        // Verificar si el usuario ha interactuado con el select
         const userInteracted = hourSelect && hourSelect.hasAttribute('data-user-interacted');
-        // Verificar si tiene un valor REAL seleccionado (no el default interno)
-        const hasRealValue = hourSelect && hourSelect.value && hourSelect.value !== "";
-
-        // Solo es válido si el usuario ha interactuado Y tiene un valor seleccionado
+        const hasRealValue = hiddenInput.value && hiddenInput.value !== "";
         const isValid = userInteracted && hasRealValue;
+
 
         if (!isValid) {
           valid = false;
@@ -940,6 +937,34 @@ function setDefaultDates() {
       setupCheckbox();
       setupValidation();
     }, 800);
+
+    const pickupTime = document.getElementById("pickupTimePoliticas");
+  const dropoffTime = document.getElementById("dropoffTimePoliticas");
+  const form = document.getElementById("rentalFormPoliticas");
+
+  if (pickupTime) {
+    pickupTime.addEventListener("focus", function () {
+      if (!this.value) {
+        this.value = "13:00";
+      }
+    });
+  }
+
+  if (dropoffTime) {
+    dropoffTime.addEventListener("focus", function () {
+      if (!this.value) {
+        this.value = "13:00";
+      }
+    });
+  }
+
+  if (form) {
+    form.addEventListener("submit", function () {
+      if (pickupTime && !pickupTime.value) pickupTime.value = "13:00";
+      if (dropoffTime && !dropoffTime.value) dropoffTime.value = "13:00";
+    });
+  }
+
 
     // Escuchar cambios de idioma para actualizar Flatpickr y placeholders
     const observer = new MutationObserver(() => {
