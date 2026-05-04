@@ -43,6 +43,7 @@ class ReservacionesActivasController extends Controller
             $reservaciones = DB::table('reservaciones as r')
                 ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
                 ->leftJoin('vehiculos as v', 'r.id_vehiculo', '=', 'v.id_vehiculo')
+                ->leftJoin('sucursales as s', 'r.sucursal_entrega', '=', 's.id_sucursal')
                 ->select(
                     'r.id_reservacion',
                     'r.codigo',
@@ -61,6 +62,25 @@ class ReservacionesActivasController extends Controller
                     'r.fecha_fin',
                     'r.total',
                     'r.sucursal_retiro',
+
+                    DB::raw("
+                        CASE
+                            WHEN s.nombre IS NULL OR s.nombre = '' THEN NULL
+                            ELSE (
+                                SELECT GROUP_CONCAT(LEFT(palabra,1) SEPARATOR '')
+                                FROM (
+                                    SELECT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(s.nombre,' ',n.n),' ',-1)) palabra
+                                    FROM (
+                                        SELECT 1 n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
+                                        UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10
+                                    ) n
+                                    WHERE n.n <= 1 + LENGTH(s.nombre) - LENGTH(REPLACE(s.nombre,' ',''))
+                                ) palabras
+                                WHERE palabra NOT IN ('de','del','la','las','los','y')
+                            )
+                        END AS oficina_compacta
+                    "),
+
                     'r.no_vuelo',
                     'r.created_at',
                     'c.codigo as categoria',

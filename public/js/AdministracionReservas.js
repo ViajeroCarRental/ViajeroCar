@@ -55,6 +55,18 @@ document.addEventListener("DOMContentLoaded", () => {
             : `${r.ubic_estado ?? ""} - ${r.ubic_destino ?? ""}`}</td>
         <td>${r.hora_entrega ?? "—"}</td>
         <td>${r.estado ?? "—"}</td>
+        <td class="text-center">
+                ${r.metodo_pago === 'mostrador'
+                    ? `
+                        <i class="fas fa-money-bill-wave text-success" title="Pago en efectivo"></i>
+                        ${r.status_pago === 'Pagado'
+                            ? '<i class="fas fa-check text-primary ms-1" title="Pagado"></i>'
+                            : ''
+                        }
+                    `
+                    : ''
+                }
+        </td>
         <td></td>
     `;
 
@@ -299,6 +311,17 @@ const id  = tr.dataset.id;
 
                 <div style="display:flex; gap:10px;">
 
+                    <button class="btn b-warning btnExtension"
+                        data-id="${d.id_contrato}">
+                        EXTENSIÓN
+                    </button>
+
+                    <input type="date"
+
+                    class="inputExtension"
+                    data-id="${d.id_contrato}"
+                    style="display:none;">
+
                     <button class="btn b-primary btnEditarContrato"
                         data-id="${d.id_contrato}">
                         CIERRE PENDIENTE
@@ -366,8 +389,65 @@ const id  = tr.dataset.id;
     // Inicial
     loadData();
 
+ // ============================================================
+ // Botón Extension.
+ // ============================================================
+document.addEventListener("click", async function(e){
+
+    // Abrir calendario
+    if(e.target.classList.contains("btnExtension")){
+
+        const id = e.target.dataset.id;
+        const input = document.querySelector(`.inputExtension[data-id="${id}"]`);
+
+        // bloquear hoy
+        const hoy = new Date();
+        hoy.setDate(hoy.getDate() + 1);
+
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth()+1).padStart(2,'0');
+        const dd = String(hoy.getDate()).padStart(2,'0');
+
+        input.min = `${yyyy}-${mm}-${dd}`;
+
+        input.style.display = "block";
+        input.showPicker(); // Chrome moderno
+    }
+
+});
 
 
+document.addEventListener("change", async function(e){
+
+    if(e.target.classList.contains("inputExtension")){
+
+        const id = e.target.dataset.id;
+        const fecha = e.target.value;
+
+        if(!fecha) return;
+
+        const res = await fetch(`/admin/contrato/${id}/extension`,{
+            method:'POST',
+            headers:{
+                'Content-Type':'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                fecha_fin: fecha
+            })
+        });
+
+        const data = await res.json();
+
+        if(data.ok){
+            alert("Fecha extendida correctamente");
+            location.reload();
+        }else{
+            alert("Error al guardar");
+        }
+    }
+
+});
 
 
     // ============================================================

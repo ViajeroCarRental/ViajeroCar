@@ -1877,13 +1877,6 @@ foreach ($fotosEntrada as $f) {
             $msg = 'Checklist de regreso guardado correctamente, pero hubo un problema al enviar uno o más correos. Revisa tu correo y el log.';
         }
 
-        // 🔥 CERRAR CONTRATO
-DB::table('contratos')
-    ->where('id_contrato', $contrato->id_contrato)
-    ->update([
-        'estado' => 'cerrado'
-    ]);
-
         return response()->json([
            'ok'  => true,
            'msg' => $msg

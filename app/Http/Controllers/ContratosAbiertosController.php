@@ -35,6 +35,8 @@ class ContratosAbiertosController extends Controller
     'cat.nombre AS categoria',
     'r.delivery_ubicacion',
     'r.delivery_direccion',
+    'r.metodo_pago',
+    'r.status_pago',
     'us.estado AS ubic_estado',
     'us.destino AS ubic_destino',
 
@@ -107,7 +109,26 @@ class ContratosAbiertosController extends Controller
             'cat.nombre AS categoria',
             'cat.codigo AS categoria_codigo',
 
-            DB::raw('se.nombre AS sucursal_entrega_nombre'),
+            //Iniciales de la sucursal
+            //DB::raw('se.nombre AS sucursal_entrega_nombre'), //Si quieres que salga la sucursal completa.
+            DB::raw("
+CASE
+    WHEN se.nombre IS NULL OR se.nombre = '' THEN NULL
+    ELSE (
+        SELECT GROUP_CONCAT(LEFT(palabra,1) SEPARATOR '')
+        FROM (
+            SELECT TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(se.nombre,' ',n.n),' ',-1)) palabra
+            FROM (
+                SELECT 1 n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
+                UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10
+            ) n
+            WHERE n.n <= 1 + LENGTH(se.nombre) - LENGTH(REPLACE(se.nombre,' ',''))
+        ) palabras
+        WHERE palabra NOT IN ('de','del','la','las','los','y')
+    )
+END AS sucursal_entrega_nombre
+"),
+
             DB::raw('r.fecha_inicio AS entrega_fecha'),
             DB::raw('r.hora_retiro AS entrega_hora'),
             DB::raw('r.fecha_fin AS dev_fecha'),
@@ -410,6 +431,20 @@ private function soloSuperAdmin()
         ->exists();
 }
 
+//Cambiar fecha
+public function extension(Request $request, $id)
+{
+    DB::table('contratos as c')
+        ->join('reservaciones as r','c.id_reservacion','=','r.id_reservacion')
+        ->where('c.id_contrato',$id)
+        ->update([
+            'r.fecha_fin' => $request->fecha_fin
+        ]);
+
+    return response()->json([
+        'ok' => true
+    ]);
+}
 
 
 

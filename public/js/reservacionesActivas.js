@@ -156,7 +156,6 @@ document.addEventListener("click", async (e) => {
     data.forEach(v => {
       tablaVehiculos.innerHTML += `
         <tr>
-          <td>${v.id_vehiculo}</td>
           <td>${v.placa ?? '-'}</td>
           <td>${v.categoria ?? '-'}</td>
           <td>${v.tamano ?? '-'}</td>

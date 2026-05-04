@@ -624,6 +624,9 @@ Route::get('/api/contratos-abiertos/{id}', [ContratosAbiertosController::class, 
     ->name('contratos.detalle');
 Route::get('/api/contratos-abiertos', [ContratosAbiertosController::class, 'api']);
 
+//Botón "xtension" cambio de fecha.
+Route::post('/admin/contrato/{id}/extension',[ContratosAbiertosController::class,'extension']);
+
 
 // Categorías de carros admin
 

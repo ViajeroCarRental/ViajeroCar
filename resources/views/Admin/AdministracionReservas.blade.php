@@ -47,6 +47,7 @@
         <th>Dropoff</th>
         <th>Hora Checkout</th>
         <th>Estatus</th>
+        <th>Forma de pago</th>
         <th class="col-actions"></th>
     </tr>
 </thead>
