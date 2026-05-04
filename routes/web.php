@@ -38,6 +38,7 @@ use App\Http\Controllers\PropietarioVehiculoController;
 use App\Http\Controllers\VehiculoDocumentosController;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\VisorReservacionController;
+use App\Http\Controllers\DropoffController;
 //rutas vistas Usuario
 
 
@@ -573,6 +574,14 @@ Route::prefix('admin')->group(function () {
 
 });
 
+//Dropoff en administración
+Route::prefix('admin')->group(function () {
+Route::get('/dropoff', [DropoffController::class, 'index'])->name('dropoff.index');
+Route::get('/dropoff/data', [DropoffController::class, 'data']);
+Route::post('/dropoff/update-km', [DropoffController::class, 'updateKm']);
+Route::post('/dropoff/update-costo', [DropoffController::class, 'updateCostoKm']);
+});
+
 Route::post('/contrato/guardar-dato', [ChecklistController::class, 'guardarDato'])
      ->name('contrato.guardarDato');
 // VER CHECKLIST
@@ -616,10 +625,16 @@ Route::get('/api/historial', [HistorialController::class, 'api'])
     ->name('api.historial');
 
     //administracion de reservaciones
+//Route::get('/admin/administracion-reservaciones', [ContratosAbiertosController::class, 'index'])
+    //->middleware('auth')
+    //->name('rutaAdministracionReservaciones');
 Route::get('/admin/administracion-reservaciones', [ContratosAbiertosController::class, 'index'])->name('rutaAdministracionReservaciones');
 Route::get('/api/contratos-abiertos/{id}', [ContratosAbiertosController::class, 'detalle'])
     ->name('contratos.detalle');
 Route::get('/api/contratos-abiertos', [ContratosAbiertosController::class, 'api']);
+
+//Botón "xtension" cambio de fecha.
+Route::post('/admin/contrato/{id}/extension',[ContratosAbiertosController::class,'extension']);
 
 
 // Categorías de carros admin

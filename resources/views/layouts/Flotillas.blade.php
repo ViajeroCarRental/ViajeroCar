@@ -24,7 +24,7 @@
     <div class="inner-back-wrap">
         <a href="{{ route('rutaMenuFlotilla') }}" class="inner-back-btn">
             <i class="fas fa-arrow-left"></i>
-            Regresar 
+            Regresar
         </a>
     </div>
 
@@ -35,7 +35,6 @@
     @yield('contenidoSeguros')
     @yield('contenidoGastos')
     @yield('contenidoDocumentos')
-
 </div>
 
 @yield('js-vistaFlotilla')

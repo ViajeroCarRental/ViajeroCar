@@ -608,8 +608,17 @@ public function guardarDano(Request $request, $idContrato)
         // Validar datos mínimos
         $request->validate([
             'zona' => 'required|integer',
-            'comentario' => 'nullable|string'
+            'comentario' => 'nullable|string',
+            'foto' => 'nullable|file|max:5120'
         ]);
+
+         $rutaFoto = null;
+
+        if ($request->hasFile('foto')) {
+            $rutaFoto = $request->file('foto')->store('danos', 'public');
+        }
+
+        $modo = $request->get('modo');
 
         DB::table('contrato_evento')->insert([
             'id_contrato' => $idContrato,
@@ -617,7 +626,9 @@ public function guardarDano(Request $request, $idContrato)
             'detalle' => json_encode([
                 'zona' => $request->zona,
                 'comentario' => $request->comentario,
+                'modo' => $modo
             ]),
+            'foto' => $rutaFoto,
             'realizado_en' => now(),
             'created_at' => now(),
             'updated_at' => now()
@@ -1865,13 +1876,6 @@ foreach ($fotosEntrada as $f) {
         if (!$correoClienteEnviado || !$correoInternoEnviado) {
             $msg = 'Checklist de regreso guardado correctamente, pero hubo un problema al enviar uno o más correos. Revisa tu correo y el log.';
         }
-
-        // 🔥 CERRAR CONTRATO
-DB::table('contratos')
-    ->where('id_contrato', $contrato->id_contrato)
-    ->update([
-        'estado' => 'cerrado'
-    ]);
 
         return response()->json([
            'ok'  => true,

@@ -254,6 +254,16 @@
         <h4 id="tituloModal">Zona</h4>
         <textarea id="comentarioDaño"
                   placeholder="Describe el daño o comentario..."></textarea>
+
+                     <!-- 🔥 NUEVO -->
+        <input type="file"
+               id="fotoDaño"
+               accept="image/*"
+               capture="environment">
+
+        <!-- preview -->
+        <div id="previewFoto" style="margin-top:10px;"></div>
+
         <button type="button" id="guardarDaño" class="btn btn-save">Guardar</button>
         <button type="button" id="cancelarDaño" class="btn btn-cancel">Cancelar</button>
     </div>
@@ -305,14 +315,20 @@
 
             // Limpiar textarea
             document.getElementById("comentarioDaño").value = "";
+            document.getElementById("fotoDaño").value = "";
+            document.getElementById("previewFoto").innerHTML = "";
+            fotoSeleccionada = null;
 
             modal.style.display = "flex";
         });
     });
 
     // ======================================
-    // 2) GUARDAR DAÑO EN BD
+    // 2) GUARDAR DAÑO EN BD y foto
     // ======================================
+
+    let fotoSeleccionada = null;
+
     document.getElementById("guardarDaño").onclick = async () => {
 
         const comentario = document.getElementById("comentarioDaño").value.trim();
@@ -323,17 +339,24 @@
         }
 
         try {
+              const formData = new FormData();
+        formData.append("id_contrato", idContrato);
+        formData.append("zona", zonaSeleccionada);
+        formData.append("comentario", comentario);
+        formData.append("modo", "{{ $modo }}");
+
+        if (fotoSeleccionada) {
+            formData.append("foto", fotoSeleccionada);
+        }
+
+
             const resp = await fetch("{{ route('contrato.guardarDano', ['id' => $id]) }}", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
+                    //"Content-Type": "application/json",
                     "X-CSRF-TOKEN": "{{ csrf_token() }}"
                 },
-                body: JSON.stringify({
-                    id_contrato: idContrato,
-                    zona: zonaSeleccionada,
-                    comentario: comentario
-                })
+                  body: formData
             });
 
             const data = await resp.json();
@@ -353,6 +376,69 @@
             console.error(e);
         }
     };
+
+    function compressImage(file, maxWidth = 1200, quality = 0.7) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+
+        img.onload = () => {
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+                const ratio = maxWidth / width;
+                width = maxWidth;
+                height = height * ratio;
+            }
+
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob(
+                (blob) => {
+                    if (!blob) return reject("Error al comprimir");
+
+                    const newFile = new File([blob], "foto.jpg", {
+                        type: "image/jpeg"
+                    });
+
+                    resolve(newFile);
+                },
+                "image/jpeg",
+                quality
+            );
+        };
+
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
+    });
+}
+
+    document.getElementById("fotoDaño").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+        const compressed = await compressImage(file);
+        fotoSeleccionada = compressed;
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            document.getElementById("previewFoto").innerHTML =
+                `<img src="${ev.target.result}" style="width:100%; border-radius:8px;">`;
+        };
+        reader.readAsDataURL(compressed);
+
+    } catch (err) {
+        alert("Error al procesar imagen");
+    }
+});
+
+
         document.getElementById("guardarInventario").addEventListener("click", async () => {
         const idContrato = document.getElementById("idContrato").value;
 

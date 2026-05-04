@@ -119,6 +119,7 @@
     <div class="thead">
       <div></div>
       <div>No. de Reservacion</div>
+      <div>oficina comprimida</div>
       <div>Check in</div>
       <div>Hora (IN)</div>
 
@@ -181,6 +182,23 @@
         </div>
 
           <div>{{ $r->codigo }}</div>
+        <div>
+            @if(!empty($r->oficina_compacta))
+
+                @php
+                    $aeropuertos = ['AIA','AIFA','AICM','BJX','QRO','MID','CUN','GDL','MTY','QA'];
+                @endphp
+
+                @if(in_array($r->oficina_compacta, $aeropuertos))
+                    ✈️ {{ $r->oficina_compacta }}
+                @else
+                    🏢 {{ $r->oficina_compacta }}
+                @endif
+
+            @else
+                —
+            @endif
+        </div>
           <div>{{ \Carbon\Carbon::parse($r->fecha_inicio)->format('d/m/Y') }}</div>
           <div>{{ $horaIn }}</div>
 
@@ -575,7 +593,6 @@ Costo online: ${{ number_format($r->precio_dia, 2) }} | Costo oficina: ${{ numbe
       <table style="width:100%">
         <thead>
           <tr>
-            <th>ID</th>
             <th>Placas</th>
             <th>Categoría</th>
             <th>Tamaño</th>

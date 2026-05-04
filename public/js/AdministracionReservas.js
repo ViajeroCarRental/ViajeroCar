@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const next = document.getElementById("next");
     const pgInfo = document.getElementById("pgInfo");
 
+
     let page = 1;
     let lastPage = 1;
 
@@ -49,11 +50,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <td>${r.numero_contrato ?? "—"}</td>
         <td>${r.fecha_fin ?? "—"}</td>
+        <td>${r.categoria ?? "—"}</td>   <!-- ✅ categoría -->
+        <td>${!r.tiene_dropoff ? "---" : r.delivery_ubicacion == 0 ? (r.delivery_direccion ?? "Sin dirección")
+            : `${r.ubic_estado ?? ""} - ${r.ubic_destino ?? ""}`}</td>
         <td>${r.hora_entrega ?? "—"}</td>
-        <td>${r.nombre ?? "—"}</td>
-        <td>${r.apellidos ?? "—"}</td>
-        <td>${r.email ?? "—"}</td>
         <td>${r.estado ?? "—"}</td>
+        <td class="text-center">
+                ${r.metodo_pago === 'mostrador'
+                    ? `
+                        <i class="fas fa-money-bill-wave text-success" title="Pago en efectivo"></i>
+                        ${r.status_pago === 'Pagado'
+                            ? '<i class="fas fa-check text-primary ms-1" title="Pagado"></i>'
+                            : ''
+                        }
+                    `
+                    : ''
+                }
+        </td>
         <td></td>
     `;
 
@@ -102,6 +115,31 @@ const id  = tr.dataset.id;
 
             const d = json.data;
 
+            //Seguros
+            const segurosPaqueteHTML = (json.segurosPaquete || [])
+                .map(s => `• ${s.nombre} ($${Number(s.precio_por_dia).toFixed(2)}/día)`)
+                .join("<br>");
+
+            const segurosIndividualesHTML = (json.segurosIndividuales || [])
+                .map(s => `• ${s.nombre} ($${Number(s.precio_por_dia).toFixed(2)}/día)`)
+                .join("<br>");
+
+            //Gasolina faltante
+            const comb = json.combustible || {};
+
+
+            //Daños nuevos.
+            const danosNuevos = json.danos_nuevos || [];
+
+            const danosHTML = danosNuevos.length
+                ? danosNuevos.map(d => `• ${d.nombre_zona}: ${d.comentario}`).join("<br>")
+                : "Sin daños nuevos";
+
+
+            const disabled = !esSuperAdmin
+            ? 'disabled style="opacity:0.5;cursor:not-allowed;"'
+            : '';
+
             const row = document.createElement("tr");
             row.classList.add("detail");
 
@@ -125,14 +163,86 @@ const id  = tr.dataset.id;
 
             <div class="card-bd">
                 <div class="block">
+
+                    <div class="kv">
+                        <div class="k">Cliente</div>
+                        <div class="v">
+                            ${d.nombre_cliente ?? ""} ${d.apellidos_cliente ?? ""}
+                        </div>
+                    </div>
+
+                    <div class="kv">
+                        <div class="k">Oficina de regreso contraída</div>
+                        <div class="v">
+                            ${d.sucursal_entrega_nombre ?? "—"}
+                        </div>
+                    </div>
+
+                    <div class="kv">
+                        <div class="k">Lugar de estancia</div>
+                        <div class="v">
+                        </div>
+                    </div>
+
                     <div class="kv">
                         <div class="k">Contacto</div>
-                        <div class="v">${d.pais ?? ""} · ${d.telefono ?? ""}</div>
+                        <div class="v">${d.pais ?? ""} · ${d.telefono ?? ""}<br>
+                            ${d.email_cliente ?? ""}
+
+                        </div>
                     </div>
 
                     <div class="kv">
                         <div class="k">Vehículo</div>
                         <div class="v">${d.categoria ?? ""} · ${d.marca ?? ""} ${d.modelo ?? ""}</div>
+                    </div>
+
+                    <div class="kv">
+                        <div class="k">Tarifa</div>
+                        <div class="v">
+
+                            <!-- Categoría -->
+                            <b>${d.categoria ?? ""} (${d.categoria_codigo ?? ""})</b><br>
+                            Tarifa base: $${Number(d.tarifa_base ?? 0).toFixed(2)}<br><br>
+
+                            <!-- Seguro paquete -->
+                            ${
+                                segurosPaqueteHTML
+                                    ? `<b>Paquete:</b><br>${segurosPaqueteHTML}<br><br>`
+                                    : ""
+                            }
+
+                            <!-- Seguros individuales -->
+                            ${
+                                segurosIndividualesHTML
+                                    ? `<b>Seguros:</b><br>${segurosIndividualesHTML}`
+                                    : ""
+                            }
+
+                        </div>
+                    </div>
+
+                    <div class="kv">
+                        <div class="k">Combustible</div>
+                        <div class="v">
+
+                            Salida: ${comb.salida ?? 0} L<br>
+                            Regreso: ${comb.entrada ?? 0} L<br>
+                            Faltante: <b>${comb.faltante ?? 0} L</b><br>
+
+                            ${
+                                comb.faltante > 0
+                                    ? `Costo: $${Number(comb.total ?? 0).toFixed(2)}`
+                                    : "Sin cargo"
+                            }
+                        </div>
+                    </div>
+
+                    <div class="kv">
+                        <div class="k">Nuevos daños</div>
+                        <div class="v">
+                            ${danosHTML}
+                        </div>
                     </div>
 
                     <div class="kv">
@@ -171,17 +281,61 @@ const id  = tr.dataset.id;
                     <img src="/img/wallet.svg" style="width:18px">
                     $${Number(d.total ?? 0).toFixed(2)}
                     <small>· ${d.metodo_pago ?? "N/A"}</small>
-                </div>
+
+
+                    <a href="{{ route('checklist2', ['id' => $contrato->id_contrato]) }}" class="btn-checklist"
+                            style="
+                    margin-right: auto;
+                    padding: 10px 16px;
+                    border-radius: 10px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    text-decoration: none;
+                    border: 1px solid transparent;
+                    background: #FF1E2D;
+                    color: #ffffff;
+                    box-shadow: 0 2px 8px rgba(16,24,40,.06);
+                ">
+                            Cambio de Vehículo
+                        </a>
+            </div>
+
+
+            <div>
+                <a class="btn b-primary"
+                href="/admin/reservacion/${d.id_contrato}/checklist?modo=regreso">
+                    CHECK
+                </a>
+            </div>
+
 
                 <div style="display:flex; gap:10px;">
+
+                    <button class="btn b-warning btnExtension"
+                        data-id="${d.id_contrato}">
+                        EXTENSIÓN
+                    </button>
+
+                    <input type="date"
+
+                    class="inputExtension"
+                    data-id="${d.id_contrato}"
+                    style="display:none;">
+
                     <button class="btn b-primary btnEditarContrato"
                         data-id="${d.id_contrato}">
+                        CIERRE PENDIENTE
+                    </button>
+
+                    <button class="btn b-primary btnEditarContrato"
+                        data-id="${d.id_contrato}"
+                        ${disabled}>
                         EDITAR
                     </button>
 
                     <button class="btn b-red btnFinalizarContrato"
                         data-id="${d.id_contrato}">
-                        FINALIZAR
+                        CIERRE
                     </button>
                 </div>
             </div>
@@ -235,8 +389,65 @@ const id  = tr.dataset.id;
     // Inicial
     loadData();
 
+ // ============================================================
+ // Botón Extension.
+ // ============================================================
+document.addEventListener("click", async function(e){
+
+    // Abrir calendario
+    if(e.target.classList.contains("btnExtension")){
+
+        const id = e.target.dataset.id;
+        const input = document.querySelector(`.inputExtension[data-id="${id}"]`);
+
+        // bloquear hoy
+        const hoy = new Date();
+        hoy.setDate(hoy.getDate() + 1);
+
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth()+1).padStart(2,'0');
+        const dd = String(hoy.getDate()).padStart(2,'0');
+
+        input.min = `${yyyy}-${mm}-${dd}`;
+
+        input.style.display = "block";
+        input.showPicker(); // Chrome moderno
+    }
+
+});
 
 
+document.addEventListener("change", async function(e){
+
+    if(e.target.classList.contains("inputExtension")){
+
+        const id = e.target.dataset.id;
+        const fecha = e.target.value;
+
+        if(!fecha) return;
+
+        const res = await fetch(`/admin/contrato/${id}/extension`,{
+            method:'POST',
+            headers:{
+                'Content-Type':'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                fecha_fin: fecha
+            })
+        });
+
+        const data = await res.json();
+
+        if(data.ok){
+            alert("Fecha extendida correctamente");
+            location.reload();
+        }else{
+            alert("Error al guardar");
+        }
+    }
+
+});
 
 
     // ============================================================

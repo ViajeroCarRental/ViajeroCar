@@ -25,7 +25,7 @@ return new class extends Migration {
             $table->date('fecha_fin');
             $table->time('hora_entrega')->nullable();
 
-            $table->enum('estado', ['hold','pendiente_pago','confirmada','cancelada','expirada'])
+            $table->enum('estado', ['hold','pendiente_pago','prepago','confirmada','cancelada','expirada'])
                   ->default('hold');
 
             $table->boolean('aprobado_por_superadmin')->default(false);
