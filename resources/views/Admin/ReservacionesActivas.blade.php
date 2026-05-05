@@ -197,27 +197,37 @@
 
           <div>{{ $r->codigo }}</div>
 
-          <div>
-            @if(!empty($r->oficina_compacta))
-              @php
-                $aeropuertos = ['AIA','AIFA','AICM','BJX','QRO','MID','CUN','GDL','MTY','QA'];
-              @endphp
 
-              @if(in_array($r->oficina_compacta, $aeropuertos))
-                <span class="oficina-icon">
-                  <i class="fa-solid fa-plane"></i>
-                  {{ $r->oficina_compacta }}
-                </span>
-              @else
-                <span class="oficina-icon">
-                  <i class="fa-solid fa-building"></i>
-                  {{ $r->oficina_compacta }}
-                </span>
-              @endif
-            @else
-              —
-            @endif
-          </div>
+          <div>
+                    @if(!empty($r->oficina_compacta))
+
+                        @if($r->oficina_compacta === 'AIQ')
+                            <span class="oficina-icon">
+                                <i class="fa-solid fa-plane"></i>
+                                {{ $r->oficina_compacta }}
+                            </span>
+
+                        @elseif($r->oficina_compacta === 'TAQ')
+                            <span class="oficina-icon">
+                                <i class="fa-solid fa-bus" style="color:black;"></i>
+                                {{ $r->oficina_compacta }}
+                            </span>
+
+                        @elseif($r->oficina_compacta === 'OCP')
+                            <span class="oficina-icon">
+                                <i class="fa-solid fa-building"></i>
+                                {{ $r->oficina_compacta }}
+                            </span>
+
+                        @else
+                            —
+                        @endif
+
+                    @else
+                        —
+                    @endif
+        </div>
+
 
           <div>{{ $fmtFecha($r->fecha_inicio) }}</div>
           <div>{{ $horaIn }}</div>

@@ -316,11 +316,6 @@
                 <span>Seguros Individuales</span>
             </a>
 
-            <a href="{{ route('propietariovehiculo.index') }}" class="admin-home-card">
-                <i class="fas fa-car"></i>
-                <span>Propietario del vehículo</span>
-            </a>
-
         </div>
 
     </div>
