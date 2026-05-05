@@ -27,6 +27,7 @@
     @yield('css-vistaContrato')
     @yield('css-vistaAltaCliente')
     @yield('css-vistaFacturar')
+    @yield('css-vistaContratoFinal')
 
     @yield('css')
 
@@ -132,6 +133,7 @@
     @yield('js-vistaContrato')
     @yield('js-vistaAltaCliente')
     @yield('js-vistaFacturar')
+    @yield('js-vistaContratoFinal')
 
     @yield('js')
 
