@@ -24,6 +24,7 @@
     @yield('css-vistaVisorReservaciones')
     @yield('css-vistaAdministracionReservaciones')
     @yield('css-vistaHistorial')
+    @yield('css-vistaContrato')
     @yield('css-vistaAltaCliente')
     @yield('css-vistaFacturar')
 
@@ -107,6 +108,7 @@
         @yield('contenidoVisorReservaciones')
         @yield('contenidoAdministracionReservaciones')
         @yield('contenidoHistorial')
+        @yield('contenidoContrato')
         @yield('contenidoAltaCliente')
         @yield('contenidoFacturar')
 
@@ -126,6 +128,7 @@
     @yield('js-vistaVisorReservaciones')
     @yield('js-vistaAdministracionReservaciones')
     @yield('js-vistaHistorial')
+    @yield('js-vistaContrato')
     @yield('js-vistaAltaCliente')
     @yield('js-vistaFacturar')
 
