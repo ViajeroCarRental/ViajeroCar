@@ -1317,8 +1317,14 @@
                                 </div>
 
                                 <div class="wizard-nav" style="margin-top:10px;">
-                                    <button id="btnReservar" type="button"
-                                        class="btn btn-primary">{{ __('Book') }}</button>
+                                    <button id="btnReservar"
+                                        type="button"
+                                        class="btn btn-primary"
+                                        data-click-text="Reservar"
+                                        data-click-id="btn-reservar"
+                                        aria-label="Reservar">
+                                        {{ __('Book') }}
+                                    </button>
                                 </div>
 
                                 <div class="pay-logos"
@@ -1610,7 +1616,12 @@
                     ${{ number_format($tarifaBase, 0) }} MXN
                 </span>
             </div>
-            <button type="button" id="btnReservarMovil" class="btn-reservar-movil">
+            <button type="button"
+                id="btnReservarMovil"
+                class="btn-reservar-movil"
+                data-click-text="Reservar"
+                data-click-id="btn-reservar-movil"
+                aria-label="Reservar">
                 {{ __('Book') }}
             </button>
         </div>
