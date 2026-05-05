@@ -339,7 +339,6 @@ small,
   border-color: #E5E7EB;
 }
 
-
 /* ==============================
    🧭 Tabla
 ============================== */
@@ -354,6 +353,7 @@ small,
   max-width: 100%;
   display: block;
   position: relative;
+  -webkit-overflow-scrolling: touch;
 
   --cols:
     30px
@@ -408,20 +408,14 @@ small,
 .table .thead > div {
   padding: 6px 6px;
   text-align: center;
-
-  /* 🔥 CLAVE */
   white-space: normal;
   word-break: break-word;
   line-height: 1.2;
-
   min-width: 0;
   border-right: 1px solid rgba(255,255,255,0.15);
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  /* opcional: altura uniforme */
   min-height: 42px;
 }
 
@@ -967,8 +961,10 @@ small,
 }
 
 /* ==============================
-   📱 Responsive
+   📱 Responsive Tablet / Celular
 ============================== */
+
+/* TABLET */
 @media (max-width: 1024px) {
   .wrap {
     grid-template-columns: 1fr;
@@ -981,75 +977,146 @@ small,
     border-bottom: 1px solid #c40c18;
   }
 
+  .brand img {
+    width: 135px;
+  }
+
   .menu {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .main {
+    padding: 14px;
+  }
+
+  .container {
+    max-width: 100%;
+  }
+
+  .table {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .table .thead,
+  .table .row {
+    min-width: max-content;
+  }
+
+  .box.box-xl {
+    width: 96vw;
   }
 }
 
+/* CELULAR */
 @media (max-width: 760px) {
+  body {
+    font-size: 14px;
+  }
+
   .main {
     padding: 12px;
+  }
+
+  .h1 {
+    font-size: 20px;
+    line-height: 1.2;
   }
 
   .toolbar {
     display: grid;
     grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .input,
   .toolbar .input,
-  .select-ubicacion {
+  .select-ubicacion,
+  .badge.gray {
     min-width: 0;
     width: 100%;
   }
 
-  .table {
-    --cols:
-      42px
-      110px
-      115px
-      95px
-      90px
-      90px;
+  .badge.gray {
+    justify-content: center;
   }
 
-  .table.is-airport {
-    --cols:
-      42px
-      110px
-      115px
-      95px
-      90px
-      90px;
+  .table {
+    border-radius: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .table .thead,
   .table .row {
-    grid-template-columns: var(--cols);
-  }
-
-  .table .thead > :nth-child(n+7),
-  .table .row > :nth-child(n+7) {
-    display: none;
+    min-width: max-content;
   }
 
   .table .thead {
     font-size: 9px;
+    padding: 5px 6px;
   }
 
   .table .row {
     font-size: 13px;
+    padding: 5px 6px;
+  }
+
+  .table .row > div {
+    padding: 4px 6px;
+  }
+
+  .actions-wrap {
+    gap: 5px;
+  }
+
+  .iconbtn {
+    font-size: 11px;
+    padding: 6px 7px;
   }
 
   .kv {
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .box {
+    width: 96vw;
+    max-height: 90vh;
+  }
+
+  .box header {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  .box .cnt {
+    padding: 16px;
+    max-height: 65vh;
+    overflow: auto;
+  }
+
+  .box .cnt.table-cnt {
+    max-height: 68vh;
+    overflow: auto;
+  }
+
+  .actions {
+    flex-direction: column;
+    padding: 12px 14px;
+  }
+
+  .actions .btn,
+  .actions button,
+  .actions a {
+    width: 100%;
   }
 
   .reserva-summary {
     grid-template-columns: 1fr;
     margin: 8px 4px 12px;
-    padding: 14px;
+    padding: 12px;
   }
 
   .reserva-summary .summary-actions,
@@ -1062,31 +1129,21 @@ small,
     width: 100%;
     justify-content: center;
   }
-
-  .box {
-    width: 96vw;
-    max-height: 90vh;
-  }
-
-  .box .cnt {
-    max-height: 65vh;
-    overflow: auto;
-  }
-
-  .actions {
-    flex-direction: column;
-  }
-
-  .actions .btn,
-  .actions button,
-  .actions a {
-    width: 100%;
-  }
 }
 
+/* CELULAR PEQUEÑO */
 @media (max-width: 480px) {
   .brand img {
-    width: 120px;
+    width: 115px;
+  }
+
+  .side {
+    padding: 12px;
+  }
+
+  .menu {
+    grid-template-columns: 1fr;
+    gap: 7px;
   }
 
   .mitem {
@@ -1094,27 +1151,24 @@ small,
     padding: 9px 10px;
   }
 
+  .main {
+    padding: 10px;
+  }
+
+  .h1 {
+    font-size: 18px;
+  }
+
   .table {
-    --cols:
-      42px
-      105px
-      105px
-      85px
-      85px;
+    border-radius: 10px;
   }
 
-  .table.is-airport {
-    --cols:
-      42px
-      105px
-      105px
-      85px
-      85px;
+  .table .thead {
+    font-size: 8.5px;
   }
 
-  .table .thead > :nth-child(n+6),
-  .table .row > :nth-child(n+6) {
-    display: none;
+  .table .row {
+    font-size: 12px;
   }
 
   .btn-more,
@@ -1122,5 +1176,17 @@ small,
     width: 28px;
     height: 28px;
     font-size: 16px;
+  }
+
+  .box header {
+    font-size: 13px;
+  }
+
+  .box header span {
+    font-size: 12px;
+  }
+
+  .reserva-summary {
+    font-size: 12px;
   }
 }

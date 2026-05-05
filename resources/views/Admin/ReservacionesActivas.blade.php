@@ -58,18 +58,13 @@
       <option value="3" {{ request('sucursal') == '3' ? 'selected' : '' }}>Central Park</option>
     </select>
 
-    <select
-      id="fSucursal2"
-      name="sucursal2"
-      class="input select-ubicacion"
-      style="max-width: 220px;"
+    <input
+      type="date"
+      name="fecha_inicio"
+      class="input"
+      value="{{ request('fecha_inicio') }}"
       onchange="this.form.submit()"
     >
-      <option value="0" {{ request('sucursal2') == '' ? 'selected' : '' }}>Segundo filtro</option>
-      <option value="1" {{ request('sucursal2') == '1' ? 'selected' : '' }}>Aeropuerto de Querétaro</option>
-      <option value="2" {{ request('sucursal2') == '2' ? 'selected' : '' }}>Central de autobuses</option>
-      <option value="3" {{ request('sucursal2') == '3' ? 'selected' : '' }}>Central Park</option>
-    </select>
 
     <select
       name="per_page"
@@ -82,22 +77,6 @@
       <option value="50"  {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
       <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
     </select>
-
-    <input
-      type="date"
-      name="fecha_inicio"
-      class="input"
-      value="{{ request('fecha_inicio') }}"
-      onchange="this.form.submit()"
-    >
-
-    <input
-      type="date"
-      name="fecha_fin"
-      class="input"
-      value="{{ request('fecha_fin') }}"
-      onchange="this.form.submit()"
-    >
 
     <span class="badge gray">Total <b id="count">{{ $reservaciones->total() }}</b></span>
 
