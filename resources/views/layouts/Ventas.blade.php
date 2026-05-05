@@ -111,6 +111,7 @@
         @yield('contenidoContrato')
         @yield('contenidoAltaCliente')
         @yield('contenidoFacturar')
+        @yield('contenidoContratoFinal')
 
         @yield('contenido')
 
