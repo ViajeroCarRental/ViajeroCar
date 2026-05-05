@@ -194,6 +194,15 @@
                             <input type="hidden" name="id_reservacion" value="{{ $idReservacion }}">
                             <input type="hidden" name="id_contrato" value="{{ $idContrato ?? '' }}">
 
+                            <div class="search-conductor-wrapper" style="margin-bottom: 20px;">
+                                <input type="text" id="buscadorGlobalPersona" class="search-conductor"
+                                    placeholder="🔍 Buscar persona guardada (Titular)…" data-idx="0" autocomplete="off"
+                                    style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                                <div class="search-results"
+                                    style="display: none; background:white; border:1px solid #e2e8f0; max-height:200px; overflow-y:auto; border-radius:6px; margin-top:4px;">
+                                </div>
+                            </div>
+
                             {{-- TITULAR --}}
                             <div class="bloque-conductor-individual">
                                 <section class="section">
@@ -223,6 +232,7 @@
                                                     <option value="ine">Credencial para Votar (INE/IFE)</option>
                                                     <option value="pasaporte">Pasaporte</option>
                                                     <option value="cedula">Cédula Profesional</option>
+                                                    <option value="licencia">Licencia</option>
                                                 </select>
                                             </div>
 
@@ -242,8 +252,8 @@
                                             <div class="input-row">
                                                 <label>Apellido Paterno</label>
                                                 <input name="conductores[0][apellido_paterno]" type="text"
-                                                    value="{{ $reservacion->apellido_paterno ?? ($reservacion->apellidos_cliente ?? '') }}"
-                                                    readonly class="input-readonly">
+                                                    value="{{ $reservacion->apellido_paterno ?? '' }}" readonly
+                                                    class="input-readonly">
                                             </div>
 
                                             <div class="input-row">
@@ -423,7 +433,8 @@
                             @foreach ($conductoresExtras as $index => $extra)
                                 @php $idx = $index + 1; @endphp
 
-                                <div class="bloque-conductor-individual bloque-conductor-adicional">
+                                <div class="bloque-conductor-individual bloque-conductor-adicional"
+                                    data-id-conductor="{{ $extra['id_conductor'] }}">
                                     <section class="section">
                                         <div class="head bg-slate">
                                             <span>
@@ -450,9 +461,10 @@
                                                     <label>Tipo de Identificación</label>
                                                     <select name="conductores[{{ $idx }}][tipo_identificacion]"
                                                         required>
-                                                        <option value="ine">INE/IFE</option>
+                                                        <option value="ine">Credencial para Votar (INE/IFE)</option>
                                                         <option value="pasaporte">Pasaporte</option>
-                                                        <option value="cedula">Cédula</option>
+                                                        <option value="cedula">Cédula Profesional</option>
+                                                        <option value="licencia">Licencia</option>
                                                     </select>
                                                 </div>
 
@@ -690,6 +702,32 @@
                                                     </p>
                                                 @endforeach
                                             @endif
+                                        </div>
+                                    </div>
+
+                                    <div class="preview-card" style="margin-bottom: 20px;">
+                                        <h5>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                                style="color: #64748b;">
+                                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                                <circle cx="12" cy="10" r="3"></circle>
+                                            </svg>
+                                            Lugar de Estancia
+                                        </h5>
+                                        <div style="margin-top: 10px;">
+                                            <label for="lugar_estancia" class="txt-muted text-sm"
+                                                style="display: block; margin-bottom: 5px;">
+                                                ¿Dónde te hospedarás durante la renta? <span class="txt-primary">*</span>
+                                            </label>
+                                            <input type="text" id="lugar_estancia" name="lugar_estancia"
+                                                class="form-control"
+                                                placeholder="Ej. Hotel Riu, Dirección, o Casa de familiar" required
+                                                style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px;">
+                                            <span id="error-estancia"
+                                                style="color: red; font-size: 12px; display: none;">Este
+                                                campo es obligatorio para continuar.</span>
                                         </div>
                                     </div>
 
@@ -1020,29 +1058,37 @@
                         </div>
                         <div data-pane="tarjeta" class="pane-hidden">
                             <div class="method-grid">
-                                <label class="mcard"><input type="radio" name="m" value="VISA"><img
-                                        src="../assets/media/visa.png" alt="">
+                                <label class="mcard">
+                                    <input type="radio" name="m" value="VISA">
+                                    <img src="{{ asset('img/visa.webp') }}" loading="lazy" alt="Visa"
+                                        class="img-method">
                                     <div>
                                         <div class="ttl">VISA</div>
                                         <div class="sub">Terminal</div>
                                     </div>
                                 </label>
-                                <label class="mcard"><input type="radio" name="m" value="MASTERCARD"><img
-                                        src="../assets/media/master.jpg" alt="">
+                                <label class="mcard">
+                                    <input type="radio" name="m" value="MASTERCARD">
+                                    <img src="{{ asset('img/mastercard.webp') }}" loading="lazy" alt="Mastercard"
+                                        class="img-method">
                                     <div>
                                         <div class="ttl">Mastercard</div>
                                         <div class="sub">Terminal</div>
                                     </div>
                                 </label>
-                                <label class="mcard"><input type="radio" name="m" value="AMEX"><img
-                                        src="../assets/media/amex.png" alt="">
+                                <label class="mcard">
+                                    <input type="radio" name="m" value="AMEX">
+                                    <img src="{{ asset('img/america.webp') }}" loading="lazy" alt="American Express"
+                                        class="img-method">
                                     <div>
                                         <div class="ttl">AMEX</div>
                                         <div class="sub">Terminal</div>
                                     </div>
                                 </label>
-                                <label class="mcard"><input type="radio" name="m" value="DEBITO"><img
-                                        src="../assets/media/debito.png" alt="">
+                                <label class="mcard">
+                                    <input type="radio" name="m" value="DEBITO">
+                                    <img src="{{ asset('img/debito.webp') }}" loading="lazy" alt="Tarjeta de Débito"
+                                        class="img-method">
                                     <div>
                                         <div class="ttl">Débito</div>
                                         <div class="sub">Terminal</div>
@@ -1051,7 +1097,7 @@
                             </div>
                             <div class="upload-section">
                                 <label>Foto del ticket (obligatorio)</label>
-                                <input id="fileTerminal" type="file" accept="image/*,.pdf">
+                                <input id="fileTerminal" type="file" accept="image/*,.pdf" capture="environment">
                             </div>
                         </div>
                         <div data-pane="efectivo" class="pane-hidden">
@@ -1059,20 +1105,27 @@
                         </div>
                         <div data-pane="transferencia" class="pane-hidden">
                             <div class="method-grid">
-                                <label class="mcard"><input type="radio" name="m" value="TRANSFERENCIA"><img
-                                        src="../assets/media/transfe.jpg" alt="">
+                                <label class="mcard">
+                                    <input type="radio" name="m" value="TRANSFERENCIA">
+                                    {{-- Corregido: Ahora usa asset() para evitar errores 404 --}}
+                                    <img src="{{ asset('assets/media/transfe.jpg') }}" loading="lazy"
+                                        alt="Transferencia Bancaria" class="img-method">
                                     <div>
                                         <div class="ttl">Transferencia</div>
                                     </div>
                                 </label>
-                                <label class="mcard"><input type="radio" name="m" value="SPEI"><img
-                                        src="../assets/media/spei.png" alt="">
+                                <label class="mcard">
+                                    <input type="radio" name="m" value="SPEI">
+                                    <img src="{{ asset('img/spei.webp') }}" loading="lazy" alt="SPEI"
+                                        class="img-method">
                                     <div>
                                         <div class="ttl">SPEI</div>
                                     </div>
                                 </label>
-                                <label class="mcard"><input type="radio" name="m" value="DEPOSITO"><img
-                                        src="../assets/media/deposito.png" alt="">
+                                <label class="mcard">
+                                    <input type="radio" name="m" value="DEPOSITO">
+                                    <img src="{{ asset('img/deposito.webp') }}" loading="lazy"
+                                        alt="Depósito en Efectivo" class="img-method">
                                     <div>
                                         <div class="ttl">Depósito</div>
                                     </div>
@@ -1080,7 +1133,7 @@
                             </div>
                             <div class="upload-section">
                                 <label>Comprobante del pago (obligatorio)</label>
-                                <input id="fileTransfer" type="file" accept="image/*,.pdf">
+                                <input id="fileTransfer" type="file" accept="image/*,.pdf" capture="environment">
                             </div>
                         </div>
                     </div>

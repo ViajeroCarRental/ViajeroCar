@@ -247,10 +247,10 @@ Route::get('/admin/reservaciones-activas/{codigo}',
 Route::delete('/admin/reservaciones-activas/{id}',
 [ReservacionesActivasController::class, 'destroy'])->name('rutaEliminarReservacionActiva');
 
-
+// Buscador de personas (ruta FIJA, debe ir antes de cualquier ruta con {id})
+Route::get('/admin/contrato/buscar-persona', [Contrato2Controller::class, 'buscarPersona']);
 
 // ContratoController
-
 Route::get('/admin/contrato/{id}', [ContratoController::class, 'mostrarContrato'])->name('contrato.mostrar');
 
 // Paso 1: Gestión de Fechas y Categoría
@@ -259,7 +259,6 @@ Route::get('/admin/contrato/cambio-fecha/aprobar/{token}', [ContratoController::
 Route::get('/admin/contrato/cambio-fecha/rechazar/{token}', [ContratoController::class, 'rechazarCambioFecha'])->name('contrato.rechazarCambioFecha');
 Route::get('/admin/contrato/cambio-fecha/estado/{id}', [ContratoController::class, 'estadoCambioFecha']);
 Route::post('/admin/contrato/{idReservacion}/recalcular-total', [ContratoController::class, 'recalcularYActualizarTotales']);
-//Route::post('/admin/contrato/{idReservacion}/actualizar-categoria', [ContratoController::class, 'actualizarCategoria'])->name('contrato.actualizarCategoria');
 Route::get('/admin/contrato/categoria-info/{codigo}', [ContratoController::class, 'categoriaInfo'])->name('contrato.categoria-info');
 
 // Paso 2: Servicios Adicionales
@@ -286,12 +285,9 @@ Route::get('/admin/contrato/vehiculo-random/{idCategoria}', [ContratoBaseControl
 // Contrato2Controller
 Route::get('/admin/contrato2/{id}', [Contrato2Controller::class, 'mostrarContrato2'])->name('contrato.mostrar2');
 
-// Paso 4: Cargos Adicionales, Delivery y Vehículo
+// Paso 4:
 Route::post('/admin/contrato/cargos', [Contrato2Controller::class, 'actualizarCargos'])->name('contrato.actualizarCargos');
-// Route::post('/admin/contrato/servicios-extra', [Contrato2Controller::class, 'actualizarServiciosExtras'])->name('contrato.servicios_extras');
-// Route::get('/admin/contrato/cargos/{idContrato}', [Contrato2Controller::class, 'obtenerCargosContrato'])->name('contrato.obtenerCargos');
 Route::post('/admin/reservacion/delivery/guardar', [ContratoController::class, 'guardarDeliveryReservacion'])->name('reservacion.delivery.guardar');
-
 
 // Paso 4: Documentación y Conductores
 Route::get('/admin/contrato/{id}/cliente', [Contrato2Controller::class, 'obtenerClienteContrato'])->name('contrato.obtenerCliente');
@@ -301,7 +297,7 @@ Route::get('/admin/contrato/documentacion/{idContrato}', [Contrato2Controller::c
 Route::get('/admin/contrato/{id}/documentos-existen', [Contrato2Controller::class, 'verificarDocumentosExistentes'])->name('contrato.documentos.existen');
 Route::get('/admin/contrato/{id}/conductores', [Contrato2Controller::class, 'obtenerConductores']);
 
-// Pasa 5: Preview
+// Paso 5: Preview
 Route::post('/contrato/firma-cliente', [Contrato2Controller::class, 'guardarFirmaCliente']);
 
 // Paso 6: Pagos y Finalización
@@ -323,10 +319,10 @@ Route::post('/contrato/{id}/enviar-correo', [ContratoFinalController::class, 'en
 // Rutas Externas (Checklist)
 Route::post('/contrato/firma-recibio', [ChecklistController::class, 'guardarFirmaRecibio']);
 
+// Mostrar archivos
 Route::get('/archivo/{id}', function($id){
     $archivo = DB::table('archivos')->where('id_archivo',$id)->first();
     if (!$archivo) abort(404);
-
     return response($archivo->contenido)
         ->header('Content-Type', $archivo->mime_type);
 })->name('archivo.mostrar');
