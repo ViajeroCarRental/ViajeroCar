@@ -330,17 +330,17 @@ class ReservacionesController extends Controller
         ];
 
         $catImages = [
-            1 => asset('img/aveo.png'),
-            2 => asset('img/virtus.png'),
-            3 => asset('img/jetta.png'),
-            4 => asset('img/camry.png'),
-            5 => asset('img/renegade.png'),
-            6 => asset('img/taos.png'),
-            7 => asset('img/avanza.png'),
-            8 => asset('img/Odyssey.png'),
-            9 => asset('img/Hiace.png'),
-            10 => asset('img/Frontier.png'),
-            11 => asset('img/Tacoma.png'),
+            1 => asset('img/aveo.webp'),
+            2 => asset('img/virtus.webp'),
+            3 => asset('img/jetta.webp'),
+            4 => asset('img/camry.webp'),
+            5 => asset('img/renegade.webp'),
+            6 => asset('img/taos.webp'),
+            7 => asset('img/avanza.webp'),
+            8 => asset('img/Odyssey.webp'),
+            9 => asset('img/Hiace.webp'),
+            10 => asset('img/Frontier.webp'),
+            11 => asset('img/Tacoma.webp'),
         ];
 
         $categoriasPreprocesadas = $categorias->map(function ($cat) use ($specsMap, $catImages, $days) {

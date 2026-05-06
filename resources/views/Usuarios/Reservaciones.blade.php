@@ -14,7 +14,7 @@
             pointer-events: none;
             background:
                 linear-gradient(180deg, rgba(15, 23, 42, .70), rgba(15, 23, 42, .62)),
-                url("{{ asset('img/4x4.png') }}");
+                url("{{ asset('img/4x4.webp') }}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -97,7 +97,7 @@
             width: 100vw;
             height: 100vh;
             z-index: -1;
-            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("{{ asset('img/4x4.png') }}");
+            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("{{ asset('img/4x4.webp') }}");
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
@@ -777,7 +777,7 @@
                                     <div class="car-sub">{{ $cat->descripcion ?? __('Car or similar.') }}</div>
 
                                     <div class="car-hero">
-                                        <img class="car-hero-img" src="{{ $cat->img_url }}" alt="{{ $cat->nombre }}">
+                                        <img class="car-hero-img" src="{{ $cat->img_url }}" alt="{{ $cat->nombre }}" loading="lazy" decoding="async">
                                     </div>
 
                                     <div class="car-features">
@@ -1215,10 +1215,21 @@
                                     <button id="btnReservar" type="button" class="btn btn-primary">{{ __('Book') }}</button>
                                 </div>
 
+<<<<<<< Updated upstream
                                 <div class="pay-logos" style="display: flex; justify-content: center; gap: 40px; align-items: center; flex-wrap: wrap; margin-top: 20px;">
                                     <img src="{{ asset('img/american.png') }}" alt="Amex" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
                                     <img src="{{ asset('img/paypal.png') }}" alt="PayPal" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
                                     <img src="{{ asset('img/oxxo.png') }}" alt="Oxxo" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+=======
+                                <div class="pay-logos"
+                                    style="display: flex; justify-content: center; gap: 40px; align-items: center; flex-wrap: wrap; margin-top: 20px;">
+                                    <img src="{{ asset('img/american.png') }}" alt="Amex" loading="lazy"
+                                        onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+                                    <img src="{{ asset('img/paypal.webp') }}" alt="PayPal" loading="lazy"
+                                        onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+                                    <img src="{{ asset('img/oxxo.webp') }}" alt="Oxxo" loading="lazy"
+                                        onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+>>>>>>> Stashed changes
                                 </div>
 
                                 {{-- Modal Métodos de Pago --}}
