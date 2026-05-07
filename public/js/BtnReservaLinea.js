@@ -37,6 +37,36 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================================
+  // 📅 Helper: Convertir fecha dd-mm-yyyy → yyyy-mm-dd
+  // ==========================================================
+  function toIsoDate(dateStr) {
+    const s = String(dateStr || "").trim();
+    if (!s) return "";
+
+    // Si ya viene en formato yyyy-mm-dd, lo dejamos
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+    // dd-mm-yyyy → yyyy-mm-dd
+    const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+
+    // dd/mm/yyyy → yyyy-mm-dd
+    const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m2) return `${m2[3]}-${m2[2]}-${m2[1]}`;
+
+    // Último intento con Date nativo
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    return s;
+  }
+
+  // ==========================================================
   // 👶 MENOR DE EDAD – helpers locales para ajustar addons
   // ==========================================================
   const YOUNG_DRIVER_SERVICE_ID = '5';
@@ -138,20 +168,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ✅ PLAN B PARA HORAS: Si no hay hora, asigna por defecto en lugar de lanzar error
     if (!pickupTime) {
-        const ph = document.getElementById("pickup_h")?.value;
-        pickupTime = ph ? ph.padStart(2, "0") + ":00" : "12:00";
+      const ph = document.getElementById("pickup_h")?.value;
+      pickupTime = ph ? ph.padStart(2, "0") + ":00" : "12:00";
     }
 
     if (!dropoffTime) {
-        const dh = document.getElementById("dropoff_h")?.value || "12";
-        const dm = document.getElementById("dropoff_m")?.value || "00";
-        dropoffTime = dh.padStart(2, "0") + ":" + dm.padStart(2, "0");
+      const dh = document.getElementById("dropoff_h")?.value || "12";
+      const dm = document.getElementById("dropoff_m")?.value || "00";
+      dropoffTime = dh.padStart(2, "0") + ":" + dm.padStart(2, "0");
     }
+
+    // ✅ Asegurar formato H:i en horas (por si llegan con segundos "13:00:00")
+    if (pickupTime && pickupTime.length > 5) pickupTime = pickupTime.substring(0, 5);
+    if (dropoffTime && dropoffTime.length > 5) dropoffTime = dropoffTime.substring(0, 5);
 
     if (!categoriaId) {
       throw new Error("Falta la categoría seleccionada de la renta.");
     }
-    
+
     if (!pickupDate || !dropoffDate) {
       throw new Error("Faltan las fechas de la reservación.");
     }
@@ -161,14 +195,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const addonsFinal = applyYoungDriverAddonOnString(addonsRaw);
-    
+
+    // ✅ FIX CRÍTICO: convertir fechas a formato yyyy-mm-dd antes de enviar
     return {
       categoria_id: categoriaId,
       plan: plan,
       addons: addonsFinal,
-      pickup_date: pickupDate,
+      pickup_date: toIsoDate(pickupDate),
       pickup_time: pickupTime,
-      dropoff_date: dropoffDate,
+      dropoff_date: toIsoDate(dropoffDate),
       dropoff_time: dropoffTime,
       pickup_sucursal_id: pickupSucursalId,
       dropoff_sucursal_id: dropoffSucursalId,
@@ -180,71 +215,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================================
-  // 🧮 Helper: calcular TOTAL local
+  // 🧮 Obtener TOTAL desde el DOM (única fuente de verdad)
+  //     reservaciones.js ya calcula y renderiza en #qTotal,
+  //     #qBase, #qExtras, #qIva. Aquí solo leemos esos valores.
   // ==========================================================
-  function calcularTotales() {
-    const cotDoc = document.getElementById("cotizacionDoc");
-    if (!cotDoc) {
-      return { base: 0, extras: 0, iva: 0, total: 0 };
-    }
+  function obtenerTotalDelDOM() {
+    const getNum = (selector) => {
+      const el = document.querySelector(selector);
+      if (!el) return 0;
+      // Limpia "$1,234.56 MXN" o "$61.73 USD" → número
+      const txt = String(el.textContent || "").replace(/[^\d.,-]/g, "").replace(/,/g, "");
+      const n = parseFloat(txt);
+      return isNaN(n) ? 0 : n;
+    };
 
-    let base = parseFloat(cotDoc.dataset.base || "0");
-    const days = parseInt(cotDoc.dataset.days || "1", 10) || 1;
-
-    const planActual = document.getElementById("plan")?.value || "linea";
-    const urlParams = new URLSearchParams(window.location.search);
-    const planUrl = urlParams.get("plan") || "linea";
-
-    if (planUrl === 'mostrador' && planActual === 'linea') {
-      let precioDiaInflado = base / days;
-      let precioDiaNormal = Math.round(precioDiaInflado / 1.13);
-      base = precioDiaNormal * days;
-    }
-
-    const addonsRawEl = document.getElementById("addons_payload");
-    const addonsRaw = (addonsRawEl?.value || "").trim();
-    const addonsForCalc = applyYoungDriverAddonOnString(addonsRaw);
-
-    let extrasSubtotal = 0;
-
-    if (addonsForCalc) {
-      const catalogScript = document.getElementById("addonsCatalog");
-      let catalog = {};
-
-      if (catalogScript) {
-        try {
-          catalog = JSON.parse(catalogScript.textContent);
-        } catch (err) {
-          console.error("Error parseando addonsCatalog:", err);
-        }
-      }
-
-      const pairs = addonsForCalc.split(",");
-      for (const pair of pairs) {
-        const clean = pair.trim();
-        if (!clean) continue;
-        const [idStr, qtyStr] = clean.split(":");
-        const id = parseInt(idStr || "0", 10);
-        const qty = parseInt(qtyStr || "0", 10);
-        if (!id || !qty || !catalog[id]) continue;
-        const srv = catalog[id];
-        const price = parseFloat(srv.precio || 0);
-        const tipo = srv.tipo || "por_evento";
-        let lineTotal = 0;
-        if (tipo === "por_evento") {
-          lineTotal = price * qty;
-        } else {
-          lineTotal = price * qty * days;
-        }
-        extrasSubtotal += lineTotal;
-      }
-    }
-
-    const subtotal = base + extrasSubtotal;
-    const iva = Math.round(subtotal * 0.16 * 100) / 100;
-    const total = subtotal + iva;
-
-    return { base, extras: extrasSubtotal, iva, total };
+    return {
+      base: getNum("#qBase"),
+      extras: getNum("#qExtras"),
+      iva: getNum("#qIva"),
+      total: getNum("#qTotal")
+    };
   }
 
   // ==========================================================
@@ -283,10 +273,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================================
-  // 💰 Helper: total exacto para PayPal
+  // 💰 Helper: total exacto para PayPal (lee del DOM)
   // ==========================================================
   function obtenerTotalParaPayPal() {
-    const { total } = calcularTotales();
+    const { total } = obtenerTotalDelDOM();
     return Number(total || 0);
   }
 
@@ -308,6 +298,8 @@ document.addEventListener("DOMContentLoaded", () => {
       paypal_order_id: paypalOrderId,
       total_local: totalCobrado
     };
+
+    console.log("📤 Enviando payload al backend:", payload);
 
     const resp = await fetch(url, {
       method: "POST",
@@ -402,7 +394,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
               const result = await enviarReservaLinea(data.orderID);
               const payload = getFormPayload();
-              const { base, extras, iva, total } = calcularTotales();
+
+              // ✅ Preferir totales del backend; si no, leer del DOM
+              const fromDom = obtenerTotalDelDOM();
+              const base = Number(result.subtotal ?? fromDom.base) || 0;
+              const iva = Number(result.impuestos ?? fromDom.iva) || 0;
+              const total = Number(result.total ?? fromDom.total) || 0;
+              const extras = Math.max(0, base + iva - total) === 0
+                ? fromDom.extras
+                : (Number(result.extras) || fromDom.extras);
 
               const fmt = new Intl.NumberFormat("es-MX", {
                 style: "currency",
@@ -431,8 +431,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
               if (window.alertify) {
                 alertify.alert("Reservación en línea confirmada", msgExito, function () {
-                  try { localStorage.removeItem("viajero_resv_filters_v1"); } catch (e) {}
-                  try { sessionStorage.clear(); } catch (e) {}
+                  try { localStorage.removeItem("viajero_resv_filters_v1"); } catch (e) { }
+                  try { sessionStorage.clear(); } catch (e) { }
                   window.location.href = window.location.pathname + "?step=1&reset=1";
                 });
               } else {
@@ -558,7 +558,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (modalPagoOnline) {
       modalPagoOnline.style.display = "none";
       restaurarScrollBody();
-      modalLineaAbierto = false; 
+      modalLineaAbierto = false;
     }
   }
 
