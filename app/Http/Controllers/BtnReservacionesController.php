@@ -16,7 +16,13 @@ use App\Http\Requests\StoreReservacionLineaRequest;
 class BtnReservacionesController extends Controller
 {
     /**
-     * Guarda una reservación real
+     * Tolerancia en MXN para diferencias de redondeo entre lo que cobra PayPal
+     * y lo que recalcula el backend. Si difieren menos de esto, se acepta.
+     */
+    private const TOLERANCIA_PAYPAL_MXN = 1.00;
+
+    /**
+     * Guarda una reservación real (pago en mostrador)
      */
     public function reservar(StoreReservacionRequest $request)
     {
@@ -60,7 +66,7 @@ class BtnReservacionesController extends Controller
             // Insertar servicios (Addons + Dropoff)
             $this->guardarServiciosReservacion($id, $data['serviciosAInsertar']);
 
-            // Enviar correo
+            // Enviar correo (no rompe la reserva si falla)
             $this->enviarCorreoConfirmacion($id, 'mostrador', $data);
 
             return response()->json([
@@ -71,10 +77,12 @@ class BtnReservacionesController extends Controller
                 'impuestos' => $data['impuestos'],
                 'total'     => $data['total'],
                 'estado'    => 'pendiente_pago',
-                'message'   => 'Reservación creada con éxito y correo enviado.',
+                'message'   => 'Reservación creada con éxito.',
             ]);
         } catch (\Throwable $e) {
-            Log::error('❌ Error creando reservación (mostrador): ' . $e->getMessage());
+            Log::error('❌ Error creando reservación (mostrador): ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'ok'      => false,
                 'message' => 'Error interno al crear la reservación',
@@ -84,25 +92,61 @@ class BtnReservacionesController extends Controller
     }
 
     /**
-     * Validar pago en PayPal y guardar reservación en línea
+     * Validar pago en PayPal y guardar reservación en línea.
+     *
+     * 🛡️ FILOSOFÍA: si PayPal ya cobró, NUNCA se rechaza el guardado.
+     * Si hay desajustes menores, se loggean y se guarda con marca de revisión.
      */
     public function reservarLinea(StoreReservacionLineaRequest $request)
     {
         try {
             $validated = $request->validated();
 
-            // Delegar todos los cálculos complejos a la función centralizada
+            // Total que cobró PayPal según el frontend (referencia)
+            $totalLocal = isset($validated['total_local']) ? (float) $validated['total_local'] : null;
+
+            // Cálculos del backend (única fuente confiable)
             $data = $this->procesarCalculosYResumen($validated, 'linea');
 
-            // Validar pago con PayPal
-            $paypalValidado = $this->validarPagoPayPal($validated['paypal_order_id'], $data['total']);
+            // Validar pago con PayPal (con tolerancia de centavos)
+            $paypalValidado = $this->validarPagoPayPal(
+                $validated['paypal_order_id'],
+                $data['total'],
+                $totalLocal
+            );
 
-            if (!$paypalValidado['ok']) {
-                return response()->json($paypalValidado, 422);
+            // 🛡️ Si PayPal NO cobró (o no existe la orden), aquí SÍ rechazamos
+            if (!$paypalValidado['ok'] && !$paypalValidado['cobro_realizado']) {
+                Log::warning('⚠️ Pago NO cobrado por PayPal, rechazando reserva', [
+                    'paypal_order_id' => $validated['paypal_order_id'],
+                    'detalle'         => $paypalValidado,
+                ]);
+                return response()->json([
+                    'ok'      => false,
+                    'message' => $paypalValidado['message'] ?? 'El pago no fue completado en PayPal.',
+                ], 422);
+            }
+
+            // 🛡️ Si PayPal sí cobró pero hay desajuste, GUARDAMOS igual y loggeamos
+            $requiereRevision = !$paypalValidado['ok'] && $paypalValidado['cobro_realizado'];
+
+            if ($requiereRevision) {
+                Log::warning('⚠️ Reserva guardada con desajuste de monto - REQUIERE REVISIÓN', [
+                    'paypal_order_id'   => $validated['paypal_order_id'],
+                    'monto_paypal'      => $paypalValidado['monto_paypal'] ?? null,
+                    'monto_backend'     => $data['total'],
+                    'monto_frontend'    => $totalLocal,
+                    'cliente_email'     => $validated['email'] ?? null,
+                    'cliente_nombre'    => $validated['nombre'] ?? null,
+                    'detalle'           => $paypalValidado,
+                ]);
             }
 
             // Generar folio único
             $codigo = $this->generarFolioReservacionUnico();
+
+            // Determinar el total a guardar: el que PayPal realmente cobró
+            $totalAGuardar = $paypalValidado['monto_paypal'] ?? $data['total'];
 
             // Insertar reservación principal confirmada
             $id = DB::table('reservaciones')->insertGetId([
@@ -121,7 +165,7 @@ class BtnReservacionesController extends Controller
                 'estado'           => 'confirmada',
                 'subtotal'         => $data['subtotal'],
                 'impuestos'        => $data['impuestos'],
-                'total'            => $data['total'],
+                'total'            => $totalAGuardar,
                 'moneda'           => 'MXN',
                 'no_vuelo'         => $validated['vuelo'] ?? null,
                 'codigo'           => $codigo,
@@ -135,27 +179,46 @@ class BtnReservacionesController extends Controller
                 'updated_at'       => now(),
             ]);
 
+            // Si hay desajuste, dejamos un log con el ID ya creado
+            if ($requiereRevision) {
+                Log::warning('🔍 RESERVA QUE REQUIERE REVISIÓN MANUAL', [
+                    'id_reservacion' => $id,
+                    'folio'          => $codigo,
+                    'paypal_order'   => $validated['paypal_order_id'],
+                ]);
+            }
+
             // Insertar servicios (Addons + Dropoff)
             $this->guardarServiciosReservacion($id, $data['serviciosAInsertar']);
 
-            // Enviar correo
-            $this->enviarCorreoConfirmacion($id, 'en_linea', $data);
+            // Enviar correo (no rompe la reserva si falla)
+            $correoEnviado = $this->enviarCorreoConfirmacion($id, 'en_linea', $data);
 
             return response()->json([
-                'ok'        => true,
-                'folio'     => $codigo,
-                'id'        => $id,
-                'subtotal'  => $data['subtotal'],
-                'impuestos' => $data['impuestos'],
-                'total'     => $data['total'],
-                'estado'    => 'confirmada',
-                'message'   => 'Pago validado con PayPal y reserva confirmada correctamente.',
+                'ok'              => true,
+                'folio'           => $codigo,
+                'id'              => $id,
+                'subtotal'        => $data['subtotal'],
+                'impuestos'       => $data['impuestos'],
+                'total'           => $totalAGuardar,
+                'estado'          => 'confirmada',
+                'correo_enviado'  => $correoEnviado,
+                'requiere_revision' => $requiereRevision,
+                'message'         => 'Pago validado con PayPal y reserva confirmada correctamente.',
             ]);
         } catch (\Throwable $e) {
-            Log::error('❌ Error en reservarLinea: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            // 🚨 LOG CRÍTICO: si esto pasa con PayPal ya cobrado, hay un cobro huérfano
+            Log::critical('❌ ERROR CRÍTICO en reservarLinea (posible cobro huérfano): ' . $e->getMessage(), [
+                'trace'           => $e->getTraceAsString(),
+                'paypal_order_id' => $request->input('paypal_order_id'),
+                'cliente_email'   => $request->input('email'),
+                'cliente_nombre'  => $request->input('nombre'),
+                'total_local'     => $request->input('total_local'),
+                'payload'         => $request->all(),
+            ]);
             return response()->json([
                 'ok'      => false,
-                'message' => 'Error interno al procesar la reserva en línea.',
+                'message' => 'Error interno al procesar la reserva en línea. Tu pago fue recibido; nos pondremos en contacto contigo a la brevedad.',
                 'error'   => $e->getMessage(),
             ], 500);
         }
@@ -247,7 +310,7 @@ class BtnReservacionesController extends Controller
                     'precio_unitario' => $precioUnitarioDB,
                 ];
 
-                // Formateamos para el correo en memoria 
+                // Formateamos para el correo en memoria
                 $srv->cantidad = $cantParaDB;
                 $srv->precio_unitario = $precioUnitarioDB;
                 $srv->total = $lineTotal;
@@ -384,45 +447,79 @@ class BtnReservacionesController extends Controller
     }
 
     /**
-     * Helper centralizado para enviar correos y no repetir la lógica de las sucursales
+     * Helper centralizado para enviar correos.
+     * 🛡️ Si el SMTP falla, NO rompe la reserva. Loggea y continúa.
+     *
+     * @return bool true si el correo se envió, false si hubo error
      */
-    private function enviarCorreoConfirmacion(int $reservacionId, string $tipoPlanCorreo, array $data): void
+    private function enviarCorreoConfirmacion(int $reservacionId, string $tipoPlanCorreo, array $data): bool
     {
-        $reservacion = DB::table('reservaciones')->where('id_reservacion', $reservacionId)->first();
-        if (empty($reservacion->email_cliente)) return;
+        try {
+            $reservacion = DB::table('reservaciones')->where('id_reservacion', $reservacionId)->first();
 
-        $nombresSucursales = DB::table('sucursales as s')
-            ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
-            ->select('s.id_sucursal', 's.nombre as nombre_sucursal', 'c.nombre as nombre_ciudad')
-            ->whereIn('s.id_sucursal', array_filter([$reservacion->sucursal_retiro, $reservacion->sucursal_entrega]))
-            ->get()->keyBy('id_sucursal');
+            if (!$reservacion || empty($reservacion->email_cliente)) {
+                Log::info('📭 Sin correo del cliente, no se envía notificación', [
+                    'id_reservacion' => $reservacionId,
+                ]);
+                return false;
+            }
 
-        $infoRetiro = $nombresSucursales->get($reservacion->sucursal_retiro);
-        $infoEntrega = $nombresSucursales->get($reservacion->sucursal_entrega);
+            $nombresSucursales = DB::table('sucursales as s')
+                ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
+                ->select('s.id_sucursal', 's.nombre as nombre_sucursal', 'c.nombre as nombre_ciudad')
+                ->whereIn('s.id_sucursal', array_filter([$reservacion->sucursal_retiro, $reservacion->sucursal_entrega]))
+                ->get()->keyBy('id_sucursal');
 
-        $lugarRetiro  = $infoRetiro ? "{$infoRetiro->nombre_ciudad} - {$infoRetiro->nombre_sucursal}" : '-';
-        $lugarEntrega = $infoEntrega ? "{$infoEntrega->nombre_ciudad} - {$infoEntrega->nombre_sucursal}" : '-';
+            $infoRetiro = $nombresSucursales->get($reservacion->sucursal_retiro);
+            $infoEntrega = $nombresSucursales->get($reservacion->sucursal_entrega);
 
-        Mail::to($reservacion->email_cliente)
-            ->cc(env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocar-rental.com'))
-            ->send(new ReservacionUsuarioMail(
-                $reservacion,
-                $tipoPlanCorreo,
-                $data['categoria'],
-                $data['extrasParaCorreo'],
-                $lugarRetiro,
-                $lugarEntrega,
-                $data['imgCategoria'],
-                $data['opcionesRentaTotal'],
-                $data['tuAuto']
-            ));
+            $lugarRetiro  = $infoRetiro ? "{$infoRetiro->nombre_ciudad} - {$infoRetiro->nombre_sucursal}" : '-';
+            $lugarEntrega = $infoEntrega ? "{$infoEntrega->nombre_ciudad} - {$infoEntrega->nombre_sucursal}" : '-';
+
+            Mail::to($reservacion->email_cliente)
+                ->cc(env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocar-rental.com'))
+                ->send(new ReservacionUsuarioMail(
+                    $reservacion,
+                    $tipoPlanCorreo,
+                    $data['categoria'],
+                    $data['extrasParaCorreo'],
+                    $lugarRetiro,
+                    $lugarEntrega,
+                    $data['imgCategoria'],
+                    $data['opcionesRentaTotal'],
+                    $data['tuAuto']
+                ));
+
+            Log::info('✅ Correo de confirmación enviado', [
+                'id_reservacion' => $reservacionId,
+                'email'          => $reservacion->email_cliente,
+                'tipo'           => $tipoPlanCorreo,
+            ]);
+
+            return true;
+        } catch (\Throwable $e) {
+            // 🚨 IMPORTANTE: NO relanzamos la excepción.
+            // La reserva ya está guardada; un fallo de correo no debe romper el flujo.
+            Log::error('❌ Error enviando correo de confirmación (la reserva SÍ se guardó)', [
+                'id_reservacion' => $reservacionId,
+                'error'          => $e->getMessage(),
+                'trace'          => $e->getTraceAsString(),
+            ]);
+            return false;
+        }
     }
 
     /**
      * Consulta a la API de PayPal para verificar que la orden existe,
-     * está pagada, y los montos cuadran perfectamente.
+     * está pagada, y los montos cuadran.
+     *
+     * 🛡️ NUEVA FILOSOFÍA:
+     * - Si PayPal NO cobró → ['ok' => false, 'cobro_realizado' => false] → rechazar reserva
+     * - Si PayPal cobró y montos cuadran → ['ok' => true, 'cobro_realizado' => true] → guardar
+     * - Si PayPal cobró pero hay desajuste menor (≤ tolerancia) → ['ok' => true, ...] → guardar
+     * - Si PayPal cobró pero hay desajuste mayor → ['ok' => false, 'cobro_realizado' => true] → guardar con marca de revisión
      */
-    private function validarPagoPayPal(string $paypalOrderId, float $totalEsperado): array
+    private function validarPagoPayPal(string $paypalOrderId, float $totalEsperado, ?float $totalLocal = null): array
     {
         $mode = env('PAYPAL_MODE', 'live');
         $clientId = $mode === 'live' ? env('PAYPAL_CLIENT_ID_LIVE') : env('PAYPAL_CLIENT_ID_SANDBOX', env('PAYPAL_CLIENT_ID_LIVE'));
@@ -431,38 +528,116 @@ class BtnReservacionesController extends Controller
 
         if (!$clientId || !$secret) {
             Log::error('❌ Credenciales de PayPal incompletas en .env');
-            return ['ok' => false, 'message' => 'Configuración de PayPal incompleta. Intenta más tarde.'];
+            return [
+                'ok' => false,
+                'cobro_realizado' => false,
+                'message' => 'Configuración de PayPal incompleta. Intenta más tarde.',
+            ];
         }
 
-        $tokenResponse = Http::withBasicAuth($clientId, $secret)->asForm()->post("$baseUrl/v1/oauth2/token", ['grant_type' => 'client_credentials']);
-        $accessToken = $tokenResponse['access_token'] ?? null;
+        try {
+            $tokenResponse = Http::withBasicAuth($clientId, $secret)
+                ->asForm()
+                ->timeout(15)
+                ->post("$baseUrl/v1/oauth2/token", ['grant_type' => 'client_credentials']);
 
-        if (!$accessToken) {
-            Log::error('❌ PayPal sin access_token en respuesta OAuth', ['json' => $tokenResponse->json()]);
-            return ['ok' => false, 'message' => 'No se pudo obtener autorización de PayPal.'];
+            $accessToken = $tokenResponse['access_token'] ?? null;
+
+            if (!$accessToken) {
+                Log::error('❌ PayPal sin access_token en respuesta OAuth', ['json' => $tokenResponse->json()]);
+                return [
+                    'ok' => false,
+                    'cobro_realizado' => false,
+                    'message' => 'No se pudo obtener autorización de PayPal.',
+                ];
+            }
+
+            $orderResponse = Http::withToken($accessToken)
+                ->timeout(15)
+                ->get("$baseUrl/v2/checkout/orders/$paypalOrderId");
+
+            if (!$orderResponse->ok()) {
+                return [
+                    'ok' => false,
+                    'cobro_realizado' => false,
+                    'message' => 'No se pudo validar la orden de pago con PayPal.',
+                ];
+            }
+
+            $orderData = $orderResponse->json();
+            $status = $orderData['status'] ?? '';
+
+            if ($status !== 'COMPLETED') {
+                return [
+                    'ok' => false,
+                    'cobro_realizado' => false,
+                    'message' => 'El pago aún no está completado en PayPal.',
+                    'status_paypal' => $status,
+                ];
+            }
+
+            // ✅ A partir de aquí, PayPal SÍ cobró
+            $amountValue = $orderData['purchase_units'][0]['amount']['value'] ?? null;
+            $currencyCode = $orderData['purchase_units'][0]['amount']['currency_code'] ?? null;
+            $montoPaypal = (float) $amountValue;
+
+            // Validación de moneda (estricta)
+            if ($currencyCode !== 'MXN') {
+                Log::warning('⚠️ Moneda incorrecta de PayPal', [
+                    'currency' => $currencyCode,
+                    'order_id' => $paypalOrderId,
+                ]);
+                return [
+                    'ok' => false,
+                    'cobro_realizado' => true,
+                    'monto_paypal' => $montoPaypal,
+                    'message' => 'El pago se procesó en una moneda incorrecta.',
+                ];
+            }
+
+            // Validación de monto con tolerancia
+            $diferencia = abs($montoPaypal - $totalEsperado);
+
+            if ($diferencia <= self::TOLERANCIA_PAYPAL_MXN) {
+                // ✅ Todo bien (con tolerancia de redondeo)
+                return [
+                    'ok' => true,
+                    'cobro_realizado' => true,
+                    'monto_paypal' => $montoPaypal,
+                    'monto_esperado' => $totalEsperado,
+                    'diferencia' => $diferencia,
+                ];
+            }
+
+            // ⚠️ Desajuste mayor a la tolerancia: cobró pero no cuadran montos
+            Log::warning('⚠️ Desajuste de monto PayPal vs Backend', [
+                'paypal'     => $montoPaypal,
+                'backend'    => $totalEsperado,
+                'frontend'   => $totalLocal,
+                'diferencia' => $diferencia,
+                'order_id'   => $paypalOrderId,
+            ]);
+
+            return [
+                'ok' => false,
+                'cobro_realizado' => true,
+                'monto_paypal' => $montoPaypal,
+                'monto_esperado' => $totalEsperado,
+                'monto_frontend' => $totalLocal,
+                'diferencia' => $diferencia,
+                'message' => 'El monto del pago tiene un desajuste con la reservación. Se registró para revisión manual.',
+            ];
+        } catch (\Throwable $e) {
+            Log::error('❌ Excepción al validar PayPal', [
+                'error' => $e->getMessage(),
+                'order_id' => $paypalOrderId,
+            ]);
+            return [
+                'ok' => false,
+                'cobro_realizado' => false,
+                'message' => 'Error de conexión con PayPal: ' . $e->getMessage(),
+            ];
         }
-
-        $orderResponse = Http::withToken($accessToken)->get("$baseUrl/v2/checkout/orders/$paypalOrderId");
-
-        if (!$orderResponse->ok()) {
-            return ['ok' => false, 'message' => 'No se pudo validar la orden de pago con PayPal.'];
-        }
-
-        $orderData = $orderResponse->json();
-        if (($orderData['status'] ?? '') !== 'COMPLETED') {
-            return ['ok' => false, 'message' => 'El pago aún no está completado en PayPal.'];
-        }
-
-        $amountValue = $orderData['purchase_units'][0]['amount']['value'] ?? null;
-        $currencyCode = $orderData['purchase_units'][0]['amount']['currency_code'] ?? null;
-        $formattedTotal = number_format($totalEsperado, 2, '.', '');
-
-        if ($currencyCode !== 'MXN' || $amountValue != $formattedTotal) {
-            Log::warning('⚠️ Desajuste PayPal', ['paypal' => $amountValue, 'esperado' => $formattedTotal]);
-            return ['ok' => false, 'message' => 'El monto del pago no coincide con la reservación.'];
-        }
-
-        return ['ok' => true];
     }
 
     /**
