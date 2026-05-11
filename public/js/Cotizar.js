@@ -1797,6 +1797,81 @@
         selH.addEventListener("change", sync);
     }
 
+
+    function initValidacionHorasTiempoReal() {
+    const fechaInicio = document.getElementById("fecha_inicio_ui");
+    const fechaFin = document.getElementById("fecha_fin_ui");
+
+    if (!fechaInicio || !fechaFin) return;
+
+    const validar = () => {
+        const warningExistente = document.querySelector('.hora-warning');
+        if (warningExistente) warningExistente.remove();
+
+        const horaEntregaUI = document.getElementById("hora_entrega_ui");
+        const horaEntregaSelect = document.querySelector('#hora_entrega_ui')?.closest('.dt-field-admin')?.querySelector('.tp-hour');
+
+        if (!fechaInicio.value || !fechaFin.value) {
+            if (horaEntregaUI) limpiarError(horaEntregaUI);
+            if (horaEntregaSelect) limpiarError(horaEntregaSelect);
+            return;
+        }
+
+        const normalizar = (f) => f.includes('/') ? f.split('/').reverse().join('-') : f;
+        const mismaFecha = normalizar(fechaInicio.value) === normalizar(fechaFin.value);
+
+        if (!mismaFecha) {
+            if (horaEntregaUI && horaEntregaSelect && horaEntregaSelect.value) {
+                limpiarError(horaEntregaUI);
+                mostrarExito(horaEntregaUI);
+                limpiarError(horaEntregaSelect);
+                horaEntregaSelect.classList.add('field-success');
+            }
+            return;
+        }
+
+        const horaRetiro = document.querySelector('#hora_retiro_ui')?.closest('.dt-field-admin')?.querySelector('.tp-hour')?.value;
+        const horaEntrega = horaEntregaSelect?.value;
+
+        if (horaRetiro && horaEntrega) {
+            if (parseInt(horaEntrega) <= parseInt(horaRetiro)) {
+                if (horaEntregaUI) {
+                    mostrarError(horaEntregaUI, 'La hora de devolución debe ser mayor');
+                }
+                if (horaEntregaSelect) {
+                    horaEntregaSelect.classList.add('field-error');
+                }
+
+                const warning = document.createElement('small');
+                warning.className = 'hora-warning';
+                warning.style.cssText = 'display: block; color: #f59e0b; font-size: 11px; margin-top: 4px;';
+                warning.textContent = 'La hora de devolución debe ser mayor';
+                horaEntregaUI?.parentNode?.appendChild(warning);
+            } else {
+                if (horaEntregaUI) {
+                    limpiarError(horaEntregaUI);
+                    mostrarExito(horaEntregaUI);
+                }
+                if (horaEntregaSelect) {
+                    limpiarError(horaEntregaSelect);
+                    horaEntregaSelect.classList.add('field-success');
+                }
+            }
+        }
+    };
+
+    fechaInicio.addEventListener('change', validar);
+    fechaFin.addEventListener('change', validar);
+
+    const horaRetiroSelect = document.querySelector('#hora_retiro_ui')?.closest('.dt-field-admin')?.querySelector('.tp-hour');
+    const horaEntregaSelect = document.querySelector('#hora_entrega_ui')?.closest('.dt-field-admin')?.querySelector('.tp-hour');
+
+    if (horaRetiroSelect) horaRetiroSelect.addEventListener('change', validar);
+    if (horaEntregaSelect) horaEntregaSelect.addEventListener('change', validar);
+
+    setTimeout(validar, 100);
+}
+
 /* =========================================
    16 LOAD PROTECCIONES (PAQUETES)
 ========================================= */
@@ -2465,8 +2540,80 @@
             if (timeContainer) { const selectHora = timeContainer.querySelector('.tp-hour'); if (selectHora && selectHora.value && selectHora.value !== "") horaValida = true; }
             if (!horaValida) { mostrarError(horaEntrega, 'Hora Requerida'); todoOk = false; } else { mostrarExito(horaEntrega); }
         }
+
+        if (todoOk && !validarHoraDevolucionPosterior()) {
+        todoOk = false;
+        }
+
         return todoOk;
     }
+
+
+    function validarHoraDevolucionPosterior() {
+    const fechaInicioUI = document.getElementById("fecha_inicio_ui");
+    const fechaFinUI = document.getElementById("fecha_fin_ui");
+
+    if (!fechaInicioUI || !fechaFinUI) return true;
+
+    const fechaInicio = fechaInicioUI.value;
+    const fechaFin = fechaFinUI.value;
+
+    if (!fechaInicio || !fechaFin) return true;
+
+    const normalizarFecha = (f) => {
+        if (!f) return null;
+        if (f.includes('/')) {
+            const [d, m, y] = f.split('/');
+            return `${y}-${m}-${d}`;
+        }
+        return f;
+    };
+
+    if (normalizarFecha(fechaInicio) !== normalizarFecha(fechaFin)) {
+        const horaEntregaUI = document.getElementById("hora_entrega_ui");
+        if (horaEntregaUI) {
+            limpiarError(horaEntregaUI);
+            const horaSelect = document.querySelector('#hora_entrega_ui')?.closest('.dt-field-admin')?.querySelector('.tp-hour');
+            if (horaSelect && horaSelect.value) {
+                mostrarExito(horaEntregaUI);
+            }
+        }
+        return true;
+    }
+    const horaRetiroSelect = document.querySelector('#hora_retiro_ui')?.closest('.dt-field-admin')?.querySelector('.tp-hour');
+    const horaEntregaSelect = document.querySelector('#hora_entrega_ui')?.closest('.dt-field-admin')?.querySelector('.tp-hour');
+
+    if (!horaRetiroSelect || !horaEntregaSelect) return true;
+
+    const horaRetiro = horaRetiroSelect.value;
+    const horaEntrega = horaEntregaSelect.value;
+
+    if (!horaRetiro || !horaEntrega) return true;
+
+    if (parseInt(horaEntrega) <= parseInt(horaRetiro)) {
+        const horaEntregaUI = document.getElementById("hora_entrega_ui");
+        if (horaEntregaUI) {
+            mostrarError(horaEntregaUI, 'La hora de devolución debe ser mayor');
+        }
+        if (horaEntregaSelect) {
+            horaEntregaSelect.classList.add('field-error');
+        }
+        mostrarToast('En la misma fecha, la devolución debe ser después del retiro', 'warning');
+        return false;
+    }
+
+    const horaEntregaUI = document.getElementById("hora_entrega_ui");
+    if (horaEntregaUI) {
+        limpiarError(horaEntregaUI);
+        mostrarExito(horaEntregaUI);
+    }
+    if (horaEntregaSelect) {
+        limpiarError(horaEntregaSelect);
+        horaEntregaSelect.classList.add('field-success');
+    }
+
+    return true;
+}
 
 /* =========================================
    27 EDITAR TARIFA DESDE VISTA PREVIA
@@ -2589,6 +2736,12 @@
         setTimeout(() => {
             if (typeof initTimeValidation === 'function') initTimeValidation();
             if (typeof initDateValidation === 'function') initDateValidation();
+
+            if (typeof initValidacionHorasTiempoReal === 'function') {
+            initValidacionHorasTiempoReal();
+            console.log('✅ Validación de horas en misma fecha inicializada');
+            }
+
             document.querySelectorAll('.tp-hour').forEach(select => {
                 if (select.value && select.value !== "") {
                     const inputHoraUI = select.closest('.dt-field-admin, .time-field-admin')?.querySelector('.input-buscador-admin');
