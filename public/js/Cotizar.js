@@ -1556,7 +1556,7 @@
             if (individualesList.length > 0) {
                 individualesList.forEach(ind => {
                     const indPrecio = Number(ind.precio || 0), indTotal = indPrecio * days;
-                    if (indTotal > 0) { let icono = 'fa-shield-alt'; if (ind.grupo === 'Colisión y robo') icono = 'fa-car-crash'; if (ind.grupo === 'Gastos médicos') icono = 'fa-ambulance'; if (ind.grupo === 'Asistencia para el camino') icono = 'fa-road'; if (ind.grupo === 'Daños a terceros') icono = 'fa-handshake'; if (ind.grupo === 'Protecciones automáticas') icono = 'fa-microchip'; proteccionesHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas ${icono}"></i> ${ind.nombre}</span><span class="rv2-option-price">${money(indTotal)} <span style="font-size: 10px; color: #888;">/día</span></span></div>`; hasProtecciones = true; }
+                    if (indTotal >= 0) { let icono = 'fa-shield-alt'; if (ind.grupo === 'Colisión y robo') icono = 'fa-car-crash'; if (ind.grupo === 'Gastos médicos') icono = 'fa-ambulance'; if (ind.grupo === 'Asistencia para el camino') icono = 'fa-road'; if (ind.grupo === 'Daños a terceros') icono = 'fa-handshake'; if (ind.grupo === 'Protecciones automáticas') icono = 'fa-microchip'; proteccionesHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas ${icono}"></i> ${ind.nombre}</span><span class="rv2-option-price">${money(indTotal)} <span style="font-size: 10px; color: #888;">/día</span></span></div>`; hasProtecciones = true; }
                 });
             }
             if (hasProtecciones) { proteccionesContainer.innerHTML = proteccionesHtml; proteccionesSection.style.display = "block"; }
