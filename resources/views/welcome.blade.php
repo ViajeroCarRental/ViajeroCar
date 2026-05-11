@@ -858,7 +858,7 @@
                     </div>
 
                     <button class="rv-cta"
-                        onclick="location.href='{{ route('rutaReservaciones') }}'">{{ __('Check availability') }}</button>
+                        onclick="location.href='{{ route('rutaReservasIniciar') }}'">{{ __('Check availability') }}</button>
                     <button class="rv-close" id="rvClose" aria-label="{{ __('Close') }}">✕</button>
                 </div>
             </div>

@@ -478,7 +478,7 @@ body.nav-open .language-selector {
 
     <div class="footer-row links-row">
       <ul>
-        <li><a href="{{ route('rutaReservaciones') }}">{{ __('Book now') }}</a></li>
+        <li><a href="{{ route('rutaReservasIniciar') }}">{{ __('Book now') }}</a></li>
         <li><a href="{{ route('rutaCatalogo') }}">{{ __('Available cars') }}</a></li>
         <li><a href="{{ route('rutaPoliticas') }}">{{ __('Terms and conditions') }}</a></li>
         <li><a href="{{ route('rutaContacto') }}">{{ __('Contact') }}</a></li>
@@ -548,7 +548,7 @@ body.nav-open .language-selector {
 
     function traducirSelect(selectElement) {
         if (!selectElement || !selectElement.options) {
-          return false; 
+          return false;
         }
 
         if (!window.sucursalesTraducciones || Object.keys(window.sucursalesTraducciones).length === 0) {
