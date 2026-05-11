@@ -16,38 +16,40 @@ class CotizacionesAdminController extends Controller
 {
     /**
      * 🚗 Obtener todas las categorías para el modal (AJAX)
-     * EXACTAMENTE COMO EN RESERVACIONES
      */
     public function getCategorias()
-    {
-        try {
-            $categorias = DB::table('categorias_carros as c')
-                ->join('categoria_costo_km as ck', 'c.id_categoria', '=', 'ck.id_categoria')
-                ->leftJoin('vehiculos as v', 'v.id_categoria', '=', 'c.id_categoria')
-                ->where('ck.activo', 1)
-                ->select(
-                    'c.id_categoria',
-                    'c.codigo',
-                    'c.nombre',
-                    'c.descripcion',
-                    'c.precio_dia',
-                    'c.activo',
-                    'ck.costo_km',
-                    DB::raw('MAX(v.capacidad_tanque) as litros_maximos')
-                )
-                ->groupBy('c.id_categoria', 'c.codigo', 'c.nombre', 'c.descripcion', 'c.precio_dia', 'c.activo', 'ck.costo_km')
-                ->orderBy('c.precio_dia')
-                ->get();
+{
+    try {
+        $categorias = DB::table('categorias_carros as c')
+            ->leftJoin('categoria_costo_km as ck', 'c.id_categoria', '=', 'ck.id_categoria')
+            ->leftJoin('vehiculos as v', 'v.id_categoria', '=', 'c.id_categoria')
+            ->where('ck.activo', 1)
+            ->select(
+                'c.id_categoria',
+                'c.codigo',
+                'c.nombre',
+                'c.descripcion',
+                'c.precio_dia',
+                'c.activo',
+                DB::raw('COALESCE(ck.costo_km, 0) as costo_km'),
+                DB::raw('MAX(v.capacidad_tanque) as litros_maximos')
+            )
+            ->groupBy('c.id_categoria', 'c.codigo', 'c.nombre', 'c.descripcion', 'c.precio_dia', 'c.activo', 'ck.costo_km')
+            ->orderBy('c.precio_dia')
+            ->get();
 
-            return response()->json($categorias);
-        } catch (\Throwable $e) {
-            Log::error("❌ Error al obtener categorías: " . $e->getMessage());
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+        return response()->json($categorias);
+    } catch (\Throwable $e) {
+        Log::error("❌ Error al obtener categorías: " . $e->getMessage());
+        return response()->json(['error' => $e->getMessage()], 500);
     }
+}
 
-    public function index()
-    {
+
+
+        public function index()
+{
+    try {
         $ciudades = DB::table('ciudades')
             ->select('id_ciudad', 'nombre', 'estado', 'pais')
             ->orderBy('nombre')
@@ -68,11 +70,33 @@ class CotizacionesAdminController extends Controller
             ->get()
             ->groupBy('ciudad');
 
-        $categorias = DB::table('categorias_carros')
-            ->select('id_categoria', 'nombre', 'descripcion', 'precio_dia')
-            ->where('activo', 1)
-            ->orderBy('nombre')
+        $categorias = DB::table('categorias_carros as c')
+            ->leftJoin('categoria_costo_km as ck', 'c.id_categoria', '=', 'ck.id_categoria')
+            ->leftJoin('vehiculos as v', 'v.id_categoria', '=', 'c.id_categoria')
+            ->select(
+                'c.id_categoria',
+                'c.codigo',
+                'c.nombre',
+                'c.descripcion',
+                'c.precio_dia',
+                'c.activo',
+                DB::raw('COALESCE(ck.costo_km, 0) as costo_km'),
+                DB::raw('MAX(v.capacidad_tanque) as litros_maximos')
+            )
+            ->where('c.activo', 1)
+            ->groupBy(
+                'c.id_categoria',
+                'c.codigo',
+                'c.nombre',
+                'c.descripcion',
+                'c.precio_dia',
+                'c.activo',
+                'ck.costo_km'
+            )
+            ->orderBy('c.precio_dia')
             ->get();
+
+        \Log::info('Categorías con costo_km y litros:', $categorias->toArray());
 
         $ubicaciones = DB::table('ubicaciones_servicio')
             ->where('activo', 1)
@@ -80,70 +104,51 @@ class CotizacionesAdminController extends Controller
             ->orderBy('destino')
             ->get();
 
-        // ✅ Obtener protecciones individuales (igual que en reservaciones)
+        // ✅ Obtener protecciones individuales
         $individuales = DB::table('seguro_individuales')
             ->select('id_individual', 'nombre', 'descripcion', 'precio_por_dia', 'activo')
             ->where('activo', 1)
             ->orderBy('precio_por_dia')
             ->get();
 
-        // Normalizador de texto
-        $norm = function ($s) {
-            $s = mb_strtolower(trim((string)$s));
-            $s = str_replace(
-                ['á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ'],
-                ['a', 'e', 'i', 'o', 'u', 'u', 'n'],
-                $s
-            );
-            return $s;
-        };
+        // =====================================================
+        // AGRUPACIÓN DE PROTECCIONES INDIVIDUALES (ACTUALIZADA)
+        // =====================================================
 
-        $match = function ($row, array $keys) use ($norm) {
-            $text = $norm(($row->nombre ?? '') . ' ' . ($row->descripcion ?? ''));
-            foreach ($keys as $k) {
-                if (str_contains($text, $norm($k))) {
-                    return true;
-                }
-            }
-            return false;
-        };
+        // 1. COLISIÓN Y ROBO - LDW, PDW, CDW, DECLINE CDW
+        $grupo_colision = $individuales->filter(function($item) {
+            $nombre = strtoupper($item->nombre);
+            return str_contains($nombre, 'LDW') ||
+                   str_contains($nombre, 'PDW') ||
+                   str_contains($nombre, 'CDW') ||
+                   str_contains($nombre, 'DECLINE CDW');
+        })->values();
 
-        // Agrupar por categorías
-        $grupo_colision = $individuales->filter(fn($r) => $match($r, [
-            'LDW',
-            'PDW',
-            'CDW',
-            'collision',
-            'damage waiver',
-            'loss damage',
-            'robo',
-            'theft',
-            'decline cdw'
-        ]))->values();
+        // 2. GASTOS MÉDICOS - PAI
+        $grupo_medicos = $individuales->filter(function($item) {
+            $nombre = strtoupper($item->nombre);
+            return str_contains($nombre, 'PAI');
+        })->values();
 
-        $grupo_medicos = $individuales->filter(fn($r) => $match($r, [
-            'PAI',
-            'personal accident',
-            'gastos medicos',
-            'medico',
-            'medical'
-        ]))->values();
+        // 3. ASISTENCIA PARA EL CAMINO - PRA
+        $grupo_asistencia = $individuales->filter(function($item) {
+            $nombre = strtoupper($item->nombre);
+            return str_contains($nombre, 'PRA');
+        })->values();
 
-        $grupo_asistencia = $individuales->filter(fn($r) => $match($r, [
-            'PRA',
-            'road assistance',
-            'asistencia',
-            'carretera',
-            'camino'
-        ]))->values();
+        // 4. DAÑOS A TERCEROS - SOLO LI, ALI, EXT. LI
+        $grupo_terceros = $individuales->filter(function($item) {
+            $nombre = strtoupper($item->nombre);
+            return $nombre === 'LI' ||
+                   $nombre === 'ALI' ||
+                   $nombre === 'EXT. LI' ||
+                   str_contains($nombre, 'LIABILITY') ||
+                   str_contains($nombre, 'LI (') ||
+                   str_contains($nombre, 'ALI (') ||
+                   str_contains($nombre, 'EXT. LI');
+        })->values();
 
-        $grupo_terceros = $individuales->filter(fn($r) => $match($r, [
-            'LI',
-            'liability',
-            'responsabilidad civil',
-            'terceros'
-        ]))->values();
-
+        // 5. PROTECCIONES AUTOMÁTICAS - el resto
         $idsUsados = collect()
             ->merge($grupo_colision->pluck('id_individual'))
             ->merge($grupo_medicos->pluck('id_individual'))
@@ -166,7 +171,11 @@ class CotizacionesAdminController extends Controller
             'grupo_terceros',
             'grupo_protecciones'
         ));
+    } catch (\Throwable $e) {
+        Log::error("❌ Error al cargar vista cotizaciones: " . $e->getMessage());
+        abort(500);
     }
+}
 
     /**
      * 🛡️ Obtener paquetes de seguros activos (Cotizar)
@@ -238,6 +247,7 @@ class CotizacionesAdminController extends Controller
     public function guardarCotizacion(Request $request)
     {
         try {
+
             // ✅ Validación
             $validated = $request->validate([
                 'pickup_sucursal_id' => 'required|integer|exists:sucursales,id_sucursal',
@@ -304,19 +314,23 @@ class CotizacionesAdminController extends Controller
                 'dropoff_name'       => $dropoff_name,
                 'days'               => $dias,
 
-                // 💰 Totales y tarifas
                 'tarifa_base'        => $request->input('tarifa_base', $categoria->precio_dia ?? 0),
                 'tarifa_modificada'  => $request->filled('tarifa_modificada') ? $request->tarifa_modificada : null,
                 'tarifa_ajustada'    => $request->boolean('tarifa_ajustada', false),
-                'extras_sub'         => $request->input('extras_sub', 0),
-                'servicios_total'    => $serviciosTotal,
+
+
+                'extras_sub'         => $request->input('extras_sub', 0) + $serviciosTotal,
+
                 'iva'                => $iva,
                 'total'              => $total,
 
-                // 🧩 JSON
-                'addons'             => json_encode($request->input('extras', [])),
+
+                'addons'             => json_encode([
+                    'extras' => $request->input('extras', []),
+                    'servicios' => $servicios
+                ]),
+
                 'seguro'             => json_encode($request->input('seguro', [])),
-                'servicios'          => json_encode($servicios),
                 'cliente'            => json_encode($request->input('cliente', [])),
 
                 'created_at'         => now(),
