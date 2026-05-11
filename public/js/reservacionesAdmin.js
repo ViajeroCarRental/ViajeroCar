@@ -3104,7 +3104,7 @@ function refreshSummary() {
                 const indPrecio = Number(ind.precio || 0);
                 const indTotal = indPrecio * days;
 
-                if (indTotal > 0) {
+                if (indTotal >= 0) {
                     let icono = 'fa-shield-alt';
                     if (ind.grupo === 'Colisión y robo') icono = 'fa-car-crash';
                     if (ind.grupo === 'Gastos médicos') icono = 'fa-ambulance';
