@@ -98,29 +98,44 @@ class ReservacionesAdminController extends Controller
             };
 
             // =====================================================
-            // AGRUPACIÓN REAL SEGÚN TU DATA
+            // AGRUPACIÓN DE PROTECCIONES INDIVIDUALES (CORREGIDA)
             // =====================================================
-            $grupo_colision = $individuales->filter(fn($r) => $match($r, [
-                'LDW', 'PDW', 'CDW', 'collision', 'damage waiver',
-                'loss damage', 'robo', 'theft', 'decline cdw'
-            ]))->values();
 
-            $grupo_medicos = $individuales->filter(fn($r) => $match($r, [
-                'PAI', 'personal accident', 'gastos medicos',
-                'medico', 'medical'
-            ]))->values();
+            // 1. COLISIÓN Y ROBO - LDW, PDW, CDW, DECLINE CDW
+            $grupo_colision = $individuales->filter(function($item) {
+                $nombre = strtoupper($item->nombre);
+                return str_contains($nombre, 'LDW') ||
+                       str_contains($nombre, 'PDW') ||
+                       str_contains($nombre, 'CDW') ||
+                       str_contains($nombre, 'DECLINE CDW');
+            })->values();
 
-            $grupo_asistencia = $individuales->filter(fn($r) => $match($r, [
-                'PRA', 'road assistance', 'asistencia',
-                'carretera', 'camino'
-            ]))->values();
+            // 2. GASTOS MÉDICOS - PAI
+            $grupo_medicos = $individuales->filter(function($item) {
+                $nombre = strtoupper($item->nombre);
+                return str_contains($nombre, 'PAI');
+            })->values();
 
-            $grupo_terceros = $individuales->filter(fn($r) => $match($r, [
-                'LI', 'liability', 'responsabilidad civil',
-                'terceros'
-            ]))->values();
+            // 3. ASISTENCIA PARA EL CAMINO - PRA
+            $grupo_asistencia = $individuales->filter(function($item) {
+                $nombre = strtoupper($item->nombre);
+                return str_contains($nombre, 'PRA');
+            })->values();
 
-            // Todo lo demás va como automáticas
+            // 4. DAÑOS A TERCEROS - SOLO LI, ALI, EXT. LI
+            $grupo_terceros = $individuales->filter(function($item) {
+                $nombre = strtoupper($item->nombre);
+                // Buscar específicamente estos tres
+                return $nombre === 'LI' ||
+                       $nombre === 'ALI' ||
+                       $nombre === 'EXT. LI' ||
+                       str_contains($nombre, 'LIABILITY') ||
+                       str_contains($nombre, 'LI (') ||
+                       str_contains($nombre, 'ALI (') ||
+                       str_contains($nombre, 'EXT. LI');
+            })->values();
+
+            // 5. PROTECCIONES AUTOMÁTICAS - LOU, LA (el resto)
             $idsUsados = collect()
                 ->merge($grupo_colision->pluck('id_individual'))
                 ->merge($grupo_medicos->pluck('id_individual'))
@@ -148,7 +163,6 @@ class ReservacionesAdminController extends Controller
 
             abort(500);
         }
-
     }
 
     /**
@@ -830,8 +844,6 @@ public function editar($id)
         'ubicaciones' => $ubicaciones,
         'delivery' => $delivery,
         'costoKmCategoria' => $costoKmCategoria,
-
-        // 🔥 NUEVOS (CLAVE)
         'serviciosReserva' => $serviciosReserva,
         'seguroReserva' => $seguroReserva,
     ]);
