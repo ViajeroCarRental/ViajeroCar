@@ -3,18 +3,13 @@
 @section('Titulo', 'Home')
 
 @section('css-vistaHome')
+    {{-- ✅ Swiper CSS (específico del home) --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
-    {{-- Select2 CSS --}}
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
-    {{-- Font Awesome --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
-        integrity="sha512-p+6F+H1G5p8pP/1hObu/YZ7o2aM5J5lFjAzU5e+0Jx8xR+uEzjFN8IvU3UpUy6v1k3vXv4+XzN0z3VQUpgK6Vw=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-    {{-- Flatpickr --}}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    {{--
+        NOTA: Select2 CSS, Font Awesome y Flatpickr CSS se eliminaron
+        de aquí porque YA están cargados en el layout.
+    --}}
 
     <style>
         :root {
@@ -826,6 +821,186 @@
 
 @section('contenidoHome')
 
+    {{-- ============================================================
+         ARRAY DE COCHES (PHP centralizado)
+         Datos exactos de las 12 tarjetas originales.
+         Si quieres cambiar precios/descuentos, edítalos aquí UNA vez.
+    ============================================================ --}}
+    @php
+        $coches = [
+            [
+                'categoria' => 'Compact',
+                'modelo' => 'Chevrolet Aveo or similar | C',
+                'imagen' => 'aveo.webp',
+                'alt' => 'Chevrolet Aveo o similar',
+                'precio' => 467,
+                'precio_anterior' => 899,
+                'descuento' => '-48%',
+                'personas' => 5,
+                'maletas_grandes' => 2,
+                'maletas_pequenas' => 1,
+                'transmision' => 'Automatic',
+            ],
+            [
+                'categoria' => 'Intermediate',
+                'modelo' => 'Volkswagen Virtus or similar | D',
+                'imagen' => 'virtus.webp',
+                'alt' => 'Volkswagen Virtus o similar',
+                'precio' => 600,
+                'precio_anterior' => 1049,
+                'descuento' => '-43%',
+                'personas' => 5,
+                'maletas_grandes' => 2,
+                'maletas_pequenas' => 2,
+                'transmision' => 'Automatic',
+            ],
+            [
+                'categoria' => 'Full Size',
+                'modelo' => 'Volkswagen Jetta or similar | E',
+                'imagen' => 'jetta.webp',
+                'alt' => 'Volkswagen Jetta o similar',
+                'precio' => 800,
+                'precio_anterior' => 1199,
+                'descuento' => '-33%',
+                'personas' => 5,
+                'maletas_grandes' => 3,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Automatic',
+            ],
+            [
+                'categoria' => 'Full Size',
+                'modelo' => 'Toyota Camry or similar | F',
+                'imagen' => 'camry.webp',
+                'alt' => 'Toyota Camry  o similar',
+                'precio' => 1550,
+                'precio_anterior' => 1999,
+                'descuento' => '-22%',
+                'personas' => 5,
+                'maletas_grandes' => 3,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Automatic',
+            ],
+            [
+                'categoria' => 'Compact SUV',
+                'modelo' => 'Jeep Renegade or similar | IC',
+                'imagen' => 'renegade.webp',
+                'alt' => ' Jeep Renegade o similar',
+                'precio' => 1600,
+                'precio_anterior' => 2100,
+                'descuento' => '-24%',
+                'personas' => 5,
+                'maletas_grandes' => 2,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Automatic',
+            ],
+            [
+                'categoria' => 'Midsize SUV',
+                'modelo' => 'Volkswagen Taos or similar | I',
+                'imagen' => 'taos.png',
+                'alt' => 'Volkswagen Taos o similar',
+                'precio' => 1800,
+                'precio_anterior' => 2400,
+                'descuento' => '-25%',
+                'personas' => 5,
+                'maletas_grandes' => 2,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Automatic',
+            ],
+            [
+                'categoria' => 'Compact Family SUV',
+                'modelo' => 'Toyota Avanza or similar | IB',
+                'imagen' => 'avanza.png',
+                'alt' => 'Toyota avanza o similar',
+                'precio' => 1700,
+                'precio_anterior' => 2200,
+                'descuento' => '-23%',
+                'personas' => 7,
+                'maletas_grandes' => 2,
+                'maletas_pequenas' => 2,
+                'transmision' => 'Automatic',
+            ],
+            [
+                'categoria' => 'Minivan',
+                'modelo' => 'Honda Odyssey or similar | M',
+                'imagen' => 'Odyssey.webp',
+                'alt' => ' Honda Odyssey o similar',
+                'precio' => 2600,
+                'precio_anterior' => 3000,
+                'descuento' => '-13%',
+                'personas' => 8,
+                'maletas_grandes' => 8,
+                'maletas_pequenas' => 4,
+                'transmision' => 'Automatic',
+            ],
+            [
+                'categoria' => 'Passenger Van',
+                'modelo' => 'Nissan Urvan or similar | L | MT',
+                'imagen' => 'Urvan.webp',
+                'alt' => 'Nissan Urvan o similar',
+                'precio' => 2900,
+                'precio_anterior' => 3400,
+                'descuento' => '-15%',
+                'personas' => 13,
+                'maletas_grandes' => 5,
+                'maletas_pequenas' => 5,
+                'transmision' => 'Manual',
+            ],
+            [
+                'categoria' => 'Passenger Van',
+                'modelo' => 'Toyota Hiace or similar | L',
+                'imagen' => 'Hiace.webp',
+                'alt' => 'Toyota Hiace o similar',
+                'precio' => 2900,
+                'precio_anterior' => 9400,
+                'descuento' => '-15%',
+                'personas' => 13,
+                'maletas_grandes' => 3,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Manual',
+            ],
+            [
+                'categoria' => 'Double Cab Pickup',
+                'modelo' => 'Nissan Frontier or similar | E',
+                'imagen' => 'Frontier.webp',
+                'alt' => 'Nissan Frontier o similar',
+                'precio' => 1950,
+                'precio_anterior' => 2203,
+                'descuento' => '-13%',
+                'personas' => 5,
+                'maletas_grandes' => 3,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Automatic',
+            ],
+            [
+                'categoria' => '4x4 Double Cab Pickup',
+                'modelo' => 'Toyota Tacoma or similar | F',
+                'imagen' => 'Tacoma.webp',
+                'alt' => 'Toyota Tacoma o similar',
+                'precio' => 2600,
+                'precio_anterior' => 3000,
+                'descuento' => '-13%',
+                'personas' => 5,
+                'maletas_grandes' => 3,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Automatic',
+            ],
+        ];
+    @endphp
+
+    {{-- ============================================================
+         SÍMBOLOS SVG REUTILIZABLES (CarPlay y Android Auto)
+         Se definen UNA vez aquí y se usan 12 veces en cada card.
+    ============================================================ --}}
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="ico-carplay" viewBox="0 0 24 24">
+            <rect x="2" y="2" width="20" height="20" rx="5"></rect>
+            <polygon points="10,8 16,12 10,16"></polygon>
+        </symbol>
+        <symbol id="ico-android" viewBox="0 0 24 24">
+            <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
+        </symbol>
+    </svg>
+
     <!-- ===== VISTA INICIO ===== -->
     <section class="v-inicio" data-title="Inicio">
 
@@ -868,9 +1043,11 @@
         <!-- HERO -->
         <section class="hero" id="heroTop">
             <div class="carousel">
+                {{-- Slide 1: carga inmediata (LCP) --}}
                 <div class="slide active" style="background-image:url('{{ asset('img/inicio1.webp') }}');"></div>
-                <div class="slide" style="background-image:url('{{ asset('img/inicio2.webp') }}');"></div>
-                <div class="slide" style="background-image:url('{{ asset('img/inicio3.webp') }}');"></div>
+                {{-- Slides 2 y 3: carga diferida con data-bg-src (después de window.load) --}}
+                <div class="slide" data-bg-src="{{ asset('img/inicio2.webp') }}"></div>
+                <div class="slide" data-bg-src="{{ asset('img/inicio3.webp') }}"></div>
                 <div class="overlay"></div>
             </div>
 
@@ -1064,648 +1241,71 @@
         {{-- Sentinel para detectar "salí del hero" --}}
         <span id="heroEndSentinel" style="position:relative; display:block; width:1px; height:1px;"></span>
 
+        {{-- ============================================================
+             FLEET / CARRUSEL DE COCHES
+             12 tarjetas generadas desde el array $coches (PHP)
+        ============================================================ --}}
         <section id="fleet-carousel" class="fleet">
             <div class="fleet-viewport" id="fleetViewport">
                 <button class="fleet-btn prev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
 
                 <div class="fleet-track">
 
-                    {{-- Chevrolet Aveo --}}
-                    <article class="car-card" data-price-mxn="467" data-old-price-mxn="899">
-                        <header class="car-title">
-                            <h3>{{ __('Compact') }}</h3>
-                            <p>{{ __('Chevrolet Aveo or similar | C') }}</p>
-                        </header>
-                        <div class="car-media">
-                            <img src="{{ asset('img/aveo.webp') }}" alt="Chevrolet Aveo o similar" loading="lazy">
-                        </div>
-
-                        <div class="offer">
-                            <span class="offer-badge" aria-label="Oferta">-48%</span>
-                            <div class="price-line">
-                                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
-                                        class="price-now">467</span></span>
-                                <span class="currency-code">MXN</span>
-                                <span class="per">{{ __('/day') }}</span>
-                                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
-                                        class="price-old">899</span></span>
-                                <span class="currency-code-old">MXN</span>
+                    @foreach ($coches as $coche)
+                        <article class="car-card"
+                            data-price-mxn="{{ $coche['precio'] }}"
+                            data-old-price-mxn="{{ $coche['precio_anterior'] }}">
+                            <header class="car-title">
+                                <h3>{{ __($coche['categoria']) }}</h3>
+                                <p>{{ __($coche['modelo']) }}</p>
+                            </header>
+                            <div class="car-media">
+                                <img src="{{ asset('img/' . $coche['imagen']) }}" alt="{{ $coche['alt'] }}"
+                                    loading="lazy">
                             </div>
-                        </div>
 
-                        <ul class="car-specs">
-                            <li><i class="fa-solid fa-user-large"></i> 5</li>
-                            <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
-                            <li><i class="fa-solid fa-briefcase"></i> 1</li>
-                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
-                                    {{ __('Automatic') }}</span></li>
-                            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
-                                    class="spec-letter">A/C</span></li>
-                        </ul>
-
-                        <div class="car-connect">
-                            <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                                    <polygon points="10,8 16,12 10,16"></polygon>
-                                </svg>
-                                CarPlay
-                            </span>
-                            <span class="badge-chip badge-android" title="Android Auto">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                                </svg>
-                                Android Auto
-                            </span>
-                        </div>
-
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
-                            class="car-cta">{{ __('Book now') }}</a>
-                    </article>
-
-                    {{-- Volkswagen Virtus --}}
-                    <article class="car-card" data-price-mxn="600" data-old-price-mxn="1049">
-                        <header class="car-title">
-                            <h3>{{ __('Intermediate') }}</h3>
-                            <p>{{ __('Volkswagen Virtus or similar | D') }}</p>
-                        </header>
-                        <div class="car-media">
-                            <img src="{{ asset('img/virtus.webp') }}" alt="Volkswagen Virtus o similar" loading="lazy">
-                        </div>
-
-                        <div class="offer">
-                            <span class="offer-badge">-43%</span>
-                            <div class="price-line">
-                                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
-                                        class="price-now">600</span></span>
-                                <span class="currency-code">MXN</span>
-                                <span class="per">{{ __('/day') }}</span>
-                                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
-                                        class="price-old">1049</span></span>
-                                <span class="currency-code-old">MXN</span>
+                            <div class="offer">
+                                <span class="offer-badge" aria-label="Oferta">{{ $coche['descuento'] }}</span>
+                                <div class="price-line">
+                                    <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
+                                            class="price-now">{{ $coche['precio'] }}</span></span>
+                                    <span class="currency-code">MXN</span>
+                                    <span class="per">{{ __('/day') }}</span>
+                                    <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
+                                            class="price-old">{{ $coche['precio_anterior'] }}</span></span>
+                                    <span class="currency-code-old">MXN</span>
+                                </div>
                             </div>
-                        </div>
 
-                        <ul class="car-specs">
-                            <li><i class="fa-solid fa-user-large"></i> 5</li>
-                            <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
-                            <li><i class="fa-solid fa-briefcase"></i> 2</li>
-                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
-                                    {{ __('Automatic') }}</span></li>
-                            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
-                                    class="spec-letter">A/C</span></li>
-                        </ul>
+                            <ul class="car-specs">
+                                <li><i class="fa-solid fa-user-large"></i> {{ $coche['personas'] }}</li>
+                                <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $coche['maletas_grandes'] }}</li>
+                                <li><i class="fa-solid fa-briefcase"></i> {{ $coche['maletas_pequenas'] }}</li>
+                                <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
+                                        {{ __($coche['transmision']) }}</span></li>
+                                <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
+                                        class="spec-letter">A/C</span></li>
+                            </ul>
 
-                        <div class="car-connect">
-                            <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                                    <polygon points="10,8 16,12 10,16"></polygon>
-                                </svg>
-                                CarPlay
-                            </span>
-                            <span class="badge-chip badge-android" title="Android Auto">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                                </svg>
-                                Android Auto
-                            </span>
-                        </div>
-
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
-                            class="car-cta">{{ __('Book now') }}</a>
-                    </article>
-
-                    {{-- Volkswagen Jetta --}}
-                    <article class="car-card" data-price-mxn="800" data-old-price-mxn="1199">
-                        <header class="car-title">
-                            <h3>{{ __('Full Size') }}</h3>
-                            <p>{{ __('Volkswagen Jetta or similar | E') }}</p>
-                        </header>
-                        <div class="car-media">
-                            <img src="{{ asset('img/jetta.webp') }}" alt="Volkswagen Jetta o similar" loading="lazy">
-                        </div>
-
-                        <div class="offer">
-                            <span class="offer-badge">-33%</span>
-                            <div class="price-line">
-                                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
-                                        class="price-now">800</span></span>
-                                <span class="currency-code">MXN</span>
-                                <span class="per">{{ __('/day') }}</span>
-                                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
-                                        class="price-old">1199</span></span>
-                                <span class="currency-code-old">MXN</span>
+                            <div class="car-connect">
+                                <span class="badge-chip badge-apple" title="Apple CarPlay">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <use href="#ico-carplay"></use>
+                                    </svg>
+                                    CarPlay
+                                </span>
+                                <span class="badge-chip badge-android" title="Android Auto">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <use href="#ico-android"></use>
+                                    </svg>
+                                    Android Auto
+                                </span>
                             </div>
-                        </div>
 
-                        <ul class="car-specs">
-                            <li><i class="fa-solid fa-user-large"></i> 5</li>
-                            <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-                            <li><i class="fa-solid fa-briefcase"></i> 3</li>
-                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
-                                    {{ __('Automatic') }}</span></li>
-                            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
-                                    class="spec-letter">A/C</span></li>
-                        </ul>
-
-                        <div class="car-connect">
-                            <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                                    <polygon points="10,8 16,12 10,16"></polygon>
-                                </svg>
-                                CarPlay
-                            </span>
-                            <span class="badge-chip badge-android" title="Android Auto">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                                </svg>
-                                Android Auto
-                            </span>
-                        </div>
-
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
-                            class="car-cta">{{ __('Book now') }}</a>
-                    </article>
-
-                    {{-- Toyota Camry --}}
-                    <article class="car-card" data-price-mxn="1550" data-old-price-mxn="1999">
-                        <header class="car-title">
-                            <h3>{{ __('Full Size') }}</h3>
-                            <p>{{ __('Toyota Camry or similar | F') }}</p>
-                        </header>
-                        <div class="car-media">
-                            <img src="{{ asset('img/camry.webp') }}" alt="Toyota Camry  o similar" loading="lazy">
-                        </div>
-
-                        <div class="offer">
-                            <span class="offer-badge">-22%</span>
-                            <div class="price-line">
-                                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
-                                        class="price-now">1550</span></span>
-                                <span class="currency-code">MXN</span>
-                                <span class="per">{{ __('/day') }}</span>
-                                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
-                                        class="price-old">1999</span></span>
-                                <span class="currency-code-old">MXN</span>
-                            </div>
-                        </div>
-
-                        <ul class="car-specs">
-                            <li><i class="fa-solid fa-user-large"></i> 5</li>
-                            <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-                            <li><i class="fa-solid fa-briefcase"></i> 3</li>
-                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
-                                    {{ __('Automatic') }}</span></li>
-                            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
-                                    class="spec-letter">A/C</span></li>
-                        </ul>
-
-                        <div class="car-connect">
-                            <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                                    <polygon points="10,8 16,12 10,16"></polygon>
-                                </svg>
-                                CarPlay
-                            </span>
-                            <span class="badge-chip badge-android" title="Android Auto">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                                </svg>
-                                Android Auto
-                            </span>
-                        </div>
-
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
-                            class="car-cta">{{ __('Book now') }}</a>
-                    </article>
-
-                    {{-- Jeep Renegade --}}
-                    <article class="car-card" data-price-mxn="1600" data-old-price-mxn="2100">
-                        <header class="car-title">
-                            <h3>{{ __('Compact SUV') }}</h3>
-                            <p>{{ __('Jeep Renegade or similar | IC') }}</p>
-                        </header>
-                        <div class="car-media">
-                            <img src="{{ asset('img/renegade.webp') }}" alt=" Jeep Renegade o similar" loading="lazy">
-                        </div>
-
-                        <div class="offer">
-                            <span class="offer-badge">-24%</span>
-                            <div class="price-line">
-                                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
-                                        class="price-now">1600</span></span>
-                                <span class="currency-code">MXN</span>
-                                <span class="per">{{ __('/day') }}</span>
-                                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
-                                        class="price-old">2100</span></span>
-                                <span class="currency-code-old">MXN</span>
-                            </div>
-                        </div>
-
-                        <ul class="car-specs">
-                            <li><i class="fa-solid fa-user-large"></i> 5</li>
-                            <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
-                            <li><i class="fa-solid fa-briefcase"></i> 3</li>
-                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
-                                    {{ __('Automatic') }}</span></li>
-                            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
-                                    class="spec-letter">A/C</span></li>
-                        </ul>
-
-                        <div class="car-connect">
-                            <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                                    <polygon points="10,8 16,12 10,16"></polygon>
-                                </svg>
-                                CarPlay
-                            </span>
-                            <span class="badge-chip badge-android" title="Android Auto">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                                </svg>
-                                Android Auto
-                            </span>
-                        </div>
-
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
-                            class="car-cta">{{ __('Book now') }}</a>
-                    </article>
-
-                    {{-- Volkswagen Taos --}}
-                    <article class="car-card" data-price-mxn="1800" data-old-price-mxn="2400">
-                        <header class="car-title">
-                            <h3>{{ __('Midsize SUV') }}</h3>
-                            <p>{{ __('Volkswagen Taos or similar | I') }}</p>
-                        </header>
-                        <div class="car-media">
-                            <img src="{{ asset('img/taos.png') }}" alt="Volkswagen Taos o similar" loading="lazy">
-                        </div>
-
-                        <div class="offer">
-                            <span class="offer-badge">-25%</span>
-                            <div class="price-line">
-                                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
-                                        class="price-now">1800</span></span>
-                                <span class="currency-code">MXN</span>
-                                <span class="per">{{ __('/day') }}</span>
-                                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
-                                        class="price-old">2400</span></span>
-                                <span class="currency-code-old">MXN</span>
-                            </div>
-                        </div>
-
-                        <ul class="car-specs">
-                            <li><i class="fa-solid fa-user-large"></i> 5</li>
-                            <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
-                            <li><i class="fa-solid fa-briefcase"></i> 3</li>
-                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
-                                    {{ __('Automatic') }}</span></li>
-                            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
-                                    class="spec-letter">A/C</span></li>
-                        </ul>
-
-                        <div class="car-connect">
-                            <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                                    <polygon points="10,8 16,12 10,16"></polygon>
-                                </svg>
-                                CarPlay
-                            </span>
-                            <span class="badge-chip badge-android" title="Android Auto">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                                </svg>
-                                Android Auto
-                            </span>
-                        </div>
-
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
-                            class="car-cta">{{ __('Book now') }}</a>
-                    </article>
-
-                    {{-- Toyota Avanza --}}
-                    <article class="car-card" data-price-mxn="1700" data-old-price-mxn="2200">
-                        <header class="car-title">
-                            <h3>{{ __('Compact Family SUV') }}</h3>
-                            <p>{{ __('Toyota Avanza or similar | IB') }}</p>
-                        </header>
-                        <div class="car-media">
-                            <img src="{{ asset('img/avanza.png') }}" alt="Toyota avanza o similar" loading="lazy">
-                        </div>
-
-                        <div class="offer">
-                            <span class="offer-badge">-23%</span>
-                            <div class="price-line">
-                                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
-                                        class="price-now">1700</span></span>
-                                <span class="currency-code">MXN</span>
-                                <span class="per">{{ __('/day') }}</span>
-                                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
-                                        class="price-old">2200</span></span>
-                                <span class="currency-code-old">MXN</span>
-                            </div>
-                        </div>
-
-                        <ul class="car-specs">
-                            <li><i class="fa-solid fa-user-large"></i> 7</li>
-                            <li><i class="fa-solid fa-suitcase-rolling"></i> 2</li>
-                            <li><i class="fa-solid fa-briefcase"></i> 2</li>
-                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
-                                    {{ __('Automatic') }}</span></li>
-                            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
-                                    class="spec-letter">A/C</span></li>
-                        </ul>
-
-                        <div class="car-connect">
-                            <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                                    <polygon points="10,8 16,12 10,16"></polygon>
-                                </svg>
-                                CarPlay
-                            </span>
-                            <span class="badge-chip badge-android" title="Android Auto">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                                </svg>
-                                Android Auto
-                            </span>
-                        </div>
-
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
-                            class="car-cta">{{ __('Book now') }}</a>
-                    </article>
-
-                    {{-- Honda Odyssey --}}
-                    <article class="car-card" data-price-mxn="2600" data-old-price-mxn="3000">
-                        <header class="car-title">
-                            <h3>{{ __('Minivan') }}</h3>
-                            <p>{{ __('Honda Odyssey or similar | M') }}</p>
-                        </header>
-                        <div class="car-media">
-                            <img src="{{ asset('img/Odyssey.webp') }}" alt=" Honda Odyssey o similar" loading="lazy">
-                        </div>
-
-                        <div class="offer">
-                            <span class="offer-badge">-13%</span>
-                            <div class="price-line">
-                                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
-                                        class="price-now">2600</span></span>
-                                <span class="currency-code">MXN</span>
-                                <span class="per">{{ __('/day') }}</span>
-                                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
-                                        class="price-old">3000</span></span>
-                                <span class="currency-code-old">MXN</span>
-                            </div>
-                        </div>
-
-                        <ul class="car-specs">
-                            <li><i class="fa-solid fa-user-large"></i> 8</li>
-                            <li><i class="fa-solid fa-suitcase-rolling"></i> 8</li>
-                            <li><i class="fa-solid fa-briefcase"></i>4</li>
-                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
-                                    {{ __('Automatic') }}</span></li>
-                            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
-                                    class="spec-letter">A/C</span></li>
-                        </ul>
-
-                        <div class="car-connect">
-                            <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                                    <polygon points="10,8 16,12 10,16"></polygon>
-                                </svg>
-                                CarPlay
-                            </span>
-                            <span class="badge-chip badge-android" title="Android Auto">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                                </svg>
-                                Android Auto
-                            </span>
-                        </div>
-
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
-                            class="car-cta">{{ __('Book now') }}</a>
-                    </article>
-
-                    {{-- Nissan Urvan --}}
-                    <article class="car-card" data-price-mxn="2900" data-old-price-mxn="3400">
-                        <header class="car-title">
-                            <h3>{{ __('Passenger Van') }}</h3>
-                            <p>{{ __('Nissan Urvan or similar | L | MT') }}</p>
-                        </header>
-                        <div class="car-media">
-                            <img src="{{ asset('img/Urvan.webp') }}" alt="Nissan Urvan o similar" loading="lazy">
-                        </div>
-
-                        <div class="offer">
-                            <span class="offer-badge">-15%</span>
-                            <div class="price-line">
-                                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
-                                        class="price-now">2900</span></span>
-                                <span class="currency-code">MXN</span>
-                                <span class="per">{{ __('/day') }}</span>
-                                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
-                                        class="price-old">3400</span></span>
-                                <span class="currency-code-old">MXN</span>
-                            </div>
-                        </div>
-
-                        <ul class="car-specs">
-                            <li><i class="fa-solid fa-user-large"></i> 13</li>
-                            <li><i class="fa-solid fa-suitcase-rolling"></i> 5</li>
-                            <li><i class="fa-solid fa-briefcase"></i> 5</li>
-                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
-                                    {{ __('Manual') }}</span></li>
-                            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
-                                    class="spec-letter">A/C</span></li>
-                        </ul>
-
-                        <div class="car-connect">
-                            <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                                    <polygon points="10,8 16,12 10,16"></polygon>
-                                </svg>
-                                CarPlay
-                            </span>
-                            <span class="badge-chip badge-android" title="Android Auto">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                                </svg>
-                                Android Auto
-                            </span>
-                        </div>
-
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
-                            class="car-cta">{{ __('Book now') }}</a>
-                    </article>
-
-                    {{-- Toyota Hiace --}}
-                    <article class="car-card" data-price-mxn="2900" data-old-price-mxn="9400">
-                        <header class="car-title">
-                            <h3>{{ __('Passenger Van') }}</h3>
-                            <p>{{ __('Toyota Hiace or similar | L') }}</p>
-                        </header>
-                        <div class="car-media">
-                            <img src="{{ asset('img/Hiace.webp') }}" alt="Toyota Hiace o similar" loading="lazy">
-                        </div>
-
-                        <div class="offer">
-                            <span class="offer-badge">-15%</span>
-                            <div class="price-line">
-                                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
-                                        class="price-now">2900</span></span>
-                                <span class="currency-code">MXN</span>
-                                <span class="per">{{ __('/day') }}</span>
-                                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
-                                        class="price-old">9400</span></span>
-                                <span class="currency-code-old">MXN</span>
-                            </div>
-                        </div>
-
-                        <ul class="car-specs">
-                            <li><i class="fa-solid fa-user-large"></i> 13</li>
-                            <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-                            <li><i class="fa-solid fa-briefcase"></i> 3</li>
-                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
-                                    {{ __('Manual') }}</span></li>
-                            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
-                                    class="spec-letter">A/C</span></li>
-                        </ul>
-
-                        <div class="car-connect">
-                            <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                                    <polygon points="10,8 16,12 10,16"></polygon>
-                                </svg>
-                                CarPlay
-                            </span>
-                            <span class="badge-chip badge-android" title="Android Auto">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                                </svg>
-                                Android Auto
-                            </span>
-                        </div>
-
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
-                            class="car-cta">{{ __('Book now') }}</a>
-                    </article>
-
-                    {{-- Nissan Frontier --}}
-                    <article class="car-card" data-price-mxn="1950" data-old-price-mxn="2203">
-                        <header class="car-title">
-                            <h3>{{ __('Double Cab Pickup') }}</h3>
-                            <p>{{ __('Nissan Frontier or similar | E') }}</p>
-                        </header>
-
-                        <div class="car-media">
-                            <img src="{{ asset('img/Frontier.webp') }}" alt="Nissan Frontier o similar" loading="lazy">
-                        </div>
-
-                        <div class="offer">
-                            <span class="offer-badge">-13%</span>
-                            <div class="price-line">
-                                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
-                                        class="price-now">1950</span></span>
-                                <span class="currency-code">MXN</span>
-                                <span class="per">{{ __('/day') }}</span>
-                                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
-                                        class="price-old">2203</span></span>
-                                <span class="currency-code-old">MXN</span>
-                            </div>
-                        </div>
-
-                        <ul class="car-specs">
-                            <li><i class="fa-solid fa-user-large"></i> 5</li>
-                            <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-                            <li><i class="fa-solid fa-briefcase"></i> 3</li>
-                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
-                                    {{ __('Automatic') }}</span></li>
-                            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
-                                    class="spec-letter">A/C</span></li>
-                        </ul>
-
-                        <div class="car-connect">
-                            <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                                    <polygon points="10,8 16,12 10,16"></polygon>
-                                </svg>
-                                CarPlay
-                            </span>
-                            <span class="badge-chip badge-android" title="Android Auto">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                                </svg>
-                                Android Auto
-                            </span>
-                        </div>
-
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
-                            class="car-cta">{{ __('Book now') }}</a>
-                    </article>
-
-                    {{-- Toyota Tacoma --}}
-                    <article class="car-card" data-price-mxn="2600" data-old-price-mxn="3000">
-                        <header class="car-title">
-                            <h3>{{ __('4x4 Double Cab Pickup') }}</h3>
-                            <p>{{ __('Toyota Tacoma or similar | F') }}</p>
-                        </header>
-                        <div class="car-media">
-                            <img src="{{ asset('img/Tacoma.webp') }}" alt="Toyota Tacoma o similar" loading="lazy">
-                        </div>
-
-                        <div class="offer">
-                            <span class="offer-badge">-13%</span>
-                            <div class="price-line">
-                                <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
-                                        class="price-now">2600</span></span>
-                                <span class="currency-code">MXN</span>
-                                <span class="per">{{ __('/day') }}</span>
-                                <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
-                                        class="price-old">3000</span></span>
-                                <span class="currency-code-old">MXN</span>
-                            </div>
-                        </div>
-
-                        <ul class="car-specs">
-                            <li><i class="fa-solid fa-user-large"></i> 5</li>
-                            <li><i class="fa-solid fa-suitcase-rolling"></i> 3</li>
-                            <li><i class="fa-solid fa-briefcase"></i> 3</li>
-                            <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
-                                    {{ __('Automatic') }}</span></li>
-                            <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
-                                    class="spec-letter">A/C</span></li>
-                        </ul>
-
-                        <div class="car-connect">
-                            <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                <svg viewBox="0 0 24 24">
-                                    <rect x="2" y="2" width="20" height="20" rx="5"></rect>
-                                    <polygon points="10,8 16,12 10,16"></polygon>
-                                </svg>
-                                CarPlay
-                            </span>
-                            <span class="badge-chip badge-android" title="Android Auto">
-                                <svg viewBox="0 0 24 24">
-                                    <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
-                                </svg>
-                                Android Auto
-                            </span>
-                        </div>
-
-                        <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
-                            class="car-cta">{{ __('Book now') }}</a>
-                    </article>
+                            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
+                                class="car-cta">{{ __('Book now') }}</a>
+                        </article>
+                    @endforeach
 
                 </div>
 
@@ -1960,38 +1560,18 @@
         </a>
     </div>
 
-    <!-- Modal de Bienvenida -->
-    <div class="modal" id="welcomeModal" aria-hidden="true">
-        <div class="modal-backdrop"></div>
-        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="wmTitle">
-            <button class="modal-close" id="wmClose" aria-label="{{ __('Close') }}"><i
-                    class="fa-regular fa-circle-xmark"></i></button>
-            <h3 id="wmTitle"><i class="fa-regular fa-hand-peace"></i> {{ __('Welcome') }}, <span
-                    id="wmName">{{ __('Traveler') }}</span>!</h3>
-            <p>{{ __('Your account is ready. Do you want to go directly to your reservation?') }}</p>
-            <div class="modal-actions">
-                <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary"><i
-                        class="fa-regular fa-calendar-check"></i> {{ __('Go to my reservation') }}</a>
-                <button class="btn btn-ghost" id="wmOk" type="button">{{ __('Stay on homepage') }}</button>
-            </div>
-        </div>
-    </div>
+    {{-- Modal de Bienvenida ELIMINADO (zombie - el JS asociado ya se quitó en home.js) --}}
+
 @endsection
 
 @section('js-vistaHome')
-    {{-- ✅ jQuery (necesario para Select2) --}}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    {{-- ✅ Swiper JS --}}
+    {{-- ✅ Swiper JS (específico del home) --}}
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-    {{-- ✅ Flatpickr core + locale ES + rangePlugin --}}
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
-
-    {{-- ✅ Select2 JS (la inicialización con íconos se hace en home.js) --}}
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    {{--
+        NOTA: jQuery, Flatpickr (core + locale ES + rangePlugin) y Select2
+        se eliminaron de aquí porque YA están cargados en el layout.
+    --}}
 
     {{-- ✅ Iconos por ID de sucursal (DEBE ir ANTES de home.js) --}}
     <script>
@@ -2020,10 +1600,21 @@
 
     <script src="{{ asset('js/home.js') }}" defer></script>
 
+    {{-- ===== LAZY LOAD SLIDES 2 Y 3 DEL HERO ===== --}}
+    <script>
+        // Carga las imágenes de fondo de los slides 2 y 3 DESPUÉS del load completo
+        // para no bloquear el LCP (largest contentful paint)
+        window.addEventListener('load', function () {
+            document.querySelectorAll('.slide[data-bg-src]').forEach(function (el) {
+                el.style.backgroundImage = "url('" + el.dataset.bgSrc + "')";
+                el.removeAttribute('data-bg-src');
+            });
+        }, { once: true });
+    </script>
+
     {{-- ===== TOAST DE RESERVAS BILINGÜE ===== --}}
     <script>
         (function () {
-            // SECUENCIA DE MENSAJES EN ESPAÑOL E INGLÉS
             const SEQ = {
                 'es': [
                     { title: "Buscando reserva", text: "Alguien más está buscando reserva en este momento" },
@@ -2063,7 +1654,6 @@
                 startTs = 0,
                 remaining = SHOW_MS;
 
-            // Función para obtener el mensaje según el idioma actual
             function getMensajeActual() {
                 const idioma = localStorage.getItem('idiomaPreferido') || 'es';
                 return SEQ[idioma] || SEQ['es'];
@@ -2160,10 +1750,8 @@
                 });
             }
 
-            // Escuchar cambios de idioma para actualizar las notificaciones
             window.addEventListener('storage', function (e) {
                 if (e.key === 'idiomaPreferido') {
-                    // Reiniciar el ciclo con el nuevo idioma
                     loop = true;
                     if (hideT) clearTimeout(hideT);
                     if (nextT) clearTimeout(nextT);
@@ -2171,7 +1759,6 @@
                 }
             });
 
-            // Iniciar
             document.addEventListener('DOMContentLoaded', () => {
                 startT = setTimeout(showOnce, INITIAL_DELAY_MS);
             });
@@ -2180,7 +1767,7 @@
     </script>
 
     {{-- ============================================================
-         CONVERSIÓN DE MONEDA CON INDICADORES MXN/USD
+         CONVERSIÓN DE MONEDA MXN/USD (sin console.log)
     ============================================================ --}}
     <script>
         (function () {
@@ -2213,8 +1800,6 @@
             function convertPrices() {
                 const language = getCurrentLanguage();
                 const currencyCode = getCurrencyCode(language);
-
-                console.log('🔄 Convirtiendo precios a:', currencyCode);
 
                 const carCards = document.querySelectorAll('.car-card');
 
@@ -2257,8 +1842,6 @@
                         currencyCodeOldSpan.textContent = currencyCode;
                     }
                 });
-
-                console.log('💰 Moneda actual:', currencyCode);
             }
 
             function initCurrencyConversion() {

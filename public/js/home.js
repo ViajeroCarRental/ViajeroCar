@@ -1,93 +1,61 @@
-/* ====================
-   Polyfills
-==================== */
+/* ============================================================
+   HOME.JS - Versión optimizada
+   - Zombies eliminados: polyfill IE11, syncAccountIcon, welcomeModal,
+     año footer, initCarouselLazyLoad
+   - 11 DOMContentLoaded consolidados en 1 (vanilla) + 1 (jQuery)
+   - TODA la lógica funcional se preserva idéntica
+============================================================ */
+
 (function () {
   "use strict";
-  if (!Element.prototype.closest) {
-    Element.prototype.closest = function (s) {
-      let el = this;
-      do {
-        if (el.matches(s)) return el;
-        el = el.parentElement || el.parentNode;
-      } while (el !== null && el.nodeType === 1);
-      return null;
-    };
+
+  /* ========================================================
+     HELPERS DE LOCALE
+  ======================================================== */
+  function getCurrentLocale() {
+    return (document.documentElement.lang || 'es') === 'en' ? 'en' : 'es';
   }
-})();
 
-// ============================================================
-// LOCALE
-// ============================================================
-function getCurrentLocale() {
-  return (document.documentElement.lang || 'es') === 'en' ? 'en' : 'es';
-}
-
-function getFlatpickrLocale() {
-  if (getCurrentLocale() === 'en') {
+  function getFlatpickrLocale() {
+    if (getCurrentLocale() === 'en') {
+      return {
+        firstDayOfWeek: 0,
+        weekdays: {
+          shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+          longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        },
+        months: {
+          shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          longhand: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        }
+      };
+    }
     return {
-      firstDayOfWeek: 0,
+      firstDayOfWeek: 1,
       weekdays: {
-        shorthand: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-        longhand: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+        shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+        longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
       },
       months: {
-        shorthand: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        longhand: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+        longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
       }
     };
   }
-  return {
-    firstDayOfWeek: 1,
-    weekdays: {
-      shorthand: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
-      longhand: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
-    },
-    months: {
-      shorthand: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
-      longhand: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
-    }
-  };
-}
 
-function getErrorMessage(fieldType) {
-  const locale = getCurrentLocale();
-  const messages = {
-    location: { es: 'Ubicación requerida', en: 'Location required' },
-    date: { es: 'Fecha requerida', en: 'Date required' },
-    time: { es: 'Hora requerida', en: 'Time required' }
-  };
-  return messages[fieldType]?.[locale] ?? 'Campo requerido';
-}
-
-/* ====================
-   Icono de cuenta
-==================== */
-(function () {
-  "use strict";
-  function syncAccountIcon() {
-    const link = document.getElementById('accountLink');
-    if (!link) return;
-    const name = link.getAttribute('data-auth-name') || '';
-    const email = link.getAttribute('data-auth-email') || '';
-    const initial = (name.trim()[0] || email.trim()[0] || '').toUpperCase();
+  function getErrorMessage(fieldType) {
     const locale = getCurrentLocale();
-    if (initial) {
-      link.title = locale === 'en' ? 'My profile' : 'Mi perfil';
-      link.innerHTML = `<span class="avatar-mini">${initial}</span>`;
-    } else {
-      link.title = locale === 'en' ? 'Sign in' : 'Iniciar sesión';
-      link.innerHTML = '<i class="fa-regular fa-user"></i>';
-    }
+    const messages = {
+      location: { es: 'Ubicación requerida', en: 'Location required' },
+      date: { es: 'Fecha requerida', en: 'Date required' },
+      time: { es: 'Hora requerida', en: 'Time required' }
+    };
+    return messages[fieldType]?.[locale] ?? 'Campo requerido';
   }
-  document.addEventListener('DOMContentLoaded', syncAccountIcon);
-})();
 
-/* =====================================================================
-   FLEET: FLECHAS CON TOPES
-===================================================================== */
-(function () {
-  "use strict";
-
+  /* ========================================================
+     MÓDULO: FLEET (flechas con topes)
+  ======================================================== */
   function initFleetControlled(fleet) {
     const track = fleet.querySelector('.fleet-track');
     const prev = fleet.querySelector('.fleet-btn.prev');
@@ -114,8 +82,10 @@ function getErrorMessage(fieldType) {
       const current = track.scrollLeft;
       const atStart = current <= 10;
       const atEnd = current >= max - 10;
-      prev.disabled = atStart; prev.classList.toggle('is-disabled', atStart);
-      next.disabled = atEnd; next.classList.toggle('is-disabled', atEnd);
+      prev.disabled = atStart;
+      prev.classList.toggle('is-disabled', atStart);
+      next.disabled = atEnd;
+      next.classList.toggle('is-disabled', atEnd);
     }
 
     function pulseLimit(btn) {
@@ -146,280 +116,245 @@ function getErrorMessage(fieldType) {
     setTimeout(forceStart, 100);
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('.fleet').forEach(initFleetControlled);
-  });
-})();
+  /* ========================================================
+     MÓDULO: FLATPICKR + SELECTS DE HORA + RESUMEN
+  ======================================================== */
+  const TimeModule = (function () {
+    function injectTimeCss() {
+      if (document.getElementById("tpHideInputStyle")) return;
+      const st = document.createElement("style");
+      st.id = "tpHideInputStyle";
+      st.textContent = `
+        .tp-hidden-input{ display:none !important; }
+        .tp-selects{ display:flex; gap:10px; margin-top:10px; }
+        .tp-selects select{ width:100%; height:48px; border-radius:12px; border:1px solid rgba(0,0,0,.12); padding:10px 12px; outline:none; }
+      `;
+      document.head.appendChild(st);
+    }
 
-/* ====================
-   Año en footer
-==================== */
-(function () {
-  "use strict";
-  const y = document.getElementById('year');
-  if (y) y.textContent = new Date().getFullYear();
-})();
+    const pad2 = n => String(n).padStart(2, "0");
 
-/* ====================
-   Modal bienvenida
-==================== */
-(function () {
-  "use strict";
-  const modal = document.getElementById('welcomeModal');
-  if (!modal) return;
-  const nameEl = document.getElementById('wmName');
-  const closeBtn = document.getElementById('wmClose');
-  const okBtn = document.getElementById('wmOk');
-  const open = () => modal.classList.add('show');
-  const close = () => modal.classList.remove('show');
-  closeBtn?.addEventListener('click', close);
-  okBtn?.addEventListener('click', close);
-  modal.querySelector('.modal-backdrop')?.addEventListener('click', close);
-  if (modal.getAttribute('data-auto-show') === '1') {
-    const who = modal.getAttribute('data-name');
-    if (nameEl && who) nameEl.textContent = who;
-    open();
-  }
-})();
+    function isSameLocalDate(dateStr, dateObj) {
+      if (!dateStr || !dateObj) return false;
+      return dateStr === `${dateObj.getFullYear()}-${pad2(dateObj.getMonth() + 1)}-${pad2(dateObj.getDate())}`;
+    }
 
-/* =====================================================================
-   FLATPICKR + SELECTS DE HORA + RESUMEN
-   ✅ Sin valores default (13:00, 12:00). El usuario elige siempre.
-===================================================================== */
-(function () {
-  "use strict";
+    function rebuildHourOptions(input, opts = {}) {
+      const { hourMax = 24 } = opts;
+      const wrap = input.closest(".time-field") || input.parentElement;
+      const selH = wrap?.querySelector(".tp-selects .tp-hour");
+      if (!selH) return;
 
-  (function injectTimeCss() {
-    if (document.getElementById("tpHideInputStyle")) return;
-    const st = document.createElement("style");
-    st.id = "tpHideInputStyle";
-    st.textContent = `
-      .tp-hidden-input{ display:none !important; }
-      .tp-selects{ display:flex; gap:10px; margin-top:10px; }
-      .tp-selects select{ width:100%; height:48px; border-radius:12px; border:1px solid rgba(0,0,0,.12); padding:10px 12px; outline:none; }
-    `;
-    document.head.appendChild(st);
-  })();
+      const previousValue = selH.value;
+      const placeholder = getCurrentLocale() === 'en' ? 'Time' : 'Hora';
 
-  const pad2 = n => String(n).padStart(2, "0");
-
-  function isSameLocalDate(dateStr, dateObj) {
-    if (!dateStr || !dateObj) return false;
-    return dateStr === `${dateObj.getFullYear()}-${pad2(dateObj.getMonth() + 1)}-${pad2(dateObj.getDate())}`;
-  }
-
-  function rebuildHourOptions(input, opts = {}) {
-    const { hourMax = 24 } = opts;
-    const wrap = input.closest(".time-field") || input.parentElement;
-    const selH = wrap?.querySelector(".tp-selects .tp-hour");
-    if (!selH) return;
-
-    const previousValue = selH.value;
-    const placeholder = getCurrentLocale() === 'en' ? 'Time' : 'Hora';
-
-    let startHour = 0;
-    if (input.id === "pickupTime") {
-      const pickupVal = document.getElementById("pickupDate")?.value || "";
-      if (isSameLocalDate(pickupVal, new Date())) {
-        startHour = new Date().getHours() + 1;
+      let startHour = 0;
+      if (input.id === "pickupTime") {
+        const pickupVal = document.getElementById("pickupDate")?.value || "";
+        if (isSameLocalDate(pickupVal, new Date())) {
+          startHour = new Date().getHours() + 1;
+        }
       }
-    }
 
-    selH.innerHTML = `<option value="" disabled selected>${placeholder}</option>`;
-    for (let h = startHour; h < hourMax; h++) {
-      const op = document.createElement("option");
-      op.value = pad2(h);
-      op.textContent = `${pad2(h)}:00`;
-      selH.appendChild(op);
-    }
+      selH.innerHTML = `<option value="" disabled selected>${placeholder}</option>`;
+      for (let h = startHour; h < hourMax; h++) {
+        const op = document.createElement("option");
+        op.value = pad2(h);
+        op.textContent = `${pad2(h)}:00`;
+        selH.appendChild(op);
+      }
 
-    const stillExists = Array.from(selH.options).some(o => o.value === previousValue);
-    if (stillExists && previousValue !== "") {
-      selH.value = previousValue;
-      input.value = `${previousValue}:00`;
-    } else {
-      selH.selectedIndex = 0;
-      input.value = "";
-    }
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-  }
-
-  function createTimeSelectsBelow(input, opts) {
-    const { hourMax = 24 } = opts || {};
-    const wrap = input.closest(".time-field") || input.parentElement;
-    if (wrap?.querySelector(".tp-selects")) return;
-
-    const box = document.createElement("div");
-    box.className = "tp-selects w-100";
-    const selH = document.createElement("select");
-    selH.className = "tp-hour custom-select-clean";
-    selH.setAttribute("aria-label", getCurrentLocale() === 'en' ? 'Time' : 'Hora');
-    box.appendChild(selH);
-    if (wrap) wrap.appendChild(box); else input.insertAdjacentElement("afterend", box);
-
-    rebuildHourOptions(input, { hourMax });
-
-    function sync() {
-      if (!selH.value) {
+      const stillExists = Array.from(selH.options).some(o => o.value === previousValue);
+      if (stillExists && previousValue !== "") {
+        selH.value = previousValue;
+        input.value = `${previousValue}:00`;
+      } else {
+        selH.selectedIndex = 0;
         input.value = "";
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-        return;
       }
-      input.value = `${pad2(Number(selH.value))}:00`;
       input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
     }
-    selH.addEventListener("change", sync);
 
-    // ✅ Si viene un valor desde la URL/Blade, lo reflejamos. Si no, vacío.
-    if (input.value && input.value !== "") {
-      const h = input.value.split(':')[0];
-      if (Array.from(selH.options).some(o => o.value === h)) {
-        selH.value = h;
-        sync();
+    function createTimeSelectsBelow(input, opts) {
+      const { hourMax = 24 } = opts || {};
+      const wrap = input.closest(".time-field") || input.parentElement;
+      if (wrap?.querySelector(".tp-selects")) return;
+
+      const box = document.createElement("div");
+      box.className = "tp-selects w-100";
+      const selH = document.createElement("select");
+      selH.className = "tp-hour custom-select-clean";
+      selH.setAttribute("aria-label", getCurrentLocale() === 'en' ? 'Time' : 'Hora');
+      box.appendChild(selH);
+      if (wrap) wrap.appendChild(box); else input.insertAdjacentElement("afterend", box);
+
+      rebuildHourOptions(input, { hourMax });
+
+      function sync() {
+        if (!selH.value) {
+          input.value = "";
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          return;
+        }
+        input.value = `${pad2(Number(selH.value))}:00`;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
       }
-    } else {
-      selH.selectedIndex = 0;
-      input.value = "";
-    }
-  }
+      selH.addEventListener("change", sync);
 
-  function initAnalogTime(id) {
-    const input = document.getElementById(id);
-    if (!input || input.dataset.tpReady === "1") return;
-    input.dataset.tpReady = "1";
-    input.setAttribute("readonly", "readonly");
-    input.setAttribute("inputmode", "none");
-    input.classList.add("tp-hidden-input");
-    input.setAttribute("aria-hidden", "true");
-    createTimeSelectsBelow(input, { hourMax: 24 });
-    input.addEventListener("change", updateSummary);
-    input.addEventListener("input", updateSummary);
-    if (id === "pickupTime") {
-      document.getElementById("pickupDate")?.addEventListener("change", () => {
-        rebuildHourOptions(input, { hourMax: 24 });
+      // Si viene un valor desde URL/Blade, lo reflejamos
+      if (input.value && input.value !== "") {
+        const h = input.value.split(':')[0];
+        if (Array.from(selH.options).some(o => o.value === h)) {
+          selH.value = h;
+          sync();
+        }
+      } else {
+        selH.selectedIndex = 0;
+        input.value = "";
+      }
+    }
+
+    function initAnalogTime(id) {
+      const input = document.getElementById(id);
+      if (!input || input.dataset.tpReady === "1") return;
+      input.dataset.tpReady = "1";
+      input.setAttribute("readonly", "readonly");
+      input.setAttribute("inputmode", "none");
+      input.classList.add("tp-hidden-input");
+      input.setAttribute("aria-hidden", "true");
+      createTimeSelectsBelow(input, { hourMax: 24 });
+      input.addEventListener("change", updateSummary);
+      input.addEventListener("input", updateSummary);
+      if (id === "pickupTime") {
+        document.getElementById("pickupDate")?.addEventListener("change", () => {
+          rebuildHourOptions(input, { hourMax: 24 });
+        });
+      }
+    }
+
+    function parseTimeTo24h(str) {
+      const m = String(str || '').trim().match(/^(\d{1,2})/);
+      if (!m) return { hh: 0, mm: 0 };
+      return { hh: Math.min(23, Math.max(0, Number(m[1]))), mm: 0 };
+    }
+
+    function buildDT(dateId, timeId) {
+      const d = document.getElementById(dateId)?.value;
+      const t = document.getElementById(timeId)?.value || '';
+      if (!d || !t) return null;
+      const [y, m, day] = d.split('-').map(Number);
+      if (!y || !m || !day) return null;
+      const { hh, mm } = parseTimeTo24h(t);
+      if (hh === 24) {
+        const dt = new Date(y, m - 1, day, 0, 0);
+        dt.setDate(dt.getDate() + 1);
+        return dt;
+      }
+      return new Date(y, m - 1, day, hh, mm);
+    }
+
+    function updateSummary() {
+      const rangeSummary = document.getElementById('rangeSummary');
+      if (!rangeSummary) return;
+      const s = buildDT('pickupDate', 'pickupTime');
+      const e = buildDT('dropoffDate', 'dropoffTime');
+      if (!s || !e) { rangeSummary.textContent = ''; return; }
+      const h = Math.round((e - s) / 36e5);
+      const d = Math.ceil(h / 24);
+      if (!Number.isFinite(h) || h <= 0) { rangeSummary.textContent = ''; return; }
+      const locale = getCurrentLocale();
+      const daysText = locale === 'en' ? 'day(s)' : 'día(s)';
+      const hoursText = locale === 'en' ? 'hour(s)' : 'hora(s)';
+      rangeSummary.textContent = `Rental for ${d} ${daysText} · ~${h} ${hoursText}`;
+    }
+
+    function bindFormFixes() {
+      const form = document.getElementById("rentalForm");
+      if (!form || form.dataset.bindFixes === "1") return;
+      form.dataset.bindFixes = "1";
+
+      const chk = document.getElementById("differentDropoff");
+      const dropSel = document.getElementById("dropoffPlace");
+      const pickSel = document.getElementById("pickupPlace");
+      const pickDate = document.getElementById("pickupDate");
+      const dropDate = document.getElementById("dropoffDate");
+
+      function syncHiddenFromSelects(hiddenId) {
+        const hidden = document.getElementById(hiddenId);
+        if (!hidden) return;
+        const wrap = hidden.closest(".time-field") || hidden.parentElement;
+        const selH = wrap?.querySelector(".tp-selects .tp-hour");
+        hidden.value = selH?.value ? `${String(selH.value).padStart(2, "0")}:00` : "";
+      }
+
+      function normalizeDateInput(input) {
+        if (!input) return;
+        const v = String(input.value || "").trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+        const m = v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+        if (m) input.value = `${m[3]}-${String(m[2]).padStart(2, "0")}-${String(m[1]).padStart(2, "0")}`;
+      }
+
+      form.addEventListener("submit", () => {
+        syncHiddenFromSelects("pickupTime");
+        syncHiddenFromSelects("dropoffTime");
+        normalizeDateInput(pickDate);
+        normalizeDateInput(dropDate);
+        if (chk && !chk.checked && dropSel && pickSel?.value) dropSel.value = pickSel.value;
+        updateSummary();
+      }, { capture: true });
+
+      [pickSel, dropSel].forEach(el => {
+        if (!el) return;
+        const toggle = () => {
+          el.classList.toggle('has-value', !!el.value);
+          if (typeof $ !== 'undefined') {
+            $(el).next('.select2-container').find('.select2-selection').toggleClass('has-value', !!el.value);
+          }
+        };
+        (typeof $ !== 'undefined') ? $(el).on('change', toggle) : el.addEventListener('change', toggle);
+        setTimeout(toggle, 500);
       });
     }
-  }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    initAnalogTime("pickupTime");
-    initAnalogTime("dropoffTime");
-    updateSummary();
-  });
-
-  function parseTimeTo24h(str) {
-    const m = String(str || '').trim().match(/^(\d{1,2})/);
-    if (!m) return { hh: 0, mm: 0 };
-    return { hh: Math.min(23, Math.max(0, Number(m[1]))), mm: 0 };
-  }
-
-  function buildDT(dateId, timeId) {
-    const d = document.getElementById(dateId)?.value;
-    const t = document.getElementById(timeId)?.value || '';
-    if (!d || !t) return null;
-    const [y, m, day] = d.split('-').map(Number);
-    if (!y || !m || !day) return null;
-    const { hh, mm } = parseTimeTo24h(t);
-    if (hh === 24) {
-      const dt = new Date(y, m - 1, day, 0, 0);
-      dt.setDate(dt.getDate() + 1);
-      return dt;
-    }
-    return new Date(y, m - 1, day, hh, mm);
-  }
-
-  function updateSummary() {
-    const rangeSummary = document.getElementById('rangeSummary');
-    if (!rangeSummary) return;
-    const s = buildDT('pickupDate', 'pickupTime');
-    const e = buildDT('dropoffDate', 'dropoffTime');
-    if (!s || !e) { rangeSummary.textContent = ''; return; }
-    const h = Math.round((e - s) / 36e5);
-    const d = Math.ceil(h / 24);
-    if (!Number.isFinite(h) || h <= 0) { rangeSummary.textContent = ''; return; }
-    const locale = getCurrentLocale();
-    const daysText = locale === 'en' ? 'day(s)' : 'día(s)';
-    const hoursText = locale === 'en' ? 'hour(s)' : 'hora(s)';
-    rangeSummary.textContent = `Rental for ${d} ${daysText} · ~${h} ${hoursText}`;
-  }
-
-  window.updateSummary = updateSummary;
-
-  (function bindFormFixes() {
-    const form = document.getElementById("rentalForm");
-    if (!form || form.dataset.bindFixes === "1") return;
-    form.dataset.bindFixes = "1";
-
-    const chk = document.getElementById("differentDropoff");
-    const dropSel = document.getElementById("dropoffPlace");
-    const pickSel = document.getElementById("pickupPlace");
-    const pickDate = document.getElementById("pickupDate");
-    const dropDate = document.getElementById("dropoffDate");
-
-    function syncHiddenFromSelects(hiddenId) {
-      const hidden = document.getElementById(hiddenId);
-      if (!hidden) return;
-      const wrap = hidden.closest(".time-field") || hidden.parentElement;
-      const selH = wrap?.querySelector(".tp-selects .tp-hour");
-      // ✅ Si no hay valor, queda vacío. La validación se encargará.
-      hidden.value = selH?.value
-        ? `${String(selH.value).padStart(2, "0")}:00`
-        : "";
-    }
-
-    function normalizeDateInput(input) {
-      if (!input) return;
-      const v = String(input.value || "").trim();
-      if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
-      const m = v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-      if (m) input.value = `${m[3]}-${String(m[2]).padStart(2, "0")}-${String(m[1]).padStart(2, "0")}`;
-    }
-
-    form.addEventListener("submit", () => {
-      syncHiddenFromSelects("pickupTime");
-      syncHiddenFromSelects("dropoffTime");
-      normalizeDateInput(pickDate);
-      normalizeDateInput(dropDate);
-      if (chk && !chk.checked && dropSel && pickSel?.value) dropSel.value = pickSel.value;
-      updateSummary();
-      // ✅ Sin fallbacks de "12:00". Si el campo está vacío, la validación lo atrapará.
-    }, { capture: true });
-
-    [pickSel, dropSel].forEach(el => {
-      if (!el) return;
-      const toggle = () => {
-        el.classList.toggle('has-value', !!el.value);
-        if (typeof $ !== 'undefined') {
-          $(el).next('.select2-container').find('.select2-selection').toggleClass('has-value', !!el.value);
-        }
-      };
-      (typeof $ !== 'undefined') ? $(el).on('change', toggle) : el.addEventListener('change', toggle);
-      setTimeout(toggle, 500);
-    });
+    return {
+      init: function () {
+        injectTimeCss();
+        initAnalogTime("pickupTime");
+        initAnalogTime("dropoffTime");
+        updateSummary();
+        bindFormFixes();
+      },
+      updateSummary: updateSummary
+    };
   })();
-})();
 
-/* ====================
-   Burbuja radial redes
-==================== */
-(function () {
-  "use strict";
-  const fab = document.getElementById("socialFab");
-  const btn = document.getElementById("fabMain");
-  if (!fab || !btn) return;
-  const openFab = () => { fab.classList.add("open"); btn.setAttribute("aria-expanded", "true"); };
-  const closeFab = () => { fab.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); };
-  btn.addEventListener("click", e => { e.preventDefault(); fab.classList.contains("open") ? closeFab() : openFab(); });
-  document.addEventListener("click", e => { if (fab.classList.contains("open") && !fab.contains(e.target)) closeFab(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") closeFab(); });
-})();
+  // Exponer updateSummary globalmente (lo usa el MutationObserver del calendar)
+  window.updateSummary = TimeModule.updateSummary;
 
-/* =====================================================================
-   Swiper tiles
-===================================================================== */
-(function () {
-  "use strict";
+  /* ========================================================
+     MÓDULO: BURBUJA RADIAL REDES
+  ======================================================== */
+  function initSocialFab() {
+    const fab = document.getElementById("socialFab");
+    const btn = document.getElementById("fabMain");
+    if (!fab || !btn) return;
+    const openFab = () => { fab.classList.add("open"); btn.setAttribute("aria-expanded", "true"); };
+    const closeFab = () => { fab.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); };
+    btn.addEventListener("click", e => {
+      e.preventDefault();
+      fab.classList.contains("open") ? closeFab() : openFab();
+    });
+    document.addEventListener("click", e => {
+      if (fab.classList.contains("open") && !fab.contains(e.target)) closeFab();
+    });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeFab(); });
+  }
+
+  /* ========================================================
+     MÓDULO: SWIPER TILES
+  ======================================================== */
   function initTilesSwiper() {
     if (typeof window.Swiper !== "function") return;
     document.querySelectorAll('.vj-tiles-swiper').forEach(el => {
@@ -443,201 +378,206 @@ function getErrorMessage(fieldType) {
       });
     });
   }
-  document.addEventListener('DOMContentLoaded', initTilesSwiper);
-})();
 
-/* ====================
-   Control del checkbox dropoff
-==================== */
-function setDropoffState() {
-  const chk = document.getElementById('differentDropoff');
-  const dropWrap = document.getElementById('dropoffWrapper');
-  const wrapper = document.getElementById('locationInputsWrapper');
-  const pickSel = document.getElementById('pickupPlace');
-  const dropSel = document.getElementById('dropoffPlace');
-  if (!chk || !dropWrap || !wrapper) return;
+  /* ========================================================
+     MÓDULO: CHECKBOX DROPOFF + SYNC
+  ======================================================== */
+  function setDropoffState() {
+    const chk = document.getElementById('differentDropoff');
+    const dropWrap = document.getElementById('dropoffWrapper');
+    const wrapper = document.getElementById('locationInputsWrapper');
+    const pickSel = document.getElementById('pickupPlace');
+    const dropSel = document.getElementById('dropoffPlace');
+    if (!chk || !dropWrap || !wrapper) return;
 
-  const isMobile = window.innerWidth <= 1124;
-  const isChecked = chk.checked;
+    const isMobile = window.innerWidth <= 1124;
+    const isChecked = chk.checked;
 
-  if (isMobile) {
-    if (isChecked) {
-      dropWrap.style.display = 'flex';
-      dropWrap.style.visibility = 'visible';
-      dropWrap.style.opacity = '1';
-      if (dropSel) dropSel.required = true;
+    if (isMobile) {
+      if (isChecked) {
+        dropWrap.style.display = 'flex';
+        dropWrap.style.visibility = 'visible';
+        dropWrap.style.opacity = '1';
+        if (dropSel) dropSel.required = true;
+      } else {
+        dropWrap.style.display = 'none';
+        if (dropSel) {
+          dropSel.required = false;
+          if (pickSel) dropSel.value = pickSel.value;
+        }
+      }
+      dropWrap.classList.remove('show-dropoff', 'hidden-dropoff');
     } else {
-      dropWrap.style.display = 'none';
-      if (dropSel) { dropSel.required = false; if (pickSel) dropSel.value = pickSel.value; }
+      if (isChecked) {
+        dropWrap.classList.add('show-dropoff');
+        dropWrap.classList.remove('hidden-dropoff');
+        wrapper.classList.remove('dropoff-hidden');
+        if (dropSel) dropSel.required = true;
+      } else {
+        dropWrap.classList.add('hidden-dropoff');
+        dropWrap.classList.remove('show-dropoff');
+        wrapper.classList.add('dropoff-hidden');
+        if (dropSel) {
+          dropSel.required = false;
+          if (pickSel) dropSel.value = pickSel.value;
+        }
+      }
+      dropWrap.style.display = '';
+      dropWrap.style.visibility = '';
+      dropWrap.style.opacity = '';
     }
-    dropWrap.classList.remove('show-dropoff', 'hidden-dropoff');
-  } else {
-    if (isChecked) {
-      dropWrap.classList.add('show-dropoff');
-      dropWrap.classList.remove('hidden-dropoff');
-      wrapper.classList.remove('dropoff-hidden');
-      if (dropSel) dropSel.required = true;
-    } else {
-      dropWrap.classList.add('hidden-dropoff');
-      dropWrap.classList.remove('show-dropoff');
-      wrapper.classList.add('dropoff-hidden');
-      if (dropSel) { dropSel.required = false; if (pickSel) dropSel.value = pickSel.value; }
+  }
+  // Exponer (por si algún otro código la usa)
+  window.setDropoffState = setDropoffState;
+
+  function initDropoffSync() {
+    const pickSel = document.getElementById('pickupPlace');
+    const dropSel = document.getElementById('dropoffPlace');
+    const chk = document.getElementById('differentDropoff');
+
+    if (pickSel && dropSel && chk) {
+      pickSel.addEventListener('change', function () {
+        if (!chk.checked) dropSel.value = this.value;
+      });
     }
-    dropWrap.style.display = '';
-    dropWrap.style.visibility = '';
-    dropWrap.style.opacity = '';
-  }
-}
 
-/* ====================
-   Sincronizar pickup → dropoff
-==================== */
-document.addEventListener('DOMContentLoaded', function () {
-  const pickSel = document.getElementById('pickupPlace');
-  const dropSel = document.getElementById('dropoffPlace');
-  const chk = document.getElementById('differentDropoff');
-
-  if (pickSel && dropSel && chk) {
-    pickSel.addEventListener('change', function () {
-      if (!chk.checked) dropSel.value = this.value;
-    });
+    setDropoffState();
+    chk?.addEventListener('change', setDropoffState);
+    window.addEventListener('resize', setDropoffState);
   }
 
-  setDropoffState();
-  chk?.addEventListener('change', setDropoffState);
-  window.addEventListener('resize', setDropoffState);
-});
+  /* ========================================================
+     MÓDULO: VALIDACIONES DEL FORMULARIO
+  ======================================================== */
+  function initFormValidation() {
+    const form = document.getElementById("rentalForm");
+    if (!form) return;
 
-/* ============================================================
-   VALIDACIONES DEL FORMULARIO
-============================================================ */
-document.addEventListener('DOMContentLoaded', function () {
-  const form = document.getElementById("rentalForm");
-  if (!form) return;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      let valid = true;
 
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    let valid = true;
+      document.querySelectorAll('.error-msg').forEach(el => el.remove());
+      document.querySelectorAll('.field-error,.field-success').forEach(el => {
+        el.classList.remove('field-error', 'field-success');
+      });
 
-    document.querySelectorAll('.error-msg').forEach(el => el.remove());
-    document.querySelectorAll('.field-error,.field-success').forEach(el => {
-      el.classList.remove('field-error', 'field-success');
-    });
+      // 1. Ubicaciones
+      [
+        { id: 'pickupPlace', msgKey: 'location' },
+        { id: 'dropoffPlace', msgKey: 'location' }
+      ].forEach(campo => {
+        const select = document.getElementById(campo.id);
+        if (!select) return;
+        if (!select.value) {
+          valid = false;
+          select.classList.add('field-error');
+          const container = select.closest('.field');
+          if (container) {
+            const msg = document.createElement('span');
+            msg.className = 'error-msg';
+            msg.textContent = getErrorMessage(campo.msgKey);
+            container.appendChild(msg);
+          }
+        } else {
+          select.classList.add('field-success');
+        }
+      });
 
-    // 1. Ubicaciones
-    [
-      { id: 'pickupPlace', msgKey: 'location' },
-      { id: 'dropoffPlace', msgKey: 'location' }
-    ].forEach(campo => {
-      const select = document.getElementById(campo.id);
-      if (!select) return;
-      if (!select.value) {
-        valid = false;
-        select.classList.add('field-error');
-        const container = select.closest('.field');
-        if (container) {
+      // 2. Fechas
+      [
+        { id: 'pickupDate', msgKey: 'date' },
+        { id: 'dropoffDate', msgKey: 'date' }
+      ].forEach(campo => {
+        const hiddenInput = document.getElementById(campo.id);
+        if (!hiddenInput) return;
+        const container = hiddenInput.closest('.dt-field');
+        if (!container) return;
+        container.querySelectorAll('.error-msg').forEach(el => el.remove());
+        const allInputs = container.querySelectorAll('input');
+        if (!hiddenInput.value?.trim()) {
+          valid = false;
+          allInputs.forEach(inp => inp.classList.add('field-error'));
           const msg = document.createElement('span');
           msg.className = 'error-msg';
           msg.textContent = getErrorMessage(campo.msgKey);
           container.appendChild(msg);
+        } else {
+          allInputs.forEach(inp => {
+            inp.classList.remove('field-error');
+            inp.classList.add('field-success');
+          });
         }
-      } else {
-        select.classList.add('field-success');
-      }
+      });
+
+      // 3. Horas
+      [
+        { id: 'pickupTime', msgKey: 'time' },
+        { id: 'dropoffTime', msgKey: 'time' }
+      ].forEach(campo => {
+        const hiddenInput = document.getElementById(campo.id);
+        if (!hiddenInput) return;
+        const timeField = hiddenInput.closest('.time-field');
+        if (!timeField) return;
+        const hourSelect = timeField.querySelector('.tp-selects .tp-hour');
+        const hasValue = hourSelect?.value && hourSelect.value !== '';
+        if (!hasValue) {
+          valid = false;
+          hourSelect?.classList.add('field-error');
+          hiddenInput.classList.add('field-error');
+          const msg = document.createElement('span');
+          msg.className = 'error-msg';
+          msg.textContent = getErrorMessage(campo.msgKey);
+          timeField.appendChild(msg);
+        } else {
+          hourSelect?.classList.add('field-success');
+          hiddenInput.classList.add('field-success');
+        }
+      });
+
+      if (valid) form.submit();
     });
-
-    // 2. Fechas
-    [
-      { id: 'pickupDate', msgKey: 'date' },
-      { id: 'dropoffDate', msgKey: 'date' }
-    ].forEach(campo => {
-      const hiddenInput = document.getElementById(campo.id);
-      if (!hiddenInput) return;
-      const container = hiddenInput.closest('.dt-field');
-      if (!container) return;
-      container.querySelectorAll('.error-msg').forEach(el => el.remove());
-      const allInputs = container.querySelectorAll('input');
-      if (!hiddenInput.value?.trim()) {
-        valid = false;
-        allInputs.forEach(inp => inp.classList.add('field-error'));
-        const msg = document.createElement('span');
-        msg.className = 'error-msg';
-        msg.textContent = getErrorMessage(campo.msgKey);
-        container.appendChild(msg);
-      } else {
-        allInputs.forEach(inp => { inp.classList.remove('field-error'); inp.classList.add('field-success'); });
-      }
-    });
-
-    // 3. Horas
-    [
-      { id: 'pickupTime', msgKey: 'time' },
-      { id: 'dropoffTime', msgKey: 'time' }
-    ].forEach(campo => {
-      const hiddenInput = document.getElementById(campo.id);
-      if (!hiddenInput) return;
-      const timeField = hiddenInput.closest('.time-field');
-      if (!timeField) return;
-      const hourSelect = timeField.querySelector('.tp-selects .tp-hour');
-      const hasValue = hourSelect?.value && hourSelect.value !== '';
-      if (!hasValue) {
-        valid = false;
-        hourSelect?.classList.add('field-error');
-        hiddenInput.classList.add('field-error');
-        const msg = document.createElement('span');
-        msg.className = 'error-msg';
-        msg.textContent = getErrorMessage(campo.msgKey);
-        timeField.appendChild(msg);
-      } else {
-        hourSelect?.classList.add('field-success');
-        hiddenInput.classList.add('field-success');
-      }
-    });
-
-    if (valid) form.submit();
-  });
-});
-
-/* ============================================================
-   LIMPIAR ERRORES AL INTERACTUAR
-============================================================ */
-document.addEventListener('DOMContentLoaded', function () {
-  function clearError(el, containerSelector) {
-    el.classList.remove('field-error');
-    const container = el.closest(containerSelector);
-    container?.querySelector('.error-msg')?.remove();
   }
 
-  document.querySelectorAll('input, select').forEach(input => {
-    ['input', 'change'].forEach(evt => {
-      input.addEventListener(evt, function () {
-        if (this.classList.contains('field-error')) clearError(this, '.field, .dt-field, .time-field');
+  /* ========================================================
+     MÓDULO: LIMPIAR ERRORES AL INTERACTUAR
+  ======================================================== */
+  function initErrorClearer() {
+    function clearError(el, containerSelector) {
+      el.classList.remove('field-error');
+      const container = el.closest(containerSelector);
+      container?.querySelector('.error-msg')?.remove();
+    }
+
+    document.querySelectorAll('input, select').forEach(input => {
+      ['input', 'change'].forEach(evt => {
+        input.addEventListener(evt, function () {
+          if (this.classList.contains('field-error')) {
+            clearError(this, '.field, .dt-field, .time-field');
+          }
+        });
       });
     });
-  });
 
-  document.querySelectorAll('.tp-selects .tp-hour').forEach(select => {
-    select.addEventListener('change', function () {
-      if (this.classList.contains('field-error')) clearError(this, '.time-field');
-    });
-  });
-
-  document.querySelectorAll('.flatpickr-input').forEach(input => {
-    if (input.type === 'hidden') return;
-    ['change', 'click'].forEach(evt => {
-      input.addEventListener(evt, function () {
-        if (this.classList.contains('field-error')) clearError(this, '.dt-field');
+    document.querySelectorAll('.tp-selects .tp-hour').forEach(select => {
+      select.addEventListener('change', function () {
+        if (this.classList.contains('field-error')) clearError(this, '.time-field');
       });
     });
-  });
-});
 
-/* ============================================================
-   FLATPICKR - CALENDARIOS CON IDIOMA DINÁMICO
-============================================================ */
-(function () {
-  "use strict";
+    document.querySelectorAll('.flatpickr-input').forEach(input => {
+      if (input.type === 'hidden') return;
+      ['change', 'click'].forEach(evt => {
+        input.addEventListener(evt, function () {
+          if (this.classList.contains('field-error')) clearError(this, '.dt-field');
+        });
+      });
+    });
+  }
 
+  /* ========================================================
+     MÓDULO: FLATPICKR CALENDARIOS (idioma dinámico)
+  ======================================================== */
   function injectOverlay() {
     if (document.getElementById("fp-view-overlay-3")) return;
     const overlay = document.createElement("div");
@@ -646,13 +586,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.body.appendChild(overlay);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initFlatpickr);
-  } else {
-    initFlatpickr();
-  }
-
-  function initFlatpickr() {
+  function initFlatpickrCalendars() {
     if (typeof flatpickr === 'undefined') return;
     injectOverlay();
 
@@ -729,14 +663,10 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }, 100);
   }
-})();
 
-/* ============================================================
-   CONTROL DE SCROLL PARA FORMULARIO MÓVIL/TABLET
-============================================================ */
-(function () {
-  "use strict";
-
+  /* ========================================================
+     MÓDULO: CONTROL SCROLL FORMULARIO MÓVIL/TABLET
+  ======================================================== */
   function initScrollControl() {
     const btnAbrir = document.getElementById('btn-abrir-buscador');
     const btnCerrar = document.getElementById('btn-cerrar-buscador');
@@ -745,19 +675,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function bloquearScroll() {
       const scrollY = window.scrollY;
-      Object.assign(document.body.style, { position: 'fixed', top: `-${scrollY}px`, left: '0', right: '0', overflow: 'hidden', width: '100%' });
+      Object.assign(document.body.style, {
+        position: 'fixed', top: `-${scrollY}px`, left: '0', right: '0',
+        overflow: 'hidden', width: '100%'
+      });
       document.body.dataset.scrollY = scrollY;
     }
 
     function restaurarScroll() {
       const scrollY = document.body.dataset.scrollY || 0;
-      Object.assign(document.body.style, { position: '', top: '', left: '', right: '', overflow: '', width: '' });
+      Object.assign(document.body.style, {
+        position: '', top: '', left: '', right: '', overflow: '', width: ''
+      });
       window.scrollTo(0, parseInt(scrollY, 10));
       delete document.body.dataset.scrollY;
     }
 
-    btnAbrir.addEventListener('click', e => { e.preventDefault(); buscador.classList.add('active'); bloquearScroll(); });
-    btnCerrar.addEventListener('click', e => { e.preventDefault(); buscador.classList.remove('active'); restaurarScroll(); });
+    btnAbrir.addEventListener('click', e => {
+      e.preventDefault();
+      buscador.classList.add('active');
+      bloquearScroll();
+    });
+    btnCerrar.addEventListener('click', e => {
+      e.preventDefault();
+      buscador.classList.remove('active');
+      restaurarScroll();
+    });
 
     window.addEventListener('keydown', e => {
       if (buscador.classList.contains('active') && ['ArrowDown', 'ArrowUp', ' ', 'Spacebar'].includes(e.key)) {
@@ -768,20 +711,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const dropoffPlace = document.getElementById('dropoffPlace');
     if (dropoffPlace) {
       let touchStartY = 0, isDragging = false;
-      dropoffPlace.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; isDragging = false; }, { passive: true });
-      dropoffPlace.addEventListener('touchmove', e => { if (Math.abs(e.touches[0].clientY - touchStartY) > 8) isDragging = true; }, { passive: true });
-      dropoffPlace.addEventListener('touchend', () => { setTimeout(() => { isDragging = false; }, 50); }, { passive: true });
+      dropoffPlace.addEventListener('touchstart', e => {
+        touchStartY = e.touches[0].clientY;
+        isDragging = false;
+      }, { passive: true });
+      dropoffPlace.addEventListener('touchmove', e => {
+        if (Math.abs(e.touches[0].clientY - touchStartY) > 8) isDragging = true;
+      }, { passive: true });
+      dropoffPlace.addEventListener('touchend', () => {
+        setTimeout(() => { isDragging = false; }, 50);
+      }, { passive: true });
     }
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initScrollControl);
-  } else {
-    initScrollControl();
-  }
-
-  // Scroll manual sobre dropoffWrapper en móvil
-  document.addEventListener('DOMContentLoaded', function () {
+  function initMobileScrollOnDropoff() {
     const modal = document.getElementById('miBuscador');
     const dropoffWrapper = document.getElementById('dropoffWrapper');
     if (!modal || !dropoffWrapper) return;
@@ -799,26 +742,72 @@ document.addEventListener('DOMContentLoaded', function () {
     dropoffWrapper.addEventListener('touchmove', e => {
       if (!isMobileFormOpen()) return;
       const diffY = startY - e.touches[0].clientY;
-      if (Math.abs(diffY) > 6) { dragging = true; e.preventDefault(); modal.scrollTop = startScrollTop + diffY; }
+      if (Math.abs(diffY) > 6) {
+        dragging = true;
+        e.preventDefault();
+        modal.scrollTop = startScrollTop + diffY;
+      }
     }, { passive: false });
 
-    dropoffWrapper.addEventListener('touchend', () => { setTimeout(() => { dragging = false; }, 50); }, { passive: true });
+    dropoffWrapper.addEventListener('touchend', () => {
+      setTimeout(() => { dragging = false; }, 50);
+    }, { passive: true });
 
     document.getElementById('dropoffPlace')?.addEventListener('click', e => {
       if (dragging) { e.preventDefault(); e.stopPropagation(); }
     });
-  });
+  }
+
+  /* ========================================================
+     ENTRY POINT - 1 solo DOMContentLoaded
+  ======================================================== */
+  function initAll() {
+    // 1. Carruseles de coches
+    document.querySelectorAll('.fleet').forEach(initFleetControlled);
+
+    // 2. Inputs de hora + summary + fixes del form
+    TimeModule.init();
+
+    // 3. Burbuja redes
+    initSocialFab();
+
+    // 4. Swiper tiles
+    initTilesSwiper();
+
+    // 5. Checkbox dropoff y sync con pickup
+    initDropoffSync();
+
+    // 6. Validaciones del form
+    initFormValidation();
+
+    // 7. Limpiar errores al interactuar
+    initErrorClearer();
+
+    // 8. Flatpickr calendarios (con idioma dinámico)
+    initFlatpickrCalendars();
+
+    // 9. Control scroll del form móvil
+    initScrollControl();
+
+    // 10. Scroll manual dropoffWrapper en móvil
+    initMobileScrollOnDropoff();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAll);
+  } else {
+    initAll();
+  }
 })();
 
 /* ============================================================
-   SELECT2 (versión con íconos según iconosPorId)
-   ⚠️ NOTA: este es el init "bueno" del Select2 (con íconos).
-   En la vista hay otro init más simple que se debe quitar
-   para evitar la doble inicialización.
+   SELECT2 con íconos (requiere jQuery, va separado)
 ============================================================ */
 $(document).ready(function () {
   function formatOption(option) {
-    if (!option.id) return $('<span class="icon-item"><i class="fa-solid fa-location-dot"></i> ' + option.text + '</span>');
+    if (!option.id) {
+      return $('<span class="icon-item"><i class="fa-solid fa-location-dot"></i> ' + option.text + '</span>');
+    }
     const iconClass = window.iconosPorId ? (window.iconosPorId[option.id] || 'fa-building') : 'fa-building';
     return $('<span class="icon-item"><i class="fa-solid ' + iconClass + '"></i> ' + option.text + '</span>');
   }
@@ -830,20 +819,3 @@ $(document).ready(function () {
     minimumResultsForSearch: Infinity
   });
 });
-
-/* ============================================================
-   LAZY LOAD SLIDES DEL HERO CAROUSEL
-============================================================ */
-(function () {
-  "use strict";
-  function initCarouselLazyLoad() {
-    document.querySelectorAll('.carousel .slide[data-src]').forEach(slide => {
-      const src = slide.getAttribute('data-src');
-      if (!src) return;
-      const img = new Image();
-      img.onload = () => { slide.style.backgroundImage = `url('${src}')`; slide.removeAttribute('data-src'); };
-      img.src = src;
-    });
-  }
-  window.addEventListener('load', initCarouselLazyLoad);
-})();
