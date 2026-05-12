@@ -1012,9 +1012,70 @@
     // Aplicar traducción
     $lugarRetiroTraducido = traducirLugar($lugarRetiro ?? '', $traduccionesLugares, $locale);
     $lugarEntregaTraducido = traducirLugar($lugarEntrega ?? '', $traduccionesLugares, $locale);
+
+    // ============================================
+    // DETECCIÓN DE SUCURSAL PARA IMAGEN Y LINK DE MAPA
+    // ============================================
+    $lugarRetiroLower = mb_strtolower($lugarRetiro ?? '');
+
+    $mapaImagenNombre = null;
+    $mapaLink = null;
+    $mapaImagen = null;
+
+    // Aeropuerto
+    if (str_contains($lugarRetiroLower, 'aeropuerto') || str_contains($lugarRetiroLower, 'airport')) {
+        $mapaImagenNombre = 'AEROPUERTOM.png';
+        $mapaLink = 'https://maps.app.goo.gl/DVXFKQJ1F8Hrjz3B8';
+    }
+    // Central Park u Oficina Central Park o Central de Autobuses
+    elseif (
+        str_contains($lugarRetiroLower, 'central park') ||
+        str_contains($lugarRetiroLower, 'central de autobuses') ||
+        str_contains($lugarRetiroLower, 'bus station')
+    ) {
+        $mapaImagenNombre = 'CENTRALPARK.png';
+        $mapaLink = 'https://maps.app.goo.gl/Jmnxoeh4mUnxf4p97';
+    }
+
+    // Construir URL de imagen usando la MISMA lógica que $imgCategoria
+    if ($mapaImagenNombre) {
+        $mapaImgBase = rtrim(config('app.url', 'https://viajerocar-production.up.railway.app'), '/') . '/' . $mapaImagenNombre;
+
+        $mapaImgLimpia = str_replace(
+            ['https://viajerocar-production.up.railway.app', 'http://localhost', 'localhost'],
+            '',
+            $mapaImgBase
+        );
+
+        $mapaImagen = 'https://www.viajerocarental.com/' . ltrim($mapaImgLimpia, '/');
+    }
 @endphp
 
 <div style="margin-bottom: 20px;">
+
+    {{-- ===== VERSIÓN A: IMAGEN ARRIBA DEL PICK-UP ===== --}}
+    @if($mapaImagen && $mapaLink)
+    <table role="presentation" width="100%" style="margin-bottom: 20px;">
+        <tr>
+            <td align="center">
+                <a href="{{ $mapaLink }}" target="_blank" style="display:inline-block; text-decoration:none;">
+                    <img src="{{ $mapaImagen }}"
+                         alt="{{ __('Ubicación de la sucursal') }}"
+                         width="600"
+                         style="width:100%; max-width:600px; height:auto; display:block; border-radius:12px; border:0;">
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td align="center" style="padding-top:8px;">
+                <a href="{{ $mapaLink }}" target="_blank"
+                   style="color:#E50914; text-decoration:underline; font-weight:600; font-size:14px;">
+                    {{ __('Ver ubicación en Google Maps') }}
+                </a>
+            </td>
+        </tr>
+    </table>
+    @endif
 
     <!-- PICK-UP -->
     <table role="presentation" width="100%" style="margin-bottom:16px;">
