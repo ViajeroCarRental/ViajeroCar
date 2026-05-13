@@ -1292,3 +1292,119 @@ small,
     font-size: 12px;
   }
 }
+/* =========================================
+   📄 Pagination elegante
+========================================= */
+
+nav[role="navigation"] {
+  margin-top: 18px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+nav[role="navigation"] > div {
+  width: 100%;
+}
+
+nav[role="navigation"] .hidden.sm\\:flex-1 {
+  display: none !important;
+}
+
+/* contenedor */
+nav[role="navigation"] .sm\\:flex {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* botones */
+nav[role="navigation"] a,
+nav[role="navigation"] span {
+  min-width: 42px;
+  height: 42px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 14px;
+
+  border-radius: 14px;
+
+  font-weight: 800;
+  font-size: 13px;
+
+  transition:
+    transform .18s ease,
+    background .18s ease,
+    color .18s ease,
+    box-shadow .18s ease;
+
+  text-decoration: none;
+}
+
+/* páginas normales */
+nav[role="navigation"] a {
+  background: rgba(255,255,255,.85);
+  color: #475467;
+  border: 1px solid #E6EAF0;
+
+  backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 4px 12px rgba(15,23,42,.06),
+    inset 0 1px 0 rgba(255,255,255,.35);
+}
+
+/* hover */
+nav[role="navigation"] a:hover {
+  background: #FFE8EB;
+  color: #D6121F;
+
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 10px 24px rgba(214,18,31,.14);
+}
+
+/* página activa */
+nav[role="navigation"] span[aria-current="page"] span {
+  background: #D6121F !important;
+  color: #fff !important;
+
+  border-radius: 14px;
+
+  box-shadow:
+    0 10px 24px rgba(214,18,31,.25);
+}
+
+/* Previous / Next */
+nav[role="navigation"] a[rel="prev"],
+nav[role="navigation"] a[rel="next"] {
+  background: rgba(214,18,31,.08);
+  color: #B42318;
+  border: 1px solid rgba(214,18,31,.14);
+}
+
+/* disabled */
+nav[role="navigation"] span[aria-disabled="true"] {
+  opacity: .45;
+  cursor: default;
+}
+
+/* móvil */
+@media (max-width: 640px) {
+
+  nav[role="navigation"] a,
+  nav[role="navigation"] span {
+    min-width: 38px;
+    height: 38px;
+    font-size: 12px;
+    border-radius: 12px;
+    padding: 0 12px;
+  }
+
+}
