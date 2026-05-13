@@ -104,7 +104,7 @@
     <section class="hero">
         <div class="hero-bg">
             {{-- Hero LCP: alta prioridad para que cargue primero --}}
-            <img src="{{ asset('img/catalogo.png') }}"
+            <img src="{{ asset('img/catalogo.webp') }}"
                  alt="Catálogo ViajeroCar"
                  width="1920" height="1080"
                  fetchpriority="high">
