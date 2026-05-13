@@ -22,7 +22,7 @@
       return str_replace(
         '.',
         '',
-        strtolower(\Carbon\Carbon::parse($fecha)->translatedFormat('d/M/Y'))
+        strtolower(\Carbon\Carbon::parse($fecha)->translatedFormat('d-M-Y'))
       );
     };
 
@@ -285,45 +285,60 @@
             </div>
 
             <div class="summary-actions">
-              <button
-                type="button"
-                class="btn gray"
-                onclick="window.location.href='/admin/reservaciones/{{ $r->id_reservacion }}/editar'"
-              >
-                ✏️ Editar Reservación
-              </button>
 
-              <button
-                type="button"
-                class="iconbtn more"
-                title="Más acciones"
-                data-open-actions
-                data-id="{{ $r->id_reservacion }}"
-                data-codigo="{{ $r->codigo }}"
-                data-delete-url="{{ route('rutaEliminarReservacionActiva', $r->id_reservacion) }}"
-              >
-                🗑️ Cancelar Reservación
-              </button>
+              {{-- IZQUIERDA --}}
+              <div class="summary-actions-left">
 
-              <button
-                type="button"
-                class="btn primary"
-                onclick="reenviarCorreo({{ $r->id_reservacion }}, this)"
-              >
-                📧 Reenviar correo de reservación
-              </button>
+                <button
+                  type="button"
+                  class="btn btn-edit"
+                  onclick="window.location.href='/admin/reservaciones/{{ $r->id_reservacion }}/editar'"
+                >
+                  <i class="fa-solid fa-pen"></i>
+                  Editar Reservación
+                </button>
 
-              <button
-                type="button"
-                class="btn success btn-apartar-auto"
-                data-id="{{ $r->id_reservacion }}"
-              >
-                🚗 Apartar auto
-              </button>
+                <button
+                  type="button"
+                  class="btn btn-cancel"
+                  title="Cancelar reservación"
+                  data-open-actions
+                  data-id="{{ $r->id_reservacion }}"
+                  data-codigo="{{ $r->codigo }}"
+                  data-delete-url="{{ route('rutaEliminarReservacionActiva', $r->id_reservacion) }}"
+                >
+                  <i class="fa-solid fa-trash"></i>
+                  Cancelar Reservación
+                </button>
+
+              </div>
+
+              {{-- DERECHA --}}
+              <div class="summary-actions-right">
+
+                <button
+                  type="button"
+                  class="btn btn-mail"
+                  onclick="reenviarCorreo({{ $r->id_reservacion }}, this)"
+                >
+                  <i class="fa-solid fa-envelope"></i>
+                  Reenviar correo
+                </button>
+
+                <button
+                  type="button"
+                  class="btn btn-car btn-apartar-auto"
+                  data-id="{{ $r->id_reservacion }}"
+                >
+                  <i class="fa-solid fa-car-side"></i>
+                  Apartar auto
+                </button>
+
+              </div>
+
             </div>
-
-          </div>
-        </div>
+            </div>
+            </div>
 
       @empty
         <div class="row">
