@@ -1,216 +1,99 @@
+/* ============================================================
+   CATALOGO.CSS - Versión optimizada
+   Solo contiene estilos específicos de la vista catálogo.
+
+   ELIMINADO:
+     - Reglas globales (*, html, body) → ya en navbar del layout
+     - Navbar duplicado (.topbar, .menu, .brand-logo, .login, etc.)
+     - Variables sin uso (--paper, --topbar-h, --radius-lg, --radius-md)
+     - Zombies del blade (.chips, .car-list, .connect-icon,
+       .catalog-group-head/title/subtitle, estructura de precios)
+     - Bloque "FORZAR GRID" duplicado al final
+     - Duplicado de scrollbar dentro de @media 768
+============================================================ */
+
+/* ============================================================
+   VARIABLES (solo las que se usan)
+============================================================ */
 :root{
-  --brand:#b22222;
-  --brand-dark:#8b1d1a;
-  --ink:#0f172a;
-  --paper:#fff;
-  --muted:#6b7280;
-  --soft:#f6f7fb;
-  --shadow:0 18px 40px rgba(15,23,42,.12);
-  --topbar-h:64px;
-
-  --radius-lg:22px;
-  --radius-md:14px;
+  --brand: #b22222;
+  --brand-dark: #8b1d1a;
+  --ink: #0f172a;
+  --muted: #6b7280;
+  --soft: #f6f7fb;
+  --shadow: 0 18px 40px rgba(15,23,42,.12);
 }
 
-/* ===== BASE ===== */
-*{ box-sizing:border-box }
-html,body{ width:100%; overflow-x:hidden; }
-
-body{
-  margin:0;
-  font-family:'Poppins',system-ui,-apple-system,Arial,sans-serif;
-  color:var(--ink);
-  background:var(--soft);
-}
-
-/* ===== NAVBAR (glass) ===== */
-.topbar{
-  position:fixed;
-  top:16px;
-  left:50%;
-  transform:translateX(-50%);
-  z-index:1000;
-  width:min(1200px,94%);
-  border-radius:14px;
-  padding:8px 12px;
-  border:1px solid var(--brand);
-  background:rgba(178,34,34,.35);
-  backdrop-filter:blur(10px);
-  box-shadow:0 10px 30px rgba(0,0,0,.15);
-  transition:background .3s, box-shadow .3s;
-}
-.topbar.solid{
-  background:rgba(178,34,34,.96);
-  box-shadow:0 18px 40px rgba(0,0,0,.25);
-}
-
-.nav{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  min-height:24px;
-}
-
-.brand-logo{
-  font-family:'Playfair Display',serif;
-  font-weight:800;
-  letter-spacing:2px;
-  color:#fff;
-  font-size:24px;
-  text-shadow:0 1px 2px rgba(0,0,0,.25);
-  text-decoration:none;
-  white-space:nowrap;
-}
-
-/* (opcional) botón hamburguesa */
-.nav-toggle{
-  display:none;
-  width:40px;height:40px;
-  border-radius:12px;
-  border:0;
-  background:rgba(255,255,255,.16);
-  color:#fff;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);
-  cursor:pointer;
-}
-.nav-toggle:hover{ background:rgba(255,255,255,.26); }
-
-.menu{
-  display:flex;
-  gap:20px;
-  list-style:none;
-  margin:0;
-  padding:0;
-  align-items:center;
-}
-
-.menu a{
-  color:#fff;
-  text-decoration:none;
-  font-weight:700;
-  font-size:13px;
-  text-transform:uppercase;
-  letter-spacing:.4px;
-  opacity:.95;
-  padding:8px 10px;
-  border-radius:10px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  line-height:1;
-}
-.menu a:hover{ opacity:1; background:rgba(255,255,255,.14); }
-.menu a.active{
-  background:rgba(255,255,255,.2);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);
-}
-
-.login{
-  color:#fff;
-  width:38px;
-  height:38px;
-  display:grid;
-  place-items:center;
-  border-radius:10px;
-  background:rgba(255,255,255,.16);
-  text-decoration:none;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);
-  flex:0 0 auto;
-}
-.login:hover{ background:rgba(255,255,255,.26); }
-
-.avatar-mini{
-  width:38px;height:38px;border-radius:10px;
-  display:grid;place-items:center;background:#ffffff26;
-  color:#fff;font-weight:900;font-size:14px;letter-spacing:.4px;
-  flex:0 0 auto;
-}
-
-/* ===== HERO ===== */
+/* ============================================================
+   HERO
+============================================================ */
 .hero{
-  position:relative;
+  position: relative;
   min-height: clamp(480px, 78vh, 860px);
   height: auto;
-  margin-bottom:30px;
-  overflow:visible;
+  margin-bottom: 30px;
+  overflow: visible;
 }
+
 .hero-bg{
-  position:absolute;
-  inset:0;
-  overflow:hidden;
- }
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
 .hero-bg img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  object-position:center 35%;
-  display:block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+  display: block;
 }
 
 .hero .overlay{
-  position:absolute;
-  inset:0;
-  background:linear-gradient(0deg, rgba(0,0,0,.6), rgba(0,0,0,.25));
-  pointer-events:none;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(0,0,0,.6), rgba(0,0,0,.25));
+  pointer-events: none;
 }
 
 .hero-inner{
-  position:relative;
-  z-index:2;
-  max-width:1200px;
-  margin:0 auto;
-
+  position: relative;
+  z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 50px 16px 28px;
 }
 
 .hero-title{
-  font-family:'Playfair Display',serif;
-  color:#fff;
-  font-size:56px;
-  line-height:1.02;
-  text-transform:uppercase;
-  letter-spacing:1px;
+  font-family: 'Playfair Display', serif;
+  color: #fff;
+  font-size: 56px;
+  line-height: 1.02;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   margin: 10px 0 14px;
 }
-.chips{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-}
-.chip{
-  background:#111827cc;
-  color:#fff;
-  border:1px solid #ffffff22;
-  padding:10px 12px;
-  border-radius:24px;
-  font-weight:700;
-  font-size:12px;
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
+
+/* Hero responsive */
+@media (max-width: 600px){
+  .hero{ height: 72vh; min-height: 520px; max-height: 780px; }
+  .hero-bg img{ object-position: center 25%; }
+  .hero-inner{ padding: 110px 14px 18px; }
+  .hero-title{ font-size: 34px; }
 }
 
-/* ✅ Hero responsive */
-@media (max-width:600px){
-  .hero{ height:72vh; min-height:520px; max-height:780px; }
-  .hero-bg img{ object-position:center 25%; }
-  .hero-inner{ padding:110px 14px 18px; }
-  .hero-title{ font-size:34px; }
+@media (min-width: 601px) and (max-width: 1024px){
+  .hero{ height: 68vh; min-height: 560px; max-height: 820px; }
+  .hero-bg img{ object-position: center 32%; }
+  .hero-inner{ padding: 120px 16px 22px; }
+  .hero-title{ font-size: 44px; }
 }
 
-@media (min-width:601px) and (max-width:1024px){
-  .hero{ height:68vh; min-height:560px; max-height:820px; }
-  .hero-bg img{ object-position:center 32%; }
-  .hero-inner{ padding:120px 16px 22px; }
-  .hero-title{ font-size:44px; }
+@media (min-width: 1025px){
+  .hero{ height: 74vh; min-height: 620px; max-height: 920px; }
+  .hero-bg img{ object-position: center 38%; }
 }
 
-@media (min-width:1025px){
-  .hero{ height:74vh; min-height:620px; max-height:920px; }
-  .hero-bg img{ object-position:center 38%; }
-}
-
+/* Tarjeta del filtro dentro del hero */
 .hero-filter-card{
   width: min(1200px, 100%);
   margin: 16px auto 0;
@@ -221,90 +104,65 @@ body{
   box-shadow: 0 22px 50px rgba(0,0,0,.22);
   padding: 18px 18px 16px;
 }
-.hero-filter-card .filter-title{ color:#111827; }
+.hero-filter-card .filter-title{ color: #111827; }
 
-/* ========================================= */
-/* ===== CATALOGO ========================== */
-/* ========================================= */
-.catalog{ padding:10px 0 60px; }
+/* ============================================================
+   CATÁLOGO
+============================================================ */
+.catalog{ padding: 10px 0 60px; }
 
 .cars{
-  max-width:1150px;
-  margin:0 auto;
-  padding:0 16px 40px;
-  display:flex;
-  flex-direction:column;
-  gap:32px;
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 0 16px 40px;
 }
 
-/* grupo (categoría) */
-.catalog-group{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.catalog-group-head{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
-.catalog-group-title{
-  font-size:20px;
-  letter-spacing:.5px;
-  text-transform:uppercase;
-  font-weight:900;
-  color:var(--ink);
-}
-.catalog-group-subtitle{
-  margin:0;
-  font-size:13px;
-  color:var(--muted);
+/* Grid de 2 columnas (1 en móvil)
+   !important para ganarle a Bootstrap si choca */
+.cars.cars-grid{
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  column-gap: 48px;
+  row-gap: 38px;
+  align-items: stretch;
 }
 
-/* =========================================================
-   ✅ GRID FINAL CATÁLOGO:
-   - 2 columnas en desktop/tablet grande
-   - 1 columna en móvil
-========================================================= */
-.car-list{
-  display:grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap:48px;
-  row-gap:38px;
-  padding: 0 28px;
-}
-
-/* ✅ 1 columna en móvil */
-@media (max-width:900px){
-  .car-list{
-    grid-template-columns: 1fr;
-    column-gap:0;
-    row-gap:22px;
-    padding: 0 14px;
+@media (max-width: 768px){
+  .cars.cars-grid{
+    grid-template-columns: 1fr !important;
+    column-gap: 0;
+    row-gap: 22px;
   }
 }
 
-/* =========================================
-   ✅ CAR CARD FINAL (1 sola definición)
-========================================= */
+/* Grupo de categoría (usado en .car-card.catalog-group) */
+.catalog-group{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ============================================================
+   CAR CARD
+============================================================ */
 .car-card{
-  position:relative;
-  width:100%;
-  max-width:520px;           /* tamaño real de la card */
-  justify-self:center;
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  justify-self: center;
 
-  background:#fff;
-  border-radius:20px;
-  border:2px solid rgba(178,34,34,.55);
-  box-shadow:0 18px 44px rgba(15,23,42,.10);
-  overflow:hidden;
+  background: #fff;
+  border-radius: 20px;
+  border: 2px solid rgba(178,34,34,.55);
+  box-shadow: 0 18px 44px rgba(15,23,42,.10);
+  overflow: hidden;
 
-  padding:14px 14px 16px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
+  padding: 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 
-  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 .car-card:hover{
   transform: translateY(-3px);
@@ -312,164 +170,145 @@ body{
   border-color: rgba(178,34,34,.85);
 }
 
-/* header */
-.car-card .car-title{ padding-right:84px; }
+/* Header (título) */
+.car-card .car-title{ padding-right: 84px; }
 .car-card .car-title h3{
-  margin:0;
-  font-size:22px;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  font-weight:900;
+  margin: 0;
+  font-size: 22px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 900;
   color: var(--brand);
 }
 .car-card .car-title p{
-  margin:4px 0 0;
-  color:#6b7280;
-  font-weight:600;
-  font-size:16px;
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 16px;
 }
 
-/* badge esquina */
+/* Badge de descuento (esquina superior derecha) */
 .car-card .offer-badge{
-  position:absolute;
-  top:12px;
-  right:12px;
-  min-width:72px;
-  height:52px;
-  padding:0 14px;
-  display:grid;
-  place-items:center;
-  border-radius:16px;
-  color:#fff;
-  font-weight:900;
-  font-size:18px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  min-width: 72px;
+  height: 52px;
+  padding: 0 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  color: #fff;
+  font-weight: 900;
+  font-size: 18px;
   background: radial-gradient(120% 120% at 30% 30%, #ff6b6b 0%, #b22222 55%, #8b1d1a 100%);
   box-shadow: 0 16px 34px rgba(178,34,34,.28);
 }
 
-/* media */
+/* Imagen del coche */
 .car-card .car-media{
-  width:100%;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  padding:4px 0 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 0 0;
 }
 .car-card .car-media img{
-  width:min(360px, 92%);
-  height:auto;
-  display:block;
+  width: min(360px, 92%);
+  height: auto;
+  display: block;
   filter: drop-shadow(0 14px 22px rgba(15,23,42,.16));
 }
 
-/* precios */
-.car-card .offer{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  margin-top:2px;
-}
-.car-card .price-line{
-  display:flex;
-  align-items:baseline;
-  gap:10px;
-  flex-wrap:wrap;
-}
-.car-card .price-now{
-  font-size:30px;
-  font-weight:900;
-  color:#0f172a;
-}
-.car-card .per{
-  font-weight:800;
-  color:#6b7280;
-  font-size:14px;
-  margin-left:-6px;
-}
-.car-card .price-old{
-  font-weight:900;
-  color:#9ca3af;
-  font-size:16px;
-  text-decoration:line-through;
-  text-decoration-thickness:2px;
-  text-decoration-color: rgba(178,34,34,.45);
-}
-
-/* specs (iconos) */
+/* Specs (iconos: pasajeros, maletas, etc) */
 .car-card .car-specs{
-  list-style:none;
-  margin:0;
-  padding:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:16px;
-  color:#111827;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #111827;
 }
 .car-card .car-specs li{
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-  font-weight:900;
-  font-size:15px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 900;
+  font-size: 15px;
 }
 .car-card .car-specs i{
-  font-size:17px;
-  color:#111827;
-}
-/*copo de nieve*/
-.car-specs li i.fa-snowflake {
-    color: #111827;
-    margin-right: 5px;
-    font-size: 1.1em;
+  font-size: 17px;
+  color: #111827;
 }
 
-/* connect (iconos minimal) */
+/* Copo de nieve (A/C) */
+.car-specs li i.fa-snowflake{
+  color: #111827;
+  margin-right: 5px;
+  font-size: 1.1em;
+}
+
+/* Spec con letra (Transmisión) */
+.spec-letter{
+  font-weight: 900;
+}
+
+/* Connect (CarPlay / Android Auto) */
 .car-card .car-connect{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:14px;
-  margin-top:8px;
-}
-.connect-icon{
-  width:48px;
-  height:48px;
-  border-radius:14px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:22px;
-  transition:transform .2s ease, box-shadow .2s ease;
-}
-.connect-icon.apple{
-  background:#f3f4f6;
-  color:#0f172a;
-}
-.connect-icon.android{
-  background:#eaf7ec;
-  color:#1f7a2e;
-}
-.connect-icon:hover{
-  transform:translateY(-3px);
-  box-shadow:0 10px 24px rgba(15,23,42,.15);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
 }
 
-/* CTA */
+.badge-chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 13px;
+}
+.badge-chip .icon-badge{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+.badge-apple{
+  background: #0f172a;
+  color: #fff;
+}
+.badge-apple .icon-badge i{ color: #fff; font-size: 14px; }
+
+.badge-android{
+  background: #eaf7ec;
+  color: #1f7a2e;
+  border: 1px solid rgba(31,122,46,.25);
+}
+.badge-android .icon-badge i{ color: #1f7a2e; font-size: 14px; }
+
+/* CTA "Book now" */
 .car-card .car-cta{
-  margin-top:12px;
-  width:100%;
-  height:52px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  margin-top: 12px;
+  width: 100%;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--brand);
-  color:#fff;
-  text-decoration:none;
-  border-radius:16px;
-  font-weight:900;
-  letter-spacing:.06em;
-  text-transform:uppercase;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 16px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
   box-shadow: 0 18px 40px rgba(178,34,34,.24);
   transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
 }
@@ -479,36 +318,48 @@ body{
   transform: translateY(-1px);
 }
 
-/* card micro responsive */
-@media (max-width:680px){
+/* Card responsive (móvil pequeño) */
+@media (max-width: 680px){
   .car-card{
-    max-width:560px;
-    border-radius:18px;
-    padding:14px 14px 14px;
+    max-width: 560px;
+    border-radius: 18px;
+    padding: 14px 14px 14px;
   }
-  .car-card .price-now{ font-size:28px; }
-  .car-card .offer-badge{ height:50px; font-size:17px; }
-  .car-card .car-specs{ gap:14px; }
-  .car-card .car-specs li{ font-size:14px; gap:8px; }
+  .car-card .offer-badge{ height: 50px; font-size: 17px; }
+  .car-card .car-specs{ gap: 14px; }
+  .car-card .car-specs li{ font-size: 14px; gap: 8px; }
 }
 
-/* =========================================
-   ✅ FILTRO DE AUTOS (1 fila + scroll)
-========================================= */
-.filter-wrapper{ margin-top:12px; width:100%; }
+/* Mensaje "no hay autos" */
+.no-results{
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+}
+.no-results h3{
+  font-size: 20px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+/* ============================================================
+   FILTRO DE AUTOS (acordeón + cards)
+============================================================ */
+.filter-wrapper{ margin-top: 12px; width: 100%; }
 
 .filter-title{
-  color:#fff; /* se sobreescribe dentro de .hero-filter-card */
-  font-size:16px;
-  font-weight:900;
-  margin:0 0 10px;
-  text-transform:uppercase;
-  letter-spacing:1px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 900;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
+/* Lista de cards del filtro (horizontal con scroll en desktop) */
 .car-filter{
-  display:flex;
-  gap:12px;
+  display: flex;
+  gap: 12px;
   flex-wrap: nowrap;
   overflow-x: auto;
   overflow-y: hidden;
@@ -517,7 +368,6 @@ body{
   padding: 6px 2px 12px;
 }
 
-/* scrollbar */
 .car-filter::-webkit-scrollbar{ height: 10px; }
 .car-filter::-webkit-scrollbar-track{
   background: rgba(15,23,42,.08);
@@ -531,15 +381,16 @@ body{
   background: rgba(178,34,34,.48);
 }
 
+/* Card individual del filtro */
 .filter-card{
   min-width: 240px;
   padding: 14px 18px;
-  display:flex;
-  align-items:center;
-  gap:14px;
-  background:#fff;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
   border-radius: 12px;
-  cursor:pointer;
+  cursor: pointer;
   border: 2px solid transparent;
   box-shadow: 0 4px 10px rgba(0,0,0,0.12);
   transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
@@ -554,14 +405,14 @@ body{
 }
 
 .filter-info{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-start;
-  text-align:left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .filter-info span{
-  display:block;
+  display: block;
   font-size: 16px;
   font-weight: 900;
   color: var(--ink);
@@ -587,20 +438,16 @@ body{
 }
 .filter-card.active .filter-info span{ color: var(--brand); }
 
-@media (max-width:600px){
-  .filter-card{ min-width: 240px; }
-}
-
-/* =========================================
-   ✅ ACORDEÓN FILTRO (glass)
-========================================= */
-.filter-accordion{ width:100%; margin:0; }
+/* ============================================================
+   ACORDEÓN FILTRO (glass)
+============================================================ */
+.filter-accordion{ width: 100%; margin: 0; }
 
 .filter-accordion .accordion-button{
   width: 100%;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 12px;
   padding: 14px 16px;
   border-radius: 16px;
@@ -608,14 +455,14 @@ body{
   background: #ffffffed;
   backdrop-filter: blur(10px);
   box-shadow: 0 10px 22px rgba(0,0,0,.12);
-  cursor:pointer;
+  cursor: pointer;
   font-family: inherit;
   font-weight: 900;
   color: #111827;
-  appearance:none;
-  -webkit-appearance:none;
+  appearance: none;
+  -webkit-appearance: none;
   outline: none;
-  user-select:none;
+  user-select: none;
 }
 .filter-accordion .accordion-button:hover{
   box-shadow: 0 14px 30px rgba(0,0,0,.16);
@@ -623,14 +470,16 @@ body{
 }
 
 .filter-accordion .acc-left{
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 .filter-accordion .acc-icon{ transition: transform .2s ease; }
-.filter-accordion .accordion-button:not(.collapsed) .acc-icon{ transform: rotate(180deg); }
+.filter-accordion .accordion-button:not(.collapsed) .acc-icon{
+  transform: rotate(180deg);
+}
 
-/* panel (animación por JS) */
+/* Panel del acordeón (la altura la anima el JS) */
 .filter-accordion .accordion-collapse{
   overflow: hidden;
   max-height: 0;
@@ -645,170 +494,62 @@ body{
 }
 .filter-accordion .accordion-body{ padding: 6px 0 0; }
 
-/* =========================
-   ✅ RESPONSIVE NAVBAR
-========================= */
-@media (max-width:1024px){
-  .topbar{ top:12px; width:min(980px,94%); }
-}
-
-@media (max-width:768px){
-  .topbar{ padding:8px 10px; }
-  .brand-logo{ font-size:20px; letter-spacing:1.5px; }
-
-  .nav-toggle{ display:grid; place-items:center; }
-
-  .menu{
-    position:absolute;
-    left:12px; right:12px;
-    top:calc(100% + 10px);
-    flex-direction:column;
-    gap:8px;
-    padding:12px;
-    border-radius:16px;
-    background:rgba(178,34,34,.96);
-    border:1px solid rgba(255,255,255,.18);
-    box-shadow:0 18px 40px rgba(0,0,0,.25);
-    display:none;
-  }
-  .menu.open{ display:flex; }
-
-  .menu a{
-    width:100%;
-    justify-content:flex-start;
-    padding:12px 12px;
-    font-size:13px;
-  }
-
-  .cars{ padding:0 14px 34px; }
-}
-
-@media (max-width:420px){
-  .topbar{ top:10px; }
-  .chip{ padding:9px 10px; font-size:11px; }
-}
-/* =========================================
-   ✅ FORZAR GRID 2 COL / 1 COL (SIN FALLAS)
-   - Pega esto AL FINAL del CSS
-========================================= */
-
-/* Si tu lista real es .car-list */
-.car-list{
-  display:grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  column-gap:48px !important;
-  row-gap:38px !important;
-  align-items:stretch;
-}
-
-/* Por si en tu proyecto usan otra clase tipo cars-grid */
-.cars.cars-grid{
-  display:grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  column-gap:48px !important;
-  row-gap:38px !important;
-}
-
-/* Asegura que las cards no “rompan” el grid por tamaños */
-.car-card{
-  width:100% !important;
-  max-width:520px;          /* puedes subir/bajar si quieres */
-  justify-self:center;
-}
-
-/* ✅ SOLO móvil: 1 columna */
+/* ============================================================
+   RESPONSIVE: FILTRO EN MÓVIL (≤768px)
+   - En móvil: lista vertical con scroll Y
+============================================================ */
 @media (max-width: 768px){
-  .car-list,
-  .cars.cars-grid{
-    grid-template-columns: 1fr !important;
-    column-gap:0 !important;
-    row-gap:22px !important;
-  }
-}
-/* =========================================================
-   ✅ FILTRO RESPONSIVO (MÓVIL)
-   - En desktop: fila horizontal con scroll X (como ya lo tienes)
-   - En móvil: lista vertical con scroll Y (como la imagen)
-========================================================= */
-@media (max-width: 768px){
-
-  /* El panel del acordeón puede crecer, pero con límite para poder scrollear */
   #filtro-autos .accordion-body{
     padding: 8px 0 0;
   }
 
-  /* ✅ De horizontal -> vertical */
   .car-filter{
-    flex-direction: column;      /* apila hacia abajo */
+    flex-direction: column;
     flex-wrap: nowrap;
-    overflow-x: hidden;          /* ya no scroll lateral */
-    overflow-y: auto;            /* ✅ scroll vertical */
+    overflow-x: hidden;
+    overflow-y: auto;
     scroll-snap-type: y mandatory;
-
-    /* Altura máxima para que se “recorra” como lista */
     max-height: min(56vh, 460px);
     padding: 8px 6px 12px;
     gap: 14px;
-
-    -webkit-overflow-scrolling: touch;
   }
 
-  /* Scrollbar (opcional, pro) */
-  .car-filter::-webkit-scrollbar{ width: 10px; height: 10px; }
-  .car-filter::-webkit-scrollbar-track{
-    background: rgba(15,23,42,.08);
-    border-radius: 999px;
-  }
-  .car-filter::-webkit-scrollbar-thumb{
-    background: rgba(178,34,34,.28);
-    border-radius: 999px;
-  }
-  .car-filter::-webkit-scrollbar-thumb:hover{
-    background: rgba(178,34,34,.45);
-  }
+  .car-filter::-webkit-scrollbar{ width: 10px; }
 
-  /* ✅ Cards del filtro full-width como “lista” */
   .filter-card{
-    min-width: 0;                /* quita el min-width de desktop */
+    min-width: 0;
     width: 100%;
     border-radius: 16px;
     padding: 14px 14px;
-    justify-content: center;     /* centra contenido */
+    justify-content: center;
     scroll-snap-align: start;
   }
 
-  /* Imagen centrada y consistente */
   .filter-card img{
     width: 120px;
-    height: auto;
   }
 
-  /* Texto centrado como en la referencia */
   .filter-info{
     align-items: center;
     text-align: center;
   }
 
-  .filter-info span{
-    font-size: 16px;
-  }
+  /* Padding del catálogo en móvil */
+  .cars{ padding: 0 14px 34px; }
 }
-/* =========================================================
-   ✅ DESKTOP/LAPTOP: filtro siempre visible dentro del hero
-   (móvil se queda igual)
-========================================================= */
+
+/* ============================================================
+   DESKTOP/LAPTOP (≥769px): filtro siempre visible dentro del hero
+============================================================ */
 @media (min-width: 769px){
-  /* panel abierto visible */
   #filtro-autos.accordion-collapse{
-    max-height: none !important;  /* no límite */
+    max-height: none !important;
     opacity: 1 !important;
     transform: translateY(0) !important;
     overflow: visible !important;
   }
 
-  /* el botón sigue visible pero no “parece” que se pueda cerrar */
   .filter-accordion .accordion-button{
     cursor: default;
   }
 }
-
