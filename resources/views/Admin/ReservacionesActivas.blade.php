@@ -80,11 +80,12 @@
 
     <span class="badge gray">Total <b id="count">{{ $reservaciones->total() }}</b></span>
 
-    <button
+    <div class="toolbar-actions">
+
+  <button
       type="button"
       class="btn primary"
       id="btnExportExcel"
-      style="margin-left:auto; display:flex; align-items:center; gap:8px;"
     >
       ⬇️ Exportar Excel
     </button>
@@ -93,11 +94,12 @@
       type="button"
       class="btn gray"
       id="btnPrevBookings"
-      style="display:flex; align-items:center; gap:8px;"
       title="Ver reservaciones del día anterior"
     >
       🗓️ Reservaciones anteriores
     </button>
+
+  </div>
 
   </form>
 
