@@ -466,7 +466,7 @@ class BtnReservacionesController extends Controller
 
         // --- Imagen de la categoría (WebP) ---
         $catImages = [
-            1  => 'img/aveo.webp',
+            1  => 'img/aveo.png',
             2  => 'img/virtus.webp',
             3  => 'img/jetta.webp',
             4  => 'img/camry.webp',
