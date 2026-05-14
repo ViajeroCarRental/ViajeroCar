@@ -5205,3 +5205,274 @@ body.modal-open {
         font-size: 24px;
     }
 }
+
+/* =====================================================
+   CSS QUE FALTA — pegar al final del <style> del Blade
+   (justo antes de </style>)
+===================================================== */
+
+/* ===== Tarjetas de adicionales (Step 3) ===== */
+.addon-card {
+    border: 1px solid #eef2f7;
+    border-radius: 18px;
+    padding: 14px;
+    background: #fff;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, .06);
+    display: grid;
+    gap: 10px;
+}
+
+.addon-top {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.addon-ico {
+    width: 70px;
+    height: 70px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    border: 3px solid #d1d5db;
+    color: #6b7280;
+    flex: 0 0 auto;
+}
+
+.addon-name {
+    margin: 0;
+    font-weight: 900;
+    letter-spacing: .25px;
+    text-transform: uppercase;
+    font-size: 13px;
+    color: #0f172a;
+}
+
+.addon-card p {
+    margin: 6px 0 0;
+    color: #475569;
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.addon-price {
+    font-weight: 900;
+    color: #0f172a;
+    font-size: 13px;
+}
+
+.addon-price strong {
+    color: var(--brand);
+}
+
+.addon-qty {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: 4px;
+}
+
+.qty-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.qty {
+    min-width: 34px;
+    text-align: center;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.qty-hint {
+    font-size: 12px;
+    font-weight: 800;
+    color: #6b7280;
+    margin-left: auto;
+}
+
+/* ===== Modal de Protecciones (Step 3) ===== */
+.modal-s3 {
+    position: fixed !important;
+    inset: 0 !important;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.8) !important;
+    z-index: 99999999 !important;
+    padding: 18px;
+    backdrop-filter: blur(5px);
+    overscroll-behavior: contain;
+}
+
+.modal-s3 .card {
+    width: min(720px, 100%);
+    background: #ffffff !important;
+    border-radius: 18px;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, .5);
+    padding: 18px;
+    position: relative;
+    z-index: 100000000 !important;
+}
+
+.modal-s3 .x {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    margin-left: auto;
+}
+
+/* ===== Step 4 — Línea de título y datos de fecha ===== */
+.sum-line-title {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 900;
+    letter-spacing: .35px;
+    text-transform: uppercase;
+    font-size: 13px;
+    color: #0f172a;
+    margin: 0 0 10px;
+}
+
+.sum-line-title:after {
+    content: "";
+    height: 3px;
+    flex: 1;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(178, 34, 34, 1), rgba(178, 34, 34, .15));
+}
+
+.sum-dt2 {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.sum-dt2 .dt-row {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+}
+
+.sum-dt2 .dt-lbl {
+    min-width: 58px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .55px;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.sum-dt2 .dt-val {
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.15;
+}
+
+.sum-dt2 .dt-time {
+    font-weight: 900;
+    color: #111827;
+}
+
+/* ===== Tarjeta móvil sticky (Step 4) ===== */
+@media (max-width: 1024px) {
+
+    footer,
+    .footer-elegant {
+        position: relative;
+        z-index: 10;
+        background-color: #0b1120 !important;
+    }
+
+    .step4-pane .sum-total,
+    .sum-form .wizard-nav,
+    #btnReservar {
+        display: none !important;
+    }
+
+    .movil-footer-sticky {
+        display: flex !important;
+        flex-direction: column;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: #ffffff;
+        padding: 20px;
+        box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.20);
+        border-radius: 25px 25px 0 0;
+        gap: 15px;
+        z-index: 9999999;
+        transform: translateY(100%);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .movil-footer-sticky.visible {
+        transform: translateY(0);
+    }
+
+    .movil-total-wrapper {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 900;
+        font-size: 20px;
+    }
+
+    .movil-total-label {
+        color: #000;
+        text-transform: uppercase;
+    }
+
+    .movil-total-amount {
+        color: #b22222;
+        font-size: 24px;
+    }
+
+    .btn-reservar-movil {
+        background: #b22222;
+        color: #fff;
+        border: none;
+        border-radius: 14px;
+        padding: 20px;
+        font-size: 18px;
+        font-weight: 900;
+        width: 100%;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: all .2s ease;
+    }
+
+    .btn-reservar-movil:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(178, 34, 34, .35);
+    }
+
+    .step4-layout {
+        padding-bottom: 250px !important;
+    }
+}
+
+/* ===== Ocultar tarjeta sticky en desktop ===== */
+@media (min-width: 1025px) {
+    .movil-footer-sticky {
+        display: none !important;
+    }
+}

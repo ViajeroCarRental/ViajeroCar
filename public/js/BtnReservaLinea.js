@@ -1,60 +1,67 @@
-// ============================================================
-// 💳 PAGO EN LÍNEA CON PAYPAL (LIVE / SANDBOX según .env)
-// ============================================================
+/* =====================================================================
+ *  BtnReservaLinea.js — Versión limpia y optimizada (mayo 2026)
+ *
+ *  Encargado del flujo de PAGO EN LÍNEA con PayPal:
+ *   - Valida campos visibles
+ *   - Detecta moneda mostrada (MXN/USD) y convierte a MXN para PayPal
+ *   - Carga SDK de PayPal dinámicamente
+ *   - Inserta la reservación con idempotencia + reintentos
+ *
+ *  🔴 BUG CRÍTICO ARREGLADO:
+ *   - Antes: si el cliente veía precio en USD ($61.73 USD), PayPal le
+ *     cobraba 61.73 MXN (~$3.10 USD reales). Pérdida ~95% del cobro.
+ *   - Ahora: detecta moneda mostrada y multiplica por EXCHANGE_RATE
+ *     antes de mandar a PayPal en MXN.
+ *
+ *  OTROS CAMBIOS:
+ *   - NO sobrescribe window.translations
+ *   - Elimina 5 funciones duplicadas con reservaciones.js
+ *   - Inyecta Drop Off (ID 11) cuando aplica
+ *   - Idempotencia con flag reservaEnviada
+ *   - Reintento automático con backoff si el POST falla post-cobro
+ *   - Emite reserva:completada / reserva:cancelada
+ *   - Usa window.APP_URL_RESERVA_LINEA (sin URL hardcoded)
+ *   - Mensajes traducidos con window.translations (del Blade)
+ * ===================================================================== */
+(function () {
+  "use strict";
 
-document.addEventListener("DOMContentLoaded", () => {
-  // Elementos del DOM
-  const modalMetodoPago = document.getElementById("modalMetodoPago");
-  const modalPagoOnline = document.getElementById("modalPagoOnline");
-  const btnPagoLinea = document.getElementById("btnPagoLinea");
-  const btnReservar = document.getElementById("btnReservar");
-  const btnReservarMovil = document.getElementById("btnReservarMovil");
-  const form = document.getElementById("formCotizacion");
-  const paypalContainer = document.getElementById("paypal-button-container");
+  /* =================================================================
+     CONSTANTES Y HELPERS
+     ================================================================= */
+  const qs = (s, r = document) => r.querySelector(s);
+  const EXCHANGE_RATE = 20; // ⚠️ Debe coincidir con reservaciones.js y backend
+  const DROP_SERVICE_ID = "11";
+  const MAX_RETRY_POST = 3;
+  const RETRY_BACKOFF_MS = 2000;
 
-  // Botones de cierre
-  const cerrarModalMetodoX = document.getElementById("cerrarModalMetodoX");
-  const cerrarModalMetodo = document.getElementById("cerrarModalMetodo");
-  const cerrarModalPagoOnline = document.getElementById("cerrarModalPagoOnline");
-
-  // Variables de control
-  let paypalSDKLoaded = false;
-  let scrollPosition = 0;
-  let modalLineaAbierto = false; // Bandera para saber si el modal de línea está abierto
-
-  // Si no existen elementos clave, salimos
-  if (!form || !paypalContainer) {
-    console.error("Elementos necesarios no encontrados");
-    return;
+  function getCurrentLocale() {
+    const htmlLang = document.documentElement.lang || 'es';
+    return htmlLang === 'en' ? 'en' : 'es';
   }
 
-  // ==========================================================
-  // 🔐 Helper: CSRF
-  // ==========================================================
+  function t(key, fallback) {
+    return (window.translations && window.translations[key]) || fallback;
+  }
+
   function getCsrfToken() {
     const meta = document.querySelector('meta[name="csrf-token"]');
     return meta ? meta.getAttribute("content") : "";
   }
 
-  // ==========================================================
-  // 📅 Helper: Convertir fecha dd-mm-yyyy → yyyy-mm-dd
-  // ==========================================================
+  /* =================================================================
+     HELPER: convertir fecha dd-mm-yyyy → yyyy-mm-dd
+     ================================================================= */
   function toIsoDate(dateStr) {
     const s = String(dateStr || "").trim();
     if (!s) return "";
-
-    // Si ya viene en formato yyyy-mm-dd, lo dejamos
     if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
 
-    // dd-mm-yyyy → yyyy-mm-dd
-    const m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+    if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+    m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (m) return `${m[3]}-${m[2]}-${m[1]}`;
 
-    // dd/mm/yyyy → yyyy-mm-dd
-    const m2 = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (m2) return `${m2[3]}-${m2[2]}-${m2[1]}`;
-
-    // Último intento con Date nativo
     const d = new Date(s);
     if (!isNaN(d.getTime())) {
       const yyyy = d.getFullYear();
@@ -62,561 +69,599 @@ document.addEventListener("DOMContentLoaded", () => {
       const dd = String(d.getDate()).padStart(2, "0");
       return `${yyyy}-${mm}-${dd}`;
     }
-
     return s;
   }
 
-  // ==========================================================
-  // 👶 MENOR DE EDAD – helpers locales para ajustar addons
-  // ==========================================================
-  const YOUNG_DRIVER_SERVICE_ID = '5';
-  const YOUNG_DRIVER_MIN_AGE = 25;
-
-  function parseAddonsStringToMapLocal(str) {
+  /* =================================================================
+     HELPER: parse / serialize de addons (solo para inyectar Drop Off)
+     ================================================================= */
+  function parseAddonsStr(str) {
     const map = new Map();
-    String(str || "")
-      .split(",")
-      .map(s => s.trim())
-      .filter(Boolean)
-      .forEach(pair => {
-        const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
-        if (m) {
-          const id = m[1];
-          const qty = Math.max(0, parseInt(m[2], 10) || 0);
-          if (qty > 0) map.set(id, qty);
-        } else {
-          const id = pair.replace(/\D/g, "");
-          if (id) map.set(id, 1);
-        }
-      });
+    String(str || "").split(",").map(s => s.trim()).filter(Boolean).forEach(pair => {
+      const m = pair.match(/^(\d+)\s*:\s*(\d+)$/);
+      if (m) {
+        const qty = Math.max(0, parseInt(m[2], 10) || 0);
+        if (qty > 0) map.set(m[1], qty);
+      } else {
+        const id = pair.replace(/\D/g, "");
+        if (id) map.set(id, 1);
+      }
+    });
     return map;
   }
 
-  function serializeAddonsMapLocal(map) {
+  function serializeAddonsMap(map) {
     return Array.from(map.entries())
       .filter(([, q]) => (q || 0) > 0)
       .map(([id, q]) => `${id}:${q}`)
       .join(",");
   }
 
-  function computeAgeFromDobLocal(dobStr, refDate) {
-    if (!dobStr) return null;
-    const m = String(dobStr).trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!m) return null;
-    const birth = new Date(+m[1], +m[2] - 1, +m[3]);
-    if (isNaN(birth.getTime())) return null;
-    const ref = (refDate instanceof Date && !isNaN(refDate)) ? refDate : new Date();
-    let age = ref.getFullYear() - birth.getFullYear();
-    const mm = ref.getMonth() - birth.getMonth();
-    if (mm < 0 || (mm === 0 && ref.getDate() < birth.getDate())) {
-      age--;
+  /* =================================================================
+     HELPER: inyectar Drop Off (servicio ID 11) cuando aplique
+     (mismo patrón que en BtnReserva.js)
+     ================================================================= */
+  function injectDropOffIfNeeded(addonsStr) {
+    const table = qs("#cotizacionDoc");
+    if (!table) return addonsStr || "";
+
+    const pickup  = table.dataset.pickup;
+    const dropoff = table.dataset.dropoff;
+    const km      = parseFloat(table.dataset.km || 0);
+    const costoKm = parseFloat(table.dataset.costokm || 0);
+
+    if (pickup && dropoff && pickup !== dropoff && km > 0 && costoKm > 0) {
+      const map = parseAddonsStr(addonsStr || "");
+      map.set(DROP_SERVICE_ID, 1);
+      return serializeAddonsMap(map);
     }
-    if (age < 0 || age > 120) return null;
-    return age;
+    return addonsStr || "";
   }
 
-  function getPickupDateForAgeLocal() {
-    const pickupInput = document.getElementById("pickup_date") || document.querySelector('input[name="pickup_date"]');
-    if (!pickupInput || !pickupInput.value) return new Date();
-    const s = String(pickupInput.value).trim();
-    let m = s.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-    if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
-    m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
-    const d = new Date(s);
-    return isNaN(d.getTime()) ? new Date() : d;
-  }
+  /* =================================================================
+     🔴 HELPER CRÍTICO: leer total del DOM Y convertir a MXN
+     - reservaciones.js renderiza #qTotal en MXN o USD según idioma.
+     - PayPal siempre cobra en MXN (currency_code: "MXN").
+     - Por tanto: si el texto contiene "USD", multiplicamos × EXCHANGE_RATE
+       para convertir el monto a su equivalente real en MXN.
+     ================================================================= */
+  function obtenerTotalesDelDOM() {
+    const parseAmount = (selector) => {
+      const el = qs(selector);
+      if (!el) return { amountMXN: 0, displayed: "" };
 
-  function applyYoungDriverAddonOnString(addonsStr) {
-    try {
-      if (!YOUNG_DRIVER_SERVICE_ID) return addonsStr || "";
-      const dobHidden = document.querySelector("#dob");
-      if (!dobHidden) return addonsStr || "";
-      const dobStr = (dobHidden.value || "").trim();
-      const age = computeAgeFromDobLocal(dobStr, getPickupDateForAgeLocal());
-      const map = parseAddonsStringToMapLocal(addonsStr || "");
-      if (age != null && age < YOUNG_DRIVER_MIN_AGE) {
-        map.set(String(YOUNG_DRIVER_SERVICE_ID), 1);
-      } else {
-        map.delete(String(YOUNG_DRIVER_SERVICE_ID));
-      }
-      return serializeAddonsMapLocal(map);
-    } catch (e) {
-      console.warn("No se pudo aplicar la regla de menor de edad en addons (PayPal):", e);
-      return addonsStr || "";
-    }
-  }
+      const txt = String(el.textContent || "").trim();
+      const isUSD = /USD/i.test(txt);
 
-  function getFormPayload() {
-    const categoriaId = document.getElementById("categoria_id")?.value || "";
-    const plan = document.getElementById("plan")?.value || "";
-    const addonsRaw = document.getElementById("addons_payload")?.value || "";
-    const pickupDate = document.getElementById("pickup_date")?.value || "";
-    let pickupTime = document.getElementById("pickup_time")?.value || "";
-    const dropoffDate = document.getElementById("dropoff_date")?.value || "";
-    let dropoffTime = document.getElementById("dropoff_time")?.value || "";
-    const pickupSucursalId = document.getElementById("pickup_sucursal_id")?.value || "";
-    const dropoffSucursalId = document.getElementById("dropoff_sucursal_id")?.value || "";
-    const nombreCompletoEl = document.getElementById("nombreCompleto");
-    const telefonoEl = document.getElementById("telefonoCliente");
-    const correoEl = document.getElementById("correoCliente");
-    const vueloEl = document.getElementById("vuelo");
-    const nombreCompleto = (nombreCompletoEl?.value || "").trim();
-    const telefono = (telefonoEl?.value || "").trim();
-    const email = (correoEl?.value || "").trim();
-    const vuelo = (vueloEl?.value || "").trim();
+      // Extraer el número limpio
+      const cleaned = txt.replace(/[^\d.,-]/g, "").replace(/,/g, "");
+      const num = parseFloat(cleaned);
+      if (isNaN(num)) return { amountMXN: 0, displayed: txt };
 
-    // ✅ PLAN B PARA HORAS: Si no hay hora, asigna por defecto en lugar de lanzar error
-    if (!pickupTime) {
-      const ph = document.getElementById("pickup_h")?.value;
-      pickupTime = ph ? ph.padStart(2, "0") + ":00" : "12:00";
-    }
+      // Si está mostrado en USD, convertir a MXN multiplicando por el tipo de cambio
+      const amountMXN = isUSD ? num * EXCHANGE_RATE : num;
 
-    if (!dropoffTime) {
-      const dh = document.getElementById("dropoff_h")?.value || "12";
-      const dm = document.getElementById("dropoff_m")?.value || "00";
-      dropoffTime = dh.padStart(2, "0") + ":" + dm.padStart(2, "0");
-    }
-
-    // ✅ Asegurar formato H:i en horas (por si llegan con segundos "13:00:00")
-    if (pickupTime && pickupTime.length > 5) pickupTime = pickupTime.substring(0, 5);
-    if (dropoffTime && dropoffTime.length > 5) dropoffTime = dropoffTime.substring(0, 5);
-
-    if (!categoriaId) {
-      throw new Error("Falta la categoría seleccionada de la renta.");
-    }
-
-    if (!pickupDate || !dropoffDate) {
-      throw new Error("Faltan las fechas de la reservación.");
-    }
-
-    if (plan !== "linea") {
-      throw new Error("Para utilizar pago en línea, selecciona el plan de pago en línea.");
-    }
-
-    const addonsFinal = applyYoungDriverAddonOnString(addonsRaw);
-
-    // ✅ FIX CRÍTICO: convertir fechas a formato yyyy-mm-dd antes de enviar
-    return {
-      categoria_id: categoriaId,
-      plan: plan,
-      addons: addonsFinal,
-      pickup_date: toIsoDate(pickupDate),
-      pickup_time: pickupTime,
-      dropoff_date: toIsoDate(dropoffDate),
-      dropoff_time: dropoffTime,
-      pickup_sucursal_id: pickupSucursalId,
-      dropoff_sucursal_id: dropoffSucursalId,
-      nombre: nombreCompleto,
-      telefono: telefono,
-      email: email,
-      vuelo: vuelo
-    };
-  }
-
-  // ==========================================================
-  // 🧮 Obtener TOTAL desde el DOM (única fuente de verdad)
-  //     reservaciones.js ya calcula y renderiza en #qTotal,
-  //     #qBase, #qExtras, #qIva. Aquí solo leemos esos valores.
-  // ==========================================================
-  function obtenerTotalDelDOM() {
-    const getNum = (selector) => {
-      const el = document.querySelector(selector);
-      if (!el) return 0;
-      // Limpia "$1,234.56 MXN" o "$61.73 USD" → número
-      const txt = String(el.textContent || "").replace(/[^\d.,-]/g, "").replace(/,/g, "");
-      const n = parseFloat(txt);
-      return isNaN(n) ? 0 : n;
+      return { amountMXN, displayed: txt, isUSD };
     };
 
     return {
-      base: getNum("#qBase"),
-      extras: getNum("#qExtras"),
-      iva: getNum("#qIva"),
-      total: getNum("#qTotal")
+      base:   parseAmount("#qBase"),
+      extras: parseAmount("#qExtras"),
+      iva:    parseAmount("#qIva"),
+      total:  parseAmount("#qTotal")
     };
   }
 
-  // ==========================================================
-  // 📥 Cargar SDK de PayPal dinámicamente con Idioma Dinámico
-  // ==========================================================
-  function loadPayPalSDK() {
-    return new Promise((resolve, reject) => {
-      if (window.paypal && window.paypalSDKLoaded) {
-        resolve();
-        return;
-      }
-
-      const clientId = window.PAYPAL_CLIENT_ID;
-      if (!clientId) {
-        const msg = "PAYPAL_CLIENT_ID no está definido. Revisa tu .env.";
-        console.error(msg);
-        if (window.alertify) alertify.error(msg); else alert(msg);
-        reject(new Error(msg));
-        return;
-      }
-
-      // --- DETECTAR IDIOMA ACTUAL ---
-      const currentLang = document.documentElement.lang || 'es';
-      const paypalLocale = (currentLang === 'es') ? 'es_MX' : 'en_US';
-
-      const script = document.createElement("script");
-      script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=MXN&intent=capture&locale=${paypalLocale}`;
-      script.async = true;
-      script.onload = () => {
-        window.paypalSDKLoaded = true;
-        resolve();
-      };
-      script.onerror = () => reject(new Error("No se pudo cargar el SDK de PayPal."));
-      document.head.appendChild(script);
-    });
-  }
-
-  // ==========================================================
-  // 💰 Helper: total exacto para PayPal (lee del DOM)
-  // ==========================================================
+  /* =================================================================
+     HELPER: total a cobrar en PayPal (siempre en MXN)
+     ================================================================= */
   function obtenerTotalParaPayPal() {
-    const { total } = obtenerTotalDelDOM();
-    return Number(total || 0);
+    const totales = obtenerTotalesDelDOM();
+    return Number(totales.total.amountMXN || 0);
   }
 
-  // ==========================================================
-  // 🚀 Enviar reserva a /reservas/linea después de onApprove
-  // ==========================================================
-  async function enviarReservaLinea(paypalOrderId) {
-    const url = window.APP_URL_RESERVA_LINEA;
-    if (!url) {
-      throw new Error("No está definida APP_URL_RESERVA_LINEA.");
+  /* =================================================================
+     BOOT
+     ================================================================= */
+  document.addEventListener("DOMContentLoaded", () => {
+    const modalMetodoPago     = qs("#modalMetodoPago");
+    const modalPagoOnline     = qs("#modalPagoOnline");
+    const btnPagoLinea        = qs("#btnPagoLinea");
+    const form                = qs("#formCotizacion");
+    const paypalContainer     = qs("#paypal-button-container");
+    const cerrarModalMetodoX  = qs("#cerrarModalMetodoX");
+    const cerrarModalPagoOnline = qs("#cerrarModalPagoOnline");
+
+    // Variables de control
+    let scrollPosition = 0;
+    let modalLineaAbierto = false;
+    let reservaEnviada = false; // 🛡️ Idempotencia: evita doble POST
+
+    if (!form || !paypalContainer) return;
+
+    /* =================================================================
+       PAYLOAD DEL FORMULARIO
+       ================================================================= */
+    function getFormPayload() {
+      const categoriaId       = qs("#categoria_id")?.value || "";
+      const plan              = qs("#plan")?.value || "";
+      const addonsRaw         = qs("#addons_payload")?.value || qs("#addonsHidden")?.value || "";
+      const pickupDate        = qs("#pickup_date")?.value || "";
+      let   pickupTime        = qs("#pickup_time")?.value || qs("#pickup_time_hidden")?.value || "";
+      const dropoffDate       = qs("#dropoff_date")?.value || "";
+      let   dropoffTime       = qs("#dropoff_time")?.value || qs("#dropoff_time_hidden")?.value || "";
+      const pickupSucursalId  = qs("#pickup_sucursal_id")?.value || "";
+      const dropoffSucursalId = qs("#dropoff_sucursal_id")?.value || "";
+
+      const nombreCompleto = (qs("#nombreCompleto")?.value || qs("#nombreCliente")?.value || "").trim();
+      const telefono       = (qs("#telefonoCliente")?.value || "").trim();
+      const email          = (qs("#correoCliente")?.value || "").trim();
+      const vuelo          = (qs("#vuelo")?.value || "").trim();
+
+      // Plan B para horas: leer del select por name, no por ID
+      if (!pickupTime) {
+        const ph = qs('select[name="pickup_h"]')?.value || "";
+        if (ph) pickupTime = ph.padStart(2, "0") + ":00";
+      }
+      if (!dropoffTime) {
+        const dh = qs('select[name="dropoff_h"]')?.value || "";
+        if (dh) dropoffTime = dh.padStart(2, "0") + ":00";
+      }
+
+      // Asegurar formato H:i (por si vienen con segundos "13:00:00")
+      if (pickupTime  && pickupTime.length  > 5) pickupTime  = pickupTime.substring(0, 5);
+      if (dropoffTime && dropoffTime.length > 5) dropoffTime = dropoffTime.substring(0, 5);
+
+      // Validaciones (mensajes traducidos por el Blade)
+      if (!categoriaId) {
+        throw new Error(getCurrentLocale() === 'en'
+          ? "The rental category is missing."
+          : "Falta la categoría seleccionada de la renta.");
+      }
+      if (!pickupDate || !dropoffDate || !pickupTime || !dropoffTime) {
+        throw new Error(t('required_missing', getCurrentLocale() === 'en'
+          ? "Required information missing."
+          : "Falta información requerida."));
+      }
+      if (plan !== "linea") {
+        throw new Error(getCurrentLocale() === 'en'
+          ? "To use online payment, please select the online payment plan."
+          : "Para utilizar pago en línea, selecciona el plan de pago en línea.");
+      }
+
+      // Inyectar Drop Off (ID 11) si pickup ≠ dropoff
+      const addonsFinal = injectDropOffIfNeeded(addonsRaw);
+
+      return {
+        categoria_id:        categoriaId,
+        plan,
+        addons:              addonsFinal,
+        pickup_date:         toIsoDate(pickupDate),
+        pickup_time:         pickupTime,
+        dropoff_date:        toIsoDate(dropoffDate),
+        dropoff_time:        dropoffTime,
+        pickup_sucursal_id:  pickupSucursalId,
+        dropoff_sucursal_id: dropoffSucursalId,
+        nombre:              nombreCompleto,
+        telefono,
+        email,
+        vuelo
+      };
     }
 
-    const csrf = getCsrfToken();
-    const basePayload = getFormPayload();
-    const totalCobrado = obtenerTotalParaPayPal();
+    /* =================================================================
+       CARGAR SDK DE PAYPAL
+       ================================================================= */
+    function loadPayPalSDK() {
+      return new Promise((resolve, reject) => {
+        if (window.paypal) { resolve(); return; }
 
-    const payload = {
-      ...basePayload,
-      paypal_order_id: paypalOrderId,
-      total_local: totalCobrado
-    };
+        const clientId = window.PAYPAL_CLIENT_ID;
+        if (!clientId) {
+          const msg = getCurrentLocale() === 'en'
+            ? "PAYPAL_CLIENT_ID is not defined. Check your .env."
+            : "PAYPAL_CLIENT_ID no está definido. Revisa tu .env.";
+          console.error(msg);
+          if (window.alertify) alertify.error(msg);
+          reject(new Error(msg));
+          return;
+        }
 
-    console.log("📤 Enviando payload al backend:", payload);
+        const paypalLocale = getCurrentLocale() === 'es' ? 'es_MX' : 'en_US';
 
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-TOKEN": csrf,
-        "X-Requested-With": "XMLHttpRequest",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await resp.json().catch(() => ({}));
-
-    if (!resp.ok || data.ok === false) {
-      console.error("Error HTTP / lógica al crear la reserva en línea:", data);
-      throw new Error(data.message || "No se pudo crear la reservación en línea. Intenta nuevamente.");
+        const script = document.createElement("script");
+        script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=MXN&intent=capture&locale=${paypalLocale}`;
+        script.async = true;
+        script.onload  = () => resolve();
+        script.onerror = () => reject(new Error(getCurrentLocale() === 'en'
+          ? "Could not load PayPal SDK."
+          : "No se pudo cargar el SDK de PayPal."));
+        document.head.appendChild(script);
+      });
     }
 
-    return data;
-  }
+    /* =================================================================
+       ENVIAR RESERVA AL BACKEND CON IDEMPOTENCIA + RETRY
+       ================================================================= */
+    async function enviarReservaLinea(paypalOrderId, attempt = 1) {
+      // 🛡️ Idempotencia: si ya se envió correctamente, no repetir
+      if (reservaEnviada) {
+        console.warn("Reserva ya fue enviada, evitando duplicado.");
+        return null;
+      }
 
-  // ==========================================================
-  // 🧷 Inicializar botones de PayPal en el contenedor
-  // ==========================================================
-  function initPaypalButtons() {
-    const totalExacto = obtenerTotalParaPayPal();
-    const amount = (totalExacto > 0 ? totalExacto : 0).toFixed(2);
+      const url = window.APP_URL_RESERVA_LINEA;
+      if (!url) {
+        throw new Error("No está definida APP_URL_RESERVA_LINEA.");
+      }
 
-    console.log("💰 Total a pagar:", amount, "MXN");
+      const csrf = getCsrfToken();
+      const basePayload = getFormPayload();
+      const totalCobrado = obtenerTotalParaPayPal(); // ← ya en MXN
 
-    if (!window.paypal || typeof window.paypal.Buttons !== "function") {
-      const msg = "PayPal SDK no está disponible tras la carga.";
-      console.error(msg);
-      if (window.alertify) alertify.error(msg); else alert(msg);
-      return;
+      const payload = {
+        ...basePayload,
+        paypal_order_id: paypalOrderId,
+        total_local: totalCobrado
+      };
+
+      try {
+        const resp = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type":     "application/json",
+            "X-CSRF-TOKEN":     csrf,
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept":           "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await resp.json().catch(() => ({}));
+
+        if (!resp.ok || data.ok === false) {
+          throw new Error(data.message || (getCurrentLocale() === 'en'
+            ? "Could not create online reservation. Please try again."
+            : "No se pudo crear la reservación en línea. Intenta nuevamente."));
+        }
+
+        reservaEnviada = true; // ✅ marcar como enviada para evitar duplicados
+        return data;
+
+      } catch (err) {
+        // 🔄 Reintento automático con backoff
+        if (attempt < MAX_RETRY_POST) {
+          console.warn(`Reintentando POST (${attempt}/${MAX_RETRY_POST}) en ${RETRY_BACKOFF_MS}ms...`);
+          await new Promise(r => setTimeout(r, RETRY_BACKOFF_MS * attempt));
+          return enviarReservaLinea(paypalOrderId, attempt + 1);
+        }
+        throw err;
+      }
     }
 
-    if (paypalContainer) {
+    /* =================================================================
+       INICIALIZAR BOTONES DE PAYPAL
+       ================================================================= */
+    function initPaypalButtons() {
+      const totalEnMXN = obtenerTotalParaPayPal();
+      const amount = (totalEnMXN > 0 ? totalEnMXN : 0).toFixed(2);
+
+      if (!window.paypal || typeof window.paypal.Buttons !== "function") {
+        const msg = getCurrentLocale() === 'en'
+          ? "PayPal SDK is not available."
+          : "PayPal SDK no está disponible.";
+        if (window.alertify) alertify.error(msg); else alert(msg);
+        return;
+      }
+
       paypalContainer.innerHTML = "";
       paypalContainer.style.display = "block";
-    }
 
-    try {
-      window.paypal.Buttons({
-        style: {
-          layout: "vertical",
-          color: "gold",
-          shape: "rect",
-          label: "paypal"
-        },
+      try {
+        window.paypal.Buttons({
+          style: { layout: "vertical", color: "gold", shape: "rect", label: "paypal" },
 
-        createOrder: function (data, actions) {
-          return actions.order.create({
-            purchase_units: [{
-              amount: {
-                value: amount,
-                currency_code: "MXN"
-              }
-            }]
-          });
-        },
+          createOrder: function (_data, actions) {
+            return actions.order.create({
+              purchase_units: [{
+                amount: {
+                  value: amount,
+                  currency_code: "MXN"
+                }
+              }]
+            });
+          },
 
-        onApprove: function (data, actions) {
-          return actions.order.capture().then(async function (orderData) {
-            console.log("✅ PayPal orderData:", orderData);
+          onApprove: function (data, actions) {
+            return actions.order.capture().then(async function (orderData) {
+              try {
+                const overallStatus = orderData?.status;
+                const firstCapture  = orderData?.purchase_units?.[0]?.payments?.captures?.[0];
+                const captureStatus = firstCapture?.status;
+                const reason        = firstCapture?.status_details?.reason || "";
 
-            try {
-              const overallStatus = orderData?.status;
-              const firstPU = orderData?.purchase_units?.[0];
-              const firstCapture = firstPU?.payments?.captures?.[0];
-              const captureStatus = firstCapture?.status;
-              const reason = firstCapture?.status_details?.reason || "";
+                if (overallStatus !== "COMPLETED" || captureStatus !== "COMPLETED") {
+                  console.warn("Pago no completado:", { overallStatus, captureStatus, reason });
 
-              if (overallStatus !== "COMPLETED" || captureStatus !== "COMPLETED") {
-                console.warn("⚠️ Pago no completado:", { overallStatus, captureStatus, reason });
+                  const locale = getCurrentLocale();
+                  let msgUser = locale === 'en'
+                    ? "Your bank or PayPal did not authorize the charge. No payment was made."
+                    : "Tu banco o PayPal no autorizó el cargo. No se realizó ningún cobro.";
 
-                let msgUser = "Tu banco o PayPal no autorizó el cargo. No se realizó ningún cobro.";
+                  if (reason === "INSUFFICIENT_FUNDS") {
+                    msgUser = locale === 'en'
+                      ? "Your bank reported insufficient funds. No payment was made."
+                      : "Tu banco reportó fondos insuficientes. No se realizó el cobro.";
+                  } else if (reason === "PAYER_CANNOT_PAY") {
+                    msgUser = locale === 'en'
+                      ? "PayPal indicated the payment method cannot process the charge."
+                      : "PayPal indicó que el medio de pago no puede procesar el cargo.";
+                  } else if (reason === "RISK_DECLINE") {
+                    msgUser = locale === 'en'
+                      ? "PayPal declined the payment due to security review."
+                      : "PayPal rechazó el pago por revisión de seguridad.";
+                  }
 
-                if (reason === "INSUFFICIENT_FUNDS") {
-                  msgUser = "Tu banco reportó fondos insuficientes. No se realizó el cobro.";
-                } else if (reason === "PAYER_CANNOT_PAY") {
-                  msgUser = "PayPal indicó que el medio de pago no puede procesar el cargo.";
-                } else if (reason === "RISK_DECLINE") {
-                  msgUser = "PayPal rechazó el pago por revisión de seguridad.";
+                  if (window.alertify) alertify.error(msgUser);
+                  else alert(msgUser);
+                  document.dispatchEvent(new CustomEvent('reserva:cancelada'));
+                  return;
                 }
 
-                if (window.alertify) alertify.error(msgUser);
-                else alert(msgUser);
-                return;
-              }
+                // ⚠️ A PARTIR DE AQUÍ: PayPal YA COBRÓ
+                // Si el POST falla, el dinero queda cobrado. Por eso hay retry.
+                let result;
+                try {
+                  result = await enviarReservaLinea(data.orderID);
+                  if (!result) return; // duplicado evitado por idempotencia
+                } catch (postErr) {
+                  // 🚨 Caso peor: PayPal cobró pero después de N reintentos no pudimos guardar
+                  console.error("PayPal cobró pero el POST falló después de reintentos:", postErr);
 
-              const result = await enviarReservaLinea(data.orderID);
-              const payload = getFormPayload();
+                  const locale = getCurrentLocale();
+                  const msgCritico = locale === 'en'
+                    ? `⚠️ IMPORTANT: Your payment was processed by PayPal but we couldn't complete the reservation in our system.\n\n` +
+                      `Please save this PayPal Order ID and contact us:\n\n${data.orderID}\n\n` +
+                      `Email: contacto@viajero.com.mx\nPhone: 01 (442) 303 2668`
+                    : `⚠️ IMPORTANTE: Tu pago fue procesado en PayPal pero no pudimos completar la reservación en nuestro sistema.\n\n` +
+                      `Por favor guarda este ID de PayPal y contáctanos:\n\n${data.orderID}\n\n` +
+                      `Email: contacto@viajero.com.mx\nTel: 01 (442) 303 2668`;
 
-              // ✅ Preferir totales del backend; si no, leer del DOM
-              const fromDom = obtenerTotalDelDOM();
-              const base = Number(result.subtotal ?? fromDom.base) || 0;
-              const iva = Number(result.impuestos ?? fromDom.iva) || 0;
-              const total = Number(result.total ?? fromDom.total) || 0;
-              const extras = Math.max(0, base + iva - total) === 0
-                ? fromDom.extras
-                : (Number(result.extras) || fromDom.extras);
+                  if (window.alertify) alertify.alert(
+                    locale === 'en' ? "Action required" : "Acción requerida",
+                    msgCritico.replace(/\n/g, '<br>')
+                  );
+                  else alert(msgCritico);
 
-              const fmt = new Intl.NumberFormat("es-MX", {
-                style: "currency",
-                currency: "MXN"
-              });
+                  document.dispatchEvent(new CustomEvent('reserva:cancelada'));
+                  return;
+                }
 
-              const pickup = `${payload.pickup_date} ${payload.pickup_time}`;
-              const dropoff = `${payload.dropoff_date} ${payload.dropoff_time}`;
-              const baseTxt = fmt.format(base);
-              const extrasTxt = fmt.format(extras);
-              const ivaTxt = fmt.format(iva);
-              const totalTxt = fmt.format(total);
-              const folio = result.folio || "";
+                // ✅ Éxito completo
+                const payload = getFormPayload();
+                const fromDom = obtenerTotalesDelDOM();
 
-              const msgExito = `
-              ✅ Su reservación en línea fue confirmada correctamente.<br><br>
-              Folio: <b>${folio}</b><br>
-              Entrega: <b>${pickup}</b><br>
-              Devolución: <b>${dropoff}</b><br><br>
-              <b>Tarifa base:</b> ${baseTxt}<br>
-              <b>Opciones de renta:</b> ${extrasTxt}<br>
-              <b>Cargos e IVA (16%):</b> ${ivaTxt}<br>
-              <b>Total:</b> ${totalTxt}<br><br>
-              📩 Recibirá confirmación por correo electrónico.
-              `;
+                // Preferir totales del backend (ya en MXN); fallback al DOM ya convertido
+                const base   = Number(result.subtotal  ?? fromDom.base.amountMXN)   || 0;
+                const iva    = Number(result.impuestos ?? fromDom.iva.amountMXN)    || 0;
+                const total  = Number(result.total     ?? fromDom.total.amountMXN)  || 0;
+                const extras = Number(result.extras    ?? fromDom.extras.amountMXN) || 0;
 
-              if (window.alertify) {
-                alertify.alert("Reservación en línea confirmada", msgExito, function () {
-                  try { localStorage.removeItem("viajero_resv_filters_v1"); } catch (e) { }
-                  try { sessionStorage.clear(); } catch (e) { }
+                const fmt = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" });
+
+                const folio = result.folio || "";
+                const pickup  = `${payload.pickup_date} ${payload.pickup_time}`;
+                const dropoff = `${payload.dropoff_date} ${payload.dropoff_time}`;
+
+                const locale = getCurrentLocale();
+                const msgExito = locale === 'en'
+                  ? `
+                    ✅ Your online reservation has been confirmed.<br><br>
+                    Folio: <b>${folio}</b><br>
+                    Pick-up: <b>${pickup}</b><br>
+                    Return: <b>${dropoff}</b><br><br>
+                    <b>Base rate:</b> ${fmt.format(base)}<br>
+                    <b>Rental options:</b> ${fmt.format(extras)}<br>
+                    <b>Fees and TAXES (16%):</b> ${fmt.format(iva)}<br>
+                    <b>Total:</b> ${fmt.format(total)}<br><br>
+                    📩 You will receive a confirmation by email.
+                  `
+                  : `
+                    ✅ Su reservación en línea fue confirmada correctamente.<br><br>
+                    Folio: <b>${folio}</b><br>
+                    Entrega: <b>${pickup}</b><br>
+                    Devolución: <b>${dropoff}</b><br><br>
+                    <b>Tarifa base:</b> ${fmt.format(base)}<br>
+                    <b>Opciones de renta:</b> ${fmt.format(extras)}<br>
+                    <b>Cargos e IVA (16%):</b> ${fmt.format(iva)}<br>
+                    <b>Total:</b> ${fmt.format(total)}<br><br>
+                    📩 Recibirá confirmación por correo electrónico.
+                  `;
+
+                // Emitir evento ANTES de mostrar alert
+                document.dispatchEvent(new CustomEvent('reserva:completada', {
+                  detail: { folio, total, plan: 'linea' }
+                }));
+
+                const tituloExito = locale === 'en'
+                  ? "Online reservation confirmed"
+                  : "Reservación en línea confirmada";
+
+                if (window.alertify) {
+                  alertify.alert(tituloExito, msgExito, function () {
+                    try { localStorage.removeItem("viajero_resv_filters_v1"); } catch (_) {}
+                    try { sessionStorage.clear(); } catch (_) {}
+                    window.location.href = window.location.pathname + "?step=1&reset=1";
+                  });
+                } else {
+                  alert(tituloExito);
+                  try { localStorage.removeItem("viajero_resv_filters_v1"); } catch (_) {}
+                  try { sessionStorage.clear(); } catch (_) {}
                   window.location.href = window.location.pathname + "?step=1&reset=1";
-                });
-              } else {
-                alert("Reservación en línea confirmada.");
-                window.location.href = window.location.pathname + "?step=1&reset=1";
+                }
+
+              } catch (err) {
+                console.error("Error en onApprove:", err);
+                const msg = err.message || (getCurrentLocale() === 'en'
+                  ? "Error confirming your reservation."
+                  : "Error al confirmar tu reserva.");
+                if (window.alertify) alertify.error(msg); else alert(msg);
+                document.dispatchEvent(new CustomEvent('reserva:cancelada'));
               }
+            });
+          },
 
-            } catch (err) {
-              console.error("❌ Error en onApprove:", err);
-              const msg = err.message || "Error al confirmar tu reserva.";
-              if (window.alertify) alertify.error(msg); else alert(msg);
-            }
-          });
-        },
+          onCancel: function () {
+            const msg = getCurrentLocale() === 'en'
+              ? "You canceled the payment on PayPal."
+              : "Cancelaste el pago en PayPal.";
+            if (window.alertify) alertify.message(msg); else alert(msg);
+            document.dispatchEvent(new CustomEvent('reserva:cancelada'));
+          },
 
-        onCancel: function () {
-          console.log("ℹ️ Pago cancelado");
-          const msg = "Cancelaste el pago en PayPal.";
-          if (window.alertify) alertify.message(msg);
-          else alert(msg);
-        },
+          onError: function (err) {
+            console.error("Error en PayPal:", err);
+            const msg = getCurrentLocale() === 'en'
+              ? "Error processing the payment."
+              : "Error al procesar el pago.";
+            if (window.alertify) alertify.error(msg); else alert(msg);
+            document.dispatchEvent(new CustomEvent('reserva:cancelada'));
+          }
+        }).render("#paypal-button-container");
 
-        onError: function (err) {
-          console.error("❌ Error en PayPal:", err);
-          const msg = "Error al procesar el pago.";
-          if (window.alertify) alertify.error(msg);
-          else alert(msg);
-        }
-      }).render("#paypal-button-container");
-
-      console.log("✅ Botones de PayPal renderizados");
-
-    } catch (err) {
-      console.error("❌ Error al renderizar PayPal:", err);
-      if (paypalContainer) {
-        paypalContainer.innerHTML = '<div style="text-align:center; color:red;">Error al cargar PayPal.</div>';
+      } catch (err) {
+        console.error("Error al renderizar PayPal:", err);
+        paypalContainer.innerHTML = `<div style="text-align:center; color:red;">${
+          getCurrentLocale() === 'en' ? 'Error loading PayPal.' : 'Error al cargar PayPal.'
+        }</div>`;
       }
     }
-  }
 
-  // ==========================================================
-  // 🔒 Funciones para controlar el scroll del body
-  // ==========================================================
-  function bloquearScrollBody() {
-    scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollPosition}px`;
-    document.body.style.width = '100%';
-    document.body.style.overflow = 'hidden';
-    document.body.style.paddingRight = '15px';
-  }
+    /* =================================================================
+       BLOQUEO DE SCROLL (sin paddingRight hardcoded)
+       ================================================================= */
+    function bloquearScrollBody() {
+      scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+      // Calcular ancho del scrollbar dinámicamente (evita salto visual)
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.position = 'fixed';
+      document.body.style.top      = `-${scrollPosition}px`;
+      document.body.style.width    = '100%';
+      document.body.style.overflow = 'hidden';
+      if (scrollbarWidth > 0) document.body.style.paddingRight = scrollbarWidth + 'px';
+    }
 
-  function restaurarScrollBody() {
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.width = '';
-    document.body.style.overflow = '';
-    document.body.style.paddingRight = '';
-    window.scrollTo(0, scrollPosition);
-  }
+    function restaurarScrollBody() {
+      document.body.style.position     = '';
+      document.body.style.top          = '';
+      document.body.style.width        = '';
+      document.body.style.overflow     = '';
+      document.body.style.paddingRight = '';
+      window.scrollTo(0, scrollPosition);
+    }
 
-  // ==========================================================
-  // 🎬 Iniciar pago en línea
-  // ==========================================================
-  async function iniciarPagoEnLinea() {
-    try {
-      console.log("🚀 Iniciando pago en línea");
-      modalLineaAbierto = true;
+    /* =================================================================
+       INICIAR PAGO EN LÍNEA
+       ================================================================= */
+    async function iniciarPagoEnLinea() {
+      try {
+        modalLineaAbierto = true;
+        reservaEnviada    = false; // reset por cada nuevo intento de pago
 
-      if (modalMetodoPago) {
+        if (modalMetodoPago) modalMetodoPago.style.display = "none";
+
+        // Validar datos antes de mostrar PayPal
+        try {
+          getFormPayload();
+        } catch (validationError) {
+          modalLineaAbierto = false;
+          if (window.alertify) alertify.error(validationError.message);
+          else alert(validationError.message);
+          document.dispatchEvent(new CustomEvent('reserva:cancelada'));
+          return;
+        }
+
+        bloquearScrollBody();
+
+        if (modalPagoOnline) modalPagoOnline.style.display = "flex";
+
+        if (paypalContainer) {
+          const loadingMsg = getCurrentLocale() === 'en' ? 'Loading PayPal...' : 'Cargando PayPal...';
+          paypalContainer.innerHTML = `<div style="text-align:center; padding:40px;">🔄 ${loadingMsg}</div>`;
+          paypalContainer.style.display = "block";
+        }
+
+        await loadPayPalSDK();
+        initPaypalButtons();
+
+      } catch (err) {
+        console.error("Error iniciando pago en línea:", err);
+        modalLineaAbierto = false;
+        const msg = getCurrentLocale() === 'en' ? 'Error loading PayPal.' : 'Error al cargar PayPal.';
+        if (window.alertify) alertify.error(msg); else alert(msg);
+
+        if (modalPagoOnline) {
+          modalPagoOnline.style.display = "none";
+          restaurarScrollBody();
+        }
+        document.dispatchEvent(new CustomEvent('reserva:cancelada'));
+      }
+    }
+
+    /* =================================================================
+       CERRAR MODALES
+       ================================================================= */
+    function cerrarModalSeleccion() {
+      if (modalMetodoPago && !modalLineaAbierto) {
         modalMetodoPago.style.display = "none";
       }
+    }
 
-      // Validar datos del formulario
-      try {
-        getFormPayload();
-      } catch (validationError) {
-        modalLineaAbierto = false;
-        if (window.alertify) alertify.error(validationError.message);
-        else alert(validationError.message);
-        return;
-      }
-
-      bloquearScrollBody();
-
-      if (modalPagoOnline) {
-        modalPagoOnline.style.display = "flex";
-      }
-
-      if (paypalContainer) {
-        paypalContainer.innerHTML = '<div style="text-align:center; padding:40px;">🔄 Cargando PayPal...</div>';
-        paypalContainer.style.display = "block";
-      }
-
-      await loadPayPalSDK();
-      initPaypalButtons();
-
-      console.log("✅ Pago en línea iniciado");
-
-    } catch (err) {
-      console.error("❌ ERROR:", err);
-      modalLineaAbierto = false;
-      if (window.alertify) alertify.error("Error al cargar PayPal.");
-      else alert("Error al cargar PayPal.");
-
+    function cerrarModalPago() {
       if (modalPagoOnline) {
         modalPagoOnline.style.display = "none";
         restaurarScrollBody();
+        modalLineaAbierto = false;
       }
     }
-  }
 
-  // ==========================================================
-  // 🔗 Funciones para cerrar modales
-  // ==========================================================
-  function cerrarModalSeleccion() {
-    if (modalMetodoPago && !modalLineaAbierto) {
-      modalMetodoPago.style.display = "none";
-    }
-  }
+    /* =================================================================
+       EVENTOS
+       ================================================================= */
+    document.addEventListener('reserva:validacionExitosa', function (e) {
+      if (modalLineaAbierto) return;
+      const currentPlan = e.detail?.plan;
 
-  function cerrarModalPago() {
-    if (modalPagoOnline) {
-      modalPagoOnline.style.display = "none";
-      restaurarScrollBody();
-      modalLineaAbierto = false;
-    }
-  }
+      if (currentPlan === 'mostrador' && modalMetodoPago) {
+        modalMetodoPago.style.display = "flex";
+      } else if (currentPlan === 'linea') {
+        iniciarPagoEnLinea();
+      }
+    });
 
-  // ==========================================================
-  // 📌 Configuración de eventos
-  // ==========================================================
+    cerrarModalMetodoX?.addEventListener("click", cerrarModalSeleccion);
 
-  document.addEventListener('reserva:validacionExitosa', function (e) {
-    if (modalLineaAbierto) return;
-
-    const currentPlan = e.detail?.plan;
-    console.log('🎯 Evento recibido en BtnReservaLinea, plan:', currentPlan);
-
-    if (currentPlan === 'mostrador' && modalMetodoPago) {
-      modalMetodoPago.style.display = "flex";
-      console.log('📱 Modal de método de pago abierto (mostrador)');
-    }
-    else if (currentPlan === 'linea') {
-      iniciarPagoEnLinea();
-      console.log('💳 Iniciando pago en línea directamente');
-    }
-  });
-
-  if (cerrarModalMetodoX) {
-    cerrarModalMetodoX.addEventListener("click", cerrarModalSeleccion);
-  }
-  if (cerrarModalMetodo) {
-    cerrarModalMetodo.addEventListener("click", cerrarModalSeleccion);
-  }
-
-  if (cerrarModalPagoOnline) {
-    cerrarModalPagoOnline.addEventListener("click", function (e) {
+    cerrarModalPagoOnline?.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
       cerrarModalPago();
     });
-  }
 
-  if (modalMetodoPago) {
-    modalMetodoPago.addEventListener("click", function (e) {
+    modalMetodoPago?.addEventListener("click", function (e) {
       if (e.target === modalMetodoPago && !modalLineaAbierto) {
         modalMetodoPago.style.display = "none";
       }
     });
-  }
 
-  // Botón "PREPAGAR EN LÍNEA" en el modal de selección
-  if (btnPagoLinea) {
-    btnPagoLinea.addEventListener("click", function (e) {
+    btnPagoLinea?.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      const planInput = document.getElementById("plan");
+      const planInput = qs("#plan");
       if (planInput) planInput.value = "linea";
       iniciarPagoEnLinea();
     });
-  }
 
-  window.handleReservaPagoEnLinea = iniciarPagoEnLinea;
-
-  console.log("✅ Módulo de pago en línea inicializado (event-driven)");
-});
+    // Expuesta al global (consumida por reservaciones.js)
+    window.handleReservaPagoEnLinea = iniciarPagoEnLinea;
+  });
+})();

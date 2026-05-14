@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -22,6 +21,13 @@ class BtnReservacionesController extends Controller
     private const TOLERANCIA_PAYPAL_MXN = 1.00;
 
     /**
+     * Multiplicador para el precio diario cuando el cliente paga en mostrador.
+     * Debe coincidir EXACTAMENTE con el multiplicador usado en
+     * ReservacionesController para mostrar los precios al cliente en Step 2.
+     */
+    private const MOSTRADOR_MULTIPLIER = 1.25;
+
+    /**
      * Guarda una reservación real (pago en mostrador)
      */
     public function reservar(StoreReservacionRequest $request)
@@ -29,44 +35,47 @@ class BtnReservacionesController extends Controller
         try {
             $validated = $request->validated();
 
-            // Delegar todos los cálculos complejos a la función centralizada
+            // Calcular subtotales, servicios e info de la categoría
             $data = $this->procesarCalculosYResumen($validated, 'mostrador');
 
             // Generar folio único
             $codigo = $this->generarFolioReservacionUnico();
 
-            // Insertar reservación principal
-            $id = DB::table('reservaciones')->insertGetId([
-                'id_usuario'       => null,
-                'id_vehiculo'      => null,
-                'id_categoria'     => $validated['categoria_id'],
-                'tarifa_base'      => $data['precioDia'],
-                'ciudad_retiro'    => $data['ciudadRetiro'],
-                'ciudad_entrega'   => $data['ciudadEntrega'],
-                'sucursal_retiro'  => $validated['pickup_sucursal_id'] ?? null,
-                'sucursal_entrega' => $validated['dropoff_sucursal_id'] ?? null,
-                'fecha_inicio'     => $validated['pickup_date'],
-                'hora_retiro'      => $validated['pickup_time'],
-                'fecha_fin'        => $validated['dropoff_date'],
-                'hora_entrega'     => $validated['dropoff_time'],
-                'estado'           => 'pendiente_pago',
-                'subtotal'         => $data['subtotal'],
-                'impuestos'        => $data['impuestos'],
-                'total'            => $data['total'],
-                'moneda'           => 'MXN',
-                'no_vuelo'         => $validated['vuelo'] ?? null,
-                'codigo'           => $codigo,
-                'nombre_cliente'   => $validated['nombre'] ?? null,
-                'email_cliente'    => $validated['email'] ?? null,
-                'telefono_cliente' => $validated['telefono'] ?? null,
-                'created_at'       => now(),
-                'updated_at'       => now(),
-            ]);
+            // Transacción atómica: reserva + servicios juntos o nada
+            $id = DB::transaction(function () use ($validated, $data, $codigo) {
+                $id = DB::table('reservaciones')->insertGetId([
+                    'id_usuario'       => null,
+                    'id_vehiculo'      => null,
+                    'id_categoria'     => $validated['categoria_id'],
+                    'tarifa_base'      => $data['precioDia'],
+                    'ciudad_retiro'    => $data['ciudadRetiro'],
+                    'ciudad_entrega'   => $data['ciudadEntrega'],
+                    'sucursal_retiro'  => $validated['pickup_sucursal_id'] ?? null,
+                    'sucursal_entrega' => $validated['dropoff_sucursal_id'] ?? null,
+                    'fecha_inicio'     => $validated['pickup_date'],
+                    'hora_retiro'      => $validated['pickup_time'],
+                    'fecha_fin'        => $validated['dropoff_date'],
+                    'hora_entrega'     => $validated['dropoff_time'],
+                    'estado'           => 'pendiente_pago',
+                    'subtotal'         => $data['subtotal'],
+                    'impuestos'        => $data['impuestos'],
+                    'total'            => $data['total'],
+                    'moneda'           => 'MXN',
+                    'no_vuelo'         => $validated['vuelo'] ?? null,
+                    'codigo'           => $codigo,
+                    'nombre_cliente'   => $validated['nombre'] ?? null,
+                    'email_cliente'    => $validated['email'] ?? null,
+                    'telefono_cliente' => $validated['telefono'] ?? null,
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ]);
 
-            // Insertar servicios (Addons + Dropoff)
-            $this->guardarServiciosReservacion($id, $data['serviciosAInsertar']);
+                $this->guardarServiciosReservacion($id, $data['serviciosAInsertar']);
 
-            // Enviar correo (no rompe la reserva si falla)
+                return $id;
+            });
+
+            // Correo fuera de la transacción (si falla, la reserva queda guardada)
             $this->enviarCorreoConfirmacion($id, 'mostrador', $data);
 
             return response()->json([
@@ -80,7 +89,7 @@ class BtnReservacionesController extends Controller
                 'message'   => 'Reservación creada con éxito.',
             ]);
         } catch (\Throwable $e) {
-            Log::error('❌ Error creando reservación (mostrador): ' . $e->getMessage(), [
+            Log::error('[ERROR] Falla creando reservación (mostrador): ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
             return response()->json([
@@ -94,13 +103,46 @@ class BtnReservacionesController extends Controller
     /**
      * Validar pago en PayPal y guardar reservación en línea.
      *
-     * 🛡️ FILOSOFÍA: si PayPal ya cobró, NUNCA se rechaza el guardado.
+     * FILOSOFÍA: si PayPal ya cobró, NUNCA se rechaza el guardado.
      * Si hay desajustes menores, se loggean y se guarda con marca de revisión.
+     *
+     * IDEMPOTENCIA: si ya existe una reserva con el mismo paypal_order_id
+     * (caso de reintento desde el JS), devuelve la existente sin duplicar.
      */
     public function reservarLinea(StoreReservacionLineaRequest $request)
     {
         try {
             $validated = $request->validated();
+
+            // --- IDEMPOTENCIA: detectar reintento desde el frontend ---
+            // El JS tiene retry con backoff: si el primer POST se cae en
+            // el camino pero el cobro ya pasó, el JS reintenta hasta 3 veces.
+            // Aquí evitamos crear reservas duplicadas con el mismo order_id.
+            $reservaExistente = DB::table('reservaciones')
+                ->where('paypal_order_id', $validated['paypal_order_id'])
+                ->first();
+
+            if ($reservaExistente) {
+                Log::info('[INFO] Reintento detectado de reserva PayPal ya registrada', [
+                    'paypal_order_id' => $validated['paypal_order_id'],
+                    'id_reservacion'  => $reservaExistente->id_reservacion,
+                    'folio'           => $reservaExistente->codigo,
+                ]);
+
+                return response()->json([
+                    'ok'               => true,
+                    'folio'            => $reservaExistente->codigo,
+                    'id'               => $reservaExistente->id_reservacion,
+                    'subtotal'         => (float) $reservaExistente->subtotal,
+                    'impuestos'        => (float) $reservaExistente->impuestos,
+                    'total'            => (float) $reservaExistente->total,
+                    'estado'           => $reservaExistente->estado,
+                    'correo_enviado'   => false,
+                    'requiere_revision' => false,
+                    'reuse'            => true,
+                    'message'          => 'Reserva ya registrada previamente.',
+                ]);
+            }
 
             // Total que cobró PayPal según el frontend (referencia)
             $totalLocal = isset($validated['total_local']) ? (float) $validated['total_local'] : null;
@@ -115,9 +157,9 @@ class BtnReservacionesController extends Controller
                 $totalLocal
             );
 
-            // 🛡️ Si PayPal NO cobró (o no existe la orden), aquí SÍ rechazamos
+            // Si PayPal NO cobró (o no existe la orden), aquí SÍ rechazamos
             if (!$paypalValidado['ok'] && !$paypalValidado['cobro_realizado']) {
-                Log::warning('⚠️ Pago NO cobrado por PayPal, rechazando reserva', [
+                Log::warning('[WARN] Pago NO cobrado por PayPal, rechazando reserva', [
                     'paypal_order_id' => $validated['paypal_order_id'],
                     'detalle'         => $paypalValidado,
                 ]);
@@ -127,88 +169,90 @@ class BtnReservacionesController extends Controller
                 ], 422);
             }
 
-            // 🛡️ Si PayPal sí cobró pero hay desajuste, GUARDAMOS igual y loggeamos
+            // Si PayPal sí cobró pero hay desajuste, GUARDAMOS igual y loggeamos
             $requiereRevision = !$paypalValidado['ok'] && $paypalValidado['cobro_realizado'];
 
             if ($requiereRevision) {
-                Log::warning('⚠️ Reserva guardada con desajuste de monto - REQUIERE REVISIÓN', [
-                    'paypal_order_id'   => $validated['paypal_order_id'],
-                    'monto_paypal'      => $paypalValidado['monto_paypal'] ?? null,
-                    'monto_backend'     => $data['total'],
-                    'monto_frontend'    => $totalLocal,
-                    'cliente_email'     => $validated['email'] ?? null,
-                    'cliente_nombre'    => $validated['nombre'] ?? null,
-                    'detalle'           => $paypalValidado,
+                Log::warning('[WARN] Reserva guardada con desajuste de monto - REQUIERE REVISIÓN', [
+                    'paypal_order_id' => $validated['paypal_order_id'],
+                    'monto_paypal'    => $paypalValidado['monto_paypal'] ?? null,
+                    'monto_backend'   => $data['total'],
+                    'monto_frontend'  => $totalLocal,
+                    'cliente_email'   => $validated['email'] ?? null,
+                    'cliente_nombre'  => $validated['nombre'] ?? null,
+                    'detalle'         => $paypalValidado,
                 ]);
             }
 
             // Generar folio único
             $codigo = $this->generarFolioReservacionUnico();
 
-            // Determinar el total a guardar: el que PayPal realmente cobró
+            // El total a guardar es el que PayPal realmente cobró
             $totalAGuardar = $paypalValidado['monto_paypal'] ?? $data['total'];
 
-            // Insertar reservación principal confirmada
-            $id = DB::table('reservaciones')->insertGetId([
-                'id_usuario'       => null,
-                'id_vehiculo'      => null,
-                'id_categoria'     => $validated['categoria_id'],
-                'tarifa_base'      => $data['precioDia'],
-                'ciudad_retiro'    => $data['ciudadRetiro'],
-                'ciudad_entrega'   => $data['ciudadEntrega'],
-                'sucursal_retiro'  => $validated['pickup_sucursal_id'] ?? null,
-                'sucursal_entrega' => $validated['dropoff_sucursal_id'] ?? null,
-                'fecha_inicio'     => $validated['pickup_date'],
-                'hora_retiro'      => $validated['pickup_time'],
-                'fecha_fin'        => $validated['dropoff_date'],
-                'hora_entrega'     => $validated['dropoff_time'],
-                'estado'           => 'confirmada',
-                'subtotal'         => $data['subtotal'],
-                'impuestos'        => $data['impuestos'],
-                'total'            => $totalAGuardar,
-                'moneda'           => 'MXN',
-                'no_vuelo'         => $validated['vuelo'] ?? null,
-                'codigo'           => $codigo,
-                'nombre_cliente'   => $validated['nombre'] ?? null,
-                'email_cliente'    => $validated['email'] ?? null,
-                'telefono_cliente' => $validated['telefono'] ?? null,
-                'paypal_order_id'  => $validated['paypal_order_id'],
-                'status_pago'      => 'Pagado',
-                'metodo_pago'      => 'en_linea',
-                'created_at'       => now(),
-                'updated_at'       => now(),
-            ]);
+            // Transacción atómica: reserva + servicios juntos o nada
+            $id = DB::transaction(function () use ($validated, $data, $codigo, $totalAGuardar) {
+                $id = DB::table('reservaciones')->insertGetId([
+                    'id_usuario'       => null,
+                    'id_vehiculo'      => null,
+                    'id_categoria'     => $validated['categoria_id'],
+                    'tarifa_base'      => $data['precioDia'],
+                    'ciudad_retiro'    => $data['ciudadRetiro'],
+                    'ciudad_entrega'   => $data['ciudadEntrega'],
+                    'sucursal_retiro'  => $validated['pickup_sucursal_id'] ?? null,
+                    'sucursal_entrega' => $validated['dropoff_sucursal_id'] ?? null,
+                    'fecha_inicio'     => $validated['pickup_date'],
+                    'hora_retiro'      => $validated['pickup_time'],
+                    'fecha_fin'        => $validated['dropoff_date'],
+                    'hora_entrega'     => $validated['dropoff_time'],
+                    'estado'           => 'confirmada',
+                    'subtotal'         => $data['subtotal'],
+                    'impuestos'        => $data['impuestos'],
+                    'total'            => $totalAGuardar,
+                    'moneda'           => 'MXN',
+                    'no_vuelo'         => $validated['vuelo'] ?? null,
+                    'codigo'           => $codigo,
+                    'nombre_cliente'   => $validated['nombre'] ?? null,
+                    'email_cliente'    => $validated['email'] ?? null,
+                    'telefono_cliente' => $validated['telefono'] ?? null,
+                    'paypal_order_id'  => $validated['paypal_order_id'],
+                    'status_pago'      => 'Pagado',
+                    'metodo_pago'      => 'en_linea',
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ]);
 
-            // Si hay desajuste, dejamos un log con el ID ya creado
+                $this->guardarServiciosReservacion($id, $data['serviciosAInsertar']);
+
+                return $id;
+            });
+
             if ($requiereRevision) {
-                Log::warning('🔍 RESERVA QUE REQUIERE REVISIÓN MANUAL', [
+                Log::warning('[WARN] Reserva creada que requiere revisión manual', [
                     'id_reservacion' => $id,
                     'folio'          => $codigo,
                     'paypal_order'   => $validated['paypal_order_id'],
                 ]);
             }
 
-            // Insertar servicios (Addons + Dropoff)
-            $this->guardarServiciosReservacion($id, $data['serviciosAInsertar']);
-
-            // Enviar correo (no rompe la reserva si falla)
+            // Correo fuera de la transacción
             $correoEnviado = $this->enviarCorreoConfirmacion($id, 'en_linea', $data);
 
             return response()->json([
-                'ok'              => true,
-                'folio'           => $codigo,
-                'id'              => $id,
-                'subtotal'        => $data['subtotal'],
-                'impuestos'       => $data['impuestos'],
-                'total'           => $totalAGuardar,
-                'estado'          => 'confirmada',
-                'correo_enviado'  => $correoEnviado,
+                'ok'                => true,
+                'folio'             => $codigo,
+                'id'                => $id,
+                'subtotal'          => $data['subtotal'],
+                'impuestos'         => $data['impuestos'],
+                'total'             => $totalAGuardar,
+                'estado'            => 'confirmada',
+                'correo_enviado'    => $correoEnviado,
                 'requiere_revision' => $requiereRevision,
-                'message'         => 'Pago validado con PayPal y reserva confirmada correctamente.',
+                'message'           => 'Pago validado con PayPal y reserva confirmada correctamente.',
             ]);
         } catch (\Throwable $e) {
-            // 🚨 LOG CRÍTICO: si esto pasa con PayPal ya cobrado, hay un cobro huérfano
-            Log::critical('❌ ERROR CRÍTICO en reservarLinea (posible cobro huérfano): ' . $e->getMessage(), [
+            // LOG CRÍTICO: si esto pasa con PayPal ya cobrado, hay un cobro huérfano
+            Log::critical('[CRITICAL] Error en reservarLinea (posible cobro huérfano): ' . $e->getMessage(), [
                 'trace'           => $e->getTraceAsString(),
                 'paypal_order_id' => $request->input('paypal_order_id'),
                 'cliente_email'   => $request->input('email'),
@@ -225,12 +269,12 @@ class BtnReservacionesController extends Controller
     }
 
     /**
-     * Realiza todos los cálculos (Días, Addons, Dropoff, Impuestos)
-     * y genera la estructura de datos que comparten Mostrador, PayPal y los Emails.
+     * Realiza todos los cálculos (días, addons, dropoff, impuestos)
+     * y genera la estructura de datos que comparten mostrador, PayPal y los correos.
      */
     private function procesarCalculosYResumen(array $validated, string $tipoPlan): array
     {
-        // Días de Renta y Tolerancia
+        // --- Días de Renta y Tolerancia ---
         $fechaInicio = Carbon::parse($validated['pickup_date'] . ' ' . $validated['pickup_time']);
         $fechaFin    = Carbon::parse($validated['dropoff_date'] . ' ' . $validated['dropoff_time']);
 
@@ -239,28 +283,32 @@ class BtnReservacionesController extends Controller
         $horasExtra   = $horasTotales % 24;
         $dias         = ($horasExtra > 1) ? $diasBase + 1 : max(1, $diasBase);
 
-        // Tarifa Base
+        // --- Tarifa Base ---
         $categoria = DB::table('categorias_carros')
             ->select('id_categoria', 'codigo', 'nombre', 'descripcion', 'precio_dia')
             ->where('id_categoria', $validated['categoria_id'])
             ->first();
 
-        $precioDia = $categoria ? (float)$categoria->precio_dia : 0.0;
+        $precioDia = $categoria ? (float) $categoria->precio_dia : 0.0;
 
-        // Si eligen mostrador, el precio diario se infla un 15%
+        // Si el plan es mostrador, aplicar multiplicador (1.25)
+        // Debe coincidir con ReservacionesController para mantener consistencia
+        // entre lo que ve el cliente en Step 2 y lo que se guarda en BD.
         if ($tipoPlan === 'mostrador' && $precioDia > 0) {
-            $precioDia = round($precioDia * 1.15);
+            $precioDia = round($precioDia * self::MOSTRADOR_MULTIPLIER);
         }
 
         $subtotalBase = $precioDia * $dias;
 
-        // Servicios Extras (Addons)
+        // --- Servicios Extras (Addons) ---
         $addonsMap = [];
         if (!empty($validated['addons'])) {
             foreach (explode(',', $validated['addons']) as $pair) {
                 $pair = trim($pair);
-                if (preg_match('/^(\d+)\s*:\s*(\d+)$/', $pair, $matches) && (int)$matches[1] > 0 && (int)$matches[2] > 0) {
-                    $addonsMap[(int)$matches[1]] = ($addonsMap[(int)$matches[1]] ?? 0) + (int)$matches[2];
+                if (preg_match('/^(\d+)\s*:\s*(\d+)$/', $pair, $matches)
+                    && (int) $matches[1] > 0 && (int) $matches[2] > 0) {
+                    $id = (int) $matches[1];
+                    $addonsMap[$id] = ($addonsMap[$id] ?? 0) + (int) $matches[2];
                 }
             }
         }
@@ -270,35 +318,38 @@ class BtnReservacionesController extends Controller
             ->where('id_estatus', 1)
             ->max('capacidad_tanque') ?? 50);
 
-        $extrasSubtotal = 0.0;
-        $serviciosAInsertar = []; // Array listo para un `insert` masivo limpio
-        $extrasParaCorreo = collect(); // Para la plantilla
+        $extrasSubtotal     = 0.0;
+        $serviciosAInsertar = [];
+        $extrasParaCorreo   = collect();
 
         if (!empty($addonsMap)) {
-            $serviciosDB = DB::table('servicios')->whereIn('id_servicio', array_keys($addonsMap))->get();
+            $serviciosDB = DB::table('servicios')
+                ->whereIn('id_servicio', array_keys($addonsMap))
+                ->get();
 
             foreach ($serviciosDB as $srv) {
-                if ($srv->id_servicio == 11) continue; // Saltamos dropoff si viene inyectado por error
+                // Saltar dropoff si viene inyectado por error desde frontend
+                if ($srv->id_servicio == 11) continue;
 
-                $cantidad = $addonsMap[$srv->id_servicio] ?? 0;
-                $precioBase = (float)$srv->precio;
-                $tipoCobro = strtolower((string)$srv->tipo_cobro);
-
-                $cantParaDB = $cantidad;
+                $cantidad         = $addonsMap[$srv->id_servicio] ?? 0;
+                $precioBase       = (float) $srv->precio;
+                $tipoCobro        = strtolower((string) $srv->tipo_cobro);
+                $cantParaDB       = $cantidad;
                 $precioUnitarioDB = $precioBase;
-                $lineTotal = 0;
+                $lineTotal        = 0;
 
-                // Lógica de cálculo
-                if ($srv->id_servicio == 1) { // Gasolina
-                    $lineTotal = $precioBase * $capacidadTanque;
-                    $cantParaDB = max(1, (int)round($capacidadTanque));
+                if ($srv->id_servicio == 1) {
+                    // Gasolina prepago: cobro por tanque
+                    $lineTotal  = $precioBase * $capacidadTanque;
+                    $cantParaDB = max(1, (int) round($capacidadTanque));
                 } elseif ($tipoCobro === 'por_tanque') {
-                    $lineTotal = $precioBase * $capacidadTanque * $cantidad;
-                    $cantParaDB = max(1, (int)round($capacidadTanque)) * $cantidad;
+                    $lineTotal  = $precioBase * $capacidadTanque * $cantidad;
+                    $cantParaDB = max(1, (int) round($capacidadTanque)) * $cantidad;
                 } elseif ($tipoCobro === 'por_evento') {
                     $lineTotal = $precioBase * $cantidad;
-                } else { // Por Día
-                    $lineTotal = $precioBase * $cantidad * $dias;
+                } else {
+                    // Por día (default)
+                    $lineTotal        = $precioBase * $cantidad * $dias;
                     $precioUnitarioDB = $precioBase * $dias;
                 }
 
@@ -310,56 +361,80 @@ class BtnReservacionesController extends Controller
                     'precio_unitario' => $precioUnitarioDB,
                 ];
 
-                // Formateamos para el correo en memoria
-                $srv->cantidad = $cantParaDB;
+                $srv->cantidad        = $cantParaDB;
                 $srv->precio_unitario = $precioUnitarioDB;
-                $srv->total = $lineTotal;
+                $srv->total           = $lineTotal;
                 $extrasParaCorreo->push($srv);
             }
         }
 
-        // Dropoff Dinámico
-        $montoDropoff = 0;
-        if (!empty($validated['pickup_sucursal_id']) && !empty($validated['dropoff_sucursal_id']) && $validated['pickup_sucursal_id'] != $validated['dropoff_sucursal_id']) {
-            $nombreDestino = DB::table('sucursales')->where('id_sucursal', $validated['dropoff_sucursal_id'])->value('nombre');
+        // --- Drop Off: ciudad de entrega + cargo dinámico ---
+        // Resolver sucursales de pickup y dropoff en UNA sola query
+        $sucursalesIds = array_filter([
+            $validated['pickup_sucursal_id'] ?? null,
+            $validated['dropoff_sucursal_id'] ?? null,
+        ]);
 
-            if ($nombreDestino) {
-                $km = DB::table('ubicaciones_servicio')->where('destino', $nombreDestino)->where('activo', true)->value('km') ?? 0;
-                $costoKm = DB::table('categoria_costo_km')->where('id_categoria', $validated['categoria_id'])->where('activo', true)->value('costo_km') ?? 0;
-                $montoDropoff = (float)$km * (float)$costoKm;
+        $sucursales = empty($sucursalesIds)
+            ? collect()
+            : DB::table('sucursales')
+                ->select('id_sucursal', 'id_ciudad', 'nombre')
+                ->whereIn('id_sucursal', $sucursalesIds)
+                ->get()
+                ->keyBy('id_sucursal');
 
-                if ($montoDropoff > 0) {
-                    $extrasSubtotal += $montoDropoff;
-                    $serviciosAInsertar[] = [
-                        'id_servicio'     => 11,
-                        'cantidad'        => 1,
-                        'precio_unitario' => $montoDropoff,
-                    ];
+        $sucPickup  = !empty($validated['pickup_sucursal_id'])
+            ? $sucursales->get($validated['pickup_sucursal_id'])  : null;
+        $sucDropoff = !empty($validated['dropoff_sucursal_id'])
+            ? $sucursales->get($validated['dropoff_sucursal_id']) : null;
 
-                    $extrasParaCorreo->push((object)[
-                        'id_servicio' => 11,
-                        'nombre' => 'Cargo por Devolución (Drop-off)',
-                        'descripcion' => 'Entrega en sucursal diferente',
-                        'cantidad' => 1,
-                        'precio_unitario' => $montoDropoff,
-                        'total' => $montoDropoff
-                    ]);
-                }
+        $ciudadRetiro  = $sucPickup->id_ciudad  ?? 1;
+        $ciudadEntrega = $sucDropoff->id_ciudad ?? $ciudadRetiro;
+
+        // Detectar si hay drop off (sucursales distintas)
+        $hayDropoff = (
+            !empty($validated['pickup_sucursal_id'])
+            && !empty($validated['dropoff_sucursal_id'])
+            && $validated['pickup_sucursal_id'] != $validated['dropoff_sucursal_id']
+        );
+
+        if ($hayDropoff && $sucDropoff) {
+            $km = DB::table('ubicaciones_servicio')
+                ->where('destino', $sucDropoff->nombre)
+                ->where('activo', true)
+                ->value('km') ?? 0;
+
+            $costoKm = DB::table('categoria_costo_km')
+                ->where('id_categoria', $validated['categoria_id'])
+                ->where('activo', true)
+                ->value('costo_km') ?? 0;
+
+            $montoDropoff = (float) $km * (float) $costoKm;
+
+            if ($montoDropoff > 0) {
+                $extrasSubtotal += $montoDropoff;
+                $serviciosAInsertar[] = [
+                    'id_servicio'     => 11,
+                    'cantidad'        => 1,
+                    'precio_unitario' => $montoDropoff,
+                ];
+                $extrasParaCorreo->push((object) [
+                    'id_servicio'     => 11,
+                    'nombre'          => 'Cargo por Devolución (Drop-off)',
+                    'descripcion'     => 'Entrega en sucursal diferente',
+                    'cantidad'        => 1,
+                    'precio_unitario' => $montoDropoff,
+                    'total'           => $montoDropoff,
+                ]);
             }
         }
 
-        // Gran Total
+        // --- Gran Total ---
         $subtotal  = $subtotalBase + $extrasSubtotal;
         $impuestos = round($subtotal * 0.16, 2);
         $total     = $subtotal + $impuestos;
 
-        // Determinar Ciudad para BD
-        $ciudadRetiro = 1; // Fallback
-        if (!empty($validated['pickup_sucursal_id'])) {
-            $ciudadRetiro = DB::table('sucursales')->where('id_sucursal', $validated['pickup_sucursal_id'])->value('id_ciudad') ?? 1;
-        }
-
-        // Estructurar Ficha "Tu Auto"
+        // --- Estructurar Ficha "Tu Auto" ---
         $predeterminados = [
             'C'  => ['pax' => 5,  'small' => 2, 'big' => 1],
             'D'  => ['pax' => 5,  'small' => 2, 'big' => 1],
@@ -374,44 +449,43 @@ class BtnReservacionesController extends Controller
             'HI' => ['pax' => 5,  'small' => 3, 'big' => 2],
         ];
 
-        $codigoCat = strtoupper(trim((string)($categoria->codigo ?? '')));
+        $codigoCat = strtoupper(trim((string) ($categoria->codigo ?? '')));
         $cap = $predeterminados[$codigoCat] ?? ['pax' => 5, 'small' => 2, 'big' => 1];
 
-        $singular = rtrim(mb_strtoupper(trim((string)($categoria->nombre ?? ''))), 'S');
+        $singular = rtrim(mb_strtoupper(trim((string) ($categoria->nombre ?? ''))), 'S');
         $tuAuto = [
-            'titulo'      => trim((string)($categoria->descripcion ?? 'Auto o similar')),
-            'subtitulo'   => $singular . " | CATEGORÍA " . ($codigoCat ?: '-'),
-            'pax'         => (int)$cap['pax'],
-            'small'       => (int)$cap['small'],
-            'big'         => (int)$cap['big'],
+            'titulo'      => trim((string) ($categoria->descripcion ?? 'Auto o similar')),
+            'subtitulo'   => $singular . ' | CATEGORÍA ' . ($codigoCat ?: '-'),
+            'pax'         => (int) $cap['pax'],
+            'small'       => (int) $cap['small'],
+            'big'         => (int) $cap['big'],
             'transmision' => 'Transmisión manual o automática',
             'tech'        => 'Apple CarPlay | Android Auto',
-            'incluye'     => 'KM ilimitados | Reelevo de Responsabilidad (LI)',
+            'incluye'     => 'KM ilimitados | Relevo de Responsabilidad (LI)',
         ];
 
-        // Enlaces de imagen
+        // --- Imagen de la categoría (WebP) ---
         $catImages = [
-            1 => 'img/aveo.png',
-            2 => 'img/virtus.png',
-            3 => 'img/jetta.png',
-            4 => 'img/camry.png',
-            5 => 'img/renegade.png',
-            6 => 'img/taos.png',
-            7 => 'img/avanza.png',
-            8 => 'img/Odyssey.png',
-            9 => 'img/Hiace.png',
-            10 => 'img/Frontier.png',
-            11 => 'img/Tacoma.png',
+            1  => 'img/aveo.webp',
+            2  => 'img/virtus.webp',
+            3  => 'img/jetta.webp',
+            4  => 'img/camry.webp',
+            5  => 'img/renegade.webp',
+            6  => 'img/taos.webp',
+            7  => 'img/avanza.webp',
+            8  => 'img/Odyssey.webp',
+            9  => 'img/Hiace.webp',
+            10 => 'img/Frontier.webp',
+            11 => 'img/Tacoma.webp',
         ];
-        $catId = (int)($categoria->id_categoria ?? 0);
-        $imgCategoria = rtrim(config('app.url', 'https://viajerocar-production.up.railway.app'), '/') . '/' . ltrim($catImages[$catId] ?? 'img/categorias/placeholder.png', '/');
+        $catId        = (int) ($categoria->id_categoria ?? 0);
+        $imgCategoria = asset($catImages[$catId] ?? 'img/categorias/placeholder.webp');
 
-        // Devolvemos el gran diccionario listo para usar
         return [
             'categoria'          => $categoria,
             'precioDia'          => $precioDia,
             'ciudadRetiro'       => $ciudadRetiro,
-            'ciudadEntrega'      => $ciudadRetiro, // Misma ciudad por defecto
+            'ciudadEntrega'      => $ciudadEntrega,
             'subtotal'           => $subtotal,
             'impuestos'          => $impuestos,
             'total'              => $total,
@@ -419,17 +493,19 @@ class BtnReservacionesController extends Controller
             'extrasParaCorreo'   => $extrasParaCorreo,
             'opcionesRentaTotal' => round($extrasSubtotal, 2),
             'tuAuto'             => $tuAuto,
-            'imgCategoria'       => $imgCategoria
+            'imgCategoria'       => $imgCategoria,
         ];
     }
 
     /**
-     * Helper para insertar todos los servicios adicionales calculados
+     * Inserta todos los servicios adicionales calculados.
+     * Se llama DENTRO de una DB::transaction para garantizar atomicidad.
      */
     private function guardarServiciosReservacion(int $reservacionId, array $servicios): void
     {
         if (empty($servicios)) return;
 
+        $now = now();
         $insertData = [];
         foreach ($servicios as $srv) {
             $insertData[] = [
@@ -438,8 +514,8 @@ class BtnReservacionesController extends Controller
                 'id_contrato'     => null,
                 'cantidad'        => $srv['cantidad'],
                 'precio_unitario' => $srv['precio_unitario'],
-                'created_at'      => now(),
-                'updated_at'      => now(),
+                'created_at'      => $now,
+                'updated_at'      => $now,
             ];
         }
 
@@ -447,33 +523,41 @@ class BtnReservacionesController extends Controller
     }
 
     /**
-     * Helper centralizado para enviar correos.
-     * 🛡️ Si el SMTP falla, NO rompe la reserva. Loggea y continúa.
+     * Envía correo de confirmación.
+     * Si el SMTP falla, NO rompe la reserva. Loggea y continúa.
      *
      * @return bool true si el correo se envió, false si hubo error
      */
     private function enviarCorreoConfirmacion(int $reservacionId, string $tipoPlanCorreo, array $data): bool
     {
         try {
-            $reservacion = DB::table('reservaciones')->where('id_reservacion', $reservacionId)->first();
+            $reservacion = DB::table('reservaciones')
+                ->where('id_reservacion', $reservacionId)
+                ->first();
 
             if (!$reservacion || empty($reservacion->email_cliente)) {
-                Log::info('📭 Sin correo del cliente, no se envía notificación', [
+                Log::info('[INFO] Sin correo del cliente, no se envía notificación', [
                     'id_reservacion' => $reservacionId,
                 ]);
                 return false;
             }
 
+            $sucursalesIds = array_filter([
+                $reservacion->sucursal_retiro,
+                $reservacion->sucursal_entrega,
+            ]);
+
             $nombresSucursales = DB::table('sucursales as s')
                 ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
                 ->select('s.id_sucursal', 's.nombre as nombre_sucursal', 'c.nombre as nombre_ciudad')
-                ->whereIn('s.id_sucursal', array_filter([$reservacion->sucursal_retiro, $reservacion->sucursal_entrega]))
-                ->get()->keyBy('id_sucursal');
+                ->whereIn('s.id_sucursal', $sucursalesIds)
+                ->get()
+                ->keyBy('id_sucursal');
 
-            $infoRetiro = $nombresSucursales->get($reservacion->sucursal_retiro);
+            $infoRetiro  = $nombresSucursales->get($reservacion->sucursal_retiro);
             $infoEntrega = $nombresSucursales->get($reservacion->sucursal_entrega);
 
-            $lugarRetiro  = $infoRetiro ? "{$infoRetiro->nombre_ciudad} - {$infoRetiro->nombre_sucursal}" : '-';
+            $lugarRetiro  = $infoRetiro  ? "{$infoRetiro->nombre_ciudad} - {$infoRetiro->nombre_sucursal}"   : '-';
             $lugarEntrega = $infoEntrega ? "{$infoEntrega->nombre_ciudad} - {$infoEntrega->nombre_sucursal}" : '-';
 
             Mail::to($reservacion->email_cliente)
@@ -490,7 +574,7 @@ class BtnReservacionesController extends Controller
                     $data['tuAuto']
                 ));
 
-            Log::info('✅ Correo de confirmación enviado', [
+            Log::info('[INFO] Correo de confirmación enviado', [
                 'id_reservacion' => $reservacionId,
                 'email'          => $reservacion->email_cliente,
                 'tipo'           => $tipoPlanCorreo,
@@ -498,9 +582,8 @@ class BtnReservacionesController extends Controller
 
             return true;
         } catch (\Throwable $e) {
-            // 🚨 IMPORTANTE: NO relanzamos la excepción.
-            // La reserva ya está guardada; un fallo de correo no debe romper el flujo.
-            Log::error('❌ Error enviando correo de confirmación (la reserva SÍ se guardó)', [
+            // No relanzar: la reserva ya está guardada, un fallo de correo no rompe el flujo
+            Log::error('[ERROR] Falla enviando correo de confirmación (la reserva SÍ se guardó)', [
                 'id_reservacion' => $reservacionId,
                 'error'          => $e->getMessage(),
                 'trace'          => $e->getTraceAsString(),
@@ -513,25 +596,25 @@ class BtnReservacionesController extends Controller
      * Consulta a la API de PayPal para verificar que la orden existe,
      * está pagada, y los montos cuadran.
      *
-     * 🛡️ NUEVA FILOSOFÍA:
-     * - Si PayPal NO cobró → ['ok' => false, 'cobro_realizado' => false] → rechazar reserva
-     * - Si PayPal cobró y montos cuadran → ['ok' => true, 'cobro_realizado' => true] → guardar
-     * - Si PayPal cobró pero hay desajuste menor (≤ tolerancia) → ['ok' => true, ...] → guardar
-     * - Si PayPal cobró pero hay desajuste mayor → ['ok' => false, 'cobro_realizado' => true] → guardar con marca de revisión
+     * FILOSOFÍA:
+     * - PayPal NO cobró           → ['ok'=>false, 'cobro_realizado'=>false] → rechazar
+     * - PayPal cobró, montos ok   → ['ok'=>true,  'cobro_realizado'=>true]  → guardar
+     * - PayPal cobró, desajuste ≤ tolerancia → ['ok'=>true, ...] → guardar
+     * - PayPal cobró, desajuste mayor        → ['ok'=>false, 'cobro_realizado'=>true] → guardar con marca de revisión
      */
     private function validarPagoPayPal(string $paypalOrderId, float $totalEsperado, ?float $totalLocal = null): array
     {
-        $mode = env('PAYPAL_MODE', 'live');
+        $mode     = env('PAYPAL_MODE', 'live');
         $clientId = $mode === 'live' ? env('PAYPAL_CLIENT_ID_LIVE') : env('PAYPAL_CLIENT_ID_SANDBOX', env('PAYPAL_CLIENT_ID_LIVE'));
-        $secret   = $mode === 'live' ? env('PAYPAL_SECRET_LIVE') : env('PAYPAL_SECRET_SANDBOX', env('PAYPAL_SECRET_LIVE'));
-        $baseUrl  = $mode === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
+        $secret   = $mode === 'live' ? env('PAYPAL_SECRET_LIVE')    : env('PAYPAL_SECRET_SANDBOX',    env('PAYPAL_SECRET_LIVE'));
+        $baseUrl  = $mode === 'live' ? 'https://api-m.paypal.com'   : 'https://api-m.sandbox.paypal.com';
 
         if (!$clientId || !$secret) {
-            Log::error('❌ Credenciales de PayPal incompletas en .env');
+            Log::error('[ERROR] Credenciales de PayPal incompletas en .env');
             return [
-                'ok' => false,
+                'ok'              => false,
                 'cobro_realizado' => false,
-                'message' => 'Configuración de PayPal incompleta. Intenta más tarde.',
+                'message'         => 'Configuración de PayPal incompleta. Intenta más tarde.',
             ];
         }
 
@@ -544,11 +627,13 @@ class BtnReservacionesController extends Controller
             $accessToken = $tokenResponse['access_token'] ?? null;
 
             if (!$accessToken) {
-                Log::error('❌ PayPal sin access_token en respuesta OAuth', ['json' => $tokenResponse->json()]);
+                Log::error('[ERROR] PayPal sin access_token en respuesta OAuth', [
+                    'json' => $tokenResponse->json(),
+                ]);
                 return [
-                    'ok' => false,
+                    'ok'              => false,
                     'cobro_realizado' => false,
-                    'message' => 'No se pudo obtener autorización de PayPal.',
+                    'message'         => 'No se pudo obtener autorización de PayPal.',
                 ];
             }
 
@@ -558,59 +643,57 @@ class BtnReservacionesController extends Controller
 
             if (!$orderResponse->ok()) {
                 return [
-                    'ok' => false,
+                    'ok'              => false,
                     'cobro_realizado' => false,
-                    'message' => 'No se pudo validar la orden de pago con PayPal.',
+                    'message'         => 'No se pudo validar la orden de pago con PayPal.',
                 ];
             }
 
             $orderData = $orderResponse->json();
-            $status = $orderData['status'] ?? '';
+            $status    = $orderData['status'] ?? '';
 
             if ($status !== 'COMPLETED') {
                 return [
-                    'ok' => false,
+                    'ok'              => false,
                     'cobro_realizado' => false,
-                    'message' => 'El pago aún no está completado en PayPal.',
-                    'status_paypal' => $status,
+                    'message'         => 'El pago aún no está completado en PayPal.',
+                    'status_paypal'   => $status,
                 ];
             }
 
-            // ✅ A partir de aquí, PayPal SÍ cobró
-            $amountValue = $orderData['purchase_units'][0]['amount']['value'] ?? null;
+            // A partir de aquí, PayPal SÍ cobró
+            $amountValue  = $orderData['purchase_units'][0]['amount']['value']         ?? null;
             $currencyCode = $orderData['purchase_units'][0]['amount']['currency_code'] ?? null;
-            $montoPaypal = (float) $amountValue;
+            $montoPaypal  = (float) $amountValue;
 
-            // Validación de moneda (estricta)
+            // Validación estricta de moneda
             if ($currencyCode !== 'MXN') {
-                Log::warning('⚠️ Moneda incorrecta de PayPal', [
+                Log::warning('[WARN] Moneda incorrecta de PayPal', [
                     'currency' => $currencyCode,
                     'order_id' => $paypalOrderId,
                 ]);
                 return [
-                    'ok' => false,
+                    'ok'              => false,
                     'cobro_realizado' => true,
-                    'monto_paypal' => $montoPaypal,
-                    'message' => 'El pago se procesó en una moneda incorrecta.',
+                    'monto_paypal'    => $montoPaypal,
+                    'message'         => 'El pago se procesó en una moneda incorrecta.',
                 ];
             }
 
-            // Validación de monto con tolerancia
             $diferencia = abs($montoPaypal - $totalEsperado);
 
             if ($diferencia <= self::TOLERANCIA_PAYPAL_MXN) {
-                // ✅ Todo bien (con tolerancia de redondeo)
                 return [
-                    'ok' => true,
+                    'ok'              => true,
                     'cobro_realizado' => true,
-                    'monto_paypal' => $montoPaypal,
-                    'monto_esperado' => $totalEsperado,
-                    'diferencia' => $diferencia,
+                    'monto_paypal'    => $montoPaypal,
+                    'monto_esperado'  => $totalEsperado,
+                    'diferencia'      => $diferencia,
                 ];
             }
 
-            // ⚠️ Desajuste mayor a la tolerancia: cobró pero no cuadran montos
-            Log::warning('⚠️ Desajuste de monto PayPal vs Backend', [
+            // Desajuste mayor a la tolerancia: cobró pero no cuadran
+            Log::warning('[WARN] Desajuste de monto PayPal vs Backend', [
                 'paypal'     => $montoPaypal,
                 'backend'    => $totalEsperado,
                 'frontend'   => $totalLocal,
@@ -619,29 +702,30 @@ class BtnReservacionesController extends Controller
             ]);
 
             return [
-                'ok' => false,
+                'ok'              => false,
                 'cobro_realizado' => true,
-                'monto_paypal' => $montoPaypal,
-                'monto_esperado' => $totalEsperado,
-                'monto_frontend' => $totalLocal,
-                'diferencia' => $diferencia,
-                'message' => 'El monto del pago tiene un desajuste con la reservación. Se registró para revisión manual.',
+                'monto_paypal'    => $montoPaypal,
+                'monto_esperado'  => $totalEsperado,
+                'monto_frontend'  => $totalLocal,
+                'diferencia'      => $diferencia,
+                'message'         => 'El monto del pago tiene un desajuste con la reservación. Se registró para revisión manual.',
             ];
         } catch (\Throwable $e) {
-            Log::error('❌ Excepción al validar PayPal', [
-                'error' => $e->getMessage(),
+            Log::error('[ERROR] Excepción al validar PayPal', [
+                'error'    => $e->getMessage(),
                 'order_id' => $paypalOrderId,
             ]);
             return [
-                'ok' => false,
+                'ok'              => false,
                 'cobro_realizado' => false,
-                'message' => 'Error de conexión con PayPal: ' . $e->getMessage(),
+                'message'         => 'Error de conexión con PayPal: ' . $e->getMessage(),
             ];
         }
     }
 
     /**
-     * Helper para folio único
+     * Genera un folio único MX-X000X0
+     * (6.7M combinaciones; con maxIntentos=20 evita colisiones reales)
      */
     private function generarFolioReservacionUnico(int $maxIntentos = 20): string
     {
