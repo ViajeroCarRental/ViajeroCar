@@ -2580,6 +2580,31 @@ span.flatpickr-weekday {
   pointer-events: none !important;
 }
 
+/* nuev0*/
+.sg-col-location-admin .select2-container--default .select2-selection--single {
+  height: 48px !important;
+  border-radius: 14px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: white !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.sg-col-location-admin .select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: 48px !important;
+  padding-left: 40px !important;
+
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 400 !important;
+  color: #111827 !important;
+}
+
+.sg-col-location-admin .select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 46px !important;
+  right: 10px !important;
+}
+/*fin nuevo*/
 .sg-col-submit-admin {
   flex: 0.35 !important;
   min-width: 110px !important;
@@ -2621,7 +2646,7 @@ span.flatpickr-weekday {
 .btn-buscar-admin {
 width: auto !important;
 margin: 2px auto 10px auto;
-padding: 14px 630px;
+padding: 14px 500px;
 border-radius: 16px !important;
   height: 48px !important;
   background: #c62828 !important;
@@ -3715,6 +3740,24 @@ border-radius: 16px !important;
 
 .btn-edit-base:hover {
   color: #2563eb;
+}
+.rv2-car-desc {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+/* Código del auto - ESTILO IMAGEN 2 (AZUL CON FONDO) */
+.rv2-car-codigo {
+    font-size: 12px;
+    font-weight: 700;
+    color: #2563eb !important;
+    background: #dbeafe;
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
 }
 
 @media (max-width: 768px) {

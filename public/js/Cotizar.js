@@ -1550,7 +1550,7 @@
             let proteccionesHtml = "", hasProtecciones = false;
             if (state.proteccion) {
                 const prot = state.proteccion, protPrecio = Number(prot.precio || 0), protTotal = prot.charge === "por_dia" ? protPrecio * days : protPrecio;
-                if (protTotal > 0) { proteccionesHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-shield-alt"></i> ${prot.nombre}</span><span class="rv2-option-price">${money(protTotal)} ${prot.charge === "por_dia" ? "/día" : ""}</span></div>`; hasProtecciones = true; }
+                if (protTotal >= 0) { proteccionesHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-shield-alt"></i> ${prot.nombre}</span><span class="rv2-option-price">${money(protTotal)} ${prot.charge === "por_dia" ? "/día" : ""}</span></div>`; hasProtecciones = true; }
             }
             const individualesList = Array.from(state.individuales.values());
             if (individualesList.length > 0) {

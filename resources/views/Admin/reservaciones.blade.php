@@ -32,7 +32,8 @@
 
       <div class="top-actions">
         <button class="btn btn-resumen" id="btnResumen" type="button">
-        <span class="pulse-dot"></span> <i class="fas fa-receipt"></i> Ver resumen de reserva
+            <span class="pulse-dot"></span>
+            <span id="btnTotalText">Total: $0.00 MXN</span>
         </button>
         <button class="btn ghost" onclick="location.href='{{ route('rutaInicioVentas') }}'"><i class="fas fa-sign-out-alt"></i> Salir</button>
       </div>
@@ -82,9 +83,7 @@
    06 SECCIÓN UNIFICADA - DISEÑO HORIZONTAL
 ========================================= --}}
 <section class="stack-card">
-    <div class="stack-head">
-        <div class="stack-title"><i class="fas fa-map-marker-alt"></i> Ubicación, fechas y horarios</div>
-    </div>
+
 
     <div class="stack-body">
         <div class="search-grid-admin">
@@ -174,74 +173,80 @@
             {{-- =========================================
                06.3 COLUMNA 3 - BOTÓN
             ========================================= --}}
-            <div class="sg-col-submit-admin">
+                       <div class="sg-col-submit-admin">
                 <div class="actions-admin">
                     <div class="days-pill-admin">
                         <i class="fa-regular fa-clock"></i>
                         <span id="diasTxt">0</span> día(s)
                     </div>
 
+                    <button type="button" id="btnBuscarReservacion" class="btn-buscar-admin">
+                        <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
+                    </button>
+
                 </div>
             </div>
 
         </div>
     </div>
-                    <button type="button" id="btnBuscarReservacion" class="btn-buscar-admin">
-                        <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
-                    </button>
 
 </section>
 
       {{-- =========================================
          07 CATEGORÍA
-      ========================================= --}}
-      <section class="stack-card acordeon-item" data-seccion="categoria" data-siguiente="adicionales">
-        <div class="stack-head">
-          <div class="stack-title"><i class="fas fa-car"></i> Categoría</div>
-          <div class="stack-indicator"><i class="fas fa-chevron-down"></i></div>
-        </div>
+========================================= --}}
+<section class="stack-card acordeon-item" data-seccion="categoria" data-siguiente="adicionales">
+    <div class="stack-head">
+        <div class="stack-title"><i class="fas fa-car"></i> Categoría</div>
+        <div class="stack-indicator"><i class="fas fa-chevron-down"></i></div>
+    </div>
 
-        <div class="stack-body">
-          <div class="picker-row">
-            <button class="btn primary" type="button" id="btnCategorias"><i class="fas fa-box"></i> Seleccionar categoría</button>
+    <div class="stack-body">
+        <div class="picker-row">
+            <button class="btn primary" type="button" id="btnCategorias" style="display: none;">
+                <i class="fas fa-box"></i> Seleccionar categoría
+            </button>
 
-            <div class="picker-selected">
-              <div class="picker-label">Seleccionado</div>
-              <div class="picker-value" id="catSelTxt">— Ninguna categoría —</div>
-              <div class="picker-sub" id="catSelSub">Tarifa base por día y cálculo previo aparecerán aquí.</div>
+
+            <div class="picker-selected" id="categoriaSelectedContainer" style="display: none;">
             </div>
 
             <button class="btn gray" type="button" id="catRemove" style="display:none;">✖</button>
-          </div>
-
-          <div class="mini-preview" id="catMiniPreview" style="display:none;">
-    <div class="mini-right">
-        <div class="mini-title-wrapper" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-            <div class="mini-title" id="catMiniName">—</div>
-            <button type="button" id="btnEditarCategoriaPreview" style="background: none; border: none; color: #2563eb; cursor: pointer; font-size: 16px; margin-left: 6px; padding: 4px; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s ease;">
-                <i class='bx bx-edit-alt'></i>
-            </button>
-        </div>
-        <div class="mini-sub" id="catMiniDesc">—</div>
-
-        <div class="mini-img-center" id="catMiniImgContainer" style="text-align: center; margin: 12px 0;">
-            <img id="catMiniImg" src="" alt="Auto" style="max-width: 100%; max-height: 100px; object-fit: contain; border-radius: 12px;">
         </div>
 
-        <div class="mini-price">
-            <div>
-                <div class="muted small">Tarifa base</div>
-                <div class="price-big" id="catMiniRate">$0.00 MXN / día</div>
+        <div class="mini-preview" id="catMiniPreview" style="display:none;">
+    <div class="mini-container">
+        <!-- Columna izquierda: Imagen -->
+        <div class="mini-imagen">
+            <img id="catMiniImg" src="" alt="Auto">
+        </div>
+
+        <!-- Columna derecha: Información -->
+        <div class="mini-info">
+            <div class="mini-header">
+                <div class="mini-title" id="catMiniName">—</div>
+                <button type="button" id="btnEditarCategoriaPreview" class="btn-edit-mini">
+                    <i class='bx bx-edit-alt'></i>
+                </button>
             </div>
-            <div>
-                <div class="muted small">Cálculo previo</div>
-                <div class="price-big" id="catMiniCalc">$0.00 MXN</div>
+            <div class="mini-sub" id="catMiniDesc">—</div>
+
+            <!-- Precios en una sola fila -->
+            <div class="mini-precios">
+                <div class="precio-item">
+                    <div class="precio-label">TARIFA BASE</div>
+                    <div class="precio-valor" id="catMiniRate">$0.00 MXN / día</div>
+                </div>
+                <div class="precio-item">
+                    <div class="precio-label">CÁLCULO PREVIO</div>
+                    <div class="precio-valor precio-rojo" id="catMiniCalc">$0.00 MXN</div>
+                </div>
             </div>
         </div>
     </div>
 </div>
-        </div>
-      </section>
+    </div>
+</section>
 
       {{-- =========================================
          08 SERVICIOS / ADICIONALES (CARRUSEL)
@@ -269,20 +274,88 @@
       <div class="carousel-container">
         <div class="carousel-track" id="adicionalesTrack">
 
+
+            {{-- =========================================
+             08.1 CARD 1 - CONDUCTOR ADICIONAL
+          ========================================= --}}
+          <div class="svc-card svc-card--addon carousel-item" data-id="conductor_extra" data-name="Conductor adicional" data-price="200" data-charge="por_dia">
+            <div class="svc-top">
+              <div class="svc-ico"><i class="fas fa-user-plus"></i>
+            </div>
+              <div class="svc-meta">
+                <div class="svc-name">Conductor adicional</div>
+              </div>
+            </div>
+
+            <div class="svc-bottom">
+              <label class="switch switch-soft">
+                <input type="checkbox" class="addon-toggle" data-addon="conductor_extra">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="svc-addon-expanded" id="conductorExtraExpanded" style="display: none;">
+              <div class="svc-price-row">
+                <div class="price-label">Costo</div>
+                <div class="price-value">$150 MXN <span>/ día</span></div>
+              </div>
+
+              <div class="svc-quantity-row">
+                <div class="quantity-control">
+                  <button class="qty-btn minus" type="button">−</button>
+                  <span class="qty-value" data-qty="1">1</span>
+                  <button class="qty-btn plus" type="button">+</button>
+                  <span class="max-hint">Máx 3</span>
+                </div>
+              </div>
+
+              <div class="svc-total-row">
+                <span>Total Conductor adicional</span>
+                <b class="addon-total">$150.00 MXN</b>
+              </div>
+            </div>
+            <input type="hidden" class="addon-qty-hidden" name="adicionales[conductor_extra]" value="0">
+          </div>
+
           {{-- =========================================
-             08.1 CARD 1 - DROP OFF
+             08.2 CARD 2 - GASOLINA PREPAGO
+          ========================================= --}}
+          <div class="svc-card svc-card--accent carousel-item">
+            <div class="svc-top">
+              <div class="svc-ico"><i class="fas fa-gas-pump"></i></div>
+              <div class="svc-meta">
+                <div class="svc-name">Gasolina prepago</div>
+              </div>
+            </div>
+
+            <div class="svc-bottom">
+              <label class="switch switch-soft">
+                <input type="checkbox" id="gasolinaToggle" data-litros="0" data-costo-litro="20">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="svc-fields" id="gasolinaFields" style="display:none;">
+              <div class="svc-total">
+                <span>Total Gasolina (<span id="litrosLabel">0</span>L)</span>
+                <b id="gasolinaTotal">$0.00 MXN</b>
+              </div>
+            </div>
+            <input type="hidden" name="gasolina_prepago_valor" id="gasolinaTotalHidden" value="0">
+          </div>
+
+          {{-- =========================================
+             08.3 CARD 3 - DROP OFF
           ========================================= --}}
           <div class="svc-card svc-card--accent dropoff-wrapper carousel-item">
             <div class="svc-top">
               <div class="svc-ico"><i class="fas fa-flag-checkered"></i></div>
               <div class="svc-meta">
                 <div class="svc-name">Drop Off</div>
-                <div class="svc-desc">Entrega en sucursal distinta.</div>
               </div>
             </div>
 
             <div class="svc-bottom">
-              <div class="svc-hint">Activar</div>
               <label class="switch switch-soft">
                 <input type="checkbox" id="dropoffToggle">
                 <span class="slider"></span>
@@ -322,7 +395,7 @@
           </div>
 
           {{-- =========================================
-             08.2 CARD 2 - DELIVERY
+             08.4 CARD 4 - DELIVERY
           ========================================= --}}
           <div class="svc-card svc-card--accent delivery-wrapper carousel-item"
             data-delivery-total="{{ $deliverySafe->total ?? 0 }}"
@@ -332,12 +405,10 @@
               <div class="svc-ico"><i class="fas fa-truck"></i></div>
               <div class="svc-meta">
                 <div class="svc-name">Delivery</div>
-                <div class="svc-desc">Entrega a domicilio.</div>
               </div>
             </div>
 
             <div class="svc-bottom">
-              <div class="svc-hint">Activar</div>
               <label class="switch switch-soft">
                 <input type="checkbox" id="deliveryToggle" {{ !empty($deliverySafe->activo) ? 'checked' : '' }}>
                 <span class="slider"></span>
@@ -378,48 +449,17 @@
           </div>
 
           {{-- =========================================
-             08.3 CARD 3 - GASOLINA PREPAGO
-          ========================================= --}}
-          <div class="svc-card svc-card--accent carousel-item">
-            <div class="svc-top">
-              <div class="svc-ico"><i class="fas fa-gas-pump"></i></div>
-              <div class="svc-meta">
-                <div class="svc-name">Gasolina prepago</div>
-                <div class="svc-desc">Tanque completo preferencial.</div>
-              </div>
-            </div>
-
-            <div class="svc-bottom">
-              <div class="svc-hint">Activar</div>
-              <label class="switch switch-soft">
-                <input type="checkbox" id="gasolinaToggle" data-litros="0" data-costo-litro="20">
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="svc-fields" id="gasolinaFields" style="display:none;">
-              <div class="svc-total">
-                <span>Total Gasolina (<span id="litrosLabel">0</span>L)</span>
-                <b id="gasolinaTotal">$0.00 MXN</b>
-              </div>
-            </div>
-            <input type="hidden" name="gasolina_prepago_valor" id="gasolinaTotalHidden" value="0">
-          </div>
-
-          {{-- =========================================
-             08.4 CARD 4 - SILLA DE BEBÉ
+             08.5 CARD 5 - SILLA DE BEBÉ
           ========================================= --}}
           <div class="svc-card svc-card--addon carousel-item" data-id="silla_bebe" data-name="Silla de bebé" data-price="150" data-charge="por_dia">
             <div class="svc-top">
               <div class="svc-ico"><i class="fas fa-baby-carriage"></i></div>
               <div class="svc-meta">
                 <div class="svc-name">Silla de bebé</div>
-                <div class="svc-desc">Silla de seguridad para bebé.</div>
               </div>
             </div>
 
             <div class="svc-bottom">
-              <div class="svc-hint">Activar</div>
               <label class="switch switch-soft">
                 <input type="checkbox" class="addon-toggle" data-addon="silla_bebe">
                 <span class="slider"></span>
@@ -449,59 +489,12 @@
             <input type="hidden" class="addon-qty-hidden" name="adicionales[silla_bebe]" value="0">
           </div>
 
-          {{-- =========================================
-             08.5 CARD 5 - CONDUCTOR ADICIONAL
-          ========================================= --}}
-          <div class="svc-card svc-card--addon carousel-item" data-id="conductor_extra" data-name="Conductor adicional" data-price="200" data-charge="por_dia">
-            <div class="svc-top">
-              <div class="svc-ico"><i class="fas fa-user-plus"></i></div>
-              <div class="svc-meta">
-                <div class="svc-name">Conductor adicional</div>
-                <div class="svc-desc">Agregar un conductor extra.</div>
-              </div>
-            </div>
-
-            <div class="svc-bottom">
-              <div class="svc-hint">Activar</div>
-              <label class="switch switch-soft">
-                <input type="checkbox" class="addon-toggle" data-addon="conductor_extra">
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="svc-addon-expanded" id="conductorExtraExpanded" style="display: none;">
-              <div class="svc-price-row">
-                <div class="price-label">Costo</div>
-                <div class="price-value">$150 MXN <span>/ día</span></div>
-              </div>
-
-              <div class="svc-quantity-row">
-                <div class="quantity-control">
-                  <button class="qty-btn minus" type="button">−</button>
-                  <span class="qty-value" data-qty="1">1</span>
-                  <button class="qty-btn plus" type="button">+</button>
-                  <span class="max-hint">Máx 3</span>
-                </div>
-              </div>
-
-              <div class="svc-total-row">
-                <span>Total Conductor adicional</span>
-                <b class="addon-total">$150.00 MXN</b>
-              </div>
-            </div>
-            <input type="hidden" class="addon-qty-hidden" name="adicionales[conductor_extra]" value="0">
-          </div>
-
         </div>
       </div>
 
       <button class="carousel-arrow next" type="button" aria-label="Siguiente">
         <i class="fa-solid fa-chevron-right"></i>
       </button>
-    </div>
-
-    <div class="clearfix">
-      <button type="button" class="btn-siguiente" data-siguiente="adicionales">SIGUIENTE</button>
     </div>
 
   </div>
@@ -528,9 +521,6 @@
 
             <button class="btn gray" type="button" id="proteRemove" style="display:none;">✖</button>
           </div>
-          <div class="clearfix">
-        <button type="button" class="btn-siguiente" data-siguiente="protecciones">SIGUIENTE</button>
-        </div>
         </div>
       </section>
 
@@ -1139,7 +1129,7 @@
                    style="cursor:pointer;">
                 <div class="body">
                     <div class="title-wrapper">
-                        <h4>{{ str_replace(['¿', '?', '¡', '!'], '', $ind->nombre) }}</h4>
+                        <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
                         <div class="info-icon-container">
                             <span class="info-icon">i</span>
                             <div class="tooltip-text">
@@ -1150,7 +1140,6 @@
                     </div>
                     <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
                     <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
-                    <div class="small">Incluir</div>
                 </div>
             </label>
         @empty
@@ -1171,7 +1160,7 @@
                    style="cursor:pointer;">
                 <div class="body">
                     <div class="title-wrapper">
-                        <h4>{{ str_replace(['¿', '?', '¡', '!'], '', $ind->nombre) }}</h4>
+                        <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
                         <div class="info-icon-container">
                             <span class="info-icon">i</span>
                             <div class="tooltip-text">
@@ -1182,7 +1171,6 @@
                     </div>
                     <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
                     <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
-                    <div class="small">Incluir</div>
                 </div>
             </label>
         @empty
@@ -1203,7 +1191,7 @@
                    style="cursor:pointer;">
                 <div class="body">
                     <div class="title-wrapper">
-                        <h4>{{ str_replace(['¿', '?', '¡', '!'], '', $ind->nombre) }}</h4>
+                        <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
                         <div class="info-icon-container">
                             <span class="info-icon">i</span>
                             <div class="tooltip-text">
@@ -1214,7 +1202,6 @@
                     </div>
                     <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
                     <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
-                    <div class="small">Incluir</div>
                 </div>
             </label>
         @empty
@@ -1235,7 +1222,7 @@
                    style="cursor:pointer;">
                 <div class="body">
                     <div class="title-wrapper">
-                        <h4>{{ str_replace(['¿', '?', '¡', '!'], '', $ind->nombre) }}</h4>
+                        <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
                         <div class="info-icon-container">
                             <span class="info-icon">i</span>
                             <div class="tooltip-text">
@@ -1246,7 +1233,6 @@
                     </div>
                     <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
                     <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
-                    <div class="small">Incluir</div>
                 </div>
             </label>
         @empty
@@ -1267,7 +1253,7 @@
                    style="cursor:pointer;">
                 <div class="body">
                     <div class="title-wrapper">
-                        <h4>{{ str_replace(['¿', '?', '¡', '!'], '', $ind->nombre) }}</h4>
+                        <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
                         <div class="info-icon-container">
                             <span class="info-icon">i</span>
                             <div class="tooltip-text">
@@ -1278,7 +1264,6 @@
                     </div>
                     <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
                     <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
-                    <div class="small">Incluir</div>
                 </div>
             </label>
         @empty
@@ -1457,7 +1442,7 @@
   <div class="box modal-box">
     <header class="modal-head">
       <div class="modal-title"><i class="fas fa-check-circle"></i> Reservación registrada</div>
-      <button class="btn gray" id="confirmClose" type="button">✖</button>
+      <button class="btn gray" id="confirmClose" type="button" onclick="window.location.href='{{ route('rutaInicioVentas') }}'">✖</button>
     </header>
 
     <div class="modal-body">

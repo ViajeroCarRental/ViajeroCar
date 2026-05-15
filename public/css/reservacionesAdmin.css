@@ -241,7 +241,7 @@ label{
 }
 .btn-block{ width:100%; }
 
-/* ✅ botón resumen “pro” */
+/* botón resumen */
 .btn-resumen{
   position:relative;
   background:linear-gradient(180deg, var(--brand), var(--brand-dark));
@@ -250,6 +250,7 @@ label{
   box-shadow:0 18px 40px rgba(178,34,34,.26);
   padding:11px 16px;
 }
+
 .btn-resumen:hover{
   transform:translateY(-2px);
   box-shadow:0 22px 55px rgba(178,34,34,.32);
@@ -264,6 +265,38 @@ label{
 @keyframes pulse{
   0%{ box-shadow:0 0 0 0 rgba(255,255,255,.55); opacity:1; }
   100%{ box-shadow:0 0 0 14px rgba(255,255,255,0); opacity:.9; }
+}
+/* =========================================
+   NAVBAR - BOTÓN RESUMEN
+========================================= */
+.res-navbar .btn-resumen-minimal {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 8px 20px !important;
+}
+
+.res-navbar .btn-resumen-minimal i {
+    font-size: 18px !important;
+    color: #190e0e !important;
+}
+.res-navbar .btn-resumen-minimal #btnTotalNav {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+}
+
+.res-navbar .btn-resumen-minimal.vertical {
+    flex-direction: column !important;
+    gap: 6px !important;
+    padding: 10px 16px !important;
+}
+
+.res-navbar .btn-resumen-minimal.vertical i {
+    font-size: 24px !important;
+}
+
+.res-navbar .btn-resumen-minimal.vertical #btnTotalNav {
+    font-size: 13px !important;
 }
 
 /* =========================================
@@ -577,8 +610,174 @@ label{
     text-align: left;
   }
 }
+/* Mini preview - Diseño horizontal con imagen y precios */
+.mini-preview {
+    margin-top: 12px;
+    border: 1px solid var(--stroke);
+    border-radius: 16px;
+    background: #fff;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
 
-/* Estilos para el botón info en el título */
+.mini-container {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 20px;
+    flex-wrap: wrap;
+}
+
+/* Columna izquierda - Imagen */
+.mini-imagen {
+    flex: 0 0 200px;
+    text-align: center;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #eef2ff;
+}
+
+.mini-imagen img {
+    max-width: 100%;
+    max-height: 160px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Columna derecha - Información */
+.mini-info {
+    flex: 1;
+    min-width: 200px;
+}
+
+.mini-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.mini-title {
+    font-weight: 900;
+    font-size: 18px;
+    color: #0f172a;
+}
+
+.btn-edit-mini {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #1a1a1a;
+    font-size: 18px;
+    padding: 4px;
+    transition: all 0.2s ease;
+}
+
+.btn-edit-mini:hover {
+    transform: scale(1.1);
+    color: #2563eb;
+}
+
+.mini-sub {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+/* Precios en fila */
+.mini-precios {
+    display: flex;
+    gap: 32px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+
+.precio-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.precio-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.precio-valor {
+    font-size: 18px;
+    font-weight: 900;
+    color: #0f172a;
+}
+
+.precio-rojo {
+    color: #b22222 !important;
+    font-size: 20px;
+}
+
+/* Responsive para móvil */
+@media (max-width: 640px) {
+    .mini-container {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .mini-imagen {
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: 180px;
+    }
+
+    .mini-precios {
+        justify-content: center;
+    }
+
+    .mini-header {
+        justify-content: center;
+    }
+
+    .btn-edit-mini {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+    }
+
+    .mini-info {
+        position: relative;
+    }
+}
+
+/* Animación suave */
+.mini-preview {
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.picker-label,
+#catSelTxt {
+    display: none !important;
+}
+.picker-selected {
+    padding: 0 !important;
+}
+
+.picker-row .btn.primary {
+    display: none !important;
+}
 #infoCategoriasBtn {
   transition: all 0.2s ease;
 }
@@ -586,6 +785,25 @@ label{
 #infoCategoriasBtn:hover {
   background: rgba(255, 255, 255, 0.35) !important;
   transform: scale(1.05);
+}
+
+.picker-selected {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+}
+
+#catMiniPreview {
+    border: 1px solid var(--stroke);
+    border-radius: 16px;
+    background: #fff;
+    overflow: hidden;
+}
+
+#categoriaSelectedContainer {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
 }
 
 /* Estilos para el pill-info */
@@ -669,7 +887,6 @@ label{
   margin:10px 0;
 }
 
-/* Protección $0 como botón chiquito */
 .prot-free-row{
   grid-column:1/-1;
   display:flex;
@@ -709,6 +926,19 @@ input[type="time"].input-lg::-webkit-calendar-picker-indicator{
 input[type="date"].input-lg{ padding-right:44px; background-image: linear-gradient(transparent,transparent); }
 input[type="time"].input-lg{ padding-right:44px; background-image: linear-gradient(transparent,transparent); }
 
+#btnProtecciones {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    background: #f44336 !important;
+    color: white !important;
+    border: none !important;
+    padding: 12px 20px !important;
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    margin-right: 10px !important;
+}
 
 /* =========================================
    8️⃣ COMBOS (PAÍS + LADA)
@@ -866,13 +1096,12 @@ input[type="time"].input-lg{ padding-right:44px; background-image: linear-gradie
 /* =========================================
    9️⃣ PROTECCIONES (MODAL) — PAQUETES + INDIVIDUALES
 ========================================= */
-/* Tabs - Botón Protecciones a la izquierda, Individuales a la derecha */
 .modal-prote-tabs .tabs-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  padding: 12px 20px;  /* ← Padding un poco más amplio */
+  padding: 12px 20px;
   background: #fff;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -890,10 +1119,10 @@ input[type="time"].input-lg{ padding-right:44px; background-image: linear-gradie
 .modal-prote-tabs .tab-btn {
   border: 1px solid #e5e7eb;
   background: #f8fafc;
-  padding: 12px 20px;  /* ← Más grande */
+  padding: 12px 20px;
   border-radius: 999px;
   font-weight: 900;
-  font-size: 14px;  /* ← Texto ligeramente más grande */
+  font-size: 14px;
   cursor: pointer;
   color: #111827;
   transition: .15s ease;
@@ -931,7 +1160,6 @@ input[type="time"].input-lg{ padding-right:44px; background-image: linear-gradie
   padding: 10px 24px;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
-  /* Agregamos esto para asegurar que el contenedor permita el estiramiento */
   align-items: stretch !important;
 }
 
@@ -1009,7 +1237,6 @@ div[style*="overflow-x: auto"] {
   padding: 24px 22px 30px;
   display: flex;
   gap: 10px;
-  /* El margin-top auto obliga a los botones a irse al puro fondo de la card */
   margin-top: auto !important;
 }
 
@@ -1040,7 +1267,7 @@ div[style*="overflow-x: auto"] {
 
 /* Título */
 .pack-card h4 {
-  font-size: 20px;
+  font-size: 25px;
   font-weight: 900;
   margin: 0 0 16px 0;
   color: #111827;
@@ -1057,11 +1284,11 @@ div[style*="overflow-x: auto"] {
 }
 
 .pack-card .desc-list li {
-  font-size: 12px;
+  font-size: 17px;
   font-weight: 600;
-  color: #475569;
-  line-height: 1.5;
-  margin-bottom: 10px;
+  color: #1e293b;
+  line-height: 1.6;
+  margin-bottom: 12px;
   display: block;
   position: relative;
   padding-left: 22px;
@@ -1081,7 +1308,7 @@ div[style*="overflow-x: auto"] {
 /* Negritas */
 .pack-card .desc-list li strong {
   font-weight: 900 !important;
-  font-size: 12px !important;
+  font-size: 17px !important;
   color: #111827 !important;
 }
 /* Precio */
@@ -1097,7 +1324,7 @@ div[style*="overflow-x: auto"] {
 }
 
 .pack-card .precio strong {
-  font-size: 22px;
+  font-size: 25px;
   font-weight: 1000;
   color: #111827;
 }
@@ -1218,7 +1445,6 @@ div[style*="overflow-x: auto"] {
   align-items: center;
   gap: 10px;
 }
-
 
 /* Switch INDIVIDUAL (solo modal protecciones) - AHORA EN VERDE */
 #proteccionPop .switch.switch-individual {
@@ -1464,23 +1690,68 @@ div[style*="overflow-x: auto"] {
   max-height: calc(100vh - 120px);
 }
 
-/* Mejorar el carrusel para pantalla completa */
+/* ============================================
+   CARRUSEL HORIZONTAL - 3 TARJETAS VISIBLES
+   ============================================ */
 #proteccionPop .scroll-h {
-  gap: 20px;
-  padding: 16px 24px;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 20px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 30px 20px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 
-/* Tarjetas más grandes en pantalla completa */
-#proteccionPop .ins-card {
-  min-width: 320px;
-  max-width: 380px;
-}
+/* ============================================
+   TARJETAS - ANCHO PARA 3 Y ALTURA LARGADA
+   ============================================ */
 
 #proteccionPop .pack-card,
 #proteccionPop .prote-pack,
 #proteccionPop .card-pack {
-  flex: 0 0 380px;
-  min-height: 380px;
+    flex: 0 0 calc((100% - 40px) / 3) !important;
+    min-width: calc((100% - 40px) / 3) !important;
+    max-width: calc((100% - 40px) / 3) !important;
+    height: 550px !important;
+    min-height: 550px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 25px !important;
+
+    scroll-snap-align: center !important;
+    box-sizing: border-box !important;
+}
+
+/* ============================================
+   RESPONSIVE - AJUSTE DINÁMICO
+   ============================================ */
+
+/* Tablets: 2 tarjetas */
+@media (max-width: 992px) {
+    #proteccionPop .pack-card,
+    #proteccionPop .prote-pack,
+    #proteccionPop .card-pack {
+        flex: 0 0 calc((100% - 20px) / 2) !important;
+        min-width: calc((100% - 20px) / 2) !important;
+        max-width: calc((100% - 20px) / 2) !important;
+        height: 500px !important;
+    }
+}
+@media (max-width: 600px) {
+    #proteccionPop .pack-card,
+    #proteccionPop .prote-pack,
+    #proteccionPop .card-pack {
+        flex: 0 0 85% !important;
+        min-width: 85% !important;
+        max-width: 85% !important;
+        height: 450px !important;
+    }
 }
 
 /* Responsive para pantallas más pequeñas */
@@ -1870,7 +2141,7 @@ div[style*="overflow-x: auto"] {
 }
 
 .mini-img-center {
-    text-align: left;  /* ← CAMBIADO: ahora la imagen va a la izquierda */
+    text-align: left;
     margin: 16px 0;
     padding: 12px;
     background: #f8fafc;
@@ -1883,7 +2154,7 @@ div[style*="overflow-x: auto"] {
     max-height: 100px;
     object-fit: contain;
     transition: transform 0.2s ease;
-    display: block;  /* ← Ayuda a que la imagen se alinee a la izquierda */
+    display: block;
 }
 
 .mini-img-center img:hover {
@@ -2361,8 +2632,6 @@ span.flatpickr-weekday {
 /* =========================================
    2️⃣1️⃣ BUSCADOR - VERSIÓN FINAL (FECHA Y HORA ALINEADOS)
 ========================================= */
-
-/* Grid principal - 3 columnas horizontales */
 .search-grid-admin {
     display: flex !important;
     flex-direction: row !important;
@@ -2559,36 +2828,36 @@ span.flatpickr-weekday {
     pointer-events: none !important;
 }
 
-/* COLUMNA 3: BOTÓN */
+/* ============================================
+   COLUMNA 3 - VERSIÓN FINAL
+   ============================================ */
+
 .sg-col-submit-admin {
     flex: 0.35 !important;
     min-width: 110px !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: flex-start !important;
+    justify-content: center !important;
+    position: relative;
 }
 
 .sg-col-submit-admin::before {
-    content: "";
-    display: block !important;
-    height: 50px !important;
-    visibility: hidden !important;
+    display: none !important;
 }
 
 .actions-admin {
-    height: 48px !important;
     width: 100% !important;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
 }
 
 .days-pill-admin {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     gap: 8px;
-    padding: 8px 12px;
+    padding: 6px 12px;
     background: rgba(34, 197, 94, 0.12);
     border: 1px solid rgba(34, 197, 94, 0.25);
     border-radius: 40px;
@@ -2596,32 +2865,36 @@ span.flatpickr-weekday {
     font-weight: 700;
     color: #166534;
     white-space: nowrap;
+    margin-left: 5px !important;
+    margin-right: auto !important;
+    margin-bottom: 4px !important;
+    margin-top: 0 !important;
 }
 
+/* BOTÓN BUSCAR  */
 .btn-buscar-admin {
-width: auto !important;
-margin: 2px auto 10px auto;
-padding: 14px 630px;
-border-radius: 16px !important;
-  height: 48px !important;
-  background: #c62828 !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 8px !important;
-  font-weight: 700 !important;
-  font-size: 13px !important;
-  text-transform: uppercase !important;
-  cursor: pointer !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 6px !important;
-  transition: background 0.2s ease !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 16px !important;
+    border-radius: 14px !important;
+    height: 48px !important;
+    background: #c62828 !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    transition: background 0.2s ease !important;
 }
 
 .btn-buscar-admin:hover {
-  background: var(--brand) !important;
-  transform: translateY(-1px);
+    background: var(--brand) !important;
+    transform: translateY(-1px);
 }
 
 /* ===== RESPONSIVE ===== */
@@ -2643,6 +2916,7 @@ border-radius: 16px !important;
     .sg-col-submit-admin {
         width: 100% !important;
         flex: auto !important;
+        justify-content: flex-start !important;
     }
     .sg-col-submit-admin::before {
         display: none !important;
@@ -2652,6 +2926,10 @@ border-radius: 16px !important;
         justify-content: space-between;
         align-items: center;
         height: auto;
+    }
+    .days-pill-admin {
+        margin-left: auto !important;
+        margin-right: 0 !important;
     }
     .btn-buscar-admin {
         width: auto !important;
@@ -2678,6 +2956,9 @@ border-radius: 16px !important;
     .btn-buscar-admin {
         width: 100% !important;
     }
+    .days-pill-admin {
+        margin-left: auto !important;
+    }
 }
 
 @media (max-width: 560px) {
@@ -2700,7 +2981,6 @@ border-radius: 16px !important;
         font-size: 10px !important;
     }
 }
-
 /* =========================================
    2️⃣2️⃣ SELECTOR DE HORA
 ========================================= */
@@ -2949,6 +3229,33 @@ border-radius: 16px !important;
     margin-left: auto;
 }
 
+/* =========================================
+   TOOLTIP DE INFORMACIÓN - en cada card de adic.
+   ========================================= */
+
+/* Tooltip flotante */
+.info-tooltip {
+  position: fixed;
+  background: #f1f5f9;
+  color: #1e293b;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  max-width: 250px;
+  text-align: center;
+  z-index: 10001;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+  border: 1px solid #e2e8f0;
+  line-height: 1.4;
+}
+
+.info-tooltip.multiline {
+  white-space: normal;
+  text-align: left;
+}
+
 /* Ajustes responsive */
 @media (max-width: 768px) {
     .carousel-item {
@@ -2964,6 +3271,46 @@ border-radius: 16px !important;
     .adicionales-carousel {
         gap: 8px;
     }
+}
+/* =========================================
+   RESPONSIVE: TABLET (768px - 1024px)
+   ========================================= */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .info-tooltip {
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    max-width: 220px;
+    border-radius: 10px;
+  }
+}
+
+/* =========================================
+   RESPONSIVE: MÓVIL (menos de 768px)
+   ========================================= */
+@media (max-width: 767px) {
+  .info-tooltip {
+    position: fixed;
+    bottom: auto;
+    top: 50%;
+    left: 50% !important;
+    transform: translate(-50%, -50%);
+    max-width: 85%;
+    width: auto;
+    min-width: 200px;
+    padding: 14px 18px;
+    font-size: 0.9rem;
+    border-radius: 16px;
+    text-align: center;
+    background: #ffffff;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+    border: 1px solid #e2e8f0;
+    z-index: 10002;
+  }
+
+  /* En móvil, el tooltip se comporta más como un modal */
+  .info-tooltip::before {
+    content: none; /* Sin flecha */
+  }
 }
 
 /* ============================================
@@ -3066,7 +3413,7 @@ border-radius: 16px !important;
 }
 
 .stack-head {
-    background: #f44336; /* ROJO como mencionaste */
+    background: #f44336;
     color: rgb(216, 175, 175);
     padding: 16px 20px;
     cursor: pointer;
@@ -3106,26 +3453,7 @@ border-radius: 16px !important;
 }
 
 .stack-body.expanded {
-    max-height: 2000px; /* Suficiente para el contenido */
-}
-
-/* Botón de siguiente */
-.btn-siguiente {
-    background: #f44336;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
-    font-weight: 700;
-    cursor: pointer;
-    margin-top: 20px;
-    float: right;
-    transition: all 0.2s ease;
-}
-
-.btn-siguiente:hover {
-    background: #b22222;
-    transform: translateY(-2px);
+    max-height: 2000px;
 }
 
 .clearfix::after {
@@ -3134,10 +3462,6 @@ border-radius: 16px !important;
     display: table;
 }
 
-.stack-completed .stack-indicator::after {
-    content: "✓";
-    margin-left: 8px;
-}
 .stack-head:active {
     transform: scale(0.99);
 }
@@ -3145,13 +3469,11 @@ border-radius: 16px !important;
 /* ============================================
    2️⃣6️⃣ ACORDEÓN - TODOS LOS ENCABEZADOS VISIBLES
 ============================================ */
-/* Todas las secciones de acordeón son visibles */
 .acordeon-item {
     display: block !important;
     margin-bottom: 20px;
 }
 
-/* El contenido blanco está oculto inicialmente */
 .acordeon-item .stack-body {
     max-height: 0 !important;
     overflow: hidden !important;
@@ -3159,11 +3481,28 @@ border-radius: 16px !important;
     transition: max-height 0.4s cubic-bezier(0.33, 1, 0.68, 1);
 }
 
-/* Cuando está expandido, muestra el contenido */
 .acordeon-item .stack-body.expanded {
     max-height: 2000px !important;
     padding: 16px !important;
 }
+
+.acordeon-item[data-seccion="cliente"] {
+    scroll-margin-top: 200px !important;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    transition: background-color 5000s ease-in-out 0s !important;
+}
+
+#clienteFormBody {
+    position: relative;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
 
 /* ============================================
    2️⃣7️⃣ EXCLUIR LA PRIMERA SECCIÓN (UBICACIÓN) DEL ACORDEÓN
@@ -3189,7 +3528,6 @@ border-radius: 16px !important;
     transform: none !important;
 }
 
-/* Asegurar que las otras secciones (acordeón) tengan el comportamiento correcto */
 .stack-card:not(:first-of-type) .stack-body {
     max-height: 0;
     overflow: hidden;
@@ -3558,7 +3896,7 @@ border-radius: 16px !important;
 .rv2-location-label {
     font-size: 10px;
     font-weight: 800;
-    color: #b22222 !important;  /* ROJO */
+    color: #b22222 !important;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     margin-bottom: 14px;
@@ -3645,18 +3983,18 @@ border-radius: 16px !important;
 
 /* Columna izquierda: imagen - MÁS GRANDE */
 .rv2-car-image {
-    flex: 0 0 200px;  /* ← Cambiado de 140px a 200px */
+    flex: 0 0 200px;
     text-align: center;
     background: white;
     border-radius: 16px;
-    padding: 16px;     /* ← Más padding interno */
+    padding: 16px;
     border: 1px solid #eef2ff;
     box-shadow: 0 4px 12px rgba(0,0,0,0.04);
 }
 
 .rv2-car-image img {
     max-width: 100%;
-    max-height: 160px;  /* ← Cambiado de 100px a 160px */
+    max-height: 160px;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -3672,7 +4010,7 @@ border-radius: 16px !important;
 
 /* Nombre del auto - más grande */
 .rv2-car-name {
-    font-size: 26px;    /* ← Más grande */
+    font-size: 26px;
     font-weight: 800;
     color: #0f172a;
     margin-bottom: 6px;
@@ -3681,7 +4019,7 @@ border-radius: 16px !important;
 
 /* Badge (tipo de vehículo) */
 .rv2-car-badge {
-    font-size: 12px;    /* ← Ligeramente más grande */
+    font-size: 12px;
     font-weight: 800;
     color: #0f172a;
     text-transform: uppercase;
@@ -3689,7 +4027,7 @@ border-radius: 16px !important;
     margin-bottom: 16px;
     background: rgba(178, 34, 34, 0.08);
     display: inline-block;
-    padding: 6px 14px;  /* ← Más padding */
+    padding: 6px 14px;
     border-radius: 30px;
 }
 
@@ -3697,7 +4035,7 @@ border-radius: 16px !important;
 .rv2-car-features {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;          /* ← Más espacio entre chips */
+    gap: 10px;
     margin-top: 16px;
 }
 
@@ -3705,18 +4043,18 @@ border-radius: 16px !important;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;  /* ← Más padding */
+    padding: 8px 16px;
     background: white;
     border: 1px solid #e2e8f0;
     border-radius: 40px;
-    font-size: 13px;    /* ← Texto más grande */
+    font-size: 13px;
     font-weight: 600;
     color: #1e293b;
     transition: all 0.2s ease;
 }
 
 .rv2-car-features i {
-    font-size: 14px;    /* ← Iconos más grandes */
+    font-size: 14px;
     color: #0f172a;
 }
 
@@ -3737,7 +4075,7 @@ border-radius: 16px !important;
 /* Responsive para pantallas más pequeñas */
 @media (max-width: 768px) {
     .rv2-car-image {
-        flex: 0 0 160px;  /* En móvil: 160px en lugar de 200px */
+        flex: 0 0 160px;
     }
 
     .rv2-car-image img {
@@ -3791,7 +4129,6 @@ body:has(.pop.modal[style*="display: flex"]) {
 /* =========================================
    3️⃣2️⃣ Alertas Cliente
 ========================================= */
-  /* Estilos para validación - SOLO BORDES, sin relleno de fondo */
   .form-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -4147,4 +4484,25 @@ input.flatpickr-input.field-success {
 #btnEditarCategoriaPreview:hover {
   transform: scale(1.1);
   background: none !important;
+}
+
+/* =========================================
+   ACORDEÓN PARA DECLINE PROTECTIONS
+   ========================================= */
+.decline-extra-info {
+    transition: max-height 0.3s ease-out;
+    max-height: 0;
+    overflow: hidden;
+}
+.pack-card .precio {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+.pack-card {
+    cursor: pointer;
+}
+.pack-card .actions {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
 }

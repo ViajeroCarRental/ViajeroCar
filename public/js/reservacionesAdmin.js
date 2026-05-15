@@ -3,7 +3,7 @@
 
 /* =========================================
    01 FUNCIÓN DE ALERTA CON SWEETALERT2
-========================================= */
+=========================================
 function mostrarToast(mensaje, tipo = 'warning') {
     let iconColor = '#f59e0b';
     let bgColor = '#fffbeb';
@@ -64,7 +64,7 @@ function mostrarToast(mensaje, tipo = 'warning') {
         background: bgColor,
         iconColor: iconColor
     });
-}
+}*/
 
 /* =========================================
    02 FUNCIONES DE VALIDACIÓN POR PASOS
@@ -494,7 +494,6 @@ function validarHoraDevolucionPosterior() {
         if (horaEntregaSelect) {
             horaEntregaSelect.classList.add('field-error');
         }
-        mostrarToast('En la misma fecha, la devolución debe ser después del retiro', 'warning');
         return false;
     }
 
@@ -568,7 +567,7 @@ function actualizarTodasSecciones() {
     }
 }
 
-function abrirSeccion(seccion) {
+function abrirSeccion(seccion, evitarScroll = false) {
     if (!seccion) return;
     const body = seccion.querySelector('.stack-body');
     const indicator = seccion.querySelector('.stack-indicator');
@@ -578,11 +577,14 @@ function abrirSeccion(seccion) {
     if (indicator && !indicator.classList.contains('expanded')) {
         indicator.classList.add('expanded');
     }
-    setTimeout(() => {
-        seccion.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-}
 
+    const seccionId = seccion.getAttribute('data-seccion');
+    if (!evitarScroll && seccionId !== 'cliente') {
+        setTimeout(() => {
+            seccion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+}
 function desbloquearCategoria() {
     if (categoriaDesbloqueada) return;
     categoriaDesbloqueada = true;
@@ -612,7 +614,31 @@ function desbloquearCliente() {
     clienteDesbloqueada = true;
     actualizarTodasSecciones();
     const seccionCliente = document.querySelector('.acordeon-item[data-seccion="cliente"]');
-    abrirSeccion(seccionCliente);
+
+    const body = seccionCliente?.querySelector('.stack-body');
+    const indicator = seccionCliente?.querySelector('.stack-indicator');
+    if (body && !body.classList.contains('expanded')) {
+        body.classList.add('expanded');
+    }
+    if (indicator && !indicator.classList.contains('expanded')) {
+        indicator.classList.add('expanded');
+    }
+
+    console.log('📂 Sección cliente expandida (sin scroll automático)');
+}
+
+function desbloquearProteccionesSinExpandir() {
+    if (proteccionesDesbloqueada) return;
+    proteccionesDesbloqueada = true;
+    actualizarTodasSecciones();
+
+}
+
+function desbloquearClienteSinExpandir() {
+    if (clienteDesbloqueada) return;
+    clienteDesbloqueada = true;
+    actualizarTodasSecciones();
+
 }
 
 function completarFlujo() {
@@ -646,16 +672,16 @@ function configurarBotonPrincipal() {
         const esValido = validarCamposUbicacion();
 
         if (esValido) {
-            console.log('✅ Validación exitosa - Desbloqueando categoría');
+            console.log('✅ Validación exitosa - Abriendo modal de categorías');
 
-            desbloquearCategoria();
+            const modalCategorias = document.getElementById('catPop');
+            if (modalCategorias) {
+                modalCategorias.style.display = 'flex';
+            }
 
-            setTimeout(() => {
-                const btnCategorias = document.getElementById('btnCategorias');
-                if (btnCategorias) {
-                    btnCategorias.click();
-                }
-            }, 300);
+            if (typeof desbloquearCategoria === 'function') {
+                desbloquearCategoria();
+            }
         } else {
             console.log('❌ Validación fallida - Corrige los campos en rojo');
         }
@@ -719,10 +745,10 @@ function configurarClicEncabezados() {
                 e.preventDefault();
                 e.stopPropagation();
                 let mensaje = '';
-                if (seccionKey === 'categoria') mensaje = '⚠️ Primero completa la ubicación y haz clic en SIGUIENTE';
-                else if (seccionKey === 'adicionales') mensaje = '⚠️ Primero selecciona una categoría de vehículo';
-                else if (seccionKey === 'protecciones') mensaje = '⚠️ Primero revisa los adicionales (puedes saltarlos)';
-                else if (seccionKey === 'cliente') mensaje = '⚠️ Primero revisa las protecciones (puedes saltarlas)';
+                if (seccionKey === 'categoria');
+                else if (seccionKey === 'adicionales');
+                else if (seccionKey === 'protecciones');
+                else if (seccionKey === 'cliente');
 
                 if (typeof mostrarToast === 'function') {
                     mostrarToast(mensaje, 'warning');
@@ -744,7 +770,19 @@ function observarCategoria() {
         const tieneCategoria = window.state && window.state.categoria !== null;
         if (tieneCategoria && !categoriaSeleccionada) {
             categoriaSeleccionada = true;
+
             desbloquearAdicionales();
+
+            setTimeout(() => {
+                if (typeof desbloquearProteccionesSinExpandir === 'function') {
+                    desbloquearProteccionesSinExpandir();
+                    console.log("🔓 Protecciones desbloqueadas (sin expandir)");
+                }
+                if (typeof desbloquearClienteSinExpandir === 'function') {
+                    desbloquearClienteSinExpandir();
+                    console.log("🔓 Cliente desbloqueado (sin expandir)");
+                }
+            }, 150);
         }
     }, 500);
 }
@@ -809,8 +847,6 @@ function initValidacionHorasTiempoReal() {
 
                 const warning = document.createElement('small');
                 warning.className = 'hora-warning';
-                warning.style.cssText = 'display: block; color: #f59e0b; font-size: 11px; margin-top: 4px;';
-                warning.textContent = 'La hora de devolución debe ser mayor';
                 horaEntregaUI?.parentNode?.appendChild(warning);
             } else {
                 if (horaEntregaUI) {
@@ -1796,6 +1832,8 @@ function syncDays() {
     refreshSummary();
     syncTotalsHidden();
     state.base_editable = null;
+
+    actualizarTotalNavbar();
 }
 
 /* =========================================
@@ -1843,16 +1881,20 @@ function setCategoria(cat) {
     const hid = qs("#categoria_id");
     if (hid) hid.value = cat ? String(cat.id) : "";
 
-    const txt = qs("#catSelTxt");
-    const sub = qs("#catSelSub");
-    const rem = qs("#catRemove");
-    const mini = qs("#catMiniPreview");
+    const container = qs("#categoriaSelectedContainer");
+    const miniPreview = qs("#catMiniPreview");
 
     if (!cat) {
+        if (container) container.style.display = "none";
+        if (miniPreview) miniPreview.style.display = "none";
+
+        const txt = qs("#catSelTxt");
+        const sub = qs("#catSelSub");
+        const rem = qs("#catRemove");
+
         if (txt) txt.textContent = "— Ninguna categoría —";
         if (sub) sub.textContent = "Tarifa base por día y cálculo previo aparecerán aquí.";
         if (rem) rem.style.display = "none";
-        if (mini) mini.style.display = "none";
 
         const inputPrecioKm = qs("#deliveryPrecioKm");
         if (inputPrecioKm) inputPrecioKm.value = "0";
@@ -1861,6 +1903,19 @@ function setCategoria(cat) {
         refreshSummary();
         return;
     }
+
+    if (container) {
+        container.style.display = "block";
+        if (miniPreview && miniPreview.parentNode !== container) {
+            container.innerHTML = '';
+            container.appendChild(miniPreview);
+        }
+        if (miniPreview) miniPreview.style.display = "block";
+    }
+
+    const txt = qs("#catSelTxt");
+    const sub = qs("#catSelSub");
+    const rem = qs("#catRemove");
 
     if (txt) txt.textContent = cat.nombre;
     if (sub) sub.textContent = `${money(cat.precio_dia)} / día · ${state.days || 0} día(s)`;
@@ -1900,10 +1955,15 @@ function refreshCategoriaPreview() {
 
     if (!cat) {
         mini.style.display = "none";
+        const container = qs("#categoriaSelectedContainer");
+        if (container) container.style.display = "none";
         return;
     }
 
     mini.style.display = "block";
+
+    const container = qs("#categoriaSelectedContainer");
+    if (container) container.style.display = "block";
 
     const imgEl = document.getElementById("catMiniImg");
     if (imgEl && cat.img) {
@@ -2008,22 +2068,23 @@ function getGrupoLabelFromTrack(trackId) {
 
 function toggleIndividualFromCard(card) {
     if (!card) return;
-
     if (state.proteccion) setProteccion(null);
 
     const id = String(card.dataset.id || "");
     const precio = Number(card.dataset.precio || 0);
     const nombre = card.querySelector("h4")?.textContent?.trim() || "Seguro individual";
     const desc = card.querySelector("p")?.textContent?.trim() || "";
-
     const parentTrack = card.closest(".scroll-h")?.id || "";
     const grupo = getGrupoLabelFromTrack(parentTrack);
+
+
+    const esProteccionAutomatica = (grupo === "Protecciones automáticas");
+
 
     if (!grupo) {
         const exists = state.individuales.has(id);
         if (exists) state.individuales.delete(id);
         else state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
-
         syncIndividualesHidden();
         repaintIndividualesUI();
         syncTotalsHidden();
@@ -2049,6 +2110,81 @@ function toggleIndividualFromCard(card) {
         }
     } else {
         state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
+    }
+
+
+    const quedoSeleccionada = state.individuales.has(id);
+
+    // ========================================
+    // REGLA: Auto-activar protecciones automáticas
+    // ========================================
+
+    function obtenerIdsProteccionesAutomaticas() {
+        const autoTrack = document.getElementById("insAutoTrack");
+        if (!autoTrack) return [];
+        const autoCards = autoTrack.querySelectorAll(".individual-item");
+        const ids = [];
+        autoCards.forEach(card => {
+            const cardId = card.dataset.id;
+            if (cardId) ids.push(String(cardId));
+        });
+        return ids;
+    }
+
+    function contarProteccionesNoAutomaticas() {
+        let count = 0;
+        for (const item of state.individuales.values()) {
+            if (item.grupo !== "Protecciones automáticas") {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    const autoIds = obtenerIdsProteccionesAutomaticas();
+    const totalNoAutomaticas = contarProteccionesNoAutomaticas();
+
+    // CASO 1:
+    if (!esProteccionAutomatica && quedoSeleccionada) {
+        autoIds.forEach(autoId => {
+            if (!state.individuales.has(autoId)) {
+                const autoCard = document.querySelector(`.individual-item[data-id="${autoId}"]`);
+                if (autoCard) {
+                    const autoNombre = autoCard.querySelector("h4")?.textContent?.trim() || "Protección Auto";
+                    const autoPrecio = Number(autoCard.dataset.precio || 0);
+                    const autoDesc = autoCard.dataset.descripcion || "";
+
+                    state.individuales.set(autoId, {
+                        id: autoId,
+                        nombre: autoNombre,
+                        desc: autoDesc,
+                        precio: autoPrecio,
+                        charge: "por_dia",
+                        grupo: "Protecciones automáticas"
+                    });
+
+                    autoCard.classList.add("is-selected");
+                    const autoSwitch = autoCard.querySelector(".switch-individual");
+                    if (autoSwitch) autoSwitch.classList.add("is-on");
+                }
+            }
+        });
+    }
+
+    // CASO 2:
+    if (!esProteccionAutomatica && !quedoSeleccionada && totalNoAutomaticas === 0) {
+        autoIds.forEach(autoId => {
+            if (state.individuales.has(autoId)) {
+                state.individuales.delete(autoId);
+
+                const autoCard = document.querySelector(`.individual-item[data-id="${autoId}"]`);
+                if (autoCard) {
+                    autoCard.classList.remove("is-selected");
+                    const autoSwitch = autoCard.querySelector(".switch-individual");
+                    if (autoSwitch) autoSwitch.classList.remove("is-on");
+                }
+            }
+        });
     }
 
     syncIndividualesHidden();
@@ -2493,6 +2629,17 @@ function calcTotals() {
     return { baseDia, baseTotal, protTotal, indTotal, extrasSub, deliveryTotal, gasolinaTotal, dropoffTotal, subtotal, iva, total };
 }
 
+// Actualizar el total en el botón del navbar
+function actualizarTotalNavbar() {
+    const btnTotal = document.getElementById('btnTotalNav');
+    if (!btnTotal) return;
+
+    const totals = calcTotals();
+    const totalValido = isNaN(totals.total) ? 0 : totals.total;
+
+    btnTotal.innerHTML = `Total: ${money(totalValido)}`;
+}
+
 function syncTotalsHidden() {
     ensureTotalsHidden();
 
@@ -2501,6 +2648,8 @@ function syncTotalsHidden() {
     qs("#subtotal").value = String(totals.subtotal || 0);
     qs("#impuestos").value = String(totals.iva || 0);
     qs("#total").value = String(totals.total || 0);
+
+    actualizarTotalNavbar();
 }
 
 function initTarifaEdit() {
@@ -3085,7 +3234,7 @@ function refreshSummary() {
             const protPrecio = Number(prot.precio || 0);
             const protTotal = prot.charge === "por_dia" ? protPrecio * days : protPrecio;
 
-            if (protTotal > 0) {
+            if (protTotal >= 0) {
                 proteccionesHtml += `
                     <div class="rv2-option-item">
                         <span class="rv2-option-name"><i class="fas fa-shield-alt"></i> ${prot.nombre}</span>
@@ -3196,7 +3345,7 @@ function validateBeforeSubmit() {
         mostrarExito(fechaFinUI);
     }
 
-    if (fechaInicio && fechaFin && fechaFin <= fechaInicio) {
+    if (fechaInicio && fechaFin && fechaFin < fechaInicio) {
         mostrarError(fechaFinUI, 'La fecha de devolución debe ser posterior a la fecha de salida');
         allValid = false;
     }
@@ -3806,9 +3955,27 @@ async function submitReservaAjax(e) {
         if (data?.redirect_url) form.dataset.redirect = data.redirect_url;
 
         const confirmPop = qs("#confirmPop");
-        const redirectToActivas = () => {
-            window.location.href = "/admin/reservaciones-activas";
-        };
+if (confirmPop && !confirmPop.dataset.bound) {
+    confirmPop.dataset.bound = "1";
+
+    const confirmOk = qs("#confirmOk");
+    if (confirmOk) {
+        const newConfirmOk = confirmOk.cloneNode(true);
+        confirmOk.parentNode.replaceChild(newConfirmOk, confirmOk);
+        newConfirmOk.addEventListener("click", () => {
+            window.location.href = "/admin/reservaciones-activas"; // Bookings
+        });
+    }
+
+    const confirmClose = qs("#confirmClose");
+    if (confirmClose) {
+        const newConfirmClose = confirmClose.cloneNode(true);
+        confirmClose.parentNode.replaceChild(newConfirmClose, confirmClose);
+        newConfirmClose.addEventListener("click", () => {
+            window.location.href = "/ventas/menu"; // Inicio Ventas
+        });
+    }
+}
 
         if (confirmPop && !confirmPop.dataset.bound) {
             confirmPop.dataset.bound = "1";
@@ -3974,20 +4141,25 @@ async function loadProtecciones() {
             `;
 
             card.addEventListener("click", (e) => {
-                const btn = e.target.closest("button");
-                if (!btn) return;
+    const btn = e.target.closest("button");
+    if (!btn) return;
 
-                setProteccion({
-                    id: p.id,
-                    nombre: p.nombre,
-                    precio: p.precio,
-                    charge: p.charge,
-                    desc: p.desc
-                });
+    setProteccion({
+        id: p.id,
+        nombre: p.nombre,
+        precio: p.precio,
+        charge: p.charge,
+        desc: p.desc
+    });
 
-                refreshProteccionUIHeader();
-                closePop(qs("#proteccionPop"));
-            });
+    refreshProteccionUIHeader();
+    closePop(qs("#proteccionPop"));
+
+    const seccionProtecciones = document.querySelector('.acordeon-item[data-seccion="protecciones"]');
+    if (seccionProtecciones && typeof abrirSeccion === 'function') {
+        abrirSeccion(seccionProtecciones, true);
+    }
+});
 
             track.appendChild(card);
         });
@@ -4781,21 +4953,17 @@ function initSelect2EnAdicionales() {
     // Delivery
     const deliverySelect = document.getElementById('deliveryUbicacion');
     if (deliverySelect) {
-        // Destruir instancia anterior si existe
         if ($(deliverySelect).data('select2')) {
             $(deliverySelect).select2('destroy');
         }
 
-        // Reinicializar
         $(deliverySelect).select2(select2Config);
 
-        // Sincronizar el valor actual del select original con Select2
         const currentValue = deliverySelect.value;
         if (currentValue) {
             $(deliverySelect).val(currentValue).trigger('change');
         }
 
-        // Evento change - disparar evento nativo para que JS lo detecte
         $(deliverySelect).off('change.delivery').on('change.delivery', function(e) {
             const nativeEvent = new Event('change', { bubbles: true });
             deliverySelect.dispatchEvent(nativeEvent);
@@ -4913,26 +5081,26 @@ document.addEventListener('DOMContentLoaded', function() {
         if (document.getElementById('resNavbar')) return;
 
         const navbarHTML = `
-            <div class="res-navbar" id="resNavbar">
-                <div class="container-res">
-                    <div class="nav-content-wrapper">
-                        <div class="left-group">
-                            <a href="/" class="logo">VIAJERO</a>
-                            <span class="page-title">Nueva reservación</span>
-                        </div>
-                        <div class="nav-actions">
-                            <button class="btn-resumen-minimal" id="btnResumenNav">
-                                <i class="fa-solid fa-file-invoice"></i>
-                                <span>VER RESUMEN</span>
-                            </button>
-                            <button class="btn-salir-minimal" id="btnSalirNav" title="Salir">
-                                ✕
-                            </button>
-                        </div>
-                    </div>
+    <div class="res-navbar" id="resNavbar">
+        <div class="container-res">
+            <div class="nav-content-wrapper">
+                <div class="left-group">
+                    <a href="/" class="logo">VIAJERO</a>
+                    <span class="page-title">Nueva reservación</span>
+                </div>
+                <div class="nav-actions">
+                    <button class="btn-resumen-minimal" id="btnResumenNav">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                        <span id="btnTotalNav">Total: $0.00 MXN</span>
+                    </button>
+                    <button class="btn-salir-minimal" id="btnSalirNav" title="Salir">
+                        ✕
+                    </button>
                 </div>
             </div>
-        `;
+        </div>
+    </div>
+`;
 
         document.body.insertAdjacentHTML('afterbegin', navbarHTML);
 
@@ -4940,7 +5108,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const dispararResumen = () => btnResumenOriginal && btnResumenOriginal.click();
         document.getElementById('btnResumenNav')?.addEventListener('click', dispararResumen);
 
-        const salirUrl = '/admin/reservaciones-activas';
+        const salirUrl = '/ventas/menu';
         document.getElementById('btnSalirNav')?.addEventListener('click', () => {
             window.location.href = salirUrl;
         });
@@ -5240,29 +5408,31 @@ function seleccionarCategoriaReservacion(cardElement) {
     };
 
     function expandirSeccion(seccionId) {
-        const seccion = document.querySelector(`.acordeon-item[data-seccion="${seccionId}"]`);
-        if (!seccion) {
-            console.error(`❌ Sección ${seccionId} no encontrada`);
-            return;
-        }
+    const seccion = document.querySelector(`.acordeon-item[data-seccion="${seccionId}"]`);
+    if (!seccion) {
+        console.error(`❌ Sección ${seccionId} no encontrada`);
+        return;
+    }
 
-        seccion.style.display = 'block';
+    seccion.style.display = 'block';
 
-        const body = seccion.querySelector('.stack-body');
-        const indicator = seccion.querySelector('.stack-indicator');
+    const body = seccion.querySelector('.stack-body');
+    const indicator = seccion.querySelector('.stack-indicator');
 
-        if (body && !body.classList.contains('expanded')) {
-            body.classList.add('expanded');
-            console.log(`📂 Expandida sección: ${seccionId}`);
-        }
-        if (indicator && !indicator.classList.contains('expanded')) {
-            indicator.classList.add('expanded');
-        }
+    if (body && !body.classList.contains('expanded')) {
+        body.classList.add('expanded');
+        console.log(`📂 Expandida sección: ${seccionId}`);
+    }
+    if (indicator && !indicator.classList.contains('expanded')) {
+        indicator.classList.add('expanded');
+    }
 
+    if (seccionId !== 'cliente') {
         setTimeout(() => {
             seccion.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
     }
+}
 
     function colapsarSeccion(seccionId) {
         const seccion = document.querySelector(`.acordeon-item[data-seccion="${seccionId}"]`);
@@ -5445,40 +5615,52 @@ function seleccionarCategoriaReservacion(cardElement) {
     }
 
     function initSeleccionCategoria() {
-        const seleccionarCategoriaOriginal = window.seleccionarCategoriaReservacion;
+    const seleccionarCategoriaOriginal = window.seleccionarCategoriaReservacion;
 
-        window.seleccionarCategoriaReservacion = function(element) {
-            console.log("🚗 Seleccionando categoría...");
+    window.seleccionarCategoriaReservacion = async function(element) {
+        console.log("🚗 Seleccionando categoría...");
 
-            if (seleccionarCategoriaOriginal && typeof seleccionarCategoriaOriginal === 'function') {
-                seleccionarCategoriaOriginal(element);
+        if (seleccionarCategoriaOriginal && typeof seleccionarCategoriaOriginal === 'function') {
+            seleccionarCategoriaOriginal(element);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        const categoriaSeleccionada = window.state?.categoria || state?.categoria;
+
+        if (categoriaSeleccionada) {
+            console.log("✅ Categoría seleccionada:", categoriaSeleccionada.nombre);
+            marcarCompletada('categoria');
+
+            console.log("📂 Expandir sección 'adicionales'...");
+            expandirSeccion('adicionales');
+
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            console.log("🔓 Desbloqueando protecciones y cliente...");
+
+            if (typeof desbloquearProtecciones === 'function') {
+                desbloquearProtecciones();
+                console.log("🔓 Protecciones desbloqueadas");
             }
 
-            setTimeout(() => {
-                const categoriaSeleccionada = window.state?.categoria || state?.categoria;
+            if (typeof desbloquearCliente === 'function') {
+                desbloquearCliente();
+                console.log("🔓 Cliente desbloqueado");
+            }
 
-                if (categoriaSeleccionada) {
-                    console.log("✅ Categoría seleccionada:", categoriaSeleccionada.nombre);
-                    marcarCompletada('categoria');
+            if (typeof actualizarTodasSecciones === 'function') {
+                actualizarTodasSecciones();
+            }
 
-                    console.log("📂 Intentando expandir 'adicionales'...");
-                    expandirSeccion('adicionales');
-
-                    setTimeout(() => {
-                        const seccionAdicionales = document.querySelector('.acordeon-item[data-seccion="adicionales"]');
-                        const bodyExpandido = seccionAdicionales?.querySelector('.stack-body.expanded');
-                        console.log("📂 Sección adicionales expandida?", !!bodyExpandido);
-                    }, 100);
-
-                    if (typeof mostrarToast === 'function') {
-                        mostrarToast(`✅ Categoría ${categoriaSeleccionada.nombre} seleccionada`, 'success');
-                    }
-                } else {
-                    console.log("❌ No se encontró categoría en state");
-                }
-            }, 200);
-        };
-    }
+            if (typeof mostrarToast === 'function') {
+                mostrarToast(`✅ Categoría ${categoriaSeleccionada.nombre} seleccionada`, 'success');
+            }
+        } else {
+            console.log("❌ No se encontró categoría en state");
+        }
+    };
+}
 
     function tieneAdicionalesSeleccionados() {
         const dropoffActivo = document.getElementById('dropoffToggle')?.checked || false;
@@ -5559,4 +5741,446 @@ function seleccionarCategoriaReservacion(cardElement) {
         initCarousel();
     }
 
+})();
+(function() {
+  const descripciones = {
+    'Conductor adicional': 'Agregar un conductor extra.',
+    'Gasolina prepago': 'Tanque completo preferencial.',
+    'Drop Off': 'Entrega en sucursal distinta.',
+    'Delivery': 'Entrega a domicilio.',
+    'Silla de bebé': 'Silla de seguridad para bebé.'
+  };
+
+  let activeTooltip = null;
+  let tooltipTimeout = null;
+  let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  let modal = document.getElementById('modalInfoAdicional');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modalInfoAdicional';
+    modal.className = 'modal-info-overlay';
+    modal.innerHTML = `
+      <div class="modal-info-container">
+        <div class="modal-info-header">
+          <i id="modalInfoIcon" class="fas fa-info-circle"></i>
+          <h3 id="modalInfoTitulo"></h3>
+          <button class="modal-info-close">&times;</button>
+        </div>
+        <div class="modal-info-body">
+          <p id="modalInfoDescripcion" class="modal-info-desc"></p>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  const modalTitulo = document.getElementById('modalInfoTitulo');
+  const modalDescripcion = document.getElementById('modalInfoDescripcion');
+  const modalIcon = document.getElementById('modalInfoIcon');
+  const closeBtn = document.querySelector('.modal-info-close');
+
+  function abrirModal(titulo, descripcion, iconClass) {
+    modalTitulo.textContent = titulo;
+    modalDescripcion.textContent = descripcion;
+    if (iconClass) {
+      modalIcon.className = iconClass;
+    }
+    modal.style.display = 'flex';
+  }
+
+  function cerrarModal() {
+    modal.style.display = 'none';
+  }
+
+  if (closeBtn) closeBtn.addEventListener('click', cerrarModal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) cerrarModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display === 'flex') cerrarModal();
+  });
+
+  function showTooltip(element, text) {
+    if (activeTooltip) {
+      activeTooltip.remove();
+      activeTooltip = null;
+    }
+    if (tooltipTimeout) clearTimeout(tooltipTimeout);
+
+    const tooltip = document.createElement('div');
+    tooltip.className = 'info-tooltip';
+    if (text.length > 40) tooltip.classList.add('multiline');
+    tooltip.textContent = text;
+    document.body.appendChild(tooltip);
+
+    const rect = element.getBoundingClientRect();
+    let top = rect.bottom + 8;
+    let left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2);
+
+    if (left < 10) left = 10;
+    if (left + tooltip.offsetWidth > window.innerWidth - 10) {
+      left = window.innerWidth - tooltip.offsetWidth - 10;
+    }
+
+    tooltip.style.top = `${top}px`;
+    tooltip.style.left = `${left}px`;
+    activeTooltip = tooltip;
+  }
+
+  function hideTooltip() {
+    if (tooltipTimeout) clearTimeout(tooltipTimeout);
+    tooltipTimeout = setTimeout(() => {
+      if (activeTooltip) {
+        activeTooltip.remove();
+        activeTooltip = null;
+      }
+    }, 150);
+  }
+
+  function hideTooltipImmediately() {
+    if (tooltipTimeout) clearTimeout(tooltipTimeout);
+    if (activeTooltip) {
+      activeTooltip.remove();
+      activeTooltip = null;
+    }
+  }
+
+  document.querySelectorAll('.svc-card').forEach(card => {
+    const iconContainer = card.querySelector('.svc-ico');
+    const titulo = card.querySelector('.svc-name')?.textContent || '';
+    const descripcion = descripciones[titulo] || 'Sin información disponible';
+
+    const iconElement = iconContainer?.querySelector('i');
+    let iconClass = '';
+    if (iconElement) {
+      const classes = iconElement.className;
+      if (classes.includes('fa-user-plus')) iconClass = 'fas fa-user-plus';
+      else if (classes.includes('fa-gas-pump')) iconClass = 'fas fa-gas-pump';
+      else if (classes.includes('fa-flag-checkered')) iconClass = 'fas fa-flag-checkered';
+      else if (classes.includes('fa-truck')) iconClass = 'fas fa-truck';
+      else if (classes.includes('fa-baby-carriage')) iconClass = 'fas fa-baby-carriage';
+      else iconClass = 'fas fa-info-circle';
+    }
+
+    if (iconContainer) {
+      if (!isMobile) {
+        iconContainer.addEventListener('mouseenter', (e) => {
+          e.stopPropagation();
+          showTooltip(iconContainer, descripcion);
+        });
+        iconContainer.addEventListener('mouseleave', () => {
+          hideTooltip();
+        });
+      }
+
+      iconContainer.addEventListener('click', (e) => {
+        e.stopPropagation();
+        hideTooltipImmediately();
+        abrirModal(titulo, descripcion, iconClass);
+      });
+    }
+  });
+
+  window.addEventListener('scroll', hideTooltipImmediately);
+  window.addEventListener('resize', hideTooltipImmediately);
+})();
+
+// =========================================
+// PERMITIR AUTOCOMPLETADO PERO PREVENIR SCROLL
+// =========================================
+(function() {
+    "use strict";
+
+    let clienteSectionTop = null;
+    let preventScroll = true;
+
+    function saveClienteSectionPosition() {
+        const clienteSection = document.querySelector('.acordeon-item[data-seccion="cliente"]');
+        if (clienteSection && clienteSection.querySelector('.stack-body')?.classList.contains('expanded')) {
+            const rect = clienteSection.getBoundingClientRect();
+            clienteSectionTop = rect.top + window.scrollY;
+            console.log('📌 Posición de cliente guardada:', clienteSectionTop);
+        }
+    }
+    function restoreClientePosition() {
+        if (preventScroll && clienteSectionTop !== null) {
+            const currentScroll = window.scrollY;
+            const difference = Math.abs(currentScroll - clienteSectionTop);
+
+            if (difference > 50) {
+                window.scrollTo({
+                    top: clienteSectionTop,
+                    behavior: 'instant'
+                });
+                console.log('🔄 Scroll restaurado a:', clienteSectionTop);
+            }
+        }
+    }
+
+    const clienteSection = document.querySelector('.acordeon-item[data-seccion="cliente"]');
+    if (clienteSection) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    const body = clienteSection.querySelector('.stack-body');
+                    if (body && body.classList.contains('expanded')) {
+                        setTimeout(() => {
+                            saveClienteSectionPosition();
+                        }, 50);
+                    }
+                }
+            });
+        });
+        observer.observe(clienteSection, { attributes: true });
+    }
+
+    const clienteInputs = [
+        'nombre_cliente',
+        'apellidos_cliente',
+        'email_cliente',
+        'telefono_ui',
+        'no_vuelo'
+    ];
+
+    clienteInputs.forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.addEventListener('focus', function() {
+                saveClienteSectionPosition();
+            });
+
+            input.addEventListener('animationstart', function(e) {
+                if (e.animationName === 'onAutoFillStart') {
+                    saveClienteSectionPosition();
+                    setTimeout(restoreClientePosition, 1);
+                    setTimeout(restoreClientePosition, 10);
+                    setTimeout(restoreClientePosition, 50);
+                }
+            });
+
+            input.addEventListener('change', function() {
+                setTimeout(restoreClientePosition, 10);
+            });
+
+            input.addEventListener('blur', function() {
+                setTimeout(restoreClientePosition, 20);
+            });
+            input.addEventListener('input', function() {
+                saveClienteSectionPosition();
+            });
+        }
+    });
+
+    document.addEventListener('focusin', function(e) {
+        if (e.target.closest('.acordeon-item[data-seccion="cliente"]')) {
+            saveClienteSectionPosition();
+            e.preventDefault();
+        }
+    });
+
+    const telefonoUI = document.getElementById('telefono_ui');
+    if (telefonoUI) {
+        telefonoUI.addEventListener('focus', saveClienteSectionPosition);
+        telefonoUI.addEventListener('animationstart', function(e) {
+            if (e.animationName === 'onAutoFillStart') {
+                saveClienteSectionPosition();
+                setTimeout(restoreClientePosition, 1);
+                setTimeout(restoreClientePosition, 10);
+                setTimeout(restoreClientePosition, 50);
+            }
+        });
+    }
+
+    setTimeout(saveClienteSectionPosition, 500);
+    console.log('✅ Autocompletado permitido - Scroll prevenido');
+})();
+
+/* =========================================
+   ACORDEÓN PARA DECLINE PROTECTIONS
+   ========================================= */
+(function() {
+    "use strict";
+
+    console.log('🔍 Iniciando script de DECLINE PROTECTIONS...');
+
+    function aplicarAcordeonADecline() {
+        console.log('🔍 Buscando cards de protección...');
+
+        const proteccionesTrack = document.getElementById('protePacksTrack');
+
+        if (!proteccionesTrack) {
+            console.log('❌ No se encontró #protePacksTrack');
+            return;
+        }
+
+        console.log('✅ #protePacksTrack encontrado');
+
+        const cards = proteccionesTrack.querySelectorAll('.pack-card');
+        console.log(`📦 Se encontraron ${cards.length} cards`);
+
+        cards.forEach((card, index) => {
+            const titleElement = card.querySelector('h4');
+            if (!titleElement) {
+                console.log(`Card ${index}: sin título`);
+                return;
+            }
+
+            const titulo = titleElement.textContent.trim();
+            console.log(`Card ${index}: "${titulo}"`);
+
+            if (titulo.toUpperCase().includes('DECLINE')) {
+                console.log('🎯 ¡Card DECLINE PROTECTIONS encontrada! Aplicando acordeón...');
+
+                const bodyDiv = card.querySelector('.body');
+                if (!bodyDiv) {
+                    console.log('❌ No se encontró .body');
+                    return;
+                }
+
+
+                let extraInfo = card.querySelector('.decline-extra-info');
+                if (!extraInfo) {
+                    extraInfo = document.createElement('div');
+                    extraInfo.className = 'decline-extra-info';
+                    extraInfo.style.cssText = 'transition: max-height 0.3s ease-out; max-height: 0; overflow: hidden;';
+
+                    const descList = card.querySelector('.desc-list');
+                    if (descList) {
+
+                        bodyDiv.insertBefore(extraInfo, descList);
+                        extraInfo.appendChild(descList);
+                        console.log('✅ Lista movida al contenedor colapsable');
+                    }
+                }
+
+                const precio = card.querySelector('.precio');
+                if (precio) {
+                    precio.style.display = 'flex';
+                    precio.style.visibility = 'visible';
+                    precio.style.opacity = '1';
+                }
+
+
+                const actions = card.querySelector('.actions');
+                if (actions) {
+                    actions.style.marginTop = '0';
+                    actions.style.paddingTop = '0';
+                }
+
+                card.style.cursor = 'pointer';
+
+                if (card._dblclickHandler) {
+                    card.removeEventListener('dblclick', card._dblclickHandler);
+                }
+                card._dblclickHandler = function(e) {
+                    e.stopPropagation();
+                    const extra = this.querySelector('.decline-extra-info');
+                    if (!extra) return;
+
+                    const isExpanded = extra.style.maxHeight !== '0px';
+                    if (isExpanded) {
+                        extra.style.maxHeight = '0';
+                        console.log('📂 Colapsando DECLINE PROTECTIONS');
+                    } else {
+                        extra.style.maxHeight = extra.scrollHeight + 'px';
+                        console.log('📂 Expandiendo DECLINE PROTECTIONS');
+                    }
+                };
+
+                card.addEventListener('dblclick', card._dblclickHandler);
+
+                const btn = card.querySelector('.actions .btn');
+                if (btn && !btn._clickPrevented) {
+                    btn._clickPrevented = true;
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        console.log('🔘 Botón Elegir clickeado');
+                    });
+                }
+
+                console.log('✅ Acordeón aplicado correctamente');
+            }
+        });
+    }
+    const observador = new MutationObserver(function(mutations) {
+        const track = document.getElementById('protePacksTrack');
+        if (track && track.children.length > 0) {
+            console.log('🔄 Cards detectadas, aplicando acordeón...');
+            aplicarAcordeonADecline();
+        }
+    });
+
+    observador.observe(document.body, { childList: true, subtree: true });
+    console.log('👀 Observador iniciado');
+    const btnProtecciones = document.getElementById('btnProtecciones');
+    if (btnProtecciones) {
+        btnProtecciones.addEventListener('click', function() {
+            console.log('🔓 Modal de protecciones abierto');
+            setTimeout(aplicarAcordeonADecline, 800);
+        });
+    }
+    setTimeout(aplicarAcordeonADecline, 1000);
+})();
+// =========================================
+// FIX: POSICIÓN EN INDIVIDUALES
+// =========================================
+(function() {
+    "use strict";
+
+    let proteccionModalAbierto = false;
+    let posicionOriginal = null;
+    let intervaloRestauracion = null;
+
+    const modal = document.getElementById('proteccionPop');
+    if (!modal) return;
+
+    const btnProtecciones = document.getElementById('btnProtecciones');
+    if (btnProtecciones) {
+        btnProtecciones.addEventListener('click', () => {
+            setTimeout(() => {
+                const seccion = document.querySelector('.acordeon-item[data-seccion="protecciones"]');
+                if (seccion) {
+                    const rect = seccion.getBoundingClientRect();
+                    posicionOriginal = rect.top + window.scrollY;
+                    console.log('📌 Posición original guardada:', posicionOriginal);
+                }
+            }, 100);
+        });
+    }
+
+    const observer = new MutationObserver(() => {
+        if (modal.style.display === 'flex') {
+            proteccionModalAbierto = true;
+
+            if (intervaloRestauracion) clearInterval(intervaloRestauracion);
+            intervaloRestauracion = setInterval(() => {
+                if (proteccionModalAbierto && posicionOriginal) {
+                    const seccion = document.querySelector('.acordeon-item[data-seccion="protecciones"]');
+                    if (seccion) {
+                        const rect = seccion.getBoundingClientRect();
+                        const posActual = rect.top + window.scrollY;
+                        if (Math.abs(posActual - posicionOriginal) > 5) {
+                            window.scrollTo({ top: posicionOriginal, behavior: 'instant' });
+                            console.log('🔄 Forzando posición durante selección');
+                        }
+                    }
+                }
+            }, 50);
+        } else {
+            proteccionModalAbierto = false;
+            if (intervaloRestauracion) {
+                clearInterval(intervaloRestauracion);
+                intervaloRestauracion = null;
+            }
+            if (posicionOriginal) {
+                setTimeout(() => {
+                    window.scrollTo({ top: posicionOriginal, behavior: 'instant' });
+                }, 10);
+            }
+        }
+    });
+
+    observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
+
+    console.log('✅ Fix urgente de posición activado');
 })();
