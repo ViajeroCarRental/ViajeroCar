@@ -39,7 +39,7 @@
     <input
       id="q"
       name="q"
-      class="input"
+      class="input search-input"
       type="search"
       placeholder="Buscar por nombre o correo…"
       value="{{ request('q') }}"
@@ -59,11 +59,19 @@
     </select>
 
     <input
-      type="date"
-      name="fecha_inicio"
+      type="text"
+      id="filtro_fecha_ui"
       class="input"
+      placeholder="Fecha"
+      value="{{ request('fecha_inicio') ? \Carbon\Carbon::parse(request('fecha_inicio'))->format('d-M-Y') : '' }}"
+      autocomplete="off"
+    >
+
+    <input
+      type="hidden"
+      id="filtro_fecha"
+      name="fecha_inicio"
       value="{{ request('fecha_inicio') }}"
-      onchange="this.form.submit()"
     >
 
     <select
@@ -368,6 +376,7 @@
           <div class="thead">
             <div></div>
             <div>No. de Reservacion</div>
+            <div>oficina</div>
             <div>Check in</div>
             <div>Hora (IN)</div>
 
@@ -382,7 +391,6 @@
             <div>Correo</div>
             <div>Estatus de pago</div>
             <div>Total</div>
-            <div>Acciones</div>
           </div>
 
           <div class="tbody">
@@ -428,8 +436,52 @@
                 data-estado="{{ $r->estado }}"
                 data-sucursal="{{ $r->sucursal_retiro }}"
               >
-                <div></div>
+                <div class="actions-wrap">
+                  <button
+                    type="button"
+                    class="iconbtn more"
+                    title="Más acciones"
+                    data-open-actions
+                    data-id="{{ $r->id_reservacion }}"
+                    data-codigo="{{ $r->codigo }}"
+                    data-delete-url="{{ route('rutaEliminarReservacionActiva', $r->id_reservacion) }}"
+                  >
+                    ⋯
+                  </button>
+                </div>
+
                 <div>{{ $r->codigo }}</div>
+
+                <div>
+                  @if(!empty($r->oficina_compacta))
+
+                    @if($r->oficina_compacta === 'AIQ')
+                      <span class="oficina-icon">
+                        <i class="fa-solid fa-plane"></i>
+                        {{ $r->oficina_compacta }}
+                      </span>
+
+                    @elseif($r->oficina_compacta === 'TAQ')
+                      <span class="oficina-icon">
+                        <i class="fa-solid fa-bus" style="color:black;"></i>
+                        {{ $r->oficina_compacta }}
+                      </span>
+
+                    @elseif($r->oficina_compacta === 'OCP')
+                      <span class="oficina-icon">
+                        <i class="fa-solid fa-building"></i>
+                        {{ $r->oficina_compacta }}
+                      </span>
+
+                    @else
+                      —
+                    @endif
+
+                  @else
+                    —
+                  @endif
+                </div>
+
                 <div>{{ $fmtFecha($r->fecha_inicio) }}</div>
                 <div>{{ $horaIn }}</div>
 
@@ -448,20 +500,6 @@
                 </div>
 
                 <div>${{ number_format($r->total, 2) }} MXN</div>
-
-                <div class="actions-wrap">
-                  <button
-                    type="button"
-                    class="iconbtn more"
-                    title="Más acciones"
-                    data-open-actions
-                    data-id="{{ $r->id_reservacion }}"
-                    data-codigo="{{ $r->codigo }}"
-                    data-delete-url="{{ route('rutaEliminarReservacionActiva', $r->id_reservacion) }}"
-                  >
-                    ⋯
-                  </button>
-                </div>
               </div>
             @empty
               <div class="row">
@@ -655,6 +693,11 @@
 @endsection
 
 @section('js-vistaReservacionesActivas')
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
   <script src="{{ asset('js/reservacionesActivas.js') }}"></script>
 
   {{-- ✅ Exportar Excel SOLO para tabla principal --}}

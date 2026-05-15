@@ -31,6 +31,100 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
   /* ==========================================================
+    🗓️ FILTRO FECHA CON FLATPICKR
+  ========================================================== */
+  function initFiltroFechaFlatpickr() {
+    if (!window.flatpickr) return;
+
+    const inputUI = document.getElementById("filtro_fecha_ui");
+    const inputHidden = document.getElementById("filtro_fecha");
+    const form = document.querySelector("form.toolbar");
+
+    if (!inputUI || !inputHidden || !form) return;
+
+    let backdrop = document.querySelector(".fp-backdrop");
+
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.className = "fp-backdrop";
+      document.body.appendChild(backdrop);
+    }
+
+    function openModal(instance) {
+      backdrop.classList.add("is-open");
+      document.body.classList.add("no-scroll");
+      backdrop.onclick = () => instance.close();
+    }
+
+    function closeModal() {
+      backdrop.classList.remove("is-open");
+      document.body.classList.remove("no-scroll");
+      backdrop.onclick = null;
+    }
+
+    function makeActions(instance) {
+      const actions = document.createElement("div");
+      actions.className = "fp-actions";
+
+      actions.innerHTML = `
+        <button type="button" class="fp-today">Hoy</button>
+        <button type="button" class="fp-clear">Limpiar</button>
+        <button type="button" class="fp-label">✖ Fecha</button>
+      `;
+
+      actions.querySelector(".fp-today").addEventListener("click", () => {
+        instance.setDate(new Date(), true);
+      });
+
+      actions.querySelector(".fp-clear").addEventListener("click", () => {
+        instance.clear();
+        inputHidden.value = "";
+        form.submit();
+      });
+
+      return actions;
+    }
+
+    flatpickr(inputUI, {
+      locale: "es",
+      dateFormat: "d-M-Y",
+      allowInput: false,
+      clickOpens: true,
+      minDate: "today",
+
+      onOpen: (selectedDates, dateStr, instance) => {
+        openModal(instance);
+
+        if (!instance._actionsAdded) {
+          instance.calendarContainer.appendChild(makeActions(instance));
+          instance._actionsAdded = true;
+        }
+      },
+
+      onClose: () => closeModal(),
+
+      onChange: (selectedDates) => {
+        const d = selectedDates?.[0];
+
+        if (d) {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+
+          inputHidden.value = `${year}-${month}-${day}`;
+        } else {
+          inputHidden.value = "";
+        }
+
+        form.submit();
+      }
+    });
+  }
+
+  initFiltroFechaFlatpickr();
+
+
+  /* ==========================================================
      🗓️ Lista: +
   =========================================================== */
  document.addEventListener("click", function(e) {
