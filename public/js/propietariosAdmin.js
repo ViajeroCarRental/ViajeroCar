@@ -92,15 +92,13 @@ async function cargarPropietarios() {
 
 
 // ==============================
-// ABRIR NUEVO
+// ABRIR NUEVO (con autocompletado al perder foco en el nombre)
 // ==============================
 
 function abrirNuevo(idVehiculo){
 
     document.getElementById("newVehiculo").value = idVehiculo;
-
-    document.getElementById("newNombre").value = "";
-
+    document.getElementById("newNombre").value   = "";
     document.getElementById("modalNuevo").style.display = "block";
 
     if(padFirmaNuevo){
@@ -154,25 +152,36 @@ document.getElementById("btnGuardarNuevo").addEventListener("click", async () =>
 
 
 // ==============================
-// ABRIR EDITAR
+// ABRIR EDITAR (precarga la firma existente)
 // ==============================
 
 async function abrirEditar(id) {
 
-    const res = await fetch(baseUrl + "/" + id);
+    const res  = await fetch(baseUrl + "/" + id);
     const data = await res.json();
 
-    document.getElementById("editId").value = data.id_vehiculo;
-    document.getElementById("editNombre").value = data.nombre_propietario;
+    document.getElementById("editId").value     = data.id_vehiculo;
+    document.getElementById("editNombre").value = data.nombre_propietario ?? "";
 
     document.getElementById("modalEditar").style.display = "block";
 
-    if(padFirmaEditar){
+    if (padFirmaEditar) {
         padFirmaEditar.clear();
+
+        // Precargar la firma actual en el canvas
+        if (data.firma_propietario) {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.getElementById("padFirmaEditar");
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                // Marcar como no vacío para SignaturePad
+                padFirmaEditar._isEmpty = false;
+            };
+            img.src = data.firma_propietario;
+        }
     }
-
 }
-
 
 // ==============================
 // ACTUALIZAR
@@ -268,3 +277,27 @@ document.getElementById("clearFirmaEditar")?.addEventListener("click", () => {
 function closeModal(id) {
     document.getElementById(id).style.display = "none";
 }
+
+
+// Listener: al salir del campo nombre, si el propietario ya existe,
+// cargar su firma automáticamente
+document.getElementById("newNombre")?.addEventListener("blur", async () => {
+
+    const nombre = document.getElementById("newNombre").value.trim();
+    if (nombre === "") return;
+
+    const res  = await fetch(`/admin/propietarios-buscar/firma?nombre=${encodeURIComponent(nombre)}`);
+    const data = await res.json();
+
+    if (data.firma && padFirmaNuevo) {
+        padFirmaNuevo.clear();
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.getElementById("padFirmaNuevo");
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            padFirmaNuevo._isEmpty = false;
+        };
+        img.src = data.firma;
+    }
+});

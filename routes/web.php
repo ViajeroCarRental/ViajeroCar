@@ -39,6 +39,7 @@ use App\Http\Controllers\VehiculoDocumentosController;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\VisorReservacionController;
 use App\Http\Controllers\DropoffController;
+use App\Http\Controllers\AdicionalesController;
 //rutas vistas Usuario
 
 
@@ -553,12 +554,16 @@ Route::prefix('admin')->group(function () {
     Route::delete('/seguros-individuales/{id}', [SeguroIndividualController::class, 'destroy']);
 });
 
+//Dueño de vehiculo
+
 Route::prefix('admin')->group(function () {
 
     Route::get('/propietarios', [PropietarioVehiculoController::class, 'index'])
         ->name('propietariovehiculo.index');
 
     Route::get('/propietarios/list', [PropietarioVehiculoController::class, 'list']);
+
+    Route::get('/propietarios-buscar/firma', [PropietarioVehiculoController::class, 'buscarPorNombre']);
 
     Route::get('/propietarios/{id}', [PropietarioVehiculoController::class, 'show']);
 
@@ -568,6 +573,14 @@ Route::prefix('admin')->group(function () {
 
     Route::delete('/propietarios/{id}', [PropietarioVehiculoController::class, 'destroy']);
 
+});
+
+//Adicionales
+Route::prefix('admin')->group(function () {
+Route::get('/servicios', [AdicionalesController::class, 'index'])->name('servicios.index');
+Route::post('/servicios', [AdicionalesController::class, 'store'])->name('servicios.store');
+Route::put('/servicios/{id}', [AdicionalesController::class, 'update'])->name('servicios.update');
+Route::delete('/servicios/{id}', [AdicionalesController::class, 'destroy'])->name('servicios.destroy');
 });
 
 //Dropoff en administración

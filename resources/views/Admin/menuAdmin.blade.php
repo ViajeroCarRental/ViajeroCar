@@ -316,6 +316,11 @@
                 <span>Seguros Individuales</span>
             </a>
 
+            <a href="{{ route('servicios.index') }}" class="admin-home-card">
+                <i class="fas fa-layer-group"></i>
+                <span>Adicionales</span>
+            </a>
+
         </div>
 
     </div>

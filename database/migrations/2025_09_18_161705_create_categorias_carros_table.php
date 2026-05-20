@@ -13,8 +13,10 @@ return new class extends Migration {
             $table->string('nombre', 100)->unique();
             $table->string('descripcion', 255)->nullable();
 
-            // 💰 Precio base por día de la categoría
+            // 💰 Precio base por categoría.
             $table->decimal('precio_dia', 10, 2)->default(0.00);
+            $table->decimal('precio_semana', 10, 2)->default(0.00);
+            $table->decimal('precio_mes', 10, 2)->default(0.00);
 
             // 🧾 Descuento para miembros
             $table->decimal('descuento_miembro', 5, 2)
