@@ -1839,39 +1839,57 @@ function syncDays() {
 /* =========================================
    16 AEROPUERTO (No. vuelo)
 ========================================= */
+function normalizarTexto(txt) {
+    return String(txt || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+}
+
+function getTextoSucursalRetiro() {
+    const sel = document.getElementById("sucursal_retiro");
+    if (!sel) return "";
+
+    // Si usa Select2, tomar el texto visible real
+    if (typeof $ !== "undefined" && $(sel).data("select2")) {
+        const data = $(sel).select2("data");
+        if (data && data.length) {
+            return data[0].text || "";
+        }
+    }
+
+    // Si es select normal
+    return sel.options[sel.selectedIndex]?.textContent || "";
+}
+
 function isAirportSelected() {
-    const selR = document.getElementById("sucursal_retiro");
-    const selE = document.getElementById("sucursal_entrega");
+    const texto = normalizarTexto(getTextoSucursalRetiro());
 
-    const check = (sel) => {
-        if (!sel || sel.selectedIndex < 0) return false;
-        const opt = sel.options[sel.selectedIndex];
-        if (!opt) return false;
-
-        const nombre = (opt.textContent || "").toLowerCase();
-        return nombre.includes("aeropuerto");
-    };
-
-    return check(selR) || check(selE);
+    return texto.includes("aeropuerto");
 }
 
 function syncVueloField() {
-    const wrap = qs("#vueloWrap");
-    const vuelo = qs("#no_vuelo");
+    const wrap = document.getElementById("vueloWrap");
+    const vuelo = document.getElementById("no_vuelo");
+
+    if (!wrap || !vuelo) return;
+
     const show = isAirportSelected();
 
-    if (wrap) wrap.style.display = show ? "block" : "none";
+    wrap.style.setProperty("display", show ? "flex" : "none", "important");
 
-    if (vuelo) {
-        if (show) {
-            vuelo.setAttribute("required", "required");
-        } else {
-            vuelo.removeAttribute("required");
-            vuelo.value = "";
+    if (show) {
+        vuelo.setAttribute("required", "required");
+    } else {
+        vuelo.removeAttribute("required");
+        vuelo.value = "";
+
+        if (typeof limpiarError === "function") {
+            limpiarError(vuelo);
         }
     }
 }
-
 /* =========================================
    17 CATEGORÍA
 ========================================= */
@@ -4928,6 +4946,11 @@ function initSelect2Sucursales() {
 
     $('#sucursal_retiro').select2(select2Config);
     $('#sucursal_entrega').select2(select2Config);
+
+    $('#sucursal_retiro, #sucursal_entrega').on('change select2:select', function () {
+        syncVueloField();
+        refreshSummary();
+    });
 }
 
 /* =========================================
@@ -5012,10 +5035,6 @@ function refreshSelect2OnShow() {
     }
 }
 
-$(document).ready(function() {
-    initSelect2Sucursales();
-});
-
 /* =========================================
    38 CHECKBOX "DEVOLVER EN OTRO DESTINO"
 ========================================= */
@@ -5058,9 +5077,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!checkbox.checked && this.value) {
                     dropoffSelect.value = this.value;
 
-                    if (typeof refreshSummary === 'function') {
-                        refreshSummary();
+                    if (typeof $ !== 'undefined' && $(dropoffSelect).data('select2')) {
+                        $(dropoffSelect).val(this.value).trigger('change.select2');
                     }
+                }
+
+                syncVueloField();
+
+                if (typeof refreshSummary === 'function') {
+                    refreshSummary();
                 }
             });
         }

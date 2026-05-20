@@ -524,9 +524,9 @@
         </div>
       </section>
 
-      {{-- =========================================
-         10 CLIENTE
-      ========================================= --}}
+ {{-- =========================================
+   10 CLIENTE
+========================================= --}}
 <section class="stack-card acordeon-item" data-seccion="cliente" data-siguiente="final">
   <div class="stack-head">
     <div class="stack-title"><i class="fas fa-user"></i> Datos del cliente</div>
@@ -534,111 +534,81 @@
   </div>
 
   <div class="stack-body" id="clienteFormBody">
-    <div class="form-2">
-      {{-- =========================================
-         10.1 NOMBRE
-      ========================================= --}}
-      <div>
-        <label>Nombre <span style="color:#ef4444;">*</span></label>
-        <input id="nombre_cliente" name="nombre_cliente" class="input" type="text" required value="{{ $reservacion->nombre_cliente ?? '' }}">
-        <div class="validation-message error" id="nombre_error">El nombre es obligatorio</div>
-      </div>
+    <div class="cliente-layout">
+      <div class="cliente-datos-card">
 
-      {{-- =========================================
-         10.2 APELLIDOS
-      ========================================= --}}
-      <div>
-        <label>Apellidos <span style="color:#ef4444;">*</span></label>
-        <input id="apellidos_cliente" name="apellidos_cliente" class="input" type="text" required value="{{ $reservacion->apellidos_cliente ?? '' }}">
-        <div class="validation-message error" id="apellidos_error">Los apellidos son obligatorios</div>
-      </div>
-
-      {{-- =========================================
-         10.3 EMAIL
-      ========================================= --}}
-      <div>
-        <label>Email <span style="color:#ef4444;">*</span></label>
-        <input id="email_cliente" name="email_cliente" class="input" type="email" required value="{{ $reservacion->email_cliente ?? '' }}">
-        <div class="validation-message error" id="email_error">El email es obligatorio y debe ser válido</div>
-      </div>
-
-      {{-- =========================================
-         10.4 TELÉFONO
-      ========================================= --}}
-      <div>
-        <label>Teléfono <span style="color:#ef4444;">*</span></label>
-        <div class="phone-grid" id="phoneCombo">
-          <button class="phone-prefix" type="button" id="phone_toggle" aria-label="Elegir país">
-            <span class="flag" id="phone_flag">🇲🇽</span>
-            <span class="code" id="phone_code">+52</span>
-            <span class="chev">▾</span>
-          </button>
-          <input id="telefono_ui" class="input" type="tel" inputmode="tel" placeholder="4421234567" required value="{{ $reservacion->telefono_cliente ?? '' }}">
-          <div class="combo-dd phone-dd" id="phone_dd" role="listbox" aria-label="Lista de ladas">
-            <div class="dd-head">
-              <input id="phone_search" class="dd-search" type="text" placeholder="Buscar país o lada…">
-            </div>
-            <div class="dd-list" id="phone_list"></div>
-          </div>
+        <div class="cliente-field required">
+          <label for="nombre_cliente">Nombre completo</label>
+          <input id="nombre_cliente" name="nombre_cliente" class="input cliente-input" type="text" required
+            value="{{ trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')) }}">
+          <input id="apellidos_cliente" name="apellidos_cliente" type="hidden" value="">
+          <div class="validation-message error" id="nombre_error">El nombre completo es obligatorio</div>
         </div>
-        <div class="validation-message error" id="telefono_error">El teléfono es obligatorio (mínimo 8 dígitos)</div>
-      </div>
 
-      {{-- =========================================
-         10.5 PAÍS Y VUELO
-      ========================================= --}}
-      <div class="pais-vuelo-row">
-        <div>
-          <label>País <span style="color:#ef4444;">*</span></label>
+        <div class="cliente-field required">
+          <label for="email_cliente">Correo electrónico</label>
+          <input id="email_cliente" name="email_cliente" class="input cliente-input" type="email" required
+            value="{{ $reservacion->email_cliente ?? '' }}">
+          <div class="validation-message error" id="email_error">El correo es obligatorio y debe ser válido</div>
+        </div>
+
+        <div class="cliente-field required">
+          <label for="telefono_ui">Móvil</label>
+
+          <div class="phone-grid" id="phoneCombo">
+            <button class="phone-prefix cliente-phone-prefix" type="button" id="phone_toggle" aria-label="Elegir país">
+              <span class="flag" id="phone_flag">🇲🇽</span>
+              <span class="code" id="phone_code">+52</span>
+              <span class="chev">▾</span>
+            </button>
+
+            <input id="telefono_ui" class="input cliente-input" type="tel" inputmode="tel" required
+              value="{{ $reservacion->telefono_cliente ?? '' }}">
+
+            <div class="combo-dd phone-dd" id="phone_dd" role="listbox" aria-label="Lista de ladas">
+              <div class="dd-head">
+                <input id="phone_search" class="dd-search" type="text" placeholder="Buscar país o lada…">
+              </div>
+              <div class="dd-list" id="phone_list"></div>
+            </div>
+          </div>
+
+          <div class="validation-message error" id="telefono_error">El móvil es obligatorio</div>
+        </div>
+
+        <div class="cliente-field required">
+          <label for="pais">País de residencia</label>
           <input type="hidden" id="pais" name="pais" value="MÉXICO">
-          <div class="input readonly-country" style="display: flex; align-items: center; gap: 0.5rem; background: transparent; border-radius: 0.5rem; padding: 0.6rem 0.75rem;">
+          <div class="input cliente-input readonly-country cliente-country">
             <span id="pais_flag_ui">🇲🇽</span>
             <span id="pais_text_ui">México</span>
           </div>
         </div>
 
-        <div>
-          <label>Vuelo <span id="vuelo_required_mark" style="display:none; color:#ef4444;">*</span> <span style="color:#6b7280;">(opcional)</span></label>
-          <input id="no_vuelo" name="no_vuelo" class="input" type="text" placeholder="UA2068" value="{{ $reservacion->no_vuelo ?? '' }}">
-          <div class="validation-message error" id="vuelo_error" style="display:none;">El número de vuelo es obligatorio para sucursal Aeropuerto</div>
-          <div class="small muted" style="font-size: 0.7rem; margin-top: 0.3rem; color: #666;">
-            Solo requerido si la sucursal es Aeropuerto
-          </div>
+        <div class="cliente-field cliente-vuelo" id="vueloWrap">
+          <label for="no_vuelo">Número de vuelo</label>
+          <input id="no_vuelo" name="no_vuelo" class="input cliente-input" type="text"
+            value="{{ $reservacion->no_vuelo ?? '' }}">
+          <div class="validation-message error" id="vuelo_error">El número de vuelo es obligatorio para Aeropuerto</div>
+        </div>
+
+      </div>
+
+      <div class="cliente-comentarios-card">
+        <div class="cliente-field">
+          <label for="comentarios">Comentarios</label>
+          <textarea id="comentarios" name="comentarios" class="input cliente-textarea" rows="8">{{ $reservacion->comentarios ?? '' }}</textarea>
         </div>
       </div>
     </div>
 
-    {{-- =========================================
-       10.6 COMENTARIOS
-    ========================================= --}}
-    <div class="comentarios-wrapper" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-      <div class="comentarios-header">
-        <span style="font-size: 1.1rem;"><i class="fas fa-comment-dots"></i> Comentarios</span>
-        <span style="font-size: 0.75rem; color: #6b7280;">(Opcional)</span>
-      </div>
-      <textarea
-        id="comentarios"
-        name="comentarios"
-        class="input"
-        rows="4"
-        placeholder="Instrucciones especiales, alergias, requerimientos específicos, etc..."
-        style="margin-top: 0.5rem; resize: vertical;">{{ $reservacion->comentarios ?? '' }}</textarea>
-    </div>
-
-    {{-- =========================================
-       10.7 BOTÓN REGISTRAR
-    ========================================= --}}
-    <div class="acciones single" style="margin-top: 1.5rem;">
-      <button class="btn primary" id="btnReservar" type="submit"><i class="fas fa-check-circle"></i> Registrar reservación</button>
+    <div class="acciones single cliente-actions">
+      <button class="btn primary" id="btnReservar" type="submit">
+        <i class="fas fa-check-circle"></i> Registrar reservación
+      </button>
     </div>
   </div>
 </section>
-
-    </form>
-
-  </main>
-</div>
-
 {{-- =========================================
    11 MODAL - CATEGORÍAS
 ========================================= --}}
@@ -1102,7 +1072,6 @@
 
     <div class="modal-body">
       <section class="tab-panel is-active" id="tab-paquetes">
-        <div class="note" style="margin-bottom:14px;">Elige un paquete de protección.</div>
         <div class="scroll-h" id="protePacksTrack" aria-label="Carrusel de protecciones">
           <div class="loading" style="padding:12px; font-weight:900; color:#111827;">Cargando paquetes...</div>
         </div>
@@ -1112,10 +1081,7 @@
    13.3 PROTECCIONES INDIVIDUALES
 ========================================= --}}
 <section class="tab-panel" id="tab-individuales">
-    <div class="note" style="margin-bottom:14px;">
-        Selecciona una o varias protecciones individuales.
-    </div>
-
+    
     <h4 class="cat-title">Colisión y robo</h4>
     <div class="scroll-h" id="insColisionTrack">
         @php
