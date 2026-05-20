@@ -27,6 +27,9 @@
           <th>Código</th>
           <th>Nombre</th>
           <th>Precio x Día</th>
+          <th>Precio x Semana</th>
+          <th>Precio x Mes</th>
+          <th>Descuento Miembro</th>
           <th>Activo</th>
           <th>Acciones</th>
         </tr>
@@ -38,6 +41,9 @@
             <td class="mono">{{ $c->codigo }}</td>
             <td>{{ $c->nombre }}</td>
             <td class="mono">${{ number_format($c->precio_dia, 2) }}</td>
+            <td class="mono">${{ number_format($c->precio_semana, 2) }}</td>
+            <td class="mono">${{ number_format($c->precio_mes, 2) }}</td>
+            <td class="mono">{{ number_format($c->descuento_miembro, 2) }}%</td>
             <td>{{ $c->activo ? 'Sí' : 'No' }}</td>
 
             <td class="actions">
@@ -47,6 +53,9 @@
                   @js($c->codigo),
                   @js($c->nombre),
                   {{ $c->precio_dia }},
+                  {{ $c->precio_semana }},
+                  {{ $c->precio_mes }},
+                  {{ $c->descuento_miembro }},
                   {{ $c->activo }}
                 )">
                 Editar
@@ -63,7 +72,7 @@
           </tr>
         @empty
           <tr>
-            <td colspan="5" class="empty">
+            <td colspan="8" class="empty">
               No hay categorías registradas.
             </td>
           </tr>
@@ -99,6 +108,34 @@
            step="0.01"
            min="0"
            required>
+
+<label class="label">Precio por semana</label>
+<input class="input"
+       name="precio_semana"
+       type="number"
+       step="0.01"
+       min="0"
+       value="0"
+       required>
+
+<label class="label">Precio por mes</label>
+<input class="input"
+       name="precio_mes"
+       type="number"
+       step="0.01"
+       min="0"
+       value="0"
+       required>
+
+<label class="label">Descuento miembro (%)</label>
+<input class="input"
+       name="descuento_miembro"
+       type="number"
+       step="0.01"
+       min="0"
+       max="100"
+       value="0"
+       required>
 
     <label class="check">
       <input type="checkbox" name="activo" value="1" checked>
@@ -143,6 +180,35 @@
            min="0"
            required>
 
+    <label class="label">Precio por semana</label>
+    <input class="input"
+        id="e_precio_semana"
+        name="precio_semana"
+        type="number"
+        step="0.01"
+        min="0"
+        required>
+
+    <label class="label">Precio por mes</label>
+    <input class="input"
+        id="e_precio_mes"
+        name="precio_mes"
+        type="number"
+        step="0.01"
+        min="0"
+        required>
+
+    <label class="label">Descuento miembro (%)</label>
+    <input class="input"
+        id="e_descuento"
+        name="descuento_miembro"
+        type="number"
+        step="0.01"
+        min="0"
+        max="100"
+        required>
+
+
     <label class="label">Activo</label>
     <select class="input" id="e_activo" name="activo" required>
       <option value="1">Sí</option>
@@ -160,7 +226,7 @@
     JS INLINE (mínimo)
 ========================= --}}
 <script>
-function openEdit(id, codigo, nombre, precio, activo) {
+function openEdit(id, codigo, nombre, precio, precioSemana, precioMes, descuento, activo) {
   const form = document.getElementById('formEditar');
 
   // ✅ construye /admin/categorias/{id} desde Laravel route()
@@ -169,6 +235,9 @@ function openEdit(id, codigo, nombre, precio, activo) {
   document.getElementById('e_codigo').value = codigo;
   document.getElementById('e_nombre').value = nombre;
   document.getElementById('e_precio').value = precio;
+  document.getElementById('e_precio_semana').value  = precioSemana;
+  document.getElementById('e_precio_mes').value     = precioMes;
+  document.getElementById('e_descuento').value      = descuento;
   document.getElementById('e_activo').value = activo;
 
   document.getElementById('modalEditar').showModal();

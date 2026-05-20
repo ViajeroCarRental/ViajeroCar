@@ -23,6 +23,9 @@ class CategoriasController extends Controller
             'codigo'     => 'required|max:10|unique:categorias_carros,codigo',
             'nombre'     => 'required|max:100',
             'precio_dia' => 'required|numeric|min:0',
+            'precio_semana'     => 'required|numeric|min:0',
+            'precio_mes'        => 'required|numeric|min:0',
+            'descuento_miembro' => 'required|numeric|min:0|max:100',
             'activo'     => 'nullable|boolean',
         ]);
 
@@ -30,6 +33,9 @@ class CategoriasController extends Controller
             'codigo'     => $request->codigo,
             'nombre'     => $request->nombre,
             'precio_dia' => $request->precio_dia,
+            'precio_semana'     => $request->precio_semana,
+            'precio_mes'        => $request->precio_mes,
+            'descuento_miembro' => $request->descuento_miembro,
             'activo'     => $request->has('activo') ? 1 : 0,
             'created_at' => now(),
             'updated_at' => now(),
@@ -45,6 +51,9 @@ class CategoriasController extends Controller
             'codigo'     => 'required|max:10|unique:categorias_carros,codigo,' . $id . ',id_categoria',
             'nombre'     => 'required|max:100',
             'precio_dia' => 'required|numeric|min:0',
+            'precio_semana'     => 'required|numeric|min:0',
+            'precio_mes'        => 'required|numeric|min:0',
+            'descuento_miembro' => 'required|numeric|min:0|max:100',
             'activo'     => 'required|boolean',
         ]);
 
@@ -54,6 +63,9 @@ class CategoriasController extends Controller
                 'codigo'     => $request->codigo,
                 'nombre'     => $request->nombre,
                 'precio_dia' => $request->precio_dia,
+                'precio_semana'     => $request->precio_semana,
+                'precio_mes'        => $request->precio_mes,
+                'descuento_miembro' => $request->descuento_miembro,
                 'activo'     => (int) $request->activo,
                 'updated_at' => now(),
             ]);
