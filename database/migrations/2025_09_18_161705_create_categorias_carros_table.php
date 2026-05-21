@@ -20,6 +20,9 @@ return new class extends Migration {
             $table->decimal('descuento_miembro', 5, 2)
                   ->default(0.00)
                   ->comment('Descuento % para miembros preferentes');
+            
+            $table->decimal('garantia_base', 10, 2)->default(0.00); // El monto sin seguros
+            $table->integer('orden')->default(0); // Para ordenarlos a tu gusto
 
             // ⚙️ Estado activo/inactivo
             $table->boolean('activo')->default(true);

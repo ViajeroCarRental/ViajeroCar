@@ -24,9 +24,11 @@
     <table class="table">
       <thead>
         <tr>
+          <th>Orden</th>
           <th>Código</th>
           <th>Nombre</th>
           <th>Precio x Día</th>
+          <th>Garantía Base</th>
           <th>Activo</th>
           <th>Acciones</th>
         </tr>
@@ -35,9 +37,11 @@
       <tbody>
         @forelse($categorias as $c)
           <tr>
+            <td class="mono">{{ $c->orden }}</td>
             <td class="mono">{{ $c->codigo }}</td>
             <td>{{ $c->nombre }}</td>
             <td class="mono">${{ number_format($c->precio_dia, 2) }}</td>
+            <td class="mono">${{ number_format($c->garantia_base, 2) }}</td>
             <td>{{ $c->activo ? 'Sí' : 'No' }}</td>
 
             <td class="actions">
@@ -47,6 +51,8 @@
                   @js($c->codigo),
                   @js($c->nombre),
                   {{ $c->precio_dia }},
+                  {{ $c->garantia_base }},
+                  {{ $c->orden }},
                   {{ $c->activo }}
                 )">
                 Editar
@@ -63,7 +69,7 @@
           </tr>
         @empty
           <tr>
-            <td colspan="5" class="empty">
+            <td colspan="7" class="empty">
               No hay categorías registradas.
             </td>
           </tr>
@@ -86,11 +92,14 @@
       <button type="button" class="x" onclick="modalCrear.close()">✕</button>
     </div>
 
+    <label class="label">Orden de Visualización</label>
+    <input class="input" name="orden" type="number" min="0" value="0" required placeholder="Ej: 1 (Aparece primero)">
+
     <label class="label">Código</label>
-    <input class="input" name="codigo" maxlength="10" required>
+    <input class="input" name="codigo" maxlength="10" required placeholder="Ej: C, D, E">
 
     <label class="label">Nombre</label>
-    <input class="input" name="nombre" maxlength="100" required>
+    <input class="input" name="nombre" maxlength="100" required placeholder="Ej: Compacto, Mediano">
 
     <label class="label">Precio por día</label>
     <input class="input"
@@ -98,6 +107,15 @@
            type="number"
            step="0.01"
            min="0"
+           required>
+
+    <label class="label">Garantía Base (Sin Seguro)</label>
+    <input class="input"
+           name="garantia_base"
+           type="number"
+           step="0.01"
+           min="0"
+           value="0.00"
            required>
 
     <label class="check">
@@ -128,6 +146,9 @@
       <button type="button" class="x" onclick="modalEditar.close()">✕</button>
     </div>
 
+    <label class="label">Orden de Visualización</label>
+    <input class="input" id="e_orden" name="orden" type="number" min="0" required>
+
     <label class="label">Código</label>
     <input class="input" id="e_codigo" name="codigo" maxlength="10" required>
 
@@ -138,6 +159,15 @@
     <input class="input"
            id="e_precio"
            name="precio_dia"
+           type="number"
+           step="0.01"
+           min="0"
+           required>
+
+    <label class="label">Garantía Base (Sin Seguro)</label>
+    <input class="input"
+           id="e_garantia_base"
+           name="garantia_base"
            type="number"
            step="0.01"
            min="0"
@@ -157,18 +187,19 @@
 </dialog>
 
 {{-- =========================
-    JS INLINE (mínimo)
+    JS INLINE
 ========================= --}}
 <script>
-function openEdit(id, codigo, nombre, precio, activo) {
+function openEdit(id, codigo, nombre, precio, garantia_base, orden, activo) {
   const form = document.getElementById('formEditar');
 
-  // ✅ construye /admin/categorias/{id} desde Laravel route()
   form.action = form.dataset.action.replace('__ID__', id);
 
   document.getElementById('e_codigo').value = codigo;
   document.getElementById('e_nombre').value = nombre;
   document.getElementById('e_precio').value = precio;
+  document.getElementById('e_garantia_base').value = garantia_base;
+  document.getElementById('e_orden').value = orden;
   document.getElementById('e_activo').value = activo;
 
   document.getElementById('modalEditar').showModal();
