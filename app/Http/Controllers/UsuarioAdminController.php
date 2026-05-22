@@ -155,8 +155,14 @@ class UsuarioAdminController extends Controller
                 'updated_at' => now(),
             ]);
 
+       // 2) Firma (solo si llegó una nueva)
         if (!empty($data['firma'])) {
-        $update['firma'] = $data['firma'];
+        DB::table('usuarios')
+            ->where('id_usuario', $id)
+            ->update([
+                'firma'      => $data['firma'],
+                'updated_at' => now(),
+            ]);
         }
 
         if (!empty($data['password'])) {
