@@ -42,6 +42,8 @@ class UsuarioAdminController extends Controller
                 'u.nombres',
                 'u.apellidos',
                 'u.correo',
+                'u.nombre_usuario',
+                'u.firma',
                 'u.numero',
                 'u.activo',
                 DB::raw('GROUP_CONCAT(r.nombre ORDER BY r.nombre SEPARATOR ", ") as roles'),
@@ -87,8 +89,10 @@ class UsuarioAdminController extends Controller
         $data = $request->validate([
             'nombres'   => 'required|string|max:120',
             'apellidos' => 'required|string|max:120',
-            'correo'    => 'required|email|max:150|unique:usuarios,correo',
+           //'correo'    => 'required|email|max:150|unique:usuarios,correo',
+            'nombre_usuario' => 'required|string|max:15|unique:usuarios,nombre_usuario',
             'numero'    => 'nullable|string|max:20',
+            'firma'          => 'nullable|string',
             'id_rol'    => 'required|exists:roles,id_rol',
             'activo'    => 'required|in:0,1',
             'password'  => 'nullable|string|min:6'
@@ -99,8 +103,10 @@ class UsuarioAdminController extends Controller
         $idUsuario = DB::table('usuarios')->insertGetId([
             'nombres'            => $data['nombres'],
             'apellidos'          => $data['apellidos'],
-            'correo'             => $data['correo'],
+            'nombre_usuario'     => $data['nombre_usuario'],
+            'correo'             => $data['correo'] ?? null,
             'numero'             => $data['numero'] ?? null,
+            'firma'              => $data['firma'] ?? null,
             'contrasena_hash'    => Hash::make($password),
             'email_verificado'   => true,
             'pais'               => 'México',
@@ -129,8 +135,10 @@ class UsuarioAdminController extends Controller
         $data = $request->validate([
             'nombres'   => 'required|string|max:120',
             'apellidos' => 'required|string|max:120',
-            'correo'    => 'required|email|max:150|unique:usuarios,correo,' . $id . ',id_usuario',
+            'nombre_usuario' => 'required|string|max:15|unique:usuarios,nombre_usuario,' . $id . ',id_usuario',
+            //'correo'    => 'required|email|max:150|unique:usuarios,correo,' . $id . ',id_usuario',
             'numero'    => 'nullable|string|max:20',
+            'firma'          => 'nullable|string',
             'id_rol'    => 'required|exists:roles,id_rol',
             'activo'    => 'required|in:0,1',
             'password'  => 'nullable|string|min:6'
@@ -141,11 +149,15 @@ class UsuarioAdminController extends Controller
             ->update([
                 'nombres'    => $data['nombres'],
                 'apellidos'  => $data['apellidos'],
-                'correo'     => $data['correo'],
+                'nombre_usuario' => $data['nombre_usuario'],
                 'numero'     => $data['numero'] ?? null,
                 'activo'     => $data['activo'],
                 'updated_at' => now(),
             ]);
+
+        if (!empty($data['firma'])) {
+        $update['firma'] = $data['firma'];
+        }
 
         if (!empty($data['password'])) {
             DB::table('usuarios')

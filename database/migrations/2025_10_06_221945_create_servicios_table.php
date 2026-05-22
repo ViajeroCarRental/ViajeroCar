@@ -14,6 +14,11 @@ return new class extends Migration {
             $table->enum('tipo_cobro', ['por_dia', 'por_evento', 'por_tanque'])->default('por_dia');
             $table->decimal('precio', 10, 2)->default(0.00);
             $table->boolean('activo')->default(true);
+
+            // ⚙️ Estado Permitido/No permitido
+            $table->boolean('usuario')->default(true);
+            $table->boolean('administrador')->default(true);
+
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
 
