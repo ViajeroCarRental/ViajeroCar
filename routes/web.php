@@ -40,8 +40,6 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\VisorReservacionController;
 use App\Http\Controllers\DropoffController;
 use App\Http\Controllers\AdicionalesController;
-
-use App\Http\Controllers\AdicionalesController;
 use App\Http\Controllers\DepositoController;
 use App\Http\Controllers\OficinaController;
 
