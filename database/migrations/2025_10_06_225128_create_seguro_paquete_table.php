@@ -15,6 +15,9 @@ return new class extends Migration {
             $table->boolean('activo')->default(true);
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
+            $table->decimal('deducible_colision', 10, 2)->default(0.00);
+            $table->decimal('deducible_robo', 10, 2)->default(0.00);
+            $table->integer('orden')->default(0);
 
             $table->unique('nombre', 'seguro_paquete_nombre_unique');
         });
