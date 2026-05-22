@@ -1081,160 +1081,177 @@
    13.3 PROTECCIONES INDIVIDUALES
 ========================================= --}}
 <section class="tab-panel" id="tab-individuales">
-    
-    <h4 class="cat-title">Colisión y robo</h4>
-    <div class="scroll-h" id="insColisionTrack">
-        @php
-            $colisionOrdenado = ($grupo_colision ?? collect())->sortByDesc('precio_por_dia');
-        @endphp
-        @forelse($colisionOrdenado as $ind)
-            <label class="ins-card individual-item"
-                   data-id="{{ $ind->id_individual }}"
-                   data-precio="{{ $ind->precio_por_dia }}"
-                   data-descripcion="{{ $ind->descripcion }}"
-                   style="cursor:pointer;">
-                <div class="body">
-                    <div class="title-wrapper">
-                        <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
-                        <div class="info-icon-container">
-                            <span class="info-icon">i</span>
-                            <div class="tooltip-text">
-                                 {{ $ind->descripcion }}
-                                <div class="tooltip-arrow"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
-                    <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
-                </div>
-            </label>
-        @empty
-            <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
-        @endforelse
+    <div class="note" style="margin-bottom:14px;">
+        Selecciona una o varias protecciones individuales.
     </div>
 
-    <h4 class="cat-title">Gastos médicos</h4>
-    <div class="scroll-h" id="insMedicosTrack">
-        @php
-            $medicosOrdenado = ($grupo_medicos ?? collect())->sortByDesc('precio_por_dia');
-        @endphp
-        @forelse($medicosOrdenado as $ind)
-            <label class="ins-card individual-item"
-                   data-id="{{ $ind->id_individual }}"
-                   data-precio="{{ $ind->precio_por_dia }}"
-                   data-descripcion="{{ $ind->descripcion }}"
-                   style="cursor:pointer;">
-                <div class="body">
-                    <div class="title-wrapper">
-                        <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
-                        <div class="info-icon-container">
-                            <span class="info-icon">i</span>
-                            <div class="tooltip-text">
-                                 {{ $ind->descripcion }}
-                                <div class="tooltip-arrow"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
-                    <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
-                </div>
-            </label>
-        @empty
-            <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
-        @endforelse
-    </div>
+    <div class="contenedor-principal-individuales">
 
-    <h4 class="cat-title">Asistencia para el camino</h4>
-    <div class="scroll-h" id="insCaminoTrack">
-        @php
-            $asistenciaOrdenado = ($grupo_asistencia ?? collect())->sortByDesc('precio_por_dia');
-        @endphp
-        @forelse($asistenciaOrdenado as $ind)
-            <label class="ins-card individual-item"
-                   data-id="{{ $ind->id_individual }}"
-                   data-precio="{{ $ind->precio_por_dia }}"
-                   data-descripcion="{{ $ind->descripcion }}"
-                   style="cursor:pointer;">
-                <div class="body">
-                    <div class="title-wrapper">
-                        <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
-                        <div class="info-icon-container">
-                            <span class="info-icon">i</span>
-                            <div class="tooltip-text">
-                                 {{ $ind->descripcion }}
-                                <div class="tooltip-arrow"></div>
+        {{-- GRUPO: COLISIÓN Y ROBO --}}
+        <h4 class="cat-title">Colisión y robo</h4>
+        <div class="grid-vertical-individuales" id="insColisionTrack">
+            @php
+                $colisionOrdenado = ($grupo_colision ?? collect())->sortByDesc('precio_por_dia');
+            @endphp
+            @forelse($colisionOrdenado as $ind)
+                <label class="ins-card individual-item"
+                       data-id="{{ $ind->id_individual }}"
+                       data-precio="{{ $ind->precio_por_dia }}"
+                       data-descripcion="{{ $ind->descripcion }}"
+                       style="cursor:pointer;">
+                    <div class="body">
+                        <div class="title-wrapper">
+                            <h4>{{ trim(explode('(', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre))[0]) }}</h4>
+                            <div class="info-icon-container">
+                                <span class="info-icon">i</span>
+                                <div class="tooltip-text">
+                                     {{ $ind->descripcion }}
+                                    <div class="tooltip-arrow"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
-                    <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
-                </div>
-            </label>
-        @empty
-            <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
-        @endforelse
-    </div>
+                        <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                        <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
 
-    <h4 class="cat-title">Daños a terceros</h4>
-    <div class="scroll-h" id="insTercerosTrack">
-        @php
-            $tercerosOrdenado = ($grupo_terceros ?? collect())->sortByDesc('precio_por_dia');
-        @endphp
-        @forelse($tercerosOrdenado as $ind)
-            <label class="ins-card individual-item"
-                   data-id="{{ $ind->id_individual }}"
-                   data-precio="{{ $ind->precio_por_dia }}"
-                   data-descripcion="{{ $ind->descripcion }}"
-                   style="cursor:pointer;">
-                <div class="body">
-                    <div class="title-wrapper">
-                        <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
-                        <div class="info-icon-container">
-                            <span class="info-icon">i</span>
-                            <div class="tooltip-text">
-                                {{ $ind->descripcion }}
-                                <div class="tooltip-arrow"></div>
-                            </div>
-                        </div>
                     </div>
-                    <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
-                    <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
-                </div>
-            </label>
-        @empty
-            <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
-        @endforelse
-    </div>
+                </label>
+            @empty
+                <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+            @endforelse
+        </div>
 
-    <h4 class="cat-title">Protecciones automáticas</h4>
-    <div class="scroll-h" id="insAutoTrack">
-        @php
-            $autoOrdenado = ($grupo_protecciones ?? collect())->sortByDesc('precio_por_dia');
-        @endphp
-        @forelse($autoOrdenado as $ind)
-            <label class="ins-card individual-item"
-                   data-id="{{ $ind->id_individual }}"
-                   data-precio="{{ $ind->precio_por_dia }}"
-                   data-descripcion="{{ $ind->descripcion }}"
-                   style="cursor:pointer;">
-                <div class="body">
-                    <div class="title-wrapper">
-                        <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
-                        <div class="info-icon-container">
-                            <span class="info-icon">i</span>
-                            <div class="tooltip-text">
-                                 {{ $ind->descripcion }}
-                                <div class="tooltip-arrow"></div>
+        {{-- GRUPO: GASTOS MÉDICOS --}}
+        <h4 class="cat-title">Gastos médicos</h4>
+        <div class="grid-vertical-individuales" id="insMedicosTrack">
+            @php
+                $medicosOrdenado = ($grupo_medicos ?? collect())->sortByDesc('precio_por_dia');
+            @endphp
+            @forelse($medicosOrdenado as $ind)
+                <label class="ins-card individual-item"
+                       data-id="{{ $ind->id_individual }}"
+                       data-precio="{{ $ind->precio_por_dia }}"
+                       data-descripcion="{{ $ind->descripcion }}"
+                       style="cursor:pointer;">
+                    <div class="body">
+                        <div class="title-wrapper">
+                            <h4>{{ trim(explode('(', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre))[0]) }}</h4>
+                            <div class="info-icon-container">
+                                <span class="info-icon">i</span>
+                                <div class="tooltip-text">
+                                     {{ $ind->descripcion }}
+                                    <div class="tooltip-arrow"></div>
+                                </div>
                             </div>
                         </div>
+                        <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                        <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+
                     </div>
-                    <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
-                    <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
-                </div>
-            </label>
-        @empty
-            <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
-        @endforelse
+                </label>
+            @empty
+                <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+            @endforelse
+        </div>
+
+        {{-- GRUPO: ASISTENCIA PARA EL CAMINO --}}
+        <h4 class="cat-title">Asistencia para el camino</h4>
+        <div class="grid-vertical-individuales" id="insCaminoTrack">
+            @php
+                $asistenciaOrdenado = ($grupo_asistencia ?? collect())->sortByDesc('precio_por_dia');
+            @endphp
+            @forelse($asistenciaOrdenado as $ind)
+                <label class="ins-card individual-item"
+                       data-id="{{ $ind->id_individual }}"
+                       data-precio="{{ $ind->precio_por_dia }}"
+                       data-descripcion="{{ $ind->descripcion }}"
+                       style="cursor:pointer;">
+                    <div class="body">
+                        <div class="title-wrapper">
+                            <h4>{{ trim(explode('(', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre))[0]) }}</h4>
+                            <div class="info-icon-container">
+                                <span class="info-icon">i</span>
+                                <div class="tooltip-text">
+                                     {{ $ind->descripcion }}
+                                    <div class="tooltip-arrow"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                        <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+
+                    </div>
+                </label>
+            @empty
+                <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+            @endforelse
+        </div>
+
+        {{-- GRUPO: DAÑOS A TERCEROS --}}
+        <h4 class="cat-title">Daños a terceros</h4>
+        <div class="grid-vertical-individuales" id="insTercerosTrack">
+            @php
+                $tercerosOrdenado = ($grupo_terceros ?? collect())->sortByDesc('precio_por_dia');
+            @endphp
+            @forelse($tercerosOrdenado as $ind)
+                <label class="ins-card individual-item"
+                       data-id="{{ $ind->id_individual }}"
+                       data-precio="{{ $ind->precio_por_dia }}"
+                       data-descripcion="{{ $ind->descripcion }}"
+                       style="cursor:pointer;">
+                    <div class="body">
+                        <div class="title-wrapper">
+                            <h4>{{ trim(explode('(', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre))[0]) }}</h4>
+                            <div class="info-icon-container">
+                                <span class="info-icon">i</span>
+                                <div class="tooltip-text">
+                                    {{ $ind->descripcion }}
+                                    <div class="tooltip-arrow"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                        <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+
+                    </div>
+                </label>
+            @empty
+                <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+            @endforelse
+        </div>
+
+        {{-- GRUPO: PROTECCIONES AUTOMÁTICAS --}}
+        <h4 class="cat-title">Protecciones automáticas</h4>
+        <div class="grid-vertical-individuales" id="insAutoTrack">
+            @php
+                $autoOrdenado = ($grupo_protecciones ?? collect())->sortByDesc('precio_por_dia');
+            @endphp
+            @forelse($autoOrdenado as $ind)
+                <label class="ins-card individual-item"
+                       data-id="{{ $ind->id_individual }}"
+                       data-precio="{{ $ind->precio_por_dia }}"
+                       data-descripcion="{{ $ind->descripcion }}"
+                       style="cursor:pointer;">
+                    <div class="body">
+                        <div class="title-wrapper">
+                            <h4>{{ trim(explode('(', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre))[0]) }}</h4>
+                            <div class="info-icon-container">
+                                <span class="info-icon">i</span>
+                                <div class="tooltip-text">
+                                     {{ $ind->descripcion }}
+                                    <div class="tooltip-arrow"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                        <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+
+                    </div>
+                </label>
+            @empty
+                <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+            @endforelse
+        </div>
+
     </div>
 </section>
 

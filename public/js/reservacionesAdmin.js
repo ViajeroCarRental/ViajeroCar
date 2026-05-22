@@ -2075,11 +2075,11 @@ function setProteccion(p) {
 ========================================= */
 function getGrupoLabelFromTrack(trackId) {
     const map = {
-        insColisionTrack: "Colisión y robo",
-        insMedicosTrack: "Gastos médicos",
-        insCaminoTrack: "Asistencia para el camino",
-        insTercerosTrack: "Daños a terceros",
-        insAutoTrack: "Protecciones automáticas",
+        "insColisionTrack": "Colisión y robo",
+        "insMedicosTrack": "Gastos médicos",
+        "insCaminoTrack": "Asistencia para el camino",
+        "insTercerosTrack": "Daños a terceros",
+        "insAutoTrack": "Protecciones automáticas",
     };
     return map[trackId] || "";
 }
@@ -2091,13 +2091,13 @@ function toggleIndividualFromCard(card) {
     const id = String(card.dataset.id || "");
     const precio = Number(card.dataset.precio || 0);
     const nombre = card.querySelector("h4")?.textContent?.trim() || "Seguro individual";
-    const desc = card.querySelector("p")?.textContent?.trim() || "";
-    const parentTrack = card.closest(".scroll-h")?.id || "";
+    const desc = card.querySelector(".tooltip-text")?.textContent?.trim() || "";
+    let parentTrack = card.closest(".grid-vertical-individuales")?.id || card.closest(".scroll-h")?.id || "";
     const grupo = getGrupoLabelFromTrack(parentTrack);
 
+    console.log("📌 Tarjeta clickeada:", { id, nombre, grupo, parentTrack });
 
     const esProteccionAutomatica = (grupo === "Protecciones automáticas");
-
 
     if (!grupo) {
         const exists = state.individuales.has(id);
@@ -2119,23 +2119,23 @@ function toggleIndividualFromCard(card) {
         }
     }
 
-    if (existingIdInGroup) {
-        if (existingIdInGroup === id) {
-            state.individuales.delete(id);
-        } else {
-            state.individuales.delete(existingIdInGroup);
-            state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
-        }
-    } else {
+    console.log("📌 Estado actual del grupo:", { existingIdInGroup, grupo });
+
+    if (existingIdInGroup === id) {
+        state.individuales.delete(id);
+        console.log("🔘 Deseleccionada:", nombre);
+    }
+    else if (existingIdInGroup !== null) {
+        state.individuales.delete(existingIdInGroup);
         state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
+        console.log("🔄 Reemplazada:", nombre);
+    }
+    else {
+        state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
+        console.log("✅ Agregada:", nombre);
     }
 
-
     const quedoSeleccionada = state.individuales.has(id);
-
-    // ========================================
-    // REGLA: Auto-activar protecciones automáticas
-    // ========================================
 
     function obtenerIdsProteccionesAutomaticas() {
         const autoTrack = document.getElementById("insAutoTrack");
@@ -2162,7 +2162,8 @@ function toggleIndividualFromCard(card) {
     const autoIds = obtenerIdsProteccionesAutomaticas();
     const totalNoAutomaticas = contarProteccionesNoAutomaticas();
 
-    // CASO 1:
+    console.log("📊 Protecciones automáticas:", { autoIds, totalNoAutomaticas });
+
     if (!esProteccionAutomatica && quedoSeleccionada) {
         autoIds.forEach(autoId => {
             if (!state.individuales.has(autoId)) {
@@ -2187,9 +2188,9 @@ function toggleIndividualFromCard(card) {
                 }
             }
         });
+        console.log("🛡️ Protecciones automáticas ACTIVADAS");
     }
 
-    // CASO 2:
     if (!esProteccionAutomatica && !quedoSeleccionada && totalNoAutomaticas === 0) {
         autoIds.forEach(autoId => {
             if (state.individuales.has(autoId)) {
@@ -2203,6 +2204,7 @@ function toggleIndividualFromCard(card) {
                 }
             }
         });
+        console.log("🛡️ Protecciones automáticas DESACTIVADAS");
     }
 
     syncIndividualesHidden();
@@ -4084,13 +4086,37 @@ async function loadProtecciones() {
 
         track.innerHTML = "";
 
-        function formatDescriptionAsList(desc) {
+        function actualizarMontoGarantiaEnCard(cardElement, nombreProteccion) {
+            if (!cardElement) return;
+
+            const categoriaActual = window.state?.categoria;
+            if (!categoriaActual || !categoriaActual.id) return;
+
+            const montoGarantia = obtenerMontoGarantia(categoriaActual.id, nombreProteccion);
+            if (montoGarantia === null) return;
+
+            const montoFormateado = new Intl.NumberFormat('es-MX', {
+                style: 'currency',
+                currency: 'MXN',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(montoGarantia);
+
+            let garantiaExistente = cardElement.querySelector('.garantia-item');
+            if (garantiaExistente) {
+                garantiaExistente.innerHTML = `<i class="fas fa-shield-alt" style="margin-right: 8px;"></i> <strong>GARANTÍA:</strong> ${montoFormateado}`;
+            }
+        }
+
+        function formatDescriptionAsList(desc, textoGarantia = '') {
             if (!desc || desc === "") {
+                if (textoGarantia) {
+                    return `<ul class="desc-list"><li>Sin descripción disponible</li><li class="garantia-item">${textoGarantia}</li></ul>`;
+                }
                 return '<ul class="desc-list"><li>Sin descripción disponible</li></ul>';
             }
 
             let items = desc.split(/[-–—·•\n]+/).filter(item => item.trim().length > 0);
-
             items = items.map(item => item.trim().replace(/^\s*[-–—·•]\s*/, '').trim());
 
             if (items.length === 0) {
@@ -4126,23 +4152,84 @@ async function loadProtecciones() {
 
                 return texto;
             }
+
             const listItems = items.map(item => {
                 const textoOriginal = escapeHtml(item);
                 const textoConNegritas = aplicarNegritas(textoOriginal);
                 return `<li>${textoConNegritas}</li>`;
             }).join('');
 
-            return `<ul class="desc-list">${listItems}</ul>`;
+            let listaCompleta = `<ul class="desc-list">${listItems}`;
+            if (textoGarantia) {
+                listaCompleta += `<li class="garantia-item">${textoGarantia}</li>`;
+            }
+            listaCompleta += `</ul>`;
+
+            return listaCompleta;
+        }
+
+        // =========================================
+        // FUNCIÓN PARA OBTENER EL MONTO DE GARANTÍA SEGÚN LA TABLA
+        // =========================================
+        function obtenerMontoGarantia(categoriaId, nombreProteccion) {
+            const garantiaPorCategoria = {
+                1: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 15000, 'CDW 20%': 25000, 'CDW declinado': 330000 },
+                2: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 18000, 'CDW 20%': 25000, 'CDW declinado': 380000 },
+                3: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 20000, 'CDW 20%': 30000, 'CDW declinado': 500000 },
+                4: { 'LDW': 5000, 'PDW': 15000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 650000 },
+                5: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 20000, 'CDW 20%': 30000, 'CDW declinado': 500000 },
+                6: { 'LDW': 5000, 'PDW': 10000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 600000 },
+                7: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 18000, 'CDW 20%': 25000, 'CDW declinado': 400000 },
+                8: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 800000 },
+                9: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 800000 },
+                10: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 600000 },
+                11: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 900000 }
+            };
+
+            const catId = parseInt(categoriaId);
+            const garantias = garantiaPorCategoria[catId];
+            if (!garantias) return null;
+
+            const nombreUpper = nombreProteccion.toUpperCase();
+
+            if (nombreUpper.includes('LDW')) return garantias['LDW'];
+            if (nombreUpper.includes('PDW')) return garantias['PDW'];
+            if (nombreUpper.includes('10%') || nombreUpper.includes('CDW PACK 1')) return garantias['CDW 10%'];
+            if (nombreUpper.includes('20%') || nombreUpper.includes('CDW PACK 2')) return garantias['CDW 20%'];
+            if (nombreUpper.includes('DECLINE') || nombreUpper.includes('RECHAZAR')) return garantias['CDW declinado'];
+
+            return garantias['CDW 20%'];
         }
 
         arr.forEach((p) => {
             const isFree = Number(p.precio || 0) <= 0;
+            const isSelected = window.state?.proteccion?.id == p.id;
+
+            const categoriaActual = window.state?.categoria;
+            let textoGarantia = '';
+
+            if (categoriaActual && categoriaActual.id) {
+                const montoGarantia = obtenerMontoGarantia(categoriaActual.id, p.nombre);
+                if (montoGarantia !== null) {
+                    const montoFormateado = new Intl.NumberFormat('es-MX', {
+                        style: 'currency',
+                        currency: 'MXN',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(montoGarantia);
+                    textoGarantia = `<i class="fas fa-shield-alt" style="margin-right: 8px;"></i> <strong>GARANTÍA:</strong> ${montoFormateado}`;
+                }
+            }
+
+            const descHtml = formatDescriptionAsList(p.desc, textoGarantia);
 
             const card = document.createElement("article");
-            card.className = "pack-card" + (isFree ? " pack-card--free" : "");
+            card.className = "pack-card" + (isFree ? " pack-card--free" : "") + (isSelected ? " is-selected" : "");
             card.style.minWidth = "320px";
-
-            const descHtml = formatDescriptionAsList(p.desc);
+            card.dataset.id = p.id;
+            card.dataset.nombre = p.nombre;
+            card.dataset.precio = p.precio;
+            card.dataset.charge = p.charge;
 
             card.innerHTML = `
                 <div class="body">
@@ -4153,31 +4240,100 @@ async function loadProtecciones() {
                         <span>MXN ${p.charge === "por_dia" ? "/ día" : ""}</span>
                     </div>
                     <div class="actions">
-                        <button class="btn primary" type="button">Elegir</button>
+                        <div class="btn-proteccion-wrapper">
+                            <button class="btn primary btn-proteccion-dividido ${isSelected ? 'activado' : 'desactivado'}"
+                                    type="button"
+                                    data-id="${p.id}"
+                                    data-nombre="${escapeHtml(p.nombre)}"
+                                    data-precio="${p.precio}"
+                                    data-charge="${p.charge}">
+                                <span class="btn-texto">${isSelected ? 'Seleccionado' : ''}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
 
-            card.addEventListener("click", (e) => {
-    const btn = e.target.closest("button");
-    if (!btn) return;
+            const btn = card.querySelector('.btn-proteccion-dividido');
+            if (btn) {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
 
-    setProteccion({
-        id: p.id,
-        nombre: p.nombre,
-        precio: p.precio,
-        charge: p.charge,
-        desc: p.desc
-    });
+                    const isCurrentlySelected = btn.classList.contains('activado');
+                    const proteccionId = btn.dataset.id;
+                    const proteccionNombre = btn.dataset.nombre;
+                    const proteccionPrecio = parseFloat(btn.dataset.precio);
+                    const proteccionCharge = btn.dataset.charge;
 
-    refreshProteccionUIHeader();
-    closePop(qs("#proteccionPop"));
+                    if (!isCurrentlySelected) {
+                        document.querySelectorAll('.pack-card').forEach(cardItem => {
+                            const boton = cardItem.querySelector('.btn-proteccion-dividido');
+                            if (boton) {
+                                boton.classList.remove('activado');
+                                boton.classList.add('desactivado');
+                                const spanTexto = boton.querySelector('.btn-texto');
+                                if (spanTexto) spanTexto.textContent = '';
+                            }
+                            cardItem.classList.remove('is-selected');
+                        });
 
-    const seccionProtecciones = document.querySelector('.acordeon-item[data-seccion="protecciones"]');
-    if (seccionProtecciones && typeof abrirSeccion === 'function') {
-        abrirSeccion(seccionProtecciones, true);
-    }
-});
+                        btn.classList.remove('desactivado');
+                        btn.classList.add('activado');
+                        const spanTexto = btn.querySelector('.btn-texto');
+                        if (spanTexto) spanTexto.textContent = 'Seleccionado';
+                        card.classList.add('is-selected');
+
+                        actualizarMontoGarantiaEnCard(card, proteccionNombre);
+
+                        if (typeof setProteccion === 'function') {
+                            setProteccion({
+                                id: proteccionId,
+                                nombre: proteccionNombre,
+                                precio: proteccionPrecio,
+                                charge: proteccionCharge,
+                                desc: p.desc
+                            });
+                        }
+
+                        if (typeof refreshProteccionUIHeader === 'function') {
+                            refreshProteccionUIHeader();
+                        }
+
+                        if (typeof mostrarToast === 'function') {
+                            mostrarToast(`✅ Protección "${proteccionNombre}" seleccionada`, 'success');
+                        }
+
+                    } else {
+                        btn.classList.remove('activado');
+                        btn.classList.add('desactivado');
+                        const spanTexto = btn.querySelector('.btn-texto');
+                        if (spanTexto) spanTexto.textContent = '';
+                        card.classList.remove('is-selected');
+
+                        if (typeof setProteccion === 'function') {
+                            setProteccion(null);
+                        }
+
+                        if (typeof refreshProteccionUIHeader === 'function') {
+                            refreshProteccionUIHeader();
+                        }
+
+                        if (typeof mostrarToast === 'function') {
+                            mostrarToast(`⚠️ Protección "${proteccionNombre}" deseleccionada`, 'info');
+                        }
+                    }
+
+                    if (typeof syncTotalsHidden === 'function') {
+                        syncTotalsHidden();
+                    }
+                    if (typeof refreshSummary === 'function') {
+                        refreshSummary();
+                    }
+                    if (typeof actualizarCarritoFlotante === 'function') {
+                        setTimeout(actualizarCarritoFlotante, 10);
+                    }
+                });
+            }
 
             track.appendChild(card);
         });
@@ -4188,6 +4344,70 @@ async function loadProtecciones() {
     }
 }
 
+// =========================================
+// FUNCIÓN PARA ACTUALIZAR LA GARANTÍA CUANDO CAMBIA EL AUTO
+// =========================================
+function actualizarGarantiaPorCambioDeAuto() {
+    const categoriaActual = window.state?.categoria;
+    if (!categoriaActual || !categoriaActual.id) return;
+
+    const cardSeleccionada = document.querySelector('#protePacksTrack .pack-card.is-selected');
+    if (!cardSeleccionada) return;
+
+    const nombreProteccion = cardSeleccionada.dataset.nombre;
+    if (!nombreProteccion) return;
+
+    const garantiaPorCategoria = {
+        1: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 15000, 'CDW 20%': 25000, 'CDW declinado': 330000 },
+        2: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 18000, 'CDW 20%': 25000, 'CDW declinado': 380000 },
+        3: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 20000, 'CDW 20%': 30000, 'CDW declinado': 500000 },
+        4: { 'LDW': 5000, 'PDW': 15000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 650000 },
+        5: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 20000, 'CDW 20%': 30000, 'CDW declinado': 500000 },
+        6: { 'LDW': 5000, 'PDW': 10000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 600000 },
+        7: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 18000, 'CDW 20%': 25000, 'CDW declinado': 400000 },
+        8: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 800000 },
+        9: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 800000 },
+        10: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 600000 },
+        11: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 900000 }
+    };
+
+    const catId = parseInt(categoriaActual.id);
+    const garantias = garantiaPorCategoria[catId];
+    if (!garantias) return;
+
+    const nombreUpper = nombreProteccion.toUpperCase();
+    let tipoGarantia = 'CDW 20%';
+    if (nombreUpper.includes('LDW')) tipoGarantia = 'LDW';
+    else if (nombreUpper.includes('PDW')) tipoGarantia = 'PDW';
+    else if (nombreUpper.includes('10%') || nombreUpper.includes('CDW PACK 1')) tipoGarantia = 'CDW 10%';
+    else if (nombreUpper.includes('20%') || nombreUpper.includes('CDW PACK 2')) tipoGarantia = 'CDW 20%';
+    else if (nombreUpper.includes('DECLINE') || nombreUpper.includes('RECHAZAR')) tipoGarantia = 'CDW declinado';
+
+    const monto = garantias[tipoGarantia];
+    if (!monto) return;
+
+    const montoFormateado = new Intl.NumberFormat('es-MX', {
+        style: 'currency',
+        currency: 'MXN',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(monto);
+
+    let garantiaItem = cardSeleccionada.querySelector('.garantia-item');
+    if (garantiaItem) {
+        garantiaItem.innerHTML = `<i class="fas fa-shield-alt" style="margin-right: 8px;"></i> <strong>GARANTÍA:</strong> ${montoFormateado}`;
+    }
+}
+
+const originalSetCategoria = window.setCategoria;
+if (typeof originalSetCategoria === 'function') {
+    window.setCategoria = function(cat) {
+        originalSetCategoria(cat);
+        setTimeout(() => {
+            actualizarGarantiaPorCambioDeAuto();
+        }, 150);
+    };
+}
 /* =========================================
    29 LOAD ADDONS
 ========================================= */
@@ -4227,22 +4447,25 @@ async function loadAddons() {
             card.dataset.id = String(id);
 
             card.innerHTML = `
-                <div class="ad-left">
-                    <div class="cp-title">${escapeHtml(nombre)}</div>
-                    <div class="cp-sub">${escapeHtml(desc || "Servicio adicional.")}</div>
-                    <div class="cp-meta">
-                        <span class="pill">Cobro: ${charge === "por_dia" ? "Por día" : "Por evento"}</span>
+                <div class="body">
+                    <h4>${escapeHtml(p.nombre)}</h4>
+                    ${descHtml}
+                    ${textoGarantia}
+                    <div class="precio">
+                        <strong>${money(p.precio).replace(" MXN", "")}</strong>
+                        <span>MXN ${p.charge === "por_dia" ? "/ día" : ""}</span>
                     </div>
-                </div>
-                <div class="ad-right">
-                    <div class="cp-price">
-                        <div class="muted small">Costo</div>
-                        <div class="price-big">${money(precio).replace(" MXN", "")} <span>MXN${charge === "por_dia" ? " / día" : ""}</span></div>
-                    </div>
-                    <div class="qty-row">
-                        <button class="qty-btn minus" type="button" aria-label="menos">−</button>
-                        <div class="qty" data-qty>${qty}</div>
-                        <button class="qty-btn plus" type="button" aria-label="más">+</button>
+                    <div class="actions">
+                        <div class="btn-proteccion-wrapper">
+                            <button class="btn primary btn-proteccion-dividido ${isSelected ? 'activado' : 'desactivado'}"
+                                    type="button"
+                                    data-id="${p.id}"
+                                    data-nombre="${escapeHtml(p.nombre)}"
+                                    data-precio="${p.precio}"
+                                    data-charge="${p.charge}">
+                                <span class="btn-texto">${isSelected ? 'Seleccionado' : ''}</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -5353,7 +5576,7 @@ observerPreview.observe(document.body, { childList: true, subtree: true });
             });
         }
 
-        modal.style.display = 'flex';
+        //modal.style.display = 'flex';
     }
     function escapeHtml(text) {
         const div = document.createElement('div');
@@ -6186,7 +6409,6 @@ function seleccionarCategoriaReservacion(cardElement) {
                         const posActual = rect.top + window.scrollY;
                         if (Math.abs(posActual - posicionOriginal) > 5) {
                             window.scrollTo({ top: posicionOriginal, behavior: 'instant' });
-                            console.log('🔄 Forzando posición durante selección');
                         }
                     }
                 }
@@ -6208,4 +6430,246 @@ function seleccionarCategoriaReservacion(cardElement) {
     observer.observe(modal, { attributes: true, attributeFilter: ['style'] });
 
     console.log('✅ Fix urgente de posición activado');
+})();
+
+// =========================================
+// 42.5 RESUMEN CARRITO DINÁMICO PARA PROTECCIONES
+// =========================================
+(function() {
+    "use strict";
+
+    function crearOCarritoEnModal() {
+        const modalHeader = document.querySelector('#proteccionPop .modal-head');
+        if (!modalHeader) return null;
+
+        let cartHeaderBtn = document.getElementById('cartHeaderBtn');
+        if (cartHeaderBtn) return cartHeaderBtn;
+
+        cartHeaderBtn = document.createElement('button');
+        cartHeaderBtn.id = 'cartHeaderBtn';
+        cartHeaderBtn.className = 'btn-cart-header';
+        cartHeaderBtn.innerHTML = `
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-header-total">$0.00 MXN</span>
+            <span class="cart-header-badge">0</span>
+        `;
+        cartHeaderBtn.setAttribute('aria-label', 'Ver resumen completo');
+        cartHeaderBtn.setAttribute('type', 'button');
+
+        const closeBtn = modalHeader.querySelector('#proteClose');
+        if (closeBtn) {
+            modalHeader.insertBefore(cartHeaderBtn, closeBtn);
+        } else {
+            modalHeader.appendChild(cartHeaderBtn);
+        }
+
+        cartHeaderBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (typeof refreshSummary === 'function') {
+                refreshSummary();
+            }
+            const resumenPop = document.getElementById('resumenPop');
+            if (resumenPop) {
+                resumenPop.style.display = 'flex';
+            }
+        });
+
+        return cartHeaderBtn;
+    }
+
+    function obtenerTotalGeneral() {
+        const totalElement = document.getElementById('resTotal');
+        const totalEstiloElement = document.getElementById('resTotalEstilo');
+
+        if (totalEstiloElement && totalEstiloElement.textContent !== '—') {
+            const totalTexto = totalEstiloElement.textContent;
+            const totalNumero = parseFloat(totalTexto.replace(/[^0-9.-]/g, ''));
+            if (!isNaN(totalNumero)) {
+                return totalNumero;
+            }
+        }
+
+        if (totalElement && totalElement.textContent !== '—') {
+            const totalTexto = totalElement.textContent;
+            const totalNumero = parseFloat(totalTexto.replace(/[^0-9.-]/g, ''));
+            if (!isNaN(totalNumero)) {
+                return totalNumero;
+            }
+        }
+
+        if (typeof calcTotals === 'function') {
+            const totals = calcTotals();
+            return totals.total || 0;
+        }
+
+        return 0;
+    }
+
+    function contarItemsSeleccionados() {
+        let count = 0;
+
+        if (state.proteccion) count++;
+        count += state.individuales.size;
+
+        return count;
+    }
+
+    function contarItemsSeleccionados() {
+        let count = 0;
+        if (state.proteccion !== null) count++;
+        count += state.individuales.size;
+        return count;
+    }
+
+    function tieneItemsConCosto() {
+        if (!state.categoria) return false;
+
+        const totalGeneral = obtenerTotalGeneral();
+        if (totalGeneral <= 0) return false;
+
+        const tieneProtecciones = (state.proteccion !== null) || (state.individuales.size > 0);
+
+        return tieneProtecciones;
+    }
+
+    function actualizarCarritoEnModal() {
+        const cartHeaderBtn = document.getElementById('cartHeaderBtn');
+        if (!cartHeaderBtn) return;
+
+        const totalGeneral = obtenerTotalGeneral();
+        const count = contarItemsSeleccionados();
+
+        const totalSpan = cartHeaderBtn.querySelector('.cart-header-total');
+        const badge = cartHeaderBtn.querySelector('.cart-header-badge');
+
+        if (totalSpan) {
+            totalSpan.textContent = `$${totalGeneral.toLocaleString("es-MX", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })} MXN`;
+        }
+
+        if (badge) {
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'inline-flex' : 'none';
+        }
+
+        const debeMostrar = tieneItemsConCosto();
+        cartHeaderBtn.style.display = debeMostrar ? 'inline-flex' : 'none';
+
+        if (debeMostrar) {
+            console.log('🛒 Carrito visible - Total:', totalGeneral, 'Items:', count);
+        } else {
+            console.log('🛒 Carrito oculto - Sin items con costo');
+        }
+    }
+    function forzarActualizacionTotal() {
+        if (typeof syncTotalsHidden === 'function') {
+            syncTotalsHidden();
+        }
+        if (typeof refreshSummary === 'function') {
+            refreshSummary();
+        }
+        setTimeout(actualizarCarritoEnModal, 50);
+    }
+
+    window.actualizarCarritoEnModal = actualizarCarritoEnModal;
+
+    function observarTodosLosCambios() {
+        const originalSetCategoria = window.setCategoria;
+        if (typeof originalSetCategoria === 'function') {
+            window.setCategoria = function(cat) {
+                originalSetCategoria(cat);
+                setTimeout(forzarActualizacionTotal, 50);
+            };
+        }
+
+        const originalSetProteccion = window.setProteccion;
+        if (typeof originalSetProteccion === 'function') {
+            window.setProteccion = function(p) {
+                originalSetProteccion(p);
+                setTimeout(forzarActualizacionTotal, 50);
+            };
+        }
+
+        const originalToggleIndividual = window.toggleIndividualFromCard;
+        if (typeof originalToggleIndividual === 'function') {
+            window.toggleIndividualFromCard = function(card) {
+                originalToggleIndividual(card);
+                setTimeout(forzarActualizacionTotal, 50);
+            };
+        }
+
+        const originalSetDeliveryActive = window.setDeliveryActive;
+        if (typeof originalSetDeliveryActive === 'function') {
+            window.setDeliveryActive = function(on) {
+                originalSetDeliveryActive(on);
+                setTimeout(forzarActualizacionTotal, 50);
+            };
+        }
+
+        const originalSetDropoffActive = window.setDropoffActive;
+        if (typeof originalSetDropoffActive === 'function') {
+            window.setDropoffActive = function(on) {
+                originalSetDropoffActive(on);
+                setTimeout(forzarActualizacionTotal, 50);
+            };
+        }
+
+        const originalSetGasolinaActive = window.setGasolinaActive;
+        if (typeof originalSetGasolinaActive === 'function') {
+            window.setGasolinaActive = function(on) {
+                originalSetGasolinaActive(on);
+                setTimeout(forzarActualizacionTotal, 50);
+            };
+        }
+
+        const originalSetAddonQty = window.setAddonQty;
+        if (typeof originalSetAddonQty === 'function') {
+            window.setAddonQty = function(item, qty) {
+                originalSetAddonQty(item, qty);
+                setTimeout(forzarActualizacionTotal, 50);
+            };
+        }
+    }
+
+    function initCarritoEnModal() {
+        const checkModal = setInterval(() => {
+            const modal = document.getElementById('proteccionPop');
+            if (modal) {
+                clearInterval(checkModal);
+                crearOCarritoEnModal();
+                observarTodosLosCambios();
+                setTimeout(forzarActualizacionTotal, 200);
+                console.log('✅ Botón de carrito con TOTAL GENERAL inicializado');
+            }
+        }, 100);
+
+        const btnProtecciones = document.getElementById('btnProtecciones');
+        if (btnProtecciones) {
+            btnProtecciones.addEventListener('click', () => {
+                setTimeout(() => {
+                    crearOCarritoEnModal();
+                    forzarActualizacionTotal();
+                }, 200);
+            });
+        }
+
+        const originalSyncDays = window.syncDays;
+        if (typeof originalSyncDays === 'function') {
+            window.syncDays = function() {
+                originalSyncDays();
+                setTimeout(forzarActualizacionTotal, 50);
+            };
+        }
+
+        setInterval(forzarActualizacionTotal, 1000);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCarritoEnModal);
+    } else {
+        initCarritoEnModal();
+    }
+
 })();
