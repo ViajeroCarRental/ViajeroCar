@@ -221,7 +221,7 @@
 <div class="main-content">
 
     <!-- BOTÓN DASHBOARD -->
-    <a href="http://127.0.0.1:8000/admin/dashboard" class="btn-dashboard">
+    <a href="{{ route('rutaDashboard') }}" class="btn-dashboard">
         <i class="fas fa-arrow-left"></i>
         Dashboard
     </a>
@@ -230,44 +230,44 @@
 
         <!-- HEADER -->
         <div class="flotilla-menu-header">
-            <img src="http://127.0.0.1:8000/img/Logo5.png" class="logo-menu" alt="Viajero Car Rental">
+            <img src="{{ asset('img/Logo5.png') }}" class="logo-menu" alt="Viajero Car Rental">
             <h1>Menú de flotilla</h1>
         </div>
 
         <!-- GRID -->
         <div class="flotilla-home-grid">
 
-            <a href="http://127.0.0.1:8000/admin/flotilla" class="flotilla-home-card">
+            <a href="{{ route('rutaFlotilla') }}" class="flotilla-home-card">
                 <i class="fas fa-truck"></i>
                 <span>Flotilla</span>
             </a>
 
-            <a href="http://127.0.0.1:8000/admin/mantenimiento" class="flotilla-home-card">
+            <a href="{{ route('rutaMantenimiento') }}" class="flotilla-home-card">
                 <i class="fas fa-wrench"></i>
                 <span>Mantenimiento</span>
             </a>
 
-            <a href="http://127.0.0.1:8000/admin/polizas" class="flotilla-home-card">
+            <a href="{{ route('rutaPolizas') }}" class="flotilla-home-card">
                 <i class="fas fa-file-alt"></i>
                 <span>Pólizas</span>
             </a>
 
-            <a href="http://127.0.0.1:8000/admin/carroceria" class="flotilla-home-card">
+            <a href="{{ route('rutaCarroceria') }}" class="flotilla-home-card">
                 <i class="fas fa-car-side"></i>
                 <span>Carrocería</span>
             </a>
 
-            <a href="http://127.0.0.1:8000/admin/siniestros" class="flotilla-home-card">
+            <a href="{{ route('rutaSeguros') }}" class="flotilla-home-card">
                 <i class="fas fa-shield-alt"></i>
                 <span>Seguros</span>
             </a>
 
-            <a href="http://127.0.0.1:8000/admin/gastos" class="flotilla-home-card">
+            <a href="{{ route('rutaGastos') }}" class="flotilla-home-card">
                 <i class="fas fa-coins"></i>
                 <span>Gastos</span>
             </a>
 
-            <a href="http://127.0.0.1:8000/admin/vehiculos/documentos" class="flotilla-home-card">
+            <a href="{{ route('vehiculos.documentos') }}" class="flotilla-home-card">
                 <i class="fas fa-folder-open"></i>
                 <span>Documentación</span>
             </a>
