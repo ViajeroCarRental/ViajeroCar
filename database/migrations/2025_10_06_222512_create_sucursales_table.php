@@ -13,6 +13,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('id_ciudad');
             $table->string('nombre', 120);
             $table->string('direccion', 255)->nullable();
+            $table->string('telefono', 20)->nullable();
             $table->decimal('lat', 9, 6)->nullable();
             $table->decimal('lng', 9, 6)->nullable();
             $table->json('horario_json')->nullable();

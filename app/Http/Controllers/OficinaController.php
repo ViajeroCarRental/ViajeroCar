@@ -34,10 +34,11 @@ class OficinaController extends Controller
     {
         // 1. Validamos que la info venga completa y correcta
         $request->validate([
-            'id_ciudad' => 'required|integer',
-            'nombre'    => 'required|string|max:150',
-            'direccion' => 'required|string',
-            'horario'   => 'required|string'
+            'id_ciudad' => 'required|integer|exists:ciudades,id_ciudad',
+            'nombre'    => 'required|string|max:120', // Sincronizado con el límite de la base de datos
+            'direccion' => 'required|string|max:255', // Sincronizado con el límite de la base de datos
+            'horario'   => 'required|string',
+            'telefono'  => 'nullable|string|max:20'
         ]);
 
         try {
@@ -47,15 +48,21 @@ class OficinaController extends Controller
                 'nombre' => $request->nombre,
                 'direccion' => $request->direccion,
                 'horario_json' => json_encode(['horario' => $request->horario]),
-                'telefono' => $request->telefono, // <--- DESCOMENTAR O AGREGAR ESTA LÍNEA
+                'telefono' => $request->telefono,
                 'activo' => true,
                 'created_at' => now(),
                 'updated_at' => now()
             ]);
 
             return redirect()->back()->with('success', 'La sucursal "' . $request->nombre . '" fue registrada exitosamente.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Manejo de error si ya existe el nombre en esa ciudad (Unique constraint)
+            if ($e->getCode() == 23000) {
+                return redirect()->back()->withInput()->with('error', 'Ya existe una sucursal con ese nombre en la ciudad seleccionada.');
+            }
+            return redirect()->back()->withInput()->with('error', 'Error en la base de datos: ' . $e->getMessage());
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Ocurrió un problema al guardar: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Ocurrió un problema al guardar: ' . $e->getMessage());
         }
     }
 
