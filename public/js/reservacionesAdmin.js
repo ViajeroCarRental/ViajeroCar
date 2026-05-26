@@ -275,29 +275,33 @@ function limpiarError(elemento) {
     }
 }
 
+function validarNombreCompleto() {
+    const nombreCompletoInput = document.getElementById("nombre_completo_cliente");
+    if (!nombreCompletoInput) return true; // No hay campo nuevo, se omite.
+
+    const valor = nombreCompletoInput.value.trim();
+    let todoOk = true;
+
+    if (valor === "") {
+        mostrarError(nombreCompletoInput, 'El nombre completo es obligatorio');
+        todoOk = false;
+    } else if (valor.split(/\s+/).length < 2) {
+        // Verifica que haya al menos dos palabras separadas por espacio(s)
+        mostrarError(nombreCompletoInput, 'Ingresa tu nombre y apellido(s) completos');
+        todoOk = false;
+    } else {
+        mostrarExito(nombreCompletoInput);
+    }
+    return todoOk;
+}
+
 function validarClienteVisual() {
     let todoOk = true;
 
-    const nombre = document.getElementById("nombre_cliente");
-    if (nombre) {
-        if (!nombre.value.trim()) {
-            mostrarError(nombre, 'El nombre es obligatorio');
-            todoOk = false;
-        } else {
-            mostrarExito(nombre);
-        }
+    if (!validarNombreCompleto()) {
+        todoOk = false;
     }
-
-    const apellidos = document.getElementById("apellidos_cliente");
-    if (apellidos) {
-        if (!apellidos.value.trim()) {
-            mostrarError(apellidos, 'Los apellidos son obligatorios');
-            todoOk = false;
-        } else {
-            mostrarExito(apellidos);
-        }
-    }
-
+l
     const email = document.getElementById("email_cliente");
     if (email) {
         const emailVal = email.value.trim();
@@ -789,18 +793,17 @@ function observarCategoria() {
 
 function observarClienteCompleto() {
     setInterval(() => {
-        const nombre = document.getElementById('nombre_cliente')?.value?.trim();
-        const apellidos = document.getElementById('apellidos_cliente')?.value?.trim();
+        const nombreCompleto = document.getElementById('nombre_completo_cliente')?.value?.trim();
         const email = document.getElementById('email_cliente')?.value?.trim();
         const telefono = document.getElementById('telefono_ui')?.value?.trim();
-        const clienteCompleto = nombre && apellidos && email && telefono;
+        // Validación simple: que tenga al menos un espacio para asumir nombre y apellido
+        const clienteCompleto = nombreCompleto && nombreCompleto.includes(' ') && email && telefono;
 
         if (clienteCompleto && !flujoCompletado && clienteDesbloqueada) {
             completarFlujo();
         }
     }, 1000);
 }
-
 function initValidacionHorasTiempoReal() {
     const fechaInicio = document.getElementById("fecha_inicio_ui");
     const fechaFin = document.getElementById("fecha_fin_ui");
@@ -983,14 +986,13 @@ function validarCategoria() {
 }
 
 function validarCliente() {
-    const nombre = document.getElementById("nombre_cliente")?.value?.trim();
-    const apellidos = document.getElementById("apellidos_cliente")?.value?.trim();
+    const nombreCompleto = document.getElementById("nombre_completo_cliente")?.value?.trim();
     const email = document.getElementById("email_cliente")?.value?.trim();
     const telefono = document.getElementById("telefono_ui")?.value?.trim();
     const pais = document.getElementById("pais")?.value;
 
-    if (!nombre || !apellidos) {
-        mostrarToast('⚠️ Completa NOMBRE y APELLIDOS del cliente', 'warning');
+    if (!nombreCompleto || !nombreCompleto.includes(' ')) {
+        mostrarToast('⚠️ Ingresa el NOMBRE COMPLETO del cliente (nombre y apellido/s)', 'warning');
         return false;
     }
 
@@ -3417,20 +3419,8 @@ function validateBeforeSubmit() {
         mostrarExito(btnCategorias);
     }
 
-    const nombre = document.getElementById("nombre_cliente");
-    if (!nombre?.value?.trim()) {
-        mostrarError(nombre, 'El nombre es obligatorio');
-        allValid = false;
-    } else {
-        mostrarExito(nombre);
-    }
-
-    const apellidos = document.getElementById("apellidos_cliente");
-    if (!apellidos?.value?.trim()) {
-        mostrarError(apellidos, 'Los apellidos son obligatorios');
-        allValid = false;
-    } else {
-        mostrarExito(apellidos);
+    if (!validarNombreCompleto()) {
+    allValid = false;
     }
 
     const email = document.getElementById("email_cliente");
@@ -5576,7 +5566,7 @@ observerPreview.observe(document.body, { childList: true, subtree: true });
             });
         }
 
-        //modal.style.display = 'flex';
+        modal.style.display = 'flex';
     }
     function escapeHtml(text) {
         const div = document.createElement('div');
