@@ -540,7 +540,7 @@
         <div class="cliente-field required">
   <label for="nombre_completo_cliente">Nombre completo</label>
   <input id="nombre_completo_cliente" name="nombre_completo_cliente" class="input cliente-input" type="text" required
-    value="{{ trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')) }}">
+    value="{{ $reservacion->nombre_completo_cliente ?? '' }}">
   <div class="validation-message error" id="nombre_completo_error">El nombre completo es obligatorio</div>
 </div>
 

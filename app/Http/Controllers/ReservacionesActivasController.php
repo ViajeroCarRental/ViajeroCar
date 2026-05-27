@@ -48,9 +48,8 @@ class ReservacionesActivasController extends Controller
                     'r.id_reservacion',
                     'r.codigo',
 
-                    'r.nombre_cliente',
-                    'r.apellidos_cliente',
-                    DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,''))) as nombre_completo"),
+                    'r.nombre_completo_cliente',
+                    DB::raw("r.nombre_completo_cliente as nombre_completo"), // alias para compat con el blade
 
                     'r.email_cliente',
                     'r.telefono_cliente',
@@ -89,42 +88,39 @@ class ReservacionesActivasController extends Controller
 
                 // filtro por sucursal
                 ->when($sucursal || $sucursal2, function ($q) use ($sucursal, $sucursal2) {
-    $q->where(function ($sub) use ($sucursal, $sucursal2) {
+                    $q->where(function ($sub) use ($sucursal, $sucursal2) {
 
-        if ($sucursal) {
-            $sub->where('r.sucursal_retiro', $sucursal);
-        }
+                        if ($sucursal) {
+                            $sub->where('r.sucursal_retiro', $sucursal);
+                        }
 
-        if ($sucursal2) {
-            $sub->orWhere('r.sucursal_retiro', $sucursal2);
-        }
+                        if ($sucursal2) {
+                            $sub->orWhere('r.sucursal_retiro', $sucursal2);
+                        }
 
-    });
-})
+                    });
+                })
 
-//Filtro por fecha
-// 🔥 Filtro por fecha (rango)
-->when($fechaInicio && $fechaFin, function ($q) use ($fechaInicio, $fechaFin) {
-    $q->whereBetween('r.fecha_inicio', [$fechaInicio, $fechaFin]);
-})
+                //Filtro por fecha
+                // 🔥 Filtro por fecha (rango)
+                ->when($fechaInicio && $fechaFin, function ($q) use ($fechaInicio, $fechaFin) {
+                    $q->whereBetween('r.fecha_inicio', [$fechaInicio, $fechaFin]);
+                })
 
-// 🔥 Si NO hay fechas → usar hoy
-->when(!($fechaInicio && $fechaFin), function ($q) use ($hoy) {
-    $q->whereDate('r.fecha_inicio', '>=', $hoy);
-})
+                // 🔥 Si NO hay fechas → usar hoy
+                ->when(!($fechaInicio && $fechaFin), function ($q) use ($hoy) {
+                    $q->whereDate('r.fecha_inicio', '>=', $hoy);
+                })
 
                 // filtro por código
                 ->when($codigo, function ($q, $codigo) {
                     $q->where('r.codigo', 'LIKE', $codigo . '%');
                 })
 
-                // filtro por nombre/apellidos/correo
                 ->when($search, function ($q, $search) {
                     $term = $search . '%';
                     $q->where(function ($sub) use ($term) {
-                        $sub->where('r.nombre_cliente', 'LIKE', $term)
-                            ->orWhere('r.apellidos_cliente', 'LIKE', $term)
-                            ->orWhere(DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,'')))"), 'LIKE', $term)
+                        $sub->where('r.nombre_completo_cliente', 'LIKE', $term)
                             ->orWhere('r.email_cliente', 'LIKE', $term);
                     });
                 })
@@ -152,9 +148,8 @@ class ReservacionesActivasController extends Controller
                     'r.id_reservacion',
                     'r.codigo',
 
-                    'r.nombre_cliente',
-                    'r.apellidos_cliente',
-                    DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,''))) as nombre_completo"),
+                    'r.nombre_completo_cliente',
+                    DB::raw("r.nombre_completo_cliente as nombre_completo"),
 
                     'r.email_cliente',
                     'r.telefono_cliente',
@@ -197,13 +192,10 @@ class ReservacionesActivasController extends Controller
                     $q->where('r.codigo', 'LIKE', $codigo . '%');
                 })
 
-                // filtro por nombre/apellidos/correo
                 ->when($search, function ($q, $search) {
                     $term = $search . '%';
                     $q->where(function ($sub) use ($term) {
-                        $sub->where('r.nombre_cliente', 'LIKE', $term)
-                            ->orWhere('r.apellidos_cliente', 'LIKE', $term)
-                            ->orWhere(DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,'')))"), 'LIKE', $term)
+                        $sub->where('r.nombre_completo_cliente', 'LIKE', $term)
                             ->orWhere('r.email_cliente', 'LIKE', $term);
                     });
                 })
@@ -217,7 +209,7 @@ class ReservacionesActivasController extends Controller
             return view('Admin.ReservacionesActivas', [
                 'reservaciones'            => $reservaciones,
                 'servicios' => $servicios,
-                'reservaciones_anteriores' => $reservaciones_anteriores, // ✅ YA VA AL BLADE
+                'reservaciones_anteriores' => $reservaciones_anteriores,
                 'sucursalSeleccionada'      => $sucursal,
             ]);
 
@@ -239,9 +231,8 @@ class ReservacionesActivasController extends Controller
                     'r.id_reservacion',
                     'r.codigo',
 
-                    'r.nombre_cliente',
-                    'r.apellidos_cliente',
-                    DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,''))) as nombre_completo"),
+                    'r.nombre_completo_cliente',
+                    DB::raw("r.nombre_completo_cliente as nombre_completo"),
 
                     'r.email_cliente',
                     'r.telefono_cliente',
@@ -376,14 +367,20 @@ class ReservacionesActivasController extends Controller
 
     /**
      * ✏️ Update datos + correo
+     *
+     * ⚠️ NOTA IMPORTANTE:
+     * - La validación ahora espera 'nombre_completo_cliente' del formulario.
+     * - Si el input del formulario aún se llama 'nombre_cliente' (no se ha
+     *   actualizado), también lo acepta como fallback para no romper.
      */
     public function updateDatos(Request $request, $id)
     {
         try {
             $validated = $request->validate([
-                'nombre_cliente'   => 'required|string|max:120',
-                'email_cliente'    => 'required|email|max:120',
-                'telefono_cliente' => 'required|string|max:40',
+                'nombre_completo_cliente' => 'nullable|string|max:240',
+                'nombre_cliente'          => 'nullable|string|max:120', // fallback
+                'email_cliente'           => 'required|email|max:120',
+                'telefono_cliente'        => 'required|string|max:40',
 
                 'fecha_inicio'     => 'required|date',
                 'hora_retiro'      => 'nullable|string|max:10',
@@ -391,6 +388,17 @@ class ReservacionesActivasController extends Controller
                 'fecha_fin'        => 'required|date|after_or_equal:fecha_inicio',
                 'hora_entrega'     => 'nullable|string|max:10',
             ]);
+
+            $nombreCompleto = $validated['nombre_completo_cliente']
+                ?? $validated['nombre_cliente']
+                ?? '';
+
+            if (trim($nombreCompleto) === '') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El nombre del cliente es obligatorio.'
+                ], 422);
+            }
 
             $reserv = DB::table('reservaciones')
                 ->where('id_reservacion', $id)
@@ -406,23 +414,24 @@ class ReservacionesActivasController extends Controller
             DB::table('reservaciones')
                 ->where('id_reservacion', $id)
                 ->update([
-                    'nombre_cliente'   => $validated['nombre_cliente'],
-                    'email_cliente'    => $validated['email_cliente'],
-                    'telefono_cliente' => $validated['telefono_cliente'],
-                    'fecha_inicio'     => $validated['fecha_inicio'],
-                    'hora_retiro'      => $validated['hora_retiro'],
-                    'fecha_fin'        => $validated['fecha_fin'],
-                    'hora_entrega'     => $validated['hora_entrega'],
-                    'updated_at'       => now(),
+                    'nombre_completo_cliente' => $nombreCompleto,
+                    'email_cliente'           => $validated['email_cliente'],
+                    'telefono_cliente'        => $validated['telefono_cliente'],
+                    'fecha_inicio'            => $validated['fecha_inicio'],
+                    'hora_retiro'             => $validated['hora_retiro'],
+                    'fecha_fin'               => $validated['fecha_fin'],
+                    'hora_entrega'            => $validated['hora_entrega'],
+                    'updated_at'              => now(),
                 ]);
 
             $r = DB::table('reservaciones as r')
                 ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
                 ->select(
                     'r.codigo',
-                    'r.nombre_cliente',
-                    'r.apellidos_cliente',
-                    DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,''))) as nombre_completo"),
+
+                    'r.nombre_completo_cliente',
+                    DB::raw("r.nombre_completo_cliente as nombre_completo"),
+
                     'r.email_cliente',
                     'r.telefono_cliente',
                     'r.fecha_inicio',
@@ -453,7 +462,8 @@ class ReservacionesActivasController extends Controller
             $mensaje .= "Categoría: " . ($r->categoria ?? '-') . "\n\n";
 
             $mensaje .= "👤 Cliente:\n";
-            $mensaje .= "Nombre: " . ($r->nombre_completo ?: $r->nombre_cliente) . "\n";
+            // ✅ MIGRADO: usa la columna nueva
+            $mensaje .= "Nombre: " . ($r->nombre_completo_cliente ?? '-') . "\n";
             $mensaje .= "Correo: {$r->email_cliente}\n";
             $mensaje .= "Teléfono: {$r->telefono_cliente}\n";
             $mensaje .= "Vuelo: " . ($r->no_vuelo ?? '-') . "\n\n";
@@ -500,58 +510,91 @@ class ReservacionesActivasController extends Controller
      * ✏️ Lista de vehiculos
      */
     public function vehiculosDisponibles()
-{
-    $vehiculos = DB::table('vehiculos as v')
-        ->leftJoin('categorias_carros as c', 'v.id_categoria', '=', 'c.id_categoria')
-        ->leftJoin('mantenimientos as m', 'v.id_vehiculo', '=', 'm.id_vehiculo')
+    {
+        $vehiculos = DB::table('vehiculos as v')
+            ->leftJoin('categorias_carros as c', 'v.id_categoria', '=', 'c.id_categoria')
+            ->leftJoin('mantenimientos as m', 'v.id_vehiculo', '=', 'm.id_vehiculo')
 
-        ->select(
-            'v.id_vehiculo',
-            'v.placa',
-            'c.codigo as categoria',
-            'c.nombre as tamano',
-            'v.modelo',
-            'v.transmision',
-            'v.color',
+            ->select(
+                'v.id_vehiculo',
+                'v.placa',
+                'c.codigo as categoria',
+                'c.nombre as tamano',
+                'v.modelo',
+                'v.transmision',
+                'v.color',
 
-            'v.gasolina_actual',
-            'v.capacidad_tanque',
+                'v.gasolina_actual',
+                'v.capacidad_tanque',
 
-            DB::raw("
-            CASE
-                WHEN v.capacidad_tanque > 0
-                THEN ROUND((v.gasolina_actual / v.capacidad_tanque) * 16)
-                ELSE 0
-            END as gasolina_fraccion
-            "),
+                DB::raw("
+                CASE
+                    WHEN v.capacidad_tanque > 0
+                    THEN ROUND((v.gasolina_actual / v.capacidad_tanque) * 16)
+                    ELSE 0
+                END as gasolina_fraccion
+                "),
 
-            'v.kilometraje',
-            'v.vigencia_verificacion',
-            'm.intervalo_km',
-            'v.fin_vigencia_poliza'
-        )
-        ->get();
+                'v.kilometraje',
+                'v.vigencia_verificacion',
+                'm.intervalo_km',
+                'v.fin_vigencia_poliza'
+            )
+            ->get();
 
 
 
-    return response()->json($vehiculos);
-}
+        return response()->json($vehiculos);
+    }
 
-public function crearContrato(Request $request)
-{
-    try {
+    public function crearContrato(Request $request)
+    {
+        try {
 
-        $idReservacion = $request->id_reservacion;
-        $idVehiculo = $request->id_vehiculo;
+            $idReservacion = $request->id_reservacion;
+            $idVehiculo = $request->id_vehiculo;
 
-        // 🔥 1. VERIFICAR SI YA EXISTE CONTRATO
-        $contratoExistente = DB::table('contratos')
-            ->where('id_reservacion', $idReservacion)
-            ->first();
+            // 🔥 1. VERIFICAR SI YA EXISTE CONTRATO
+            $contratoExistente = DB::table('contratos')
+                ->where('id_reservacion', $idReservacion)
+                ->first();
 
-        if ($contratoExistente) {
+            if ($contratoExistente) {
 
-            // 🔥 OPCIONAL: actualizar vehículo si quieres
+                // 🔥 OPCIONAL: actualizar vehículo si quieres
+                DB::table('reservaciones')
+                    ->where('id_reservacion', $idReservacion)
+                    ->update([
+                        'id_vehiculo' => $idVehiculo
+                    ]);
+
+                return response()->json([
+                    'success' => true,
+                    'id_contrato' => $contratoExistente->id_contrato,
+                    'existente' => true
+                ]);
+            }
+
+            // 🔥 2. GENERAR NÚMERO DE CONTRATO
+            $ultimo = DB::table('contratos')
+                ->orderBy('id_contrato', 'desc')
+                ->value('numero_contrato');
+
+            $numero = $ultimo ? intval($ultimo) + 1 : 1;
+
+            $numeroContrato = str_pad($numero, 4, "0", STR_PAD_LEFT);
+
+            // 🔥 3. CREAR CONTRATO
+            $idContrato = DB::table('contratos')->insertGetId([
+                'id_reservacion' => $idReservacion,
+                'numero_contrato' => $numeroContrato,
+                'estado' => 'abierto',
+                'abierto_en' => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // 🔥 4. ASIGNAR VEHÍCULO
             DB::table('reservaciones')
                 ->where('id_reservacion', $idReservacion)
                 ->update([
@@ -560,172 +603,139 @@ public function crearContrato(Request $request)
 
             return response()->json([
                 'success' => true,
-                'id_contrato' => $contratoExistente->id_contrato,
-                'existente' => true
-            ]);
-        }
-
-        // 🔥 2. GENERAR NÚMERO DE CONTRATO
-        $ultimo = DB::table('contratos')
-            ->orderBy('id_contrato', 'desc')
-            ->value('numero_contrato');
-
-        $numero = $ultimo ? intval($ultimo) + 1 : 1;
-
-        $numeroContrato = str_pad($numero, 4, "0", STR_PAD_LEFT);
-
-        // 🔥 3. CREAR CONTRATO
-        $idContrato = DB::table('contratos')->insertGetId([
-            'id_reservacion' => $idReservacion,
-            'numero_contrato' => $numeroContrato,
-            'estado' => 'abierto',
-            'abierto_en' => now(),
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // 🔥 4. ASIGNAR VEHÍCULO
-        DB::table('reservaciones')
-            ->where('id_reservacion', $idReservacion)
-            ->update([
-                'id_vehiculo' => $idVehiculo
+                'id_contrato' => $idContrato,
+                'existente' => false
             ]);
 
-        return response()->json([
-            'success' => true,
-            'id_contrato' => $idContrato,
-            'existente' => false
-        ]);
-
-    } catch (\Throwable $e) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
-    }
-}
-
-
-public function reenviarCorreo($id)
-{
-    try {
-
-        // 🔎 Reservación
-        $reservacion = DB::table('reservaciones')
-            ->where('id_reservacion', $id)
-            ->first();
-
-        if (!$reservacion) {
+        } catch (\Throwable $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Reservación no encontrada'
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function reenviarCorreo($id)
+    {
+        try {
+
+            // 🔎 Reservación
+            $reservacion = DB::table('reservaciones')
+                ->where('id_reservacion', $id)
+                ->first();
+
+            if (!$reservacion) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Reservación no encontrada'
+                ]);
+            }
+
+            // 🔎 Categoría
+            $categoria = DB::table('categorias_carros')
+                ->where('id_categoria', $reservacion->id_categoria)
+                ->first();
+
+            // 🔎 Seguro
+            $seguroReserva = DB::table('reservacion_paquete_seguro as rps')
+                ->join('seguro_paquete as sp', 'sp.id_paquete', '=', 'rps.id_paquete')
+                ->where('rps.id_reservacion', $id)
+                ->select(
+                    'sp.id_paquete',
+                    'sp.nombre',
+                    'sp.descripcion',
+                    'rps.precio_por_dia'
+                )
+                ->first();
+
+            // 🔎 Extras
+            $extrasReserva = DB::table('reservacion_servicio as rs')
+                ->join('servicios as s', 's.id_servicio', '=', 'rs.id_servicio')
+                ->where('rs.id_reservacion', $id)
+                ->select(
+                    's.id_servicio',
+                    's.nombre',
+                    's.descripcion',
+                    'rs.cantidad',
+                    'rs.precio_unitario',
+                    DB::raw('(rs.cantidad * rs.precio_unitario) as total')
+                )
+                ->get();
+
+            // 🔎 Lugares
+            $retiroInfo = DB::table('sucursales as s')
+                ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
+                ->where('s.id_sucursal', $reservacion->sucursal_retiro)
+                ->select('s.nombre as sucursal', 'c.nombre as ciudad')
+                ->first();
+
+            $entregaInfo = DB::table('sucursales as s')
+                ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
+                ->where('s.id_sucursal', $reservacion->sucursal_entrega)
+                ->select('s.nombre as sucursal', 'c.nombre as ciudad')
+                ->first();
+
+            $lugarRetiro  = $retiroInfo ? ($retiroInfo->ciudad . ' - ' . $retiroInfo->sucursal) : '-';
+            $lugarEntrega = $entregaInfo ? ($entregaInfo->ciudad . ' - ' . $entregaInfo->sucursal) : '-';
+
+            // 🔎 Imagen (igual que el original)
+            $catImages = [
+                1=>'img/aveo.png',2=>'img/virtus.png',3=>'img/jetta.png',
+                4=>'img/camry.png',5=>'img/renegade.png',6=>'img/taos.png',
+                7=>'img/avanza.png',8=>'img/Odyssey.png',9=>'img/Hiace.png',
+                10=>'img/Frontier.png',11=>'img/Tacoma.png',
+            ];
+
+            $baseUrl = rtrim(config('app.url'), '/');
+            $imgPath = $catImages[$categoria->id_categoria] ?? 'img/categorias/placeholder.png';
+            $imgCategoria = $baseUrl . '/' . $imgPath;
+
+            // 🔎 Totales
+            $extrasServiciosTotal = (float) $extrasReserva->sum('total');
+            $dias = \Carbon\Carbon::parse($reservacion->fecha_inicio)
+                ->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_fin));
+
+            $dias = max(1, $dias);
+
+            $seguroTotal = $seguroReserva
+                ? (float)$seguroReserva->precio_por_dia * $dias
+                : 0;
+
+            $opcionesRentaTotal = $extrasServiciosTotal + $seguroTotal;
+
+            // 🔎 Tu Auto (mínimo necesario)
+            $tuAuto = [
+                'pax' => 5,
+                'small' => 2,
+                'big' => 1
+            ];
+
+            // 📧 ENVÍO
+            Mail::to($reservacion->email_cliente)
+                ->send(new ReservacionAdminMail(
+                    $reservacion,
+                    $categoria,
+                    $seguroReserva,
+                    $extrasReserva,
+                    $lugarRetiro,
+                    $lugarEntrega,
+                    $imgCategoria,
+                    $opcionesRentaTotal,
+                    $tuAuto
+                ));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Correo reenviado correctamente'
+            ]);
+
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
             ]);
         }
-
-        // 🔎 Categoría
-        $categoria = DB::table('categorias_carros')
-            ->where('id_categoria', $reservacion->id_categoria)
-            ->first();
-
-        // 🔎 Seguro
-        $seguroReserva = DB::table('reservacion_paquete_seguro as rps')
-            ->join('seguro_paquete as sp', 'sp.id_paquete', '=', 'rps.id_paquete')
-            ->where('rps.id_reservacion', $id)
-            ->select(
-                'sp.id_paquete',
-                'sp.nombre',
-                'sp.descripcion',
-                'rps.precio_por_dia'
-            )
-            ->first();
-
-        // 🔎 Extras
-        $extrasReserva = DB::table('reservacion_servicio as rs')
-            ->join('servicios as s', 's.id_servicio', '=', 'rs.id_servicio')
-            ->where('rs.id_reservacion', $id)
-            ->select(
-                's.id_servicio',
-                's.nombre',
-                's.descripcion',
-                'rs.cantidad',
-                'rs.precio_unitario',
-                DB::raw('(rs.cantidad * rs.precio_unitario) as total')
-            )
-            ->get();
-
-        // 🔎 Lugares
-        $retiroInfo = DB::table('sucursales as s')
-            ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
-            ->where('s.id_sucursal', $reservacion->sucursal_retiro)
-            ->select('s.nombre as sucursal', 'c.nombre as ciudad')
-            ->first();
-
-        $entregaInfo = DB::table('sucursales as s')
-            ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
-            ->where('s.id_sucursal', $reservacion->sucursal_entrega)
-            ->select('s.nombre as sucursal', 'c.nombre as ciudad')
-            ->first();
-
-        $lugarRetiro  = $retiroInfo ? ($retiroInfo->ciudad . ' - ' . $retiroInfo->sucursal) : '-';
-        $lugarEntrega = $entregaInfo ? ($entregaInfo->ciudad . ' - ' . $entregaInfo->sucursal) : '-';
-
-        // 🔎 Imagen (igual que el original)
-        $catImages = [
-            1=>'img/aveo.png',2=>'img/virtus.png',3=>'img/jetta.png',
-            4=>'img/camry.png',5=>'img/renegade.png',6=>'img/taos.png',
-            7=>'img/avanza.png',8=>'img/Odyssey.png',9=>'img/Hiace.png',
-            10=>'img/Frontier.png',11=>'img/Tacoma.png',
-        ];
-
-        $baseUrl = rtrim(config('app.url'), '/');
-        $imgPath = $catImages[$categoria->id_categoria] ?? 'img/categorias/placeholder.png';
-        $imgCategoria = $baseUrl . '/' . $imgPath;
-
-        // 🔎 Totales
-        $extrasServiciosTotal = (float) $extrasReserva->sum('total');
-        $dias = \Carbon\Carbon::parse($reservacion->fecha_inicio)
-            ->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_fin));
-
-        $dias = max(1, $dias);
-
-        $seguroTotal = $seguroReserva
-            ? (float)$seguroReserva->precio_por_dia * $dias
-            : 0;
-
-        $opcionesRentaTotal = $extrasServiciosTotal + $seguroTotal;
-
-        // 🔎 Tu Auto (mínimo necesario)
-        $tuAuto = [
-            'pax' => 5,
-            'small' => 2,
-            'big' => 1
-        ];
-
-        // 📧 ENVÍO
-        Mail::to($reservacion->email_cliente)
-            ->send(new ReservacionAdminMail(
-                $reservacion,
-                $categoria,
-                $seguroReserva,
-                $extrasReserva,
-                $lugarRetiro,
-                $lugarEntrega,
-                $imgCategoria,
-                $opcionesRentaTotal,
-                $tuAuto
-            ));
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Correo reenviado correctamente'
-        ]);
-
-    } catch (\Throwable $e) {
-    return response()->json([
-        'success' => false,
-        'message' => $e->getMessage()
-    ]);
-}
-}
+    }
 
 }

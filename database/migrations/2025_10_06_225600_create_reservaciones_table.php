@@ -45,8 +45,7 @@ return new class extends Migration {
             $table->string('no_vuelo', 40)->nullable();
             $table->string('codigo', 50)->unique();
 
-            $table->string('nombre_cliente', 120)->nullable();
-            $table->string('apellidos_cliente', 120)->nullable(); // ✅ faltaba
+            $table->string('nombre_completo_cliente', 240)->nullable();
             $table->string('email_cliente', 120)->nullable();
             $table->string('telefono_cliente', 40)->nullable();
 

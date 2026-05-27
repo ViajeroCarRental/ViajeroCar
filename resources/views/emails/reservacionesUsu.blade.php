@@ -802,8 +802,8 @@
 
 <div class="hero">
     <p class="thanks">
-        {{ __('¡Gracias!') }}
-        <strong>{{ strtoupper(trim(($reservacion->nombre_cliente ?? 'Cliente') . ' ' . ($reservacion->apellidos_cliente ?? ''))) }}</strong>
+      {{ __('¡Gracias!') }}
+      <strong>{{ strtoupper($reservacion->nombre_completo_cliente ?? 'Cliente') }}</strong>
     </p>
 
     <p class="lead">

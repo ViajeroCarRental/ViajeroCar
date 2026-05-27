@@ -37,12 +37,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 json.data.forEach(r => {
 
-    const tr = document.createElement("tr");
+                    const tr = document.createElement("tr");
 
-    // 🔒 Guardamos el id_contrato real en la fila (oculto)
-    tr.dataset.id = r.id_contrato;
+                    // 🔒 Guardamos el id_contrato real en la fila (oculto)
+                    tr.dataset.id = r.id_contrato;
 
-    tr.innerHTML = `
+                    tr.innerHTML = `
         <td>
             <button class="btnToggle"
                 style="font-size:20px;border:none;background:none;cursor:pointer">+</button>
@@ -52,26 +52,26 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${r.fecha_fin ?? "—"}</td>
         <td>${r.categoria ?? "—"}</td>   <!-- ✅ categoría -->
         <td>${!r.tiene_dropoff ? "---" : r.delivery_ubicacion == 0 ? (r.delivery_direccion ?? "Sin dirección")
-            : `${r.ubic_estado ?? ""} - ${r.ubic_destino ?? ""}`}</td>
+                            : `${r.ubic_estado ?? ""} - ${r.ubic_destino ?? ""}`}</td>
         <td>${r.hora_entrega ?? "—"}</td>
         <td>${r.estado ?? "—"}</td>
         <td class="text-center">
                 ${r.metodo_pago === 'mostrador'
-                    ? `
+                            ? `
                         <i class="fas fa-money-bill-wave text-success" title="Pago en efectivo"></i>
                         ${r.status_pago === 'Pagado'
-                            ? '<i class="fas fa-check text-primary ms-1" title="Pagado"></i>'
+                                ? '<i class="fas fa-check text-primary ms-1" title="Pagado"></i>'
+                                : ''
+                            }
+                    `
                             : ''
                         }
-                    `
-                    : ''
-                }
         </td>
         <td></td>
     `;
 
-    tbody.appendChild(tr);
-});
+                    tbody.appendChild(tr);
+                });
 
             })
             .catch(err => {
@@ -92,11 +92,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("click", async (e) => {
         if (!e.target.classList.contains("btnToggle")) return;
 
-const btn = e.target;
-const tr  = btn.closest("tr");
+        const btn = e.target;
+        const tr = btn.closest("tr");
 
-// 🔑 Tomamos SIEMPRE el id_contrato guardado en la fila
-const id  = tr.dataset.id;
+        // 🔑 Tomamos SIEMPRE el id_contrato guardado en la fila
+        const id = tr.dataset.id;
 
 
         const nextRow = tr.nextElementSibling;
@@ -137,8 +137,8 @@ const id  = tr.dataset.id;
 
 
             const disabled = !esSuperAdmin
-            ? 'disabled style="opacity:0.5;cursor:not-allowed;"'
-            : '';
+                ? 'disabled style="opacity:0.5;cursor:not-allowed;"'
+                : '';
 
             const row = document.createElement("tr");
             row.classList.add("detail");
@@ -165,11 +165,11 @@ const id  = tr.dataset.id;
                 <div class="block">
 
                     <div class="kv">
-                        <div class="k">Cliente</div>
-                        <div class="v">
-                            ${d.nombre_cliente ?? ""} ${d.apellidos_cliente ?? ""}
-                        </div>
-                    </div>
+    <div class="k">Cliente</div>
+    <div class="v">
+        ${d.nombre_completo_cliente ?? ""}
+    </div>
+</div>
 
                     <div class="kv">
                         <div class="k">Oficina de regreso contraída</div>
@@ -206,18 +206,16 @@ const id  = tr.dataset.id;
                             Tarifa base: $${Number(d.tarifa_base ?? 0).toFixed(2)}<br><br>
 
                             <!-- Seguro paquete -->
-                            ${
-                                segurosPaqueteHTML
-                                    ? `<b>Paquete:</b><br>${segurosPaqueteHTML}<br><br>`
-                                    : ""
-                            }
+                            ${segurosPaqueteHTML
+                    ? `<b>Paquete:</b><br>${segurosPaqueteHTML}<br><br>`
+                    : ""
+                }
 
                             <!-- Seguros individuales -->
-                            ${
-                                segurosIndividualesHTML
-                                    ? `<b>Seguros:</b><br>${segurosIndividualesHTML}`
-                                    : ""
-                            }
+                            ${segurosIndividualesHTML
+                    ? `<b>Seguros:</b><br>${segurosIndividualesHTML}`
+                    : ""
+                }
 
                         </div>
                     </div>
@@ -230,11 +228,10 @@ const id  = tr.dataset.id;
                             Regreso: ${comb.entrada ?? 0} L<br>
                             Faltante: <b>${comb.faltante ?? 0} L</b><br>
 
-                            ${
-                                comb.faltante > 0
-                                    ? `Costo: $${Number(comb.total ?? 0).toFixed(2)}`
-                                    : "Sin cargo"
-                            }
+                            ${comb.faltante > 0
+                    ? `Costo: $${Number(comb.total ?? 0).toFixed(2)}`
+                    : "Sin cargo"
+                }
                         </div>
                     </div>
 
@@ -389,89 +386,89 @@ const id  = tr.dataset.id;
     // Inicial
     loadData();
 
- // ============================================================
- // Botón Extension.
- // ============================================================
-document.addEventListener("click", async function(e){
+    // ============================================================
+    // Botón Extension.
+    // ============================================================
+    document.addEventListener("click", async function (e) {
 
-    // Abrir calendario
-    if(e.target.classList.contains("btnExtension")){
+        // Abrir calendario
+        if (e.target.classList.contains("btnExtension")) {
 
-        const id = e.target.dataset.id;
-        const input = document.querySelector(`.inputExtension[data-id="${id}"]`);
+            const id = e.target.dataset.id;
+            const input = document.querySelector(`.inputExtension[data-id="${id}"]`);
 
-        // bloquear hoy
-        const hoy = new Date();
-        hoy.setDate(hoy.getDate() + 1);
+            // bloquear hoy
+            const hoy = new Date();
+            hoy.setDate(hoy.getDate() + 1);
 
-        const yyyy = hoy.getFullYear();
-        const mm = String(hoy.getMonth()+1).padStart(2,'0');
-        const dd = String(hoy.getDate()).padStart(2,'0');
+            const yyyy = hoy.getFullYear();
+            const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+            const dd = String(hoy.getDate()).padStart(2, '0');
 
-        input.min = `${yyyy}-${mm}-${dd}`;
+            input.min = `${yyyy}-${mm}-${dd}`;
 
-        input.style.display = "block";
-        input.showPicker(); // Chrome moderno
-    }
-
-});
-
-
-document.addEventListener("change", async function(e){
-
-    if(e.target.classList.contains("inputExtension")){
-
-        const id = e.target.dataset.id;
-        const fecha = e.target.value;
-
-        if(!fecha) return;
-
-        const res = await fetch(`/admin/contrato/${id}/extension`,{
-            method:'POST',
-            headers:{
-                'Content-Type':'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({
-                fecha_fin: fecha
-            })
-        });
-
-        const data = await res.json();
-
-        if(data.ok){
-            alert("Fecha extendida correctamente");
-            location.reload();
-        }else{
-            alert("Error al guardar");
+            input.style.display = "block";
+            input.showPicker(); // Chrome moderno
         }
-    }
 
-});
+    });
+
+
+    document.addEventListener("change", async function (e) {
+
+        if (e.target.classList.contains("inputExtension")) {
+
+            const id = e.target.dataset.id;
+            const fecha = e.target.value;
+
+            if (!fecha) return;
+
+            const res = await fetch(`/admin/contrato/${id}/extension`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    fecha_fin: fecha
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.ok) {
+                alert("Fecha extendida correctamente");
+                location.reload();
+            } else {
+                alert("Error al guardar");
+            }
+        }
+
+    });
 
 
     // ============================================================
     // Botón EDITAR
     // ============================================================
     document.addEventListener("click", (e) => {
-    if (!e.target.classList.contains("btnEditarContrato")) return;
+        if (!e.target.classList.contains("btnEditarContrato")) return;
 
-    // Primero intentamos leer data-id del botón
-    let idContrato = e.target.dataset.id;
+        // Primero intentamos leer data-id del botón
+        let idContrato = e.target.dataset.id;
 
-    // Si no trae, usamos el de la fila
-    if (!idContrato) {
-        const tr = e.target.closest("tr");
-        idContrato = tr?.dataset.id;
-    }
+        // Si no trae, usamos el de la fila
+        if (!idContrato) {
+            const tr = e.target.closest("tr");
+            idContrato = tr?.dataset.id;
+        }
 
-    if (!idContrato) {
-        console.error("No se pudo obtener id_contrato para EDITAR");
-        return;
-    }
+        if (!idContrato) {
+            console.error("No se pudo obtener id_contrato para EDITAR");
+            return;
+        }
 
-    window.location.href = `/admin/contrato/${idContrato}`;
-});
+        window.location.href = `/admin/contrato/${idContrato}`;
+    });
 
 
 
@@ -480,95 +477,95 @@ document.addEventListener("change", async function(e){
 
 
     // ============================================================
-// Botón FINALIZAR
-// ============================================================
-document.addEventListener("click", async (e) => {
-    if (!e.target.classList.contains("btnFinalizarContrato")) return;
+    // Botón FINALIZAR
+    // ============================================================
+    document.addEventListener("click", async (e) => {
+        if (!e.target.classList.contains("btnFinalizarContrato")) return;
 
-    // 1) Sacar el id_contrato
-    let idContrato = e.target.dataset.id;
+        // 1) Sacar el id_contrato
+        let idContrato = e.target.dataset.id;
 
-    // Si el botón no trae data-id, lo tomamos de la fila
-    if (!idContrato) {
-        const tr = e.target.closest("tr");
-        idContrato = tr ? tr.dataset.id : null;
-    }
+        // Si el botón no trae data-id, lo tomamos de la fila
+        if (!idContrato) {
+            const tr = e.target.closest("tr");
+            idContrato = tr ? tr.dataset.id : null;
+        }
 
-    if (!idContrato) {
-        console.error("No se pudo obtener id_contrato para FINALIZAR");
-        alertify.error("No se pudo identificar el contrato.");
-        return;
-    }
-
-    try {
-        // 2) Consultar saldo pendiente
-        const respSaldo = await fetch(`/admin/contrato/${idContrato}/saldo`);
-        const jsonSaldo = await respSaldo.json();
-
-        if (!jsonSaldo.ok) {
-            alertify.error("Error consultando saldo.");
+        if (!idContrato) {
+            console.error("No se pudo obtener id_contrato para FINALIZAR");
+            alertify.error("No se pudo identificar el contrato.");
             return;
         }
 
-        const saldo = jsonSaldo.saldo;
+        try {
+            // 2) Consultar saldo pendiente
+            const respSaldo = await fetch(`/admin/contrato/${idContrato}/saldo`);
+            const jsonSaldo = await respSaldo.json();
 
-        // 3) Si hay saldo pendiente → mostrar alerta
-        if (saldo > 0) {
-            mostrarModalFinalizar({
-                titulo: "Pago pendiente",
-                mensaje: `Este contrato tiene un saldo pendiente de <b>$${saldo.toFixed(2)}</b>.<br><br>
+            if (!jsonSaldo.ok) {
+                alertify.error("Error consultando saldo.");
+                return;
+            }
+
+            const saldo = jsonSaldo.saldo;
+
+            // 3) Si hay saldo pendiente → mostrar alerta
+            if (saldo > 0) {
+                mostrarModalFinalizar({
+                    titulo: "Pago pendiente",
+                    mensaje: `Este contrato tiene un saldo pendiente de <b>$${saldo.toFixed(2)}</b>.<br><br>
                           Debes liquidarlo antes de finalizar.`,
-                textoOK: "Ir a pagar",
-                onOK: () => window.location.href = `/admin/contrato/${idContrato}`,
-            });
-            return;
-        }
+                    textoOK: "Ir a pagar",
+                    onOK: () => window.location.href = `/admin/contrato/${idContrato}`,
+                });
+                return;
+            }
 
-        // 4) Si NO hay saldo pendiente → confirmar cierre
-        mostrarModalFinalizar({
-            titulo: "Finalizar contrato",
-            mensaje: `
+            // 4) Si NO hay saldo pendiente → confirmar cierre
+            mostrarModalFinalizar({
+                titulo: "Finalizar contrato",
+                mensaje: `
                 ¿Deseas finalizar el contrato?<br><br>
                 Esto generará:<br>
                 • Ticket PDF<br>
                 • PDF de pagos<br>
                 • Enviado por correo al cliente.
             `,
-            textoOK: "Finalizar",
-            onOK: async () => {
-                try {
-                    const respCerrar = await fetch(`/admin/contrato/${idContrato}/cerrar`, {
-                        method: "POST",
-                        headers: {
-                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-                            "Content-Type": "application/json"
+                textoOK: "Finalizar",
+                onOK: async () => {
+                    try {
+                        const respCerrar = await fetch(`/admin/contrato/${idContrato}/cerrar`, {
+                            method: "POST",
+                            headers: {
+                                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                                "Content-Type": "application/json"
+                            }
+                        });
+
+                        const jsonCerrar = await respCerrar.json();
+
+                        if (!jsonCerrar.ok) {
+                            alertify.error(jsonCerrar.msg || "Error al finalizar.");
+                            return;
                         }
-                    });
 
-                    const jsonCerrar = await respCerrar.json();
-
-                    if (!jsonCerrar.ok) {
-                        alertify.error(jsonCerrar.msg || "Error al finalizar.");
-                        return;
+                        alertify.success("Contrato finalizado y correo enviado.");
+                        // 🔥 REDIRECCIÓN AUTOMÁTICA AL CHECKLIST (REGRESO)
+                        setTimeout(() => {
+                            window.location.href = `/admin/reservacion/${idContrato}/checklist?modo=regreso`;
+                        }, 800);
+                    } catch (err) {
+                        console.error(err);
+                        alertify.error("Error al procesar finalización.");
                     }
-
-                    alertify.success("Contrato finalizado y correo enviado.");
-                    // 🔥 REDIRECCIÓN AUTOMÁTICA AL CHECKLIST (REGRESO)
-                    setTimeout(() => {
-                    window.location.href = `/admin/reservacion/${idContrato}/checklist?modo=regreso`;
-                    }, 800);
-                } catch (err) {
-                    console.error(err);
-                    alertify.error("Error al procesar finalización.");
                 }
-            }
-        });
+            });
 
-    } catch (err) {
-        console.error(err);
-        alertify.error("Error al consultar saldo.");
-    }
-});
+        } catch (err) {
+            console.error(err);
+            alertify.error("Error al consultar saldo.");
+        }
+    });
 
 
 
