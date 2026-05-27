@@ -439,10 +439,9 @@ class ReservacionesAdminController extends Controller
                 'id_categoria'      => $validated['id_categoria'],
 
                 // 🧑‍💼 Datos del cliente
-                'nombre_cliente'    => $validated['nombre_cliente'],
-                'apellidos_cliente' => $validated['apellidos_cliente'],
-                'email_cliente'     => $validated['email_cliente'],
-                'telefono_cliente'  => $validated['telefono_cliente'],
+                'nombre_completo_cliente' => $validated['nombre_completo_cliente'],
+                'email_cliente'           => $validated['email_cliente'],
+                'telefono_cliente'        => $validated['telefono_cliente'],
 
                 // 📍 Ubicación
                 'ciudad_retiro'     => $ciudadRetiroId,
@@ -983,10 +982,9 @@ $tarifaBaseGuardar = (float) $categoria->precio_dia;
             'sucursal_retiro'   => $request->sucursal_retiro,
             'sucursal_entrega'  => $request->sucursal_entrega,
 
-            'nombre_cliente'    => $request->nombre_cliente,
-            'apellidos_cliente' => $request->apellidos_cliente,
-            'email_cliente'     => $request->email_cliente,
-            'telefono_cliente'  => $request->telefono_cliente,
+            'nombre_completo_cliente' => $request->nombre_completo_cliente,
+            'email_cliente'           => $request->email_cliente,
+            'telefono_cliente'        => $request->telefono_cliente,
 
             'fecha_inicio'      => $request->fecha_inicio,
             'hora_retiro'       => $request->hora_retiro,
