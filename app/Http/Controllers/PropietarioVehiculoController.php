@@ -13,7 +13,7 @@ class PropietarioVehiculoController extends Controller
     // ===============================
     public function index()
     {
-        return view('admin.propietarios');
+        return view('Admin.propietarios');
     }
 
     // ===============================

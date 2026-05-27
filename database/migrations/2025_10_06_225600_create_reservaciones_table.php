@@ -49,6 +49,7 @@ return new class extends Migration {
             $table->string('apellidos_cliente', 120)->nullable(); // ✅ faltaba
             $table->string('email_cliente', 120)->nullable();
             $table->string('telefono_cliente', 40)->nullable();
+            $table->string('comentarios', 100)->nullable();
 
             $table->string('paypal_order_id', 100)->nullable();
             $table->string('status_pago', 50)->default('Pendiente');
