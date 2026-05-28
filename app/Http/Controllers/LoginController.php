@@ -293,6 +293,8 @@ class LoginController extends Controller
             'required' => 'Debes llenar todos los campos para iniciar sesión.',
         ]);
 
+        $loginInput = trim($request->input('login'));
+
         // Rate limit: prevenir brute force por IP + email
         $rateKey = 'login:' . $request->ip() . ':' . strtolower($request->input('login'));
         if (RateLimiter::tooManyAttempts($rateKey, self::MAX_LOGIN_ATTEMPTS)) {
@@ -302,7 +304,13 @@ class LoginController extends Controller
                 ->withInput();
         }
 
-        $usuario = DB::table('usuarios')->where('correo', $request->input('login'))->first();
+         // 🆕 Detectar si es correo o nombre de usuario y buscar en la columna adecuada
+            $campo = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'correo' : 'nombre_usuario';
+
+            $usuario = DB::table('usuarios')
+                ->where($campo, $loginInput)
+                ->first();
+
 
         // Verificación de credenciales (timing constant: si no existe usuario, igual consume tiempo equivalente)
         $validPassword = $usuario
@@ -311,16 +319,18 @@ class LoginController extends Controller
 
         if (!$usuario || !$validPassword) {
             RateLimiter::hit($rateKey, self::LOGIN_DECAY_SECONDS);
-            return back()->withErrors(['error' => 'Correo o contraseña incorrectos.'])->withInput();
+            return back()->withErrors(['error' => 'Correo/Usuario o contraseña incorrectos.'])->withInput();
         }
 
         // Verificar que la cuenta esté activa y el correo verificado
         if (!$usuario->activo) {
             return back()->withErrors(['error' => 'Tu cuenta está inactiva. Contacta a soporte.'])->withInput();
         }
-        if (!$usuario->email_verificado) {
-            return back()->withErrors(['error' => 'Debes verificar tu correo antes de iniciar sesión.'])->withInput();
-        }
+        // 🆕 Solo exigir verificación de correo si el login fue por correo
+    //    (los usuarios admin con solo nombre_usuario no tienen correo que verificar)
+    if ($campo === 'correo' && !$usuario->email_verificado) {
+        return back()->withErrors(['error' => 'Debes verificar tu correo antes de iniciar sesión.'])->withInput();
+    }
 
         // Login exitoso: limpiar rate limiter
         RateLimiter::clear($rateKey);
@@ -337,6 +347,7 @@ class LoginController extends Controller
             'id_usuario' => $usuario->id_usuario,
             'nombre'     => $usuario->nombres,
             'correo'     => $usuario->correo,
+            'usuario'    => $usuario->nombre_usuario,
             'rol'        => $rol,
         ]);
 

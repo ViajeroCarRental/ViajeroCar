@@ -84,7 +84,7 @@ class CategoriasController extends Controller
                 'updated_at'        => now(),
             ]);
 
-        return redirect()->route('categorias.index')->with('success', 'Categoría actualizada.');
+        return redirect()->route('categorias.index')->with('success', 'Categoría actualizada con éxito.');
     }
 
     public function destroy($id)

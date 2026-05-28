@@ -13,11 +13,42 @@ document.addEventListener("DOMContentLoaded", () => {
     const uId = document.getElementById("uId");
     const uNombre = document.getElementById("uNombre");
     const uApellidos = document.getElementById("uApellidos");
-    const uEmail = document.getElementById("uEmail");
+    const uNombreUsuario  = document.getElementById("uNombreUsuario");
     const uNumero = document.getElementById("uNumero");
     const uRol = document.getElementById("uRol");
     const uActivo = document.getElementById("uActivo");
     const uPassword = document.getElementById("uPassword");
+
+
+    // 🆕 FIRMA
+    const firmaCanvas = document.getElementById("uFirmaPad");
+    const firmaClear  = document.getElementById("uFirmaClear");
+    let firmaPad = null;
+    let firmaPrevia = null; // base64 cargada al editar
+
+    if (firmaCanvas && window.SignaturePad) {
+        firmaPad = new SignaturePad(firmaCanvas, { minWidth: 1, maxWidth: 2 });
+    }
+
+    firmaClear?.addEventListener("click", () => {
+        firmaPad?.clear();
+        firmaPrevia = null;
+    });
+
+    const cargarFirmaEnCanvas = (dataUrl) => {
+        if (!firmaPad || !dataUrl) return;
+        firmaPad.clear();
+        const img = new Image();
+        img.onload = () => {
+            const ctx = firmaCanvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, firmaCanvas.width, firmaCanvas.height);
+            firmaPad._isEmpty = false;
+        };
+        img.src = dataUrl;
+    };
+
+
+
 
     const csrfToken = document
         .querySelector('meta[name="csrf-token"]')
@@ -32,22 +63,26 @@ document.addEventListener("DOMContentLoaded", () => {
         uId.value = "";
         uNombre.value = "";
         uApellidos.value = "";
-        uEmail.value = "";
+        uNombreUsuario.value = "";
         uNumero.value = "";
         uRol.value = "";
         uActivo.value = "1";
         if (uPassword) uPassword.value = "";
+        firmaPad?.clear();
+        firmaPrevia = null;
     };
 
     const cargarDesdeFila = (tr) => {
         uId.value = tr.dataset.id;
         uNombre.value = tr.dataset.nombres;
         uApellidos.value = tr.dataset.apellidos;
-        uEmail.value = tr.dataset.correo;
+        uNombreUsuario.value  = tr.dataset.nombreUsuario ?? "";
         uNumero.value = tr.dataset.numero;
         uRol.value = tr.dataset.rolId;
         uActivo.value = tr.dataset.activo === "0" ? "0" : "1";
         if (uPassword) uPassword.value = "";
+        firmaPrevia = tr.dataset.firma || null;
+        cargarFirmaEnCanvas(firmaPrevia);
     };
 
     // ========================
@@ -110,14 +145,34 @@ document.addEventListener("DOMContentLoaded", () => {
     // 💾 GUARDAR
     // ========================
     btnSave?.addEventListener("click", () => {
+
+        if (uNombreUsuario.value.trim() === "") {
+            alert("Debes ingresar el nombre de usuario.");
+            return;
+        }
+        if (uNombreUsuario.value.trim().length > 15) {
+            alert("El nombre de usuario no puede exceder 15 caracteres.");
+            return;
+        }
+
+        // 🆕 Resolver firma: nueva si dibujó, previa si está editando, o null
+        let firmaData = null;
+        if (firmaPad && !firmaPad.isEmpty()) {
+            firmaData = firmaPad.toDataURL("image/png");
+        } else if (modo === "edit" && firmaPrevia) {
+            firmaData = firmaPrevia;
+        }
+
         const fd = new FormData();
 
         fd.append("nombres", uNombre.value.trim());
         fd.append("apellidos", uApellidos.value.trim());
-        fd.append("correo", uEmail.value.trim());
+        fd.append("nombre_usuario", uNombreUsuario.value.trim());
         fd.append("numero", uNumero.value.trim());
         fd.append("id_rol", uRol.value);
         fd.append("activo", uActivo.value);
+
+        if (firmaData) fd.append("firma", firmaData);
 
         // contraseña opcional
         if (uPassword && uPassword.value.trim() !== "") {
