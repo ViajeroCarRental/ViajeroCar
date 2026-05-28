@@ -22,9 +22,9 @@
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <div class="buscador-flotilla mb-0">
     <i class="fas fa-search icono-buscar"></i>
-    <input 
-      type="text" 
-      id="filtroCarroceria" 
+    <input
+      type="text"
+      id="filtroCarroceria"
       placeholder="Buscar por placa, modelo, marca, zona o taller...">
   </div>
 
@@ -72,6 +72,7 @@
                         data-taller="{{ $c->taller }}"
                         data-costo="{{ $c->costo_estimado }}"
                         data-estatus="{{ $c->estatus }}"
+                        data-tiene-foto="{{ $c->tiene_foto }}"
                         data-bs-toggle="modal" data-bs-target="#modalEditarReporte">
                   <i class="bi bi-pencil-square"></i>
                 </button>
@@ -94,7 +95,7 @@
         <h5 class="modal-title">Nuevo reporte de carrocería</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-      <form action="{{ route('carroceria.store') }}" method="POST">
+      <form action="{{ route('carroceria.store') }}" method="POST" id="formNuevoReporte" enctype="multipart/form-data">
         @csrf
         <div class="modal-body">
           <div class="row g-3">
@@ -151,6 +152,22 @@
               </select>
             </div>
 
+            <!-- 🆕 IMAGEN DEL DAÑO -->
+            <div class="col-12">
+                <label class="form-label">Foto del daño (opcional)</label>
+                <input type="file"
+                       name="foto_carroceria"
+                       id="nuevoFoto"
+                       class="form-control"
+                       accept="image/jpeg,image/png,image/webp">
+                <div class="form-text">Se comprime automáticamente para ahorrar espacio.</div>
+
+                <div id="nuevoPreviewWrap" class="mt-2" style="display:none;">
+                    <img id="nuevoPreview" src="" alt="Preview"
+                         style="max-width:200px;max-height:150px;border:1px solid #ddd;border-radius:6px;">
+                </div>
+            </div>
+
           </div>
         </div>
         <div class="modal-footer">
@@ -170,7 +187,7 @@
         <h5 class="modal-title">Editar reporte de carrocería</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-      <form id="formEditarReporte" action="{{ route('carroceria.update', 0) }}" method="POST">
+      <form id="formEditarReporte" action="{{ route('carroceria.update', 0) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
         <div class="modal-body">
@@ -208,6 +225,32 @@
                 <option value="Terminado">Terminado</option>
               </select>
             </div>
+
+            <!-- 🆕 FOTO ACTUAL + REEMPLAZAR -->
+            <div class="col-12">
+                <label class="form-label">Foto actual</label>
+                <div id="edit_foto_actual_wrap" class="mb-2" style="display:none;">
+                    <img id="edit_foto_actual" src="" alt="Foto actual"
+                         style="max-width:200px;max-height:150px;border:1px solid #ddd;border-radius:6px;">
+                </div>
+                <div id="edit_sin_foto" class="text-muted mb-2" style="display:none;">
+                    No hay foto cargada para este reporte.
+                </div>
+
+                <label class="form-label mt-2">Reemplazar foto (opcional)</label>
+                <input type="file"
+                       name="foto_carroceria"
+                       id="editFoto"
+                       class="form-control"
+                       accept="image/jpeg,image/png,image/webp">
+                <div class="form-text">Si subes una nueva, sobreescribe la actual.</div>
+
+                <div id="editPreviewWrap" class="mt-2" style="display:none;">
+                    <img id="editPreview" src="" alt="Preview"
+                         style="max-width:200px;max-height:150px;border:1px solid #ddd;border-radius:6px;">
+                </div>
+            </div>
+
           </div>
         </div>
         <div class="modal-footer">
@@ -314,6 +357,27 @@
 
       const form = document.getElementById('formEditarReporte');
       form.action = `{{ url('/admin/carroceria/update') }}/${id}`;
+
+      // 🆕 Mostrar foto actual si existe
+        const tieneFoto = btn.dataset.tieneFoto === "1";
+        const wrapFotoActual = document.getElementById('edit_foto_actual_wrap');
+        const imgFotoActual  = document.getElementById('edit_foto_actual');
+        const sinFoto        = document.getElementById('edit_sin_foto');
+
+        if (tieneFoto) {
+            // cache-buster con timestamp para que actualice si se cambió
+            imgFotoActual.src = `{{ url('/admin/carroceria') }}/${id}/foto?t=${Date.now()}`;
+            wrapFotoActual.style.display = "block";
+            sinFoto.style.display = "none";
+        } else {
+            wrapFotoActual.style.display = "none";
+            sinFoto.style.display = "block";
+        }
+
+        // Limpiar el input file y el preview previos
+        document.getElementById('editFoto').value = "";
+        document.getElementById('editPreviewWrap').style.display = "none";
+
     });
   });
 
@@ -324,5 +388,97 @@
     const modalNuevo = bootstrap.Modal.getInstance(nuevo);
     if (modalNuevo) modalNuevo.show();
   });
+
+
+
+  // ==========================================================
+// 📦 COMPRIMIR IMAGEN
+// ==========================================================
+async function comprimirImagen(file, maxWidth = 1200, quality = 0.7) {
+    if (!file || !file.type || !file.type.startsWith("image/")) return file;
+
+    return new Promise((resolve) => {
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = (e) => { img.src = e.target.result; };
+        img.onerror = () => resolve(file);
+        img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const scale = Math.min(maxWidth / img.width, 1);
+            canvas.width  = img.width * scale;
+            canvas.height = img.height * scale;
+            canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob((blob) => {
+                if (!blob) return resolve(file);
+                const newName = (file.name || "imagen").replace(/\.\w+$/, ".jpg");
+                resolve(new File([blob], newName, { type: "image/jpeg" }));
+            }, "image/jpeg", quality);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// ==========================================================
+// 🖼️ PREVIEW al seleccionar imagen
+// ==========================================================
+function setupPreview(inputId, previewId, wrapId) {
+    const input  = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+    const wrap   = document.getElementById(wrapId);
+
+    if (!input || !preview || !wrap) return;
+
+    input.addEventListener("change", () => {
+        const file = input.files[0];
+        if (!file || !file.type.startsWith("image/")) {
+            wrap.style.display = "none";
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            wrap.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+setupPreview("nuevoFoto", "nuevoPreview", "nuevoPreviewWrap");
+setupPreview("editFoto",  "editPreview",  "editPreviewWrap");
+
+
+// ==========================================================
+// 💾 Comprimir antes de enviar (nuevo y editar)
+// ==========================================================
+async function interceptarSubmit(formId, inputFotoId) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
+        const input = document.getElementById(inputFotoId);
+        if (!input || !input.files || !input.files[0]) return; // sin imagen, deja pasar
+
+        e.preventDefault();
+
+        const original = input.files[0];
+        let archivoFinal = original;
+
+        if (original.type.startsWith("image/") && original.size > 500 * 1024) {
+            archivoFinal = await comprimirImagen(original);
+        }
+
+        // Reemplaza el archivo en el input
+        const dt = new DataTransfer();
+        dt.items.add(archivoFinal);
+        input.files = dt.files;
+
+        // Reenvía el form ya con la imagen comprimida
+        form.submit();
+    });
+}
+
+interceptarSubmit("formNuevoReporte",  "nuevoFoto");
+interceptarSubmit("formEditarReporte", "editFoto")
 </script>
 @endsection

@@ -18,6 +18,13 @@ class AdicionalesController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge([
+        'nombre'      => mb_strtoupper(trim($request->nombre), 'UTF-8'),
+        'descripcion' => $request->descripcion
+            ? mb_strtoupper(trim($request->descripcion), 'UTF-8')
+            : null,
+        ]);
+
         $request->validate([
             'nombre'        => 'required|max:120|unique:servicios,nombre',
             'descripcion'   => 'nullable|max:255',

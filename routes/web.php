@@ -42,6 +42,7 @@ use App\Http\Controllers\DropoffController;
 use App\Http\Controllers\AdicionalesController;
 use App\Http\Controllers\DepositoController;
 use App\Http\Controllers\OficinaController;
+use App\Http\Controllers\FlotillaStatusController;
 
 //rutas vistas Usuario
 
@@ -346,6 +347,17 @@ Route::get('/admin/rfc', [App\Http\Controllers\controladorVistasAdmin::class, 'R
 Route::get('/admin/facturar', [App\Http\Controllers\controladorVistasAdmin::class, 'Facturar'])->name('rutaFacturar');
 
 
+//Status del vehiculo
+Route::prefix('ventas')->group(function () {
+
+    Route::get('/flotilla-status', [FlotillaStatusController::class, 'index'])->name('rutaflotillastatus');
+
+    Route::get('/flotilla-status/list', [FlotillaStatusController::class, 'list']);
+
+    Route::put('/flotilla-status/{id}', [FlotillaStatusController::class, 'updateEstatus'])
+    ->name('rutaflotillastatus.update');
+});
+
 
 // 🚗 Rutas de Flotilla (Administrador)
 // 🔹 Vista principal de la flotilla
@@ -391,7 +403,8 @@ Route::post('/admin/carroceria/store', [CarroceriaController::class, 'store'])
 Route::put('/admin/carroceria/update/{id}', [CarroceriaController::class, 'update'])
     ->name('carroceria.update');
 
-
+Route::get('/admin/carroceria/{id}/foto', [CarroceriaController::class, 'foto'])
+    ->name('carroceria.foto');
 
 
 // === GASTOS ===

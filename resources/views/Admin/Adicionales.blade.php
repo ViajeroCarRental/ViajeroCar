@@ -190,13 +190,13 @@
       <option value="0">No</option>
     </select>
 
-    <label class="label">Acceso Usuario</label>
+    <label class="label">Permitir en pagina web</label>
     <select class="input" id="e_usuario" name="usuario" required>
       <option value="1">Permitido</option>
       <option value="0">No permitido</option>
     </select>
 
-    <label class="label">Acceso Administrador</label>
+    <label class="label">Permitir en panel</label>
     <select class="input" id="e_administrador" name="administrador" required>
       <option value="1">Permitido</option>
       <option value="0">No permitido</option>
