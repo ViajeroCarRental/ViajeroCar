@@ -3886,7 +3886,7 @@ span.flatpickr-weekday {
 }
 
 .rv2-price-block {
-  background: #e0f2fe;
+  background: #fef2f2;
   border-radius: 16px;
   padding: 16px;
   margin-bottom: 16px;
@@ -3895,7 +3895,7 @@ span.flatpickr-weekday {
 .rv2-price-title {
   font-size: 11px;
   font-weight: 800;
-  color: #68bfc7;
+  color: #43a047;
   text-transform: uppercase;
   margin-bottom: 8px;
 }
@@ -4020,7 +4020,7 @@ span.flatpickr-weekday {
 
 .rv2-grand-total strong {
   font-size: 22px;
-  color: #68bfc7;
+  color: #43a047;
 }
 
 .rv2-location-section {
@@ -4050,7 +4050,7 @@ span.flatpickr-weekday {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #68bfc7, #5f95db, #68bfc7);
+  background: linear-gradient(90deg, #b22222, #ff6b6b, #b22222);
 }
 
 .rv2-location-col:hover {
@@ -4062,7 +4062,7 @@ span.flatpickr-weekday {
 .rv2-location-label {
   font-size: 10px;
   font-weight: 800;
-  color: #68bfc7 !important;
+  color: #b22222 !important;
   text-transform: uppercase;
   letter-spacing: 1.5px;
   margin-bottom: 14px;

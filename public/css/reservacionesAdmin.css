@@ -1757,7 +1757,7 @@ div[style*="overflow-x: auto"] {
 }
 
 #proteccionPop .pack-card .desc-list li::before {
-  color: #16a34a !important;
+  color: #3ddc84 !important;
 }
 
 #proteccionPop .pack-card .precio {
@@ -2879,14 +2879,12 @@ span.flatpickr-weekday {
 /* ============================================
    COLUMNA 3 - VERSIÓN FINAL
    ============================================ */
-
 .sg-col-submit-admin {
     flex: 0.35 !important;
     min-width: 110px !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: center !important;
-    position: relative;
+    margin-top: 42px !important; /* CORREGIDO: Empuja el botón exactamente a la altura de los otros inputs (32px de título + 10px de margen) */
 }
 
 .sg-col-submit-admin::before {
@@ -2906,7 +2904,7 @@ span.flatpickr-weekday {
     justify-content: center !important;
     gap: 8px;
     padding: 6px 12px;
-    background: rgba(34, 197, 94, 0.12);
+    background: rgba(167, 243, 208, 0.35) !important;
     border: 1px solid rgba(34, 197, 94, 0.25);
     border-radius: 40px;
     font-size: 12px;

@@ -175,11 +175,6 @@
             ========================================= --}}
                        <div class="sg-col-submit-admin">
                 <div class="actions-admin">
-                    <div class="days-pill-admin">
-                        <i class="fa-regular fa-clock"></i>
-                        <span id="diasTxt">0</span> día(s)
-                    </div>
-
                     <button type="button" id="btnBuscarReservacion" class="btn-buscar-admin">
                         <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
                     </button>
@@ -363,18 +358,20 @@
             </div>
 
             <div class="svc-fields" id="dropoffFields" style="display: none;">
-              <div class="svc-field">
-                <label class="svc-label">Ubicación de devolución</label>
-                <select id="dropUbicacion" class="input">
-                  <option value="">Seleccione...</option>
-                  @foreach($ubicaciones as $u)
-                    <option value="{{ $u->id_ubicacion }}" data-km="{{ $u->km ?? 0 }}">
-                      {{ $u->estado }} - {{ $u->destino }} ({{ $u->km ?? 0 }} km)
-                    </option>
-                  @endforeach
-                  <option value="0">Dirección personalizada</option>
-                </select>
-              </div>
+    <div class="svc-field">
+        <label class="svc-label">Ubicación de devolución</label>
+        <select id="dropUbicacion" class="input">
+            <option value="">Seleccione...</option>
+            @foreach($ubicaciones as $u)
+                <option value="{{ $u->id_ubicacion }}"
+                        data-km="{{ $u->km ?? 0 }}"
+                        data-sucursal-id="{{ $u->id_sucursal ?? '' }}">
+                    {{ $u->estado }} - {{ $u->destino }} ({{ $u->km ?? 0 }} km)
+                </option>
+            @endforeach
+            <option value="0">Dirección personalizada</option>
+        </select>
+    </div>
 
               <div class="svc-field" id="dropGroupDireccion" style="display: none;">
                 <label class="svc-label">Dirección</label>
@@ -1100,7 +1097,7 @@
                        style="cursor:pointer;">
                     <div class="body">
                         <div class="title-wrapper">
-                            <h4>{{ trim(explode('(', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre))[0]) }}</h4>
+                           <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
                             <div class="info-icon-container">
                                 <span class="info-icon">i</span>
                                 <div class="tooltip-text">
