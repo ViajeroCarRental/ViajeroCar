@@ -13,7 +13,7 @@ class SeguroPaqueteController extends Controller
     public function index()
     {
         $categorias = DB::table('categorias_carros')->orderBy('orden', 'asc')->get();
-        
+
         // 🟢 AQUÍ ESTÁ LA MAGIA: Traemos los seguros individuales (protecciones) para los checkboxes
         $protecciones = DB::table('seguro_individuales')->where('activo', 1)->orderBy('nombre', 'asc')->get();
 
@@ -43,7 +43,7 @@ class SeguroPaqueteController extends Controller
         $depositos = DB::table('depositos')
             ->where('id_paquete', $id)
             ->get()
-            ->pluck('monto', 'id_categoria'); 
+            ->pluck('monto', 'id_categoria');
 
         // 🟢 Buscamos qué protecciones ya tiene seleccionadas este paquete
         $proteccionesAsignadas = DB::table('paquete_seguro_individual')
@@ -51,7 +51,7 @@ class SeguroPaqueteController extends Controller
             ->pluck('id_individual');
 
         return response()->json([
-            'ok' => true, 
+            'ok' => true,
             'data' => $paquete,
             'depositos' => $depositos,
             'protecciones' => $proteccionesAsignadas // Lo mandamos al JS
@@ -66,8 +66,8 @@ class SeguroPaqueteController extends Controller
         DB::beginTransaction();
         try {
             $id_paquete = DB::table('seguro_paquete')->insertGetId([
-                'nombre'             => $request->nombre,
-                'descripcion'        => $request->descripcion,
+                'nombre'             => mb_strtoupper($request->nombre, 'UTF-8'),
+                'descripcion'        => mb_strtoupper($request->descripcion, 'UTF-8'),
                 'precio_por_dia'     => $request->precio_por_dia,
                 'deducible_colision' => $request->deducible_colision ?? 0.00,
                 'deducible_robo'     => $request->deducible_robo ?? 0.00,
@@ -78,10 +78,14 @@ class SeguroPaqueteController extends Controller
             ]);
 
             $deducibleTotal = ($request->deducible_colision ?? 0) + ($request->deducible_robo ?? 0);
-            
+
             // Guardar porcentajes de los autos
             foreach ($request->porcentajes ?? [] as $id_categoria => $porcentaje) {
-                $montoGarantia = $deducibleTotal * ($porcentaje / 100);
+                $categoria = DB::table('categorias_carros')->where('id_categoria', $id_categoria)->first();
+                $garantiaBase = $categoria->garantia_base ?? 0;
+
+                $montoGarantia = $garantiaBase * ($porcentaje / 100);
+
                 DB::table('depositos')->updateOrInsert(
                     ['id_categoria' => $id_categoria, 'id_paquete' => $id_paquete],
                     ['monto' => $montoGarantia, 'created_at' => now(), 'updated_at' => now()]
@@ -98,7 +102,6 @@ class SeguroPaqueteController extends Controller
 
             DB::commit();
             return response()->json(['ok' => true, 'msg' => 'Paquete guardado con éxito']);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['ok' => false, 'msg' => $e->getMessage()]);
@@ -115,8 +118,8 @@ class SeguroPaqueteController extends Controller
             DB::table('seguro_paquete')
                 ->where('id_paquete', $id)
                 ->update([
-                    'nombre'             => $request->nombre,
-                    'descripcion'        => $request->descripcion,
+                    'nombre'             => mb_strtoupper($request->nombre, 'UTF-8'),
+                    'descripcion'        => mb_strtoupper($request->descripcion, 'UTF-8'),
                     'precio_por_dia'     => $request->precio_por_dia,
                     'deducible_colision' => $request->deducible_colision ?? 0.00,
                     'deducible_robo'     => $request->deducible_robo ?? 0.00,
@@ -126,9 +129,12 @@ class SeguroPaqueteController extends Controller
                 ]);
 
             $deducibleTotal = ($request->deducible_colision ?? 0) + ($request->deducible_robo ?? 0);
-            
+
             foreach ($request->porcentajes ?? [] as $id_categoria => $porcentaje) {
-                $montoGarantia = $deducibleTotal * ($porcentaje / 100);
+                $categoria = DB::table('categorias_carros')->where('id_categoria', $id_categoria)->first();
+                $garantiaBase = $categoria->garantia_base ?? 0;
+                $montoGarantia = $garantiaBase * ($porcentaje / 100);
+
                 DB::table('depositos')->updateOrInsert(
                     ['id_categoria' => $id_categoria, 'id_paquete' => $id],
                     ['monto' => $montoGarantia, 'updated_at' => now()]
@@ -146,7 +152,6 @@ class SeguroPaqueteController extends Controller
 
             DB::commit();
             return response()->json(['ok' => true, 'msg' => 'Paquete actualizado']);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['ok' => false, 'msg' => $e->getMessage()]);

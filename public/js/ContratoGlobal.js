@@ -90,14 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Modal de vehículos ─────────────────────────────────────────────
 
     window.abrirModalVehiculos = async () => {
-        const modal      = window.$('#modalVehiculos');
-        const idCategoria = document.getElementById('contratoInicial')?.dataset.idCategoria;
-
-        if (!idCategoria) {
-            console.error('❌ No se encontró data-id-categoria');
-            window.alertify?.error('No se pudo identificar la categoría de la reservación.');
-            return;
-        }
+        const modal = window.$('#modalVehiculos');
 
         if (modal) {
             modal.style.display = 'flex';
@@ -105,7 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.style.overflow = 'hidden';
         }
 
-        await window.cargarVehiculosCategoriaModal(idCategoria);
+        // Cargamos 'todos' los vehículos sin importar la categoría inicial
+        await window.cargarVehiculosCategoriaModal('todos');
     };
 
     window.cerrarModalVehiculos = () => {
@@ -178,7 +172,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const cIni = document.getElementById('contratoInicial');
 
             if (r.vehiculo) {
-                if (cIni) cIni.dataset.idVehiculo = r.vehiculo.id_vehiculo || '';
+                if (cIni) {
+                    cIni.dataset.idVehiculo = r.vehiculo.id_vehiculo || '';
+                    // Priorizamos el ID que viene del servidor
+                    if (r.vehiculo.id_categoria) {
+                        cIni.dataset.idCategoria = r.vehiculo.id_categoria;
+                    }
+                }
 
                 setTxt('#detModelo',       r.vehiculo.modelo);
                 setTxt('#detMarca',        r.vehiculo.marca);
@@ -196,9 +196,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTxt('#detNombreVehiculoStep1', nombre);
                 setTxt('#resumenCategoriaCompacto', r.vehiculo.categoria);
 
-                const codigoCat = r.vehiculo.codigo_categoria || cIni?.dataset?.idCategoria || 'C';
+                const codigoCat = r.vehiculo.codigo_categoria || 'C';
                 setTxt('#detCategoriaCodigoStep1', codigoCat);
                 setTxt('#detCategoriaNombreStep1', (r.vehiculo.categoria || '').toUpperCase());
+
+                // Actualizar selección en el modal de categorías si existe
+                const modalCat = document.getElementById('contenedorCategoriasJS');
+                if (modalCat) {
+                    modalCat.querySelectorAll(".card-categoria").forEach(c => {
+                        const active = (c.dataset.idCategoria == (r.vehiculo.id_categoria || cIni?.dataset.idCategoria));
+                        c.classList.toggle("activa", active);
+                        const badge = c.querySelector(".cat-badge-actual");
+                        if (badge && !active) badge.remove();
+                        if (active && !badge) {
+                            const newBadge = document.createElement("span");
+                            newBadge.className = "cat-badge-actual";
+                            newBadge.textContent = "Actual";
+                            c.appendChild(newBadge);
+                        }
+                    });
+                }
 
                 // Imagen: usa render de backend o imagen local por categoría
                 const imgSrc = r.vehiculo.imagen_render?.includes('iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAQAAADwXcor')
@@ -427,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<tr style="${rowStyle}">
                 <td>${i + 1}</td>
                 <td><b>${v.placa || 'Sin Placa'}</b></td>
-                <td>${v.categoria || '—'}</td>
+                <td>${v.categoria_nombre || v.categoria || '—'}</td>
                 <td>${v.nombre_publico || v.marca || '—'}</td>
                 <td>${v.modelo || '—'}</td>
                 <td>${v.transmision || '—'}</td>
@@ -457,17 +474,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Filtros del modal de vehículos
-    ['filtroPlacas', 'filtroColor', 'filtroModelo'].forEach(id => {
+    ['filtroPlacas', 'filtroColor', 'filtroModelo', 'filtroCategoria'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', () => {
             const p = window.$('#filtroPlacas')?.value.toLowerCase() || '';
             const c = window.$('#filtroColor')?.value.toLowerCase()  || '';
             const m = window.$('#filtroModelo')?.value.toLowerCase() || '';
+            const cat = window.$('#filtroCategoria')?.value.toLowerCase() || '';
 
             window.renderVehiculosEnModal(
                 window.listaVehiculosOriginal.filter(v =>
                     (v.placa  ?? '').toLowerCase().includes(p) &&
                     (v.color  ?? '').toLowerCase().includes(c) &&
-                    (v.modelo ?? '').toLowerCase().includes(m)
+                    (v.modelo ?? '').toLowerCase().includes(m) &&
+                    ((v.categoria_nombre ?? v.categoria ?? '').toLowerCase().includes(cat))
                 )
             );
         });

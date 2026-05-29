@@ -45,8 +45,8 @@ class OficinaController extends Controller
             // 2. Insertamos a la Base de Datos
             DB::table('sucursales')->insert([
                 'id_ciudad' => $request->id_ciudad,
-                'nombre' => $request->nombre,
-                'direccion' => $request->direccion,
+                'nombre' => mb_strtoupper($request->nombre, 'UTF-8'),
+                'direccion' => mb_strtoupper($request->direccion, 'UTF-8'),
                 'horario_json' => json_encode(['horario' => $request->horario]),
                 'telefono' => $request->telefono,
                 'activo' => true,
@@ -63,6 +63,55 @@ class OficinaController extends Controller
             return redirect()->back()->withInput()->with('error', 'Error en la base de datos: ' . $e->getMessage());
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('error', 'Ocurrió un problema al guardar: ' . $e->getMessage());
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'id_ciudad' => 'required|integer|exists:ciudades,id_ciudad',
+            'nombre'    => 'required|string|max:120',
+            'direccion' => 'required|string|max:255',
+            'horario'   => 'required|string',
+            'telefono'  => 'nullable|string|max:20'
+        ]);
+
+        try {
+            DB::table('sucursales')
+                ->where('id_sucursal', $id)
+                ->update([
+                    'id_ciudad'    => $request->id_ciudad,
+                    'nombre'       => mb_strtoupper($request->nombre, 'UTF-8'),
+                    'direccion'    => mb_strtoupper($request->direccion, 'UTF-8'),
+                    'horario_json' => json_encode(['horario' => $request->horario]),
+                    'telefono'     => $request->telefono,
+                    'updated_at'   => now()
+                ]);
+
+            return redirect()->back()->with('success', 'La sucursal "' . $request->nombre . '" fue actualizada correctamente.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() == 23000) {
+                return redirect()->back()->with('error', 'Ya existe una sucursal con ese nombre en la ciudad seleccionada.');
+            }
+            return redirect()->back()->with('error', 'Error en la base de datos: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Ocurrió un problema al actualizar: ' . $e->getMessage());
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            DB::table('sucursales')->where('id_sucursal', $id)->delete();
+            return redirect()->back()->with('success', 'Sucursal eliminada correctamente.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Si tiene relaciones (FK) que impiden borrarla
+            if ($e->getCode() == 23000) {
+                return redirect()->back()->with('error', 'No se puede eliminar: la sucursal tiene registros vinculados.');
+            }
+            return redirect()->back()->with('error', 'Error al eliminar: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Ocurrió un problema al eliminar: ' . $e->getMessage());
         }
     }
 

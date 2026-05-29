@@ -20,11 +20,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     tbody.innerHTML += `
                         <tr>
-                            <td class="mono">${seg.orden}</td>
                             <td><strong>${seg.nombre}</strong></td>
                             <td class="mono">$${precio}</td>
-                            <td class="mono">$${colision}</td>
-                            <td class="mono">$${robo}</td>
+                            <td class="mono">${colision}%</td>
+                            <td class="mono">${robo}%</td>
                             <td>${seg.activo ? "Sí" : "No"}</td>
                             <td>
                                 <button class="btn btn-sm btn-warning" onclick="editar(${seg.id_paquete})">Editar</button>
@@ -51,24 +50,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("editNombre").value = d.nombre;
                 document.getElementById("editDescripcion").value = d.descripcion;
                 document.getElementById("editPrecio").value = d.precio_por_dia;
-                document.getElementById("editOrden").value = d.orden;
                 document.getElementById("editDeducibleColision").value = d.deducible_colision;
                 document.getElementById("editDeducibleRobo").value = d.deducible_robo;
                 document.getElementById("editActivo").checked = d.activo == 1;
-
-                // Calculamos el deducible total para revertir el porcentaje visualmente
-                const colision = parseFloat(d.deducible_colision) || 0;
-                const robo = parseFloat(d.deducible_robo) || 0;
-                const totalDeducible = colision + robo;
 
                 // Pintamos los porcentajes correspondientes a cada auto
                 document.querySelectorAll(".edit-porcentaje").forEach(input => {
                     const catId = input.dataset.id;
                     const montoGarantia = parseFloat(depositos[catId]) || 0;
+                    const garantiaBase = parseFloat(input.dataset.base) || 0;
 
-                    if (totalDeducible > 0 && montoGarantia > 0) {
-                        // Revertimos la ecuación: (Monto / Total Deducible) * 100
-                        input.value = Math.round((montoGarantia / totalDeducible) * 100);
+                    if (garantiaBase > 0 && montoGarantia > 0) {
+                        // Revertimos: (Monto guardado / Garantía base) * 100
+                        input.value = Math.round((montoGarantia / garantiaBase) * 100);
                     } else {
                         input.value = 0;
                     }
@@ -109,7 +103,10 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("newNombre").value = "";
         document.getElementById("newDescripcion").value = "";
         document.getElementById("newPrecio").value = "0.00";
-        document.getElementById("newOrden").value = "0";
+        
+        const ordenEl = document.getElementById("newOrden");
+        if (ordenEl) ordenEl.value = "0";
+
         document.getElementById("newDeducibleColision").value = "0.00";
         document.getElementById("newDeducibleRobo").value = "0.00";
         document.getElementById("newActivo").checked = true;
@@ -136,6 +133,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // 🟢 Recolectar las protecciones marcadas
         let proteccionesArr = Array.from(document.querySelectorAll(".new-prot:checked")).map(chk => chk.value);
 
+        const ordenEl = document.getElementById("newOrden");
+
         fetch("/admin/seguros", {
             method: "POST",
             headers: {
@@ -146,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 nombre: document.getElementById("newNombre").value,
                 descripcion: document.getElementById("newDescripcion").value,
                 precio_por_dia: document.getElementById("newPrecio").value,
-                orden: document.getElementById("newOrden").value,
+                orden: ordenEl ? ordenEl.value : 0,
                 deducible_colision: document.getElementById("newDeducibleColision").value,
                 deducible_robo: document.getElementById("newDeducibleRobo").value,
                 activo: document.getElementById("newActivo").checked ? 1 : 0,
@@ -180,6 +179,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // 🟢 Recolectar las protecciones marcadas en edición
         let proteccionesArr = Array.from(document.querySelectorAll(".edit-prot:checked")).map(chk => chk.value);
 
+        const ordenEl = document.getElementById("editOrden");
+
         fetch(`/admin/seguros/${id}`, {
             method: "PUT",
             headers: {
@@ -190,7 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 nombre: document.getElementById("editNombre").value,
                 descripcion: document.getElementById("editDescripcion").value,
                 precio_por_dia: document.getElementById("editPrecio").value,
-                orden: document.getElementById("editOrden").value,
+                orden: ordenEl ? ordenEl.value : 0,
                 deducible_colision: document.getElementById("editDeducibleColision").value,
                 deducible_robo: document.getElementById("editDeducibleRobo").value,
                 activo: document.getElementById("editActivo").checked ? 1 : 0,
