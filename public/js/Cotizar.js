@@ -1,71 +1,5 @@
 (function() {
     "use strict";
-
-/* =========================================
-   01 FUNCIÓN DE ALERTA CON SWEETALERT2
-========================================= */
-    function mostrarToast(mensaje, tipo = 'warning') {
-        let iconColor = '#f59e0b';
-        let bgColor = '#fffbeb';
-        let borderColor = '#f59e0b';
-
-        if (tipo === 'error') {
-            iconColor = '#ef4444';
-            bgColor = '#fef2f2';
-            borderColor = '#ef4444';
-        } else if (tipo === 'success') {
-            iconColor = '#10b981';
-            bgColor = '#ecfdf5';
-            borderColor = '#10b981';
-        } else if (tipo === 'info') {
-            iconColor = '#3b82f6';
-            bgColor = '#eff6ff';
-            borderColor = '#3b82f6';
-        }
-
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'center',
-            showConfirmButton: false,
-            timer: 2500,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer);
-                toast.addEventListener('mouseleave', Swal.resumeTimer);
-            },
-            customClass: {
-                popup: 'custom-toast-center'
-            }
-        });
-
-        if (!document.querySelector('#toast-center-style')) {
-            const style = document.createElement('style');
-            style.id = 'toast-center-style';
-            style.textContent = `
-                .custom-toast-center {
-                    border-radius: 12px !important;
-                    border-left: 4px solid ${borderColor} !important;
-                    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1) !important;
-                    font-weight: 500 !important;
-                    min-width: 300px !important;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        let icon = 'warning';
-        if (tipo === 'error') icon = 'error';
-        if (tipo === 'success') icon = 'success';
-        if (tipo === 'info') icon = 'info';
-
-        Toast.fire({
-            icon: icon,
-            title: mensaje,
-            background: bgColor,
-            iconColor: iconColor
-        });
-    }
-
 /* =========================================
    02 FUNCIONES DE VALIDACIÓN VISUAL
 ========================================= */
@@ -456,117 +390,205 @@
         return Math.max(1, Number.isFinite(diff) ? diff : 0);
     }
 
-    function syncDays() {
-        state.days = computeDays();
+   function syncDays() {
+    state.days = computeDays();
 
-        const diasTxt = qs("#diasTxt");
-        if (diasTxt) diasTxt.textContent = String(state.days || 0);
+    const diasTxt = qs("#diasTxt");
+    if (diasTxt) diasTxt.textContent = String(state.days || 0);
 
-        refreshCategoriaPreview();
-        repaintCategoriaModalEstimados();
+    // ✅ ACTUALIZAR PASTILLA DE LA NAVBAR
+    const diasNavbar = document.getElementById('diasNavbarCount');
+    if (diasNavbar) diasNavbar.textContent = String(state.days || 0);
 
-        if (state.servicios.delivery) {
-            const els = getDeliveryEls();
-            if (els) computeDelivery(els);
-        }
-        if (state.servicios.dropoff) {
-            const els = getDropoffEls();
-            if (els) computeDropoff(els);
-        }
-        if (state.servicios.gasolina) computeGasolina();
+    // ✅ DISPARAR EVENTO PARA SINCronización adicional
+    document.dispatchEvent(new CustomEvent('diasActualizados', {
+        detail: { dias: state.days || 0 }
+    }));
 
-        refreshSummary();
-        syncTotalsHidden();
+    refreshCategoriaPreview();
+    repaintCategoriaModalEstimados();
 
-        console.log("📆 Días actualizados:", state.days);
+    if (state.servicios.delivery) {
+        const els = getDeliveryEls();
+        if (els) computeDelivery(els);
     }
+    if (state.servicios.dropoff) {
+        const els = getDropoffEls();
+        if (els) computeDropoff(els);
+    }
+    if (state.servicios.gasolina) computeGasolina();
 
+    refreshSummary();
+    syncTotalsHidden();
+
+    actualizarTotalBoton();
+    actualizarTotalNavbar();
+
+    console.log("📆 Días actualizados:", state.days);
+}
 /* =========================================
    07 CATEGORÍA
 ========================================= */
     function setCategoria(cat) {
-        state.categoria = cat;
+    state.categoria = cat;
 
-        const hid = qs("#categoria_id");
-        if (hid) hid.value = cat ? String(cat.id) : "";
-        const txt = qs("#catSelTxt");
-        const sub = qs("#catSelSub");
-        const rem = qs("#catRemove");
-        const mini = qs("#catMiniPreview");
-        if (!cat) {
-            if (txt) txt.textContent = "— Ninguna categoría —";
-            if (sub) sub.textContent = "Tarifa base por día y cálculo previo aparecerán aquí.";
-            if (rem) rem.style.display = "none";
-            if (mini) mini.style.display = "none";
-            const inputPrecioKm = qs("#deliveryPrecioKm");
-            if (inputPrecioKm) inputPrecioKm.value = "0";
-            syncTotalsHidden();
-            refreshSummary();
-            return;
-        }
-        if (txt) txt.textContent = cat.nombre;
-        if (sub) sub.textContent = `${money(cat.precio_dia)} / día · ${state.days || 0} día(s)`;
-        if (rem) rem.style.display = "";
-        refreshCategoriaPreview();
+    const hid = qs("#categoria_id");
+    if (hid) hid.value = cat ? String(cat.id) : "";
+    const txt = qs("#catSelTxt");
+    const sub = qs("#catSelSub");
+
+    if (!cat) {
+        if (txt) txt.textContent = "— Ninguna categoría —";
+        if (sub) sub.textContent = "Tarifa base por día y cálculo previo aparecerán aquí.";
         const inputPrecioKm = qs("#deliveryPrecioKm");
-        if (inputPrecioKm) inputPrecioKm.value = cat.precio_km || 0;
-        if (state.servicios.delivery) {
-            const els = getDeliveryEls();
-            if (els) computeDelivery(els);
-        }
-        if (state.servicios.dropoff) {
-            const els = getDropoffEls();
-            if (els) computeDropoff(els);
-        }
-        if (state.servicios.gasolina) computeGasolina();
+        if (inputPrecioKm) inputPrecioKm.value = "0";
+        const container = document.getElementById("categoriaContainer");
+        if (container) container.innerHTML = '';
+
         syncTotalsHidden();
         refreshSummary();
-        state.base_editable = null;
-
-        console.log("🚗 Categoría seleccionada:", cat);
-        console.log("💰 precio_km:", cat?.precio_km);
+        return;
     }
+
+    if (txt) txt.textContent = cat.nombre;
+    if (sub) sub.textContent = `${money(cat.precio_dia)} / día · ${state.days || 0} día(s)`;
+
+    refreshCategoriaPreview();
+
+    const inputPrecioKm = qs("#deliveryPrecioKm");
+    if (inputPrecioKm) inputPrecioKm.value = cat.precio_km || 0;
+
+    if (state.servicios.delivery) {
+        const els = getDeliveryEls();
+        if (els) computeDelivery(els);
+    }
+    if (state.servicios.dropoff) {
+        const els = getDropoffEls();
+        if (els) computeDropoff(els);
+    }
+    if (state.servicios.gasolina) computeGasolina();
+
+    syncTotalsHidden();
+    refreshSummary();
+    state.base_editable = null;
+
+    console.log("🚗 Categoría seleccionada:", cat);
+    console.log("💰 precio_km:", cat?.precio_km);
+}
+
 
     function refreshCategoriaPreview() {
-        const cat = state.categoria;
-        const mini = qs("#catMiniPreview");
-        if (!mini) return;
-        if (!cat) {
-            mini.style.display = "none";
-            return;
-        }
-        mini.style.display = "block";
-        const imgEl = document.getElementById("catMiniImg");
-        if (imgEl && cat.img) {
-            imgEl.src = cat.img;
-        } else if (imgEl) {
-            imgEl.src = "/img/Logotipo.png";
-        }
-        const n = document.getElementById("catMiniName");
-        const d = document.getElementById("catMiniDesc");
-        const rate = document.getElementById("catMiniRate");
-        const calc = document.getElementById("catMiniCalc");
-        if (n) n.textContent = cat.nombre || "—";
-        let descripcion = cat.desc || "";
-        if (!descripcion && cat.id) {
-            const descripciones = {
-                1: "Chevrolet Aveo o similar", 2: "Volkswagen Virtus o similar",
-                3: "Volkswagen Jetta o similar", 4: "Toyota Camry o similar",
-                5: "Jeep Renegade o similar", 6: "Volkswagen Taos o similar",
-                7: "Toyota Avanza o similar", 8: "Honda Odyssey o similar",
-                9: "Toyota Hiace o similar", 10: "Nissan Frontier o similar",
-                11: "Toyota Tacoma o similar"
-            };
-            descripcion = descripciones[cat.id] || "";
-        }
-        if (d) d.textContent = descripcion || "—";
-        if (rate) rate.textContent = `${money(cat.precio_dia).replace(" MXN", "")} MXN / día`;
-        const pre = Number(cat.precio_dia || 0) * Number(state.days || 0);
-        if (calc) calc.textContent = money(pre);
-        setTimeout(() => {
-            if (typeof initEditarCategoriaPreview === 'function') initEditarCategoriaPreview();
-        }, 100);
+    const cat = state.categoria;
+    const container = document.getElementById("categoriaContainer");
+
+    if (!container) return;
+    if (!cat) {
+        container.innerHTML = '';
+        return;
     }
+    const descripcionesPorId = {
+        1: "Chevrolet Aveo o similar",
+        2: "Volkswagen Virtus o similar",
+        3: "Volkswagen Jetta o similar",
+        4: "Toyota Camry o similar",
+        5: "Jeep Renegade o similar",
+        6: "Volkswagen Taos o similar",
+        7: "Toyota Avanza o similar",
+        8: "Honda Odyssey o similar",
+        9: "Toyota Hiace o similar",
+        10: "Nissan Frontier o similar",
+        11: "Toyota Tacoma o similar"
+    };
+
+    const descripcionAuto = cat.desc || descripcionesPorId[cat.id] || "";
+    container.innerHTML = `
+        <div class="preview-wrapper" style="display:block;">
+            <div class="mini-preview">
+                <div class="mini-container">
+                    <div class="mini-imagen">
+                        <img id="catMiniImg" src="${cat.img || '/img/Logotipo.png'}" alt="Auto">
+                    </div>
+                    <div class="mini-info">
+                        <div class="mini-header">
+                            <div class="mini-title" id="catMiniName">${escapeHtml(cat.nombre || '—')}</div>
+                            <button type="button" id="btnEditarCategoriaPreview" class="btn-edit-mini">
+                                <i class='bx bx-edit-alt'></i>
+                            </button>
+                        </div>
+                        <div class="mini-sub" id="catMiniDesc">${escapeHtml(descripcionAuto)}</div>
+                        <div class="mini-precios">
+                            <div class="precio-item">
+                                <div class="precio-label">TARIFA BASE</div>
+                                <div class="precio-valor" id="catMiniRate">${money(cat.precio_dia)} / día</div>
+                            </div>
+                            <div class="precio-item">
+                                <div class="precio-label">CÁLCULO PREVIO</div>
+                                <div class="precio-valor precio-rojo" id="catMiniCalc">${money(cat.precio_dia * state.days)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn gray" type="button" id="catRemove">✖</button>
+        </div>
+    `;
+
+const removeBtn = document.getElementById("catRemove");
+if (removeBtn) {
+    const newRemoveBtn = removeBtn.cloneNode(true);
+    removeBtn.parentNode.replaceChild(newRemoveBtn, removeBtn);
+    newRemoveBtn.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log("🗑️ Eliminando categoría (onclick)");
+        setCategoria(null);
+    };
+}
+    const editBtn = document.getElementById("btnEditarCategoriaPreview");
+    if (editBtn) {
+        const newEditBtn = editBtn.cloneNode(true);
+        editBtn.parentNode.replaceChild(newEditBtn, editBtn);
+        newEditBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (!state.categoria) return;
+            const rateContainer = document.getElementById("catMiniRate");
+            if (!rateContainer || rateContainer.querySelector('input')) return;
+            const precioActual = parseFloat(state.categoria.precio_dia || 0);
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.value = precioActual.toFixed(2);
+            input.min = 0;
+            input.step = 0.01;
+            Object.assign(input.style, {
+                width: '100px', padding: '4px 8px', border: '1px solid #2563eb',
+                borderRadius: '8px', fontWeight: '600', fontSize: '14px',
+                color: '#333', outline: 'none'
+            });
+            rateContainer.textContent = '';
+            rateContainer.appendChild(input);
+            input.focus();
+            input.select();
+            const guardar = () => {
+                let nuevoValor = parseFloat(input.value);
+                if (isNaN(nuevoValor) || nuevoValor < 0) nuevoValor = precioActual;
+                state.categoria.precio_dia = nuevoValor;
+                rateContainer.textContent = `${money(nuevoValor)} / día`;
+                const calcContainer = document.getElementById("catMiniCalc");
+                if (calcContainer) calcContainer.textContent = money(nuevoValor * state.days);
+                const sub = document.getElementById('catSelSub');
+                if (sub) sub.textContent = `${money(nuevoValor)} / día · ${state.days || 0} día(s)`;
+                if (window._cotizacionAPI) {
+                    window._cotizacionAPI.syncTotalsHidden();
+                    window._cotizacionAPI.refreshSummary();
+                }
+            };
+            input.addEventListener('blur', guardar);
+            input.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Enter') { ev.preventDefault(); input.blur(); }
+            });
+        });
+    }
+}
 
     function repaintCategoriaModalEstimados() {
         const dias = Number(state.days || 0);
@@ -1071,152 +1093,323 @@
         syncProteccionHidden();
         syncTotalsHidden();
         refreshSummary();
-    }
 
+    }
 /* =========================================
    10 PROTECCIONES INDIVIDUALES
 ========================================= */
-    function getGrupoLabelFromTrack(trackId) {
-        const map = {
-            insColisionTrack: "Colisión y robo",
-            insMedicosTrack: "Gastos médicos",
-            insCaminoTrack: "Asistencia para el camino",
-            insTercerosTrack: "Daños a terceros",
-            insAutoTrack: "Protecciones automáticas",
-        };
-        return map[trackId] || "";
+function getGrupoLabelFromTrack(trackId) {
+    const map = {
+        insColisionTrack: "Colisión y robo",
+        insMedicosTrack: "Gastos médicos",
+        insCaminoTrack: "Asistencia para el camino",
+        insTercerosTrack: "Daños a terceros",
+        insAutoTrack: "Protecciones automáticas",
+    };
+    return map[trackId] || "";
+}
+
+function toggleIndividualFromCard(card) {
+    if (!card) return;
+    if (state.proteccion) setProteccion(null);
+
+    const id = String(card.dataset.id || "");
+    const precio = Number(card.dataset.precio || 0);
+    const nombre = card.querySelector("h4")?.textContent?.trim() || "Seguro individual";
+    const desc = card.querySelector("p")?.textContent?.trim() || "";
+    const parentTrack = card.closest(".scroll-h")?.id || "";
+    const grupo = getGrupoLabelFromTrack(parentTrack);
+
+    console.log("📌 Tarjeta clickeada:", { id, nombre, grupo, parentTrack });
+
+    const esProteccionAutomatica = (grupo === "Protecciones automáticas");
+    const esDaniosTerceros = (grupo === "Daños a terceros");
+    const esLI = nombre.toUpperCase() === "LI" ||
+                 (nombre.toUpperCase().includes("LI") &&
+                  !nombre.toUpperCase().includes("EXT") &&
+                  !nombre.toUpperCase().includes("ALI"));
+    if (esLI) {
+        console.log("🔒 LI es fijo, no se puede desmarcar");
+        if (!state.individuales.has(id)) {
+            state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
+            repaintIndividualesUI();
+        }
+        ejecutarRepaintYRefresh();
+        return;
+    }
+    if (!grupo) {
+        const exists = state.individuales.has(id);
+        if (exists) state.individuales.delete(id);
+        else state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
+
+        verificarProteccionesAutomaticas();
+        ejecutarRepaintYRefresh();
+        return;
+    }
+    if (esDaniosTerceros) {
+        const yaSeleccionado = state.individuales.has(id);
+
+        if (yaSeleccionado) {
+            state.individuales.delete(id);
+            console.log("🔘 Deseleccionada de Daños a terceros:", nombre);
+        } else {
+            const elementosDaniosTerceros = [];
+            for (const [existingId, item] of state.individuales.entries()) {
+                if (item.grupo === "Daños a terceros" && existingId !== id) {
+                    const esLiExistente = item.nombre.toUpperCase() === "LI" ||
+                                          (item.nombre.toUpperCase().includes("LI") &&
+                                           !item.nombre.toUpperCase().includes("EXT") &&
+                                           !item.nombre.toUpperCase().includes("ALI"));
+                    if (!esLiExistente) {
+                        elementosDaniosTerceros.push(existingId);
+                    }
+                }
+            }
+            elementosDaniosTerceros.forEach(existingId => {
+                state.individuales.delete(existingId);
+                console.log(`🔄 Reemplazando: se quitó el anterior`);
+            });
+            state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
+            console.log("✅ Agregado nuevo adicional:", nombre);
+        }
+        verificarProteccionesAutomaticas();
+        ejecutarRepaintYRefresh();
+        return;
+    }
+    let existingIdInGroup = null;
+    for (const [existingId, item] of state.individuales.entries()) {
+        if (item.grupo === grupo && existingId !== id) {
+            existingIdInGroup = existingId;
+            break;
+        }
     }
 
-    function toggleIndividualFromCard(card) {
-        if (!card) return;
-        if (state.proteccion) setProteccion(null);
+    if (existingIdInGroup) {
+        if (existingIdInGroup === id) {
+            state.individuales.delete(id);
+        } else {
+            state.individuales.delete(existingIdInGroup);
+            state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
+        }
+    } else {
+        state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
+    }
+    verificarProteccionesAutomaticas();
+    ejecutarRepaintYRefresh();
+}
+
+// --- FUNCIONES AUXILIARES ---
+
+function ejecutarRepaintYRefresh() {
+    syncIndividualesHidden();
+    repaintIndividualesUI();
+    syncTotalsHidden();
+    refreshSummary();
+    refreshProteccionUIHeader();
+}
+
+function verificarProteccionesAutomaticas() {
+    const tarjetasAutomaticas = document.querySelectorAll("#insAutoTrack .individual-item");
+    if (tarjetasAutomaticas.length === 0) return;
+    let otrasCategoriasActivas = 0;
+    for (const [_, item] of state.individuales.entries()) {
+        if (item.grupo && item.grupo !== "Protecciones automáticas") {
+            otrasCategoriasActivas++;
+        }
+    }
+    if (otrasCategoriasActivas > 0) {
+        tarjetasAutomaticas.forEach(card => {
+            const autoId = String(card.dataset.id || "");
+            if (!state.individuales.has(autoId)) {
+                const autoPrecio = Number(card.dataset.precio || 0);
+                const autoNombre = card.querySelector("h4")?.textContent?.trim() || "Protección automática";
+                const autoDesc = card.querySelector("p")?.textContent?.trim() || "";
+
+                state.individuales.set(autoId, {
+                    id: autoId,
+                    nombre: autoNombre,
+                    desc: autoDesc,
+                    precio: autoPrecio,
+                    charge: "por_dia",
+                    grupo: "Protecciones automáticas"
+                });
+            }
+        });
+    } else {
+        tarjetasAutomaticas.forEach(card => {
+            const autoId = String(card.dataset.id || "");
+            state.individuales.delete(autoId);
+        });
+    }
+}
+
+function repaintIndividualesUI() {
+    qsa(".individual-item").forEach((card) => {
+        const id = String(card.dataset.id || "");
+        const on = state.individuales.has(id);
+        card.classList.toggle("is-selected", on);
+        const sw = card.querySelector(".switch-individual");
+        if (sw) sw.classList.toggle("is-on", on);
+    });
+}
+
+function refreshProteccionUIHeader() {
+    const txt = qs("#proteSelTxt");
+    const sub = qs("#proteSelSub");
+    const rem = qs("#proteRemove");
+
+    const inds = Array.from(state.individuales.values());
+
+    if (state.proteccion) {
+        if (txt) txt.textContent = state.proteccion.nombre || "Protección";
+        const pPrice = Number(state.proteccion.precio || 0);
+        if (sub) sub.textContent = `${money(pPrice)} ${state.proteccion.charge === "por_dia" ? "/ día" : ""}`;
+        if (rem) rem.style.display = "";
+        return;
+    }
+
+    if (!inds.length) {
+        if (txt) txt.textContent = "— Ninguna protección —";
+        if (sub) sub.textContent = "Costo se refleja en el resumen.";
+        if (rem) rem.style.display = "none";
+        return;
+    }
+
+    if (rem) rem.style.display = "";
+
+    const listaContainer = document.createElement("div");
+    listaContainer.className = "protecciones-lista-individuales";
+    listaContainer.style.cssText = "display: flex; flex-direction: column; gap: 8px; margin-top: 4px;";
+
+    const getIconoByGrupo = (grupo) => {
+        const iconos = {
+            'Colisión y robo': 'fa-car-crash',
+            'Gastos médicos': 'fa-ambulance',
+            'Asistencia para el camino': 'fa-road',
+            'Daños a terceros': 'fa-handshake',
+            'Protecciones automáticas': 'fa-microchip'
+        };
+        return iconos[grupo] || 'fa-shield-alt';
+    };
+
+    inds.forEach(ind => {
+        const item = document.createElement("div");
+        item.className = "proteccion-item-individual";
+
+        const icono = getIconoByGrupo(ind.grupo);
+        const precioTotal = (ind.precio || 0) * (state.days || 1);
+
+        item.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas ${icono}" style="width: 20px; font-size: 14px;"></i>
+                <span style="font-weight: 600; font-size: 13px; color: #1e293b;">${escapeHtml(ind.nombre)}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-weight: 700; font-size: 13px; color: #0f172a;">${money(precioTotal)}</span>
+                <span style="font-size: 10px; color: #64748b;">/día</span>
+            </div>
+        `;
+        listaContainer.appendChild(item);
+    });
+
+    const subTot = calcIndividualesSubtotal();
+    const totalItem = document.createElement("div");
+    totalItem.className = "proteccion-total-individual";
+    totalItem.innerHTML = `
+        <span style="font-weight: 800; font-size: 14px; color: #b22222;">TOTAL</span>
+        <span style="font-weight: 900; font-size: 18px; color: #b22222;">${money(subTot)}</span>
+    `;
+    listaContainer.appendChild(totalItem);
+
+    if (txt) {
+        txt.innerHTML = "";
+        txt.appendChild(listaContainer);
+    }
+
+    if (sub) sub.innerHTML = `${inds.length} individual(es) seleccionados · ${state.days || 0} día(s)`;
+}
+
+function calcIndividualesSubtotal() {
+    const days = Number(state.days || 0);
+    let sum = 0;
+    state.individuales.forEach((it) => {
+        sum += Number(it.precio || 0) * days;
+    });
+    return sum;
+}
+
+// =========================================
+// FUNCIÓN PARA PRESELECCIONAR PROTECCIONES INDIVIDUALES
+// =========================================
+function preseleccionarProteccionesIndividuales() {
+    console.log("🎯 Preseleccionando protecciones individuales en COTIZACIONES...");
+    const todasLasTarjetas = document.querySelectorAll('.individual-item');
+
+    let idLI = null;
+    let datosLI = null;
+    const idsProteccionesAuto = [];
+    todasLasTarjetas.forEach(card => {
+        const nombre = card.querySelector("h4")?.textContent?.trim() || "";
+        const nombreUpper = nombre.toUpperCase();
+
+        let parentTrack = card.closest(".scroll-h")?.id || "";
+        const grupo = getGrupoLabelFromTrack(parentTrack);
+
         const id = String(card.dataset.id || "");
         const precio = Number(card.dataset.precio || 0);
-        const nombre = card.querySelector("h4")?.textContent?.trim() || "Seguro individual";
         const desc = card.querySelector("p")?.textContent?.trim() || "";
-        const parentTrack = card.closest(".scroll-h")?.id || "";
-        const grupo = getGrupoLabelFromTrack(parentTrack);
-        if (!grupo) {
-            const exists = state.individuales.has(id);
-            if (exists) state.individuales.delete(id);
-            else state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
-            syncIndividualesHidden();
-            repaintIndividualesUI();
-            syncTotalsHidden();
-            refreshSummary();
-            refreshProteccionUIHeader();
-            return;
-        }
-        let existingIdInGroup = null;
-        for (const [existingId, item] of state.individuales.entries()) {
-            if (item.grupo === grupo) { existingIdInGroup = existingId; break; }
-        }
-        if (existingIdInGroup) {
-            if (existingIdInGroup === id) state.individuales.delete(id);
-            else { state.individuales.delete(existingIdInGroup); state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo }); }
-        } else state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
-        syncIndividualesHidden();
-        repaintIndividualesUI();
-        syncTotalsHidden();
-        refreshSummary();
-        refreshProteccionUIHeader();
-    }
 
-    function repaintIndividualesUI() {
-        qsa(".individual-item").forEach((card) => {
-            const id = String(card.dataset.id || "");
-            const on = state.individuales.has(id);
-            card.classList.toggle("is-selected", on);
-            const sw = card.querySelector(".switch-individual");
-            if (sw) sw.classList.toggle("is-on", on);
+        console.log(`🔍 Tarjeta: "${nombre}" - Grupo: "${grupo}"`);
+        const esLI = nombreUpper === "LI" ||
+                     (nombreUpper.includes("LI") &&
+                      !nombreUpper.includes("EXT") &&
+                      !nombreUpper.includes("ALI"));
+
+        if (esLI && grupo === "Daños a terceros") {
+            idLI = id;
+            datosLI = { id, nombre, desc, precio, grupo };
+            console.log(`🎯 LI identificado como FIJO: ${nombre}`);
+        }
+        if (grupo === "Protecciones automáticas") {
+            idsProteccionesAuto.push({ id, nombre, desc, precio, grupo });
+            console.log(`🛡️ Protección automática: ${nombre}`);
+        }
+    });
+    state.individuales.clear();
+    if (idLI && datosLI) {
+        state.individuales.set(idLI, {
+            id: datosLI.id,
+            nombre: datosLI.nombre,
+            desc: datosLI.desc,
+            precio: datosLI.precio,
+            charge: "por_dia",
+            grupo: "Daños a terceros"
         });
+        console.log(`✅ LI fijo seleccionado: ${datosLI.nombre}`);
     }
-
-    function refreshProteccionUIHeader() {
-        const txt = qs("#proteSelTxt");
-        const sub = qs("#proteSelSub");
-        const rem = qs("#proteRemove");
-
-        const inds = Array.from(state.individuales.values());
-
-        if (state.proteccion) {
-            if (txt) txt.textContent = state.proteccion.nombre || "Protección";
-            const pPrice = Number(state.proteccion.precio || 0);
-            if (sub) sub.textContent = `${money(pPrice)} ${state.proteccion.charge === "por_dia" ? "/ día" : ""}`;
-            if (rem) rem.style.display = "";
-            return;
+    idsProteccionesAuto.forEach(auto => {
+        if (!state.individuales.has(auto.id)) {
+            state.individuales.set(auto.id, {
+                id: auto.id,
+                nombre: auto.nombre,
+                desc: auto.desc,
+                precio: auto.precio,
+                charge: "por_dia",
+                grupo: "Protecciones automáticas"
+            });
+            console.log(`✅ Protección automática seleccionada: ${auto.nombre}`);
         }
+    });
 
-        if (!inds.length) {
-            if (txt) txt.textContent = "— Ninguna protección —";
-            if (sub) sub.textContent = "Costo se refleja en el resumen.";
-            if (rem) rem.style.display = "none";
-            return;
-        }
+    repaintIndividualesUI();
+    refreshProteccionUIHeader();
+    syncIndividualesHidden();
+    syncTotalsHidden();
+    refreshSummary();
 
-        if (rem) rem.style.display = "";
-
-        const listaContainer = document.createElement("div");
-        listaContainer.className = "protecciones-lista-individuales";
-        listaContainer.style.cssText = "display: flex; flex-direction: column; gap: 8px; margin-top: 4px;";
-
-        const getIconoByGrupo = (grupo) => {
-            const iconos = {
-                'Colisión y robo': 'fa-car-crash',
-                'Gastos médicos': 'fa-ambulance',
-                'Asistencia para el camino': 'fa-road',
-                'Daños a terceros': 'fa-handshake',
-                'Protecciones automáticas': 'fa-microchip'
-            };
-            return iconos[grupo] || 'fa-shield-alt';
-        };
-
-        inds.forEach(ind => {
-            const item = document.createElement("div");
-            item.className = "proteccion-item-individual";
-
-            const icono = getIconoByGrupo(ind.grupo);
-            const precioTotal = (ind.precio || 0) * (state.days || 1);
-
-            item.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <i class="fas ${icono}" style="width: 20px; font-size: 14px;"></i>
-                    <span style="font-weight: 600; font-size: 13px; color: #1e293b;">${escapeHtml(ind.nombre)}</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;">${money(precioTotal)}</span>
-                    <span style="font-size: 10px; color: #64748b;">/día</span>
-                </div>
-            `;
-            listaContainer.appendChild(item);
-        });
-
-        const subTot = calcIndividualesSubtotal();
-        const totalItem = document.createElement("div");
-        totalItem.className = "proteccion-total-individual";
-        totalItem.innerHTML = `
-            <span style="font-weight: 800; font-size: 14px; color: #b22222;">TOTAL</span>
-            <span style="font-weight: 900; font-size: 18px; color: #b22222;">${money(subTot)}</span>
-        `;
-        listaContainer.appendChild(totalItem);
-
-        if (txt) {
-            txt.innerHTML = "";
-            txt.appendChild(listaContainer);
-        }
-
-        if (sub) sub.innerHTML = `${inds.length} individual(es) seleccionados · ${state.days || 0} día(s)`;
-    }
-
-    function calcIndividualesSubtotal() {
-        const days = Number(state.days || 0);
-        let sum = 0;
-        state.individuales.forEach((it) => {
-            sum += Number(it.precio || 0) * days;
-        });
-        return sum;
-    }
-
+    console.log("🎯 Preselección completada. Total en state.individuales:", state.individuales.size);
+    console.log("📋 Items seleccionados:", Array.from(state.individuales.values()).map(i => i.nombre));
+}
 /* =========================================
    11 ADDONS CON SWITCH
 ========================================= */
@@ -1377,6 +1570,24 @@
         const total = subtotal + iva;
         return { baseDia, baseTotal, protTotal, indTotal, extrasSub, deliveryTotal, gasolinaTotal, dropoffTotal, subtotal, iva, total };
     }
+    function actualizarTotalBoton() {
+        const btnTotal = document.getElementById('btnTotalText');
+        if (!btnTotal) return;
+
+        const totals = calcTotals();
+        const totalValido = isNaN(totals.total) ? 0 : totals.total;
+
+        btnTotal.innerHTML = `Total: ${money(totalValido)}`;
+    }
+    function actualizarTotalNavbar() {
+        const btnTotal = document.getElementById('btnTotalNav');
+        if (!btnTotal) return;
+
+        const totals = calcTotals();
+        const totalValido = isNaN(totals.total) ? 0 : totals.total;
+
+        btnTotal.innerHTML = `Total: ${money(totalValido)}`;
+    }
 
     function syncTotalsHidden() {
         ensureTotalsHidden();
@@ -1384,6 +1595,9 @@
         qs("#tarifa_base").value = String(totals.baseDia || 0);
         qs("#tarifa_modificada").value = String(totals.subtotal || 0);
         qs("#tarifa_ajustada").value = String(totals.total || 0);
+
+        actualizarTotalBoton();
+        actualizarTotalNavbar();
     }
 
     function initEditBaseTotal() {
@@ -1395,7 +1609,7 @@
         btn.parentNode.replaceChild(newBtn, btn);
         newBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            if (!state.categoria) { mostrarToast('⚠️ Primero debes seleccionar una categoría', 'warning'); return; }
+            if (!state.categoria) {  return; }
             if (container.querySelector("input")) return;
             const totals = calcTotals();
             const precioActual = state.base_editable !== null ? state.base_editable : totals.baseTotal;
@@ -1423,7 +1637,6 @@
                 if (sub && state.categoria) sub.textContent = `${money(nuevoPrecioDia)} / día · ${days} día(s)`;
                 syncTotalsHidden();
                 refreshSummary();
-                mostrarToast(`✅ Tarifa base actualizada a ${money(nuevoValor)}`, 'success');
             };
             const cancelar = () => {
                 container.innerHTML = "";
@@ -1683,8 +1896,7 @@
         } else { const vuelo = document.getElementById("no_vuelo"); if (vuelo && typeof limpiarError === 'function') limpiarError(vuelo); }
         if (!allValid) {
             const totalErrores = document.querySelectorAll('.field-error').length;
-            if (totalErrores === 1) { const primerError = document.querySelector('.error-msg'); const mensaje = primerError?.textContent || 'Completa los campos marcados en rojo'; mostrarToast(`⚠️ ${mensaje}`, 'warning'); }
-            else { mostrarToast(`⚠️ Faltan ${totalErrores} campos por completar correctamente`, 'warning'); }
+            if (totalErrores === 1) { const primerError = document.querySelector('.error-msg'); const mensaje = primerError?.textContent || 'Completa los campos marcados en rojo'; }
             const primerCampoError = document.querySelector('.field-error');
             if (primerCampoError) { primerCampoError.scrollIntoView({ behavior: 'smooth', block: 'center' }); primerCampoError.style.transition = 'box-shadow 0.3s ease'; primerCampoError.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.3)'; setTimeout(() => { primerCampoError.style.boxShadow = ''; }, 1000); }
         }
@@ -1726,7 +1938,6 @@
                             finInstance.clear();
                             qs("#fecha_fin").value = "";
                             qs("#fecha_fin_ui").value = "";
-                            if (typeof mostrarToast === 'function') mostrarToast("⚠️ La fecha de devolución no puede ser anterior a la fecha de salida", 'warning');
                         }
                     } else {
                         finInstance.set("minDate", "today");
@@ -1748,7 +1959,6 @@
                 if (ini && fin && fin < ini) {
                     qs("#fecha_fin").value = "";
                     qs("#fecha_fin_ui").value = "";
-                    if (typeof mostrarToast === 'function') mostrarToast("⚠️ La fecha de devolución no puede ser anterior a la fecha de salida", 'warning');
                 }
                 syncDays();
             }
@@ -1842,11 +2052,6 @@
                     horaEntregaSelect.classList.add('field-error');
                 }
 
-                const warning = document.createElement('small');
-                warning.className = 'hora-warning';
-                warning.style.cssText = 'display: block; color: #f59e0b; font-size: 11px; margin-top: 4px;';
-                warning.textContent = 'La hora de devolución debe ser mayor';
-                horaEntregaUI?.parentNode?.appendChild(warning);
             } else {
                 if (horaEntregaUI) {
                     limpiarError(horaEntregaUI);
@@ -1871,49 +2076,363 @@
 
     setTimeout(validar, 100);
 }
-
 /* =========================================
-   16 LOAD PROTECCIONES (PAQUETES)
+   28 LOAD PROTECCIONES (PAQUETES)
 ========================================= */
-    async function loadProtecciones() {
-        const track = qs("#protePacksTrack");
-        if (!track) return;
-        track.innerHTML = `<div class="loading" style="padding:12px;font-weight:900;color:rgba(255,255,255,.9);">Cargando paquetes...</div>`;
-        try {
-            const res = await fetch("/admin/cotizaciones/seguros", { headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" } });
-            const data = await res.json().catch(() => []);
-            const arrRaw = Array.isArray(data) ? data : (data?.data || []);
-            const arr = arrRaw.map((raw) => { const id = raw.id_paquete ?? raw.id ?? raw.idPaquete; const nombre = raw.nombre ?? "Protección"; const desc = raw.descripcion ?? ""; const precio = Number(raw.precio_por_dia ?? raw.precio_dia ?? raw.precio ?? 0); const charge = raw.tipo_cobro ?? raw.charge ?? "por_evento"; return { id, nombre, desc, precio, charge }; });
-            arr.sort((a, b) => Number(b.precio || 0) - Number(a.precio || 0));
-            if (!arr.length) { track.innerHTML = `<div class="loading" style="padding:12px;font-weight:900;color:rgba(255,255,255,.9);">No hay protecciones disponibles.</div>`; return; }
-            track.innerHTML = "";
-            function formatDescriptionAsList(desc) {
-                if (!desc || desc === "") return '<ul class="desc-list"><li>Sin descripción disponible</li></ul>';
-                let items = desc.split(/[-–—·•\n]+/).filter(item => item.trim().length > 0);
-                items = items.map(item => item.trim().replace(/^\s*[-–—·•]\s*/, '').trim());
-                if (items.length === 0) items = [desc];
-                function aplicarNegritas(texto) {
-                    texto = texto.replace(/(\d+%)(?:\s*(deducible|Deducible|Perdida))?/gi, '<strong>$1</strong>');
-                    texto = texto.replace(/(\d{1,3}(?:,\d{3})*)\s*MXN/g, '<strong>$1 MXN</strong>');
-                    const palabrasClave = ['El cliente es Responsable por el', 'de lado a lado', 'bumper a bumper', 'Gastos médicos', 'Asistencia en carretera Premium', 'Asistencia Premium', 'Tiempo perdido en taller, cubierto', 'Asistencia Legal, Cubierta', 'Responsabilidad civil', 'Cubierta toda la carrosería', 'NO CUBRE', 'Perdida total', 'Robo', 'No cubre', 'Incluye:'];
-                    palabrasClave.forEach(palabra => { const regex = new RegExp(`(${palabra})`, 'gi'); texto = texto.replace(regex, '<strong>$1</strong>'); });
-                    return texto;
-                }
-                const listItems = items.map(item => { const textoOriginal = escapeHtml(item); const textoConNegritas = aplicarNegritas(textoOriginal); return `<li>${textoConNegritas}</li>`; }).join('');
-                return `<ul class="desc-list">${listItems}</ul>`;
-            }
-            arr.forEach((p) => {
-                const card = document.createElement("article");
-                card.className = "pack-card";
-                card.style.minWidth = "320px";
-                const descHtml = formatDescriptionAsList(p.desc);
-                card.innerHTML = `<div class="body"><h4>${escapeHtml(p.nombre)}</h4>${descHtml}<div class="precio"><strong>${money(p.precio).replace(" MXN", "")}</strong><span>MXN ${p.charge === "por_dia" ? "/ día" : ""}</span></div><div class="actions"><button class="btn primary" type="button">Elegir</button></div></div>`;
-                card.addEventListener("click", (e) => { const btn = e.target.closest("button"); if (!btn) return; setProteccion({ id: p.id, nombre: p.nombre, precio: p.precio, charge: p.charge, desc: p.desc }); refreshProteccionUIHeader(); closePop(qs("#proteccionPop")); });
-                track.appendChild(card);
-            });
-        } catch (e) { console.error("Protecciones error:", e); track.innerHTML = `<div class="loading" style="padding:12px;font-weight:900;color:rgba(255,255,255,.9);">Error cargando protecciones.</div>`; }
-    }
+async function loadProtecciones() {
+    const track = qs("#protePacksTrack");
+    if (!track) return;
 
+    track.innerHTML = `<div class="loading" style="padding:12px;font-weight:900;color:rgba(255,255,255,.9);">Cargando paquetes...</div>`;
+
+    try {
+        const res = await fetch("/admin/reservaciones/seguros", {
+            headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
+        });
+
+        const data = await res.json().catch(() => []);
+        const arrRaw = Array.isArray(data) ? data : (data?.data || []);
+
+        const arr = arrRaw.map((raw) => {
+            const id = raw.id_paquete ?? raw.id ?? raw.idPaquete;
+            const nombre = raw.nombre ?? "Protección";
+            const desc = raw.descripcion ?? "";
+            const precio = Number(raw.precio_por_dia ?? raw.precio_dia ?? raw.precio ?? 0);
+            const charge = raw.tipo_cobro ?? raw.charge ?? "por_evento";
+            return { id, nombre, desc, precio, charge };
+        });
+
+        arr.sort((a, b) => Number(b.precio || 0) - Number(a.precio || 0));
+
+        if (!arr.length) {
+            track.innerHTML = `<div class="loading" style="padding:12px;font-weight:900;color:rgba(255,255,255,.9);">No hay protecciones disponibles.</div>`;
+            return;
+        }
+
+        track.innerHTML = "";
+
+        function actualizarMontoGarantiaEnCard(cardElement, nombreProteccion) {
+            if (!cardElement) return;
+
+            const categoriaActual = window.state?.categoria;
+            if (!categoriaActual || !categoriaActual.id) return;
+
+            const montoGarantia = obtenerMontoGarantia(categoriaActual.id, nombreProteccion);
+            if (montoGarantia === null) return;
+
+            const montoFormateado = new Intl.NumberFormat('es-MX', {
+                style: 'currency',
+                currency: 'MXN',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(montoGarantia);
+
+            let garantiaExistente = cardElement.querySelector('.garantia-item');
+            if (garantiaExistente) {
+                garantiaExistente.innerHTML = `<strong>GARANTÍA:</strong> ${montoFormateado}`;
+            }
+        }
+
+        function formatDescriptionAsList(desc, textoGarantia = '') {
+            if (!desc || desc === "") {
+                if (textoGarantia) {
+                    return `<ul class="desc-list"><li>Sin descripción disponible</li><li class="garantia-item">${textoGarantia}</li></ul>`;
+                }
+                return '<ul class="desc-list"><li>Sin descripción disponible</li></ul>';
+            }
+
+            let items = desc.split(/[-–—·•\n]+/).filter(item => item.trim().length > 0);
+            items = items.map(item => item.trim().replace(/^\s*[-–—·•]\s*/, '').trim());
+
+            if (items.length === 0) {
+                items = [desc];
+            }
+
+            function aplicarNegritas(texto) {
+                texto = texto.replace(/(\d+%)(?:\s*(deducible|Deducible|Perdida))?/gi, '<strong>$1</strong>');
+                texto = texto.replace(/(\d{1,3}(?:,\d{3})*)\s*MXN/g, '<strong>$1 MXN</strong>');
+
+                const palabrasClave = [
+                    'El cliente es Responsable por el',
+                    'de lado a lado',
+                    'bumper a bumper',
+                    'Gastos médicos',
+                    'Asistencia en carretera Premium',
+                    'Asistencia Premium',
+                    'Tiempo perdido en taller, cubierto',
+                    'Asistencia Legal, Cubierta',
+                    'Responsabilidad civil',
+                    'Cubierta toda la carrosería',
+                    'NO CUBRE',
+                    'Perdida total',
+                    'Robo',
+                    'No cubre',
+                    'Incluye:'
+                ];
+
+                palabrasClave.forEach(palabra => {
+                    const regex = new RegExp(`(${palabra})`, 'gi');
+                    texto = texto.replace(regex, '<strong>$1</strong>');
+                });
+
+                return texto;
+            }
+
+            const listItems = items.map(item => {
+                const textoOriginal = escapeHtml(item);
+                const textoConNegritas = aplicarNegritas(textoOriginal);
+                return `<li>${textoConNegritas}</li>`;
+            }).join('');
+
+            let listaCompleta = `<ul class="desc-list">${listItems}`;
+            if (textoGarantia) {
+                listaCompleta += `<li class="garantia-item">${textoGarantia}</li>`;
+            }
+            listaCompleta += `</ul>`;
+
+            return listaCompleta;
+        }
+
+        // =========================================
+        // FUNCIÓN PARA OBTENER EL MONTO DE GARANTÍA SEGÚN LA TABLA
+        // =========================================
+        function obtenerMontoGarantia(categoriaId, nombreProteccion) {
+            const garantiaPorCategoria = {
+                1: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 15000, 'CDW 20%': 25000, 'CDW declinado': 330000 },
+                2: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 18000, 'CDW 20%': 25000, 'CDW declinado': 380000 },
+                3: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 20000, 'CDW 20%': 30000, 'CDW declinado': 500000 },
+                4: { 'LDW': 5000, 'PDW': 15000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 650000 },
+                5: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 20000, 'CDW 20%': 30000, 'CDW declinado': 500000 },
+                6: { 'LDW': 5000, 'PDW': 10000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 600000 },
+                7: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 18000, 'CDW 20%': 25000, 'CDW declinado': 400000 },
+                8: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 800000 },
+                9: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 800000 },
+                10: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 600000 },
+                11: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 900000 }
+            };
+
+            const catId = parseInt(categoriaId);
+            const garantias = garantiaPorCategoria[catId];
+            if (!garantias) return null;
+
+            const nombreUpper = nombreProteccion.toUpperCase();
+
+            if (nombreUpper.includes('LDW')) return garantias['LDW'];
+            if (nombreUpper.includes('PDW')) return garantias['PDW'];
+            if (nombreUpper.includes('10%') || nombreUpper.includes('CDW PACK 1')) return garantias['CDW 10%'];
+            if (nombreUpper.includes('20%') || nombreUpper.includes('CDW PACK 2')) return garantias['CDW 20%'];
+            if (nombreUpper.includes('DECLINE') || nombreUpper.includes('RECHAZAR')) return garantias['CDW declinado'];
+
+            return garantias['CDW 20%'];
+        }
+
+        arr.forEach((p) => {
+            const isFree = Number(p.precio || 0) <= 0;
+            const isSelected = window.state?.proteccion?.id == p.id;
+
+            const categoriaActual = window.state?.categoria;
+            let textoGarantia = '';
+
+            if (categoriaActual && categoriaActual.id) {
+                const montoGarantia = obtenerMontoGarantia(categoriaActual.id, p.nombre);
+                if (montoGarantia !== null) {
+                    const montoFormateado = new Intl.NumberFormat('es-MX', {
+                        style: 'currency',
+                        currency: 'MXN',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(montoGarantia);
+                    textoGarantia = `<strong>GARANTÍA:</strong> ${montoFormateado}`;
+                }
+            }
+
+            const descHtml = formatDescriptionAsList(p.desc, textoGarantia);
+
+            const card = document.createElement("article");
+            card.className = "pack-card" + (isFree ? " pack-card--free" : "") + (isSelected ? " is-selected" : "");
+            card.style.minWidth = "320px";
+            card.dataset.id = p.id;
+            card.dataset.nombre = p.nombre;
+            card.dataset.precio = p.precio;
+            card.dataset.charge = p.charge;
+
+            card.innerHTML = `
+                <div class="body">
+                    <h4>${escapeHtml(p.nombre)}</h4>
+                    ${descHtml}
+                    <div class="precio">
+                        <strong>${money(p.precio).replace(" MXN", "")}</strong>
+                        <span>MXN ${p.charge === "por_dia" ? "/ día" : ""}</span>
+                    </div>
+                    <div class="actions">
+                        <div class="btn-proteccion-wrapper">
+                            <button class="btn primary btn-proteccion-dividido ${isSelected ? 'activado' : 'desactivado'}"
+                                    type="button"
+                                    data-id="${p.id}"
+                                    data-nombre="${escapeHtml(p.nombre)}"
+                                    data-precio="${p.precio}"
+                                    data-charge="${p.charge}">
+                                <span class="btn-texto">${isSelected ? 'Seleccionado' : ''}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const btn = card.querySelector('.btn-proteccion-dividido');
+            if (btn) {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+
+                    const isCurrentlySelected = btn.classList.contains('activado');
+                    const proteccionId = btn.dataset.id;
+                    const proteccionNombre = btn.dataset.nombre;
+                    const proteccionPrecio = parseFloat(btn.dataset.precio);
+                    const proteccionCharge = btn.dataset.charge;
+
+                    if (!isCurrentlySelected) {
+                        document.querySelectorAll('.pack-card').forEach(cardItem => {
+                            const boton = cardItem.querySelector('.btn-proteccion-dividido');
+                            if (boton) {
+                                boton.classList.remove('activado');
+                                boton.classList.add('desactivado');
+                                const spanTexto = boton.querySelector('.btn-texto');
+                                if (spanTexto) spanTexto.textContent = '';
+                            }
+                            cardItem.classList.remove('is-selected');
+                        });
+
+                        btn.classList.remove('desactivado');
+                        btn.classList.add('activado');
+                        const spanTexto = btn.querySelector('.btn-texto');
+                        if (spanTexto) spanTexto.textContent = 'Seleccionado';
+                        card.classList.add('is-selected');
+
+                        actualizarMontoGarantiaEnCard(card, proteccionNombre);
+
+                        if (typeof setProteccion === 'function') {
+                            setProteccion({
+                                id: proteccionId,
+                                nombre: proteccionNombre,
+                                precio: proteccionPrecio,
+                                charge: proteccionCharge,
+                                desc: p.desc
+                            });
+                        }
+
+                        if (typeof refreshProteccionUIHeader === 'function') {
+                            refreshProteccionUIHeader();
+                        }
+
+                        if (typeof mostrarToast === 'function') {
+                            mostrarToast(`✅ Protección "${proteccionNombre}" seleccionada`, 'success');
+                        }
+
+                    } else {
+                        btn.classList.remove('activado');
+                        btn.classList.add('desactivado');
+                        const spanTexto = btn.querySelector('.btn-texto');
+                        if (spanTexto) spanTexto.textContent = '';
+                        card.classList.remove('is-selected');
+
+                        if (typeof setProteccion === 'function') {
+                            setProteccion(null);
+                        }
+
+                        if (typeof refreshProteccionUIHeader === 'function') {
+                            refreshProteccionUIHeader();
+                        }
+
+                        if (typeof mostrarToast === 'function') {
+                            mostrarToast(`⚠️ Protección "${proteccionNombre}" deseleccionada`, 'info');
+                        }
+                    }
+
+                    if (typeof syncTotalsHidden === 'function') {
+                        syncTotalsHidden();
+                    }
+                    if (typeof refreshSummary === 'function') {
+                        refreshSummary();
+                    }
+                    if (typeof actualizarCarritoFlotante === 'function') {
+                        setTimeout(actualizarCarritoFlotante, 10);
+                    }
+                });
+            }
+
+            track.appendChild(card);
+        });
+
+    } catch (e) {
+        console.error("Protecciones error:", e);
+        track.innerHTML = `<div class="loading" style="padding:12px;font-weight:900;color:rgba(255,255,255,.9);">Error cargando protecciones.</div>`;
+    }
+}
+
+// =========================================
+// FUNCIÓN PARA ACTUALIZAR LA GARANTÍA CUANDO CAMBIA EL AUTO
+// =========================================
+function actualizarGarantiaPorCambioDeAuto() {
+    const categoriaActual = window.state?.categoria;
+    if (!categoriaActual || !categoriaActual.id) return;
+
+    const cardSeleccionada = document.querySelector('#protePacksTrack .pack-card.is-selected');
+    if (!cardSeleccionada) return;
+
+    const nombreProteccion = cardSeleccionada.dataset.nombre;
+    if (!nombreProteccion) return;
+
+    const garantiaPorCategoria = {
+        1: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 15000, 'CDW 20%': 25000, 'CDW declinado': 330000 },
+        2: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 18000, 'CDW 20%': 25000, 'CDW declinado': 380000 },
+        3: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 20000, 'CDW 20%': 30000, 'CDW declinado': 500000 },
+        4: { 'LDW': 5000, 'PDW': 15000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 650000 },
+        5: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 20000, 'CDW 20%': 30000, 'CDW declinado': 500000 },
+        6: { 'LDW': 5000, 'PDW': 10000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 600000 },
+        7: { 'LDW': 5000, 'PDW': 8000, 'CDW 10%': 18000, 'CDW 20%': 25000, 'CDW declinado': 400000 },
+        8: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 800000 },
+        9: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 800000 },
+        10: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 600000 },
+        11: { 'LDW': 10000, 'PDW': 20000, 'CDW 10%': 30000, 'CDW 20%': 40000, 'CDW declinado': 900000 }
+    };
+
+    const catId = parseInt(categoriaActual.id);
+    const garantias = garantiaPorCategoria[catId];
+    if (!garantias) return;
+
+    const nombreUpper = nombreProteccion.toUpperCase();
+    let tipoGarantia = 'CDW 20%';
+    if (nombreUpper.includes('LDW')) tipoGarantia = 'LDW';
+    else if (nombreUpper.includes('PDW')) tipoGarantia = 'PDW';
+    else if (nombreUpper.includes('10%') || nombreUpper.includes('CDW PACK 1')) tipoGarantia = 'CDW 10%';
+    else if (nombreUpper.includes('20%') || nombreUpper.includes('CDW PACK 2')) tipoGarantia = 'CDW 20%';
+    else if (nombreUpper.includes('DECLINE') || nombreUpper.includes('RECHAZAR')) tipoGarantia = 'CDW declinado';
+
+    const monto = garantias[tipoGarantia];
+    if (!monto) return;
+
+    const montoFormateado = new Intl.NumberFormat('es-MX', {
+        style: 'currency',
+        currency: 'MXN',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(monto);
+
+    let garantiaItem = cardSeleccionada.querySelector('.garantia-item');
+    if (garantiaItem) {
+        garantiaItem.innerHTML = `<strong>GARANTÍA:</strong> ${montoFormateado}`;
+    }
+}
+
+const originalSetCategoria = window.setCategoria;
+if (typeof originalSetCategoria === 'function') {
+    window.setCategoria = function(cat) {
+        originalSetCategoria(cat);
+        setTimeout(() => {
+            actualizarGarantiaPorCambioDeAuto();
+        }, 150);
+    };
+}
 /* =========================================
    17 LOAD ADDONS
 ========================================= */
@@ -2144,7 +2663,9 @@
                 if (confirmClose) {
                     const newConfirmClose = confirmClose.cloneNode(true);
                     confirmClose.parentNode.replaceChild(newConfirmClose, confirmClose);
-                    newConfirmClose.addEventListener("click", redirectToCotizaciones);
+                    newConfirmClose.addEventListener("click", () => {
+                        window.location.href = "/ventas/menu";
+                    });
                 }
                 confirmPop.addEventListener("click", (ev) => {
                     if (ev.target === confirmPop) redirectToCotizaciones();
@@ -2286,6 +2807,9 @@
         if (state.servicios.gasolina) computeGasolina();
         syncTotalsHidden();
         refreshSummary();
+
+        actualizarTotalBoton();
+        actualizarTotalNavbar();
     }
 
     function forceUpdateUI() {
@@ -2433,25 +2957,30 @@
     function desbloquearAdicionales() { if (adicionalesDesbloqueada) return; adicionalesDesbloqueada = true; actualizarTodasSecciones(); abrirSeccion(document.querySelector('.acordeon-item[data-seccion="adicionales"]')); }
     function desbloquearProtecciones() { if (proteccionesDesbloqueada) return; proteccionesDesbloqueada = true; actualizarTodasSecciones(); abrirSeccion(document.querySelector('.acordeon-item[data-seccion="protecciones"]')); }
     function desbloquearCliente() { if (clienteDesbloqueada) return; clienteDesbloqueada = true; actualizarTodasSecciones(); abrirSeccion(document.querySelector('.acordeon-item[data-seccion="cliente"]')); }
-    function completarFlujo() { if (flujoCompletado) return; flujoCompletado = true; actualizarTodasSecciones(); if (typeof mostrarToast === 'function') mostrarToast('✅ ¡Formulario completo! Puedes editar cualquier sección', 'success'); }
+    function completarFlujo() { if (flujoCompletado) return; flujoCompletado = true; actualizarTodasSecciones(); }
 
     function configurarBotonPrincipal() {
-        const btn = document.getElementById('btnBuscarCotizacion');
-        if (!btn) { console.error('❌ Botón btnBuscarCotizacion no encontrado'); return; }
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-        newBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (validarCamposUbicacion()) {
-                desbloquearCategoria();
-                setTimeout(() => {
-                    const btnCategorias = document.getElementById('btnCategorias');
-                    if (btnCategorias) btnCategorias.click();
-                }, 300);
-            }
-        });
-    }
+    const btn = document.getElementById('btnBuscarCotizacion');
+    if (!btn) { console.error('❌ Botón btnBuscarCotizacion no encontrado'); return; }
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+    newBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (validarCamposUbicacion()) {
+            desbloquearCategoria();
+            setTimeout(() => {
+                const catPop = document.getElementById('catPop');
+                if (catPop) {
+                    if (typeof repaintCategoriaModalEstimados === 'function') {
+                        repaintCategoriaModalEstimados();
+                    }
+                    openPop(catPop);
+                }
+            }, 300);
+        }
+    });
+}
 
     function configurarBotonesSiguiente() {
         const btnSiguienteAdicionales = document.querySelector('.acordeon-item[data-seccion="adicionales"] .btn-siguiente');
@@ -2495,7 +3024,6 @@
                     else if (seccionKey === 'adicionales') mensaje = '⚠️ Primero selecciona una categoría de vehículo';
                     else if (seccionKey === 'protecciones') mensaje = '⚠️ Primero revisa los adicionales (puedes saltarlos)';
                     else if (seccionKey === 'cliente') mensaje = '⚠️ Primero revisa las protecciones (puedes saltarlas)';
-                    if (typeof mostrarToast === 'function') mostrarToast(mensaje, 'warning');
                     return;
                 }
                 const body = seccion.querySelector('.stack-body'), indicator = seccion.querySelector('.stack-indicator');
@@ -2505,7 +3033,28 @@
         });
     }
 
-    function observarCategoria() { let categoriaSeleccionada = false; setInterval(() => { const tieneCategoria = window.state && window.state.categoria !== null; if (tieneCategoria && !categoriaSeleccionada) { categoriaSeleccionada = true; desbloquearAdicionales(); } }, 500); }
+    function observarCategoria() {
+    let categoriaSeleccionada = false;
+    setInterval(() => {
+        const tieneCategoria = window.state && window.state.categoria !== null;
+        if (tieneCategoria && !categoriaSeleccionada) {
+            categoriaSeleccionada = true;
+
+            desbloquearAdicionales();
+
+            setTimeout(() => {
+                if (typeof desbloquearProteccionesSinExpandir === 'function') {
+                    desbloquearProteccionesSinExpandir();
+                    console.log("🔓 Protecciones desbloqueadas (sin expandir)");
+                }
+                if (typeof desbloquearClienteSinExpandir === 'function') {
+                    desbloquearClienteSinExpandir();
+                    console.log("🔓 Cliente desbloqueado (sin expandir)");
+                }
+            }, 150);
+        }
+    }, 500);
+}
     function observarClienteCompleto() { setInterval(() => { const nombre = document.getElementById('nombre_cliente')?.value?.trim(), apellidos = document.getElementById('apellidos_cliente')?.value?.trim(), email = document.getElementById('email_cliente')?.value?.trim(), telefono = document.getElementById('telefono_ui')?.value?.trim(); const clienteCompleto = nombre && apellidos && email && telefono; if (clienteCompleto && !flujoCompletado && clienteDesbloqueada) completarFlujo(); }, 1000); }
 
     function validarCamposUbicacion() {
@@ -2580,6 +3129,7 @@
         }
         return true;
     }
+
     const horaRetiroSelect = document.querySelector('#hora_retiro_ui')?.closest('.dt-field-admin')?.querySelector('.tp-hour');
     const horaEntregaSelect = document.querySelector('#hora_entrega_ui')?.closest('.dt-field-admin')?.querySelector('.tp-hour');
 
@@ -2590,22 +3140,25 @@
 
     if (!horaRetiro || !horaEntrega) return true;
 
+    const horaEntregaUI = document.getElementById("hora_entrega_ui");
+
     if (parseInt(horaEntrega) <= parseInt(horaRetiro)) {
-        const horaEntregaUI = document.getElementById("hora_entrega_ui");
         if (horaEntregaUI) {
-            mostrarError(horaEntregaUI, 'La hora de devolución debe ser mayor');
+            horaEntregaUI.classList.add('field-error');
+            horaEntregaUI.classList.remove('field-success');
+            agregarMensajeErrorUnico(horaEntregaUI, 'La hora de devolución debe ser mayor');
         }
         if (horaEntregaSelect) {
             horaEntregaSelect.classList.add('field-error');
+            horaEntregaSelect.classList.remove('field-success');
         }
-        mostrarToast('En la misma fecha, la devolución debe ser después del retiro', 'warning');
         return false;
     }
 
-    const horaEntregaUI = document.getElementById("hora_entrega_ui");
+    // Validación exitosa
     if (horaEntregaUI) {
         limpiarError(horaEntregaUI);
-        mostrarExito(horaEntregaUI);
+        horaEntregaUI.classList.add('field-success');
     }
     if (horaEntregaSelect) {
         limpiarError(horaEntregaSelect);
@@ -2613,6 +3166,23 @@
     }
 
     return true;
+}
+/* =========================================
+   FUNCIONES PARA DESBLOQUEAR SIN EXPANDIR
+========================================= */
+
+function desbloquearProteccionesSinExpandir() {
+    if (proteccionesDesbloqueada) return;
+    proteccionesDesbloqueada = true;
+    actualizarTodasSecciones();
+    console.log("🔓 Protecciones desbloqueadas (sin expandir)");
+}
+
+function desbloquearClienteSinExpandir() {
+    if (clienteDesbloqueada) return;
+    clienteDesbloqueada = true;
+    actualizarTodasSecciones();
+    console.log("🔓 Cliente desbloqueado (sin expandir)");
 }
 
 /* =========================================
@@ -2626,7 +3196,7 @@
         btnEditar.parentNode.replaceChild(newBtn, btnEditar);
         newBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            if (!window.state?.categoria) { mostrarToast('Primero debes seleccionar una categoría', 'warning'); return; }
+            if (!window.state?.categoria) { return; }
             if (container.querySelector('input')) return;
             const precioActual = parseFloat(window.state.categoria.precio_dia || 0);
             const input = document.createElement('input');
@@ -2652,7 +3222,6 @@
             input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); input.blur(); } });
         });
     }
-
 /* =========================================
    28 MODAL DE CARACTERÍSTICAS
 ========================================= */
@@ -2661,7 +3230,9 @@
         if (featuresModal) {
             featuresModal.style.display = 'none';
             const catPop = document.getElementById('catPop');
-            if (catPop && catPop.style.display !== 'flex') catPop.style.display = 'flex';
+            if (catPop && catPop.style.display !== 'flex') {
+                catPop.style.display = 'flex';
+            }
         }
     }
     function initFeaturesModal() {
@@ -2672,7 +3243,7 @@
         featuresModal.id = 'featuresModal';
         featuresModal.className = 'modal-features';
         featuresModal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:10001;backdrop-filter:blur(2px);';
-        featuresModal.innerHTML = `<div class="modal-box" style="background:white;width:min(500px,90vw);border-radius:24px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,0.3);animation:modalFadeIn 0.2s ease;"><div class="header" style="background:linear-gradient(180deg, var(--brand), var(--brand-dark)) !important;border-bottom:1px solid rgba(227,0,0,0.3);color:white;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;"><h3 style="margin:0;font-size:20px;font-weight:900;display:flex;align-items:center;gap:10px;color:white !important;"><i class='bx bx-car' style="color:white !important;"></i><span id="featuresCatName" style="color:white !important;">Categoría</span></h3><button id="closeFeaturesModalBtn" style="background:rgba(255,255,255,0.2);border:none;color:white;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;">✖</button></div><div class="body" style="padding:20px;max-height:60vh;overflow-y:auto;"><div class="features-list" id="featuresListContainer" style="display:flex;flex-direction:column;gap:12px;"></div></div></div>`;
+        featuresModal.innerHTML = `<div class="modal-box" style="background:white;width:min(500px,90vw);border-radius:24px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,0.3);animation:modalFadeIn 0.2s ease;"><div class="header" style="background:linear-gradient(180deg, var(--brand), var(--brand-dark)) !important;border-bottom:1px solid rgba(227,0,0,0.3);color:white;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;"><h3 style="margin:0;font-size:20px;font-weight:900;display:flex;align-items:center;gap:10px;color:white !important;"><i class='bx bx-car' style="color:white !important;"></i><span id="featuresCatName" style="color:white !important;">Características</span></h3><button id="closeFeaturesModalBtn" style="background:rgba(255,255,255,0.2);border:none;color:white;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;">✖</button></div><div class="body" style="padding:20px;max-height:60vh;overflow-y:auto;"><div class="features-list" id="featuresListContainer" style="display:flex;flex-direction:column;gap:12px;"></div></div></div>`;
         document.body.appendChild(featuresModal);
         document.getElementById('closeFeaturesModalBtn')?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); closeFeaturesModal(); });
         featuresModal.addEventListener('click', (e) => { if (e.target === featuresModal) closeFeaturesModal(); });
@@ -2683,7 +3254,7 @@
         const modal = initFeaturesModal();
         const nameSpan = document.getElementById('featuresCatName');
         const container = document.getElementById('featuresListContainer');
-        if (nameSpan) nameSpan.textContent = catName || 'Categoría';
+        if (nameSpan) nameSpan.textContent = catName || 'Características';
         if (container && features && Array.isArray(features)) {
             container.innerHTML = '';
             features.forEach(f => {
@@ -2698,15 +3269,23 @@
     }
     document.addEventListener('click', function(e) {
         const infoBtn = e.target.closest('.info-categoria-btn');
+
         if (infoBtn) {
             e.preventDefault();
             e.stopPropagation();
+            e.stopImmediatePropagation();
             const card = infoBtn.closest('.card-pick');
             if (card) {
                 const catName = card.querySelector('.cp-title')?.textContent || 'Categoría';
                 let features = [];
                 const featuresData = card.dataset.caracteristicas;
-                if (featuresData) { try { features = JSON.parse(featuresData); } catch(e) { console.error('Error parsing features:', e); } }
+                if (featuresData) {
+                    try {
+                        features = JSON.parse(featuresData);
+                    } catch(err) {
+                        console.error('Error parsing features:', err);
+                    }
+                }
                 if (!features || !features.length) {
                     features = [
                         { icon: 'bx bx-infinite', text: 'Km ilimitados' },
@@ -2720,9 +3299,17 @@
                 }
                 openFeaturesModal(catName, features);
             }
+            return;
         }
-    });
 
+
+        const cardClick = e.target.closest('.card-pick');
+        if (cardClick && (e.target.classList.contains('info-categoria-btn') || e.target.closest('.info-categoria-btn'))) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+    }, true);
 /* =========================================
    29 INICIALIZACIÓN (BOOT)
 ========================================= */
@@ -2770,32 +3357,105 @@
         }
     });
     observerPreview.observe(document.body, { childList: true, subtree: true });
-
 /* =========================================
-   31 NAVBAR COTIZACIONES
+   31 NAVBAR COTIZACIONES CON PASTILLA A LA DERECHA
 ========================================= */
-    (function() {
-        function crearNavbarCotizaciones() {
-            if (document.getElementById('resNavbar')) return;
-            const navbarHTML = `<div class="res-navbar" id="resNavbar"><div class="container-res"><div class="nav-content-wrapper"><div class="left-group"><a href="/" class="logo">VIAJERO</a><span class="page-title">Nueva cotización</span></div><div class="nav-actions"><button class="btn-resumen-minimal" id="btnResumenNav"><i class="fa-solid fa-file-invoice"></i><span>VER RESUMEN</span></button><button class="btn-salir-minimal" id="btnSalirNav" title="Salir">✕</button></div></div></div></div>`;
-            document.body.insertAdjacentHTML('afterbegin', navbarHTML);
-            const btnResumenOriginal = document.getElementById('btnResumen');
-            document.getElementById('btnResumenNav')?.addEventListener('click', () => btnResumenOriginal && btnResumenOriginal.click());
-            document.getElementById('btnSalirNav')?.addEventListener('click', () => window.location.href = '/admin/cotizaciones');
-        }
-        function initScrollEffect() {
-            const navbar = document.getElementById('resNavbar');
-            if (!navbar) return;
-            window.addEventListener('scroll', () => { if (window.scrollY > 40) navbar.classList.add('scrolled'); else navbar.classList.remove('scrolled'); });
-        }
-        function prepararPagina() {
-            const topOriginal = document.querySelector('.top');
-            if (topOriginal) topOriginal.style.setProperty('display', 'none', 'important');
-            document.body.style.paddingTop = "115px";
-        }
-        document.addEventListener('DOMContentLoaded', () => { crearNavbarCotizaciones(); initScrollEffect(); prepararPagina(); });
-    })();
+(function() {
+    function crearNavbarCotizaciones() {
+        if (document.getElementById('resNavbar')) return;
 
+        const navbarHTML = `<div class="res-navbar" id="resNavbar">
+            <div class="container-res">
+                <div class="nav-content-wrapper">
+                    <div class="left-group">
+                        <a href="/" class="logo">VIAJERO</a>
+                        <span class="page-title">Nueva reservación</span>
+                    </div>
+                    <div class="nav-actions">
+                        <!-- PASTILLA VERDE DE DÍAS -->
+                        <div class="days-pill-navbar" id="daysPillNavbar">
+                            <i class="fa-regular fa-clock"></i>
+                            <span id="diasNavbarCount">0</span>
+                            <span>día(s)</span>
+                        </div>
+                        <!-- BOTÓN CARRITO -->
+                        <button class="btn-resumen-minimal" id="btnResumenNav">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span id="btnTotalNav">Total: $0.00 MXN</span>
+                        </button>
+                        <!-- BOTÓN SALIR -->
+                        <button class="btn-salir-minimal" id="btnSalirNav" title="Salir">✕</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+        document.body.insertAdjacentHTML('afterbegin', navbarHTML);
+
+        // Conectar botón resumen
+        const btnResumenOriginal = document.getElementById('btnResumen');
+        document.getElementById('btnResumenNav')?.addEventListener('click', () => btnResumenOriginal && btnResumenOriginal.click());
+
+        // Botón salir
+        document.getElementById('btnSalirNav')?.addEventListener('click', () => window.location.href = '/ventas/menu');
+
+        // Sincronizar la pastilla de días
+        sincronizarPastillaDias();
+    }
+
+    // Función para sincronizar la pastilla de días
+    function sincronizarPastillaDias() {
+        const diasNavbar = document.getElementById('diasNavbarCount');
+        const diasOriginal = document.getElementById('diasTxt');
+
+        if (diasNavbar && diasOriginal) {
+            // Actualizar inicial
+            diasNavbar.textContent = diasOriginal.textContent || '0';
+
+            // Observar cambios en el texto original
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'characterData' || mutation.type === 'childList') {
+                        diasNavbar.textContent = diasOriginal.textContent || '0';
+                    }
+                });
+            });
+            observer.observe(diasOriginal, { childList: true, characterData: true, subtree: true });
+
+            // También actualizar cuando se dispare el evento de cambio de fechas
+            document.addEventListener('diasActualizados', function(e) {
+                diasNavbar.textContent = e.detail?.dias || diasOriginal.textContent || '0';
+            });
+        }
+    }
+
+    function initScrollEffect() {
+        const navbar = document.getElementById('resNavbar');
+        if (!navbar) return;
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 40) navbar.classList.add('scrolled');
+            else navbar.classList.remove('scrolled');
+        });
+    }
+
+    function prepararPagina() {
+        const topOriginal = document.querySelector('.top');
+        if (topOriginal) topOriginal.style.setProperty('display', 'none', 'important');
+        document.body.style.paddingTop = "100px";
+
+        // Ocultar la pastilla original del formulario
+        const daysPillOriginal = document.querySelector('.days-pill-admin:not(#daysPillNavbar)');
+        if (daysPillOriginal) {
+            daysPillOriginal.classList.add('original-pill');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        crearNavbarCotizaciones();
+        initScrollEffect();
+        prepararPagina();
+    });
+})();
 /* =========================================
    32 BOOT FINAL
 ========================================= */
@@ -2829,10 +3489,19 @@
         initDifferentDropoff();
         setTimeout(init, 500);
         setTimeout(() => { initAdicionalesCarousel(); }, 300);
+
+        // 👇 PRESELECCIÓN DE PROTECCIONES INDIVIDUALES
+        setTimeout(() => {
+            if (typeof preseleccionarProteccionesIndividuales === 'function') {
+                preseleccionarProteccionesIndividuales();
+                console.log("🎯 Preselección de protecciones ejecutada en COTIZACIONES");
+            }
+        }, 800);
     });
 
-    $(document).ready(function() { setTimeout(initSelect2Sucursales, 300); });
-
+    $(document).ready(function() {
+        setTimeout(initSelect2Sucursales, 300);
+    });
 /* =========================================
    33 CARRUSEL DE ADICIONALES
 ========================================= */
@@ -3039,9 +3708,432 @@ function seleccionarCategoriaCotizacion(cardElement) {
     const precioKm = Number(cardElement.dataset.precioKm || 0);
     const img = cardElement.dataset.img || "";
     const capacidad = parseFloat(cardElement.dataset.litros || 0);
+
     if (window._cotizacionAPI && window._cotizacionAPI.setCategoria) {
         window._cotizacionAPI.setCategoria({ id, nombre, desc, precio_dia: precio, precio_km: precioKm, img, capacidad_tanque: capacidad });
     }
+
     const catPop = document.getElementById('catPop');
     if (catPop) catPop.style.display = 'none';
+
+    // Desbloquear adicionales Y también protecciones y cliente sin expandirlos
+    setTimeout(() => {
+        if (typeof desbloquearAdicionales === 'function') {
+            desbloquearAdicionales();
+        }
+        if (typeof desbloquearProteccionesSinExpandir === 'function') {
+            desbloquearProteccionesSinExpandir();
+        }
+        if (typeof desbloquearClienteSinExpandir === 'function') {
+            desbloquearClienteSinExpandir();
+        }
+    }, 200);
 }
+
+ //Tooltip para adicionales
+(function() {
+  "use strict";
+
+  // Mapa de textos por nombre del servicio (usando los textos originales)
+  const textosTooltip = {
+    'Conductor adicional': 'Agregar un conductor extra.',
+    'Gasolina prepago': 'Tanque completo preferencial.',
+    'Drop Off': 'Entrega en sucursal distinta.',
+    'Delivery': 'Entrega a domicilio.',
+    'Silla de bebé': 'Silla de seguridad para bebé.'
+  };
+
+  let activeTooltip = null;
+  let tooltipTimeout = null;
+  let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+  function showTooltip(element, text) {
+    if (activeTooltip) {
+      activeTooltip.remove();
+      activeTooltip = null;
+    }
+    if (tooltipTimeout) clearTimeout(tooltipTimeout);
+
+    const tooltip = document.createElement('div');
+    tooltip.className = 'svc-tooltip';
+    if (text.length > 40) tooltip.classList.add('multiline');
+    tooltip.textContent = text;
+    document.body.appendChild(tooltip);
+
+    const rect = element.getBoundingClientRect();
+    let top = rect.bottom + 8;
+    let left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2);
+
+    if (left < 10) left = 10;
+    if (left + tooltip.offsetWidth > window.innerWidth - 10) {
+      left = window.innerWidth - tooltip.offsetWidth - 10;
+    }
+
+    tooltip.style.top = `${top}px`;
+    tooltip.style.left = `${left}px`;
+    activeTooltip = tooltip;
+  }
+
+  function hideTooltip() {
+    if (tooltipTimeout) clearTimeout(tooltipTimeout);
+    tooltipTimeout = setTimeout(() => {
+      if (activeTooltip) {
+        activeTooltip.remove();
+        activeTooltip = null;
+      }
+    }, 150);
+  }
+
+  function hideTooltipImmediately() {
+    if (tooltipTimeout) clearTimeout(tooltipTimeout);
+    if (activeTooltip) {
+      activeTooltip.remove();
+      activeTooltip = null;
+    }
+  }
+
+  function initTooltips() {
+    document.querySelectorAll('.svc-card .svc-ico').forEach(icon => {
+      if (icon._tooltipInitialized) return;
+      icon._tooltipInitialized = true;
+
+      const card = icon.closest('.svc-card');
+      const nombre = card?.querySelector('.svc-name')?.textContent || '';
+      const texto = textosTooltip[nombre] || 'Sin información disponible';
+
+      if (!isMobile) {
+        icon.addEventListener('mouseenter', (e) => {
+          e.stopPropagation();
+          showTooltip(icon, texto);
+        });
+        icon.addEventListener('mouseleave', () => {
+          hideTooltip();
+        });
+      }
+
+      icon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (isMobile) {
+          if (activeTooltip && activeTooltip.parentNode) {
+            hideTooltipImmediately();
+          } else {
+            showTooltip(icon, texto);
+            setTimeout(() => hideTooltipImmediately(), 3000);
+          }
+        }
+      });
+    });
+  }
+
+  window.addEventListener('scroll', hideTooltipImmediately);
+  window.addEventListener('resize', hideTooltipImmediately);
+
+  function init() {
+    initTooltips();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  const observer = new MutationObserver(() => {
+    initTooltips();
+  });
+
+  const track = document.getElementById('adicionalesTrack');
+  if (track) {
+    observer.observe(track, { childList: true, subtree: true });
+  }
+})();
+// =========================================
+// FIX: PREVENIR SCROLL EN AUTOCOMPLETADO DE CLIENTE
+// =========================================
+(function() {
+    "use strict";
+
+    let posicionClienteGuardada = null;
+    let autocompletando = false;
+
+    function guardarPosicionCliente() {
+        const seccionCliente = document.querySelector('.acordeon-item[data-seccion="cliente"]');
+        if (seccionCliente) {
+            const rect = seccionCliente.getBoundingClientRect();
+            posicionClienteGuardada = rect.top + window.scrollY;
+            console.log('📌 Posición de cliente guardada:', posicionClienteGuardada);
+        }
+    }
+
+    function restaurarPosicionCliente() {
+        if (autocompletando && posicionClienteGuardada !== null) {
+            const currentScroll = window.scrollY;
+            const difference = Math.abs(currentScroll - posicionClienteGuardada);
+
+            if (difference > 20) {
+                window.scrollTo({
+                    top: posicionClienteGuardada,
+                    behavior: 'instant'
+                });
+                console.log('🔄 Scroll restaurado a posición de cliente');
+            }
+            autocompletando = false;
+        }
+    }
+
+    const inputsCliente = [
+        'nombre_cliente',
+        'apellidos_cliente',
+        'email_cliente',
+        'telefono_ui',
+        'no_vuelo'
+    ];
+
+    inputsCliente.forEach(inputId => {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        input.addEventListener('focus', function(e) {
+            guardarPosicionCliente();
+        });
+
+        input.addEventListener('animationstart', function(e) {
+            if (e.animationName === 'onAutoFillStart') {
+                autocompletando = true;
+                guardarPosicionCliente();
+                setTimeout(restaurarPosicionCliente, 5);
+                setTimeout(restaurarPosicionCliente, 25);
+                setTimeout(restaurarPosicionCliente, 50);
+                setTimeout(restaurarPosicionCliente, 100);
+                setTimeout(restaurarPosicionCliente, 200);
+            }
+        });
+
+        input.addEventListener('input', function(e) {
+            if (input.value && input.value.length > 3 && !autocompletando) {
+
+                setTimeout(() => {
+                    const currentScroll = window.scrollY;
+                    if (posicionClienteGuardada && Math.abs(currentScroll - posicionClienteGuardada) > 30) {
+                        window.scrollTo({ top: posicionClienteGuardada, behavior: 'instant' });
+                        console.log('🔄 Scroll corregido después de input');
+                    }
+                }, 10);
+            }
+        });
+
+        input.addEventListener('change', function() {
+            setTimeout(restaurarPosicionCliente, 10);
+        });
+    });
+
+    const telefonoSelect = document.getElementById('phone_toggle');
+    if (telefonoSelect) {
+        telefonoSelect.addEventListener('click', function() {
+            guardarPosicionCliente();
+            setTimeout(() => {
+                if (posicionClienteGuardada && Math.abs(window.scrollY - posicionClienteGuardada) > 20) {
+                    window.scrollTo({ top: posicionClienteGuardada, behavior: 'instant' });
+                }
+            }, 50);
+        });
+    }
+
+    const observer = new MutationObserver(function(mutations) {
+        if (autocompletando) {
+            restaurarPosicionCliente();
+        }
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'style']
+    });
+
+    console.log('✅ Fix para autocompletado de cliente activado');
+})();
+
+// =========================================
+// 42.5 RESUMEN CARRITO PARA PROTECCIONES
+// =========================================
+(function() {
+    "use strict";
+
+    let cartHeaderBtn = null;
+    let intervalId = null;
+
+    function tieneProteccionSeleccionada() {
+        if (typeof state === 'undefined') return false;
+
+        if (state.proteccion !== null) return true;
+        if (state.individuales && state.individuales.size > 0) return true;
+        return false;
+    }
+
+    function obtenerTotalGeneral() {
+        if (typeof calcTotals === 'function') {
+            const totals = calcTotals();
+            return totals.total || 0;
+        }
+
+        const totalEstiloElement = document.getElementById('resTotalEstilo');
+        if (totalEstiloElement && totalEstiloElement.textContent !== '—') {
+            const totalNumero = parseFloat(totalEstiloElement.textContent.replace(/[^0-9.-]/g, ''));
+            if (!isNaN(totalNumero)) return totalNumero;
+        }
+
+        const totalElement = document.getElementById('resTotal');
+        if (totalElement && totalElement.textContent !== '—') {
+            const totalNumero = parseFloat(totalElement.textContent.replace(/[^0-9.-]/g, ''));
+            if (!isNaN(totalNumero)) return totalNumero;
+        }
+
+        return 0;
+    }
+
+    function contarProteccionesSeleccionadas() {
+        if (typeof state === 'undefined') return 0;
+
+        let count = 0;
+        if (state.proteccion !== null) count++;
+        if (state.individuales) count += state.individuales.size;
+        return count;
+    }
+
+    function crearOCarritoEnModal() {
+        const modalHeader = document.querySelector('#proteccionPop .modal-head');
+        if (!modalHeader) return false;
+
+        if (document.getElementById('cartHeaderBtn')) {
+            cartHeaderBtn = document.getElementById('cartHeaderBtn');
+            return true;
+        }
+
+        cartHeaderBtn = document.createElement('button');
+        cartHeaderBtn.id = 'cartHeaderBtn';
+        cartHeaderBtn.className = 'btn-cart-header';
+        cartHeaderBtn.innerHTML = `
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-header-total">$0.00 MXN</span>
+            <span class="cart-header-badge">0</span>
+        `;
+        cartHeaderBtn.setAttribute('aria-label', 'Ver resumen completo');
+        cartHeaderBtn.setAttribute('type', 'button');
+
+        const closeBtn = modalHeader.querySelector('#proteClose');
+        if (closeBtn) {
+            modalHeader.insertBefore(cartHeaderBtn, closeBtn);
+        } else {
+            modalHeader.appendChild(cartHeaderBtn);
+        }
+
+        cartHeaderBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (typeof refreshSummary === 'function') refreshSummary();
+            const resumenPop = document.getElementById('resumenPop');
+            if (resumenPop) resumenPop.style.display = 'flex';
+        });
+
+        console.log('✅ Botón de carrito creado en el modal de cotizaciones');
+        return true;
+    }
+
+    function actualizarCarritoEnModal() {
+        if (!cartHeaderBtn) return;
+
+        const tieneSeleccion = tieneProteccionSeleccionada();
+
+        cartHeaderBtn.style.display = tieneSeleccion ? 'inline-flex' : 'none';
+
+        if (!tieneSeleccion) return;
+
+        const totalGeneral = obtenerTotalGeneral();
+        const count = contarProteccionesSeleccionadas();
+
+        const totalSpan = cartHeaderBtn.querySelector('.cart-header-total');
+        const badge = cartHeaderBtn.querySelector('.cart-header-badge');
+
+        if (totalSpan) {
+            totalSpan.textContent = `$${totalGeneral.toLocaleString("es-MX", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })} MXN`;
+        }
+
+        if (badge) {
+            badge.textContent = count;
+            badge.style.display = count > 0 ? 'inline-flex' : 'none';
+        }
+
+        console.log('🛒 Carrito actualizado - Total:', totalGeneral, 'Items:', count, 'Visible:', tieneSeleccion);
+    }
+
+    function observarCambiosEnProtecciones() {
+        const track = document.getElementById('protePacksTrack');
+        if (track) {
+            const observer = new MutationObserver(() => {
+                setTimeout(actualizarCarritoEnModal, 50);
+            });
+            observer.observe(track, { childList: true, subtree: true, attributes: true });
+        }
+
+        const individualesContainer = document.getElementById('tab-individuales');
+        if (individualesContainer) {
+            const observer = new MutationObserver(() => {
+                setTimeout(actualizarCarritoEnModal, 50);
+            });
+            observer.observe(individualesContainer, { childList: true, subtree: true, attributes: true });
+        }
+    }
+
+    function escucharClicksEnProtecciones() {
+        document.addEventListener('click', (e) => {
+            const btnPaquete = e.target.closest('.btn-proteccion-dividido');
+            if (btnPaquete) {
+                setTimeout(actualizarCarritoEnModal, 100);
+                setTimeout(actualizarCarritoEnModal, 300);
+                return;
+            }
+
+            const switchIndividual = e.target.closest('.switch-individual');
+            if (switchIndividual) {
+                setTimeout(actualizarCarritoEnModal, 100);
+                setTimeout(actualizarCarritoEnModal, 300);
+                return;
+            }
+
+            const cardIndividual = e.target.closest('.individual-item');
+            if (cardIndividual && !e.target.closest('.switch-individual')) {
+                setTimeout(actualizarCarritoEnModal, 100);
+                setTimeout(actualizarCarritoEnModal, 300);
+                return;
+            }
+        });
+    }
+
+    function init() {
+        const checkModal = setInterval(() => {
+            const modal = document.getElementById('proteccionPop');
+            if (modal) {
+                clearInterval(checkModal);
+                crearOCarritoEnModal();
+                observarCambiosEnProtecciones();
+                escucharClicksEnProtecciones();
+
+                if (intervalId) clearInterval(intervalId);
+                intervalId = setInterval(actualizarCarritoEnModal, 500);
+
+                console.log('✅ Carrito de protecciones inicializado en COTIZACIONES');
+            }
+        }, 100);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+})();
