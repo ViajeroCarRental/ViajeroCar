@@ -1228,7 +1228,7 @@ if (kmSalidaText && kmSalidaInput && btnGuardarKmSalida) {
             alertify.success("Kilometraje de salida guardado.");
 
             // 🔥 OPCIONAL (recomendado para asegurar sync)
-            location.reload();
+            //location.reload();
         });
 
     }
@@ -1249,7 +1249,7 @@ if (selectGasSalidaEl) {
 
         const nivel = e.target.value;
 
-        const resp = await fetch(`/checklist/${CHECKLIST_ID}/guardar-gasolina-salida`, {
+        const resp = await fetch(`/admin/checklist/${CHECKLIST_ID}/guardar-gasolina-salida`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
