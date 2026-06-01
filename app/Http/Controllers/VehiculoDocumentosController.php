@@ -9,7 +9,7 @@ class VehiculoDocumentosController extends Controller
 {
     public function index()
     {
-        return view('admin.vehiculos-documentos');
+        return view ('Admin.vehiculos-documentos');
     }
 
  public function list()
