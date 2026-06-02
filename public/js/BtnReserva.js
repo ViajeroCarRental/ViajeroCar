@@ -24,6 +24,45 @@
      ================================================================= */
   const qs = (s, r = document) => r.querySelector(s);
   const val = (sel) => qs(sel)?.value?.trim() || "";
+  let loaderReservaInterval = null;
+
+  const mensajesLoader = [
+    "Procesando tu reservación...",
+    "Preparando tu vehículo...",
+    "Generando tu folio...",
+    "Confirmando disponibilidad..."
+  ];
+
+  const showLoaderReserva = () => {
+    const loader = qs("#loaderReserva");
+    const texto = qs("#loaderReservaTexto");
+
+    if (loader) loader.style.display = "flex";
+
+    let index = 0;
+
+    if (texto) {
+      texto.textContent = mensajesLoader[0];
+    }
+
+    clearInterval(loaderReservaInterval);
+
+    loaderReservaInterval = setInterval(() => {
+      index = (index + 1) % mensajesLoader.length;
+
+      if (texto) {
+        texto.textContent = mensajesLoader[index];
+      }
+    }, 2000);
+  };
+
+  const hideLoaderReserva = () => {
+    const loader = qs("#loaderReserva");
+
+    clearInterval(loaderReservaInterval);
+
+    if (loader) loader.style.display = "none";
+  };
 
   /* =================================================================
      HELPER: obtener traducción del Blade (con fallback)
@@ -182,11 +221,13 @@
       // 2) PREPARAR PAYLOAD
       // ============================================================
       if (paymentModal) paymentModal.style.display = "none";
+      showLoaderReserva();
 
       const form = qs("#formCotizacion");
       if (!form) {
         if (window.alertify) alertify.error(t('reservation_form_not_found', 'Reservation form not found.'));
         else alert(t('reservation_form_not_found', 'Reservation form not found.'));
+        hideLoaderReserva();
         document.dispatchEvent(new CustomEvent('reserva:cancelada'));
         return;
       }
@@ -219,6 +260,7 @@
         if (!pickup_date || !dropoff_date || !pickup_time || !dropoff_time) {
           if (window.alertify) alertify.error(t('required_missing', 'Required information missing.'));
           else alert(t('required_missing', 'Required information missing.'));
+          hideLoaderReserva();
           document.dispatchEvent(new CustomEvent('reserva:cancelada'));
           return;
         }
@@ -251,6 +293,7 @@
           console.error("CSRF token not found for counter payment.");
           if (window.alertify) alertify.error(t('security_token_not_found', 'Security token not found. Please refresh the page.'));
           else alert(t('security_token_not_found', 'Security token not found.'));
+          hideLoaderReserva();
           document.dispatchEvent(new CustomEvent('reserva:cancelada'));
           return;
         }
@@ -289,6 +332,7 @@
           console.error("Error registering reservation (counter):", data);
           if (window.alertify) alertify.error(t('could_not_register', 'Could not register the reservation.'));
           else alert(t('could_not_register', 'Could not register the reservation.'));
+          hideLoaderReserva();
           document.dispatchEvent(new CustomEvent('reserva:cancelada'));
           return;
         }
@@ -383,6 +427,7 @@
         }));
 
         if (window.alertify) {
+          hideLoaderReserva();
           const alertInstance = alertify.alert("", successMsg, function () {
             clearReservationStorage();
             window.location.href = "/";
@@ -402,12 +447,14 @@
             this.elements.dialog.classList.remove("resv-alertify-success");
           });
         } else {
+          hideLoaderReserva();
           alert(t('reservation_success_fallback', 'Reservation registered successfully. Check your confirmation email.'));
           clearReservationStorage();
           window.location.href = "/";
         }
 
       } catch (error) {
+        hideLoaderReserva();
         console.error("Error in counter payment:", error);
         if (window.alertify) alertify.error(t('error_occurred', 'An error occurred while registering the reservation.'));
         else alert(t('error_occurred', 'An error occurred while registering the reservation.'));
