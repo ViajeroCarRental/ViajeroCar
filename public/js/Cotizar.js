@@ -1,71 +1,5 @@
 (function() {
     "use strict";
-
-/* =========================================
-   01 FUNCIÓN DE ALERTA CON SWEETALERT2
-=========================================
-    function mostrarToast(mensaje, tipo = 'warning') {
-        let iconColor = '#f59e0b';
-        let bgColor = '#fffbeb';
-        let borderColor = '#f59e0b';
-
-        if (tipo === 'error') {
-            iconColor = '#ef4444';
-            bgColor = '#fef2f2';
-            borderColor = '#ef4444';
-        } else if (tipo === 'success') {
-            iconColor = '#10b981';
-            bgColor = '#ecfdf5';
-            borderColor = '#10b981';
-        } else if (tipo === 'info') {
-            iconColor = '#3b82f6';
-            bgColor = '#eff6ff';
-            borderColor = '#3b82f6';
-        }
-
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'center',
-            showConfirmButton: false,
-            timer: 2500,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer);
-                toast.addEventListener('mouseleave', Swal.resumeTimer);
-            },
-            customClass: {
-                popup: 'custom-toast-center'
-            }
-        });
-
-        if (!document.querySelector('#toast-center-style')) {
-            const style = document.createElement('style');
-            style.id = 'toast-center-style';
-            style.textContent = `
-                .custom-toast-center {
-                    border-radius: 12px !important;
-                    border-left: 4px solid ${borderColor} !important;
-                    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1) !important;
-                    font-weight: 500 !important;
-                    min-width: 300px !important;
-                }
-            `;
-            document.head.appendChild(style);
-        }
-
-        let icon = 'warning';
-        if (tipo === 'error') icon = 'error';
-        if (tipo === 'success') icon = 'success';
-        if (tipo === 'info') icon = 'info';
-
-        Toast.fire({
-            icon: icon,
-            title: mensaje,
-            background: bgColor,
-            iconColor: iconColor
-        });
-    }*/
-
 /* =========================================
    02 FUNCIONES DE VALIDACIÓN VISUAL
 ========================================= */
@@ -456,34 +390,42 @@
         return Math.max(1, Number.isFinite(diff) ? diff : 0);
     }
 
-    function syncDays() {
-        state.days = computeDays();
+   function syncDays() {
+    state.days = computeDays();
 
-        const diasTxt = qs("#diasTxt");
-        if (diasTxt) diasTxt.textContent = String(state.days || 0);
+    const diasTxt = qs("#diasTxt");
+    if (diasTxt) diasTxt.textContent = String(state.days || 0);
 
-        refreshCategoriaPreview();
-        repaintCategoriaModalEstimados();
+    // ✅ ACTUALIZAR PASTILLA DE LA NAVBAR
+    const diasNavbar = document.getElementById('diasNavbarCount');
+    if (diasNavbar) diasNavbar.textContent = String(state.days || 0);
 
-        if (state.servicios.delivery) {
-            const els = getDeliveryEls();
-            if (els) computeDelivery(els);
-        }
-        if (state.servicios.dropoff) {
-            const els = getDropoffEls();
-            if (els) computeDropoff(els);
-        }
-        if (state.servicios.gasolina) computeGasolina();
+    // ✅ DISPARAR EVENTO PARA SINCronización adicional
+    document.dispatchEvent(new CustomEvent('diasActualizados', {
+        detail: { dias: state.days || 0 }
+    }));
 
-        refreshSummary();
-        syncTotalsHidden();
+    refreshCategoriaPreview();
+    repaintCategoriaModalEstimados();
 
-        actualizarTotalBoton();
-        actualizarTotalNavbar();
-
-        console.log("📆 Días actualizados:", state.days);
+    if (state.servicios.delivery) {
+        const els = getDeliveryEls();
+        if (els) computeDelivery(els);
     }
+    if (state.servicios.dropoff) {
+        const els = getDropoffEls();
+        if (els) computeDropoff(els);
+    }
+    if (state.servicios.gasolina) computeGasolina();
 
+    refreshSummary();
+    syncTotalsHidden();
+
+    actualizarTotalBoton();
+    actualizarTotalNavbar();
+
+    console.log("📆 Días actualizados:", state.days);
+}
 /* =========================================
    07 CATEGORÍA
 ========================================= */
@@ -500,8 +442,6 @@
         if (sub) sub.textContent = "Tarifa base por día y cálculo previo aparecerán aquí.";
         const inputPrecioKm = qs("#deliveryPrecioKm");
         if (inputPrecioKm) inputPrecioKm.value = "0";
-
-        // Limpiar el contenedor de categoría
         const container = document.getElementById("categoriaContainer");
         if (container) container.innerHTML = '';
 
@@ -542,14 +482,10 @@
     const container = document.getElementById("categoriaContainer");
 
     if (!container) return;
-
-    // Si no hay categoría, limpiar todo y salir
     if (!cat) {
         container.innerHTML = '';
         return;
     }
-
-    // Obtener descripción del auto según el ID
     const descripcionesPorId = {
         1: "Chevrolet Aveo o similar",
         2: "Volkswagen Virtus o similar",
@@ -565,8 +501,6 @@
     };
 
     const descripcionAuto = cat.desc || descripcionesPorId[cat.id] || "";
-
-    // Si hay categoría, generar el HTML completo
     container.innerHTML = `
         <div class="preview-wrapper" style="display:block;">
             <div class="mini-preview">
@@ -601,10 +535,8 @@
 
 const removeBtn = document.getElementById("catRemove");
 if (removeBtn) {
-    // Remover event listeners anteriores
     const newRemoveBtn = removeBtn.cloneNode(true);
     removeBtn.parentNode.replaceChild(newRemoveBtn, removeBtn);
-    // Asignar directamente onclick
     newRemoveBtn.onclick = function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -612,8 +544,6 @@ if (removeBtn) {
         setCategoria(null);
     };
 }
-
-    // Re-asignar event listener al botón editar
     const editBtn = document.getElementById("btnEditarCategoriaPreview");
     if (editBtn) {
         const newEditBtn = editBtn.cloneNode(true);
@@ -1165,212 +1095,321 @@ if (removeBtn) {
         refreshSummary();
 
     }
-
 /* =========================================
    10 PROTECCIONES INDIVIDUALES
 ========================================= */
-    function getGrupoLabelFromTrack(trackId) {
-        const map = {
-            insColisionTrack: "Colisión y robo",
-            insMedicosTrack: "Gastos médicos",
-            insCaminoTrack: "Asistencia para el camino",
-            insTercerosTrack: "Daños a terceros",
-            insAutoTrack: "Protecciones automáticas",
-        };
-        return map[trackId] || "";
+function getGrupoLabelFromTrack(trackId) {
+    const map = {
+        insColisionTrack: "Colisión y robo",
+        insMedicosTrack: "Gastos médicos",
+        insCaminoTrack: "Asistencia para el camino",
+        insTercerosTrack: "Daños a terceros",
+        insAutoTrack: "Protecciones automáticas",
+    };
+    return map[trackId] || "";
+}
+
+function toggleIndividualFromCard(card) {
+    if (!card) return;
+    if (state.proteccion) setProteccion(null);
+
+    const id = String(card.dataset.id || "");
+    const precio = Number(card.dataset.precio || 0);
+    const nombre = card.querySelector("h4")?.textContent?.trim() || "Seguro individual";
+    const desc = card.querySelector("p")?.textContent?.trim() || "";
+    const parentTrack = card.closest(".scroll-h")?.id || "";
+    const grupo = getGrupoLabelFromTrack(parentTrack);
+
+    console.log("📌 Tarjeta clickeada:", { id, nombre, grupo, parentTrack });
+
+    const esProteccionAutomatica = (grupo === "Protecciones automáticas");
+    const esDaniosTerceros = (grupo === "Daños a terceros");
+    const esLI = nombre.toUpperCase() === "LI" ||
+                 (nombre.toUpperCase().includes("LI") &&
+                  !nombre.toUpperCase().includes("EXT") &&
+                  !nombre.toUpperCase().includes("ALI"));
+    if (esLI) {
+        console.log("🔒 LI es fijo, no se puede desmarcar");
+        if (!state.individuales.has(id)) {
+            state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
+            repaintIndividualesUI();
+        }
+        ejecutarRepaintYRefresh();
+        return;
+    }
+    if (!grupo) {
+        const exists = state.individuales.has(id);
+        if (exists) state.individuales.delete(id);
+        else state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
+
+        verificarProteccionesAutomaticas();
+        ejecutarRepaintYRefresh();
+        return;
+    }
+    if (esDaniosTerceros) {
+        const yaSeleccionado = state.individuales.has(id);
+
+        if (yaSeleccionado) {
+            state.individuales.delete(id);
+            console.log("🔘 Deseleccionada de Daños a terceros:", nombre);
+        } else {
+            const elementosDaniosTerceros = [];
+            for (const [existingId, item] of state.individuales.entries()) {
+                if (item.grupo === "Daños a terceros" && existingId !== id) {
+                    const esLiExistente = item.nombre.toUpperCase() === "LI" ||
+                                          (item.nombre.toUpperCase().includes("LI") &&
+                                           !item.nombre.toUpperCase().includes("EXT") &&
+                                           !item.nombre.toUpperCase().includes("ALI"));
+                    if (!esLiExistente) {
+                        elementosDaniosTerceros.push(existingId);
+                    }
+                }
+            }
+            elementosDaniosTerceros.forEach(existingId => {
+                state.individuales.delete(existingId);
+                console.log(`🔄 Reemplazando: se quitó el anterior`);
+            });
+            state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
+            console.log("✅ Agregado nuevo adicional:", nombre);
+        }
+        verificarProteccionesAutomaticas();
+        ejecutarRepaintYRefresh();
+        return;
+    }
+    let existingIdInGroup = null;
+    for (const [existingId, item] of state.individuales.entries()) {
+        if (item.grupo === grupo && existingId !== id) {
+            existingIdInGroup = existingId;
+            break;
+        }
     }
 
- function toggleIndividualFromCard(card) {
-        if (!card) return;
-        if (state.proteccion) setProteccion(null);
-        const id = String(card.dataset.id || "");
-        const precio = Number(card.dataset.precio || 0);
-        const nombre = card.querySelector("h4")?.textContent?.trim() || "Seguro individual";
-        const desc = card.querySelector("p")?.textContent?.trim() || "";
-        const parentTrack = card.closest(".scroll-h")?.id || "";
-        const grupo = getGrupoLabelFromTrack(parentTrack);
-
-        // 1. Si no tiene grupo, alternamos de forma simple
-        if (!grupo) {
-            const exists = state.individuales.has(id);
-            if (exists) state.individuales.delete(id);
-            else state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
-
-            verificarProteccionesAutomaticas();
-            ejecutarRepaintYRefresh();
-            return;
-        }
-
-        // 2. Lógica normal de exclusión por grupo (un solo item activo por categoría)
-        let existingIdInGroup = null;
-        for (const [existingId, item] of state.individuales.entries()) {
-            if (item.grupo === grupo) { existingIdInGroup = existingId; break; }
-        }
-
-        if (existingIdInGroup) {
-            if (existingIdInGroup === id) {
-                state.individuales.delete(id);
-            } else {
-                state.individuales.delete(existingIdInGroup);
-                state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
-            }
+    if (existingIdInGroup) {
+        if (existingIdInGroup === id) {
+            state.individuales.delete(id);
         } else {
+            state.individuales.delete(existingIdInGroup);
             state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
         }
-
-        // 3. REGLA AUTOMÁTICA: Activación / Desactivación según categorías externas
-        verificarProteccionesAutomaticas();
-
-        // 4. Refrescar todo el sistema
-        ejecutarRepaintYRefresh();
+    } else {
+        state.individuales.set(id, { id, nombre, desc, precio, charge: "por_dia", grupo });
     }
+    verificarProteccionesAutomaticas();
+    ejecutarRepaintYRefresh();
+}
 
-    // --- FUNCIONES AUXILIARES NUEVAS (Ponlas justo debajo de la función anterior) ---
+// --- FUNCIONES AUXILIARES ---
 
-    function ejecutarRepaintYRefresh() {
-        syncIndividualesHidden();
-        repaintIndividualesUI();
-        syncTotalsHidden();
-        refreshSummary();
-        refreshProteccionUIHeader();
+function ejecutarRepaintYRefresh() {
+    syncIndividualesHidden();
+    repaintIndividualesUI();
+    syncTotalsHidden();
+    refreshSummary();
+    refreshProteccionUIHeader();
+}
+
+function verificarProteccionesAutomaticas() {
+    const tarjetasAutomaticas = document.querySelectorAll("#insAutoTrack .individual-item");
+    if (tarjetasAutomaticas.length === 0) return;
+    let otrasCategoriasActivas = 0;
+    for (const [_, item] of state.individuales.entries()) {
+        if (item.grupo && item.grupo !== "Protecciones automáticas") {
+            otrasCategoriasActivas++;
+        }
     }
+    if (otrasCategoriasActivas > 0) {
+        tarjetasAutomaticas.forEach(card => {
+            const autoId = String(card.dataset.id || "");
+            if (!state.individuales.has(autoId)) {
+                const autoPrecio = Number(card.dataset.precio || 0);
+                const autoNombre = card.querySelector("h4")?.textContent?.trim() || "Protección automática";
+                const autoDesc = card.querySelector("p")?.textContent?.trim() || "";
 
-    function verificarProteccionesAutomaticas() {
-        // Buscamos las tarjetas de Protecciones Automáticas usando su ID de track en el HTML
-        const tarjetasAutomaticas = document.querySelectorAll("#insAutoTrack .individual-item");
-        if (tarjetasAutomaticas.length === 0) return;
-
-        // Contamos si hay algún seguro de "otra" categoría seleccionado
-        let otrasCategoriasActivas = 0;
-        for (const [_, item] of state.individuales.entries()) {
-            if (item.grupo && item.grupo !== "Protecciones automáticas") {
-                otrasCategoriasActivas++;
+                state.individuales.set(autoId, {
+                    id: autoId,
+                    nombre: autoNombre,
+                    desc: autoDesc,
+                    precio: autoPrecio,
+                    charge: "por_dia",
+                    grupo: "Protecciones automáticas"
+                });
             }
-        }
-
-        // Si el usuario seleccionó algo de Colisión, Médicos, etc -> Forzamos las automáticas
-        if (otrasCategoriasActivas > 0) {
-            tarjetasAutomaticas.forEach(card => {
-                const autoId = String(card.dataset.id || "");
-                if (!state.individuales.has(autoId)) {
-                    const autoPrecio = Number(card.dataset.precio || 0);
-                    const autoNombre = card.querySelector("h4")?.textContent?.trim() || "Protección automática";
-                    const autoDesc = card.querySelector("p")?.textContent?.trim() || "";
-
-                    state.individuales.set(autoId, {
-                        id: autoId,
-                        nombre: autoNombre,
-                        desc: autoDesc,
-                        precio: autoPrecio,
-                        charge: "por_dia",
-                        grupo: "Protecciones automáticas"
-                    });
-                }
-            });
-        } else {
-            // Si deseleccionó todo y no queda nada externo -> Quitamos las automáticas
-            tarjetasAutomaticas.forEach(card => {
-                const autoId = String(card.dataset.id || "");
-                state.individuales.delete(autoId);
-            });
-        }
-    }
-
-    function repaintIndividualesUI() {
-        qsa(".individual-item").forEach((card) => {
-            const id = String(card.dataset.id || "");
-            const on = state.individuales.has(id);
-            card.classList.toggle("is-selected", on);
-            const sw = card.querySelector(".switch-individual");
-            if (sw) sw.classList.toggle("is-on", on);
+        });
+    } else {
+        tarjetasAutomaticas.forEach(card => {
+            const autoId = String(card.dataset.id || "");
+            state.individuales.delete(autoId);
         });
     }
+}
 
-    function refreshProteccionUIHeader() {
-        const txt = qs("#proteSelTxt");
-        const sub = qs("#proteSelSub");
-        const rem = qs("#proteRemove");
+function repaintIndividualesUI() {
+    qsa(".individual-item").forEach((card) => {
+        const id = String(card.dataset.id || "");
+        const on = state.individuales.has(id);
+        card.classList.toggle("is-selected", on);
+        const sw = card.querySelector(".switch-individual");
+        if (sw) sw.classList.toggle("is-on", on);
+    });
+}
 
-        const inds = Array.from(state.individuales.values());
+function refreshProteccionUIHeader() {
+    const txt = qs("#proteSelTxt");
+    const sub = qs("#proteSelSub");
+    const rem = qs("#proteRemove");
 
-        if (state.proteccion) {
-            if (txt) txt.textContent = state.proteccion.nombre || "Protección";
-            const pPrice = Number(state.proteccion.precio || 0);
-            if (sub) sub.textContent = `${money(pPrice)} ${state.proteccion.charge === "por_dia" ? "/ día" : ""}`;
-            if (rem) rem.style.display = "";
-            return;
-        }
+    const inds = Array.from(state.individuales.values());
 
-        if (!inds.length) {
-            if (txt) txt.textContent = "— Ninguna protección —";
-            if (sub) sub.textContent = "Costo se refleja en el resumen.";
-            if (rem) rem.style.display = "none";
-            return;
-        }
-
+    if (state.proteccion) {
+        if (txt) txt.textContent = state.proteccion.nombre || "Protección";
+        const pPrice = Number(state.proteccion.precio || 0);
+        if (sub) sub.textContent = `${money(pPrice)} ${state.proteccion.charge === "por_dia" ? "/ día" : ""}`;
         if (rem) rem.style.display = "";
+        return;
+    }
 
-        const listaContainer = document.createElement("div");
-        listaContainer.className = "protecciones-lista-individuales";
-        listaContainer.style.cssText = "display: flex; flex-direction: column; gap: 8px; margin-top: 4px;";
+    if (!inds.length) {
+        if (txt) txt.textContent = "— Ninguna protección —";
+        if (sub) sub.textContent = "Costo se refleja en el resumen.";
+        if (rem) rem.style.display = "none";
+        return;
+    }
 
-        const getIconoByGrupo = (grupo) => {
-            const iconos = {
-                'Colisión y robo': 'fa-car-crash',
-                'Gastos médicos': 'fa-ambulance',
-                'Asistencia para el camino': 'fa-road',
-                'Daños a terceros': 'fa-handshake',
-                'Protecciones automáticas': 'fa-microchip'
-            };
-            return iconos[grupo] || 'fa-shield-alt';
+    if (rem) rem.style.display = "";
+
+    const listaContainer = document.createElement("div");
+    listaContainer.className = "protecciones-lista-individuales";
+    listaContainer.style.cssText = "display: flex; flex-direction: column; gap: 8px; margin-top: 4px;";
+
+    const getIconoByGrupo = (grupo) => {
+        const iconos = {
+            'Colisión y robo': 'fa-car-crash',
+            'Gastos médicos': 'fa-ambulance',
+            'Asistencia para el camino': 'fa-road',
+            'Daños a terceros': 'fa-handshake',
+            'Protecciones automáticas': 'fa-microchip'
         };
+        return iconos[grupo] || 'fa-shield-alt';
+    };
 
-        inds.forEach(ind => {
-            const item = document.createElement("div");
-            item.className = "proteccion-item-individual";
+    inds.forEach(ind => {
+        const item = document.createElement("div");
+        item.className = "proteccion-item-individual";
 
-            const icono = getIconoByGrupo(ind.grupo);
-            const precioTotal = (ind.precio || 0) * (state.days || 1);
+        const icono = getIconoByGrupo(ind.grupo);
+        const precioTotal = (ind.precio || 0) * (state.days || 1);
 
-            item.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <i class="fas ${icono}" style="width: 20px; font-size: 14px;"></i>
-                    <span style="font-weight: 600; font-size: 13px; color: #1e293b;">${escapeHtml(ind.nombre)}</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-weight: 700; font-size: 13px; color: #0f172a;">${money(precioTotal)}</span>
-                    <span style="font-size: 10px; color: #64748b;">/día</span>
-                </div>
-            `;
-            listaContainer.appendChild(item);
-        });
-
-        const subTot = calcIndividualesSubtotal();
-        const totalItem = document.createElement("div");
-        totalItem.className = "proteccion-total-individual";
-        totalItem.innerHTML = `
-            <span style="font-weight: 800; font-size: 14px; color: #b22222;">TOTAL</span>
-            <span style="font-weight: 900; font-size: 18px; color: #b22222;">${money(subTot)}</span>
+        item.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas ${icono}" style="width: 20px; font-size: 14px;"></i>
+                <span style="font-weight: 600; font-size: 13px; color: #1e293b;">${escapeHtml(ind.nombre)}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-weight: 700; font-size: 13px; color: #0f172a;">${money(precioTotal)}</span>
+                <span style="font-size: 10px; color: #64748b;">/día</span>
+            </div>
         `;
-        listaContainer.appendChild(totalItem);
+        listaContainer.appendChild(item);
+    });
 
-        if (txt) {
-            txt.innerHTML = "";
-            txt.appendChild(listaContainer);
+    const subTot = calcIndividualesSubtotal();
+    const totalItem = document.createElement("div");
+    totalItem.className = "proteccion-total-individual";
+    totalItem.innerHTML = `
+        <span style="font-weight: 800; font-size: 14px; color: #b22222;">TOTAL</span>
+        <span style="font-weight: 900; font-size: 18px; color: #b22222;">${money(subTot)}</span>
+    `;
+    listaContainer.appendChild(totalItem);
+
+    if (txt) {
+        txt.innerHTML = "";
+        txt.appendChild(listaContainer);
+    }
+
+    if (sub) sub.innerHTML = `${inds.length} individual(es) seleccionados · ${state.days || 0} día(s)`;
+}
+
+function calcIndividualesSubtotal() {
+    const days = Number(state.days || 0);
+    let sum = 0;
+    state.individuales.forEach((it) => {
+        sum += Number(it.precio || 0) * days;
+    });
+    return sum;
+}
+
+// =========================================
+// FUNCIÓN PARA PRESELECCIONAR PROTECCIONES INDIVIDUALES
+// =========================================
+function preseleccionarProteccionesIndividuales() {
+    console.log("🎯 Preseleccionando protecciones individuales en COTIZACIONES...");
+    const todasLasTarjetas = document.querySelectorAll('.individual-item');
+
+    let idLI = null;
+    let datosLI = null;
+    const idsProteccionesAuto = [];
+    todasLasTarjetas.forEach(card => {
+        const nombre = card.querySelector("h4")?.textContent?.trim() || "";
+        const nombreUpper = nombre.toUpperCase();
+
+        let parentTrack = card.closest(".scroll-h")?.id || "";
+        const grupo = getGrupoLabelFromTrack(parentTrack);
+
+        const id = String(card.dataset.id || "");
+        const precio = Number(card.dataset.precio || 0);
+        const desc = card.querySelector("p")?.textContent?.trim() || "";
+
+        console.log(`🔍 Tarjeta: "${nombre}" - Grupo: "${grupo}"`);
+        const esLI = nombreUpper === "LI" ||
+                     (nombreUpper.includes("LI") &&
+                      !nombreUpper.includes("EXT") &&
+                      !nombreUpper.includes("ALI"));
+
+        if (esLI && grupo === "Daños a terceros") {
+            idLI = id;
+            datosLI = { id, nombre, desc, precio, grupo };
+            console.log(`🎯 LI identificado como FIJO: ${nombre}`);
         }
-
-        if (sub) sub.innerHTML = `${inds.length} individual(es) seleccionados · ${state.days || 0} día(s)`;
-    }
-
-    function calcIndividualesSubtotal() {
-        const days = Number(state.days || 0);
-        let sum = 0;
-        state.individuales.forEach((it) => {
-            sum += Number(it.precio || 0) * days;
+        if (grupo === "Protecciones automáticas") {
+            idsProteccionesAuto.push({ id, nombre, desc, precio, grupo });
+            console.log(`🛡️ Protección automática: ${nombre}`);
+        }
+    });
+    state.individuales.clear();
+    if (idLI && datosLI) {
+        state.individuales.set(idLI, {
+            id: datosLI.id,
+            nombre: datosLI.nombre,
+            desc: datosLI.desc,
+            precio: datosLI.precio,
+            charge: "por_dia",
+            grupo: "Daños a terceros"
         });
-        return sum;
+        console.log(`✅ LI fijo seleccionado: ${datosLI.nombre}`);
     }
+    idsProteccionesAuto.forEach(auto => {
+        if (!state.individuales.has(auto.id)) {
+            state.individuales.set(auto.id, {
+                id: auto.id,
+                nombre: auto.nombre,
+                desc: auto.desc,
+                precio: auto.precio,
+                charge: "por_dia",
+                grupo: "Protecciones automáticas"
+            });
+            console.log(`✅ Protección automática seleccionada: ${auto.nombre}`);
+        }
+    });
 
+    repaintIndividualesUI();
+    refreshProteccionUIHeader();
+    syncIndividualesHidden();
+    syncTotalsHidden();
+    refreshSummary();
+
+    console.log("🎯 Preselección completada. Total en state.individuales:", state.individuales.size);
+    console.log("📋 Items seleccionados:", Array.from(state.individuales.values()).map(i => i.nombre));
+}
 /* =========================================
    11 ADDONS CON SWITCH
 ========================================= */
@@ -1531,8 +1570,6 @@ if (removeBtn) {
         const total = subtotal + iva;
         return { baseDia, baseTotal, protTotal, indTotal, extrasSub, deliveryTotal, gasolinaTotal, dropoffTotal, subtotal, iva, total };
     }
-
-    // Actualizar el total en el botón principal
     function actualizarTotalBoton() {
         const btnTotal = document.getElementById('btnTotalText');
         if (!btnTotal) return;
@@ -1542,8 +1579,6 @@ if (removeBtn) {
 
         btnTotal.innerHTML = `Total: ${money(totalValido)}`;
     }
-
-    // Actualizar el total en el navbar
     function actualizarTotalNavbar() {
         const btnTotal = document.getElementById('btnTotalNav');
         if (!btnTotal) return;
@@ -3187,7 +3222,6 @@ function desbloquearClienteSinExpandir() {
             input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); input.blur(); } });
         });
     }
-
 /* =========================================
    28 MODAL DE CARACTERÍSTICAS
 ========================================= */
@@ -3196,7 +3230,9 @@ function desbloquearClienteSinExpandir() {
         if (featuresModal) {
             featuresModal.style.display = 'none';
             const catPop = document.getElementById('catPop');
-            if (catPop && catPop.style.display !== 'flex') catPop.style.display = 'flex';
+            if (catPop && catPop.style.display !== 'flex') {
+                catPop.style.display = 'flex';
+            }
         }
     }
     function initFeaturesModal() {
@@ -3207,7 +3243,7 @@ function desbloquearClienteSinExpandir() {
         featuresModal.id = 'featuresModal';
         featuresModal.className = 'modal-features';
         featuresModal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:10001;backdrop-filter:blur(2px);';
-        featuresModal.innerHTML = `<div class="modal-box" style="background:white;width:min(500px,90vw);border-radius:24px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,0.3);animation:modalFadeIn 0.2s ease;"><div class="header" style="background:linear-gradient(180deg, var(--brand), var(--brand-dark)) !important;border-bottom:1px solid rgba(227,0,0,0.3);color:white;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;"><h3 style="margin:0;font-size:20px;font-weight:900;display:flex;align-items:center;gap:10px;color:white !important;"><i class='bx bx-car' style="color:white !important;"></i><span id="featuresCatName" style="color:white !important;">Categoría</span></h3><button id="closeFeaturesModalBtn" style="background:rgba(255,255,255,0.2);border:none;color:white;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;">✖</button></div><div class="body" style="padding:20px;max-height:60vh;overflow-y:auto;"><div class="features-list" id="featuresListContainer" style="display:flex;flex-direction:column;gap:12px;"></div></div></div>`;
+        featuresModal.innerHTML = `<div class="modal-box" style="background:white;width:min(500px,90vw);border-radius:24px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,0.3);animation:modalFadeIn 0.2s ease;"><div class="header" style="background:linear-gradient(180deg, var(--brand), var(--brand-dark)) !important;border-bottom:1px solid rgba(227,0,0,0.3);color:white;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;"><h3 style="margin:0;font-size:20px;font-weight:900;display:flex;align-items:center;gap:10px;color:white !important;"><i class='bx bx-car' style="color:white !important;"></i><span id="featuresCatName" style="color:white !important;">Características</span></h3><button id="closeFeaturesModalBtn" style="background:rgba(255,255,255,0.2);border:none;color:white;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;">✖</button></div><div class="body" style="padding:20px;max-height:60vh;overflow-y:auto;"><div class="features-list" id="featuresListContainer" style="display:flex;flex-direction:column;gap:12px;"></div></div></div>`;
         document.body.appendChild(featuresModal);
         document.getElementById('closeFeaturesModalBtn')?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); closeFeaturesModal(); });
         featuresModal.addEventListener('click', (e) => { if (e.target === featuresModal) closeFeaturesModal(); });
@@ -3218,7 +3254,7 @@ function desbloquearClienteSinExpandir() {
         const modal = initFeaturesModal();
         const nameSpan = document.getElementById('featuresCatName');
         const container = document.getElementById('featuresListContainer');
-        if (nameSpan) nameSpan.textContent = catName || 'Categoría';
+        if (nameSpan) nameSpan.textContent = catName || 'Características';
         if (container && features && Array.isArray(features)) {
             container.innerHTML = '';
             features.forEach(f => {
@@ -3233,15 +3269,23 @@ function desbloquearClienteSinExpandir() {
     }
     document.addEventListener('click', function(e) {
         const infoBtn = e.target.closest('.info-categoria-btn');
+
         if (infoBtn) {
             e.preventDefault();
             e.stopPropagation();
+            e.stopImmediatePropagation();
             const card = infoBtn.closest('.card-pick');
             if (card) {
                 const catName = card.querySelector('.cp-title')?.textContent || 'Categoría';
                 let features = [];
                 const featuresData = card.dataset.caracteristicas;
-                if (featuresData) { try { features = JSON.parse(featuresData); } catch(e) { console.error('Error parsing features:', e); } }
+                if (featuresData) {
+                    try {
+                        features = JSON.parse(featuresData);
+                    } catch(err) {
+                        console.error('Error parsing features:', err);
+                    }
+                }
                 if (!features || !features.length) {
                     features = [
                         { icon: 'bx bx-infinite', text: 'Km ilimitados' },
@@ -3255,9 +3299,17 @@ function desbloquearClienteSinExpandir() {
                 }
                 openFeaturesModal(catName, features);
             }
+            return;
         }
-    });
 
+
+        const cardClick = e.target.closest('.card-pick');
+        if (cardClick && (e.target.classList.contains('info-categoria-btn') || e.target.closest('.info-categoria-btn'))) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+    }, true);
 /* =========================================
    29 INICIALIZACIÓN (BOOT)
 ========================================= */
@@ -3305,33 +3357,105 @@ function desbloquearClienteSinExpandir() {
         }
     });
     observerPreview.observe(document.body, { childList: true, subtree: true });
-
-
 /* =========================================
-   31 NAVBAR COTIZACIONES
+   31 NAVBAR COTIZACIONES CON PASTILLA A LA DERECHA
 ========================================= */
-    (function() {
-        function crearNavbarCotizaciones() {
-            if (document.getElementById('resNavbar')) return;
-            const navbarHTML = `<div class="res-navbar" id="resNavbar"><div class="container-res"><div class="nav-content-wrapper"><div class="left-group"><a href="/" class="logo">VIAJERO</a><span class="page-title">Nueva cotización</span></div><div class="nav-actions"><button class="btn-resumen-minimal" id="btnResumenNav"><i class="fa-solid fa-cart-shopping"></i><span id="btnTotalNav">Total: $0.00 MXN</span></button><button class="btn-salir-minimal" id="btnSalirNav" title="Salir">✕</button></div></div></div></div>`;
-            document.body.insertAdjacentHTML('afterbegin', navbarHTML);
-            const btnResumenOriginal = document.getElementById('btnResumen');
-            document.getElementById('btnResumenNav')?.addEventListener('click', () => btnResumenOriginal && btnResumenOriginal.click());
-            document.getElementById('btnSalirNav')?.addEventListener('click', () => window.location.href = '/ventas/menu');
-        }
-        function initScrollEffect() {
-            const navbar = document.getElementById('resNavbar');
-            if (!navbar) return;
-            window.addEventListener('scroll', () => { if (window.scrollY > 40) navbar.classList.add('scrolled'); else navbar.classList.remove('scrolled'); });
-        }
-        function prepararPagina() {
-            const topOriginal = document.querySelector('.top');
-            if (topOriginal) topOriginal.style.setProperty('display', 'none', 'important');
-            document.body.style.paddingTop = "115px";
-        }
-        document.addEventListener('DOMContentLoaded', () => { crearNavbarCotizaciones(); initScrollEffect(); prepararPagina(); });
-    })();
+(function() {
+    function crearNavbarCotizaciones() {
+        if (document.getElementById('resNavbar')) return;
 
+        const navbarHTML = `<div class="res-navbar" id="resNavbar">
+            <div class="container-res">
+                <div class="nav-content-wrapper">
+                    <div class="left-group">
+                        <a href="/" class="logo">VIAJERO</a>
+                        <span class="page-title">Nueva reservación</span>
+                    </div>
+                    <div class="nav-actions">
+                        <!-- PASTILLA VERDE DE DÍAS -->
+                        <div class="days-pill-navbar" id="daysPillNavbar">
+                            <i class="fa-regular fa-clock"></i>
+                            <span id="diasNavbarCount">0</span>
+                            <span>día(s)</span>
+                        </div>
+                        <!-- BOTÓN CARRITO -->
+                        <button class="btn-resumen-minimal" id="btnResumenNav">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span id="btnTotalNav">Total: $0.00 MXN</span>
+                        </button>
+                        <!-- BOTÓN SALIR -->
+                        <button class="btn-salir-minimal" id="btnSalirNav" title="Salir">✕</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+        document.body.insertAdjacentHTML('afterbegin', navbarHTML);
+
+        // Conectar botón resumen
+        const btnResumenOriginal = document.getElementById('btnResumen');
+        document.getElementById('btnResumenNav')?.addEventListener('click', () => btnResumenOriginal && btnResumenOriginal.click());
+
+        // Botón salir
+        document.getElementById('btnSalirNav')?.addEventListener('click', () => window.location.href = '/ventas/menu');
+
+        // Sincronizar la pastilla de días
+        sincronizarPastillaDias();
+    }
+
+    // Función para sincronizar la pastilla de días
+    function sincronizarPastillaDias() {
+        const diasNavbar = document.getElementById('diasNavbarCount');
+        const diasOriginal = document.getElementById('diasTxt');
+
+        if (diasNavbar && diasOriginal) {
+            // Actualizar inicial
+            diasNavbar.textContent = diasOriginal.textContent || '0';
+
+            // Observar cambios en el texto original
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'characterData' || mutation.type === 'childList') {
+                        diasNavbar.textContent = diasOriginal.textContent || '0';
+                    }
+                });
+            });
+            observer.observe(diasOriginal, { childList: true, characterData: true, subtree: true });
+
+            // También actualizar cuando se dispare el evento de cambio de fechas
+            document.addEventListener('diasActualizados', function(e) {
+                diasNavbar.textContent = e.detail?.dias || diasOriginal.textContent || '0';
+            });
+        }
+    }
+
+    function initScrollEffect() {
+        const navbar = document.getElementById('resNavbar');
+        if (!navbar) return;
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 40) navbar.classList.add('scrolled');
+            else navbar.classList.remove('scrolled');
+        });
+    }
+
+    function prepararPagina() {
+        const topOriginal = document.querySelector('.top');
+        if (topOriginal) topOriginal.style.setProperty('display', 'none', 'important');
+        document.body.style.paddingTop = "100px";
+
+        // Ocultar la pastilla original del formulario
+        const daysPillOriginal = document.querySelector('.days-pill-admin:not(#daysPillNavbar)');
+        if (daysPillOriginal) {
+            daysPillOriginal.classList.add('original-pill');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        crearNavbarCotizaciones();
+        initScrollEffect();
+        prepararPagina();
+    });
+})();
 /* =========================================
    32 BOOT FINAL
 ========================================= */
@@ -3365,10 +3489,19 @@ function desbloquearClienteSinExpandir() {
         initDifferentDropoff();
         setTimeout(init, 500);
         setTimeout(() => { initAdicionalesCarousel(); }, 300);
+
+        // 👇 PRESELECCIÓN DE PROTECCIONES INDIVIDUALES
+        setTimeout(() => {
+            if (typeof preseleccionarProteccionesIndividuales === 'function') {
+                preseleccionarProteccionesIndividuales();
+                console.log("🎯 Preselección de protecciones ejecutada en COTIZACIONES");
+            }
+        }, 800);
     });
 
-    $(document).ready(function() { setTimeout(initSelect2Sucursales, 300); });
-
+    $(document).ready(function() {
+        setTimeout(initSelect2Sucursales, 300);
+    });
 /* =========================================
    33 CARRUSEL DE ADICIONALES
 ========================================= */

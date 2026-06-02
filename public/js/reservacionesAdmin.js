@@ -782,10 +782,81 @@
 
         setTimeout(validar, 100);
     }
-
-    function init() {
+function init() {
         console.log('🚀 Sistema unificado iniciado...');
         initSelect2Sucursales();
+
+        /* =========================================================================
+           FIX: Reset completo y reconectar sincronización
+        ========================================================================= */
+        $('#sucursal_entrega').on('change', function(e) {
+            if (e.originalEvent === undefined && $(this).data('manejado-por-fix')) {
+                $(this).data('manejado-por-fix', false);
+                return;
+            }
+
+            const textoEntrega = $(this).find('option:selected').text() || "";
+
+            const sucursalesExcluidasQro = [
+                'Querétaro Aeropuerto',
+                'Querétaro Central de Autobuses',
+                'Querétaro Oficina Plaza Central Park'
+            ];
+            const limpiar = (t) => t.replace(/\s*\([^)]*\)/, '').trim().toLowerCase();
+
+            const esExcluida = sucursalesExcluidasQro.some(sucursal =>
+                limpiar(textoEntrega) === limpiar(sucursal)
+            );
+
+            if (esExcluida) {
+                console.log('🚩 Sucursal excluida detectada. Forzando Drop Off a 0.00...');
+
+                if (window.state) {
+                    window.state.servicios.dropoff = false;
+                    window.state.dropoff.activo = false;
+                    window.state.dropoff.total = 0;
+                    window.state.dropoff.km = 0;
+                    window.state.dropoff.ubicacion = "";
+                    window.state.dropoff.direccion = "";
+                }
+
+                const actHidden = document.getElementById("dropoff_activo");
+                const totHidden = document.getElementById("dropoff_total");
+                const kmsHidden = document.getElementById("dropoff_km");
+                if (actHidden) actHidden.value = "0";
+                if (totHidden) totHidden.value = "0.00";
+                if (kmsHidden) kmsHidden.value = "0";
+
+                const txtTotalDropoff = document.getElementById("dropTotal");
+                if (txtTotalDropoff) {
+                    txtTotalDropoff.textContent = "$0.00 MXN";
+                }
+
+                if (typeof syncTotalsHidden === 'function') syncTotalsHidden();
+                if (typeof refreshSummary === 'function') refreshSummary();
+
+                setTimeout(() => {
+                    const dropoffSelect = document.getElementById('dropUbicacion');
+                    if (dropoffSelect) {
+                        dropoffSelect.value = '';
+
+                        if (typeof $ !== 'undefined' && $(dropoffSelect).data('select2')) {
+                            $(dropoffSelect).val(null).trigger('change.select2');
+                        } else {
+                            dropoffSelect.dispatchEvent(new Event('change'));
+                        }
+                    }
+
+                    const $sucEntrega = $('#sucursal_entrega');
+                    $sucEntrega.data('manejado-por-fix', true);
+                    $sucEntrega.trigger('change');
+                }, 60);
+
+            } else {
+                console.log('✅ Destino normal: Se conserva la selección y el cálculo de Drop Off.');
+            }
+        });
+        /* ========================================================================= */
         configurarBotonPrincipal();
         configurarBotonesSiguiente();
         configurarClicEncabezados();
@@ -5000,7 +5071,7 @@
         setTimeout(saveClienteSectionPosition, 500);
     })();
 
-    /* =========================================
+ /* =========================================
     38. ACORDEÓN PARA DECLINE PROTECTIONS
     ========================================= */
     (function() {
@@ -5094,8 +5165,9 @@
         }
 
         setTimeout(aplicarAcordeonADecline, 1000);
-    })();
 
+
+    })();
     /* =========================================
     39. FIX: POSICIÓN EN INDIVIDUALES
     ========================================= */
@@ -5272,240 +5344,254 @@
         }
     })();
 
-    /* =========================================
-    41. SINCRONIZACIÓN DEVOLUCIÓN CON DROPOFF
-    ========================================= */
-    (function() {
-        let syncInProgress = false;
-        let select2Initialized = false;
+ /* =========================================
+            41. SINCRONIZACIÓN BIDIRECCIONAL (Formulario ↔ DropOff)
+        ========================================= */
+(function() {
+    let syncInProgress = false;
+    let select2Initialized = false;
 
-        const select2Config = {
-            placeholder: "¿Dónde termina tu viaje?",
-            allowClear: false,
-            width: '100%',
-            minimumResultsForSearch: -1,
-            templateResult: function(option) {
-                if (!option.id) return option.text;
-                let iconClass = 'fa-location-dot';
-                if (window.iconosPorId && window.iconosPorId[option.id]) {
-                    iconClass = window.iconosPorId[option.id];
-                }
-                return $('<span><i class="fa-solid ' + iconClass + '" style="margin-right: 8px;"></i>' + option.text + '</span>');
-            },
-            templateSelection: function(option) {
-                if (!option.id) {
-                    return $('<span><i class="fa-solid fa-location-dot" style="margin-right: 8px;"></i> ¿Dónde termina tu viaje?</span>');
-                }
-                let iconClass = 'fa-location-dot';
-                if (window.iconosPorId && window.iconosPorId[option.id]) {
-                    iconClass = window.iconosPorId[option.id];
-                }
-                return $('<span><i class="fa-solid ' + iconClass + '" style="margin-right: 8px;"></i>' + option.text + '</span>');
-            },
-            escapeMarkup: function(m) { return m; }
-        };
+    const sucursalesExcluidas = [
+        'Querétaro Aeropuerto',
+        'Querétaro Central de Autobuses',
+        'Querétaro Oficina Plaza Central Park'
+    ];
 
-        function initSelect2Once() {
-            if (select2Initialized) return;
-            const select = document.getElementById('sucursal_entrega');
-            if (select && typeof $ !== 'undefined') {
-                if ($(select).data('select2')) $(select).select2('destroy');
-                $(select).select2(select2Config);
-                select2Initialized = true;
-            }
+    function limpiarTexto(texto) {
+        return (texto || '').replace(/\s*\([^)]*\)/, '').trim();
+    }
+
+    function getSelectedBranchText() {
+        const select = document.getElementById('sucursal_entrega');
+        if (!select) return '';
+        if (typeof $ !== 'undefined' && $(select).data('select2')) {
+            const data = $(select).select2('data');
+            if (data && data.length) return data[0].text || '';
         }
+        return select.options[select.selectedIndex]?.text?.trim() || '';
+    }
 
-        function updateSelect2Value(select, value) {
-            if (typeof $ !== 'undefined' && $(select).data('select2')) {
-                $(select).val(value).trigger('change');
+    function isExcluded() {
+        const text = limpiarTexto(getSelectedBranchText());
+        return sucursalesExcluidas.includes(text);
+    }
+
+    function limpiarDropoffCompleto() {
+        const dropoffSelect = document.getElementById('dropUbicacion');
+        if (dropoffSelect) {
+            dropoffSelect.value = '';
+            if (typeof $ !== 'undefined' && $(dropoffSelect).data('select2')) {
+                $(dropoffSelect).val(null).trigger('change');
             }
+            dropoffSelect.dispatchEvent(new Event('change', { bubbles: true }));
         }
-
-        function initFinalSync() {
-            const checkbox = document.getElementById('differentDropoffAdmin');
-            const sucursalEntrega = document.getElementById('sucursal_entrega');
-            const dropoffSelect = document.getElementById('dropUbicacion');
-            const dropoffToggle = document.getElementById('dropoffToggle');
-
-            if (!checkbox || !sucursalEntrega || !dropoffSelect) return;
-
-            let currentDynamicOption = null;
-
-            function limpiarOpcionDinamica() {
-                if (currentDynamicOption) {
-                    const optionToRemove = document.querySelector(`#sucursal_entrega option[value="${currentDynamicOption}"]`);
-                    if (optionToRemove) optionToRemove.remove();
-                    currentDynamicOption = null;
-                }
-            }
-
-            function syncFormToDropoff() {
-                if (syncInProgress) return;
-                syncInProgress = true;
-
-                if (!checkbox.checked) {
-                    syncInProgress = false;
-                    return;
-                }
-
-                const selectedValue = sucursalEntrega.value;
-                if (!selectedValue) {
-                    syncInProgress = false;
-                    return;
-                }
-
-                const selectedOpt = sucursalEntrega.options[sucursalEntrega.selectedIndex];
-                const selectedText = selectedOpt?.text || "";
-
-                let foundMatch = false;
-                for (let i = 0; i < dropoffSelect.options.length; i++) {
-                    const opt = dropoffSelect.options[i];
-                    if (!opt.value || opt.value === "0") continue;
-
-                    const optText = opt.text;
-                    if (optText === selectedText ||
-                        optText.toLowerCase().includes(selectedText.toLowerCase()) ||
-                        selectedText.toLowerCase().includes(optText.toLowerCase())) {
-
-                        if (dropoffSelect.value !== opt.value) {
-                            dropoffSelect.value = opt.value;
-                            dropoffSelect.dispatchEvent(new Event('change', { bubbles: true }));
-
-                            setTimeout(() => {
-                                const els = getDropoffEls();
-                                if (els && state.servicios.dropoff) {
-                                    computeDropoff(els);
-                                    syncTotalsHidden();
-                                    refreshSummary();
-                                }
-                            }, 100);
-                        }
-                        foundMatch = true;
-                        break;
-                    }
-                }
-
-                syncInProgress = false;
-            }
-
-            function updateSelectState() {
-                const wrapper = document.getElementById('dropoffWrapperAdmin');
-                if (checkbox.checked) {
-                    if (wrapper) wrapper.style.display = 'block';
-                    sucursalEntrega.disabled = false;
-                    initSelect2Once();
-                    limpiarOpcionDinamica();
-                    setTimeout(syncFormToDropoff, 100);
-                } else {
-                    if (wrapper) wrapper.style.display = 'none';
-                    sucursalEntrega.disabled = true;
-                    limpiarOpcionDinamica();
-                }
-            }
-
-            checkbox.addEventListener('change', updateSelectState);
-            updateSelectState();
-
-            sucursalEntrega.addEventListener('change', function() {
-                if (!this.disabled && checkbox.checked) {
-                    setTimeout(syncFormToDropoff, 50);
-                }
-            });
-
-            dropoffSelect.addEventListener('change', function() {
-                if (checkbox.checked) {
-                    setTimeout(syncFormToDropoff, 50);
-                }
-            });
-
-            if (dropoffToggle) {
-                dropoffToggle.addEventListener('change', function() {
-                    if (this.checked && checkbox.checked) {
-                        setTimeout(syncFormToDropoff, 200);
-                    }
-                });
-            }
+        const dropDireccion = document.getElementById('dropDireccion');
+        if (dropDireccion) dropDireccion.value = '';
+        const dropKm = document.getElementById('dropKm');
+        if (dropKm) dropKm.value = '';
+        if (typeof state !== 'undefined') {
+            state.dropoff.total = 0;
+            state.dropoff.km = 0;
+            state.dropoff.ubicacion = '';
+            state.dropoff.direccion = '';
         }
+        if (typeof syncDropoffHidden === 'function') syncDropoffHidden();
+        if (typeof syncTotalsHidden === 'function') syncTotalsHidden();
+        if (typeof refreshSummary === 'function') refreshSummary();
+    }
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initFinalSync);
-        } else {
-            initFinalSync();
+    // ========== FORMULARIO → DROPOFF ==========
+    function syncFormToDropoff() {
+    if (syncInProgress) return;
+    syncInProgress = true;
+
+    const checkbox = document.getElementById('differentDropoffAdmin');
+    const dropoffToggle = document.getElementById('dropoffToggle');
+
+    if (!checkbox || !dropoffToggle) {
+        syncInProgress = false;
+        return;
+    }
+
+    // Solo si el checkbox está marcado
+    if (checkbox.checked) {
+        if (!dropoffToggle.checked) {
+            dropoffToggle.checked = true;
+            dropoffToggle.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log('✅ DropOff activado siempre (modo siempre activo)');
         }
-    })();
-
-    /* =========================================
-    42. FIX: ACTIVAR DROPOFF AUTOMÁTICAMENTE CON EL CHECKBOX
-    ========================================= */
-    (function() {
-        function forceDropoffSync() {
-            const checkbox = document.getElementById('differentDropoffAdmin');
-            const dropoffToggle = document.getElementById('dropoffToggle');
-
-            if (!checkbox || !dropoffToggle) return;
-
-            if (checkbox.checked) {
-                if (!dropoffToggle.checked) {
-                    dropoffToggle.checked = true;
-                    const changeEvent = new Event('change', { bubbles: true });
-                    dropoffToggle.dispatchEvent(changeEvent);
-                }
-            } else {
-                if (dropoffToggle.checked) {
-                    dropoffToggle.checked = false;
-                    const changeEvent = new Event('change', { bubbles: true });
-                    dropoffToggle.dispatchEvent(changeEvent);
-                }
-            }
+    } else {
+        if (dropoffToggle.checked) {
+            dropoffToggle.checked = false;
+            dropoffToggle.dispatchEvent(new Event('change', { bubbles: true }));
         }
+    }
 
-        const originalCheckbox = document.getElementById('differentDropoffAdmin');
-        if (originalCheckbox) {
-            originalCheckbox.removeEventListener('change', forceDropoffSync);
-            originalCheckbox.addEventListener('change', forceDropoffSync);
-        }
+    syncInProgress = false;
+}
 
+    // ========== DROPOFF → FORMULARIO ==========
+    function syncDropoffToForm() {
+        if (syncInProgress) return;
+        syncInProgress = true;
+
+        const checkbox = document.getElementById('differentDropoffAdmin');
         const sucursalEntrega = document.getElementById('sucursal_entrega');
-        if (sucursalEntrega) {
-            sucursalEntrega.addEventListener('change', function() {
-                const checkbox = document.getElementById('differentDropoffAdmin');
-                const dropoffToggle = document.getElementById('dropoffToggle');
+        const dropoffSelect = document.getElementById('dropUbicacion');
 
-                if (checkbox && checkbox.checked && this.value && dropoffToggle && !dropoffToggle.checked) {
-                    dropoffToggle.checked = true;
-                    const changeEvent = new Event('change', { bubbles: true });
-                    dropoffToggle.dispatchEvent(changeEvent);
-                }
-            });
+        if (!checkbox || !sucursalEntrega || !dropoffSelect) {
+            syncInProgress = false;
+            return;
         }
 
-        function checkInitialState() {
-            const checkbox = document.getElementById('differentDropoffAdmin');
-            const dropoffToggle = document.getElementById('dropoffToggle');
-            const dropoffWrapper = document.getElementById('dropoffWrapperAdmin');
+        if (!checkbox.checked) {
+            syncInProgress = false;
+            return;
+        }
 
-            if (checkbox && dropoffToggle && dropoffWrapper) {
-                if (checkbox.checked) {
-                    dropoffWrapper.style.display = 'block';
-                    if (!dropoffToggle.checked) {
-                        dropoffToggle.checked = true;
-                        const changeEvent = new Event('change', { bubbles: true });
-                        dropoffToggle.dispatchEvent(changeEvent);
+        const selectedValue = dropoffSelect.value;
+        if (!selectedValue || selectedValue === "0") {
+            syncInProgress = false;
+            return;
+        }
+
+        const selectedText = dropoffSelect.options[dropoffSelect.selectedIndex]?.text || '';
+        if (!selectedText) {
+            syncInProgress = false;
+            return;
+        }
+
+        // Buscar coincidencia exacta en sucursal_entrega
+        let matchFound = false;
+        for (let i = 0; i < sucursalEntrega.options.length; i++) {
+            const opt = sucursalEntrega.options[i];
+            if (opt.text === selectedText) {
+                if (sucursalEntrega.value !== opt.value) {
+                    sucursalEntrega.value = opt.value;
+                    if (typeof $ !== 'undefined' && $(sucursalEntrega).data('select2')) {
+                        $(sucursalEntrega).val(opt.value).trigger('change');
                     }
-                } else {
-                    dropoffWrapper.style.display = 'none';
-                    if (dropoffToggle.checked) {
-                        dropoffToggle.checked = false;
-                        const changeEvent = new Event('change', { bubbles: true });
-                        dropoffToggle.dispatchEvent(changeEvent);
-                    }
+                }
+                matchFound = true;
+                break;
+            }
+        }
+
+        // Si no existe, crear opción dinámica
+        if (!matchFound) {
+            const oldDynamic = sucursalEntrega.querySelector('option[data-dynamic="true"]');
+            if (oldDynamic) oldDynamic.remove();
+
+            const tempId = `dynamic_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+            const newOption = document.createElement('option');
+            newOption.value = tempId;
+            newOption.text = selectedText;
+            newOption.setAttribute('data-dynamic', 'true');
+
+            if (!window.iconosPorId) window.iconosPorId = {};
+            const textLower = selectedText.toLowerCase();
+            if (textLower.includes('aeropuerto')) window.iconosPorId[tempId] = 'fa-plane-departure';
+            else if (textLower.includes('central') || textLower.includes('autobuses')) window.iconosPorId[tempId] = 'fa-bus';
+            else window.iconosPorId[tempId] = 'fa-location-dot';
+
+            sucursalEntrega.appendChild(newOption);
+            sucursalEntrega.value = tempId;
+            if (typeof $ !== 'undefined' && $(sucursalEntrega).data('select2')) {
+                $(sucursalEntrega).val(tempId).trigger('change');
+            }
+            console.log(`🆕 Opción dinámica creada: ${selectedText}`);
+        }
+
+        setTimeout(() => {
+            if (typeof refreshSummary === 'function') refreshSummary();
+            syncTotalsHidden();
+        }, 100);
+
+        syncInProgress = false;
+    }
+
+    // ========== CONFIGURAR EVENTOS ==========
+    function initSync() {
+        const checkbox = document.getElementById('differentDropoffAdmin');
+        const sucursalEntrega = document.getElementById('sucursal_entrega');
+        const dropoffSelect = document.getElementById('dropUbicacion');
+        const dropoffToggle = document.getElementById('dropoffToggle');
+
+        if (!checkbox || !sucursalEntrega || !dropoffSelect) {
+            setTimeout(initSync, 300);
+            return;
+        }
+
+        function updateSelectState() {
+            const wrapper = document.getElementById('dropoffWrapperAdmin');
+            if (checkbox.checked) {
+                if (wrapper) wrapper.style.display = 'block';
+                sucursalEntrega.disabled = false;
+                setTimeout(syncFormToDropoff, 100);
+            } else {
+                if (wrapper) wrapper.style.display = 'none';
+                sucursalEntrega.disabled = true;
+                if (dropoffToggle && dropoffToggle.checked) {
+                    dropoffToggle.checked = false;
+                    dropoffToggle.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             }
         }
 
-        setTimeout(checkInitialState, 300);
-    })();
+        checkbox.addEventListener('change', updateSelectState);
+        updateSelectState();
 
+        sucursalEntrega.addEventListener('change', () => {
+            if (!sucursalEntrega.disabled && checkbox.checked) {
+                setTimeout(syncFormToDropoff, 50);
+            }
+        });
+
+        dropoffSelect.addEventListener('change', () => {
+            if (checkbox.checked) {
+                setTimeout(syncDropoffToForm, 50);
+            }
+        });
+
+        if (dropoffToggle) {
+            dropoffToggle.addEventListener('change', () => {
+                if (dropoffToggle.checked && checkbox.checked) {
+                    setTimeout(syncFormToDropoff, 200);
+                }
+            });
+        }
+
+        console.log('✅ Sincronización bidireccional inicializada (corregida)');
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSync);
+    } else {
+        initSync();
+    }
+})();
+/* =========================================
+42. ACTIVAR/DESACTIVAR DROPOFF SEGÚN CHECKBOX
+========================================= */
+(function() {
+    function actualizarUI() {
+        const checkbox = document.getElementById('differentDropoffAdmin');
+        const dropoffWrapper = document.getElementById('dropoffWrapperAdmin');
+        const sucursalEntrega = document.getElementById('sucursal_entrega');
+
+        if (!checkbox) return;
+        const isChecked = checkbox.checked;
+
+        if (dropoffWrapper) dropoffWrapper.style.display = isChecked ? 'block' : 'none';
+        if (sucursalEntrega) sucursalEntrega.disabled = !isChecked;
+    }
+
+    const checkbox = document.getElementById('differentDropoffAdmin');
+    if (checkbox) {
+        checkbox.addEventListener('change', actualizarUI);
+    }
+    actualizarUI();
+})();
     /* =========================================
     43. EXPONER API GLOBAL
     ========================================= */
