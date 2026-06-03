@@ -245,6 +245,11 @@
                 <span>Facturar</span>
             </a>
 
+            <a href="{{ route('rutaflotillastatus') }}" class="ventas-home-card">
+                <i class="fas fa-warehouse"></i>
+                <span>Flotilla</span>
+            </a>
+
         </div>
 
     </div>

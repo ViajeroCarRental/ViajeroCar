@@ -24,6 +24,9 @@ return new class extends Migration
             $table->decimal('costo_estimado', 10, 2)->default(0);
             $table->enum('estatus', ['Pendiente', 'Cotizado', 'En proceso', 'Refacciones', 'Terminado'])->default('Pendiente');
 
+            // 🔹 Archivos guardados en BD (LONGBLOB)
+            $table->binary('foto_carroceria')->nullable();
+
             // ⏰ Tiempos de control (nullable como en tu tabla real)
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
@@ -35,6 +38,9 @@ return new class extends Migration
                   ->on('vehiculos')
                   ->onDelete('cascade');
         });
+
+        // 🔥  Convertimos los campos a LONGBLOB manualmente
+        DB::statement('ALTER TABLE carrocerias MODIFY foto_carroceria LONGBLOB');
     }
 
     public function down(): void
