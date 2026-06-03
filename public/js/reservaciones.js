@@ -1062,7 +1062,7 @@
     updateHidden();
   }
 
-  /* =================================================================
+/* =================================================================
      STEPS 1 & 2 — Días y precios de tarjetas
      ================================================================= */
   function initDaysAndPricesSync() {
@@ -1079,6 +1079,40 @@
       if (!(a instanceof Date) || isNaN(a) || !(b instanceof Date) || isNaN(b)) return false;
       return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
     };
+
+    // ========== NUEVA: Configura el "clic para 13:00" ==========
+    function setupDefaultTimeOnClick(selectElem, hiddenSel) {
+      if (selectElem.dataset.defaultTimeSetup === "1") return;
+      selectElem.dataset.defaultTimeSetup = "1";
+
+      const hiddenEl = qs(hiddenSel);
+      if (hiddenEl && hiddenEl.value && hiddenEl.value.trim() !== "") return;
+
+      function applyDefaultIfNeeded() {
+        if (selectElem.dataset.defaultApplied === "true") return;
+        if (selectElem.value && selectElem.value !== "") return;
+
+        const defaultHour = "13";
+        const option = Array.from(selectElem.options).find(opt => opt.value === defaultHour);
+        if (option) {
+          selectElem.value = defaultHour;
+          selectElem.setAttribute('data-user-interacted', 'true');
+          if (hiddenEl) hiddenEl.value = `${defaultHour}:00:00`;
+          selectElem.dispatchEvent(new Event('change', { bubbles: true }));
+          selectElem.dataset.defaultApplied = "true";
+        }
+      }
+
+      selectElem.addEventListener("click", function onClick() {
+        applyDefaultIfNeeded();
+        selectElem.removeEventListener("click", onClick);
+      }, { once: true });
+
+      selectElem.addEventListener("focus", function onFocus() {
+        applyDefaultIfNeeded();
+        selectElem.removeEventListener("focus", onFocus);
+      }, { once: true });
+    }
 
     function rebuildPickupHours() {
       const pickupHourEl   = qs('select[name="pickup_h"]');
@@ -1123,33 +1157,18 @@
       if (newValue) {
         pickupHourEl.value = newValue;
         if (pickupHiddenEl) pickupHiddenEl.value = `${newValue}:00:00`;
+        pickupHourEl.dataset.defaultApplied = "true";
       } else {
         pickupHourEl.selectedIndex = 0;
         if (pickupHiddenEl) pickupHiddenEl.value = '';
+        delete pickupHourEl.dataset.defaultApplied;
       }
 
       if (dropoffHourEl && (!dropoffHourEl.value || dropoffHourEl.value === "")) {
         dropoffHourEl.selectedIndex = 0;
         if (dropoffHiddenEl) dropoffHiddenEl.value = '';
+        delete dropoffHourEl.dataset.defaultApplied;
       }
-    }
-
-    function initHourSelectFocusBehavior() {
-      const handleFocus = (select, hiddenSel) => {
-        if (!select.value || select.value === "") {
-          let option13 = Array.from(select.options).find(opt => opt.value === "13");
-          if (!option13 && select.options.length > 1) option13 = select.options[1];
-          if (option13 && option13.value) {
-            select.value = option13.value;
-            select.setAttribute('data-user-interacted', 'true');
-            select.dispatchEvent(new Event('change', { bubbles: true }));
-            const hiddenEl = qs(hiddenSel);
-            if (hiddenEl) hiddenEl.value = `${option13.value}:00:00`;
-          }
-        }
-      };
-      pickupHour?.addEventListener('focus',  () => handleFocus(pickupHour,  '#pickup_time_hidden'));
-      dropoffHour?.addEventListener('focus', () => handleFocus(dropoffHour, '#dropoff_time_hidden'));
     }
 
     function getDateTime(which) {
@@ -1206,7 +1225,10 @@
 
     rebuildPickupHours();
     runUpdate();
-    initHourSelectFocusBehavior();
+
+    // Configurar el comportamiento "clic → 13:00" para ambos selects
+    if (pickupHour) setupDefaultTimeOnClick(pickupHour, '#pickup_time_hidden');
+    if (dropoffHour) setupDefaultTimeOnClick(dropoffHour, '#dropoff_time_hidden');
   }
 
   /* =================================================================
@@ -1364,75 +1386,125 @@
   /* =================================================================
      STEP 1 — Flatpickr
      ================================================================= */
-  function initFlatpickrRules() {
-    if (!window.flatpickr) return;
-    const start = qs("#start"), end = qs("#end");
-    if (!start || !end) return;
+ function initFlatpickrRules() {
+  if (!window.flatpickr) return;
+  const start = qs("#start"), end = qs("#end");
+  if (!start || !end) return;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const toMidnight = d => { const x = new Date(d.getTime()); x.setHours(0, 0, 0, 0); return x; };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const toMidnight = d => { const x = new Date(d.getTime()); x.setHours(0, 0, 0, 0); return x; };
 
-    try { start._flatpickr?.destroy(); } catch (_) {}
-    try { end._flatpickr?.destroy();   } catch (_) {}
+  // Helper para construir un picker protegido (sin teclado móvil)
+  function createProtectedPicker(inputElement, additionalConfig = {}) {
+    if (!inputElement) return null;
+    let picker;
+    try {
+      picker = flatpickr(inputElement, {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d M Y",
+        allowInput: false,        // IMPORTANTE: el usuario NO puede escribir
+        disableMobile: true,
+        locale: getFlatpickrLocale(),
+        onOpen: () => qs('#fp-view-overlay')?.classList.add('active'),
+        onClose: () => qs('#fp-view-overlay')?.classList.remove('active'),
+        onReady(selectedDates, dateStr, instance) {
+          if (instance.altInput) {
+            // 1. Deshabilitar edición y teclado
+            instance.altInput.setAttribute('readonly', 'readonly');
+            instance.altInput.setAttribute('inputmode', 'none');
+            instance.altInput.style.cursor = 'pointer';
 
-    const baseCfg = {
-      dateFormat: "Y-m-d",
-      altInput: true,
-      altFormat: "d M Y",
-      allowInput: true,
-      disableMobile: true,
-      locale: getFlatpickrLocale(),
-      onOpen:  () => qs('#fp-view-overlay')?.classList.add('active'),
-      onClose: () => qs('#fp-view-overlay')?.classList.remove('active')
-    };
-
-    const startFp = flatpickr(start, { ...baseCfg });
-    const endFp   = flatpickr(end,   { ...baseCfg });
-
-    const startInit = parseDateAny(start.value);
-    const endInit   = parseDateAny(end.value);
-    if (startInit) startFp.setDate(startInit, false);
-    if (endInit)   endFp.setDate(endInit, false);
-
-    startFp.set("minDate", today);
-    endFp.set("minDate", today);
-
-    const jumpToCurrentMonth = (fp) => fp.jumpToDate(fp.selectedDates?.[0] || today, true);
-    startFp.set("onOpen", [() => { qs('#fp-view-overlay')?.classList.add('active'); jumpToCurrentMonth(startFp); }]);
-    endFp.set("onOpen",   [() => { qs('#fp-view-overlay')?.classList.add('active'); jumpToCurrentMonth(endFp); }]);
-
-    let lock = false;
-    function applyConstraintsAndFix() {
-      if (lock) return;
-      lock = true;
-      const s = startFp.selectedDates?.[0] ? toMidnight(startFp.selectedDates[0]) : null;
-      const e = endFp.selectedDates?.[0]   ? toMidnight(endFp.selectedDates[0])   : null;
-      if (s && s < today) startFp.setDate(today, false);
-      if (e && e < today) endFp.setDate(today, false);
-      const s2 = startFp.selectedDates?.[0] ? toMidnight(startFp.selectedDates[0]) : null;
-      const e2 = endFp.selectedDates?.[0]   ? toMidnight(endFp.selectedDates[0])   : null;
-      endFp.set("minDate", s2 || today);
-      if (s2 && e2 && s2.getTime() > e2.getTime()) {
-        endFp.setDate(s2, false);
-        endFp.set("minDate", s2);
-      }
-      lock = false;
-    }
-
-    startFp.set("onChange", [applyConstraintsAndFix]);
-    endFp.set("onChange",   [applyConstraintsAndFix]);
-    applyConstraintsAndFix();
-    start.addEventListener("blur", applyConstraintsAndFix);
-    end.addEventListener("blur", applyConstraintsAndFix);
-
-    // Cambio de idioma → actualizar locale
-    new MutationObserver(() => {
-      const newLocale = getFlatpickrLocale();
-      startFp?.set('locale', newLocale);
-      endFp?.set('locale', newLocale);
-    }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+            // 2. Bloquear cualquier intento de foco (teclado)
+            instance.altInput.addEventListener('focus', (e) => {
+              e.preventDefault();
+              instance.altInput.blur();
+            });
+            instance.altInput.addEventListener('touchstart', (e) => {
+              e.preventDefault();
+              instance.open();
+            });
+            instance.altInput.addEventListener('mousedown', (e) => {
+              e.preventDefault();
+              instance.open();
+            });
+          }
+        },
+        ...additionalConfig
+      });
+    } catch (e) { /* silencioso */ }
+    return picker;
   }
+
+  // Destruir pickers previos si existen
+  try { start._flatpickr?.destroy(); } catch (_) {}
+  try { end._flatpickr?.destroy(); } catch (_) {}
+
+  // Crear picker de inicio
+  const startFp = createProtectedPicker(start, {
+    minDate: today,
+    onChange(selectedDates, dateStr) {
+      start.value = dateStr;
+      start.dispatchEvent(new Event('change', { bubbles: true }));
+      if (endFp && selectedDates[0]) {
+        const minDate = new Date(selectedDates[0]);
+        minDate.setDate(minDate.getDate() + 1);
+        endFp.set('minDate', minDate);
+      }
+    }
+  });
+
+  // Crear picker de fin (minDate dinámico)
+  let minEndDate = today;
+  if (start.value) {
+    const d = parseDateAny(start.value);
+    if (d && !isNaN(d)) {
+      const next = new Date(d);
+      next.setDate(next.getDate() + 1);
+      minEndDate = next;
+    }
+  }
+  const endFp = createProtectedPicker(end, {
+    minDate: minEndDate,
+    onChange(_, dateStr) {
+      end.value = dateStr;
+      end.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });
+
+  // Lógica de constraints y sincronía (igual que antes)
+  let lock = false;
+  function applyConstraintsAndFix() {
+    if (lock) return;
+    lock = true;
+    const s = startFp?.selectedDates?.[0] ? toMidnight(startFp.selectedDates[0]) : null;
+    const e = endFp?.selectedDates?.[0]   ? toMidnight(endFp.selectedDates[0])   : null;
+    if (s && s < today) startFp?.setDate(today, false);
+    if (e && e < today) endFp?.setDate(today, false);
+    const s2 = startFp?.selectedDates?.[0] ? toMidnight(startFp.selectedDates[0]) : null;
+    if (s2 && e && s2.getTime() > e.getTime()) {
+      endFp?.setDate(s2, false);
+      endFp?.set('minDate', s2);
+    } else if (s2) {
+      endFp?.set('minDate', s2);
+    }
+    lock = false;
+  }
+
+  startFp?.set('onChange', [applyConstraintsAndFix]);
+  endFp?.set('onChange', [applyConstraintsAndFix]);
+  start.addEventListener('blur', applyConstraintsAndFix);
+  end.addEventListener('blur', applyConstraintsAndFix);
+  applyConstraintsAndFix();
+
+  // Observador de cambio de idioma (solo actualiza locale, no recrea pickers)
+  new MutationObserver(() => {
+    const newLocale = getFlatpickrLocale();
+    startFp?.set('locale', newLocale);
+    endFp?.set('locale', newLocale);
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+}
 
   function bootWhenFlatpickrReady() {
     if (window.flatpickr) { initFlatpickrRules(); return; }

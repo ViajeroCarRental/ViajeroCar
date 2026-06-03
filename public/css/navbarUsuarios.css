@@ -3189,6 +3189,21 @@ span.flatpickr-weekday {
     background: white !important;
     color: #333 !important;
 }
+.flatpickr-calendar,
+.flatpickr-calendar.mobile{
+    border-radius: 18px !important;
+    overflow: hidden !important;
+}
+
+.flatpickr-innerContainer,
+.flatpickr-rContainer{
+    border-radius: 0 0 18px 18px !important;
+    overflow: hidden !important;
+}
+
+.flatpickr-months{
+    border-radius: 18px 18px 0 0 !important;
+}
 
 /* ==========================================================
    DIAS DESHABILITADOS
