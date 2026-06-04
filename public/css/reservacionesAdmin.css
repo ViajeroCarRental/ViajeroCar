@@ -5727,3 +5727,950 @@ input.flatpickr-input.field-success {
         font-size: 13px !important;
     }
 }
+
+
+/* =========================================
+   📱 RESPONSIVE 360px - AJUSTES EXTREMO
+   ========================================= */
+@media (max-width: 360px) {
+
+    /* ---------- RESET GLOBAL ---------- */
+    body, .wrap {
+        overflow-x: hidden !important;
+    }
+    .wrap {
+        padding: 0 12px 40px !important;
+        margin: 30px auto !important;
+    }
+
+    /* ---------- NAVBAR (mostrar total) ---------- */
+    .res-navbar {
+        width: 98% !important;
+        padding: 6px 0 !important;
+        top: 8px !important;
+        border-radius: 50px !important;
+    }
+    .res-navbar .container-res {
+        padding: 0 12px !important;
+    }
+    .res-navbar .logo {
+        font-size: 14px !important;
+    }
+    .res-navbar .days-pill-admin {
+        padding: 2px 6px !important;
+        font-size: 9px !important;
+        gap: 2px !important;
+    }
+    .res-navbar .btn-resumen-minimal {
+        padding: 4px 8px !important;
+        gap: 4px !important;
+    }
+    .res-navbar .btn-resumen-minimal i {
+        font-size: 12px !important;
+    }
+
+    .res-navbar .btn-resumen-minimal #btnTotalNav {
+        display: inline-block !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        white-space: nowrap !important;
+    }
+    .res-navbar .btn-salir-minimal {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 10px !important;
+    }
+    .res-navbar .nav-actions {
+        gap: 4px !important;
+    }
+
+
+    /* ---------- TIPOGRAFÍA Y ESPACIADOS ---------- */
+    .h1 {
+        font-size: 22px !important;
+    }
+    .stack-title {
+        font-size: 14px !important;
+    }
+    .stack-sub {
+        font-size: 11px !important;
+    }
+    .stack-body {
+        padding: 12px !important;
+    }
+    .form-2 {
+        gap: 10px !important;
+    }
+    .label, label {
+        font-size: 10px !important;
+    }
+    .input, .input-lg {
+        padding: 10px 12px !important;
+        font-size: 13px !important;
+    }
+
+    /* ---------- BOTONES ---------- */
+    .btn {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+    }
+    .btn-resumen {
+        padding: 8px 12px !important;
+    }
+    .top-actions {
+        gap: 6px !important;
+    }
+
+    /* ---------- MODALES (PROTECCIONES, CATEGORÍAS, RESUMEN) ---------- */
+    .box {
+        width: 98vw !important;
+        border-radius: 16px !important;
+    }
+    .modal-body {
+        padding: 10px !important;
+    }
+    .modal-head {
+        padding: 10px 12px !important;
+    }
+    .modal-title {
+        font-size: 14px !important;
+    }
+    .modal-foot {
+        padding: 10px 12px !important;
+        flex-wrap: wrap !important;
+    }
+    .modal-foot .btn {
+        flex: 1 !important;
+        font-size: 11px !important;
+    }
+
+    /* ---------- CATEGORÍAS (PICKER) ---------- */
+    .picker-row {
+        flex-direction: column !important;
+    }
+    .picker-selected {
+        padding: 8px !important;
+    }
+    .mini-preview .mini-container {
+        flex-direction: column !important;
+        text-align: center !important;
+        padding: 12px !important;
+    }
+    .mini-imagen {
+        flex: none !important;
+        width: 100% !important;
+        max-width: 140px !important;
+        margin: 0 auto !important;
+    }
+    .mini-precios {
+        justify-content: center !important;
+        gap: 16px !important;
+    }
+    #btnEditarCategoriaPreview i {
+        font-size: 28px !important;
+    }
+
+    /* ---------- PROTECCIONES (MODAL COMPLETO) ---------- */
+    #proteccionPop .modal-body {
+        padding: 0 !important;
+    }
+    #proteccionPop .scroll-h {
+        gap: 8px !important;
+        padding: 8px 6px 20px !important;
+    }
+    #proteccionPop .pack-card {
+        margin: 0 0 12px 0 !important;
+        border-radius: 20px !important;
+    }
+    #proteccionPop .pack-card .body {
+        padding: 12px 10px 0 10px !important;
+    }
+    #proteccionPop .pack-card h4 {
+        font-size: 14px !important;
+        margin-bottom: 6px !important;
+    }
+    #proteccionPop .pack-card .desc-list li {
+        font-size: 10px !important;
+        line-height: 1.3 !important;
+        padding-left: 18px !important;
+        margin-bottom: 4px !important;
+    }
+    #proteccionPop .pack-card .precio {
+        padding: 6px 10px !important;
+        margin: 8px 0 !important;
+    }
+    #proteccionPop .pack-card .precio strong {
+        font-size: 16px !important;
+    }
+    #proteccionPop .pack-card .actions {
+        padding: 0 12px 16px 12px !important;
+    }
+    #proteccionPop .pack-card .actions .btn {
+        height: 38px !important;
+        font-size: 12px !important;
+    }
+
+    /* ---------- PROTECCIONES INDIVIDUALES (CARRUSEL HORIZONTAL) ---------- */
+    #proteccionPop .grid-vertical-individuales {
+        gap: 12px !important;
+        padding: 4px 4px 16px 4px !important;
+    }
+    #proteccionPop .grid-vertical-individuales .ins-card {
+        flex: 0 0 240px !important;
+        min-width: 240px !important;
+        max-width: 240px !important;
+    }
+    .ins-card .body {
+        padding: 12px !important;
+    }
+    .ins-card h4 {
+        font-size: 12px !important;
+    }
+    .ins-card .precio {
+        font-size: 14px !important;
+        padding: 6px 8px !important;
+    }
+    .switch.switch-individual {
+        width: 48px !important;
+        height: 28px !important;
+    }
+    .switch.switch-individual::after {
+        width: 22px !important;
+        height: 22px !important;
+        top: 2px !important;
+        left: 2px !important;
+    }
+    .switch.switch-individual.is-on::after {
+        left: 24px !important;
+    }
+
+    /* ---------- SERVICIOS (ADICIONALES) ---------- */
+    .svc-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+    .svc-card {
+        padding: 12px !important;
+    }
+    .svc-ico {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 16px !important;
+    }
+    .svc-name {
+        font-size: 14px !important;
+    }
+    .svc-desc {
+        font-size: 11px !important;
+    }
+    .adicionales-carousel {
+        padding: 0 !important;
+    }
+    .carousel-item {
+        flex: 0 0 100% !important;
+        min-width: 100% !important;
+    }
+
+    /* ---------- FORMULARIO CLIENTE ---------- */
+    .cliente-layout {
+        gap: 16px !important;
+    }
+    .cliente-input, .cliente-country, .cliente-phone-prefix {
+        height: 40px !important;
+        font-size: 12px !important;
+        padding: 0 12px !important;
+    }
+    .cliente-textarea {
+        height: 150px !important;
+        min-height: 150px !important;
+        font-size: 12px !important;
+    }
+    .phone-prefix {
+        min-width: auto !important;
+        justify-content: space-between !important;
+    }
+    .cliente-actions .btn.primary {
+        padding: 10px !important;
+        font-size: 13px !important;
+    }
+
+        /* ---------- BUSCADOR (LUGAR/FECHA) ---------- */
+.search-grid-admin {
+    flex-direction: column !important;
+    gap: 20px !important;
+}
+.sg-col-location-admin,
+.sg-col-datetime-admin,
+.sg-col-submit-admin {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+.sg-col-datetime-admin {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    background: transparent !important;
+}
+.sg-col-datetime-admin .field-admin {
+    width: 100% !important;
+    background: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+}
+.sg-col-datetime-admin .field-admin > label,
+.sg-col-datetime-admin .field-title-admin {
+    display: block !important;
+    font-size: 14px !important;
+    font-weight: 900 !important;
+    color: #0f172a !important;
+    margin-bottom: 12px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+}
+.datetime-row-admin {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    height: auto !important;
+    flex-wrap: wrap !important;
+}
+.dt-field-admin {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+.dt-field-admin .input-buscador-admin,
+.dt-field-admin input,
+.dt-field-admin .tp-selects select {
+    width: 100% !important;
+    height: 44px !important;
+    font-size: 13px !important;
+    padding: 0 12px 0 32px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+    background: white !important;
+}
+/* Validación error */
+.dt-field-admin .input-buscador-admin.field-error,
+.dt-field-admin input.field-error,
+.dt-field-admin .tp-selects select.field-error,
+#fecha_inicio_ui.field-error,
+#fecha_fin_ui.field-error {
+    border: 2px solid #e53935 !important;
+    box-shadow: 0 0 0 1px rgba(229, 57, 53, 0.2) !important;
+}
+/* Validación éxito */
+.dt-field-admin .input-buscador-admin.field-success,
+.dt-field-admin input.field-success,
+.dt-field-admin .tp-selects select.field-success,
+#fecha_inicio_ui.field-success,
+#fecha_fin_ui.field-success {
+    border: 2px solid #43a047 !important;
+}
+/* Iconos sin duplicar */
+.dt-field-admin .field-icon-admin {
+    display: block !important;
+    left: 8px !important;
+    font-size: 14px !important;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+.dt-field-admin.time-field-admin .field-icon-admin {
+    display: none !important;
+}
+.dt-field-admin.time-field-admin::before {
+    content: "\f017" !important;
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 400 !important;
+    position: absolute !important;
+    left: 8px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-size: 14px !important;
+    color: #5b6e8c !important;
+    z-index: 10 !important;
+    pointer-events: none !important;
+    display: block !important;
+}
+/* Mensajes de error */
+.dt-field-admin .error-msg,
+.dt-field-admin .validation-message {
+    display: block !important;
+    font-size: 9px !important;
+    margin-top: 4px !important;
+    white-space: normal !important;
+    line-height: 1.2 !important;
+}
+.datetime-row-admin .dt-field-admin {
+    margin-bottom: 16px !important;
+}
+/* Checkbox a la derecha */
+.inline-check-admin {
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-top: 8px !important;
+    margin-bottom: 8px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: #2c3e66 !important;
+    width: 100% !important;
+}
+.inline-check-admin input {
+    width: 14px !important;
+    height: 14px !important;
+}
+/* Ubicación con mismo estilo */
+.location-inputs-wrapper-admin {
+    flex-direction: column !important;
+    gap: 12px !important;
+}
+.location-inputs-wrapper-admin .field-admin {
+    width: 100% !important;
+}
+.location-inputs-wrapper-admin input,
+.location-inputs-wrapper-admin select {
+    width: 100% !important;
+    height: 44px !important;
+    font-size: 13px !important;
+    padding: 0 12px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+}
+/* Botón buscar */
+.sg-col-submit-admin {
+    margin-top: 8px !important;
+}
+.actions-admin {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 12px !important;
+}
+.btn-buscar-admin {
+    flex: 2 !important;
+    height: 44px !important;
+    font-size: 13px !important;
+}
+.days-pill-admin {
+    flex: 1 !important;
+    text-align: center !important;
+    font-size: 10px !important;
+    padding: 8px 8px !important;
+    white-space: nowrap !important;
+}
+    /* ---------- TELÉFONO (PAÍS + INPUT) ---------- */
+    .phone-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+    .phone-prefix {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+
+    /* ---------- MODAL DE CATEGORÍAS ---------- */
+    .grid-cards {
+        grid-template-columns: 1fr !important;
+    }
+    .card-pick {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+        text-align: center !important;
+    }
+    .cp-img {
+        height: 130px !important;
+    }
+    .cp-price {
+        text-align: center !important;
+    }
+
+   /* ---------- TARJETA DE RESUMEN V2 ---------- */
+    .rv2-car {
+        padding: 12px !important;
+    }
+    .rv2-car-image {
+        max-width: 120px !important;
+    }
+    .rv2-car-name {
+        font-size: 16px !important;
+    }
+    .rv2-car-features span {
+        font-size: 9px !important;
+        padding: 4px 8px !important;
+    }
+    .rv2-location-two-columns {
+        gap: 10px !important;
+    }
+    .rv2-location-col {
+        padding: 10px !important;
+    }
+    .rv2-location-sucursal {
+        font-size: 11px !important;
+    }
+    .rv2-price-amount {
+        font-size: 16px !important;
+    }
+    .rv2-grand-total strong {
+        font-size: 18px !important;
+    }
+}
+
+/* =========================================
+   NAVBAR RESPONSIVE - 400px
+   ========================================= */
+
+@media (max-width: 400px) {
+
+    /* Navbar principal */
+    .res-navbar {
+        width: 96% !important;
+        padding: 6px 0 !important;
+        top: 10px !important;
+        border-radius: 50px !important;
+    }
+
+    .res-navbar .container-res {
+        padding: 0 12px !important;
+    }
+
+    .res-navbar .nav-content-wrapper {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        width: 100% !important;
+    }
+
+    /* Grupo izquierdo (logo) */
+    .res-navbar .left-group {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        flex-shrink: 1 !important;
+        min-width: 0 !important;
+    }
+
+    .res-navbar .logo {
+        font-size: 14px !important;
+        white-space: nowrap !important;
+    }
+
+    /* Ocultar página title */
+    .res-navbar .page-title {
+        display: none !important;
+    }
+
+    /* Grupo derecho (acciones) */
+    .res-navbar .nav-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Pastilla de días */
+    .res-navbar .days-pill-admin {
+        padding: 3px 6px !important;
+        font-size: 9px !important;
+        gap: 3px !important;
+    }
+
+    .res-navbar .days-pill-admin i {
+        font-size: 9px !important;
+    }
+
+    /* Botón resumen */
+    .res-navbar .btn-resumen-minimal {
+        padding: 4px 8px !important;
+        font-size: 9px !important;
+        gap: 4px !important;
+    }
+
+    .res-navbar .btn-resumen-minimal i {
+        font-size: 11px !important;
+    }
+
+    .res-navbar .btn-resumen-minimal #btnTotalNav {
+        font-size: 9px !important;
+        display: inline-block !important;
+    }
+
+    /* Botón salir */
+    .res-navbar .btn-salir-minimal {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 11px !important;
+    }
+
+    /* Ajuste del body para que no tape la navbar */
+    body {
+        padding-top: 75px !important;
+    }
+}
+
+/* =========================================
+   FORMULARIO RESPONSIVE - 400px
+   ========================================= */
+
+@media (max-width: 400px) {
+
+    /* ========== FORMULARIO PRINCIPAL ========== */
+    .search-grid-admin {
+        flex-direction: column !important;
+        gap: 16px !important;
+        align-items: stretch !important;
+    }
+
+    /* COLUMNA UBICACIÓN */
+    .sg-col-location-admin {
+        width: 100% !important;
+        min-width: auto !important;
+        max-width: 100% !important;
+    }
+
+    .location-head-admin {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        height: auto !important;
+        margin-bottom: 10px !important;
+        gap: 8px !important;
+    }
+
+    .field-title-admin {
+        font-size: 11px !important;
+        white-space: nowrap !important;
+    }
+
+    .inline-check-admin {
+        font-size: 9px !important;
+        white-space: nowrap !important;
+        gap: 4px !important;
+    }
+
+    .inline-check-admin input[type="checkbox"] {
+        width: 14px !important;
+        height: 14px !important;
+        margin: 0 !important;
+    }
+
+}
+
+/* =========================================
+   LÁPIZ DE CATEGORÍA - TAMAÑO AJUSTADO
+   ========================================= */
+
+/* Tamaño normal en escritorio */
+#btnEditarCategoriaPreview {
+    background: none !important;
+    border: none !important;
+    cursor: pointer;
+    color: #1a1a1a !important;
+    font-size: 24px !important;
+    padding: 0 !important;
+    margin-left: 8px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    transition: all 0.2s ease;
+    width: auto !important;
+    height: auto !important;
+}
+
+#btnEditarCategoriaPreview i {
+    color: #1a1a1a !important;
+    font-size: 22px !important;
+}
+
+#btnEditarCategoriaPreview:hover {
+    transform: scale(1.05);
+    background: none !important;
+}
+
+/* Ajustes para móvil */
+@media (max-width: 768px) {
+    #btnEditarCategoriaPreview {
+        font-size: 20px !important;
+        margin-left: 8px !important;
+        flex-shrink: 0 !important;
+    }
+
+    #btnEditarCategoriaPreview i {
+        font-size: 18px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #btnEditarCategoriaPreview {
+        font-size: 18px !important;
+    }
+
+    #btnEditarCategoriaPreview i {
+        font-size: 16px !important;
+    }
+}
+
+/* Asegurar que el encabezado no se rompa */
+.mini-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+}
+
+.mini-title {
+    font-size: 18px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    flex: 1 !important;
+}
+
+@media (max-width: 480px) {
+    .mini-title {
+        font-size: 15px !important;
+    }
+}
+
+/* =========================================
+   PROTECCIONES MODAL - BOTONES VISIBLES
+   ========================================= */
+
+/* Asegurar que el modal head y foot sean visibles */
+#proteccionPop .modal-head {
+    background: linear-gradient(180deg, #68bfc7 0%, #5f95db 100%) !important;
+    padding: 12px 16px !important;
+    z-index: 10 !important;
+    position: relative !important;
+}
+
+/* Botón de carrito en el header */
+#proteccionPop .btn-cart-header {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 40px !important;
+    padding: 6px 14px !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+}
+
+#proteccionPop .btn-cart-header:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: scale(1.02) !important;
+}
+
+#proteccionPop .btn-cart-header i {
+    font-size: 16px !important;
+    color: #ffffff !important;
+}
+
+#proteccionPop .btn-cart-header .cart-header-total {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+}
+
+#proteccionPop .btn-cart-header .cart-header-badge {
+    background: #ef4444 !important;
+    color: white !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    padding: 2px 6px !important;
+    border-radius: 30px !important;
+    min-width: 18px !important;
+    text-align: center !important;
+}
+
+/* Botón de cerrar en el header */
+#proteccionPop #proteClose {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 50% !important;
+    width: 36px !important;
+    height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    color: white !important;
+    font-size: 18px !important;
+}
+
+#proteccionPop #proteClose:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: rotate(90deg) !important;
+}
+
+/* Footer del modal - botones visibles */
+#proteccionPop .modal-foot {
+    background: #ffffff !important;
+    padding: 12px 16px !important;
+    border-top: 1px solid #e5e7eb !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+    z-index: 10 !important;
+    position: relative !important;
+}
+
+#proteccionPop .modal-foot .btn {
+    padding: 10px 20px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border-radius: 30px !important;
+    cursor: pointer !important;
+}
+
+#proteccionPop .modal-foot .btn.gray {
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #1e293b !important;
+}
+
+#proteccionPop .modal-foot .btn.primary {
+    background: linear-gradient(180deg, #68bfc7 0%, #5f95db 100%) !important;
+    border: none !important;
+    color: white !important;
+}
+
+#proteccionPop .modal-foot .btn:hover {
+    transform: translateY(-1px) !important;
+}
+
+/* Responsive móvil */
+@media (max-width: 768px) {
+    #proteccionPop .modal-head {
+        padding: 10px 12px !important;
+    }
+
+    #proteccionPop .btn-cart-header {
+        padding: 4px 10px !important;
+    }
+
+    #proteccionPop .btn-cart-header .cart-header-total {
+        font-size: 11px !important;
+    }
+
+    #proteccionPop #proteClose {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 16px !important;
+    }
+
+    #proteccionPop .modal-foot {
+        padding: 10px 12px !important;
+    }
+
+    #proteccionPop .modal-foot .btn {
+        padding: 8px 16px !important;
+        font-size: 12px !important;
+    }
+}
+/* =========================================
+   PROTECCIONES CARDS - RESPONSIVE 400px
+   ========================================= */
+
+@media (max-width: 400px) {
+
+    /* Contenedor de scroll - ajustar altura */
+    #proteccionPop .scroll-h {
+        flex-direction: column !important;
+        gap: 16px !important;
+        padding: 12px !important;
+        height: auto !important;
+        max-height: calc(100vh - 140px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Card - altura automática para ver todo el contenido */
+    #proteccionPop .pack-card {
+        flex: 0 0 auto !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        margin: 0 0 12px 0 !important;
+        border-radius: 16px !important;
+    }
+
+    /* Body de la card */
+    #proteccionPop .pack-card .body {
+        padding: 12px 12px 0 12px !important;
+    }
+
+    /* Título */
+    #proteccionPop .pack-card h4 {
+        font-size: 14px !important;
+        margin-bottom: 8px !important;
+    }
+
+    /* Lista de características */
+    #proteccionPop .pack-card .desc-list {
+        gap: 6px !important;
+        margin-bottom: 10px !important;
+    }
+
+    /* Items de la lista */
+    #proteccionPop .pack-card .desc-list li {
+        font-size: 10px !important;
+        line-height: 1.35 !important;
+        padding-left: 18px !important;
+        margin-bottom: 4px !important;
+    }
+
+    /* Garantía */
+    #proteccionPop .pack-card .desc-list .garantia-item {
+        font-size: 9px !important;
+        margin-top: 4px !important;
+    }
+
+    /* Precio */
+    #proteccionPop .pack-card .precio {
+        padding: 6px 10px !important;
+        margin: 8px 0 12px 0 !important;
+    }
+
+    #proteccionPop .pack-card .precio strong {
+        font-size: 15px !important;
+    }
+
+    /* Botón - visible y completo */
+    #proteccionPop .pack-card .actions {
+        padding: 0 12px 16px 12px !important;
+        margin-top: 0 !important;
+    }
+
+    #proteccionPop .pack-card .actions .btn {
+        height: 42px !important;
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        width: 100% !important;
+    }
+}
+/* Ajuste específico para 400px */
+@media (max-width: 400px) {
+
+    #proteccionPop .contenedor-principal-individuales {
+        padding: 0 10px 20px 10px !important;
+    }
+
+    #proteccionPop .ins-card .body {
+        padding: 12px 14px !important;
+    }
+
+    #proteccionPop .ins-card .precio {
+        padding: 6px 10px !important;
+        font-size: 13px !important;
+    }
+}
