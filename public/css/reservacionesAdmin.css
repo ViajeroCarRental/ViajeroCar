@@ -5730,8 +5730,88 @@ input.flatpickr-input.field-success {
 
 
 /* =========================================
-   📱 RESPONSIVE 360px - AJUSTES EXTREMO
+   RESPONSIVE 360px
    ========================================= */
+.cp-mobile-layout {
+    display: none;
+}
+.cp-desktop-layout {
+    display: block;
+}
+
+/* ============================================
+   RESPONSIVE PARA MÓVIL (0px a 500px)
+   ============================================ */
+@media (max-width: 500px) {
+    .cp-desktop-layout {
+        display: none;
+    }
+    .cp-mobile-layout {
+        display: block;
+    }
+
+    .cp-mobile-layout .cp-meta-row {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 6px;
+        align-items: center;
+        justify-content: flex-start;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .cp-mobile-layout .cp-meta-row .pill {
+        white-space: nowrap;
+        font-size: 11px;
+        padding: 5px 8px;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    @media (max-width: 380px) {
+        .cp-mobile-layout .cp-meta-row {
+            gap: 4px;
+        }
+        .cp-mobile-layout .cp-meta-row .pill {
+            font-size: 10px;
+            padding: 4px 6px;
+        }
+    }
+    .cp-mobile-layout .cp-title,
+    .cp-mobile-layout .cp-sub {
+        margin-bottom: 6px;
+    }
+
+    /* === AJUSTE GLOBAL DE TELÉFONO PARA TODO MÓVIL === */
+    .phone-grid {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    .phone-prefix,
+    .cliente-phone-prefix {
+        flex: 0 0 110px !important;
+        min-width: 110px !important;
+        max-width: 110px !important;
+        box-sizing: border-box !important;
+    }
+
+    .phone-grid input,
+    .phone-grid .cliente-input,
+    .phone-grid select + input {
+        flex: 1 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+    }
+}
+
 @media (max-width: 360px) {
 
     /* ---------- RESET GLOBAL ---------- */
@@ -5910,7 +5990,7 @@ input.flatpickr-input.field-success {
         font-size: 12px !important;
     }
 
-    /* ---------- PROTECCIONES INDIVIDUALES (CARRUSEL HORIZONTAL) ---------- */
+    /* ---------- PROTECCIONES INDIVIDUALES ---------- */
     #proteccionPop .grid-vertical-individuales {
         gap: 12px !important;
         padding: 4px 4px 16px 4px !important;
@@ -5994,183 +6074,152 @@ input.flatpickr-input.field-success {
         font-size: 13px !important;
     }
 
-        /* ---------- BUSCADOR (LUGAR/FECHA) ---------- */
-.search-grid-admin {
-    flex-direction: column !important;
-    gap: 20px !important;
-}
-.sg-col-location-admin,
-.sg-col-datetime-admin,
-.sg-col-submit-admin {
-    width: 100% !important;
-    max-width: 100% !important;
-}
-.sg-col-datetime-admin {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 8px !important;
-    background: transparent !important;
-}
-.sg-col-datetime-admin .field-admin {
-    width: 100% !important;
-    background: transparent !important;
-    padding: 0 !important;
-    border: none !important;
-    border-radius: 0 !important;
-}
-.sg-col-datetime-admin .field-admin > label,
-.sg-col-datetime-admin .field-title-admin {
-    display: block !important;
-    font-size: 14px !important;
-    font-weight: 900 !important;
-    color: #0f172a !important;
-    margin-bottom: 12px !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
-}
-.datetime-row-admin {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 8px !important;
-    height: auto !important;
-    flex-wrap: wrap !important;
-}
-.dt-field-admin {
-    flex: 1 !important;
-    min-width: 0 !important;
-}
-.dt-field-admin .input-buscador-admin,
-.dt-field-admin input,
-.dt-field-admin .tp-selects select {
-    width: 100% !important;
-    height: 44px !important;
-    font-size: 13px !important;
-    padding: 0 12px 0 32px !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 12px !important;
-    background: white !important;
-}
-/* Validación error */
-.dt-field-admin .input-buscador-admin.field-error,
-.dt-field-admin input.field-error,
-.dt-field-admin .tp-selects select.field-error,
-#fecha_inicio_ui.field-error,
-#fecha_fin_ui.field-error {
-    border: 2px solid #e53935 !important;
-    box-shadow: 0 0 0 1px rgba(229, 57, 53, 0.2) !important;
-}
-/* Validación éxito */
-.dt-field-admin .input-buscador-admin.field-success,
-.dt-field-admin input.field-success,
-.dt-field-admin .tp-selects select.field-success,
-#fecha_inicio_ui.field-success,
-#fecha_fin_ui.field-success {
-    border: 2px solid #43a047 !important;
-}
-/* Iconos sin duplicar */
-.dt-field-admin .field-icon-admin {
-    display: block !important;
-    left: 8px !important;
-    font-size: 14px !important;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-}
-.dt-field-admin.time-field-admin .field-icon-admin {
-    display: none !important;
-}
-.dt-field-admin.time-field-admin::before {
-    content: "\f017" !important;
-    font-family: "Font Awesome 6 Free" !important;
-    font-weight: 400 !important;
-    position: absolute !important;
-    left: 8px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    font-size: 14px !important;
-    color: #5b6e8c !important;
-    z-index: 10 !important;
-    pointer-events: none !important;
-    display: block !important;
-}
-/* Mensajes de error */
-.dt-field-admin .error-msg,
-.dt-field-admin .validation-message {
-    display: block !important;
-    font-size: 9px !important;
-    margin-top: 4px !important;
-    white-space: normal !important;
-    line-height: 1.2 !important;
-}
-.datetime-row-admin .dt-field-admin {
-    margin-bottom: 16px !important;
-}
-/* Checkbox a la derecha */
-.inline-check-admin {
-    display: flex !important;
-    justify-content: flex-end !important;
-    align-items: center !important;
-    gap: 6px !important;
-    margin-top: 8px !important;
-    margin-bottom: 8px !important;
-    font-size: 11px !important;
-    font-weight: 600 !important;
-    color: #2c3e66 !important;
-    width: 100% !important;
-}
-.inline-check-admin input {
-    width: 14px !important;
-    height: 14px !important;
-}
-/* Ubicación con mismo estilo */
-.location-inputs-wrapper-admin {
-    flex-direction: column !important;
-    gap: 12px !important;
-}
-.location-inputs-wrapper-admin .field-admin {
-    width: 100% !important;
-}
-.location-inputs-wrapper-admin input,
-.location-inputs-wrapper-admin select {
-    width: 100% !important;
-    height: 44px !important;
-    font-size: 13px !important;
-    padding: 0 12px !important;
-    border: 1px solid #cbd5e1 !important;
-    border-radius: 12px !important;
-}
-/* Botón buscar */
-.sg-col-submit-admin {
-    margin-top: 8px !important;
-}
-.actions-admin {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    gap: 12px !important;
-}
-.btn-buscar-admin {
-    flex: 2 !important;
-    height: 44px !important;
-    font-size: 13px !important;
-}
-.days-pill-admin {
-    flex: 1 !important;
-    text-align: center !important;
-    font-size: 10px !important;
-    padding: 8px 8px !important;
-    white-space: nowrap !important;
-}
-    /* ---------- TELÉFONO (PAÍS + INPUT) ---------- */
-    .phone-grid {
-        grid-template-columns: 1fr !important;
-        gap: 8px !important;
+    /* ---------- BUSCADOR (LUGAR/FECHA) ---------- */
+    .search-grid-admin {
+        flex-direction: column !important;
+        gap: 20px !important;
     }
-    .phone-prefix {
+    .sg-col-location-admin,
+    .sg-col-datetime-admin,
+    .sg-col-submit-admin {
         width: 100% !important;
+        max-width: 100% !important;
+    }
+    .sg-col-datetime-admin {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        background: transparent !important;
+    }
+    .sg-col-datetime-admin .field-admin {
+        width: 100% !important;
+        background: transparent !important;
+        padding: 0 !important;
+        border: none !important;
+        border-radius: 0 !important;
+    }
+    .sg-col-datetime-admin .field-admin > label,
+    .sg-col-datetime-admin .field-title-admin {
+        display: block !important;
+        font-size: 14px !important;
+        font-weight: 900 !important;
+        color: #0f172a !important;
+        margin-bottom: 12px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+    .datetime-row-admin {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        height: auto !important;
+        flex-wrap: wrap !important;
+    }
+    .dt-field-admin {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+    .dt-field-admin .input-buscador-admin,
+    .dt-field-admin input,
+    .dt-field-admin .tp-selects select {
+        width: 100% !important;
+        height: 44px !important;
+        font-size: 13px !important;
+        padding: 0 12px 0 32px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 12px !important;
+        background: white !important;
+    }
+    /* Validación error */
+    .dt-field-admin .input-buscador-admin.field-error,
+    .dt-field-admin input.field-error,
+    .dt-field-admin .tp-selects select.field-error,
+    #fecha_inicio_ui.field-error,
+    #fecha_fin_ui.field-error {
+        border: 2px solid #e53935 !important;
+        box-shadow: 0 0 0 1px rgba(229, 57, 53, 0.2) !important;
+    }
+    /* Validación éxito */
+    .dt-field-admin .input-buscador-admin.field-success,
+    .dt-field-admin input.field-success,
+    .dt-field-admin .tp-selects select.field-success,
+    #fecha_inicio_ui.field-success,
+    #fecha_fin_ui.field-success {
+        border: 2px solid #43a047 !important;
+    }
+
+    .dt-field-admin.time-field-admin .field-icon-admin {
+        display: none !important;
+    }
+
+    /* Mensajes de error */
+    .dt-field-admin .error-msg,
+    .dt-field-admin .validation-message {
+        display: block !important;
+        font-size: 9px !important;
+        margin-top: 4px !important;
+        white-space: normal !important;
+        line-height: 1.2 !important;
+    }
+    .datetime-row-admin .dt-field-admin {
+        margin-bottom: 16px !important;
+    }
+
+    .inline-check-admin {
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        gap: 6px !important;
+        margin-top: 8px !important;
+        margin-bottom: 8px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        color: #2c3e66 !important;
+        width: 100% !important;
+    }
+    .inline-check-admin input {
+        width: 14px !important;
+        height: 14px !important;
+    }
+
+    .location-inputs-wrapper-admin {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+    .location-inputs-wrapper-admin .field-admin {
+        width: 100% !important;
+    }
+    .location-inputs-wrapper-admin input,
+    .location-inputs-wrapper-admin select {
+        width: 100% !important;
+        height: 44px !important;
+        font-size: 13px !important;
+        padding: 0 12px !important;
+        border: 1px solid #cbd5e1 !important;
+        border-radius: 12px !important;
+    }
+    /* Botón buscar */
+    .sg-col-submit-admin {
+        margin-top: 8px !important;
+    }
+    .actions-admin {
+        display: flex !important;
+        flex-direction: row !important;
         justify-content: space-between !important;
+        align-items: center !important;
+        gap: 12px !important;
+    }
+    .btn-buscar-admin {
+        flex: 2 !important;
+        height: 44px !important;
+        font-size: 13px !important;
+    }
+    .days-pill-admin {
+        flex: 1 !important;
+        text-align: center !important;
+        font-size: 10px !important;
+        padding: 8px 8px !important;
+        white-space: nowrap !important;
     }
 
     /* ---------- MODAL DE CATEGORÍAS ---------- */
@@ -6189,12 +6238,12 @@ input.flatpickr-input.field-success {
         text-align: center !important;
     }
 
-   /* ---------- TARJETA DE RESUMEN V2 ---------- */
+    /* ---------- TARJETA DE RESUMEN V2 ---------- */
     .rv2-car {
         padding: 12px !important;
     }
     .rv2-car-image {
-        max-width: 120px !important;
+        max-width: 220px !important;
     }
     .rv2-car-name {
         font-size: 16px !important;
@@ -6223,7 +6272,6 @@ input.flatpickr-input.field-success {
 /* =========================================
    NAVBAR RESPONSIVE - 400px
    ========================================= */
-
 @media (max-width: 400px) {
 
     /* Navbar principal */
@@ -6307,7 +6355,6 @@ input.flatpickr-input.field-success {
         font-size: 11px !important;
     }
 
-    /* Ajuste del body para que no tape la navbar */
     body {
         padding-top: 75px !important;
     }
@@ -6316,7 +6363,6 @@ input.flatpickr-input.field-success {
 /* =========================================
    FORMULARIO RESPONSIVE - 400px
    ========================================= */
-
 @media (max-width: 400px) {
 
     /* ========== FORMULARIO PRINCIPAL ========== */
@@ -6359,12 +6405,18 @@ input.flatpickr-input.field-success {
         margin: 0 !important;
     }
 
+    .datetime-row-admin .dt-field-admin {
+    margin-bottom: 6px !important;
+    }
+
+    .sg-col-submit-admin {
+        margin-top: 4px !important;
+    }
 }
 
 /* =========================================
-   LÁPIZ DE CATEGORÍA - TAMAÑO AJUSTADO
+   LÁPIZ DE CATEGORÍA
    ========================================= */
-
 /* Tamaño normal en escritorio */
 #btnEditarCategoriaPreview {
     background: none !important;
@@ -6440,8 +6492,6 @@ input.flatpickr-input.field-success {
 /* =========================================
    PROTECCIONES MODAL - BOTONES VISIBLES
    ========================================= */
-
-/* Asegurar que el modal head y foot sean visibles */
 #proteccionPop .modal-head {
     background: linear-gradient(180deg, #68bfc7 0%, #5f95db 100%) !important;
     padding: 12px 16px !important;
@@ -6575,10 +6625,10 @@ input.flatpickr-input.field-success {
         font-size: 12px !important;
     }
 }
+
 /* =========================================
    PROTECCIONES CARDS - RESPONSIVE 400px
    ========================================= */
-
 @media (max-width: 400px) {
 
     /* Contenedor de scroll - ajustar altura */
@@ -6658,11 +6708,11 @@ input.flatpickr-input.field-success {
         width: 100% !important;
     }
 }
-/* Ajuste específico para 400px */
-@media (max-width: 400px) {
 
+@media (max-width: 428px) {
     #proteccionPop .contenedor-principal-individuales {
-        padding: 0 10px 20px 10px !important;
+        padding: 0 16px 24px 16px !important;
+        box-sizing: border-box !important;
     }
 
     #proteccionPop .ins-card .body {
