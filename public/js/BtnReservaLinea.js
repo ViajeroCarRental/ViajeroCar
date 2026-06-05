@@ -30,6 +30,46 @@
      CONSTANTES Y HELPERS
      ================================================================= */
   const qs = (s, r = document) => r.querySelector(s);
+
+  let loaderReservaInterval = null;
+
+  const mensajesLoader = [
+    "Procesando tu reservación...",
+    "Preparando tu vehículo...",
+    "Generando tu folio...",
+    "Confirmando disponibilidad..."
+  ];
+
+  const showLoaderReserva = () => {
+    const loader = qs("#loaderReserva");
+    const texto = qs("#loaderReservaTexto");
+
+    if (loader) loader.style.display = "flex";
+
+    let index = 0;
+
+    if (texto) {
+      texto.textContent = mensajesLoader[0];
+    }
+
+    clearInterval(loaderReservaInterval);
+
+    loaderReservaInterval = setInterval(() => {
+      index = (index + 1) % mensajesLoader.length;
+
+      if (texto) {
+        texto.textContent = mensajesLoader[index];
+      }
+    }, 2000);
+  };
+
+  const hideLoaderReserva = () => {
+    const loader = qs("#loaderReserva");
+
+    clearInterval(loaderReservaInterval);
+
+    if (loader) loader.style.display = "none";
+  };
   const EXCHANGE_RATE = 20; // ⚠️ Debe coincidir con reservaciones.js y backend
   const DROP_SERVICE_ID = "11";
   const MAX_RETRY_POST = 3;
@@ -412,9 +452,11 @@
                 // Si el POST falla, el dinero queda cobrado. Por eso hay retry.
                 let result;
                 try {
+                  showLoaderReserva();
                   result = await enviarReservaLinea(data.orderID);
                   if (!result) return; // duplicado evitado por idempotencia
                 } catch (postErr) {
+                    hideLoaderReserva();
                   // 🚨 Caso peor: PayPal cobró pero después de N reintentos no pudimos guardar
                   console.error("PayPal cobró pero el POST falló después de reintentos:", postErr);
 
@@ -483,6 +525,8 @@
                   detail: { folio, total, plan: 'linea' }
                 }));
 
+                hideLoaderReserva();
+
                 const tituloExito = locale === 'en'
                   ? "Online reservation confirmed"
                   : "Reservación en línea confirmada";
@@ -494,6 +538,7 @@
                     window.location.href = window.location.pathname + "?step=1&reset=1";
                   });
                 } else {
+                  hideLoaderReserva();
                   alert(tituloExito);
                   try { localStorage.removeItem("viajero_resv_filters_v1"); } catch (_) {}
                   try { sessionStorage.clear(); } catch (_) {}
@@ -501,6 +546,7 @@
                 }
 
               } catch (err) {
+                hideLoaderReserva();
                 console.error("Error en onApprove:", err);
                 const msg = err.message || (getCurrentLocale() === 'en'
                   ? "Error confirming your reservation."
@@ -512,6 +558,7 @@
           },
 
           onCancel: function () {
+            hideLoaderReserva();
             const msg = getCurrentLocale() === 'en'
               ? "You canceled the payment on PayPal."
               : "Cancelaste el pago en PayPal.";
@@ -520,6 +567,7 @@
           },
 
           onError: function (err) {
+            hideLoaderReserva();
             console.error("Error en PayPal:", err);
             const msg = getCurrentLocale() === 'en'
               ? "Error processing the payment."
@@ -569,11 +617,13 @@
         reservaEnviada    = false; // reset por cada nuevo intento de pago
 
         if (modalMetodoPago) modalMetodoPago.style.display = "none";
+        showLoaderReserva();
 
         // Validar datos antes de mostrar PayPal
         try {
           getFormPayload();
         } catch (validationError) {
+          hideLoaderReserva();
           modalLineaAbierto = false;
           if (window.alertify) alertify.error(validationError.message);
           else alert(validationError.message);
@@ -582,7 +632,7 @@
         }
 
         bloquearScrollBody();
-
+        hideLoaderReserva();
         if (modalPagoOnline) modalPagoOnline.style.display = "flex";
 
         if (paypalContainer) {
@@ -595,6 +645,7 @@
         initPaypalButtons();
 
       } catch (err) {
+        hideLoaderReserva();
         console.error("Error iniciando pago en línea:", err);
         modalLineaAbierto = false;
         const msg = getCurrentLocale() === 'en' ? 'Error loading PayPal.' : 'Error al cargar PayPal.';
