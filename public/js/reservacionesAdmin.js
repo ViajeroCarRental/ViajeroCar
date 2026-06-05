@@ -178,6 +178,7 @@
             const msg = contenedor.querySelector('.error-msg');
             if (msg) msg.remove();
         }
+    }
 
     function validarNombreCompleto() {
         const nombreCompletoInput = document.getElementById("nombre_completo_cliente");
@@ -416,14 +417,6 @@
 
         return true;
     }
-    /* =========================================
-       03 BLOQUEO DE ACORDEONES
-    ========================================= */
-    let categoriaDesbloqueada = false;
-    let adicionalesDesbloqueada = false;
-    let proteccionesDesbloqueada = false;
-    let clienteDesbloqueada = false;
-    let flujoCompletado = false;
 
     function mostrarToast(mensaje, tipo = 'warning') {
         console.log(`🔇 Toast silenciado: [${tipo}] ${mensaje}`);
@@ -505,6 +498,7 @@
             }, 100);
         }
     }
+
     function desbloquearCategoria() {
         if (categoriaDesbloqueada) return;
         categoriaDesbloqueada = true;
@@ -707,6 +701,7 @@
             }
         }, 1000);
     }
+
     function initValidacionHorasTiempoReal() {
         const fechaInicio = document.getElementById("fecha_inicio_ui");
         const fechaFin = document.getElementById("fecha_fin_ui");
@@ -2848,6 +2843,7 @@ function init() {
                 const proteccionesSection = document.getElementById("proteccionesSection");
                 if (proteccionesSection) proteccionesSection.style.display = "block";
             }
+        }
 
         let adicionales = [];
 
@@ -3345,10 +3341,17 @@ function init() {
     function initFlatpickrModalCalendar() {
     if (!window.flatpickr) return;
 
-        function makeActions(instance, labelText) {
-            const actions = document.createElement("div");
-            actions.className = "fp-actions";
-            actions.innerHTML = `
+    let backdrop = document.querySelector(".fp-backdrop");
+    if (!backdrop) {
+        backdrop = document.createElement("div");
+        backdrop.className = "fp-backdrop";
+        document.body.appendChild(backdrop);
+    }
+
+    function makeActions(instance, labelText) {
+        const actions = document.createElement("div");
+        actions.className = "fp-actions";
+        actions.innerHTML = `
             <button type="button" class="fp-today">Hoy</button>
             <button type="button" class="fp-clear">Limpiar</button>
             <button type="button" class="fp-label">✖ ${labelText}</button>
@@ -3581,22 +3584,6 @@ function init() {
             horaEntregaInput.setAttribute("readonly", "readonly");
             createTimeSelectsBelow(horaEntregaInput, horaEntregaHidden, "Hora");
         }
-
-        function sync() {
-            if (!selH.value) {
-                if (hiddenInput) hiddenInput.value = "";
-                input.value = "";
-                if (typeof refreshSummary === 'function') refreshSummary();
-                return;
-            }
-            const finalHour = String(selH.value).padStart(2, "0");
-            const timeValue = `${finalHour}:00`;
-            if (hiddenInput) hiddenInput.value = timeValue;
-            input.value = timeValue;
-            if (typeof refreshSummary === 'function') refreshSummary();
-        }
-
-        selH.addEventListener("change", sync);
     }
 
     function initTimeValidation() {
