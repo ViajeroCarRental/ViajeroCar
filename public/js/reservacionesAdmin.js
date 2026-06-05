@@ -1745,8 +1745,27 @@ function init() {
 
         const d1 = parseDate(fi);
         const d2 = parseDate(ff);
-        const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
-        return Math.max(1, Number.isFinite(diff) ? diff : 0);
+
+        // Días base por diferencia de fechas (calendario)
+        let dias = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+        if (!Number.isFinite(dias)) dias = 0;
+
+        // ===============================
+        // Cortesía de 1 hora:
+        // si la hora de devolución pasa de la hora de pick-up + 1h,
+        // se cobra un día extra.
+        // ===============================
+        const horaRetiro = parseInt(qs("#hora_retiro")?.value?.split(":")[0] ?? "", 10);
+        const horaEntrega = parseInt(qs("#hora_entrega")?.value?.split(":")[0] ?? "", 10);
+
+        if (!Number.isNaN(horaRetiro) && !Number.isNaN(horaEntrega)) {
+            // hora límite = hora de pick-up + 1h de cortesía
+            if (horaEntrega > horaRetiro + 1) {
+                dias += 1;
+            }
+        }
+
+        return Math.max(1, dias);
     }
 
     function repaintCategoriaModalEstimados() {
@@ -3475,6 +3494,7 @@ function init() {
                 else finInstance.set("minDate", "today");
             }
             syncDays();
+            filtrarHorasPasadas();
         }
     });
 
@@ -3563,7 +3583,7 @@ function init() {
                     if (hiddenInput) hiddenInput.value = timeValue;
                     input.value = timeValue;
                 }
-                refreshSummary();
+                syncDays();
             });
         }
 
@@ -3583,6 +3603,61 @@ function init() {
             horaEntregaInput.dataset.tpReady = "1";
             horaEntregaInput.setAttribute("readonly", "readonly");
             createTimeSelectsBelow(horaEntregaInput, horaEntregaHidden, "Hora");
+        }
+    }
+
+    /* =========================================
+    23.1 FILTRO DE HORAS PASADAS (solo si pick-up = hoy)
+    ========================================= */
+    function filtrarHorasPasadas() {
+        // Select de hora de RETIRO (pick-up)
+        const selRetiro = document.querySelector('#hora_retiro_ui')
+            ?.closest('.dt-field-admin, .time-field-admin')
+            ?.querySelector('.tp-hour');
+
+        if (!selRetiro) return;
+
+        const fechaInicioVal = (qs("#fecha_inicio")?.value || "").trim(); // YYYY-MM-DD
+
+        // 1) Reactivar todas las opciones primero (estado limpio)
+        Array.from(selRetiro.options).forEach(opt => {
+            if (opt.value === "") return; // dejar el placeholder
+            opt.disabled = false;
+            opt.hidden = false;
+        });
+
+        if (!fechaInicioVal) return;
+
+        // 2) ¿La fecha de pick-up es HOY?
+        const hoy = new Date();
+        const y = hoy.getFullYear();
+        const m = String(hoy.getMonth() + 1).padStart(2, "0");
+        const d = String(hoy.getDate()).padStart(2, "0");
+        const hoyISO = `${y}-${m}-${d}`;
+
+        if (fechaInicioVal !== hoyISO) return; // fecha futura -> no se filtra nada
+
+        // 3) Deshabilitar todas las horas <= hora actual
+        const horaActual = hoy.getHours(); // 0-23
+
+        Array.from(selRetiro.options).forEach(opt => {
+            if (opt.value === "") return;
+            const horaOpt = parseInt(opt.value, 10);
+            if (!Number.isNaN(horaOpt) && horaOpt <= horaActual) {
+                opt.hidden = true;
+                opt.disabled = true; // refuerzo: que no sea seleccionable aunque el navegador ignore hidden
+            }
+        });
+
+        // 4) Si la hora seleccionada quedó deshabilitada, limpiarla
+        const seleccionada = selRetiro.options[selRetiro.selectedIndex];
+        if (seleccionada && (seleccionada.hidden || seleccionada.disabled)) {
+            selRetiro.value = "";
+            const inputHoraUI = document.getElementById("hora_retiro_ui");
+            const hiddenHora = document.getElementById("hora_retiro");
+            if (inputHoraUI) inputHoraUI.value = "";
+            if (hiddenHora) hiddenHora.value = "";
+            if (typeof refreshSummary === 'function') refreshSummary();
         }
     }
 
@@ -4181,7 +4256,7 @@ function init() {
         ["#hora_retiro_ui", "#hora_entrega_ui"].forEach((id) => {
             qs(id)?.addEventListener("change", () => {
                 syncTimeHiddenFromUI(id, id.replace("_ui", ""));
-                refreshSummary();
+                syncDays();
             });
         });
 
@@ -4363,6 +4438,7 @@ function init() {
 
         initFlatpickrModalCalendar();
         initTimeSelectors();
+        filtrarHorasPasadas();
 
         initPhoneCombo();
         syncTelefonoFinal();

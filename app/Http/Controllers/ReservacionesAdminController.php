@@ -350,11 +350,22 @@ class ReservacionesAdminController extends Controller
                 }
             }
 
-            $dias = max(
-                1,
-                Carbon::parse($validated['fecha_inicio'])
-                    ->diffInDays(Carbon::parse($validated['fecha_fin']))
-            );
+            // ===============================
+            // ✅ Días base por diferencia de fechas
+            // ===============================
+            $diasBase = Carbon::parse($validated['fecha_inicio'])
+                ->diffInDays(Carbon::parse($validated['fecha_fin']));
+
+            // Cortesía de 1 hora: si la hora de devolución pasa de
+            // la hora de pick-up + 1h, se cobra un día extra.
+            $horaRetiroNum  = (int) explode(':', (string) $request->input('hora_retiro'))[0];
+            $horaEntregaNum = (int) explode(':', (string) $request->input('hora_entrega'))[0];
+
+            if ($horaEntregaNum > $horaRetiroNum + 1) {
+                $diasBase += 1;
+            }
+
+            $dias = max(1, $diasBase);
 
             // ===============================
             // ✅ Calcular total de OPCIONES desde el request
@@ -439,7 +450,7 @@ class ReservacionesAdminController extends Controller
                 'id_categoria'      => $validated['id_categoria'],
 
                 // 🧑‍💼 Datos del cliente
-                'nombre_completo_cliente' => $validated['nombre_completo_cliente'],
+                'nombre_cliente'    => $validated['nombre_completo_cliente'],
                 'email_cliente'           => $validated['email_cliente'],
                 'telefono_cliente'        => $validated['telefono_cliente'],
 
@@ -876,12 +887,20 @@ public function update(Request $request, $id)
         ->where('id_categoria', $request->id_categoria)
         ->first();
 
-    // 🔹 Días
-    $dias = max(
-        1,
-        \Carbon\Carbon::parse($request->fecha_inicio)
-            ->diffInDays(\Carbon\Carbon::parse($request->fecha_fin))
-    );
+    // 🔹 Días base por diferencia de fechas
+    $diasBase = \Carbon\Carbon::parse($request->fecha_inicio)
+        ->diffInDays(\Carbon\Carbon::parse($request->fecha_fin));
+
+    // Cortesía de 1 hora: si la hora de devolución pasa de
+    // la hora de pick-up + 1h, se cobra un día extra.
+    $horaRetiroNum  = (int) explode(':', (string) $request->hora_retiro)[0];
+    $horaEntregaNum = (int) explode(':', (string) $request->hora_entrega)[0];
+
+    if ($horaEntregaNum > $horaRetiroNum + 1) {
+        $diasBase += 1;
+    }
+
+    $dias = max(1, $diasBase);
 
     // ===============================
     // 🔥 BASE
@@ -982,7 +1001,7 @@ $tarifaBaseGuardar = (float) $categoria->precio_dia;
             'sucursal_retiro'   => $request->sucursal_retiro,
             'sucursal_entrega'  => $request->sucursal_entrega,
 
-            'nombre_completo_cliente' => $request->nombre_completo_cliente,
+            'nombre_cliente'    => $request->nombre_completo_cliente,
             'email_cliente'           => $request->email_cliente,
             'telefono_cliente'        => $request->telefono_cliente,
 
