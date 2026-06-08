@@ -52,8 +52,8 @@ class SeguroIndividualController extends Controller
     public function store(Request $request)
     {
         DB::table('seguro_individuales')->insert([
-            'nombre'                => mb_strtoupper($request->nombre, 'UTF-8'),
-            'descripcion'           => mb_strtoupper($request->descripcion, 'UTF-8'),
+            'nombre'      => $request->nombre,
+            'descripcion' => $request->descripcion,
             'id_seccion'            => $request->id_seccion,
             'precio_por_dia'        => $request->precio_por_dia ?? 0,
             'precios_por_categoria' => json_encode($request->precios_por_categoria),
@@ -73,8 +73,8 @@ class SeguroIndividualController extends Controller
         DB::table('seguro_individuales')
             ->where('id_individual', $id)
             ->update([
-                'nombre'                => mb_strtoupper($request->nombre, 'UTF-8'),
-                'descripcion'           => mb_strtoupper($request->descripcion, 'UTF-8'),
+                'nombre'      => $request->nombre,
+                'descripcion' => $request->descripcion,
                 'id_seccion'            => $request->id_seccion,
                 'precio_por_dia'        => $request->precio_por_dia ?? 0,
                 'precios_por_categoria' => json_encode($request->precios_por_categoria),
@@ -101,7 +101,7 @@ class SeguroIndividualController extends Controller
     {
         try {
             $id = DB::table('secciones_seguros')->insertGetId([
-                'nombre'                  => mb_strtoupper($request->nombre, 'UTF-8'),
+                'nombre'      => $request->nombre,
                 'requiere_desglose_autos' => $request->requiere_desglose ?? 0,
                 'created_at'              => now(),
                 'updated_at'              => now(),
@@ -133,7 +133,7 @@ class SeguroIndividualController extends Controller
             DB::table('secciones_seguros')
                 ->where('id_seccion', $id)
                 ->update([
-                    'nombre'                  => mb_strtoupper($request->nombre, 'UTF-8'),
+                    'nombre'      => $request->nombre,
                     'requiere_desglose_autos' => $request->requiere_desglose ?? 0,
                     'updated_at'              => now(),
                 ]);

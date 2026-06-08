@@ -1122,7 +1122,6 @@ body {
   flex-direction: column;
 }
 
-
 .modal-vehiculos-header {
   background: linear-gradient(135deg, var(--ink) 0%, #1e293b 100%);
   color: #ffffff;

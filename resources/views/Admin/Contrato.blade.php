@@ -692,7 +692,7 @@
         </div>
 
         {{-- ========================================================================= --}}
-        {{-- ===================== ZONA DE MODALES ACTUALIZADA ===================== --}}
+        {{-- ================================ MODALES ================================ --}}
         {{-- ========================================================================= --}}
 
         {{-- Modal de vehículos --}}
@@ -742,6 +742,52 @@
                 <div
                     style="padding: 16px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
                     <button id="cerrarModalVehiculos2" class="btn gray">Cerrar inventario</button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal de confirmación de edición de inventario --}}
+        <div id="modalConfirmEdicion" class="modal-vehiculos" style="display:none; z-index:100001;">
+            <div class="modal-vehiculos-content" style="max-width:440px; height:auto;">
+                <div class="modal-vehiculos-header">
+                    <span class="modal-vehiculos-titulo">Confirmar cambio</span>
+                    <button type="button" id="cerrarConfirmEdicion" class="modal-close-btn">✕</button>
+                </div>
+
+                <div style="padding:24px;">
+                    <p style="margin:0 0 16px; color:#475569;">Vas a modificar el siguiente vehículo:</p>
+
+                    <div
+                        style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:16px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span style="color:#64748b;">Categoría:</span>
+                            <b id="confCategoria">—</b>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span style="color:#64748b;">Color:</span>
+                            <b id="confColor">—</b>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:#64748b;">Placas:</span>
+                            <b id="confPlacas">—</b>
+                        </div>
+                    </div>
+
+                    <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:12px 16px;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:#1e40af;" id="confCampoLabel">Campo</span>
+                            <span>
+                                <s id="confValorAnterior" style="color:#94a3b8;">—</s>
+                                <b id="confValorNuevo" style="color:#1d4ed8; margin-left:8px;">—</b>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style="padding:16px 24px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:8px;">
+                    <button id="btnCancelarEdicion" class="btn gray">Cancelar</button>
+                    <button id="btnConfirmarEdicion" class="btn primary">Confirmar</button>
                 </div>
             </div>
         </div>

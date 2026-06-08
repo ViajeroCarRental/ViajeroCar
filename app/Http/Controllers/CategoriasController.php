@@ -36,11 +36,13 @@ class CategoriasController extends Controller
             'garantia_base'     => 'required|numeric|min:0',
             'activo'            => 'nullable|boolean',
             'paquetes'          => 'nullable|array',
+        ], [
+            'codigo.unique' => 'El código que intentas asignar ya le pertenece a otra categoría.'
         ]);
 
         DB::table('categorias_carros')->insert([
-            'codigo'            => $request->codigo,
-            'nombre'            => $request->nombre,
+            'codigo'            => mb_strtoupper($request->codigo, 'UTF-8'),
+            'nombre'            => mb_strtoupper($request->nombre, 'UTF-8'),
             'precio_dia'        => $request->precio_dia,
             'precio_semana'     => $request->precio_semana,
             'precio_mes'        => $request->precio_mes,
@@ -67,13 +69,15 @@ class CategoriasController extends Controller
             'garantia_base'     => 'required|numeric|min:0',
             'activo'            => 'required|boolean',
             'paquetes'          => 'nullable|array',
+        ], [
+            'codigo.unique' => 'El código que intentas asignar ya le pertenece a otra categoría.'
         ]);
 
         DB::table('categorias_carros')
             ->where('id_categoria', $id)
             ->update([
-                'codigo'            => $request->codigo,
-                'nombre'            => $request->nombre,
+                'codigo'            => mb_strtoupper($request->codigo, 'UTF-8'),
+                'nombre'            => mb_strtoupper($request->nombre, 'UTF-8'),
                 'precio_dia'        => $request->precio_dia,
                 'precio_semana'     => $request->precio_semana,
                 'precio_mes'        => $request->precio_mes,
