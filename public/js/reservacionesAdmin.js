@@ -3585,19 +3585,6 @@ function init() {
                 }
                 syncDays();
             });
-
-            ['#fecha_inicio_ui', '#fecha_fin_ui'].forEach(selector => {
-                const input = document.querySelector(selector);
-                if (input && input.value && input.value.trim() !== "") {
-                    mostrarExito(input);
-                }
-            });
-        }, 100);
-
-        if (window.state && window.state.categoria) {
-            adicionalesDesbloqueada = true;
-            categoriaDesbloqueada = true;
-            actualizarTodasSecciones();
         }
 
         const horaRetiroInput = document.getElementById("hora_retiro_ui");
@@ -3617,7 +3604,6 @@ function init() {
             horaEntregaInput.setAttribute("readonly", "readonly");
             createTimeSelectsBelow(horaEntregaInput, horaEntregaHidden, "Hora");
         }
-        return input;
     }
 
     /* =========================================
@@ -4265,6 +4251,7 @@ function init() {
                 syncDateHiddenFromUI(id, id.replace("_ui", ""));
                 syncDays();
             });
+        });
 
         ["#hora_retiro_ui", "#hora_entrega_ui"].forEach((id) => {
             qs(id)?.addEventListener("change", () => {
