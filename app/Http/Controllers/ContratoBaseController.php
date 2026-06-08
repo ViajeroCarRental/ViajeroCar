@@ -310,7 +310,7 @@ class ContratoBaseController extends Controller
             ->where('estatus', 'paid')
             ->where(function ($query) {
                 $query->whereNull('tipo_pago')
-                      ->orWhereRaw('UPPER(TRIM(tipo_pago)) <> ?', ['GARANTIA']);
+                    ->orWhereRaw('UPPER(TRIM(tipo_pago)) <> ?', ['GARANTIA']);
             })
             ->sum('monto') ?? 0;
 
@@ -409,10 +409,10 @@ class ContratoBaseController extends Controller
                 })
                 ->leftJoin('mantenimientos as m', 'm.id_vehiculo', '=', 'v.id_vehiculo')
                 ->select(
-                    'v.*', 
-                    'cc.nombre as categoria_nombre', 
+                    'v.*',
+                    'cc.nombre as categoria_nombre',
                     'cc.codigo as categoria_codigo',
-                    'img.url as foto_url', 
+                    'img.url as foto_url',
                     'm.proximo_servicio'
                 )
                 ->selectSub(
@@ -450,6 +450,64 @@ class ContratoBaseController extends Controller
         } catch (\Exception $e) {
             Log::error("Error en vehiculosPorCategoria: " . $e->getMessage());
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function actualizarInventarioVehiculo(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'id_vehiculo' => 'required|integer|exists:vehiculos,id_vehiculo',
+                'campo'       => 'required|string|in:gasolina,kilometraje',
+                'valor'       => 'required|numeric|min:0',
+            ]);
+
+            $vehiculo = DB::table('vehiculos')->where('id_vehiculo', $data['id_vehiculo'])->first();
+            if (!$vehiculo) {
+                return response()->json(['success' => false, 'error' => 'Vehículo no encontrado'], 404);
+            }
+
+            if ($data['campo'] === 'gasolina') {
+                // El front manda el NIVEL (0-16). Validamos rango.
+                if ($data['valor'] < 0 || $data['valor'] > 16) {
+                    return response()->json([
+                        'success' => false,
+                        'error'   => 'El nivel de gasolina debe estar entre 0 y 16.'
+                    ], 422);
+                }
+
+                // Convertimos nivel (0-16) a LITROS reales según la capacidad del tanque
+                $capacidad = (float) ($vehiculo->capacidad_tanque ?? 60);
+                $litros    = round(($data['valor'] / 16) * $capacidad);
+
+                DB::table('vehiculos')
+                    ->where('id_vehiculo', $data['id_vehiculo'])
+                    ->update(['gasolina_actual' => $litros, 'updated_at' => now()]);
+
+                return response()->json([
+                    'success'           => true,
+                    'msg'               => 'Gasolina actualizada.',
+                    'campo'             => 'gasolina',
+                    'nivel'             => (float) $data['valor'],
+                    'litros'            => $litros,
+                    'gasolina_fraccion' => $data['valor'] . '/16',
+                ]);
+            }
+
+            // Kilometraje (sin validación de retroceso)
+            DB::table('vehiculos')
+                ->where('id_vehiculo', $data['id_vehiculo'])
+                ->update(['kilometraje' => $data['valor'], 'updated_at' => now()]);
+
+            return response()->json([
+                'success' => true,
+                'msg'     => 'Kilometraje actualizado.',
+                'campo'   => 'kilometraje',
+                'valor'   => (float) $data['valor'],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Error actualizarInventarioVehiculo: " . $e->getMessage());
+            return response()->json(['success' => false, 'error' => 'Error interno.'], 500);
         }
     }
 
@@ -668,4 +726,4 @@ class ContratoBaseController extends Controller
             ->where('rsi.id_reservacion', $idReservacion)
             ->get();
     }
-}				
+}

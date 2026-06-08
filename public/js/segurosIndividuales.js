@@ -8,8 +8,32 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnGuardarEdit = document.getElementById("btnGuardarEdit");
     const btnGuardarSeccion = document.getElementById("btnGuardarSeccion");
 
+    // ==========================================================
+    // FORMATEO DINÁMICO DE DINERO
+    // ==========================================================
+    const limpiarNumero = (val) => {
+        if (!val) return 0;
+        const limpio = String(val).replace(/[^0-9.]/g, '');
+        return parseFloat(limpio) || 0;
+    };
+
+    document.addEventListener("focusin", (e) => {
+        if (e.target.classList.contains("input-money")) {
+            let valorLimpio = e.target.value.replace(/[^0-9.]/g, '');
+            if (parseFloat(valorLimpio) === 0) valorLimpio = "";
+            e.target.value = valorLimpio;
+        }
+    });
+
+    document.addEventListener("focusout", (e) => {
+        if (e.target.classList.contains("input-money")) {
+            const num = parseFloat(e.target.value) || 0;
+            e.target.value = "$" + num.toFixed(2);
+        }
+    });
+
     // ==========================
-    // LÓGICA DE MOSTRAR/OCULTAR DESGLOSE
+    // LÓGICA DE MOSTRAR/OCULTAR DESGLOSE Y TIPO DE PRECIO
     // ==========================
     function toggleDesglose(selectElement, cajaPrecio, cajaDesglose) {
         let option = selectElement.options[selectElement.selectedIndex];
@@ -31,35 +55,65 @@ document.addEventListener("DOMContentLoaded", () => {
         toggleDesglose(this, "caja_precio_edit", "caja_desglose_edit");
     });
 
+    // Lógica para ocultar/mostrar el input si eligen "Incluido"
+    document.querySelectorAll('input[name="newTipoPrecio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.getElementById('wrapper_input_nuevo').style.display = this.value === 'precio' ? 'block' : 'none';
+        });
+    });
+
+    document.querySelectorAll('input[name="editTipoPrecio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            document.getElementById('wrapper_input_edit').style.display = this.value === 'precio' ? 'block' : 'none';
+        });
+    });
+
     // ==========================
-    // CARGAR LISTA
+    // CARGAR LISTA (TABLAS DINÁMICAS)
     // ==========================
     function cargar(highlightId = null) {
         fetch("/admin/seguros-individuales/list")
             .then(r => r.json())
             .then(json => {
                 if (!json) return;
-                tbody.innerHTML = "";
+
+                document.querySelectorAll('[id^="tbody-seccion-"]').forEach(tb => {
+                    tb.innerHTML = "";
+                });
 
                 json.data.forEach(i => {
-                    let precioTxt = i.precio_por_dia > 0
-                        ? `$${parseFloat(i.precio_por_dia).toFixed(2)}`
-                        : `<span style='color:gray;'>Por vehículo</span>`;
+                    let precioNum = parseFloat(i.precio_por_dia);
+                    let precioTxt = precioNum > 0
+                        ? `$${precioNum.toFixed(2)}`
+                        : `<span style="color: #16a34a; font-weight: bold;">Incluido</span>`;
 
                     const isHighlight = i.id_individual == highlightId ? 'class="row-highlight"' : '';
 
-                    tbody.innerHTML += `
+                    const filaHtml = `
                         <tr ${isHighlight}>
-                            <td><strong>${i.nombre}</strong></td>
-                            <td><span style="background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${i.seccion_nombre || 'N/A'}</span></td>
-                            <td style="font-family: monospace;">${precioTxt}</td>
+                            <td style="min-width: 180px;">
+                                <strong>${i.nombre}</strong>
+                            </td>
+                            <td title="${i.descripcion || ''}">
+                                <div style="max-width: 350px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; font-size: 0.9em; color: #555;">
+                                    ${i.descripcion || ''}
+                                </div>
+                            </td>
+                            <td style="font-family: monospace; white-space: nowrap;">${precioTxt}</td>
                             <td>${i.activo ? "Sí" : "No"}</td>
-                            <td>
-                                <button class="btn btn-sm btn-warning" onclick="editar(${i.id_individual})">Editar</button>
-                                <button class="btn btn-sm btn-danger" onclick="eliminar(${i.id_individual})">Eliminar</button>
+                            <td style="width: 160px;">
+                                <div style="display: flex; gap: 8px; justify-content: center; align-items: center;">
+                                    <button class="btn btn-sm btn-warning" onclick="editar(${i.id_individual})">Editar</button>
+                                    <button class="btn btn-sm btn-danger" onclick="eliminar(${i.id_individual})">Eliminar</button>
+                                </div>
                             </td>
                         </tr>
                     `;
+
+                    const targetTbody = document.getElementById(`tbody-seccion-${i.id_seccion}`);
+                    if (targetTbody) {
+                        targetTbody.innerHTML += filaHtml;
+                    }
                 });
             });
     }
@@ -71,27 +125,39 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("newNombre").value = "";
         document.getElementById("newDescripcion").value = "";
         document.getElementById("newSeccion").value = "";
-        document.getElementById("newPrecio").value = "0.00";
+        document.getElementById("newPrecio").value = "$0.00";
         document.getElementById("newActivo").checked = true;
 
-        document.querySelectorAll('.new-precio-auto').forEach(i => i.value = 0);
+        document.querySelector('input[name="newTipoPrecio"][value="precio"]').checked = true;
+        document.getElementById('wrapper_input_nuevo').style.display = 'block';
+
+        document.querySelectorAll('.new-precio-auto').forEach(i => i.value = "$0.00");
         toggleDesglose(document.getElementById("newSeccion"), "caja_precio_nuevo", "caja_desglose_nuevo");
         openModal("modalNuevo");
     });
 
     btnGuardarNuevo.addEventListener("click", () => {
-        let jsonPrecios = {};
-        document.querySelectorAll(".new-precio-auto").forEach(input => {
-            jsonPrecios[input.dataset.id] = parseFloat(input.value) || 0;
-        });
-
+        document.activeElement.blur();
+        
         const nombre = document.getElementById("newNombre").value;
-        if(!nombre) {
-            if(window.alertify) alertify.warning("El nombre es requerido");
+        if (!nombre) {
+            Swal.fire('Atención', 'El nombre es requerido', 'warning');
             return;
         }
 
+        // Determinar precio final y limpiar formato
+        let rawPrecio = document.getElementById("newPrecio").value;
+        let precioFinalNuevo = document.querySelector('input[name="newTipoPrecio"]:checked').value === 'incluido' 
+            ? 0 
+            : limpiarNumero(rawPrecio);
+
+        let jsonPrecios = {};
+        document.querySelectorAll(".new-precio-auto").forEach(input => {
+            jsonPrecios[input.dataset.id] = limpiarNumero(input.value);
+        });
+
         setLoading(btnGuardarNuevo, true);
+        
         fetch("/admin/seguros-individuales", {
             method: "POST",
             headers: {
@@ -102,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 nombre: nombre,
                 descripcion: document.getElementById("newDescripcion").value,
                 id_seccion: document.getElementById("newSeccion").value,
-                precio_por_dia: document.getElementById("newPrecio").value,
+                precio_por_dia: precioFinalNuevo,
                 precios_por_categoria: jsonPrecios,
                 activo: document.getElementById("newActivo").checked ? 1 : 0
             })
@@ -110,9 +176,11 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(r => r.json())
             .then(res => {
                 closeModal("modalNuevo");
-                // Recargar y resaltar el último (aproximado si no viene el ID en la respuesta)
-                cargar(); 
-                if (window.alertify) alertify.success("Seguro creado con éxito");
+                cargar();
+                Swal.fire('¡Creado!', 'El seguro ha sido creado con éxito.', 'success');
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Ocurrió un error al procesar la solicitud.', 'error');
             })
             .finally(() => setLoading(btnGuardarNuevo, false));
     });
@@ -128,14 +196,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 document.getElementById("editId").value = d.id_individual;
                 document.getElementById("editNombre").value = d.nombre;
-                document.getElementById("editDescripcion").value = d.descripcion;
+                document.getElementById("editDescripcion").value = d.descripcion || '';
                 document.getElementById("editSeccion").value = d.id_seccion;
-                document.getElementById("editPrecio").value = d.precio_por_dia;
                 document.getElementById("editActivo").checked = d.activo == 1;
+
+                // Formatear dinero y asignar radio buttons
+                if (d.precio_por_dia > 0) {
+                    document.querySelector('input[name="editTipoPrecio"][value="precio"]').checked = true;
+                    document.getElementById('wrapper_input_edit').style.display = 'block';
+                    document.getElementById("editPrecio").value = "$" + parseFloat(d.precio_por_dia).toFixed(2);
+                } else {
+                    document.querySelector('input[name="editTipoPrecio"][value="incluido"]').checked = true;
+                    document.getElementById('wrapper_input_edit').style.display = 'none';
+                    document.getElementById("editPrecio").value = "$0.00";
+                }
 
                 let precios = d.precios_por_categoria || {};
                 document.querySelectorAll(".edit-precio-auto").forEach(input => {
-                    input.value = precios[input.dataset.id] || 0;
+                    input.value = "$" + parseFloat(precios[input.dataset.id] || 0).toFixed(2);
                 });
 
                 toggleDesglose(document.getElementById("editSeccion"), "caja_precio_edit", "caja_desglose_edit");
@@ -144,14 +222,21 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     btnGuardarEdit.addEventListener("click", () => {
+        document.activeElement.blur();
         const id = document.getElementById("editId").value;
-        let jsonPrecios = {};
+        
+        let rawPrecioEdit = document.getElementById("editPrecio").value;
+        let precioFinalEdit = document.querySelector('input[name="editTipoPrecio"]:checked').value === 'incluido' 
+            ? 0 
+            : limpiarNumero(rawPrecioEdit);
 
+        let jsonPrecios = {};
         document.querySelectorAll(".edit-precio-auto").forEach(input => {
-            jsonPrecios[input.dataset.id] = parseFloat(input.value) || 0;
+            jsonPrecios[input.dataset.id] = limpiarNumero(input.value);
         });
 
         setLoading(btnGuardarEdit, true);
+        
         fetch(`/admin/seguros-individuales/${id}`, {
             method: "PUT",
             headers: {
@@ -162,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 nombre: document.getElementById("editNombre").value,
                 descripcion: document.getElementById("editDescripcion").value,
                 id_seccion: document.getElementById("editSeccion").value,
-                precio_por_dia: document.getElementById("editPrecio").value,
+                precio_por_dia: precioFinalEdit,
                 precios_por_categoria: jsonPrecios,
                 activo: document.getElementById("editActivo").checked ? 1 : 0
             })
@@ -170,8 +255,11 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(r => r.json())
             .then(() => {
                 closeModal("modalEditar");
-                cargar(id); // Resaltar el editado
-                if (window.alertify) alertify.success("Seguro actualizado");
+                cargar(id);
+                Swal.fire('¡Actualizado!', 'La información ha sido guardada correctamente.', 'success');
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Ocurrió un error al actualizar la solicitud.', 'error');
             })
             .finally(() => setLoading(btnGuardarEdit, false));
     });
@@ -180,22 +268,36 @@ document.addEventListener("DOMContentLoaded", () => {
     // ELIMINAR SEGURO
     // ==========================
     window.eliminar = id => {
-        if (confirm("¿Estás seguro? Esta acción eliminará el seguro de forma permanente.")) {
-            fetch(`/admin/seguros-individuales/${id}`, {
-                method: "DELETE",
-                headers: { "X-CSRF-TOKEN": csrf }
-            })
-                .then(() => {
-                    cargar();
-                    if (window.alertify) alertify.success("Seguro eliminado");
-                });
-        }
+        document.activeElement.blur();
+        Swal.fire({
+            title: '¿Estás completamente seguro?',
+            text: "Esta acción eliminará el seguro de forma permanente y no se puede revertir.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin/seguros-individuales/${id}`, {
+                    method: "DELETE",
+                    headers: { "X-CSRF-TOKEN": csrf }
+                })
+                    .then(() => {
+                        cargar();
+                        Swal.fire('¡Eliminado!', 'El seguro desapareció del sistema.', 'success');
+                    })
+                    .catch(() => {
+                        Swal.fire('Error', 'No se pudo eliminar el seguro.', 'error');
+                    });
+            }
+        });
     };
 
     // ==========================================================
-    // GESTIÓN DE SECCIONES (crear / editar / eliminar / listar)
+    // GESTIÓN DE SECCIONES (CREAR / EDITAR / ELIMINAR)
     // ==========================================================
-
     let cacheSecciones = null;
 
     function cargarSecciones(highlightId = null) {
@@ -206,7 +308,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const cont = document.getElementById("listaSecciones");
                 cont.innerHTML = "";
 
-                // Estado vacío elegante si no hay secciones
                 if (json.data.length === 0) {
                     cont.innerHTML = `
                     <div style="text-align: center; padding: 30px 10px; color: #64748b;">
@@ -217,11 +318,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 json.data.forEach(sec => {
-                    // Colores condicionales para el badge
                     const requiere = sec.requiere_desglose_autos == 1;
                     const desglose = requiere ? "🚗 Por vehículo" : "💰 Precio único";
-                    const bgBadge = requiere ? "#e0e7ff" : "#f1f5f9"; // Azul claro vs Gris claro
-                    const colorBadge = requiere ? "#3730a3" : "#475569"; // Azul oscuro vs Gris oscuro
+                    const bgBadge = requiere ? "#e0e7ff" : "#f1f5f9"; 
+                    const colorBadge = requiere ? "#3730a3" : "#475569"; 
 
                     const nombreSeguro = sec.nombre.replace(/'/g, "\\'");
                     const isHighlight = sec.id_seccion == highlightId ? 'row-highlight' : '';
@@ -230,7 +330,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     <div class="fila-seccion ${isHighlight}" id="row-sec-${sec.id_seccion}">
                         <div style="display: flex; flex-direction: column; gap: 6px;">
                             <strong style="color: #1e292b; font-size: 14px;">${sec.nombre}</strong> 
-                            <span class="badge-desglose" style="background: ${bgBadge}; color: ${colorBadge}; width: fit-content;">
+                            <span class="badge-desglose" style="background: ${bgBadge}; color: ${colorBadge}; width: fit-content; padding: 2px 6px; border-radius: 4px; font-size: 11px;">
                                 ${desglose}
                             </span>
                         </div>
@@ -271,33 +371,48 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnCancelarEdicionSec").addEventListener("click", resetFormSeccion);
 
     window.eliminarSeccion = (id) => {
-        if (confirm("¿Eliminar sección? No podrás revertir esto y podría afectar a los seguros asignados.")) {
-            fetch(`/admin/secciones-seguros/${id}`, {
-                method: "DELETE",
-                headers: { "X-CSRF-TOKEN": csrf }
-            })
-                .then(r => r.json())
-                .then(res => {
-                    if (!res.ok) {
-                        if (window.alertify) alertify.error(res.msg);
-                        else alert(res.msg);
-                        return;
-                    }
-                    document.querySelectorAll(`#newSeccion option[value='${id}'], #editSeccion option[value='${id}']`).forEach(o => o.remove());
-                    cargarSecciones();
-                    resetFormSeccion();
-                    if (window.alertify) alertify.success("Sección eliminada");
-                });
-        }
+        document.activeElement.blur();
+        Swal.fire({
+            title: '¿Eliminar sección?',
+            text: "No podrás revertir esto y podría afectar a los seguros asignados.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin/secciones-seguros/${id}`, {
+                    method: "DELETE",
+                    headers: { "X-CSRF-TOKEN": csrf }
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        if (!res.ok) {
+                            Swal.fire('Error', res.msg, 'error');
+                            return;
+                        }
+                        Swal.fire({
+                            title: '¡Eliminada!',
+                            text: 'La sección fue eliminada.',
+                            icon: 'success'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    });
+            }
+        });
     };
 
     btnGuardarSeccion.addEventListener("click", () => {
+        document.activeElement.blur();
         const id = document.getElementById("secId").value;
         const nombre = document.getElementById("secNombre").value;
         const desglose = document.getElementById("secDesglose").checked ? 1 : 0;
 
         if (!nombre) {
-            if (window.alertify) alertify.warning('Escribe un nombre para la sección');
+            Swal.fire('Atención', 'Escribe un nombre para la sección', 'warning');
             return;
         }
 
@@ -317,26 +432,16 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(r => r.json())
             .then(res => {
                 if (!res.ok) {
-                    if (window.alertify) alertify.error(res.msg || "No se pudo guardar");
+                    Swal.fire('Error', res.msg || "No se pudo guardar", 'error');
                     return;
                 }
-
-                const sec = res.seccion;
-
-                if (esEdicion) {
-                    document.querySelectorAll(`#newSeccion option[value='${sec.id_seccion}'], #editSeccion option[value='${sec.id_seccion}']`).forEach(o => {
-                        o.textContent = sec.nombre;
-                        o.dataset.desglose = sec.requiere_desglose_autos;
-                    });
-                } else {
-                    const opcionHtml = `<option value="${sec.id_seccion}" data-desglose="${sec.requiere_desglose_autos}">${sec.nombre}</option>`;
-                    document.getElementById("newSeccion").insertAdjacentHTML('beforeend', opcionHtml);
-                    document.getElementById("editSeccion").insertAdjacentHTML('beforeend', opcionHtml);
-                }
-
-                if (window.alertify) alertify.success(esEdicion ? "Sección actualizada" : "Sección creada");
-                resetFormSeccion();
-                cargarSecciones(sec.id_seccion);
+                Swal.fire({
+                    title: '¡Guardado!',
+                    text: esEdicion ? "Sección actualizada exitosamente." : "Sección creada exitosamente.",
+                    icon: 'success'
+                }).then(() => {
+                    window.location.reload();
+                });
             })
             .finally(() => setLoading(btnGuardarSeccion, false));
     });

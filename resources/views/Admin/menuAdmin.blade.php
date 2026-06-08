@@ -94,7 +94,7 @@
         .admin-home-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 30px;
+            gap: 30px; /* Separación perfecta entre todas las tarjetas */
         }
 
         .admin-home-card {
@@ -106,7 +106,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 18px;
+            gap: 25px; /* Aumentado de 18px a 25px para separar más el icono del texto */
             text-decoration: none;
             color: #111;
             font-weight: 800;
@@ -124,6 +124,11 @@
             border-color: #b22222;
             box-shadow: 0 10px 30px rgba(178, 34, 34, .15);
             transform: translateY(-3px);
+        }
+
+        /* NUEVA CLASE: Hace que la tarjeta ocupe toda la fila sin perder el margen */
+        .card-full-width {
+            grid-column: 1 / -1; 
         }
 
         @media(max-width:900px) {
@@ -170,7 +175,6 @@
 
         /* 💻 Tablet grande */
         @media (max-width: 1024px) {
-
             .dashboard-grid,
             .cards-dashboard,
             .grid-dashboard {
@@ -187,12 +191,10 @@
             .main-content {
                 padding: 90px 28px 40px;
             }
-
         }
 
         /* 📱 Tablet vertical */
         @media (max-width: 768px) {
-
             .dashboard-grid,
             .cards-dashboard,
             .grid-dashboard {
@@ -223,12 +225,10 @@
             .dashboard-header h1 {
                 font-size: 26px;
             }
-
         }
 
         /* 📱 Celulares */
         @media (max-width: 560px) {
-
             .dashboard-grid,
             .cards-dashboard,
             .grid-dashboard {
@@ -252,12 +252,10 @@
             .main-content {
                 padding: 80px 16px 28px;
             }
-
         }
 
         /* 📱 iPhone chico */
         @media (max-width: 390px) {
-
             .card,
             .dashboard-card {
                 min-height: 105px;
@@ -272,7 +270,6 @@
                 padding-left: 12px;
                 padding-right: 12px;
             }
-
         }
     </style>
 </head>
@@ -312,7 +309,7 @@
 
                 <a href="{{ route('paqueteseguros.index') }}" class="admin-home-card">
                     <i class="fas fa-shield-alt"></i>
-                    <span>Seguros</span>
+                    <span>Paquetes Seguros</span>
                 </a>
 
                 <a href="{{ route('paquetesindividuales.index') }}" class="admin-home-card">
@@ -320,38 +317,33 @@
                     <span>Seguros Individuales</span>
                 </a>
 
-                <!-- Adicionales -->
                 <a href="{{ route('adicionales.index') }}" class="admin-home-card">
                     <i class="fas fa-plus-circle"></i>
                     <span>Adicionales</span>
                 </a>
 
-                <!-- Dropoff y Delivery (Ojo: vi que ya tienes la ruta dropoff.index en tu web.php) -->
                 <a href="{{ route('dropoffdelivery.index') }}" class="admin-home-card">
                     <i class="fas fa-map-marker-alt"></i>
                     <span>Dropoff / Delivery</span>
                 </a>
 
-                <!-- Depósitos -->
                 <a href="{{ route('depositos.index') }}" class="admin-home-card">
                     <i class="fas fa-hand-holding-usd"></i>
                     <span>Depósitos</span>
                 </a>
 
-                <!-- Oficinas -->
                 <a href="{{ route('oficinas.index') }}" class="admin-home-card">
                     <i class="fas fa-building"></i>
                     <span>Oficinas</span>
                 </a>
 
+                <a href="{{ route('servicios.index') }}" class="admin-home-card card-full-width">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Adicionales</span>
+                </a>
+
+            </div> 
             </div>
-
-            <a href="{{ route('servicios.index') }}" class="admin-home-card">
-                <i class="fas fa-layer-group"></i>
-                <span>Adicionales</span>
-            </a>
-
-        </div>
 
     </div>
 

@@ -13,8 +13,6 @@ class SeguroPaqueteController extends Controller
     public function index()
     {
         $categorias = DB::table('categorias_carros')->orderBy('orden', 'asc')->get();
-
-        // 🟢 AQUÍ ESTÁ LA MAGIA: Traemos los seguros individuales (protecciones) para los checkboxes
         $protecciones = DB::table('seguro_individuales')->where('activo', 1)->orderBy('nombre', 'asc')->get();
 
         return view('Admin.paqueteseguros', compact('categorias', 'protecciones'));
@@ -43,9 +41,9 @@ class SeguroPaqueteController extends Controller
         $depositos = DB::table('depositos')
             ->where('id_paquete', $id)
             ->get()
-            ->pluck('monto', 'id_categoria');
+            ->pluck('monto', 'id_categoria')
+            ->toArray();
 
-        // 🟢 Buscamos qué protecciones ya tiene seleccionadas este paquete
         $proteccionesAsignadas = DB::table('paquete_seguro_individual')
             ->where('id_paquete', $id)
             ->pluck('id_individual');
@@ -53,8 +51,8 @@ class SeguroPaqueteController extends Controller
         return response()->json([
             'ok' => true,
             'data' => $paquete,
-            'depositos' => $depositos,
-            'protecciones' => $proteccionesAsignadas // Lo mandamos al JS
+            'depositos' => (object)$depositos, 
+            'protecciones' => $proteccionesAsignadas
         ]);
     }
 
@@ -63,11 +61,18 @@ class SeguroPaqueteController extends Controller
     // ===========================================
     public function store(Request $request)
     {
+        $nombre = $request->nombre;
+
+        $existe = DB::table('seguro_paquete')->where('nombre', $nombre)->exists();
+        if ($existe) {
+            return response()->json(['ok' => false, 'msg' => 'Ya existe un paquete registrado con el nombre "' . $nombre . '".']);
+        }
+
         DB::beginTransaction();
         try {
             $id_paquete = DB::table('seguro_paquete')->insertGetId([
-                'nombre'             => mb_strtoupper($request->nombre, 'UTF-8'),
-                'descripcion'        => mb_strtoupper($request->descripcion, 'UTF-8'),
+                'nombre'             => $nombre,
+                'descripcion'        => $request->descripcion,
                 'precio_por_dia'     => $request->precio_por_dia,
                 'deducible_colision' => $request->deducible_colision ?? 0.00,
                 'deducible_robo'     => $request->deducible_robo ?? 0.00,
@@ -77,26 +82,22 @@ class SeguroPaqueteController extends Controller
                 'updated_at'         => now(),
             ]);
 
-            $deducibleTotal = ($request->deducible_colision ?? 0) + ($request->deducible_robo ?? 0);
-
-            // Guardar porcentajes de los autos
-            foreach ($request->porcentajes ?? [] as $id_categoria => $porcentaje) {
-                $categoria = DB::table('categorias_carros')->where('id_categoria', $id_categoria)->first();
-                $garantiaBase = $categoria->garantia_base ?? 0;
-
-                $montoGarantia = $garantiaBase * ($porcentaje / 100);
-
-                DB::table('depositos')->updateOrInsert(
-                    ['id_categoria' => $id_categoria, 'id_paquete' => $id_paquete],
-                    ['monto' => $montoGarantia, 'created_at' => now(), 'updated_at' => now()]
-                );
+            foreach ($request->montos ?? [] as $id_categoria => $monto) {
+                $id_cat_int = (int)$id_categoria; 
+                
+                DB::table('depositos')->insert([
+                    'id_categoria' => $id_cat_int, 
+                    'id_paquete' => $id_paquete,
+                    'monto' => (float)$monto,
+                    'created_at' => now(), 
+                    'updated_at' => now()
+                ]);
             }
 
-            // 🟢 Guardar las protecciones (checkboxes) en la tabla intermedia
             foreach ($request->protecciones ?? [] as $id_individual) {
                 DB::table('paquete_seguro_individual')->insert([
                     'id_paquete' => $id_paquete,
-                    'id_individual' => $id_individual
+                    'id_individual' => (int)$id_individual
                 ]);
             }
 
@@ -113,13 +114,24 @@ class SeguroPaqueteController extends Controller
     // ===========================================
     public function update(Request $request, $id)
     {
+        $nombre = $request->nombre;
+
+        $existe = DB::table('seguro_paquete')
+            ->where('nombre', $nombre)
+            ->where('id_paquete', '!=', $id)
+            ->exists();
+
+        if ($existe) {
+            return response()->json(['ok' => false, 'msg' => 'No se puede actualizar. El nombre "' . $nombre . '" ya pertenece a otro paquete.']);
+        }
+
         DB::beginTransaction();
         try {
             DB::table('seguro_paquete')
                 ->where('id_paquete', $id)
                 ->update([
-                    'nombre'             => mb_strtoupper($request->nombre, 'UTF-8'),
-                    'descripcion'        => mb_strtoupper($request->descripcion, 'UTF-8'),
+                    'nombre'             => $nombre,
+                    'descripcion'        => $request->descripcion,
                     'precio_por_dia'     => $request->precio_por_dia,
                     'deducible_colision' => $request->deducible_colision ?? 0.00,
                     'deducible_robo'     => $request->deducible_robo ?? 0.00,
@@ -128,30 +140,26 @@ class SeguroPaqueteController extends Controller
                     'updated_at'         => now(),
                 ]);
 
-            $deducibleTotal = ($request->deducible_colision ?? 0) + ($request->deducible_robo ?? 0);
-
-            foreach ($request->porcentajes ?? [] as $id_categoria => $porcentaje) {
-                $categoria = DB::table('categorias_carros')->where('id_categoria', $id_categoria)->first();
-                $garantiaBase = $categoria->garantia_base ?? 0;
-                $montoGarantia = $garantiaBase * ($porcentaje / 100);
+            // ACTUALIZAR MONTOS DIRECTOS
+            foreach ($request->montos ?? [] as $id_categoria => $monto) {
+                $id_cat_int = (int)$id_categoria; 
 
                 DB::table('depositos')->updateOrInsert(
-                    ['id_categoria' => $id_categoria, 'id_paquete' => $id],
-                    ['monto' => $montoGarantia, 'updated_at' => now()]
+                    ['id_categoria' => $id_cat_int, 'id_paquete' => $id],
+                    ['monto' => (float)$monto, 'updated_at' => now()]
                 );
             }
 
-            // 🟢 Actualizar protecciones (borramos las viejas y guardamos las nuevas)
             DB::table('paquete_seguro_individual')->where('id_paquete', $id)->delete();
             foreach ($request->protecciones ?? [] as $id_individual) {
                 DB::table('paquete_seguro_individual')->insert([
                     'id_paquete' => $id,
-                    'id_individual' => $id_individual
+                    'id_individual' => (int)$id_individual
                 ]);
             }
 
             DB::commit();
-            return response()->json(['ok' => true, 'msg' => 'Paquete actualizado']);
+            return response()->json(['ok' => true, 'msg' => 'Paquete actualizado con éxito']);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['ok' => false, 'msg' => $e->getMessage()]);

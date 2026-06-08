@@ -288,6 +288,7 @@ Route::get('/admin/contrato/{id_reservacion}/resumen', [ContratoBaseController::
 Route::get('/contrato/{id}/exportar-word', [ContratoController::class, 'exportarWord'])->name('contrato.exportarWord');
 Route::get('/admin/contrato/vehiculos-por-categoria/{idCategoria}/{idReservacion}', [ContratoBaseController::class, 'vehiculosPorCategoria'])->name('contrato.vehiculosPorCategoria');
 Route::post('/admin/contrato/asignar-vehiculo', [ContratoBaseController::class, 'asignarVehiculo'])->name('contrato.asignarVehiculo');
+Route::post('/admin/vehiculo/actualizar-inventario', [ContratoBaseController::class, 'actualizarInventarioVehiculo'])->name('vehiculo.actualizar-inventario');
 Route::get('/admin/contrato/vehiculo-random/{idCategoria}', [ContratoBaseController::class, 'vehiculoRandom'])->name('contrato.vehiculo-random');
 
 // Contrato2Controller

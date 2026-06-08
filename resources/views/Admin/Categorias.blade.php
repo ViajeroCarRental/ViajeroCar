@@ -3,65 +3,6 @@
 
 @section('css')
     <link rel="stylesheet" href="{{ asset('css/Categorias.css') }}">
-    <style>
-        /* =========================
-       DISEÑO DEL MODAL (ANCHO Y COLUMNAS)
-    ========================= */
-        dialog.modal {
-            max-width: 750px;
-            /* Lo hace más ancho */
-            width: 90%;
-            border-radius: 12px;
-            border: none;
-            padding: 0;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        .modal-box {
-            padding: 25px;
-            max-height: 85vh;
-            /* Evita que sea más largo que tu pantalla */
-            overflow-y: auto;
-            /* Activa el scroll internamente solo si es necesario */
-        }
-
-        /* Sistema de 2 columnas */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .full-width {
-            grid-column: span 2;
-        }
-        
-        .modal-box::-webkit-scrollbar {
-            width: 8px;
-            /* Más delgado */
-        }
-
-        .modal-box::-webkit-scrollbar-track {
-            background: #f0f0f0;
-            border-radius: 10px;
-        }
-
-        .modal-box::-webkit-scrollbar-thumb {
-            background: #bbbbbb;
-            border-radius: 10px;
-        }
-
-        .modal-box::-webkit-scrollbar-thumb:hover {
-            background: #999999;
-        }
-    </style>
 @endsection
 
 @section('contenido')
@@ -74,10 +15,6 @@
                 + Nueva categoría
             </button>
         </div>
-
-        @if (session('success'))
-            <div class="toast">{{ session('success') }}</div>
-        @endif
 
         <section class="card">
             <table class="table">
@@ -110,25 +47,24 @@
                                 <div style="display: flex; gap: 8px; align-items: center;">
                                     <button class="btn-edit"
                                         onclick="openEdit(
-                    {{ $c->id_categoria }},
-                    @js($c->codigo),
-                    @js($c->nombre),
-                    {{ $c->precio_dia }},
-                    {{ $c->precio_semana }},
-                    {{ $c->precio_mes }},
-                    {{ $c->descuento_miembro }},
-                    {{ $c->garantia_base }},
-                    {{ $c->activo }},
-                    @js($c->paquetes_asignados)
-                  )">
+                                            {{ $c->id_categoria }},
+                                            @js($c->codigo),
+                                            @js($c->nombre),
+                                            {{ $c->precio_dia }},
+                                            {{ $c->precio_semana }},
+                                            {{ $c->precio_mes }},
+                                            {{ $c->descuento_miembro }},
+                                            {{ $c->garantia_base }},
+                                            {{ $c->activo }},
+                                            @js($c->paquetes_asignados)
+                                        )">
                                         Editar
                                     </button>
 
-                                    <form method="POST" action="{{ route('categorias.destroy', $c->id_categoria) }}"
-                                        style="margin: 0;">
+                                    <form id="form-delete-{{ $c->id_categoria }}" method="POST" action="{{ route('categorias.destroy', $c->id_categoria) }}" style="margin: 0;">
                                         @csrf
                                         @method('DELETE')
-                                        <button class="btn-del" onclick="return confirm('¿Eliminar esta categoría?')">
+                                        <button type="button" class="btn-del" onclick="confirmarEliminacion(event, 'form-delete-{{ $c->id_categoria }}')">
                                             Eliminar
                                         </button>
                                     </form>
@@ -150,9 +86,9 @@
 
     {{-- =========================
     MODAL CREAR
-========================= --}}
+    ========================= --}}
     <dialog id="modalCrear" class="modal">
-        <form method="POST" action="{{ route('categorias.store') }}" class="modal-box">
+        <form method="POST" action="{{ route('categorias.store') }}" class="modal-box" id="formCrear">
             @csrf
 
             <div class="modal-head" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
@@ -161,45 +97,40 @@
                     style="border:none; background:none; font-size:1.5rem; cursor:pointer;">✕</button>
             </div>
 
-            {{-- Contenedor de 2 columnas --}}
             <div class="form-grid">
                 <div class="input-group">
                     <label class="label">Código</label>
-                    <input class="input" name="codigo" maxlength="10" required placeholder="Ej: C, D, E">
+                    <input class="input uppercase-input" name="codigo" maxlength="10" required placeholder="Ej: C, D, E">
                 </div>
 
                 <div class="input-group">
                     <label class="label">Nombre</label>
-                    <input class="input" name="nombre" maxlength="100" required placeholder="Ej: Compacto, Mediano">
+                    <input class="input uppercase-input" name="nombre" maxlength="100" required placeholder="Ej: COMPACTO">
                 </div>
 
                 <div class="input-group">
                     <label class="label">Precio por día</label>
-                    <input class="input" name="precio_dia" type="number" step="0.01" min="0" required>
+                    <input class="input input-money" name="precio_dia" type="text" value="$0.00" required>
                 </div>
 
                 <div class="input-group">
                     <label class="label">Precio por semana</label>
-                    <input class="input" name="precio_semana" type="number" step="0.01" min="0" value="0"
-                        required>
+                    <input class="input input-money" name="precio_semana" type="text" value="$0.00" required>
                 </div>
 
                 <div class="input-group">
                     <label class="label">Precio por mes</label>
-                    <input class="input" name="precio_mes" type="number" step="0.01" min="0" value="0"
-                        required>
+                    <input class="input input-money" name="precio_mes" type="text" value="$0.00" required>
                 </div>
 
                 <div class="input-group">
                     <label class="label">Descuento miembro (%)</label>
-                    <input class="input" name="descuento_miembro" type="number" step="0.01" min="0"
-                        max="100" value="0" required>
+                    <input class="input input-percent" name="descuento_miembro" type="text" value="0.00 %" required>
                 </div>
 
                 <div class="input-group">
                     <label class="label">Garantía Base</label>
-                    <input class="input" name="garantia_base" type="number" step="0.01" min="0" value="0.00"
-                        required>
+                    <input class="input input-money" name="garantia_base" type="text" value="$0.00" required>
                 </div>
 
                 <div class="input-group" style="justify-content: center;">
@@ -209,11 +140,9 @@
                     </label>
                 </div>
 
-                {{-- Esta fila ocupa ambas columnas --}}
                 <div class="full-width">
                     <label class="label" style="display: block; margin-bottom: 8px;">Paquetes Incluidos</label>
-                    <div
-                        style="display: flex; gap: 15px; flex-wrap: wrap; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
                         @forelse($paquetes as $p)
                             <label class="check" style="cursor: pointer;">
                                 <input type="checkbox" name="paquetes[]" value="{{ $p->id_paquete }}">
@@ -227,8 +156,7 @@
             </div>
 
             <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
-                <button class="btn-ghost" type="button"
-                    onclick="document.getElementById('modalCrear').close()">Cancelar</button>
+                <button class="btn-ghost" type="button" onclick="document.getElementById('modalCrear').close()">Cancelar</button>
                 <button class="btn-add" type="submit">Guardar</button>
             </div>
         </form>
@@ -236,10 +164,9 @@
 
     {{-- =========================
     MODAL EDITAR
-========================= --}}
+    ========================= --}}
     <dialog id="modalEditar" class="modal">
-        <form method="POST" id="formEditar" class="modal-box"
-            data-action="{{ route('categorias.update', '__ID__') }}">
+        <form method="POST" id="formEditar" class="modal-box" data-action="{{ route('categorias.update', '__ID__') }}">
             @csrf
             @method('PUT')
 
@@ -249,46 +176,40 @@
                     style="border:none; background:none; font-size:1.5rem; cursor:pointer;">✕</button>
             </div>
 
-            {{-- Contenedor de 2 columnas --}}
             <div class="form-grid">
                 <div class="input-group">
                     <label class="label">Código</label>
-                    <input class="input" id="e_codigo" name="codigo" maxlength="10" required>
+                    <input class="input uppercase-input" id="e_codigo" name="codigo" maxlength="10" required>
                 </div>
 
                 <div class="input-group">
                     <label class="label">Nombre</label>
-                    <input class="input" id="e_nombre" name="nombre" maxlength="100" required>
+                    <input class="input uppercase-input" id="e_nombre" name="nombre" maxlength="100" required>
                 </div>
 
                 <div class="input-group">
                     <label class="label">Precio por día</label>
-                    <input class="input" id="e_precio" name="precio_dia" type="number" step="0.01"
-                        min="0" required>
+                    <input class="input input-money" id="e_precio" name="precio_dia" type="text" required>
                 </div>
 
                 <div class="input-group">
                     <label class="label">Precio por semana</label>
-                    <input class="input" id="e_precio_semana" name="precio_semana" type="number" step="0.01"
-                        min="0" required>
+                    <input class="input input-money" id="e_precio_semana" name="precio_semana" type="text" required>
                 </div>
 
                 <div class="input-group">
                     <label class="label">Precio por mes</label>
-                    <input class="input" id="e_precio_mes" name="precio_mes" type="number" step="0.01"
-                        min="0" required>
+                    <input class="input input-money" id="e_precio_mes" name="precio_mes" type="text" required>
                 </div>
 
                 <div class="input-group">
                     <label class="label">Descuento (%)</label>
-                    <input class="input" id="e_descuento" name="descuento_miembro" type="number" step="0.01"
-                        min="0" max="100" required>
+                    <input class="input input-percent" id="e_descuento" name="descuento_miembro" type="text" required>
                 </div>
 
                 <div class="input-group">
                     <label class="label">Garantía Base</label>
-                    <input class="input" id="e_garantia_base" name="garantia_base" type="number" step="0.01"
-                        min="0" required>
+                    <input class="input input-money" id="e_garantia_base" name="garantia_base" type="text" required>
                 </div>
 
                 <div class="input-group">
@@ -299,16 +220,12 @@
                     </select>
                 </div>
 
-                {{-- Esta fila ocupa ambas columnas --}}
                 <div class="full-width">
-                    <label class="label" style="display: block; margin-bottom: 8px;">Paquetes Incluidos (Desde
-                        BD)</label>
-                    <div
-                        style="display: flex; gap: 15px; flex-wrap: wrap; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
+                    <label class="label" style="display: block; margin-bottom: 8px;">Paquetes Incluidos (Desde BD)</label>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap; background: #f9f9f9; padding: 15px; border-radius: 8px; border: 1px solid #eee;">
                         @foreach ($paquetes as $p)
                             <label class="check" style="cursor: pointer;">
-                                <input type="checkbox" name="paquetes[]" value="{{ $p->id_paquete }}"
-                                    class="checkbox-paquete-edit">
+                                <input type="checkbox" name="paquetes[]" value="{{ $p->id_paquete }}" class="checkbox-paquete-edit">
                                 {{ $p->nombre }}
                             </label>
                         @endforeach
@@ -317,39 +234,42 @@
             </div>
 
             <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
-                <button class="btn-ghost" type="button"
-                    onclick="document.getElementById('modalEditar').close()">Cancelar</button>
+                <button class="btn-ghost" type="button" onclick="document.getElementById('modalEditar').close()">Cancelar</button>
                 <button class="btn-add" type="submit">Actualizar</button>
             </div>
         </form>
     </dialog>
 
-    {{-- =========================
-    JS INLINE
-========================= --}}
-    <script>
-        function openEdit(id, codigo, nombre, precioDia, precioSemana, precioMes, descuento, garantiaBase, activo,
-            paquetesAsignados) {
-            const form = document.getElementById('formEditar');
+@endsection
 
-            form.action = form.dataset.action.replace('__ID__', id);
+@section('js-vistaRoles')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ asset('js/CategoriasAdmin.js') }}"></script>
 
-            document.getElementById('e_codigo').value = codigo;
-            document.getElementById('e_nombre').value = nombre;
-            document.getElementById('e_precio').value = precioDia;
-            document.getElementById('e_precio_semana').value = precioSemana;
-            document.getElementById('e_precio_mes').value = precioMes;
-            document.getElementById('e_descuento').value = descuento;
-            document.getElementById('e_garantia_base').value = garantiaBase;
-            document.getElementById('e_activo').value = activo;
-
-            // 🟢 Lógica para checar los paquetes que vienen guardados en editar
-            document.querySelectorAll('.checkbox-paquete-edit').forEach(checkbox => {
-                checkbox.checked = paquetesAsignados && paquetesAsignados.map(String).includes(String(checkbox
-                    .value));
+    @if(session('success'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    title: '¡Éxito!',
+                    text: '{{ session('success') }}',
+                    icon: 'success',
+                    timer: 2500,
+                    showConfirmButton: false
+                });
             });
+        </script>
+    @endif
 
-            document.getElementById('modalEditar').showModal();
-        }
-    </script>
+    @if ($errors->any())
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    title: 'No se pudo guardar',
+                    html: `{!! implode('<br>', $errors->all()) !!}`,
+                    icon: 'error',
+                    confirmButtonColor: '#ff1e2d'
+                });
+            });
+        </script>
+    @endif
 @endsection
