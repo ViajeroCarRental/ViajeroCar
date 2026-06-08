@@ -563,43 +563,65 @@
     }
 
     /* =========================================
-    03. EVENTO PRINCIPAL DEL BOTÓN
-    ========================================= */
-    function configurarBotonPrincipal() {
-        const btn = document.getElementById('btnBuscarReservacion');
-        if (!btn) {
-            console.error('❌ Botón btnBuscarReservacion no encontrado');
-            return;
-        }
-
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-
-        newBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            console.log('🔍 Validando campos de ubicación...');
-
-            const esValido = validarCamposUbicacion();
-
-            if (esValido) {
-                console.log('✅ Validación exitosa - Abriendo modal de categorías');
-
-                const modalCategorias = document.getElementById('catPop');
-                if (modalCategorias) {
-                    modalCategorias.style.display = 'flex';
-                }
-
-                if (typeof desbloquearCategoria === 'function') {
-                    desbloquearCategoria();
-                }
-            } else {
-                console.log('❌ Validación fallida - Corrige los campos en rojo');
-            }
-        });
+03. EVENTO PRINCIPAL DEL BOTÓN
+========================================= */
+function configurarBotonPrincipal() {
+    const btn = document.getElementById('btnBuscarReservacion');
+    if (!btn) {
+        console.error('❌ Botón btnBuscarReservacion no encontrado');
+        return;
     }
 
+    // Ocultar navbar en móvil al iniciar
+    const navbar = document.getElementById('resNavbar');
+    if (navbar && window.innerWidth <= 860) {
+        navbar.classList.add('hidden-mobile');
+    }
+
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+
+    newBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        console.log('🔍 Validando campos de ubicación...');
+
+        const esValido = validarCamposUbicacion();
+
+        if (esValido) {
+            console.log('✅ Validación exitosa');
+
+             document.body.classList.add('buscar-realizado');
+
+            // Mostrar navbar en móvil
+            if (navbar && navbar.classList.contains('hidden-mobile')) {
+                navbar.classList.remove('hidden-mobile');
+            }
+
+            // 🚀 MOSTRAR SECCIÓN DE CATEGORÍA EN MÓVIL
+            if (window.innerWidth <= 860) {
+                const seccionCategoria = document.querySelector('.acordeon-item[data-seccion="categoria"]');
+                if (seccionCategoria && !seccionCategoria.classList.contains('unlocked')) {
+                    seccionCategoria.classList.add('unlocked');
+                    console.log('📱 Sección de categoría visible en móvil');
+                }
+            }
+
+            // Abrir modal de categorías
+            const modalCategorias = document.getElementById('catPop');
+            if (modalCategorias) {
+                modalCategorias.style.display = 'flex';
+            }
+
+            if (typeof desbloquearCategoria === 'function') {
+                desbloquearCategoria();
+            }
+        } else {
+            console.log('❌ Validación fallida - Corrige los campos en rojo');
+        }
+    });
+}
     /* =========================================
     04. OBSERVADORES Y CONFIGURACIÓN
     ========================================= */
