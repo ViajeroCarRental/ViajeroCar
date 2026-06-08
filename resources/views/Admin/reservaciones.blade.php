@@ -853,23 +853,37 @@
               <img src="{{ $img }}" alt="{{ $cat->nombre }}">
             </div>
 
-            <div class="cp-left">
-              <div class="cp-title">{{ $cat->nombre }}</div>
-              <div class="cp-sub">{{ $cat->descripcion ?? 'Chevrolet Aveo o similar' }}</div>
+          <div class="cp-left">
+            <div class="cp-title">{{ $cat->nombre }}</div>
+            <div class="cp-sub">{{ $cat->descripcion ?? 'Chevrolet Aveo o similar' }}</div>
 
-              <div class="cp-meta">
+            <div class="cp-desktop-layout">
+                <div class="cp-meta">
                 <span class="pill pill-info info-categoria-btn" style="cursor:pointer;">
-                  <i class='bx bx-info-circle'></i> Características
+                    <i class='bx bx-info-circle'></i> Características
                 </span>
-              </div>
-
-              <div class="cp-meta">
+                </div>
+                <div class="cp-meta">
                 <span class="pill">Código: {{ $cat->codigo }}</span>
                 @if(isset($cat->activo) && (int)$cat->activo === 1)
-                  <span class="pill pill-ok">Activo</span>
+                    <span class="pill pill-ok">Activo</span>
                 @endif
-              </div>
+                </div>
             </div>
+
+            <div class="cp-mobile-layout">
+                <div class="cp-meta-row">
+                <span class="pill pill-info info-categoria-btn" style="cursor:pointer;">
+                    <i class='bx bx-info-circle'></i> Características
+                </span>
+                <span class="pill">Código: {{ $cat->codigo }}</span>
+                @if(isset($cat->activo) && (int)$cat->activo === 1)
+                    <span class="pill pill-ok">Activo</span>
+                @endif
+                </div>
+            </div>
+            </div>
+
 
             <div class="cp-right">
               <div class="price-block">
@@ -1479,3 +1493,4 @@
 @endsection
 
 @endsection
+

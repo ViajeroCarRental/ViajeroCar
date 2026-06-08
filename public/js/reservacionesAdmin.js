@@ -1745,8 +1745,27 @@ function init() {
 
         const d1 = parseDate(fi);
         const d2 = parseDate(ff);
-        const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
-        return Math.max(1, Number.isFinite(diff) ? diff : 0);
+
+        // Días base por diferencia de fechas (calendario)
+        let dias = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+        if (!Number.isFinite(dias)) dias = 0;
+
+        // ===============================
+        // Cortesía de 1 hora:
+        // si la hora de devolución pasa de la hora de pick-up + 1h,
+        // se cobra un día extra.
+        // ===============================
+        const horaRetiro = parseInt(qs("#hora_retiro")?.value?.split(":")[0] ?? "", 10);
+        const horaEntrega = parseInt(qs("#hora_entrega")?.value?.split(":")[0] ?? "", 10);
+
+        if (!Number.isNaN(horaRetiro) && !Number.isNaN(horaEntrega)) {
+            // hora límite = hora de pick-up + 1h de cortesía
+            if (horaEntrega > horaRetiro + 1) {
+                dias += 1;
+            }
+        }
+
+        return Math.max(1, dias);
     }
 
     function repaintCategoriaModalEstimados() {
@@ -3339,108 +3358,189 @@ function init() {
     22. FLATPICKR (CALENDARIO)
     ========================================= */
     function initFlatpickrModalCalendar() {
-        if (!window.flatpickr) return;
+    if (!window.flatpickr) return;
 
-        let backdrop = document.querySelector(".fp-backdrop");
-        if (!backdrop) {
-            backdrop = document.createElement("div");
-            backdrop.className = "fp-backdrop";
-            document.body.appendChild(backdrop);
-        }
-
-        function makeActions(instance, labelText) {
-            const actions = document.createElement("div");
-            actions.className = "fp-actions";
-            actions.innerHTML = `
-                <button type="button" class="fp-today">Hoy</button>
-                <button type="button" class="fp-clear">Limpiar</button>
-                <button type="button" class="fp-label">✖ ${labelText}</button>
-            `;
-
-            actions.querySelector(".fp-today").addEventListener("click", () => instance.setDate(new Date(), true));
-            actions.querySelector(".fp-clear").addEventListener("click", () => {
-                instance.clear();
-                if (instance.input?.id === "fecha_inicio_ui") {
-                    qs("#fecha_inicio").value = "";
-                    const finInstance = document.getElementById("fecha_fin_ui")._flatpickr;
-                    if (finInstance) {
-                        finInstance.set("minDate", "today");
-                    }
-                }
-                if (instance.input?.id === "fecha_fin_ui") qs("#fecha_fin").value = "";
-                syncDays();
-            });
-            return actions;
-        }
-
-        function openModal(instance) {
-            backdrop.classList.add("is-open");
-            document.body.classList.add("no-scroll");
-            backdrop.onclick = () => instance.close();
-        }
-
-        function closeModal() {
-            backdrop.classList.remove("is-open");
-            document.body.classList.remove("no-scroll");
-            backdrop.onclick = null;
-        }
-
-        window.flatpickr("#fecha_inicio_ui", {
-            locale: "es",
-            dateFormat: "d-m-Y",
-            altInput: true,
-            altFormat: "d-M-y",
-            allowInput: false,
-            clickOpens: true,
-            minDate: "today",
-            onOpen: (sel, str, instance) => {
-                openModal(instance);
-                if (!instance._actionsAdded) {
-                    instance.calendarContainer.appendChild(makeActions(instance, "Fecha PickUp"));
-                    instance._actionsAdded = true;
-                }
-            },
-            onClose: () => closeModal(),
-            onChange: (selectedDates) => {
-                const d = selectedDates?.[0];
-                qs("#fecha_inicio").value = d ? toISODate(d) : "";
-
-                const finInstance = document.getElementById("fecha_fin_ui")._flatpickr;
-                if (finInstance) {
-                    if (d) {
-                        finInstance.set("minDate", new Date(d));
-                    } else {
-                        finInstance.set("minDate", "today");
-                    }
-                }
-
-                syncDays();
-            }
-        });
-
-        window.flatpickr("#fecha_fin_ui", {
-            locale: "es",
-            dateFormat: "d-m-Y",
-            altInput: true,
-            altFormat: "d-M-y",
-            allowInput: false,
-            clickOpens: true,
-            minDate: "today",
-            onOpen: (sel, str, instance) => {
-                openModal(instance);
-                if (!instance._actionsAdded) {
-                    instance.calendarContainer.appendChild(makeActions(instance, "Fecha Devolución"));
-                    instance._actionsAdded = true;
-                }
-            },
-            onClose: () => closeModal(),
-            onChange: (selectedDates) => {
-                const d = selectedDates?.[0];
-                qs("#fecha_fin").value = d ? toISODate(d) : "";
-                syncDays();
-            }
-        });
+    let backdrop = document.querySelector(".fp-backdrop");
+    if (!backdrop) {
+        backdrop = document.createElement("div");
+        backdrop.className = "fp-backdrop";
+        document.body.appendChild(backdrop);
     }
+
+    function makeActions(instance, labelText) {
+        const actions = document.createElement("div");
+        actions.className = "fp-actions";
+        actions.innerHTML = `
+            <button type="button" class="fp-today">Hoy</button>
+            <button type="button" class="fp-clear">Limpiar</button>
+            <button type="button" class="fp-label">✖ ${labelText}</button>
+        `;
+        actions.querySelector(".fp-today").addEventListener("click", () => instance.setDate(new Date(), true));
+        actions.querySelector(".fp-clear").addEventListener("click", () => {
+            instance.clear();
+            if (instance.input?.id === "fecha_inicio_ui") {
+                qs("#fecha_inicio").value = "";
+                const finInstance = document.getElementById("fecha_fin_ui")._flatpickr;
+                if (finInstance) finInstance.set("minDate", "today");
+            }
+            if (instance.input?.id === "fecha_fin_ui") qs("#fecha_fin").value = "";
+            syncDays();
+        });
+        return actions;
+    }
+
+    function openModal(instance) {
+        backdrop.classList.add("is-open");
+        document.body.classList.add("no-scroll");
+        backdrop.onclick = () => instance.close();
+    }
+
+    function closeModal() {
+        backdrop.classList.remove("is-open");
+        document.body.classList.remove("no-scroll");
+        backdrop.onclick = null;
+    }
+
+    // ========== PROTECCIÓN ANTI-TECLADO (móvil) ==========
+    function createProtectedPicker(inputElement, additionalConfig = {}) {
+        if (!inputElement) return null;
+        let picker;
+        try {
+            picker = flatpickr(inputElement, {
+                locale: "es",
+                dateFormat: "d-m-Y",
+                altInput: true,
+                altFormat: "d-M-y",
+                allowInput: false,
+                clickOpens: true,
+                minDate: "today",
+                onOpen: (sel, str, instance) => {
+                    openModal(instance);
+                    if (!instance._actionsAdded) {
+                        instance.calendarContainer.appendChild(makeActions(instance, additionalConfig.labelText || "Fecha"));
+                        instance._actionsAdded = true;
+                    }
+                },
+                onClose: () => closeModal(),
+                ...additionalConfig,
+                onReady(selectedDates, dateStr, instance) {
+                    if (instance.altInput) {
+                        instance.altInput.setAttribute('readonly', 'readonly');
+                        instance.altInput.setAttribute('inputmode', 'none');
+                        instance.altInput.style.cursor = 'pointer';
+
+                        instance.altInput.addEventListener('focus', (e) => {
+                            e.preventDefault();
+                            instance.altInput.blur();
+                        });
+                        instance.altInput.addEventListener('touchstart', (e) => {
+                            e.preventDefault();
+                            instance.open();
+                        });
+                        instance.altInput.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            instance.open();
+                        });
+                    }
+                }
+            });
+        } catch (e) {  }
+        return picker;
+    }
+
+    window.flatpickr("#fecha_inicio_ui", {
+        locale: "es",
+        dateFormat: "d-m-Y",
+        altInput: true,
+        altFormat: "d-M-y",
+        allowInput: false,
+        clickOpens: true,
+        minDate: "today",
+        onOpen: (sel, str, instance) => {
+            openModal(instance);
+            if (!instance._actionsAdded) {
+                instance.calendarContainer.appendChild(makeActions(instance, "Fecha PickUp"));
+                instance._actionsAdded = true;
+            }
+        },
+        onClose: () => closeModal(),
+        onReady(selectedDates, dateStr, instance) {
+            if (instance.altInput) {
+                instance.altInput.setAttribute('readonly', 'readonly');
+                instance.altInput.setAttribute('inputmode', 'none');
+                instance.altInput.style.cursor = 'pointer';
+
+                instance.altInput.addEventListener('focus', (e) => {
+                    e.preventDefault();
+                    instance.altInput.blur();
+                });
+                instance.altInput.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    instance.open();
+                });
+                instance.altInput.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    instance.open();
+                });
+            }
+        },
+        onChange: (selectedDates) => {
+            const d = selectedDates?.[0];
+            qs("#fecha_inicio").value = d ? toISODate(d) : "";
+
+            const finInstance = document.getElementById("fecha_fin_ui")._flatpickr;
+            if (finInstance) {
+                if (d) finInstance.set("minDate", new Date(d));
+                else finInstance.set("minDate", "today");
+            }
+            syncDays();
+            filtrarHorasPasadas();
+        }
+    });
+
+    window.flatpickr("#fecha_fin_ui", {
+        locale: "es",
+        dateFormat: "d-m-Y",
+        altInput: true,
+        altFormat: "d-M-y",
+        allowInput: false,
+        clickOpens: true,
+        minDate: "today",
+        onOpen: (sel, str, instance) => {
+            openModal(instance);
+            if (!instance._actionsAdded) {
+                instance.calendarContainer.appendChild(makeActions(instance, "Fecha Devolución"));
+                instance._actionsAdded = true;
+            }
+        },
+        onClose: () => closeModal(),
+        onReady(selectedDates, dateStr, instance) {
+            if (instance.altInput) {
+                instance.altInput.setAttribute('readonly', 'readonly');
+                instance.altInput.setAttribute('inputmode', 'none');
+                instance.altInput.style.cursor = 'pointer';
+
+                instance.altInput.addEventListener('focus', (e) => {
+                    e.preventDefault();
+                    instance.altInput.blur();
+                });
+                instance.altInput.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    instance.open();
+                });
+                instance.altInput.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    instance.open();
+                });
+            }
+        },
+        onChange: (selectedDates) => {
+            const d = selectedDates?.[0];
+            qs("#fecha_fin").value = d ? toISODate(d) : "";
+            syncDays();
+        }
+    });
+}
 
     /* =========================================
     23. SELECTOR DE HORA CON <SELECT>
@@ -3483,8 +3583,21 @@ function init() {
                     if (hiddenInput) hiddenInput.value = timeValue;
                     input.value = timeValue;
                 }
-                refreshSummary();
+                syncDays();
             });
+
+            ['#fecha_inicio_ui', '#fecha_fin_ui'].forEach(selector => {
+                const input = document.querySelector(selector);
+                if (input && input.value && input.value.trim() !== "") {
+                    mostrarExito(input);
+                }
+            });
+        }, 100);
+
+        if (window.state && window.state.categoria) {
+            adicionalesDesbloqueada = true;
+            categoriaDesbloqueada = true;
+            actualizarTodasSecciones();
         }
 
         const horaRetiroInput = document.getElementById("hora_retiro_ui");
@@ -3503,6 +3616,62 @@ function init() {
             horaEntregaInput.dataset.tpReady = "1";
             horaEntregaInput.setAttribute("readonly", "readonly");
             createTimeSelectsBelow(horaEntregaInput, horaEntregaHidden, "Hora");
+        }
+        return input;
+    }
+
+    /* =========================================
+    23.1 FILTRO DE HORAS PASADAS (solo si pick-up = hoy)
+    ========================================= */
+    function filtrarHorasPasadas() {
+        // Select de hora de RETIRO (pick-up)
+        const selRetiro = document.querySelector('#hora_retiro_ui')
+            ?.closest('.dt-field-admin, .time-field-admin')
+            ?.querySelector('.tp-hour');
+
+        if (!selRetiro) return;
+
+        const fechaInicioVal = (qs("#fecha_inicio")?.value || "").trim(); // YYYY-MM-DD
+
+        // 1) Reactivar todas las opciones primero (estado limpio)
+        Array.from(selRetiro.options).forEach(opt => {
+            if (opt.value === "") return; // dejar el placeholder
+            opt.disabled = false;
+            opt.hidden = false;
+        });
+
+        if (!fechaInicioVal) return;
+
+        // 2) ¿La fecha de pick-up es HOY?
+        const hoy = new Date();
+        const y = hoy.getFullYear();
+        const m = String(hoy.getMonth() + 1).padStart(2, "0");
+        const d = String(hoy.getDate()).padStart(2, "0");
+        const hoyISO = `${y}-${m}-${d}`;
+
+        if (fechaInicioVal !== hoyISO) return; // fecha futura -> no se filtra nada
+
+        // 3) Deshabilitar todas las horas <= hora actual
+        const horaActual = hoy.getHours(); // 0-23
+
+        Array.from(selRetiro.options).forEach(opt => {
+            if (opt.value === "") return;
+            const horaOpt = parseInt(opt.value, 10);
+            if (!Number.isNaN(horaOpt) && horaOpt <= horaActual) {
+                opt.hidden = true;
+                opt.disabled = true; // refuerzo: que no sea seleccionable aunque el navegador ignore hidden
+            }
+        });
+
+        // 4) Si la hora seleccionada quedó deshabilitada, limpiarla
+        const seleccionada = selRetiro.options[selRetiro.selectedIndex];
+        if (seleccionada && (seleccionada.hidden || seleccionada.disabled)) {
+            selRetiro.value = "";
+            const inputHoraUI = document.getElementById("hora_retiro_ui");
+            const hiddenHora = document.getElementById("hora_retiro");
+            if (inputHoraUI) inputHoraUI.value = "";
+            if (hiddenHora) hiddenHora.value = "";
+            if (typeof refreshSummary === 'function') refreshSummary();
         }
     }
 
@@ -4096,12 +4265,11 @@ function init() {
                 syncDateHiddenFromUI(id, id.replace("_ui", ""));
                 syncDays();
             });
-        });
 
         ["#hora_retiro_ui", "#hora_entrega_ui"].forEach((id) => {
             qs(id)?.addEventListener("change", () => {
                 syncTimeHiddenFromUI(id, id.replace("_ui", ""));
-                refreshSummary();
+                syncDays();
             });
         });
 
@@ -4283,6 +4451,7 @@ function init() {
 
         initFlatpickrModalCalendar();
         initTimeSelectors();
+        filtrarHorasPasadas();
 
         initPhoneCombo();
         syncTelefonoFinal();
