@@ -67,7 +67,7 @@
         border-color: #0284c7;
         box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
     }
-    .schedule-container select, 
+    .schedule-container select,
     .schedule-container input {
         border: none !important;
         background: transparent !important;
@@ -135,28 +135,6 @@
     </div>
   </div>
 
-  @if(session('success'))
-    <div class="toast" style="background: #10b981; color: white; padding: 10px; margin-bottom: 15px; border-radius: 5px;">
-        {{ session('success') }}
-    </div>
-  @endif
-
-  @if(session('error'))
-    <div class="toast" style="background: #ef4444; color: white; padding: 10px; margin-bottom: 15px; border-radius: 5px;">
-        {{ session('error') }}
-    </div>
-  @endif
-
-  @if($errors->any())
-    <div class="toast" style="background: #f59e0b; color: white; padding: 10px; margin-bottom: 15px; border-radius: 5px;">
-        <ul style="margin: 0; padding-left: 20px;">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-  @endif
-
   <section class="card">
     <table class="table">
       <thead>
@@ -197,7 +175,7 @@
                     <button type="button" class="btn-mini btn-edit"
                         onclick='abrirEditar(@json($sucursal), @json($textoHorario))'>✏️ Editar</button>
                     <button type="button" class="btn-mini btn-del"
-                        onclick="confirmarEliminar({{ $sucursal->id_sucursal }}, '{{ addslashes($sucursal->nombre) }}')">🗑️</button>
+                        onclick="confirmarEliminar({{ $sucursal->id_sucursal }}, @js($sucursal->nombre))">🗑️</button>
                 </td>
             </tr>
         @empty
@@ -415,7 +393,19 @@
 @endsection
 
 @section('js')
+{{-- SweetAlert2 CDN --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    // ==========================
+    // PARCHE GLOBAL: cerrar dialogs antes de cualquier Swal
+    // (los <dialog> showModal() viven en la top-layer, por encima de Swal)
+    // ==========================
+    const _swalFire = Swal.fire.bind(Swal);
+    Swal.fire = function (...args) {
+        document.querySelectorAll('dialog[open]').forEach(function (d) { d.close(); });
+        return _swalFire(...args);
+    };
+
     // ==========================
     // EDITAR OFICINA
     // ==========================
@@ -424,7 +414,7 @@
         document.getElementById('edit_nombre').value = sucursal.nombre;
         document.getElementById('edit_direccion').value = sucursal.direccion;
         document.getElementById('edit_telefono').value = sucursal.telefono ?? '';
-        
+
         // Intentar parsear el horario "DIA A DIA HORA - HORA"
         if (horario) {
             const parts = horario.split(' ');
@@ -463,15 +453,60 @@
     vincularHorario('edit');
 
     // ==========================
-    // ELIMINAR OFICINA
+    // CONFIRMAR EDITAR (SweetAlert2)
+    // ==========================
+    (function () {
+        const formEditar = document.getElementById('formEditar');
+        if (!formEditar) return;
+
+        formEditar.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Asegura que el horario oculto esté actualizado antes de confirmar
+            const diaI = document.getElementById('edit_dia_inicio');
+            const diaF = document.getElementById('edit_dia_fin');
+            const hora = document.getElementById('edit_horas');
+            document.getElementById('edit_horario_hidden').value =
+                `${diaI.value} A ${diaF.value} ${hora.value}`.toUpperCase();
+
+            Swal.fire({
+                title: '¿Guardar cambios?',
+                text: 'Se modificará la oficina "' + document.getElementById('edit_nombre').value + '".',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, modificar',
+                cancelButtonText: 'Cancelar'
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    formEditar.submit();
+                }
+            });
+        });
+    })();
+
+    // ==========================
+    // ELIMINAR OFICINA (SweetAlert2)
     // ==========================
     function confirmarEliminar(id, nombre) {
-        if (!confirm(`¿Eliminar la sucursal "${nombre}"? Esta acción no se puede deshacer.`)) return;
-
-        const base = "{{ url('oficinas') }}";
-        const form = document.getElementById('formEliminar');
-        form.action = `${base}/${id}`;
-        form.submit();
+        Swal.fire({
+            title: '¿Eliminar oficina?',
+            text: 'Se eliminará la sucursal "' + nombre + '". Esta acción no se puede deshacer.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                const base = "{{ url('oficinas') }}";
+                const form = document.getElementById('formEliminar');
+                form.action = `${base}/${id}`;
+                form.submit();
+            }
+        });
     }
 
     // ==========================
@@ -530,7 +565,12 @@
         })
         .catch(error => {
             console.error("Error en el cálculo:", error);
-            alert("Hubo un error de conexión al calcular la tarifa.");
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de conexión',
+                text: 'Hubo un error al calcular la tarifa.',
+                confirmButtonText: 'Entendido'
+            });
         });
     }
 
@@ -543,5 +583,36 @@
             e.target.value = e.target.value.replace(/\D/g, '');
         }
     });
+
+    // ==========================
+    // TOAST DE ÉXITO / ERROR / VALIDACIÓN (centrados, NO en la esquina)
+    // ==========================
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Listo',
+            text: @js(session('success')),
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#10b981'
+        });
+    @endif
+
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: @js(session('error')),
+            confirmButtonText: 'Entendido'
+        });
+    @endif
+
+    @if($errors->any())
+        Swal.fire({
+            icon: 'error',
+            title: 'Revisa el formulario',
+            html: `{!! implode('<br>', $errors->all()) !!}`,
+            confirmButtonText: 'Entendido'
+        });
+    @endif
 </script>
 @endsection

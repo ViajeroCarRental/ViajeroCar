@@ -24,12 +24,10 @@
     color: #64748b;
     cursor: pointer;
     border-bottom: 3px solid transparent;
-    margin-bottom: -2px; /* Superpone el borde */
+    margin-bottom: -2px;
     transition: all 0.3s;
   }
-  .tab-btn:hover {
-    color: #0f172a;
-  }
+  .tab-btn:hover { color: #0f172a; }
   .tab-btn.active {
     color: #b22222;
     border-bottom-color: #b22222;
@@ -39,9 +37,7 @@
     padding-top: 20px;
     animation: fadeIn 0.3s ease;
   }
-  .tab-content.active {
-    display: block;
-  }
+  .tab-content.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
   /* =======================================
@@ -59,7 +55,7 @@
   }
   .badge-delivery { background: #e0f2fe; color: #0284c7; }
   .badge-dropoff { background: #f3e8ff; color: #9333ea; }
-  
+
   .filtros-container {
     background: #ffffff;
     border: 1px solid #e2e8f0;
@@ -130,9 +126,8 @@
   <div class="head" style="display: flex; justify-content: space-between; align-items: center;">
     <div>
         <h1 class="h1" style="margin-bottom: 5px;">Dropoff y Delivery</h1>
-        {{-- <p style="color: #64748b; margin-top:0; font-size: 14px;">Administra costos de Delivery (Puntos Especiales) y Dropoff (Sucursales).</p> --}}
     </div>
-    
+
     <div style="display: flex; gap: 12px;">
         <button onclick="document.getElementById('modalUbicacion').showModal()" style="background: #0284c7; color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
             + Nuevo Destino (Delivery)
@@ -142,10 +137,6 @@
         </button>
     </div>
   </div>
-
-  @if(session('success'))
-    <div class="toast" style="background: #10b981; color: white; padding: 12px; margin-bottom: 15px; border-radius: 8px; font-weight: bold;">✓ {{ session('success') }}</div>
-  @endif
 
   <div class="tabs-nav">
       <button class="tab-btn active" onclick="switchTab('tab-categorias', this)">1. Categorías (Costo x KM)</button>
@@ -170,7 +161,7 @@
                     <td>{{ $cat->nombre }}</td>
                     <td class="mono" style="color: #166534; font-weight: bold; font-size: 15px;">${{ number_format($cat->costo_km ?? 0, 2) }}</td>
                     <td style="text-align: center;">
-                        <button class="btn-icon btn-edit" onclick="openEditCategoria({{ $cat->id_categoria }}, '{{ $cat->nombre }}', {{ $cat->costo_km ?? 0 }})">
+                        <button class="btn-icon btn-edit" onclick="openEditCategoria({{ $cat->id_categoria }}, @js($cat->nombre), {{ $cat->costo_km ?? 0 }})">
                             ✎ Ajustar Costo
                         </button>
                     </td>
@@ -182,20 +173,20 @@
   </div>
 
   <div id="tab-viajes" class="tab-content">
-      
+
       <div class="filtros-container">
           <div class="filtro-item">
               <label>📍 Origen</label>
               <select id="filtroOrigen" onchange="aplicarFiltros()">
                   <option value="todos">Todos los orígenes</option>
-                  </select>
+              </select>
           </div>
 
           <div class="filtro-item">
               <label>🚩 Destino</label>
               <select id="filtroDestino" onchange="aplicarFiltros()">
                   <option value="todos">Todos los destinos</option>
-                  </select>
+              </select>
           </div>
 
           <div class="divisor-vertical"></div>
@@ -226,7 +217,7 @@
             </tr>
           </thead>
           <tbody>
-            
+
             {{-- RUTAS DE DELIVERY --}}
             @if(isset($ubicaciones))
                 @foreach($ubicaciones as $u)
@@ -240,7 +231,8 @@
                         </td>
                         <td>
                             <div class="btn-grupo">
-                                <button class="btn-icon btn-del">🗑️</button>
+                                <button type="button" class="btn-icon btn-del"
+                                    onclick="confirmarEliminar('delivery', {{ $u->id_ubicacion }}, @js($u->destino))">🗑️</button>
                             </div>
                         </td>
                     </tr>
@@ -270,7 +262,8 @@
                         </td>
                         <td>
                             <div class="btn-grupo">
-                                <button class="btn-icon btn-del">🗑️</button>
+                                <button type="button" class="btn-icon btn-del"
+                                    onclick="confirmarEliminar('dropoff', {{ $t->id_tarifa ?? 0 }}, @js(($t->origen_nombre ?? '') . ' → ' . ($t->destino_nombre ?? '')))">🗑️</button>
                             </div>
                         </td>
                     </tr>
@@ -285,23 +278,22 @@
 </main>
 
 {{-- ==========================================
-     MODALES PARA CREAR (FORMULARIOS ACTIVOS)
+     MODALES PARA CREAR
 =========================================== --}}
 
 {{-- Modal Delivery --}}
 <dialog id="modalUbicacion" class="modal">
-  <form id="formUbicacion" class="modal-box" method="POST" action="{{ url('admin/ubicacion/store') }}">
-    @csrf
+  <form id="formUbicacion" class="modal-box">
     <div class="modal-head"><h2>Nuevo Punto (Delivery)</h2><button type="button" class="x" onclick="document.getElementById('modalUbicacion').close()">✕</button></div>
-    
+
     <label class="label">Estado</label>
-    <input type="text" name="estado" class="input" required placeholder="Ej: Querétaro">
+    <input type="text" id="ub_estado" name="estado" class="input" required placeholder="Ej: Querétaro">
 
     <label class="label">Destino Especial</label>
-    <input type="text" name="destino" class="input" required placeholder="Ej: Hotel Real de Minas">
+    <input type="text" id="ub_destino" name="destino" class="input" required placeholder="Ej: Hotel Real de Minas">
 
     <label class="label">Distancia Total (Kilómetros)</label>
-    <input type="number" name="km" class="input mono" step="0.1" min="0" required placeholder="Ej: 15.5">
+    <input type="number" id="ub_km" name="km" class="input mono" step="0.1" min="0" required placeholder="Ej: 15.5">
 
     <div class="modal-actions" style="margin-top: 20px;"><button class="btn-add" style="background: #0284c7;" type="submit">Guardar Destino</button></div>
   </form>
@@ -309,12 +301,11 @@
 
 {{-- Modal Dropoff --}}
 <dialog id="modalTarifa" class="modal">
-  <form id="formTarifa" class="modal-box" method="POST" action="{{ url('admin/tarifa_dropoff/store') }}">
-    @csrf
+  <form id="formTarifa" class="modal-box">
     <div class="modal-head"><h2>Nueva Ruta (Dropoff)</h2><button type="button" class="x" onclick="document.getElementById('modalTarifa').close()">✕</button></div>
 
     <label class="label">Origen</label>
-    <select name="id_sucursal_origen" class="input" required>
+    <select id="tf_origen" name="id_sucursal_origen" class="input" required>
         <option value="">-- Seleccione Sucursal --</option>
         @if(isset($sucursales))
             @foreach($sucursales as $s) <option value="{{ $s->id_sucursal }}">{{ $s->nombre }}</option> @endforeach
@@ -322,15 +313,15 @@
     </select>
 
     <label class="label">Destino</label>
-    <select name="id_sucursal_destino" class="input" required>
+    <select id="tf_destino" name="id_sucursal_destino" class="input" required>
         <option value="">-- Seleccione Sucursal --</option>
         @if(isset($sucursales))
             @foreach($sucursales as $s) <option value="{{ $s->id_sucursal }}">{{ $s->nombre }}</option> @endforeach
         @endif
     </select>
-    
+
     <label class="label">Modalidad de Cobro</label>
-    <select name="tipo_cobro" class="input" required>
+    <select id="tf_tipo_cobro" name="tipo_cobro" class="input" required>
         <option value="variable">Cobro por Distancia (Km x Categoria)</option>
         <option value="fijo">Cobro Fijo (Sin importar el auto)</option>
     </select>
@@ -338,11 +329,11 @@
     <div style="display: flex; gap: 10px;">
         <div style="flex: 1;">
             <label class="label">Monto Fijo ($)</label>
-            <input type="number" name="monto_base" class="input mono" step="0.01" min="0" value="0">
+            <input type="number" id="tf_monto_base" name="monto_base" class="input mono" step="0.01" min="0" value="0">
         </div>
         <div style="flex: 1;">
             <label class="label">Distancia (KM)</label>
-            <input type="number" name="monto_por_km" class="input mono" step="0.1" min="0" value="0">
+            <input type="number" id="tf_monto_km" name="monto_por_km" class="input mono" step="0.1" min="0" value="0">
         </div>
     </div>
 
@@ -352,9 +343,9 @@
 
 {{-- Modal Editar Costo KM Categoría --}}
 <dialog id="modalCosto" class="modal">
-  <form id="formCosto" class="modal-box" method="POST" action="">
-    @csrf @method('PUT')
+  <form id="formCosto" class="modal-box">
     <div class="modal-head"><h2>Actualizar Costo por Kilómetro</h2><button type="button" class="x" onclick="document.getElementById('modalCosto').close()">✕</button></div>
+    <input type="hidden" id="c_id_categoria">
     <label class="label">Categoría</label>
     <input type="text" id="c_nombre" class="input" readonly style="background: #f1f5f9;">
     <label class="label">Costo por Kilómetro ($)</label>
@@ -366,14 +357,35 @@
 @endsection
 
 @section('js')
+{{-- SweetAlert2 CDN --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <script>
+    const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+
+    // ==========================================
+    // PARCHE GLOBAL: cerrar dialogs antes de cualquier Swal
+    // ==========================================
+    const _swalFire = Swal.fire.bind(Swal);
+    Swal.fire = function (...args) {
+        document.querySelectorAll('dialog[open]').forEach(function (d) { d.close(); });
+        return _swalFire(...args);
+    };
+
+    // Helper fetch JSON con FormData
+    function postForm(url, dataObj) {
+        const form = new FormData();
+        form.append('_token', CSRF);
+        Object.keys(dataObj).forEach(k => form.append(k, dataObj[k]));
+        return fetch(url, { method: 'POST', body: form }).then(r => r.json());
+    }
+
     // ==========================================
     // NAVEGACIÓN ENTRE TABS
     // ==========================================
     function switchTab(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        
         document.getElementById(tabId).classList.add('active');
         btnElement.classList.add('active');
     }
@@ -385,7 +397,7 @@
         const selectOrigen = document.getElementById('filtroOrigen');
         const selectDestino = document.getElementById('filtroDestino');
         const filas = document.querySelectorAll('.fila-viaje');
-        
+
         let origenes = new Set();
         let destinos = new Set();
 
@@ -394,49 +406,41 @@
             if(fila.dataset.destino) destinos.add(fila.dataset.destino);
         });
 
-        // Crear opciones para Origen
         origenes.forEach(origen => {
             let option = document.createElement("option");
             option.value = origen;
-            option.text = origen.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '); 
+            option.text = origen.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
             selectOrigen.appendChild(option);
         });
 
-        // Crear opciones para Destino
         destinos.forEach(destino => {
             let option = document.createElement("option");
             option.value = destino;
-            option.text = destino.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '); 
+            option.text = destino.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
             selectDestino.appendChild(option);
         });
     });
 
     // ==========================================
-    // MAGIA: FILTRO MULTIPLE + PRECIOS
+    // FILTRO MULTIPLE + PRECIOS
     // ==========================================
     function aplicarFiltros() {
         const valOrigen = document.getElementById('filtroOrigen').value;
         const valDestino = document.getElementById('filtroDestino').value;
         const selectCat = document.getElementById('filtroCategoria');
         const costoPorKm = parseFloat(selectCat.options[selectCat.selectedIndex].dataset.costokm) || 0;
-        
+
         document.querySelectorAll('.fila-viaje').forEach(fila => {
             const origenFila = fila.dataset.origen;
             const destinoFila = fila.dataset.destino;
-            const tipo = fila.dataset.tipo; 
+            const tipo = fila.dataset.tipo;
             const celdaCosto = fila.querySelector('.celda-costo');
-            
-            // 1. Filtrar visibilidad
+
             let mostrarOrigen = (valOrigen === "todos" || origenFila === valOrigen);
             let mostrarDestino = (valDestino === "todos" || destinoFila === valDestino);
 
-            if (mostrarOrigen && mostrarDestino) {
-                fila.style.display = "table-row";
-            } else {
-                fila.style.display = "none";
-            }
+            fila.style.display = (mostrarOrigen && mostrarDestino) ? "table-row" : "none";
 
-            // 2. Calcular Precios
             if (costoPorKm === 0) {
                 if (tipo === 'dropoff' && fila.dataset.cobro === 'fijo') {
                     celdaCosto.innerText = "$" + parseFloat(fila.dataset.fijo).toFixed(2);
@@ -450,14 +454,13 @@
                 return;
             }
 
-            celdaCosto.style.color = "#b22222"; 
+            celdaCosto.style.color = "#b22222";
             celdaCosto.style.fontWeight = "900";
-            
+
             if (tipo === 'delivery') {
                 const total = (parseFloat(fila.dataset.km) || 0) * costoPorKm;
                 celdaCosto.innerText = "$" + total.toFixed(2);
-            } 
-            else if (tipo === 'dropoff') {
+            } else if (tipo === 'dropoff') {
                 if (fila.dataset.cobro === 'fijo') {
                     celdaCosto.innerText = "$" + parseFloat(fila.dataset.fijo).toFixed(2);
                 } else {
@@ -468,15 +471,139 @@
         });
     }
 
-    // Modal para Editar el costo por Categoría
+    // ==========================================
+    // CREAR DESTINO (DELIVERY) — fetch
+    // ==========================================
+    document.getElementById('formUbicacion').addEventListener('submit', function (e) {
+        e.preventDefault();
+        postForm("{{ url('admin/dropoff/ubicacion') }}", {
+            estado:  document.getElementById('ub_estado').value,
+            destino: document.getElementById('ub_destino').value,
+            km:      document.getElementById('ub_km').value
+        })
+        .then(() => {
+            Swal.fire({
+                icon: 'success', title: 'Destino creado',
+                text: 'El destino de delivery se creó correctamente.',
+                confirmButtonText: 'Aceptar', confirmButtonColor: '#10b981'
+            }).then(() => location.reload());
+        })
+        .catch(() => errorSwal());
+    });
+
+    // ==========================================
+    // CREAR RUTA (DROPOFF) — fetch
+    // ==========================================
+    document.getElementById('formTarifa').addEventListener('submit', function (e) {
+        e.preventDefault();
+        postForm("{{ url('admin/dropoff/tarifa') }}", {
+            id_sucursal_origen:  document.getElementById('tf_origen').value,
+            id_sucursal_destino: document.getElementById('tf_destino').value,
+            tipo_cobro:          document.getElementById('tf_tipo_cobro').value,
+            monto_base:          document.getElementById('tf_monto_base').value,
+            monto_por_km:        document.getElementById('tf_monto_km').value
+        })
+        .then(() => {
+            Swal.fire({
+                icon: 'success', title: 'Ruta creada',
+                text: 'La ruta de dropoff se creó correctamente.',
+                confirmButtonText: 'Aceptar', confirmButtonColor: '#10b981'
+            }).then(() => location.reload());
+        })
+        .catch(() => errorSwal());
+    });
+
+    // ==========================================
+    // EDITAR COSTO POR CATEGORÍA
+    // ==========================================
     function openEditCategoria(id, nombre, costoActual) {
+        document.getElementById('c_id_categoria').value = id;
         document.getElementById('c_nombre').value = nombre;
         document.getElementById('c_costo').value = costoActual;
-        // La URL de acción se arma aquí
-        document.getElementById('formCosto').action = `{{ url('admin/categoria_costo_km/update') }}/${id}`; 
         document.getElementById('modalCosto').showModal();
     }
-</script>
 
-{{-- <script src="{{ asset('js/dropoff.js') }}"></script> --}}
+    document.getElementById('formCosto').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const nombre = document.getElementById('c_nombre').value;
+
+        // cerrar el dialog antes de confirmar para que el Swal no quede detrás
+        document.getElementById('modalCosto').close();
+
+        Swal.fire({
+            title: '¿Guardar cambios?',
+            text: 'Se modificará el costo por km de "' + nombre + '".',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, modificar',
+            cancelButtonText: 'Cancelar'
+        }).then(result => {
+            if (!result.isConfirmed) {
+                document.getElementById('modalCosto').showModal();
+                return;
+            }
+            // tu updateCostoKm lee id_categoria y costo_km del body
+            postForm("{{ url('admin/dropoff/update-costo') }}", {
+                id_categoria: document.getElementById('c_id_categoria').value,
+                costo_km:     document.getElementById('c_costo').value
+            })
+            .then(() => {
+                Swal.fire({
+                    icon: 'success', title: 'Costo actualizado',
+                    text: 'El costo por km se modificó correctamente.',
+                    confirmButtonText: 'Aceptar', confirmButtonColor: '#10b981'
+                }).then(() => location.reload());
+            })
+            .catch(() => errorSwal());
+        });
+    });
+
+    // ==========================================
+    // ELIMINAR RUTA / DESTINO — fetch
+    // ==========================================
+    function confirmarEliminar(tipo, id, nombre) {
+        const esDelivery = (tipo === 'delivery');
+        Swal.fire({
+            title: esDelivery ? '¿Eliminar destino?' : '¿Eliminar ruta?',
+            text: 'Se eliminará "' + nombre + '". Esta acción no se puede deshacer.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            const url = esDelivery
+                ? "{{ url('admin/dropoff/ubicacion/eliminar') }}/" + id
+                : "{{ url('admin/dropoff/tarifa/eliminar') }}/" + id;
+
+            postForm(url, {})
+            .then(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: esDelivery ? 'Destino eliminado' : 'Ruta eliminada',
+                    text: 'Se eliminó correctamente.',
+                    confirmButtonText: 'Aceptar', confirmButtonColor: '#10b981'
+                }).then(() => location.reload());
+            })
+            .catch(() => errorSwal());
+        });
+    }
+
+    // ==========================================
+    // ERROR GENÉRICO
+    // ==========================================
+    function errorSwal() {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Ocurrió un error al procesar la solicitud.',
+            confirmButtonText: 'Entendido'
+        });
+    }
+</script>
 @endsection

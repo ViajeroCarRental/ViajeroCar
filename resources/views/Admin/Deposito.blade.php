@@ -25,13 +25,6 @@
   .btn-primary:hover {
     background: #b91c1c;
   }
-  .toast-success {
-    background: #10b981;
-    color: white;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 5px;
-  }
   .text-left { text-align: left; }
   .text-center { text-align: center; }
   .font-bold { font-weight: bold; }
@@ -61,7 +54,7 @@
     color: #64748b;
     text-decoration: underline;
   }
-  
+
   /* Headers clickeables */
   .header-click {
     cursor: pointer;
@@ -69,7 +62,7 @@
   .header-click:hover {
     text-decoration: underline;
   }
-  
+
   /* Botones de acción */
   .btn-danger {
     background: transparent;
@@ -84,7 +77,7 @@
     background: #ef4444;
     color: white;
   }
-  
+
   /* Campos del modal masivo */
   .bulk-container {
     max-height: 450px;
@@ -101,7 +94,7 @@
   }
   .bulk-row span { font-weight: 500; font-size: 14px; }
   .bulk-row input { width: 120px; }
-  
+
   /* =========================================
      PAGINACIÓN (SOLO PREVIOUS Y NEXT EN LÍNEA)
   ========================================= */
@@ -168,10 +161,6 @@
     </button>
   </div>
 
-  @if(session('success'))
-    <div class="toast toast-success">{{ session('success') }}</div>
-  @endif
-
   <section class="card">
     <table class="table">
       <thead>
@@ -201,11 +190,11 @@
               @endphp
               <td class="text-center">
                 @if($dep)
-                  <span class="mono monto-link" 
+                  <span class="mono monto-link"
                         onclick="openEdit(
-                          {{ $dep->id_deposito }}, 
-                          @js($cat->nombre), 
-                          @js($paq->nombre), 
+                          {{ $dep->id_deposito }},
+                          @js($cat->nombre),
+                          @js($paq->nombre),
                           {{ $dep->monto }}
                         )">
                     ${{ number_format($dep->monto, 0) }}
@@ -236,7 +225,7 @@
     MODAL INDIVIDUAL
 ========================= --}}
 <dialog id="modalNuevo" class="modal">
-  <form method="POST" action="{{ route('depositos.store') }}" class="modal-box">
+  <form method="POST" action="{{ route('depositos.store') }}" class="modal-box" id="formNuevo">
     @csrf
     <div class="modal-head">
       <h2>Actualizar Garantía</h2>
@@ -273,10 +262,10 @@
     MODAL MASIVO (DINÁMICO)
 ========================= --}}
 <dialog id="modalBulk" class="modal">
-  <form method="POST" action="{{ route('depositos.store') }}" class="modal-box" style="max-width: 500px;">
+  <form method="POST" action="{{ route('depositos.store') }}" class="modal-box" id="formBulk" style="max-width: 500px;">
     @csrf
     <input type="hidden" name="bulk" value="1">
-    
+
     <div class="modal-head">
       <h2 id="bulkTitle">Actualización Masiva</h2>
       <button type="button" class="x" onclick="document.getElementById('modalBulk').close()">✕</button>
@@ -302,31 +291,45 @@
       <h2>Modificar Garantía</h2>
       <button type="button" class="x" onclick="document.getElementById('modalEditar').close()">✕</button>
     </div>
-    
+
     <input type="hidden" id="delete_id">
-    
+
     <label class="label">Categoría de Auto</label>
     <input class="input" id="view_categoria" readonly style="background: #f1f5f9; cursor: not-allowed;">
-    
+
     <label class="label">Paquete de Seguro</label>
     <input class="input" id="view_seguro" readonly style="background: #f1f5f9; cursor: not-allowed; color: #0369a1; font-weight: bold;">
-    
+
     <label class="label">Monto de Depósito ($)</label>
     <input class="input mono" id="e_monto" name="monto" type="number" step="1" min="0" required>
-    
+
     <div class="modal-actions" style="display: flex; gap: 10px; margin-top: 15px;">
       <button class="btn-add" type="submit">Actualizar</button>
       <button type="button" class="btn-danger" onclick="eliminarDeposito()">Eliminar</button>
       <button class="btn-ghost" type="button" onclick="document.getElementById('modalEditar').close()">Cancelar</button>
     </div>
   </form>
-  
-  <form id="formEliminar" method="POST" style="display: none;"> 
-    @csrf @method('DELETE') 
+
+  <form id="formEliminar" method="POST" style="display: none;">
+    @csrf @method('DELETE')
   </form>
 </dialog>
 
+{{-- =========================
+    SWEETALERT2 CDN
+========================= --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
+/* ---------- PARCHE GLOBAL: cerrar dialogs antes de cualquier Swal ---------- */
+/* Los <dialog> abiertos con showModal() viven en la top-layer del navegador,
+   por encima de SweetAlert2. Esto los cierra antes de mostrar cualquier alerta. */
+const _swalFire = Swal.fire.bind(Swal);
+Swal.fire = function (...args) {
+  document.querySelectorAll('dialog[open]').forEach(function (d) { d.close(); });
+  return _swalFire(...args);
+};
+
 const matrizData = @js($matriz);
 const categoriasData = @js($todasCategorias->items());
 const paquetesData = @js($todosPaquetes);
@@ -335,7 +338,7 @@ function openBulkPackage(idPaq, nombrePaq) {
     document.getElementById('bulkTitle').innerText = "Editar Seguro: " + nombrePaq;
     const container = document.getElementById('bulkContainer');
     container.innerHTML = '';
-    
+
     categoriasData.forEach((cat, index) => {
         const monto = (matrizData[cat.id_categoria] && matrizData[cat.id_categoria][idPaq]) ? matrizData[cat.id_categoria][idPaq].monto : 0;
         container.innerHTML += `
@@ -347,7 +350,7 @@ function openBulkPackage(idPaq, nombrePaq) {
             </div>
         `;
     });
-    
+
     document.getElementById('modalBulk').showModal();
 }
 
@@ -355,7 +358,7 @@ function openBulkCategory(idCat, nombreCat) {
     document.getElementById('bulkTitle').innerText = "Editar Categoría: " + nombreCat;
     const container = document.getElementById('bulkContainer');
     container.innerHTML = '';
-    
+
     paquetesData.forEach((paq, index) => {
         const monto = (matrizData[idCat] && matrizData[idCat][paq.id_paquete]) ? matrizData[idCat][paq.id_paquete].monto : 0;
         container.innerHTML += `
@@ -367,7 +370,7 @@ function openBulkCategory(idCat, nombreCat) {
             </div>
         `;
     });
-    
+
     document.getElementById('modalBulk').showModal();
 }
 
@@ -387,12 +390,73 @@ function openEdit(id, categoria, seguro, monto) {
   document.getElementById('modalEditar').showModal();
 }
 
+/* ---------- ELIMINAR DEPÓSITO (con SweetAlert2) ---------- */
 function eliminarDeposito() {
-    if(confirm('¿Deseas eliminar este monto?')) {
-        let formDelete = document.getElementById('formEliminar');
+    const categoria = document.getElementById('view_categoria').value;
+    const seguro    = document.getElementById('view_seguro').value;
+
+    Swal.fire({
+      title: '¿Eliminar garantía?',
+      text: 'Se eliminará el monto de "' + categoria + ' / ' + seguro + '". Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then(function (result) {
+      if (result.isConfirmed) {
+        const formDelete = document.getElementById('formEliminar');
         formDelete.action = "{{ url('admin/depositos') }}/" + document.getElementById('delete_id').value;
         formDelete.submit();
-    }
+      }
+    });
 }
+
+/* ---------- CONFIRMAR EDITAR ---------- */
+(function () {
+  const formEditar = document.getElementById('formEditar');
+  if (!formEditar) return;
+
+  formEditar.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    Swal.fire({
+      title: '¿Guardar cambios?',
+      text: 'Se modificará la garantía de "' + document.getElementById('view_categoria').value + '".',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, modificar',
+      cancelButtonText: 'Cancelar'
+    }).then(function (result) {
+      if (result.isConfirmed) {
+        formEditar.submit();
+      }
+    });
+  });
+})();
+
+/* ---------- TOAST DE ÉXITO (centrado, NO en la esquina) ---------- */
+@if(session('success'))
+  Swal.fire({
+    icon: 'success',
+    title: 'Listo',
+    text: @js(session('success')),
+    confirmButtonText: 'Aceptar',
+    confirmButtonColor: '#10b981'
+  });
+@endif
+
+/* ---------- ERRORES DE VALIDACIÓN ---------- */
+@if($errors->any())
+  Swal.fire({
+    icon: 'error',
+    title: 'Revisa el formulario',
+    html: `{!! implode('<br>', $errors->all()) !!}`,
+    confirmButtonText: 'Entendido'
+  });
+@endif
 </script>
 @endsection

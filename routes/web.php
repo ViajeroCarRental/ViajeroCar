@@ -617,6 +617,8 @@ Route::post('/dropoff/update-km', [DropoffController::class, 'updateKm']);
 Route::post('/dropoff/update-costo', [DropoffController::class, 'updateCostoKm']);
 Route::post('/dropoff/ubicacion', [DropoffController::class, 'storeUbicacion']);
 Route::post('/dropoff/tarifa', [DropoffController::class, 'storeTarifaDropoff']);
+Route::post('/dropoff/ubicacion/eliminar/{id}', [DropoffController::class, 'destroyUbicacion']);
+Route::post('/dropoff/tarifa/eliminar/{id}', [DropoffController::class, 'destroyTarifaDropoff']);
 });
 
 Route::post('/contrato/guardar-dato', [ChecklistController::class, 'guardarDato'])
