@@ -337,10 +337,10 @@
                     <span>Oficinas</span>
                 </a>
 
-                <a href="{{ route('servicios.index') }}" class="admin-home-card card-full-width">
+                {{-- <a href="{{ route('servicios.index') }}" class="admin-home-card card-full-width">
                     <i class="fas fa-layer-group"></i>
                     <span>Adicionales</span>
-                </a>
+                </a> --}}
 
             </div> 
             </div>

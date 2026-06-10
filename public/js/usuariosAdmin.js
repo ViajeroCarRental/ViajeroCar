@@ -1,6 +1,20 @@
 document.addEventListener("DOMContentLoaded", () => {
     console.log("🔥 usuariosAdmin.js cargado");
 
+    // =====================================================
+    // PARCHE: SweetAlert2 SIEMPRE por encima del modal .pop
+    // (el modal es un <div> con z-index, no un <dialog>)
+    // =====================================================
+    if (window.Swal) {
+        const _swalFire = Swal.fire.bind(Swal);
+        Swal.fire = function (...args) {
+            const p = _swalFire(...args);
+            const cont = document.querySelector('.swal2-container');
+            if (cont) cont.style.zIndex = '999999';
+            return p;
+        };
+    }
+
     const btnAdd = document.getElementById("btnAdd");
     const tbodyAdmins = document.getElementById("tbodyAdmins");
 
@@ -59,6 +73,33 @@ document.addEventListener("DOMContentLoaded", () => {
     const abrirModal = () => (pop.style.display = "flex");
     const cerrarModal = () => (pop.style.display = "none");
 
+    // ===== Helpers SweetAlert2 (con fallback si no está cargado) =====
+    const swalError = (msg) => {
+        if (window.Swal) {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: msg || "Ocurrió un error.",
+                confirmButtonText: "Entendido"
+            });
+        } else {
+            alert(msg || "Ocurrió un error.");
+        }
+    };
+
+    const swalExito = (titulo, texto) => {
+        if (window.Swal) {
+            return Swal.fire({
+                icon: "success",
+                title: titulo,
+                text: texto,
+                confirmButtonText: "Aceptar",
+                confirmButtonColor: "#10b981"
+            });
+        }
+        return Promise.resolve();
+    };
+
     const limpiarForm = () => {
         uId.value = "";
         uNombre.value = "";
@@ -111,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ========================
-    // 🗑 ELIMINAR ADMIN
+    // 🗑 ELIMINAR ADMIN (SweetAlert2)
     // ========================
     tbodyAdmins?.addEventListener("click", (e) => {
         const btn = e.target.closest(".btn-delete-user");
@@ -121,45 +162,95 @@ document.addEventListener("DOMContentLoaded", () => {
         const id = tr.dataset.id;
         const nombre = `${tr.dataset.nombres} ${tr.dataset.apellidos}`;
 
-        if (!confirm(`¿Eliminar al usuario "${nombre}"?`)) return;
+        Swal.fire({
+            title: "¿Eliminar usuario?",
+            text: `Se eliminará a "${nombre}". Esta acción no se puede deshacer.`,
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar"
+        }).then(result => {
+            if (!result.isConfirmed) return;
 
-        const fd = new FormData();
+            const fd = new FormData();
 
-        fetch(`/admin/usuarios/${id}/delete`, {
-            method: "POST",
-            headers: {
-                "X-CSRF-TOKEN": csrfToken,
-                "Accept": "application/json"
-            },
-            body: fd
-        })
-            .then(r => r.json())
-            .then(data => {
-                if (data.ok) location.reload();
-                else alert(data.message ?? "Error al eliminar.");
+            fetch(`/admin/usuarios/${id}/delete`, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": csrfToken,
+                    "Accept": "application/json"
+                },
+                body: fd
             })
-            .catch(err => console.error("ERROR DELETE ADMIN:", err));
+                .then(r => r.json())
+                .then(data => {
+                    if (data.ok) {
+                        swalExito("Usuario eliminado", "El usuario se eliminó correctamente.")
+                            .then(() => location.reload());
+                    } else {
+                        swalError(data.message ?? "Error al eliminar.");
+                    }
+                })
+                .catch(err => {
+                    console.error("ERROR DELETE ADMIN:", err);
+                    swalError("Error de conexión al eliminar.");
+                });
+        });
     });
 
     // ========================
-    // 💾 GUARDAR
+    // 💾 GUARDAR (CREAR / EDITAR)
     // ========================
     btnSave?.addEventListener("click", () => {
 
         if (uNombreUsuario.value.trim() === "") {
-            alert("Debes ingresar el nombre de usuario.");
+            swalError("Debes ingresar el nombre de usuario.");
             return;
         }
         if (uNombreUsuario.value.trim().length > 15) {
-            alert("El nombre de usuario no puede exceder 15 caracteres.");
+            swalError("El nombre de usuario no puede exceder 15 caracteres.");
             return;
         }
+
+        // Si es edición, pedir confirmación; si es creación, guardar directo
+        if (modo === "edit") {
+            const nombreCompleto = `${uNombre.value.trim()} ${uApellidos.value.trim()}`.trim();
+
+            // cerrar el modal antes de confirmar para que el Swal no quede detrás
+            cerrarModal();
+
+            Swal.fire({
+                title: "¿Guardar cambios?",
+                text: `Se modificará el usuario "${nombreCompleto || uNombreUsuario.value.trim()}".`,
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#6c757d",
+                confirmButtonText: "Sí, modificar",
+                cancelButtonText: "Cancelar"
+            }).then(result => {
+                if (result.isConfirmed) {
+                    enviarUsuario();
+                } else {
+                    // si cancela, reabrir el modal sin perder lo escrito
+                    abrirModal();
+                }
+            });
+        } else {
+            enviarUsuario();
+        }
+    });
+
+    function enviarUsuario() {
+        const esEdicion = (modo === "edit");
 
         // 🆕 Resolver firma: nueva si dibujó, previa si está editando, o null
         let firmaData = null;
         if (firmaPad && !firmaPad.isEmpty()) {
             firmaData = firmaPad.toDataURL("image/png");
-        } else if (modo === "edit" && firmaPrevia) {
+        } else if (esEdicion && firmaPrevia) {
             firmaData = firmaPrevia;
         }
 
@@ -181,7 +272,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let url = "/admin/usuarios";
 
-        if (modo === "edit") {
+        if (esEdicion) {
             const id = uId.value;
             url = `/admin/usuarios/${id}/update`;
         }
@@ -195,16 +286,27 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(data => {
                 if (data.ok) {
                     cerrarModal();
-                    location.reload();
+                    swalExito(
+                        esEdicion ? "Usuario modificado" : "Usuario creado",
+                        esEdicion
+                            ? "El usuario se modificó correctamente."
+                            : "El usuario se creó correctamente."
+                    ).then(() => location.reload());
                 } else {
-                    alert(data.message ?? "Error al guardar.");
+                    swalError(data.message ?? "Error al guardar.");
+                    // si era edición y falló, reabrir el modal para reintentar
+                    if (esEdicion) abrirModal();
                 }
             })
-            .catch(err => console.error("ERROR CREATE/UPDATE:", err));
-    });
+            .catch(err => {
+                console.error("ERROR CREATE/UPDATE:", err);
+                swalError("Error de conexión al guardar.");
+                if (esEdicion) abrirModal();
+            });
+    }
 
     // ==============================
-    // 🗑 ELIMINAR CLIENTE
+    // 🗑 ELIMINAR CLIENTE (SweetAlert2)
     // ==============================
     document.addEventListener("click", e => {
         const btn = e.target.closest(".btn-delete-client");
@@ -212,24 +314,42 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const id = btn.dataset.id;
 
-        if (!confirm("¿Eliminar este cliente?")) return;
+        Swal.fire({
+            title: "¿Eliminar cliente?",
+            text: "Esta acción no se puede deshacer.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar"
+        }).then(result => {
+            if (!result.isConfirmed) return;
 
-        const fd = new FormData();
+            const fd = new FormData();
 
-        fetch(`/admin/clientes/${id}/delete`, {
-            method: "POST",
-            headers: {
-                "X-CSRF-TOKEN": csrfToken,
-                "Accept": "application/json"
-            },
-            body: fd
-        })
-            .then(r => r.json())
-            .then(data => {
-                if (data.ok) location.reload();
-                else alert(data.message ?? "Error al eliminar cliente.");
+            fetch(`/admin/clientes/${id}/delete`, {
+                method: "POST",
+                headers: {
+                    "X-CSRF-TOKEN": csrfToken,
+                    "Accept": "application/json"
+                },
+                body: fd
             })
-            .catch(err => console.error("ERROR DELETE CLIENTE:", err));
+                .then(r => r.json())
+                .then(data => {
+                    if (data.ok) {
+                        swalExito("Cliente eliminado", "El cliente se eliminó correctamente.")
+                            .then(() => location.reload());
+                    } else {
+                        swalError(data.message ?? "Error al eliminar cliente.");
+                    }
+                })
+                .catch(err => {
+                    console.error("ERROR DELETE CLIENTE:", err);
+                    swalError("Error de conexión al eliminar el cliente.");
+                });
+        });
     });
 
     btnClose?.addEventListener("click", cerrarModal);

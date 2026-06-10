@@ -16,10 +16,6 @@
     </button>
   </div>
 
-  @if(session('success'))
-    <div class="toast">{{ session('success') }}</div>
-  @endif
-
   <section class="card">
     <table class="table">
       <thead>
@@ -67,10 +63,13 @@
                 Editar
               </button>
 
-              <form method="POST" action="{{ route('servicios.destroy', $s->id_servicio) }}">
+              <form method="POST"
+                    action="{{ route('servicios.destroy', $s->id_servicio) }}"
+                    class="form-eliminar"
+                    data-nombre="{{ $s->nombre }}">
                 @csrf
                 @method('DELETE')
-                <button class="btn-del" onclick="return confirm('¿Eliminar este servicio?')">
+                <button class="btn-del" type="submit">
                   Eliminar
                 </button>
               </form>
@@ -93,7 +92,7 @@
     MODAL CREAR
 ========================= --}}
 <dialog id="modalCrear" class="modal">
-  <form method="POST" action="{{ route('servicios.store') }}" class="modal-box">
+  <form method="POST" action="{{ route('servicios.store') }}" class="modal-box" id="formCrear">
     @csrf
 
     <div class="modal-head">
@@ -210,9 +209,25 @@
 </dialog>
 
 {{-- =========================
+    SWEETALERT2 CDN
+========================= --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+{{-- =========================
     JS INLINE
 ========================= --}}
 <script>
+/* ---------- PARCHE GLOBAL: cerrar dialogs antes de cualquier Swal ---------- */
+/* Los <dialog> abiertos con showModal() viven en la top-layer del navegador,
+   por encima de SweetAlert2. Esto fuerza a cerrarlos antes de mostrar cualquier
+   alerta para que el Swal siempre quede visible. */
+const _swalFire = Swal.fire.bind(Swal);
+Swal.fire = function (...args) {
+  document.querySelectorAll('dialog[open]').forEach(function (d) { d.close(); });
+  return _swalFire(...args);
+};
+
+/* ---------- ABRIR MODAL EDITAR ---------- */
 function openEdit(id, nombre, descripcion, tipoCobro, precio, activo, usuario, administrador) {
   const form = document.getElementById('formEditar');
 
@@ -228,5 +243,75 @@ function openEdit(id, nombre, descripcion, tipoCobro, precio, activo, usuario, a
 
   document.getElementById('modalEditar').showModal();
 }
+
+/* ---------- TOAST DE ÉXITO (después de redirect) ---------- */
+@if(session('success'))
+  Swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'success',
+    title: @js(session('success')),
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true
+  });
+@endif
+
+/* ---------- ERRORES DE VALIDACIÓN ---------- */
+@if($errors->any())
+  Swal.fire({
+    icon: 'error',
+    title: 'Revisa el formulario',
+    html: `{!! implode('<br>', $errors->all()) !!}`,
+    confirmButtonText: 'Entendido'
+  });
+@endif
+
+/* ---------- CONFIRMAR ELIMINAR ---------- */
+document.querySelectorAll('.form-eliminar').forEach(function (form) {
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    Swal.fire({
+      title: '¿Eliminar servicio?',
+      text: 'Se eliminará "' + form.dataset.nombre + '". Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then(function (result) {
+      if (result.isConfirmed) {
+        form.submit();
+      }
+    });
+  });
+});
+
+/* ---------- CONFIRMAR EDITAR ---------- */
+(function () {
+  const formEditar = document.getElementById('formEditar');
+  if (!formEditar) return;
+
+  formEditar.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    Swal.fire({
+      title: '¿Guardar cambios?',
+      text: 'Se modificará el servicio "' + document.getElementById('e_nombre').value + '".',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, modificar',
+      cancelButtonText: 'Cancelar'
+    }).then(function (result) {
+      if (result.isConfirmed) {
+        formEditar.submit();
+      }
+    });
+  });
+})();
 </script>
 @endsection

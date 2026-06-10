@@ -136,4 +136,16 @@ class DropoffController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    public function destroyUbicacion($id)
+    {
+        DB::table('ubicaciones_servicio')->where('id_ubicacion', $id)->delete();
+        return response()->json(['success' => true]);
+    }
+
+    public function destroyTarifaDropoff($id)
+    {
+        DB::table('tarifa_dropoff')->where('id_tarifa', $id)->delete();
+        return response()->json(['success' => true]);
+    }
 }
