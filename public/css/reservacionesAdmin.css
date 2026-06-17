@@ -3240,7 +3240,7 @@ span.flatpickr-weekday {
     min-width: 110px !important;
     display: flex !important;
     flex-direction: column !important;
-    margin-top: 42px !important; /* CORREGIDO: Empuja el botón exactamente a la altura de los otros inputs (32px de título + 10px de margen) */
+    margin-top: 42px !important;
 }
 
 .sg-col-submit-admin::before {

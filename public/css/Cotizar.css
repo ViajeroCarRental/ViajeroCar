@@ -34,6 +34,7 @@ body {
 html, body {
   overflow-x: hidden !important;
 }
+
 /* =========================================
    2️⃣ ESTILOS NAVBAR
 ========================================= */
@@ -144,9 +145,7 @@ html, body {
     color: #f44336;
     transform: rotate(90deg);
 }
-/* =========================================
-   📱 NAVBAR RESPONSIVE
-========================================= */
+
 .res-navbar,
 .res-navbar .logo,
 .res-navbar .btn-resumen-minimal,
@@ -155,147 +154,6 @@ html, body {
 .res-navbar .btn-salir-minimal,
 .res-navbar .nav-actions {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-@media (max-width: 860px) {
-    .res-navbar {
-        width: 96%;
-        padding: 8px 0;
-        top: 12px;
-    }
-
-    .res-navbar .container-res {
-        padding: 0 18px;
-    }
-    .res-navbar .page-title {
-        display: none;
-    }
-    .res-navbar .nav-content-wrapper {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        gap: 8px !important;
-        width: 100% !important;
-        flex-wrap: nowrap !important;
-    }
-    .res-navbar .left-group {
-        display: flex !important;
-        align-items: center !important;
-        gap: 10px !important;
-        flex-shrink: 1 !important;
-        min-width: 0 !important;
-        overflow: hidden !important;
-    }
-    .res-navbar .logo {
-        font-size: 18px;
-        white-space: nowrap;
-        flex-shrink: 0 !important;
-    }
-    .res-navbar .days-pill-admin {
-        padding: 4px 8px !important;
-        font-size: 11px !important;
-        white-space: nowrap !important;
-        flex-shrink: 0 !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 4px !important;
-    }
-    .res-navbar .nav-actions {
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-        flex-shrink: 0 !important;
-    }
-    .res-navbar .btn-resumen-minimal {
-        padding: 6px 12px !important;
-        font-size: 11px !important;
-        gap: 6px !important;
-        min-width: auto !important;
-        white-space: nowrap !important;
-        flex-shrink: 0 !important;
-    }
-
-    .res-navbar .btn-resumen-minimal i {
-        font-size: 13px !important;
-    }
-
-    .res-navbar .btn-resumen-minimal #btnTotalNav {
-        display: inline-block !important;
-        font-size: 11px !important;
-        font-weight: 700 !important;
-        white-space: nowrap !important;
-    }
-    .res-navbar .btn-salir-minimal {
-        width: 32px;
-        height: 32px;
-        font-size: 12px;
-        flex-shrink: 0 !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .res-navbar .logo {
-        font-size: 15px;
-    }
-
-    .res-navbar .days-pill-admin {
-        padding: 3px 6px !important;
-        font-size: 10px !important;
-        gap: 3px !important;
-    }
-
-    .res-navbar .btn-resumen-minimal {
-        padding: 5px 10px !important;
-        gap: 4px !important;
-    }
-
-    .res-navbar .btn-resumen-minimal i {
-        font-size: 12px !important;
-    }
-
-    .res-navbar .btn-resumen-minimal #btnTotalNav {
-        font-size: 10px !important;
-    }
-
-    .res-navbar .btn-salir-minimal {
-        width: 30px;
-        height: 30px;
-        font-size: 11px;
-    }
-
-    .res-navbar .nav-actions {
-        gap: 6px !important;
-    }
-}
-@media (max-width: 400px) {
-    .res-navbar .btn-resumen-minimal #btnTotalNav {
-        display: none !important;
-    }
-
-    .res-navbar .btn-resumen-minimal {
-        padding: 5px 8px !important;
-    }
-
-    .res-navbar .btn-resumen-minimal i {
-        font-size: 14px !important;
-        margin: 0 !important;
-    }
-}
-
-@media (min-width: 861px) and (max-width: 1400px) {
-    .res-navbar {
-        width: 95%;
-    }
-
-    .res-navbar .container-res {
-        padding: 0 30px;
-    }
-}
-@media (min-width: 1401px) {
-    .res-navbar {
-        width: 1400px;
-        left: 50%;
-        transform: translateX(-50%);
-    }
 }
 
 /* ========== LAYOUT ========== */
@@ -392,6 +250,7 @@ input[type="time"].input-lg {
   padding-right: 44px;
   background-image: linear-gradient(transparent, transparent);
 }
+
 
 /* ========== BUTTONS ========== */
 .btn {
@@ -551,13 +410,6 @@ input[type="time"].input-lg {
   gap: 12px;
 }
 
-@media (max-width: 820px) {
-  .form-2 {
-    grid-template-columns: 1fr;
-  }
-}
-
-
 /* ========== PICKER ========== */
 .picker-row {
   display: flex;
@@ -594,12 +446,6 @@ input[type="time"].input-lg {
   font-size: 12px;
   color: #475569;
   margin-top: 2px;
-}
-
-@media (max-width: 720px) {
-  .picker-row {
-    flex-direction: column;
-  }
 }
 
 /* ============================================
@@ -772,30 +618,6 @@ input[type="time"].input-lg {
     border-color: #fecaca !important;
 }
 
-@media (max-width: 640px) {
-    .preview-wrapper {
-        flex-direction: column !important;
-    }
-    .mini-container {
-        flex-direction: column !important;
-        text-align: center !important;
-    }
-    .mini-imagen {
-        width: 100% !important;
-        max-width: 180px !important;
-    }
-    .mini-precios {
-        justify-content: center !important;
-    }
-    .mini-header {
-        justify-content: center !important;
-    }
-    .preview-wrapper #catRemove {
-        width: 100% !important;
-        min-height: 56px !important;
-    }
-}
-
 @keyframes slideUp {
     from {
         opacity: 0;
@@ -894,12 +716,6 @@ body:has(.pop.modal[style*="display: flex"]) {
   gap: 12px;
 }
 
-@media (max-width: 840px) {
-  .grid-cards {
-    grid-template-columns: 1fr;
-  }
-}
-
 .loading {
   width: 100%;
   text-align: center;
@@ -990,18 +806,6 @@ body:has(.pop.modal[style*="display: flex"]) {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-@media (max-width: 840px) {
-  .cat-wide {
-    grid-template-columns: 1fr;
-  }
-  .cp-img {
-    height: 160px;
-  }
-  .cp-price {
-    text-align: left;
-  }
 }
 
 /* ========== CATEGORÍAS MODAL ========== */
@@ -1124,17 +928,6 @@ body:has(.pop.modal[style*="display: flex"]) {
 
 #catPop .pill-info:hover {
   background: #bae6fd !important;
-}
-
-@media (max-width: 850px) {
-  #catPop .card-pick {
-    grid-template-columns: 1fr !important;
-  }
-  #catPop .cp-right {
-    border-left: 0;
-    padding-left: 0;
-    text-align: left;
-  }
 }
 
 /* ========== BOTONES ESPECIALES ========== */
@@ -1549,15 +1342,6 @@ body:has(.pop.modal[style*="display: flex"]) {
   opacity: .9;
 }
 
-@media (max-width: 520px) {
-  .phone-grid {
-    grid-template-columns: 1fr;
-  }
-  .phone-prefix {
-    justify-content: space-between;
-  }
-}
-
 .readonly-country {
   display: flex;
   align-items: center;
@@ -1571,6 +1355,7 @@ body:has(.pop.modal[style*="display: flex"]) {
 .readonly-country #pais_flag_ui {
   font-size: 18px;
 }
+
 /* ============================================
    MODAL PROTECCIONES - TABS
    ============================================ */
@@ -1629,6 +1414,9 @@ body:has(.pop.modal[style*="display: flex"]) {
 .modal-prote-tabs .tab-panel.is-active {
   display: block;
 }
+
+
+
 /* ============================================
    SCROLL HORIZONTAL
    ============================================ */
@@ -1666,6 +1454,7 @@ div[style*="overflow-x: auto"] {
   gap: 20px;
   padding-bottom: 20px;
 }
+
 /* ============================================
    SCROLL VERTICAL PARA INDIVIDUALES
    ============================================ */
@@ -1696,6 +1485,7 @@ div[style*="overflow-x: auto"] {
     height:auto !important;
     min-height:unset !important;
 }
+
 /* ============================================
    PROTECCIONES - PAQUETES
    ============================================ */
@@ -1906,72 +1696,6 @@ div[style*="overflow-x: auto"] {
 
 #proteccionPop .tab-panel#tab-paquetes .pack-card.is-selected h4 {
   color: #16a34a;
-}
-/* =========================================
-   📱 PROTECCIONES - PAQUETES SCROLL VERTICAL (MÓVIL)
-   ========================================= */
-
-@media (max-width: 768px) {
-
-    /* Contenedor principal - scroll vertical */
-    #proteccionPop .tab-panel#tab-paquetes {
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        height: 100% !important;
-        max-height: calc(100vh - 180px) !important;
-    }
-
-    /* Contenedor del scroll - dirección vertical */
-    #proteccionPop .tab-panel#tab-paquetes .scroll-h {
-        flex-direction: column !important;
-        overflow-x: hidden !important;
-        overflow-y: auto !important;
-        gap: 20px !important;
-        padding: 16px !important;
-        scroll-snap-type: y mandatory !important;
-        height: auto !important;
-        max-height: none !important;
-    }
-
-    /* Tarjetas - una debajo de otra */
-    #proteccionPop .tab-panel#tab-paquetes .pack-card {
-        flex: 0 0 auto !important;
-        min-width: 100% !important;
-        max-width: 100% !important;
-        width: 100% !important;
-        height: auto !important;
-        min-height: auto !important;
-        scroll-snap-align: start !important;
-        margin-bottom: 16px !important;
-    }
-
-    /* Ocultar scrollbar horizontal si aparece */
-    #proteccionPop .tab-panel#tab-paquetes::-webkit-scrollbar {
-        width: 4px;
-        height: 0;
-    }
-
-    #proteccionPop .tab-panel#tab-paquetes::-webkit-scrollbar-track {
-        background: #f1f5f9;
-        border-radius: 10px;
-    }
-
-    #proteccionPop .tab-panel#tab-paquetes::-webkit-scrollbar-thumb {
-        background: var(--brand);
-        border-radius: 10px;
-    }
-}
-
-/* Ajuste para pantallas muy pequeñas */
-@media (max-width: 480px) {
-    #proteccionPop .tab-panel#tab-paquetes .scroll-h {
-        padding: 12px !important;
-        gap: 16px !important;
-    }
-
-    #proteccionPop .tab-panel#tab-paquetes .pack-card {
-        margin-bottom: 12px !important;
-    }
 }
 
 /* ============================================
@@ -2193,7 +1917,7 @@ div[style*="overflow-x: auto"] {
 }
 
 /* ============================================================
-   SOLUCIÓN DEFINITIVA: TOOLTIP LATERAL SÓLIDO (TAPANDO LA CARD)
+   TOOLTIP LATERAL SÓLIDO (TAPANDO LA CARD)
    ============================================================ */
 .info-icon-container {
   position: relative;
@@ -2273,58 +1997,6 @@ div[style*="overflow-x: auto"] {
   transform: scale(1.1);
 }
 
-/* ============================================================
-   RESPONSIVO Y CONTENEDORES MÓVILES
-   ============================================================ */
-@media (max-width: 860px) {
-  .prote-pack, .pack-card, .prote-card, .card-pack {
-    flex-basis: 320px;
-  }
-  .ins-card {
-    flex-basis: 290px;
-  }
-}
-
-@media (max-width: 768px) {
-  .tooltip-text {
-    width: 240px;
-    font-size: 12px;
-    padding: 10px 14px;
-  }
-}
-
-@media (max-width: 560px) {
-  .pop.modal {
-    padding: 10px;
-  }
-  .modal-prote-tabs .tabs-bar {
-    flex-wrap: wrap;
-  }
-  .modal-prote-tabs .tab-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .tooltip-text {
-    width: 250px;
-    font-size: 11px;
-    padding: 10px 12px;
-    top: 130%;
-    left: 50%;
-    transform: translateX(-50%) translateY(5px);
-  }
-
-  .tooltip-arrow {
-    top: -16px;
-    left: 50%;
-    margin-left: -8px;
-    border-color: transparent transparent #ffffff transparent !important;
-  }
-
-  .info-icon-container:hover .tooltip-text {
-    transform: translateX(-50%) translateY(0);
-  }
-}
 /* ============================================
    AJUSTE DE MÁRGENES PARA TEXTOS EN PROTECCIONES
    ============================================ */
@@ -2350,6 +2022,7 @@ div[style*="overflow-x: auto"] {
 #proteccionPop .tab-panel#tab-individuales h3 {
     padding-left: 20px !important;
 }
+
 /* ============================================
    PROTECCIONES - MODAL PANTALLA COMPLETA
    ============================================ */
@@ -2387,18 +2060,6 @@ div[style*="overflow-x: auto"] {
 #proteccionPop .card-pack {
   flex: 0 0 380px;
   min-height: 380px;
-}
-
-@media (max-width: 768px) {
-  #proteccionPop .ins-card {
-    min-width: 280px;
-    max-width: 320px;
-  }
-  #proteccionPop .pack-card,
-  #proteccionPop .prote-pack,
-  #proteccionPop .card-pack {
-    flex: 0 0 300px;
-  }
 }
 
 /* ========== SERVICIOS GRID ========== */
@@ -2552,20 +2213,6 @@ div[style*="overflow-x: auto"] {
   box-shadow: 0 0 0 4px rgba(34, 197, 94, .20);
 }
 
-@media (max-width: 1100px) {
-  .svc-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 720px) {
-  .svc-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-
-
 /* ========== SELECT2 ========== */
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
   background-color: #f0f4f8 !important;
@@ -2581,13 +2228,6 @@ div[style*="overflow-x: auto"] {
   color: #000 !important;
 }
 
-.select2-dropdown {
-  border-radius: 12px !important;
-  border: 1px solid #ccc !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  margin-top: 8px !important;
-}
 
 .select2-results__option--highlighted[aria-selected] {
   background-color: #68bfc7 !important;
@@ -2643,17 +2283,7 @@ div[style*="overflow-x: auto"] {
   color: #000 !important;
 }
 
-.select2-dropdown {
-  min-width: 300px !important;
-  width: auto !important;
-}
 
-.select2-results__option {
-  font-size: 11px !important;
-  white-space: nowrap !important;
-  overflow-x: auto !important;
-  padding: 12px 16px !important;
-}
 
 .select2-results__group {
   padding: 12px 16px 6px 16px !important;
@@ -2979,141 +2609,6 @@ span.flatpickr-weekday {
   color: #333 !important;
 }
 
-/* =========================================
-   📱 FLATPICKR RESPONSIVE MÓVIL
-   ========================================= */
-
-@media (max-width: 768px) {
-    .flatpickr-calendar.open {
-        width: min(380px, 90vw) !important;
-        position: fixed !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        max-height: 90vh !important;
-        overflow-y: auto !important;
-    }
-
-    .flatpickr-day {
-        height: 48px !important;
-        line-height: 48px !important;
-        font-size: 14px !important;
-    }
-
-    .flatpickr-weekday {
-        height: 48px !important;
-        line-height: 48px !important;
-        font-size: 14px !important;
-    }
-
-    .flatpickr-current-month {
-        font-size: 18px !important;
-        padding-top: 12px !important;
-        height: 56px !important;
-    }
-
-    .flatpickr-months .flatpickr-month {
-        height: 56px !important;
-    }
-
-    .dayContainer {
-        gap: 6px 0 !important;
-        padding: 8px !important;
-    }
-}
-
-@media (max-width: 560px) {
-    .flatpickr-calendar.open {
-        width: min(340px, 92vw) !important;
-        position: fixed !important;
-        top: 50% !important;
-        left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        max-height: 85vh !important;
-    }
-
-    .flatpickr-day {
-        height: 52px !important;
-        line-height: 52px !important;
-        font-size: 13px !important;
-    }
-
-    .flatpickr-weekday {
-        height: 44px !important;
-        line-height: 44px !important;
-        font-size: 13px !important;
-    }
-
-    .flatpickr-current-month {
-        font-size: 16px !important;
-        padding-top: 10px !important;
-        height: 50px !important;
-    }
-
-    .flatpickr-months .flatpickr-month {
-        height: 50px !important;
-    }
-
-    .dayContainer {
-        gap: 5px 0 !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .flatpickr-calendar.open {
-        width: min(300px, 94vw) !important;
-    }
-
-    .flatpickr-day {
-        height: 48px !important;
-        line-height: 48px !important;
-        font-size: 12px !important;
-    }
-
-    .flatpickr-weekday {
-        height: 40px !important;
-        line-height: 40px !important;
-        font-size: 12px !important;
-    }
-
-    .flatpickr-current-month {
-        font-size: 15px !important;
-        padding-top: 8px !important;
-        height: 46px !important;
-    }
-
-    .flatpickr-months .flatpickr-month {
-        height: 46px !important;
-    }
-}
-
-@media (max-width: 400px) {
-    .flatpickr-calendar.open {
-        width: min(280px, 96vw) !important;
-    }
-
-    .flatpickr-day {
-        height: 44px !important;
-        line-height: 44px !important;
-        font-size: 11px !important;
-    }
-
-    .flatpickr-weekday {
-        height: 38px !important;
-        line-height: 38px !important;
-        font-size: 11px !important;
-    }
-
-    .flatpickr-current-month {
-        font-size: 14px !important;
-        height: 42px !important;
-    }
-
-    .flatpickr-months .flatpickr-month {
-        height: 42px !important;
-    }
-}
-
 /* ========== SEARCH GRID ADMIN ========== */
 .search-grid-admin {
   display: flex !important;
@@ -3342,28 +2837,7 @@ span.flatpickr-weekday {
   pointer-events: none !important;
 }
 
-.sg-col-location-admin .select2-container--default .select2-selection--single {
-  height: 48px !important;
-  border-radius: 14px !important;
-  border: 1px solid #cbd5e1 !important;
-  background: white !important;
-  display: flex !important;
-  align-items: center !important;
-}
 
-.sg-col-location-admin .select2-container--default .select2-selection--single .select2-selection__rendered {
-  line-height: 48px !important;
-  padding-left: 40px !important;
-  font-family: 'Poppins', sans-serif !important;
-  font-size: 15px !important;
-  font-weight: 400 !important;
-  color: #111827 !important;
-}
-
-.sg-col-location-admin .select2-container--default .select2-selection--single .select2-selection__arrow {
-  height: 46px !important;
-  right: 10px !important;
-}
 /* ============================================
    COLUMNA DE ACCIÓN - MODIFICADA
    ============================================ */
@@ -3393,21 +2867,22 @@ span.flatpickr-weekday {
 }
 
 .days-pill-admin {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: rgba(34, 197, 94, 0.12);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  border-radius: 40px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #166534;
-  white-space: nowrap;
-  height: 32px !important;
-  width: 100%;
-  box-sizing: border-box;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(167, 243, 208, 0.35) !important;
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #166534;
+    white-space: nowrap;
+    margin-left: 5px !important;
+    margin-right: auto !important;
+    margin-bottom: 4px !important;
+    margin-top: 0 !important;
 }
 
 /* BOTÓN BUSCAR  */
@@ -3440,180 +2915,6 @@ span.flatpickr-weekday {
     transform: translateY(-1px);
 }
 
-/* =========================================
-   📱 RESPONSIVE MÓVIL - FORMULARIO
-   ========================================= */
-
-@media (max-width: 768px) {
-    .search-grid-admin {
-        flex-direction: column !important;
-        gap: 20px !important;
-    }
-    .sg-col-location-admin {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-    .location-head-admin {
-        flex-direction: row !important;
-        align-items: center !important;
-        justify-content: space-between !important;
-        height: auto !important;
-        gap: 10px !important;
-        margin-bottom: 12px !important;
-        flex-wrap: wrap !important;
-    }
-
-    .field-title-admin {
-        margin-bottom: 0 !important;
-        flex-shrink: 0 !important;
-    }
-
-    .inline-check-admin {
-        margin-left: 0 !important;
-        white-space: nowrap !important;
-        flex-shrink: 0 !important;
-    }
-    .location-inputs-wrapper-admin {
-        flex-direction: column !important;
-        gap: 12px !important;
-    }
-
-    .location-inputs-wrapper-admin .field-admin {
-        width: 100% !important;
-    }
-
-    .input-buscador-admin {
-        height: 44px !important;
-        font-size: 14px !important;
-    }
-    .sg-col-datetime-admin {
-        flex-direction: column !important;
-        gap: 20px !important;
-        width: 100% !important;
-        min-width: auto !important;
-    }
-
-    .sg-col-datetime-admin .field-admin {
-        width: 100% !important;
-    }
-
-    .solo-responsivo-izq {
-        margin-bottom: 8px !important;
-        font-size: 13px !important;
-        height: auto !important;
-        line-height: 1.4 !important;
-    }
-    .datetime-row-admin {
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 12px !important;
-        width: 100% !important;
-        flex-wrap: nowrap !important;
-        height: auto !important;
-    }
-
-    .dt-field-admin {
-        flex: 1 !important;
-        width: 50% !important;
-        min-width: 0 !important;
-    }
-    .dt-field-admin .input-buscador-admin,
-    .dt-field-admin input,
-    .dt-field-admin .tp-selects select {
-        width: 100% !important;
-        height: 44px !important;
-        font-size: 14px !important;
-        padding: 0 8px 0 36px !important;
-    }
-    .dt-field-admin:not(.time-field-admin) .field-icon-admin {
-        left: 12px !important;
-        font-size: 14px !important;
-    }
-    .dt-field-admin.time-field-admin::before {
-        left: 12px !important;
-        top: 50% !important;
-        transform: translateY(-50%) !important;
-        font-size: 14px !important;
-        z-index: 5 !important;
-        pointer-events: none !important;
-    }
-    .dt-field-admin.time-field-admin .input-buscador-admin,
-    .dt-field-admin.time-field-admin input,
-    .dt-field-admin.time-field-admin .tp-selects select {
-        padding-left: 32px !important;
-    }
-    .sg-col-submit-admin {
-        width: 100% !important;
-        margin-top: 10px !important;
-    }
-    .btn-buscar-admin {
-        height: 46px !important;
-        font-size: 14px !important;
-        width: 100% !important;
-    }
-    .days-pill-admin {
-        display: none !important;
-    }
-}
-
-/* Pantallas muy pequeñas (≤480px) */
-@media (max-width: 480px) {
-
-    .location-head-admin {
-        gap: 6px !important;
-    }
-
-    .field-title-admin {
-        font-size: 12px !important;
-    }
-
-    .inline-check-admin {
-        font-size: 10px !important;
-    }
-
-    .datetime-row-admin {
-        gap: 8px !important;
-    }
-
-    .dt-field-admin .input-buscador-admin,
-    .dt-field-admin input,
-    .dt-field-admin .tp-selects select {
-        height: 42px !important;
-        font-size: 13px !important;
-        padding: 0 6px 0 30px !important;
-    }
-
-    .dt-field-admin:not(.time-field-admin) .field-icon-admin {
-        left: 8px !important;
-        font-size: 12px !important;
-    }
-
-    /* Ícono reloj móvil pequeño */
-    .dt-field-admin.time-field-admin::before {
-        left: 8px !important;
-        font-size: 12px !important;
-    }
-
-    .dt-field-admin.time-field-admin .input-buscador-admin,
-    .dt-field-admin.time-field-admin input,
-    .dt-field-admin.time-field-admin .tp-selects select {
-        padding-left: 26px !important;
-    }
-
-    .input-buscador-admin {
-        height: 42px !important;
-        font-size: 13px !important;
-    }
-
-    .solo-responsivo-izq {
-        font-size: 12px !important;
-    }
-
-    .btn-buscar-admin {
-        height: 44px !important;
-        font-size: 13px !important;
-    }
-}
 .select2-dropdown-custom {
   border-radius: 12px !important;
   border: 1px solid #e2e8f0 !important;
@@ -3780,128 +3081,6 @@ span.flatpickr-weekday {
   font-size: 11px;
   color: #94a3b8;
   margin-left: auto;
-}
-
-/* =========================================
-   RESPONSIVE: TABLET (768px - 1024px)
-   ========================================= */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .info-tooltip {
-    padding: 10px 14px;
-    font-size: 0.8rem;
-    max-width: 220px;
-    border-radius: 10px;
-  }
-}
-
-/* =========================================
-   RESPONSIVE: MÓVIL (menos de 768px)
-   ========================================= */
-@media (max-width: 767px) {
-  .info-tooltip {
-    position: fixed;
-    bottom: auto;
-    top: 50%;
-    left: 50% !important;
-    transform: translate(-50%, -50%);
-    max-width: 85%;
-    width: auto;
-    min-width: 200px;
-    padding: 14px 18px;
-    font-size: 0.9rem;
-    border-radius: 16px;
-    text-align: center;
-    background: #ffffff;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-    border: 1px solid #e2e8f0;
-    z-index: 10002;
-  }
-  .info-tooltip::before {
-    content: none;
-  }
-}
-/* =========================================
-   RESPONSIVE: MÓVIL (menos de 768px)
-   ========================================= */
-@media (max-width: 767px) {
-
-    .adicionales-carousel {
-        flex-direction: column;
-        gap: 0;
-        padding: 0;
-        margin: 0;
-    }
-    .carousel-arrow {
-        display: none;
-    }
-    .carousel-container {
-        overflow-x: hidden;
-        overflow-y: auto;
-        max-height: none;
-        width: 100%;
-    }
-    .carousel-track {
-        flex-direction: column;
-        gap: 16px;
-        padding: 8px 0;
-    }
-    .carousel-item {
-        flex: 0 0 auto;
-        min-width: 100%;
-        width: 100%;
-    }
-    .svc-card--addon {
-        padding: 12px 16px;
-        border-radius: 16px;
-    }
-    .svc-price-row {
-        margin: 10px 0;
-        padding: 8px 0;
-    }
-
-    .svc-price-row .price-label {
-        font-size: 11px;
-    }
-
-    .svc-price-row .price-value {
-        font-size: 16px;
-    }
-    .svc-quantity .qty-btn {
-        width: 32px;
-        height: 32px;
-        font-size: 16px;
-    }
-
-    .svc-quantity .qty-display {
-        font-size: 16px;
-        min-width: 30px;
-    }
-
-    .svc-quantity .max-hint {
-        font-size: 10px;
-    }
-    .info-tooltip {
-        position: fixed;
-        bottom: auto;
-        top: 50%;
-        left: 50% !important;
-        transform: translate(-50%, -50%);
-        max-width: 85%;
-        width: auto;
-        min-width: 200px;
-        padding: 14px 18px;
-        font-size: 0.9rem;
-        border-radius: 16px;
-        text-align: center;
-        background: #ffffff;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-        border: 1px solid #e2e8f0;
-        z-index: 10002;
-    }
-
-    .info-tooltip::before {
-        content: none;
-    }
 }
 
 /* ========== SELECT2 DELIVERY ========== */
@@ -4482,47 +3661,6 @@ span.flatpickr-weekday {
   font-size: 12px;
 }
 
-@media (max-width: 640px) {
-  .rv2-location-two-columns {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-}
-
-@media (max-width: 768px) {
-  .rv2-car-image {
-    flex: 0 0 160px;
-  }
-  .rv2-car-image img {
-    max-height: 130px;
-  }
-  .rv2-car-name {
-    font-size: 22px;
-  }
-}
-
-@media (max-width: 640px) {
-  .rv2-car {
-    flex-direction: column;
-    text-align: center;
-  }
-  .rv2-car-image {
-    flex: 0 0 auto;
-    width: 100%;
-    max-width: 240px;
-    margin: 0 auto;
-  }
-  .rv2-car-image img {
-    max-height: 180px;
-  }
-  .rv2-car-features {
-    justify-content: center;
-  }
-  .rv2-car-badge {
-    display: inline-block;
-  }
-}
-
 /* ========== PAÍS VUELO ROW ========== */
 .pais-vuelo-row {
   grid-column: span 2;
@@ -4715,19 +3853,6 @@ input.flatpickr-input.field-success {
   margin-top: 8px;
 }
 
-/* ========== RESPONSIVE MODAL PROTECCIONES ========== */
-@media (max-width: 560px) {
-  .pop.modal {
-    padding: 10px;
-  }
-  .modal-prote-tabs .tabs-bar {
-    flex-wrap: wrap;
-  }
-  .modal-prote-tabs .tab-btn {
-    width: 100%;
-    justify-content: center;
-  }
-}
 /* ============================================================
    PROTECCIONES - CARDS
    ============================================================ */
@@ -5030,6 +4155,7 @@ input.flatpickr-input.field-success {
     border: none !important;
     outline: none !important;
 }
+
 /* =========================================
    BOTÓN DE CARRITO EN HEADER DEL MODAL PROTECCIONES
 ========================================= */
@@ -5196,6 +4322,7 @@ input.flatpickr-input.field-success {
     transform: translateX(4px) translateY(-2px) !important;
     box-shadow: 0 6px 16px rgba(178, 34, 34, 0.2) !important;
 }
+
 /* =========================================
    - DATOS CLIENTE
 ========================================= */
@@ -5320,84 +4447,6 @@ input.flatpickr-input.field-success {
   display: none !important;
 }
 
-/* ============================================
-   RESPONSIVE MÓVIL - DATOS DEL CLIENTE
-   ============================================ */
-@media (max-width: 768px) {
-    .cliente-layout {
-        grid-template-columns: 1fr !important;
-        gap: 20px !important;
-    }
-    .cliente-datos-card {
-        gap: 12px !important;
-    }
-    .form-2 {
-        grid-template-columns: 1fr !important;
-        gap: 12px !important;
-    }
-    .phone-grid {
-        flex-direction: column !important;
-        gap: 10px !important;
-    }
-    .phone-prefix {
-        width: 100% !important;
-        justify-content: space-between !important;
-    }
-    .pais-vuelo-row {
-        grid-template-columns: 1fr !important;
-        gap: 12px !important;
-    }
-    .cliente-comentarios-card {
-        margin-top: 0 !important;
-    }
-    .cliente-comentarios-card .cliente-textarea {
-        height: 200px !important;
-        min-height: 200px !important;
-    }
-    .cliente-actions {
-        margin-top: 20px !important;
-    }
-    .cliente-actions .btn.primary {
-        width: 100% !important;
-        padding: 12px !important;
-        font-size: 14px !important;
-    }
-    .cliente-input,
-    .cliente-country,
-    .cliente-phone-prefix {
-        height: 44px !important;
-        min-height: 44px !important;
-        font-size: 13px !important;
-    }
-    .cliente-textarea {
-        font-size: 13px !important;
-    }
-    .cliente-field label,
-    .cliente-label {
-        font-size: 10px !important;
-    }
-    #vueloWrap {
-        margin-top: 0 !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .cliente-input,
-    .cliente-country,
-    .cliente-phone-prefix {
-        height: 42px !important;
-        font-size: 12px !important;
-    }
-    .cliente-textarea {
-        font-size: 12px !important;
-        height: 180px !important;
-        min-height: 180px !important;
-    }
-    .cliente-actions .btn.primary {
-        padding: 10px !important;
-        font-size: 13px !important;
-    }
-}
 /* =========================================
    CARACTERÍSTICAS DEL AUTO - CON COLORES
    ========================================= */
@@ -5429,6 +4478,7 @@ input.flatpickr-input.field-success {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     background: #ffffff;
 }
+
 /* =========================================
    COLORES PARA MODAL DE CARACTERÍSTICAS
    ========================================= */
@@ -5481,4 +4531,1103 @@ input.flatpickr-input.field-success {
 .features-list .feature-item i.bx-check,
 .features-list .feature-item i.bx-check-circle {
     color: #22c55e !important;
+}
+
+/* ===============
+   RESPONSIVOS
+   =============== */
+/* ========================================================================
+   PANTALLAS GRANDES Y MONITORES (Desde 1401px en adelante)
+   ======================================================================== */
+@media (min-width: 1401px) {
+    .res-navbar {
+        width: 1400px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+/* ========================================================================
+   LAPTOPS Y MONITORES PEQUEÑOS (Entre 861px y 1400px)
+   ======================================================================== */
+@media (min-width: 861px) and (max-width: 1400px) {
+    .res-navbar {
+        width: 95%;
+    }
+
+    .res-navbar .container-res {
+        padding: 0 30px;
+    }
+}
+
+/* ========================================================================
+   TABLETS Y ESCRITORIOS COMPACTOS (Hasta 1100px)
+   ======================================================================== */
+@media (max-width: 1100px) {
+    .svc-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* ========================================================================
+   TABLETS HORIZONTAL (Hasta 1024px)
+   ======================================================================== */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .info-tooltip {
+        padding: 10px 14px;
+        font-size: 0.8rem;
+        max-width: 220px;
+        border-radius: 10px;
+    }
+}
+
+/* ========================================================================
+   DISPOSITIVOS MEDIANOS, NAVBAR MÓVIL Y FLUJO CARD (Hasta 860px)
+   ======================================================================== */
+@media (max-width: 860px) {
+    /* --- NAVBAR RESPONSIVE --- */
+    .res-navbar {
+        width: 96%;
+        padding: 8px 0;
+        top: 12px;
+    }
+
+    .res-navbar .container-res {
+        padding: 0 18px;
+    }
+
+    .res-navbar .page-title {
+        display: none;
+    }
+
+    .res-navbar .nav-content-wrapper {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 8px !important;
+        width: 100% !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .res-navbar .left-group {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        flex-shrink: 1 !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+    }
+
+    .res-navbar .logo {
+        font-size: 18px;
+        white-space: nowrap;
+        flex-shrink: 0 !important;
+    }
+
+    .res-navbar .days-pill-admin {
+        padding: 4px 8px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+    }
+
+    .res-navbar .nav-actions {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .res-navbar .btn-resumen-minimal {
+        padding: 6px 12px !important;
+        font-size: 11px !important;
+        gap: 6px !important;
+        min-width: auto !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+
+    .res-navbar .btn-resumen-minimal i {
+        font-size: 13px !important;
+    }
+
+    .res-navbar .btn-resumen-minimal #btnTotalNav {
+        display: inline-block !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        white-space: nowrap !important;
+    }
+
+    .res-navbar .btn-salir-minimal {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+        flex-shrink: 0 !important;
+    }
+
+    /* --- TOOLTIPS & PACK CARDS --- */
+    .prote-pack, .pack-card, .prote-card, .card-pack {
+        flex-basis: 320px;
+    }
+
+    .ins-card {
+        flex-basis: 290px;
+    }
+
+    /* --- OCULTAR NAVBAR EN MÓVIL / FLUJO COTIZACIONES --- */
+    .res-navbar.hidden-mobile {
+        display: none !important;
+    }
+
+    body, .main-content, .content-wrapper {
+        padding-top: 10px !important;
+    }
+
+    body.buscar-realizado .res-navbar.hidden-mobile {
+        display: flex !important;
+        position: relative !important;
+        margin: 8px auto 12px auto !important;
+        width: 96% !important;
+        top: 0 !important;
+        left: auto !important;
+        transform: none !important;
+    }
+
+    body.buscar-realizado .inner-back-wrap {
+        position: relative !important;
+        margin: 65px 4px 12px 4px !important;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .inner-back-wrap {
+        position: relative !important;
+        top: auto !important;
+        background: transparent !important;
+        border: none !important;
+        margin: 12px 4px 12px 4px !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .inner-back-btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 10px 16px !important;
+        width: calc(100% - 8px) !important;
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
+    }
+
+    .stack-card:first-of-type {
+        margin: 0 4px 16px 4px !important;
+        padding: 16px 12px !important;
+        border-radius: 12px !important;
+        width: calc(100% - 8px) !important;
+    }
+
+    /* Ocultar/Mostrar secciones en móvil */
+    .acordeon-item[data-seccion="categoria"],
+    .acordeon-item[data-seccion="adicionales"],
+    .acordeon-item[data-seccion="protecciones"],
+    .acordeon-item[data-seccion="cliente"] {
+        display: none !important;
+    }
+
+    .acordeon-item[data-seccion="categoria"].unlocked {
+        display: block !important;
+    }
+
+    .acordeon-item[data-seccion="categoria"].unlocked ~ .acordeon-item,
+    body.buscar-realizado .acordeon-item[data-seccion="adicionales"],
+    body.buscar-realizado .acordeon-item[data-seccion="protecciones"],
+    body.buscar-realizado .acordeon-item[data-seccion="cliente"] {
+        display: block !important;
+    }
+}
+
+/* ========================================================================
+   SECCIONES DE TARJETAS Y COMPONENTES EN BLOQUE (Hasta 850px / 840px)
+   ======================================================================== */
+@media (max-width: 850px) {
+    #catPop .card-pick {
+        grid-template-columns: 1fr !important;
+    }
+
+    #catPop .cp-right {
+        border-left: 0;
+        padding-left: 0;
+        text-align: left;
+    }
+}
+
+@media (max-width: 840px) {
+    .grid-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .cat-wide {
+        grid-template-columns: 1fr;
+    }
+
+    .cp-img {
+        height: 160px;
+    }
+
+    .cp-price {
+        text-align: left;
+    }
+}
+
+/* ========================================================================
+   COLUMNAS ÚNICAS EN FORMULARIOS GENERALES (Hasta 820px)
+   ======================================================================== */
+@media (max-width: 820px) {
+    .form-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================================================
+   TABLILLAS MÓVILES Y BUSCADORES PRINCIPALES (Hasta 768px / 767px)
+   ======================================================================== */
+@media (max-width: 768px) {
+    /* --- FORMULARIO / BUSCADOR --- */
+    .search-grid-admin {
+        flex-direction: column !important;
+        gap: 20px !important;
+        width: 100% !important;
+        padding: 0 !important;
+    }
+
+    .sg-col-location-admin,
+    .sg-col-datetime-admin {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .location-head-admin {
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        height: auto !important;
+        gap: 10px !important;
+        margin-bottom: 12px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .field-title-admin {
+        margin-bottom: 0 !important;
+        flex-shrink: 0 !important;
+    }
+
+    .inline-check-admin {
+        margin-left: 0 !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+
+    .location-inputs-wrapper-admin {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    .location-inputs-wrapper-admin .field-admin {
+        width: 100% !important;
+    }
+
+    .input-buscador-admin {
+        height: 56px !important;
+        font-size: 16px !important;
+        padding: 0 16px 0 48px !important;
+    }
+
+    .sg-col-datetime-admin {
+        flex-direction: column !important;
+        gap: 20px !important;
+        min-width: auto !important;
+    }
+
+    .sg-col-datetime-admin .field-admin {
+        width: 100% !important;
+    }
+
+    .solo-responsivo-izq {
+        margin-bottom: 8px !important;
+        font-size: 13px !important;
+        height: auto !important;
+        line-height: 1.4 !important;
+    }
+
+    .datetime-row-admin {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 12px !important;
+        width: 100% !important;
+        flex-wrap: nowrap !important;
+        height: auto !important;
+    }
+
+    .dt-field-admin {
+        flex: 1 !important;
+        width: 50% !important;
+        min-width: 0 !important;
+    }
+
+    .dt-field-admin .input-buscador-admin,
+    .dt-field-admin input,
+    .dt-field-admin .tp-selects select {
+        height: 56px !important;
+        font-size: 16px !important;
+        padding: 0 12px 0 44px !important;
+    }
+
+    .dt-field-admin:not(.time-field-admin) .field-icon-admin {
+        left: 12px !important;
+        font-size: 14px !important;
+    }
+
+    .dt-field-admin.time-field-admin::before {
+        left: 12px !important;
+        top: 50% !important;
+        transform: translateY(-50%) !important;
+        font-size: 14px !important;
+        z-index: 5 !important;
+        pointer-events: none !important;
+    }
+
+    .dt-field-admin.time-field-admin .input-buscador-admin,
+    .dt-field-admin.time-field-admin input,
+    .dt-field-admin.time-field-admin .tp-selects select {
+        padding-left: 42px !important;
+        padding-right: 4px !important;
+    }
+
+    .sg-col-submit-admin {
+        width: 100% !important;
+        margin-top: 0px !important;
+    }
+
+    .btn-buscar-admin {
+        height: 56px !important;
+        font-size: 16px !important;
+        width: 100% !important;
+    }
+
+    .days-pill-admin {
+        display: none !important;
+    }
+
+    /* --- SCROLL VERTICAL PROTECCIONES MÓVIL --- */
+    #proteccionPop .tab-panel#tab-paquetes {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        height: 100% !important;
+        max-height: calc(100vh - 180px) !important;
+    }
+
+    #proteccionPop .tab-panel#tab-paquetes .scroll-h {
+        flex-direction: column !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        gap: 20px !important;
+        padding: 16px !important;
+        scroll-snap-type: y mandatory !important;
+        height: auto !important;
+        max-height: none !important;
+    }
+
+    #proteccionPop .tab-panel#tab-paquetes .pack-card {
+        flex: 0 0 auto !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        scroll-snap-align: start !important;
+        margin-bottom: 16px !important;
+    }
+
+    #proteccionPop .tab-panel#tab-paquetes::-webkit-scrollbar {
+        width: 4px;
+        height: 0;
+    }
+
+    #proteccionPop .tab-panel#tab-paquetes::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 10px;
+    }
+
+    #proteccionPop .tab-panel#tab-paquetes::-webkit-scrollbar-thumb {
+        background: var(--brand);
+        border-radius: 10px;
+    }
+
+    /* --- MODAL PROTECCIONES --- */
+    #proteccionPop .ins-card {
+        min-width: 280px;
+        max-width: 320px;
+    }
+
+    #proteccionPop .pack-card,
+    #proteccionPop .prote-pack,
+    #proteccionPop .card-pack {
+        flex: 0 0 300px;
+    }
+
+    .tooltip-text {
+        width: 240px;
+        font-size: 12px;
+        padding: 10px 14px;
+    }
+
+    /* --- RESUMEN V2 MÓVIL --- */
+    .rv2-car-image {
+        flex: 0 0 160px;
+    }
+
+    .rv2-car-image img {
+        max-height: 130px;
+    }
+
+    .rv2-car-name {
+        font-size: 22px;
+    }
+
+    /* --- DATOS DEL CLIENTE MÓVIL --- */
+    .cliente-layout {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+
+    .cliente-datos-card {
+        gap: 12px !important;
+    }
+
+    .form-2 {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .phone-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    width: 100% !important;
+}
+
+.phone-prefix {
+    width: 110px !important;
+    flex-shrink: 0 !important;
+}
+
+.phone-grid .cliente-input,
+.phone-grid input {
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+
+    .pais-vuelo-row {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .cliente-comentarios-card {
+        margin-top: 0 !important;
+    }
+
+    .cliente-comentarios-card .cliente-textarea {
+        height: 200px !important;
+        min-height: 200px !important;
+    }
+
+    .cliente-actions {
+        margin-top: 20px !important;
+    }
+
+    .cliente-actions .btn.primary {
+        width: 100% !important;
+        padding: 12px !important;
+        font-size: 14px !important;
+    }
+
+    .cliente-input,
+    .cliente-country,
+    .cliente-phone-prefix {
+        height: 44px !important;
+        min-height: 44px !important;
+        font-size: 13px !important;
+    }
+
+    .cliente-textarea {
+        font-size: 13px !important;
+    }
+
+    .cliente-field label,
+    .cliente-label {
+        font-size: 10px !important;
+    }
+
+    #vueloWrap {
+        margin-top: 0 !important;
+    }
+
+    /* --- FLATPICKR MÓVIL CALENDARIO --- */
+    .flatpickr-calendar.open {
+        width: min(380px, 90vw) !important;
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        max-height: 90vh !important;
+        overflow-y: auto !important;
+    }
+
+    .flatpickr-day, .flatpickr-weekday {
+        height: 48px !important;
+        line-height: 48px !important;
+        font-size: 14px !important;
+    }
+
+    .flatpickr-current-month {
+        font-size: 18px !important;
+        padding-top: 12px !important;
+        height: 56px !important;
+    }
+
+    .flatpickr-months .flatpickr-month {
+        height: 56px !important;
+    }
+
+    .dayContainer {
+        gap: 6px 0 !important;
+        padding: 8px !important;
+    }
+}
+
+@media (max-width: 767px) {
+    /* --- ADICIONALES CAROUSEL --- */
+    .info-tooltip {
+        position: fixed;
+        bottom: auto;
+        top: 50%;
+        left: 50% !important;
+        transform: translate(-50%, -50%);
+        max-width: 85%;
+        width: auto;
+        min-width: 200px;
+        padding: 14px 18px;
+        font-size: 0.9rem;
+        border-radius: 16px;
+        text-align: center;
+        background: #ffffff;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        border: 1px solid #e2e8f0;
+        z-index: 10002;
+    }
+
+    .info-tooltip::before {
+        content: none;
+    }
+
+    .adicionales-carousel {
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
+        margin: 0;
+    }
+
+    .carousel-arrow {
+        display: none;
+    }
+
+    .carousel-container {
+        overflow-x: hidden;
+        overflow-y: auto;
+        max-height: none;
+        width: 100%;
+    }
+
+    .carousel-track {
+        flex-direction: column;
+        gap: 16px;
+        padding: 8px 0;
+    }
+
+    .carousel-item {
+        flex: 0 0 auto;
+        min-width: 100%;
+        width: 100%;
+    }
+
+    .svc-card--addon {
+        padding: 12px 16px;
+        border-radius: 16px;
+    }
+
+    .svc-price-row {
+        margin: 10px 0;
+        padding: 8px 0;
+    }
+
+    .svc-price-row .price-label {
+        font-size: 11px;
+    }
+
+    .svc-price-row .price-value {
+        font-size: 16px;
+    }
+
+    .svc-quantity .qty-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+
+    .svc-quantity .qty-display {
+        font-size: 16px;
+        min-width: 30px;
+    }
+
+    .svc-quantity .max-hint {
+        font-size: 10px;
+    }
+}
+
+/* ========================================================================
+   FILAS Y PREVIEWS EN GRILLA (Hasta 720px)
+   ======================================================================== */
+@media (max-width: 720px) {
+    .picker-row {
+        flex-direction: column;
+    }
+
+    .svc-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================================================
+   MINI PREVIEWS Y COLS DEL RESUMEN V2 (Hasta 640px)
+   ======================================================================== */
+@media (max-width: 640px) {
+    .preview-wrapper {
+        flex-direction: column !important;
+    }
+
+    .mini-container {
+        flex-direction: column !important;
+        text-align: center !important;
+    }
+
+    .mini-imagen {
+        width: 100% !important;
+        max-width: 180px !important;
+    }
+
+    .mini-precios {
+        justify-content: center !important;
+    }
+
+    .mini-header {
+        justify-content: center !important;
+    }
+
+    .preview-wrapper #catRemove {
+        width: 100% !important;
+        min-height: 56px !important;
+    }
+
+    .rv2-location-two-columns {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .rv2-car {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .rv2-car-image {
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: 240px;
+        margin: 0 auto;
+    }
+
+    .rv2-car-image img {
+        max-height: 180px;
+    }
+
+    .rv2-car-features {
+        justify-content: center;
+    }
+
+    .rv2-car-badge {
+        display: inline-block;
+    }
+}
+
+/* ========================================================================
+   TOOLTIPS EN TELÉFONOS EN VERTICAL (Hasta 560px)
+   ======================================================================== */
+@media (max-width: 560px) {
+    .pop.modal {
+        padding: 10px;
+    }
+
+    .modal-prote-tabs .tabs-bar {
+        flex-wrap: wrap;
+    }
+
+    .modal-prote-tabs .tab-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .tooltip-text {
+        width: 250px;
+        font-size: 11px;
+        padding: 10px 12px;
+        top: 130%;
+        left: 50%;
+        transform: translateX(-50%) translateY(5px);
+    }
+
+    .tooltip-arrow {
+        top: -16px;
+        left: 50%;
+        margin-left: -8px;
+        border-color: transparent transparent #ffffff transparent !important;
+    }
+
+    .info-icon-container:hover .tooltip-text {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    /* --- FLATPICKR COMPACTO --- */
+    .flatpickr-calendar.open {
+        width: min(340px, 92vw) !important;
+        max-height: 85vh !important;
+    }
+
+    .flatpickr-day {
+        height: 52px !important;
+        line-height: 52px !important;
+        font-size: 13px !important;
+    }
+
+    .flatpickr-weekday {
+        height: 44px !important;
+        line-height: 44px !important;
+        font-size: 13px !important;
+    }
+
+    .flatpickr-current-month {
+        font-size: 16px !important;
+        padding-top: 10px !important;
+        height: 50px !important;
+    }
+
+    .flatpickr-months .flatpickr-month {
+        height: 50px !important;
+    }
+
+    .dayContainer {
+        gap: 5px 0 !important;
+    }
+}
+
+/* ========================================================================
+   MODELOS DE FILAS COMPACTAS (Hasta 520px)
+   ======================================================================== */
+@media (max-width: 520px) {
+    .phone-grid {
+        display: flex !important;
+        flex-direction: row !important;
+    }
+
+    .phone-prefix {
+        justify-content: space-between;
+    }
+}
+
+/* ========================================================================
+   SMARTPHONES EN VERTICAL (Hasta 480px)
+   ======================================================================== */
+@media (max-width: 480px) {
+    .inner-back-wrap,
+    .stack-card:first-of-type,
+    body.buscar-realizado .res-navbar.hidden-mobile {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        border-radius: 0 !important;
+    }
+
+    /* --- AJUSTES NAVBAR --- */
+    .res-navbar .logo {
+        font-size: 15px;
+    }
+
+    .res-navbar .days-pill-admin {
+        padding: 3px 6px !important;
+        font-size: 10px !important;
+        gap: 3px !important;
+    }
+
+    .res-navbar .btn-resumen-minimal {
+        padding: 5px 10px !important;
+        gap: 4px !important;
+    }
+
+    .res-navbar .btn-resumen-minimal i {
+        font-size: 12px !important;
+    }
+
+    .res-navbar .btn-resumen-minimal #btnTotalNav {
+        font-size: 10px !important;
+    }
+
+    .res-navbar .btn-salir-minimal {
+        width: 30px;
+        height: 30px;
+        font-size: 11px;
+    }
+
+    .res-navbar .nav-actions {
+        gap: 6px !important;
+    }
+
+    /* --- BUSCADOR INTERNO --- */
+    .location-head-admin {
+        gap: 6px !important;
+    }
+
+    .field-title-admin {
+        font-size: 12px !important;
+    }
+
+    .inline-check-admin {
+        font-size: 10px !important;
+    }
+
+    .datetime-row-admin {
+        gap: 6px !important;
+    }
+
+    .dt-field-admin .input-buscador-admin,
+    .dt-field-admin input,
+    .dt-field-admin .tp-selects select {
+        height: 54px !important;
+        font-size: 15px !important;
+        padding: 0 6px 0 32px !important;
+    }
+
+    .dt-field-admin:not(.time-field-admin) .field-icon-admin {
+        left: 8px !important;
+        font-size: 12px !important;
+    }
+
+    .dt-field-admin.time-field-admin::before {
+        left: 10px !important;
+    }
+
+    .dt-field-admin.time-field-admin .input-buscador-admin,
+    .dt-field-admin.time-field-admin input,
+    .dt-field-admin.time-field-admin .tp-selects select {
+        padding-left: 38px !important;
+        padding-right: 4px !important;
+    }
+
+    .input-buscador-admin {
+        height: 54px !important;
+        font-size: 15px !important;
+    }
+
+    .solo-responsivo-izq {
+        font-size: 12px !important;
+    }
+
+    .btn-buscar-admin {
+        height: 54px !important;
+        font-size: 15px !important;
+    }
+
+    .sg-col-submit-admin {
+        margin-top: -6px !important;
+    }
+
+    .search-grid-admin {
+        gap: 12px !important;
+    }
+
+    /* --- COLS DE PROTECCIÓN --- */
+    #proteccionPop .tab-panel#tab-paquetes .scroll-h {
+        padding: 12px !important;
+        gap: 16px !important;
+    }
+
+    #proteccionPop .tab-panel#tab-paquetes .pack-card {
+        margin-bottom: 12px !important;
+    }
+
+    /* --- DATOS CLIENTE COMPACTO --- */
+    .cliente-input,
+    .cliente-country,
+    .cliente-phone-prefix {
+        height: 42px !important;
+        font-size: 12px !important;
+    }
+
+    .cliente-textarea {
+        font-size: 12px !important;
+        height: 180px !important;
+        min-height: 180px !important;
+    }
+
+    .cliente-actions .btn.primary {
+        padding: 10px !important;
+        font-size: 13px !important;
+    }
+
+    /* --- FLATPICKR PEQUEÑO --- */
+    .flatpickr-calendar.open {
+        width: min(300px, 94vw) !important;
+    }
+
+    .flatpickr-day, .flatpickr-weekday {
+        height: 48px !important;
+        line-height: 48px !important;
+        font-size: 12px !important;
+    }
+
+    .flatpickr-current-month {
+        font-size: 15px !important;
+        padding-top: 8px !important;
+        height: 46px !important;
+    }
+
+    .flatpickr-months .flatpickr-month {
+        height: 46px !important;
+    }
+}
+/* =========================================
+   FIX BUSCADOR MÓVIL 320 / 360 / 375
+========================================= */
+
+@media (max-width: 430px) {
+
+  .wrap,
+  .main,
+  .stack-card:first-of-type,
+  .stack-body {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .wrap {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  .stack-card:first-of-type {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 14px 12px !important;
+  }
+
+  .search-grid-admin,
+  .sg-col-location-admin,
+  .sg-col-datetime-admin,
+  .location-inputs-wrapper-admin,
+  .field-admin,
+  .dt-field-admin {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .location-head-admin {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .inline-check-admin {
+    max-width: 100% !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    font-size: 9px !important;
+  }
+
+  .location-inputs-wrapper-admin {
+    overflow: hidden !important;
+  }
+
+  .sg-col-location-admin .select2-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .sg-col-location-admin .select2-selection--single {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 52px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .sg-col-location-admin .select2-selection__rendered {
+    max-width: 100% !important;
+    padding-left: 38px !important;
+    padding-right: 32px !important;
+    font-size: 13px !important;
+    line-height: 52px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    box-sizing: border-box !important;
+  }
+
+  .sg-col-location-admin .select2-selection__rendered i {
+    left: 12px !important;
+    font-size: 15px !important;
+  }
+
+  .datetime-row-admin {
+    width: 100% !important;
+    max-width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .datetime-row-admin .dt-field-admin {
+    flex: 1 1 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+  }
+
+  .dt-field-admin .input-buscador-admin,
+  .dt-field-admin input,
+  .dt-field-admin .tp-selects select {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
 }

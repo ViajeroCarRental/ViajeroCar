@@ -128,7 +128,7 @@
                     <div class="datetime-row-admin">
                         <div class="dt-field-admin icon-field-admin">
                             <span class="field-icon-admin"><i class="fa-regular fa-calendar-days"></i></span>
-                            <input id="fecha_inicio_ui" class="input-buscador-admin" type="text" placeholder="Fecha" autocomplete="off">
+                            <input id="fecha_inicio_ui" class="input-buscador-admin" type="text" placeholder="Fecha" autocomplete="off" readonly inputmode="none">
                             <input id="fecha_inicio" name="fecha_inicio" type="hidden">
                         </div>
                         <div class="dt-field-admin icon-field-admin time-field-admin">
@@ -145,7 +145,7 @@
                     <div class="datetime-row-admin">
                         <div class="dt-field-admin icon-field-admin">
                             <span class="field-icon-admin"><i class="fa-regular fa-calendar-days"></i></span>
-                            <input id="fecha_fin_ui" class="input-buscador-admin" type="text" placeholder="Fecha" autocomplete="off">
+                            <input id="fecha_fin_ui" class="input-buscador-admin" type="text" placeholder="Fecha" autocomplete="off" readonly inputmode="none">
                             <input id="fecha_fin" name="fecha_fin" type="hidden">
                         </div>
                         <div class="dt-field-admin icon-field-admin time-field-admin">
