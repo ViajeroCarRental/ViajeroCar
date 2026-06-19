@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
         SeguroIndividualesSeeder::class,
         PaisSeeder::class,
         DepositoSeeder::class,
+        SistemasSeeder::class,
         ]);
     }
 
