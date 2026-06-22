@@ -611,14 +611,11 @@ Route::delete('/servicios/{id}', [AdicionalesController::class, 'destroy'])->nam
 
 //Dropoff en administración
 Route::prefix('admin')->group(function () {
-Route::get('/dropoff', [DropoffController::class, 'index'])->name('dropoffdelivery.index');
-Route::get('/dropoff/data', [DropoffController::class, 'data']);
-Route::post('/dropoff/update-km', [DropoffController::class, 'updateKm']);
-Route::post('/dropoff/update-costo', [DropoffController::class, 'updateCostoKm']);
-Route::post('/dropoff/ubicacion', [DropoffController::class, 'storeUbicacion']);
-Route::post('/dropoff/tarifa', [DropoffController::class, 'storeTarifaDropoff']);
-Route::post('/dropoff/ubicacion/eliminar/{id}', [DropoffController::class, 'destroyUbicacion']);
-Route::post('/dropoff/tarifa/eliminar/{id}', [DropoffController::class, 'destroyTarifaDropoff']);
+    Route::get('/dropoff', [DropoffController::class, 'index'])->name('dropoffdelivery.index');
+    Route::post('/dropoff/update-km', [DropoffController::class, 'updateKm']);
+    Route::post('/dropoff/update-costo', [DropoffController::class, 'updateCostoKm']);
+    Route::post('/dropoff/ubicacion', [DropoffController::class, 'storeUbicacion']);
+    Route::post('/dropoff/ubicacion/eliminar/{id}', [DropoffController::class, 'destroyUbicacion']);
 });
 
 Route::post('/contrato/guardar-dato', [ChecklistController::class, 'guardarDato'])
@@ -699,7 +696,7 @@ Route::get('/oficinas', [OficinaController::class, 'index'])->name('oficinas.ind
 Route::post('/oficinas', [OficinaController::class, 'store'])->name('oficinas.store');
 Route::put('/oficinas/{id}', [OficinaController::class, 'update'])->name('oficinas.update');
 Route::delete('/oficinas/{id}', [OficinaController::class, 'destroy'])->name('oficinas.destroy');
-Route::post('/oficinas/calcular', [OficinaController::class, 'calculate'])->name('oficinas.calculate');
+Route::get('/oficinas/{id}/imagen/{num}', [OficinaController::class, 'imagen'])->name('oficinas.imagen');
 
 //suta consultar saldo pendiente
 Route::get('/admin/contrato/{id}/saldo', [ContratosAbiertosController::class, 'saldo']);

@@ -720,7 +720,6 @@
                                 <th>#</th>
                                 <th>PLACAS</th>
                                 <th>CATEGORÍA</th>
-                                <th>MARCA/NOMBRE</th>
                                 <th>MODELO</th>
                                 <th>TRANSMISIÓN</th>
                                 <th>COLOR</th>

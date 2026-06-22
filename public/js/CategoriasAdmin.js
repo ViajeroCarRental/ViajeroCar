@@ -10,47 +10,68 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ==========================================================
-    // 2. FORMATEO DINÁMICO DE DINERO Y PORCENTAJE
+    // 2. LÓGICA DE DINERO CON CAMPO OCULTO
+    //    - El input visible muestra el formato bonito ($1,500.00)
+    //    - El input hidden (name=...) lleva el número puro (1500)
+    //    Así Laravel SIEMPRE recibe un número limpio.
     // ==========================================================
-    const limpiarNumero = (val) => {
-        if (!val) return 0;
+
+    // Devuelve el número limpio o null si está vacío
+    const numeroLimpio = (val) => {
+        if (val === null || val === undefined) return null;
         const limpio = String(val).replace(/[^0-9.]/g, '');
-        return parseFloat(limpio) || 0;
+        if (limpio === '' || limpio === '.') return null;
+        const num = parseFloat(limpio);
+        return isNaN(num) ? null : num;
     };
 
-    // Al hacer clic dentro del input (quita los signos)
-    document.addEventListener("focusin", (e) => {
-        if (e.target.classList.contains("input-money") || e.target.classList.contains("input-percent")) {
-            let valorLimpio = e.target.value.replace(/[^0-9.]/g, '');
-            if (parseFloat(valorLimpio) === 0) valorLimpio = "";
-            e.target.value = valorLimpio;
+    // Sincroniza un input visible con su hidden asociado
+    const sincronizarMoney = (inputVisible) => {
+        const target = inputVisible.dataset.target;
+        if (!target) return;
+        const form = inputVisible.closest('form');
+        const hidden = form?.querySelector(`input[type="hidden"][name="${target}"]`);
+        if (!hidden) return;
+
+        const num = numeroLimpio(inputVisible.value);
+        hidden.value = (num === null) ? '' : num;
+    };
+
+    // Mientras escribe: actualiza el hidden en tiempo real
+    document.addEventListener("input", (e) => {
+        if (e.target.classList.contains("input-money")) {
+            sincronizarMoney(e.target);
         }
     });
 
-    // Al salir del input (agrega los signos)
+    // Al entrar al campo: muestra el número crudo para editar
+    document.addEventListener("focusin", (e) => {
+        if (e.target.classList.contains("input-money")) {
+            const num = numeroLimpio(e.target.value);
+            e.target.value = (num === null) ? '' : num;
+        }
+    });
+
+    // Al salir del campo: muestra el formato bonito y sincroniza el hidden
     document.addEventListener("focusout", (e) => {
         if (e.target.classList.contains("input-money")) {
-            const num = parseFloat(e.target.value) || 0;
-            e.target.value = "$" + num.toFixed(2);
-        } else if (e.target.classList.contains("input-percent")) {
-            const num = parseFloat(e.target.value) || 0;
-            e.target.value = num.toFixed(2) + " %";
+            const num = numeroLimpio(e.target.value);
+            e.target.value = (num === null) ? '' : ('$' + num.toFixed(2));
+            sincronizarMoney(e.target);
         }
     });
 
     // ==========================================================
-    // 3. LIMPIAR DATOS JUSTO ANTES DE ENVIAR EL FORMULARIO
+    // 3. AL ENVIAR: nos aseguramos de que los hidden estén al día
     // ==========================================================
     const interceptarFormulario = (formId) => {
         const form = document.getElementById(formId);
-        if (form) {
-            form.addEventListener('submit', function () {
-                // Quitamos el formato visual para que Laravel reciba números puros
-                form.querySelectorAll('.input-money, .input-percent').forEach(input => {
-                    input.value = limpiarNumero(input.value);
-                });
+        if (!form) return;
+        form.addEventListener('submit', function () {
+            form.querySelectorAll('.input-money').forEach(inputVisible => {
+                sincronizarMoney(inputVisible);
             });
-        }
+        });
     };
 
     interceptarFormulario('formCrear');
@@ -60,34 +81,42 @@ document.addEventListener("DOMContentLoaded", () => {
 // ==========================================================
 // ABRIR MODAL EDITAR CATEGORÍA
 // ==========================================================
-window.openEdit = function (id, codigo, nombre, precioDia, precioSemana, precioMes, descuento, garantiaBase, activo, paquetesAsignados) {
+window.openEdit = function (id, codigo, nombre, descripcion, precioDia, precioSemana, precioMes, garantiaBase, activo, paquetesAsignados) {
     const form = document.getElementById('formEditar');
 
     if (form && form.dataset.action) {
         form.action = form.dataset.action.replace('__ID__', id);
     }
 
-    // Llenar inputs de texto
+    // Inputs de texto
     document.getElementById('e_codigo').value = codigo;
     document.getElementById('e_nombre').value = nombre;
+    document.getElementById('e_descripcion').value = descripcion ?? '';
     document.getElementById('e_activo').value = activo;
 
-    // Llenar inputs formateados con los signos iniciales
-    document.getElementById('e_precio').value = "$" + parseFloat(precioDia).toFixed(2);
-    document.getElementById('e_precio_semana').value = "$" + parseFloat(precioSemana).toFixed(2);
-    document.getElementById('e_precio_mes').value = "$" + parseFloat(precioMes).toFixed(2);
-    document.getElementById('e_descuento').value = parseFloat(descuento).toFixed(2) + " %";
-    document.getElementById('e_garantia_base').value = "$" + parseFloat(garantiaBase).toFixed(2);
+    // Helper: llena el visible (formato) y el hidden (número puro)
+    const llenarMoney = (idVisible, idHidden, valor) => {
+        const visible = document.getElementById(idVisible);
+        const hidden = document.getElementById(idHidden);
+        const num = parseFloat(valor);
+        const valido = !isNaN(num) && num > 0;
 
-    // Lógica para checar los paquetes
+        if (visible) visible.value = valido ? ('$' + num.toFixed(2)) : '';
+        if (hidden) hidden.value = valido ? num : '';
+    };
+
+    llenarMoney('e_precio', 'e_precio_hidden', precioDia);
+    llenarMoney('e_precio_semana', 'e_precio_semana_hidden', precioSemana);
+    llenarMoney('e_precio_mes', 'e_precio_mes_hidden', precioMes);
+    llenarMoney('e_garantia_base', 'e_garantia_base_hidden', garantiaBase);
+
+    // Checar paquetes asignados
     document.querySelectorAll('.checkbox-paquete-edit').forEach(checkbox => {
         checkbox.checked = paquetesAsignados && paquetesAsignados.map(String).includes(String(checkbox.value));
     });
 
     const modal = document.getElementById('modalEditar');
-    if (modal) {
-        modal.showModal();
-    }
+    if (modal) modal.showModal();
 };
 
 // ==========================================================
@@ -95,9 +124,7 @@ window.openEdit = function (id, codigo, nombre, precioDia, precioSemana, precioM
 // ==========================================================
 window.closeModal = function (idModal) {
     const modal = document.getElementById(idModal);
-    if (modal) {
-        modal.close();
-    }
+    if (modal) modal.close();
 };
 
 // ==========================================================

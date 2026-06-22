@@ -55,7 +55,10 @@
 
                     <div>
                         <label>Descripción</label>
-                        <textarea id="newDescripcion" rows="2" placeholder="Breve descripción del paquete..."></textarea>
+                        <textarea id="newDescripcion" rows="3" placeholder="Se llena sola al marcar protecciones. Puedes editarla."></textarea>
+                        <small style="display:block; color:#64748b; font-size:11px; margin-top:4px;">
+                            💡 Para poner texto en <strong>negritas</strong>, enciérralo entre dobles asteriscos. Ejemplo: <code>**texto importante**</code>
+                        </small>
                     </div>
 
                     <div style="display: flex; gap: 10px;">
@@ -97,18 +100,29 @@
                         </div>
                     </div>
 
-                    {{-- Columna de Protecciones --}}
+                    {{-- Columna de Protecciones (AGRUPADAS POR SECCIÓN) --}}
                     <div>
                         <label style="font-weight: bold; color: #1e3a8a; display: block; margin-bottom: 5px;">
                             🛡️ Protecciones Incluidas
                         </label>
                         <div class="contenedor-protecciones">
-                            @if (isset($protecciones))
-                                @foreach ($protecciones as $prot)
-                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: white; padding: 5px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                                        <input type="checkbox" class="new-prot" value="{{ $prot->id_individual }}">
-                                        {{ $prot->nombre }}
-                                    </label>
+                            @if (isset($proteccionesPorSeccion))
+                                @foreach ($secciones as $idSeccion => $nombreSeccion)
+                                    <div class="seccion-proteccion" style="margin-bottom:12px;">
+                                        <div style="font-weight:bold; font-size:12px; color:#dc2626; border-left:3px solid #dc2626; padding-left:6px; margin-bottom:6px;">
+                                            {{ $nombreSeccion }}
+                                        </div>
+                                        @foreach ($proteccionesPorSeccion[$idSeccion] as $prot)
+                                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: white; padding: 5px; border-radius: 4px; border: 1px solid #e2e8f0; margin-bottom:4px;">
+                                                <input type="checkbox" class="new-prot"
+                                                    value="{{ $prot->id_individual }}"
+                                                    data-precio="{{ $prot->precio_por_dia }}"
+                                                    data-desc="{{ $prot->descripcion }}"
+                                                    data-suma="{{ $prot->requiere_desglose_autos ? 0 : 1 }}">
+                                                {{ $prot->nombre }}
+                                            </label>
+                                        @endforeach
+                                    </div>
                                 @endforeach
                             @endif
                         </div>
@@ -146,7 +160,10 @@
 
                     <div>
                         <label>Descripción</label>
-                        <textarea id="editDescripcion" rows="2"></textarea>
+                        <textarea id="editDescripcion" rows="3"></textarea>
+                        <small style="display:block; color:#64748b; font-size:11px; margin-top:4px;">
+                            💡 Para poner texto en <strong>negritas</strong>, enciérralo entre dobles asteriscos. Ejemplo: <code>**texto importante**</code>
+                        </small>
                     </div>
 
                     <div style="display: flex; gap: 10px;">
@@ -188,18 +205,29 @@
                         </div>
                     </div>
 
-                    {{-- Protecciones Incluidas --}}
+                    {{-- Protecciones Incluidas (AGRUPADAS POR SECCIÓN) --}}
                     <div>
                         <label style="font-weight: bold; color: #1e3a8a; display: block; margin-bottom: 5px;">
                             🛡️ Protecciones Incluidas
                         </label>
                         <div class="contenedor-protecciones">
-                            @if (isset($protecciones))
-                                @foreach ($protecciones as $prot)
-                                    <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: white; padding: 5px; border-radius: 4px; border: 1px solid #e2e8f0;">
-                                        <input type="checkbox" class="edit-prot" value="{{ $prot->id_individual }}">
-                                        {{ $prot->nombre }}
-                                    </label>
+                            @if (isset($proteccionesPorSeccion))
+                                @foreach ($secciones as $idSeccion => $nombreSeccion)
+                                    <div class="seccion-proteccion" style="margin-bottom:12px;">
+                                        <div style="font-weight:bold; font-size:12px; color:#dc2626; border-left:3px solid #dc2626; padding-left:6px; margin-bottom:6px;">
+                                            {{ $nombreSeccion }}
+                                        </div>
+                                        @foreach ($proteccionesPorSeccion[$idSeccion] as $prot)
+                                            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; background: white; padding: 5px; border-radius: 4px; border: 1px solid #e2e8f0; margin-bottom:4px;">
+                                                <input type="checkbox" class="edit-prot"
+                                                    value="{{ $prot->id_individual }}"
+                                                    data-precio="{{ $prot->precio_por_dia }}"
+                                                    data-desc="{{ $prot->descripcion }}"
+                                                    data-suma="{{ $prot->requiere_desglose_autos ? 0 : 1 }}">
+                                                {{ $prot->nombre }}
+                                            </label>
+                                        @endforeach
+                                    </div>
                                 @endforeach
                             @endif
                         </div>

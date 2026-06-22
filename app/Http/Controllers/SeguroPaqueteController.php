@@ -13,9 +13,34 @@ class SeguroPaqueteController extends Controller
     public function index()
     {
         $categorias = DB::table('categorias_carros')->orderBy('orden', 'asc')->get();
-        $protecciones = DB::table('seguro_individuales')->where('activo', 1)->orderBy('nombre', 'asc')->get();
 
-        return view('Admin.paqueteseguros', compact('categorias', 'protecciones'));
+        // Traemos los individuales con su sección, ordenados por id_seccion (orden de creación)
+        // y con la bandera requiere_desglose_autos para saber si suman al precio o no.
+        $protecciones = DB::table('seguro_individuales as si')
+            ->join('secciones_seguros as ss', 'si.id_seccion', '=', 'ss.id_seccion')
+            ->where('si.activo', 1)
+            ->orderBy('ss.id_seccion', 'asc')
+            ->orderBy('si.nombre', 'asc')
+            ->select(
+                'si.id_individual',
+                'si.nombre',
+                'si.descripcion',
+                'si.precio_por_dia',
+                'si.id_seccion',
+                'ss.nombre as seccion_nombre',
+                'ss.requiere_desglose_autos'
+            )
+            ->get();
+
+        // Agrupamos por sección manteniendo el orden por id_seccion
+        $proteccionesPorSeccion = $protecciones->groupBy('id_seccion');
+
+        // Lista ordenada de secciones (id => nombre) en orden de creación
+        $secciones = $protecciones
+            ->unique('id_seccion')
+            ->mapWithKeys(fn($p) => [$p->id_seccion => $p->seccion_nombre]);
+
+        return view('Admin.paqueteseguros', compact('categorias', 'protecciones', 'proteccionesPorSeccion', 'secciones'));
     }
 
     // ===========================================
@@ -51,7 +76,7 @@ class SeguroPaqueteController extends Controller
         return response()->json([
             'ok' => true,
             'data' => $paquete,
-            'depositos' => (object)$depositos, 
+            'depositos' => (object)$depositos,
             'protecciones' => $proteccionesAsignadas
         ]);
     }
@@ -83,13 +108,13 @@ class SeguroPaqueteController extends Controller
             ]);
 
             foreach ($request->montos ?? [] as $id_categoria => $monto) {
-                $id_cat_int = (int)$id_categoria; 
-                
+                $id_cat_int = (int)$id_categoria;
+
                 DB::table('depositos')->insert([
-                    'id_categoria' => $id_cat_int, 
+                    'id_categoria' => $id_cat_int,
                     'id_paquete' => $id_paquete,
                     'monto' => (float)$monto,
-                    'created_at' => now(), 
+                    'created_at' => now(),
                     'updated_at' => now()
                 ]);
             }
@@ -140,9 +165,8 @@ class SeguroPaqueteController extends Controller
                     'updated_at'         => now(),
                 ]);
 
-            // ACTUALIZAR MONTOS DIRECTOS
             foreach ($request->montos ?? [] as $id_categoria => $monto) {
-                $id_cat_int = (int)$id_categoria; 
+                $id_cat_int = (int)$id_categoria;
 
                 DB::table('depositos')->updateOrInsert(
                     ['id_categoria' => $id_cat_int, 'id_paquete' => $id],

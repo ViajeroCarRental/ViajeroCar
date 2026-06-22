@@ -9,6 +9,10 @@ class UbicacionesServicioSeeder extends Seeder
 {
     public function run()
     {
+        // Todas estas rutas salen desde Querétaro (origen único actual).
+        // Buscamos su id_ciudad una sola vez.
+        $idQueretaro = DB::table('ciudades')->where('nombre', 'Querétaro')->value('id_ciudad');
+
         // Lista de destinos con KM exactos
         $destinos = [
             ['estado' => 'Aguascalientes', 'destino' => 'Aeropuerto Internacional de Aguascalientes', 'km' => 310],
@@ -44,12 +48,13 @@ class UbicacionesServicioSeeder extends Seeder
 
         foreach ($destinos as $d) {
             DB::table('ubicaciones_servicio')->insert([
-                'estado'     => $d['estado'],
-                'destino'    => $d['destino'],
-                'km'         => $d['km'],
-                'activo'     => true,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'id_ciudad_origen' => $idQueretaro,
+                'estado'           => $d['estado'],
+                'destino'          => $d['destino'],
+                'km'               => $d['km'],
+                'activo'           => true,
+                'created_at'       => now(),
+                'updated_at'       => now(),
             ]);
         }
     }
