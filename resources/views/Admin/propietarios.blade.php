@@ -1,12 +1,12 @@
-@extends('layouts.Admin')
+@extends('layouts.Flotillas')
 
 @section('Titulo', 'Propietarios')
 
-@section('css-vistaRoles')
-<link rel="stylesheet" href="{{ asset('css/paqueteseguro.css') }}">
+@section('css-vistaFlotilla')
+<link rel="stylesheet" href="{{ asset('css/flotilla.css') }}">
 @endsection
 
-@section('contenidoRoles')
+@section('contenidoFirmas')
 
 <div class="roles-container">
     <div class="header-flex">
@@ -110,7 +110,7 @@ Actualizar
 
 
 
-@section('js-vistaRoles')
+@section('js-vistaFirmas')
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
 <script src="{{ asset('js/propietariosAdmin.js') }}"></script>
 

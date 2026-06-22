@@ -20,7 +20,7 @@
         <div>
             <h2 style="margin:0 0 6px;font-size:28px">Usuarios del sistema</h2>
             <div class="small">
-                Alta, edición, roles y acceso a módulos.  
+                Alta, edición, roles y acceso a módulos.
                 Aquí se muestran los usuarios administrativos y los clientes registrados.
             </div>
         </div>
@@ -89,7 +89,8 @@
                         <thead>
                             <tr>
                                 <th>Nombre</th>
-                                <th>Email</th>
+                                <th>Usuario</th>
+                                <th>Firma</th>
                                 <th>Teléfono</th>
                                 <th>Rol(es)</th>
                                 <th>Estatus</th>
@@ -103,13 +104,21 @@
                                     data-id="{{ $admin->id_usuario }}"
                                     data-nombres="{{ $admin->nombres }}"
                                     data-apellidos="{{ $admin->apellidos }}"
-                                    data-correo="{{ $admin->correo }}"
+                                    data-nombre-usuario="{{ $admin->nombre_usuario }}"
                                     data-numero="{{ $admin->numero }}"
+                                    data-firma="{{ $admin->firma }}"
                                     data-rol-id="{{ $admin->rol_id_principal }}"
                                     data-activo="{{ $admin->activo }}"
                                 >
                                     <td>{{ $admin->nombres }} {{ $admin->apellidos }}</td>
-                                    <td>{{ $admin->correo }}</td>
+                                    <td>{{ $admin->nombre_usuario }}</td>
+                                    <td>
+                                        @if($admin->firma)
+                                            <img src="{{ $admin->firma }}" width="80" style="border:1px solid #ddd;background:#fff">
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
                                     <td>{{ $admin->numero ?? '—' }}</td>
                                     <td>{{ $admin->roles }}</td>
 
@@ -128,7 +137,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6">
+                                    <td colspan="7">
                                         <div class="empty">
                                             Aún no hay usuarios administrativos con roles asignados.
                                         </div>
@@ -255,8 +264,17 @@
             </div>
 
             <div>
-                <label>Email</label>
-                <input class="input" id="uEmail" placeholder="email@dominio.com">
+                <label>Nombre de usuario</label>
+                <input class="input" id="uNombreUsuario" maxlength="15" placeholder="Máx. 15 caracteres">
+            </div>
+
+            <div>
+                <label>Firma</label>
+                <canvas id="uFirmaPad" width="380" height="160"
+                        style="border:1px solid #ccc;background:white;display:block;border-radius:6px"></canvas>
+                <button type="button" class="btn gray" id="uFirmaClear" style="margin-top:6px">
+                    Limpiar firma
+                </button>
             </div>
 
             <div>
@@ -310,6 +328,8 @@
 @endsection
 
 @section('js-vistaUsuariosAdmin')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@2.3.2/dist/signature_pad.min.js"></script>
 
 {{-- Chart.js --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

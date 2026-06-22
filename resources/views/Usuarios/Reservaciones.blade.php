@@ -4,9 +4,14 @@
 @section('css-vistaReservaciones')
     <link rel="stylesheet" href="{{ asset('css/reservaciones.css') }}">
 
+    {{--
+        ⚠️ NOTA: Las reglas CSS de este bloque <style> que estén marcadas como
+        "MOVER A reservaciones.css" debes pasarlas al archivo externo cuando
+        ataquemos el CSS (fase 2). Por ahora se quedan aquí para no romper
+        la vista.
+    --}}
     <style>
-        /* fondos de reservaciones */
-
+        /* === FONDOS DE RESERVACIONES (MOVER A reservaciones.css) === */
         .reservas-bg {
             position: absolute;
             inset: 0;
@@ -14,7 +19,7 @@
             pointer-events: none;
             background:
                 linear-gradient(180deg, rgba(15, 23, 42, .70), rgba(15, 23, 42, .62)),
-                url("{{ asset('img/4x4.png') }}");
+                url("{{ asset('img/4x4.webp') }}");
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -26,6 +31,7 @@
             z-index: 1;
         }
 
+        /* === Ajustes inputs steps >1 (MOVER A reservaciones.css) === */
         .page.wizard-page:not([data-current-step="1"]) .ctl input,
         .page.wizard-page:not([data-current-step="1"]) .ctl select {
             padding-left: 46px;
@@ -89,7 +95,7 @@
             }
         }
 
-        /* imagen de fondo  fija*/
+        /* === Fondo fijo del layout (MOVER A reservaciones.css) === */
         .fondo-fijo-layout {
             position: fixed;
             top: 0;
@@ -97,7 +103,9 @@
             width: 100vw;
             height: 100vh;
             z-index: -1;
-            background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url("{{ asset('img/4x4.png') }}");
+            background-image:
+                linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+                url("{{ asset('img/4x4.webp') }}");
             background-size: cover;
             background-position: center center;
             background-repeat: no-repeat;
@@ -107,13 +115,8 @@
             background: transparent !important;
         }
 
-
-        /* step 3 */
-
-        .step3-wrap {
-            display: grid;
-            gap: 18px;
-        }
+        /* === STEP 3 (MOVER A reservaciones.css) === */
+        .step3-wrap { display: grid; gap: 18px; }
 
         .step3-section {
             background: #fff;
@@ -160,12 +163,7 @@
             gap: 14px;
             align-items: stretch;
         }
-
-        @media (max-width:840px) {
-            .prot-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        @media (max-width:840px) { .prot-grid { grid-template-columns: 1fr; } }
 
         .prot-card {
             border: 1px dashed rgba(178, 34, 34, .20);
@@ -176,27 +174,17 @@
             align-content: start;
         }
 
-        .prot-top {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-        }
+        .prot-top { display: flex; align-items: flex-start; gap: 12px; }
 
         .prot-icon {
-            width: 70px;
-            height: 70px;
+            width: 70px; height: 70px;
             border-radius: 999px;
-            display: grid;
-            place-items: center;
+            display: grid; place-items: center;
             border: 3px solid #d1d5db;
             color: #9ca3af;
             flex: 0 0 auto;
         }
-
-        .prot-icon.is-on {
-            border-color: #16a34a;
-            color: #16a34a;
-        }
+        .prot-icon.is-on { border-color: #16a34a; color: #16a34a; }
 
         .prot-name {
             font-weight: 900;
@@ -228,8 +216,7 @@
         }
 
         .prot-badge .dot {
-            width: 10px;
-            height: 10px;
+            width: 10px; height: 10px;
             border-radius: 999px;
             background: #16a34a;
             box-shadow: 0 0 0 4px rgba(22, 163, 74, .12);
@@ -240,158 +227,15 @@
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 14px;
         }
-
-        @media (max-width:980px) {
-            .equip-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width:620px) {
-            .equip-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .addon-card {
-            border: 1px solid #eef2f7;
-            border-radius: 18px;
-            padding: 14px;
-            background: #fff;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, .06);
-            display: grid;
-            gap: 10px;
-        }
-
-        .addon-top {
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
-
-        .addon-ico {
-            width: 70px;
-            height: 70px;
-            border-radius: 999px;
-            display: grid;
-            place-items: center;
-            border: 3px solid #d1d5db;
-            color: #6b7280;
-            flex: 0 0 auto;
-        }
-
-        .addon-name {
-            margin: 0;
-            font-weight: 900;
-            letter-spacing: .25px;
-            text-transform: uppercase;
-            font-size: 13px;
-            color: #0f172a;
-        }
-
-        .addon-card p {
-            margin: 6px 0 0;
-            color: #475569;
-            font-weight: 700;
-            font-size: 13px;
-            line-height: 1.45;
-        }
-
-        .addon-price {
-            font-weight: 900;
-            color: #0f172a;
-            font-size: 13px;
-        }
-
-        .addon-price strong {
-            color: var(--brand);
-        }
-
-        .addon-qty {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            justify-content: flex-start;
-            margin-top: 4px;
-        }
-
-        .qty-btn {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            background: #fff;
-            font-weight: 900;
-            cursor: pointer;
-        }
-
-        .qty {
-            min-width: 34px;
-            text-align: center;
-            font-weight: 900;
-            color: #0f172a;
-        }
-
-        .qty-hint {
-            font-size: 12px;
-            font-weight: 800;
-            color: #6b7280;
-            margin-left: auto;
-        }
-
-        /* modal simple (step 3) */
-        .modal-s3 {
-            position: fixed !important;
-            inset: 0 !important;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.8) !important; 
-            z-index: 99999999 !important; 
-            padding: 18px;
-            backdrop-filter: blur(5px);
-            overscroll-behavior: contain;
-        }
-
-        .modal-s3 .card {
-            width: min(720px, 100%);
-            background: #ffffff !important;
-            border-radius: 18px;
-            border: 1px solid #eef2f7;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, .5);
-            padding: 18px;
-            position: relative;
-            z-index: 100000000 !important;
-        }
-
-        .modal-s3 .x {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            background: #fff;
-            cursor: pointer;
-            display: grid;
-            place-items: center;
-            margin-left: auto;
-        }
-
-
-        /* addon-qty */
+        @media (max-width:980px) { .equip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width:620px) { .equip-grid { grid-template-columns: 1fr; } }
 
         .switch {
             position: relative;
             display: inline-block;
-            width: 46px;
-            height: 26px;
+            width: 46px; height: 26px;
         }
-
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
+        .switch input { opacity: 0; width: 0; height: 0; }
         .slider {
             position: absolute;
             cursor: pointer;
@@ -400,213 +244,52 @@
             transition: .3s;
             border-radius: 26px;
         }
-
         .slider:before {
             position: absolute;
             content: "";
-            height: 20px;
-            width: 20px;
-            left: 3px;
-            bottom: 3px;
+            height: 20px; width: 20px;
+            left: 3px; bottom: 3px;
             background-color: white;
             transition: .3s;
             border-radius: 50%;
         }
+        input:checked + .slider { background-color: #16a34a; }
+        input:checked + .slider:before { transform: translateX(20px); }
 
-        input:checked+.slider {
-            background-color: #16a34a;
-        }
-
-        input:checked+.slider:before {
-            transform: translateX(20px);
-        }
-
-        input:checked+.slider:before {
-            transform: translateX(20px);
-        }
-
-
-        /* step 4 */
-
-        .sum-line-title {
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 900;
-            letter-spacing: .35px;
-            text-transform: uppercase;
-            font-size: 13px;
-            color: #0f172a;
-            margin: 0 0 10px;
-        }
-
-        .sum-line-title:after {
-            content: "";
-            height: 3px;
-            flex: 1;
-            border-radius: 999px;
-            background: linear-gradient(90deg, rgba(178, 34, 34, 1), rgba(178, 34, 34, .15));
-        }
-
-        .sum-dt2 {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            margin-top: 4px;
-        }
-
-        .sum-dt2 .dt-row {
-            display: flex;
-            gap: 8px;
-            align-items: baseline;
-        }
-
-        .sum-dt2 .dt-lbl {
-            min-width: 58px;
-            font-size: 11px;
-            font-weight: 900;
-            letter-spacing: .55px;
-            text-transform: uppercase;
-            color: #6b7280;
-        }
-
-        .sum-dt2 .dt-val {
-            font-weight: 800;
-            color: #111827;
-            line-height: 1.15;
-        }
-
-        .sum-dt2 .dt-time {
-            font-weight: 900;
-            color: #111827;
-        }
-
-        /* DISEÑO RESPONSIVO: TARJETA DE RESERVACIÓN - SOLO MÓVIL/TABLET */
-        @media (max-width:1024px) {
-
-            footer,
-            .footer-elegant {
-                position: relative;
-                z-index: 10;
-                background-color: #0b1120 !important;
-            }
-
-            .step4-pane .sum-total,
-            .sum-form .wizard-nav,
-            #btnReservar {
-                display: none !important;
-            }
-
-            /* ESTILO BASE DE LA TARJETA - INICIALMENTE OCULTA */
-            .movil-footer-sticky {
-                display: flex !important;
-                flex-direction: column;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                background: #ffffff;
-                padding: 20px;
-                box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.20);
-                border-radius: 25px 25px 0 0;
-                gap: 15px;
-                z-index: 9999999;
-                transform: translateY(100%);
-                transition: transform 0.3s ease-in-out;
-            }
-
-            /* CUANDO TIENE LA CLASE 'visible' - SE MUESTRA */
-            .movil-footer-sticky.visible {
-                transform: translateY(0);
-            }
-
-            .movil-total-wrapper {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                font-weight: 900;
-                font-size: 20px;
-            }
-
-            .movil-total-label {
-                color: #000;
-                text-transform: uppercase;
-            }
-
-            .movil-total-amount {
-                color: #b22222;
-                font-size: 24px;
-            }
-
-            .btn-reservar-movil {
-                background: #b22222;
-                color: #fff;
-                border: none;
-                border-radius: 14px;
-                padding: 20px;
-                font-size: 18px;
-                font-weight: 900;
-                width: 100%;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                cursor: pointer;
-                transition: all .2s ease;
-            }
-
-            .btn-reservar-movil:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 8px 20px rgba(178, 34, 34, .35);
-            }
-
-            /* AJUSTE PARA EL SCROLL */
-            .step4-layout {
-                padding-bottom: 250px !important;
-            }
-        }
-
-        /* ESCRITORIO - OCULTA COMPLETAMENTE LA TARJETA */
-        @media (min-width:1025px) {
-            .movil-footer-sticky {
-                display: none !important;
-            }
-        }
-
-        /*  letra mayúscula en los mesess */
-        #dob_month option {
-            text-transform: capitalize !important;
-        }
+        /* === Letra mayúscula en los meses (MOVER A reservaciones.css) === */
+        #dob_month option { text-transform: capitalize !important; }
     </style>
-
 @endsection
 
 @section('contenidoReservaciones')
 
-    <main class="page wizard-page {{ $fromWelcome ? 'modo-welcome' : '' }}" data-current-step="{{ $step }}"
-        data-plan="{{ $plan ?? '' }}" style="position:relative; overflow:visible;">
+    <main class="page wizard-page {{ $fromWelcome ? 'modo-welcome' : '' }}"
+          data-current-step="{{ $step }}"
+          data-plan="{{ $plan ?? '' }}"
+          style="position:relative; overflow:visible;">
 
         {{-- ✅ Fondo SOLO dentro del main (NO footer) --}}
         <div class="fondos-reservaciones"
-            style="background-image: url('../img/banner/banner-reservaciones.webp'); background-attachment: fixed; background-size: cover; background-position: center; min-height: 100vh;">
+             style="background-image: url('{{ asset('img/banner/banner-reservaciones.webp') }}'); background-attachment: fixed; background-size: cover; background-position: center; min-height: 100vh;">
 
             <div class="fondo-fijo-layout" style="pointer-events:none;"></div>
 
             {{-- ===================== PASOS ARRIBA ===================== --}}
             <nav class="wizard-steps" aria-label="{{ __('Steps') }}">
                 <a class="wizard-step {{ $step > 1 ? 'done' : '' }} {{ $step === 1 ? 'active' : '' }}"
-                    href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 1])) }}">
+                   href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 1])) }}">
                     <span class="n">1</span> {{ __('General') }}
                 </a>
                 <a class="wizard-step {{ $step > 2 || request('auto') ? 'done' : '' }} {{ $step === 2 ? 'active' : '' }}"
-                    href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 2])) }}">
+                   href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 2])) }}">
                     <span class="n">2</span> {{ __('Category') }}
                 </a>
                 <a class="wizard-step {{ $step > 3 ? 'done' : '' }} {{ $step === 3 ? 'active' : '' }}"
-                    href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3])) }}">
+                   href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3])) }}">
                     <span class="n">3</span> {{ __('Extras') }}
                 </a>
                 <a class="wizard-step {{ $step === 4 ? 'active' : '' }}"
-                    href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 4])) }}">
+                   href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 4])) }}">
                     <span class="n">4</span> {{ __('Confirmation') }}
                 </a>
             </nav>
@@ -614,8 +297,7 @@
             <section class="wizard-card">
 
                 {{-- ===================== STEP 1 ===================== --}}
-
-                @if ($stepCurrent === 1)
+                @if ($step === 1)
                     <div class="search-card" id="miBuscador">
                         <header class="wizard-head">
                             <h2>{{ __('About your reservation') }}</h2>
@@ -634,7 +316,7 @@
                                         <span class="field-title">{{ __('Pick-up location') }}</span>
                                         <label class="inline-check" for="differentDropoff">
                                             <input type="checkbox" id="differentDropoff" name="different_dropoff"
-                                                value="1" {{ $isDifferentDropoff ? 'checked' : '' }}>
+                                                   value="1" {{ $isDifferentDropoff ? 'checked' : '' }}>
                                             <span class="checkbox-text">{{ __('Different return location') }}</span>
                                         </label>
                                     </div>
@@ -649,14 +331,12 @@
                                                 <option value="" disabled {{ $pickupSucursalId ? '' : 'selected' }}>
                                                     {{ __('Where does your trip begin?') }}
                                                 </option>
-
-                                                {{-- Solo itera Querétaro --}}
                                                 @foreach ($ciudadesPickup as $ciudad)
                                                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                                         @foreach ($ciudad->sucursalesActivas as $suc)
-                                                            <option value="{{ $suc->id_sucursal }}" 
-                                                                data-icon="{{ $suc->icon_class }}"
-                                                                {{ (string) $pickupSucursalId === (string) $suc->id_sucursal ? 'selected' : '' }}>
+                                                            <option value="{{ $suc->id_sucursal }}"
+                                                                    data-icon="{{ $suc->icon_class }}"
+                                                                    {{ (string) $pickupSucursalId === (string) $suc->id_sucursal ? 'selected' : '' }}>
                                                                 {{ $suc->nombre }}
                                                             </option>
                                                         @endforeach
@@ -666,8 +346,8 @@
                                         </div>
 
                                         {{-- SELECT DROPOFF --}}
-                                        <div class="field icon-field" id="dropoffWrapper" 
-                                            style="display: {{ $isDifferentDropoff ? 'block' : 'none' }};">
+                                        <div class="field icon-field" id="dropoffWrapper"
+                                             style="display: {{ $isDifferentDropoff ? 'block' : 'none' }};">
                                             <span class="field-icon">
                                                 <i id="dropoffIcon" class="fa-solid fa-location-dot"></i>
                                             </span>
@@ -675,14 +355,12 @@
                                                 <option value="" disabled {{ $dropoffSucursalId ? '' : 'selected' }}>
                                                     {{ __('Where does your trip end?') }}
                                                 </option>
-
-                                                {{-- Itera todas las ciudades (con Querétaro al principio) --}}
                                                 @foreach ($ciudadesDropoff as $ciudad)
                                                     <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
                                                         @foreach ($ciudad->sucursalesActivas as $suc)
-                                                            <option value="{{ $suc->id_sucursal }}" 
-                                                                data-icon="{{ $suc->icon_class }}"
-                                                                {{ (string) $dropoffSucursalId === (string) $suc->id_sucursal ? 'selected' : '' }}>
+                                                            <option value="{{ $suc->id_sucursal }}"
+                                                                    data-icon="{{ $suc->icon_class }}"
+                                                                    {{ (string) $dropoffSucursalId === (string) $suc->id_sucursal ? 'selected' : '' }}>
                                                                 {{ $suc->nombre }}
                                                             </option>
                                                         @endforeach
@@ -700,14 +378,15 @@
                                         <div class="datetime-row">
                                             <div class="dt-field icon-field">
                                                 <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                                                <input id="start" name="pickup_date" type="text" placeholder="{{ __('Date') }}" 
-                                                    class="flatpickr-input" value="{{ $pickupDate }}" required>
+                                                <input id="start" name="pickup_date" type="text"
+                                                       placeholder="{{ __('Date') }}" class="flatpickr-input"
+                                                       value="{{ $pickupDate }}" required>
                                             </div>
                                             <div class="dt-field icon-field time-field">
                                                 <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
                                                 <select name="pickup_h" required class="time-select">
                                                     <option value="" disabled {{ empty($ph) ? 'selected' : '' }}>{{ __('Time') }}</option>
-                                                    @foreach($horasDropdown as $hh)
+                                                    @foreach ($horasDropdown as $hh)
                                                         <option value="{{ $hh }}" {{ $hh === $ph ? 'selected' : '' }}>{{ $hh }}:00</option>
                                                     @endforeach
                                                 </select>
@@ -723,14 +402,15 @@
                                         <div class="datetime-row">
                                             <div class="dt-field icon-field">
                                                 <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-                                                <input id="end" name="dropoff_date" type="text" placeholder="{{ __('Date') }}" 
-                                                    class="flatpickr-input" value="{{ $dropoffDate }}" required>
+                                                <input id="end" name="dropoff_date" type="text"
+                                                       placeholder="{{ __('Date') }}" class="flatpickr-input"
+                                                       value="{{ $dropoffDate }}" required>
                                             </div>
                                             <div class="dt-field icon-field time-field">
                                                 <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
                                                 <select name="dropoff_h" required class="time-select">
                                                     <option value="" disabled {{ empty($dh) ? 'selected' : '' }}>{{ __('Time') }}</option>
-                                                    @foreach($horasDropdown as $hh)
+                                                    @foreach ($horasDropdown as $hh)
                                                         <option value="{{ $hh }}" {{ $hh === $dh ? 'selected' : '' }}>{{ $hh }}:00</option>
                                                     @endforeach
                                                 </select>
@@ -750,7 +430,6 @@
                 @endif
 
                 {{-- ===================== STEP 2 ===================== --}}
-
                 @if ($step === 2)
                     <header class="wizard-head">
                         <h2>{{ __('Select your category') }}</h2>
@@ -759,10 +438,11 @@
 
                     <div class="cars">
                         @forelse($categorias as $cat)
-                            <article class="car-card car-card--v2 {{ (string)request('categoria_id') === (string)$cat->id_categoria ? 'active' : '' }}"
-                                data-prepago-dia="{{ $cat->precio_dia }}" 
+                            <article
+                                class="car-card car-card--v2 {{ (string) request('categoria_id') === (string) $cat->id_categoria ? 'active' : '' }}"
+                                data-prepago-dia="{{ $cat->precio_dia }}"
                                 data-mostrador-dia="{{ round($cat->precio_dia * 1.25) }}"
-                                data-price-mxn="{{ $cat->prepago_total }}" 
+                                data-price-mxn="{{ $cat->prepago_total }}"
                                 data-old-price-mxn="{{ $cat->mostrador_total }}">
 
                                 <div class="car-body">
@@ -777,7 +457,12 @@
                                     <div class="car-sub">{{ $cat->descripcion ?? __('Car or similar.') }}</div>
 
                                     <div class="car-hero">
-                                        <img class="car-hero-img" src="{{ $cat->img_url }}" alt="{{ $cat->nombre }}">
+                                        <img class="car-hero-img"
+                                             src="{{ $cat->img_url }}"
+                                             alt="{{ $cat->nombre }}"
+                                             loading="lazy"
+                                             decoding="async"
+                                             width="320" height="200">
                                     </div>
 
                                     <div class="car-features">
@@ -786,14 +471,11 @@
                                             <li title="{{ __('Small suitcases') }}"><i class="fa-solid fa-suitcase-rolling"></i> {{ $cat->s_luggage }}</li>
                                             <li title="{{ __('Large suitcases') }}"><i class="fa-solid fa-briefcase"></i> {{ $cat->b_luggage }}</li>
                                             <li title="{{ __('Transmission') }}"><span class="spec-letter">T | {{ $cat->transmision_txt }}</span></li>
-                                            
-                                            {{-- Aire acondicionado --}}
-                                            @if($cat->tiene_ac)
+                                            @if ($cat->tiene_ac)
                                                 <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i> <span class="spec-letter">A/C</span></li>
                                             @endif
                                         </ul>
 
-                                        {{-- Conectividad (Apple CarPlay y Android Auto) --}}
                                         <div class="car-connect">
                                             @if ($cat->tiene_carplay)
                                                 <span class="badge-chip badge-apple" title="Apple CarPlay">
@@ -801,7 +483,6 @@
                                                     CarPlay
                                                 </span>
                                             @endif
-
                                             @if ($cat->tiene_android)
                                                 <span class="badge-chip badge-android" title="Android Auto">
                                                     <span class="icon-badge"><i class="fa-brands fa-android"></i></span>
@@ -814,18 +495,20 @@
                                     <div class="car-price car-price--v2">
                                         <div class="price-old">${{ number_format($cat->mostrador_total, 0) }} MXN</div>
                                         <div class="price-new">$<span class="js-prepago-total">{{ number_format($cat->prepago_total, 0) }}</span> MXN</div>
-                                        
+
                                         @if ($cat->ahorro_pct > 0)
                                             <div class="price-save">{{ __('Save') }} <strong class="js-ahorro">{{ $cat->ahorro_pct }}</strong>%</div>
                                         @endif
-                                        
-                                        <a class="btn-pay primary" href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3, 'categoria_id' => $cat->id_categoria, 'plan' => 'linea'])) }}">
+
+                                        <a class="btn-pay primary"
+                                           href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3, 'categoria_id' => $cat->id_categoria, 'plan' => 'linea'])) }}">
                                             {{ __('PREPAY ONLINE') }}
                                         </a>
-                                        
+
                                         <div class="office-wrap">
                                             <div class="office-price">$<span class="js-mostrador-total">{{ number_format($cat->mostrador_total, 0) }}</span> MXN</div>
-                                            <a class="btn-pay gray" href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3, 'categoria_id' => $cat->id_categoria, 'plan' => 'mostrador'])) }}">
+                                            <a class="btn-pay gray"
+                                               href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3, 'categoria_id' => $cat->id_categoria, 'plan' => 'mostrador'])) }}">
                                                 {{ __('PAY AT OFFICE') }}
                                             </a>
                                         </div>
@@ -838,13 +521,14 @@
                     </div>
 
                     <div class="wizard-nav">
-                        <a class="btn btn-ghost" href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 1])) }}">{{ __('Previous') }}</a>
-                        <a class="btn btn-primary" href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3])) }}">{{ __('Next') }}</a>
+                        <a class="btn btn-ghost"
+                           href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 1])) }}">{{ __('Previous') }}</a>
+                        <a class="btn btn-primary"
+                           href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 3])) }}">{{ __('Next') }}</a>
                     </div>
                 @endif
 
                 {{-- ===================== STEP 3 ===================== --}}
-
                 @if ($step === 3)
                     <header class="wizard-head">
                         <h2>{{ __('Select the additional options you want') }}</h2>
@@ -854,17 +538,16 @@
                     <input type="hidden" id="addonsHidden" value="{{ $filters['addons'] ?? '' }}">
 
                     <div class="step3-wrap">
-                        
-                        {{-- SECCIÓN PROTECCIONES --}}
+
+                        {{-- ===================== SECCIÓN PROTECCIONES ===================== --}}
                         <section class="step3-section">
                             <div class="step3-title">{{ __('Liability waivers (Protections)') }}
                                 <button type="button" class="step3-info" id="info-protecciones-step3" title="{{ __('More information') }}">
                                     <i class="fa-solid fa-circle-info"></i>
                                 </button>
                             </div>
-                            
+
                             <div class="prot-grid">
-                                {{-- Protección 1: Básica --}}
                                 <div class="prot-card">
                                     <div class="prot-top">
                                         <div class="prot-icon is-on"><i class="fa-solid fa-shield"></i></div>
@@ -876,21 +559,18 @@
                                     </div>
                                 </div>
 
-                                {{-- Protección 2: ADICIONAL --}}
                                 <div class="prot-card">
                                     <div class="prot-top">
                                         <div class="prot-icon"><i class="fa-solid fa-shield-halved"></i></div>
                                         <div>
                                             <p class="prot-name">{{ __('Additional protections') }}</p>
-                                            <p class="prot-desc">
-                                                {{ __('You choose the level of liability for the vehicle that best fits your needs and budget. Ask about our waivers (optional) when you arrive at any of our branches.') }}
-                                            </p>
+                                            <p class="prot-desc">{{ __('You choose the level of liability for the vehicle that best fits your needs and budget. Ask about our waivers (optional) when you arrive at any of our branches.') }}</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {{-- MODAL DE PROTECCIONES REINTEGRADO --}}
+                            {{-- MODAL DE PROTECCIONES --}}
                             <div id="modalProteccionesStep3" class="modal-s3" aria-hidden="true">
                                 <div class="card">
                                     <button type="button" class="x" id="closeProteccionesStep3" aria-label="{{ __('Close') }}">
@@ -902,15 +582,9 @@
 
                                     <div class="s3-body-scroll">
                                         <div class="s3-info-top">
-                                            <p>
-                                                <strong>{{ __('VIAJERO') }}</strong> {{ __('offers different types of optional Liability Waivers (Protections) available for an additional daily fee, which can be purchased when booking or on the rental day.') }}
-                                            </p>
-                                            <p>
-                                                {{ __('The customer is responsible for any damage or theft of the VIAJERO vehicle subject to certain exclusions contained in the rental agreement. VIAJERO will waive or limit the customer\'s liability by purchasing any of these.') }}
-                                            </p>
-                                            <p style="margin-bottom:0;">
-                                                {{ __('Customers booking using their Wizard Number will see the coverage and insurance preferences selected in their profile. You can also visit a branch or call') }} <strong>01 (442) 303 2668</strong> {{ __('for assistance.') }}
-                                            </p>
+                                            <p><strong>{{ __('VIAJERO') }}</strong> {{ __('offers different types of optional Liability Waivers (Protections) available for an additional daily fee, which can be purchased when booking or on the rental day.') }}</p>
+                                            <p>{{ __('The customer is responsible for any damage or theft of the VIAJERO vehicle subject to certain exclusions contained in the rental agreement. VIAJERO will waive or limit the customer\'s liability by purchasing any of these.') }}</p>
+                                            <p style="margin-bottom:0;">{{ __('Customers booking using their Wizard Number will see the coverage and insurance preferences selected in their profile. You can also visit a branch or call') }} <strong>01 (442) 303 2668</strong> {{ __('for assistance.') }}</p>
                                         </div>
 
                                         {{-- LDW PACK --}}
@@ -1001,7 +675,7 @@
                             </div>
                         </section>
 
-                        {{-- SECCIÓN EQUIPAMIENTO (Solo Silla, Gasolina y Conductor) --}}
+                        {{-- ===================== SECCIÓN EQUIPAMIENTO ===================== --}}
                         <section class="step3-section">
                             <div class="step3-title">
                                 {{ __('Equipment & Services') }}
@@ -1010,20 +684,46 @@
 
                             <div class="equip-grid">
                                 @forelse($serviciosFiltrados as $srv)
-                                    <div class="addon-card" 
-                                        data-id="{{ $srv->id_servicio }}" 
-                                        data-name="{{ $srv->nombre }}" 
-                                        data-price="{{ (float) $srv->precio }}"
-                                        data-gasolina="{{ str_contains(strtolower($srv->nombre), 'prepaid fuel') ? 1 : 0 }}"
-                                        data-charge="{{ $srv->tipo_cobro ?? 'por_evento' }}" 
-                                        data-max="3">
-                                        
+                                    @php
+                                        $locale = app()->getLocale();
+                                        $isUSD = $locale === 'en';
+                                        $rate = 20;
+                                        $nombreLower = strtolower($srv->nombre);
+                                        $esGasolina = str_contains($nombreLower, 'prepaid fuel') || str_contains($nombreLower, 'gasolina');
+                                        $esConductor = str_contains($nombreLower, 'driver') || str_contains($nombreLower, 'conductor');
+
+                                        if ($esGasolina) {
+                                            $precioMostrar = $srv->precio_total_tanque ?? (float) $srv->precio * ($capacidadTanque ?? 50);
+                                            $unidad = '';
+                                        } else {
+                                            $precioMostrar = (float) $srv->precio;
+                                            if ($esConductor) {
+                                                $unidad = __('/driver per day');
+                                            } else {
+                                                $unidad = match ($srv->tipo_cobro) {
+                                                    'por_dia' => __('/day'),
+                                                    default => __('/event'),
+                                                };
+                                            }
+                                        }
+
+                                        $monto = $isUSD ? $precioMostrar / $rate : $precioMostrar;
+                                        $moneda = $isUSD ? 'USD' : 'MXN';
+                                        $formato = $isUSD ? number_format($monto, 2) : number_format($monto, 0);
+                                    @endphp
+
+                                    <div class="addon-card" data-id="{{ $srv->id_servicio }}"
+                                         data-name="{{ $srv->nombre }}"
+                                         data-price="{{ (float) $srv->precio }}"
+                                         data-gasolina="{{ $esGasolina ? 1 : 0 }}"
+                                         data-charge="{{ $srv->tipo_cobro ?? 'por_evento' }}"
+                                         data-max="3">
+
                                         <div class="addon-top">
                                             <div class="addon-ico"><i class="{{ $srv->icon }}"></i></div>
                                             <div style="flex:1;">
                                                 <div class="addon-headline">
                                                     <h4 class="addon-name">{{ __($srv->nombre) }}</h4>
-                                                    
                                                     <span class="addon-help-wrap" tabindex="0">
                                                         <button type="button" class="addon-help-btn" aria-label="{{ __('More information') }}">
                                                             <i class="fa-solid fa-info"></i>
@@ -1034,35 +734,13 @@
                                                 <p>{{ __($srv->descripcion) }}</p>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="addon-price">
-                                            @php
-                                                $locale = app()->getLocale();
-                                                $isUSD = $locale === 'en';
-                                                $rate = 20;
-                                                
-                                                $precio = (float) $srv->precio;
-                                                $monto = $isUSD ? $precio / $rate : $precio;
-                                                $moneda = $isUSD ? 'USD' : 'MXN';
-                                                $formato = $isUSD ? number_format($monto, 2) : number_format($monto, 0);
-                                                
-                                                $nombreLower = strtolower($srv->nombre);
-                                            
-                                                if (str_contains($nombreLower, 'driver') || str_contains($nombreLower, 'conductor')) {
-                                                    $unidad = __('/driver per day');
-                                                } else {
-                                                    $unidad = match($srv->tipo_cobro) {
-                                                        'por_tanque' => __('/tank'),
-                                                        'por_dia'    => __('/day'),
-                                                        default      => __('/event'),
-                                                    };
-                                                }
-                                            @endphp
                                             <strong>${{ $formato }}</strong> {{ $moneda }} {{ $unidad }}
                                         </div>
 
                                         <div class="addon-qty">
-                                            @if (str_contains($nombreLower, 'prepaid fuel') || str_contains($nombreLower, 'gasolina'))
+                                            @if ($esGasolina)
                                                 <label class="switch">
                                                     <input type="checkbox" class="gasolina-switch">
                                                     <span class="slider"></span>
@@ -1085,18 +763,28 @@
                     </div>
 
                     <div class="wizard-nav">
-                        <a class="btn btn-ghost" href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 2])) }}">{{ __('Previous') }}</a>
-                        <a class="btn btn-primary" id="toStep4" href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 4])) }}">{{ __('Next') }}</a>
+                        <a class="btn btn-ghost"
+                           href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 2])) }}">{{ __('Previous') }}</a>
+                        <a class="btn btn-primary" id="toStep4"
+                           href="{{ route('rutaReservasIniciar', array_merge($baseParams, ['step' => 4])) }}">{{ __('Next') }}</a>
                     </div>
                 @endif
 
                 {{-- ===================== STEP 4 ===================== --}}
-
                 @if ($step === 4)
                     <input type="hidden" id="addonsHidden" value="{{ $filters['addons'] ?? '' }}">
+                    <div id="loaderReserva" class="loader-reserva-overlay" style="display:none;">
+                        <div class="loader-reserva-card">
+                            <img src="{{ asset('img/Carga.svg') }}" alt="Procesando reserva">
+
+                            <p id="loaderReservaTexto">
+                                Procesando tu reservación...
+                            </p>
+                        </div>
+                    </div>
 
                     <div class="step4-layout">
-                        
+
                         {{-- ===================== PANE IZQUIERDO (FORMULARIO) ===================== --}}
                         <div class="step4-pane">
                             <form class="sum-form" id="formCotizacion" onsubmit="return false;" novalidate>
@@ -1106,12 +794,10 @@
                                 <input type="hidden" name="categoria_id" id="categoria_id" value="{{ $categoriaId ?? '' }}">
                                 <input type="hidden" name="plan" id="plan" value="{{ $plan ?? '' }}">
                                 <input type="hidden" name="addons" id="addons_payload" value="{{ $filters['addons'] ?? '' }}">
-
                                 <input type="hidden" name="pickup_date" id="pickup_date" value="{{ $pickupDate ?? '' }}">
                                 <input type="hidden" name="pickup_time" id="pickup_time" value="{{ $pickupTime ?? '' }}">
                                 <input type="hidden" name="dropoff_date" id="dropoff_date" value="{{ $dropoffDate ?? '' }}">
                                 <input type="hidden" name="dropoff_time" id="dropoff_time" value="{{ $dropoffTime ?? '' }}">
-
                                 <input type="hidden" name="pickup_sucursal_id" id="pickup_sucursal_id" value="{{ $pickupSucursalId ?? '' }}">
                                 <input type="hidden" name="dropoff_sucursal_id" id="dropoff_sucursal_id" value="{{ $dropoffSucursalId ?? '' }}">
 
@@ -1119,7 +805,8 @@
 
                                 <div class="sum-personal-grid">
                                     <div class="field field-floating" style="grid-column: 1 / -1;">
-                                        <input type="text" class="input-centered" name="nombre_completo" id="nombreCompleto" autocomplete="name" placeholder=" " required>
+                                        <input type="text" class="input-centered" name="nombre_completo"
+                                               id="nombreCompleto" autocomplete="name" placeholder=" " required>
                                         <label for="nombreCompleto">{{ __('Full name') }}</label>
                                         <input type="hidden" name="nombre" id="nombreCliente">
                                         <input type="hidden" name="apellido" id="apellidoCliente">
@@ -1136,17 +823,19 @@
                                     </div>
 
                                     <div class="field field-floating">
-                                        <select name="pais" id="pais" required style="width: 100%; height: 50px; border: 1px solid #d1d5db; border-radius: 8px; padding: 0 12px; background-color: #fff; font-size: 16px; outline: none; margin-top: 18px;">
+                                        <select name="pais" id="pais" required
+                                                style="width: 100%; height: 50px; border: 1px solid #d1d5db; border-radius: 8px; padding: 0 12px; background-color: #fff; font-size: 16px; outline: none; margin-top: 18px;">
                                             <option value="" disabled selected></option>
-                    
                                             @foreach ($paises->where('prioritario', true) as $pais)
-                                                <option value="{{ $pais->nombre }}">{{ $isUSD ? ($pais->nombre_en ?? $pais->nombre) : $pais->nombre }}</option>
+                                                <option value="{{ $pais->nombre }}">
+                                                    {{ $isUSD ? $pais->nombre_en ?? $pais->nombre : $pais->nombre }}
+                                                </option>
                                             @endforeach
-                                            
                                             <option disabled>──────────</option>
-                                            
                                             @foreach ($paises->where('prioritario', false) as $pais)
-                                                <option value="{{ $pais->nombre }}">{{ $isUSD ? ($pais->nombre_en ?? $pais->nombre) : $pais->nombre }}</option>
+                                                <option value="{{ $pais->nombre }}">
+                                                    {{ $isUSD ? $pais->nombre_en ?? $pais->nombre : $pais->nombre }}
+                                                </option>
                                             @endforeach
                                         </select>
                                         <label for="pais" style="top: 0; transform: translateY(-50%) scale(0.8); background: #fff; padding: 0 4px;">{{ __('Country') }}</label>
@@ -1186,7 +875,6 @@
                                         <input type="hidden" id="dob" name="dob">
                                     </div>
 
-                                    {{-- Vuelo (Si es aeropuerto) --}}
                                     @if ($isAirport)
                                         <div class="field field-floating" style="grid-column: 1 / -1;">
                                             <input type="text" name="vuelo" id="vuelo" placeholder=" ">
@@ -1212,13 +900,30 @@
                                 </div>
 
                                 <div class="wizard-nav" style="margin-top:10px;">
-                                    <button id="btnReservar" type="button" class="btn btn-primary">{{ __('Book') }}</button>
+                                    <button id="btnReservar" type="button" class="btn btn-primary"
+                                            data-click-text="Reservar"
+                                            data-click-id="btn-reservar"
+                                            aria-label="Reservar">
+                                        {{ __('Book') }}
+                                    </button>
                                 </div>
 
                                 <div class="pay-logos" style="display: flex; justify-content: center; gap: 40px; align-items: center; flex-wrap: wrap; margin-top: 20px;">
-                                    <img src="{{ asset('img/american.png') }}" alt="Amex" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
-                                    <img src="{{ asset('img/paypal.png') }}" alt="PayPal" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
-                                    <img src="{{ asset('img/oxxo.png') }}" alt="Oxxo" onerror="this.style.display='none'" style="height: 30px; object-fit: contain;">
+                                    <img src="{{ asset('img/american.webp') }}" alt="Amex"
+                                         loading="lazy" decoding="async"
+                                         width="60" height="30"
+                                         onerror="this.style.display='none'"
+                                         style="height: 30px; object-fit: contain;">
+                                    <img src="{{ asset('img/paypal.webp') }}" alt="PayPal"
+                                         loading="lazy" decoding="async"
+                                         width="80" height="30"
+                                         onerror="this.style.display='none'"
+                                         style="height: 30px; object-fit: contain;">
+                                    <img src="{{ asset('img/oxxo.webp') }}" alt="Oxxo"
+                                         loading="lazy" decoding="async"
+                                         width="60" height="30"
+                                         onerror="this.style.display='none'"
+                                         style="height: 30px; object-fit: contain;">
                                 </div>
 
                                 {{-- Modal Métodos de Pago --}}
@@ -1244,7 +949,7 @@
                                 </div>
                             </form>
                         </div>
-                        
+
                         {{-- ===================== PANE DERECHO (RESUMEN) ===================== --}}
                         <div class="step4-pane">
                             <div class="sum-compact" aria-label="{{ __('Compact summary') }}">
@@ -1281,9 +986,12 @@
                                 <h4 class="sum-subtitle" id="tuAutoSection" style="margin-top:14px;">{{ __('Your vehicle') }}</h4>
                                 <div class="sum-car" style="margin-top:10px; display:flex; gap:20px; align-items:center;">
                                     <div class="sum-car-img">
-                                        <img src="{{ $categoriaImg ?? asset('img/Logotipo.png') }}" alt="{{ __('Car') }}"
-                                            onerror="this.onerror=null;this.src='{{ asset('img/Logotipo.png') }}';"
-                                            style="width:200px; border-radius:14px;">
+                                        <img src="{{ $categoriaImg ?? asset('img/Logotipo.webp') }}"
+                                             alt="{{ __('Car') }}"
+                                             loading="lazy" decoding="async"
+                                             width="200" height="120"
+                                             onerror="this.onerror=null;this.src='{{ asset('img/Logotipo.webp') }}';"
+                                             style="width:200px; border-radius:14px;">
                                     </div>
 
                                     <div class="sum-car-info" style="flex:1;">
@@ -1304,18 +1012,13 @@
                                             <div class="car-connect">
                                                 @if ($categoriaSel->tiene_carplay ?? true)
                                                     <span class="badge-chip badge-apple" title="Apple CarPlay">
-                                                        <span class="icon-badge">
-                                                            <i class="fa-brands fa-apple"></i>
-                                                        </span>
+                                                        <span class="icon-badge"><i class="fa-brands fa-apple"></i></span>
                                                         CarPlay
                                                     </span>
                                                 @endif
-
                                                 @if ($categoriaSel->tiene_android ?? true)
                                                     <span class="badge-chip badge-android" title="Android Auto">
-                                                        <span class="icon-badge">
-                                                            <i class="fa-brands fa-android"></i>
-                                                        </span>
+                                                        <span class="icon-badge"><i class="fa-brands fa-android"></i></span>
                                                         Android Auto
                                                     </span>
                                                 @endif
@@ -1325,14 +1028,14 @@
                                 </div>
 
                                 <h4 class="sum-subtitle" style="margin-top:16px;">{{ __('Price details') }}</h4>
-                                <div class="sum-table" id="cotizacionDoc" 
-                                    data-base="{{ $tarifaBase ?? 0 }}"
-                                    data-days="{{ $days ?? 1 }}" 
-                                    data-pickup="{{ $pickupSucursalId ?? '' }}"
-                                    data-dropoff="{{ $dropoffSucursalId ?? '' }}" 
-                                    data-km="{{ $dropoffKm ?? 0 }}"
-                                    data-costokm="{{ $costoKmCategoria ?? 0 }}" 
-                                    data-tanque="{{ $capacidadTanque ?? 0 }}">
+                                <div id="cotizacionDoc"
+                                     data-base="{{ $tarifaBase }}"
+                                     data-days="{{ $days }}"
+                                     data-pickup="{{ $pickupSucursalId }}"
+                                     data-dropoff="{{ $dropoffSucursalId }}"
+                                     data-km="{{ $dropoffKm }}"
+                                     data-costokm="{{ $costoKmCategoria }}"
+                                     data-tanque="{{ $capacidadTanque ?? 50 }}">
 
                                     <details class="sum-acc">
                                         <summary class="sum-bar">
@@ -1340,32 +1043,23 @@
                                             <strong id="qBase">{{ $tarifaBaseFormateada }}</strong>
                                             <i class="sum-caret fa-solid fa-chevron-down" aria-hidden="true"></i>
                                         </summary>
-
                                         <div class="sum-acc-body">
-                                            {{-- Detalle de días --}}
                                             <div class="row row-base">
-                                                <span>
-                                                    {{ $days ?? 1 }} {{ __('day(s) - price per day') }} {{ $precioDiaFormateado }}
-                                                </span>
+                                                <span>{{ $days ?? 1 }} {{ __('day(s) - price per day') }} {{ $precioDiaFormateado }}</span>
                                             </div>
-
-                                            {{-- Fila del Total de Base --}}
                                             <div class="row row-base-total">
                                                 <span class="row-total-label">{{ __('Total') }}:</span>
                                                 <strong>{{ $tarifaBaseFormateada }}</strong>
                                             </div>
-
-                                            {{-- Sección de Incluidos --}}
                                             <div class="col-12 mt-2">
                                                 <div class="linea-incluido-box">
                                                     <p class="incluido-text">
                                                         <strong>{{ __('INCLUDED') }}</strong>
                                                         <i class="fa-solid fa-circle-question" id="info-protecciones"
-                                                            style="cursor: pointer; color: #b22222; margin-left: 5px; font-size: 1.1rem; vertical-align: middle;"></i>
+                                                           style="cursor: pointer; color: #b22222; margin-left: 5px; font-size: 1.1rem; vertical-align: middle;"></i>
                                                     </p>
                                                 </div>
                                             </div>
-
                                             <div class="row row-included" style="border-top:0;">
                                                 <span class="inc-items">
                                                     <span class="inc-item"><span class="inc-check">✔</span> {{ __('Unlimited mileage') }}</span>
@@ -1375,11 +1069,11 @@
                                         </div>
                                     </details>
 
-                                    {{-- MODAL DE PROTECCIONES --}}
+                                    {{-- MODAL DE PROTECCIONES (Step 4) --}}
                                     <div id="modalProtecciones" class="modal-global-viajero" style="display:none;">
                                         <div class="modal-global-content">
                                             <span class="cerrar-modal-v">&times;</span>
-                                            
+
                                             <h2 class="modal-v-header-title">{{ __('Liability waivers (Protections)') }}</h2>
                                             <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
 
@@ -1389,9 +1083,7 @@
                                                 </div>
                                                 <div>
                                                     <strong class="modal-v-titulo-negro">{{ __('LIMITED THIRD-PARTY LIABILITY PROTECTION (LI)') }}</strong>
-                                                    <p class="modal-v-texto-gris">
-                                                        {{ __('Protects third parties for damages and injuries caused in an accident and covers the minimum amount required by law.') }}
-                                                    </p>
+                                                    <p class="modal-v-texto-gris">{{ __('Protects third parties for damages and injuries caused in an accident and covers the minimum amount required by law.') }}</p>
                                                 </div>
                                             </div>
 
@@ -1458,8 +1150,8 @@
         </div>{{-- /fondos-reservaciones --}}
     </main>
 
-    {{-- TARJETA RESPONSIVA --}}
-    @if ($stepCurrent === 4)
+    {{-- ===================== TARJETA RESPONSIVA + MODAL PAGO ONLINE (solo Step 4) ===================== --}}
+    @if ($step === 4)
         <div class="movil-footer-sticky">
             <div class="movil-total-wrapper">
                 <span class="movil-total-label">{{ __('Total') }}</span>
@@ -1467,7 +1159,10 @@
                     ${{ number_format($tarifaBase, 0) }} MXN
                 </span>
             </div>
-            <button type="button" id="btnReservarMovil" class="btn-reservar-movil">
+            <button type="button" id="btnReservarMovil" class="btn-reservar-movil"
+                    data-click-text="Reservar"
+                    data-click-id="btn-reservar-movil"
+                    aria-label="Reservar">
                 {{ __('Book') }}
             </button>
         </div>
@@ -1477,7 +1172,6 @@
             <div class="modal-card">
                 <button id="cerrarModalPagoOnline" class="modal-close" type="button">×</button>
 
-                <!-- HEADER -->
                 <div class="modal-linea-head">
                     <span class="modal-linea-badge">
                         <i class="fa-regular fa-credit-card"></i> {{ __('Secure payment') }}
@@ -1488,7 +1182,6 @@
 
                 <div class="modal-linea-scrollable">
                     <div class="modal-linea-body">
-                        <!-- Contenedor de PayPal -->
                         <div id="paypal-button-container">
                             <div class="modal-linea-loading">
                                 <i class="fa-regular fa-credit-card"></i>
@@ -1500,7 +1193,7 @@
                 <div class="modal-linea-security">
                     <i class="fa-regular fa-lock"></i>
                     <span>{{ __('Secure payment processed by PayPal') }}</span>
-                    <i class="fa-regular fa-shield-haltered"></i>
+                    <i class="fa-solid fa-shield-halved"></i>
                 </div>
             </div>
         </div>
@@ -1512,24 +1205,26 @@
 
     @php
         $paypalMode = env('PAYPAL_MODE', 'live');
-        $paypalClientId =
-            $paypalMode === 'live'
-                ? env('PAYPAL_CLIENT_ID_LIVE')
-                : env('PAYPAL_CLIENT_ID_SANDBOX', env('PAYPAL_CLIENT_ID_LIVE'));
+        $paypalClientId = $paypalMode === 'live'
+            ? env('PAYPAL_CLIENT_ID_LIVE')
+            : env('PAYPAL_CLIENT_ID_SANDBOX', env('PAYPAL_CLIENT_ID_LIVE'));
     @endphp
 
-    {{-- libs (defer) --}}
-    <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/es.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/plugins/rangePlugin.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+    {{-- ✅ flatpickr SOLO en Step 1 (donde se usa el calendario) --}}
+    @if ($step === 1)
+        <script defer src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+    @endif
 
-    {{-- tus JS locales (defer) --}}
+    {{-- ✅ JS principal en todos los steps --}}
     <script defer src="{{ asset('js/reservaciones.js') }}"></script>
-    <script defer src="{{ asset('js/BtnReserva.js') }}"></script>
-    <script defer src="{{ asset('js/BtnReservaLinea.js') }}"></script>
-    <script>
 
+    {{-- ✅ Botones de reserva SOLO en Step 4 --}}
+    @if ($step === 4)
+        <script defer src="{{ asset('js/BtnReserva.js') }}"></script>
+        <script defer src="{{ asset('js/BtnReservaLinea.js') }}"></script>
+    @endif
+
+    <script>
         window.PAYPAL_MODE = "{{ $paypalMode }}";
         window.PAYPAL_CLIENT_ID = "{{ $paypalClientId }}";
 
@@ -1539,7 +1234,6 @@
         // ============================================================
         // TRADUCCIONES PARA EL JS DE RESERVACIÓN
         // ============================================================
-
         window.translations = {
             // Mensajes de error/validación
             cannot_proceed: "{{ __('We cannot proceed.') }}",
@@ -1569,7 +1263,6 @@
             go_to_homepage: "{{ __('Go to homepage') }}",
             reservation_success_fallback: "{{ __('Reservation registered successfully. Check your confirmation email.') }}",
         };
-        
     </script>
 
 @endsection

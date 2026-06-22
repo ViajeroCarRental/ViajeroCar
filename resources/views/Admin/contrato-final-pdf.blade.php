@@ -1270,7 +1270,7 @@ if (!empty($reservacion->fecha_fin)) {
       Declaro bajo protesta de decir verdad, haber recibido el auto descrito en el apartado de salida y
       acepto las condiciones generales al inicio de la renta, así mismo entiendo y acepto las condiciones
       del tratamiento de mis datos personales como se describe en el aviso de privacidad que se encuentra
-      a mi disposición en: https://www.viajerocarental.mx/
+      a mi disposición en: https://www.viajerocarental.com
     </div>
 
     <div class="final-firma">

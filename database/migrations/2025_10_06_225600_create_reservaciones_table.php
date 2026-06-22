@@ -25,7 +25,7 @@ return new class extends Migration {
             $table->date('fecha_fin');
             $table->time('hora_entrega')->nullable();
 
-            $table->enum('estado', ['hold','pendiente_pago','confirmada','cancelada','expirada'])
+            $table->enum('estado', ['hold','pendiente_pago','prepago','confirmada','cancelada','expirada'])
                   ->default('hold');
 
             $table->boolean('aprobado_por_superadmin')->default(false);
@@ -49,6 +49,7 @@ return new class extends Migration {
             $table->string('apellidos_cliente', 120)->nullable(); // ✅ faltaba
             $table->string('email_cliente', 120)->nullable();
             $table->string('telefono_cliente', 40)->nullable();
+            $table->string('comentarios', 100)->nullable();
 
             $table->string('paypal_order_id', 100)->nullable();
             $table->string('status_pago', 50)->default('Pendiente');

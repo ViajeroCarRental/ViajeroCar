@@ -2,1080 +2,995 @@
 @section('Titulo', 'cotizacionesAdmin')
 
 @section('css-vistaCotizar')
-<link rel="stylesheet" href="{{ asset('css/Cotizar.css') }}">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/Cotizar.css') }}">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 @endsection
 
 @section('contenidoCotizar')
 
+@php
+  $edit = isset($cotizacion) && !empty($cotizacion->id_cotizacion);
+@endphp
+
 <div class="wrap">
   <main class="main">
 
-    <!-- =========================================
-         ENCABEZADO
-    ========================================= -->
     <div class="top">
-      <h1 class="h1">Nueva cotización</h1>
+      <h1 class="h1"><i class="fas fa-plus-circle"></i> Nueva cotización</h1>
+
       <div class="top-actions">
         <button class="btn btn-resumen" id="btnResumen" type="button">
-          <span class="pulse-dot"></span> 🧾 Ver resumen de cotización
+            <span class="pulse-dot"></span> <i class="fas fa-money-bill-wave"></i>
+            <span id="btnTotalText">Total: $0.00 MXN</span>
         </button>
-        <button class="btn ghost" onclick="location.href='{{ route('rutaCotizaciones') }}'">Salir</button>
+        <button class="btn ghost" onclick="location.href='{{ route('rutaCotizaciones') }}'"><i class="fas fa-sign-out-alt"></i> Salir</button>
       </div>
     </div>
 
-   <form id="formCotizacion" action="{{ route('rutaGuardarCotizacion') }}" method="POST" novalidate>
-      @csrf
-      <input type="hidden" id="categoria_id" name="categoria_id" value="">
+    <form
+  id="formCotizacion"
+  action="{{ $edit
+      ? route('cotizaciones.update', $cotizacion->id_cotizacion ?? '')
+      : route('rutaGuardarCotizacion') }}"
+  method="POST"
+   novalidate
+>
+  @csrf
+
+  @if($edit)
+    @method('PUT')
+  @endif
+
+      {{-- Hidden "state" --}}
+      <input type="hidden" id="categoria_id" name="categoria_id"
+      value="{{ $cotizacion->id_categoria ?? '' }}">
       <input type="hidden" id="proteccion_id" name="proteccion_id" value="">
-      <input type="hidden" id="tarifa_base" name="tarifa_base" value="">
-      <input type="hidden" id="tarifa_modificada" name="tarifa_modificada" value="">
-      <input type="hidden" id="tarifa_ajustada" name="tarifa_ajustada" value="0">
+      <div id="addonsHidden"></div>
 
-      <div id="extrasHidden"></div>
-      <div id="individualesHidden"></div>
+      {{-- ✅ FIX: ciudades (FK -> id_ciudad) --}}
+      <input type="hidden" id="ciudad_retiro"  name="ciudad_retiro"  value="">
+      <input type="hidden" id="ciudad_entrega" name="ciudad_entrega" value="">
 
-      <!-- =========================================
-           PASO 1: UBICACIÓN
-      ========================================= -->
-      <section class="stack-card">
-        <div class="stack-head">
-          <div class="stack-title">📍 Ubicación</div>
-          <div class="stack-sub">Selecciona dónde se recoge y se entrega el vehículo.</div>
+      {{-- ✅ Servicios (switch) --}}
+      <input type="hidden" id="svc_dropoff"  name="svc_dropoff"  value="0">
+      <input type="hidden" id="svc_delivery" name="svc_delivery" value="0">
+      <input type="hidden" id="svc_gasolina" name="svc_gasolina" value="0">
+
+      {{-- ✅ Precio por litro (Gasolina prepago) -> lo usa el JS --}}
+      <input type="hidden" id="gasolinaPrecioLitro" value="24">
+
+      {{-- Hidden wrap para individuales --}}
+      <div id="insHidden"></div>
+
+      {{-- ✅ Teléfono final (backend) --}}
+      <input type="hidden" id="telefono_cliente" name="telefono_cliente" value="{{ $cotizacion->telefono_cliente ?? '' }}">
+
+      <input type="hidden" id="telefono_lada" name="telefono_lada" value="+52">
+
+{{-- ======================
+     SECCIÓN UNIFICADA - DISEÑO HORIZONTAL
+======================= --}}
+<section class="stack-card">
+    <div class="stack-body">
+        <div class="search-grid-admin">
+
+            {{-- COLUMNA 1: UBICACIÓN --}}
+            <div class="sg-col-location-admin">
+                <div class="location-head-admin">
+                    <span class="field-title-admin">PICK-UP</span>
+                    <label class="inline-check-admin" for="differentDropoffAdmin">
+                        <input type="checkbox" id="differentDropoffAdmin" name="different_dropoff" value="1">
+                        <span>DEVOLVER EN OTRO DESTINO</span>
+                    </label>
+                </div>
+
+                <div class="location-inputs-wrapper-admin">
+                    {{-- SELECT PICKUP --}}
+                <div class="field-admin">
+                    <select id="sucursal_retiro" name="sucursal_retiro" class="input-buscador-admin" required style="padding-left: 40px !important;">
+                        <option value="" disabled selected>¿Dónde comienza tu viaje?</option>
+                        @foreach($sucursales as $ciudad => $grupo)
+                            @if($ciudad === 'Querétaro')
+                                <optgroup label="{{ $ciudad }}">
+                                    @foreach($grupo as $s)
+                                        <option value="{{ $s->id_sucursal }}" data-icon="{{ $s->icono ?? 'fa-location-dot' }}">{{ $s->sucursal }}</option>
+                                    @endforeach
+                                </optgroup>
+                            @endif
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- SELECT DROPOFF (oculto por defecto) --}}
+                <div class="field-admin" id="dropoffWrapperAdmin" style="display: none;">
+                    <select id="sucursal_entrega" name="sucursal_entrega" class="input-buscador-admin" disabled style="padding-left: 40px !important;">
+                        <option value="" disabled selected>¿Dónde termina tu viaje?</option>
+                        @foreach($sucursales as $ciudad => $grupo)
+                            <optgroup label="{{ $ciudad }}">
+                                @foreach($grupo as $s)
+                                    <option value="{{ $s->id_sucursal }}">{{ $s->sucursal }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                </div>
+                </div>
+            </div>
+
+            {{-- COLUMNA 2: FECHAS Y HORAS --}}
+            <div class="sg-col-datetime-admin">
+                {{-- PICKUP --}}
+                <div class="field-admin">
+                    <span class="field-title-admin solo-responsivo-izq">PICK-UP</span>
+                    <div class="datetime-row-admin">
+                        <div class="dt-field-admin icon-field-admin">
+                            <span class="field-icon-admin"><i class="fa-regular fa-calendar-days"></i></span>
+                            <input id="fecha_inicio_ui" class="input-buscador-admin" type="text" placeholder="Fecha" autocomplete="off">
+                            <input id="fecha_inicio" name="fecha_inicio" type="hidden">
+                        </div>
+                        <div class="dt-field-admin icon-field-admin time-field-admin">
+                            <span class="field-icon-admin"><i class="fa-regular fa-clock"></i></span>
+                            <input id="hora_retiro_ui" class="input-buscador-admin" type="text" placeholder="Hora" autocomplete="off">
+                            <input id="hora_retiro" name="hora_retiro" type="hidden">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- DROPOFF --}}
+                <div class="field-admin">
+                    <span class="field-title-admin solo-responsivo-izq">DEVOLUCIÓN</span>
+                    <div class="datetime-row-admin">
+                        <div class="dt-field-admin icon-field-admin">
+                            <span class="field-icon-admin"><i class="fa-regular fa-calendar-days"></i></span>
+                            <input id="fecha_fin_ui" class="input-buscador-admin" type="text" placeholder="Fecha" autocomplete="off">
+                            <input id="fecha_fin" name="fecha_fin" type="hidden">
+                        </div>
+                        <div class="dt-field-admin icon-field-admin time-field-admin">
+                            <span class="field-icon-admin"><i class="fa-regular fa-clock"></i></span>
+                            <input id="hora_entrega_ui" class="input-buscador-admin" type="text" placeholder="Hora" autocomplete="off">
+                            <input id="hora_entrega" name="hora_entrega" type="hidden">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- COLUMNA 3: CONTADOR + BOTÓN --}}
+            <div class="sg-col-submit-admin">
+                <div class="actions-admin">
+                    <button type="button" id="btnBuscarCotizacion" class="btn-buscar-admin">
+                        <i class="fa-solid fa-magnifying-glass"></i> BUSCAR
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{{-- ======================
+       3) CATEGORÍA
+======================= --}}
+<section class="stack-card acordeon-item"
+         data-seccion="categoria"
+         data-siguiente="adicionales">
+
+    <div class="stack-head">
+
+        <div class="stack-title">
+            <i class="fas fa-car"></i>
+            Categoría
         </div>
 
-        <div class="stack-body">
-          <div class="form-2">
-            <!-- RETIRO -->
-            <div>
-              <label>Sucursal de retiro</label>
-              <select id="sucursal_retiro" name="sucursal_retiro" class="input" required>
-                <option value="">Selecciona punto de entrega</option>
-                @foreach($sucursales as $ciudad => $grupo)
-                  @if($ciudad === 'Querétaro')
-                    <optgroup label="{{ $ciudad }} — {{ $ciudad }}">
-                      @foreach($grupo as $s)
-                        <option value="{{ $s->id_sucursal }}"
-                                data-ciudad-id="{{ $s->id_ciudad }}"
-                                data-nombre="{{ $s->sucursal }}">
-                          {{ $s->sucursal }}
-                        </option>
-                      @endforeach
-                    </optgroup>
-                  @endif
-                @endforeach
-              </select>
+        <div class="stack-indicator">
+            <i class="fas fa-chevron-down"></i>
+        </div>
 
-              <!-- CAMPO VUELO -->
-              <div id="campo_vuelo" style="display:none; margin-top:10px;">
-                <label>Número de vuelo</label>
-                <input type="text" name="numero_vuelo" id="numero_vuelo" class="input" placeholder="Ej. AA1234">
+    </div>
+
+    <div class="stack-body">
+
+        {{-- CONTENEDOR DINÁMICO - Todo se genera desde JS --}}
+        <div id="categoriaContainer"></div>
+
+    </div>
+
+</section>
+
+      {{-- ======================
+     4) SERVICIOS / ADICIONALES (CARRUSEL)
+======================= --}}
+@php
+  $deliverySafe = $delivery ?? null;
+  $ubicacionesSafe = $ubicaciones ?? [];
+  $costoKmCategoriaSafe = $costoKmCategoria ?? 0;
+  $idCotizacionSafe = $cotizacion->id_cotizacion ?? null;
+@endphp
+
+<section class="stack-card acordeon-item" data-seccion="adicionales" data-siguiente="protecciones">
+  <div class="stack-head">
+    <div class="stack-title"><i class="fas fa-tools"></i> Adicionales</div>
+    <div class="stack-indicator"><i class="fas fa-chevron-down"></i></div>
+  </div>
+
+  <div class="stack-body">
+
+    {{-- CARRUSEL DE CARDS --}}
+    <div class="adicionales-carousel">
+      <button class="carousel-arrow prev" type="button" aria-label="Anterior">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+
+      <div class="carousel-container">
+        <div class="carousel-track" id="adicionalesTrack">
+
+            {{-- CARD 1: CONDUCTOR ADICIONAL --}}
+          <div class="svc-card svc-card--addon carousel-item" data-id="conductor_extra" data-name="Conductor adicional" data-price="200" data-charge="por_dia">
+            <div class="svc-top">
+              <div class="svc-ico"><i class="fas fa-user-plus"></i></div>
+              <div class="svc-meta">
+                <div class="svc-name">Conductor adicional</div>
               </div>
             </div>
 
-            <!-- ENTREGA -->
-            <div>
-              <label>Sucursal de entrega</label>
-              <select id="sucursal_entrega" name="sucursal_entrega" class="input" required>
-                <option value="">Selecciona punto de devolución</option>
-                @foreach($sucursales as $ciudad => $grupo)
-                  <optgroup label="{{ $ciudad }} — {{ $ciudad }}">
-                    @foreach($grupo as $s)
-                      <option value="{{ $s->id_sucursal }}"
-                              data-ciudad-id="{{ $s->id_ciudad }}"
-                              data-nombre="{{ $s->sucursal }}">
-                        {{ $s->sucursal }}
-                      </option>
-                    @endforeach
-                  </optgroup>
-                @endforeach
-              </select>
+            <div class="svc-bottom">
+              <label class="switch switch-soft">
+                <input type="checkbox" class="addon-toggle" data-addon="conductor_extra">
+                <span class="slider"></span>
+              </label>
             </div>
-          </div>
-        </div>
-      </section>
 
-      <!-- =========================================
-           PASO 2: FECHAS Y HORAS
-      ========================================= -->
-      <section class="stack-card">
+            <div class="svc-addon-expanded" id="conductorExtraExpanded" style="display: none;">
+              <div class="svc-price-row">
+                <div class="price-label">Costo</div>
+                <div class="price-value">$200 MXN <span>/ día</span></div>
+              </div>
+
+              <div class="svc-quantity-row">
+                <div class="quantity-control">
+                  <button class="qty-btn minus" type="button">−</button>
+                  <span class="qty-value" data-qty="1">1</span>
+                  <button class="qty-btn plus" type="button">+</button>
+                  <span class="max-hint">Máx 3</span>
+                </div>
+              </div>
+
+              <div class="svc-total-row">
+                <span>Total Conductor adicional</span>
+                <b class="addon-total">$200.00 MXN</b>
+              </div>
+            </div>
+            <input type="hidden" class="addon-qty-hidden" name="adicionales[conductor_extra]" value="0">
+          </div>
+
+          {{-- CARD 2: GASOLINA PREPAGO --}}
+          <div class="svc-card svc-card--accent carousel-item">
+            <div class="svc-top">
+              <div class="svc-ico"><i class="fas fa-gas-pump"></i></div>
+              <div class="svc-meta">
+                <div class="svc-name">Gasolina prepago</div>
+              </div>
+            </div>
+
+            <div class="svc-bottom">
+              <label class="switch switch-soft">
+                <input type="checkbox" id="gasolinaToggle" data-litros="0" data-costo-litro="20">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="svc-fields" id="gasolinaFields" style="display:none;">
+              <div class="svc-total">
+                <span>Total Gasolina (<span id="litrosLabel">0</span>L)</span>
+                <b id="gasolinaTotal">$0.00 MXN</b>
+              </div>
+            </div>
+            <input type="hidden" name="gasolina_prepago_valor" id="gasolinaTotalHidden" value="0">
+          </div>
+
+          {{-- CARD 3: DROP OFF --}}
+          <div class="svc-card svc-card--accent dropoff-wrapper carousel-item">
+            <div class="svc-top">
+              <div class="svc-ico"><i class="fas fa-flag-checkered"></i></div>
+              <div class="svc-meta">
+                <div class="svc-name">Drop Off</div>
+              </div>
+            </div>
+
+            <div class="svc-bottom">
+              <label class="switch switch-soft">
+                <input type="checkbox" id="dropoffToggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="svc-fields" id="dropoffFields" style="display: none;">
+              <div class="svc-field">
+                <label class="svc-label">Ubicación de devolución</label>
+                <select id="dropUbicacion" class="input">
+                  <option value="">Seleccione...</option>
+                  @foreach($ubicaciones as $u)
+                    <option value="{{ $u->id_ubicacion }}" data-km="{{ $u->km ?? 0 }}">
+                      {{ $u->estado }} - {{ $u->destino }} ({{ $u->km ?? 0 }} km)
+                    </option>
+                  @endforeach
+                  <option value="0">Dirección personalizada</option>
+                </select>
+              </div>
+
+              <div class="svc-field" id="dropGroupDireccion" style="display: none;">
+                <label class="svc-label">Dirección</label>
+                <input type="text" id="dropDireccion" class="input" placeholder="Calle, No, Colonia...">
+              </div>
+
+              <div class="svc-field" id="dropGroupKm" style="display: none;">
+                <label class="svc-label">Kilómetros</label>
+                <input type="number" id="dropKm" class="input" placeholder="0">
+              </div>
+
+              <div class="svc-total">
+                <span>Total Drop Off</span>
+                <b id="dropTotal">$0.00 MXN</b>
+              </div>
+            </div>
+            <input type="hidden" id="dropoffTotalHidden" value="0">
+          </div>
+
+          {{-- CARD 4: DELIVERY --}}
+          <div class="svc-card svc-card--accent delivery-wrapper carousel-item"
+            data-delivery-total="{{ $deliverySafe->total ?? 0 }}"
+            data-costo-km="{{ $costoKmCategoriaSafe }}">
+
+            <div class="svc-top">
+              <div class="svc-ico"><i class="fas fa-truck"></i></div>
+              <div class="svc-meta">
+                <div class="svc-name">Delivery</div>
+              </div>
+            </div>
+
+            <div class="svc-bottom">
+              <label class="switch switch-soft">
+                <input type="checkbox" id="deliveryToggle" {{ !empty($deliverySafe->activo) ? 'checked' : '' }}>
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="svc-fields" id="deliveryFields" style="display: {{ !empty($deliverySafe->activo) ? 'block' : 'none' }};">
+              <div class="svc-field">
+                <label class="svc-label">Seleccionar ubicación</label>
+                <select id="deliveryUbicacion" class="input">
+                  <option value="">Seleccione...</option>
+                  @foreach($ubicacionesSafe as $u)
+                    <option value="{{ $u->id_ubicacion }}" data-km="{{ $u->km ?? 0 }}"
+                            {{ (!empty($deliverySafe->id_ubicacion) && $deliverySafe->id_ubicacion == $u->id_ubicacion) ? 'selected' : '' }}>
+                      {{ $u->estado }} - {{ $u->destino }} ({{ $u->km ?? 0 }} km)
+                    </option>
+                  @endforeach
+                  <option value="0" {{ (isset($deliverySafe->id_ubicacion) && (int)$deliverySafe->id_ubicacion === 0) ? 'selected' : '' }}>Dirección personalizada</option>
+                </select>
+              </div>
+
+              <div class="svc-field" id="groupDireccion" style="display: none;">
+                <label class="svc-label">Dirección</label>
+                <input type="text" id="deliveryDireccion" class="input" placeholder="Calle, No, Colonia..." value="{{ $deliverySafe->direccion ?? '' }}">
+              </div>
+
+              <div class="svc-field" id="groupKm" style="display: none;">
+                <label class="svc-label">Kilómetros</label>
+                <input type="number" id="deliveryKm" class="input" placeholder="0" value="{{ $deliverySafe->km ?? 0 }}">
+              </div>
+
+              <div class="svc-total">
+                <span>Total Delivery</span>
+                <b id="deliveryTotal">${{ number_format($deliverySafe->total ?? 0, 2) }} MXN</b>
+              </div>
+            </div>
+            <input type="hidden" id="deliveryTotalHidden" value="{{ $deliverySafe->total ?? 0 }}">
+          </div>
+
+          {{-- CARD 5: SILLA DE BEBÉ --}}
+          <div class="svc-card svc-card--addon carousel-item" data-id="silla_bebe" data-name="Silla de bebé" data-price="150" data-charge="por_dia">
+            <div class="svc-top">
+              <div class="svc-ico"><i class="fas fa-baby-carriage"></i></div>
+              <div class="svc-meta">
+                <div class="svc-name">Silla de bebé</div>
+              </div>
+            </div>
+
+            <div class="svc-bottom">
+              <label class="switch switch-soft">
+                <input type="checkbox" class="addon-toggle" data-addon="silla_bebe">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="svc-addon-expanded" id="sillaBebeExpanded" style="display: none;">
+              <div class="svc-price-row">
+                <div class="price-label">Costo</div>
+                <div class="price-value">$150 MXN <span>/ día</span></div>
+              </div>
+
+              <div class="svc-quantity-row">
+                <div class="quantity-control">
+                  <button class="qty-btn minus" type="button">−</button>
+                  <span class="qty-value" data-qty="1">1</span>
+                  <button class="qty-btn plus" type="button">+</button>
+                  <span class="max-hint">Máx 3</span>
+                </div>
+              </div>
+
+              <div class="svc-total-row">
+                <span>Total Silla de bebé</span>
+                <b class="addon-total">$150.00 MXN</b>
+              </div>
+            </div>
+            <input type="hidden" class="addon-qty-hidden" name="adicionales[silla_bebe]" value="0">
+          </div>
+
+
+        </div> {{-- .carousel-track --}}
+      </div> {{-- .carousel-container --}}
+
+      <button class="carousel-arrow next" type="button" aria-label="Siguiente">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div> {{-- .adicionales-carousel --}}
+
+
+  </div> {{-- .stack-body --}}
+</section>
+
+      {{-- ======================
+           5) PROTECCIONES
+      ======================= --}}
+      <section class="stack-card acordeon-item" data-seccion="protecciones" data-siguiente="cliente">
         <div class="stack-head">
-          <div class="stack-title">🗓️ Fechas y horas</div>
-          <div class="stack-sub">Define inicio/fin. Se calculan los días automáticamente.</div>
-        </div>
-
-        <div class="stack-body">
-          <div class="form-2">
-            <!-- FECHA DE SALIDA -->
-            <div class="dt-field icon-field">
-              <label>Fecha de salida</label>
-              <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-              <input id="fecha_inicio_ui" class="input input-lg" type="text" placeholder="Fecha" autocomplete="off">
-              <input id="fecha_inicio" type="hidden">
-            </div>
-
-            <!-- HORA DE SALIDA -->
-            <div class="dt-field icon-field time-field">
-              <label>Hora de salida</label>
-              <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-              <input id="hora_retiro_ui" class="input input-lg" type="text" placeholder="hh:mm" autocomplete="off">
-              <input id="hora_retiro" type="hidden">
-            </div>
-
-            <!-- FECHA DE LLEGADA -->
-            <div class="dt-field icon-field">
-              <label>Fecha de llegada</label>
-              <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
-              <input id="fecha_fin_ui" class="input input-lg" type="text" placeholder="Fecha" autocomplete="off">
-              <input id="fecha_fin" type="hidden">
-            </div>
-
-            <!-- HORA DE LLEGADA -->
-            <div class="dt-field icon-field time-field">
-              <label>Hora de llegada</label>
-              <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-              <input id="hora_entrega_ui" class="input input-lg" type="text" placeholder="hh:mm" autocomplete="off">
-              <input id="hora_entrega" type="hidden">
-            </div>
-          </div>
-
-          <div class="days-row">
-            <span class="days-pill">⏱️ <b id="diasTxt">0</b> día(s)</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- =========================================
-           PASO 3: CATEGORÍA
-      ========================================= -->
-      <section class="stack-card">
-        <div class="stack-head">
-          <div class="stack-title">🚗 Categoría</div>
-          <div class="stack-sub">Selecciona una categoría. Mostramos tarifa base por día + cálculo previo.</div>
+          <div class="stack-title"><i class="fas fa-shield-alt"></i> Protecciones</div>
+          <div class="stack-indicator"><i class="fas fa-chevron-down"></i></div>
         </div>
 
         <div class="stack-body">
           <div class="picker-row">
-            <button class="btn primary" type="button" id="btnCategorias">📦 Seleccionar categoría</button>
-            <div class="picker-selected">
-              <div class="picker-label">Seleccionado</div>
-              <div class="picker-value" id="catSelTxt">— Ninguna categoría —</div>
-              <div class="picker-sub" id="catSelSub">Tarifa base por día y cálculo previo aparecerán aquí.</div>
-            </div>
-            <button class="btn gray" type="button" id="catRemove" style="display:none;">✖</button>
-          </div>
+            <button class="btn primary" type="button" id="btnProtecciones"><i class="fas fa-shield-alt"></i> Seleccionar protección</button>
 
-          <div class="mini-preview" id="catMiniPreview" style="display:none;">
-            <div class="mini-right">
-              <div class="mini-title" id="catMiniName">—</div>
-              <div class="mini-sub" id="catMiniDesc">—</div>
-              <div class="mini-price">
-                <div>
-                  <div class="muted small">Tarifa base</div>
-                  <div class="price-big" id="catMiniRate">$0.00 MXN / día</div>
-                </div>
-                <div>
-                  <div class="muted small">Cálculo previo</div>
-                  <div class="price-big" id="catMiniCalc">$0.00 MXN</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-            <!-- =========================================
-           PASO 4: SERVICIOS (DROP OFF, DELIVERY, GASOLINA)
-      ========================================= -->
-      <section class="stack-card">
-        <div class="stack-head">
-          <div class="stack-title">🧰 Servicios</div>
-          <div class="stack-sub">Servicios adicionales.</div>
-        </div>
-
-        <div class="stack-body">
-          <div class="svc-grid">
-
-            {{-- 🚩 DROP OFF --}}
-            <div class="svc-card svc-card--accent dropoff-wrapper">
-              <div class="svc-top">
-                <div class="svc-ico">🚩</div>
-                <div class="svc-meta">
-                  <div class="svc-name">Drop Off</div>
-                  <div class="svc-desc">Entrega en sucursal distinta.</div>
-                </div>
-              </div>
-
-              <div class="svc-bottom">
-                <div class="svc-hint">Activar</div>
-                <label class="switch switch-soft">
-                  <input type="checkbox" id="dropoffToggle">
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <div class="svc-fields" id="dropoffFields" style="display: none;">
-                <div class="svc-field">
-                  <label class="svc-label">Ubicación de devolución</label>
-                  <select id="dropUbicacion" class="input">
-                    <option value="">Seleccione...</option>
-                    @if(isset($ubicaciones))
-                      @foreach($ubicaciones as $u)
-                        <option value="{{ $u->id_ubicacion }}" data-km="{{ $u->km ?? 0 }}">
-                          {{ $u->estado }} - {{ $u->destino }} ({{ $u->km ?? 0 }} km)
-                        </option>
-                      @endforeach
-                    @endif
-                    <option value="0">Dirección personalizada</option>
-                  </select>
-                </div>
-
-                <div class="svc-field" id="dropGroupDireccion" style="display: none;">
-                  <label class="svc-label">Dirección</label>
-                  <input type="text" id="dropDireccion" class="input" placeholder="Calle, No, Colonia...">
-                </div>
-
-                <div class="svc-field" id="dropGroupKm" style="display: none;">
-                  <label class="svc-label">Kilómetros</label>
-                  <input type="number" id="dropKm" class="input" placeholder="0">
-                </div>
-
-                <div class="svc-total">
-                  <span>Total Drop Off</span>
-                  <b id="dropTotal">$0.00 MXN</b>
-                </div>
-              </div>
-              <input type="hidden" id="dropoffTotalHidden" value="0">
-            </div>
-
-            {{-- 🚚 DELIVERY --}}
-            <div class="svc-card svc-card--accent delivery-wrapper">
-              <div class="svc-top">
-                <div class="svc-ico">🚚</div>
-                <div class="svc-meta">
-                  <div class="svc-name">Delivery</div>
-                  <div class="svc-desc">Entrega a domicilio.</div>
-                </div>
-              </div>
-
-              <div class="svc-bottom">
-                <div class="svc-hint">Activar</div>
-                <label class="switch switch-soft">
-                  <input type="checkbox" id="deliveryToggle">
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <div class="svc-fields" id="deliveryFields" style="display: none;">
-                <div class="svc-field">
-                  <label class="svc-label">Seleccionar ubicación</label>
-                  <select id="deliveryUbicacion" class="input">
-                    <option value="">Seleccione...</option>
-                    @if(isset($ubicaciones))
-                      @foreach($ubicaciones as $u)
-                        <option value="{{ $u->id_ubicacion }}" data-km="{{ $u->km ?? 0 }}">
-                          {{ $u->estado }} - {{ $u->destino }} ({{ $u->km ?? 0 }} km)
-                        </option>
-                      @endforeach
-                    @endif
-                    <option value="0">Dirección personalizada</option>
-                  </select>
-                </div>
-
-                <div class="svc-field" id="groupDireccion" style="display: none;">
-                  <label class="svc-label">Dirección</label>
-                  <input type="text" id="deliveryDireccion" class="input" placeholder="Calle, No, Colonia...">
-                </div>
-
-                <div class="svc-field" id="groupKm" style="display: none;">
-                  <label class="svc-label">Kilómetros</label>
-                  <input type="number" id="deliveryKm" class="input" placeholder="0">
-                </div>
-
-                <div class="svc-total">
-                  <span>Total Delivery</span>
-                  <b id="deliveryTotal">$0.00 MXN</b>
-                </div>
-              </div>
-              <input type="hidden" id="deliveryTotalHidden" value="0">
-            </div>
-
-            {{-- ⛽ GASOLINA PREPAGO --}}
-            <div class="svc-card svc-card--accent">
-              <div class="svc-top">
-                <div class="svc-ico">⛽</div>
-                <div class="svc-meta">
-                  <div class="svc-name">Gasolina prepago</div>
-                  <div class="svc-desc">Tanque completo preferencial.</div>
-                </div>
-              </div>
-
-              <div class="svc-bottom">
-                <div class="svc-hint">Activar</div>
-                <label class="switch switch-soft">
-                  <input type="checkbox" id="gasolinaToggle">
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <div class="svc-fields" id="gasolinaFields" style="display: none;">
-                <div class="svc-total">
-                  <span>Total Gasolina (<span id="litrosLabel">0</span>L)</span>
-                  <b id="gasolinaTotal">$0.00 MXN</b>
-                </div>
-              </div>
-              <input type="hidden" name="gasolina_prepago_valor" id="gasolinaTotalHidden" value="0">
-            </div>
-
-          </div>
-
-          <!-- Hidden inputs para servicios -->
-          <input type="hidden" id="svc_dropoff" name="svc_dropoff" value="0">
-          <input type="hidden" id="svc_delivery" name="svc_delivery" value="0">
-          <input type="hidden" id="svc_gasolina" name="svc_gasolina" value="0">
-          <input type="hidden" id="deliveryPrecioKm" value="0">
-          <input type="hidden" id="gasolinaPrecioLitro" value="24">
-        </div>
-      </section>
-
-      <!-- =========================================
-           PASO 4: PROTECCIONES
-      ========================================= -->
-      <section class="stack-card">
-        <div class="stack-head">
-          <div class="stack-title">🔒 Protecciones</div>
-          <div class="stack-sub">Elige un paquete de protección.</div>
-        </div>
-
-        <div class="stack-body">
-          <div class="picker-row">
-            <button class="btn primary" type="button" id="btnProtecciones">🛡️ Seleccionar protección</button>
             <div class="picker-selected">
               <div class="picker-label">Seleccionado</div>
               <div class="picker-value" id="proteSelTxt">— Ninguna protección —</div>
               <div class="picker-sub" id="proteSelSub">Costo se refleja en el resumen.</div>
             </div>
+
             <button class="btn gray" type="button" id="proteRemove" style="display:none;">✖</button>
           </div>
         </div>
       </section>
 
-      <!-- =========================================
-           PASO 5: ADICIONALES
-      ========================================= -->
-      <section class="stack-card">
-        <div class="stack-head">
-          <div class="stack-title">➕ Adicionales</div>
-          <div class="stack-sub">Selecciona servicios extra.</div>
+ {{-- ======================
+   6) CLIENTE - ESTILO RESERVACIONES
+======================= --}}
+<section class="stack-card acordeon-item" data-seccion="cliente" data-siguiente="final">
+  <div class="stack-head">
+    <div class="stack-title"><i class="fas fa-user"></i> Datos del cliente</div>
+    <div class="stack-indicator"><i class="fas fa-chevron-down"></i></div>
+  </div>
+
+  <div class="stack-body" id="clienteFormBody">
+    <div class="cliente-layout">
+
+      {{-- COLUMNA IZQUIERDA: DATOS PRINCIPALES --}}
+      <div class="cliente-datos-card">
+
+        {{-- NOMBRE COMPLETO (unificado como en reservaciones) --}}
+        <div class="cliente-field required">
+          <label for="nombre_completo_cliente">Nombre completo</label>
+          <input id="nombre_completo_cliente" name="nombre_completo_cliente" class="input cliente-input" type="text" required
+            value="{{ trim(($cotizacion->nombre_cliente ?? '') . ' ' . ($cotizacion->apellidos_cliente ?? '')) }}">
+          <div class="validation-message error" id="nombre_completo_error">El nombre completo es obligatorio</div>
         </div>
 
-        <div class="stack-body">
-          <div class="picker-row">
-            <button class="btn primary" type="button" id="btnAddons">🧩 Seleccionar adicionales</button>
-            <div class="picker-selected">
-              <div class="picker-label">Seleccionado</div>
-              <div class="picker-value" id="addonsSelTxt">— Ninguno —</div>
-              <div class="picker-sub" id="addonsSelSub">Subtotal estimado aparecerá aquí.</div>
-            </div>
-            <button class="btn gray" type="button" id="addonsClear" style="display:none;">✖</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- =========================================
-           PASO 6: CLIENTE
-      ========================================= -->
-      <section class="stack-card">
-        <div class="stack-head">
-          <div class="stack-title">👤 Datos del cliente</div>
-          <div class="stack-sub">Completa los datos para registrar la cotización.</div>
+        {{-- CORREO ELECTRÓNICO --}}
+        <div class="cliente-field required">
+          <label for="email_cliente">Correo electrónico</label>
+          <input id="email_cliente" name="email_cliente" class="input cliente-input" type="email" required
+            value="{{ $cotizacion->email_cliente ?? '' }}">
+          <div class="validation-message error" id="email_error">El correo es obligatorio y debe ser válido</div>
         </div>
 
-        <div class="stack-body">
-          <div class="form-2">
-            <div>
-              <label>Nombre</label>
-              <input id="nombre_cliente" class="input" type="text" required>
-            </div>
-            <div>
-              <label>Apellidos</label>
-              <input id="apellidos" class="input" type="text" required>
-            </div>
-            <div>
-              <label>Email</label>
-              <input id="email_cliente" class="input" type="email" required>
-            </div>
-            <div>
-              <label>Teléfono</label>
-              <input id="telefono_cliente" class="input" type="text" placeholder="+52..." required>
-            </div>
-            <div>
-              <label>País</label>
-              <input id="pais" class="input" type="text" value="MÉXICO" required>
-            </div>
-            <div>
-              <label>Vuelo (opcional)</label>
-              <input id="no_vuelo" class="input" type="text" placeholder="UA2068">
-            </div>
-            <div>
-              <label>Moneda</label>
-              <select id="moneda" class="input">
-                <option value="MXN">MXN</option>
-                <option value="USD">USD</option>
-              </select>
-            </div>
-            <div>
-              <label>Tipo de cambio USD</label>
-              <input type="number" id="tc" value="17" step="0.01" class="input">
+        {{-- MÓVIL (TELÉFONO) --}}
+        <div class="cliente-field required">
+          <label for="telefono_ui">Móvil</label>
+          <div class="phone-grid" id="phoneCombo">
+            <button class="phone-prefix cliente-phone-prefix" type="button" id="phone_toggle" aria-label="Elegir país">
+              <span class="flag" id="phone_flag">🇲🇽</span>
+              <span class="code" id="phone_code">+52</span>
+              <span class="chev">▾</span>
+            </button>
+            <input id="telefono_ui" class="input cliente-input" type="tel" inputmode="tel" required
+              value="{{ $cotizacion->telefono_cliente ?? '' }}">
+            <div class="combo-dd phone-dd" id="phone_dd" role="listbox" aria-label="Lista de ladas">
+              <div class="dd-head">
+                <input id="phone_search" class="dd-search" type="text" placeholder="Buscar país o lada…">
+              </div>
+              <div class="dd-list" id="phone_list"></div>
             </div>
           </div>
+          <div class="validation-message error" id="telefono_error">El móvil es obligatorio</div>
+        </div>
 
-          <div class="acciones" style="margin-top: 20px;">
-            <button class="btn success" id="btnGuardarYEnviar" type="button">💾 Guardar y enviar</button>
-            <button class="btn primary" id="btnConfirmarCotizacion" type="button">✅ Confirmar y reservar</button>
+        {{-- PAÍS DE RESIDENCIA (readonly, siempre México) --}}
+        <div class="cliente-field required">
+          <label for="pais">País de residencia</label>
+          <input type="hidden" id="pais" name="pais" value="MÉXICO">
+          <div class="input cliente-input readonly-country cliente-country">
+            <span id="pais_flag_ui">🇲🇽</span>
+            <span id="pais_text_ui">México</span>
           </div>
         </div>
-      </section>
 
-      <!-- BOTÓN VER COTIZACIONES -->
-      <div class="ver-cotizaciones-wrap">
-        <a href="{{ route('rutaVerCotizaciones') }}" class="btn-ver-cotizaciones" style="text-decoration: none; display: inline-block;">📄 Ver cotizaciones</a>
+        {{-- VUELO (solo requerido si sucursal es Aeropuerto) --}}
+        <div class="cliente-field cliente-vuelo" id="vueloWrap">
+          <label for="no_vuelo">Número de vuelo <span id="vuelo_required_mark" style="display:none; color:#ef4444;">*</span></label>
+          <input id="no_vuelo" name="no_vuelo" class="input cliente-input" type="text"
+            value="{{ $cotizacion->no_vuelo ?? '' }}">
+          <div class="validation-message error" id="vuelo_error">El número de vuelo es obligatorio para Aeropuerto</div>
+          <div class="small muted" style="font-size: 0.7rem; margin-top: 0.3rem; color: #64748b;">
+            Solo requerido si la sucursal es Aeropuerto
+          </div>
+        </div>
+
       </div>
 
-    </form>
+      {{-- COLUMNA DERECHA: COMENTARIOS --}}
+      <div class="cliente-comentarios-card">
+        <div class="cliente-field">
+          <label for="comentarios">Comentarios</label>
+          <textarea id="comentarios" name="comentarios" class="input cliente-textarea" rows="8" placeholder="Instrucciones especiales, alergias, requerimientos específicos, etc...">{{ $cotizacion->comentarios ?? '' }}</textarea>
+        </div>
+      </div>
+    </div>
 
-  </main>
-</div>
+    {{-- BOTÓN REGISTRAR --}}
+    <div class="acciones single cliente-actions">
+      <button class="btn primary" id="btnCotizar" type="submit">
+        <i class="fas fa-check-circle"></i> Registrar cotización
+      </button>
+    </div>
+  </div>
+</section>
 
-<!-- =========================================
-     BACKDROP
-========================================= -->
-<div class="fp-backdrop"></div>
-
-
-<!-- =========================================
-     MODAL: CATEGORÍAS
-========================================= -->
+{{-- MODAL: CATEGORÍAS --}}
 <div class="pop modal" id="catPop">
-  <div class="box modal-box">
-    <header class="modal-head">
-      <div class="modal-title">🚗 Selecciona una categoría</div>
-      <button class="btn gray" id="catClose" type="button">✖</button>
-    </header>
-
-    <div class="modal-body">
-      <div class="grid-cards" id="categoriasGrid">
-        <div class="loading">Cargando categorías...</div>
-      </div>
-    </div>
-
-    <footer class="modal-foot">
-      <button class="btn gray" id="catCancel" type="button">Cerrar</button>
-    </footer>
-  </div>
-</div>
-<!-- =========================================
-     MODAL: PROTECCIONES (CARRUSEL + DECLINE + INDIVIDUALES)
-========================================= -->
-<div class="pop modal" id="proteccionPop">
-  <div class="box modal-box" style="max-width: 1000px;">
-    <header class="modal-head">
-      <div class="modal-title">🔒 Protecciones</div>
-      <button class="btn gray" id="proteClose" type="button">✖</button>
-    </header>
-
-    <div class="modal-body" style="padding: 0;">
-      <div class="prote-content-wrapper">
-        <!-- ✅ BOTONES EN LA ESQUINA SUPERIOR IZQUIERDA -->
-        <div class="prote-buttons-left">
-          <button type="button" id="btnIndividualesModal" class="btn-individuales-inline">🧩 Protecciones Individuales</button>
-          <button type="button" id="btnDeclineModal" class="btn-decline-inline">⚠️ Decline Protections</button>
-        </div>
-        <div id="proteList">
-          <div class="loading">Cargando protecciones...</div>
-        </div>
-      </div>
-    </div>
-
-    <footer class="modal-foot">
-      <button class="btn gray" id="proteCancel" type="button">Cerrar</button>
-    </footer>
-  </div>
-</div>
-{{-- ✅ MODAL: PROTECCIONES INDIVIDUALES (ESTILO PAQUETES - TÍTULO ARRIBA, PRECIO Y BOTÓN ABAJO) --}}
-<div class="pop modal" id="proteccionIndividualPop">
   <div class="box modal-box" style="max-width: 950px;">
-    <header class="modal-head">
-      <div class="modal-title">🧩 Protecciones individuales</div>
-      <button class="btn gray" id="proteIndividualClose" type="button">✖</button>
+    <header class="modal-head" style="background: var(--brand); color: #fff;">
+      <div class="modal-title" style="color:#fff;">
+        🚗 Selecciona una categoría
+        <button type="button" id="infoCategoriasBtn" style="background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50%; width: 28px; height: 28px; margin-left: 10px; cursor: pointer; font-size: 16px;">
+          <i class='bx bx-info-circle'></i>
+        </button>
+      </div>
+      <button class="btn" id="catClose" type="button" onclick="closePop('catPop')" style="background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 8px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">✖</button>
     </header>
-<style>
-    /* =========================================
-       1. CONTENEDOR PRINCIPAL Y SCROLL
-    ========================================= */
-    #proteccionIndividualPop .modal-body {
-        max-height: 70vh;
-        overflow-y: auto;
-        padding: 20px;
-    }
 
-    #proteccionIndividualPop .scroll-h {
-        display: flex;
-        gap: 20px;
-        overflow-x: auto;
-        padding: 10px 6px 25px 6px;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-    }
+    <div class="modal-body" style="background: #f1f5f9;">
+      <div class="grid-cards" id="categoriasGrid">
+        @php
+          $imgCategorias = [
+            1 => asset('img/aveo.png'), 2 => asset('img/virtus.png'), 3 => asset('img/jetta.png'),
+            4 => asset('img/camry.png'), 5 => asset('img/renegade.png'), 6 => asset('img/taos.png'),
+            7 => asset('img/avanza.png'), 8 => asset('img/Odyssey.png'), 9 => asset('img/Urvan.png'),
+            10 => asset('img/Frontier.png'), 11 => asset('img/Tacoma.png'),
+          ];
+          $pasajeros = [ 1=>5, 2=>5, 3=>5, 4=>5, 5=>5, 6=>5, 7=>7, 8=>8, 9=>13, 10=>5, 11=>5 ];
+          $transmision = [ 9 => 'Manual' ];
 
-    #proteccionIndividualPop .scroll-h::-webkit-scrollbar {
-        height: 8px;
-    }
+          $categoriasOrdenadas = $categorias->sortBy(fn($c) => (float)($c->precio_dia ?? 0))->values();
+        @endphp
 
-    #proteccionIndividualPop .scroll-h::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 999px;
-    }
+        @foreach($categoriasOrdenadas as $cat)
+          @php
+            $img = $imgCategorias[$cat->id_categoria] ?? asset('img/Logotipo.png');
+            $cap = $pasajeros[$cat->id_categoria] ?? 5;
+            $tran = $transmision[$cat->id_categoria] ?? 'Automático';
+            $transIcon = ($tran === 'Manual' ? 'bx-joystick' : 'bx-cog');
 
-    /* =========================================
-       2. TÍTULOS DE CATEGORÍA
-    ========================================= */
-    #proteccionIndividualPop .cat-title {
-        margin: 28px 0 16px 0;
-        font-weight: 900;
-        color: #111827;
-        text-transform: uppercase;
-        letter-spacing: 0.02em;
-        font-size: 15px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
+            $featuresList = [
+                ['icon' => 'bx bx-infinite', 'text' => 'Km ilimitados'],
+                ['icon' => 'bx bx-shield-quarter', 'text' => 'Relevo responsabilidad'],
+                ['icon' => 'bx bx-user', 'text' => "{$cap} pasajeros"],
+                ['icon' => 'bx bxl-apple', 'text' => 'Apple CarPlay'],
+                ['icon' => 'bx bxl-android', 'text' => 'Android Auto'],
+                ['icon' => 'bx bx-wind', 'text' => 'Aire Acondicionado'],
+                ['icon' => "bx {$transIcon}", 'text' => $tran],
+            ];
+          @endphp
 
-    #proteccionIndividualPop .cat-title::after {
-        content: "";
-        flex: 1;
-        height: 3px;
-        background: linear-gradient(90deg, #f44336, #ff6b6b, transparent);
-        border-radius: 3px;
-    }
+          <article class="card-pick"
+            data-id="{{ $cat->id_categoria }}"
+            data-nombre="{{ $cat->nombre }}"
+            data-precio="{{ $cat->precio_dia }}"
+            data-precio-km="{{ $cat->costo_km ?? 0 }}"
+            data-litros="{{ $cat->litros_maximos ?? 0 }}"
+            data-img="{{ $img }}"
+            data-caracteristicas='@json($featuresList)'
+            >
+            <div class="cp-img">
+              <img src="{{ $img }}" alt="{{ $cat->nombre }}">
+            </div>
 
-    #proteccionIndividualPop .cat-title:first-of-type {
-        margin-top: 0;
-    }
+            <div class="cp-left">
+              <div class="cp-title">{{ $cat->nombre }}</div>
+              <div class="cp-sub">{{ $cat->descripcion ?? 'Chevrolet Aveo o similar' }}</div>
 
-    /* =========================================
-       3. TARJETAS (MÁS COMPACTAS HORIZONTALMENTE)
-    ========================================= */
-    #proteccionIndividualPop .ins-card-pack {
-        flex: 0 0 285px; /* <--- Ancho reducido para que sea más compacto */
-        scroll-snap-align: start;
-        background: #fff;
-        border-radius: 20px;
-        border: 1px solid rgba(15, 23, 42, 0.08);
-        box-shadow: 0 14px 38px rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-        transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
-        position: relative;
-        cursor: pointer;
-        min-height: 520px;
-        display: flex;
-        flex-direction: column;
-    }
-
-    #proteccionIndividualPop .ins-card-pack::before {
-        content: "";
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 6px;
-        background: linear-gradient(90deg, #f44336, #ff6b6b);
-        z-index: 2;
-    }
-
-    #proteccionIndividualPop .ins-card-pack:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 24px 48px rgba(0, 0, 0, 0.14);
-        border-color: rgba(244, 67, 54, 0.25);
-    }
-
-    /* =========================================
-       4. CUERPO DE LA TARJETA (LLENADO DE ESPACIO)
-    ========================================= */
-    #proteccionIndividualPop .ins-pack-body {
-        padding: 25px 18px; /* Padding equilibrado */
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        height: 100%;
-    }
-
-    /* TÍTULO - Arriba */
-    #proteccionIndividualPop .ins-pack-title {
-        margin: 0 0 10px 0;
-        font-size: 20px;
-        font-weight: 900;
-        color: #111827;
-        letter-spacing: -0.2px;
-        line-height: 1.2;
-        text-align: center;
-    }
-
-    /* BENEFICIOS - ESTO LLENA EL "ESPACIO VERDE" DE TU DIBUJO */
-    #proteccionIndividualPop .ins-pack-benefits {
-        margin: 0;
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-evenly; /* Separa los textos para ocupar todo el alto */
-        padding: 15px 0;
-    }
-
-    /* CADA RENGLÓN DE TEXTO (MÁS GRANDE) */
-    #proteccionIndividualPop .ins-pack-bullet {
-        font-size: 18px;
-        color: #374151;
-        font-weight: 600;
-        line-height: 1.3;
-        text-align: center;
-        width: 100%;
-        list-style: none;
-        padding: 0;
-    }
-
-    /* =========================================
-       5. PRECIO Y BOTÓN (TU ESTILO ORIGINAL)
-    ========================================= */
-    #proteccionIndividualPop .ins-pack-bottom {
-        margin-top: auto;
-        padding-top: 16px;
-        border-top: 1px solid rgba(15, 23, 42, 0.08);
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-    }
-
-    #proteccionIndividualPop .ins-pack-price {
-        font-size: 24px;
-        font-weight: 900;
-        color: #f44336;
-        line-height: 1.2;
-        text-align: center;
-    }
-
-    #proteccionIndividualPop .ins-pack-price span {
-        font-size: 11px;
-        font-weight: 800;
-        color: #6b7280;
-        text-transform: uppercase;
-    }
-
-    /* BOTÓN SELECCIONAR (MANTENIDO TU GRADIENTE Y ESTILO) */
-    #proteccionIndividualPop .btn-ins-pack-select {
-        width: 100%;
-        background: linear-gradient(180deg, #f44336, #d32f2f);
-        border: none;
-        border-radius: 14px;
-        padding: 14px 16px;
-        font-weight: 900;
-        font-size: 14px;
-        color: white;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    #proteccionIndividualPop .btn-ins-pack-select:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(244, 67, 54, 0.3);
-    }
-
-    /* =========================================
-       6. ESTADOS Y RESPONSIVO
-    ========================================= */
-    #proteccionIndividualPop .ins-card-pack.is-selected {
-        border-color: #f44336;
-        box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.12), 0 20px 40px rgba(0, 0, 0, 0.12);
-    }
-
-    #proteccionIndividualPop .ins-card-pack.is-selected::after {
-        content: "✓ SELECCIONADO";
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        background: #111827;
-        color: white;
-        padding: 5px 12px;
-        border-radius: 30px;
-        font-weight: 800;
-        font-size: 10px;
-        z-index: 3;
-    }
-
-    @media (max-width: 560px) {
-        #proteccionIndividualPop .ins-card-pack {
-            flex-basis: 260px;
-            min-height: 480px;
-        }
-        #proteccionIndividualPop .ins-pack-bullet {
-            font-size: 16px;
-        }
-    }
-</style>
-    <div class="modal-body">
-      <!-- COLISIÓN Y ROBO -->
-      <div class="cat-title">🚗 Colisión y robo</div>
-      <div class="scroll-h" id="insColisionTrack">
-        @forelse(($grupo_colision ?? []) as $ind)
-          <div class="ins-card-pack individual-item-cotizacion" data-id="{{ $ind->id_individual }}" data-precio="{{ $ind->precio_por_dia }}" data-nombre="{{ $ind->nombre }}" data-desc="{{ $ind->descripcion }}">
-            <div class="ins-pack-body">
-              <h4 class="ins-pack-title">{{ $ind->nombre }}</h4>
-              <div class="ins-pack-benefits">
-                @php
-                  $beneficios = explode("\n", $ind->descripcion);
-                @endphp
-                @foreach($beneficios as $beneficio)
-                  @if(trim($beneficio))
-                    {{-- ✅ SIN EL PUNTO • --}}
-                    <div class="ins-pack-bullet">{{ trim($beneficio) }}</div>
-                  @endif
-                @endforeach
+              <div class="cp-meta">
+                <span class="pill pill-info info-categoria-btn" style="cursor:pointer;">
+                  <i class='bx bx-info-circle'></i> Características
+                </span>
               </div>
-              <div class="ins-pack-bottom">
-                <div class="ins-pack-price">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN / día</span></div>
-                <button class="btn-ins-pack-select">Seleccionar</button>
+
+              <div class="cp-meta">
+                <span class="pill">Código: {{ $cat->codigo ?? ($cat->id_categoria ?? 'N/A') }}</span>
+                @if(isset($cat->activo) && (int)$cat->activo === 1)
+                  <span class="pill pill-ok">Activo</span>
+                @endif
               </div>
             </div>
-          </div>
-        @empty
-          <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
-        @endforelse
-      </div>
 
-      <!-- GASTOS MÉDICOS -->
-      <div class="cat-title">🏥 Gastos médicos</div>
-      <div class="scroll-h" id="insMedicosTrack">
-        @forelse(($grupo_medicos ?? []) as $ind)
-          <div class="ins-card-pack individual-item-cotizacion" data-id="{{ $ind->id_individual }}" data-precio="{{ $ind->precio_por_dia }}" data-nombre="{{ $ind->nombre }}" data-desc="{{ $ind->descripcion }}">
-            <div class="ins-pack-body">
-              <h4 class="ins-pack-title">{{ $ind->nombre }}</h4>
-              <div class="ins-pack-benefits">
-                @php
-                  $beneficios = explode("\n", $ind->descripcion);
-                @endphp
-                @foreach($beneficios as $beneficio)
-                  @if(trim($beneficio))
-                    {{-- ✅ SIN EL PUNTO • --}}
-                    <div class="ins-pack-bullet">{{ trim($beneficio) }}</div>
-                  @endif
-                @endforeach
+            <div class="cp-right">
+              <div class="price-block">
+                <div class="price-label">Tarifa base</div>
+                <div class="price-value">${{ number_format((float)$cat->precio_dia, 2) }} <span>/ día</span></div>
               </div>
-              <div class="ins-pack-bottom">
-                <div class="ins-pack-price">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN / día</span></div>
-                <button class="btn-ins-pack-select">Seleccionar</button>
-              </div>
-            </div>
-          </div>
-        @empty
-          <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
-        @endforelse
-      </div>
 
-      <!-- ASISTENCIA PARA EL CAMINO -->
-      <div class="cat-title">🛣️ Asistencia para el camino</div>
-      <div class="scroll-h" id="insCaminoTrack">
-        @forelse(($grupo_asistencia ?? []) as $ind)
-          <div class="ins-card-pack individual-item-cotizacion" data-id="{{ $ind->id_individual }}" data-precio="{{ $ind->precio_por_dia }}" data-nombre="{{ $ind->nombre }}" data-desc="{{ $ind->descripcion }}">
-            <div class="ins-pack-body">
-              <h4 class="ins-pack-title">{{ $ind->nombre }}</h4>
-              <div class="ins-pack-benefits">
-                @php
-                  $beneficios = explode("\n", $ind->descripcion);
-                @endphp
-                @foreach($beneficios as $beneficio)
-                  @if(trim($beneficio))
-                    {{-- ✅ SIN EL PUNTO • --}}
-                    <div class="ins-pack-bullet">{{ trim($beneficio) }}</div>
-                  @endif
-                @endforeach
+              <div class="price-block">
+                <div class="price-label">Estimado</div>
+                <div class="price-value" style="color:var(--brand)">
+                    <span class="cat-estimado">$0.00</span> <span>MXN</span>
+                </div>
               </div>
-              <div class="ins-pack-bottom">
-                <div class="ins-pack-price">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN / día</span></div>
-                <button class="btn-ins-pack-select">Seleccionar</button>
-              </div>
-            </div>
-          </div>
-        @empty
-          <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
-        @endforelse
-      </div>
 
-      <!-- DAÑOS A TERCEROS -->
-      <div class="cat-title">⚖️ Daños a terceros</div>
-      <div class="scroll-h" id="insTercerosTrack">
-        @forelse(($grupo_terceros ?? []) as $ind)
-          <div class="ins-card-pack individual-item-cotizacion" data-id="{{ $ind->id_individual }}" data-precio="{{ $ind->precio_por_dia }}" data-nombre="{{ $ind->nombre }}" data-desc="{{ $ind->descripcion }}">
-            <div class="ins-pack-body">
-              <h4 class="ins-pack-title">{{ $ind->nombre }}</h4>
-              <div class="ins-pack-benefits">
-                @php
-                  $beneficios = explode("\n", $ind->descripcion);
-                @endphp
-                @foreach($beneficios as $beneficio)
-                  @if(trim($beneficio))
-                    {{-- ✅ SIN EL PUNTO • --}}
-                    <div class="ins-pack-bullet">{{ trim($beneficio) }}</div>
-                  @endif
-                @endforeach
-              </div>
-              <div class="ins-pack-bottom">
-                <div class="ins-pack-price">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN / día</span></div>
-                <button class="btn-ins-pack-select">Seleccionar</button>
-              </div>
-            </div>
-          </div>
-        @empty
-          <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
-        @endforelse
-      </div>
-
-      <!-- PROTECCIONES AUTOMÁTICAS -->
-      <div class="cat-title">🔧 Protecciones automáticas</div>
-      <div class="scroll-h" id="insAutoTrack">
-        @forelse(($grupo_protecciones ?? []) as $ind)
-          <div class="ins-card-pack individual-item-cotizacion" data-id="{{ $ind->id_individual }}" data-precio="{{ $ind->precio_por_dia }}" data-nombre="{{ $ind->nombre }}" data-desc="{{ $ind->descripcion }}">
-            <div class="ins-pack-body">
-              <h4 class="ins-pack-title">{{ $ind->nombre }}</h4>
-              <div class="ins-pack-benefits">
-                @php
-                  $beneficios = explode("\n", $ind->descripcion);
-                @endphp
-                @foreach($beneficios as $beneficio)
-                  @if(trim($beneficio))
-                    {{-- ✅ SIN EL PUNTO • --}}
-                    <div class="ins-pack-bullet">{{ trim($beneficio) }}</div>
-                  @endif
-                @endforeach
-              </div>
-              <div class="ins-pack-bottom">
-                <div class="ins-pack-price">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN / día</span></div>
-                <button class="btn-ins-pack-select">Seleccionar</button>
-              </div>
-            </div>
-          </div>
-        @empty
-          <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
-        @endforelse
+            <button class="btn primary btn-block" type="button" onclick="seleccionarCategoriaCotizacion(this.closest('.card-pick'))" style="margin-top:10px; border-radius: 12px; font-weight: 800; height: 45px;">Seleccionar</button>
+          </article>
+        @endforeach
       </div>
     </div>
 
-    <footer class="modal-foot foot-split">
-      <button class="btn gray" id="proteIndividualCancel" type="button">Cerrar</button>
-      <button class="btn primary" id="proteIndividualApply" type="button">Aplicar selección</button>
-    </footer>
-  </div>
-</div>
-<!-- =========================================
-     MODAL: DECLINE PROTECTIONS (TÉRMINOS)
-========================================= -->
-<div id="modalDeclineTerms" class="pop modal" style="display:none; z-index: 10001;">
-  <div class="box modal-box" style="max-width: 500px; border: 2px solid #ef4444;">
-    <header class="modal-head" style="background: #fff5f5;">
-      <div class="modal-title" style="color: #ef4444;">⚠️ Aviso de Responsabilidad</div>
-    </header>
-
-    <div class="modal-body">
-      <p style="font-size: 14px; margin-bottom: 15px; font-weight: bold; color: #b91c1c;">
-        Al declinar las protecciones, usted acepta y entiende lo siguiente:
-      </p>
-      <ul class="lista-protecciones">
-        <li>El cliente es Responsable por el 100% Deducible sobre valor factura de auto.</li>
-        <li>No cubre gastos médicos en caso de accidente.</li>
-        <li>Asistencia Premium: El cliente es responsable por costos de grúa, corralón, envío de llaves o gasolina, apertura de auto, cambio de neumático ponchado y paso de corriente.</li>
-        <li>No cubre Tiempo perdido en taller ni Asistencia Legal.</li>
-        <li>Responsabilidad civil limitada hasta 350,000 MXN.</li>
-      </ul>
-    </div>
-
-    <footer class="modal-foot" style="background: #fff5f5; display: flex; justify-content: flex-end; gap: 10px;">
-      <button class="btn gray" id="btnCerrarDeclineTerms" type="button">Cancelar</button>
-      <button class="btn danger" id="btnConfirmarDecline" type="button">Aceptar y Seleccionar</button>
+    <footer class="modal-foot">
+      <button class="btn gray" id="catCancel" type="button" onclick="closePop('catPop')">Cerrar</button>
     </footer>
   </div>
 </div>
 
-<!-- =========================================
-     MODAL: ADICIONALES
-========================================= -->
-<div class="pop modal" id="addonsPop">
-  <div class="box modal-box">
-    <header class="modal-head">
-      <div class="modal-title">➕ Seleccionar adicionales</div>
-      <button class="btn gray" id="addonsClose" type="button">✖</button>
-    </header>
-
-    <div class="modal-body">
-      <div id="addonsList" class="grid-cards">
-        <div class="loading">Cargando adicionales...</div>
-      </div>
+{{-- MODAL DE CARACTERÍSTICAS (INFO) --}}
+<div class="modal-features" id="featuresModal" style="display:none;">
+  <div class="modal-box">
+    <div class="header">
+      <h3>
+        <i class='bx bx-car'></i>
+        <span id="featuresCatName">Categoría</span>
+      </h3>
+      <button id="closeFeaturesModal">✖</button>
     </div>
-
-    <footer class="modal-foot foot-split">
-      <button class="btn gray" id="addonsCancel" type="button">Cerrar</button>
-      <button class="btn primary" id="addonsApply" type="button">Aplicar</button>
-    </footer>
+    <div class="body">
+      <div class="features-list" id="featuresListContainer"></div>
+    </div>
   </div>
 </div>
 
-<!-- =========================================
-     MODAL: RESUMEN DE COTIZACIÓN
-========================================= -->
+{{-- MODAL: PROTECCIONES --}}
+<div class="pop modal" id="proteccionPop">
+    <div class="box modal-box modal-prote-tabs">
+        <header class="modal-head">
+            <div class="modal-title"><i class="fas fa-lock"></i> Protecciones</div>
+            <button class="btn gray" id="proteClose" type="button">✖</button>
+        </header>
+
+        <div class="tabs-bar">
+            <button type="button" class="tab-btn is-active" data-tab="tab-paquetes">
+                <i class="fas fa-shield-alt"></i> Paquetes
+            </button>
+            <button type="button" class="tab-btn" data-tab="tab-individuales">
+                <i class="fas fa-puzzle-piece"></i> Individuales
+            </button>
+        </div>
+
+        <div class="modal-body">
+            {{-- TAB PAQUETES --}}
+            <section class="tab-panel is-active" id="tab-paquetes">
+                <div class="scroll-h" id="protePacksTrack">
+                    <div class="loading">Cargando paquetes...</div>
+                </div>
+            </section>
+
+            {{-- TAB INDIVIDUALES --}}
+            <section class="tab-panel" id="tab-individuales">
+                <div class="note" style="margin-bottom:14px;">Selecciona una o varias protecciones individuales.</div>
+
+                {{-- GRUPO: COLISIÓN Y ROBO --}}
+                <h4 class="cat-title">Colisión y robo</h4>
+                <div class="scroll-h" id="insColisionTrack">
+                    @php $colisionOrdenado = ($grupo_colision ?? collect())->sortByDesc('precio_por_dia'); @endphp
+                    @forelse($colisionOrdenado as $ind)
+                        <label class="ins-card individual-item"
+                               data-id="{{ $ind->id_individual }}"
+                               data-precio="{{ $ind->precio_por_dia }}"
+                               data-descripcion="{{ $ind->descripcion }}">
+                            <div class="body">
+                                <div class="title-wrapper">
+                                   <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
+                                    <div class="info-icon-container">
+                                        <span class="info-icon">i</span>
+                                        <div class="tooltip-text">
+                                            {{ $ind->descripcion }}
+                                            <div class="tooltip-arrow"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                                <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+
+                            </div>
+                        </label>
+                    @empty
+                        <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+                    @endforelse
+                </div>
+
+                {{-- GRUPO: GASTOS MÉDICOS --}}
+                <h4 class="cat-title">Gastos médicos</h4>
+                <div class="scroll-h" id="insMedicosTrack">
+                    @php $medicosOrdenado = ($grupo_medicos ?? collect())->sortByDesc('precio_por_dia'); @endphp
+                    @forelse($medicosOrdenado as $ind)
+                        <label class="ins-card individual-item"
+                               data-id="{{ $ind->id_individual }}"
+                               data-precio="{{ $ind->precio_por_dia }}"
+                               data-descripcion="{{ $ind->descripcion }}">
+                            <div class="body">
+                                <div class="title-wrapper">
+                                  <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
+                                    <div class="info-icon-container">
+                                        <span class="info-icon">i</span>
+                                        <div class="tooltip-text">
+                                            {{ $ind->descripcion }}
+                                            <div class="tooltip-arrow"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                                <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+
+                            </div>
+                        </label>
+                    @empty
+                        <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+                    @endforelse
+                </div>
+
+                {{-- GRUPO: ASISTENCIA PARA EL CAMINO --}}
+                <h4 class="cat-title">Asistencia para el camino</h4>
+                <div class="scroll-h" id="insCaminoTrack">
+                    @php $asistenciaOrdenado = ($grupo_asistencia ?? collect())->sortByDesc('precio_por_dia'); @endphp
+                    @forelse($asistenciaOrdenado as $ind)
+                        <label class="ins-card individual-item"
+                               data-id="{{ $ind->id_individual }}"
+                               data-precio="{{ $ind->precio_por_dia }}"
+                               data-descripcion="{{ $ind->descripcion }}">
+                            <div class="body">
+                                <div class="title-wrapper">
+                                <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
+                                    <div class="info-icon-container">
+                                        <span class="info-icon">i</span>
+                                        <div class="tooltip-text">
+                                            {{ $ind->descripcion }}
+                                            <div class="tooltip-arrow"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                                <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+
+                            </div>
+                        </label>
+                    @empty
+                        <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+                    @endforelse
+                </div>
+
+                {{-- GRUPO: DAÑOS A TERCEROS --}}
+                <h4 class="cat-title">Daños a terceros</h4>
+                <div class="scroll-h" id="insTercerosTrack">
+                    @php $tercerosOrdenado = ($grupo_terceros ?? collect())->sortByDesc('precio_por_dia'); @endphp
+                    @forelse($tercerosOrdenado as $ind)
+                        <label class="ins-card individual-item"
+                               data-id="{{ $ind->id_individual }}"
+                               data-precio="{{ $ind->precio_por_dia }}"
+                               data-descripcion="{{ $ind->descripcion }}">
+                            <div class="body">
+                                <div class="title-wrapper">
+                                   <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
+                                    <div class="info-icon-container">
+                                        <span class="info-icon">i</span>
+                                        <div class="tooltip-text">
+                                            {{ $ind->descripcion }}
+                                            <div class="tooltip-arrow"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                                <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+
+                            </div>
+                        </label>
+                    @empty
+                        <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+                    @endforelse
+                </div>
+
+                {{-- GRUPO: PROTECCIONES AUTOMÁTICAS --}}
+                <h4 class="cat-title">Protecciones automáticas</h4>
+                <div class="scroll-h" id="insAutoTrack">
+                    @php $autoOrdenado = ($grupo_protecciones ?? collect())->sortByDesc('precio_por_dia'); @endphp
+                    @forelse($autoOrdenado as $ind)
+                        <label class="ins-card individual-item"
+                               data-id="{{ $ind->id_individual }}"
+                               data-precio="{{ $ind->precio_por_dia }}"
+                               data-descripcion="{{ $ind->descripcion }}">
+                            <div class="body">
+                                <div class="title-wrapper">
+                                    <h4>{{ preg_replace('/\s*\([^)]*\)/', '', str_replace(['¿', '?', '¡', '!'], '', $ind->nombre)) }}</h4>
+                                    <div class="info-icon-container">
+                                        <span class="info-icon">i</span>
+                                        <div class="tooltip-text">
+                                            {{ $ind->descripcion }}
+                                            <div class="tooltip-arrow"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="precio">${{ number_format($ind->precio_por_dia, 2) }} <span>MXN x Día</span></div>
+                                <div class="switch switch-individual" data-id="{{ $ind->id_individual }}"></div>
+
+                            </div>
+                        </label>
+                    @empty
+                        <div class="muted" style="padding:10px 0; font-weight:800;">Sin opciones en esta categoría.</div>
+                    @endforelse
+                </div>
+            </section>
+        </div>
+
+        <footer class="modal-foot foot-split">
+            <button class="btn gray" id="proteCancel" type="button">Cerrar</button>
+            <button class="btn primary" id="proteApply" type="button">Aplicar</button>
+        </footer>
+    </div>
+</div>
+
+{{-- MODAL: RESUMEN --}}
 <div class="pop modal" id="resumenPop">
-  <div class="box modal-box resumen-box">
+  <div class="box modal-box resumen-v2">
     <header class="modal-head">
-      <div class="modal-title">
-        <i class='bx bx-spreadsheet' style="vertical-align: middle; margin-right: 5px;"></i>
-        Resumen de cotización
-      </div>
+      <div class="modal-title"><i class="fas fa-file-alt"></i> Resumen de cotización</div>
       <button class="btn gray" id="resumenClose" type="button">✖</button>
     </header>
-
     <div class="modal-body">
-      <div class="resumen-card">
-        <div class="res-row">
-          <div><i class='bx bx-map-pin'></i> Retiro</div>
-          <div id="resSucursalRetiro">—</div>
-        </div>
-        <div class="res-row">
-          <div><i class='bx bx-flag'></i> Entrega</div>
-          <div id="resSucursalEntrega">—</div>
-        </div>
-
-        <div class="res-row">
-          <div><i class='bx bx-calendar-event'></i> Salida</div>
-          <div id="resFechaInicio">—</div>
-        </div>
-        <div class="res-row">
-          <div><i class='bx bx-time-five'></i> Hora salida</div>
-          <div id="resHoraInicio">—</div>
-        </div>
-        <div class="res-row">
-          <div><i class='bx bx-calendar-check'></i> Llegada</div>
-          <div id="resFechaFin">—</div>
-        </div>
-        <div class="res-row">
-          <div><i class='bx bx-time'></i> Hora llegada</div>
-          <div id="resHoraFin">—</div>
-        </div>
-
-        <div class="res-row">
-          <div><i class='bx bx-timer'></i> Días</div>
-          <div id="resDias">—</div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="res-row">
-          <div>
-            <i class='bx bx-money'></i> Tarifa base
-            <button type="button" id="btnEditarTarifa" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:16px;margin-left:6px;">
-              <i class='bx bx-edit-alt'></i>
-            </button>
+      <div class="resumen-v2-card">
+        <div class="rv2-section rv2-location-section">
+          <h3 class="rv2-section-title">LUGAR Y FECHA</h3>
+          <div class="rv2-location-two-columns">
+            <div class="rv2-location-col">
+              <div class="rv2-location-label"><i class="fas fa-map-marker-alt"></i> PICK-UP</div>
+              <div class="rv2-location-sucursal" id="resSucursalRetiro">—</div>
+              <div class="rv2-location-datetime">
+                <div class="rv2-location-date"><i class="fa-regular fa-calendar"></i><span id="resFechaInicioDetail">—</span></div>
+                <div class="rv2-location-time"><i class="fa-regular fa-clock"></i><span id="resHoraInicioDetail">—</span></div>
+              </div>
+            </div>
+            <div class="rv2-location-col">
+              <div class="rv2-location-label"><i class="fas fa-map-marker-alt"></i> DEVOLUCIÓN</div>
+              <div class="rv2-location-sucursal" id="resSucursalEntrega">—</div>
+              <div class="rv2-location-datetime">
+                <div class="rv2-location-date"><i class="fa-regular fa-calendar"></i><span id="resFechaFinDetail">—</span></div>
+                <div class="rv2-location-time"><i class="fa-regular fa-clock"></i><span id="resHoraFinDetail">—</span></div>
+              </div>
+            </div>
           </div>
-          <div id="resBaseDia">—</div>
-        </div>
-        <div class="res-row">
-          <div><i class='bx bx-calculator'></i> Base × días</div>
-          <div id="resBaseTotal">—</div>
         </div>
 
-        <div class="res-row">
-          <div><i class='bx bx-wrench'></i> Servicios</div>
-          <div id="resServicios">—</div>
+        <div class="rv2-section">
+          <h3 class="rv2-section-title">TU AUTO</h3>
+          <div class="rv2-car">
+            <div class="rv2-car-image"><img id="resCatImage" src="" alt="Auto"></div>
+            <div class="rv2-car-info">
+              <div class="rv2-car-name" id="resCatName">—</div>
+              <div class="rv2-car-desc" id="resCatDesc">—</div>
+              <div class="rv2-car-codigo" id="resCatCodigo">—</div>
+              <div class="rv2-car-features" id="resCatFeatures"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="res-row">
-          <div><i class='bx bx-shield-quarter'></i> Protección</div>
-          <div id="resProte">—</div>
+        <div class="rv2-section">
+          <h3 class="rv2-section-title">DETALLES DEL PRECIO</h3>
+          <div class="rv2-price-block">
+            <div class="rv2-price-title">TARIFA BASE <button id="btnEditBase" class="btn-edit-base"><i class="fas fa-pen"></i></button></div>
+            <div class="rv2-price-amount" id="resBaseAmount">$0.00 MXN</div>
+            <div class="rv2-price-note" id="resBaseNote">0 día(s) – precio por día $0.00 MXN</div>
+          </div>
+          <div class="rv2-total-row"><span>Total:</span><strong id="resBaseTotalEstilo">$0.00 MXN</strong></div>
+          <div class="rv2-included">
+            <div class="rv2-included-title">INCLUIDO</div>
+            <ul><li><i class="fas fa-infinity"></i> Kilometraje ilimitado</li><li><i class="fas fa-shield-alt"></i> Relevo de Responsabilidad (Lí)</li></ul>
+          </div>
+          <div class="rv2-options" id="rv2OptionsContainer"><div class="rv2-options-title">OPCIONES DE RENTA</div><div id="rv2OptionsList"></div></div>
+          <div class="rv2-section" id="proteccionesSection"><h3 class="rv2-section-title">PROTECCIONES</h3><div id="rv2ProteccionesList"></div></div>
+          <div class="rv2-tax-row"><div class="rv2-tax-label">CARGOS E IVA (16%)</div><div class="rv2-tax-amount" id="resIvaEstilo">$0.00 MXN</div></div>
+          <div class="rv2-grand-total"><span>Total</span><strong id="resTotalEstilo">$0.00 MXN</strong></div>
         </div>
-        <div class="res-row">
-          <div><i class='bx bx-plus-circle'></i> Adicionales</div>
-          <div id="resAdds">—</div>
-        </div>
-
-        <div class="divider"></div>
-
-        <div class="res-row"><div>Subtotal</div><div id="resSub">$0.00 MXN</div></div>
-        <div class="res-row"><div>IVA (16%)</div><div id="resIva">$0.00 MXN</div></div>
-        <div class="res-row total"><div>Total</div><div id="resTotal">$0.00 MXN</div></div>
       </div>
     </div>
-
-    <footer class="modal-foot">
-      <button class="btn primary" type="button" id="resumenOk">Listo</button>
-    </footer>
+    <footer class="modal-foot"><button class="btn primary" type="button" id="resumenOk">Entendido</button></footer>
   </div>
 </div>
 
-<!-- =========================================
-     MODAL: CONFIRMACIÓN
-========================================= -->
+{{-- MODAL: CONFIRMACIÓN --}}
 <div class="pop modal" id="confirmPop" style="display:none;">
   <div class="box modal-box">
-    <header class="modal-head">
-      <div class="modal-title">✅ Cotización registrada</div>
-      <button class="btn gray" id="confirmClose" type="button">✖</button>
-    </header>
-
-    <div class="modal-body">
-      <p style="margin:0; font-weight:800; color:#111827;">
-        ¡Listo! La cotización se registró correctamente.
-      </p>
-    </div>
-
-    <footer class="modal-foot">
-      <button class="btn primary" id="confirmOk" type="button">Aceptar</button>
-    </footer>
+    <header class="modal-head"><div class="modal-title"><i class="fas fa-check-circle"></i> Cotización registrada</div><button class="btn gray" id="confirmClose" type="button">✖</button></header>
+    <div class="modal-body"><p style="margin:0; font-weight:800; color:#111827;">¡Listo! La cotización se registró correctamente.</p><p class="muted" style="margin:8px 0 0;">Te enviaremos a <b>Cotizaciones</b>.</p></div>
+    <footer class="modal-foot"><button class="btn primary" id="confirmOk" type="button">Ir a Cotizaciones</button></footer>
   </div>
 </div>
 
-@endsection
-@section('js-vistaCotizar')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<!-- MAPA DE ICONOS -->
 <script>
-    window.iconosPorId = {
-        @foreach($sucursales as $ciudad => $grupo)
-            @foreach($grupo as $s)
-                @php
-                    $nombre = strtolower($s->sucursal);
-                    $icono = 'fa-building';
-
-                    if (str_contains($nombre, 'aeropuerto')) {
-                        $icono = 'fa-plane-departure';
-                    }
-                    elseif ((str_contains($nombre, 'central') || str_contains($nombre, 'autobuses')) && !str_contains($nombre, 'plaza central park')) {
-                        $icono = 'fa-bus';
-                    }
-                    elseif (str_contains($nombre, 'oficina') || str_contains($nombre, 'plaza central park') || str_contains($nombre, 'plaza')) {
-                        $icono = 'fa-building';
-                    }
-                @endphp
-                {{ $s->id_sucursal }}: '{{ $icono }}',
-            @endforeach
-        @endforeach
-    };
-    console.log('✅ Iconos cargados:', window.iconosPorId);
+  window.cotizacionEditar = @json($cotizacion ?? null);
+  window.serviciosEditar = @json($serviciosCotizacion ?? []);
+  window.seguroEditar = @json($seguroCotizacion ?? null);
 </script>
 
-<script src="{{ asset('js/Cotizar.js') }}"></script>
+@endsection
+
+@section('js-vistaCotizar')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        window.iconosPorId = {
+            @foreach($sucursales as $ciudad => $grupo)
+                @foreach($grupo as $s)
+                    @php
+                        $nombre = strtolower($s->sucursal);
+                        $icono = 'fa-building';
+                        if (str_contains($nombre, 'aeropuerto')) { $icono = 'fa-plane-departure'; }
+                        elseif ((str_contains($nombre, 'central') || str_contains($nombre, 'autobuses')) && !str_contains($nombre, 'plaza central park')) { $icono = 'fa-bus'; }
+                    @endphp
+                    {{ $s->id_sucursal }}: '{{ $icono }}',
+                @endforeach
+            @endforeach
+        };
+    </script>
+
+    <script src="{{ asset('js/Cotizar.js') }}"></script>
+    <script>
+        function closePop(popId) {
+            const pop = document.getElementById(popId);
+            if (pop) pop.style.display = "none";
+        }
+        function seleccionarCategoriaCotizacion(cardElement) {
+            const id = cardElement.dataset.id;
+            const nombre = cardElement.dataset.nombre || "";
+            const desc = cardElement.dataset.desc || "";
+            const precio = Number(cardElement.dataset.precio || 0);
+            const precioKm = Number(cardElement.dataset.precioKm || 0);
+            const img = cardElement.dataset.img || "";
+            const capacidad = parseFloat(cardElement.dataset.litros || 0);
+            if (window._cotizacionAPI && window._cotizacionAPI.setCategoria) {
+                window._cotizacionAPI.setCategoria({ id, nombre, desc, precio_dia: precio, precio_km: precioKm, img, capacidad_tanque: capacidad });
+            }
+            const catPop = document.getElementById('catPop');
+            if (catPop) catPop.style.display = "none";
+        }
+    </script>
 @endsection

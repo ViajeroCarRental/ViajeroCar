@@ -1016,6 +1016,7 @@
 
 <div style="margin-bottom: 20px;">
 
+
     <!-- PICK-UP -->
     <table role="presentation" width="100%" style="margin-bottom:16px;">
         <tr>
@@ -1114,10 +1115,10 @@
     $urlFinalCategoria = 'https://www.viajerocarental.com/' . ltrim($imgLimpia, '/');
   @endphp
 
-  <img src="{{ $urlFinalCategoria }}"
-       alt="Categoría"
-       width="200"
-       style="width:200px; max-width:200px; display:block; border-radius:12px; border:0;">
+  <img src="{{ $imgCategoria }}"
+     alt="{{ $categoria->descripcion ?? 'Vehículo' }}"
+     width="200"
+     style="width:200px; max-width:200px; display:block; border-radius:12px; border:0;">
 </td>
 
   <!-- INFO -->
@@ -1270,9 +1271,9 @@
       $urlMobileFinal = 'https://www.viajerocarental.com/' . ltrim($imgMobileLimpia, '/');
     @endphp
 
-    <img src="{{ $urlMobileFinal }}"
-         alt="Categoría Vehículo"
-         style="width:90%; max-width:260px; height:auto; display:block; border-radius:12px; border:0;">
+    <img src="{{ $imgCategoria }}"
+     alt="{{ $categoria->descripcion ?? 'Vehículo' }}"
+     style="width:90%; max-width:260px; height:auto; display:block; border-radius:12px; border:0;">
   </td>
 </tr>
 

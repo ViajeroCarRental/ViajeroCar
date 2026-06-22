@@ -80,15 +80,35 @@
     </div>
 </div>
 
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 const csrf = document.querySelector('meta[name="csrf-token"]').content;
 let editId = null;
 
-/* ================
+/* =========================================================
    MODALES
-================ */
+========================================================= */
 const pop = document.getElementById("rolesPop");
 const usuariosPop = document.getElementById("usuariosPop");
+
+/* Helpers para abrir/cerrar el modal de rol */
+function abrirPop()  { pop.style.display = "flex"; }
+function cerrarPop() { pop.style.display = "none"; }
+
+/* =========================================================
+   PARCHE: SweetAlert2 SIEMPRE por encima de los .pop
+   (los .pop son <div> con z-index; subimos el de Swal por
+   encima de cualquier cosa para que nunca quede detrás)
+========================================================= */
+const _swalFire = Swal.fire.bind(Swal);
+Swal.fire = function (...args) {
+    const p = _swalFire(...args);
+    const container = document.querySelector('.swal2-container');
+    if (container) container.style.zIndex = '999999';
+    return p;
+};
 
 /* ================
    ELEMENTOS
@@ -105,11 +125,12 @@ const nombre = document.getElementById("rolNombre");
 btnNuevo.onclick = () => {
     editId = null;
     nombre.value = "";
+    document.getElementById("tituloModal").innerText = "Nuevo rol";
     document.getElementById("usuariosAsignados").style.display = "none";
-    pop.style.display = "flex";
+    abrirPop();
 };
 
-closePop.onclick = btnCancelar.onclick = () => pop.style.display = "none";
+closePop.onclick = btnCancelar.onclick = () => cerrarPop();
 
 /* =========================================================
    LISTAR ROLES
@@ -133,7 +154,7 @@ function cargarRoles() {
 
                     <td>
                         <button class="btn-action btn-editar" onclick="editar(${r.id_rol})">Editar</button>
-                        <button class="btn-action btn-eliminar" onclick="eliminarRol(${r.id_rol})">Eliminar</button>
+                        <button class="btn-action btn-eliminar" onclick="eliminarRol(${r.id_rol}, '${r.nombre.replace(/'/g, "\\'")}')">Eliminar</button>
                     </td>
                 </tr>`;
             });
@@ -182,6 +203,7 @@ window.editar = (id) => {
 
             editId = id;
             nombre.value = data.rol.nombre;
+            document.getElementById("tituloModal").innerText = "Editar rol";
 
             const lista = document.getElementById("listaUsuarios");
             lista.innerHTML = data.usuarios.length
@@ -191,7 +213,7 @@ window.editar = (id) => {
                 : "<li>No hay usuarios.</li>";
 
             document.getElementById("usuariosAsignados").style.display = "block";
-            pop.style.display = "flex";
+            abrirPop();
         });
 };
 
@@ -199,36 +221,126 @@ window.editar = (id) => {
    GUARDAR (CREAR / EDITAR)
 ========================================================= */
 btnGuardar.onclick = () => {
+
+    // Validación rápida
+    if (!nombre.value.trim()) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Falta el nombre',
+            text: 'Escribe el nombre del rol.',
+            confirmButtonText: 'Entendido'
+        });
+        return;
+    }
+
+    if (editId) {
+        // EDITAR: cerrar el modal ANTES de mostrar la confirmación
+        // (si no, el Swal sale detrás del .pop)
+        const nombreRol = nombre.value;
+        cerrarPop();
+
+        Swal.fire({
+            title: '¿Guardar cambios?',
+            text: 'Se modificará el rol "' + nombreRol + '".',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, modificar',
+            cancelButtonText: 'Cancelar'
+        }).then(result => {
+            if (result.isConfirmed) {
+                guardarRol();
+            } else {
+                // Si cancela, reabrir el modal para que no pierda lo escrito
+                abrirPop();
+            }
+        });
+    } else {
+        // CREAR: guardar directo
+        guardarRol();
+    }
+};
+
+function guardarRol() {
     const form = new FormData();
     form.append("_token", csrf);
     form.append("nombre", nombre.value);
 
+    const esEdicion = !!editId;
     let url = "/admin/roles/crear";
     if (editId) url = `/admin/roles/actualizar/${editId}`;
 
     fetch(url, { method: "POST", body: form })
     .then(r => r.json())
     .then(() => {
-        pop.style.display = "none";
+        cerrarPop();
         cargarRoles();
+
+        // Modal de confirmación centrado (éxito)
+        Swal.fire({
+            icon: 'success',
+            title: esEdicion ? 'Rol modificado' : 'Rol creado',
+            text: esEdicion
+                ? 'El rol se modificó correctamente.'
+                : 'El rol se creó correctamente.',
+            confirmButtonText: 'Aceptar',
+            confirmButtonColor: '#10b981'
+        });
+    })
+    .catch(() => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo guardar el rol.',
+            confirmButtonText: 'Entendido'
+        });
     });
-};
+}
 
 /* =========================================================
    ELIMINAR
 ========================================================= */
-window.eliminarRol = (id) => {
-    if (!confirm("¿Eliminar este rol?")) return;
+window.eliminarRol = (id, nombreRol) => {
+    Swal.fire({
+        title: '¿Eliminar rol?',
+        text: 'Se eliminará el rol "' + (nombreRol || '') + '". Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then(result => {
+        if (!result.isConfirmed) return;
 
-    const form = new FormData();
-    form.append("_token", csrf);
+        const form = new FormData();
+        form.append("_token", csrf);
 
-    fetch(`/admin/roles/eliminar/${id}`, {
-        method: "POST",
-        body: form
-    })
-    .then(r => r.json())
-    .then(() => cargarRoles());
+        fetch(`/admin/roles/eliminar/${id}`, {
+            method: "POST",
+            body: form
+        })
+        .then(r => r.json())
+        .then(() => {
+            cargarRoles();
+            Swal.fire({
+                icon: 'success',
+                title: 'Rol eliminado',
+                text: 'El rol se eliminó correctamente.',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#10b981'
+            });
+        })
+        .catch(() => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo eliminar el rol.',
+                confirmButtonText: 'Entendido'
+            });
+        });
+    });
 };
 </script>
 

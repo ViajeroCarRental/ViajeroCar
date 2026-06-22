@@ -31,81 +31,175 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
   /* ==========================================================
-     🗓️ Lista: +
-  =========================================================== */
- document.addEventListener("click", function(e) {
-  const btn = e.target.closest(".btn-plus");
-  if (!btn) return;
+    🗓️ FILTRO FECHA CON FLATPICKR
+  ========================================================== */
+  function initFiltroFechaFlatpickr() {
+    if (!window.flatpickr) return;
 
-  const row = btn.closest(".row");
-  const detail = row.nextElementSibling;
+    const inputUI = document.getElementById("filtro_fecha_ui");
+    const inputHidden = document.getElementById("filtro_fecha");
+    const form = document.querySelector("form.toolbar");
 
-  if (!detail || !detail.classList.contains("row-detail")) return;
+    if (!inputUI || !inputHidden || !form) return;
 
-  const isVisible = detail.style.display === "block";
+    let backdrop = document.querySelector(".fp-backdrop");
 
-  detail.style.display = isVisible ? "none" : "block";
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.className = "fp-backdrop";
+      document.body.appendChild(backdrop);
+    }
 
-  // cambiar + a -
-  btn.textContent = isVisible ? "+" : "-";
-});
+    function openModal(instance) {
+      backdrop.classList.add("is-open");
+      document.body.classList.add("no-scroll");
+      backdrop.onclick = () => instance.close();
+    }
 
-/* ==========================================================
-     🗓️ Lista: + // Editar
-  =========================================================== */
+    function closeModal() {
+      backdrop.classList.remove("is-open");
+      document.body.classList.remove("no-scroll");
+      backdrop.onclick = null;
+    }
 
-document.addEventListener("click", function(e) {
-  console.log("CLICK DETECTADO", e.target);
+    function makeActions(instance) {
+      const actions = document.createElement("div");
+      actions.className = "fp-actions";
 
-  const btn = e.target.closest(".btn-edit-direct");
+      actions.innerHTML = `
+        <button type="button" class="fp-today">Hoy</button>
+        <button type="button" class="fp-clear">Limpiar</button>
+        <button type="button" class="fp-label">✖ Fecha</button>
+      `;
 
-  if (!btn) {
-    console.log("NO es botón editar");
-    return;
+      actions.querySelector(".fp-today").addEventListener("click", () => {
+        instance.setDate(new Date(), true);
+      });
+
+      actions.querySelector(".fp-clear").addEventListener("click", () => {
+        instance.clear();
+        inputHidden.value = "";
+        form.submit();
+      });
+
+      return actions;
+    }
+
+    flatpickr(inputUI, {
+      locale: "es",
+      dateFormat: "d-M-Y",
+      allowInput: false,
+      clickOpens: true,
+      minDate: "today",
+
+      onOpen: (selectedDates, dateStr, instance) => {
+        openModal(instance);
+
+        if (!instance._actionsAdded) {
+          instance.calendarContainer.appendChild(makeActions(instance));
+          instance._actionsAdded = true;
+        }
+      },
+
+      onClose: () => closeModal(),
+
+      onChange: (selectedDates) => {
+        const d = selectedDates?.[0];
+
+        if (d) {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+
+          inputHidden.value = `${year}-${month}-${day}`;
+        } else {
+          inputHidden.value = "";
+        }
+
+        form.submit();
+      }
+    });
   }
 
-  console.log("✅ BOTÓN EDITAR DETECTADO");
+  initFiltroFechaFlatpickr();
 
-  const row = btn.closest(".row-detail")?.previousElementSibling;
 
-  console.log("ROW:", row);
-
-  current = {
-    codigo: row.dataset.codigo,
-    nombre_cliente: row.dataset.cliente,
-    email_cliente: row.dataset.email,
-    telefono_cliente: row.dataset.numero,
-    fecha_inicio: row.dataset.fechaSalida,
-    hora_retiro: row.dataset.hora_retiro,
-    fecha_fin: row.dataset.fechaFin,
-    hora_entrega: row.dataset.hora_entrega
-  };
-
-  console.log("🧾 CURRENT:", current);
-
-  openEditModal();
-});
-/* ==========================================================
-     🗓️ Lista: + // Eliminar
+  /* ==========================================================
+     🗓️ Lista: +
   =========================================================== */
+  document.addEventListener("click", function (e) {
+    const btn = e.target.closest(".btn-plus");
+    if (!btn) return;
 
-  document.addEventListener("click", function(e) {
-  const btn = e.target.closest(".btn-delete-direct");
-  if (!btn) return;
+    const row = btn.closest(".row");
+    const detail = row.nextElementSibling;
 
-  const url = btn.dataset.url;
+    if (!detail || !detail.classList.contains("row-detail")) return;
 
-  const form = document.getElementById("aDeleteForm");
-  form.action = url;
+    const isVisible = detail.style.display === "block";
 
-  // 🔥 envía directamente
-  form.submit();
-});
+    detail.style.display = isVisible ? "none" : "block";
 
-/* ==========================================================
-     🗓️ Lista: + // Reenviar correo.
-  =========================================================== */
-window.reenviarCorreo = function(id, btn) {
+    // cambiar + a -
+    btn.textContent = isVisible ? "+" : "-";
+  });
+
+  /* ==========================================================
+       🗓️ Lista: + // Editar
+    =========================================================== */
+
+  document.addEventListener("click", function (e) {
+    console.log("CLICK DETECTADO", e.target);
+
+    const btn = e.target.closest(".btn-edit-direct");
+
+    if (!btn) {
+      console.log("NO es botón editar");
+      return;
+    }
+
+    console.log("✅ BOTÓN EDITAR DETECTADO");
+
+    const row = btn.closest(".row-detail")?.previousElementSibling;
+
+    console.log("ROW:", row);
+
+    current = {
+      codigo: row.dataset.codigo,
+      nombre_cliente: row.dataset.cliente,
+      email_cliente: row.dataset.email,
+      telefono_cliente: row.dataset.numero,
+      fecha_inicio: row.dataset.fechaSalida,
+      hora_retiro: row.dataset.hora_retiro,
+      fecha_fin: row.dataset.fechaFin,
+      hora_entrega: row.dataset.hora_entrega
+    };
+
+    console.log("🧾 CURRENT:", current);
+
+    openEditModal();
+  });
+  /* ==========================================================
+       🗓️ Lista: + // Eliminar
+    =========================================================== */
+
+  document.addEventListener("click", function (e) {
+    const btn = e.target.closest(".btn-delete-direct");
+    if (!btn) return;
+
+    const url = btn.dataset.url;
+
+    const form = document.getElementById("aDeleteForm");
+    form.action = url;
+
+    // 🔥 envía directamente
+    form.submit();
+  });
+
+  /* ==========================================================
+       🗓️ Lista: + // Reenviar correo.
+    =========================================================== */
+  window.reenviarCorreo = function (id, btn) {
 
     if (!confirm("¿Reenviar correo al cliente?")) return;
 
@@ -114,150 +208,288 @@ window.reenviarCorreo = function(id, btn) {
     btn.innerHTML = "Enviando... ⏳";
 
     fetch(`/reservaciones/${id}/reenviar-correo`, {
-        method: "POST",
-        headers: {
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert(data.message);
-    })
-    .catch(() => {
-        alert("Error al enviar correo");
-    })
-    .finally(() => {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-    });
-};
-
-/* ==========================================================
-     🗓️ MODAL: Lista de vehiculos
-  =========================================================== */
-const modalVehiculos = document.getElementById("modalVehiculos");
-const tablaVehiculos = document.getElementById("tablaVehiculos");
-
-document.addEventListener("click", async (e) => {
-
-  const btn = e.target.closest(".btn-apartar-auto");
-  if (!btn) return;
-
-  modalVehiculos.classList.add("show");
-
-  tablaVehiculos.innerHTML = `<tr><td colspan="13">Cargando...</td></tr>`;
-
-  try {
-    const res = await fetch('/admin/vehiculos-disponibles');
-    const data = await res.json();
-
-    tablaVehiculos.innerHTML = "";
-
-    data.forEach(v => {
-      tablaVehiculos.innerHTML += `
-        <tr>
-          <td>${v.id_vehiculo}</td>
-          <td>${v.placa ?? '-'}</td>
-          <td>${v.categoria ?? '-'}</td>
-          <td>${v.tamano ?? '-'}</td>
-          <td>${v.modelo ?? '-'}</td>
-          <td>${v.transmision ?? '-'}</td>
-          <td>${v.color ?? '-'}</td>
-          <td>${v.gasolina_fraccion ?? 0}/16</td>
-          <td>${v.gasolina_actual ?? '-'}</td>
-          <td>${v.kilometraje ?? '-'}</td>
-          <td>${v.vigencia_verificacion ?? '-'}</td>
-          <td>${v.intervalo_km ?? '-'}</td>
-          <td>${v.fin_vigencia_poliza ?? '-'}</td>
-          <td>
-            <button class="btn success btn-select-auto" data-id="${v.id_vehiculo}">
-            Seleccionar
-            </button>
-            </td>
-        </tr>
-      `;
-    });
-
-  } catch (err) {
-    console.error(err);
-    tablaVehiculos.innerHTML = `<tr><td colspan="13">Error</td></tr>`;
-  }
-});
-
-
-document.getElementById("vClose")?.addEventListener("click", () => {
-  modalVehiculos.classList.remove("show");
-});
-
-document.getElementById("vCancel")?.addEventListener("click", () => {
-  modalVehiculos.classList.remove("show");
-});
-
-
-let reservacionSeleccionada = null;
-
-document.addEventListener("click", async (e) => {
-
-  const btn = e.target.closest(".btn-apartar-auto");
-  if (!btn) return;
-
-  reservacionSeleccionada = btn.dataset.id;
-
-  modalVehiculos.classList.add("show");
-});
-
-document.addEventListener("click", async (e) => {
-
-  const btn = e.target.closest(".btn-select-auto");
-  if (!btn) return;
-
-  const idVehiculo = btn.dataset.id;
-
-  if (!reservacionSeleccionada) {
-    alert("No hay reservación seleccionada");
-    return;
-  }
-
-  try {
-    const res = await fetch('/admin/crear-contrato', {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-      },
-      body: JSON.stringify({
-        id_reservacion: reservacionSeleccionada,
-        id_vehiculo: idVehiculo
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message);
       })
+      .catch(() => {
+        alert("Error al enviar correo");
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      });
+  };
+
+  /* ==========================================================
+       🗓️ MODAL: Lista de vehiculos
+    =========================================================== */
+  const modalVehiculos = document.getElementById("modalVehiculos");
+  const tablaVehiculos = document.getElementById("tablaVehiculos");
+
+  document.addEventListener("click", async (e) => {
+
+    const btn = e.target.closest(".btn-apartar-auto");
+    if (!btn) return;
+
+    modalVehiculos.classList.add("show");
+
+    tablaVehiculos.innerHTML = `<tr><td colspan="13">Cargando...</td></tr>`;
+
+    try {
+      const res = await fetch('/admin/vehiculos-disponibles');
+      const data = await res.json();
+
+      tablaVehiculos.innerHTML = "";
+
+      data.forEach(v => {
+        const fraccion = v.gasolina_fraccion ?? 0;   // nivel 0-16 (lo calcula el controlador)
+        const litros = v.gasolina_actual ?? 0;     // litros reales
+        const km = v.kilometraje ?? 0;
+
+        tablaVehiculos.innerHTML += `
+          <tr data-id-vehiculo="${v.id_vehiculo}"
+              data-placa="${v.placa ?? '-'}"
+              data-color="${v.color ?? '-'}"
+              data-categoria="${v.tamano ?? v.categoria ?? '-'}"
+              data-gas-original="${fraccion}"
+              data-km-original="${km}">
+            <td>${v.placa ?? '-'}</td>
+            <td>${v.categoria ?? '-'}</td>
+            <td>${v.tamano ?? '-'}</td>
+            <td>${v.modelo ?? '-'}</td>
+            <td>${v.transmision ?? '-'}</td>
+            <td>${v.color ?? '-'}</td>
+            <td class="celda-editable" data-tipo="gas">
+              <span class="celda-valor">${fraccion}/16</span>
+              <button type="button" class="btn-edit-inline" style="background:none;border:none;color:#D6121F;cursor:pointer;margin-left:4px;font-size:14px;">✏️</button>
+            </td>
+            <td class="celda-litros">${litros}</td>
+            <td class="celda-editable" data-tipo="km">
+              <span class="celda-valor">${Number(km).toLocaleString()}</span>
+              <button type="button" class="btn-edit-inline" style="background:none;border:none;color:#D6121F;cursor:pointer;margin-left:4px;font-size:14px;">✏️</button>
+            </td>
+            <td>${v.vigencia_verificacion ?? '-'}</td>
+            <td>${v.intervalo_km ?? '-'}</td>
+            <td>${v.fin_vigencia_poliza ?? '-'}</td>
+            <td>
+              <button class="btn success btn-select-auto" data-id="${v.id_vehiculo}">Seleccionar</button>
+            </td>
+          </tr>
+        `;
+      });
+
+    } catch (err) {
+      console.error(err);
+      tablaVehiculos.innerHTML = `<tr><td colspan="13">Error</td></tr>`;
+    }
+  });
+
+
+  document.getElementById("vClose")?.addEventListener("click", () => {
+    modalVehiculos.classList.remove("show");
+  });
+
+  document.getElementById("vCancel")?.addEventListener("click", () => {
+    modalVehiculos.classList.remove("show");
+  });
+
+
+  let reservacionSeleccionada = null;
+
+  document.addEventListener("click", async (e) => {
+
+    const btn = e.target.closest(".btn-apartar-auto");
+    if (!btn) return;
+
+    reservacionSeleccionada = btn.dataset.id;
+
+    modalVehiculos.classList.add("show");
+  });
+
+  document.addEventListener("click", async (e) => {
+
+    const btn = e.target.closest(".btn-select-auto");
+    if (!btn) return;
+
+    const idVehiculo = btn.dataset.id;
+
+    if (!reservacionSeleccionada) {
+      alert("No hay reservación seleccionada");
+      return;
+    }
+
+    try {
+      const res = await fetch('/admin/crear-contrato', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+          id_reservacion: reservacionSeleccionada,
+          id_vehiculo: idVehiculo
+        })
+      });
+
+      const data = await res.json();
+
+      if (!data.success) throw new Error(data.message);
+
+      // 🔥 REDIRECCIÓN
+      window.location.href = `/admin/reservacion/${data.id_contrato}/checklist?modo=salida&from=apartar`;
+
+    } catch (err) {
+      console.error(err);
+      alert("Error al crear contrato");
+    }
+  });
+
+  /* ==========================================================
+   ✏️ EDICIÓN INLINE INVENTARIO (gas / km) — Modal Apartar
+=========================================================== */
+  (function initEdicionInventarioRA() {
+    const tbody = document.getElementById("tablaVehiculos");
+    const modalConf = document.getElementById("modalConfirmInv");
+    if (!tbody || !modalConf) return;
+
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
+    let pendiente = null;
+
+    const activar = (celda) => {
+      if (celda.querySelector("input")) return;
+      const fila = celda.closest("tr");
+      const span = celda.querySelector(".celda-valor");
+      const tipo = celda.dataset.tipo;
+      const original = tipo === "gas"
+        ? (fila.dataset.gasOriginal || "0")
+        : (fila.dataset.kmOriginal || "0");
+
+      const input = document.createElement("input");
+      input.type = "number"; input.value = original; input.min = "0";
+      if (tipo === "gas") input.max = "16";
+      Object.assign(input.style, { width: "70px", border: "1px solid #D6121F", borderRadius: "6px", padding: "3px 6px", fontWeight: "bold", textAlign: "center" });
+
+      span.style.display = "none";
+      celda.querySelector(".btn-edit-inline").style.display = "none";
+      celda.appendChild(input);
+      input.focus(); input.select();
+
+      const cancelar = () => {
+        input.remove();
+        span.style.display = "";
+        celda.querySelector(".btn-edit-inline").style.display = "";
+      };
+
+      const confirmar = () => {
+        const nuevo = parseFloat(input.value);
+        const orig = parseFloat(original);
+        if (isNaN(nuevo) || nuevo === orig) { cancelar(); return; }
+        if (tipo === "gas" && (nuevo < 0 || nuevo > 16)) { alert("La gasolina debe estar entre 0 y 16."); cancelar(); return; }
+        if (nuevo < 0) { cancelar(); return; }
+
+        pendiente = {
+          fila, celda, tipo, span,
+          idVehiculo: fila.dataset.idVehiculo,
+          valorNuevo: nuevo,           // para km
+          fraccionNueva: nuevo,        // para gas (nivel 0-16)
+          restaurar: cancelar,
+        };
+
+        document.getElementById("ciCategoria").textContent = fila.dataset.categoria;
+        document.getElementById("ciColor").textContent = fila.dataset.color;
+        document.getElementById("ciPlacas").textContent = fila.dataset.placa;
+        document.getElementById("ciCampoLabel").textContent = tipo === "gas" ? "Gasolina" : "Kilometraje";
+        document.getElementById("ciAnterior").textContent = tipo === "gas" ? `${orig}/16` : orig.toLocaleString();
+        document.getElementById("ciNuevo").textContent = tipo === "gas" ? `${nuevo}/16` : nuevo.toLocaleString();
+
+        modalConf.classList.add("show");
+      };
+
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") confirmar(); if (e.key === "Escape") cancelar(); });
+      input.addEventListener("blur", confirmar);
+    };
+
+    tbody.addEventListener("click", (e) => {
+      const btn = e.target.closest(".btn-edit-inline");
+      if (!btn) return;
+      e.stopPropagation();
+      activar(btn.closest(".celda-editable"));
     });
 
-    const data = await res.json();
+    const cerrar = (restaurar = true) => {
+      modalConf.classList.remove("show");
+      if (restaurar && pendiente) pendiente.restaurar();
+      pendiente = null;
+    };
+    document.getElementById("ciCancel")?.addEventListener("click", () => cerrar(true));
+    document.getElementById("ciClose")?.addEventListener("click", () => cerrar(true));
+    modalConf.addEventListener("click", (e) => { if (e.target === modalConf) cerrar(true); });
 
-    if (!data.success) throw new Error(data.message);
-
-    // 🔥 REDIRECCIÓN
-    window.location.href = `/admin/reservacion/${data.id_contrato}/checklist?modo=salida&from=apartar`;
-
-  } catch (err) {
-    console.error(err);
-    alert("Error al crear contrato");
-  }
-});
+    document.getElementById("ciConfirm")?.addEventListener("click", async () => {
+      if (!pendiente) return;
+      const p = pendiente;
+      const btn = document.getElementById("ciConfirm");
+      btn.disabled = true; const txt = btn.innerHTML; btn.innerHTML = "Guardando...";
+      try {
+        const res = await fetch("/admin/vehiculo/actualizar-inventario", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrf },
+          body: JSON.stringify({
+            id_vehiculo: p.idVehiculo,
+            campo: p.tipo === "gas" ? "gasolina" : "kilometraje",
+            valor: p.tipo === "gas" ? p.fraccionNueva : p.valorNuevo,  // nivel 0-16 para gas
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && (data.success || data.ok)) {
+          if (p.tipo === "gas") {
+            p.span.textContent = `${p.fraccionNueva}/16`;
+            p.fila.dataset.gasOriginal = p.fraccionNueva;
+            const cl = p.fila.querySelector(".celda-litros");
+            if (cl) cl.textContent = data.litros ?? cl.textContent;   // litros del servidor
+          } else {
+            p.span.textContent = p.valorNuevo.toLocaleString();
+            p.fila.dataset.kmOriginal = p.valorNuevo;
+          }
+          p.celda.querySelector("input")?.remove();
+          p.span.style.display = "";
+          p.celda.querySelector(".btn-edit-inline").style.display = "";
+          window.alertify?.success?.("Inventario actualizado.");
+          modalConf.classList.remove("show");
+          pendiente = null;
+        } else {
+          throw new Error(data.error || "Error backend");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("No se pudo guardar: " + err.message);
+        cerrar(true);
+      } finally {
+        btn.disabled = false; btn.innerHTML = txt;
+      }
+    });
+  })();
 
   /* ==========================================================
      🗓️ MODAL: RESERVACIONES ANTERIORES
   =========================================================== */
   const modalPrev = $("#modalPrev");
-  const btnPrev   = $("#btnPrevBookings");
-  const pClose    = $("#pClose");
-  const pCancel   = $("#pCancel");
+  const btnPrev = $("#btnPrevBookings");
+  const pClose = $("#pClose");
+  const pCancel = $("#pCancel");
 
-  function openPrevModal(){
+  function openPrevModal() {
     if (!modalPrev) return;
     modalPrev.classList.add("show");
     modalPrev.setAttribute("aria-hidden", "false");
   }
-  function closePrevModal(){
+  function closePrevModal() {
     if (!modalPrev) return;
     modalPrev.classList.remove("show");
     modalPrev.setAttribute("aria-hidden", "true");
@@ -354,8 +586,8 @@ document.addEventListener("click", async (e) => {
       //$("#mTotal").textContent = Fmx(data.total);
 
       //$("#mTarifaModificada").textContent = data.tarifa_modificada
-        //? Fmx(data.tarifa_modificada)
-        //: "—";
+      //? Fmx(data.tarifa_modificada)
+      //: "—";
 
       $("#modal").classList.add("show");
       console.log("🪟 Modal abierto con reservación:", current);

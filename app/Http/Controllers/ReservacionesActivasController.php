@@ -43,6 +43,7 @@ class ReservacionesActivasController extends Controller
             $reservaciones = DB::table('reservaciones as r')
                 ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
                 ->leftJoin('vehiculos as v', 'r.id_vehiculo', '=', 'v.id_vehiculo')
+                ->leftJoin('sucursales as s', 'r.sucursal_retiro', '=', 's.id_sucursal')
                 ->select(
                     'r.id_reservacion',
                     'r.codigo',
@@ -61,6 +62,16 @@ class ReservacionesActivasController extends Controller
                     'r.fecha_fin',
                     'r.total',
                     'r.sucursal_retiro',
+
+                    DB::raw("
+                    CASE
+                        WHEN s.nombre = 'Querétaro Aeropuerto' THEN 'AIQ'
+                        WHEN s.nombre = 'Querétaro Central de Autobuses' THEN 'TAQ'
+                        WHEN s.nombre = 'Querétaro Oficina Plaza Central Park' THEN 'OCP'
+                        ELSE NULL
+                    END AS oficina_compacta
+                    "),
+
                     'r.no_vuelo',
                     'r.created_at',
                     'c.codigo as categoria',

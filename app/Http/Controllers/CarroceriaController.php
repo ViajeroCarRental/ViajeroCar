@@ -27,7 +27,8 @@ class CarroceriaController extends Controller
                 'v.marca',
                 'v.modelo',
                 'v.placa',
-                'v.anio'
+                'v.anio',
+                DB::raw('CASE WHEN c.foto_carroceria IS NOT NULL THEN 1 ELSE 0 END as tiene_foto')
             )
             ->orderByDesc('c.id_carroceria')
             ->get();
@@ -53,11 +54,17 @@ class CarroceriaController extends Controller
                 'taller'          => 'nullable|string|max:120',
                 'costo_estimado'  => 'nullable|numeric|min:0',
                 'estatus'         => 'required|string|max:50',
+                'foto_carroceria' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096',
             ]);
 
             // ✅ Generar folio automático
             $ultimo = DB::table('carrocerias')->max('id_carroceria') + 1;
             $folio = 'CAR-' . str_pad($ultimo, 3, '0', STR_PAD_LEFT);
+
+            //Imagen de carroceria
+            $foto = $request->hasFile('foto_carroceria')
+            ? file_get_contents($request->file('foto_carroceria')->getRealPath())
+            : null;
 
             // ✅ Insertar registro
             $idCarroceria = DB::table('carrocerias')->insertGetId([
@@ -70,6 +77,7 @@ class CarroceriaController extends Controller
                 'taller'          => $validated['taller'],
                 'costo_estimado'  => $validated['costo_estimado'] ?? 0,
                 'estatus'         => $validated['estatus'], // 👈 columna correcta confirmada
+                'foto_carroceria' => $foto,
                 'created_at'      => now(),
                 'updated_at'      => now(),
             ]);
@@ -108,6 +116,8 @@ class CarroceriaController extends Controller
                 'taller'         => 'nullable|string|max:120',
                 'costo_estimado' => 'nullable|numeric|min:0',
                 'estatus'        => 'required|string|max:50',
+                'foto_carroceria' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096',
+
             ]);
 
             DB::table('carrocerias')->where('id_carroceria', $id)->update([
@@ -120,10 +130,39 @@ class CarroceriaController extends Controller
                 'updated_at'     => now(),
             ]);
 
+            // 🆕 Solo actualizar foto si vino una nueva
+        if ($request->hasFile('foto_carroceria')) {
+            $update['foto_carroceria'] = file_get_contents(
+                $request->file('foto_carroceria')->getRealPath()
+            );
+        }
+
+        DB::table('carrocerias')->where('id_carroceria', $id)->update($update);
+
             return redirect()->route('carroceria.index')->with('success', 'Reporte actualizado correctamente.');
         } catch (\Exception $e) {
             \Log::error('❌ Error en CarroceriaController@update: ' . $e->getMessage());
             return back()->with('error', 'Error al actualizar el reporte.');
         }
     }
+
+
+    // ==========================================================
+// 🖼️ Servir foto desde BD
+// ==========================================================
+public function foto($id)
+{
+    $row = DB::table('carrocerias')
+        ->select('foto_carroceria')
+        ->where('id_carroceria', $id)
+        ->first();
+
+    if (!$row || !$row->foto_carroceria) {
+        abort(404);
+    }
+
+    return response($row->foto_carroceria)
+        ->header('Content-Type', 'image/jpeg')
+        ->header('Cache-Control', 'public, max-age=3600');
+}
 }

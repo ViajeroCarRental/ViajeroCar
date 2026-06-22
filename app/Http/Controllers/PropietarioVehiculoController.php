@@ -13,7 +13,7 @@ class PropietarioVehiculoController extends Controller
     // ===============================
     public function index()
     {
-        return view('admin.propietarios');
+        return view('Admin.propietarios');
     }
 
     // ===============================
@@ -64,17 +64,28 @@ class PropietarioVehiculoController extends Controller
             'firma_propietario' => 'required|string'
         ]);
 
-        DB::table('vehiculos')
-            ->where('id_vehiculo', $request->id_vehiculo)
-            ->update([
-                'propietario' => $request->nombre_propietario,
-                'firma_propietario' => $request->firma_propietario,
-                'updated_at' => now()
-            ]);
+        $nombre = trim($request->nombre_propietario);
+    $firma  = $request->firma_propietario;
 
-        return response()->json(['success' => true]);
-    }
+    // 1) Guardar en el vehículo seleccionado
+    DB::table('vehiculos')
+        ->where('id_vehiculo', $request->id_vehiculo)
+        ->update([
+            'propietario'       => $nombre,
+            'firma_propietario' => $firma,
+            'updated_at'        => now()
+        ]);
 
+    // 2) Propagar la MISMA firma a todos los vehículos con el mismo propietario
+    DB::table('vehiculos')
+        ->where('propietario', $nombre)
+        ->update([
+            'firma_propietario' => $firma,
+            'updated_at'        => now()
+        ]);
+
+    return response()->json(['success' => true]);
+}
     // ===============================
     // ACTUALIZAR
     // ===============================
@@ -85,16 +96,55 @@ class PropietarioVehiculoController extends Controller
             'firma_propietario' => 'required|string'
         ]);
 
-        DB::table('vehiculos')
-            ->where('id_vehiculo', $id)
-            ->update([
-                'propietario' => $request->nombre_propietario,
-                'firma_propietario' => $request->firma_propietario,
-                'updated_at' => now()
-            ]);
+     $nombre = trim($request->nombre_propietario);
+        $firma  = $request->firma_propietario;
 
-        return response()->json(['success' => true]);
+    // Nombre anterior (por si cambió el propietario en este vehículo)
+    $anterior = DB::table('vehiculos')
+        ->where('id_vehiculo', $id)
+        ->value('propietario');
+
+    // 1) Actualizar el vehículo editado
+    DB::table('vehiculos')
+        ->where('id_vehiculo', $id)
+        ->update([
+            'propietario'       => $nombre,
+            'firma_propietario' => $firma,
+            'updated_at'        => now()
+        ]);
+
+    // 2) Propagar la firma a todos los vehículos con el MISMO propietario (nuevo)
+    DB::table('vehiculos')
+        ->where('propietario', $nombre)
+        ->update([
+            'firma_propietario' => $firma,
+            'updated_at'        => now()
+        ]);
+
+    return response()->json(['success' => true]);
+}
+
+// ===============================
+// BUSCAR FIRMA POR NOMBRE (para autocompletar al registrar)
+// ===============================
+public function buscarPorNombre(Request $request)
+{
+    $nombre = trim($request->query('nombre', ''));
+
+    if ($nombre === '') {
+        return response()->json(['firma' => null]);
     }
+
+    $firma = DB::table('vehiculos')
+        ->where('propietario', $nombre)
+        ->whereNotNull('firma_propietario')
+        ->value('firma_propietario');
+
+    return response()->json(['firma' => $firma]);
+}
+
+
+
 
     // ===============================
     // ELIMINAR

@@ -1,111 +1,142 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="{{asset('css/sidebar.css')}}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css"/>
+
+    <title>@yield('Titulo', 'Ventas')</title>
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <link rel="icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
     <link rel="shortcut icon" href="{{ asset('img/Icono.ico') }}" type="image/x-icon">
 
-    <!-- Bootstrap Icons -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Alertify -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css"/>
+
+    <!-- CSS VISTAS -->
     @yield('css-vistaHomeVentas')
     @yield('css-vistareservacionesAdmin')
-    @yield('css-vistaHomeCotizaciones')
-    @yield('css-vistaCotizar')
-    @yield('css-vistaHCotizacionesRecientes')
     @yield('css-vistaReservacionesActivas')
+    @yield('css-vistaCotizar')
     @yield('css-vistaVisorReservaciones')
     @yield('css-vistaAdministracionReservaciones')
     @yield('css-vistaHistorial')
     @yield('css-vistaContrato')
     @yield('css-vistaAltaCliente')
-    @yield('css-vistaLicencia')
-    @yield('css-vistaRFC-Fiscal')
     @yield('css-vistaFacturar')
-    @yield('css-VistaCotizacionesRecientes')
     @yield('css-vistaContratoFinal')
-    @yield('css-vistaEditarContrato')
-    <title>@yield('Titulo')</title>
+
+    @yield('css')
+
+    <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
+
+    <!-- 🔥 FIX GLOBAL DEL CONTENEDOR -->
+    <style>
+        .ventas-internal-content{
+            display:block !important;
+            padding:28px 40px !important;
+        }
+
+        .ventas-internal-content .inner-back-wrap{
+            width:100%;
+            display:flex;
+            justify-content:flex-start;
+            align-items:center;
+            margin:0 0 22px 0;
+            padding:0;
+            position:relative;
+            z-index:50;
+            order:-999;
+        }
+
+        .ventas-internal-content .inner-back-btn{
+            display:inline-flex;
+            align-items:center;
+            gap:9px;
+            padding:11px 18px;
+            border-radius:12px;
+            background:#fff;
+            color:#b22222;
+            border:1px solid rgba(178,34,34,.25);
+            text-decoration:none;
+            font-weight:800;
+            font-size:14px;
+            box-shadow:0 10px 25px rgba(0,0,0,.06);
+            transition:.2s ease;
+        }
+
+        .ventas-internal-content .inner-back-btn:hover{
+            background:#b22222;
+            color:#fff;
+        }
+
+        @media(max-width:650px){
+            .ventas-internal-content{
+                padding:20px !important;
+            }
+
+            .ventas-internal-content .inner-back-btn{
+                width:100%;
+                justify-content:center;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-<button class="btn-toggle" id="btnToggleSidebar" type="button" aria-label="Mostrar/Ocultar menú">
-  <i class="bi bi-list"></i>
-</button>
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<!-- 🔥 CONTENEDOR PRINCIPAL -->
+<div class="main-content ventas-internal-content">
 
-    <!-- SIDEBAR: Reservaciones -->
-<aside class="sidebar sidebar--reservas">
-  <div class="logo">
-    <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
-  </div>
+    <!-- 🔙 BOTÓN -->
+    <div class="inner-back-wrap">
+        <a href="{{ route('rutaMenuVentas') }}" class="inner-back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Regresar a menú ventas
+        </a>
+    </div>
 
-  <ul class="menu">
-    <li class="menu-section">Reservaciones</li>
-    <li><a href="{{ route('rutaReservacionesAdmin') }}"><i class="fas fa-file-invoice"></i> Reservaciones</a></li>
-    <li><a href="{{ route('rutaCotizar') }}"><i class="fas fa-briefcase"></i> Cotizaciones</a></li>
-    <li><a href="{{ route('rutaReservacionesActivas') }}"><i class="fas fa-check-square"></i>Bookings</a></li>
-    <li><a href="{{ route('rutaVisorReservaciones') }}"><i class="fas fa-eye"></i> Visor de reservaciones</a></li>
-    <li><a href="{{ route('rutaAdministracionReservaciones') }}"><i class="fas fa-cogs"></i> Contratos</a></li>
-    <li><a href="{{ route('ventas.historial') }}"><i class="fas fa-folder-open"></i> Historial completo</a></li>
-    <li><a href="{{ route('rutaAltaCliente') }}"><i class="fas fa-user-plus"></i> Alta Cliente</a></li>
-    <li><a href="{{ route('rutaFacturar') }}"><i class="fas fa-file-invoice-dollar"></i> Facturar</a></li>
+    <!-- 🔥 CONTENEDOR DE CONTENIDO (CLAVE PARA QUE NO SE BAJE) -->
+    <div class="ventas-content-wrap">
 
-    <li class="menu-section">Navegación</li>
-    <li><a href="{{route('rutaInicioVentas')}}"><i class="fas fa-arrow-left"></i> Volver al Panel</a></li>
-    <li><a href="{{ route('rutaDashboard') }}"><i class="fas fa-arrow-left"></i> Volver a módulos</a></li>
-  </ul>
-</aside>
-<div class="main-content">
-    @yield('contenidoHomeVentas')
-    @yield('contenidoreservacionesAdmin')
-    @yield('contenidoCotizaciones')
-    @yield('contenidoCotizar')
-    @yield('contenidoCotizacionesRecientes')
-    @yield('contenidoReservacionesActivas')
-    @yield('contenidoVisorReservaciones')
-    @yield('contenidoAdministracionReservaciones')
-    @yield('contenidoHistorial')
-    @yield('contenidoContrato')
-    @yield('contenidoAltaCliente')
-    @yield('contenidoLicencia')
-    @yield('contenidoRFC-Fiscal')
-    @yield('contenidoFacturar')
-    @yield('contenido-VistaCotizacionesRecientes')
-    @yield('contenidoContratoFinal')
-    @yield('contenidoEditarContrato')
-    @yield('contenidoChecklist2')
+        @yield('contenidoHomeVentas')
+        @yield('contenidoreservacionesAdmin')
+        @yield('contenidoReservacionesActivas')
+        @yield('contenidoCotizar')
+        @yield('contenidoVisorReservaciones')
+        @yield('contenidoAdministracionReservaciones')
+        @yield('contenidoHistorial')
+        @yield('contenidoContrato')
+        @yield('contenidoAltaCliente')
+        @yield('contenidoFacturar')
+        @yield('contenidoContratoFinal')
+
+        @yield('contenido')
+
+    </div>
+
 </div>
 
 <div class="containerJS">
     <script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+
     @yield('js-vistaHomeVentas')
     @yield('js-vistareservacionesAdmin')
-    @yield('js-vistaHomeCotizaciones')
-    @yield('js-vistaCotizar')
-    @yield('js-vistaCotizacionesRecientes')
     @yield('js-vistaReservacionesActivas')
+    @yield('js-vistaCotizar')
     @yield('js-vistaVisorReservaciones')
     @yield('js-vistaAdministracionReservaciones')
     @yield('js-vistaHistorial')
     @yield('js-vistaContrato')
     @yield('js-vistaAltaCliente')
-    @yield('js-vistaLicencia')
-    @yield('js-vistaRFC-Fiscal')
     @yield('js-vistaFacturar')
-    @yield('js-VistaCotizacionesRecientes')
     @yield('js-vistaContratoFinal')
-    @yield('js-vistaEditarContrato')
-    @yield('js-vistaChecklist2')
-    <script src="{{ asset('js/sidebar-toggle.js') }}"></script>
 
-    {{-- ⚠️ Mensaje de sesión expirada --}}
+    @yield('js')
+
     @if (session('session_expired'))
         <script>
             document.addEventListener('DOMContentLoaded', function () {
@@ -114,6 +145,6 @@
         </script>
     @endif
 </div>
+
 </body>
 </html>
-

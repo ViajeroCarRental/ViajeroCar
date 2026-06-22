@@ -1,21 +1,16 @@
 @extends('layouts.Usuarios')
+
 @section('Titulo', 'Home')
+
 @section('css-vistaHome')
+    {{-- ✅ Swiper CSS (específico del home) --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    {{-- Select2 CSS --}}
 
+    {{--
+        NOTA: Select2 CSS, Font Awesome y Flatpickr CSS se eliminaron
+        de aquí porque YA están cargados en el layout.
+    --}}
 
-
-    {{-- reemplaza visualmente  <select>. --}}
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
-        integrity="sha512-p+6F+H1G5p8pP/1hObu/YZ7o2aM5J5lFjAzU5e+0Jx8xR+uEzjFN8IvU3UpUy6v1k3vXv4+XzN0z3VQUpgK6Vw=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
-        integrity="sha512-p+6F+H1G5p8pP/1hObu/YZ7o2aM5J5lFjAzU5e+0Jx8xR+uEzjFN8IvU3UpUy6v1k3vXv4+XzN0z3VQUpgK6Vw=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         :root {
             --brand: #b22222;
@@ -378,8 +373,8 @@
         }
 
         /* =========================
-                  ✅ BURBUJA RADIAL
-                ========================= */
+           ✅ BURBUJA RADIAL
+        ========================= */
         .social-fab {
             position: fixed;
             right: 18px;
@@ -456,6 +451,11 @@
             pointer-events: auto;
         }
 
+        .social-fab i {
+            font-size: 20px;
+        }
+
+        /* ===== Select2 ===== */
         .select2-container--default .select2-selection--single {
             display: flex;
             align-items: center;
@@ -483,35 +483,6 @@
         .select2-results__option .icon-item i {
             margin-right: 8px;
             font-size: 1em;
-        }
-
-        .select2-container--default .select2-selection--single {
-            display: flex;
-            align-items: center;
-            height: 48px;
-            border-radius: 10px;
-            padding: 0 10px;
-        }
-
-        .select2-selection__rendered {
-            display: flex;
-            align-items: center;
-            line-height: normal !important;
-        }
-
-        .select2-selection__rendered i {
-            margin-right: 8px;
-            font-size: 1.2em;
-        }
-
-        .select2-results__option .icon-item i {
-            margin-right: 8px;
-            font-size: 1em;
-        }
-
-        .social-fab i {
-            font-size: 20px;
-        }
         }
 
         /* Botones de carrusel */
@@ -551,8 +522,8 @@
         }
 
         /* ========================
-               ESTILOS PARA PRECIOS
-            =========================== */
+           ESTILOS PARA PRECIOS
+        =========================== */
         .price-line {
             display: flex;
             align-items: baseline;
@@ -632,8 +603,8 @@
         }
 
         /* ============================================================
-               MODAL MEMBRESÍA
-            ============================================================ */
+           MODAL MEMBRESÍA
+        ============================================================ */
         .modal-membership {
             position: fixed;
             inset: 0;
@@ -795,8 +766,8 @@
         }
 
         /* ============================================================
-               BOTÓN INTERROGACIÓN
-            ============================================================ */
+           BOTÓN INTERROGACIÓN
+        ============================================================ */
         .btn-icon-question-corner {
             position: absolute;
             top: 20px;
@@ -847,334 +818,202 @@
     </style>
 @endsection
 
+
 @section('contenidoHome')
     @push('head')
         <link rel="preload" as="image" href="{{ asset('img/inicio1.webp') }}" fetchpriority="high">
     @endpush
 
+    {{-- ============================================================
+         ARRAY DE COCHES (PHP centralizado)
+         Datos exactos de las 12 tarjetas originales.
+         Si quieres cambiar precios/descuentos, edítalos aquí UNA vez.
+    ============================================================ --}}
     @php
-        $bookNowUrl = route('rutaReservasIniciar', ['from' => 'welcome']);
-
-        $flota1 = [
+        $coches = [
             [
-                'price' => 467,
-                'old' => 899,
-                'pct' => 48,
-                'cat' => 'Compact',
-                'model' => 'Chevrolet Aveo or similar | C',
-                'img' => 'aveo.webp',
-                'pass' => 5,
-                'bags' => 2,
-                'brief' => 1,
-                'trans' => 'Automatic',
+                'categoria' => 'Compact',
+                'modelo' => 'Chevrolet Aveo or similar | C',
+                'imagen' => 'aveo.webp',
+                'alt' => 'Chevrolet Aveo o similar',
+                'precio' => 467,
+                'precio_anterior' => 899,
+                'descuento' => '-48%',
+                'personas' => 5,
+                'maletas_grandes' => 2,
+                'maletas_pequenas' => 1,
+                'transmision' => 'Automatic',
             ],
             [
-                'price' => 600,
-                'old' => 1049,
-                'pct' => 43,
-                'cat' => 'Intermediate',
-                'model' => 'Volkswagen Virtus or similar | D',
-                'img' => 'virtus.webp',
-                'pass' => 5,
-                'bags' => 2,
-                'brief' => 2,
-                'trans' => 'Automatic',
+                'categoria' => 'Intermediate',
+                'modelo' => 'Volkswagen Virtus or similar | D',
+                'imagen' => 'virtus.webp',
+                'alt' => 'Volkswagen Virtus o similar',
+                'precio' => 600,
+                'precio_anterior' => 1049,
+                'descuento' => '-43%',
+                'personas' => 5,
+                'maletas_grandes' => 2,
+                'maletas_pequenas' => 2,
+                'transmision' => 'Automatic',
             ],
             [
-                'price' => 800,
-                'old' => 1199,
-                'pct' => 33,
-                'cat' => 'Full Size',
-                'model' => 'Volkswagen Jetta or similar | E',
-                'img' => 'jetta.webp',
-                'pass' => 5,
-                'bags' => 3,
-                'brief' => 3,
-                'trans' => 'Automatic',
+                'categoria' => 'Full Size',
+                'modelo' => 'Volkswagen Jetta or similar | E',
+                'imagen' => 'jetta.webp',
+                'alt' => 'Volkswagen Jetta o similar',
+                'precio' => 800,
+                'precio_anterior' => 1199,
+                'descuento' => '-33%',
+                'personas' => 5,
+                'maletas_grandes' => 3,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Automatic',
             ],
             [
-                'price' => 1550,
-                'old' => 1999,
-                'pct' => 22,
-                'cat' => 'Full Size',
-                'model' => 'Toyota Camry or similar | F',
-                'img' => 'camry.webp',
-                'pass' => 5,
-                'bags' => 3,
-                'brief' => 3,
-                'trans' => 'Automatic',
+                'categoria' => 'Full Size',
+                'modelo' => 'Toyota Camry or similar | F',
+                'imagen' => 'camry.webp',
+                'alt' => 'Toyota Camry  o similar',
+                'precio' => 1550,
+                'precio_anterior' => 1999,
+                'descuento' => '-22%',
+                'personas' => 5,
+                'maletas_grandes' => 3,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Automatic',
             ],
             [
-                'price' => 1600,
-                'old' => 2100,
-                'pct' => 24,
-                'cat' => 'Compact SUV',
-                'model' => 'Jeep Renegade or similar | IC',
-                'img' => 'renegade.webp',
-                'pass' => 5,
-                'bags' => 2,
-                'brief' => 3,
-                'trans' => 'Automatic',
+                'categoria' => 'Compact SUV',
+                'modelo' => 'Jeep Renegade or similar | IC',
+                'imagen' => 'renegade.webp',
+                'alt' => ' Jeep Renegade o similar',
+                'precio' => 1600,
+                'precio_anterior' => 2100,
+                'descuento' => '-24%',
+                'personas' => 5,
+                'maletas_grandes' => 2,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Automatic',
             ],
             [
-                'price' => 1800,
-                'old' => 2400,
-                'pct' => 25,
-                'cat' => 'Midsize SUV',
-                'model' => 'Volkswagen Taos or similar | I',
-                'img' => 'taos.webp',
-                'pass' => 5,
-                'bags' => 2,
-                'brief' => 3,
-                'trans' => 'Automatic',
-            ],
-        ];
-
-        $flota2 = [
-            [
-                'price' => 1700,
-                'old' => 2200,
-                'pct' => 23,
-                'cat' => 'Compact Family SUV',
-                'model' => 'Toyota Avanza or similar | IB',
-                'img' => 'avanza.png',
-                'pass' => 7,
-                'bags' => 2,
-                'brief' => 2,
-                'trans' => 'Automatic',
+                'categoria' => 'Midsize SUV',
+                'modelo' => 'Volkswagen Taos or similar | I',
+                'imagen' => 'taos.png',
+                'alt' => 'Volkswagen Taos o similar',
+                'precio' => 1800,
+                'precio_anterior' => 2400,
+                'descuento' => '-25%',
+                'personas' => 5,
+                'maletas_grandes' => 2,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Automatic',
             ],
             [
-                'price' => 2600,
-                'old' => 3000,
-                'pct' => 13,
-                'cat' => 'Minivan',
-                'model' => 'Honda Odyssey or similar | M',
-                'img' => 'Odyssey.png',
-                'pass' => 8,
-                'bags' => 8,
-                'brief' => 4,
-                'trans' => 'Automatic',
+                'categoria' => 'Compact Family SUV',
+                'modelo' => 'Toyota Avanza or similar | IB',
+                'imagen' => 'avanza.png',
+                'alt' => 'Toyota avanza o similar',
+                'precio' => 1700,
+                'precio_anterior' => 2200,
+                'descuento' => '-23%',
+                'personas' => 7,
+                'maletas_grandes' => 2,
+                'maletas_pequenas' => 2,
+                'transmision' => 'Automatic',
             ],
             [
-                'price' => 2900,
-                'old' => 3400,
-                'pct' => 15,
-                'cat' => 'Passenger Van',
-                'model' => 'Nissan Urvan or similar | L | MT',
-                'img' => 'Urvan.png',
-                'pass' => 13,
-                'bags' => 5,
-                'brief' => 5,
-                'trans' => 'Standard',
+                'categoria' => 'Minivan',
+                'modelo' => 'Honda Odyssey or similar | M',
+                'imagen' => 'Odyssey.webp',
+                'alt' => ' Honda Odyssey o similar',
+                'precio' => 2600,
+                'precio_anterior' => 3000,
+                'descuento' => '-13%',
+                'personas' => 8,
+                'maletas_grandes' => 8,
+                'maletas_pequenas' => 4,
+                'transmision' => 'Automatic',
             ],
             [
-                'price' => 2900,
-                'old' => 9400,
-                'pct' => 15,
-                'cat' => 'Passenger Van',
-                'model' => 'Toyota Hiace or similar | L',
-                'img' => 'Hiace.png',
-                'pass' => 13,
-                'bags' => 3,
-                'brief' => 3,
-                'trans' => 'Standard',
+                'categoria' => 'Passenger Van',
+                'modelo' => 'Nissan Urvan or similar | L | MT',
+                'imagen' => 'Urvan.webp',
+                'alt' => 'Nissan Urvan o similar',
+                'precio' => 2900,
+                'precio_anterior' => 3400,
+                'descuento' => '-15%',
+                'personas' => 13,
+                'maletas_grandes' => 5,
+                'maletas_pequenas' => 5,
+                'transmision' => 'Manual',
             ],
             [
-                'price' => 1950,
-                'old' => 2203,
-                'pct' => 13,
-                'cat' => 'Double Cab Pickup',
-                'model' => 'Nissan Frontier or similar | E',
-                'img' => 'Frontier.png',
-                'pass' => 5,
-                'bags' => 3,
-                'brief' => 3,
-                'trans' => 'Automatic',
+                'categoria' => 'Passenger Van',
+                'modelo' => 'Toyota Hiace or similar | L',
+                'imagen' => 'Hiace.webp',
+                'alt' => 'Toyota Hiace o similar',
+                'precio' => 2900,
+                'precio_anterior' => 9400,
+                'descuento' => '-15%',
+                'personas' => 13,
+                'maletas_grandes' => 3,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Manual',
             ],
             [
-                'price' => 2600,
-                'old' => 3000,
-                'pct' => 13,
-                'cat' => '4x4 Double Cab Pickup',
-                'model' => 'Toyota Tacoma or similar | F',
-                'img' => 'Tacoma.png',
-                'pass' => 5,
-                'bags' => 3,
-                'brief' => 3,
-                'trans' => 'Automatic',
-            ],
-        ];
-
-        $tiles = [
-            [
-                'img' => '24.jpg',
-                'title' => 'Available 24/7',
-                'body' =>
-                    'Service and support at all times. Our team is available 24 hours a day, 7 days a week, so you can travel with peace of mind.',
-                'link' => '#',
-                'linkText' => 'Read more...',
+                'categoria' => 'Double Cab Pickup',
+                'modelo' => 'Nissan Frontier or similar | E',
+                'imagen' => 'Frontier.webp',
+                'alt' => 'Nissan Frontier o similar',
+                'precio' => 1950,
+                'precio_anterior' => 2203,
+                'descuento' => '-13%',
+                'personas' => 5,
+                'maletas_grandes' => 3,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Automatic',
             ],
             [
-                'img' => '4x4.png',
-                'title' => '4x4 Cars & Trucks',
-                'body' =>
-                    'Travel without limits. We have SUVs, off-road vehicles and 4x4 trucks ideal for highways, city or adventure.',
-                'link' => route('rutaCatalogo'),
-                'linkText' => 'Explore our fleet...',
-            ],
-            [
-                'img' => 'Urvancard.png',
-                'title' => '13-Passenger Vans',
-                'body' => 'Perfect for family or business trips. Comfort, space and safety for all your companions.',
-                'link' => route('rutaReservasIniciar', ['from' => 'welcome']),
-                'linkText' => 'Book yours...',
-            ],
-            [
-                'img' => 'tarjeta.png',
-                'title' => 'We accept cards',
-                'body' =>
-                    'Pay with credit or debit card. Easy, fast and secure. You can also make your final payment when returning your vehicle.',
-                'link' => route('rutaReservasIniciar', ['from' => 'welcome']),
-                'linkText' => 'Learn about our options...',
-            ],
-            [
-                'img' => 'Aeropuerto.png',
-                'title' => '24/7 Airport Delivery',
-                'body' =>
-                    'Pick up or drop off your car directly at the airport, no lines or waiting. Available 24 hours a day.',
-                'link' => route('rutaReservasIniciar', ['from' => 'welcome']),
-                'linkText' => 'Schedule delivery...',
-            ],
-            [
-                'img' => 'Verificacion.png',
-                'title' => '00 Verified Vehicles',
-                'body' =>
-                    'All our cars meet environmental standards and are 00 verified to ensure optimal performance.',
-                'link' => route('rutaCatalogo'),
-                'linkText' => 'Discover more...',
-            ],
-            [
-                'img' => 'Drop.png',
-                'title' => 'Nationwide Drop-off',
-                'body' =>
-                    'Enjoy your trip without worries. Return your car in another city with our Nationwide Drop-off service (additional cost applies).',
-                'link' => route('rutaReservasIniciar', ['from' => 'welcome']),
-                'linkText' => 'Check destinations...',
-            ],
-            [
-                'img' => 'nuevos.png',
-                'title' => 'New & Modern Cars',
-                'body' =>
-                    'Drive with style and safety. Our fleet consists of recent vehicles, always in optimal condition.',
-                'link' => route('rutaCatalogo'),
-                'linkText' => 'Explore the fleet...',
+                'categoria' => '4x4 Double Cab Pickup',
+                'modelo' => 'Toyota Tacoma or similar | F',
+                'imagen' => 'Tacoma.webp',
+                'alt' => 'Toyota Tacoma o similar',
+                'precio' => 2600,
+                'precio_anterior' => 3000,
+                'descuento' => '-13%',
+                'personas' => 5,
+                'maletas_grandes' => 3,
+                'maletas_pequenas' => 3,
+                'transmision' => 'Automatic',
             ],
         ];
     @endphp
 
-    {{-- ===== MACRO INLINE: render de carrusel de flota ===== --}}
-    @php
-        function renderFlota(array $autos, string $carouselId, string $bookNowUrl): string
-        {
-            $html = '<section id="' . $carouselId . '" class="fleet">';
-            $html .= '<div class="fleet-viewport" id="' . $carouselId . '-viewport">';
-            $html .=
-                '<button class="fleet-btn prev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>';
-            $html .= '<div class="fleet-track">';
+    {{-- ============================================================
+         SÍMBOLOS SVG REUTILIZABLES (CarPlay y Android Auto)
+         Se definen UNA vez aquí y se usan 12 veces en cada card.
+    ============================================================ --}}
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+        <symbol id="ico-carplay" viewBox="0 0 24 24">
+            <rect x="2" y="2" width="20" height="20" rx="5"></rect>
+            <polygon points="10,8 16,12 10,16"></polygon>
+        </symbol>
+        <symbol id="ico-android" viewBox="0 0 24 24">
+            <path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"></path>
+        </symbol>
+    </svg>
 
-            foreach ($autos as $a) {
-                $imgUrl = asset('img/' . $a['img']);
-                $html .=
-                    '
-        <article class="car-card" data-price-mxn="' .
-                    $a['price'] .
-                    '" data-old-price-mxn="' .
-                    $a['old'] .
-                    '">
-          <header class="car-title">
-            <h3>' .
-                    e(__($a['cat'])) .
-                    '</h3>
-            <p>' .
-                    e(__($a['model'])) .
-                    '</p>
-          </header>
-          <div class="car-media">
-            <img src="' .
-                    $imgUrl .
-                    '" alt="' .
-                    e(__($a['model'])) .
-                    '" loading="lazy" decoding="async" width="340" height="200">
-          </div>
-          <div class="offer">
-            <span class="offer-badge" aria-label="Oferta">-' .
-                    $a['pct'] .
-                    '%</span>
-            <div class="price-line">
-              <span class="price-now-wrapper"><span class="currency-symbol">$</span><span class="price-now">' .
-                    $a['price'] .
-                    '</span></span>
-              <span class="currency-code">MXN</span>
-              <span class="per">' .
-                    e(__('/day')) .
-                    '</span>
-              <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span class="price-old">' .
-                    $a['old'] .
-                    '</span></span>
-              <span class="currency-code-old">MXN</span>
-            </div>
-          </div>
-          <ul class="car-specs">
-            <li><i class="fa-solid fa-user-large"></i> ' .
-                    $a['pass'] .
-                    '</li>
-            <li><i class="fa-solid fa-suitcase-rolling"></i> ' .
-                    $a['bags'] .
-                    '</li>
-            <li><i class="fa-solid fa-briefcase"></i> ' .
-                    $a['brief'] .
-                    '</li>
-            <li title="' .
-                    e(__('Transmission')) .
-                    '"><span class="spec-letter">T | ' .
-                    e(__($a['trans'])) .
-                    '</span></li>
-            <li title="' .
-                    e(__('Air conditioning')) .
-                    '"><i class="fa-regular fa-snowflake"></i><span class="spec-letter">A/C</span></li>
-          </ul>
-          <div class="car-connect">
-            <span class="badge-chip badge-apple" title="Apple CarPlay">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><polygon points="10,8 16,12 10,16"/></svg>
-              CarPlay
-            </span>
-            <span class="badge-chip badge-android" title="Android Auto">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 L20 19 H16.8 L12 10.2 L7.2 19 H4 L12 3 Z"/></svg>
-              Android Auto
-            </span>
-          </div>
-          <a href="' .
-                    e($bookNowUrl) .
-                    '" class="car-cta">' .
-                    e(__('Book now')) .
-                    '</a>
-        </article>';
-            }
-
-            $html .= '</div>';
-            $html .=
-                '<button class="fleet-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>';
-            $html .= '</div></section>';
-            return $html;
-        }
-    @endphp
-
+    <!-- ===== VISTA INICIO ===== -->
     <section class="v-inicio" data-title="Inicio">
 
-        {{-- ===== BANNER RESERVAS EN VIVO ===== --}}
+        <!-- ===== Banner Reservas ===== -->
         <div class="rv-banner-wrap" id="rvWrap" aria-live="polite">
             <div class="rv-banner" id="rvBanner" role="status" aria-label="Reservas en vivo">
-                <div class="rv-bar"><i id="rvBar"></i></div>
+                <div class="rv-bar-container">
+                    <div class="rv-bar" id="rvBar"></div>
+                </div>
+
                 <div class="rv-row">
                     <div class="rv-car" aria-hidden="true">
                         <svg width="18" height="18" viewBox="0 0 24 24">
@@ -1182,57 +1021,98 @@
                                 d="M5 11l1-3.2A2 2 0 0 1 7.9 6h8.2a2 2 0 0 1 1.9 1.8L20 11v5a1 1 0 0 1-1 1h-1a1.5 1.5 0 0 1 0-3h1v-1H5v1h1a1.5 1.5 0 1 1 0 3H5a1 1 0 0 1-1-1v-5Zm3.2-3a.8.8 0 0 0-.77.6L6.9 10h10.2l-.53-1.4a.8.8 0 0 0-.77-.6H8.2Z" />
                         </svg>
                     </div>
+
                     <div class="rv-copy" style="flex:1 1 auto">
                         <div class="rv-live" id="rvTitle">{{ __('Searching for booking') }}</div>
-                        <div class="rv-text" id="rvMsg">{{ __('Someone else is looking for a reservation right now') }}
+                        <div class="rv-text" id="rvMsg">
+                            {{ __('Someone else is looking for a reservation right now') }}
                         </div>
                     </div>
+
+                    <!-- Contador de personas -->
+                    <div class="rv-count-wrapper">
+                        <span id="rvCount">5</span>
+                        <span class="rv-unit">{{ __('people') }}</span>
+                    </div>
+
                     <button class="rv-cta"
-                        onclick="location.href='{{ route('rutaReservaciones') }}'">{{ __('Check availability') }}</button>
+                        onclick="location.href='{{ route('rutaReservasIniciar') }}'">{{ __('Check availability') }}</button>
                     <button class="rv-close" id="rvClose" aria-label="{{ __('Close') }}">✕</button>
                 </div>
             </div>
         </div>
+        <!-- ===== /Banner Reservas ===== -->
 
-        {{-- ===== HERO ===== --}}
+        <!-- HERO -->
         <section class="hero" id="heroTop">
             <div class="carousel">
+                {{-- Slide 1: carga inmediata (LCP) --}}
                 <div class="slide active" style="background-image:url('{{ asset('img/inicio1.webp') }}');"></div>
-                <div class="slide" data-src="{{ asset('img/inicio2.webp') }}"></div>
-                <div class="slide" data-src="{{ asset('img/inicio3.webp') }}"></div>
+                {{-- Slides 2 y 3: carga diferida con data-bg-src (después de window.load) --}}
+                <div class="slide" data-bg-src="{{ asset('img/inicio2.webp') }}"></div>
+                <div class="slide" data-bg-src="{{ asset('img/inicio3.webp') }}"></div>
                 <div class="overlay"></div>
             </div>
 
             <div class="hero-copy">
                 <h2 class="kicker">{{ __('Rent your car with Viajero') }}</h2>
 
-                <div class="hero-icons">
-                    @foreach ([['fa-regular fa-clock', 'Active 24 hours a day, 7 days a week'], ['fa-regular fa-credit-card', 'We accept debit and credit cards'], ['fa-solid fa-shield-halved', 'We have 00 verification'], ['fa-solid fa-plane-departure', '24/7 Airport Assistance'], ['fa-solid fa-car-side', 'Cars with recent models']] as [$icon, $label])
-                        <div class="icon-item">
-                            <i class="{{ $icon }}"></i>
-                            <span>{{ __($label) }}</span>
-                        </div>
-                    @endforeach
-                </div>
-
-                {{-- Botón abrir buscador (solo móvil) --}}
                 <div class="d-block d-xl-none p-3">
                     <div
-                        style="background:white;padding:15px;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,.1);text-align:center;">
-                        <p style="margin-bottom:10px;font-weight:bold;color:#333;font-size:16px;">
+                        style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center;">
+                        <p style="margin-bottom: 10px; font-weight: bold; color: #333; font-size: 16px;">
                             {{ __('Find your car here') }}</p>
+
                         <button type="button" id="btn-abrir-buscador" class="btn btn-danger w-100"
-                            style="background-color:#d4002a;border:none;font-weight:700;height:55px;font-size:18px;display:flex;align-items:center;justify-content:center;gap:8px;text-transform:uppercase;border-radius:6px;">
-                            <i class="fa-solid fa-magnifying-glass" style="font-size:16px;"></i> {{ __('Search') }}
+                            style="background-color: #d4002a;
+               border: none;
+               font-weight: 700;
+               height: 55px;
+               font-size: 18px;
+               display: flex;
+               align-items: center;
+               justify-content: center;
+               gap: 8px;
+               text-transform: uppercase;
+               border-radius: 6px;">
+                            <i class="fa-solid fa-magnifying-glass" style="font-size: 16px;"></i> {{ __('Search') }}
                         </button>
                     </div>
                 </div>
 
-                {{-- ===== FORMULARIO BUSCADOR ===== --}}
+                <div class="hero-icons">
+
+                    <div class="icon-item">
+                        <i class="fa-solid fa-plane-departure"></i>
+                        <span>{{ __('24/7 Airport Assistance') }}</span>
+                    </div>
+
+                    <div class="icon-item">
+                        <i class="fa-regular fa-credit-card"></i>
+                        <span>{{ __('We accept debit and credit cards') }}</span>
+                    </div>
+
+                    <div class="icon-item">
+                        <i class="fa-regular fa-clock"></i>
+                        <span>{{ __('Active 24 hours a day, 7 days a week') }}</span>
+                    </div>
+
+                    <div class="icon-item">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>{{ __('We have 00 verification') }}</span>
+                    </div>
+
+                    <div class="icon-item">
+                        <i class="fa-solid fa-car-side"></i>
+                        <span>{{ __('Cars with recent models') }}</span>
+                    </div>
+                </div>
+
                 <div class="search-card" id="miBuscador">
+
                     <div class="d-block d-xl-none text-end mb-3">
                         <button type="button" id="btn-cerrar-buscador" class="btn-close"
-                            style="font-size:1.5rem;"></button>
+                            style="font-size: 1.5rem;"></button>
                         <h5 class="text-start mt-2">{{ __('1 Location & date') }}</h5>
                         <hr>
                     </div>
@@ -1244,7 +1124,7 @@
 
                         <div class="search-grid">
 
-                            {{-- Columna 1: Ubicaciones --}}
+                            {{-- COLUMNA 1: LUGAR DE RENTA --}}
                             <div class="sg-col sg-col-location">
                                 <div class="location-head">
                                     <span class="field-title"
@@ -1257,7 +1137,7 @@
                                 </div>
 
                                 <div class="location-inputs-wrapper" id="locationInputsWrapper">
-                                    {{-- Pickup --}}
+                                    {{-- SELECT PICKUP --}}
                                     <div class="field icon-field">
                                         <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
                                         <select id="pickupPlace" name="pickup_sucursal_id">
@@ -1277,7 +1157,7 @@
                                         </select>
                                     </div>
 
-                                    {{-- Dropoff --}}
+                                    {{-- SELECT DROPOFF --}}
                                     <div class="field icon-field" id="dropoffWrapper">
                                         <span class="field-icon"><i class="fa-solid fa-location-dot"></i></span>
                                         <select id="dropoffPlace" name="dropoff_sucursal_id" class="no-scroll-trap">
@@ -1299,32 +1179,46 @@
                                 </div>
                             </div>
 
-                            {{-- Columna 2: Fechas y horas --}}
+                            {{-- COLUMNA 2: FECHAS Y HORAS --}}
                             <div class="sg-col sg-col-datetime">
-                                @foreach ([['pickup', 'Pick-up', 'pickup_date', 'pickup_time'], ['dropoff', 'Return', 'dropoff_date', 'dropoff_time']] as [$prefix, $label, $dateField, $timeField])
-                                    <div class="field">
-                                        <span class="field-title solo-responsivo-izq">{{ __($label) }}</span>
-                                        <div class="datetime-row">
-                                            <div class="dt-field icon-field">
-                                                <span class="field-icon"><i
-                                                        class="fa-regular fa-calendar-days"></i></span>
-                                                <input id="{{ $prefix }}Date" name="{{ $dateField }}"
-                                                    type="text" placeholder="{{ __('Date') }}"
-                                                    value="{{ request($dateField) }}"
-                                                    data-min="{{ now()->toDateString() }}">
-                                            </div>
-                                            <div class="dt-field icon-field time-field">
-                                                <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
-                                                <input type="text" id="{{ $prefix }}Time"
-                                                    name="{{ $timeField }}" placeholder="{{ __('Time') }}"
-                                                    value="{{ request($timeField) }}">
-                                            </div>
+                                {{-- PICKUP --}}
+                                <div class="field">
+                                    <span class="field-title solo-responsivo-izq">{{ __('Pick-up') }}</span>
+                                    <div class="datetime-row">
+                                        <div class="dt-field icon-field">
+                                            <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                                            <input id="pickupDate" name="pickup_date" type="text"
+                                                placeholder="{{ __('Date') }}" value="{{ request('pickup_date') }}"
+                                                data-min="{{ now()->toDateString() }}">
+                                        </div>
+                                        <div class="dt-field icon-field time-field">
+                                            <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+                                            <input type="text" id="pickupTime" name="pickup_time"
+                                                placeholder="{{ __('Time') }}" value="{{ request('pickup_time') }}">
                                         </div>
                                     </div>
-                                @endforeach
+                                </div>
+
+                                {{-- DROPOFF --}}
+                                <div class="field">
+                                    <span class="field-title solo-responsivo-izq">{{ __('Return') }}</span>
+                                    <div class="datetime-row">
+                                        <div class="dt-field icon-field">
+                                            <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                                            <input id="dropoffDate" name="dropoff_date" type="text"
+                                                placeholder="{{ __('Date') }}" value="{{ request('dropoff_date') }}"
+                                                data-min="{{ now()->toDateString() }}">
+                                        </div>
+                                        <div class="dt-field icon-field time-field">
+                                            <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
+                                            <input type="text" id="dropoffTime" name="dropoff_time"
+                                                placeholder="{{ __('Time') }}" value="{{ request('dropoff_time') }}">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            {{-- Columna 3: Botón --}}
+                            {{-- COLUMNA 3: BOTÓN BUSCAR --}}
                             <div class="sg-col sg-col-submit">
                                 <div class="actions">
                                     <button type="submit">
@@ -1346,10 +1240,80 @@
             </div>
         </section>
 
-        <span id="heroEndSentinel" style="position:relative;display:block;width:1px;height:1px;"></span>
+        {{-- Sentinel para detectar "salí del hero" --}}
+        <span id="heroEndSentinel" style="position:relative; display:block; width:1px; height:1px;"></span>
 
-        {{-- ===== FLOTA 1 ===== --}}
-        {!! renderFlota($flota1, 'fleet-carousel', $bookNowUrl) !!}
+        {{-- ============================================================
+             FLEET / CARRUSEL DE COCHES
+             12 tarjetas generadas desde el array $coches (PHP)
+        ============================================================ --}}
+        <section id="fleet-carousel" class="fleet">
+            <div class="fleet-viewport" id="fleetViewport">
+                <button class="fleet-btn prev" aria-label="Anterior"><i class="fa-solid fa-chevron-left"></i></button>
+
+                <div class="fleet-track">
+
+                    @foreach ($coches as $coche)
+                        <article class="car-card"
+                            data-price-mxn="{{ $coche['precio'] }}"
+                            data-old-price-mxn="{{ $coche['precio_anterior'] }}">
+                            <header class="car-title">
+                                <h3>{{ __($coche['categoria']) }}</h3>
+                                <p>{{ __($coche['modelo']) }}</p>
+                            </header>
+                            <div class="car-media">
+                                <img src="{{ asset('img/' . $coche['imagen']) }}" alt="{{ $coche['alt'] }}"
+                                    loading="lazy">
+                            </div>
+
+                            <div class="offer">
+                                <span class="offer-badge" aria-label="Oferta">{{ $coche['descuento'] }}</span>
+                                <div class="price-line">
+                                    <span class="price-now-wrapper"><span class="currency-symbol">$</span><span
+                                            class="price-now">{{ $coche['precio'] }}</span></span>
+                                    <span class="currency-code">MXN</span>
+                                    <span class="per">{{ __('/day') }}</span>
+                                    <span class="price-old-wrapper"><span class="currency-symbol-old">$</span><span
+                                            class="price-old">{{ $coche['precio_anterior'] }}</span></span>
+                                    <span class="currency-code-old">MXN</span>
+                                </div>
+                            </div>
+
+                            <ul class="car-specs">
+                                <li><i class="fa-solid fa-user-large"></i> {{ $coche['personas'] }}</li>
+                                <li><i class="fa-solid fa-suitcase-rolling"></i> {{ $coche['maletas_grandes'] }}</li>
+                                <li><i class="fa-solid fa-briefcase"></i> {{ $coche['maletas_pequenas'] }}</li>
+                                <li title="{{ __('Transmission') }}"><span class="spec-letter">T |
+                                        {{ __($coche['transmision']) }}</span></li>
+                                <li title="{{ __('Air conditioning') }}"><i class="fa-regular fa-snowflake"></i><span
+                                        class="spec-letter">A/C</span></li>
+                            </ul>
+
+                            <div class="car-connect">
+                                <span class="badge-chip badge-apple" title="Apple CarPlay">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <use href="#ico-carplay"></use>
+                                    </svg>
+                                    CarPlay
+                                </span>
+                                <span class="badge-chip badge-android" title="Android Auto">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <use href="#ico-android"></use>
+                                    </svg>
+                                    Android Auto
+                                </span>
+                            </div>
+
+                            <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}"
+                                class="car-cta">{{ __('Book now') }}</a>
+                        </article>
+                    @endforeach
+
+                </div>
+
+                <button class="fleet-btn next" aria-label="Siguiente"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </section>
 
         <div class="fleet-meta" aria-label="Beneficios">
             <span>{{ __('Unlimited mileage') }}</span>
@@ -1357,118 +1321,166 @@
             <span>{{ __('Automatic transmission') }}</span>
         </div>
 
-        {{-- ===== SECCIONES INFO ===== --}}
-        <section class="info-sections">
-            <div class="info-row">
-                <div class="info-media media-carousel" data-interval="4500">
-                    <div class="media-slide active" style="background-image:url('{{ asset('img/inicio4.webp') }}');">
-                    </div>
-                    <div class="media-slide" style="background-image:url('{{ asset('img/inicio5.webp') }}');"></div>
-                    <div class="media-slide" style="background-image:url('{{ asset('img/inicio6.webp') }}');"></div>
-                </div>
-                <div class="info-content">
-                    <button type="button" class="btn-icon-question-corner" id="openMembershipModalBtn"
-                        aria-label="Más información sobre membresías">
-                        <i class="fa-solid fa-question"></i>
-                    </button>
-                    <h2>{{ __('Frequent traveler?') }}</h2>
-                    <p>{{ __('Become a member and unlock exclusive discounts on all your bookings, making every trip more affordable.') }}
-                    </p>
-                    <p>{{ __('Earn points for every rental and redeem them for discounts, upgrades, or special experiences.') }}
-                    </p>
-                    <p>{{ __('Activate your membership today and enjoy exclusive rewards.') }}</p>
-                    <div class="cta-group" style="align-items:center;gap:12px;">
-                        <button type="button" class="btn btn-primary" id="openMembershipModalFromBtn">
-                            <i class="fa-solid fa-id-card"></i> {{ __('Get your membership') }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {{-- ===== FLOTA 2 ===== --}}
-            {!! renderFlota($flota2, 'fleet-carousel-2', $bookNowUrl) !!}
-
-            <div class="fleet-meta" aria-label="Beneficios">
-                <span>{{ __('Unlimited mileage') }}</span>
-                <i class="sep" aria-hidden="true">|</i>
-                <span>{{ __('Automatic transmission') }}</span>
-            </div>
-
-            <div class="info-row reverse">
-                <div class="info-content">
-                    <h2>{{ __('Business solutions') }}</h2>
-                    <p>{{ __('We manage your corporate travel end-to-end so your team can focus on what matters.') }}</p>
-                    <p>{{ __('Optimize costs, comfort and safety with our corporate plans.') }}</p>
-                    <div class="cta-group">
-                        <a href="{{ route('rutaReservaciones', ['from' => 'welcome']) }}" class="btn btn-primary">
-                            <i class="fa-regular fa-calendar-check"></i> {{ __('Book now') }}
-                        </a>
-                    </div>
-                </div>
-                <div class="info-media media-carousel" data-interval="5200">
-                    <div class="media-slide active" style="background-image:url('{{ asset('img/inicio7.webp') }}');">
-                    </div>
-                    <div class="media-slide" style="background-image:url('{{ asset('img/inicio8.webp') }}');"></div>
-                    <div class="media-slide" style="background-image:url('{{ asset('img/inicio9.webp') }}');"></div>
-                </div>
-            </div>
-        </section>
-
-        {{-- ===== SWIPER TILES ===== --}}
+        <!-- TARJETAS (Swiper) -->
         <section aria-label="Explora destinos y servicios">
             <div class="swiper vj-tiles-swiper">
                 <div class="swiper-wrapper">
 
-                    @foreach ($tiles as $tile)
-                        <div class="swiper-slide">
-                            <article class="tile-card">
-                                <div class="tile-media"
-                                    style="background-image:url('{{ asset('img/' . $tile['img']) }}')">
-                                </div>
-                                <div class="tile-body">
-                                    <h3>{{ __($tile['title']) }}</h3>
-                                    <p>{{ __($tile['body']) }}</p>
-                                    <a href="{{ $tile['link'] }}" class="tile-link">{{ __($tile['linkText']) }}</a>
-                                </div>
-                            </article>
-                        </div>
-                    @endforeach
+                    <div class="swiper-slide">
+                        <article class="tile-card">
+                            <div class="tile-media" style="background-image:url('{{ asset('img/24.webp') }}')"></div>
+                            <div class="tile-body">
+                                <h3>{{ __('Available 24/7') }}</h3>
+                                <p>{{ __('Service and support at all times. Our team is available 24 hours a day, 7 days a week, so you can travel with peace of mind.') }}
+                                </p>
+                                <a href="#" class="tile-link">{{ __('Read more...') }}</a>
+                            </div>
+                        </article>
+                    </div>
 
-                    {{-- Tile especial: Reseñas Google --}}
+                    <div class="swiper-slide">
+                        <article class="tile-card">
+                            <div class="tile-media" style="background-image:url('{{ asset('img/4x4.webp') }}')"></div>
+                            <div class="tile-body">
+                                <h3>{{ __('4x4 Cars & Trucks') }}</h3>
+                                <p>{{ __('Travel without limits. We have SUVs, off-road vehicles and 4x4 trucks ideal for highways, city or adventure.') }}
+                                </p>
+                                <a href="{{ route('rutaCatalogo') }}"
+                                    class="tile-link">{{ __('Explore our fleet...') }}</a>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <article class="tile-card">
+                            <div class="tile-media" style="background-image:url('{{ asset('img/Urvancard.webp') }}')">
+                            </div>
+                            <div class="tile-body">
+                                <h3>{{ __('13-Passenger Vans') }}</h3>
+                                <p>{{ __('Perfect for family or business trips. Comfort, space and safety for all your companions.') }}
+                                </p>
+                                <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome', 'step' => 1, 'tipo' => 'camioneta_13']) }}"
+                                    class="tile-link">{{ __('Book yours...') }}</a>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <article class="tile-card">
+                            <div class="tile-media" style="background-image:url('{{ asset('img/tarjeta.webp') }}')">
+                            </div>
+                            <div class="tile-body">
+                                <h3>{{ __('We accept cards') }}</h3>
+                                <p>{{ __('Pay with credit or debit card. Easy, fast and secure. You can also make your final payment when returning your vehicle.') }}
+                                </p>
+                                <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome', 'step' => 1, 'tipo' => 'tarjetas']) }}"
+                                    class="tile-link">{{ __('Learn about our options...') }}</a>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <article class="tile-card">
+                            <div class="tile-media" style="background-image:url('{{ asset('img/Aeropuerto.webp') }}')">
+                            </div>
+                            <div class="tile-body">
+                                <h3>{{ __('24/7 Airport Delivery') }}</h3>
+                                <p>{{ __('Pick up or drop off your car directly at the airport, no lines or waiting. Available 24 hours a day.') }}
+                                </p>
+                                <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome', 'step' => 1, 'tipo' => 'aeropuerto']) }}"
+                                    class="tile-link">{{ __('Schedule delivery...') }}</a>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <article class="tile-card">
+                            <div class="tile-media"
+                                style="background-image:url('{{ asset('img/Verificacion.webp') }}')">
+                            </div>
+                            <div class="tile-body">
+                                <h3>{{ __('00 Verified Vehicles') }}</h3>
+                                <p>{{ __('All our cars meet environmental standards and are 00 verified to ensure optimal performance.') }}
+                                </p>
+                                <a href="{{ route('rutaCatalogo') }}"
+                                    class="tile-link">{{ __('Discover more...') }}</a>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <article class="tile-card">
+                            <div class="tile-media" style="background-image:url('{{ asset('img/Drop.webp') }}')"></div>
+                            <div class="tile-body">
+                                <h3>{{ __('Nationwide Drop-off') }}</h3>
+                                <p>{{ __('Enjoy your trip without worries. Return your car in another city with our Nationwide Drop-off service (additional cost applies).') }}
+                                </p>
+                                <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome', 'step' => 1, 'tipo' => 'dropoff']) }}"
+                                    class="tile-link">{{ __('Check destinations...') }}</a>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="swiper-slide">
+                        <article class="tile-card">
+                            <div class="tile-media" style="background-image:url('{{ asset('img/nuevos.webp') }}')">
+                            </div>
+                            <div class="tile-body">
+                                <h3>{{ __('New & Modern Cars') }}</h3>
+                                <p>{{ __('Drive with style and safety. Our fleet consists of recent vehicles, always in optimal condition.') }}
+                                </p>
+                                <a href="{{ route('rutaCatalogo') }}"
+                                    class="tile-link">{{ __('Explore the fleet...') }}</a>
+                            </div>
+                        </article>
+                    </div>
+
                     <div class="swiper-slide">
                         <article class="tile-card tile-reviews">
                             <div class="tile-media" style="background-image:url('{{ asset('img/Prioridad.webp') }}')">
                             </div>
+
                             <div class="tile-body">
                                 <h3>{{ __('Google Maps Reviews') }}</h3>
+
                                 @if (!empty($googleRating))
                                     <div class="reviews-summary">
                                         <span class="reviews-score">⭐ {{ number_format($googleRating, 1) }}</span>
                                         @if (!empty($googleTotal))
-                                            <span class="reviews-count">({{ $googleTotal }} {{ __('reviews') }})</span>
+                                            <span class="reviews-count">({{ $googleTotal }}
+                                                {{ __('reviews') }})</span>
                                         @endif
                                     </div>
                                 @endif
+
                                 <div class="reviews-list">
-                                    @forelse ($googleReviews ?? collect() as $review)
-                                        <div class="review-item">
-                                            <div class="review-head">
-                                                <strong>{{ $review['author_name'] ?? __('Google User') }}</strong>
-                                                @if (!empty($review['rating']))
-                                                    <span
-                                                        class="review-stars">{{ str_repeat('★', (int) $review['rating']) }}</span>
-                                                @endif
+                                    @if (isset($googleReviews) && $googleReviews->isNotEmpty())
+                                        @foreach ($googleReviews as $review)
+                                            <div class="review-item">
+                                                <div class="review-head">
+                                                    <strong>{{ $review['author_name'] ?? __('Google User') }}</strong>
+                                                    @if (!empty($review['rating']))
+                                                        <span class="review-stars">
+                                                            @for ($i = 0; $i < (int) $review['rating']; $i++)
+                                                                ★
+                                                            @endfor
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <p class="review-text">
+                                                    {{ \Illuminate\Support\Str::limit($review['text'] ?? '', 120) }}
+                                                </p>
                                             </div>
-                                            <p class="review-text">
-                                                {{ \Illuminate\Support\Str::limit($review['text'] ?? '', 120) }}</p>
-                                        </div>
-                                    @empty
+                                        @endforeach
+                                    @else
                                         <div class="review-item">
                                             <p class="review-text">
-                                                {{ __('Soon you will see our customers reviews on Google Maps.') }}</p>
+                                                {{ __('Soon you will see our customers reviews on Google Maps.') }}
+                                            </p>
                                         </div>
-                                    @endforelse
+                                    @endif
                                 </div>
+
                                 <a href="https://www.google.com/maps/place/VIAJERO+CAR+RENTAL+Centro+Sur" target="_blank"
                                     rel="noopener" class="tile-link">
                                     {{ __('See more reviews on Google...') }}
@@ -1483,14 +1495,15 @@
                 <div class="swiper-pagination"></div>
             </div>
         </section>
+        <!-- /TARJETAS (Swiper) -->
 
-        {{-- ===== CTA FINAL ===== --}}
+        <!-- CTA FINAL -->
         <section class="cta-hero">
             <div class="cta-bg" style="background-image:url('{{ asset('img/inicio10.webp') }}');"></div>
             <div class="cta-overlay"></div>
             <div class="cta-inner">
                 <h2>{{ __('RENT TODAY, EXPLORE TOMORROW, TRAVEL FOREVER!') }}</h2>
-                <a href="{{ $bookNowUrl }}" class="btn btn-primary btn-lg">
+                <a href="{{ route('rutaReservasIniciar', ['from' => 'welcome']) }}" class="btn btn-primary btn-lg">
                     <i class="fa-regular fa-calendar-check"></i> {{ __('Book now') }}
                 </a>
             </div>
@@ -1498,20 +1511,23 @@
 
     </section>
 
-    {{-- ===== MODAL MEMBRESÍA ===== --}}
+    <!-- MODAL MEMBRESÍA -->
     <div class="modal-membership" id="membershipModal" aria-hidden="true">
         <div class="modal-membership-backdrop"></div>
         <div class="modal-membership-card" role="dialog" aria-modal="true" aria-labelledby="membershipModalTitle">
             <button class="modal-membership-close" id="closeMembershipModalBtn" aria-label="{{ __('Close') }}">
                 <i class="fa-regular fa-circle-xmark"></i>
             </button>
-            <div class="modal-membership-icon"><i class="fa-regular fa-id-card"></i></div>
+            <div class="modal-membership-icon">
+                <i class="fa-regular fa-id-card"></i>
+            </div>
             <h3 id="membershipModalTitle">{{ __('Need more information?') }}</h3>
             <p>{{ __('To get more information about memberships and receive personalized assistance, contact us directly by phone or send a message to our WhatsApp number.') }}
             </p>
             <div class="modal-membership-actions">
-                <a href="tel:+524427169793" class="btn-contact btn-call"><i class="fa-solid fa-phone"></i>
-                    {{ __('Call us') }}</a>
+                <a href="tel:+524427169793" class="btn-contact btn-call">
+                    <i class="fa-solid fa-phone"></i> {{ __('Call us') }}
+                </a>
                 <a href="https://wa.me/5214427169793" target="_blank" rel="noopener" class="btn-contact btn-whatsapp">
                     <i class="fa-brands fa-whatsapp"></i> WhatsApp
                 </a>
@@ -1522,7 +1538,7 @@
         </div>
     </div>
 
-    {{-- ===== BURBUJA REDES SOCIALES ===== --}}
+    <!-- BURBUJA RADIAL DE REDES -->
     <div class="social-fab" id="socialFab">
         <button class="fab-main" id="fabMain" type="button" aria-label="{{ __('Social media') }}"
             aria-expanded="false">
@@ -1542,259 +1558,20 @@
         </a>
     </div>
 
-    {{-- ===== MODAL BIENVENIDA ===== --}}
-    <div class="modal" id="welcomeModal" aria-hidden="true">
-        <div class="modal-backdrop"></div>
-        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="wmTitle">
-            <button class="modal-close" id="wmClose" aria-label="{{ __('Close') }}">
-                <i class="fa-regular fa-circle-xmark"></i>
-            </button>
-            <h3 id="wmTitle">
-                <i class="fa-regular fa-hand-peace"></i> {{ __('Welcome') }},
-                <span id="wmName">{{ __('Traveler') }}</span>!
-            </h3>
-            <p>{{ __('Your account is ready. Do you want to go directly to your reservation?') }}</p>
-            <div class="modal-actions">
-                <a href="{{ route('rutaReservaciones') }}" class="btn btn-primary">
-                    <i class="fa-regular fa-calendar-check"></i> {{ __('Go to my reservation') }}
-                </a>
-                <button class="btn btn-ghost" id="wmOk" type="button">{{ __('Stay on homepage') }}</button>
-            </div>
-        </div>
-    </div>
+    {{-- Modal de Bienvenida ELIMINADO (zombie - el JS asociado ya se quitó en home.js) --}}
 
 @endsection
 
 @section('js-vistaHome')
-
-    {{-- ✅ jQuery  Permite que Select2 funcione --}}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    {{-- ✅ Swiper JS --}}
+    {{-- ✅ Swiper JS (específico del home) --}}
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
-    {{-- ✅ Flatpickr core + locale ES + rangePlugin --}}
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    {{--
+        NOTA: jQuery, Flatpickr (core + locale ES + rangePlugin) y Select2
+        se eliminaron de aquí porque YA están cargados en el layout.
+    --}}
 
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/rangePlugin.js"></script>
-
-    {{-- ✅ Select2 JS  Convierte el select en avanzado --}}
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-    {{-- ✅ Inicializar Select2 básico --}}
-    <script>
-        $(document).ready(function() {
-            $('#pickupPlace').select2({
-                width: '100%'
-            });
-            $('#dropoffPlace').select2({
-                width: '100%'
-            });
-        });
-    </script>
-
-    <script src="{{ asset('js/iconos-lugar.js') }}"></script>
-    <script src="{{ asset('js/home.js') }}"></script>
-
-    {{-- ✅ (Tu inline script de fleet infinito - lo dejo tal cual) --}}
-
-    <!-- ===== TOAST DE RESERVAS BILINGÜE ===== -->
-    <script>
-        (function() {
-                // Detectar idioma actual
-                const idiomaActual = localStorage.getItem('idiomaPreferido') || 'es';
-
-                // SECUENCIA DE MENSAJES EN ESPAÑOL E INGLÉS
-                const SEQ = {
-                    'es': [{
-                            title: "Buscando reserva",
-                            text: "Alguien más está buscando reserva en este momento"
-                        },
-                        {
-                            title: "Otra reserva",
-                            text: "Un cliente acaba de reservar en el Aeropuerto de Querétaro (AIQ)"
-                        },
-                        {
-                            title: "Buscando reserva",
-                            text: "Alguien más está buscando reserva en este momento"
-                        },
-                        {
-                            title: "Otra reserva",
-                            text: "Un cliente acaba de reservar en la Central de Autobuses de Querétaro (TAQ)"
-                        },
-                        {
-                            title: "Buscando reserva",
-                            text: "Alguien más está buscando reserva en este momento"
-                        },
-                        {
-                            title: "Otra reserva",
-                            text: "Un cliente acaba de reservar en la Plaza de Central Park Querétaro"
-                        }
-                    ],
-                    'en': [{
-                            title: "Searching for booking",
-                            text: "Someone else is looking for a reservation right now"
-                        },
-                        {
-                            title: "Another booking",
-                            text: "A customer just booked at Querétaro Airport (AIQ)"
-                        },
-                        {
-                            title: "Searching for booking",
-                            text: "Someone else is looking for a reservation right now"
-                        },
-                        {
-                            title: "Another booking",
-                            text: "A customer just booked at Querétaro Bus Station (TAQ)"
-                        },
-                        {
-                            title: "Searching for booking",
-                            text: "Someone else is looking for a reservation right now"
-                        },
-                        {
-                            title: "Another booking",
-                            text: "A customer just booked at Plaza Central Park Querétaro"
-                        }
-                    ]
-                };
-
-                const SHOW_MS = 7000;
-                const HIDE_MS = 25000;
-                const INITIAL_DELAY_MS = 10000;
-                const START_INDEX = 5;
-
-                const banner = document.getElementById('rvBanner');
-                const bar = document.getElementById('rvBar');
-                const title = document.getElementById('rvTitle');
-                const msg = document.getElementById('rvMsg');
-                const close = document.getElementById('rvClose');
-
-                let idx = START_INDEX,
-                    loop = true,
-                    hideT = null,
-                    nextT = null,
-                    startT = null;
-                let paused = false,
-                    startTs = 0,
-                    remaining = SHOW_MS;
-
-                // Función para obtener el mensaje según el idioma actual
-                function getMensajeActual() {
-                    const idioma = localStorage.getItem('idiomaPreferido') || 'es';
-                    return SEQ[idioma] || SEQ['es'];
-                }
-
-                function setBar(ms) {
-                    if (!bar) return;
-                    bar.style.transition = 'none';
-                    bar.style.width = '0%';
-
-                    requestAnimationFrame(() => {
-                        requestAnimationFrame(() => {
-                            bar.style.transition = `width ${ms}ms linear`;
-                            bar.style.width = '100%';
-                        });
-                    });
-                }
-
-                function showOnce() {
-                    if (!banner || !title || !msg) return;
-
-                    const mensajes = getMensajeActual();
-                    const item = mensajes[idx];
-                    idx = (idx + 1) % mensajes.length;
-
-                    title.textContent = item.title;
-                    msg.textContent = item.text;
-
-                    banner.style.display = 'block';
-                    banner.classList.remove('rv-out');
-                    banner.classList.add('rv-in');
-
-                    remaining = SHOW_MS;
-                    startTs = performance.now();
-                    setBar(SHOW_MS);
-
-                    if (hideT) clearTimeout(hideT);
-                    hideT = setTimeout(hide, SHOW_MS);
-                }
-
-                function hide() {
-                    if (!banner) return;
-
-                    banner.classList.remove('rv-in');
-                    banner.classList.add('rv-out');
-
-                    setTimeout(() => {
-                        banner.style.display = 'none';
-                        if (loop) {
-                            nextT = setTimeout(showOnce, HIDE_MS);
-                        }
-                    }, 260);
-                }
-
-                if (banner) {
-                    banner.addEventListener('mouseenter', () => {
-                        paused = true;
-                        const elapsed = performance.now() - startTs;
-                        remaining = Math.max(0, SHOW_MS - elapsed);
-
-                        if (hideT) {
-                            clearTimeout(hideT);
-                            hideT = null;
-                        }
-
-                        if (bar) {
-                            const progress = ((SHOW_MS - remaining) / SHOW_MS) * 100;
-                            bar.style.transition = 'none';
-                            bar.style.width = `${progress}%`;
-                        }
-                    });
-
-                    banner.addEventListener('mouseleave', () => {
-                        if (!paused) return;
-                        paused = false;
-
-                        setTimeout(() => {
-                            setBar(remaining);
-                            hideT = setTimeout(hide, remaining);
-                            startTs = performance.now() - (SHOW_MS - remaining);
-                        }, 30);
-                    });
-                }
-
-                if (close) {
-                    close.addEventListener('click', () => {
-                        loop = false;
-
-                        if (hideT) clearTimeout(hideT);
-                        if (nextT) clearTimeout(nextT);
-                        if (startT) clearTimeout(startT);
-
-                        banner.style.display = 'none';
-                    });
-                }
-
-                // Escuchar cambios de idioma para actualizar las notificaciones
-                window.addEventListener('storage', function(e) {
-                        if (e.key === 'idiomaPreferido') {
-                            // Reiniciar el ciclo con el nuevo idioma
-                            loop = true;
-                            if (hideT) clearTimeout(hideT);
-                            if (nextT) clearTimeout(nextT);
-                            showOnce();
-                        }
-                    }
-                });
-
-            // Iniciar
-            document.addEventListener('DOMContentLoaded', () => {
-                startT = setTimeout(showOnce, INITIAL_DELAY_MS);
-            });
-
-        })();
-    </script>
+    {{-- ✅ Iconos por ID de sucursal (DEBE ir ANTES de home.js) --}}
     <script>
         window.iconosPorId = {
             @foreach ($ciudades as $ciudad)
@@ -1819,11 +1596,179 @@
         };
     </script>
 
+    <script src="{{ asset('js/home.js') }}" defer></script>
+
+    {{-- ===== LAZY LOAD SLIDES 2 Y 3 DEL HERO ===== --}}
     <script>
-        /* ============================================================
-               CONVERSIÓN DE MONEDA CON INDICADORES MXN/USD
-            ============================================================ */
-        (function() {
+        // Carga las imágenes de fondo de los slides 2 y 3 DESPUÉS del load completo
+        // para no bloquear el LCP (largest contentful paint)
+        window.addEventListener('load', function () {
+            document.querySelectorAll('.slide[data-bg-src]').forEach(function (el) {
+                el.style.backgroundImage = "url('" + el.dataset.bgSrc + "')";
+                el.removeAttribute('data-bg-src');
+            });
+        }, { once: true });
+    </script>
+
+    {{-- ===== TOAST DE RESERVAS BILINGÜE ===== --}}
+    <script>
+        (function () {
+            const SEQ = {
+                'es': [
+                    { title: "Buscando reserva", text: "Alguien más está buscando reserva en este momento" },
+                    { title: "Otra reserva", text: "Un cliente acaba de reservar en el Aeropuerto de Querétaro (AIQ)" },
+                    { title: "Buscando reserva", text: "Alguien más está buscando reserva en este momento" },
+                    { title: "Otra reserva", text: "Un cliente acaba de reservar en la Central de Autobuses de Querétaro (TAQ)" },
+                    { title: "Buscando reserva", text: "Alguien más está buscando reserva en este momento" },
+                    { title: "Otra reserva", text: "Un cliente acaba de reservar en la Plaza de Central Park Querétaro" }
+                ],
+                'en': [
+                    { title: "Searching for booking", text: "Someone else is looking for a reservation right now" },
+                    { title: "Another booking", text: "A customer just booked at Querétaro Airport (AIQ)" },
+                    { title: "Searching for booking", text: "Someone else is looking for a reservation right now" },
+                    { title: "Another booking", text: "A customer just booked at Querétaro Bus Station (TAQ)" },
+                    { title: "Searching for booking", text: "Someone else is looking for a reservation right now" },
+                    { title: "Another booking", text: "A customer just booked at Plaza Central Park Querétaro" }
+                ]
+            };
+
+            const SHOW_MS = 7000;
+            const HIDE_MS = 25000;
+            const INITIAL_DELAY_MS = 10000;
+            const START_INDEX = 5;
+
+            const banner = document.getElementById('rvBanner');
+            const bar = document.getElementById('rvBar');
+            const title = document.getElementById('rvTitle');
+            const msg = document.getElementById('rvMsg');
+            const close = document.getElementById('rvClose');
+
+            let idx = START_INDEX,
+                loop = true,
+                hideT = null,
+                nextT = null,
+                startT = null;
+            let paused = false,
+                startTs = 0,
+                remaining = SHOW_MS;
+
+            function getMensajeActual() {
+                const idioma = localStorage.getItem('idiomaPreferido') || 'es';
+                return SEQ[idioma] || SEQ['es'];
+            }
+
+            function setBar(ms) {
+                if (!bar) return;
+                bar.style.transition = 'none';
+                bar.style.width = '0%';
+
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        bar.style.transition = `width ${ms}ms linear`;
+                        bar.style.width = '100%';
+                    });
+                });
+            }
+
+            function showOnce() {
+                if (!banner || !title || !msg) return;
+
+                const mensajes = getMensajeActual();
+                const item = mensajes[idx];
+                idx = (idx + 1) % mensajes.length;
+
+                title.textContent = item.title;
+                msg.textContent = item.text;
+
+                banner.style.display = 'block';
+                banner.classList.remove('rv-out');
+                banner.classList.add('rv-in');
+
+                remaining = SHOW_MS;
+                startTs = performance.now();
+                setBar(SHOW_MS);
+
+                if (hideT) clearTimeout(hideT);
+                hideT = setTimeout(hide, SHOW_MS);
+            }
+
+            function hide() {
+                if (!banner) return;
+
+                banner.classList.remove('rv-in');
+                banner.classList.add('rv-out');
+
+                setTimeout(() => {
+                    banner.style.display = 'none';
+                    if (loop) {
+                        nextT = setTimeout(showOnce, HIDE_MS);
+                    }
+                }, 260);
+            }
+
+            if (banner) {
+                banner.addEventListener('mouseenter', () => {
+                    paused = true;
+                    const elapsed = performance.now() - startTs;
+                    remaining = Math.max(0, SHOW_MS - elapsed);
+
+                    if (hideT) {
+                        clearTimeout(hideT);
+                        hideT = null;
+                    }
+
+                    if (bar) {
+                        const progress = ((SHOW_MS - remaining) / SHOW_MS) * 100;
+                        bar.style.transition = 'none';
+                        bar.style.width = `${progress}%`;
+                    }
+                });
+
+                banner.addEventListener('mouseleave', () => {
+                    if (!paused) return;
+                    paused = false;
+
+                    setTimeout(() => {
+                        setBar(remaining);
+                        hideT = setTimeout(hide, remaining);
+                        startTs = performance.now() - (SHOW_MS - remaining);
+                    }, 30);
+                });
+            }
+
+            if (close) {
+                close.addEventListener('click', () => {
+                    loop = false;
+
+                    if (hideT) clearTimeout(hideT);
+                    if (nextT) clearTimeout(nextT);
+                    if (startT) clearTimeout(startT);
+
+                    banner.style.display = 'none';
+                });
+            }
+
+            window.addEventListener('storage', function (e) {
+                if (e.key === 'idiomaPreferido') {
+                    loop = true;
+                    if (hideT) clearTimeout(hideT);
+                    if (nextT) clearTimeout(nextT);
+                    showOnce();
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', () => {
+                startT = setTimeout(showOnce, INITIAL_DELAY_MS);
+            });
+
+        })();
+    </script>
+
+    {{-- ============================================================
+         CONVERSIÓN DE MONEDA MXN/USD (sin console.log)
+    ============================================================ --}}
+    <script>
+        (function () {
             "use strict";
 
             const EXCHANGE_RATE = 20;
@@ -1853,8 +1798,6 @@
             function convertPrices() {
                 const language = getCurrentLanguage();
                 const currencyCode = getCurrencyCode(language);
-
-                console.log('🔄 Convirtiendo precios a:', currencyCode);
 
                 const carCards = document.querySelectorAll('.car-card');
 
@@ -1897,8 +1840,6 @@
                         currencyCodeOldSpan.textContent = currencyCode;
                     }
                 });
-
-                console.log('💰 Moneda actual:', currencyCode);
             }
 
             function initCurrencyConversion() {
@@ -1908,20 +1849,20 @@
                     convertPrices();
                 }
 
-                window.addEventListener('storage', function(e) {
+                window.addEventListener('storage', function (e) {
                     if (e.key === 'idiomaPreferido') {
                         setTimeout(convertPrices, 100);
                     }
                 });
 
-                document.addEventListener('click', function(e) {
+                document.addEventListener('click', function (e) {
                     const langBtn = e.target.closest('.lang-btn, .dropdown-item[href*="/lang/"]');
                     if (langBtn) {
                         setTimeout(convertPrices, 300);
                     }
                 });
 
-                const observer = new MutationObserver(function() {
+                const observer = new MutationObserver(function () {
                     const lang = document.documentElement.lang;
                     if (lang === 'en' || lang === 'es') {
                         convertPrices();
@@ -1937,11 +1878,11 @@
         })();
     </script>
 
+    {{-- ============================================================
+         MODAL MEMBRESÍA
+    ============================================================ --}}
     <script>
-        /* ============================================================
-               MODAL MEMBRESÍA
-            ============================================================ */
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const modal = document.getElementById('membershipModal');
             const openBtn = document.getElementById('openMembershipModalBtn');
             const openBtnMain = document.getElementById('openMembershipModalFromBtn');
@@ -1963,19 +1904,17 @@
             if (openBtnMain) openBtnMain.addEventListener('click', openModal);
             if (closeBtn) closeBtn.addEventListener('click', closeModal);
 
-            modal.addEventListener('click', function(event) {
-                if (event.target === modal || event.target.classList.contains(
-                        'modal-membership-backdrop')) {
+            modal.addEventListener('click', function (event) {
+                if (event.target === modal || event.target.classList.contains('modal-membership-backdrop')) {
                     closeModal();
                 }
             });
 
-            document.addEventListener('keydown', function(event) {
+            document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape' && modal.classList.contains('show')) {
                     closeModal();
                 }
             });
         });
     </script>
-
 @endsection

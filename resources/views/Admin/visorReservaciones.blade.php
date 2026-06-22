@@ -8,69 +8,70 @@
 
 @section('contenidoVisorReservaciones')
 
-<main class="main">
-    <h1 class="h1">Visor de Reservaciones</h1>
+<div class="visor-reservacion container">
+    <div class="visor-panel visor-panel-wide">
+        <div class="visor-card-header">
+            <div class="visor-card-title">
+                <h5>Visor de Reservaciones</h5>
+                <span class="visor-pill">Resultados solo lectura</span>
+            </div>
+        </div>
 
-    <section class="section">
-        <div class="head">Resultados (Solo lectura)</div>
-        <div class="cnt">
+        <div class="visor-card-body">
 
-            <!-- ================= Toolbar ================= -->
-            <div class="toolbar">
-                <div class="controls">
-                    <label>Mostrar
-                        <select id="pp">
-                            <option>10</option>
-                            <option selected>25</option>
-                            <option>50</option>
-                            <option>100</option>
-                        </select>
-                        registros
-                    </label>
+            <div class="toolbar visor-actions">
+                <div class="visor-field-group">
+                    <label>Mostrar</label>
+                    <select id="pp" class="form-select">
+                        <option>10</option>
+                        <option selected>25</option>
+                        <option>50</option>
+                        <option>100</option>
+                    </select>
+                    <small>registros</small>
                 </div>
 
-                <div class="controls">
-                    <label>Buscar:
-                        <input type="text" id="q" placeholder="Folio, cliente, teléfono, vehículo…" />
-                    </label>
+                <div class="visor-field-group">
+                    <label>Buscar</label>
+                    <input type="text" id="q" class="form-control" placeholder="Folio, cliente, teléfono, vehículo…" />
                 </div>
             </div>
 
-            <!-- ================= Tabla ================= -->
-            <table class="table" id="tbl">
-                <thead>
-                    <tr>
-                        <th style="width:58px"></th>
-                        <th>Clave Reservación</th>
-                        <th>Fecha Checkout</th>
-                        <th>Horario</th>
-                        <th>Días</th>
-                        <th>Categoría</th>
-                        <th>Nombre Completo</th>
-                        <th>Número Teléfono</th>
-                    </tr>
-                </thead>
+            <div class="visor-table-wrap">
+                <table class="visor-table" id="tbl">
+                    <thead>
+                        <tr>
+                            <th style="width:58px"></th>
+                            <th>Clave Reservación</th>
+                            <th>Fecha Checkout</th>
+                            <th>Horario</th>
+                            <th>Días</th>
+                            <th>Categoría</th>
+                            <th>Nombre Completo</th>
+                            <th>Número Teléfono</th>
+                        </tr>
+                    </thead>
 
-                <tbody id="tbody">
-                    <tr>
-                        <td colspan="8" style="text-align:center;color:#667085">Cargando…</td>
-                    </tr>
-                </tbody>
-            </table>
+                    <tbody id="tbody">
+                        <tr>
+                            <td colspan="8" style="text-align:center;color:#667085">Cargando…</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-            <!-- ================= Paginador ================= -->
-            <div class="pager">
-                <div class="range" id="range">0–0 de 0</div>
+            <div class="visor-actions visor-confirm-wrap">
+                <div class="visor-pill" id="range">0–0 de 0</div>
 
                 <div>
-                    <button class="btn" id="prev">‹</button>
-                    <button class="btn" id="next">›</button>
+                    <button class="btn btn-outline-primary" id="prev">‹</button>
+                    <button class="btn btn-outline-primary" id="next">›</button>
                 </div>
             </div>
 
         </div>
-    </section>
-</main>
+    </div>
+</div>
 
 @endsection
 

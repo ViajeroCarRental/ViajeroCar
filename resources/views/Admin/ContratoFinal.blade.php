@@ -222,7 +222,7 @@
                 <section class="bloque">
                     <h3>Firmas</h3>
                     <div class="firmas" style="display: flex; justify-content: space-around; align-items: flex-end; text-align: center; margin-top: 20px;">
-                        
+
                         <div class="firma-item">
                             <p><b>Firma de Arrendatario:</b></p>
                             <br>
@@ -318,22 +318,6 @@
        ">
             Checklist
         </a>
-
-        <a href="{{ route('checklist2', ['id' => $contrato->id_contrato]) }}" class="btn-checklist"
-            style="
-    padding: 10px 16px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 700;
-    text-decoration: none;
-    border: 1px solid transparent;
-    background: #FF1E2D;
-    color: #ffffff;
-    box-shadow: 0 2px 8px rgba(16,24,40,.06);
-   ">
-            Cambio de Vehículo
-        </a>
-
 
         <a href="{{ route('anexo.ver', ['id' => $contrato->id_contrato]) }}" class="btn-checklist"
             style="

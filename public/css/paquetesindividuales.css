@@ -1,6 +1,6 @@
 /* ============================================
-   PAGINA COMPLETA - SEGUROS INDIVIDUALES
-   DISEÑO PROFESIONAL
+   PÁGINA COMPLETA - SEGUROS INDIVIDUALES
+   DISEÑO PROFESIONAL Y UNIFICADO
 ============================================ */
 
 body {
@@ -15,7 +15,9 @@ body {
     padding: 20px 35px;
 }
 
-/* HEADER */
+/* ============================================
+   HEADER Y BOTONES SUPERIORES
+============================================ */
 .header-flex {
     display: flex;
     justify-content: space-between;
@@ -29,17 +31,28 @@ body {
     color: #2b2b2b;
 }
 
-/* BOTÓN + NUEVO */
-#btnNuevo {
-    padding: 10px 22px;
-    border-radius: 50px;
+/* Forzar que los botones del header se vean idénticos sin importar el color */
+.header-flex .btn-header-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 16px;
     font-size: 14px;
-    background: #e60023;
-    color: #fff;
-    border: none;
     font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    border-radius: 50px;
+    border: none;
     cursor: pointer;
     transition: 0.25s ease;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#btnNuevo {
+    background: #e60023;
+    color: #fff;
     box-shadow: 0px 4px 12px rgba(230, 0, 35, 0.25);
 }
 
@@ -49,9 +62,8 @@ body {
 }
 
 /* ============================================
-   TABLA
+   TABLA PRINCIPAL
 ============================================ */
-
 .table-wrap {
     width: 100%;
     background: white;
@@ -62,7 +74,6 @@ body {
     box-shadow: 0px 8px 30px rgba(0,0,0,0.08);
 }
 
-/* ENCABEZADOS */
 table.roles-table {
     width: 100%;
     border-collapse: collapse;
@@ -80,7 +91,6 @@ table.roles-table {
     text-align: left;
 }
 
-/* FILAS */
 .roles-table tbody tr {
     border-bottom: 1px solid #e5e7eb;
     transition: 0.25s ease;
@@ -90,22 +100,57 @@ table.roles-table {
     background: #f8fafc;
 }
 
-/* CELDAS */
 .roles-table td {
     padding: 14px 16px;
     font-size: 15px;
     color: #333;
 }
 
-/* BOTONES EDITAR / ELIMINAR */
-.roles-table button {
-    padding: 7px 16px;
-    border-radius: 40px;
-    font-size: 13px;
+/* Forzar botones de acción de la tabla en una sola fila */
+#tbodyIndividuales td:last-child {
+    white-space: nowrap;
+}
+
+#tbodyIndividuales td:last-child button {
+    display: inline-block;
+    margin-right: 5px;
+}
+
+/* ============================================
+   CLASES GLOBALES DE BOTONES
+============================================ */
+.roles-table button,
+.btn {
+    padding: 10px 22px;
+    border-radius: 50px;
+    font-size: 14px;
     font-weight: 600;
     border: none;
     cursor: pointer;
     transition: 0.25s ease;
+}
+
+.roles-table button {
+    padding: 7px 16px;
+    font-size: 13px;
+}
+
+.btn-secondary {
+    background: #e5e7eb;
+    color: #333;
+}
+
+.btn-secondary:hover {
+    background: #d1d5db;
+}
+
+.btn-primary {
+    background: #e60023;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: #c1001e;
 }
 
 .btn-warning {
@@ -128,9 +173,8 @@ table.roles-table {
 }
 
 /* ============================================
-   MODAL
+   MODALES BASE (NUEVO / EDITAR)
 ============================================ */
-
 .modal {
     display: none;
     position: fixed;
@@ -142,9 +186,9 @@ table.roles-table {
     z-index: 2000;
 }
 
-/* CUERPO DEL MODAL */
 .modal-content {
-    width: 520px;
+    width: 90%;
+    max-width: 700px;
     background: #fff;
     border-radius: 18px;
     padding: 28px 32px;
@@ -152,7 +196,6 @@ table.roles-table {
     animation: fadeIn .25s ease-out;
 }
 
-/* TITULO */
 .modal-content h3 {
     margin-bottom: 20px;
     font-size: 22px;
@@ -160,7 +203,6 @@ table.roles-table {
     color: #232323;
 }
 
-/* LABELS */
 .modal-content label {
     display: block;
     font-size: 14px;
@@ -169,7 +211,6 @@ table.roles-table {
     margin-bottom: 6px;
 }
 
-/* INPUTS */
 .modal-content input[type="text"],
 .modal-content input[type="number"],
 .modal-content textarea {
@@ -181,6 +222,7 @@ table.roles-table {
     outline: none;
     margin-bottom: 18px;
     transition: 0.25s ease;
+    box-sizing: border-box;
 }
 
 .modal-content textarea {
@@ -194,7 +236,6 @@ table.roles-table {
     box-shadow: 0 0 0 3px rgba(230,57,70,0.15);
 }
 
-/* CHECKBOX */
 .checkbox-row {
     display: flex;
     align-items: center;
@@ -208,44 +249,246 @@ table.roles-table {
     cursor: pointer;
 }
 
-/* FOOTER */
 .modal-footer {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
 }
 
-/* BOTONES MODAL */
-.modal-footer .btn {
-    padding: 10px 22px;
-    border-radius: 50px;
-    font-size: 14px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: 0.25s ease;
-}
-
-.modal-footer .btn-secondary {
-    background: #e5e7eb;
-    color: #333;
-}
-
-.modal-footer .btn-secondary:hover {
-    background: #d1d5db;
-}
-
-.modal-footer .btn-primary {
-    background: #e60023;
-    color: #fff;
-}
-
-.modal-footer .btn-primary:hover {
-    background: #c1001e;
-}
-
-/* ANIMACION DEL MODAL */
 @keyframes fadeIn {
     from { opacity: 0; transform: scale(0.92); }
     to { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================
+   ELEMENTOS DE DESGLOSE (SELECT Y PRECIOS)
+============================================ */
+.flex-input {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+    margin-bottom: 15px;
+}
+
+.contenedor-desglose {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #cbd5e1;
+    padding: 12px;
+    border-radius: 10px; 
+    margin-bottom: 15px;
+    background: #f8fafc;
+    display: none;
+}
+
+.fila-precio {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.input-precio {
+    width: 100px !important;
+    text-align: right;
+    padding: 4px 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    font-family: monospace;
+    margin-bottom: 0 !important;
+}
+
+/* ============================================
+   MODAL DE GESTIÓN DE SECCIONES (DISEÑO MEJORADO)
+============================================ */
+.modal-title-custom {
+    color: #1e3a8a !important;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 12px;
+    margin-top: 0;
+    margin-bottom: 20px !important;
+    font-size: 1.25rem !important;
+}
+
+/* Formulario lado izquierdo */
+.form-seccion-container {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.form-label-custom {
+    font-weight: 600;
+    color: #1e3a8a !important;
+    display: block;
+    margin-bottom: 8px !important;
+    font-size: 14px;
+}
+
+.form-input-custom {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.25s ease;
+    background: #fff;
+}
+
+.form-input-custom:focus {
+    outline: none;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+}
+
+.form-checkbox-custom {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: #991b1b !important;
+    cursor: pointer;
+    background: #fef2f2;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid #fecaca;
+    transition: all 0.2s ease;
+}
+
+.form-checkbox-custom:hover {
+    background: #fee2e2;
+}
+
+/* Lista lado derecho y Scrollbar */
+#listaSecciones {
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+    background: #f8fafc;
+}
+
+#listaSecciones::-webkit-scrollbar {
+    width: 6px;
+}
+#listaSecciones::-webkit-scrollbar-track {
+    background: transparent;
+}
+#listaSecciones::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 10px;
+}
+#listaSecciones::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
+
+.fila-seccion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 10px;
+    font-size: 13px;
+    transition: all 0.25s ease;
+}
+
+.fila-seccion:last-child {
+    margin-bottom: 0;
+}
+
+.fila-seccion:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transform: translateY(-2px);
+}
+
+.fila-seccion .badge-desglose {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    letter-spacing: 0.3px;
+}
+
+/* Grid y Responsividad */
+.modal-body-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 25px;
+    align-items: start;
+}
+
+.modal-body-grid .form-seccion-container {
+    margin-bottom: 0; 
+}
+
+@media (max-width: 768px) {
+    .modal-body-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Botones "Soft UI" de la lista de secciones */
+.btn-lista {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-lista-editar {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.btn-lista-editar:hover {
+    background: #fde68a;
+    border-color: #fcd34d;
+    color: #92400e;
+}
+
+.btn-lista-eliminar {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.btn-lista-eliminar:hover {
+    background: #fecaca;
+    border-color: #fca5a5;
+    color: #991b1b;
+}
+
+/* ============================================
+   ANIMACIONES Y MEJORAS DE UX
+============================================ */
+@keyframes highlight-success {
+    0% { background-color: #f0fdf4; }
+    50% { background-color: #bbf7d0; }
+    100% { background-color: transparent; }
+}
+
+.row-highlight {
+    animation: highlight-success 2s ease-out;
+}
+
+button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed !important;
+}
+
+.fa-spin {
+    margin-right: 5px;
 }

@@ -107,13 +107,6 @@
                                     </ul>
                                     <p>Total: <b id="r_servicios_total">—</b></p>
                                 </section>
-                                {{-- <section class="res-block">
-                                    <h4>Servicios adicionales</h4>
-                                    <ul id="r_cargos_lista" class="det-lista">
-                                        <li class="empty">—</li>
-                                    </ul>
-                                    <p>Total: <b id="r_cargos_total">$0.00 MXN</b></p>
-                                </section> --}}
                                 <section class="res-block">
                                     <h4>Total desglosado</h4>
                                     <p>Tarifa base: <b id="r_base_precio">${{ number_format($precioReal, 2) }}</b>
@@ -281,8 +274,10 @@
                                 </div>
 
                                 <div class="botones-accion-paso1">
-                                    <button type="button" class="btn secondary" id="btnElegirVehiculo">Cambiar
-                                        Vehículo</button>
+                                    <button type="button" class="btn secondary" id="btnElegirVehiculo">Elegir
+                                        vehículo</button>
+                                    <button type="button" class="btn secondary" id="btnCambiarCategoria">Cambiar
+                                        categoría</button>
                                     <button class="btn primary" id="go2">Continuar</button>
                                 </div>
                             </div>
@@ -696,22 +691,25 @@
 
         </div>
 
-        {{-- Modales --}}
+        {{-- ========================================================================= --}}
+        {{-- ================================ MODALES ================================ --}}
+        {{-- ========================================================================= --}}
 
-        {{-- Modal de vehiculos --}}
+        {{-- Modal de vehículos --}}
         <div id="modalVehiculos" class="modal-vehiculos">
-            <div class="modal-content modal-vehiculos-content">
-                <div class="modal-header modal-vehiculos-header">
+            <div class="modal-vehiculos-content">
+                <div class="modal-vehiculos-header">
                     <span class="modal-vehiculos-titulo">Inventario de Vehículos</span>
-                    <button type="button" id="cerrarModalVehiculos" class="close-btn modal-close-btn">✕</button>
+                    <button type="button" id="cerrarModalVehiculos" class="modal-close-btn">✕</button>
                 </div>
 
-                {{-- Filtros superiores --}}
-                <div class="modal-filtros modal-vehiculos-filtros">
+                {{-- Filtros superiores (Nuevas clases del CSS) --}}
+                <div class="modal-vehiculos-filtros">
                     <span class="filtros-label">Filtros rápidos:</span>
                     <input type="text" id="filtroPlacas" placeholder="Placas..." class="filtro-input">
                     <input type="text" id="filtroColor" placeholder="Color..." class="filtro-input">
                     <input type="text" id="filtroModelo" placeholder="Modelo..." class="filtro-input">
+                    <input type="text" id="filtroCategoria" placeholder="Categoría..." class="filtro-input">
                 </div>
 
                 {{-- Tabla con scroll --}}
@@ -719,17 +717,16 @@
                     <table class="tabla-excel-vehiculos">
                         <thead>
                             <tr>
-                                <th>MVA</th>
+                                <th>#</th>
                                 <th>PLACAS</th>
-                                <th>CATEGORIA</th>
-                                <th>TAMAÑO</th>
+                                <th>CATEGORÍA</th>
                                 <th>MODELO</th>
-                                <th>Trasmisión</th>
+                                <th>TRANSMISIÓN</th>
                                 <th>COLOR</th>
-                                <th>Gasolina</th>
-                                <th>GAS EN LITROS</th>
+                                <th>GAS (1/16)</th>
+                                <th>GAS (L)</th>
                                 <th>KILOMETRAJE</th>
-                                <th>VERIFICACION</th>
+                                <th>VERIF.</th>
                                 <th>MANTENIMIENTO</th>
                                 <th>SEGURO</th>
                                 <th class="accion-header">ACCIÓN</th>
@@ -741,11 +738,55 @@
                     </table>
                 </div>
 
-                {{-- Footer con botón cerrar --}}
-                <div class="modal-footer modal-vehiculos-footer">
-                    <div class="footer-boton-container">
-                        <button id="cerrarModalVehiculos2" class="btn gray modal-cerrar-btn">Cerrar inventario</button>
+                <div
+                    style="padding: 16px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
+                    <button id="cerrarModalVehiculos2" class="btn gray">Cerrar inventario</button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal de confirmación de edición de inventario --}}
+        <div id="modalConfirmEdicion" class="modal-vehiculos" style="display:none; z-index:100001;">
+            <div class="modal-vehiculos-content" style="max-width:440px; height:auto;">
+                <div class="modal-vehiculos-header">
+                    <span class="modal-vehiculos-titulo">Confirmar cambio</span>
+                    <button type="button" id="cerrarConfirmEdicion" class="modal-close-btn">✕</button>
+                </div>
+
+                <div style="padding:24px;">
+                    <p style="margin:0 0 16px; color:#475569;">Vas a modificar el siguiente vehículo:</p>
+
+                    <div
+                        style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:16px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span style="color:#64748b;">Categoría:</span>
+                            <b id="confCategoria">—</b>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span style="color:#64748b;">Color:</span>
+                            <b id="confColor">—</b>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:#64748b;">Placas:</span>
+                            <b id="confPlacas">—</b>
+                        </div>
                     </div>
+
+                    <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:12px 16px;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:#1e40af;" id="confCampoLabel">Campo</span>
+                            <span>
+                                <s id="confValorAnterior" style="color:#94a3b8;">—</s>
+                                <b id="confValorNuevo" style="color:#1d4ed8; margin-left:8px;">—</b>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    style="padding:16px 24px; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; gap:8px;">
+                    <button id="btnCancelarEdicion" class="btn gray">Cancelar</button>
+                    <button id="btnConfirmarEdicion" class="btn primary">Confirmar</button>
                 </div>
             </div>
         </div>
@@ -769,6 +810,24 @@
                 <div class="upgrade-buttons">
                     <button id="btnRechazarUpgrade" class="btn-upgrade-cancel">No gracias</button>
                     <button id="btnAceptarUpgrade" class="btn-upgrade-accept">Aceptar upgrade</button>
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal de cambio de categoría (Dinámico) --}}
+        <div id="modalCategorias" class="modal-vehiculos">
+            <div class="modal-vehiculos-content">
+                <div class="modal-vehiculos-header">
+                    <span class="modal-vehiculos-titulo">Selecciona una nueva Categoría</span>
+                    <button type="button" id="cerrarModalCategorias" class="modal-close-btn">✕</button>
+                </div>
+
+                <div class="categorias-grid" id="contenedorCategoriasJS">
+                </div>
+
+                <div
+                    style="padding: 16px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
+                    <button id="cerrarModalCategorias2" class="btn gray">Cancelar</button>
                 </div>
             </div>
         </div>

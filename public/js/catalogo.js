@@ -1,47 +1,35 @@
+/* ============================================================
+   CATALOGO.JS - Versión optimizada
+   Solo contiene lo específico de la vista catálogo:
+     - Acordeón del filtro (abrir/cerrar/ESC/click-fuera)
+     - Sticky del filtro en desktop
+     - Filtro visual por categoría (Sedan/SUV/Pickup/Van)
+
+   ELIMINADO:
+     - Zombies: Flatpickr, btn-filter, helpers de fecha
+     - Duplicados con layout: topbar scroll, hamburguesa, año footer
+   ============================================================ */
+
 (function () {
   "use strict";
 
-  // --- 1. Utilidades Globales ---
+  /* ====================
+     Helpers
+  ==================== */
   const qs = (s, r = document) => r.querySelector(s);
   const qsa = (s, r = document) => Array.from(r.querySelectorAll(s));
 
-  // --- 2. Herramientas de Fecha (Para los inputs de entrega/devolución) ---
-  function todayISO() {
-    const t = new Date();
-    const y = t.getFullYear();
-    const m = String(t.getMonth() + 1).padStart(2, "0");
-    const d = String(t.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
-
-  function parseYMD(v) {
-    if (!v) return null;
-    const [y, m, d] = v.split("-").map(Number);
-    if (!y || !m || !d) return null;
-    return new Date(y, m - 1, d);
-  }
-
-  function formatYMD(dt) {
-    const y = dt.getFullYear();
-    const m = String(dt.getMonth() + 1).padStart(2, "0");
-    const d = String(dt.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
-
-  // --- Helpers UI ---
   function smoothScrollIntoView(el) {
     if (!el) return;
     const topbar = qs(".topbar");
     const offset = (topbar ? topbar.offsetHeight : 0) + 16;
-
     const y = el.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
   }
 
-  // --- Helper acordeón: animación por altura real ---
+  // Animación del panel del acordeón por altura real
   function setPanelOpen(panel, open) {
     if (!panel) return;
-
     panel.style.overflow = "hidden";
 
     if (open) {
@@ -62,40 +50,17 @@
     }
   }
 
+  /* ====================
+     ENTRY POINT
+  ==================== */
   document.addEventListener("DOMContentLoaded", () => {
-    // ===== Interfaz Básica (Topbar, Menú y Footer) =====
-    const topbar = qs(".topbar");
-    const toggleTopbar = () => {
-      if (!topbar) return;
-      window.scrollY > 40
-        ? topbar.classList.add("solid")
-        : topbar.classList.remove("solid");
-    };
-    window.addEventListener("scroll", toggleTopbar, { passive: true });
-    toggleTopbar();
 
-    const hamburger = qs(".hamburger");
-    const menu = qs(".menu");
-    if (hamburger && menu) {
-      hamburger.addEventListener("click", () => {
-        const visible = getComputedStyle(menu).display !== "none";
-        menu.style.display = visible ? "none" : "flex";
-        if (!visible) {
-          menu.style.flexDirection = "column";
-          menu.style.gap = "12px";
-        }
-      });
-    }
-
-    const yearEl = qs("#year");
-    if (yearEl) yearEl.textContent = new Date().getFullYear();
-
-    // ==========================================================
-    // ✅ ACORDEÓN FILTRO (VANILLA) + CERRAR AL CLICK FUERA + AL SELECCIONAR
-    // ==========================================================
+    // ========================================================
+    // ACORDEÓN FILTRO + CERRAR AL CLICK FUERA + ESC + SELECCIÓN
+    // ========================================================
     let closeFiltroAccordion = null;
 
-    (function initFiltroAccordionVanilla() {
+    (function initFiltroAccordion() {
       const wrapper = qs(".filter-accordion");
       const btn = qs("#btn-filtro-autos");
       const panel = qs("#filtro-autos");
@@ -107,8 +72,9 @@
       // Estado inicial cerrado
       btn.classList.add("collapsed");
       btn.setAttribute("aria-expanded", "false");
-     const textClosed = btn.dataset.textClosed || "Filtrar categorías";
-if (labelSpan) labelSpan.textContent = textClosed;
+
+      const textClosed = btn.dataset.textClosed || "Filtrar categorías";
+      if (labelSpan) labelSpan.textContent = textClosed;
       if (icon) icon.style.transform = "rotate(0deg)";
 
       panel.classList.remove("show");
@@ -121,9 +87,9 @@ if (labelSpan) labelSpan.textContent = textClosed;
         btn.setAttribute("aria-expanded", String(open));
         btn.classList.toggle("collapsed", !open);
 
-       if (labelSpan) {
-  labelSpan.textContent = open ? btn.dataset.textOpen : btn.dataset.textClosed;
-}
+        if (labelSpan) {
+          labelSpan.textContent = open ? btn.dataset.textOpen : btn.dataset.textClosed;
+        }
         if (icon) icon.style.transform = open ? "rotate(180deg)" : "rotate(0deg)";
 
         setPanelOpen(panel, open);
@@ -134,13 +100,13 @@ if (labelSpan) labelSpan.textContent = textClosed;
         if (isOpenNow()) setState(false);
       };
 
-      // Toggle normal
+      // Toggle al hacer click en el botón
       btn.addEventListener("click", (e) => {
         e.preventDefault();
         setState(!isOpenNow());
       });
 
-      // Cerrar al hacer click fuera
+      // Cerrar al hacer click fuera del acordeón
       document.addEventListener("click", (e) => {
         if (!isOpenNow()) return;
         if (!wrapper.contains(e.target)) setState(false);
@@ -157,9 +123,9 @@ if (labelSpan) labelSpan.textContent = textClosed;
       });
     })();
 
-    // ==========================================================
-    // ✅ STICKY DENTRO DEL HERO (solo desktop) — móvil normal
-    // ==========================================================
+    // ========================================================
+    // STICKY DENTRO DEL HERO (solo desktop)
+    // ========================================================
     (function stickyInsideHeroDesktopOnly() {
       const hero = qs(".hero");
       const heroInner = qs(".hero-inner");
@@ -169,12 +135,12 @@ if (labelSpan) labelSpan.textContent = textClosed;
       const mq = window.matchMedia("(max-width: 768px)");
 
       const apply = () => {
-        // reset
+        // Reset
         filterCard.style.position = "";
         filterCard.style.top = "";
         filterCard.style.zIndex = "";
 
-        if (mq.matches) return; // móvil: normal
+        if (mq.matches) return; // móvil: comportamiento normal
 
         const topbar = qs(".topbar");
         const offset = (topbar ? topbar.offsetHeight : 0) + 22;
@@ -190,7 +156,9 @@ if (labelSpan) labelSpan.textContent = textClosed;
       else mq.addListener(apply);
     })();
 
-    // ===== Filtro Visual de Autos (Categorías) =====
+    // ========================================================
+    // FILTRO VISUAL DE AUTOS POR CATEGORÍA
+    // ========================================================
     const botonesFiltro = qsa(".filter-card");
     const autos = qsa(".catalog-group");
 
@@ -209,68 +177,11 @@ if (labelSpan) labelSpan.textContent = textClosed;
           }
         });
 
-        // ✅ cerrar acordeón al seleccionar opción (móvil)
-        // (si luego quieres que solo cierre en móvil, lo ajustamos)
+        // Cerrar acordeón al seleccionar opción (útil en móvil)
         if (typeof closeFiltroAccordion === "function") {
           closeFiltroAccordion();
         }
       });
     });
-
-    // ===== Calendarios y Fechas (Flatpickr) =====
-    const startInput = qs("#date-start");
-    const endInput = qs("#date-end");
-
-    if (startInput && endInput) {
-      startInput.setAttribute("placeholder", "dd/mm/aaaa");
-      endInput.setAttribute("placeholder", "dd/mm/aaaa");
-
-      if (window.flatpickr) {
-        const fpConfig = {
-          altInput: true,
-          altFormat: "d/m/Y",
-          dateFormat: "Y-m-d",
-          minDate: "today",
-          allowInput: false,
-        };
-
-        if (typeof rangePlugin !== "undefined") {
-          flatpickr("#date-start", {
-            ...fpConfig,
-            plugins: [new rangePlugin({ input: "#date-end" })],
-          });
-        } else {
-          flatpickr("#date-start", fpConfig);
-          flatpickr("#date-end", fpConfig);
-        }
-      } else {
-        startInput.setAttribute("min", todayISO());
-        endInput.setAttribute("min", todayISO());
-      }
-    }
-
-    // ===== Botón Filtrar (Envío a Laravel) =====
-    const btnFilter = qs("#btn-filter");
-    if (btnFilter) {
-      btnFilter.addEventListener("click", () => {
-        const params = new URLSearchParams({
-          location: qs("#f-location")?.value || "",
-          type: qs("#f-type")?.value || "",
-          start: qs("#date-start")?.value || "",
-          end: qs("#date-end")?.value || "",
-        });
-
-        if (!params.get("start") || !params.get("end")) {
-          alert("Por favor selecciona las fechas de entrega y devolución.");
-          return;
-        }
-
-        btnFilter.disabled = true;
-        btnFilter.classList.add("loading");
-        setTimeout(() => {
-          window.location.href = `/catalogo/filtrar?${params.toString()}`;
-        }, 250);
-      });
-    }
   });
 })();
