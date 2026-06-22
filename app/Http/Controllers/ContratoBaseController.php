@@ -138,7 +138,8 @@ class ContratoBaseController extends Controller
                 'v.placa as vehiculo_placa',
                 'v.asientos as vehiculo_asientos',
                 'v.puertas as vehiculo_puertas',
-                'cc.codigo as codigo_categoria'
+                'cc.codigo as codigo_categoria',
+                'cc.nombre as categoria_nombre_formal'
             )
             ->where('r.id_reservacion', $idReservacion)
             ->first();
@@ -151,10 +152,11 @@ class ContratoBaseController extends Controller
         if ($res->vehiculo_id) {
             return [
                 'id_vehiculo'      => $res->vehiculo_id,
+                'id_categoria'     => $res->id_categoria, // ID real de la categoría
                 'marca'            => $res->vehiculo_marca,
                 'modelo'           => $res->vehiculo_modelo,
                 'nombre_publico'   => $res->vehiculo_nombre_publico,
-                'categoria'        => $res->vehiculo_categoria,
+                'categoria'        => $res->categoria_nombre_formal, // Usar nombre de la tabla categorias_carros
                 'codigo_categoria' => $codigoCat,
                 'transmision'      => $res->vehiculo_transmision,
                 'km'               => $res->vehiculo_km,
@@ -167,7 +169,8 @@ class ContratoBaseController extends Controller
 
         return [
             'imagen_render'    => $imgFinal,
-            'categoria'        => $codigoCat,
+            'id_categoria'     => $res->id_categoria,
+            'categoria'        => $res->categoria_nombre_formal,
             'codigo_categoria' => $codigoCat,
         ];
     }
@@ -307,7 +310,7 @@ class ContratoBaseController extends Controller
             ->where('estatus', 'paid')
             ->where(function ($query) {
                 $query->whereNull('tipo_pago')
-                      ->orWhereRaw('UPPER(TRIM(tipo_pago)) <> ?', ['GARANTIA']);
+                    ->orWhereRaw('UPPER(TRIM(tipo_pago)) <> ?', ['GARANTIA']);
             })
             ->sum('monto') ?? 0;
 
@@ -334,6 +337,17 @@ class ContratoBaseController extends Controller
                 return response()->json(['success' => false, 'error' => 'Reservación no encontrada'], 404);
             }
 
+            // Obtener información del vehículo y su categoría
+            $vehiculo = DB::table('vehiculos')->where('id_vehiculo', $data['id_vehiculo'])->first();
+            if (!$vehiculo) {
+                return response()->json(['success' => false, 'error' => 'Vehículo no encontrado'], 404);
+            }
+
+            $categoria = DB::table('categorias_carros')->where('id_categoria', $vehiculo->id_categoria)->first();
+            if (!$categoria) {
+                return response()->json(['success' => false, 'error' => 'Categoría del vehículo no encontrada'], 404);
+            }
+
             $inicioReq = $res->fecha_inicio . ' ' . $res->hora_retiro;
             $finReq    = $res->fecha_fin . ' ' . $res->hora_entrega;
 
@@ -344,12 +358,15 @@ class ContratoBaseController extends Controller
                 ], 422);
             }
 
-            DB::transaction(function () use ($data, $res) {
+            DB::transaction(function () use ($data, $res, $vehiculo, $categoria) {
+                // Actualizamos vehículo, categoría y tarifa base de la reservación
                 DB::table('reservaciones')
                     ->where('id_reservacion', $data['id_reservacion'])
                     ->update([
-                        'id_vehiculo' => $data['id_vehiculo'],
-                        'updated_at'  => now(),
+                        'id_vehiculo'  => $data['id_vehiculo'],
+                        'id_categoria' => $vehiculo->id_categoria,
+                        'tarifa_base'  => $categoria->precio_dia,
+                        'updated_at'   => now(),
                     ]);
 
                 DB::table('vehiculo_estatus_historial')->insert([
@@ -362,7 +379,7 @@ class ContratoBaseController extends Controller
                 ]);
             });
 
-            return response()->json(['success' => true, 'msg' => 'Vehículo asignado y estatus actualizado.']);
+            return response()->json(['success' => true, 'msg' => 'Vehículo asignado y categoría actualizada.']);
         } catch (\Exception $e) {
             Log::error("Error asignarVehiculo: " . $e->getMessage());
             return response()->json(['success' => false, 'error' => "No se pudo asignar el coche"], 500);
@@ -385,19 +402,31 @@ class ContratoBaseController extends Controller
             $finReq    = $resActual->fecha_fin . ' ' . $resActual->hora_entrega;
             $idVehiculoActual = $resActual->id_vehiculo ?? 0;
 
-            $vehiculos = DB::table('vehiculos as v')
+            $query = DB::table('vehiculos as v')
+                ->leftJoin('categorias_carros as cc', 'v.id_categoria', '=', 'cc.id_categoria')
                 ->leftJoin('vehiculo_imagenes as img', function ($j) {
                     $j->on('img.id_vehiculo', '=', 'v.id_vehiculo')->where('img.orden', 0);
                 })
                 ->leftJoin('mantenimientos as m', 'm.id_vehiculo', '=', 'v.id_vehiculo')
-                ->where('v.id_categoria', $idCategoria)
-                ->select('v.*', 'img.url as foto_url', 'm.proximo_servicio')
+                ->select(
+                    'v.*',
+                    'cc.nombre as categoria_nombre',
+                    'cc.codigo as categoria_codigo',
+                    'img.url as foto_url',
+                    'm.proximo_servicio'
+                )
                 ->selectSub(
                     $this->subqueryBloqueo($inicioReq, $finReq, $idReservacion),
                     'bloqueado_por_codigo'
                 )
-                ->addSelect(DB::raw("(v.id_vehiculo = {$idVehiculoActual}) as es_el_actual"))
-                ->get();
+                ->addSelect(DB::raw("(v.id_vehiculo = {$idVehiculoActual}) as es_el_actual"));
+
+            // Si es 'todos', no filtramos por categoría
+            if ($idCategoria !== 'todos') {
+                $query->where('v.id_categoria', $idCategoria);
+            }
+
+            $vehiculos = $query->orderBy('cc.orden')->orderBy('v.placa')->get();
 
             $vehiculos->transform(function ($v) {
                 $v->km_restantes = ($v->proximo_servicio && $v->kilometraje)
@@ -421,6 +450,64 @@ class ContratoBaseController extends Controller
         } catch (\Exception $e) {
             Log::error("Error en vehiculosPorCategoria: " . $e->getMessage());
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function actualizarInventarioVehiculo(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'id_vehiculo' => 'required|integer|exists:vehiculos,id_vehiculo',
+                'campo'       => 'required|string|in:gasolina,kilometraje',
+                'valor'       => 'required|numeric|min:0',
+            ]);
+
+            $vehiculo = DB::table('vehiculos')->where('id_vehiculo', $data['id_vehiculo'])->first();
+            if (!$vehiculo) {
+                return response()->json(['success' => false, 'error' => 'Vehículo no encontrado'], 404);
+            }
+
+            if ($data['campo'] === 'gasolina') {
+                // El front manda el NIVEL (0-16). Validamos rango.
+                if ($data['valor'] < 0 || $data['valor'] > 16) {
+                    return response()->json([
+                        'success' => false,
+                        'error'   => 'El nivel de gasolina debe estar entre 0 y 16.'
+                    ], 422);
+                }
+
+                // Convertimos nivel (0-16) a LITROS reales según la capacidad del tanque
+                $capacidad = (float) ($vehiculo->capacidad_tanque ?? 60);
+                $litros    = round(($data['valor'] / 16) * $capacidad);
+
+                DB::table('vehiculos')
+                    ->where('id_vehiculo', $data['id_vehiculo'])
+                    ->update(['gasolina_actual' => $litros, 'updated_at' => now()]);
+
+                return response()->json([
+                    'success'           => true,
+                    'msg'               => 'Gasolina actualizada.',
+                    'campo'             => 'gasolina',
+                    'nivel'             => (float) $data['valor'],
+                    'litros'            => $litros,
+                    'gasolina_fraccion' => $data['valor'] . '/16',
+                ]);
+            }
+
+            // Kilometraje (sin validación de retroceso)
+            DB::table('vehiculos')
+                ->where('id_vehiculo', $data['id_vehiculo'])
+                ->update(['kilometraje' => $data['valor'], 'updated_at' => now()]);
+
+            return response()->json([
+                'success' => true,
+                'msg'     => 'Kilometraje actualizado.',
+                'campo'   => 'kilometraje',
+                'valor'   => (float) $data['valor'],
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Error actualizarInventarioVehiculo: " . $e->getMessage());
+            return response()->json(['success' => false, 'error' => 'Error interno.'], 500);
         }
     }
 
@@ -639,4 +726,4 @@ class ContratoBaseController extends Controller
             ->where('rsi.id_reservacion', $idReservacion)
             ->get();
     }
-}				
+}

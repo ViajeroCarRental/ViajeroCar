@@ -36,8 +36,11 @@ class DatabaseSeeder extends Seeder
         MantenimientosSeeder::class,
         CategoriaCostoKmSeeder::class,
         UbicacionesServicioSeeder::class,
+        SeccionesSegurosSeeder::class,
         SeguroIndividualesSeeder::class,
         PaisSeeder::class,
+        DepositoSeeder::class,
+        SistemasSeeder::class,
         ]);
     }
 

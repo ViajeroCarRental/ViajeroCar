@@ -13,6 +13,8 @@ return new class extends Migration {
             $table->string('apellidos', 120);
             $table->string('correo', 150)->unique();
             $table->string('numero', 20)->nullable();
+            $table->string('nombre_usuario', 15)->nullable();
+            $table->longText('firma')->nullable();
             $table->string('contrasena_hash', 255);
             $table->boolean('email_verificado')->default(false);
             $table->string('pais', 60)->nullable();

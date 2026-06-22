@@ -42,6 +42,7 @@ use App\Http\Controllers\DropoffController;
 use App\Http\Controllers\AdicionalesController;
 use App\Http\Controllers\DepositoController;
 use App\Http\Controllers\OficinaController;
+use App\Http\Controllers\FlotillaStatusController;
 
 //rutas vistas Usuario
 
@@ -254,6 +255,10 @@ Route::delete('/admin/reservaciones-activas/{id}',
 // Buscador de personas (ruta FIJA, debe ir antes de cualquier ruta con {id})
 Route::get('/admin/contrato/buscar-persona', [Contrato2Controller::class, 'buscarPersona']);
 
+// Rutas estáticas de contrato (deben ir antes de {id})
+Route::get('/admin/contrato/categorias-dinamicas', [ContratoController::class, 'obtenerCategoriasDinamicas']);
+Route::get('/admin/contrato/categoria-info/{codigo}', [ContratoController::class, 'categoriaInfo'])->name('contrato.categoria-info');
+
 // ContratoController
 Route::get('/admin/contrato/{id}', [ContratoController::class, 'mostrarContrato'])->name('contrato.mostrar');
 
@@ -263,7 +268,6 @@ Route::get('/admin/contrato/cambio-fecha/aprobar/{token}', [ContratoController::
 Route::get('/admin/contrato/cambio-fecha/rechazar/{token}', [ContratoController::class, 'rechazarCambioFecha'])->name('contrato.rechazarCambioFecha');
 Route::get('/admin/contrato/cambio-fecha/estado/{id}', [ContratoController::class, 'estadoCambioFecha']);
 Route::post('/admin/contrato/{idReservacion}/recalcular-total', [ContratoController::class, 'recalcularYActualizarTotales']);
-Route::get('/admin/contrato/categoria-info/{codigo}', [ContratoController::class, 'categoriaInfo'])->name('contrato.categoria-info');
 
 // Paso 2: Servicios Adicionales
 Route::post('/admin/contrato/servicios', [ContratoController::class, 'actualizarServicios'])->name('contrato.actualizarServicios');
@@ -284,6 +288,7 @@ Route::get('/admin/contrato/{id_reservacion}/resumen', [ContratoBaseController::
 Route::get('/contrato/{id}/exportar-word', [ContratoController::class, 'exportarWord'])->name('contrato.exportarWord');
 Route::get('/admin/contrato/vehiculos-por-categoria/{idCategoria}/{idReservacion}', [ContratoBaseController::class, 'vehiculosPorCategoria'])->name('contrato.vehiculosPorCategoria');
 Route::post('/admin/contrato/asignar-vehiculo', [ContratoBaseController::class, 'asignarVehiculo'])->name('contrato.asignarVehiculo');
+Route::post('/admin/vehiculo/actualizar-inventario', [ContratoBaseController::class, 'actualizarInventarioVehiculo'])->name('vehiculo.actualizar-inventario');
 Route::get('/admin/contrato/vehiculo-random/{idCategoria}', [ContratoBaseController::class, 'vehiculoRandom'])->name('contrato.vehiculo-random');
 
 // Contrato2Controller
@@ -346,6 +351,17 @@ Route::get('/admin/rfc', [App\Http\Controllers\controladorVistasAdmin::class, 'R
 Route::get('/admin/facturar', [App\Http\Controllers\controladorVistasAdmin::class, 'Facturar'])->name('rutaFacturar');
 
 
+//Status del vehiculo
+Route::prefix('ventas')->group(function () {
+
+    Route::get('/flotilla-status', [FlotillaStatusController::class, 'index'])->name('rutaflotillastatus');
+
+    Route::get('/flotilla-status/list', [FlotillaStatusController::class, 'list']);
+
+    Route::put('/flotilla-status/{id}', [FlotillaStatusController::class, 'updateEstatus'])
+    ->name('rutaflotillastatus.update');
+});
+
 
 // 🚗 Rutas de Flotilla (Administrador)
 // 🔹 Vista principal de la flotilla
@@ -391,7 +407,8 @@ Route::post('/admin/carroceria/store', [CarroceriaController::class, 'store'])
 Route::put('/admin/carroceria/update/{id}', [CarroceriaController::class, 'update'])
     ->name('carroceria.update');
 
-
+Route::get('/admin/carroceria/{id}/foto', [CarroceriaController::class, 'foto'])
+    ->name('carroceria.foto');
 
 
 // === GASTOS ===
@@ -543,7 +560,7 @@ Route::prefix('admin')->group(function () {
     Route::delete('/seguros/{id}', [SeguroPaqueteController::class, 'destroy']);
 });
 
-
+// Paquetes individuales
 Route::prefix('admin')->group(function () {
 
     Route::get('/seguros-individuales', [SeguroIndividualController::class, 'index'])
@@ -555,7 +572,15 @@ Route::prefix('admin')->group(function () {
     Route::post('/seguros-individuales', [SeguroIndividualController::class, 'store']);
     Route::put('/seguros-individuales/{id}', [SeguroIndividualController::class, 'update']);
     Route::delete('/seguros-individuales/{id}', [SeguroIndividualController::class, 'destroy']);
+
+    //secciones de paquetes individuales
+    Route::post('/secciones-seguros', [SeguroIndividualController::class, 'storeSeccion']);
+    Route::get('/secciones-seguros/list', [SeguroIndividualController::class, 'listSecciones']);
+    Route::put('/secciones-seguros/{id}', [SeguroIndividualController::class, 'updateSeccion']);
+    Route::delete('/secciones-seguros/{id}', [SeguroIndividualController::class, 'destroySeccion']);
 });
+
+//Dueño de vehiculo
 
 Route::prefix('admin')->group(function () {
 
@@ -563,6 +588,8 @@ Route::prefix('admin')->group(function () {
         ->name('propietariovehiculo.index');
 
     Route::get('/propietarios/list', [PropietarioVehiculoController::class, 'list']);
+
+    Route::get('/propietarios-buscar/firma', [PropietarioVehiculoController::class, 'buscarPorNombre']);
 
     Route::get('/propietarios/{id}', [PropietarioVehiculoController::class, 'show']);
 
@@ -574,12 +601,24 @@ Route::prefix('admin')->group(function () {
 
 });
 
+//Adicionales
+Route::prefix('admin')->group(function () {
+Route::get('/servicios', [AdicionalesController::class, 'index'])->name('servicios.index');
+Route::post('/servicios', [AdicionalesController::class, 'store'])->name('servicios.store');
+Route::put('/servicios/{id}', [AdicionalesController::class, 'update'])->name('servicios.update');
+Route::delete('/servicios/{id}', [AdicionalesController::class, 'destroy'])->name('servicios.destroy');
+});
+
 //Dropoff en administración
 Route::prefix('admin')->group(function () {
-Route::get('/dropoff', [DropoffController::class, 'index'])->name('dropoff.index');
+Route::get('/dropoff', [DropoffController::class, 'index'])->name('dropoffdelivery.index');
 Route::get('/dropoff/data', [DropoffController::class, 'data']);
 Route::post('/dropoff/update-km', [DropoffController::class, 'updateKm']);
 Route::post('/dropoff/update-costo', [DropoffController::class, 'updateCostoKm']);
+Route::post('/dropoff/ubicacion', [DropoffController::class, 'storeUbicacion']);
+Route::post('/dropoff/tarifa', [DropoffController::class, 'storeTarifaDropoff']);
+Route::post('/dropoff/ubicacion/eliminar/{id}', [DropoffController::class, 'destroyUbicacion']);
+Route::post('/dropoff/tarifa/eliminar/{id}', [DropoffController::class, 'destroyTarifaDropoff']);
 });
 
 Route::post('/contrato/guardar-dato', [ChecklistController::class, 'guardarDato'])
@@ -638,12 +677,30 @@ Route::post('/admin/contrato/{id}/extension',[ContratosAbiertosController::class
 
 
 // Categorías de carros admin
-
-
 Route::get('/categorias', [CategoriasController::class, 'index'])->name('categorias.index');
 Route::post('/categorias', [CategoriasController::class, 'store'])->name('categorias.store');
 Route::put('/categorias/{id}', [CategoriasController::class, 'update'])->name('categorias.update');
 Route::delete('/categorias/{id}', [CategoriasController::class, 'destroy'])->name('categorias.destroy');
+
+// Servicios Adicionales CRUD
+Route::get('/adicionales', [AdicionalesController::class, 'index'])->name('adicionales.index');
+Route::post('/adicionales', [AdicionalesController::class, 'store'])->name('adicionales.store');
+Route::put('/adicionales/{id}', [AdicionalesController::class, 'update'])->name('adicionales.update');
+Route::delete('/adicionales/{id}', [AdicionalesController::class, 'destroy'])->name('adicionales.destroy');
+
+// Rutas para el CRUD de Garantías/Depósitos
+Route::get('/admin/depositos', [DepositoController::class, 'index'])->name('depositos.index');
+Route::post('/admin/depositos', [DepositoController::class, 'store'])->name('depositos.store');
+Route::put('/admin/depositos/{id}', [DepositoController::class, 'update'])->name('depositos.update');
+Route::delete('/admin/depositos/{id}', [DepositoController::class, 'destroy'])->name('depositos.destroy');
+
+// Oficinas
+Route::get('/oficinas', [OficinaController::class, 'index'])->name('oficinas.index');
+Route::post('/oficinas', [OficinaController::class, 'store'])->name('oficinas.store');
+Route::put('/oficinas/{id}', [OficinaController::class, 'update'])->name('oficinas.update');
+Route::delete('/oficinas/{id}', [OficinaController::class, 'destroy'])->name('oficinas.destroy');
+Route::post('/oficinas/calcular', [OficinaController::class, 'calculate'])->name('oficinas.calculate');
+
 //suta consultar saldo pendiente
 Route::get('/admin/contrato/{id}/saldo', [ContratosAbiertosController::class, 'saldo']);
 

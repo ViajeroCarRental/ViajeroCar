@@ -13,16 +13,23 @@ return new class extends Migration {
             $table->string('nombre', 100)->unique();
             $table->string('descripcion', 255)->nullable();
 
-            // 💰 Precio base por día de la categoría
+            // 💰 Precio base por categoría.
             $table->decimal('precio_dia', 10, 2)->default(0.00);
+            $table->decimal('precio_semana', 10, 2)->default(0.00);
+            $table->decimal('precio_mes', 10, 2)->default(0.00);
 
             // 🧾 Descuento para miembros
             $table->decimal('descuento_miembro', 5, 2)
                   ->default(0.00)
                   ->comment('Descuento % para miembros preferentes');
+            
+            $table->decimal('garantia_base', 10, 2)->default(0.00); // El monto sin seguros
+            $table->integer('orden')->default(0); // Para ordenarlos a tu gusto
 
             // ⚙️ Estado activo/inactivo
             $table->boolean('activo')->default(true);
+
+            $table->json('paquetes')->nullable()->comment('Arreglo con los IDs de los paquetes');
 
             // ⏰ Control de tiempo
             // ⏰ Control de tiempo (nullable como en tu tabla real)

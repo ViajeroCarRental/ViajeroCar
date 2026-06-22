@@ -3,8 +3,50 @@ document.addEventListener("DOMContentLoaded", () => {
     const tbody = document.getElementById("tbodySeguros");
     const btnNuevo = document.getElementById("btnNuevo");
 
+    // ===================================================
+    // Lógica de formateo dinámico en los Inputs
+    // ===================================================
+    const limpiarNumero = (val) => {
+        const limpio = String(val).replace(/[^0-9.]/g, '');
+        return parseFloat(limpio) || 0;
+    };
+
+    // Al hacer clic dentro del input para escribir
+    document.addEventListener("focusin", (e) => {
+        const id = e.target.id;
+        const cls = e.target.classList;
+
+        if (id === "newPrecio" || id === "editPrecio" || 
+            id === "newDeducibleColision" || id === "editDeducibleColision" || 
+            id === "newDeducibleRobo" || id === "editDeducibleRobo" ||
+            cls.contains("new-monto") || cls.contains("edit-monto")) {
+            
+            let valorLimpio = e.target.value.replace(/[^0-9.]/g, '');
+            if (parseFloat(valorLimpio) === 0) valorLimpio = "";
+            e.target.value = valorLimpio;
+        }
+    });
+
+    // Al salir del input (Formatea agregando $ a la izquierda o % a la derecha)
+    document.addEventListener("focusout", (e) => {
+        const id = e.target.id;
+        const cls = e.target.classList;
+
+        // Formato MONTO ($ a la izquierda)
+        if (id === "newPrecio" || id === "editPrecio" || cls.contains("new-monto") || cls.contains("edit-monto")) {
+            const num = parseFloat(e.target.value) || 0;
+            e.target.value = "$" + num.toFixed(2);
+        }
+        // Formato PORCENTAJE (% a la derecha)
+        else if (id === "newDeducibleColision" || id === "editDeducibleColision" || 
+                 id === "newDeducibleRobo" || id === "editDeducibleRobo") {
+            const num = parseFloat(e.target.value) || 0;
+            e.target.value = num.toFixed(2) + " %";
+        }
+    });
+
     // ===============================
-    // Cargar tabla
+    // Cargar tabla principal
     // ===============================
     function cargarSeguros() {
         fetch("/admin/seguros/list")
@@ -13,10 +55,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 tbody.innerHTML = "";
 
                 json.data.forEach(seg => {
+                    const precio = parseFloat(seg.precio_por_dia).toFixed(2);
+                    const colision = parseFloat(seg.deducible_colision).toFixed(2);
+                    const robo = parseFloat(seg.deducible_robo).toFixed(2);
+
                     tbody.innerHTML += `
                         <tr>
-                            <td>${seg.nombre}</td>
-                            <td>$${seg.precio_por_dia}</td>
+                            <td><strong>${seg.nombre}</strong></td>
+                            <td class="mono">$${precio}</td>
+                            <td class="mono">${colision}%</td>
+                            <td class="mono">${robo}%</td>
                             <td>${seg.activo ? "Sí" : "No"}</td>
                             <td>
                                 <button class="btn btn-sm btn-warning" onclick="editar(${seg.id_paquete})">Editar</button>
@@ -28,39 +76,109 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
 
+    // ===============================
+    // Cargar datos en Modal Editar
+    // ===============================
     window.editar = (id) => {
         fetch(`/admin/seguros/${id}`)
             .then(r => r.json())
             .then(json => {
                 const d = json.data;
+                const depositos = json.depositos || {};
 
                 document.getElementById("editId").value = d.id_paquete;
                 document.getElementById("editNombre").value = d.nombre;
                 document.getElementById("editDescripcion").value = d.descripcion;
-                document.getElementById("editPrecio").value = d.precio_por_dia;
+                document.getElementById("editPrecio").value = "$" + parseFloat(d.precio_por_dia).toFixed(2);
+                document.getElementById("editDeducibleColision").value = parseFloat(d.deducible_colision).toFixed(2) + " %";
+                document.getElementById("editDeducibleRobo").value = parseFloat(d.deducible_robo).toFixed(2) + " %";
                 document.getElementById("editActivo").checked = d.activo == 1;
+
+                // 🟢 PINTRAR MONTOS DIRECTOS: Ya no requiere fórmulas matemáticas inversas complejas
+                document.querySelectorAll(".edit-monto").forEach(input => {
+                    const catId = input.dataset.id;
+                    const montoGarantia = parseFloat(depositos[catId]) || 0;
+                    
+                    input.value = "$" + montoGarantia.toFixed(2);
+                });
+
+                document.querySelectorAll(".edit-prot").forEach(chk => chk.checked = false);
+                if (json.protecciones) {
+                    document.querySelectorAll(".edit-prot").forEach(chk => {
+                        if (json.protecciones.includes(parseInt(chk.value))) {
+                            chk.checked = true;
+                        }
+                    });
+                }
 
                 openModal("modalEditar");
             });
     };
 
+    // ===================================================
+    // CONFIRMACIÓN AL ELIMINAR (SweetAlert2)
+    // ===================================================
     window.eliminar = (id) => {
-        if (!confirm("¿Seguro que deseas eliminar este paquete?")) return;
-
-        fetch(`/admin/seguros/${id}`, {
-            method: "DELETE",
-            headers: { "X-CSRF-TOKEN": document.querySelector("meta[name='csrf-token']").content }
-        })
-        .then(r => r.json())
-        .then(() => cargarSeguros());
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "¡No podrás revertir esto y se eliminarán todas las garantías vinculadas!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff1e2d',
+            cancelButtonColor: '#e5e7eb',
+            confirmButtonText: 'Sí, eliminar paquete',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin/seguros/${id}`, {
+                    method: "DELETE",
+                    headers: { "X-CSRF-TOKEN": document.querySelector("meta[name='csrf-token']").content }
+                })
+                .then(r => r.json())
+                .then(() => {
+                    Swal.fire({
+                        title: '¡Eliminado!',
+                        text: 'El paquete ha sido borrado correctamente.',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    cargarSeguros();
+                });
+            }
+        });
     };
 
-
+    // ===============================
+    // Abrir Modal Nuevo
+    // ===============================
     btnNuevo.addEventListener("click", () => {
+        document.getElementById("newNombre").value = "";
+        document.getElementById("newDescripcion").value = "";
+        document.getElementById("newPrecio").value = "$0.00";
+        document.getElementById("newDeducibleColision").value = "0.00 %";
+        document.getElementById("newDeducibleRobo").value = "0.00 %";
+        document.getElementById("newActivo").checked = true;
+        
+        document.querySelectorAll(".new-monto").forEach(input => input.value = "$0.00");
+        document.querySelectorAll(".new-prot").forEach(chk => chk.checked = false);
+
         openModal("modalNuevo");
     });
 
+    // ===================================================
+    // NOTIFICACIÓN AL GUARDAR NUEVO PAQUETE
+    // ===================================================
     document.getElementById("btnGuardarNuevo").addEventListener("click", () => {
+        
+        let montosObj = {};
+        document.querySelectorAll(".new-monto").forEach(input => {
+            montosObj[input.dataset.id] = limpiarNumero(input.value);
+        });
+
+        let proteccionesArr = Array.from(document.querySelectorAll(".new-prot:checked")).map(chk => chk.value);
+        const ordenEl = document.getElementById("newOrden");
+
         fetch("/admin/seguros", {
             method: "POST",
             headers: {
@@ -68,21 +186,54 @@ document.addEventListener("DOMContentLoaded", () => {
                 "X-CSRF-TOKEN": document.querySelector("meta[name='csrf-token']").content
             },
             body: JSON.stringify({
-                nombre: newNombre.value,
-                descripcion: newDescripcion.value,
-                precio_por_dia: newPrecio.value,
-                activo: newActivo.checked ? 1 : 0
+                nombre: document.getElementById("newNombre").value,
+                descripcion: document.getElementById("newDescripcion").value,
+                precio_por_dia: limpiarNumero(document.getElementById("newPrecio").value),
+                orden: ordenEl ? ordenEl.value : 0,
+                deducible_colision: limpiarNumero(document.getElementById("newDeducibleColision").value),
+                deducible_robo: limpiarNumero(document.getElementById("newDeducibleRobo").value),
+                activo: document.getElementById("newActivo").checked ? 1 : 0,
+                montos: montosObj, // Cambiado el payload a montos planos
+                protecciones: proteccionesArr
             })
         })
         .then(r => r.json())
-        .then(() => {
-            closeModal("modalNuevo");
-            cargarSeguros();
+        .then(res => {
+            if(res.ok) {
+                closeModal("modalNuevo");
+                cargarSeguros();
+                
+                Swal.fire({
+                    title: '¡Guardado con éxito!',
+                    text: 'El paquete se ha registrado en el sistema.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error al guardar',
+                    text: res.msg,
+                    icon: 'error',
+                    confirmButtonColor: '#2563eb'
+                });
+            }
         });
     });
 
+    // ===================================================
+    // NOTIFICACIÓN AL ACTUALIZAR PAQUETE
+    // ===================================================
     document.getElementById("btnGuardarEdit").addEventListener("click", () => {
-        const id = editId.value;
+        const id = document.getElementById("editId").value;
+
+        let montosObj = {};
+        document.querySelectorAll(".edit-monto").forEach(input => {
+            montosObj[input.dataset.id] = limpiarNumero(input.value);
+        });
+
+        let proteccionesArr = Array.from(document.querySelectorAll(".edit-prot:checked")).map(chk => chk.value);
+        const ordenEl = document.getElementById("editOrden");
 
         fetch(`/admin/seguros/${id}`, {
             method: "PUT",
@@ -91,20 +242,49 @@ document.addEventListener("DOMContentLoaded", () => {
                 "X-CSRF-TOKEN": document.querySelector("meta[name='csrf-token']").content
             },
             body: JSON.stringify({
-                nombre: editNombre.value,
-                descripcion: editDescripcion.value,
-                precio_por_dia: editPrecio.value,
-                activo: editActivo.checked ? 1 : 0
+                nombre: document.getElementById("editNombre").value,
+                descripcion: document.getElementById("editDescripcion").value,
+                precio_por_dia: limpiarNumero(document.getElementById("editPrecio").value),
+                orden: ordenEl ? ordenEl.value : 0,
+                deducible_colision: limpiarNumero(document.getElementById("editDeducibleColision").value),
+                deducible_robo: limpiarNumero(document.getElementById("editDeducibleRobo").value),
+                activo: document.getElementById("editActivo").checked ? 1 : 0,
+                montos: montosObj,
+                protecciones: proteccionesArr
             })
         })
         .then(r => r.json())
-        .then(() => {
-            closeModal("modalEditar");
-            cargarSeguros();
+        .then(res => {
+            if(res.ok) {
+                closeModal("modalEditar");
+                cargarSeguros();
+
+                Swal.fire({
+                    title: '¡Paquete Actualizado!',
+                    text: 'Los cambios se guardaron correctamente.',
+                    icon: 'success',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error al actualizar',
+                    text: res.msg,
+                    icon: 'error',
+                    confirmButtonColor: '#2563eb'
+                });
+            }
         });
     });
 
     cargarSeguros();
+});
+
+// Cerrar modales haciendo clic afuera
+window.addEventListener("click", (e) => {
+    if (e.target.classList.contains("modal")) {
+        closeModal(e.target.id);
+    }
 });
 
 function openModal(id) {

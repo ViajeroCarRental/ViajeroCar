@@ -21,10 +21,11 @@ class StoreReservacionAdminRequest extends FormRequest
             'sucursal_retiro'   => 'required|integer|exists:sucursales,id_sucursal',
             'sucursal_entrega'  => 'required|integer|exists:sucursales,id_sucursal',
 
-            'nombre_completo_cliente' => 'required|string|max:200',
+            'nombre_cliente' => 'required|string|max:200',
             'email_cliente'     => 'required|email|max:150',
             'telefono_cliente'  => 'required|string|max:30',
             'telefono_lada'     => 'nullable|string|max:10', // Opcional, solo valida formato si viene
+            'comentarios'       => 'nullable|string|max:100',
 
             // Opcionales que podrías querer validar también (si deseas ser estricto)
             // 'tarifa_base'             => 'nullable|numeric|min:0',
@@ -44,7 +45,7 @@ class StoreReservacionAdminRequest extends FormRequest
             'sucursal_retiro'   => 'sucursal de retiro',
             'sucursal_entrega'  => 'sucursal de entrega',
             'nombre_cliente'    => 'nombre del cliente',
-            'apellidos_cliente' => 'apellidos del cliente',
+            // 'apellidos_cliente' => 'apellidos del cliente',
             'email_cliente'     => 'correo electrónico',
             'telefono_cliente'  => 'teléfono',
         ];
