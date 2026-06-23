@@ -10,8 +10,10 @@ return new class extends Migration {
         Schema::create('reservaciones', function (Blueprint $table) {
             $table->bigIncrements('id_reservacion');
 
+            $table->unsignedBigInteger('sistema_id')->default(1);
+
             $table->unsignedBigInteger('id_usuario')->nullable();
-            $table->unsignedBigInteger('id_asesor')->nullable(); // ✅ faltaba
+            $table->unsignedBigInteger('id_asesor')->nullable();
             $table->unsignedBigInteger('id_vehiculo')->nullable();
             $table->unsignedBigInteger('id_categoria')->nullable();
 
@@ -46,7 +48,7 @@ return new class extends Migration {
             $table->string('codigo', 50)->unique();
 
             $table->string('nombre_cliente', 120)->nullable();
-            $table->string('apellidos_cliente', 120)->nullable(); // ✅ faltaba
+            $table->string('apellidos_cliente', 120)->nullable();
             $table->string('email_cliente', 120)->nullable();
             $table->string('telefono_cliente', 40)->nullable();
             $table->string('comentarios', 100)->nullable();
@@ -55,7 +57,6 @@ return new class extends Migration {
             $table->string('status_pago', 50)->default('Pendiente');
             $table->string('metodo_pago', 30)->default('mostrador');
 
-            // ✅ faltaba en tu migración (existe en la tabla real)
             $table->string('firma_arrendador', 255)->nullable();
 
             // Delivery
@@ -69,7 +70,8 @@ return new class extends Migration {
             $table->timestamp('created_at')->nullable();
             $table->timestamp('updated_at')->nullable();
 
-            // Índices (reflejar MUL + optimizar)
+            // Índices
+            $table->index('sistema_id', 'res_sistema_idx'); // 🆕
             $table->index('id_usuario', 'res_usr_idx');
             $table->index('id_asesor', 'res_asesor_idx');
             $table->index('id_vehiculo', 'res_veh_idx');
@@ -82,6 +84,10 @@ return new class extends Migration {
             $table->index(['estado', 'fecha_inicio', 'fecha_fin'], 'reservas_estado_fecha_idx');
 
             // FKs
+            $table->foreign('sistema_id') // 🆕
+                ->references('id_sistema')->on('sistemas')
+                ->onDelete('restrict');
+
             $table->foreign('id_usuario')
                 ->references('id_usuario')->on('usuarios')
                 ->onDelete('set null');

@@ -18,7 +18,6 @@ return new class extends Migration {
             $table->string('contrasena_hash', 255);
             $table->boolean('email_verificado')->default(false);
             $table->string('pais', 60)->nullable();
-            $table->boolean('miembro_preferente')->default(false)->comment('Descuento aplicado en reservas');
             $table->boolean('activo')->default(true);
             $table->string('codigo_verificacion', 6)->nullable();
             $table->timestamp('expira_en')->nullable();
