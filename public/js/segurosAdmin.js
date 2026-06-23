@@ -4,44 +4,73 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnNuevo = document.getElementById("btnNuevo");
 
     // ===================================================
-    // Lógica de formateo dinámico en los Inputs
+    // Formateo dinámico de inputs (dinero / porcentaje)
     // ===================================================
     const limpiarNumero = (val) => {
         const limpio = String(val).replace(/[^0-9.]/g, '');
         return parseFloat(limpio) || 0;
     };
 
-    // Al hacer clic dentro del input para escribir
     document.addEventListener("focusin", (e) => {
         const id = e.target.id;
         const cls = e.target.classList;
-
-        if (id === "newPrecio" || id === "editPrecio" || 
-            id === "newDeducibleColision" || id === "editDeducibleColision" || 
+        if (id === "newPrecio" || id === "editPrecio" ||
+            id === "newDeducibleColision" || id === "editDeducibleColision" ||
             id === "newDeducibleRobo" || id === "editDeducibleRobo" ||
             cls.contains("new-monto") || cls.contains("edit-monto")) {
-            
             let valorLimpio = e.target.value.replace(/[^0-9.]/g, '');
             if (parseFloat(valorLimpio) === 0) valorLimpio = "";
             e.target.value = valorLimpio;
         }
     });
 
-    // Al salir del input (Formatea agregando $ a la izquierda o % a la derecha)
     document.addEventListener("focusout", (e) => {
         const id = e.target.id;
         const cls = e.target.classList;
-
-        // Formato MONTO ($ a la izquierda)
         if (id === "newPrecio" || id === "editPrecio" || cls.contains("new-monto") || cls.contains("edit-monto")) {
             const num = parseFloat(e.target.value) || 0;
             e.target.value = "$" + num.toFixed(2);
-        }
-        // Formato PORCENTAJE (% a la derecha)
-        else if (id === "newDeducibleColision" || id === "editDeducibleColision" || 
-                 id === "newDeducibleRobo" || id === "editDeducibleRobo") {
+        } else if (id === "newDeducibleColision" || id === "editDeducibleColision" ||
+                   id === "newDeducibleRobo" || id === "editDeducibleRobo") {
             const num = parseFloat(e.target.value) || 0;
             e.target.value = num.toFixed(2) + " %";
+        }
+    });
+
+    // ===================================================
+    // AUTO: recalcular precio y descripción según marcados
+    //   - precio: suma data-precio de los que tienen data-suma="1"
+    //   - descripción: junta data-desc de TODOS los marcados
+    //   El usuario puede sobrescribir ambos después.
+    // ===================================================
+    const recalcularDesde = (claseCheckbox, idPrecio, idDescripcion) => {
+        const marcados = Array.from(document.querySelectorAll(`.${claseCheckbox}:checked`));
+
+        // Precio: solo suman los que tienen data-suma = "1"
+        let suma = 0;
+        marcados.forEach(chk => {
+            if (chk.dataset.suma === "1") {
+                suma += parseFloat(chk.dataset.precio) || 0;
+            }
+        });
+        const inputPrecio = document.getElementById(idPrecio);
+        if (inputPrecio) inputPrecio.value = "$" + suma.toFixed(2);
+
+        // Descripción: junta las descripciones de TODOS los marcados
+        const descripciones = marcados
+            .map(chk => (chk.dataset.desc || "").trim())
+            .filter(d => d.length > 0);
+        const inputDesc = document.getElementById(idDescripcion);
+        if (inputDesc) inputDesc.value = descripciones.join("\n");
+    };
+
+    // Listener para los checkboxes de NUEVO
+    document.addEventListener("change", (e) => {
+        if (e.target.classList.contains("new-prot")) {
+            recalcularDesde("new-prot", "newPrecio", "newDescripcion");
+        }
+        if (e.target.classList.contains("edit-prot")) {
+            recalcularDesde("edit-prot", "editPrecio", "editDescripcion");
         }
     });
 
@@ -53,7 +82,6 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(r => r.json())
             .then(json => {
                 tbody.innerHTML = "";
-
                 json.data.forEach(seg => {
                     const precio = parseFloat(seg.precio_por_dia).toFixed(2);
                     const colision = parseFloat(seg.deducible_colision).toFixed(2);
@@ -88,17 +116,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 document.getElementById("editId").value = d.id_paquete;
                 document.getElementById("editNombre").value = d.nombre;
-                document.getElementById("editDescripcion").value = d.descripcion;
+                document.getElementById("editDescripcion").value = d.descripcion || "";
                 document.getElementById("editPrecio").value = "$" + parseFloat(d.precio_por_dia).toFixed(2);
                 document.getElementById("editDeducibleColision").value = parseFloat(d.deducible_colision).toFixed(2) + " %";
                 document.getElementById("editDeducibleRobo").value = parseFloat(d.deducible_robo).toFixed(2) + " %";
                 document.getElementById("editActivo").checked = d.activo == 1;
 
-                // 🟢 PINTRAR MONTOS DIRECTOS: Ya no requiere fórmulas matemáticas inversas complejas
                 document.querySelectorAll(".edit-monto").forEach(input => {
                     const catId = input.dataset.id;
                     const montoGarantia = parseFloat(depositos[catId]) || 0;
-                    
                     input.value = "$" + montoGarantia.toFixed(2);
                 });
 
@@ -116,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // ===================================================
-    // CONFIRMACIÓN AL ELIMINAR (SweetAlert2)
+    // Eliminar (SweetAlert2)
     // ===================================================
     window.eliminar = (id) => {
         Swal.fire({
@@ -159,7 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("newDeducibleColision").value = "0.00 %";
         document.getElementById("newDeducibleRobo").value = "0.00 %";
         document.getElementById("newActivo").checked = true;
-        
+
         document.querySelectorAll(".new-monto").forEach(input => input.value = "$0.00");
         document.querySelectorAll(".new-prot").forEach(chk => chk.checked = false);
 
@@ -167,10 +193,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ===================================================
-    // NOTIFICACIÓN AL GUARDAR NUEVO PAQUETE
+    // Guardar NUEVO
     // ===================================================
     document.getElementById("btnGuardarNuevo").addEventListener("click", () => {
-        
         let montosObj = {};
         document.querySelectorAll(".new-monto").forEach(input => {
             montosObj[input.dataset.id] = limpiarNumero(input.value);
@@ -193,7 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 deducible_colision: limpiarNumero(document.getElementById("newDeducibleColision").value),
                 deducible_robo: limpiarNumero(document.getElementById("newDeducibleRobo").value),
                 activo: document.getElementById("newActivo").checked ? 1 : 0,
-                montos: montosObj, // Cambiado el payload a montos planos
+                montos: montosObj,
                 protecciones: proteccionesArr
             })
         })
@@ -202,27 +227,15 @@ document.addEventListener("DOMContentLoaded", () => {
             if(res.ok) {
                 closeModal("modalNuevo");
                 cargarSeguros();
-                
-                Swal.fire({
-                    title: '¡Guardado con éxito!',
-                    text: 'El paquete se ha registrado en el sistema.',
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
+                Swal.fire({ title: '¡Guardado con éxito!', text: 'El paquete se ha registrado en el sistema.', icon: 'success', timer: 2000, showConfirmButton: false });
             } else {
-                Swal.fire({
-                    title: 'Error al guardar',
-                    text: res.msg,
-                    icon: 'error',
-                    confirmButtonColor: '#2563eb'
-                });
+                Swal.fire({ title: 'Error al guardar', text: res.msg, icon: 'error', confirmButtonColor: '#2563eb' });
             }
         });
     });
 
     // ===================================================
-    // NOTIFICACIÓN AL ACTUALIZAR PAQUETE
+    // Actualizar
     // ===================================================
     document.getElementById("btnGuardarEdit").addEventListener("click", () => {
         const id = document.getElementById("editId").value;
@@ -258,21 +271,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if(res.ok) {
                 closeModal("modalEditar");
                 cargarSeguros();
-
-                Swal.fire({
-                    title: '¡Paquete Actualizado!',
-                    text: 'Los cambios se guardaron correctamente.',
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
+                Swal.fire({ title: '¡Paquete Actualizado!', text: 'Los cambios se guardaron correctamente.', icon: 'success', timer: 2000, showConfirmButton: false });
             } else {
-                Swal.fire({
-                    title: 'Error al actualizar',
-                    text: res.msg,
-                    icon: 'error',
-                    confirmButtonColor: '#2563eb'
-                });
+                Swal.fire({ title: 'Error al actualizar', text: res.msg, icon: 'error', confirmButtonColor: '#2563eb' });
             }
         });
     });

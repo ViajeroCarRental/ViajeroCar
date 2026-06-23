@@ -22,10 +22,10 @@
                     <tr>
                         <th>Código</th>
                         <th>Nombre</th>
+                        <th>Descripción</th>
                         <th>Precio x Día</th>
                         <th>Precio x Semana</th>
                         <th>Precio x Mes</th>
-                        <th>Descuento</th>
                         <th>Garantía</th>
                         <th>Activo</th>
                         <th>Acciones</th>
@@ -37,11 +37,11 @@
                         <tr>
                             <td class="mono">{{ $c->codigo }}</td>
                             <td>{{ $c->nombre }}</td>
-                            <td class="mono">${{ number_format($c->precio_dia, 2) }}</td>
-                            <td class="mono">${{ number_format($c->precio_semana, 2) }}</td>
-                            <td class="mono">${{ number_format($c->precio_mes, 2) }}</td>
-                            <td class="mono">{{ number_format($c->descuento_miembro, 2) }}%</td>
-                            <td class="mono">${{ number_format($c->garantia_base, 2) }}</td>
+                            <td>{{ $c->descripcion ?: '—' }}</td>
+                            <td class="mono">{{ $c->precio_dia > 0 ? '$' . number_format($c->precio_dia, 2) : '—' }}</td>
+                            <td class="mono">{{ $c->precio_semana > 0 ? '$' . number_format($c->precio_semana, 2) : '—' }}</td>
+                            <td class="mono">{{ $c->precio_mes > 0 ? '$' . number_format($c->precio_mes, 2) : '—' }}</td>
+                            <td class="mono">{{ $c->garantia_base > 0 ? '$' . number_format($c->garantia_base, 2) : '—' }}</td>
                             <td>{{ $c->activo ? 'Sí' : 'No' }}</td>
                             <td>
                                 <div style="display: flex; gap: 8px; align-items: center;">
@@ -50,10 +50,10 @@
                                             {{ $c->id_categoria }},
                                             @js($c->codigo),
                                             @js($c->nombre),
+                                            @js($c->descripcion),
                                             {{ $c->precio_dia }},
                                             {{ $c->precio_semana }},
                                             {{ $c->precio_mes }},
-                                            {{ $c->descuento_miembro }},
                                             {{ $c->garantia_base }},
                                             {{ $c->activo }},
                                             @js($c->paquetes_asignados)
@@ -108,29 +108,33 @@
                     <input class="input uppercase-input" name="nombre" maxlength="100" required placeholder="Ej: COMPACTO">
                 </div>
 
+                <div class="input-group full-width">
+                    <label class="label">Descripción</label>
+                    <input class="input" name="descripcion" maxlength="255" required placeholder="Ej: Toyota Tacoma o similar">
+                </div>
+
                 <div class="input-group">
                     <label class="label">Precio por día</label>
-                    <input class="input input-money" name="precio_dia" type="text" value="$0.00" required>
+                    <input class="input input-money" type="text" inputmode="decimal" placeholder="$0.00" data-target="precio_dia">
+                    <input type="hidden" name="precio_dia" value="">
                 </div>
 
                 <div class="input-group">
                     <label class="label">Precio por semana</label>
-                    <input class="input input-money" name="precio_semana" type="text" value="$0.00" required>
+                    <input class="input input-money" type="text" inputmode="decimal" placeholder="$0.00" data-target="precio_semana">
+                    <input type="hidden" name="precio_semana" value="">
                 </div>
 
                 <div class="input-group">
                     <label class="label">Precio por mes</label>
-                    <input class="input input-money" name="precio_mes" type="text" value="$0.00" required>
-                </div>
-
-                <div class="input-group">
-                    <label class="label">Descuento miembro (%)</label>
-                    <input class="input input-percent" name="descuento_miembro" type="text" value="0.00 %" required>
+                    <input class="input input-money" type="text" inputmode="decimal" placeholder="$0.00" data-target="precio_mes">
+                    <input type="hidden" name="precio_mes" value="">
                 </div>
 
                 <div class="input-group">
                     <label class="label">Garantía Base</label>
-                    <input class="input input-money" name="garantia_base" type="text" value="$0.00" required>
+                    <input class="input input-money" type="text" inputmode="decimal" placeholder="$0.00" data-target="garantia_base">
+                    <input type="hidden" name="garantia_base" value="">
                 </div>
 
                 <div class="input-group" style="justify-content: center;">
@@ -187,29 +191,33 @@
                     <input class="input uppercase-input" id="e_nombre" name="nombre" maxlength="100" required>
                 </div>
 
+                <div class="input-group full-width">
+                    <label class="label">Descripción</label>
+                    <input class="input" id="e_descripcion" name="descripcion" maxlength="255" required placeholder="Ej: Toyota Tacoma o similar">
+                </div>
+
                 <div class="input-group">
                     <label class="label">Precio por día</label>
-                    <input class="input input-money" id="e_precio" name="precio_dia" type="text" required>
+                    <input class="input input-money" id="e_precio" type="text" inputmode="decimal" placeholder="$0.00" data-target="precio_dia">
+                    <input type="hidden" name="precio_dia" id="e_precio_hidden" value="">
                 </div>
 
                 <div class="input-group">
                     <label class="label">Precio por semana</label>
-                    <input class="input input-money" id="e_precio_semana" name="precio_semana" type="text" required>
+                    <input class="input input-money" id="e_precio_semana" type="text" inputmode="decimal" placeholder="$0.00" data-target="precio_semana">
+                    <input type="hidden" name="precio_semana" id="e_precio_semana_hidden" value="">
                 </div>
 
                 <div class="input-group">
                     <label class="label">Precio por mes</label>
-                    <input class="input input-money" id="e_precio_mes" name="precio_mes" type="text" required>
-                </div>
-
-                <div class="input-group">
-                    <label class="label">Descuento (%)</label>
-                    <input class="input input-percent" id="e_descuento" name="descuento_miembro" type="text" required>
+                    <input class="input input-money" id="e_precio_mes" type="text" inputmode="decimal" placeholder="$0.00" data-target="precio_mes">
+                    <input type="hidden" name="precio_mes" id="e_precio_mes_hidden" value="">
                 </div>
 
                 <div class="input-group">
                     <label class="label">Garantía Base</label>
-                    <input class="input input-money" id="e_garantia_base" name="garantia_base" type="text" required>
+                    <input class="input input-money" id="e_garantia_base" type="text" inputmode="decimal" placeholder="$0.00" data-target="garantia_base">
+                    <input type="hidden" name="garantia_base" id="e_garantia_base_hidden" value="">
                 </div>
 
                 <div class="input-group">

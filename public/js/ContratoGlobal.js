@@ -417,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!cont) return;
 
         if (!lista?.length) {
-            cont.innerHTML = `<tr><td colspan="14" style="padding:20px;text-align:center;color:#555;font-weight:bold;">No hay vehículos disponibles en la categoría reservada.</td></tr>`;
+            cont.innerHTML = `<tr><td colspan="13" style="padding:20px;text-align:center;color:#555;font-weight:bold;">No hay vehículos disponibles en la categoría reservada.</td></tr>`;
             return;
         }
 
@@ -458,7 +458,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${i + 1}</td>
                 <td><b>${v.placa || 'Sin Placa'}</b></td>
                 <td>${v.categoria_nombre || v.categoria || '—'}</td>
-                <td>${v.nombre_publico || v.marca || '—'}</td>
                 <td>${v.modelo || '—'}</td>
                 <td>${v.transmision || '—'}</td>
                 <td>${v.color || '—'}</td>

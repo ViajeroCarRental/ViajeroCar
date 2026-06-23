@@ -283,7 +283,7 @@ const TimeModule = (function () {
     if (!y || !m || !day) return null;
     const { hh, mm } = parseTimeTo24h(t);
     if (hh === 24) {
-      const dt = new Date(y, m - 1, day, 0, 0);
+      const dt = new Date(y, m-1, day, 0, 0);
       dt.setDate(dt.getDate() + 1);
       return dt;
     }
@@ -881,7 +881,7 @@ $(document).ready(function () {
     return $('<span class="icon-item"><i class="fa-solid ' + iconClass + '"></i> ' + option.text + '</span>');
   }
   $('#pickupPlace, #dropoffPlace').select2({
-    templateResult: formatOption,
+    templateResult:    formatOption,
     templateSelection: formatOption,
     escapeMarkup: markup => markup,
     width: '100%',

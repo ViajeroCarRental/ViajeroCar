@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
@@ -204,6 +205,8 @@
 </noscript>
 
 @php
+
+
     if (session()->has('locale')) {
         App::setLocale(session('locale'));
     }
@@ -265,15 +268,15 @@
       @else
         <a href="{{ route('auth.show') }}" class="icon-pill" title="{{ __('Sign in') }}">
           <i class="fa-regular fa-user guest"></i>
-        </a>
-      @endif
+        </a> @endif
 
-      <button class="hamburger" type="button" id="navHamburger" aria-label="Abrir menú">
-        <span class="hb"></span>
-      </button>
+      <button class="hamburger"
+        type="button" id="navHamburger" aria-label="Abrir menú">
+    <span class="hb"></span>
+    </button>
     </div>
-  </nav>
-</header>
+    </nav>
+    </header>
 
 <div class="containerVS">
   @yield('contenidoHome')
@@ -302,20 +305,12 @@
            width="120" height="42" loading="lazy" decoding="async">
     </div>
 
-    <div class="footer-row loc-row">
-      <div class="loc-card">
-        <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
-        <div class="loc-body"><h4>Plaza Central Park, Querétaro Centro</h4><p>{{ __('Main office') }}</p></div>
-      </div>
-      <div class="loc-card">
-        <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
-        <div class="loc-body"><h4>Aeropuerto Internacional de Querétaro (AIQ)</h4><p>{{ __('Pick-up / Drop-off') }}</p></div>
-      </div>
-      <div class="loc-card">
-        <div class="pin"><i class="fa-solid fa-location-dot"></i></div>
-        <div class="loc-body"><h4>Central de Autobuses de Querétaro (TAQ)</h4><p>{{ __('Pick-up / Drop-off') }}</p></div>
-      </div>
-    </div>
+    <!-- 🔹 SCRIPTS-->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <div class="footer-row pay-row">
       <div class="payments-logos">
@@ -344,9 +339,7 @@
       </ul>
     </div>
 
-    <div class="footer-copy">© <span id="year"></span> Viajero. {{ __('All rights reserved') }}.</div>
-  </div>
-</footer>
+            if (!topbar || !btn || !menu) return;
 
 {{-- ============================================================
      🚀 OPTIMIZACIÓN 7: TODOS LOS SCRIPTS CON DEFER
@@ -511,25 +504,32 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!selectElement || !selectElement.options) return false;
         if (!window.sucursalesTraducciones || Object.keys(window.sucursalesTraducciones).length === 0) return false;
 
-        const locale = document.documentElement.lang || 'es';
-        let traduccionesRealizadas = 0;
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && isMobile()) closeNav();
+            });
 
-        for (let i = 0; i < selectElement.options.length; i++) {
-            const option = selectElement.options[i];
-            const textoOriginal = option.textContent.trim();
+            if (MQ.addEventListener) {
+                MQ.addEventListener("change", () => {
+                    if (!isMobile()) closeNav();
+                });
+            }
 
-            if (window.sucursalesTraducciones[textoOriginal]) {
-                const textoTraducido = window.sucursalesTraducciones[textoOriginal][locale];
-                if (textoTraducido && option.textContent !== textoTraducido) {
-                    option.textContent = textoTraducido;
-                    traduccionesRealizadas++;
+            const SOLID_AT = 20;
+
+            function syncTopbar() {
+                if (window.scrollY > SOLID_AT) {
+                    topbar.classList.add("solid");
+                    topbar.classList.remove("glass");
+                } else {
+                    topbar.classList.add("glass");
+                    topbar.classList.remove("solid");
                 }
             }
-        }
 
-        if (typeof $ !== 'undefined' && $(selectElement).data('select2')) {
-            $(selectElement).trigger('change.select2');
-        }
+            syncTopbar();
+            window.addEventListener("scroll", syncTopbar, {
+                passive: true
+            });
 
         return traduccionesRealizadas > 0;
     }
@@ -546,10 +546,125 @@ document.addEventListener('DOMContentLoaded', function() {
             if (select) traducirSelect(select);
         });
 
-        const selectsPorNombre = document.querySelectorAll('select[name*="sucursal"], select[name*="pickup"], select[name*="dropoff"]');
-        selectsPorNombre.forEach(select => {
-            if (select.id && !posiblesIds.includes(select.id)) {
-                traducirSelect(select);
+            <div class="footer-row links-row">
+                <ul>
+                    <li><a href="{{ route('rutaReservaciones') }}">{{ __('Book now') }}</a></li>
+                    <li><a href="{{ route('rutaCatalogo') }}">{{ __('Available cars') }}</a></li>
+                    <li><a href="{{ route('rutaPoliticas') }}">{{ __('Terms and conditions') }}</a></li>
+                    <li><a href="{{ route('rutaContacto') }}">{{ __('Contact') }}</a></li>
+                </ul>
+                <ul>
+                    <li><a href="{{ route('rutaFAQ') }}">{{ __('FAQ') }}</a></li>
+                    <li><a href="{{ route('rutaPoliticas') }}">{{ __('Privacy policy') }}</a></li>
+                    <li><a href="{{ route('rutaPoliticas') }}">{{ __('Cleaning policy') }}</a></li>
+                    <li><a href="{{ route('rutaPoliticas') }}">{{ __('Rental policy') }}</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-copy">© <span id="year"></span> Viajero. {{ __('All rights reserved') }}.</div>
+        </div>
+    </footer>
+
+    {{-- 🔹 Scripts específicos por vista --}}
+    @yield('js-vistaHome')
+    @yield('js-vistaCatalogo')
+    @yield('js-vistaReservaciones')
+    @yield('js-vistaContacto')
+    @yield('js-vistaPoliticas')
+    @yield('js-vistaFAQ')
+    @yield('js-vistaLogin')
+    @yield('js-vistaPerfil')
+    @yield('js-visorReservacion')
+    <script></script>
+    <script>
+        // iOS: bloquear zoom
+        (function() {
+            document.addEventListener('gesturestart', e => e.preventDefault(), {
+                passive: false
+            });
+            document.addEventListener('touchmove', e => {
+                if (e.touches && e.touches.length > 1) e.preventDefault();
+            }, {
+                passive: false
+            });
+
+            let last = 0;
+            document.addEventListener('touchend', e => {
+                const now = Date.now();
+                if (now - last <= 300) e.preventDefault();
+                last = now;
+            }, {
+                passive: false
+            });
+        })();
+
+        (function() {
+            document.addEventListener('gesturestart', e => e.preventDefault(), {
+                passive: false
+            });
+            document.addEventListener('gesturechange', e => e.preventDefault(), {
+                passive: false
+            });
+            document.addEventListener('gestureend', e => e.preventDefault(), {
+                passive: false
+            });
+            document.addEventListener('touchmove', e => {
+                if (e.touches && e.touches.length > 1) e.preventDefault();
+            }, {
+                passive: false
+            });
+        })();
+    </script>
+
+    <script>
+        // Actualizar año en footer
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+    <script src="{{ asset('js/sucursalesTraducciones.js') }}"></script>
+
+    <script>
+        /* ============================================================
+       TRADUCCIÓN DE SELECT2 - GLOBAL PARA TODOS LOS FORMULARIOS
+
+    ============================================================ */
+        (function() {
+            "use strict";
+
+            function traducirSelect(selectElement) {
+                if (!selectElement || !selectElement.options) {
+                    return false;
+                }
+
+                if (!window.sucursalesTraducciones || Object.keys(window.sucursalesTraducciones).length === 0) {
+                    console.log('⚠️ No hay traducciones de sucursales cargadas');
+                    return false;
+                }
+
+                const locale = document.documentElement.lang || 'es';
+                let traduccionesRealizadas = 0;
+
+                for (let i = 0; i < selectElement.options.length; i++) {
+                    const option = selectElement.options[i];
+                    const textoOriginal = option.textContent.trim();
+
+                    if (window.sucursalesTraducciones[textoOriginal]) {
+                        const textoTraducido = window.sucursalesTraducciones[textoOriginal][locale];
+                        if (textoTraducido && option.textContent !== textoTraducido) {
+                            option.textContent = textoTraducido;
+                            traduccionesRealizadas++;
+                        }
+                    }
+                }
+
+                if (typeof $ !== 'undefined' && $(selectElement).data('select2')) {
+                    $(selectElement).trigger('change.select2');
+                }
+
+                if (traduccionesRealizadas > 0) {
+                    console.log(`✅ Select traducido: ${selectElement.id || selectElement.name}`);
+                }
+
+                return traduccionesRealizadas > 0;
             }
         });
     }
@@ -560,10 +675,13 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(traducirTodosLosSelects, 600);
     });
 
-    observer.observe(document.documentElement, {
-        attributes: true,
-        attributeFilter: ['lang']
-    });
+                const selectsPorNombre = document.querySelectorAll(
+                    'select[name*="sucursal"], select[name*="pickup"], select[name*="dropoff"]');
+                selectsPorNombre.forEach(select => {
+                    if (select.id && !posiblesIds.includes(select.id)) {
+                        traducirSelect(select);
+                    }
+                });
 
     document.addEventListener('click', (e) => {
         const langBtn = e.target.closest('.lang-btn, .dropdown-item[href*="/lang/"]');

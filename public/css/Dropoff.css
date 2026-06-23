@@ -1,0 +1,136 @@
+/* ============================================================
+   DROPOFF Y DELIVERY — estilos
+============================================================ */
+
+/* Pestañas (tabs) */
+.tabs-nav {
+    display: flex;
+    gap: 10px;
+    margin-top: 30px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0;
+}
+.tab-btn {
+    background: transparent;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #64748b;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.3s;
+}
+.tab-btn:hover { color: #0f172a; }
+.tab-btn.active {
+    color: #b22222;
+    border-bottom-color: #b22222;
+}
+.tab-content {
+    display: none;
+    padding-top: 20px;
+    animation: fadeIn 0.3s ease;
+}
+.tab-content.active { display: block; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Filtros */
+.filtros-container {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 15px 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    margin-bottom: 20px;
+}
+.filtro-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    min-width: 200px;
+}
+.filtro-item label {
+    font-weight: bold;
+    color: #475569;
+    font-size: 13px;
+    margin: 0;
+}
+.filtro-item select {
+    margin: 0;
+    padding: 8px 10px;
+    border-color: #cbd5e1;
+    border-radius: 6px;
+    outline: none;
+    width: 100%;
+}
+.divisor-vertical {
+    width: 2px;
+    height: 40px;
+    background: #e2e8f0;
+}
+
+/* Badge de origen */
+.badge-origen {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
+/* Botones de acción en tabla */
+.btn-grupo { display: flex; gap: 8px; justify-content: center; }
+.btn-icon {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-edit { background: #fef08a; color: #854d0e; }
+.btn-edit:hover { background: #fde047; }
+.btn-del { background: #fecaca; color: #991b1b; }
+.btn-del:hover { background: #fca5a5; }
+
+/* Celda de costo */
+.celda-costo {
+    background: #f8fafc;
+    font-weight: 900;
+    color: #0f172a;
+    font-size: 16px;
+    border-left: 2px solid #e2e8f0;
+}
+
+/* Botones superiores */
+.btn-top {
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.btn-top-azul { background: #0284c7; }
+
+/* Mensaje sin resultados */
+.sin-rutas {
+    text-align: center;
+    padding: 30px;
+    color: #94a3b8;
+}
