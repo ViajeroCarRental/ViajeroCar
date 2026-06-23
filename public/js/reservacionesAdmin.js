@@ -565,41 +565,62 @@
     /* =========================================
     03. EVENTO PRINCIPAL DEL BOTÓN
     ========================================= */
-    function configurarBotonPrincipal() {
-        const btn = document.getElementById('btnBuscarReservacion');
-        if (!btn) {
-            console.error('❌ Botón btnBuscarReservacion no encontrado');
-            return;
-        }
-
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-
-        newBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            console.log('🔍 Validando campos de ubicación...');
-
-            const esValido = validarCamposUbicacion();
-
-            if (esValido) {
-                console.log('✅ Validación exitosa - Abriendo modal de categorías');
-
-                const modalCategorias = document.getElementById('catPop');
-                if (modalCategorias) {
-                    modalCategorias.style.display = 'flex';
-                }
-
-                if (typeof desbloquearCategoria === 'function') {
-                    desbloquearCategoria();
-                }
-            } else {
-                console.log('❌ Validación fallida - Corrige los campos en rojo');
-            }
-        });
+function configurarBotonPrincipal() {
+    const btn = document.getElementById('btnBuscarReservacion');
+    if (!btn) {
+        console.error('❌ Botón btnBuscarReservacion no encontrado');
+        return;
     }
 
+    // Ocultar navbar en móvil al iniciar
+    const navbar = document.getElementById('resNavbar');
+    if (navbar && window.innerWidth <= 860) {
+        navbar.classList.add('hidden-mobile');
+    }
+
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+
+    newBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        console.log('🔍 Validando campos de ubicación...');
+
+        const esValido = validarCamposUbicacion();
+
+        if (esValido) {
+            console.log('✅ Validación exitosa');
+
+             document.body.classList.add('buscar-realizado');
+
+            // Mostrar navbar en móvil
+            if (navbar && navbar.classList.contains('hidden-mobile')) {
+                navbar.classList.remove('hidden-mobile');
+            }
+
+            if (window.innerWidth <= 860) {
+                const seccionCategoria = document.querySelector('.acordeon-item[data-seccion="categoria"]');
+                if (seccionCategoria && !seccionCategoria.classList.contains('unlocked')) {
+                    seccionCategoria.classList.add('unlocked');
+                    console.log('📱 Sección de categoría visible en móvil');
+                }
+            }
+
+            // Abrir modal de categorías
+            const modalCategorias = document.getElementById('catPop');
+            if (modalCategorias) {
+                modalCategorias.style.display = 'flex';
+            }
+
+            if (typeof desbloquearCategoria === 'function') {
+                desbloquearCategoria();
+            }
+        } else {
+            console.log('❌ Validación fallida - Corrige los campos en rojo');
+        }
+    });
+}
     /* =========================================
     04. OBSERVADORES Y CONFIGURACIÓN
     ========================================= */
@@ -785,7 +806,7 @@
 function init() {
         console.log('🚀 Sistema unificado iniciado...');
         initSelect2Sucursales();
-
+         initEditBaseTotal();
         /* =========================================================================
            FIX: Reset completo y reconectar sincronización
         ========================================================================= */
@@ -1745,8 +1766,20 @@ function init() {
 
         const d1 = parseDate(fi);
         const d2 = parseDate(ff);
-        const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
-        return Math.max(1, Number.isFinite(diff) ? diff : 0);
+
+        let dias = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+        if (!Number.isFinite(dias)) dias = 0;
+
+        const horaRetiro = parseInt(qs("#hora_retiro")?.value?.split(":")[0] ?? "", 10);
+        const horaEntrega = parseInt(qs("#hora_entrega")?.value?.split(":")[0] ?? "", 10);
+
+        if (!Number.isNaN(horaRetiro) && !Number.isNaN(horaEntrega)) {
+            if (horaEntrega > horaRetiro + 1) {
+                dias += 1;
+            }
+        }
+
+        return Math.max(1, dias);
     }
 
     function repaintCategoriaModalEstimados() {
@@ -2590,571 +2623,595 @@ function init() {
     /* =========================================
     19. TOTALES + HIDDEN
     ========================================= */
-    function calcTotals() {
-        const days = Number(state.days || 0);
+function calcTotals() {
+    const days = Number(state.days || 0);
 
-        const baseDiaOriginal = state.categoria ? Number(state.categoria.precio_dia || 0) : 0;
-        const baseTotalOriginal = baseDiaOriginal * days;
+    const baseDiaOriginal = state.categoria ? Number(state.categoria.precio_dia || 0) : 0;
+    const baseTotalOriginal = baseDiaOriginal * days;
 
-        const baseTotal = state.base_editable !== null
-            ? Number(state.base_editable)
-            : baseTotalOriginal;
+    const baseTotal = state.base_editable !== null
+        ? Number(state.base_editable)
+        : baseTotalOriginal;
 
-        const baseDia = days > 0 ? (baseTotal / days) : baseDiaOriginal;
+    const baseDia = days > 0 ? (baseTotal / days) : baseDiaOriginal;
 
+    const prot = state.proteccion;
+    const protPrice = prot ? Number(prot.precio || 0) : 0;
+    const protTotal = prot
+        ? (String(prot.charge || "por_evento") === "por_dia" ? protPrice * days : protPrice)
+        : 0;
+
+    const indTotal = (!prot) ? calcIndividualesSubtotal() : 0;
+    const extrasSub = calcExtrasSubtotal();
+
+    const deliveryTotal = state.servicios.delivery ? (state.delivery.total || 0) : 0;
+    const dropoffTotal = state.servicios.dropoff ? (state.dropoff.total || 0) : 0;
+    const gasolinaTotal = state.servicios.gasolina ? (state.gasolina.total || 0) : 0;
+
+    const subtotal = baseTotal + protTotal + indTotal + extrasSub + deliveryTotal + dropoffTotal + gasolinaTotal;
+    const iva = Math.round(subtotal * 0.16 * 100) / 100;
+    const total = subtotal + iva;
+
+    return { baseDia, baseTotal, protTotal, indTotal, extrasSub, deliveryTotal, gasolinaTotal, dropoffTotal, subtotal, iva, total };
+}
+
+function actualizarTotalNavbar() {
+    const btnTotal = document.getElementById('btnTotalNav');
+    if (!btnTotal) return;
+
+    const totals = calcTotals();
+    const totalValido = isNaN(totals.total) ? 0 : totals.total;
+
+    btnTotal.innerHTML = `Total: ${money(totalValido)}`;
+}
+
+function syncTotalsHidden() {
+    ensureTotalsHidden();
+
+    const totals = calcTotals();
+    qs("#precio_base_dia").value = String(totals.baseDia || 0);
+    qs("#subtotal").value = String(totals.subtotal || 0);
+    qs("#impuestos").value = String(totals.iva || 0);
+    qs("#total").value = String(totals.total || 0);
+
+    actualizarTotalNavbar();
+}
+
+/* =========================================
+    20. RESUMEN (VERSIÓN CORREGIDA)
+========================================= */
+function refreshSummary() {
+    const days = Number(state.days || 0);
+
+    const selR = qs("#sucursal_retiro");
+    const selE = qs("#sucursal_entrega");
+
+    const getText = (sel) =>
+        sel?.options?.[sel.selectedIndex]?.textContent?.trim() || "—";
+
+    const fi = qs("#fecha_inicio_ui")?.value || "—";
+    const hi = qs("#hora_retiro_ui")?.value || "—";
+    const ff = qs("#fecha_fin_ui")?.value || "—";
+    const hf = qs("#hora_entrega_ui")?.value || "—";
+
+    const setText = (id, val) => { const el = qs(id); if (el) el.textContent = val; };
+
+    const checkbox = document.getElementById('differentDropoffAdmin');
+    let textoEntrega = getText(selE);
+
+    if (checkbox && !checkbox.checked) {
+        const textoRetiro = getText(selR);
+        if (textoRetiro !== "—") {
+            textoEntrega = textoRetiro;
+        }
+    }
+
+    setText("#resSucursalRetiro", getText(selR));
+    setText("#resSucursalEntrega", textoEntrega);
+    setText("#resFechaInicio", fi);
+    setText("#resHoraInicio", hi);
+    setText("#resFechaFin", ff);
+    setText("#resHoraFin", hf);
+    setText("#resDias", days ? `${days} día(s)` : "—");
+
+    const cat = state.categoria;
+    const totals = calcTotals();
+
+    setText("#resCat", cat ? cat.nombre : "—");
+
+    const baseEl = qs("#resBaseDia");
+    if (baseEl && !baseEl.querySelector("input")) {
+        baseEl.textContent = cat ? `${money(totals.baseDia)} / día` : "—";
+    }
+
+    setText("#resBaseTotal", cat ? money(totals.baseTotal) : "—");
+    setText("#resDelivery", state.servicios.delivery ? money(totals.deliveryTotal) : money(0));
+    setText("#resDropoff", state.servicios.dropoff ? money(totals.dropoffTotal) : money(0));
+    setText("#resGasolina", state.servicios.gasolina ? money(totals.gasolinaTotal) : money(0));
+
+    const sillaBebe = state.addons.get('silla_bebe');
+    const sillaTotal = sillaBebe ? sillaBebe.total : 0;
+    setText("#resSillaBebe", sillaBebe && sillaBebe.qty > 0 ? `${money(sillaTotal)} (${sillaBebe.qty})` : money(0));
+
+    const conductorExtra = state.addons.get('conductor_extra');
+    const conductorTotal = conductorExtra ? conductorExtra.total : 0;
+    setText("#resConductorExtra", conductorExtra && conductorExtra.qty > 0 ? `${money(conductorTotal)} (${conductorExtra.qty})` : money(0));
+
+    const svcList = getServiciosLabelList();
+    setText("#resServicios", svcList.length ? svcList.join(", ") : "—");
+
+    if (state.proteccion) {
         const prot = state.proteccion;
-        const protPrice = prot ? Number(prot.precio || 0) : 0;
-        const protTotal = prot
-            ? (String(prot.charge || "por_evento") === "por_dia" ? protPrice * days : protPrice)
-            : 0;
-
-        const indTotal = (!prot) ? calcIndividualesSubtotal() : 0;
-        const extrasSub = calcExtrasSubtotal();
-
-        const deliveryTotal = state.servicios.delivery ? (state.delivery.total || 0) : 0;
-        const dropoffTotal = state.servicios.dropoff ? (state.dropoff.total || 0) : 0;
-        const gasolinaTotal = state.servicios.gasolina ? (state.gasolina.total || 0) : 0;
-
-        const subtotal = baseTotal + protTotal + indTotal + extrasSub + deliveryTotal + dropoffTotal + gasolinaTotal;
-        const iva = Math.round(subtotal * 0.16 * 100) / 100;
-        const total = subtotal + iva;
-
-        return { baseDia, baseTotal, protTotal, indTotal, extrasSub, deliveryTotal, gasolinaTotal, dropoffTotal, subtotal, iva, total };
-    }
-
-    function actualizarTotalNavbar() {
-        const btnTotal = document.getElementById('btnTotalNav');
-        if (!btnTotal) return;
-
-        const totals = calcTotals();
-        const totalValido = isNaN(totals.total) ? 0 : totals.total;
-
-        btnTotal.innerHTML = `Total: ${money(totalValido)}`;
-    }
-
-    function syncTotalsHidden() {
-        ensureTotalsHidden();
-
-        const totals = calcTotals();
-        qs("#precio_base_dia").value = String(totals.baseDia || 0);
-        qs("#subtotal").value = String(totals.subtotal || 0);
-        qs("#impuestos").value = String(totals.iva || 0);
-        qs("#total").value = String(totals.total || 0);
-
-        actualizarTotalNavbar();
-    }
-
-    function initEditBaseTotal() {
-        const btn = document.getElementById("btnEditBase");
-        const container = document.getElementById("resBaseAmount");
-        const noteContainer = document.getElementById("resBaseNote");
-
-        if (!btn || !container) return;
-
-        const newBtn = btn.cloneNode(true);
-        btn.parentNode.replaceChild(newBtn, btn);
-
-        newBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-
-            if (!state.categoria) {
-                mostrarToast('⚠️ Primero debes seleccionar una categoría', 'warning');
-                return;
-            }
-
-            if (container.querySelector("input")) return;
-
-            const totals = calcTotals();
-            const precioActual = state.base_editable !== null
-                ? state.base_editable
-                : totals.baseTotal;
-
-            const input = document.createElement("input");
-            input.type = "number";
-            input.value = precioActual.toFixed(2);
-            input.min = 0;
-            input.step = 0.01;
-
-            Object.assign(input.style, {
-                width: "140px",
-                padding: "6px 10px",
-                border: "2px solid #2563eb",
-                borderRadius: "8px",
-                fontWeight: "700",
-                fontSize: "20px",
-                color: "#1e293b",
-                outline: "none",
-                textAlign: "center",
-                backgroundColor: "#ffffff"
-            });
-
-            container.innerHTML = "";
-            container.appendChild(input);
-            input.focus();
-            input.select();
-
-            const guardar = () => {
-                let nuevoValor = parseFloat(input.value);
-
-                if (isNaN(nuevoValor) || nuevoValor < 0) {
-                    nuevoValor = precioActual;
-                }
-
-                state.base_editable = nuevoValor;
-
-                const days = Number(state.days || 1);
-                const nuevoPrecioDia = nuevoValor / days;
-
-                if (state.categoria) {
-                    state.categoria.precio_dia = nuevoPrecioDia;
-                }
-
-                container.innerHTML = "";
-                container.textContent = money(nuevoValor);
-
-                if (noteContainer) {
-                    noteContainer.innerHTML = `${days} día(s) – precio por día ${money(nuevoPrecioDia).replace(" MXN", "")} MXN`;
-                }
-
-                const sub = document.getElementById("catSelSub");
-                if (sub && state.categoria) {
-                    sub.textContent = `${money(nuevoPrecioDia)} / día · ${days} día(s)`;
-                }
-
-                if (typeof syncTotalsHidden === 'function') syncTotalsHidden();
-                if (typeof refreshSummary === 'function') refreshSummary();
-
-                mostrarToast(`✅ Tarifa base actualizada a ${money(nuevoValor)}`, 'success');
-            };
-
-            const cancelar = () => {
-                container.innerHTML = "";
-                container.textContent = money(precioActual);
-                if (noteContainer && originalNote) {
-                    const days = Number(state.days || 1);
-                    const precioDia = state.categoria ? state.categoria.precio_dia : 0;
-                    noteContainer.innerHTML = `${days} día(s) – precio por día ${money(precioDia).replace(" MXN", "")} MXN`;
-                }
-            };
-
-            input.addEventListener("blur", guardar);
-            input.addEventListener("keydown", (ev) => {
-                if (ev.key === "Enter") {
-                    ev.preventDefault();
-                    input.blur();
-                }
-                if (ev.key === "Escape") {
-                    ev.preventDefault();
-                    cancelar();
-                }
-            });
-        });
-    }
-
-    function refreshTotalsOnly() {
-        const totals = calcTotals();
-        const cat = state.categoria;
-
-        const setText = (id, val) => { const el = qs(id); if (el) el.textContent = val; };
-
-        setText("#resBaseTotal", cat ? money(totals.baseTotal) : "—");
-        setText("#resSub", money(totals.subtotal));
-        setText("#resIva", money(totals.iva));
-        setText("#resTotal", money(totals.total));
-    }
-
-    /* =========================================
-    20. RESUMEN
-    ========================================= */
-    function refreshSummary() {
-        const days = Number(state.days || 0);
-
-        const selR = qs("#sucursal_retiro");
-        const selE = qs("#sucursal_entrega");
-
-        const getText = (sel) =>
-            sel?.options?.[sel.selectedIndex]?.textContent?.trim() || "—";
-
-        const fi = qs("#fecha_inicio_ui")?.value || "—";
-        const hi = qs("#hora_retiro_ui")?.value || "—";
-        const ff = qs("#fecha_fin_ui")?.value || "—";
-        const hf = qs("#hora_entrega_ui")?.value || "—";
-
-        const setText = (id, val) => { const el = qs(id); if (el) el.textContent = val; };
-
-        const checkbox = document.getElementById('differentDropoffAdmin');
-        let textoEntrega = getText(selE);
-
-        if (checkbox && !checkbox.checked) {
-            const textoRetiro = getText(selR);
-            if (textoRetiro !== "—") {
-                textoEntrega = textoRetiro;
-            }
-        }
-
-        setText("#resSucursalRetiro", getText(selR));
-        setText("#resSucursalEntrega", textoEntrega);
-        setText("#resFechaInicio", fi);
-        setText("#resHoraInicio", hi);
-        setText("#resFechaFin", ff);
-        setText("#resHoraFin", hf);
-        setText("#resDias", days ? `${days} día(s)` : "—");
-
-        const cat = state.categoria;
-        const totals = calcTotals();
-
-        setText("#resCat", cat ? cat.nombre : "—");
-
-        const baseEl = qs("#resBaseDia");
-        if (baseEl && !baseEl.querySelector("input")) {
-            baseEl.textContent = cat ? `${money(totals.baseDia)} / día` : "—";
-        }
-
-        setText("#resBaseTotal", cat ? money(totals.baseTotal) : "—");
-        setText("#resDelivery", state.servicios.delivery ? money(totals.deliveryTotal) : money(0));
-        setText("#resDropoff", state.servicios.dropoff ? money(totals.dropoffTotal) : money(0));
-        setText("#resGasolina", state.servicios.gasolina ? money(totals.gasolinaTotal) : money(0));
-
-        const sillaBebe = state.addons.get('silla_bebe');
-        const sillaTotal = sillaBebe ? sillaBebe.total : 0;
-        setText("#resSillaBebe", sillaBebe && sillaBebe.qty > 0 ? `${money(sillaTotal)} (${sillaBebe.qty})` : money(0));
-
-        const conductorExtra = state.addons.get('conductor_extra');
-        const conductorTotal = conductorExtra ? conductorExtra.total : 0;
-        setText("#resConductorExtra", conductorExtra && conductorExtra.qty > 0 ? `${money(conductorTotal)} (${conductorExtra.qty})` : money(0));
-
-        const svcList = getServiciosLabelList();
-        setText("#resServicios", svcList.length ? svcList.join(", ") : "—");
-
-        if (state.proteccion) {
-            const prot = state.proteccion;
-            const protPrice = Number(prot.precio || 0);
-            setText("#resProte", prot ? `${prot.nombre} (${money(protPrice)}${prot.charge === "por_dia" ? " / día" : ""})` : "—");
+        const protPrice = Number(prot.precio || 0);
+        setText("#resProte", prot ? `${prot.nombre} (${money(protPrice)}${prot.charge === "por_dia" ? " / día" : ""})` : "—");
+    } else {
+        const inds = Array.from(state.individuales.values());
+        if (!inds.length) {
+            setText("#resProte", "—");
+            const proteccionesSection = document.getElementById("proteccionesSection");
+            if (proteccionesSection) proteccionesSection.style.display = "none";
         } else {
-            const inds = Array.from(state.individuales.values());
-            if (!inds.length) {
-                setText("#resProte", "—");
-                const proteccionesSection = document.getElementById("proteccionesSection");
-                if (proteccionesSection) proteccionesSection.style.display = "none";
-            } else {
-                const preview = inds.slice(0, 3).map(x => x.nombre).join(", ");
-                const rest = inds.length > 3 ? ` +${inds.length - 3} más` : "";
-                setText("#resProte", `🧩 Individuales: ${preview}${rest}`);
-                const proteccionesSection = document.getElementById("proteccionesSection");
-                if (proteccionesSection) proteccionesSection.style.display = "block";
-            }
+            const preview = inds.slice(0, 3).map(x => x.nombre).join(", ");
+            const rest = inds.length > 3 ? ` +${inds.length - 3} más` : "";
+            setText("#resProte", `🧩 Individuales: ${preview}${rest}`);
+            const proteccionesSection = document.getElementById("proteccionesSection");
+            if (proteccionesSection) proteccionesSection.style.display = "block";
         }
+    }
 
-        let adicionales = [];
+    let adicionales = [];
 
-        if (state.delivery.total > 0) adicionales.push("🚚 Delivery");
-        if (state.dropoff.total > 0) adicionales.push("🚩 Drop Off");
-        if (state.gasolina.total > 0) adicionales.push("⛽ Gasolina");
+    if (state.delivery.total > 0) adicionales.push("🚚 Delivery");
+    if (state.dropoff.total > 0) adicionales.push("🚩 Drop Off");
+    if (state.gasolina.total > 0) adicionales.push("⛽ Gasolina");
 
-        const items = Array.from(state.addons.values()).filter(x => Number(x.qty || 0) > 0);
-        items.forEach(x => {
-            adicionales.push(`${x.nombre} ×${x.qty}`);
-        });
+    const items = Array.from(state.addons.values()).filter(x => Number(x.qty || 0) > 0);
+    items.forEach(x => {
+        adicionales.push(`${x.nombre} ×${x.qty}`);
+    });
 
-        setText("#resAdds", adicionales.length ? adicionales.join(", ") : "—");
+    setText("#resAdds", adicionales.length ? adicionales.join(", ") : "—");
 
-        setText("#resSub", money(totals.subtotal));
-        setText("#resIva", money(totals.iva));
-        setText("#resTotal", money(totals.total));
+    setText("#resSub", money(totals.subtotal));
+    setText("#resIva", money(totals.iva));
+    setText("#resTotal", money(totals.total));
 
-        const setTextV2 = (id, val) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = val;
-        };
+    const setTextV2 = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
 
-        function formatearFechaResumen(fechaStr) {
-            if (!fechaStr || fechaStr === "—") return "—";
+    function formatearFechaResumen(fechaStr) {
+        if (!fechaStr || fechaStr === "—") return "—";
 
-            let partes;
-            if (fechaStr.includes('-')) {
-                partes = fechaStr.split('-');
-            } else if (fechaStr.includes('/')) {
-                partes = fechaStr.split('/');
-            } else {
-                return fechaStr;
-            }
-
-            if (partes.length === 3) {
-                const dia = partes[0].padStart(2, '0');
-                const mesNum = parseInt(partes[1]);
-                const año = partes[2];
-
-                const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-                    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-
-                const mesLetras = meses[mesNum - 1] || '???';
-                return `${dia} ${mesLetras} ${año}`;
-            }
-
+        let partes;
+        if (fechaStr.includes('-')) {
+            partes = fechaStr.split('-');
+        } else if (fechaStr.includes('/')) {
+            partes = fechaStr.split('/');
+        } else {
             return fechaStr;
         }
 
-        function formatearHoraResumen(horaStr) {
-            if (!horaStr || horaStr === "—") return "—";
+        if (partes.length === 3) {
+            const dia = partes[0].padStart(2, '0');
+            const mesNum = parseInt(partes[1]);
+            const año = partes[2];
 
-            if (horaStr.includes(':')) {
-                const partes = horaStr.split(':');
-                if (partes.length >= 2) {
-                    const hora = partes[0].padStart(2, '0');
-                    const minuto = partes[1].padStart(2, '0');
-                    return `${hora}:${minuto} hrs`;
+            const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+                'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+            const mesLetras = meses[mesNum - 1] || '???';
+            return `${dia} ${mesLetras} ${año}`;
+        }
+
+        return fechaStr;
+    }
+
+    function formatearHoraResumen(horaStr) {
+        if (!horaStr || horaStr === "—") return "—";
+
+        if (horaStr.includes(':')) {
+            const partes = horaStr.split(':');
+            if (partes.length >= 2) {
+                const hora = partes[0].padStart(2, '0');
+                const minuto = partes[1].padStart(2, '0');
+                return `${hora}:${minuto} hrs`;
+            }
+        }
+
+        return `${horaStr} hrs`;
+    }
+
+    setTextV2("resFechaInicioDetail", formatearFechaResumen(document.getElementById("fecha_inicio_ui")?.value || "—"));
+    setTextV2("resHoraInicioDetail", formatearHoraResumen(document.getElementById("hora_retiro_ui")?.value || "—"));
+    setTextV2("resFechaFinDetail", formatearFechaResumen(document.getElementById("fecha_fin_ui")?.value || "—"));
+    setTextV2("resHoraFinDetail", formatearHoraResumen(document.getElementById("hora_entrega_ui")?.value || "—"));
+
+    let tipoVehiculo = "MEDIANOS";
+    let capacidadPasajeros = 5;
+    let tipoTransmision = "Automático";
+
+    if (cat) {
+        const descripcionesModelos = {
+            "1": "Chevrolet Aveo o similar",
+            "2": "Volkswagen Virtus o similar",
+            "3": "Volkswagen Jetta o similar",
+            "4": "Toyota Camry o similar",
+            "5": "Jeep Renegade o similar",
+            "6": "Volkswagen Taos o similar",
+            "7": "Toyota Avanza o similar",
+            "8": "Honda Odyssey o similar",
+            "9": "Toyota Hiace o similar",
+            "10": "Nissan Frontier o similar",
+            "11": "Toyota Tacoma o similar"
+        };
+
+        const codigosCategoria = {
+            "1": "C",
+            "2": "D",
+            "3": "E",
+            "4": "F",
+            "5": "IC",
+            "6": "I",
+            "7": "IB",
+            "8": "M",
+            "9": "L",
+            "10": "H",
+            "11": "HI"
+        };
+
+        let descripcionMostrar = descripcionesModelos[cat.id] || cat.desc || "";
+        let codigoMostrar = codigosCategoria[cat.id] || "";
+
+        const resCatNameEl = document.getElementById("resCatName");
+        if (resCatNameEl) {
+            resCatNameEl.textContent = cat.nombre;
+        }
+
+        const resCatDescEl = document.getElementById("resCatDesc");
+        if (resCatDescEl) {
+            resCatDescEl.textContent = descripcionMostrar;
+        }
+
+        const resCatCodigoEl = document.getElementById("resCatCodigo");
+        if (resCatCodigoEl && codigoMostrar) {
+            resCatCodigoEl.textContent = `Código: ${codigoMostrar}`;
+        }
+
+        switch(parseInt(cat.id)) {
+            case 1:
+                tipoVehiculo = "COMPACTO";
+                capacidadPasajeros = 5;
+                tipoTransmision = "Automático";
+                break;
+            case 2:
+                tipoVehiculo = "MEDIANOS";
+                capacidadPasajeros = 5;
+                tipoTransmision = "Automático";
+                break;
+            case 3:
+                tipoVehiculo = "GRANDES";
+                capacidadPasajeros = 5;
+                tipoTransmision = "Automático";
+                break;
+            case 4:
+                tipoVehiculo = "FULL SIZE";
+                capacidadPasajeros = 5;
+                tipoTransmision = "Automático";
+                break;
+            case 5:
+                tipoVehiculo = "SUV COMPACTA";
+                capacidadPasajeros = 5;
+                tipoTransmision = "Automático";
+                break;
+            case 6:
+                tipoVehiculo = "SUV MEDIANA";
+                capacidadPasajeros = 5;
+                tipoTransmision = "Automático";
+                break;
+            case 7:
+                tipoVehiculo = "SUV FAMILIAR COMPACTA";
+                capacidadPasajeros = 7;
+                tipoTransmision = "Automático";
+                break;
+            case 8:
+                tipoVehiculo = "MINIVAN";
+                capacidadPasajeros = 8;
+                tipoTransmision = "Automático";
+                break;
+            case 9:
+                tipoVehiculo = "VAN PASAJEROS 13";
+                capacidadPasajeros = 13;
+                tipoTransmision = "Manual";
+                break;
+            case 10:
+                tipoVehiculo = "PICKUP DOBLE CABINA";
+                capacidadPasajeros = 5;
+                tipoTransmision = "Automático";
+                break;
+            case 11:
+                tipoVehiculo = "PICKUP 4X4 DOBLE CABINA";
+                capacidadPasajeros = 5;
+                tipoTransmision = "Automático";
+                break;
+        }
+
+        setTextV2(
+            "resCatBadge",
+            `${tipoVehiculo} · ${capacidadPasajeros} pasajeros · ${tipoTransmision}`
+        );
+
+        const imgEl = document.getElementById("resCatImage");
+        if (imgEl) {
+            if (cat.img) {
+                imgEl.src = cat.img;
+            } else {
+                const card = document.querySelector(`.card-pick[data-id="${cat.id}"]`);
+                const img = card?.querySelector(".cp-img img");
+                if (img) {
+                    imgEl.src = img.src;
+                    cat.img = img.src;
                 }
             }
-
-            return `${horaStr} hrs`;
+            imgEl.alt = cat.nombre;
         }
 
-        setTextV2("resFechaInicioDetail", formatearFechaResumen(document.getElementById("fecha_inicio_ui")?.value || "—"));
-        setTextV2("resHoraInicioDetail", formatearHoraResumen(document.getElementById("hora_retiro_ui")?.value || "—"));
-        setTextV2("resFechaFinDetail", formatearFechaResumen(document.getElementById("fecha_fin_ui")?.value || "—"));
-        setTextV2("resHoraFinDetail", formatearHoraResumen(document.getElementById("hora_entrega_ui")?.value || "—"));
+    } else {
+        const resCatNameEl = document.getElementById("resCatName");
+        if (resCatNameEl) resCatNameEl.textContent = "—";
+        const resCatDescEl = document.getElementById("resCatDesc");
+        if (resCatDescEl) resCatDescEl.textContent = "—";
+        const resCatCodigoEl = document.getElementById("resCatCodigo");
+        if (resCatCodigoEl) resCatCodigoEl.textContent = "—";
+        setTextV2("resCatBadge", "—");
+        const imgEl = document.getElementById("resCatImage");
+        if (imgEl) imgEl.src = "";
+    }
 
-        let tipoVehiculo = "MEDIANOS";
-        let capacidadPasajeros = 5;
-        let tipoTransmision = "Automático";
+    const featuresContainer = document.getElementById("resCatFeatures");
+    if (featuresContainer && cat) {
+        let featuresHTML = '';
 
-        if (cat) {
-            const descripcionesModelos = {
-                "1": "Chevrolet Aveo o similar",
-                "2": "Volkswagen Virtus o similar",
-                "3": "Volkswagen Jetta o similar",
-                "4": "Toyota Camry o similar",
-                "5": "Jeep Renegade o similar",
-                "6": "Volkswagen Taos o similar",
-                "7": "Toyota Avanza o similar",
-                "8": "Honda Odyssey o similar",
-                "9": "Toyota Hiace o similar",
-                "10": "Nissan Frontier o similar",
-                "11": "Toyota Tacoma o similar"
-            };
+        featuresHTML += `<span><i class="fas fa-car"></i> ${tipoTransmision}</span>`;
+        featuresHTML += `<span><i class="fas fa-wind"></i> A/C</span>`;
+        featuresHTML += `<span><i class="fas fa-users"></i> ${capacidadPasajeros} pasajeros</span>`;
+        featuresHTML += `<span><i class="fab fa-apple"></i> CarPlay</span>`;
+        featuresHTML += `<span><i class="fab fa-android"></i> Android Auto</span>`;
 
-            const codigosCategoria = {
-                "1": "C",
-                "2": "D",
-                "3": "E",
-                "4": "F",
-                "5": "IC",
-                "6": "I",
-                "7": "IB",
-                "8": "M",
-                "9": "L",
-                "10": "H",
-                "11": "HI"
-            };
+        featuresContainer.innerHTML = featuresHTML;
+    }
 
-            let descripcionMostrar = descripcionesModelos[cat.id] || cat.desc || "";
-            let codigoMostrar = codigosCategoria[cat.id] || "";
+        const precioPorDia = totals.baseDia;
+        const totalBase = totals.baseTotal;
 
-            const resCatNameEl = document.getElementById("resCatName");
-            if (resCatNameEl) {
-                resCatNameEl.textContent = cat.nombre;
+        const resBaseAmount = document.getElementById("resBaseAmount");
+        const resBaseNote = document.getElementById("resBaseNote");
+        const resBaseTotalEstilo = document.getElementById("resBaseTotalEstilo");
+
+        if (resBaseAmount) {
+            if (!resBaseAmount.querySelector("input")) {
+                resBaseAmount.textContent = money(precioPorDia);
             }
-
-            const resCatDescEl = document.getElementById("resCatDesc");
-            if (resCatDescEl) {
-                resCatDescEl.textContent = descripcionMostrar;
-            }
-
-            const resCatCodigoEl = document.getElementById("resCatCodigo");
-            if (resCatCodigoEl && codigoMostrar) {
-                resCatCodigoEl.textContent = `Código: ${codigoMostrar}`;
-            }
-
-            switch(parseInt(cat.id)) {
-                case 1:
-                    tipoVehiculo = "COMPACTO";
-                    capacidadPasajeros = 5;
-                    tipoTransmision = "Automático";
-                    break;
-                case 2:
-                    tipoVehiculo = "MEDIANOS";
-                    capacidadPasajeros = 5;
-                    tipoTransmision = "Automático";
-                    break;
-                case 3:
-                    tipoVehiculo = "GRANDES";
-                    capacidadPasajeros = 5;
-                    tipoTransmision = "Automático";
-                    break;
-                case 4:
-                    tipoVehiculo = "FULL SIZE";
-                    capacidadPasajeros = 5;
-                    tipoTransmision = "Automático";
-                    break;
-                case 5:
-                    tipoVehiculo = "SUV COMPACTA";
-                    capacidadPasajeros = 5;
-                    tipoTransmision = "Automático";
-                    break;
-                case 6:
-                    tipoVehiculo = "SUV MEDIANA";
-                    capacidadPasajeros = 5;
-                    tipoTransmision = "Automático";
-                    break;
-                case 7:
-                    tipoVehiculo = "SUV FAMILIAR COMPACTA";
-                    capacidadPasajeros = 7;
-                    tipoTransmision = "Automático";
-                    break;
-                case 8:
-                    tipoVehiculo = "MINIVAN";
-                    capacidadPasajeros = 8;
-                    tipoTransmision = "Automático";
-                    break;
-                case 9:
-                    tipoVehiculo = "VAN PASAJEROS 13";
-                    capacidadPasajeros = 13;
-                    tipoTransmision = "Manual";
-                    break;
-                case 10:
-                    tipoVehiculo = "PICKUP DOBLE CABINA";
-                    capacidadPasajeros = 5;
-                    tipoTransmision = "Automático";
-                    break;
-                case 11:
-                    tipoVehiculo = "PICKUP 4X4 DOBLE CABINA";
-                    capacidadPasajeros = 5;
-                    tipoTransmision = "Automático";
-                    break;
-            }
-
-            setTextV2(
-                "resCatBadge",
-                `${tipoVehiculo} · ${capacidadPasajeros} pasajeros · ${tipoTransmision}`
-            );
-
-            const imgEl = document.getElementById("resCatImage");
-            if (imgEl) {
-                if (cat.img) {
-                    imgEl.src = cat.img;
-                } else {
-                    const card = document.querySelector(`.card-pick[data-id="${cat.id}"]`);
-                    const img = card?.querySelector(".cp-img img");
-                    if (img) {
-                        imgEl.src = img.src;
-                        cat.img = img.src;
-                    }
-                }
-                imgEl.alt = cat.nombre;
-            }
-
-        } else {
-            const resCatNameEl = document.getElementById("resCatName");
-            if (resCatNameEl) resCatNameEl.textContent = "—";
-            const resCatDescEl = document.getElementById("resCatDesc");
-            if (resCatDescEl) resCatDescEl.textContent = "—";
-            const resCatCodigoEl = document.getElementById("resCatCodigo");
-            if (resCatCodigoEl) resCatCodigoEl.textContent = "—";
-            setTextV2("resCatBadge", "—");
-            const imgEl = document.getElementById("resCatImage");
-            if (imgEl) imgEl.src = "";
         }
 
-        const featuresContainer = document.getElementById("resCatFeatures");
-        if (featuresContainer && cat) {
-            let featuresHTML = '';
-
-            featuresHTML += `<span><i class="fas fa-car"></i> ${tipoTransmision}</span>`;
-            featuresHTML += `<span><i class="fas fa-wind"></i> A/C</span>`;
-            featuresHTML += `<span><i class="fas fa-users"></i> ${capacidadPasajeros} pasajeros</span>`;
-            featuresHTML += `<span><i class="fab fa-apple"></i> CarPlay</span>`;
-            featuresHTML += `<span><i class="fab fa-android"></i> Android Auto</span>`;
-
-            featuresContainer.innerHTML = featuresHTML;
+        if (resBaseNote && !resBaseNote.querySelector("input")) {
+            resBaseNote.innerHTML = `${days} día(s) – precio por día ${money(precioPorDia).replace(" MXN", "")} MXN`;
         }
 
-        const baseDia = cat ? cat.precio_dia : 0;
-        setTextV2("resBaseAmount", `$${baseDia.toLocaleString("es-MX", {minimumFractionDigits: 2})} MXN`);
-        setTextV2("resBaseNote", `${days} día(s) – precio por día $${baseDia.toLocaleString("es-MX", {minimumFractionDigits: 2})} MXN`);
-        setTextV2("resBaseTotalEstilo", money(totals.baseTotal));
-        setTextV2("resIvaEstilo", money(totals.iva));
-        setTextV2("resTotalEstilo", money(totals.total));
-
-        const optionsContainer = document.getElementById("rv2OptionsList");
-        const proteccionesContainer = document.getElementById("rv2ProteccionesList");
-        const proteccionesSection = document.getElementById("proteccionesSection");
-
-        if (optionsContainer) {
-            let optionsHtml = "";
-
-            if (state.servicios.delivery && state.delivery.total > 0) {
-                optionsHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-truck"></i> Delivery</span><span class="rv2-option-price">${money(state.delivery.total)}</span></div>`;
-            }
-
-            if (state.servicios.dropoff && state.dropoff.total > 0) {
-                optionsHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-flag-checkered"></i> Drop Off</span><span class="rv2-option-price">${money(state.dropoff.total)}</span></div>`;
-            }
-
-            if (state.servicios.gasolina && state.gasolina.total > 0) {
-                optionsHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-gas-pump"></i> Gasolina Prepago</span><span class="rv2-option-price">${money(state.gasolina.total)}</span></div>`;
-            }
-
-            if (sillaBebe && sillaBebe.qty > 0) {
-                optionsHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-baby-carriage"></i> Silla de bebé ×${sillaBebe.qty}</span><span class="rv2-option-price">${money(sillaBebe.total)}</span></div>`;
-            }
-
-            if (conductorExtra && conductorExtra.qty > 0) {
-                optionsHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-user-plus"></i> Conductor adicional ×${conductorExtra.qty}</span><span class="rv2-option-price">${money(conductorExtra.total)}</span></div>`;
-            }
-
-            if (optionsHtml === "") {
-                optionsHtml = '<div class="rv2-option-item" style="color:#94a3b8;">Ninguna opción seleccionada</div>';
-            }
-
-            optionsContainer.innerHTML = optionsHtml;
+        if (resBaseTotalEstilo) {
+            resBaseTotalEstilo.textContent = money(totalBase);
         }
 
-        if (proteccionesContainer && proteccionesSection) {
-            let proteccionesHtml = "";
-            let hasProtecciones = false;
+    setTextV2("resIvaEstilo", money(totals.iva));
+    setTextV2("resTotalEstilo", money(totals.total));
 
-            if (state.proteccion) {
-                const prot = state.proteccion;
-                const protPrecio = Number(prot.precio || 0);
-                const protTotal = prot.charge === "por_dia" ? protPrecio * days : protPrecio;
+    const optionsContainer = document.getElementById("rv2OptionsList");
+    const proteccionesContainer = document.getElementById("rv2ProteccionesList");
+    const proteccionesSection = document.getElementById("proteccionesSection");
 
-                if (protTotal >= 0) {
-                    proteccionesHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-shield-alt"></i> ${prot.nombre}</span><span class="rv2-option-price">${money(protTotal)} ${prot.charge === "por_dia" ? "/día" : ""}</span></div>`;
+    if (optionsContainer) {
+        let optionsHtml = "";
+
+        if (state.servicios.delivery && state.delivery.total > 0) {
+            optionsHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-truck"></i> Delivery</span><span class="rv2-option-price">${money(state.delivery.total)}</span></div>`;
+        }
+
+        if (state.servicios.dropoff && state.dropoff.total > 0) {
+            optionsHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-flag-checkered"></i> Drop Off</span><span class="rv2-option-price">${money(state.dropoff.total)}</span></div>`;
+        }
+
+        if (state.servicios.gasolina && state.gasolina.total > 0) {
+            optionsHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-gas-pump"></i> Gasolina Prepago</span><span class="rv2-option-price">${money(state.gasolina.total)}</span></div>`;
+        }
+
+        if (sillaBebe && sillaBebe.qty > 0) {
+            optionsHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-baby-carriage"></i> Silla de bebé ×${sillaBebe.qty}</span><span class="rv2-option-price">${money(sillaBebe.total)}</span></div>`;
+        }
+
+        if (conductorExtra && conductorExtra.qty > 0) {
+            optionsHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-user-plus"></i> Conductor adicional ×${conductorExtra.qty}</span><span class="rv2-option-price">${money(conductorExtra.total)}</span></div>`;
+        }
+
+        if (optionsHtml === "") {
+            optionsHtml = '<div class="rv2-option-item" style="color:#94a3b8;">Ninguna opción seleccionada</div>';
+        }
+
+        optionsContainer.innerHTML = optionsHtml;
+    }
+
+    if (proteccionesContainer && proteccionesSection) {
+        let proteccionesHtml = "";
+        let hasProtecciones = false;
+
+        if (state.proteccion) {
+            const prot = state.proteccion;
+            const protPrecio = Number(prot.precio || 0);
+            const protTotal = prot.charge === "por_dia" ? protPrecio * days : protPrecio;
+
+            if (protTotal >= 0) {
+                proteccionesHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas fa-shield-alt"></i> ${prot.nombre}</span><span class="rv2-option-price">${money(protTotal)} ${prot.charge === "por_dia" ? "/día" : ""}</span></div>`;
+                hasProtecciones = true;
+            }
+        }
+
+        const individualesList = Array.from(state.individuales.values());
+
+        if (individualesList.length > 0) {
+            individualesList.forEach(ind => {
+                const indPrecio = Number(ind.precio || 0);
+                const indTotal = indPrecio * days;
+
+                if (indTotal >= 0) {
+                    let icono = 'fa-shield-alt';
+                    if (ind.grupo === 'Colisión y robo') icono = 'fa-car-crash';
+                    if (ind.grupo === 'Gastos médicos') icono = 'fa-ambulance';
+                    if (ind.grupo === 'Asistencia para el camino') icono = 'fa-road';
+                    if (ind.grupo === 'Daños a terceros') icono = 'fa-handshake';
+                    if (ind.grupo === 'Protecciones automáticas') icono = 'fa-microchip';
+
+                    proteccionesHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas ${icono}"></i> ${ind.nombre}</span><span class="rv2-option-price">${money(indTotal)} <span style="font-size: 10px; color: #888;">/día</span></span></div>`;
                     hasProtecciones = true;
                 }
-            }
-
-            const individualesList = Array.from(state.individuales.values());
-
-            if (individualesList.length > 0) {
-                individualesList.forEach(ind => {
-                    const indPrecio = Number(ind.precio || 0);
-                    const indTotal = indPrecio * days;
-
-                    if (indTotal >= 0) {
-                        let icono = 'fa-shield-alt';
-                        if (ind.grupo === 'Colisión y robo') icono = 'fa-car-crash';
-                        if (ind.grupo === 'Gastos médicos') icono = 'fa-ambulance';
-                        if (ind.grupo === 'Asistencia para el camino') icono = 'fa-road';
-                        if (ind.grupo === 'Daños a terceros') icono = 'fa-handshake';
-                        if (ind.grupo === 'Protecciones automáticas') icono = 'fa-microchip';
-
-                        proteccionesHtml += `<div class="rv2-option-item"><span class="rv2-option-name"><i class="fas ${icono}"></i> ${ind.nombre}</span><span class="rv2-option-price">${money(indTotal)} <span style="font-size: 10px; color: #888;">/día</span></span></div>`;
-                        hasProtecciones = true;
-                    }
-                });
-            }
-
-            if (hasProtecciones) {
-                proteccionesContainer.innerHTML = proteccionesHtml;
-                proteccionesSection.style.display = "block";
-            } else {
-                proteccionesSection.style.display = "none";
-            }
+            });
         }
 
-        initEditBaseTotal();
+        if (hasProtecciones) {
+            proteccionesContainer.innerHTML = proteccionesHtml;
+            proteccionesSection.style.display = "block";
+        } else {
+            proteccionesSection.style.display = "none";
+        }
     }
+}
+
+/* =========================================
+   EDITAR TARIFA BASE EN RESUMEN
+========================================= */
+function initEditBaseTotal() {
+    const btn = document.getElementById("btnEditBase");
+
+    if (!btn) {
+        setTimeout(initEditBaseTotal, 500);
+        return;
+    }
+
+    const container = document.getElementById("resBaseAmount");
+    const noteContainer = document.getElementById("resBaseNote");
+
+    if (!container) return;
+
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
+
+    newBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        if (!state.categoria) {
+            mostrarToast('⚠️ Primero debes seleccionar una categoría', 'warning');
+            return;
+        }
+
+        if (container.querySelector("input")) return;
+
+        const totals = calcTotals();
+        const precioPorDiaActual = state.base_editable !== null
+            ? state.base_editable / (state.days || 1)
+            : totals.baseDia;
+
+        const originalAmountText = container.textContent;
+        const originalNoteText = noteContainer ? noteContainer.innerHTML : "";
+
+        const input = document.createElement("input");
+        input.type = "number";
+        input.value = precioPorDiaActual.toFixed(2);
+        input.min = 0;
+        input.step = 0.01;
+
+        Object.assign(input.style, {
+            width: "120px",
+            padding: "6px 10px",
+            border: "2px solid #2563eb",
+            borderRadius: "8px",
+            fontWeight: "700",
+            fontSize: "18px",
+            color: "#1e293b",
+            outline: "none",
+            textAlign: "center",
+            backgroundColor: "#ffffff"
+        });
+
+        container.innerHTML = "";
+        container.appendChild(input);
+        input.focus();
+        input.select();
+
+        const guardar = () => {
+            let nuevoPrecioPorDia = parseFloat(input.value);
+
+            if (isNaN(nuevoPrecioPorDia) || nuevoPrecioPorDia < 0) {
+                nuevoPrecioPorDia = precioPorDiaActual;
+            }
+
+            const days = Number(state.days || 1);
+            const nuevoTotal = nuevoPrecioPorDia * days;
+
+            state.base_editable = nuevoTotal;
+
+            if (state.categoria) {
+                state.categoria.precio_dia = nuevoPrecioPorDia;
+            }
+
+            container.innerHTML = "";
+            container.textContent = money(nuevoPrecioPorDia);
+
+            if (noteContainer) {
+                noteContainer.innerHTML = `${days} día(s) – precio por día ${money(nuevoPrecioPorDia).replace(" MXN", "")} MXN`;
+            }
+
+            const catMiniRate = document.getElementById("catMiniRate");
+            if (catMiniRate && !catMiniRate.querySelector("input")) {
+                catMiniRate.textContent = `${money(nuevoPrecioPorDia).replace(" MXN", "")} MXN / día`;
+            }
+
+            const catMiniCalc = document.getElementById("catMiniCalc");
+            if (catMiniCalc) {
+                catMiniCalc.textContent = money(nuevoTotal);
+            }
+
+            const sub = document.getElementById("catSelSub");
+            if (sub && state.categoria) {
+                sub.textContent = `${money(nuevoPrecioPorDia)} / día · ${days} día(s)`;
+            }
+
+            syncTotalsHidden();
+            refreshSummary();
+
+            mostrarToast(`✅ Tarifa actualizada a ${money(nuevoPrecioPorDia)}/día`, 'success');
+        };
+
+        const cancelar = () => {
+            container.innerHTML = "";
+            container.textContent = originalAmountText;
+            if (noteContainer) {
+                noteContainer.innerHTML = originalNoteText;
+            }
+        };
+
+        input.addEventListener("blur", guardar);
+        input.addEventListener("keydown", (ev) => {
+            if (ev.key === "Enter") {
+                ev.preventDefault();
+                guardar();
+            }
+            if (ev.key === "Escape") {
+                ev.preventDefault();
+                cancelar();
+            }
+        });
+    });
+}
 
     /* =========================================
     21. VALIDACIÓN
@@ -3475,6 +3532,7 @@ function init() {
                 else finInstance.set("minDate", "today");
             }
             syncDays();
+            filtrarHorasPasadas();
         }
     });
 
@@ -3522,124 +3580,247 @@ function init() {
     });
 }
 
-    /* =========================================
-    23. SELECTOR DE HORA CON <SELECT>
-    ========================================= */
-    function initTimeSelectors() {
-        function createTimeSelectsBelow(input, hiddenInput, placeholderText) {
-            const wrap = input.closest(".time-field") || input.parentElement;
-            if (!wrap || wrap.querySelector(".tp-selects")) return;
+    // =========================================
+    // 23. SELECCIONADORES DE HORA Y VALIDACIONES
+    // =========================================
 
-            const box = document.createElement("div");
-            box.className = "tp-selects";
+function initTimeSelectors() {
+    function createTimeSelectsBelow(input, hiddenInput, placeholderText) {
+        const wrap = input.closest(".time-field") || input.parentElement;
+        if (!wrap || wrap.querySelector(".tp-selects")) return;
 
-            const selH = document.createElement("select");
-            selH.className = "tp-hour";
-            selH.innerHTML = '<option value="" disabled selected>' + placeholderText + '</option>';
-            for (let h = 0; h < 24; h++) {
-                const opt = document.createElement("option");
-                opt.value = String(h).padStart(2, "0");
-                opt.textContent = `${String(h).padStart(2, "0")}:00`;
-                selH.appendChild(opt);
+        const box = document.createElement("div");
+        box.className = "tp-selects";
+
+        const selH = document.createElement("select");
+        selH.className = "tp-hour";
+        selH.innerHTML = '<option value="" disabled selected>' + placeholderText + '</option>';
+        for (let h = 0; h < 24; h++) {
+            const opt = document.createElement("option");
+            opt.value = String(h).padStart(2, "0");
+            opt.textContent = `${String(h).padStart(2, "0")}:00`;
+            selH.appendChild(opt);
+        }
+
+        box.appendChild(selH);
+        wrap.appendChild(box);
+
+        if (hiddenInput && hiddenInput.value) {
+            const existingHour = hiddenInput.value.split(":")[0];
+            if (existingHour && Array.from(selH.options).some(opt => opt.value === existingHour)) {
+                selH.value = existingHour;
+                input.value = hiddenInput.value;
             }
+        }
 
-            box.appendChild(selH);
-            wrap.appendChild(box);
-
-            if (hiddenInput && hiddenInput.value) {
-                const existingHour = hiddenInput.value.split(":")[0];
-                if (existingHour && Array.from(selH.options).some(opt => opt.value === existingHour)) {
-                    selH.value = existingHour;
-                    input.value = hiddenInput.value;
-                }
+        selH.addEventListener("change", () => {
+            if (!selH.value) {
+                if (hiddenInput) hiddenInput.value = "";
+                input.value = "";
+            } else {
+                const timeValue = `${String(selH.value).padStart(2, "0")}:00`;
+                if (hiddenInput) hiddenInput.value = timeValue;
+                input.value = timeValue;
             }
+            syncDays();
+        });
+    }
 
-            selH.addEventListener("change", () => {
-                if (!selH.value) {
-                    if (hiddenInput) hiddenInput.value = "";
-                    input.value = "";
-                } else {
-                    const timeValue = `${String(selH.value).padStart(2, "0")}:00`;
-                    if (hiddenInput) hiddenInput.value = timeValue;
-                    input.value = timeValue;
-                }
-                refreshSummary();
+    const horaRetiroInput = document.getElementById("hora_retiro_ui");
+    const horaRetiroHidden = document.getElementById("hora_retiro");
+
+    if (horaRetiroInput && !horaRetiroInput.dataset.tpReady) {
+        horaRetiroInput.dataset.tpReady = "1";
+        horaRetiroInput.setAttribute("readonly", "readonly");
+        createTimeSelectsBelow(horaRetiroInput, horaRetiroHidden, "Hora");
+    }
+
+    const horaEntregaInput = document.getElementById("hora_entrega_ui");
+    const horaEntregaHidden = document.getElementById("hora_entrega");
+
+    if (horaEntregaInput && !horaEntregaInput.dataset.tpReady) {
+        horaEntregaInput.dataset.tpReady = "1";
+        horaEntregaInput.setAttribute("readonly", "readonly");
+        createTimeSelectsBelow(horaEntregaInput, horaEntregaHidden, "Hora");
+    }
+}
+
+// =========================================
+// 23.1 FILTRO DE HORAS PASADAS
+// =========================================
+function filtrarHorasPasadas() {
+    const selRetiro = document.querySelector('#hora_retiro_ui')
+        ?.closest('.dt-field-admin, .time-field-admin')
+        ?.querySelector('.tp-hour');
+
+    if (!selRetiro) return;
+
+    const fechaInicioVal = (qs("#fecha_inicio")?.value || "").trim();
+
+    Array.from(selRetiro.options).forEach(opt => {
+        if (opt.value === "") return;
+        opt.disabled = false;
+        opt.hidden = false;
+    });
+
+    if (!fechaInicioVal) return;
+
+    const hoy = new Date();
+    const y = hoy.getFullYear();
+    const m = String(hoy.getMonth() + 1).padStart(2, "0");
+    const d = String(hoy.getDate()).padStart(2, "0");
+    const hoyISO = `${y}-${m}-${d}`;
+
+    if (fechaInicioVal !== hoyISO) return;
+
+    const horaActual = hoy.getHours();
+
+    Array.from(selRetiro.options).forEach(opt => {
+        if (opt.value === "") return;
+        const horaOpt = parseInt(opt.value, 10);
+        if (!Number.isNaN(horaOpt) && horaOpt <= horaActual) {
+            opt.hidden = true;
+            opt.disabled = true;
+        }
+    });
+
+    const seleccionada = selRetiro.options[selRetiro.selectedIndex];
+    if (seleccionada && (seleccionada.hidden || seleccionada.disabled)) {
+        selRetiro.value = "";
+        const inputHoraUI = document.getElementById("hora_retiro_ui");
+        const hiddenHora = document.getElementById("hora_retiro");
+        if (inputHoraUI) inputHoraUI.value = "";
+        if (hiddenHora) hiddenHora.value = "";
+        if (typeof refreshSummary === 'function') refreshSummary();
+    }
+}
+
+function initTimeValidation() {
+    const timeSelectors = document.querySelectorAll('.tp-hour');
+
+    timeSelectors.forEach(select => {
+        if (select._validationListener) {
+            select.removeEventListener('change', select._validationListener);
+        }
+
+        const handler = function() {
+            const inputHoraUI = this.closest('.dt-field-admin, .time-field-admin')?.querySelector('.input-buscador-admin');
+
+            if (this.value && this.value !== "") {
+                if (inputHoraUI) mostrarExito(inputHoraUI);
+                mostrarExito(this);
+            } else {
+                if (inputHoraUI) limpiarError(inputHoraUI);
+                limpiarError(this);
+            }
+        };
+
+        select._validationListener = handler;
+        select.addEventListener('change', handler);
+    });
+}
+
+function initDateValidation() {
+    const dateInputs = ['#fecha_inicio_ui', '#fecha_fin_ui'];
+
+    dateInputs.forEach(selector => {
+        const input = document.querySelector(selector);
+        if (!input) return;
+
+        if (input._validationListener) {
+            input.removeEventListener('change', input._validationListener);
+        }
+
+        const handler = function() {
+            if (this.value && this.value.trim() !== "") {
+                mostrarExito(this);
+            } else {
+                limpiarError(this);
+            }
+        };
+
+        input._validationListener = handler;
+        input.addEventListener('change', handler);
+
+        if (input._flatpickr) {
+            input._flatpickr.config.onChange.push(() => {
+                handler.call(input);
             });
         }
+    });
+}
 
-        const horaRetiroInput = document.getElementById("hora_retiro_ui");
-        const horaRetiroHidden = document.getElementById("hora_retiro");
+function initValidacionHorasTiempoReal() {
+    const fechaInicio = document.getElementById("fecha_inicio_ui");
+    const fechaFin = document.getElementById("fecha_fin_ui");
 
-        if (horaRetiroInput && !horaRetiroInput.dataset.tpReady) {
-            horaRetiroInput.dataset.tpReady = "1";
-            horaRetiroInput.setAttribute("readonly", "readonly");
-            createTimeSelectsBelow(horaRetiroInput, horaRetiroHidden, "Hora");
+    if (!fechaInicio || !fechaFin) return;
+
+    const validar = () => {
+        const warningExistente = document.querySelector('.hora-warning');
+        if (warningExistente) warningExistente.remove();
+
+        const horaEntregaUI = document.getElementById("hora_entrega_ui");
+        const horaEntregaSelect = document.querySelector('#hora_entrega_ui')?.closest('.dt-field-admin')?.querySelector('.tp-hour');
+
+        if (!fechaInicio.value || !fechaFin.value) {
+            if (horaEntregaUI) limpiarError(horaEntregaUI);
+            if (horaEntregaSelect) limpiarError(horaEntregaSelect);
+            return;
         }
 
-        const horaEntregaInput = document.getElementById("hora_entrega_ui");
-        const horaEntregaHidden = document.getElementById("hora_entrega");
+        const normalizar = (f) => f.includes('/') ? f.split('/').reverse().join('-') : f;
+        const mismaFecha = normalizar(fechaInicio.value) === normalizar(fechaFin.value);
 
-        if (horaEntregaInput && !horaEntregaInput.dataset.tpReady) {
-            horaEntregaInput.dataset.tpReady = "1";
-            horaEntregaInput.setAttribute("readonly", "readonly");
-            createTimeSelectsBelow(horaEntregaInput, horaEntregaHidden, "Hora");
+        if (!mismaFecha) {
+            if (horaEntregaUI && horaEntregaSelect && horaEntregaSelect.value) {
+                limpiarError(horaEntregaUI);
+                mostrarExito(horaEntregaUI);
+                limpiarError(horaEntregaSelect);
+                horaEntregaSelect.classList.add('field-success');
+            }
+            return;
         }
-    }
 
-    function initTimeValidation() {
-        const timeSelectors = document.querySelectorAll('.tp-hour');
+        const horaRetiro = document.querySelector('#hora_retiro_ui')?.closest('.dt-field-admin')?.querySelector('.tp-hour')?.value;
+        const horaEntrega = horaEntregaSelect?.value;
 
-        timeSelectors.forEach(select => {
-            if (select._validationListener) {
-                select.removeEventListener('change', select._validationListener);
-            }
-
-            const handler = function() {
-                const inputHoraUI = this.closest('.dt-field-admin, .time-field-admin')?.querySelector('.input-buscador-admin');
-
-                if (this.value && this.value !== "") {
-                    if (inputHoraUI) mostrarExito(inputHoraUI);
-                    mostrarExito(this);
-                } else {
-                    if (inputHoraUI) limpiarError(inputHoraUI);
-                    limpiarError(this);
+        if (horaRetiro && horaEntrega) {
+            if (parseInt(horaEntrega) <= parseInt(horaRetiro)) {
+                if (horaEntregaUI) {
+                    mostrarError(horaEntregaUI, 'La hora de devolución debe ser mayor');
                 }
-            };
-
-            select._validationListener = handler;
-            select.addEventListener('change', handler);
-        });
-    }
-
-    function initDateValidation() {
-        const dateInputs = ['#fecha_inicio_ui', '#fecha_fin_ui'];
-
-        dateInputs.forEach(selector => {
-            const input = document.querySelector(selector);
-            if (!input) return;
-
-            if (input._validationListener) {
-                input.removeEventListener('change', input._validationListener);
-            }
-
-            const handler = function() {
-                if (this.value && this.value.trim() !== "") {
-                    mostrarExito(this);
-                } else {
-                    limpiarError(this);
+                if (horaEntregaSelect) {
+                    horaEntregaSelect.classList.add('field-error');
                 }
-            };
-
-            input._validationListener = handler;
-            input.addEventListener('change', handler);
-
-            if (input._flatpickr) {
-                input._flatpickr.config.onChange.push(() => {
-                    handler.call(input);
-                });
+            } else {
+                if (horaEntregaUI) {
+                    limpiarError(horaEntregaUI);
+                    mostrarExito(horaEntregaUI);
+                }
+                if (horaEntregaSelect) {
+                    limpiarError(horaEntregaSelect);
+                    horaEntregaSelect.classList.add('field-success');
+                }
             }
-        });
+        }
+    };
+
+    fechaInicio.addEventListener('change', validar);
+    fechaFin.addEventListener('change', validar);
+
+    const horaRetiroSelect = document.querySelector('#hora_retiro_ui')?.closest('.dt-field-admin')?.querySelector('.tp-hour');
+    const horaEntregaSelect = document.querySelector('#hora_entrega_ui')?.closest('.dt-field-admin')?.querySelector('.tp-hour');
+
+    if (horaRetiroSelect) {
+        horaRetiroSelect.addEventListener('change', validar);
     }
+    if (horaEntregaSelect) {
+        horaEntregaSelect.addEventListener('change', validar);
+    }
+
+    setTimeout(validar, 100);
+}
 
     /* =========================================
     24. SUBMIT POR AJAX
@@ -3875,7 +4056,7 @@ function init() {
                 const nombre = raw.nombre ?? "Protección";
                 const desc = raw.descripcion ?? "";
                 const precio = Number(raw.precio_por_dia ?? raw.precio_dia ?? raw.precio ?? 0);
-                const charge = raw.tipo_cobro ?? raw.charge ?? "por_evento";
+                const charge = "por_dia"; // 🔧 el paquete usa precio_por_dia → siempre por día
                 return { id, nombre, desc, precio, charge };
             }).sort((a, b) => Number(b.precio || 0) - Number(a.precio || 0));
 
@@ -4181,7 +4362,7 @@ function init() {
         ["#hora_retiro_ui", "#hora_entrega_ui"].forEach((id) => {
             qs(id)?.addEventListener("change", () => {
                 syncTimeHiddenFromUI(id, id.replace("_ui", ""));
-                refreshSummary();
+                syncDays();
             });
         });
 
@@ -4209,6 +4390,11 @@ function init() {
 
         const catPop = qs("#catPop");
         qs("#btnCategorias")?.addEventListener("click", () => {
+            repaintCategoriaModalEstimados();
+            openPop(catPop);
+        });
+
+        qs("#btnEditarCategoriaPreview")?.addEventListener("click", () => {
             repaintCategoriaModalEstimados();
             openPop(catPop);
         });
@@ -4323,6 +4509,18 @@ function init() {
             $(sucursalEntrega).off('change change.select2', forceDropoffSync);
             $(sucursalEntrega).on('change change.select2', forceDropoffSync);
         }
+
+        document.getElementById("rv2OptionsList")?.addEventListener("click", (e) => {
+            const btnEditar = e.target.closest(".btn-edit-mini") || e.target.closest(".btn-editar-cantidad");
+            if (!btnEditar) return;
+
+            closePop(resPop);
+
+            if (protPop) {
+                openPop(protPop);
+                setProteTab("tab-individuales");
+            }
+        });
     }
 
     /* =========================================
@@ -4363,6 +4561,7 @@ function init() {
 
         initFlatpickrModalCalendar();
         initTimeSelectors();
+        filtrarHorasPasadas();
 
         initPhoneCombo();
         syncTelefonoFinal();
@@ -4541,77 +4740,100 @@ function init() {
     /* =========================================
     33. EDITAR TARIFA DESDE LA VISTA PREVIA DE CATEGORÍA
     ========================================= */
-    function initEditarCategoriaPreview() {
-        const btnEditar = document.getElementById('btnEditarCategoriaPreview');
-        const container = document.getElementById('catMiniRate');
+  function initEditarCategoriaPreview() {
+    const btnEditar = document.getElementById('btnEditarCategoriaPreview');
+    const container = document.getElementById('catMiniRate');
 
-        if (!btnEditar || !container) return;
+    if (!btnEditar || !container) return;
 
-        const newBtn = btnEditar.cloneNode(true);
-        btnEditar.parentNode.replaceChild(newBtn, btnEditar);
+    const newBtn = btnEditar.cloneNode(true);
+    btnEditar.parentNode.replaceChild(newBtn, btnEditar);
 
-        newBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+    newBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
 
-            if (!window._reservaAPI || !window._reservaAPI.getState().categoria) {
-                mostrarToast('Primero debes seleccionar una categoría', 'warning');
-                return;
+        if (!state.categoria) {
+            mostrarToast('Primero debes seleccionar una categoría', 'warning');
+            return;
+        }
+
+        if (container.querySelector('input')) return;
+
+        const precioActual = state.base_editable !== null
+            ? state.base_editable / (state.days || 1)
+            : parseFloat(state.categoria.precio_dia || 0);
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.value = precioActual.toFixed(2);
+        input.min = 0;
+        input.step = 0.01;
+
+        Object.assign(input.style, {
+            width: '100px',
+            padding: '4px 8px',
+            border: '1px solid #2563eb',
+            borderRadius: '8px',
+            fontWeight: '600',
+            fontSize: '14px',
+            color: '#333',
+            outline: 'none'
+        });
+
+        container.textContent = '';
+        container.appendChild(input);
+        input.focus();
+        input.select();
+
+        const guardar = () => {
+            let nuevoValor = parseFloat(input.value);
+            if (isNaN(nuevoValor) || nuevoValor < 0) nuevoValor = precioActual;
+
+            const days = state.days || 1;
+            const nuevoTotal = nuevoValor * days;
+
+            state.base_editable = nuevoTotal;
+            state.categoria.precio_dia = nuevoValor;
+
+            // Actualizar el precio por día en la vista previa
+            container.textContent = `${money(nuevoValor).replace(" MXN", "")} MXN / día`;
+
+            // ACTUALIZAR TAMBIÉN EL CÁLCULO TOTAL (catMiniCalc)
+            const calcElement = document.getElementById('catMiniCalc');
+            if (calcElement) {
+                const nuevoCalculo = nuevoValor * days;
+                calcElement.textContent = money(nuevoCalculo);
             }
 
-            const apiState = window._reservaAPI.getState();
-            if (!apiState.categoria) return;
+            // Actualizar el subtítulo de la categoría si existe
+            const sub = document.getElementById('catSelSub');
+            if (sub) sub.textContent = `${money(nuevoValor)} / día · ${days} día(s)`;
 
-            if (container.querySelector('input')) return;
+            // Forzar actualización de totales y resumen
+            syncTotalsHidden();
+            refreshSummary();
 
-            const precioActual = parseFloat(apiState.categoria.precio_dia || 0);
+            mostrarToast(`✅ Tarifa actualizada a ${money(nuevoValor)}/día`, 'success');
+        };
 
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.value = precioActual.toFixed(2);
-            input.min = 0;
-            input.step = 0.01;
-
-            Object.assign(input.style, {
-                width: '100px',
-                padding: '4px 8px',
-                border: '1px solid #2563eb',
-                borderRadius: '8px',
-                fontWeight: '600',
-                fontSize: '14px',
-                color: '#333',
-                outline: 'none'
-            });
-
-            container.textContent = '';
-            container.appendChild(input);
-            input.focus();
-            input.select();
-
-            const guardar = () => {
-                let nuevoValor = parseFloat(input.value);
-                if (isNaN(nuevoValor) || nuevoValor < 0) nuevoValor = precioActual;
-
-                apiState.categoria.precio_dia = nuevoValor;
-                container.textContent = `${money(nuevoValor).replace(" MXN", "")} MXN / día`;
-
-                const sub = document.getElementById('catSelSub');
-                if (sub) sub.textContent = `${money(nuevoValor)} / día · ${apiState.days || 0} día(s)`;
-
-                if (window._reservaAPI) {
-                    window._reservaAPI.syncTotalsHidden();
-                    window._reservaAPI.refreshSummary();
+        input.addEventListener('blur', guardar);
+        input.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') {
+                ev.preventDefault();
+                guardar();
+            }
+            if (ev.key === 'Escape') {
+                ev.preventDefault();
+                container.textContent = `${money(precioActual).replace(" MXN", "")} MXN / día`;
+                const calcElement = document.getElementById('catMiniCalc');
+                if (calcElement) {
+                    const calculoOriginal = precioActual * (state.days || 1);
+                    calcElement.textContent = money(calculoOriginal);
                 }
-            };
-
-            input.addEventListener('blur', guardar);
-            input.addEventListener('keydown', (ev) => {
-                if (ev.key === 'Enter') {
-                    ev.preventDefault();
-                    input.blur();
-                }
-            });
+            }
         });
-    }
+    });
+}
 
     document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
@@ -5424,7 +5646,7 @@ function init() {
         }
     })();
 
- /* =========================================
+        /* =========================================
             41. SINCRONIZACIÓN BIDIRECCIONAL (Formulario ↔ DropOff)
         ========================================= */
 (function() {
@@ -5693,7 +5915,6 @@ function init() {
             refreshSummary();
         },
         getState: () => state,
-        loadAddons: loadAddons
     };
 
     /* =========================================

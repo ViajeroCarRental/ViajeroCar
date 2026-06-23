@@ -43,6 +43,7 @@ use App\Http\Controllers\AdicionalesController;
 use App\Http\Controllers\DepositoController;
 use App\Http\Controllers\OficinaController;
 use App\Http\Controllers\FlotillaStatusController;
+use App\Http\Controllers\RespaldoReservacionesController;
 
 //rutas vistas Usuario
 
@@ -182,7 +183,16 @@ Route::get('/admin/reservaciones/seguros', [ReservacionesAdminController::class,
 Route::get('/admin/reservaciones/servicios', [ReservacionesAdminController::class, 'getServicios'])->name('rutaServiciosReservaciones');
 // Guardar reservación
 Route::post('/reservaciones/guardar', [ReservacionesAdminController::class, 'guardarReservacion'])->name('reservaciones.guardar');
+// ===============================
+// 📦 RESPALDO DE RESERVACIONES (Export / Import Excel)
+// ===============================
+Route::get('/admin/reservaciones-respaldo/exportar',
+    [RespaldoReservacionesController::class, 'exportar'])
+    ->name('rutaExportarReservacionesRespaldo');
 
+Route::post('/admin/reservaciones-respaldo/importar',
+    [RespaldoReservacionesController::class, 'importar'])
+    ->name('rutaImportarReservacionesRespaldo');
 // =========================
 // 🌍 RUTAS COTIZACIONES ADMIN
 // =========================
