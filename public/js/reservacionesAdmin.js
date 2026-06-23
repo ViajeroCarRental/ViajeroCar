@@ -4056,7 +4056,7 @@ function initValidacionHorasTiempoReal() {
                 const nombre = raw.nombre ?? "Protección";
                 const desc = raw.descripcion ?? "";
                 const precio = Number(raw.precio_por_dia ?? raw.precio_dia ?? raw.precio ?? 0);
-                const charge = raw.tipo_cobro ?? raw.charge ?? "por_evento";
+                const charge = "por_dia"; // 🔧 el paquete usa precio_por_dia → siempre por día
                 return { id, nombre, desc, precio, charge };
             }).sort((a, b) => Number(b.precio || 0) - Number(a.precio || 0));
 

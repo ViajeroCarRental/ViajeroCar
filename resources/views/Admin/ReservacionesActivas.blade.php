@@ -3,6 +3,10 @@
 
 @section('css-vistaReservacionesActivas')
   <link rel="stylesheet" href="{{ asset('css/reservacionesActivas.css') }}">
+
+  {{-- 🔔 Alertify (CSS) --}}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css">
 @endsection
 
 @section('contenidoReservacionesActivas')
@@ -88,15 +92,40 @@
 
     <span class="badge gray">Total <b id="count">{{ $reservaciones->total() }}</b></span>
 
-    <div class="toolbar-actions">
+  </form>
 
-  <button
-      type="button"
+  {{-- ⚙️ ACCIONES (fuera del form de filtros para que Exportar funcione) --}}
+  <div class="toolbar-actions">
+
+    {{-- ⬇️ Exportar respaldo COMPLETO (5 tablas) --}}
+    <a
+      href="{{ route('rutaExportarReservacionesRespaldo') }}"
       class="btn primary"
       id="btnExportExcel"
     >
       ⬇️ Exportar Excel
+    </a>
+
+    {{-- ⬆️ Importar respaldo --}}
+    <button
+      type="button"
+      class="btn primary"
+      id="btnImportExcel"
+    >
+      ⬆️ Importar Excel
     </button>
+
+    {{-- Form oculto que envía el archivo --}}
+    <form
+      id="formImportExcel"
+      action="{{ route('rutaImportarReservacionesRespaldo') }}"
+      method="POST"
+      enctype="multipart/form-data"
+      style="display:none;"
+    >
+      @csrf
+      <input type="file" id="inputImportExcel" name="archivo" accept=".xlsx,.xls" style="display:none;">
+    </form>
 
     <button
       type="button"
@@ -108,8 +137,6 @@
     </button>
 
   </div>
-
-  </form>
 
   {{-- ======================= 📋 TABLA ACTUAL ======================= --}}
   <section id="tablaActivas" class="table {{ $esAeropuerto ? 'is-airport' : '' }}" data-cols="{{ $cols }}">
@@ -186,37 +213,35 @@
 
           <div>{{ $r->codigo }}</div>
 
-
           <div>
-                    @if(!empty($r->oficina_compacta))
+            @if(!empty($r->oficina_compacta))
 
-                        @if($r->oficina_compacta === 'AIQ')
-                            <span class="oficina-icon">
-                                <i class="fa-solid fa-plane"></i>
-                                {{ $r->oficina_compacta }}
-                            </span>
+              @if($r->oficina_compacta === 'AIQ')
+                <span class="oficina-icon">
+                  <i class="fa-solid fa-plane"></i>
+                  {{ $r->oficina_compacta }}
+                </span>
 
-                        @elseif($r->oficina_compacta === 'TAQ')
-                            <span class="oficina-icon">
-                                <i class="fa-solid fa-bus" style="color:black;"></i>
-                                {{ $r->oficina_compacta }}
-                            </span>
+              @elseif($r->oficina_compacta === 'TAQ')
+                <span class="oficina-icon">
+                  <i class="fa-solid fa-bus" style="color:black;"></i>
+                  {{ $r->oficina_compacta }}
+                </span>
 
-                        @elseif($r->oficina_compacta === 'OCP')
-                            <span class="oficina-icon">
-                                <i class="fa-solid fa-building"></i>
-                                {{ $r->oficina_compacta }}
-                            </span>
+              @elseif($r->oficina_compacta === 'OCP')
+                <span class="oficina-icon">
+                  <i class="fa-solid fa-building"></i>
+                  {{ $r->oficina_compacta }}
+                </span>
 
-                        @else
-                            —
-                        @endif
+              @else
+                —
+              @endif
 
-                    @else
-                        —
-                    @endif
-        </div>
-
+            @else
+              —
+            @endif
+          </div>
 
           <div>{{ $fmtFecha($r->fecha_inicio) }}</div>
           <div>{{ $horaIn }}</div>
@@ -347,8 +372,8 @@
               </div>
 
             </div>
-            </div>
-            </div>
+          </div>
+        </div>
 
       @empty
         <div class="row">
@@ -698,73 +723,60 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 
+  {{-- 🔔 Alertify (JS) — debe cargarse ANTES de reservacionesActivas.js porque ese archivo usa alertify.* --}}
+  <script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+
   <script src="{{ asset('js/reservacionesActivas.js') }}"></script>
 
-  {{-- ✅ Exportar Excel SOLO para tabla principal --}}
+  {{-- ✅ Importar respaldo con confirmación (Alertify) --}}
   <script>
     window.addEventListener("DOMContentLoaded", () => {
-      const btn = document.getElementById('btnExportExcel');
-      if (!btn) return;
+      const btnImport   = document.getElementById('btnImportExcel');
+      const inputImport = document.getElementById('inputImportExcel');
+      const formImport  = document.getElementById('formImportExcel');
 
-      const csvCell = (v) => {
-        const s = (v ?? '').toString().replace(/\s+/g, ' ').trim();
-        const escaped = s.replace(/"/g, '""');
-        return /[",\n]/.test(escaped) ? `"${escaped}"` : escaped;
-      };
+      if (!btnImport || !inputImport || !formImport) return;
 
-      const downloadCSV = (filename, csvContent) => {
-        const bom = "\uFEFF";
-        const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
+      // Posición de las notificaciones tipo toast
+      if (window.alertify) {
+        alertify.set('notifier', 'position', 'top-right');
+      }
 
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-
-        URL.revokeObjectURL(url);
-      };
-
-      btn.addEventListener('click', () => {
-        const thead = document.querySelector('#tablaActivas .thead');
-        const rows  = Array.from(document.querySelectorAll('#tablaActivas .tbody > .row'));
-
-        if (!thead) {
-          alert('No encontré el encabezado de la tabla.');
-          return;
-        }
-
-        const dataRows = rows.filter(r => r.children.length > 2);
-
-        if (dataRows.length === 0) {
-          alert('No hay bookings para exportar.');
-          return;
-        }
-
-        const headers = Array.from(thead.children)
-          .slice(1)
-          .map(h => h.innerText.trim());
-
-        const SEP = ';';
-        let csv = headers.map(csvCell).join(SEP) + '\n';
-
-        dataRows.forEach(row => {
-          const dataCells = Array.from(row.children)
-            .slice(1)
-            .map(cell => cell.innerText);
-
-          csv += dataCells.map(csvCell).join(SEP) + '\n';
-        });
-
-        const now = new Date();
-        const y = now.getFullYear();
-        const m = String(now.getMonth()+1).padStart(2,'0');
-        const d = String(now.getDate()).padStart(2,'0');
-
-        downloadCSV(`bookings_${y}-${m}-${d}.csv`, csv);
+      // Al hacer clic en "Importar", abre el selector de archivo
+      btnImport.addEventListener('click', () => {
+        inputImport.click();
       });
+
+      // Cuando se selecciona un archivo, pide confirmación (Alertify) y envía
+      inputImport.addEventListener('change', () => {
+        if (!inputImport.files.length) return;
+
+        const nombre = inputImport.files[0].name;
+
+        alertify.confirm(
+          'Importar respaldo',
+          `¿Seguro que deseas IMPORTAR el archivo "${nombre}"?<br><br>` +
+          `Esto restaurará o actualizará las reservaciones comparando por ID. ` +
+          `Las que ya existan se sobrescribirán con los datos del archivo.`,
+          function () {
+            // ✅ Aceptar
+            formImport.submit();
+          },
+          function () {
+            // ❌ Cancelar: limpiar selección
+            inputImport.value = "";
+            alertify.warning('Importación cancelada');
+          }
+        ).set('labels', { ok: 'Sí, importar', cancel: 'Cancelar' });
+      });
+
+      // Mostrar mensajes flash del servidor (resultado de la importación)
+      @if(session('success'))
+        alertify.success(@json(session('success')));
+      @endif
+      @if(session('error'))
+        alertify.error(@json(session('error')));
+      @endif
     });
   </script>
 

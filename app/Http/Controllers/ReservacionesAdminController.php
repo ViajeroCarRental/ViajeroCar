@@ -378,12 +378,13 @@ class ReservacionesAdminController extends Controller
 
                 if (is_array($extras)) {
                     foreach ($extras as $extra) {
-                        if (!is_array($extra) || !isset($extra['precio'])) {
+                        // 🔧 NOMBRE CORREGIDO: el JS manda 'precio_unitario', no 'precio'
+                        if (!is_array($extra) || !isset($extra['precio_unitario'])) {
                             continue;
                         }
 
-                        $precio   = (float) ($extra['precio'] ?? 0);   // precio por día
-                        $cantidad = (int)   ($extra['cantidad'] ?? 1); // cantidad seleccionada
+                        $precio   = (float) ($extra['precio_unitario'] ?? 0); // precio por día
+                        $cantidad = (int)   ($extra['cantidad'] ?? 1);        // cantidad seleccionada
 
                         // opciones por día
                         $extrasServiciosTotal += $precio * $cantidad * $dias;
@@ -401,8 +402,29 @@ class ReservacionesAdminController extends Controller
                 }
             }
 
+            // ===============================
+            // ✅ Seguros individuales (por día) desde el request
+            //    El JS manda 'id' y 'precio' en individualesSeleccionados
+            // ===============================
+            $individualesTotal = 0.0;
+
+            if ($request->filled('individualesSeleccionados')) {
+                $individuales = $request->input('individualesSeleccionados');
+
+                if (is_array($individuales)) {
+                    foreach ($individuales as $ind) {
+                        if (!is_array($ind) || !isset($ind['precio'])) {
+                            continue;
+                        }
+
+                        $precioInd = (float) ($ind['precio'] ?? 0); // precio por día
+                        $individualesTotal += $precioInd * $dias;
+                    }
+                }
+            }
+
             // ✅ Total de OPCIONES por toda la renta
-            $opcionesRentaTotal = round($seguroTotal + $extrasServiciosTotal, 2);
+            $opcionesRentaTotal = round($seguroTotal + $extrasServiciosTotal + $individualesTotal, 2);
 
             // Delivery
             $deliveryActivo = $request->input('delivery_activo', 0) == 1 ? 1 : 0;
@@ -541,17 +563,43 @@ class ReservacionesAdminController extends Controller
 
                 if (is_array($extras)) {
                     foreach ($extras as $extra) {
-                        if (!is_array($extra) || !isset($extra['id'])) {
+                        // 🔧 NOMBRE CORREGIDO: el JS manda 'id_servicio', no 'id'
+                        if (!is_array($extra) || !isset($extra['id_servicio'])) {
                             continue;
                         }
 
                         DB::table('reservacion_servicio')->insert([
                             'id_reservacion'  => $id,
-                            'id_servicio'     => $extra['id'],
+                            'id_servicio'     => $extra['id_servicio'],
                             'cantidad'        => $extra['cantidad'] ?? 1,
-                            'precio_unitario' => $extra['precio'] ?? 0,
+                            'precio_unitario' => $extra['precio_unitario'] ?? 0,
                             'created_at'      => now(),
                             'updated_at'      => now(),
+                        ]);
+                    }
+                }
+            }
+
+            /* ==========================================================
+                4.3️⃣ Guardar seguros individuales (reservacion_seguro_individual)
+                El JS manda 'id' y 'precio' en individualesSeleccionados
+            ========================================================== */
+            if ($request->filled('individualesSeleccionados')) {
+                $individuales = $request->input('individualesSeleccionados');
+
+                if (is_array($individuales)) {
+                    foreach ($individuales as $ind) {
+                        if (!is_array($ind) || !isset($ind['id'])) {
+                            continue;
+                        }
+
+                        DB::table('reservacion_seguro_individual')->insert([
+                            'id_reservacion' => $id,
+                            'id_individual'  => $ind['id'],
+                            'precio_por_dia' => $ind['precio'] ?? 0,
+                            'cantidad'       => $ind['cantidad'] ?? 1,
+                            'created_at'     => now(),
+                            'updated_at'     => now(),
                         ]);
                     }
                 }
@@ -917,11 +965,12 @@ public function update(Request $request, $id)
 
         foreach ($request->input('adicionalesSeleccionados') as $extra) {
 
-            if (!is_array($extra) || !isset($extra['precio'])) {
+            // 🔧 NOMBRE CORREGIDO: el JS manda 'precio_unitario', no 'precio'
+            if (!is_array($extra) || !isset($extra['precio_unitario'])) {
                 continue;
             }
 
-            $precio   = (float) $extra['precio'];
+            $precio   = (float) $extra['precio_unitario'];
             $cantidad = (int) ($extra['cantidad'] ?? 1);
 
             // 👇 igual que en CREATE
@@ -936,6 +985,24 @@ public function update(Request $request, $id)
 
     if ($request->filled('seguroSeleccionado.precio')) {
         $seguroTotal = (float)$request->input('seguroSeleccionado.precio') * $dias;
+    }
+
+    // ===============================
+    // 🔥 SEGUROS INDIVIDUALES
+    //    El JS manda 'id' y 'precio' en individualesSeleccionados
+    // ===============================
+    $individualesTotal = 0;
+
+    if ($request->filled('individualesSeleccionados')) {
+
+        foreach ($request->input('individualesSeleccionados') as $ind) {
+
+            if (!is_array($ind) || !isset($ind['precio'])) {
+                continue;
+            }
+
+            $individualesTotal += (float) $ind['precio'] * $dias;
+        }
     }
 
     // ===============================
@@ -968,7 +1035,7 @@ public function update(Request $request, $id)
     // ===============================
     // 🔥 OPCIONES DE RENTA
     // ===============================
-    $opcionesRentaTotal = $seguroTotal + $extrasServiciosTotal;
+    $opcionesRentaTotal = $seguroTotal + $extrasServiciosTotal + $individualesTotal;
 
     // ===============================
     // 🔥 TOTAL FINAL
@@ -1062,15 +1129,16 @@ $tarifaBaseGuardar = (float) $categoria->precio_dia;
 
         foreach ($request->input('adicionalesSeleccionados') as $extra) {
 
-            if (!is_array($extra) || !isset($extra['id'])) {
+            // 🔧 NOMBRE CORREGIDO: el JS manda 'id_servicio' y 'precio_unitario'
+            if (!is_array($extra) || !isset($extra['id_servicio'])) {
                 continue;
             }
 
             DB::table('reservacion_servicio')->insert([
                 'id_reservacion'  => $id,
-                'id_servicio'     => $extra['id'],
+                'id_servicio'     => $extra['id_servicio'],
                 'cantidad'        => $extra['cantidad'] ?? 1,
-                'precio_unitario' => $extra['precio'] ?? 0,
+                'precio_unitario' => $extra['precio_unitario'] ?? 0,
                 'created_at'      => now(),
                 'updated_at'      => now(),
             ]);
@@ -1092,6 +1160,33 @@ $tarifaBaseGuardar = (float) $categoria->precio_dia;
             'created_at'     => now(),
             'updated_at'     => now(),
         ]);
+    }
+
+    // =========================
+    // 🔥 SEGUROS INDIVIDUALES (RESET)
+    //    El JS manda 'id' y 'precio' en individualesSeleccionados
+    // =========================
+    DB::table('reservacion_seguro_individual')
+        ->where('id_reservacion', $id)
+        ->delete();
+
+    if ($request->filled('individualesSeleccionados')) {
+
+        foreach ($request->input('individualesSeleccionados') as $ind) {
+
+            if (!is_array($ind) || !isset($ind['id'])) {
+                continue;
+            }
+
+            DB::table('reservacion_seguro_individual')->insert([
+                'id_reservacion' => $id,
+                'id_individual'  => $ind['id'],
+                'precio_por_dia' => $ind['precio'] ?? 0,
+                'cantidad'       => $ind['cantidad'] ?? 1,
+                'created_at'     => now(),
+                'updated_at'     => now(),
+            ]);
+        }
     }
 
     return redirect()->route('rutaReservacionesActivas')
