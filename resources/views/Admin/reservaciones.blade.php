@@ -535,10 +535,10 @@
       <div class="cliente-datos-card">
 
         <div class="cliente-field required">
-  <label for="nombre_completo_cliente">Nombre completo</label>
-  <input id="nombre_completo_cliente" name="nombre_completo_cliente" class="input cliente-input" type="text" required
+  <label for="nombre_cliente">Nombre completo</label>
+  <input id="nombre_cliente" name="nombre_cliente" class="input cliente-input" type="text" required
     value="{{ trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')) }}">
-  <div class="validation-message error" id="nombre_completo_error">El nombre completo es obligatorio</div>
+  <div class="validation-message error" id="nombre_cliente_error">El nombre completo es obligatorio</div>
 </div>
 
         <div class="cliente-field required">

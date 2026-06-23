@@ -181,7 +181,7 @@
     }
 
     function validarNombreCompleto() {
-        const nombreCompletoInput = document.getElementById("nombre_completo_cliente");
+        const nombreCompletoInput = document.getElementById("nombre_cliente");
         if (!nombreCompletoInput) return true;
 
         const valor = nombreCompletoInput.value.trim();
@@ -712,7 +712,7 @@ function configurarBotonPrincipal() {
 
     function observarClienteCompleto() {
         setInterval(() => {
-            const nombreCompleto = document.getElementById('nombre_completo_cliente')?.value?.trim();
+            const nombreCompleto = document.getElementById('nombre_cliente')?.value?.trim();
             const email = document.getElementById('email_cliente')?.value?.trim();
             const telefono = document.getElementById('telefono_ui')?.value?.trim();
             const clienteCompleto = nombreCompleto && nombreCompleto.includes(' ') && email && telefono;

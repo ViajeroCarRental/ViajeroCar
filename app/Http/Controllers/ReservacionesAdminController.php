@@ -715,128 +715,9 @@ class ReservacionesAdminController extends Controller
                 ->where('codigo', $folio)
                 ->exists();
 
-    // 🟡 UBICACIONES
-    $ubicaciones = DB::table('ubicaciones_servicio')
-        ->where('activo', 1)
-        ->orderBy('estado')
-        ->orderBy('destino')
-        ->get();
-
-    // 🔵 SERVICIOS (ADICIONALES + GASOLINA + DROPOFF)
-    $serviciosReserva = DB::table('reservacion_servicio as rs')
-        ->join('servicios as s', 's.id_servicio', '=', 'rs.id_servicio')
-        ->where('rs.id_reservacion', $id)
-        ->select(
-            's.id_servicio',
-            's.nombre',
-            'rs.cantidad',
-            'rs.precio_unitario'
-        )
-        ->get();
-
-    // 🟣 SEGURO (PROTECCIÓN)
-    $seguroReserva = DB::table('reservacion_paquete_seguro as rps')
-        ->join('seguro_paquete as sp', 'sp.id_paquete', '=', 'rps.id_paquete')
-        ->where('rps.id_reservacion', $id)
-        ->select(
-            'sp.id_paquete',
-            'sp.nombre',
-            'sp.descripcion',
-            'rps.precio_por_dia'
-        )
-        ->first();
-
-    // 🔴 DELIVERY (si tienes datos guardados)
-    $delivery = (object)[
-        'activo' => $reservacion->delivery_activo ?? 0,
-        'total' => $reservacion->delivery_total ?? 0,
-        'kms' => $reservacion->delivery_km ?? 0,
-        'direccion' => $reservacion->delivery_direccion ?? '',
-        'id_ubicacion' => $reservacion->delivery_ubicacion ?? null,
-    ];
-
-    $costoKmCategoria = 0;
-
-    return view('Admin.reservaciones', [
-        'reservacion' => $reservacion,
-        'sucursales' => $sucursales,
-        'categorias' => $categorias,
-        'ubicaciones' => $ubicaciones,
-        'delivery' => $delivery,
-        'costoKmCategoria' => $costoKmCategoria,
-        'serviciosReserva' => $serviciosReserva,
-        'seguroReserva' => $seguroReserva,
-    ]);
-}
-
-public function update(Request $request, $id)
-{
-    // 🔹 Reservación actual
-    $reservacion = DB::table('reservaciones')
-        ->where('id_reservacion', $id)
-        ->first();
-
-    if (!$reservacion) {
-        abort(404, 'Reservación no encontrada');
-    }
-
-    // 🔹 Sucursales → ciudades
-    $sucursalRetiro = DB::table('sucursales')
-        ->where('id_sucursal', $request->sucursal_retiro)
-        ->first();
-
-    $sucursalEntrega = DB::table('sucursales')
-        ->where('id_sucursal', $request->sucursal_entrega)
-        ->first();
-
-    $ciudadRetiroId  = $sucursalRetiro->id_ciudad ?? null;
-    $ciudadEntregaId = $sucursalEntrega->id_ciudad ?? null;
-
-    // 🔹 Categoría
-    $categoria = DB::table('categorias_carros')
-        ->where('id_categoria', $request->id_categoria)
-        ->first();
-
-    // 🔹 Días base por diferencia de fechas
-    $diasBase = \Carbon\Carbon::parse($request->fecha_inicio)
-        ->diffInDays(\Carbon\Carbon::parse($request->fecha_fin));
-
-    // Cortesía de 1 hora: si la hora de devolución pasa de
-    // la hora de pick-up + 1h, se cobra un día extra.
-    $horaRetiroNum  = (int) explode(':', (string) $request->hora_retiro)[0];
-    $horaEntregaNum = (int) explode(':', (string) $request->hora_entrega)[0];
-
-    if ($horaEntregaNum > $horaRetiroNum + 1) {
-        $diasBase += 1;
-    }
-
-    $dias = max(1, $diasBase);
-
-    // ===============================
-    // 🔥 BASE
-    // ===============================
-    $precioDia = (float) $categoria->precio_dia;
-    $tarifaBaseTotal = $precioDia * $dias;
-
-    // ===============================
-    // 🔥 EXTRAS (ADICIONALES)
-    // ===============================
-    $extrasServiciosTotal = 0;
-
-    if ($request->filled('adicionalesSeleccionados')) {
-
-        foreach ($request->input('adicionalesSeleccionados') as $extra) {
-
-            // 🔧 NOMBRE CORREGIDO: el JS manda 'precio_unitario', no 'precio'
-            if (!is_array($extra) || !isset($extra['precio_unitario'])) {
-                continue;
+            if (!$existe) {
+                return $folio;
             }
-
-            $precio   = (float) $extra['precio_unitario'];
-            $cantidad = (int) ($extra['cantidad'] ?? 1);
-
-            // 👇 igual que en CREATE
-            $extrasServiciosTotal += $precio * $cantidad * $dias;
         }
 
         throw new \RuntimeException('No se pudo generar un folio único para la reservación.');
@@ -966,30 +847,15 @@ public function update(Request $request, $id)
         ]);
     }
 
-    // ===============================
-    // 🔥 SEGUROS INDIVIDUALES
-    //    El JS manda 'id' y 'precio' en individualesSeleccionados
-    // ===============================
-    $individualesTotal = 0;
-
-    if ($request->filled('individualesSeleccionados')) {
-
-        foreach ($request->input('individualesSeleccionados') as $ind) {
-
-            if (!is_array($ind) || !isset($ind['precio'])) {
-                continue;
-            }
-
-            $individualesTotal += (float) $ind['precio'] * $dias;
-        }
-    }
-
-    // ===============================
-    // 🔥 DELIVERY
-    // ===============================
-    $deliveryTotal = $request->delivery_activo == 1
-        ? (float)$request->delivery_total
-        : 0;
+    /**
+     * 🔄 Actualizar reservación
+     */
+    public function update(Request $request, $id)
+    {
+        // 🔹 Reservación actual
+        $reservacion = DB::table('reservaciones')
+            ->where('id_reservacion', $id)
+            ->first();
 
         if (!$reservacion) {
             abort(404, 'Reservación no encontrada');
@@ -1012,117 +878,57 @@ public function update(Request $request, $id)
             ->where('id_categoria', $request->id_categoria)
             ->first();
 
-        // 🔹 Días
-        $dias = max(
-            1,
-            \Carbon\Carbon::parse($request->fecha_inicio)
-                ->diffInDays(\Carbon\Carbon::parse($request->fecha_fin))
-        );
+        // 🔹 Días base por diferencia de fechas
+        $diasBase = \Carbon\Carbon::parse($request->fecha_inicio)
+            ->diffInDays(\Carbon\Carbon::parse($request->fecha_fin));
 
-    // ===============================
-    // 🔥 OPCIONES DE RENTA
-    // ===============================
-    $opcionesRentaTotal = $seguroTotal + $extrasServiciosTotal + $individualesTotal;
+        // Cortesía de 1 hora
+        $horaRetiroNum  = (int) explode(':', (string) $request->hora_retiro)[0];
+        $horaEntregaNum = (int) explode(':', (string) $request->hora_entrega)[0];
 
+        if ($horaEntregaNum > $horaRetiroNum + 1) {
+            $diasBase += 1;
+        }
+
+        $dias = max(1, $diasBase);
+
+        // ===============================
+        // 🔥 BASE
+        // ===============================
+        $precioDia = (float) $categoria->precio_dia;
+        $tarifaBaseTotal = $precioDia * $dias;
+
+        // ===============================
         // 🔥 EXTRAS (ADICIONALES)
+        // ===============================
         $extrasServiciosTotal = 0;
 
-    $iva = round($subtotal * 0.16, 2);
-    $total = $subtotal + $iva;
+        if ($request->filled('adicionalesSeleccionados')) {
+            foreach ($request->input('adicionalesSeleccionados') as $extra) {
+                // 🔧 NOMBRE CORREGIDO: el JS manda 'precio_unitario', no 'precio'
+                if (!is_array($extra) || !isset($extra['precio_unitario'])) {
+                    continue;
+                }
 
+                $precio   = (float) $extra['precio_unitario'];
+                $cantidad = (int) ($extra['cantidad'] ?? 1);
 
-    // ===============================
-    // 🔥 Actualiza Tarifa base
-    // ===============================
-$tarifaBaseGuardar = (float) $categoria->precio_dia;
-
-    // =========================
-    // 🔥 UPDATE PRINCIPAL
-    // =========================
-    DB::table('reservaciones')
-        ->where('id_reservacion', $id)
-        ->update([
-            'id_categoria'      => $request->id_categoria,
-
-            'ciudad_retiro'     => $ciudadRetiroId,
-            'ciudad_entrega'    => $ciudadEntregaId,
-            'sucursal_retiro'   => $request->sucursal_retiro,
-            'sucursal_entrega'  => $request->sucursal_entrega,
-
-            'nombre_cliente'    => $request->nombre_completo_cliente,
-            'email_cliente'           => $request->email_cliente,
-            'telefono_cliente'        => $request->telefono_cliente,
-
-            'fecha_inicio'      => $request->fecha_inicio,
-            'hora_retiro'       => $request->hora_retiro,
-            'fecha_fin'         => $request->fecha_fin,
-            'hora_entrega'      => $request->hora_entrega,
-            'tarifa_base' => $tarifaBaseGuardar,
-
-            // 🔥 delivery
-            'delivery_activo'   => $request->delivery_activo,
-            'delivery_total'    => $deliveryTotal,
-            'delivery_km'       => $request->delivery_km,
-            'delivery_direccion'=> $request->delivery_direccion,
-            'delivery_ubicacion'=> $request->delivery_ubicacion,
-
-            // 🔥 totales
-            'subtotal'          => $subtotal,
-            'impuestos'         => $iva,
-            'total'             => $total,
-
-            'updated_at'        => now(),
-        ]);
-
-    // =========================
-    // 🔥 SERVICIOS (RESET)
-    // =========================
-    DB::table('reservacion_servicio')
-        ->where('id_reservacion', $id)
-        ->delete();
-
-    // 🚩 DROPOFF
-    if ($request->dropoff_activo == 1) {
-        DB::table('reservacion_servicio')->insert([
-            'id_reservacion' => $id,
-            'id_servicio' => 11,
-            'cantidad' => 1,
-            'precio_unitario' => $request->dropoff_total,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    }
-
-    // ⛽ GASOLINA
-    if ($request->svc_gasolina == 1) {
-        DB::table('reservacion_servicio')->insert([
-            'id_reservacion' => $id,
-            'id_servicio' => 1,
-            'cantidad' => 1,
-            'precio_unitario' => 20,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    }
-
-    // ➕ ADICIONALES
-    if ($request->filled('adicionalesSeleccionados')) {
-
-        foreach ($request->input('adicionalesSeleccionados') as $extra) {
-
-            // 🔧 NOMBRE CORREGIDO: el JS manda 'id_servicio' y 'precio_unitario'
-            if (!is_array($extra) || !isset($extra['id_servicio'])) {
-                continue;
+                $extrasServiciosTotal += $precio * $cantidad * $dias;
             }
         }
 
+        // ===============================
         // 🔥 SEGURO (PAQUETE)
+        // ===============================
         $seguroTotal = 0;
         if ($request->filled('seguroSeleccionado.precio')) {
             $seguroTotal = (float)$request->input('seguroSeleccionado.precio') * $dias;
         }
 
-        // 🔥 INDIVIDUALES
+        // ===============================
+        // 🔥 SEGUROS INDIVIDUALES
+        //    El JS manda 'id' y 'precio' en individualesSeleccionados
+        // ===============================
         $individualesTotal = 0;
         if ($request->filled('individualesSeleccionados')) {
             foreach ((array) $request->input('individualesSeleccionados') as $ind) {
@@ -1132,17 +938,23 @@ $tarifaBaseGuardar = (float) $categoria->precio_dia;
             }
         }
 
+        // ===============================
         // 🔥 DELIVERY
+        // ===============================
         $deliveryTotal = $request->delivery_activo == 1
             ? (float)$request->delivery_total
             : 0;
 
+        // ===============================
         // 🔥 DROPOFF
+        // ===============================
         $dropoffTotal = $request->dropoff_activo == 1
             ? (float)$request->dropoff_total
             : 0;
 
+        // ===============================
         // 🔥 GASOLINA
+        // ===============================
         $gasolinaTotal = 0;
         if ($request->svc_gasolina == 1) {
             $litros = DB::table('vehiculos')
@@ -1151,10 +963,14 @@ $tarifaBaseGuardar = (float) $categoria->precio_dia;
             $gasolinaTotal = $litros * 20;
         }
 
+        // ===============================
         // 🔥 OPCIONES DE RENTA
+        // ===============================
         $opcionesRentaTotal = $seguroTotal + $extrasServiciosTotal + $individualesTotal;
 
+        // ===============================
         // 🔥 TOTAL FINAL
+        // ===============================
         $subtotal = $tarifaBaseTotal
             + $opcionesRentaTotal
             + $deliveryTotal
@@ -1166,7 +982,9 @@ $tarifaBaseGuardar = (float) $categoria->precio_dia;
 
         $tarifaBaseGuardar = (float) $categoria->precio_dia;
 
+        // =========================
         // 🔥 UPDATE PRINCIPAL
+        // =========================
         DB::table('reservaciones')
             ->where('id_reservacion', $id)
             ->update([
@@ -1195,7 +1013,9 @@ $tarifaBaseGuardar = (float) $categoria->precio_dia;
                 'updated_at'        => now(),
             ]);
 
+        // =========================
         // 🔥 SERVICIOS (RESET)
+        // =========================
         DB::table('reservacion_servicio')
             ->where('id_reservacion', $id)
             ->delete();
@@ -1204,9 +1024,9 @@ $tarifaBaseGuardar = (float) $categoria->precio_dia;
         if ($request->dropoff_activo == 1) {
             DB::table('reservacion_servicio')->insert([
                 'id_reservacion'  => $id,
-                'id_servicio'     => $extra['id_servicio'],
-                'cantidad'        => $extra['cantidad'] ?? 1,
-                'precio_unitario' => $extra['precio_unitario'] ?? 0,
+                'id_servicio'     => 11,
+                'cantidad'        => 1,
+                'precio_unitario' => $request->dropoff_total,
                 'created_at'      => now(),
                 'updated_at'      => now(),
             ]);
@@ -1215,33 +1035,36 @@ $tarifaBaseGuardar = (float) $categoria->precio_dia;
         // ⛽ GASOLINA
         if ($request->svc_gasolina == 1) {
             DB::table('reservacion_servicio')->insert([
-                'id_reservacion' => $id,
-                'id_servicio' => 1,
-                'cantidad' => 1,
+                'id_reservacion'  => $id,
+                'id_servicio'     => 1,
+                'cantidad'        => 1,
                 'precio_unitario' => 20,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at'      => now(),
+                'updated_at'      => now(),
             ]);
         }
 
         // ➕ ADICIONALES
         if ($request->filled('adicionalesSeleccionados')) {
             foreach ($request->input('adicionalesSeleccionados') as $extra) {
-                if (!is_array($extra) || !isset($extra['id'])) {
+                // 🔧 NOMBRE CORREGIDO: el JS manda 'id_servicio' y 'precio_unitario'
+                if (!is_array($extra) || !isset($extra['id_servicio'])) {
                     continue;
                 }
                 DB::table('reservacion_servicio')->insert([
                     'id_reservacion'  => $id,
-                    'id_servicio'     => $extra['id'],
+                    'id_servicio'     => $extra['id_servicio'],
                     'cantidad'        => $extra['cantidad'] ?? 1,
-                    'precio_unitario' => $extra['precio'] ?? 0,
+                    'precio_unitario' => $extra['precio_unitario'] ?? 0,
                     'created_at'      => now(),
                     'updated_at'      => now(),
                 ]);
             }
         }
 
+        // =========================
         // 🔥 SEGURO (RESET)
+        // =========================
         DB::table('reservacion_paquete_seguro')
             ->where('id_reservacion', $id)
             ->delete();
@@ -1256,20 +1079,24 @@ $tarifaBaseGuardar = (float) $categoria->precio_dia;
             ]);
         }
 
-        // 🔥 INDIVIDUALES (RESET)
+        // =========================
+        // 🔥 SEGUROS INDIVIDUALES (RESET)
+        //    El JS manda 'id' y 'precio' en individualesSeleccionados
+        // =========================
         DB::table('reservacion_seguro_individual')
             ->where('id_reservacion', $id)
             ->delete();
 
         if ($request->filled('individualesSeleccionados')) {
-            foreach ((array) $request->input('individualesSeleccionados') as $ind) {
-                if (!is_array($ind) || empty($ind['id'])) {
+            foreach ($request->input('individualesSeleccionados') as $ind) {
+                if (!is_array($ind) || !isset($ind['id'])) {
                     continue;
                 }
                 DB::table('reservacion_seguro_individual')->insert([
                     'id_reservacion' => $id,
-                    'id_individual'  => (int) $ind['id'],
-                    'precio_por_dia' => (float) ($ind['precio'] ?? 0),
+                    'id_individual'  => $ind['id'],
+                    'precio_por_dia' => $ind['precio'] ?? 0,
+                    'cantidad'       => $ind['cantidad'] ?? 1,
                     'created_at'     => now(),
                     'updated_at'     => now(),
                 ]);
@@ -1279,52 +1106,4 @@ $tarifaBaseGuardar = (float) $categoria->precio_dia;
         return redirect()->route('rutaReservacionesActivas')
             ->with('success', 'Reservación actualizada correctamente');
     }
-
-    // =========================
-    // 🔥 SEGURO (RESET)
-    // =========================
-    DB::table('reservacion_paquete_seguro')
-        ->where('id_reservacion', $id)
-        ->delete();
-
-    if ($request->filled('seguroSeleccionado.id')) {
-        DB::table('reservacion_paquete_seguro')->insert([
-            'id_reservacion' => $id,
-            'id_paquete'     => $request->input('seguroSeleccionado.id'),
-            'precio_por_dia' => $request->input('seguroSeleccionado.precio'),
-            'created_at'     => now(),
-            'updated_at'     => now(),
-        ]);
-    }
-
-    // =========================
-    // 🔥 SEGUROS INDIVIDUALES (RESET)
-    //    El JS manda 'id' y 'precio' en individualesSeleccionados
-    // =========================
-    DB::table('reservacion_seguro_individual')
-        ->where('id_reservacion', $id)
-        ->delete();
-
-    if ($request->filled('individualesSeleccionados')) {
-
-        foreach ($request->input('individualesSeleccionados') as $ind) {
-
-            if (!is_array($ind) || !isset($ind['id'])) {
-                continue;
-            }
-
-            DB::table('reservacion_seguro_individual')->insert([
-                'id_reservacion' => $id,
-                'id_individual'  => $ind['id'],
-                'precio_por_dia' => $ind['precio'] ?? 0,
-                'cantidad'       => $ind['cantidad'] ?? 1,
-                'created_at'     => now(),
-                'updated_at'     => now(),
-            ]);
-        }
-    }
-
-    return redirect()->route('rutaReservacionesActivas')
-        ->with('success', 'Reservación actualizada correctamente');
-}
 }
