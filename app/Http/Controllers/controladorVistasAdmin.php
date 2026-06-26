@@ -96,10 +96,6 @@ class controladorVistasAdmin extends Controller
         return view('Admin.Contrato');
     }
 
-    public function altaCliente()
-    {
-        return view('Admin.AltaCliente');
-    }
 
     public function licencia()
     {

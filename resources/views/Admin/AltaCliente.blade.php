@@ -9,16 +9,32 @@
 
 @section('contenidoAltaCliente')
 @php
-    $categorias = ['Económico', 'Compacto', 'Intermedio', 'SUV', 'Van'];
-
-    $protecciones = [
-        ['name' => 'Protección 1', 'price' => 0, 'guarantee' => 0],
-        ['name' => 'Protección 2', 'price' => 250, 'guarantee' => 5000],
-        ['name' => 'Protección 3', 'price' => 450, 'guarantee' => 8000],
-        ['name' => 'Protección 4', 'price' => 650, 'guarantee' => 12000],
-        ['name' => 'Protección 5', 'price' => 850, 'guarantee' => 18000],
-    ];
+    // Fallback por si el controlador no envía datos (evita que truene la vista)
+    $categorias   = $categorias   ?? collect();
+    $protecciones = $protecciones ?? collect();
 @endphp
+
+{{-- Mensajes de resultado --}}
+@if(session('success'))
+    <div class="alert-flash alert-success" style="margin:12px 0;padding:12px 16px;border-radius:10px;background:#dcfce7;color:#166534;font-weight:600;">
+        {{ session('success') }}
+    </div>
+@endif
+@if(session('error'))
+    <div class="alert-flash alert-error" style="margin:12px 0;padding:12px 16px;border-radius:10px;background:#fee2e2;color:#991b1b;font-weight:600;">
+        {{ session('error') }}
+    </div>
+@endif
+
+{{-- ===== FORM PRINCIPAL: envuelve los 4 pasos ===== --}}
+<form id="altaClienteForm"
+      method="POST"
+      action="{{ route('altaCliente.store') }}"
+      enctype="multipart/form-data">
+    @csrf
+
+    {{-- Tipo de cliente: lo llena el JS al seleccionar tarjeta (campo hidden) --}}
+    <input type="hidden" name="tipo_persona" id="tipoPersonaInput" value="">
 
 <main class="main alta-member">
 
@@ -100,54 +116,54 @@
             <div class="grid-3">
                 <div class="field">
                     <label>Nombre completo</label>
-                    <input class="input" id="fisicaNombre" type="text" required>
+                    <input class="input" id="fisicaNombre" name="fisica_nombre" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Fecha de nacimiento</label>
-                    <input class="input birthdate-picker" id="fisicaNacimiento" type="text" placeholder="dd-mmm-aaaa" readonly required>
+                    <input class="input birthdate-picker" id="fisicaNacimiento" name="fisica_nacimiento" type="text" placeholder="dd-mmm-aaaa" readonly required>
                 </div>
 
                 <div class="field">
                     <label>Teléfono</label>
-                    <input class="input" id="fisicaTelefono" type="text" required>
+                    <input class="input" id="fisicaTelefono" name="fisica_telefono" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Correo</label>
-                    <input class="input" id="fisicaCorreo" type="email" required>
+                    <input class="input" id="fisicaCorreo" name="fisica_correo" type="email" required>
                 </div>
 
                 <div class="field">
                     <label>Correo de factura</label>
-                    <input class="input" id="fisicaCorreoFactura" type="email">
+                    <input class="input" id="fisicaCorreoFactura" name="fisica_correo_factura" type="email">
                 </div>
 
                 <div class="field">
                     <label>Número de empresa / marca</label>
-                    <input class="input" id="fisicaNumeroEmpresa" type="text">
+                    <input class="input" id="fisicaNumeroEmpresa" name="fisica_numero_empresa" type="text">
                 </div>
 
                 <div class="field">
                     <label>Nombre de empresa / marca</label>
-                    <input class="input" id="fisicaNombreEmpresa" type="text">
+                    <input class="input" id="fisicaNombreEmpresa" name="fisica_nombre_empresa" type="text">
                 </div>
 
                 <div class="field">
                     <label>No. identificación</label>
-                    <input class="input" id="fisicaNumeroIdentificacion" type="text" placeholder="INE, pasaporte o cédula" autocomplete="off" required>
+                    <input class="input" id="fisicaNumeroIdentificacion" name="fisica_numero_identificacion" type="text" placeholder="INE, pasaporte o cédula" autocomplete="off" required>
                     <small class="id-detect-helper" id="fisicaTipoIdentificacionTexto">Tipo detectado: —</small>
-                    <input type="hidden" id="fisicaTipoIdentificacion" value="">
+                    <input type="hidden" id="fisicaTipoIdentificacion" name="fisica_tipo_identificacion" value="">
                 </div>
 
                 <div class="field">
                     <label>No. licencia</label>
-                    <input class="input" id="fisicaLicencia" type="text" required>
+                    <input class="input" id="fisicaLicencia" name="fisica_licencia" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Vigencia de licencia</label>
-                    <input class="input license-expiry-picker" id="fisicaVigenciaLicencia" type="text" placeholder="dd-mmm-aaaa" readonly required>
+                    <input class="input license-expiry-picker" id="fisicaVigenciaLicencia" name="fisica_vigencia_licencia" type="text" placeholder="dd-mmm-aaaa" readonly required>
                 </div>
             </div>
 
@@ -156,17 +172,17 @@
             <div class="grid-3">
                 <div class="field">
                     <label>RFC</label>
-                    <input class="input" id="fisicaFacturacionRfc" type="text">
+                    <input class="input" id="fisicaFacturacionRfc" name="fisica_facturacion_rfc" type="text">
                 </div>
 
                 <div class="field">
                     <label>Razón social</label>
-                    <input class="input" id="fisicaFacturacionRazon" type="text">
+                    <input class="input" id="fisicaFacturacionRazon" name="fisica_facturacion_razon" type="text">
                 </div>
 
                 <div class="field">
                     <label>Uso CFDI</label>
-                    <select class="select" id="fisicaFacturacionCfdi">
+                    <select class="select" id="fisicaFacturacionCfdi" name="fisica_facturacion_cfdi">
                         <option value="">Selecciona una opción</option>
                         <option value="G03">G03 - Gastos en general</option>
                         <option value="P01">P01 - Por definir</option>
@@ -175,12 +191,12 @@
 
                 <div class="field">
                     <label>Régimen fiscal</label>
-                    <input class="input" id="fisicaFacturacionRegimen" type="text">
+                    <input class="input" id="fisicaFacturacionRegimen" name="fisica_facturacion_regimen" type="text">
                 </div>
 
                 <div class="field">
                     <label>País</label>
-                    <select class="select" id="fisicaFiscalPais">
+                    <select class="select" id="fisicaFiscalPais" name="fisica_fiscal_pais">
                         <option value="">Selecciona una opción</option>
                         <option value="México">México</option>
                         <option value="Estados Unidos">Estados Unidos</option>
@@ -190,47 +206,47 @@
 
                 <div class="field">
                     <label>Código postal</label>
-                    <input class="input" id="fisicaFiscalCp" type="text">
+                    <input class="input" id="fisicaFiscalCp" name="fisica_fiscal_cp" type="text">
                 </div>
 
                 <div class="field">
                     <label>Delegación / Municipio</label>
-                    <input class="input" id="fisicaFiscalMunicipio" type="text">
+                    <input class="input" id="fisicaFiscalMunicipio" name="fisica_fiscal_municipio" type="text">
                 </div>
 
                 <div class="field">
                     <label>Localidad</label>
-                    <input class="input" id="fisicaFiscalLocalidad" type="text">
+                    <input class="input" id="fisicaFiscalLocalidad" name="fisica_fiscal_localidad" type="text">
                 </div>
 
                 <div class="field">
                     <label>Estado</label>
-                    <input class="input" id="fisicaFiscalEstado" type="text">
+                    <input class="input" id="fisicaFiscalEstado" name="fisica_fiscal_estado" type="text">
                 </div>
 
                 <div class="field">
                     <label>Colonia</label>
-                    <input class="input" id="fisicaFiscalColonia" type="text">
+                    <input class="input" id="fisicaFiscalColonia" name="fisica_fiscal_colonia" type="text">
                 </div>
 
                 <div class="field">
                     <label>Calle</label>
-                    <input class="input" id="fisicaFiscalCalle" type="text">
+                    <input class="input" id="fisicaFiscalCalle" name="fisica_fiscal_calle" type="text">
                 </div>
 
                 <div class="field">
                     <label>Número exterior</label>
-                    <input class="input" id="fisicaFiscalNumeroExterior" type="text">
+                    <input class="input" id="fisicaFiscalNumeroExterior" name="fisica_fiscal_numero_exterior" type="text">
                 </div>
 
                 <div class="field">
                     <label>Número interior</label>
-                    <input class="input" id="fisicaFiscalNumeroInterior" type="text">
+                    <input class="input" id="fisicaFiscalNumeroInterior" name="fisica_fiscal_numero_interior" type="text">
                 </div>
 
                 <div class="field">
                     <label>Referencias</label>
-                    <textarea class="txta" id="fisicaFiscalReferencias" placeholder="Entre calles, fachada, indicaciones..."></textarea>
+                    <textarea class="txta" id="fisicaFiscalReferencias" name="fisica_fiscal_referencias" placeholder="Entre calles, fachada, indicaciones..."></textarea>
                 </div>
             </div>
 
@@ -239,27 +255,27 @@
             <div class="docs-upload-grid docs-upload-grid-2">
                 <div class="field document-upload-field">
                     <label>Identificación frontal</label>
-                    <input class="input document-file-input" id="fisicaIdentificacionFrontal" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="fisicaIdentificacionFrontal" name="fisica_identificacion_frontal" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
 
                 <div class="field document-upload-field">
                     <label>Identificación trasera</label>
-                    <input class="input document-file-input" id="fisicaIdentificacionTrasera" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="fisicaIdentificacionTrasera" name="fisica_identificacion_trasera" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
 
                 <div class="field document-upload-field">
                     <label>Licencia frontal</label>
-                    <input class="input document-file-input" id="fisicaLicenciaFrontal" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="fisicaLicenciaFrontal" name="fisica_licencia_frontal" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
 
                 <div class="field document-upload-field">
                     <label>Licencia trasera</label>
-                    <input class="input document-file-input" id="fisicaLicenciaTrasera" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="fisicaLicenciaTrasera" name="fisica_licencia_trasera" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
 
                 <div class="field document-upload-field">
                     <label>Constancia de Situación Fiscal</label>
-                    <input class="input document-file-input" id="fisicaCsf" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="fisicaCsf" name="fisica_csf" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
             </div>
         </div>
@@ -273,7 +289,7 @@
                     <label>Razón social</label>
 
                     <div class="company-search-wrap">
-                        <input class="input" id="moralRazon" type="text" placeholder="Buscar empresa..." autocomplete="off" required>
+                        <input class="input" id="moralRazon" name="moral_razon" type="text" placeholder="Buscar empresa..." autocomplete="off" required>
                         <button class="btn ghost company-search-btn" id="btnBuscarEmpresa" type="button">Buscar</button>
                     </div>
 
@@ -284,12 +300,12 @@
 
                 <div class="field">
                     <label>Teléfono empresa</label>
-                    <input class="input" id="moralTelefono" type="text" required>
+                    <input class="input" id="moralTelefono" name="moral_telefono" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Correo empresa</label>
-                    <input class="input" id="moralCorreo" type="email" required>
+                    <input class="input" id="moralCorreo" name="moral_correo" type="email" required>
                 </div>
             </div>
 
@@ -298,37 +314,37 @@
             <div class="grid-3">
                 <div class="field">
                     <label>Nombre representante legal</label>
-                    <input class="input" id="moralRepresentante" type="text" required>
+                    <input class="input" id="moralRepresentante" name="moral_representante" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Fecha de nacimiento</label>
-                    <input class="input birthdate-picker" id="moralRepresentanteNacimiento" type="text" placeholder="dd-mmm-aaaa" readonly required>
+                    <input class="input birthdate-picker" id="moralRepresentanteNacimiento" name="moral_representante_nacimiento" type="text" placeholder="dd-mmm-aaaa" readonly required>
                 </div>
 
                 <div class="field">
                     <label>Teléfono representante legal</label>
-                    <input class="input" id="moralTelefonoRepresentante" type="text" required>
+                    <input class="input" id="moralTelefonoRepresentante" name="moral_telefono_representante" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Correo representante legal</label>
-                    <input class="input" id="moralCorreoRepresentante" type="email" required>
+                    <input class="input" id="moralCorreoRepresentante" name="moral_correo_representante" type="email" required>
                 </div>
 
                 <div class="field">
                     <label>No. identificación</label>
-                    <input class="input" id="moralRepresentanteIdentificacion" type="text" required>
+                    <input class="input" id="moralRepresentanteIdentificacion" name="moral_representante_identificacion" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>No. licencia</label>
-                    <input class="input" id="moralLicenciaTitular" type="text" required>
+                    <input class="input" id="moralLicenciaTitular" name="moral_licencia_titular" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Vigencia licencia</label>
-                    <input class="input license-expiry-picker" id="moralVigenciaLicenciaTitular" type="text" placeholder="dd-mmm-aaaa" readonly required>
+                    <input class="input license-expiry-picker" id="moralVigenciaLicenciaTitular" name="moral_vigencia_licencia_titular" type="text" placeholder="dd-mmm-aaaa" readonly required>
                 </div>
             </div>
 
@@ -337,22 +353,22 @@
             <div class="grid-3">
                 <div class="field">
                     <label>RFC</label>
-                    <input class="input" id="moralFacturacionRfc" type="text" required>
+                    <input class="input" id="moralFacturacionRfc" name="moral_facturacion_rfc" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Razón social fiscal</label>
-                    <input class="input" id="moralFacturacionRazon" type="text" required>
+                    <input class="input" id="moralFacturacionRazon" name="moral_facturacion_razon" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Correo de facturación</label>
-                    <input class="input" id="moralFacturacionCorreo" type="email" required>
+                    <input class="input" id="moralFacturacionCorreo" name="moral_facturacion_correo" type="email" required>
                 </div>
 
                 <div class="field">
                     <label>Uso CFDI</label>
-                    <select class="select" id="moralFacturacionCfdi" required>
+                    <select class="select" id="moralFacturacionCfdi" name="moral_facturacion_cfdi" required>
                         <option value="">Selecciona una opción</option>
                         <option value="G03">G03 - Gastos en general</option>
                         <option value="P01">P01 - Por definir</option>
@@ -361,12 +377,12 @@
 
                 <div class="field">
                     <label>Régimen fiscal</label>
-                    <input class="input" id="moralFacturacionRegimen" type="text" required>
+                    <input class="input" id="moralFacturacionRegimen" name="moral_facturacion_regimen" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>País</label>
-                    <select class="select" id="moralFiscalPais" required>
+                    <select class="select" id="moralFiscalPais" name="moral_fiscal_pais" required>
                         <option value="">Selecciona una opción</option>
                         <option value="México">México</option>
                         <option value="Estados Unidos">Estados Unidos</option>
@@ -376,47 +392,47 @@
 
                 <div class="field">
                     <label>Código postal</label>
-                    <input class="input" id="moralFiscalCp" type="text" required>
+                    <input class="input" id="moralFiscalCp" name="moral_fiscal_cp" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Delegación / Municipio</label>
-                    <input class="input" id="moralFiscalMunicipio" type="text" required>
+                    <input class="input" id="moralFiscalMunicipio" name="moral_fiscal_municipio" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Localidad</label>
-                    <input class="input" id="moralFiscalLocalidad" type="text" required>
+                    <input class="input" id="moralFiscalLocalidad" name="moral_fiscal_localidad" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Estado</label>
-                    <input class="input" id="moralFiscalEstado" type="text" required>
+                    <input class="input" id="moralFiscalEstado" name="moral_fiscal_estado" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Colonia</label>
-                    <input class="input" id="moralFiscalColonia" type="text" required>
+                    <input class="input" id="moralFiscalColonia" name="moral_fiscal_colonia" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Calle</label>
-                    <input class="input" id="moralFiscalCalle" type="text" required>
+                    <input class="input" id="moralFiscalCalle" name="moral_fiscal_calle" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Número exterior</label>
-                    <input class="input" id="moralFiscalNumeroExterior" type="text" required>
+                    <input class="input" id="moralFiscalNumeroExterior" name="moral_fiscal_numero_exterior" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Número interior</label>
-                    <input class="input" id="moralFiscalNumeroInterior" type="text">
+                    <input class="input" id="moralFiscalNumeroInterior" name="moral_fiscal_numero_interior" type="text">
                 </div>
 
                 <div class="field">
                     <label>Referencias</label>
-                    <textarea class="txta" id="moralFiscalReferencias" placeholder="Entre calles, fachada, indicaciones..."></textarea>
+                    <textarea class="txta" id="moralFiscalReferencias" name="moral_fiscal_referencias" placeholder="Entre calles, fachada, indicaciones..."></textarea>
                 </div>
             </div>
 
@@ -425,37 +441,37 @@
             <div class="docs-upload-grid docs-upload-grid-2">
                 <div class="field document-upload-field">
                     <label>Constancia de Situación Fiscal</label>
-                    <input class="input document-file-input" id="moralCsf" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="moralCsf" name="moral_csf" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
 
                 <div class="field document-upload-field">
                     <label>Acta constitutiva</label>
-                    <input class="input document-file-input" id="moralActaConstitutiva" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="moralActaConstitutiva" name="moral_acta_constitutiva" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
 
                 <div class="field document-upload-field">
                     <label>Identificación frontal</label>
-                    <input class="input document-file-input" id="moralIdentificacionFrontal" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="moralIdentificacionFrontal" name="moral_identificacion_frontal" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
 
                 <div class="field document-upload-field">
                     <label>Identificación trasera</label>
-                    <input class="input document-file-input" id="moralIdentificacionTrasera" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="moralIdentificacionTrasera" name="moral_identificacion_trasera" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
 
                 <div class="field document-upload-field">
                     <label>Licencia frontal</label>
-                    <input class="input document-file-input" id="moralLicenciaFrontal" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="moralLicenciaFrontal" name="moral_licencia_frontal" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
 
                 <div class="field document-upload-field">
                     <label>Licencia trasera</label>
-                    <input class="input document-file-input" id="moralLicenciaTrasera" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="moralLicenciaTrasera" name="moral_licencia_trasera" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
 
                 <div class="field document-upload-field">
                     <label>Responsiva Cliente</label>
-                    <input class="input document-file-input" id="moralResponsivaCliente" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="moralResponsivaCliente" name="moral_responsiva_cliente" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
             </div>
 
@@ -556,37 +572,37 @@
             <div class="grid-3">
                 <div class="field">
                     <label>Nombre completo</label>
-                    <input class="input" id="generalNombre" type="text" required>
+                    <input class="input" id="generalNombre" name="general_nombre" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Fecha de nacimiento</label>
-                    <input class="input birthdate-picker" id="generalNacimiento" type="text" placeholder="dd-mmm-aaaa" readonly required>
+                    <input class="input birthdate-picker" id="generalNacimiento" name="general_nacimiento" type="text" placeholder="dd-mmm-aaaa" readonly required>
                 </div>
 
                 <div class="field">
                     <label>Teléfono</label>
-                    <input class="input" id="generalTelefono" type="text" required>
+                    <input class="input" id="generalTelefono" name="general_telefono" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Correo</label>
-                    <input class="input" id="generalCorreo" type="email" required>
+                    <input class="input" id="generalCorreo" name="general_correo" type="email" required>
                 </div>
 
                 <div class="field">
                     <label>No. identificación</label>
-                    <input class="input" id="generalIdentificacion" type="text" required>
+                    <input class="input" id="generalIdentificacion" name="general_identificacion" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>No. licencia</label>
-                    <input class="input" id="generalLicencia" type="text" required>
+                    <input class="input" id="generalLicencia" name="general_licencia" type="text" required>
                 </div>
 
                 <div class="field">
                     <label>Vigencia de licencia</label>
-                    <input class="input license-expiry-picker" id="generalVigenciaLicencia" type="text" placeholder="dd-mmm-aaaa" readonly required>
+                    <input class="input license-expiry-picker" id="generalVigenciaLicencia" name="general_vigencia_licencia" type="text" placeholder="dd-mmm-aaaa" readonly required>
                 </div>
             </div>
 
@@ -595,22 +611,22 @@
             <div class="docs-upload-grid docs-upload-grid-2">
                 <div class="field document-upload-field">
                     <label>Identificación frontal</label>
-                    <input class="input document-file-input" id="generalIdentificacionFrontal" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="generalIdentificacionFrontal" name="general_identificacion_frontal" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
 
                 <div class="field document-upload-field">
                     <label>Identificación trasera</label>
-                    <input class="input document-file-input" id="generalIdentificacionTrasera" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="generalIdentificacionTrasera" name="general_identificacion_trasera" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
 
                 <div class="field document-upload-field">
                     <label>Licencia frontal</label>
-                    <input class="input document-file-input" id="generalLicenciaFrontal" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="generalLicenciaFrontal" name="general_licencia_frontal" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
 
                 <div class="field document-upload-field">
                     <label>Licencia trasera</label>
-                    <input class="input document-file-input" id="generalLicenciaTrasera" type="file" accept="image/*,.pdf" capture="environment" required>
+                    <input class="input document-file-input" id="generalLicenciaTrasera" name="general_licencia_trasera" type="file" accept="image/*,.pdf" capture="environment" required>
                 </div>
             </div>
         </div>
@@ -643,34 +659,55 @@
                 <tbody>
                     @foreach($categorias as $index => $categoria)
                         <tr data-rate-row="{{ $index }}">
-                            <td>{{ $categoria }}</td>
+                            <td>{{ $categoria->nombre }}</td>
+
+                            {{-- id_categoria real para guardar la FK --}}
+                            <input type="hidden" name="tarifa_id_categoria[]" value="{{ $categoria->id_categoria }}">
 
                             <td>
-                                <input class="input money-input rate-daily-input" type="text" placeholder="$0.00" data-row-index="{{ $index }}">
+                                <input class="input money-input rate-daily-input"
+                                       type="text"
+                                       name="tarifa_diaria[]"
+                                       placeholder="$0.00"
+                                       data-row-index="{{ $index }}"
+                                       value="{{ $categoria->precio_dia > 0 ? '$'.number_format($categoria->precio_dia, 2) : '' }}">
                             </td>
 
                             <td>
-                                <input class="input money-input" type="text" placeholder="$0.00">
+                                <input class="input money-input"
+                                       type="text"
+                                       name="tarifa_semanal[]"
+                                       placeholder="$0.00"
+                                       value="{{ $categoria->precio_semana > 0 ? '$'.number_format($categoria->precio_semana, 2) : '' }}">
                             </td>
 
                             <td>
-                                <input class="input money-input" type="text" placeholder="$0.00">
+                                <input class="input money-input"
+                                       type="text"
+                                       name="tarifa_mensual[]"
+                                       placeholder="$0.00"
+                                       value="{{ $categoria->precio_mes > 0 ? '$'.number_format($categoria->precio_mes, 2) : '' }}">
                             </td>
 
                             <td>
                                 <div class="selected-protection" id="selectedProtection{{ $index }}">
                                     Sin protección
                                 </div>
+                                {{-- Estos los llena el JS-puente al enviar (paquete elegido) --}}
+                                <input type="hidden" name="tarifa_id_paquete[]"      id="tarifaIdPaquete{{ $index }}"     value="">
+                                <input type="hidden" name="tarifa_paquete_nombre[]"  id="tarifaPaqueteNombre{{ $index }}" value="">
+                                <input type="hidden" name="tarifa_paquete_precio[]"  id="tarifaPaquetePrecio{{ $index }}" value="">
                             </td>
 
                             <td>
                                 <div class="final-daily-price" id="finalDailyPrice{{ $index }}">
                                     $0.00 MXN
                                 </div>
+                                <input type="hidden" name="tarifa_total[]" id="tarifaTotal{{ $index }}" value="">
                             </td>
 
                             <td>
-                                <button class="btn ghost btn-open-protections" type="button" data-row-index="{{ $index }}" data-category="{{ $categoria }}">
+                                <button class="btn ghost btn-open-protections" type="button" data-row-index="{{ $index }}" data-category="{{ $categoria->nombre }}">
                                     Ver protecciones
                                 </button>
                             </td>
@@ -716,41 +753,43 @@
             </div>
 
             <div class="protections-modal-body">
-                @foreach($protecciones as $protection)
+                @forelse($protecciones as $protection)
                     <article
                         class="protection-card"
-                        data-protection-name="{{ $protection['name'] }}"
-                        data-protection-price="{{ $protection['price'] }}"
+                        data-protection-id="{{ $protection->id_paquete }}"
+                        data-protection-name="{{ $protection->nombre }}"
+                        data-protection-price="{{ $protection->precio_por_dia }}"
                     >
                         <div class="protection-top-line"></div>
 
                         <div class="protection-card-head">
-                            <h4>{{ $protection['name'] }}</h4>
+                            <h4>{{ $protection->nombre }}</h4>
 
                             <label class="protection-switch">
                                 <input
                                     type="checkbox"
                                     class="protection-toggle"
-                                    data-protection-name="{{ $protection['name'] }}"
-                                    data-protection-price="{{ $protection['price'] }}"
+                                    data-protection-id="{{ $protection->id_paquete }}"
+                                    data-protection-name="{{ $protection->nombre }}"
+                                    data-protection-price="{{ $protection->precio_por_dia }}"
                                 >
                                 <span class="switch-ui"></span>
                             </label>
                         </div>
 
                         <ul>
-                            <li>Cobertura configurable desde base de datos.</li>
-                            <li>Descripción pendiente de cargar.</li>
+                            <li>Deducible colisión: ${{ number_format($protection->deducible_colision, 2) }}</li>
+                            <li>Deducible robo: ${{ number_format($protection->deducible_robo, 2) }}</li>
                             <li>Condiciones y beneficios del paquete.</li>
                         </ul>
 
                         <div class="protection-guarantee">
-                            Garantía: ${{ number_format($protection['guarantee'], 2) }} MXN
+                            Deducible robo: ${{ number_format($protection->deducible_robo, 2) }} MXN
                         </div>
 
                         <div class="protection-price-box">
                             <small>Precio protección</small>
-                            <strong>${{ number_format($protection['price'], 2) }}</strong>
+                            <strong>${{ number_format($protection->precio_por_dia, 2) }}</strong>
                         </div>
 
                         <div class="protection-total-box">
@@ -758,7 +797,9 @@
                             <strong class="protection-card-total">$0.00 MXN</strong>
                         </div>
                     </article>
-                @endforeach
+                @empty
+                    <div class="empty-clauses">No hay paquetes de protección activos en el catálogo.</div>
+                @endforelse
             </div>
 
             <div class="protections-modal-footer">
@@ -818,7 +859,7 @@
                     <label>Firma cliente / nombre completo</label>
 
                     <div class="signature-preview-box" data-signature-target="firmaUsuarioFisica">
-                        <input type="hidden" id="firmaUsuarioFisica" class="signature-value">
+                        <input type="hidden" id="firmaUsuarioFisica" name="firma_usuario_fisica" class="signature-value">
 
                         <div class="signature-preview-empty">Sin firma registrada</div>
                         <img class="signature-preview-img" alt="Firma cliente persona física">
@@ -835,7 +876,7 @@
                     <label>Firma asesor Viajero</label>
 
                     <div class="signature-preview-box" data-signature-target="firmaAsesorFisica">
-                        <input type="hidden" id="firmaAsesorFisica" class="signature-value">
+                        <input type="hidden" id="firmaAsesorFisica" name="firma_asesor_fisica" class="signature-value">
 
                         <div class="signature-preview-empty">Sin firma registrada</div>
                         <img class="signature-preview-img" alt="Firma asesor Viajero">
@@ -859,7 +900,7 @@
                     <label>Firma representante legal</label>
 
                     <div class="signature-preview-box" data-signature-target="firmaRepresentanteLegal">
-                        <input type="hidden" id="firmaRepresentanteLegal" class="signature-value">
+                        <input type="hidden" id="firmaRepresentanteLegal" name="firma_representante_legal" class="signature-value">
 
                         <div class="signature-preview-empty">Sin firma registrada</div>
                         <img class="signature-preview-img" alt="Firma representante legal">
@@ -876,7 +917,7 @@
                     <label>Firma conductor adicional</label>
 
                     <div class="signature-preview-box" data-signature-target="firmaConductorConvenio">
-                        <input type="hidden" id="firmaConductorConvenio" class="signature-value">
+                        <input type="hidden" id="firmaConductorConvenio" name="firma_conductor_convenio" class="signature-value">
 
                         <div class="signature-preview-empty">Sin firma registrada</div>
                         <img class="signature-preview-img" alt="Firma conductor adicional">
@@ -893,7 +934,7 @@
                     <label>Firma asesor Viajero</label>
 
                     <div class="signature-preview-box" data-signature-target="firmaAsesorMoral">
-                        <input type="hidden" id="firmaAsesorMoral" class="signature-value">
+                        <input type="hidden" id="firmaAsesorMoral" name="firma_asesor_moral" class="signature-value">
 
                         <div class="signature-preview-empty">Sin firma registrada</div>
                         <img class="signature-preview-img" alt="Firma asesor Viajero">
@@ -936,7 +977,7 @@
                     <label>Firma usuario</label>
 
                     <div class="signature-preview-box" data-signature-target="firmaUsuarioGeneral">
-                        <input type="hidden" id="firmaUsuarioGeneral" class="signature-value">
+                        <input type="hidden" id="firmaUsuarioGeneral" name="firma_usuario_general" class="signature-value">
 
                         <div class="signature-preview-empty">Sin firma registrada</div>
                         <img class="signature-preview-img" alt="Firma usuario">
@@ -953,7 +994,7 @@
                     <label>Firma asesor Viajero</label>
 
                     <div class="signature-preview-box" data-signature-target="firmaAsesorGeneral">
-                        <input type="hidden" id="firmaAsesorGeneral" class="signature-value">
+                        <input type="hidden" id="firmaAsesorGeneral" name="firma_asesor_general" class="signature-value">
 
                         <div class="signature-preview-empty">Sin firma registrada</div>
                         <img class="signature-preview-img" alt="Firma asesor Viajero">
@@ -970,17 +1011,23 @@
 
         <div class="field mini-title">
             <label>Convenio firmado</label>
-            <input class="input document-file-input" id="convenioFirmado" type="file" accept="image/*,.pdf">
+            <input class="input document-file-input" id="convenioFirmado" name="convenio_firmado" type="file" accept="image/*,.pdf">
         </div>
 
         <div class="field">
             <label>Observaciones</label>
-            <textarea class="txta" id="observacionesConvenio" placeholder="Observaciones del convenio..."></textarea>
+            <textarea class="txta" id="observacionesConvenio" name="observaciones_convenio" placeholder="Observaciones del convenio..."></textarea>
         </div>
+
+        {{-- Contenedores donde el JS inyecta el estado visual como inputs hidden --}}
+        <div id="hiddenDriversContainer"></div>
+        <div id="hiddenDriverFilesContainer"></div>
+        <div id="hiddenClausesContainer"></div>
+        <div id="hiddenResponsivasContainer"></div>
 
         <div class="bar">
             <button class="btn ghost" type="button" data-prev-step="3">Regresar</button>
-            <button class="btn primary" id="btnFinishVisual" type="button">Finalizar registro</button>
+            <button class="btn primary" id="btnFinishVisual" type="submit">Finalizar registro</button>
         </div>
     </section>
 
@@ -1015,6 +1062,9 @@
     <div id="toast"></div>
 
 </main>
+
+</form>
+{{-- ===== FIN FORM PRINCIPAL ===== --}}
 @endsection
 
 @section('js-vistaAltaCliente')

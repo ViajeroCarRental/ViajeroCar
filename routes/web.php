@@ -44,6 +44,7 @@ use App\Http\Controllers\DepositoController;
 use App\Http\Controllers\OficinaController;
 use App\Http\Controllers\FlotillaStatusController;
 use App\Http\Controllers\RespaldoReservacionesController;
+use App\Http\Controllers\AltaClienteController;
 
 //rutas vistas Usuario
 
@@ -351,8 +352,21 @@ Route::get('/admin/visor-reservaciones', [App\Http\Controllers\controladorVistas
 
 //historial completo
 Route::get('/admin/historial-completo', [App\Http\Controllers\controladorVistasAdmin::class, 'historialCompleto'])->name('rutaHistorialCompleto');
-//Alta Cliente
-Route::get('/admin/alta-cliente', [App\Http\Controllers\controladorVistasAdmin::class, 'altaCliente'])->name('rutaAltaCliente');
+// ===========================
+    // 📋 ALTA CLIENTE (CONVENIO PREFER)
+    // ===========================
+
+    // Mostrar la vista (GET)
+    Route::get('/admin/alta-cliente', [AltaClienteController::class, 'index'])
+        ->name('rutaAltaCliente');
+
+    // Guardar todo el alta (POST)
+    Route::post('/admin/alta-cliente', [AltaClienteController::class, 'store'])
+        ->name('altaCliente.store');
+
+    // Ver un documento guardado del cliente (imagen/PDF en LONGBLOB)
+    Route::get('/admin/alta-cliente/documento/{id}', [AltaClienteController::class, 'verDocumento'])
+        ->name('altaCliente.documento');
 //Licencia
 Route::get('/admin/licencia', [App\Http\Controllers\controladorVistasAdmin::class, 'licencia'])->name('rutaLicencia');
 //RFC
