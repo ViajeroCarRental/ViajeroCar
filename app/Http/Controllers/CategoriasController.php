@@ -9,51 +9,53 @@ class CategoriasController extends Controller
 {
     public function index()
     {
-        // 🟢 Cambiado: Ahora ordena prioritariamente por tu columna de orden personalizado
         $categorias = DB::table('categorias_carros')
-            ->orderBy('orden', 'asc')
+            ->orderBy('nombre', 'asc')
             ->get();
 
-        return view('Admin.Categorias', compact('categorias'));
+        $paquetes = DB::table('seguro_paquete')
+            ->orderBy('nombre', 'asc')
+            ->get();
+
+        foreach ($categorias as $cat) {
+            $cat->paquetes_asignados = isset($cat->paquetes) && $cat->paquetes ? json_decode($cat->paquetes, true) : [];
+        }
+
+        return view('Admin.Categorias', compact('categorias', 'paquetes'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'codigo'     => 'required|max:10|unique:categorias_carros,codigo',
-            'nombre'     => 'required|max:100',
-            'precio_dia' => 'required|numeric|min:0',
-            'precio_semana'     => 'required|numeric|min:0',
-            'precio_mes'        => 'required|numeric|min:0',
-            'descuento_miembro' => 'required|numeric|min:0|max:100',
-            'activo'     => 'nullable|boolean',
-        ]);
-
-        DB::table('categorias_carros')->insert([
-            'codigo'     => $request->codigo,
-            'nombre'     => $request->nombre,
-            'precio_dia' => $request->precio_dia,
-            'precio_semana'     => $request->precio_semana,
-            'precio_mes'        => $request->precio_mes,
-            'descuento_miembro' => $request->descuento_miembro,
-            'activo'     => $request->has('activo') ? 1 : 0,
-            'created_at' => now(),
-            'updated_at' => now(),
             'codigo'        => 'required|max:10|unique:categorias_carros,codigo',
             'nombre'        => 'required|max:100',
-            'precio_dia'    => 'required|numeric|min:0',
-            'garantia_base' => 'required|numeric|min:0', // 🟢 Validaciones agregadas
-            'orden'         => 'required|integer|min:0',
+            'descripcion'   => 'required|string|max:255',
+            'precio_dia'    => 'required|numeric|gt:0',
+            'precio_semana' => 'required|numeric|gt:0',
+            'precio_mes'    => 'required|numeric|gt:0',
+            'garantia_base' => 'required|numeric|gt:0',
             'activo'        => 'nullable|boolean',
+            'paquetes'      => 'nullable|array',
+        ], [
+            'codigo.unique'        => 'El código que intentas asignar ya le pertenece a otra categoría.',
+            'descripcion.required' => 'La descripción es obligatoria.',
+            'precio_dia.gt'        => 'El precio por día debe ser mayor a 0.',
+            'precio_dia.required'  => 'El precio por día es obligatorio.',
+            'precio_semana.gt'     => 'El precio por semana debe ser mayor a 0.',
+            'precio_mes.gt'        => 'El precio por mes debe ser mayor a 0.',
+            'garantia_base.gt'     => 'La garantía base debe ser mayor a 0.',
         ]);
 
         DB::table('categorias_carros')->insert([
-            'codigo'        => $request->codigo,
-            'nombre'        => $request->nombre,
+            'codigo'        => mb_strtoupper($request->codigo, 'UTF-8'),
+            'nombre'        => mb_strtoupper($request->nombre, 'UTF-8'),
+            'descripcion'   => $request->descripcion,
             'precio_dia'    => $request->precio_dia,
-            'garantia_base' => $request->garantia_base, // 🟢 Inserta la garantía base
-            'orden'         => $request->orden,         // 🟢 Inserta el orden
+            'precio_semana' => $request->precio_semana,
+            'precio_mes'    => $request->precio_mes,
+            'garantia_base' => $request->garantia_base,
             'activo'        => $request->has('activo') ? 1 : 0,
+            'paquetes'      => $request->has('paquetes') ? json_encode($request->paquetes) : json_encode([]),
             'created_at'    => now(),
             'updated_at'    => now(),
         ]);
@@ -64,38 +66,36 @@ class CategoriasController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'codigo'     => 'required|max:10|unique:categorias_carros,codigo,' . $id . ',id_categoria',
-            'nombre'     => 'required|max:100',
-            'precio_dia' => 'required|numeric|min:0',
-            'precio_semana'     => 'required|numeric|min:0',
-            'precio_mes'        => 'required|numeric|min:0',
-            'descuento_miembro' => 'required|numeric|min:0|max:100',
-            'activo'     => 'required|boolean',
             'codigo'        => 'required|max:10|unique:categorias_carros,codigo,' . $id . ',id_categoria',
             'nombre'        => 'required|max:100',
-            'precio_dia'    => 'required|numeric|min:0',
-            'garantia_base' => 'required|numeric|min:0', // 🟢 Validaciones agregadas
-            'orden'         => 'required|integer|min:0',
+            'descripcion'   => 'required|string|max:255',
+            'precio_dia'    => 'required|numeric|gt:0',
+            'precio_semana' => 'required|numeric|gt:0',
+            'precio_mes'    => 'required|numeric|gt:0',
+            'garantia_base' => 'required|numeric|gt:0',
             'activo'        => 'required|boolean',
+            'paquetes'      => 'nullable|array',
+        ], [
+            'codigo.unique'        => 'El código que intentas asignar ya le pertenece a otra categoría.',
+            'descripcion.required' => 'La descripción es obligatoria.',
+            'precio_dia.gt'        => 'El precio por día debe ser mayor a 0.',
+            'precio_semana.gt'     => 'El precio por semana debe ser mayor a 0.',
+            'precio_mes.gt'        => 'El precio por mes debe ser mayor a 0.',
+            'garantia_base.gt'     => 'La garantía base debe ser mayor a 0.',
         ]);
 
         DB::table('categorias_carros')
             ->where('id_categoria', $id)
             ->update([
-                'codigo'     => $request->codigo,
-                'nombre'     => $request->nombre,
-                'precio_dia' => $request->precio_dia,
-                'precio_semana'     => $request->precio_semana,
-                'precio_mes'        => $request->precio_mes,
-                'descuento_miembro' => $request->descuento_miembro,
-                'activo'     => (int) $request->activo,
-                'updated_at' => now(),
-                'codigo'        => $request->codigo,
-                'nombre'        => $request->nombre,
+                'codigo'        => mb_strtoupper($request->codigo, 'UTF-8'),
+                'nombre'        => mb_strtoupper($request->nombre, 'UTF-8'),
+                'descripcion'   => $request->descripcion,
                 'precio_dia'    => $request->precio_dia,
-                'garantia_base' => $request->garantia_base, // 🟢 Actualiza la garantía base
-                'orden'         => $request->orden,         // 🟢 Actualiza el orden
+                'precio_semana' => $request->precio_semana,
+                'precio_mes'    => $request->precio_mes,
+                'garantia_base' => $request->garantia_base,
                 'activo'        => (int) $request->activo,
+                'paquetes'      => $request->has('paquetes') ? json_encode($request->paquetes) : json_encode([]),
                 'updated_at'    => now(),
             ]);
 

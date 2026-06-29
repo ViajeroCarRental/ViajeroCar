@@ -29,6 +29,8 @@ return new class extends Migration {
             // ⚙️ Estado activo/inactivo
             $table->boolean('activo')->default(true);
 
+            $table->json('paquetes')->nullable()->comment('Arreglo con los IDs de los paquetes');
+
             // ⏰ Control de tiempo
             // ⏰ Control de tiempo (nullable como en tu tabla real)
             $table->timestamp('created_at')->nullable();

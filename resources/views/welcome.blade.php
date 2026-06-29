@@ -820,6 +820,9 @@
 
 
 @section('contenidoHome')
+    @push('head')
+        <link rel="preload" as="image" href="{{ asset('img/inicio1.webp') }}" fetchpriority="high">
+    @endpush
 
     {{-- ============================================================
          ARRAY DE COCHES (PHP centralizado)
@@ -1117,7 +1120,6 @@
                     <form id="rentalForm" class="search-form" method="GET" action="{{ route('rutaReservasIniciar') }}"
                         novalidate>
                         @csrf
-
                         <input type="hidden" name="step" value="2">
 
                         <div class="search-grid">
@@ -1488,7 +1490,6 @@
                     </div>
 
                 </div>
-
                 <div class="swiper-button-prev"></div>
                 <div class="swiper-button-next"></div>
                 <div class="swiper-pagination"></div>
@@ -1543,17 +1544,14 @@
             aria-expanded="false">
             <i class="fa-solid fa-share-nodes"></i>
         </button>
-
         <a class="fab-item fab-wp" href="https://wa.me/5214427169793" target="_blank" rel="noopener"
             aria-label="WhatsApp">
             <i class="fa-brands fa-whatsapp"></i>
         </a>
-
         <a class="fab-item fab-fb" href="https://www.facebook.com/ViajeroCarRentalQueretaro?locale=es_LA" target="_blank"
             rel="noopener" aria-label="Facebook">
             <i class="fa-brands fa-facebook-f"></i>
         </a>
-
         <a class="fab-item fab-ig" href="https://www.instagram.com/viajerocarental/" target="_blank" rel="noopener"
             aria-label="Instagram">
             <i class="fa-brands fa-instagram"></i>

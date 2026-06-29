@@ -5476,3 +5476,53 @@ body.modal-open {
         display: none !important;
     }
 }
+/* =========================================
+   LOADER RESERVA - STEP 4
+========================================= */
+.loader-reserva-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(31, 41, 55, 0.68);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.loader-reserva-card {
+  width: min(360px, 88vw);
+  padding: 28px 24px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.30);
+  text-align: center;
+  animation: loaderReservaIn .22s ease-out;
+}
+
+.loader-reserva-card img {
+  width: 160px;
+  max-width: 72%;
+  height: auto;
+  display: block;
+  margin: 0 auto 14px;
+}
+
+.loader-reserva-card p {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 900;
+  color: #111827;
+}
+
+@keyframes loaderReservaIn {
+  from {
+    opacity: 0;
+    transform: scale(.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

@@ -13,11 +13,34 @@ class SeguroPaqueteController extends Controller
     public function index()
     {
         $categorias = DB::table('categorias_carros')->orderBy('orden', 'asc')->get();
-        
-        // 🟢 AQUÍ ESTÁ LA MAGIA: Traemos los seguros individuales (protecciones) para los checkboxes
-        $protecciones = DB::table('seguro_individuales')->where('activo', 1)->orderBy('nombre', 'asc')->get();
 
-        return view('Admin.paqueteseguros', compact('categorias', 'protecciones'));
+        // Traemos los individuales con su sección, ordenados por id_seccion (orden de creación)
+        // y con la bandera requiere_desglose_autos para saber si suman al precio o no.
+        $protecciones = DB::table('seguro_individuales as si')
+            ->join('secciones_seguros as ss', 'si.id_seccion', '=', 'ss.id_seccion')
+            ->where('si.activo', 1)
+            ->orderBy('ss.id_seccion', 'asc')
+            ->orderBy('si.nombre', 'asc')
+            ->select(
+                'si.id_individual',
+                'si.nombre',
+                'si.descripcion',
+                'si.precio_por_dia',
+                'si.id_seccion',
+                'ss.nombre as seccion_nombre',
+                'ss.requiere_desglose_autos'
+            )
+            ->get();
+
+        // Agrupamos por sección manteniendo el orden por id_seccion
+        $proteccionesPorSeccion = $protecciones->groupBy('id_seccion');
+
+        // Lista ordenada de secciones (id => nombre) en orden de creación
+        $secciones = $protecciones
+            ->unique('id_seccion')
+            ->mapWithKeys(fn($p) => [$p->id_seccion => $p->seccion_nombre]);
+
+        return view('Admin.paqueteseguros', compact('categorias', 'protecciones', 'proteccionesPorSeccion', 'secciones'));
     }
 
     // ===========================================
@@ -43,18 +66,18 @@ class SeguroPaqueteController extends Controller
         $depositos = DB::table('depositos')
             ->where('id_paquete', $id)
             ->get()
-            ->pluck('monto', 'id_categoria'); 
+            ->pluck('monto', 'id_categoria')
+            ->toArray();
 
-        // 🟢 Buscamos qué protecciones ya tiene seleccionadas este paquete
         $proteccionesAsignadas = DB::table('paquete_seguro_individual')
             ->where('id_paquete', $id)
             ->pluck('id_individual');
 
         return response()->json([
-            'ok' => true, 
+            'ok' => true,
             'data' => $paquete,
-            'depositos' => $depositos,
-            'protecciones' => $proteccionesAsignadas // Lo mandamos al JS
+            'depositos' => (object)$depositos,
+            'protecciones' => $proteccionesAsignadas
         ]);
     }
 
@@ -63,10 +86,17 @@ class SeguroPaqueteController extends Controller
     // ===========================================
     public function store(Request $request)
     {
+        $nombre = $request->nombre;
+
+        $existe = DB::table('seguro_paquete')->where('nombre', $nombre)->exists();
+        if ($existe) {
+            return response()->json(['ok' => false, 'msg' => 'Ya existe un paquete registrado con el nombre "' . $nombre . '".']);
+        }
+
         DB::beginTransaction();
         try {
             $id_paquete = DB::table('seguro_paquete')->insertGetId([
-                'nombre'             => $request->nombre,
+                'nombre'             => $nombre,
                 'descripcion'        => $request->descripcion,
                 'precio_por_dia'     => $request->precio_por_dia,
                 'deducible_colision' => $request->deducible_colision ?? 0.00,
@@ -77,28 +107,27 @@ class SeguroPaqueteController extends Controller
                 'updated_at'         => now(),
             ]);
 
-            $deducibleTotal = ($request->deducible_colision ?? 0) + ($request->deducible_robo ?? 0);
-            
-            // Guardar porcentajes de los autos
-            foreach ($request->porcentajes ?? [] as $id_categoria => $porcentaje) {
-                $montoGarantia = $deducibleTotal * ($porcentaje / 100);
-                DB::table('depositos')->updateOrInsert(
-                    ['id_categoria' => $id_categoria, 'id_paquete' => $id_paquete],
-                    ['monto' => $montoGarantia, 'created_at' => now(), 'updated_at' => now()]
-                );
+            foreach ($request->montos ?? [] as $id_categoria => $monto) {
+                $id_cat_int = (int)$id_categoria;
+
+                DB::table('depositos')->insert([
+                    'id_categoria' => $id_cat_int,
+                    'id_paquete' => $id_paquete,
+                    'monto' => (float)$monto,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
             }
 
-            // 🟢 Guardar las protecciones (checkboxes) en la tabla intermedia
             foreach ($request->protecciones ?? [] as $id_individual) {
                 DB::table('paquete_seguro_individual')->insert([
                     'id_paquete' => $id_paquete,
-                    'id_individual' => $id_individual
+                    'id_individual' => (int)$id_individual
                 ]);
             }
 
             DB::commit();
             return response()->json(['ok' => true, 'msg' => 'Paquete guardado con éxito']);
-
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['ok' => false, 'msg' => $e->getMessage()]);
@@ -110,12 +139,23 @@ class SeguroPaqueteController extends Controller
     // ===========================================
     public function update(Request $request, $id)
     {
+        $nombre = $request->nombre;
+
+        $existe = DB::table('seguro_paquete')
+            ->where('nombre', $nombre)
+            ->where('id_paquete', '!=', $id)
+            ->exists();
+
+        if ($existe) {
+            return response()->json(['ok' => false, 'msg' => 'No se puede actualizar. El nombre "' . $nombre . '" ya pertenece a otro paquete.']);
+        }
+
         DB::beginTransaction();
         try {
             DB::table('seguro_paquete')
                 ->where('id_paquete', $id)
                 ->update([
-                    'nombre'             => $request->nombre,
+                    'nombre'             => $nombre,
                     'descripcion'        => $request->descripcion,
                     'precio_por_dia'     => $request->precio_por_dia,
                     'deducible_colision' => $request->deducible_colision ?? 0.00,
@@ -125,28 +165,25 @@ class SeguroPaqueteController extends Controller
                     'updated_at'         => now(),
                 ]);
 
-            $deducibleTotal = ($request->deducible_colision ?? 0) + ($request->deducible_robo ?? 0);
-            
-            foreach ($request->porcentajes ?? [] as $id_categoria => $porcentaje) {
-                $montoGarantia = $deducibleTotal * ($porcentaje / 100);
+            foreach ($request->montos ?? [] as $id_categoria => $monto) {
+                $id_cat_int = (int)$id_categoria;
+
                 DB::table('depositos')->updateOrInsert(
-                    ['id_categoria' => $id_categoria, 'id_paquete' => $id],
-                    ['monto' => $montoGarantia, 'updated_at' => now()]
+                    ['id_categoria' => $id_cat_int, 'id_paquete' => $id],
+                    ['monto' => (float)$monto, 'updated_at' => now()]
                 );
             }
 
-            // 🟢 Actualizar protecciones (borramos las viejas y guardamos las nuevas)
             DB::table('paquete_seguro_individual')->where('id_paquete', $id)->delete();
             foreach ($request->protecciones ?? [] as $id_individual) {
                 DB::table('paquete_seguro_individual')->insert([
                     'id_paquete' => $id,
-                    'id_individual' => $id_individual
+                    'id_individual' => (int)$id_individual
                 ]);
             }
 
             DB::commit();
-            return response()->json(['ok' => true, 'msg' => 'Paquete actualizado']);
-
+            return response()->json(['ok' => true, 'msg' => 'Paquete actualizado con éxito']);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['ok' => false, 'msg' => $e->getMessage()]);

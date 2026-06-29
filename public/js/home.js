@@ -117,218 +117,254 @@
   }
 
   /* ========================================================
-     MÓDULO: FLATPICKR + SELECTS DE HORA + RESUMEN
-  ======================================================== */
-  const TimeModule = (function () {
-    function injectTimeCss() {
-      if (document.getElementById("tpHideInputStyle")) return;
-      const st = document.createElement("style");
-      st.id = "tpHideInputStyle";
-      st.textContent = `
-        .tp-hidden-input{ display:none !important; }
-        .tp-selects{ display:flex; gap:10px; margin-top:10px; }
-        .tp-selects select{ width:100%; height:48px; border-radius:12px; border:1px solid rgba(0,0,0,.12); padding:10px 12px; outline:none; }
-      `;
-      document.head.appendChild(st);
+   MÓDULO: FLATPICKR + SELECTS DE HORA + RESUMEN
+   con selección automática de 13:00 al primer clic
+============================================================ */
+const TimeModule = (function () {
+  function injectTimeCss() {
+    if (document.getElementById("tpHideInputStyle")) return;
+    const st = document.createElement("style");
+    st.id = "tpHideInputStyle";
+    st.textContent = `
+      .tp-hidden-input{ display:none !important; }
+      .tp-selects{ display:flex; gap:10px; margin-top:10px; }
+      .tp-selects select{ width:100%; height:48px; border-radius:12px; border:1px solid rgba(0,0,0,.12); padding:10px 12px; outline:none; }
+    `;
+    document.head.appendChild(st);
+  }
+
+  const pad2 = n => String(n).padStart(2, "0");
+
+  function isSameLocalDate(dateStr, dateObj) {
+    if (!dateStr || !dateObj) return false;
+    return dateStr === `${dateObj.getFullYear()}-${pad2(dateObj.getMonth() + 1)}-${pad2(dateObj.getDate())}`;
+  }
+
+  function setupDefaultTimeOnClick(selectElem, inputElem) {
+    if (selectElem.dataset.defaultTimeSetup === "1") return;
+    selectElem.dataset.defaultTimeSetup = "1";
+
+    if (inputElem.value && inputElem.value.trim() !== "") return;
+
+    function applyDefaultIfNeeded() {
+      if (selectElem.dataset.defaultApplied === "true") return;
+
+      if (selectElem.value && selectElem.value !== "") return;
+
+      const defaultHour = "13";
+      const option = Array.from(selectElem.options).find(opt => opt.value === defaultHour);
+      if (option) {
+        selectElem.value = defaultHour;
+        inputElem.value = `${defaultHour}:00`;
+        inputElem.dispatchEvent(new Event("input", { bubbles: true }));
+        inputElem.dispatchEvent(new Event("change", { bubbles: true }));
+        selectElem.dataset.defaultApplied = "true";
+      }
     }
 
-    const pad2 = n => String(n).padStart(2, "0");
+    selectElem.addEventListener("click", function onClick() {
+      applyDefaultIfNeeded();
+      selectElem.removeEventListener("click", onClick);
+    }, { once: true });
 
-    function isSameLocalDate(dateStr, dateObj) {
-      if (!dateStr || !dateObj) return false;
-      return dateStr === `${dateObj.getFullYear()}-${pad2(dateObj.getMonth() + 1)}-${pad2(dateObj.getDate())}`;
+    selectElem.addEventListener("focus", function onFocus() {
+      applyDefaultIfNeeded();
+      selectElem.removeEventListener("focus", onFocus);
+    }, { once: true });
+  }
+
+  function rebuildHourOptions(input, opts = {}) {
+    const { hourMax = 24 } = opts;
+    const wrap = input.closest(".time-field") || input.parentElement;
+    const selH = wrap?.querySelector(".tp-selects .tp-hour");
+    if (!selH) return;
+
+    const previousValue = selH.value;
+    const placeholder = getCurrentLocale() === 'en' ? 'Time' : 'Hora';
+
+    let startHour = 0;
+    if (input.id === "pickupTime") {
+      const pickupVal = document.getElementById("pickupDate")?.value || "";
+      if (isSameLocalDate(pickupVal, new Date())) {
+        startHour = new Date().getHours() + 1;
+      }
     }
 
-    function rebuildHourOptions(input, opts = {}) {
-      const { hourMax = 24 } = opts;
-      const wrap = input.closest(".time-field") || input.parentElement;
-      const selH = wrap?.querySelector(".tp-selects .tp-hour");
-      if (!selH) return;
+    selH.innerHTML = `<option value="" disabled selected>${placeholder}</option>`;
+    for (let h = startHour; h < hourMax; h++) {
+      const op = document.createElement("option");
+      op.value = pad2(h);
+      op.textContent = `${pad2(h)}:00`;
+      selH.appendChild(op);
+    }
 
-      const previousValue = selH.value;
-      const placeholder = getCurrentLocale() === 'en' ? 'Time' : 'Hora';
+    if (previousValue && previousValue !== "" && Array.from(selH.options).some(o => o.value === previousValue)) {
+      selH.value = previousValue;
+      input.value = `${previousValue}:00`;
 
-      let startHour = 0;
-      if (input.id === "pickupTime") {
-        const pickupVal = document.getElementById("pickupDate")?.value || "";
-        if (isSameLocalDate(pickupVal, new Date())) {
-          startHour = new Date().getHours() + 1;
-        }
-      }
+      selH.dataset.defaultApplied = "true";
+    } else {
+      selH.selectedIndex = 0;
+      input.value = "";
+      delete selH.dataset.defaultApplied;
+    }
 
-      selH.innerHTML = `<option value="" disabled selected>${placeholder}</option>`;
-      for (let h = startHour; h < hourMax; h++) {
-        const op = document.createElement("option");
-        op.value = pad2(h);
-        op.textContent = `${pad2(h)}:00`;
-        selH.appendChild(op);
-      }
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
 
-      const stillExists = Array.from(selH.options).some(o => o.value === previousValue);
-      if (stillExists && previousValue !== "") {
-        selH.value = previousValue;
-        input.value = `${previousValue}:00`;
-      } else {
-        selH.selectedIndex = 0;
+  function createTimeSelectsBelow(input, opts) {
+    const { hourMax = 24 } = opts || {};
+    const wrap = input.closest(".time-field") || input.parentElement;
+    if (wrap?.querySelector(".tp-selects")) return;
+
+    const box = document.createElement("div");
+    box.className = "tp-selects w-100";
+    const selH = document.createElement("select");
+    selH.className = "tp-hour custom-select-clean";
+    selH.setAttribute("aria-label", getCurrentLocale() === 'en' ? 'Time' : 'Hora');
+    box.appendChild(selH);
+    if (wrap) wrap.appendChild(box); else input.insertAdjacentElement("afterend", box);
+
+    rebuildHourOptions(input, { hourMax });
+
+    setupDefaultTimeOnClick(selH, input);
+
+    function sync() {
+      if (!selH.value) {
         input.value = "";
-      }
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.dispatchEvent(new Event("change", { bubbles: true }));
-    }
-
-    function createTimeSelectsBelow(input, opts) {
-      const { hourMax = 24 } = opts || {};
-      const wrap = input.closest(".time-field") || input.parentElement;
-      if (wrap?.querySelector(".tp-selects")) return;
-
-      const box = document.createElement("div");
-      box.className = "tp-selects w-100";
-      const selH = document.createElement("select");
-      selH.className = "tp-hour custom-select-clean";
-      selH.setAttribute("aria-label", getCurrentLocale() === 'en' ? 'Time' : 'Hora');
-      box.appendChild(selH);
-      if (wrap) wrap.appendChild(box); else input.insertAdjacentElement("afterend", box);
-
-      rebuildHourOptions(input, { hourMax });
-
-      function sync() {
-        if (!selH.value) {
-          input.value = "";
-          input.dispatchEvent(new Event("input", { bubbles: true }));
-          return;
-        }
-        input.value = `${pad2(Number(selH.value))}:00`;
         input.dispatchEvent(new Event("input", { bubbles: true }));
+        return;
       }
-      selH.addEventListener("change", sync);
+      input.value = `${pad2(Number(selH.value))}:00`;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    selH.addEventListener("change", sync);
 
-      // Si viene un valor desde URL/Blade, lo reflejamos
-      if (input.value && input.value !== "") {
-        const h = input.value.split(':')[0];
-        if (Array.from(selH.options).some(o => o.value === h)) {
-          selH.value = h;
-          sync();
-        }
-      } else {
-        selH.selectedIndex = 0;
-        input.value = "";
+    if (input.value && input.value !== "") {
+      const h = input.value.split(':')[0];
+      if (Array.from(selH.options).some(o => o.value === h)) {
+        selH.value = h;
+        sync();
+        selH.dataset.defaultApplied = "true";
       }
     }
+  }
 
-    function initAnalogTime(id) {
-      const input = document.getElementById(id);
-      if (!input || input.dataset.tpReady === "1") return;
-      input.dataset.tpReady = "1";
-      input.setAttribute("readonly", "readonly");
-      input.setAttribute("inputmode", "none");
-      input.classList.add("tp-hidden-input");
-      input.setAttribute("aria-hidden", "true");
-      createTimeSelectsBelow(input, { hourMax: 24 });
-      input.addEventListener("change", updateSummary);
-      input.addEventListener("input", updateSummary);
-      if (id === "pickupTime") {
-        document.getElementById("pickupDate")?.addEventListener("change", () => {
-          rebuildHourOptions(input, { hourMax: 24 });
-        });
-      }
-    }
-
-    function parseTimeTo24h(str) {
-      const m = String(str || '').trim().match(/^(\d{1,2})/);
-      if (!m) return { hh: 0, mm: 0 };
-      return { hh: Math.min(23, Math.max(0, Number(m[1]))), mm: 0 };
-    }
-
-    function buildDT(dateId, timeId) {
-      const d = document.getElementById(dateId)?.value;
-      const t = document.getElementById(timeId)?.value || '';
-      if (!d || !t) return null;
-      const [y, m, day] = d.split('-').map(Number);
-      if (!y || !m || !day) return null;
-      const { hh, mm } = parseTimeTo24h(t);
-      if (hh === 24) {
-        const dt = new Date(y, m - 1, day, 0, 0);
-        dt.setDate(dt.getDate() + 1);
-        return dt;
-      }
-      return new Date(y, m - 1, day, hh, mm);
-    }
-
-    function updateSummary() {
-      const rangeSummary = document.getElementById('rangeSummary');
-      if (!rangeSummary) return;
-      const s = buildDT('pickupDate', 'pickupTime');
-      const e = buildDT('dropoffDate', 'dropoffTime');
-      if (!s || !e) { rangeSummary.textContent = ''; return; }
-      const h = Math.round((e - s) / 36e5);
-      const d = Math.ceil(h / 24);
-      if (!Number.isFinite(h) || h <= 0) { rangeSummary.textContent = ''; return; }
-      const locale = getCurrentLocale();
-      const daysText = locale === 'en' ? 'day(s)' : 'día(s)';
-      const hoursText = locale === 'en' ? 'hour(s)' : 'hora(s)';
-      rangeSummary.textContent = `Rental for ${d} ${daysText} · ~${h} ${hoursText}`;
-    }
-
-    function bindFormFixes() {
-      const form = document.getElementById("rentalForm");
-      if (!form || form.dataset.bindFixes === "1") return;
-      form.dataset.bindFixes = "1";
-
-      const chk = document.getElementById("differentDropoff");
-      const dropSel = document.getElementById("dropoffPlace");
-      const pickSel = document.getElementById("pickupPlace");
-      const pickDate = document.getElementById("pickupDate");
-      const dropDate = document.getElementById("dropoffDate");
-
-      function syncHiddenFromSelects(hiddenId) {
-        const hidden = document.getElementById(hiddenId);
-        if (!hidden) return;
-        const wrap = hidden.closest(".time-field") || hidden.parentElement;
-        const selH = wrap?.querySelector(".tp-selects .tp-hour");
-        hidden.value = selH?.value ? `${String(selH.value).padStart(2, "0")}:00` : "";
-      }
-
-      function normalizeDateInput(input) {
-        if (!input) return;
-        const v = String(input.value || "").trim();
-        if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
-        const m = v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-        if (m) input.value = `${m[3]}-${String(m[2]).padStart(2, "0")}-${String(m[1]).padStart(2, "0")}`;
-      }
-
-      form.addEventListener("submit", () => {
-        syncHiddenFromSelects("pickupTime");
-        syncHiddenFromSelects("dropoffTime");
-        normalizeDateInput(pickDate);
-        normalizeDateInput(dropDate);
-        if (chk && !chk.checked && dropSel && pickSel?.value) dropSel.value = pickSel.value;
-        updateSummary();
-      }, { capture: true });
-
-      [pickSel, dropSel].forEach(el => {
-        if (!el) return;
-        const toggle = () => {
-          el.classList.toggle('has-value', !!el.value);
-          if (typeof $ !== 'undefined') {
-            $(el).next('.select2-container').find('.select2-selection').toggleClass('has-value', !!el.value);
-          }
-        };
-        (typeof $ !== 'undefined') ? $(el).on('change', toggle) : el.addEventListener('change', toggle);
-        setTimeout(toggle, 500);
+  function initAnalogTime(id) {
+    const input = document.getElementById(id);
+    if (!input || input.dataset.tpReady === "1") return;
+    input.dataset.tpReady = "1";
+    input.setAttribute("readonly", "readonly");
+    input.setAttribute("inputmode", "none");
+    input.classList.add("tp-hidden-input");
+    input.setAttribute("aria-hidden", "true");
+    createTimeSelectsBelow(input, { hourMax: 24 });
+    input.addEventListener("change", updateSummary);
+    input.addEventListener("input", updateSummary);
+    if (id === "pickupTime") {
+      document.getElementById("pickupDate")?.addEventListener("change", () => {
+        rebuildHourOptions(input, { hourMax: 24 });
       });
     }
+  }
 
-    return {
-      init: function () {
-        injectTimeCss();
-        initAnalogTime("pickupTime");
-        initAnalogTime("dropoffTime");
-        updateSummary();
-        bindFormFixes();
-      },
-      updateSummary: updateSummary
-    };
-  })();
+  function parseTimeTo24h(str) {
+    const m = String(str || '').trim().match(/^(\d{1,2})/);
+    if (!m) return { hh: 0, mm: 0 };
+    return { hh: Math.min(23, Math.max(0, Number(m[1]))), mm: 0 };
+  }
+
+  function buildDT(dateId, timeId) {
+    const d = document.getElementById(dateId)?.value;
+    const t = document.getElementById(timeId)?.value || '';
+    if (!d || !t) return null;
+    const [y, m, day] = d.split('-').map(Number);
+    if (!y || !m || !day) return null;
+    const { hh, mm } = parseTimeTo24h(t);
+    if (hh === 24) {
+      const dt = new Date(y, m-1, day, 0, 0);
+      dt.setDate(dt.getDate() + 1);
+      return dt;
+    }
+    return new Date(y, m - 1, day, hh, mm);
+  }
+
+  function updateSummary() {
+    const rangeSummary = document.getElementById('rangeSummary');
+    if (!rangeSummary) return;
+    const s = buildDT('pickupDate', 'pickupTime');
+    const e = buildDT('dropoffDate', 'dropoffTime');
+    if (!s || !e) { rangeSummary.textContent = ''; return; }
+    const h = Math.round((e - s) / 36e5);
+    const d = Math.ceil(h / 24);
+    if (!Number.isFinite(h) || h <= 0) { rangeSummary.textContent = ''; return; }
+    const locale = getCurrentLocale();
+    const daysText = locale === 'en' ? 'day(s)' : 'día(s)';
+    const hoursText = locale === 'en' ? 'hour(s)' : 'hora(s)';
+    rangeSummary.textContent = `Rental for ${d} ${daysText} · ~${h} ${hoursText}`;
+  }
+
+  function bindFormFixes() {
+    const form = document.getElementById("rentalForm");
+    if (!form || form.dataset.bindFixes === "1") return;
+    form.dataset.bindFixes = "1";
+
+    const chk = document.getElementById("differentDropoff");
+    const dropSel = document.getElementById("dropoffPlace");
+    const pickSel = document.getElementById("pickupPlace");
+    const pickDate = document.getElementById("pickupDate");
+    const dropDate = document.getElementById("dropoffDate");
+
+    function syncHiddenFromSelects(hiddenId) {
+      const hidden = document.getElementById(hiddenId);
+      if (!hidden) return;
+      const wrap = hidden.closest(".time-field") || hidden.parentElement;
+      const selH = wrap?.querySelector(".tp-selects .tp-hour");
+      hidden.value = selH?.value ? `${String(selH.value).padStart(2, "0")}:00` : "";
+    }
+
+    function normalizeDateInput(input) {
+      if (!input) return;
+      const v = String(input.value || "").trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return;
+      const m = v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (m) input.value = `${m[3]}-${String(m[2]).padStart(2, "0")}-${String(m[1]).padStart(2, "0")}`;
+    }
+
+    form.addEventListener("submit", () => {
+      syncHiddenFromSelects("pickupTime");
+      syncHiddenFromSelects("dropoffTime");
+      normalizeDateInput(pickDate);
+      normalizeDateInput(dropDate);
+      if (chk && !chk.checked && dropSel && pickSel?.value) dropSel.value = pickSel.value;
+      updateSummary();
+    }, { capture: true });
+
+    [pickSel, dropSel].forEach(el => {
+      if (!el) return;
+      const toggle = () => {
+        el.classList.toggle('has-value', !!el.value);
+        if (typeof $ !== 'undefined') {
+          $(el).next('.select2-container').find('.select2-selection').toggleClass('has-value', !!el.value);
+        }
+      };
+      (typeof $ !== 'undefined') ? $(el).on('change', toggle) : el.addEventListener('change', toggle);
+      setTimeout(toggle, 500);
+    });
+  }
+
+  return {
+    init: function () {
+      injectTimeCss();
+      initAnalogTime("pickupTime");
+      initAnalogTime("dropoffTime");
+      updateSummary();
+      bindFormFixes();
+    },
+    updateSummary: updateSummary
+  };
+})();
 
   // Exponer updateSummary globalmente (lo usa el MutationObserver del calendar)
   window.updateSummary = TimeModule.updateSummary;
@@ -586,83 +622,116 @@
     document.body.appendChild(overlay);
   }
 
-  function initFlatpickrCalendars() {
-    if (typeof flatpickr === 'undefined') return;
-    injectOverlay();
 
-    const pickupEl = document.getElementById('pickupDate');
-    const dropoffEl = document.getElementById('dropoffDate');
-    const overlay = document.getElementById('fp-view-overlay-3');
-    if (!pickupEl || !dropoffEl) return;
+function initFlatpickrCalendars() {
+  if (typeof flatpickr === 'undefined') return;
+  injectOverlay();
 
-    let pickupPicker, dropoffPicker;
+  const pickupEl = document.getElementById('pickupDate');
+  const dropoffEl = document.getElementById('dropoffDate');
+  const overlay = document.getElementById('fp-view-overlay-3');
+  if (!pickupEl || !dropoffEl) return;
 
-    function initPickers() {
-      const localeData = getFlatpickrLocale();
-      const commonConfig = {
+  let pickupPicker = null;
+  let dropoffPicker = null;
+
+  function createProtectedPicker(inputElement, additionalConfig = {}) {
+    if (!inputElement) return null;
+    let picker;
+
+    try {
+      picker = flatpickr(inputElement, {
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "d-M-y",
-        locale: localeData,
+        locale: getFlatpickrLocale(),
         allowInput: false,
         disableMobile: true,
-        onOpen: () => overlay?.classList.add('active'),
+        onOpen: () => {
+          overlay?.classList.add('active');
+          if (picker && picker.altInput) picker.altInput.blur();
+        },
         onClose: () => overlay?.classList.remove('active'),
-      };
+        onReady(selectedDates, dateStr, instance) {
+          if (instance.altInput) {
+            instance.altInput.setAttribute('readonly', 'readonly');
+            instance.altInput.setAttribute('inputmode', 'none');
+            instance.altInput.style.cursor = 'pointer';
 
-      try {
-        pickupPicker?.destroy();
-        pickupPicker = flatpickr(pickupEl, {
-          ...commonConfig,
-          minDate: "today",
-          onChange(selectedDates, dateStr) {
-            pickupEl.value = dateStr;
-            pickupEl.dispatchEvent(new Event('change', { bubbles: true }));
-            if (dropoffPicker && selectedDates[0]) {
-              const minDate = new Date(selectedDates[0]);
-              minDate.setDate(minDate.getDate() + 1);
-              dropoffPicker.set('minDate', minDate);
-            }
+            instance.altInput.addEventListener('focus', (e) => {
+              e.preventDefault();
+              instance.altInput.blur();
+            });
+            instance.altInput.addEventListener('touchstart', (e) => {
+              e.preventDefault();
+              instance.open();
+            });
+            instance.altInput.addEventListener('mousedown', (e) => {
+              e.preventDefault();
+              instance.open();
+            });
           }
-        });
-      } catch (e) { /* silent */ }
-
-      try {
-        let minDate = "today";
-        if (pickupEl.value) {
-          const d = new Date(pickupEl.value);
-          if (!isNaN(d)) { d.setDate(d.getDate() + 1); minDate = d; }
-        }
-        dropoffPicker?.destroy();
-        dropoffPicker = flatpickr(dropoffEl, {
-          ...commonConfig,
-          minDate,
-          onChange(_, dateStr) {
-            dropoffEl.value = dateStr;
-            dropoffEl.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        });
-      } catch (e) { /* silent */ }
+        },
+        ...additionalConfig
+      });
+    } catch (e) {
+      console.warn("Flatpickr error:", e);
     }
-
-    initPickers();
-
-    const observer = new MutationObserver(() => {
-      initPickers();
-      const placeholder = getCurrentLocale() === 'en' ? 'Hour' : 'Hora';
-      document.querySelectorAll('.tp-hour').forEach(sel => {
-        if (sel.options[0]) sel.options[0].textContent = placeholder;
-      });
-      if (typeof window.updateSummary === 'function') window.updateSummary();
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
-
-    setTimeout(() => {
-      document.querySelectorAll('.flatpickr-input').forEach(input => {
-        if (!input.value) input.placeholder = 'dd-Mmm-yy';
-      });
-    }, 100);
+    return picker;
   }
+
+  pickupPicker = createProtectedPicker(pickupEl, {
+    minDate: "today",
+    onChange(selectedDates, dateStr) {
+      pickupEl.value = dateStr;
+      pickupEl.dispatchEvent(new Event('change', { bubbles: true }));
+      if (typeof window.updateSummary === 'function') window.updateSummary();
+      if (dropoffPicker && selectedDates[0]) {
+        const minDropoffDate = new Date(selectedDates[0]);
+        minDropoffDate.setDate(minDropoffDate.getDate() + 1);
+        dropoffPicker.set('minDate', minDropoffDate);
+      }
+    }
+  });
+
+  let initialMinDate = "today";
+  if (pickupEl.value) {
+    const d = new Date(pickupEl.value);
+    if (!isNaN(d.getTime())) {
+      d.setDate(d.getDate() + 1);
+      initialMinDate = d;
+    }
+  }
+
+  dropoffPicker = createProtectedPicker(dropoffEl, {
+    minDate: initialMinDate,
+    onChange(selectedDates, dateStr) {
+      dropoffEl.value = dateStr;
+      dropoffEl.dispatchEvent(new Event('change', { bubbles: true }));
+      if (typeof window.updateSummary === 'function') window.updateSummary();
+    }
+  });
+
+  const localeObserver = new MutationObserver(() => {
+    const newLocale = getFlatpickrLocale();
+    if (pickupPicker) pickupPicker.set('locale', newLocale);
+    if (dropoffPicker) dropoffPicker.set('locale', newLocale);
+    const hourPlaceholder = getCurrentLocale() === 'en' ? 'Time' : 'Hora';
+    document.querySelectorAll('.tp-hour').forEach(sel => {
+      if (sel.options[0] && sel.options[0].textContent !== hourPlaceholder) {
+        sel.options[0].textContent = hourPlaceholder;
+      }
+    });
+    if (typeof window.updateSummary === 'function') window.updateSummary();
+  });
+  localeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+
+  setTimeout(() => {
+    document.querySelectorAll('.flatpickr-input').forEach(input => {
+      if (!input.value) input.placeholder = 'dd-Mmm-yy';
+    });
+  }, 100);
+}
 
   /* ========================================================
      MÓDULO: CONTROL SCROLL FORMULARIO MÓVIL/TABLET
@@ -812,7 +881,7 @@ $(document).ready(function () {
     return $('<span class="icon-item"><i class="fa-solid ' + iconClass + '"></i> ' + option.text + '</span>');
   }
   $('#pickupPlace, #dropoffPlace').select2({
-    templateResult: formatOption,
+    templateResult:    formatOption,
     templateSelection: formatOption,
     escapeMarkup: markup => markup,
     width: '100%',

@@ -4,6 +4,7 @@
  *  - Topbar: clase .solid al hacer scroll
  *  - Modal de políticas (vj-modal)
  *  - Buscador de reservas en hero (Flatpickr + Select2 + selects de hora)
+ *  - Hora: placeholder "Hora" y al primer clic → 13:00
  * ===================================================================== */
 (function () {
   "use strict";
@@ -77,7 +78,6 @@
 
   /* =================================================================
      TOPBAR: clase .solid al hacer scroll
-     - Cachea estado para no tocar el DOM en cada pixel
      ================================================================= */
   function setupNavbar() {
     const topbar = qs(".topbar");
@@ -152,7 +152,6 @@
 
   /* =================================================================
      SELECTS DE HORA (custom)
-     - Reemplazan al input[type="text"] visible con un <select> de horas
      ================================================================= */
   function isSameLocalDate(dateStr, dateObj) {
     if (!dateStr || !dateObj) return false;
@@ -166,6 +165,39 @@
     return new Date().getHours() + 1;
   }
 
+  // ========== Configuración del "clic para 13:00" ==========
+  function setupDefaultTimeOnClick(selectElem, inputElem) {
+    if (selectElem.dataset.defaultTimeSetup === "1") return;
+    selectElem.dataset.defaultTimeSetup = "1";
+
+    if (inputElem.value && inputElem.value.trim() !== "") return;
+
+    function applyDefaultIfNeeded() {
+      if (selectElem.dataset.defaultApplied === "true") return;
+      if (selectElem.value && selectElem.value !== "") return;
+
+      const defaultHour = "13";
+      const option = Array.from(selectElem.options).find(opt => opt.value === defaultHour);
+      if (option) {
+        selectElem.value = defaultHour;
+        inputElem.value = `${defaultHour}:00`;
+        inputElem.dispatchEvent(new Event("input", { bubbles: true }));
+        inputElem.dispatchEvent(new Event("change", { bubbles: true }));
+        selectElem.dataset.defaultApplied = "true";
+      }
+    }
+
+    selectElem.addEventListener("click", function onClick() {
+      applyDefaultIfNeeded();
+      selectElem.removeEventListener("click", onClick);
+    }, { once: true });
+
+    selectElem.addEventListener("focus", function onFocus() {
+      applyDefaultIfNeeded();
+      selectElem.removeEventListener("focus", onFocus);
+    }, { once: true });
+  }
+
   function rebuildHourOptions(input, hourMax = 24) {
     const wrap = input.closest(".time-field") || input.parentElement;
     if (!wrap) return;
@@ -176,7 +208,6 @@
     const previousValue = selH.value;
     const hourPlaceholder = getCurrentLocale() === 'en' ? 'Time' : 'Hora';
 
-    // Solo pickupTime restringe horas pasadas si la fecha es hoy
     let startHour = 0;
     if (input.id === "pickupTimePoliticas") {
       const pickupDateValue = document.getElementById("pickupDatePoliticas")?.value || "";
@@ -185,7 +216,7 @@
       }
     }
 
-    selH.innerHTML = `<option value="" disabled>${hourPlaceholder}</option>`;
+    selH.innerHTML = `<option value="" disabled selected>${hourPlaceholder}</option>`;
     for (let h = startHour; h < hourMax; h++) {
       const val24 = pad2(h);
       const op = document.createElement("option");
@@ -194,14 +225,16 @@
       selH.appendChild(op);
     }
 
-    // Restaurar selección previa si sigue siendo válida
     const stillExists = Array.from(selH.options).some(opt => opt.value === previousValue);
     if (stillExists && previousValue !== "") {
       selH.value = previousValue;
       input.value = `${previousValue}:00`;
+
+      selH.dataset.defaultApplied = "true";
     } else {
       selH.selectedIndex = 0;
       input.value = "";
+      delete selH.dataset.defaultApplied;
     }
 
     input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -224,6 +257,7 @@
     else input.insertAdjacentElement("afterend", box);
 
     rebuildHourOptions(input, hourMax);
+    setupDefaultTimeOnClick(selH, input);
 
     function sync() {
       if (!selH.value) {
@@ -252,7 +286,6 @@
 
     createTimeSelectsBelow(input, 24);
 
-    // Solo el pickup time reacciona al cambio de fecha
     if (id === "pickupTimePoliticas") {
       const pickupDate = document.getElementById("pickupDatePoliticas");
       pickupDate?.addEventListener("change", () => rebuildHourOptions(input, 24));
@@ -260,29 +293,7 @@
   }
 
   /* =================================================================
-     HORAS POR DEFECTO (13:00)
-     ================================================================= */
-  function setDefaultDates() {
-    ['pickupTimePoliticas', 'dropoffTimePoliticas'].forEach(id => {
-      const input = document.getElementById(id);
-      if (!input) return;
-
-      input.value = "13:00";
-
-      const field = input.closest('.time-field');
-      const hourSelect = field?.querySelector('.tp-selects .tp-hour');
-      if (hourSelect) {
-        hourSelect.value = "13";
-        if (hourSelect.options[0].value === "") {
-          hourSelect.options[0].selected = true;
-        }
-      }
-    });
-  }
-
-  /* =================================================================
      ESPERA HASTA QUE JQUERY+SELECT2 ESTÉN DISPONIBLES
-     (reemplaza el setTimeout(800) frágil del original)
      ================================================================= */
   function waitForJQuerySelect2(callback, maxTries = 50, interval = 100) {
     let tries = 0;
@@ -314,7 +325,6 @@
     const dropoffWrapper  = document.getElementById('dropoffWrapperPoliticas');
     const dropoffSelect   = document.getElementById('dropoffPlacePoliticas');
 
-    // Guardar estado original del dropoff (Select2 dispara change al inicializar con disabled)
     const originalDisplay  = dropoffWrapper ? dropoffWrapper.style.display : null;
     const originalDisabled = dropoffSelect ? dropoffSelect.disabled : null;
 
@@ -333,7 +343,6 @@
       dropdownParent: modal ? $(modal) : $('body')
     };
 
-    // Destruir instancias previas si existen
     ['#pickupPlacePoliticas', '#dropoffPlacePoliticas'].forEach(selector => {
       if ($(selector).data('select2')) $(selector).select2('destroy');
     });
@@ -386,7 +395,6 @@
         if ($?.fn?.select2) {
           $('#dropoffPlacePoliticas').prop('disabled', !isChecked).trigger('change');
         }
-        // Si NO está marcado, dropoff = pickup
         if (!isChecked && pickSel?.value) {
           dropSel.value = pickSel.value;
           if ($?.fn?.select2) {
@@ -423,7 +431,6 @@
       e.preventDefault();
       let valid = true;
 
-      // Limpiar errores previos
       form.querySelectorAll('.error-msg').forEach(el => el.remove());
       form.querySelectorAll('.field-error, .field-success').forEach(el => {
         el.classList.remove('field-error', 'field-success');
@@ -434,7 +441,6 @@
         });
       }
 
-      // 1) Validar selects de ubicación
       const checkbox = document.getElementById('differentDropoffPoliticas');
       const selects = [{ id: 'pickupPlacePoliticas', msgKey: 'location' }];
       if (checkbox?.checked) {
@@ -466,7 +472,6 @@
         }
       });
 
-      // 2) Validar fechas
       [
         { id: 'pickupDatePoliticas', msgKey: 'date' },
         { id: 'dropoffDatePoliticas', msgKey: 'date' }
@@ -496,7 +501,6 @@
         }
       });
 
-      // 3) Validar horas (solo si el usuario interactuó con el select)
       [
         { id: 'pickupTimePoliticas', msgKey: 'time' },
         { id: 'dropoffTimePoliticas', msgKey: 'time' }
@@ -533,7 +537,6 @@
         }
       });
 
-      // Si todo es válido, enviar
       if (valid) {
         const pickup  = document.getElementById('pickupPlacePoliticas');
         const dropoff = document.getElementById('dropoffPlacePoliticas');
@@ -559,44 +562,66 @@
     const overlay      = document.getElementById('fp-overlay');
 
     function initPicker(input) {
-      if (!input) return;
+  if (!input) return;
 
-      return flatpickr(input, {
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d-M-y",
-        minDate: "today",
-        allowInput: false,
-        disableMobile: true,
-        locale: getFlatpickrLocale(),
+  return flatpickr(input, {
+    dateFormat: "Y-m-d",
+    altInput: true,
+    altFormat: "d-M-y",
+    minDate: "today",
+    allowInput: false,
+    disableMobile: true,
+    clickOpens: true,
+    locale: getFlatpickrLocale(),
 
-        onOpen() {
-          overlay?.classList.add('active');
-        },
-        onClose() {
-          overlay?.classList.remove('active');
-        },
+    onReady(selectedDates, dateStr, instance) {
+      if (instance.altInput) {
+        instance.altInput.setAttribute('readonly', 'readonly');
+        instance.altInput.setAttribute('inputmode', 'none');
+        instance.altInput.style.cursor = 'pointer';
+        instance.altInput.addEventListener('focus', (e) => {
+          e.preventDefault();
+          instance.altInput.blur();
+        });
+        instance.altInput.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          instance.open();
+        });
+        instance.altInput.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          instance.open();
+        });
+      }
+    },
 
-        onChange(selectedDates) {
-          // Si cambia pickup, ajustar minDate del dropoff (mínimo 1 día después)
-          if (input.id === 'pickupDatePoliticas' && selectedDates[0]) {
-            const dropoffPicker = document.getElementById('dropoffDatePoliticas')?._flatpickr;
-            if (dropoffPicker) {
-              const minDropoffDate = new Date(selectedDates[0]);
-              minDropoffDate.setDate(minDropoffDate.getDate() + 1);
-              dropoffPicker.set('minDate', minDropoffDate);
-            }
-          }
+    onOpen() {
+      overlay?.classList.add('active');
+      if (this.altInput) this.altInput.blur();
+    },
+
+    onClose() {
+      overlay?.classList.remove('active');
+    },
+
+    onChange(selectedDates) {
+      if (input.id === 'pickupDatePoliticas' && selectedDates[0]) {
+        const dropoffPicker = document.getElementById('dropoffDatePoliticas')?._flatpickr;
+        if (dropoffPicker) {
+          const minDropoffDate = new Date(selectedDates[0]);
+          minDropoffDate.setDate(minDropoffDate.getDate() + 1);
+          dropoffPicker.set('minDate', minDropoffDate);
         }
-      });
+      }
     }
+  });
+}
 
     if (pickupInput)  initPicker(pickupInput);
     if (dropoffInput) initPicker(dropoffInput);
   }
 
   /* =================================================================
-     CONTROL DEL BUSCADOR EN MÓVIL/TABLET (abrir/cerrar fullscreen)
+     CONTROL DEL BUSCADOR EN MÓVIL/TABLET
      ================================================================= */
   function initBuscadorPoliticas() {
     const btnAbrir  = document.getElementById('btn-abrir-buscador-politicas');
@@ -636,7 +661,6 @@
       if (e.key === 'Escape' && buscador.classList.contains('active')) cerrar();
     });
 
-    // Evitar scroll del body al hacer touchmove sobre áreas no scrolleables
     document.body.addEventListener('touchmove', function (e) {
       if (!buscador.classList.contains('active')) return;
       const isScrollable = e.target.closest('.select2-results__options, .select2-dropdown, select, .vj-modal__body');
@@ -645,7 +669,7 @@
   }
 
   /* =================================================================
-     OBSERVER DE IDIOMA (cambia placeholders de hora y locale Flatpickr)
+     OBSERVER DE IDIOMA
      ================================================================= */
   function setupLocaleObserver() {
     const observer = new MutationObserver(() => {
@@ -661,30 +685,9 @@
   }
 
   /* =================================================================
-     FALLBACK: hora 13:00 al hacer focus si está vacío
-     ================================================================= */
-  function setupTimeFallback() {
-    const pickupTime  = document.getElementById("pickupTimePoliticas");
-    const dropoffTime = document.getElementById("dropoffTimePoliticas");
-    const form        = document.getElementById("rentalFormPoliticas");
-
-    [pickupTime, dropoffTime].forEach(input => {
-      input?.addEventListener("focus", function () {
-        if (!this.value) this.value = "13:00";
-      });
-    });
-
-    form?.addEventListener("submit", () => {
-      if (pickupTime && !pickupTime.value) pickupTime.value = "13:00";
-      if (dropoffTime && !dropoffTime.value) dropoffTime.value = "13:00";
-    });
-  }
-
-  /* =================================================================
      INICIALIZACIÓN PRINCIPAL
      ================================================================= */
   onReady(() => {
-    // Funciones que NO dependen de jQuery/Select2
     setupNavbar();
     setupFooterYear();
     setupPolicyModal();
@@ -693,12 +696,9 @@
     initAnalogTime("dropoffTimePoliticas");
 
     setupFlatpickr();
-    setDefaultDates();
     initBuscadorPoliticas();
-    setupTimeFallback();
     setupLocaleObserver();
 
-    // Funciones que SÍ dependen de jQuery+Select2 (esperar a que carguen)
     waitForJQuerySelect2(() => {
       setupSelect2Iconos();
       setupCheckbox();

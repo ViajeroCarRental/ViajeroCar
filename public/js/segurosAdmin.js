@@ -3,6 +3,77 @@ document.addEventListener("DOMContentLoaded", () => {
     const tbody = document.getElementById("tbodySeguros");
     const btnNuevo = document.getElementById("btnNuevo");
 
+    // ===================================================
+    // Formateo dinámico de inputs (dinero / porcentaje)
+    // ===================================================
+    const limpiarNumero = (val) => {
+        const limpio = String(val).replace(/[^0-9.]/g, '');
+        return parseFloat(limpio) || 0;
+    };
+
+    document.addEventListener("focusin", (e) => {
+        const id = e.target.id;
+        const cls = e.target.classList;
+        if (id === "newPrecio" || id === "editPrecio" ||
+            id === "newDeducibleColision" || id === "editDeducibleColision" ||
+            id === "newDeducibleRobo" || id === "editDeducibleRobo" ||
+            cls.contains("new-monto") || cls.contains("edit-monto")) {
+            let valorLimpio = e.target.value.replace(/[^0-9.]/g, '');
+            if (parseFloat(valorLimpio) === 0) valorLimpio = "";
+            e.target.value = valorLimpio;
+        }
+    });
+
+    document.addEventListener("focusout", (e) => {
+        const id = e.target.id;
+        const cls = e.target.classList;
+        if (id === "newPrecio" || id === "editPrecio" || cls.contains("new-monto") || cls.contains("edit-monto")) {
+            const num = parseFloat(e.target.value) || 0;
+            e.target.value = "$" + num.toFixed(2);
+        } else if (id === "newDeducibleColision" || id === "editDeducibleColision" ||
+                   id === "newDeducibleRobo" || id === "editDeducibleRobo") {
+            const num = parseFloat(e.target.value) || 0;
+            e.target.value = num.toFixed(2) + " %";
+        }
+    });
+
+    // ===================================================
+    // AUTO: recalcular precio y descripción según marcados
+    //   - precio: suma data-precio de los que tienen data-suma="1"
+    //   - descripción: junta data-desc de TODOS los marcados
+    //   El usuario puede sobrescribir ambos después.
+    // ===================================================
+    const recalcularDesde = (claseCheckbox, idPrecio, idDescripcion) => {
+        const marcados = Array.from(document.querySelectorAll(`.${claseCheckbox}:checked`));
+
+        // Precio: solo suman los que tienen data-suma = "1"
+        let suma = 0;
+        marcados.forEach(chk => {
+            if (chk.dataset.suma === "1") {
+                suma += parseFloat(chk.dataset.precio) || 0;
+            }
+        });
+        const inputPrecio = document.getElementById(idPrecio);
+        if (inputPrecio) inputPrecio.value = "$" + suma.toFixed(2);
+
+        // Descripción: junta las descripciones de TODOS los marcados
+        const descripciones = marcados
+            .map(chk => (chk.dataset.desc || "").trim())
+            .filter(d => d.length > 0);
+        const inputDesc = document.getElementById(idDescripcion);
+        if (inputDesc) inputDesc.value = descripciones.join("\n");
+    };
+
+    // Listener para los checkboxes de NUEVO
+    document.addEventListener("change", (e) => {
+        if (e.target.classList.contains("new-prot")) {
+            recalcularDesde("new-prot", "newPrecio", "newDescripcion");
+        }
+        if (e.target.classList.contains("edit-prot")) {
+            recalcularDesde("edit-prot", "editPrecio", "editDescripcion");
+        }
+    });
+
     // ===============================
     // Cargar tabla principal
     // ===============================
@@ -11,20 +82,17 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(r => r.json())
             .then(json => {
                 tbody.innerHTML = "";
-
                 json.data.forEach(seg => {
-                    // Formateamos los números a dos decimales de forma segura
                     const precio = parseFloat(seg.precio_por_dia).toFixed(2);
                     const colision = parseFloat(seg.deducible_colision).toFixed(2);
                     const robo = parseFloat(seg.deducible_robo).toFixed(2);
 
                     tbody.innerHTML += `
                         <tr>
-                            <td class="mono">${seg.orden}</td>
                             <td><strong>${seg.nombre}</strong></td>
                             <td class="mono">$${precio}</td>
-                            <td class="mono">$${colision}</td>
-                            <td class="mono">$${robo}</td>
+                            <td class="mono">${colision}%</td>
+                            <td class="mono">${robo}%</td>
                             <td>${seg.activo ? "Sí" : "No"}</td>
                             <td>
                                 <button class="btn btn-sm btn-warning" onclick="editar(${seg.id_paquete})">Editar</button>
@@ -44,38 +112,23 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(r => r.json())
             .then(json => {
                 const d = json.data;
-                const depositos = json.depositos || {}; // Mapa de montos de la tabla depositos
+                const depositos = json.depositos || {};
 
-                // Llenamos campos base
                 document.getElementById("editId").value = d.id_paquete;
                 document.getElementById("editNombre").value = d.nombre;
-                document.getElementById("editDescripcion").value = d.descripcion;
-                document.getElementById("editPrecio").value = d.precio_por_dia;
-                document.getElementById("editOrden").value = d.orden;
-                document.getElementById("editDeducibleColision").value = d.deducible_colision;
-                document.getElementById("editDeducibleRobo").value = d.deducible_robo;
+                document.getElementById("editDescripcion").value = d.descripcion || "";
+                document.getElementById("editPrecio").value = "$" + parseFloat(d.precio_por_dia).toFixed(2);
+                document.getElementById("editDeducibleColision").value = parseFloat(d.deducible_colision).toFixed(2) + " %";
+                document.getElementById("editDeducibleRobo").value = parseFloat(d.deducible_robo).toFixed(2) + " %";
                 document.getElementById("editActivo").checked = d.activo == 1;
 
-                // Calculamos el deducible total para revertir el porcentaje visualmente
-                const colision = parseFloat(d.deducible_colision) || 0;
-                const robo = parseFloat(d.deducible_robo) || 0;
-                const totalDeducible = colision + robo;
-
-                // Pintamos los porcentajes correspondientes a cada auto
-                document.querySelectorAll(".edit-porcentaje").forEach(input => {
+                document.querySelectorAll(".edit-monto").forEach(input => {
                     const catId = input.dataset.id;
                     const montoGarantia = parseFloat(depositos[catId]) || 0;
-
-                    if (totalDeducible > 0 && montoGarantia > 0) {
-                        // Revertimos la ecuación: (Monto / Total Deducible) * 100
-                        input.value = Math.round((montoGarantia / totalDeducible) * 100);
-                    } else {
-                        input.value = 0;
-                    }
+                    input.value = "$" + montoGarantia.toFixed(2);
                 });
 
-                // 🟢 Marcar las protecciones seleccionadas
-                document.querySelectorAll(".edit-prot").forEach(chk => chk.checked = false); // Limpiar previos
+                document.querySelectorAll(".edit-prot").forEach(chk => chk.checked = false);
                 if (json.protecciones) {
                     document.querySelectorAll(".edit-prot").forEach(chk => {
                         if (json.protecciones.includes(parseInt(chk.value))) {
@@ -88,53 +141,68 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     };
 
-    // ===============================
-    // Eliminar Paquete
-    // ===============================
+    // ===================================================
+    // Eliminar (SweetAlert2)
+    // ===================================================
     window.eliminar = (id) => {
-        if (!confirm("¿Seguro que deseas eliminar este paquete y todas sus garantías vinculadas?")) return;
-
-        fetch(`/admin/seguros/${id}`, {
-            method: "DELETE",
-            headers: { "X-CSRF-TOKEN": document.querySelector("meta[name='csrf-token']").content }
-        })
-        .then(r => r.json())
-        .then(() => cargarSeguros());
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "¡No podrás revertir esto y se eliminarán todas las garantías vinculadas!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff1e2d',
+            cancelButtonColor: '#e5e7eb',
+            confirmButtonText: 'Sí, eliminar paquete',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/admin/seguros/${id}`, {
+                    method: "DELETE",
+                    headers: { "X-CSRF-TOKEN": document.querySelector("meta[name='csrf-token']").content }
+                })
+                .then(r => r.json())
+                .then(() => {
+                    Swal.fire({
+                        title: '¡Eliminado!',
+                        text: 'El paquete ha sido borrado correctamente.',
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    cargarSeguros();
+                });
+            }
+        });
     };
 
     // ===============================
-    // Abrir Modal Nuevo (Limpia campos)
+    // Abrir Modal Nuevo
     // ===============================
     btnNuevo.addEventListener("click", () => {
         document.getElementById("newNombre").value = "";
         document.getElementById("newDescripcion").value = "";
-        document.getElementById("newPrecio").value = "0.00";
-        document.getElementById("newOrden").value = "0";
-        document.getElementById("newDeducibleColision").value = "0.00";
-        document.getElementById("newDeducibleRobo").value = "0.00";
+        document.getElementById("newPrecio").value = "$0.00";
+        document.getElementById("newDeducibleColision").value = "0.00 %";
+        document.getElementById("newDeducibleRobo").value = "0.00 %";
         document.getElementById("newActivo").checked = true;
-        
-        // Resetea los porcentajes de autos a 0
-        document.querySelectorAll(".new-porcentaje").forEach(input => input.value = 0);
-        // 🟢 Resetea las protecciones seleccionadas
+
+        document.querySelectorAll(".new-monto").forEach(input => input.value = "$0.00");
         document.querySelectorAll(".new-prot").forEach(chk => chk.checked = false);
 
         openModal("modalNuevo");
     });
 
-    // ===============================
-    // Guardar Nuevo Paquete (POST)
-    // ===============================
+    // ===================================================
+    // Guardar NUEVO
+    // ===================================================
     document.getElementById("btnGuardarNuevo").addEventListener("click", () => {
-        
-        // Recolectamos dinámicamente los porcentajes ingresados
-        let porcentajesObj = {};
-        document.querySelectorAll(".new-porcentaje").forEach(input => {
-            porcentajesObj[input.dataset.id] = parseFloat(input.value) || 0;
+        let montosObj = {};
+        document.querySelectorAll(".new-monto").forEach(input => {
+            montosObj[input.dataset.id] = limpiarNumero(input.value);
         });
 
-        // 🟢 Recolectar las protecciones marcadas
         let proteccionesArr = Array.from(document.querySelectorAll(".new-prot:checked")).map(chk => chk.value);
+        const ordenEl = document.getElementById("newOrden");
 
         fetch("/admin/seguros", {
             method: "POST",
@@ -145,13 +213,13 @@ document.addEventListener("DOMContentLoaded", () => {
             body: JSON.stringify({
                 nombre: document.getElementById("newNombre").value,
                 descripcion: document.getElementById("newDescripcion").value,
-                precio_por_dia: document.getElementById("newPrecio").value,
-                orden: document.getElementById("newOrden").value,
-                deducible_colision: document.getElementById("newDeducibleColision").value,
-                deducible_robo: document.getElementById("newDeducibleRobo").value,
+                precio_por_dia: limpiarNumero(document.getElementById("newPrecio").value),
+                orden: ordenEl ? ordenEl.value : 0,
+                deducible_colision: limpiarNumero(document.getElementById("newDeducibleColision").value),
+                deducible_robo: limpiarNumero(document.getElementById("newDeducibleRobo").value),
                 activo: document.getElementById("newActivo").checked ? 1 : 0,
-                porcentajes: porcentajesObj,
-                protecciones: proteccionesArr // 👈 Enviamos el array
+                montos: montosObj,
+                protecciones: proteccionesArr
             })
         })
         .then(r => r.json())
@@ -159,26 +227,26 @@ document.addEventListener("DOMContentLoaded", () => {
             if(res.ok) {
                 closeModal("modalNuevo");
                 cargarSeguros();
+                Swal.fire({ title: '¡Guardado con éxito!', text: 'El paquete se ha registrado en el sistema.', icon: 'success', timer: 2000, showConfirmButton: false });
             } else {
-                alert("Error al guardar: " + res.msg);
+                Swal.fire({ title: 'Error al guardar', text: res.msg, icon: 'error', confirmButtonColor: '#2563eb' });
             }
         });
     });
 
-    // ===============================
-    // Actualizar Paquete Existente (PUT)
-    // ===============================
+    // ===================================================
+    // Actualizar
+    // ===================================================
     document.getElementById("btnGuardarEdit").addEventListener("click", () => {
         const id = document.getElementById("editId").value;
 
-        // Recolectamos dinámicamente los porcentajes editados
-        let porcentajesObj = {};
-        document.querySelectorAll(".edit-porcentaje").forEach(input => {
-            porcentajesObj[input.dataset.id] = parseFloat(input.value) || 0;
+        let montosObj = {};
+        document.querySelectorAll(".edit-monto").forEach(input => {
+            montosObj[input.dataset.id] = limpiarNumero(input.value);
         });
 
-        // 🟢 Recolectar las protecciones marcadas en edición
         let proteccionesArr = Array.from(document.querySelectorAll(".edit-prot:checked")).map(chk => chk.value);
+        const ordenEl = document.getElementById("editOrden");
 
         fetch(`/admin/seguros/${id}`, {
             method: "PUT",
@@ -189,13 +257,13 @@ document.addEventListener("DOMContentLoaded", () => {
             body: JSON.stringify({
                 nombre: document.getElementById("editNombre").value,
                 descripcion: document.getElementById("editDescripcion").value,
-                precio_por_dia: document.getElementById("editPrecio").value,
-                orden: document.getElementById("editOrden").value,
-                deducible_colision: document.getElementById("editDeducibleColision").value,
-                deducible_robo: document.getElementById("editDeducibleRobo").value,
+                precio_por_dia: limpiarNumero(document.getElementById("editPrecio").value),
+                orden: ordenEl ? ordenEl.value : 0,
+                deducible_colision: limpiarNumero(document.getElementById("editDeducibleColision").value),
+                deducible_robo: limpiarNumero(document.getElementById("editDeducibleRobo").value),
                 activo: document.getElementById("editActivo").checked ? 1 : 0,
-                porcentajes: porcentajesObj,
-                protecciones: proteccionesArr // 👈 Enviamos el array
+                montos: montosObj,
+                protecciones: proteccionesArr
             })
         })
         .then(r => r.json())
@@ -203,8 +271,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if(res.ok) {
                 closeModal("modalEditar");
                 cargarSeguros();
+                Swal.fire({ title: '¡Paquete Actualizado!', text: 'Los cambios se guardaron correctamente.', icon: 'success', timer: 2000, showConfirmButton: false });
             } else {
-                alert("Error al actualizar: " + res.msg);
+                Swal.fire({ title: 'Error al actualizar', text: res.msg, icon: 'error', confirmButtonColor: '#2563eb' });
             }
         });
     });
@@ -212,7 +281,13 @@ document.addEventListener("DOMContentLoaded", () => {
     cargarSeguros();
 });
 
-// Helpers para los modales
+// Cerrar modales haciendo clic afuera
+window.addEventListener("click", (e) => {
+    if (e.target.classList.contains("modal")) {
+        closeModal(e.target.id);
+    }
+});
+
 function openModal(id) {
     document.getElementById(id).style.display = "flex";
 }

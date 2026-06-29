@@ -324,6 +324,159 @@ document.addEventListener("DOMContentLoaded", () => {
     $elId("btnRechazarUpgrade")?.addEventListener("click", () => { $elId("modalUpgrade").classList.remove("show"); window.showStep(2); });
     $elId("cerrarUpgrade")?.addEventListener("click", () => $elId("modalUpgrade").classList.remove("show"));
 
+    // ================================ CAMBIO DE CATEGORÍA ===============================
+
+    (function inicializarCambioCategoria() {
+        const modalCat = $elId("modalCategorias");
+        const btnAbrir = $elId("btnCambiarCategoria");
+        const btnCerrar = $elId("cerrarModalCategorias");
+        const btnCerrar2 = $elId("cerrarModalCategorias2");
+        const contenedorCategorias = $elId("contenedorCategoriasJS");
+        const elInicial = $elId("contratoInicial");
+
+        if (!modalCat || !btnAbrir) return;
+
+        // 🟢 Aseguramos que solo use la clase show-modal y bloquee el scroll de fondo
+        const abrirModal = () => {
+            modalCat.classList.add("show-modal");
+            document.body.style.overflow = "hidden";
+        };
+        const cerrarModal = () => {
+            modalCat.classList.remove("show-modal");
+            document.body.style.overflow = "auto";
+        };
+
+        btnCerrar?.addEventListener("click", cerrarModal);
+        btnCerrar2?.addEventListener("click", cerrarModal);
+
+        modalCat.addEventListener("click", (e) => {
+            if (e.target === modalCat) cerrarModal();
+        });
+
+        // Evento CLIC explícito para abrir y cargar datos
+        btnAbrir.addEventListener("click", async (e) => {
+            e.preventDefault(); // Evita comportamientos raros de botones en formularios
+            abrirModal();
+
+            if (!contenedorCategorias) return;
+
+            contenedorCategorias.innerHTML = '<div style="width: 100%; text-align: center; padding: 40px; color: #64748b;">⏳ Cargando catálogo de categorías...</div>';
+
+            try {
+                // Fetch a la ruta que declaraste en tu web.php
+                const data = await ContratoAPI.getJSON('/admin/contrato/categorias-dinamicas');
+
+                if (data.success && data.categorias && data.categorias.length > 0) {
+                    renderizarCategorias(data.categorias);
+                } else {
+                    contenedorCategorias.innerHTML = '<p style="text-align:center; color:#64748b; padding: 20px;">No hay categorías disponibles en este momento.</p>';
+                }
+            } catch (err) {
+                console.error("Error cargando categorías dinámicas:", err);
+                contenedorCategorias.innerHTML = '<p style="text-align:center;">Hubo un error de conexión al cargar el catálogo.</p>';
+            }
+        });
+
+        function renderizarCategorias(categorias) {
+            contenedorCategorias.innerHTML = '';
+            // Buscamos el elemento de nuevo para asegurar que tenemos el dataset actualizado
+            const cIni = document.getElementById('contratoInicial');
+            const categoriaActualId = cIni ? cIni.dataset.idCategoria : null;
+
+            categorias.forEach(cat => {
+                const isActive = (cat.id_categoria == categoriaActualId);
+                const precioFormateado = ContratoUI.money(cat.precio_dia || 0);
+
+                // 🟢 Fíjate en el onerror="" de la imagen, eso salva las rutas rotas.
+                const cardHtml = `
+                    <div class="card-categoria ${isActive ? 'activa' : ''}"
+                        data-id-categoria="${cat.id_categoria}" 
+                        data-codigo="${cat.codigo}"
+                        data-precio="${cat.precio_dia || 0}"
+                        data-nombre="${cat.nombre}">
+
+                        <div class="cat-img-wrapper">
+                            <img src="${cat.imagen}" alt="${cat.nombre}" onerror="this.src='/img/Logotipo.png';">
+                        </div>
+                        
+                        <div class="cat-info">
+                            <div class="cat-codigo">${cat.codigo}</div>
+                            <div class="cat-nombre">${cat.nombre}</div>
+                            <div class="cat-precio">${precioFormateado} /día</div>
+                        </div>
+                        
+                        ${isActive ? '<span class="cat-badge-actual">Actual</span>' : ''}
+                    </div>
+                `;
+
+                contenedorCategorias.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        }
+
+        contenedorCategorias?.addEventListener("click", async (e) => {
+            const card = e.target.closest(".card-categoria");
+            if (!card) return;
+
+            const idCategoria = card.dataset.idCategoria;
+            const nombreCat = card.dataset.nombre || "";
+
+            if (card.classList.contains("activa")) {
+                ContratoUI.notify("warning", "Esa ya es la categoría actual.");
+                return;
+            }
+
+            const inputE = $elId("inputOcultoEntrega");
+            const inputD = $elId("inputOcultoDevolucion");
+
+            if (!inputE?.value || !inputD?.value) {
+                return ContratoUI.notify("error", "No se pudieron leer las fechas de la reservación.");
+            }
+
+            const [fechaInicio, horaInicio] = inputE.value.split("T");
+            const [fechaFin, horaFin] = inputD.value.split("T");
+
+            try {
+                const result = await ContratoAPI.postJSON(
+                    `/admin/contrato/${window.ID_RESERVACION}/recalcular-total`,
+                    {
+                        id_categoria: idCategoria,
+                        fecha_inicio: fechaInicio,
+                        hora_inicio: horaInicio,
+                        fecha_fin: fechaFin,
+                        hora_fin: horaFin
+                    }
+                );
+
+                if (result.success) {
+                    if (elInicial) elInicial.dataset.idCategoria = idCategoria;
+
+                    contenedorCategorias.querySelectorAll(".card-categoria").forEach(c => {
+                        c.classList.toggle("activa", c.dataset.idCategoria === idCategoria);
+                        const badge = c.querySelector(".cat-badge-actual");
+                        if (badge) badge.remove();
+                    });
+
+                    const badge = document.createElement("span");
+                    badge.className = "cat-badge-actual";
+                    badge.textContent = "Actual";
+                    card.appendChild(badge);
+
+                    if (typeof window.cargarResumenBasico === "function") {
+                        await window.cargarResumenBasico();
+                    }
+
+                    ContratoUI.notify("success", `Categoría cambiada a ${nombreCat}.`);
+                    cerrarModal();
+                } else {
+                    ContratoUI.notify("error", result.error || "No se pudo cambiar la categoría.");
+                }
+            } catch (err) {
+                console.error("Error al cambiar categoría:", err);
+                ContratoUI.notify("error", "Error de conexión al cambiar categoría.");
+            }
+        });
+    })();
+
     // ================================ LÓGICA DEL DELIVERY ===============================
 
     const deliveryToggle = $el("#deliveryToggle");

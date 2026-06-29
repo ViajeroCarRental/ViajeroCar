@@ -773,6 +773,15 @@
                 {{-- ===================== STEP 4 ===================== --}}
                 @if ($step === 4)
                     <input type="hidden" id="addonsHidden" value="{{ $filters['addons'] ?? '' }}">
+                    <div id="loaderReserva" class="loader-reserva-overlay" style="display:none;">
+                        <div class="loader-reserva-card">
+                            <img src="{{ asset('img/Carga.svg') }}" alt="Procesando reserva">
+
+                            <p id="loaderReservaTexto">
+                                Procesando tu reservación...
+                            </p>
+                        </div>
+                    </div>
 
                     <div class="step4-layout">
 

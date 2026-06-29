@@ -279,6 +279,31 @@ class ContratoController extends ContratoBaseController
         })->toArray();
     }
 
+    public function obtenerCategoriasDinamicas()
+    {
+        try {
+            $categorias = DB::table('categorias_carros')
+                ->where('activo', true)
+                ->orderBy('precio_dia', 'asc')
+                ->get();
+
+            $categorias->transform(function ($cat) {
+                $codigoCat = $cat->codigo ?? 'C';
+                $nombreImagen = self::MAPA_IMAGENES[$codigoCat] ?? 'Logotipo.png';
+                $cat->imagen = asset('img/' . $nombreImagen);
+                return $cat;
+            });
+
+            return response()->json([
+                'success' => true,
+                'categorias' => $categorias
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("Error cargando categorías dinámicas: " . $e->getMessage());
+            return response()->json(['success' => false, 'error' => 'Error interno'], 500);
+        }
+    }
+
     private function formatearTelefono(string $telOriginal): string
     {
         $soloNumeros = preg_replace('/[^0-9]/', '', $telOriginal);
@@ -486,8 +511,15 @@ class ContratoController extends ContratoBaseController
 
             $horasCortesiaFinal = $data['horas_cortesia'] ?? $res->horas_cortesia;
 
+            // Si hay cambio de categoría, eliminamos el vehículo asignado
+            $idVehiculoFinal = $res->id_vehiculo;
+            if ($cambioDeCategoria) {
+                $idVehiculoFinal = null;
+            }
+
             DB::table('reservaciones')->where('id_reservacion', $idReservacion)->update([
                 'id_categoria'      => $data['id_categoria'],
+                'id_vehiculo'       => $idVehiculoFinal,
                 'tarifa_base'       => $precioReal,
                 'tarifa_modificada' => $tarifaModificada,
                 'tarifa_ajustada'   => $nuevaTarifaAjustada,
