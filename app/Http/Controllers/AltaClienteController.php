@@ -34,7 +34,7 @@ class AltaClienteController extends Controller
             ->orderBy('orden')
             ->get(['id_paquete', 'nombre', 'precio_por_dia', 'deducible_colision', 'deducible_robo']);
 
-        return view('Admin.altaCliente', compact('categorias', 'protecciones'));
+        return view('Admin.AltaCliente', compact('categorias', 'protecciones'));
     }
 
     /* ============================================================
