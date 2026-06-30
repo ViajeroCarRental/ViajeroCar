@@ -2,13 +2,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const $ = (s) => document.querySelector(s);
     const $$ = (s) => Array.from(document.querySelectorAll(s));
 
+    // =========================================
+    // ESTADO GLOBAL
+    // =========================================
     let selectedClientType = null;
     let currentStep = 1;
     let activeProtectionRow = null;
     let activeBaseDailyPrice = 0;
+    let activeCategoryName = '';
     let activeSignatureTarget = null;
     let modalDrawing = false;
     let modalHasDrawn = false;
+
+    // =========================================
+    // ESTADO DE PROTECCIONES
+    // =========================================
+    const protectionState = {
+        selectedId: null,
+        selectedName: null,
+        selectedPrice: 0,
+        selectedGuarantee: 0,
+        activeRowIndex: null,
+        baseDailyPrice: 0,
+        categoryName: '',
+    };
 
     const clauses = {
         fisica: [],
@@ -37,6 +54,9 @@ document.addEventListener("DOMContentLoaded", () => {
         general: "Cláusulas del convenio Público General",
     };
 
+    // =========================================
+    // HELPERS
+    // =========================================
     const showToast = (message) => {
         const toast = $("#toast");
         if (!toast) return;
@@ -56,13 +76,32 @@ document.addEventListener("DOMContentLoaded", () => {
         })} MXN`;
     };
 
+    const formatMoneySimple = (value) => {
+        return `$${Number(value).toLocaleString("es-MX", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        })}`;
+    };
+
     const getFileName = (input) => input?.files?.[0]?.name || "";
+
+    function escapeHtml(str) {
+        return String(str || "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
 
     function getActiveClauses() {
         if (!selectedClientType) return [];
         return clauses[selectedClientType] || [];
     }
 
+    // =========================================
+    // NAVEGACIÓN DEL WIZARD
+    // =========================================
     function goToStep(step) {
         currentStep = step;
 
@@ -84,6 +123,9 @@ document.addEventListener("DOMContentLoaded", () => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
+    // =========================================
+    // CLIENTE - SELECCIÓN Y DOCUMENTACIÓN
+    // =========================================
     function showDocForm(type) {
         $$(".doc-form").forEach((form) => form.classList.remove("active"));
 
@@ -149,6 +191,9 @@ document.addEventListener("DOMContentLoaded", () => {
         renderClauses();
     }
 
+    // =========================================
+    // CLÁUSULAS
+    // =========================================
     function renderClauses() {
         const list = $("#clausesList");
         if (!list) return;
@@ -204,6 +249,9 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Cláusula agregada al convenio correspondiente");
     }
 
+    // =========================================
+    // CONDUCTORES
+    // =========================================
     function renderDrivers() {
         const list = $("#driversList");
         if (!list) return;
@@ -415,167 +463,454 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Responsivas generadas individualmente");
     }
 
-    function updateProtectionCardTotals() {
-        $$(".protection-card").forEach((card) => {
-            const protectionPrice = Number(card.dataset.protectionPrice) || 0;
-            const total = activeBaseDailyPrice + protectionPrice;
+    // =========================================
+    // PROTECCIONES - CARGA Y SELECCIÓN
+    // =========================================
 
-            const totalEl = card.querySelector(".protection-card-total");
-            if (totalEl) totalEl.textContent = formatMoney(total);
-        });
+    async function loadProtectionPacks() {
+        const track = document.getElementById('protectionPacksTrack');
+        if (!track) return;
 
-        const baseEl = $("#modalBasePrice");
-        if (baseEl) baseEl.textContent = formatMoney(activeBaseDailyPrice);
+        track.innerHTML = `<div class="loading" style="padding:12px;font-weight:900;color:rgba(255,255,255,.9);">Cargando paquetes...</div>`;
 
-        const selectedEl = $("#modalSelectedTotal");
-        if (selectedEl) selectedEl.textContent = formatMoney(activeBaseDailyPrice);
-    }
+        try {
+            const res = await fetch("/admin/reservaciones/seguros", {
+                headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
+            });
 
-    function openProtectionsModal(button) {
-        activeProtectionRow = button.dataset.rowIndex;
+            const data = await res.json().catch(() => []);
+            const arrRaw = Array.isArray(data) ? data : (data?.data || []);
 
-        const dailyInput = $(`.rate-daily-input[data-row-index="${activeProtectionRow}"]`);
-        activeBaseDailyPrice = parseMoney(dailyInput?.value || 0);
+            console.log("📦 Datos de protecciones recibidos:", arrRaw);
+            console.log("🔍 Campos disponibles en el primer registro:", Object.keys(arrRaw[0] || {}));
 
-        if (activeBaseDailyPrice <= 0) {
-            showToast("Primero captura la tarifa diaria");
-            return;
+            const arr = arrRaw.map((raw) => {
+                const id = raw.id_paquete ?? raw.id ?? raw.idPaquete;
+                const nombre = raw.nombre ?? "Protección";
+                const desc = raw.descripcion ?? "";
+                const precio = Number(raw.precio_por_dia ?? raw.precio_dia ?? raw.precio ?? 0);
+
+                // =========================================
+                // 🔍 BUSCAR GARANTÍA EN CUALQUIER CAMPO
+                // =========================================
+                let garantia = 0;
+
+                // Lista de posibles nombres de campo para la garantía
+                const camposGarantia = [
+                    'garantia', 'monto_garantia', 'garantia_monto',
+                    'garantia_seguro', 'garantia_paquete', 'deposito_garantia',
+                    'fianza', 'monto_fianza', 'deposito', 'garantia_deposito'
+                ];
+
+                for (const campo of camposGarantia) {
+                    if (raw[campo] !== undefined && raw[campo] !== null) {
+                        const valor = Number(raw[campo]);
+                        if (!isNaN(valor) && valor > 0) {
+                            garantia = valor;
+                            console.log(`✅ Garantía encontrada en campo "${campo}": ${garantia}`);
+                            break;
+                        }
+                    }
+                }
+
+                // SI NO SE ENCONTRÓ GARANTÍA, USA UN VALOR DE PRUEBA
+                if (garantia === 0) {
+                    // Asignar garantía según el nombre de la protección (ejemplo)
+                    const nombreUpper = nombre.toUpperCase();
+                    if (nombreUpper.includes('LDW')) garantia = 5000;
+                    else if (nombreUpper.includes('PDW')) garantia = 8000;
+                    else if (nombreUpper.includes('CDW')) garantia = 15000;
+                    else if (nombreUpper.includes('DECLINE')) garantia = 330000;
+                    else garantia = 10000;
+                    console.log(`⚠️ Garantía asignada por defecto para "${nombre}": ${garantia}`);
+                }
+
+                const charge = raw.tipo_cobro ?? raw.charge ?? "por_dia";
+
+                console.log(`🔍 Protección: ${nombre}, Garantía: ${garantia}`);
+
+                return { id, nombre, desc, precio, garantia, charge };
+            });
+
+            arr.sort((a, b) => Number(b.precio || 0) - Number(a.precio || 0));
+
+            if (!arr.length) {
+                track.innerHTML = `<div class="loading" style="padding:12px;font-weight:900;color:rgba(255,255,255,.9);">No hay protecciones disponibles.</div>`;
+                return;
+            }
+
+            track.innerHTML = "";
+
+            arr.forEach((p) => {
+                const isSelected = protectionState.selectedId === p.id;
+
+                // Procesar descripción - convertir en lista con viñetas
+                let descItems = [];
+                if (p.desc) {
+                    descItems = p.desc.split(/[-–—·•\n]+/).filter(item => item.trim().length > 0);
+                    descItems = descItems.map(item => item.trim().replace(/^\s*[-–—·•]\s*/, '').trim());
+                }
+
+                // ==========================================================================
+                // AGREGAR GARANTÍA COMO UN PUNTO CON CLASE EXCLUSIVA PARA EL CONTROL DE COLOR
+                // ==========================================================================
+                if (p.garantia > 0) {
+                    descItems.push(`<span class="garantia-text">GARANTÍA: ${formatMoney(p.garantia)}</span>`);
+                }
+
+                // Aplicar negritas a palabras clave en la descripción
+                let descHtml = descItems.length > 0
+                    ? descItems.map(item => {
+                        // Si el renglón es el de la garantía, protegemos sus etiquetas HTML para que no se destruyan
+                        let text = item.includes('class="garantia-text"') ? item : escapeHtml(item);
+
+                        // Resaltar palabras clave
+                        text = text.replace(/(\d+%|\d{1,3}(?:,\d{3})*\s*MXN|GARANTÍA|DEDUCIBLE|NO CUBRE|INCLUYE|RESPONSABILIDAD CIVIL|GASTOS MÉDICOS|ASISTENCIA|PERDIDA TOTAL|ROBO|EL CLIENTE ES RESPONSABLE|CUBIERTA|PRECIO PROTECCIÓN)/gi, '<strong>$1</strong>');
+                        return `<li>${text}</li>`;
+                    }).join('')
+                    : '<li>Sin descripción disponible</li>';
+
+                const totalConProteccion = activeBaseDailyPrice + p.precio;
+
+                const card = document.createElement("article");
+                card.className = `protection-card ${isSelected ? 'active' : ''}`;
+                card.dataset.protectionId = p.id;
+                card.dataset.protectionName = p.nombre;
+                card.dataset.protectionPrice = p.precio;
+                card.dataset.protectionGuarantee = p.garantia;
+                card.dataset.protectionCharge = p.charge;
+
+                card.innerHTML = `
+                    <div class="protection-top-line"></div>
+
+                    <div class="protection-card-head">
+                        <h4>${escapeHtml(p.nombre)}</h4>
+                    </div>
+
+                    <ul>
+                        ${descHtml}
+                    </ul>
+
+                    <div class="protection-price-box">
+                        <span class="price-amount">${formatMoney(p.precio)}</span>
+                        <span class="price-period">${p.charge === 'por_dia' ? 'MXN / día' : 'MXN'}</span>
+                    </div>
+
+                    <div class="protection-total-box">
+                        <span class="total-label">TOTAL CON TARIFA DIARIA</span>
+                        <span class="total-amount protection-card-total">${formatMoney(totalConProteccion)}</span>
+                    </div>
+
+                    <button class="protection-select-btn ${isSelected ? 'selected' : ''}"
+                            data-protection-id="${p.id}"
+                            data-protection-name="${escapeHtml(p.nombre)}"
+                            data-protection-price="${p.precio}"
+                            data-protection-guarantee="${p.garantia}"
+                            data-protection-charge="${p.charge}"
+                            type="button">
+                        ${isSelected ? '✓ Seleccionado' : 'Seleccionar'}
+                    </button>
+                `;
+
+                track.appendChild(card);
+            });
+
+            // Actualizar totales después de cargar
+            updateProtectionSummary();
+
+        } catch (e) {
+            console.error("Protecciones error:", e);
+            track.innerHTML = `<div class="loading" style="padding:12px;font-weight:900;color:rgba(255,255,255,.9);">Error cargando protecciones.</div>`;
         }
-
-        const categoryText = $("#protectionModalCategory");
-        if (categoryText) {
-            categoryText.textContent = `Selecciona un paquete para ${button.dataset.category || "categoría"}.`;
-        }
-
-        $$(".protection-card").forEach((card) => card.classList.remove("active"));
-        updateProtectionCardTotals();
-
-        $("#protectionsModal")?.classList.add("active");
     }
 
-    function closeProtectionsModal() {
-        $("#protectionsModal")?.classList.remove("active");
-    }
-
-    function selectProtection(card) {
+    // =========================================
+    // SELECCIONAR PROTECCIÓN DESDE BOTÓN
+    // =========================================
+    function selectProtectionFromButton(button) {
         if (activeProtectionRow === null) {
-            showToast("Selecciona una fila de tarifa primero");
+            showToast("Primero selecciona una fila de tarifa");
             return;
         }
 
-        const name = card.dataset.protectionName || "Protección";
-        const price = Number(card.dataset.protectionPrice) || 0;
+        const card = button.closest('.protection-card');
+        if (!card) return;
+
+        const id = button.dataset.protectionId;
+        const name = button.dataset.protectionName || "Protección";
+        const price = Number(button.dataset.protectionPrice) || 0;
+        const guarantee = Number(button.dataset.protectionGuarantee) || 0;
+        const charge = button.dataset.protectionCharge || "por_dia";
         const total = activeBaseDailyPrice + price;
 
-        const selectedProtection = $(`#selectedProtection${activeProtectionRow}`);
-        const finalDailyPrice = $(`#finalDailyPrice${activeProtectionRow}`);
+        // Desactivar todas las tarjetas y botones
+        document.querySelectorAll('.protection-card').forEach((item) => {
+            item.classList.remove('active');
+            const btn = item.querySelector('.protection-select-btn');
+            if (btn) {
+                btn.classList.remove('selected');
+                btn.textContent = 'Seleccionar';
+            }
+        });
+
+        // Activar la tarjeta seleccionada
+        card.classList.add('active');
+        button.classList.add('selected');
+        button.textContent = '✓ Seleccionado';
+
+        // Guardar en el estado de protecciones
+        protectionState.selectedId = id;
+        protectionState.selectedName = name;
+        protectionState.selectedPrice = price;
+        protectionState.selectedGuarantee = guarantee;
+        protectionState.activeRowIndex = activeProtectionRow;
+        protectionState.baseDailyPrice = activeBaseDailyPrice;
+        protectionState.categoryName = activeCategoryName;
+
+        // Si existe el estado global, actualizarlo
+        if (window.state && window.state.setProteccion) {
+            window.state.setProteccion({
+                id: id,
+                nombre: name,
+                precio: price,
+                charge: charge,
+                garantia: guarantee
+            });
+        }
+
+        // Actualizar la UI de la fila de tarifa
+        const selectedProtection = document.getElementById(`selectedProtection${activeProtectionRow}`);
+        const finalDailyPrice = document.getElementById(`finalDailyPrice${activeProtectionRow}`);
 
         if (selectedProtection) {
             selectedProtection.dataset.protectionPrice = price;
             selectedProtection.innerHTML = `
-                <strong>${name}</strong>
+                <strong>${escapeHtml(name)}</strong>
                 <small>${formatMoney(price)}</small>
             `;
+            selectedProtection.style.color = '#0f172a';
         }
 
         if (finalDailyPrice) {
             finalDailyPrice.textContent = formatMoney(total);
+            finalDailyPrice.style.color = '#0f172a';
+            finalDailyPrice.style.fontWeight = '900';
         }
 
-        $$(".protection-card").forEach((item) => item.classList.remove("active"));
-        card.classList.add("active");
+        // Actualizar resumen del modal
+        updateProtectionSummary();
 
-        const selectedTotal = $("#modalSelectedTotal");
-        if (selectedTotal) selectedTotal.textContent = formatMoney(total);
+        showToast(`✅ Protección "${name}" seleccionada`);
+    }
 
-        showToast("Protección seleccionada");
+    // =========================================
+    // DESELECCIONAR PROTECCIÓN
+    // =========================================
+    function deselectProtection() {
+        const rowIndex = activeProtectionRow;
+
+        // Desactivar todas las tarjetas y botones
+        document.querySelectorAll('.protection-card').forEach((item) => {
+            item.classList.remove('active');
+            const btn = item.querySelector('.protection-select-btn');
+            if (btn) {
+                btn.classList.remove('selected');
+                btn.textContent = 'Seleccionar';
+            }
+        });
+
+        // Limpiar estado de protecciones
+        protectionState.selectedId = null;
+        protectionState.selectedName = null;
+        protectionState.selectedPrice = 0;
+        protectionState.selectedGuarantee = 0;
+
+        // Si existe el estado global, limpiarlo
+        if (window.state && window.state.setProteccion) {
+            window.state.setProteccion(null);
+        }
+
+        // Actualizar la UI de la fila de tarifa
+        const selectedProtection = document.getElementById(`selectedProtection${rowIndex}`);
+        const finalDailyPrice = document.getElementById(`finalDailyPrice${rowIndex}`);
+
+        if (selectedProtection) {
+            selectedProtection.innerHTML = `<span style="color: #94a3b8;">Sin protección</span>`;
+            selectedProtection.dataset.protectionPrice = '0';
+            selectedProtection.style.color = '#94a3b8';
+        }
+
+        if (finalDailyPrice) {
+            finalDailyPrice.textContent = formatMoney(activeBaseDailyPrice);
+            finalDailyPrice.style.color = '#0f172a';
+            finalDailyPrice.style.fontWeight = '700';
+        }
+
+        // Actualizar resumen del modal
+        updateProtectionSummary();
+
+        showToast('⚠️ Protección deseleccionada');
+    }
+
+    function updateProtectionSummary() {
+        // Actualizar tarifa base
+        const baseEl = document.getElementById("modalBasePrice");
+        if (baseEl) {
+            baseEl.textContent = formatMoney(activeBaseDailyPrice);
+        }
+
+        // Actualizar precio de protección seleccionada
+        const protectionPriceEl = document.getElementById("modalProtectionPrice");
+        if (protectionPriceEl) {
+            const price = protectionState.selectedPrice || 0;
+            protectionPriceEl.textContent = price > 0 ? formatMoney(price) : '$0.00 MXN';
+            protectionPriceEl.style.color = price > 0 ? '#eeeeee' : '#fdfdfd';
+        }
+
+        // Actualizar total seleccionado
+        const selectedTotal = document.getElementById("modalSelectedTotal");
+        if (selectedTotal) {
+            const total = activeBaseDailyPrice + protectionState.selectedPrice;
+            selectedTotal.textContent = formatMoney(total);
+            selectedTotal.style.color = total > activeBaseDailyPrice ? '#e50914' : '#0f172a';
+        }
+
+        // =========================================
+        // TEXTO DE CATEGORÍA - SIEMPRE ESTÁTICO
+        // =========================================
+        const categoryText = document.getElementById("protectionModalCategory");
+        if (categoryText) {
+            const catName = protectionState.categoryName || activeCategoryName || 'categoría';
+            // Siempre mostrar el mismo mensaje sin importar si hay selección
+            categoryText.innerHTML = ` Selecciona un paquete de protección para <strong>${catName}</strong>`;
+            categoryText.style.color = '#ffffff';
+            categoryText.style.fontWeight = '400';
+        }
+
+        // Actualizar todas las tarjetas con el total correcto
+        document.querySelectorAll('.protection-card').forEach((card) => {
+            const price = Number(card.dataset.protectionPrice) || 0;
+            const total = activeBaseDailyPrice + price;
+            const totalEl = card.querySelector('.protection-card-total');
+            if (totalEl) {
+                totalEl.textContent = formatMoney(total);
+            }
+        });
+    }
+
+    function openProtectionsModal(button) {
+        activeProtectionRow = button.dataset.rowIndex;
+        activeCategoryName = button.dataset.category || 'categoría';
+
+        const dailyInput = document.querySelector(`.rate-daily-input[data-row-index="${activeProtectionRow}"]`);
+        activeBaseDailyPrice = parseMoney(dailyInput?.value || 0);
+
+        if (activeBaseDailyPrice <= 0) {
+            showToast("⚠️ Primero captura la tarifa diaria");
+            return;
+        }
+
+        // Limpiar selección anterior
+        protectionState.selectedId = null;
+        protectionState.selectedName = null;
+        protectionState.selectedPrice = 0;
+        protectionState.selectedGuarantee = 0;
+        protectionState.activeRowIndex = activeProtectionRow;
+        protectionState.baseDailyPrice = activeBaseDailyPrice;
+        protectionState.categoryName = activeCategoryName;
+
+        const categoryText = document.getElementById("protectionModalCategory");
+        if (categoryText) {
+            categoryText.innerHTML = `📌 Selecciona un paquete de protección para <strong>${activeCategoryName}</strong>`;
+            categoryText.style.color = '#ffffff';
+            categoryText.style.fontWeight = '400';
+        }
+
+        // Actualizar tarifa base en el resumen
+        const baseEl = document.getElementById("modalBasePrice");
+        if (baseEl) {
+            baseEl.textContent = formatMoney(activeBaseDailyPrice);
+        }
+
+        const selectedTotal = document.getElementById("modalSelectedTotal");
+        if (selectedTotal) {
+            selectedTotal.textContent = formatMoney(activeBaseDailyPrice);
+        }
+
+        // Cargar protecciones
+        loadProtectionPacks();
+
+        const modal = document.getElementById("protectionsModal");
+        if (modal) {
+            modal.classList.add("active");
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeProtectionsModal() {
+        const modal = document.getElementById("protectionsModal");
+        if (modal) {
+            modal.classList.remove("active");
+            document.body.style.overflow = '';
+        }
+        activeProtectionRow = null;
+    }
+
+    // =========================================
+    // APLICAR PROTECCIÓN SELECCIONADA
+    // =========================================
+    function applySelectedProtection() {
+        if (activeProtectionRow === null) {
+            showToast("⚠️ No hay una fila de tarifa seleccionada");
+            return;
+        }
+
+        if (!protectionState.selectedId) {
+            showToast("⚠️ Selecciona una protección primero");
+            return;
+        }
+
+        // La protección ya está aplicada en la UI de la fila
+        // Solo cerramos el modal y confirmamos
         closeProtectionsModal();
+        showToast(`✅ Protección "${protectionState.selectedName}" aplicada correctamente`);
+
+        // Si existe el estado global, sincronizar
+        if (window.state && window.state.syncTotalsHidden) {
+            window.state.syncTotalsHidden();
+        }
+        if (window.state && window.state.refreshSummary) {
+            window.state.refreshSummary();
+        }
     }
 
     function recalculateRowTotal(rowIndex) {
-        const daily = parseMoney($(`.rate-daily-input[data-row-index="${rowIndex}"]`)?.value);
-        const weekly = parseMoney($(`.rate-weekly-input[data-row-index="${rowIndex}"]`)?.value);
-        const monthly = parseMoney($(`.rate-monthly-input[data-row-index="${rowIndex}"]`)?.value);
+        const daily = parseMoney(document.querySelector(`.rate-daily-input[data-row-index="${rowIndex}"]`)?.value);
+        const weekly = parseMoney(document.querySelector(`.rate-weekly-input[data-row-index="${rowIndex}"]`)?.value);
+        const monthly = parseMoney(document.querySelector(`.rate-monthly-input[data-row-index="${rowIndex}"]`)?.value);
 
-        const selectedProtection = $(`#selectedProtection${rowIndex}`);
-        const finalDailyPrice = $(`#finalDailyPrice${rowIndex}`);
+        const selectedProtection = document.getElementById(`selectedProtection${rowIndex}`);
+        const finalDailyPrice = document.getElementById(`finalDailyPrice${rowIndex}`);
 
         const protection = Number(selectedProtection?.dataset.protectionPrice) || 0;
-        const final = Math.max(daily, weekly, monthly) + protection;
+        const baseTotal = Math.max(daily, weekly, monthly);
+        const final = baseTotal + protection;
 
         if (finalDailyPrice) {
             finalDailyPrice.textContent = formatMoney(final);
         }
+
+        // Si esta fila es la que está activa en el modal, actualizar el resumen
+        if (activeProtectionRow == rowIndex) {
+            activeBaseDailyPrice = baseTotal;
+            protectionState.baseDailyPrice = baseTotal;
+            updateProtectionSummary();
+        }
     }
 
-    function initBirthdateCalendars() {
-        if (typeof flatpickr === "undefined") return;
-
-        const today = new Date();
-        const maxAdultDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-
-        flatpickr(".birthdate-picker", {
-            locale: "es",
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d-M-Y",
-            maxDate: maxAdultDate,
-            disableMobile: true,
-            allowInput: false,
-            monthSelectorType: "dropdown",
-            showMonths: 1,
-            position: "auto center",
-        });
-    }
-
-    function initLicenseExpiryCalendars() {
-        if (typeof flatpickr === "undefined") return;
-
-        flatpickr(".license-expiry-picker", {
-            locale: "es",
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d-M-Y",
-            minDate: "today",
-            disableMobile: true,
-            allowInput: false,
-            monthSelectorType: "dropdown",
-            showMonths: 1,
-            position: "auto center",
-        });
-    }
-
-    function detectIdentificationType(value) {
-        const clean = value.trim().toUpperCase();
-
-        if (!clean) return { type: "", label: "—" };
-        if (/^[A-Z0-9]{13}$/.test(clean)) return { type: "ine", label: "INE" };
-        if (/^\d{7,8}$/.test(clean)) return { type: "cedula", label: "Cédula profesional" };
-        if (/^[A-Z0-9]{8,9}$/.test(clean)) return { type: "pasaporte", label: "Pasaporte" };
-
-        return { type: "", label: "No identificado" };
-    }
-
-    function initIdentificationDetection() {
-        const input = $("#fisicaNumeroIdentificacion");
-        const helper = $("#fisicaTipoIdentificacionTexto");
-        const hidden = $("#fisicaTipoIdentificacion");
-
-        if (!input || !helper || !hidden) return;
-
-        input.addEventListener("input", () => {
-            input.value = input.value.toUpperCase();
-
-            const result = detectIdentificationType(input.value);
-
-            hidden.value = result.type;
-            helper.textContent = `Tipo detectado: ${result.label}`;
-
-            helper.classList.remove("is-valid", "is-invalid", "is-empty");
-            helper.classList.add(result.type ? "is-valid" : result.label === "—" ? "is-empty" : "is-invalid");
-        });
-    }
-
+    // =========================================
+    // FIRMA DIGITAL
+    // =========================================
     function resizeSignatureCanvas(canvas) {
         const ratio = Math.max(window.devicePixelRatio || 1, 1);
         const rect = canvas.getBoundingClientRect();
@@ -762,6 +1097,77 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // =========================================
+    // CALENDARIOS Y VALIDACIONES
+    // =========================================
+    function initBirthdateCalendars() {
+        if (typeof flatpickr === "undefined") return;
+
+        const today = new Date();
+        const maxAdultDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+
+        flatpickr(".birthdate-picker", {
+            locale: "es",
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d-M-Y",
+            maxDate: maxAdultDate,
+            disableMobile: true,
+            allowInput: false,
+            monthSelectorType: "dropdown",
+            showMonths: 1,
+            position: "auto center",
+        });
+    }
+
+    function initLicenseExpiryCalendars() {
+        if (typeof flatpickr === "undefined") return;
+
+        flatpickr(".license-expiry-picker", {
+            locale: "es",
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d-M-Y",
+            minDate: "today",
+            disableMobile: true,
+            allowInput: false,
+            monthSelectorType: "dropdown",
+            showMonths: 1,
+            position: "auto center",
+        });
+    }
+
+    function detectIdentificationType(value) {
+        const clean = value.trim().toUpperCase();
+
+        if (!clean) return { type: "", label: "—" };
+        if (/^[A-Z0-9]{13}$/.test(clean)) return { type: "ine", label: "INE" };
+        if (/^\d{7,8}$/.test(clean)) return { type: "cedula", label: "Cédula profesional" };
+        if (/^[A-Z0-9]{8,9}$/.test(clean)) return { type: "pasaporte", label: "Pasaporte" };
+
+        return { type: "", label: "No identificado" };
+    }
+
+    function initIdentificationDetection() {
+        const input = $("#fisicaNumeroIdentificacion");
+        const helper = $("#fisicaTipoIdentificacionTexto");
+        const hidden = $("#fisicaTipoIdentificacion");
+
+        if (!input || !helper || !hidden) return;
+
+        input.addEventListener("input", () => {
+            input.value = input.value.toUpperCase();
+
+            const result = detectIdentificationType(input.value);
+
+            hidden.value = result.type;
+            helper.textContent = `Tipo detectado: ${result.label}`;
+
+            helper.classList.remove("is-valid", "is-invalid", "is-empty");
+            helper.classList.add(result.type ? "is-valid" : result.label === "—" ? "is-empty" : "is-invalid");
+        });
+    }
+
     function markRequiredFields() {
         $$(".field").forEach((field) => {
             const label = field.querySelector("label");
@@ -784,13 +1190,18 @@ document.addEventListener("DOMContentLoaded", () => {
         input.value = value ? `$${value}` : "";
     }
 
+    // =========================================
+    // EVENTOS - CLICK
+    // =========================================
     document.addEventListener("click", (event) => {
+        // 1. SELECCIÓN DE TIPO DE CLIENTE
         const clientCard = event.target.closest(".client-type-card");
         if (clientCard) {
             selectClientType(clientCard);
             return;
         }
 
+        // 2. NAVEGACIÓN DEL WIZARD (PASOS)
         const wizardStep = event.target.closest(".wizard-step");
         if (wizardStep) {
             const targetStep = Number(wizardStep.dataset.stepTarget);
@@ -804,6 +1215,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // 3. BOTÓN SIGUIENTE
         const nextBtn = event.target.closest("[data-next-step]");
         if (nextBtn) {
             const nextStep = Number(nextBtn.dataset.nextStep);
@@ -817,24 +1229,33 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // 4. BOTÓN ANTERIOR
         const prevBtn = event.target.closest("[data-prev-step]");
         if (prevBtn) {
             goToStep(Number(prevBtn.dataset.prevStep));
             return;
         }
 
+        // 5. ABRIR MODAL DE PROTECCIONES
         const openProtectionBtn = event.target.closest(".btn-open-protections");
         if (openProtectionBtn) {
             openProtectionsModal(openProtectionBtn);
             return;
         }
 
-        const protectionCard = event.target.closest(".protection-card");
-        if (protectionCard && event.target.closest(".protection-toggle")) {
-            selectProtection(protectionCard);
+        // 6. SELECCIÓN DE PROTECCIÓN (VÍA BOTÓN SELECCIONAR)
+        const selectBtn = event.target.closest(".protection-select-btn");
+        if (selectBtn) {
+            // Si ya está seleccionado, deseleccionar
+            if (selectBtn.classList.contains('selected')) {
+                deselectProtection();
+            } else {
+                selectProtectionFromButton(selectBtn);
+            }
             return;
         }
 
+        // 7. ELIMINAR CLÁUSULA
         const removeClauseBtn = event.target.closest(".btn-remove-clause");
         if (removeClauseBtn) {
             const activeClauses = getActiveClauses();
@@ -844,6 +1265,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // 8. ELIMINAR CONDUCTOR
         const removeDriverBtn = event.target.closest(".btn-remove-driver");
         if (removeDriverBtn) {
             drivers.splice(Number(removeDriverBtn.dataset.driverIndex), 1);
@@ -853,34 +1275,93 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // 9. AGREGAR CLÁUSULA A RESPONSIVA
         const addResponsivaClauseBtn = event.target.closest(".btn-add-responsiva-clause");
         if (addResponsivaClauseBtn) {
             addResponsivaClause(Number(addResponsivaClauseBtn.dataset.driverIndex));
             return;
         }
 
+        // 10. ABRIR MODAL DE FIRMA
         const openSignatureBtn = event.target.closest(".btn-open-signature-modal");
         if (openSignatureBtn) {
             openSignatureModal(openSignatureBtn);
+            return;
+        }
+
+        // 11. CERRAR MODAL DE PROTECCIONES (CLICK FUERA)
+        const protectionsModal = event.target.closest("#protectionsModal");
+        if (protectionsModal && event.target === protectionsModal) {
+            closeProtectionsModal();
+            return;
+        }
+
+        // 12. CERRAR MODAL DE FIRMA (CLICK FUERA)
+        const signatureModal = event.target.closest("#signatureModal");
+        if (signatureModal && event.target === signatureModal) {
+            closeSignatureModal();
+            return;
         }
     });
 
-    document.addEventListener("input", (event) => {
+    // =========================================
+    // EVENTO 'input' PARA RECALCULAR TOTALES
+    // =========================================
+    document.addEventListener('input', function(event) {
         const input = event.target;
 
-        if (input.classList.contains("money-input")) {
+        if (input.classList.contains('money-input')) {
             formatMoneyInput(input);
 
-            if (
-                input.classList.contains("rate-daily-input") ||
-                input.classList.contains("rate-weekly-input") ||
-                input.classList.contains("rate-monthly-input")
-            ) {
+            if (input.classList.contains('rate-daily-input') ||
+                input.classList.contains('rate-weekly-input') ||
+                input.classList.contains('rate-monthly-input')) {
                 recalculateRowTotal(input.dataset.rowIndex);
             }
         }
     });
 
+    // =========================================
+    // EVENTO 'keydown' PARA CERRAR MODALES CON ESCAPE
+    // =========================================
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const protectionsModal = document.getElementById('protectionsModal');
+            if (protectionsModal && protectionsModal.classList.contains('active')) {
+                closeProtectionsModal();
+                return;
+            }
+
+            const signatureModal = document.getElementById('signatureModal');
+            if (signatureModal && signatureModal.classList.contains('active')) {
+                closeSignatureModal();
+                return;
+            }
+        }
+    });
+
+    // =========================================
+    // INICIALIZACIÓN DE PROTECCIONES
+    // =========================================
+    function initProtectionsSystem() {
+        console.log('🛡️ Sistema de protecciones inicializado');
+
+        if (window.state && window.state.proteccion) {
+            const prot = window.state.proteccion;
+            if (prot && prot.id) {
+                setTimeout(() => {
+                    const btn = document.querySelector(`.protection-select-btn[data-protection-id="${prot.id}"]`);
+                    if (btn && !btn.classList.contains('selected')) {
+                        selectProtectionFromButton(btn);
+                    }
+                }, 800);
+            }
+        }
+    }
+
+    // =========================================
+    // INICIALIZACIÓN DE EVENTOS UI
+    // =========================================
     $("#btnGoDocs")?.addEventListener("click", () => {
         if (!selectedClientType) {
             showToast("Selecciona un tipo de cliente");
@@ -894,6 +1375,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     $("#btnCloseProtections")?.addEventListener("click", closeProtectionsModal);
     $("#btnCancelProtections")?.addEventListener("click", closeProtectionsModal);
+
+    // =========================================
+    // BOTÓN APLICAR PROTECCIÓN
+    // =========================================
+    $("#btnApplyProtection")?.addEventListener("click", applySelectedProtection);
 
     $("#protectionsModal")?.addEventListener("click", (event) => {
         if (event.target === $("#protectionsModal")) closeProtectionsModal();
@@ -916,6 +1402,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     $("#btnBack")?.addEventListener("click", () => window.history.back());
 
+    // =========================================
+    // RENDERIZADO INICIAL
+    // =========================================
     renderClauses();
     renderDrivers();
     renderResponsivas();
@@ -926,5 +1415,29 @@ document.addEventListener("DOMContentLoaded", () => {
     initSignatureModal();
 
     markRequiredFields();
-    goToStep(currentStep);
+
+    // Inicializar sistema de protecciones
+    setTimeout(initProtectionsSystem, 500);
+
+    // Ir al paso 1
+    goToStep(1);
+
+    // =========================================
+    // EXPONER API PARA USO EXTERNO
+    // =========================================
+    window.protectionAPI = {
+        openModal: openProtectionsModal,
+        closeModal: closeProtectionsModal,
+        selectProtection: selectProtectionFromButton,
+        deselectProtection: deselectProtection,
+        loadPacks: loadProtectionPacks,
+        updateSummary: updateProtectionSummary,
+        getState: () => ({ ...protectionState }),
+        setBasePrice: (price) => {
+            activeBaseDailyPrice = Number(price) || 0;
+            protectionState.baseDailyPrice = activeBaseDailyPrice;
+            updateProtectionSummary();
+        },
+        recalculateRow: recalculateRowTotal
+    };
 });

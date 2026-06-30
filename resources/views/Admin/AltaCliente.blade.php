@@ -687,87 +687,45 @@
     </section>
 
     {{-- MODAL PROTECCIONES --}}
-    <div class="protections-modal" id="protectionsModal">
-        <div class="protections-modal-card">
-            <div class="protections-modal-header">
-                <div>
-                    <h3>Protecciones</h3>
-                    <p id="protectionModalCategory">Activa una protección para calcular el total.</p>
-                </div>
-
-                <div class="protection-summary-bubbles">
-                    <div class="summary-bubble">
-                        <small>Tarifa diaria</small>
-                        <strong id="modalBasePrice">$0.00 MXN</strong>
-                    </div>
-
-                    <div class="summary-bubble">
-                        <small>Protección</small>
-                        <strong id="modalProtectionPrice">$0.00 MXN</strong>
-                    </div>
-
-                    <div class="summary-bubble total">
-                        <small>Total seleccionado</small>
-                        <strong id="modalSelectedTotal">$0.00 MXN</strong>
-                    </div>
-
-                    <button class="modal-close-btn" id="btnCloseProtections" type="button">×</button>
-                </div>
+<div class="protections-modal" id="protectionsModal">
+    <div class="protections-modal-card">
+        <div class="protections-modal-header">
+            <div>
+                <h3>Protecciones</h3>
+                <p id="protectionModalCategory">Activa una protección para calcular el total.</p>
             </div>
 
-            <div class="protections-modal-body">
-                @foreach($protecciones as $protection)
-                    <article
-                        class="protection-card"
-                        data-protection-name="{{ $protection['name'] }}"
-                        data-protection-price="{{ $protection['price'] }}"
-                    >
-                        <div class="protection-top-line"></div>
+            <div class="protection-summary-bubbles">
+                <div class="summary-bubble">
+                    <small>Tarifa diaria</small>
+                    <strong id="modalBasePrice">$0.00 MXN</strong>
+                </div>
 
-                        <div class="protection-card-head">
-                            <h4>{{ $protection['name'] }}</h4>
+                <div class="summary-bubble">
+                    <small>Protección</small>
+                    <strong id="modalProtectionPrice">$0.00 MXN</strong>
+                </div>
 
-                            <label class="protection-switch">
-                                <input
-                                    type="checkbox"
-                                    class="protection-toggle"
-                                    data-protection-name="{{ $protection['name'] }}"
-                                    data-protection-price="{{ $protection['price'] }}"
-                                >
-                                <span class="switch-ui"></span>
-                            </label>
-                        </div>
+                <div class="summary-bubble total">
+                    <small>Total seleccionado</small>
+                    <strong id="modalSelectedTotal">$0.00 MXN</strong>
+                </div>
 
-                        <ul>
-                            <li>Cobertura configurable desde base de datos.</li>
-                            <li>Descripción pendiente de cargar.</li>
-                            <li>Condiciones y beneficios del paquete.</li>
-                        </ul>
-
-                        <div class="protection-guarantee">
-                            Garantía: ${{ number_format($protection['guarantee'], 2) }} MXN
-                        </div>
-
-                        <div class="protection-price-box">
-                            <small>Precio protección</small>
-                            <strong>${{ number_format($protection['price'], 2) }}</strong>
-                        </div>
-
-                        <div class="protection-total-box">
-                            <small>Total con tarifa diaria</small>
-                            <strong class="protection-card-total">$0.00 MXN</strong>
-                        </div>
-                    </article>
-                @endforeach
-            </div>
-
-            <div class="protections-modal-footer">
-                <button class="btn ghost" id="btnCancelProtections" type="button">Cerrar</button>
-                <button class="btn primary" id="btnApplyProtection" type="button">Aplicar protección</button>
+                <button class="modal-close-btn" id="btnCloseProtections" type="button">×</button>
             </div>
         </div>
-    </div>
 
+        {{-- Este contenedor se llenará dinámicamente con JS --}}
+        <div class="protections-modal-body" id="protectionPacksTrack">
+            <div class="loading">Cargando paquetes...</div>
+        </div>
+
+        <div class="protections-modal-footer">
+            <button class="btn ghost" id="btnCancelProtections" type="button">Cerrar</button>
+            <button class="btn primary" id="btnApplyProtection" type="button">Aplicar protección</button>
+        </div>
+    </div>
+</div>
     {{-- PASO 4 --}}
     <section class="card wizard-panel" data-step="4">
         <h3 class="section-title">Paso 4 · Convenio y firmas</h3>
