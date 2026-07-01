@@ -7,10 +7,9 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
   {{-- ============================================================
-       🚀 OPTIMIZACIÓN 1: PRECONNECT
-       Le dice al navegador que se conecte a estos dominios YA,
-       en paralelo, antes de necesitar los archivos.
-       Ahorra ~400ms en DNS + TLS handshake.
+       OPTIMIZACIÓN 1: PRECONNECT
+       Conecta a estos dominios cuanto antes, en paralelo,
+       antes de necesitar los archivos. Ahorra DNS + TLS handshake.
   ============================================================ --}}
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,29 +22,22 @@
   <title>@yield('Titulo')</title>
 
   {{-- ============================================================
-       🚀 OPTIMIZACIÓN 2: FAVICON
-       Antes: 2 líneas → 2 descargas de 222 KB = 444 KB perdidos
-       Ahora: 1 línea
-       👉 TODO: el archivo Icono.ico pesa 222 KB. Reemplázalo
-       por uno de ~5 KB usando https://favicon.io/
+       OPTIMIZACIÓN 2: FAVICON
   ============================================================ --}}
   <link rel="icon" href="{{ asset('img/Icono.ico') }}" sizes="any">
 
   {{-- ============================================================
-       🚀 OPTIMIZACIÓN 3: CSS CRÍTICOS PRIMERO
-       Estos sí los necesitamos para pintar la primera vista.
+       OPTIMIZACIÓN 3: CSS CRÍTICOS PRIMERO
   ============================================================ --}}
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{{ asset('css/navbarUsuarios.css') }}">
 
-  {{-- Fuentes (con display=swap ya lo tenías bien) --}}
+  {{-- Fuentes --}}
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
   {{-- ============================================================
-       🚀 OPTIMIZACIÓN 4: CSS NO CRÍTICOS DIFERIDOS
-       Truco: media="print" + onload = el navegador los carga
-       SIN bloquear el render. Cuando terminan, se aplican.
-       Esto le quita ~500ms al "tiempo a primera pintura".
+       OPTIMIZACIÓN 4: CSS NO CRÍTICOS DIFERIDOS
+       media="print" + onload = se cargan sin bloquear el render.
   ============================================================ --}}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css"
         media="print" onload="this.media='all'">
@@ -60,7 +52,7 @@
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/default.min.css"
         media="print" onload="this.media='all'">
 
-  {{-- Fallback por si el navegador no soporta JS (raro pero buena práctica) --}}
+  {{-- Fallback sin JS --}}
   <noscript>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
@@ -68,7 +60,7 @@
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css">
   </noscript>
 
-  {{-- CSS por vista (se mantienen como los tenías) --}}
+  {{-- CSS por vista --}}
   @yield('css-vistaHome')
   @yield('css-VistaCatalogo')
   @yield('css-vistaReservaciones')
@@ -79,11 +71,13 @@
   @yield('css-vistaPerfil')
   @yield('css-visorReservaciones')
 
+  {{-- Permite a las vistas inyectar <link rel=preload> u otros tags en el head --}}
+  @stack('head')
+
   {{-- ============================================================
-       💡 RECOMENDACIÓN: este bloque <style> de ~250 líneas
-       deberías moverlo al final de navbarUsuarios.css. Ahí va a
-       estar cacheado y no se reenviará en cada página.
-       Por ahora lo dejo aquí para no romper nada.
+       Estilos de navbar/footer comunes.
+       RECOMENDACIÓN: mover este bloque al final de navbarUsuarios.css
+       para que quede cacheado y no se reenvíe en cada página.
   ============================================================ --}}
   <style>
     html, body{ margin: 0 !important; padding: 0 !important; }
@@ -195,9 +189,7 @@
 
 <body>
 {{-- ============================================================
-     🚀 OPTIMIZACIÓN 5: GTM (NOSCRIPT) AL INICIO DEL BODY
-     El script de GTM lo movimos al final del body para no
-     bloquear el render. Aquí solo dejamos el noscript.
+     OPTIMIZACIÓN 5: GTM (NOSCRIPT) AL INICIO DEL BODY
 ============================================================ --}}
 <noscript>
   <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PB88VSKW"
@@ -205,8 +197,6 @@
 </noscript>
 
 @php
-
-
     if (session()->has('locale')) {
         App::setLocale(session('locale'));
     }
@@ -218,7 +208,6 @@
   <nav class="nav">
     <div class="brand">
       <a href="{{ route('rutaHome') }}" class="brand-link" aria-label="Viajero">
-        {{-- 🚀 fetchpriority="high" le dice al navegador "este logo es importante, descárgalo primero" --}}
         <img src="{{ asset('img/LogoB.webp') }}" alt="Viajero" class="brand-logo-img"
              width="120" height="28" fetchpriority="high" decoding="async">
       </a>
@@ -236,7 +225,6 @@
     <div class="nav-actions">
       <div class="language-selector dropdown">
         <button class="lang-btn dropdown-toggle" data-bs-toggle="dropdown">
-          {{-- 🚀 Agregué width/height para evitar layout shift --}}
           <img id="currentFlag" width="20" height="15"
                src="{{ app()->getLocale() == 'en' ? 'https://flagcdn.com/w40/us.png' : 'https://flagcdn.com/w40/mx.png' }}"
                alt="flag">
@@ -268,15 +256,15 @@
       @else
         <a href="{{ route('auth.show') }}" class="icon-pill" title="{{ __('Sign in') }}">
           <i class="fa-regular fa-user guest"></i>
-        </a> @endif
+        </a>
+      @endif
 
-      <button class="hamburger"
-        type="button" id="navHamburger" aria-label="Abrir menú">
-    <span class="hb"></span>
-    </button>
+      <button class="hamburger" type="button" id="navHamburger" aria-label="Abrir menú">
+        <span class="hb"></span>
+      </button>
     </div>
-    </nav>
-    </header>
+  </nav>
+</header>
 
 <div class="containerVS">
   @yield('contenidoHome')
@@ -290,11 +278,8 @@
 </div>
 
 {{-- ============================================================
-     🚀 OPTIMIZACIÓN 6: FOOTER CON LAZY LOAD
-     Las imágenes del footer no se ven al cargar la página
-     (están abajo). loading="lazy" hace que solo se descarguen
-     cuando el usuario haga scroll hasta ellas.
-     Esto ahorra ~1.5 segundos en la carga inicial.
+     OPTIMIZACIÓN 6: FOOTER CON LAZY LOAD
+     Las imágenes del footer solo se descargan al hacer scroll.
 ============================================================ --}}
 <footer class="site-footer">
   <div class="footer-bg" style="background-image:url('https://images.unsplash.com/photo-1465447142348-e9952c393450?q=80&w=1600&auto=format&fit=crop');"></div>
@@ -305,16 +290,8 @@
            width="120" height="42" loading="lazy" decoding="async">
     </div>
 
-    <!-- 🔹 SCRIPTS-->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
     <div class="footer-row pay-row">
       <div class="payments-logos">
-        {{-- 🚀 Todas las imágenes de pago con lazy load --}}
         <img src="{{ asset('img/visa.webp') }}"       alt="Visa"             loading="lazy" decoding="async" width="60" height="38" />
         <img src="{{ asset('img/mastercard.webp') }}" alt="Mastercard"       loading="lazy" decoding="async" width="60" height="38" />
         <img src="{{ asset('img/america.webp') }}"    alt="American Express" loading="lazy" decoding="async" width="60" height="38" />
@@ -339,14 +316,14 @@
       </ul>
     </div>
 
-            if (!topbar || !btn || !menu) return;
+    <div class="footer-copy">© <span id="year"></span> Viajero. {{ __('All rights reserved') }}.</div>
+  </div>
+</footer>
 
 {{-- ============================================================
-     🚀 OPTIMIZACIÓN 7: TODOS LOS SCRIPTS CON DEFER
-     defer = se descargan en paralelo PERO se ejecutan en orden,
-     después de que el HTML esté listo. No bloquean el render.
-     Mantienen el orden, así que jQuery sigue cargando antes
-     que los plugins que lo usan.
+     OPTIMIZACIÓN 7: LIBRERÍAS CON DEFER (UNA SOLA VEZ)
+     defer = se descargan en paralelo y se ejecutan en orden,
+     después de que el HTML esté listo. jQuery va antes que sus plugins.
 ============================================================ --}}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
@@ -356,13 +333,9 @@
 <script src="{{ asset('js/sucursalesTraducciones.js') }}" defer></script>
 
 {{-- ============================================================
-     🚀 OPTIMIZACIÓN 8: GTM AL FINAL CON CARGA ASÍNCRONA
-     Antes lo tenías como lo PRIMERO del <head>, lo que bloquea
-     el render mientras carga ~115 KB de tracking.
-     Ahora se carga después de todo lo importante.
+     OPTIMIZACIÓN 8: GTM AL FINAL CON CARGA ASÍNCRONA
 ============================================================ --}}
 <script>
-  // GTM diferido - se carga cuando la página ya está visible
   window.addEventListener('load', function() {
     (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -373,7 +346,7 @@
 </script>
 
 {{-- ============================================================
-     SCRIPTS PROPIOS (también con defer-like: dentro de DOMContentLoaded)
+     SCRIPTS PROPIOS DEL LAYOUT (menú, topbar, año)
 ============================================================ --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -382,9 +355,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // ==============================================
     // MENÚ HAMBURGUESA
     // ==============================================
-    const topbar = document.querySelector(".topbar");
-    const btn = document.getElementById("navHamburger");
-    const menu = document.getElementById("mainMenu");
+    const topbar  = document.querySelector(".topbar");
+    const btn      = document.getElementById("navHamburger");
+    const menu     = document.getElementById("mainMenu");
     const backdrop = document.querySelector(".nav-backdrop");
 
     if (!topbar || !btn || !menu) return;
@@ -448,16 +421,14 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener("scroll", syncTopbar, { passive:true });
 
     // ==============================================
-    // 🚀 OPTIMIZACIÓN: PROTECCIÓN NULL
-    // Antes: document.getElementById('year').textContent = ...
-    // Si por error no existe el span, daba error y rompía todo.
+    // AÑO EN EL FOOTER (con protección null)
     // ==============================================
     const yearEl = document.getElementById('year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
 });
 </script>
 
-{{-- 🔹 Scripts específicos por vista (se mantienen como los tenías) --}}
+{{-- Scripts específicos por vista --}}
 @yield('js-vistaHome')
 @yield('js-vistaCatalogo')
 @yield('js-vistaReservaciones')
@@ -469,13 +440,11 @@ document.addEventListener('DOMContentLoaded', function() {
 @yield('js-visorReservacion')
 
 {{-- ============================================================
-     🚀 OPTIMIZACIÓN 9: GESTOS iOS - LIMPIEZA
-     Antes tenías DOS IIFE con código duplicado para bloquear
-     gestos en iOS. Ahora es uno solo y más limpio.
+     OPTIMIZACIÓN 9: GESTOS iOS (UNA SOLA VEZ)
+     Bloquea zoom por gestos y doble-tap en iOS.
 ============================================================ --}}
 <script>
 (function(){
-    // Bloquear zoom por gestos y doble tap en iOS
     document.addEventListener('gesturestart',  e => e.preventDefault(), {passive:false});
     document.addEventListener('gesturechange', e => e.preventDefault(), {passive:false});
     document.addEventListener('gestureend',    e => e.preventDefault(), {passive:false});
@@ -494,7 +463,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 {{-- ============================================================
-     TRADUCCIÓN DE SELECT2 (mantenido tal cual, solo movido al final)
+     TRADUCCIÓN DE SELECT2 - GLOBAL PARA TODOS LOS FORMULARIOS
+     Reescrito limpio (antes tenía código del menú/topbar colado dentro).
 ============================================================ --}}
 <script>
 (function() {
@@ -504,32 +474,25 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!selectElement || !selectElement.options) return false;
         if (!window.sucursalesTraducciones || Object.keys(window.sucursalesTraducciones).length === 0) return false;
 
-            document.addEventListener("keydown", (e) => {
-                if (e.key === "Escape" && isMobile()) closeNav();
-            });
+        const locale = document.documentElement.lang || 'es';
+        let traduccionesRealizadas = 0;
 
-            if (MQ.addEventListener) {
-                MQ.addEventListener("change", () => {
-                    if (!isMobile()) closeNav();
-                });
-            }
+        for (let i = 0; i < selectElement.options.length; i++) {
+            const option = selectElement.options[i];
+            const textoOriginal = option.textContent.trim();
 
-            const SOLID_AT = 20;
-
-            function syncTopbar() {
-                if (window.scrollY > SOLID_AT) {
-                    topbar.classList.add("solid");
-                    topbar.classList.remove("glass");
-                } else {
-                    topbar.classList.add("glass");
-                    topbar.classList.remove("solid");
+            if (window.sucursalesTraducciones[textoOriginal]) {
+                const textoTraducido = window.sucursalesTraducciones[textoOriginal][locale];
+                if (textoTraducido && option.textContent !== textoTraducido) {
+                    option.textContent = textoTraducido;
+                    traduccionesRealizadas++;
                 }
             }
+        }
 
-            syncTopbar();
-            window.addEventListener("scroll", syncTopbar, {
-                passive: true
-            });
+        if (typeof $ !== 'undefined' && $(selectElement).hasClass('select2-hidden-accessible')) {
+            $(selectElement).trigger('change.select2');
+        }
 
         return traduccionesRealizadas > 0;
     }
@@ -546,143 +509,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (select) traducirSelect(select);
         });
 
-            <div class="footer-row links-row">
-                <ul>
-                    <li><a href="{{ route('rutaReservaciones') }}">{{ __('Book now') }}</a></li>
-                    <li><a href="{{ route('rutaCatalogo') }}">{{ __('Available cars') }}</a></li>
-                    <li><a href="{{ route('rutaPoliticas') }}">{{ __('Terms and conditions') }}</a></li>
-                    <li><a href="{{ route('rutaContacto') }}">{{ __('Contact') }}</a></li>
-                </ul>
-                <ul>
-                    <li><a href="{{ route('rutaFAQ') }}">{{ __('FAQ') }}</a></li>
-                    <li><a href="{{ route('rutaPoliticas') }}">{{ __('Privacy policy') }}</a></li>
-                    <li><a href="{{ route('rutaPoliticas') }}">{{ __('Cleaning policy') }}</a></li>
-                    <li><a href="{{ route('rutaPoliticas') }}">{{ __('Rental policy') }}</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-copy">© <span id="year"></span> Viajero. {{ __('All rights reserved') }}.</div>
-        </div>
-    </footer>
-
-    {{-- 🔹 Scripts específicos por vista --}}
-    @yield('js-vistaHome')
-    @yield('js-vistaCatalogo')
-    @yield('js-vistaReservaciones')
-    @yield('js-vistaContacto')
-    @yield('js-vistaPoliticas')
-    @yield('js-vistaFAQ')
-    @yield('js-vistaLogin')
-    @yield('js-vistaPerfil')
-    @yield('js-visorReservacion')
-    <script></script>
-    <script>
-        // iOS: bloquear zoom
-        (function() {
-            document.addEventListener('gesturestart', e => e.preventDefault(), {
-                passive: false
-            });
-            document.addEventListener('touchmove', e => {
-                if (e.touches && e.touches.length > 1) e.preventDefault();
-            }, {
-                passive: false
-            });
-
-            let last = 0;
-            document.addEventListener('touchend', e => {
-                const now = Date.now();
-                if (now - last <= 300) e.preventDefault();
-                last = now;
-            }, {
-                passive: false
-            });
-        })();
-
-        (function() {
-            document.addEventListener('gesturestart', e => e.preventDefault(), {
-                passive: false
-            });
-            document.addEventListener('gesturechange', e => e.preventDefault(), {
-                passive: false
-            });
-            document.addEventListener('gestureend', e => e.preventDefault(), {
-                passive: false
-            });
-            document.addEventListener('touchmove', e => {
-                if (e.touches && e.touches.length > 1) e.preventDefault();
-            }, {
-                passive: false
-            });
-        })();
-    </script>
-
-    <script>
-        // Actualizar año en footer
-        document.getElementById('year').textContent = new Date().getFullYear();
-    </script>
-    <script src="{{ asset('js/sucursalesTraducciones.js') }}"></script>
-
-    <script>
-        /* ============================================================
-       TRADUCCIÓN DE SELECT2 - GLOBAL PARA TODOS LOS FORMULARIOS
-
-    ============================================================ */
-        (function() {
-            "use strict";
-
-            function traducirSelect(selectElement) {
-                if (!selectElement || !selectElement.options) {
-                    return false;
-                }
-
-                if (!window.sucursalesTraducciones || Object.keys(window.sucursalesTraducciones).length === 0) {
-                    console.log('⚠️ No hay traducciones de sucursales cargadas');
-                    return false;
-                }
-
-                const locale = document.documentElement.lang || 'es';
-                let traduccionesRealizadas = 0;
-
-                for (let i = 0; i < selectElement.options.length; i++) {
-                    const option = selectElement.options[i];
-                    const textoOriginal = option.textContent.trim();
-
-                    if (window.sucursalesTraducciones[textoOriginal]) {
-                        const textoTraducido = window.sucursalesTraducciones[textoOriginal][locale];
-                        if (textoTraducido && option.textContent !== textoTraducido) {
-                            option.textContent = textoTraducido;
-                            traduccionesRealizadas++;
-                        }
-                    }
-                }
-
-                if (typeof $ !== 'undefined' && $(selectElement).data('select2')) {
-                    $(selectElement).trigger('change.select2');
-                }
-
-                if (traduccionesRealizadas > 0) {
-                    console.log(`✅ Select traducido: ${selectElement.id || selectElement.name}`);
-                }
-
-                return traduccionesRealizadas > 0;
+        const selectsPorNombre = document.querySelectorAll(
+            'select[name*="sucursal"], select[name*="pickup"], select[name*="dropoff"]');
+        selectsPorNombre.forEach(select => {
+            if (select.id && !posiblesIds.includes(select.id)) {
+                traducirSelect(select);
             }
         });
     }
 
-    const observer = new MutationObserver(() => {
-        setTimeout(traducirTodosLosSelects, 100);
-        setTimeout(traducirTodosLosSelects, 300);
-        setTimeout(traducirTodosLosSelects, 600);
-    });
-
-                const selectsPorNombre = document.querySelectorAll(
-                    'select[name*="sucursal"], select[name*="pickup"], select[name*="dropoff"]');
-                selectsPorNombre.forEach(select => {
-                    if (select.id && !posiblesIds.includes(select.id)) {
-                        traducirSelect(select);
-                    }
-                });
-
+    // Reintenta al cambiar idioma (clic en banderas)
     document.addEventListener('click', (e) => {
         const langBtn = e.target.closest('.lang-btn, .dropdown-item[href*="/lang/"]');
         if (langBtn) {
@@ -692,6 +528,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Reintenta cuando cambia el atributo lang del <html>
+    const observer = new MutationObserver(() => {
+        setTimeout(traducirTodosLosSelects, 100);
+        setTimeout(traducirTodosLosSelects, 300);
+        setTimeout(traducirTodosLosSelects, 600);
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+
+    // Primeras pasadas tras cargar
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(traducirTodosLosSelects, 300);
@@ -705,5 +550,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 })();
 </script>
+
 </body>
 </html>

@@ -344,8 +344,8 @@
     };
 
     ['#pickupPlacePoliticas', '#dropoffPlacePoliticas'].forEach(selector => {
-      if ($(selector).data('select2')) $(selector).select2('destroy');
-    });
+  if ($(selector).hasClass('select2-hidden-accessible')) $(selector).select2('destroy');
+});
 
     $('#pickupPlacePoliticas').select2({
       ...select2Config,

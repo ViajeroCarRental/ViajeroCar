@@ -94,6 +94,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (subtitle) {
             subtitle.textContent = docSubtitles[type] || "Completa la información del cliente.";
         }
+
+        // 🔧 Ajustar 'required' según el tipo elegido (evita que campos ocultos bloqueen el envío)
+        syncRequiredByType(type);
     }
 
     function showAgreementForm(type) {
@@ -132,8 +135,49 @@ document.addEventListener("DOMContentLoaded", () => {
         if (clauseTitle) clauseTitle.textContent = clauseTitles[type] || "Cláusulas del convenio";
     }
 
+    /**
+     * 🔧 NUEVO: activa 'required' SOLO en el formulario del tipo seleccionado
+     * y lo quita de los otros dos (que están ocultos). Sin esto, el navegador
+     * bloquea el submit por campos required vacíos en formularios ocultos.
+     */
+    function syncRequiredByType(type) {
+        const tipos = ["fisica", "moral", "general"];
+
+        tipos.forEach((t) => {
+            const docForm = $(`.doc-form-${t}`);
+            if (!docForm) return;
+
+            const activo = (t === type);
+
+            docForm.querySelectorAll("[data-orig-required]").forEach((el) => {
+                // restaurar/aplicar según corresponda
+                if (activo) {
+                    el.setAttribute("required", "required");
+                } else {
+                    el.removeAttribute("required");
+                }
+            });
+        });
+    }
+
+    /**
+     * 🔧 NUEVO: marca con data-orig-required los campos que nacieron como required,
+     * para poder activarlos/desactivarlos según el tipo. Se llama una vez al inicio.
+     */
+    function snapshotRequiredFields() {
+        $$(".doc-form [required]").forEach((el) => {
+            el.setAttribute("data-orig-required", "1");
+        });
+        // Empezamos quitando required a todos los doc-form (hasta que se elija tipo)
+        $$(".doc-form [data-orig-required]").forEach((el) => el.removeAttribute("required"));
+    }
+
     function selectClientType(card) {
         selectedClientType = card.dataset.clientType;
+
+        // 🔧 Guardar el tipo en el hidden del form
+        const hiddenTipo = $("#tipoPersonaInput");
+        if (hiddenTipo) hiddenTipo.value = selectedClientType;
 
         $$(".client-type-card").forEach((item) => item.classList.remove("active"));
         card.classList.add("active");
@@ -303,6 +347,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const driverIndex = drivers.length;
 
+        // 🔧 NUEVO: clonar los archivos del conductor a inputs file ocultos DENTRO del form,
+        // para que viajen en el POST. (El nombre usa índice: driver_xxx_frontal[idx])
+        moverArchivoConductor(identificacionFrontal, `driver_identificacion_frontal`, driverIndex);
+        moverArchivoConductor(identificacionTrasera, `driver_identificacion_trasera`, driverIndex);
+        moverArchivoConductor(licenciaFrontal,       `driver_licencia_frontal`,       driverIndex);
+        moverArchivoConductor(licenciaTrasera,       `driver_licencia_trasera`,       driverIndex);
+
         drivers.push({
             nombre,
             nacimiento,
@@ -342,6 +393,28 @@ document.addEventListener("DOMContentLoaded", () => {
         renderDrivers();
         renderResponsivas();
         showToast("Conductor agregado");
+    }
+
+    /**
+     * 🔧 NUEVO: mueve el archivo seleccionado de un input temporal a un input file
+     * oculto dentro del form, conservando el File real para que se envíe en el POST.
+     */
+    function moverArchivoConductor(inputTemporal, baseName, index) {
+        const cont = $("#hiddenDriverFilesContainer");
+        if (!cont || !inputTemporal || !inputTemporal.files.length) return;
+
+        const nuevo = document.createElement("input");
+        nuevo.type = "file";
+        nuevo.name = `${baseName}[${index}]`;
+        nuevo.style.display = "none";
+
+        // Transferir el archivo real usando DataTransfer
+        const dt = new DataTransfer();
+        dt.items.add(inputTemporal.files[0]);
+        nuevo.files = dt.files;
+
+        nuevo.setAttribute("data-driver-file-index", index);
+        cont.appendChild(nuevo);
     }
 
     function renderResponsivas() {
@@ -463,6 +536,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        const id = card.dataset.protectionId || "";
         const name = card.dataset.protectionName || "Protección";
         const price = Number(card.dataset.protectionPrice) || 0;
         const total = activeBaseDailyPrice + price;
@@ -472,6 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (selectedProtection) {
             selectedProtection.dataset.protectionPrice = price;
+            selectedProtection.dataset.protectionId = id;   // 🔧 guardar id del paquete
             selectedProtection.innerHTML = `
                 <strong>${name}</strong>
                 <small>${formatMoney(price)}</small>
@@ -481,6 +556,17 @@ document.addEventListener("DOMContentLoaded", () => {
         if (finalDailyPrice) {
             finalDailyPrice.textContent = formatMoney(total);
         }
+
+        // 🔧 NUEVO: volcar la protección elegida a los hidden de esa fila
+        const i = activeProtectionRow;
+        const inpId     = $(`#tarifaIdPaquete${i}`);
+        const inpNombre = $(`#tarifaPaqueteNombre${i}`);
+        const inpPrecio = $(`#tarifaPaquetePrecio${i}`);
+        const inpTotal  = $(`#tarifaTotal${i}`);
+        if (inpId)     inpId.value     = id;
+        if (inpNombre) inpNombre.value = name;
+        if (inpPrecio) inpPrecio.value = price;
+        if (inpTotal)  inpTotal.value  = total.toFixed(2);
 
         $$(".protection-card").forEach((item) => item.classList.remove("active"));
         card.classList.add("active");
@@ -506,6 +592,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (finalDailyPrice) {
             finalDailyPrice.textContent = formatMoney(final);
         }
+
+        // 🔧 mantener el total en el hidden actualizado
+        const inpTotal = $(`#tarifaTotal${rowIndex}`);
+        if (inpTotal) inpTotal.value = final.toFixed(2);
     }
 
     function initBirthdateCalendars() {
@@ -846,7 +936,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const removeDriverBtn = event.target.closest(".btn-remove-driver");
         if (removeDriverBtn) {
-            drivers.splice(Number(removeDriverBtn.dataset.driverIndex), 1);
+            const idx = Number(removeDriverBtn.dataset.driverIndex);
+            drivers.splice(idx, 1);
+            // 🔧 quitar también los archivos ocultos de ese conductor
+            $$(`#hiddenDriverFilesContainer [data-driver-file-index="${idx}"]`).forEach((el) => el.remove());
             renderDrivers();
             renderResponsivas();
             showToast("Conductor eliminado");
@@ -910,11 +1003,92 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Vista previa del convenio pendiente de conectar");
     });
 
-    $("#btnFinishVisual")?.addEventListener("click", () => {
-        showToast("Registro visual finalizado");
-    });
-
     $("#btnBack")?.addEventListener("click", () => window.history.back());
+
+    /* ============================================================
+       🔧 ENVÍO DEL FORM
+       El botón #btnFinishVisual es type="submit".
+       Antes de enviar:
+       - validar que haya tipo de cliente
+       - asegurar required correctos
+       - volcar cláusulas y responsivas a hidden
+    ============================================================ */
+    const form = $("#altaClienteForm");
+
+    if (form) {
+        form.addEventListener("submit", (event) => {
+            if (!selectedClientType) {
+                event.preventDefault();
+                showToast("Selecciona un tipo de cliente antes de finalizar");
+                goToStep(1);
+                return;
+            }
+
+            // Reasegurar required correcto según el tipo (por si acaso)
+            syncRequiredByType(selectedClientType);
+
+            // Confirmar el tipo en el hidden
+            const hiddenTipo = $("#tipoPersonaInput");
+            if (hiddenTipo) hiddenTipo.value = selectedClientType;
+
+            // --- Volcar cláusulas del convenio a hidden ---
+            const contClau = $("#hiddenClausesContainer");
+            if (contClau) {
+                contClau.innerHTML = "";
+                getActiveClauses().forEach((texto) => {
+                    const inp = document.createElement("input");
+                    inp.type = "hidden";
+                    inp.name = "clausulas[]";
+                    inp.value = texto;
+                    contClau.appendChild(inp);
+                });
+            }
+
+            // --- Volcar conductores (datos de texto) a hidden ---
+            const contDrv = $("#hiddenDriversContainer");
+            if (contDrv) {
+                contDrv.innerHTML = "";
+                drivers.forEach((d, idx) => {
+                    const campos = {
+                        "driver_nombre[]":            d.nombre,
+                        "driver_nacimiento[]":        d.nacimiento,
+                        "driver_telefono[]":          d.telefono,
+                        "driver_correo[]":            d.correo,
+                        "driver_ine[]":               d.identificacion,
+                        "driver_licencia[]":          d.licencia,
+                        "driver_vigencia_licencia[]": d.vigenciaLicencia,
+                        "driver_firma[]":             d.firmaConductor,
+                    };
+                    for (const [name, value] of Object.entries(campos)) {
+                        const inp = document.createElement("input");
+                        inp.type = "hidden";
+                        inp.name = name;
+                        inp.value = value ?? "";
+                        contDrv.appendChild(inp);
+                    }
+                });
+            }
+
+            // --- Volcar responsivas (índice + cláusulas) a hidden ---
+            const contResp = $("#hiddenResponsivasContainer");
+            if (contResp) {
+                contResp.innerHTML = "";
+                Object.keys(clauses.responsivas).forEach((idx) => {
+                    const lista = clauses.responsivas[idx] || [];
+                    lista.forEach((texto) => {
+                        const inp = document.createElement("input");
+                        inp.type = "hidden";
+                        inp.name = `responsiva_clausulas[${idx}][]`;
+                        inp.value = texto;
+                        contResp.appendChild(inp);
+                    });
+                });
+            }
+
+            showToast("Guardando registro...");
+            // Dejar continuar el submit normal
+        });
+    }
 
     renderClauses();
     renderDrivers();
@@ -925,6 +1099,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initIdentificationDetection();
     initSignatureModal();
 
+    snapshotRequiredFields();   // 🔧 guardar qué campos eran required
     markRequiredFields();
     goToStep(currentStep);
 });
