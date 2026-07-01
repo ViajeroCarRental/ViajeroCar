@@ -430,8 +430,9 @@
     <table class="header-table" role="presentation">
       <tr>
         <td style="vertical-align:middle;">
-          <img src="{{ rtrim(config('app.url'), '/') . '/img/Logo3.jpg' }}" alt="Viajero Car Rental">
-
+        <img src="{{ $message->embed($logoPath) }}"
+            alt="Viajero Car Rental"
+            style="width:210px; max-width:210px; height:auto; display:block; border:none;">
         </td>
 
         <td class="resv-box">
@@ -510,13 +511,13 @@
 <table role="presentation" style="width:100%; border-collapse:collapse;">
   <tr>
     <!-- Imagen -->
-    <td style="width:45%; vertical-align:middle; padding:10px 0;">
-      <img
-        src="{{ $imgCategoria ?? (rtrim(config('app.url'), '/') . '/img/categorias/placeholder.png') }}"
-        alt="Vehículo"
-        style="width:100%; max-width:260px; height:auto; display:block; border:none;"
-      >
-    </td>
+   <td style="width:45%; vertical-align:middle; padding:10px 0;">
+    {{-- Usamos la variable que enviamos --}}
+    <img src="{{ $imgCategoria }}"
+         alt="Vehículo"
+         width="260"
+         style="display:block; border:0;">
+</td>
 
     <!-- Texto -->
     <td style="width:55%; vertical-align:middle; padding:10px 0 10px 10px;">
@@ -755,23 +756,22 @@
       {{-- Fila superior: redes + logo de palabra --}}
       <div class="footer-top">
         <div class="footer-social">
-          {{-- Aquí pon las rutas reales de tus redes o déjalas en "#" y luego las cambias --}}
-          <a href="https://wa.me/524423032668">
-            <img src="{{ asset('img/email/whatsapp-black.png') }}" alt="WhatsApp">
-          </a>
-          <a href="https://www.facebook.com/viajerocarental">
-            <img src="{{ asset('img/email/facebook-black.png') }}" alt="Facebook">
-          </a>
-          <a href="https://www.instagram.com/viajerocarental">
-            <img src="{{ asset('img/email/instagram-black.png') }}" alt="Instagram">
-          </a>
-          <a href="https://www.tiktok.com/@viajerocarental">
-            <img src="{{ asset('img/email/tiktok-black.png') }}" alt="TikTok">
-          </a>
-        </div>
+    <a href="https://wa.me/524423032668">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="max-height:20px; display:block;">
+    </a>
+    <a href="https://www.facebook.com/viajerocarental">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook" style="max-height:20px; display:block;">
+    </a>
+    <a href="https://www.instagram.com/viajerocarental">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" alt="Instagram" style="max-height:20px; display:block;">
+    </a>
+    <a href="https://www.tiktok.com/@viajerocarental">
+        <img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" alt="TikTok" style="max-height:20px; display:block;">
+    </a>
+</div>
 
         <div class="footer-logo-word">
-          <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
+          <img src="{{ $message->embed(public_path('img/Logo3.jpg')) }}" alt="Viajero Car Rental">
         </div>
       </div>
 
@@ -811,12 +811,12 @@
 
       {{-- Fila inferior: métodos de pago --}}
       <div class="footer-pay">
-        <img src="{{ asset('img/visa.jpg') }}" alt="Visa">
-        <img src="{{ asset('img/mastercard.png') }}" alt="Mastercard">
-        <img src="{{ asset('img/america.png') }}" alt="American Express">
-        <img src="{{ asset('img/oxxo.png') }}" alt="OXXO">
-        <img src="{{ asset('img/pago.png') }}" alt="Mercado Pago">
-        <img src="{{ asset('img/paypal.png') }}" alt="PayPal">
+        <img src="{{ $message->embed(public_path('img/visa.jpg')) }}" alt="Visa">
+        <img src="{{ $message->embed(public_path('img/mastercard.png')) }}" alt="Mastercard">
+        <img src="{{ $message->embed(public_path('img/america.png')) }}" alt="American Express">
+        <img src="{{ $message->embed(public_path('img/oxxo.png')) }}" alt="OXXO">
+        <img src="{{ $message->embed(public_path('img/pago.png')) }}" alt="Mercado Pago">
+        <img src="{{ $message->embed(public_path('img/paypal.png')) }}" alt="PayPal">
       </div>
 
     </div>
