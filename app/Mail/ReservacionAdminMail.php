@@ -19,6 +19,8 @@ class ReservacionAdminMail extends Mailable
     public $imgCategoria;
     public $opcionesRentaTotal;
     public $tuAuto;
+    public $logoPath;
+    public $autoPath;
 
 
     public function __construct(
@@ -42,12 +44,20 @@ class ReservacionAdminMail extends Mailable
         $this->opcionesRentaTotal = $opcionesRentaTotal;
         $this->tuAuto = $tuAuto;
 
+        $this->logoPath = public_path('img/Logo3.jpg');
+        $pathImagen = public_path(str_replace(config('app.url'), '', $this->imgCategoria));
+        if (filter_var($imgCategoria, FILTER_VALIDATE_URL) === false) {
+        $this->imgCategoria = url($imgCategoria);
+    } else {
+        $this->imgCategoria = $imgCategoria;
     }
 
-    public function build()
-    {
-        return $this
-            ->subject("Nueva reservación {$this->reservacion->codigo} - Pago en mostrador")
-            ->view('emails.reservacionesAdmin');
     }
+
+public function build()
+{
+    return $this->subject("Nueva reservación {$this->reservacion->codigo}")
+                ->view('emails.reservacionesAdmin')
+                ->with(['imgCategoria' => $this->imgCategoria]);
+}
 }

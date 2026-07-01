@@ -164,7 +164,7 @@ class ReservacionesAdminController extends Controller
                 'reservacion'
             ));
         } catch (\Throwable $e) {
-            Log::channel('reservaciones')->error('Error critico al cargar vista reservaciones', [
+            Log::info('reservaciones')->error('Error critico al cargar vista reservaciones', [
                 'message' => $e->getMessage(),
                 'file'    => $e->getFile(),
                 'line'    => $e->getLine()
@@ -179,7 +179,7 @@ class ReservacionesAdminController extends Controller
      */
     public function obtenerCategoriaPorId(Request $request, $idCategoria)
     {
-        Log::channel('reservaciones')->withContext([
+        Log::info('reservaciones')->withContext([
             'request_id' => (string) Str::uuid(),
             'asesor_id'  => session('id_usuario'),
             'target_id'  => $idCategoria
@@ -214,7 +214,7 @@ class ReservacionesAdminController extends Controller
 
             return response()->json($categoria);
         } catch (\Throwable $e) {
-            Log::channel('reservaciones')->error('Error SQL al buscar categoria', [
+            Log::info('reservaciones')->error('Error SQL al buscar categoria', [
                 'message' => $e->getMessage()
             ]);
 

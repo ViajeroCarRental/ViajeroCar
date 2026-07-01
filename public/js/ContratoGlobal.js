@@ -197,6 +197,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTxt('#resumenCategoriaCompacto', r.vehiculo.categoria);
 
                 const codigoCat = r.vehiculo.codigo_categoria || 'C';
+                if (cIni) {
+                    cIni.dataset.codigoCategoria = codigoCat;
+                }
                 setTxt('#detCategoriaCodigoStep1', codigoCat);
                 setTxt('#detCategoriaNombreStep1', (r.vehiculo.categoria || '').toUpperCase());
 
@@ -371,32 +374,80 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Selección de vehículo ──────────────────────────────────────────
 
     window.seleccionarVehiculo = async (idVehiculo, btnEl) => {
-        if (btnEl) btnEl.innerHTML = '⌛...';
+    if (btnEl) btnEl.innerHTML = '⌛...';
 
-        try {
-            const resp = await fetch('/admin/contrato/asignar-vehiculo', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
-                body: JSON.stringify({ id_reservacion: window.ID_RESERVACION, id_vehiculo: idVehiculo }),
-            });
-            const data = await resp.json();
+    try {
+        const resp = await fetch('/admin/contrato/asignar-vehiculo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': window.csrfToken
+            },
+            body: JSON.stringify({
+                id_reservacion: window.ID_RESERVACION,
+                id_vehiculo: idVehiculo
+            }),
+        });
 
-            if (data.success) {
-                window.alertify?.success('Vehículo asignado.');
-                const cIni = document.getElementById('contratoInicial');
-                if (cIni) cIni.dataset.idVehiculo = String(idVehiculo);
-                window.cerrarModalVehiculos();
-                setTimeout(() => window.cargarResumenBasico?.(), 150);
-            } else {
-                window.alertify?.error(data.error || 'Error al asignar.');
-                if (btnEl) btnEl.innerHTML = 'Seleccionar';
+        const data = await resp.json();
+
+        if (data.success) {
+
+            window.alertify?.success('Vehículo asignado.');
+
+            const cIni = document.getElementById('contratoInicial');
+            if (cIni) {
+                cIni.dataset.idVehiculo = String(idVehiculo);
             }
-        } catch (err) {
-            console.error(err);
-            window.alertify?.error('Error de conexión.');
-            if (btnEl) btnEl.innerHTML = 'Seleccionar';
+
+            window.cerrarModalVehiculos();
+
+            setTimeout(async () => {
+
+                // Actualizar toda la información del contrato
+                await window.cargarResumenBasico?.();
+
+                const contrato = document.getElementById('contratoInicial');
+
+                const codigoCategoria =
+                    contrato?.dataset.codigoCategoria ||
+                    document.getElementById('detCategoriaCodigoStep1')?.textContent?.trim();
+
+                // Notificar el cambio de categoría
+                document.dispatchEvent(new CustomEvent('categoriaCambiada', {
+                    detail: {
+                        categoria: codigoCategoria,
+                        id: contrato?.dataset.idCategoria
+                    }
+                }));
+
+                // Actualizar garantías
+                if (typeof window.actualizarTodasLasGarantias === 'function') {
+                    window.actualizarTodasLasGarantias();
+                }
+
+            }, 200);
+
+        } else {
+
+            window.alertify?.error(data.error || 'Error al asignar.');
+
+            if (btnEl) {
+                btnEl.innerHTML = 'Seleccionar';
+            }
         }
-    };
+
+    } catch (err) {
+
+        console.error(err);
+
+        window.alertify?.error('Error de conexión.');
+
+        if (btnEl) {
+            btnEl.innerHTML = 'Seleccionar';
+        }
+    }
+};
 
     window.cargarVehiculosCategoriaModal = async (idCategoria) => {
         if (!idCategoria || !window.ID_RESERVACION) return;
@@ -461,14 +512,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${v.modelo || '—'}</td>
                 <td>${v.transmision || '—'}</td>
                 <td>${v.color || '—'}</td>
-                <td class="celda-editable" data-campo="gasolina" data-tipo="gas" title="Doble clic o ✏️ para editar">
+                <td class="celda-editable" data-campo="gasolina" data-tipo="gas" title="Doble clic o clic en el ícono para editar">
                     <span class="celda-valor">${fraccion}</span>
-                    <button type="button" class="btn-edit-inline" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:13px;margin-left:4px;">✏️</button>
+                    <button type="button" class="btn-edit-inline" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:13px;margin-left:4px;"><i class="fas fa-pen-to-square"></i></button>
                 </td>
                 <td class="celda-litros">${gasLitros}</td>
-                <td class="celda-editable" data-campo="kilometraje" data-tipo="km" title="Doble clic o ✏️ para editar">
+                <td class="celda-editable" data-campo="kilometraje" data-tipo="km" title="Doble clic o clic en el ícono para editar">
                     <span class="celda-valor">${v.kilometraje?.toLocaleString() || '—'}</span>
-                    <button type="button" class="btn-edit-inline" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:13px;margin-left:4px;">✏️</button>
+                    <button type="button" class="btn-edit-inline" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:13px;margin-left:4px;"><i class="fas fa-pen-to-square"></i></button>
                 </td>
                 <td>${diasVerif}</td>
                 <td>${mantKm}</td>
