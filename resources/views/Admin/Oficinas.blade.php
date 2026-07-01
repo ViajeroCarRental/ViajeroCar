@@ -132,7 +132,7 @@
     <input type="text" name="nombre" class="input" placeholder="Ej: Querétaro Aeropuerto" required>
 
     <label class="label">Dirección Completa</label>
-    <textarea name="direccion" class="input" rows="2" placeholder="Calle, Número, Colonia..." required></textarea>
+    <textarea name="direccion" class="input" rows="2" placeholder="Calle, Número, Colonia..."></textarea>
 
     <label class="label">URL de la dirección (Google Maps)</label>
     <input type="url" name="url_direccion" class="input" placeholder="https://maps.google.com/...">
@@ -235,7 +235,7 @@
     <input type="text" name="nombre" id="edit_nombre" class="input" required>
 
     <label class="label">Dirección Completa</label>
-    <textarea name="direccion" id="edit_direccion" class="input" rows="2" required></textarea>
+    <textarea name="direccion" id="edit_direccion" class="input" rows="2"></textarea>
 
     <label class="label">URL de la dirección (Google Maps)</label>
     <input type="url" name="url_direccion" id="edit_url_direccion" class="input" placeholder="https://maps.google.com/...">

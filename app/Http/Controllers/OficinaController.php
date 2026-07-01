@@ -80,7 +80,7 @@ class OficinaController extends Controller
         $request->validate([
             'id_ciudad'     => 'required|integer|exists:ciudades,id_ciudad',
             'nombre'        => 'required|string|max:120',
-            'direccion'     => 'required|string|max:255',
+            'direccion'     => 'nullable|string|max:255',
             'horario'       => 'required|string',
             'telefono'      => 'nullable|string|max:20',
             'url_direccion' => 'nullable|string|max:500',
@@ -105,6 +105,9 @@ class OficinaController extends Controller
                 'updated_at'    => now(),
             ]);
 
+            // Limpia el caché del home para que la nueva sucursal se vea de inmediato
+            \App\Http\Controllers\BusquedaController::limpiarCacheCiudades();
+
             return redirect()->back()->with('success', 'La sucursal "' . $request->nombre . '" fue registrada exitosamente.');
         } catch (\Illuminate\Database\QueryException $e) {
             if ($e->getCode() == 23000) {
@@ -121,7 +124,7 @@ class OficinaController extends Controller
         $request->validate([
             'id_ciudad'     => 'required|integer|exists:ciudades,id_ciudad',
             'nombre'        => 'required|string|max:120',
-            'direccion'     => 'required|string|max:255',
+            'direccion'     => 'nullable|string|max:255',
             'horario'       => 'required|string',
             'telefono'      => 'nullable|string|max:20',
             'url_direccion' => 'nullable|string|max:500',
@@ -153,6 +156,9 @@ class OficinaController extends Controller
                 ->where('id_sucursal', $id)
                 ->update($datos);
 
+            // Limpia el caché del home para que los cambios se vean de inmediato
+            \App\Http\Controllers\BusquedaController::limpiarCacheCiudades();
+
             return redirect()->back()->with('success', 'La sucursal "' . $request->nombre . '" fue actualizada correctamente.');
         } catch (\Illuminate\Database\QueryException $e) {
             if ($e->getCode() == 23000) {
@@ -168,6 +174,10 @@ class OficinaController extends Controller
     {
         try {
             DB::table('sucursales')->where('id_sucursal', $id)->delete();
+
+            // Limpia el caché del home para que la eliminación se refleje de inmediato
+            \App\Http\Controllers\BusquedaController::limpiarCacheCiudades();
+
             return redirect()->back()->with('success', 'Sucursal eliminada correctamente.');
         } catch (\Illuminate\Database\QueryException $e) {
             if ($e->getCode() == 23000) {

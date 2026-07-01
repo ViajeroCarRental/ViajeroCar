@@ -66,14 +66,16 @@
                                         <span class="field-icon" aria-hidden="true"></span>
                                         <select id="pickupPlacePoliticas" name="pickup_sucursal_id">
                                             <option value="" disabled selected>{{ __('Where does your trip begin?') }}</option>
-                                            @foreach($ciudades->where('nombre','Querétaro') as $ciudad)
-                                                <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
-                                                    @foreach($ciudad->sucursalesActivas as $suc)
-                                                        <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
-                                                            {{ $suc->nombre }}
-                                                        </option>
-                                                    @endforeach
-                                                </optgroup>
+                                            @foreach($ciudades as $ciudad)
+                                                @if($ciudad->sucursalesActivas->isNotEmpty())
+                                                    <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
+                                                        @foreach($ciudad->sucursalesActivas as $suc)
+                                                            <option value="{{ $suc->id_sucursal }}" @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
+                                                                {{ $suc->nombre }}
+                                                            </option>
+                                                        @endforeach
+                                                    </optgroup>
+                                                @endif
                                             @endforeach
                                         </select>
                                     </div>
@@ -83,14 +85,16 @@
                                         <span class="field-icon" aria-hidden="true"></span>
                                         <select id="dropoffPlacePoliticas" name="dropoff_sucursal_id">
                                             <option value="" disabled selected>{{ __('Where does your trip end?') }}</option>
-                                            @foreach ($ciudades->sortByDesc(fn($c) => $c->nombre === 'Querétaro') as $ciudad)
-                                                <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
-                                                    @foreach($ciudad->sucursalesActivas as $suc)
-                                                        <option value="{{ $suc->id_sucursal }}" @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
-                                                            {{ $suc->nombre }}
-                                                        </option>
-                                                    @endforeach
-                                                </optgroup>
+                                            @foreach ($ciudadesDropoff->sortByDesc(fn($c) => $c->nombre === 'Querétaro') as $ciudad)
+                                                @if($ciudad->sucursalesActivas->isNotEmpty())
+                                                    <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
+                                                        @foreach($ciudad->sucursalesActivas as $suc)
+                                                            <option value="{{ $suc->id_sucursal }}" @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
+                                                                {{ $suc->nombre }}
+                                                            </option>
+                                                        @endforeach
+                                                    </optgroup>
+                                                @endif
                                             @endforeach
                                         </select>
                                     </div>
@@ -516,7 +520,7 @@
 {{-- Mapa de iconos por sucursal (consumido por politicas.js → setupSelect2Iconos) --}}
 @php
     $iconosPorSucursal = [];
-    foreach ($ciudades as $ciudad) {
+    foreach ($ciudadesDropoff as $ciudad) {
         foreach ($ciudad->sucursalesActivas as $suc) {
             $name = mb_strtolower($suc->nombre);
             if (str_contains($name, 'aeropuerto')) {

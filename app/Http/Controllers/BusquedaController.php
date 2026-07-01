@@ -21,18 +21,19 @@ class BusquedaController extends Controller
     private const CACHE_TTL_CATEGORIAS  = 21600; // 6 horas
     private const CACHE_TTL_GOOGLE      = 3600;  // 1 hora (Reviews)
 
-    private const CACHE_KEY_CIUDADES    = 'ciudades_con_sucursales';
-    private const CACHE_KEY_CATEGORIAS  = 'categorias_carros';
-
+    private const CACHE_KEY_CIUDADES         = 'ciudades_con_sucursales';
+    private const CACHE_KEY_CIUDADES_DROPOFF = 'ciudades_con_sucursales_dropoff';
+    private const CACHE_KEY_CATEGORIAS       = 'categorias_carros';
     /* ====== HOME ====== */
     public function home()
     {
-        $ciudades   = $this->getCiudadesConSucursales();
-        $categorias = $this->getCategorias();
+        $ciudades        = $this->getCiudadesConSucursales();      // PICKUP: respeta ver_usuario
+        $ciudadesDropoff = $this->getCiudadesConSucursalesDropoff(); // DROPOFF: todas las activas (ignora ver_usuario)
+        $categorias      = $this->getCategorias();
 
         [$googleReviews, $googleRating, $googleTotal] = $this->fetchGoogleReviews();
 
-        return view('welcome', compact('ciudades', 'categorias', 'googleReviews', 'googleRating', 'googleTotal'));
+        return view('welcome', compact('ciudades', 'ciudadesDropoff', 'categorias', 'googleReviews', 'googleRating', 'googleTotal'));
     }
 
     /* ====== BUSCAR ====== */
@@ -89,9 +90,10 @@ class BusquedaController extends Controller
 
        O por consola: php artisan cache:forget ciudades_con_sucursales
     ============================================================ */
-    public static function limpiarCacheCiudades(): void
+   public static function limpiarCacheCiudades(): void
     {
         Cache::forget(self::CACHE_KEY_CIUDADES);
+        Cache::forget(self::CACHE_KEY_CIUDADES_DROPOFF);
     }
 
     public static function limpiarCacheCategorias(): void
@@ -123,7 +125,45 @@ class BusquedaController extends Controller
                 ->orderBy('nombre')
                 ->get();
 
-            // Obtener todas las sucursales activas en una sola consulta
+            // Obtener todas las sucursales activas Y visibles para el usuario
+            // en una sola consulta. El flag ver_usuario lo controla el panel admin.
+            $sucursales = DB::table('sucursales')
+                ->select('id_sucursal', 'id_ciudad', 'nombre')
+                ->where('activo', true)
+                ->where('ver_usuario', true)
+                ->orderBy('nombre')
+                ->get()
+                ->groupBy('id_ciudad');
+
+            // Asignar manualmente las sucursales a cada ciudad
+            foreach ($ciudades as $ciudad) {
+                $ciudad->sucursalesActivas = $sucursales->get($ciudad->id_ciudad, collect());
+            }
+
+            return $ciudades;
+        });
+    }
+
+    /**
+     * DROPOFF: todas las sucursales activas, SIN filtrar por ver_usuario.
+     *
+     * El cliente puede iniciar la renta solo en sucursales habilitadas
+     * (ver_usuario = 1), pero puede DEVOLVER el auto en cualquier sucursal
+     * que esté operativa (activo = 1), sin importar ver_usuario.
+     *
+     * Caché propio de 6 horas. Si agregas/editas una sucursal, llama a:
+     *    BusquedaController::limpiarCacheCiudades();
+     */
+    private function getCiudadesConSucursalesDropoff()
+    {
+        return Cache::remember(self::CACHE_KEY_CIUDADES_DROPOFF, self::CACHE_TTL_CIUDADES, function () {
+            $ciudades = DB::table('ciudades')
+                ->select('id_ciudad', 'nombre', 'estado', 'pais')
+                ->orderByRaw("CASE WHEN nombre = 'Querétaro' THEN 0 ELSE 1 END")
+                ->orderBy('nombre')
+                ->get();
+
+            // Todas las sucursales activas (SIN ver_usuario)
             $sucursales = DB::table('sucursales')
                 ->select('id_sucursal', 'id_ciudad', 'nombre')
                 ->where('activo', true)
@@ -131,7 +171,6 @@ class BusquedaController extends Controller
                 ->get()
                 ->groupBy('id_ciudad');
 
-            // Asignar manualmente las sucursales a cada ciudad
             foreach ($ciudades as $ciudad) {
                 $ciudad->sucursalesActivas = $sucursales->get($ciudad->id_ciudad, collect());
             }
