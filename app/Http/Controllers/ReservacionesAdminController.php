@@ -45,10 +45,27 @@ class ReservacionesAdminController extends Controller
                 ->orderBy('c.nombre')
                 ->get();
 
-            // Sucursales
+            // Sucursales — DROPOFF (entrega): todas las activas, sin filtrar por ver_admin
             $sucursales = DB::table('sucursales as s')
                 ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
                 ->where('s.activo', 1)
+                ->select(
+                    's.id_sucursal',
+                    's.nombre as sucursal',
+                    'c.nombre as ciudad',
+                    'c.id_ciudad'
+                )
+                ->orderByRaw("CASE WHEN c.nombre = 'Querétaro' THEN 0 ELSE 1 END")
+                ->orderBy('c.nombre')
+                ->orderBy('s.nombre')
+                ->get()
+                ->groupBy('ciudad');
+
+            // Sucursales — PICKUP (retiro): solo las habilitadas para panel (ver_admin = 1)
+            $sucursalesPickup = DB::table('sucursales as s')
+                ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
+                ->where('s.activo', 1)
+                ->where('s.ver_admin', 1)
                 ->select(
                     's.id_sucursal',
                     's.nombre as sucursal',
@@ -67,6 +84,41 @@ class ReservacionesAdminController extends Controller
                 ->orderBy('estado')
                 ->orderBy('destino')
                 ->get();
+
+            // ===============================================================
+            // 🧩 Servicios adicionales (cards dinámicas del carrusel)
+            // Solo los habilitados para panel (administrador = 1).
+            // Se EXCLUYE la fila 11 (Drop Off), porque Drop Off y Delivery
+            // se manejan aparte como cards de ubicación (no salen de aquí).
+            // Se calcula el ícono por nombre para no hardcodearlo en el Blade.
+            // ===============================================================
+            $serviciosAdicionales = DB::table('servicios')
+                ->where('activo', 1)
+                ->where('administrador', 1)
+                ->where('id_servicio', '!=', 11)
+                ->orderBy('id_servicio')
+                ->get()
+                ->map(function ($srv) {
+                    $n = mb_strtolower($srv->nombre);
+
+                    $srv->icon = match (true) {
+                        str_contains($n, 'silla')     || str_contains($n, 'baby')   => 'fas fa-baby-carriage',
+                        str_contains($n, 'conductor') || str_contains($n, 'driver') => 'fas fa-user-plus',
+                        str_contains($n, 'gasolina')  || str_contains($n, 'fuel')   => 'fas fa-gas-pump',
+                        str_contains($n, 'gps')                                     => 'fas fa-location-arrow',
+                        str_contains($n, 'licencia')                                => 'fas fa-id-card',
+                        str_contains($n, 'upgrade')   || str_contains($n, 'categor')=> 'fas fa-arrow-up',
+                        str_contains($n, 'celular')   || str_contains($n, 'accesor')=> 'fas fa-mobile-screen',
+                        str_contains($n, 'litro')                                   => 'fas fa-oil-can',
+                        default => 'fas fa-circle-plus',
+                    };
+
+                    // Bandera para que el Blade sepa si esta card es de tipo tanque
+                    // (Gasolina): switch + total, SIN control de cantidad.
+                    $srv->es_tanque = ($srv->tipo_cobro === 'por_tanque');
+
+                    return $srv;
+                });
 
             $delivery = (object)['activo' => 0, 'total' => 0, 'kms' => 0, 'direccion' => '', 'id_ubicacion' => null];
             $costoKmCategoria = 0;
@@ -153,12 +205,14 @@ class ReservacionesAdminController extends Controller
             return view('Admin.reservaciones', compact(
                 'categorias',
                 'sucursales',
+                'sucursalesPickup',
                 'grupo_colision',
                 'grupo_medicos',
                 'grupo_asistencia',
                 'grupo_terceros',
                 'grupo_protecciones',
                 'ubicaciones',
+                'serviciosAdicionales',
                 'delivery',
                 'costoKmCategoria',
                 'reservacion'

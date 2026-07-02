@@ -105,8 +105,8 @@
                         <span class="field-icon-admin"><i class="fa-solid fa-location-dot"></i></span>
                         <select id="sucursal_retiro" name="sucursal_retiro" class="input-buscador-admin" required>
                             <option value="" disabled selected>¿Dónde comienza tu viaje?</option>
-                            @foreach($sucursales as $ciudad => $grupo)
-                                @if($ciudad === 'Querétaro')
+                            @foreach($sucursalesPickup as $ciudad => $grupo)
+                                @if($grupo->isNotEmpty())
                                     <optgroup label="{{ $ciudad }}">
                                         @foreach($grupo as $s)
                                             <option value="{{ $s->id_sucursal }}">{{ $s->sucursal }}</option>
@@ -122,11 +122,13 @@
                         <select id="sucursal_entrega" name="sucursal_entrega" class="input-buscador-admin" disabled>
                             <option value="" disabled selected>¿Dónde termina tu viaje?</option>
                             @foreach($sucursales as $ciudad => $grupo)
-                                <optgroup label="{{ $ciudad }}">
-                                    @foreach($grupo as $s)
-                                        <option value="{{ $s->id_sucursal }}">{{ $s->sucursal }}</option>
-                                    @endforeach
-                                </optgroup>
+                                @if($grupo->isNotEmpty())
+                                    <optgroup label="{{ $ciudad }}">
+                                        @foreach($grupo as $s)
+                                            <option value="{{ $s->id_sucursal }}">{{ $s->sucursal }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
                             @endforeach
                         </select>
                     </div>
@@ -271,73 +273,96 @@
 
 
             {{-- =========================================
-             08.1 CARD 1 - CONDUCTOR ADICIONAL
+             08.1 CARDS DE SERVICIO (DINÁMICAS desde `servicios`, administrador=1)
+             Reemplaza a las antiguas cards fijas de Conductor, Silla y Gasolina.
+               - Molde CON cantidad: por_dia / por_evento (switch + − 1 + + total)
+               - Molde SIN cantidad: por_tanque / Gasolina (switch + total por litros)
+             Drop Off y Delivery NO salen de aquí (siguen siendo cards fijas abajo).
           ========================================= --}}
-          <div class="svc-card svc-card--addon carousel-item" data-id="conductor_extra" data-name="Conductor adicional" data-price="200" data-charge="por_dia">
-            <div class="svc-top">
-              <div class="svc-ico"><i class="fas fa-user-plus"></i>
-            </div>
-              <div class="svc-meta">
-                <div class="svc-name">Conductor adicional</div>
-              </div>
-            </div>
+          @foreach(($serviciosAdicionales ?? collect()) as $srv)
+            @php
+              $esTanque   = !empty($srv->es_tanque);       // por_tanque (Gasolina): sin cantidad
+              $precioNum  = (float) ($srv->precio ?? 0);
+              $unidadTxt  = $srv->tipo_cobro === 'por_dia' ? '/ día' : '/ evento';
+            @endphp
 
-            <div class="svc-bottom">
-              <label class="switch switch-soft">
-                <input type="checkbox" class="addon-toggle" data-addon="conductor_extra">
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="svc-addon-expanded" id="conductorExtraExpanded" style="display: none;">
-              <div class="svc-price-row">
-                <div class="price-label">Costo</div>
-                <div class="price-value">$150 MXN <span>/ día</span></div>
-              </div>
-
-              <div class="svc-quantity-row">
-                <div class="quantity-control">
-                  <button class="qty-btn minus" type="button">−</button>
-                  <span class="qty-value" data-qty="1">1</span>
-                  <button class="qty-btn plus" type="button">+</button>
-                  <span class="max-hint">Máx 3</span>
+            @if($esTanque)
+              {{-- Molde SIN cantidad (tanque): switch + total por litros de la categoría --}}
+              <div class="svc-card svc-card--accent carousel-item svc-card--servicio svc-card--tanque"
+                   data-id="{{ $srv->id_servicio }}"
+                   data-id-servicio="{{ $srv->id_servicio }}"
+                   data-name="{{ $srv->nombre }}"
+                   data-price="{{ $precioNum }}"
+                   data-charge="{{ $srv->tipo_cobro }}"
+                   data-tanque="1">
+                <div class="svc-top">
+                  <div class="svc-ico"><i class="{{ $srv->icon }}"></i></div>
+                  <div class="svc-meta">
+                    <div class="svc-name">{{ $srv->nombre }}</div>
+                  </div>
                 </div>
-              </div>
 
-              <div class="svc-total-row">
-                <span>Total Conductor adicional</span>
-                <b class="addon-total">$150.00 MXN</b>
-              </div>
-            </div>
-            <input type="hidden" class="addon-qty-hidden" name="adicionales[conductor_extra]" value="0">
-          </div>
+                <div class="svc-bottom">
+                  <label class="switch switch-soft">
+                    <input type="checkbox" class="addon-toggle-tanque" data-addon="{{ $srv->id_servicio }}">
+                    <span class="slider"></span>
+                  </label>
+                </div>
 
-          {{-- =========================================
-             08.2 CARD 2 - GASOLINA PREPAGO
-          ========================================= --}}
-          <div class="svc-card svc-card--accent carousel-item">
-            <div class="svc-top">
-              <div class="svc-ico"><i class="fas fa-gas-pump"></i></div>
-              <div class="svc-meta">
-                <div class="svc-name">Gasolina prepago</div>
+                <div class="svc-fields svc-tanque-fields" style="display:none;">
+                  <div class="svc-total">
+                    <span>Total {{ $srv->nombre }} (<span class="tanque-litros-label">0</span>L)</span>
+                    <b class="tanque-total">$0.00 MXN</b>
+                  </div>
+                </div>
+                <input type="hidden" class="addon-qty-hidden" name="adicionales[{{ $srv->id_servicio }}]" value="0">
               </div>
-            </div>
+            @else
+              {{-- Molde CON cantidad (por_dia / por_evento): switch + − 1 + + total --}}
+              <div class="svc-card svc-card--addon carousel-item svc-card--servicio"
+                   data-id="{{ $srv->id_servicio }}"
+                   data-id-servicio="{{ $srv->id_servicio }}"
+                   data-name="{{ $srv->nombre }}"
+                   data-price="{{ $precioNum }}"
+                   data-charge="{{ $srv->tipo_cobro }}">
+                <div class="svc-top">
+                  <div class="svc-ico"><i class="{{ $srv->icon }}"></i></div>
+                  <div class="svc-meta">
+                    <div class="svc-name">{{ $srv->nombre }}</div>
+                  </div>
+                </div>
 
-            <div class="svc-bottom">
-              <label class="switch switch-soft">
-                <input type="checkbox" id="gasolinaToggle" data-litros="0" data-costo-litro="20">
-                <span class="slider"></span>
-              </label>
-            </div>
+                <div class="svc-bottom">
+                  <label class="switch switch-soft">
+                    <input type="checkbox" class="addon-toggle" data-addon="{{ $srv->id_servicio }}">
+                    <span class="slider"></span>
+                  </label>
+                </div>
 
-            <div class="svc-fields" id="gasolinaFields" style="display:none;">
-              <div class="svc-total">
-                <span>Total Gasolina (<span id="litrosLabel">0</span>L)</span>
-                <b id="gasolinaTotal">$0.00 MXN</b>
+                <div class="svc-addon-expanded svc-addon-expanded-dyn" style="display: none;">
+                  <div class="svc-price-row">
+                    <div class="price-label">Costo</div>
+                    <div class="price-value">${{ number_format($precioNum, 0) }} MXN <span>{{ $unidadTxt }}</span></div>
+                  </div>
+
+                  <div class="svc-quantity-row">
+                    <div class="quantity-control">
+                      <button class="qty-btn minus" type="button">−</button>
+                      <span class="qty-value" data-qty="1">1</span>
+                      <button class="qty-btn plus" type="button">+</button>
+                      <span class="max-hint">Máx 3</span>
+                    </div>
+                  </div>
+
+                  <div class="svc-total-row">
+                    <span>Total {{ $srv->nombre }}</span>
+                    <b class="addon-total">${{ number_format($precioNum, 2) }} MXN</b>
+                  </div>
+                </div>
+                <input type="hidden" class="addon-qty-hidden" name="adicionales[{{ $srv->id_servicio }}]" value="0">
               </div>
-            </div>
-            <input type="hidden" name="gasolina_prepago_valor" id="gasolinaTotalHidden" value="0">
-          </div>
+            @endif
+          @endforeach
 
           {{-- =========================================
              08.3 CARD 3 - DROP OFF
@@ -443,47 +468,6 @@
               </div>
             </div>
             <input type="hidden" id="deliveryTotalHidden" value="{{ $deliverySafe->total ?? 0 }}">
-          </div>
-
-          {{-- =========================================
-             08.5 CARD 5 - SILLA DE BEBÉ
-          ========================================= --}}
-          <div class="svc-card svc-card--addon carousel-item" data-id="silla_bebe" data-name="Silla de bebé" data-price="150" data-charge="por_dia">
-            <div class="svc-top">
-              <div class="svc-ico"><i class="fas fa-baby-carriage"></i></div>
-              <div class="svc-meta">
-                <div class="svc-name">Silla de bebé</div>
-              </div>
-            </div>
-
-            <div class="svc-bottom">
-              <label class="switch switch-soft">
-                <input type="checkbox" class="addon-toggle" data-addon="silla_bebe">
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="svc-addon-expanded" id="sillaBebeExpanded" style="display: none;">
-              <div class="svc-price-row">
-                <div class="price-label">Costo</div>
-                <div class="price-value">$150 MXN <span>/ día</span></div>
-              </div>
-
-              <div class="svc-quantity-row">
-                <div class="quantity-control">
-                  <button class="qty-btn minus" type="button">−</button>
-                  <span class="qty-value" data-qty="1">1</span>
-                  <button class="qty-btn plus" type="button">+</button>
-                  <span class="max-hint">Máx 3</span>
-                </div>
-              </div>
-
-              <div class="svc-total-row">
-                <span>Total Silla de bebé</span>
-                <b class="addon-total">$150.00 MXN</b>
-              </div>
-            </div>
-            <input type="hidden" class="addon-qty-hidden" name="adicionales[silla_bebe]" value="0">
           </div>
 
         </div>
@@ -1493,4 +1477,3 @@
 @endsection
 
 @endsection
-

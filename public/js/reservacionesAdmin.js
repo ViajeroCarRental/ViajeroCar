@@ -808,76 +808,11 @@ function init() {
         initSelect2Sucursales();
          initEditBaseTotal();
         /* =========================================================================
-           FIX: Reset completo y reconectar sincronización
+           NOTA: La lógica de sincronización DropOff ↔ sucursal_entrega y la
+           exclusión de sucursales de Querétaro se maneja de forma centralizada
+           en la sección 41 (SINCRONIZACIÓN BIDIRECCIONAL). Bloque duplicado
+           eliminado para evitar bucles de eventos.
         ========================================================================= */
-        $('#sucursal_entrega').on('change', function(e) {
-            if (e.originalEvent === undefined && $(this).data('manejado-por-fix')) {
-                $(this).data('manejado-por-fix', false);
-                return;
-            }
-
-            const textoEntrega = $(this).find('option:selected').text() || "";
-
-            const sucursalesExcluidasQro = [
-                'Querétaro Aeropuerto',
-                'Querétaro Central de Autobuses',
-                'Querétaro Oficina Plaza Central Park'
-            ];
-            const limpiar = (t) => t.replace(/\s*\([^)]*\)/, '').trim().toLowerCase();
-
-            const esExcluida = sucursalesExcluidasQro.some(sucursal =>
-                limpiar(textoEntrega) === limpiar(sucursal)
-            );
-
-            if (esExcluida) {
-                console.log('🚩 Sucursal excluida detectada. Forzando Drop Off a 0.00...');
-
-                if (window.state) {
-                    window.state.servicios.dropoff = false;
-                    window.state.dropoff.activo = false;
-                    window.state.dropoff.total = 0;
-                    window.state.dropoff.km = 0;
-                    window.state.dropoff.ubicacion = "";
-                    window.state.dropoff.direccion = "";
-                }
-
-                const actHidden = document.getElementById("dropoff_activo");
-                const totHidden = document.getElementById("dropoff_total");
-                const kmsHidden = document.getElementById("dropoff_km");
-                if (actHidden) actHidden.value = "0";
-                if (totHidden) totHidden.value = "0.00";
-                if (kmsHidden) kmsHidden.value = "0";
-
-                const txtTotalDropoff = document.getElementById("dropTotal");
-                if (txtTotalDropoff) {
-                    txtTotalDropoff.textContent = "$0.00 MXN";
-                }
-
-                if (typeof syncTotalsHidden === 'function') syncTotalsHidden();
-                if (typeof refreshSummary === 'function') refreshSummary();
-
-                setTimeout(() => {
-                    const dropoffSelect = document.getElementById('dropUbicacion');
-                    if (dropoffSelect) {
-                        dropoffSelect.value = '';
-
-                        if (typeof $ !== 'undefined' && $(dropoffSelect).data('select2')) {
-                            $(dropoffSelect).val(null).trigger('change.select2');
-                        } else {
-                            dropoffSelect.dispatchEvent(new Event('change'));
-                        }
-                    }
-
-                    const $sucEntrega = $('#sucursal_entrega');
-                    $sucEntrega.data('manejado-por-fix', true);
-                    $sucEntrega.trigger('change');
-                }, 60);
-
-            } else {
-                console.log('✅ Destino normal: Se conserva la selección y el cálculo de Drop Off.');
-            }
-        });
-        /* ========================================================================= */
         configurarBotonPrincipal();
         configurarBotonesSiguiente();
         configurarClicEncabezados();
@@ -1127,15 +1062,9 @@ function init() {
             const qty = Number(it.qty || 0);
             if (qty <= 0) return;
 
-            let idServicio = null;
-
-            if (it.id === 'silla_bebe') {
-                idServicio = 7;
-            } else if (it.id === 'conductor_extra') {
-                idServicio = 4;
-            } else {
-                idServicio = it.id;
-            }
+            // DINÁMICO: it.id ya es el id_servicio real (número) de la card.
+            // Ya no hace falta mapear silla_bebe→7 ni conductor_extra→4.
+            const idServicio = it.id;
 
             const fields = [
                 ["id_servicio", idServicio],
@@ -1602,11 +1531,21 @@ function init() {
     11. GASOLINA
     ========================================= */
     function getGasolinaEls() {
+        // DINÁMICO (Opción 1): la card de Gasolina ahora sale del @foreach
+        // como card de tanque. Buscamos sus elementos por clase relativa a
+        // la card .svc-card--tanque, en vez de por IDs fijos.
+        // El cálculo (computeGasolina) NO cambia; solo cambia de dónde lee.
+        const card = document.querySelector('.svc-card--tanque[data-tanque="1"]');
+        if (!card) {
+            return { toggle: null, fields: null, totalTxt: null, totalHid: null, litrosLabel: null, card: null };
+        }
         return {
-            toggle: qs("#gasolinaToggle"),
-            fields: qs("#gasolinaFields"),
-            totalTxt: qs("#gasolinaTotal"),
-            totalHid: qs("#gasolinaTotalHidden"),
+            toggle: card.querySelector('.addon-toggle-tanque'),
+            fields: card.querySelector('.svc-tanque-fields'),
+            totalTxt: card.querySelector('.tanque-total'),
+            totalHid: card.querySelector('.addon-qty-hidden'),
+            litrosLabel: card.querySelector('.tanque-litros-label'),
+            card: card,
         };
     }
 
@@ -1623,7 +1562,7 @@ function init() {
         const precio = state.gasolina.precioLitro;
         const total = litros * precio;
 
-        const label = document.getElementById("litrosLabel");
+        const label = els.litrosLabel;
         if (label) {
             label.textContent = litros;
         }
@@ -2366,35 +2305,32 @@ function init() {
     }
 
     function getAddonConfig(addonId) {
-        const configs = {
-            'silla_bebe': {
-                id: 7,
-                name: 'Silla de bebé',
-                price: 150,
-                charge: 'por_dia',
-                maxQty: 3,
-                defaultQty: 1,
-                toggleSelector: '.addon-toggle[data-addon="silla_bebe"]',
-                expandedSelector: '#sillaBebeExpanded',
-                qtySelector: '#sillaBebeExpanded .qty-value',
-                totalSelector: '#sillaBebeExpanded .addon-total',
-                hiddenSelector: 'input[name="adicionales[silla_bebe]"]'
-            },
-            'conductor_extra': {
-                id: 4,
-                name: 'Conductor adicional',
-                price: 150,
-                charge: 'por_dia',
-                maxQty: 3,
-                defaultQty: 1,
-                toggleSelector: '.addon-toggle[data-addon="conductor_extra"]',
-                expandedSelector: '#conductorExtraExpanded',
-                qtySelector: '#conductorExtraExpanded .qty-value',
-                totalSelector: '#conductorExtraExpanded .addon-total',
-                hiddenSelector: 'input[name="adicionales[conductor_extra]"]'
-            }
+        // DINÁMICO: la config se lee de los data-* de la card en el DOM.
+        // addonId aquí es el id_servicio real (número), que es el data-addon
+        // del toggle y el data-id-servicio de la card. Ya no hay mapeos fijos.
+        const card = document.querySelector(`.svc-card--servicio[data-id-servicio="${addonId}"]`);
+        if (!card) return null;
+
+        // Las cards de tanque (Gasolina) NO usan este motor de cantidad;
+        // tienen su propio cálculo especial (computeGasolina).
+        if (card.dataset.tanque === '1') return null;
+
+        const expanded = card.querySelector('.svc-addon-expanded-dyn');
+
+        return {
+            id: addonId,
+            name: card.dataset.name || '',
+            price: Number(card.dataset.price || 0),
+            charge: card.dataset.charge || 'por_evento',
+            maxQty: 3,
+            defaultQty: 1,
+            card: card,
+            toggleSelector: `.addon-toggle[data-addon="${addonId}"]`,
+            expanded: expanded,
+            qtyEl: expanded ? expanded.querySelector('.qty-value') : null,
+            totalEl: expanded ? expanded.querySelector('.addon-total') : null,
+            hiddenEl: card.querySelector('.addon-qty-hidden'),
         };
-        return configs[addonId];
     }
 
     function getCurrentDays() {
@@ -2416,14 +2352,12 @@ function init() {
             total = pricePerUnit * qty;
         }
 
-        const totalElement = document.querySelector(config.totalSelector);
-        if (totalElement) {
-            totalElement.textContent = money(total);
+        if (config.totalEl) {
+            config.totalEl.textContent = money(total);
         }
 
-        const hiddenInput = document.querySelector(config.hiddenSelector);
-        if (hiddenInput) {
-            hiddenInput.value = qty;
+        if (config.hiddenEl) {
+            config.hiddenEl.value = qty;
         }
 
         const addonState = {
@@ -2456,12 +2390,11 @@ function init() {
         const stateAddon = state.addons.get(String(addonId));
         if (stateAddon && stateAddon.qty) {
             currentQty = Number(stateAddon.qty);
-        } else {
-            const qtySpan = document.querySelector(config.qtySelector);
-            if (qtySpan && qtySpan.dataset.qty) {
-                currentQty = Number(qtySpan.dataset.qty);
-            } else if (qtySpan) {
-                currentQty = Number(qtySpan.textContent);
+        } else if (config.qtyEl) {
+            if (config.qtyEl.dataset.qty) {
+                currentQty = Number(config.qtyEl.dataset.qty);
+            } else {
+                currentQty = Number(config.qtyEl.textContent);
             }
         }
 
@@ -2477,16 +2410,14 @@ function init() {
                 const event = new Event('change', { bubbles: true });
                 toggle.dispatchEvent(event);
             }
-            const expanded = document.querySelector(config.expandedSelector);
-            if (expanded) {
-                expanded.style.display = 'none';
+            if (config.expanded) {
+                config.expanded.style.display = 'none';
             }
         }
 
-        const qtySpan = document.querySelector(config.qtySelector);
-        if (qtySpan) {
-            qtySpan.textContent = newQty;
-            qtySpan.dataset.qty = newQty;
+        if (config.qtyEl) {
+            config.qtyEl.textContent = newQty;
+            config.qtyEl.dataset.qty = newQty;
         }
 
         updateAddonTotal(addonId, newQty);
@@ -2496,11 +2427,10 @@ function init() {
         const config = getAddonConfig(addonId);
         if (!config) return;
 
-        const expanded = document.querySelector(config.expandedSelector);
         const toggle = document.querySelector(config.toggleSelector);
 
-        if (expanded) {
-            expanded.style.display = active ? 'block' : 'none';
+        if (config.expanded) {
+            config.expanded.style.display = active ? 'block' : 'none';
         }
 
         if (toggle) {
@@ -2508,10 +2438,9 @@ function init() {
         }
 
         if (active) {
-            const qtySpan = document.querySelector(config.qtySelector);
-            if (qtySpan) {
-                qtySpan.textContent = config.defaultQty;
-                qtySpan.dataset.qty = config.defaultQty;
+            if (config.qtyEl) {
+                config.qtyEl.textContent = config.defaultQty;
+                config.qtyEl.dataset.qty = config.defaultQty;
             }
             updateAddonTotal(addonId, config.defaultQty);
         } else {
@@ -2520,13 +2449,19 @@ function init() {
     }
 
     function initAddonsWithSwitch() {
-        const addonIds = ['silla_bebe', 'conductor_extra'];
+        // DINÁMICO: recorremos TODAS las cards de servicio con cantidad
+        // (excluye tanque/Gasolina, que tiene su propio binder).
+        // El addonId es el data-id-servicio (número real).
+        const cards = document.querySelectorAll('.svc-card--servicio:not(.svc-card--tanque)');
 
-        addonIds.forEach(addonId => {
+        cards.forEach(card => {
+            const addonId = card.dataset.idServicio;
+            if (!addonId) return;
+
             const config = getAddonConfig(addonId);
             if (!config) return;
 
-            const toggle = document.querySelector(config.toggleSelector);
+            const toggle = card.querySelector('.addon-toggle');
             if (toggle && !toggle.dataset.initialized) {
                 toggle.dataset.initialized = 'true';
 
@@ -2536,7 +2471,7 @@ function init() {
                 });
             }
 
-            const expanded = document.querySelector(config.expandedSelector);
+            const expanded = config.expanded;
             if (expanded && !expanded.dataset.quantityInitialized) {
                 expanded.dataset.quantityInitialized = 'true';
 
@@ -2566,18 +2501,16 @@ function init() {
                 }
             }
 
-            const hiddenInput = document.querySelector(config.hiddenSelector);
+            const hiddenInput = card.querySelector('.addon-qty-hidden');
             if (hiddenInput && Number(hiddenInput.value) > 0) {
                 const savedQty = Number(hiddenInput.value);
 
-                const toggle = document.querySelector(config.toggleSelector);
                 if (toggle && !toggle.checked) {
                     setAddonActive(addonId, true);
 
-                    const qtySpan = document.querySelector(config.qtySelector);
-                    if (qtySpan) {
-                        qtySpan.textContent = savedQty;
-                        qtySpan.dataset.qty = savedQty;
+                    if (config.qtyEl) {
+                        config.qtyEl.textContent = savedQty;
+                        config.qtyEl.dataset.qty = savedQty;
                     }
                     updateAddonTotal(addonId, savedQty);
                 }
@@ -4376,7 +4309,7 @@ function initValidacionHorasTiempoReal() {
             refreshSummary();
         });
 
-        qs("#gasolinaToggle")?.addEventListener("change", (e) => {
+        getGasolinaEls().toggle?.addEventListener("change", (e) => {
             setGasolinaActive(!!e.target.checked);
         });
 
@@ -4539,7 +4472,7 @@ function initValidacionHorasTiempoReal() {
         const dropT = qs("#dropoffToggle");
         if (dropT) dropT.checked = state.servicios.dropoff;
 
-        const gasT = qs("#gasolinaToggle");
+        const gasT = getGasolinaEls().toggle;
         if (gasT) gasT.checked = state.servicios.gasolina;
 
         syncVueloField();
@@ -4620,18 +4553,17 @@ function initValidacionHorasTiempoReal() {
         if (deliverySelect) {
             if ($(deliverySelect).data('select2')) $(deliverySelect).select2('destroy');
             $(deliverySelect).select2(select2Config);
-            $(deliverySelect).off('change.delivery').on('change.delivery', function() {
-                deliverySelect.dispatchEvent(new Event('change', { bubbles: true }));
-            });
+            // Listener de cálculo real está en bindDeliveryUI (sección 09).
+            // Se elimina el dispatchEvent que se auto-disparaba y causaba bucle infinito.
         }
 
         const dropoffSelect = document.getElementById('dropUbicacion');
         if (dropoffSelect) {
             if ($(dropoffSelect).data('select2')) $(dropoffSelect).select2('destroy');
             $(dropoffSelect).select2(select2Config);
-            $(dropoffSelect).off('change.dropoff').on('change.dropoff', function() {
-                dropoffSelect.dispatchEvent(new Event('change', { bubbles: true }));
-            });
+            // Listener de cálculo real está en bindDropoffUI (sección 10) y en la
+            // sincronización de la sección 41. Se elimina el dispatchEvent que se
+            // auto-disparaba y causaba el bucle infinito (Maximum call stack size).
         }
     }
 
@@ -5734,82 +5666,9 @@ function initValidacionHorasTiempoReal() {
 
     // ========== DROPOFF → FORMULARIO ==========
     function syncDropoffToForm() {
-        if (syncInProgress) return;
-        syncInProgress = true;
-
-        const checkbox = document.getElementById('differentDropoffAdmin');
-        const sucursalEntrega = document.getElementById('sucursal_entrega');
-        const dropoffSelect = document.getElementById('dropUbicacion');
-
-        if (!checkbox || !sucursalEntrega || !dropoffSelect) {
-            syncInProgress = false;
-            return;
-        }
-
-        if (!checkbox.checked) {
-            syncInProgress = false;
-            return;
-        }
-
-        const selectedValue = dropoffSelect.value;
-        if (!selectedValue || selectedValue === "0") {
-            syncInProgress = false;
-            return;
-        }
-
-        const selectedText = dropoffSelect.options[dropoffSelect.selectedIndex]?.text || '';
-        if (!selectedText) {
-            syncInProgress = false;
-            return;
-        }
-
-        // Buscar coincidencia exacta en sucursal_entrega
-        let matchFound = false;
-        for (let i = 0; i < sucursalEntrega.options.length; i++) {
-            const opt = sucursalEntrega.options[i];
-            if (opt.text === selectedText) {
-                if (sucursalEntrega.value !== opt.value) {
-                    sucursalEntrega.value = opt.value;
-                    if (typeof $ !== 'undefined' && $(sucursalEntrega).data('select2')) {
-                        $(sucursalEntrega).val(opt.value).trigger('change');
-                    }
-                }
-                matchFound = true;
-                break;
-            }
-        }
-
-        // Si no existe, crear opción dinámica
-        if (!matchFound) {
-            const oldDynamic = sucursalEntrega.querySelector('option[data-dynamic="true"]');
-            if (oldDynamic) oldDynamic.remove();
-
-            const tempId = `dynamic_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
-            const newOption = document.createElement('option');
-            newOption.value = tempId;
-            newOption.text = selectedText;
-            newOption.setAttribute('data-dynamic', 'true');
-
-            if (!window.iconosPorId) window.iconosPorId = {};
-            const textLower = selectedText.toLowerCase();
-            if (textLower.includes('aeropuerto')) window.iconosPorId[tempId] = 'fa-plane-departure';
-            else if (textLower.includes('central') || textLower.includes('autobuses')) window.iconosPorId[tempId] = 'fa-bus';
-            else window.iconosPorId[tempId] = 'fa-location-dot';
-
-            sucursalEntrega.appendChild(newOption);
-            sucursalEntrega.value = tempId;
-            if (typeof $ !== 'undefined' && $(sucursalEntrega).data('select2')) {
-                $(sucursalEntrega).val(tempId).trigger('change');
-            }
-            console.log(`🆕 Opción dinámica creada: ${selectedText}`);
-        }
-
-        setTimeout(() => {
-            if (typeof refreshSummary === 'function') refreshSummary();
-            syncTotalsHidden();
-        }, 100);
-
-        syncInProgress = false;
+        // Solo refrescar resumen/totales; no modificar el valor de sucursal_entrega.
+        if (typeof refreshSummary === 'function') refreshSummary();
+        if (typeof syncTotalsHidden === 'function') syncTotalsHidden();
     }
 
     // ========== CONFIGURAR EVENTOS ==========
