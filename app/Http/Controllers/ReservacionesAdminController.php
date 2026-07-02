@@ -791,10 +791,27 @@ class ReservacionesAdminController extends Controller
             abort(404, 'Reservación no encontrada');
         }
 
-        // 🔵 SUCURSALES
+        // 🔵 SUCURSALES — DROPOFF (entrega): todas las activas, sin filtrar por ver_admin
         $sucursales = DB::table('sucursales as s')
             ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
             ->where('s.activo', 1)
+            ->select(
+                's.id_sucursal',
+                's.nombre as sucursal',
+                'c.nombre as ciudad',
+                'c.id_ciudad'
+            )
+            ->orderByRaw("CASE WHEN c.nombre = 'Querétaro' THEN 0 ELSE 1 END")
+            ->orderBy('c.nombre')
+            ->orderBy('s.nombre')
+            ->get()
+            ->groupBy('ciudad');
+
+        // 🔵 SUCURSALES — PICKUP (retiro): solo las habilitadas para panel (ver_admin = 1)
+        $sucursalesPickup = DB::table('sucursales as s')
+            ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
+            ->where('s.activo', 1)
+            ->where('s.ver_admin', 1)
             ->select(
                 's.id_sucursal',
                 's.nombre as sucursal',
@@ -841,7 +858,38 @@ class ReservacionesAdminController extends Controller
             ->orderBy('destino')
             ->get();
 
-        // 🔵 SERVICIOS
+        // ===============================================================
+        // 🧩 Servicios adicionales (cards dinámicas del carrusel)
+        // Idéntico a index(): solo administrador = 1, excluye Drop Off (11),
+        // con ícono calculado y bandera de tanque.
+        // ===============================================================
+        $serviciosAdicionales = DB::table('servicios')
+            ->where('activo', 1)
+            ->where('administrador', 1)
+            ->where('id_servicio', '!=', 11)
+            ->orderBy('id_servicio')
+            ->get()
+            ->map(function ($srv) {
+                $n = mb_strtolower($srv->nombre);
+
+                $srv->icon = match (true) {
+                    str_contains($n, 'silla')     || str_contains($n, 'baby')   => 'fas fa-baby-carriage',
+                    str_contains($n, 'conductor') || str_contains($n, 'driver') => 'fas fa-user-plus',
+                    str_contains($n, 'gasolina')  || str_contains($n, 'fuel')   => 'fas fa-gas-pump',
+                    str_contains($n, 'gps')                                     => 'fas fa-location-arrow',
+                    str_contains($n, 'licencia')                                => 'fas fa-id-card',
+                    str_contains($n, 'upgrade')   || str_contains($n, 'categor')=> 'fas fa-arrow-up',
+                    str_contains($n, 'celular')   || str_contains($n, 'accesor')=> 'fas fa-mobile-screen',
+                    str_contains($n, 'litro')                                   => 'fas fa-oil-can',
+                    default => 'fas fa-circle-plus',
+                };
+
+                $srv->es_tanque = ($srv->tipo_cobro === 'por_tanque');
+
+                return $srv;
+            });
+
+        // 🔵 SERVICIOS guardados en la reserva (para precargar cantidades)
         $serviciosReserva = DB::table('reservacion_servicio as rs')
             ->join('servicios as s', 's.id_servicio', '=', 'rs.id_servicio')
             ->where('rs.id_reservacion', $id)
@@ -877,6 +925,62 @@ class ReservacionesAdminController extends Controller
             )
             ->get();
 
+        // =====================================================
+        // CATÁLOGO de protecciones individuales + AGRUPACIÓN
+        // Idéntico a index(): el Blade necesita los 5 grupos para
+        // pintar las tarjetas del modal de protecciones.
+        // =====================================================
+        $individuales = DB::table('seguro_individuales')
+            ->select('id_individual', 'nombre', 'descripcion', 'precio_por_dia', 'activo')
+            ->where('activo', 1)
+            ->orderBy('precio_por_dia')
+            ->get();
+
+        // 1. COLISIÓN Y ROBO - LDW, PDW, CDW, DECLINE CDW
+        $grupo_colision = $individuales->filter(function ($item) {
+            $nombre = strtoupper($item->nombre);
+            return str_contains($nombre, 'LDW') ||
+                str_contains($nombre, 'PDW') ||
+                str_contains($nombre, 'CDW') ||
+                str_contains($nombre, 'DECLINE CDW');
+        })->values();
+
+        // 2. GASTOS MÉDICOS - PAI
+        $grupo_medicos = $individuales->filter(function ($item) {
+            $nombre = strtoupper($item->nombre);
+            return str_contains($nombre, 'PAI');
+        })->values();
+
+        // 3. ASISTENCIA PARA EL CAMINO - PRA
+        $grupo_asistencia = $individuales->filter(function ($item) {
+            $nombre = strtoupper($item->nombre);
+            return str_contains($nombre, 'PRA');
+        })->values();
+
+        // 4. DAÑOS A TERCEROS - SOLO LI, ALI, EXT. LI
+        $grupo_terceros = $individuales->filter(function ($item) {
+            $nombre = strtoupper($item->nombre);
+            return $nombre === 'LI' ||
+                $nombre === 'ALI' ||
+                $nombre === 'EXT. LI' ||
+                str_contains($nombre, 'LIABILITY') ||
+                str_contains($nombre, 'LI (') ||
+                str_contains($nombre, 'ALI (') ||
+                str_contains($nombre, 'EXT. LI');
+        })->values();
+
+        // 5. PROTECCIONES AUTOMÁTICAS - LOU, LA (el resto)
+        $idsUsados = collect()
+            ->merge($grupo_colision->pluck('id_individual'))
+            ->merge($grupo_medicos->pluck('id_individual'))
+            ->merge($grupo_asistencia->pluck('id_individual'))
+            ->merge($grupo_terceros->pluck('id_individual'))
+            ->unique();
+
+        $grupo_protecciones = $individuales
+            ->filter(fn($r) => !$idsUsados->contains($r->id_individual))
+            ->values();
+
         // 🔴 DELIVERY
         $delivery = (object)[
             'activo' => $reservacion->delivery_activo ?? 0,
@@ -891,13 +995,20 @@ class ReservacionesAdminController extends Controller
         return view('Admin.reservaciones', [
             'reservacion'         => $reservacion,
             'sucursales'          => $sucursales,
+            'sucursalesPickup'    => $sucursalesPickup,
             'categorias'          => $categorias,
             'ubicaciones'         => $ubicaciones,
+            'serviciosAdicionales' => $serviciosAdicionales,
             'delivery'            => $delivery,
             'costoKmCategoria'    => $costoKmCategoria,
             'serviciosReserva'    => $serviciosReserva,
             'seguroReserva'       => $seguroReserva,
             'individualesReserva' => $individualesReserva,
+            'grupo_colision'      => $grupo_colision,
+            'grupo_medicos'       => $grupo_medicos,
+            'grupo_asistencia'    => $grupo_asistencia,
+            'grupo_terceros'      => $grupo_terceros,
+            'grupo_protecciones'  => $grupo_protecciones,
         ]);
     }
 

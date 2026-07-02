@@ -952,7 +952,8 @@ function init() {
             km: 0,
             ubicacion: "",
             direccion: "",
-            activo: false
+            activo: false,
+            restaurado: false
         },
         delivery: {
             total: 0,
@@ -1355,6 +1356,18 @@ function init() {
             km = opt ? parseFloat(opt.dataset.km) || 0 : 0;
         }
 
+        // MODO EDICIÓN: si el dropoff se restauró con un total guardado y todavía
+        // no se eligió una ubicación (val vacío), respetar ese total en vez de 0.
+        if (state.dropoff.restaurado && val === "") {
+            const totalRestaurado = parseFloat(state.dropoff.total) || 0;
+            if (els.totalTxt) els.totalTxt.textContent = money(totalRestaurado);
+            qs("#dropoff_activo").value = state.servicios.dropoff ? "1" : "0";
+            qs("#dropoff_total").value = totalRestaurado.toFixed(2);
+            syncTotalsHidden();
+            refreshSummary();
+            return totalRestaurado;
+        }
+
         const total = km * precioKm;
 
         state.dropoff.km = km;
@@ -1496,6 +1509,9 @@ function init() {
             els.ubicacion = newUbicacion;
 
             els.ubicacion.addEventListener("change", () => {
+                // El usuario eligió una ubicación: dejar de respetar el total
+                // restaurado y volver a calcular normal por km.
+                state.dropoff.restaurado = false;
                 syncDropoffGroups(els);
                 if (state.servicios.dropoff) {
                     computeDropoff(els);
@@ -5779,18 +5795,199 @@ function initValidacionHorasTiempoReal() {
             refreshSummary();
         },
         getState: () => state,
+
+        // ---- Helpers para MODO EDICIÓN (no afectan el flujo de creación) ----
+
+        // Activa una card de addon dinámica (enciende switch + cantidad + total),
+        // leyendo el charge/precio REAL desde la card del DOM.
+        activarAddonEdicion: function(idServicio, cantidad) {
+            const qty = Math.max(1, Number(cantidad || 1));
+            const cfg = getAddonConfig(idServicio);
+            if (!cfg) return false;          // no existe o es tanque (gasolina)
+            setAddonActive(idServicio, true);
+            if (cfg.qtyEl) {
+                cfg.qtyEl.textContent = qty;
+                cfg.qtyEl.dataset.qty = qty;
+            }
+            updateAddonTotal(idServicio, qty);
+            return true;
+        },
+
+        // Coloca fecha en el input UI (Flatpickr) y sincroniza el hidden + días.
+        setFechaEdicion: function(uiId, hiddenId, valorISO) {
+            const ui = qs(uiId);
+            const hid = qs(hiddenId);
+            if (!ui || !valorISO) return;
+
+            const iso = String(valorISO).slice(0, 10); // "YYYY-MM-DD"
+            const partes = iso.split("-").map(Number);
+            // Construir Date local sin desfase de zona horaria (año, mes-1, día)
+            const fechaObj = new Date(partes[0], (partes[1] || 1) - 1, partes[2] || 1, 0, 0, 0);
+
+            const fp = ui._flatpickr;
+            if (fp) {
+                // Quitar el límite minDate para permitir fechas de reservas ya creadas
+                fp.set("minDate", null);
+                fp.setDate(fechaObj, true);   // objeto Date + dispara onChange
+            } else {
+                ui.value = iso;
+            }
+
+            // Asegurar el hidden en formato ISO (por si onChange no alcanzó)
+            if (hid) hid.value = iso;
+            syncDays();
+        },
+
+        // Coloca hora en el time-picker custom (.tp-hour) y sincroniza el hidden.
+        setHoraEdicion: function(uiId, hiddenId, valorHora) {
+            const ui = qs(uiId);
+            const hid = qs(hiddenId);
+            if (!ui || !valorHora) return;
+            const hh = String(valorHora).split(":")[0].padStart(2, "0");
+            const sel = ui.closest('.dt-field-admin, .time-field-admin')?.querySelector('.tp-hour');
+            if (sel) {
+                sel.value = hh;
+                sel.dispatchEvent(new Event("change"));  // sincroniza hidden + syncDays
+            } else {
+                ui.value = `${hh}:00`;
+                if (hid) hid.value = `${hh}:00`;
+            }
+        },
+
+        // Desbloquea todas las secciones de golpe (reserva ya completa).
+        desbloquearTodoEdicion: function() {
+            if (typeof completarFlujo === 'function') completarFlujo();
+        },
+
+        // Opción B: abre (expande) las 4 secciones a la vez, sin scroll brusco.
+        expandirTodasEdicion: function() {
+            const secciones = ['categoria', 'adicionales', 'protecciones', 'cliente'];
+            secciones.forEach(sec => {
+                const el = document.querySelector(`.acordeon-item[data-seccion="${sec}"]`);
+                if (el && typeof abrirSeccion === 'function') {
+                    abrirSeccion(el, true);   // true = evitar scroll
+                }
+            });
+        },
+
+        // Opción B: abre (expande) las 4 secciones a la vez, sin scroll brusco.
+        expandirTodasEdicion: function() {
+            const secciones = ['categoria', 'adicionales', 'protecciones', 'cliente'];
+            secciones.forEach(sec => {
+                const el = document.querySelector(`.acordeon-item[data-seccion="${sec}"]`);
+                if (el && typeof abrirSeccion === 'function') {
+                    abrirSeccion(el, true);   // true = evitar scroll
+                }
+            });
+        },
+
+        // Restaura el Drop Off en edición con el TOTAL guardado tal cual (Opción A),
+        // sin recalcular por ubicación (que se perdería y daría 0).
+        restaurarDropoffEdicion: function(totalGuardado) {
+            const els = getDropoffEls();
+            if (!els) return;
+
+            const total = parseFloat(totalGuardado) || 0;
+
+            // Encender el switch y mostrar los campos, sin recalcular.
+            state.servicios.dropoff = true;
+            state.dropoff.activo = true;
+            state.dropoff.total = total;   // ← total fijo restaurado
+            state.dropoff.restaurado = true;   // ← respetar este total hasta que elijan ubicación
+
+            if (els.toggle) els.toggle.checked = true;
+            if (els.fields) els.fields.style.display = "block";
+            if (els.totalTxt) els.totalTxt.textContent = money(total);
+
+            // Volcar a hidden + resumen usando el total ya fijado.
+            syncServiciosHidden();
+            syncDropoffHidden();
+            syncTotalsHidden();
+            refreshSummary();
+        },
     };
 
     /* =========================================
     44. CARGA DE EDICIÓN (RESERVACIÓN EXISTENTE)
     ========================================= */
-    window.addEventListener("DOMContentLoaded", async () => {
+    async function __cargarEdicionReserva() {
         const API = window._reservaAPI;
 
-        if (!window.reservacionEditar || !API) return;
+        // Solo corre en EDICIÓN real: debe existir un id_reservacion válido.
+        if (!API) return;
+        if (!window.reservacionEditar || !window.reservacionEditar.id_reservacion) return;
 
         const r = window.reservacionEditar;
 
+        // ============================================================
+        // 1) DESBLOQUEAR todas las secciones (la reserva ya está completa,
+        //    no hay que forzar el flujo secuencial del botón "Buscar").
+        // ============================================================
+        if (typeof API.desbloquearTodoEdicion === 'function') {
+            API.desbloquearTodoEdicion();
+        }
+        document.body.classList.add('buscar-realizado');
+
+        // Opción B: abrir las 4 secciones expandidas de una vez.
+        if (typeof API.expandirTodasEdicion === 'function') {
+            API.expandirTodasEdicion();
+        }
+
+        // ============================================================
+        // 2) SUCURSALES (retiro y entrega) + checkbox "devolver en otro destino"
+        // ============================================================
+        const selRetiro = document.getElementById("sucursal_retiro");
+        if (selRetiro && r.sucursal_retiro != null) {
+            selRetiro.value = String(r.sucursal_retiro);
+            selRetiro.dispatchEvent(new Event("change"));
+        }
+
+        // Si la entrega es distinta al retiro, activar el dropoff diferente
+        const hayDropoffDistinto = r.sucursal_entrega != null &&
+                                   String(r.sucursal_entrega) !== String(r.sucursal_retiro);
+
+        if (hayDropoffDistinto) {
+            const chkDiff = document.getElementById("differentDropoffAdmin");
+            const wrapEntrega = document.getElementById("dropoffWrapperAdmin");
+            const selEntrega = document.getElementById("sucursal_entrega");
+
+            if (chkDiff && !chkDiff.checked) {
+                chkDiff.checked = true;
+                chkDiff.dispatchEvent(new Event("change"));
+            }
+            if (wrapEntrega) wrapEntrega.style.display = "";
+            if (selEntrega) {
+                selEntrega.disabled = false;
+                selEntrega.value = String(r.sucursal_entrega);
+                selEntrega.dispatchEvent(new Event("change"));
+            }
+        }
+
+        // ============================================================
+        // 3) FECHAS y HORAS (se perdían: ahora se cargan vía Flatpickr / tp-hour)
+        // ============================================================
+        if (r.fecha_inicio) API.setFechaEdicion("#fecha_inicio_ui", "#fecha_inicio", r.fecha_inicio);
+        if (r.fecha_fin)    API.setFechaEdicion("#fecha_fin_ui", "#fecha_fin", r.fecha_fin);
+        if (r.hora_retiro)  API.setHoraEdicion("#hora_retiro_ui", "#hora_retiro", r.hora_retiro);
+        if (r.hora_entrega) API.setHoraEdicion("#hora_entrega_ui", "#hora_entrega", r.hora_entrega);
+
+        // ============================================================
+        // 4) DATOS DEL CLIENTE
+        // ============================================================
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el && val != null) el.value = val;
+        };
+        setVal("nombre_cliente", r.nombre_cliente);
+        setVal("email_cliente", r.email_cliente);
+        setVal("telefono_ui", r.telefono_cliente);
+        setVal("telefono_cliente", r.telefono_cliente);
+        setVal("comentarios", r.comentarios);
+        setVal("no_vuelo", r.no_vuelo);
+
+        // ============================================================
+        // 5) CATEGORÍA (igual que antes, con su espera para que calcule)
+        // ============================================================
         if (r.id_categoria) {
             const card = document.querySelector(`.card-pick[data-id="${r.id_categoria}"]`);
             if (card) {
@@ -5806,6 +6003,9 @@ function initValidacionHorasTiempoReal() {
             }
         }
 
+        // ============================================================
+        // 6) DELIVERY (igual que antes)
+        // ============================================================
         if (r.delivery_activo == 1) {
             API.setDeliveryActive(true);
             await new Promise(res => setTimeout(res, 150));
@@ -5825,14 +6025,41 @@ function initValidacionHorasTiempoReal() {
             if (dir && r.delivery_direccion) dir.value = r.delivery_direccion;
         }
 
+        // ============================================================
+        // 7) SERVICIOS / ADICIONALES guardados
+        //    - Gasolina (por_tanque, id 1): switch especial.
+        //    - Drop Off (id 11): switch de ubicación.
+        //    - El resto: cards dinámicas con su CHARGE REAL (leído del DOM).
+        // ============================================================
         if (window.serviciosEditar?.length) {
             for (const s of window.serviciosEditar) {
-                if (s.id_servicio == 1) API.setGasolinaActive(true);
-                if (s.id_servicio == 11) API.setDropoffActive(true);
-                if (s.id_servicio == 12) API.setDeliveryActive(true);
-                if (![1, 11, 12].includes(s.id_servicio)) {
+                const idServ = Number(s.id_servicio);
+
+                // Gasolina: card de tanque (id 1). Su cálculo es especial.
+                if (idServ === 1) {
+                    API.setGasolinaActive(true);
+                    continue;
+                }
+
+                // Drop Off: card de ubicación (id 11).
+                // Opción A: restaurar el total guardado (precio_unitario) tal cual,
+                // sin recalcular por ubicación (no se guardó cuál era).
+                if (idServ === 11) {
+                    API.restaurarDropoffEdicion(s.precio_unitario || 0);
+                    continue;
+                }
+
+                // Resto: intentar activarlo como card dinámica de addon.
+                // activarAddonEdicion lee el charge/precio REAL desde la card,
+                // así que por_dia se cobra por día y por_evento por evento.
+                const ok = API.activarAddonEdicion(idServ, s.cantidad || 1);
+
+                // Si por alguna razón no existe la card (servicio deshabilitado
+                // en admin), lo metemos al estado con su precio guardado para no
+                // perder el cobro, usando el charge que traiga (fallback evento).
+                if (!ok) {
                     API.setAddonQty({
-                        id: s.id_servicio,
+                        id: idServ,
                         nombre: s.nombre,
                         precio: s.precio_unitario,
                         charge: "por_evento"
@@ -5841,6 +6068,9 @@ function initValidacionHorasTiempoReal() {
             }
         }
 
+        // ============================================================
+        // 8) PROTECCIÓN (paquete)
+        // ============================================================
         if (window.seguroEditar) {
             API.setProteccion({
                 id: window.seguroEditar.id_paquete,
@@ -5850,7 +6080,17 @@ function initValidacionHorasTiempoReal() {
             });
         }
 
+        // ============================================================
+        // 9) Recalcular todo al final
+        // ============================================================
         API.forceRecalc();
+    }
+
+    // La inicialización general corre con setTimeout(init, 500) tras DOMContentLoaded.
+    // La carga de edición DEBE correr DESPUÉS de esa init (Flatpickr, time-pickers,
+    // API y cards ya listos). Por eso esperamos un poco más (700ms > 500ms).
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => { __cargarEdicionReserva(); }, 700);
     });
 
 })();
