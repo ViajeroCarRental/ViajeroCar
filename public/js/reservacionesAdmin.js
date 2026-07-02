@@ -894,6 +894,11 @@ function init() {
             .replaceAll("'", "&#039;");
     };
 
+    // Convierte **texto** en <strong>texto</strong>.
+    const aplicarNegritas = (str) => {
+        return String(str || "").replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    };
+
     const toISODate = (d) => {
         if (!(d instanceof Date) || isNaN(d)) return "";
         const y = d.getFullYear();
@@ -4062,7 +4067,7 @@ function initValidacionHorasTiempoReal() {
                     items = items.map(item => item.trim().replace(/^\s*[-–—·•]\s*/, '').trim());
                     if (items.length === 0) items = [p.desc];
 
-                    const listItems = items.map(item => `<li>${escapeHtml(item)}</li>`).join('');
+                    const listItems = items.map(item => `<li>${aplicarNegritas(escapeHtml(item))}</li>`).join('');
                     descHtml = `<ul class="desc-list">${listItems}`;
                     if (textoGarantia) descHtml += `<li class="garantia-item">${textoGarantia}</li>`;
                     descHtml += `</ul>`;

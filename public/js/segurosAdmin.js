@@ -46,12 +46,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const recalcularDesde = (claseCheckbox, idPrecio, idDescripcion) => {
         const marcados = Array.from(document.querySelectorAll(`.${claseCheckbox}:checked`));
 
-        // Precio: solo suman los que tienen data-suma = "1"
+        // Precio: ahora suman TODAS las protecciones marcadas según su precio_por_dia
         let suma = 0;
         marcados.forEach(chk => {
-            if (chk.dataset.suma === "1") {
-                suma += parseFloat(chk.dataset.precio) || 0;
-            }
+            suma += parseFloat(chk.dataset.precio) || 0;
         });
         const inputPrecio = document.getElementById(idPrecio);
         if (inputPrecio) inputPrecio.value = "$" + suma.toFixed(2);
