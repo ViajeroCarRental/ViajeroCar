@@ -123,35 +123,183 @@
     };
 
     /* =========================================================
-       AUTOLLENADO DE ESTADO AL ELEGIR DESTINO EXISTENTE
+       SELECTOR DE DESTINOS (checkboxes + "Todas" + km + visibilidad)
     ========================================================= */
-    function initDestinoAutollenado() {
-        const selectDestino = document.getElementById('ub_destino_select');
-        const inputDestino  = document.getElementById('ub_destino');
-        const inputEstado   = document.getElementById('ub_estado');
-        const wrapNuevo     = document.getElementById('ub_destino_nuevo_wrap');
-        if (!selectDestino) return;
 
-        selectDestino.addEventListener('change', function () {
-            if (this.value === '__nuevo__') {
-                if (wrapNuevo) wrapNuevo.style.display = 'block';
-                if (inputDestino) { inputDestino.value = ''; inputDestino.required = true; }
-                if (inputEstado)  { inputEstado.value = ''; inputEstado.readOnly = false; }
-            } else if (this.value) {
-                const opt = this.options[this.selectedIndex];
-                if (wrapNuevo) wrapNuevo.style.display = 'none';
-                if (inputDestino) { inputDestino.value = opt.dataset.destino || this.value; inputDestino.required = false; }
-                if (inputEstado)  { inputEstado.value = opt.dataset.estado || ''; inputEstado.readOnly = true; }
-            } else {
-                if (wrapNuevo) wrapNuevo.style.display = 'none';
-                if (inputDestino) { inputDestino.value = ''; inputDestino.required = false; }
-                if (inputEstado)  { inputEstado.value = ''; inputEstado.readOnly = false; }
-            }
+    // Guarda los destinos elegidos: { destino, estado }
+    let destinosSeleccionados = [];
+
+    function initSelectorDestinos() {
+        const selectOrigen  = document.getElementById('ub_id_ciudad_origen');
+        const btnAbrir      = document.getElementById('btnAbrirDestinos');
+        const hintOrigen    = document.getElementById('ubHintOrigen');
+        const modalDest     = document.getElementById('modalDestinos');
+        const chkTodas      = document.getElementById('ub_check_todas');
+        const inputBuscar   = document.getElementById('ub_buscar_destino');
+        const btnConfirmar  = document.getElementById('btnConfirmarDestinos');
+        const btnNuevoDest  = document.getElementById('btnAgregarDestinoNuevo');
+        const lista         = document.getElementById('ub_lista_destinos');
+
+        if (!selectOrigen || !btnAbrir || !modalDest) return;
+
+        // Habilitar el botón "Seleccionar destinos" solo con origen elegido
+        selectOrigen.addEventListener('change', function () {
+            const hayOrigen = !!this.value;
+            btnAbrir.disabled = !hayOrigen;
+            btnAbrir.style.opacity = hayOrigen ? '1' : '.5';
+            btnAbrir.style.cursor  = hayOrigen ? 'pointer' : 'not-allowed';
+            if (hintOrigen) hintOrigen.style.display = hayOrigen ? 'none' : 'block';
+        });
+
+        // Abrir el modal de destinos
+        btnAbrir.addEventListener('click', function () {
+            if (btnAbrir.disabled) return;
+            modalDest.showModal();
+        });
+
+        // Check "Todas": marca/desmarca todos los visibles
+        if (chkTodas) {
+            chkTodas.addEventListener('change', function () {
+                const marcar = this.checked;
+                lista.querySelectorAll('.destino-item').forEach(item => {
+                    if (item.style.display === 'none') return; // respeta el buscador
+                    const chk = item.querySelector('.chk-destino');
+                    if (chk) chk.checked = marcar;
+                });
+            });
+        }
+
+        // Buscador en vivo
+        if (inputBuscar) {
+            inputBuscar.addEventListener('input', function () {
+                const q = this.value.trim().toLowerCase();
+                lista.querySelectorAll('.destino-item').forEach(item => {
+                    const nombre = item.dataset.nombre || '';
+                    item.style.display = nombre.includes(q) ? 'flex' : 'none';
+                });
+            });
+        }
+
+        // Agregar un destino nuevo a la lista (queda marcado)
+        if (btnNuevoDest) {
+            btnNuevoDest.addEventListener('click', function () {
+                const nombreInput = document.getElementById('ub_nuevo_destino_nombre');
+                const estadoInput = document.getElementById('ub_nuevo_destino_estado');
+                const nombre = nombreInput.value.trim();
+                const estado = estadoInput.value.trim();
+
+                if (!nombre) {
+                    Swal.fire({ icon: 'warning', title: 'Falta el nombre', text: 'Escribe el nombre del destino.' });
+                    return;
+                }
+
+                // Evitar duplicados por nombre
+                const yaExiste = Array.from(lista.querySelectorAll('.chk-destino'))
+                    .some(c => (c.value || '').toLowerCase() === nombre.toLowerCase());
+
+                if (yaExiste) {
+                    Swal.fire({ icon: 'info', title: 'Ya existe', text: 'Ese destino ya está en la lista.' });
+                    return;
+                }
+
+                const label = document.createElement('label');
+                label.className = 'check-vis destino-item';
+                label.dataset.nombre = nombre.toLowerCase();
+                label.style.cssText = 'display:flex; align-items:center; gap:10px; padding:6px 0;';
+                label.innerHTML =
+                    '<input type="checkbox" class="chk-destino" checked' +
+                    ' value="' + nombre.replace(/"/g, '&quot;') + '"' +
+                    ' data-destino="' + nombre.replace(/"/g, '&quot;') + '"' +
+                    ' data-estado="' + estado.replace(/"/g, '&quot;') + '">' +
+                    '<span>' + nombre +
+                    ' <small style="color:#94a3b8;">' + (estado ? '— ' + estado : '') + '</small></span>';
+
+                lista.prepend(label);
+                nombreInput.value = '';
+                estadoInput.value = '';
+            });
+        }
+
+        // Confirmar selección → guardar y pintar filas de km/visibilidad
+        if (btnConfirmar) {
+            btnConfirmar.addEventListener('click', function () {
+                destinosSeleccionados = [];
+                lista.querySelectorAll('.chk-destino:checked').forEach(chk => {
+                    destinosSeleccionados.push({
+                        destino: chk.dataset.destino || chk.value,
+                        estado:  chk.dataset.estado || ''
+                    });
+                });
+
+                if (destinosSeleccionados.length === 0) {
+                    Swal.fire({ icon: 'warning', title: 'Sin destinos', text: 'Marca al menos un destino.' });
+                    return;
+                }
+
+                pintarRutasSeleccionadas();
+                modalDest.close();
+            });
+        }
+    }
+
+    // Pinta en #ub_rutas_wrap una tarjeta por destino: km + visibilidad (desactivada)
+    function pintarRutasSeleccionadas() {
+        const wrap = document.getElementById('ub_rutas_wrap');
+        if (!wrap) return;
+        wrap.innerHTML = '';
+
+        const titulo = document.createElement('div');
+        titulo.style.cssText = 'font-weight:700; color:#0f172a; margin-bottom:10px;';
+        titulo.textContent = 'Destinos seleccionados (' + destinosSeleccionados.length + ')';
+        wrap.appendChild(titulo);
+
+        destinosSeleccionados.forEach((d, i) => {
+            const card = document.createElement('div');
+            card.className = 'ruta-item-card';
+            card.dataset.destino = d.destino;
+            card.dataset.estado  = d.estado;
+            card.style.cssText =
+                'border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; margin-bottom:10px; background:#f8fafc;';
+
+            card.innerHTML =
+                '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">' +
+                    '<strong style="color:#0f172a;">' + d.destino +
+                        (d.estado ? ' <small style="color:#94a3b8; font-weight:normal;">— ' + d.estado + '</small>' : '') +
+                    '</strong>' +
+                    '<button type="button" class="btn-icon btn-del btn-quitar-ruta" data-idx="' + i + '">🗑️</button>' +
+                '</div>' +
+                '<label class="label" style="margin-top:0;">Distancia (km)</label>' +
+                '<input type="number" class="input mono ruta-km" step="0.1" min="0" required placeholder="Ej: 320">' +
+                '<div class="visibilidad-grid" style="margin-top:10px;">' +
+                    '<label class="check-vis">' +
+                        '<input type="checkbox" class="ruta-ver-usuario">' +
+                        '<span>Permitir ver en página web (usuario)</span>' +
+                    '</label>' +
+                    '<label class="check-vis">' +
+                        '<input type="checkbox" class="ruta-ver-admin">' +
+                        '<span>Permitir ver en panel (admin)</span>' +
+                    '</label>' +
+                '</div>';
+
+            wrap.appendChild(card);
+        });
+
+        // Quitar una tarjeta de destino
+        wrap.querySelectorAll('.btn-quitar-ruta').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const idx = parseInt(this.dataset.idx, 10);
+                destinosSeleccionados.splice(idx, 1);
+                if (destinosSeleccionados.length === 0) {
+                    wrap.innerHTML = '';
+                } else {
+                    pintarRutasSeleccionadas();
+                }
+            });
         });
     }
 
     /* =========================================================
-       CREAR RUTA
+       CREAR RUTAS (alta masiva: 1 origen → varios destinos)
     ========================================================= */
     function initFormUbicacion() {
         const form = document.getElementById('formUbicacion');
@@ -161,29 +309,58 @@
             e.preventDefault();
 
             const idCiudad = document.getElementById('ub_id_ciudad_origen').value;
-            const destino  = document.getElementById('ub_destino').value.trim();
-            const estado   = document.getElementById('ub_estado').value.trim();
-            const km       = document.getElementById('ub_km').value;
-            const verUsuario = document.getElementById('ub_ver_usuario').checked ? 1 : 0;
-            const verAdmin   = document.getElementById('ub_ver_admin').checked ? 1 : 0;
-
-            if (!idCiudad || !destino || !km) {
-                Swal.fire({ icon: 'warning', title: 'Faltan datos', text: 'Elige ciudad de origen, destino y km.' });
+            if (!idCiudad) {
+                Swal.fire({ icon: 'warning', title: 'Falta el origen', text: 'Elige la ciudad de origen.' });
                 return;
             }
 
-            postForm(BASE + "/ubicacion", {
-                id_ciudad_origen: idCiudad,
-                destino: destino,
-                estado: estado,
-                km: km,
-                ver_usuario: verUsuario,
-                ver_admin: verAdmin
-            })
-            .then(() => {
+            const cards = document.querySelectorAll('#ub_rutas_wrap .ruta-item-card');
+            if (cards.length === 0) {
+                Swal.fire({ icon: 'warning', title: 'Sin destinos', text: 'Selecciona al menos un destino.' });
+                return;
+            }
+
+            const rutas = [];
+            let faltanKm = false;
+
+            cards.forEach(card => {
+                const km = card.querySelector('.ruta-km').value;
+                if (!km) { faltanKm = true; return; }
+
+                rutas.push({
+                    destino:     card.dataset.destino,
+                    estado:      card.dataset.estado || '',
+                    km:          km,
+                    ver_usuario: card.querySelector('.ruta-ver-usuario').checked ? 1 : 0,
+                    ver_admin:   card.querySelector('.ruta-ver-admin').checked ? 1 : 0
+                });
+            });
+
+            if (faltanKm) {
+                Swal.fire({ icon: 'warning', title: 'Faltan kilómetros', text: 'Captura el km de cada destino seleccionado.' });
+                return;
+            }
+
+            // Enviar como rutas[i][campo] para que Laravel lo reciba como arreglo
+            const payload = { id_ciudad_origen: idCiudad };
+            rutas.forEach((r, i) => {
+                payload['rutas[' + i + '][destino]']     = r.destino;
+                payload['rutas[' + i + '][estado]']      = r.estado;
+                payload['rutas[' + i + '][km]']          = r.km;
+                payload['rutas[' + i + '][ver_usuario]'] = r.ver_usuario;
+                payload['rutas[' + i + '][ver_admin]']   = r.ver_admin;
+            });
+
+            postForm(BASE + "/ubicacion", payload)
+            .then(resp => {
+                if (resp && resp.success === false) {
+                    Swal.fire({ icon: 'warning', title: 'Aviso', text: resp.message || 'No se registraron rutas.' });
+                    return;
+                }
+                const n = (resp && resp.creadas) ? resp.creadas : rutas.length;
                 Swal.fire({
-                    icon: 'success', title: 'Ruta creada',
-                    text: 'La ruta se registró correctamente.',
+                    icon: 'success', title: 'Rutas creadas',
+                    text: 'Se registraron ' + n + ' ruta(s) correctamente.',
                     confirmButtonText: 'Aceptar', confirmButtonColor: '#10b981'
                 }).then(() => location.reload());
             })
@@ -329,7 +506,7 @@
     ========================================================= */
     document.addEventListener('DOMContentLoaded', function () {
         initFiltros();
-        initDestinoAutollenado();
+        initSelectorDestinos();
         initFormUbicacion();
         initFormEditarKm();
         initFormCosto();

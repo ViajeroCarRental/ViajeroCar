@@ -157,11 +157,14 @@
 </main>
 
 {{-- ===========================================================
-     MODAL: NUEVA RUTA
+     MODAL: NUEVA RUTA (alta masiva: 1 origen → varios destinos)
 =========================================================== --}}
 <dialog id="modalUbicacion" class="modal">
-  <form id="formUbicacion" class="modal-box">
-    <div class="modal-head"><h2>Nueva Ruta</h2><button type="button" class="x" onclick="document.getElementById('modalUbicacion').close()">✕</button></div>
+  <form id="formUbicacion" class="modal-box modal-box-ancho">
+    <div class="modal-head">
+        <h2>Nueva Ruta</h2>
+        <button type="button" class="x" onclick="document.getElementById('modalUbicacion').close()">✕</button>
+    </div>
 
     <label class="label">Ciudad de origen</label>
     <select id="ub_id_ciudad_origen" class="input" required>
@@ -171,43 +174,82 @@
         @endforeach
     </select>
 
-    <label class="label">Destino</label>
-    <select id="ub_destino_select" class="input">
-        <option value="">-- Seleccione un destino existente --</option>
-        @php $destinosUnicos = collect($ubicaciones)->unique('destino'); @endphp
-        @foreach($destinosUnicos as $d)
-            <option value="{{ $d->destino }}" data-destino="{{ $d->destino }}" data-estado="{{ $d->estado }}">{{ $d->destino }}</option>
-        @endforeach
-        <option value="__nuevo__">➕ Nuevo destino...</option>
-    </select>
-
-    <div id="ub_destino_nuevo_wrap" style="display:none; margin-top:10px;">
-        <label class="label">Nombre del nuevo destino</label>
-        <input type="text" id="ub_destino" name="destino" class="input" placeholder="Ej: Aeropuerto de Monterrey">
+    {{-- Botón que abre el selector de destinos (se habilita al elegir origen) --}}
+    <div style="margin-top:14px;">
+        <button type="button" id="btnAbrirDestinos" class="btn-top btn-top-azul" disabled
+                style="width:100%; opacity:.5; cursor:not-allowed;">
+            📍 Seleccionar destinos
+        </button>
+        <small id="ubHintOrigen" style="display:block; color:#94a3b8; margin-top:6px;">
+            Primero elige la ciudad de origen.
+        </small>
     </div>
 
-    <label class="label">Estado del destino</label>
-    <input type="text" id="ub_estado" name="estado" class="input" placeholder="Ej: Nuevo León">
-
-    <label class="label">Distancia desde la ciudad de origen (Kilómetros)</label>
-    <input type="number" id="ub_km" name="km" class="input mono" step="0.1" min="0" required placeholder="Ej: 320">
-
-    {{-- Visibilidad --}}
-    <div class="visibilidad-grid" style="margin-top:15px;">
-        <label class="check-vis">
-            <input type="checkbox" id="ub_ver_usuario" checked>
-            <span>Permitir ver en página web (usuario)</span>
-        </label>
-        <label class="check-vis">
-            <input type="checkbox" id="ub_ver_admin" checked>
-            <span>Permitir ver en panel (admin)</span>
-        </label>
-    </div>
+    {{-- Contenedor donde el JS pinta los destinos elegidos + km + visibilidad --}}
+    <div id="ub_rutas_wrap" style="margin-top:18px;"></div>
 
     <div class="modal-actions" style="margin-top: 20px;">
-        <button class="btn-add" style="background: #0284c7;" type="submit">Guardar Ruta</button>
+        <button class="btn-add" style="background: #0284c7;" type="submit">Guardar Rutas</button>
     </div>
   </form>
+</dialog>
+
+{{-- ===========================================================
+     MODAL SECUNDARIO: SELECTOR DE DESTINOS (checkboxes + Todas)
+=========================================================== --}}
+<dialog id="modalDestinos" class="modal">
+  <div class="modal-box modal-box-ancho">
+    <div class="modal-head">
+        <h2>Selecciona los destinos</h2>
+        <button type="button" class="x" onclick="document.getElementById('modalDestinos').close()">✕</button>
+    </div>
+
+    <div style="margin:8px 0 12px;">
+        <input type="text" id="ub_buscar_destino" class="input"
+               placeholder="🔎 Buscar destino..." autocomplete="off">
+    </div>
+
+    {{-- Check "Todas" --}}
+    <label class="check-vis" style="border-bottom:1px solid #e2e8f0; padding-bottom:10px; margin-bottom:6px;">
+        <input type="checkbox" id="ub_check_todas">
+        <span><strong>Todas</strong></span>
+    </label>
+
+    {{-- Lista de destinos existentes --}}
+    <div id="ub_lista_destinos" style="max-height:320px; overflow-y:auto; padding-right:6px;">
+        @php $destinosUnicos = collect($ubicaciones)->unique('destino'); @endphp
+        @foreach($destinosUnicos as $d)
+            <label class="check-vis destino-item" data-nombre="{{ strtolower($d->destino) }}"
+                   style="display:flex; align-items:center; gap:10px; padding:6px 0;">
+                <input type="checkbox" class="chk-destino"
+                       value="{{ $d->destino }}"
+                       data-destino="{{ $d->destino }}"
+                       data-estado="{{ $d->estado }}">
+                <span>{{ $d->destino }}
+                    <small style="color:#94a3b8;">{{ $d->estado ? '— ' . $d->estado : '' }}</small>
+                </span>
+            </label>
+        @endforeach
+    </div>
+
+    {{-- Alta de un destino nuevo dentro del mismo selector --}}
+    <div style="border-top:1px solid #e2e8f0; margin-top:12px; padding-top:12px;">
+        <label class="label" style="margin-top:0;">➕ Agregar destino nuevo</label>
+        <div style="display:flex; gap:8px;">
+            <input type="text" id="ub_nuevo_destino_nombre" class="input" placeholder="Nombre del destino">
+            <input type="text" id="ub_nuevo_destino_estado" class="input" placeholder="Estado" style="max-width:180px;">
+            <button type="button" id="btnAgregarDestinoNuevo" class="btn-add" style="background:#10b981; white-space:nowrap;">
+                Añadir
+            </button>
+        </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 18px;">
+        <button type="button" class="btn-add" style="background:#0284c7;" id="btnConfirmarDestinos">
+            Confirmar selección
+        </button>
+    </div>
+  </div>
 </dialog>
 
 {{-- ===========================================================
