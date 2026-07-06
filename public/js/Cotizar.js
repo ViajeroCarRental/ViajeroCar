@@ -330,7 +330,7 @@
             fields.forEach(([k, v]) => {
                 const input = document.createElement("input");
                 input.type = "hidden";
-                input.name = `extrasSeleccionados[${i}][${k}]`;
+                input.name = `extras[${i}][${k}]`;
                 input.value = String(v ?? "");
                 wrap.appendChild(input);
             });
@@ -1153,9 +1153,18 @@ function bindDropoffUI() {
     }
 
     function getGasolinaEls() {
+        // DINÁMICO: la card de Gasolina ahora sale del @foreach como card de tanque.
+        const card = document.querySelector('.svc-card--tanque[data-tanque="1"]');
+        if (!card) {
+            return { toggle: null, fields: null, totalTxt: null, totalHid: null, litrosLabel: null, card: null };
+        }
         return {
-            toggle: qs("#gasolinaToggle"), fields: qs("#gasolinaFields"),
-            totalTxt: qs("#gasolinaTotal"), totalHid: qs("#gasolinaTotalHidden"),
+            toggle: card.querySelector('.addon-toggle-tanque'),
+            fields: card.querySelector('.svc-tanque-fields'),
+            totalTxt: card.querySelector('.tanque-total'),
+            totalHid: card.querySelector('.addon-qty-hidden'),
+            litrosLabel: card.querySelector('.tanque-litros-label'),
+            card: card,
         };
     }
 
@@ -1202,7 +1211,7 @@ function bindDropoffUI() {
         state.gasolina.total = total;
         state.gasolina.precioLitro = PRECIO_POR_LITRO;
 
-        const label = document.getElementById("litrosLabel");
+        const label = els.litrosLabel;
         if (label) label.textContent = litros;
 
         if (els.totalTxt) els.totalTxt.textContent = money(total);
@@ -1864,17 +1873,30 @@ function preseleccionarProteccionesIndividuales() {
 // =========================================
 
     function getAddonConfig(addonId) {
-        const configs = {
-            'silla_bebe': { id: 'silla_bebe', name: 'Silla de bebé', price: 150, charge: 'por_dia', maxQty: 3, defaultQty: 1,
-                toggleSelector: '.addon-toggle[data-addon="silla_bebe"]', expandedSelector: '#sillaBebeExpanded',
-                qtySelector: '#sillaBebeExpanded .qty-value', totalSelector: '#sillaBebeExpanded .addon-total',
-                hiddenSelector: 'input[name="adicionales[silla_bebe]"]' },
-            'conductor_extra': { id: 'conductor_extra', name: 'Conductor adicional', price: 150, charge: 'por_dia', maxQty: 3, defaultQty: 1,
-                toggleSelector: '.addon-toggle[data-addon="conductor_extra"]', expandedSelector: '#conductorExtraExpanded',
-                qtySelector: '#conductorExtraExpanded .qty-value', totalSelector: '#conductorExtraExpanded .addon-total',
-                hiddenSelector: 'input[name="adicionales[conductor_extra]"]' }
+        // DINÁMICO: la config se lee de los data-* de la card en el DOM.
+        const card = document.querySelector(`.svc-card--servicio[data-id-servicio="${addonId}"]`);
+        if (!card) return null;
+
+        // Las cards de tanque (Gasolina) NO usan este motor de cantidad;
+        // tienen su propio cálculo especial (computeGasolina).
+        if (card.dataset.tanque === '1') return null;
+
+        const expanded = card.querySelector('.svc-addon-expanded-dyn');
+
+        return {
+            id: addonId,
+            name: card.dataset.name || '',
+            price: Number(card.dataset.price || 0),
+            charge: card.dataset.charge || 'por_evento',
+            maxQty: 3,
+            defaultQty: 1,
+            card: card,
+            toggleSelector: `.addon-toggle[data-addon="${addonId}"]`,
+            expanded: expanded,
+            qtyEl: expanded ? expanded.querySelector('.qty-value') : null,
+            totalEl: expanded ? expanded.querySelector('.addon-total') : null,
+            hiddenEl: card.querySelector('.addon-qty-hidden'),
         };
-        return configs[addonId];
     }
 
     function getCurrentDays() { return Number(state.days || 0) || 1; }
@@ -1883,11 +1905,14 @@ function preseleccionarProteccionesIndividuales() {
         const config = getAddonConfig(addonId);
         if (!config) return;
         const days = getCurrentDays();
-        const total = config.price * qty * days;
-        const totalElement = document.querySelector(config.totalSelector);
-        if (totalElement) totalElement.textContent = money(total);
-        const hiddenInput = document.querySelector(config.hiddenSelector);
-        if (hiddenInput) hiddenInput.value = qty;
+        let total = 0;
+        if (config.charge === 'por_dia') {
+            total = config.price * qty * days;
+        } else {
+            total = config.price * qty;
+        }
+        if (config.totalEl) config.totalEl.textContent = money(total);
+        if (config.hiddenEl) config.hiddenEl.value = qty;
         const addonState = { id: addonId, nombre: config.name, precio: config.price, charge: config.charge, qty: qty, total: total };
         if (qty > 0) state.addons.set(String(addonId), addonState);
         else state.addons.delete(String(addonId));
@@ -1903,10 +1928,9 @@ function preseleccionarProteccionesIndividuales() {
         let currentQty = 0;
         const stateAddon = state.addons.get(String(addonId));
         if (stateAddon && stateAddon.qty) currentQty = Number(stateAddon.qty);
-        else {
-            const qtySpan = document.querySelector(config.qtySelector);
-            if (qtySpan && qtySpan.dataset.qty) currentQty = Number(qtySpan.dataset.qty);
-            else if (qtySpan) currentQty = Number(qtySpan.textContent);
+        else if (config.qtyEl) {
+            if (config.qtyEl.dataset.qty) currentQty = Number(config.qtyEl.dataset.qty);
+            else currentQty = Number(config.qtyEl.textContent);
         }
         let newQty = currentQty + change;
         if (newQty < 0) newQty = 0;
@@ -1914,39 +1938,39 @@ function preseleccionarProteccionesIndividuales() {
         if (newQty === 0) {
             const toggle = document.querySelector(config.toggleSelector);
             if (toggle) { toggle.checked = false; const event = new Event('change', { bubbles: true }); toggle.dispatchEvent(event); }
-            const expanded = document.querySelector(config.expandedSelector);
-            if (expanded) expanded.style.display = 'none';
+            if (config.expanded) config.expanded.style.display = 'none';
         }
-        const qtySpan = document.querySelector(config.qtySelector);
-        if (qtySpan) { qtySpan.textContent = newQty; qtySpan.dataset.qty = newQty; }
+        if (config.qtyEl) { config.qtyEl.textContent = newQty; config.qtyEl.dataset.qty = newQty; }
         updateAddonTotal(addonId, newQty);
     }
 
     function setAddonActive(addonId, active) {
         const config = getAddonConfig(addonId);
         if (!config) return;
-        const expanded = document.querySelector(config.expandedSelector);
         const toggle = document.querySelector(config.toggleSelector);
-        if (expanded) expanded.style.display = active ? 'block' : 'none';
+        if (config.expanded) config.expanded.style.display = active ? 'block' : 'none';
         if (toggle) toggle.checked = active;
         if (active) {
-            const qtySpan = document.querySelector(config.qtySelector);
-            if (qtySpan) { qtySpan.textContent = config.defaultQty; qtySpan.dataset.qty = config.defaultQty; }
+            if (config.qtyEl) { config.qtyEl.textContent = config.defaultQty; config.qtyEl.dataset.qty = config.defaultQty; }
             updateAddonTotal(addonId, config.defaultQty);
         } else updateAddonTotal(addonId, 0);
     }
 
     function initAddonsWithSwitch() {
-        const addonIds = ['silla_bebe', 'conductor_extra'];
-        addonIds.forEach(addonId => {
+        // DINÁMICO: recorremos TODAS las cards de servicio con cantidad
+        // (excluye tanque/Gasolina, que tiene su propio binder).
+        const cards = document.querySelectorAll('.svc-card--servicio:not(.svc-card--tanque)');
+        cards.forEach(card => {
+            const addonId = card.dataset.idServicio;
+            if (!addonId) return;
             const config = getAddonConfig(addonId);
             if (!config) return;
-            const toggle = document.querySelector(config.toggleSelector);
+            const toggle = card.querySelector('.addon-toggle');
             if (toggle && !toggle.dataset.initialized) {
                 toggle.dataset.initialized = 'true';
                 toggle.addEventListener('change', (e) => setAddonActive(addonId, e.target.checked));
             }
-            const expanded = document.querySelector(config.expandedSelector);
+            const expanded = config.expanded;
             if (expanded && !expanded.dataset.quantityInitialized) {
                 expanded.dataset.quantityInitialized = 'true';
                 const minusBtn = expanded.querySelector('.qty-btn.minus');
@@ -1956,14 +1980,12 @@ function preseleccionarProteccionesIndividuales() {
                 const qtySpan = expanded.querySelector('.qty-value');
                 if (qtySpan && !qtySpan.dataset.qty) qtySpan.dataset.qty = Number(qtySpan.textContent) || 0;
             }
-            const hiddenInput = document.querySelector(config.hiddenSelector);
+            const hiddenInput = card.querySelector('.addon-qty-hidden');
             if (hiddenInput && Number(hiddenInput.value) > 0) {
                 const savedQty = Number(hiddenInput.value);
-                const toggle = document.querySelector(config.toggleSelector);
                 if (toggle && !toggle.checked) {
                     setAddonActive(addonId, true);
-                    const qtySpan = document.querySelector(config.qtySelector);
-                    if (qtySpan) { qtySpan.textContent = savedQty; qtySpan.dataset.qty = savedQty; }
+                    if (config.qtyEl) { config.qtyEl.textContent = savedQty; config.qtyEl.dataset.qty = savedQty; }
                     updateAddonTotal(addonId, savedQty);
                 }
             }
@@ -2338,7 +2360,6 @@ function preseleccionarProteccionesIndividuales() {
         const categoria = window.state?.categoria || state?.categoria, catInput = document.getElementById("categoria_id"), btnCategorias = document.getElementById("btnCategorias");
         if (!categoria || !catInput?.value) { if (btnCategorias) mostrarError(btnCategorias, 'Selecciona una categoría de vehículo'); allValid = false; } else if (btnCategorias) { mostrarExito(btnCategorias); }
         const nombre = document.getElementById("nombre_cliente"); if (!nombre?.value?.trim()) { mostrarError(nombre, 'El nombre es obligatorio'); allValid = false; } else { mostrarExito(nombre); }
-        const apellidos = document.getElementById("apellidos_cliente"); if (!apellidos?.value?.trim()) { mostrarError(apellidos, 'Los apellidos son obligatorios'); allValid = false; } else { mostrarExito(apellidos); }
         const email = document.getElementById("email_cliente"), emailVal = email?.value?.trim() || "", emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailVal) { mostrarError(email, 'El email es obligatorio'); allValid = false; } else if (!emailRegex.test(emailVal)) { mostrarError(email, 'Formato de email inválido'); allValid = false; } else { mostrarExito(email); }
         const telefono = document.getElementById("telefono_ui"), telVal = telefono?.value?.trim().replace(/\s+/g, "") || "";
@@ -2424,9 +2445,11 @@ function preseleccionarProteccionesIndividuales() {
                 instance.element.blur();
 
                 syncDays();
+                filtrarHorasPasadas();
 
                 setTimeout(() => {
                     syncDays();
+                    filtrarHorasPasadas();
                     if (instance.altInput) instance.altInput.blur();
                     instance.element.blur();
                 }, 150);
@@ -2989,9 +3012,10 @@ if (typeof originalSetCategoria === 'function') {
 // =========================================
 
     function isAirportSelected() {
-        const selR = document.getElementById("sucursal_retiro"), selE = document.getElementById("sucursal_entrega");
+
+        const selR = document.getElementById("sucursal_retiro");
         const check = (sel) => { if (!sel || sel.selectedIndex < 0) return false; const opt = sel.options[sel.selectedIndex]; if (!opt) return false; const nombre = (opt.textContent || "").toLowerCase(); return nombre.includes("aeropuerto"); };
-        return check(selR) || check(selE);
+        return check(selR);
     }
 
     function syncVueloField() {
@@ -3291,6 +3315,59 @@ if (typeof originalSetCategoria === 'function') {
         if (out) out.value = num ? `${lada}${num}` : "";
     }
 
+    // =========================================
+    // FILTRO DE HORAS PASADAS (si la fecha de inicio es hoy)
+    // =========================================
+    function filtrarHorasPasadas() {
+        const selRetiro = document.querySelector('#hora_retiro_ui')
+            ?.closest('.dt-field-admin, .time-field-admin')
+            ?.querySelector('.tp-hour');
+
+        if (!selRetiro) return;
+
+        const fechaInicioVal = (qs("#fecha_inicio")?.value || "").trim();
+
+        // Reactivar todas las opciones primero
+        Array.from(selRetiro.options).forEach(opt => {
+            if (opt.value === "") return;
+            opt.disabled = false;
+            opt.hidden = false;
+        });
+
+        if (!fechaInicioVal) return;
+
+        const hoy = new Date();
+        const y = hoy.getFullYear();
+        const m = String(hoy.getMonth() + 1).padStart(2, "0");
+        const d = String(hoy.getDate()).padStart(2, "0");
+        const hoyISO = `${y}-${m}-${d}`;
+
+        // Solo filtrar si la fecha de inicio es HOY
+        if (fechaInicioVal !== hoyISO) return;
+
+        const horaActual = hoy.getHours();
+
+        Array.from(selRetiro.options).forEach(opt => {
+            if (opt.value === "") return;
+            const horaOpt = parseInt(opt.value, 10);
+            if (!Number.isNaN(horaOpt) && horaOpt <= horaActual) {
+                opt.hidden = true;
+                opt.disabled = true;
+            }
+        });
+
+        // Si la hora seleccionada quedó oculta, limpiarla
+        const seleccionada = selRetiro.options[selRetiro.selectedIndex];
+        if (seleccionada && (seleccionada.hidden || seleccionada.disabled)) {
+            selRetiro.value = "";
+            const inputHoraUI = document.getElementById("hora_retiro_ui");
+            const hiddenHora = document.getElementById("hora_retiro");
+            if (inputHoraUI) inputHoraUI.value = "";
+            if (hiddenHora) hiddenHora.value = "";
+            if (typeof refreshSummary === 'function') refreshSummary();
+        }
+    }
+
 // =========================================
 // 22 EVENTOS UI
 // =========================================
@@ -3300,7 +3377,7 @@ if (typeof originalSetCategoria === 'function') {
         ["#hora_retiro_ui", "#hora_entrega_ui"].forEach((id) => { qs(id)?.addEventListener("change", () => { refreshSummary(); }); });
         qs("#sucursal_retiro")?.addEventListener("change", () => { syncVueloField(); refreshSummary(); });
         qs("#sucursal_entrega")?.addEventListener("change", () => { syncVueloField(); refreshSummary(); });
-        qs("#gasolinaToggle")?.addEventListener("change", (e) => { setGasolinaActive(!!e.target.checked); });
+        getGasolinaEls().toggle?.addEventListener("change", (e) => { setGasolinaActive(!!e.target.checked); });
         qs("#dropoffToggle")?.addEventListener("change", (e) => { setDropoffActive(!!e.target.checked); });
         bindDropoffUI();
         qs("#deliveryToggle")?.addEventListener("change", (e) => { setDeliveryActive(!!e.target.checked); });
@@ -3679,7 +3756,7 @@ function initDifferentDropoff() {
     }, 500);
 }
 
-    function observarClienteCompleto() { setInterval(() => { const nombre = document.getElementById('nombre_cliente')?.value?.trim(), apellidos = document.getElementById('apellidos_cliente')?.value?.trim(), email = document.getElementById('email_cliente')?.value?.trim(), telefono = document.getElementById('telefono_ui')?.value?.trim(); const clienteCompleto = nombre && apellidos && email && telefono; if (clienteCompleto && !flujoCompletado && clienteDesbloqueada) completarFlujo(); }, 1000); }
+    function observarClienteCompleto() { setInterval(() => { const nombre = document.getElementById('nombre_cliente')?.value?.trim(), email = document.getElementById('email_cliente')?.value?.trim(), telefono = document.getElementById('telefono_ui')?.value?.trim(); const clienteCompleto = nombre && email && telefono; if (clienteCompleto && !flujoCompletado && clienteDesbloqueada) completarFlujo(); }, 1000); }
 
     function validarCamposUbicacion() {
         let todoOk = true;
@@ -4100,7 +4177,7 @@ function desbloquearClienteSinExpandir() {
         state.servicios.dropoff = String(qs("#svc_dropoff")?.value || "0") === "1";
         state.servicios.gasolina = String(qs("#svc_gasolina")?.value || "0") === "1";
         const dropT = qs("#dropoffToggle"); if (dropT) dropT.checked = state.servicios.dropoff;
-        const gasT = qs("#gasolinaToggle"); if (gasT) gasT.checked = state.servicios.gasolina;
+        const gasT = getGasolinaEls().toggle; if (gasT) gasT.checked = state.servicios.gasolina;
         syncVueloField();
         bindDeliveryUI();
         bindDropoffUI();
@@ -4115,6 +4192,7 @@ function desbloquearClienteSinExpandir() {
         refreshSummary();
         initFlatpickrModalCalendar();
         initTimeSelectors();
+        filtrarHorasPasadas();
         initPhoneCombo();
         syncTelefonoFinal();
         bindUI();

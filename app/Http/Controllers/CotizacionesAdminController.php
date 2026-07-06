@@ -55,9 +55,27 @@ class CotizacionesAdminController extends Controller
             ->orderBy('nombre')
             ->get();
 
+        // 🔵 SUCURSALES — DROPOFF (entrega): todas las activas, sin filtrar por ver_admin
         $sucursales = DB::table('sucursales as s')
             ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
             ->where('s.activo', 1)
+            ->select(
+                's.id_sucursal',
+                's.nombre as sucursal',
+                'c.nombre as ciudad',
+                'c.id_ciudad'
+            )
+            ->orderByRaw("CASE WHEN c.nombre = 'Querétaro' THEN 0 ELSE 1 END")
+            ->orderBy('c.nombre')
+            ->orderBy('s.nombre')
+            ->get()
+            ->groupBy('ciudad');
+
+        // 🔵 SUCURSALES — PICKUP (retiro): solo las habilitadas para panel (ver_admin = 1)
+        $sucursalesPickup = DB::table('sucursales as s')
+            ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
+            ->where('s.activo', 1)
+            ->where('s.ver_admin', 1)
             ->select(
                 's.id_sucursal',
                 's.nombre as sucursal',
@@ -96,13 +114,47 @@ class CotizacionesAdminController extends Controller
             ->orderBy('c.precio_dia')
             ->get();
 
-        \Log::info('Categorías con costo_km y litros:', $categorias->toArray());
+        Log::info('Categorías con costo_km y litros:', $categorias->toArray());
 
         $ubicaciones = DB::table('ubicaciones_servicio')
             ->where('activo', 1)
+            ->where('ver_admin', 1)
             ->orderBy('estado')
             ->orderBy('destino')
             ->get();
+
+        // ===============================================================
+        // 🧩 Servicios adicionales (cards dinámicas del carrusel)
+        // Solo los habilitados para panel (administrador = 1).
+        // Se EXCLUYE la fila 11 (Drop Off), porque Drop Off y Delivery
+        // se manejan aparte como cards de ubicación (no salen de aquí).
+        // ===============================================================
+        $serviciosAdicionales = DB::table('servicios')
+            ->where('activo', 1)
+            ->where('administrador', 1)
+            ->where('id_servicio', '!=', 11)
+            ->orderBy('id_servicio')
+            ->get()
+            ->map(function ($srv) {
+                $n = mb_strtolower($srv->nombre);
+
+                $srv->icon = match (true) {
+                    str_contains($n, 'silla')     || str_contains($n, 'baby')   => 'fas fa-baby-carriage',
+                    str_contains($n, 'conductor') || str_contains($n, 'driver') => 'fas fa-user-plus',
+                    str_contains($n, 'gasolina')  || str_contains($n, 'fuel')   => 'fas fa-gas-pump',
+                    str_contains($n, 'gps')                                     => 'fas fa-location-arrow',
+                    str_contains($n, 'licencia')                                => 'fas fa-id-card',
+                    str_contains($n, 'upgrade')   || str_contains($n, 'categor')=> 'fas fa-arrow-up',
+                    str_contains($n, 'celular')   || str_contains($n, 'accesor')=> 'fas fa-mobile-screen',
+                    str_contains($n, 'litro')                                   => 'fas fa-oil-can',
+                    default => 'fas fa-circle-plus',
+                };
+
+                // Bandera para el Blade: card de tipo tanque (Gasolina) = switch + total, sin cantidad.
+                $srv->es_tanque = ($srv->tipo_cobro === 'por_tanque');
+
+                return $srv;
+            });
 
         // ✅ Obtener protecciones individuales
         $individuales = DB::table('seguro_individuales')
@@ -163,8 +215,10 @@ class CotizacionesAdminController extends Controller
         return view('Admin.Cotizar', compact(
             'ciudades',
             'sucursales',
+            'sucursalesPickup',
             'categorias',
             'ubicaciones',
+            'serviciosAdicionales',
             'grupo_colision',
             'grupo_medicos',
             'grupo_asistencia',
@@ -394,7 +448,7 @@ class CotizacionesAdminController extends Controller
             /* ==========================================================
                📧 Enviar correo con PDF adjunto (USANDO MAILABLE)
             ========================================================== */
-            if ($request->has('enviarCorreo') && !empty($cliente->email)) {
+            if (!empty($cliente->email)) {
 
                 $clienteNombre = trim(($cliente->nombre ?? '') . ' ' . ($cliente->apellidos ?? ''));
 
@@ -561,9 +615,13 @@ class CotizacionesAdminController extends Controller
 
             // 2️⃣ Decodificar JSON
             $cliente = json_decode($cot->cliente ?? '{}', true);
-            $addons = json_decode($cot->addons ?? '[]', true);
-            $seguro = json_decode($cot->seguro ?? '{}', true);
-            $servicios = json_decode($cot->servicios ?? '{}', true);
+            $addons  = json_decode($cot->addons ?? '[]', true);
+            $seguro  = json_decode($cot->seguro ?? '{}', true);
+
+            // Los servicios (Drop Off, Delivery, Gasolina) NO están en una columna
+            // propia: viven dentro de `addons` bajo la clave 'servicios'.
+            // Los adicionales del carrusel viven bajo la clave 'extras'.
+            $servicios = $addons['servicios'] ?? [];
 
             // 3️⃣ Buscar sucursales por nombre
             $sucursalRetiro = DB::table('sucursales')
@@ -632,17 +690,23 @@ class CotizacionesAdminController extends Controller
             Log::info("📝 [Convertir] Reservación creada ID {$idReserva} para cotización {$cot->folio}");
 
             // 8️⃣ Guardar servicios adicionales (tablas pivot)
-            if (!empty($addons)) {
-                foreach ($addons as $srv) {
+            // El JSON `addons` tiene la forma { extras: [...], servicios: {...} }.
+            $extrasConvertir = $addons['extras'] ?? [];
+            if (!empty($extrasConvertir) && is_array($extrasConvertir)) {
+                foreach ($extrasConvertir as $srv) {
+                    // Cada extra trae id, cantidad, precio (nombres del front).
+                    if (!is_array($srv) || !isset($srv['id'])) {
+                        continue;
+                    }
                     DB::table('reservacion_servicio')->insert([
-                        'id_reservacion' => $idReserva,
-                        'id_servicio'    => $srv['id'],
-                        'cantidad'       => $srv['cantidad'],
-                        'precio_unitario' => $srv['precio'],
-                        'created_at'     => now(),
-                        'updated_at'     => now(),
+                        'id_reservacion'  => $idReserva,
+                        'id_servicio'     => $srv['id'],
+                        'cantidad'        => $srv['cantidad'] ?? 1,
+                        'precio_unitario' => $srv['precio'] ?? 0,
+                        'created_at'      => now(),
+                        'updated_at'      => now(),
                     ]);
-                    Log::info("➕ [Convertir] Servicio añadido ID {$srv['id']} (cant={$srv['cantidad']})");
+                    Log::info("➕ [Convertir] Servicio añadido ID {$srv['id']} (cant=" . ($srv['cantidad'] ?? 1) . ")");
                 }
             } else {
                 Log::info("ℹ️ [Convertir] La cotización no tenía servicios adicionales.");
