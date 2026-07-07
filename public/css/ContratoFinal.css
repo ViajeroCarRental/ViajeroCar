@@ -1,58 +1,40 @@
-/* =====================================
-   ✅ CONTRATO FINAL — UI PRO + PRINT PRO
-   (DomPDF friendly / multipágina real)
-===================================== */
+/* ==========================================================
+   CONTRATO FINAL
+========================================================== */
 
-/* ✅ DomPDF sí lee @page si NO está dentro de @media print */
 @page{
   size: legal portrait;
-  margin: 8mm;
+  margin: 6mm;
 }
 
-/* ---------- TOKENS ---------- */
-:root{
-  --brand:#FF1E2D;
-  --brand-2:#D6121F;
-
-  --ink:#101828;
-  --muted:#667085;
-
-  --bg:#F3F5F9;
-  --paper:#ffffff;
-
-  --stroke:#E5E7EB;
-
-  --radius-lg:16px;
-  --radius-md:12px;
-
-  --shadow-sm:0 8px 22px rgba(16,24,40,.08);
-  --shadow-xs:0 2px 8px rgba(16,24,40,.06);
-}
-
-/* ---------- GLOBAL ---------- */
-*{ box-sizing:border-box; }
-html,body{
+/* ===== BASE ===== */
+*{
+  box-sizing:border-box;
   margin:0;
   padding:0;
-  color:var(--ink);
-  background:var(--bg);
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
-body{ overflow-x:hidden !important; }
 
-/* ---------- CONTENEDOR (PANTALLA) ---------- */
+html, body{
+  margin:0;
+  padding:0;
+  background:#ffffff;
+  color:#111827;
+  font-family: 'Inter', 'Poppins', system-ui, Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
 .contrato-final-container{
   max-width: 1060px;
   margin: 0 auto;
-
-  /* ✅ AJUSTE DE MARGEN / AIRE EN PANTALLA */
-  padding: 22px 18px 32px;
+  padding: 12px 16px 0;
+  background:#fff;
 }
 
-/* ---------- ACCIONES SUPERIORES (solo pantalla) ---------- */
+/* ===== BOTONES SUPERIORES ===== */
 .acciones-contrato{
   max-width: 1060px;
-  margin: 0 auto 16px;
+  margin: 0 auto 12px;
   display:flex;
   align-items:center;
   gap:10px;
@@ -60,229 +42,714 @@ body{ overflow-x:hidden !important; }
 
 .acciones-contrato .btn,
 #btnAbrirModalAviso{
-  padding: 10px 16px;
-  border-radius: 10px;
-  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
   font-weight: 700;
-  border: 1px solid transparent;
+  border: none;
   cursor: pointer;
   transition: .2s ease;
-  box-shadow: var(--shadow-xs);
 }
 
-.btn-pdf{ background: var(--brand); color:#fff; }
-.btn-word{ background: #0B66FF; color:#fff; }
+.btn-pdf{ background: #D6001C; color:#fff; }
 .btn-email, #btnAbrirModalAviso{ background:#16A34A; color:#fff; }
-
-.acciones-contrato .btn:hover,
-#btnAbrirModalAviso:hover{ opacity:.9; transform: translateY(-1px); }
 
 .badge-ra{
   margin-left:auto;
   background: #111827;
   color:#fff;
-  padding: 7px 12px;
+  padding: 5px 12px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
-  letter-spacing:.2px;
 }
 
-/* ---------- CARD PRINCIPAL ---------- */
+/* ===== CARD PRINCIPAL ===== */
 .contrato-card{
-  background: var(--paper);
-  border: 1px solid rgba(229,231,235,.9);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  overflow:hidden;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(16,24,40,.06);
 }
 
-/* ---------- ENCABEZADO ---------- */
-.encabezado{
-  background: linear-gradient(90deg, var(--brand), var(--brand-2));
-  color:#fff;
-  padding: 18px 20px;
+/* ==========================================================
+   ENCABEZADO - BLANCO
+========================================================== */
+.encabezado-blanco{
+  background: #ffffff;
+  padding: 14px 20px 10px;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap: 18px;
 }
 
-.logo-titulo{
+.logo-titulo-blanco{
   display:flex;
   align-items:center;
-  gap:14px;
+  gap:12px;
 }
 
 .logo-contrato{
-  width: 58px;
-  height:auto;
-  border-radius: 10px;
-  background: rgba(255,255,255,.14);
-  padding: 6px;
+width: 230px;
+height: auto;
+filter: brightness(0) saturate(100%) invert(25%) sepia(90%) saturate(7000%) hue-rotate(355deg);
+transition: transform 0.3s ease;
 }
 
-.titulo-texto h2{
-  margin:0;
-  font-size: 18px;
-  font-weight: 900;
-  letter-spacing:.2px;
-}
-.titulo-texto p{
-  margin: 2px 0 0;
-  font-size: 12px;
-  opacity:.9;
-}
-
-.encabezado-info{
+.encabezado-datos{
   text-align:right;
-  font-size: 12px;
-  line-height: 1.25;
-  opacity:.95;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #111827;
 }
 
-/* ---------- CUERPO ---------- */
+.encabezado-datos p{
+  margin: 0;
+}
+.encabezado-datos-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 10px;
+
+}
+
+.logo-fondo-derecho {
+    position: absolute;
+    right: -170px;
+    top: 50%;
+    transform: translateY(-50%) scaleY(2);;
+    height: 280px;
+    width: auto;
+    z-index: 0;
+    filter: grayscale(100%) brightness(150%) contrast(50%) sepia(100%) hue-rotate(180deg) saturate(0%);
+}
+
+.encabezado-datos {
+    position: relative;
+    z-index: 1;
+    text-align: right;
+    font-size: 18px;
+    line-height: 1.6;
+    color: #222;
+    margin-right: 20px;
+}
+
+.burbuja-roja {
+    background-color: #d32f2f;
+    color: white;
+    padding: 0px 15px;
+    border-radius: 10px;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+    font-size: 15px;
+    height: 18px;
+    line-height: 18px;
+}
+
+.encabezado-datos p {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0;
+}
+
+/* ==========================================================
+   TARJETA BLANCA - GRACIAS (IZQUIERDA)
+========================================================== */
+.tarjeta-blanca-izquierda{
+  background: #ffffff;
+  padding: 8px 0 8px 50px;
+  text-align: left;
+  margin-bottom: 4px;
+}
+
+.tarjeta-blanca-izquierda .gracias{
+  color: #1a1a1a;
+  font-size: 26px;
+  font-weight: 400;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.tarjeta-blanca-izquierda .gracias strong{
+  font-weight: 700;
+  color: #000000;
+}
+
+.tarjeta-blanca-izquierda .frase{
+  color: #4b5563;
+  font-size: 16px;
+  margin: 0;
+  font-style: italic;
+}
+
+/* ==========================================================
+   TÍTULOS DE SECCIÓN (ROJOS)
+========================================================== */
+.titulo-seccion{
+  color: #D6001C;
+  font-size: 35px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  margin: 14px 0 6px 0;
+  text-transform: uppercase;
+}
+
+/* ==========================================================
+   CUERPO - SECCIONES
+========================================================== */
 .secciones{
-  padding: 18px 20px 22px;
+  padding: 4px 18px 14px;
 }
 
-/* ---------- BLOQUES ---------- */
-.bloque{
-  position: relative;
-  border: 1px solid var(--stroke);
-  border-radius: var(--radius-md);
-  padding: 14px 14px 14px 16px;
-  margin-bottom: 12px;
-  background: #fff;
+.row-dos-columnas{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
-.bloque::before{
-  content:"";
-  position:absolute;
-  left:0;
-  top:12px;
-  bottom:12px;
-  width:4px;
-  border-radius: 999px;
-  background: var(--brand);
-  opacity:.9;
+.row-full{
+  display: block;
 }
 
-.bloque h3{
-  margin: 0 0 10px;
-  padding-left: 8px;
-  font-size: 14px;
-  font-weight: 900;
-  letter-spacing:.2px;
+/* ==========================================================
+   VEHÍCULO - Una columna
+========================================================== */
+.bloque-vehiculo {
+   background-color: #d32f2f;
+    border-top-left-radius: 40px;
+    border-bottom-left-radius: 40px;
+    padding: 15px 20px 15px 60px;
+    width: calc(100% + 20px);
+    margin-right: -20px;
+    padding: 20px 20px 20px 60px;
+    box-sizing: border-box;
+    display: block;
 }
 
-.bloque ul{
-  margin:0;
-  padding-left: 22px;
-  color: var(--ink);
+.vehiculo-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+    width: 100%;
+    color: #ffffff;
 }
-.bloque ul li{
-  margin: 0 0 6px;
-  font-size: 12.5px;
-  line-height: 1.35;
-}
-.bloque ul li b{ color:#0F172A; }
 
-/* 2 columnas solo en pantalla */
-.bloque.ul-2cols ul{
-  columns: 2;
-  column-gap: 28px;
+.vehiculo-item {
+    display: flex;
+    flex-direction: column;
+    border-bottom: none;
 }
-.bloque.ul-2cols ul li{ break-inside: avoid; }
 
-/* ---------- TABLA TARIFAS ---------- */
-.tabla-tarifas{
+.vehiculo-item .label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.vehiculo-item .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.gasolina-row {
+    display: flex;
+    gap: 30px;
+    margin-top: 15px;
+    align-items: center;
+    color: #ffffff;
+}
+/* --- ICONO GASOLINERA --- */
+.fa-gas-pump {
+    font-size: 28px !important;
+    color: transparent;
+    -webkit-text-stroke: 1.5px white;
+
+}
+
+.gasolina-row .label {
+    font-size: 14px !important;
+}
+
+.gasolina-row .value {
+    font-size: 18px !important;
+}
+
+.vehiculo-grid .label {
+    font-size: 13px !important;
+}
+
+.vehiculo-grid .value {
+    font-size: 16px !important;
+}
+
+/* ==========================================================
+   ARRENDATARIO
+========================================================== */
+.row-dos-columnas {
+    display: flex;
+    gap: 0;
+    margin-top: 14px;
+    align-items: stretch;
+}
+
+.col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.bloque-arrendatario{
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.arrendatario-item{
+  display: flex;
+  padding: 2px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.arrendatario-item:last-of-type{
+  border-bottom: none;
+}
+
+.arrendatario-item .label{
+  font-weight: 700;
+  color: #4b5563;
+  width: 150px;
+  flex-shrink: 0;
+}
+
+.arrendatario-item .value{
+  color: #111827;
+}
+
+/* ===== Tabla Licencia ===== */
+.licencia-table{
   width:100%;
   border-collapse: collapse;
-  overflow:hidden;
-  border-radius: 12px;
-  border:1px solid var(--stroke);
-  font-size: 12.5px;
   margin-top: 8px;
+  font-size: 14px;
 }
 
-.tabla-tarifas th{
-  background: #F8FAFC;
-  color:#111827;
-  text-align:left;
-  padding: 9px 10px;
-  font-size: 12px;
-  font-weight: 900;
-  border-bottom: 1px solid var(--stroke);
+.licencia-table th{
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  padding: 4px 6px;
+  font-weight: 700;
+  text-align: left;
 }
 
-.tabla-tarifas td{
-  padding: 9px 10px;
-  border-bottom: 1px solid #EEF2F7;
-  color:#111827;
+.licencia-table td{
+  border: 1px solid #e5e7eb;
+  padding: 4px 6px;
 }
 
-.tabla-tarifas tr:last-child td{ border-bottom:none; }
+/* ==========================================================
+   ITINERARIO
+========================================================== */
+.bloque-itinerario{
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
 
-/* ---------- TOTALES ---------- */
+.itinerario-item{
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  margin-bottom: 8px;
+}
+
+.itinerario-item:last-child{
+  border-bottom: none;
+}
+
+.itinerario-item .label{
+  font-weight: 700;
+  color: #111827;
+  font-size: 18px;
+  margin-bottom: 8px;
+  display: block;
+  width: 100%;
+}
+
+.itinerario-item .value{
+  color: #111827;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+.itinerario-item .info-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.itinerario-item .info-line i {
+  color: #d32f2f;
+  width: 22px;
+  text-align: center;
+  font-size: 18px;
+}
+/* ==========================================================
+   TARIFAS
+========================================================== */
+.bloque-tarifas{
+  background: #D6001C;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 8px 10px;
+  position: relative;
+    left: -18px;
+    width: calc(100% + 36px);
+    box-sizing: border-box;
+}
+
+.tarifas-table{
+  width:100%;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.tarifas-table th{
+  background: #D6001C;
+  border: 1px solid #e5e7eb;
+  padding: 4px 6px;
+  font-weight: 700;
+  text-align: left;
+  color: #ffffff;
+}
+
+.tarifas-table td{
+background: #D6001C;
+  border: 1px solid #e5e7eb;
+  padding: 4px 6px;
+  color: #ffffff;
+}
+
+/* ===== TOTALES ===== */
 .totales{
-  margin-top: 10px;
-  padding: 10px 12px;
-  border: 1px dashed #E5E7EB;
-  border-radius: 12px;
-  background: #FCFCFD;
-  font-size: 12.5px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  text-align: right;
+  border-top: 2px solid #D6001C;
 }
-.totales p{ margin: 4px 0; color:#111827; }
+
+.totales p{
+  margin: 2px 0;
+  font-size: 10.5px;
+  color: #ffffff;
+}
 
 .totales .total-final{
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #EEF2F7;
+  font-size: 16px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+/* ==========================================================
+   ADICIONALES
+========================================================== */
+.bloque-adicionales{
+  background: #D6001C;
+    border: 1px solid #D6001C;
+    border-radius: 10px;
+    padding: 8px 10px;
+    width: 100%;
+    min-height: 290px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    right: -18px;
+    width: calc(100% + 36px);
+    box-sizing: border-box;
+}
+
+.adicionales-table{
+  width:100%;
+  border-collapse: collapse;
   font-size: 14px;
-  font-weight: 1000;
-  color: var(--brand);
+  color: #ffffff;
 }
 
-/* ---------- FIRMAS (hoja 1) ---------- */
-.firmas{
-  display:flex;
-  gap: 12px;
-  margin-top: 12px;
+.adicionales-table td[colspan="3"] {
+    color: #ffffff !important;
+    text-align: center;
+    font-weight: 500;
+
 }
-.firma-box{
-  flex:1;
-  border: 1px solid var(--stroke);
-  border-radius: 12px;
-  padding: 12px;
-  text-align:center;
-  background:#fff;
+
+.adicionales-table th{
+  background: #D6001C;
+  border: 1px solid #D6001C;
+  padding: 4px 6px;
+  font-weight: 700;
+  text-align: left;
+  color: #ffffff;
 }
-.firma-box p{
-  margin: 0 0 8px;
-  font-size: 12px;
-  font-weight: 800;
-  color:#111827;
+
+.adicionales-table td{
+    background: #D6001C;
+  border: 1px solid #D6001C;
+  padding: 4px 6px;
+  color: #ffffff;
 }
-.firma-img{
-  width: 160px;
-  max-width:100%;
-  border: 1px solid #E5E7EB;
+
+/* ==========================================================
+   ACEPTACIÓN Y FIRMAS
+========================================================== */
+.bloque-aceptacion{
+  background: #ffffff;
   border-radius: 10px;
-  background: #fff;
+  padding: 12px 14px;
 }
 
-/* ---------- PIE ---------- */
-.pie-contrato{
-  text-align:center;
-  margin: 14px 0 0;
-  padding: 10px 0 0;
-  border-top: 1px solid #EEF2F7;
+.aceptacion-texto{
+  font-size: 10.5px;
+  line-height: 1.5;
+  text-align: justify;
+  margin-bottom: 10px;
+  color: #111827;
+}
+
+.aceptacion-texto a{
+  color: #D6001C;
+  text-decoration: underline;
+}
+
+.firmas-container{
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.firma-item{
+  text-align: center;
+  flex: 1;
+  max-width: 300px;
+}
+
+.firma-label{
+  font-size: 10px;
+  font-weight: 700;
+  color: #4b5563;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.firma-img{
+  width: 90%;
+  height: 60px;
+  max-width: 180px;
+  object-fit: contain;
+  border: none;
+  border-radius: 0;
+  border-bottom: 2px solid #111827;
+  background: transparent;
+  display: block;
+  margin: 0 auto;
+}
+
+.firma-linea{
+  width: 80%;
+  height: 40px;
+  border-bottom: 2px solid #111827;
+  margin: 0 auto;
+}
+
+.firma-nombre{
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 6px;
+  color: #111827;
+}
+
+/* ==========================================================
+   GASOLINA
+========================================================== */
+.bloque-gasolina{
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.gasolina-texto{
+  font-size: 10.5px;
+  color: #111827;
+  margin:0;
+}
+
+.nota-gas{
+  font-size: 9px;
+  color: #6b7280;
+  display: block;
+  margin-top: 2px;
+}
+
+/* ==========================================================
+   NOTAS FINALES
+========================================================== */
+.bloque-notas{
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 8px 12px;
+}
+
+.nota-title{
+  font-size: 11px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.nota{
+  font-size: 9.5px;
+  line-height: 1.4;
+  margin: 2px 0;
+  color: #111827;
+}
+
+/* ==========================================================
+   FACTURACIÓN
+========================================================== */
+.bloque-facturacion{
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.fact-title{
+  font-size: 13px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.fact-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px 20px;
+}
+
+.fact-item{
+  display: flex;
+  padding: 2px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.fact-item .label{
+  font-weight: 700;
+  color: #4b5563;
+  width: 130px;
+  flex-shrink: 0;
+}
+
+.fact-item .value{
+  color: #111827;
+}
+
+/* ==========================================================
+   PIE DE PÁGINA - ROJO (2 Columnas)
+========================================================== */
+.pie-rojo {
+    background: #D6001C;
+    padding: 14px 20px 12px;
+    color: #ffffff;
+    margin-top: 0;
+}
+
+.pie-contenido-columnas {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.col-izq {
+    flex: 1;
+    text-align: left;
+}
+
+.col-der {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+}
+
+.pie-rojo p {
+    margin: 3px 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.pie-rojo .pie-empresa {
+    font-size: 16px;
+    margin-bottom: 4px;
+    text-align: left;
+}
+
+.pie-rojo .pie-empresa strong {
+    font-weight: 900;
+}
+
+.pie-correos {
+    display: flex;
+    flex-direction: column;
+    margin-top: 5px;
+}
+
+.pie-rojo span {
+    font-size: 14px;
+    display: block;
+}
+
+
+/* ==========================================================
+   ACCIONES EXTRA
+========================================================== */
+.acciones-extra{
+  max-width: 1060px;
+  margin: 12px auto 0;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-checklist{
+  padding: 8px 16px;
+  border-radius: 8px;
   font-size: 12px;
-  color: var(--muted);
+  font-weight: 700;
+  text-decoration: none;
+  background: #D6001C;
+  color: #ffffff;
+  transition: .2s ease;
 }
 
-/* ---------- MODAL ---------- */
+.btn-checklist:hover{
+  opacity:.9;
+}
+
+/* ==========================================================
+   MODALES
+========================================================== */
 .modal-firma{
   display:none;
   position:fixed;
@@ -292,145 +759,103 @@ body{ overflow-x:hidden !important; }
   justify-content:center;
   align-items:center;
 }
+
 .modal-body{
   background:#fff;
-  padding:22px;
+  padding:20px;
   border-radius: 14px;
-  width: 560px;
+  width: 540px;
   max-width: calc(100% - 24px);
   text-align:center;
   box-shadow: 0 18px 60px rgba(0,0,0,.28);
 }
 
-/* ---------- SALTO DE PÁGINA ---------- */
-.page-break{ page-break-after: always; }
-
-/* ===========================
-   ✅ HOJA 2 — CLAUSULAS (PRO)
-   (DomPDF friendly)
-=========================== */
-.hoja2{
-  width: 100%;
-  background: #ffffff;
-  position: relative;
+.firma-buttons{
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 10px;
 }
 
-/* ✅ CLAVE: que el marco ocupe la página en DomPDF (usa px, no vh) */
-.hoja2-marco{
-  position: relative;
-  margin: 0 auto;
-  border: 2px solid #2b2b2b;
-  border-radius: 32px;
-  padding: 20px 18px 18px;
-  box-sizing: border-box;
-  min-height: 1250px; /* prueba 1180–1280 según tu contenido */
-}
-
-.hoja2-encabezado{
-  font-family: Arial, sans-serif;
-  font-size: 13px;
-  line-height: 1.32;
-  text-transform: uppercase;
-  text-align: left;
-  margin: 0 0 14px 0;
-}
-
-.hoja2-titulo{
-  font-family: Arial, sans-serif;
-  font-size: 22px;
-  font-weight: 400;
-  text-align: center;
-  margin: 0 0 12px 0;
-  letter-spacing: 1px;
-}
-
-/* DomPDF se lleva mejor con tabla/table-cell */
-.hoja2-cols{
-  width: 100%;
-  display: table;
-  table-layout: fixed;
-
-  /* ✅ EDIT: evita overflow (no uses separate + spacing) */
-  border-collapse: collapse;
-  border-spacing: 0;
-}
-
-.hoja2-col{
-  display: table-cell;
-
-  /* ✅ EDIT: 49% para que NO se salga la columna derecha */
-  width: 49%;
-
-  vertical-align: top;
-  font-family: Arial, sans-serif;
-  font-size: 10px;
-
-  /* ✅ EDIT: gap entre columnas SIN romper el ancho total */
-  padding: 0 8px;
-  box-sizing: border-box;
-
-  /* ✅ EDIT: evita cortes por palabras largas */
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  word-break: break-word;
-
-  /* ✅ EDIT: DomPDF corta menos con left */
-  text-align: left;
-
-  line-height: 1.22;
-}
-
-.clausula{ margin: 0 0 6px 0; }
-.clausula b{ font-weight: 500; }
-
-.obligaciones{ margin: 6px 0 0 18px; padding: 0; }
-.obligaciones li{ margin: 0 0 4px 0; }
-
-.hoja2-pie{
-  margin-top: 14px;
-  font-family: Arial, sans-serif;
-  font-size: 13px;
-}
-
-.pie-linea{
-  display: inline-block;
-  border-bottom: 2px solid #2b2b2b;
-  height: 16px;
-  vertical-align: bottom;
-}
-
-.w1{ width: 420px; }
-.w2{ width: 110px; }
-.w3{ width: 220px; }
-.w4{ width: 160px; }
-
-/* Firmas hoja 2 */
-.hoja2 .firmas{
-  width: 100%;
-  display: table;
-  margin-top: 16px;
-}
-.hoja2 .firma-box{
-  display: table-cell;
-  width: 50%;
-  text-align: center;
-  font-size: 13px;
-  vertical-align: top;
+.btn-gray{
+  background: #e5e7eb;
+  color: #111827;
+  padding: 6px 18px;
+  border-radius: 8px;
   border: none;
-  padding: 0;
-  background: transparent;
-}
-.firma-linea{
-  border-bottom: 2px solid #2b2b2b;
-  height: 18px;
-  margin: 0 auto 6px auto;
-  width: 80%;
+  cursor: pointer;
+  font-weight: 600;
 }
 
-/* =====================================
-   ✅ PRINT / PDF (multipágina REAL)
-   (Para impresión del navegador)
-===================================== */
+.btn-blue{
+  background: #2563eb;
+  color: #fff;
+  padding: 6px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-red{
+  background: #D6001C;
+  color: #fff;
+  padding: 6px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+@media (max-width: 768px){
+  .row-dos-columnas{
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .encabezado-blanco{
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .encabezado-datos{
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  .logo-titulo-blanco{
+    flex-direction: column;
+  }
+
+  .firmas-container{
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .firma-item{
+    max-width: 100%;
+  }
+
+  .vehiculo-grid{
+    grid-template-columns: 1fr;
+  }
+
+  .fact-grid{
+    grid-template-columns: 1fr;
+  }
+
+  .pie-rojo .pie-datos span{
+    display: block;
+    margin: 2px 0;
+  }
+}
+
+/* ==========================================================
+   PRINT / PDF
+========================================================== */
 @media print{
   html, body{
     background:#fff !important;
@@ -465,31 +890,35 @@ body{ overflow-x:hidden !important; }
     border-radius: 0 !important;
   }
 
-  .encabezado{ padding: 14px 16px !important; }
-  .secciones{ padding: 14px 16px 14px !important; }
-
-  .titulo-texto h2{ font-size: 16px !important; }
-  .bloque h3{ font-size: 12.5px !important; }
-  li, p, td, th{ font-size: 11px !important; line-height: 1.22 !important; }
-  .tabla-tarifas th, .tabla-tarifas td{ padding: 7px 8px !important; }
-  .firma-img{ width: 120px !important; }
-
-  .page-break{
-    page-break-after: always !important;
-    break-after: page !important;
+  .secciones{
+    padding: 2px 14px 10px !important;
   }
 
-  .bloque, .tabla-tarifas, .totales, .firmas,
-  .hoja2, .hoja2-marco, .clausula, .obligaciones, .obligaciones li{
-    break-inside: avoid !important;
+  .titulo-seccion{
+    font-size: 12px !important;
+    margin: 10px 0 4px !important;
+  }
+
+  .bloque-vehiculo,
+  .bloque-arrendatario,
+  .bloque-itinerario,
+  .bloque-tarifas,
+  .bloque-adicionales,
+  .bloque-aceptacion,
+  .bloque-gasolina,
+  .bloque-notas,
+  .bloque-facturacion{
+    page-break-inside: avoid !important;
+  }
+
+  .pie-rojo{
     page-break-inside: avoid !important;
   }
 }
 
-/* =====================================
-   ✅ DOMPDF MODE (RECOMENDADO PARA PDF)
-   (Aplícalo poniendo class="pdf" en <body>)
-===================================== */
+/* ==========================================================
+   DOMPDF MODE
+========================================================== */
 .pdf{
   background:#fff !important;
 }
@@ -500,12 +929,11 @@ body{ overflow-x:hidden !important; }
   display:none !important;
 }
 
-/* ✅ MARGEN GENERAL DEL PDF (ajústalo aquí) */
 .pdf .contrato-final-container{
   max-width: none !important;
   width: 100% !important;
   margin: 0 !important;
-  padding: 0 !important; /* prueba 6mm si lo quieres con aire */
+  padding: 0 !important;
   background:#fff !important;
 }
 
@@ -513,92 +941,33 @@ body{ overflow-x:hidden !important; }
   box-shadow:none !important;
   border:none !important;
   border-radius:0 !important;
-  overflow: visible !important;
 }
 
-/* Compacto en PDF */
-.pdf .encabezado{ padding: 12px 14px !important; }
-.pdf .secciones{ padding: 12px 14px 12px !important; }
-
-/* Fuente segura DomPDF */
 .pdf, .pdf *{
   font-family: DejaVu Sans, Arial, sans-serif !important;
 }
 
-/* Texto base PDF */
-.pdf .titulo-texto h2{ font-size: 15px !important; }
-.pdf .titulo-texto p{ font-size: 11px !important; }
-.pdf .bloque h3{ font-size: 12px !important; margin: 0 0 8px !important; }
-
-.pdf li,
-.pdf p,
-.pdf td,
-.pdf th{
-  font-size: 10.8px !important;
-  line-height: 1.22 !important;
+.pdf .secciones{
+  padding: 2px 14px 10px !important;
 }
 
-/* 2 columnas web -> 1 columna en PDF */
-.pdf .bloque.ul-2cols ul{ columns: unset !important; }
-
-/* Tablas compactas */
-.pdf .tabla-tarifas th,
-.pdf .tabla-tarifas td{ padding: 6px 7px !important; }
-
-/* Firmas: reduce para que no salten */
-.pdf .firma-img{
-  width: 120px !important;
-  max-width: 100% !important;
-  display:block !important;
-  margin: 0 auto !important;
+.pdf .titulo-seccion{
+  font-size: 12px !important;
+  margin: 10px 0 4px !important;
 }
 
-/* DomPDF no ama flex */
-.pdf .firmas{
-  display: table !important;
-  width: 100% !important;
-  border-collapse: separate !important;
-  border-spacing: 10px 0 !important;
-}
-.pdf .firma-box{
-  display: table-cell !important;
-  width: 50% !important;
-  vertical-align: top !important;
-}
-
-/* Saltos */
-.pdf .page-break{ page-break-after: always !important; }
-
-/* Evita cortes feos */
-.pdf .bloque,
-.pdf .tabla-tarifas,
-.pdf .totales,
-.pdf .firmas,
-.pdf .clausula,
-.pdf .obligaciones,
-.pdf .obligaciones li{
+.pdf .bloque-vehiculo,
+.pdf .bloque-arrendatario,
+.pdf .bloque-itinerario,
+.pdf .bloque-tarifas,
+.pdf .bloque-adicionales,
+.pdf .bloque-aceptacion,
+.pdf .bloque-gasolina,
+.pdf .bloque-notas,
+.pdf .bloque-facturacion{
   page-break-inside: avoid !important;
 }
 
-/* ✅ Hoja 2 en PDF: vuelve a forzar el alto */
-.pdf .hoja2-marco{
-  padding: 20px 18px 18px !important;
-  border-radius: 26px !important;
-  min-height: 1250px !important;
-}
-
-/* ✅ EDIT: fuerza columnas sin corte en DomPDF */
-.pdf .hoja2-cols{
-  border-collapse: collapse !important;
-  border-spacing: 0 !important;
-}
-.pdf .hoja2-col{
-  width: 49% !important;
-  padding: 0 8px !important;
-  text-align: left !important;
-  word-break: break-word !important;
-  overflow-wrap: break-word !important;
-  word-wrap: break-word !important;
-  font-size: 10px !important;
-  line-height: 1.22 !important;
+.pdf .pie-rojo{
+  page-break-inside: avoid !important;
 }
