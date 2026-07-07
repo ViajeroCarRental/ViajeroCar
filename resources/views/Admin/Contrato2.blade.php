@@ -268,12 +268,12 @@
 
                                             <div class="input-row">
                                                 <label>Fecha de Nacimiento</label>
-                                                <input name="conductores[0][fecha_nacimiento]" type="text" class="fecha-flatpickr" autocomplete="off" readonlyrequired>
+                                                <input name="conductores[0][fecha_nacimiento]" type="text" class="fecha-flatpickr" autocomplete="off" readonly required>
                                             </div>
 
                                             <div class="input-row">
                                                 <label>Fecha de Vencimiento del ID</label>
-                                                <input name="conductores[0][fecha_vencimiento_id]" type="text" class="fecha-flatpickr" autocomplete="off" readonlyrequired>
+                                                <input name="conductores[0][fecha_vencimiento_id]" type="text" class="fecha-flatpickr" autocomplete="off" readonly required>
                                             </div>
                                         </div>
 
@@ -373,12 +373,12 @@
 
                                             <div class="input-row">
                                                 <label>Fecha de Emisión</label>
-                                                <input name="conductores[0][fecha_emision]" type="text" class="fecha-flatpickr" autocomplete="off" readonlyrequired>
+                                                <input name="conductores[0][fecha_emision]" type="text" class="fecha-flatpickr" autocomplete="off" readonly required>
                                             </div>
 
                                             <div class="input-row">
                                                 <label>Fecha de Vencimiento de la Licencia</label>
-                                                <input name="conductores[0][fecha_vencimiento]" type="text" class="fecha-flatpickr" autocomplete="off" readonlyrequired>
+                                                <input name="conductores[0][fecha_vencimiento]" type="text" class="fecha-flatpickr" autocomplete="off" readonly required>
                                             </div>
                                         </div>
 
@@ -496,12 +496,12 @@
 
                                                 <div class="input-row">
                                                     <label>Fecha de Nacimiento</label>
-                                                    <input name="conductores[{{ $idx }}][fecha_nacimiento]" type="text" class="fecha-flatpickr" autocomplete="off" readonlyrequired>
+                                                    <input name="conductores[{{ $idx }}][fecha_nacimiento]" type="text" class="fecha-flatpickr" autocomplete="off" readonly required>
                                                 </div>
 
                                                 <div class="input-row">
                                                     <label>Fecha de Vencimiento del ID</label>
-                                                    <input name="conductores[{{ $idx }}][fecha_vencimiento_id]"type="text" class="fecha-flatpickr" autocomplete="off" readonlyrequired>
+                                                    <input name="conductores[{{ $idx }}][fecha_vencimiento_id]" type="text" class="fecha-flatpickr" autocomplete="off" readonly required>
                                                 </div>
                                             </div>
 

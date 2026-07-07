@@ -1455,12 +1455,98 @@
                     </table>
                 </div>
 
+
                 <div
                     style="padding: 16px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
                     <button id="cerrarModalVehiculos2" class="btn gray">Cerrar inventario</button>
                 </div>
             </div>
         </div>
+
+        {{-- Modal de confirmación de selección de vehículo --}}
+<div id="modalConfirmarVehiculo" class="modal-vehiculos">
+    <div class="modal-vehiculos-content">
+        <!-- HEADER -->
+        <div class="modal-vehiculos-header">
+            <span class="modal-vehiculos-titulo">
+                <i class="fas fa-check-circle"></i> Confirmar selección
+            </span>
+            <button type="button" id="cerrarConfirmarVehiculo" class="modal-close-btn">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-vehiculos-body">
+            <!-- Información del vehículo -->
+            <div class="vehiculo-info-card">
+                <div class="vehiculo-info-row">
+                    <span class="vehiculo-info-label"><i class="fas fa-id-card"></i> Placas</span>
+                    <span class="vehiculo-info-value" id="confPlacasVehiculo">—</span>
+                </div>
+                <div class="vehiculo-info-row">
+                    <span class="vehiculo-info-label"><i class="fas fa-car"></i> Modelo</span>
+                    <span class="vehiculo-info-value" id="confModeloVehiculo">—</span>
+                </div>
+                <div class="vehiculo-info-row">
+                    <span class="vehiculo-info-label"><i class="fas fa-tag"></i> Categoría</span>
+                    <span class="vehiculo-info-value" id="confCategoriaVehiculo">—</span>
+                </div>
+                <div class="vehiculo-info-row" style="border-bottom: none;">
+                    <span class="vehiculo-info-label"><i class="fas fa-palette"></i> Color</span>
+                    <span class="vehiculo-info-value" id="confColorVehiculo">—</span>
+                </div>
+            </div>
+
+            <!-- Selector de Gasolina -->
+            <div class="campo-gasolina">
+                <label><i class="fas fa-gas-pump"></i> Nivel de gasolina</label>
+                <div class="gasolina-select-wrapper">
+                    <select id="confGasolinaSelect">
+                        <option value="0">0/16</option>
+                        <option value="1">1/16</option>
+                        <option value="2">2/16</option>
+                        <option value="3">3/16</option>
+                        <option value="4">4/16</option>
+                        <option value="5">5/16</option>
+                        <option value="6">6/16</option>
+                        <option value="7">7/16</option>
+                        <option value="8">8/16</option>
+                        <option value="9">9/16</option>
+                        <option value="10">10/16</option>
+                        <option value="11">11/16</option>
+                        <option value="12">12/16</option>
+                        <option value="13">13/16</option>
+                        <option value="14">14/16</option>
+                        <option value="15">15/16</option>
+                        <option value="16" selected>16/16</option>
+                    </select>
+                    <span class="gasolina-texto" id="confLitrosTexto">~0 L</span>
+                </div>
+            </div>
+            <div class="campo-kilometraje">
+                <label><i class="fas fa-tachometer-alt"></i> Kilometraje actual</label>
+                <div class="kilometraje-input-wrapper">
+                    <input type="number" id="confKilometrajeInput" min="0" step="1" placeholder="Ej. 25000">
+                    <span class="kilometraje-unidad">km</span>
+                </div>
+                <div class="kilometraje-hint">
+                    <i class="fas fa-info-circle"></i> Ingresa el kilometraje actual del vehículo
+                </div>
+            </div>
+            <div class="warning-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Verifica que los datos sean correctos antes de confirmar la selección.</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-cancelar" id="cancelarConfirmarVehiculo">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button type="button" class="btn btn-confirmar" id="confirmarSeleccionVehiculo">
+                <i class="fas fa-check"></i> Confirmar
+            </button>
+        </div>
+    </div>
+</div>
 
         {{-- Modal de confirmación de edición de inventario --}}
         <div id="modalConfirmEdicion" class="modal-vehiculos" style="display:none; z-index:100001;">

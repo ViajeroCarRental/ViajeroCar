@@ -61,7 +61,6 @@ function initFlatpickrPaso4() {
     }
 
     const inputs = document.querySelectorAll("#formDocumentacion .fecha-flatpickr");
-
     console.log("Calendarios encontrados:", inputs.length);
 
     inputs.forEach(input => {
@@ -75,7 +74,15 @@ function initFlatpickrPaso4() {
             clickOpens: true,
             disableMobile: true,
             monthSelectorType: "static",
-            appendTo: document.body
+            onOpen: function(selectedDates, dateStr, instance) {
+            const cal = instance.calendarContainer;
+            const rect = input.getBoundingClientRect();
+                cal.style.position = 'absolute';
+                cal.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+                cal.style.left = (rect.left + window.scrollX) + 'px';
+                cal.style.width = '300px';
+                cal.style.zIndex = '99999';
+            }
         });
     });
 }
@@ -1560,43 +1567,65 @@ inyectarYCrearPad: function () {
     // ================================================================
     // irAlPaso6 - VERSIÓN CORREGIDA (FORZAR AVANCE)
     // ================================================================
-    irAlPaso6: async function (e) {
-        const btn = e.target || document.getElementById("go6");
+   irAlPaso6: async function (e) {
+    const btn = e.target || document.getElementById("go6");
 
-        // Validar lugar de estancia
-        const inputEstancia = document.getElementById('lugar_estancia');
-        const errorEstancia = document.getElementById('error-estancia');
+    // Validar lugar de estancia
+    const inputEstancia = document.getElementById('lugar_estancia');
+    const errorEstancia = document.getElementById('error-estancia');
 
-        if (inputEstancia && inputEstancia.value.trim() === '') {
-            inputEstancia.style.border = "2px solid #ef4444";
-            if (errorEstancia) errorEstancia.style.display = "block";
-            inputEstancia.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            inputEstancia.focus();
+    if (inputEstancia && inputEstancia.value.trim() === '') {
+        inputEstancia.style.border = "2px solid #ef4444";
+        if (errorEstancia) errorEstancia.style.display = "block";
+        inputEstancia.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        inputEstancia.focus();
+        return;
+    } else if (inputEstancia) {
+        inputEstancia.style.border = "1px solid #cbd5e1";
+        if (errorEstancia) errorEstancia.style.display = "none";
+    }
+
+    // NUEVO: persistir firma del titular + lugar de estancia
+    const firmaTitular = document.getElementById('firma_cliente_paso5')?.value || '';
+    if (firmaTitular) {
+        try {
+            if (btn) btn.disabled = true;
+            const resp = await fetch('/contrato/firma-cliente', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': window.csrfToken
+                },
+                body: JSON.stringify({
+                    id_contrato: window.ID_CONTRATO,
+                    firma: firmaTitular,
+                    lugar_estancia: inputEstancia ? inputEstancia.value.trim() : ''
+                })
+            });
+            const data = await resp.json();
+            if (!data.ok) {
+                console.error('No se guardó la firma:', data.msg);
+                ContratoUI.mostrarNotificacion('error', data.msg || 'No se pudo guardar la firma.');
+                if (btn) btn.disabled = false;
+                return; // no avanzar si el guardado falló
+            }
+        } catch (err) {
+            console.error('Error guardando firma:', err);
+            ContratoUI.mostrarNotificacion('error', 'Error de conexión al guardar la firma.');
+            if (btn) btn.disabled = false;
             return;
-        } else if (inputEstancia) {
-            inputEstancia.style.border = "1px solid #cbd5e1";
-            if (errorEstancia) errorEstancia.style.display = "none";
         }
+    }
 
-        // ================================================================
-        // FORZAR AVANCE AL PASO 6 - SIN VALIDAR FIRMAS
-        // ================================================================
+    // Navegar al Paso 6
+    if (btn) btn.disabled = false;
+    if (typeof window.showStep === 'function') window.showStep(6);
+    if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
+    if (typeof window.actualizarStepper === 'function') window.actualizarStepper(6);
+    if (typeof window.cargarPaso6 === 'function') window.cargarPaso6();
 
-        if (typeof window.showStep === 'function') {
-            window.showStep(6);
-        }
-        if (typeof window.cargarResumenBasico === 'function') {
-            window.cargarResumenBasico();
-        }
-        if (typeof window.actualizarStepper === 'function') {
-            window.actualizarStepper(6);
-        }
-        if (typeof window.cargarPaso6 === 'function') {
-            window.cargarPaso6();
-        }
-
-        console.log('✅ Navegando al Paso 6 - Firmas omitidas');
-    },
+    console.log('✅ Navegando al Paso 6');
+},
 
     sincronizarDatosTablet: function () {
         const container = document.getElementById('res-lista-conductores');
