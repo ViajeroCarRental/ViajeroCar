@@ -14,122 +14,204 @@ class ContratoFinalController extends Controller
     /* =========================================================
        MOSTRAR CONTRATO EN PANTALLA
     ========================================================= */
-    public function mostrarContratoFinal($idContrato)
-    {
-        // 1️⃣ Contrato
-        $contrato = DB::table('contratos')
-            ->where('id_contrato', $idContrato)
-            ->first();
-
-        if (!$contrato) {
-            return back()->with('error', 'Contrato no encontrado.');
-        }
-
-        // 2️⃣ Reservación
-        $reservacion = DB::table('reservaciones as r')
-            ->leftJoin('sucursales as sr', 'r.sucursal_retiro', '=', 'sr.id_sucursal')
-            ->leftJoin('sucursales as se', 'r.sucursal_entrega', '=', 'se.id_sucursal')
-            ->select(
-                'r.*',
-                'sr.nombre as sucursal_retiro_nombre',
-                'se.nombre as sucursal_entrega_nombre'
-            )
-            ->where('r.id_reservacion', $contrato->id_reservacion)
-            ->first();
-
-        if (!$reservacion) {
-            return back()->with('error', 'Reservación no encontrada.');
-        }
-
-        // ✅ DOB fallback: si la reserva NO tiene fecha_nacimiento,
-// entonces tomarla de contrato_documento (identificacion)
-if (empty($reservacion->fecha_nacimiento)) {
-
-    $docIdentTitular = DB::table('contrato_documento')
+   public function mostrarContratoFinal($idContrato)
+{
+    // 1️⃣ Contrato
+    $contrato = DB::table('contratos')
         ->where('id_contrato', $idContrato)
-        ->where('tipo', 'identificacion')
-        ->whereNotNull('fecha_nacimiento')
-        ->orderBy('id_documento', 'asc') // agarre el primero registrado
         ->first();
 
-    if ($docIdentTitular) {
-        $reservacion->fecha_nacimiento = $docIdentTitular->fecha_nacimiento;
+    if (!$contrato) {
+        return back()->with('error', 'Contrato no encontrado.');
     }
-}
 
-        // 3️⃣ Licencia
-        $licencia = DB::table('contrato_documento')
+    // 2️⃣ Reservación
+    $reservacion = DB::table('reservaciones as r')
+        ->leftJoin('sucursales as sr', 'r.sucursal_retiro', '=', 'sr.id_sucursal')
+        ->leftJoin('sucursales as se', 'r.sucursal_entrega', '=', 'se.id_sucursal')
+        ->select(
+            'r.*',
+            'sr.nombre as sucursal_retiro_nombre',
+            'se.nombre as sucursal_entrega_nombre'
+        )
+        ->where('r.id_reservacion', $contrato->id_reservacion)
+        ->first();
+
+    if (!$reservacion) {
+        return back()->with('error', 'Reservación no encontrada.');
+    }
+
+    // DOB fallback
+    if (empty($reservacion->fecha_nacimiento)) {
+        $docIdentTitular = DB::table('contrato_documento')
             ->where('id_contrato', $idContrato)
-            ->where('tipo', 'licencia')
+            ->where('tipo', 'identificacion')
+            ->whereNotNull('fecha_nacimiento')
+            ->orderBy('id_documento', 'asc')
             ->first();
 
-        // 4️⃣ Días
-        $dias = max(
-            \Carbon\Carbon::parse($reservacion->fecha_inicio)
-                ->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_fin)),
-            1
-        );
-
-        // 5️⃣ Tarifas
-        $tarifaBase = $reservacion->tarifa_modificada ?? $reservacion->tarifa_base ?? 0;
-
-        $paquetes = DB::table('reservacion_paquete_seguro as rps')
-            ->leftJoin('seguro_paquete as sp', 'rps.id_paquete', '=', 'sp.id_paquete')
-            ->select('sp.nombre', 'rps.precio_por_dia')
-            ->where('rps.id_reservacion', $reservacion->id_reservacion)
-            ->get();
-
-        $individuales = DB::table('reservacion_seguro_individual as rsi')
-            ->leftJoin('seguro_individuales as si', 'rsi.id_individual', '=', 'si.id_individual')
-            ->select('si.nombre', 'rsi.precio_por_dia')
-            ->where('rsi.id_reservacion', $reservacion->id_reservacion)
-            ->get();
-
-        $extras = DB::table('reservacion_servicio as rs')
-            ->leftJoin('servicios as s', 'rs.id_servicio', '=', 's.id_servicio')
-            ->select('s.nombre', 'rs.precio_unitario')
-            ->where('rs.id_reservacion', $reservacion->id_reservacion)
-            ->get();
-
-        // 6️⃣ Totales
-        $subtotal =
-            ($tarifaBase * $dias) +
-            $paquetes->sum(fn($p) => $p->precio_por_dia * $dias) +
-            $individuales->sum(fn($i) => $i->precio_por_dia * $dias) +
-            $extras->sum(fn($e) => $e->precio_unitario * $dias);
-
-        $totalFinal = $subtotal * 1.16;
-
-        // 7️⃣ Vehículo
-        $vehiculo = DB::table('vehiculos as v')
-            ->leftJoin('categorias_carros as c', 'v.id_categoria', '=', 'c.id_categoria')
-            ->select(
-                'v.modelo',
-                'v.color',
-                'v.transmision',
-                'v.kilometraje',
-                'v.gasolina_actual',
-                'v.firma_propietario',
-                DB::raw('COALESCE(c.nombre, v.categoria) as categoria')
-            )
-            ->where('v.id_vehiculo', $reservacion->id_vehiculo)
-            ->first();
-
-        return view('Admin.ContratoFinal', compact(
-            'contrato',
-            'reservacion',
-            'licencia',
-            'vehiculo',
-            'dias',
-            'tarifaBase',
-            'paquetes',
-            'individuales',
-            'extras',
-            'subtotal',
-            'totalFinal'
-
-        ));
+        if ($docIdentTitular) {
+            $reservacion->fecha_nacimiento = $docIdentTitular->fecha_nacimiento;
+        }
     }
+
+    // 3️⃣ Licencia
+    $licencia = DB::table('contrato_documento')
+        ->where('id_contrato', $idContrato)
+        ->where('tipo', 'licencia')
+        ->first();
+
+        $identificacion = DB::table('contrato_documento')
+    ->where('id_contrato', $idContrato)
+    ->where('tipo', 'identificacion')
+    ->whereNotNull('fecha_nacimiento')
+    ->orderBy('id_documento', 'asc')
+    ->first();
+
+// Fecha de nacimiento: reservación primero, luego identificación
+$fechaNacimiento = $reservacion->fecha_nacimiento
+    ?? ($identificacion->fecha_nacimiento ?? null);
+
+// Edad calculada desde la fecha de nacimiento
+$edad = !empty($fechaNacimiento)
+    ? \Carbon\Carbon::parse($fechaNacimiento)->age
+    : null;
+
+    // 4️⃣ Días
+    $dias = max(
+        \Carbon\Carbon::parse($reservacion->fecha_inicio)
+            ->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_fin)),
+        1
+    );
+
+    // 5️⃣ Tarifas
+    $tarifaBase = $reservacion->tarifa_modificada ?? $reservacion->tarifa_base ?? 0;
+
+    $paquetes = DB::table('reservacion_paquete_seguro as rps')
+        ->leftJoin('seguro_paquete as sp', 'rps.id_paquete', '=', 'sp.id_paquete')
+        ->select('sp.nombre', 'rps.precio_por_dia')
+        ->where('rps.id_reservacion', $reservacion->id_reservacion)
+        ->get();
+
+    $individuales = DB::table('reservacion_seguro_individual as rsi')
+        ->leftJoin('seguro_individuales as si', 'rsi.id_individual', '=', 'si.id_individual')
+        ->select('si.nombre', 'rsi.precio_por_dia')
+        ->where('rsi.id_reservacion', $reservacion->id_reservacion)
+        ->get();
+
+    // OBTENER EXTRAS CON CANTIDAD (servicios normales de la tabla reservacion_servicio)
+    $extras = DB::table('reservacion_servicio as rs')
+        ->leftJoin('servicios as s', 'rs.id_servicio', '=', 's.id_servicio')
+        ->select('s.nombre', 'rs.precio_unitario', 'rs.cantidad')
+        ->where('rs.id_reservacion', $reservacion->id_reservacion)
+        ->get();
+
+    // 1. DELIVERY - Desde la tabla reservaciones (columnas delivery_*)
+    $deliveryInfo = null;
+    if ($reservacion->delivery_activo && ($reservacion->delivery_total ?? 0) > 0) {
+        $deliveryInfo = (object) [
+            'nombre' => 'Delivery',
+            'precio_unitario' => $reservacion->delivery_total ?? 0,
+            'cantidad' => 1,
+            'activo' => $reservacion->delivery_activo,
+            'direccion' => $reservacion->delivery_direccion ?? '',
+            'kms' => $reservacion->delivery_km ?? 0,
+        ];
+    }
+
+    // 2. DROPOFF - Desde la tabla cargo_adicional (id_concepto = 6)
+    $dropoffInfo = null;
+    $dropoffCargo = DB::table('cargo_adicional')
+        ->where('id_contrato', $idContrato)
+        ->where('id_concepto', 6)
+        ->first();
+
+    if ($dropoffCargo && ($dropoffCargo->monto ?? 0) > 0) {
+        $dropoffInfo = (object) [
+            'nombre' => 'Drop Off',
+            'precio_unitario' => $dropoffCargo->monto ?? 0,
+            'cantidad' => 1,
+            'destino' => $dropoffCargo->destino ?? '',
+            'km' => $dropoffCargo->km ?? 0,
+        ];
+    }
+
+    // 3. GASOLINA - Desde la tabla cargo_adicional (id_concepto = 5)
+    $gasolinaInfo = null;
+    $gasolinaCargo = DB::table('cargo_adicional')
+        ->where('id_contrato', $idContrato)
+        ->where('id_concepto', 5)
+        ->first();
+
+    if ($gasolinaCargo && ($gasolinaCargo->monto ?? 0) > 0) {
+        $gasolinaInfo = (object) [
+            'nombre' => 'Gasolina (faltante)',
+            'precio_unitario' => $gasolinaCargo->monto ?? 0,
+            'cantidad' => $gasolinaCargo->litros ?? 1,
+            'litros' => $gasolinaCargo->litros ?? 0,
+        ];
+    }
+
+    $todosLosServicios = DB::table('servicios')
+        ->select('id_servicio', 'nombre', 'precio', 'tipo_cobro')
+        ->where('activo', true)
+        ->get();
+
+    // 6️⃣ Totales
+    $subtotal =
+        ($tarifaBase * $dias) +
+        $paquetes->sum(fn($p) => $p->precio_por_dia * $dias) +
+        $individuales->sum(fn($i) => $i->precio_por_dia * $dias) +
+        $extras->sum(fn($e) => ($e->precio_unitario ?? 0) * ($e->cantidad ?? 1) * $dias);
+
+    if ($deliveryInfo && ($deliveryInfo->precio_unitario ?? 0) > 0) {
+        $subtotal += $deliveryInfo->precio_unitario;
+    }
+    if ($dropoffInfo && ($dropoffInfo->precio_unitario ?? 0) > 0) {
+        $subtotal += $dropoffInfo->precio_unitario;
+    }
+    if ($gasolinaInfo && ($gasolinaInfo->precio_unitario ?? 0) > 0) {
+        $subtotal += $gasolinaInfo->precio_unitario;
+    }
+
+    $totalFinal = $subtotal * 1.16;
+
+    // 7️⃣ Vehículo
+    $vehiculo = DB::table('vehiculos as v')
+        ->leftJoin('categorias_carros as c', 'v.id_categoria', '=', 'c.id_categoria')
+        ->select(
+            'v.modelo',
+            'v.color',
+            'v.transmision',
+            'v.kilometraje',
+            'v.gasolina_actual',
+            'v.firma_propietario',
+            'v.capacidad_tanque',
+            'v.placa',
+            DB::raw('COALESCE(c.nombre, v.categoria) as categoria')
+        )
+        ->where('v.id_vehiculo', $reservacion->id_vehiculo)
+        ->first();
+
+    return view('Admin.ContratoFinal', compact(
+        'contrato',
+        'reservacion',
+        'licencia',
+        'vehiculo',
+        'dias',
+        'tarifaBase',
+        'paquetes',
+        'individuales',
+        'extras',
+        'subtotal',
+        'totalFinal',
+        'deliveryInfo',
+        'dropoffInfo',
+        'gasolinaInfo',
+        'todosLosServicios',
+        'fechaNacimiento', 'edad'
+    ));
+}
 
     /* =========================================================
        GUARDAR FIRMAS
@@ -171,12 +253,10 @@ if (empty($reservacion->fecha_nacimiento)) {
         return response()->json(['ok' => false, 'msg' => 'Correo del cliente no disponible']);
     }
 
-    // ✅ DOB fallback: si la reserva NO tiene fecha_nacimiento,
-// entonces tomarla de contrato_documento (identificacion)
 if (empty($reservacion->fecha_nacimiento)) {
 
     $docIdentTitular = DB::table('contrato_documento')
-        ->where('id_contrato', $id) // $id es id_contrato
+        ->where('id_contrato', $id)
         ->where('tipo', 'identificacion')
         ->whereNotNull('fecha_nacimiento')
         ->orderBy('id_documento', 'asc')
@@ -240,6 +320,8 @@ if (empty($reservacion->fecha_nacimiento)) {
             'v.transmision',
             'v.kilometraje',
             'v.gasolina_actual',
+            'v.placa',
+            'v.firma_propietario',
             DB::raw('COALESCE(c.nombre, v.categoria) as categoria')
         )
         ->where('v.id_vehiculo', $reservacion->id_vehiculo)
@@ -257,13 +339,11 @@ if ($firmaAviso) {
         ->where('id_contrato', $id)
         ->update(['firma_aviso' => $firmaAviso]);
 
-    // ⚠️ MUY IMPORTANTE: también actualizar el objeto que se manda al mailable
     $contrato->firma_aviso = $firmaAviso;
 }
-// ✅ Releer contrato para traer firma_cliente/firma_arrendador/firma_aviso actualizados
 $contrato = DB::table('contratos')->where('id_contrato', $id)->first();
 // ======================================================
-// ✅ DATOS HOJA 2: lugar/fecha + arrendador/arrendatario
+// DATOS HOJA 2: lugar/fecha + arrendador/arrendatario
 // ======================================================
 \Carbon\Carbon::setLocale('es');
 
@@ -335,15 +415,15 @@ $filePath = storage_path("app/public/Contrato_{$contrato->numero_contrato}.pdf")
 
 Browsershot::html($html)
     ->format('A4')
-    ->margins(6, 6, 6, 6) // mm aprox; si quieres exacto lo afinamos
-    ->showBackground()    // importante para fondos rojos y colores
+    ->margins(6, 6, 6, 6)
+    ->showBackground()
     ->save($filePath);
 
 // 1️⃣2️⃣ ENVIAR CORREO
 $correoReservaciones = config('mail.from.address');
 
 Mail::to($reservacion->email_cliente)
-    ->bcc($correoReservaciones)  // copia oculta a reservaciones@
+    ->bcc($correoReservaciones)
     ->send(
         new ContratoFinalMail(
             $contrato,
