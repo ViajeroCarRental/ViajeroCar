@@ -11,3 +11,6 @@ Route::get('/user', function (Request $request) {
 // Ruta para el Agente IA (reserva desde WhatsApp/voz, sin CSRF, protegida por token)
 Route::post('/agente/reservar', [BtnReservacionesController::class, 'reservarAgente'])
     ->name('agente.reservar');
+
+Route::post('/agente/modificar', [App\Http\Controllers\VisorReservacionController::class, 'modificarAgente'])
+    ->name('agente.modificar');

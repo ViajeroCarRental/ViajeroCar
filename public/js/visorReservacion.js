@@ -48,7 +48,11 @@ function marcarCambios(){
 
 function recalcularTotales(){
 
-    let subtotal = 0;
+    // Empezar con la tarifa base del auto (días × precio_dia × 1.25), que viene del servidor
+    const tarifaBaseInput = document.getElementById('tarifaBaseReserva');
+    const tarifaBase = tarifaBaseInput ? (parseFloat(tarifaBaseInput.value) || 0) : 0;
+
+    let subtotalServicios = 0;
 
     document.querySelectorAll('#tablaServicios tr').forEach(fila=>{
 
@@ -62,38 +66,32 @@ function recalcularTotales(){
 
         const total = cantidad * precio;
 
-        fila.children[3].innerText = "$" + total.toFixed(2);
+        if(fila.children[3]){
+            fila.children[3].innerText = "$" + total.toFixed(2);
+        }
 
-        subtotal += total;
+        subtotalServicios += total;
     });
 
+    // El subtotal REAL = tarifa base del auto + servicios
+    const subtotal = tarifaBase + subtotalServicios;
     const iva = subtotal * 0.16;
     const total = subtotal + iva;
 
-    const subtotalLabel = document.querySelector('p strong:contains("Subtotal")');
+    // Actualizar las etiquetas de totales (usa las clases del visor)
+    document.querySelectorAll('.visor-total-item').forEach(item=>{
 
-    const labels = document.querySelectorAll('p');
+        const texto = item.innerText || '';
 
-    labels.forEach(label=>{
-
-        if(label.innerText.includes('Subtotal:')){
-
-            label.innerHTML = "<strong>Subtotal:</strong> $" + subtotal.toFixed(2);
-
+        if(texto.includes('Subtotal:')){
+            item.innerHTML = "<strong>Subtotal:</strong> $" + subtotal.toFixed(2);
         }
-
-        if(label.innerText.includes('IVA:')){
-
-            label.innerHTML = "<strong>IVA:</strong> $" + iva.toFixed(2);
-
+        else if(texto.includes('IVA:')){
+            item.innerHTML = "<strong>IVA:</strong> $" + iva.toFixed(2);
         }
-
-        if(label.innerText.includes('Total:')){
-
-            label.innerHTML = "<strong>Total:</strong> $" + total.toFixed(2);
-
+        else if(texto.includes('Total:')){
+            item.innerHTML = "<strong>Total:</strong> $" + total.toFixed(2);
         }
-
     });
 }
 
@@ -397,29 +395,15 @@ const btnConfirmarCambios = document.getElementById('btnConfirmarCambios');
 
 if(btnConfirmarCambios){
 
-    btnConfirmarCambios.disabled = true;
-
-    btnConfirmarCambios.classList.add('btn-secondary');
-
     btnConfirmarCambios.addEventListener('click',function(e){
 
         e.preventDefault();
 
         const form = this.closest('form');
 
-        if(!cambiosDetectados){
-
-            alertify.alert(
-            'No hay cambios',
-            'No se detectaron modificaciones en la reservación.'
-            );
-
-            return;
-        }
-
         alertify.confirm(
-        '¿Enviar correo?',
-        'Se enviará nuevamente el correo con los cambios realizados.',
+        '¿Reenviar correo?',
+        'Se te va a enviar nuevamente el correo con los datos actualizados de tu reservación. Revisa tu bandeja de entrada.',
         function(){
 
             form.submit();
