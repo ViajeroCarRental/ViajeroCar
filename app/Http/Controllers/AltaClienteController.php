@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AltaClienteController extends Controller
 {
@@ -85,6 +86,10 @@ class AltaClienteController extends Controller
             }
 
             DB::commit();
+
+            if ($request->input('accion_post_submit') === 'generar_pdf') {
+                return redirect()->route('admin.convenio.pdf', $idConvenio);
+            }
 
             return redirect()
                 ->route('rutaAltaCliente')
@@ -480,67 +485,145 @@ class AltaClienteController extends Controller
         ]);
     }
 
-    private function guardarClausulas(Request $request, int $idConvenio): void
-    {
-        $clausulas = $request->input('clausulas', []); // clausulas[] (textarea por cláusula)
 
-        if (!is_array($clausulas)) {
-            return;
-        }
+        private function guardarClausulas(Request $request, int $idConvenio): void
+{
+    $clausulas = $request->input('clausulas', []);
 
-        $orden = 1;
-        foreach ($clausulas as $texto) {
-            if (empty(trim($texto))) {
-                continue;
-            }
-
-            DB::table('convenio_clausula')->insert([
-                'id_convenio' => $idConvenio,
-                'texto'       => $texto,
-                'orden'       => $orden++,
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ]);
-        }
+    if (!is_array($clausulas)) {
+        return;
     }
 
-    /**
-     * Crea una responsiva por conductor, con sus cláusulas.
-     * $mapaConductores = [indice_form => id_conductor_convenio]
-     */
-    private function guardarResponsivas(Request $request, int $idConvenio, array $mapaConductores): void
-    {
-        // responsiva_clausulas[indice_conductor][] = texto
-        $todas = $request->input('responsiva_clausulas', []);
+    $orden = 1;
 
-        foreach ($mapaConductores as $iForm => $idConductor) {
-            $idResponsiva = DB::table('convenio_responsiva')->insertGetId([
-                'id_convenio'             => $idConvenio,
-                'id_conductor_convenio'   => $idConductor,
-                'created_at'              => now(),
-                'updated_at'              => now(),
-            ]);
+    foreach ($clausulas as $texto) {
+        if (empty(trim($texto))) {
+            continue;
+        }
 
-            $clausulas = $todas[$iForm] ?? [];
-            if (!is_array($clausulas)) {
-                continue;
-            }
+        DB::table('convenio_clausula')->insert([
+            'id_convenio' => $idConvenio,
+            'texto'       => $texto,
+            'orden'       => $orden++,
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+    }
+}
 
-            $orden = 1;
-            foreach ($clausulas as $texto) {
-                if (empty(trim($texto))) {
+        private function guardarResponsivas(Request $request, int $idConvenio, array $mapaConductores): void
+        {
+            $todas = $request->input('responsiva_clausulas', []);
+
+            foreach ($mapaConductores as $iForm => $idConductor) {
+                $idResponsiva = DB::table('convenio_responsiva')->insertGetId([
+                    'id_convenio'           => $idConvenio,
+                    'id_conductor_convenio' => $idConductor,
+                    'created_at'            => now(),
+                    'updated_at'            => now(),
+                ]);
+
+                $clausulas = $todas[$iForm] ?? [];
+
+                if (!is_array($clausulas)) {
                     continue;
                 }
 
-                DB::table('responsiva_clausula')->insert([
-                    'id_responsiva' => $idResponsiva,
-                    'texto'         => $texto,
-                    'orden'         => $orden++,
-                    'created_at'    => now(),
-                    'updated_at'    => now(),
-                ]);
+                $orden = 1;
+
+                foreach ($clausulas as $texto) {
+                    if (empty(trim($texto))) {
+                        continue;
+                    }
+
+                    DB::table('responsiva_clausula')->insert([
+                        'id_responsiva' => $idResponsiva,
+                        'texto'         => $texto,
+                        'orden'         => $orden++,
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
+                    ]);
+                }
             }
         }
+
+    public function generarConvenioPdf($id)
+    {
+        $convenio = DB::table('convenios')->where('id_convenio', $id)->first();
+
+        if (!$convenio) abort(404);
+
+        $cliente = DB::table('clientes')
+            ->join('usuarios', 'usuarios.id_usuario', '=', 'clientes.id_usuario')
+            ->where('clientes.id_cliente', $convenio->id_cliente)
+            ->select('clientes.*', 'usuarios.*')
+            ->first();
+
+        $facturacion = DB::table('cliente_facturacion')
+            ->where('id_cliente', $convenio->id_cliente)
+            ->first();
+
+        $moral = DB::table('cliente_moral')
+            ->where('id_cliente', $convenio->id_cliente)
+            ->first();
+
+        $tarifas = DB::table('cliente_tarifa_convenio')
+            ->leftJoin('categorias_carros', 'categorias_carros.id_categoria', '=', 'cliente_tarifa_convenio.id_categoria')
+            ->where('cliente_tarifa_convenio.id_cliente', $convenio->id_cliente)
+            ->select('cliente_tarifa_convenio.*', 'categorias_carros.nombre as categoria')
+            ->get();
+
+        $clausulas = DB::table('convenio_clausula')
+            ->where('id_convenio', $id)
+            ->orderBy('orden')
+            ->get();
+
+        $pdf = Pdf::loadView('admin.convenio', compact(
+            'convenio',
+            'cliente',
+            'facturacion',
+            'moral',
+            'tarifas',
+            'clausulas'
+        ))->setPaper('letter');
+
+        return $pdf->stream('convenio-viajero.pdf');
+    }
+
+    public function generarResponsivaPdf($id)
+    {
+        $responsiva = DB::table('convenio_responsiva')->where('id_responsiva', $id)->first();
+
+        if (!$responsiva) abort(404);
+
+        $convenio = DB::table('convenios')
+            ->where('id_convenio', $responsiva->id_convenio)
+            ->first();
+
+        $cliente = DB::table('clientes')
+            ->join('usuarios', 'usuarios.id_usuario', '=', 'clientes.id_usuario')
+            ->where('clientes.id_cliente', $convenio->id_cliente)
+            ->select('clientes.*', 'usuarios.*')
+            ->first();
+
+        $conductor = DB::table('conductor_adicional_convenio')
+            ->where('id_conductor_convenio', $responsiva->id_conductor_convenio)
+            ->first();
+
+        $clausulas = DB::table('responsiva_clausula')
+            ->where('id_responsiva', $id)
+            ->orderBy('orden')
+            ->get();
+
+        $pdf = Pdf::loadView('admin.responsiva', compact(
+            'responsiva',
+            'convenio',
+            'cliente',
+            'conductor',
+            'clausulas'
+        ))->setPaper('letter');
+
+        return $pdf->stream('responsiva-viajero.pdf');
     }
 
     /* ============================================================

@@ -65,7 +65,7 @@ const CAT_IMAGES = {
     IB: '/img/avanza.webp', M: '/img/Odyssey.webp', L: '/img/Hiace.webp',
     H: '/img/Frontier.webp', HI: '/img/Tacoma.webp',
 };
-const IMG_FALLBACK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAQAAADwXcorAAAAeUlEQVR42u3PAQ0AAAgDoJvYv7Y6uI0LAtI6S0hISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISGg7CiwA98X9m8YAAAAASUVORK5CYII=';
+const IMG_FALLBACK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAQAAADwXcorAAAAeUlEQVR42u3PAQ0AAAgDoJvYv7Y6uI0LAtI6S0hISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISGg7CiwA98X9m8YAAAAASUVORK5CYII=';
 
 const getLocalImg = (codigo) => CAT_IMAGES[codigo] || '/img/Logotipo.png';
 
@@ -113,6 +113,405 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cerrarModalVehiculos')?.addEventListener('click', window.cerrarModalVehiculos);
     document.getElementById('cerrarModalVehiculos2')?.addEventListener('click', window.cerrarModalVehiculos);
 
+    // ── Cargar vehículos en el modal ─────────────────────────────────────
+
+    window.cargarVehiculosCategoriaModal = async (idCategoria) => {
+        if (!idCategoria || !window.ID_RESERVACION) {
+            console.warn('⚠️ Faltan datos para cargar vehículos:', { idCategoria, idReservacion: window.ID_RESERVACION });
+            return;
+        }
+
+        try {
+            const resp = await fetch(`/admin/contrato/vehiculos-por-categoria/${idCategoria}/${window.ID_RESERVACION}`);
+            const data = await resp.json();
+
+            if (data.success) {
+                window.listaVehiculosOriginal = data.data;
+                window.renderVehiculosEnModal(data.data);
+            } else {
+                console.error('❌ Error al cargar vehículos:', data.error);
+                const cont = window.$('#listaVehiculosTabla');
+                if (cont) {
+                    cont.innerHTML = `<tr><td colspan="13" style="padding:20px;text-align:center;color:#dc2626;font-weight:bold;">Error al cargar vehículos: ${data.error || 'Error desconocido'}</td></tr>`;
+                }
+            }
+        } catch (err) {
+            console.error('❌ Error de conexión al cargar vehículos:', err);
+            const cont = window.$('#listaVehiculosTabla');
+            if (cont) {
+                cont.innerHTML = `<tr><td colspan="13" style="padding:20px;text-align:center;color:#dc2626;font-weight:bold;">Error de conexión al cargar el inventario.</td></tr>`;
+            }
+        }
+    };
+
+    // ── Renderizar vehículos en el modal ──────────────────────────────
+
+    window.renderVehiculosEnModal = (lista) => {
+        const cont = window.$('#listaVehiculosTabla');
+        if (!cont) return;
+
+        if (!lista?.length) {
+            cont.innerHTML = `<tr><td colspan="13" style="padding:20px;text-align:center;color:#555;font-weight:bold;">No hay vehículos disponibles en la categoría reservada.</td></tr>`;
+            return;
+        }
+
+        cont.innerHTML = lista.map((v, i) => {
+            const capacidadTanque = parseFloat(v.capacidad_tanque) || 60;
+            const litrosActuales = parseFloat(v.gasolina_actual) || 0;
+            const g = Math.round((litrosActuales / capacidadTanque) * 16);
+            const fraccion = `${g}/16`;
+            const gasLitros = Math.round(litrosActuales);
+            const mantKm = v.km_restantes !== null ? `${v.km_restantes} Km` : '—';
+            const vigenciaPoliza = v.dias_seguro !== undefined ? `${v.dias_seguro} Días` : (v.fin_vigencia_poliza ?? '—');
+            const diasVerif = v.dias_verificacion !== undefined ? `${v.dias_verificacion} Días` : '—';
+
+            let accion = '', rowStyle = '';
+
+            if (v.es_el_actual) {
+                rowStyle = 'background-color:#dcfce7;color:#166534;';
+                accion = `<b style="font-size:11px;">ACTUAL</b>`;
+            } else if (v.bloqueado_por_codigo) {
+                rowStyle = 'background-color:#fee2e2;color:#991b1b;opacity:0.8;';
+                accion = `<span style="font-size:10px;font-weight:bold;cursor:help;" title="Bloqueado por: ${v.bloqueado_por_codigo}">Ocupado</span>`;
+            } else {
+                accion = `<button type="button" class="btn primary btn-vehiculo" style="padding:4px 16px;font-size:12px;" data-id="${v.id_vehiculo}" data-gasolina="${fraccion}">Elegir</button>`;
+            }
+
+            return `
+            <tr style="${rowStyle}"
+                        data-id-vehiculo="${v.id_vehiculo}"
+                        data-placa="${v.placa || 'Sin Placa'}"
+                        data-color="${v.color || '—'}"
+                        data-categoria="${v.categoria_nombre || v.categoria || '—'}"
+                        data-gas-original="${g}"
+                        data-km-original="${v.kilometraje ?? 0}"
+                        data-capacidad-tanque="${capacidadTanque}">
+                <td>${i + 1}</td>
+                <td><b>${v.placa || 'Sin Placa'}</b></td>
+                <td>${v.categoria_nombre || v.categoria || '—'}</td>
+                <td>${v.modelo || '—'}</td>
+                <td>${v.transmision || '—'}</td>
+                <td>${v.color || '—'}</td>
+                <td class="celda-editable" data-campo="gasolina" data-tipo="gas" title="Doble clic o ✏️ para editar">
+                    <span class="celda-valor">${fraccion}</span>
+                    <button type="button" class="btn-edit-inline" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:13px;margin-left:4px;">✏️</button>
+                </td>
+                <td class="celda-litros">${gasLitros}</td>
+                <td class="celda-editable" data-campo="kilometraje" data-tipo="km" title="Doble clic o ✏️ para editar">
+                    <span class="celda-valor">${v.kilometraje?.toLocaleString() || '—'}</span>
+                    <button type="button" class="btn-edit-inline" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:13px;margin-left:4px;">✏️</button>
+                </td>
+                <td>${diasVerif}</td>
+                <td>${mantKm}</td>
+                <td>${vigenciaPoliza}</td>
+                <td>${accion}</td>
+            </tr>`;
+        }).join('');
+
+        // Asignar eventos a los botones "Elegir" - ASIGNACIÓN DIRECTA (sin confirmación)
+        window.$$('.btn-vehiculo').forEach(btn => {
+            btn.onclick = async (e) => {
+                e.stopPropagation();
+                await window.seleccionarVehiculoDirecto(btn.dataset.id, btn);
+            };
+        });
+
+        // Evento para seleccionar vehículo al hacer clic en la fila - CON MODAL DE CONFIRMACIÓN
+        cont.querySelectorAll('tr').forEach(fila => {
+            // Si la fila ya tiene estilo de "ACTUAL", no hacer nada
+            if (fila.style.backgroundColor === '#dcfce7') return;
+            // Si la fila está bloqueada, no hacer nada
+            if (fila.style.backgroundColor === '#fee2e2' || fila.style.opacity === '0.8') return;
+
+            fila.addEventListener('click', function(e) {
+                // Si se hizo clic en un botón o en el lápiz, no hacer nada (ya tienen sus eventos)
+                if (e.target.closest('.btn-vehiculo')) return;
+                if (e.target.closest('.btn-edit-inline')) return;
+
+                // Obtener el ID del vehículo desde el dataset de la fila
+                const idVehiculo = this.dataset.idVehiculo;
+                if (idVehiculo) {
+                    // Abrir modal de confirmación al hacer clic en la fila
+                    window.seleccionarVehiculoConConfirmacion(idVehiculo, this);
+                }
+            });
+        });
+    };
+
+    // ── Selección de vehículo DIRECTO (sin modal de confirmación) ─────────────────
+    // Esto se usa para el botón "Elegir"
+
+    window.seleccionarVehiculoDirecto = async (idVehiculo, btnEl) => {
+        if (btnEl) {
+            btnEl.disabled = true;
+            btnEl.innerHTML = '⌛...';
+        }
+
+        try {
+            const resp = await fetch('/admin/contrato/asignar-vehiculo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': window.csrfToken
+                },
+                body: JSON.stringify({
+                    id_reservacion: window.ID_RESERVACION,
+                    id_vehiculo: idVehiculo
+                }),
+            });
+            const data = await resp.json();
+
+            if (data.success) {
+                window.alertify?.success('Vehículo asignado.');
+                const cIni = document.getElementById('contratoInicial');
+                if (cIni) cIni.dataset.idVehiculo = String(idVehiculo);
+
+                // Cerrar modal y actualizar
+                window.cerrarModalVehiculos();
+                setTimeout(() => window.cargarResumenBasico?.(), 150);
+            } else {
+                window.alertify?.error(data.error || 'Error al asignar.');
+                if (btnEl) {
+                    btnEl.disabled = false;
+                    btnEl.innerHTML = 'Elegir';
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            window.alertify?.error('Error de conexión.');
+            if (btnEl) {
+                btnEl.disabled = false;
+                btnEl.innerHTML = 'Elegir';
+            }
+        }
+    };
+
+    // ── Selección de vehículo CON MODAL DE CONFIRMACIÓN ─────────────────
+    // Esto se usa para el clic en la fila
+
+    // Variable para almacenar el vehículo seleccionado temporalmente
+    let vehiculoSeleccionadoTemp = null;
+
+    // Función para abrir el modal de confirmación
+    function abrirConfirmacionVehiculo(idVehiculo, fila) {
+        // Obtener datos de la fila
+        const placas = fila.dataset.placa || '—';
+        const modelo = fila.querySelector('td:nth-child(4)')?.textContent?.trim() || '—';
+        const categoria = fila.dataset.categoria || '—';
+        const color = fila.dataset.color || '—';
+        const gasActual = parseInt(fila.dataset.gasOriginal) || 16;
+        const kmActual = parseInt(fila.dataset.kmOriginal) || 0;
+
+        // Guardar temporalmente
+        vehiculoSeleccionadoTemp = {
+            id: idVehiculo,
+            placas: placas,
+            modelo: modelo,
+            categoria: categoria,
+            color: color,
+            gasActual: gasActual,
+            kmActual: kmActual,
+            fila: fila
+        };
+
+        // Llenar datos en el modal
+        document.getElementById('confPlacasVehiculo').textContent = placas;
+        document.getElementById('confModeloVehiculo').textContent = modelo;
+        document.getElementById('confCategoriaVehiculo').textContent = categoria;
+        document.getElementById('confColorVehiculo').textContent = color;
+
+        // Select de gasolina - seleccionar el valor actual
+        const gasSelect = document.getElementById('confGasolinaSelect');
+        gasSelect.value = gasActual;
+        actualizarLitrosTexto(gasActual);
+
+        // Input de kilometraje
+        document.getElementById('confKilometrajeInput').value = kmActual;
+
+        // Abrir modal
+        const modal = document.getElementById('modalConfirmarVehiculo');
+        modal.style.display = 'flex';
+        modal.classList.add('show-modal');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Función para actualizar el texto de litros
+    function actualizarLitrosTexto(nivel) {
+        const litros = Math.round((nivel / 16) * 60);
+        const el = document.getElementById('confLitrosTexto');
+        if (el) el.textContent = `~${litros} L`;
+    }
+
+    // Función para cerrar el modal de confirmación
+    function cerrarConfirmacionVehiculo() {
+        const modal = document.getElementById('modalConfirmarVehiculo');
+        if (!modal) return;
+        modal.classList.remove('show-modal');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        vehiculoSeleccionadoTemp = null;
+    }
+
+    // Función para confirmar la selección del vehículo (desde el modal de confirmación)
+    async function confirmarSeleccionVehiculo() {
+        if (!vehiculoSeleccionadoTemp) {
+            window.alertify?.error('No hay vehículo seleccionado.');
+            return;
+        }
+
+        const btnConfirmar = document.getElementById('confirmarSeleccionVehiculo');
+        const textoOriginal = btnConfirmar?.innerHTML || 'Confirmar';
+        if (btnConfirmar) {
+            btnConfirmar.disabled = true;
+            btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+        }
+
+        try {
+            const idVehiculo = vehiculoSeleccionadoTemp.id;
+            const nuevoGas = parseInt(document.getElementById('confGasolinaSelect')?.value) || 16;
+            const nuevoKm = parseInt(document.getElementById('confKilometrajeInput')?.value) || 0;
+
+            // Actualizar gasolina
+            await fetch('/admin/vehiculo/actualizar-inventario', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': window.csrfToken
+                },
+                body: JSON.stringify({
+                    id_vehiculo: idVehiculo,
+                    campo: 'gasolina',
+                    valor: nuevoGas
+                })
+            });
+
+            // Actualizar kilometraje si cambió
+            if (nuevoKm !== vehiculoSeleccionadoTemp.kmActual) {
+                await fetch('/admin/vehiculo/actualizar-inventario', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': window.csrfToken
+                    },
+                    body: JSON.stringify({
+                        id_vehiculo: idVehiculo,
+                        campo: 'kilometraje',
+                        valor: nuevoKm
+                    })
+                });
+            }
+
+            // Asignar vehículo a la reservación
+            const asignarResp = await fetch('/admin/contrato/asignar-vehiculo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': window.csrfToken
+                },
+                body: JSON.stringify({
+                    id_reservacion: window.ID_RESERVACION,
+                    id_vehiculo: idVehiculo
+                })
+            });
+
+            const data = await asignarResp.json();
+
+            if (data.success) {
+                // Actualizar UI
+                const cIni = document.getElementById('contratoInicial');
+                if (cIni) cIni.dataset.idVehiculo = String(idVehiculo);
+
+                // Actualizar la fila en el inventario
+                const fila = vehiculoSeleccionadoTemp.fila;
+                if (fila) {
+                    document.querySelectorAll('#listaVehiculosTabla tr').forEach(tr => {
+                        tr.style.backgroundColor = '';
+                        tr.style.color = '';
+                        const accionCelda = tr.querySelector('td:last-child');
+                        if (accionCelda) {
+                            const btnElegir = accionCelda.querySelector('.btn-vehiculo');
+                            if (btnElegir) {
+                                accionCelda.innerHTML = '<button type="button" class="btn primary btn-vehiculo" style="padding:4px 16px;font-size:12px;" data-id="' + idVehiculo + '">Elegir</button>';
+                            }
+                        }
+                        tr.classList.remove('seleccionado');
+                    });
+
+                    fila.style.backgroundColor = '#dcfce7';
+                    fila.style.color = '#166534';
+                    const accionCelda = fila.querySelector('td:last-child');
+                    if (accionCelda) {
+                        accionCelda.innerHTML = '<b style="font-size:11px;">ACTUAL</b>';
+                    }
+                    fila.classList.add('seleccionado');
+                }
+
+                // Actualizar gasolina en paso 1
+                const inputGas = document.getElementById('gasNivelActual');
+                if (inputGas) inputGas.value = `${nuevoGas}/16`;
+
+                // Cerrar ambos modales
+                cerrarConfirmacionVehiculo();
+                window.cerrarModalVehiculos();
+
+                // Actualizar resumen
+                setTimeout(() => {
+                    window.cargarResumenBasico?.();
+                }, 300);
+
+                window.alertify?.success('Vehículo asignado correctamente.');
+            } else {
+                window.alertify?.error(data.error || 'Error al asignar el vehículo.');
+                cerrarConfirmacionVehiculo();
+            }
+        } catch (err) {
+            console.error('Error al confirmar vehículo:', err);
+            window.alertify?.error('Error de conexión al guardar los datos.');
+            cerrarConfirmacionVehiculo();
+        } finally {
+            if (btnConfirmar) {
+                btnConfirmar.disabled = false;
+                btnConfirmar.innerHTML = textoOriginal;
+            }
+        }
+    }
+
+    // Función para seleccionar vehículo con confirmación (clic en fila)
+    window.seleccionarVehiculoConConfirmacion = function(idVehiculo, fila) {
+        if (fila) {
+            if (fila.style.backgroundColor === '#fee2e2' || fila.style.opacity === '0.8') {
+                window.alertify?.warning('Este vehículo está ocupado por otra reservación.');
+                return;
+            }
+            abrirConfirmacionVehiculo(idVehiculo, fila);
+        } else {
+            window.alertify?.error('No se encontró la información del vehículo.');
+        }
+    };
+
+    // Exponer funciones globalmente
+    window.abrirConfirmacionVehiculo = abrirConfirmacionVehiculo;
+    window.cerrarConfirmacionVehiculo = cerrarConfirmacionVehiculo;
+    window.confirmarSeleccionVehiculo = confirmarSeleccionVehiculo;
+
+    // ──────────────────────────────────────────────────────────────────────
+    // Eventos del modal de confirmación
+    // ──────────────────────────────────────────────────────────────────────
+
+    document.getElementById('cerrarConfirmarVehiculo')?.addEventListener('click', cerrarConfirmacionVehiculo);
+    document.getElementById('cancelarConfirmarVehiculo')?.addEventListener('click', cerrarConfirmacionVehiculo);
+    document.getElementById('confirmarSeleccionVehiculo')?.addEventListener('click', confirmarSeleccionVehiculo);
+
+    document.getElementById('modalConfirmarVehiculo')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            cerrarConfirmacionVehiculo();
+        }
+    });
+
+    document.getElementById('confGasolinaSelect')?.addEventListener('change', function() {
+        actualizarLitrosTexto(parseInt(this.value) || 0);
+    });
+
     // ── Navegación de pasos ────────────────────────────────────────────
 
     window.showStep = (n) => {
@@ -158,23 +557,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const { success, data: r } = await resp.json();
             if (!success) return;
 
-            // Código
             setTxt('#detCodigo', r.codigo);
 
-            // Cliente
             if (r.cliente) {
                 setTxt('#detCliente', r.cliente.nombre?.toUpperCase());
                 setTxt('#detTelefono', window.formatPhone(r.cliente.telefono));
                 setTxt('#detEmail', r.cliente.email);
             }
 
-            // Vehículo
             const cIni = document.getElementById('contratoInicial');
 
             if (r.vehiculo) {
                 if (cIni) {
                     cIni.dataset.idVehiculo = r.vehiculo.id_vehiculo || '';
-                    // Priorizamos el ID que viene del servidor
                     if (r.vehiculo.id_categoria) {
                         cIni.dataset.idCategoria = r.vehiculo.id_categoria;
                     }
@@ -200,7 +595,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTxt('#detCategoriaCodigoStep1', codigoCat);
                 setTxt('#detCategoriaNombreStep1', (r.vehiculo.categoria || '').toUpperCase());
 
-                // Actualizar selección en el modal de categorías si existe
                 const modalCat = document.getElementById('contenedorCategoriasJS');
                 if (modalCat) {
                     modalCat.querySelectorAll(".card-categoria").forEach(c => {
@@ -217,7 +611,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }
 
-                // Imagen: usa render de backend o imagen local por categoría
                 const imgSrc = r.vehiculo.imagen_render?.includes('iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAQAAADwXcor')
                     ? getLocalImg(codigoCat)
                     : (r.vehiculo.imagen_render || getLocalImg(codigoCat));
@@ -238,7 +631,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.$$('.resumenImgVeh, #resumenImgVeh, #mainImgVeh').forEach(el => { if (el) el.src = IMG_FALLBACK; });
             }
 
-            // Fechas
             if (r.fechas) {
                 const hoyStr = new Date().toISOString().split('T')[0];
                 setTxt('#detFechaSalida', r.fechas.inicio);
@@ -257,20 +649,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 actualizarCalendario('.fecha-devolucion-display', r.fechas.fin);
             }
 
-            // Seguros
             pintarLista('#r_seguros_lista', r.seguros?.lista);
             setTxt('#r_seguros_total', window.money(r.seguros?.total || 0));
 
-            // Adicionales (servicios + cargos combinados)
             const todosAdicionales = [...(r.servicios || []), ...(r.cargos || [])];
             const totalAdicionales = (r.totales?.servicios_total || 0) + (r.totales?.cargos_total || 0);
             pintarLista('#r_servicios_lista', todosAdicionales);
             setTxt('#r_servicios_total', window.money(totalAdicionales));
 
-            // Reintentos si hay switches activos pero cargos vacíos
             _manejarReintentosCargos(r);
 
-            // Totales
             if (r.totales) {
                 const granTotal = parseFloat(r.totales.total || 0);
                 const tarifa = parseFloat(r.totales.tarifa_modificada) > 0
@@ -280,6 +668,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTxt('#resumenTotalBarra', window.money(granTotal));
                 setTxt('#resumenTotalUsd', `$${(granTotal / 18.5).toFixed(2)} USD`);
                 setTxt('#resumenTotalCompacto', window.money(granTotal));
+                setTxt('#btnTotalTextContrato', window.money(granTotal));
+                setTxt('#btnTotalUsdContrato', `$${(granTotal / 18.5).toFixed(2)} USD`);
                 setTxt('#r_total_final', window.money(granTotal));
                 setTxt('#r_subtotal', window.money(r.totales.subtotal));
                 setTxt('#r_iva', window.money(r.totales.iva));
@@ -288,7 +678,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTxt('#totalReserva', window.money(tarifa * parseInt(r.fechas?.dias || 1)));
             }
 
-            // Pagos
             if (r.pagos) {
                 setTxt('#detPagos', window.money(r.pagos.realizados));
                 setTxt('#detSaldo', window.money(r.pagos.saldo));
@@ -367,327 +756,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isNaN(val) && usdNode) usdNode.innerText = '$' + (val / 18.5).toFixed(2) + ' USD';
         }).observe(totalCompactoNode, { childList: true, characterData: true, subtree: true });
     }
-
-    // ── Selección de vehículo ──────────────────────────────────────────
-
-    window.seleccionarVehiculo = async (idVehiculo, btnEl) => {
-        if (btnEl) btnEl.innerHTML = '⌛...';
-
-        try {
-            const resp = await fetch('/admin/contrato/asignar-vehiculo', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
-                body: JSON.stringify({ id_reservacion: window.ID_RESERVACION, id_vehiculo: idVehiculo }),
-            });
-            const data = await resp.json();
-
-            if (data.success) {
-                window.alertify?.success('Vehículo asignado.');
-                const cIni = document.getElementById('contratoInicial');
-                if (cIni) cIni.dataset.idVehiculo = String(idVehiculo);
-                window.cerrarModalVehiculos();
-                setTimeout(() => window.cargarResumenBasico?.(), 150);
-            } else {
-                window.alertify?.error(data.error || 'Error al asignar.');
-                if (btnEl) btnEl.innerHTML = 'Seleccionar';
-            }
-        } catch (err) {
-            console.error(err);
-            window.alertify?.error('Error de conexión.');
-            if (btnEl) btnEl.innerHTML = 'Seleccionar';
-        }
-    };
-
-    window.cargarVehiculosCategoriaModal = async (idCategoria) => {
-        if (!idCategoria || !window.ID_RESERVACION) return;
-        try {
-            const resp = await fetch(`/admin/contrato/vehiculos-por-categoria/${idCategoria}/${window.ID_RESERVACION}`);
-            const data = await resp.json();
-            if (data.success) {
-                window.listaVehiculosOriginal = data.data;
-                window.renderVehiculosEnModal(data.data);
-            }
-        } catch (err) {
-            console.error('Error al cargar vehículos:', err);
-        }
-    };
-
-    window.renderVehiculosEnModal = (lista) => {
-        const cont = window.$('#listaVehiculosTabla');
-        if (!cont) return;
-
-        if (!lista?.length) {
-            cont.innerHTML = `<tr><td colspan="13" style="padding:20px;text-align:center;color:#555;font-weight:bold;">No hay vehículos disponibles en la categoría reservada.</td></tr>`;
-            return;
-        }
-
-        cont.innerHTML = lista.map((v, i) => {
-            const capacidadTanque = parseFloat(v.capacidad_tanque) || 60;
-            const litrosActuales = parseFloat(v.gasolina_actual) || 0;
-            const g = Math.round((litrosActuales / capacidadTanque) * 16); // nivel 0-16
-            const fraccion = `${g}/16`;
-            const gasLitros = Math.round(litrosActuales); // litros reales, ya vienen de la BD
-            const mantKm = v.km_restantes !== null ? `${v.km_restantes} Km` : '—';
-            const vigenciaPoliza = v.dias_seguro !== undefined ? `${v.dias_seguro} Días` : (v.fin_vigencia_poliza ?? '—');
-            const diasVerif = v.dias_verificacion !== undefined ? `${v.dias_verificacion} Días` : '—';
-
-            let accion = '', rowStyle = '';
-
-            if (v.es_el_actual) {
-                rowStyle = 'background-color:#dcfce7;color:#166534;';
-                accion = `<b style="font-size:11px;">ACTUAL</b>`;
-            } else if (v.bloqueado_por_codigo) {
-                rowStyle = 'background-color:#fee2e2;color:#991b1b;opacity:0.8;';
-                accion = `<span style="font-size:10px;font-weight:bold;cursor:help;" title="Bloqueado por: ${v.bloqueado_por_codigo}">Ocupado</span>`;
-            } else {
-                accion = `<button type="button" class="btn primary btn-vehiculo" style="padding:4px 16px;font-size:12px;" data-id="${v.id_vehiculo}" data-gasolina="${fraccion}">Elegir</button>`;
-            }
-
-            return `
-            <tr style="${rowStyle}"
-                        data-id-vehiculo="${v.id_vehiculo}"
-                        data-placa="${v.placa || 'Sin Placa'}"
-                        data-color="${v.color || '—'}"
-                        data-categoria="${v.categoria_nombre || v.categoria || '—'}"
-                        data-gas-original="${g}"
-                        data-km-original="${v.kilometraje ?? 0}"
-                        data-capacidad-tanque="${parseFloat(v.capacidad_tanque) || 60}"
-                        data-capacidad-tanque="${capacidadTanque}"
-                        data-gas-original="${g}"
-                        data-km-original="${v.kilometraje ?? 0}">
-                <td>${i + 1}</td>
-                <td><b>${v.placa || 'Sin Placa'}</b></td>
-                <td>${v.categoria_nombre || v.categoria || '—'}</td>
-                <td>${v.modelo || '—'}</td>
-                <td>${v.transmision || '—'}</td>
-                <td>${v.color || '—'}</td>
-                <td class="celda-editable" data-campo="gasolina" data-tipo="gas" title="Doble clic o ✏️ para editar">
-                    <span class="celda-valor">${fraccion}</span>
-                    <button type="button" class="btn-edit-inline" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:13px;margin-left:4px;">✏️</button>
-                </td>
-                <td class="celda-litros">${gasLitros}</td>
-                <td class="celda-editable" data-campo="kilometraje" data-tipo="km" title="Doble clic o ✏️ para editar">
-                    <span class="celda-valor">${v.kilometraje?.toLocaleString() || '—'}</span>
-                    <button type="button" class="btn-edit-inline" style="background:none;border:none;color:#2563eb;cursor:pointer;font-size:13px;margin-left:4px;">✏️</button>
-                </td>
-                <td>${diasVerif}</td>
-                <td>${mantKm}</td>
-                <td>${vigenciaPoliza}</td>
-                <td>${accion}</td>
-            </tr>`;
-
-        }).join('');
-
-        window.$$('.btn-vehiculo').forEach(btn => {
-            btn.onclick = async () => {
-                await window.seleccionarVehiculo(btn.dataset.id, btn);
-
-                const inputGas = document.getElementById('gasNivelActual');
-                if (inputGas) inputGas.value = btn.dataset.gasolina;
-
-                if (document.getElementById('switchGasolinaCheckbox')?.checked) {
-                    window.handleGasolinaUpdate?.();
-                }
-            };
-        });
-    };
-
-    // Filtros del modal de vehículos
-    ['filtroPlacas', 'filtroColor', 'filtroModelo', 'filtroCategoria'].forEach(id => {
-        document.getElementById(id)?.addEventListener('input', () => {
-            const p = window.$('#filtroPlacas')?.value.toLowerCase() || '';
-            const c = window.$('#filtroColor')?.value.toLowerCase() || '';
-            const m = window.$('#filtroModelo')?.value.toLowerCase() || '';
-            const cat = window.$('#filtroCategoria')?.value.toLowerCase() || '';
-
-            window.renderVehiculosEnModal(
-                window.listaVehiculosOriginal.filter(v =>
-                    (v.placa ?? '').toLowerCase().includes(p) &&
-                    (v.color ?? '').toLowerCase().includes(c) &&
-                    (v.modelo ?? '').toLowerCase().includes(m) &&
-                    ((v.categoria_nombre ?? v.categoria ?? '').toLowerCase().includes(cat))
-                )
-            );
-        });
-    });
-
-    // ── Edición inline de inventario (gasolina / kilometraje) ──────────
-    (function initEdicionInventario() {
-        const tbody = window.$('#listaVehiculosTabla');
-        const modalConf = window.$('#modalConfirmEdicion');
-        if (!tbody || !modalConf) return;
-
-        let edicionPendiente = null; // guarda los datos del cambio en curso
-
-        // Convierte una celda en input editable
-        const activarEdicion = (celda) => {
-            if (celda.querySelector('input')) return; // ya está en edición
-
-            const fila = celda.closest('tr');
-            const valorSpan = celda.querySelector('.celda-valor');
-            const tipo = celda.dataset.tipo; // 'gas' | 'km'
-
-            // Valor crudo (no el formateado con comas o /16)
-            const valorOriginal = tipo === 'gas'
-                ? (fila.dataset.gasOriginal || '0')
-                : (fila.dataset.kmOriginal || '0');
-
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.value = valorOriginal;
-            input.min = '0';
-            if (tipo === 'gas') input.max = '16';
-            Object.assign(input.style, {
-                width: '70px', border: '1px solid #2563eb', borderRadius: '4px',
-                padding: '2px 4px', fontWeight: 'bold', textAlign: 'center'
-            });
-
-            const textoPrevio = valorSpan.textContent;
-            celda.querySelector('.btn-edit-inline').style.display = 'none';
-            valorSpan.style.display = 'none';
-            celda.appendChild(input);
-            input.focus();
-            input.select();
-
-            const cancelar = () => {
-                input.remove();
-                valorSpan.style.display = '';
-                celda.querySelector('.btn-edit-inline').style.display = '';
-            };
-
-            const confirmar = () => {
-                const nuevoValor = parseFloat(input.value);
-                const original = parseFloat(valorOriginal);
-
-                // Sin cambios → cancelar silencioso
-                if (isNaN(nuevoValor) || nuevoValor === original) { cancelar(); return; }
-                if (tipo === 'gas' && (nuevoValor < 0 || nuevoValor > 16)) {
-                    window.alertify?.error('El nivel de gasolina debe estar entre 0 y 16.');
-                    cancelar(); return;
-                }
-                if (nuevoValor < 0) { cancelar(); return; }
-
-                // Preparamos el modal de confirmación
-                edicionPendiente = {
-                    fila, celda, tipo,
-                    campo: celda.dataset.campo,
-                    idVehiculo: fila.dataset.idVehiculo,
-                    valorOriginal: original,
-                    valorNuevo: nuevoValor,
-                    textoPrevio,
-                    restaurarCelda: cancelar,
-                };
-
-                window.$('#confCategoria').textContent = fila.dataset.categoria;
-                window.$('#confColor').textContent = fila.dataset.color;
-                window.$('#confPlacas').textContent = fila.dataset.placa;
-                window.$('#confCampoLabel').textContent = tipo === 'gas' ? 'Gasolina' : 'Kilometraje';
-                window.$('#confValorAnterior').textContent = tipo === 'gas' ? `${original}/16` : original.toLocaleString();
-                window.$('#confValorNuevo').textContent = tipo === 'gas' ? `${nuevoValor}/16` : nuevoValor.toLocaleString();
-
-                if (modalConf.parentElement !== document.body) {
-                    document.body.appendChild(modalConf);
-                }
-                modalConf.style.display = 'flex';
-            };
-
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') confirmar();
-                if (e.key === 'Escape') cancelar();
-            });
-            input.addEventListener('blur', confirmar);
-        };
-
-        // Delegación: clic en lápiz o doble clic en la celda
-        tbody.addEventListener('click', (e) => {
-            const btn = e.target.closest('.btn-edit-inline');
-            if (!btn) return;
-            e.stopPropagation();
-            activarEdicion(btn.closest('.celda-editable'));
-        });
-        tbody.addEventListener('dblclick', (e) => {
-            const celda = e.target.closest('.celda-editable');
-            if (celda) activarEdicion(celda);
-        });
-
-        // ── Acciones del modal de confirmación ──
-        const cerrarConf = (restaurar = true) => {
-            modalConf.style.display = 'none';
-            if (restaurar && edicionPendiente) edicionPendiente.restaurarCelda();
-            edicionPendiente = null;
-        };
-
-        window.$('#btnCancelarEdicion')?.addEventListener('click', () => cerrarConf(true));
-        window.$('#cerrarConfirmEdicion')?.addEventListener('click', () => cerrarConf(true));
-        modalConf.addEventListener('click', (e) => { if (e.target === modalConf) cerrarConf(true); });
-
-        window.$('#btnConfirmarEdicion')?.addEventListener('click', async () => {
-            if (!edicionPendiente) return;
-            const ep = edicionPendiente;
-            const btn = window.$('#btnConfirmarEdicion');
-            btn.disabled = true;
-            const txt = btn.innerHTML;
-            btn.innerHTML = 'Guardando...';
-
-            try {
-                // ⚠️ AJUSTA esta ruta al endpoint que crees en tu web.php
-                const resp = await fetch('/admin/vehiculo/actualizar-inventario', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': window.csrfToken },
-                    body: JSON.stringify({
-                        id_vehiculo: ep.idVehiculo,
-                        campo: ep.campo,          // 'gasolina' | 'kilometraje'
-                        valor: ep.valorNuevo,
-                    }),
-                });
-                const data = await resp.json();
-
-                if (resp.ok && (data.success || data.ok)) {
-                    // Actualizamos la UI de la celda y el dataset de la fila
-                    const valorSpan = ep.celda.querySelector('.celda-valor');
-                    if (ep.tipo === 'gas') {
-                        // ep.valorNuevo es el nivel 0-16 que se mandó al servidor
-                        valorSpan.textContent = `${ep.valorNuevo}/16`;
-                        ep.fila.dataset.gasOriginal = ep.valorNuevo;
-
-                        // Los litros vienen calculados desde el servidor (data.litros)
-                        const celdaLitros = ep.fila.querySelector('.celda-litros');
-                        if (celdaLitros) {
-                            celdaLitros.textContent = data.litros ?? celdaLitros.textContent;
-                        }
-                    } else {
-                        valorSpan.textContent = ep.valorNuevo.toLocaleString();
-                        ep.fila.dataset.kmOriginal = ep.valorNuevo;
-                    }
-
-                    // Sincronizamos también la lista en memoria (para que el filtro no revierta el valor)
-                    const orig = window.listaVehiculosOriginal?.find(v => String(v.id_vehiculo) === String(ep.idVehiculo));
-                    if (orig) {
-                        if (ep.tipo === 'gas') orig.gasolina_actual = ep.valorNuevo;
-                        else orig.kilometraje = ep.valorNuevo;
-                    }
-
-                    // Quitamos el input y restauramos la vista
-                    ep.celda.querySelector('input')?.remove();
-                    valorSpan.style.display = '';
-                    ep.celda.querySelector('.btn-edit-inline').style.display = '';
-
-                    window.alertify?.success('Inventario actualizado.');
-                    modalConf.style.display = 'none';
-                    edicionPendiente = null;
-                } else {
-                    throw new Error(data.error || 'Error backend');
-                }
-            } catch (err) {
-                console.error('Error actualizando inventario:', err);
-                window.alertify?.error('No se pudo guardar el cambio.');
-                cerrarConf(true); // restaura el valor anterior en la celda
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = txt;
-            }
-        });
-    })();
 
     // ── Edición de fechas y recálculo ──────────────────────────────────
 

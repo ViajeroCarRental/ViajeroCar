@@ -28,6 +28,111 @@ class BtnReservacionesController extends Controller
     private const MOSTRADOR_MULTIPLIER = 1.25;
 
     /**
+     * Reserva creada por el Agente IA (WhatsApp / voz).
+     * Reutiliza exactamente la misma lógica que reservar() en mostrador:
+     * cálculo, guardado y correo. La diferencia es que se protege con un
+     * token secreto (header X-Agente-Token) en vez de CSRF, porque la
+     * llamada viene de un sistema externo (la API de Python), no de un navegador.
+     */
+    public function reservarAgente(Request $request)
+    {
+        // 1. Validar el token secreto del agente
+        $tokenRecibido = $request->header('X-Agente-Token');
+        $tokenEsperado = env('AGENTE_API_TOKEN');
+
+        if (!$tokenEsperado || $tokenRecibido !== $tokenEsperado) {
+            return response()->json([
+                'ok'      => false,
+                'message' => 'No autorizado.',
+            ], 401);
+        }
+
+       // 2. Validar los datos de entrada (mismas reglas que el formulario web)
+        $validated = $request->validate([
+            'categoria_id'        => 'required|integer|exists:categorias_carros,id_categoria',
+            'pickup_date'         => 'required|date',
+            'pickup_time'         => 'required',
+            'dropoff_date'        => 'required|date',
+            'dropoff_time'        => 'required',
+            'pickup_sucursal_id'  => 'required|integer',
+            'dropoff_sucursal_id' => 'required|integer',
+            'nombre'              => 'required|string|max:120',
+            'email'               => 'required|string|max:120',
+            'telefono'            => 'required|string|max:40',
+            'vuelo'               => 'nullable|string|max:40',
+            'addons'              => 'nullable|string',
+            'idioma'              => 'nullable|string|in:es,en',
+        ]);
+
+        // Aplicar el idioma del cliente (es/en) para que el correo salga en su idioma.
+        // Si no se manda, por defecto español.
+        app()->setLocale($validated['idioma'] ?? 'es');
+
+        try {
+            // 3. Reutilizar EXACTAMENTE la misma lógica que el mostrador
+            $data = $this->procesarCalculosYResumen($validated, 'mostrador');
+
+            $codigo = $this->generarFolioReservacionUnico();
+
+            $id = DB::transaction(function () use ($validated, $data, $codigo) {
+                $id = DB::table('reservaciones')->insertGetId([
+                    'id_usuario'       => null,
+                    'id_vehiculo'      => null,
+                    'id_categoria'     => $validated['categoria_id'],
+                    'tarifa_base'      => $data['precioDia'],
+                    'ciudad_retiro'    => $data['ciudadRetiro'],
+                    'ciudad_entrega'   => $data['ciudadEntrega'],
+                    'sucursal_retiro'  => $validated['pickup_sucursal_id'] ?? null,
+                    'sucursal_entrega' => $validated['dropoff_sucursal_id'] ?? null,
+                    'fecha_inicio'     => $validated['pickup_date'],
+                    'hora_retiro'      => $validated['pickup_time'],
+                    'fecha_fin'        => $validated['dropoff_date'],
+                    'hora_entrega'     => $validated['dropoff_time'],
+                    'estado'           => 'pendiente_pago',
+                    'subtotal'         => $data['subtotal'],
+                    'impuestos'        => $data['impuestos'],
+                    'total'            => $data['total'],
+                    'moneda'           => 'MXN',
+                    'no_vuelo'         => $validated['vuelo'] ?? null,
+                    'codigo'           => $codigo,
+                    'nombre_cliente'   => $validated['nombre'] ?? null,
+                    'email_cliente'    => $validated['email'] ?? null,
+                    'telefono_cliente' => $validated['telefono'] ?? null,
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
+                ]);
+
+                $this->guardarServiciosReservacion($id, $data['serviciosAInsertar']);
+
+                return $id;
+            });
+
+            // 4. Enviar el correo (mismo que el mostrador: cliente + cc reservaciones)
+            $this->enviarCorreoConfirmacion($id, 'mostrador', $data);
+
+            return response()->json([
+                'ok'        => true,
+                'folio'     => $codigo,
+                'id'        => $id,
+                'subtotal'  => $data['subtotal'],
+                'impuestos' => $data['impuestos'],
+                'total'     => $data['total'],
+                'estado'    => 'pendiente_pago',
+                'message'   => 'Reservación creada con éxito por el agente.',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('[ERROR] Falla creando reservación (agente): ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'ok'      => false,
+                'message' => 'Error interno al crear la reservación',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Guarda una reservación real (pago en mostrador)
      */
     public function reservar(StoreReservacionRequest $request)

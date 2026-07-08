@@ -750,3 +750,11 @@ Route::get('/lang/{locale}', function ($locale) {
 
     return redirect()->back();
 })->name('cambiar.idioma');
+
+//PDF Alta Cliente
+Route::get('/admin/convenio/{id}', [AltaClienteController::class, 'generarConvenioPdf'])
+    ->name('admin.convenio.pdf');
+
+Route::get('/admin/responsiva/{id}', [AltaClienteController::class, 'generarResponsivaPdf'])
+    ->name('admin.responsiva.pdf');
+    

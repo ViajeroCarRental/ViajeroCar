@@ -45,10 +45,27 @@ class ReservacionesAdminController extends Controller
                 ->orderBy('c.nombre')
                 ->get();
 
-            // Sucursales
+            // Sucursales — DROPOFF (entrega): todas las activas, sin filtrar por ver_admin
             $sucursales = DB::table('sucursales as s')
                 ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
                 ->where('s.activo', 1)
+                ->select(
+                    's.id_sucursal',
+                    's.nombre as sucursal',
+                    'c.nombre as ciudad',
+                    'c.id_ciudad'
+                )
+                ->orderByRaw("CASE WHEN c.nombre = 'Querétaro' THEN 0 ELSE 1 END")
+                ->orderBy('c.nombre')
+                ->orderBy('s.nombre')
+                ->get()
+                ->groupBy('ciudad');
+
+            // Sucursales — PICKUP (retiro): solo las habilitadas para panel (ver_admin = 1)
+            $sucursalesPickup = DB::table('sucursales as s')
+                ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
+                ->where('s.activo', 1)
+                ->where('s.ver_admin', 1)
                 ->select(
                     's.id_sucursal',
                     's.nombre as sucursal',
@@ -67,6 +84,41 @@ class ReservacionesAdminController extends Controller
                 ->orderBy('estado')
                 ->orderBy('destino')
                 ->get();
+
+            // ===============================================================
+            // 🧩 Servicios adicionales (cards dinámicas del carrusel)
+            // Solo los habilitados para panel (administrador = 1).
+            // Se EXCLUYE la fila 11 (Drop Off), porque Drop Off y Delivery
+            // se manejan aparte como cards de ubicación (no salen de aquí).
+            // Se calcula el ícono por nombre para no hardcodearlo en el Blade.
+            // ===============================================================
+            $serviciosAdicionales = DB::table('servicios')
+                ->where('activo', 1)
+                ->where('administrador', 1)
+                ->where('id_servicio', '!=', 11)
+                ->orderBy('id_servicio')
+                ->get()
+                ->map(function ($srv) {
+                    $n = mb_strtolower($srv->nombre);
+
+                    $srv->icon = match (true) {
+                        str_contains($n, 'silla')     || str_contains($n, 'baby')   => 'fas fa-baby-carriage',
+                        str_contains($n, 'conductor') || str_contains($n, 'driver') => 'fas fa-user-plus',
+                        str_contains($n, 'gasolina')  || str_contains($n, 'fuel')   => 'fas fa-gas-pump',
+                        str_contains($n, 'gps')                                     => 'fas fa-location-arrow',
+                        str_contains($n, 'licencia')                                => 'fas fa-id-card',
+                        str_contains($n, 'upgrade')   || str_contains($n, 'categor')=> 'fas fa-arrow-up',
+                        str_contains($n, 'celular')   || str_contains($n, 'accesor')=> 'fas fa-mobile-screen',
+                        str_contains($n, 'litro')                                   => 'fas fa-oil-can',
+                        default => 'fas fa-circle-plus',
+                    };
+
+                    // Bandera para que el Blade sepa si esta card es de tipo tanque
+                    // (Gasolina): switch + total, SIN control de cantidad.
+                    $srv->es_tanque = ($srv->tipo_cobro === 'por_tanque');
+
+                    return $srv;
+                });
 
             $delivery = (object)['activo' => 0, 'total' => 0, 'kms' => 0, 'direccion' => '', 'id_ubicacion' => null];
             $costoKmCategoria = 0;
@@ -153,18 +205,20 @@ class ReservacionesAdminController extends Controller
             return view('Admin.reservaciones', compact(
                 'categorias',
                 'sucursales',
+                'sucursalesPickup',
                 'grupo_colision',
                 'grupo_medicos',
                 'grupo_asistencia',
                 'grupo_terceros',
                 'grupo_protecciones',
                 'ubicaciones',
+                'serviciosAdicionales',
                 'delivery',
                 'costoKmCategoria',
                 'reservacion'
             ));
         } catch (\Throwable $e) {
-            Log::channel('reservaciones')->error('Error critico al cargar vista reservaciones', [
+            Log::info('reservaciones')->error('Error critico al cargar vista reservaciones', [
                 'message' => $e->getMessage(),
                 'file'    => $e->getFile(),
                 'line'    => $e->getLine()
@@ -179,7 +233,7 @@ class ReservacionesAdminController extends Controller
      */
     public function obtenerCategoriaPorId(Request $request, $idCategoria)
     {
-        Log::channel('reservaciones')->withContext([
+        Log::info('reservaciones')->withContext([
             'request_id' => (string) Str::uuid(),
             'asesor_id'  => session('id_usuario'),
             'target_id'  => $idCategoria
@@ -214,7 +268,7 @@ class ReservacionesAdminController extends Controller
 
             return response()->json($categoria);
         } catch (\Throwable $e) {
-            Log::channel('reservaciones')->error('Error SQL al buscar categoria', [
+            Log::info('reservaciones')->error('Error SQL al buscar categoria', [
                 'message' => $e->getMessage()
             ]);
 
@@ -737,10 +791,27 @@ class ReservacionesAdminController extends Controller
             abort(404, 'Reservación no encontrada');
         }
 
-        // 🔵 SUCURSALES
+        // 🔵 SUCURSALES — DROPOFF (entrega): todas las activas, sin filtrar por ver_admin
         $sucursales = DB::table('sucursales as s')
             ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
             ->where('s.activo', 1)
+            ->select(
+                's.id_sucursal',
+                's.nombre as sucursal',
+                'c.nombre as ciudad',
+                'c.id_ciudad'
+            )
+            ->orderByRaw("CASE WHEN c.nombre = 'Querétaro' THEN 0 ELSE 1 END")
+            ->orderBy('c.nombre')
+            ->orderBy('s.nombre')
+            ->get()
+            ->groupBy('ciudad');
+
+        // 🔵 SUCURSALES — PICKUP (retiro): solo las habilitadas para panel (ver_admin = 1)
+        $sucursalesPickup = DB::table('sucursales as s')
+            ->join('ciudades as c', 's.id_ciudad', '=', 'c.id_ciudad')
+            ->where('s.activo', 1)
+            ->where('s.ver_admin', 1)
             ->select(
                 's.id_sucursal',
                 's.nombre as sucursal',
@@ -787,7 +858,38 @@ class ReservacionesAdminController extends Controller
             ->orderBy('destino')
             ->get();
 
-        // 🔵 SERVICIOS
+        // ===============================================================
+        // 🧩 Servicios adicionales (cards dinámicas del carrusel)
+        // Idéntico a index(): solo administrador = 1, excluye Drop Off (11),
+        // con ícono calculado y bandera de tanque.
+        // ===============================================================
+        $serviciosAdicionales = DB::table('servicios')
+            ->where('activo', 1)
+            ->where('administrador', 1)
+            ->where('id_servicio', '!=', 11)
+            ->orderBy('id_servicio')
+            ->get()
+            ->map(function ($srv) {
+                $n = mb_strtolower($srv->nombre);
+
+                $srv->icon = match (true) {
+                    str_contains($n, 'silla')     || str_contains($n, 'baby')   => 'fas fa-baby-carriage',
+                    str_contains($n, 'conductor') || str_contains($n, 'driver') => 'fas fa-user-plus',
+                    str_contains($n, 'gasolina')  || str_contains($n, 'fuel')   => 'fas fa-gas-pump',
+                    str_contains($n, 'gps')                                     => 'fas fa-location-arrow',
+                    str_contains($n, 'licencia')                                => 'fas fa-id-card',
+                    str_contains($n, 'upgrade')   || str_contains($n, 'categor')=> 'fas fa-arrow-up',
+                    str_contains($n, 'celular')   || str_contains($n, 'accesor')=> 'fas fa-mobile-screen',
+                    str_contains($n, 'litro')                                   => 'fas fa-oil-can',
+                    default => 'fas fa-circle-plus',
+                };
+
+                $srv->es_tanque = ($srv->tipo_cobro === 'por_tanque');
+
+                return $srv;
+            });
+
+        // 🔵 SERVICIOS guardados en la reserva (para precargar cantidades)
         $serviciosReserva = DB::table('reservacion_servicio as rs')
             ->join('servicios as s', 's.id_servicio', '=', 'rs.id_servicio')
             ->where('rs.id_reservacion', $id)
@@ -823,6 +925,62 @@ class ReservacionesAdminController extends Controller
             )
             ->get();
 
+        // =====================================================
+        // CATÁLOGO de protecciones individuales + AGRUPACIÓN
+        // Idéntico a index(): el Blade necesita los 5 grupos para
+        // pintar las tarjetas del modal de protecciones.
+        // =====================================================
+        $individuales = DB::table('seguro_individuales')
+            ->select('id_individual', 'nombre', 'descripcion', 'precio_por_dia', 'activo')
+            ->where('activo', 1)
+            ->orderBy('precio_por_dia')
+            ->get();
+
+        // 1. COLISIÓN Y ROBO - LDW, PDW, CDW, DECLINE CDW
+        $grupo_colision = $individuales->filter(function ($item) {
+            $nombre = strtoupper($item->nombre);
+            return str_contains($nombre, 'LDW') ||
+                str_contains($nombre, 'PDW') ||
+                str_contains($nombre, 'CDW') ||
+                str_contains($nombre, 'DECLINE CDW');
+        })->values();
+
+        // 2. GASTOS MÉDICOS - PAI
+        $grupo_medicos = $individuales->filter(function ($item) {
+            $nombre = strtoupper($item->nombre);
+            return str_contains($nombre, 'PAI');
+        })->values();
+
+        // 3. ASISTENCIA PARA EL CAMINO - PRA
+        $grupo_asistencia = $individuales->filter(function ($item) {
+            $nombre = strtoupper($item->nombre);
+            return str_contains($nombre, 'PRA');
+        })->values();
+
+        // 4. DAÑOS A TERCEROS - SOLO LI, ALI, EXT. LI
+        $grupo_terceros = $individuales->filter(function ($item) {
+            $nombre = strtoupper($item->nombre);
+            return $nombre === 'LI' ||
+                $nombre === 'ALI' ||
+                $nombre === 'EXT. LI' ||
+                str_contains($nombre, 'LIABILITY') ||
+                str_contains($nombre, 'LI (') ||
+                str_contains($nombre, 'ALI (') ||
+                str_contains($nombre, 'EXT. LI');
+        })->values();
+
+        // 5. PROTECCIONES AUTOMÁTICAS - LOU, LA (el resto)
+        $idsUsados = collect()
+            ->merge($grupo_colision->pluck('id_individual'))
+            ->merge($grupo_medicos->pluck('id_individual'))
+            ->merge($grupo_asistencia->pluck('id_individual'))
+            ->merge($grupo_terceros->pluck('id_individual'))
+            ->unique();
+
+        $grupo_protecciones = $individuales
+            ->filter(fn($r) => !$idsUsados->contains($r->id_individual))
+            ->values();
+
         // 🔴 DELIVERY
         $delivery = (object)[
             'activo' => $reservacion->delivery_activo ?? 0,
@@ -837,13 +995,20 @@ class ReservacionesAdminController extends Controller
         return view('Admin.reservaciones', [
             'reservacion'         => $reservacion,
             'sucursales'          => $sucursales,
+            'sucursalesPickup'    => $sucursalesPickup,
             'categorias'          => $categorias,
             'ubicaciones'         => $ubicaciones,
+            'serviciosAdicionales' => $serviciosAdicionales,
             'delivery'            => $delivery,
             'costoKmCategoria'    => $costoKmCategoria,
             'serviciosReserva'    => $serviciosReserva,
             'seguroReserva'       => $seguroReserva,
             'individualesReserva' => $individualesReserva,
+            'grupo_colision'      => $grupo_colision,
+            'grupo_medicos'       => $grupo_medicos,
+            'grupo_asistencia'    => $grupo_asistencia,
+            'grupo_terceros'      => $grupo_terceros,
+            'grupo_protecciones'  => $grupo_protecciones,
         ]);
     }
 
@@ -870,7 +1035,7 @@ class ReservacionesAdminController extends Controller
             ->where('id_sucursal', $request->sucursal_entrega)
             ->first();
 
-        $ciudadRetiroId  = $sucursalRetiro->id_ciudad ?? null;
+        $ciudadRetiroId = $sucursalRetiro->id_ciudad ?? null;
         $ciudadEntregaId = $sucursalEntrega->id_ciudad ?? null;
 
         // 🔹 Categoría
@@ -883,7 +1048,7 @@ class ReservacionesAdminController extends Controller
             ->diffInDays(\Carbon\Carbon::parse($request->fecha_fin));
 
         // Cortesía de 1 hora
-        $horaRetiroNum  = (int) explode(':', (string) $request->hora_retiro)[0];
+        $horaRetiroNum = (int) explode(':', (string) $request->hora_retiro)[0];
         $horaEntregaNum = (int) explode(':', (string) $request->hora_entrega)[0];
 
         if ($horaEntregaNum > $horaRetiroNum + 1) {
@@ -902,17 +1067,14 @@ class ReservacionesAdminController extends Controller
         // 🔥 EXTRAS (ADICIONALES)
         // ===============================
         $extrasServiciosTotal = 0;
-
         if ($request->filled('adicionalesSeleccionados')) {
             foreach ($request->input('adicionalesSeleccionados') as $extra) {
                 // 🔧 NOMBRE CORREGIDO: el JS manda 'precio_unitario', no 'precio'
                 if (!is_array($extra) || !isset($extra['precio_unitario'])) {
                     continue;
                 }
-
-                $precio   = (float) $extra['precio_unitario'];
+                $precio = (float) $extra['precio_unitario'];
                 $cantidad = (int) ($extra['cantidad'] ?? 1);
-
                 $extrasServiciosTotal += $precio * $cantidad * $dias;
             }
         }
@@ -922,12 +1084,12 @@ class ReservacionesAdminController extends Controller
         // ===============================
         $seguroTotal = 0;
         if ($request->filled('seguroSeleccionado.precio')) {
-            $seguroTotal = (float)$request->input('seguroSeleccionado.precio') * $dias;
+            $seguroTotal = (float) $request->input('seguroSeleccionado.precio') * $dias;
         }
 
         // ===============================
         // 🔥 SEGUROS INDIVIDUALES
-        //    El JS manda 'id' y 'precio' en individualesSeleccionados
+        // El JS manda 'id' y 'precio' en individualesSeleccionados
         // ===============================
         $individualesTotal = 0;
         if ($request->filled('individualesSeleccionados')) {
@@ -942,25 +1104,26 @@ class ReservacionesAdminController extends Controller
         // 🔥 DELIVERY
         // ===============================
         $deliveryTotal = $request->delivery_activo == 1
-            ? (float)$request->delivery_total
+            ? (float) $request->delivery_total
             : 0;
 
         // ===============================
         // 🔥 DROPOFF
         // ===============================
         $dropoffTotal = $request->dropoff_activo == 1
-            ? (float)$request->dropoff_total
+            ? (float) $request->dropoff_total
             : 0;
 
         // ===============================
         // 🔥 GASOLINA
         // ===============================
         $gasolinaTotal = 0;
+        $capacidadMax = 0;
         if ($request->svc_gasolina == 1) {
-            $litros = DB::table('vehiculos')
+            $capacidadMax = DB::table('vehiculos')
                 ->where('id_categoria', $request->id_categoria)
                 ->max('capacidad_tanque') ?? 0;
-            $gasolinaTotal = $litros * 20;
+            $gasolinaTotal = $capacidadMax * 20;
         }
 
         // ===============================
@@ -988,29 +1151,29 @@ class ReservacionesAdminController extends Controller
         DB::table('reservaciones')
             ->where('id_reservacion', $id)
             ->update([
-                'id_categoria'      => $request->id_categoria,
-                'ciudad_retiro'     => $ciudadRetiroId,
-                'ciudad_entrega'    => $ciudadEntregaId,
-                'sucursal_retiro'   => $request->sucursal_retiro,
-                'sucursal_entrega'  => $request->sucursal_entrega,
-                'nombre_cliente'    => $request->nombre_cliente,
-                'email_cliente'     => $request->email_cliente,
-                'telefono_cliente'  => $request->telefono_cliente,
-                'comentarios'       => $request->input('comentarios'),
-                'fecha_inicio'      => $request->fecha_inicio,
-                'hora_retiro'       => $request->hora_retiro,
-                'fecha_fin'         => $request->fecha_fin,
-                'hora_entrega'      => $request->hora_entrega,
-                'tarifa_base'       => $tarifaBaseGuardar,
-                'delivery_activo'   => $request->delivery_activo,
-                'delivery_total'    => $deliveryTotal,
-                'delivery_km'       => $request->delivery_km,
+                'id_categoria' => $request->id_categoria,
+                'ciudad_retiro' => $ciudadRetiroId,
+                'ciudad_entrega' => $ciudadEntregaId,
+                'sucursal_retiro' => $request->sucursal_retiro,
+                'sucursal_entrega' => $request->sucursal_entrega,
+                'nombre_cliente' => $request->nombre_cliente,
+                'email_cliente' => $request->email_cliente,
+                'telefono_cliente' => $request->telefono_cliente,
+                'comentarios' => $request->input('comentarios'),
+                'fecha_inicio' => $request->fecha_inicio,
+                'hora_retiro' => $request->hora_retiro,
+                'fecha_fin' => $request->fecha_fin,
+                'hora_entrega' => $request->hora_entrega,
+                'tarifa_base' => $tarifaBaseGuardar,
+                'delivery_activo' => $request->delivery_activo,
+                'delivery_total' => $deliveryTotal,
+                'delivery_km' => $request->delivery_km,
                 'delivery_direccion' => $request->delivery_direccion,
                 'delivery_ubicacion' => $request->delivery_ubicacion,
-                'subtotal'          => $subtotal,
-                'impuestos'         => $iva,
-                'total'             => $total,
-                'updated_at'        => now(),
+                'subtotal' => $subtotal,
+                'impuestos' => $iva,
+                'total' => $total,
+                'updated_at' => now(),
             ]);
 
         // =========================
@@ -1023,24 +1186,24 @@ class ReservacionesAdminController extends Controller
         // 🚩 DROPOFF
         if ($request->dropoff_activo == 1) {
             DB::table('reservacion_servicio')->insert([
-                'id_reservacion'  => $id,
-                'id_servicio'     => 11,
-                'cantidad'        => 1,
+                'id_reservacion' => $id,
+                'id_servicio' => 11,
+                'cantidad' => 1,
                 'precio_unitario' => $request->dropoff_total,
-                'created_at'      => now(),
-                'updated_at'      => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
 
         // ⛽ GASOLINA
         if ($request->svc_gasolina == 1) {
             DB::table('reservacion_servicio')->insert([
-                'id_reservacion'  => $id,
-                'id_servicio'     => 1,
-                'cantidad'        => 1,
+                'id_reservacion' => $id,
+                'id_servicio' => 1,
+                'cantidad' => $capacidadMax ?: 1,
                 'precio_unitario' => 20,
-                'created_at'      => now(),
-                'updated_at'      => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
 
@@ -1052,12 +1215,12 @@ class ReservacionesAdminController extends Controller
                     continue;
                 }
                 DB::table('reservacion_servicio')->insert([
-                    'id_reservacion'  => $id,
-                    'id_servicio'     => $extra['id_servicio'],
-                    'cantidad'        => $extra['cantidad'] ?? 1,
+                    'id_reservacion' => $id,
+                    'id_servicio' => $extra['id_servicio'],
+                    'cantidad' => $extra['cantidad'] ?? 1,
                     'precio_unitario' => $extra['precio_unitario'] ?? 0,
-                    'created_at'      => now(),
-                    'updated_at'      => now(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             }
         }
@@ -1072,16 +1235,16 @@ class ReservacionesAdminController extends Controller
         if ($request->filled('seguroSeleccionado.id')) {
             DB::table('reservacion_paquete_seguro')->insert([
                 'id_reservacion' => $id,
-                'id_paquete'     => $request->input('seguroSeleccionado.id'),
+                'id_paquete' => $request->input('seguroSeleccionado.id'),
                 'precio_por_dia' => $request->input('seguroSeleccionado.precio'),
-                'created_at'     => now(),
-                'updated_at'     => now(),
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
 
         // =========================
         // 🔥 SEGUROS INDIVIDUALES (RESET)
-        //    El JS manda 'id' y 'precio' en individualesSeleccionados
+        // El JS manda 'id' y 'precio' en individualesSeleccionados
         // =========================
         DB::table('reservacion_seguro_individual')
             ->where('id_reservacion', $id)
@@ -1094,13 +1257,129 @@ class ReservacionesAdminController extends Controller
                 }
                 DB::table('reservacion_seguro_individual')->insert([
                     'id_reservacion' => $id,
-                    'id_individual'  => $ind['id'],
+                    'id_individual' => $ind['id'],
                     'precio_por_dia' => $ind['precio'] ?? 0,
-                    'cantidad'       => $ind['cantidad'] ?? 1,
-                    'created_at'     => now(),
-                    'updated_at'     => now(),
+                    'cantidad' => $ind['cantidad'] ?? 1,
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
             }
+        }
+
+        /* ==========================================================
+           5️⃣ Enviar correo con Mailable (ReservacionAdminMail)
+           Réplica del envío de guardarReservacion(), leyendo los
+           datos YA ACTUALIZADOS de la reserva editada.
+        ========================================================== */
+
+        // ✅ Ficha "Tu Auto" (capacidad por código de categoría)
+        $predeterminados = [
+            'C'  => ['pax' => 5,  'small' => 2, 'big' => 1],
+            'D'  => ['pax' => 5,  'small' => 2, 'big' => 1],
+            'E'  => ['pax' => 5,  'small' => 2, 'big' => 2],
+            'F'  => ['pax' => 5,  'small' => 2, 'big' => 2],
+            'IC' => ['pax' => 5,  'small' => 2, 'big' => 2],
+            'I'  => ['pax' => 5,  'small' => 3, 'big' => 2],
+            'IB' => ['pax' => 7,  'small' => 3, 'big' => 2],
+            'M'  => ['pax' => 7,  'small' => 4, 'big' => 2],
+            'L'  => ['pax' => 13, 'small' => 4, 'big' => 3],
+            'H'  => ['pax' => 5,  'small' => 3, 'big' => 2],
+            'HI' => ['pax' => 5,  'small' => 3, 'big' => 2],
+        ];
+        $codigoCat = strtoupper(trim((string)($categoria->codigo ?? '')));
+        $tuAuto = $predeterminados[$codigoCat] ?? ['pax' => 5, 'small' => 2, 'big' => 1];
+
+        // 📧 Correos destino
+        $correoCliente = $request->email_cliente ?? null;
+        $correoEmpresa = env('MAIL_FROM_ADDRESS', 'reservaciones@viajerocarental.com');
+
+        // 🔄 Re-consultar la reserva YA actualizada
+        $reservacion = DB::table('reservaciones')
+            ->where('id_reservacion', $id)
+            ->first();
+
+        // 🛡️ Paquete de seguro guardado
+        $seguroReserva = DB::table('reservacion_paquete_seguro as rps')
+            ->join('seguro_paquete as sp', 'sp.id_paquete', '=', 'rps.id_paquete')
+            ->where('rps.id_reservacion', $id)
+            ->select('sp.id_paquete', 'sp.nombre', 'sp.descripcion', 'rps.precio_por_dia')
+            ->first();
+
+        // ➕ Servicios guardados (con total)
+        $extrasReserva = DB::table('reservacion_servicio as rs')
+            ->join('servicios as s', 's.id_servicio', '=', 'rs.id_servicio')
+            ->where('rs.id_reservacion', $id)
+            ->select(
+                's.id_servicio',
+                's.nombre',
+                's.descripcion',
+                'rs.cantidad',
+                'rs.precio_unitario',
+                DB::raw('(rs.cantidad * rs.precio_unitario) as total')
+            )
+            ->get();
+
+        // 📍 Lugares de retiro y entrega (Ciudad - Sucursal)
+        $retiroInfo = DB::table('sucursales as s')
+            ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
+            ->where('s.id_sucursal', $reservacion->sucursal_retiro)
+            ->select('s.nombre as sucursal', 'c.nombre as ciudad')
+            ->first();
+
+        $entregaInfo = DB::table('sucursales as s')
+            ->join('ciudades as c', 'c.id_ciudad', '=', 's.id_ciudad')
+            ->where('s.id_sucursal', $reservacion->sucursal_entrega)
+            ->select('s.nombre as sucursal', 'c.nombre as ciudad')
+            ->first();
+
+        $lugarRetiro = $retiroInfo ? ($retiroInfo->ciudad . ' - ' . $retiroInfo->sucursal) : '-';
+        $lugarEntrega = $entregaInfo ? ($entregaInfo->ciudad . ' - ' . $entregaInfo->sucursal) : '-';
+
+        // 🖼️ Imagen de la categoría
+        $catImages = [
+            1  => 'img/aveo.png',
+            2  => 'img/virtus.png',
+            3  => 'img/jetta.png',
+            4  => 'img/camry.png',
+            5  => 'img/renegade.png',
+            6  => 'img/taos.png',
+            7  => 'img/avanza.png',
+            8  => 'img/Odyssey.png',
+            9  => 'img/Hiace.png',
+            10 => 'img/Frontier.png',
+            11 => 'img/Tacoma.png',
+        ];
+        $catId = (int)($categoria->id_categoria ?? 0);
+        $baseUrl = rtrim(config('app.url'), '/');
+        $imgPath = $catImages[$catId] ?? 'img/categorias/placeholder.png';
+        $imgCategoria = $baseUrl . '/' . ltrim($imgPath, '/');
+
+        // 💵 Recalcular opciones de renta para el correo (misma fórmula que creación)
+        $extrasServiciosTotalCorreo = 0;
+        if (!empty($extrasReserva)) {
+            $extrasServiciosTotalCorreo = (float) $extrasReserva->sum('total');
+        }
+        $seguroTotalCorreo = 0;
+        if (!empty($seguroReserva) && isset($seguroReserva->precio_por_dia)) {
+            $seguroTotalCorreo = (float) $seguroReserva->precio_por_dia * (float) $dias;
+        }
+        $opcionesRentaTotalCorreo = round(
+            $seguroTotalCorreo + $extrasServiciosTotalCorreo + $deliveryTotal + $dropoffTotal,
+            2
+        );
+
+        // ✉️ Envío
+        try {
+            if ($correoCliente) {
+                Mail::to($correoCliente)
+                    ->cc($correoEmpresa)
+                    ->send(new ReservacionAdminMail($reservacion, $categoria, $seguroReserva, $extrasReserva, $lugarRetiro, $lugarEntrega, $imgCategoria, $opcionesRentaTotalCorreo, $tuAuto));
+            } else {
+                Mail::to($correoEmpresa)
+                    ->send(new ReservacionAdminMail($reservacion, $categoria, $seguroReserva, $extrasReserva, $lugarRetiro, $lugarEntrega, $imgCategoria, $opcionesRentaTotalCorreo, $tuAuto));
+            }
+        } catch (\Throwable $e) {
+            Log::error('❌ Error al enviar correo de reserva (update): ' . $e->getMessage());
         }
 
         return redirect()->route('rutaReservacionesActivas')

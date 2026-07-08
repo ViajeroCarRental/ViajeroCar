@@ -50,19 +50,64 @@ class DropoffController extends Controller
 
     public function storeUbicacion(Request $request)
     {
-        DB::table('ubicaciones_servicio')->insert([
-            'id_ciudad_origen' => $request->id_ciudad_origen,
-            'estado'           => $request->estado,
-            'destino'          => $request->destino,
-            'km'               => $request->km,
-            'ver_usuario'      => $request->boolean('ver_usuario'),
-            'ver_admin'        => $request->boolean('ver_admin'),
-            'activo'           => true,
-            'created_at'       => now(),
-            'updated_at'       => now()
-        ]);
+        $idCiudadOrigen = $request->id_ciudad_origen;
+        $rutas = $request->input('rutas', []);
 
-        return response()->json(['success' => true]);
+        // Si viene el formato antiguo (una sola ruta), lo normalizamos a arreglo
+        if (empty($rutas) && $request->filled('destino')) {
+            $rutas = [[
+                'destino'     => $request->destino,
+                'estado'      => $request->estado,
+                'km'          => $request->km,
+                'ver_usuario' => $request->boolean('ver_usuario'),
+                'ver_admin'   => $request->boolean('ver_admin'),
+            ]];
+        }
+
+        if (empty($idCiudadOrigen) || empty($rutas)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Faltan datos: ciudad de origen o destinos.'
+            ], 422);
+        }
+
+        $ahora = now();
+        $insertar = [];
+
+        foreach ($rutas as $r) {
+            $destino = trim($r['destino'] ?? '');
+            $km      = $r['km'] ?? null;
+
+            if ($destino === '' || $km === null || $km === '') {
+                continue; // se ignoran destinos sin nombre o sin km
+            }
+
+            $insertar[] = [
+                'id_ciudad_origen' => $idCiudadOrigen,
+                'estado'           => trim($r['estado'] ?? ''),
+                'destino'          => $destino,
+                'km'               => $km,
+                'ver_usuario'      => filter_var($r['ver_usuario'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'ver_admin'        => filter_var($r['ver_admin'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'activo'           => true,
+                'created_at'       => $ahora,
+                'updated_at'       => $ahora,
+            ];
+        }
+
+        if (empty($insertar)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se registró ninguna ruta válida (revisa los km).'
+            ], 422);
+        }
+
+        DB::table('ubicaciones_servicio')->insert($insertar);
+
+        return response()->json([
+            'success' => true,
+            'creadas' => count($insertar)
+        ]);
     }
 
     public function updateKm(Request $request)

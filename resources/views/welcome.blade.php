@@ -1143,16 +1143,18 @@
                                         <select id="pickupPlace" name="pickup_sucursal_id">
                                             <option value="" disabled selected data-i18n="where_start">
                                                 {{ __('Where does your trip begin?') }}</option>
-                                            @foreach ($ciudades->where('nombre', 'Querétaro') as $ciudad)
-                                                <optgroup
-                                                    label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
-                                                    @foreach ($ciudad->sucursalesActivas as $suc)
-                                                        <option value="{{ $suc->id_sucursal }}"
-                                                            @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
-                                                            {{ $suc->nombre }}
-                                                        </option>
-                                                    @endforeach
-                                                </optgroup>
+                                            @foreach ($ciudades as $ciudad)
+                                                @if ($ciudad->sucursalesActivas->isNotEmpty())
+                                                    <optgroup
+                                                        label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
+                                                        @foreach ($ciudad->sucursalesActivas as $suc)
+                                                            <option value="{{ $suc->id_sucursal }}"
+                                                                @selected(request('pickup_sucursal_id') == $suc->id_sucursal)>
+                                                                {{ $suc->nombre }}
+                                                            </option>
+                                                        @endforeach
+                                                    </optgroup>
+                                                @endif
                                             @endforeach
                                         </select>
                                     </div>
@@ -1163,16 +1165,18 @@
                                         <select id="dropoffPlace" name="dropoff_sucursal_id" class="no-scroll-trap">
                                             <option value="" disabled selected>{{ __('Where does your trip end?') }}
                                             </option>
-                                            @foreach ($ciudades as $ciudad)
-                                                <optgroup
-                                                    label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
-                                                    @foreach ($ciudad->sucursalesActivas as $suc)
-                                                        <option value="{{ $suc->id_sucursal }}"
-                                                            @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
-                                                            {{ $suc->nombre }}
-                                                        </option>
-                                                    @endforeach
-                                                </optgroup>
+                                            @foreach ($ciudadesDropoff as $ciudad)
+                                                @if ($ciudad->sucursalesActivas->isNotEmpty())
+                                                    <optgroup
+                                                        label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
+                                                        @foreach ($ciudad->sucursalesActivas as $suc)
+                                                            <option value="{{ $suc->id_sucursal }}"
+                                                                @selected(request('dropoff_sucursal_id') == $suc->id_sucursal)>
+                                                                {{ $suc->nombre }}
+                                                            </option>
+                                                        @endforeach
+                                                    </optgroup>
+                                                @endif
                                             @endforeach
                                         </select>
                                     </div>
@@ -1571,10 +1575,9 @@
         se eliminaron de aquí porque YA están cargados en el layout.
     --}}
 
-    {{-- ✅ Iconos por ID de sucursal (DEBE ir ANTES de home.js) --}}
-    <script>
+   <script>
         window.iconosPorId = {
-            @foreach ($ciudades as $ciudad)
+            @foreach ($ciudadesDropoff as $ciudad)
                 @foreach ($ciudad->sucursalesActivas as $suc)
                     @php
                         $name = strtolower($suc->nombre);

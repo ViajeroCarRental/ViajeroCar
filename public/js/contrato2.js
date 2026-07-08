@@ -37,7 +37,6 @@ const ContratoUI = {
         }
     },
     mostrarNotificacion: function (tipo, htmlMsg) {
-        // Permite repetir la misma notificación si han pasado más de 3 segundos
         const now = Date.now();
         if (window.lastAlert === htmlMsg && window.lastAlertTime && (now - window.lastAlertTime) < 3000) return;
         window.lastAlert = htmlMsg;
@@ -55,6 +54,39 @@ const ContratoUI = {
 
 const urlArchivo = (id) => id ? `/archivo/${id}` : null;
 
+function initFlatpickrPaso4() {
+    if (typeof flatpickr === "undefined") {
+        console.error("Flatpickr no está cargado");
+        return;
+    }
+
+    const inputs = document.querySelectorAll("#formDocumentacion .fecha-flatpickr");
+    console.log("Calendarios encontrados:", inputs.length);
+
+    inputs.forEach(input => {
+        if (input._flatpickr) return;
+
+        flatpickr(input, {
+            locale: flatpickr.l10ns?.es || "default",
+            dateFormat: "Y-m-d",
+            altInput: false,
+            allowInput: false,
+            clickOpens: true,
+            disableMobile: true,
+            monthSelectorType: "static",
+            onOpen: function (selectedDates, dateStr, instance) {
+                const cal = instance.calendarContainer;
+                const rect = input.getBoundingClientRect();
+                cal.style.position = 'absolute';
+                cal.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+                cal.style.left = (rect.left + window.scrollX) + 'px';
+                cal.style.width = '300px';
+                cal.style.zIndex = '99999';
+            }
+        });
+    });
+}
+
 /**
  * MÓDULO 2: PASO 5 - DOCUMENTACIÓN Y VALIDACIÓN
  */
@@ -69,6 +101,9 @@ const ContratoPaso5 = {
         this.configurarPreviews();
         this.initBusquedaPersonas();
         this.inicializarEstadoLicencia();
+        setTimeout(() => {
+            initFlatpickrPaso4();
+        }, 500);
         const form = ContratoUI.DOM.formDoc;
         if (form) {
             form.setAttribute("novalidate", "true");
@@ -83,7 +118,7 @@ const ContratoPaso5 = {
     initBusquedaPersonas: function () {
         const buscador = document.getElementById('buscadorGlobalPersona');
         if (!buscador) return;
-        const self = this;                               // <-- referencia segura
+        const self = this;
 
         const wrapper = buscador.parentElement;
         if (!wrapper) return;
@@ -116,7 +151,7 @@ const ContratoPaso5 = {
                             div.innerHTML = `<strong>${persona.nombre} ${persona.apellido_paterno} ${persona.apellido_materno}</strong><br>
                                           <small>${persona.tipo_identificacion}: ${persona.numero_identificacion}</small>`;
                             div.addEventListener('click', () => {
-                                self.autocompletarDesdeBusqueda(persona, 0);   // usa self
+                                self.autocompletarDesdeBusqueda(persona, 0);
                                 resultsDiv.style.display = 'none';
                                 buscador.value = '';
                             });
@@ -127,7 +162,6 @@ const ContratoPaso5 = {
             }, 300);
         });
 
-        // Cerrar al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (wrapper && resultsDiv && !wrapper.contains(e.target)) {
                 resultsDiv.style.display = 'none';
@@ -433,13 +467,12 @@ const ContratoPaso5 = {
             }
         };
 
-        // Validación rápida de contacto
         if (nameAttr.includes('contacto_emergencia')) {
             const val = inputContacto ? inputContacto.value.replace(/\D/g, '') : '';
             if (!val) { setEstado(inputContacto, ''); return; }
             if (val.length !== 10) {
                 setEstado(inputContacto, 'error');
-                ContratoUI.mostrarNotificacion('error', "<b>⚠️ Teléfono Inválido</b><br>Debe tener exactamente 10 dígitos.");
+                console.warn("⚠️ Teléfono Inválido - Debe tener exactamente 10 dígitos.");
             } else {
                 setEstado(inputContacto, 'ok');
             }
@@ -496,7 +529,6 @@ const ContratoPaso5 = {
                 } catch (e) { }
             };
 
-            // Validación de edad local
             if (inputNac && inputNac.value && inputTrigger.name.includes('nacimiento')) {
                 const b = new Date(inputNac.value + "T00:00:00"), h = new Date();
                 let e = h.getFullYear() - b.getFullYear();
@@ -505,7 +537,7 @@ const ContratoPaso5 = {
                 if (e < 18) {
                     setEstado(inputNac, 'error');
                     borrarYTemblar(inputNac);
-                    ContratoUI.mostrarNotificacion('error', "<b>🚫 Edad no permitida</b><br>El conductor debe tener al menos 18 años.");
+                    console.warn("🚫 Edad no permitida - El conductor debe tener al menos 18 años.");
                     this.gestionarCobroMenoresExtra();
                     return;
                 } else if (e >= 18 && e <= 24) {
@@ -515,26 +547,25 @@ const ContratoPaso5 = {
                 }
             }
 
-            // Procesar respuestas del servidor
             if (res.status === 'vencido') {
                 setEstado(inputVen, 'error');
                 borrarYTemblar(inputVen);
-                ContratoUI.mostrarNotificacion('error', `<b>🚫 Expirado</b><br>${msgSrv}`);
+                console.warn(`🚫 Expirado - ${msgSrv}`);
             } else if (res.status === 'error_fecha') {
                 setEstado(inputEmi, 'error');
                 setEstado(inputVen, 'error');
                 borrarYTemblar(inputEmi);
                 borrarYTemblar(inputVen);
-                ContratoUI.mostrarNotificacion('error', `<b>🚫 Error Fechas</b><br>${msgSrv}`);
+                console.warn(`🚫 Error Fechas - ${msgSrv}`);
             } else if (res.status === 'warning') {
                 setEstado(inputVen, 'warning');
-                ContratoUI.mostrarNotificacion('warning', `<b>⚠️ Revisión</b><br>${msgSrv}`);
+                console.warn(`⚠️ Revisión - ${msgSrv}`);
             }
 
             if (res.status === 'invalido' && payload.numero) {
                 setEstado(inputNum, 'error');
                 borrarYTemblar(inputNum, false);
-                ContratoUI.mostrarNotificacion('error', `<b>🚫 Formato Incorrecto</b><br>${msgSrv}`);
+                console.warn(`🚫 Formato Incorrecto - ${msgSrv}`);
             }
 
         } catch (err) {
@@ -581,9 +612,9 @@ const ContratoPaso5 = {
             if (r.ok) {
                 if (typeof window.cargarPaso6 === 'function') window.cargarPaso6();
                 if (count > 0) {
-                    ContratoUI.mostrarNotificacion('warning', `🔞 <b>Cargo Aplicado</b><br>Aplica tarifa extra por ${count} conductor(es) joven(es).`);
+                    console.log(`🔞 Cargo Aplicado - Tarifa extra por ${count} conductor(es) joven(es).`);
                 } else {
-                    ContratoUI.mostrarNotificacion('success', "✅ <b>Cargo Removido</b><br>Ningún conductor requiere tarifa de menor.");
+                    console.log("✅ Cargo Removido - Ningún conductor requiere tarifa de menor.");
                 }
                 if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
             }
@@ -639,8 +670,8 @@ const ContratoPaso5 = {
 
                     prev.innerHTML = `
                         <img src="${ev.target.result}" style="width:100%; height:100%; object-fit:contain; border-radius:inherit;" alt="Vista previa">
-                        
-                        <button type="button" title="Quitar imagen" style="position:absolute; top:8px; right:8px; background:#ef4444; color:white; border:none; border-radius:50%; width:26px; height:26px; cursor:pointer; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3); z-index:11; display:flex; justify-content:center; align-items:center; line-height:1;" 
+
+                        <button type="button" title="Quitar imagen" style="position:absolute; top:8px; right:8px; background:#ef4444; color:white; border:none; border-radius:50%; width:26px; height:26px; cursor:pointer; font-weight:bold; box-shadow:0 2px 4px rgba(0,0,0,0.3); z-index:11; display:flex; justify-content:center; align-items:center; line-height:1;"
                         onclick="
                             event.preventDefault();
                             const uploaderNode = this.closest('.uploader');
@@ -650,7 +681,6 @@ const ContratoPaso5 = {
                             }
                             const prevNode = this.closest('.preview');
                             if(prevNode) {
-                                // Quitamos los estilos para que vuelva a mostrarse el uploader original
                                 prevNode.style.cssText = '';
                                 prevNode.innerHTML = '';
                             }
@@ -672,14 +702,18 @@ const ContratoPaso5 = {
         });
     },
 
-    enviarFormulario: async function (e) {
-        e.preventDefault();
+    validarCamposRequeridos: function () {
         const form = ContratoUI.DOM.formDoc;
-        const btn = document.getElementById("btnContinuarDoc");
-        if (!form || !btn) return;
+        if (!form) return false;
 
-        let detallesFaltantes = [];
-        const faltantes = Array.from(form.querySelectorAll('input[required], select[required]')).filter(c => {
+        form.querySelectorAll('.input-error').forEach(el => {
+            el.classList.remove('input-error');
+            el.style.border = '';
+            el.style.backgroundColor = '';
+        });
+
+        let primerError = null;
+        form.querySelectorAll('input[required], select[required]').forEach(c => {
             const esArchivo = c.type === 'file';
             const estaVacio = esArchivo ? c.files.length === 0 : !c.value.trim();
             const elementoVisual = esArchivo ? c.closest('.uploader') : c;
@@ -690,48 +724,61 @@ const ContratoPaso5 = {
                     if (!esArchivo) elementoVisual.style.backgroundColor = "#fef2f2";
                     elementoVisual.classList.add('input-error');
                 }
-                const n = c.name;
-                const esTitular = n.includes("[0]") ? "del Titular" : "del Adicional";
-                let nombreCampo = "Dato obligatorio";
-                if (n.includes("idFrente")) nombreCampo = `Foto Identificación (Frente) ${esTitular}`;
-                else if (n.includes("idReverso")) nombreCampo = `Foto Identificación (Reverso) ${esTitular}`;
-                else if (n.includes("licFrente")) nombreCampo = `Foto Licencia (Frente) ${esTitular}`;
-                else if (n.includes("licReverso")) nombreCampo = `Foto Licencia (Reverso) ${esTitular}`;
-                else if (n.includes("emision")) nombreCampo = `Fecha de Emisión ${esTitular}`;
-                else if (n.includes("identificacion")) nombreCampo = `Número de ID ${esTitular}`;
-                else if (n.includes("licencia") && !esArchivo) nombreCampo = `Número de Licencia ${esTitular}`;
-                else if (n.includes("nacimiento")) nombreCampo = `Fecha de Nacimiento ${esTitular}`;
-                else if (n.includes("nombre")) nombreCampo = `Nombre ${esTitular}`;
-                else if (n.includes("paterno")) nombreCampo = `Apellido Paterno ${esTitular}`;
-                detallesFaltantes.push(`• ${nombreCampo}`);
-                return true;
-            } else {
-                if (elementoVisual) {
-                    elementoVisual.style.border = "";
-                    if (!esArchivo) elementoVisual.style.backgroundColor = "";
-                    elementoVisual.classList.remove('input-error');
-                }
-                return false;
+                if (!primerError) primerError = elementoVisual || c;
             }
-        }).length;
+        });
 
-        if (faltantes > 0) {
-            const unicos = [...new Set(detallesFaltantes)].join("<br>");
-            ContratoUI.mostrarNotificacion('warning', `<b>⚠️ Faltan Datos Obligatorios</b><br>${unicos}`);
-            const primerError = form.querySelector('.input-error');
-            if (primerError) {
-                primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                if (primerError.tagName !== 'DIV') primerError.focus();
+        if (primerError) {
+            primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (primerError.tagName !== 'DIV') primerError.focus();
+            ContratoUI.mostrarNotificacion('error', 'Faltan campos obligatorios por llenar.');
+            return false;
+        }
+        return true;
+    },
+
+    enviarFormulario: async function (e) {
+        e.preventDefault();
+        const form = ContratoUI.DOM.formDoc;
+        const btn = document.getElementById("btnContinuarDoc");
+        if (!form || !btn) return;
+
+        form.querySelectorAll('.input-error').forEach(el => {
+            el.classList.remove('input-error');
+            el.style.border = '';
+            el.style.backgroundColor = '';
+        });
+
+        let primerError = null;
+
+        const requiredFields = form.querySelectorAll('input[required], select[required]');
+        requiredFields.forEach(c => {
+            const esArchivo = c.type === 'file';
+            const estaVacio = esArchivo ? c.files.length === 0 : !c.value.trim();
+            const elementoVisual = esArchivo ? c.closest('.uploader') : c;
+
+            if (estaVacio) {
+                if (elementoVisual) {
+                    elementoVisual.style.border = "2px solid #ef4444";
+                    if (!esArchivo) elementoVisual.style.backgroundColor = "#fef2f2";
+                    elementoVisual.classList.add('input-error');
+                }
+                if (!primerError) {
+                    primerError = elementoVisual || c;
+                }
             }
+        });
+
+        if (primerError) {
+            primerError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (primerError.tagName !== 'DIV') primerError.focus();
             return;
         }
 
-        // Verificar campos con error visual (clase input-error)
         const errores = form.querySelectorAll('.input-error');
         if (errores.length > 0) {
             errores[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
             errores[0].focus();
-            ContratoUI.mostrarNotificacion('error', `<b>🚫 Datos Inválidos</b><br>Hay campos en rojo. Corrígelos.`);
             return;
         }
 
@@ -750,10 +797,10 @@ const ContratoPaso5 = {
                 if (typeof window.cargarPaso6 === 'function') window.cargarPaso6();
                 if (window.cargarResumenBasico) window.cargarResumenBasico();
             } else {
-                ContratoUI.mostrarNotificacion('error', res.error || "Error al guardar");
+                console.error("Error al guardar:", res.error);
             }
         } catch (err) {
-            ContratoUI.mostrarNotificacion('error', "Error de conexión");
+            console.error("Error de conexión:", err);
         } finally {
             btn.disabled = false;
             btn.innerText = "Guardar y Continuar →";
@@ -801,13 +848,11 @@ const ContratoPaso6 = {
 
             const fM = (v) => window.money ? window.money(v) : `$${parseFloat(v).toFixed(2)} MXN`;
 
-            // Renta y Seguros
             if (document.getElementById("baseDescr")) document.getElementById("baseDescr").textContent = r.base.descripcion;
             if (document.getElementById("baseAmt")) document.getElementById("baseAmt").textContent = fM(r.base.total);
             if (document.getElementById("insDescr")) document.getElementById("insDescr").textContent = r.totales.nombre_seguro || "Protecciones";
             if (document.getElementById("insAmt")) document.getElementById("insAmt").textContent = fM(r.totales.monto_seguros);
 
-            // Extras dinámicos
             const containerExtras = document.getElementById("listaExtrasP6");
             if (containerExtras) {
                 containerExtras.innerHTML = "";
@@ -823,7 +868,6 @@ const ContratoPaso6 = {
                 }
             }
 
-            // Totales
             const totalTexto = fM(r.totales.total_contrato || r.totales.total);
             if (document.getElementById("subtotalAmt")) document.getElementById("subtotalAmt").textContent = fM(r.totales.subtotal);
             if (document.getElementById("ivaOnly")) document.getElementById("ivaOnly").textContent = fM(r.totales.iva);
@@ -833,8 +877,6 @@ const ContratoPaso6 = {
             if (document.getElementById("detSaldo")) document.getElementById("detSaldo").textContent = fM(r.totales.saldo_pendiente);
             if (document.getElementById("detPagos")) document.getElementById("detPagos").textContent = fM(r.pagos.realizados || 0);
 
-            // Garantía: Si el backend no envía estos datos, se ocultan o muestran en blanco.
-            // Para activar la funcionalidad completa, el backend debe incluir `totales.garantia` y `pagos.garantia`.
             const garantiaMonto = r.totales?.garantia?.monto;
             const garantiaPagada = r.pagos?.garantia?.realizados;
             const garantiaPendiente = r.pagos?.garantia?.pendiente;
@@ -965,7 +1007,7 @@ const ContratoPaso6 = {
         const garantiaPendiente = this.obtenerMontoPendienteGarantia();
 
         if (reservaPendiente > 0.009 && garantiaPendiente > 0.009) {
-            btn.textContent = "+ Elegir Pago";
+            btn.textContent = " Elegir Pago";
         } else if (reservaPendiente > 0.009) {
             btn.textContent = "+ Registrar Pago (Reserva)";
         } else if (garantiaPendiente > 0.009) {
@@ -1018,7 +1060,6 @@ const ContratoPaso6 = {
             return;
         }
 
-        // Ambos saldos pendientes: paga garantía primero
         if (saldoReserva > 0.009 && saldoGarantia > 0.009) {
             modal.classList.add("show");
             this.configurarFlujoPago("garantia");
@@ -1110,10 +1151,12 @@ const ContratoPaso6 = {
                             this.abrirModalPago("garantia");
                         });
                     } else {
-                        ContratoUI.mostrarNotificacion('success', flujoAnterior === "garantia" ? "Garantía registrada." : "Pago PayPal exitoso.");
+                        console.log(flujoAnterior === "garantia" ? "Garantía registrada." : "Pago PayPal exitoso.");
                     }
                 },
-                onError: () => ContratoUI.mostrarNotificacion('error', "Error PayPal")
+                onError: () => {
+                    console.error("Error PayPal");
+                }
             }).render("#paypal-button-container-modal");
         } catch (e) {
             console.error("PayPal", e);
@@ -1168,7 +1211,7 @@ const ContratoPaso6 = {
                         this.abrirModalPago("garantia");
                     });
                 } else {
-                    ContratoUI.mostrarNotificacion('success', flujoAnterior === "garantia" ? "Garantía registrada." : "Pago guardado.");
+                    console.log(flujoAnterior === "garantia" ? "Garantía registrada." : "Pago guardado.");
                 }
             } else {
                 if (errBox) errBox.innerText = data.msg || "Error";
@@ -1190,6 +1233,7 @@ const ContratoPaso6 = {
 const ContratoNav = {
     padPaso5: null,
     firmaPrevia: null,
+    firmaPreviaAdicional: null,
 
     init: function () {
         document.getElementById("back_to_step3")?.addEventListener("click", () => {
@@ -1197,7 +1241,10 @@ const ContratoNav = {
             window.location.href = `/admin/contrato/${window.ID_RESERVACION}`;
         });
 
-        document.getElementById("btnSaltarDoc")?.addEventListener("click", () => this.irAlPaso5());
+        document.getElementById("btnSaltarDoc")?.addEventListener("click", () => {
+            if (!ContratoPaso5.validarCamposRequeridos()) return;
+            this.irAlPaso5();
+        });
         document.getElementById("go6")?.addEventListener("click", (e) => this.irAlPaso6(e));
         document.getElementById("back4")?.addEventListener("click", () => {
             if (typeof window.showStep === 'function') window.showStep(4);
@@ -1208,97 +1255,339 @@ const ContratoNav = {
             if (typeof window.actualizarStepper === 'function') window.actualizarStepper(5);
         });
 
-        this.reubicarBotonLimpiar();
     },
-
-    reubicarBotonLimpiar: function () {
-        const contenedor = document.querySelector(".signature-pad-wrapper");
-        const btn = document.getElementById("clearPaso5");
-        if (contenedor && btn && contenedor.contains(btn)) {
-            contenedor.parentNode.insertBefore(btn, contenedor.nextSibling);
-            btn.style.position = 'static';
-            btn.style.marginTop = '10px';
-            btn.style.display = 'inline-block';
-            btn.style.backgroundColor = '#f8fafc';
-            btn.style.border = '1px solid #cbd5e1';
-            btn.style.borderRadius = '8px';
-            btn.style.padding = '6px 16px';
-            btn.style.fontSize = '14px';
-            btn.style.cursor = 'pointer';
-        }
-    },
-
+    /**
+     * CREAR CANVAS PEQUEÑO - SOLO VISUAL (NO SE PUEDE FIRMAR)
+     * La firma se hace ÚNICAMENTE en el modal a pantalla completa
+     * Los botones "Limpiar" se muestran FUERA del modal, en la vista previa
+     */
     inyectarYCrearPad: function () {
-        if (typeof SignaturePad === 'undefined') {
-            console.warn("SignaturePad library not loaded.");
-            return;
-        }
-        const contenedor = document.querySelector(".signature-pad-wrapper");
-        if (!contenedor) return;
+        // === CANVAS DEL TITULAR ===
+        const contenedorTitular = document.querySelector("#firmaPreviewWrapper");
+        if (contenedorTitular) {
+            // Guardar firma previa desde el input oculto
+            const firmaGuardada = document.getElementById('firma_cliente_paso5')?.value;
+            if (firmaGuardada) {
+                this.firmaPrevia = firmaGuardada;
+            }
 
-        if (this.padPaso5 && !this.padPaso5.isEmpty()) {
-            this.firmaPrevia = this.padPaso5.toData();
-        }
+            // Eliminar canvas viejo si existe
+            const canvasViejo = document.getElementById("padPaso5");
+            if (canvasViejo) canvasViejo.remove();
 
-        const canvasViejo = document.getElementById("padPaso5");
-        if (canvasViejo) canvasViejo.remove();
+            let anchoReal = contenedorTitular.clientWidth;
+            let altoReal = contenedorTitular.clientHeight;
+            if (anchoReal === 0 || altoReal === 0) {
+                setTimeout(() => this.inyectarYCrearPad(), 100);
+                return;
+            }
 
-        let anchoReal = contenedor.clientWidth;
-        let altoReal = contenedor.clientHeight;
-        if (anchoReal === 0 || altoReal === 0) {
-            setTimeout(() => this.inyectarYCrearPad(), 100);
-            return;
-        }
-
-        const ratio = Math.max(window.devicePixelRatio || 1, 1);
-        const nuevoCanvas = document.createElement("canvas");
-        nuevoCanvas.id = "padPaso5";
-        nuevoCanvas.style.cssText = `
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            const nuevoCanvas = document.createElement("canvas");
+            nuevoCanvas.id = "padPaso5";
+            nuevoCanvas.style.cssText = `
             display: block;
             width: 100%;
             height: 100%;
             touch-action: none;
-            cursor: crosshair;
-            border-radius: 8px;
+            cursor: default !important;
+            border-radius: 10px;
             background: white;
+            pointer-events: none !important;
+            user-select: none;
         `;
-        nuevoCanvas.width = anchoReal * ratio;
-        nuevoCanvas.height = altoReal * ratio;
+            nuevoCanvas.width = anchoReal * ratio;
+            nuevoCanvas.height = altoReal * ratio;
 
-        const ctx = nuevoCanvas.getContext("2d");
-        ctx.scale(ratio, ratio);
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, anchoReal, altoReal);
+            const ctx = nuevoCanvas.getContext("2d");
+            ctx.scale(ratio, ratio);
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, anchoReal, altoReal);
 
-        contenedor.appendChild(nuevoCanvas);
+            contenedorTitular.appendChild(nuevoCanvas);
 
-        this.padPaso5 = new SignaturePad(nuevoCanvas, {
-            minWidth: 2.5,
-            maxWidth: 4.5,
-            penColor: "#1e293b",
-            velocityFilterWeight: 0.7
-        });
+            // Si hay una firma guardada, mostrarla en el canvas pequeño
+            if (this.firmaPrevia) {
+                this.mostrarFirmaEnCanvasPequeno(this.firmaPrevia);
+            }
 
-        if (this.firmaPrevia) {
-            this.padPaso5.fromData(this.firmaPrevia);
-        }
+            // === CONFIGURAR BOTÓN LIMPIAR DEL TITULAR (FUERA DEL MODAL) ===
+            let btnClearTitular = document.getElementById("clearPaso5");
 
-        this.reubicarBotonLimpiar();
+            // Si no existe, crearlo
+            if (!btnClearTitular) {
+                btnClearTitular = document.createElement("button");
+                btnClearTitular.type = "button";
+                btnClearTitular.id = "clearPaso5";
+                btnClearTitular.textContent = "✕ Limpiar";
+                contenedorTitular.appendChild(btnClearTitular);
+            } else {
+                // Si existe, asegurarse de que esté dentro del wrapper
+                if (!contenedorTitular.contains(btnClearTitular)) {
+                    contenedorTitular.appendChild(btnClearTitular);
+                }
+                btnClearTitular.textContent = "✕ Limpiar";
+            }
 
-        const btnClear = document.getElementById("clearPaso5");
-        if (btnClear) {
-            const newBtn = btnClear.cloneNode(true);
-            btnClear.parentNode.replaceChild(newBtn, btnClear);
-            newBtn.addEventListener("click", () => {
-                this.padPaso5?.clear();
-                this.firmaPrevia = null;
+            // Aplicar estilos (ya están en CSS, pero aseguramos visibilidad)
+            btnClearTitular.style.display = 'block';
+            btnClearTitular.style.position = 'absolute';
+            btnClearTitular.style.bottom = '12px';
+            btnClearTitular.style.right = '12px';
+            btnClearTitular.style.zIndex = '60';
+
+            // Remover eventos anteriores y agregar nuevo
+            const newBtnTitular = btnClearTitular.cloneNode(true);
+            btnClearTitular.parentNode.replaceChild(newBtnTitular, btnClearTitular);
+
+            newBtnTitular.addEventListener("click", function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                // Limpiar canvas pequeño del TITULAR
                 const c = document.getElementById("padPaso5");
                 if (c) {
                     const ct = c.getContext("2d");
                     ct.fillStyle = 'white';
                     ct.fillRect(0, 0, c.width, c.height);
+                    // Mostrar placeholder
+                    const placeholder = document.getElementById('firmaPlaceholderPequeno');
+                    if (placeholder) placeholder.style.display = 'block';
                 }
-            });
+                // Limpiar input oculto del TITULAR
+                const inputOculto = document.getElementById('firma_cliente_paso5');
+                if (inputOculto) inputOculto.value = '';
+                // Ocultar badge del TITULAR
+                const badge = document.getElementById('firmaCompletadaBadge');
+                if (badge) {
+                    badge.style.display = 'none';
+                    badge.style.background = '#dcfce7';
+                    badge.style.color = '#166534';
+                    badge.textContent = '✅ Firma registrada';
+                }
+                // Cambiar texto del botón del TITULAR
+                const btnAbrirTitular = document.getElementById('btnAbrirFirmaModal');
+                if (btnAbrirTitular) {
+                    btnAbrirTitular.innerHTML = '✍️ Firmar como Titular';
+                    btnAbrirTitular.style.background = '#eab308';
+                    btnAbrirTitular.style.color = 'white';
+                }
+                // Limpiar variable
+                this.firmaPrevia = null;
+
+                console.log('🧹 Firma del TITULAR limpiada');
+            }.bind(this));
+
+            console.log('✅ Botón Limpiar del TITULAR configurado en vista previa');
+        }
+
+        // === CANVAS DEL CONDUCTOR ADICIONAL ===
+        const contenedorAdicional = document.querySelector("#firmaPreviewWrapperAdicional");
+        if (contenedorAdicional) {
+            // Guardar firma previa del adicional
+            const firmaGuardadaAdicional = document.getElementById('firma_cliente_paso5_adicional')?.value;
+            if (firmaGuardadaAdicional) {
+                this.firmaPreviaAdicional = firmaGuardadaAdicional;
+            }
+
+            const canvasViejoAdicional = document.getElementById("padPaso5Adicional");
+            if (canvasViejoAdicional) canvasViejoAdicional.remove();
+
+            let anchoRealAdicional = contenedorAdicional.clientWidth;
+            let altoRealAdicional = contenedorAdicional.clientHeight;
+            if (anchoRealAdicional === 0 || altoRealAdicional === 0) {
+                setTimeout(() => this.inyectarYCrearPad(), 100);
+                return;
+            }
+
+            const ratioAdicional = Math.max(window.devicePixelRatio || 1, 1);
+            const nuevoCanvasAdicional = document.createElement("canvas");
+            nuevoCanvasAdicional.id = "padPaso5Adicional";
+            nuevoCanvasAdicional.style.cssText = `
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            cursor: default !important;
+            border-radius: 10px;
+            background: white;
+            pointer-events: none !important;
+            user-select: none;
+        `;
+            nuevoCanvasAdicional.width = anchoRealAdicional * ratioAdicional;
+            nuevoCanvasAdicional.height = altoRealAdicional * ratioAdicional;
+
+            const ctxAdicional = nuevoCanvasAdicional.getContext("2d");
+            ctxAdicional.scale(ratioAdicional, ratioAdicional);
+            ctxAdicional.fillStyle = 'white';
+            ctxAdicional.fillRect(0, 0, anchoRealAdicional, altoRealAdicional);
+
+            contenedorAdicional.appendChild(nuevoCanvasAdicional);
+
+            // Si hay una firma guardada, mostrarla en el canvas pequeño
+            if (this.firmaPreviaAdicional) {
+                this.mostrarFirmaEnCanvasPequenoAdicional(this.firmaPreviaAdicional);
+            }
+
+            // === CONFIGURAR BOTÓN LIMPIAR DEL ADICIONAL (FUERA DEL MODAL) ===
+            let btnClearAdicional = document.getElementById("clearPaso5Adicional");
+
+            if (!btnClearAdicional) {
+                btnClearAdicional = document.createElement("button");
+                btnClearAdicional.type = "button";
+                btnClearAdicional.id = "clearPaso5Adicional";
+                btnClearAdicional.textContent = "✕ Limpiar";
+                contenedorAdicional.appendChild(btnClearAdicional);
+            } else {
+                if (!contenedorAdicional.contains(btnClearAdicional)) {
+                    contenedorAdicional.appendChild(btnClearAdicional);
+                }
+                btnClearAdicional.textContent = "✕ Limpiar";
+            }
+
+            btnClearAdicional.style.display = 'block';
+            btnClearAdicional.style.position = 'absolute';
+            btnClearAdicional.style.bottom = '12px';
+            btnClearAdicional.style.right = '12px';
+            btnClearAdicional.style.zIndex = '60';
+
+            const newBtnAdicional = btnClearAdicional.cloneNode(true);
+            btnClearAdicional.parentNode.replaceChild(newBtnAdicional, btnClearAdicional);
+
+            newBtnAdicional.addEventListener("click", function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                const c = document.getElementById("padPaso5Adicional");
+                if (c) {
+                    const ct = c.getContext("2d");
+                    ct.fillStyle = 'white';
+                    ct.fillRect(0, 0, c.width, c.height);
+                    const placeholder = document.getElementById('firmaPlaceholderAdicional');
+                    if (placeholder) placeholder.style.display = 'block';
+                }
+                const inputOculto = document.getElementById('firma_cliente_paso5_adicional');
+                if (inputOculto) inputOculto.value = '';
+                const badge = document.getElementById('firmaCompletadaBadgeAdicional');
+                if (badge) {
+                    badge.style.display = 'none';
+                    badge.style.background = '#dbeafe';
+                    badge.style.color = '#1e40af';
+                    badge.textContent = '✅ Firma registrada';
+                }
+                const btnAbrirAdicional = document.getElementById('btnAbrirFirmaModalAdicional');
+                if (btnAbrirAdicional) {
+                    btnAbrirAdicional.innerHTML = '✍️ Firmar como Conductor Adicional';
+                    btnAbrirAdicional.style.background = '#3b82f6';
+                    btnAbrirAdicional.style.color = 'white';
+                }
+                this.firmaPreviaAdicional = null;
+
+                console.log('🧹 Firma del ADICIONAL limpiada');
+            }.bind(this));
+
+            console.log('✅ Botón Limpiar del ADICIONAL configurado en vista previa');
+        }
+
+        console.log('✅ Canvas pequeños creados con botones "Limpiar" en vista previa');
+    },
+    /**
+     * MOSTRAR FIRMA EN CANVAS PEQUEÑO DEL TITULAR (SOLO VISUAL)
+     */
+    mostrarFirmaEnCanvasPequeno: function (firmaDataURL) {
+        const canvas = document.getElementById("padPaso5");
+        if (!canvas) return;
+
+        try {
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.getBoundingClientRect();
+            const width = rect.width || canvas.width || 300;
+            const height = rect.height || canvas.height || 200;
+
+            if (canvas.width === 0 || canvas.height === 0) {
+                canvas.width = width;
+                canvas.height = height;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const img = new Image();
+            img.onload = function () {
+                const ratio = Math.min(
+                    canvas.width / img.width,
+                    canvas.height / img.height
+                );
+                const margen = 0.85;
+                const finalRatio = ratio * margen;
+                const newWidth = img.width * finalRatio;
+                const newHeight = img.height * finalRatio;
+                const x = (canvas.width - newWidth) / 2;
+                const y = (canvas.height - newHeight) / 2;
+                ctx.drawImage(img, x, y, newWidth, newHeight);
+
+                const placeholder = document.getElementById('firmaPlaceholderPequeno');
+                if (placeholder) placeholder.style.display = 'none';
+
+                console.log('✅ Firma del titular mostrada en canvas pequeño');
+            };
+            img.onerror = function () {
+                console.warn('⚠️ No se pudo cargar la firma del titular en el canvas pequeño');
+            };
+            img.src = firmaDataURL;
+        } catch (e) {
+            console.error('Error al mostrar firma del titular en canvas pequeño:', e);
+        }
+    },
+
+    /**
+     * MOSTRAR FIRMA EN CANVAS PEQUEÑO DEL ADICIONAL (SOLO VISUAL)
+     */
+    mostrarFirmaEnCanvasPequenoAdicional: function (firmaDataURL) {
+        const canvas = document.getElementById("padPaso5Adicional");
+        if (!canvas) return;
+
+        try {
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.getBoundingClientRect();
+            const width = rect.width || canvas.width || 300;
+            const height = rect.height || canvas.height || 160;
+
+            if (canvas.width === 0 || canvas.height === 0) {
+                canvas.width = width;
+                canvas.height = height;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const img = new Image();
+            img.onload = function () {
+                const ratio = Math.min(
+                    canvas.width / img.width,
+                    canvas.height / img.height
+                );
+                const margen = 0.85;
+                const finalRatio = ratio * margen;
+                const newWidth = img.width * finalRatio;
+                const newHeight = img.height * finalRatio;
+                const x = (canvas.width - newWidth) / 2;
+                const y = (canvas.height - newHeight) / 2;
+                ctx.drawImage(img, x, y, newWidth, newHeight);
+
+                const placeholder = document.getElementById('firmaPlaceholderAdicional');
+                if (placeholder) placeholder.style.display = 'none';
+
+                console.log('✅ Firma del adicional mostrada en canvas pequeño');
+            };
+            img.onerror = function () {
+                console.warn('⚠️ No se pudo cargar la firma del adicional en el canvas pequeño');
+            };
+            img.src = firmaDataURL;
+        } catch (e) {
+            console.error('Error al mostrar firma del adicional en canvas pequeño:', e);
         }
     },
 
@@ -1313,15 +1602,19 @@ const ContratoNav = {
         if (typeof window.actualizarStepper === 'function') window.actualizarStepper(5);
     },
 
+    // ================================================================
+    // irAlPaso6 - VERSIÓN CORREGIDA (FORZAR AVANCE)
+    // ================================================================
     irAlPaso6: async function (e) {
         const btn = e.target || document.getElementById("go6");
+
+        // Validar lugar de estancia
         const inputEstancia = document.getElementById('lugar_estancia');
         const errorEstancia = document.getElementById('error-estancia');
 
         if (inputEstancia && inputEstancia.value.trim() === '') {
             inputEstancia.style.border = "2px solid #ef4444";
             if (errorEstancia) errorEstancia.style.display = "block";
-            ContratoUI.mostrarNotificacion('warning', '<b>⚠️ Dato Requerido</b><br>Por favor indica el lugar de estancia para continuar.');
             inputEstancia.scrollIntoView({ behavior: 'smooth', block: 'center' });
             inputEstancia.focus();
             return;
@@ -1330,53 +1623,46 @@ const ContratoNav = {
             if (errorEstancia) errorEstancia.style.display = "none";
         }
 
-        if (!this.padPaso5 || this.padPaso5.isEmpty()) {
-            ContratoUI.mostrarNotificacion('warning', '<b>⚠️ Firma Requerida</b><br>El cliente debe firmar el contrato para continuar.');
-            return;
-        }
-
-        const idContrato = document.getElementById("contratoApp")?.dataset.idContrato || window.ID_CONTRATO;
-        if (!idContrato) {
-            ContratoUI.mostrarNotificacion('error', 'Error: No se encontró el ID del contrato para guardar la firma.');
-            return;
-        }
-
-        const textoOriginal = btn.innerText;
-        btn.disabled = true;
-        btn.innerText = "Guardando Firma...";
-
-        try {
-            const firmaBase64 = this.padPaso5.toDataURL("image/png");
-            const token = window.csrfToken || document.querySelector('meta[name="csrf-token"]')?.content;
-
-            const res = await fetch("/contrato/firma-cliente", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": token
-                },
-                body: JSON.stringify({
-                    id_contrato: idContrato,
-                    firma: firmaBase64,
-                    lugar_estancia: inputEstancia ? inputEstancia.value.trim() : null
-                })
-            });
-
-            const data = await res.json();
-            if (data.ok) {
-                if (typeof window.showStep === 'function') window.showStep(6);
-                if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
-                if (typeof window.actualizarStepper === 'function') window.actualizarStepper(6);
-            } else {
-                throw new Error(data.msg || "Error al guardar en el servidor");
+        // NUEVO: persistir firma del titular + lugar de estancia
+        const firmaTitular = document.getElementById('firma_cliente_paso5')?.value || '';
+        if (firmaTitular) {
+            try {
+                if (btn) btn.disabled = true;
+                const resp = await fetch('/contrato/firma-cliente', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': window.csrfToken
+                    },
+                    body: JSON.stringify({
+                        id_contrato: window.ID_CONTRATO,
+                        firma: firmaTitular,
+                        lugar_estancia: inputEstancia ? inputEstancia.value.trim() : ''
+                    })
+                });
+                const data = await resp.json();
+                if (!data.ok) {
+                    console.error('No se guardó la firma:', data.msg);
+                    ContratoUI.mostrarNotificacion('error', data.msg || 'No se pudo guardar la firma.');
+                    if (btn) btn.disabled = false;
+                    return; // no avanzar si el guardado falló
+                }
+            } catch (err) {
+                console.error('Error guardando firma:', err);
+                ContratoUI.mostrarNotificacion('error', 'Error de conexión al guardar la firma.');
+                if (btn) btn.disabled = false;
+                return;
             }
-        } catch (error) {
-            console.error("Error firma:", error);
-            ContratoUI.mostrarNotificacion('error', 'Error al guardar la firma. Intenta de nuevo.');
-        } finally {
-            btn.disabled = false;
-            btn.innerText = textoOriginal;
         }
+
+        // Navegar al Paso 6
+        if (btn) btn.disabled = false;
+        if (typeof window.showStep === 'function') window.showStep(6);
+        if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
+        if (typeof window.actualizarStepper === 'function') window.actualizarStepper(6);
+        if (typeof window.cargarPaso6 === 'function') window.cargarPaso6();
+
+        console.log('✅ Navegando al Paso 6');
     },
 
     sincronizarDatosTablet: function () {
@@ -1424,12 +1710,158 @@ const ContratoNav = {
     }
 };
 
+// ================================================================
+// MÓDULO 5: NAVBAR Y RESUMEN DESPLEGABLE
+// ================================================================
+
+const ContratoNavbar = {
+    init: function () {
+        console.log('🚀 Inicializando Navbar...');
+        this.initResumenToggle();
+        this.initNavbarScrollEffect();
+        this.sincronizarTotalNavbar();
+    },
+
+    initResumenToggle: function () {
+        const btnToggle = document.getElementById('btnToggleDetalle');
+        const detalleContainer = document.getElementById('resumenDetalleContainer');
+        const flechaIcon = document.getElementById('iconoFlechaResumen');
+
+        if (!btnToggle || !detalleContainer) {
+            console.warn('⚠️ No se encontraron los elementos del resumen');
+            return;
+        }
+
+        detalleContainer.classList.remove('visible');
+        detalleContainer.style.display = 'none';
+
+        const toggleResumen = (show) => {
+            if (show) {
+                detalleContainer.style.display = 'block';
+                void detalleContainer.offsetHeight;
+                detalleContainer.classList.add('visible');
+                if (flechaIcon) flechaIcon.classList.add('rotada');
+                console.log('✅ Resumen abierto');
+            } else {
+                detalleContainer.classList.remove('visible');
+                if (flechaIcon) flechaIcon.classList.remove('rotada');
+                setTimeout(() => {
+                    detalleContainer.style.display = 'none';
+                }, 300);
+                console.log('✅ Resumen cerrado');
+            }
+        };
+
+        btnToggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+            e.preventDefault();
+            const isVisible = detalleContainer.classList.contains('visible');
+            toggleResumen(!isVisible);
+        });
+
+        document.addEventListener('click', function (e) {
+            if (detalleContainer.classList.contains('visible')) {
+                if (!btnToggle.contains(e.target) && !detalleContainer.contains(e.target)) {
+                    toggleResumen(false);
+                }
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && detalleContainer.classList.contains('visible')) {
+                toggleResumen(false);
+            }
+        });
+
+        const btnVerDetalle = document.getElementById('btnVerDetalle');
+        const btnOcultarDetalle = document.getElementById('btnOcultarDetalle');
+        const resumenCompacto = document.getElementById('resumenCompacto');
+        const resumenDetalle = document.getElementById('resumenDetalle');
+
+        if (btnVerDetalle && resumenCompacto && resumenDetalle) {
+            btnVerDetalle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                resumenCompacto.style.display = 'none';
+                resumenDetalle.style.display = 'block';
+            });
+        }
+
+        if (btnOcultarDetalle && resumenCompacto && resumenDetalle) {
+            btnOcultarDetalle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                resumenCompacto.style.display = 'block';
+                resumenDetalle.style.display = 'none';
+            });
+        }
+
+        console.log('✅ Toggle del resumen inicializado correctamente');
+    },
+
+    initNavbarScrollEffect: function () {
+        const navbar = document.querySelector('.topbar-contrato');
+        if (!navbar) return;
+        const scrollThreshold = 50;
+
+        const handleScroll = () => {
+            if (window.scrollY > scrollThreshold) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        };
+
+        let ticking = false;
+        window.addEventListener('scroll', function () {
+            if (!ticking) {
+                requestAnimationFrame(function () {
+                    handleScroll();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+        handleScroll();
+    },
+
+    sincronizarTotalNavbar: function () {
+        const totalFinalEl = document.getElementById('r_total_final');
+        const resumenTotalBarra = document.getElementById('resumenTotalBarra');
+        const resumenTotalCompacto = document.getElementById('resumenTotalCompacto');
+        const btnTotalText = document.getElementById('btnTotalTextContrato');
+        const btnTotalUsd = document.getElementById('btnTotalUsdContrato');
+
+        let totalTexto = null;
+        let totalNumerico = 0;
+
+        if (totalFinalEl && totalFinalEl.textContent) {
+            totalTexto = totalFinalEl.textContent;
+            totalNumerico = parseFloat(totalFinalEl.textContent.replace(/[^0-9.-]/g, '')) || 0;
+        } else if (resumenTotalBarra && resumenTotalBarra.textContent) {
+            totalTexto = resumenTotalBarra.textContent;
+            totalNumerico = parseFloat(resumenTotalBarra.textContent.replace(/[^0-9.-]/g, '')) || 0;
+        } else if (resumenTotalCompacto && resumenTotalCompacto.textContent) {
+            totalTexto = resumenTotalCompacto.textContent;
+            totalNumerico = parseFloat(resumenTotalCompacto.textContent.replace(/[^0-9.-]/g, '')) || 0;
+        }
+
+        if (btnTotalText && totalTexto) {
+            btnTotalText.innerHTML = totalTexto;
+        }
+
+        if (btnTotalUsd && totalNumerico > 0) {
+            btnTotalUsd.textContent = `$${(totalNumerico / 18.5).toFixed(2)} USD`;
+        }
+    }
+};
+
 /**
  * INICIALIZACIÓN GLOBAL
  */
 document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.add('sidebar-collapse');
     document.body.classList.remove('sidebar-open');
+
+    ContratoNavbar.init();
 
     if (typeof window.showStep === 'function' && !window.showStep.isPatched) {
         const originalShowStep = window.showStep;
@@ -1474,4 +1906,701 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof window.actualizarStepper === 'function') {
         window.actualizarStepper(pasoInicial);
     }
+
+    // ================================================================
+    // INICIALIZACIÓN DEL MODAL DE FIRMA
+    // ================================================================
+    setTimeout(function () {
+        FirmaModal.init();
+        // Inicializar firma adicional si existe
+        if (document.querySelector('.signature-adicional')) {
+            FirmaModalAdicional.init();
+        }
+    }, 500);
 });
+
+// ================================================================
+// MÓDULO 6: MODAL DE FIRMA - PANTALLA COMPLETA
+// ================================================================
+
+const FirmaModal = {
+    modal: null,
+    canvas: null,
+    pad: null,
+    clienteNombre: '',
+    onSaveCallback: null,
+    isOpen: false,
+
+    init: function () {
+        console.log('🔧 Inicializando FirmaModal...');
+
+        this.modal = document.getElementById('firmaModal');
+        this.canvas = document.getElementById('firmaModalCanvas');
+
+        if (!this.modal || !this.canvas) {
+            console.error('❌ Modal o canvas no encontrados');
+            return;
+        }
+
+        console.log('✅ Modal y canvas encontrados');
+
+        const nombreEl = document.querySelector('.signature-section .txt-primary');
+        this.clienteNombre = nombreEl ? nombreEl.textContent.trim() : 'Cliente';
+        document.getElementById('firmaModalCliente').textContent = this.clienteNombre;
+
+        document.getElementById('firmaModalClose')?.addEventListener('click', () => this.cerrar());
+        document.getElementById('firmaModalLimpiar')?.addEventListener('click', () => this.limpiar());
+        document.getElementById('firmaModalGuardar')?.addEventListener('click', () => this.guardar());
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen) this.cerrar();
+        });
+
+        this.modal.addEventListener('click', (e) => {
+            if (e.target === this.modal) this.cerrar();
+        });
+
+        this.configurarApertura();
+
+        const canvasPequeno = document.getElementById('padPaso5');
+        if (canvasPequeno) {
+            canvasPequeno.style.pointerEvents = 'none';
+            canvasPequeno.style.cursor = 'default';
+        }
+
+        console.log('✅ FirmaModal inicializado correctamente');
+    },
+
+    configurarApertura: function () {
+        const btnAbrir = document.getElementById('btnAbrirFirmaModal');
+        const wrapper = document.getElementById('firmaPreviewWrapper');
+
+        const abrir = () => {
+            console.log('🖱️ Abriendo modal de firma...');
+            this.abrir();
+        };
+
+        if (btnAbrir) {
+            btnAbrir.addEventListener('click', abrir);
+        }
+
+        if (wrapper) {
+            wrapper.addEventListener('click', function (e) {
+                if (!e.target.closest('#clearPaso5')) {
+                    abrir();
+                }
+            });
+        }
+
+        const btnClear = document.getElementById('clearPaso5');
+        if (btnClear) {
+            btnClear.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const canvasPequeno = document.getElementById('padPaso5');
+                if (canvasPequeno) {
+                    const ctx = canvasPequeno.getContext('2d');
+                    ctx.clearRect(0, 0, canvasPequeno.width, canvasPequeno.height);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvasPequeno.width, canvasPequeno.height);
+                }
+                document.getElementById('firma_cliente_paso5').value = '';
+                document.getElementById('firmaCompletadaBadge').style.display = 'none';
+                document.getElementById('firmaPlaceholderPequeno').style.display = 'block';
+                const btnAbrir = document.getElementById('btnAbrirFirmaModal');
+                if (btnAbrir) {
+                    btnAbrir.innerHTML = '✍️ Firmar en Pantalla Completa';
+                    btnAbrir.style.background = '#eab308';
+                }
+            });
+        }
+    },
+
+    handleSave: function (firmaDataURL, firmaData) {
+        const inputOculto = document.getElementById('firma_cliente_paso5');
+        if (inputOculto) {
+            inputOculto.value = firmaDataURL;
+        }
+
+        this.mostrarFirmaEnCanvasPequeno(firmaDataURL);
+
+        const badge = document.getElementById('firmaCompletadaBadge');
+        if (badge) badge.style.display = 'block';
+
+        const btnAbrir = document.getElementById('btnAbrirFirmaModal');
+        if (btnAbrir) {
+            btnAbrir.innerHTML = '✅ Firma Registrada';
+            btnAbrir.style.background = '#22c55e';
+        }
+
+        const placeholderPequeno = document.getElementById('firmaPlaceholderPequeno');
+        if (placeholderPequeno) placeholderPequeno.style.display = 'none';
+
+        console.log('✅ Firma guardada correctamente.');
+        this.cerrar();
+    },
+
+    mostrarFirmaEnCanvasPequeno: function (firmaDataURL) {
+        const canvasPequeno = document.getElementById('padPaso5');
+        if (!canvasPequeno) return;
+
+        try {
+            const ctx = canvasPequeno.getContext('2d');
+            const rect = canvasPequeno.getBoundingClientRect();
+            const width = rect.width || canvasPequeno.width || 300;
+            const height = rect.height || canvasPequeno.height || 200;
+
+            if (canvasPequeno.width === 0 || canvasPequeno.height === 0) {
+                canvasPequeno.width = width;
+                canvasPequeno.height = height;
+            }
+
+            ctx.clearRect(0, 0, canvasPequeno.width, canvasPequeno.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvasPequeno.width, canvasPequeno.height);
+
+            const img = new Image();
+            img.onload = function () {
+                const ratio = Math.min(
+                    canvasPequeno.width / img.width,
+                    canvasPequeno.height / img.height
+                );
+                const margen = 0.90;
+                const finalRatio = ratio * margen;
+                const newWidth = img.width * finalRatio;
+                const newHeight = img.height * finalRatio;
+                const x = (canvasPequeno.width - newWidth) / 2;
+                const y = (canvasPequeno.height - newHeight) / 2;
+                ctx.drawImage(img, x, y, newWidth, newHeight);
+                console.log('✅ Firma mostrada en canvas pequeño');
+            };
+            img.onerror = function () {
+                console.warn('Error al cargar imagen de firma');
+            };
+            img.src = firmaDataURL;
+        } catch (e) {
+            console.error('Error al mostrar firma en canvas pequeño:', e);
+        }
+    },
+
+    mostrarMensaje: function (tipo, texto) {
+        console.log(`[${tipo}] ${texto}`);
+        return;
+    },
+
+    abrir: function () {
+        this.modal?.classList.add('active');
+        this.isOpen = true;
+        setTimeout(() => this.crearCanvas(), 100);
+    },
+
+    cerrar: function () {
+        this.modal?.classList.remove('active');
+        this.isOpen = false;
+        const mensaje = document.getElementById('firmaMensajeEstado');
+        if (mensaje) mensaje.style.display = 'none';
+    },
+
+    crearCanvas: function () {
+        const wrapper = document.getElementById('firmaCanvasWrapper');
+        if (!wrapper) return;
+
+        const rect = wrapper.getBoundingClientRect();
+        const ancho = rect.width || 600;
+        const alto = rect.height || 400;
+
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        this.canvas.width = ancho * ratio;
+        this.canvas.height = alto * ratio;
+        this.canvas.style.width = ancho + 'px';
+        this.canvas.style.height = alto + 'px';
+
+        const ctx = this.canvas.getContext('2d');
+        ctx.scale(ratio, ratio);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, ancho, alto);
+
+        if (this.pad) {
+            this.pad.clear();
+            this.pad = null;
+        }
+
+        this.pad = new SignaturePad(this.canvas, {
+            minWidth: 2.5,
+            maxWidth: 4.5,
+            penColor: '#1e293b',
+            backgroundColor: '#ffffff',
+            velocityFilterWeight: 0.7
+        });
+
+        const placeholder = document.getElementById('firmaPlaceholder');
+        this.pad.onBegin = () => {
+            if (placeholder) placeholder.style.display = 'none';
+        };
+
+        const limpiarOriginal = this.pad.clear.bind(this.pad);
+        this.pad.clear = function () {
+            limpiarOriginal();
+            if (placeholder) placeholder.style.display = 'block';
+        };
+
+        const actualizarPlaceholder = () => {
+            if (this.pad && this.pad.isEmpty()) {
+                if (placeholder) placeholder.style.display = 'block';
+            } else {
+                if (placeholder) placeholder.style.display = 'none';
+            }
+        };
+
+        let resizeTimeout;
+        const resizeHandler = () => {
+            if (!this.isOpen) return;
+            const datos = this.pad?.toData();
+            const nuevoAncho = wrapper.clientWidth;
+            const nuevoAlto = wrapper.clientHeight;
+            if (nuevoAncho > 0 && nuevoAlto > 0) {
+                const nuevoRatio = Math.max(window.devicePixelRatio || 1, 1);
+                this.canvas.width = nuevoAncho * nuevoRatio;
+                this.canvas.height = nuevoAlto * nuevoRatio;
+                this.canvas.style.width = nuevoAncho + 'px';
+                this.canvas.style.height = nuevoAlto + 'px';
+                const nuevoCtx = this.canvas.getContext('2d');
+                nuevoCtx.scale(nuevoRatio, nuevoRatio);
+                nuevoCtx.fillStyle = '#ffffff';
+                nuevoCtx.fillRect(0, 0, nuevoAncho, nuevoAlto);
+                this.pad = new SignaturePad(this.canvas, {
+                    minWidth: 2.5,
+                    maxWidth: 4.5,
+                    penColor: '#1e293b',
+                    backgroundColor: '#ffffff',
+                    velocityFilterWeight: 0.7
+                });
+                if (datos && datos.length > 0) {
+                    this.pad.fromData(datos);
+                }
+                if (this.pad.isEmpty()) {
+                    if (placeholder) placeholder.style.display = 'block';
+                } else {
+                    if (placeholder) placeholder.style.display = 'none';
+                }
+            }
+        };
+
+        const debouncedResize = () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(resizeHandler, 250);
+        };
+
+        if (this._resizeListener) {
+            window.removeEventListener('resize', this._resizeListener);
+        }
+        this._resizeListener = debouncedResize;
+        window.addEventListener('resize', this._resizeListener);
+
+        console.log('✅ Canvas de firma creado');
+    },
+
+    limpiar: function () {
+        if (this.pad) {
+            this.pad.clear();
+            document.getElementById('firmaPlaceholder').style.display = 'block';
+        }
+        document.getElementById('firmaMensajeEstado').style.display = 'none';
+    },
+
+    guardar: function () {
+        if (!this.pad) {
+            console.error('Error: No se pudo capturar la firma.');
+            return;
+        }
+
+        if (this.pad.isEmpty()) {
+            console.warn('Por favor, firma en el área antes de guardar.');
+            return;
+        }
+
+        const btn = document.getElementById('firmaModalGuardar');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '⏳ Guardando...';
+        }
+
+        try {
+            const firmaDataURL = this.pad.toDataURL('image/png');
+            const firmaData = this.pad.toData();
+
+            if (typeof this.onSaveCallback === 'function') {
+                this.onSaveCallback(firmaDataURL, firmaData);
+            } else {
+                const inputOculto = document.getElementById('firma_cliente_paso5');
+                if (inputOculto) {
+                    inputOculto.value = firmaDataURL;
+                }
+
+                this.mostrarFirmaEnCanvasPequeno(firmaDataURL);
+
+                const badge = document.getElementById('firmaCompletadaBadge');
+                if (badge) badge.style.display = 'block';
+
+                const btnAbrir = document.getElementById('btnAbrirFirmaModal');
+                if (btnAbrir) {
+                    btnAbrir.innerHTML = '✅ Firma Registrada';
+                    btnAbrir.style.background = '#22c55e';
+                }
+
+                const placeholderPequeno = document.getElementById('firmaPlaceholderPequeno');
+                if (placeholderPequeno) placeholderPequeno.style.display = 'none';
+
+                console.log('✅ Firma guardada correctamente.');
+                this.cerrar();
+            }
+        } catch (error) {
+            console.error('Error al guardar la firma:', error);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '💾 Guardar Firma';
+            }
+        }
+    }
+};
+
+// Re-inicializar al cambiar al Paso 5
+document.addEventListener('stepChanged', function (e) {
+    if (e.detail && (e.detail.step === 5 || e.detail.step === '5')) {
+        setTimeout(() => FirmaModal.init(), 300);
+        if (document.querySelector('.signature-adicional')) {
+            setTimeout(() => FirmaModalAdicional.init(), 400);
+        }
+    }
+});
+
+// Si existe window.showStep, parchearlo
+if (typeof window.showStep === 'function' && !window.showStep._firmaPatched) {
+    const originalShowStep = window.showStep;
+    window.showStep = function (step, force) {
+        originalShowStep(step, force);
+        if (step === 5 || step === '5') {
+            setTimeout(() => FirmaModal.init(), 400);
+            if (document.querySelector('.signature-adicional')) {
+                setTimeout(() => FirmaModalAdicional.init(), 500);
+            }
+        }
+    };
+    window.showStep._firmaPatched = true;
+}
+
+// ================================================================
+// MÓDULO 7: FIRMA DEL CONDUCTOR ADICIONAL
+// ================================================================
+
+const FirmaModalAdicional = {
+    modal: null,
+    canvas: null,
+    pad: null,
+    clienteNombre: '',
+    isOpen: false,
+
+    init: function () {
+        // Verificar si existe el conductor adicional
+        const signatureAdicional = document.querySelector('.signature-adicional');
+        if (!signatureAdicional) {
+            console.log('ℹ️ No hay conductor adicional, omitiendo firma adicional.');
+            return;
+        }
+
+        console.log('🔧 Inicializando FirmaModalAdicional...');
+
+        this.modal = document.getElementById('firmaModalAdicional');
+        this.canvas = document.getElementById('firmaModalCanvasAdicional');
+
+        if (!this.modal || !this.canvas) {
+            console.error('❌ Modal o canvas adicional no encontrados');
+            return;
+        }
+
+        // Obtener nombre del conductor adicional
+        const nombreEl = document.querySelector('.signature-adicional .txt-primary');
+        this.clienteNombre = nombreEl ? nombreEl.textContent.trim() : 'Conductor Adicional';
+        document.getElementById('firmaModalClienteAdicional').textContent = this.clienteNombre;
+
+        // Eventos
+        document.getElementById('firmaModalCloseAdicional')?.addEventListener('click', () => this.cerrar());
+        document.getElementById('firmaModalLimpiarAdicional')?.addEventListener('click', () => this.limpiar());
+        document.getElementById('firmaModalGuardarAdicional')?.addEventListener('click', () => this.guardar());
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isOpen) this.cerrar();
+        });
+
+        this.modal.addEventListener('click', (e) => {
+            if (e.target === this.modal) this.cerrar();
+        });
+
+        this.configurarApertura();
+
+        console.log('✅ FirmaModalAdicional inicializado correctamente');
+    },
+
+    configurarApertura: function () {
+        const btnAbrir = document.getElementById('btnAbrirFirmaModalAdicional');
+        const wrapper = document.getElementById('firmaPreviewWrapperAdicional');
+
+        const abrir = () => {
+            console.log('🖱️ Abriendo modal de firma adicional...');
+            this.abrir();
+        };
+
+        if (btnAbrir) {
+            btnAbrir.addEventListener('click', abrir);
+        }
+
+        if (wrapper) {
+            wrapper.addEventListener('click', function (e) {
+                if (!e.target.closest('#clearPaso5Adicional')) {
+                    abrir();
+                }
+            });
+        }
+
+        const btnClear = document.getElementById('clearPaso5Adicional');
+        if (btnClear) {
+            btnClear.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const canvasPequeno = document.getElementById('padPaso5Adicional');
+                if (canvasPequeno) {
+                    const ctx = canvasPequeno.getContext('2d');
+                    ctx.clearRect(0, 0, canvasPequeno.width, canvasPequeno.height);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvasPequeno.width, canvasPequeno.height);
+                }
+                document.getElementById('firma_cliente_paso5_adicional').value = '';
+                document.getElementById('firmaCompletadaBadgeAdicional').style.display = 'none';
+                document.getElementById('firmaPlaceholderAdicional').style.display = 'block';
+                const btnAbrir = document.getElementById('btnAbrirFirmaModalAdicional');
+                if (btnAbrir) {
+                    btnAbrir.innerHTML = '✍️ Firmar como Conductor Adicional';
+                    btnAbrir.style.background = '#3b82f6';
+                }
+            });
+        }
+    },
+
+    abrir: function () {
+        this.modal?.classList.add('active');
+        this.isOpen = true;
+        setTimeout(() => this.crearCanvas(), 100);
+    },
+
+    cerrar: function () {
+        this.modal?.classList.remove('active');
+        this.isOpen = false;
+        const mensaje = document.getElementById('firmaMensajeEstadoAdicional');
+        if (mensaje) mensaje.style.display = 'none';
+    },
+
+    crearCanvas: function () {
+        const wrapper = document.getElementById('firmaCanvasWrapperAdicional');
+        if (!wrapper) return;
+
+        const rect = wrapper.getBoundingClientRect();
+        const ancho = rect.width || 600;
+        const alto = rect.height || 400;
+
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        this.canvas.width = ancho * ratio;
+        this.canvas.height = alto * ratio;
+        this.canvas.style.width = ancho + 'px';
+        this.canvas.style.height = alto + 'px';
+
+        const ctx = this.canvas.getContext('2d');
+        ctx.scale(ratio, ratio);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, ancho, alto);
+
+        if (this.pad) {
+            this.pad.clear();
+            this.pad = null;
+        }
+
+        this.pad = new SignaturePad(this.canvas, {
+            minWidth: 2.5,
+            maxWidth: 4.5,
+            penColor: '#1e293b',
+            backgroundColor: '#ffffff',
+            velocityFilterWeight: 0.7
+        });
+
+        const placeholder = document.getElementById('firmaPlaceholderAdicionalModal');
+        this.pad.onBegin = () => {
+            if (placeholder) placeholder.style.display = 'none';
+        };
+
+        const limpiarOriginal = this.pad.clear.bind(this.pad);
+        this.pad.clear = function () {
+            limpiarOriginal();
+            if (placeholder) placeholder.style.display = 'block';
+        };
+
+        const actualizarPlaceholder = () => {
+            if (this.pad && this.pad.isEmpty()) {
+                if (placeholder) placeholder.style.display = 'block';
+            } else {
+                if (placeholder) placeholder.style.display = 'none';
+            }
+        };
+
+        let resizeTimeout;
+        const resizeHandler = () => {
+            if (!this.isOpen) return;
+            const datos = this.pad?.toData();
+            const nuevoAncho = wrapper.clientWidth;
+            const nuevoAlto = wrapper.clientHeight;
+            if (nuevoAncho > 0 && nuevoAlto > 0) {
+                const nuevoRatio = Math.max(window.devicePixelRatio || 1, 1);
+                this.canvas.width = nuevoAncho * nuevoRatio;
+                this.canvas.height = nuevoAlto * nuevoRatio;
+                this.canvas.style.width = nuevoAncho + 'px';
+                this.canvas.style.height = nuevoAlto + 'px';
+                const nuevoCtx = this.canvas.getContext('2d');
+                nuevoCtx.scale(nuevoRatio, nuevoRatio);
+                nuevoCtx.fillStyle = '#ffffff';
+                nuevoCtx.fillRect(0, 0, nuevoAncho, nuevoAlto);
+                this.pad = new SignaturePad(this.canvas, {
+                    minWidth: 2.5,
+                    maxWidth: 4.5,
+                    penColor: '#1e293b',
+                    backgroundColor: '#ffffff',
+                    velocityFilterWeight: 0.7
+                });
+                if (datos && datos.length > 0) {
+                    this.pad.fromData(datos);
+                }
+                if (this.pad.isEmpty()) {
+                    if (placeholder) placeholder.style.display = 'block';
+                } else {
+                    if (placeholder) placeholder.style.display = 'none';
+                }
+            }
+        };
+
+        const debouncedResize = () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(resizeHandler, 250);
+        };
+
+        if (this._resizeListener) {
+            window.removeEventListener('resize', this._resizeListener);
+        }
+        this._resizeListener = debouncedResize;
+        window.addEventListener('resize', this._resizeListener);
+
+        console.log('✅ Canvas de firma adicional creado');
+    },
+
+    limpiar: function () {
+        if (this.pad) {
+            this.pad.clear();
+            document.getElementById('firmaPlaceholderAdicionalModal').style.display = 'block';
+        }
+        document.getElementById('firmaMensajeEstadoAdicional').style.display = 'none';
+    },
+
+    guardar: function () {
+        if (!this.pad) {
+            console.error('Error: No se pudo capturar la firma adicional.');
+            return;
+        }
+
+        if (this.pad.isEmpty()) {
+            console.warn('Por favor, firma en el área antes de guardar.');
+            return;
+        }
+
+        const btn = document.getElementById('firmaModalGuardarAdicional');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '⏳ Guardando...';
+        }
+
+        try {
+            const firmaDataURL = this.pad.toDataURL('image/png');
+
+            // Guardar en el input oculto
+            const inputOculto = document.getElementById('firma_cliente_paso5_adicional');
+            if (inputOculto) {
+                inputOculto.value = firmaDataURL;
+            }
+
+            // Mostrar en el canvas pequeño
+            this.mostrarFirmaEnCanvasPequeno(firmaDataURL);
+
+            // Mostrar badge de completado
+            const badge = document.getElementById('firmaCompletadaBadgeAdicional');
+            if (badge) badge.style.display = 'block';
+
+            // Cambiar texto del botón
+            const btnAbrir = document.getElementById('btnAbrirFirmaModalAdicional');
+            if (btnAbrir) {
+                btnAbrir.innerHTML = '✅ Firma Registrada';
+                btnAbrir.style.background = '#22c55e';
+            }
+
+            // Ocultar placeholder
+            const placeholder = document.getElementById('firmaPlaceholderAdicional');
+            if (placeholder) placeholder.style.display = 'none';
+
+            console.log('✅ Firma adicional guardada correctamente.');
+            this.cerrar();
+        } catch (error) {
+            console.error('Error al guardar la firma adicional:', error);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '💾 Guardar Firma';
+            }
+        }
+    },
+
+    mostrarFirmaEnCanvasPequeno: function (firmaDataURL) {
+        const canvasPequeno = document.getElementById('padPaso5Adicional');
+        if (!canvasPequeno) return;
+
+        try {
+            const ctx = canvasPequeno.getContext('2d');
+            const rect = canvasPequeno.getBoundingClientRect();
+            const width = rect.width || canvasPequeno.width || 300;
+            const height = rect.height || canvasPequeno.height || 160;
+
+            if (canvasPequeno.width === 0 || canvasPequeno.height === 0) {
+                canvasPequeno.width = width;
+                canvasPequeno.height = height;
+            }
+
+            ctx.clearRect(0, 0, canvasPequeno.width, canvasPequeno.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvasPequeno.width, canvasPequeno.height);
+
+            const img = new Image();
+            img.onload = function () {
+                const ratio = Math.min(
+                    canvasPequeno.width / img.width,
+                    canvasPequeno.height / img.height
+                );
+                const margen = 0.90;
+                const finalRatio = ratio * margen;
+                const newWidth = img.width * finalRatio;
+                const newHeight = img.height * finalRatio;
+                const x = (canvasPequeno.width - newWidth) / 2;
+                const y = (canvasPequeno.height - newHeight) / 2;
+                ctx.drawImage(img, x, y, newWidth, newHeight);
+                console.log('✅ Firma adicional mostrada en canvas pequeño');
+            };
+            img.onerror = function () {
+                console.warn('Error al cargar imagen de firma adicional');
+            };
+            img.src = firmaDataURL;
+        } catch (e) {
+            console.error('Error al mostrar firma adicional en canvas pequeño:', e);
+        }
+    }
+};

@@ -365,6 +365,7 @@
                         </div>
 
                         <div class="visor-totals">
+                            <input type="hidden" id="tarifaBaseReserva" value="{{ $baseCategoria }}">
                             <div class="visor-total-item"><strong>Subtotal:</strong> ${{ number_format($subtotal, 2) }}</div>
                             <div class="visor-total-item"><strong>IVA:</strong> ${{ number_format($iva, 2) }}</div>
                             <div class="visor-total-item visor-total-main"><strong>Total:</strong> ${{ number_format($total, 2) }}</div>

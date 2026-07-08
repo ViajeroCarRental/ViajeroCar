@@ -332,15 +332,17 @@
                                                     {{ __('Where does your trip begin?') }}
                                                 </option>
                                                 @foreach ($ciudadesPickup as $ciudad)
-                                                    <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
-                                                        @foreach ($ciudad->sucursalesActivas as $suc)
-                                                            <option value="{{ $suc->id_sucursal }}"
-                                                                    data-icon="{{ $suc->icon_class }}"
-                                                                    {{ (string) $pickupSucursalId === (string) $suc->id_sucursal ? 'selected' : '' }}>
-                                                                {{ $suc->nombre }}
-                                                            </option>
-                                                        @endforeach
-                                                    </optgroup>
+                                                    @if ($ciudad->sucursalesActivas->isNotEmpty())
+                                                        <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
+                                                            @foreach ($ciudad->sucursalesActivas as $suc)
+                                                                <option value="{{ $suc->id_sucursal }}"
+                                                                        data-icon="{{ $suc->icon_class }}"
+                                                                        {{ (string) $pickupSucursalId === (string) $suc->id_sucursal ? 'selected' : '' }}>
+                                                                    {{ $suc->nombre }}
+                                                                </option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                    @endif
                                                 @endforeach
                                             </select>
                                         </div>
@@ -356,15 +358,17 @@
                                                     {{ __('Where does your trip end?') }}
                                                 </option>
                                                 @foreach ($ciudadesDropoff as $ciudad)
-                                                    <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
-                                                        @foreach ($ciudad->sucursalesActivas as $suc)
-                                                            <option value="{{ $suc->id_sucursal }}"
-                                                                    data-icon="{{ $suc->icon_class }}"
-                                                                    {{ (string) $dropoffSucursalId === (string) $suc->id_sucursal ? 'selected' : '' }}>
-                                                                {{ $suc->nombre }}
-                                                            </option>
-                                                        @endforeach
-                                                    </optgroup>
+                                                    @if ($ciudad->sucursalesActivas->isNotEmpty())
+                                                        <optgroup label="{{ $ciudad->nombre }}{{ $ciudad->estado ? ' — ' . $ciudad->estado : '' }}">
+                                                            @foreach ($ciudad->sucursalesActivas as $suc)
+                                                                <option value="{{ $suc->id_sucursal }}"
+                                                                        data-icon="{{ $suc->icon_class }}"
+                                                                        {{ (string) $dropoffSucursalId === (string) $suc->id_sucursal ? 'selected' : '' }}>
+                                                                    {{ $suc->nombre }}
+                                                                </option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                    @endif
                                                 @endforeach
                                             </select>
                                         </div>
@@ -683,7 +687,7 @@
                             </div>
 
                             <div class="equip-grid">
-                                @forelse($serviciosFiltrados as $srv)
+                                @forelse($servicios as $srv)
                                     @php
                                         $locale = app()->getLocale();
                                         $isUSD = $locale === 'en';
@@ -1128,10 +1132,10 @@
                             </div>
                         </div>
 
-                        @isset($servicios)
+                        @isset($serviciosCalculo)
                             <script id="addonsCatalog" type="application/json">
                             {!! json_encode(
-                                collect($servicios)->mapWithKeys(fn($s) => [
+                                collect($serviciosCalculo)->mapWithKeys(fn($s) => [
                                     (string) $s->id_servicio => [
                                         'nombre' => $s->nombre,
                                         'precio' => (float) $s->precio,

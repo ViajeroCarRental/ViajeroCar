@@ -247,7 +247,7 @@ class ReservacionesController extends Controller
     private function obtenerCatalogos()
     {
         $sucursales = DB::table('sucursales')
-            ->select('id_sucursal', 'id_ciudad', 'nombre')
+            ->select('id_sucursal', 'id_ciudad', 'nombre', 'ver_usuario')
             ->where('activo', true)
             ->orderBy('nombre')
             ->get()
@@ -262,21 +262,34 @@ class ReservacionesController extends Controller
                 return $suc;
             });
 
+        // DROPOFF: todas las sucursales activas (ignora ver_usuario)
         $sucursalesPorCiudad = $sucursales->groupBy('id_ciudad');
 
-        $ciudadesBase = DB::table('ciudades')
+        // PICKUP: solo sucursales visibles para usuario (ver_usuario = 1)
+        $sucursalesPickupPorCiudad = $sucursales
+            ->where('ver_usuario', true)
+            ->groupBy('id_ciudad');
+
+        // Ciudades para el DROPOFF (todas, con sus sucursales sin filtrar)
+        $ciudadesDropoff = DB::table('ciudades')
             ->select('id_ciudad', 'nombre', 'estado', 'pais')
             ->get()
             ->map(function ($c) use ($sucursalesPorCiudad) {
                 $c->sucursalesActivas = $sucursalesPorCiudad->get($c->id_ciudad, collect());
                 return $c;
-            });
+            })
+            ->sortByDesc(fn($c) => $c->nombre === 'Querétaro')
+            ->values();
 
-        // Pickup solo en Querétaro (por ahora)
-        $ciudadesPickup = $ciudadesBase->where('nombre', 'Querétaro');
-
-        // Dropoff: todas las ciudades, con Querétaro primero
-        $ciudadesDropoff = $ciudadesBase
+        // Ciudades para el PICKUP (con sus sucursales filtradas por ver_usuario),
+        // Querétaro primero
+        $ciudadesPickup = DB::table('ciudades')
+            ->select('id_ciudad', 'nombre', 'estado', 'pais')
+            ->get()
+            ->map(function ($c) use ($sucursalesPickupPorCiudad) {
+                $c->sucursalesActivas = $sucursalesPickupPorCiudad->get($c->id_ciudad, collect());
+                return $c;
+            })
             ->sortByDesc(fn($c) => $c->nombre === 'Querétaro')
             ->values();
 
@@ -312,13 +325,10 @@ class ReservacionesController extends Controller
 
         $serviciosProcesados = $this->preprocesarServicios($serviciosRaw, $capacidad);
 
-        $serviciosFiltrados = $serviciosProcesados->filter(function ($s) {
-            $n = mb_strtolower(trim($s->nombre));
-            $esSilla     = str_contains($n, 'baby')       && str_contains($n, 'seat');
-            $esGasolina  = str_contains($n, 'prepaid')    && str_contains($n, 'fuel');
-            $esConductor = str_contains($n, 'additional') && str_contains($n, 'driver');
-            return $esSilla || $esGasolina || $esConductor;
-        })->values();
+        // Servicios para el catálogo de cálculo (incluye los automáticos como el ID 5),
+        // sin el filtro 'usuario'. Se procesan igual para tener precio/formato coherentes.
+        $serviciosCalculoRaw = $this->obtenerServiciosParaCalculo();
+        $serviciosCalculo    = $this->preprocesarServicios($serviciosCalculoRaw, $capacidad);
 
         return [
             'sucursales'         => $sucursales->keyBy('id_sucursal'),
@@ -328,7 +338,7 @@ class ReservacionesController extends Controller
             'isDifferentDropoff' => request('different_dropoff') == '1',
             'categorias'         => $categorias,
             'servicios'          => $serviciosProcesados,
-            'serviciosFiltrados' => $serviciosFiltrados,
+            'serviciosCalculo'   => $serviciosCalculo,
         ];
     }
 
@@ -492,6 +502,7 @@ class ReservacionesController extends Controller
 
             $serviciosDB = DB::table('servicios')
                 ->whereIn('id_servicio', $ids)
+                ->where('usuario', true)
                 ->get()
                 ->keyBy('id_servicio');
 
@@ -547,6 +558,23 @@ class ReservacionesController extends Controller
         return DB::table('servicios')
             ->select('id_servicio', 'nombre', 'descripcion', 'tipo_cobro', 'precio')
             ->where('activo', true)
+            ->where('usuario', true)
+            ->orderBy('nombre')
+            ->get();
+    }
+
+    /**
+     * Servicios para CÁLCULO (catálogo del paso 4), SIN filtrar por 'usuario'.
+     *
+     * Incluye servicios que el sistema agrega automáticamente aunque no se
+     * muestren como card en el paso 3 (ej. conductor menor de 25 = ID 5,
+     * que se agrega por la fecha de nacimiento). Solo exige que estén activos.
+     */
+    private function obtenerServiciosParaCalculo()
+    {
+        return DB::table('servicios')
+            ->select('id_servicio', 'nombre', 'descripcion', 'tipo_cobro', 'precio')
+            ->where('activo', true)
             ->orderBy('nombre')
             ->get();
     }
@@ -586,7 +614,8 @@ class ReservacionesController extends Controller
      */
     public function politicas()
     {
-        $ciudades = $this->obtenerCiudadesConSucursales();
+        $ciudades        = $this->obtenerCiudadesConSucursales();        // PICKUP: respeta ver_usuario
+        $ciudadesDropoff = $this->obtenerCiudadesConSucursalesDropoff(); // DROPOFF: todas las activas (ignora ver_usuario)
 
         $filters = [
             'pickup_sucursal_id'  => null,
@@ -598,12 +627,40 @@ class ReservacionesController extends Controller
         ];
 
         return view('Usuarios.Politicas', [
-            'ciudades' => $ciudades,
-            'filters'  => $filters,
+            'ciudades'        => $ciudades,
+            'ciudadesDropoff' => $ciudadesDropoff,
+            'filters'         => $filters,
         ]);
     }
 
     private function obtenerCiudadesConSucursales()
+    {
+        // PICKUP: solo sucursales activas Y visibles para usuario (ver_usuario).
+        // El flag lo controla el panel admin (Oficinas).
+        $sucursalesPorCiudad = DB::table('sucursales')
+            ->select('id_sucursal', 'id_ciudad', 'nombre')
+            ->where('activo', true)
+            ->where('ver_usuario', true)
+            ->orderBy('nombre')
+            ->get()
+            ->groupBy('id_ciudad');
+
+        return DB::table('ciudades')
+            ->select('id_ciudad', 'nombre', 'estado', 'pais')
+            ->orderByRaw("CASE WHEN nombre = 'Querétaro' THEN 0 ELSE 1 END")
+            ->orderBy('nombre')
+            ->get()
+            ->map(function ($ciudad) use ($sucursalesPorCiudad) {
+                $ciudad->sucursalesActivas = $sucursalesPorCiudad->get($ciudad->id_ciudad, collect());
+                return $ciudad;
+            });
+    }
+
+    /**
+     * DROPOFF (políticas): todas las sucursales activas, SIN filtrar por ver_usuario.
+     * El cliente puede devolver el auto en cualquier sucursal operativa.
+     */
+    private function obtenerCiudadesConSucursalesDropoff()
     {
         $sucursalesPorCiudad = DB::table('sucursales')
             ->select('id_sucursal', 'id_ciudad', 'nombre')

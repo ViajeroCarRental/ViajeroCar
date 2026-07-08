@@ -118,7 +118,7 @@ if (canvasAviso && window.SignaturePad) {
 
 // Abrir modal de aviso y limpiar firma
 btnAbrirModalAviso?.addEventListener("click", () => {
-  if (!modalAviso || !padAviso) return;
+  if (!modalAviso) return;
   modalAviso.style.display = "flex";
   padAviso.clear();
 });
