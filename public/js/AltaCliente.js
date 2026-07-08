@@ -958,6 +958,36 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function autoCalculateRates(rowIndex, changedInput) {
+        const dailyInput = document.querySelector(`.rate-daily-input[data-row-index="${rowIndex}"]`);
+        const weeklyInput = document.querySelector(`.rate-weekly-input[data-row-index="${rowIndex}"]`);
+        const monthlyInput = document.querySelector(`.rate-monthly-input[data-row-index="${rowIndex}"]`);
+
+        if (!dailyInput || !weeklyInput || !monthlyInput) return;
+
+        if (changedInput.classList.contains("rate-weekly-input")) {
+            weeklyInput.dataset.manual = weeklyInput.value.trim() ? "1" : "0";
+            return;
+        }
+
+        if (changedInput.classList.contains("rate-monthly-input")) {
+            monthlyInput.dataset.manual = monthlyInput.value.trim() ? "1" : "0";
+            return;
+        }
+
+        if (!changedInput.classList.contains("rate-daily-input")) return;
+
+        const daily = parseMoney(dailyInput.value);
+
+        if (weeklyInput.dataset.manual !== "1") {
+            weeklyInput.value = daily > 0 ? formatMoneySimple(daily * 7) : "";
+        }
+
+        if (monthlyInput.dataset.manual !== "1") {
+            monthlyInput.value = daily > 0 ? formatMoneySimple(daily * 30) : "";
+        }
+    }
+
     function recalculateRowTotal(rowIndex) {
         const daily = parseMoney(document.querySelector(`.rate-daily-input[data-row-index="${rowIndex}"]`)?.value);
         const weekly = parseMoney(document.querySelector(`.rate-weekly-input[data-row-index="${rowIndex}"]`)?.value);
@@ -1393,6 +1423,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (input.classList.contains('rate-daily-input') ||
                 input.classList.contains('rate-weekly-input') ||
                 input.classList.contains('rate-monthly-input')) {
+
+                autoCalculateRates(input.dataset.rowIndex, input);
                 recalculateRowTotal(input.dataset.rowIndex);
             }
         }
@@ -1470,7 +1502,19 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#btnGenerateResponsivas")?.addEventListener("click", generateResponsivas);
 
     $("#btnViewPdf")?.addEventListener("click", () => {
-        showToast("Vista previa del convenio pendiente de conectar");
+        const form = $("#altaClienteForm");
+        const actionInput = $("#accionPostSubmit");
+
+        if (!form || !actionInput) {
+            showToast("No se encontró el formulario");
+            return;
+        }
+
+        actionInput.value = "generar_pdf";
+
+        console.log("Acción PDF:", actionInput.value);
+
+        form.submit();
     });
 
     $("#btnBack")?.addEventListener("click", () => window.history.back());
