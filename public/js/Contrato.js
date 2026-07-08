@@ -284,179 +284,179 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     })();
 
-// ================================ CALENDARIOS FLATPICKR ===============================
+    // ================================ CALENDARIOS FLATPICKR ===============================
 
-(function inicializarCalendarios() {
-    const pickerE = document.getElementById('pickerEntrega');
-    const pickerD = document.getElementById('pickerDevolucion');
+    (function inicializarCalendarios() {
+        const pickerE = document.getElementById('pickerEntrega');
+        const pickerD = document.getElementById('pickerDevolucion');
 
-    if (!pickerE || !pickerD) {
-        console.warn('⚠️ No se encontraron los inputs de flatpickr');
-        return;
-    }
+        if (!pickerE || !pickerD) {
+            console.warn('⚠️ No se encontraron los inputs de flatpickr');
+            return;
+        }
 
-    console.log('✅ Inicializando calendarios Flatpickr...');
+        console.log('✅ Inicializando calendarios Flatpickr...');
 
-    // Configuración común
-    const commonOptions = {
-        enableTime: true,
-        dateFormat: "Y-m-d H:i",
-        locale: 'es',
-        disableMobile: true,
-        static: false,
-        allowInput: false,
-    };
+        // Configuración común
+        const commonOptions = {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            locale: 'es',
+            disableMobile: true,
+            static: false,
+            allowInput: false,
+        };
 
-    // Guardar valor original para detectar cambios
-    let originalValueE = pickerE.value;
-    let originalValueD = pickerD.value;
+        // Guardar valor original para detectar cambios
+        let originalValueE = pickerE.value;
+        let originalValueD = pickerD.value;
 
-    // =============================================
-    // PICKER ENTREGA
-    // =============================================
-    const fpEntrega = flatpickr(pickerE, {
-        ...commonOptions,
-        positionElement: document.getElementById("tarjetaEntrega"),
-        onChange: function(selectedDates, dateStr, instance) {
-            if (!selectedDates.length) return;
+        // =============================================
+        // PICKER ENTREGA
+        // =============================================
+        const fpEntrega = flatpickr(pickerE, {
+            ...commonOptions,
+            positionElement: document.getElementById("tarjetaEntrega"),
+            onChange: function (selectedDates, dateStr, instance) {
+                if (!selectedDates.length) return;
 
-            const fechaSeleccionada = selectedDates[0];
-            const fechaOriginal = new Date(originalValueE.replace(' ', 'T'));
+                const fechaSeleccionada = selectedDates[0];
+                const fechaOriginal = new Date(originalValueE.replace(' ', 'T'));
 
-            // Si la fecha cambia, solicitar autorización
-            if (fechaSeleccionada.toDateString() !== fechaOriginal.toDateString()) {
-                alertify.confirm(
-                    "⚠️ Requiere Autorización",
-                    "Cambiar la fecha requiere autorización. ¿Enviar solicitud?",
-                    async () => {
-                        try {
-                            const f = fechaSeleccionada.toISOString().split('T')[0];
-                            const h = `${String(fechaSeleccionada.getHours()).padStart(2, '0')}:${String(fechaSeleccionada.getMinutes()).padStart(2, '0')}`;
+                // Si la fecha cambia, solicitar autorización
+                if (fechaSeleccionada.toDateString() !== fechaOriginal.toDateString()) {
+                    alertify.confirm(
+                        "⚠️ Requiere Autorización",
+                        "Cambiar la fecha requiere autorización. ¿Enviar solicitud?",
+                        async () => {
+                            try {
+                                const f = fechaSeleccionada.toISOString().split('T')[0];
+                                const h = `${String(fechaSeleccionada.getHours()).padStart(2, '0')}:${String(fechaSeleccionada.getMinutes()).padStart(2, '0')}`;
 
-                            await fetch('/admin/contrato/solicitar-cambio-fecha', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': window.csrfToken
-                                },
-                                body: JSON.stringify({
-                                    id_reservacion: window.ID_RESERVACION,
-                                    nueva_fecha: f,
-                                    nueva_hora: h
-                                })
-                            });
-                            alertify.success("Solicitud enviada.");
-                        } catch (e) {
-                            instance.setDate(fechaOriginal);
-                        }
-                    },
-                    () => instance.setDate(fechaOriginal)
-                );
-            } else {
-                // Solo cambió la hora, actualizar UI y originalValue
-                originalValueE = dateStr;
-                actualizarUIFechas(fechaSeleccionada, 'entrega');
-                if (window.actualizarFechasYRecalcular) {
-                    window.actualizarFechasYRecalcular();
+                                await fetch('/admin/contrato/solicitar-cambio-fecha', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': window.csrfToken
+                                    },
+                                    body: JSON.stringify({
+                                        id_reservacion: window.ID_RESERVACION,
+                                        nueva_fecha: f,
+                                        nueva_hora: h
+                                    })
+                                });
+                                alertify.success("Solicitud enviada.");
+                            } catch (e) {
+                                instance.setDate(fechaOriginal);
+                            }
+                        },
+                        () => instance.setDate(fechaOriginal)
+                    );
+                } else {
+                    // Solo cambió la hora, actualizar UI y originalValue
+                    originalValueE = dateStr;
+                    actualizarUIFechas(fechaSeleccionada, 'entrega');
+                    if (window.actualizarFechasYRecalcular) {
+                        window.actualizarFechasYRecalcular();
+                    }
                 }
             }
-        }
-    });
-
-    // =============================================
-    // PICKER DEVOLUCIÓN
-    // =============================================
-    const fpDevolucion = flatpickr(pickerD, {
-        ...commonOptions,
-        positionElement: document.getElementById("tarjetaDevolucion"),
-
-        onChange: function(selectedDates, dateStr, instance) {
-            if (!selectedDates.length) return;
-
-            // Validar que la devolución sea después de la entrega
-            const fechaEntrega = fpEntrega.selectedDates[0];
-            const fechaDevolucion = selectedDates[0];
-
-            if (fechaDevolucion < fechaEntrega) {
-                const nuevaFecha = new Date(fechaEntrega);
-                nuevaFecha.setDate(fechaEntrega.getDate() + 1);
-                instance.setDate(nuevaFecha);
-                alertify.warning('Fecha de devolución ajustada automáticamente.');
-            }
-
-            actualizarUIFechas(fechaDevolucion, 'devolucion');
-            pickerD.value = instance.formatDate(fechaDevolucion, "Y-m-d H:i");
-        }
-    });
-
-    // =============================================
-    // FUNCIÓN PARA ACTUALIZAR LA UI DE FECHAS
-    // =============================================
-    function actualizarUIFechas(date, tipo) {
-        if (!date) return;
-
-        const prefix = tipo === 'entrega' ? 'Entrega' : 'Devolucion';
-
-        // Actualizar día, mes y año
-        document.getElementById(`txtDia${prefix}`).textContent = String(date.getDate()).padStart(2, '0');
-        document.getElementById(`txtMes${prefix}`).textContent = date.toLocaleString('es', { month: 'short' }).toUpperCase();
-        document.getElementById(`txtAnio${prefix}`).textContent = date.getFullYear();
-
-        // Actualizar hora
-        const horas = date.getHours();
-        const ampm = horas >= 12 ? 'PM' : 'AM';
-        const hora12 = horas % 12 || 12;
-        document.getElementById(`txtHora${prefix}`).textContent =
-            `${String(hora12).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')} ${ampm}`;
-    }
-
-    // =============================================
-    // EVENTOS PARA ABRIR EL CALENDARIO AL HACER CLICK EN LAS TARJETAS
-    // =============================================
-    const tarjetaEntrega = document.getElementById('tarjetaEntrega');
-    const tarjetaDevolucion = document.getElementById('tarjetaDevolucion');
-
-    if (tarjetaEntrega) {
-        tarjetaEntrega.addEventListener('click', function(e) {
-            // No abrir si se hizo clic en el input directamente
-            if (e.target.closest('.flatpickr-input')) return;
-
-            const ahora = new Date();
-            const fechaSeleccionada = fpEntrega.selectedDates[0];
-
-            // Si la fecha seleccionada es hoy, actualizar a la hora actual
-            if (fechaSeleccionada && fechaSeleccionada.toDateString() === ahora.toDateString()) {
-                fpEntrega.setDate(ahora);
-                actualizarUIFechas(ahora, 'entrega');
-            }
-
-            fpEntrega.open();
         });
-    }
 
-    if (tarjetaDevolucion) {
-        tarjetaDevolucion.addEventListener('click', function(e) {
-            if (e.target.closest('.flatpickr-input')) return;
-            fpDevolucion.open();
+        // =============================================
+        // PICKER DEVOLUCIÓN
+        // =============================================
+        const fpDevolucion = flatpickr(pickerD, {
+            ...commonOptions,
+            positionElement: document.getElementById("tarjetaDevolucion"),
+
+            onChange: function (selectedDates, dateStr, instance) {
+                if (!selectedDates.length) return;
+
+                // Validar que la devolución sea después de la entrega
+                const fechaEntrega = fpEntrega.selectedDates[0];
+                const fechaDevolucion = selectedDates[0];
+
+                if (fechaDevolucion < fechaEntrega) {
+                    const nuevaFecha = new Date(fechaEntrega);
+                    nuevaFecha.setDate(fechaEntrega.getDate() + 1);
+                    instance.setDate(nuevaFecha);
+                    alertify.warning('Fecha de devolución ajustada automáticamente.');
+                }
+
+                actualizarUIFechas(fechaDevolucion, 'devolucion');
+                pickerD.value = instance.formatDate(fechaDevolucion, "Y-m-d H:i");
+            }
         });
-    }
 
-    // =============================================
-    // ACTUALIZAR UI INICIAL
-    // =============================================
-    if (fpEntrega.selectedDates.length > 0) {
-        actualizarUIFechas(fpEntrega.selectedDates[0], 'entrega');
-    }
-    if (fpDevolucion.selectedDates.length > 0) {
-        actualizarUIFechas(fpDevolucion.selectedDates[0], 'devolucion');
-    }
+        // =============================================
+        // FUNCIÓN PARA ACTUALIZAR LA UI DE FECHAS
+        // =============================================
+        function actualizarUIFechas(date, tipo) {
+            if (!date) return;
 
-    // Exponer funciones globalmente para usar desde otros lugares
-    window.fpEntrega = fpEntrega;
-    window.fpDevolucion = fpDevolucion;
+            const prefix = tipo === 'entrega' ? 'Entrega' : 'Devolucion';
 
-    console.log('✅ Calendarios Flatpickr configurados correctamente');
-})();
+            // Actualizar día, mes y año
+            document.getElementById(`txtDia${prefix}`).textContent = String(date.getDate()).padStart(2, '0');
+            document.getElementById(`txtMes${prefix}`).textContent = date.toLocaleString('es', { month: 'short' }).toUpperCase();
+            document.getElementById(`txtAnio${prefix}`).textContent = date.getFullYear();
+
+            // Actualizar hora
+            const horas = date.getHours();
+            const ampm = horas >= 12 ? 'PM' : 'AM';
+            const hora12 = horas % 12 || 12;
+            document.getElementById(`txtHora${prefix}`).textContent =
+                `${String(hora12).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')} ${ampm}`;
+        }
+
+        // =============================================
+        // EVENTOS PARA ABRIR EL CALENDARIO AL HACER CLICK EN LAS TARJETAS
+        // =============================================
+        const tarjetaEntrega = document.getElementById('tarjetaEntrega');
+        const tarjetaDevolucion = document.getElementById('tarjetaDevolucion');
+
+        if (tarjetaEntrega) {
+            tarjetaEntrega.addEventListener('click', function (e) {
+                // No abrir si se hizo clic en el input directamente
+                if (e.target.closest('.flatpickr-input')) return;
+
+                const ahora = new Date();
+                const fechaSeleccionada = fpEntrega.selectedDates[0];
+
+                // Si la fecha seleccionada es hoy, actualizar a la hora actual
+                if (fechaSeleccionada && fechaSeleccionada.toDateString() === ahora.toDateString()) {
+                    fpEntrega.setDate(ahora);
+                    actualizarUIFechas(ahora, 'entrega');
+                }
+
+                fpEntrega.open();
+            });
+        }
+
+        if (tarjetaDevolucion) {
+            tarjetaDevolucion.addEventListener('click', function (e) {
+                if (e.target.closest('.flatpickr-input')) return;
+                fpDevolucion.open();
+            });
+        }
+
+        // =============================================
+        // ACTUALIZAR UI INICIAL
+        // =============================================
+        if (fpEntrega.selectedDates.length > 0) {
+            actualizarUIFechas(fpEntrega.selectedDates[0], 'entrega');
+        }
+        if (fpDevolucion.selectedDates.length > 0) {
+            actualizarUIFechas(fpDevolucion.selectedDates[0], 'devolucion');
+        }
+
+        // Exponer funciones globalmente para usar desde otros lugares
+        window.fpEntrega = fpEntrega;
+        window.fpDevolucion = fpDevolucion;
+
+        console.log('✅ Calendarios Flatpickr configurados correctamente');
+    })();
 
     // ================================ VEHÍCULOS Y UPGRADES ===============================
 
@@ -587,9 +587,13 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
+        let categoriaEnProceso = false;
+
         contenedorCategorias?.addEventListener("click", async (e) => {
             const card = e.target.closest(".card-categoria");
             if (!card) return;
+
+            if (categoriaEnProceso) return;
 
             const idCategoria = card.dataset.idCategoria;
             const nombreCat = card.dataset.nombre || "";
@@ -600,15 +604,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const inputE = $elId("inputOcultoEntrega");
-            const inputD = $elId("inputOcultoDevolucion");
+            const inputE = $elId("pickerEntrega");
+            const inputD = $elId("pickerDevolucion");
 
             if (!inputE?.value || !inputD?.value) {
                 return ContratoUI.notify("error", "No se pudieron leer las fechas de la reservación.");
             }
 
-            const [fechaInicio, horaInicio] = inputE.value.split("T");
-            const [fechaFin, horaFin] = inputD.value.split("T");
+            const [fechaInicio, horaInicio] = inputE.value.split(" ");
+            const [fechaFin, horaFin] = inputD.value.split(" ");
+
+            categoriaEnProceso = true;
+            card.style.opacity = "0.5";
+            card.style.pointerEvents = "none";
+            contenedorCategorias.style.pointerEvents = "none";
 
             try {
                 const result = await ContratoAPI.postJSON(
@@ -632,16 +641,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
 
                     if (elInicial) {
-            elInicial.dataset.idCategoria = idCategoria;
-            elInicial.dataset.codigoCategoria = codigoCat;
-        }
-        document.dispatchEvent(new CustomEvent('categoriaCambiada', {
-            detail: { categoria: codigoCat, id: idCategoria, nombre: nombreCat }
-        }));
+                        elInicial.dataset.idCategoria = idCategoria;
+                        elInicial.dataset.codigoCategoria = codigoCat;
+                    }
+                    document.dispatchEvent(new CustomEvent('categoriaCambiada', {
+                        detail: { categoria: codigoCat, id: idCategoria, nombre: nombreCat }
+                    }));
 
-if (typeof actualizarTodasLasGarantias === "function") {
-    actualizarTodasLasGarantias();
-}
+                    if (typeof actualizarTodasLasGarantias === "function") {
+                        actualizarTodasLasGarantias();
+                    }
 
                     const badge = document.createElement("span");
                     badge.className = "cat-badge-actual";
@@ -660,6 +669,11 @@ if (typeof actualizarTodasLasGarantias === "function") {
             } catch (err) {
                 console.error("Error al cambiar categoría:", err);
                 ContratoUI.notify("error", "Error de conexión al cambiar categoría.");
+            } finally {
+                categoriaEnProceso = false;
+                card.style.opacity = "1";
+                card.style.pointerEvents = "";
+                contenedorCategorias.style.pointerEvents = "";
             }
         });
     })();
@@ -955,40 +969,40 @@ if (typeof actualizarTodasLasGarantias === "function") {
 
     // ================================ TOGGLE DEL RESUMEN ===============================
 
-const btnToggleDetalle = document.getElementById('btnToggleDetalle');
-const resumenContainer = document.getElementById('resumenDetalleContainer');
-const iconoFlecha = document.getElementById('iconoFlechaResumen');
+    const btnToggleDetalle = document.getElementById('btnToggleDetalle');
+    const resumenContainer = document.getElementById('resumenDetalleContainer');
+    const iconoFlecha = document.getElementById('iconoFlechaResumen');
 
-if (btnToggleDetalle && resumenContainer) {
-    btnToggleDetalle.addEventListener('click', function(e) {
-        e.stopPropagation();
+    if (btnToggleDetalle && resumenContainer) {
+        btnToggleDetalle.addEventListener('click', function (e) {
+            e.stopPropagation();
 
-        // Alternar la clase 'abierto' para mostrar/ocultar
-        const estaAbierto = resumenContainer.classList.contains('abierto');
+            // Alternar la clase 'abierto' para mostrar/ocultar
+            const estaAbierto = resumenContainer.classList.contains('abierto');
 
-        if (estaAbierto) {
-            resumenContainer.classList.remove('abierto');
-            resumenContainer.style.display = 'none';
-            if (iconoFlecha) iconoFlecha.style.transform = 'rotate(0deg)';
-        } else {
-            resumenContainer.classList.add('abierto');
-            resumenContainer.style.display = 'block';
-            if (iconoFlecha) iconoFlecha.style.transform = 'rotate(180deg)';
-        }
-    });
-
-    // Opcional: Cerrar el resumen al hacer clic fuera de él
-    document.addEventListener('click', function(e) {
-        if (resumenContainer.classList.contains('abierto')) {
-            const isClickInside = btnToggleDetalle.contains(e.target) || resumenContainer.contains(e.target);
-            if (!isClickInside) {
+            if (estaAbierto) {
                 resumenContainer.classList.remove('abierto');
                 resumenContainer.style.display = 'none';
                 if (iconoFlecha) iconoFlecha.style.transform = 'rotate(0deg)';
+            } else {
+                resumenContainer.classList.add('abierto');
+                resumenContainer.style.display = 'block';
+                if (iconoFlecha) iconoFlecha.style.transform = 'rotate(180deg)';
             }
-        }
-    });
-}
+        });
+
+        // Opcional: Cerrar el resumen al hacer clic fuera de él
+        document.addEventListener('click', function (e) {
+            if (resumenContainer.classList.contains('abierto')) {
+                const isClickInside = btnToggleDetalle.contains(e.target) || resumenContainer.contains(e.target);
+                if (!isClickInside) {
+                    resumenContainer.classList.remove('abierto');
+                    resumenContainer.style.display = 'none';
+                    if (iconoFlecha) iconoFlecha.style.transform = 'rotate(0deg)';
+                }
+            }
+        });
+    }
 
     // ================================ PASO 2: SERVICIOS ===============================
 
@@ -1059,68 +1073,65 @@ if (btnToggleDetalle && resumenContainer) {
                         precio_unitario: card.dataset.precio
                     });
 
-                    setTimeout(() => {
-                        if (typeof window.cargarResumenBasico === 'function') {
-                            window.cargarResumenBasico();
-                        }
-                    }, 150);
-
+                    if (typeof window.cargarResumenBasico === 'function') {
+                        window.cargarResumenBasico();
+                    }
                 } catch (err) {
                     console.error("Error al guardar el servicio:", err);
                     if (typeof window.cargarResumenBasico === 'function') {
                         window.cargarResumenBasico();
                     }
                 }
-            }, 400);
+            }, 250);
         });
     }
 
     // ================================ PASO 3: SEGUROS ===============================
 
-   function recalcularTotalProtecciones() {
-    const display = $elId("total_seguros");
-    const btnGo = $elId("go4");
+    function recalcularTotalProtecciones() {
+        const display = $elId("total_seguros");
+        const btnGo = $elId("go4");
 
-    let subtotalPorDia = 0;
-    let haySeleccion = false;
+        let subtotalPorDia = 0;
+        let haySeleccion = false;
 
-    const packActive = document.querySelector(".input-paquete:checked");
-    if (packActive) {
-        const seguroItem = packActive.closest(".seguro-item");
-        if (seguroItem) {
-            subtotalPorDia = parseFloat(seguroItem.dataset.precio || 0);
-            haySeleccion = true;
-        }
-    } else {
-        const individualesActivos = document.querySelectorAll(".switch-individual:checked");
-        if (individualesActivos.length > 0) {
-            haySeleccion = true;
-            individualesActivos.forEach(checkbox => {
-                const individualItem = checkbox.closest(".individual-item");
-                if (individualItem) {
-                    subtotalPorDia += parseFloat(individualItem.dataset.precio || 0);
-                }
-            });
-        }
-    }
-
-    if (display) {
-        const diasRenta = parseInt($elId("detDiasRenta")?.textContent || 1);
-        display.textContent = ContratoUI.money(subtotalPorDia * diasRenta);
-    }
-
-    if (btnGo) {
-        if (haySeleccion) {
-            btnGo.classList.remove("disabled");
-            btnGo.style.opacity = "1";
-            btnGo.style.pointerEvents = "auto";
+        const packActive = document.querySelector(".input-paquete:checked");
+        if (packActive) {
+            const seguroItem = packActive.closest(".seguro-item");
+            if (seguroItem) {
+                subtotalPorDia = parseFloat(seguroItem.dataset.precio || 0);
+                haySeleccion = true;
+            }
         } else {
-            btnGo.classList.add("disabled");
-            btnGo.style.opacity = "0.5";
-            btnGo.style.pointerEvents = "none";
+            const individualesActivos = document.querySelectorAll(".switch-individual:checked");
+            if (individualesActivos.length > 0) {
+                haySeleccion = true;
+                individualesActivos.forEach(checkbox => {
+                    const individualItem = checkbox.closest(".individual-item");
+                    if (individualItem) {
+                        subtotalPorDia += parseFloat(individualItem.dataset.precio || 0);
+                    }
+                });
+            }
+        }
+
+        if (display) {
+            const diasRenta = parseInt($elId("detDiasRenta")?.textContent || 1);
+            display.textContent = ContratoUI.money(subtotalPorDia * diasRenta);
+        }
+
+        if (btnGo) {
+            if (haySeleccion) {
+                btnGo.classList.remove("disabled");
+                btnGo.style.opacity = "1";
+                btnGo.style.pointerEvents = "auto";
+            } else {
+                btnGo.classList.add("disabled");
+                btnGo.style.opacity = "0.5";
+                btnGo.style.pointerEvents = "none";
+            }
         }
     }
-}
 
     // --- LÓGICA PARA CAMBIAR VISTAS (PAQUETES VS INDIVIDUALES) ---
     const btnVerPaquetes = $elId('btnVerPaquetes');
@@ -1178,53 +1189,53 @@ if (btnToggleDetalle && resumenContainer) {
         });
     }
 
-   // --- LÓGICA DE SELECCIÓN PARA PAQUETES (Radio Buttons) ---
-if (vistaPaquetes) {
-    vistaPaquetes.addEventListener("change", async (e) => {
-        if (e.target.classList.contains("input-paquete")) {
-            const inputPaquete = e.target;
-            const label = inputPaquete.closest(".seguro-item");
+    // --- LÓGICA DE SELECCIÓN PARA PAQUETES (Radio Buttons) ---
+    if (vistaPaquetes) {
+        vistaPaquetes.addEventListener("change", async (e) => {
+            if (e.target.classList.contains("input-paquete")) {
+                const inputPaquete = e.target;
+                const label = inputPaquete.closest(".seguro-item");
 
-            // 1. Apagar visualmente todos los individuales
-            document.querySelectorAll(".switch-individual").forEach(checkbox => {
-                checkbox.checked = false;
-            });
-
-            recalcularTotalProtecciones();
-
-            try {
-                // 2. Guardar paquete
-                await ContratoAPI.postJSON(`/admin/contrato/seguros`, {
-                    id_reservacion: window.ID_RESERVACION,
-                    id_paquete: inputPaquete.value,
-                    precio_por_dia: label.dataset.precio
+                // 1. Apagar visualmente todos los individuales
+                document.querySelectorAll(".switch-individual").forEach(checkbox => {
+                    checkbox.checked = false;
                 });
 
-                // 3. IMPORTANTE: limpiar individuales del backend
-                document.querySelectorAll(".switch-individual").forEach(async (checkbox) => {
-                    await ContratoAPI.deleteJSON(`/admin/contrato/seguros-individuales`, {
+                recalcularTotalProtecciones();
+
+                try {
+                    // 2. Guardar paquete
+                    await ContratoAPI.postJSON(`/admin/contrato/seguros`, {
                         id_reservacion: window.ID_RESERVACION,
-                        id_seguro: checkbox.dataset.id || checkbox.value
+                        id_paquete: inputPaquete.value,
+                        precio_por_dia: label.dataset.precio
                     });
-                });
 
-                // 4. Recargar resumen de carrito navbar
-                setTimeout(() => {
-                    if (typeof window.cargarResumenBasico === 'function') {
-                        window.cargarResumenBasico();
-                    }
+                    // 3. IMPORTANTE: limpiar individuales del backend
+                    document.querySelectorAll(".switch-individual").forEach(async (checkbox) => {
+                        await ContratoAPI.deleteJSON(`/admin/contrato/seguros-individuales`, {
+                            id_reservacion: window.ID_RESERVACION,
+                            id_seguro: checkbox.dataset.id || checkbox.value
+                        });
+                    });
 
-                    if (typeof copiarResumenNavbarAlModal === 'function') {
-                        copiarResumenNavbarAlModal();
-                    }
-                }, 400);
+                    // 4. Recargar resumen de carrito navbar
+                    setTimeout(() => {
+                        if (typeof window.cargarResumenBasico === 'function') {
+                            window.cargarResumenBasico();
+                        }
 
-            } catch (err) {
-                console.error(err);
+                        if (typeof copiarResumenNavbarAlModal === 'function') {
+                            copiarResumenNavbarAlModal();
+                        }
+                    }, 400);
+
+                } catch (err) {
+                    console.error(err);
+                }
             }
-        }
-    });
-}
+        });
+    }
 
     // --- LÓGICA DE SELECCIÓN PARA INDIVIDUALES (Checkboxes) ---
     if (vistaIndividuales) {
@@ -1236,12 +1247,12 @@ if (vistaPaquetes) {
 
                 // Si prende un individual, desmarcamos los paquetes completos
                 if (estaPrendido) {
-    document.querySelectorAll(".input-paquete").forEach(radio => radio.checked = false);
+                    document.querySelectorAll(".input-paquete").forEach(radio => radio.checked = false);
 
-    await ContratoAPI.deleteJSON(`/admin/contrato/seguros`, {
-        id_reservacion: window.ID_RESERVACION
-    });
-}
+                    await ContratoAPI.deleteJSON(`/admin/contrato/seguros`, {
+                        id_reservacion: window.ID_RESERVACION
+                    });
+                }
 
                 recalcularTotalProtecciones();
 
@@ -1269,868 +1280,853 @@ if (vistaPaquetes) {
     // Ejecutar al cargar para configurar estado inicial
     setTimeout(recalcularTotalProtecciones, 300);
 
-   // ================================ NAVEGACIÓN Y GUARDADO ===============================
+    // ================================ NAVEGACIÓN Y GUARDADO ===============================
 
-function precargarPaso4() {
-    const idReservacion = window.ID_RESERVACION;
-    if (!idReservacion) return;
+    function precargarPaso4() {
+        const idReservacion = window.ID_RESERVACION;
+        if (!idReservacion) return;
 
-    if (!document.querySelector(`link[data-contrato-prefetch="${idReservacion}"]`)) {
-        const link = document.createElement("link");
-        link.rel = "prefetch";
-        link.as = "document";
-        link.href = `/admin/contrato2/${idReservacion}`;
-        link.dataset.contratoPrefetch = idReservacion;
-        document.head.appendChild(link);
-    }
-}
-
-function obtenerVehiculoSeleccionadoId() {
-    return $elId("contratoInicial")?.dataset?.idVehiculo?.trim() || "";
-}
-
-// =============================================
-// BOTÓN CONTINUAR - PASO 1 → PASO 2
-// =============================================
-$el("#go2")?.addEventListener("click", async () => {
-    // Validar que haya un vehículo seleccionado
-    if (!obtenerVehiculoSeleccionadoId()) {
-        return ContratoUI.notify("error", "Debes seleccionar un vehículo antes de continuar.");
-    }
-
-    // Ir directamente al Paso 2 (Servicios) - SIN MODAL DE UPGRADE
-    window.showStep(2);
-});
-
-// =============================================
-// BOTÓN CONTINUAR - PASO 2 → PASO 3
-// =============================================
-$el("#go3")?.addEventListener("click", () => {
-    if (typeof guardarDeliverySeguro === 'function') guardarDeliverySeguro(true);
-    setTimeout(() => {
-        if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
-    }, 150);
-    precargarPaso4();
-    window.showStep(3);
-});
-
-// =============================================
-// BOTÓN CONTINUAR - PASO 3 → PASO 4
-// =============================================
-$el("#go4")?.addEventListener("click", (e) => {
-    e.preventDefault();
-
-    const elInicial = $elId("contratoInicial");
-    const idReservacion = window.ID_RESERVACION || (elInicial ? elInicial.dataset.idReservacion : null);
-
-    if (!idReservacion) return ContratoUI.notify("error", "Error: ID de reservación perdido.");
-
-    const paqueteSeleccionado = document.querySelector(".input-paquete:checked");
-    const individualSeleccionado = document.querySelector(".switch-individual:checked");
-
-    if (!paqueteSeleccionado && !individualSeleccionado) {
-        return ContratoUI.notify("warning", "Selecciona al menos un paquete o una protección para continuar.");
-    }
-
-    localStorage.setItem(`contratoPasoActual_${idReservacion}`, '4');
-
-    const btn = e.currentTarget;
-    btn.innerHTML = "Cargando Paso 4...";
-    btn.style.pointerEvents = "none";
-
-    precargarPaso4();
-    window.location.href = `/admin/contrato2/${idReservacion}`;
-});
-
-// =============================================
-// BOTONES ATRÁS
-// =============================================
-$el("#back1")?.addEventListener("click", () => window.showStep(1));
-$el("#back2")?.addEventListener("click", () => window.showStep(2));
-$el("#back3")?.addEventListener("click", () => window.showStep(3));
-
-// =============================================
-// SALTO AUTOMÁTICO DE PASO (desde localStorage)
-// =============================================
-const ejecutarSaltoDePaso = () => {
-    const idRes = window.ID_RESERVACION || $elId("contratoInicial")?.dataset.idReservacion;
-    if (!idRes) return;
-
-    const storageKey = `contratoPasoActual_${idRes}`;
-    const pasoSolicitado = localStorage.getItem(storageKey);
-
-    if (pasoSolicitado) {
-        const pasoN = Number(pasoSolicitado);
-        if ([1, 2, 3].includes(pasoN)) {
-            console.log(`🚀 Saltando automáticamente al Paso: ${pasoN}`);
-            if (typeof window.showStep === 'function') window.showStep(pasoN);
-            if (typeof window.actualizarStepper === 'function') window.actualizarStepper(pasoN);
-        }
-        localStorage.removeItem(storageKey);
-    }
-};
-
-setTimeout(ejecutarSaltoDePaso, 50);
-
-// =============================================
-// INICIALIZACIÓN DE GASOLINA (carga de datos guardados)
-// =============================================
-setTimeout(async () => {
-    const gasSwitch = $elId("switchGasolinaCheckbox");
-    if (gasSwitch && gasSwitch.checked) {
-        const cardGas = document.querySelector('.cargo-item[data-id="5"]');
-        const montoGuardado = parseFloat(cardGas?.dataset.monto || 0);
-
-        if (montoGuardado > 0) {
-            setState("gasolinaTotal", montoGuardado);
-            ContratoUI.setText($elId("gasTotalHTML"), ContratoUI.money(montoGuardado));
-
-            const inputNivel = $elId("gasNivelActual")?.value || "16/16";
-            let nivel = parseInt(inputNivel.split('/')[0]) || 16;
-            ContratoUI.setText($elId("gasLitrosTexto"), `${16 - nivel} L`);
-        } else {
-            if (typeof window.handleGasolinaUpdate === 'function') window.handleGasolinaUpdate();
+        if (!document.querySelector(`link[data-contrato-prefetch="${idReservacion}"]`)) {
+            const link = document.createElement("link");
+            link.rel = "prefetch";
+            link.as = "document";
+            link.href = `/admin/contrato2/${idReservacion}`;
+            link.dataset.contratoPrefetch = idReservacion;
+            document.head.appendChild(link);
         }
     }
-}, 800);
 
-// ================================ MODAL DE PROTECCIONES ===============================
-(function () {
-    console.log("🟢 Inicializando Modal de Protecciones...");
-
-    let modal, btnAbrir, btnAplicar;
-    let totalModal, totalResumen, resumenNombre;
-
-    const FORZADOS = ["LOU", "LA"];
-    const DEFAULT_COLISION = ["DECLINE CDW", "DECLINE"];
-    const DEFAULT_TERCEROS = ["LI"];
-
-    const SECCIONES_UNICAS = [
-        "Colisión y robo",
-        "Daños a terceros",
-        "Gastos médicos",
-        "Asistencia para el camino"
-    ];
-
-    let paqueteSeleccionado = null;
-    let individualesSeleccionados = new Map();
-
-    function getElements() {
-        modal = document.getElementById("modalProtecciones");
-        btnAbrir = document.getElementById("btnAbrirModalProtecciones");
-        btnAplicar = document.getElementById("btnAplicarProtecciones");
-        totalModal = document.getElementById("total_seguros_modal");
-        totalResumen = document.getElementById("total_seguros_resumen");
-        resumenNombre = document.getElementById("resumen_nombre_proteccion");
-
-        return modal && btnAbrir;
+    function obtenerVehiculoSeleccionadoId() {
+        return $elId("contratoInicial")?.dataset?.idVehiculo?.trim() || "";
     }
 
-    function money(value) {
-        const n = parseFloat(value || 0);
-        return window.money ? window.money(n) : `$${n.toFixed(2)} MXN`;
-    }
+    // =============================================
+    // BOTÓN CONTINUAR - PASO 1 → PASO 2
+    // =============================================
+    $el("#go2")?.addEventListener("click", async () => {
+        // Validar que haya un vehículo seleccionado
+        if (!obtenerVehiculoSeleccionadoId()) {
+            return ContratoUI.notify("error", "Debes seleccionar un vehículo antes de continuar.");
+        }
 
-    function getNombreIndividual(card) {
-        return card?.querySelector(".individual-nombre")?.textContent?.trim() || "";
-    }
+        // Ir directamente al Paso 2 (Servicios) - SIN MODAL DE UPGRADE
+        window.showStep(2);
+    });
 
-    function normalizarTexto(txt) {
-        return String(txt || "").trim().toUpperCase();
-    }
+    // =============================================
+    // BOTÓN CONTINUAR - PASO 2 → PASO 3
+    // =============================================
+    $el("#go3")?.addEventListener("click", () => {
+        if (typeof guardarDeliverySeguro === 'function') guardarDeliverySeguro(true);
+        setTimeout(() => {
+            if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
+        }, 150);
+        precargarPaso4();
+        window.showStep(3);
+    });
 
-    function getGrupoDeCard(card) {
-        if (!card) return '';
+    // =============================================
+    // BOTÓN CONTINUAR - PASO 3 → PASO 4
+    // =============================================
+    $el("#go4")?.addEventListener("click", (e) => {
+        e.preventDefault();
 
-        // Buscar el contenedor de la sección
-        let section = card.closest('.individuales-grid');
-        if (section) {
-            // Buscar el título que está ANTES de este grid
-            let prevElement = section.previousElementSibling;
-            while (prevElement) {
-                if (prevElement.classList && prevElement.classList.contains('categoria-titulo-individual')) {
-                    return prevElement.textContent.trim();
+        const elInicial = $elId("contratoInicial");
+        const idReservacion = window.ID_RESERVACION || (elInicial ? elInicial.dataset.idReservacion : null);
+
+        if (!idReservacion) return ContratoUI.notify("error", "Error: ID de reservación perdido.");
+
+        const paqueteSeleccionado = document.querySelector(".input-paquete:checked");
+        const individualSeleccionado = document.querySelector(".switch-individual:checked");
+
+        if (!paqueteSeleccionado && !individualSeleccionado) {
+            return ContratoUI.notify("warning", "Selecciona al menos un paquete o una protección para continuar.");
+        }
+
+        localStorage.setItem(`contratoPasoActual_${idReservacion}`, '4');
+
+        const btn = e.currentTarget;
+        btn.innerHTML = "Cargando Paso 4...";
+        btn.style.pointerEvents = "none";
+
+        precargarPaso4();
+        window.location.href = `/admin/contrato2/${idReservacion}`;
+    });
+
+    // =============================================
+    // BOTONES ATRÁS
+    // =============================================
+    $el("#back1")?.addEventListener("click", () => window.showStep(1));
+    $el("#back2")?.addEventListener("click", () => window.showStep(2));
+    $el("#back3")?.addEventListener("click", () => window.showStep(3));
+
+    // =============================================
+    // SALTO AUTOMÁTICO DE PASO (desde localStorage)
+    // =============================================
+    const ejecutarSaltoDePaso = () => {
+        const idRes = window.ID_RESERVACION || $elId("contratoInicial")?.dataset.idReservacion;
+        if (!idRes) return;
+
+        const storageKey = `contratoPasoActual_${idRes}`;
+        const pasoSolicitado = localStorage.getItem(storageKey);
+
+        if (pasoSolicitado) {
+            const pasoN = Number(pasoSolicitado);
+            if ([1, 2, 3].includes(pasoN)) {
+                console.log(`🚀 Saltando automáticamente al Paso: ${pasoN}`);
+                if (typeof window.showStep === 'function') window.showStep(pasoN);
+                if (typeof window.actualizarStepper === 'function') window.actualizarStepper(pasoN);
+            }
+            localStorage.removeItem(storageKey);
+        }
+    };
+
+    setTimeout(ejecutarSaltoDePaso, 50);
+
+    // =============================================
+    // INICIALIZACIÓN DE GASOLINA (carga de datos guardados)
+    // =============================================
+    setTimeout(async () => {
+        const gasSwitch = $elId("switchGasolinaCheckbox");
+        if (gasSwitch && gasSwitch.checked) {
+            const cardGas = document.querySelector('.cargo-item[data-id="5"]');
+            const montoGuardado = parseFloat(cardGas?.dataset.monto || 0);
+
+            if (montoGuardado > 0) {
+                setState("gasolinaTotal", montoGuardado);
+                ContratoUI.setText($elId("gasTotalHTML"), ContratoUI.money(montoGuardado));
+
+                const inputNivel = $elId("gasNivelActual")?.value || "16/16";
+                let nivel = parseInt(inputNivel.split('/')[0]) || 16;
+                ContratoUI.setText($elId("gasLitrosTexto"), `${16 - nivel} L`);
+            } else {
+                if (typeof window.handleGasolinaUpdate === 'function') window.handleGasolinaUpdate();
+            }
+        }
+    }, 800);
+
+    // ================================ MODAL DE PROTECCIONES ===============================
+    (function () {
+        console.log("🟢 Inicializando Modal de Protecciones...");
+
+        let modal, btnAbrir, btnAplicar;
+        let totalModal, totalResumen, resumenNombre;
+
+        const FORZADOS = ["LOU", "LA"];
+        const DEFAULT_COLISION = ["DECLINE CDW", "DECLINE"];
+        const DEFAULT_TERCEROS = ["LI"];
+
+        const SECCIONES_UNICAS = [
+            "Colisión y robo",
+            "Daños a terceros",
+            "Gastos médicos",
+            "Asistencia para el camino"
+        ];
+
+        let paqueteSeleccionado = null;
+        let individualesSeleccionados = new Map();
+
+        function getElements() {
+            modal = document.getElementById("modalProtecciones");
+            btnAbrir = document.getElementById("btnAbrirModalProtecciones");
+            btnAplicar = document.getElementById("btnAplicarProtecciones");
+            totalModal = document.getElementById("total_seguros_modal");
+            totalResumen = document.getElementById("total_seguros_resumen");
+            resumenNombre = document.getElementById("resumen_nombre_proteccion");
+
+            return modal && btnAbrir;
+        }
+
+        function money(value) {
+            const n = parseFloat(value || 0);
+            return window.money ? window.money(n) : `$${n.toFixed(2)} MXN`;
+        }
+
+        function getNombreIndividual(card) {
+            return card?.querySelector(".individual-nombre")?.textContent?.trim() || "";
+        }
+
+        function normalizarTexto(txt) {
+            return String(txt || "").trim().toUpperCase();
+        }
+
+        function getGrupoDeCard(card) {
+            if (!card) return '';
+
+            // Buscar el contenedor de la sección
+            let section = card.closest('.individuales-grid');
+            if (section) {
+                // Buscar el título que está ANTES de este grid
+                let prevElement = section.previousElementSibling;
+                while (prevElement) {
+                    if (prevElement.classList && prevElement.classList.contains('categoria-titulo-individual')) {
+                        return prevElement.textContent.trim();
+                    }
+                    prevElement = prevElement.previousElementSibling;
                 }
-                prevElement = prevElement.previousElementSibling;
+            }
+
+            // Fallback: buscar cualquier título de categoría cercano
+            const titulo = card.closest('.modal-view')?.querySelector('.categoria-titulo-individual');
+            return titulo ? titulo.textContent.trim() : '';
+        }
+
+        function getIdCard(card) {
+            return String(card?.dataset?.id || card?.querySelector(".switch-individual")?.value || "");
+        }
+
+        function getPrecioCard(card) {
+            return parseFloat(card?.dataset?.precio || 0);
+        }
+
+        function esForzado(nombre) {
+            return FORZADOS.includes(normalizarTexto(nombre));
+        }
+
+        function esDefault(nombre, grupo) {
+            const n = normalizarTexto(nombre);
+            const g = normalizarTexto(grupo);
+
+            if (g.includes("COLISIÓN") || g.includes("COLISION") || g.includes("ROBO")) {
+                return n.includes("DECLINE");
+            }
+
+            if (g.includes("TERCEROS") || g.includes("DAÑOS")) {
+                return n === "LI" || n.startsWith("LI ") || n.includes("LI -");
+            }
+
+            return false;
+        }
+
+        // NUEVA FUNCIÓN: Normalizar nombre de sección para comparación
+        function normalizarSeccion(texto) {
+            const t = normalizarTexto(texto);
+            if (t.includes("COLISIÓN") || t.includes("COLISION") || t.includes("ROBO")) return "COLISIÓN Y ROBO";
+            if (t.includes("TERCEROS") || t.includes("DAÑOS")) return "DAÑOS A TERCEROS";
+            if (t.includes("MÉDICOS") || t.includes("MEDICOS")) return "GASTOS MÉDICOS";
+            if (t.includes("ASISTENCIA") || t.includes("CAMINO")) return "ASISTENCIA PARA EL CAMINO";
+            return t;
+        }
+
+        function actualizarUICardPaquete(card, seleccionado) {
+            if (!card) return;
+
+            const radio = card.querySelector(".input-paquete");
+            const label = card.querySelector(".btn-proteccion-dividido");
+            const texto = label?.querySelector(".btn-texto");
+
+            card.classList.toggle("is-selected", seleccionado);
+
+            if (radio) radio.checked = seleccionado;
+
+            if (label) {
+                label.classList.toggle("activado", seleccionado);
+                label.classList.toggle("desactivado", !seleccionado);
+            }
+
+            if (texto) {
+                texto.textContent = seleccionado ? "Seleccionado ✓" : "Seleccionar";
             }
         }
 
-        // Fallback: buscar cualquier título de categoría cercano
-        const titulo = card.closest('.modal-view')?.querySelector('.categoria-titulo-individual');
-        return titulo ? titulo.textContent.trim() : '';
-    }
+        function actualizarUICardIndividual(card, checked) {
+            if (!card) return;
 
-    function getIdCard(card) {
-        return String(card?.dataset?.id || card?.querySelector(".switch-individual")?.value || "");
-    }
-
-    function getPrecioCard(card) {
-        return parseFloat(card?.dataset?.precio || 0);
-    }
-
-    function esForzado(nombre) {
-        return FORZADOS.includes(normalizarTexto(nombre));
-    }
-
-    function esDefault(nombre, grupo) {
-        const n = normalizarTexto(nombre);
-        const g = normalizarTexto(grupo);
-
-        if (g.includes("COLISIÓN") || g.includes("COLISION") || g.includes("ROBO")) {
-            return n.includes("DECLINE");
-        }
-
-        if (g.includes("TERCEROS") || g.includes("DAÑOS")) {
-            return n === "LI" || n.startsWith("LI ") || n.includes("LI -");
-        }
-
-        return false;
-    }
-
-    // NUEVA FUNCIÓN: Normalizar nombre de sección para comparación
-    function normalizarSeccion(texto) {
-        const t = normalizarTexto(texto);
-        if (t.includes("COLISIÓN") || t.includes("COLISION") || t.includes("ROBO")) return "COLISIÓN Y ROBO";
-        if (t.includes("TERCEROS") || t.includes("DAÑOS")) return "DAÑOS A TERCEROS";
-        if (t.includes("MÉDICOS") || t.includes("MEDICOS")) return "GASTOS MÉDICOS";
-        if (t.includes("ASISTENCIA") || t.includes("CAMINO")) return "ASISTENCIA PARA EL CAMINO";
-        return t;
-    }
-
-    function actualizarUICardPaquete(card, seleccionado) {
-        if (!card) return;
-
-        const radio = card.querySelector(".input-paquete");
-        const label = card.querySelector(".btn-proteccion-dividido");
-        const texto = label?.querySelector(".btn-texto");
-
-        card.classList.toggle("is-selected", seleccionado);
-
-        if (radio) radio.checked = seleccionado;
-
-        if (label) {
-            label.classList.toggle("activado", seleccionado);
-            label.classList.toggle("desactivado", !seleccionado);
-        }
-
-        if (texto) {
-            texto.textContent = seleccionado ? "Seleccionado ✓" : "Seleccionar";
-        }
-    }
-
-    function actualizarUICardIndividual(card, checked) {
-        if (!card) return;
-
-        const checkbox = card.querySelector(".switch-individual");
-        const nombre = getNombreIndividual(card);
-        const forzado = esForzado(nombre);
-
-        if (checkbox) {
-            checkbox.checked = checked;
-            checkbox.dataset.forzado = forzado ? "true" : "false";
-            checkbox.disabled = forzado;
-        }
-
-        card.classList.toggle("selected", checked);
-
-        const pill = card.querySelector(".switch-pill");
-        if (pill && forzado && !pill.querySelector(".lock-badge")) {
-            const badge = document.createElement("span");
-            badge.className = "lock-badge";
-            badge.textContent = " 🔒";
-            pill.appendChild(badge);
-        }
-    }
-
-    function limpiarPaquetes() {
-        paqueteSeleccionado = null;
-
-        modal.querySelectorAll(".input-paquete").forEach(radio => {
-            radio.checked = false;
-            actualizarUICardPaquete(radio.closest(".pack-card"), false);
-        });
-    }
-
-    function limpiarIndividuales() {
-        individualesSeleccionados.clear();
-
-        modal.querySelectorAll(".individual-card").forEach(card => {
-            actualizarUICardIndividual(card, false);
-        });
-    }
-
-    function agregarIndividual(card, forzado = false) {
-        const id = getIdCard(card);
-        const nombre = getNombreIndividual(card);
-        const grupo = getGrupoDeCard(card);
-        const precio = getPrecioCard(card);
-
-        if (!id) return;
-
-        individualesSeleccionados.set(id, {
-            id,
-            nombre,
-            grupo,
-            precio,
-            forzado
-        });
-
-        actualizarUICardIndividual(card, true);
-    }
-
-    function quitarIndividual(card) {
-        const id = getIdCard(card);
-        const nombre = getNombreIndividual(card);
-
-        if (esForzado(nombre)) {
-            actualizarUICardIndividual(card, true);
-            return;
-        }
-
-        individualesSeleccionados.delete(id);
-        actualizarUICardIndividual(card, false);
-    }
-
-    function aplicarDefaultsIndividuales() {
-        limpiarPaquetes();
-        limpiarIndividuales();
-
-        modal.querySelectorAll(".individual-card").forEach(card => {
+            const checkbox = card.querySelector(".switch-individual");
             const nombre = getNombreIndividual(card);
-            const grupo = getGrupoDeCard(card);
+            const forzado = esForzado(nombre);
 
-            if (esForzado(nombre) || esDefault(nombre, grupo)) {
-                agregarIndividual(card, esForzado(nombre));
+            if (checkbox) {
+                checkbox.checked = checked;
+                checkbox.dataset.forzado = forzado ? "true" : "false";
+                checkbox.disabled = forzado;
             }
-        });
 
-        actualizarTotales();
-    }
+            card.classList.toggle("selected", checked);
 
-    function seleccionarPaquete(radio) {
-        limpiarIndividuales();
-
-        modal.querySelectorAll(".input-paquete").forEach(r => {
-            actualizarUICardPaquete(r.closest(".pack-card"), r === radio);
-        });
-
-        const card = radio.closest(".pack-card");
-        paqueteSeleccionado = {
-            id: radio.value,
-            nombre: card?.querySelector("h4")?.textContent?.trim() || "Paquete",
-            precio: parseFloat(card?.dataset?.precio || card?.closest(".seguro-item")?.dataset?.precio || 0)
-        };
-
-        actualizarTotales();
-    }
-
-    function seleccionarIndividual(card) {
-        limpiarPaquetes();
-
-        const id = getIdCard(card);
-        const nombre = getNombreIndividual(card);
-        const grupo = getGrupoDeCard(card);
-        const checkbox = card.querySelector(".switch-individual");
-
-        // Log para depuración
-        console.log("🔄 Seleccionando individual:", { id, nombre, grupo });
-
-        if (esForzado(nombre)) {
-            agregarIndividual(card, true);
-            return;
+            const pill = card.querySelector(".switch-pill");
+            if (pill && forzado && !pill.querySelector(".lock-badge")) {
+                const badge = document.createElement("span");
+                badge.className = "lock-badge";
+                badge.textContent = " 🔒";
+                pill.appendChild(badge);
+            }
         }
 
-        if (checkbox?.checked) {
-            quitarIndividual(card);
-            actualizarTotales();
-            return;
-        }
+        function limpiarPaquetes() {
+            paqueteSeleccionado = null;
 
-        // VERIFICAR SI ES UNA SECCIÓN ÚNICA USANDO NORMALIZACIÓN
-        const grupoNormalizado = normalizarSeccion(grupo);
-        const esSeccionUnica = SECCIONES_UNICAS.some(s => normalizarSeccion(s) === grupoNormalizado);
-
-        console.log("📌 Grupo normalizado:", grupoNormalizado, "¿Es sección única?", esSeccionUnica);
-
-        if (esSeccionUnica) {
-            modal.querySelectorAll(".individual-card").forEach(otraCard => {
-                if (otraCard === card) return;
-
-                const otroGrupo = getGrupoDeCard(otraCard);
-                const otroNombre = getNombreIndividual(otraCard);
-                const otroGrupoNormalizado = normalizarSeccion(otroGrupo);
-
-                // Solo desactivar si es la misma sección y no es forzado
-                if (otroGrupoNormalizado === grupoNormalizado && !esForzado(otroNombre)) {
-                    quitarIndividual(otraCard);
-                }
+            modal.querySelectorAll(".input-paquete").forEach(radio => {
+                radio.checked = false;
+                actualizarUICardPaquete(radio.closest(".pack-card"), false);
             });
         }
 
-        agregarIndividual(card, false);
-        actualizarTotales();
-    }
+        function limpiarIndividuales() {
+            individualesSeleccionados.clear();
 
-    function pintarProteccionesEnCarrito() {
-    const dias = parseInt(document.getElementById("detDiasRenta")?.textContent || 1);
+            modal.querySelectorAll(".individual-card").forEach(card => {
+                actualizarUICardIndividual(card, false);
+            });
+        }
 
-    const listas = [
-        document.getElementById("r_seguros_lista"),
-        document.getElementById("r_seguros_listaModal")
-    ];
+        function agregarIndividual(card, forzado = false) {
+            const id = getIdCard(card);
+            const nombre = getNombreIndividual(card);
+            const grupo = getGrupoDeCard(card);
+            const precio = getPrecioCard(card);
 
-    const totales = [
-        document.getElementById("r_seguros_total"),
-        document.getElementById("r_seguros_totalModal")
-    ];
+            if (!id) return;
 
-    let html = "";
-    let total = 0;
+            individualesSeleccionados.set(id, {
+                id,
+                nombre,
+                grupo,
+                precio,
+                forzado
+            });
 
-    if (paqueteSeleccionado) {
-        total = paqueteSeleccionado.precio * dias;
+            actualizarUICardIndividual(card, true);
+        }
 
-        html = `
+        function quitarIndividual(card) {
+            const id = getIdCard(card);
+            const nombre = getNombreIndividual(card);
+
+            if (esForzado(nombre)) {
+                actualizarUICardIndividual(card, true);
+                return;
+            }
+
+            individualesSeleccionados.delete(id);
+            actualizarUICardIndividual(card, false);
+        }
+
+        function aplicarDefaultsIndividuales() {
+            limpiarPaquetes();
+            limpiarIndividuales();
+
+            modal.querySelectorAll(".individual-card").forEach(card => {
+                const nombre = getNombreIndividual(card);
+                const grupo = getGrupoDeCard(card);
+
+                if (esForzado(nombre) || esDefault(nombre, grupo)) {
+                    agregarIndividual(card, esForzado(nombre));
+                }
+            });
+
+            actualizarTotales();
+        }
+
+        function seleccionarPaquete(radio) {
+            limpiarIndividuales();
+
+            modal.querySelectorAll(".input-paquete").forEach(r => {
+                actualizarUICardPaquete(r.closest(".pack-card"), r === radio);
+            });
+
+            const card = radio.closest(".pack-card");
+            paqueteSeleccionado = {
+                id: radio.value,
+                nombre: card?.querySelector("h4")?.textContent?.trim() || "Paquete",
+                precio: parseFloat(card?.dataset?.precio || card?.closest(".seguro-item")?.dataset?.precio || 0)
+            };
+
+            actualizarTotales();
+        }
+
+        function seleccionarIndividual(card) {
+            limpiarPaquetes();
+
+            const id = getIdCard(card);
+            const nombre = getNombreIndividual(card);
+            const grupo = getGrupoDeCard(card);
+            const checkbox = card.querySelector(".switch-individual");
+
+            // Log para depuración
+            console.log("🔄 Seleccionando individual:", { id, nombre, grupo });
+
+            if (esForzado(nombre)) {
+                agregarIndividual(card, true);
+                return;
+            }
+
+            if (checkbox?.checked) {
+                quitarIndividual(card);
+                actualizarTotales();
+                return;
+            }
+
+            // VERIFICAR SI ES UNA SECCIÓN ÚNICA USANDO NORMALIZACIÓN
+            const grupoNormalizado = normalizarSeccion(grupo);
+            const esSeccionUnica = SECCIONES_UNICAS.some(s => normalizarSeccion(s) === grupoNormalizado);
+
+            console.log("📌 Grupo normalizado:", grupoNormalizado, "¿Es sección única?", esSeccionUnica);
+
+            if (esSeccionUnica) {
+                modal.querySelectorAll(".individual-card").forEach(otraCard => {
+                    if (otraCard === card) return;
+
+                    const otroGrupo = getGrupoDeCard(otraCard);
+                    const otroNombre = getNombreIndividual(otraCard);
+                    const otroGrupoNormalizado = normalizarSeccion(otroGrupo);
+
+                    // Solo desactivar si es la misma sección y no es forzado
+                    if (otroGrupoNormalizado === grupoNormalizado && !esForzado(otroNombre)) {
+                        quitarIndividual(otraCard);
+                    }
+                });
+            }
+
+            agregarIndividual(card, false);
+            actualizarTotales();
+        }
+
+        function pintarProteccionesEnCarrito() {
+            const dias = parseInt(document.getElementById("detDiasRenta")?.textContent || 1);
+
+            const listas = [
+                document.getElementById("r_seguros_lista"),
+                document.getElementById("r_seguros_listaModal")
+            ];
+
+            const totales = [
+                document.getElementById("r_seguros_total"),
+                document.getElementById("r_seguros_totalModal")
+            ];
+
+            let html = "";
+            let total = 0;
+
+            if (paqueteSeleccionado) {
+                total = paqueteSeleccionado.precio * dias;
+
+                html = `
             <li>
                 <span>${paqueteSeleccionado.nombre}</span>
                 <b>${money(total)}</b>
             </li>
         `;
-    } else {
-        const items = Array.from(individualesSeleccionados.values());
+            } else {
+                const items = Array.from(individualesSeleccionados.values());
 
-        items.forEach(item => {
-            const importe = item.precio * dias;
-            total += importe;
+                items.forEach(item => {
+                    const importe = item.precio * dias;
+                    total += importe;
 
-            html += `
+                    html += `
                 <li>
                     <span>${item.nombre}</span>
                     <b>${money(importe)}</b>
                 </li>
             `;
-        });
-    }
-
-    listas.forEach(lista => {
-        if (lista) {
-            lista.innerHTML = html || `<li class="empty">—</li>`;
-        }
-    });
-
-    totales.forEach(totalEl => {
-        if (totalEl) {
-            totalEl.textContent = money(total);
-        }
-    });
-    const compacto = document.getElementById("resumenProteccionesCompacto");
-const compactoModal = document.getElementById("resumenProteccionesCompactoModal");
-
-let textoCompacto = "—";
-
-if (paqueteSeleccionado) {
-    textoCompacto = paqueteSeleccionado.nombre;
-} else {
-    const items = Array.from(individualesSeleccionados.values());
-
-    if (items.length > 0) {
-        textoCompacto = items.map(i => i.nombre).join(", ");
-    }
-}
-
-if (compacto) compacto.textContent = textoCompacto;
-if (compactoModal) compactoModal.textContent = textoCompacto;
-}
-
-function actualizarTotales() {
-    const dias = parseInt(document.getElementById("detDiasRenta")?.textContent || 1);
-    let subtotal = 0;
-    let textoResumen = "";
-
-    if (paqueteSeleccionado) {
-        subtotal = paqueteSeleccionado.precio * dias;
-        textoResumen = `${paqueteSeleccionado.nombre}`;
-    } else {
-        const items = Array.from(individualesSeleccionados.values());
-
-        items.forEach(item => {
-            subtotal += item.precio * dias;
-        });
-
-        textoResumen = ` ${items.map(i => i.nombre).join(", ")}`;
-    }
-
-    if (totalModal) totalModal.textContent = money(subtotal);
-    if (totalResumen) totalResumen.textContent = money(subtotal);
-
-    if (resumenNombre) {
-        resumenNombre.textContent = textoResumen || " DECLINE CDW, LI, LOU, LA";
-        resumenNombre.style.color = "#16a34a";
-        resumenNombre.style.background = "#dcfce7";
-    }
-
-    pintarProteccionesEnCarrito();
-
-    if (typeof copiarResumenNavbarAlModal === "function") {
-        copiarResumenNavbarAlModal();
-    }
-
-    if (btnAplicar) {
-        btnAplicar.disabled = false;
-        btnAplicar.style.opacity = "1";
-    }
-}
-
-    function sincronizarModalAPaso() {
-        const hayPaquete = !!paqueteSeleccionado;
-
-        document.querySelectorAll(".input-paquete").forEach(radio => {
-            radio.checked = hayPaquete && String(radio.value) === String(paqueteSeleccionado.id);
-        });
-
-        document.querySelectorAll(".switch-individual").forEach(cb => {
-            const card = cb.closest(".individual-card");
-            const id = getIdCard(card);
-
-            cb.checked = !hayPaquete && individualesSeleccionados.has(id);
-            card?.classList.toggle("selected", cb.checked);
-        });
-
-        if (typeof window.recalcularTotalProtecciones === "function") {
-            window.recalcularTotalProtecciones();
-        }
-    }
-
-    function abrirModal() {
-
-        window.categoriaActual = obtenerCategoriaActual();
-    console.log('📢 Abriendo modal, categoría forzada:', window.categoriaActual);
-
-    modal.classList.add("active")
-        modal.classList.add("active");
-        modal.style.display = "flex";
-        document.body.style.overflow = "hidden";
-
-        const vistaPaquetes = document.getElementById("modal-vista-paquetes");
-        const vistaIndividuales = document.getElementById("modal-vista-individuales");
-        const tabPaquetes = document.getElementById("tabPaquetes");
-        const tabIndividuales = document.getElementById("tabIndividuales");
-
-        if (!paqueteSeleccionado && individualesSeleccionados.size === 0) {
-            limpiarPaquetes();
-            limpiarIndividuales();
-        }
-
-        if (vistaPaquetes) vistaPaquetes.style.display = "block";
-        if (vistaIndividuales) vistaIndividuales.style.display = "none";
-
-        tabPaquetes?.classList.add("active");
-        tabIndividuales?.classList.remove("active");
-
-        setTimeout(actualizarTodasLasGarantias, 200);
-        actualizarTotales();
-    }
-
-    function cerrarModal() {
-        modal.classList.remove("active");
-        modal.style.display = "none";
-        document.body.style.overflow = "";
-
-        if (!paqueteSeleccionado && individualesSeleccionados.size === 0) {
-            aplicarDefaultsIndividuales();
-            sincronizarModalAPaso();
-        }
-
-        actualizarTotales();
-    }
-
-    function setupEvents() {
-        btnAbrir.addEventListener("click", e => {
-            e.preventDefault();
-            abrirModal();
-        });
-
-        document.getElementById("btnCerrarModalProtecciones")?.addEventListener("click", cerrarModal);
-        document.getElementById("btnCerrarModalFooter")?.addEventListener("click", cerrarModal);
-
-        modal.addEventListener("click", e => {
-            if (e.target === modal) cerrarModal();
-
-            const packCard = e.target.closest(".pack-card");
-            if (packCard) {
-                const radio = packCard.querySelector(".input-paquete");
-                if (radio) seleccionarPaquete(radio);
-                return;
+                });
             }
 
-            const individualCard = e.target.closest(".individual-card");
-            if (individualCard) {
-                seleccionarIndividual(individualCard);
+            listas.forEach(lista => {
+                if (lista) {
+                    lista.innerHTML = html || `<li class="empty">—</li>`;
+                }
+            });
+
+            totales.forEach(totalEl => {
+                if (totalEl) {
+                    totalEl.textContent = money(total);
+                }
+            });
+            const compacto = document.getElementById("resumenProteccionesCompacto");
+            const compactoModal = document.getElementById("resumenProteccionesCompactoModal");
+
+            let textoCompacto = "—";
+
+            if (paqueteSeleccionado) {
+                textoCompacto = paqueteSeleccionado.nombre;
+            } else {
+                const items = Array.from(individualesSeleccionados.values());
+
+                if (items.length > 0) {
+                    textoCompacto = items.map(i => i.nombre).join(", ");
+                }
             }
-        });
 
-        document.getElementById("tabPaquetes")?.addEventListener("click", e => {
-            e.preventDefault();
+            if (compacto) compacto.textContent = textoCompacto;
+            if (compactoModal) compactoModal.textContent = textoCompacto;
+        }
 
-            document.getElementById("modal-vista-paquetes").style.display = "block";
-            document.getElementById("modal-vista-individuales").style.display = "none";
+        function actualizarTotales() {
+            const dias = parseInt(document.getElementById("detDiasRenta")?.textContent || 1);
+            let subtotal = 0;
+            let textoResumen = "";
 
-            document.getElementById("tabPaquetes")?.classList.add("active");
-            document.getElementById("tabIndividuales")?.classList.remove("active");
-        });
+            if (paqueteSeleccionado) {
+                subtotal = paqueteSeleccionado.precio * dias;
+                textoResumen = `${paqueteSeleccionado.nombre}`;
+            } else {
+                const items = Array.from(individualesSeleccionados.values());
 
-        document.getElementById("tabIndividuales")?.addEventListener("click", e => {
-            e.preventDefault();
+                items.forEach(item => {
+                    subtotal += item.precio * dias;
+                });
 
-            document.getElementById("modal-vista-paquetes").style.display = "none";
-            document.getElementById("modal-vista-individuales").style.display = "block";
+                textoResumen = ` ${items.map(i => i.nombre).join(", ")}`;
+            }
 
-            document.getElementById("tabIndividuales")?.classList.add("active");
-            document.getElementById("tabPaquetes")?.classList.remove("active");
+            if (totalModal) totalModal.textContent = money(subtotal);
+            if (totalResumen) totalResumen.textContent = money(subtotal);
 
-            aplicarDefaultsIndividuales();
-        });
+            if (resumenNombre) {
+                resumenNombre.textContent = textoResumen || " DECLINE CDW, LI, LOU, LA";
+                resumenNombre.style.color = "#16a34a";
+                resumenNombre.style.background = "#dcfce7";
+            }
 
-       btnAplicar?.addEventListener("click", () => {
-    sincronizarModalAPaso();
-    pintarProteccionesEnCarrito();
+            pintarProteccionesEnCarrito();
 
-    if (typeof copiarResumenNavbarAlModal === "function") {
-        copiarResumenNavbarAlModal();
-    }
+            if (typeof copiarResumenNavbarAlModal === "function") {
+                copiarResumenNavbarAlModal();
+            }
 
-    cerrarModal();
+            if (btnAplicar) {
+                btnAplicar.disabled = false;
+                btnAplicar.style.opacity = "1";
+            }
+        }
 
-    if (window.alertify) {
-        alertify.success("✅ Protecciones aplicadas");
-    }
-});
-    }
+        function sincronizarModalAPaso() {
+            const hayPaquete = !!paqueteSeleccionado;
 
-    function init() {
-        let intentos = 0;
+            document.querySelectorAll(".input-paquete").forEach(radio => {
+                radio.checked = hayPaquete && String(radio.value) === String(paqueteSeleccionado.id);
+            });
 
-        const timer = setInterval(() => {
-            intentos++;
+            document.querySelectorAll(".switch-individual").forEach(cb => {
+                const card = cb.closest(".individual-card");
+                const id = getIdCard(card);
 
-            if (getElements()) {
-                clearInterval(timer);
-                setupEvents();
+                cb.checked = !hayPaquete && individualesSeleccionados.has(id);
+                card?.classList.toggle("selected", cb.checked);
+            });
 
-                modal.style.display = "none";
-                modal.classList.remove("active");
+            if (typeof window.recalcularTotalProtecciones === "function") {
+                window.recalcularTotalProtecciones();
+            }
+        }
 
+        function abrirModal() {
+
+            window.categoriaActual = obtenerCategoriaActual();
+            console.log('📢 Abriendo modal, categoría forzada:', window.categoriaActual);
+
+            modal.classList.add("active")
+            modal.classList.add("active");
+            modal.style.display = "flex";
+            document.body.style.overflow = "hidden";
+
+            const vistaPaquetes = document.getElementById("modal-vista-paquetes");
+            const vistaIndividuales = document.getElementById("modal-vista-individuales");
+            const tabPaquetes = document.getElementById("tabPaquetes");
+            const tabIndividuales = document.getElementById("tabIndividuales");
+
+            if (!paqueteSeleccionado && individualesSeleccionados.size === 0) {
+                limpiarPaquetes();
+                limpiarIndividuales();
+            }
+
+            if (vistaPaquetes) vistaPaquetes.style.display = "block";
+            if (vistaIndividuales) vistaIndividuales.style.display = "none";
+
+            tabPaquetes?.classList.add("active");
+            tabIndividuales?.classList.remove("active");
+
+            setTimeout(actualizarTodasLasGarantias, 200);
+            actualizarTotales();
+        }
+
+        function cerrarModal() {
+            modal.classList.remove("active");
+            modal.style.display = "none";
+            document.body.style.overflow = "";
+
+            if (!paqueteSeleccionado && individualesSeleccionados.size === 0) {
                 aplicarDefaultsIndividuales();
                 sincronizarModalAPaso();
-
-                window.abrirModalProtecciones = abrirModal;
-                window.cerrarModalProtecciones = cerrarModal;
-                window.aplicarDefaultsIndividuales = aplicarDefaultsIndividuales;
-
-                console.log("✅ Modal de protecciones listo");
             }
 
-            if (intentos >= 20) {
-                clearInterval(timer);
-                console.warn("⚠️ No se encontró el modal de protecciones");
+            actualizarTotales();
+        }
+
+        function setupEvents() {
+            btnAbrir.addEventListener("click", e => {
+                e.preventDefault();
+                abrirModal();
+            });
+
+            document.getElementById("btnCerrarModalProtecciones")?.addEventListener("click", cerrarModal);
+            document.getElementById("btnCerrarModalFooter")?.addEventListener("click", cerrarModal);
+
+            modal.addEventListener("click", e => {
+                if (e.target === modal) cerrarModal();
+
+                const packCard = e.target.closest(".pack-card");
+                if (packCard) {
+                    const radio = packCard.querySelector(".input-paquete");
+                    if (radio) seleccionarPaquete(radio);
+                    return;
+                }
+
+                const individualCard = e.target.closest(".individual-card");
+                if (individualCard) {
+                    seleccionarIndividual(individualCard);
+                }
+            });
+
+            document.getElementById("tabPaquetes")?.addEventListener("click", e => {
+                e.preventDefault();
+
+                document.getElementById("modal-vista-paquetes").style.display = "block";
+                document.getElementById("modal-vista-individuales").style.display = "none";
+
+                document.getElementById("tabPaquetes")?.classList.add("active");
+                document.getElementById("tabIndividuales")?.classList.remove("active");
+            });
+
+            document.getElementById("tabIndividuales")?.addEventListener("click", e => {
+                e.preventDefault();
+
+                document.getElementById("modal-vista-paquetes").style.display = "none";
+                document.getElementById("modal-vista-individuales").style.display = "block";
+
+                document.getElementById("tabIndividuales")?.classList.add("active");
+                document.getElementById("tabPaquetes")?.classList.remove("active");
+
+                aplicarDefaultsIndividuales();
+            });
+
+            btnAplicar?.addEventListener("click", () => {
+                sincronizarModalAPaso();
+                pintarProteccionesEnCarrito();
+
+                if (typeof copiarResumenNavbarAlModal === "function") {
+                    copiarResumenNavbarAlModal();
+                }
+
+                cerrarModal();
+
+                if (window.alertify) {
+                    alertify.success("✅ Protecciones aplicadas");
+                }
+            });
+        }
+
+        function init() {
+            let intentos = 0;
+
+            const timer = setInterval(() => {
+                intentos++;
+
+                if (getElements()) {
+                    clearInterval(timer);
+                    setupEvents();
+
+                    modal.style.display = "none";
+                    modal.classList.remove("active");
+
+                    aplicarDefaultsIndividuales();
+                    sincronizarModalAPaso();
+
+                    window.abrirModalProtecciones = abrirModal;
+                    window.cerrarModalProtecciones = cerrarModal;
+                    window.aplicarDefaultsIndividuales = aplicarDefaultsIndividuales;
+
+                    console.log("✅ Modal de protecciones listo");
+                }
+
+                if (intentos >= 20) {
+                    clearInterval(timer);
+                    console.warn("⚠️ No se encontró el modal de protecciones");
+                }
+            }, 200);
+        }
+
+        init();
+    })();
+
+    // ================================ SISTEMA DE GARANTÍAS MEJORADO ===============================
+
+    // Tabla de garantías por categoría y tipo de protección
+    const GARANTIAS_POR_CATEGORIA = {
+        'C': { // Compacto Chevrolet Aveo o similar
+            'LDW': 5000,
+            'PDW': 8000,
+            'CDW 10%': 15000,
+            'CDW 20%': 25000,
+            'CDW declinado': 330000
+        },
+        'D': { // Medianos Nissan Virtus o similar
+            'LDW': 5000,
+            'PDW': 8000,
+            'CDW 10%': 18000,
+            'CDW 20%': 25000,
+            'CDW declinado': 380000
+        },
+        'E': { // Grandes Volkswagen Jetta o similar
+            'LDW': 5000,
+            'PDW': 8000,
+            'CDW 10%': 20000,
+            'CDW 20%': 30000,
+            'CDW declinado': 500000
+        },
+        'F': { // Full size Camry o similar
+            'LDW': 5000,
+            'PDW': 15000,
+            'CDW 10%': 30000,
+            'CDW 20%': 40000,
+            'CDW declinado': 650000
+        },
+        'IC': { // Suv compacta Jeep Renegade o similar
+            'LDW': 5000,
+            'PDW': 8000,
+            'CDW 10%': 20000,
+            'CDW 20%': 30000,
+            'CDW declinado': 500000
+        },
+        'I': { // Suv Mediana Volkswagen Taos o similar
+            'LDW': 5000,
+            'PDW': 10000,
+            'CDW 10%': 30000,
+            'CDW 20%': 40000,
+            'CDW declinado': 600000
+        },
+        'IB': { // Suv Familiar compacta Toyota avanza o similar
+            'LDW': 5000,
+            'PDW': 8000,
+            'CDW 10%': 18000,
+            'CDW 20%': 25000,
+            'CDW declinado': 400000
+        },
+        'M': { // Minivan Honda Odyssey o similar
+            'LDW': 10000,
+            'PDW': 20000,
+            'CDW 10%': 30000,
+            'CDW 20%': 40000,
+            'CDW declinado': 800000
+        },
+        'L': { // Pasajeros de 12 usuarios Toyota Hiace o similar
+            'LDW': 10000,
+            'PDW': 20000,
+            'CDW 10%': 30000,
+            'CDW 20%': 40000,
+            'CDW declinado': 800000
+        },
+        'H': { // Pick up Doble Cabina Nissan Frontier o similar
+            'LDW': 10000,
+            'PDW': 20000,
+            'CDW 10%': 30000,
+            'CDW 20%': 40000,
+            'CDW declinado': 600000
+        },
+        'HI': { // Pick up 4x4 Doble Cabina Toyota Tacoma o similar
+            'LDW': 10000,
+            'PDW': 20000,
+            'CDW 10%': 30000,
+            'CDW 20%': 40000,
+            'CDW declinado': 900000
+        }
+    };
+
+    // Mapeo de nombres de seguros a tipos de protección
+    // Mapeo de nombres de seguros a tipos de protección
+    const MAPEO_TIPO_PROTECCION = {
+        'CDW 10%': 'CDW 10%',
+        'CDW 20%': 'CDW 20%',
+        'CDW declinado': 'CDW declinado',
+        'LDW': 'LDW',
+        'PDW': 'PDW',
+        'PROTECCIÓN TOTAL 10%': 'CDW 10%',
+        'PROTECCIÓN TOTAL 20%': 'CDW 20%',
+        'PROTECCIÓN BÁSICA': 'CDW declinado',
+        'ROBO TOTAL': 'CDW declinado',
+        'DAÑOS A TERCEROS': 'PDW',
+        // NUEVOS NOMBRES
+        'CDW PACK 1': 'CDW 10%',
+        'CDW PACK 2': 'CDW 20%',
+        'CDW PACK 3': 'CDW 20%',
+        'DECLINE PROTECTIONS': 'CDW declinado',
+        'DECLINE CDW': 'CDW declinado',
+        'DECLINE': 'CDW declinado',
+    };
+
+    // Variable global para almacenar la categoría actual
+    window.categoriaActual = null;
+
+    /**
+     * Obtiene la categoría del vehículo actual de manera confiable
+     */
+    function obtenerCategoriaActual() {
+        // 1. Intentar desde el elemento contratoInicial
+        const contratoInicial = document.getElementById('contratoInicial');
+        if (contratoInicial) {
+            const codigoCategoria = contratoInicial.dataset.codigoCategoria || contratoInicial.dataset.idCategoria;
+            if (codigoCategoria && GARANTIAS_POR_CATEGORIA[codigoCategoria]) {
+                window.categoriaActual = codigoCategoria;
+                return codigoCategoria;
             }
-        }, 200);
-    }
-
-    init();
-})();
-
-// ================================ SISTEMA DE GARANTÍAS MEJORADO ===============================
-
-// Tabla de garantías por categoría y tipo de protección
-const GARANTIAS_POR_CATEGORIA = {
-    'C': { // Compacto Chevrolet Aveo o similar
-        'LDW': 5000,
-        'PDW': 8000,
-        'CDW 10%': 15000,
-        'CDW 20%': 25000,
-        'CDW declinado': 330000
-    },
-    'D': { // Medianos Nissan Virtus o similar
-        'LDW': 5000,
-        'PDW': 8000,
-        'CDW 10%': 18000,
-        'CDW 20%': 25000,
-        'CDW declinado': 380000
-    },
-    'E': { // Grandes Volkswagen Jetta o similar
-        'LDW': 5000,
-        'PDW': 8000,
-        'CDW 10%': 20000,
-        'CDW 20%': 30000,
-        'CDW declinado': 500000
-    },
-    'F': { // Full size Camry o similar
-        'LDW': 5000,
-        'PDW': 15000,
-        'CDW 10%': 30000,
-        'CDW 20%': 40000,
-        'CDW declinado': 650000
-    },
-    'IC': { // Suv compacta Jeep Renegade o similar
-        'LDW': 5000,
-        'PDW': 8000,
-        'CDW 10%': 20000,
-        'CDW 20%': 30000,
-        'CDW declinado': 500000
-    },
-    'I': { // Suv Mediana Volkswagen Taos o similar
-        'LDW': 5000,
-        'PDW': 10000,
-        'CDW 10%': 30000,
-        'CDW 20%': 40000,
-        'CDW declinado': 600000
-    },
-    'IB': { // Suv Familiar compacta Toyota avanza o similar
-        'LDW': 5000,
-        'PDW': 8000,
-        'CDW 10%': 18000,
-        'CDW 20%': 25000,
-        'CDW declinado': 400000
-    },
-    'M': { // Minivan Honda Odyssey o similar
-        'LDW': 10000,
-        'PDW': 20000,
-        'CDW 10%': 30000,
-        'CDW 20%': 40000,
-        'CDW declinado': 800000
-    },
-    'L': { // Pasajeros de 12 usuarios Toyota Hiace o similar
-        'LDW': 10000,
-        'PDW': 20000,
-        'CDW 10%': 30000,
-        'CDW 20%': 40000,
-        'CDW declinado': 800000
-    },
-    'H': { // Pick up Doble Cabina Nissan Frontier o similar
-        'LDW': 10000,
-        'PDW': 20000,
-        'CDW 10%': 30000,
-        'CDW 20%': 40000,
-        'CDW declinado': 600000
-    },
-    'HI': { // Pick up 4x4 Doble Cabina Toyota Tacoma o similar
-        'LDW': 10000,
-        'PDW': 20000,
-        'CDW 10%': 30000,
-        'CDW 20%': 40000,
-        'CDW declinado': 900000
-    }
-};
-
-// Mapeo de nombres de seguros a tipos de protección
-// Mapeo de nombres de seguros a tipos de protección
-const MAPEO_TIPO_PROTECCION = {
-    'CDW 10%': 'CDW 10%',
-    'CDW 20%': 'CDW 20%',
-    'CDW declinado': 'CDW declinado',
-    'LDW': 'LDW',
-    'PDW': 'PDW',
-    'PROTECCIÓN TOTAL 10%': 'CDW 10%',
-    'PROTECCIÓN TOTAL 20%': 'CDW 20%',
-    'PROTECCIÓN BÁSICA': 'CDW declinado',
-    'ROBO TOTAL': 'CDW declinado',
-    'DAÑOS A TERCEROS': 'PDW',
-    // NUEVOS NOMBRES
-    'CDW PACK 1': 'CDW 10%',
-    'CDW PACK 2': 'CDW 20%',
-    'CDW PACK 3': 'CDW 20%',
-    'DECLINE PROTECTIONS': 'CDW declinado',
-    'DECLINE CDW': 'CDW declinado',
-    'DECLINE': 'CDW declinado',
-};
-
-// Variable global para almacenar la categoría actual
-window.categoriaActual = null;
-
-/**
- * Obtiene la categoría del vehículo actual de manera confiable
- */
-function obtenerCategoriaActual() {
-    // 1. Intentar desde el elemento contratoInicial
-    const contratoInicial = document.getElementById('contratoInicial');
-    if (contratoInicial) {
-        const codigoCategoria = contratoInicial.dataset.codigoCategoria || contratoInicial.dataset.idCategoria;
-        if (codigoCategoria && GARANTIAS_POR_CATEGORIA[codigoCategoria]) {
-            window.categoriaActual = codigoCategoria;
-            return codigoCategoria;
         }
-    }
 
-    // 2. Buscar en las tarjetas de categorías activas (modal de categorías)
-    const cardActiva = document.querySelector('.card-categoria.activa');
-    if (cardActiva) {
-        const codigo = cardActiva.dataset.codigo;
-        if (codigo && GARANTIAS_POR_CATEGORIA[codigo]) {
-            window.categoriaActual = codigo;
-            return codigo;
-        }
-    }
-
-    // 3. Buscar en cualquier card-categoria (buscar la que tenga badge "Actual")
-    const cards = document.querySelectorAll('.card-categoria');
-    for (let card of cards) {
-        if (card.classList.contains('activa') || card.querySelector('.cat-badge-actual')) {
-            const codigo = card.dataset.codigo;
+        // 2. Buscar en las tarjetas de categorías activas (modal de categorías)
+        const cardActiva = document.querySelector('.card-categoria.activa');
+        if (cardActiva) {
+            const codigo = cardActiva.dataset.codigo;
             if (codigo && GARANTIAS_POR_CATEGORIA[codigo]) {
                 window.categoriaActual = codigo;
                 return codigo;
             }
         }
-    }
 
-    // 4. Usar la categoría guardada en window
-    if (window.categoriaActual && GARANTIAS_POR_CATEGORIA[window.categoriaActual]) {
-        return window.categoriaActual;
-    }
-
-    // 5. Último recurso: intentar obtener del texto visible "Categoría X"
-    const categoriaText = document.querySelector('.categoria-actual-texto');
-    if (categoriaText) {
-        const texto = categoriaText.textContent.trim();
-        for (let key of Object.keys(GARANTIAS_POR_CATEGORIA)) {
-            if (texto.includes(key)) {
-                window.categoriaActual = key;
-                return key;
-            }
-        }
-    }
-
-    console.warn('⚠️ No se pudo determinar la categoría actual');
-    return null;
-}
-
-/**
- * Obtiene el tipo de protección seleccionado actualmente
- */
-function obtenerTipoProteccionSeleccionado() {
-    // 1. Verificar paquetes (radio buttons)
-    const paqueteSeleccionado = document.querySelector('.input-paquete:checked');
-    if (paqueteSeleccionado) {
-        const card = paqueteSeleccionado.closest('.pack-card');
-        if (card) {
-            const nombre = card.querySelector('h4')?.textContent?.trim() || '';
-            // Buscar coincidencia exacta o parcial
-            for (let [key, value] of Object.entries(MAPEO_TIPO_PROTECCION)) {
-                if (nombre.includes(key) || key.includes(nombre)) {
-                    return value;
+        // 3. Buscar en cualquier card-categoria (buscar la que tenga badge "Actual")
+        const cards = document.querySelectorAll('.card-categoria');
+        for (let card of cards) {
+            if (card.classList.contains('activa') || card.querySelector('.cat-badge-actual')) {
+                const codigo = card.dataset.codigo;
+                if (codigo && GARANTIAS_POR_CATEGORIA[codigo]) {
+                    window.categoriaActual = codigo;
+                    return codigo;
                 }
             }
         }
+
+        // 4. Usar la categoría guardada en window
+        if (window.categoriaActual && GARANTIAS_POR_CATEGORIA[window.categoriaActual]) {
+            return window.categoriaActual;
+        }
+
+        // 5. Último recurso: intentar obtener del texto visible "Categoría X"
+        const categoriaText = document.querySelector('.categoria-actual-texto');
+        if (categoriaText) {
+            const texto = categoriaText.textContent.trim();
+            for (let key of Object.keys(GARANTIAS_POR_CATEGORIA)) {
+                if (texto.includes(key)) {
+                    window.categoriaActual = key;
+                    return key;
+                }
+            }
+        }
+
+        console.warn('⚠️ No se pudo determinar la categoría actual');
+        return null;
     }
 
-    // 2. Verificar individuales (checkboxes)
-    const individualesActivos = document.querySelectorAll('.switch-individual:checked');
-    if (individualesActivos.length > 0) {
-        for (let cb of individualesActivos) {
-            const card = cb.closest('.individual-card');
+    /**
+     * Obtiene el tipo de protección seleccionado actualmente
+     */
+    function obtenerTipoProteccionSeleccionado() {
+        // 1. Verificar paquetes (radio buttons)
+        const paqueteSeleccionado = document.querySelector('.input-paquete:checked');
+        if (paqueteSeleccionado) {
+            const card = paqueteSeleccionado.closest('.pack-card');
             if (card) {
-                const nombre = card.querySelector('.individual-nombre')?.textContent?.trim() || '';
+                const nombre = card.querySelector('h4')?.textContent?.trim() || '';
+                // Buscar coincidencia exacta o parcial
                 for (let [key, value] of Object.entries(MAPEO_TIPO_PROTECCION)) {
                     if (nombre.includes(key) || key.includes(nombre)) {
                         return value;
@@ -2138,97 +2134,43 @@ function obtenerTipoProteccionSeleccionado() {
                 }
             }
         }
-    }
 
-    // 3. Si hay selección en el estado del modal
-    if (typeof paqueteSeleccionado !== 'undefined' && window.paqueteSeleccionado) {
-        const nombre = window.paqueteSeleccionado.nombre || '';
-        for (let [key, value] of Object.entries(MAPEO_TIPO_PROTECCION)) {
-            if (nombre.includes(key) || key.includes(nombre)) {
-                return value;
+        // 2. Verificar individuales (checkboxes)
+        const individualesActivos = document.querySelectorAll('.switch-individual:checked');
+        if (individualesActivos.length > 0) {
+            for (let cb of individualesActivos) {
+                const card = cb.closest('.individual-card');
+                if (card) {
+                    const nombre = card.querySelector('.individual-nombre')?.textContent?.trim() || '';
+                    for (let [key, value] of Object.entries(MAPEO_TIPO_PROTECCION)) {
+                        if (nombre.includes(key) || key.includes(nombre)) {
+                            return value;
+                        }
+                    }
+                }
             }
         }
-    }
 
-    // 4. Default: CDW declinado
-    return 'CDW declinado';
-}
-
-/**
- * Actualiza el valor de garantía para un seguro específico
- */
-function actualizarGarantia(seguroId, categoria, tipoProteccion) {
-    const elementoGarantia = document.getElementById(`garantia-${seguroId}`);
-    if (!elementoGarantia) return;
-
-    // Si no hay categoría, mostrar 0
-    if (!categoria || !GARANTIAS_POR_CATEGORIA[categoria]) {
-        elementoGarantia.textContent = '$0 MXN';
-        return;
-    }
-
-    // Obtener el valor de garantía según la categoría y tipo
-    const garantias = GARANTIAS_POR_CATEGORIA[categoria];
-    const valor = garantias[tipoProteccion];
-
-    if (valor !== undefined) {
-        const valorFormateado = new Intl.NumberFormat('es-MX').format(valor);
-        elementoGarantia.textContent = `$${valorFormateado} MXN`;
-        elementoGarantia.style.color = '#16a34a';
-        elementoGarantia.style.fontWeight = 'bold';
-    } else {
-        elementoGarantia.textContent = '$0 MXN';
-    }
-}
-
-/**
- * Actualiza todas las garantías en el modal
- * Detecta el tipo de protección por el nombre del seguro
- */
-function actualizarTodasLasGarantias() {
-    const categoria = obtenerCategoriaActual();
-
-    console.log('🔍 Categoría actual:', categoria);
-    console.log('🔍 Garantías disponibles:', GARANTIAS_POR_CATEGORIA[categoria]);
-
-    // Recorrer CADA paquete de seguro individualmente
-    document.querySelectorAll('.pack-card').forEach(card => {
-        // 1. Primero intentar con data-tipo
-        let tipoProteccion = card.dataset.tipo;
-
-        // 2. Si no tiene data-tipo, detectar por el nombre
-        if (!tipoProteccion) {
-            const nombre = card.querySelector('h4')?.textContent?.trim() || '';
-            const nombreUpper = nombre.toUpperCase();
-
-            console.log(`🔍 Detectando tipo para: "${nombre}"`);
-
-            // Mapeo completo de tipos
-            if (nombreUpper.includes('LDW')) {
-                tipoProteccion = 'LDW';
-            } else if (nombreUpper.includes('PDW')) {
-                tipoProteccion = 'PDW';
-            } else if (nombreUpper.includes('CDW 10%') || nombreUpper.includes('10%') || nombreUpper.includes('CDW PACK 1')) {
-                tipoProteccion = 'CDW 10%';
-            } else if (nombreUpper.includes('CDW 20%') || nombreUpper.includes('20%') || nombreUpper.includes('CDW PACK 2') || nombreUpper.includes('CDW PACK 3')) {
-                tipoProteccion = 'CDW 20%';
-            } else if (nombreUpper.includes('DECLINE') || nombreUpper.includes('BÁSICA') || nombreUpper.includes('BASICA') || nombreUpper.includes('PROTECCIONES')) {
-                tipoProteccion = 'CDW declinado';
-            } else {
-                tipoProteccion = 'CDW declinado';
+        // 3. Si hay selección en el estado del modal
+        if (typeof paqueteSeleccionado !== 'undefined' && window.paqueteSeleccionado) {
+            const nombre = window.paqueteSeleccionado.nombre || '';
+            for (let [key, value] of Object.entries(MAPEO_TIPO_PROTECCION)) {
+                if (nombre.includes(key) || key.includes(nombre)) {
+                    return value;
+                }
             }
-
-            console.log(`🔍 Tipo detectado para "${nombre}": ${tipoProteccion}`);
         }
 
-        const seguroId = card.dataset.id;
+        // 4. Default: CDW declinado
+        return 'CDW declinado';
+    }
 
-        // Buscar el elemento de garantía de ESTE paquete
+    /**
+     * Actualiza el valor de garantía para un seguro específico
+     */
+    function actualizarGarantia(seguroId, categoria, tipoProteccion) {
         const elementoGarantia = document.getElementById(`garantia-${seguroId}`);
-        if (!elementoGarantia) {
-            console.warn(`⚠️ No se encontró elemento garantia-${seguroId}`);
-            return;
-        }
+        if (!elementoGarantia) return;
 
         // Si no hay categoría, mostrar 0
         if (!categoria || !GARANTIAS_POR_CATEGORIA[categoria]) {
@@ -2236,7 +2178,7 @@ function actualizarTodasLasGarantias() {
             return;
         }
 
-        // Obtener el valor según la categoría y el tipo ESPECÍFICO de este paquete
+        // Obtener el valor de garantía según la categoría y tipo
         const garantias = GARANTIAS_POR_CATEGORIA[categoria];
         const valor = garantias[tipoProteccion];
 
@@ -2245,371 +2187,440 @@ function actualizarTodasLasGarantias() {
             elementoGarantia.textContent = `$${valorFormateado} MXN`;
             elementoGarantia.style.color = '#16a34a';
             elementoGarantia.style.fontWeight = 'bold';
-
-            console.log(`✅ Paquete ${seguroId} (${tipoProteccion}): $${valorFormateado} MXN`);
         } else {
             elementoGarantia.textContent = '$0 MXN';
-            console.warn(`⚠️ No se encontró garantía para ${tipoProteccion} en categoría ${categoria}`);
         }
-    });
-}
-
-// ================================ ESCUCHAR CAMBIOS DE CATEGORÍA ===============================
-
-/**
- * Esta función se ejecuta cuando la categoría cambia desde cualquier lugar
- * (Paso 1, modal de categorías, etc.)
- */
-function onCategoriaCambiada(nuevaCategoria) {
-    console.log('🔄 Categoría cambiada a:', nuevaCategoria);
-
-    // Actualizar la variable global
-    window.categoriaActual = nuevaCategoria;
-
-    // Si el modal de protecciones está abierto, actualizar las garantías
-    const modal = document.getElementById('modalProtecciones');
-    if (modal && modal.classList.contains('active')) {
-        console.log('📢 Modal abierto, actualizando garantías...');
-        setTimeout(actualizarTodasLasGarantias, 300);
-    } else {
-        console.log('📢 Modal cerrado, las garantías se actualizarán al abrirlo');
     }
-}
 
-// Escuchar el evento personalizado 'categoriaCambiada'
-document.addEventListener('categoriaCambiada', function(e) {
-    if (e.detail && e.detail.categoria) {
-        onCategoriaCambiada(e.detail.categoria);
-    }
-});
+    /**
+     * Actualiza todas las garantías en el modal
+     * Detecta el tipo de protección por el nombre del seguro
+     */
+    function actualizarTodasLasGarantias() {
+        const categoria = obtenerCategoriaActual();
 
-// También observar cambios en el elemento contratoInicial
-const contratoInicial = document.getElementById('contratoInicial');
-if (contratoInicial) {
-    const observer = new MutationObserver(function(mutations) {
-        for (let mutation of mutations) {
-            if (mutation.type === 'attributes' &&
-                (mutation.attributeName === 'data-id-categoria' ||
-                 mutation.attributeName === 'data-codigo-categoria')) {
+        console.log('🔍 Categoría actual:', categoria);
+        console.log('🔍 Garantías disponibles:', GARANTIAS_POR_CATEGORIA[categoria]);
 
-                const nuevaCategoria = contratoInicial.dataset.codigoCategoria || contratoInicial.dataset.idCategoria;
-                console.log('🔄 Cambio detectado en contratoInicial:', nuevaCategoria);
+        // Recorrer CADA paquete de seguro individualmente
+        document.querySelectorAll('.pack-card').forEach(card => {
+            // 1. Primero intentar con data-tipo
+            let tipoProteccion = card.dataset.tipo;
 
-                if (nuevaCategoria) {
-                    onCategoriaCambiada(nuevaCategoria);
+            // 2. Si no tiene data-tipo, detectar por el nombre
+            if (!tipoProteccion) {
+                const nombre = card.querySelector('h4')?.textContent?.trim() || '';
+                const nombreUpper = nombre.toUpperCase();
+
+                console.log(`🔍 Detectando tipo para: "${nombre}"`);
+
+                // Mapeo completo de tipos
+                if (nombreUpper.includes('LDW')) {
+                    tipoProteccion = 'LDW';
+                } else if (nombreUpper.includes('PDW')) {
+                    tipoProteccion = 'PDW';
+                } else if (nombreUpper.includes('CDW 10%') || nombreUpper.includes('10%') || nombreUpper.includes('CDW PACK 1')) {
+                    tipoProteccion = 'CDW 10%';
+                } else if (nombreUpper.includes('CDW 20%') || nombreUpper.includes('20%') || nombreUpper.includes('CDW PACK 2') || nombreUpper.includes('CDW PACK 3')) {
+                    tipoProteccion = 'CDW 20%';
+                } else if (nombreUpper.includes('DECLINE') || nombreUpper.includes('BÁSICA') || nombreUpper.includes('BASICA') || nombreUpper.includes('PROTECCIONES')) {
+                    tipoProteccion = 'CDW declinado';
+                } else {
+                    tipoProteccion = 'CDW declinado';
                 }
+
+                console.log(`🔍 Tipo detectado para "${nombre}": ${tipoProteccion}`);
             }
-        }
-    });
-    observer.observe(contratoInicial, { attributes: true });
-}
 
-// ================================ INTEGRACIÓN CON EL MODAL ===============================
+            const seguroId = card.dataset.id;
 
-// Función para inicializar el sistema de garantías
-function inicializarSistemaGarantias() {
-    console.log('🟢 Inicializando sistema de garantías...');
+            // Buscar el elemento de garantía de ESTE paquete
+            const elementoGarantia = document.getElementById(`garantia-${seguroId}`);
+            if (!elementoGarantia) {
+                console.warn(`⚠️ No se encontró elemento garantia-${seguroId}`);
+                return;
+            }
 
-    // 1. Actualizar al abrir el modal de protecciones
-    const btnAbrirModal = document.getElementById('btnAbrirModalProtecciones');
-    if (btnAbrirModal) {
-        btnAbrirModal.addEventListener('click', function() {
-            // Obtener la categoría actual antes de actualizar
-            const categoria = obtenerCategoriaActual();
-            console.log('📢 Abriendo modal, categoría actual:', categoria);
-            setTimeout(actualizarTodasLasGarantias, 300);
+            // Si no hay categoría, mostrar 0
+            if (!categoria || !GARANTIAS_POR_CATEGORIA[categoria]) {
+                elementoGarantia.textContent = '$0 MXN';
+                return;
+            }
+
+            // Obtener el valor según la categoría y el tipo ESPECÍFICO de este paquete
+            const garantias = GARANTIAS_POR_CATEGORIA[categoria];
+            const valor = garantias[tipoProteccion];
+
+            if (valor !== undefined) {
+                const valorFormateado = new Intl.NumberFormat('es-MX').format(valor);
+                elementoGarantia.textContent = `$${valorFormateado} MXN`;
+                elementoGarantia.style.color = '#16a34a';
+                elementoGarantia.style.fontWeight = 'bold';
+
+                console.log(`✅ Paquete ${seguroId} (${tipoProteccion}): $${valorFormateado} MXN`);
+            } else {
+                elementoGarantia.textContent = '$0 MXN';
+                console.warn(`⚠️ No se encontró garantía para ${tipoProteccion} en categoría ${categoria}`);
+            }
         });
     }
 
-    // 2. Escuchar el evento personalizado de cambio de categoría
-    document.addEventListener('categoriaCambiada', function(e) {
-        console.log('📢 Evento categoriaCambiada recibido en inicializador:', e.detail);
-        // Si el modal está abierto, actualizar inmediatamente
+    // ================================ ESCUCHAR CAMBIOS DE CATEGORÍA ===============================
+
+    /**
+     * Esta función se ejecuta cuando la categoría cambia desde cualquier lugar
+     * (Paso 1, modal de categorías, etc.)
+     */
+    function onCategoriaCambiada(nuevaCategoria) {
+        console.log('🔄 Categoría cambiada a:', nuevaCategoria);
+
+        // Actualizar la variable global
+        window.categoriaActual = nuevaCategoria;
+
+        // Si el modal de protecciones está abierto, actualizar las garantías
         const modal = document.getElementById('modalProtecciones');
         if (modal && modal.classList.contains('active')) {
-            setTimeout(actualizarTodasLasGarantias, 200);
-        }
-    });
-
-    // 3. Actualizar al seleccionar protección
-    document.addEventListener('change', function(e) {
-        if (e.target.classList.contains('input-paquete') ||
-            e.target.classList.contains('switch-individual')) {
-            setTimeout(actualizarTodasLasGarantias, 200);
-        }
-    });
-
-    // 4. Interceptar el cambio de categoría desde el código existente
-    const observer = new MutationObserver(function(mutations) {
-        for (let mutation of mutations) {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'data-id-categoria') {
-                setTimeout(actualizarTodasLasGarantias, 200);
-                break;
-            }
-        }
-    });
-
-    const contratoInicial = document.getElementById('contratoInicial');
-    if (contratoInicial) {
-        observer.observe(contratoInicial, { attributes: true });
-    }
-
-    // 5. Actualizar al aplicar protecciones
-    const btnAplicar = document.getElementById('btnAplicarProtecciones');
-    if (btnAplicar) {
-        btnAplicar.addEventListener('click', function() {
-            setTimeout(actualizarTodasLasGarantias, 200);
-        });
-    }
-
-    // 6. Actualizar al cambiar de vista (paquetes/individuales)
-    const tabPaquetes = document.getElementById('tabPaquetes');
-    const tabIndividuales = document.getElementById('tabIndividuales');
-
-    if (tabPaquetes) {
-        tabPaquetes.addEventListener('click', function() {
+            console.log('📢 Modal abierto, actualizando garantías...');
             setTimeout(actualizarTodasLasGarantias, 300);
-        });
-    }
-    if (tabIndividuales) {
-        tabIndividuales.addEventListener('click', function() {
-            setTimeout(actualizarTodasLasGarantias, 300);
-        });
-    }
-
-    // 7. Ejecutar inicialmente
-    setTimeout(actualizarTodasLasGarantias, 600);
-
-    // 8. Ejecutar periódicamente mientras el modal esté visible
-    setInterval(function() {
-        const modal = document.getElementById('modalProtecciones');
-        if (modal && modal.classList.contains('active')) {
-            actualizarTodasLasGarantias();
+        } else {
+            console.log('📢 Modal cerrado, las garantías se actualizarán al abrirlo');
         }
-    }, 3000);
+    }
 
-    console.log('✅ Sistema de garantías inicializado');
-}
-
-// ================================ SOBRESCRIBIR FUNCIÓN DE CAMBIO DE CATEGORÍA ===============================
-
-// Modificar la función de cambio de categoría para actualizar garantías
-(function patchCambioCategoria() {
-    const originalClick = document.querySelector('#contenedorCategoriasJS')?.addEventListener;
-
-    // Agregar listener adicional para capturar cambios de categoría
-    document.addEventListener('categoriaCambiada', function(e) {
-        console.log('📢 Evento categoriaCambiada detectado:', e.detail);
+    // Escuchar el evento personalizado 'categoriaCambiada'
+    document.addEventListener('categoriaCambiada', function (e) {
         if (e.detail && e.detail.categoria) {
-            window.categoriaActual = e.detail.categoria;
-            setTimeout(actualizarTodasLasGarantias, 200);
+            onCategoriaCambiada(e.detail.categoria);
         }
     });
 
-    // Observar cambios en el dataset de contratoInicial
+    // También observar cambios en el elemento contratoInicial
     const contratoInicial = document.getElementById('contratoInicial');
     if (contratoInicial) {
-        const observer = new MutationObserver(function(mutations) {
+        const observer = new MutationObserver(function (mutations) {
             for (let mutation of mutations) {
                 if (mutation.type === 'attributes' &&
                     (mutation.attributeName === 'data-id-categoria' ||
-                     mutation.attributeName === 'data-codigo-categoria')) {
-                    console.log('🔄 Categoría cambiada en contratoInicial');
-                    setTimeout(actualizarTodasLasGarantias, 200);
+                        mutation.attributeName === 'data-codigo-categoria')) {
+
+                    const nuevaCategoria = contratoInicial.dataset.codigoCategoria || contratoInicial.dataset.idCategoria;
+                    console.log('🔄 Cambio detectado en contratoInicial:', nuevaCategoria);
+
+                    if (nuevaCategoria) {
+                        onCategoriaCambiada(nuevaCategoria);
+                    }
                 }
             }
         });
         observer.observe(contratoInicial, { attributes: true });
     }
-})();
 
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
-    // Esperar a que el modal esté disponible
-    let intentos = 0;
-    const checkModal = setInterval(function() {
-        intentos++;
-        if (document.getElementById('modalProtecciones')) {
-            clearInterval(checkModal);
-            inicializarSistemaGarantias();
-            console.log('✅ Sistema de garantías completamente inicializado');
+    // ================================ INTEGRACIÓN CON EL MODAL ===============================
+
+    // Función para inicializar el sistema de garantías
+    function inicializarSistemaGarantias() {
+        console.log('🟢 Inicializando sistema de garantías...');
+
+        // 1. Actualizar al abrir el modal de protecciones
+        const btnAbrirModal = document.getElementById('btnAbrirModalProtecciones');
+        if (btnAbrirModal) {
+            btnAbrirModal.addEventListener('click', function () {
+                // Obtener la categoría actual antes de actualizar
+                const categoria = obtenerCategoriaActual();
+                console.log('📢 Abriendo modal, categoría actual:', categoria);
+                setTimeout(actualizarTodasLasGarantias, 300);
+            });
         }
-        if (intentos >= 20) {
-            clearInterval(checkModal);
-            console.warn('⚠️ No se encontró el modal de protecciones, iniciando igual...');
-            inicializarSistemaGarantias();
-        }
-    }, 200);
-});
 
-// Exponer funciones globalmente
-window.actualizarGarantia = actualizarGarantia;
-window.actualizarTodasLasGarantias = actualizarTodasLasGarantias;
-window.obtenerCategoriaActual = obtenerCategoriaActual;
-window.obtenerTipoProteccionSeleccionado = obtenerTipoProteccionSeleccionado;
-
-// ================================ MODAL DE PROTECCIONES - TOGGLE DEL CARRITO ===============================
-
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('modalProtecciones');
-    const btnAbrir = document.getElementById('btnAbrirModalProtecciones');
-
-    // === ABRIR MODAL ===
-    if (btnAbrir && modal) {
-        btnAbrir.addEventListener('click', function(e) {
-            e.preventDefault();
-            modal.classList.add('active');
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-
-            // Copiar datos del resumen principal al modal
-            setTimeout(copiarResumenAlModal, 200);
-        });
-    }
-
-    // === CERRAR MODAL ===
-    const btnCerrar = document.getElementById('btnCerrarModalProtecciones');
-    const btnCerrarFooter = document.getElementById('btnCerrarModalFooter');
-
-    function cerrarModal() {
-        modal.classList.remove('active');
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
-    }
-
-    if (btnCerrar) btnCerrar.addEventListener('click', cerrarModal);
-    if (btnCerrarFooter) btnCerrarFooter.addEventListener('click', cerrarModal);
-
-    // Cerrar al hacer clic fuera
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) cerrarModal();
-    });
-
-    // === TOGGLE DEL CARRITO DENTRO DEL MODAL ===
-    const btnToggleModal = document.getElementById('btnToggleDetalleModal');
-    const resumenContainerModal = document.getElementById('resumenDetalleContainerModal');
-    const iconoFlechaModal = document.getElementById('iconoFlechaResumenModal');
-
-    if (btnToggleModal && resumenContainerModal) {
-        btnToggleModal.addEventListener('click', function(e) {
-            e.stopPropagation();
-
-            const estaAbierto = resumenContainerModal.classList.contains('abierto');
-
-            if (estaAbierto) {
-                resumenContainerModal.classList.remove('abierto');
-                resumenContainerModal.style.display = 'none';
-                if (iconoFlechaModal) iconoFlechaModal.style.transform = 'rotate(0deg)';
-            } else {
-                // Copiar datos antes de abrir
-                copiarResumenAlModal();
-                resumenContainerModal.classList.add('abierto');
-                resumenContainerModal.style.display = 'block';
-                if (iconoFlechaModal) iconoFlechaModal.style.transform = 'rotate(180deg)';
+        // 2. Escuchar el evento personalizado de cambio de categoría
+        document.addEventListener('categoriaCambiada', function (e) {
+            console.log('📢 Evento categoriaCambiada recibido en inicializador:', e.detail);
+            // Si el modal está abierto, actualizar inmediatamente
+            const modal = document.getElementById('modalProtecciones');
+            if (modal && modal.classList.contains('active')) {
+                setTimeout(actualizarTodasLasGarantias, 200);
             }
         });
-    }
 
-    // === VER DETALLE DENTRO DEL MODAL ===
-    const btnVerDetalleModal = document.getElementById('btnVerDetalleModal');
-    const btnOcultarDetalleModal = document.getElementById('btnOcultarDetalleModal');
-    const resumenDetalleModal = document.getElementById('resumenDetalleModal');
-    const resumenCompactoModal = document.getElementById('resumenCompactoModal');
-
-    if (btnVerDetalleModal && resumenDetalleModal) {
-        btnVerDetalleModal.addEventListener('click', function() {
-            copiarResumenAlModal();
-            resumenDetalleModal.style.display = 'block';
-            if (resumenCompactoModal) resumenCompactoModal.style.display = 'none';
+        // 3. Actualizar al seleccionar protección
+        document.addEventListener('change', function (e) {
+            if (e.target.classList.contains('input-paquete') ||
+                e.target.classList.contains('switch-individual')) {
+                setTimeout(actualizarTodasLasGarantias, 200);
+            }
         });
-    }
 
-    if (btnOcultarDetalleModal && resumenDetalleModal) {
-        btnOcultarDetalleModal.addEventListener('click', function() {
-            resumenDetalleModal.style.display = 'none';
-            if (resumenCompactoModal) resumenCompactoModal.style.display = 'block';
+        // 4. Interceptar el cambio de categoría desde el código existente
+        const observer = new MutationObserver(function (mutations) {
+            for (let mutation of mutations) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'data-id-categoria') {
+                    setTimeout(actualizarTodasLasGarantias, 200);
+                    break;
+                }
+            }
         });
+
+        const contratoInicial = document.getElementById('contratoInicial');
+        if (contratoInicial) {
+            observer.observe(contratoInicial, { attributes: true });
+        }
+
+        // 5. Actualizar al aplicar protecciones
+        const btnAplicar = document.getElementById('btnAplicarProtecciones');
+        if (btnAplicar) {
+            btnAplicar.addEventListener('click', function () {
+                setTimeout(actualizarTodasLasGarantias, 200);
+            });
+        }
+
+        // 6. Actualizar al cambiar de vista (paquetes/individuales)
+        const tabPaquetes = document.getElementById('tabPaquetes');
+        const tabIndividuales = document.getElementById('tabIndividuales');
+
+        if (tabPaquetes) {
+            tabPaquetes.addEventListener('click', function () {
+                setTimeout(actualizarTodasLasGarantias, 300);
+            });
+        }
+        if (tabIndividuales) {
+            tabIndividuales.addEventListener('click', function () {
+                setTimeout(actualizarTodasLasGarantias, 300);
+            });
+        }
+
+        // 7. Ejecutar inicialmente
+        setTimeout(actualizarTodasLasGarantias, 600);
+
+        // 8. Ejecutar periódicamente mientras el modal esté visible
+        setInterval(function () {
+            const modal = document.getElementById('modalProtecciones');
+            if (modal && modal.classList.contains('active')) {
+                actualizarTodasLasGarantias();
+            }
+        }, 3000);
+
+        console.log('✅ Sistema de garantías inicializado');
     }
-});
 
-// === FUNCIÓN PARA COPIAR DATOS DEL RESUMEN PRINCIPAL AL MODAL ===
-function copiarResumenAlModal() {
-    console.log('🔄 Copiando resumen al modal...');
+    // ================================ SOBRESCRIBIR FUNCIÓN DE CAMBIO DE CATEGORÍA ===============================
 
-    // Mapeo de elementos: [idPrincipal, idModal]
-    const elementos = [
-        ['btnTotalTextContrato', 'btnTotalTextContratoModal'],
-        ['btnTotalUsdContrato', 'btnTotalUsdContratoModal'],
-        ['resumenTotalCompacto', 'resumenTotalCompactoModal'],
-        ['resumenVehCompacto', 'resumenVehCompactoModal'],
-        ['resumenCategoriaCompacto', 'resumenCategoriaCompactoModal'],
-        ['resumenDiasCompacto', 'resumenDiasCompactoModal'],
-        ['resumenFechasCompacto', 'resumenFechasCompactoModal'],
-        ['detCodigo', 'detCodigoModal'],
-        ['detCliente', 'detClienteModal'],
-        ['detTelefono', 'detTelefonoModal'],
-        ['detEmail', 'detEmailModal'],
-        ['detModelo', 'detModeloModal'],
-        ['detMarca', 'detMarcaModal'],
-        ['detCategoria', 'detCategoriaModal'],
-        ['detTransmision', 'detTransmisionModal'],
-        ['detPasajeros', 'detPasajerosModal'],
-        ['detPuertas', 'detPuertasModal'],
-        ['detKm', 'detKmModal'],
-        ['detFechaSalida', 'detFechaSalidaModal'],
-        ['detHoraSalida', 'detHoraSalidaModal'],
-        ['detFechaEntrega', 'detFechaEntregaModal'],
-        ['detHoraEntrega', 'detHoraEntregaModal'],
-        ['detDiasRenta', 'detDiasRentaModal'],
-        ['r_base_precio', 'r_base_precioModal'],
-        ['r_cortesia', 'r_cortesiaModal'],
-        ['r_subtotal', 'r_subtotalModal'],
-        ['r_iva', 'r_ivaModal'],
-        ['r_total_final', 'r_total_finalModal'],
-        ['detPagos', 'detPagosModal'],
-        ['detSaldo', 'detSaldoModal'],
-    ];
+    // Modificar la función de cambio de categoría para actualizar garantías
+    (function patchCambioCategoria() {
+        const originalClick = document.querySelector('#contenedorCategoriasJS')?.addEventListener;
 
-    elementos.forEach(([origen, destino]) => {
-        const elOrigen = document.getElementById(origen);
-        const elDestino = document.getElementById(destino);
+        // Agregar listener adicional para capturar cambios de categoría
+        document.addEventListener('categoriaCambiada', function (e) {
+            console.log('📢 Evento categoriaCambiada detectado:', e.detail);
+            if (e.detail && e.detail.categoria) {
+                window.categoriaActual = e.detail.categoria;
+                setTimeout(actualizarTodasLasGarantias, 200);
+            }
+        });
 
-        if (elOrigen && elDestino) {
-            elDestino.textContent = elOrigen.textContent;
+        // Observar cambios en el dataset de contratoInicial
+        const contratoInicial = document.getElementById('contratoInicial');
+        if (contratoInicial) {
+            const observer = new MutationObserver(function (mutations) {
+                for (let mutation of mutations) {
+                    if (mutation.type === 'attributes' &&
+                        (mutation.attributeName === 'data-id-categoria' ||
+                            mutation.attributeName === 'data-codigo-categoria')) {
+                        console.log('🔄 Categoría cambiada en contratoInicial');
+                        setTimeout(actualizarTodasLasGarantias, 200);
+                    }
+                }
+            });
+            observer.observe(contratoInicial, { attributes: true });
+        }
+    })();
+
+    // Inicializar cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function () {
+        // Esperar a que el modal esté disponible
+        let intentos = 0;
+        const checkModal = setInterval(function () {
+            intentos++;
+            if (document.getElementById('modalProtecciones')) {
+                clearInterval(checkModal);
+                inicializarSistemaGarantias();
+                console.log('✅ Sistema de garantías completamente inicializado');
+            }
+            if (intentos >= 20) {
+                clearInterval(checkModal);
+                console.warn('⚠️ No se encontró el modal de protecciones, iniciando igual...');
+                inicializarSistemaGarantias();
+            }
+        }, 200);
+    });
+
+    // Exponer funciones globalmente
+    window.actualizarGarantia = actualizarGarantia;
+    window.actualizarTodasLasGarantias = actualizarTodasLasGarantias;
+    window.obtenerCategoriaActual = obtenerCategoriaActual;
+    window.obtenerTipoProteccionSeleccionado = obtenerTipoProteccionSeleccionado;
+
+    // ================================ MODAL DE PROTECCIONES - TOGGLE DEL CARRITO ===============================
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('modalProtecciones');
+        const btnAbrir = document.getElementById('btnAbrirModalProtecciones');
+
+        // === ABRIR MODAL ===
+        if (btnAbrir && modal) {
+            btnAbrir.addEventListener('click', function (e) {
+                e.preventDefault();
+                modal.classList.add('active');
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+
+                // Copiar datos del resumen principal al modal
+                setTimeout(copiarResumenAlModal, 200);
+            });
+        }
+
+        // === CERRAR MODAL ===
+        const btnCerrar = document.getElementById('btnCerrarModalProtecciones');
+        const btnCerrarFooter = document.getElementById('btnCerrarModalFooter');
+
+        function cerrarModal() {
+            modal.classList.remove('active');
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        if (btnCerrar) btnCerrar.addEventListener('click', cerrarModal);
+        if (btnCerrarFooter) btnCerrarFooter.addEventListener('click', cerrarModal);
+
+        // Cerrar al hacer clic fuera
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) cerrarModal();
+        });
+
+        // === TOGGLE DEL CARRITO DENTRO DEL MODAL ===
+        const btnToggleModal = document.getElementById('btnToggleDetalleModal');
+        const resumenContainerModal = document.getElementById('resumenDetalleContainerModal');
+        const iconoFlechaModal = document.getElementById('iconoFlechaResumenModal');
+
+        if (btnToggleModal && resumenContainerModal) {
+            btnToggleModal.addEventListener('click', function (e) {
+                e.stopPropagation();
+
+                const estaAbierto = resumenContainerModal.classList.contains('abierto');
+
+                if (estaAbierto) {
+                    resumenContainerModal.classList.remove('abierto');
+                    resumenContainerModal.style.display = 'none';
+                    if (iconoFlechaModal) iconoFlechaModal.style.transform = 'rotate(0deg)';
+                } else {
+                    // Copiar datos antes de abrir
+                    copiarResumenAlModal();
+                    resumenContainerModal.classList.add('abierto');
+                    resumenContainerModal.style.display = 'block';
+                    if (iconoFlechaModal) iconoFlechaModal.style.transform = 'rotate(180deg)';
+                }
+            });
+        }
+
+        // === VER DETALLE DENTRO DEL MODAL ===
+        const btnVerDetalleModal = document.getElementById('btnVerDetalleModal');
+        const btnOcultarDetalleModal = document.getElementById('btnOcultarDetalleModal');
+        const resumenDetalleModal = document.getElementById('resumenDetalleModal');
+        const resumenCompactoModal = document.getElementById('resumenCompactoModal');
+
+        if (btnVerDetalleModal && resumenDetalleModal) {
+            btnVerDetalleModal.addEventListener('click', function () {
+                copiarResumenAlModal();
+                resumenDetalleModal.style.display = 'block';
+                if (resumenCompactoModal) resumenCompactoModal.style.display = 'none';
+            });
+        }
+
+        if (btnOcultarDetalleModal && resumenDetalleModal) {
+            btnOcultarDetalleModal.addEventListener('click', function () {
+                resumenDetalleModal.style.display = 'none';
+                if (resumenCompactoModal) resumenCompactoModal.style.display = 'block';
+            });
         }
     });
 
-    // Copiar imagen del vehículo
-    const imgOrigen = document.getElementById('resumenImgVeh');
-    const imgDestino = document.getElementById('resumenImgVehModal');
-    if (imgOrigen && imgDestino) {
-        imgDestino.src = imgOrigen.src;
-    }
+    // === FUNCIÓN PARA COPIAR DATOS DEL RESUMEN PRINCIPAL AL MODAL ===
+    function copiarResumenAlModal() {
+        console.log('🔄 Copiando resumen al modal...');
 
-    // Copiar listas (seguros y servicios)
-    const listas = [
-        ['r_seguros_lista', 'r_seguros_listaModal'],
-        ['r_servicios_lista', 'r_servicios_listaModal'],
-    ];
+        // Mapeo de elementos: [idPrincipal, idModal]
+        const elementos = [
+            ['btnTotalTextContrato', 'btnTotalTextContratoModal'],
+            ['btnTotalUsdContrato', 'btnTotalUsdContratoModal'],
+            ['resumenTotalCompacto', 'resumenTotalCompactoModal'],
+            ['resumenVehCompacto', 'resumenVehCompactoModal'],
+            ['resumenCategoriaCompacto', 'resumenCategoriaCompactoModal'],
+            ['resumenDiasCompacto', 'resumenDiasCompactoModal'],
+            ['resumenFechasCompacto', 'resumenFechasCompactoModal'],
+            ['detCodigo', 'detCodigoModal'],
+            ['detCliente', 'detClienteModal'],
+            ['detTelefono', 'detTelefonoModal'],
+            ['detEmail', 'detEmailModal'],
+            ['detModelo', 'detModeloModal'],
+            ['detMarca', 'detMarcaModal'],
+            ['detCategoria', 'detCategoriaModal'],
+            ['detTransmision', 'detTransmisionModal'],
+            ['detPasajeros', 'detPasajerosModal'],
+            ['detPuertas', 'detPuertasModal'],
+            ['detKm', 'detKmModal'],
+            ['detFechaSalida', 'detFechaSalidaModal'],
+            ['detHoraSalida', 'detHoraSalidaModal'],
+            ['detFechaEntrega', 'detFechaEntregaModal'],
+            ['detHoraEntrega', 'detHoraEntregaModal'],
+            ['detDiasRenta', 'detDiasRentaModal'],
+            ['r_base_precio', 'r_base_precioModal'],
+            ['r_cortesia', 'r_cortesiaModal'],
+            ['r_subtotal', 'r_subtotalModal'],
+            ['r_iva', 'r_ivaModal'],
+            ['r_total_final', 'r_total_finalModal'],
+            ['detPagos', 'detPagosModal'],
+            ['detSaldo', 'detSaldoModal'],
+        ];
 
-    listas.forEach(([origen, destino]) => {
-        const elOrigen = document.getElementById(origen);
-        const elDestino = document.getElementById(destino);
+        elementos.forEach(([origen, destino]) => {
+            const elOrigen = document.getElementById(origen);
+            const elDestino = document.getElementById(destino);
 
-        if (elOrigen && elDestino) {
-            elDestino.innerHTML = elOrigen.innerHTML;
+            if (elOrigen && elDestino) {
+                elDestino.textContent = elOrigen.textContent;
+            }
+        });
+
+        // Copiar imagen del vehículo
+        const imgOrigen = document.getElementById('resumenImgVeh');
+        const imgDestino = document.getElementById('resumenImgVehModal');
+        if (imgOrigen && imgDestino) {
+            imgDestino.src = imgOrigen.src;
         }
-    });
 
-    // Copiar totales de seguros
-    const totalSeguros = document.getElementById('total_seguros');
-    const totalSegurosModal = document.getElementById('total_seguros_modal');
-    if (totalSeguros && totalSegurosModal) {
-        totalSegurosModal.textContent = totalSeguros.textContent;
+        // Copiar listas (seguros y servicios)
+        const listas = [
+            ['r_seguros_lista', 'r_seguros_listaModal'],
+            ['r_servicios_lista', 'r_servicios_listaModal'],
+        ];
+
+        listas.forEach(([origen, destino]) => {
+            const elOrigen = document.getElementById(origen);
+            const elDestino = document.getElementById(destino);
+
+            if (elOrigen && elDestino) {
+                elDestino.innerHTML = elOrigen.innerHTML;
+            }
+        });
+
+        // Copiar totales de seguros
+        const totalSeguros = document.getElementById('total_seguros');
+        const totalSegurosModal = document.getElementById('total_seguros_modal');
+        if (totalSeguros && totalSegurosModal) {
+            totalSegurosModal.textContent = totalSeguros.textContent;
+        }
+
+        console.log('✅ Resumen copiado al modal');
     }
-
-    console.log('✅ Resumen copiado al modal');
-}
 
     const modal = document.getElementById('modalProtecciones');
     if (modal && modal.classList.contains('active')) {
@@ -2617,189 +2628,189 @@ function copiarResumenAlModal() {
     }
 
     // =====================================================
-// CARRITO DEL MODAL DE PROTECCIONES
-// =====================================================
+    // CARRITO DEL MODAL DE PROTECCIONES
+    // =====================================================
 
-function copiarResumenNavbarAlModal() {
-    const copiarTexto = (origenId, destinoId) => {
-        const origen = document.getElementById(origenId);
-        const destino = document.getElementById(destinoId);
+    function copiarResumenNavbarAlModal() {
+        const copiarTexto = (origenId, destinoId) => {
+            const origen = document.getElementById(origenId);
+            const destino = document.getElementById(destinoId);
 
-        if (origen && destino) {
-            destino.textContent = origen.textContent.trim();
-        }
-    };
-
-    const copiarHTML = (origenId, destinoId) => {
-        const origen = document.getElementById(origenId);
-        const destino = document.getElementById(destinoId);
-
-        if (origen && destino) {
-            destino.innerHTML = origen.innerHTML;
-        }
-    };
-
-    copiarTexto('btnTotalTextContrato', 'btnTotalTextContratoModal');
-    copiarTexto('btnTotalUsdContrato', 'btnTotalUsdContratoModal');
-    copiarTexto('resumenTotalCompacto', 'resumenTotalCompactoModal');
-
-    copiarTexto('resumenVehCompacto', 'resumenVehCompactoModal');
-    copiarTexto('resumenCategoriaCompacto', 'resumenCategoriaCompactoModal');
-    copiarTexto('resumenDiasCompacto', 'resumenDiasCompactoModal');
-    copiarTexto('resumenFechasCompacto', 'resumenFechasCompactoModal');
-
-    copiarTexto('detCodigo', 'detCodigoModal');
-    copiarTexto('detCliente', 'detClienteModal');
-    copiarTexto('detTelefono', 'detTelefonoModal');
-    copiarTexto('detEmail', 'detEmailModal');
-
-    copiarTexto('detModelo', 'detModeloModal');
-    copiarTexto('detMarca', 'detMarcaModal');
-    copiarTexto('detCategoria', 'detCategoriaModal');
-    copiarTexto('detTransmision', 'detTransmisionModal');
-    copiarTexto('detPasajeros', 'detPasajerosModal');
-    copiarTexto('detPuertas', 'detPuertasModal');
-    copiarTexto('detKm', 'detKmModal');
-
-    copiarTexto('detFechaSalida', 'detFechaSalidaModal');
-    copiarTexto('detHoraSalida', 'detHoraSalidaModal');
-    copiarTexto('detFechaEntrega', 'detFechaEntregaModal');
-    copiarTexto('detHoraEntrega', 'detHoraEntregaModal');
-    copiarTexto('detDiasRenta', 'detDiasRentaModal');
-
-    copiarHTML('r_seguros_lista', 'r_seguros_listaModal');
-    copiarTexto('r_seguros_total', 'r_seguros_totalModal');
-
-    copiarHTML('r_servicios_lista', 'r_servicios_listaModal');
-    copiarTexto('r_servicios_total', 'r_servicios_totalModal');
-
-    copiarTexto('r_base_precio', 'r_base_precioModal');
-    copiarTexto('r_cortesia', 'r_cortesiaModal');
-    copiarTexto('r_subtotal', 'r_subtotalModal');
-    copiarTexto('r_iva', 'r_ivaModal');
-    copiarTexto('r_total_final', 'r_total_finalModal');
-
-    copiarTexto('detPagos', 'detPagosModal');
-    copiarTexto('detSaldo', 'detSaldoModal');
-
-    const imgOrigen = document.getElementById('resumenImgVeh');
-    const imgDestino = document.getElementById('resumenImgVehModal');
-
-    if (imgOrigen && imgDestino) {
-        imgDestino.src = imgOrigen.src;
-    }
-
-    copiarTexto('resumenProteccionesCompacto', 'resumenProteccionesCompactoModal');
-}
-
-function cerrarCarritoModalProtecciones() {
-    const resumenModal = document.getElementById('resumenDetalleContainerModal');
-    const iconoModal = document.getElementById('iconoFlechaResumenModal');
-
-    if (!resumenModal) return;
-
-    resumenModal.classList.remove('abierto');
-    resumenModal.style.display = 'none';
-
-    if (iconoModal) {
-        iconoModal.style.transform = 'rotate(0deg)';
-    }
-}
-
-function inicializarCarritoModalProtecciones() {
-    const modal = document.getElementById('modalProtecciones');
-
-    const btnToggleModal = document.getElementById('btnToggleDetalleModal');
-    const resumenModal = document.getElementById('resumenDetalleContainerModal');
-    const iconoModal = document.getElementById('iconoFlechaResumenModal');
-
-    const btnVerDetalleModal = document.getElementById('btnVerDetalleModal');
-    const btnOcultarDetalleModal = document.getElementById('btnOcultarDetalleModal');
-
-    const resumenCompactoModal = document.getElementById('resumenCompactoModal');
-    const resumenDetalleModal = document.getElementById('resumenDetalleModal');
-
-    if (!btnToggleModal || !resumenModal) {
-        console.warn('⚠️ No se encontró el carrito del modal de protecciones.');
-        return;
-    }
-
-    copiarResumenNavbarAlModal();
-
-    btnToggleModal.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        copiarResumenNavbarAlModal();
-
-        const abierto = resumenModal.classList.contains('abierto');
-
-        if (abierto) {
-            cerrarCarritoModalProtecciones();
-        } else {
-            resumenModal.classList.add('abierto');
-            resumenModal.style.display = 'block';
-
-            if (iconoModal) {
-                iconoModal.style.transform = 'rotate(180deg)';
+            if (origen && destino) {
+                destino.textContent = origen.textContent.trim();
             }
-        }
-    });
+        };
 
-    btnVerDetalleModal?.addEventListener('click', function (e) {
-        e.preventDefault();
+        const copiarHTML = (origenId, destinoId) => {
+            const origen = document.getElementById(origenId);
+            const destino = document.getElementById(destinoId);
+
+            if (origen && destino) {
+                destino.innerHTML = origen.innerHTML;
+            }
+        };
+
+        copiarTexto('btnTotalTextContrato', 'btnTotalTextContratoModal');
+        copiarTexto('btnTotalUsdContrato', 'btnTotalUsdContratoModal');
+        copiarTexto('resumenTotalCompacto', 'resumenTotalCompactoModal');
+
+        copiarTexto('resumenVehCompacto', 'resumenVehCompactoModal');
+        copiarTexto('resumenCategoriaCompacto', 'resumenCategoriaCompactoModal');
+        copiarTexto('resumenDiasCompacto', 'resumenDiasCompactoModal');
+        copiarTexto('resumenFechasCompacto', 'resumenFechasCompactoModal');
+
+        copiarTexto('detCodigo', 'detCodigoModal');
+        copiarTexto('detCliente', 'detClienteModal');
+        copiarTexto('detTelefono', 'detTelefonoModal');
+        copiarTexto('detEmail', 'detEmailModal');
+
+        copiarTexto('detModelo', 'detModeloModal');
+        copiarTexto('detMarca', 'detMarcaModal');
+        copiarTexto('detCategoria', 'detCategoriaModal');
+        copiarTexto('detTransmision', 'detTransmisionModal');
+        copiarTexto('detPasajeros', 'detPasajerosModal');
+        copiarTexto('detPuertas', 'detPuertasModal');
+        copiarTexto('detKm', 'detKmModal');
+
+        copiarTexto('detFechaSalida', 'detFechaSalidaModal');
+        copiarTexto('detHoraSalida', 'detHoraSalidaModal');
+        copiarTexto('detFechaEntrega', 'detFechaEntregaModal');
+        copiarTexto('detHoraEntrega', 'detHoraEntregaModal');
+        copiarTexto('detDiasRenta', 'detDiasRentaModal');
+
+        copiarHTML('r_seguros_lista', 'r_seguros_listaModal');
+        copiarTexto('r_seguros_total', 'r_seguros_totalModal');
+
+        copiarHTML('r_servicios_lista', 'r_servicios_listaModal');
+        copiarTexto('r_servicios_total', 'r_servicios_totalModal');
+
+        copiarTexto('r_base_precio', 'r_base_precioModal');
+        copiarTexto('r_cortesia', 'r_cortesiaModal');
+        copiarTexto('r_subtotal', 'r_subtotalModal');
+        copiarTexto('r_iva', 'r_ivaModal');
+        copiarTexto('r_total_final', 'r_total_finalModal');
+
+        copiarTexto('detPagos', 'detPagosModal');
+        copiarTexto('detSaldo', 'detSaldoModal');
+
+        const imgOrigen = document.getElementById('resumenImgVeh');
+        const imgDestino = document.getElementById('resumenImgVehModal');
+
+        if (imgOrigen && imgDestino) {
+            imgDestino.src = imgOrigen.src;
+        }
+
+        copiarTexto('resumenProteccionesCompacto', 'resumenProteccionesCompactoModal');
+    }
+
+    function cerrarCarritoModalProtecciones() {
+        const resumenModal = document.getElementById('resumenDetalleContainerModal');
+        const iconoModal = document.getElementById('iconoFlechaResumenModal');
+
+        if (!resumenModal) return;
+
+        resumenModal.classList.remove('abierto');
+        resumenModal.style.display = 'none';
+
+        if (iconoModal) {
+            iconoModal.style.transform = 'rotate(0deg)';
+        }
+    }
+
+    function inicializarCarritoModalProtecciones() {
+        const modal = document.getElementById('modalProtecciones');
+
+        const btnToggleModal = document.getElementById('btnToggleDetalleModal');
+        const resumenModal = document.getElementById('resumenDetalleContainerModal');
+        const iconoModal = document.getElementById('iconoFlechaResumenModal');
+
+        const btnVerDetalleModal = document.getElementById('btnVerDetalleModal');
+        const btnOcultarDetalleModal = document.getElementById('btnOcultarDetalleModal');
+
+        const resumenCompactoModal = document.getElementById('resumenCompactoModal');
+        const resumenDetalleModal = document.getElementById('resumenDetalleModal');
+
+        if (!btnToggleModal || !resumenModal) {
+            console.warn('⚠️ No se encontró el carrito del modal de protecciones.');
+            return;
+        }
 
         copiarResumenNavbarAlModal();
 
-        if (resumenCompactoModal) resumenCompactoModal.style.display = 'none';
-        if (resumenDetalleModal) resumenDetalleModal.style.display = 'block';
-    });
+        btnToggleModal.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-    btnOcultarDetalleModal?.addEventListener('click', function (e) {
-        e.preventDefault();
+            copiarResumenNavbarAlModal();
 
-        if (resumenDetalleModal) resumenDetalleModal.style.display = 'none';
-        if (resumenCompactoModal) resumenCompactoModal.style.display = 'block';
-    });
+            const abierto = resumenModal.classList.contains('abierto');
 
-    document.addEventListener('click', function (e) {
-        if (!resumenModal.classList.contains('abierto')) return;
+            if (abierto) {
+                cerrarCarritoModalProtecciones();
+            } else {
+                resumenModal.classList.add('abierto');
+                resumenModal.style.display = 'block';
 
-        const clicDentro =
-            btnToggleModal.contains(e.target) ||
-            resumenModal.contains(e.target);
+                if (iconoModal) {
+                    iconoModal.style.transform = 'rotate(180deg)';
+                }
+            }
+        });
 
-        if (!clicDentro) {
-            cerrarCarritoModalProtecciones();
-        }
-    });
+        btnVerDetalleModal?.addEventListener('click', function (e) {
+            e.preventDefault();
 
-    document.addEventListener('change', function () {
-        if (modal && modal.classList.contains('active')) {
-            setTimeout(copiarResumenNavbarAlModal, 250);
-        }
-    });
+            copiarResumenNavbarAlModal();
 
-    document.addEventListener('click', function (e) {
-        if (!modal || !modal.classList.contains('active')) return;
+            if (resumenCompactoModal) resumenCompactoModal.style.display = 'none';
+            if (resumenDetalleModal) resumenDetalleModal.style.display = 'block';
+        });
 
-        const cambioResumen =
-            e.target.closest('.card-servicio') ||
-            e.target.closest('.cargo-item') ||
-            e.target.closest('.proteccion-card') ||
-            e.target.closest('.coverage-card') ||
-            e.target.closest('.card-paquete') ||
-            e.target.closest('.btn-contador') ||
-            e.target.closest('.btn-elegir-paquete') ||
-            e.target.closest('.btn-proteccion');
+        btnOcultarDetalleModal?.addEventListener('click', function (e) {
+            e.preventDefault();
 
-        if (cambioResumen) {
-            setTimeout(copiarResumenNavbarAlModal, 350);
-        }
-    });
-}
+            if (resumenDetalleModal) resumenDetalleModal.style.display = 'none';
+            if (resumenCompactoModal) resumenCompactoModal.style.display = 'block';
+        });
 
-inicializarCarritoModalProtecciones();
+        document.addEventListener('click', function (e) {
+            if (!resumenModal.classList.contains('abierto')) return;
+
+            const clicDentro =
+                btnToggleModal.contains(e.target) ||
+                resumenModal.contains(e.target);
+
+            if (!clicDentro) {
+                cerrarCarritoModalProtecciones();
+            }
+        });
+
+        document.addEventListener('change', function () {
+            if (modal && modal.classList.contains('active')) {
+                setTimeout(copiarResumenNavbarAlModal, 250);
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!modal || !modal.classList.contains('active')) return;
+
+            const cambioResumen =
+                e.target.closest('.card-servicio') ||
+                e.target.closest('.cargo-item') ||
+                e.target.closest('.proteccion-card') ||
+                e.target.closest('.coverage-card') ||
+                e.target.closest('.card-paquete') ||
+                e.target.closest('.btn-contador') ||
+                e.target.closest('.btn-elegir-paquete') ||
+                e.target.closest('.btn-proteccion');
+
+            if (cambioResumen) {
+                setTimeout(copiarResumenNavbarAlModal, 350);
+            }
+        });
+    }
+
+    inicializarCarritoModalProtecciones();
 
 });
 

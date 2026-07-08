@@ -668,6 +668,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTxt('#resumenTotalBarra', window.money(granTotal));
                 setTxt('#resumenTotalUsd', `$${(granTotal / 18.5).toFixed(2)} USD`);
                 setTxt('#resumenTotalCompacto', window.money(granTotal));
+                setTxt('#btnTotalTextContrato', window.money(granTotal));
+                setTxt('#btnTotalUsdContrato', `$${(granTotal / 18.5).toFixed(2)} USD`);
                 setTxt('#r_total_final', window.money(granTotal));
                 setTxt('#r_subtotal', window.money(r.totales.subtotal));
                 setTxt('#r_iva', window.money(r.totales.iva));
