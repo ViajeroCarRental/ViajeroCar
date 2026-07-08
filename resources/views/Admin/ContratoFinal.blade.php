@@ -418,7 +418,7 @@
                             del tratamiento de mis datos personales como se describe en el aviso de privacidad que se
                             encuentra
                             a mi disposición en:
-                            <a href="https://www.viajeroacrental.mx/" target="_blank">https://www.viajeroacrental.mx/</a>
+                            <a href="https://www.viajerocarental.com" target="_blank">https://www.viajerocarental.com</a>
                         </p>
 
                         <div class="firmas-container">

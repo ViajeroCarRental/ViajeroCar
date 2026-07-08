@@ -7,1445 +7,1267 @@
 
   <style>
   /* ==========================================================
-     🧾 CONFIG BÁSICA PDF
+     CONFIG BÁSICA PDF
   ========================================================== */
-
   @page{
-    /* La hoja ahora es A4 vertical */
     size: A4 portrait;
-    margin: 6mm;
+    margin: 0;
+  }
+
+  @page clausulas{
+    size: A4 portrait;
+    margin: 14mm 6mm 10mm 6mm;
   }
 
   :root{
-    --brand:#FF1E2D;
-    --brand-2:#D6121F;
-    --ink:#101828;
-    --muted:#667085;
-    --stroke:#E5E7EB;
-    --paper:#ffffff;
+    --brand:#D6001C;
+    --brand-2:#d32f2f;
+    --ink:#111827;
+    --muted:#4b5563;
+    --stroke:#e5e7eb;
   }
 
-  *{
-    box-sizing:border-box;
-  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
 
   html, body{
-    margin:0;
-    padding:0;
     background:#fff !important;
     color:var(--ink);
-    font-family: "Bahnschrift", Arial, sans-serif;
+    font-family: 'Inter','Poppins', Arial, sans-serif;
+    font-size: 10px;
+    line-height: 1.25;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
   .contrato-final-container{
     width:100%;
     margin:0;
-    padding: 0;
+    padding:0;
     background:#fff;
   }
 
   /* ==========================================================
-   🧾 ENCABEZADO CONTRATO (AJUSTADO AL DISEÑO ORIGINAL)
-========================================================== */
-
-.header-contrato{
-  width:100%;
-  padding: 12mm 16mm 4mm 16mm;
-  position:relative;
-}
-
-.header-layout{
-  display: table;
-  width:100%;
-  table-layout: fixed;
-}
-
-.header-left{
-  display: table-cell;
-  width: 60%;
-  vertical-align: top;
-}
-
-.header-right{
-  display: table-cell;
-  width: 40%;
-  vertical-align: top;
-  text-align:right;
-  position:relative;
-}
-
-/* LOGO */
-
-.logo-viajero{
-  display:block;
-  height: 16mm;          /* tamaño del logo */
-  margin-left: -6mm;     /* mueve izquierda (-) / derecha (+) */
-  margin-top: -6mm;      /* mueve arriba (-) / abajo (+) */
-  margin-bottom: 6mm;    /* distancia entre logo y texto */
-  width:auto;
-}
-
-/* TEXTOS */
-
-.header-textos{
-  margin-top: 0;
-}
-
-.header-titulo{
-  margin:0 0 1.5mm 0;
-  font-size: 21pt;
-  font-weight: 700;
-  color:#444444;
-  line-height:1.2;
-}
-
-.header-subtitulo{
-  margin:0;
-  font-size: 12pt;
-  font-weight:600;
-  color:#5A5A5A;
-}
-
-/* FIGURA  A GRANDE */
-
-.header-figura{
-  position:absolute;
-  right:-32mm;   /* mueve derecha (-) / izquierda (+) */
-  top:0mm;     /* mueve arriba (-) / abajo (+) */
-  height:105mm;  /* tamaño de la figura */
-  width:auto;
-  z-index:1;
-  opacity:0.9;
-}
-
-/* BLOQUE DERECHO */
-
-.header-datos{
-  position:relative;
-  z-index:2;
-  font-size: 10pt;
-  color:#9A9A9A;
-  text-align:right;
-  margin-top: 2mm;
-}
-
-.header-datos-linea{
-  margin: 0 0 2.2mm 0;
-  line-height:1.3;
-}
-
-/* CHIPS */
-
-.chip-rojo{
-  display:inline-block;
-  background: var(--brand);
-  color:#fff;
-  padding: 1.3mm 4.2mm;
-  border-radius: 999px;
-  margin-left: 3mm;
-  font-size: 9pt;
-  font-weight:700;
-  white-space: nowrap;
-}
-
-  /* ==========================================================
-   🧾 TÍTULO SECCIÓN: INFORMACIÓN DE TU VEHÍCULO
-========================================================== */
-
-.titulo-seccion-vehiculo{
-  margin: 10mm 16mm 4mm 16mm;
-}
-
-.titulo-vehiculo-texto{
-  font-family: "Bahnschrift", Arial, sans-serif;
-  font-weight: 800;
-  font-size: 13pt;
-  color: var(--brand);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-  /* ==========================================================
-     🔴 FRANJA ROJA: INFORMACIÓN DEL VEHÍCULO
+     ENCABEZADO - BLANCO
   ========================================================== */
-
-  .vehiculo-info-box{
-    margin: 0 16mm 8mm 16mm;     /* mismos márgenes horizontales que el título */
-    width: calc(100% - 32mm);    /* 16mm izq + 16mm der */
-    background: var(--brand);
-    border-radius: 12mm 12mm 6mm 6mm; /* redondeado fuerte arriba como la imagen */
-    padding: 7mm 10mm 6mm 10mm;
-    color:#ffffff;
-    font-family: Arial, sans-serif;
-    font-size: 9pt;
-  }
-
-  .vehiculo-info-top{
-    display: table;
+  .encabezado-blanco{
     width:100%;
-    table-layout: fixed;
-    margin-bottom: 4mm;
-  }
-
-  .vehiculo-info-item{
-    display: table-cell;
-    vertical-align: top;
-    padding-right: 4mm;
-    text-align:left;
-  }
-
-  .vehiculo-info-label{
-    display:block;
-    font-weight:700;
-    margin-bottom: 1mm;
-  }
-
-  .vehiculo-info-value{
-    display:block;
-    font-weight:400;
-  }
-
-  .vehiculo-info-bottom{
     display: table;
-    width:100%;
     table-layout: fixed;
-    margin-top: 1mm;
+    padding: 5px 6mm 7px 6mm;
   }
 
-  .vehiculo-info-bottom-left,
-  .vehiculo-info-bottom-right{
+  .logo-titulo-blanco{
     display: table-cell;
-    vertical-align: middle;
-    text-align:left;
-  }
-
-  .vehiculo-info-bottom-right{
-    text-align:right;
-  }
-
-  .vehiculo-gas-icon{
-    display:inline-block;
-    height: 5mm;         /* icono de la gasolinera */
-    width:auto;
-    margin-right: 2mm;
+    width: 50%;
     vertical-align: middle;
   }
 
-  .vehiculo-inline-label{
-    font-weight:700;
+  .logo-contrato{
+    width: 205px;
+    height: auto;
+    filter: brightness(0) saturate(100%) invert(11%) sepia(96%) saturate(6019%) hue-rotate(354deg) brightness(93%) contrast(118%);
   }
 
-  .vehiculo-inline-value{
-    font-weight:400;
-  }
-
-  /* ==========================================================
-     🔴 SECCIÓN ARRENDATARIO / ITINERARIO
-  ========================================================== */
-
-  .seccion-dos-columnas{
-    margin: 6mm 16mm 4mm 16mm;
-    width: calc(100% - 32mm); /* 16mm izq + 16mm der */
-  }
-
-  .seccion-dos-columnas-inner{
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-  }
-
-  .col-arrendatario,
-  .col-itinerario{
+  .encabezado-datos-cell{
     display: table-cell;
-    vertical-align: top;
-  }
-
-  .col-arrendatario{
-    padding-right: 8mm;
-  }
-
-  .col-itinerario{
-    padding-left: 8mm;
-  }
-
-  .titulo-col-rojo{
-    font-family: "Bahnschrift", Arial, sans-serif;
-    font-weight: 700;
-    font-size: 11.5pt;
-    color: var(--brand);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    margin: 0 0 3mm 0;
-  }
-
-  .titulo-col-derecha{
+    width: 50%;
+    vertical-align: middle;
     text-align: right;
+    position: relative;
   }
 
-  .arrendatario-datos{
-    font-family: Arial, sans-serif;
-    font-size: 9.3pt;
+  .logo-fondo-derecho{
+    position: absolute;
+    right: -18mm;
+    top: -8px;
+    height: 195px;
+    width: auto;
+    z-index: 0;
+    opacity: 0.9;
+    filter: grayscale(100%) brightness(0) invert(88%);
+  }
+
+  .encabezado-datos{
+    position: relative;
+    z-index: 1;
+  }
+
+  .encabezado-datos p{
+    margin: 5px 0;
+    font-size: 13.5px;
+    color: #222;
+    white-space: nowrap;
+  }
+
+  .burbuja-roja{
+    background-color: var(--brand-2);
+    color: #fff;
+    padding: 3px 14px;
+    border-radius: 10px;
+    font-weight: bold;
+    display: inline-block;
+    text-align: center;
+    font-size: 13.5px;
+    margin-left: 6px;
+  }
+
+  .ico{
+    width: 11px;
+    height: 11px;
+    display: inline-block;
+    vertical-align: -1px;
+    margin-right: 3px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .itinerario-item .info-line .ico{ color: var(--brand-2); }
+  .adicionales-table .ico,
+  .gasolina-cell .ico{ color: #ffffff; stroke-width: 2.3; }
+
+  /* ==========================================================
+     TARJETA GRACIAS (IZQUIERDA)
+  ========================================================== */
+  .tarjeta-blanca-izquierda{
+    padding: 9px 6mm 9px 6mm;
+    text-align: left;
+    margin-bottom: 2px;
+  }
+
+  .tarjeta-blanca-izquierda .gracias{
+    color: #1a1a1a;
+    font-size: 20px;
+    font-weight: 400;
+    margin: 0;
+    line-height: 1.25;
+  }
+
+  .tarjeta-blanca-izquierda .gracias strong{
+    font-weight: 700;
     color: #000;
   }
 
-  .arrendatario-row{
-    margin-bottom: 1.8mm;
+  .tarjeta-blanca-izquierda .frase{
+    color: #4b5563;
+    font-size: 13px;
+    margin: 4px 0 0 0;
+    font-style: italic;
   }
 
-  .arrendatario-label{
+  /* ==========================================================
+     TÍTULOS DE SECCIÓN (ROJOS)
+  ========================================================== */
+  .titulo-seccion{
+    color: var(--brand);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: .3px;
+    margin: 7px 0 3px 0;
+    text-transform: uppercase;
+  }
+
+  /* ==========================================================
+     CUERPO - SECCIONES
+  ========================================================== */
+  .secciones{
+    padding: 1px 6mm 0;
+  }
+
+  .row-full{ display: block; margin-top: 11px; }
+
+  /* ==========================================================
+     VEHÍCULO
+  ========================================================== */
+  .bloque-vehiculo{
+    background-color: var(--brand-2);
+    border-top-left-radius: 24px;
+    border-bottom-left-radius: 24px;
+    padding: 10px 14px 10px 26px;
+    width: calc(100% + 6mm);
+    margin-right: -6mm;
+    box-sizing: border-box;
+    color:#fff;
+  }
+
+  .vehiculo-grid{
+    display: table;
+    width:100%;
+    table-layout: fixed;
+    color:#fff;
+  }
+
+  .vehiculo-item{
+    display: table-cell;
+    vertical-align: top;
+  }
+
+  .vehiculo-item .label{
+    display:block;
+    font-size: 9.5px;
     font-weight: 700;
+    color:#fff;
+    margin-bottom: 2px;
   }
 
-  .arrendatario-label-inline{
-    margin-left: 10mm;
+  .vehiculo-item .value{
+    display:block;
+    font-size: 10.5px;
+    font-weight: 600;
+    color:#fff;
   }
 
-  .arrendatario-value{
-    font-weight: 400;
+  .gasolina-row{
+    display: table;
+    width:100%;
+    table-layout: fixed;
+    margin-top: 8px;
+    color:#fff;
   }
 
-  .arrendatario-underline{
-    display: inline-block;
-    padding-bottom: 0.3mm;
-    border-bottom: 0.4pt solid #000;
-    min-width: 35mm;
+  .gasolina-cell{
+    display: table-cell;
+    vertical-align: middle;
   }
 
-  .arrendatario-tabla-licencia{
-    width: 100%;
-    margin-top: 3mm;
+  .gasolina-cell.derecha{ text-align: left; }
+
+  .gasolina-cell .label{
+    font-size: 10.5px;
+    font-weight: 700;
+    color:#fff;
+  }
+
+  .gasolina-cell .value{
+    font-size: 11px;
+    font-weight: 600;
+    color:#fff;
+  }
+
+  .gasolina-icon{
+    display:inline-block;
+    height: 5mm;
+    width:auto;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  /* ==========================================================
+     ARRENDATARIO / ITINERARIO (2 columnas)
+  ========================================================== */
+  .row-dos-columnas{
+    display: flex;
+    align-items: stretch;
+    width:100%;
+    margin-top: 10px;
+  }
+
+  .col{
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .col-izq{ padding-right: 3px; }
+  .col-der{ padding-left: 3px; }
+
+  .bloque-arrendatario,
+  .bloque-itinerario{
+    background:#fff;
+    border-radius: 10px;
+    padding: 5px 8px;
+  }
+
+  .arrendatario-item{
+    display: table;
+    width:100%;
+    padding: 2px 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .arrendatario-item:last-of-type{ border-bottom: none; }
+
+  .arrendatario-item .label{
+    display: table-cell;
+    font-weight: 700;
+    color: var(--muted);
+    width: 42mm;
+    font-size: 9.5px;
+  }
+
+  .arrendatario-item .value{
+    display: table-cell;
+    color: var(--ink);
+    font-size: 9.5px;
+  }
+
+  /* Tabla Licencia */
+  .licencia-table{
+    width:100%;
     border-collapse: collapse;
-    font-family: Arial, sans-serif;
-    font-size: 8.8pt;
+    margin-top: 4px;
+    font-size: 9.5px;
   }
 
-  .arrendatario-tabla-licencia thead tr th{
-    border-top: 0.5pt solid #000;
-    padding-top: 1.5mm;
+  .licencia-table th{
+    background: #f3f4f6;
+    border: 1px solid var(--stroke);
+    padding: 2px 4px;
     font-weight: 700;
     text-align: left;
   }
 
-  .arrendatario-tabla-licencia tbody tr td{
-    padding-top: 0.8mm;
-    font-weight: 400;
+  .licencia-table td{
+    border: 1px solid var(--stroke);
+    padding: 2px 4px;
   }
 
-  .itinerario-bloque{
-    font-family: Arial, sans-serif;
-    font-size: 9.3pt;
-    margin-bottom: 6mm;
+  /* Itinerario */
+  .itinerario-item{
+    padding: 2px 0;
+    margin-bottom: 3px;
   }
 
-  .itinerario-label{
+  .itinerario-item .label{
     font-weight: 700;
-    margin: 0 0 1mm 0;
+    color: var(--ink);
+    font-size: 11px;
+    margin-bottom: 2px;
+    display: block;
   }
 
-  .itinerario-texto{
-    margin: 0;
+  .itinerario-item .value{
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 10.5px;
     line-height: 1.3;
   }
 
-    /* ==========================================================
-     🔴 SECCIÓN TARIFAS / ADICIONALES (franja roja abajo)
-  ========================================================== */
-
-  .tarifas-adicionales-wrap{
-    margin-top: 6mm;
-    background: var(--brand);
-    color:#ffffff;
-    padding: 4mm 0 5mm 0;
-    width:100%;
+  .itinerario-item .info-line{
+    display: block;
+    margin: 0;
   }
 
-  .tarifas-adicionales-inner{
-    margin: 0 16mm;
-    width: calc(100% - 32mm); /* 16mm izq + 16mm der */
+  .itinerario-item .info-line i{
+    display: inline-block;
+    width: 14px;
+    text-align: center;
+    font-style: normal;
+    filter: brightness(0);
+  }
+
+  /* ==========================================================
+     TARIFAS / ADICIONALES (2 columnas, rojas)
+  ========================================================== */
+  .bloque-tarifas{
+    background: var(--brand);
+    border-radius: 10px;
+    padding: 6px 8px;
+    box-sizing: border-box;
+    width: calc(100% + 6mm + 3px);
+    margin-left: calc(-6mm - 3px);
+    flex: 1;
+  }
+
+  .tarifas-table{
+    width:100%;
+    border-collapse: collapse;
+    font-size: 9.5px;
+    color:#fff;
+  }
+
+  .tarifas-table th{
+    background: var(--brand);
+    border: 1px solid rgba(255,255,255,.5);
+    padding: 2px 4px;
+    font-weight: 700;
+    text-align: left;
+    color:#fff;
+  }
+
+  .tarifas-table td{
+    background: var(--brand);
+    border: 1px solid rgba(255,255,255,.5);
+    padding: 2px 4px;
+    color:#ffffff;
+    font-weight: 600;
+  }
+
+  .totales{
+    margin-top: 4px;
+    padding: 3px 4px 0 4px;
+    text-align: right;
+    border-top: 2px solid #fff;
+  }
+
+  .totales p{
+    margin: 1px 0;
+    font-size: 9.5px;
+    color:#fff;
+  }
+
+  .totales .total-final{
+    font-size: 13px;
+    font-weight: 900;
+    color:#fff;
+  }
+
+  .bloque-adicionales{
+    background: var(--brand);
+    border-radius: 10px;
+    padding: 6px 8px;
+    box-sizing: border-box;
+    width: calc(100% + 6mm + 3px);
+    margin-right: calc(-6mm - 3px);
+    flex: 1;
+  }
+
+  .adicionales-table{
+    width:100%;
+    border-collapse: collapse;
+    font-size: 9.5px;
+    color:#fff;
+  }
+
+  .adicionales-table th{
+    background: var(--brand);
+    border: 1px solid rgba(255,255,255,.5);
+    padding: 2px 4px;
+    font-weight: 700;
+    text-align: left;
+    color:#fff;
+  }
+
+  .adicionales-table td{
+    background: var(--brand);
+    border: 1px solid rgba(255,255,255,.5);
+    padding: 2px 4px;
+    color:#ffffff;
+    font-weight: 600;
+  }
+
+  .adicionales-table td[colspan]{
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .adicional-item.no-seleccionado td{
+    opacity: .92;
+  }
+
+  .badge-cantidad,
+  .badge-ubicacion,
+  .badge-inactivo{
+    font-size: 9px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    margin-left: 4px;
+    white-space: nowrap;
+  }
+
+  .badge-cantidad{ background: rgba(255,255,255,.25); }
+  .badge-ubicacion{ background: rgba(255,255,255,.20); font-style: italic; }
+  .badge-inactivo{ background: rgba(255,255,255,.18); font-style: italic; color:#ffffff; }
+
+  .texto-inactivo{ opacity:.92; }
+
+  .adicional-total-row td{
+    border-top: 2px solid #fff;
+  }
+
+  .fa-gas-pump, .fa-user-plus, .fa-user-minus, .fa-child,
+  .fa-location-dot, .fa-truck, .fa-flag-checkered, .fa-fire,
+  .fa-regular, .fa-solid, .fa-calendar, .fa-clock{
+    font-style: normal;
+  }
+
+  /* ==========================================================
+     ACEPTACIÓN Y FIRMAS
+  ========================================================== */
+  .bloque-aceptacion{
+    background:#fff;
+    border-radius: 10px;
+    padding: 5px 4px;
+  }
+
+  .aceptacion-texto{
+    font-size: 9px;
+    line-height: 1.3;
+    text-align: justify;
+    margin-bottom: 5px;
+    color: var(--ink);
+  }
+
+  .aceptacion-texto a{
+    color: var(--brand);
+    text-decoration: underline;
+  }
+
+  .firmas-container{
+    display: table;
+    width:100%;
+    table-layout: fixed;
+    margin-top: 3px;
+  }
+
+  .firma-item{
+    display: table-cell;
+    text-align: center;
+    width: 50%;
+    padding: 0 20px;
+    vertical-align: bottom;
+  }
+
+  .firma-label{
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 2px;
+    text-transform: uppercase;
+  }
+
+  .firma-img{
+    width: 90%;
+    height: 34px;
+    max-width: 160px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .firma-linea,
+  .firma-linea-roja{
+    width: 80%;
+    height: 4px;
+    border-bottom: 2px solid #000;
+    margin: 0 auto;
+  }
+
+  .firma-nombre{
+    font-size: 10px;
+    font-weight: 600;
+    margin-top: 3px;
+    color: var(--ink);
+  }
+
+  /* ==========================================================
+     GASOLINA / NOTAS / FACTURACIÓN
+  ========================================================== */
+  .bloque-gasolina,
+  .bloque-notas,
+  .bloque-facturacion{
+    background:#fff;
+    border-radius: 10px;
+    padding: 4px 4px;
+  }
+
+  .gasolina-texto{
+    font-size: 9px;
+    color: var(--ink);
+    margin:0;
+    line-height: 1.25;
+  }
+
+  .nota-gas{
+    font-size: 9px;
+    color: #6b7280;
+    display: block;
+    margin-top: 1px;
+  }
+
+  .nota-title{
+    font-size: 9.5px;
+    font-weight: 800;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .nota{
+    font-size: 10px;
+    line-height: 1.25;
+    margin: 1px 0;
+    color: var(--ink);
+  }
+
+  .fact-title{
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+
+  .fact-grid{
+    display: table;
+    width:100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+
+  .fact-row{ display: table-row; }
+
+  .fact-item{
+    display: table-cell;
+    width: 33.33%;
+    padding: 1px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 10px;
+  }
+
+  .fact-item .label{
+    font-weight: 700;
+    color: var(--muted);
+    display: inline;
+  }
+
+  .fact-item .value{
+    color: var(--ink);
+    display: inline;
+    margin-left: 4px;
+  }
+
+  /* ==========================================================
+     PIE DE PÁGINA - ROJO
+  ========================================================== */
+  .pie-rojo{
+    background: var(--brand);
+    padding: 12px 6mm 20px 6mm;
+    color:#fff;
+    margin-top: 6px;
+  }
+
+  .pie-empresa{
+    font-size: 14.5px;
+    margin-bottom: 3px;
+    text-align: left;
+  }
+
+  .pie-empresa strong{ font-weight: 900; }
+
+  .pie-contenido-columnas{
+    display: table;
+    width:100%;
+    table-layout: fixed;
+    margin-top: 5px;
+  }
+
+  .col-pie{
+    display: table-cell;
+    vertical-align: top;
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+
+  .col-pie.izq{ text-align: left; }
+  .col-pie.der{ text-align: right; }
+
+  .pie-rojo p{ margin: 2px 0; font-size: 12px; }
+  .pie-rojo span{ font-size: 12px; display: block; }
+
+  /* ==========================================================
+     PAGE BREAK + HOJA 2 (CLÁUSULAS) - solo PDF
+  ========================================================== */
+  .page-break{
+    page-break-before: always;
+    break-before: page;
+  }
+
+  .clausulas-page{
+    page: clausulas;
+    font-family: Arial, sans-serif;
+    color:#111;
+  }
+
+  .clausulas-intro{
+    text-align:center;
+    font-size: 9.5pt;
+    line-height: 1.25;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin: 0 0 5mm 0;
+  }
+
+  .clausulas-title{
+    text-align:center;
+    font-size: 26pt;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: #4a4a4a;
+    margin: 0 0 6mm 0;
+    text-transform: uppercase;
+  }
+
+  .clausulas-body{ margin: 0; }
+
+  .clausulas-body p{
+    margin: 0 0 3.5mm 0;
+    font-size: 9pt;
+    line-height: 1.35;
+    text-align: justify;
+  }
+
+  .clausula-tag{
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #111;
+  }
+
+  .clausulas-notas{
+    margin: 5mm 0 0 0;
+    font-size: 8.5pt;
+    line-height: 1.3;
+    color:#222;
+  }
+
+  .clausulas-notas .nota-titulo{
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .clausulas-notas .nota{ margin: 1.5mm 0 3mm 0; }
+
+  .clausulas-fecha{
+    margin: 6mm 0 2mm 0;
+    text-align:center;
+    font-size: 10pt;
+    color:#333;
+  }
+
+  .linea-roja{
+    display:inline-block;
+    border-bottom: 1.2pt solid #000;
+    min-width: 45mm;
+    height: 4mm;
+    vertical-align: bottom;
+    margin: 0 2mm;
+  }
+
+  .clausulas-firmas{
+    margin: 4mm 0 0 0;
+    width: 100%;
     display: table;
     table-layout: fixed;
   }
 
-  .tarifas-col{
+  .firma-col{
     display: table-cell;
+    width: 50%;
+    text-align: center;
     vertical-align: top;
-    font-family: Arial, sans-serif;
-    font-size: 8.8pt;
   }
 
-  .tarifas-col-left{
-    padding-right: 4mm;
-    border-right: 0.4pt solid rgba(255,255,255,0.7);
+  .firma-col .firma-line{
+    width: 70%;
+    margin: 0 auto 2mm auto;
+    border-top: 1.2pt solid #000;
   }
 
-  .tarifas-col-right{
-    padding-left: 4mm;
+  .firma-col .firma-img{
+    height: 12mm;
+    margin: 0 auto 0 auto;
   }
 
-  .tarifas-titulo{
-    font-family: "Bahnschrift", Arial, sans-serif;
+  .firma-col .firma-nombre{
+    font-size: 11pt;
     font-weight: 700;
-    font-size: 11.5pt;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    margin: 0 0 3mm 0;
-    color:#ffffff;
+    margin: 0;
   }
 
-  .tarifas-tabla,
-  .adicionales-tabla{
-    width:100%;
-    border-collapse: collapse;
-    font-family: Arial, sans-serif;
-    font-size: 8.8pt;
+  .pie-rojo{
+    page-break-inside: avoid;
   }
-
-  .tarifas-tabla thead th,
-  .adicionales-tabla thead th{
-    padding: 1mm 0;
-    border-bottom: 0.4pt solid rgba(255,255,255,0.7);
-    text-align:left;
-    font-weight:700;
-  }
-
-  .tarifas-tabla tbody td,
-  .adicionales-tabla tbody td{
-    padding: 0.9mm 0;
-    border-bottom: 0.2pt solid rgba(255,255,255,0.25);
-  }
-
-  .tarifas-tabla th:nth-child(2),
-  .tarifas-tabla td:nth-child(2),
-  .tarifas-tabla th:nth-child(3),
-  .tarifas-tabla td:nth-child(3),
-  .tarifas-tabla th:nth-child(4),
-  .tarifas-tabla td:nth-child(4){
-    text-align:right;
-  }
-
-  .adicionales-tabla th:nth-child(2),
-  .adicionales-tabla td:nth-child(2),
-  .adicionales-tabla th:nth-child(3),
-  .adicionales-tabla td:nth-child(3){
-    text-align:right;
-  }
-
-  .tarifas-totales-tabla{
-    width:100%;
-    margin-top: 3mm;
-    border-collapse: collapse;
-    font-size: 9pt;
-  }
-
-  .tarifas-totales-tabla td{
-    padding-top: 0.7mm;
-  }
-
-  .tarifas-totales-tabla .lbl{
-    font-weight:700;
-  }
-
-  .tarifas-totales-tabla .val{
-    text-align:right;
-    font-weight:700;
-  }
-
-  .tarifas-totales-tabla .total-label{
-    padding-top: 1.4mm;
-  }
-
-  .tarifas-totales-tabla .total-value{
-    padding-top: 1.4mm;
-    font-size: 9.5pt;
-  }
-
-  /* ==========================================================
-   🧾 SECCIÓN FINAL (aceptación + firma + gasolina + facturación + footer)
-   - DomPDF friendly (tables)
-========================================================== */
-
-.seccion-final{
-  margin: 0 16mm;
-  width: calc(100% - 32mm);
-  font-family: Arial, sans-serif;
-  color: #111;
-}
-
-/* --- Bloque aceptación + firma --- */
-.final-acepta-firma{
-  display: table;
-  width: 100%;
-  table-layout: fixed;
-  margin-top: 6mm;
-  margin-bottom: 3mm;
-}
-
-.final-acepta{
-  display: table-cell;
-  width: 68%;
-  vertical-align: top;
-  font-size: 10pt;
-  line-height: 1.35;
-  padding-right: 6mm;
-}
-
-.final-firma{
-  display: table-cell;
-  width: 32%;
-  vertical-align: top;
-  text-align: center;
-  padding-left: 2mm;
-}
-
-.final-firma-label{
-  font-size: 12pt;
-  color: #6b6b6b;
-  margin: 2mm 0 3mm 0;
-}
-
-.final-firma-linea{
-  border-top: 1.2pt solid var(--brand);
-  margin: 1mm 0 3mm 0;
-}
-
-.final-firma-nombre{
-  font-size: 14pt;
-  font-weight: 700;
-  margin: 0;
-}
-
-/* Imagen firma (si viene como imagen) */
-.firma-img{
-  display: block;
-  margin: 0 auto 2mm auto;
-  max-width: 60mm;
-  height: 12mm;          /* ajusta si tu firma sale muy alta */
-  object-fit: contain;
-}
-
-/* --- Lineas rojas separadoras --- */
-.final-sep-roja{
-  border-top: 1.2pt solid var(--brand);
-  margin: 0;
-}
-
-/* --- Bloque gasolina / cargos --- */
-.final-cargos{
-  padding: 4mm 0 4mm 0;
-  font-size: 9.2pt;
-  line-height: 1.35;
-}
-
-.final-cargos .lbl{
-  font-weight: 700;
-}
-
-.final-cargos h3{
-  font-size: 10.5pt;
-  margin: 2mm 0 1.5mm 0;
-  font-weight: 800;
-}
-
-.final-cargos .nota{
-  margin: 0 0 2mm 0;
-}
-
-.final-cargos .lista{
-  margin: 0;
-  padding: 0;
-}
-
-.final-cargos .lista span{
-  display: inline-block;
-  margin-right: 3mm;
-}
-
-/* --- Datos de facturación --- */
-.final-facturacion{
-  display: table;
-  width: 100%;
-  table-layout: fixed;
-  padding: 5mm 0 5mm 0;
-}
-
-.factu-titulo{
-  display: table-cell;
-  width: 22%;
-  vertical-align: top;
-  font-family: "Bahnschrift", Arial, sans-serif;
-  font-weight: 800;
-  font-size: 16pt;
-  line-height: 1.05;
-  padding-right: 6mm;
-}
-
-.factu-datos{
-  display: table-cell;
-  width: 78%;
-  vertical-align: top;
-  font-size: 11pt;
-  color: #2b2b2b;
-}
-
-/* rejilla de datos (2 filas tipo columnas) */
-.factu-grid{
-  display: table;
-  width: 100%;
-  table-layout: fixed;
-}
-
-.factu-row{
-  display: table-row;
-}
-
-.factu-cell{
-  display: table-cell;
-  vertical-align: top;
-  padding-bottom: 2mm;
-}
-
-.factu-cell.w25{ width: 25%; }
-.factu-cell.w30{ width: 30%; }
-.factu-cell.w35{ width: 35%; }
-.factu-cell.w40{ width: 40%; }
-.factu-cell.w50{ width: 50%; }
-.factu-cell.w60{ width: 60%; }
-
-.factu-label{
-  font-weight: 800;
-  margin-right: 2mm;
-}
-
-.factu-value{
-  color: #808080;
-}
-
-/* --- Footer rojo (como banda inferior) --- */
-.footer-rojo{
-  margin-top: 0;
-  background: var(--brand-2);
-  color: #fff;
-  width: 100%;
-  padding: 6mm 0 6mm 0;
-}
-
-.footer-rojo-inner{
-  margin: 0 16mm;
-  width: calc(100% - 32mm);
-  display: table;
-  table-layout: fixed;
-}
-
-.footer-col{
-  display: table-cell;
-  vertical-align: top;
-  font-size: 10.5pt;
-  line-height: 1.35;
-}
-
-.footer-col-left{
-  width: 60%;
-  padding-right: 6mm;
-}
-
-.footer-col-right{
-  width: 40%;
-  padding-left: 6mm;
-}
-
-.footer-titulo{
-  font-family: "Bahnschrift", Arial, sans-serif;
-  font-weight: 900;
-  font-size: 16pt;
-  margin: 0 0 2mm 0;
-  letter-spacing: 0.02em;
-}
-
-.footer-strong{
-  font-weight: 800;
-}
-
-/* ==========================================================
-   📄 SALTO DE PÁGINA (HOJA 2)
-========================================================== */
-.page-break{
-  page-break-before: always;   /* DomPDF */
-  break-before: page;          /* Chromium */
-}
-
-/* ==========================================================
-   🧾 HOJA 2 - CLAUSULAS (estilo como PDF diseñador)
-   - A4 con margin 6mm ya lo tienes en @page
-   - DomPDF/Chromium friendly
-========================================================== */
-
-.page-break{
-  page-break-before: always;
-}
-
-.clausulas-page{
-  /* Respetamos el margin de @page; aquí solo controlamos “aire” interno */
-  padding-top: 6mm;
-  font-family: Arial, sans-serif;  /* en el PDF se ve más “Arial/Helvetica” que Bahnschrift */
-  color:#111;
-}
-
-/* Párrafo superior centrado */
-.clausulas-intro{
-  text-align:center;
-  font-size: 10.2pt;
-  line-height: 1.25;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  margin: 0 8mm 6mm 8mm; /* un poquito de margen lateral extra como el diseño */
-}
-
-/* Título “CLAUSULAS” grande */
-.clausulas-title{
-  text-align:center;
-  font-size: 30pt;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  color:#4a4a4a;
-  margin: 0 0 8mm 0;
-}
-
-/* Cuerpo de cláusulas */
-.clausulas-body{
-  margin: 0 8mm; /* el diseñador deja más “colchón” a los lados */
-}
-
-.clausulas-body p{
-  margin: 0 0 4.2mm 0;   /* separación entre cláusulas */
-  font-size: 9.4pt;
-  line-height: 1.35;
-  text-align: justify;
-}
-
-/* Etiqueta PRIMERA., SEGUNDA., etc */
-.clausula-tag{
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-/* Bloque gasolina y cargos (abajo) */
-.clausulas-notas{
-  margin: 6mm 8mm 0 8mm;
-  font-size: 8.6pt;
-  line-height: 1.28;
-  color:#222;
-}
-
-.clausulas-notas .nota-titulo{
-  font-weight: 800;
-  text-transform: uppercase;
-}
-
-.clausulas-notas .nota{
-  margin: 1.6mm 0 3mm 0;
-}
-
-/* Renglón “En ____ al día __ del mes __ del año __” */
-.clausulas-fecha{
-  margin: 7mm 8mm 2mm 8mm;
-  text-align:center;
-  font-size: 10pt;
-  color:#333;
-}
-
-/* Línea roja tipo “subrayado” (como el PDF) */
-.linea-roja{
-  display:inline-block;
-  border-bottom: 1.2pt solid var(--brand-2);
-  min-width: 55mm;
-  height: 4mm;
-  vertical-align: bottom;
-  margin: 0 2mm;
-}
-
-/* Firma: dos columnas centradas */
-.clausulas-firmas{
-  margin: 3mm 8mm 0 8mm;
-  width: calc(100% - 16mm);
-  display: table;
-  table-layout: fixed;
-}
-
-.firma-col{
-  display: table-cell;
-  width: 50%;
-  text-align: center;
-  vertical-align: top;
-}
-
-.firma-label{
-  font-size: 10pt;
-  color:#666;
-  margin: 0 0 2mm 0;
-}
-
-.firma-line{
-  width: 70%;
-  margin: 0 auto 2mm auto;
-  border-top: 1.2pt solid var(--brand-2);
-}
-
-.firma-nombre{
-  font-size: 11pt;
-  font-weight: 700;
-  margin: 0;
-}
   </style>
 </head>
 
 <body>
+
 @php
-    use Carbon\Carbon;
-
-    // Nombre completo del cliente
-    $nombreCompletoCliente = trim(
-        ($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')
-    );
-
-    // Nombre que se usará en el saludo
-    $nombreSaludo = $reservacion->nombre_cliente
-        ?? ($nombreCompletoCliente !== '' ? $nombreCompletoCliente : 'Cliente');
-
-    // Tipo de cambio
-    $tipoCambioValor = $tipoCambio ?? null;
-    $textoTipoCambio = $tipoCambioValor !== null
-        ? '$' . number_format($tipoCambioValor, 2) . ' MXN'
-        : '—';
-
-    // Fecha de apertura
-    $fechaAperturaRaw = $contrato->fecha_apertura
-        ?? (isset($reservacion->fecha_inicio)
-            ? ($reservacion->fecha_inicio . ' ' . ($reservacion->hora_retiro ?? '00:00'))
-            : null);
-
-    if ($fechaAperturaRaw) {
-        $fechaAperturaCarbon = Carbon::parse($fechaAperturaRaw);
-        $textoFechaApertura = $fechaAperturaCarbon->format('d/m/y g:i a');
-    } else {
-        $textoFechaApertura = '—';
-    }
+  // ===== Iconos SVG de contorno (line icons) =====
+  $icoUbicacion = '<svg class="ico" viewBox="0 0 24 24"><path d="M12 21s-6-5.686-6-10a6 6 0 0 1 12 0c0 4.314-6 10-6 10z"/><circle cx="12" cy="11" r="2.5"/></svg>';
+  $icoCalendario = '<svg class="ico" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M3.5 9h17M8 3v4M16 3v4"/></svg>';
+  $icoReloj = '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>';
+  $icoPersona = '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"/></svg>';
+  $icoBebe = '<svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="7" r="3.5"/><path d="M9 7h.01M15 7h.01M6 20c0-3 2.5-5.5 6-5.5s6 2.5 6 5.5"/></svg>';
+  $icoCamion = '<svg class="ico" viewBox="0 0 24 24"><path d="M3 6h10v9H3zM13 9h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/></svg>';
+  $icoMeta = '<svg class="ico" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 3 2 3H5"/></svg>';
+  $icoFuego = '<svg class="ico" viewBox="0 0 24 24"><path d="M12 3s5 4 5 9a5 5 0 0 1-10 0c0-1.5.7-2.8 1.5-3.5C8.5 10 9 12 10 12c0-2 2-4 2-9z"/></svg>';
 @endphp
 
 <div class="contrato-final-container">
 
-  {{-- 🧾 ENCABEZADO --}}
-  <header class="header-contrato">
-    <div class="header-layout">
-      {{-- LADO IZQUIERDO: LOGO + MENSAJE --}}
-      <div class="header-left">
-        {{-- Cambia la ruta del logo --}}
-        <img
-          class="logo-viajero"
-          src="{{ public_path('img/VIAJEROPDF.png') }}"
-          alt="Viajero Car Rental"
-        >
-
-        <div class="header-textos">
-          <h1 class="header-titulo">
-            Este es nuestro acuerdo, {{ $nombreSaludo }}
-          </h1>
-          <p class="header-subtitulo">
-            Disfruta el camino tanto como tu destino.
-          </p>
-        </div>
-      </div>
-
-      {{-- LADO DERECHO: FIGURA + ETIQUETAS ROJAS --}}
-      <div class="header-right">
-        {{-- Cambia la ruta de la figura gris --}}
-        <img
-          class="header-figura"
-          src="{{ public_path('img/A.png') }}"
-          alt=""
-        >
-
-        <div class="header-datos">
-          <p class="header-datos-linea">
-            No. Rental Agreement:
-            <span class="chip-rojo">
-              {{ $contrato->numero_contrato ?? '—' }}
-            </span>
-          </p>
-
-          <p class="header-datos-linea">
-            Tipo de cambio:
-            <span class="chip-rojo">
-              {{ $textoTipoCambio }}
-            </span>
-          </p>
-
-          <p class="header-datos-linea">
-            Fecha de apertura:
-            <span class="chip-rojo">
-              {{ $textoFechaApertura }}
-            </span>
-          </p>
-
-          <p class="header-datos-linea">
-            Reservación:
-            <span class="chip-rojo">
-              {{ $reservacion->codigo ?? '—' }}
-            </span>
-          </p>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  {{-- TÍTULO: INFORMACIÓN DE TU VEHÍCULO --}}
-  <div class="titulo-seccion-vehiculo">
-    <div class="titulo-vehiculo-texto">
-      INFORMACIÓN DE TU VEHÍCULO
-    </div>
-    <div class="titulo-vehiculo-linea"></div>
-  </div>
-
-  {{-- FRANJA ROJA CON DATOS DEL VEHÍCULO --}}
-  <div class="vehiculo-info-box">
-    <div class="vehiculo-info-top">
-      <div class="vehiculo-info-item">
-        <span class="vehiculo-info-label">Modelo:</span>
-        <span class="vehiculo-info-value">
-          {{ $vehiculo->modelo ?? '—' }}
-        </span>
-      </div>
-
-      <div class="vehiculo-info-item">
-        <span class="vehiculo-info-label">Categoría:</span>
-        <span class="vehiculo-info-value">
-          {{ $vehiculo->categoria ?? '—' }}
-        </span>
-      </div>
-
-      <div class="vehiculo-info-item">
-        <span class="vehiculo-info-label">Color:</span>
-        <span class="vehiculo-info-value">
-          {{ $vehiculo->color ?? '—' }}
-        </span>
-      </div>
-
-      <div class="vehiculo-info-item">
-        <span class="vehiculo-info-label">Placas:</span>
-        <span class="vehiculo-info-value">
-          {{ $vehiculo->placas ?? '—' }}
-        </span>
-      </div>
-
-      <div class="vehiculo-info-item">
-        <span class="vehiculo-info-label">Transmisión:</span>
-        <span class="vehiculo-info-value">
-          {{ $vehiculo->transmision ?? '—' }}
-        </span>
-      </div>
-
-      <div class="vehiculo-info-item">
-        <span class="vehiculo-info-label">Kilometraje:</span>
-        <span class="vehiculo-info-value">
-          {{ isset($vehiculo->kilometraje) ? number_format($vehiculo->kilometraje, 0) : '—' }}
-        </span>
-      </div>
+  {{-- ============================ ENCABEZADO ============================ --}}
+  <div class="encabezado-blanco">
+    <div class="logo-titulo-blanco">
+      @if(!empty($logoBase64))
+        <img src="{{ $logoBase64 }}" class="logo-contrato" alt="Viajero Car Rental">
+      @endif
     </div>
 
-    <div class="vehiculo-info-bottom">
-      <div class="vehiculo-info-bottom-left">
-        {{-- Cambia la ruta del icono --}}
-        <img
-          class="vehiculo-gas-icon"
-          src="{{ public_path('img/icono-gasolina.png') }}"
-          alt="Gasolina"
-        >
-        <span class="vehiculo-inline-label">Capacidad del tanque:</span>
-        <span class="vehiculo-inline-value">
-          {{ $vehiculo->capacidad_tanque ?? '—' }}
-        </span>
-      </div>
-
-      <div class="vehiculo-info-bottom-right">
-        <span class="vehiculo-inline-label">Gasolina de salida:</span>
-        <span class="vehiculo-inline-value">
-          {{ $contrato->gasolina_inicial ?? '—' }}
-        </span>
+    <div class="encabezado-datos-cell">
+      @if(!empty($imgABase64))
+        <img src="{{ $imgABase64 }}" class="logo-fondo-derecho" alt="">
+      @endif
+      <div class="encabezado-datos">
+        <p><strong>No. Rental Agreement:</strong>
+          <span class="burbuja-roja">{{ $contrato->id_contrato ?? '—' }}</span>
+        </p>
+        <p><strong>Fecha de apertura:</strong>
+          <span class="burbuja-roja">{{ now()->translatedFormat('d/M/Y H:i') }}</span>
+        </p>
+        <p><strong>Reservación:</strong>
+          <span class="burbuja-roja">{{ $reservacion->id_reservacion ?? '—' }}</span>
+        </p>
       </div>
     </div>
   </div>
+
+  {{-- ============================ GRACIAS ============================ --}}
+  <div class="tarjeta-blanca-izquierda">
+    <p class="gracias">
+      Gracias por tu reserva,
+      <strong>{{ trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')) ?: 'Cliente' }}</strong>
+    </p>
+    <p class="frase">Disfruta el camino tanto como tu destino.</p>
+  </div>
+
+  {{-- ============================ CUERPO ============================ --}}
+  <div class="secciones">
+
+    {{-- ===================== VEHÍCULO ===================== --}}
+    <div class="row-full">
+      <h3 class="titulo-seccion">Información de tu vehículo</h3>
+      <div class="bloque-vehiculo">
+        <div class="vehiculo-grid">
+          <div class="vehiculo-item"><span class="label">Modelo:</span><span class="value">{{ $vehiculo->modelo ?? '—' }}</span></div>
+          <div class="vehiculo-item"><span class="label">Categoría:</span><span class="value">{{ $vehiculo->categoria ?? '—' }}</span></div>
+          <div class="vehiculo-item"><span class="label">Color:</span><span class="value">{{ $vehiculo->color ?? '—' }}</span></div>
+          <div class="vehiculo-item"><span class="label">Placas:</span><span class="value">{{ $vehiculo->placa ?? '—' }}</span></div>
+          <div class="vehiculo-item"><span class="label">Transmisión:</span><span class="value">{{ $vehiculo->transmision ?? '—' }}</span></div>
+          <div class="vehiculo-item"><span class="label">Kilometraje:</span><span class="value">{{ number_format($vehiculo->kilometraje ?? 0) }}</span></div>
+        </div>
+
+        <div class="gasolina-row">
+          <div class="gasolina-cell">
+            {!! $icoFuego !!}
+            <span class="label">Capacidad del tanque:</span>
+            <span class="value">{{ $vehiculo->capacidad_tanque ?? '—' }} LITROS</span>
+          </div>
+          <div class="gasolina-cell derecha">
+            <span class="label">Gasolina de salida:</span>
+            <span class="value">{{ $vehiculo->gasolina_actual ?? '—' }} LITROS</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- ===================== ARRENDATARIO + ITINERARIO ===================== --}}
+    <div class="row-dos-columnas">
+
+      {{-- ARRENDATARIO --}}
+      <div class="col col-izq">
+        <h3 class="titulo-seccion">Arrendatario</h3>
+        <div class="bloque-arrendatario">
+          <div class="arrendatario-item">
+            <span class="label">Nombre:</span>
+            <span class="value">{{ trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')) ?: '—' }}</span>
+          </div>
+          <div class="arrendatario-item">
+            <span class="label">Fecha de nacimiento (DOB):</span>
+            <span class="value">{{ $fechaNacimiento ? \Carbon\Carbon::parse($fechaNacimiento)->format('d/m/Y') : '—' }}</span>
+          </div>
+          <div class="arrendatario-item">
+            <span class="label">Edad:</span>
+            <span class="value">{{ isset($edad) && $edad !== null ? $edad . ' años' : '—' }}</span>
+          </div>
+          <div class="arrendatario-item">
+            <span class="label">Teléfono:</span>
+            <span class="value">{{ $reservacion->telefono_cliente ?? '—' }}</span>
+          </div>
+          <div class="arrendatario-item">
+            <span class="label">Correo:</span>
+            <span class="value">{{ $reservacion->email_cliente ?? '—' }}</span>
+          </div>
+          <div class="arrendatario-item">
+            <span class="label">Dirección:</span>
+            <span class="value">{{ $reservacion->direccion_cliente ?? '—' }}</span>
+          </div>
+
+          <table class="licencia-table">
+            <thead>
+              <tr>
+                <th>No. Licencia</th>
+                <th>Vencimiento</th>
+                <th>País</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{{ $licencia->numero_identificacion ?? '—' }}</td>
+                <td>{{ $licencia->fecha_vencimiento ?? '—' }}</td>
+                <td>{{ $licencia->pais_emision ?? '—' }}</td>
+                <td>{{ $licencia->estado ?? '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {{-- ITINERARIO --}}
+      <div class="col col-der">
+        <h3 class="titulo-seccion">Itinerario</h3>
+        <div class="bloque-itinerario">
+          <div class="itinerario-item">
+            <span class="label">Check in:</span>
+            <div class="value">
+              <div class="info-line">{!! $icoUbicacion !!} {{ $reservacion->sucursal_retiro_nombre ?? '—' }}</div>
+              <div class="info-line">{!! $icoCalendario !!} {{ $reservacion->fecha_inicio ? \Carbon\Carbon::parse($reservacion->fecha_inicio)->translatedFormat('d/M/Y') : '—' }}</div>
+              <div class="info-line">{!! $icoReloj !!} {{ $reservacion->hora_retiro ? \Carbon\Carbon::parse($reservacion->hora_retiro)->format('H:i') : '—' }} HRS</div>
+            </div>
+          </div>
+          <div class="itinerario-item">
+            <span class="label">Check out:</span>
+            <div class="value">
+              <div class="info-line">{!! $icoUbicacion !!} {{ $reservacion->sucursal_entrega_nombre ?? '—' }}</div>
+              <div class="info-line">{!! $icoCalendario !!} {{ $reservacion->fecha_fin ? \Carbon\Carbon::parse($reservacion->fecha_fin)->translatedFormat('d/M/Y') : '—' }}</div>
+              <div class="info-line">{!! $icoReloj !!} {{ $reservacion->hora_entrega ? \Carbon\Carbon::parse($reservacion->hora_entrega)->format('H:i') : '—' }} HRS</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    {{-- ===================== TARIFAS + ADICIONALES ===================== --}}
+    <div class="row-dos-columnas">
+
+      {{-- TARIFAS --}}
+      <div class="col col-izq">
+        <h3 class="titulo-seccion">Tarifas</h3>
+        <div class="bloque-tarifas">
+          <table class="tarifas-table">
+            <thead>
+              <tr>
+                <th>Concepto</th>
+                <th>Días</th>
+                <th>Precio por día</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Tarifa base</td>
+                <td>{{ $dias }}</td>
+                <td>$ {{ number_format($tarifaBase, 2) }}</td>
+                <td>$ {{ number_format($tarifaBase * $dias, 2) }}</td>
+              </tr>
+
+              @foreach ($paquetes as $p)
+                <tr>
+                  <td>{{ $p->nombre }}</td>
+                  <td>{{ $dias }}</td>
+                  <td>$ {{ number_format($p->precio_por_dia, 2) }}</td>
+                  <td>$ {{ number_format($p->precio_por_dia * $dias, 2) }}</td>
+                </tr>
+              @endforeach
+
+              @foreach ($individuales as $i)
+                <tr>
+                  <td>{{ $i->nombre }}</td>
+                  <td>{{ $dias }}</td>
+                  <td>$ {{ number_format($i->precio_por_dia, 2) }}</td>
+                  <td>$ {{ number_format($i->precio_por_dia * $dias, 2) }}</td>
+                </tr>
+              @endforeach
+            </tbody>
+          </table>
+
+          <div class="totales">
+            <p><strong>Subtotal:</strong> $ {{ number_format($subtotal, 2) }}</p>
+            <p><strong>IVA.</strong> $ {{ number_format($subtotal * 0.16, 2) }}</p>
+            <p><strong>Cuotas locales e impuestos federales</strong> $ {{ number_format($subtotal * 0.16, 2) }}</p>
+            <p class="total-final"><strong>TOTAL:</strong> $ {{ number_format($totalFinal, 2) }}</p>
+          </div>
+        </div>
+      </div>
+
+      {{-- ADICIONALES --}}
+      <div class="col col-der">
+        <h3 class="titulo-seccion">Adicionales</h3>
+        <div class="bloque-adicionales">
+          <table class="adicionales-table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Días</th>
+                <th>Precio por día</th>
+              </tr>
+            </thead>
+            <tbody>
+              @php
+                $totalAdicionales = 0;
+
+                $extrasSeleccionados = [];
+                foreach (($extras ?? []) as $extra) {
+                    $extrasSeleccionados[$extra->nombre] = [
+                        'precio'   => $extra->precio_unitario ?? 0,
+                        'cantidad' => $extra->cantidad ?? 1,
+                    ];
+                }
+
+                $deliveryActivo = isset($deliveryInfo) && $deliveryInfo && (($deliveryInfo->precio_unitario ?? 0) > 0);
+                $dropoffActivo  = isset($dropoffInfo)  && $dropoffInfo  && (($dropoffInfo->precio_unitario ?? 0) > 0);
+                $gasolinaActiva = isset($gasolinaInfo) && $gasolinaInfo && (($gasolinaInfo->precio_unitario ?? 0) > 0);
+
+                $serviciosMostrar = [
+                    'Additional driver'   => ['icono' => $icoPersona, 'es_especial' => false],
+                    'Conductor menor'     => ['icono' => $icoPersona, 'es_especial' => false],
+                    'Baby seat'           => ['icono' => $icoBebe,    'es_especial' => false],
+                    'GPS'                 => ['icono' => $icoUbicacion,'es_especial' => false],
+                    'Delivery'            => ['icono' => $icoCamion,  'es_especial' => true],
+                    'Drop Off'            => ['icono' => $icoMeta,    'es_especial' => true],
+                    'Gasolina (faltante)' => ['icono' => $icoFuego,   'es_especial' => true],
+                ];
+              @endphp
+
+              @foreach ($serviciosMostrar as $nombre => $config)
+                @php
+                    $icono = $config['icono'];
+                    $esEspecial = $config['es_especial'];
+                    $seleccionado = isset($extrasSeleccionados[$nombre]);
+                    $detalles = '';
+
+                    if ($nombre === 'Delivery' && $deliveryActivo) {
+                        $seleccionado = true;
+                        $precio = $deliveryInfo->precio_unitario ?? 0;
+                        $cantidad = 1;
+                        $detalles = $deliveryInfo->direccion ?? '';
+                    } elseif ($nombre === 'Drop Off' && $dropoffActivo) {
+                        $seleccionado = true;
+                        $precio = $dropoffInfo->precio_unitario ?? 0;
+                        $cantidad = 1;
+                        $detalles = $dropoffInfo->destino ?? '';
+                    } elseif ($nombre === 'Gasolina (faltante)' && $gasolinaActiva) {
+                        $seleccionado = true;
+                        $precio = $gasolinaInfo->precio_unitario ?? 0;
+                        $cantidad = $gasolinaInfo->cantidad ?? 1;
+                        $detalles = ($gasolinaInfo->litros ?? 0) > 0 ? $gasolinaInfo->litros . ' L' : '';
+                    } elseif ($seleccionado) {
+                        $precio = $extrasSeleccionados[$nombre]['precio'];
+                        $cantidad = $extrasSeleccionados[$nombre]['cantidad'];
+                    } else {
+                        $precio = 0;
+                        $cantidad = 0;
+                    }
+
+                    if ($seleccionado && $precio > 0) {
+                        if (!$esEspecial) {
+                            $totalAdicionales += $precio * $cantidad * $dias;
+                        } else {
+                            $totalAdicionales += $precio;
+                        }
+                    }
+
+                    $estadoClase     = ($seleccionado && $precio > 0) ? 'seleccionado' : 'no-seleccionado';
+                    $estadoTexto     = ($seleccionado && $precio > 0) ? number_format($precio, 2) : '0.00';
+                    $cantidadMostrar = ($seleccionado && $cantidad > 0) ? $cantidad : 0;
+                    $diasMostrar     = !$esEspecial ? $dias : '—';
+                @endphp
+                <tr class="adicional-item {{ $estadoClase }}">
+                  <td>
+                    {!! $icono !!}
+                    {{ $nombre }}
+                    @if ($seleccionado && $cantidadMostrar > 1)
+                      <span class="badge-cantidad">×{{ $cantidadMostrar }}</span>
+                    @endif
+                    @if ($seleccionado && !empty($detalles))
+                      <span class="badge-ubicacion">{{ $detalles }}</span>
+                    @endif
+                    @if (!$seleccionado || $precio == 0)
+                      <span class="badge-inactivo">(No seleccionado)</span>
+                    @endif
+                  </td>
+                  <td class="{{ !$seleccionado || $precio == 0 ? 'texto-inactivo' : '' }}">{{ $diasMostrar }}</td>
+                  <td class="{{ !$seleccionado || $precio == 0 ? 'texto-inactivo' : '' }}">$ {{ $estadoTexto }}</td>
+                </tr>
+              @endforeach
+
+              @if ($totalAdicionales > 0)
+                <tr class="adicional-total-row">
+                  <td colspan="2" style="text-align:right; font-weight:bold;">TOTAL ADICIONALES</td>
+                  <td style="font-weight:bold;">$ {{ number_format($totalAdicionales, 2) }}</td>
+                </tr>
+              @else
+                <tr class="adicional-total-row">
+                  <td colspan="3" style="text-align:center; font-weight:bold;">Ningún adicional seleccionado</td>
+                </tr>
+              @endif
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    {{-- ===================== ACEPTACIÓN + FIRMAS ===================== --}}
+    <div class="row-full">
+      <div class="bloque-aceptacion">
+        <p class="aceptacion-texto">
+          Acepto plenamente las obligaciones descritas en la carátula y en el clausulado de este contrato.
+          Declaro bajo protesta de decir verdad, haber recibido el auto descrito en el apartado de salida
+          y acepto las condiciones generales al inicio de la renta, así mismo entiendo y acepto las condiciones
+          del tratamiento de mis datos personales como se describe en el aviso de privacidad que se encuentra
+          a mi disposición en:
+          <a href="https://www.viajeroacrental.mx/">https://www.viajeroacrental.mx/</a>
+        </p>
+
+        <div class="firmas-container">
+          @php
+
+            $firmaSrc = function ($valor) {
+                if (empty($valor)) return null;
+                if (str_starts_with($valor, 'data:image')) return $valor;
+                if (str_starts_with($valor, 'http://') || str_starts_with($valor, 'https://')) return $valor;
+
+                $candidatos = [
+                    public_path(ltrim($valor, '/')),
+                    storage_path('app/public/' . ltrim(str_replace('storage/', '', $valor), '/')),
+                    $valor,
+                ];
+                foreach ($candidatos as $ruta) {
+                    if (is_file($ruta) && ($bytes = @file_get_contents($ruta)) !== false) {
+                        $ext = strtolower(pathinfo($ruta, PATHINFO_EXTENSION));
+                        $mime = in_array($ext, ['jpg','jpeg']) ? 'image/jpeg'
+                              : ($ext === 'gif' ? 'image/gif'
+                              : ($ext === 'webp' ? 'image/webp' : 'image/png'));
+                        return 'data:' . $mime . ';base64,' . base64_encode($bytes);
+                    }
+                }
+                return 'data:image/png;base64,' . $valor;
+            };
+
+            $firmaClienteCaratula = $firmaSrc($contrato->firma_cliente ?? null);
+            $firmaArrendadorCaratula = $firmaSrc($vehiculo->firma_propietario ?? null);
+          @endphp
+
+          <div class="firma-item">
+            <p class="firma-label">(firma de arrendatario)</p>
+            @if (!empty($firmaClienteCaratula))
+              <img src="{{ $firmaClienteCaratula }}" class="firma-img">
+            @endif
+            <div class="firma-linea-roja"></div>
+            <p class="firma-nombre">{{ trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')) ?: 'CLIENTE' }}</p>
+          </div>
+
+          <div class="firma-item">
+            <p class="firma-label">(firma de arrendador)</p>
+            @if (!empty($firmaArrendadorCaratula))
+              <img src="{{ $firmaArrendadorCaratula }}" class="firma-img">
+            @endif
+            <div class="firma-linea-roja"></div>
+            <p class="firma-nombre">VIAJERO CAR RENTAL</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {{-- ===================== GASOLINA ===================== --}}
+    <div class="row-full">
+      <div class="bloque-gasolina">
+        <p class="gasolina-texto">
+          <strong>GASOLINA:</strong> PRECIO POR LITRO FALTANTE $13.16 MXN MAS CARGO POR SERVICIO DE 23.96
+          MXN POR LITRO FALTANTE IMPUESTOS INCLUIDOS
+          <span class="nota-gas">(APLICABLE SI LA OPCION DE PREPAGO DE GAS NO FUE ADQUIRIDA)</span>
+        </p>
+      </div>
+    </div>
+
+    {{-- ===================== NOTAS ===================== --}}
+    <div class="row-full">
+      <div class="bloque-notas">
+        <p class="nota-title"><strong>INFORMACIÓN DE LOS CARGOS TOTALES:</strong></p>
+        <table style="width:100%; border-collapse:collapse;">
+          <tr>
+            <td style="width:50%; vertical-align:top; padding-right:8px;">
+              <p class="nota"><strong>(1)</strong> Al firmar este contrato el cliente declara tener conocimiento de todas las condiciones establecidas y acepta el clausulado al reverso.</p>
+              <p class="nota"><strong>(2)</strong> Los cargos son ESTIMADOS, el importe total a pagar del contrato aparecerá al cierre del mismo.</p>
+              <p class="nota"><strong>(3)</strong> Usted va alquilar y devolver el vehículo en el momento y lugares indicados. Gasolina no reembolsable en prepago. EXCEPTO si se regresa con tanque lleno.</p>
+              <p class="nota"><strong>(4)</strong> NO SE ACEPTA EFECTIVO como pago ni como deposito.</p>
+            </td>
+            <td style="width:50%; vertical-align:top; padding-left:8px;">
+              <p class="nota"><strong>(5)</strong> CDW 0% incluye: ROBO %, llantas, rines, cristales y espejos.</p>
+              <p class="nota"><strong>(6)</strong> CDW20%, CDW10%, PCDW NO incluye llantas, rines, cristales y espejos.</p>
+              <p class="nota"><strong>(7)</strong> Ninguna protección cubre GPS, Placas o llaves.</p>
+              <p class="nota"><strong>(8)</strong> CDW20%, CDW10%, PDW. LDW revocado en caso de negligencia del conductor o si existen conductores NO autorizados en el contrato.</p>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    {{-- ===================== FACTURACIÓN ===================== --}}
+    <div class="row-full">
+      <div class="bloque-facturacion">
+        <p class="fact-title"><strong>Datos de Facturación</strong></p>
+        <div class="fact-grid">
+          <div class="fact-row">
+            <div class="fact-item"><span class="label">No. cliente fiscal:</span><span class="value">{{ $reservacion->cliente_fiscal ?? '—' }}</span></div>
+            <div class="fact-item"><span class="label">RFC:</span><span class="value">{{ $reservacion->rfc_cliente ?? '—' }}</span></div>
+            <div class="fact-item"><span class="label">Razón social:</span><span class="value">{{ $reservacion->razon_social_cliente ?? '—' }}</span></div>
+          </div>
+          <div class="fact-row">
+            <div class="fact-item"><span class="label">Calle:</span><span class="value">{{ $reservacion->direccion_cliente ?? '—' }}</span></div>
+            <div class="fact-item"><span class="label">No. Ext.</span><span class="value">{{ $reservacion->num_ext_cliente ?? '—' }}</span></div>
+            <div class="fact-item"><span class="label">No. Int.</span><span class="value">{{ $reservacion->num_int_cliente ?? '—' }}</span></div>
+          </div>
+          <div class="fact-row">
+            <div class="fact-item"><span class="label">C.P.:</span><span class="value">{{ $reservacion->cp_cliente ?? '—' }}</span></div>
+            <div class="fact-item"><span class="label">Colonia:</span><span class="value">{{ $reservacion->colonia_cliente ?? '—' }}</span></div>
+            <div class="fact-item"><span class="label">Estado:</span><span class="value">{{ $reservacion->estado_cliente ?? '—' }}</span></div>
+          </div>
+          <div class="fact-row">
+            <div class="fact-item"><span class="label">Municipio:</span><span class="value">{{ $reservacion->municipio_cliente ?? '—' }}</span></div>
+            <div class="fact-item"><span class="label">País:</span><span class="value">{{ $reservacion->pais_cliente ?? '—' }}</span></div>
+            <div class="fact-item"><span class="label">Ciudad:</span><span class="value">{{ $reservacion->ciudad_cliente ?? '—' }}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div> {{-- /secciones --}}
+
+  {{-- ============================ PIE ROJO ============================ --}}
+  <footer class="pie-rojo">
+    <p class="pie-empresa"><strong>VIAJERO CAR RENTAL</strong></p>
+    <div class="pie-contenido-columnas">
+      <div class="col-pie izq">
+        <p>Business Center INNERA Central Park. Armando Birlain Shaffler #2001, Torre 2, Centro Sur, Qro.</p>
+        <p>Teléfono: 442 303 26 68 &nbsp; Celular: 442 716 97 93 | &nbsp; 442 343 07 70</p>
+      </div>
+      <div class="col-pie der">
+        <span>Arrendador: José Juan de Dios Hernández Resendiz</span>
+        <span>Facturación: facturación@viajeroacr-rental.com</span>
+        <span>Reservaciones: reservaciones@viajeroacr-rental.com</span>
+      </div>
+    </div>
+  </footer>
 
 </div> {{-- /contrato-final-container --}}
 
-{{-- Cálculos para DOB, edad y fechas de check in/out --}}
-@php
-// ✅ Locale español para días/meses
-\Carbon\Carbon::setLocale('es');
 
-$dobTexto  = '—';
-$edadTexto = '—';
-
-// ✅ DOB: ya viene desde reservación o “inyectado” por el controlador
-$fechaNacRaw = $reservacion->fecha_nacimiento ?? null;
-
-if (!empty($fechaNacRaw)) {
-    try {
-        $fn = \Carbon\Carbon::parse($fechaNacRaw);
-
-
-        $dobTexto = mb_strtoupper($fn->translatedFormat('d/M/Y'), 'UTF-8');
-
-        $edadTexto = $fn->age . ' años';
-    } catch (\Exception $e) {
-        $dobTexto  = '—';
-        $edadTexto = '—';
-    }
-}
-
-
-// Helper para dejarlo como: JUE 05 MAR 2026 - 14:30 HRS
-$formatearItinerario = function ($carbon) {
-
-    // Día y mes en español
-    $fecha = $carbon->translatedFormat('D d M Y');
-
-    // Mayúsculas (incluye acentos)
-    $fecha = mb_strtoupper($fecha, 'UTF-8');
-
-    // Hora 24h
-    $hora = $carbon->format('H:i');
-
-    return $fecha . ' - ' . $hora . ' HRS';
-};
-
-
-// Check out
-$textoCheckOut = '—';
-if (!empty($reservacion->fecha_inicio)) {
-    $co = \Carbon\Carbon::parse(
-        $reservacion->fecha_inicio . ' ' . ($reservacion->hora_retiro ?? '00:00')
-    );
-
-    $textoCheckOut = $formatearItinerario($co);
-}
-
-
-// Check in
-$textoCheckIn = '—';
-if (!empty($reservacion->fecha_fin)) {
-    $ci = \Carbon\Carbon::parse(
-        $reservacion->fecha_fin . ' ' . ($reservacion->hora_entrega ?? '00:00')
-    );
-
-    $textoCheckIn = $formatearItinerario($ci);
-}
-@endphp
-
-{{-- SECCIÓN: ARRENDATARIO / ITINERARIO --}}
-<div class="seccion-dos-columnas">
-  <div class="seccion-dos-columnas-inner">
-
-    {{-- ARRENDATARIO --}}
-    <div class="col-arrendatario">
-      <h2 class="titulo-col-rojo">ARRENDATARIO</h2>
-
-      <div class="arrendatario-datos">
-
-        <div class="arrendatario-row">
-          <span class="arrendatario-label">Nombre:</span>
-          <span class="arrendatario-value">
-            {{ $nombreCompletoCliente !== '' ? $nombreCompletoCliente : ($reservacion->nombre_cliente ?? '—') }}
-          </span>
-        </div>
-
-        <div class="arrendatario-row">
-          <span class="arrendatario-label">Fecha de nacimiento (DOB):</span>
-          <span class="arrendatario-value">{{ $dobTexto !== '—' ? '(' . $dobTexto . ')' : '—' }}</span>
-        </div>
-
-        <div class="arrendatario-row">
-          <span class="arrendatario-label">Edad:</span>
-          <span class="arrendatario-value">{{ $edadTexto }}</span>
-
-          <span class="arrendatario-label arrendatario-label-inline">Teléfono:</span>
-          <span class="arrendatario-value">
-            {{ $reservacion->telefono_cliente ?? '—' }}
-          </span>
-        </div>
-
-        <div class="arrendatario-row">
-          <span class="arrendatario-label">Correo:</span>
-          <span class="arrendatario-value">
-            {{ $reservacion->email_cliente ?? '—' }}
-          </span>
-        </div>
-
-
-        <table class="arrendatario-tabla-licencia">
-          <thead>
-            <tr>
-              <th>No. Licencia</th>
-              <th>Vencimiento</th>
-              <th>País</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>{{ $licencia->numero_identificacion ?? '—' }}</td>
-              <td>{{ $licencia->fecha_vencimiento ?? '—' }}</td>
-              <td>{{ $licencia->pais_emision ?? '—' }}</td>
-              <td>{{ $licencia->estado_emision ?? '—' }}</td>
-            </tr>
-          </tbody>
-        </table>
-
-      </div>
-    </div>
-
-    {{-- ITINERARIO --}}
-    <div class="col-itinerario">
-      <h2 class="titulo-col-rojo titulo-col-derecha">ITINERARIO</h2>
-
-      <div class="itinerario-bloque">
-        <p class="itinerario-label">Check in:</p>
-        <p class="itinerario-texto">
-          {{ $reservacion->sucursal_retiro_nombre ?? '—' }}<br>
-          {{ $textoCheckOut }}
-        </p>
-      </div>
-
-      <div class="itinerario-bloque">
-        <p class="itinerario-label">Check out:</p>
-        <p class="itinerario-texto">
-          {{ $reservacion->sucursal_entrega_nombre ?? '—' }}<br>
-          {{ $textoCheckIn }}
-        </p>
-      </div>
-
-    </div>
-
-  </div>
-</div>
-{{-- =======================================================
-     SECCIÓN TARIFAS / ADICIONALES (franja roja)
-   ======================================================= --}}
-@php
-    // Cálculos para mostrar en el cuadro de totales
-    $ivaCalc        = $subtotal * 0.16;
-    $cuotasLocales  = 0; // si más adelante definen un monto, va aquí
-@endphp
-
-<div class="tarifas-adicionales-wrap">
-  <div class="tarifas-adicionales-inner">
-
-    {{-- COLUMNA IZQUIERDA: TARIFAS --}}
-    <div class="tarifas-col tarifas-col-left">
-      <h2 class="tarifas-titulo">TARIFAS</h2>
-
-      <table class="tarifas-tabla">
-        <thead>
-          <tr>
-            <th>Concepto</th>
-            <th>Días</th>
-            <th>Precio por día</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {{-- Tarifa base --}}
-          <tr>
-            <td>Tarifa base</td>
-            <td>{{ $dias ?? 1 }}</td>
-            <td>${{ number_format($tarifaBase ?? 0, 2) }}</td>
-            <td>${{ number_format(($tarifaBase ?? 0) * ($dias ?? 1), 2) }}</td>
-          </tr>
-
-          {{-- Paquetes de seguro --}}
-          @foreach(($paquetes ?? []) as $p)
-            <tr>
-              <td>{{ $p->nombre ?? 'Paquete' }}</td>
-              <td>{{ $dias ?? 1 }}</td>
-              <td>${{ number_format($p->precio_por_dia ?? 0, 2) }}</td>
-              <td>${{ number_format(($p->precio_por_dia ?? 0) * ($dias ?? 1), 2) }}</td>
-            </tr>
-          @endforeach
-
-          {{-- Seguros individuales --}}
-          @foreach(($individuales ?? []) as $i)
-            <tr>
-              <td>{{ $i->nombre ?? 'Protección' }}</td>
-              <td>{{ $dias ?? 1 }}</td>
-              <td>${{ number_format($i->precio_por_dia ?? 0, 2) }}</td>
-              <td>${{ number_format(($i->precio_por_dia ?? 0) * ($dias ?? 1), 2) }}</td>
-            </tr>
-          @endforeach
-        </tbody>
-      </table>
-
-      {{-- Totales al pie, igual que en el diseño --}}
-      <table class="tarifas-totales-tabla">
-        <tr>
-          <td class="lbl">Subtotal:</td>
-          <td class="val">
-            ${{ number_format($subtotal ?? 0, 2) }}
-          </td>
-        </tr>
-        <tr>
-          <td class="lbl">I.V.A.</td>
-          <td class="val">
-            ${{ number_format($ivaCalc, 2) }}
-          </td>
-        </tr>
-        <tr>
-          <td class="lbl">Cuotas locales e impuestos federales</td>
-          <td class="val">
-            ${{ number_format($cuotasLocales, 2) }}
-          </td>
-        </tr>
-        <tr>
-          <td class="lbl total-label">TOTAL:</td>
-          <td class="val total-value">
-            ${{ number_format($totalFinal ?? (($subtotal ?? 0) + $ivaCalc + $cuotasLocales), 2) }}
-          </td>
-        </tr>
-      </table>
-    </div>
-
-    {{-- COLUMNA DERECHA: ADICIONALES --}}
-    <div class="tarifas-col tarifas-col-right">
-      <h2 class="tarifas-titulo">ADICIONALES</h2>
-
-      <table class="adicionales-tabla">
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>Días</th>
-            <th>Precio por día</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse(($extras ?? []) as $e)
-            <tr>
-              <td>{{ $e->nombre ?? 'Servicio' }}</td>
-              <td>{{ $dias ?? 1 }}</td>
-              <td>${{ number_format($e->precio_unitario ?? 0, 2) }}</td>
-            </tr>
-          @empty
-            {{-- Si no hay extras, dejamos una fila vacía para que no se vea el cuadro en blanco --}}
-            <tr>
-              <td colspan="3">Sin adicionales contratados.</td>
-            </tr>
-          @endforelse
-        </tbody>
-      </table>
-    </div>
-
-
-
-  </div>
-</div>
-{{-- =======================================================
-     SECCIÓN FINAL (aceptación + firma + gasolina/cargos + datos facturación + footer)
-   ======================================================= --}}
-@php
-  // Nombre arrendatario (ya lo traes calculado arriba en $nombreCompletoCliente)
-  $nombreArrendatarioFirma = $nombreCompletoCliente !== '' ? $nombreCompletoCliente : ($reservacion->nombre_cliente ?? '—');
-
-  // ✅ Firma arrendador desde contratos
-  // Ajusta el nombre del campo según tu BD: firma_arrendador / firma / etc.
-  // Puede ser:
-  //  - Ruta relativa en public (ej. "firmas/firma.png")
-  //  - o null
-  $firmaArrendadorPath = !empty($contrato->firma_arrendador)
-      ? public_path($contrato->firma_arrendador)
-      : null;
-@endphp
-
-<div class="seccion-final">
-
-  {{-- Aceptación + firma --}}
-  <div class="final-acepta-firma">
-    <div class="final-acepta">
-      Acepto plenamente las obligaciones descritas en la carátula y en el clausulado de este contrato.
-      Declaro bajo protesta de decir verdad, haber recibido el auto descrito en el apartado de salida y
-      acepto las condiciones generales al inicio de la renta, así mismo entiendo y acepto las condiciones
-      del tratamiento de mis datos personales como se describe en el aviso de privacidad que se encuentra
-      a mi disposición en: https://www.viajerocarental.com
-    </div>
-
-    <div class="final-firma">
-
-  {{-- Firma del ARRENDATARIO (cliente) desde BD --}}
-  @php
-    $firmaClienteRaw = $contrato->firma_cliente ?? null;
-
-    $firmaClienteSrc = null;
-    if (!empty($firmaClienteRaw)) {
-        $firmaClienteSrc = str_starts_with($firmaClienteRaw, 'data:image')
-            ? $firmaClienteRaw
-            : 'data:image/png;base64,' . $firmaClienteRaw;
-    }
-  @endphp
-
-  {{-- Firma manuscrita --}}
-  @if(!empty($firmaClienteSrc))
-    <img class="firma-img" src="{{ $firmaClienteSrc }}" alt="Firma arrendatario">
-  @endif
-
-  {{-- Línea de firma --}}
-  <div class="final-firma-linea"></div>
-
-  {{-- Nombre del arrendatario --}}
-  <p class="final-firma-nombre">{{ $nombreArrendatarioFirma }}</p>
-
-</div>
-  </div>
-
-  <hr class="final-sep-roja">
-
-  {{-- Gasolina + info cargos --}}
-  <div class="final-cargos">
-
-  <div class="nota">
-    <span class="lbl">GASOLINA:</span>
-    PRECIO POR LITRO FALTANTE $13.16 MXN MAS CARGO POR SERVICIO DE 23.96 MXN POR LITRO FALTANTE
-    IMPUESTOS INCLUIDOS (APLICABLE SI LA OPCION DE PREPAGO DE GAS NO FUE ADQUIRIDA)
-  </div>
-
-  <h3>INFORMACIÓN DE LOS CARGOS TOTALES:</h3>
-
-  <div class="nota">
-    <strong>(1)</strong> Al firmar este contrato el cliente declara tener conocimiento de todas las condiciones establecidas
-    y acepta el clausulado al reverso.
-    <strong>(2)</strong> Los cargos son ESTIMADOS, el importe total a pagar del contrato aparecera al cierre del mismo.
-    <strong>(3)</strong> Usted va a alquilar y devolver el vehiculo en el momento y lugares indicados. Gasolina no reembolsable
-    en prepago, EXCEPTO si se regresa con tanque lleno.
-  </div>
-
-  <div class="nota">
-    <span class="lbl"><strong>1.</strong></span> NO SE ACEPTA EFECTIVO como pago ni como deposito.
-    <span class="lbl"><strong>2.</strong></span> CDW 0% incluye: ROBO %, llantas, rines, cristales y espejos.
-    <span class="lbl"><strong>3.</strong></span> CDW20%, CDW10%, PCDW NO incluye llantas, rines, cristales y espejos.
-    <span class="lbl"><strong>4.</strong></span> Ninguna protección cubre GPS, Placas o llaves
-    <span class="lbl"><strong>5.</strong></span> CDW20%, CDW10%, PDW, LDW revocado en caso de negligencia del conductor o si existen conductores NO autorizados en el contrato.
-  </div>
-
-</div>
-
-  <hr class="final-sep-roja">
-
-  {{-- Datos de facturación (estático como la imagen)
-  <div class="final-facturacion">
-    <div class="factu-titulo">
-      Datos de<br>Facturación
-    </div>
-
-    <div class="factu-datos">
-      <div class="factu-grid">
-
-        <div class="factu-row">
-          <div class="factu-cell w30">
-            <span class="factu-label">No. cliente fiscal:</span>
-            <span class="factu-value">2</span>
-          </div>
-
-          <div class="factu-cell w35">
-            <span class="factu-label">Calle:</span>
-            <span class="factu-value">Lagos de Pátzcuaro</span>
-          </div>
-
-          <div class="factu-cell w35">
-            <span class="factu-label">Colonia:</span>
-            <span class="factu-value">Capital Sur</span>
-          </div>
-        </div>
-
-        <div class="factu-row">
-          <div class="factu-cell w30">
-            <span class="factu-label">RFC:</span>
-            <span class="factu-value">SORH930507TG3</span>
-          </div>
-
-          <div class="factu-cell w35">
-            <span class="factu-label">No. Ext.</span>
-            <span class="factu-value">200</span>
-            &nbsp;&nbsp;
-            <span class="factu-label">No. Int.</span>
-            <span class="factu-value">88</span>
-          </div>
-
-          <div class="factu-cell w35">
-            <span class="factu-label">Estado:</span>
-            <span class="factu-value">Querétaro</span>
-          </div>
-        </div>
-
-        <div class="factu-row">
-          <div class="factu-cell w60">
-            <span class="factu-label">Razón social:</span>
-            <span class="factu-value">HORACIO DE JESÚS SOTELO DE LA ROSA</span>
-          </div>
-
-          <div class="factu-cell w40">
-            <span class="factu-label">Municipio:</span>
-            <span class="factu-value">El Marqués</span>
-          </div>
-        </div>
-
-        <div class="factu-row">
-          <div class="factu-cell w60">
-            <span class="factu-label">C.P.</span>
-            <span class="factu-value">76246</span>
-            &nbsp;&nbsp;&nbsp;
-            <span class="factu-label">Ciudad:</span>
-            <span class="factu-value">San Isidro Miranda</span>
-          </div>
-
-          <div class="factu-cell w40">
-            <span class="factu-label">País:</span>
-            <span class="factu-value">México</span>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>--}}
-
-</div> {{-- /seccion-final --}}
-
-{{-- Footer rojo final --}}
-<div class="footer-rojo">
-  <div class="footer-rojo-inner">
-    <div class="footer-col footer-col-left">
-      <div class="footer-titulo">VIAJERO CAR RENTAL</div>
-      Business Center INNERA Central Park, Armando Birlain Shaffler #2001, Torre 2, Centro Sur, Qro.<br>
-      Teléfono de reservaciones: 442 303 26 68 &nbsp;&nbsp;&nbsp;&nbsp;
-      Celular de módulo: 442 716 97 93 y 442 343 07 70
-    </div>
-
-    <div class="footer-col footer-col-right">
-      <span class="footer-strong">Arrendador:</span> José Juan de Dios Hernández Resendiz<br>
-      <span class="footer-strong">Facturación:</span> facturación@viajerocar-rental.com<br>
-      <span class="footer-strong">Reservaciones:</span> reservaciones@viajerocar-rental.com
-    </div>
-  </div>
-</div>
-
-{{-- ===========================
-     HOJA 2 - CLAUSULAS
-=========================== --}}
-<div class="page-break"></div>
+{{-- ============================================================
+     HOJA 2 - CLÁUSULAS (solo en el PDF que se envía por correo)
+============================================================ --}}
 
 @php
-  // Nombres (ajusta si tú ya los tienes en variables)
-  $arrendadorNombre = $arrendadorNombre ?? 'Juan de Dios Hernández Resendiz';
-  $arrendatarioNombre = $nombreArrendatarioFirma ?? ($reservacion->nombre_cliente ?? '—');
-
-  // Datos de fecha/lugar (puedes reemplazar por datos reales si ya los tienes)
-  $lugarFirma = $lugarFirma ?? 'Santiago de Querétaro';
-  $diaFirma   = $diaFirma   ?? '12';
-  $mesFirma   = $mesFirma   ?? 'Febrero';
-  $anioFirma  = $anioFirma  ?? '2026';
+  $arrendadorNombre   = $arrendadorNombre   ?? '—';
+  $arrendatarioNombre = $arrendatarioNombre ?? (trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? '')) ?: '—');
+  $lugarFirma = $lugarFirma ?? '—';
+  $diaFirma   = $diaFirma   ?? '—';
+  $mesFirma   = $mesFirma   ?? '—';
+  $anioFirma  = $anioFirma  ?? '—';
 @endphp
 
 <section class="clausulas-page">
@@ -1454,7 +1276,7 @@ if (!empty($reservacion->fecha_fin)) {
     CONTRATO DE ARRENDAMIENTO, QUE CELEBRA POR UNA PARTE LA COMPAÑÍA CUYA RAZÓN SOCIAL APARECE EN EL APARTADO NO. 1 DEL ANVERSO DE ESTE CONTRATO COMO ARRENDADORA, Y POR LA OTRA, LA PERSONA CUYO NOMBRE APARECE EN EL APARTADO NO. 2 DEL ANVERSO DE ESTE CONTRATO, CON CARÁCTER DE ARRENDATARIA.
   </div>
 
-  <div class="clausulas-title">CLAUSULAS</div>
+  <div class="clausulas-title">Clausulas</div>
 
   <div class="clausulas-body">
     <p><span class="clausula-tag">PRIMERA.</span> LA ARRENDADORA entrega en arrendamiento a la ARRENDATARIA cuyo nombre aparece en la carátula de este documento y dicha ARRENDATARIA recibe en tal carácter el vehículo objeto de este contrato en condiciones normales, mecánicas y de carrocería, consignadas en el inventario respectivo, con el carácter de BIEN ARRENDADO, a tener bajo su custodia y a su entera satisfacción, el vehículo de referencia y se obliga a pagar a la ARRENDADORA la renta señalada del contrato y a precisar de mercado, el o los faltantes de accesorios y partes del vehículo que recibe en el momento de entrega del mismo.</p>
@@ -1509,72 +1331,64 @@ if (!empty($reservacion->fecha_fin)) {
       <span class="nota-titulo">1.</span> NO SE ACEPTA EFECTIVO como pago ni como deposito.
       <span class="nota-titulo">2.</span> CDW 0% incluye: ROBO %, llantas, rines, cristales y espejos.
       <span class="nota-titulo">3.</span> CDW20%, CDW10%, PCDW NO incluye llantas, rines, cristales y espejos.
-      <span class="nota-titulo">4.</span> Ninguna protección cubre GPS. Placas o llaves
+      <span class="nota-titulo">4.</span> Ninguna protección cubre GPS. Placas o llaves.
       <span class="nota-titulo">5.</span> CDW20%, CDW10%, PDW, LDW revocado en caso de negligencia del conductor o si existen conductores NO autorizados en el contrato.
     </div>
   </div>
 
- <div class="clausulas-fecha">
-  En <span class="linea-roja">{{ $lugarFirma }}</span>
-  al día <span class="linea-roja" style="min-width:18mm;">{{ $diaFirma }}</span>
-  del mes de <span class="linea-roja" style="min-width:32mm;">{{ $mesFirma }}</span>
-  del año <span class="linea-roja" style="min-width:22mm;">{{ $anioFirma }}</span>
-</div>
-
-<div class="clausulas-firmas">
-
-  {{-- ===============================
-       FIRMA ARRENDADOR
-  =============================== --}}
-  <div class="firma-col">
-
-    @php
-      $firmaArrRaw = $contrato->firma_arrendador ?? null;
-
-      $firmaArrSrc = null;
-      if (!empty($firmaArrRaw)) {
-          $firmaArrSrc = str_starts_with($firmaArrRaw, 'data:image')
-              ? $firmaArrRaw
-              : 'data:image/png;base64,' . $firmaArrRaw;
-      }
-    @endphp
-
-    @if(!empty($firmaArrSrc))
-      <img class="firma-img" src="{{ $firmaArrSrc }}" alt="Firma arrendador">
-    @endif
-
-    <div class="firma-line"></div>
-    <p class="firma-nombre">{{ $arrendadorNombre }}</p>
-
+  <div class="clausulas-fecha">
+    En <span class="linea-roja">{{ $lugarFirma }}</span>
+    al día <span class="linea-roja" style="min-width:16mm;">{{ $diaFirma }}</span>
+    del mes de <span class="linea-roja" style="min-width:30mm;">{{ $mesFirma }}</span>
+    del año <span class="linea-roja" style="min-width:20mm;">{{ $anioFirma }}</span>
   </div>
 
-
-  {{-- ===============================
-       FIRMA ARRENDATARIO (CLIENTE)
-  =============================== --}}
-  <div class="firma-col">
-
+  <div class="clausulas-firmas">
     @php
-      $firmaClienteRaw = $contrato->firma_cliente ?? null;
-
-      $firmaClienteSrc = null;
-      if (!empty($firmaClienteRaw)) {
-          $firmaClienteSrc = str_starts_with($firmaClienteRaw, 'data:image')
-              ? $firmaClienteRaw
-              : 'data:image/png;base64,' . $firmaClienteRaw;
+      if (!isset($firmaSrc)) {
+          $firmaSrc = function ($valor) {
+              if (empty($valor)) return null;
+              if (str_starts_with($valor, 'data:image')) return $valor;
+              if (str_starts_with($valor, 'http://') || str_starts_with($valor, 'https://')) return $valor;
+              $candidatos = [
+                  public_path(ltrim($valor, '/')),
+                  storage_path('app/public/' . ltrim(str_replace('storage/', '', $valor), '/')),
+                  $valor,
+              ];
+              foreach ($candidatos as $ruta) {
+                  if (is_file($ruta) && ($bytes = @file_get_contents($ruta)) !== false) {
+                      $ext = strtolower(pathinfo($ruta, PATHINFO_EXTENSION));
+                      $mime = in_array($ext, ['jpg','jpeg']) ? 'image/jpeg'
+                            : ($ext === 'gif' ? 'image/gif'
+                            : ($ext === 'webp' ? 'image/webp' : 'image/png'));
+                      return 'data:' . $mime . ';base64,' . base64_encode($bytes);
+                  }
+              }
+              return 'data:image/png;base64,' . $valor;
+          };
       }
+      $firmaArrSrc = $firmaSrc($contrato->firma_arrendador ?? null);
+      $firmaCliSrc = $firmaSrc($contrato->firma_cliente ?? null);
     @endphp
 
-    @if(!empty($firmaClienteSrc))
-      <img class="firma-img" src="{{ $firmaClienteSrc }}" alt="Firma arrendatario">
-    @endif
+    {{-- FIRMA ARRENDADOR --}}
+    <div class="firma-col">
+      @if(!empty($firmaArrSrc))
+        <img class="firma-img" src="{{ $firmaArrSrc }}" alt="Firma arrendador">
+      @endif
+      <div class="firma-line"></div>
+      <p class="firma-nombre">{{ $arrendadorNombre }}</p>
+    </div>
 
-    <div class="firma-line"></div>
-    <p class="firma-nombre">{{ $arrendatarioNombre }}</p>
-
+    {{-- FIRMA ARRENDATARIO --}}
+    <div class="firma-col">
+      @if(!empty($firmaCliSrc))
+        <img class="firma-img" src="{{ $firmaCliSrc }}" alt="Firma arrendatario">
+      @endif
+      <div class="firma-line"></div>
+      <p class="firma-nombre">{{ $arrendatarioNombre }}</p>
+    </div>
   </div>
-
-</div>
 
 </section>
 </body>

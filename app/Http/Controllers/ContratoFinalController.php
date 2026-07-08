@@ -229,7 +229,7 @@ $edad = !empty($fechaNacimiento)
     /* =========================================================
        ENVIAR CONTRATO POR CORREO (PDF)
     ========================================================= */
-    public function enviarContratoCorreo(Request $request, $id)
+public function enviarContratoCorreo(Request $request, $id)
 {
     // 1️⃣ CONTRATO
     $contrato = DB::table('contratos')->where('id_contrato', $id)->first();
@@ -237,7 +237,7 @@ $edad = !empty($fechaNacimiento)
         return response()->json(['ok' => false, 'msg' => 'Contrato no encontrado']);
     }
 
-    // 2️⃣ RESERVACIÓN (MISMO JOIN QUE mostrarContratoFinal)
+    // 2️⃣ RESERVACIÓN (mismo join que mostrarContratoFinal)
     $reservacion = DB::table('reservaciones as r')
         ->leftJoin('sucursales as sr', 'r.sucursal_retiro', '=', 'sr.id_sucursal')
         ->leftJoin('sucursales as se', 'r.sucursal_entrega', '=', 'se.id_sucursal')
@@ -253,27 +253,42 @@ $edad = !empty($fechaNacimiento)
         return response()->json(['ok' => false, 'msg' => 'Correo del cliente no disponible']);
     }
 
-if (empty($reservacion->fecha_nacimiento)) {
+    // DOB fallback en reservación
+    if (empty($reservacion->fecha_nacimiento)) {
+        $docIdentTitular = DB::table('contrato_documento')
+            ->where('id_contrato', $id)
+            ->where('tipo', 'identificacion')
+            ->whereNotNull('fecha_nacimiento')
+            ->orderBy('id_documento', 'asc')
+            ->first();
 
-    $docIdentTitular = DB::table('contrato_documento')
+        if ($docIdentTitular) {
+            $reservacion->fecha_nacimiento = $docIdentTitular->fecha_nacimiento;
+        }
+    }
+
+    // 3️⃣ LICENCIA
+    $licencia = DB::table('contrato_documento')
+        ->where('id_contrato', $id)
+        ->where('tipo', 'licencia')
+        ->first();
+
+    // 3.1) Identificación (para DOB/edad)
+    $identificacion = DB::table('contrato_documento')
         ->where('id_contrato', $id)
         ->where('tipo', 'identificacion')
         ->whereNotNull('fecha_nacimiento')
         ->orderBy('id_documento', 'asc')
         ->first();
 
-    if ($docIdentTitular) {
-        $reservacion->fecha_nacimiento = $docIdentTitular->fecha_nacimiento;
-    }
-}
+    $fechaNacimiento = $reservacion->fecha_nacimiento
+        ?? ($identificacion->fecha_nacimiento ?? null);
 
-    // 3️⃣ LICENCIA (por si la quieres usar en el correo)
-    $licencia = DB::table('contrato_documento')
-        ->where('id_contrato', $id)
-        ->where('tipo', 'licencia')
-        ->first();
+    $edad = !empty($fechaNacimiento)
+        ? \Carbon\Carbon::parse($fechaNacimiento)->age
+        : null;
 
-    // 4️⃣ DÍAS  (MISMA FÓRMULA QUE mostrarContratoFinal)
+    // 4️⃣ DÍAS
     $dias = max(
         \Carbon\Carbon::parse($reservacion->fecha_inicio)
             ->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_fin)),
@@ -283,7 +298,7 @@ if (empty($reservacion->fecha_nacimiento)) {
     // 5️⃣ TARIFA BASE
     $tarifaBase = $reservacion->tarifa_modificada ?? $reservacion->tarifa_base ?? 0;
 
-    // 6️⃣ PAQUETES, INDIVIDUALES, EXTRAS (MISMO CÓDIGO)
+    // 6️⃣ PAQUETES, INDIVIDUALES, EXTRAS (con cantidad)
     $paquetes = DB::table('reservacion_paquete_seguro as rps')
         ->leftJoin('seguro_paquete as sp', 'rps.id_paquete', '=', 'sp.id_paquete')
         ->select('sp.nombre', 'rps.precio_por_dia')
@@ -298,20 +313,75 @@ if (empty($reservacion->fecha_nacimiento)) {
 
     $extras = DB::table('reservacion_servicio as rs')
         ->leftJoin('servicios as s', 'rs.id_servicio', '=', 's.id_servicio')
-        ->select('s.nombre', 'rs.precio_unitario')
+        ->select('s.nombre', 'rs.precio_unitario', 'rs.cantidad')
         ->where('rs.id_reservacion', $reservacion->id_reservacion)
         ->get();
 
-    // 7️⃣ SUBTOTAL Y TOTAL (IGUAL QUE EN LA VISTA)
+    // 6.1) ADICIONALES ESPECIALES (igual que mostrarContratoFinal)
+    // Delivery - desde la tabla reservaciones
+    $deliveryInfo = null;
+    if (($reservacion->delivery_activo ?? false) && ($reservacion->delivery_total ?? 0) > 0) {
+        $deliveryInfo = (object) [
+            'nombre'          => 'Delivery',
+            'precio_unitario' => $reservacion->delivery_total ?? 0,
+            'cantidad'        => 1,
+            'activo'          => $reservacion->delivery_activo,
+            'direccion'       => $reservacion->delivery_direccion ?? '',
+            'kms'             => $reservacion->delivery_km ?? 0,
+        ];
+    }
+
+    // Dropoff - tabla cargo_adicional (id_concepto = 6)
+    $dropoffInfo = null;
+    $dropoffCargo = DB::table('cargo_adicional')
+        ->where('id_contrato', $id)
+        ->where('id_concepto', 6)
+        ->first();
+    if ($dropoffCargo && ($dropoffCargo->monto ?? 0) > 0) {
+        $dropoffInfo = (object) [
+            'nombre'          => 'Drop Off',
+            'precio_unitario' => $dropoffCargo->monto ?? 0,
+            'cantidad'        => 1,
+            'destino'         => $dropoffCargo->destino ?? '',
+            'km'              => $dropoffCargo->km ?? 0,
+        ];
+    }
+
+    // Gasolina - tabla cargo_adicional (id_concepto = 5)
+    $gasolinaInfo = null;
+    $gasolinaCargo = DB::table('cargo_adicional')
+        ->where('id_contrato', $id)
+        ->where('id_concepto', 5)
+        ->first();
+    if ($gasolinaCargo && ($gasolinaCargo->monto ?? 0) > 0) {
+        $gasolinaInfo = (object) [
+            'nombre'          => 'Gasolina (faltante)',
+            'precio_unitario' => $gasolinaCargo->monto ?? 0,
+            'cantidad'        => $gasolinaCargo->litros ?? 1,
+            'litros'          => $gasolinaCargo->litros ?? 0,
+        ];
+    }
+
+    // 7️⃣ SUBTOTAL Y TOTAL (igual que pantalla)
     $subtotal =
         ($tarifaBase * $dias) +
         $paquetes->sum(fn($p) => $p->precio_por_dia * $dias) +
         $individuales->sum(fn($i) => $i->precio_por_dia * $dias) +
-        $extras->sum(fn($e) => $e->precio_unitario * $dias);
+        $extras->sum(fn($e) => ($e->precio_unitario ?? 0) * ($e->cantidad ?? 1) * $dias);
+
+    if ($deliveryInfo && ($deliveryInfo->precio_unitario ?? 0) > 0) {
+        $subtotal += $deliveryInfo->precio_unitario;
+    }
+    if ($dropoffInfo && ($dropoffInfo->precio_unitario ?? 0) > 0) {
+        $subtotal += $dropoffInfo->precio_unitario;
+    }
+    if ($gasolinaInfo && ($gasolinaInfo->precio_unitario ?? 0) > 0) {
+        $subtotal += $gasolinaInfo->precio_unitario;
+    }
 
     $totalFinal = $subtotal * 1.16;
 
-    // 8️⃣ VEHÍCULO (MISMO JOIN)
+    // 8️⃣ VEHÍCULO
     $vehiculo = DB::table('vehiculos as v')
         ->leftJoin('categorias_carros as c', 'v.id_categoria', '=', 'c.id_categoria')
         ->select(
@@ -320,6 +390,7 @@ if (empty($reservacion->fecha_nacimiento)) {
             'v.transmision',
             'v.kilometraje',
             'v.gasolina_actual',
+            'v.capacidad_tanque',
             'v.placa',
             'v.firma_propietario',
             DB::raw('COALESCE(c.nombre, v.categoria) as categoria')
@@ -327,121 +398,152 @@ if (empty($reservacion->fecha_nacimiento)) {
         ->where('v.id_vehiculo', $reservacion->id_vehiculo)
         ->first();
 
-    // 9️⃣ TEXTO DEL AVISO
-$aviso = $request->input('aviso', '');
+    // 9️⃣ TEXTO Y FIRMA DEL AVISO
+    $aviso = $request->input('aviso', '');
+    $firmaAviso = $request->input('firma_aviso', null);
 
-// 🔟 FIRMA DEL AVISO (base64 desde el modal)
-$firmaAviso = $request->input('firma_aviso', null);
-
-// Guardar la firma del aviso en la tabla contratos (si viene)
-if ($firmaAviso) {
-    DB::table('contratos')
-        ->where('id_contrato', $id)
-        ->update(['firma_aviso' => $firmaAviso]);
-
-    $contrato->firma_aviso = $firmaAviso;
-}
-$contrato = DB::table('contratos')->where('id_contrato', $id)->first();
-// ======================================================
-// DATOS HOJA 2: lugar/fecha + arrendador/arrendatario
-// ======================================================
-\Carbon\Carbon::setLocale('es');
-
-// Lugar (sucursal retiro)
-$lugarFirma = $reservacion->sucursal_retiro_nombre
-    ?? '—';
-
-// Fecha inicio reserva -> día/mes/año
-$fechaInicio = !empty($reservacion->fecha_inicio)
-    ? \Carbon\Carbon::parse($reservacion->fecha_inicio)
-    : null;
-
-$diaFirma  = $fechaInicio ? $fechaInicio->format('d') : '—';
-$mesFirma  = $fechaInicio ? ucfirst($fechaInicio->translatedFormat('F')) : '—';
-$anioFirma = $fechaInicio ? $fechaInicio->format('Y') : '—';
-
-// Quién hizo la reservación (arrendador): contrato.id_asesor > reservacion.id_asesor > reservacion.id_usuario
-$idArrendador = $contrato->id_asesor
-    ?? $reservacion->id_asesor
-    ?? $reservacion->id_usuario
-    ?? null;
-
-// Nombre del arrendador desde usuarios
-$arrendadorNombre = '—';
-if (!empty($idArrendador)) {
-    $arr = DB::table('usuarios')
-        ->select('nombres', 'apellidos')
-        ->where('id_usuario', $idArrendador)
-        ->first();
-
-    if ($arr) {
-        $arrendadorNombre = trim(($arr->nombres ?? '') . ' ' . ($arr->apellidos ?? ''));
-        if ($arrendadorNombre === '') $arrendadorNombre = '—';
+    if ($firmaAviso) {
+        DB::table('contratos')
+            ->where('id_contrato', $id)
+            ->update(['firma_aviso' => $firmaAviso]);
     }
-}
 
-// Nombre del arrendatario (cliente) (sale de reservación)
-$arrendatarioNombre = trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? ''));
-if ($arrendatarioNombre === '') {
-    $arrendatarioNombre = $reservacion->nombre_cliente ?? '—';
-}
+    $contrato = DB::table('contratos')->where('id_contrato', $id)->first();
 
+    // 🔟 DATOS HOJA lugar/fecha
+    \Carbon\Carbon::setLocale('es');
 
-// 1️⃣1️⃣ GENERAR PDF (CHROMIUM) CON TODOS LOS DATOS
-$html = view('Admin.contrato-final-pdf', [
-    'contrato'     => $contrato,
-    'reservacion'  => $reservacion,
-    'licencia'     => $licencia,
-    'vehiculo'     => $vehiculo,
-    'dias'         => $dias,
-    'tarifaBase'   => $tarifaBase,
-    'paquetes'     => $paquetes,
-    'individuales' => $individuales,
-    'extras'       => $extras,
-    'subtotal'     => $subtotal,
-    'totalFinal'   => $totalFinal,
-    // ✅ HOJA 2: fecha/lugar
-    'lugarFirma'   => $lugarFirma,
-    'diaFirma'     => $diaFirma,
-    'mesFirma'     => $mesFirma,
-    'anioFirma'    => $anioFirma,
+    $lugarFirma = $reservacion->sucursal_retiro_nombre ?? '—';
 
-    // ✅ HOJA 2: nombres firmas
-    'arrendadorNombre'   => $arrendadorNombre,
-    'arrendatarioNombre' => $arrendatarioNombre,
-])->render();
+    $fechaInicio = !empty($reservacion->fecha_inicio)
+        ? \Carbon\Carbon::parse($reservacion->fecha_inicio)
+        : null;
 
-$filePath = storage_path("app/public/Contrato_{$contrato->numero_contrato}.pdf");
+    $diaFirma  = $fechaInicio ? $fechaInicio->format('d') : '—';
+    $mesFirma  = $fechaInicio ? ucfirst($fechaInicio->translatedFormat('F')) : '—';
+    $anioFirma = $fechaInicio ? $fechaInicio->format('Y') : '—';
 
-Browsershot::html($html)
-    ->format('A4')
-    ->margins(6, 6, 6, 6)
-    ->showBackground()
-    ->save($filePath);
+    $idArrendador = $contrato->id_asesor
+        ?? $reservacion->id_asesor
+        ?? $reservacion->id_usuario
+        ?? null;
 
-// 1️⃣2️⃣ ENVIAR CORREO
-$correoReservaciones = config('mail.from.address');
+    $arrendadorNombre = '—';
+    if (!empty($idArrendador)) {
+        $arr = DB::table('usuarios')
+            ->select('nombres', 'apellidos')
+            ->where('id_usuario', $idArrendador)
+            ->first();
+        if ($arr) {
+            $arrendadorNombre = trim(($arr->nombres ?? '') . ' ' . ($arr->apellidos ?? ''));
+            if ($arrendadorNombre === '') $arrendadorNombre = '—';
+        }
+    }
 
-Mail::to($reservacion->email_cliente)
-    ->bcc($correoReservaciones)
-    ->send(
-        new ContratoFinalMail(
-            $contrato,
-            $reservacion,
-            $licencia,
-            $vehiculo,
-            $dias,
-            $totalFinal,
-            $filePath,
-            $aviso
-        )
-    );
+    $arrendatarioNombre = trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? ''));
+    if ($arrendatarioNombre === '') {
+        $arrendatarioNombre = $reservacion->nombre_cliente ?? '—';
+    }
 
+    // 1️⃣1️⃣ IMÁGENES EN BASE64
+    $imgToBase64 = function (array $rutasRelativas): ?string {
+        foreach ($rutasRelativas as $rel) {
+            $full = public_path($rel);
+            if (is_file($full) && ($bytes = @file_get_contents($full)) !== false) {
+                $ext  = strtolower(pathinfo($full, PATHINFO_EXTENSION));
+                $mime = match ($ext) {
+                    'jpg', 'jpeg' => 'image/jpeg',
+                    'gif'         => 'image/gif',
+                    'svg'         => 'image/svg+xml',
+                    'webp'        => 'image/webp',
+                    default       => 'image/png',
+                };
+                return 'data:' . $mime . ';base64,' . base64_encode($bytes);
+            }
+        }
+        \Log::warning('Contrato PDF: no se encontró imagen', ['probadas' => $rutasRelativas]);
+        return null;
+    };
 
-return response()->json([
-    'ok'  => true,
-    'msg' => 'Contrato enviado correctamente'
-]);
+    $logoBase64 = $imgToBase64([
+        'img/LogoB.png',
+        'img/VIAJEROPDF.png',
+        'img/logo.png',
+        'img/Logo.png',
+    ]);
+
+    $imgABase64 = $imgToBase64([
+        'img/A.png',
+        'img/a.png',
+    ]);
+
+    // 1️⃣2️⃣ GENERAR PDF (Chromium) CON TODOS LOS DATOS
+    $html = view('Admin.contrato-final-pdf', [
+        'contrato'     => $contrato,
+        'reservacion'  => $reservacion,
+        'licencia'     => $licencia,
+        'vehiculo'     => $vehiculo,
+        'dias'         => $dias,
+        'tarifaBase'   => $tarifaBase,
+        'paquetes'     => $paquetes,
+        'individuales' => $individuales,
+        'extras'       => $extras,
+        'subtotal'     => $subtotal,
+        'totalFinal'   => $totalFinal,
+
+        // Adicionales especiales + DOB/edad
+        'deliveryInfo'    => $deliveryInfo,
+        'dropoffInfo'     => $dropoffInfo,
+        'gasolinaInfo'    => $gasolinaInfo,
+        'fechaNacimiento' => $fechaNacimiento,
+        'edad'            => $edad,
+
+        // Imágenes base64
+        'logoBase64'   => $logoBase64,
+        'imgABase64'   => $imgABase64,
+
+        // Hoja 2: fecha/lugar
+        'lugarFirma'   => $lugarFirma,
+        'diaFirma'     => $diaFirma,
+        'mesFirma'     => $mesFirma,
+        'anioFirma'    => $anioFirma,
+
+        // Hoja 2: nombres firmas
+        'arrendadorNombre'   => $arrendadorNombre,
+        'arrendatarioNombre' => $arrendatarioNombre,
+    ])->render();
+
+    // Nombre del archivo
+    $filePath = storage_path("app/public/Contrato_{$contrato->id_contrato}.pdf");
+
+    Browsershot::html($html)
+        ->format('A4')
+        ->margins(6, 6, 6, 6)
+        ->showBackground()
+        ->save($filePath);
+
+    // 1️⃣3️⃣ ENVIAR CORREO
+    $correoReservaciones = config('mail.from.address');
+
+    Mail::to($reservacion->email_cliente)
+        ->bcc($correoReservaciones)
+        ->send(
+            new ContratoFinalMail(
+                $contrato,
+                $reservacion,
+                $licencia,
+                $vehiculo,
+                $dias,
+                $totalFinal,
+                $filePath,
+                $aviso
+            )
+        );
+
+    return response()->json([
+        'ok'  => true,
+        'msg' => 'Contrato enviado correctamente'
+    ]);
 }
 
 

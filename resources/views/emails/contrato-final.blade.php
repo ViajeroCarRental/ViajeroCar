@@ -161,7 +161,7 @@
 
   <!-- HEADER -->
   <div class="header">
-    <img src="{{ asset('img/Logo3.jpg') }}" alt="Viajero Car Rental">
+    <img src="{{ asset('https://res.cloudinary.com/xpcjjkal/image/upload/v1783355566/Logo3_p1kxin.jpg') }}" alt="Viajero Car Rental">
     <h1>Contrato Final de Arrendamiento</h1>
   </div>
 
