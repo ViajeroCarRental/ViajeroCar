@@ -1,5 +1,5 @@
 /* ==========================================================
-   CONTRATO FINAL
+   CONTRATO FINAL - VERSIÓN UNA PÁGINA
 ========================================================== */
 
 @page{
@@ -293,13 +293,6 @@ transition: transform 0.3s ease;
 /* ==========================================================
    ARRENDATARIO
 ========================================================== */
-.row-dos-columnas {
-    display: flex;
-    gap: 0;
-    margin-top: 14px;
-    align-items: stretch;
-}
-
 .col {
     flex: 1;
     display: flex;
@@ -854,65 +847,326 @@ background: #D6001C;
 }
 
 /* ==========================================================
-   PRINT / PDF
+   IMPRESIÓN
 ========================================================== */
 @media print{
+
+  @page{
+    size: legal portrait;
+    margin: 2mm 6mm 2mm 6mm;
+  }
+
   html, body{
     background:#fff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     margin:0 !important;
     padding:0 !important;
+    font-size: 10.5px !important;
+    line-height: 1.28 !important;
+  }
+
+  i, .fa, .fas, .far, .fa-solid, .fa-regular,
+  .itinerario-item .info-line i,
+  .adicionales-table i,
+  .fa-gas-pump{
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 
   body *{ visibility: hidden !important; }
-
   .contrato-final-container,
-  .contrato-final-container *{
-    visibility: visible !important;
-  }
+  .contrato-final-container *{ visibility: visible !important; }
 
   .contrato-final-container{
     position: static !important;
     width: 100% !important;
+    max-width: none !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 8px 0 0 0 !important;
     background:#fff !important;
   }
 
   .acciones-contrato,
   .acciones-extra,
-  .modal-firma{ display:none !important; }
+  .modal-firma,
+  #modalArrendador,
+  #modalAviso,
+  .btn-volver, .btn-back, .btn-regresar, .btn-atras, .btn-flecha,
+  .flecha, .flecha-atras, .back, .back-arrow, .arrow-back,
+  .volver, .regresar, .atras,
+  .fa-arrow-left, .fa-chevron-left, .fa-angle-left, .fa-long-arrow-left,
+  .fa-arrow-left-long{ display:none !important; }
 
   .contrato-card{
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
+    overflow: visible !important;
   }
 
-  .secciones{
-    padding: 2px 14px 10px !important;
+  .encabezado-blanco{
+    display: table !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+    padding: 1px 9px 0 !important;
+  }
+  .encabezado-blanco > .logo-titulo-blanco{
+    display: table-cell !important;
+    width: 35% !important;
+    vertical-align: top !important;
+    text-align: left !important;
+  }
+  .encabezado-blanco > .encabezado-datos-container{
+    display: table-cell !important;
+    width: 65% !important;
+    vertical-align: middle !important;
+    text-align: right !important;
+  }
+  .logo-contrato{ width: 185px !important; }
+  .encabezado-datos-container{
+    position: relative !important;
+    overflow: visible !important;
+    height: 72px !important;
+    padding: 0 !important;
+  }
+  .encabezado-datos-container .logo-fondo-derecho{
+    display: block !important;
+    position: absolute !important;
+    right: -60px !important;
+    top: auto !important;
+    bottom: -70px !important;
+    transform-origin: right bottom !important;
+    transform: scaleY(2.4) !important;
+    height: 150px !important;
+    width: auto !important;
+    max-width: none !important;
+    z-index: 0 !important;
+    opacity: 0.5 !important;
+    filter: grayscale(100%) brightness(150%) contrast(50%)
+            sepia(100%) hue-rotate(180deg) saturate(0%) !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  .encabezado-datos{
+    position: relative !important;
+    z-index: 2 !important;
+    font-size: 11.5px !important;
+    line-height: 1.3 !important;
+    margin-right: 5px !important;
+    text-align: right !important;
+  }
+  .encabezado-datos p{
+    justify-content: flex-end !important;
+    gap: 5px !important;
+    margin: 1px 0 !important;
+  }
+  .burbuja-roja{
+    font-size: 11.5px !important;
+    height: 19px !important;
+    line-height: 19px !important;
+    padding: 0 9px !important;
   }
 
+  .tarjeta-blanca-izquierda{
+    padding: 0 0 0 32px !important;
+    margin-top: -10px !important;
+    margin-bottom: 7px !important;
+  }
+  .tarjeta-blanca-izquierda .gracias{ font-size: 18px !important; }
+  .tarjeta-blanca-izquierda .frase{ font-size: 12px !important; }
+
+  /* ===== TÍTULOS DE SECCIÓN  ===== */
   .titulo-seccion{
-    font-size: 12px !important;
-    margin: 10px 0 4px !important;
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    margin: 8px 0 4px !important;  
   }
 
-  .bloque-vehiculo,
+  .secciones{ padding: 0 8px 1px !important; }
+
+  .bloque-vehiculo{
+    padding: 9px 12px 9px 26px !important;
+    border-top-left-radius: 18px !important;
+    border-bottom-left-radius: 18px !important;
+    width: 100% !important;
+    margin-right: 0 !important;
+    margin-top: 4px !important;  
+  }
+  .vehiculo-grid{
+    display: table !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-spacing: 4px 0 !important;
+  }
+  .vehiculo-grid .vehiculo-item{
+    display: table-cell !important;
+    width: 16.66% !important;
+    vertical-align: top !important;
+  }
+  .vehiculo-grid .label{ display: block !important; font-size: 9.5px !important; margin-bottom: 3px !important; }
+  .vehiculo-grid .value{ display: block !important; font-size: 12.5px !important; }
+  .gasolina-row{ display: block !important; margin-top: 3px !important; }
+  .gasolina-row .vehiculo-item{
+    display: inline-block !important;
+    width: auto !important;
+    margin-right: 18px !important;
+  }
+  .gasolina-row .label{ font-size: 9.5px !important; }
+  .gasolina-row .value{ font-size: 12.5px !important; }
+  .fa-gas-pump{ font-size: 16px !important; }
+
+  .row-dos-columnas{
+    display: table !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    margin-top: 6px !important;  
+  }
+  .row-dos-columnas > .col{
+    display: table-cell !important;
+    width: 50% !important;
+    vertical-align: top !important;
+    float: none !important;
+  }
+  .row-dos-columnas > .col:first-child{ padding-right: 6px !important; }
+  .row-dos-columnas > .col:last-child{  padding-left: 6px !important; }
+
   .bloque-arrendatario,
-  .bloque-itinerario,
+  .bloque-itinerario{
+    padding: 4px 9px !important; 
+    margin-top: 4px !important;   
+  }
+  .arrendatario-item{
+    display: table !important;
+    width: 100% !important;
+    padding: 0.5px 0 !important;
+  }
+  .arrendatario-item .label{
+    display: table-cell !important;
+    width: 115px !important;
+    font-size: 10.5px !important;
+    font-weight: 700;
+    color: #4b5563;
+    padding-right: 5px !important;
+  }
+  .arrendatario-item .value{
+    display: table-cell !important;
+    font-size: 10.5px !important;
+    color: #111827;
+    max-width: 165px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+  .itinerario-item{ padding: 0.5px 0 !important; margin-bottom: 0.5px !important; }
+  .itinerario-item .label{ font-size: 11.5px !important; margin-bottom: 0.5px !important; }
+  .itinerario-item .value{ font-size: 11.5px !important; }
+  .itinerario-item .info-line{ gap: 5px !important; }
+  .itinerario-item .info-line i{ font-size: 11.5px !important; width:14px !important; }
+  .licencia-table{ font-size: 9.5px !important; margin-top: 4px !important; }  
+  .licencia-table th, .licencia-table td{ padding: 1px 4px !important; font-size: 9.5px !important; }
+
+  .bloque-tarifas,
+  .bloque-adicionales{
+    padding: 5px 8px !important;
+    position: static !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    margin-top: 4px !important; 
+  }
+  .bloque-adicionales{ min-height: 0 !important; }
+  .tarifas-table,
+  .adicionales-table{ font-size: 10.5px !important; }
+  .tarifas-table th, .tarifas-table td,
+  .adicionales-table th, .adicionales-table td{ padding: 0.5px 4px !important; font-size: 10.5px !important; }
+  .adicionales-table i{ font-size: 10.5px !important; }
+  .totales{ margin-top: 4px !important; padding: 1.5px 5px !important; } 
+  .totales p{ font-size: 9.5px !important; margin: 0.5px 0 !important; }
+  .totales .total-final{ font-size: 13px !important; }
+  .adicional-total-row td{ font-size: 11px !important; }
+
+  .bloque-aceptacion{ padding: 6px 9px !important; margin-top: 4px !important; }
+  .aceptacion-texto{ font-size: 9.5px !important; line-height: 1.25 !important; margin-bottom: 3px !important; }
+  .firmas-container{
+    display: table !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+    border-spacing: 16px 0 !important;
+    margin-top: 6px !important;
+  }
+  .firmas-container > .firma-item{
+    display: table-cell !important;
+    width: 50% !important;
+    vertical-align: bottom !important;
+    max-width: none !important;
+    text-align: center !important;
+    float: none !important;
+  }
+  .firma-label{ font-size: 9.5px !important; }
+  .firma-img{ height: 36px !important; }
+  .firma-linea{ height: 28px !important; }
+  .firma-nombre{ font-size: 10.5px !important; margin-top: 1.5px !important; }
+
+  .bloque-gasolina{ padding: 4px 9px !important; margin-top: 4px !important; }
+  .gasolina-texto{ font-size: 9.5px !important; }
+  .nota-gas{ font-size: 8.5px !important; }
+  .bloque-notas{ padding: 4px 9px !important; margin-top: 4px !important; }
+  .nota-title{ font-size: 10.5px !important; margin-bottom: 1px !important; }
+  .nota{ font-size: 9px !important; line-height: 1.2 !important; margin: 0.25px 0 !important; }
+
+  .bloque-facturacion{ padding: 5px 9px !important; margin-top: 4px !important; }
+  .fact-title{ font-size: 14px !important; margin-bottom: 2px !important; }
+  .fact-grid{ display: flex !important; flex-wrap: wrap !important; width: 100% !important; gap: 0 !important; }
+  .fact-item{
+    width: 50% !important;
+    display: flex !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    box-sizing: border-box !important;
+    padding: 1px 0 !important;
+  }
+  .fact-item:nth-child(even){ padding-left: 14px !important; }
+  .fact-item:nth-child(odd){  padding-right: 8px !important; }
+  .fact-item .label{
+    width: 115px !important;
+    font-size: 10.5px !important;
+    font-weight: 700;
+    color: #4b5563;
+    flex-shrink: 0 !important;
+    padding-right: 6px !important;
+  }
+  .fact-item .value{ font-size: 10.5px !important; color: #111827; }
+
+  .pie-rojo{
+    padding: 4px 12px 4px !important;
+    margin-top: 8px !important;
+    margin-bottom: 0 !important;
+    width: 100% !important;
+  }
+  .pie-rojo .pie-empresa{ font-size: 14px !important; margin-bottom: 2px !important; }
+  .pie-rojo p{ font-size: 10.5px !important; margin: 1px 0 !important; }
+  .pie-rojo span{ font-size: 10.5px !important; }
+  .pie-contenido-columnas{ margin-top: 3px !important; gap: 12px !important; }
+  .pie-contenido-columnas > .col-izq{ flex: 1.3 !important; }
+  .pie-contenido-columnas > .col-der{ flex: 1 !important; }
+
+  .contrato-card,
+  .bloque-vehiculo,
+  .row-dos-columnas,
   .bloque-tarifas,
   .bloque-adicionales,
   .bloque-aceptacion,
   .bloque-gasolina,
   .bloque-notas,
-  .bloque-facturacion{
-    page-break-inside: avoid !important;
-  }
-
+  .bloque-facturacion,
   .pie-rojo{
-    page-break-inside: avoid !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
   }
 }
 
@@ -971,3 +1225,4 @@ background: #D6001C;
 .pdf .pie-rojo{
   page-break-inside: avoid !important;
 }
+
