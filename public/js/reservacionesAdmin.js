@@ -3869,6 +3869,8 @@ function initValidacionHorasTiempoReal() {
             }
 
             fd.set("telefono_cliente", qs("#telefono_cliente")?.value || "");
+            fd.set("email_cliente", qs("#email_cliente")?.value?.trim() || "");
+            fd.set("nombre_cliente", qs("#nombre_cliente")?.value?.trim() || "");
             fd.set("svc_dropoff", state.servicios.dropoff ? "1" : "0");
             fd.set("svc_delivery", state.servicios.delivery ? "1" : "0");
             fd.set("svc_gasolina", state.servicios.gasolina ? "1" : "0");
@@ -5980,7 +5982,18 @@ function initValidacionHorasTiempoReal() {
         };
         setVal("nombre_cliente", r.nombre_cliente);
         setVal("email_cliente", r.email_cliente);
-        setVal("telefono_ui", r.telefono_cliente);
+
+        // Separar lada (+52) del número para no duplicarla al editar
+        const ladaActual = (document.getElementById("telefono_lada")?.value || "+52").trim();
+        let telSinLada = String(r.telefono_cliente || "").trim();
+        if (ladaActual && telSinLada.startsWith(ladaActual)) {
+            telSinLada = telSinLada.slice(ladaActual.length);
+        } else {
+            // Respaldo: si viene con +52 aunque la lada activa sea otra, quitarlo igual
+            telSinLada = telSinLada.replace(/^\+52/, "");
+        }
+
+        setVal("telefono_ui", telSinLada);
         setVal("telefono_cliente", r.telefono_cliente);
         setVal("comentarios", r.comentarios);
         setVal("no_vuelo", r.no_vuelo);

@@ -427,121 +427,45 @@
 <body>
   <div class="container">
 
-<div class="container">
-
-    <!-- HEADER NUEVO -->
-  <div class="header">
-    <table class="header-table" role="presentation">
-      <tr>
-        <td style="vertical-align:middle;">
-        <img src="{{ $message->embed($logoPath) }}"
-            alt="Viajero Car Rental"
-            style="width:210px; max-width:210px; height:auto; display:block; border:none;">
-        </td>
-
-        <td class="resv-box">
-          <p class="label">Reservación</p>
-          <p class="code">{{ $reservacion->codigo }}</p>
-        </td>
-      </tr>
-    </table>
-  </div>
-
-
-  <!-- CONTENT -->
-  <div class="content">
-
-        <!-- MENSAJE NUEVO (tipo imagen 1) -->
-    <div class="hero">
-      <p class="thanks">
-        ¡Gracias! <strong>{{ strtoupper(trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? ''))) }}</strong>
-      </p>
-
-      <p class="lead">
-        Tu vehículo ya está reservado, el siguiente código es tu número de reservación,
-        da <a href="{{ $url_detalle ?? '#' }}">click aquí</a> para más información.
-      </p>
-
-      <p class="lead" style="margin-top:0;">
-        La siguiente información se calculó con los datos proporcionados en el proceso de reservación,
-        cualquier modificación relacionada con lo que esta reservación describe podría resultar en una variación contra el precio acordado.
-      </p>
-    </div>
-
-    <div class="content">
-
-        <!-- RESUMEN NUEVO (tipo imagen 2) -->
-    <h2 class="summary-title">Resumen de tu reserva</h2>
-
-    <div class="summary-card">
-
-      <!-- Encabezado interno -->
-      <table class="summary-top" role="presentation">
+    <!-- HEADER -->
+    <div class="header">
+      <table class="header-table" role="presentation">
         <tr>
-          <td class="left">Lugar y fecha</td>
-          <td class="right">
-            RESERVACIÓN<br>
-            {{ $reservacion->codigo }}
+          <td style="vertical-align:middle;">
+            <img src="{{ $message->embed($logoPath) }}"
+                alt="Viajero Car Rental"
+                style="width:210px; max-width:210px; height:auto; display:block; border:none;">
+          </td>
+
+          <td class="resv-box">
+            <p class="label">Reservación</p>
+            <p class="code">{{ $reservacion->codigo }}</p>
           </td>
         </tr>
       </table>
+    </div>
 
-      <div class="summary-line"></div>
+    <!-- CONTENT -->
+    <div class="content">
 
-      <!-- Lugar y fecha -->
-      <table class="item" role="presentation">
-        <tr>
-          <td class="label">Entrega:</td>
-          <td class="value">
-  <div>{{ $reservacion->fecha_inicio }} {{ $reservacion->hora_retiro ?? '' }}</div>
-  <div style="font-size:13px; opacity:.85;">{{ $lugarRetiro ?? '-' }}</div>
-</td>
+      <!-- MENSAJE -->
+      <div class="hero">
+        <p class="thanks">
+          ¡Gracias! <strong>{{ strtoupper(trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? ''))) }}</strong>
+        </p>
 
-        </tr>
-        <tr>
-          <td class="label">Devolución:</td>
-          <td class="value">
-  <div>{{ $reservacion->fecha_fin }} {{ $reservacion->hora_entrega ?? '' }}</div>
-  <div style="font-size:13px; opacity:.85;">{{ $lugarEntrega ?? '-' }}</div>
-</td>
+        <p class="lead">
+          Tu vehículo ya está reservado, el siguiente código es tu número de reservación,
+          da <a href="{{ $url_detalle ?? '#' }}">click aquí</a> para más información.
+        </p>
 
-        </tr>
-      </table>
-
-      <div class="summary-line"></div>
-
-     <!-- Tu Auto -->
-<p class="section-title">Tu Auto</p>
-
-<table role="presentation" style="width:100%; border-collapse:collapse;">
-  <tr>
-    <!-- Imagen -->
-   <td style="width:45%; vertical-align:middle; padding:10px 0;">
-    {{-- Usamos la variable que enviamos --}}
-    <img src="{{ $imgCategoria }}"
-         alt="Vehículo"
-         width="260"
-         style="display:block; border:0;">
-</td>
-
-    <!-- Texto -->
-    <td style="width:55%; vertical-align:middle; padding:10px 0 10px 10px;">
-      <p class="auto-title">
-        {{ $tuAuto['titulo'] ?? ($categoria->descripcion ?? '-') }}
-      </p>
-
-      <p class="auto-subtitle">
-        {{ $tuAuto['subtitulo'] ?? 'CATEGORÍA ' . ($categoria->codigo ?? '-') }}
-      </p>
-
-      <div class="auto-specs">
-        <div><strong>{{ $tuAuto['pax'] ?? 5 }}</strong> pasajeros</div>
-        <div><strong>{{ $tuAuto['small'] ?? 2 }}</strong> maletas chicas</div>
-        <div><strong>{{ $tuAuto['big'] ?? 1 }}</strong> maletas grandes</div>
-        <div class="muted">{{ $tuAuto['transmision'] ?? 'Transmisión manual o automática' }}</div>
-        <div class="muted">{{ $tuAuto['tech'] ?? 'Apple CarPlay | Android Auto' }}</div>
+        <p class="lead" style="margin-top:0;">
+          La siguiente información se calculó con los datos proporcionados en el proceso de reservación,
+          cualquier modificación relacionada con lo que esta reservación describe podría resultar en una variación contra el precio acordado.
+        </p>
       </div>
 
+      <!-- RESUMEN -->
       <h2 class="summary-title">Resumen de tu reserva</h2>
 
       <div class="summary-card">
@@ -582,7 +506,15 @@
         <table role="presentation" style="width:100%; border-collapse:collapse;">
           <tr>
             <td style="width:45%; vertical-align:middle; padding:10px 0;">
-              <img src="{{ $imgCategoria ?? (rtrim(config('app.url'), '/') . '/img/categorias/placeholder.png') }}" alt="Vehículo" style="width:100%; max-width:260px; height:auto; display:block; border:none;">
+              @php
+                $rutaImg = ltrim(parse_url($imgCategoria, PHP_URL_PATH) ?? '', '/');
+                $rutaImgLocal = public_path($rutaImg);
+              @endphp
+              @if($rutaImg && file_exists($rutaImgLocal))
+                <img src="{{ $message->embed($rutaImgLocal) }}" alt="Vehículo" style="width:100%; max-width:260px; height:auto; display:block; border:none;">
+              @else
+                <img src="{{ $imgCategoria }}" alt="Vehículo" style="width:100%; max-width:260px; height:auto; display:block; border:none;">
+              @endif
             </td>
             <td style="width:55%; vertical-align:middle; padding:10px 0 10px 10px;">
               <p class="auto-title">{{ $tuAuto['titulo'] ?? ($categoria->descripcion ?? '-') }}</p>
@@ -715,87 +647,44 @@
           </tr>
         </table>
 
-        <div class="divider"></div>
-
-      {{-- Fila superior: redes + logo de palabra --}}
-      <div class="footer-top">
-        <div class="footer-social">
-    <a href="https://wa.me/524423032668">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="max-height:20px; display:block;">
-    </a>
-    <a href="https://www.facebook.com/viajerocarental">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook" style="max-height:20px; display:block;">
-    </a>
-    <a href="https://www.instagram.com/viajerocarental">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" alt="Instagram" style="max-height:20px; display:block;">
-    </a>
-    <a href="https://www.tiktok.com/@viajerocarental">
-        <img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" alt="TikTok" style="max-height:20px; display:block;">
-    </a>
-</div>
-
-        <div class="footer-logo-word">
-          <img src="{{ $message->embed(public_path('img/Logo3.jpg')) }}" alt="Viajero Car Rental">
-        </div>
       </div>
 
-      <div class="footer-sep"></div>
+      <!-- TEXTO Y LÍNEA ROJA -->
+      <p class="price-note">
+        VIAJERO te garantiza el tamaño del vehículo y sus características, más no el modelo específico.
+        Nos comprometemos a entregarte un auto de la categoría reservada, por ejemplo un auto compacto,
+        pudiendo ser cualquiera de las marcas que manejamos en nuestra flota dentro de este grupo.
+      </p>
+      <div class="price-note-line"></div>
 
-      {{-- Fila central: ubicaciones + links --}}
-      <div class="footer-main">
-        {{-- Columna 1: ubicaciones --}}
-        <div class="footer-col">
-          <p>📍 OFICINA CENTRAL PARK, QUERÉTARO</p>
-          <p>📍 PICK-UP AEROPUERTO DE QUERÉTARO</p>
-          <p>📍 PICK-UP AEROPUERTO DE LEÓN</p>
-        </div>
-
-        {{-- Columna 2: links centro --}}
-        <div class="footer-col">
-          <ul>
-            <li><a href="{{ route('rutaReservaciones') }}">MI RESERVA</a></li>
-            <li><a href="{{ route('rutaCatalogo') }}">AUTOS</a></li>
-            <li><a href="https://viajerocarental.com/empresas">EMPRESAS</a></li>
-            <li><a href="{{ route('rutaPoliticas') }}">TÉRMINOS Y CONDICIONES</a></li>
-            <li><a href="{{ route('rutaContacto') }}">CONTACTO</a></li>
-          </ul>
-          <p class="info-section-paragraph">
-            Los requisitos de renta pueden variar, si requieres más información comunícate al 01 (442) 303 26 68
-            o escríbenos a reservaciones@viajerocarental.com
-          </p>
-          <p class="info-section-title">Protección limitada de responsabilidad hacia terceros (LI)</p>
-          <p class="info-section-paragraph">
-            Protege a terceros por daños y perjuicios ocasionados en un accidente y cubre la cantidad mínima
-            requerida por ley. Tú eliges el nivel de responsabilidad sobre el auto que más vaya acorde a tus
-            necesidades y presupuesto. Pregunta por nuestros relevos de responsabilidad (opcionales) al llegar
-            al mostrador de cualquiera de nuestras oficinas.
-          </p>
-        </div>
-
-        {{-- Columna 3: links derecha --}}
-        <div class="footer-col">
-          <ul>
-            <li><a href="https://viajerocarental.com/blog">BLOG</a></li>
-            <li><a href="{{ route('rutaFAQ') }}">F.A.Q</a></li>
-            <li><a href="{{ route('rutaPoliticas') }}">AVISO DE PRIVACIDAD</a></li>
-            <li><a href="{{ route('rutaPoliticas') }}">POLÍTICA DE LIMPIEZA</a></li>
-            <li><a href="{{ route('rutaPoliticas') }}">POLÍTICA DE RENTA</a></li>
-          </ul>
-        </div>
+      <!-- REQUISITOS -->
+      <div class="info-section">
+        <p class="info-section-title">Requisitos para rentar</p>
+        <ul class="info-section-list">
+          <li>Tarjeta de crédito: Con un mínimo de antigüedad de un año, todas nuestras rentas deben ser amparadas con una tarjeta de crédito.</li>
+          <li>Edad mínima 21 años: Aplica un cargo por conductor joven si eres menor de 25 años.</li>
+          <li>Identificación con fotografía: Credencial del IFE/INE o Pasaporte.</li>
+          <li>Licencia para conducir: Deberá estar vigente.</li>
+          <li>Relevos de responsabilidad: Elegir entre nuestras opciones de protección para el auto (100%, 90%, 80% o 0%).</li>
+        </ul>
+        <p class="info-section-paragraph">
+          Los requisitos de renta pueden variar, si requieres más información comunícate al 01 (442) 303 26 68
+          o escríbenos a reservaciones@viajerocarental.com
+        </p>
+        <p class="info-section-title">Protección limitada de responsabilidad hacia terceros (LI)</p>
+        <p class="info-section-paragraph">
+          Protege a terceros por daños y perjuicios ocasionados en un accidente y cubre la cantidad mínima
+          requerida por ley. Tú eliges el nivel de responsabilidad sobre el auto que más vaya acorde a tus
+          necesidades y presupuesto. Pregunta por nuestros relevos de responsabilidad (opcionales) al llegar
+          al mostrador de cualquiera de nuestras oficinas.
+        </p>
       </div>
 
-      {{-- Fila inferior: métodos de pago --}}
-      <div class="footer-pay">
-        <img src="{{ $message->embed(public_path('img/visa.jpg')) }}" alt="Visa">
-        <img src="{{ $message->embed(public_path('img/mastercard.png')) }}" alt="Mastercard">
-        <img src="{{ $message->embed(public_path('img/america.png')) }}" alt="American Express">
-        <img src="{{ $message->embed(public_path('img/oxxo.png')) }}" alt="OXXO">
-        <img src="{{ $message->embed(public_path('img/pago.png')) }}" alt="Mercado Pago">
-        <img src="{{ $message->embed(public_path('img/paypal.png')) }}" alt="PayPal">
-      </div>
+      <div class="divider"></div>
 
     </div>
 
+    <!-- SITE FOOTER -->
     <div class="site-footer">
       <div class="footer-inner">
 

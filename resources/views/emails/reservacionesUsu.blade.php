@@ -607,7 +607,15 @@
         <table role="presentation" style="width:100%; border-collapse:collapse;">
           <tr>
             <td style="width:45%; vertical-align:middle; padding:10px 0;">
-              <img src="{{ $imgCategoria }}" alt="Vehículo" style="width:100%; max-width:260px; height:auto; display:block; border:none;">
+              @php
+                $rutaImgUsr = ltrim(parse_url($imgCategoria, PHP_URL_PATH) ?? '', '/');
+                $rutaImgUsrLocal = public_path($rutaImgUsr);
+              @endphp
+              @if($rutaImgUsr && file_exists($rutaImgUsrLocal))
+                <img src="{{ $message->embed($rutaImgUsrLocal) }}" alt="Vehículo" style="width:100%; max-width:260px; height:auto; display:block; border:none;">
+              @else
+                <img src="{{ $imgCategoria }}" alt="Vehículo" style="width:100%; max-width:260px; height:auto; display:block; border:none;">
+              @endif
             </td>
             <td style="width:55%; vertical-align:middle; padding:10px 0 10px 10px;">
               <p class="auto-title">{{ $tuAuto['titulo'] ?? ($categoria->descripcion ?? '-') }}</p>

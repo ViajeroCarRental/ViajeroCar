@@ -543,7 +543,7 @@
             </button>
 
             <input id="telefono_ui" class="input cliente-input" type="tel" inputmode="tel" required
-              value="{{ $reservacion->telefono_cliente ?? '' }}">
+              value="{{ isset($reservacion->telefono_cliente) ? preg_replace('/^\+52/', '', $reservacion->telefono_cliente) : '' }}">
 
             <div class="combo-dd phone-dd" id="phone_dd" role="listbox" aria-label="Lista de ladas">
               <div class="dd-head">
