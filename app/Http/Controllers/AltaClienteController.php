@@ -94,7 +94,6 @@ class AltaClienteController extends Controller
             return redirect()
                 ->route('rutaAltaCliente')
                 ->with('success', 'Cliente y convenio registrados correctamente.');
-
         } catch (\Throwable $e) {
             DB::rollBack();
 
@@ -123,6 +122,12 @@ class AltaClienteController extends Controller
             $nombre   = $request->input('general_nombre');
             $correo   = $request->input('general_correo');
             $telefono = $request->input('general_telefono');
+        }
+
+        $existe = DB::table('usuarios')->where('correo', $correo)->exists();
+
+        if ($existe) {
+            throw new \Exception("El correo {$correo} ya está registrado. Usa uno diferente o busca al cliente existente.");
         }
 
         return DB::table('usuarios')->insertGetId([
@@ -213,8 +218,8 @@ class AltaClienteController extends Controller
             'uso_cfdi'         => $request->input($p . 'facturacion_cfdi'),
             'regimen_fiscal'   => $request->input($p . 'facturacion_regimen'),
             'correo_factura'   => $tipo === 'fisica'
-                                    ? $request->input('fisica_correo_factura')
-                                    : $request->input('moral_facturacion_correo'),
+                ? $request->input('fisica_correo_factura')
+                : $request->input('moral_facturacion_correo'),
             'pais'             => $request->input($p . 'fiscal_pais'),
             'codigo_postal'    => $request->input($p . 'fiscal_cp'),
             'municipio'        => $request->input($p . 'fiscal_municipio'),
@@ -486,66 +491,66 @@ class AltaClienteController extends Controller
     }
 
 
-        private function guardarClausulas(Request $request, int $idConvenio): void
-{
-    $clausulas = $request->input('clausulas', []);
+    private function guardarClausulas(Request $request, int $idConvenio): void
+    {
+        $clausulas = $request->input('clausulas', []);
 
-    if (!is_array($clausulas)) {
-        return;
-    }
-
-    $orden = 1;
-
-    foreach ($clausulas as $texto) {
-        if (empty(trim($texto))) {
-            continue;
+        if (!is_array($clausulas)) {
+            return;
         }
 
-        DB::table('convenio_clausula')->insert([
-            'id_convenio' => $idConvenio,
-            'texto'       => $texto,
-            'orden'       => $orden++,
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
+        $orden = 1;
+
+        foreach ($clausulas as $texto) {
+            if (empty(trim($texto))) {
+                continue;
+            }
+
+            DB::table('convenio_clausula')->insert([
+                'id_convenio' => $idConvenio,
+                'texto'       => $texto,
+                'orden'       => $orden++,
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+        }
     }
-}
 
-        private function guardarResponsivas(Request $request, int $idConvenio, array $mapaConductores): void
-        {
-            $todas = $request->input('responsiva_clausulas', []);
+    private function guardarResponsivas(Request $request, int $idConvenio, array $mapaConductores): void
+    {
+        $todas = $request->input('responsiva_clausulas', []);
 
-            foreach ($mapaConductores as $iForm => $idConductor) {
-                $idResponsiva = DB::table('convenio_responsiva')->insertGetId([
-                    'id_convenio'           => $idConvenio,
-                    'id_conductor_convenio' => $idConductor,
-                    'created_at'            => now(),
-                    'updated_at'            => now(),
-                ]);
+        foreach ($mapaConductores as $iForm => $idConductor) {
+            $idResponsiva = DB::table('convenio_responsiva')->insertGetId([
+                'id_convenio'           => $idConvenio,
+                'id_conductor_convenio' => $idConductor,
+                'created_at'            => now(),
+                'updated_at'            => now(),
+            ]);
 
-                $clausulas = $todas[$iForm] ?? [];
+            $clausulas = $todas[$iForm] ?? [];
 
-                if (!is_array($clausulas)) {
+            if (!is_array($clausulas)) {
+                continue;
+            }
+
+            $orden = 1;
+
+            foreach ($clausulas as $texto) {
+                if (empty(trim($texto))) {
                     continue;
                 }
 
-                $orden = 1;
-
-                foreach ($clausulas as $texto) {
-                    if (empty(trim($texto))) {
-                        continue;
-                    }
-
-                    DB::table('responsiva_clausula')->insert([
-                        'id_responsiva' => $idResponsiva,
-                        'texto'         => $texto,
-                        'orden'         => $orden++,
-                        'created_at'    => now(),
-                        'updated_at'    => now(),
-                    ]);
-                }
+                DB::table('responsiva_clausula')->insert([
+                    'id_responsiva' => $idResponsiva,
+                    'texto'         => $texto,
+                    'orden'         => $orden++,
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
+                ]);
             }
         }
+    }
 
     public function generarConvenioPdf($id)
     {
@@ -556,7 +561,20 @@ class AltaClienteController extends Controller
         $cliente = DB::table('clientes')
             ->join('usuarios', 'usuarios.id_usuario', '=', 'clientes.id_usuario')
             ->where('clientes.id_cliente', $convenio->id_cliente)
-            ->select('clientes.*', 'usuarios.*')
+            ->select(
+                'clientes.tipo_persona',
+                'clientes.fecha_nacimiento',
+                'clientes.numero_identificacion',
+                'clientes.tipo_identificacion',
+                'clientes.numero_licencia',
+                'clientes.vigencia_licencia',
+                'clientes.numero_empresa',
+                'clientes.nombre_empresa',
+                'usuarios.nombres',
+                'usuarios.apellidos',
+                'usuarios.correo',
+                'usuarios.numero'
+            )
             ->first();
 
         $facturacion = DB::table('cliente_facturacion')
@@ -585,7 +603,8 @@ class AltaClienteController extends Controller
             'moral',
             'tarifas',
             'clausulas'
-        ))->setPaper('letter');
+        ))->setPaper('letter')
+            ->setOption('isRemoteEnabled', true);
 
         return $pdf->stream('convenio-viajero.pdf');
     }
