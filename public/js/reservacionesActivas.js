@@ -504,33 +504,210 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   /* ==========================================================
-     🔍 FILTRO DE BÚSQUEDA (SOLO TABLA PRINCIPAL)
+     🔍 BÚSQUEDA EN VIVO (AJAX) - nombre, correo y código
+     Busca en TODAS las fechas (trae reservaciones pasadas/futuras).
+     Con búsqueda vacía, restaura las filas originales del servidor.
   =========================================================== */
-  $("#q")?.addEventListener("input", () => {
-    const q = $("#q").value.trim().toLowerCase();
-    const rows = $$("#tablaActivas .tbody .row");
-    let visible = 0;
-
-    rows.forEach((row) => {
-      const nombre = (row.dataset.cliente || "").toLowerCase();
-      const email = (row.dataset.email || "").toLowerCase();
-      const estado = (row.dataset.estado || "").toLowerCase();
-      const codigo = (row.dataset.codigo || "").toLowerCase();
-
-      const show =
-        !q ||
-        nombre.includes(q) ||
-        email.includes(q) ||
-        estado.includes(q) ||
-        codigo.includes(q);
-
-      row.style.display = show ? "grid" : "none";
-      if (show) visible++;
-    });
-
+  (function initBusquedaAjax() {
+    const inputQ = $("#q");
+    const tbody = $("#tablaActivas .tbody");
     const count = $("#count");
-    if (count) count.textContent = visible;
-  });
+    if (!inputQ || !tbody) return;
+
+    const esAeropuerto = new URLSearchParams(location.search).get("sucursal") === "1";
+
+    let debounceTimer = null;
+    let ultimoController = null;
+    const filasOriginales = tbody.innerHTML; // respaldo de lo que carga el servidor
+
+    const escapeHtml = (s) =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    const fmtFecha = (f) => {
+      if (!f) return "—";
+      const d = new Date(String(f).includes("T") ? f : f + "T00:00:00");
+      if (isNaN(d)) return f;
+      const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+      return `${String(d.getDate()).padStart(2, "0")}-${meses[d.getMonth()]}-${d.getFullYear()}`;
+    };
+
+    // Fecha CON hora, minutos y segundos (para la fecha de creación)
+    const fmtFechaHora = (f) => {
+      if (!f) return "—";
+      const d = new Date(String(f).replace(" ", "T"));
+      if (isNaN(d)) return f;
+      const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+      const fecha = `${String(d.getDate()).padStart(2, "0")}-${meses[d.getMonth()]}-${d.getFullYear()}`;
+      const hora = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:${String(d.getSeconds()).padStart(2, "0")}`;
+      return `${fecha} ${hora}`;
+    };
+
+    const fmtHora = (h) => (h ? String(h).slice(0, 5) : "—");
+
+    const colorEstado = (estado) => {
+      switch (estado) {
+        case "confirmada": return "ok";
+        case "pendiente_pago": return "warn";
+        case "hold": return "gray";
+        case "cancelada": return "danger";
+        default: return "gray";
+      }
+    };
+
+    const oficinaHtml = (of) => {
+      if (of === "AIQ") return `<span class="oficina-icon"><i class="fa-solid fa-plane"></i> AIQ</span>`;
+      if (of === "TAQ") return `<span class="oficina-icon"><i class="fa-solid fa-bus" style="color:black;"></i> TAQ</span>`;
+      if (of === "OCP") return `<span class="oficina-icon"><i class="fa-solid fa-building"></i> OCP</span>`;
+      return "—";
+    };
+
+    function construirFila(r) {
+      const nombre = r.nombre_completo && r.nombre_completo !== ""
+        ? r.nombre_completo
+        : (r.nombre_cliente || "—");
+
+      const vueloCol = esAeropuerto ? `<div>${escapeHtml(r.no_vuelo || "—")}</div>` : "";
+
+      const totalFmt = "$" + Number(r.total || 0).toLocaleString("es-MX", {
+        minimumFractionDigits: 2, maximumFractionDigits: 2,
+      }) + " MXN";
+
+      const costoOnline = "$" + Number(r.precio_dia || 0).toLocaleString("es-MX", {
+        minimumFractionDigits: 2, maximumFractionDigits: 2,
+      });
+      const costoOficina = "$" + Number((r.precio_dia || 0) * 1.15).toLocaleString("es-MX", {
+        minimumFractionDigits: 2, maximumFractionDigits: 2,
+      });
+
+      let extrasHtml = `<span style="color:#999;">Ninguno</span>`;
+      if (r.extras && r.extras.length) {
+        extrasHtml = r.extras.map(e => `<div>- ${escapeHtml(e.nombre)} (x${escapeHtml(e.cantidad)})</div>`).join("");
+      }
+
+      const estadoTxt = (r.estado || "").charAt(0).toUpperCase() + (r.estado || "").slice(1);
+
+      return `
+        <div class="row"
+          data-codigo="${escapeHtml(r.codigo)}"
+          data-cliente="${escapeHtml(nombre)}"
+          data-email="${escapeHtml(r.email_cliente || "")}"
+          data-numero="${escapeHtml(r.telefono_cliente || "")}"
+          data-categoria="${escapeHtml(r.categoria || "")}"
+          data-fecha-salida="${escapeHtml(r.fecha_inicio_ymd || "")}"
+          data-estado="${escapeHtml(r.estado || "")}"
+          data-sucursal="${escapeHtml(r.sucursal_retiro || "")}"
+          data-hora_retiro="${escapeHtml(r.hora_retiro || "")}"
+          data-fecha_fin="${escapeHtml(r.fecha_fin_ymd || "")}"
+          data-hora_entrega="${escapeHtml(r.hora_entrega || "")}"
+        >
+          <div><button type="button" class="btn-more" data-toggle-detail>+</button></div>
+          <div>${escapeHtml(r.codigo)}</div>
+          <div>${oficinaHtml(r.oficina_compacta)}</div>
+          <div>${fmtFecha(r.fecha_inicio)}</div>
+          <div>${fmtHora(r.hora_retiro)}</div>
+          ${vueloCol}
+          <div>${escapeHtml(r.categoria || "")}</div>
+          <div>${escapeHtml(r.dias)}</div>
+          <div>${escapeHtml(nombre)}</div>
+          <div>${escapeHtml(r.telefono_cliente || "—")}</div>
+          <div>${escapeHtml(r.email_cliente || "—")}</div>
+          <div><span class="state ${colorEstado(r.estado)}">${escapeHtml(estadoTxt)}</span></div>
+          <div>${totalFmt}</div>
+        </div>
+
+        <div class="row-detail" style="display:none;">
+          <div class="reserva-summary">
+            <div class="summary-title">Reservación Confirmada el: ${fmtFechaHora(r.created_at)}</div>
+            <div class="reserva-summary-line"><b>Datos de Contacto:</b> MEXICO (MX) ${escapeHtml(r.telefono_cliente || "—")}</div>
+            <div class="reserva-summary-line"><b>Entrega:</b> ${fmtFecha(r.fecha_inicio)} a las ${fmtHora(r.hora_retiro)} HRS</div>
+            <div class="reserva-summary-line"><b>Devolución:</b> ${fmtFecha(r.fecha_fin)} a las ${fmtHora(r.hora_entrega)} HRS</div>
+            <div class="reserva-summary-line"><b>Total(MXN):</b> ${totalFmt} - Forma de pago: (${escapeHtml(r.metodo_pago || "mostrador")})</div>
+            <div class="reserva-summary-line summary-full">
+              <b>Vehículo Requerido:</b> ${escapeHtml(r.categoria || "")} | ${escapeHtml(r.categoria_nombre || "Sin asignar")} ${escapeHtml(r.transmision || "Sin transmisión")} ${escapeHtml(r.categoria_descripcion || "")} | Costo online: ${costoOnline} | Costo oficina: ${costoOficina}
+            </div>
+            <div class="reserva-summary-line"><b>Número de vuelo:</b> ${escapeHtml(r.no_vuelo || "—")}</div>
+            <div class="reserva-summary-line"><b>Adicionales Requeridos:</b> ${extrasHtml}</div>
+            <div class="reserva-summary-line"><b>Seguros:</b><br>${r.seguro ? escapeHtml(r.seguro) : "—"}</div>
+
+            <div class="summary-actions">
+              <div class="summary-actions-left">
+                <button type="button" class="btn btn-edit" onclick="window.location.href='/admin/reservaciones/${r.id_reservacion}/editar'">
+                  <i class="fa-solid fa-pen"></i> Editar Reservación
+                </button>
+                <button type="button" class="btn btn-cancel" title="Cancelar reservación" data-open-actions data-id="${r.id_reservacion}" data-codigo="${escapeHtml(r.codigo)}" data-delete-url="${r.delete_url}">
+                  <i class="fa-solid fa-trash"></i> Cancelar Reservación
+                </button>
+              </div>
+              <div class="summary-actions-right">
+                <button type="button" class="btn btn-mail" onclick="reenviarCorreo(${r.id_reservacion}, this)">
+                  <i class="fa-solid fa-envelope"></i> Reenviar correo
+                </button>
+                <button type="button" class="btn btn-car btn-apartar-auto" data-id="${r.id_reservacion}">
+                  <i class="fa-solid fa-car-side"></i> Apartar auto
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function buscar(q) {
+      // Cancelar petición anterior si sigue en curso
+      if (ultimoController) ultimoController.abort();
+      ultimoController = new AbortController();
+
+      const params = new URLSearchParams(location.search);
+      params.set("q", q);
+
+      try {
+        const res = await fetch(`${location.pathname}?${params.toString()}`, {
+          headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json",
+          },
+          signal: ultimoController.signal,
+        });
+
+        const data = await res.json();
+
+        if (!data.success) throw new Error("Respuesta inválida");
+
+        if (!data.data.length) {
+          tbody.innerHTML = `<div class="row"><div style="grid-column: 1 / -1; text-align:center;">No se encontraron reservaciones.</div></div>`;
+        } else {
+          tbody.innerHTML = data.data.map(construirFila).join("");
+        }
+
+        if (count) count.textContent = data.total;
+      } catch (err) {
+        if (err.name === "AbortError") return; // petición cancelada, ignorar
+        console.error("Error en búsqueda:", err);
+      }
+    }
+
+    inputQ.addEventListener("input", () => {
+      const q = inputQ.value.trim();
+
+      clearTimeout(debounceTimer);
+
+      // Si el campo queda vacío, restauramos las filas originales del servidor
+      if (q === "") {
+        if (ultimoController) ultimoController.abort();
+        tbody.innerHTML = filasOriginales;
+        if (count) count.textContent = $$("#tablaActivas .tbody .row").length;
+        return;
+      }
+
+      // Esperar 300ms tras dejar de escribir antes de consultar (debounce)
+      debounceTimer = setTimeout(() => buscar(q), 300);
+    });
+  })();
 
   /* ==========================================================
      🧾 MODAL DE DETALLE

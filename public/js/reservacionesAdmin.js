@@ -5828,8 +5828,20 @@ function initValidacionHorasTiempoReal() {
 
             const fp = ui._flatpickr;
             if (fp) {
-                // Quitar el límite minDate para permitir fechas de reservas ya creadas
-                fp.set("minDate", null);
+                // Opción B: bloquear fechas pasadas EXCEPTO la fecha original de la reserva.
+                // Si la fecha de la reserva ya pasó, el minDate se ajusta a esa fecha
+                // (para poder mostrarla). Si es de hoy o futura, el minDate se queda en hoy.
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+
+                if (fechaObj < hoy) {
+                    // La fecha original ya pasó: permitir desde esa fecha
+                    fp.set("minDate", fechaObj);
+                } else {
+                    // La fecha original es de hoy en adelante: bloquear todo lo anterior a hoy
+                    fp.set("minDate", "today");
+                }
+
                 fp.setDate(fechaObj, true);   // objeto Date + dispara onChange
             } else {
                 ui.value = iso;

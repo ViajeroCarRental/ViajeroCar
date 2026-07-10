@@ -108,8 +108,10 @@ class ReservacionesActivasController extends Controller
     $q->whereBetween('r.fecha_inicio', [$fechaInicio, $fechaFin]);
 })
 
-// 🔥 Si NO hay fechas → usar hoy
-->when(!($fechaInicio && $fechaFin), function ($q) use ($hoy) {
+// 🔥 Si NO hay fechas Y NO hay búsqueda → usar hoy en adelante
+// Cuando hay búsqueda (nombre, correo o código) se ignora la fecha
+// para poder encontrar reservaciones de cualquier fecha.
+->when(!($fechaInicio && $fechaFin) && !$search, function ($q) use ($hoy) {
     $q->whereDate('r.fecha_inicio', '>=', $hoy);
 })
 
@@ -118,14 +120,16 @@ class ReservacionesActivasController extends Controller
                     $q->where('r.codigo', 'LIKE', $codigo . '%');
                 })
 
-                // filtro por nombre/apellidos/correo
+                // filtro por nombre/apellidos/correo (empieza con) + código (exacto, sin distinguir mayúsculas/minúsculas)
                 ->when($search, function ($q, $search) {
                     $term = $search . '%';
-                    $q->where(function ($sub) use ($term) {
+                    $codigoBuscado = trim($search);
+                    $q->where(function ($sub) use ($term, $codigoBuscado) {
                         $sub->where('r.nombre_cliente', 'LIKE', $term)
                             ->orWhere('r.apellidos_cliente', 'LIKE', $term)
                             ->orWhere(DB::raw("TRIM(CONCAT(COALESCE(r.nombre_cliente,''),' ',COALESCE(r.apellidos_cliente,'')))"), 'LIKE', $term)
-                            ->orWhere('r.email_cliente', 'LIKE', $term);
+                            ->orWhere('r.email_cliente', 'LIKE', $term)
+                            ->orWhereRaw('UPPER(TRIM(r.codigo)) = UPPER(?)', [$codigoBuscado]);
                     });
                 })
 
@@ -140,6 +144,86 @@ class ReservacionesActivasController extends Controller
                 ->select('rs.id_reservacion', 's.nombre', 'rs.cantidad')
                 ->get()
                 ->groupBy('id_reservacion');
+
+            /* ==========================================================
+               🛡️ SEGUROS (paquete O individual — solo puede haber uno)
+               Se traen por separado y se indexan por reservación.
+            ========================================================== */
+            $seguroPaquete = DB::table('reservacion_paquete_seguro as rps')
+                ->join('seguro_paquete as sp', 'sp.id_paquete', '=', 'rps.id_paquete')
+                ->select('rps.id_reservacion', 'sp.nombre')
+                ->get()
+                ->keyBy('id_reservacion');
+
+            $seguroIndividual = DB::table('reservacion_seguro_individual as rsi')
+                ->join('seguro_individuales as si', 'si.id_individual', '=', 'rsi.id_individual')
+                ->select('rsi.id_reservacion', 'si.nombre')
+                ->get()
+                ->keyBy('id_reservacion');
+
+            /* ==========================================================
+               🔎 RESPUESTA AJAX (búsqueda en vivo)
+               Si la petición es AJAX, devolvemos JSON con las reservaciones
+               ya filtradas (incluye búsqueda por código de cualquier fecha).
+               El frontend arma las filas con esta data.
+            ========================================================== */
+            if ($request->ajax()) {
+                $data = collect($reservaciones->items())->map(function ($r) use ($servicios, $seguroPaquete, $seguroIndividual) {
+                    $extras = $servicios[$r->id_reservacion] ?? collect();
+
+                    // Solo puede haber uno: paquete o individual
+                    $nombreSeguro = null;
+                    if (isset($seguroPaquete[$r->id_reservacion])) {
+                        $nombreSeguro = $seguroPaquete[$r->id_reservacion]->nombre;
+                    } elseif (isset($seguroIndividual[$r->id_reservacion])) {
+                        $nombreSeguro = $seguroIndividual[$r->id_reservacion]->nombre;
+                    }
+
+                    $inicio = Carbon::parse($r->fecha_inicio);
+                    $fin    = Carbon::parse($r->fecha_fin);
+
+                    return [
+                        'id_reservacion'        => $r->id_reservacion,
+                        'codigo'                => $r->codigo,
+                        'nombre_cliente'        => $r->nombre_cliente,
+                        'apellidos_cliente'     => $r->apellidos_cliente,
+                        'nombre_completo'       => trim((string)($r->nombre_completo ?? '')),
+                        'email_cliente'         => $r->email_cliente,
+                        'telefono_cliente'      => $r->telefono_cliente,
+                        'estado'                => $r->estado,
+                        'metodo_pago'           => $r->metodo_pago,
+                        'fecha_inicio'          => $r->fecha_inicio,
+                        'fecha_inicio_ymd'      => $inicio->format('Y-m-d'),
+                        'hora_retiro'           => $r->hora_retiro,
+                        'hora_entrega'          => $r->hora_entrega,
+                        'fecha_fin'             => $r->fecha_fin,
+                        'fecha_fin_ymd'         => $fin->format('Y-m-d'),
+                        'dias'                  => $inicio->diffInDays($fin),
+                        'total'                 => $r->total,
+                        'sucursal_retiro'       => $r->sucursal_retiro,
+                        'oficina_compacta'      => $r->oficina_compacta,
+                        'no_vuelo'              => $r->no_vuelo,
+                        'created_at'            => $r->created_at,
+                        'seguro'                => $nombreSeguro,
+                        'categoria'             => $r->categoria,
+                        'categoria_nombre'      => $r->categoria_nombre,
+                        'categoria_descripcion' => $r->categoria_descripcion,
+                        'precio_dia'            => $r->precio_dia,
+                        'transmision'           => $r->transmision,
+                        'delete_url'            => route('rutaEliminarReservacionActiva', $r->id_reservacion),
+                        'extras'                => collect($extras)->map(fn($e) => [
+                            'nombre'   => $e->nombre,
+                            'cantidad' => $e->cantidad,
+                        ])->values(),
+                    ];
+                });
+
+                return response()->json([
+                    'success' => true,
+                    'data'    => $data,
+                    'total'   => $reservaciones->total(),
+                ]);
+            }
 
             /* ==========================================================
                ✅ RESERVACIONES ANTERIORES (AYER)
