@@ -295,8 +295,8 @@ class BtnReservacionesController extends Controller
             // El total a guardar es el que PayPal realmente cobró
             $totalAGuardar = $paypalValidado['monto_paypal'] ?? $data['total'];
 
-            // Transacción atómica: reserva + servicios juntos o nada
-            $id = DB::transaction(function () use ($validated, $data, $codigo, $totalAGuardar) {
+            // Transacción atómica: reserva + servicios + pago juntos o nada
+            $id = DB::transaction(function () use ($validated, $data, $codigo, $totalAGuardar, $paypalValidado) {
                 $id = DB::table('reservaciones')->insertGetId([
                     'id_usuario'       => null,
                     'id_vehiculo'      => null,
@@ -328,6 +328,9 @@ class BtnReservacionesController extends Controller
                 ]);
 
                 $this->guardarServiciosReservacion($id, $data['serviciosAInsertar']);
+
+                // Registrar el pago en la tabla `pagos`
+                $this->guardarPagoPayPal($id, $validated['paypal_order_id'], $totalAGuardar, $paypalValidado);
 
                 return $id;
             });
@@ -628,6 +631,64 @@ class BtnReservacionesController extends Controller
     }
 
     /**
+     * Registra el pago de PayPal en la tabla `pagos`.
+     * Se llama DENTRO de la DB::transaction de reservarLinea().
+     *
+     * La columna `referencia_pasarela` es UNIQUE: si por alguna razón
+     * llega un duplicado, la excepción revierte toda la transacción,
+     * evitando reservas duplicadas.
+     */
+    private function guardarPagoPayPal(
+        int $reservacionId,
+        string $paypalOrderId,
+        float $montoCobrado,
+        array $paypalValidado
+    ): void {
+        // Si hubo desajuste de monto, se guarda como 'paid' pero el payload
+        // conserva la evidencia para la revisión manual.
+        $requiereRevision = !$paypalValidado['ok'] && $paypalValidado['cobro_realizado'];
+
+        $capturedAt = !empty($paypalValidado['captured_at'])
+            ? Carbon::parse($paypalValidado['captured_at'])->toDateTimeString()
+            : now()->toDateTimeString();
+
+        $payload = [
+            'order_data'        => $paypalValidado['order_data']     ?? null,
+            'monto_esperado'    => $paypalValidado['monto_esperado'] ?? null,
+            'monto_frontend'    => $paypalValidado['monto_frontend'] ?? null,
+            'diferencia'        => $paypalValidado['diferencia']     ?? 0,
+            'requiere_revision' => $requiereRevision,
+        ];
+
+        DB::table('pagos')->insert([
+            'id_reservacion'      => $reservacionId,
+            'id_contrato'         => null,
+            'origen_pago'         => 'reservacion',
+            'comprobante'         => null,
+            'pasarela'            => 'paypal',
+            'referencia_pasarela' => $paypalOrderId,
+            'estatus'             => 'paid',
+            'metodo'              => 'en_linea',
+            'tipo_pago'           => 'total',
+            'monto'               => $montoCobrado,
+            'moneda'              => $paypalValidado['moneda_paypal'] ?? 'MXN',
+            'tasa_cambio'         => null,
+            'payload_webhook'     => json_encode($payload, JSON_UNESCAPED_UNICODE),
+            'captured_at'         => $capturedAt,
+            'referencia_externa'  => $paypalValidado['capture_id'] ?? null,
+            'created_at'          => now(),
+            'updated_at'          => now(),
+        ]);
+
+        Log::info('[INFO] Pago registrado en tabla pagos', [
+            'id_reservacion'      => $reservacionId,
+            'referencia_pasarela' => $paypalOrderId,
+            'monto'               => $montoCobrado,
+            'requiere_revision'   => $requiereRevision,
+        ]);
+    }
+
+    /**
      * Envía correo de confirmación.
      * Si el SMTP falla, NO rompe la reserva. Loggea y continúa.
      *
@@ -771,6 +832,11 @@ class BtnReservacionesController extends Controller
             $currencyCode = $orderData['purchase_units'][0]['amount']['currency_code'] ?? null;
             $montoPaypal  = (float) $amountValue;
 
+            // Datos de la captura (para la tabla pagos)
+            $captura    = $orderData['purchase_units'][0]['payments']['captures'][0] ?? [];
+            $captureId  = $captura['id']          ?? null;
+            $capturedAt = $captura['create_time'] ?? null;
+
             // Validación estricta de moneda
             if ($currencyCode !== 'MXN') {
                 Log::warning('[WARN] Moneda incorrecta de PayPal', [
@@ -781,6 +847,10 @@ class BtnReservacionesController extends Controller
                     'ok'              => false,
                     'cobro_realizado' => true,
                     'monto_paypal'    => $montoPaypal,
+                    'moneda_paypal'   => $currencyCode,
+                    'capture_id'      => $captureId,
+                    'captured_at'     => $capturedAt,
+                    'order_data'      => $orderData,
                     'message'         => 'El pago se procesó en una moneda incorrecta.',
                 ];
             }
@@ -794,6 +864,10 @@ class BtnReservacionesController extends Controller
                     'monto_paypal'    => $montoPaypal,
                     'monto_esperado'  => $totalEsperado,
                     'diferencia'      => $diferencia,
+                    'moneda_paypal'   => $currencyCode,
+                    'capture_id'      => $captureId,
+                    'captured_at'     => $capturedAt,
+                    'order_data'      => $orderData,
                 ];
             }
 
@@ -813,6 +887,10 @@ class BtnReservacionesController extends Controller
                 'monto_esperado'  => $totalEsperado,
                 'monto_frontend'  => $totalLocal,
                 'diferencia'      => $diferencia,
+                'moneda_paypal'   => $currencyCode,
+                'capture_id'      => $captureId,
+                'captured_at'     => $capturedAt,
+                'order_data'      => $orderData,
                 'message'         => 'El monto del pago tiene un desajuste con la reservación. Se registró para revisión manual.',
             ];
         } catch (\Throwable $e) {
