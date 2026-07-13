@@ -133,10 +133,15 @@ $categoriasCards = DB::table('categorias_carros')
             ->where('s.activo', 1)
             ->select(
                 's.id_sucursal',
-                DB::raw("CONCAT(s.nombre,' (',c.nombre,')') as nombre_mostrado")
+                's.nombre as nombre_sucursal',
+                'c.estado as estado'
             )
-            ->orderBy('c.nombre')
+            ->orderBy('c.estado')
+            ->orderBy('s.nombre')
             ->get();
+
+        // Agrupar por estado para los <optgroup> (pick-up y devolución)
+        $sucursalesPorEstado = $sucursales->groupBy('estado');
 
         // ---------- CONTRATO ----------
         $tieneContrato = DB::table('contratos')
@@ -161,6 +166,7 @@ $categoriasCards = DB::table('categorias_carros')
             // Card 3
             'itinerario'        => $itinerario,
             'sucursales'        => $sucursales,
+            'sucursalesPorEstado' => $sucursalesPorEstado,
 
             'tieneContrato'     => $tieneContrato,
         ]);
