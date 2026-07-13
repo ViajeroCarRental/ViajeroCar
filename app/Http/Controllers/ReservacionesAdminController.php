@@ -302,7 +302,7 @@ class ReservacionesAdminController extends Controller
         );
     }
 
-    /**
+   /**
      * 💾 Guardar reservación
      */
     public function guardarReservacion(StoreReservacionAdminRequest $request)
@@ -383,6 +383,13 @@ class ReservacionesAdminController extends Controller
             $codigoCat = strtoupper(trim((string)($categoria->codigo ?? '')));
             $cap = $predeterminados[$codigoCat] ?? ['pax' => 5, 'small' => 2, 'big' => 1];
 
+            // La VAN (categoría 9) es la única manual
+            $esManual = ((int) ($categoria->id_categoria ?? 0) === 9);
+
+            $tuAuto = array_merge($cap, [
+                'transmision' => $esManual ? 'Manual' : 'Automática',
+            ]);
+
             $nombreCat = trim((string)($categoria->nombre ?? ''));
             $singular = $nombreCat;
             if (mb_substr($singular, -1) === 's') {
@@ -391,7 +398,6 @@ class ReservacionesAdminController extends Controller
             $singular = mb_strtoupper($singular);
 
             $tituloAuto = trim((string)($categoria->descripcion ?? 'Auto o similar'));
-            $tuAuto = $cap;
 
             // 👉 Tarifa base
             $precioOriginal = (float) $categoria->precio_dia;

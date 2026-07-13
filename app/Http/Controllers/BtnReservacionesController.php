@@ -560,6 +560,9 @@ class BtnReservacionesController extends Controller
         $codigoCat = strtoupper(trim((string) ($categoria->codigo ?? '')));
         $cap = $predeterminados[$codigoCat] ?? ['pax' => 5, 'small' => 2, 'big' => 1];
 
+        // La VAN (categoría 9) es la única manual
+        $esManual = ((int) ($categoria->id_categoria ?? 0) === 9);
+
         $singular = rtrim(mb_strtoupper(trim((string) ($categoria->nombre ?? ''))), 'S');
         $tuAuto = [
             'titulo'      => trim((string) ($categoria->descripcion ?? 'Auto o similar')),
@@ -567,7 +570,7 @@ class BtnReservacionesController extends Controller
             'pax'         => (int) $cap['pax'],
             'small'       => (int) $cap['small'],
             'big'         => (int) $cap['big'],
-            'transmision' => 'Transmisión manual o automática',
+            'transmision' => $esManual ? 'Manual' : 'Automática',   // ← CAMBIO
             'tech'        => 'Apple CarPlay | Android Auto',
             'incluye'     => 'KM ilimitados | Relevo de Responsabilidad (LI)',
         ];
