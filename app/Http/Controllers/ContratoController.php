@@ -892,6 +892,67 @@ class ContratoController extends ContratoBaseController
         }
     }
 
+    public function syncProtecciones(Request $request)
+    {
+        try {
+            $data = $request->validate([
+                'id_reservacion'        => 'required|integer|exists:reservaciones,id_reservacion',
+                'id_paquete'            => 'nullable|integer|exists:seguro_paquete,id_paquete',
+                'precio_por_dia'        => 'nullable|numeric|min:0',
+                'individuales'          => 'nullable|array',
+                'individuales.*.id'     => 'required_with:individuales|integer|exists:seguro_individuales,id_individual',
+                'individuales.*.precio' => 'required_with:individuales|numeric|min:0',
+            ]);
+
+            $idRes = $data['id_reservacion'];
+
+            DB::transaction(function () use ($data, $idRes) {
+
+                DB::table('reservacion_paquete_seguro')
+                    ->where('id_reservacion', $idRes)
+                    ->delete();
+
+                DB::table('reservacion_seguro_individual')
+                    ->where('id_reservacion', $idRes)
+                    ->delete();
+
+                if (!empty($data['id_paquete'])) {
+
+                    DB::table('reservacion_paquete_seguro')->insert([
+                        'id_reservacion' => $idRes,
+                        'id_paquete'     => $data['id_paquete'],
+                        'precio_por_dia' => $data['precio_por_dia'] ?? 0,
+                        'created_at'     => now(),
+                        'updated_at'     => now(),
+                    ]);
+                } elseif (!empty($data['individuales'])) {
+
+                    $rows = collect($data['individuales'])
+                        ->unique('id')
+                        ->map(fn($i) => [
+                            'id_reservacion' => $idRes,
+                            'id_individual'  => $i['id'],
+                            'precio_por_dia' => $i['precio'] ?? 0,
+                            'created_at'     => now(),
+                            'updated_at'     => now(),
+                        ])
+                        ->values()
+                        ->all();
+
+                    DB::table('reservacion_seguro_individual')->insert($rows); // bulk insert
+                }
+            });
+
+            return response()->json(['success' => true, 'msg' => 'Protecciones guardadas.']);
+        } catch (\Throwable $e) {
+            Log::error('Error en syncProtecciones: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error'   => 'No se pudieron guardar las protecciones.'
+            ], 500);
+        }
+    }
+
     // ─── Upgrade ─────────────────────────────────────────────────────────────────
 
     public function obtenerOfertaUpgrade($idReservacion)

@@ -293,6 +293,7 @@ Route::post('/admin/contrato/seguros', [ContratoController::class, 'actualizarSe
 Route::post('/admin/contrato/seguros-individuales', [ContratoController::class, 'actualizarSegurosIndividuales'])->name('contrato.actualizarSegurosIndividuales');
 Route::delete('/admin/contrato/seguros-individuales', [ContratoController::class, 'eliminarSeguroIndividual'])->name('contrato.eliminarSeguroIndividual');
 Route::delete('/admin/contrato/seguros-individuales/todos', [ContratoController::class, 'eliminarTodosLosIndividuales'])->name('contrato.eliminarIndividualesTodos');
+Route::post('/admin/contrato/protecciones/sync', [ContratoController::class, 'syncProtecciones'])->name('contrato.syncProtecciones');
 
 // Utilidades del Paso 1-3
 Route::get('/admin/contrato/{id_reservacion}/resumen', [ContratoBaseController::class, 'resumenContrato'])->name('contrato.resumen');
