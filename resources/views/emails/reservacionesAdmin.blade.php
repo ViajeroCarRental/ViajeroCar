@@ -421,127 +421,161 @@
       font-size: 12px;
       margin: 0 0 6px;
     }
+
+/* === RESPONSIVO MÓVIL === */
+@media only screen and (max-width: 600px) {
+  .container {
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .content, .hero {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+
+  .summary-card {
+    padding: 14px !important;
+  }
+
+  /* HEADER: se mantiene en 2 columnas, solo se reduce */
+  .header {
+    padding: 16px 16px !important;
+  }
+
+  table.header-table td.hdr-logo img {
+    max-width: 150px !important;
+  }
+
+  table.header-table td.hdr-resv .label {
+    font-size: 12px !important;
+  }
+
+  table.header-table td.hdr-resv .code {
+    font-size: 16px !important;
+    white-space: nowrap !important;
+  }
+
+  /* AUTO: imagen arriba, texto abajo */
+  .auto-table,
+  .auto-table tbody,
+  .auto-table tr {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .auto-table .auto-img-cell,
+  .auto-table .auto-info-cell {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 !important;
+    text-align: center !important;
+  }
+
+  .auto-table .auto-img-cell {
+    padding-bottom: 14px !important;
+  }
+
+  .auto-table .auto-img-cell img {
+    margin: 0 auto !important;
+    max-width: 220px !important;
+  }
+
+  .auto-table .auto-info-cell {
+    text-align: left !important;
+  }
+
+  .auto-table .auto-title {
+    font-size: 20px !important;
+  }
+
+  /* === FOOTER MÓVIL === */
+  .site-footer {
+    padding: 16px 16px 18px !important;
+    margin-top: 24px !important;
+  }
+
+  .footer-social img {
+    max-height: 22px !important;
+  }
+
+  .footer-social a {
+    margin-right: 10px !important;
+  }
+
+  table.footer-table td.foot-logo-cell img {
+    height: 20px !important;
+    max-height: 20px !important;
+  }
+
+  table.footer-main-table,
+  table.footer-main-table tbody,
+  table.footer-main-table tr {
+    display: block !important;
+    width: 100% !important;
+  }
+
+table.footer-main-table td.foot-col {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 0 0 14px 0 !important;
+    text-align: center !important;
+  }
+
+  .footer-pay img {
+    max-height: 16px !important;
+    width: auto !important;
+    margin: 0 5px 0 0 !important;
+  }
+}
   </style>
 </head>
 
 <body>
   <div class="container">
 
-<div class="container">
-
-    <!-- HEADER NUEVO -->
-  <div class="header">
-    <table class="header-table" role="presentation">
-      <tr>
-        <td style="vertical-align:middle;">
+<!-- HEADER -->
+<div class="header">
+  <table class="header-table" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; table-layout:fixed; border-collapse:collapse;">
+    <tr>
+      <td class="hdr-logo" width="55%" style="width:55%; vertical-align:middle; padding:0;">
         <img src="{{ $message->embed($logoPath) }}"
-            alt="Viajero Car Rental"
-            style="width:210px; max-width:210px; height:auto; display:block; border:none;">
-        </td>
+             alt="Viajero Car Rental"
+             style="width:100%; max-width:210px; height:auto; display:block; border:none;">
+      </td>
 
-        <td class="resv-box">
-          <p class="label">Reservación</p>
-          <p class="code">{{ $reservacion->codigo }}</p>
-        </td>
-      </tr>
-    </table>
-  </div>
-
-
-  <!-- CONTENT -->
-  <div class="content">
-
-        <!-- MENSAJE NUEVO (tipo imagen 1) -->
-    <div class="hero">
-      <p class="thanks">
-        ¡Gracias! <strong>{{ strtoupper(trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? ''))) }}</strong>
-      </p>
-
-      <p class="lead">
-        Tu vehículo ya está reservado, el siguiente código es tu número de reservación,
-        da <a href="{{ $url_detalle ?? '#' }}">click aquí</a> para más información.
-      </p>
-
-      <p class="lead" style="margin-top:0;">
-        La siguiente información se calculó con los datos proporcionados en el proceso de reservación,
-        cualquier modificación relacionada con lo que esta reservación describe podría resultar en una variación contra el precio acordado.
-      </p>
-    </div>
-
+      <td class="hdr-resv" width="45%" style="width:45%; vertical-align:middle; padding:0 0 0 10px; text-align:right;">
+        <p class="label" style="font-size:15px; text-transform:uppercase; opacity:.95; margin:0; font-weight:700; letter-spacing:.5px;">Reservación</p>
+        <p class="code" style="font-size:20px; margin:4px 0 0 0; font-weight:700; letter-spacing:.5px;">{{ $reservacion->codigo }}</p>
+      </td>
+    </tr>
+  </table>
+</div>
+    <!-- CONTENT -->
     <div class="content">
 
-        <!-- RESUMEN NUEVO (tipo imagen 2) -->
-    <h2 class="summary-title">Resumen de tu reserva</h2>
+      <!-- MENSAJE -->
+      <div class="hero">
+        <p class="thanks">
+          ¡Gracias! <strong>{{ strtoupper(trim(($reservacion->nombre_cliente ?? '') . ' ' . ($reservacion->apellidos_cliente ?? ''))) }}</strong>
+        </p>
 
-    <div class="summary-card">
+        <p class="lead">
+          Tu vehículo ya está reservado, el siguiente código es tu número de reservación,
+          da <a href="{{ $url_detalle ?? '#' }}">click aquí</a> para más información.
+        </p>
 
-      <!-- Encabezado interno -->
-      <table class="summary-top" role="presentation">
-        <tr>
-          <td class="left">Lugar y fecha</td>
-          <td class="right">
-            RESERVACIÓN<br>
-            {{ $reservacion->codigo }}
-          </td>
-        </tr>
-      </table>
-
-      <div class="summary-line"></div>
-
-      <!-- Lugar y fecha -->
-      <table class="item" role="presentation">
-        <tr>
-          <td class="label">Entrega:</td>
-          <td class="value">
-  <div>{{ $reservacion->fecha_inicio }} {{ $reservacion->hora_retiro ?? '' }}</div>
-  <div style="font-size:13px; opacity:.85;">{{ $lugarRetiro ?? '-' }}</div>
-</td>
-
-        </tr>
-        <tr>
-          <td class="label">Devolución:</td>
-          <td class="value">
-  <div>{{ $reservacion->fecha_fin }} {{ $reservacion->hora_entrega ?? '' }}</div>
-  <div style="font-size:13px; opacity:.85;">{{ $lugarEntrega ?? '-' }}</div>
-</td>
-
-        </tr>
-      </table>
-
-      <div class="summary-line"></div>
-
-     <!-- Tu Auto -->
-<p class="section-title">Tu Auto</p>
-
-<table role="presentation" style="width:100%; border-collapse:collapse;">
-  <tr>
-    <!-- Imagen -->
-   <td style="width:45%; vertical-align:middle; padding:10px 0;">
-    {{-- Usamos la variable que enviamos --}}
-    <img src="{{ $imgCategoria }}"
-         alt="Vehículo"
-         width="260"
-         style="display:block; border:0;">
-</td>
-
-    <!-- Texto -->
-    <td style="width:55%; vertical-align:middle; padding:10px 0 10px 10px;">
-      <p class="auto-title">
-        {{ $tuAuto['titulo'] ?? ($categoria->descripcion ?? '-') }}
-      </p>
-
-      <p class="auto-subtitle">
-        {{ $tuAuto['subtitulo'] ?? 'CATEGORÍA ' . ($categoria->codigo ?? '-') }}
-      </p>
-
-      <div class="auto-specs">
-        <div><strong>{{ $tuAuto['pax'] ?? 5 }}</strong> pasajeros</div>
-        <div><strong>{{ $tuAuto['small'] ?? 2 }}</strong> maletas chicas</div>
-        <div><strong>{{ $tuAuto['big'] ?? 1 }}</strong> maletas grandes</div>
-        <div class="muted">{{ $tuAuto['transmision'] ?? 'Transmisión manual o automática' }}</div>
-        <div class="muted">{{ $tuAuto['tech'] ?? 'Apple CarPlay | Android Auto' }}</div>
+        <p class="lead" style="margin-top:0;">
+          La siguiente información se calculó con los datos proporcionados en el proceso de reservación,
+          cualquier modificación relacionada con lo que esta reservación describe podría resultar en una variación contra el precio acordado.
+        </p>
       </div>
 
+      <!-- RESUMEN -->
       <h2 class="summary-title">Resumen de tu reserva</h2>
 
       <div class="summary-card">
@@ -558,132 +592,296 @@
 
         <div class="summary-line"></div>
 
-        <table class="item" role="presentation">
-          <tr>
-            <td class="label">Entrega:</td>
-            <td class="value">
-              <div>{{ $reservacion->fecha_inicio }} {{ $reservacion->hora_retiro ?? '' }}</div>
-              <div style="font-size:13px; opacity:.85;">{{ $lugarRetiro ?? '-' }}</div>
-            </td>
-          </tr>
-          <tr>
-            <td class="label">Devolución:</td>
-            <td class="value">
-              <div>{{ $reservacion->fecha_fin }} {{ $reservacion->hora_entrega ?? '' }}</div>
-              <div style="font-size:13px; opacity:.85;">{{ $lugarEntrega ?? '-' }}</div>
-            </td>
-          </tr>
-        </table>
+        <!-- ENTREGA (PICK-UP) -->
+        <div style="margin-bottom:16px;">
+          <div style="font-weight:700; font-size:13px; color:#111; margin-bottom:6px;">ENTREGA</div>
+
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; width:100%;">
+            <tr>
+              <td style="width:24px; vertical-align:middle; padding:2px 8px 2px 0;">
+                <img src="https://api.iconify.design/lucide/calendar.svg?color=%23111111&width=16&height=16"
+                     width="16" height="16" alt="" style="display:block; border:0;">
+              </td>
+              <td style="vertical-align:middle; padding:2px 0; font-size:14px; font-weight:600; color:#111;">
+                Fecha: <strong>{{ $reservacion->fecha_inicio }}</strong>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:24px; vertical-align:middle; padding:2px 8px 2px 0;">
+                <img src="https://api.iconify.design/lucide/clock.svg?color=%23111111&width=16&height=16"
+                     width="16" height="16" alt="" style="display:block; border:0;">
+              </td>
+              <td style="vertical-align:middle; padding:2px 0; font-size:14px; font-weight:600; color:#111;">
+                Hora: <strong>{{ $reservacion->hora_retiro ?? '-' }}</strong>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:24px; vertical-align:top; padding:2px 8px 2px 0;">
+                <img src="https://api.iconify.design/lucide/map-pin.svg?color=%236b7280&width=16&height=16"
+                     width="16" height="16" alt="" style="display:block; border:0;">
+              </td>
+              <td style="vertical-align:top; padding:2px 0; font-size:13px; color:#6b7280;">
+                Location: <strong>{{ $lugarRetiro ?? '-' }}</strong>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- DEVOLUCIÓN (RETURN) -->
+        <div style="margin-bottom:10px;">
+          <div style="font-weight:700; font-size:13px; color:#111; margin-bottom:6px;">DEVOLUCIÓN</div>
+
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; width:100%;">
+            <tr>
+              <td style="width:24px; vertical-align:middle; padding:2px 8px 2px 0;">
+                <img src="https://api.iconify.design/lucide/calendar.svg?color=%23111111&width=16&height=16"
+                     width="16" height="16" alt="" style="display:block; border:0;">
+              </td>
+              <td style="vertical-align:middle; padding:2px 0; font-size:14px; font-weight:600; color:#111;">
+                Fecha: <strong>{{ $reservacion->fecha_fin }}</strong>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:24px; vertical-align:middle; padding:2px 8px 2px 0;">
+                <img src="https://api.iconify.design/lucide/clock.svg?color=%23111111&width=16&height=16"
+                     width="16" height="16" alt="" style="display:block; border:0;">
+              </td>
+              <td style="vertical-align:middle; padding:2px 0; font-size:14px; font-weight:600; color:#111;">
+                Hora: <strong>{{ $reservacion->hora_entrega ?? '-' }}</strong>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:24px; vertical-align:top; padding:2px 8px 2px 0;">
+                <img src="https://api.iconify.design/lucide/map-pin.svg?color=%236b7280&width=16&height=16"
+                     width="16" height="16" alt="" style="display:block; border:0;">
+              </td>
+              <td style="vertical-align:top; padding:2px 0; font-size:13px; color:#6b7280;">
+                Location: <strong>{{ $lugarEntrega ?? '-' }}</strong>
+              </td>
+            </tr>
+          </table>
+        </div>
 
         <div class="summary-line"></div>
 
+        <!-- TU AUTO -->
         <p class="section-title">Tu Auto</p>
 
-        <table role="presentation" style="width:100%; border-collapse:collapse;">
+        <table role="presentation" class="auto-table" style="width:100%; border-collapse:collapse;">
           <tr>
-            <td style="width:45%; vertical-align:middle; padding:10px 0;">
-              <img src="{{ $imgCategoria ?? (rtrim(config('app.url'), '/') . '/img/categorias/placeholder.png') }}" alt="Vehículo" style="width:100%; max-width:260px; height:auto; display:block; border:none;">
+            <td class="auto-img-cell" style="width:45%; vertical-align:middle; padding:10px 0;">
+              @php
+                $rutaImg = ltrim(parse_url($imgCategoria, PHP_URL_PATH) ?? '', '/');
+                $rutaImgLocal = public_path($rutaImg);
+              @endphp
+              @if($rutaImg && file_exists($rutaImgLocal))
+                <img src="{{ $message->embed($rutaImgLocal) }}" alt="Vehículo" style="width:100%; max-width:260px; height:auto; display:block; border:none;">
+              @else
+                <img src="{{ $imgCategoria }}" alt="Vehículo" style="width:100%; max-width:260px; height:auto; display:block; border:none;">
+              @endif
             </td>
-            <td style="width:55%; vertical-align:middle; padding:10px 0 10px 10px;">
+            <td class="auto-info-cell" style="width:55%; vertical-align:middle; padding:10px 0 10px 10px;">
               <p class="auto-title">{{ $tuAuto['titulo'] ?? ($categoria->descripcion ?? '-') }}</p>
               <p class="auto-subtitle">{{ $tuAuto['subtitulo'] ?? 'CATEGORÍA ' . ($categoria->codigo ?? '-') }}</p>
-              <div class="auto-specs">
-                <div><strong>{{ $tuAuto['pax'] ?? 5 }}</strong> pasajeros</div>
-                <div><strong>{{ $tuAuto['small'] ?? 2 }}</strong> maletas chicas</div>
-                <div><strong>{{ $tuAuto['big'] ?? 1 }}</strong> maletas grandes</div>
-                <div class="muted">{{ $tuAuto['transmision'] ?? 'Transmisión manual o automática' }}</div>
-                <div class="muted">{{ $tuAuto['tech'] ?? 'Apple CarPlay | Android Auto' }}</div>
-              </div>
-              <div class="auto-includes">{{ $tuAuto['incluye'] ?? 'KM ilimitados | Reelevo de Responsabilidad (LI)' }}</div>
-            </td>
-          </tr>
-        </table>
 
-        <div class="summary-line"></div>
+              <!-- SPECS EN UNA SOLA FILA -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; margin:8px 0 10px;">
+                <tr>
+                  <td style="vertical-align:middle; padding:0 4px 0 0;">
+                    <img src="https://api.iconify.design/lucide/user.svg?color=%23111111&width=14&height=14"
+                         width="14" height="14" alt="" style="display:block; border:0;">
+                  </td>
+                  <td style="vertical-align:middle; padding:0 12px 0 0; font-size:13px; font-weight:700; color:#111; white-space:nowrap;">
+                    {{ $tuAuto['pax'] ?? 5 }}
+                  </td>
 
-        <p class="section-title">Extras</p>
-        <div class="extras-hr" style="height:1px; background:#111; margin:10px 0 14px;"></div>
+                  <td style="vertical-align:middle; padding:0 4px 0 0;">
+                    <img src="https://api.iconify.design/lucide/briefcase.svg?color=%23111111&width=14&height=14"
+                         width="14" height="14" alt="" style="display:block; border:0;">
+                  </td>
+                  <td style="vertical-align:middle; padding:0 12px 0 0; font-size:13px; font-weight:700; color:#111; white-space:nowrap;">
+                    {{ $tuAuto['small'] ?? 2 }}
+                  </td>
 
-        @php
-          $servCards = collect();
-          if (!empty($extrasReserva) && count($extrasReserva) > 0) {
-            foreach ($extrasReserva as $ex) {
-              $servCards->push([
-                'nombre' => $ex->nombre ?? 'Servicio',
-                'precio' => isset($ex->precio_unitario) ? ('$' . number_format((float)$ex->precio_unitario, 2) . ' c/u') : '',
-                'tipo'   => 'servicio',
-              ]);
-            }
-          }
+                  <td style="vertical-align:middle; padding:0 4px 0 0;">
+                    <img src="https://api.iconify.design/lucide/luggage.svg?color=%23111111&width=14&height=14"
+                         width="14" height="14" alt="" style="display:block; border:0;">
+                  </td>
+                  <td style="vertical-align:middle; padding:0 12px 0 0; font-size:13px; font-weight:700; color:#111; white-space:nowrap;">
+                    {{ $tuAuto['big'] ?? 1 }}
+                  </td>
 
-          $segCard = null;
-          if (!empty($seguroReserva)) {
-            $segCard = [
-              'nombre' => $seguroReserva->nombre ?? 'Seguro',
-              'precio' => isset($seguroReserva->precio_por_dia) ? ('$' . number_format((float)$seguroReserva->precio_por_dia, 2) . ' por día') : '',
-              'tipo'   => 'seguro',
-            ];
-          }
+                  <td style="vertical-align:middle; padding:0 4px 0 0;">
+                    <img src="https://api.iconify.design/lucide/settings-2.svg?color=%23111111&width=14&height=14"
+                         width="14" height="14" alt="" style="display:block; border:0;">
+                  </td>
+                  <td style="vertical-align:middle; padding:0 12px 0 0; font-size:13px; color:#111; white-space:nowrap;">
+                    {{ $tuAuto['transmision'] ?? 'Automática' }}
+                  </td>
 
-          $servChunks = $servCards->chunk(3);
-        @endphp
+                  <td style="vertical-align:middle; padding:0 4px 0 0;">
+                    <img src="https://api.iconify.design/lucide/snowflake.svg?color=%23111111&width=14&height=14"
+                         width="14" height="14" alt="" style="display:block; border:0;">
+                  </td>
+                  <td style="vertical-align:middle; padding:0; font-size:13px; color:#111; white-space:nowrap;">
+                    A/C
+                  </td>
+                </tr>
+              </table>
 
-        @if($servCards->count() === 0)
-          <div style="font-size:14px; opacity:.85;">No seleccionados</div>
-        @else
-          <table role="presentation" style="width:100%; border-collapse:collapse;">
-            @foreach($servChunks as $row)
-              <tr>
-                @foreach($row as $c)
-                  <td style="width:33.33%; padding:10px 8px; vertical-align:top;">
-                    <table role="presentation" style="width:100%; border-collapse:collapse;">
+              <!-- BADGES CARPLAY / ANDROID AUTO -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; margin:0 0 10px;">
+                <tr>
+                  <td style="padding:0 8px 0 0;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                           style="border-collapse:separate; background:#111827; border-radius:20px;">
                       <tr>
-                        <td style="width:26px; vertical-align:top; padding-top:2px;">
-                          <div style="width:18px; height:18px; background:#E50914; border:2px solid #E50914; border-radius:3px;"></div>
+                        <td style="padding:5px 10px 5px 10px; vertical-align:middle;">
+                          <img src="https://api.iconify.design/lucide/car.svg?color=%23ffffff&width=13&height=13"
+                               width="13" height="13" alt="" style="display:block; border:0;">
                         </td>
-                        <td style="vertical-align:top;">
-                          <div style="font-weight:800; font-size:14px; color:#111; line-height:1.2;">{{ $c['nombre'] }}</div>
-                          @if(!empty($c['precio']))
-                            <div style="font-size:13px; opacity:.85; color:#111; margin-top:2px;">{{ $c['precio'] }}</div>
-                          @endif
+                        <td style="padding:5px 12px 5px 0; vertical-align:middle; font-size:12px; font-weight:700; color:#ffffff; white-space:nowrap;">
+                          CarPlay
                         </td>
                       </tr>
                     </table>
                   </td>
-                @endforeach
-                @for($i = $row->count(); $i < 3; $i++)
-                  <td style="width:33.33%; padding:10px 8px;"></td>
-                @endfor
-              </tr>
-            @endforeach
-          </table>
-        @endif
+                  <td style="padding:0;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                           style="border-collapse:separate; background:#22c55e; border-radius:20px;">
+                      <tr>
+                        <td style="padding:5px 10px 5px 10px; vertical-align:middle;">
+                          <img src="https://api.iconify.design/lucide/bot.svg?color=%23ffffff&width=13&height=13"
+                               width="13" height="13" alt="" style="display:block; border:0;">
+                        </td>
+                        <td style="padding:5px 12px 5px 0; vertical-align:middle; font-size:12px; font-weight:700; color:#ffffff; white-space:nowrap;">
+                          Android Auto
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
 
-        @if($segCard)
-          <div style="margin-top:10px;"></div>
-          <div style="font-size:12px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; opacity:.85; margin:14px 0 8px;">Paquete de seguro</div>
-          <table role="presentation" style="width:100%; border-collapse:collapse;">
+              <!-- INCLUYE -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+                <tr>
+                  <td style="vertical-align:middle; padding:0 6px 0 0;">
+                    <img src="https://api.iconify.design/lucide/check.svg?color=%23111111&width=14&height=14"
+                         width="14" height="14" alt="" style="display:block; border:0;">
+                  </td>
+                  <td style="vertical-align:middle; font-size:12px; font-weight:700; color:#111; letter-spacing:.3px;">
+                    {{ $tuAuto['incluye'] ?? 'KM ILIMITADOS | PROTECCIÓN A TERCEROS (LI)' }}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <div class="summary-line"></div>
+
+      <!-- EXTRAS -->
+<p class="section-title">Extras</p>
+<div class="extras-hr" style="height:1px; background:#111; margin:10px 0 14px;"></div>
+
+@php
+  $diasExtras = max(1, \Carbon\Carbon::parse($reservacion->fecha_inicio)
+                        ->diffInDays(\Carbon\Carbon::parse($reservacion->fecha_fin)));
+
+  $filasExtras = [];
+
+  // SERVICIOS (id 1 = Gasolina, id 11 = Drop Off, resto = adicionales)
+  foreach (($extrasReserva ?? []) as $ex) {
+    $idServ = (int)   ($ex->id_servicio ?? 0);
+    $cant   = (float) ($ex->cantidad ?? 1);
+    $pu     = (float) ($ex->precio_unitario ?? 0);
+
+    if ($idServ === 11) {
+      // Drop Off: precio_unitario ES el total (km × costo_km)
+      $total  = $pu;
+      $unidad = 'Entrega en sucursal distinta';
+    } elseif ($idServ === 1) {
+      // Gasolina: cantidad = litros del tanque
+      $total  = $pu * $cant;
+      $unidad = number_format($cant, 0) . ' L x $' . number_format($pu, 2) . ' por litro';
+    } else {
+      // Adicionales: se cobran por día
+      $total  = $pu * $cant * $diasExtras;
+      $unidad = number_format($cant, 0) . ' x $' . number_format($pu, 2) . ' x ' . $diasExtras . ' día(s)';
+    }
+
+    $filasExtras[] = [
+      'nombre' => $ex->nombre ?? 'Servicio',
+      'desc'   => $ex->descripcion ?? '',
+      'unidad' => $unidad,
+      'total'  => $total,
+    ];
+  }
+
+  // DELIVERY (columnas de la tabla reservaciones)
+  if (!empty($reservacion->delivery_activo) && (float)($reservacion->delivery_total ?? 0) > 0) {
+    $dKm  = (float) ($reservacion->delivery_km ?? 0);
+    $dDir = trim((string) ($reservacion->delivery_direccion ?? ''));
+
+    $filasExtras[] = [
+      'nombre' => 'Delivery',
+      'desc'   => $dDir !== ''
+                    ? 'Entrega del vehículo a domicilio: ' . $dDir
+                    : 'Entrega del vehículo a domicilio.',
+      'unidad' => number_format($dKm, 0) . ' km',
+      'total'  => (float) $reservacion->delivery_total,
+    ];
+  }
+
+  // PAQUETE DE SEGURO
+  if (!empty($seguroReserva)) {
+    $pd = (float) ($seguroReserva->precio_por_dia ?? 0);
+    $filasExtras[] = [
+      'nombre' => $seguroReserva->nombre ?? 'Paquete de seguro',
+      'desc'   => $seguroReserva->descripcion ?? '',
+      'unidad' => '$' . number_format($pd, 2) . ' por día x ' . $diasExtras . ' día(s)',
+      'total'  => $pd * $diasExtras,
+    ];
+  }
+@endphp
+
+@if(count($filasExtras) === 0)
+  <div style="font-size:14px; opacity:.85;">Sin complementos seleccionados</div>
+@else
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%; border-collapse:collapse;">
+    @foreach($filasExtras as $f)
+      <tr>
+        <!-- Checkbox con palomita roja -->
+        <td width="34" style="width:34px; vertical-align:top; padding:10px 10px 10px 0;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                 style="border-collapse:collapse; width:20px; height:20px; border:2px solid #111; border-radius:3px;">
             <tr>
-              <td style="width:33.33%; padding:10px 8px; vertical-align:top;">
-                <table role="presentation" style="width:100%; border-collapse:collapse;">
-                  <tr>
-                    <td style="width:26px; vertical-align:top; padding-top:2px;">
-                      <div style="width:18px; height:18px; background:#E50914; border:2px solid #E50914; border-radius:3px;"></div>
-                    </td>
-                    <td style="vertical-align:top;">
-                      <div style="font-weight:800; font-size:14px; color:#111; line-height:1.2;">{{ $segCard['nombre'] }}</div>
-                      @if(!empty($segCard['precio']))
-                        <div style="font-size:13px; opacity:.85; color:#111; margin-top:2px;">{{ $segCard['precio'] }}</div>
-                      @endif
-                    </td>
-                  </tr>
-                </table>
+              <td align="center" valign="middle" style="width:20px; height:20px; text-align:center; padding:0;">
+                <img src="https://api.iconify.design/lucide/check.svg?color=%23E50914&width=14&height=14"
+                     width="14" height="14" alt="" style="display:inline-block; border:0; vertical-align:middle;">
               </td>
-              <td style="width:33.33%; padding:10px 8px;"></td>
-              <td style="width:33.33%; padding:10px 8px;"></td>
             </tr>
           </table>
-        @endif
+        </td>
+
+        <!-- Nombre + Descripción + Unidad -->
+        <td style="vertical-align:top; padding:10px 10px 10px 0;">
+          <div style="font-weight:800; font-size:15px; color:#111; line-height:1.3;">{{ $f['nombre'] }}</div>
+          @if(!empty($f['desc']))
+            <div style="font-size:13px; color:#555; margin-top:3px; line-height:1.5;">{{ $f['desc'] }}</div>
+          @endif
+          <div style="font-size:12px; color:#888; margin-top:3px;">{{ $f['unidad'] }}</div>
+        </td>
+
+        <!-- Total -->
+        <td align="right" style="vertical-align:top; padding:10px 0; white-space:nowrap;">
+          <span style="font-weight:800; font-size:15px; color:#111;">TOTAL ${{ number_format($f['total'], 2) }}</span>
+        </td>
+      </tr>
+    @endforeach
+  </table>
+@endif
 
         <div class="summary-line"></div>
 
@@ -709,49 +907,112 @@
             <td class="p-label">Cargos e IVA</td>
             <td class="p-value">${{ number_format($reservacion->impuestos, 2) }} MXN</td>
           </tr>
-          <tr>
-            <td class="p-label price-total">TOTAL</td>
-            <td class="p-value price-total">${{ number_format($reservacion->total, 2) }} MXN</td>
-          </tr>
+         <tr>
+            <td class="p-label price-total" style="color:#E50914;">TOTAL</td>
+            <td class="p-value price-total" style="color:#E50914;">${{ number_format($reservacion->total, 2) }} MXN</td>
+            </tr>
         </table>
 
-        <div class="divider"></div>
-
-      {{-- Fila superior: redes + logo de palabra --}}
-      <div class="footer-top">
-        <div class="footer-social">
-    <a href="https://wa.me/524423032668">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" style="max-height:20px; display:block;">
-    </a>
-    <a href="https://www.facebook.com/viajerocarental">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook" style="max-height:20px; display:block;">
-    </a>
-    <a href="https://www.instagram.com/viajerocarental">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" alt="Instagram" style="max-height:20px; display:block;">
-    </a>
-    <a href="https://www.tiktok.com/@viajerocarental">
-        <img src="https://cdn-icons-png.flaticon.com/512/3046/3046121.png" alt="TikTok" style="max-height:20px; display:block;">
-    </a>
-</div>
-
-        <div class="footer-logo-word">
-          <img src="{{ $message->embed(public_path('img/Logo3.jpg')) }}" alt="Viajero Car Rental">
-        </div>
       </div>
 
-      <div class="footer-sep"></div>
+      <!-- TEXTO Y LÍNEA ROJA -->
+      <p class="price-note">
+        VIAJERO te garantiza el tamaño del vehículo y sus características, más no el modelo específico.
+        Nos comprometemos a entregarte un auto de la categoría reservada, por ejemplo un auto compacto,
+        pudiendo ser cualquiera de las marcas que manejamos en nuestra flota dentro de este grupo.
+      </p>
+      <div class="price-note-line"></div>
 
-      {{-- Fila central: ubicaciones + links --}}
-      <div class="footer-main">
-        {{-- Columna 1: ubicaciones --}}
-        <div class="footer-col">
-          <p>📍 OFICINA CENTRAL PARK, QUERÉTARO</p>
-          <p>📍 PICK-UP AEROPUERTO DE QUERÉTARO</p>
-          <p>📍 PICK-UP AEROPUERTO DE LEÓN</p>
-        </div>
+      <!-- REQUISITOS -->
+      <div class="info-section">
+        <p class="info-section-title">Requisitos para rentar</p>
+        <ul class="info-section-list">
+          <li>Tarjeta de crédito: Con un mínimo de antigüedad de un año, todas nuestras rentas deben ser amparadas con una tarjeta de crédito.</li>
+          <li>Edad mínima 21 años: Aplica un cargo por conductor joven si eres menor de 25 años.</li>
+          <li>Identificación con fotografía: Credencial del IFE/INE o Pasaporte.</li>
+          <li>Licencia para conducir: Deberá estar vigente.</li>
+          <li>Relevos de responsabilidad: Elegir entre nuestras opciones de protección para el auto (100%, 90%, 80% o 0%).</li>
+        </ul>
+        <p class="info-section-paragraph">
+          Los requisitos de renta pueden variar, si requieres más información comunícate al 01 (442) 303 26 68
+          o escríbenos a reservaciones@viajerocarental.com
+        </p>
+        <p class="info-section-title">Protección limitada de responsabilidad hacia terceros (LI)</p>
+        <p class="info-section-paragraph">
+          Protege a terceros por daños y perjuicios ocasionados en un accidente y cubre la cantidad mínima
+          requerida por ley. Tú eliges el nivel de responsabilidad sobre el auto que más vaya acorde a tus
+          necesidades y presupuesto. Pregunta por nuestros relevos de responsabilidad (opcionales) al llegar
+          al mostrador de cualquiera de nuestras oficinas.
+        </p>
+      </div>
 
-        {{-- Columna 2: links centro --}}
-        <div class="footer-col">
+      <div class="divider"></div>
+
+    </div>
+<!-- SITE FOOTER -->
+<div class="site-footer">
+  <div class="footer-inner">
+
+    <table class="footer-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; table-layout:fixed; border-collapse:collapse;">
+      <tr>
+        <td class="foot-social-cell" align="left" valign="middle" width="60%" style="width:60%;">
+          <div class="footer-social">
+            <a href="https://wa.me/524423032668">
+              <img src="https://res.cloudinary.com/xpcjjkal/image/upload/f_auto,q_auto/whatsapp_dtdhsa" alt="WhatsApp">
+            </a>
+            <a href="https://www.facebook.com/viajerocarental">
+              <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783354979/facebook_n5drvl.png" alt="Facebook">
+            </a>
+            <a href="https://www.instagram.com/viajerocarental">
+              <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355021/instagram_azxt4t.png" alt="Instagram">
+            </a>
+            <a href="https://www.tiktok.com/@viajerocarental">
+              <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355062/tiktok_romtce.png" alt="TikTok">
+            </a>
+          </div>
+        </td>
+        <td class="foot-logo-cell" align="right" valign="middle" width="40%" style="width:40%; padding-left:10px;">
+          <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783358827/LogoR_uwdvtq.png" alt="Viajero Car Rental" style="height:28px; max-height:28px; width:auto; max-width:100%; display:inline-block; border:none;">
+        </td>
+      </tr>
+    </table>
+
+    <div class="footer-sep"></div>
+
+    <table class="footer-main-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; border-collapse:collapse;">
+      <tr>
+       <td class="foot-col" width="33%" valign="top" style="width:33%; padding-right: 15px;">
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+    <tr>
+      <td style="width:20px; vertical-align:top; padding:0 6px 6px 0;">
+        <img src="https://api.iconify.design/lucide/map-pin.svg?color=%23111827&width=13&height=13"
+             width="13" height="13" alt="" style="display:block; border:0;">
+      </td>
+      <td style="vertical-align:top; padding:0 0 6px; font-size:12px; color:#111827; line-height:1.4;">
+        OFICINA CENTRAL PARK, QUERÉTARO
+      </td>
+    </tr>
+    <tr>
+      <td style="width:20px; vertical-align:top; padding:0 6px 6px 0;">
+        <img src="https://api.iconify.design/lucide/map-pin.svg?color=%23111827&width=13&height=13"
+             width="13" height="13" alt="" style="display:block; border:0;">
+      </td>
+      <td style="vertical-align:top; padding:0 0 6px; font-size:12px; color:#111827; line-height:1.4;">
+        PICK-UP AEROPUERTO DE QUERÉTARO
+      </td>
+    </tr>
+    <tr>
+      <td style="width:20px; vertical-align:top; padding:0 6px 0 0;">
+        <img src="https://api.iconify.design/lucide/map-pin.svg?color=%23111827&width=13&height=13"
+             width="13" height="13" alt="" style="display:block; border:0;">
+      </td>
+      <td style="vertical-align:top; padding:0; font-size:12px; color:#111827; line-height:1.4;">
+        PICK-UP AEROPUERTO DE LEÓN
+      </td>
+    </tr>
+  </table>
+</td>
+        <td class="foot-col" width="33%" valign="top" style="width:33%; padding-right: 15px;">
           <ul>
             <li><a href="{{ route('rutaReservaciones') }}">MI RESERVA</a></li>
             <li><a href="{{ route('rutaCatalogo') }}">AUTOS</a></li>
@@ -759,21 +1020,8 @@
             <li><a href="{{ route('rutaPoliticas') }}">TÉRMINOS Y CONDICIONES</a></li>
             <li><a href="{{ route('rutaContacto') }}">CONTACTO</a></li>
           </ul>
-          <p class="info-section-paragraph">
-            Los requisitos de renta pueden variar, si requieres más información comunícate al 01 (442) 303 26 68
-            o escríbenos a reservaciones@viajerocarental.com
-          </p>
-          <p class="info-section-title">Protección limitada de responsabilidad hacia terceros (LI)</p>
-          <p class="info-section-paragraph">
-            Protege a terceros por daños y perjuicios ocasionados en un accidente y cubre la cantidad mínima
-            requerida por ley. Tú eliges el nivel de responsabilidad sobre el auto que más vaya acorde a tus
-            necesidades y presupuesto. Pregunta por nuestros relevos de responsabilidad (opcionales) al llegar
-            al mostrador de cualquiera de nuestras oficinas.
-          </p>
-        </div>
-
-        {{-- Columna 3: links derecha --}}
-        <div class="footer-col">
+        </td>
+        <td class="foot-col" width="33%" valign="top" style="width:33%;">
           <ul>
             <li><a href="https://viajerocarental.com/blog">BLOG</a></li>
             <li><a href="{{ route('rutaFAQ') }}">F.A.Q</a></li>
@@ -781,90 +1029,24 @@
             <li><a href="{{ route('rutaPoliticas') }}">POLÍTICA DE LIMPIEZA</a></li>
             <li><a href="{{ route('rutaPoliticas') }}">POLÍTICA DE RENTA</a></li>
           </ul>
-        </div>
-      </div>
+        </td>
+      </tr>
+    </table>
 
-      {{-- Fila inferior: métodos de pago --}}
-      <div class="footer-pay">
-        <img src="{{ $message->embed(public_path('img/visa.jpg')) }}" alt="Visa">
-        <img src="{{ $message->embed(public_path('img/mastercard.png')) }}" alt="Mastercard">
-        <img src="{{ $message->embed(public_path('img/america.png')) }}" alt="American Express">
-        <img src="{{ $message->embed(public_path('img/oxxo.png')) }}" alt="OXXO">
-        <img src="{{ $message->embed(public_path('img/pago.png')) }}" alt="Mercado Pago">
-        <img src="{{ $message->embed(public_path('img/paypal.png')) }}" alt="PayPal">
-      </div>
-
+    <div class="footer-pay">
+      <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355140/visa_ootjas.jpg" alt="Visa">
+      <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355180/mastercard_g4sfkg.png" alt="Mastercard">
+      <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355306/america_nzg98m.png" alt="American Express">
+      <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355407/oxxo_zllhgk.png" alt="OXXO">
+      <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355459/mercadop_qhqrwm.jpg" alt="Mercado Pago">
+      <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355507/paypal_rrsa9u.png" alt="PayPal">
     </div>
 
-    <div class="site-footer">
-      <div class="footer-inner">
+  </div>
+</div>
+    </div><!-- /content -->
 
-        <table class="footer-table" cellpadding="0" cellspacing="0" border="0">
-          <tr>
-            <td align="left" valign="middle" style="width: 70%;">
-              <div class="footer-social">
-                <a href="https://wa.me/524423032668">
-                  <img src="https://res.cloudinary.com/xpcjjkal/image/upload/f_auto,q_auto/whatsapp_dtdhsa" alt="WhatsApp">
-                </a>
-                <a href="https://www.facebook.com/viajerocarental">
-                  <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783354979/facebook_n5drvl.png" alt="Facebook">
-                </a>
-                <a href="https://www.instagram.com/viajerocarental">
-                  <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355021/instagram_azxt4t.png" alt="Instagram">
-                </a>
-                <a href="https://www.tiktok.com/@viajerocarental">
-                  <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355062/tiktok_romtce.png" alt="TikTok">
-                </a>
-              </div>
-            </td>
-            <td align="right" valign="middle" style="width: 30%; padding-left: 20px;">
-              <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783358827/LogoR_uwdvtq.png" alt="Viajero Car Rental" style="height: 28px; max-height: 28px; width: auto; display: inline-block; border: none;">
-            </td>
-          </tr>
-        </table>
-
-        <div class="footer-sep"></div>
-
-        <table class="footer-main-table" cellpadding="0" cellspacing="0" border="0">
-          <tr>
-            <td width="33%" valign="top" style="padding-right: 15px;">
-              <p class="ubicacion-text">📍 OFICINA CENTRAL PARK, QUERÉTARO</p>
-              <p class="ubicacion-text">📍 PICK-UP AEROPUERTO DE QUERÉTARO</p>
-              <p class="ubicacion-text">📍 PICK-UP AEROPUERTO DE LEÓN</p>
-            </td>
-            <td width="33%" valign="top" style="padding-right: 15px;">
-              <ul>
-                <li><a href="{{ route('rutaReservaciones') }}">MI RESERVA</a></li>
-                <li><a href="{{ route('rutaCatalogo') }}">AUTOS</a></li>
-                <li><a href="https://viajerocarental.com/empresas">EMPRESAS</a></li>
-                <li><a href="{{ route('rutaPoliticas') }}">TÉRMINOS Y CONDICIONES</a></li>
-                <li><a href="{{ route('rutaContacto') }}">CONTACTO</a></li>
-              </ul>
-            </td>
-            <td width="33%" valign="top">
-              <ul>
-                <li><a href="https://viajerocarental.com/blog">BLOG</a></li>
-                <li><a href="{{ route('rutaFAQ') }}">F.A.Q</a></li>
-                <li><a href="{{ route('rutaPoliticas') }}">AVISO DE PRIVACIDAD</a></li>
-                <li><a href="{{ route('rutaPoliticas') }}">POLÍTICA DE LIMPIEZA</a></li>
-                <li><a href="{{ route('rutaPoliticas') }}">POLÍTICA DE RENTA</a></li>
-              </ul>
-            </td>
-          </tr>
-        </table>
-
-        <div class="footer-pay">
-          <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355140/visa_ootjas.jpg" alt="Visa">
-          <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355180/mastercard_g4sfkg.png" alt="Mastercard">
-          <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355306/america_nzg98m.png" alt="American Express">
-          <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355407/oxxo_zllhgk.png" alt="OXXO">
-          <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355459/mercadop_qhqrwm.jpg" alt="Mercado Pago">
-          <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355507/paypal_rrsa9u.png" alt="PayPal">
-        </div>
-
-      </div>
-    </div>
-
+    <!-- FOOTER FINAL -->
     <div class="footer">
       © {{ date('Y') }} <strong>Viajero Car Rental</strong><br>
       <a href="https://viajerocarental.com">www.viajerocarental.com</a> |

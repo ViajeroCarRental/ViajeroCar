@@ -19,6 +19,8 @@
     $esAeropuerto = request('sucursal') === '1';
     $cols = $esAeropuerto ? 13 : 12;
     $reservaciones_anteriores = $reservaciones_anteriores ?? [];
+    $seguroPaquete = $seguroPaquete ?? collect();
+    $seguroIndividual = $seguroIndividual ?? collect();
 
     $fmtFecha = function ($fecha) {
       if (!$fecha) return '—';
@@ -45,7 +47,7 @@
       name="q"
       class="input search-input"
       type="search"
-      placeholder="Buscar por nombre o correo…"
+      placeholder="Buscar por nombre, correo o código…"
       value="{{ request('q') }}"
     >
 
@@ -191,6 +193,14 @@
           };
 
           $extras = $servicios[$r->id_reservacion] ?? [];
+
+          // 🛡️ Seguro (paquete O individual — solo puede haber uno)
+          $seguroNombre = null;
+          if (isset($seguroPaquete[$r->id_reservacion])) {
+            $seguroNombre = $seguroPaquete[$r->id_reservacion]->nombre;
+          } elseif (isset($seguroIndividual[$r->id_reservacion])) {
+            $seguroNombre = $seguroIndividual[$r->id_reservacion]->nombre;
+          }
         @endphp
 
         <div
@@ -267,7 +277,7 @@
           <div class="reserva-summary">
 
             <div class="summary-title">
-              Reservación Confirmada el: {{ $fmtFecha($r->created_at) }}
+              Reservación Confirmada el: {{ $r->created_at ? \Carbon\Carbon::parse($r->created_at)->format('d-M-Y H:i:s') : '—' }}
             </div>
 
             <div class="reserva-summary-line">
@@ -317,6 +327,11 @@
               @else
                 <span style="color:#999;">Ninguno</span>
               @endif
+            </div>
+
+            <div class="reserva-summary-line">
+              <b>Seguros:</b>
+              <div>{{ $seguroNombre ?? '—' }}</div>
             </div>
 
             <div class="summary-actions">

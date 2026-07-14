@@ -16,7 +16,7 @@ class UbicacionesServicioSeeder extends Seeder
         // Lista de destinos con KM exactos
         $destinos = [
             ['estado' => 'Aguascalientes', 'destino' => 'Aeropuerto Internacional de Aguascalientes', 'km' => 310],
-            ['estado' => 'CDMX', 'destino' => 'Aeropuerto Internacional de la Ciudad de México', 'km' => 230],
+            ['estado' => 'CDMX', 'destino' => 'Aeropuerto Internacional de Ciudad de México', 'km' => 230],
             ['estado' => 'CDMX', 'destino' => 'Aeropuerto Internacional Felipe Ángeles', 'km' => 200],
             ['estado' => 'Durango', 'destino' => 'Aeropuerto Internacional de Durango', 'km' => 700],
             ['estado' => 'Guanajuato', 'destino' => 'Aeropuerto Internacional de Guanajuato, Silao', 'km' => 160],
