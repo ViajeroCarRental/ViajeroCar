@@ -62,6 +62,7 @@ class BtnReservacionesController extends Controller
             'vuelo'               => 'nullable|string|max:40',
             'addons'              => 'nullable|string',
             'idioma'              => 'nullable|string|in:es,en',
+            'fecha_nacimiento'    => 'nullable|date',
         ]);
 
         // Aplicar el idioma del cliente (es/en) para que el correo salga en su idioma.
@@ -98,6 +99,7 @@ class BtnReservacionesController extends Controller
                     'nombre_cliente'   => $validated['nombre'] ?? null,
                     'email_cliente'    => $validated['email'] ?? null,
                     'telefono_cliente' => $validated['telefono'] ?? null,
+                    'fecha_nacimiento' => $validated['fecha_nacimiento'] ?? null,
                     'created_at'       => now(),
                     'updated_at'       => now(),
                 ]);
@@ -171,6 +173,7 @@ class BtnReservacionesController extends Controller
                     'nombre_cliente'   => $validated['nombre'] ?? null,
                     'email_cliente'    => $validated['email'] ?? null,
                     'telefono_cliente' => $validated['telefono'] ?? null,
+                    'fecha_nacimiento' => $validated['fecha_nacimiento'] ?? null,
                     'created_at'       => now(),
                     'updated_at'       => now(),
                 ]);
@@ -320,6 +323,7 @@ class BtnReservacionesController extends Controller
                     'nombre_cliente'   => $validated['nombre'] ?? null,
                     'email_cliente'    => $validated['email'] ?? null,
                     'telefono_cliente' => $validated['telefono'] ?? null,
+                    'fecha_nacimiento' => $validated['fecha_nacimiento'] ?? null,
                     'paypal_order_id'  => $validated['paypal_order_id'],
                     'status_pago'      => 'Pagado',
                     'metodo_pago'      => 'en_linea',
