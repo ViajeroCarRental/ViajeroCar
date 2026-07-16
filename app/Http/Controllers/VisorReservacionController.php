@@ -76,8 +76,12 @@ class VisorReservacionController extends Controller
             $reservacion->fecha_fin . ' ' . ($reservacion->hora_entrega ?? '00:00:00')
         );
 
-        $minutos = $inicio->lt($fin) ? $inicio->diffInMinutes($fin) : 0;
-        $dias = max(1, (int) ceil($minutos / 1440));
+        // Días con tolerancia de 1 hora (misma fórmula que admin y que al crear):
+        // si el exceso sobre las 24h es de MÁS de 1 hora, suma un día.
+        $horasTotales = $inicio->lt($fin) ? $inicio->diffInHours($fin) : 0;
+        $diasBase     = intdiv($horasTotales, 24);
+        $horasExtra   = $horasTotales % 24;
+        $dias         = ($horasExtra > 1) ? $diasBase + 1 : max(1, $diasBase);
 
         $baseCategoria = $precioDiaCategoria * $dias;
 
@@ -528,8 +532,11 @@ $categoriasCards = DB::table('categorias_carros')
         $inicio = Carbon::parse($reserva->fecha_inicio . ' ' . ($reserva->hora_retiro ?? '00:00:00'));
         $fin    = Carbon::parse($reserva->fecha_fin . ' ' . ($reserva->hora_entrega ?? '00:00:00'));
 
-        $minutos = $inicio->lt($fin) ? $inicio->diffInMinutes($fin) : 0;
-        $dias = max(1, (int) ceil($minutos / 1440));
+        // Días con tolerancia de 1 hora (misma fórmula que admin y que al crear).
+        $horasTotales = $inicio->lt($fin) ? $inicio->diffInHours($fin) : 0;
+        $diasBase     = intdiv($horasTotales, 24);
+        $horasExtra   = $horasTotales % 24;
+        $dias         = ($horasExtra > 1) ? $diasBase + 1 : max(1, $diasBase);
 
         $baseCategoria = $precioDia * $dias;
 
@@ -731,6 +738,55 @@ $categoriasCards = DB::table('categorias_carros')
                 }
             }
 
+            // 9-BIS. Recalcular CONDUCTOR MENOR (id 5) según la edad al pickup final.
+            //   El conductor menor aplica solo a titulares de 18 a 24 años.
+            //   Como las fechas pueden haber cambiado en esta modificación, se
+            //   recalcula la edad al pickup FINAL y se decide si el cargo debe
+            //   estar o no. La fecha de nacimiento vive en la propia reserva.
+            $reservaCM = DB::table('reservaciones')->where('id_reservacion', $id)
+                ->select('fecha_inicio', 'fecha_nacimiento')->first();
+
+            // Sólo se puede recalcular si tenemos la fecha de nacimiento guardada.
+            if ($reservaCM && !empty($reservaCM->fecha_nacimiento)) {
+                $pickupFinal = Carbon::parse($reservaCM->fecha_inicio);
+                $nacimiento  = Carbon::parse($reservaCM->fecha_nacimiento);
+                $edad        = $nacimiento->diffInYears($pickupFinal);
+
+                $aplicaConductorMenor = ($edad >= 18 && $edad <= 24);
+
+                $tieneConductorMenor = DB::table('reservacion_servicio')
+                    ->where('id_reservacion', $id)
+                    ->where('id_servicio', 5)
+                    ->exists();
+
+                if ($aplicaConductorMenor && !$tieneConductorMenor) {
+                    // Debe estar y no está: agregarlo con su precio de BD.
+                    $servicioCM = DB::table('servicios')
+                        ->where('id_servicio', 5)
+                        ->where('activo', 1)
+                        ->first();
+
+                    if ($servicioCM) {
+                        DB::table('reservacion_servicio')->insert([
+                            'id_reservacion'  => $id,
+                            'id_servicio'     => 5,
+                            'cantidad'        => 1,
+                            'precio_unitario' => (float) $servicioCM->precio,
+                            'created_at'      => now(),
+                            'updated_at'      => now(),
+                        ]);
+                    }
+                } elseif (!$aplicaConductorMenor && $tieneConductorMenor) {
+                    // Ya no aplica (p. ej. cumplió 25 con las fechas nuevas): quitarlo.
+                    DB::table('reservacion_servicio')
+                        ->where('id_reservacion', $id)
+                        ->where('id_servicio', 5)
+                        ->delete();
+                }
+                // Si aplica y ya está, o no aplica y no está: no se hace nada.
+                // El precio por días lo recalcula recalcularTotalesReserva más abajo.
+            }
+
             // 10. Guardar tarifa_base actualizada (con ×1.25 condicional según método de pago)
             $reservaAct = DB::table('reservaciones')->where('id_reservacion', $id)
                 ->select('id_categoria', 'metodo_pago')->first();
@@ -846,9 +902,11 @@ $categoriasCards = DB::table('categorias_carros')
         $finCorreo = Carbon::parse(
             $reservacion->fecha_fin . ' ' . ($reservacion->hora_entrega ?? '00:00:00')
         );
-        $minutosCorreo = $inicioCorreo->lt($finCorreo) ? $inicioCorreo->diffInMinutes($finCorreo) : 0;
-        $diasCorreo = max(1, (int) ceil($minutosCorreo / 1440));
-
+        // Días con tolerancia de 1 hora (misma fórmula que admin y que al crear).
+        $horasCorreo = $inicioCorreo->lt($finCorreo) ? $inicioCorreo->diffInHours($finCorreo) : 0;
+        $diasBaseCorreo = intdiv($horasCorreo, 24);
+        $horasExtraCorreo = $horasCorreo % 24;
+        $diasCorreo = ($horasExtraCorreo > 1) ? $diasBaseCorreo + 1 : max(1, $diasBaseCorreo);
         $extrasReserva = DB::table('reservacion_servicio as rs')
             ->join('servicios as s','s.id_servicio','=','rs.id_servicio')
             ->where('rs.id_reservacion',$id)
