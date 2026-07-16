@@ -39,6 +39,8 @@ class VisorReservacionController extends Controller
             ->select(
                 'servicios.id_servicio',
                 'servicios.nombre',
+                'servicios.tipo_cobro',
+                'servicios.usuario',
                 'reservacion_servicio.cantidad',
                 'reservacion_servicio.precio_unitario'
             )
@@ -74,8 +76,12 @@ class VisorReservacionController extends Controller
             $reservacion->fecha_fin . ' ' . ($reservacion->hora_entrega ?? '00:00:00')
         );
 
-        $minutos = $inicio->lt($fin) ? $inicio->diffInMinutes($fin) : 0;
-        $dias = max(1, (int) ceil($minutos / 1440));
+        // Días con tolerancia de 1 hora (misma fórmula que admin y que al crear):
+        // si el exceso sobre las 24h es de MÁS de 1 hora, suma un día.
+        $horasTotales = $inicio->lt($fin) ? $inicio->diffInHours($fin) : 0;
+        $diasBase     = intdiv($horasTotales, 24);
+        $horasExtra   = $horasTotales % 24;
+        $dias         = ($horasExtra > 1) ? $diasBase + 1 : max(1, $diasBase);
 
         $baseCategoria = $precioDiaCategoria * $dias;
 
@@ -83,11 +89,12 @@ class VisorReservacionController extends Controller
         $iva = $subtotal * 0.16;
         $total = $subtotal + $iva;
 
-        // Catálogo de servicios: solo los que el cliente puede elegir
-        // (silla de bebé=7, conductor adicional=4, gasolina prepago=1)
+        // Catálogo de servicios: los visibles para el cliente (usuario = 1).
+        // Los automáticos (dropoff = 11, conductor menor = 5) están en usuario = 0,
+        // por lo que quedan excluidos solos y se agregan por lógica de negocio.
         $catalogoServicios = DB::table('servicios')
             ->where('activo', 1)
-            ->whereIn('id_servicio', [1, 4, 7])
+            ->where('usuario', 1)
             ->orderBy('nombre')
             ->get();
 
@@ -208,7 +215,8 @@ $categoriasCards = DB::table('categorias_carros')
             'servicios'            => 'nullable|array',
             'servicios.*.id'       => 'required|integer',
             'servicios.*.cantidad' => 'required|integer|min:1',
-            'servicios.*.precio'   => 'required|numeric|min:0',
+            // 'precio' ya NO se valida ni se usa: el precio real se lee de BD.
+            'servicios.*.precio'   => 'nullable|numeric|min:0',
         ]);
 
         DB::beginTransaction();
@@ -273,26 +281,61 @@ $categoriasCards = DB::table('categorias_carros')
                     'updated_at'   => now(),
                 ]);
 
-            // Eliminar servicios anteriores
+            // Eliminar servicios anteriores, PRESERVANDO los automáticos:
+            //  - 11 (Drop Off): lo regenera recalcularDropoff() más abajo.
+            //  - 5  (Conductor menor): NO se recalcula en la web de usuario
+            //    (esa lógica depende de la edad y vive en el flujo del agente).
+            //    Se preserva tal cual estaba para no perderlo al editar.
             DB::table('reservacion_servicio')
                 ->where('id_reservacion', $id)
+                ->whereNotIn('id_servicio', [5, 11])
                 ->delete();
 
-            // Insertar servicios nuevos si existen
+            // Insertar servicios nuevos si existen.
+            // El precio y el tipo de cobro SIEMPRE se leen de la tabla `servicios`
+            // (nunca del front). La gasolina (id 1) resuelve litros por categoría.
             $subtotalServicios = 0;
 
             if (!empty($request->servicios)) {
                 foreach ($request->servicios as $s) {
+                    // El usuario nunca manda 5 ni 11; si llegaran, se ignoran
+                    // porque son automáticos y ya se manejan aparte.
+                    if (in_array((int) $s['id'], [5, 11], true)) {
+                        continue;
+                    }
+
+                    // Precio real desde BD (fuente de verdad)
+                    $servicioDb = DB::table('servicios')
+                        ->where('id_servicio', $s['id'])
+                        ->where('activo', 1)
+                        ->first();
+
+                    if (!$servicioDb) {
+                        continue; // servicio inexistente o inactivo: se omite
+                    }
+
+                    $cantidad = (int) $s['cantidad'];
+                    $precioUnitario = (float) $servicioDb->precio;
+
+                    // Caso especial GASOLINA (por_tanque): cantidad = litros del
+                    // tanque de la categoría, precio_unitario = 20 (igual que admin).
+                    if ((int) $s['id'] === 1) {
+                        $capacidadTanque = DB::table('vehiculos')
+                            ->where('id_categoria', $request->id_categoria)
+                            ->max('capacidad_tanque') ?? 0;
+
+                        $cantidad = (int) ($capacidadTanque ?: 1);
+                        $precioUnitario = 20.00;
+                    }
+
                     DB::table('reservacion_servicio')->insert([
                         'id_reservacion'  => $id,
-                        'id_servicio'     => $s['id'],
-                        'cantidad'        => $s['cantidad'],
-                        'precio_unitario' => $s['precio'],
+                        'id_servicio'     => $servicioDb->id_servicio,
+                        'cantidad'        => $cantidad,
+                        'precio_unitario' => $precioUnitario,
                         'created_at'      => now(),
                         'updated_at'      => now(),
                     ]);
-
-                    $subtotalServicios += $s['cantidad'] * $s['precio'];
                 }
             }
 
@@ -489,14 +532,34 @@ $categoriasCards = DB::table('categorias_carros')
         $inicio = Carbon::parse($reserva->fecha_inicio . ' ' . ($reserva->hora_retiro ?? '00:00:00'));
         $fin    = Carbon::parse($reserva->fecha_fin . ' ' . ($reserva->hora_entrega ?? '00:00:00'));
 
-        $minutos = $inicio->lt($fin) ? $inicio->diffInMinutes($fin) : 0;
-        $dias = max(1, (int) ceil($minutos / 1440));
+        // Días con tolerancia de 1 hora (misma fórmula que admin y que al crear).
+        $horasTotales = $inicio->lt($fin) ? $inicio->diffInHours($fin) : 0;
+        $diasBase     = intdiv($horasTotales, 24);
+        $horasExtra   = $horasTotales % 24;
+        $dias         = ($horasExtra > 1) ? $diasBase + 1 : max(1, $diasBase);
 
         $baseCategoria = $precioDia * $dias;
 
-        $subtotalServicios = DB::table('reservacion_servicio')
-            ->where('id_reservacion', $id)
-            ->sum(DB::raw('cantidad * precio_unitario'));
+        // Subtotal de servicios respetando tipo_cobro:
+        //  - por_dia   → cantidad × precio_unitario × días
+        //  - por_evento→ cantidad × precio_unitario
+        //  - por_tanque→ cantidad × precio_unitario (gasolina: litros × 20)
+        // El dropoff (id 11) se guarda como cargo fijo (cantidad 1, precio total),
+        // por lo que su tipo_cobro no debe ser por_dia y cae en × 1 automáticamente.
+        $subtotalServicios = 0;
+
+        $serviciosReserva = DB::table('reservacion_servicio as rs')
+            ->join('servicios as s', 's.id_servicio', '=', 'rs.id_servicio')
+            ->where('rs.id_reservacion', $id)
+            ->select('rs.cantidad', 'rs.precio_unitario', 's.tipo_cobro')
+            ->get();
+
+        foreach ($serviciosReserva as $s) {
+            $lineaBase = (float) $s->cantidad * (float) $s->precio_unitario;
+            $subtotalServicios += ($s->tipo_cobro === 'por_dia')
+                ? $lineaBase * $dias
+                : $lineaBase;
+        }
 
         $subtotal = $baseCategoria + $subtotalServicios;
         $iva = $subtotal * 0.16;
@@ -618,24 +681,110 @@ $categoriasCards = DB::table('categorias_carros')
             // 9. Actualizar SERVICIOS (si vienen, reemplaza la lista completa)
             //    OJO: no tocamos el dropoff aquí, lo recalcula recalcularDropoff después.
             if ($request->has('servicios')) {
-                // Borrar servicios que NO son dropoff (id 11)
+                // Borrar servicios, PRESERVANDO los automáticos:
+                //  - 11 (Drop Off): lo regenera recalcularDropoff() después.
+                //  - 5  (Conductor menor): lo RECALCULA el agente por edad
+                //    (esa lógica la agrega el flujo del agente / Python).
+                //    Aquí lo preservamos para que ese recálculo trabaje sobre
+                //    la lista ya depurada, sin perderlo ni duplicarlo.
                 DB::table('reservacion_servicio')
                     ->where('id_reservacion', $id)
-                    ->where('id_servicio', '!=', 11)
+                    ->whereNotIn('id_servicio', [5, 11])
                     ->delete();
 
                 if (!empty($validated['servicios'])) {
                     foreach ($validated['servicios'] as $s) {
+                        // 5 y 11 son automáticos: no se insertan desde la lista.
+                        if (in_array((int) $s['id'], [5, 11], true)) {
+                            continue;
+                        }
+
+                        // Precio real desde BD (fuente de verdad)
+                        $servicioDb = DB::table('servicios')
+                            ->where('id_servicio', $s['id'])
+                            ->where('activo', 1)
+                            ->first();
+
+                        if (!$servicioDb) {
+                            continue;
+                        }
+
+                        $cantidad = (int) $s['cantidad'];
+                        $precioUnitario = (float) $servicioDb->precio;
+
+                        // Caso especial GASOLINA (por_tanque): litros × 20.
+                        if ((int) $s['id'] === 1) {
+                            $reservaCatId = DB::table('reservaciones')
+                                ->where('id_reservacion', $id)
+                                ->value('id_categoria');
+
+                            $capacidadTanque = DB::table('vehiculos')
+                                ->where('id_categoria', $reservaCatId)
+                                ->max('capacidad_tanque') ?? 0;
+
+                            $cantidad = (int) ($capacidadTanque ?: 1);
+                            $precioUnitario = 20.00;
+                        }
+
                         DB::table('reservacion_servicio')->insert([
                             'id_reservacion'  => $id,
-                            'id_servicio'     => $s['id'],
-                            'cantidad'        => $s['cantidad'],
-                            'precio_unitario' => $s['precio'],
+                            'id_servicio'     => $servicioDb->id_servicio,
+                            'cantidad'        => $cantidad,
+                            'precio_unitario' => $precioUnitario,
                             'created_at'      => now(),
                             'updated_at'      => now(),
                         ]);
                     }
                 }
+            }
+
+            // 9-BIS. Recalcular CONDUCTOR MENOR (id 5) según la edad al pickup final.
+            //   El conductor menor aplica solo a titulares de 18 a 24 años.
+            //   Como las fechas pueden haber cambiado en esta modificación, se
+            //   recalcula la edad al pickup FINAL y se decide si el cargo debe
+            //   estar o no. La fecha de nacimiento vive en la propia reserva.
+            $reservaCM = DB::table('reservaciones')->where('id_reservacion', $id)
+                ->select('fecha_inicio', 'fecha_nacimiento')->first();
+
+            // Sólo se puede recalcular si tenemos la fecha de nacimiento guardada.
+            if ($reservaCM && !empty($reservaCM->fecha_nacimiento)) {
+                $pickupFinal = Carbon::parse($reservaCM->fecha_inicio);
+                $nacimiento  = Carbon::parse($reservaCM->fecha_nacimiento);
+                $edad        = $nacimiento->diffInYears($pickupFinal);
+
+                $aplicaConductorMenor = ($edad >= 18 && $edad <= 24);
+
+                $tieneConductorMenor = DB::table('reservacion_servicio')
+                    ->where('id_reservacion', $id)
+                    ->where('id_servicio', 5)
+                    ->exists();
+
+                if ($aplicaConductorMenor && !$tieneConductorMenor) {
+                    // Debe estar y no está: agregarlo con su precio de BD.
+                    $servicioCM = DB::table('servicios')
+                        ->where('id_servicio', 5)
+                        ->where('activo', 1)
+                        ->first();
+
+                    if ($servicioCM) {
+                        DB::table('reservacion_servicio')->insert([
+                            'id_reservacion'  => $id,
+                            'id_servicio'     => 5,
+                            'cantidad'        => 1,
+                            'precio_unitario' => (float) $servicioCM->precio,
+                            'created_at'      => now(),
+                            'updated_at'      => now(),
+                        ]);
+                    }
+                } elseif (!$aplicaConductorMenor && $tieneConductorMenor) {
+                    // Ya no aplica (p. ej. cumplió 25 con las fechas nuevas): quitarlo.
+                    DB::table('reservacion_servicio')
+                        ->where('id_reservacion', $id)
+                        ->where('id_servicio', 5)
+                        ->delete();
+                }
+                // Si aplica y ya está, o no aplica y no está: no se hace nada.
+                // El precio por días lo recalcula recalcularTotalesReserva más abajo.
             }
 
             // 10. Guardar tarifa_base actualizada (con ×1.25 condicional según método de pago)
@@ -746,6 +895,18 @@ $categoriasCards = DB::table('categorias_carros')
         ];
 
         // 4️⃣ Servicios / extras
+        // Días de la renta (para cobrar por_dia × días en el desglose del correo).
+        $inicioCorreo = Carbon::parse(
+            $reservacion->fecha_inicio . ' ' . ($reservacion->hora_retiro ?? '00:00:00')
+        );
+        $finCorreo = Carbon::parse(
+            $reservacion->fecha_fin . ' ' . ($reservacion->hora_entrega ?? '00:00:00')
+        );
+        // Días con tolerancia de 1 hora (misma fórmula que admin y que al crear).
+        $horasCorreo = $inicioCorreo->lt($finCorreo) ? $inicioCorreo->diffInHours($finCorreo) : 0;
+        $diasBaseCorreo = intdiv($horasCorreo, 24);
+        $horasExtraCorreo = $horasCorreo % 24;
+        $diasCorreo = ($horasExtraCorreo > 1) ? $diasBaseCorreo + 1 : max(1, $diasBaseCorreo);
         $extrasReserva = DB::table('reservacion_servicio as rs')
             ->join('servicios as s','s.id_servicio','=','rs.id_servicio')
             ->where('rs.id_reservacion',$id)
@@ -753,9 +914,12 @@ $categoriasCards = DB::table('categorias_carros')
                 's.id_servicio',
                 's.nombre',
                 's.descripcion',
+                's.tipo_cobro',
                 'rs.cantidad',
                 'rs.precio_unitario',
-                DB::raw('(rs.cantidad * rs.precio_unitario) as total')
+                // 'total' = cobro real de la línea: por_dia se multiplica por días,
+                // los demás (por_evento / por_tanque / dropoff) quedan × 1.
+                DB::raw("(rs.cantidad * rs.precio_unitario * CASE WHEN s.tipo_cobro = 'por_dia' THEN {$diasCorreo} ELSE 1 END) as total")
             )
             ->get();
 

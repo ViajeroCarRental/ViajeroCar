@@ -49,6 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const tarifaBaseInput = document.getElementById('tarifaBaseReserva');
         const tarifaBase = tarifaBaseInput ? (parseFloat(tarifaBaseInput.value) || 0) : 0;
 
+        // Días de la renta (para cobrar por_dia × días en pantalla).
+        const diasInput = document.getElementById('diasReserva');
+        const dias = diasInput ? (parseInt(diasInput.value) || 1) : 1;
+
         let subtotalServicios = 0;
 
         document.querySelectorAll('#tablaServicios tr').forEach(fila => {
@@ -60,7 +64,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const cantidad = parseFloat(cantidadInput.value) || 0;
             const precio = parseFloat(precioInput.value) || 0;
 
-            const total = cantidad * precio;
+            // El tipo de cobro se lee del data-charge de la fila.
+            // por_dia → × días; por_evento / por_tanque → × 1.
+            const charge = fila.dataset.charge || 'por_evento';
+            const total = (charge === 'por_dia')
+                ? cantidad * precio * dias
+                : cantidad * precio;
 
             if (fila.children[3]) {
                 fila.children[3].innerText = "$" + total.toFixed(2);
@@ -150,8 +159,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const id = option.value;
             const nombre = option.dataset.nombre;
             const precio = option.dataset.precio;
+            const charge = option.dataset.charge || 'por_evento';
+
+            // Total inicial de la fila según tipo de cobro (cantidad 1 al agregar).
+            const diasInput = document.getElementById('diasReserva');
+            const dias = diasInput ? (parseInt(diasInput.value) || 1) : 1;
+            const totalFila = (charge === 'por_dia')
+                ? parseFloat(precio) * dias
+                : parseFloat(precio);
 
             const fila = document.createElement('tr');
+            fila.dataset.charge = charge;
+            fila.dataset.automatico = '0';
             fila.innerHTML = `
                 <td>
                     ${nombre}
@@ -170,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         name="servicios[${servicioIndex}][precio]"
                         value="${precio}">
                 </td>
-                <td>$${parseFloat(precio).toFixed(2)}</td>
+                <td>$${totalFila.toFixed(2)}</td>
                 <td>
                     <button type="button"
                         class="btn btn-sm btn-danger btnEliminarServicio">

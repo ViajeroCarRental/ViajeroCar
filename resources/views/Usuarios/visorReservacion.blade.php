@@ -404,7 +404,8 @@
                                         @foreach ($catalogoServicios as $servicio)
                                             <option value="{{ $servicio->id_servicio }}"
                                                 data-nombre="{{ $servicio->nombre }}"
-                                                data-precio="{{ $servicio->precio }}">
+                                                data-precio="{{ $servicio->precio }}"
+                                                data-charge="{{ $servicio->tipo_cobro }}">
                                                 {{ $servicio->nombre }} (${{ number_format($servicio->precio, 2) }})
                                             </option>
                                         @endforeach
@@ -432,9 +433,23 @@
 
                                     <tbody id="tablaServicios">
                                         @forelse ($servicios as $i => $s)
-                                            <tr>
+                                            @php
+                                                // Servicio automático (no visible al usuario): id 5 y 11.
+                                                // Se muestra como línea informativa, sin controles de edición.
+                                                $esAutomatico = ((int) $s->usuario === 0);
+                                                // Cobro de la línea para la columna Total:
+                                                // por_dia × días; el resto × 1.
+                                                $totalLinea = ($s->tipo_cobro === 'por_dia')
+                                                    ? $s->cantidad * $s->precio_unitario * $dias
+                                                    : $s->cantidad * $s->precio_unitario;
+                                            @endphp
+                                            <tr data-charge="{{ $s->tipo_cobro }}"
+                                                data-automatico="{{ $esAutomatico ? '1' : '0' }}">
                                                 <td>
                                                     {{ $s->nombre }}
+                                                    @if($esAutomatico)
+                                                        <span class="badge bg-secondary">Automático</span>
+                                                    @endif
                                                     <input type="hidden" name="servicios[{{ $i }}][id]"
                                                         value="{{ $s->id_servicio }}">
                                                 </td>
@@ -443,7 +458,8 @@
                                                     <input type="number" min="1"
                                                         name="servicios[{{ $i }}][cantidad]"
                                                         class="form-control editable-servicio"
-                                                        value="{{ $s->cantidad }}" readonly>
+                                                        value="{{ $s->cantidad }}"
+                                                        {{ $esAutomatico ? 'disabled' : 'readonly' }}>
                                                 </td>
 
                                                 <td>
@@ -452,13 +468,15 @@
                                                         value="{{ $s->precio_unitario }}">
                                                 </td>
 
-                                                <td>${{ number_format($s->cantidad * $s->precio_unitario, 2) }}</td>
+                                                <td>${{ number_format($totalLinea, 2) }}</td>
 
                                                 <td>
-                                                    <button type="button"
-                                                        class="btn btn-sm btn-danger d-none btnEliminarServicio">
-                                                        ✖
-                                                    </button>
+                                                    @unless($esAutomatico)
+                                                        <button type="button"
+                                                            class="btn btn-sm btn-danger d-none btnEliminarServicio">
+                                                            ✖
+                                                        </button>
+                                                    @endunless
                                                 </td>
                                             </tr>
                                         @empty
@@ -476,6 +494,7 @@
 
                             <div class="visor-totals">
                                 <input type="hidden" id="tarifaBaseReserva" value="{{ $baseCategoria }}">
+                                <input type="hidden" id="diasReserva" value="{{ $dias }}">
                                 <div class="visor-total-item"><strong>Subtotal:</strong>
                                     ${{ number_format($subtotal, 2) }}</div>
                                 <div class="visor-total-item"><strong>IVA:</strong> ${{ number_format($iva, 2) }}</div>

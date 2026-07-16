@@ -272,6 +272,9 @@
       // Inyectar Drop Off (ID 11) si pickup ≠ dropoff
       const addonsFinal = injectDropOffIfNeeded(addonsRaw);
 
+      // Fecha de nacimiento (hidden #dob, formato AAAA-MM-DD)
+      const dob = (qs("#dob")?.value || "").trim();
+
       return {
         categoria_id:        categoriaId,
         plan,
@@ -285,7 +288,8 @@
         nombre:              nombreCompleto,
         telefono,
         email,
-        vuelo
+        vuelo,
+        fecha_nacimiento:    dob
       };
     }
 
