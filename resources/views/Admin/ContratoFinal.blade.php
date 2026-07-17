@@ -113,7 +113,7 @@
                             </div>
                             <div class="arrendatario-item">
                                 <span class="label">Edad:</span>
-                                <span class="value">{{ $fechaNacimiento ?? '—' }}</span>
+                                <span class="value">{{ $edad ? $edad . ' años' : '—' }}</span>
                             </div>
                             <div class="arrendatario-item">
                                 <span class="label">Teléfono:</span>

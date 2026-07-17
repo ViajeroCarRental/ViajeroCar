@@ -182,22 +182,38 @@ class ContratoBaseController extends Controller
         $paquete = DB::table('reservacion_paquete_seguro as rps')
             ->join('seguro_paquete as sp', 'rps.id_paquete', '=', 'sp.id_paquete')
             ->where('rps.id_reservacion', $idReservacion)
-            ->select('sp.nombre', 'rps.precio_por_dia')
+            ->select('sp.id_paquete', 'sp.nombre', 'rps.precio_por_dia')
             ->first();
 
         if ($paquete) {
             $seguros['tipo'] = 'paquete';
-            $seguros['lista'][] = ['nombre' => $paquete->nombre, 'precio' => $paquete->precio_por_dia];
+            $seguros['lista'][] = [
+                'id_paquete'     => $paquete->id_paquete,
+                'tipo'           => 'paquete',
+                'nombre'         => $paquete->nombre,
+                'precio'         => $paquete->precio_por_dia,
+                'precio_por_dia' => $paquete->precio_por_dia,
+            ];
             $seguros['total'] = (float) $paquete->precio_por_dia * $dias;
         } else {
             $individuales = DB::table('reservacion_seguro_individual as ri')
                 ->join('seguro_individuales as si', 'ri.id_individual', '=', 'si.id_individual')
                 ->where('ri.id_reservacion', $idReservacion)
-                ->select('si.nombre', 'ri.precio_por_dia')
+                ->select('si.id_individual', 'si.nombre', 'ri.precio_por_dia')
                 ->get();
 
+            if ($individuales->isNotEmpty()) {
+                $seguros['tipo'] = 'individual';
+            }
+
             foreach ($individuales as $ind) {
-                $seguros['lista'][] = ['nombre' => $ind->nombre, 'precio' => $ind->precio_por_dia];
+                $seguros['lista'][] = [
+                    'id_individual'  => $ind->id_individual,
+                    'tipo'           => 'individual',
+                    'nombre'         => $ind->nombre,
+                    'precio'         => $ind->precio_por_dia,
+                    'precio_por_dia' => $ind->precio_por_dia,
+                ];
                 $seguros['total'] += (float) $ind->precio_por_dia * $dias;
             }
         }

@@ -1097,7 +1097,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const packActive = document.querySelector(".input-paquete:checked");
         if (packActive) {
-            const seguroItem = packActive.closest(".seguro-item");
+            const seguroItem = packActive.closest(".pack-card");
             if (seguroItem) {
                 subtotalPorDia = parseFloat(seguroItem.dataset.precio || 0);
                 haySeleccion = true;
@@ -1107,7 +1107,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (individualesActivos.length > 0) {
                 haySeleccion = true;
                 individualesActivos.forEach(checkbox => {
-                    const individualItem = checkbox.closest(".individual-item");
+                    const individualItem = checkbox.closest(".individual-card");
                     if (individualItem) {
                         subtotalPorDia += parseFloat(individualItem.dataset.precio || 0);
                     }
@@ -1131,6 +1131,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 btnGo.style.pointerEvents = "none";
             }
         }
+
+        window.recalcularTotalProtecciones = recalcularTotalProtecciones;
     }
 
     // --- LÓGICA PARA CAMBIAR VISTAS (PAQUETES VS INDIVIDUALES) ---
@@ -1186,94 +1188,6 @@ document.addEventListener("DOMContentLoaded", () => {
         btnToggleVista.addEventListener('click', function () {
             const vistaActual = (vistaPaquetes && vistaPaquetes.style.display !== 'none') ? 'individuales' : 'paquetes';
             cambiarVistaProtecciones(vistaActual);
-        });
-    }
-
-    // --- LÓGICA DE SELECCIÓN PARA PAQUETES (Radio Buttons) ---
-    if (vistaPaquetes) {
-        vistaPaquetes.addEventListener("change", async (e) => {
-            if (e.target.classList.contains("input-paquete")) {
-                const inputPaquete = e.target;
-                const label = inputPaquete.closest(".seguro-item");
-
-                // 1. Apagar visualmente todos los individuales
-                document.querySelectorAll(".switch-individual").forEach(checkbox => {
-                    checkbox.checked = false;
-                });
-
-                recalcularTotalProtecciones();
-
-                try {
-                    // 2. Guardar paquete
-                    await ContratoAPI.postJSON(`/admin/contrato/seguros`, {
-                        id_reservacion: window.ID_RESERVACION,
-                        id_paquete: inputPaquete.value,
-                        precio_por_dia: label.dataset.precio
-                    });
-
-                    // 3. IMPORTANTE: limpiar individuales del backend
-                    document.querySelectorAll(".switch-individual").forEach(async (checkbox) => {
-                        await ContratoAPI.deleteJSON(`/admin/contrato/seguros-individuales`, {
-                            id_reservacion: window.ID_RESERVACION,
-                            id_seguro: checkbox.dataset.id || checkbox.value
-                        });
-                    });
-
-                    // 4. Recargar resumen de carrito navbar
-                    setTimeout(() => {
-                        if (typeof window.cargarResumenBasico === 'function') {
-                            window.cargarResumenBasico();
-                        }
-
-                        if (typeof copiarResumenNavbarAlModal === 'function') {
-                            copiarResumenNavbarAlModal();
-                        }
-                    }, 400);
-
-                } catch (err) {
-                    console.error(err);
-                }
-            }
-        });
-    }
-
-    // --- LÓGICA DE SELECCIÓN PARA INDIVIDUALES (Checkboxes) ---
-    if (vistaIndividuales) {
-        vistaIndividuales.addEventListener("change", async (e) => {
-            if (e.target.classList.contains("switch-individual")) {
-                const checkbox = e.target;
-                const label = checkbox.closest(".individual-item");
-                const estaPrendido = checkbox.checked;
-
-                // Si prende un individual, desmarcamos los paquetes completos
-                if (estaPrendido) {
-                    document.querySelectorAll(".input-paquete").forEach(radio => radio.checked = false);
-
-                    await ContratoAPI.deleteJSON(`/admin/contrato/seguros`, {
-                        id_reservacion: window.ID_RESERVACION
-                    });
-                }
-
-                recalcularTotalProtecciones();
-
-                try {
-                    if (!estaPrendido) {
-                        // Si se apagó, lo borramos
-                        await ContratoAPI.deleteJSON(`/admin/contrato/seguros-individuales`, {
-                            id_reservacion: window.ID_RESERVACION,
-                            id_seguro: checkbox.dataset.id || checkbox.value
-                        });
-                    } else {
-                        // Si se prendió, lo agregamos
-                        await ContratoAPI.postJSON(`/admin/contrato/seguros-individuales`, {
-                            id_reservacion: window.ID_RESERVACION,
-                            id_seguro: checkbox.dataset.id || checkbox.value,
-                            precio_por_dia: label.dataset.precio
-                        });
-                    }
-                    if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
-                } catch (err) { console.error(err); }
-            }
         });
     }
 
@@ -1855,6 +1769,93 @@ document.addEventListener("DOMContentLoaded", () => {
             actualizarTotales();
         }
 
+        async function guardarProteccionesEnBackend() {
+            const idRes = window.ID_RESERVACION;
+            if (!idRes) return;
+
+            const payload = {
+                id_reservacion: idRes,
+                id_paquete: paqueteSeleccionado?.id ?? null,
+                precio_por_dia: paqueteSeleccionado?.precio ?? null,
+                individuales: paqueteSeleccionado
+                    ? []
+                    : Array.from(individualesSeleccionados.values()).map(i => ({
+                        id: i.id,
+                        precio: i.precio
+                    }))
+            };
+
+            try {
+                await ContratoAPI.postJSON('/admin/contrato/protecciones/sync', payload);
+
+                if (typeof window.cargarResumenBasico === "function") {
+                    await window.cargarResumenBasico();
+                }
+
+                if (typeof copiarResumenNavbarAlModal === "function") {
+                    copiarResumenNavbarAlModal();
+                }
+
+            } catch (err) {
+                console.error("Error guardando protecciones:", err);
+                if (window.alertify) alertify.error("Error al guardar protecciones");
+                throw err;
+            }
+        }
+
+        async function hidratarDesdeBackend() {
+            if (!window.ID_RESERVACION) return false;
+
+            try {
+                const resp = await fetch(`/admin/contrato/${window.ID_RESERVACION}/resumen?t=${Date.now()}`);
+                if (!resp.ok) return false;
+
+                const { success, data: r } = await resp.json();
+                if (!success || !r?.seguros?.lista?.length) return false;
+
+                console.log("Protecciones recuperadas:", r.seguros);
+
+                limpiarPaquetes();
+                limpiarIndividuales();
+
+                let huboAlgo = false;
+
+                r.seguros.lista.forEach(item => {
+
+                    // ── Paquete ──
+                    if (item.id_paquete) {
+                        const radio = modal.querySelector(`.input-paquete[value="${item.id_paquete}"]`);
+                        if (radio) {
+                            seleccionarPaquete(radio);
+                            huboAlgo = true;
+                        }
+                        return;
+                    }
+
+                    // ── Individual ──
+                    if (item.id_individual) {
+                        const card = modal.querySelector(`.individual-card[data-id="${item.id_individual}"]`);
+                        if (card) {
+                            agregarIndividual(card, esForzado(getNombreIndividual(card)));
+                            huboAlgo = true;
+                        }
+                    }
+                });
+
+                if (huboAlgo) {
+                    actualizarTotales();
+                    sincronizarModalAPaso();
+                    console.log("Protecciones hidratadas desde backend");
+                }
+
+                return huboAlgo;
+
+            } catch (e) {
+                console.error("Error hidratando protecciones:", e);
+                return false;
+            }
+        }
+
         function setupEvents() {
             btnAbrir.addEventListener("click", e => {
                 e.preventDefault();
@@ -1865,10 +1866,11 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("btnCerrarModalFooter")?.addEventListener("click", cerrarModal);
 
             modal.addEventListener("click", e => {
-                if (e.target === modal) cerrarModal();
+                if (e.target === modal) return cerrarModal();
 
                 const packCard = e.target.closest(".pack-card");
                 if (packCard) {
+                    e.preventDefault();
                     const radio = packCard.querySelector(".input-paquete");
                     if (radio) seleccionarPaquete(radio);
                     return;
@@ -1876,6 +1878,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const individualCard = e.target.closest(".individual-card");
                 if (individualCard) {
+                    e.preventDefault();
                     seleccionarIndividual(individualCard);
                 }
             });
@@ -1899,21 +1902,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("tabIndividuales")?.classList.add("active");
                 document.getElementById("tabPaquetes")?.classList.remove("active");
 
-                aplicarDefaultsIndividuales();
+                // Solo aplica defaults si NO hay nada seleccionado
+                if (!paqueteSeleccionado && individualesSeleccionados.size === 0) {
+                    aplicarDefaultsIndividuales();
+                }
             });
 
-            btnAplicar?.addEventListener("click", () => {
-                sincronizarModalAPaso();
-                pintarProteccionesEnCarrito();
+            btnAplicar?.addEventListener("click", async () => {   // ← async
+                btnAplicar.disabled = true;
+                btnAplicar.textContent = "Guardando...";
 
-                if (typeof copiarResumenNavbarAlModal === "function") {
-                    copiarResumenNavbarAlModal();
-                }
+                try {
+                    await guardarProteccionesEnBackend();
 
-                cerrarModal();
+                    sincronizarModalAPaso();
+                    pintarProteccionesEnCarrito();
+                    cerrarModal();
 
-                if (window.alertify) {
-                    alertify.success("✅ Protecciones aplicadas");
+                    if (window.alertify) alertify.success("Protecciones aplicadas");
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    btnAplicar.disabled = false;
+                    btnAplicar.textContent = "Aplicar";
                 }
             });
         }
@@ -1921,7 +1932,7 @@ document.addEventListener("DOMContentLoaded", () => {
         function init() {
             let intentos = 0;
 
-            const timer = setInterval(() => {
+            const timer = setInterval(async () => {
                 intentos++;
 
                 if (getElements()) {
@@ -1931,19 +1942,25 @@ document.addEventListener("DOMContentLoaded", () => {
                     modal.style.display = "none";
                     modal.classList.remove("active");
 
-                    aplicarDefaultsIndividuales();
-                    sincronizarModalAPaso();
+                    const hidratado = await hidratarDesdeBackend();
+
+                    if (!hidratado) {
+                        aplicarDefaultsIndividuales();
+                        sincronizarModalAPaso();
+                    }
 
                     window.abrirModalProtecciones = abrirModal;
                     window.cerrarModalProtecciones = cerrarModal;
                     window.aplicarDefaultsIndividuales = aplicarDefaultsIndividuales;
+                    window.hidratarProtecciones = hidratarDesdeBackend;
 
-                    console.log("✅ Modal de protecciones listo");
+                    console.log("Modal de protecciones listo");
+                    return;
                 }
 
                 if (intentos >= 20) {
                     clearInterval(timer);
-                    console.warn("⚠️ No se encontró el modal de protecciones");
+                    console.warn("No se encontró el modal de protecciones");
                 }
             }, 200);
         }
@@ -2391,14 +2408,6 @@ document.addEventListener("DOMContentLoaded", () => {
         // 7. Ejecutar inicialmente
         setTimeout(actualizarTodasLasGarantias, 600);
 
-        // 8. Ejecutar periódicamente mientras el modal esté visible
-        setInterval(function () {
-            const modal = document.getElementById('modalProtecciones');
-            if (modal && modal.classList.contains('active')) {
-                actualizarTodasLasGarantias();
-            }
-        }, 3000);
-
         console.log('✅ Sistema de garantías inicializado');
     }
 
@@ -2434,24 +2443,24 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     })();
 
-    // Inicializar cuando el DOM esté listo
-    document.addEventListener('DOMContentLoaded', function () {
-        // Esperar a que el modal esté disponible
+    // IIFE
+    (function () {
         let intentos = 0;
         const checkModal = setInterval(function () {
             intentos++;
             if (document.getElementById('modalProtecciones')) {
                 clearInterval(checkModal);
                 inicializarSistemaGarantias();
-                console.log('✅ Sistema de garantías completamente inicializado');
+                console.log('Sistema de garantías completamente inicializado');
+                return;
             }
             if (intentos >= 20) {
                 clearInterval(checkModal);
-                console.warn('⚠️ No se encontró el modal de protecciones, iniciando igual...');
+                console.warn('No se encontró el modal de protecciones, iniciando igual...');
                 inicializarSistemaGarantias();
             }
         }, 200);
-    });
+    })();
 
     // Exponer funciones globalmente
     window.actualizarGarantia = actualizarGarantia;

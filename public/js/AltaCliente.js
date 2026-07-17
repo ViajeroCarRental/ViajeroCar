@@ -296,57 +296,60 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================
     // CONDUCTORES
     // =========================================
-    function renderDrivers() {
-        const list = $("#driversList");
-        if (!list) return;
+        function renderDrivers() {
+            const list = $("#driversList");
+            if (!list) return;
 
-        if (!drivers.length) {
-            list.innerHTML = `<div class="empty-clauses">Aún no hay conductores adicionales.</div>`;
-            return;
-        }
+            if (!drivers.length) {
+                list.innerHTML = `<div class="empty-clauses">Aún no hay conductores adicionales.</div>`;
+                return;
+            }
 
-        list.innerHTML = `
-            <div class="drivers-table-wrap">
-                <table class="drivers-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Nombre</th>
-                            <th>Nacimiento</th>
-                            <th>Teléfono</th>
-                            <th>Correo</th>
-                            <th>Identificación</th>
-                            <th>Licencia</th>
-                            <th>Vigencia</th>
-                            <th>Firma</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        ${drivers.map((driver, index) => `
+            list.innerHTML = `
+                <div class="drivers-table-wrap">
+                    <table class="drivers-table">
+                        <thead>
                             <tr>
-                                <td>${index + 1}</td>
-                                <td>${driver.nombre}</td>
-                                <td>${driver.nacimiento}</td>
-                                <td>${driver.telefono}</td>
-                                <td>${driver.correo}</td>
-                                <td>${driver.identificacion}</td>
-                                <td>${driver.licencia}</td>
-                                <td>${driver.vigenciaLicencia}</td>
-                                <td>${driver.firmaConductor ? "Guardada" : "Sin firma"}</td>
-                                <td>
-                                    <button class="btn danger btn-remove-driver" type="button" data-driver-index="${index}">
-                                        Eliminar
-                                    </button>
-                                </td>
+                                <th>#</th>
+                                <th>Nombre</th>
+                                <th>Nacimiento</th>
+                                <th>Teléfono</th>
+                                <th>Correo</th>
+                                <th>Identificación</th>
+                                <th>Licencia</th>
+                                <th>Vigencia</th>
+                                <th>Firma</th>
+                                <th>Acción</th>
                             </tr>
-                        `).join("")}
-                    </tbody>
-                </table>
-            </div>
-        `;
-    }
+                        </thead>
+
+                        <tbody>
+                            ${drivers.map((driver, index) => `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${driver.nombre}</td>
+                                    <td>${driver.nacimiento}</td>
+                                    <td>${driver.telefono}</td>
+                                    <td>${driver.correo}</td>
+                                    <td>${driver.identificacion}</td>
+                                    <td>${driver.licencia}</td>
+                                    <td>${driver.vigenciaLicencia}</td>
+                                    <td>${driver.firmaConductor
+                                            ? `<img src="${driver.firmaConductor}" alt="Firma de ${escapeHtml(driver.nombre)}" class="driver-signature-thumb" data-signature-view="${driver.firmaConductor}" data-driver-name="${escapeHtml(driver.nombre)}" style="max-width:120px; max-height:50px; border:1px solid #e2e8f0; border-radius:6px; background:#fff; padding:2px; cursor:pointer;">`
+                                            : `<span style="color:#94a3b8;">Sin firma</span>`}
+                                    </td>
+                                    <td>
+                                        <button class="btn danger btn-remove-driver" type="button" data-driver-index="${index}">
+                                            Eliminar
+                                        </button>
+                                    </td>
+                                </tr>               
+                            `).join("")}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
 
     function addDriver() {
         const nombre = $("#driverNombre")?.value.trim();
@@ -399,8 +402,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // para que viajen en el POST. (El nombre usa índice: driver_xxx_frontal[idx])
         moverArchivoConductor(identificacionFrontal, `driver_identificacion_frontal`, driverIndex);
         moverArchivoConductor(identificacionTrasera, `driver_identificacion_trasera`, driverIndex);
-        moverArchivoConductor(licenciaFrontal,       `driver_licencia_frontal`,       driverIndex);
-        moverArchivoConductor(licenciaTrasera,       `driver_licencia_trasera`,       driverIndex);
+        moverArchivoConductor(licenciaFrontal, `driver_licencia_frontal`, driverIndex);
+        moverArchivoConductor(licenciaTrasera, `driver_licencia_trasera`, driverIndex);
 
         drivers.push({
             nombre,
@@ -714,6 +717,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const price = Number(button.dataset.protectionPrice) || 0;
         const guarantee = Number(button.dataset.protectionGuarantee) || 0;
         const charge = button.dataset.protectionCharge || "por_dia";
+
+        const dailyInput = document.querySelector(`.rate-daily-input[data-row-index="${activeProtectionRow}"]`);
+        activeBaseDailyPrice = parseMoney(dailyInput?.value);
+
         const total = activeBaseDailyPrice + price;
 
         // Desactivar todas las tarjetas y botones
@@ -771,6 +778,11 @@ document.addEventListener("DOMContentLoaded", () => {
             finalDailyPrice.style.fontWeight = '900';
         }
 
+        const tarifaTotalHidden = document.getElementById(`tarifaTotal${activeProtectionRow}`);
+        if (tarifaTotalHidden) {
+            tarifaTotalHidden.value = total.toFixed(2);
+        }
+
         // Actualizar resumen del modal
         updateProtectionSummary();
 
@@ -811,6 +823,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (selectedProtection) {
             selectedProtection.innerHTML = `<span style="color: #94a3b8;">Sin protección</span>`;
             selectedProtection.dataset.protectionPrice = '0';
+            delete selectedProtection.dataset.protectionId;
             selectedProtection.style.color = '#94a3b8';
         }
 
@@ -819,6 +832,9 @@ document.addEventListener("DOMContentLoaded", () => {
             finalDailyPrice.style.color = '#0f172a';
             finalDailyPrice.style.fontWeight = '700';
         }
+
+        const tarifaTotalHidden = document.getElementById(`tarifaTotal${rowIndex}`);
+        if (tarifaTotalHidden) tarifaTotalHidden.value = "";
 
         // Actualizar resumen del modal
         updateProtectionSummary();
@@ -921,6 +937,40 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    function validarFirmasPaso4() {
+        if (!selectedClientType) {
+            showToast("Primero selecciona el tipo de cliente");
+            return false;
+        }
+
+        const firmasRequeridas = {
+            fisica: [
+                { id: "firmaUsuarioFisica", label: "firma del cliente" },
+                { id: "firmaAsesorFisica", label: "firma del asesor" },
+            ],
+            moral: [
+                { id: "firmaRepresentanteLegal", label: "firma del representante legal" },
+                { id: "firmaAsesorMoral", label: "firma del asesor" },
+            ],
+            general: [
+                { id: "firmaUsuarioGeneral", label: "firma del usuario" },
+                { id: "firmaAsesorGeneral", label: "firma del asesor" },
+            ],
+        };
+
+        const requeridas = firmasRequeridas[selectedClientType] || [];
+
+        for (const firma of requeridas) {
+            const input = document.getElementById(firma.id);
+            if (!input || !input.value.trim()) {
+                showToast(`⚠️ Falta la ${firma.label}`);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     function closeProtectionsModal() {
         const modal = document.getElementById("protectionsModal");
         if (modal) {
@@ -989,25 +1039,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function recalculateRowTotal(rowIndex) {
-        const daily = parseMoney(document.querySelector(`.rate-daily-input[data-row-index="${rowIndex}"]`)?.value);
-        const weekly = parseMoney(document.querySelector(`.rate-weekly-input[data-row-index="${rowIndex}"]`)?.value);
-        const monthly = parseMoney(document.querySelector(`.rate-monthly-input[data-row-index="${rowIndex}"]`)?.value);
-
+        const dailyInput = document.querySelector(`.rate-daily-input[data-row-index="${rowIndex}"]`);
         const selectedProtection = document.getElementById(`selectedProtection${rowIndex}`);
         const finalDailyPrice = document.getElementById(`finalDailyPrice${rowIndex}`);
+        const tarifaTotalHidden = document.getElementById(`tarifaTotal${rowIndex}`);
 
-        const protection = Number(selectedProtection?.dataset.protectionPrice) || 0;
-        const baseTotal = Math.max(daily, weekly, monthly);
-        const final = baseTotal + protection;
+        const daily = parseMoney(dailyInput?.value);
+        const protectionId = selectedProtection?.dataset.protectionId;
+        const protection = parseMoney(selectedProtection?.dataset.protectionPrice);
 
-        if (finalDailyPrice) {
-            finalDailyPrice.textContent = formatMoney(final);
+        let total = 0;
+        if (protectionId) {
+            total = daily + protection;
         }
 
-        // Si esta fila es la que está activa en el modal, actualizar el resumen
+        if (finalDailyPrice) {
+            finalDailyPrice.textContent = total > 0 ? formatMoney(total) : "$0.00 MXN";
+        }
+
+        if (tarifaTotalHidden) {
+            tarifaTotalHidden.value = total > 0 ? total.toFixed(2) : "";
+        }
+
         if (activeProtectionRow == rowIndex) {
-            activeBaseDailyPrice = baseTotal;
-            protectionState.baseDailyPrice = baseTotal;
+            activeBaseDailyPrice = daily;
+            protectionState.baseDailyPrice = daily;
             updateProtectionSummary();
         }
     }
@@ -1287,11 +1343,23 @@ document.addEventListener("DOMContentLoaded", () => {
         let value = input.value.replace(/[^\d.]/g, "");
 
         const parts = value.split(".");
-        if (parts.length > 2) {
-            value = `${parts[0]}.${parts.slice(1).join("")}`;
+        let intPart = parts[0] || "";
+        let decPart = parts.length > 1 ? parts.slice(1).join("") : null;
+
+        if (decPart !== null) {
+            decPart = decPart.slice(0, 2);
         }
 
-        input.value = value ? `$${value}` : "";
+        if (!intPart && decPart === null) {
+            input.value = "";
+            return;
+        }
+
+        const intFormatted = intPart ? Number(intPart).toLocaleString("en-US") : "0";
+
+        input.value = decPart !== null
+            ? `$${intFormatted}.${decPart}`
+            : `$${intFormatted}`;
     }
 
     // =========================================
@@ -1414,7 +1482,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================
     // EVENTO 'input' PARA RECALCULAR TOTALES
     // =========================================
-    document.addEventListener('input', function(event) {
+    document.addEventListener('input', function (event) {
         const input = event.target;
 
         if (input.classList.contains('money-input')) {
@@ -1433,7 +1501,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================================
     // EVENTO 'keydown' PARA CERRAR MODALES CON ESCAPE
     // =========================================
-    document.addEventListener('keydown', function(event) {
+    document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
             const protectionsModal = document.getElementById('protectionsModal');
             if (protectionsModal && protectionsModal.classList.contains('active')) {
@@ -1510,10 +1578,13 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        if (!validarFirmasPaso4()) {
+            return;
+        }
+
+        showToast("Generando convenio...");
+
         actionInput.value = "generar_pdf";
-
-        console.log("Acción PDF:", actionInput.value);
-
         form.submit();
     });
 
