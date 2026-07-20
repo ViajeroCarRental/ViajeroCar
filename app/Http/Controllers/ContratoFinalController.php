@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Mail;
 use Spatie\Browsershot\Browsershot;
 use PhpOffice\PhpWord\TemplateProcessor;
 use App\Mail\ContratoFinalMail;
+use App\Models\ContratoRevision;
 
 class ContratoFinalController extends Controller
 {
@@ -194,6 +195,46 @@ class ContratoFinalController extends Controller
             ->where('v.id_vehiculo', $reservacion->id_vehiculo)
             ->first();
 
+            // 8️⃣ Detectar conductores adicionales reales
+            $nombreTitular = trim(mb_strtoupper(
+                ($reservacion->nombre_cliente ?? '') . ' ' .
+                ($reservacion->apellidos_cliente ?? ''),
+                'UTF-8'
+            ));
+
+            $conductoresContrato = DB::table('contrato_conductor_adicional')
+                ->where('id_contrato', $idContrato)
+                ->select(
+                    'id_conductor',
+                    'nombres',
+                    'apellidos'
+                )
+                ->get();
+
+            $conductoresAdicionales = $conductoresContrato
+                ->filter(function ($conductor) use ($nombreTitular) {
+                    $nombreConductor = trim(mb_strtoupper(
+                        ($conductor->nombres ?? '') . ' ' .
+                        ($conductor->apellidos ?? ''),
+                        'UTF-8'
+                    ));
+
+                    return $nombreConductor !== $nombreTitular;
+                })
+                ->values();
+
+            $tieneConductorAdicional = $conductoresAdicionales->isNotEmpty();
+
+            // 9️⃣ Revisiones guardadas de este contrato
+            $revisionesContrato = ContratoRevision::where(
+                    'id_contrato',
+                    $idContrato
+                )
+                ->where('revisado', true)
+                ->pluck('revisado', 'seccion')
+                ->map(fn ($revisado) => (bool) $revisado)
+                ->toArray();
+
         return view('Admin.ContratoFinal', compact(
             'contrato',
             'reservacion',
@@ -211,8 +252,91 @@ class ContratoFinalController extends Controller
             'gasolinaInfo',
             'todosLosServicios',
             'fechaNacimiento',
-            'edad'
+            'edad',
+            'conductoresAdicionales',
+            'tieneConductorAdicional',
+            'revisionesContrato'
         ));
+    }
+
+    /* =========================================================
+       REVISIONES DE LOS DOCUMENTOS DEL CONTRATO
+    ========================================================= */
+
+    public function guardarRevision(Request $request, $id)
+    {
+        $contrato = DB::table('contratos')
+            ->where('id_contrato', $id)
+            ->first();
+
+        if (!$contrato) {
+            return response()->json([
+                'ok' => false,
+                'msg' => 'Contrato no encontrado.',
+            ], 404);
+        }
+
+        $datos = $request->validate([
+            'seccion' => [
+                'required',
+                'string',
+                'in:contrato,checklist,conductor_adicional,clausulas',
+            ],
+        ]);
+
+        $revision = ContratoRevision::updateOrCreate(
+            [
+                'id_contrato' => $id,
+                'seccion' => $datos['seccion'],
+            ],
+            [
+                'revisado' => true,
+                'revisado_por' => auth()->id(),
+                'revisado_en' => now(),
+            ]
+        );
+
+        return response()->json([
+            'ok' => true,
+            'msg' => 'Apartado marcado como revisado.',
+            'revision' => [
+                'seccion' => $revision->seccion,
+                'revisado' => $revision->revisado,
+                'revisado_en' => optional($revision->revisado_en)->format('d/m/Y H:i'),
+            ],
+        ]);
+    }
+
+    public function obtenerRevisiones($id)
+    {
+        $contratoExiste = DB::table('contratos')
+            ->where('id_contrato', $id)
+            ->exists();
+
+        if (!$contratoExiste) {
+            return response()->json([
+                'ok' => false,
+                'msg' => 'Contrato no encontrado.',
+            ], 404);
+        }
+
+        $revisiones = ContratoRevision::where('id_contrato', $id)
+            ->where('revisado', true)
+            ->get()
+            ->mapWithKeys(function ($revision) {
+                return [
+                    $revision->seccion => [
+                        'revisado' => true,
+                        'revisado_en' => optional($revision->revisado_en)
+                            ->format('d/m/Y H:i'),
+                    ],
+                ];
+            });
+
+        return response()->json([
+            'ok' => true,
+            'revisiones' => $revisiones,
+        ]);
     }
 
     /* =========================================================
@@ -255,6 +379,83 @@ class ContratoFinalController extends Controller
             return response()->json(['ok' => false, 'msg' => 'Correo del cliente no disponible']);
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDAR QUE TODOS LOS DOCUMENTOS ESTÉN REVISADOS
+        |--------------------------------------------------------------------------
+        */
+
+        $seccionesObligatorias = [
+            'contrato',
+            'clausulas',
+            'checklist',
+        ];
+
+        // Detectar si realmente existe un conductor adicional
+        $nombreTitular = trim(mb_strtoupper(
+            ($reservacion->nombre_cliente ?? '') . ' ' .
+            ($reservacion->apellidos_cliente ?? ''),
+            'UTF-8'
+        ));
+
+        $conductoresContrato = DB::table('contrato_conductor_adicional')
+            ->where('id_contrato', $id)
+            ->select(
+                'nombres',
+                'apellidos'
+            )
+            ->get();
+
+        $tieneConductorAdicional = $conductoresContrato
+            ->contains(function ($conductor) use ($nombreTitular) {
+                $nombreConductor = trim(mb_strtoupper(
+                    ($conductor->nombres ?? '') . ' ' .
+                    ($conductor->apellidos ?? ''),
+                    'UTF-8'
+                ));
+
+                return $nombreConductor !== $nombreTitular;
+            });
+
+        if ($tieneConductorAdicional) {
+            $seccionesObligatorias[] = 'conductor_adicional';
+        }
+
+        $seccionesRevisadas = ContratoRevision::where(
+                'id_contrato',
+                $id
+            )
+            ->where('revisado', true)
+            ->whereIn('seccion', $seccionesObligatorias)
+            ->pluck('seccion')
+            ->toArray();
+
+        $seccionesFaltantes = array_values(
+            array_diff(
+                $seccionesObligatorias,
+                $seccionesRevisadas
+            )
+        );
+
+        if (!empty($seccionesFaltantes)) {
+            $nombresSecciones = [
+                'contrato' => 'Contrato',
+                'clausulas' => 'Cláusulas',
+                'checklist' => 'Checklist',
+                'conductor_adicional' => 'Conductor adicional',
+            ];
+
+            $faltantesTexto = collect($seccionesFaltantes)
+                ->map(fn ($seccion) => $nombresSecciones[$seccion] ?? $seccion)
+                ->implode(', ');
+
+            return response()->json([
+                'ok' => false,
+                'msg' => 'No se puede enviar el correo. Falta revisar: ' .
+                    $faltantesTexto,
+            ], 422);
+        }
+
         if (empty($reservacion->fecha_nacimiento)) {
 
             $docIdentTitular = DB::table('contrato_documento')
@@ -269,11 +470,30 @@ class ContratoFinalController extends Controller
             }
         }
 
-        // 3️⃣ LICENCIA (por si la quieres usar en el correo)
+        // 3️⃣ LICENCIA DEL TITULAR
         $licencia = DB::table('contrato_documento')
             ->where('id_contrato', $id)
+            ->whereNull('id_conductor')
             ->where('tipo', 'licencia')
             ->first();
+
+        // IDENTIFICACIÓN DEL TITULAR
+        $identificacion = DB::table('contrato_documento')
+            ->where('id_contrato', $id)
+            ->whereNull('id_conductor')
+            ->where('tipo', 'identificacion')
+            ->whereNotNull('fecha_nacimiento')
+            ->orderBy('id_documento', 'asc')
+            ->first();
+
+        // Fecha de nacimiento
+        $fechaNacimiento = $reservacion->fecha_nacimiento
+            ?? ($identificacion->fecha_nacimiento ?? null);
+
+        // Edad
+        $edad = !empty($fechaNacimiento)
+            ? \Carbon\Carbon::parse($fechaNacimiento)->age
+            : null;
 
         // 4️⃣ DÍAS  (MISMA FÓRMULA QUE mostrarContratoFinal)
         $dias = max(
@@ -402,6 +622,8 @@ class ContratoFinalController extends Controller
             'extras'       => $extras,
             'subtotal'     => $subtotal,
             'totalFinal'   => $totalFinal,
+            'fechaNacimiento' => $fechaNacimiento,
+            'edad'             => $edad,
             // ✅ HOJA 2: fecha/lugar
             'lugarFirma'   => $lugarFirma,
             'diaFirma'     => $diaFirma,

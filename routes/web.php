@@ -336,6 +336,15 @@ Route::get('/admin/contrato-final', [ContratoFinalController::class, 'mostrarCon
 Route::get('/admin/contrato-final/{id}', [ContratoFinalController::class, 'mostrarContratoFinal'])->name('contrato.final');
 Route::post('/contrato/firma-arrendador', [ContratoFinalController::class, 'guardarFirmaArr'])->name('contrato.firmaArr');
 Route::post('/contrato/{id}/enviar-correo', [ContratoFinalController::class, 'enviarContratoCorreo']);
+Route::post(
+    '/contrato/{id}/revision',
+    [ContratoFinalController::class, 'guardarRevision']
+)->name('contrato.revision.guardar');
+
+Route::get(
+    '/contrato/{id}/revisiones',
+    [ContratoFinalController::class, 'obtenerRevisiones']
+)->name('contrato.revisiones.obtener');
 
 // Rutas Externas (Checklist)
 Route::post('/contrato/firma-recibio', [ChecklistController::class, 'guardarFirmaRecibio']);

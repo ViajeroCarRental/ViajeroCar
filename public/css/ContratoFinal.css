@@ -7,6 +7,336 @@
   margin: 6mm;
 }
 
+/* ==========================================================
+   ACORDEÓN DE DOCUMENTOS Y CONTROL DE REVISIÓN
+========================================================== */
+
+@media screen {
+  .contrato-final-container {
+    max-width: 1220px;
+  }
+
+  .acciones-contrato {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .revision-resumen {
+    display: inline-flex;
+    align-items: center;
+    min-height: 42px;
+    padding: 0 15px;
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+    color: #475569;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .btn-enviar-contrato {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 11px;
+    color: #fff;
+    background: #d6001c;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+  }
+
+  .btn-enviar-contrato:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 9px 20px rgba(214, 0, 28, .22);
+  }
+
+  .btn-enviar-contrato:disabled {
+    color: #94a3b8;
+    background: #e2e8f0;
+    cursor: not-allowed;
+    opacity: .8;
+  }
+
+  .documentos-acordeon {
+    display: grid;
+    gap: 14px;
+    width: 100%;
+  }
+
+  .documento-acordeon {
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, .07);
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+
+  .documento-acordeon.abierto {
+    border-color: rgba(214, 0, 28, .45);
+    box-shadow: 0 14px 34px rgba(15, 23, 42, .11);
+  }
+
+  .documento-acordeon.revisado {
+    border-color: #86efac;
+  }
+
+  .documento-encabezado {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 34px 18px;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    min-height: 76px;
+    padding: 13px 18px;
+    border: 0;
+    color: #0f172a;
+    background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .documento-acordeon.revisado > .documento-encabezado {
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  }
+
+  .documento-numero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    color: #fff;
+    background: #d6001c;
+    font-size: 15px;
+    font-weight: 900;
+    box-shadow: 0 6px 15px rgba(214, 0, 28, .2);
+  }
+
+  .documento-acordeon.revisado .documento-numero {
+    background: #16a34a;
+    box-shadow: 0 6px 15px rgba(22, 163, 74, .2);
+  }
+
+  .documento-titulo {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .documento-titulo strong {
+    color: #0f172a;
+    font-size: 16px;
+    font-weight: 850;
+  }
+
+  .documento-titulo small {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 650;
+  }
+
+  .documento-acordeon.revisado .documento-titulo small,
+  .documento-acordeon.revisado .documento-estado {
+    color: #15803d;
+  }
+
+  .documento-estado {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #cbd5e1;
+    font-size: 21px;
+  }
+
+  .documento-flecha {
+    color: #64748b;
+    font-size: 14px;
+    transition: transform .25s ease;
+  }
+
+  .documento-acordeon.abierto .documento-flecha {
+    transform: rotate(180deg);
+  }
+
+  .documento-contenido {
+    display: none;
+    padding: 20px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+  }
+
+  .documento-acordeon.abierto > .documento-contenido {
+    display: block;
+  }
+
+  .documento-contenido .contrato-card,
+  .documento-contenido .pie-rojo {
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .confirmacion-revision {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 18px;
+  }
+
+  .btn-confirmar-revision {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 44px;
+    padding: 0 19px;
+    border: 0;
+    border-radius: 11px;
+    color: #fff;
+    background: #d6001c;
+    font-size: 13px;
+    font-weight: 850;
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+
+  .btn-confirmar-revision:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(214, 0, 28, .22);
+  }
+
+  .btn-confirmar-revision:disabled {
+    color: #fff;
+    background: #16a34a;
+    cursor: default;
+  }
+
+  .clausulas-documento {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 30px 34px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 7px 22px rgba(15, 23, 42, .06);
+  }
+
+  .clausulas-title {
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 3px solid #d6001c;
+    color: #d6001c;
+    font-size: 25px;
+    font-weight: 900;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: .7px;
+  }
+
+  .clausulas-body p {
+    margin: 0 0 15px;
+    color: #334155;
+    font-size: 13px;
+    line-height: 1.72;
+    text-align: justify;
+  }
+
+  .clausula-tag {
+    color: #b91c1c;
+    font-weight: 900;
+  }
+
+  .clausulas-notas {
+    display: grid;
+    gap: 12px;
+    margin-top: 25px;
+  }
+
+  .clausulas-notas .nota {
+    margin: 0;
+    padding: 15px 17px;
+    border-left: 4px solid #d6001c;
+    border-radius: 9px;
+    color: #475569;
+    background: #fff1f2;
+    font-size: 12px;
+    line-height: 1.65;
+  }
+
+  .nota-titulo {
+    color: #991b1b;
+    font-weight: 900;
+  }
+
+  .documento-frame-container {
+    overflow: hidden;
+    width: 100%;
+    min-height: 850px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    background: #fff;
+  }
+
+  .documento-frame {
+    display: block;
+    width: 100%;
+    height: 1000px;
+    border: 0;
+    background: #fff;
+  }
+
+  @media (max-width: 760px) {
+    .acciones-contrato > * {
+      width: 100%;
+    }
+
+    .documento-encabezado {
+      grid-template-columns: 38px minmax(0, 1fr) 28px 14px;
+      gap: 9px;
+      padding: 12px;
+    }
+
+    .documento-contenido {
+      padding: 10px;
+    }
+
+    .clausulas-documento {
+      padding: 20px 16px;
+    }
+
+    .documento-frame {
+      height: 850px;
+    }
+  }
+}
+
+@media print {
+  .documento-encabezado,
+  .confirmacion-revision,
+  .revision-resumen {
+    display: none !important;
+  }
+
+  .documento-contenido {
+    display: block !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  .documento-acordeon:not([data-seccion="contrato"]) {
+    display: none !important;
+  }
+}
+
 /* ===== BASE ===== */
 *{
   box-sizing:border-box;
@@ -1224,5 +1554,32 @@ background: #D6001C;
 
 .pdf .pie-rojo{
   page-break-inside: avoid !important;
+}
+
+/* Prioridad final de controles del acordeón */
+@media screen {
+  .acciones-contrato {
+    max-width: 1220px;
+    margin: 0 auto 18px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  #btnAbrirModalAviso.btn-enviar-contrato {
+    min-height: 42px;
+    padding: 0 18px;
+    border-radius: 11px;
+    color: #fff;
+    background: #d6001c;
+  }
+
+  #btnAbrirModalAviso.btn-enviar-contrato:disabled {
+    color: #94a3b8;
+    background: #e2e8f0;
+    cursor: not-allowed;
+    opacity: .8;
+  }
 }
 
