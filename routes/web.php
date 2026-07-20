@@ -758,4 +758,6 @@ Route::get('/admin/convenio/{id}', [AltaClienteController::class, 'generarConven
 
 Route::get('/admin/responsiva/{id}', [AltaClienteController::class, 'generarResponsivaPdf'])
     ->name('admin.responsiva.pdf');
-    
+
+Route::post('/admin/responsiva-preview', [AltaClienteController::class, 'previewResponsiva'])
+    ->name('admin.responsiva.preview');

@@ -610,40 +610,54 @@ class AltaClienteController extends Controller
     }
 
     public function generarResponsivaPdf($id)
-    {
-        $responsiva = DB::table('convenio_responsiva')->where('id_responsiva', $id)->first();
+{
+    $responsiva = DB::table('convenio_responsiva')->where('id_responsiva', $id)->first();
+    if (!$responsiva) abort(404);
 
-        if (!$responsiva) abort(404);
+    $convenio = DB::table('convenios')
+        ->where('id_convenio', $responsiva->id_convenio)
+        ->first();
 
-        $convenio = DB::table('convenios')
-            ->where('id_convenio', $responsiva->id_convenio)
-            ->first();
+    $cliente = DB::table('clientes')
+        ->join('usuarios', 'usuarios.id_usuario', '=', 'clientes.id_usuario')
+        ->where('clientes.id_cliente', $convenio->id_cliente)
+        ->select('clientes.*', 'usuarios.*')
+        ->first();
 
-        $cliente = DB::table('clientes')
-            ->join('usuarios', 'usuarios.id_usuario', '=', 'clientes.id_usuario')
-            ->where('clientes.id_cliente', $convenio->id_cliente)
-            ->select('clientes.*', 'usuarios.*')
-            ->first();
+    // datos que el blade usa en "Persona Moral"
+    $moral = DB::table('cliente_moral')
+        ->where('id_cliente', $convenio->id_cliente)
+        ->first();
 
-        $conductor = DB::table('conductor_adicional_convenio')
-            ->where('id_conductor_convenio', $responsiva->id_conductor_convenio)
-            ->first();
+    $facturacion = DB::table('cliente_facturacion')
+        ->where('id_cliente', $convenio->id_cliente)
+        ->first();
 
-        $clausulas = DB::table('responsiva_clausula')
-            ->where('id_responsiva', $id)
-            ->orderBy('orden')
-            ->get();
+    $conductor = DB::table('conductor_adicional_convenio')
+        ->where('id_conductor_convenio', $responsiva->id_conductor_convenio)
+        ->first();
 
-        $pdf = Pdf::loadView('admin.responsiva', compact(
-            'responsiva',
-            'convenio',
-            'cliente',
-            'conductor',
-            'clausulas'
-        ))->setPaper('letter');
+     // tarifas del papá (misma consulta que el convenio)
+    $tarifas = DB::table('cliente_tarifa_convenio')
+        ->leftJoin('categorias_carros', 'categorias_carros.id_categoria', '=', 'cliente_tarifa_convenio.id_categoria')
+        ->where('cliente_tarifa_convenio.id_cliente', $convenio->id_cliente)
+        ->select('cliente_tarifa_convenio.*', 'categorias_carros.nombre as categoria')
+        ->get();
 
-        return $pdf->stream('responsiva-viajero.pdf');
-    }
+    $clausulas = DB::table('responsiva_clausula')
+        ->where('id_responsiva', $id)
+        ->orderBy('orden')
+        ->get();
+
+    $pdf = Pdf::loadView('admin.responsiva', compact(
+        'responsiva', 'convenio', 'cliente',
+        'moral', 'facturacion',
+        'conductor', 'clausulas'
+    ))->setPaper('letter')
+      ->setOption('isRemoteEnabled', true);
+
+    return $pdf->stream('responsiva-viajero.pdf');
+}
 
     /* ============================================================
      |  SERVIR documentos guardados (LONGBLOB) — para ver imagen/PDF
@@ -715,4 +729,70 @@ class AltaClienteController extends Controller
             'extension' => $a->getClientOriginalExtension(),
         ];
     }
+
+    public function previewResponsiva(Request $request)
+{
+    $conductor = (object) [
+        'nombre'            => $request->input('nombre'),
+        'identificacion'    => $request->input('identificacion'),
+        'licencia'          => $request->input('licencia'),
+        'correo'            => $request->input('correo'),
+        'telefono'          => $request->input('telefono'),
+        'vigencia_licencia' => $request->input('vigencia_licencia'),
+        'nacimiento'        => $request->input('nacimiento'),
+        'firma'             => $request->input('firma'),
+    ];
+
+    $moral = (object) [
+        'razon_social'                 => $request->input('razon_social'),
+        'representante_nombre'         => $request->input('representante_nombre'),
+        'representante_correo'         => $request->input('representante_correo'),
+        'representante_telefono'       => $request->input('representante_telefono'),
+        'representante_identificacion' => $request->input('representante_identificacion'),
+        'telefono_empresa'             => $request->input('telefono_empresa'),
+        'correo_empresa'               => $request->input('correo_empresa'),
+    ];
+
+    $facturacion = (object) [
+        'rfc'          => $request->input('rfc'),
+        'razon_social' => $request->input('razon_social'),
+    ];
+
+    $convenio = (object) [
+        'id_convenio'         => null,
+        'created_at'          => now(),
+        'firma_representante' => $request->input('firma_representante'),
+        'firma_conductor'     => $request->input('firma_conductor_convenio'),
+        'firma_asesor'        => $request->input('firma_asesor'),
+    ];
+
+    $responsiva = (object) ['id_responsiva' => null];
+    $cliente    = (object) ['nombres' => $request->input('razon_social'), 'apellidos' => ''];
+    $clausulas  = collect();
+
+    // tarifas para la preview.
+    $tarifas = DB::table('categorias_carros')
+        ->where('activo', 1)
+        ->orderBy('orden')
+        ->get()
+        ->map(function ($cat) {
+            return (object) [
+                'categoria'      => $cat->nombre,
+                'tarifa_diaria'  => $cat->precio_dia,
+                'tarifa_semanal' => $cat->precio_semana,
+                'tarifa_mensual' => $cat->precio_mes,
+                'paquete_nombre' => 'Sin protección',
+                'total_diario'   => 0,
+            ];
+        });
+
+    $pdf = Pdf::loadView('admin.responsiva', compact(
+        'responsiva', 'convenio', 'cliente',
+        'moral', 'facturacion', 'conductor', 'clausulas',
+        'tarifas'
+    ))->setPaper('letter')
+      ->setOption('isRemoteEnabled', true);
+
+    return $pdf->stream('responsiva-preview.pdf');
+}
 }
