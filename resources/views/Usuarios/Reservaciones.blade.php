@@ -382,9 +382,11 @@
                                         <div class="datetime-row">
                                             <div class="dt-field icon-field">
                                                 <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                                                {{-- Formato Y-m-d: es el que espera flatpickr (dateFormat: "Y-m-d").
+                                                     Con d-m-Y el picker no lo entiende y vacía el campo. --}}
                                                 <input id="start" name="pickup_date" type="text"
                                                        placeholder="{{ __('Date') }}" class="flatpickr-input"
-                                                       value="{{ $pickupDate }}" required>
+                                                       value="{{ $pickupDateISO ?? '' }}" required>
                                             </div>
                                             <div class="dt-field icon-field time-field">
                                                 <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
@@ -406,9 +408,10 @@
                                         <div class="datetime-row">
                                             <div class="dt-field icon-field">
                                                 <span class="field-icon"><i class="fa-regular fa-calendar-days"></i></span>
+                                                {{-- Formato Y-m-d para flatpickr (ver nota en #start). --}}
                                                 <input id="end" name="dropoff_date" type="text"
                                                        placeholder="{{ __('Date') }}" class="flatpickr-input"
-                                                       value="{{ $dropoffDate }}" required>
+                                                       value="{{ $dropoffDateISO ?? '' }}" required>
                                             </div>
                                             <div class="dt-field icon-field time-field">
                                                 <span class="field-icon"><i class="fa-regular fa-clock"></i></span>
@@ -810,34 +813,37 @@
                                 <div class="sum-personal-grid">
                                     <div class="field field-floating" style="grid-column: 1 / -1;">
                                         <input type="text" class="input-centered" name="nombre_completo"
-                                               id="nombreCompleto" autocomplete="name" placeholder=" " required>
+                                               id="nombreCompleto" autocomplete="name" placeholder=" "
+                                               value="{{ $datosCliente['nombre_completo'] ?? '' }}" required>
                                         <label for="nombreCompleto">{{ __('Full name') }}</label>
                                         <input type="hidden" name="nombre" id="nombreCliente">
                                         <input type="hidden" name="apellido" id="apellidoCliente">
                                     </div>
 
                                     <div class="field field-floating" style="grid-column: 1 / -1;">
-                                        <input type="text" name="telefono" id="telefonoCliente" placeholder=" " required>
+                                        <input type="text" name="telefono" id="telefonoCliente" placeholder=" "
+                                               value="{{ $datosCliente['telefono'] ?? '' }}" required>
                                         <label for="telefonoCliente">{{ __('Mobile') }}</label>
                                     </div>
 
                                     <div class="field field-floating" style="grid-column: 1 / -1;">
-                                        <input type="email" name="email" id="correoCliente" placeholder=" " required>
+                                        <input type="email" name="email" id="correoCliente" placeholder=" "
+                                               value="{{ $datosCliente['email'] ?? '' }}" required>
                                         <label for="correoCliente">{{ __('Email address') }}</label>
                                     </div>
 
                                     <div class="field field-floating">
                                         <select name="pais" id="pais" required
                                                 style="width: 100%; height: 50px; border: 1px solid #d1d5db; border-radius: 8px; padding: 0 12px; background-color: #fff; font-size: 16px; outline: none; margin-top: 18px;">
-                                            <option value="" disabled selected></option>
+                                            <option value="" disabled {{ ($datosCliente['pais'] ?? '') ? '' : 'selected' }}></option>
                                             @foreach ($paises->where('prioritario', true) as $pais)
-                                                <option value="{{ $pais->nombre }}">
+                                                <option value="{{ $pais->nombre }}" {{ ($datosCliente['pais'] ?? '') === $pais->nombre ? 'selected' : '' }}>
                                                     {{ $isUSD ? $pais->nombre_en ?? $pais->nombre : $pais->nombre }}
                                                 </option>
                                             @endforeach
                                             <option disabled>──────────</option>
                                             @foreach ($paises->where('prioritario', false) as $pais)
-                                                <option value="{{ $pais->nombre }}">
+                                                <option value="{{ $pais->nombre }}" {{ ($datosCliente['pais'] ?? '') === $pais->nombre ? 'selected' : '' }}>
                                                     {{ $isUSD ? $pais->nombre_en ?? $pais->nombre : $pais->nombre }}
                                                 </option>
                                             @endforeach
@@ -876,12 +882,15 @@
                                                 <label>YYYY</label>
                                             </div>
                                         </div>
-                                        <input type="hidden" id="dob" name="dob">
+                                        {{-- Al precargar este hidden (formato AAAA-MM-DD), el JS
+                                             (hydrateFromHidden) llena solo los 3 selects DD/MM/YYYY. --}}
+                                        <input type="hidden" id="dob" name="dob" value="{{ $datosCliente['dob'] ?? '' }}">
                                     </div>
 
                                     @if ($isAirport)
                                         <div class="field field-floating" style="grid-column: 1 / -1;">
-                                            <input type="text" name="vuelo" id="vuelo" placeholder=" ">
+                                            <input type="text" name="vuelo" id="vuelo" placeholder=" "
+                                                   value="{{ $datosCliente['vuelo'] ?? '' }}">
                                             <label for="vuelo">{{ __('Flight number') }}</label>
                                         </div>
                                     @endif
