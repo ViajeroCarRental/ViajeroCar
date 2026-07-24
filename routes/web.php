@@ -320,6 +320,7 @@ Route::get('/admin/contrato/{id}/conductores', [Contrato2Controller::class, 'obt
 
 // Paso 5: Preview
 Route::post('/contrato/firma-cliente', [Contrato2Controller::class, 'guardarFirmaCliente']);
+Route::get('/admin/contrato/{id}/vehiculo-actual', [Contrato2Controller::class, 'vehiculoActual']);
 
 // Paso 6: Pagos y Finalización
 Route::get('/admin/contrato/{id}/resumen-paso6', [Contrato2Controller::class, 'resumenPaso6']);
