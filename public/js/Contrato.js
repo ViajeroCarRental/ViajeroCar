@@ -5,8 +5,6 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("✅ DOM listo, iniciando navegación de pasos (1-3)...");
 
     // ================================ UTILIDADES ===============================
-
-    // Función de Debounce para no saturar el servidor en eventos de "input"
     const debounce = (func, delay = 300) => {
         let timer;
         return (...args) => {
@@ -40,7 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
         gasolinaTotal: 0
     };
 
-    // Actualiza el estado local (sin contaminar todo el window innecesariamente)
     const setState = (key, value) => {
         ContratoState[key] = value;
         return value;
@@ -176,6 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 ContratoUI.setText($elId('txtHoraDevolucion'), ui.devolucion.hora);
             });
         }
+
         function iniciarMonitoreoAprobacion() {
             const solicitud = JSON.parse(sessionStorage.getItem("solicitudCambio") || "{}");
             if (!solicitud.activa) return;
@@ -284,7 +282,96 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     })();
 
-    // ================================ CALENDARIOS FLATPICKR ===============================
+  // ================================ CALENDARIOS FLATPICKR ===============================
+
+    const FP_MESES_P1 = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+    function crearSelectAniosP1(fp, desde, hasta) {
+        const wrapper = fp.calendarContainer.querySelector(".numInputWrapper");
+        if (!wrapper || fp.calendarContainer.querySelector(".fp-year-select")) return;
+
+        const select = document.createElement("select");
+        select.className = "fp-year-select";
+        for (let a = hasta; a >= desde; a--) {
+            const op = document.createElement("option");
+            op.value = a;
+            op.textContent = a;
+            select.appendChild(op);
+        }
+        select.value = fp.currentYear;
+        select.addEventListener("change", (e) => {
+            e.stopPropagation();
+            fp.changeYear(parseInt(e.target.value, 10));
+        });
+        wrapper.parentNode.insertBefore(select, wrapper);
+        wrapper.remove();
+    }
+
+    function crearPanelMesesP1(fp) {
+        if (fp.calendarContainer.querySelector(".fp-meses-panel")) return;
+
+        const panel = document.createElement("div");
+        panel.className = "fp-meses-panel";
+
+        FP_MESES_P1.forEach((nombre, i) => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "fp-mes-btn";
+            btn.dataset.mes = i;
+            btn.textContent = nombre.substring(0, 3);
+            btn.title = nombre;
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                fp.changeMonth(i, false);
+                cerrarPanelMesesP1(fp);
+            });
+            panel.appendChild(btn);
+        });
+
+        fp.calendarContainer.appendChild(panel);
+
+        const dd = fp.calendarContainer.querySelector(".flatpickr-monthDropdown-months");
+        if (dd) {
+            const trigger = document.createElement("button");
+            trigger.type = "button";
+            trigger.className = "fp-mes-trigger";
+            trigger.innerHTML = '<span></span> <i>&#9662;</i>';
+            dd.parentNode.insertBefore(trigger, dd);
+            dd.style.display = "none";
+            trigger.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (panel.classList.contains("abierto")) {
+                    cerrarPanelMesesP1(fp);
+                } else {
+                    abrirPanelMesesP1(fp);
+                }
+            });
+        }
+
+        actualizarTriggerMesP1(fp);
+    }
+
+    function abrirPanelMesesP1(fp) {
+        const panel = fp.calendarContainer.querySelector(".fp-meses-panel");
+        if (!panel) return;
+        panel.querySelectorAll(".fp-mes-btn").forEach(b => {
+            b.classList.toggle("activo", parseInt(b.dataset.mes, 10) === fp.currentMonth);
+        });
+        panel.classList.add("abierto");
+    }
+
+    function cerrarPanelMesesP1(fp) {
+        const panel = fp.calendarContainer.querySelector(".fp-meses-panel");
+        if (panel) panel.classList.remove("abierto");
+    }
+
+    function actualizarTriggerMesP1(fp) {
+        const span = fp.calendarContainer.querySelector(".fp-mes-trigger span");
+        if (span) span.textContent = FP_MESES_P1[fp.currentMonth];
+    }
 
     (function inicializarCalendarios() {
         const pickerE = document.getElementById('pickerEntrega');
@@ -297,17 +384,73 @@ document.addEventListener("DOMContentLoaded", () => {
 
         console.log('✅ Inicializando calendarios Flatpickr...');
 
+        function horaDesdeValor(valor, fallback) {
+            const m = String(valor || '').match(/(\d{1,2}):(\d{2})/);
+            if (!m) return fallback;
+            return String(m[1]).padStart(2, '0') + ':' + String(m[2]).padStart(2, '0');
+        }
+
+        function horaInicial(divId, picker) {
+            const div = document.getElementById(divId);
+            const delDiv = div ? horaDesdeValor(div.textContent, null) : null;
+            if (delDiv) return delDiv;
+            return horaDesdeValor(picker.value, '08:00');
+        }
+
+        let horaEntrega = horaInicial('txtHoraEntrega', pickerE);
+        let horaDevolucion = horaInicial('txtHoraDevolucion', pickerD);
+
+        function combinar(fecha, hora) {
+            const partes = hora.split(':');
+            const d = new Date(fecha);
+            d.setHours(parseInt(partes[0], 10), parseInt(partes[1], 10) || 0, 0, 0);
+            return d;
+        }
+
         // Configuración común
         const commonOptions = {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i",
+            enableTime: false,
+            dateFormat: "Y-m-d",
             locale: 'es',
             disableMobile: true,
             static: false,
             allowInput: false,
+            monthSelectorType: "dropdown",
+
+            onReady: function (sel, str, fp) {
+                fp.calendarContainer.classList.add("fp-centrado");
+                crearSelectAniosP1(fp, new Date().getFullYear() - 1, new Date().getFullYear() + 5);
+                crearPanelMesesP1(fp);
+            },
+
+            onOpen: function (sel, str, fp) {
+                document.body.classList.add("fp-modal-abierto");
+                const cal = fp.calendarContainer;
+                cal.style.top = "";
+                cal.style.left = "";
+                cal.style.width = "";
+                cerrarPanelMesesP1(fp);
+                const s = cal.querySelector(".fp-year-select");
+                if (s) s.value = fp.currentYear;
+                actualizarTriggerMesP1(fp);
+            },
+
+            onClose: function (sel, str, fp) {
+                document.body.classList.remove("fp-modal-abierto");
+                cerrarPanelMesesP1(fp);
+            },
+
+            onMonthChange: function (sel, str, fp) {
+                actualizarTriggerMesP1(fp);
+            },
+
+            onYearChange: function (sel, str, fp) {
+                const s = fp.calendarContainer.querySelector(".fp-year-select");
+                if (s) s.value = fp.currentYear;
+                actualizarTriggerMesP1(fp);
+            }
         };
 
-        // Guardar valor original para detectar cambios
         let originalValueE = pickerE.value;
         let originalValueD = pickerD.value;
 
@@ -316,14 +459,13 @@ document.addEventListener("DOMContentLoaded", () => {
         // =============================================
         const fpEntrega = flatpickr(pickerE, {
             ...commonOptions,
-            positionElement: document.getElementById("tarjetaEntrega"),
+            minDate: "today",
             onChange: function (selectedDates, dateStr, instance) {
                 if (!selectedDates.length) return;
 
-                const fechaSeleccionada = selectedDates[0];
+                const fechaSeleccionada = combinar(selectedDates[0], horaEntrega);
                 const fechaOriginal = new Date(originalValueE.replace(' ', 'T'));
 
-                // Si la fecha cambia, solicitar autorización
                 if (fechaSeleccionada.toDateString() !== fechaOriginal.toDateString()) {
                     alertify.confirm(
                         "⚠️ Requiere Autorización",
@@ -347,15 +489,18 @@ document.addEventListener("DOMContentLoaded", () => {
                                 });
                                 alertify.success("Solicitud enviada.");
                             } catch (e) {
-                                instance.setDate(fechaOriginal);
+                                instance.setDate(fechaOriginal, false);
                             }
                         },
-                        () => instance.setDate(fechaOriginal)
+                        () => instance.setDate(fechaOriginal, false)
                     );
                 } else {
-                    // Solo cambió la hora, actualizar UI y originalValue
-                    originalValueE = dateStr;
+                    originalValueE = instance.formatDate(fechaSeleccionada, "Y-m-d H:i");
+                    pickerE.value = originalValueE;
                     actualizarUIFechas(fechaSeleccionada, 'entrega');
+
+                    sincronizarMinimoDevolucion(fechaSeleccionada);
+
                     if (window.actualizarFechasYRecalcular) {
                         window.actualizarFechasYRecalcular();
                     }
@@ -368,26 +513,67 @@ document.addEventListener("DOMContentLoaded", () => {
         // =============================================
         const fpDevolucion = flatpickr(pickerD, {
             ...commonOptions,
-            positionElement: document.getElementById("tarjetaDevolucion"),
-
+            minDate: "today",
             onChange: function (selectedDates, dateStr, instance) {
                 if (!selectedDates.length) return;
 
-                // Validar que la devolución sea después de la entrega
                 const fechaEntrega = fpEntrega.selectedDates[0];
-                const fechaDevolucion = selectedDates[0];
+                let fechaDevolucion = combinar(selectedDates[0], horaDevolucion);
 
-                if (fechaDevolucion < fechaEntrega) {
-                    const nuevaFecha = new Date(fechaEntrega);
-                    nuevaFecha.setDate(fechaEntrega.getDate() + 1);
-                    instance.setDate(nuevaFecha);
+                if (fechaEntrega && fechaDevolucion < fechaEntrega) {
+                    fechaDevolucion = new Date(fechaEntrega);
+                    fechaDevolucion.setDate(fechaEntrega.getDate() + 1);
+                    instance.setDate(fechaDevolucion, false);
                     alertify.warning('Fecha de devolución ajustada automáticamente.');
                 }
 
                 actualizarUIFechas(fechaDevolucion, 'devolucion');
-                pickerD.value = instance.formatDate(fechaDevolucion, "Y-m-d H:i");
+                originalValueD = instance.formatDate(fechaDevolucion, "Y-m-d H:i");
+                pickerD.value = originalValueD;
+
+                if (window.actualizarFechasYRecalcular) {
+                    window.actualizarFechasYRecalcular();
+                }
             }
         });
+
+        // =============================================
+        // MÍNIMO DE LA DEVOLUCIÓN
+        // Bloquea (en gris) el día de la entrega y todos los anteriores.
+        // =============================================
+        function sincronizarMinimoDevolucion(fechaEntrega) {
+            if (!fechaEntrega) return;
+            const minDev = new Date(fechaEntrega);
+            minDev.setHours(0, 0, 0, 0);
+            minDev.setDate(minDev.getDate() + 1);
+            fpDevolucion.set('minDate', minDev);
+
+            const actual = fpDevolucion.selectedDates[0];
+            if (actual && actual < minDev) {
+                fpDevolucion.setDate(minDev, false);
+                actualizarUIFechas(minDev, 'devolucion');
+                originalValueD = fpDevolucion.formatDate(minDev, "Y-m-d H:i");
+                pickerD.value = originalValueD;
+            }
+        }
+
+        sincronizarMinimoDevolucion(fpEntrega.selectedDates[0]);
+
+        // =============================================
+        // HELPER: inserta una opción en el select si no existe
+        // (para horas con minutos fuera del intervalo de 5)
+        // =============================================
+        function asegurarOpcion(select, val) {
+            if (!select || !val) return;
+            if ([...select.options].some(o => o.value === val)) return;
+            const op = document.createElement('option');
+            op.value = val;
+            op.textContent = `${val} HRS`;
+            select.appendChild(op);
+            [...select.options]
+                .sort((a, b) => a.value.localeCompare(b.value))
+                .forEach(o => select.appendChild(o));
+        }
 
         // =============================================
         // FUNCIÓN PARA ACTUALIZAR LA UI DE FECHAS
@@ -397,17 +583,72 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const prefix = tipo === 'entrega' ? 'Entrega' : 'Devolucion';
 
-            // Actualizar día, mes y año
             document.getElementById(`txtDia${prefix}`).textContent = String(date.getDate()).padStart(2, '0');
             document.getElementById(`txtMes${prefix}`).textContent = date.toLocaleString('es', { month: 'short' }).toUpperCase();
             document.getElementById(`txtAnio${prefix}`).textContent = date.getFullYear();
 
-            // Actualizar hora
-            const horas = date.getHours();
-            const ampm = horas >= 12 ? 'PM' : 'AM';
-            const hora12 = horas % 12 || 12;
-            document.getElementById(`txtHora${prefix}`).textContent =
-                `${String(hora12).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')} ${ampm}`;
+            const cont = document.getElementById(`txtHora${prefix}`);
+            const sel = cont ? cont.querySelector('.hora-select') : null;
+            if (sel) {
+                const val = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                asegurarOpcion(sel, val);
+                sel.value = val;
+            }
+        }
+
+        // =============================================
+        // SELECT DE HORA (00:00 a 23:00)
+        // =============================================
+        function montarSelectHora(tipo) {
+            const prefix = tipo === 'entrega' ? 'Entrega' : 'Devolucion';
+            const div = document.getElementById(`txtHora${prefix}`);
+            if (!div || div.querySelector('.hora-select')) return;
+
+            const select = document.createElement('select');
+            select.className = 'hora-select';
+
+            for (let h = 0; h < 24; h++) {
+                for (let m = 0; m < 60; m += 5) {
+                    const val = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                    const op = document.createElement('option');
+                    op.value = val;
+                    op.textContent = `${val} HRS`;
+                    select.appendChild(op);
+                }
+            }
+
+            const horaActual = tipo === 'entrega' ? horaEntrega : horaDevolucion;
+            asegurarOpcion(select, horaActual);
+            select.value = horaActual;
+
+            select.addEventListener('click', e => e.stopPropagation());
+            select.addEventListener('mousedown', e => e.stopPropagation());
+
+            select.addEventListener('change', (e) => {
+                e.stopPropagation();
+                const nueva = e.target.value;
+                const fp = tipo === 'entrega' ? fpEntrega : fpDevolucion;
+                const base = fp.selectedDates[0] || new Date();
+
+                if (tipo === 'entrega') horaEntrega = nueva;
+                else horaDevolucion = nueva;
+
+                const combinada = combinar(base, nueva);
+                fp.setDate(combinada, false);
+
+                const picker = tipo === 'entrega' ? pickerE : pickerD;
+                picker.value = fp.formatDate(combinada, "Y-m-d H:i");
+
+                if (tipo === 'entrega') originalValueE = picker.value;
+                else originalValueD = picker.value;
+
+                if (window.actualizarFechasYRecalcular) {
+                    window.actualizarFechasYRecalcular();
+                }
+            });
+
+            div.textContent = '';
+            div.appendChild(select);
         }
 
         // =============================================
@@ -418,16 +659,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (tarjetaEntrega) {
             tarjetaEntrega.addEventListener('click', function (e) {
-                // No abrir si se hizo clic en el input directamente
                 if (e.target.closest('.flatpickr-input')) return;
+                if (e.target.closest('.hora-select')) return;
 
                 const ahora = new Date();
                 const fechaSeleccionada = fpEntrega.selectedDates[0];
 
-                // Si la fecha seleccionada es hoy, actualizar a la hora actual
                 if (fechaSeleccionada && fechaSeleccionada.toDateString() === ahora.toDateString()) {
-                    fpEntrega.setDate(ahora);
-                    actualizarUIFechas(ahora, 'entrega');
+                    horaEntrega = `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
+                    const combinada = combinar(ahora, horaEntrega);
+                    fpEntrega.setDate(combinada, false);
+                    pickerE.value = fpEntrega.formatDate(combinada, "Y-m-d H:i");
+                    originalValueE = pickerE.value;
+                    actualizarUIFechas(combinada, 'entrega');
                 }
 
                 fpEntrega.open();
@@ -437,21 +681,30 @@ document.addEventListener("DOMContentLoaded", () => {
         if (tarjetaDevolucion) {
             tarjetaDevolucion.addEventListener('click', function (e) {
                 if (e.target.closest('.flatpickr-input')) return;
+                if (e.target.closest('.hora-select')) return;
                 fpDevolucion.open();
             });
         }
 
         // =============================================
-        // ACTUALIZAR UI INICIAL
+        // MONTAR SELECTS Y ACTUALIZAR UI INICIAL
         // =============================================
+        montarSelectHora('entrega');
+        montarSelectHora('devolucion');
+
         if (fpEntrega.selectedDates.length > 0) {
-            actualizarUIFechas(fpEntrega.selectedDates[0], 'entrega');
+            const iniE = combinar(fpEntrega.selectedDates[0], horaEntrega);
+            pickerE.value = fpEntrega.formatDate(iniE, "Y-m-d H:i");
+            originalValueE = pickerE.value;
+            actualizarUIFechas(iniE, 'entrega');
         }
         if (fpDevolucion.selectedDates.length > 0) {
-            actualizarUIFechas(fpDevolucion.selectedDates[0], 'devolucion');
+            const iniD = combinar(fpDevolucion.selectedDates[0], horaDevolucion);
+            pickerD.value = fpDevolucion.formatDate(iniD, "Y-m-d H:i");
+            originalValueD = pickerD.value;
+            actualizarUIFechas(iniD, 'devolucion');
         }
 
-        // Exponer funciones globalmente para usar desde otros lugares
         window.fpEntrega = fpEntrega;
         window.fpDevolucion = fpDevolucion;
 
@@ -510,7 +763,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!modalCat || !btnAbrir) return;
 
-        // 🟢 Aseguramos que solo use la clase show-modal y bloquee el scroll de fondo
         const abrirModal = () => {
             modalCat.classList.add("show-modal");
             document.body.style.overflow = "hidden";
@@ -527,9 +779,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (e.target === modalCat) cerrarModal();
         });
 
-        // Evento CLIC explícito para abrir y cargar datos
         btnAbrir.addEventListener("click", async (e) => {
-            e.preventDefault(); // Evita comportamientos raros de botones en formularios
+            e.preventDefault();
             abrirModal();
 
             if (!contenedorCategorias) return;
@@ -537,7 +788,6 @@ document.addEventListener("DOMContentLoaded", () => {
             contenedorCategorias.innerHTML = '<div style="width: 100%; text-align: center; padding: 40px; color: #64748b;">⏳ Cargando catálogo de categorías...</div>';
 
             try {
-                // Fetch a la ruta que declaraste en tu web.php
                 const data = await ContratoAPI.getJSON('/admin/contrato/categorias-dinamicas');
 
                 if (data.success && data.categorias && data.categorias.length > 0) {
@@ -553,7 +803,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         function renderizarCategorias(categorias) {
             contenedorCategorias.innerHTML = '';
-            // Buscamos el elemento de nuevo para asegurar que tenemos el dataset actualizado
             const cIni = document.getElementById('contratoInicial');
             const categoriaActualId = cIni ? cIni.dataset.idCategoria : null;
 
@@ -561,7 +810,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 const isActive = (cat.id_categoria == categoriaActualId);
                 const precioFormateado = ContratoUI.money(cat.precio_dia || 0);
 
-                // 🟢 Fíjate en el onerror="" de la imagen, eso salva las rutas rotas.
                 const cardHtml = `
                     <div class="card-categoria ${isActive ? 'activa' : ''}"
                         data-id-categoria="${cat.id_categoria}"
@@ -784,18 +1032,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const dropSwitch = $elId("switchDropoffCheckbox");
     const dropoffFields = $elId("dropoffFields");
     const dropUbicacion = $elId("dropUbicacion");
-    const dropDireccion = $elId("dropDireccion");
-    const dropKm = $elId("dropKm");
 
     const getCostoKmDropoff = () => parseFloat($elId("deliveryPrecioKm")?.value || 15);
 
-    const enviarDropoffAPI = async (isCustom, kms, precioKmActual) => {
+    const enviarDropoffAPI = async (kms, precioKmActual) => {
         try {
             await ContratoAPI.postJSON('/admin/contrato/cargo-variable', {
                 id_reservacion: window.ID_RESERVACION,
                 id_contrato: window.ID_CONTRATO,
                 id_concepto: 6,
-                destino: isCustom ? (dropDireccion?.value || "") : dropUbicacion.options[dropUbicacion.selectedIndex]?.text,
+                destino: dropUbicacion.options[dropUbicacion.selectedIndex]?.text || "",
                 km: kms,
                 precio_km: precioKmActual,
                 monto_variable: ContratoState.dropoffTotal
@@ -806,23 +1052,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const enviarDropoffDebounced = debounce(enviarDropoffAPI, 300);
 
-    function handleDropoffUpdate(inmediato = false) {
+    /**
+     * Dropoff
+     */
+    function handleDropoffUpdate(inmediato = false, soloUI = false) {
         if (!dropUbicacion) return;
 
-        const val = dropUbicacion.value;
-        const isCustom = (val === "0");
+        const precioKmActual = getCostoKmDropoff();
+        const opt = dropUbicacion.options[dropUbicacion.selectedIndex];
+        const kms = parseFloat(opt?.dataset.km || 0);
 
-        if ($elId("dropGroupDireccion")) $elId("dropGroupDireccion").style.display = isCustom ? "block" : "none";
-        if ($elId("dropGroupKm")) $elId("dropGroupKm").style.display = isCustom ? "block" : "none";
+        if (dropUbicacion.value !== "") {
+            ContratoUI.setText($elId("dropCostoKmHTML"), ContratoUI.money(precioKmActual));
+        }
 
-        let precioKmActual = getCostoKmDropoff();
-        if (val !== "") ContratoUI.setText($elId("dropCostoKmHTML"), ContratoUI.money(precioKmActual));
+        if (!soloUI) {
+            setState("dropoffTotal", kms * precioKmActual);
+        }
 
-        let kms = isCustom
-            ? parseFloat(dropKm?.value || 0)
-            : parseFloat(dropUbicacion.options[dropUbicacion.selectedIndex]?.dataset.km || 0);
-
-        setState("dropoffTotal", kms * precioKmActual);
         ContratoUI.setText($elId("dropTotalHTML"), ContratoUI.money(ContratoState.dropoffTotal));
 
         const card = document.querySelector('.cargo-item[data-id="6"]');
@@ -830,8 +1077,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         actualizarTotalServicios();
 
-        if (inmediato) enviarDropoffAPI(isCustom, kms, precioKmActual);
-        else enviarDropoffDebounced(isCustom, kms, precioKmActual);
+        if (soloUI) return;
+
+        if (inmediato) {
+            enviarDropoffAPI(kms, precioKmActual);
+        } else {
+            enviarDropoffDebounced(kms, precioKmActual);
+        }
     }
 
     dropSwitch?.addEventListener("change", async () => {
@@ -844,6 +1096,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!isOn) {
             setState("dropoffTotal", 0);
             if (card) card.dataset.monto = "0";
+            if (dropUbicacion) dropUbicacion.value = "";
             ContratoUI.setText($elId("dropTotalHTML"), ContratoUI.money(0));
             actualizarTotalServicios();
 
@@ -868,14 +1121,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     dropUbicacion?.addEventListener("change", () => handleDropoffUpdate(true));
 
-    $elId("dropoffFields")?.addEventListener("input", (e) => {
-        if (['dropKm', 'dropDireccion'].includes(e.target.id)) handleDropoffUpdate(false);
-    });
-
     if (dropSwitch && dropSwitch.checked) {
         const card = document.querySelector('.cargo-item[data-id="6"]');
         setState("dropoffTotal", parseFloat(card?.dataset.monto || 0));
-        handleDropoffUpdate(true);
+        handleDropoffUpdate(false, true);
     } else {
         setState("dropoffTotal", 0);
     }
@@ -977,7 +1226,6 @@ document.addEventListener("DOMContentLoaded", () => {
         btnToggleDetalle.addEventListener('click', function (e) {
             e.stopPropagation();
 
-            // Alternar la clase 'abierto' para mostrar/ocultar
             const estaAbierto = resumenContainer.classList.contains('abierto');
 
             if (estaAbierto) {
@@ -991,7 +1239,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        // Opcional: Cerrar el resumen al hacer clic fuera de él
         document.addEventListener('click', function (e) {
             if (resumenContainer.classList.contains('abierto')) {
                 const isClickInside = btnToggleDetalle.contains(e.target) || resumenContainer.contains(e.target);
@@ -1040,10 +1287,99 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const timersServicios = {};
 
-    const gridServicios = document.querySelector("#serviciosGrid");
+    // =============================================
+    // TOOLTIPS DEL PASO 2
+    // =============================================
+    (function posicionarTooltipsPaso2() {
+        const MARGEN = 8;
+        const SEP = 12;
+        const ALTO_ESTIMADO = 76;
+        const ANCHO_ESTIMADO = 240;
 
-    if (gridServicios) {
-        gridServicios.addEventListener("click", (e) => {
+        function colocar(icono) {
+            const r = icono.getBoundingClientRect();
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+
+            const anchoMax = Math.min(ANCHO_ESTIMADO, vw * 0.86, vw - MARGEN * 2);
+
+            const espacioAbajo = vh - r.bottom;
+            const arriba = espacioAbajo < (ALTO_ESTIMADO + SEP + MARGEN);
+
+            let top, arrowTop;
+            if (arriba) {
+                top = r.top - SEP - ALTO_ESTIMADO;
+                arrowTop = r.top - SEP + 1;
+                icono.classList.add('tt-arriba');
+            } else {
+                top = r.bottom + SEP;
+                arrowTop = r.bottom + SEP - 13;
+                icono.classList.remove('tt-arriba');
+            }
+            top = Math.max(MARGEN, top);
+
+            let left = r.left;
+            if (left + anchoMax > vw - MARGEN) left = vw - MARGEN - anchoMax;
+            left = Math.max(MARGEN, left);
+
+            const arrowLeft = Math.min(
+                Math.max(r.left + r.width / 2 - 7, left + 8),
+                left + anchoMax - 22
+            );
+
+            icono.style.setProperty('--tt-top', top + 'px');
+            icono.style.setProperty('--tt-left', left + 'px');
+            icono.style.setProperty('--tt-arrow-top', arrowTop + 'px');
+            icono.style.setProperty('--tt-arrow-left', arrowLeft + 'px');
+        }
+
+        function esDelPaso2(el) {
+            return el.closest('#serviciosGrid, #especialesGrid');
+        }
+
+        document.addEventListener('mouseover', e => {
+            const icono = e.target.closest('.servicio-numero[data-tooltip]');
+            if (icono && esDelPaso2(icono)) colocar(icono);
+        });
+
+        document.addEventListener('touchstart', e => {
+            const icono = e.target.closest('.servicio-numero[data-tooltip]');
+            if (icono && esDelPaso2(icono)) colocar(icono);
+        }, { passive: true });
+
+        ['scroll', 'resize'].forEach(evt => {
+            window.addEventListener(evt, () => {
+                const icono = document.querySelector(
+                    '#serviciosGrid .servicio-numero:hover, #especialesGrid .servicio-numero:hover'
+                );
+                if (icono) colocar(icono);
+            }, true);
+        });
+    })();
+
+    const gridServicios = document.querySelector("#serviciosGrid");
+    const gridEspeciales = document.querySelector("#especialesGrid");
+
+    function sincronizarEstadoAdicionales() {
+        const MAX_ADICIONALES = 3;
+        document.querySelectorAll("#serviciosGrid .card-servicio").forEach(card => {
+            const cantEl = card.querySelector(".cantidad");
+            if (!cantEl) return;
+            const cant = parseInt(cantEl.textContent) || 0;
+            card.classList.toggle("servicio-activo", cant > 0);
+            const btnMas = card.querySelector(".btn-contador.mas");
+            if (btnMas) {
+                btnMas.classList.toggle("tope", cant >= MAX_ADICIONALES);
+                btnMas.setAttribute("aria-disabled", cant >= MAX_ADICIONALES);
+            }
+        });
+    }
+
+    sincronizarEstadoAdicionales();
+    window.sincronizarEstadoAdicionales = sincronizarEstadoAdicionales;
+
+    [gridServicios, gridEspeciales].filter(Boolean).forEach((grid) => {
+        grid.addEventListener("click", (e) => {
             const btn = e.target;
             if (!btn.classList.contains("mas") && !btn.classList.contains("menos")) return;
 
@@ -1052,14 +1388,36 @@ document.addEventListener("DOMContentLoaded", () => {
             const cantEl = card.querySelector(".cantidad");
             let cant = parseInt(cantEl.textContent);
 
-            if (btn.classList.contains("mas")) cant++;
-            else if (cant > 0) cant--;
+            const MAX_ADICIONALES = 3;
+
+            if (btn.classList.contains("mas")) {
+                if (cant >= MAX_ADICIONALES) {
+                    card.classList.add("tope-alcanzado");
+                    setTimeout(() => card.classList.remove("tope-alcanzado"), 700);
+                    return;
+                }
+                cant++;
+                card.classList.remove("pulso-add");
+                void card.offsetWidth;
+                card.classList.add("pulso-add");
+            } else if (cant > 0) {
+                cant--;
+            } else {
+                return;
+            }
 
             cantEl.textContent = cant;
 
+            card.classList.toggle("servicio-activo", cant > 0);
+
+            const btnMas = card.querySelector(".btn-contador.mas");
+            if (btnMas) {
+                btnMas.classList.toggle("tope", cant >= MAX_ADICIONALES);
+                btnMas.setAttribute("aria-disabled", cant >= MAX_ADICIONALES);
+            }
+
             actualizarTotalServicios();
 
-            // 3. Limpiamos el temporizador SOLO de este servicio específico
             if (timersServicios[idServicio]) {
                 clearTimeout(timersServicios[idServicio]);
             }
@@ -1084,41 +1442,63 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }, 250);
         });
-    }
+    });
 
     // ================================ PASO 3: SEGUROS ===============================
 
     function recalcularTotalProtecciones() {
-        const display = $elId("total_seguros");
+        const displays = [
+            $elId("total_seguros"),
+            $elId("total_seguros_modal"),
+            $elId("total_seguros_resumen")
+        ].filter(Boolean);
+
         const btnGo = $elId("go4");
 
         let subtotalPorDia = 0;
         let haySeleccion = false;
 
-        const packActive = document.querySelector(".input-paquete:checked");
+        const packActive = document.querySelector(
+            '#modal-vista-paquetes .hidden-radio:checked, .input-paquete:checked'
+        );
+
         if (packActive) {
-            const seguroItem = packActive.closest(".pack-card");
+            const seguroItem = packActive.closest(".pack-card, .seguro-item");
             if (seguroItem) {
-                subtotalPorDia = parseFloat(seguroItem.dataset.precio || 0);
+                subtotalPorDia = parseFloat(
+                    seguroItem.dataset.precio ||
+                    seguroItem.dataset.precioPorDia || 0
+                ) || 0;
                 haySeleccion = true;
             }
         } else {
-            const individualesActivos = document.querySelectorAll(".switch-individual:checked");
-            if (individualesActivos.length > 0) {
-                haySeleccion = true;
-                individualesActivos.forEach(checkbox => {
-                    const individualItem = checkbox.closest(".individual-card");
-                    if (individualItem) {
-                        subtotalPorDia += parseFloat(individualItem.dataset.precio || 0);
-                    }
-                });
-            }
+            const individualesActivos = document.querySelectorAll(
+                '#modal-vista-individuales .individual-card input[type="checkbox"]:checked, .switch-individual:checked'
+            );
+
+            individualesActivos.forEach(checkbox => {
+                const item = checkbox.closest(".individual-card");
+                if (!item) return;
+                const p = parseFloat(
+                    item.dataset.precio ||
+                    item.dataset.precioPorDia || 0
+                );
+                if (!isNaN(p)) {
+                    subtotalPorDia += p;
+                    haySeleccion = true;
+                }
+            });
         }
 
-        if (display) {
-            const diasRenta = parseInt($elId("detDiasRenta")?.textContent || 1);
-            display.textContent = ContratoUI.money(subtotalPorDia * diasRenta);
-        }
+        const diasRenta = parseInt($elId("detDiasRenta")?.textContent || 1) || 1;
+        const totalProtecciones = subtotalPorDia * diasRenta;
+
+        displays.forEach(el => {
+            el.textContent = ContratoUI.money(totalProtecciones);
+        });
+
+        window.TOTAL_PROTECCIONES = totalProtecciones;
+        window.SUBTOTAL_PROTECCIONES_DIA = subtotalPorDia;
 
         if (btnGo) {
             if (haySeleccion) {
@@ -1132,10 +1512,137 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        window.recalcularTotalProtecciones = recalcularTotalProtecciones;
+        if (typeof window.recalcularCarritoNavbar === "function") {
+            window.recalcularCarritoNavbar();
+        }
+
+        return totalProtecciones;
     }
 
-    // --- LÓGICA PARA CAMBIAR VISTAS (PAQUETES VS INDIVIDUALES) ---
+    window.recalcularTotalProtecciones = recalcularTotalProtecciones;
+
+    // =========================================================
+    // CARRITO DE LA NAVBAR — CÁLCULO INSTANTÁNEO EN EL NAVEGADOR
+    // =========================================================
+    const IVA_TASA = 0.16;
+
+    function _num(txt) {
+        if (txt === null || txt === undefined) return 0;
+        const limpio = String(txt).replace(/[^0-9.,-]/g, "").replace(/,/g, "");
+        const n = parseFloat(limpio);
+        return isNaN(n) ? 0 : n;
+    }
+
+    function recalcularCarritoNavbar() {
+        const dias = parseInt($elId("detDiasRenta")?.textContent || 1) || 1;
+
+        const tarifaBase = _num($elId("r_base_precio")?.textContent);
+        const subtotalRenta = tarifaBase * dias;
+
+        const totalServicios = _num($elId("r_servicios_total")?.textContent);
+
+        const totalProtecciones = (typeof window.TOTAL_PROTECCIONES === "number")
+            ? window.TOTAL_PROTECCIONES
+            : _num($elId("r_seguros_total")?.textContent);
+
+        // --- Totales ---
+        const subtotal = subtotalRenta + totalServicios + totalProtecciones;
+        const iva = subtotal * IVA_TASA;
+        const total = subtotal + iva;
+
+        const escribir = (id, valor) => {
+            const el = $elId(id);
+            if (el) el.textContent = ContratoUI.money(valor);
+        };
+
+        escribir("r_subtotal", subtotal);
+        escribir("r_subtotalModal", subtotal);
+        escribir("r_iva", iva);
+        escribir("r_ivaModal", iva);
+        escribir("r_total_final", total);
+        escribir("r_total_finalModal", total);
+        escribir("resumenTotalCompacto", total);
+        escribir("resumenTotalCompactoModal", total);
+
+        const btnMXN = $elId("btnTotalTextContrato");
+        const btnMXNModal = $elId("btnTotalTextContratoModal");
+        if (btnMXN) btnMXN.textContent = ContratoUI.money(total) + " MXN";
+        if (btnMXNModal) btnMXNModal.textContent = ContratoUI.money(total) + " MXN";
+
+        const tipoCambio = window.TIPO_CAMBIO_USD || 20;
+        const usd = total / tipoCambio;
+        const btnUSD = $elId("btnTotalUsdContrato");
+        const btnUSDModal = $elId("btnTotalUsdContratoModal");
+        if (btnUSD) btnUSD.textContent = ContratoUI.money(usd) + " USD";
+        if (btnUSDModal) btnUSDModal.textContent = ContratoUI.money(usd) + " USD";
+
+        const pagos = _num($elId("detPagos")?.textContent);
+        escribir("detSaldo", Math.max(0, total - pagos));
+        escribir("detSaldoModal", Math.max(0, total - pagos));
+
+        window.TOTAL_CONTRATO = total;
+        return { subtotalRenta, totalServicios, totalProtecciones, subtotal, iva, total };
+    }
+
+    window.recalcularCarritoNavbar = recalcularCarritoNavbar;
+
+    // =========================================================
+    // CONFIRMACIÓN DEL SERVIDOR
+    // =========================================================
+    function aplicarTotalesDelServidor(data) {
+        if (!data) return;
+
+        const escribir = (id, valor) => {
+            if (valor === undefined || valor === null) return;
+            const el = $elId(id);
+            if (el) el.textContent = ContratoUI.money(valor);
+        };
+
+        escribir("r_subtotal", data.subtotal);
+        escribir("r_subtotalModal", data.subtotal);
+        escribir("r_iva", data.iva ?? data.impuestos);
+        escribir("r_ivaModal", data.iva ?? data.impuestos);
+        escribir("r_total_final", data.total);
+        escribir("r_total_finalModal", data.total);
+        escribir("resumenTotalCompacto", data.total);
+        escribir("resumenTotalCompactoModal", data.total);
+        escribir("r_seguros_total", data.seguros_total);
+        escribir("r_seguros_totalModal", data.seguros_total);
+        escribir("r_servicios_total", data.servicios_total);
+        escribir("r_servicios_totalModal", data.servicios_total);
+
+        if (data.seguros_total !== undefined) {
+            window.TOTAL_PROTECCIONES = Number(data.seguros_total) || 0;
+        }
+
+        if (data.total !== undefined) {
+            const btnMXN = $elId("btnTotalTextContrato");
+            const btnMXNModal = $elId("btnTotalTextContratoModal");
+            if (btnMXN) btnMXN.textContent = ContratoUI.money(data.total) + " MXN";
+            if (btnMXNModal) btnMXNModal.textContent = ContratoUI.money(data.total) + " MXN";
+
+            const tc = window.TIPO_CAMBIO_USD || 20;
+            const btnUSD = $elId("btnTotalUsdContrato");
+            const btnUSDModal = $elId("btnTotalUsdContratoModal");
+            if (btnUSD) btnUSD.textContent = ContratoUI.money(data.total / tc) + " USD";
+            if (btnUSDModal) btnUSDModal.textContent = ContratoUI.money(data.total / tc) + " USD";
+
+            window.TOTAL_CONTRATO = data.total;
+        }
+
+        if (data.pagos_realizados !== undefined) {
+            escribir("detPagos", data.pagos_realizados);
+            escribir("detPagosModal", data.pagos_realizados);
+        }
+        const saldo = data.saldo ?? data.saldo_pendiente;
+        if (saldo !== undefined) {
+            escribir("detSaldo", saldo);
+            escribir("detSaldoModal", saldo);
+        }
+    }
+
+    window.aplicarTotalesDelServidor = aplicarTotalesDelServidor;
+
     const btnVerPaquetes = $elId('btnVerPaquetes');
     const btnVerIndividuales = $elId('btnVerIndividuales');
     const btnToggleVista = $elId('btnToggleVista');
@@ -1143,14 +1650,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const vistaPaquetes = $elId('vista-paquetes');
     const vistaIndividuales = $elId('vista-individuales');
-
-    // Función centralizada para alternar las vistas
     function cambiarVistaProtecciones(vistaDestino) {
         if (vistaDestino === 'paquetes') {
             if (vistaIndividuales) vistaIndividuales.style.display = 'none';
             if (vistaPaquetes) vistaPaquetes.style.display = 'block';
 
-            // Actualizar textos y estilos
             if (btnToggleVista) btnToggleVista.innerText = 'SELECCIÓN INDIVIDUAL';
 
             if (btnVerPaquetes) {
@@ -1165,7 +1669,6 @@ document.addEventListener("DOMContentLoaded", () => {
             if (vistaPaquetes) vistaPaquetes.style.display = 'none';
             if (vistaIndividuales) vistaIndividuales.style.display = 'block';
 
-            // Actualizar textos y estilos
             if (btnToggleVista) btnToggleVista.innerText = 'VER PAQUETES';
 
             if (btnVerIndividuales) {
@@ -1179,11 +1682,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Conectar botones superiores
     if (btnVerPaquetes) btnVerPaquetes.addEventListener('click', () => cambiarVistaProtecciones('paquetes'));
     if (btnVerIndividuales) btnVerIndividuales.addEventListener('click', () => cambiarVistaProtecciones('individuales'));
 
-    // Conectar botón inferior
     if (btnToggleVista) {
         btnToggleVista.addEventListener('click', function () {
             const vistaActual = (vistaPaquetes && vistaPaquetes.style.display !== 'none') ? 'individuales' : 'paquetes';
@@ -1191,7 +1692,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Ejecutar al cargar para configurar estado inicial
     setTimeout(recalcularTotalProtecciones, 300);
 
     // ================================ NAVEGACIÓN Y GUARDADO ===============================
@@ -1218,12 +1718,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // BOTÓN CONTINUAR - PASO 1 → PASO 2
     // =============================================
     $el("#go2")?.addEventListener("click", async () => {
-        // Validar que haya un vehículo seleccionado
         if (!obtenerVehiculoSeleccionadoId()) {
             return ContratoUI.notify("error", "Debes seleccionar un vehículo antes de continuar.");
         }
 
-        // Ir directamente al Paso 2 (Servicios) - SIN MODAL DE UPGRADE
         window.showStep(2);
     });
 
@@ -1257,7 +1755,7 @@ document.addEventListener("DOMContentLoaded", () => {
             return ContratoUI.notify("warning", "Selecciona al menos un paquete o una protección para continuar.");
         }
 
-        localStorage.setItem(`contratoPasoActual_${idReservacion}`, '4');
+        localStorage.removeItem(`contratoPasoActual_${idReservacion}`);
 
         const btn = e.currentTarget;
         btn.innerHTML = "Cargando Paso 4...";
@@ -1367,10 +1865,8 @@ document.addEventListener("DOMContentLoaded", () => {
         function getGrupoDeCard(card) {
             if (!card) return '';
 
-            // Buscar el contenedor de la sección
             let section = card.closest('.individuales-grid');
             if (section) {
-                // Buscar el título que está ANTES de este grid
                 let prevElement = section.previousElementSibling;
                 while (prevElement) {
                     if (prevElement.classList && prevElement.classList.contains('categoria-titulo-individual')) {
@@ -1380,7 +1876,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
-            // Fallback: buscar cualquier título de categoría cercano
             const titulo = card.closest('.modal-view')?.querySelector('.categoria-titulo-individual');
             return titulo ? titulo.textContent.trim() : '';
         }
@@ -1412,7 +1907,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return false;
         }
 
-        // NUEVA FUNCIÓN: Normalizar nombre de sección para comparación
         function normalizarSeccion(texto) {
             const t = normalizarTexto(texto);
             if (t.includes("COLISIÓN") || t.includes("COLISION") || t.includes("ROBO")) return "COLISIÓN Y ROBO";
@@ -1557,7 +2051,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const grupo = getGrupoDeCard(card);
             const checkbox = card.querySelector(".switch-individual");
 
-            // Log para depuración
             console.log("🔄 Seleccionando individual:", { id, nombre, grupo });
 
             if (esForzado(nombre)) {
@@ -1571,7 +2064,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // VERIFICAR SI ES UNA SECCIÓN ÚNICA USANDO NORMALIZACIÓN
             const grupoNormalizado = normalizarSeccion(grupo);
             const esSeccionUnica = SECCIONES_UNICAS.some(s => normalizarSeccion(s) === grupoNormalizado);
 
@@ -1585,7 +2077,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     const otroNombre = getNombreIndividual(otraCard);
                     const otroGrupoNormalizado = normalizarSeccion(otroGrupo);
 
-                    // Solo desactivar si es la misma sección y no es forzado
                     if (otroGrupoNormalizado === grupoNormalizado && !esForzado(otroNombre)) {
                         quitarIndividual(otraCard);
                     }
@@ -1648,6 +2139,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     totalEl.textContent = money(total);
                 }
             });
+
             const compacto = document.getElementById("resumenProteccionesCompacto");
             const compactoModal = document.getElementById("resumenProteccionesCompactoModal");
 
@@ -1665,6 +2157,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (compacto) compacto.textContent = textoCompacto;
             if (compactoModal) compactoModal.textContent = textoCompacto;
+        }
+
+        function actualizarBadgeCarrito() {
+            const btn = document.getElementById("btnToggleDetalleModal");
+            if (!btn) return;
+
+            let badge = btn.querySelector(".cart-badge");
+            if (!badge) {
+                badge = document.createElement("span");
+                badge.className = "cart-badge";
+                const icono = btn.querySelector(".fa-shopping-cart");
+                (icono ? icono.parentNode : btn).insertBefore(
+                    badge, icono ? icono.nextSibling : btn.firstChild
+                );
+            }
+
+            const vistaInd = document.getElementById("modal-vista-individuales");
+            const enIndividuales = vistaInd && vistaInd.style.display !== "none";
+
+            const n = enIndividuales
+                ? individualesSeleccionados.size
+                : (paqueteSeleccionado ? 1 : 0);
+
+            badge.textContent = n;
+            badge.classList.toggle("is-empty", n === 0);
+
+            if (badge.dataset.prev !== String(n)) {
+                badge.classList.remove("pop");
+                void badge.offsetWidth;
+                badge.classList.add("pop");
+                badge.dataset.prev = String(n);
+            }
         }
 
         function actualizarTotales() {
@@ -1696,6 +2220,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             pintarProteccionesEnCarrito();
 
+            if (typeof window.recalcularTotalProtecciones === "function") {
+                window.recalcularTotalProtecciones();
+            } else if (typeof window.recalcularCarritoNavbar === "function") {
+                window.recalcularCarritoNavbar();
+            }
+
             if (typeof copiarResumenNavbarAlModal === "function") {
                 copiarResumenNavbarAlModal();
             }
@@ -1703,6 +2233,12 @@ document.addEventListener("DOMContentLoaded", () => {
             if (btnAplicar) {
                 btnAplicar.disabled = false;
                 btnAplicar.style.opacity = "1";
+            }
+
+            actualizarBadgeCarrito();
+
+            if (typeof window.marcarChipsConSeleccion === "function") {
+                window.marcarChipsConSeleccion();
             }
         }
 
@@ -1724,6 +2260,10 @@ document.addEventListener("DOMContentLoaded", () => {
             if (typeof window.recalcularTotalProtecciones === "function") {
                 window.recalcularTotalProtecciones();
             }
+
+            if (typeof window.marcarChipsConSeleccion === "function") {
+                window.marcarChipsConSeleccion();
+            }
         }
 
         function abrirModal() {
@@ -1731,7 +2271,6 @@ document.addEventListener("DOMContentLoaded", () => {
             window.categoriaActual = obtenerCategoriaActual();
             console.log('📢 Abriendo modal, categoría forzada:', window.categoriaActual);
 
-            modal.classList.add("active")
             modal.classList.add("active");
             modal.style.display = "flex";
             document.body.style.overflow = "hidden";
@@ -1746,7 +2285,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 limpiarIndividuales();
             }
 
-            if (vistaPaquetes) vistaPaquetes.style.display = "block";
+            if (vistaPaquetes)     vistaPaquetes.style.display     = "block";
             if (vistaIndividuales) vistaIndividuales.style.display = "none";
 
             tabPaquetes?.classList.add("active");
@@ -1786,7 +2325,11 @@ document.addEventListener("DOMContentLoaded", () => {
             };
 
             try {
-                await ContratoAPI.postJSON('/admin/contrato/protecciones/sync', payload);
+                const resp = await ContratoAPI.postJSON('/admin/contrato/protecciones/sync', payload);
+
+                if (typeof window.aplicarTotalesDelServidor === "function") {
+                    window.aplicarTotalesDelServidor(resp?.detalles || resp?.resumen || resp);
+                }
 
                 if (typeof window.cargarResumenBasico === "function") {
                     await window.cargarResumenBasico();
@@ -1872,7 +2415,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (packCard) {
                     e.preventDefault();
                     const radio = packCard.querySelector(".input-paquete");
-                    if (radio) seleccionarPaquete(radio);
+                    if (!radio) return;
+
+                    const yaActivo = paqueteSeleccionado &&
+                                     String(paqueteSeleccionado.id) === String(radio.value);
+
+                    if (yaActivo) {
+                        limpiarPaquetes();
+                        actualizarTotales();
+                    } else {
+                        seleccionarPaquete(radio);
+                    }
                     return;
                 }
 
@@ -1891,6 +2444,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 document.getElementById("tabPaquetes")?.classList.add("active");
                 document.getElementById("tabIndividuales")?.classList.remove("active");
+
+                actualizarBadgeCarrito();
             });
 
             document.getElementById("tabIndividuales")?.addEventListener("click", e => {
@@ -1902,13 +2457,114 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("tabIndividuales")?.classList.add("active");
                 document.getElementById("tabPaquetes")?.classList.remove("active");
 
-                // Solo aplica defaults si NO hay nada seleccionado
-                if (!paqueteSeleccionado && individualesSeleccionados.size === 0) {
+                if (individualesSeleccionados.size === 0) {
                     aplicarDefaultsIndividuales();
+                } else {
+                    actualizarBadgeCarrito();
+                }
+
+                if (typeof window.reiniciarFiltroIndividuales === 'function') {
+                    window.reiniciarFiltroIndividuales();
                 }
             });
 
-            btnAplicar?.addEventListener("click", async () => {   // ← async
+            if (!window.__chipsListenerListo) {
+                window.__chipsListenerListo = true;
+
+                const repintarChips = () => {
+                    if (typeof window.marcarChipsConSeleccion === 'function') {
+                        window.marcarChipsConSeleccion();
+                    }
+                };
+
+                document.addEventListener('change', e => {
+                    if (e.target.closest('#modal-vista-individuales')) {
+                        setTimeout(repintarChips, 0);
+                    }
+                });
+
+                document.addEventListener('click', e => {
+                    if (e.target.closest('#modal-vista-individuales .individual-card')) {
+                        setTimeout(repintarChips, 0);
+                    }
+                });
+            }
+
+            // =============================================
+            // FILTRO POR CATEGORÍA — PROTECCIONES INDIVIDUALES
+            // =============================================
+            (function inicializarFiltroIndividuales() {
+                const barra = document.getElementById('filtroIndividuales');
+                if (!barra) return;
+
+                const vista = document.getElementById('modal-vista-individuales');
+                if (!vista) return;
+
+                function aplicarFiltro(categoria) {
+                    const titulos = vista.querySelectorAll('.categoria-titulo-individual[data-categoria]');
+                    const grids = vista.querySelectorAll('.individuales-grid[data-categoria]');
+
+                    [...titulos, ...grids].forEach(el => {
+                        const suya = el.getAttribute('data-categoria');
+                        const visible = (categoria === 'todas' || suya === categoria);
+                        el.classList.toggle('filtrado-oculto', !visible);
+                    });
+
+                    barra.querySelectorAll('.filtro-chip').forEach(chip => {
+                        chip.classList.toggle('activo', chip.dataset.filtro === categoria);
+                    });
+
+                    marcarChipsConSeleccion();
+                }
+
+                barra.addEventListener('click', e => {
+                    const chip = e.target.closest('.filtro-chip');
+                    if (!chip) return;
+                    e.preventDefault();
+                    aplicarFiltro(chip.dataset.filtro || 'todas');
+                });
+
+
+                function marcarChipsConSeleccion() {
+
+                    const vistaAct = document.getElementById('modal-vista-individuales');
+                    const barraAct = document.getElementById('filtroIndividuales');
+                    if (!vistaAct || !barraAct) return;
+
+                    const conteo = {};
+
+                    vistaAct.querySelectorAll('.individuales-grid[data-categoria]').forEach(grid => {
+                        const cat = grid.getAttribute('data-categoria');
+                        const elegidas = grid.querySelectorAll(
+                            '.individual-card.selected, .individual-card .switch-individual:checked'
+                        );
+                        const tarjetas = new Set();
+                        elegidas.forEach(el => {
+                            const card = el.closest('.individual-card');
+                            if (card) tarjetas.add(card);
+                        });
+                        conteo[cat] = tarjetas.size;
+                    });
+
+                    barraAct.querySelectorAll('.filtro-chip').forEach(chip => {
+                        const filtro = chip.dataset.filtro;
+
+                        if (filtro === 'todas') {
+                            chip.classList.remove('con-seleccion');
+                            return;
+                        }
+
+                        chip.classList.toggle('con-seleccion', (conteo[filtro] || 0) > 0);
+                    });
+                }
+
+                window.reiniciarFiltroIndividuales = () => aplicarFiltro('todas');
+                window.filtrarIndividualesPor = aplicarFiltro;
+                window.marcarChipsConSeleccion = marcarChipsConSeleccion;
+                marcarChipsConSeleccion();
+            })();
+
+            btnAplicar?.addEventListener("click", async () => {
                 btnAplicar.disabled = true;
                 btnAplicar.textContent = "Guardando...";
 
@@ -1949,6 +2605,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         sincronizarModalAPaso();
                     }
 
+                    if (typeof window.marcarChipsConSeleccion === "function") {
+                        window.marcarChipsConSeleccion();
+                    }
+
                     window.abrirModalProtecciones = abrirModal;
                     window.cerrarModalProtecciones = cerrarModal;
                     window.aplicarDefaultsIndividuales = aplicarDefaultsIndividuales;
@@ -1968,9 +2628,8 @@ document.addEventListener("DOMContentLoaded", () => {
         init();
     })();
 
-    // ================================ SISTEMA DE GARANTÍAS MEJORADO ===============================
+    // ================================ SISTEMA DE GARANTÍAS ===============================
 
-    // Tabla de garantías por categoría y tipo de protección
     const GARANTIAS_POR_CATEGORIA = {
         'C': { // Compacto Chevrolet Aveo o similar
             'LDW': 5000,
@@ -2052,7 +2711,6 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Mapeo de nombres de seguros a tipos de protección
-    // Mapeo de nombres de seguros a tipos de protección
     const MAPEO_TIPO_PROTECCION = {
         'CDW 10%': 'CDW 10%',
         'CDW 20%': 'CDW 20%',
@@ -2064,7 +2722,6 @@ document.addEventListener("DOMContentLoaded", () => {
         'PROTECCIÓN BÁSICA': 'CDW declinado',
         'ROBO TOTAL': 'CDW declinado',
         'DAÑOS A TERCEROS': 'PDW',
-        // NUEVOS NOMBRES
         'CDW PACK 1': 'CDW 10%',
         'CDW PACK 2': 'CDW 20%',
         'CDW PACK 3': 'CDW 20%',
@@ -2073,14 +2730,9 @@ document.addEventListener("DOMContentLoaded", () => {
         'DECLINE': 'CDW declinado',
     };
 
-    // Variable global para almacenar la categoría actual
     window.categoriaActual = null;
 
-    /**
-     * Obtiene la categoría del vehículo actual de manera confiable
-     */
     function obtenerCategoriaActual() {
-        // 1. Intentar desde el elemento contratoInicial
         const contratoInicial = document.getElementById('contratoInicial');
         if (contratoInicial) {
             const codigoCategoria = contratoInicial.dataset.codigoCategoria || contratoInicial.dataset.idCategoria;
@@ -2090,7 +2742,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // 2. Buscar en las tarjetas de categorías activas (modal de categorías)
         const cardActiva = document.querySelector('.card-categoria.activa');
         if (cardActiva) {
             const codigo = cardActiva.dataset.codigo;
@@ -2100,7 +2751,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // 3. Buscar en cualquier card-categoria (buscar la que tenga badge "Actual")
         const cards = document.querySelectorAll('.card-categoria');
         for (let card of cards) {
             if (card.classList.contains('activa') || card.querySelector('.cat-badge-actual')) {
@@ -2112,12 +2762,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // 4. Usar la categoría guardada en window
         if (window.categoriaActual && GARANTIAS_POR_CATEGORIA[window.categoriaActual]) {
             return window.categoriaActual;
         }
 
-        // 5. Último recurso: intentar obtener del texto visible "Categoría X"
         const categoriaText = document.querySelector('.categoria-actual-texto');
         if (categoriaText) {
             const texto = categoriaText.textContent.trim();
@@ -2133,17 +2781,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return null;
     }
 
-    /**
-     * Obtiene el tipo de protección seleccionado actualmente
-     */
     function obtenerTipoProteccionSeleccionado() {
-        // 1. Verificar paquetes (radio buttons)
         const paqueteSeleccionado = document.querySelector('.input-paquete:checked');
         if (paqueteSeleccionado) {
             const card = paqueteSeleccionado.closest('.pack-card');
             if (card) {
                 const nombre = card.querySelector('h4')?.textContent?.trim() || '';
-                // Buscar coincidencia exacta o parcial
                 for (let [key, value] of Object.entries(MAPEO_TIPO_PROTECCION)) {
                     if (nombre.includes(key) || key.includes(nombre)) {
                         return value;
@@ -2152,7 +2795,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // 2. Verificar individuales (checkboxes)
         const individualesActivos = document.querySelectorAll('.switch-individual:checked');
         if (individualesActivos.length > 0) {
             for (let cb of individualesActivos) {
@@ -2168,7 +2810,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // 3. Si hay selección en el estado del modal
         if (typeof paqueteSeleccionado !== 'undefined' && window.paqueteSeleccionado) {
             const nombre = window.paqueteSeleccionado.nombre || '';
             for (let [key, value] of Object.entries(MAPEO_TIPO_PROTECCION)) {
@@ -2178,24 +2819,18 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // 4. Default: CDW declinado
         return 'CDW declinado';
     }
 
-    /**
-     * Actualiza el valor de garantía para un seguro específico
-     */
     function actualizarGarantia(seguroId, categoria, tipoProteccion) {
         const elementoGarantia = document.getElementById(`garantia-${seguroId}`);
         if (!elementoGarantia) return;
 
-        // Si no hay categoría, mostrar 0
         if (!categoria || !GARANTIAS_POR_CATEGORIA[categoria]) {
             elementoGarantia.textContent = '$0 MXN';
             return;
         }
 
-        // Obtener el valor de garantía según la categoría y tipo
         const garantias = GARANTIAS_POR_CATEGORIA[categoria];
         const valor = garantias[tipoProteccion];
 
@@ -2209,29 +2844,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    /**
-     * Actualiza todas las garantías en el modal
-     * Detecta el tipo de protección por el nombre del seguro
-     */
     function actualizarTodasLasGarantias() {
         const categoria = obtenerCategoriaActual();
 
         console.log('🔍 Categoría actual:', categoria);
-        console.log('🔍 Garantías disponibles:', GARANTIAS_POR_CATEGORIA[categoria]);
 
-        // Recorrer CADA paquete de seguro individualmente
         document.querySelectorAll('.pack-card').forEach(card => {
-            // 1. Primero intentar con data-tipo
             let tipoProteccion = card.dataset.tipo;
 
-            // 2. Si no tiene data-tipo, detectar por el nombre
             if (!tipoProteccion) {
                 const nombre = card.querySelector('h4')?.textContent?.trim() || '';
                 const nombreUpper = nombre.toUpperCase();
-
-                console.log(`🔍 Detectando tipo para: "${nombre}"`);
-
-                // Mapeo completo de tipos
                 if (nombreUpper.includes('LDW')) {
                     tipoProteccion = 'LDW';
                 } else if (nombreUpper.includes('PDW')) {
@@ -2245,26 +2868,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else {
                     tipoProteccion = 'CDW declinado';
                 }
-
-                console.log(`🔍 Tipo detectado para "${nombre}": ${tipoProteccion}`);
             }
 
             const seguroId = card.dataset.id;
 
-            // Buscar el elemento de garantía de ESTE paquete
             const elementoGarantia = document.getElementById(`garantia-${seguroId}`);
             if (!elementoGarantia) {
                 console.warn(`⚠️ No se encontró elemento garantia-${seguroId}`);
                 return;
             }
 
-            // Si no hay categoría, mostrar 0
             if (!categoria || !GARANTIAS_POR_CATEGORIA[categoria]) {
                 elementoGarantia.textContent = '$0 MXN';
                 return;
             }
 
-            // Obtener el valor según la categoría y el tipo ESPECÍFICO de este paquete
             const garantias = GARANTIAS_POR_CATEGORIA[categoria];
             const valor = garantias[tipoProteccion];
 
@@ -2273,8 +2891,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 elementoGarantia.textContent = `$${valorFormateado} MXN`;
                 elementoGarantia.style.color = '#16a34a';
                 elementoGarantia.style.fontWeight = 'bold';
-
-                console.log(`✅ Paquete ${seguroId} (${tipoProteccion}): $${valorFormateado} MXN`);
             } else {
                 elementoGarantia.textContent = '$0 MXN';
                 console.warn(`⚠️ No se encontró garantía para ${tipoProteccion} en categoría ${categoria}`);
@@ -2283,44 +2899,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ================================ ESCUCHAR CAMBIOS DE CATEGORÍA ===============================
-
-    /**
-     * Esta función se ejecuta cuando la categoría cambia desde cualquier lugar
-     * (Paso 1, modal de categorías, etc.)
-     */
     function onCategoriaCambiada(nuevaCategoria) {
         console.log('🔄 Categoría cambiada a:', nuevaCategoria);
 
-        // Actualizar la variable global
         window.categoriaActual = nuevaCategoria;
 
-        // Si el modal de protecciones está abierto, actualizar las garantías
         const modal = document.getElementById('modalProtecciones');
         if (modal && modal.classList.contains('active')) {
-            console.log('📢 Modal abierto, actualizando garantías...');
             setTimeout(actualizarTodasLasGarantias, 300);
-        } else {
-            console.log('📢 Modal cerrado, las garantías se actualizarán al abrirlo');
         }
     }
 
-    // Escuchar el evento personalizado 'categoriaCambiada'
     document.addEventListener('categoriaCambiada', function (e) {
         if (e.detail && e.detail.categoria) {
             onCategoriaCambiada(e.detail.categoria);
         }
     });
 
-    // También observar cambios en el elemento contratoInicial
-    const contratoInicial = document.getElementById('contratoInicial');
-    if (contratoInicial) {
+    const contratoInicialObs = document.getElementById('contratoInicial');
+    if (contratoInicialObs) {
         const observer = new MutationObserver(function (mutations) {
             for (let mutation of mutations) {
                 if (mutation.type === 'attributes' &&
                     (mutation.attributeName === 'data-id-categoria' ||
                         mutation.attributeName === 'data-codigo-categoria')) {
 
-                    const nuevaCategoria = contratoInicial.dataset.codigoCategoria || contratoInicial.dataset.idCategoria;
+                    const nuevaCategoria = contratoInicialObs.dataset.codigoCategoria || contratoInicialObs.dataset.idCategoria;
                     console.log('🔄 Cambio detectado en contratoInicial:', nuevaCategoria);
 
                     if (nuevaCategoria) {
@@ -2329,37 +2933,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         });
-        observer.observe(contratoInicial, { attributes: true });
+        observer.observe(contratoInicialObs, { attributes: true });
     }
 
     // ================================ INTEGRACIÓN CON EL MODAL ===============================
-
-    // Función para inicializar el sistema de garantías
     function inicializarSistemaGarantias() {
         console.log('🟢 Inicializando sistema de garantías...');
-
-        // 1. Actualizar al abrir el modal de protecciones
         const btnAbrirModal = document.getElementById('btnAbrirModalProtecciones');
         if (btnAbrirModal) {
             btnAbrirModal.addEventListener('click', function () {
-                // Obtener la categoría actual antes de actualizar
-                const categoria = obtenerCategoriaActual();
-                console.log('📢 Abriendo modal, categoría actual:', categoria);
+                obtenerCategoriaActual();
                 setTimeout(actualizarTodasLasGarantias, 300);
             });
         }
 
-        // 2. Escuchar el evento personalizado de cambio de categoría
         document.addEventListener('categoriaCambiada', function (e) {
-            console.log('📢 Evento categoriaCambiada recibido en inicializador:', e.detail);
-            // Si el modal está abierto, actualizar inmediatamente
             const modal = document.getElementById('modalProtecciones');
             if (modal && modal.classList.contains('active')) {
                 setTimeout(actualizarTodasLasGarantias, 200);
             }
         });
 
-        // 3. Actualizar al seleccionar protección
         document.addEventListener('change', function (e) {
             if (e.target.classList.contains('input-paquete') ||
                 e.target.classList.contains('switch-individual')) {
@@ -2367,7 +2961,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        // 4. Interceptar el cambio de categoría desde el código existente
         const observer = new MutationObserver(function (mutations) {
             for (let mutation of mutations) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'data-id-categoria') {
@@ -2382,15 +2975,12 @@ document.addEventListener("DOMContentLoaded", () => {
             observer.observe(contratoInicial, { attributes: true });
         }
 
-        // 5. Actualizar al aplicar protecciones
         const btnAplicar = document.getElementById('btnAplicarProtecciones');
         if (btnAplicar) {
             btnAplicar.addEventListener('click', function () {
                 setTimeout(actualizarTodasLasGarantias, 200);
             });
         }
-
-        // 6. Actualizar al cambiar de vista (paquetes/individuales)
         const tabPaquetes = document.getElementById('tabPaquetes');
         const tabIndividuales = document.getElementById('tabIndividuales');
 
@@ -2405,45 +2995,11 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        // 7. Ejecutar inicialmente
         setTimeout(actualizarTodasLasGarantias, 600);
 
         console.log('✅ Sistema de garantías inicializado');
     }
 
-    // ================================ SOBRESCRIBIR FUNCIÓN DE CAMBIO DE CATEGORÍA ===============================
-
-    // Modificar la función de cambio de categoría para actualizar garantías
-    (function patchCambioCategoria() {
-        const originalClick = document.querySelector('#contenedorCategoriasJS')?.addEventListener;
-
-        // Agregar listener adicional para capturar cambios de categoría
-        document.addEventListener('categoriaCambiada', function (e) {
-            console.log('📢 Evento categoriaCambiada detectado:', e.detail);
-            if (e.detail && e.detail.categoria) {
-                window.categoriaActual = e.detail.categoria;
-                setTimeout(actualizarTodasLasGarantias, 200);
-            }
-        });
-
-        // Observar cambios en el dataset de contratoInicial
-        const contratoInicial = document.getElementById('contratoInicial');
-        if (contratoInicial) {
-            const observer = new MutationObserver(function (mutations) {
-                for (let mutation of mutations) {
-                    if (mutation.type === 'attributes' &&
-                        (mutation.attributeName === 'data-id-categoria' ||
-                            mutation.attributeName === 'data-codigo-categoria')) {
-                        console.log('🔄 Categoría cambiada en contratoInicial');
-                        setTimeout(actualizarTodasLasGarantias, 200);
-                    }
-                }
-            });
-            observer.observe(contratoInicial, { attributes: true });
-        }
-    })();
-
-    // IIFE
     (function () {
         let intentos = 0;
         const checkModal = setInterval(function () {
@@ -2451,196 +3007,51 @@ document.addEventListener("DOMContentLoaded", () => {
             if (document.getElementById('modalProtecciones')) {
                 clearInterval(checkModal);
                 inicializarSistemaGarantias();
-                console.log('Sistema de garantías completamente inicializado');
                 return;
             }
             if (intentos >= 20) {
                 clearInterval(checkModal);
-                console.warn('No se encontró el modal de protecciones, iniciando igual...');
                 inicializarSistemaGarantias();
             }
         }, 200);
     })();
 
-    // Exponer funciones globalmente
     window.actualizarGarantia = actualizarGarantia;
     window.actualizarTodasLasGarantias = actualizarTodasLasGarantias;
     window.obtenerCategoriaActual = obtenerCategoriaActual;
     window.obtenerTipoProteccionSeleccionado = obtenerTipoProteccionSeleccionado;
 
-    // ================================ MODAL DE PROTECCIONES - TOGGLE DEL CARRITO ===============================
+    // ================================ CARRITO DEL MODAL DE PROTECCIONES ===============================
+    const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+                          'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const modal = document.getElementById('modalProtecciones');
-        const btnAbrir = document.getElementById('btnAbrirModalProtecciones');
-
-        // === ABRIR MODAL ===
-        if (btnAbrir && modal) {
-            btnAbrir.addEventListener('click', function (e) {
-                e.preventDefault();
-                modal.classList.add('active');
-                modal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-
-                // Copiar datos del resumen principal al modal
-                setTimeout(copiarResumenAlModal, 200);
-            });
-        }
-
-        // === CERRAR MODAL ===
-        const btnCerrar = document.getElementById('btnCerrarModalProtecciones');
-        const btnCerrarFooter = document.getElementById('btnCerrarModalFooter');
-
-        function cerrarModal() {
-            modal.classList.remove('active');
-            modal.style.display = 'none';
-            document.body.style.overflow = '';
-        }
-
-        if (btnCerrar) btnCerrar.addEventListener('click', cerrarModal);
-        if (btnCerrarFooter) btnCerrarFooter.addEventListener('click', cerrarModal);
-
-        // Cerrar al hacer clic fuera
-        modal.addEventListener('click', function (e) {
-            if (e.target === modal) cerrarModal();
-        });
-
-        // === TOGGLE DEL CARRITO DENTRO DEL MODAL ===
-        const btnToggleModal = document.getElementById('btnToggleDetalleModal');
-        const resumenContainerModal = document.getElementById('resumenDetalleContainerModal');
-        const iconoFlechaModal = document.getElementById('iconoFlechaResumenModal');
-
-        if (btnToggleModal && resumenContainerModal) {
-            btnToggleModal.addEventListener('click', function (e) {
-                e.stopPropagation();
-
-                const estaAbierto = resumenContainerModal.classList.contains('abierto');
-
-                if (estaAbierto) {
-                    resumenContainerModal.classList.remove('abierto');
-                    resumenContainerModal.style.display = 'none';
-                    if (iconoFlechaModal) iconoFlechaModal.style.transform = 'rotate(0deg)';
-                } else {
-                    // Copiar datos antes de abrir
-                    copiarResumenAlModal();
-                    resumenContainerModal.classList.add('abierto');
-                    resumenContainerModal.style.display = 'block';
-                    if (iconoFlechaModal) iconoFlechaModal.style.transform = 'rotate(180deg)';
-                }
-            });
-        }
-
-        // === VER DETALLE DENTRO DEL MODAL ===
-        const btnVerDetalleModal = document.getElementById('btnVerDetalleModal');
-        const btnOcultarDetalleModal = document.getElementById('btnOcultarDetalleModal');
-        const resumenDetalleModal = document.getElementById('resumenDetalleModal');
-        const resumenCompactoModal = document.getElementById('resumenCompactoModal');
-
-        if (btnVerDetalleModal && resumenDetalleModal) {
-            btnVerDetalleModal.addEventListener('click', function () {
-                copiarResumenAlModal();
-                resumenDetalleModal.style.display = 'block';
-                if (resumenCompactoModal) resumenCompactoModal.style.display = 'none';
-            });
-        }
-
-        if (btnOcultarDetalleModal && resumenDetalleModal) {
-            btnOcultarDetalleModal.addEventListener('click', function () {
-                resumenDetalleModal.style.display = 'none';
-                if (resumenCompactoModal) resumenCompactoModal.style.display = 'block';
-            });
-        }
-    });
-
-    // === FUNCIÓN PARA COPIAR DATOS DEL RESUMEN PRINCIPAL AL MODAL ===
-    function copiarResumenAlModal() {
-        console.log('🔄 Copiando resumen al modal...');
-
-        // Mapeo de elementos: [idPrincipal, idModal]
-        const elementos = [
-            ['btnTotalTextContrato', 'btnTotalTextContratoModal'],
-            ['btnTotalUsdContrato', 'btnTotalUsdContratoModal'],
-            ['resumenTotalCompacto', 'resumenTotalCompactoModal'],
-            ['resumenVehCompacto', 'resumenVehCompactoModal'],
-            ['resumenCategoriaCompacto', 'resumenCategoriaCompactoModal'],
-            ['resumenDiasCompacto', 'resumenDiasCompactoModal'],
-            ['resumenFechasCompacto', 'resumenFechasCompactoModal'],
-            ['detCodigo', 'detCodigoModal'],
-            ['detCliente', 'detClienteModal'],
-            ['detTelefono', 'detTelefonoModal'],
-            ['detEmail', 'detEmailModal'],
-            ['detModelo', 'detModeloModal'],
-            ['detMarca', 'detMarcaModal'],
-            ['detCategoria', 'detCategoriaModal'],
-            ['detTransmision', 'detTransmisionModal'],
-            ['detPasajeros', 'detPasajerosModal'],
-            ['detPuertas', 'detPuertasModal'],
-            ['detKm', 'detKmModal'],
-            ['detFechaSalida', 'detFechaSalidaModal'],
-            ['detHoraSalida', 'detHoraSalidaModal'],
-            ['detFechaEntrega', 'detFechaEntregaModal'],
-            ['detHoraEntrega', 'detHoraEntregaModal'],
-            ['detDiasRenta', 'detDiasRentaModal'],
-            ['r_base_precio', 'r_base_precioModal'],
-            ['r_cortesia', 'r_cortesiaModal'],
-            ['r_subtotal', 'r_subtotalModal'],
-            ['r_iva', 'r_ivaModal'],
-            ['r_total_final', 'r_total_finalModal'],
-            ['detPagos', 'detPagosModal'],
-            ['detSaldo', 'detSaldoModal'],
-        ];
-
-        elementos.forEach(([origen, destino]) => {
-            const elOrigen = document.getElementById(origen);
-            const elDestino = document.getElementById(destino);
-
-            if (elOrigen && elDestino) {
-                elDestino.textContent = elOrigen.textContent;
-            }
-        });
-
-        // Copiar imagen del vehículo
-        const imgOrigen = document.getElementById('resumenImgVeh');
-        const imgDestino = document.getElementById('resumenImgVehModal');
-        if (imgOrigen && imgDestino) {
-            imgDestino.src = imgOrigen.src;
-        }
-
-        // Copiar listas (seguros y servicios)
-        const listas = [
-            ['r_seguros_lista', 'r_seguros_listaModal'],
-            ['r_servicios_lista', 'r_servicios_listaModal'],
-        ];
-
-        listas.forEach(([origen, destino]) => {
-            const elOrigen = document.getElementById(origen);
-            const elDestino = document.getElementById(destino);
-
-            if (elOrigen && elDestino) {
-                elDestino.innerHTML = elOrigen.innerHTML;
-            }
-        });
-
-        // Copiar totales de seguros
-        const totalSeguros = document.getElementById('total_seguros');
-        const totalSegurosModal = document.getElementById('total_seguros_modal');
-        if (totalSeguros && totalSegurosModal) {
-            totalSegurosModal.textContent = totalSeguros.textContent;
-        }
-
-        console.log('✅ Resumen copiado al modal');
+    function fechaCorta(iso) {
+        const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!m) return null;
+        const mes = MESES_CORTOS[parseInt(m[2], 10) - 1];
+        if (!mes) return null;
+        return `${m[3]}-${mes}-${m[1].slice(2)}`;
     }
 
-    const modal = document.getElementById('modalProtecciones');
-    if (modal && modal.classList.contains('active')) {
-        setTimeout(copiarResumenAlModal, 300);
+    function aplicarFormatoFechasResumen() {
+        const ids = [
+            'resumenFechasCompacto', 'resumenFechasCompactoModal',
+            'detFechaSalida', 'detFechaSalidaModal',
+            'detFechaRegreso', 'detFechaRegresoModal'
+        ];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const txt = el.textContent;
+            const nuevo = txt.replace(/\d{4}-\d{2}-\d{2}/g, d => fechaCorta(d) || d);
+            if (nuevo !== txt) el.textContent = nuevo;
+        });
     }
 
-    // =====================================================
-    // CARRITO DEL MODAL DE PROTECCIONES
-    // =====================================================
-
+    window.aplicarFormatoFechasResumen = aplicarFormatoFechasResumen;
     function copiarResumenNavbarAlModal() {
+        aplicarFormatoFechasResumen();
+
         const copiarTexto = (origenId, destinoId) => {
             const origen = document.getElementById(origenId);
             const destino = document.getElementById(destinoId);
@@ -2711,6 +3122,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         copiarTexto('resumenProteccionesCompacto', 'resumenProteccionesCompactoModal');
     }
+
+    window.copiarResumenAlModal = copiarResumenNavbarAlModal;
+    window.copiarResumenNavbarAlModal = copiarResumenNavbarAlModal;
 
     function cerrarCarritoModalProtecciones() {
         const resumenModal = document.getElementById('resumenDetalleContainerModal');
@@ -2817,9 +3231,538 @@ document.addEventListener("DOMContentLoaded", () => {
                 setTimeout(copiarResumenNavbarAlModal, 350);
             }
         });
+
+        console.log('🛒 Carrito del modal de protecciones inicializado.');
     }
+
 
     inicializarCarritoModalProtecciones();
 
-});
+    /* ============================================================================
+       ANEXO — LAYOUT FIJO + CARRUSEL DEL PASO 2
+       ============================================================================ */
+    const ANCHO_LAYOUT_FIJO = 1025;
+    function esTabletPortrait() {
+        return window.matchMedia('(max-width: 1024px) and (orientation: portrait)').matches;
+    }
 
+    function esPaginaLayoutFijo() {
+        const tienePasos13 = !!document.querySelector('.step[data-step="1"], .step[data-step="2"], .step[data-step="3"]');
+        if (!tienePasos13) return false;
+        if (esTabletPortrait()) return false;
+        return window.innerWidth >= ANCHO_LAYOUT_FIJO;
+    }
+
+    function liberarScrollSiNoAplica() {
+        if (esPaginaLayoutFijo()) return false;
+        const main = document.querySelector('.main');
+        document.documentElement.style.overflow = '';
+        document.documentElement.style.height = '';
+        document.body.style.overflow = '';
+        document.body.style.height = '';
+        document.documentElement.style.overflowX = 'hidden';
+        document.body.style.overflowX = 'hidden';
+        if (main) {
+            main.style.height = '';
+            main.style.maxHeight = '';
+            main.style.minHeight = '';
+            main.classList.remove('altura-calculada');
+        }
+
+        document.documentElement.style.setProperty('--alto-disponible', 'auto');
+        return true;
+    }
+
+    (function bloquearScrollVertical() {
+        if (!esPaginaLayoutFijo()) {
+            console.log('📜 Pagina con scroll vertical (pasos 4-6): no se bloquea.');
+            return;
+        }
+        document.documentElement.style.overflow = 'hidden';
+        document.documentElement.style.height = '100%';
+        document.body.style.overflow = 'hidden';
+        document.body.style.height = '100vh';
+        document.body.style.margin = '0';
+        console.log('🔒 Layout fijo activo (sin scroll vertical).');
+    })();
+
+    function ajustarAlturaMain() {
+        const main = document.querySelector('.main');
+        if (!main) return;
+        if (!esPaginaLayoutFijo()) return;
+
+        const alturaVentana = window.innerHeight;
+
+        let alturaHermanos = 0;
+        const padre = main.parentElement;
+
+        if (padre) {
+            Array.from(padre.children).forEach(hijo => {
+                if (hijo === main) return;
+                const est = window.getComputedStyle(hijo);
+                if (est.display === 'none' || est.visibility === 'hidden') return;
+                if (est.position === 'fixed' || est.position === 'absolute') return;
+                const r = hijo.getBoundingClientRect();
+                if (r.height > 0) {
+                    alturaHermanos += r.height +
+                        parseFloat(est.marginTop || 0) +
+                        parseFloat(est.marginBottom || 0);
+                }
+            });
+
+            const estPadre = window.getComputedStyle(padre);
+            alturaHermanos += parseFloat(estPadre.paddingTop || 0) +
+                parseFloat(estPadre.paddingBottom || 0);
+        }
+
+        const offsetTop = main.getBoundingClientRect().top + window.scrollY;
+        const descuento = Math.max(alturaHermanos, offsetTop);
+
+        const disponible = Math.max(320, alturaVentana - descuento);
+
+        document.documentElement.style.setProperty('--alto-disponible', disponible + 'px');
+        main.classList.add('altura-calculada');
+
+        console.log('📐 Altura disponible para .main:', disponible + 'px',
+            '(ventana:', alturaVentana + 'px, descuento:', Math.round(descuento) + 'px)');
+    }
+
+    ajustarAlturaMain();
+    setTimeout(ajustarAlturaMain, 120);
+    setTimeout(ajustarAlturaMain, 600);
+    window.addEventListener('load', ajustarAlturaMain);
+    window.addEventListener('resize', () => {
+        if (liberarScrollSiNoAplica()) return;
+        document.documentElement.style.overflow = 'hidden';
+        document.documentElement.style.height = '100%';
+        document.body.style.overflow = 'hidden';
+        document.body.style.height = '100vh';
+        ajustarAlturaMain();
+    });
+
+    window.addEventListener('orientationchange', () => {
+        liberarScrollSiNoAplica();
+        setTimeout(liberarScrollSiNoAplica, 250);
+        setTimeout(liberarScrollSiNoAplica, 600);
+    });
+
+    if (window.matchMedia) {
+        const mqPortrait = window.matchMedia('(orientation: portrait)');
+        const onCambioOrientacion = () => {
+            liberarScrollSiNoAplica();
+            setTimeout(liberarScrollSiNoAplica, 250);
+        };
+        if (mqPortrait.addEventListener) {
+            mqPortrait.addEventListener('change', onCambioOrientacion);
+        } else if (mqPortrait.addListener) {
+            mqPortrait.addListener(onCambioOrientacion);
+        }
+    }
+
+    liberarScrollSiNoAplica();
+
+    let timerResize;
+    window.addEventListener('resize', () => {
+        clearTimeout(timerResize);
+        timerResize = setTimeout(() => {
+            if (liberarScrollSiNoAplica()) {
+                refrescarTodosLosCarruseles();
+                return;
+            }
+            ajustarAlturaMain();
+            refrescarTodosLosCarruseles();
+        }, 120);
+    });
+
+    window.ajustarAlturaMain = ajustarAlturaMain;
+
+    function inicializarCarruselesPaso2() {
+        const carruseles = [
+            document.getElementById('serviciosGrid'),
+            document.getElementById('especialesGrid')
+        ].filter(Boolean);
+
+        carruseles.forEach(carrusel => {
+            if (carrusel.dataset.carruselListo === '1') return;
+            carrusel.dataset.carruselListo = '1';
+            carrusel.addEventListener('wheel', (e) => {
+                if (e.deltaY === 0) return;
+                if (carrusel.scrollWidth <= carrusel.clientWidth) return;
+                e.preventDefault();
+                carrusel.scrollLeft += e.deltaY;
+            }, { passive: false });
+
+            let arrastrando = false, inicioX = 0, inicioScroll = 0, seMovio = false;
+
+            carrusel.addEventListener('mousedown', (e) => {
+                if (e.target.closest('button, input, select, label, .switch, .switch-toggle, .switch-pill')) return;
+                arrastrando = true;
+                seMovio = false;
+                inicioX = e.pageX - carrusel.offsetLeft;
+                inicioScroll = carrusel.scrollLeft;
+                carrusel.style.cursor = 'grabbing';
+            });
+
+            const soltar = () => {
+                arrastrando = false;
+                carrusel.style.cursor = '';
+            };
+
+            carrusel.addEventListener('mouseleave', soltar);
+            carrusel.addEventListener('mouseup', soltar);
+
+            carrusel.addEventListener('mousemove', (e) => {
+                if (!arrastrando) return;
+                e.preventDefault();
+                seMovio = true;
+                const x = e.pageX - carrusel.offsetLeft;
+                carrusel.scrollLeft = inicioScroll - (x - inicioX) * 1.4;
+            });
+
+            carrusel.addEventListener('click', (e) => {
+                if (seMovio) {
+                    e.stopPropagation();
+                    seMovio = false;
+                }
+            }, true);
+
+            const contenedor = carrusel.parentElement;
+            if (!contenedor) return;
+            contenedor.style.position = 'relative';
+
+            const crearFlecha = (dir) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'carrusel-flecha carrusel-flecha-' + dir;
+                b.setAttribute('aria-label', dir === 'izq' ? 'Anterior' : 'Siguiente');
+                b.innerHTML = dir === 'izq' ? '&#10094;' : '&#10095;';
+                b.addEventListener('click', (ev) => {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    const paso = Math.max(260, Math.round(carrusel.clientWidth * 0.7));
+                    carrusel.scrollBy({ left: dir === 'izq' ? -paso : paso, behavior: 'smooth' });
+                });
+                contenedor.appendChild(b);
+                return b;
+            };
+
+            const flechaIzq = crearFlecha('izq');
+            const flechaDer = crearFlecha('der');
+
+            const refrescarFlechas = () => {
+                const hayDesborde = carrusel.scrollWidth > carrusel.clientWidth + 4;
+                flechaIzq.style.display = (hayDesborde && carrusel.scrollLeft > 6) ? 'flex' : 'none';
+                flechaDer.style.display = (hayDesborde &&
+                    carrusel.scrollLeft + carrusel.clientWidth < carrusel.scrollWidth - 6) ? 'flex' : 'none';
+            };
+
+            carrusel.addEventListener('scroll', refrescarFlechas);
+            window.addEventListener('resize', refrescarFlechas);
+            carrusel._refrescarFlechas = refrescarFlechas;
+
+            setTimeout(refrescarFlechas, 300);
+            setTimeout(refrescarFlechas, 900);
+            setTimeout(refrescarFlechas, 1800);
+        });
+
+        console.log('🎠 Carruseles del paso 2 listos.');
+    }
+
+    inicializarCarruselesPaso2();
+
+    function refrescarTodosLosCarruseles() {
+        document.querySelectorAll('#serviciosGrid.add-grid, #especialesGrid.add-grid').forEach(c => {
+            if (typeof c._refrescarFlechas === 'function') c._refrescarFlechas();
+        });
+    }
+
+    window.refrescarCarruseles = refrescarTodosLosCarruseles;
+    document.addEventListener('change', (e) => {
+        if (e.target.matches('#deliveryToggle, #switchDropoffCheckbox, #switchGasolinaCheckbox, #deliveryUbicacion, #dropUbicacion')) {
+            setTimeout(refrescarTodosLosCarruseles, 120);
+        }
+    });
+
+    (function engancharShowStep() {
+        let intentos = 0;
+        const timer = setInterval(() => {
+            intentos++;
+            if (typeof window.showStep === 'function' && !window.showStep.__parcheado) {
+                const original = window.showStep;
+                const nueva = function () {
+                    original.apply(this, arguments);
+                    setTimeout(() => {
+                        window.dispatchEvent(new Event('resize'));
+                        refrescarTodosLosCarruseles();
+                    }, 60);
+                };
+                nueva.__parcheado = true;
+                window.showStep = nueva;
+                clearInterval(timer);
+                console.log('🔗 showStep enganchado.');
+                return;
+            }
+            if (intentos >= 25) clearInterval(timer);
+        }, 200);
+    })();
+
+    (function mantenerBodyBloqueado() {
+        if (!esPaginaLayoutFijo()) return;
+
+        const obs = new MutationObserver(() => {
+            if (document.body.style.overflow === 'auto' || document.body.style.overflow === '') {
+                document.body.style.overflow = 'hidden';
+            }
+        });
+        obs.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+    })();
+
+    setTimeout(() => {
+        if (!esPaginaLayoutFijo()) return;
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+        ajustarAlturaMain();
+        refrescarTodosLosCarruseles();
+        console.log('✅ Vista de contrato sin scroll vertical.');
+    }, 1200);
+
+    (function mantenerFormatoFechas() {
+        const aplicar = () => {
+            if (typeof window.aplicarFormatoFechasResumen === 'function') {
+                window.aplicarFormatoFechasResumen();
+            }
+        };
+
+        aplicar();
+
+        const contenedores = [
+            document.getElementById('resumenDetalleContainer'),
+            document.getElementById('resumenDetalleContainerModal')
+        ].filter(Boolean);
+
+        if (contenedores.length) {
+            const obs = new MutationObserver(aplicar);
+            contenedores.forEach(n => obs.observe(n, {
+                childList: true, subtree: true, characterData: true
+            }));
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#btnToggleDetalle, #btnToggleDetalleModal')) {
+                setTimeout(aplicar, 60);
+            }
+        });
+
+        setTimeout(aplicar, 400);
+        setTimeout(aplicar, 1400);
+    })();
+
+    // ================================================================
+    // DESPLEGABLE PERSONALIZADO DE GASOLINA  (modal Confirmar vehículo)
+    // ================================================================
+    (function construirDropdownGasolina() {
+        const CAPACIDAD_LITROS = 60;
+        const DIECISEISAVOS = 16;
+        const PRINCIPALES = { 0: '0', 4: '1/4', 8: '1/2', 12: '3/4', 16: '1' };
+
+        function etiqueta(n) {
+            return PRINCIPALES[n] || `${n}/16`;
+        }
+
+        function enOctavos(n) {
+            if (n === 0) return 'Vacío · 0/8';
+            if (n === 16) return 'Lleno · 8/8';
+
+            if (n % 2 === 0) {
+                return `${n / 2}/8`;
+            }
+
+            const bajo = Math.floor(n / 2);
+            const alto = Math.ceil(n / 2);
+            return `entre ${bajo}/8 y ${alto}/8`;
+        }
+
+        function litros(n) {
+            return Math.round((n / DIECISEISAVOS) * CAPACIDAD_LITROS);
+        }
+
+        function inicializar() {
+            const select = document.getElementById('confGasolinaSelect');
+            if (!select || select.dataset.dropdownListo === '1') return;
+
+            const wrapper = select.closest('.gasolina-select-wrapper');
+            if (!wrapper) return;
+
+            select.dataset.dropdownListo = '1';
+            select.style.display = 'none';
+
+            const dd = document.createElement('div');
+            dd.className = 'gas-dropdown';
+
+            const trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'gas-dropdown-trigger';
+            trigger.innerHTML = `<span class="gas-dropdown-valor"></span>
+                                 <i class="fas fa-chevron-down gas-dropdown-flecha"></i>`;
+
+            const lista = document.createElement('ul');
+            lista.className = 'gas-dropdown-lista';
+
+            for (let n = 0; n <= DIECISEISAVOS; n++) {
+                const li = document.createElement('li');
+                li.className = 'gas-dropdown-opcion';
+                if (PRINCIPALES[n] !== undefined) li.classList.add('es-principal');
+                li.dataset.valor = String(n);
+                li.textContent = etiqueta(n);
+                lista.appendChild(li);
+            }
+
+            dd.appendChild(trigger);
+            dd.appendChild(lista);
+            select.parentNode.insertBefore(dd, select);
+
+            let hint = wrapper.parentNode.querySelector('.gasolina-hint');
+            if (!hint) {
+                hint = document.createElement('div');
+                hint.className = 'gasolina-hint';
+                hint.innerHTML = '<i class="fas fa-info-circle"></i><span></span>';
+                wrapper.parentNode.insertBefore(hint, wrapper.nextSibling);
+            }
+            const hintTexto = hint.querySelector('span');
+
+            const textoLitros = document.getElementById('confLitrosTexto');
+
+            function pintarHint(n, resaltado) {
+                if (hintTexto) hintTexto.textContent = `Equivale a ${enOctavos(n)} · ~${litros(n)} L`;
+                hint.classList.toggle('activo', !!resaltado);
+            }
+
+            function seleccionar(n) {
+                select.value = String(n);
+                trigger.querySelector('.gas-dropdown-valor').textContent = `${n}/16`;
+
+                lista.querySelectorAll('.gas-dropdown-opcion').forEach(o => {
+                    o.classList.toggle('seleccionada', o.dataset.valor === String(n));
+                });
+
+                if (textoLitros) textoLitros.textContent = `~${litros(n)} L`;
+                pintarHint(n, false);
+
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            function abrir() {
+                dd.classList.add('abierto');
+                const sel = lista.querySelector('.seleccionada');
+                if (sel) sel.scrollIntoView({ block: 'nearest' });
+            }
+
+            function cerrar() {
+                dd.classList.remove('abierto');
+                lista.querySelectorAll('.resaltada').forEach(o => o.classList.remove('resaltada'));
+                pintarHint(parseInt(select.value, 10) || 0, false);
+            }
+
+            trigger.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dd.classList.contains('abierto') ? cerrar() : abrir();
+            });
+
+            lista.addEventListener('mouseover', (e) => {
+                const op = e.target.closest('.gas-dropdown-opcion');
+                if (!op) return;
+                lista.querySelectorAll('.resaltada').forEach(o => o.classList.remove('resaltada'));
+                op.classList.add('resaltada');
+                pintarHint(parseInt(op.dataset.valor, 10), true);
+            });
+
+            lista.addEventListener('mouseleave', () => {
+                lista.querySelectorAll('.resaltada').forEach(o => o.classList.remove('resaltada'));
+                pintarHint(parseInt(select.value, 10) || 0, false);
+            });
+
+            lista.addEventListener('click', (e) => {
+                const op = e.target.closest('.gas-dropdown-opcion');
+                if (!op) return;
+                e.preventDefault();
+                e.stopPropagation();
+                seleccionar(parseInt(op.dataset.valor, 10));
+                cerrar();
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!dd.contains(e.target)) cerrar();
+            });
+
+            trigger.addEventListener('keydown', (e) => {
+                const actual = parseInt(select.value, 10) || 0;
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    seleccionar(Math.min(DIECISEISAVOS, actual + 1));
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    seleccionar(Math.max(0, actual - 1));
+                } else if (e.key === 'Escape') {
+                    cerrar();
+                }
+            });
+
+            seleccionar(parseInt(select.value, 10) || DIECISEISAVOS);
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('[data-abrir-confirmar-vehiculo], .btn-elegir-vehiculo, #btnConfirmarVehiculo')) {
+                setTimeout(inicializar, 120);
+            }
+        });
+
+        const modal = document.getElementById('modalConfirmarVehiculo');
+        if (modal) {
+            new MutationObserver(() => inicializar()).observe(modal, {
+                childList: true, subtree: true
+            });
+        }
+
+        inicializar();
+        setTimeout(inicializar, 500);
+        setTimeout(inicializar, 1500);
+
+        window.inicializarDropdownGasolina = inicializar;
+    })();
+
+    (function engancharRecalculoCarrito() {
+        const recalcular = () => {
+            if (typeof window.recalcularCarritoNavbar === 'function') {
+                window.recalcularCarritoNavbar();
+            }
+        };
+
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.btn-contador, .cargo-item-toggle')) {
+                setTimeout(recalcular, 180);
+            }
+        });
+
+        document.addEventListener('change', (e) => {
+            if (e.target.matches(
+                '#deliveryToggle, #switchDropoffCheckbox, #switchGasolinaCheckbox, ' +
+                '#deliveryUbicacion, #dropUbicacion, #deliveryKm'
+            )) {
+                setTimeout(recalcular, 180);
+            }
+        });
+
+        ['r_base_precio', 'detDiasRenta', 'r_servicios_total'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            new MutationObserver(recalcular).observe(el, {
+                childList: true, subtree: true, characterData: true
+            });
+        });
+
+        setTimeout(recalcular, 600);
+        setTimeout(recalcular, 1600);
+    })();
+
+});

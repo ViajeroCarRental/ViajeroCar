@@ -1,7 +1,7 @@
-/**
- * MÓDULO 0: UTILIDADES GLOBALES Y CACHÉ DOM
- */
-
+/* ============================================
+Pasos: 4,5 y 6
+UTILIDADES GLOBALES Y CACHÉ DOM
+============================================ */
 const ContratoUI = {
     DOM: {},
     cacheDOM: function () {
@@ -54,6 +54,92 @@ const ContratoUI = {
 
 const urlArchivo = (id) => id ? `/archivo/${id}` : null;
 
+/* ============================================
+   PASO 4 — CALENDARIOS
+   ============================================ */
+const FP_MESES_P4 = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+function fpCrearSelectAnios(fp, desde, hasta) {
+    const wrapper = fp.calendarContainer.querySelector(".numInputWrapper");
+    if (!wrapper || fp.calendarContainer.querySelector(".fp-year-select")) return;
+
+    const select = document.createElement("select");
+    select.className = "fp-year-select";
+    for (let a = hasta; a >= desde; a--) {
+        const op = document.createElement("option");
+        op.value = a;
+        op.textContent = a;
+        select.appendChild(op);
+    }
+    select.value = fp.currentYear;
+    select.addEventListener("change", (e) => {
+        e.stopPropagation();
+        fp.changeYear(parseInt(e.target.value, 10));
+    });
+    wrapper.parentNode.insertBefore(select, wrapper);
+    wrapper.remove();
+}
+
+function fpCerrarPanelMeses(fp) {
+    const panel = fp.calendarContainer.querySelector(".fp-meses-panel");
+    if (panel) panel.classList.remove("abierto");
+}
+
+function fpActualizarTriggerMes(fp) {
+    const span = fp.calendarContainer.querySelector(".fp-mes-trigger span");
+    if (span) span.textContent = FP_MESES_P4[fp.currentMonth];
+}
+
+function fpCrearPanelMeses(fp) {
+    if (fp.calendarContainer.querySelector(".fp-meses-panel")) return;
+
+    const panel = document.createElement("div");
+    panel.className = "fp-meses-panel";
+
+    FP_MESES_P4.forEach((nombre, i) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "fp-mes-btn";
+        btn.dataset.mes = i;
+        btn.textContent = nombre.substring(0, 3);
+        btn.title = nombre;
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            fp.changeMonth(i, false);
+            fpCerrarPanelMeses(fp);
+        });
+        panel.appendChild(btn);
+    });
+
+    fp.calendarContainer.appendChild(panel);
+
+    const dd = fp.calendarContainer.querySelector(".flatpickr-monthDropdown-months");
+    if (dd) {
+        const trigger = document.createElement("button");
+        trigger.type = "button";
+        trigger.className = "fp-mes-trigger";
+        trigger.innerHTML = '<span></span> <i>&#9662;</i>';
+        dd.parentNode.insertBefore(trigger, dd);
+        dd.style.display = "none";
+        trigger.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (panel.classList.contains("abierto")) {
+                fpCerrarPanelMeses(fp);
+            } else {
+                panel.querySelectorAll(".fp-mes-btn").forEach(b => {
+                    b.classList.toggle("activo", parseInt(b.dataset.mes, 10) === fp.currentMonth);
+                });
+                panel.classList.add("abierto");
+            }
+        });
+    }
+
+    fpActualizarTriggerMes(fp);
+}
+
 function initFlatpickrPaso4() {
     if (typeof flatpickr === "undefined") {
         console.error("Flatpickr no está cargado");
@@ -61,35 +147,85 @@ function initFlatpickrPaso4() {
     }
 
     const inputs = document.querySelectorAll("#formDocumentacion .fecha-flatpickr");
-    console.log("Calendarios encontrados:", inputs.length);
+    const anio = new Date().getFullYear();
+    const hoy = new Date();
+    const hace18 = new Date(anio - 18, hoy.getMonth(), hoy.getDate());
 
     inputs.forEach(input => {
         if (input._flatpickr) return;
 
-        flatpickr(input, {
-            locale: flatpickr.l10ns?.es || "default",
+        const nombre = input.getAttribute("name") || "";
+        let desde, hasta;
+        if (nombre.includes("fecha_nacimiento")) { desde = anio - 100; hasta = anio - 18; }
+        else if (nombre.includes("fecha_emision")) { desde = anio - 30; hasta = anio; }
+        else { desde = anio; hasta = anio + 30; }
+
+        const opciones = {
+            locale: (flatpickr.l10ns && flatpickr.l10ns.es) ? flatpickr.l10ns.es : "default",
             dateFormat: "Y-m-d",
-            altInput: false,
+            altInput: true,
+            altFormat: "d-M-Y",
             allowInput: false,
             clickOpens: true,
             disableMobile: true,
-            monthSelectorType: "static",
-            onOpen: function (selectedDates, dateStr, instance) {
-                const cal = instance.calendarContainer;
-                const rect = input.getBoundingClientRect();
-                cal.style.position = 'absolute';
-                cal.style.top = (rect.bottom + window.scrollY + 4) + 'px';
-                cal.style.left = (rect.left + window.scrollX) + 'px';
-                cal.style.width = '300px';
-                cal.style.zIndex = '99999';
+            monthSelectorType: "dropdown",
+
+            onReady: function (sel, str, fp) {
+                fp.calendarContainer.classList.add("fp-centrado");
+                fpCrearSelectAnios(fp, desde, hasta);
+                fpCrearPanelMeses(fp);
+
+                [input, fp.altInput].filter(Boolean).forEach(el => {
+                    el.setAttribute("readonly", "readonly");
+                    el.setAttribute("inputmode", "none");
+                    el.style.caretColor = "transparent";
+                    el.addEventListener("focus", function (ev) {
+                        ev.target.blur();
+                        if (!fp.isOpen) fp.open();
+                    });
+                });
+            },
+
+            onOpen: function (sel, str, fp) {
+                document.body.classList.add("fp-modal-abierto");
+                const cal = fp.calendarContainer;
+                cal.style.top = "";
+                cal.style.left = "";
+                cal.style.width = "";
+                fpCerrarPanelMeses(fp);
+                const y = cal.querySelector(".fp-year-select");
+                if (y) y.value = fp.currentYear;
+                fpActualizarTriggerMes(fp);
+                if (document.activeElement) document.activeElement.blur();
+            },
+
+            onClose: function (sel, str, fp) {
+                document.body.classList.remove("fp-modal-abierto");
+                fpCerrarPanelMeses(fp);
+            },
+
+            onMonthChange: function (sel, str, fp) { fpActualizarTriggerMes(fp); },
+
+            onYearChange: function (sel, str, fp) {
+                const y = fp.calendarContainer.querySelector(".fp-year-select");
+                if (y) y.value = fp.currentYear;
+                fpActualizarTriggerMes(fp);
             }
-        });
+        };
+
+        if (nombre.includes("fecha_nacimiento")) opciones.maxDate = hace18;
+        else if (nombre.includes("fecha_emision")) opciones.maxDate = "today";
+        else if (nombre.includes("fecha_vencimiento")) opciones.minDate = "today";
+
+        flatpickr(input, opciones);
     });
+
+    console.log("Calendarios del Paso 4 listos (" + inputs.length + ").");
 }
 
-/**
- * MÓDULO 2: PASO 5 - DOCUMENTACIÓN Y VALIDACIÓN
- */
+/* ============================================
+   PASO 5 - DOCUMENTACIÓN Y VALIDACIÓN
+   ============================================ */
 const ContratoPaso5 = {
     ultimaCantidadMenores: -1,
     timeoutValidacion: null,
@@ -470,12 +606,7 @@ const ContratoPaso5 = {
         if (nameAttr.includes('contacto_emergencia')) {
             const val = inputContacto ? inputContacto.value.replace(/\D/g, '') : '';
             if (!val) { setEstado(inputContacto, ''); return; }
-            if (val.length !== 10) {
-                setEstado(inputContacto, 'error');
-                console.warn("⚠️ Teléfono Inválido - Debe tener exactamente 10 dígitos.");
-            } else {
-                setEstado(inputContacto, 'ok');
-            }
+            setEstado(inputContacto, val.length === 10 ? 'ok' : 'warning');
             return;
         }
 
@@ -814,9 +945,9 @@ const ContratoPaso5 = {
     }
 };
 
-/**
- * MÓDULO 3: PASO 6 - PAGOS Y ESTADO DE CUENTA
- */
+/* ============================================
+   PASO 6 - PAGOS Y ESTADO DE CUENTA
+   ============================================ */
 const ContratoPaso6 = {
     paypalLoaded: false,
     paymentFlow: "reserva",
@@ -1227,9 +1358,9 @@ const ContratoPaso6 = {
     }
 };
 
-/**
- * MÓDULO 4: NAVEGACIÓN ENTRE PASOS
- */
+/* ============================================
+   NAVEGACIÓN ENTRE PASOS
+   ============================================ */
 const ContratoNav = {
     padPaso5: null,
     firmaPrevia: null,
@@ -1256,22 +1387,15 @@ const ContratoNav = {
         });
 
     },
-    /**
-     * CREAR CANVAS PEQUEÑO - SOLO VISUAL (NO SE PUEDE FIRMAR)
-     * La firma se hace ÚNICAMENTE en el modal a pantalla completa
-     * Los botones "Limpiar" se muestran FUERA del modal, en la vista previa
-     */
+
     inyectarYCrearPad: function () {
-        // === CANVAS DEL TITULAR ===
         const contenedorTitular = document.querySelector("#firmaPreviewWrapper");
         if (contenedorTitular) {
-            // Guardar firma previa desde el input oculto
             const firmaGuardada = document.getElementById('firma_cliente_paso5')?.value;
             if (firmaGuardada) {
                 this.firmaPrevia = firmaGuardada;
             }
 
-            // Eliminar canvas viejo si existe
             const canvasViejo = document.getElementById("padPaso5");
             if (canvasViejo) canvasViejo.remove();
 
@@ -1306,15 +1430,12 @@ const ContratoNav = {
 
             contenedorTitular.appendChild(nuevoCanvas);
 
-            // Si hay una firma guardada, mostrarla en el canvas pequeño
             if (this.firmaPrevia) {
                 this.mostrarFirmaEnCanvasPequeno(this.firmaPrevia);
             }
 
-            // === CONFIGURAR BOTÓN LIMPIAR DEL TITULAR (FUERA DEL MODAL) ===
             let btnClearTitular = document.getElementById("clearPaso5");
 
-            // Si no existe, crearlo
             if (!btnClearTitular) {
                 btnClearTitular = document.createElement("button");
                 btnClearTitular.type = "button";
@@ -1322,21 +1443,18 @@ const ContratoNav = {
                 btnClearTitular.textContent = "✕ Limpiar";
                 contenedorTitular.appendChild(btnClearTitular);
             } else {
-                // Si existe, asegurarse de que esté dentro del wrapper
                 if (!contenedorTitular.contains(btnClearTitular)) {
                     contenedorTitular.appendChild(btnClearTitular);
                 }
                 btnClearTitular.textContent = "✕ Limpiar";
             }
 
-            // Aplicar estilos (ya están en CSS, pero aseguramos visibilidad)
             btnClearTitular.style.display = 'block';
             btnClearTitular.style.position = 'absolute';
             btnClearTitular.style.bottom = '12px';
             btnClearTitular.style.right = '12px';
             btnClearTitular.style.zIndex = '60';
 
-            // Remover eventos anteriores y agregar nuevo
             const newBtnTitular = btnClearTitular.cloneNode(true);
             btnClearTitular.parentNode.replaceChild(newBtnTitular, btnClearTitular);
 
@@ -1344,35 +1462,29 @@ const ContratoNav = {
                 e.stopPropagation();
                 e.preventDefault();
 
-                // Limpiar canvas pequeño del TITULAR
                 const c = document.getElementById("padPaso5");
                 if (c) {
                     const ct = c.getContext("2d");
                     ct.fillStyle = 'white';
                     ct.fillRect(0, 0, c.width, c.height);
-                    // Mostrar placeholder
                     const placeholder = document.getElementById('firmaPlaceholderPequeno');
                     if (placeholder) placeholder.style.display = 'block';
                 }
-                // Limpiar input oculto del TITULAR
                 const inputOculto = document.getElementById('firma_cliente_paso5');
                 if (inputOculto) inputOculto.value = '';
-                // Ocultar badge del TITULAR
                 const badge = document.getElementById('firmaCompletadaBadge');
                 if (badge) {
                     badge.style.display = 'none';
                     badge.style.background = '#dcfce7';
                     badge.style.color = '#166534';
-                    badge.textContent = '✅ Firma registrada';
+                    badge.textContent = 'Firma registrada';
                 }
-                // Cambiar texto del botón del TITULAR
                 const btnAbrirTitular = document.getElementById('btnAbrirFirmaModal');
                 if (btnAbrirTitular) {
-                    btnAbrirTitular.innerHTML = '✍️ Firmar como Titular';
+                    btnAbrirTitular.innerHTML = 'Firmar como Titular';
                     btnAbrirTitular.style.background = '#eab308';
                     btnAbrirTitular.style.color = 'white';
                 }
-                // Limpiar variable
                 this.firmaPrevia = null;
 
                 console.log('🧹 Firma del TITULAR limpiada');
@@ -1381,10 +1493,8 @@ const ContratoNav = {
             console.log('✅ Botón Limpiar del TITULAR configurado en vista previa');
         }
 
-        // === CANVAS DEL CONDUCTOR ADICIONAL ===
         const contenedorAdicional = document.querySelector("#firmaPreviewWrapperAdicional");
         if (contenedorAdicional) {
-            // Guardar firma previa del adicional
             const firmaGuardadaAdicional = document.getElementById('firma_cliente_paso5_adicional')?.value;
             if (firmaGuardadaAdicional) {
                 this.firmaPreviaAdicional = firmaGuardadaAdicional;
@@ -1424,12 +1534,10 @@ const ContratoNav = {
 
             contenedorAdicional.appendChild(nuevoCanvasAdicional);
 
-            // Si hay una firma guardada, mostrarla en el canvas pequeño
             if (this.firmaPreviaAdicional) {
                 this.mostrarFirmaEnCanvasPequenoAdicional(this.firmaPreviaAdicional);
             }
 
-            // === CONFIGURAR BOTÓN LIMPIAR DEL ADICIONAL (FUERA DEL MODAL) ===
             let btnClearAdicional = document.getElementById("clearPaso5Adicional");
 
             if (!btnClearAdicional) {
@@ -1473,11 +1581,11 @@ const ContratoNav = {
                     badge.style.display = 'none';
                     badge.style.background = '#dbeafe';
                     badge.style.color = '#1e40af';
-                    badge.textContent = '✅ Firma registrada';
+                    badge.textContent = 'Firma registrada';
                 }
                 const btnAbrirAdicional = document.getElementById('btnAbrirFirmaModalAdicional');
                 if (btnAbrirAdicional) {
-                    btnAbrirAdicional.innerHTML = '✍️ Firmar como Conductor Adicional';
+                    btnAbrirAdicional.innerHTML = 'Firmar como Conductor Adicional';
                     btnAbrirAdicional.style.background = '#3b82f6';
                     btnAbrirAdicional.style.color = 'white';
                 }
@@ -1491,9 +1599,7 @@ const ContratoNav = {
 
         console.log('✅ Canvas pequeños creados con botones "Limpiar" en vista previa');
     },
-    /**
-     * MOSTRAR FIRMA EN CANVAS PEQUEÑO DEL TITULAR (SOLO VISUAL)
-     */
+
     mostrarFirmaEnCanvasPequeno: function (firmaDataURL) {
         const canvas = document.getElementById("padPaso5");
         if (!canvas) return;
@@ -1509,22 +1615,26 @@ const ContratoNav = {
                 canvas.height = height;
             }
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const dpr = Math.max(window.devicePixelRatio || 1, 1);
+            const cssW = canvas.width / dpr;
+            const cssH = canvas.height / dpr;
+
+            ctx.clearRect(0, 0, cssW, cssH);
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, cssW, cssH);
 
             const img = new Image();
             img.onload = function () {
                 const ratio = Math.min(
-                    canvas.width / img.width,
-                    canvas.height / img.height
+                    cssW / img.width,
+                    cssH / img.height
                 );
                 const margen = 0.85;
                 const finalRatio = ratio * margen;
                 const newWidth = img.width * finalRatio;
                 const newHeight = img.height * finalRatio;
-                const x = (canvas.width - newWidth) / 2;
-                const y = (canvas.height - newHeight) / 2;
+                const x = (cssW - newWidth) / 2;
+                const y = (cssH - newHeight) / 2;
                 ctx.drawImage(img, x, y, newWidth, newHeight);
 
                 const placeholder = document.getElementById('firmaPlaceholderPequeno');
@@ -1541,9 +1651,6 @@ const ContratoNav = {
         }
     },
 
-    /**
-     * MOSTRAR FIRMA EN CANVAS PEQUEÑO DEL ADICIONAL (SOLO VISUAL)
-     */
     mostrarFirmaEnCanvasPequenoAdicional: function (firmaDataURL) {
         const canvas = document.getElementById("padPaso5Adicional");
         if (!canvas) return;
@@ -1559,22 +1666,26 @@ const ContratoNav = {
                 canvas.height = height;
             }
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const dpr = Math.max(window.devicePixelRatio || 1, 1);
+            const cssW = canvas.width / dpr;
+            const cssH = canvas.height / dpr;
+
+            ctx.clearRect(0, 0, cssW, cssH);
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillRect(0, 0, cssW, cssH);
 
             const img = new Image();
             img.onload = function () {
                 const ratio = Math.min(
-                    canvas.width / img.width,
-                    canvas.height / img.height
+                    cssW / img.width,
+                    cssH / img.height
                 );
                 const margen = 0.85;
                 const finalRatio = ratio * margen;
                 const newWidth = img.width * finalRatio;
                 const newHeight = img.height * finalRatio;
-                const x = (canvas.width - newWidth) / 2;
-                const y = (canvas.height - newHeight) / 2;
+                const x = (cssW - newWidth) / 2;
+                const y = (cssH - newHeight) / 2;
                 ctx.drawImage(img, x, y, newWidth, newHeight);
 
                 const placeholder = document.getElementById('firmaPlaceholderAdicional');
@@ -1602,13 +1713,9 @@ const ContratoNav = {
         if (typeof window.actualizarStepper === 'function') window.actualizarStepper(5);
     },
 
-    // ================================================================
-    // irAlPaso6 - VERSIÓN CORREGIDA (FORZAR AVANCE)
-    // ================================================================
     irAlPaso6: async function (e) {
         const btn = e.target || document.getElementById("go6");
 
-        // Validar lugar de estancia
         const inputEstancia = document.getElementById('lugar_estancia');
         const errorEstancia = document.getElementById('error-estancia');
 
@@ -1623,7 +1730,6 @@ const ContratoNav = {
             if (errorEstancia) errorEstancia.style.display = "none";
         }
 
-        // NUEVO: persistir firma del titular + lugar de estancia
         const firmaTitular = document.getElementById('firma_cliente_paso5')?.value || '';
         if (firmaTitular) {
             try {
@@ -1645,7 +1751,7 @@ const ContratoNav = {
                     console.error('No se guardó la firma:', data.msg);
                     ContratoUI.mostrarNotificacion('error', data.msg || 'No se pudo guardar la firma.');
                     if (btn) btn.disabled = false;
-                    return; // no avanzar si el guardado falló
+                    return;
                 }
             } catch (err) {
                 console.error('Error guardando firma:', err);
@@ -1655,7 +1761,6 @@ const ContratoNav = {
             }
         }
 
-        // Navegar al Paso 6
         if (btn) btn.disabled = false;
         if (typeof window.showStep === 'function') window.showStep(6);
         if (typeof window.cargarResumenBasico === 'function') window.cargarResumenBasico();
@@ -1710,10 +1815,9 @@ const ContratoNav = {
     }
 };
 
-// ================================================================
-// MÓDULO 5: NAVBAR Y RESUMEN DESPLEGABLE
-// ================================================================
-
+/* ============================================
+   NAVBAR Y RESUMEN DESPLEGABLE
+   ============================================ */
 const ContratoNavbar = {
     init: function () {
         console.log('🚀 Inicializando Navbar...');
@@ -1854,9 +1958,9 @@ const ContratoNavbar = {
     }
 };
 
-/**
- * INICIALIZACIÓN GLOBAL
- */
+/* ============================================
+   INICIALIZACIÓN GLOBAL
+   ============================================ */
 document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.add('sidebar-collapse');
     document.body.classList.remove('sidebar-open');
@@ -1870,6 +1974,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (step === 5 || step === "5") {
                 ContratoNav.sincronizarDatosTablet();
                 setTimeout(() => ContratoNav.inyectarYCrearPad(), 200);
+                ResumenPaso5.cargar();
             } else if (step === 4 || step === "4") {
                 ContratoPaso5.cargarDocumentacionGuardada();
             } else if (step === 6 || step === "6") {
@@ -1897,6 +2002,8 @@ document.addEventListener("DOMContentLoaded", () => {
     ContratoPaso5.init();
     ContratoPaso6.init();
     ContratoNav.init();
+    GuiasPaso4.init();
+    ResumenFechas.init();
 
     window.cargarPaso6 = ContratoPaso6.cargarResumen.bind(ContratoPaso6);
 
@@ -1907,22 +2014,17 @@ document.addEventListener("DOMContentLoaded", () => {
         window.actualizarStepper(pasoInicial);
     }
 
-    // ================================================================
-    // INICIALIZACIÓN DEL MODAL DE FIRMA
-    // ================================================================
     setTimeout(function () {
         FirmaModal.init();
-        // Inicializar firma adicional si existe
         if (document.querySelector('.signature-adicional')) {
             FirmaModalAdicional.init();
         }
     }, 500);
 });
 
-// ================================================================
-// MÓDULO 6: MODAL DE FIRMA - PANTALLA COMPLETA
-// ================================================================
-
+/* ============================================
+   MODAL DE FIRMA - PANTALLA COMPLETA
+   ============================================ */
 const FirmaModal = {
     modal: null,
     canvas: null,
@@ -2008,7 +2110,7 @@ const FirmaModal = {
                 document.getElementById('firmaPlaceholderPequeno').style.display = 'block';
                 const btnAbrir = document.getElementById('btnAbrirFirmaModal');
                 if (btnAbrir) {
-                    btnAbrir.innerHTML = '✍️ Firmar en Pantalla Completa';
+                    btnAbrir.innerHTML = 'Firmar en Pantalla Completa';
                     btnAbrir.style.background = '#eab308';
                 }
             });
@@ -2028,7 +2130,7 @@ const FirmaModal = {
 
         const btnAbrir = document.getElementById('btnAbrirFirmaModal');
         if (btnAbrir) {
-            btnAbrir.innerHTML = '✅ Firma Registrada';
+            btnAbrir.innerHTML = 'Firma Registrada';
             btnAbrir.style.background = '#22c55e';
         }
 
@@ -2054,22 +2156,26 @@ const FirmaModal = {
                 canvasPequeno.height = height;
             }
 
-            ctx.clearRect(0, 0, canvasPequeno.width, canvasPequeno.height);
+            const dpr = Math.max(window.devicePixelRatio || 1, 1);
+            const cssW = canvasPequeno.width / dpr;
+            const cssH = canvasPequeno.height / dpr;
+
+            ctx.clearRect(0, 0, cssW, cssH);
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvasPequeno.width, canvasPequeno.height);
+            ctx.fillRect(0, 0, cssW, cssH);
 
             const img = new Image();
             img.onload = function () {
                 const ratio = Math.min(
-                    canvasPequeno.width / img.width,
-                    canvasPequeno.height / img.height
+                    cssW / img.width,
+                    cssH / img.height
                 );
                 const margen = 0.90;
                 const finalRatio = ratio * margen;
                 const newWidth = img.width * finalRatio;
                 const newHeight = img.height * finalRatio;
-                const x = (canvasPequeno.width - newWidth) / 2;
-                const y = (canvasPequeno.height - newHeight) / 2;
+                const x = (cssW - newWidth) / 2;
+                const y = (cssH - newHeight) / 2;
                 ctx.drawImage(img, x, y, newWidth, newHeight);
                 console.log('✅ Firma mostrada en canvas pequeño');
             };
@@ -2221,7 +2327,7 @@ const FirmaModal = {
         const btn = document.getElementById('firmaModalGuardar');
         if (btn) {
             btn.disabled = true;
-            btn.textContent = '⏳ Guardando...';
+            btn.textContent = 'Guardando...';
         }
 
         try {
@@ -2243,7 +2349,7 @@ const FirmaModal = {
 
                 const btnAbrir = document.getElementById('btnAbrirFirmaModal');
                 if (btnAbrir) {
-                    btnAbrir.innerHTML = '✅ Firma Registrada';
+                    btnAbrir.innerHTML = 'Firma Registrada';
                     btnAbrir.style.background = '#22c55e';
                 }
 
@@ -2258,13 +2364,12 @@ const FirmaModal = {
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.textContent = '💾 Guardar Firma';
+                btn.textContent = 'Guardar Firma';
             }
         }
     }
 };
 
-// Re-inicializar al cambiar al Paso 5
 document.addEventListener('stepChanged', function (e) {
     if (e.detail && (e.detail.step === 5 || e.detail.step === '5')) {
         setTimeout(() => FirmaModal.init(), 300);
@@ -2274,7 +2379,6 @@ document.addEventListener('stepChanged', function (e) {
     }
 });
 
-// Si existe window.showStep, parchearlo
 if (typeof window.showStep === 'function' && !window.showStep._firmaPatched) {
     const originalShowStep = window.showStep;
     window.showStep = function (step, force) {
@@ -2289,10 +2393,9 @@ if (typeof window.showStep === 'function' && !window.showStep._firmaPatched) {
     window.showStep._firmaPatched = true;
 }
 
-// ================================================================
-// MÓDULO 7: FIRMA DEL CONDUCTOR ADICIONAL
-// ================================================================
-
+/* ============================================
+   FIRMA DEL CONDUCTOR ADICIONAL
+   ============================================ */
 const FirmaModalAdicional = {
     modal: null,
     canvas: null,
@@ -2301,7 +2404,6 @@ const FirmaModalAdicional = {
     isOpen: false,
 
     init: function () {
-        // Verificar si existe el conductor adicional
         const signatureAdicional = document.querySelector('.signature-adicional');
         if (!signatureAdicional) {
             console.log('ℹ️ No hay conductor adicional, omitiendo firma adicional.');
@@ -2318,12 +2420,10 @@ const FirmaModalAdicional = {
             return;
         }
 
-        // Obtener nombre del conductor adicional
         const nombreEl = document.querySelector('.signature-adicional .txt-primary');
         this.clienteNombre = nombreEl ? nombreEl.textContent.trim() : 'Conductor Adicional';
         document.getElementById('firmaModalClienteAdicional').textContent = this.clienteNombre;
 
-        // Eventos
         document.getElementById('firmaModalCloseAdicional')?.addEventListener('click', () => this.cerrar());
         document.getElementById('firmaModalLimpiarAdicional')?.addEventListener('click', () => this.limpiar());
         document.getElementById('firmaModalGuardarAdicional')?.addEventListener('click', () => this.guardar());
@@ -2378,7 +2478,7 @@ const FirmaModalAdicional = {
                 document.getElementById('firmaPlaceholderAdicional').style.display = 'block';
                 const btnAbrir = document.getElementById('btnAbrirFirmaModalAdicional');
                 if (btnAbrir) {
-                    btnAbrir.innerHTML = '✍️ Firmar como Conductor Adicional';
+                    btnAbrir.innerHTML = 'Firmar como Conductor Adicional';
                     btnAbrir.style.background = '#3b82f6';
                 }
             });
@@ -2519,33 +2619,28 @@ const FirmaModalAdicional = {
         const btn = document.getElementById('firmaModalGuardarAdicional');
         if (btn) {
             btn.disabled = true;
-            btn.textContent = '⏳ Guardando...';
+            btn.textContent = 'Guardando...';
         }
 
         try {
             const firmaDataURL = this.pad.toDataURL('image/png');
 
-            // Guardar en el input oculto
             const inputOculto = document.getElementById('firma_cliente_paso5_adicional');
             if (inputOculto) {
                 inputOculto.value = firmaDataURL;
             }
 
-            // Mostrar en el canvas pequeño
             this.mostrarFirmaEnCanvasPequeno(firmaDataURL);
 
-            // Mostrar badge de completado
             const badge = document.getElementById('firmaCompletadaBadgeAdicional');
             if (badge) badge.style.display = 'block';
 
-            // Cambiar texto del botón
             const btnAbrir = document.getElementById('btnAbrirFirmaModalAdicional');
             if (btnAbrir) {
-                btnAbrir.innerHTML = '✅ Firma Registrada';
+                btnAbrir.innerHTML = 'Firma Registrada';
                 btnAbrir.style.background = '#22c55e';
             }
 
-            // Ocultar placeholder
             const placeholder = document.getElementById('firmaPlaceholderAdicional');
             if (placeholder) placeholder.style.display = 'none';
 
@@ -2556,7 +2651,7 @@ const FirmaModalAdicional = {
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.textContent = '💾 Guardar Firma';
+                btn.textContent = 'Guardar Firma';
             }
         }
     },
@@ -2576,22 +2671,26 @@ const FirmaModalAdicional = {
                 canvasPequeno.height = height;
             }
 
-            ctx.clearRect(0, 0, canvasPequeno.width, canvasPequeno.height);
+            const dpr = Math.max(window.devicePixelRatio || 1, 1);
+            const cssW = canvasPequeno.width / dpr;
+            const cssH = canvasPequeno.height / dpr;
+
+            ctx.clearRect(0, 0, cssW, cssH);
             ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvasPequeno.width, canvasPequeno.height);
+            ctx.fillRect(0, 0, cssW, cssH);
 
             const img = new Image();
             img.onload = function () {
                 const ratio = Math.min(
-                    canvasPequeno.width / img.width,
-                    canvasPequeno.height / img.height
+                    cssW / img.width,
+                    cssH / img.height
                 );
                 const margen = 0.90;
                 const finalRatio = ratio * margen;
                 const newWidth = img.width * finalRatio;
                 const newHeight = img.height * finalRatio;
-                const x = (canvasPequeno.width - newWidth) / 2;
-                const y = (canvasPequeno.height - newHeight) / 2;
+                const x = (cssW - newWidth) / 2;
+                const y = (cssH - newHeight) / 2;
                 ctx.drawImage(img, x, y, newWidth, newHeight);
                 console.log('✅ Firma adicional mostrada en canvas pequeño');
             };
@@ -2602,5 +2701,380 @@ const FirmaModalAdicional = {
         } catch (e) {
             console.error('Error al mostrar firma adicional en canvas pequeño:', e);
         }
+    }
+};
+
+/* ============================================
+   PASO 4 — GUÍAS DE CAPTURA
+   ============================================ */
+const GuiasPaso4 = {
+    RX_CURP: /^[A-Z][AEIOUX][A-Z]{2}\d{6}[HM][A-Z]{2}[BCDFGHJKLMNPQRSTVWXYZ]{3}[A-Z0-9]\d$/,
+    RX_CLAVE: /^[A-Z]{6}\d{8}[HM]\d{3}$/,
+
+    REGLAS: {},
+    DEFECTO: null,
+
+    init: function () {
+        if (!document.querySelector('.step[data-step="4"]')) return;
+
+        const self = this;
+
+        this.REGLAS = {
+            ine: {
+                etiqueta: 'CURP o Clave de elector (18 caracteres)',
+                placeholder: 'XXXXXXXXXXXXXXXXXX',
+                max: 18,
+                limpiar: v => v.toUpperCase().replace(/[^A-Z0-9]/g, ''),
+                valido: v => self.RX_CURP.test(v) || self.RX_CLAVE.test(v),
+                pista: function (v) {
+                    const n = v.length;
+                    if (n === 18) {
+                        if (self.RX_CURP.test(v)) return 'CURP válida';
+                        if (self.RX_CLAVE.test(v)) return 'Clave de elector válida';
+                        return 'No coincide con CURP ni Clave de elector';
+                    }
+                    if (/^[A-Z]{5}/.test(v)) {
+                        if (n < 6) return 'Clave de elector: 6 letras iniciales';
+                        if (n < 14) return 'Clave de elector: 8 dígitos';
+                        if (n < 15) return 'Clave de elector: sexo (H o M)';
+                        return 'Clave de elector: 3 dígitos finales';
+                    }
+                    if (n < 4) return 'CURP: iniciales de apellido y nombre';
+                    if (n < 10) return 'CURP: fecha de nacimiento AAMMDD';
+                    if (n < 11) return 'CURP: sexo (H o M)';
+                    if (n < 13) return 'CURP: clave del estado (ej. QT, DF, JC)';
+                    if (n < 16) return 'CURP: consonantes internas';
+                    return 'CURP: homoclave y dígito verificador';
+                }
+            },
+            pasaporte: {
+                etiqueta: 'Letra inicial + 8 dígitos',
+                placeholder: 'G12345678',
+                max: 9,
+                limpiar: v => v.toUpperCase().replace(/[^A-Z0-9]/g, ''),
+                valido: v => /^[A-Z]\d{8}$/.test(v)
+            },
+            cedula: {
+                etiqueta: 'Entre 7 y 8 dígitos',
+                placeholder: '12345678',
+                max: 8,
+                limpiar: v => v.replace(/\D/g, ''),
+                valido: v => v.length >= 7 && v.length <= 8
+            },
+            licencia: {
+                etiqueta: 'Entre 8 y 15 caracteres',
+                placeholder: 'A1234567890',
+                max: 15,
+                limpiar: v => v.toUpperCase().replace(/[^A-Z0-9]/g, ''),
+                valido: v => v.length >= 8 && v.length <= 15
+            }
+        };
+
+        this.DEFECTO = {
+            etiqueta: 'Selecciona primero el tipo de identificación',
+            placeholder: 'XXXX-XXXX-XXXX',
+            max: 18,
+            limpiar: v => v.toUpperCase().replace(/[^A-Z0-9]/g, ''),
+            valido: () => true
+        };
+
+        document.addEventListener('change', (e) => {
+            const sel = e.target.closest('select[name*="[tipo_identificacion]"]');
+            if (sel) this.aplicarRegla(sel);
+        });
+
+        document.addEventListener('input', (e) => {
+            const id = e.target.closest('input[name*="[numero_identificacion]"]');
+            if (id) {
+                const regla = this.REGLAS[id.dataset.tipoId] || this.DEFECTO;
+                const limpio = regla.limpiar(id.value).slice(0, regla.max);
+                if (limpio !== id.value) id.value = limpio;
+                this.pintar(id, regla);
+                return;
+            }
+            const tel = e.target.closest('input[name*="[contacto_emergencia]"], input[name*="[telefono]"]');
+            if (tel) this.formatearTelefono(tel);
+        });
+
+        document.addEventListener('submit', (e) => {
+            if (e.target && e.target.id === 'formDocumentacion') {
+                e.target.querySelectorAll('input[name*="[contacto_emergencia]"], input[name*="[telefono]"]')
+                    .forEach(i => { i.value = this.soloDigitos(i.value); });
+            }
+        }, true);
+
+        this.sincronizar();
+    },
+
+    guia: function (input) {
+        let g = input.parentElement.querySelector('.campo-hint');
+        if (!g) {
+            g = document.createElement('div');
+            g.className = 'campo-hint';
+            g.innerHTML = '<span class="hint-texto"></span><span class="hint-contador"></span>';
+            input.parentElement.appendChild(g);
+        }
+        return g;
+    },
+
+    pintar: function (input, regla) {
+        const g = this.guia(input);
+        const largo = input.value.length;
+        g.querySelector('.hint-texto').textContent =
+            (regla.pista && largo > 0) ? regla.pista(input.value) : regla.etiqueta;
+        const cnt = g.querySelector('.hint-contador');
+        cnt.textContent = largo + '/' + regla.max;
+        cnt.classList.toggle('completo', regla.valido(input.value));
+    },
+
+    aplicarRegla: function (select) {
+        const m = (select.getAttribute('name') || '').match(/conductores\[(\d+)\]/);
+        if (!m) return;
+        const input = document.querySelector('input[name="conductores[' + m[1] + '][numero_identificacion]"]');
+        if (!input) return;
+
+        const regla = this.REGLAS[select.value] || this.DEFECTO;
+        input.placeholder = regla.placeholder;
+        input.maxLength = regla.max;
+        input.dataset.tipoId = select.value || '';
+        if (input.value) input.value = regla.limpiar(input.value).slice(0, regla.max);
+        this.pintar(input, regla);
+    },
+
+    soloDigitos: function (v) {
+        return String(v || '').replace(/\D/g, '').slice(0, 10);
+    },
+
+    agrupar: function (d) {
+        if (d.length <= 3) return d;
+        if (d.length <= 6) return d.slice(0, 3) + ' ' + d.slice(3);
+        return d.slice(0, 3) + ' ' + d.slice(3, 6) + ' ' + d.slice(6);
+    },
+
+    formatearTelefono: function (input) {
+        if (input.maxLength !== 12) input.maxLength = 12;
+
+        const cursor = input.selectionStart;
+        const antes = this.soloDigitos(input.value.slice(0, cursor)).length;
+
+        const d = this.soloDigitos(input.value);
+        input.value = this.agrupar(d);
+
+        let pos = 0, vistos = 0;
+        while (pos < input.value.length && vistos < antes) {
+            if (/\d/.test(input.value[pos])) vistos++;
+            pos++;
+        }
+        try { input.setSelectionRange(pos, pos); } catch (e) { }
+
+        const g = this.guia(input);
+        g.querySelector('.hint-texto').textContent =
+            d.length === 0 ? '10 dígitos, sin guiones'
+                : d.length < 10 ? 'Faltan ' + (10 - d.length) + ' dígitos'
+                    : 'Número completo';
+        const cnt = g.querySelector('.hint-contador');
+        cnt.textContent = d.length + '/10';
+        cnt.classList.toggle('completo', d.length === 10);
+    },
+
+    sincronizar: function () {
+        document.querySelectorAll('select[name*="[tipo_identificacion]"]')
+            .forEach(s => this.aplicarRegla(s));
+        document.querySelectorAll('input[name*="[contacto_emergencia]"]')
+            .forEach(t => this.formatearTelefono(t));
+    }
+};
+
+/* ============================================
+   PASO 5 — RESUMEN COMPLETO
+   ============================================ */
+const ResumenPaso5 = {
+    money: function (v) {
+        return window.money ? window.money(v)
+            : '$' + (Number(v) || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' MXN';
+    },
+
+    put: function (id, val) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = (val === null || val === undefined || val === '') ? '—' : val;
+    },
+
+    lista: function (id, items, vacio) {
+        const ul = document.getElementById(id);
+        if (!ul) return;
+        ul.innerHTML = '';
+        if (!items || !items.length) {
+            ul.innerHTML = '<li class="txt-muted">' + vacio + '</li>';
+            return;
+        }
+        items.forEach(it => {
+            const li = document.createElement('li');
+            const nombre = it.nombre || it.concepto || it.descripcion || '—';
+            const monto = (it.total !== undefined) ? it.total
+                : (it.monto !== undefined) ? it.monto
+                    : (it.precio !== undefined) ? it.precio : null;
+            li.innerHTML = (monto !== null)
+                ? '<span>' + nombre + '</span><span class="txt-muted">' + this.money(monto) + '</span>'
+                : '<span>' + nombre + '</span>';
+            ul.appendChild(li);
+        });
+    },
+
+    fechaLarga: function (iso, hora) {
+        if (!iso) return '—';
+        const d = new Date(iso + 'T00:00:00');
+        const t = d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }).replace('.', '');
+        return hora ? (t + ' - ' + hora) : t;
+    },
+
+    cargar: async function () {
+        const id = window.ID_RESERVACION;
+        if (!id) return;
+
+        let r;
+        try {
+            const resp = await fetch('/admin/contrato/' + id + '/resumen?t=' + Date.now());
+            if (!resp.ok) return;
+            const json = await resp.json();
+            if (!json.success) return;
+            r = json.data;
+        } catch (e) {
+            console.error('Paso 5: no se pudo leer el resumen', e);
+            return;
+        }
+
+        if (r.vehiculo) {
+            const v = r.vehiculo;
+            this.put('res-auto-nombre', v.nombre_publico || ((v.marca || '') + ' ' + (v.modelo || '')).trim());
+            this.put('res-auto-placa', v.placa || '---');
+            const vin = v.numero_serie || v.vin;
+            if (vin) this.put('res-auto-vin', vin);
+        }
+
+        this.lista('res-lista-coberturas', (r.seguros && r.seguros.lista) || [], 'Sin protecciones seleccionadas');
+        this.lista('res-lista-extras', [].concat(r.servicios || [], r.cargos || []), 'Sin servicios adicionales');
+
+        this.put('res-total-final-p5', this.money(r.totales && r.totales.total));
+        if (r.codigo) this.put('res-numero-contrato', r.codigo);
+
+        if (r.fechas) {
+            const b = document.querySelectorAll('.step[data-step="5"] .loc-block .loc-date');
+            if (b[0]) b[0].textContent = this.fechaLarga(r.fechas.inicio, r.fechas.hora_inicio);
+            if (b[1]) b[1].textContent = this.fechaLarga(r.fechas.fin, r.fechas.hora_fin);
+        }
+    }
+};
+
+/* ============================================
+   RESUMEN DEL CARRITO — FECHAS Y PROTECCIONES
+   ============================================ */
+const ResumenFechas = {
+    MESES: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+            'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+
+    formatear: function (txt) {
+        const t = String(txt || '').trim();
+
+        const iso = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (iso) {
+            return iso[3] + '-' + this.MESES[parseInt(iso[2], 10) - 1] + '-' + iso[1];
+        }
+
+        const corto = t.match(/^(\d{1,2})-([A-Za-zÁÉÍÓÚáéíóú]{3})-(\d{2})$/);
+        if (corto) {
+            return corto[1] + '-' + corto[2] + '-20' + corto[3];
+        }
+
+        return null;
+    },
+
+    aplicarFechas: function () {
+        ['detFechaSalida', 'detFechaEntrega'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const nuevo = this.formatear(el.textContent);
+            if (nuevo) el.textContent = nuevo;
+        });
+
+        const comp = document.getElementById('resumenFechasCompacto');
+        if (comp) {
+            const partes = comp.textContent.split('/').map(x => x.trim());
+            if (partes.length === 2) {
+                const a = this.formatear(partes[0]);
+                const b = this.formatear(partes[1]);
+                if (a && b) comp.textContent = a + ' / ' + b;
+            }
+        }
+    },
+
+    aplicarProtecciones: function () {
+        const fechas = document.getElementById('resumenFechasCompacto');
+        if (!fechas) return;
+
+        const origen = document.getElementById('r_seguros_lista');
+        if (!origen) return;
+
+        const nombres = [];
+        origen.querySelectorAll('li').forEach(li => {
+            if (li.classList.contains('empty')) return;
+            let txt = (li.querySelector('span')?.textContent || li.textContent || '').trim();
+            if (!txt || txt === '—') return;
+
+            txt = txt
+                .replace(/\([^)]*\)/g, '')
+                .replace(/\$[\d,.]+.*$/, '')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+
+            if (txt) nombres.push(txt);
+        });
+
+        let caja = document.getElementById('resumenProteccionesCompacto');
+        if (!caja) {
+            caja = document.createElement('div');
+            caja.id = 'resumenProteccionesCompacto';
+            caja.style.cssText =
+                'margin:10px auto 0; padding:8px 14px; max-width:90%;' +
+                ' background:#f0fdf4; border:1px solid #bbf7d0;' +
+                ' border-radius:12px; text-align:center;';
+            fechas.insertAdjacentElement('afterend', caja);
+        }
+
+        if (!nombres.length) {
+            caja.style.display = 'none';
+            return;
+        }
+
+        caja.style.display = 'block';
+        caja.innerHTML =
+            '<div style="font-size:10px; font-weight:800; letter-spacing:.8px;' +
+            ' text-transform:uppercase; color:#15803d; margin-bottom:3px;">Protecciones:</div>' +
+            '<div style="font-size:12.5px; font-weight:700; color:#16a34a; line-height:1.4;">' +
+            nombres.join(', ') + '</div>';
+    },
+
+    refrescar: function () {
+        this.aplicarFechas();
+        this.aplicarProtecciones();
+    },
+
+    init: function () {
+        this.refrescar();
+        const objetivos = ['detFechaSalida', 'detFechaEntrega',
+                           'resumenFechasCompacto', 'r_seguros_lista']
+            .map(id => document.getElementById(id))
+            .filter(Boolean);
+
+        if (!objetivos.length) return;
+
+        let pendiente = null;
+        const obs = new MutationObserver(() => {
+            clearTimeout(pendiente);
+            pendiente = setTimeout(() => this.refrescar(), 40);
+        });
+
+        objetivos.forEach(el => obs.observe(el, {
+            childList: true, characterData: true, subtree: true
+        }));
     }
 };

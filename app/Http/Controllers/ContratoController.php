@@ -111,11 +111,19 @@ class ContratoController extends ContratoBaseController
                 ];
             }
 
-            $fechaInicio  = Carbon::parse($reservacion->fecha_inicio ?? now());
-            $fechaFin     = Carbon::parse($reservacion->fecha_fin ?? now()->addDay());
-            $horaRetiro   = Carbon::parse($reservacion->hora_retiro ?? '12:00:00');
-            $horaEntrega  = Carbon::parse($reservacion->hora_entrega ?? '12:00:00');
-            $diasTotales  = max(1, $fechaInicio->diffInDays($fechaFin));
+            $timezone     = 'America/Mexico_City';
+            $ahoraApertura = Carbon::now($timezone);
+
+            // ENTREGA: fecha y hora exacta de apertura del contrato
+            $fechaInicio  = $ahoraApertura->copy();
+            $horaRetiro   = $ahoraApertura->copy();
+
+            // DEVOLUCIÓN: viene de la reservación
+            $fechaFin     = Carbon::parse($reservacion->fecha_fin ?? now()->addDay(), $timezone);
+            $horaEntrega  = Carbon::parse($reservacion->hora_entrega ?? '12:00:00', $timezone);
+
+            $diasTotales  = max(1, $fechaInicio->copy()->startOfDay()
+                    ->diffInDays($fechaFin->copy()->startOfDay()));
 
             $precioBase       = $catActual->precio_dia ?? ($catActual->precio ?? 0);
             $esAjustada       = $reservacion->tarifa_ajustada ?? 0;
@@ -160,6 +168,28 @@ class ContratoController extends ContratoBaseController
                 $totalPaso2Variables = $cargosDelContrato->sum('monto');
             }
 
+            $dropDetalle = null;
+            if ($cargoDrop && !empty($cargoDrop->detalle)) {
+                $dropDetalle = json_decode($cargoDrop->detalle);
+            }
+
+            $dropActivo = (bool) $cargoDrop;
+            $dropTotal  = $cargoDrop->monto ?? 0;
+            $dropDest   = $dropDetalle->destino ?? '';
+            $dropKm     = $dropDetalle->km ?? '';
+            $dropIdUbicacion = null;
+            if ($dropActivo && $dropDest !== '') {
+                $destinoLimpio = trim(preg_replace('/\s*\([^)]*\)\s*$/', '', $dropDest));
+
+                foreach ($ubicaciones as $u) {
+                    $etiqueta = trim(($u->estado ?? '') . ' - ' . ($u->destino ?? ''));
+                    if ($etiqueta === $destinoLimpio || trim($u->destino ?? '') === $destinoLimpio) {
+                        $dropIdUbicacion = $u->id_ubicacion;
+                        break;
+                    }
+                }
+            }
+
             return view('Admin.Contrato', [
                 'reservacion'         => $reservacion,
                 'vehiculo'            => $vehiculo,
@@ -176,6 +206,11 @@ class ContratoController extends ContratoBaseController
                 'cargosActivos'       => $cargosActivosIds,
                 'cargoGas'            => $cargoGas,
                 'cargoDrop'           => $cargoDrop,
+                'dropActivo'          => $dropActivo,
+                'dropTotal'           => $dropTotal,
+                'dropDest'            => $dropDest,
+                'dropKm'              => $dropKm,
+                'dropIdUbicacion'     => $dropIdUbicacion,
                 'totalPaso4Server'    => $totalPaso2Variables,
                 'catActual'           => $catActual,
                 'fechaInicio'         => $fechaInicio,
@@ -534,15 +569,18 @@ class ContratoController extends ContratoBaseController
                 'updated_at'        => now(),
             ]);
 
+            $resumen = $this->recalcularResumenServiciosReservacion((int) $idReservacion);
+
             return response()->json([
                 'success'          => true,
                 'dias'             => $dias,
                 'precio_dia'       => $precioReal,
                 'horas_cortesia'   => $horasCortesiaFinal,
-                'total'            => $total,
-                'total_formateado' => number_format($total, 2),
-                'subtotal'         => $subtotal,
-                'impuestos'        => $iva,
+                'total'            => $resumen['total'],
+                'total_formateado' => number_format($resumen['total'], 2),
+                'subtotal'         => $resumen['subtotal'],
+                'impuestos'        => $resumen['iva'],
+                'detalles'         => $resumen,
                 'fecha_inicio'     => $data['fecha_inicio'],
                 'fecha_fin'        => $data['fecha_fin'],
                 'hora_inicio'      => Carbon::parse($data['hora_inicio'])->format('h:i A'),
@@ -569,6 +607,10 @@ class ContratoController extends ContratoBaseController
         }
     }
 
+    /**
+     * Recalcula el resumen de la reservación.
+     *
+     */
     protected function recalcularResumenServiciosReservacion(int $idReservacion): array
     {
         $res = DB::table('reservaciones')->where('id_reservacion', $idReservacion)->first();
@@ -605,7 +647,46 @@ class ContratoController extends ContratoBaseController
             $totalServicios  += $totalLinea;
         }
 
-        $nuevoSubtotal = $subtotalRenta + $totalServicios;
+        $idContrato = DB::table('contratos')
+            ->where('id_reservacion', $idReservacion)
+            ->orderByDesc('id_contrato')
+            ->value('id_contrato');
+
+        $totalCargos = 0;
+
+        if ($idContrato) {
+            $cargos = DB::table('cargo_adicional')
+                ->where('id_contrato', $idContrato)
+                ->where('monto', '>', 0)
+                ->select('id_concepto', 'concepto', 'monto')
+                ->get();
+
+            foreach ($cargos as $c) {
+                $listaServicios[] = [
+                    'nombre'   => $c->concepto ?: 'Cargo adicional',
+                    'cantidad' => 1,
+                    'total'    => (float) $c->monto,
+                ];
+                $totalCargos += (float) $c->monto;
+            }
+        }
+
+        // Protecciones (paquete o individuales) — se cobran por día
+        $precioSeguros = 0;
+
+        $paquete = DB::table('reservacion_paquete_seguro')
+            ->where('id_reservacion', $idReservacion)
+            ->value('precio_por_dia');
+
+        if ($paquete !== null) {
+            $precioSeguros = (float) $paquete * $dias;
+        } else {
+            $precioSeguros = (float) DB::table('reservacion_seguro_individual')
+                ->where('id_reservacion', $idReservacion)
+                ->sum('precio_por_dia') * $dias;
+        }
+
+        $nuevoSubtotal = $subtotalRenta + $totalServicios + $totalCargos + $precioSeguros;
         $nuevoIva      = $nuevoSubtotal * 0.16;
         $nuevoTotal    = $nuevoSubtotal + $nuevoIva;
 
@@ -627,7 +708,9 @@ class ContratoController extends ContratoBaseController
         return [
             'dias'             => $dias,
             'base_total'       => $subtotalRenta,
-            'servicios_total'  => $totalServicios,
+            'servicios_total'  => $totalServicios + $totalCargos,
+            'cargos_total'     => $totalCargos,
+            'seguros_total'    => $precioSeguros,
             'subtotal'         => $nuevoSubtotal,
             'iva'              => $nuevoIva,
             'total'            => $nuevoTotal,
@@ -733,7 +816,14 @@ class ContratoController extends ContratoBaseController
                     'delivery_total'     => 0,
                     'updated_at'         => now(),
                 ]);
-                return response()->json(['status' => 'deleted', 'msg' => 'Delivery desactivado correctamente']);
+
+                $resumen = $this->recalcularResumenServiciosReservacion((int)$data['id_reservacion']);
+
+                return response()->json([
+                    'status'   => 'deleted',
+                    'msg'      => 'Delivery desactivado correctamente',
+                    'detalles' => $resumen,
+                ]);
             }
 
             DB::table('reservaciones')->where('id_reservacion', $data['id_reservacion'])->update([
@@ -746,7 +836,14 @@ class ContratoController extends ContratoBaseController
                 'updated_at'         => now(),
             ]);
 
-            return response()->json(['status' => 'updated', 'msg' => 'Delivery guardado correctamente', 'total' => $data['delivery_total']]);
+            $resumen = $this->recalcularResumenServiciosReservacion((int)$data['id_reservacion']);
+
+            return response()->json([
+                'status'   => 'updated',
+                'msg'      => 'Delivery guardado correctamente',
+                'total'    => $data['delivery_total'],
+                'detalles' => $resumen,
+            ]);
         } catch (\Throwable $e) {
             Log::error("Error en guardarDeliveryReservacion: " . $e->getMessage());
             return response()->json(['error' => 'Error interno'], 500);
@@ -943,7 +1040,9 @@ class ContratoController extends ContratoBaseController
                 }
             });
 
-            return response()->json(['success' => true, 'msg' => 'Protecciones guardadas.']);
+            $resumen = $this->recalcularResumenServiciosReservacion((int) $idRes);
+
+            return response()->json(['success' => true, 'msg' => 'Protecciones guardadas.', 'detalles' => $resumen]);
         } catch (\Throwable $e) {
             Log::error('Error en syncProtecciones: ' . $e->getMessage());
             return response()->json([

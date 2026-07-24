@@ -192,6 +192,7 @@ class Contrato2Controller extends ContratoBaseController
                     'v.modelo',
                     'v.placa',
                     'v.color',
+                    'v.numero_serie',
                     'v.transmision',
                     'v.asientos',
                     'v.puertas',
@@ -845,18 +846,75 @@ class Contrato2Controller extends ContratoBaseController
                 $listaAdicionales[] = ['nombre' => 'Servicio de Delivery', 'cantidad' => 1, 'total' => $delivery];
             }
 
+            // ── FIX: cargos variables (dropoff = 6, gasolina = 5) ──
+            // Deben incluirse igual que en recalcularResumenServiciosReservacion,
+            // o ambos metodos se sobrescriben el total mutuamente.
+            $idContratoActual = DB::table('contratos')
+                ->where('id_reservacion', $idReservacion)
+                ->orderByDesc('id_contrato')
+                ->value('id_contrato');
+
+            $totalCargos = 0;
+
+            if ($idContratoActual) {
+                DB::table('cargo_adicional')
+                    ->where('id_contrato', $idContratoActual)
+                    ->where('monto', '>', 0)
+                    ->select('concepto', 'monto')
+                    ->get()
+                    ->each(function ($c) use (&$listaAdicionales, &$totalCargos) {
+                        $listaAdicionales[] = [
+                            'nombre'   => $c->concepto ?: 'Cargo adicional',
+                            'cantidad' => 1,
+                            'total'    => (float) $c->monto,
+                        ];
+                        $totalCargos += (float) $c->monto;
+                    });
+            }
+
             $precioSeguros = (float) $this->calcularTotalProtecciones($idReservacion);
 
-            $nombreSeguro = DB::table('reservacion_paquete_seguro as rps')
+            // ── Detalle de protecciones (paquete O individuales) ──
+            $listaProtecciones = [];
+
+            $paquete = DB::table('reservacion_paquete_seguro as rps')
                 ->join('seguro_paquete as p', 'rps.id_paquete', '=', 'p.id_paquete')
                 ->where('rps.id_reservacion', $idReservacion)
-                ->value('p.nombre') ?? 'Protecciones seleccionadas';
+                ->select('p.nombre', 'rps.precio_por_dia')
+                ->first();
+
+            if ($paquete) {
+                $nombreSeguro = $paquete->nombre;
+                $listaProtecciones[] = [
+                    'nombre' => $paquete->nombre,
+                    'total'  => (float) $paquete->precio_por_dia * $dias,
+                ];
+            } else {
+                $individuales = DB::table('reservacion_seguro_individual as rsi')
+                    ->join('seguro_individuales as si', 'rsi.id_individual', '=', 'si.id_individual')
+                    ->where('rsi.id_reservacion', $idReservacion)
+                    ->select('si.nombre', 'rsi.precio_por_dia')
+                    ->get();
+
+                foreach ($individuales as $ind) {
+                    $listaProtecciones[] = [
+                        'nombre' => trim(preg_replace('/\([^)]*\)/', '', $ind->nombre)),
+                        'total'  => (float) $ind->precio_por_dia * $dias,
+                    ];
+                }
+
+                $nombreSeguro = $individuales->isNotEmpty()
+                    ? $individuales
+                        ->map(fn($i) => trim(preg_replace('/\([^)]*\)/', '', $i->nombre)))
+                        ->implode(', ')
+                    : 'Sin protecciones';
+            }
 
             $codigoCategoria = DB::table('categorias_carros')
                 ->where('id_categoria', $res->id_categoria)->value('codigo') ?? 'C';
 
             $garantia  = $this->obtenerGarantiaSeguro($codigoCategoria, $nombreSeguro);
-            $subtotal  = $baseTotal + $totalServicios + $delivery + $precioSeguros;
+            $subtotal  = $baseTotal + $totalServicios + $delivery + $totalCargos + $precioSeguros;
             $iva       = $subtotal * 0.16;
             $totalContrato = $subtotal + $iva;
 
@@ -889,9 +947,10 @@ class Contrato2Controller extends ContratoBaseController
                 'success' => true,
                 'data'    => [
                     'base'       => ['total' => $baseTotal, 'descripcion' => "{$dias} días · $" . number_format($tarifa, 2)],
-                    'adicionales' => ['lista' => $listaAdicionales, 'total' => $totalServicios + $delivery],
+                    'adicionales' => ['lista' => $listaAdicionales, 'total' => $totalServicios + $delivery + $totalCargos],
                     'totales'    => [
                         'nombre_seguro'   => $nombreSeguro,
+                        'lista_seguros'   => $listaProtecciones,
                         'monto_seguros'   => $precioSeguros,
                         'subtotal'        => $subtotal,
                         'iva'             => $iva,
@@ -1385,20 +1444,26 @@ class Contrato2Controller extends ContratoBaseController
     public function guardarFirmaCliente(Request $request)
     {
         try {
+            /* El lugar de estancia se exige al avanzar de paso, NO al
+               firmar: el cliente puede firmar antes de que se capture. */
             $request->validate([
                 'id_contrato'    => 'required|integer|exists:contratos,id_contrato',
                 'firma'          => 'required|string',
-                'lugar_estancia' => 'required|string|max:255',
+                'lugar_estancia' => 'nullable|string|max:255',
             ]);
 
             DB::table('contratos')
                 ->where('id_contrato', $request->id_contrato)
                 ->update(['firma_cliente' => $request->firma, 'updated_at' => now()]);
 
-            DB::table('contrato_estancias')->updateOrInsert(
-                ['id_contrato' => $request->id_contrato],
-                ['lugar_estancia' => $request->lugar_estancia, 'updated_at' => now()]
-            );
+            // Solo se escribe la estancia si viene con valor
+            $lugar = trim((string) $request->input('lugar_estancia', ''));
+            if ($lugar !== '') {
+                DB::table('contrato_estancias')->updateOrInsert(
+                    ['id_contrato' => $request->id_contrato],
+                    ['lugar_estancia' => $lugar, 'updated_at' => now()]
+                );
+            }
 
             return response()->json(['ok' => true, 'msg' => 'Firma y lugar de estancia guardados correctamente.']);
         } catch (\Exception $e) {
@@ -1446,4 +1511,36 @@ class Contrato2Controller extends ContratoBaseController
 
         return response()->json($personas);
     }
+
+    public function vehiculoActual($id)
+{
+    try {
+        $data = DB::table('reservaciones as r')
+            ->leftJoin('vehiculos as v', 'r.id_vehiculo', '=', 'v.id_vehiculo')
+            ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
+            ->where('r.id_reservacion', $id)
+            ->select(
+                'v.id_vehiculo',
+                'v.marca',
+                'v.modelo',
+                'v.placa',
+                'v.color',
+                'v.numero_serie',
+                'v.transmision',
+                'v.asientos',
+                'v.puertas',
+                'c.nombre as categoria_nombre',
+                'c.codigo as categoria_codigo'
+            )
+            ->first();
+
+        return response()->json([
+            'success'  => (bool) $data,
+            'vehiculo' => $data,
+        ]);
+    } catch (\Throwable $e) {
+        Log::error('Error vehiculoActual: ' . $e->getMessage());
+        return response()->json(['success' => false], 500);
+    }
+}
 }

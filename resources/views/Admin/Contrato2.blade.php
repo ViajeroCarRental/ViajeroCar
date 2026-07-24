@@ -3,7 +3,7 @@
 
 @section('css-vistaContrato')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="{{ asset('css/Contrato.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/Contrato2.css') }}">
 @endsection
 
 @section('contenidoContrato')
@@ -144,22 +144,22 @@
         {{-- Stepper Navbar --}}
         <nav class="stepper-navbar">
             <ul class="stepper-list">
-                <li class="stepper-item active" data-step-indicator="1">
+                <li class="stepper-item completed" data-step-indicator="1">
                     <div class="stepper-circle">1</div>
                     <div class="stepper-title">Reservación</div>
                 </li>
-                <li class="stepper-line"></li>
-                <li class="stepper-item" data-step-indicator="2">
+                <li class="stepper-line completed"></li>
+                <li class="stepper-item completed" data-step-indicator="2">
                     <div class="stepper-circle">2</div>
                     <div class="stepper-title">Servicios</div>
                 </li>
-                <li class="stepper-line"></li>
-                <li class="stepper-item" data-step-indicator="3">
+                <li class="stepper-line completed"></li>
+                <li class="stepper-item completed" data-step-indicator="3">
                     <div class="stepper-circle">3</div>
                     <div class="stepper-title">Protecciones</div>
                 </li>
-                <li class="stepper-line"></li>
-                <li class="stepper-item" data-step-indicator="4">
+                <li class="stepper-line completed"></li>
+                <li class="stepper-item active" data-step-indicator="4">
                     <div class="stepper-circle">4</div>
                     <div class="stepper-title">Documentación</div>
                 </li>
@@ -181,7 +181,7 @@
             <section class="steps">
 
                 {{-- Paso 4 --}}
-                <article class="step" data-step="4">
+                <article class="step active" data-step="4">
                     <div class="body">
                         <form id="formDocumentacion" action="{{ route('contrato.guardarDocumentacion') }}"
                             method="POST" enctype="multipart/form-data">
@@ -190,15 +190,15 @@
                             <input type="hidden" name="id_reservacion" value="{{ $idReservacion }}">
                             <input type="hidden" name="id_contrato" value="{{ $idContrato ?? '' }}">
 
-                          <div class="search-conductor-wrapper" style="margin-bottom: 20px;">
-    <input type="text" id="buscadorGlobalPersona" class="search-conductor"
-        placeholder="🔍 Buscar por teléfono (ej 4421234567)"
-        data-idx="0" autocomplete="off"
-        style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
-    <div class="search-results"
-        style="display: none; background:white; border:1px solid #e2e8f0; max-height:200px; overflow-y:auto; border-radius:6px; margin-top:4px;">
-    </div>
-</div>
+                        <div class="search-conductor-wrapper" style="margin-bottom: 20px;">
+                            <input type="text" id="buscadorGlobalPersona" class="search-conductor"
+                                placeholder="Buscar por teléfono (ej 4421234567)"
+                                data-idx="0" autocomplete="off"
+                                style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            <div class="search-results"
+                                style="display: none; background:white; border:1px solid #e2e8f0; max-height:200px; overflow-y:auto; border-radius:6px; margin-top:4px;">
+                            </div>
+                        </div>
 
                             {{-- TITULAR --}}
                             <div class="bloque-conductor-individual">
@@ -457,6 +457,8 @@
                                                     <label>Tipo de Identificación</label>
                                                     <select name="conductores[{{ $idx }}][tipo_identificacion]"
                                                         required>
+                                                        <option value="" disabled selected>Selecciona una opción...
+                                                        </option>
                                                         <option value="ine">Credencial para Votar (INE/IFE)</option>
                                                         <option value="pasaporte">Pasaporte</option>
                                                         <option value="cedula">Cédula Profesional</option>
@@ -467,7 +469,7 @@
                                                 <div class="input-row">
                                                     <label>Número de Identificación</label>
                                                     <input name="conductores[{{ $idx }}][numero_identificacion]"
-                                                        type="text" required>
+                                                        type="text" placeholder="XXXX-XXXX-XXXX" maxlength="18" required>
                                                 </div>
 
                                                 <div class="input-row">
@@ -569,7 +571,7 @@
                                                 <div class="input-row">
                                                     <label>Número de Licencia</label>
                                                     <input name="conductores[{{ $idx }}][numero_licencia]"
-                                                        type="text" required>
+                                                        type="text"  placeholder="Ej. QRO-123456" required>
                                                 </div>
 
                                                 <div class="input-row">
@@ -586,12 +588,12 @@
 
                                                 <div class="input-row">
                                                     <label>Fecha de Emisión</label>
-                                                    <input name="conductores[{{ $idx }}][fecha_emision]" type="text" class="fecha-flatpickr" autocomplete="off" readonlyrequired>
+                                                    <input name="conductores[{{ $idx }}][fecha_emision]" type="text" class="fecha-flatpickr" autocomplete="off" readonly required>
                                                 </div>
 
                                                 <div class="input-row">
                                                     <label>Fecha de Vencimiento de la Licencia</label>
-                                                    <input name="conductores[{{ $idx }}][fecha_vencimiento]" type="text" class="fecha-flatpickr" autocomplete="off" readonlyrequired>
+                                                    <input name="conductores[{{ $idx }}][fecha_vencimiento]" type="text" class="fecha-flatpickr" autocomplete="off" readonly required>
                                                 </div>
                                             </div>
 
@@ -880,10 +882,6 @@
                                 style="background: #eab308; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 8px; transition: all 0.2s ease;">
                              Firmar como Titular
                         </button>
-
-                        <div id="firmaCompletadaBadge" style="display: none; margin-top: 8px; padding: 8px 12px; background: #dcfce7; color: #166534; border-radius: 8px; font-size: 13px; font-weight: 600; text-align: center;">
-                             Firma registrada
-                        </div>
                     </div>
 
                     {{-- ========================================================= --}}
@@ -938,10 +936,6 @@
                                     style="background: #3b82f6; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 8px; transition: all 0.2s ease;">
                                   Firmar como Conductor Adicional
                             </button>
-
-                            <div id="firmaCompletadaBadgeAdicional" style="display: none; margin-top: 8px; padding: 8px 12px; background: #dbeafe; color: #1e40af; border-radius: 8px; font-size: 13px; font-weight: 600; text-align: center;">
-                                  Firma registrada
-                            </div>
                         </div>
                     @endif
 
@@ -952,7 +946,7 @@
                         condiciones del reverso de este documento, así como el aviso de privacidad que
                         se encuentra a mi disposición en:
                         <br><br>
-                        <a href="https://www.europcar.com.mx/privacidad.php" target="_blank"
+                        <a href="https://www.viajerocarental.com/politicas" target="_blank"
                             class="privacy-link">Aviso de privacidad</a>
                     </div>
                 </div>
@@ -1068,7 +1062,7 @@
 
         </div> {{-- cierra contrato-preview-container --}}
 
-        {{-- ⚠️ BOTONES FUERA DEL CONTAINER PARA QUE FUNCIONE EL FLEX --}}
+        {{-- BOTONES FUERA DEL CONTAINER PARA QUE FUNCIONE EL FLEX --}}
         <div class="acciones-finales">
             <button class="btn gray" id="back4" type="button">Corregir Documentos</button>
             <button class="btn-continuar-yellow" id="go6" type="button">Continuar</button>
@@ -1153,16 +1147,16 @@
                         <section class="section section-mt-16">
                             <div class="head">Estado de Cuenta</div>
                             <div class="cnt">
-                                <div class="flex-between-wrap">
-                                    <div>
-                                        <div class="small">Total del Contrato</div>
-                                        <div class="total" id="detTotalFinalCuenta">$0.00 MXN</div>
-                                    </div>
-                                    <div>
-                                        <div class="small">Saldo Pendiente</div>
-                                        <div class="badge badge-saldo" id="detSaldo">$0.00 MXN</div>
-                                    </div>
+                               <div class="flex-between-wrap">
+                                <div>
+                                    <div class="small">Total del Contrato</div>
+                                    <div class="total" id="detTotalFinalCuenta">$0.00 MXN</div>
                                 </div>
+                                <div>
+                                    <div class="small">Saldo Pendiente</div>
+                                    <div class="badge badge-saldo" id="detSaldo">$0.00 MXN</div>
+                                </div>
+                            </div>
 
                                 <div class="garantia-box">
                                     <div>

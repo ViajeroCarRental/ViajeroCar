@@ -343,7 +343,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                             Eliminar
                                         </button>
                                     </td>
-                                </tr>               
+                                </tr>
                             `).join("")}
                         </tbody>
                     </table>
@@ -1454,6 +1454,70 @@ document.addEventListener("DOMContentLoaded", () => {
         const addResponsivaClauseBtn = event.target.closest(".btn-add-responsiva-clause");
         if (addResponsivaClauseBtn) {
             addResponsivaClause(Number(addResponsivaClauseBtn.dataset.driverIndex));
+            return;
+        }
+
+        // 9.1 VISUALIZAR RESPONSIVA (vista previa sin guardar)
+        const previewResponsivaBtn = event.target.closest(".btn-preview-responsiva");
+        if (previewResponsivaBtn) {
+            const idx = Number(previewResponsivaBtn.dataset.driverIndex);
+            const driver = drivers[idx];
+            if (!driver) {
+                showToast("No se encontró el conductor");
+                return;
+            }
+
+            // Datos de la empresa que ya escribió en el Paso 2 (persona moral)
+            const val = (id) => document.getElementById(id)?.value || "";
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = "/admin/responsiva-preview";
+            form.target = "_blank";
+            form.style.display = "none";
+
+            const token = document.querySelector('meta[name="csrf-token"]')?.content
+                    || document.querySelector('input[name="_token"]')?.value
+                    || "";
+
+            const campos = {
+                _token: token,
+                nombre: driver.nombre,
+                identificacion: driver.identificacion,
+                licencia: driver.licencia,
+                correo: driver.correo,
+                telefono: driver.telefono,
+                vigencia_licencia: driver.vigenciaLicencia,
+                nacimiento: driver.nacimiento,
+                firma: driver.firmaConductor,
+                razon_social: val("moralRazon"),
+                representante_nombre: val("moralRepresentante"),
+                representante_correo: val("moralCorreoRepresentante"),
+                representante_telefono: val("moralTelefonoRepresentante"),
+                representante_identificacion: val("moralRepresentanteIdentificacion"),
+                telefono_empresa: val("moralTelefono"),
+                correo_empresa: val("moralCorreo"),
+                rfc: val("moralFacturacionRfc"),
+                // firma del representante legal (del Paso 4)
+                firma_representante: val("firmaRepresentanteLegal"),
+                // firma del conductor del convenio (del Paso 4)
+                firma_conductor_convenio: val("firmaConductorConvenio"),
+                // firma del asesor (del Paso 4)
+                firma_asesor: val("firmaAsesorMoral"),
+            };
+
+            Object.entries(campos).forEach(([name, value]) => {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = name;
+                input.value = value ?? "";
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
+            form.remove();
+
+            showToast("Generando vista previa...");
             return;
         }
 
