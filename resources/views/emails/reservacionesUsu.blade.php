@@ -387,27 +387,90 @@
       color: #6b7280;
     }
 
+    /* === IMAGEN DEL AUTO MÁS GRANDE === */
+    .auto-img-cell img {
+      width: 100% !important;
+      max-width: 320px !important;
+      min-width: 240px !important;
+      height: auto !important;
+      display: block !important;
+      border: none !important;
+      margin: 0 auto !important;
+    }
+
+    /* === RESPONSIVO MÓVIL === */
     @media only screen and (max-width: 600px) {
-      .footer-main-table td {
-        display: block !important;
-        width: 100% !important;
-        text-align: center !important;
-        padding: 8px 0 !important;
+      .container {
+        margin: 0 !important;
+        border-radius: 0 !important;
       }
 
-      .footer-pay img {
-        width: 35px !important;
-        margin-bottom: 5px !important;
-      }
-
-      .content {
-        padding: 20px !important;
+      .content, .hero {
+        padding-left: 20px !important;
+        padding-right: 20px !important;
       }
 
       .summary-card {
         padding: 14px !important;
       }
 
+      .header {
+        padding: 16px 16px !important;
+      }
+
+      table.header-table td.hdr-logo img {
+        max-width: 150px !important;
+      }
+
+      table.header-table td.hdr-resv .label {
+        font-size: 12px !important;
+      }
+
+      table.header-table td.hdr-resv .code {
+        font-size: 16px !important;
+        white-space: nowrap !important;
+      }
+
+      /* AUTO: imagen arriba, texto abajo - IMAGEN MÁS GRANDE */
+      table.auto-table,
+      table.auto-table tbody,
+      table.auto-table tr {
+        display: block !important;
+        width: 100% !important;
+      }
+
+      table.auto-table td.auto-img-cell,
+      table.auto-table td.auto-info-cell {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 0 !important;
+      }
+
+      table.auto-table td.auto-img-cell {
+        padding: 0 0 16px 0 !important;
+        text-align: center !important;
+      }
+
+      table.auto-table td.auto-img-cell img {
+        width: 100% !important;
+        max-width: 280px !important;
+        min-width: 200px !important;
+        height: auto !important;
+        margin: 0 auto !important;
+        display: block !important;
+      }
+
+      table.auto-table td.auto-info-cell {
+        text-align: left !important;
+      }
+
+      .auto-title {
+        font-size: 20px !important;
+      }
+
+      /* PRICE TABLE */
       .price-table {
         display: table !important;
         width: 100% !important;
@@ -446,6 +509,47 @@
         width: 40% !important;
         text-align: right !important;
       }
+
+      /* === FOOTER MÓVIL === */
+      .site-footer {
+        padding: 16px 16px 18px !important;
+        margin-top: 24px !important;
+      }
+
+      .footer-social img {
+        max-height: 22px !important;
+      }
+
+      .footer-social a {
+        margin-right: 10px !important;
+      }
+
+      table.footer-table td.foot-logo-cell img {
+        height: 20px !important;
+        max-height: 20px !important;
+      }
+
+      table.footer-main-table,
+      table.footer-main-table tbody,
+      table.footer-main-table tr {
+        display: block !important;
+        width: 100% !important;
+      }
+
+      table.footer-main-table td.foot-col {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 0 0 14px 0 !important;
+        text-align: center !important;
+      }
+
+      .footer-pay img {
+        max-height: 16px !important;
+        width: auto !important;
+        margin: 0 5px 0 0 !important;
+      }
     }
   </style>
 </head>
@@ -455,14 +559,14 @@
 
     <!-- HEADER -->
     <div class="header">
-      <table class="header-table" role="presentation">
+      <table class="header-table" role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; table-layout:fixed; border-collapse:collapse;">
         <tr>
-          <td style="vertical-align:middle;">
-            <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355566/Logo3_p1kxin.jpg" alt="Viajero Car Rental" style="width:210px; max-width:210px; height:auto; display:block; border:none;">
+          <td class="hdr-logo" width="55%" style="width:55%; vertical-align:middle; padding:0;">
+            <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783355566/Logo3_p1kxin.jpg" alt="Viajero Car Rental" style="width:100%; max-width:210px; height:auto; display:block; border:none;">
           </td>
-          <td class="resv-box">
-            <p class="label">Reservación</p>
-            <p class="code">{{ $reservacion->codigo }}</p>
+          <td class="hdr-resv" width="45%" style="width:45%; vertical-align:middle; padding:0 0 0 10px; text-align:right;">
+            <p class="label" style="font-size:15px; text-transform:uppercase; opacity:.95; margin:0; font-weight:700; letter-spacing:.5px;">Reservación</p>
+            <p class="code" style="font-size:20px; margin:4px 0 0 0; font-weight:700; letter-spacing:.5px;">{{ $reservacion->codigo }}</p>
           </td>
         </tr>
       </table>
@@ -574,127 +678,276 @@
         <!-- PICK-UP -->
         <div class="location-block">
           <div class="location-title">PICK-UP</div>
-          <div class="location-datetime">
-            Fecha: <strong>{{ ucfirst(\Carbon\Carbon::parse($reservacion->fecha_inicio)->translatedFormat('D. d M. Y')) }}</strong>
-          </div>
-          <div class="location-datetime">
-            Hora: <strong>{{ \Carbon\Carbon::parse($reservacion->hora_retiro)->format('g:i A') }}</strong>
-          </div>
-          <div class="location-place">
-            Location: <strong>{{ $lugarRetiroTraducido }}</strong>
-          </div>
+
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; width:100%;">
+            <tr>
+              <td style="width:24px; vertical-align:middle; padding:2px 8px 2px 0;">
+                <img src="https://api.iconify.design/lucide/calendar.svg?color=%23111111&width=16&height=16"
+                     width="16" height="16" alt="" style="display:block; border:0;">
+              </td>
+              <td style="vertical-align:middle; padding:2px 0; font-size:14px; font-weight:600; color:#111;">
+                Fecha: <strong>{{ ucfirst(\Carbon\Carbon::parse($reservacion->fecha_inicio)->translatedFormat('D. d M. Y')) }}</strong>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:24px; vertical-align:middle; padding:2px 8px 2px 0;">
+                <img src="https://api.iconify.design/lucide/clock.svg?color=%23111111&width=16&height=16"
+                     width="16" height="16" alt="" style="display:block; border:0;">
+              </td>
+              <td style="vertical-align:middle; padding:2px 0; font-size:14px; font-weight:600; color:#111;">
+                Hora: <strong>{{ \Carbon\Carbon::parse($reservacion->hora_retiro)->format('g:i A') }}</strong>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:24px; vertical-align:top; padding:2px 8px 2px 0;">
+                <img src="https://api.iconify.design/lucide/map-pin.svg?color=%236b7280&width=16&height=16"
+                     width="16" height="16" alt="" style="display:block; border:0;">
+              </td>
+              <td style="vertical-align:top; padding:2px 0; font-size:13px; color:#6b7280;">
+                Location: <strong>{{ $lugarRetiroTraducido }}</strong>
+              </td>
+            </tr>
+          </table>
         </div>
 
         <!-- RETURN -->
         <div class="location-block">
           <div class="location-title">RETURN</div>
-          <div class="location-datetime">
-            Fecha: <strong>{{ ucfirst(\Carbon\Carbon::parse($reservacion->fecha_fin)->translatedFormat('D. d M. Y')) }}</strong>
-          </div>
-          <div class="location-datetime">
-            Hora: <strong>{{ \Carbon\Carbon::parse($reservacion->hora_entrega)->format('g:i A') }}</strong>
-          </div>
-          <div class="location-place">
-            Location: <strong>{{ $lugarEntregaTraducido }}</strong>
-          </div>
+
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; width:100%;">
+            <tr>
+              <td style="width:24px; vertical-align:middle; padding:2px 8px 2px 0;">
+                <img src="https://api.iconify.design/lucide/calendar.svg?color=%23111111&width=16&height=16"
+                     width="16" height="16" alt="" style="display:block; border:0;">
+              </td>
+              <td style="vertical-align:middle; padding:2px 0; font-size:14px; font-weight:600; color:#111;">
+                Fecha: <strong>{{ ucfirst(\Carbon\Carbon::parse($reservacion->fecha_fin)->translatedFormat('D. d M. Y')) }}</strong>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:24px; vertical-align:middle; padding:2px 8px 2px 0;">
+                <img src="https://api.iconify.design/lucide/clock.svg?color=%23111111&width=16&height=16"
+                     width="16" height="16" alt="" style="display:block; border:0;">
+              </td>
+              <td style="vertical-align:middle; padding:2px 0; font-size:14px; font-weight:600; color:#111;">
+                Hora: <strong>{{ \Carbon\Carbon::parse($reservacion->hora_entrega)->format('g:i A') }}</strong>
+              </td>
+            </tr>
+            <tr>
+              <td style="width:24px; vertical-align:top; padding:2px 8px 2px 0;">
+                <img src="https://api.iconify.design/lucide/map-pin.svg?color=%236b7280&width=16&height=16"
+                     width="16" height="16" alt="" style="display:block; border:0;">
+              </td>
+              <td style="vertical-align:top; padding:2px 0; font-size:13px; color:#6b7280;">
+                Location: <strong>{{ $lugarEntregaTraducido }}</strong>
+              </td>
+            </tr>
+          </table>
         </div>
 
         <div class="summary-line"></div>
+<!-- ============================================ -->
+<!-- === TU AUTO - IMAGEN MÁS GRANDE === -->
+<!-- ============================================ -->
+<p class="section-title">Tu Auto</p>
 
-        <!-- TU AUTO -->
-        <p class="section-title">Tu Auto</p>
+<table role="presentation" class="auto-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; border-collapse:collapse;">
+  <tr>
+    <td class="auto-img-cell" width="45%" style="width:45%; vertical-align:middle; padding:10px 0;">
+      @php
+        $rutaImgUsr = ltrim(parse_url($imgCategoria, PHP_URL_PATH) ?? '', '/');
+        $rutaImgUsrLocal = public_path($rutaImgUsr);
+      @endphp
+      @if($rutaImgUsr && file_exists($rutaImgUsrLocal))
+        <img src="{{ $message->embed($rutaImgUsrLocal) }}" alt="Vehículo" width="320" style="width:100%; max-width:320px; min-width:240px; height:auto; display:block; border:none; margin:0 auto;">
+      @else
+        <img src="{{ $imgCategoria }}" alt="Vehículo" width="320" style="width:100%; max-width:320px; min-width:240px; height:auto; display:block; border:none; margin:0 auto;">
+      @endif
+    </td>
+    <td class="auto-info-cell" style="width:55%; vertical-align:middle; padding:10px 0 10px 10px;">
+      <p class="auto-title">{{ $tuAuto['titulo'] ?? ($categoria->descripcion ?? '-') }}</p>
+      <p class="auto-subtitle">{{ $tuAuto['subtitulo'] ?? 'CATEGORÍA ' . ($categoria->codigo ?? '-') }}</p>
 
-        <table role="presentation" style="width:100%; border-collapse:collapse;">
-          <tr>
-            <td style="width:45%; vertical-align:middle; padding:10px 0;">
-              @php
-                $rutaImgUsr = ltrim(parse_url($imgCategoria, PHP_URL_PATH) ?? '', '/');
-                $rutaImgUsrLocal = public_path($rutaImgUsr);
-              @endphp
-              @if($rutaImgUsr && file_exists($rutaImgUsrLocal))
-                <img src="{{ $message->embed($rutaImgUsrLocal) }}" alt="Vehículo" style="width:100%; max-width:260px; height:auto; display:block; border:none;">
-              @else
-                <img src="{{ $imgCategoria }}" alt="Vehículo" style="width:100%; max-width:260px; height:auto; display:block; border:none;">
-              @endif
+      <!-- SPECS EN UNA SOLA FILA -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; margin:8px 0 10px;">
+        <tr>
+          <td style="vertical-align:middle; padding:0 4px 0 0;">
+            <img src="https://api.iconify.design/lucide/user.svg?color=%23111111&width=14&height=14"
+                 width="14" height="14" alt="" style="display:block; border:0;">
+          </td>
+          <td style="vertical-align:middle; padding:0 12px 0 0; font-size:13px; font-weight:700; color:#111; white-space:nowrap;">
+            {{ $tuAuto['pax'] ?? 5 }}
+          </td>
+
+          <td style="vertical-align:middle; padding:0 4px 0 0;">
+            <img src="https://api.iconify.design/lucide/briefcase.svg?color=%23111111&width=14&height=14"
+                 width="14" height="14" alt="" style="display:block; border:0;">
+          </td>
+          <td style="vertical-align:middle; padding:0 12px 0 0; font-size:13px; font-weight:700; color:#111; white-space:nowrap;">
+            {{ $tuAuto['small'] ?? 2 }}
+          </td>
+
+          <td style="vertical-align:middle; padding:0 4px 0 0;">
+            <img src="https://api.iconify.design/lucide/luggage.svg?color=%23111111&width=14&height=14"
+                 width="14" height="14" alt="" style="display:block; border:0;">
+          </td>
+          <td style="vertical-align:middle; padding:0 12px 0 0; font-size:13px; font-weight:700; color:#111; white-space:nowrap;">
+            {{ $tuAuto['big'] ?? 1 }}
+          </td>
+
+          <td style="vertical-align:middle; padding:0 4px 0 0;">
+            <img src="https://api.iconify.design/lucide/settings-2.svg?color=%23111111&width=14&height=14"
+                 width="14" height="14" alt="" style="display:block; border:0;">
+          </td>
+          <td style="vertical-align:middle; padding:0 12px 0 0; font-size:13px; color:#111; white-space:nowrap;">
+            {{ $tuAuto['transmision'] ?? 'Automática' }}
             </td>
-            <td style="width:55%; vertical-align:middle; padding:10px 0 10px 10px;">
-              <p class="auto-title">{{ $tuAuto['titulo'] ?? ($categoria->descripcion ?? '-') }}</p>
-              <p class="auto-subtitle">{{ $tuAuto['subtitulo'] ?? 'CATEGORÍA ' . ($categoria->codigo ?? '-') }}</p>
-              <div class="auto-specs">
-                <div><strong>{{ $tuAuto['pax'] ?? 5 }}</strong> pasajeros</div>
-                <div><strong>{{ $tuAuto['small'] ?? 2 }}</strong> maletas chicas</div>
-                <div><strong>{{ $tuAuto['big'] ?? 1 }}</strong> maletas grandes</div>
-                <div class="muted">{{ $tuAuto['transmision'] ?? 'Transmisión manual o automática' }}</div>
-                <div class="muted">{{ $tuAuto['tech'] ?? 'Apple CarPlay | Android Auto' }}</div>
-              </div>
-              <div class="auto-includes">{{ $tuAuto['incluye'] ?? 'KM ilimitados | Reelevo de Responsabilidad (LI)' }}</div>
-            </td>
-          </tr>
-        </table>
 
-        <div class="summary-line"></div>
+          <td style="vertical-align:middle; padding:0 4px 0 0;">
+            <img src="https://api.iconify.design/lucide/snowflake.svg?color=%23111111&width=14&height=14"
+                 width="14" height="14" alt="" style="display:block; border:0;">
+          </td>
+          <td style="vertical-align:middle; padding:0; font-size:13px; color:#111; white-space:nowrap;">
+            A/C
+          </td>
+        </tr>
+      </table>
+
+      <!-- BADGES CARPLAY / ANDROID AUTO -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse; margin:0 0 10px;">
+        <tr>
+          <td style="padding:0 8px 0 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                   style="border-collapse:separate; background:#111827; border-radius:20px;">
+              <tr>
+                <td style="padding:5px 10px 5px 10px; vertical-align:middle;">
+                  <img src="https://api.iconify.design/lucide/car.svg?color=%23ffffff&width=13&height=13"
+                       width="13" height="13" alt="" style="display:block; border:0;">
+                </td>
+                <td style="padding:5px 12px 5px 0; vertical-align:middle; font-size:12px; font-weight:700; color:#ffffff; white-space:nowrap;">
+                  CarPlay
+                </td>
+              </tr>
+            </table>
+          </td>
+          <td style="padding:0;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                   style="border-collapse:separate; background:#22c55e; border-radius:20px;">
+              <tr>
+                <td style="padding:5px 10px 5px 10px; vertical-align:middle;">
+                  <img src="https://api.iconify.design/lucide/bot.svg?color=%23ffffff&width=13&height=13"
+                       width="13" height="13" alt="" style="display:block; border:0;">
+                </td>
+                <td style="padding:5px 12px 5px 0; vertical-align:middle; font-size:12px; font-weight:700; color:#ffffff; white-space:nowrap;">
+                  Android Auto
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+
+      <!-- INCLUYE -->
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+        <tr>
+          <td style="vertical-align:middle; padding:0 6px 0 0;">
+            <img src="https://api.iconify.design/lucide/check.svg?color=%23111111&width=14&height=14"
+                 width="14" height="14" alt="" style="display:block; border:0;">
+          </td>
+          <td style="vertical-align:middle; font-size:12px; font-weight:700; color:#111; letter-spacing:.3px;">
+            {{ $tuAuto['incluye'] ?? 'KM ILIMITADOS | PROTECCIÓN A TERCEROS (LI)' }}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<div class="summary-line"></div>
 
         <!-- EXTRAS -->
         <p class="section-title">Extras</p>
         <div class="summary-line"></div>
 
-        <div style="margin:15px 0;">
-          <table role="presentation" width="100%">
-            <tr>
-              @foreach($serviciosDisponibles as $index => $servicio)
-                @php
-                  $seleccionado = collect($extrasReserva)->pluck('nombre')->contains($servicio['nombre']);
-                  $tipoCambio = 20;
-                  $moneda = $locale === 'en' ? 'USD' : 'MXN';
-                  $simboloMoneda = '$';
-                  $precioExtra = $servicio['precio'];
-                  if ($moneda === 'USD') {
-                    $precioExtra = $precioExtra / $tipoCambio;
-                  }
-                  $precioExtraFormateado = number_format($precioExtra, $moneda === 'USD' ? 2 : 0);
-                  $unidadTraducida = __($servicio['unidad']);
-                @endphp
-                <td width="33%" style="vertical-align:top; padding-bottom:12px;">
-                  <table role="presentation">
+        @php
+          $tipoCambio    = 20;
+          $moneda        = $locale === 'en' ? 'USD' : 'MXN';
+          $simboloMoneda = '$';
+
+          $convertir = function ($mxn) use ($moneda, $tipoCambio) {
+              return $moneda === 'USD'
+                  ? number_format((float) $mxn / $tipoCambio, 2)
+                  : number_format((float) $mxn, 2);
+          };
+
+          $filasExtras = [];
+
+          foreach (($extrasReserva ?? []) as $ex) {
+            $idServ = (int)   ($ex->id_servicio ?? 0);
+            $cant   = (float) ($ex->cantidad ?? 1);
+            $total  = (float) ($ex->total ?? 0);
+            $cobro  = strtolower((string) ($ex->tipo_cobro ?? ''));
+            $precio = (float) ($ex->precio ?? 0);
+
+            if ($idServ === 11) {
+              $unidad = __('Return at a different branch');
+            } elseif ($idServ === 1 || $cobro === 'por_tanque') {
+              $unidad = number_format($cant, 0) . ' L x $' . $convertir($precio) . ' ' . $moneda;
+            } elseif ($cobro === 'por_evento') {
+              $unidad = number_format($cant, 0) . ' x $' . $convertir($precio) . ' ' . $moneda;
+            } else {
+              $unidad = number_format($cant, 0) . ' x $' . $convertir($precio) . ' ' . $moneda
+                      . ' x ' . $diasCorreo . ' ' . __('day(s)');
+            }
+
+            $filasExtras[] = [
+              'nombre' => $ex->nombre ?? 'Servicio',
+              'desc'   => $ex->descripcion ?? '',
+              'unidad' => $unidad,
+              'total'  => $total,
+            ];
+          }
+        @endphp
+
+        @if(count($filasExtras) === 0)
+          <div style="font-size:14px; opacity:.85; margin:15px 0;">{{ __('No add-ons selected') }}</div>
+        @else
+          <table role="presentation" class="extras-table" cellpadding="0" cellspacing="0" border="0" style="width:100%; border-collapse:collapse; margin:15px 0;">
+            @foreach($filasExtras as $f)
+              <tr>
+                <td class="ex-check-cell" width="34" style="width:34px; vertical-align:top; padding:10px 10px 10px 0;">
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0"
+                         style="border-collapse:collapse; width:20px; height:20px; border:2px solid #111; border-radius:3px;">
                     <tr>
-                      <td style="vertical-align:top; padding-right:8px;">
-                        <div style="width:18px; height:18px; border-radius:4px; border:2px solid {{ $seleccionado ? '#E50914' : '#d1d5db' }}; background:{{ $seleccionado ? '#E50914' : '#fff' }}; text-align:center; line-height:16px; font-size:12px; color:white; font-weight:bold;">
-                          @if($seleccionado) ✓ @endif
-                        </div>
-                      </td>
-                      <td>
-                        <div style="font-size:13px; font-weight:700; color:#111;">{{ $servicio['nombre'] }}</div>
-                        <div style="font-size:11px; color:#6b7280;">{{ $servicio['desc'] }}</div>
-                        <div style="font-size:11px; font-weight:600; color:#111;">{{ $simboloMoneda }}{{ $precioExtraFormateado }} / {{ $unidadTraducida }} {{ $moneda === 'USD' ? 'USD' : 'MXN' }}</div>
+                      <td align="center" valign="middle" style="width:20px; height:20px; text-align:center; padding:0;">
+                        <img src="https://api.iconify.design/lucide/check.svg?color=%23E50914&width=14&height=14"
+                             width="14" height="14" alt="" style="display:inline-block; border:0; vertical-align:middle;">
                       </td>
                     </tr>
                   </table>
                 </td>
-                @if(($index + 1) % 3 == 0 && !$loop->last)
-                  </tr><tr>
-                @endif
-              @endforeach
-            </tr>
+                <td class="ex-info-cell" style="vertical-align:top; padding:10px 10px 10px 0;">
+                  <div style="font-weight:800; font-size:15px; color:#111; line-height:1.3;">{{ __($f['nombre']) }}</div>
+                  @if(!empty($f['desc']))
+                    <div style="font-size:13px; color:#555; margin-top:3px; line-height:1.5;">{{ __($f['desc']) }}</div>
+                  @endif
+                  <div style="font-size:12px; color:#888; margin-top:3px;">{{ $f['unidad'] }}</div>
+                </td>
+                <td class="ex-total-cell" align="right" style="vertical-align:top; padding:10px 0; white-space:nowrap;">
+                  <span style="font-weight:800; font-size:15px; color:#111;">
+                    TOTAL ${{ $convertir($f['total']) }} {{ $moneda }}
+                  </span>
+                </td>
+              </tr>
+            @endforeach
           </table>
-        </div>
+        @endif
 
         @php
-          $tipoCambio = 20;
-          $moneda = $locale === 'en' ? 'USD' : 'MXN';
-          $simboloMoneda = '$';
-
-          function formatearPrecioEmail($montoMXN, $moneda, $tipoCambio) {
-            if ($moneda === 'USD') {
-              $monto = $montoMXN / $tipoCambio;
-              return number_format($monto, 2);
-            }
-            return number_format($montoMXN, 2);
-          }
-
-          $tarifaBaseTotalConvertida = formatearPrecioEmail($tarifaBaseTotal, $moneda, $tipoCambio);
-          $opcionesRentaTotalConvertida = formatearPrecioEmail($opcionesRentaTotal, $moneda, $tipoCambio);
-          $impuestosConvertidos = formatearPrecioEmail($reservacion->impuestos, $moneda, $tipoCambio);
-          $totalConvertido = formatearPrecioEmail($reservacion->total, $moneda, $tipoCambio);
+          $tarifaBaseTotalConvertida    = $convertir($tarifaBaseTotal);
+          $opcionesRentaTotalConvertida = $convertir($opcionesRentaTotal);
+          $impuestosConvertidos         = $convertir($reservacion->impuestos);
+          $totalConvertido              = $convertir($reservacion->total);
         @endphp
 
         <p class="section-title">Detalles del precio</p>
@@ -770,9 +1023,9 @@
     <div class="site-footer">
       <div class="footer-inner">
 
-        <table class="footer-table" cellpadding="0" cellspacing="0" border="0">
+        <table class="footer-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; table-layout:fixed; border-collapse:collapse;">
           <tr>
-            <td align="left" valign="middle" style="width:70%;">
+            <td class="foot-social-cell" align="left" valign="middle" width="60%" style="width:60%;">
               <div class="footer-social">
                 <a href="https://wa.me/524423032668">
                   <img src="https://res.cloudinary.com/xpcjjkal/image/upload/f_auto,q_auto/whatsapp_dtdhsa" alt="WhatsApp">
@@ -788,22 +1041,48 @@
                 </a>
               </div>
             </td>
-            <td align="right" valign="middle" style="width:30%; padding-left:20px;">
-              <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783358827/LogoR_uwdvtq.png" alt="Viajero Car Rental" style="height:28px; max-height:28px; width:auto; display:inline-block; border:none;">
+            <td class="foot-logo-cell" align="right" valign="middle" width="40%" style="width:40%; padding-left:10px;">
+              <img src="https://res.cloudinary.com/xpcjjkal/image/upload/v1783358827/LogoR_uwdvtq.png" alt="Viajero Car Rental" style="height:28px; max-height:28px; width:auto; max-width:100%; display:inline-block; border:none;">
             </td>
           </tr>
         </table>
 
         <div class="footer-sep"></div>
 
-        <table class="footer-main-table" cellpadding="0" cellspacing="0" border="0">
+        <table class="footer-main-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; border-collapse:collapse;">
           <tr>
-            <td width="33%" valign="top" style="padding-right:15px;">
-              <p class="ubicacion-text">📍 OFICINA CENTRAL PARK, QUERÉTARO</p>
-              <p class="ubicacion-text">📍 PICK-UP AEROPUERTO DE QUERÉTARO</p>
-              <p class="ubicacion-text">📍 PICK-UP AEROPUERTO DE LEÓN</p>
+            <td class="foot-col" width="33%" valign="top" style="width:33%; padding-right:15px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+                <tr>
+                  <td style="width:20px; vertical-align:top; padding:0 6px 6px 0;">
+                    <img src="https://api.iconify.design/lucide/map-pin.svg?color=%23111827&width=13&height=13"
+                         width="13" height="13" alt="" style="display:block; border:0;">
+                  </td>
+                  <td style="vertical-align:top; padding:0 0 6px; font-size:12px; color:#111827; line-height:1.4;">
+                    OFICINA CENTRAL PARK, QUERÉTARO
+                  </td>
+                </tr>
+                <tr>
+                  <td style="width:20px; vertical-align:top; padding:0 6px 6px 0;">
+                    <img src="https://api.iconify.design/lucide/map-pin.svg?color=%23111827&width=13&height=13"
+                         width="13" height="13" alt="" style="display:block; border:0;">
+                  </td>
+                  <td style="vertical-align:top; padding:0 0 6px; font-size:12px; color:#111827; line-height:1.4;">
+                    PICK-UP AEROPUERTO DE QUERÉTARO
+                  </td>
+                </tr>
+                <tr>
+                  <td style="width:20px; vertical-align:top; padding:0 6px 0 0;">
+                    <img src="https://api.iconify.design/lucide/map-pin.svg?color=%23111827&width=13&height=13"
+                         width="13" height="13" alt="" style="display:block; border:0;">
+                  </td>
+                  <td style="vertical-align:top; padding:0; font-size:12px; color:#111827; line-height:1.4;">
+                    PICK-UP AEROPUERTO DE LEÓN
+                  </td>
+                </tr>
+              </table>
             </td>
-            <td width="33%" valign="top" style="padding-right:15px;">
+            <td class="foot-col" width="33%" valign="top" style="width:33%; padding-right:15px;">
               <ul>
                 <li><a href="{{ route('rutaReservaciones') }}">MI RESERVA</a></li>
                 <li><a href="{{ route('rutaCatalogo') }}">AUTOS</a></li>
@@ -812,7 +1091,7 @@
                 <li><a href="{{ route('rutaContacto') }}">CONTACTO</a></li>
               </ul>
             </td>
-            <td width="33%" valign="top">
+            <td class="foot-col" width="33%" valign="top" style="width:33%;">
               <ul>
                 <li><a href="https://viajerocarental.com/blog">BLOG</a></li>
                 <li><a href="{{ route('rutaFAQ') }}">F.A.Q</a></li>

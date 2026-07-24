@@ -1,208 +1,590 @@
 /* =======================================
-   CONTRATO FINAL — JS estable (firmas + correo)
+   CONTRATO FINAL
+   Acordeón + revisiones + firmas + correo
 ======================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
-
-  /* =======================================
-     1) OBTENER ID DEL CONTRATO (seguro)
-  ======================================= */
   const contratoApp =
     document.getElementById("contratoApp") ||
     document.querySelector("[data-id-contrato]");
 
-  const CONTRATO_ID =
+  const id =
     contratoApp?.dataset.idContrato ||
-    contratoApp?.dataset.idContratoFinal ||
-    contratoApp?.dataset.idContratoId ||
-    contratoApp?.dataset.idContrato ||
-    contratoApp?.dataset.idContratoValue ||
-    contratoApp?.dataset.idContrato;
+    contratoApp?.getAttribute("data-id-contrato") ||
+    null;
 
-  // fallback por si usas data-id-contrato (con guion)
-  const CONTRATO_ID_2 = contratoApp?.dataset.idContrato || contratoApp?.getAttribute("data-id-contrato");
-
-  const id = CONTRATO_ID || CONTRATO_ID_2 || null;
-
-  console.log("🔎 ID CONTRATO:", id);
-
-  const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || "";
+  const CSRF =
+    document.querySelector('meta[name="csrf-token"]')?.content || "";
 
   async function postJSON(url, payload) {
     const resp = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json",
-        "X-CSRF-TOKEN": CSRF
+        Accept: "application/json",
+        "X-CSRF-TOKEN": CSRF,
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     const raw = await resp.text();
-    let data = null;
-    try { data = JSON.parse(raw); } catch { data = { raw }; }
+    let data;
+
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      data = { raw };
+    }
 
     if (!resp.ok) {
-      console.error("❌ Error HTTP:", resp.status, data);
-      throw new Error(data?.msg || data?.message || `Error ${resp.status}`);
+      console.error("Error HTTP:", resp.status, data);
+
+      throw new Error(
+        data?.msg ||
+        data?.message ||
+        `Error ${resp.status}`
+      );
     }
 
     return data;
   }
 
+  function notificar(tipo, mensaje) {
+    if (
+      window.alertify &&
+      typeof alertify[tipo] === "function"
+    ) {
+      alertify[tipo](mensaje);
+      return;
+    }
+
+    if (tipo === "error" || tipo === "warning") {
+      alert(mensaje);
+    }
+  }
+
   /* =======================================
-     3) FIRMA ARRENDADOR
+     1) ACORDEÓN DE DOCUMENTOS
   ======================================= */
-  const modalArr = document.getElementById("modalArrendador");
-  const btnArr   = document.getElementById("btnFirmaArrendador");
-  const canvasA  = document.getElementById("padArrendador");
-  const clearArr = document.getElementById("clearArr");
-  const saveArr  = document.getElementById("saveArr");
+
+  const secciones = Array.from(
+    document.querySelectorAll(".documento-acordeon")
+  );
+
+  function abrirSeccion(seccion) {
+    secciones.forEach((item) => {
+      const encabezado = item.querySelector(
+        ".documento-encabezado"
+      );
+
+      const debeAbrirse = item === seccion;
+
+      item.classList.toggle("abierto", debeAbrirse);
+
+      encabezado?.setAttribute(
+        "aria-expanded",
+        debeAbrirse ? "true" : "false"
+      );
+    });
+
+    if (seccion) {
+      setTimeout(() => ajustarFrame(seccion), 80);
+    }
+  }
+
+  secciones.forEach((seccion) => {
+    const encabezado = seccion.querySelector(
+      ".documento-encabezado"
+    );
+
+    encabezado?.addEventListener("click", () => {
+      const yaEstaAbierta =
+        seccion.classList.contains("abierto");
+
+      if (yaEstaAbierta) {
+        seccion.classList.remove("abierto");
+        encabezado.setAttribute("aria-expanded", "false");
+      } else {
+        abrirSeccion(seccion);
+      }
+    });
+  });
+
+  /* =======================================
+     2) ALTURA DE VISTAS INTERNAS
+  ======================================= */
+
+  function ajustarFrame(contenedor) {
+    const frames = contenedor
+      ? contenedor.querySelectorAll(".documento-frame")
+      : document.querySelectorAll(".documento-frame");
+
+    frames.forEach((frame) => {
+      try {
+        const documento =
+          frame.contentDocument ||
+          frame.contentWindow?.document;
+
+        if (!documento) return;
+
+        const alto = Math.max(
+          documento.body?.scrollHeight || 0,
+          documento.documentElement?.scrollHeight || 0,
+          850
+        );
+
+        frame.style.height = `${alto + 30}px`;
+      } catch (error) {
+        console.warn(
+          "No se pudo ajustar la altura de la vista interna.",
+          error
+        );
+      }
+    });
+  }
+
+  document
+    .querySelectorAll(".documento-frame")
+    .forEach((frame) => {
+      frame.addEventListener("load", () => {
+        ajustarFrame(
+          frame.closest(".documento-acordeon")
+        );
+      });
+    });
+
+  /* =======================================
+     3) GUARDAR REVISIONES
+  ======================================= */
+
+  const btnCorreo = document.getElementById(
+    "btnAbrirModalAviso"
+  );
+
+  const contadorRevisiones = document.getElementById(
+    "contadorRevisiones"
+  );
+
+  const textosRevisados = {
+    contrato: "Contrato revisado",
+    clausulas: "Cláusulas revisadas",
+    checklist: "Checklist revisado",
+    conductor_adicional:
+      "Conductor adicional revisado",
+  };
+
+  function actualizarProgreso() {
+    const total = secciones.length;
+
+    const revisadas = secciones.filter(
+      (seccion) => seccion.dataset.revisado === "1"
+    ).length;
+
+    if (contadorRevisiones) {
+      contadorRevisiones.textContent =
+        `${revisadas} de ${total} documentos revisados`;
+    }
+
+    if (btnCorreo) {
+      btnCorreo.disabled = revisadas !== total;
+    }
+
+    return { total, revisadas };
+  }
+
+  function marcarVisualmente(
+    seccion,
+    nombreSeccion
+  ) {
+    seccion.dataset.revisado = "1";
+    seccion.classList.add("revisado");
+
+    const estadoTexto = seccion.querySelector(
+      ".documento-titulo small"
+    );
+
+    const estadoIcono = seccion.querySelector(
+      ".documento-estado i"
+    );
+
+    const boton = seccion.querySelector(
+      "[data-marcar-revision]"
+    );
+
+    if (estadoTexto) {
+      estadoTexto.textContent =
+        nombreSeccion === "clausulas"
+          ? "Revisadas"
+          : "Revisado";
+    }
+
+    if (estadoIcono) {
+      estadoIcono.classList.remove("fa-circle");
+      estadoIcono.classList.add("fa-circle-check");
+    }
+
+    if (boton) {
+      boton.disabled = true;
+
+      const textoBoton =
+        boton.querySelector("span");
+
+      if (textoBoton) {
+        textoBoton.textContent =
+          textosRevisados[nombreSeccion] ||
+          "Documento revisado";
+      }
+    }
+  }
+
+  function abrirSiguienteSeccion(seccionActual) {
+    const indice = secciones.indexOf(seccionActual);
+    const siguiente = secciones[indice + 1];
+
+    if (siguiente) {
+      abrirSeccion(siguiente);
+
+      setTimeout(() => {
+        siguiente.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 120);
+    }
+  }
+
+  document
+    .querySelectorAll("[data-marcar-revision]")
+    .forEach((boton) => {
+      boton.addEventListener("click", async () => {
+        const nombreSeccion =
+          boton.dataset.marcarRevision;
+
+        const seccion = boton.closest(
+          ".documento-acordeon"
+        );
+
+        if (
+          !id ||
+          !nombreSeccion ||
+          !seccion ||
+          boton.disabled
+        ) {
+          return;
+        }
+
+        const textoOriginal =
+          boton.querySelector("span")?.textContent || "";
+
+        try {
+          boton.disabled = true;
+
+          const textoBoton =
+            boton.querySelector("span");
+
+          if (textoBoton) {
+            textoBoton.textContent =
+              "Guardando revisión...";
+          }
+
+          const data = await postJSON(
+            `/contrato/${id}/revision`,
+            {
+              seccion: nombreSeccion,
+            }
+          );
+
+          if (!data.ok) {
+            throw new Error(
+              data.msg ||
+              "No se pudo guardar la revisión."
+            );
+          }
+
+          marcarVisualmente(
+            seccion,
+            nombreSeccion
+          );
+
+          const progreso = actualizarProgreso();
+
+          notificar(
+            "success",
+            data.msg ||
+            "Documento marcado como revisado."
+          );
+
+          if (
+            progreso.revisadas === progreso.total
+          ) {
+            // Cerrar el último apartado
+            seccion.classList.remove("abierto");
+
+            const encabezadoActual = seccion.querySelector(
+              ".documento-encabezado"
+            );
+
+            encabezadoActual?.setAttribute(
+              "aria-expanded",
+              "false"
+            );
+
+            notificar(
+              "success",
+              "Todos los documentos fueron revisados. Ya puedes enviar el correo."
+            );
+
+            // Subir automáticamente hasta el botón de correo
+            setTimeout(() => {
+              document
+                .querySelector(".acciones-contrato")
+                ?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+            }, 200);
+          } else {
+            abrirSiguienteSeccion(seccion);
+          }
+              
+        } catch (error) {
+          console.error(error);
+
+          boton.disabled = false;
+
+          const textoBoton =
+            boton.querySelector("span");
+
+          if (textoBoton) {
+            textoBoton.textContent =
+              textoOriginal;
+          }
+
+          notificar(
+            "error",
+            `No se pudo guardar la revisión: ${error.message}`
+          );
+        }
+      });
+    });
+
+  actualizarProgreso();
+    /* =======================================
+     4) FIRMA DEL ARRENDADOR
+  ======================================= */
+
+  const modalArr =
+    document.getElementById("modalArrendador");
+
+  const btnArr =
+    document.getElementById("btnFirmaArrendador");
+
+  const canvasA =
+    document.getElementById("padArrendador");
+
+  const clearArr =
+    document.getElementById("clearArr");
+
+  const saveArr =
+    document.getElementById("saveArr");
 
   let padArr = null;
+
   if (canvasA && window.SignaturePad) {
-    padArr = new SignaturePad(canvasA, { minWidth: 1, maxWidth: 2 });
+    padArr = new SignaturePad(canvasA, {
+      minWidth: 1,
+      maxWidth: 2,
+    });
   }
 
   btnArr?.addEventListener("click", () => {
     if (!modalArr || !padArr) return;
+
     modalArr.style.display = "flex";
     padArr.clear();
   });
 
-  clearArr?.addEventListener("click", () => padArr?.clear());
+  clearArr?.addEventListener("click", () => {
+    padArr?.clear();
+  });
 
   saveArr?.addEventListener("click", async () => {
     try {
       if (!padArr) return;
-      if (!id) return alert("No se detectó el ID del contrato.");
-      if (padArr.isEmpty()) return alert("Realiza la firma");
+
+      if (!id) {
+        alert("No se detectó el ID del contrato.");
+        return;
+      }
+
+      if (padArr.isEmpty()) {
+        alert("Realiza la firma.");
+        return;
+      }
 
       saveArr.disabled = true;
       saveArr.textContent = "Guardando...";
 
-      await postJSON("/contrato/firma-arrendador", {
-        id_contrato: id,
-        firma: padArr.toDataURL("image/png")
-      });
+      await postJSON(
+        "/contrato/firma-arrendador",
+        {
+          id_contrato: id,
+          firma: padArr.toDataURL("image/png"),
+        }
+      );
 
-      alert("✅ Firma del arrendador guardada");
+      notificar(
+        "success",
+        "Firma del arrendador guardada."
+      );
+
       modalArr.style.display = "none";
       location.reload();
-    } catch (e) {
-      alert("❌ No se pudo guardar la firma: " + e.message);
+    } catch (error) {
+      notificar(
+        "error",
+        `No se pudo guardar la firma: ${error.message}`
+      );
     } finally {
       saveArr.disabled = false;
-      saveArr.textContent = "Guardar";
+      saveArr.textContent = "Guardar firma";
     }
   });
 
- /* =======================================
-   4) MODAL AVISO + ENVIAR CORREO (PDF)
-======================================= */
-const modalAviso         = document.getElementById("modalAviso");
-const btnAbrirModalAviso = document.getElementById("btnAbrirModalAviso");
-const cancelarAviso      = document.getElementById("cancelarAviso");
-const confirmarAviso     = document.getElementById("confirmarAviso");
+  /* =======================================
+     5) AVISO LEGAL Y ENVÍO DE CORREO
+  ======================================= */
 
-// Nuevo: elementos para la firma del aviso
-const canvasAviso        = document.getElementById("padAviso");
-const clearAviso         = document.getElementById("clearAviso");
-const textoOriginalAviso = document.getElementById("textoOriginal");
+  const modalAviso =
+    document.getElementById("modalAviso");
 
-let padAviso = null;
-if (canvasAviso && window.SignaturePad) {
-  padAviso = new SignaturePad(canvasAviso, { minWidth: 1, maxWidth: 2 });
-}
+  const cancelarAviso =
+    document.getElementById("cancelarAviso");
 
-// Abrir modal de aviso y limpiar firma
-btnAbrirModalAviso?.addEventListener("click", () => {
-  if (!modalAviso) return;
-  modalAviso.style.display = "flex";
-  padAviso.clear();
-});
+  const confirmarAviso =
+    document.getElementById("confirmarAviso");
 
-// Cerrar modal de aviso
-cancelarAviso?.addEventListener("click", () => {
-  if (!modalAviso) return;
-  modalAviso.style.display = "none";
-});
+  const canvasAviso =
+    document.getElementById("padAviso");
 
-// Limpiar la firma del aviso
-clearAviso?.addEventListener("click", () => {
-  padAviso?.clear();
-});
+  const clearAviso =
+    document.getElementById("clearAviso");
 
-// Confirmar aviso: validar firma + enviar correo
-confirmarAviso?.addEventListener("click", async () => {
-  try {
-    if (!id) {
-      if (window.alertify) {
-        alertify.error("No se detectó el ID del contrato.");
-      } else {
-        alert("No se detectó el ID del contrato.");
-      }
-      return;
-    }
+  const textoOriginalAviso =
+    document.getElementById("textoOriginal");
 
-    if (!padAviso) return;
+  let padAviso = null;
 
-    // Validar que haya firma
-    if (padAviso.isEmpty()) {
-      if (window.alertify) {
-        alertify.warning("Por favor realiza la firma para confirmar el aviso.");
-      } else {
-        alert("Por favor realiza la firma para confirmar el aviso.");
-      }
-      return;
-    }
-
-    // Texto del aviso (ya viene con el nombre completo desde Blade)
-    const avisoTexto = textoOriginalAviso?.innerText?.trim() || "";
-
-    confirmarAviso.disabled = true;
-    confirmarAviso.textContent = "Enviando...";
-
-    if (window.alertify) {
-      alertify.message("Guardando firma del aviso y enviando contrato...");
-    }
-
-    const data = await postJSON(`/contrato/${id}/enviar-correo`, {
-      aviso: avisoTexto,
-      firma_aviso: padAviso.toDataURL("image/png")
+  if (canvasAviso && window.SignaturePad) {
+    padAviso = new SignaturePad(canvasAviso, {
+      minWidth: 1,
+      maxWidth: 2,
     });
-
-    if (window.alertify) {
-      if (data.ok) {
-        alertify.success(data.msg || "Contrato enviado correctamente.");
-      } else {
-        alertify.error(data.msg || "No se pudo enviar el contrato.");
-      }
-    } else {
-      alert(data.msg || "Contrato enviado correctamente.");
-    }
-
-    modalAviso.style.display = "none";
-  } catch (e) {
-    console.error(e);
-    if (window.alertify) {
-      alertify.error("Error al enviar correo: " + (e.message || "Error desconocido"));
-    } else {
-      alert("❌ Error al enviar correo: " + e.message + "\nRevisa storage/logs/laravel.log");
-    }
-  } finally {
-    confirmarAviso.disabled = false;
-    confirmarAviso.textContent = "Firmar y Enviar";
   }
-});
 
+  btnCorreo?.addEventListener("click", () => {
+    if (
+      btnCorreo.disabled ||
+      !modalAviso
+    ) {
+      return;
+    }
 
+    modalAviso.style.display = "flex";
+    padAviso?.clear();
+  });
+
+  cancelarAviso?.addEventListener("click", () => {
+    if (modalAviso) {
+      modalAviso.style.display = "none";
+    }
+  });
+
+  clearAviso?.addEventListener("click", () => {
+    padAviso?.clear();
+  });
+
+  confirmarAviso?.addEventListener(
+    "click",
+    async () => {
+      try {
+        if (!id) {
+          notificar(
+            "error",
+            "No se detectó el ID del contrato."
+          );
+
+          return;
+        }
+
+        if (!padAviso) return;
+
+        if (padAviso.isEmpty()) {
+          notificar(
+            "warning",
+            "Por favor realiza la firma para confirmar el aviso."
+          );
+
+          return;
+        }
+
+        const avisoTexto =
+          textoOriginalAviso?.innerText?.trim() || "";
+
+        confirmarAviso.disabled = true;
+        confirmarAviso.textContent = "Enviando...";
+
+        notificar(
+          "message",
+          "Guardando firma del aviso y enviando contrato..."
+        );
+
+        const data = await postJSON(
+          `/contrato/${id}/enviar-correo`,
+          {
+            aviso: avisoTexto,
+            firma_aviso:
+              padAviso.toDataURL("image/png"),
+          }
+        );
+
+        if (!data.ok) {
+          throw new Error(
+            data.msg ||
+            "No se pudo enviar el contrato."
+          );
+        }
+
+        notificar(
+          "success",
+          data.msg ||
+          "Contrato enviado correctamente."
+        );
+
+        modalAviso.style.display = "none";
+      } catch (error) {
+        console.error(error);
+
+        notificar(
+          "error",
+          `Error al enviar correo: ${error.message}`
+        );
+      } finally {
+        confirmarAviso.disabled = false;
+        confirmarAviso.textContent =
+          "Firmar y Enviar";
+      }
+    }
+  );
 
   /* =======================================
-     5) IMPRIMIR (solo navegador)
+     6) IMPRIMIR
   ======================================= */
-  const btnPDF = document.querySelector(".btn-pdf");
-  btnPDF?.addEventListener("click", () => window.print());
 
+  const btnPDF =
+    document.querySelector(".btn-pdf");
+
+  btnPDF?.addEventListener("click", () => {
+    window.print();
+  });
 });

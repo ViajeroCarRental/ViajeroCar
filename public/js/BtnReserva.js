@@ -298,6 +298,9 @@
           return;
         }
 
+        // Fecha de nacimiento (el form la guarda en el hidden #dob como AAAA-MM-DD)
+        const dob = val("#dob") || "";
+
         const payload = {
           categoria_id:        category_id,
           pickup_date,
@@ -310,6 +313,7 @@
           email,
           telefono:            phone,
           vuelo:               flight,
+          fecha_nacimiento:    dob,
           addons,
         };
 

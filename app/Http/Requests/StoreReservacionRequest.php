@@ -27,6 +27,7 @@ class StoreReservacionRequest extends FormRequest
             'telefono'            => 'nullable|string|max:40',
             'vuelo'               => 'nullable|string|max:40',
             'addons'              => ['nullable', 'string'],
+            'fecha_nacimiento'    => ['nullable', 'date'],
         ];
     }
 }

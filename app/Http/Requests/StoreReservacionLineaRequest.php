@@ -31,11 +31,12 @@ class StoreReservacionLineaRequest extends FormRequest
             'dropoff_date' => $this->normalizeDate($this->input('dropoff_date')),
             'pickup_time'  => $this->normalizeTime($this->input('pickup_time')),
             'dropoff_time' => $this->normalizeTime($this->input('dropoff_time')),
-            'nombre'       => trim((string) $this->input('nombre', '')),
-            'email'        => trim((string) $this->input('email', '')),
-            'telefono'     => trim((string) $this->input('telefono', '')),
-            'vuelo'        => trim((string) $this->input('vuelo', '')),
-            'addons'       => trim((string) $this->input('addons', '')),
+            'nombre'           => trim((string) $this->input('nombre', '')),
+            'email'            => trim((string) $this->input('email', '')),
+            'telefono'         => trim((string) $this->input('telefono', '')),
+            'vuelo'            => trim((string) $this->input('vuelo', '')),
+            'addons'           => trim((string) $this->input('addons', '')),
+            'fecha_nacimiento' => $this->normalizeDate($this->input('fecha_nacimiento')),
         ]);
     }
 
@@ -120,6 +121,9 @@ class StoreReservacionLineaRequest extends FormRequest
 
             // 🔹 Vuelo (opcional)
             'vuelo' => ['nullable', 'string', 'max:40'],
+
+            // 🔹 Fecha de nacimiento del titular (opcional)
+            'fecha_nacimiento' => ['nullable', 'date'],
 
             // 🔹 Addons (cadena tipo "1:2,3:1")
             'addons' => ['nullable', 'string'],

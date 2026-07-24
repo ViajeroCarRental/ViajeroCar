@@ -214,7 +214,7 @@
                             <div class="col-reservacion">
                                 <div class="tarjeta-blanca">
                                     <div class="tarjeta-blanca-header">
-                                        <h3 class="tarjeta-blanca-titulo"> <i class="fas fa-clipboard-list"></i>Datos de
+                                        <h3 class="tarjeta-blanca-titulo"> <i class="fas fa-clipboard-list"></i> Datos de
                                             Reservación</h3>
                                     </div>
                                     <div class="tarjeta-blanca-body">
@@ -354,16 +354,11 @@
 
                             <div class="cnt">
                                 {{-- ========================================== --}}
-                                {{-- SECCIÓN 1: SERVICIOS NORMALES --}}
+                                {{-- CARRUSEL 1: ADICIONALES --}}
                                 {{-- ========================================== --}}
-                                <div class="servicios-seccion">
-                                    <div class="servicios-seccion-titulo">
-                                        <span class="seccion-icono"><i class="fas fa-clipboard-list"></i></span>
-                                        Servicios disponibles
-                                        <span class="seccion-badge">{{ count($servicios) }}</span>
-                                    </div>
-
-                                    <div id="serviciosGrid" class="add-grid">
+                                <h4 class="carrusel-titulo">Adicionales</h4>
+                                <div class="carrusel-wrap">
+                                <div id="serviciosGrid" class="add-grid">
                                         @forelse ($servicios as $s)
                                             @php
                                                 $iconos = [
@@ -401,22 +396,17 @@
                                                 </div>
                                             </div>
                                         @empty
-                                            <p>No hay servicios adicionales disponibles.</p>
                                         @endforelse
-                                    </div>
+                                </div>
                                 </div>
 
                                 {{-- ========================================== --}}
-                                {{-- SECCIÓN 2: SERVICIOS ESPECIALES --}}
+                                {{-- CARRUSEL 2: SERVICIOS --}}
                                 {{-- ========================================== --}}
-                                <div class="servicios-seccion especiales">
-                                    <div class="servicios-seccion-titulo">
-                                        <span class="seccion-icono"><i class="fas fa-rocket"></i></span>
-                                        Servicios especiales
-                                        <span class="seccion-badge">3</span>
-                                    </div>
+                                <h4 class="carrusel-titulo">Servicios</h4>
+                                <div class="carrusel-wrap">
+                                <div id="especialesGrid" class="add-grid">
 
-                                    <div class="especiales-grid">
                                         {{-- DELIVERY --}}
                                         <div class="cargo-item delivery-wrapper {{ !empty($delivery->activo) ? 'active' : '' }}"
                                             data-id-reservacion="{{ $reservacion->id_reservacion }}"
@@ -492,7 +482,7 @@
                                             </div>
                                         </div>
 
-                                        {{-- DROPOFF --}}
+                                       {{-- DROPOFF --}}
                                         <div class="cargo-item dropoff-wrapper {{ $dropActivo ?? false ? 'active' : '' }}"
                                             data-id="6" data-monto="{{ $dropTotal ?? 0 }}">
                                             <div class="cargo-item-header">
@@ -521,35 +511,15 @@
                                                             @foreach ($ubicaciones as $u)
                                                                 <option value="{{ $u->id_ubicacion }}"
                                                                     data-km="{{ $u->km }}"
-                                                                    {{ ($dropDest ?? '') == ($u->estado ?? '') . ' - ' . ($u->destino ?? '') ? 'selected' : '' }}>
+                                                                    @selected(($dropIdUbicacion ?? null) == $u->id_ubicacion)>
                                                                     {{ ($u->estado ?? '') . ' - ' . ($u->destino ?? '') }}
                                                                     ({{ $u->km }} km)
                                                                 </option>
                                                             @endforeach
-                                                            <option value="0"
-                                                                {{ $esManual ?? false ? 'selected' : '' }}>
-                                                                Dirección manual</option>
                                                         </select>
                                                     </div>
-                                                    <div id="dropGroupDireccion" class="form-group"
-                                                        style="display: {{ $esManual ?? false ? 'block' : 'none' }};">
-                                                        <label>Dirección</label>
-                                                        <input type="text" id="dropDireccion"
-                                                            class="form-control-simple" placeholder="Ej. Calle Las Flores"
-                                                            value="{{ $dropDest ?? '' }}">
-                                                    </div>
-                                                    <div id="dropGroupKm" class="form-group"
-                                                        style="display: {{ $esManual ?? false ? 'block' : 'none' }};">
-                                                        <label>Distancia (Km)</label>
-                                                        <input type="number" min="0" id="dropKm"
-                                                            class="form-control-simple" placeholder="Ej. 25"
-                                                            value="{{ $dropKm ?? '' }}">
-                                                    </div>
                                                 </div>
-                                                <div id="dropCostoKm" class="cargo-item-costo-km">
-                                                    Costo por km: <b
-                                                        id="dropCostoKmHTML">${{ number_format($costoKmCategoria ?? 0, 2) }}</b>
-                                                </div>
+
                                                 <div class="cargo-item-total">
                                                     <span class="cargo-item-total-label">Total Dropoff</span>
                                                     <span id="dropTotalHTML" class="cargo-item-total-amount">
@@ -596,7 +566,7 @@
                                                 <input type="hidden" id="gasPrecioLitro" value="20">
                                             </div>
                                         </div>
-                                    </div>
+                                </div>
                                 </div>
 
                                 {{-- ========================================== --}}
@@ -1023,9 +993,31 @@
                                                 protecciones individuales.
                                             </div>
 
+                                            {{-- FILTRO POR CATEGORÍA --}}
+                                            <div class="filtro-individuales" id="filtroIndividuales">
+                                                <button type="button" class="filtro-chip activo" data-filtro="todas">
+                                                    Todas
+                                                </button>
+                                                <button type="button" class="filtro-chip" data-filtro="colision">
+                                                    Colisión y robo
+                                                </button>
+                                                <button type="button" class="filtro-chip" data-filtro="medicos">
+                                                    Gastos médicos
+                                                </button>
+                                                <button type="button" class="filtro-chip" data-filtro="asistencia">
+                                                    Asistencia para el camino
+                                                </button>
+                                                <button type="button" class="filtro-chip" data-filtro="terceros">
+                                                    Daños a terceros
+                                                </button>
+                                                <button type="button" class="filtro-chip" data-filtro="automaticas">
+                                                    Protecciones automáticas
+                                                </button>
+                                            </div>
+
                                             {{-- 1. Colisión y robo --}}
-                                            <h4 class="categoria-titulo-individual">Colisión y robo</h4>
-                                            <div class="individuales-grid">
+                                            <h4 class="categoria-titulo-individual" data-categoria="colision">Colisión y robo</h4>
+                                            <div class="individuales-grid" data-categoria="colision">
                                                 @foreach ($grupo_colision as $ind)
                                                     @php
                                                         // Limpiar el nombre: eliminar paréntesis y contenido
@@ -1094,8 +1086,8 @@
                                             </div>
 
                                             {{-- 2. Gastos médicos --}}
-                                            <h4 class="categoria-titulo-individual">Gastos médicos</h4>
-                                            <div class="individuales-grid">
+                                            <h4 class="categoria-titulo-individual" data-categoria="medicos">Gastos médicos</h4>
+                                            <div class="individuales-grid" data-categoria="medicos">
                                                 @foreach ($grupo_medicos as $ind)
                                                     @php
                                                         $nombreLimpio = preg_replace('/\([^)]*\)/', '', $ind->nombre);
@@ -1155,8 +1147,8 @@
                                             </div>
 
                                             {{-- 3. Asistencia para el camino --}}
-                                            <h4 class="categoria-titulo-individual">Asistencia para el camino</h4>
-                                            <div class="individuales-grid">
+                                            <h4 class="categoria-titulo-individual" data-categoria="asistencia">Asistencia para el camino</h4>
+                                            <div class="individuales-grid" data-categoria="asistencia">
                                                 @foreach ($grupo_asistencia as $ind)
                                                     @php
                                                         $nombreLimpio = preg_replace('/\([^)]*\)/', '', $ind->nombre);
@@ -1226,8 +1218,8 @@
                                             @endphp
 
                                             @if ($tercerosFiltrados->isNotEmpty())
-                                                <h4 class="categoria-titulo-individual">Daños a terceros</h4>
-                                                <div class="individuales-grid">
+                                                <h4 class="categoria-titulo-individual" data-categoria="terceros">Daños a terceros</h4>
+                                                <div class="individuales-grid" data-categoria="terceros">
                                                     @foreach ($tercerosFiltrados as $ind)
                                                         @php
                                                             $nombreLimpio = preg_replace(
@@ -1289,8 +1281,8 @@
                                             @endif
 
                                             {{-- 5. Protecciones automáticas --}}
-                                            <h4 class="categoria-titulo-individual">Protecciones automáticas</h4>
-                                            <div class="individuales-grid">
+                                            <h4 class="categoria-titulo-individual" data-categoria="automaticas">Protecciones automáticas</h4>
+                                            <div class="individuales-grid" data-categoria="automaticas">
                                                 @foreach ($grupo_protecciones as $ind)
                                                     @php
                                                         $nombreLimpio = preg_replace('/\([^)]*\)/', '', $ind->nombre);

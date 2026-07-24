@@ -5815,6 +5815,21 @@ function initValidacionHorasTiempoReal() {
             return true;
         },
 
+        // Selecciona una protección INDIVIDUAL guardada, reutilizando el mismo
+        // flujo que el clic del usuario (toggleIndividualFromCard). Localiza la
+        // card por su data-id y, si no está ya seleccionada, la activa.
+        seleccionarIndividualEdicion: function(idIndividual) {
+            const card = document.querySelector(`.individual-item[data-id="${idIndividual}"]`);
+            if (!card) return false;
+            // Evita doble toggle si por algún motivo ya está activa.
+            if (state.individuales.has(String(idIndividual)) ||
+                state.individuales.has(Number(idIndividual))) {
+                return true;
+            }
+            toggleIndividualFromCard(card);
+            return true;
+        },
+
         // Coloca fecha en el input UI (Flatpickr) y sincroniza el hidden + días.
         setFechaEdicion: function(uiId, hiddenId, valorISO) {
             const ui = qs(uiId);
@@ -5873,16 +5888,6 @@ function initValidacionHorasTiempoReal() {
             if (typeof completarFlujo === 'function') completarFlujo();
         },
 
-        // Opción B: abre (expande) las 4 secciones a la vez, sin scroll brusco.
-        expandirTodasEdicion: function() {
-            const secciones = ['categoria', 'adicionales', 'protecciones', 'cliente'];
-            secciones.forEach(sec => {
-                const el = document.querySelector(`.acordeon-item[data-seccion="${sec}"]`);
-                if (el && typeof abrirSeccion === 'function') {
-                    abrirSeccion(el, true);   // true = evitar scroll
-                }
-            });
-        },
 
         // Opción B: abre (expande) las 4 secciones a la vez, sin scroll brusco.
         expandirTodasEdicion: function() {
@@ -6103,6 +6108,22 @@ function initValidacionHorasTiempoReal() {
                 precio: window.seguroEditar.precio_por_dia,
                 charge: "por_dia"
             });
+        }
+
+        // ============================================================
+        // 8.b) PROTECCIONES INDIVIDUALES guardadas
+        //      Se re-seleccionan reutilizando el flujo de la card.
+        //      OJO: si hay paquete de seguro, las individuales normalmente
+        //      no aplican (son excluyentes); por eso solo se cargan cuando
+        //      NO hay paquete seleccionado.
+        // ============================================================
+        if (!window.seguroEditar && Array.isArray(window.individualesEditar)) {
+            for (const ind of window.individualesEditar) {
+                const idInd = ind.id_individual ?? ind.id;
+                if (idInd != null && typeof API.seleccionarIndividualEdicion === 'function') {
+                    API.seleccionarIndividualEdicion(idInd);
+                }
+            }
         }
 
         // ============================================================

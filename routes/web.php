@@ -293,6 +293,7 @@ Route::post('/admin/contrato/seguros', [ContratoController::class, 'actualizarSe
 Route::post('/admin/contrato/seguros-individuales', [ContratoController::class, 'actualizarSegurosIndividuales'])->name('contrato.actualizarSegurosIndividuales');
 Route::delete('/admin/contrato/seguros-individuales', [ContratoController::class, 'eliminarSeguroIndividual'])->name('contrato.eliminarSeguroIndividual');
 Route::delete('/admin/contrato/seguros-individuales/todos', [ContratoController::class, 'eliminarTodosLosIndividuales'])->name('contrato.eliminarIndividualesTodos');
+Route::post('/admin/contrato/protecciones/sync', [ContratoController::class, 'syncProtecciones'])->name('contrato.syncProtecciones');
 
 // Utilidades del Paso 1-3
 Route::get('/admin/contrato/{id_reservacion}/resumen', [ContratoBaseController::class, 'resumenContrato'])->name('contrato.resumen');
@@ -319,6 +320,7 @@ Route::get('/admin/contrato/{id}/conductores', [Contrato2Controller::class, 'obt
 
 // Paso 5: Preview
 Route::post('/contrato/firma-cliente', [Contrato2Controller::class, 'guardarFirmaCliente']);
+Route::get('/admin/contrato/{id}/vehiculo-actual', [Contrato2Controller::class, 'vehiculoActual']);
 
 // Paso 6: Pagos y Finalización
 Route::get('/admin/contrato/{id}/resumen-paso6', [Contrato2Controller::class, 'resumenPaso6']);
@@ -335,6 +337,15 @@ Route::get('/admin/contrato-final', [ContratoFinalController::class, 'mostrarCon
 Route::get('/admin/contrato-final/{id}', [ContratoFinalController::class, 'mostrarContratoFinal'])->name('contrato.final');
 Route::post('/contrato/firma-arrendador', [ContratoFinalController::class, 'guardarFirmaArr'])->name('contrato.firmaArr');
 Route::post('/contrato/{id}/enviar-correo', [ContratoFinalController::class, 'enviarContratoCorreo']);
+Route::post(
+    '/contrato/{id}/revision',
+    [ContratoFinalController::class, 'guardarRevision']
+)->name('contrato.revision.guardar');
+
+Route::get(
+    '/contrato/{id}/revisiones',
+    [ContratoFinalController::class, 'obtenerRevisiones']
+)->name('contrato.revisiones.obtener');
 
 // Rutas Externas (Checklist)
 Route::post('/contrato/firma-recibio', [ChecklistController::class, 'guardarFirmaRecibio']);
@@ -757,4 +768,6 @@ Route::get('/admin/convenio/{id}', [AltaClienteController::class, 'generarConven
 
 Route::get('/admin/responsiva/{id}', [AltaClienteController::class, 'generarResponsivaPdf'])
     ->name('admin.responsiva.pdf');
-    
+
+Route::post('/admin/responsiva-preview', [AltaClienteController::class, 'previewResponsiva'])
+    ->name('admin.responsiva.preview');

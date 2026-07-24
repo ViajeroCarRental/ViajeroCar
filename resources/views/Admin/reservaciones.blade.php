@@ -1444,6 +1444,7 @@
   window.reservacionEditar = @json($reservacion ?? null);
   window.serviciosEditar = @json($serviciosReserva ?? []);
   window.seguroEditar = @json($seguroReserva ?? null);
+  window.individualesEditar = @json($individualesReserva ?? []);
 </script>
 
 {{-- =========================================
