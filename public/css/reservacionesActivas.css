@@ -1132,6 +1132,20 @@ select[name="limit"]:focus {
   grid-column: 1 / -1;
 }
 
+.reserva-summary .summary-contact {
+  background: #F8FAFC;
+}
+
+.reserva-summary .summary-total {
+  background: #FFF7ED;
+  border-color: #FED7AA;
+  font-size: 14px;
+}
+
+.reserva-summary .summary-total b {
+  color: #C2410C;
+}
+
 .reserva-summary .summary-actions,
 .reserva-summary>div:last-child {
   grid-column: 1 / -1;

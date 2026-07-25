@@ -43,7 +43,8 @@ class ReservacionesActivasController extends Controller
             $reservaciones = DB::table('reservaciones as r')
                 ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
                 ->leftJoin('vehiculos as v', 'r.id_vehiculo', '=', 'v.id_vehiculo')
-                ->leftJoin('sucursales as s', 'r.sucursal_retiro', '=', 's.id_sucursal')
+                ->leftJoin('sucursales as sr', 'r.sucursal_retiro', '=', 'sr.id_sucursal')
+                ->leftJoin('sucursales as se', 'r.sucursal_entrega', '=', 'se.id_sucursal')
                 ->select(
                     'r.id_reservacion',
                     'r.codigo',
@@ -62,15 +63,34 @@ class ReservacionesActivasController extends Controller
                     'r.fecha_fin',
                     'r.total',
                     'r.sucursal_retiro',
+                    'r.sucursal_entrega',
 
                     DB::raw("
                     CASE
-                        WHEN s.nombre = 'Querétaro Aeropuerto' THEN 'AIQ'
-                        WHEN s.nombre = 'Querétaro Central de Autobuses' THEN 'TAQ'
-                        WHEN s.nombre = 'Querétaro Oficina Plaza Central Park' THEN 'OCP'
-                        ELSE NULL
+                        WHEN sr.nombre = 'Querétaro Aeropuerto' THEN 'AIQ'
+                        WHEN sr.nombre = 'Querétaro Central de Autobuses' THEN 'TAQ'
+                        WHEN sr.nombre = 'Querétaro Oficina Plaza Central Park' THEN 'OCP'
+                        ELSE sr.nombre
                     END AS oficina_compacta
                     "),
+                    DB::raw("
+                    CASE
+                        WHEN sr.nombre = 'Querétaro Aeropuerto' THEN 'AIQ'
+                        WHEN sr.nombre = 'Querétaro Central de Autobuses' THEN 'TAQ'
+                        WHEN sr.nombre = 'Querétaro Oficina Plaza Central Park' THEN 'OCP'
+                        ELSE sr.nombre
+                    END AS oficina_retiro
+                    "),
+                    DB::raw("
+                    CASE
+                        WHEN COALESCE(se.nombre, sr.nombre) = 'Querétaro Aeropuerto' THEN 'AIQ'
+                        WHEN COALESCE(se.nombre, sr.nombre) = 'Querétaro Central de Autobuses' THEN 'TAQ'
+                        WHEN COALESCE(se.nombre, sr.nombre) = 'Querétaro Oficina Plaza Central Park' THEN 'OCP'
+                        ELSE COALESCE(se.nombre, sr.nombre)
+                    END AS oficina_devolucion
+                    "),
+                    'sr.nombre as oficina_retiro_completa',
+                    DB::raw('COALESCE(se.nombre, sr.nombre) AS oficina_devolucion_completa'),
 
                     'r.no_vuelo',
                     'r.created_at',
@@ -201,7 +221,12 @@ class ReservacionesActivasController extends Controller
                         'dias'                  => $inicio->diffInDays($fin),
                         'total'                 => $r->total,
                         'sucursal_retiro'       => $r->sucursal_retiro,
+                        'sucursal_entrega'      => $r->sucursal_entrega,
                         'oficina_compacta'      => $r->oficina_compacta,
+                        'oficina_retiro'        => $r->oficina_retiro,
+                        'oficina_devolucion'    => $r->oficina_devolucion ?: $r->oficina_retiro,
+                        'oficina_retiro_completa' => $r->oficina_retiro_completa,
+                        'oficina_devolucion_completa' => $r->oficina_devolucion_completa ?: $r->oficina_retiro_completa,
                         'no_vuelo'              => $r->no_vuelo,
                         'created_at'            => $r->created_at,
                         'seguro'                => $nombreSeguro,
@@ -319,6 +344,8 @@ class ReservacionesActivasController extends Controller
         try {
             $reservacion = DB::table('reservaciones as r')
                 ->leftJoin('categorias_carros as c', 'r.id_categoria', '=', 'c.id_categoria')
+                ->leftJoin('sucursales as sr', 'r.sucursal_retiro', '=', 'sr.id_sucursal')
+                ->leftJoin('sucursales as se', 'r.sucursal_entrega', '=', 'se.id_sucursal')
                 ->select(
                     'r.id_reservacion',
                     'r.codigo',
@@ -338,6 +365,26 @@ class ReservacionesActivasController extends Controller
                     'r.total',
                     'r.tarifa_modificada',
                     'r.no_vuelo',
+                    'r.sucursal_retiro',
+                    'r.sucursal_entrega',
+                    DB::raw("
+                    CASE
+                        WHEN sr.nombre = 'Querétaro Aeropuerto' THEN 'AIQ'
+                        WHEN sr.nombre = 'Querétaro Central de Autobuses' THEN 'TAQ'
+                        WHEN sr.nombre = 'Querétaro Oficina Plaza Central Park' THEN 'OCP'
+                        ELSE sr.nombre
+                    END AS oficina_retiro
+                    "),
+                    DB::raw("
+                    CASE
+                        WHEN COALESCE(se.nombre, sr.nombre) = 'Querétaro Aeropuerto' THEN 'AIQ'
+                        WHEN COALESCE(se.nombre, sr.nombre) = 'Querétaro Central de Autobuses' THEN 'TAQ'
+                        WHEN COALESCE(se.nombre, sr.nombre) = 'Querétaro Oficina Plaza Central Park' THEN 'OCP'
+                        ELSE COALESCE(se.nombre, sr.nombre)
+                    END AS oficina_devolucion
+                    "),
+                    'sr.nombre as oficina_retiro_completa',
+                    DB::raw('COALESCE(se.nombre, sr.nombre) AS oficina_devolucion_completa'),
                     DB::raw('DATEDIFF(r.fecha_fin, r.fecha_inicio) as dias'),
                     'c.codigo as categoria',
                     'c.nombre as categoria_nombre',
