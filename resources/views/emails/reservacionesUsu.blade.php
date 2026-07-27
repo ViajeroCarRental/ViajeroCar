@@ -609,9 +609,19 @@
       <div class="summary-card">
 
         @php
-          $fechaInicio = \Carbon\Carbon::parse($reservacion->fecha_inicio);
-          $fechaFin = \Carbon\Carbon::parse($reservacion->fecha_fin);
-          $diasCorreo = max(1, $fechaInicio->diffInDays($fechaFin));
+          // Incluir las horas de retiro y entrega para calcular bien los días.
+          $fechaInicio = \Carbon\Carbon::parse(
+              $reservacion->fecha_inicio . ' ' . ($reservacion->hora_retiro ?? '00:00:00')
+          );
+          $fechaFin = \Carbon\Carbon::parse(
+              $reservacion->fecha_fin . ' ' . ($reservacion->hora_entrega ?? '00:00:00')
+          );
+          // Días con tolerancia de 1 hora (misma fórmula que en todo el sistema):
+          // si el exceso sobre las 24h es de MÁS de 1 hora, suma un día.
+          $horasCorreo = $fechaInicio->lt($fechaFin) ? $fechaInicio->diffInHours($fechaFin) : 0;
+          $diasBaseCorreo = intdiv($horasCorreo, 24);
+          $horasExtraCorreo = $horasCorreo % 24;
+          $diasCorreo = ($horasExtraCorreo > 1) ? $diasBaseCorreo + 1 : max(1, $diasBaseCorreo);
           $tarifaBaseDia = (float) ($reservacion->tarifa_base ?? 0);
           $tarifaBaseTotal = round($tarifaBaseDia * $diasCorreo, 2);
           $extrasIds = collect($extrasReserva)->pluck('id_servicio')->toArray();
@@ -887,7 +897,8 @@
             $cant   = (float) ($ex->cantidad ?? 1);
             $total  = (float) ($ex->total ?? 0);
             $cobro  = strtolower((string) ($ex->tipo_cobro ?? ''));
-            $precio = (float) ($ex->precio ?? 0);
+            // El campo real que trae el controlador es 'precio_unitario', no 'precio'.
+            $precio = (float) ($ex->precio_unitario ?? 0);
 
             if ($idServ === 11) {
               $unidad = __('Return at a different branch');

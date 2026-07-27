@@ -33,6 +33,28 @@ class ReservacionesController extends Controller
     {
         $reset = $request->input('reset') == '1';
 
+        // --- Datos del cliente en sesión ---
+        // Si vienen por URL (por ejemplo, desde un link de pago), se guardan en
+        // sesión para que sobrevivan al navegar entre pasos, sin exponerlos en la
+        // URL en cada clic. Si no vienen, se recuperan de la sesión.
+        $camposCliente = ['nombre_completo', 'telefono', 'email', 'dob', 'pais', 'vuelo'];
+
+        if ($reset) {
+            session()->forget('datos_cliente');
+        } else {
+            $clienteEnUrl = array_filter(
+                $request->only($camposCliente),
+                fn($v) => $v !== null && $v !== ''
+            );
+            if (!empty($clienteEnUrl)) {
+                session([
+                    'datos_cliente' => array_merge(session('datos_cliente', []), $clienteEnUrl),
+                ]);
+            }
+        }
+
+        $datosCliente = $reset ? [] : session('datos_cliente', []);
+
         $pickupDateRaw  = $reset ? null : ($request->input('pickup_date')  ?? $request->input('start'));
         $dropoffDateRaw = $reset ? null : ($request->input('dropoff_date') ?? $request->input('end'));
 
@@ -177,6 +199,9 @@ class ReservacionesController extends Controller
         $capacidadTanque = $detallesAddons['capacidadTanque'] ?? 50.0;
 
         return view('Usuarios.Reservaciones', array_merge(compact(
+            'datosCliente',
+            'pickupDateISO',
+            'dropoffDateISO',
             'step',
             'stepCurrent',
             'filters',

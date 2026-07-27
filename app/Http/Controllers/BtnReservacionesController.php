@@ -462,7 +462,7 @@ class BtnReservacionesController extends Controller
                 } else {
                     // Por día (default)
                     $lineTotal        = $precioBase * $cantidad * $dias;
-                    $precioUnitarioDB = $precioBase * $dias;
+                    $precioUnitarioDB = $precioBase;
                 }
 
                 $extrasSubtotal += $lineTotal;
